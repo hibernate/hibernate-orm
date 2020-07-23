@@ -222,7 +222,8 @@ public class BasicValueBinder<T> implements SqlTypeDescriptorIndicators {
 			XClass modelPropertyTypeXClass,
 			String declaringClassName,
 			ConverterDescriptor converterDescriptor) {
-		if ( modelPropertyTypeXClass == null ) {
+		boolean isArray = modelXProperty.isArray();
+		if ( modelPropertyTypeXClass == null && !isArray ) {
 			// we cannot guess anything
 			return;
 		}
@@ -232,7 +233,7 @@ public class BasicValueBinder<T> implements SqlTypeDescriptorIndicators {
 		}
 		assert columns.length == 1;
 
-		final XClass modelTypeXClass = modelXProperty.isArray()
+		final XClass modelTypeXClass = isArray
 				? modelXProperty.getElementClass()
 				: modelPropertyTypeXClass;
 
@@ -383,10 +384,18 @@ public class BasicValueBinder<T> implements SqlTypeDescriptorIndicators {
 
 		// todo (6.0) : @SqlType / @SqlTypeDescriptor
 
+		Class<T> javaType;
 		//noinspection unchecked
-		final Class<T> javaType = buildingContext.getBootstrapContext()
-				.getReflectionManager()
-				.toClass( elementTypeXClass );
+		if ( elementTypeXClass == null && attributeXProperty.isArray() ) {
+			javaType = buildingContext.getBootstrapContext()
+					.getReflectionManager()
+					.toClass( attributeXProperty.getElementClass() );
+		}
+		else {
+			javaType = buildingContext.getBootstrapContext()
+					.getReflectionManager()
+					.toClass( elementTypeXClass );
+		}
 
 		implicitJavaTypeAccess = typeConfiguration -> javaType;
 

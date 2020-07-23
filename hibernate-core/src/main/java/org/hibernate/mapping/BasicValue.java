@@ -432,12 +432,11 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 			);
 		}
 		else {
-			impliedJavaType = null;
+			return null;
 		}
 
-		return impliedJavaType == null
-				? null
-				: typeConfiguration.getJavaTypeDescriptorRegistry().resolveDescriptor( impliedJavaType );
+		resolvedJavaClass = impliedJavaType;
+		return typeConfiguration.getJavaTypeDescriptorRegistry().resolveDescriptor( impliedJavaType );
 	}
 
 

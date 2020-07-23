@@ -9,15 +9,13 @@ package org.hibernate.sql.results.graph.embeddable.internal;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.embeddable.AbstractEmbeddableInitializer;
-import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 
 /**
  * @author Steve Ebersole
  */
 public class EmbeddableFetchInitializer
-		extends AbstractEmbeddableInitializer
-		implements EmbeddableInitializer {
+		extends AbstractEmbeddableInitializer {
 	public EmbeddableFetchInitializer(
 			FetchParentAccess fetchParentAccess,
 			EmbeddableResultGraphNode resultDescriptor,

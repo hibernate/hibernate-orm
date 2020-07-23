@@ -33,7 +33,7 @@ public class StandardCollectionSemanticsResolver implements CollectionSemanticsR
 	@Override
 	public CollectionSemantics resolveRepresentation(Collection bootDescriptor) {
 		if ( bootDescriptor instanceof PrimitiveArray ) {
-			throw new NotYetImplementedFor6Exception();
+			return StandardArraySemantics.INSTANCE;
 		}
 
 		if ( bootDescriptor instanceof Array ) {

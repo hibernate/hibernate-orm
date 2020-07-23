@@ -32,6 +32,7 @@ import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -47,6 +48,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
@@ -71,6 +73,7 @@ import org.hibernate.sql.results.graph.collection.internal.DelayedCollectionFetc
 import org.hibernate.sql.results.graph.collection.internal.EagerCollectionFetch;
 import org.hibernate.sql.results.graph.collection.internal.SelectEagerCollectionFetch;
 import org.hibernate.type.EntityType;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
 
@@ -854,6 +857,15 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 		consumer.accept( elementDescriptor );
 		if ( indexDescriptor != null ) {
 			consumer.accept( indexDescriptor );
+		}
+	}
+
+	@Override
+	public void visitJdbcTypes(
+			Consumer<JdbcMapping> action, Clause clause, TypeConfiguration typeConfiguration) {
+		elementDescriptor.visitJdbcTypes( action, clause, typeConfiguration );
+		if ( indexDescriptor != null ) {
+			indexDescriptor.visitJdbcTypes( action, clause, typeConfiguration );
 		}
 	}
 

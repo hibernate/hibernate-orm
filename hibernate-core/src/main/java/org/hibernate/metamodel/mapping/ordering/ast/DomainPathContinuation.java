@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.mapping.ordering.ast;
 
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ordering.TranslationContext;
@@ -47,11 +48,9 @@ public class DomainPathContinuation implements DomainPath {
 			String name,
 			boolean isTerminal,
 			TranslationContext translationContext) {
-		if ( referencedModelPart.getPartMappingType() instanceof EmbeddableValuedModelPart ) {
-			final EmbeddableValuedModelPart embeddableValuedPart =
-					(EmbeddableValuedModelPart) referencedModelPart.getPartMappingType();
-
-			final ModelPart subPart = embeddableValuedPart.findSubPart( name, null );
+		if ( referencedModelPart instanceof EmbeddableValuedModelPart ) {
+			final EmbeddableMappingType embeddableMappingType = (EmbeddableMappingType) referencedModelPart.getPartMappingType();
+			final ModelPart subPart = embeddableMappingType.findSubPart( name, null );
 			if ( subPart == null ) {
 				throw new PathResolutionException(
 						"Could not resolve path token : " + referencedModelPart + " -> " + name

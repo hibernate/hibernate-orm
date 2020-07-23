@@ -145,7 +145,7 @@ public class JoinProcessor implements SqlTokenTypes {
 			EntityPersister entityPersister = fromElement.getEntityPersister();
 			if ( entityPersister != null && entityPersister instanceof AbstractEntityPersister ) {
 				AbstractEntityPersister aep = (AbstractEntityPersister) entityPersister;
-				while ( !aep.filterFragment("").isEmpty() && aep.getMappedSuperclass() != null ) {
+				while ( !aep.filterFragment("", Collections.emptyMap()).isEmpty() && aep.getMappedSuperclass() != null ) {
 					Collections.addAll(result, aep.getTableNames());
 					aep = (AbstractEntityPersister) walker.getSessionFactoryHelper().findEntityPersisterByName( aep.getMappedSuperclass() );
 				}

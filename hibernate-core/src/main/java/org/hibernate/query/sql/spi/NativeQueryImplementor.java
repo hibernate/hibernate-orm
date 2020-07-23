@@ -56,6 +56,9 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	NativeQueryImplementor<R> addScalar(String columnAlias, BasicDomainType type);
 
 	@Override
+	NativeQueryImplementor<R> addScalar(String columnAlias, Class<?> javaType);
+
+	@Override
 	EntityResultBuilder addRoot(String tableAlias, String entityName);
 
 	@Override

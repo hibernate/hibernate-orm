@@ -105,6 +105,13 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	NativeQuery<T> addScalar(String columnAlias, BasicDomainType type);
 
 	/**
+	 * Declare a scalar query result with an explicit return type
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	NativeQuery<T> addScalar(String columnAlias, Class<?> javaType);
+
+	/**
 	 * Add a new root return mapping, returning a {@link RootReturn} to allow
 	 * further definition.
 	 *

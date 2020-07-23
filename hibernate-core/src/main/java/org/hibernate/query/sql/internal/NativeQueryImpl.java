@@ -475,12 +475,19 @@ public class NativeQueryImpl<R>
 
 	@Override
 	public NativeQueryImplementor<R> addScalar(String columnAlias) {
-		return addScalar( columnAlias, null );
+		resultSetMapping.addResultBuilder( Builders.scalar( columnAlias ) );
+		return this;
 	}
 
 	@Override
 	public NativeQueryImplementor<R> addScalar(String columnAlias, BasicDomainType type) {
 		resultSetMapping.addResultBuilder( Builders.scalar( columnAlias, (BasicType<?>) type ) );
+		return this;
+	}
+
+	@Override
+	public NativeQueryImplementor<R> addScalar(String columnAlias, Class<?> javaType) {
+		resultSetMapping.addResultBuilder( Builders.scalar( columnAlias, javaType, getSessionFactory() ) );
 		return this;
 	}
 

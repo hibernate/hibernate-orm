@@ -8,26 +8,21 @@ package org.hibernate.orm.test.query.sql;
 
 import java.time.LocalDate;
 import java.util.List;
-import javax.persistence.Entity;
 
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.contacts.Contact;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import org.hamcrest.CoreMatchers;
-
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Steve Ebersole
@@ -88,7 +83,7 @@ public class NativeQueryScalarTests {
 	}
 
 	@Test
-	@FailureExpected( reason = "Explicit type support not working atm" )
+//	@FailureExpected( reason = "Explicit type support not working atm" )
 	public void explicitEnumTypeTest(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -98,7 +93,7 @@ public class NativeQueryScalarTests {
 					query.addScalar( "id" );
 					query.addScalar( "last" );
 					query.addScalar( "first" );
-					query.addScalar( "gender", scope.getSessionFactory().getTypeConfiguration().getBasicTypeForJavaType( Contact.Gender.class ) );
+					query.addScalar( "gender", Contact.Gender.class );
 
 					final List<?> results = query.list();
 					assertThat( results.size(), is( 1 ) );

@@ -26,12 +26,36 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public class ScalarResultBuilder implements ResultBuilder {
 	private final String explicitName;
+
 	private final BasicType<?> explicitType;
+	private final JavaTypeDescriptor<?> explicitJavaTypeDescriptor;
 
 	ScalarResultBuilder(String explicitName, BasicType<?> explicitType) {
 		assert explicitName != null;
 		this.explicitName = explicitName;
+
+		assert explicitType != null;
 		this.explicitType = explicitType;
+
+		this.explicitJavaTypeDescriptor = null;
+	}
+
+	ScalarResultBuilder(String explicitName, JavaTypeDescriptor<?> explicitJavaTypeDescriptor) {
+		assert explicitName != null;
+		this.explicitName = explicitName;
+
+		assert explicitJavaTypeDescriptor != null;
+		this.explicitJavaTypeDescriptor = explicitJavaTypeDescriptor;
+
+		this.explicitType = null;
+	}
+
+	public ScalarResultBuilder(String explicitName) {
+		assert explicitName != null;
+		this.explicitName = explicitName;
+
+		this.explicitType = null;
+		this.explicitJavaTypeDescriptor = null;
 	}
 
 	public String getExplicitName() {
@@ -51,6 +75,13 @@ public class ScalarResultBuilder implements ResultBuilder {
 
 		if ( explicitType != null ) {
 			jdbcMapping = explicitType;
+		}
+		else if ( explicitJavaTypeDescriptor != null ) {
+			final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
+
+			final SqlTypeDescriptor sqlTypeDescriptor = jdbcResultsMetadata.resolveSqlTypeDescriptor( jdbcPosition );
+
+			jdbcMapping = typeConfiguration.getBasicTypeRegistry().resolve( explicitJavaTypeDescriptor, sqlTypeDescriptor );
 		}
 		else {
 			final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();

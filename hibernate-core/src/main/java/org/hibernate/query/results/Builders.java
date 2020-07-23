@@ -23,6 +23,10 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 public class Builders {
+	public static ScalarResultBuilder scalar(String columnAlias) {
+		return new ScalarResultBuilder( columnAlias );
+	}
+
 	public static ScalarResultBuilder scalar(
 			String columnAlias,
 			BasicType<?> type) {
@@ -35,7 +39,7 @@ public class Builders {
 			SessionFactoryImplementor factory) {
 		return new ScalarResultBuilder(
 				columnAlias,
-				factory.getTypeConfiguration().getBasicTypeForJavaType( javaType )
+				factory.getTypeConfiguration().standardBasicTypeForJavaType( javaType )
 		);
 	}
 

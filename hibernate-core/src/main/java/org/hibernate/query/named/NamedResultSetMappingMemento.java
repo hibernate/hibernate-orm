@@ -6,8 +6,11 @@
  */
 package org.hibernate.query.named;
 
+import java.util.function.Consumer;
+
 import org.hibernate.Incubating;
-import org.hibernate.query.spi.ResultSetMapping;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.results.ResultSetMapping;
 
 /**
  * Used to keep information about named result mappings defined by the
@@ -27,8 +30,5 @@ import org.hibernate.query.spi.ResultSetMapping;
 public interface NamedResultSetMappingMemento {
 	String getName();
 
-	/**
-	 * todo (6.0) : determine the proper arguments.  depends on how we port JdbcValues, etc from the original 6.0 work
-	 */
-	ResultSetMapping toResultSetMapping();
+	void resolve(ResultSetMapping resultSetMapping, Consumer<String> querySpaceConsumer, SessionFactoryImplementor sessionFactory);
 }

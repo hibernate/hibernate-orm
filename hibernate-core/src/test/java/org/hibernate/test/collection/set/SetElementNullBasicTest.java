@@ -10,12 +10,16 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import javax.persistence.CollectionTable;
+import javax.persistence.ColumnResult;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.SqlResultSetMapping;
 import javax.persistence.Table;
+
+import org.hibernate.query.NativeQuery;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -117,8 +121,43 @@ public class SetElementNullBasicTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 	}
-
+//
+//	@SqlResultSetMapping(
+//			columns = {
+//					@ColumnResult( name = "a_id", type = long.class ),
+//					@ColumnResult( name = "a_name" )
+//			}
+//	)
 	private List<?> getCollectionElementRows(int id) {
+		doInHibernate(
+				this::sessionFactory,
+				session -> {
+					final String qry = "SELECT a.id as a_id, a.name as a_name FROM AnEntity a where a.id = " + id;
+					final NativeQuery nativeQuery = session.createNativeQuery( qry );
+					nativeQuery.list();
+
+
+
+					nativeQuery.addRoot( "a", AnEntity.class )
+							.addIdColumnAliases( "a_id" )
+							.addProperty( "name", "a_name" );
+					nativeQuery.addFetch( "c", "a", "aCollection" );
+				}
+		);
+
+		doInHibernate(
+				this::sessionFactory,
+				session -> {
+					final String qry = "SELECT a.id as a_id, a.name as a_name, c.aCollection FROM AnEntity a join AnEntity_aCollection c on a.id = c.id and a.id = " + id;
+					final NativeQuery nativeQuery = session.createNativeQuery( qry );
+					nativeQuery.addRoot( "a", AnEntity.class )
+							.addIdColumnAliases( "a_id" )
+							.addProperty( "name", "a_name" );
+					nativeQuery.addFetch( "c", "a", "aCollection" );
+					nativeQuery.list();
+				}
+		);
+
 		return doInHibernate(
 				this::sessionFactory, session -> {
 					return session.createNativeQuery(

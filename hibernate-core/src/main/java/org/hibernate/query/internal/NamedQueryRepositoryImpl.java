@@ -123,6 +123,10 @@ public class NamedQueryRepositoryImpl implements NamedQueryRepository {
 		resultSetMappingMementoMap.put( name, memento );
 	}
 
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Prepare repository for use
+
 	@Override
 	public void prepare(
 			SessionFactoryImplementor sessionFactory,

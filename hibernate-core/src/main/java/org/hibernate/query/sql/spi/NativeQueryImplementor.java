@@ -32,6 +32,7 @@ import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.named.NameableQuery;
+import org.hibernate.query.results.EntityResultBuilder;
 import org.hibernate.query.spi.QueryImplementor;
 
 /**
@@ -55,7 +56,7 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	NativeQueryImplementor<R> addScalar(String columnAlias, BasicDomainType type);
 
 	@Override
-	RootReturn addRoot(String tableAlias, String entityName);
+	EntityResultBuilder addRoot(String tableAlias, String entityName);
 
 	@Override
 	NativeQueryImplementor<R> addEntity(String entityName);

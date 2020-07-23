@@ -6,9 +6,9 @@
  */
 package org.hibernate.engine.query.internal;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.query.spi.NativeQueryInterpreter;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.sql.internal.NativeSelectQueryPlanImpl;
 import org.hibernate.query.sql.internal.ParameterParser;
 import org.hibernate.query.sql.spi.NativeSelectQueryDefinition;
 import org.hibernate.query.sql.spi.NativeSelectQueryPlan;
@@ -32,15 +32,12 @@ public class NativeQueryInterpreterStandardImpl implements NativeQueryInterprete
 	public <R> NativeSelectQueryPlan<R> createQueryPlan(
 			NativeSelectQueryDefinition<R> queryDefinition,
 			SessionFactoryImplementor sessionFactory) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-
-//		CustomQuery customQuery = new SQLCustomQuery(
-//				specification.getQueryString(),
-//				specification.getQueryReturns(),
-//				specification.getQuerySpaces(),
-//				sessionFactory
-//		);
-//
-//		return new NativeSQLQueryPlan( specification.getQueryString(), customQuery );
+		return new NativeSelectQueryPlanImpl<>(
+				queryDefinition.getSqlString(),
+				queryDefinition.getAffectedTableNames(),
+				queryDefinition.getQueryParameterList(),
+				queryDefinition.getJdbcValuesMappingProducer(),
+				queryDefinition.getRowTransformer()
+		);
 	}
 }

@@ -17,10 +17,12 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 
+import org.hibernate.graph.GraphParser;
 import org.hibernate.graph.GraphSemantic;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.BeforeEach;
@@ -81,6 +83,7 @@ public class EntityGraphNativeQueryTest {
 	}
 
 	@Test
+	@FailureExpected( reason = "Uses an implicit entity/root return, which is not yet implemented" )
 	void testNativeQueryLoadGraph(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -98,14 +101,21 @@ public class EntityGraphNativeQueryTest {
 								.setHint( GraphSemantic.LOAD.getJpaHintName(), fooGraph )
 								.getSingleResult();
 						fail("Should throw exception");
-					} catch (Exception e) {
-						assertThat( e.getMessage(), is( "A native SQL query cannot use EntityGraphs" ) );
+					}
+					catch (Exception e) {
+						if ( e.getMessage().equals( "A native SQL query cannot use EntityGraphs" ) ) {
+							// success
+						}
+						else {
+							throw new RuntimeException( "Unexpected exception", e );
+						}
 					}
 				}
 		);
 	}
 
 	@Test
+	@FailureExpected( reason = "Uses an implicit entity/root return, which is not yet implemented" )
 	void testNativeQueryFetchGraph(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -123,8 +133,14 @@ public class EntityGraphNativeQueryTest {
 								.setHint( GraphSemantic.FETCH.getJpaHintName(), fooGraph )
 								.getSingleResult();
 						fail( "Should throw exception" );
-					} catch (Exception e) {
-						assertThat( e.getMessage(), is( "A native SQL query cannot use EntityGraphs" ) );
+					}
+					catch (Exception e) {
+						if ( e.getMessage().equals( "A native SQL query cannot use EntityGraphs" ) ) {
+							// success
+						}
+						else {
+							throw new RuntimeException( "Unexpected exception", e );
+						}
 					}
 				}
 		);

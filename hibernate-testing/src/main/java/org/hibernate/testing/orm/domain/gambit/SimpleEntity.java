@@ -43,6 +43,15 @@ public class SimpleEntity {
 
 	public SimpleEntity(
 			Integer id,
+			String someString,
+			Long someLong) {
+		this.id = id;
+		this.someString = someString;
+		this.someLong = someLong;
+	}
+
+	public SimpleEntity(
+			Integer id,
 			Date someDate,
 			Instant someInstant,
 			Integer someInteger,

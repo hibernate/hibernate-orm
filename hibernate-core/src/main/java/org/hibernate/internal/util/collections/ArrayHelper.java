@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -467,5 +468,16 @@ public final class ArrayHelper {
 
 	public static boolean isEmpty(Object[] array) {
 		return array == null || array.length == 0;
+	}
+
+	public static <T> void forEach(T[] array, Consumer<T> consumer) {
+		if ( array == null ) {
+			return;
+		}
+
+		//noinspection ForLoopReplaceableByForEach
+		for ( int i = 0; i < array.length; i++ ) {
+			consumer.accept( array[ i ] );
+		}
 	}
 }

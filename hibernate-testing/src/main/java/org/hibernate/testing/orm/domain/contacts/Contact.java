@@ -16,6 +16,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OrderColumn;
 import javax.persistence.SecondaryTable;
+import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
@@ -23,6 +24,7 @@ import javax.persistence.TemporalType;
  * @author Steve Ebersole
  */
 @Entity
+@Table( name = "contacts" )
 @SecondaryTable( name="contact_supp" )
 public class Contact {
 	private Integer id;

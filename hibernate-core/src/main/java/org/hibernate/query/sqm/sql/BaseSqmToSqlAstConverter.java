@@ -707,7 +707,7 @@ public abstract class BaseSqmToSqlAstConverter
 		// add any additional join restrictions
 		if ( sqmJoin.getJoinPredicate() != null ) {
 			if ( sqmJoin.isFetched() ) {
-				QueryLogger.QUERY_LOGGER.debugf( "Join fetch [" + sqmJoin.getNavigablePath() + "] is restricted" );
+				QueryLogger.QUERY_MESSAGE_LOGGER.debugf( "Join fetch [" + sqmJoin.getNavigablePath() + "] is restricted" );
 			}
 
 			if ( joinedTableGroupJoin == null ) {

@@ -304,7 +304,7 @@ public class QueryEngine {
 				StringBuilder failingQueries = new StringBuilder( "Errors in named queries: " );
 				String sep = "";
 				for ( Map.Entry<String, HibernateException> entry : errors.entrySet() ) {
-					QueryLogger.QUERY_LOGGER.namedQueryError( entry.getKey(), entry.getValue() );
+					QueryLogger.QUERY_MESSAGE_LOGGER.namedQueryError( entry.getKey(), entry.getValue() );
 					failingQueries.append( sep ).append( entry.getKey() );
 					sep = ", ";
 				}

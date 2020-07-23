@@ -6,8 +6,9 @@
  */
 package org.hibernate.sql.results.jdbc.spi;
 
+import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.spi.ResultSetMapping;
+import org.hibernate.query.results.ResultSetMapping;
 
 /**
  * Producer for JdbcValuesMapping references.
@@ -20,13 +21,12 @@ import org.hibernate.query.spi.ResultSetMapping;
  *
  * @author Steve Ebersole
  */
+@Incubating
 public interface JdbcValuesMappingProducer {
-
 	/**
-	 * Resolve the selections (both at the JDBC and object level) for this
-	 * mapping.  Acts as delayed access to this resolution process to support
-	 * "auto discovery" as needed for "undefined scalar" results as defined by
-	 * native-sql and procedure call queries.
+	 * Resolve the JdbcValuesMapping.  This involves resolving the
+	 * {@link org.hibernate.sql.results.graph.DomainResult} and
+	 * {@link org.hibernate.sql.results.graph.Fetch}
 	 */
 	JdbcValuesMapping resolve(JdbcValuesMetadata jdbcResultsMetadata, SessionFactoryImplementor sessionFactory);
 }

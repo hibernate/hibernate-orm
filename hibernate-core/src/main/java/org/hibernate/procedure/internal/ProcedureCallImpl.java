@@ -49,11 +49,12 @@ import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.procedure.ProcedureParameter;
+import org.hibernate.query.results.ResultSetMapping;
+import org.hibernate.query.results.ResultSetMappingImpl;
 import org.hibernate.query.spi.AbstractQuery;
 import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
-import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.result.NoMoreReturnsException;
 import org.hibernate.result.Output;
 import org.hibernate.result.ResultSetOutput;
@@ -83,7 +84,7 @@ public class ProcedureCallImpl<R>
 	private final ProcedureParameterMetadataImpl parameterMetadata;
 	private final ProcedureParamBindings paramBindings;
 
-	private final List<DomainResultProducer<?>> domainResultProducers;
+	private final ResultSetMapping resultSetMapping = new ResultSetMappingImpl();
 
 	private Set<String> synchronizedQuerySpaces;
 
@@ -106,7 +107,6 @@ public class ProcedureCallImpl<R>
 		this.paramBindings = new ProcedureParamBindings( parameterMetadata, getSessionFactory() );
 
 		this.synchronizedQuerySpaces = null;
-		this.domainResultProducers = null;
 	}
 	/**
 	 * The result Class(es) return form
@@ -125,12 +125,11 @@ public class ProcedureCallImpl<R>
 		this.parameterMetadata = new ProcedureParameterMetadataImpl();
 		this.paramBindings = new ProcedureParamBindings( parameterMetadata, getSessionFactory() );
 
-		this.domainResultProducers = CollectionHelper.arrayList( resultClasses.length );
 		this.synchronizedQuerySpaces = new HashSet<>();
 
 		Util.resolveResultSetMappingClasses(
 				resultClasses,
-				domainResultProducers::add,
+				resultSetMapping,
 				synchronizedQuerySpaces::add,
 				getSession().getFactory()
 		);
@@ -156,12 +155,11 @@ public class ProcedureCallImpl<R>
 		this.parameterMetadata = new ProcedureParameterMetadataImpl();
 		this.paramBindings = new ProcedureParamBindings( parameterMetadata, getSessionFactory() );
 
-		this.domainResultProducers = CollectionHelper.arrayList( resultSetMappingNames.length );
 		this.synchronizedQuerySpaces = new HashSet<>();
 
 		Util.resolveResultSetMappingNames(
 				resultSetMappingNames,
-				domainResultProducers::add,
+				resultSetMapping,
 				synchronizedQuerySpaces::add,
 				getSession().getFactory()
 		);
@@ -180,13 +178,12 @@ public class ProcedureCallImpl<R>
 		this.parameterMetadata = new ProcedureParameterMetadataImpl( memento, session );
 		this.paramBindings = new ProcedureParamBindings( parameterMetadata, getSessionFactory() );
 
-		this.domainResultProducers = new ArrayList<>();
 		this.synchronizedQuerySpaces = CollectionHelper.makeCopy( memento.getQuerySpaces() );
 
 		Util.resolveResultSetMappings(
 				memento.getResultSetMappingNames(),
 				memento.getResultSetMappingClasses(),
-				domainResultProducers::add,
+				resultSetMapping,
 				synchronizedQuerySpaces::add,
 				getSession().getFactory()
 		);

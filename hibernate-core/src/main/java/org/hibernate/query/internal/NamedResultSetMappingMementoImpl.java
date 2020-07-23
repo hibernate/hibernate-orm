@@ -6,10 +6,12 @@
  */
 package org.hibernate.query.internal;
 
+import java.util.function.Consumer;
+
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
-import org.hibernate.query.spi.ResultSetMapping;
+import org.hibernate.query.results.ResultSetMapping;
 
 /**
  * @author Steve Ebersole
@@ -27,7 +29,10 @@ public class NamedResultSetMappingMementoImpl implements NamedResultSetMappingMe
 	}
 
 	@Override
-	public ResultSetMapping toResultSetMapping() {
+	public void resolve(
+			ResultSetMapping resultSetMapping,
+			Consumer<String> querySpaceConsumer,
+			SessionFactoryImplementor sessionFactory) {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 }

@@ -11,7 +11,6 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
@@ -38,9 +37,6 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.query.spi.NativeQueryInterpreter;
-import org.hibernate.engine.query.spi.sql.NativeSQLQueryConstructorReturn;
-import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
-import org.hibernate.engine.query.spi.sql.NativeSQLQueryScalarReturn;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
@@ -56,12 +52,13 @@ import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
-import org.hibernate.query.internal.NativeQueryReturnBuilder;
-import org.hibernate.query.internal.NativeQueryReturnBuilderFetchImpl;
-import org.hibernate.query.internal.NativeQueryReturnBuilderRootImpl;
 import org.hibernate.query.internal.ParameterMetadataImpl;
 import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.internal.QueryParameterBindingsImpl;
+import org.hibernate.query.results.Builders;
+import org.hibernate.query.results.EntityResultBuilder;
+import org.hibernate.query.results.LegacyFetchBuilder;
+import org.hibernate.query.results.ResultSetMappingImpl;
 import org.hibernate.query.spi.AbstractQuery;
 import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.NonSelectQueryPlan;
@@ -84,6 +81,7 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 import org.hibernate.sql.results.spi.RowTransformer;
 import org.hibernate.transform.ResultTransformer;
+import org.hibernate.type.BasicType;
 
 import static org.hibernate.jpa.QueryHints.HINT_NATIVE_LOCKMODE;
 
@@ -104,11 +102,7 @@ public class NativeQueryImpl<R>
 
 	private Set<String> querySpaces;
 
-
-
-	private List<NativeSQLQueryReturn> queryReturns;
-	private List<NativeQueryReturnBuilder> queryReturnBuilders;
-	private boolean autoDiscoverTypes;
+	private ResultSetMappingImpl resultSetMapping = new ResultSetMappingImpl();
 
 	private Object collectionKey;
 	private NativeQueryInterpreter nativeQueryInterpreter;
@@ -141,7 +135,10 @@ public class NativeQueryImpl<R>
 			SharedSessionContractImplementor session) {
 		this( memento, session );
 
-		// todo (6.0) : validate `resultJavaType` against specified result-set mapping
+		// todo (6.0) : need to add handling for `javax.persistence.NamedNativeQuery#resultSetMapping`
+		//		and `javax.persistence.NamedNativeQuery#resultClass`
+
+		// todo (6.0) : relatedly, does `resultJavaType` come from `NamedNativeQuery#resultClass`?
 	}
 
 	/**
@@ -152,6 +149,11 @@ public class NativeQueryImpl<R>
 			String resultSetMappingName,
 			SharedSessionContractImplementor session) {
 		this( memento, session );
+
+		// todo (6.0) : need to add handling for `javax.persistence.NamedNativeQuery#resultSetMapping`
+		//		and `javax.persistence.NamedNativeQuery#resultClass`
+
+		// todo (6.0) : relatedly, does `resultSetMappingName` come from `NamedNativeQuery#resultSetMapping`?
 	}
 
 	private ParameterInterpretation resolveParameterInterpretation(SharedSessionContractImplementor session) {
@@ -199,7 +201,6 @@ public class NativeQueryImpl<R>
 
 		this.sqlString = sqlString;
 
-		this.queryReturns = new ArrayList<>();
 		this.querySpaces = new HashSet<>();
 
 		final ParameterInterpretation parameterInterpretation = resolveParameterInterpretation( session );
@@ -332,44 +333,56 @@ public class NativeQueryImpl<R>
 
 	@SuppressWarnings("unchecked")
 	private SelectQueryPlan<R> resolveSelectQueryPlan() {
-
-		SelectQueryPlan<R> queryPlan = null;
-
-
-		final JdbcValuesMappingProducer resultSetMapping = getJdbcValuesMappingProducer();
-
 		final QueryInterpretationCache.Key cacheKey = generateSelectInterpretationsKey( resultSetMapping );
 		if ( cacheKey != null ) {
 			return getSession().getFactory().getQueryEngine().getInterpretationCache().resolveSelectQueryPlan(
 					cacheKey,
-					this::createQueryPlan
+					() -> createQueryPlan( resultSetMapping )
 			);
 		}
 		else {
-			return createQueryPlan();
+			return createQueryPlan( resultSetMapping );
 		}
 	}
 
-	private NativeSelectQueryPlan<R> createQueryPlan() {
-		final RowTransformer rowTransformer = resolveRowTransformer();
+	private NativeSelectQueryPlan<R> createQueryPlan(JdbcValuesMappingProducer jdbcValuesMappingProducer) {
+		final RowTransformer<?> rowTransformer = null;
 
-		return getSessionFactory().getQueryEngine().getNativeQueryInterpreter().createQueryPlan(
-				generateSelectQueryDefinition(),
-				getSessionFactory()
-		);
-	}
+		final NativeSelectQueryDefinition queryDefinition = new NativeSelectQueryDefinition() {
+			@Override
+			public String getSqlString() {
+				return NativeQueryImpl.this.getQueryString();
+			}
 
-	private JdbcValuesMappingProducer getJdbcValuesMappingProducer() {
-		// todo (6.0) - need to resolve SqlSelections as well as resolving ResultBuilders and FetchBuilders into QueryResult trees
-		// 		also need to account for the edge case where the user passed just the
-		//		query string and no mappings (see ResultSetMappingUndefinedImpl)
-		throw new NotYetImplementedFor6Exception(  );
-	}
+			@Override
+			public boolean isCallable() {
+				return false;
+			}
 
-	private RowTransformer resolveRowTransformer() {
-		// todo (6.0) - need to resolve the RowTransformer to use, if one.
-		// todo (6.0) - what about ResultListTransformer?
-		throw new NotYetImplementedFor6Exception(  );
+			@Override
+			public List<QueryParameterImplementor<?>> getQueryParameterList() {
+				return NativeQueryImpl.this.occurrenceOrderedParamList;
+			}
+
+			@Override
+			public JdbcValuesMappingProducer getJdbcValuesMappingProducer() {
+				return jdbcValuesMappingProducer;
+			}
+
+			@Override
+			public RowTransformer getRowTransformer() {
+				return rowTransformer;
+			}
+
+			@Override
+			public Set<String> getAffectedTableNames() {
+				return querySpaces;
+			}
+		};
+
+		return getSessionFactory().getQueryEngine()
+				.getNativeQueryInterpreter()
+				.createQueryPlan( queryDefinition, getSessionFactory() );
 	}
 
 	private SelectInterpretationsKey generateSelectInterpretationsKey(JdbcValuesMappingProducer resultSetMapping) {
@@ -398,57 +411,6 @@ public class NativeQueryImpl<R>
 		return limit.getFirstRow() != null || limit.getMaxRows() != null;
 	}
 
-	private NativeSelectQueryDefinition<R> generateSelectQueryDefinition() {
-		return new NativeSelectQueryDefinition() {
-			@Override
-			public String getSqlString() {
-				return NativeQueryImpl.this.getQueryString();
-			}
-
-			@Override
-			public boolean isCallable() {
-				return false;
-			}
-
-			@Override
-			public List<QueryParameterImplementor<?>> getQueryParameterList() {
-				return NativeQueryImpl.this.occurrenceOrderedParamList;
-			}
-
-			@Override
-			public JdbcValuesMappingProducer getJdbcValuesMappingProducer() {
-				return NativeQueryImpl.this.getJdbcValuesMappingProducer();
-			}
-
-			@Override
-			public RowTransformer getRowTransformer() {
-				return NativeQueryImpl.this.resolveRowTransformer();
-			}
-
-			@Override
-			public Set<String> getAffectedTableNames() {
-				return querySpaces;
-			}
-		};
-	}
-
-	private void prepareQueryReturnsIfNecessary() {
-		if ( queryReturnBuilders != null ) {
-			if ( !queryReturnBuilders.isEmpty() ) {
-				if ( queryReturns != null ) {
-					queryReturns.clear();
-					queryReturns = null;
-				}
-				queryReturns = new ArrayList<>();
-				for ( NativeQueryReturnBuilder builder : queryReturnBuilders ) {
-					queryReturns.add( builder.buildReturn() );
-				}
-				queryReturnBuilders.clear();
-			}
-			queryReturnBuilders = null;
-		}
-	}
-
 	@Override
 	protected ScrollableResultsImplementor doScroll(ScrollMode scrollMode) {
 		return resolveSelectQueryPlan().performScroll( scrollMode, this );
@@ -456,27 +418,6 @@ public class NativeQueryImpl<R>
 
 	@Override
 	protected void beforeQuery(boolean txnRequired) {
-		prepareQueryReturnsIfNecessary();
-		boolean noReturns = queryReturns == null || queryReturns.isEmpty();
-		if ( noReturns ) {
-			this.autoDiscoverTypes = true;
-		}
-		else {
-			for ( NativeSQLQueryReturn queryReturn : queryReturns ) {
-				if ( queryReturn instanceof NativeSQLQueryScalarReturn ) {
-					NativeSQLQueryScalarReturn scalar = (NativeSQLQueryScalarReturn) queryReturn;
-					if ( scalar.getType() == null ) {
-						autoDiscoverTypes = true;
-						break;
-					}
-				}
-				else if ( NativeSQLQueryConstructorReturn.class.isInstance( queryReturn ) ) {
-					autoDiscoverTypes = true;
-					break;
-				}
-			}
-		}
-
 		super.beforeQuery( txnRequired );
 
 		if ( getSynchronizedQuerySpaces() != null && !getSynchronizedQuerySpaces().isEmpty() ) {
@@ -496,7 +437,7 @@ public class NativeQueryImpl<R>
 	}
 
 	protected int doExecuteUpdate() {
-			return resolveNonSelectQueryPlan().executeUpdate( this );
+		return resolveNonSelectQueryPlan().executeUpdate( this );
 	}
 
 	private NonSelectQueryPlan resolveNonSelectQueryPlan() {
@@ -537,36 +478,24 @@ public class NativeQueryImpl<R>
 		return addScalar( columnAlias, null );
 	}
 
-//	@Override
-//	public NativeQueryImplementor<R> addScalar(String columnAlias, BasicDomainType type) {
-//		return null;
-//	}
-
 	@Override
 	public NativeQueryImplementor<R> addScalar(String columnAlias, BasicDomainType type) {
-		addReturnBuilder(
-				() -> new NativeSQLQueryScalarReturn( columnAlias, type )
-		);
+		resultSetMapping.addResultBuilder( Builders.scalar( columnAlias, (BasicType<?>) type ) );
 		return this;
 	}
 
-	protected void addReturnBuilder(NativeQueryReturnBuilder builder) {
-		if ( queryReturnBuilders == null ) {
-			queryReturnBuilders = new ArrayList<>();
-		}
-
-		queryReturnBuilders.add( builder );
+	@Override
+	public EntityResultBuilder addRoot(String tableAlias, String entityName) {
+		final EntityResultBuilder resultBuilder = Builders.entity(
+				tableAlias,
+				entityName
+		);
+		resultSetMapping.addResultBuilder( resultBuilder );
+		return resultBuilder;
 	}
 
 	@Override
-	public RootReturn addRoot(String tableAlias, String entityName) {
-		NativeQueryReturnBuilderRootImpl builder = new NativeQueryReturnBuilderRootImpl( tableAlias, entityName );
-		addReturnBuilder( builder );
-		return builder;
-	}
-
-	@Override
-	public RootReturn addRoot(String tableAlias, Class entityType) {
+	public EntityResultBuilder addRoot(String tableAlias, Class entityType) {
 		return addRoot( tableAlias, entityType.getName() );
 	}
 
@@ -604,9 +533,9 @@ public class NativeQueryImpl<R>
 
 	@Override
 	public FetchReturn addFetch(String tableAlias, String ownerTableAlias, String joinPropertyName) {
-		NativeQueryReturnBuilderFetchImpl builder = new NativeQueryReturnBuilderFetchImpl( tableAlias, ownerTableAlias, joinPropertyName );
-		addReturnBuilder( builder );
-		return builder;
+		final LegacyFetchBuilder fetchBuilder = Builders.fetch( tableAlias, ownerTableAlias, joinPropertyName );
+		resultSetMapping.addLegacyFetchBuilder( fetchBuilder );
+		return fetchBuilder;
 	}
 
 	@Override

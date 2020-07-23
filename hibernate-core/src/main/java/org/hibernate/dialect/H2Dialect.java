@@ -121,7 +121,8 @@ public class H2Dialect extends Dialect {
 		registerColumnType( Types.DECIMAL, buildId >= 201 ? "numeric($p,$s)" : "decimal($p,$s)" );
 		registerColumnType( Types.NUMERIC, buildId >= 201 ? "numeric($p,$s)" : "decimal($p,$s)" );
 		registerColumnType( Types.DOUBLE, "double" );
-		registerColumnType( Types.FLOAT, "float" );
+		// H2 does not have a float type. Instead, it's mapping floats as alias to double
+		registerColumnType( Types.FLOAT, "double" );
 		registerColumnType( Types.INTEGER, "integer" );
 		registerColumnType( Types.LONGVARBINARY, "longvarbinary" );
 		// H2 does define "longvarchar", but it is a simple alias to "varchar"

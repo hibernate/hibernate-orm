@@ -163,7 +163,7 @@ public class FormulaWithColumnTypesTest extends BaseCoreFunctionalTestCase {
 			this.displayCode = displayCode;
 		}
 
-		@Formula("CAST(DISPLAY_CODE AS FLOAT)")
+		@Formula("CAST(DISPLAY_CODE AS DOUBLE)")
 		public Integer getDisplayCodeAsFloat() {
 			return displayCodeAsFloat;
 		}

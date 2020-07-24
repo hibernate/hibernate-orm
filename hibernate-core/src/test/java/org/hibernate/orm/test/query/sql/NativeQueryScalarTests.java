@@ -125,7 +125,7 @@ public class NativeQueryScalarTests {
 									1,
 									new Contact.Name( "My First", "Contact"),
 									Contact.Gender.OTHER,
-									LocalDate.EPOCH
+									LocalDate.of(1990,4,18)
 							)
 					);
 				}

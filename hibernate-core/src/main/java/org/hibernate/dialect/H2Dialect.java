@@ -267,19 +267,20 @@ public class H2Dialect extends Dialect {
 
 	private static final ViolatedConstraintNameExtractor EXTRACTOR =
 			new TemplatedViolatedConstraintNameExtractor( sqle -> {
+				String constraintName = null;
 				// 23000: Check constraint violation: {0}
 				// 23001: Unique index or primary key violation: {0}
 				if ( sqle.getSQLState().startsWith( "23" ) ) {
 					final String message = sqle.getMessage();
 					final int idx = message.indexOf( "violation: " );
 					if ( idx > 0 ) {
-						return message.substring( idx + "violation: ".length() );
+						constraintName = message.substring( idx + "violation: ".length() );
 					}
-					if ( sqle.getSQLState().equals("23506") ) {
-						return constraintName.substring( 1, constraintName.indexOf(":") );
+					if ( sqle.getSQLState().equals( "23506" ) ) {
+						constraintName = constraintName.substring( 1, constraintName.indexOf( ":" ) );
 					}
 				}
-				return null;
+				return constraintName;
 			} );
 
 	@Override

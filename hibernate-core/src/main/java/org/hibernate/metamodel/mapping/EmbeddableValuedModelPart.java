@@ -8,6 +8,7 @@ package org.hibernate.metamodel.mapping;
 
 import java.util.List;
 
+import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
@@ -46,7 +47,9 @@ public interface EmbeddableValuedModelPart extends ModelPart, Fetchable, Fetchab
 	/**
 	 * @see org.hibernate.annotations.Parent
 	 */
-	SingularAttributeMapping getParentInjectionAttributeMapping();
+	default PropertyAccess getParentInjectionAttributePropertyAccess() {
+		return null;
+	}
 
 	Expression toSqlExpression(
 			TableGroup tableGroup,

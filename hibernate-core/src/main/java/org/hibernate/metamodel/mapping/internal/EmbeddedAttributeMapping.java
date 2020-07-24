@@ -22,9 +22,9 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.property.access.internal.PropertyAccessStrategyBasicImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
@@ -62,6 +62,7 @@ public class EmbeddedAttributeMapping
 	private final String tableExpression;
 	private final String[] attrColumnNames;
 	private final EmbeddableMappingType embeddableMappingType;
+	private final PropertyAccess parentInjectionAttributeProperyAccess;
 
 	@SuppressWarnings("WeakerAccess")
 	public EmbeddedAttributeMapping(
@@ -71,6 +72,7 @@ public class EmbeddedAttributeMapping
 			String tableExpression,
 			String[] attrColumnNames,
 			StateArrayContributorMetadataAccess attributeMetadataAccess,
+			String parentInjectionAttributeName,
 			FetchStrategy mappedFetchStrategy,
 			EmbeddableMappingType embeddableMappingType,
 			ManagedMappingType declaringType,
@@ -83,6 +85,15 @@ public class EmbeddedAttributeMapping
 				declaringType,
 				propertyAccess
 		);
+		if ( parentInjectionAttributeName != null ) {
+			parentInjectionAttributeProperyAccess = PropertyAccessStrategyBasicImpl.INSTANCE.buildPropertyAccess(
+					embeddableMappingType.getMappedJavaTypeDescriptor().getJavaType(),
+					parentInjectionAttributeName
+			);
+		}
+		else {
+			parentInjectionAttributeProperyAccess = null;
+		}
 		this.navigableRole = navigableRole;
 		this.tableExpression = tableExpression;
 		this.attrColumnNames = attrColumnNames;
@@ -100,12 +111,6 @@ public class EmbeddedAttributeMapping
 	}
 
 	@Override
-	public SingularAttributeMapping getParentInjectionAttributeMapping() {
-		// todo (6.0) : implement
-		return null;
-	}
-
-	@Override
 	public String getContainingTableExpression() {
 		return tableExpression;
 	}
@@ -113,6 +118,11 @@ public class EmbeddedAttributeMapping
 	@Override
 	public List<String> getMappedColumnExpressions() {
 		return Arrays.asList( attrColumnNames );
+	}
+
+	@Override
+	public PropertyAccess getParentInjectionAttributePropertyAccess() {
+		return parentInjectionAttributeProperyAccess;
 	}
 
 	@Override

@@ -413,8 +413,9 @@ public class MappingModelCreationHelper {
 				creationProcess
 		);
 
+		final Component component = (Component) bootProperty.getValue();
 		final EmbeddableMappingType embeddableMappingType = EmbeddableMappingType.from(
-				(Component) bootProperty.getValue(),
+				component,
 				attrType,
 				attributeMappingType -> new EmbeddedAttributeMapping(
 						attrName,
@@ -423,6 +424,7 @@ public class MappingModelCreationHelper {
 						tableExpression,
 						attrColumnNames,
 						attributeMetadataAccess,
+						component.getParentProperty(),
 						FetchStrategy.IMMEDIATE_JOIN,
 						attributeMappingType,
 						declaringType,
@@ -1115,7 +1117,7 @@ public class MappingModelCreationHelper {
 							CollectionPart.Nature.INDEX,
 							inflightDescriptor,
 							// parent-injection
-							null,
+							component.getParentProperty(),
 							tableExpression,
 							columnExpressions,
 							sqlAliasStem
@@ -1206,7 +1208,7 @@ public class MappingModelCreationHelper {
 							CollectionPart.Nature.ELEMENT,
 							embeddableMappingType,
 							// parent-injection
-							null,
+							component.getParentProperty(),
 							tableExpression,
 							columnExpressions,
 							sqlAliasStem

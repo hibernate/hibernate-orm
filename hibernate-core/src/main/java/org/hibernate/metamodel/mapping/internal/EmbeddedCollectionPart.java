@@ -22,9 +22,10 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.property.access.internal.PropertyAccessStrategyBasicImpl;
+import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.sql.ast.Clause;
@@ -59,7 +60,7 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 
 	private final String containingTableExpression;
 
-	private final SingularAttributeMapping parentInjectionAttribute;
+	private final PropertyAccess parentInjectionAttributeProperyAccess;
 	private final List<String> columnExpressions;
 	private final String sqlAliasStem;
 
@@ -68,15 +69,24 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 			CollectionPersister collectionDescriptor,
 			Nature nature,
 			EmbeddableMappingType embeddableMappingType,
-			SingularAttributeMapping parentInjectionAttribute,
+			String parentInjectionAttributeName,
 			String containingTableExpression,
 			List<String> columnExpressions,
 			String sqlAliasStem) {
 		this.navigableRole = collectionDescriptor.getNavigableRole().appendContainer( nature.getName() );
 		this.collectionDescriptor = collectionDescriptor;
 		this.nature = nature;
+		if ( parentInjectionAttributeName != null ) {
+			parentInjectionAttributeProperyAccess = PropertyAccessStrategyBasicImpl.INSTANCE.buildPropertyAccess(
+					embeddableMappingType.getMappedJavaTypeDescriptor().getJavaType(),
+					parentInjectionAttributeName
+			);
+		}
+		else {
+			parentInjectionAttributeProperyAccess = null;
+		}
 		this.embeddableMappingType = embeddableMappingType;
-		this.parentInjectionAttribute = parentInjectionAttribute;
+
 		this.containingTableExpression = containingTableExpression;
 		this.columnExpressions = columnExpressions;
 		this.sqlAliasStem = sqlAliasStem;
@@ -108,8 +118,8 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 	}
 
 	@Override
-	public SingularAttributeMapping getParentInjectionAttributeMapping() {
-		return parentInjectionAttribute;
+	public PropertyAccess getParentInjectionAttributePropertyAccess() {
+		return parentInjectionAttributeProperyAccess;
 	}
 
 	@Override

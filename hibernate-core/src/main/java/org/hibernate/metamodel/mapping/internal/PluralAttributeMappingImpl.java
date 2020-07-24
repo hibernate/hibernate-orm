@@ -849,6 +849,9 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 		if ( elementDescriptor instanceof EntityCollectionPart ) {
 			return ( (EntityCollectionPart) elementDescriptor ).findSubPart( name );
 		}
+		else if ( elementDescriptor instanceof EmbeddedCollectionPart ) {
+			return ( (EmbeddedCollectionPart) elementDescriptor ).findSubPart( name, treatTargetType );
+		}
 		return null;
 	}
 

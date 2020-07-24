@@ -275,6 +275,9 @@ public class H2Dialect extends Dialect {
 					if ( idx > 0 ) {
 						return message.substring( idx + "violation: ".length() );
 					}
+					if ( sqle.getSQLState().equals("23506") ) {
+						return constraintName.substring( 1, constraintName.indexOf(":") );
+					}
 				}
 				return null;
 			} );

@@ -264,7 +264,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 									expectation.verifyOutcome(
 											session.getJdbcCoordinator()
 													.getResultSetReturn()
-													.executeUpdate( st ), st, -1
+													.executeUpdate( st ), st, -1, sql
 									);
 								}
 							}
@@ -373,7 +373,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 								deleteExpectation.verifyOutcome(
 										session.getJdbcCoordinator()
 												.getResultSetReturn()
-												.executeUpdate( st ), st, -1
+												.executeUpdate( st ), st, -1, sql
 								);
 							}
 							count++;
@@ -445,7 +445,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 								insertExpectation.verifyOutcome(
 										session.getJdbcCoordinator()
 												.getResultSetReturn()
-												.executeUpdate( st ), st, -1
+												.executeUpdate( st ), st, -1, sql
 								);
 							}
 							count++;

@@ -1335,7 +1335,7 @@ public abstract class AbstractCollectionPersister
 				Expectation expectation = Expectations.appropriateExpectation( getDeleteAllCheckStyle() );
 				boolean callable = isDeleteAllCallable();
 				boolean useBatch = expectation.canBeBatched();
-				String sql = getSQLDeleteString();
+				final String sql = getSQLDeleteString();
 				if ( useBatch ) {
 					if ( removeBatchKey == null ) {
 						removeBatchKey = new BasicBatchKey(
@@ -1366,7 +1366,7 @@ public abstract class AbstractCollectionPersister
 								.addToBatch();
 					}
 					else {
-						expectation.verifyOutcome( session.getJdbcCoordinator().getResultSetReturn().executeUpdate( st ), st, -1 );
+						expectation.verifyOutcome( session.getJdbcCoordinator().getResultSetReturn().executeUpdate( st ), st, -1, sql );
 					}
 				}
 				catch ( SQLException sqle ) {
@@ -1436,7 +1436,7 @@ public abstract class AbstractCollectionPersister
 						final PreparedStatement st;
 						boolean callable = isInsertCallable();
 						boolean useBatch = expectation.canBeBatched();
-						String sql = getSQLInsertRowString();
+						final String sql = getSQLInsertRowString();
 
 						if ( useBatch ) {
 							if ( recreateBatchKey == null ) {
@@ -1475,7 +1475,7 @@ public abstract class AbstractCollectionPersister
 							}
 							else {
 								expectation.verifyOutcome( jdbcCoordinator
-																.getResultSetReturn().executeUpdate( st ), st, -1 );
+																.getResultSetReturn().executeUpdate( st ), st, -1, sql );
 							}
 
 							collection.afterRowInsert( this, entry, i );
@@ -1552,7 +1552,7 @@ public abstract class AbstractCollectionPersister
 					final PreparedStatement st;
 					boolean callable = isDeleteCallable();
 					boolean useBatch = expectation.canBeBatched();
-					String sql = getSQLDeleteRowString();
+					final String sql = getSQLDeleteRowString();
 
 					if ( useBatch ) {
 						if ( deleteBatchKey == null ) {
@@ -1598,7 +1598,7 @@ public abstract class AbstractCollectionPersister
 									.addToBatch();
 						}
 						else {
-							expectation.verifyOutcome( session.getJdbcCoordinator().getResultSetReturn().executeUpdate( st ), st, -1 );
+							expectation.verifyOutcome( session.getJdbcCoordinator().getResultSetReturn().executeUpdate( st ), st, -1, sql );
 						}
 						count++;
 					}
@@ -1710,7 +1710,7 @@ public abstract class AbstractCollectionPersister
 							session.getJdbcCoordinator().getBatch( insertBatchKey ).addToBatch();
 						}
 						else {
-							expectation.verifyOutcome( session.getJdbcCoordinator().getResultSetReturn().executeUpdate( st ), st, -1 );
+							expectation.verifyOutcome( session.getJdbcCoordinator().getResultSetReturn().executeUpdate( st ), st, -1, sql );
 						}
 						collection.afterRowInsert( this, entry, i );
 						count++;

@@ -18,7 +18,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentMap;
@@ -1832,7 +1831,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	// INSERTED KEYS HANDLING ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	private HashMap<String,List<Object>> insertedKeysMap;
+	private HashMap<String,HashSet<Object>> insertedKeysMap;
 
 	@Override
 	public void registerInsertedKey(EntityPersister persister, Object id) {
@@ -1842,11 +1841,10 @@ public class StatefulPersistenceContext implements PersistenceContext {
 				insertedKeysMap = new HashMap<>();
 			}
 			final String rootEntityName = persister.getRootEntityName();
-			List<Object> insertedEntityIds = insertedKeysMap.get( rootEntityName );
-			if ( insertedEntityIds == null ) {
-				insertedEntityIds = new ArrayList<>();
-				insertedKeysMap.put( rootEntityName, insertedEntityIds );
-			}
+			HashSet<Object> insertedEntityIds = insertedKeysMap.computeIfAbsent(
+					rootEntityName,
+					k -> new HashSet<>()
+			);
 			insertedEntityIds.add( id );
 		}
 	}
@@ -1856,7 +1854,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		// again, we only really care if the entity is cached
 		if ( persister.canWriteToCache() ) {
 			if ( insertedKeysMap != null ) {
-				final List<Object> insertedEntityIds = insertedKeysMap.get( persister.getRootEntityName() );
+				final HashSet<Object> insertedEntityIds = insertedKeysMap.get( persister.getRootEntityName() );
 				if ( insertedEntityIds != null ) {
 					return insertedEntityIds.contains( id );
 				}

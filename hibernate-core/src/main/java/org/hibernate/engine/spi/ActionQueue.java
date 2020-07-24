@@ -1189,9 +1189,11 @@ public class ActionQueue {
 
 					if ( nextBatchIdentifier.hasAnyParentEntityNames( batchIdentifier ) ) {
 						nextBatchIdentifier.parent = batchIdentifier;
+						nextBatchIdentifier.getParentEntityNames().add( batchIdentifier.getEntityName() );
 					}
 					if ( batchIdentifier.hasAnyChildEntityNames( nextBatchIdentifier ) ) {
 						nextBatchIdentifier.parent = batchIdentifier;
+						nextBatchIdentifier.getParentEntityNames().add( batchIdentifier.getEntityName() );
 					}
 				}
 			}

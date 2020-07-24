@@ -304,7 +304,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 					expectation.verifyOutcome(
 							session.getJdbcCoordinator().getResultSetReturn().executeUpdate(
 									st
-							), st, -1
+							), st, -1, sql
 					);
 				}
 			}

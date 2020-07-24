@@ -174,11 +174,6 @@ public class NonAggregatedIdentifierMappingImpl
 	}
 
 	@Override
-	public SingularAttributeMapping getParentInjectionAttributeMapping() {
-		return null;
-	}
-
-	@Override
 	public Expression toSqlExpression(
 			TableGroup tableGroup,
 			Clause clause,

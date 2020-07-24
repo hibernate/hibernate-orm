@@ -9,16 +9,20 @@ package org.hibernate.sql.results.graph.embeddable;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
-import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMapping;
+import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.AbstractFetchParentAccess;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.collection.CollectionInitializer;
+import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.internal.NullValueAssembler;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
@@ -28,7 +32,7 @@ import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentAccess implements EmbeddableInitializer {
 	private final NavigablePath navigablePath;
 	private final EmbeddableValuedModelPart embeddedModelPartDescriptor;
-	private final FetchParentAccess fetchParentAccess;
+	private FetchParentAccess fetchParentAccess;
 
 	private final Map<StateArrayContributorMapping, DomainResultAssembler> assemblerMap;
 
@@ -92,26 +96,27 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		// todo (6.0) : register "parent resolution listener" if the composite is defined for `@Parent`
 		//		something like:
 
-		final SingularAttributeMapping parentInjectionTarget = embeddedModelPartDescriptor.getParentInjectionAttributeMapping();
+		final PropertyAccess parentInjectionPropertyAccess = embeddedModelPartDescriptor.getParentInjectionAttributePropertyAccess();
 
-		if ( parentInjectionTarget != null ) {
-			getFetchParentAccess().findFirstEntityDescriptorAccess().registerResolutionListener(
-					// todo (6.0) : this is the legacy behavior
-					// 		- the first entity is injected as the parent, even if the composite
-					//		is defined on another composite
-					owner -> {
-						if ( compositeInstance == null ) {
-							return;
+		if ( parentInjectionPropertyAccess != null ) {
+			if ( getFetchParentAccess() != null ) {
+				getFetchParentAccess().findFirstEntityDescriptorAccess().registerResolutionListener(
+						// todo (6.0) : this is the legacy behavior
+						// 		- the first entity is injected as the parent, even if the composite
+						//		is defined on another composite
+						owner -> {
+							if ( compositeInstance == null ) {
+								return;
+							}
+							parentInjectionPropertyAccess.getSetter().set(
+									compositeInstance,
+									owner,
+									rowProcessingState.getSession().getFactory()
+							);
 						}
-						parentInjectionTarget.getPropertyAccess().getSetter().set(
-								compositeInstance,
-								owner,
-								rowProcessingState.getSession().getFactory()
-						);
-					}
-			);
+				);
+			}
 		}
-
 	}
 
 	@Override
@@ -129,6 +134,33 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 
 	@Override
 	public void initializeInstance(RowProcessingState rowProcessingState) {
+
+		final PropertyAccess parentInjectionPropertyAccess = embeddedModelPartDescriptor.getParentInjectionAttributePropertyAccess();
+
+		if ( parentInjectionPropertyAccess != null && getFetchParentAccess() == null ) {
+			Initializer initializer = rowProcessingState.resolveInitializer( navigablePath.getParent() );
+			final Object owner;
+			if ( initializer instanceof CollectionInitializer ) {
+				owner = ( (CollectionInitializer) initializer ).getCollectionInstance().getOwner();
+			}
+			else if ( initializer instanceof EntityInitializer ) {
+				owner = ( (EntityInitializer) initializer ).getEntityInstance();
+
+				parentInjectionPropertyAccess.getSetter().set(
+						compositeInstance,
+						owner,
+						rowProcessingState.getSession().getFactory()
+				);
+			}
+			else {
+				throw new NotYetImplementedFor6Exception( getClass() );
+			}
+			parentInjectionPropertyAccess.getSetter().set(
+					compositeInstance,
+					owner,
+					rowProcessingState.getSession().getFactory()
+			);
+		}
 
 		EmbeddableLoadingLogger.INSTANCE.debugf(
 				"Initializing composite instance [%s] : %s",

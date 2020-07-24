@@ -484,7 +484,6 @@ public class EmbeddedTest {
 	}
 
 	@Test
-	@FailureExpected(reason = "@Parent annotation mapping has not yet been implemented")
 	public void testParent(SessionFactoryScope scope) {
 		Book book = new Book();
 		scope.inTransaction(

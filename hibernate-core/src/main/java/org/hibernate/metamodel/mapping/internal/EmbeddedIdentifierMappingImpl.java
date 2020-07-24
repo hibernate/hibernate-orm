@@ -153,11 +153,6 @@ public class EmbeddedIdentifierMappingImpl
 	}
 
 	@Override
-	public SingularAttributeMapping getParentInjectionAttributeMapping() {
-		return null;
-	}
-
-	@Override
 	public void visitJdbcTypes(
 			Consumer<JdbcMapping> action,
 			Clause clause,

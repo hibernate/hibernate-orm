@@ -307,7 +307,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 					determineJpaMetaModelPopulationSetting( properties )
 			);
 
-			eventEngine.buildCallbacks(metadata, this);
+			eventEngine.buildCallbacks( metadata, this );
 
 			//Named Queries:
 			this.namedQueryRepository = metadata.buildNamedQueryRepository( this );

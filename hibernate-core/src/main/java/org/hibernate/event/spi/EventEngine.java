@@ -27,6 +27,8 @@ import org.hibernate.jpa.event.spi.CallbackBuilder;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.service.spi.Stoppable;
+import org.hibernate.type.CollectionType;
+import org.hibernate.type.Type;
 
 /**
  * Composite for the things related to Hibernate's event system.
@@ -54,28 +56,6 @@ public class EventEngine {
 				sessionFactory.getServiceRegistry(),
 				mappings.getMetadataBuildingOptions().getReflectionManager()
 		);
-
-		for ( PersistentClass persistentClass : mappings.getEntityBindings() ) {
-			if ( persistentClass.getClassName() == null ) {
-				// we can have dynamic (non-java class) mapping
-				continue;
-			}
-
-			this.callbackBuilder.buildCallbacksForEntity( persistentClass.getClassName(), callbackRegistry );
-
-			for ( Iterator<Property> propertyIterator = persistentClass.getDeclaredPropertyIterator(); propertyIterator.hasNext(); ) {
-				final Property property = propertyIterator.next();
-
-				if ( property.getType().isComponentType() ) {
-					this.callbackBuilder.buildCallbacksForEmbeddable(
-							property,
-							persistentClass.getClassName(),
-							callbackRegistry
-					);
-				}
-			}
-		}
-
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// resolve event types and listeners
@@ -166,6 +146,34 @@ public class EventEngine {
 
 		this.registeredEventTypes = Collections.unmodifiableMap( eventTypes );
 		this.listenerRegistry = listenerRegistryBuilder.buildRegistry( registeredEventTypes );
+	}
+
+	public void buildCallbacks(MetadataImplementor mappings, SessionFactoryImplementor factory){
+		for ( PersistentClass persistentClass : mappings.getEntityBindings() ) {
+			if ( persistentClass.getClassName() == null ) {
+				// we can have dynamic (non-java class) mapping
+				continue;
+			}
+
+			this.callbackBuilder.buildCallbacksForEntity( persistentClass.getClassName(), callbackRegistry );
+
+			for ( Iterator<Property> propertyIterator = persistentClass.getDeclaredPropertyIterator(); propertyIterator.hasNext(); ) {
+				final Property property = propertyIterator.next();
+
+				Type type = property.getType();
+				if ( type.isCollectionType() ) {
+					type = ( ( CollectionType ) type ).getElementType( factory );
+				}
+
+				if ( type.isComponentType() ) {
+					this.callbackBuilder.buildCallbacksForEmbeddable(
+							property,
+							persistentClass.getClassName(),
+							callbackRegistry
+					);
+				}
+			}
+		}
 	}
 
 	public Collection<EventType<?>> getRegisteredEventTypes() {

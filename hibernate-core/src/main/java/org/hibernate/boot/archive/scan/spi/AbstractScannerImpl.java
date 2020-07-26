@@ -10,6 +10,7 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.hibernate.boot.archive.scan.internal.NoopEntryHandler;
 import org.hibernate.boot.archive.scan.internal.ScanResultCollector;
 import org.hibernate.boot.archive.spi.ArchiveContext;
 import org.hibernate.boot.archive.spi.ArchiveDescriptor;
@@ -131,6 +132,12 @@ public abstract class AbstractScannerImpl implements Scanner {
 
 			if ( nameWithinArchive.endsWith( "package-info.class" ) ) {
 				return packageEntryHandler;
+			}
+			else if ( nameWithinArchive.endsWith( "module-info.class" ) ) {
+				//There's two reasons to skip this: the most important one is that Jandex
+				//is unable to analyze them, so we need to dodge it.
+				//Secondarily, we have no use for these so let's save the effort.
+				return NoopEntryHandler.NOOP_INSTANCE;
 			}
 			else if ( nameWithinArchive.endsWith( ".class" ) ) {
 				return classEntryHandler;

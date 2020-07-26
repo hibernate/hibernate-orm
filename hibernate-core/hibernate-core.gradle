@@ -6,12 +6,12 @@
  */
 import org.apache.tools.ant.filters.ReplaceTokens
 
+description = 'Hibernate\'s core ORM functionality'
+
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 apply plugin: 'antlr'
 apply plugin: 'hibernate-matrix-testing'
 apply plugin: 'org.hibernate.build.gradle.xjc'
-
-description = 'Hibernate\'s core ORM functionality'
 
 ext {
     jaxbTargetDir = file( "${buildDir}/generated-src/jaxb/main" )
@@ -95,10 +95,7 @@ dependencies {
     testCompile( libraries.jodaTime )
     testCompile( libraries.assertj )
 
-    testCompile( libraries.cdi ) {
-        // we need to force it to make sure we influence the one coming from arquillian
-        force=true
-    }
+    testCompile( libraries.cdi )
 
     testCompile( libraries.validator ) {
         // for test runtime
@@ -120,11 +117,8 @@ dependencies {
 
     testAnnotationProcessor( project( ':hibernate-jpamodelgen' ) )
 
-    testCompile libraries.arquillian_junit_container
-    testCompile libraries.arquillian_protocol_servlet
     testCompile libraries.shrinkwrap_descriptors_api_javaee
     testCompile libraries.shrinkwrap_descriptors_impl_javaee
-    testCompile libraries.wildfly_arquillian_container_managed
 
     testCompile libraries.jboss_ejb_spec_jar
     testCompile libraries.jboss_annotation_spec_jar
@@ -136,39 +130,54 @@ dependencies {
 
 jar {
     manifest {
-        mainAttributes( 'Main-Class': 'org.hibernate.Version' )
+        attributes(
+                'Main-Class': 'org.hibernate.Version',
 
-        instructionFirst 'Import-Package',
-            'javax.security.auth;resolution:=optional',
-            'javax.security.jacc;resolution:=optional',
-            'javax.validation;resolution:=optional',
-            'javax.validation.constraints;resolution:=optional',
-            'javax.validation.groups;resolution:=optional',
-            'javax.validation.metadata;resolution:=optional',
-            // TODO: Shouldn't have to explicitly list this, but the plugin
-            // generates it with a [1.0,2) version.
-            "javax.persistence;version=\"${project.jpaVersion.osgiName}\"",
-            // optionals
-            'javax.management;resolution:=optional',
-            'javax.naming.event;resolution:=optional',
-            'javax.naming.spi;resolution:=optional',
-            'org.apache.tools.ant;resolution:=optional',
-            'org.apache.tools.ant.taskdefs;resolution:=optional',
-            'org.apache.tools.ant.types;resolution:=optional',
-            '!javax.enterprise*',
-            'javax.enterprise.context.spi;resolution:=optional',
-            'javax.enterprise.inject.spi;resolution:=optional',
-            'javax.inject;resolution:=optional',
-            'net.bytebuddy.*;resolution:=optional',
-            // We must specify the version explicitly to allow Karaf
-            // to use an older version of JAXB (the only one we can use in Karaf)
-            "javax.xml.bind.*;version=\"${project.jaxbApiVersionOsgiRange}\""
-
-//        // TODO: Uncomment once EntityManagerFactoryBuilderImpl no longer
-//        // uses ClassLoaderServiceImpl.
-//        instruction 'Export-Package',
-//            'org.hibernate.boot.registry.classloading.internal',
-//            '*'
+                // BND Plugin instructions (for OSGi):
+                'Import-Package': [
+                        'javax.security.auth;resolution:=optional',
+                        // Make javax.security.jacc optional and do not reference a version range (because that's what we used to do)
+                        'javax.security.jacc;resolution:=optional;version=!',
+                        // Make javax.validation optional and do not reference a version range (because that's what we used to do)
+                        'javax.validation;resolution:=optional;version=!',
+                        'javax.validation.constraints;resolution:=optional;version=!',
+                        'javax.validation.groups;resolution:=optional;version=!',
+                        'javax.validation.metadata;resolution:=optional;version=!',
+                        // Make javax.enterprise optional and do not reference a version range (because that's what we used to do)
+                        '!javax.enterprise*',
+                        'javax.enterprise.context.spi;resolution:=optional;version=!',
+                        'javax.enterprise.inject.spi;resolution:=optional;version=!',
+                        // For JPA, we don't want to target the automatically generated range, but a specific version
+                        "javax.persistence;version=\"${project.jpaVersion.osgiName}\"",
+                        // optionals
+                        'javax.management;resolution:=optional',
+                        'javax.naming.event;resolution:=optional',
+                        'javax.naming.spi;resolution:=optional',
+                        'org.apache.tools.ant;resolution:=optional',
+                        'org.apache.tools.ant.taskdefs;resolution:=optional',
+                        'org.apache.tools.ant.types;resolution:=optional',
+                        'javax.inject;resolution:=optional',
+                        'net.bytebuddy.*;resolution:=optional',
+                        'org.objectweb.jonas_tm;resolution:=optional',
+                        'com.ibm.websphere.jtaextensions;resolution:=optional',
+                        // We must specify the version explicitly to allow Karaf
+                        // to use an older version of JAXB (the only one we can use in Karaf)
+                        "javax.xml.bind.*;version=\"${project.jaxbApiVersionOsgiRange}\"",
+                        // Temporarily support JTA 1.1 -- Karaf and other frameworks still
+                        // use it.  Without this, the plugin generates [1.2,2).
+                        'javax.transaction;version="[1.1,2)"',
+                        // Also import every package referenced in the code
+                        '*'
+                ].join( ',' ),
+                '-exportcontents': [
+                        // Legacy resource packages containing XSDs that were traditionally not exported
+                        "!org.hibernate.xsd.cfg",
+                        "!org.hibernate.xsd.mapping",
+                        // TODO: Uncomment once EntityManagerFactoryBuilderImpl no longer uses ClassLoaderServiceImpl.
+                        //'org.hibernate.boot.registry.classloading.internal',
+                        "*;version=${project.version}"
+                ].join( ',' ),
+        )
     }
 }
 
@@ -194,6 +203,9 @@ xjc {
     }
 }
 
+generateGrammarSource {
+    arguments += "-traceParser"
+}
 
 //sourceSets.main.sourceGeneratorsTask.dependsOn xjc
 //sourceSets.main.sourceGeneratorsTask.dependsOn generateGrammarSource
@@ -217,29 +229,13 @@ task copyBundleResources (type: Copy) {
 processTestResources.dependsOn copyBundleResources
 
 task testJar(type: Jar, dependsOn: testClasses) {
-    classifier = 'test'
+    archiveClassifier.set( 'test' )
     from sourceSets.test.output
 }
 
 artifacts {
     tests testJar
 }
-
-processTestResources {
-    doLast {
-        copy {
-            from file( 'src/test/resources' )
-            into file( "${buildDir}/resources/test" )
-            include 'arquillian.xml'
-            include 'org/hibernate/test/wf/ddl/manifest.mf'
-            expand wildFlyInstallDir: project( ':hibernate-orm-modules' ).wildFlyInstallDir,
-                   hibernateMajorMinorVersion: "${project.ormVersion.family}",
-                   arquillianDeploymentExportDir: "${rootProject.buildDir.absolutePath}/arquillian-deployments"
-        }
-    }
-}
-
-test.dependsOn ':hibernate-orm-modules:prepareWildFlyForTests'
 
 test {
     systemProperty 'file.encoding', 'utf-8'

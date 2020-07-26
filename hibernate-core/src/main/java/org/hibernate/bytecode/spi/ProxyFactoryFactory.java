@@ -6,11 +6,9 @@
  */
 package org.hibernate.bytecode.spi;
 
-import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.proxy.ProxyFactory;
-import org.hibernate.service.ServiceRegistry;
+import org.hibernate.service.Service;
 
 /**
  * An interface for factories of {@link ProxyFactory proxy factory} instances.
@@ -20,7 +18,7 @@ import org.hibernate.service.ServiceRegistry;
  *
  * @author Steve Ebersole
  */
-public interface ProxyFactoryFactory {
+public interface ProxyFactoryFactory extends Service {
 	/**
 	 * Build a proxy factory specifically for handling runtime
 	 * lazy loading.

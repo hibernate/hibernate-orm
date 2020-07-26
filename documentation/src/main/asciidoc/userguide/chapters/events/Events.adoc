@@ -247,8 +247,8 @@ include::{extrasdir}/events-default-listener-update-example.sql[]
 
 If you already registered a default entity listener, but you don't want to apply it to a particular entity,
 you can use the
-https://javaee.github.io/javaee-spec/javadocs/javax/persistence/ExcludeDefaultListeners.html[`@ExcludeDefaultListeners`] and
-https://javaee.github.io/javaee-spec/javadocs/javax/persistence/ExcludeSuperclassListeners.html[`@ExcludeSuperclassListeners`] JPA annotations.
+{jpaJavadocUrlPrefix}ExcludeDefaultListeners.html[`@ExcludeDefaultListeners`] and
+{jpaJavadocUrlPrefix}ExcludeSuperclassListeners.html[`@ExcludeSuperclassListeners`] JPA annotations.
 
 `@ExcludeDefaultListeners` instructs the current class to ignore the default entity listeners for the current entity
 while `@ExcludeSuperclassListeners` is used to ignore the default entity listeners propagated to the `BaseEntity` super-class.

@@ -61,6 +61,10 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 		this.queryStructure = new QueryStructure<T>( this, criteriaBuilder );
 	}
 
+	protected QueryStructure<T> getQueryStructure() {
+		return queryStructure;
+	}
+
 	@Override
 	public Class<T> getResultType() {
 		return returnType;

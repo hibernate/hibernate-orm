@@ -32,9 +32,11 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.query.spi.QueryPlanCache;
+import org.hibernate.event.spi.EventEngine;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.internal.FastSessionServices;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -94,6 +96,11 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory, Quer
 	 * @return The factory's ServiceRegistry
 	 */
 	ServiceRegistryImplementor getServiceRegistry();
+
+	/**
+	 * Get the EventEngine associated with this SessionFactory
+	 */
+	EventEngine getEventEngine();
 
 	/**
 	 * Get the factory scoped interceptor for this factory.
@@ -175,6 +182,11 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory, Quer
 	default Iterable<EntityNameResolver> iterateEntityNameResolvers() {
 		return getMetamodel().getEntityNameResolvers();
 	}
+
+	/**
+	 * @return the FastSessionServices instance associated with this SessionFactory
+	 */
+	FastSessionServices getFastSessionServices();
 
 	/**
 	 * Contract for resolving this SessionFactory on deserialization

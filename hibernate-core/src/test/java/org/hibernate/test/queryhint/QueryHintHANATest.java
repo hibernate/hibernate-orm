@@ -89,7 +89,7 @@ public class QueryHintHANATest extends BaseNonConfigCoreFunctionalTestCase {
 		doInHibernate( this::sessionFactory, s -> {
 			Query<Employee> query = s.createQuery( "FROM QueryHintHANATest$Employee e WHERE e.department.name = :departmentName", Employee.class )
 					.addQueryHint( "NO_CS_JOIN" )
-					.addQueryHint( "OPTIMIZE_METAMODEL" )
+					.addQueryHint( "IGNORE_PLAN_CACHE" )
 					.setParameter( "departmentName", "Sales" );
 			List<Employee> results = query.list();
 
@@ -98,7 +98,7 @@ public class QueryHintHANATest extends BaseNonConfigCoreFunctionalTestCase {
 
 		sqlStatementInterceptor.assertExecutedCount( 1 );
 
-		assertThat( sqlStatementInterceptor.getSqlQueries().get( 0 ), containsString( " with hint (NO_CS_JOIN,OPTIMIZE_METAMODEL)" ) );
+		assertThat( sqlStatementInterceptor.getSqlQueries().get( 0 ), containsString( " with hint (NO_CS_JOIN,IGNORE_PLAN_CACHE)" ) );
 		sqlStatementInterceptor.clear();
 
 		// ensure the insertion logic can handle a comment appended to the front

@@ -103,7 +103,7 @@ public class TeradataDialect extends Dialect implements IdTableSupport {
 	/**
 	 * Does this dialect support the <tt>FOR UPDATE</tt> syntax?
 	 *
-	 * @return empty string ... Teradata does not support <tt>FOR UPDATE<tt> syntax
+	 * @return empty string ... Teradata does not support <tt>FOR UPDATE</tt> syntax
 	 */
 	@Override
 	public String getForUpdateString() {

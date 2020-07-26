@@ -18,5 +18,11 @@ dependencies {
 	compile localGroovy()
 
 	compile 'org.hibernate.build.gradle:gradle-animalSniffer-plugin:1.0.1.Final'
-	compile 'org.hibernate.build.gradle:hibernate-matrix-testing:2.0.0.Final'
+	compile 'org.hibernate.build.gradle:hibernate-matrix-testing:3.0.0.Final'
+}
+
+tasks.withType( GroovyCompile ) {
+	options.encoding = 'UTF-8'
+	sourceCompatibility = 8
+	targetCompatibility = 8
 }

@@ -8,6 +8,7 @@ package org.hibernate.bytecode.spi;
 
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
+import org.hibernate.service.Service;
 
 /**
  * Contract for providers of bytecode services to Hibernate.
@@ -19,7 +20,7 @@ import org.hibernate.bytecode.enhance.spi.Enhancer;
  *
  * @author Steve Ebersole
  */
-public interface BytecodeProvider {
+public interface BytecodeProvider extends Service {
 	/**
 	 * Retrieve the specific factory for this provider capable of
 	 * generating run-time proxies for lazy-loading purposes.

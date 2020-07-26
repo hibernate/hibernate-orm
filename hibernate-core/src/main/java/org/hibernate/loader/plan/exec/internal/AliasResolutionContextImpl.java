@@ -154,7 +154,7 @@ public class AliasResolutionContextImpl implements AliasResolutionContext {
 	 * query space UID:
 	 * <ul>
 	 * <li>
-	 *     {@link ##resolveCollectionReferenceAliases(String)} can be used to
+	 *     {@link #resolveCollectionReferenceAliases(String)} can be used to
 	 *     look up the returned collection reference aliases;
 	 * </li>
 	 * <li>

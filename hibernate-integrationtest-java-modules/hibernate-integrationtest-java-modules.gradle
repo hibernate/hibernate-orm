@@ -24,10 +24,12 @@ apply from: rootProject.file( 'gradle/java-module.gradle' )
 // so we have to use https://github.com/java9-modularity/gradle-modules-plugin
 apply plugin: "org.javamodularity.moduleplugin"
 
-// Override -source and -target
-ext.baselineJavaVersion = 11
-sourceCompatibility = project.baselineJavaVersion
-targetCompatibility = project.baselineJavaVersion
+// Override -source and -target to the version being tested (11+, since this module is enabled)
+ext.baselineJavaVersion = gradle.ext.testedJavaVersion
+tasks.withType( JavaCompile ) {
+	sourceCompatibility = project.baselineJavaVersion
+	targetCompatibility = project.baselineJavaVersion
+}
 
 // Checkstyle fails for module-info
 checkstyleMain.exclude '**/module-info.java'

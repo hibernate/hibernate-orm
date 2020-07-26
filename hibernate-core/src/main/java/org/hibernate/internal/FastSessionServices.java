@@ -32,6 +32,8 @@ import org.hibernate.event.spi.LoadEventListener;
 import org.hibernate.event.spi.LockEventListener;
 import org.hibernate.event.spi.MergeEventListener;
 import org.hibernate.event.spi.PersistEventListener;
+import org.hibernate.event.spi.PostLoadEvent;
+import org.hibernate.event.spi.PostLoadEventListener;
 import org.hibernate.event.spi.RefreshEventListener;
 import org.hibernate.event.spi.ReplicateEventListener;
 import org.hibernate.event.spi.ResolveNaturalIdEventListener;
@@ -80,7 +82,7 @@ import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_STORE_MODE;
  *
  * @author Sanne Grinovero
  */
-final class FastSessionServices {
+public final class FastSessionServices {
 
 	/**
 	 * Default session properties
@@ -106,6 +108,9 @@ final class FastSessionServices {
 	final EventListenerGroup<SaveOrUpdateEventListener> eventListenerGroup_SAVE;
 	final EventListenerGroup<SaveOrUpdateEventListener> eventListenerGroup_SAVE_UPDATE;
 	final EventListenerGroup<SaveOrUpdateEventListener> eventListenerGroup_UPDATE;
+
+	//Frequently used by 2LC initialization:
+	final EventListenerGroup<PostLoadEventListener> eventListenerGroup_POST_LOAD;
 
 	//Intentionally Package private:
 	final boolean disallowOutOfTransactionUpdateOperations;
@@ -155,6 +160,7 @@ final class FastSessionServices {
 		this.eventListenerGroup_SAVE = listeners( eventListenerRegistry, EventType.SAVE );
 		this.eventListenerGroup_SAVE_UPDATE = listeners( eventListenerRegistry, EventType.SAVE_UPDATE );
 		this.eventListenerGroup_UPDATE = listeners( eventListenerRegistry, EventType.UPDATE );
+		this.eventListenerGroup_POST_LOAD = listeners( eventListenerRegistry, EventType.POST_LOAD );
 
 		//Other highly useful constants:
 		this.dialect = jdbcServices.getJdbcEnvironment().getDialect();
@@ -285,4 +291,7 @@ final class FastSessionServices {
 		return defaultJdbcObservers;
 	}
 
+	public void firePostLoadEvent(final PostLoadEvent postLoadEvent) {
+		eventListenerGroup_POST_LOAD.fireEventOnEachListener( postLoadEvent, PostLoadEventListener::onPostLoad );
+	}
 }

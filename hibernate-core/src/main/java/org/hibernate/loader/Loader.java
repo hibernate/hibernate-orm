@@ -62,12 +62,10 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.engine.spi.TypedValue;
-import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostLoadEvent;
-import org.hibernate.event.spi.PostLoadEventListener;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.hql.internal.HolderInstantiator;
@@ -77,7 +75,6 @@ import org.hibernate.internal.FetchingScrollableResultsImpl;
 import org.hibernate.internal.ScrollableResultsImpl;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.loader.entity.CascadeEntityLoader;
 import org.hibernate.loader.spi.AfterLoadAction;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -118,14 +115,12 @@ public abstract class Loader {
 	private final SessionFactoryImplementor factory;
 	private volatile ColumnNameCache columnNameCache;
 
-	private final boolean referenceCachingEnabled;
 	private final boolean enhancementAsProxyEnabled;
 
 	private boolean isJdbc4 = true;
 
 	public Loader(SessionFactoryImplementor factory) {
 		this.factory = factory;
-		this.referenceCachingEnabled = factory.getSessionFactoryOptions().isDirectReferenceCacheEntriesEnabled();
 		this.enhancementAsProxyEnabled = factory.getSessionFactoryOptions().isEnhancementAsProxyEnabled();
 	}
 
@@ -676,7 +671,7 @@ public abstract class Loader {
 		}
 	}
 
-	private static EntityKey getOptionalObjectKey(QueryParameters queryParameters, SharedSessionContractImplementor session) {
+	protected static EntityKey getOptionalObjectKey(QueryParameters queryParameters, SharedSessionContractImplementor session) {
 		final Object optionalObject = queryParameters.getOptionalObject();
 		final Serializable optionalId = queryParameters.getOptionalId();
 		final String optionalEntityName = queryParameters.getOptionalEntityName();
@@ -988,12 +983,48 @@ public abstract class Loader {
 			int maxRows,
 			List<AfterLoadAction> afterLoadActions) throws SQLException {
 		final int entitySpan = getEntityPersisters().length;
+		final boolean createSubselects = isSubselectLoadingEnabled();
+		final List<EntityKey[]> subselectResultKeys = createSubselects ? new ArrayList<>() : null;
+		final List<Object> hydratedObjects = entitySpan == 0 ? null : new ArrayList<>( entitySpan * 10 );
+
+		final List results = getRowsFromResultSet(
+				rs,
+				queryParameters,
+				session,
+				returnProxies,
+				forcedResultTransformer,
+				maxRows,
+				hydratedObjects,
+				subselectResultKeys
+		);
+
+		initializeEntitiesAndCollections(
+				hydratedObjects,
+				rs,
+				session,
+				queryParameters.isReadOnly( session ),
+				afterLoadActions
+		);
+		if ( createSubselects ) {
+			createSubselects( subselectResultKeys, queryParameters, session );
+		}
+		return results;
+	}
+
+	protected List<Object> getRowsFromResultSet(
+			ResultSet rs,
+			QueryParameters queryParameters,
+			SharedSessionContractImplementor session,
+			boolean returnProxies,
+			ResultTransformer forcedResultTransformer,
+			int maxRows,
+			List<Object> hydratedObjects,
+			List<EntityKey[]> subselectResultKeys) throws SQLException {
+		final int entitySpan = getEntityPersisters().length;
+		final boolean createSubselects = isSubselectLoadingEnabled();
 		final EntityKey optionalObjectKey = getOptionalObjectKey( queryParameters, session );
 		final LockMode[] lockModesArray = getLockModes( queryParameters.getLockOptions() );
-		final boolean createSubselects = isSubselectLoadingEnabled();
-		final List subselectResultKeys = createSubselects ? new ArrayList() : null;
-		final ArrayList hydratedObjects = entitySpan == 0 ? null : new ArrayList( entitySpan * 10 );
-		final List results = new ArrayList();
+		final List<Object> results = new ArrayList<>();
 
 		handleEmptyCollections( queryParameters.getCollectionKeys(), rs, session );
 		EntityKey[] keys = new EntityKey[entitySpan]; //we can reuse it for each row
@@ -1025,16 +1056,6 @@ public abstract class Loader {
 
 		LOG.tracev( "Done processing result set ({0} rows)", count );
 
-		initializeEntitiesAndCollections(
-				hydratedObjects,
-				rs,
-				session,
-				queryParameters.isReadOnly( session ),
-				afterLoadActions
-		);
-		if ( createSubselects ) {
-			createSubselects( subselectResultKeys, queryParameters, session );
-		}
 		return results;
 	}
 
@@ -1063,7 +1084,7 @@ public abstract class Loader {
 		return result;
 	}
 
-	private void createSubselects(List keys, QueryParameters queryParameters, SharedSessionContractImplementor session) {
+	protected void createSubselects(List keys, QueryParameters queryParameters, SharedSessionContractImplementor session) {
 		if ( keys.size() > 1 ) { //if we only returned one entity, query by key is more efficient
 
 			Set[] keySets = transpose( keys );
@@ -1206,21 +1227,8 @@ public abstract class Loader {
 		// persistence context.
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		if ( hydratedObjects != null && hydratedObjects.size() > 0 ) {
-
-			final Iterable<PostLoadEventListener> postLoadEventListeners;
-			if ( session.isEventSource() ) {
-				final EventListenerGroup<PostLoadEventListener> listenerGroup = session.getFactory()
-					.getServiceRegistry()
-					.getService( EventListenerRegistry.class )
-					.getEventListenerGroup( EventType.POST_LOAD );
-				postLoadEventListeners = listenerGroup.listeners();
-			}
-			else {
-				postLoadEventListeners = Collections.emptyList();
-			}
-
 			for ( Object hydratedObject : hydratedObjects ) {
-				TwoPhaseLoad.postLoad( hydratedObject, session, post, postLoadEventListeners );
+				TwoPhaseLoad.postLoad( hydratedObject, session, post );
 				if ( afterLoadActions != null ) {
 					for ( AfterLoadAction afterLoadAction : afterLoadActions ) {
 						final EntityEntry entityEntry = persistenceContext.getEntry( hydratedObject );
@@ -1237,7 +1245,7 @@ public abstract class Loader {
 		}
 	}
 
-	private void endCollectionLoad(
+	protected void endCollectionLoad(
 			final Object resultSetId,
 			final SharedSessionContractImplementor session,
 			final CollectionPersister collectionPersister) {
@@ -1311,7 +1319,7 @@ public abstract class Loader {
 	 * result set, register the fact that the the object is missing with the
 	 * session.
 	 */
-	private void registerNonExists(
+	protected void registerNonExists(
 			final EntityKey[] keys,
 			final Loadable[] persisters,
 			final SharedSessionContractImplementor session) {
@@ -1450,7 +1458,7 @@ public abstract class Loader {
 	 * is being initialized, to account for the possibility of the collection having
 	 * no elements (hence no rows in the result set).
 	 */
-	private void handleEmptyCollections(
+	protected void handleEmptyCollections(
 			final Serializable[] keys,
 			final Object resultSetId,
 			final SharedSessionContractImplementor session) {
@@ -1637,7 +1645,7 @@ public abstract class Loader {
 	/**
 	 * The entity instance is already in the session cache
 	 */
-	private void instanceAlreadyLoaded(
+	protected void instanceAlreadyLoaded(
 			final ResultSet rs,
 			final int i,
 			final Loadable persister,
@@ -1655,38 +1663,34 @@ public abstract class Loader {
 			);
 		}
 
-		if ( persister.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() && enhancementAsProxyEnabled ) {
-			if ( "merge".equals( session.getLoadQueryInfluencers().getInternalFetchProfile() ) ) {
-				assert this instanceof CascadeEntityLoader;
-				// we are processing a merge and have found an existing "managed copy" in the
-				// session - we need to check if this copy is an enhanced-proxy and, if so,
-				// perform the hydration just as if it were "not yet loaded"
-				final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) object;
-				final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
-				if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
-					hydrateEntityState(
-							rs,
-							i,
-							persister,
-							getEntityAliases()[i].getRowIdAlias(),
-							key,
-							hydratedObjects,
-							session,
-							getInstanceClass(
-									rs,
-									i,
-									persister,
-									key.getIdentifier(),
-									session
-							),
-							object,
-							requestedLockMode
-					);
+		if ( enhancementAsProxyEnabled && persister.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() ) {
+			// we have found an existing "managed copy" in the session
+			// we need to check if this copy is an enhanced-proxy and, if so,
+			// perform the hydration just as if it were "not yet loaded"
+			final PersistentAttributeInterceptor interceptor = ( (PersistentAttributeInterceptable) object ).$$_hibernate_getInterceptor();
+			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
+				hydrateEntityState(
+						rs,
+						i,
+						persister,
+						getEntityAliases()[i].getRowIdAlias(),
+						key,
+						hydratedObjects,
+						session,
+						getInstanceClass(
+								rs,
+								i,
+								persister,
+								key.getIdentifier(),
+								session
+						),
+						object,
+						requestedLockMode
+				);
 
-					// EARLY EXIT!!!
-					//		- to skip the version check
-					return;
-				}
+				// EARLY EXIT!!!
+				//		- to skip the version check
+				return;
 			}
 		}
 
@@ -1707,7 +1711,7 @@ public abstract class Loader {
 	/**
 	 * The entity instance is not in the session cache
 	 */
-	private Object instanceNotYetLoaded(
+	protected Object instanceNotYetLoaded(
 			final ResultSet rs,
 			final int i,
 			final Loadable persister,
@@ -1985,15 +1989,18 @@ public abstract class Loader {
 
 	private ScrollMode getScrollMode(
 			boolean scroll,
-			boolean hasFirstRow,
-			boolean useLimitOffSet,
+			LimitHandler limitHandler,
 			QueryParameters queryParameters) {
 		final boolean canScroll = getFactory().getSessionFactoryOptions().isScrollableResultSetsEnabled();
 		if ( canScroll ) {
 			if ( scroll ) {
 				return queryParameters.getScrollMode();
 			}
-			if ( hasFirstRow && !useLimitOffSet ) {
+			final RowSelection selection = queryParameters.getRowSelection();
+			final boolean useLimit = LimitHelper.useLimit( limitHandler, selection );
+			final boolean hasFirstRow = LimitHelper.hasFirstRow( selection );
+			final boolean useLimitOffset = hasFirstRow && useLimit && limitHandler.supportsLimitOffset();
+			if ( hasFirstRow && !useLimitOffset ) {
 				return ScrollMode.SCROLL_INSENSITIVE;
 			}
 		}
@@ -2093,19 +2100,24 @@ public abstract class Loader {
 			final LimitHandler limitHandler,
 			final boolean scroll,
 			final SharedSessionContractImplementor session) throws SQLException, HibernateException {
+
+		final PreparedStatement preparedStatement = session.getJdbcCoordinator().getStatementPreparer().prepareQueryStatement(
+				sql,
+				queryParameters.isCallable(),
+				getScrollMode( scroll, limitHandler, queryParameters )
+		);
+		return bindPreparedStatement( preparedStatement, queryParameters, limitHandler, session );
+	}
+
+	protected final PreparedStatement bindPreparedStatement(
+			final PreparedStatement st,
+			final QueryParameters queryParameters,
+			final LimitHandler limitHandler,
+			final SharedSessionContractImplementor session) throws SQLException, HibernateException {
+
 		final Dialect dialect = getFactory().getDialect();
 		final RowSelection selection = queryParameters.getRowSelection();
-		final boolean useLimit = LimitHelper.useLimit( limitHandler, selection );
-		final boolean hasFirstRow = LimitHelper.hasFirstRow( selection );
-		final boolean useLimitOffset = hasFirstRow && useLimit && limitHandler.supportsLimitOffset();
 		final boolean callable = queryParameters.isCallable();
-		final ScrollMode scrollMode = getScrollMode( scroll, hasFirstRow, useLimitOffset, queryParameters );
-
-		PreparedStatement st = session.getJdbcCoordinator().getStatementPreparer().prepareQueryStatement(
-				sql,
-				callable,
-				scrollMode
-		);
 
 		try {
 
@@ -2291,7 +2303,7 @@ public abstract class Loader {
 		try {
 			ResultSet rs = session.getJdbcCoordinator().getResultSetReturn().extract( st );
 
-			return processResultSet(rs, selection, limitHandler, autodiscovertypes, session);
+			return preprocessResultSet( rs, selection, limitHandler, autodiscovertypes, session );
 		}
 		catch (SQLException | HibernateException e) {
 			session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
@@ -2312,7 +2324,7 @@ public abstract class Loader {
 		try {
 			ResultSet rs = session.getJdbcCoordinator().getResultSetReturn().extract( st );
 
-			return processResultSet(rs, selection, limitHandler, autodiscovertypes, session);
+			return preprocessResultSet( rs, selection, limitHandler, autodiscovertypes, session );
 		}
 		catch (SQLException | HibernateException e) {
 			session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
@@ -2321,7 +2333,7 @@ public abstract class Loader {
 		}
 	}
 
-	private ResultSet processResultSet(
+	protected ResultSet preprocessResultSet(
 			ResultSet rs,
 			final RowSelection selection,
 			final LimitHandler limitHandler,
@@ -2710,7 +2722,7 @@ public abstract class Loader {
 		return getResultList( result, queryParameters.getResultTransformer() );
 	}
 
-	private QueryKey generateQueryKey(
+	protected QueryKey generateQueryKey(
 			SharedSessionContractImplementor session,
 			QueryParameters queryParameters) {
 		return QueryKey.generateQueryKey(
@@ -2722,7 +2734,7 @@ public abstract class Loader {
 		);
 	}
 
-	private CacheableResultTransformer createCacheableResultTransformer(QueryParameters queryParameters) {
+	protected CacheableResultTransformer createCacheableResultTransformer(QueryParameters queryParameters) {
 		return CacheableResultTransformer.create(
 				queryParameters.getResultTransformer(),
 				getResultRowAliases(),
@@ -2730,7 +2742,7 @@ public abstract class Loader {
 		);
 	}
 
-	private List getResultFromQueryCache(
+	protected List getResultFromQueryCache(
 			final SharedSessionContractImplementor session,
 			final QueryParameters queryParameters,
 			final Set<Serializable> querySpaces,
@@ -2786,7 +2798,7 @@ public abstract class Loader {
 		return result;
 	}
 
-	private EntityPersister getEntityPersister(EntityType entityType) {
+	protected EntityPersister getEntityPersister(EntityType entityType) {
 		return factory.getMetamodel().entityPersister( entityType.getAssociatedEntityName() );
 	}
 

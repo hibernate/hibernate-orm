@@ -11,6 +11,9 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import javax.persistence.Id;
 
+import net.bytebuddy.description.NamedElement;
+import net.bytebuddy.description.type.TypeDefinition;
+import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.utility.OpenedClassReader;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl.AnnotatedFieldDescription;
 import org.hibernate.bytecode.enhance.spi.EnhancementException;
@@ -63,10 +66,11 @@ final class FieldAccessEnhancer implements AsmVisitorWrapper.ForDeclaredMethods.
 					return;
 				}
 
-				AnnotatedFieldDescription field = findField( owner, name, desc );
+				TypeDescription declaredOwnerType = findDeclaredType( owner );
+				AnnotatedFieldDescription field = findField( declaredOwnerType, name, desc );
 
-				if ( ( enhancementContext.isEntityClass( field.getDeclaringType().asErasure() )
-						|| enhancementContext.isCompositeClass( field.getDeclaringType().asErasure() ) )
+				if ( ( enhancementContext.isEntityClass( declaredOwnerType.asErasure() )
+						|| enhancementContext.isCompositeClass( declaredOwnerType.asErasure() ) )
 						&& !field.getType().asErasure().equals( managedCtClass )
 						&& enhancementContext.isPersistentField( field )
 						&& !field.hasAnnotation( Id.class )
@@ -110,23 +114,37 @@ final class FieldAccessEnhancer implements AsmVisitorWrapper.ForDeclaredMethods.
 		};
 	}
 
-	private AnnotatedFieldDescription findField(String owner, String name, String desc) {
+	private TypeDescription findDeclaredType(String name) {
 		//Classpool#describe does not accept '/' in the description name as it expects a class name
-		final String cleanedOwner = owner.replace( '/', '.' );
-		final TypePool.Resolution resolution = classPool.describe( cleanedOwner );
+		final String cleanedName = name.replace( '/', '.' );
+		final TypePool.Resolution resolution = classPool.describe( cleanedName );
 		if ( !resolution.isResolved() ) {
 			final String msg = String.format(
 					"Unable to perform extended enhancement - Unable to locate [%s]",
-					cleanedOwner
+					cleanedName
 			);
 			throw new EnhancementException( msg );
 		}
-		FieldList<?> fields = resolution.resolve().getDeclaredFields().filter( named( name ).and( hasDescriptor( desc ) ) );
+		return resolution.resolve();
+	}
+
+	private AnnotatedFieldDescription findField(TypeDescription declaredOwnedType, String name, String desc) {
+		TypeDefinition ownerType = declaredOwnedType;
+		ElementMatcher.Junction<NamedElement.WithDescriptor> fieldFilter = named( name ).and( hasDescriptor( desc ) );
+
+		FieldList<?> fields = ownerType.getDeclaredFields().filter( fieldFilter );
+
+		// Look in the superclasses if necessary
+		while ( fields.isEmpty() && ownerType.getSuperClass() != null ) {
+			ownerType = ownerType.getSuperClass();
+			fields = ownerType.getDeclaredFields().filter( fieldFilter );
+		}
+
 		if ( fields.size() != 1 ) {
 			final String msg = String.format(
 					"Unable to perform extended enhancement - No unique field [%s] defined by [%s]",
 					name,
-					cleanedOwner
+					declaredOwnedType.getName()
 			);
 			throw new EnhancementException( msg );
 		}

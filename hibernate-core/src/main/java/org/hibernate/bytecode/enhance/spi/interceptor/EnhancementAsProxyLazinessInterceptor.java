@@ -285,7 +285,29 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 	}
 
 	@Override
+	public boolean isAttributeLoaded(String fieldName) {
+		if ( initialized ) {
+			throw new UnsupportedOperationException( "Call to EnhancementAsProxyLazinessInterceptor#isAttributeLoaded on an interceptor which is marked as initialized" );
+		}
+		// Only fields from the identifier are loaded (until it's initialized)
+		return identifierAttributeNames.contains( fieldName );
+	}
+
+	@Override
+	public boolean hasAnyUninitializedAttributes() {
+		if ( initialized ) {
+			throw new UnsupportedOperationException( "Call to EnhancementAsProxyLazinessInterceptor#hasAnyUninitializedAttributes on an interceptor which is marked as initialized" );
+		}
+		return true;
+	}
+
+	@Override
 	public Object getIdentifier() {
 		return entityKey.getIdentifier();
+	}
+
+	//Mostly useful for testing
+	public boolean isInitialized() {
+		return initialized;
 	}
 }

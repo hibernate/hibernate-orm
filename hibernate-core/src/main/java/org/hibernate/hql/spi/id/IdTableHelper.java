@@ -61,6 +61,9 @@ public class IdTableHelper {
 			List<String> creationStatements,
 			JdbcServices jdbcServices,
 			JdbcConnectionAccess connectionAccess) {
+		if ( creationStatements == null || creationStatements.isEmpty() ) {
+			return;
+		}
 		try {
 			Connection connection;
 			try {

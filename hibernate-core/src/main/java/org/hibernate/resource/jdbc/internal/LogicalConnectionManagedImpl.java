@@ -150,6 +150,15 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 	}
 
 	@Override
+	public void beforeTransactionCompletion() {
+		super.beforeTransactionCompletion();
+		if ( connectionHandlingMode.getReleaseMode() == ConnectionReleaseMode.BEFORE_TRANSACTION_COMPLETION ) {
+			log.debug( "Initiating JDBC connection release from beforeTransactionCompletion" );
+			releaseConnection();
+		}
+	}
+
+	@Override
 	public void afterTransaction() {
 		super.afterTransaction();
 

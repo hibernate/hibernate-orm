@@ -351,8 +351,15 @@ public final class Environment implements AvailableSettings {
 
 		LOG.bytecodeProvider( providerName );
 
-		// todo : allow a custom class name - just check if the config is a FQN
-		//		currently we assume it is only ever the Strings "javassist" or "bytebuddy"...
+		// there is no need to support plugging in a custom BytecodeProvider via FQCN:
+		// - the static helper methods on this class are deprecated
+		// - it's possible to plug a custom BytecodeProvider directly into the ServiceRegistry
+		//
+		// This also allows integrators to inject a BytecodeProvider instance which has some
+		// state; particularly useful to inject proxy definitions which have been prepared in
+		// advance.
+		// See also https://hibernate.atlassian.net/browse/HHH-13804 and how this was solved in
+		// Quarkus.
 
 		LOG.unknownBytecodeProvider( providerName, BYTECODE_PROVIDER_NAME_DEFAULT );
 		return new org.hibernate.bytecode.internal.bytebuddy.BytecodeProviderImpl();

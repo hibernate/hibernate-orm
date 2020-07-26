@@ -17,14 +17,11 @@ import java.util.function.Function;
  *
  * @author Steve Ebersole
  */
-public class StandardStack<T> implements Stack<T> {
-	private LinkedList<T> internalStack = new LinkedList<>();
+public final class StandardStack<T> implements Stack<T> {
+
+	private final LinkedList<T> internalStack = new LinkedList<>();
 
 	public StandardStack() {
-	}
-
-	public StandardStack(T initial) {
-		internalStack.add( initial );
 	}
 
 	@Override
@@ -43,14 +40,6 @@ public class StandardStack<T> implements Stack<T> {
 	}
 
 	@Override
-	public T getPrevious() {
-		if ( internalStack.size() < 2 ) {
-			return null;
-		}
-		return internalStack.get( internalStack.size() - 2 );
-	}
-
-	@Override
 	public int depth() {
 		return internalStack.size();
 	}
@@ -65,19 +54,4 @@ public class StandardStack<T> implements Stack<T> {
 		internalStack.clear();
 	}
 
-	@Override
-	public void visitCurrentFirst(Consumer<T> action) {
-		internalStack.forEach( action );
-	}
-
-	@Override
-	public <X> X findCurrentFirst(Function<T, X> function) {
-		for ( T t : internalStack ) {
-			final X result = function.apply( t );
-			if ( result != null ) {
-				return result;
-			}
-		}
-		return null;
-	}
 }

@@ -22,8 +22,8 @@ import org.hibernate.hql.spi.id.local.AfterUseAction;
  * <p>
  * Row tables are created by this dialect when using the auto-ddl feature.
  *
- * @author Andrew Clemons <andrew.clemons@sap.com>
- * @author Jonathan Bregler <jonathan.bregler@sap.com>
+ * @author <a href="mailto:andrew.clemons@sap.com">Andrew Clemons</a>
+ * @author <a href="mailto:jonathan.bregler@sap.com">Jonathan Bregler</a>
  */
 public class HANARowStoreDialect extends AbstractHANADialect {
 
@@ -45,5 +45,15 @@ public class HANARowStoreDialect extends AbstractHANADialect {
 				return "create global temporary row table";
 			}
 		}, AfterUseAction.CLEAN );
+	}
+
+	@Override
+	protected boolean supportsAsciiStringTypes() {
+		return true;
+	}
+
+	@Override
+	protected Boolean useUnicodeStringTypesDefault() {
+		return Boolean.FALSE;
 	}
 }

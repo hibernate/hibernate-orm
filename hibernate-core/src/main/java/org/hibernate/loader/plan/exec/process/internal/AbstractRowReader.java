@@ -16,12 +16,10 @@ import java.util.Map;
 
 import org.hibernate.engine.internal.TwoPhaseLoad;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostLoadEvent;
-import org.hibernate.event.spi.PostLoadEventListener;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.internal.CoreLogging;
@@ -224,7 +222,7 @@ public abstract class AbstractRowReader implements RowReader {
 		postLoad( postLoadEvent, context, hydratedEntityRegistrations, afterLoadActionList );
 	}
 
-	private void finishLoadingArrays(ResultSetProcessingContextImpl context) {
+	protected void finishLoadingArrays(ResultSetProcessingContextImpl context) {
 		for ( CollectionReferenceInitializer arrayReferenceInitializer : arrayReferenceInitializers ) {
 			arrayReferenceInitializer.endLoading( context );
 		}
@@ -262,13 +260,13 @@ public abstract class AbstractRowReader implements RowReader {
 		}
 	}
 
-	private void finishLoadingCollections(ResultSetProcessingContextImpl context) {
+	protected void finishLoadingCollections(ResultSetProcessingContextImpl context) {
 		for ( CollectionReferenceInitializer collectionReferenceInitializer : collectionReferenceInitializers ) {
 			collectionReferenceInitializer.endLoading( context );
 		}
 	}
 
-	private void afterInitialize(ResultSetProcessingContextImpl context,
+	protected void afterInitialize(ResultSetProcessingContextImpl context,
 			List<HydratedEntityRegistration> hydratedEntityRegistrations) {
 		if ( hydratedEntityRegistrations == null ) {
 			return;
@@ -279,7 +277,7 @@ public abstract class AbstractRowReader implements RowReader {
 		}
 	}
 
-	private void postLoad(
+	protected void postLoad(
 			PostLoadEvent postLoadEvent,
 			ResultSetProcessingContextImpl context,
 			List<HydratedEntityRegistration> hydratedEntityRegistrations,
@@ -293,20 +291,9 @@ public abstract class AbstractRowReader implements RowReader {
 		}
 
 		final SharedSessionContractImplementor session = context.getSession();
-		final Iterable<PostLoadEventListener> postLoadEventListeners;
-		if ( session.isEventSource() ) {
-			final EventListenerGroup<PostLoadEventListener> listenerGroup = session.getFactory()
-				.getServiceRegistry()
-				.getService( EventListenerRegistry.class )
-				.getEventListenerGroup( EventType.POST_LOAD );
-			postLoadEventListeners = listenerGroup.listeners();
-		}
-		else {
-			postLoadEventListeners = Collections.emptyList();
-		}
 
 		for ( HydratedEntityRegistration registration : hydratedEntityRegistrations ) {
-			TwoPhaseLoad.postLoad( registration.getInstance(), session, postLoadEvent, postLoadEventListeners );
+			TwoPhaseLoad.postLoad( registration.getInstance(), session, postLoadEvent );
 			if ( afterLoadActionList != null ) {
 				for ( AfterLoadAction afterLoadAction : afterLoadActionList ) {
 					afterLoadAction.afterLoad(

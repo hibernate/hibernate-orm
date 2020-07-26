@@ -80,7 +80,7 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 		afterEntityManagerFactoryBuilt();
 	}
 
-	private PersistenceUnitDescriptor buildPersistenceUnitDescriptor() {
+	protected PersistenceUnitDescriptor buildPersistenceUnitDescriptor() {
 		return new TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() );
 	}
 

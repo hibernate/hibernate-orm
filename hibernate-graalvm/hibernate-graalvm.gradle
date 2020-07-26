@@ -1,0 +1,17 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
+
+description = "Experimental extension to make it easier to compile applications into a GraalVM native image"
+
+apply from: rootProject.file( 'gradle/published-java-module.gradle' )
+
+dependencies {
+    //No need for transitive dependencies: this is all just metadata to be used as companion jar.
+    compileOnly project( ':hibernate-core' )
+    compileOnly( libraries.graalvm_nativeimage )
+    testCompile( project( ':hibernate-core' ) )
+}

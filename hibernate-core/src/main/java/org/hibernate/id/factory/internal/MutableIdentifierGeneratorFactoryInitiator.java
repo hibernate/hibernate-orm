@@ -13,7 +13,7 @@ import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
- * @author Emmanuel Bernard <emmanuel@hibernate.org>
+ * @author <a href="mailto:emmanuel@hibernate.org">Emmanuel Bernard</a>
  */
 public class MutableIdentifierGeneratorFactoryInitiator implements StandardServiceInitiator<MutableIdentifierGeneratorFactory> {
 	public static final MutableIdentifierGeneratorFactoryInitiator INSTANCE = new MutableIdentifierGeneratorFactoryInitiator();

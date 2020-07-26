@@ -62,6 +62,9 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.transaction.internal.TransactionImpl;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.id.uuid.StandardRandomStrategy;
+import org.hibernate.jdbc.ReturningWork;
+import org.hibernate.jdbc.Work;
+import org.hibernate.jdbc.WorkExecutorVisitable;
 import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.jpa.spi.CriteriaQueryTupleTransformer;
@@ -1057,6 +1060,28 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override
 	public NativeQueryImplementor createSQLQuery(String queryString) {
 		return getNativeQueryImplementor( queryString, true );
+	}
+
+	@Override
+	public void doWork(final Work work) throws HibernateException {
+		WorkExecutorVisitable<Void> realWork = (workExecutor, connection) -> {
+			workExecutor.executeWork( work, connection );
+			return null;
+		};
+		doWork( realWork );
+	}
+
+	@Override
+	public <T> T doReturningWork(final ReturningWork<T> work) throws HibernateException {
+		WorkExecutorVisitable<T> realWork = (workExecutor, connection) -> workExecutor.executeReturningWork(
+				work,
+				connection
+		);
+		return doWork( realWork );
+	}
+
+	private <T> T doWork(WorkExecutorVisitable<T> work) throws HibernateException {
+		return getJdbcCoordinator().coordinateWork( work );
 	}
 
 	protected NativeQueryImplementor getNativeQueryImplementor(

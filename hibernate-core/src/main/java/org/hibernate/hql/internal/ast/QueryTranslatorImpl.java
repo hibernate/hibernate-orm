@@ -210,7 +210,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 			else {
 				// PHASE 3 : Generate the SQL.
 				generate( (QueryNode) sqlAst );
-				queryLoader = new QueryLoader( this, factory, w.getSelectClause() );
+				queryLoader = createQueryLoader( w, factory );
 			}
 
 			compiled = true;
@@ -243,6 +243,10 @@ public class QueryTranslatorImpl implements FilterTranslator {
 
 		//only needed during compilation phase...
 		this.enabledFilters = null;
+	}
+
+	protected QueryLoader createQueryLoader(HqlSqlWalker w, SessionFactoryImplementor factory) {
+		return new QueryLoader( this, factory, w.getSelectClause() );
 	}
 
 	private void generate(AST sqlAst) throws QueryException, RecognitionException {
@@ -310,7 +314,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 		}
 	}
 
-	private void errorIfDML() throws HibernateException {
+	protected void errorIfDML() throws HibernateException {
 		if ( sqlAst.needsExecutor() ) {
 			throw new QueryExecutionRequestException( "Not supported for DML operations", hql );
 		}
@@ -452,6 +456,18 @@ public class QueryTranslatorImpl implements FilterTranslator {
 			throws HibernateException {
 		errorIfSelect();
 		return statementExecutor.execute( queryParameters, session );
+	}
+
+	/**
+	 * The SQl statements used for an update query.
+	 * Throws exception if the query is a SELECT.
+	 * @see #getSQLString()
+	 * @throws QueryExecutionRequestException for select queries.
+	 * @return the sql queries used for the update
+	 */
+	protected String[] getSqlStatements() {
+		errorIfSelect();
+		return statementExecutor.getSqlStatements();
 	}
 
 	/**

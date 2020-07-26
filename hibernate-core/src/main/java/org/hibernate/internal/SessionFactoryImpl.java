@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
@@ -84,6 +85,7 @@ import org.hibernate.engine.spi.SessionOwner;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
+import org.hibernate.event.spi.EventEngine;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.id.IdentifierGenerator;
@@ -167,6 +169,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	private final transient Map<String,Object> properties;
 
 	private final transient SessionFactoryServiceRegistry serviceRegistry;
+	private final transient EventEngine eventEngine;
 	private final transient JdbcServices jdbcServices;
 
 	private final transient SQLFunctionRegistry sqlFunctionRegistry;
@@ -197,7 +200,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	public SessionFactoryImpl(
 			final MetadataImplementor metadata,
-			SessionFactoryOptions options) {
+			SessionFactoryOptions options,
+			QueryPlanCache.QueryPlanCreator queryPlanCacheFunction) {
 		LOG.debug( "Building session factory" );
 
 		this.sessionFactoryOptions = options;
@@ -207,6 +211,10 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 				.getServiceRegistry()
 				.getService( SessionFactoryServiceRegistryFactory.class )
 				.buildServiceRegistry( this, options );
+
+		this.eventEngine = new EventEngine( metadata, this );
+
+		metadata.initSessionFactory( this );
 
 		final CfgXmlAccessService cfgXmlAccessService = serviceRegistry.getService( CfgXmlAccessService.class );
 
@@ -254,7 +262,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		LOG.debugf( "Session factory constructed with filter configurations : %s", filters );
 		LOG.debugf( "Instantiating session factory with properties: %s", properties );
 
-		this.queryPlanCache = new QueryPlanCache( this );
+		this.queryPlanCache = new QueryPlanCache( this, queryPlanCacheFunction );
 
 		class IntegratorObserver implements SessionFactoryObserver {
 			private ArrayList<Integrator> integrators = new ArrayList<>();
@@ -298,8 +306,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 					metadata,
 					determineJpaMetaModelPopulationSetting( properties )
 			);
-
-			metadata.initSessionFactory( this );
 
 			//Named Queries:
 			this.namedQueryRepository = metadata.buildNamedQueryRepository( this );
@@ -516,6 +522,11 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	@Override
 	public String getName() {
 		return name;
+	}
+
+	@Override
+	public EventEngine getEventEngine() {
+		return eventEngine;
 	}
 
 	@Override
@@ -753,8 +764,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	 * @throws HibernateException
 	 */
 	public void close() throws HibernateException {
-		//This is an idempotent operation so we can do it even before the checks (it won't hurt):
-		Environment.getBytecodeProvider().resetCaches();
 		synchronized (this) {
 			if ( isClosed ) {
 				if ( getSessionFactoryOptions().getJpaCompliance().isJpaClosedComplianceEnabled() ) {
@@ -1649,7 +1658,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	/**
 	 * @return the FastSessionServices for this SessionFactory.
 	 */
-	FastSessionServices getFastSessionServices() {
+	@Override
+	public FastSessionServices getFastSessionServices() {
 		return this.fastSessionServices;
 	}
 

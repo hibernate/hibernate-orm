@@ -71,7 +71,7 @@ public class StandardServiceRegistryBuilder {
 	public static final String DEFAULT_CFG_RESOURCE_NAME = "hibernate.cfg.xml";
 
 	private final Map settings;
-	private final List<StandardServiceInitiator> initiators = standardInitiatorList();
+	private final List<StandardServiceInitiator> initiators;
 	private final List<ProvidedService> providedServices = new ArrayList<>();
 
 	private boolean autoCloseRegistry = true;
@@ -97,11 +97,12 @@ public class StandardServiceRegistryBuilder {
 	}
 
 	/**
-	 * Intended for use exclusively from JPA boot-strapping.
+	 * Intended for use exclusively from JPA boot-strapping, or extensions of
+	 * this class. Consider this an SPI.
 	 *
 	 * @see #forJpa
 	 */
-	private StandardServiceRegistryBuilder(
+	protected StandardServiceRegistryBuilder(
 			BootstrapServiceRegistry bootstrapServiceRegistry,
 			Map settings,
 			LoadedConfig loadedConfig) {
@@ -109,6 +110,24 @@ public class StandardServiceRegistryBuilder {
 		this.configLoader = new ConfigLoader( bootstrapServiceRegistry );
 		this.settings = settings;
 		this.aggregatedCfgXml = loadedConfig;
+		this.initiators = standardInitiatorList();
+	}
+
+	/**
+	 * Intended for use exclusively from Quarkus boot-strapping, or extensions of
+	 * this class which need to override the standard ServiceInitiator list.
+	 * Consider this an SPI.
+	 */
+	protected StandardServiceRegistryBuilder(
+			BootstrapServiceRegistry bootstrapServiceRegistry,
+			Map settings,
+			LoadedConfig loadedConfig,
+			List<StandardServiceInitiator> initiators) {
+		this.bootstrapServiceRegistry = bootstrapServiceRegistry;
+		this.configLoader = new ConfigLoader( bootstrapServiceRegistry );
+		this.settings = settings;
+		this.aggregatedCfgXml = loadedConfig;
+		this.initiators = initiators;
 	}
 
 	/**
@@ -123,6 +142,7 @@ public class StandardServiceRegistryBuilder {
 		this.bootstrapServiceRegistry = bootstrapServiceRegistry;
 		this.configLoader = new ConfigLoader( bootstrapServiceRegistry );
 		this.aggregatedCfgXml = loadedConfigBaseline;
+		this.initiators = standardInitiatorList();
 	}
 
 	public ConfigLoader getConfigLoader() {

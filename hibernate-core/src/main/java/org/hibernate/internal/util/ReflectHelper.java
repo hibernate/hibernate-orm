@@ -39,7 +39,7 @@ import org.hibernate.type.Type;
 public final class ReflectHelper {
 
 	private static final Pattern JAVA_CONSTANT_PATTERN = Pattern.compile(
-			"[a-z\\d]+\\.([A-Z]{1}[a-z\\d]+)+\\$?([A-Z]{1}[a-z\\d]+)*\\.[A-Z_\\$]+", Pattern.UNICODE_CHARACTER_CLASS);
+			"[a-z\\d]+\\.([A-Z]+[a-z\\d]+)+\\$?([A-Z]{1}[a-z\\d]+)*\\.[A-Z_\\$]+", Pattern.UNICODE_CHARACTER_CLASS);
 
 	public static final Class[] NO_PARAM_SIGNATURE = new Class[0];
 	public static final Object[] NO_PARAMS = new Object[0];
@@ -347,9 +347,37 @@ public final class ReflectHelper {
 
 	}
 
+	public static <T> Constructor<T> getConstructor(
+			Class<T> clazz,
+			Class... constructorArgs) {
+		Constructor<T> constructor = null;
+		try {
+			constructor = clazz.getDeclaredConstructor( constructorArgs );
+			try {
+				ReflectHelper.ensureAccessibility( constructor );
+			}
+			catch ( SecurityException e ) {
+				constructor = null;
+			}
+		}
+		catch ( NoSuchMethodException ignore ) {
+		}
+
+		return constructor;
+	}
+
 	public static Method getMethod(Class clazz, Method method) {
 		try {
 			return clazz.getMethod( method.getName(), method.getParameterTypes() );
+		}
+		catch (Exception e) {
+			return null;
+		}
+	}
+
+	public static Method getMethod(Class clazz, String methodName, Class... paramTypes) {
+		try {
+			return clazz.getMethod( methodName, paramTypes );
 		}
 		catch (Exception e) {
 			return null;

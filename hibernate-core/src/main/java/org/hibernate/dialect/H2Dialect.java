@@ -37,6 +37,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorH2DatabaseImpl;
+import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.StandardBasicTypes;
@@ -101,7 +102,9 @@ public class H2Dialect extends Dialect {
 		}
 
 		if ( buildId >= 32 ) {
-			this.sequenceInformationExtractor = SequenceInformationExtractorH2DatabaseImpl.INSTANCE;
+			this.sequenceInformationExtractor = buildId >= 201
+					? SequenceInformationExtractorLegacyImpl.INSTANCE
+					: SequenceInformationExtractorH2DatabaseImpl.INSTANCE;
 			this.querySequenceString = "select * from INFORMATION_SCHEMA.SEQUENCES";
 		}
 		else {
@@ -115,8 +118,8 @@ public class H2Dialect extends Dialect {
 		registerColumnType( Types.BIT, "boolean" );
 		registerColumnType( Types.CHAR, "char($l)" );
 		registerColumnType( Types.DATE, "date" );
-		registerColumnType( Types.DECIMAL, "decimal($p,$s)" );
-		registerColumnType( Types.NUMERIC, "decimal($p,$s)" );
+		registerColumnType( Types.DECIMAL, buildId >= 201 ? "numeric($p,$s)" : "decimal($p,$s)" );
+		registerColumnType( Types.NUMERIC, buildId >= 201 ? "numeric($p,$s)" : "decimal($p,$s)" );
 		registerColumnType( Types.DOUBLE, "double" );
 		registerColumnType( Types.FLOAT, "float" );
 		registerColumnType( Types.INTEGER, "integer" );
@@ -129,7 +132,7 @@ public class H2Dialect extends Dialect {
 		registerColumnType( Types.TIME, "time" );
 		registerColumnType( Types.TIMESTAMP, "timestamp" );
 		registerColumnType( Types.VARCHAR, "varchar($l)" );
-		registerColumnType( Types.VARBINARY, "binary($l)" );
+		registerColumnType( Types.VARBINARY, buildId >= 201 ? "varbinary($l)" : "binary($l)" );
 		registerColumnType( Types.BLOB, "blob" );
 		registerColumnType( Types.CLOB, "clob" );
 
@@ -260,11 +263,6 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsIfExistsAfterTableName() {
-		return true;
-	}
-
-	@Override
 	public boolean supportsIfExistsBeforeConstraintName() {
 		return true;
 	}
@@ -331,6 +329,9 @@ public class H2Dialect extends Dialect {
 				final int idx = message.indexOf( "violation: " );
 				if ( idx > 0 ) {
 					constraintName = message.substring( idx + "violation: ".length() );
+				}
+				if ( sqle.getSQLState().equals("23506") ) {
+					constraintName  = constraintName.substring( 1, constraintName.indexOf(":") );
 				}
 			}
 			return constraintName;
@@ -428,17 +429,32 @@ public class H2Dialect extends Dialect {
 		// see http://groups.google.com/group/h2-database/browse_thread/thread/562d8a49e2dabe99?hl=en
 		return true;
 	}
-	
+
 	@Override
 	public boolean supportsTuplesInSubqueries() {
 		return false;
 	}
-	
+
+	// Do not drop constraints explicitly, just do this by cascading instead.
 	@Override
 	public boolean dropConstraints() {
-		// We don't need to drop constraints before dropping tables, that just leads to error
-		// messages about missing tables when we don't have a schema in the database
 		return false;
+	}
+
+	@Override
+	public String getCascadeConstraintsString() {
+		return " CASCADE ";
+	}
+
+	// CASCADE has to be AFTER IF EXISTS in case it's after the tablename
+	@Override
+	public boolean supportsIfExistsAfterTableName() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsIfExistsBeforeTableName() {
+		return true;
 	}
 
 	@Override

@@ -10,7 +10,7 @@ buildscript {
 		mavenCentral()
 	}
 	dependencies {
-		classpath 'de.thetaphi:forbiddenapis:2.6'
+		classpath 'de.thetaphi:forbiddenapis:3.0.1'
 	}
 }
 
@@ -26,7 +26,7 @@ apply from: rootProject.file( 'gradle/libraries.gradle' )
 apply from: rootProject.file( 'gradle/databases.gradle' )
 
 apply plugin: 'java'
-apply plugin: 'osgi'
+apply plugin: 'biz.aQute.bnd.builder'
 
 apply plugin: 'checkstyle'
 apply plugin: 'build-dashboard'
@@ -38,14 +38,8 @@ ext {
 	forbiddenAPITargetJDKCompatibility = '11'
 }
 
-
-sourceCompatibility = project.baselineJavaVersion
-targetCompatibility = project.baselineJavaVersion
-
-afterEvaluate {
-	if ( !project.description ) {
-		project.description = "The Hibernate ORM $project.name module"
-	}
+if ( !project.description ) {
+	project.description = "The Hibernate ORM $project.name module"
 }
 
 
@@ -117,8 +111,20 @@ dependencies {
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Compilation
 
-tasks.withType(JavaCompile) {
+tasks.withType( JavaCompile ) {
 	options.encoding = 'UTF-8'
+	sourceCompatibility = project.baselineJavaVersion
+	targetCompatibility = project.baselineJavaVersion
+}
+
+if ( project.baselineJavaVersion != gradle.ext.testedJavaVersion ) {
+	logger.info( "Forcing the target bytecode version for test classes to '$gradle.ext.testedJavaVersion'" )
+
+	tasks.compileTestJava {
+		// For *tests only*, generate bytecode matching the Java version currently in use.
+		// This allows testing bytecode enhancement on the latest Java versions (13, 14, ...).
+		targetCompatibility = gradle.ext.testedJavaVersion
+	}
 }
 
 task compile(dependsOn: [compileJava, processResources, compileTestJava, processTestResources] )
@@ -191,7 +197,6 @@ processTestResources {
 		copy {
 			from file( 'src/test/resources' )
 			into file( "${buildDir}/resources/test" )
-			exclude 'src/test/resources/arquillian.xml'
 			exclude 'src/test/resources/hibernate.properties'
 		}
 		copy {
@@ -202,15 +207,12 @@ processTestResources {
 	}
 }
 
-// Enable the experimental features of ByteBuddy with JDK 12+
+// Enable the experimental features of ByteBuddy with JDK 15+
 test {
-	//Only safe to attempt to parse the version as an integer since JDK11
-	if ( JavaVersion.current().isJava11Compatible() ) {
-		int majorJVMVersionInt = Integer.valueOf(JavaVersion.current().toString());
-		//Set the -Dnet.bytebuddy.experimental=true property only when we need it:
-		if (majorJVMVersionInt >= 12) {
-			systemProperty 'net.bytebuddy.experimental', true
-		}
+	if ( Integer.valueOf( gradle.ext.testedJavaVersionAsEnum.getMajorVersion() ) >= 15 ) {
+		logger.warn( "The version of java that will be tested is not supported by Bytebuddy by default. " +
+				 " Setting 'net.bytebuddy.experimental=true'." )
+		systemProperty 'net.bytebuddy.experimental', true
 	}
 }
 
@@ -332,6 +334,10 @@ task forbiddenApisSystemOut(type: CheckForbiddenApis, dependsOn: compileJava) {
 	targetCompatibility = project.forbiddenAPITargetJDKCompatibility
 	bundledSignatures += 'jdk-system-out'
 	suppressAnnotations += ['org.hibernate.internal.build.AllowSysOut', 'org.hibernate.internal.build.AllowPrintStacktrace']
+
+	// This slows down the checks a little, but is necessary to avoid the gradle deamon holding on
+	// to class definitions loaded previously - even possibly in a previous build.
+	disableClassloadingCache = true
 }
 
 task forbiddenApisUnsafe(type: CheckForbiddenApis, dependsOn: compileJava) {
@@ -345,6 +351,10 @@ task forbiddenApisUnsafe(type: CheckForbiddenApis, dependsOn: compileJava) {
 	//
 	// No idea how findbugs was missing these b4
 	ignoreFailures = true
+
+	// This slows down the checks a little, but is necessary to avoid the gradle deamon holding on
+	// to class definitions loaded previously - even possibly in a previous build.
+	disableClassloadingCache = true
 }
 
 task forbiddenApisNonPortable(type: CheckForbiddenApis, dependsOn: compileJava) {
@@ -352,6 +362,10 @@ task forbiddenApisNonPortable(type: CheckForbiddenApis, dependsOn: compileJava) 
 	classpath = project.sourceSets.main.compileClasspath + project.sourceSets.main.runtimeClasspath
 	targetCompatibility = project.forbiddenAPITargetJDKCompatibility
 	bundledSignatures += 'jdk-non-portable'
+
+	// This slows down the checks a little, but is necessary to avoid the gradle deamon holding on
+	// to class definitions loaded previously - even possibly in a previous build.
+	disableClassloadingCache = true
 }
 
 task forbiddenApis

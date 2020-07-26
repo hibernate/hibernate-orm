@@ -83,6 +83,8 @@ import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.ValueInclusion;
+import org.hibernate.event.spi.EventSource;
+import org.hibernate.event.spi.LoadEvent;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.PostInsertIdentifierGenerator;
 import org.hibernate.id.PostInsertIdentityPersister;
@@ -98,6 +100,7 @@ import org.hibernate.jdbc.Expectations;
 import org.hibernate.jdbc.TooManyRowsAffectedException;
 import org.hibernate.loader.custom.sql.SQLQueryParser;
 import org.hibernate.loader.entity.BatchingEntityLoaderBuilder;
+import org.hibernate.loader.entity.CacheEntityLoaderHelper;
 import org.hibernate.loader.entity.CascadeEntityLoader;
 import org.hibernate.loader.entity.DynamicBatchingEntityLoaderBuilder;
 import org.hibernate.loader.entity.EntityLoader;
@@ -1193,7 +1196,7 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	private Object initializeLazyPropertiesFromDatastore(
+	protected Object initializeLazyPropertiesFromDatastore(
 			final String fieldName,
 			final Object entity,
 			final SharedSessionContractImplementor session,
@@ -1305,7 +1308,7 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	private Object initializeLazyPropertiesFromCache(
+	protected Object initializeLazyPropertiesFromCache(
 			final String fieldName,
 			final Object entity,
 			final SharedSessionContractImplementor session,
@@ -1343,7 +1346,7 @@ public abstract class AbstractEntityPersister
 		return result;
 	}
 
-	private boolean initializeLazyProperty(
+	protected boolean initializeLazyProperty(
 			final String fieldName,
 			final Object entity,
 			final SharedSessionContractImplementor session,
@@ -2406,6 +2409,22 @@ public abstract class AbstractEntityPersister
 
 	}
 
+	protected int[] getLazyPropertyNumbers() {
+		return lazyPropertyNumbers;
+	}
+
+	protected String[] getLazyPropertyNames() {
+		return lazyPropertyNames;
+	}
+
+	protected Type[] getLazyPropertyTypes() {
+		return lazyPropertyTypes;
+	}
+
+	protected String[][] getLazyPropertyColumnAliases() {
+		return lazyPropertyColumnAliases;
+	}
+
 	public Object loadByUniqueKey(
 			String propertyName,
 			Object uniqueKey,
@@ -2572,9 +2591,10 @@ public abstract class AbstractEntityPersister
 			Serializable id,
 			int tableNumber,
 			Expectation expectation,
-			PreparedStatement statement) throws HibernateException {
+			PreparedStatement statement,
+			String statementSQL) throws HibernateException {
 		try {
-			expectation.verifyOutcome( rows, statement, -1 );
+			expectation.verifyOutcome( rows, statement, -1, statementSQL );
 		}
 		catch (StaleStateException e) {
 			if ( !isNullableTable( tableNumber ) ) {
@@ -3232,7 +3252,7 @@ public abstract class AbstractEntityPersister
 					expectation.verifyOutcome(
 							session.getJdbcCoordinator()
 									.getResultSetReturn()
-									.executeUpdate( insert ), insert, -1
+									.executeUpdate( insert ), insert, -1, sql
 					);
 				}
 			}
@@ -3431,7 +3451,8 @@ public abstract class AbstractEntityPersister
 							id,
 							j,
 							expectation,
-							update
+							update,
+							sql
 					);
 				}
 
@@ -3556,7 +3577,8 @@ public abstract class AbstractEntityPersister
 							id,
 							j,
 							expectation,
-							delete
+							delete,
+							sql
 					);
 				}
 
@@ -3587,7 +3609,7 @@ public abstract class AbstractEntityPersister
 
 	}
 
-	private String[] getUpdateStrings(boolean byRowId, boolean lazy) {
+	protected String[] getUpdateStrings(boolean byRowId, boolean lazy) {
 		if ( byRowId ) {
 			return lazy ? getSQLLazyUpdateByRowIdStrings() : getSQLUpdateByRowIdStrings();
 		}
@@ -3762,7 +3784,7 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	private void preInsertInMemoryValueGeneration(Object[] fields, Object object, SharedSessionContractImplementor session) {
+	protected void preInsertInMemoryValueGeneration(Object[] fields, Object object, SharedSessionContractImplementor session) {
 		if ( getEntityMetamodel().hasPreInsertGeneratedValues() ) {
 			final InMemoryValueGenerationStrategy[] strategies = getEntityMetamodel().getInMemoryValueGenerationStrategies();
 			for ( int i = 0; i < strategies.length; i++ ) {
@@ -3799,7 +3821,7 @@ public abstract class AbstractEntityPersister
 		final String[] deleteStrings;
 		if ( isImpliedOptimisticLocking && loadedState != null ) {
 			// we need to utilize dynamic delete statements
-			deleteStrings = generateSQLDeletStrings( loadedState );
+			deleteStrings = generateSQLDeleteStrings( loadedState );
 		}
 		else {
 			// otherwise, utilize the static delete statements
@@ -3812,12 +3834,12 @@ public abstract class AbstractEntityPersister
 
 	}
 
-	private boolean isAllOrDirtyOptLocking() {
+	protected boolean isAllOrDirtyOptLocking() {
 		return entityMetamodel.getOptimisticLockStyle() == OptimisticLockStyle.DIRTY
 				|| entityMetamodel.getOptimisticLockStyle() == OptimisticLockStyle.ALL;
 	}
 
-	private String[] generateSQLDeletStrings(Object[] loadedState) {
+	private String[] generateSQLDeleteStrings(Object[] loadedState) {
 		int span = getTableSpan();
 		String[] deleteStrings = new String[span];
 		for ( int j = span - 1; j >= 0; j-- ) {
@@ -4408,12 +4430,21 @@ public abstract class AbstractEntityPersister
 
 			final EntityKey entityKey = proxyInterceptor.getEntityKey();
 			final Serializable identifier = entityKey.getIdentifier();
-			final Object loaded = readLockLoader.load(
-					identifier,
-					entity,
-					session,
-					LockOptions.READ
-			);
+
+
+			LoadEvent loadEvent = new LoadEvent( identifier, entity, (EventSource)session, false );
+			Object loaded = null;
+			if ( canReadFromCache ) {
+				loaded = CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache( loadEvent, this, entityKey );
+			}
+			if ( loaded == null ) {
+				loaded = readLockLoader.load(
+						identifier,
+						entity,
+						session,
+						LockOptions.READ
+				);
+			}
 
 			if ( loaded == null ) {
 				final PersistenceContext persistenceContext = session.getPersistenceContext();

@@ -22,7 +22,7 @@ import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 /**
  * Integration version of the Graph contract
  *
- * @author Strong Liu <stliu@hibernate.org>
+ * @author <a href="mailto:stliu@hibernate.org">Strong Liu</a>
  * @author Steve Ebersole
  * @author Andrea Boriero
  */

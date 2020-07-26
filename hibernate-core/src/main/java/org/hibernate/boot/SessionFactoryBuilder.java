@@ -752,7 +752,6 @@ public interface SessionFactoryBuilder {
 	 */
 	SessionFactoryBuilder enableJpaClosedCompliance(boolean enabled);
 
-
 	/**
 	 * Allows unwrapping this builder as another, more specific type.
 	 *

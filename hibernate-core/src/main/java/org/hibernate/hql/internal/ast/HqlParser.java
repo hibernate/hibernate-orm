@@ -62,7 +62,8 @@ public final class HqlParser extends HqlBaseParser {
 	}
 
 
-	// handle trace logging ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// trace logging hooks
 
 	private int traceDepth;
 
@@ -90,6 +91,9 @@ public final class HqlParser extends HqlBaseParser {
 		LOG.trace( prefix + ruleName );
 	}
 
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// error handling hooks
+
 	@Override
 	public void reportError(RecognitionException e) {
 		parseErrorHandler.reportError( e ); // Use the delegate.
@@ -108,6 +112,10 @@ public final class HqlParser extends HqlBaseParser {
 	public ParseErrorHandler getParseErrorHandler() {
 		return parseErrorHandler;
 	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Semantic actions
 
 	/**
 	 * Overrides the base behavior to retry keywords as identifiers.

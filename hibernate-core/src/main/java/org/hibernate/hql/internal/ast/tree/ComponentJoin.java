@@ -152,6 +152,9 @@ public class ComponentJoin extends FromElement {
 			return getComponentPath() + '.' + propertyName;
 		}
 
+		// `size( c.component.customers )`
+		// PropertyMapping(c).toColumns( component.customers )
+
 		@Override
 		public String[] toColumns(String alias, String propertyName) throws QueryException {
 			return getBasePropertyMapping().toColumns( alias, getPropertyPath( propertyName ) );

@@ -2538,7 +2538,7 @@ public abstract class Dialect implements ConversionContext {
 	 * Are subselects supported as the left-hand-side (LHS) of
 	 * IN-predicates.
 	 * <p/>
-	 * In other words, is syntax like "... <subquery> IN (1, 2, 3) ..." supported?
+	 * In other words, is syntax like {@code ... <subquery> IN (1, 2, 3) ...} supported?
 	 *
 	 * @return True if subselects can appear as the LHS of an in-predicate;
 	 * false otherwise.

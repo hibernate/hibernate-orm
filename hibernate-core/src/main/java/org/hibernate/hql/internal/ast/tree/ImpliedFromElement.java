@@ -23,6 +23,14 @@ public class ImpliedFromElement extends FromElement {
 	 */
 	private boolean inProjectionList;
 
+	/**
+	 * Here to add debug breakpoints
+	 */
+	@SuppressWarnings("unused")
+	public ImpliedFromElement() {
+		super();
+	}
+
 	public boolean isImplied() {
 		return true;
 	}

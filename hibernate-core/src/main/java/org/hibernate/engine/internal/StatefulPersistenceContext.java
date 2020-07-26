@@ -18,11 +18,11 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.hibernate.AssertionFailure;
@@ -984,6 +984,10 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public void initializeNonLazyCollections() throws HibernateException {
+		initializeNonLazyCollections( PersistentCollection::forceInitialization );
+	}
+
+	protected void initializeNonLazyCollections(Consumer<PersistentCollection> initializeAction ) {
 		if ( loadCounter == 0 ) {
 			LOG.trace( "Initializing non-lazy collections" );
 
@@ -994,7 +998,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 				int size;
 				while ( nonlazyCollections != null && ( size = nonlazyCollections.size() ) > 0 ) {
 					//note that each iteration of the loop may add new elements
-					nonlazyCollections.remove( size - 1 ).forceInitialization();
+					initializeAction.accept( nonlazyCollections.remove( size - 1 ) );
 				}
 			}
 			finally {
@@ -1356,7 +1360,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	private Object getParentsByChild(Object childEntity) {
 		if ( parentsByChild != null ) {
-			parentsByChild.get( childEntity );
+			return parentsByChild.get( childEntity );
 		}
 		return null;
 	}
@@ -1826,7 +1830,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	// INSERTED KEYS HANDLING ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	private HashMap<String,List<Serializable>> insertedKeysMap;
+	private HashMap<String, HashSet<Serializable>> insertedKeysMap;
 
 	@Override
 	public void registerInsertedKey(EntityPersister persister, Serializable id) {
@@ -1836,11 +1840,10 @@ public class StatefulPersistenceContext implements PersistenceContext {
 				insertedKeysMap = new HashMap<>();
 			}
 			final String rootEntityName = persister.getRootEntityName();
-			List<Serializable> insertedEntityIds = insertedKeysMap.get( rootEntityName );
-			if ( insertedEntityIds == null ) {
-				insertedEntityIds = new ArrayList<>();
-				insertedKeysMap.put( rootEntityName, insertedEntityIds );
-			}
+			HashSet<Serializable> insertedEntityIds = insertedKeysMap.computeIfAbsent(
+					rootEntityName,
+					k -> new HashSet<>()
+			);
 			insertedEntityIds.add( id );
 		}
 	}
@@ -1850,7 +1853,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		// again, we only really care if the entity is cached
 		if ( persister.canWriteToCache() ) {
 			if ( insertedKeysMap != null ) {
-				final List<Serializable> insertedEntityIds = insertedKeysMap.get( persister.getRootEntityName() );
+				final HashSet<Serializable> insertedEntityIds = insertedKeysMap.get( persister.getRootEntityName() );
 				if ( insertedEntityIds != null ) {
 					return insertedEntityIds.contains( id );
 				}

@@ -159,7 +159,7 @@ public final class ByteBuddyState {
 
 	/**
 	 * Wipes out all known caches used by ByteBuddy. This implies it might trigger the need
-	 * to re-create some helpers if used at runtime, especially as this state is shared by
+	 * to re-create some helpers if used at runtime, especially as this state might be shared by
 	 * multiple SessionFactory instances, but at least ensures we cleanup anything which is no
 	 * longer needed after a SessionFactory close.
 	 * The assumption is that closing SessionFactories is a rare event; in this perspective the cost
@@ -179,6 +179,10 @@ public final class ByteBuddyState {
 						.load( referenceClass.getClassLoader(), resolveClassLoadingStrategy( referenceClass ) )
 						.getLoaded(),
 				cache );
+	}
+
+	public Unloaded<?> make(Function<ByteBuddy, DynamicType.Builder<?>> makeProxyFunction) {
+		return make( makeProxyFunction.apply( byteBuddy ) );
 	}
 
 	private Unloaded<?> make(DynamicType.Builder<?> builder) {

@@ -21,11 +21,14 @@ import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistrationException;
 import org.hibernate.event.service.spi.JpaBootstrapSensitive;
 import org.hibernate.event.spi.EventType;
+import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 
 import org.jboss.logging.Logger;
 
 /**
+ * Standard EventListenerGroup implementation
+ *
  * @author Steve Ebersole
  * @author Sanne Grinovero
  */
@@ -33,15 +36,20 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	private static final Logger log = Logger.getLogger( EventListenerGroupImpl.class );
 
 	private final EventType<T> eventType;
-	private final EventListenerRegistryImpl listenerRegistry;
+	private final CallbackRegistry callbackRegistry;
+	private final boolean isJpaBootstrap;
 
 	private final Set<DuplicationStrategy> duplicationStrategies = new LinkedHashSet<>();
 
 	private T[] listeners = null;
 
-	public EventListenerGroupImpl(EventType<T> eventType, EventListenerRegistryImpl listenerRegistry) {
+	public EventListenerGroupImpl(
+			EventType<T> eventType,
+			CallbackRegistry callbackRegistry,
+			boolean isJpaBootstrap) {
 		this.eventType = eventType;
-		this.listenerRegistry = listenerRegistry;
+		this.callbackRegistry = callbackRegistry;
+		this.isJpaBootstrap = isJpaBootstrap;
 
 		duplicationStrategies.add(
 				// At minimum make sure we do not register the same exact listener class multiple times.
@@ -267,14 +275,12 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	}
 
 	private void performInjections(T listener) {
-		if ( CallbackRegistryConsumer.class.isInstance( listener ) ) {
-			( (CallbackRegistryConsumer) listener ).injectCallbackRegistry( listenerRegistry.getCallbackRegistry() );
+		if ( listener instanceof CallbackRegistryConsumer ) {
+			( (CallbackRegistryConsumer) listener ).injectCallbackRegistry( callbackRegistry );
 		}
 
-		if ( JpaBootstrapSensitive.class.isInstance( listener ) ) {
-			( (JpaBootstrapSensitive) listener ).wasJpaBootstrap(
-					listenerRegistry.getSessionFactory().getSessionFactoryOptions().isJpaBootstrap()
-			);
+		if ( listener instanceof JpaBootstrapSensitive ) {
+			( (JpaBootstrapSensitive) listener ).wasJpaBootstrap( isJpaBootstrap );
 		}
 	}
 

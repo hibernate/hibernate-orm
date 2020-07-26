@@ -6,9 +6,6 @@
  */
 package org.hibernate.internal.util.collections;
 
-import java.util.function.Consumer;
-import java.util.function.Function;
-
 /**
  * Stack implementation exposing useful methods for Hibernate needs.
  *
@@ -33,11 +30,6 @@ public interface Stack<T> {
 	T getCurrent();
 
 	/**
-	 * The element previously at the top of the stack before the current one
-	 */
-	T getPrevious();
-
-	/**
 	 * How many elements are currently on the stack?
 	 */
 	int depth();
@@ -52,14 +44,4 @@ public interface Stack<T> {
 	 */
 	void clear();
 
-	/**
-	 * Visit all elements in the stack, starting with the current and working back
-	 */
-	void visitCurrentFirst(Consumer<T> action);
-
-	/**
-	 * Find an element on the stack and return a value.  The first non-null element
-	 * returned from `action` stops the iteration and is returned from here
-	 */
-	<X> X findCurrentFirst(Function<T, X> action);
 }

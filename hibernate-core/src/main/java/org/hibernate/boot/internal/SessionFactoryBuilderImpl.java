@@ -20,13 +20,17 @@ import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryBuilderImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.bytecode.internal.SessionFactoryObserverForBytecodeEnhancer;
+import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.loader.BatchFetchStyle;
@@ -45,10 +49,13 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	private final SessionFactoryOptionsBuilder optionsBuilder;
 
 	public SessionFactoryBuilderImpl(MetadataImplementor metadata, BootstrapContext bootstrapContext) {
-		this( metadata, new SessionFactoryOptionsBuilder(
-				metadata.getMetadataBuildingOptions().getServiceRegistry(),
-				bootstrapContext
-		) );
+		this(
+				metadata,
+				new SessionFactoryOptionsBuilder(
+						metadata.getMetadataBuildingOptions().getServiceRegistry(),
+						bootstrapContext
+				)
+		);
 	}
 
 	public SessionFactoryBuilderImpl(MetadataImplementor metadata, SessionFactoryOptionsBuilder optionsBuilder) {
@@ -268,7 +275,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
-	public SessionFactoryBuilder applyQuerySubstitutions(Map substitutions) {
+	public SessionFactoryBuilder applyQuerySubstitutions(@SuppressWarnings("rawtypes") Map substitutions) {
 		this.optionsBuilder.applyQuerySubstitutions( substitutions );
 		return this;
 	}
@@ -459,12 +466,14 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public SessionFactory build() {
 		metadata.validate();
-		return new SessionFactoryImpl( metadata, buildSessionFactoryOptions() );
+		final StandardServiceRegistry serviceRegistry = metadata.getMetadataBuildingOptions().getServiceRegistry();
+		BytecodeProvider bytecodeProvider = serviceRegistry.getService( BytecodeProvider.class );
+		addSessionFactoryObservers( new SessionFactoryObserverForBytecodeEnhancer( bytecodeProvider ) );
+		return new SessionFactoryImpl( metadata, buildSessionFactoryOptions(), HQLQueryPlan::new );
 	}
 
 	@Override
 	public SessionFactoryOptions buildSessionFactoryOptions() {
 		return optionsBuilder.buildOptions();
 	}
-
 }

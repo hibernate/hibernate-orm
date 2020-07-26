@@ -60,6 +60,7 @@ import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import antlr.RecognitionException;
@@ -571,6 +572,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@Ignore( "Old parser generated incorrect SQL for `size()`")
 	public void testSizeFunctionAndProperty() {
 		assertTranslation("from Animal a where a.offspring.size > 0");
 		assertTranslation("from Animal a join a.offspring where a.offspring.size > 1");
@@ -625,15 +627,8 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
-	public void testCollectionOfValuesSize() throws Exception {
-		//SQL *was* missing a comma
-		assertTranslation( "select size(baz.stringDateMap) from org.hibernate.test.legacy.Baz baz" );
-	}
-
-	@Test
 	public void testCollectionFunctions() throws Exception {
 		//these are both broken, a join that belongs in the subselect finds its way into the main query
-		assertTranslation( "from Zoo zoo where size(zoo.animals) > 100" );
 		assertTranslation( "from Zoo zoo where maxindex(zoo.mammals) = 'dog'" );
 	}
 
@@ -651,8 +646,10 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
-	public void testCollectionSize() throws Exception {
+	@Ignore( "The old parser generated incorrect SQL for selection of size functions" )
+	public void testCollectionSizeSelection() throws Exception {
 		assertTranslation( "select size(zoo.animals) from Zoo zoo" );
+		assertTranslation( "select size(baz.stringDateMap) from org.hibernate.test.legacy.Baz baz" );
 	}
 
 	@Test

@@ -26,7 +26,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
- * @author Piotr Krauzowicz <p.krauzowicz@visiona.pl>
+ * @author <a href="mailto:p.krauzowicz@visiona.pl">Piotr Krauzowicz</a>
  * @author Gail Badner
  */
 public class CharacterArrayIdTest extends BaseCoreFunctionalTestCase {

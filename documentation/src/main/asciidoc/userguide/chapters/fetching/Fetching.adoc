@@ -188,8 +188,15 @@ In both cases, this resolves to exactly one database query to get all that infor
 [[fetching-strategies-dynamic-fetching-entity-graph]]
 === Dynamic fetching via JPA entity graph
 
-JPA 2.1 introduced entity graphs so the application developer has more control over fetch plans.
+JPA 2.1 introduced ``entity graph`` so the application developer has more control over fetch plans. It has two modes to choose from:
 
+fetch graph:::
+In this case, all attributes specified in the entity graph will be treated as FetchType.EAGER, and all attributes not specified will *ALWAYS* be treated as FetchType.LAZY.
+
+load graph:::
+In this case, all attributes specified in the entity graph will be treated as FetchType.EAGER, but attributes not specified use their static mapping specification.
+
+Below is an `fetch graph` dynamic fetching example:
 [[fetching-strategies-dynamic-fetching-entity-graph-example]]
 .Fetch graph example
 ====
@@ -219,7 +226,7 @@ An EntityGraph is the root of a "load plan" and must correspond to an EntityType
 ==== JPA (key) subgraphs
 
 A sub-graph is used to control the fetching of sub-attributes of the AttributeNode it is applied to.
-It is generally defined via the https://javaee.github.io/javaee-spec/javadocs/javax/persistence/NamedSubgraph.html[`@NamedSubgraph`] annotation.
+It is generally defined via the {jpaJavadocUrlPrefix}NamedSubgraph.html[`@NamedSubgraph`] annotation.
 
 If we have a `Project` parent entity which has an `employees` child associations,
 and we'd like to fetch the `department` for the `Employee` child association.
@@ -587,7 +594,7 @@ The possible values are given by the `https://docs.jboss.org/hibernate/orm/{majo
 `FALSE`:: Eagerly load it.
 `EXTRA`:: Prefer extra queries over full collection loading.
 
-The `TRUE` and `FALSE` values are deprecated since you should be using the JPA https://javaee.github.io/javaee-spec/javadocs/javax/persistence/FetchType.html[`FetchType`] attribute of the <<annotations-jpa-elementcollection>>, <<annotations-jpa-onetomany>>, or <<annotations-jpa-manytomany>> collection.
+The `TRUE` and `FALSE` values are deprecated since you should be using the JPA {jpaJavadocUrlPrefix}FetchType.html[`FetchType`] attribute of the <<annotations-jpa-elementcollection>>, <<annotations-jpa-onetomany>>, or <<annotations-jpa-manytomany>> collection.
 
 The `EXTRA` value has no equivalent in the JPA specification, and it's used to avoid loading the entire collection even when the collection is accessed for the first time.
 Each element is fetched individually using a secondary query.

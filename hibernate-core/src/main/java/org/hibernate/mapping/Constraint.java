@@ -156,6 +156,13 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 		return columns.iterator();
 	}
 
+	/**
+	 * This is a duplicate method, that has been removed in v.6.0.
+	 * {@link #getColumnIterator()} is the one that will stay.
+	 *
+	 * @deprecated (Since 6.0) use {@link #getColumnIterator()} instead.
+	 */
+	@Deprecated
 	public Iterator<Column> columnIterator() {
 		return columns.iterator();
 	}

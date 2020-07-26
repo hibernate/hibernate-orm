@@ -181,7 +181,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			ClassLoaderService providedClassLoaderService ) {
 		this( persistenceUnit, integrationSettings, null, providedClassLoaderService);
 	}
-	
+
 	private EntityManagerFactoryBuilderImpl(
 			PersistenceUnitDescriptor persistenceUnit,
 			Map integrationSettings,
@@ -193,14 +193,26 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		this.persistenceUnit = persistenceUnit;
 
 		if ( integrationSettings == null ) {
-			integrationSettings = Collections.emptyMap();
+			integrationSettings = new HashMap();
+		}
+
+		Map mergedIntegrationSettings = null;
+		Properties properties = persistenceUnit.getProperties();
+		if ( properties != null ) {
+			// original integratin setting entries take precedence
+			mergedIntegrationSettings = new HashMap( properties );
+			mergedIntegrationSettings.putAll( integrationSettings );
 		}
 
 		// Build the boot-strap service registry, which mainly handles class loader interactions
-		final BootstrapServiceRegistry bsr = buildBootstrapServiceRegistry( integrationSettings, providedClassLoader, providedClassLoaderService);
+		final BootstrapServiceRegistry bsr = buildBootstrapServiceRegistry(
+				mergedIntegrationSettings != null ? mergedIntegrationSettings : integrationSettings,
+				providedClassLoader,
+				providedClassLoaderService
+		);
 
 		// merge configuration sources and build the "standard" service registry
-		final StandardServiceRegistryBuilder ssrBuilder = StandardServiceRegistryBuilder.forJpa( bsr );
+		final StandardServiceRegistryBuilder ssrBuilder = getStandardServiceRegistryBuilder( bsr );
 
 		final MergedSettings mergedSettings = mergeSettings( persistenceUnit, integrationSettings, ssrBuilder );
 
@@ -266,6 +278,13 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 		// for the time being we want to revoke access to the temp ClassLoader if one was passed
 		metamodelBuilder.applyTempClassLoader( null );
+	}
+
+	/**
+	 * Extension point for subclasses. Used by Hibernate Reactive
+	 */
+	protected StandardServiceRegistryBuilder getStandardServiceRegistryBuilder(BootstrapServiceRegistry bsr) {
+		return StandardServiceRegistryBuilder.forJpa( bsr );
 	}
 
 	private void applyMetadataBuilderContributor() {
@@ -1197,7 +1216,10 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		// todo : close the bootstrap registry (not critical, but nice to do)
 	}
 
-	private MetadataImplementor metadata() {
+	/**
+	 * Used by extensions : Hibernate Reactive
+	 */
+	protected MetadataImplementor metadata() {
 		if ( this.metadata == null ) {
 			this.metadata = MetadataBuildingProcess.complete(
 					managedResources,
@@ -1309,7 +1331,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		return persistenceException( message, null );
 	}
 
-	private PersistenceException persistenceException(String message, Exception cause) {
+	protected PersistenceException persistenceException(String message, Exception cause) {
 		return new PersistenceException(
 				getExceptionHeader() + message,
 				cause
@@ -1428,5 +1450,13 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 
 		return instance;
+	}
+
+	/**
+	 * Exposed to extensions: see Hibernate Reactive
+	 * @return
+	 */
+	protected StandardServiceRegistry getStandardServiceRegistry() {
+		return standardServiceRegistry;
 	}
 }

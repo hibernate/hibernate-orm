@@ -7,45 +7,45 @@
 [[annotations-jpa-access]]
 ==== `@Access`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/Access.html[`@Access`] annotation is used to specify the access type of the associated entity class, mapped superclass, or embeddable class, or entity attribute.
+The {jpaJavadocUrlPrefix}Access.html[`@Access`] annotation is used to specify the access type of the associated entity class, mapped superclass, or embeddable class, or entity attribute.
 
 See the <<chapters/domain/access.adoc#access,Access type>> section for more info.
 
 [[annotations-jpa-associationoverride]]
 ==== `@AssociationOverride`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/AssociationOverride.html[`@AssociationOverride`] annotation is used to override an association mapping (e.g. `@ManyToOne`, `@OneToOne`, `@OneToMany`, `@ManyToMany`) inherited from a mapped superclass or an embeddable.
+The {jpaJavadocUrlPrefix}AssociationOverride.html[`@AssociationOverride`] annotation is used to override an association mapping (e.g. `@ManyToOne`, `@OneToOne`, `@OneToMany`, `@ManyToMany`) inherited from a mapped superclass or an embeddable.
 
 See the <<chapters/domain/embeddables.adoc#embeddable-override, Overriding Embeddable types>> section for more info.
 
 [[annotations-jpa-associationoverrides]]
 ==== `@AssociationOverrides`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/AssociationOverrides.html[`@AssociationOverrides`] is used to group several <<annotations-jpa-associationoverride>> annotations.
+The {jpaJavadocUrlPrefix}AssociationOverrides.html[`@AssociationOverrides`] is used to group several <<annotations-jpa-associationoverride>> annotations.
 
 [[annotations-jpa-attributeoverride]]
 ==== `@AttributeOverride`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/AttributeOverride.html[`@AttributeOverride`] annotation is used to override an attribute mapping inherited from a mapped superclass or an embeddable.
+The {jpaJavadocUrlPrefix}AttributeOverride.html[`@AttributeOverride`] annotation is used to override an attribute mapping inherited from a mapped superclass or an embeddable.
 
 See the <<chapters/domain/embeddables.adoc#embeddable-override, Overriding Embeddable types>> section for more info.
 
 [[annotations-jpa-attributeoverrides]]
 ==== `@AttributeOverrides`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/AttributeOverrides.html[`@AttributeOverrides`] is used to group several <<annotations-jpa-attributeoverride>> annotations.
+The {jpaJavadocUrlPrefix}AttributeOverrides.html[`@AttributeOverrides`] is used to group several <<annotations-jpa-attributeoverride>> annotations.
 
 [[annotations-jpa-basic]]
 ==== `@Basic`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/Basic.html[`@Basic`] annotation is used to map a basic attribute type to a database column.
+The {jpaJavadocUrlPrefix}Basic.html[`@Basic`] annotation is used to map a basic attribute type to a database column.
 
 See the <<chapters/domain/basic_types.adoc#basic,Basic types>> chapter for more info.
 
 [[annotations-jpa-cacheable]]
 ==== `@Cacheable`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/Cacheable.html[`@Cacheable`] annotation is used to specify whether an entity should be stored in the second-level cache.
+The {jpaJavadocUrlPrefix}Cacheable.html[`@Cacheable`] annotation is used to specify whether an entity should be stored in the second-level cache.
 
 If the `persistence.xml` `shared-cache-mode` XML attribute is set to `ENABLE_SELECTIVE`, then only the entities annotated with the `@Cacheable` are going to be stored in the second-level cache.
 
@@ -56,102 +56,102 @@ See the <<chapters/caching/Caching.adoc#caching,Caching>> chapter for more info.
 [[annotations-jpa-collectiontable]]
 ==== `@CollectionTable`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/CollectionTable.html[`@CollectionTable`] annotation is used to specify the database table that stores the values of a basic or an embeddable type collection.
+The {jpaJavadocUrlPrefix}CollectionTable.html[`@CollectionTable`] annotation is used to specify the database table that stores the values of a basic or an embeddable type collection.
 
 See the <<chapters/domain/embeddables.adoc#embeddable-collections,Collections of embeddable types>> section for more info.
 
 [[annotations-jpa-column]]
 ==== `@Column`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/Column.html[`@Column`] annotation is used to specify the mapping between a basic entity attribute and the database table column.
+The {jpaJavadocUrlPrefix}Column.html[`@Column`] annotation is used to specify the mapping between a basic entity attribute and the database table column.
 
 See the <<chapters/domain/basic_types.adoc#basic-column-annotation, `@Column` annotation>> section for more info.
 
 [[annotations-jpa-columnresult]]
 ==== `@ColumnResult`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/ColumnResult.html[`@ColumnResult`] annotation is used in conjunction with the <<annotations-jpa-sqlresultsetmapping>> or <<annotations-jpa-constructorresult>> annotations to map a SQL column for a given SELECT query.
+The {jpaJavadocUrlPrefix}ColumnResult.html[`@ColumnResult`] annotation is used in conjunction with the <<annotations-jpa-sqlresultsetmapping>> or <<annotations-jpa-constructorresult>> annotations to map a SQL column for a given SELECT query.
 
 See the <<chapters/query/native/Native.adoc#sql-composite-key-entity-associations_named-query-example, Entity associations with named native queries>> section for more info.
 
 [[annotations-jpa-constructorresult]]
 ==== `@ConstructorResult`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/ConstructorResult.html[`@ConstructorResult`] annotation is used in conjunction with the <<annotations-jpa-sqlresultsetmapping>> annotations to map columns of a given SELECT query to a certain object constructor.
+The {jpaJavadocUrlPrefix}ConstructorResult.html[`@ConstructorResult`] annotation is used in conjunction with the <<annotations-jpa-sqlresultsetmapping>> annotations to map columns of a given SELECT query to a certain object constructor.
 
 See the <<chapters/query/native/Native.adoc#sql-multiple-scalar-values-dto-NamedNativeQuery-example, Multiple scalar values `NamedNativeQuery` with `ConstructorResult`>> section for more info.
 
 [[annotations-jpa-convert]]
 ==== `@Convert`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/Convert.html[`@Convert`] annotation is used to specify the https://javaee.github.io/javaee-spec/javadocs/javax/persistence/AttributeConverter.html[`AttributeConverter`] implementation used to convert the currently annotated basic attribute.
+The {jpaJavadocUrlPrefix}Convert.html[`@Convert`] annotation is used to specify the {jpaJavadocUrlPrefix}AttributeConverter.html[`AttributeConverter`] implementation used to convert the currently annotated basic attribute.
 
-If the `AttributeConverter` uses https://javaee.github.io/javaee-spec/javadocs/javax/persistence/Converter.html#autoApply--[`autoApply`], then all entity attributes with the same target type are going to be converted automatically.
+If the `AttributeConverter` uses {jpaJavadocUrlPrefix}Converter.html#autoApply--[`autoApply`], then all entity attributes with the same target type are going to be converted automatically.
 
 See the <<chapters/domain/basic_types.adoc#basic-enums-attribute-converter, `AttributeConverter`>> section for more info.
 
 [[annotations-jpa-converter]]
 ==== `@Converter`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/Converter.html[`@Converter`] annotation is used to specify that the currently annotated https://javaee.github.io/javaee-spec/javadocs/javax/persistence/AttributeConverter.html[`AttributeConverter`] implementation can be used as a JPA basic attribute converter.
+The {jpaJavadocUrlPrefix}Converter.html[`@Converter`] annotation is used to specify that the currently annotated {jpaJavadocUrlPrefix}AttributeConverter.html[`AttributeConverter`] implementation can be used as a JPA basic attribute converter.
 
-If the https://javaee.github.io/javaee-spec/javadocs/javax/persistence/Converter.html#autoApply--[`autoApply`] attribute is set to `true`, then the JPA provider will automatically convert all basic attributes with the same Java type as defined by the current converter.
+If the {jpaJavadocUrlPrefix}Converter.html#autoApply--[`autoApply`] attribute is set to `true`, then the JPA provider will automatically convert all basic attributes with the same Java type as defined by the current converter.
 
 See the <<chapters/domain/basic_types.adoc#basic-enums-attribute-converter, `AttributeConverter`>> section for more info.
 
 [[annotations-jpa-converts]]
 ==== `@Converts`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/Converts.html[`@Converts`] annotation is used to group multiple <<annotations-jpa-convert>> annotations.
+The {jpaJavadocUrlPrefix}Converts.html[`@Converts`] annotation is used to group multiple <<annotations-jpa-convert>> annotations.
 
 See the <<chapters/domain/basic_types.adoc#basic-enums-attribute-converter, `AttributeConverter`>> section for more info.
 
 [[annotations-jpa-discriminatorcolumn]]
 ==== `@DiscriminatorColumn`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/DiscriminatorColumn.html[`@DiscriminatorColumn`] annotation is used to specify the discriminator column name and the https://javaee.github.io/javaee-spec/javadocs/javax/persistence/DiscriminatorColumn.html#discriminatorType--[discriminator type] for the `SINGLE_TABLE` and `JOINED` inheritance strategies.
+The {jpaJavadocUrlPrefix}DiscriminatorColumn.html[`@DiscriminatorColumn`] annotation is used to specify the discriminator column name and the {jpaJavadocUrlPrefix}DiscriminatorColumn.html#discriminatorType--[discriminator type] for the `SINGLE_TABLE` and `JOINED` inheritance strategies.
 
 See the <<chapters/domain/inheritance.adoc#entity-inheritance-discriminator, Discriminator>> section for more info.
 
 [[annotations-jpa-discriminatorvalue]]
 ==== `@DiscriminatorValue`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/DiscriminatorValue.html[`@DiscriminatorValue`] annotation is used to specify what value of the discriminator column is used for mapping the currently annotated entity.
+The {jpaJavadocUrlPrefix}DiscriminatorValue.html[`@DiscriminatorValue`] annotation is used to specify what value of the discriminator column is used for mapping the currently annotated entity.
 
 See the <<chapters/domain/inheritance.adoc#entity-inheritance-discriminator, Discriminator>> section for more info.
 
 [[annotations-jpa-elementcollection]]
 ==== `@ElementCollection`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/ElementCollection.html[`@ElementCollection`] annotation is used to specify a collection of a basic or embeddable types.
+The {jpaJavadocUrlPrefix}ElementCollection.html[`@ElementCollection`] annotation is used to specify a collection of a basic or embeddable types.
 
 See the <<chapters/domain/collections.adoc#collections, Collections>> section for more info.
 
 [[annotations-jpa-embeddable]]
 ==== `@Embeddable`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/Embeddable.html[`@Embeddable`] annotation is used to specify embeddable types. Like basic types, embeddable types do not have any identity, being managed by their owning entity.
+The {jpaJavadocUrlPrefix}Embeddable.html[`@Embeddable`] annotation is used to specify embeddable types. Like basic types, embeddable types do not have any identity, being managed by their owning entity.
 
 See the <<chapters/domain/embeddables.adoc#embeddables, Embeddables>> section for more info.
 
 [[annotations-jpa-embedded]]
 ==== `@Embedded`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/Embedded.html[`@Embedded`] annotation is used to specify that a given entity attribute represents an embeddable type.
+The {jpaJavadocUrlPrefix}Embedded.html[`@Embedded`] annotation is used to specify that a given entity attribute represents an embeddable type.
 
 See the <<chapters/domain/embeddables.adoc#embeddables, Embeddables>> section for more info.
 
 [[annotations-jpa-embeddedid]]
 ==== `@EmbeddedId`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/EmbeddedId.html[`@EmbeddedId`] annotation is used to specify the entity identifier is an embeddable type.
+The {jpaJavadocUrlPrefix}EmbeddedId.html[`@EmbeddedId`] annotation is used to specify the entity identifier is an embeddable type.
 
 See the <<chapters/domain/identifiers.adoc#identifiers-composite-aggregated, Composite identifiers with `@EmbeddedId`>> section for more info.
 
 [[annotations-jpa-entity]]
 ==== `@Entity`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/Entity.html[`@Entity`] annotation is used to specify that the currently annotated class represents an entity type.
+The {jpaJavadocUrlPrefix}Entity.html[`@Entity`] annotation is used to specify that the currently annotated class represents an entity type.
 Unlike basic and embeddable types, entity types have an identity and their state is managed by the underlying Persistence Context.
 
 See the <<chapters/domain/entity.adoc#entity, Entity>> section for more info.
@@ -159,49 +159,49 @@ See the <<chapters/domain/entity.adoc#entity, Entity>> section for more info.
 [[annotations-jpa-entitylisteners]]
 ==== `@EntityListeners`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/EntityListeners.html[`@EntityListeners`] annotation is used to specify an array of callback listener classes that are used by the currently annotated entity.
+The {jpaJavadocUrlPrefix}EntityListeners.html[`@EntityListeners`] annotation is used to specify an array of callback listener classes that are used by the currently annotated entity.
 
 See the <<chapters/events/Events.adoc#events-jpa-callbacks-example, JPA callbacks>> section for more info.
 
 [[annotations-jpa-entityresult]]
 ==== `@EntityResult`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/EntityResult.html[`@EntityResult`] annotation is used with the <<annotations-jpa-sqlresultsetmapping>> annotation to map the selected columns to an entity.
+The {jpaJavadocUrlPrefix}EntityResult.html[`@EntityResult`] annotation is used with the <<annotations-jpa-sqlresultsetmapping>> annotation to map the selected columns to an entity.
 
 See the <<chapters/query/native/Native.adoc#sql-composite-key-entity-associations_named-query-example, Entity associations with named native queries>> section for more info.
 
 [[annotations-jpa-enumerated]]
 ==== `@Enumerated`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/Enumerated.html[`@Enumerated`] annotation is used to specify that an entity attribute represents an enumerated type.
+The {jpaJavadocUrlPrefix}Enumerated.html[`@Enumerated`] annotation is used to specify that an entity attribute represents an enumerated type.
 
 See the <<chapters/domain/basic_types.adoc#basic-enums-Enumerated, `@Enumerated` basic type>> section for more info.
 
 [[annotations-jpa-excludedefaultlisteners]]
 ==== `@ExcludeDefaultListeners`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/ExcludeDefaultListeners.html[`@ExcludeDefaultListeners`] annotation is used to specify that the currently annotated entity skips the invocation of any default listener.
+The {jpaJavadocUrlPrefix}ExcludeDefaultListeners.html[`@ExcludeDefaultListeners`] annotation is used to specify that the currently annotated entity skips the invocation of any default listener.
 
 See the <<chapters/events/Events.adoc#events-exclude-default-listener, Exclude default entity listeners>> section for more info.
 
 [[annotations-jpa-excludesuperclasslisteners]]
 ==== `@ExcludeSuperclassListeners`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/ExcludeSuperclassListeners.html[`@ExcludeSuperclassListeners`]  annotation is used to specify that the currently annotated entity skips the invocation of listeners declared by its superclass.
+The {jpaJavadocUrlPrefix}ExcludeSuperclassListeners.html[`@ExcludeSuperclassListeners`]  annotation is used to specify that the currently annotated entity skips the invocation of listeners declared by its superclass.
 
 See the <<chapters/events/Events.adoc#events-exclude-default-listener, Exclude default entity listeners>> section for more info.
 
 [[annotations-jpa-fieldresult]]
 ==== `@FieldResult`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/FieldResult.html[`@FieldResult`] annotation is used with the <<annotations-jpa-entityresult>> annotation to map the selected columns to the fields of some specific entity.
+The {jpaJavadocUrlPrefix}FieldResult.html[`@FieldResult`] annotation is used with the <<annotations-jpa-entityresult>> annotation to map the selected columns to the fields of some specific entity.
 
 See the <<chapters/query/native/Native.adoc#sql-composite-key-entity-associations_named-query-example, Entity associations with named native queries>> section for more info.
 
 [[annotations-jpa-foreignkey]]
 ==== `@ForeignKey`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/ForeignKey.html[`@ForeignKey`] annotation is used to specify the associated foreign key of a <<annotations-jpa-joincolumn>> mapping.
+The {jpaJavadocUrlPrefix}ForeignKey.html[`@ForeignKey`] annotation is used to specify the associated foreign key of a <<annotations-jpa-joincolumn>> mapping.
 The `@ForeignKey` annotation is only used if the automated schema generation tool is enabled, in which case, it allows you to customize the underlying foreign key definition.
 
 See the <<chapters/domain/associations.adoc#associations-many-to-one-example,`@ManyToOne` with `@ForeignKey`>> section for more info.
@@ -209,7 +209,7 @@ See the <<chapters/domain/associations.adoc#associations-many-to-one-example,`@M
 [[annotations-jpa-generatedvalue]]
 ==== `@GeneratedValue`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/GeneratedValue.html[`@GeneratedValue`] annotation specifies that the entity identifier value is automatically generated using an identity column, a database sequence, or a table generator.
+The {jpaJavadocUrlPrefix}GeneratedValue.html[`@GeneratedValue`] annotation specifies that the entity identifier value is automatically generated using an identity column, a database sequence, or a table generator.
 Hibernate supports the `@GeneratedValue` mapping even for `UUID` identifiers.
 
 See the <<chapters/domain/identifiers.adoc#identifiers-simple-generated,Automatically-generated identifiers>> section for more info.
@@ -217,7 +217,7 @@ See the <<chapters/domain/identifiers.adoc#identifiers-simple-generated,Automati
 [[annotations-jpa-id]]
 ==== `@Id`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/Id.html[`@Id`] annotation specifies the entity identifier.
+The {jpaJavadocUrlPrefix}Id.html[`@Id`] annotation specifies the entity identifier.
 An entity must always have an identifier attribute which is used when loading the entity in a given Persistence Context.
 
 See the <<chapters/domain/identifiers.adoc#identifiers,Identifiers>> section for more info.
@@ -225,7 +225,7 @@ See the <<chapters/domain/identifiers.adoc#identifiers,Identifiers>> section for
 [[annotations-jpa-idclass]]
 ==== `@IdClass`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/IdClass.html[`@IdClass`] annotation is used if the current entity defined a composite identifier.
+The {jpaJavadocUrlPrefix}IdClass.html[`@IdClass`] annotation is used if the current entity defined a composite identifier.
 A separate class encapsulates all the identifier attributes, which are mirrored by the current entity mapping.
 
 See the <<chapters/domain/identifiers.adoc#identifiers-composite-nonaggregated,Composite identifiers with `@IdClass`>> section for more info.
@@ -233,89 +233,89 @@ See the <<chapters/domain/identifiers.adoc#identifiers-composite-nonaggregated,C
 [[annotations-jpa-index]]
 ==== `@Index`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/Index.html[`@Index`] annotation is used by the automated schema generation tool to create a database index.
+The {jpaJavadocUrlPrefix}Index.html[`@Index`] annotation is used by the automated schema generation tool to create a database index.
 
 See the <<chapters/schema/Schema.adoc#schema-generation-columns-index, Columns index>> chapter for more info.
 
 [[annotations-jpa-inheritance]]
 ==== `@Inheritance`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/Inheritance.html[`@Inheritance`] annotation is used to specify the inheritance strategy of a given entity class hierarchy.
+The {jpaJavadocUrlPrefix}Inheritance.html[`@Inheritance`] annotation is used to specify the inheritance strategy of a given entity class hierarchy.
 
 See the <<chapters/domain/inheritance.adoc#entity-inheritance,Inheritance>> section for more info.
 
 [[annotations-jpa-joincolumn]]
 ==== `@JoinColumn`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/JoinColumn.html[`@JoinColumn`] annotation is used to specify the FOREIGN KEY column used when joining an entity association or an embeddable collection.
+The {jpaJavadocUrlPrefix}JoinColumn.html[`@JoinColumn`] annotation is used to specify the FOREIGN KEY column used when joining an entity association or an embeddable collection.
 
 See the <<chapters/domain/associations.adoc#associations-many-to-one-example,`@ManyToOne` with `@JoinColumn`>> section for more info.
 
 [[annotations-jpa-joincolumns]]
 ==== `@JoinColumns`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/JoinColumns.html[`@JoinColumns`] annotation is used to group multiple <<annotations-jpa-joincolumn>> annotations, which are used when mapping entity association or an embeddable collection using a composite identifier.
+The {jpaJavadocUrlPrefix}JoinColumns.html[`@JoinColumns`] annotation is used to group multiple <<annotations-jpa-joincolumn>> annotations, which are used when mapping entity association or an embeddable collection using a composite identifier.
 
 [[annotations-jpa-jointable]]
 ==== `@JoinTable`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/JoinTable.html[`@JoinTable`] annotation is used to specify the link table between two other database tables.
+The {jpaJavadocUrlPrefix}JoinTable.html[`@JoinTable`] annotation is used to specify the link table between two other database tables.
 
 See the <<chapters/domain/collections.adoc#collections-map-unidirectional-example, `@JoinTable` mapping>> section for more info.
 
 [[annotations-jpa-lob]]
 ==== `@Lob`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/Lob.html[`@Lob`] annotation is used to specify that the currently annotated entity attribute represents a large object type.
+The {jpaJavadocUrlPrefix}Lob.html[`@Lob`] annotation is used to specify that the currently annotated entity attribute represents a large object type.
 
 See the <<chapters/domain/basic_types.adoc#basic-blob-example, `BLOB` mapping>> section for more info.
 
 [[annotations-jpa-manytomany]]
 ==== `@ManyToMany`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/ManyToMany.html[`@ManyToMany`] annotation is used to specify a many-to-many database relationship.
+The {jpaJavadocUrlPrefix}ManyToMany.html[`@ManyToMany`] annotation is used to specify a many-to-many database relationship.
 
 See the <<chapters/domain/associations.adoc#associations-many-to-many, `@ManyToMany` mapping>> section for more info.
 
 [[annotations-jpa-manytoone]]
 ==== `@ManyToOne`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/ManyToOne.html[`@ManyToOne`] annotation is used to specify a many-to-one database relationship.
+The {jpaJavadocUrlPrefix}ManyToOne.html[`@ManyToOne`] annotation is used to specify a many-to-one database relationship.
 
 See the <<chapters/domain/associations.adoc#associations-many-to-one, `@ManyToOne` mapping>> section for more info.
 
 [[annotations-jpa-mapkey]]
 ==== `@MapKey`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/MapKey.html[`@MapKey`] annotation is used to specify the key of a `java.util.Map` association for which the key type is either the primary key or an attribute of the entity which represents the value of the map.
+The {jpaJavadocUrlPrefix}MapKey.html[`@MapKey`] annotation is used to specify the key of a `java.util.Map` association for which the key type is either the primary key or an attribute of the entity which represents the value of the map.
 
 See the <<chapters/domain/collections.adoc#collections-map-unidirectional-example, `@MapKey` mapping>> section for more info.
 
 [[annotations-jpa-mapkeyclass]]
 ==== `@MapKeyClass`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/MapKeyClass.html[`@MapKeyClass`] annotation is used to specify the type of the map key of a `java.util.Map` associations.
+The {jpaJavadocUrlPrefix}MapKeyClass.html[`@MapKeyClass`] annotation is used to specify the type of the map key of a `java.util.Map` associations.
 
 See the <<chapters/domain/collections.adoc#collections-map-key-class, `@MapKeyClass` mapping>> section for more info.
 
 [[annotations-jpa-mapkeycolumn]]
 ==== `@MapKeyColumn`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/MapKeyColumn.html[`@MapKeyColumn`] annotation is used to specify the database column which stores the key of a `java.util.Map` association for which the map key is a basic type.
+The {jpaJavadocUrlPrefix}MapKeyColumn.html[`@MapKeyColumn`] annotation is used to specify the database column which stores the key of a `java.util.Map` association for which the map key is a basic type.
 
 See the <<chapters/domain/collections.adoc#collections-map-custom-key-type-mapping-example, `@MapKeyType` mapping section>> for an example of `@MapKeyColumn` annotation usage.
 
 [[annotations-jpa-mapkeyenumerated]]
 ==== `@MapKeyEnumerated`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/MapKeyEnumerated.html[`@MapKeyEnumerated`] annotation is used to specify that the key of `java.util.Map` association is a Java Enum.
+The {jpaJavadocUrlPrefix}MapKeyEnumerated.html[`@MapKeyEnumerated`] annotation is used to specify that the key of `java.util.Map` association is a Java Enum.
 
 See the <<chapters/domain/collections.adoc#collections-map-bidirectional-example, `@MapKeyEnumerated` mapping>> section for more info.
 
 [[annotations-jpa-mapkeyjoincolumn]]
 ==== `@MapKeyJoinColumn`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/MapKeyJoinColumn.html[`@MapKeyJoinColumn`] annotation is used to specify that the key of `java.util.Map` association is an entity association.
+The {jpaJavadocUrlPrefix}MapKeyJoinColumn.html[`@MapKeyJoinColumn`] annotation is used to specify that the key of `java.util.Map` association is an entity association.
 The map key column is a FOREIGN KEY in a link table that also joins the `Map` owner's table with the table where the `Map` value resides.
 
 See the <<chapters/domain/collections.adoc#collections-map-value-type-entity-key-example, `@MapKeyJoinColumn` mapping>> section for more info.
@@ -323,205 +323,205 @@ See the <<chapters/domain/collections.adoc#collections-map-value-type-entity-key
 [[annotations-jpa-mapkeyjoincolumns]]
 ==== `@MapKeyJoinColumns`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/MapKeyJoinColumns.html[`@MapKeyJoinColumns`] annotation is used to group several <<annotations-jpa-mapkeyjoincolumn>> mappings when the `java.util.Map` association key uses a composite identifier.
+The {jpaJavadocUrlPrefix}MapKeyJoinColumns.html[`@MapKeyJoinColumns`] annotation is used to group several <<annotations-jpa-mapkeyjoincolumn>> mappings when the `java.util.Map` association key uses a composite identifier.
 
 [[annotations-jpa-mapkeytemporal]]
 ==== `@MapKeyTemporal`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/MapKeyTemporal.html[`@MapKeyTemporal`] annotation is used to specify that the key of `java.util.Map` association is a https://javaee.github.io/javaee-spec/javadocs/javax/persistence/TemporalType.html[`@TemporalType`] (e.g. `DATE`, `TIME`, `TIMESTAMP`).
+The {jpaJavadocUrlPrefix}MapKeyTemporal.html[`@MapKeyTemporal`] annotation is used to specify that the key of `java.util.Map` association is a {jpaJavadocUrlPrefix}TemporalType.html[`@TemporalType`] (e.g. `DATE`, `TIME`, `TIMESTAMP`).
 
 See the <<chapters/domain/collections.adoc#collections-map-unidirectional-example, `@MapKeyTemporal` mapping>> section for more info.
 
 [[annotations-jpa-mappedsuperclass]]
 ==== `@MappedSuperclass`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/MappedSuperclass.html[`@MappedSuperclass`] annotation is used to specify that the currently annotated type attributes are inherited by any subclass entity.
+The {jpaJavadocUrlPrefix}MappedSuperclass.html[`@MappedSuperclass`] annotation is used to specify that the currently annotated type attributes are inherited by any subclass entity.
 
 See the <<chapters/domain/inheritance.adoc#entity-inheritance-mapped-superclass, `@MappedSuperclass`>> section for more info.
 
 [[annotations-jpa-mapsid]]
 ==== `@MapsId`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/MapsId.html[`@MapsId`] annotation is used to specify that the entity identifier is mapped by the currently annotated `@ManyToOne` or `@OneToOne` association.
+The {jpaJavadocUrlPrefix}MapsId.html[`@MapsId`] annotation is used to specify that the entity identifier is mapped by the currently annotated `@ManyToOne` or `@OneToOne` association.
 
 See the <<chapters/domain/identifiers.adoc#identifiers-derived-mapsid, `@MapsId` mapping>> section for more info.
 
 [[annotations-jpa-namedattributenode]]
 ==== `@NamedAttributeNode`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/NamedAttributeNode.html[`@NamedAttributeNode`] annotation is used to specify each individual attribute node that needs to be fetched by an Entity Graph.
+The {jpaJavadocUrlPrefix}NamedAttributeNode.html[`@NamedAttributeNode`] annotation is used to specify each individual attribute node that needs to be fetched by an Entity Graph.
 
 See the <<chapters/fetching/Fetching.adoc#fetching-strategies-dynamic-fetching-entity-graph-example, Fetch graph>> section for more info.
 
 [[annotations-jpa-namedentitygraph]]
 ==== `@NamedEntityGraph`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/NamedEntityGraph.html[`@NamedEntityGraph`] annotation is used to specify an Entity Graph that can be used by an entity query to override the default fetch plan.
+The {jpaJavadocUrlPrefix}NamedEntityGraph.html[`@NamedEntityGraph`] annotation is used to specify an Entity Graph that can be used by an entity query to override the default fetch plan.
 
 See the <<chapters/fetching/Fetching.adoc#fetching-strategies-dynamic-fetching-entity-graph-example, Fetch graph>> section for more info.
 
 [[annotations-jpa-namedentitygraphs]]
 ==== `@NamedEntityGraphs`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/NamedEntityGraphs.html[`@NamedEntityGraphs`] annotation is used to group multiple <<annotations-jpa-namedentitygraph>> annotations.
+The {jpaJavadocUrlPrefix}NamedEntityGraphs.html[`@NamedEntityGraphs`] annotation is used to group multiple <<annotations-jpa-namedentitygraph>> annotations.
 
 [[annotations-jpa-namednativequeries]]
 ==== `@NamedNativeQueries`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/NamedNativeQueries.html[`@NamedNativeQueries`] annotation is used to group multiple <<annotations-jpa-namednativequery>> annotations.
+The {jpaJavadocUrlPrefix}NamedNativeQueries.html[`@NamedNativeQueries`] annotation is used to group multiple <<annotations-jpa-namednativequery>> annotations.
 
 See the <<chapters/query/native/Native.adoc#sql-custom-crud-example, Custom CRUD mapping>> section for more info.
 
 [[annotations-jpa-namednativequery]]
 ==== `@NamedNativeQuery`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/NamedNativeQuery.html[`@NamedNativeQuery`] annotation is used to specify a native SQL query that can be retrieved later by its name.
+The {jpaJavadocUrlPrefix}NamedNativeQuery.html[`@NamedNativeQuery`] annotation is used to specify a native SQL query that can be retrieved later by its name.
 
 See the <<chapters/query/native/Native.adoc#sql-custom-crud-example, Custom CRUD mapping>> section for more info.
 
 [[annotations-jpa-namedqueries]]
 ==== `@NamedQueries`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/NamedQueries.html[`@NamedQueries`] annotation is used to group multiple <<annotations-jpa-namedquery>> annotations.
+The {jpaJavadocUrlPrefix}NamedQueries.html[`@NamedQueries`] annotation is used to group multiple <<annotations-jpa-namedquery>> annotations.
 
 [[annotations-jpa-namedquery]]
 ==== `@NamedQuery`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/NamedQuery.html[`@NamedQuery`] annotation is used to specify a JPQL query that can be retrieved later by its name.
+The {jpaJavadocUrlPrefix}NamedQuery.html[`@NamedQuery`] annotation is used to specify a JPQL query that can be retrieved later by its name.
 
 See the <<chapters/query/hql/HQL.adoc#jpql-api-named-query-example, `@NamedQuery`>> section for more info.
 
 [[annotations-jpa-namedstoredprocedurequeries]]
 ==== `@NamedStoredProcedureQueries`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/NamedStoredProcedureQueries.html[`@NamedStoredProcedureQueries`] annotation is used to group multiple <<annotations-jpa-namedstoredprocedurequery>> annotations.
+The {jpaJavadocUrlPrefix}NamedStoredProcedureQueries.html[`@NamedStoredProcedureQueries`] annotation is used to group multiple <<annotations-jpa-namedstoredprocedurequery>> annotations.
 
 [[annotations-jpa-namedstoredprocedurequery]]
 ==== `@NamedStoredProcedureQuery`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/NamedStoredProcedureQuery.html[`@NamedStoredProcedureQuery`] annotation is used to specify a stored procedure query that can be retrieved later by its name.
+The {jpaJavadocUrlPrefix}NamedStoredProcedureQuery.html[`@NamedStoredProcedureQuery`] annotation is used to specify a stored procedure query that can be retrieved later by its name.
 
 See the <<chapters/query/native/Native.adoc#sql-sp-named-query, Using named queries to call stored procedures>> section for more info.
 
 [[annotations-jpa-namedsubgraph]]
 ==== `@NamedSubgraph`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/NamedSubgraph.html[`@NamedSubgraph`] annotation used to specify a subgraph in an Entity Graph.
+The {jpaJavadocUrlPrefix}NamedSubgraph.html[`@NamedSubgraph`] annotation used to specify a subgraph in an Entity Graph.
 
 See the <<chapters/fetching/Fetching.adoc#fetching-strategies-dynamic-fetching-entity-subgraph, Fetch subgraph>> section for more info.
 
 [[annotations-jpa-onetomany]]
 ==== `@OneToMany`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/OneToMany.html[`@OneToMany`] annotation is used to specify a one-to-many database relationship.
+The {jpaJavadocUrlPrefix}OneToMany.html[`@OneToMany`] annotation is used to specify a one-to-many database relationship.
 
 See the <<chapters/domain/associations.adoc#associations-one-to-many, `@OneToMany` mapping>> section for more info.
 
 [[annotations-jpa-onetoone]]
 ==== `@OneToOne`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/OneToOne.html[`@OneToOne`] annotation is used to specify a one-to-one database relationship.
+The {jpaJavadocUrlPrefix}OneToOne.html[`@OneToOne`] annotation is used to specify a one-to-one database relationship.
 
 See the <<chapters/domain/associations.adoc#associations-one-to-one, `@OneToOne` mapping>> section for more info.
 
 [[annotations-jpa-orderby]]
 ==== `@OrderBy`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/OrderBy.html[`@OrderBy`] annotation is used to specify the entity attributes used for sorting when fetching the currently annotated collection.
+The {jpaJavadocUrlPrefix}OrderBy.html[`@OrderBy`] annotation is used to specify the entity attributes used for sorting when fetching the currently annotated collection.
 
 See the <<chapters/domain/collections.adoc#collections-unidirectional-ordered-list, `@OrderBy` mapping>> section for more info.
 
 [[annotations-jpa-ordercolumn]]
 ==== `@OrderColumn`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/OrderColumn.html[`@OrderColumn`] annotation is used to specify that the current annotation collection order should be materialized in the database.
+The {jpaJavadocUrlPrefix}OrderColumn.html[`@OrderColumn`] annotation is used to specify that the current annotation collection order should be materialized in the database.
 
 See the <<chapters/domain/collections.adoc#collections-unidirectional-ordered-list-order-column-example, `@OrderColumn` mapping>> section for more info.
 
 [[annotations-jpa-persistencecontext]]
 ==== `@PersistenceContext`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/PersistenceContext.html[`@PersistenceContext`] annotation is used to specify the `EntityManager` that needs to be injected as a dependency.
+The {jpaJavadocUrlPrefix}PersistenceContext.html[`@PersistenceContext`] annotation is used to specify the `EntityManager` that needs to be injected as a dependency.
 
 See the <<chapters/bootstrap/Bootstrap.adoc#bootstrap-jpa-compliant-PersistenceContext-example, `@PersistenceContext` mapping>> section for more info.
 
 [[annotations-jpa-persistencecontexts]]
 ==== `@PersistenceContexts`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/PersistenceContexts.html[`@PersistenceContexts`] annotation is used to group multiple <<annotations-jpa-persistencecontext>> annotations.
+The {jpaJavadocUrlPrefix}PersistenceContexts.html[`@PersistenceContexts`] annotation is used to group multiple <<annotations-jpa-persistencecontext>> annotations.
 
 [[annotations-jpa-persistenceproperty]]
 ==== `@PersistenceProperty`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/PersistenceProperty.html[`@PersistenceProperty`] annotation is used by the <<annotations-jpa-persistencecontext>> annotation to declare JPA provider properties that are passed to the underlying container when the `EntityManager` instance is created.
+The {jpaJavadocUrlPrefix}PersistenceProperty.html[`@PersistenceProperty`] annotation is used by the <<annotations-jpa-persistencecontext>> annotation to declare JPA provider properties that are passed to the underlying container when the `EntityManager` instance is created.
 
 See the <<chapters/bootstrap/Bootstrap.adoc#bootstrap-jpa-compliant-PersistenceContext-configurable-example, `@PersistenceProperty` mapping>> section for more info.
 
 [[annotations-jpa-persistenceunit]]
 ==== `@PersistenceUnit`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/PersistenceUnit.html[`@PersistenceUnit`] annotation is used to specify the `EntityManagerFactory` that needs to be injected as a dependency.
+The {jpaJavadocUrlPrefix}PersistenceUnit.html[`@PersistenceUnit`] annotation is used to specify the `EntityManagerFactory` that needs to be injected as a dependency.
 
 See the <<chapters/bootstrap/Bootstrap.adoc#bootstrap-jpa-compliant-PersistenceUnit-example, `@PersistenceUnit` mapping>> section for more info.
 
 [[annotations-jpa-persistenceunits]]
 ==== `@PersistenceUnits`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/PersistenceUnits.html[`@PersistenceUnits`] annotation is used to group multiple <<annotations-jpa-persistenceunit>> annotations.
+The {jpaJavadocUrlPrefix}PersistenceUnits.html[`@PersistenceUnits`] annotation is used to group multiple <<annotations-jpa-persistenceunit>> annotations.
 
 [[annotations-jpa-postload]]
 ==== `@PostLoad`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/PostLoad.html[`@PostLoad`] annotation is used to specify a callback method that fires after an entity is loaded.
+The {jpaJavadocUrlPrefix}PostLoad.html[`@PostLoad`] annotation is used to specify a callback method that fires after an entity is loaded.
 
 See the <<chapters/events/Events.adoc#events-jpa-callbacks-example, JPA callbacks>> section for more info.
 
 [[annotations-jpa-postpersist]]
 ==== `@PostPersist`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/PostPersist.html[`@PostPersist`] annotation is used to specify a callback method that fires after an entity is persisted.
+The {jpaJavadocUrlPrefix}PostPersist.html[`@PostPersist`] annotation is used to specify a callback method that fires after an entity is persisted.
 
 See the <<chapters/events/Events.adoc#events-jpa-callbacks-example, JPA callbacks>> section for more info.
 
 [[annotations-jpa-postremove]]
 ==== `@PostRemove`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/PostRemove.html[`@PostRemove`] annotation is used to specify a callback method that fires after an entity is removed.
+The {jpaJavadocUrlPrefix}PostRemove.html[`@PostRemove`] annotation is used to specify a callback method that fires after an entity is removed.
 
 See the <<chapters/events/Events.adoc#events-jpa-callbacks-example, JPA callbacks>> section for more info.
 
 [[annotations-jpa-postupdate]]
 ==== `@PostUpdate`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/PostUpdate.html[`@PostUpdate`] annotation is used to specify a callback method that fires after an entity is updated.
+The {jpaJavadocUrlPrefix}PostUpdate.html[`@PostUpdate`] annotation is used to specify a callback method that fires after an entity is updated.
 
 See the <<chapters/events/Events.adoc#events-jpa-callbacks-example, JPA callbacks>> section for more info.
 
 [[annotations-jpa-prepersist]]
 ==== `@PrePersist`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/PrePersist.html[`@PrePersist`] annotation is used to specify a callback method that fires before an entity is persisted.
+The {jpaJavadocUrlPrefix}PrePersist.html[`@PrePersist`] annotation is used to specify a callback method that fires before an entity is persisted.
 
 See the <<chapters/events/Events.adoc#events-jpa-callbacks-example, JPA callbacks>> section for more info.
 
 [[annotations-jpa-preremove]]
 ==== `@PreRemove`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/PreRemove.html[`@PreRemove`] annotation is used to specify a callback method that fires before an entity is removed.
+The {jpaJavadocUrlPrefix}PreRemove.html[`@PreRemove`] annotation is used to specify a callback method that fires before an entity is removed.
 
 See the <<chapters/events/Events.adoc#events-jpa-callbacks-example, JPA callbacks>> section for more info.
 
 [[annotations-jpa-preupdate]]
 ==== `@PreUpdate`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/PreUpdate.html[`@PreUpdate`] annotation is used to specify a callback method that fires before an entity is updated.
+The {jpaJavadocUrlPrefix}PreUpdate.html[`@PreUpdate`] annotation is used to specify a callback method that fires before an entity is updated.
 
 See the <<chapters/events/Events.adoc#events-jpa-callbacks-example, JPA callbacks>> section for more info.
 
 [[annotations-jpa-primarykeyjoincolumn]]
 ==== `@PrimaryKeyJoinColumn`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/PrimaryKeyJoinColumn.html[`@PrimaryKeyJoinColumn`] annotation is used to specify that the primary key column of the currently annotated entity is also a foreign key to some other entity
+The {jpaJavadocUrlPrefix}PrimaryKeyJoinColumn.html[`@PrimaryKeyJoinColumn`] annotation is used to specify that the primary key column of the currently annotated entity is also a foreign key to some other entity
 (e.g. a base class table in a `JOINED` inheritance strategy, the primary table in a secondary table mapping, or the parent table in a `@OneToOne` relationship).
 
 See the <<chapters/domain/identifiers.adoc#identifiers-derived-primarykeyjoincolumn, `@PrimaryKeyJoinColumn` mapping>> section for more info.
@@ -529,92 +529,92 @@ See the <<chapters/domain/identifiers.adoc#identifiers-derived-primarykeyjoincol
 [[annotations-jpa-primarykeyjoincolumns]]
 ==== `@PrimaryKeyJoinColumns`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/PrimaryKeyJoinColumns.html[`@PrimaryKeyJoinColumns`] annotation is used to group multiple <<annotations-jpa-primarykeyjoincolumn>> annotations.
+The {jpaJavadocUrlPrefix}PrimaryKeyJoinColumns.html[`@PrimaryKeyJoinColumns`] annotation is used to group multiple <<annotations-jpa-primarykeyjoincolumn>> annotations.
 
 [[annotations-jpa-queryhint]]
 ==== `@QueryHint`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/QueryHint.html[`@QueryHint`] annotation is used to specify a JPA provider hint used by a `@NamedQuery` or a `@NamedNativeQuery` annotation.
+The {jpaJavadocUrlPrefix}QueryHint.html[`@QueryHint`] annotation is used to specify a JPA provider hint used by a `@NamedQuery` or a `@NamedNativeQuery` annotation.
 
 See the <<chapters/query/hql/HQL.adoc#jpa-read-only-entities-native-example, `@QueryHint`>> section for more info.
 
 [[annotations-jpa-secondarytable]]
 ==== `@SecondaryTable`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/SecondaryTable.html[`@SecondaryTable`] annotation is used to specify a secondary table for the currently annotated entity.
+The {jpaJavadocUrlPrefix}SecondaryTable.html[`@SecondaryTable`] annotation is used to specify a secondary table for the currently annotated entity.
 
 See the <<chapters/query/native/Native.adoc#sql-custom-crud-secondary-table-example, `@SecondaryTable` mapping>> section for more info.
 
 [[annotations-jpa-secondarytables]]
 ==== `@SecondaryTables`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/SecondaryTables.html[`@SecondaryTables`] annotation is used to group multiple <<annotations-jpa-secondarytable>> annotations.
+The {jpaJavadocUrlPrefix}SecondaryTables.html[`@SecondaryTables`] annotation is used to group multiple <<annotations-jpa-secondarytable>> annotations.
 
 [[annotations-jpa-sequencegenerator]]
 ==== `@SequenceGenerator`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/SequenceGenerator.html[`@SequenceGenerator`] annotation is used to specify the database sequence used by the identifier generator of the currently annotated entity.
+The {jpaJavadocUrlPrefix}SequenceGenerator.html[`@SequenceGenerator`] annotation is used to specify the database sequence used by the identifier generator of the currently annotated entity.
 
 See the <<chapters/domain/identifiers.adoc#identifiers-generators-sequence-configured,`@SequenceGenerator` mapping>> section for more info.
 
 [[annotations-jpa-sqlresultsetmapping]]
 ==== `@SqlResultSetMapping`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/SqlResultSetMapping.html[`@SqlResultSetMapping`] annotation is used to specify the `ResultSet` mapping of a native SQL query or stored procedure.
+The {jpaJavadocUrlPrefix}SqlResultSetMapping.html[`@SqlResultSetMapping`] annotation is used to specify the `ResultSet` mapping of a native SQL query or stored procedure.
 
 See the <<chapters/query/native/Native.adoc#sql-composite-key-entity-associations_named-query-example, `SqlResultSetMapping` mapping>> section for more info.
 
 [[annotations-jpa-sqlresultsetmappings]]
 ==== `@SqlResultSetMappings`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/SqlResultSetMappings.html[`@SqlResultSetMappings`] annotation is group multiple <<annotations-jpa-sqlresultsetmapping>> annotations.
+The {jpaJavadocUrlPrefix}SqlResultSetMappings.html[`@SqlResultSetMappings`] annotation is group multiple <<annotations-jpa-sqlresultsetmapping>> annotations.
 
 [[annotations-jpa-storedprocedureparameter]]
 ==== `@StoredProcedureParameter`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/StoredProcedureParameter.html[`@StoredProcedureParameter`] annotation is used to specify a parameter of a <<annotations-jpa-namedstoredprocedurequery>>.
+The {jpaJavadocUrlPrefix}StoredProcedureParameter.html[`@StoredProcedureParameter`] annotation is used to specify a parameter of a <<annotations-jpa-namedstoredprocedurequery>>.
 
 See the <<chapters/query/native/Native.adoc#sql-sp-named-query, Using named queries to call stored procedures>> section for more info.
 
 [[annotations-jpa-table]]
 ==== `@Table`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/Table.html[`@Table`] annotation is used to specify the primary table of the currently annotated entity.
+The {jpaJavadocUrlPrefix}Table.html[`@Table`] annotation is used to specify the primary table of the currently annotated entity.
 
 See the <<chapters/query/native/Native.adoc#sql-custom-crud-secondary-table-example, `@Table` mapping>> section for more info.
 
 [[annotations-jpa-tablegenerator]]
 ==== `@TableGenerator`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/TableGenerator.html[`@TableGenerator`] annotation is used to specify the database table used by the identity generator of the currently annotated entity.
+The {jpaJavadocUrlPrefix}TableGenerator.html[`@TableGenerator`] annotation is used to specify the database table used by the identity generator of the currently annotated entity.
 
 See the <<chapters/domain/identifiers.adoc#identifiers-generators-table-configured-mapping-example,`@TableGenerator` mapping>> section for more info.
 
 [[annotations-jpa-temporal]]
 ==== `@Temporal`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/Temporal.html[`@Temporal`] annotation is used to specify the `TemporalType` of the currently annotated `java.util.Date` or `java.util.Calendar` entity attribute.
+The {jpaJavadocUrlPrefix}Temporal.html[`@Temporal`] annotation is used to specify the `TemporalType` of the currently annotated `java.util.Date` or `java.util.Calendar` entity attribute.
 
 See the <<chapters/domain/basic_types.adoc#basic-datetime,Basic temporal types>> chapter for more info.
 
 [[annotations-jpa-transient]]
 ==== `@Transient`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/Transient.html[`@Transient`] annotation is used to specify that a given entity attribute should not be persisted.
+The {jpaJavadocUrlPrefix}Transient.html[`@Transient`] annotation is used to specify that a given entity attribute should not be persisted.
 
 See the <<chapters/events/Events.adoc#events-jpa-callbacks-example, `@Transient` mapping>> section for more info.
 
 [[annotations-jpa-uniqueconstraint]]
 ==== `@UniqueConstraint`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/UniqueConstraint.html[`@UniqueConstraint`] annotation is used to specify a unique constraint to be included by the automated schema generator for the primary or secondary table associated with the currently annotated entity.
+The {jpaJavadocUrlPrefix}UniqueConstraint.html[`@UniqueConstraint`] annotation is used to specify a unique constraint to be included by the automated schema generator for the primary or secondary table associated with the currently annotated entity.
 
 See the <<chapters/schema/Schema.adoc#schema-generation-columns-unique-constraint, Columns unique constraint>> chapter for more info.
 
 [[annotations-jpa-version]]
 ==== `@Version`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/Version.html[`@Version`] annotation is used to specify the version attribute used for optimistic locking.
+The {jpaJavadocUrlPrefix}Version.html[`@Version`] annotation is used to specify the version attribute used for optimistic locking.
 
 See the <<chapters/locking/Locking.adoc#locking-optimistic, Optimistic locking mapping>> section for more info.
 
@@ -676,7 +676,7 @@ See the <<chapters/caching/Caching.adoc#caching,Caching>> chapter for more info.
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Cascade.html[`@Cascade`] annotation is used to apply the Hibernate specific http://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/CascadeType.html[`CascadeType`] strategies (e.g. `CascadeType.LOCK`, `CascadeType.SAVE_UPDATE`, `CascadeType.REPLICATE`) on a given association.
 
-For JPA cascading, prefer using the https://javaee.github.io/javaee-spec/javadocs/javax/persistence/CascadeType.html[`javax.persistence.CascadeType`] instead.
+For JPA cascading, prefer using the {jpaJavadocUrlPrefix}CascadeType.html[`javax.persistence.CascadeType`] instead.
 
 When combining both JPA and Hibernate `CascadeType` strategies, Hibernate will merge both sets of cascades.
 
@@ -930,7 +930,7 @@ The possible values are given by the `https://docs.jboss.org/hibernate/orm/{majo
 `FALSE`:: Eagerly load it.
 `EXTRA`:: Prefer extra queries over full collection loading.
 
-The `TRUE` and `FALSE` values are deprecated since you should be using the JPA https://javaee.github.io/javaee-spec/javadocs/javax/persistence/FetchType.html[`FetchType`] attribute of the <<annotations-jpa-elementcollection>>, <<annotations-jpa-onetomany>>, or <<annotations-jpa-manytomany>> collection.
+The `TRUE` and `FALSE` values are deprecated since you should be using the JPA {jpaJavadocUrlPrefix}FetchType.html[`FetchType`] attribute of the <<annotations-jpa-elementcollection>>, <<annotations-jpa-onetomany>>, or <<annotations-jpa-manytomany>> collection.
 
 The `EXTRA` value has no equivalent in the JPA specification, and it's used to avoid loading the entire collection even when the collection is accessed for the first time.
 Each element is fetched individually using a secondary query.

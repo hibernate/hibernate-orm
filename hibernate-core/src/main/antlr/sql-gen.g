@@ -127,6 +127,10 @@ options {
 	protected String renderOrderByElement(String expression, String order, String nulls) {
 		throw new UnsupportedOperationException("Concrete SQL generator should override this method.");
 	}
+
+	protected void renderCollectionSize(AST collectionSizeNode) {
+		throw new UnsupportedOperationException( "Concrete SQL generator should override this method." );
+	}
 }
 
 statement
@@ -478,6 +482,9 @@ methodCall
 	 ( #(EXPR_LIST (arguments)? ) )?
 	 { endFunctionTemplate(m); } )
 	| #( c:CAST { beginFunctionTemplate(c,c); } castExpression {betweenFunctionArguments();} castTargetType { endFunctionTemplate(c); } )
+	| cs:COLL_SIZE {
+		renderCollectionSize( #cs );
+	}
 	;
 
 arguments

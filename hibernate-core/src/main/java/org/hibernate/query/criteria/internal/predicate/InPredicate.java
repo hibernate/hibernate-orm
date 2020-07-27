@@ -14,7 +14,11 @@ import java.util.List;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Subquery;
 
+import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.MathHelper;
+import org.hibernate.query.criteria.LiteralHandlingMode;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
 import org.hibernate.query.criteria.internal.Renderable;
@@ -197,14 +201,51 @@ public class InPredicate<T>
 				}
 			}
 			else {
+				Expression lastValue = null;
 				buffer.append( '(' );
 				String sep = "";
 				for ( Expression value : values) {
+					lastValue = value;
 					buffer.append( sep )
 							.append( ( (Renderable) value )
 									.render( renderingContext ) );
 					sep = ", ";
 				}
+
+
+				if (renderingContext.getCriteriaLiteralHandlingMode() == LiteralHandlingMode.BIND &&
+						lastValue instanceof LiteralExpression) {
+
+					int bindValueCount = values.size();
+					int bindValueMaxCount = bindValueCount;
+
+					final SessionFactoryImplementor sfi = criteriaBuilder().getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+					final Dialect dialect = sfi.getServiceRegistry().getService(JdbcServices.class).getJdbcEnvironment().getDialect();
+					final int inExprLimit = dialect.getInExpressionCountLimit();
+
+					boolean inClauseParameterPaddingEnabled = sfi.getSessionFactoryOptions().inClauseParameterPaddingEnabled() &&
+									bindValueCount > 2;
+
+					if ( inClauseParameterPaddingEnabled ) {
+						int bindValuePaddingCount = MathHelper.ceilingPowerOfTwo( bindValueCount );
+
+						if (inExprLimit > 0 && bindValuePaddingCount > inExprLimit ) {
+							bindValuePaddingCount = Math.max(bindValueCount, inExprLimit);
+						}
+
+						if ( bindValueCount < bindValuePaddingCount ) {
+							bindValueMaxCount = bindValuePaddingCount;
+						}
+
+						for (int i = bindValueCount; i < bindValueMaxCount; i++) {
+							buffer.append( sep )
+									.append( ( (Renderable) lastValue )
+											.render( renderingContext ) );
+						}
+					}
+				}
+
+
 				buffer.append( ')' );
 			}
 		}

@@ -3,6 +3,41 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.4.19.Final (July 27, 2020)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31844
+
+** Bug
+    * [HHH-14116] - Exception when fetch joining a non-collection when selecting non-query-root
+    * [HHH-14112] - Invalid Pagination COUNT query generated  with @Inheritance(strategy = InheritanceType.JOINED) 
+    * [HHH-14108] - PADDED and DYNAMIC Batch loading strategies not compatible with the Enhanced Proxy feature
+    * [HHH-14106] - Return entry from `#parentsByChild` in `StateFulPersistenceContext#getParentsByChild`
+    * [HHH-14098] - Query plan cache query-level statistics documentation, used getQueryPlanCacheMissCount instead of getPlanCompilationTotalMicroseconds
+    * [HHH-14097] - Versions 5.4.11.Final+ produce too many sql queries
+    * [HHH-14071] - @FetchProfile not working with @OneToOne(mappedBy=...) properties
+    * [HHH-14059] - Cannot use full qualified enum name which has two uppercase alphabet prefix
+    * [HHH-14041] - H2Dialect does not correctly extract violated constraint names for 23506
+    * [HHH-14021] - Using AttributeConverter to Byte fails with "No dialect mapping for JBDC Type: <697960108>"
+    * [HHH-13931] - MissingFormatArgumentException in JpaCompliantLifecycleStrategy.BeanImpl
+    * [HHH-13926] - StaleStateException message should not contain SQL parameters
+    * [HHH-13410] - "order_inserts = true" causes FK Violation when inserting with a special case of Unidirectional Relations between 4 Entities
+    * [HHH-13214] - DML batch delete re-firing SQL from previous calls
+    * [HHH-12268] - LazyInitializationException thrown from lazy collection when batch fetching enabled and owning entity refreshed with lock
+
+** Improvement
+    * [HHH-14100] - Update c3p0 to 0.9.5.5
+    * [HHH-14093] - Optimize inserted key contains
+
+** New Feature
+    * [HHH-13724] - Support CockroachDB
+
+** Task
+    * [HHH-14111] - Upgrade build dependencies to test JDK15/JDK16
+    * [HHH-14103] - Add test cases showing that an entity's transient attribute can be overridden to be persistent in entity subclasses
+    * [HHH-14096] - Removal of unused code: XMLHelper and its SAXReader factory helper
+
+
 Changes in 5.4.18.Final (June 22, 2020)
 ------------------------------------------------------------------------------------------------------------------------
 

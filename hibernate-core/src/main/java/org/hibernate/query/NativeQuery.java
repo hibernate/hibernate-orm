@@ -14,6 +14,7 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
+import javax.persistence.AttributeConverter;
 import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
 import javax.persistence.Parameter;
@@ -88,28 +89,47 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-//	NativeQuery<T> addScalar(String columnAlias, Type type);
-
-	/**
-	 * Declare a scalar query result.
-	 * <p/>
-	 * Functions like {@code <return-scalar/>} in {@code hbm.xml} or
-	 * {@link javax.persistence.ColumnResult} in annotations
-	 *
-	 * @param columnAlias The column alias in the result-set to be processed
-	 * 		as a scalar result
-	 * @param type The Hibernate type as which to treat the value.
-	 *
-	 * @return {@code this}, for method chaining
-	 */
 	NativeQuery<T> addScalar(String columnAlias, BasicDomainType type);
 
 	/**
-	 * Declare a scalar query result with an explicit return type
+	 * Declare a scalar query result using the specified result type.
+	 *
+	 * Hibernate will implicitly determine an appropriate conversion, if
+	 * it can.  Otherwise an exception will be thrown
 	 *
 	 * @return {@code this}, for method chaining
+	 *
+	 * @since 6.0
 	 */
 	NativeQuery<T> addScalar(String columnAlias, Class<?> javaType);
+
+	/**
+	 * Declare a scalar query result with an explicit conversion
+	 *
+	 * @param relationalJavaType The Java type expected by the converter as its
+	 * "relational" type.
+	 * @param converter The conversion to apply.  Consumes the JDBC value based
+	 * on `relationalJavaType`.
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @since 6.0
+	 */
+	<C> NativeQuery<T> addScalar(String columnAlias, Class<C> relationalJavaType, AttributeConverter<?,C> converter);
+
+	/**
+	 * Declare a scalar query result with an explicit conversion
+	 *
+	 * @param relationalJavaType The Java type expected by the converter as its
+	 * "relational" type.
+	 * @param converter The conversion to apply.  Consumes the JDBC value based
+	 * on `relationalJavaType`.
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @since 6.0
+	 */
+	<C> NativeQuery<T> addScalar(String columnAlias, Class<C> relationalJavaType, Class<? extends AttributeConverter<?,C>> converter);
 
 	/**
 	 * Add a new root return mapping, returning a {@link RootReturn} to allow

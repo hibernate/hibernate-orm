@@ -6,9 +6,17 @@
  */
 package org.hibernate.type.descriptor.converter;
 
+import java.sql.CallableStatement;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
+import javax.persistence.AttributeConverter;
+
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
@@ -24,13 +32,14 @@ import org.jboss.logging.Logger;
 public class AttributeConverterTypeAdapter<T> extends AbstractSingleColumnStandardBasicType<T> {
 	private static final Logger log = Logger.getLogger( AttributeConverterTypeAdapter.class );
 
+	@SuppressWarnings("unused")
 	public static final String NAME_PREFIX = ConverterDescriptor.TYPE_NAME_PREFIX;
 
 	private final String name;
 	private final String description;
 
-	private final Class modelType;
-	private final Class jdbcType;
+	private final JavaTypeDescriptor<T> domainJtd;
+	private final JavaTypeDescriptor<?> relationalJtd;
 	private final JpaAttributeConverter<? extends T,?> attributeConverter;
 
 	private final MutabilityPlan<T> mutabilityPlan;
@@ -40,24 +49,22 @@ public class AttributeConverterTypeAdapter<T> extends AbstractSingleColumnStanda
 			String name,
 			String description,
 			JpaAttributeConverter<? extends T,?> attributeConverter,
-			SqlTypeDescriptor sqlTypeDescriptorAdapter,
-			Class modelType,
-			Class jdbcType,
-			JavaTypeDescriptor<T> entityAttributeJavaTypeDescriptor) {
-		super( sqlTypeDescriptorAdapter, entityAttributeJavaTypeDescriptor );
+			SqlTypeDescriptor std,
+			JavaTypeDescriptor<?> relationalJtd,
+			JavaTypeDescriptor<T> domainJtd) {
+		//noinspection rawtypes
+		super( std, (JavaTypeDescriptor) relationalJtd );
 		this.name = name;
 		this.description = description;
-		this.modelType = modelType;
-		this.jdbcType = jdbcType;
+		this.domainJtd = domainJtd;
+		this.relationalJtd = relationalJtd;
 		this.attributeConverter = attributeConverter;
 
-		this.mutabilityPlan = entityAttributeJavaTypeDescriptor.getMutabilityPlan().isMutable()
+		this.mutabilityPlan = domainJtd.getMutabilityPlan().isMutable()
 				? new AttributeConverterMutabilityPlanImpl<>( attributeConverter )
 				: ImmutableMutabilityPlan.INSTANCE;
 
 		log.debugf( "Created AttributeConverterTypeAdapter -> %s", name );
-
-//		throw new UnsupportedOperationException(  );
 	}
 
 	@Override
@@ -65,17 +72,41 @@ public class AttributeConverterTypeAdapter<T> extends AbstractSingleColumnStanda
 		return name;
 	}
 
-	public Class getModelType() {
-		return modelType;
+	public JavaTypeDescriptor<T> getDomainJtd() {
+		return domainJtd;
 	}
 
-	public Class getJdbcType() {
-		return jdbcType;
+	public JavaTypeDescriptor<?> getRelationalJtd() {
+		return relationalJtd;
 	}
 
 	public JpaAttributeConverter<? extends T,?> getAttributeConverter() {
 		return attributeConverter;
 	}
+
+	@Override
+	@SuppressWarnings({"rawtypes", "unchecked"})
+	public void nullSafeSet(
+			CallableStatement st,
+			Object value,
+			String name,
+			SharedSessionContractImplementor session) throws SQLException {
+		final AttributeConverter converter = attributeConverter.getConverterBean().getBeanInstance();
+		final Object converted = converter.convertToDatabaseColumn( value );
+		super.nullSafeSet( st, converted, name, session );
+	}
+
+	@Override
+	@SuppressWarnings({"rawtypes", "unchecked"})
+	protected void nullSafeSet(PreparedStatement st, Object value, int index, WrapperOptions options) throws SQLException {
+		final AttributeConverter converter = attributeConverter.getConverterBean().getBeanInstance();
+		final Object converted = converter.convertToDatabaseColumn( value );
+		super.nullSafeSet( st, converted, index, options );
+	}
+
+
+
+
 
 	@Override
 	protected MutabilityPlan<T> getMutabilityPlan() {

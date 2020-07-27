@@ -5,10 +5,15 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.type.descriptor.java;
+import java.sql.Types;
+
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.spi.Primitive;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Descriptor for {@link Character} handling.
@@ -25,6 +30,7 @@ public class CharacterTypeDescriptor extends AbstractTypeDescriptor<Character> i
 	public String toString(Character value) {
 		return value.toString();
 	}
+
 	@Override
 	public Character fromString(String string) {
 		if ( string.length() != 1 ) {

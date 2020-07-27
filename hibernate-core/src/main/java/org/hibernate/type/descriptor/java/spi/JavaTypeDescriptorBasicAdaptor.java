@@ -54,4 +54,9 @@ public class JavaTypeDescriptorBasicAdaptor<T> extends AbstractTypeDescriptor<T>
 				"Wrap strategy not known for this Java type : " + getJavaType().getName()
 		);
 	}
+
+	@Override
+	public String toString() {
+		return "JavaTypeDescriptorBasicAdaptor(" + getJavaType().getName() + ")";
+	}
 }

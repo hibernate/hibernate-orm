@@ -7,6 +7,9 @@
 package org.hibernate.type.descriptor.sql;
 import java.sql.Types;
 
+import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
+
 /**
  * Descriptor for {@link Types#CHAR CHAR} handling.
  *
@@ -26,5 +29,10 @@ public class CharTypeDescriptor extends VarcharTypeDescriptor {
 	@Override
 	public int getSqlType() {
 		return Types.CHAR;
+	}
+
+	@Override
+	public <T> BasicJavaDescriptor<T> getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
+		return super.getJdbcRecommendedJavaTypeMapping( typeConfiguration );
 	}
 }

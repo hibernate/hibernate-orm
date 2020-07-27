@@ -168,6 +168,17 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 	}
 
 	@Override
+	public long getColumnLength() {
+		if ( column != null && column instanceof Column ) {
+			final Long length = ( (Column) column ).getLength();
+			return length == null ? NO_COLUMN_LENGTH : length;
+		}
+		else {
+			return NO_COLUMN_LENGTH;
+		}
+	}
+
+	@Override
 	public void addColumn(Column incomingColumn) {
 		super.addColumn( incomingColumn );
 
@@ -329,7 +340,6 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 					getBuildingContext()
 			);
 		}
-
 
 		JavaTypeDescriptor jtd = null;
 

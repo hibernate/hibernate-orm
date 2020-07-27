@@ -19,6 +19,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.persistence.AttributeConverter;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.FlushModeType;
@@ -58,6 +59,7 @@ import org.hibernate.query.internal.QueryParameterBindingsImpl;
 import org.hibernate.query.results.Builders;
 import org.hibernate.query.results.EntityResultBuilder;
 import org.hibernate.query.results.LegacyFetchBuilder;
+import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.ResultSetMappingImpl;
 import org.hibernate.query.spi.AbstractQuery;
 import org.hibernate.query.spi.MutableQueryOptions;
@@ -475,21 +477,40 @@ public class NativeQueryImpl<R>
 
 	@Override
 	public NativeQueryImplementor<R> addScalar(String columnAlias) {
-		resultSetMapping.addResultBuilder( Builders.scalar( columnAlias ) );
+		return registerBuilder( Builders.scalar( columnAlias ) );
+	}
+
+	protected NativeQueryImplementor<R> registerBuilder(ResultBuilder builder) {
+		resultSetMapping.addResultBuilder( builder );
 		return this;
 	}
 
 	@Override
 	public NativeQueryImplementor<R> addScalar(String columnAlias, BasicDomainType type) {
-		resultSetMapping.addResultBuilder( Builders.scalar( columnAlias, (BasicType<?>) type ) );
-		return this;
+		return registerBuilder( Builders.scalar( columnAlias, (BasicType<?>) type ) );
 	}
 
 	@Override
 	public NativeQueryImplementor<R> addScalar(String columnAlias, Class<?> javaType) {
-		resultSetMapping.addResultBuilder( Builders.scalar( columnAlias, javaType, getSessionFactory() ) );
-		return this;
+		return registerBuilder( Builders.scalar( columnAlias, javaType, getSessionFactory() ) );
 	}
+
+	@Override
+	public <C> NativeQueryImplementor<R> addScalar(
+			String columnAlias,
+			Class<C> relationalJavaType,
+			AttributeConverter<?, C> converter) {
+		return registerBuilder( Builders.scalar( columnAlias, relationalJavaType, converter, getSessionFactory() ) );
+	}
+
+	@Override
+	public <C> NativeQueryImplementor<R> addScalar(
+			String columnAlias,
+			Class<C> relationalJavaType,
+			Class<? extends AttributeConverter<?, C>> converter) {
+		return registerBuilder( Builders.scalar( columnAlias, relationalJavaType, converter, getSessionFactory() ) );
+	}
+
 
 	@Override
 	public EntityResultBuilder addRoot(String tableAlias, String entityName) {

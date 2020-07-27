@@ -21,6 +21,8 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 public interface SqlTypeDescriptorIndicators {
+	int NO_COLUMN_LENGTH = -1;
+
 	/**
 	 * Was nationalized character datatype requested for the given Java type?
 	 *
@@ -63,6 +65,13 @@ public interface SqlTypeDescriptorIndicators {
 	 */
 	default int getPreferredSqlTypeCodeForBoolean() {
 		return Types.BOOLEAN;
+	}
+
+	/**
+	 * Useful for resolutions based on column length.  E.g. choosing between a VARCHAR (String) and a CHAR(1) (Character/char)
+	 */
+	default long getColumnLength() {
+		return NO_COLUMN_LENGTH;
 	}
 
 	/**

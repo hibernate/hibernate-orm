@@ -19,6 +19,8 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.descriptor.ValueBinder;
+import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -93,6 +95,7 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 		final JavaTypeDescriptor explicitJtd = explicitJtdAccess != null
 				? explicitJtdAccess.apply( typeConfiguration )
 				: null;
+
 		final JavaTypeDescriptor domainJtd = explicitJtd != null
 				? explicitJtd
 				: converter.getDomainJavaDescriptor();
@@ -100,7 +103,9 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 		final SqlTypeDescriptor explicitStd = explicitStdAccess != null
 				? explicitStdAccess.apply( typeConfiguration )
 				: null;
+
 		final JavaTypeDescriptor relationalJtd = converter.getRelationalJavaDescriptor();
+
 		final SqlTypeDescriptor relationalStd = explicitStd != null
 				? explicitStd
 				: relationalJtd.getJdbcRecommendedSqlType( sqlTypeIndicators );
@@ -139,13 +144,46 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 			SqlTypeDescriptor relationalStd,
 			JpaAttributeConverter valueConverter,
 			MutabilityPlan mutabilityPlan) {
+		assert domainJtd != null;
 		this.domainJtd = domainJtd;
+
+		assert relationalJtd != null;
 		this.relationalJtd = relationalJtd;
+
+		assert relationalStd != null;
 		this.relationalStd = relationalStd;
+
+		assert valueConverter != null;
 		this.valueConverter = valueConverter;
+
+		assert mutabilityPlan != null;
 		this.mutabilityPlan = mutabilityPlan;
 
-		this.jdbcMapping = new StandardBasicTypeImpl( relationalJtd, relationalStd ).getJdbcMapping();
+		this.jdbcMapping = new JdbcMapping() {
+			private final ValueExtractor extractor = relationalStd.getExtractor( relationalJtd );
+			private final ValueBinder binder = relationalStd.getBinder( relationalJtd );
+
+			@Override
+			public JavaTypeDescriptor getJavaTypeDescriptor() {
+				return relationalJtd;
+			}
+
+			@Override
+			public SqlTypeDescriptor getSqlTypeDescriptor() {
+				return relationalStd;
+			}
+
+			@Override
+			public ValueExtractor getJdbcValueExtractor() {
+				return extractor;
+			}
+
+			@Override
+			public ValueBinder getJdbcValueBinder() {
+				return binder;
+			}
+		};
+//		this.jdbcMapping = new StandardBasicTypeImpl( relationalJtd, relationalStd );
 
 		this.legacyResolvedType = new AttributeConverterTypeAdapter(
 				ConverterDescriptor.TYPE_NAME_PREFIX + valueConverter.getConverterJavaTypeDescriptor().getJavaType().getName(),
@@ -156,8 +194,7 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 				),
 				valueConverter,
 				relationalStd,
-				domainJtd.getJavaType(),
-				relationalJtd.getJavaType(),
+				relationalJtd,
 				domainJtd
 		);
 	}

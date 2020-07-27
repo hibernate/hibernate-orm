@@ -8,6 +8,9 @@ package org.hibernate.orm.test.metamodel.mapping;
 
 import java.sql.Statement;
 import java.sql.Types;
+import javax.persistence.AttributeConverter;
+import javax.persistence.Column;
+import javax.persistence.Convert;
 import javax.persistence.Embeddable;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
@@ -25,6 +28,7 @@ import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.model.convert.internal.NamedEnumValueConverter;
 import org.hibernate.metamodel.model.convert.internal.OrdinalEnumValueConverter;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
 import org.hibernate.persister.entity.EntityPersister;
 
 import org.hibernate.testing.hamcrest.CollectionMatchers;
@@ -40,6 +44,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
@@ -60,9 +65,10 @@ public class SmokeTests {
 				.getEntityDescriptor( SimpleEntity.class );
 
 		final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
-		assert Integer.class.equals( identifierMapping.getMappedTypeDescriptor()
-											 .getMappedJavaTypeDescriptor()
-											 .getJavaType() );
+		assertThat(
+				identifierMapping.getMappedTypeDescriptor().getMappedJavaTypeDescriptor().getJavaType(),
+				sameInstance( Integer.class )
+		);
 
 		{
 			final ModelPart namePart = entityDescriptor.findSubPart( "name" );
@@ -103,6 +109,23 @@ public class SmokeTests {
 			assertThat( valueConverter.getRelationalJavaDescriptor().getJavaType(), equalTo( String.class ) );
 
 			assertThat( attrMapping.getJdbcMapping().getSqlTypeDescriptor().getJdbcTypeCode(), is( Types.VARCHAR ) );
+		}
+
+		{
+			final ModelPart part = entityDescriptor.findSubPart( "gender3" );
+			assert part instanceof BasicValuedSingularAttributeMapping;
+			final BasicValuedSingularAttributeMapping attrMapping = (BasicValuedSingularAttributeMapping) part;
+			assert "mapping_simple_entity".equals( attrMapping.getContainingTableExpression() );
+			assert "gender3".equals( attrMapping.getMappedColumnExpression() );
+
+			assertThat( attrMapping.getJavaTypeDescriptor().getJavaType(), equalTo( Gender.class ) );
+
+			final BasicValueConverter valueConverter = attrMapping.getValueConverter();
+			assertThat( valueConverter, instanceOf( JpaAttributeConverter.class ) );
+			assertThat( valueConverter.getDomainJavaDescriptor(), is( attrMapping.getJavaTypeDescriptor() ) );
+			assertThat( valueConverter.getRelationalJavaDescriptor().getJavaType(), equalTo( Character.class ) );
+
+			assertThat( attrMapping.getJdbcMapping().getSqlTypeDescriptor().getJdbcTypeCode(), is( Types.CHAR ) );
 		}
 
 		{
@@ -223,6 +246,7 @@ public class SmokeTests {
 		private String name;
 		private Gender gender;
 		private Gender gender2;
+		private Gender gender3;
 		private Component component;
 
 		@Id
@@ -260,6 +284,16 @@ public class SmokeTests {
 			this.gender2 = gender2;
 		}
 
+		@Convert( converter = GenderConverter.class )
+		@Column( length = 1 )
+		public Gender getGender3() {
+			return gender3;
+		}
+
+		public void setGender3(Gender gender3) {
+			this.gender3 = gender3;
+		}
+
 		@Embedded
 		public Component getComponent() {
 			return component;
@@ -267,6 +301,35 @@ public class SmokeTests {
 
 		public void setComponent(Component component) {
 			this.component = component;
+		}
+	}
+
+	static class GenderConverter implements AttributeConverter<Gender,Character> {
+
+		@Override
+		public Character convertToDatabaseColumn(Gender attribute) {
+			if ( attribute == null ) {
+				return null;
+			}
+
+			if ( attribute == Gender.MALE ) {
+				return 'M';
+			}
+
+			return 'F';
+		}
+
+		@Override
+		public Gender convertToEntityAttribute(Character dbData) {
+			if ( dbData == null ) {
+				return null;
+			}
+
+			if ( 'M' == dbData ) {
+				return Gender.MALE;
+			}
+
+			return Gender.FEMALE;
 		}
 	}
 

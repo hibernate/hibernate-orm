@@ -306,7 +306,7 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	@SuppressWarnings({ "unchecked" })
-	protected final void nullSafeSet(PreparedStatement st, Object value, int index, WrapperOptions options) throws SQLException {
+	protected void nullSafeSet(PreparedStatement st, Object value, int index, WrapperOptions options) throws SQLException {
 		remapSqlTypeDescriptor( options ).getBinder( javaTypeDescriptor ).bind( st, ( T ) value, index, options );
 	}
 
@@ -428,6 +428,16 @@ public abstract class AbstractStandardBasicType<T>
 				paramName,
 				session
 		);
+	}
+
+	@Override
+	public void nullSafeSet(
+			PreparedStatement st,
+			Object value,
+			int index,
+			boolean[] settable,
+			SharedSessionContractImplementor session) throws SQLException {
+
 	}
 
 	@Override

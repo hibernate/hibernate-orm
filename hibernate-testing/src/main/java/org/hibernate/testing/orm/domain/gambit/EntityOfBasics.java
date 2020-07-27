@@ -8,6 +8,7 @@ package org.hibernate.testing.orm.domain.gambit;
 
 import java.net.URL;
 import java.sql.Clob;
+import java.sql.Types;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -26,6 +27,8 @@ import javax.persistence.Id;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
+import org.hibernate.annotations.SqlTypeCode;
+
 /**
  * @author Steve Ebersole
  */
@@ -34,7 +37,8 @@ public class EntityOfBasics {
 
 	public enum Gender {
 		MALE,
-		FEMALE
+		FEMALE,
+		OTHER
 	}
 
 	private Integer id;
@@ -59,6 +63,13 @@ public class EntityOfBasics {
 	private LocalTime theLocalTime;
 	private ZonedDateTime theZonedDateTime;
 	private OffsetDateTime theOffsetDateTime;
+
+	public EntityOfBasics() {
+	}
+
+	public EntityOfBasics(Integer id) {
+		this.id = id;
+	}
 
 	@Id
 	public Integer getId() {
@@ -127,7 +138,8 @@ public class EntityOfBasics {
 	}
 
 	@Convert( converter = GenderConverter.class )
-	@Column(name = "converted_gender")
+	@Column(name = "converted_gender", length = 1)
+	@SqlTypeCode( Types.CHAR )
 	public Gender getConvertedGender() {
 		return convertedGender;
 	}
@@ -244,6 +256,10 @@ public class EntityOfBasics {
 				return null;
 			}
 
+			if ( attribute == Gender.OTHER ) {
+				return 'O';
+			}
+
 			if ( attribute == Gender.MALE ) {
 				return 'M';
 			}
@@ -255,6 +271,10 @@ public class EntityOfBasics {
 		public Gender convertToEntityAttribute(Character dbData) {
 			if ( dbData == null ) {
 				return null;
+			}
+
+			if ( 'O' == dbData ) {
+				return Gender.OTHER;
 			}
 
 			if ( 'M' == dbData ) {

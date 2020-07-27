@@ -18,14 +18,14 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * @author Steve Ebersole
  */
 public class JpaAttributeConverterImpl<O,R> implements JpaAttributeConverter<O,R> {
-	private final ManagedBean<AttributeConverter<O,R>> attributeConverterBean;
-	private final JavaTypeDescriptor<AttributeConverter<O, R>> converterJavaTypeDescriptor;
+	private final ManagedBean<? extends AttributeConverter<O,R>> attributeConverterBean;
+	private final JavaTypeDescriptor<? extends AttributeConverter<O, R>> converterJavaTypeDescriptor;
 	private final JavaTypeDescriptor<O> domainJavaTypeDescriptor;
 	private final JavaTypeDescriptor<R> relationalJavaTypeDescriptor;
 
 	public JpaAttributeConverterImpl(
-			ManagedBean<AttributeConverter<O, R>> attributeConverterBean,
-			JavaTypeDescriptor<AttributeConverter<O,R>> converterJavaTypeDescriptor,
+			ManagedBean<? extends AttributeConverter<O, R>> attributeConverterBean,
+			JavaTypeDescriptor<? extends AttributeConverter<O,R>> converterJavaTypeDescriptor,
 			JavaTypeDescriptor<O> domainJavaTypeDescriptor,
 			JavaTypeDescriptor<R> relationalJavaTypeDescriptor) {
 		this.attributeConverterBean = attributeConverterBean;
@@ -35,7 +35,7 @@ public class JpaAttributeConverterImpl<O,R> implements JpaAttributeConverter<O,R
 	}
 
 	@Override
-	public ManagedBean<AttributeConverter<O, R>> getConverterBean() {
+	public ManagedBean<? extends AttributeConverter<O, R>> getConverterBean() {
 		return attributeConverterBean;
 	}
 
@@ -50,7 +50,7 @@ public class JpaAttributeConverterImpl<O,R> implements JpaAttributeConverter<O,R
 	}
 
 	@Override
-	public JavaTypeDescriptor<AttributeConverter<O, R>> getConverterJavaTypeDescriptor() {
+	public JavaTypeDescriptor<? extends AttributeConverter<O, R>> getConverterJavaTypeDescriptor() {
 		return converterJavaTypeDescriptor;
 	}
 

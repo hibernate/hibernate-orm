@@ -46,5 +46,6 @@ public interface DynamicParameterizedType extends ParameterizedType {
 
 		String[] getColumns();
 
+		Long[] getColumnLengths();
 	}
 }

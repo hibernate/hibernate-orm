@@ -173,7 +173,7 @@ public class InferredBasicValueResolver {
 
 		switch ( enumStyle ) {
 			case STRING: {
-				final JavaTypeDescriptor<String> relationalJtd;
+				final JavaTypeDescriptor<?> relationalJtd;
 				if ( explicitJavaType != null ) {
 					if ( ! String.class.isAssignableFrom( explicitJavaType.getJavaType() ) ) {
 						throw new MappingException(
@@ -182,11 +182,12 @@ public class InferredBasicValueResolver {
 										" should handle `java.lang.String` as its relational type descriptor"
 						);
 					}
-					//noinspection unchecked
 					relationalJtd = explicitJavaType;
 				}
 				else {
-					relationalJtd = typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( String.class );
+					final boolean useCharacter = stdIndicators.getColumnLength() == 1;
+					final Class<?> relationalJavaType = useCharacter ? Character.class : String.class;
+					relationalJtd = typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( relationalJavaType );
 				}
 
 				final SqlTypeDescriptor std = explicitSqlType != null ? explicitSqlType : relationalJtd.getJdbcRecommendedSqlType( stdIndicators );

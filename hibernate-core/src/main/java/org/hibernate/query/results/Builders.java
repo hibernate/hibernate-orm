@@ -6,55 +6,62 @@
  */
 package org.hibernate.query.results;
 
-import java.util.function.Consumer;
+import javax.persistence.AttributeConverter;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.results.graph.DomainResult;
-import org.hibernate.sql.results.graph.basic.BasicResult;
-import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
 public class Builders {
 	public static ScalarResultBuilder scalar(String columnAlias) {
-		return new ScalarResultBuilder( columnAlias );
+		return new StandardScalarResultBuilder( columnAlias );
 	}
 
 	public static ScalarResultBuilder scalar(
 			String columnAlias,
 			BasicType<?> type) {
-		return new ScalarResultBuilder( columnAlias, type );
+		return new StandardScalarResultBuilder( columnAlias, type );
 	}
 
 	public static ScalarResultBuilder scalar(
 			String columnAlias,
 			Class<?> javaType,
 			SessionFactoryImplementor factory) {
-		return new ScalarResultBuilder(
-				columnAlias,
-				factory.getTypeConfiguration().standardBasicTypeForJavaType( javaType )
-		);
+		final JavaTypeDescriptor<?> javaTypeDescriptor = factory.getTypeConfiguration()
+				.getJavaTypeDescriptorRegistry()
+				.getDescriptor( javaType );
+
+		return new StandardScalarResultBuilder( columnAlias, javaTypeDescriptor );
 	}
 
-	public static DomainResult<?> implicitScalarDomainResult(
-			int colIndex,
-			String columnName,
-			JdbcValuesMetadata jdbcResultsMetadata,
-			Consumer<SqlSelection> sqlSelectionConsumer,
+	public static <C> ResultBuilder scalar(
+			String columnAlias,
+			Class<C> relationalJavaType,
+			AttributeConverter<?, C> converter,
 			SessionFactoryImplementor sessionFactory) {
-		final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
-		final SqlTypeDescriptor sqlTypeDescriptor = jdbcResultsMetadata.resolveSqlTypeDescriptor( colIndex );
-		final BasicJavaDescriptor<?> javaTypeDescriptor = sqlTypeDescriptor.getJdbcRecommendedJavaTypeMapping( typeConfiguration );
-		final BasicType<?> jdbcMapping = typeConfiguration.getBasicTypeRegistry().resolve( javaTypeDescriptor, sqlTypeDescriptor );
-		sqlSelectionConsumer.accept( new SqlSelectionImpl( colIndex, jdbcMapping ) );
-		return new BasicResult<>( colIndex, columnName, javaTypeDescriptor );
+		return ConvertedResultBuilder.from( columnAlias, relationalJavaType, converter, sessionFactory );
+	}
+
+	public static <C> ResultBuilder scalar(
+			String columnAlias,
+			Class<C> relationalJavaType,
+			Class<? extends AttributeConverter<?, C>> converterJavaType,
+			SessionFactoryImplementor sessionFactory) {
+		return ConvertedResultBuilder.from( columnAlias, relationalJavaType, converterJavaType, sessionFactory );
+	}
+
+	public static ScalarResultBuilder scalar(int position) {
+		// will be needed for interpreting legacy HBM <resultset/> mappings
+		throw new NotYetImplementedFor6Exception();
+	}
+
+	public static ScalarResultBuilder scalar(int position, BasicType<?> type) {
+		// will be needed for interpreting legacy HBM <resultset/> mappings
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	public static EntityResultBuilder entity(String tableAlias, String entityName) {

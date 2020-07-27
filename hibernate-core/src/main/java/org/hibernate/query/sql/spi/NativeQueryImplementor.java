@@ -14,6 +14,7 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
+import javax.persistence.AttributeConverter;
 import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
 import javax.persistence.Parameter;
@@ -57,6 +58,12 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 
 	@Override
 	NativeQueryImplementor<R> addScalar(String columnAlias, Class<?> javaType);
+
+	@Override
+	<C> NativeQueryImplementor<R> addScalar(String columnAlias, Class<C> relationalJavaType, AttributeConverter<?,C> converter);
+
+	@Override
+	<C> NativeQueryImplementor<R> addScalar(String columnAlias, Class<C> relationalJavaType, Class<? extends AttributeConverter<?,C>> converter);
 
 	@Override
 	EntityResultBuilder addRoot(String tableAlias, String entityName);

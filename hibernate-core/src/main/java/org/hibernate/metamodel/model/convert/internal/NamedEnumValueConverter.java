@@ -70,7 +70,7 @@ public class NamedEnumValueConverter<E extends Enum<E>> implements EnumValueConv
 
 	@Override
 	public int getJdbcTypeCode() {
-		return Types.VARCHAR;
+		return sqlTypeDescriptor.getJdbcTypeCode();
 	}
 
 	@Override

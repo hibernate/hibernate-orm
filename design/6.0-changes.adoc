@@ -1,0 +1,20 @@
+= Changes
+
+Changes in 6.0 worth documenting in various places
+
+
+== New features
+
+Document in release-notes:
+
+* `@SqlTypeCode`
+* `@SqlType`
+* `@JavaType`
+* `NativeQuery#addScalar(Class)`
+* `NativeQuery#addScalar(Class,AttributeConverter)`
+* `NativeQuery#addScalar(Class,Class<AttributeConverter>)`
+
+
+== Changes
+
+Document in migration-guide.

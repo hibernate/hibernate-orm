@@ -576,7 +576,7 @@ public abstract class SimpleValue implements KeyValue {
 				}
 		);
 
-		final BasicJavaDescriptor entityAttributeJavaTypeDescriptor = (BasicJavaDescriptor) jpaAttributeConverter.getDomainJavaTypeDescriptor();
+		final BasicJavaDescriptor<?> domainJtd = (BasicJavaDescriptor<?>) jpaAttributeConverter.getDomainJavaTypeDescriptor();
 
 
 		// build the SqlTypeDescriptor adapter ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -595,7 +595,7 @@ public abstract class SimpleValue implements KeyValue {
 				jdbcTypeCode = LobTypeMappings.getLobCodeTypeMapping( jdbcTypeCode );
 			}
 			else {
-				if ( Serializable.class.isAssignableFrom( entityAttributeJavaTypeDescriptor.getJavaType() ) ) {
+				if ( Serializable.class.isAssignableFrom( domainJtd.getJavaType() ) ) {
 					jdbcTypeCode = Types.BLOB;
 				}
 				else {
@@ -642,19 +642,18 @@ public abstract class SimpleValue implements KeyValue {
 				jpaAttributeConverter.getDomainJavaTypeDescriptor().getJavaType().getSimpleName(),
 				jpaAttributeConverter.getRelationalJavaTypeDescriptor().getJavaType().getSimpleName()
 		);
-		return new AttributeConverterTypeAdapter(
+		return new AttributeConverterTypeAdapter<>(
 				name,
 				description,
 				jpaAttributeConverter,
 				sqlTypeDescriptorAdapter,
-				jpaAttributeConverter.getDomainJavaTypeDescriptor().getJavaType(),
-				jpaAttributeConverter.getRelationalJavaTypeDescriptor().getJavaType(),
-				entityAttributeJavaTypeDescriptor
+				jpaAttributeConverter.getRelationalJavaTypeDescriptor(),
+				jpaAttributeConverter.getDomainJavaTypeDescriptor()
 		);
 	}
 
 	public boolean isTypeSpecified() {
-		return typeName!=null;
+		return typeName != null;
 	}
 
 	public void setTypeParameters(Properties parameterMap) {
@@ -752,11 +751,15 @@ public abstract class SimpleValue implements KeyValue {
 
 	private void createParameterImpl() {
 		try {
-			String[] columnsNames = new String[columns.size()];
+			final String[] columnNames = new String[ columns.size() ];
+			final Long[] columnLengths = new Long[ columns.size() ];
+
 			for ( int i = 0; i < columns.size(); i++ ) {
-				Selectable column = columns.get(i);
-				if (column instanceof Column){
-					columnsNames[i] = ((Column) column).getName();
+				final Selectable selectable = columns.get(i);
+				if ( selectable instanceof Column ) {
+					final Column column = (Column) selectable;
+					columnNames[i] = column.getName();
+					columnLengths[i] = column.getLength();
 				}
 			}
 
@@ -781,7 +784,8 @@ public abstract class SimpleValue implements KeyValue {
 							table.getSchema(),
 							table.getName(),
 							Boolean.valueOf( typeParameters.getProperty( DynamicParameterizedType.IS_PRIMARY_KEY ) ),
-							columnsNames
+							columnNames,
+							columnLengths
 					)
 			);
 		}
@@ -799,9 +803,17 @@ public abstract class SimpleValue implements KeyValue {
 		private final String table;
 		private final boolean primaryKey;
 		private final String[] columns;
+		private final Long[] columnLengths;
 
-		private ParameterTypeImpl(Class returnedClass, Annotation[] annotationsMethod, String catalog, String schema,
-				String table, boolean primaryKey, String[] columns) {
+		private ParameterTypeImpl(
+				Class returnedClass,
+				Annotation[] annotationsMethod,
+				String catalog,
+				String schema,
+				String table,
+				boolean primaryKey,
+				String[] columns,
+				Long[] columnLengths) {
 			this.returnedClass = returnedClass;
 			this.annotationsMethod = annotationsMethod;
 			this.catalog = catalog;
@@ -809,6 +821,7 @@ public abstract class SimpleValue implements KeyValue {
 			this.table = table;
 			this.primaryKey = primaryKey;
 			this.columns = columns;
+			this.columnLengths = columnLengths;
 		}
 
 		@Override
@@ -844,6 +857,11 @@ public abstract class SimpleValue implements KeyValue {
 		@Override
 		public String[] getColumns() {
 			return columns;
+		}
+
+		@Override
+		public Long[] getColumnLengths() {
+			return columnLengths;
 		}
 	}
 }

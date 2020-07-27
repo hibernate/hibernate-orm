@@ -31,6 +31,12 @@ public class EnumJavaTypeDescriptor<T extends Enum<T>> extends AbstractTypeDescr
 	@Override
 	public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context) {
 		if ( context.getEnumeratedType() != null && context.getEnumeratedType() == EnumType.STRING ) {
+			if ( context.getColumnLength() == 1 ) {
+				return context.isNationalized()
+						? context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.NCHAR )
+						: context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.CHAR );
+			}
+
 			return context.isNationalized()
 					? context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.NVARCHAR )
 					: context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.VARCHAR );

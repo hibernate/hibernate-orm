@@ -15,7 +15,12 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
+ * Same function as {@link JavaType}, but used to define the Java type descriptor to
+ * use for the map-key
+ *
  * @author Steve Ebersole
+ *
+ * @since 6.0
  */
 @java.lang.annotation.Target({METHOD, FIELD, ANNOTATION_TYPE})
 @Inherited

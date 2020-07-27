@@ -9,7 +9,9 @@ Document in release-notes:
 
 * `@SqlTypeCode`
 * `@SqlType`
+* `@SqlTypeRegistration`
 * `@JavaType`
+* `@JavaTypeRegistration`
 * `NativeQuery#addScalar(Class)`
 * `NativeQuery#addScalar(Class,AttributeConverter)`
 * `NativeQuery#addScalar(Class,Class<AttributeConverter>)`

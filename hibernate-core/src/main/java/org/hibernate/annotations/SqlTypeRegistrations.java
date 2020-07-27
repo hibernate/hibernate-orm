@@ -15,7 +15,11 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
+ * Grouping of {@link SqlTypeRegistration}
+ *
  * @author Steve Ebersole
+ *
+ * @since 6.0
  */
 @java.lang.annotation.Target({PACKAGE, TYPE, ANNOTATION_TYPE})
 @Inherited

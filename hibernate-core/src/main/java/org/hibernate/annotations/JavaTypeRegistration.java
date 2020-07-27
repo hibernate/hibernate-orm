@@ -11,7 +11,6 @@ import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 
 import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.PACKAGE;
@@ -19,7 +18,11 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
+ * Registers the BasicJavaDescriptor to use for the given {@link #javaType}
+ *
  * @author Steve Ebersole
+ *
+ * @since 6.0
  */
 @java.lang.annotation.Target({PACKAGE, TYPE, ANNOTATION_TYPE})
 @Inherited

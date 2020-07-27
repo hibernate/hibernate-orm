@@ -17,7 +17,11 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
+ * Explicit BasicJavaDescriptor for the associated attribute
+ *
  * @author Steve Ebersole
+ *
+ * @since 6.0
  */
 @Inherited
 @java.lang.annotation.Target({METHOD, FIELD, ANNOTATION_TYPE})

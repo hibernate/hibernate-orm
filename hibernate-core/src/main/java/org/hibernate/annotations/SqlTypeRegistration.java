@@ -13,8 +13,6 @@ import java.lang.annotation.Retention;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
-import static java.lang.annotation.ElementType.FIELD;
-import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.PACKAGE;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -24,6 +22,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * {@link org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry}
  *
  * @author Steve Ebersole
+ *
+ * @since 6.0
  */
 @java.lang.annotation.Target({PACKAGE, TYPE, ANNOTATION_TYPE})
 @Inherited

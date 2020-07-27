@@ -41,6 +41,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * @see org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry
  *
  * @author Steve Ebersole
+ *
+ * @since 6.0
  */
 @java.lang.annotation.Target({METHOD, FIELD, ANNOTATION_TYPE})
 @Inherited

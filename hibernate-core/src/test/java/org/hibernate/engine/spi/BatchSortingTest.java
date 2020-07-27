@@ -62,7 +62,7 @@ public class BatchSortingTest extends BaseNonConfigCoreFunctionalTestCase {
         });
     }
 
-    @Entity
+    @Entity(name = "GeoCountry")
     public static class GeoCountry {
 
         @GeneratedValue
@@ -112,7 +112,7 @@ public class BatchSortingTest extends BaseNonConfigCoreFunctionalTestCase {
         }
     }
 
-    @Entity
+    @Entity(name = "GeoDistrict")
     public static class GeoDistrict {
 
         @GeneratedValue
@@ -161,7 +161,7 @@ public class BatchSortingTest extends BaseNonConfigCoreFunctionalTestCase {
         }
     }
 
-    @Entity
+    @Entity(name = "GeoDistrictDetail")
     public static class GeoDistrictDetail {
 
         @GeneratedValue
@@ -178,7 +178,7 @@ public class BatchSortingTest extends BaseNonConfigCoreFunctionalTestCase {
 
     }
 
-    @Entity
+    @Entity(name = "GeoNation")
     public static class GeoNation {
 
         @GeneratedValue

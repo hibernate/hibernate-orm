@@ -19,6 +19,7 @@ import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
 import javax.persistence.Parameter;
 import javax.persistence.TemporalType;
+import javax.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -130,6 +131,41 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 * @since 6.0
 	 */
 	<C> NativeQuery<T> addScalar(String columnAlias, Class<C> relationalJavaType, Class<? extends AttributeConverter<?,C>> converter);
+
+	/**
+	 * Defines a result based on a specified attribute.  Differs from adding a scalar in that
+	 * any conversions or other semantics defined on the attribute are automatically applied
+	 * to the mapping
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @since 6.0
+	 */
+	NativeQuery<T> addAttributeResult(String columnAlias, Class<?> entityJavaType, String attributePath);
+
+	/**
+	 * Defines a result based on a specified attribute.  Differs from adding a scalar in that
+	 * any conversions or other semantics defined on the attribute are automatically applied
+	 * to the mapping
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @since 6.0
+	 */
+	NativeQuery<T> addAttributeResult(String columnAlias, String entityName, String attributePath);
+
+	/**
+	 * Defines a result based on a specified attribute. Differs from adding a scalar in that
+	 * any conversions or other semantics defined on the attribute are automatically applied
+	 * to the mapping.
+	 *
+	 * This form accepts the JPA Attribute mapping describing the attribute
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @since 6.0
+	 */
+	NativeQuery<T> addAttributeResult(String columnAlias, SingularAttribute<?,?> attribute);
 
 	/**
 	 * Add a new root return mapping, returning a {@link RootReturn} to allow

@@ -27,6 +27,7 @@ import javax.persistence.LockModeType;
 import javax.persistence.Parameter;
 import javax.persistence.PersistenceException;
 import javax.persistence.TemporalType;
+import javax.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -511,6 +512,30 @@ public class NativeQueryImpl<R>
 		return registerBuilder( Builders.scalar( columnAlias, relationalJavaType, converter, getSessionFactory() ) );
 	}
 
+	@Override
+	public NativeQueryImplementor<R> addAttributeResult(
+			String columnAlias,
+			Class<?> entityJavaType,
+			String attributePath) {
+		return addAttributeResult( columnAlias, entityJavaType.getName(), attributePath );
+	}
+
+	@Override
+	public NativeQueryImplementor<R> addAttributeResult(
+			String columnAlias,
+			String entityName,
+			String attributePath) {
+		registerBuilder( Builders.attributeResult( columnAlias, entityName, attributePath, getSessionFactory() ) );
+		return this;
+	}
+
+	@Override
+	public NativeQueryImplementor<R> addAttributeResult(
+			String columnAlias,
+			SingularAttribute<?, ?> attribute) {
+		registerBuilder( Builders.attributeResult( columnAlias, attribute ) );
+		return this;
+	}
 
 	@Override
 	public EntityResultBuilder addRoot(String tableAlias, String entityName) {
@@ -534,13 +559,13 @@ public class NativeQueryImpl<R>
 
 	@Override
 	public NativeQueryImplementor<R> addEntity(String tableAlias, String entityName) {
-		addRoot( tableAlias, entityName );
+		registerBuilder( Builders.entityCalculated( tableAlias, entityName ) );
 		return this;
 	}
 
 	@Override
 	public NativeQueryImplementor<R> addEntity(String tableAlias, String entityName, LockMode lockMode) {
-		addRoot( tableAlias, entityName ).setLockMode( lockMode );
+		registerBuilder( Builders.entityCalculated( tableAlias, entityName, lockMode ) );
 		return this;
 	}
 

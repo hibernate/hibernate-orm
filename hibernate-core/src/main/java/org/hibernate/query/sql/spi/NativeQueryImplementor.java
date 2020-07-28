@@ -19,6 +19,7 @@ import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
 import javax.persistence.Parameter;
 import javax.persistence.TemporalType;
+import javax.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -64,6 +65,15 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 
 	@Override
 	<C> NativeQueryImplementor<R> addScalar(String columnAlias, Class<C> relationalJavaType, Class<? extends AttributeConverter<?,C>> converter);
+
+	@Override
+	NativeQueryImplementor<R> addAttributeResult(String columnAlias, Class<?> entityJavaType, String attributePath);
+
+	@Override
+	NativeQueryImplementor<R> addAttributeResult(String columnAlias, String entityName, String attributePath);
+
+	@Override
+	NativeQueryImplementor<R> addAttributeResult(String columnAlias, SingularAttribute<?, ?> attribute);
 
 	@Override
 	EntityResultBuilder addRoot(String tableAlias, String entityName);

@@ -536,7 +536,12 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 
 	@Override
 	public String getImportedName(String name) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		// we have to go back through TypeConfiguration / SessionFactory to get to the JpaMetamodel :(
+		final String qualifiedName = typeConfiguration.getSessionFactory()
+				.getRuntimeMetamodels()
+				.getJpaMetamodel()
+				.qualifyImportableName( name );
+		return qualifiedName == null ? name : qualifiedName;
 	}
 
 	@Override

@@ -15,6 +15,9 @@ Document in release-notes:
 * `NativeQuery#addScalar(Class)`
 * `NativeQuery#addScalar(Class,AttributeConverter)`
 * `NativeQuery#addScalar(Class,Class<AttributeConverter>)`
+* `NativeQuery#addAttributeResult(String,Class,String)`
+* `NativeQuery#addAttributeResult(String,String,String)`
+* `NativeQuery#addAttributeResult(String,Attribute)`
 
 
 == Changes

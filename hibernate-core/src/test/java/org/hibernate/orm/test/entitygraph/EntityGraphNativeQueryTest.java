@@ -83,7 +83,6 @@ public class EntityGraphNativeQueryTest {
 	}
 
 	@Test
-	@FailureExpected( reason = "Uses an implicit entity/root return, which is not yet implemented" )
 	void testNativeQueryLoadGraph(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -115,7 +114,6 @@ public class EntityGraphNativeQueryTest {
 	}
 
 	@Test
-	@FailureExpected( reason = "Uses an implicit entity/root return, which is not yet implemented" )
 	void testNativeQueryFetchGraph(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

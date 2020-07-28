@@ -17,13 +17,11 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.BasicValuedSingularAttributeMapping;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
-import org.hibernate.orm.test.metamodel.mapping.SmokeTests;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -47,7 +45,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 		standardModels = StandardDomainModel.GAMBIT
 )
 @SessionFactory
-public class NativeQueryScalarTests {
+public class NativeQueryResultBuilderTests {
 	public static final String STRING_VALUE = "a string value";
 	public static final String URL_STRING = "http://hibernate.org";
 
@@ -218,6 +216,31 @@ public class NativeQueryScalarTests {
 				return ( (Number) item ).intValue() == enumValue.ordinal();
 			}
 		};
+	}
+
+	@Test
+	public void testConvertedAttributeBasedBuilder(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final NativeQueryImplementor qry = session.createNativeQuery(
+							"select converted_gender from EntityOfBasics"
+					);
+
+					qry.addAttributeResult(
+							"converted_gender",
+							"EntityOfBasics",
+							"convertedGender"
+					);
+
+					final List results = qry.list();
+					assertThat( results.size(), is( 1 ) );
+
+					final Object result = results.get( 0 );
+					assertThat( result, instanceOf( EntityOfBasics.Gender.class ) );
+
+					assertThat( result, is( EntityOfBasics.Gender.OTHER ) );
+				}
+		);
 	}
 
 	@BeforeAll

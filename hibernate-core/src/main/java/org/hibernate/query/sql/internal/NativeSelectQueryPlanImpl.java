@@ -6,24 +6,32 @@
  */
 package org.hibernate.query.sql.internal;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.ScrollMode;
+import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.model.domain.AllowableParameterType;
+import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.sql.spi.NativeSelectQueryPlan;
+import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
+import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
+import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
 import org.hibernate.sql.results.internal.RowTransformerPassThruImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 import org.hibernate.sql.results.spi.RowTransformer;
+import org.hibernate.type.StandardBasicTypes;
 
 /**
  * @author Steve Ebersole
@@ -54,8 +62,51 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 
 	@Override
 	public List<R> performList(ExecutionContext executionContext) {
-		final List<JdbcParameterBinder> jdbcParameterBinders = resolveJdbcParamBinders( executionContext );
-		final JdbcParameterBindings jdbcParameterBindings = resolveJdbcParamBindings( executionContext, jdbcParameterBinders );
+		final List<JdbcParameterBinder> jdbcParameterBinders;
+		final JdbcParameterBindings jdbcParameterBindings;
+
+		final QueryParameterBindings queryParameterBindings = executionContext.getQueryParameterBindings();
+		if ( parameterList == null || parameterList.isEmpty() ) {
+			jdbcParameterBinders = Collections.emptyList();
+			jdbcParameterBindings = JdbcParameterBindings.NO_BINDINGS;
+		}
+		else {
+			jdbcParameterBinders = new ArrayList<>( parameterList.size() );
+			jdbcParameterBindings = new JdbcParameterBindingsImpl( parameterList.size() );
+
+			queryParameterBindings.visitBindings(
+					(param, binding) -> {
+						AllowableParameterType<?> type = binding.getBindType();
+						if ( type == null ) {
+							type = param.getHibernateType();
+						}
+						if ( type == null ) {
+							type = StandardBasicTypes.OBJECT_TYPE;
+						}
+
+						final JdbcMapping jdbcMapping = ( (BasicValuedMapping) type ).getJdbcMapping();
+						final JdbcParameterImpl jdbcParameter = new JdbcParameterImpl( jdbcMapping );
+
+						jdbcParameterBinders.add( jdbcParameter );
+
+						jdbcParameterBindings.addBinding(
+								jdbcParameter,
+
+								new JdbcParameterBinding() {
+									@Override
+									public JdbcMapping getBindType() {
+										return jdbcMapping;
+									}
+
+									@Override
+									public Object getBindValue() {
+										return binding.getBindValue();
+									}
+								}
+						);
+					}
+			);
+		}
 
 		final JdbcSelect jdbcSelect = new JdbcSelect(
 				sql,
@@ -76,62 +127,53 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 		);
 	}
 
-	private List<JdbcParameterBinder> resolveJdbcParamBinders(ExecutionContext executionContext) {
-		if ( parameterList == null || parameterList.isEmpty() ) {
-			return Collections.emptyList();
-		}
-
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
-
-	private JdbcParameterBindings resolveJdbcParamBindings(
-			ExecutionContext executionContext,
-			List<JdbcParameterBinder> jdbcParameterBinders) {
-		if ( jdbcParameterBinders.isEmpty() ) {
-			return JdbcParameterBindings.NO_BINDINGS;
-		}
-
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
-
-//	private List<JdbcParameterBinder> resolveJdbcParameterBinders(ExecutionContext executionContext) {
-//		final List<JdbcParameterBinder> jdbcParameterBinders = CollectionHelper.arrayList( parameterList.size() );
-//
-//		for ( QueryParameterImplementor parameter : parameterList ) {
-//			final QueryParameterBinding parameterBinding = executionContext.getDomainParameterBindingContext()
-//					.getQueryParameterBindings()
-//					.getBinding( parameter );
-//			AllowableParameterType type = parameterBinding.getBindType();
-//			if ( type == null ) {
-//				type = parameter.getHibernateType();
-//			}
-//
-//			type.dehydrate(
-//					type.unresolve( parameterBinding.getBindValue(), executionContext.getSession() ),
-//					(jdbcValue, sqlExpressableType, boundColumn) -> jdbcParameterBinders.add(
-//							(statement, startPosition, jdbcParameterBindings, executionContext1) -> {
-//								//noinspection unchecked
-//								sqlExpressableType.getJdbcValueBinder().bind(
-//										statement,
-//										startPosition,
-//										jdbcValue,
-//										executionContext1
-//								);
-//								return 1;
-//							}
-//					),
-//					Clause.IRRELEVANT,
-//					executionContext.getSession()
-//			);
-//		}
-//
-//		return jdbcParameterBinders;
-//	}
-
 	@Override
 	public ScrollableResultsImplementor<R> performScroll(ScrollMode scrollMode, ExecutionContext executionContext) {
-		final List<JdbcParameterBinder> jdbcParameterBinders = resolveJdbcParamBinders( executionContext );
-		final JdbcParameterBindings jdbcParameterBindings = resolveJdbcParamBindings( executionContext, jdbcParameterBinders );
+		final List<JdbcParameterBinder> jdbcParameterBinders;
+		final JdbcParameterBindings jdbcParameterBindings;
+
+		final QueryParameterBindings queryParameterBindings = executionContext.getQueryParameterBindings();
+		if ( parameterList.isEmpty() ) {
+			jdbcParameterBinders = Collections.emptyList();
+			jdbcParameterBindings = JdbcParameterBindings.NO_BINDINGS;
+		}
+		else {
+			jdbcParameterBinders = new ArrayList<>( parameterList.size() );
+			jdbcParameterBindings = new JdbcParameterBindingsImpl( parameterList.size() );
+
+			queryParameterBindings.visitBindings(
+					(param, binding) -> {
+						AllowableParameterType<?> type = binding.getBindType();
+						if ( type == null ) {
+							type = param.getHibernateType();
+						}
+						if ( type == null ) {
+							type = StandardBasicTypes.OBJECT_TYPE;
+						}
+
+						final JdbcMapping jdbcMapping = ( (BasicValuedMapping) type ).getJdbcMapping();
+						final JdbcParameterImpl jdbcParameter = new JdbcParameterImpl( jdbcMapping );
+
+						jdbcParameterBinders.add( jdbcParameter );
+
+						jdbcParameterBindings.addBinding(
+								jdbcParameter,
+
+								new JdbcParameterBinding() {
+									@Override
+									public JdbcMapping getBindType() {
+										return jdbcMapping;
+									}
+
+									@Override
+									public Object getBindValue() {
+										return binding.getBindValue();
+									}
+								}
+						);
+					}
+			);
+		}
 
 		final JdbcSelect jdbcSelect = new JdbcSelect(
 				sql,

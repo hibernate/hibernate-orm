@@ -29,8 +29,6 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 		NAMED
 	}
 
-	private final int ordinalParameterBase;
-
 	private ParameterStyle parameterStyle;
 
 	private Map<String, QueryParameterImplementor<?>> namedQueryParameters;
@@ -42,12 +40,6 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 
 	@SuppressWarnings("WeakerAccess")
 	public ParameterRecognizerImpl(SessionFactoryImplementor factory) {
-		if ( factory.getSessionFactoryOptions().isJpaBootstrap() ) {
-			ordinalParameterBase = 1;
-		}
-		else {
-			ordinalParameterBase = 1;
-		}
 		ordinalParameterImplicitPosition = 1;
 	}
 
@@ -63,7 +55,7 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 			for ( Integer position : positionsArray ) {
 				if ( position != previous + 1 ) {
 					if ( first ) {
-						throw new QueryException( "Positional parameters did not start with base [" + ordinalParameterBase + "] : " + position );
+						throw new QueryException( "Positional parameters did not start with base 1 : " + position );
 					}
 					else {
 						throw new QueryException( "Gap in positional parameter positions; skipped " + (previous+1) );

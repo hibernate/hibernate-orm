@@ -1241,7 +1241,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 	@Override
 	public EntityDiscriminatorMapping getDiscriminatorMapping(TableGroup tableGroup) {
-		if(hasSubclasses()) {
+		if ( hasSubclasses() ) {
 			if ( explicitDiscriminatorColumnName == null ) {
 				CaseSearchedExpressionInfo info = getCaseSearchedExpression( tableGroup );
 				return new JoinedSubclassDiscriminatorMappingImpl(
@@ -1291,34 +1291,38 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		final BasicType discriminatorType = (BasicType) getDiscriminatorType();
 		final CaseSearchedExpression caseSearchedExpression = new CaseSearchedExpression( discriminatorType );
 
-		discriminatorValuesByTableName.forEach(
-				(tableName, discriminatorValue) -> {
-					if ( ! primaryTableReference.getTableExpression().equals( tableName ) ) {
-						TableReference tableReference = entityTableGroup.getTableReference( tableName );
-						if ( tableReference == null ) {
-							// we have not yet created a TableReference for this sub-class table, but we need to because
-							// it has a discriminator value associated with it
-							tableReference = entityTableGroup.resolveTableReference( tableName );
-						}
-
-						final ColumnReference identifierColumnReference = getIdentifierColumnReference( tableReference );
-						info.columnReferences.add( identifierColumnReference );
-						addWhen(
-								caseSearchedExpression,
-								tableReference,
-								identifierColumnReference,
-								discriminatorType
-						);
-					}
+		Boolean addPrimaryTableCaseAsLastCaseExpression = false;
+		for ( String tableName : discriminatorValuesByTableName.keySet() ) {
+			if ( !primaryTableReference.getTableExpression().equals( tableName ) ) {
+				TableReference tableReference = entityTableGroup.getTableReference( tableName );
+				if ( tableReference == null ) {
+					// we have not yet created a TableReference for this sub-class table, but we need to because
+					// it has a discriminator value associated with it
+					tableReference = entityTableGroup.resolveTableReference( tableName );
 				}
-		);
 
-		addWhen(
-				caseSearchedExpression,
-				primaryTableReference,
-				getIdentifierColumnReference( primaryTableReference ),
-				discriminatorType
-		);
+				final ColumnReference identifierColumnReference = getIdentifierColumnReference( tableReference );
+				info.columnReferences.add( identifierColumnReference );
+				addWhen(
+						caseSearchedExpression,
+						tableReference,
+						identifierColumnReference,
+						discriminatorType
+				);
+			}
+			else {
+				addPrimaryTableCaseAsLastCaseExpression = true;
+			}
+		}
+
+		if ( addPrimaryTableCaseAsLastCaseExpression ) {
+			addWhen(
+					caseSearchedExpression,
+					primaryTableReference,
+					getIdentifierColumnReference( primaryTableReference ),
+					discriminatorType
+			);
+		}
 
 		info.caseSearchedExpression = caseSearchedExpression;
 		return info;

@@ -212,11 +212,6 @@ public abstract class AbstractCompositeIdentifierMapping
 	}
 
 	@Override
-	public SingularAttributeMapping getParentInjectionAttributeMapping() {
-		return null;
-	}
-
-	@Override
 	public EntityMappingType findContainingEntityMapping() {
 		return entityMapping;
 	}

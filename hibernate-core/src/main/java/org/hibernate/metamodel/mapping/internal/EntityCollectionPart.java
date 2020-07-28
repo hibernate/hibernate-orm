@@ -13,6 +13,7 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.mapping.ColumnConsumer;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
@@ -166,6 +167,12 @@ public class EntityCollectionPart
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+
+	@Override
+	public void visitColumns(ColumnConsumer consumer) {
+		entityMappingType.visitColumns( consumer );
 	}
 
 	@Override

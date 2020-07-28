@@ -93,29 +93,25 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 
 	@Override
 	public void resolveKey(RowProcessingState rowProcessingState) {
-		// todo (6.0) : register "parent resolution listener" if the composite is defined for `@Parent`
-		//		something like:
-
 		final PropertyAccess parentInjectionPropertyAccess = embeddedModelPartDescriptor.getParentInjectionAttributePropertyAccess();
 
-		if ( parentInjectionPropertyAccess != null ) {
-			if ( getFetchParentAccess() != null ) {
-				getFetchParentAccess().findFirstEntityDescriptorAccess().registerResolutionListener(
-						// todo (6.0) : this is the legacy behavior
-						// 		- the first entity is injected as the parent, even if the composite
-						//		is defined on another composite
-						owner -> {
-							if ( compositeInstance == null ) {
-								return;
-							}
-							parentInjectionPropertyAccess.getSetter().set(
-									compositeInstance,
-									owner,
-									rowProcessingState.getSession().getFactory()
-							);
+		final FetchParentAccess fetchParentAccess = getFetchParentAccess();
+		if ( parentInjectionPropertyAccess != null && fetchParentAccess != null ) {
+			fetchParentAccess.findFirstEntityDescriptorAccess().registerResolutionListener(
+					// todo (6.0) : this is the legacy behavior
+					// 		- the first entity is injected as the parent, even if the composite
+					//		is defined on another composite
+					owner -> {
+						if ( compositeInstance == null ) {
+							return;
 						}
-				);
-			}
+						parentInjectionPropertyAccess.getSetter().set(
+								compositeInstance,
+								owner,
+								rowProcessingState.getSession().getFactory()
+						);
+					}
+			);
 		}
 	}
 
@@ -137,7 +133,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 
 		final PropertyAccess parentInjectionPropertyAccess = embeddedModelPartDescriptor.getParentInjectionAttributePropertyAccess();
 
-		if ( parentInjectionPropertyAccess != null && getFetchParentAccess() == null ) {
+		if ( parentInjectionPropertyAccess != null ) {
 			Initializer initializer = rowProcessingState.resolveInitializer( navigablePath.getParent() );
 			final Object owner;
 			if ( initializer instanceof CollectionInitializer ) {

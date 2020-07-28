@@ -39,5 +39,4 @@ public class Products {
 	public void setWidgets(Set<Widgets> widgets) {
 		this.widgets = widgets;
 	}
-
 }

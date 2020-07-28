@@ -133,6 +133,7 @@ import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.AttributeMetadataAccess;
+import org.hibernate.metamodel.mapping.ColumnConsumer;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -6439,6 +6440,13 @@ public abstract class AbstractEntityPersister
 		if ( superMappingType != null ) {
 			superMappingType.visitSuperTypeAttributeMappings( action );
 		}
+	}
+
+	@Override
+	public void visitColumns(ColumnConsumer consumer) {
+		getAttributeMappings().forEach(
+				attributeMapping -> attributeMapping.visitColumns( consumer )
+		);
 	}
 
 	@Override

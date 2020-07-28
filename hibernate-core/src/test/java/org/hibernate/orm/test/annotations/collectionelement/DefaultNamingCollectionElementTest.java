@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Locale;
 
 import org.hibernate.Filter;
-import org.hibernate.Transaction;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.mapping.Collection;
@@ -65,144 +64,114 @@ public class DefaultNamingCollectionElementTest {
 				scope.getMetadataImplementor().getCollectionBinding( Boy.class.getName() + '.' + "favoriteNumbers" )
 						.getCollectionTable().getName()
 		);
-		scope.inSession(
+
+		scope.inTransaction(
 				session -> {
-					Transaction transaction = session.getTransaction();
-					try {
-						transaction.begin();
-
-						Boy boy = new Boy();
-						boy.setFirstName( "John" );
-						boy.setLastName( "Doe" );
-						boy.getNickNames().add( "Johnny" );
-						boy.getNickNames().add( "Thing" );
-						boy.getScorePerNickName().put( "Johnny", 3 );
-						boy.getScorePerNickName().put( "Thing", 5 );
-						int[] favNbrs = new int[4];
-						for ( int index = 0; index < favNbrs.length - 1; index++ ) {
-							favNbrs[index] = index * 3;
-						}
-						boy.setFavoriteNumbers( favNbrs );
-						boy.getCharacters().add( Character.GENTLE );
-						boy.getCharacters().add( Character.CRAFTY );
-
-						HashMap<String, FavoriteFood> foods = new HashMap<>();
-						foods.put( "breakfast", FavoriteFood.PIZZA );
-						foods.put( "lunch", FavoriteFood.KUNGPAOCHICKEN );
-						foods.put( "dinner", FavoriteFood.SUSHI );
-						boy.setFavoriteFood( foods );
-						session.persist( boy );
-						transaction.commit();
-
-						session.clear();
-						transaction = session.beginTransaction();
-						boy = session.get( Boy.class, boy.getId() );
-						assertNotNull( boy.getNickNames() );
-						assertTrue( boy.getNickNames().contains( "Thing" ) );
-						assertNotNull( boy.getScorePerNickName() );
-						assertTrue( boy.getScorePerNickName().containsKey( "Thing" ) );
-						assertEquals( Integer.valueOf( 5 ), boy.getScorePerNickName().get( "Thing" ) );
-						assertNotNull( boy.getFavoriteNumbers() );
-						assertEquals( 3, boy.getFavoriteNumbers()[1] );
-						assertTrue( boy.getCharacters().contains( Character.CRAFTY ) );
-						assertTrue( boy.getFavoriteFood().get( "dinner" ).equals( FavoriteFood.SUSHI ) );
-						assertTrue( boy.getFavoriteFood().get( "lunch" ).equals( FavoriteFood.KUNGPAOCHICKEN ) );
-						assertTrue( boy.getFavoriteFood().get( "breakfast" ).equals( FavoriteFood.PIZZA ) );
-						List result = session.createQuery(
-								"select boy from Boy boy join boy.nickNames names where names = :name" )
-								.setParameter( "name", "Thing" ).list();
-						assertEquals( 1, result.size() );
-						session.delete( boy );
-
-						transaction.commit();
+					Boy boy = new Boy();
+					boy.setFirstName( "John" );
+					boy.setLastName( "Doe" );
+					boy.getNickNames().add( "Johnny" );
+					boy.getNickNames().add( "Thing" );
+					boy.getScorePerNickName().put( "Johnny", 3 );
+					boy.getScorePerNickName().put( "Thing", 5 );
+					int[] favNbrs = new int[4];
+					for ( int index = 0; index < favNbrs.length - 1; index++ ) {
+						favNbrs[index] = index * 3;
 					}
-					finally {
-						if ( transaction.isActive() ) {
-							transaction.rollback();
-						}
-					}
+					boy.setFavoriteNumbers( favNbrs );
+					boy.getCharacters().add( Character.GENTLE );
+					boy.getCharacters().add( Character.CRAFTY );
+
+					HashMap<String, FavoriteFood> foods = new HashMap<>();
+					foods.put( "breakfast", FavoriteFood.PIZZA );
+					foods.put( "lunch", FavoriteFood.KUNGPAOCHICKEN );
+					foods.put( "dinner", FavoriteFood.SUSHI );
+					boy.setFavoriteFood( foods );
+					session.persist( boy );
+
+					session.getTransaction().commit();
+
+					session.clear();
+
+					session.beginTransaction();
+					boy = session.get( Boy.class, boy.getId() );
+					assertNotNull( boy.getNickNames() );
+					assertTrue( boy.getNickNames().contains( "Thing" ) );
+					assertNotNull( boy.getScorePerNickName() );
+					assertTrue( boy.getScorePerNickName().containsKey( "Thing" ) );
+					assertEquals( Integer.valueOf( 5 ), boy.getScorePerNickName().get( "Thing" ) );
+					assertNotNull( boy.getFavoriteNumbers() );
+					assertEquals( 3, boy.getFavoriteNumbers()[1] );
+					assertTrue( boy.getCharacters().contains( Character.CRAFTY ) );
+					assertTrue( boy.getFavoriteFood().get( "dinner" ).equals( FavoriteFood.SUSHI ) );
+					assertTrue( boy.getFavoriteFood().get( "lunch" ).equals( FavoriteFood.KUNGPAOCHICKEN ) );
+					assertTrue( boy.getFavoriteFood().get( "breakfast" ).equals( FavoriteFood.PIZZA ) );
+					List result = session.createQuery(
+							"select boy from Boy boy join boy.nickNames names where names = :name" )
+							.setParameter( "name", "Thing" ).list();
+					assertEquals( 1, result.size() );
+					session.delete( boy );
 				}
 		);
 	}
 
 	@Test
 	public void testCompositeElement(SessionFactoryScope scope) {
-		scope.inSession(
+		scope.inTransaction(
 				session -> {
-					Transaction transaction = session.getTransaction();
-					try {
-						transaction.begin();
+					Boy boy = new Boy();
+					boy.setFirstName( "John" );
+					boy.setLastName( "Doe" );
+					Toy toy = new Toy();
+					toy.setName( "Balloon" );
+					toy.setSerial( "serial001" );
+					toy.setBrand( new Brand() );
+					toy.getBrand().setName( "Bandai" );
+					boy.getFavoriteToys().add( toy );
+					session.persist( boy );
+					session.getTransaction().commit();
 
-						Boy boy = new Boy();
-						boy.setFirstName( "John" );
-						boy.setLastName( "Doe" );
-						Toy toy = new Toy();
-						toy.setName( "Balloon" );
-						toy.setSerial( "serial001" );
-						toy.setBrand( new Brand() );
-						toy.getBrand().setName( "Bandai" );
-						boy.getFavoriteToys().add( toy );
-						session.persist( boy );
-						transaction.commit();
+					session.clear();
 
-						session.clear();
-
-						transaction = session.beginTransaction();
-						boy = session.get( Boy.class, boy.getId() );
-						assertNotNull( boy );
-						assertNotNull( boy.getFavoriteToys() );
-						assertTrue( boy.getFavoriteToys().contains( toy ) );
-						Toy next = boy.getFavoriteToys().iterator().next();
-						assertEquals( boy, next.getOwner(), "@Parent is failing" );
-						session.delete( boy );
-						transaction.commit();
-					}
-					finally {
-						if ( transaction.isActive() ) {
-							transaction.rollback();
-						}
-					}
+					session.beginTransaction();
+					boy = session.get( Boy.class, boy.getId() );
+					assertNotNull( boy );
+					assertNotNull( boy.getFavoriteToys() );
+					assertTrue( boy.getFavoriteToys().contains( toy ) );
+					Toy next = boy.getFavoriteToys().iterator().next();
+					assertEquals( boy, next.getOwner(), "@Parent is failing" );
+					session.delete( boy );
 				}
 		);
 	}
 
 	@Test
 	public void testAttributedJoin(SessionFactoryScope scope) {
-		scope.inSession(
+		scope.inTransaction(
 				session -> {
-					Transaction transaction = session.getTransaction();
-					try {
-						transaction.begin();
-						Country country = new Country();
-						country.setName( "Australia" );
-						session.persist( country );
+					Country country = new Country();
+					country.setName( "Australia" );
+					session.persist( country );
 
-						Boy boy = new Boy();
-						boy.setFirstName( "John" );
-						boy.setLastName( "Doe" );
-						CountryAttitude attitude = new CountryAttitude();
-						// TODO: doesn't work
-						attitude.setBoy( boy );
-						attitude.setCountry( country );
-						attitude.setLikes( true );
-						boy.getCountryAttitudes().add( attitude );
-						session.persist( boy );
-						transaction.commit();
+					Boy boy = new Boy();
+					boy.setFirstName( "John" );
+					boy.setLastName( "Doe" );
+					CountryAttitude attitude = new CountryAttitude();
+					// TODO: doesn't work
+					attitude.setBoy( boy );
+					attitude.setCountry( country );
+					attitude.setLikes( true );
+					boy.getCountryAttitudes().add( attitude );
+					session.persist( boy );
+					session.getTransaction().commit();
 
-						session.clear();
+					session.clear();
 
-						transaction = session.beginTransaction();
-						boy = session.get( Boy.class, boy.getId() );
-						assertTrue( boy.getCountryAttitudes().contains( attitude ) );
-						session.delete( boy );
-						session.delete( session.get( Country.class, country.getId() ) );
-						transaction.commit();
-					}
-					finally {
-						if ( transaction.isActive() ) {
-							transaction.rollback();
-						}
-					}
+					session.beginTransaction();
+					boy = session.get( Boy.class, boy.getId() );
+					assertTrue( boy.getCountryAttitudes().contains( attitude ) );
+					session.delete( boy );
+					session.delete( session.get( Country.class, country.getId() ) );
 				}
 		);
 	}
@@ -214,113 +183,85 @@ public class DefaultNamingCollectionElementTest {
 				scope.getMetadataImplementor().getCollectionBinding( Boy.class.getName() + '.' + "favoriteNumbers" )
 						.getCollectionTable().getName()
 		);
-		scope.inSession(
+
+		scope.inTransaction(
 				session -> {
-					Transaction transaction = session.getTransaction();
-					try {
-						transaction.begin();
-						Boy boy = new Boy();
-						boy.setFirstName( "John" );
-						boy.setLastName( "Doe" );
-						boy.getNickNames().add( "Johnny" );
-						boy.getNickNames().add( "Thing" );
-						boy.getScorePerNickName().put( "Johnny", 3 );
-						boy.getScorePerNickName().put( "Thing", 5 );
-						int[] favNbrs = new int[4];
-						for ( int index = 0; index < favNbrs.length - 1; index++ ) {
-							favNbrs[index] = index * 3;
-						}
-						boy.setFavoriteNumbers( favNbrs );
-						boy.getCharacters().add( Character.GENTLE );
-						boy.getCharacters().add( Character.CRAFTY );
-						session.persist( boy );
-						transaction.commit();
-
-						session.clear();
-
-						transaction = session.beginTransaction();
-						boy = session.get( Boy.class, boy.getId() );
-						assertNotNull( boy.getNickNames() );
-						assertTrue( boy.getNickNames().contains( "Thing" ) );
-						assertNotNull( boy.getScorePerNickName() );
-						assertTrue( boy.getScorePerNickName().containsKey( "Thing" ) );
-						assertEquals( new Integer( 5 ), boy.getScorePerNickName().get( "Thing" ) );
-						assertNotNull( boy.getFavoriteNumbers() );
-						assertEquals( 3, boy.getFavoriteNumbers()[1] );
-						assertTrue( boy.getCharacters().contains( Character.CRAFTY ) );
-						List result = session.createQuery(
-								"select boy from Boy boy join boy.nickNames names where names = :name" )
-								.setParameter( "name", "Thing" ).list();
-						assertEquals( 1, result.size() );
-						session.delete( boy );
-						transaction.commit();
+					Boy boy = new Boy();
+					boy.setFirstName( "John" );
+					boy.setLastName( "Doe" );
+					boy.getNickNames().add( "Johnny" );
+					boy.getNickNames().add( "Thing" );
+					boy.getScorePerNickName().put( "Johnny", 3 );
+					boy.getScorePerNickName().put( "Thing", 5 );
+					int[] favNbrs = new int[4];
+					for ( int index = 0; index < favNbrs.length - 1; index++ ) {
+						favNbrs[index] = index * 3;
 					}
-					finally {
-						if ( transaction.isActive() ) {
-							transaction.rollback();
-						}
-					}
+					boy.setFavoriteNumbers( favNbrs );
+					boy.getCharacters().add( Character.GENTLE );
+					boy.getCharacters().add( Character.CRAFTY );
+					session.persist( boy );
+					session.getTransaction().commit();
+
+					session.clear();
+
+					session.beginTransaction();
+					boy = session.get( Boy.class, boy.getId() );
+					assertNotNull( boy.getNickNames() );
+					assertTrue( boy.getNickNames().contains( "Thing" ) );
+					assertNotNull( boy.getScorePerNickName() );
+					assertTrue( boy.getScorePerNickName().containsKey( "Thing" ) );
+					assertEquals( new Integer( 5 ), boy.getScorePerNickName().get( "Thing" ) );
+					assertNotNull( boy.getFavoriteNumbers() );
+					assertEquals( 3, boy.getFavoriteNumbers()[1] );
+					assertTrue( boy.getCharacters().contains( Character.CRAFTY ) );
+					List result = session.createQuery(
+							"select boy from Boy boy join boy.nickNames names where names = :name" )
+							.setParameter( "name", "Thing" ).list();
+					assertEquals( 1, result.size() );
+					session.delete( boy );
 				}
 		);
 	}
 
 	@Test
 	public void testFetchEagerAndFilter(SessionFactoryScope scope) {
-		scope.inSession(
+		scope.inTransaction(
 				session -> {
-					Transaction tx = session.beginTransaction();
-					try {
-						TestCourse test = new TestCourse();
+					TestCourse test = new TestCourse();
 
-						LocalizedString title = new LocalizedString( "title in english" );
-						title.getVariations().put( Locale.FRENCH.getLanguage(), "title en francais" );
-						test.setTitle( title );
-						session.save( test );
+					LocalizedString title = new LocalizedString( "title in english" );
+					title.getVariations().put( Locale.FRENCH.getLanguage(), "title en francais" );
+					test.setTitle( title );
+					session.save( test );
 
-						session.flush();
-						session.clear();
+					session.flush();
+					session.clear();
 
-						Filter filter = session.enableFilter( "selectedLocale" );
-						filter.setParameter( "param", "fr" );
+					Filter filter = session.enableFilter( "selectedLocale" );
+					filter.setParameter( "param", "fr" );
 
-						Query q = session.createQuery( "from TestCourse t" );
-						List l = q.list();
-						assertEquals( 1, l.size() );
+					Query q = session.createQuery( "from TestCourse t" );
+					List l = q.list();
+					assertEquals( 1, l.size() );
 
-						TestCourse t = session.get( TestCourse.class, test.getTestCourseId() );
-						assertEquals( 1, t.getTitle().getVariations().size() );
-
-						tx.rollback();
-					}
-					finally {
-						if ( tx.isActive() ) {
-							tx.rollback();
-						}
-					}
+					TestCourse t = session.get( TestCourse.class, test.getTestCourseId() );
+					assertEquals( 1, t.getTitle().getVariations().size() );
 				}
 		);
 	}
 
 	@Test
 	public void testMapKeyType(SessionFactoryScope scope) {
-
-		scope.inSession(
+		scope.inTransaction(
 				session -> {
 					Matrix m = new Matrix();
 					m.getMvalues().put( 1, 1.1f );
-					Transaction tx = session.beginTransaction();
-					try {
-						session.persist( m );
-						session.flush();
-						session.clear();
-						m = session.get( Matrix.class, m.getId() );
-						assertEquals( 1.1f, m.getMvalues().get( 1 ), 0.01f );
-					}
-					finally {
-						if ( tx.isActive() ) {
-							tx.rollback();
-						}
-					}
+					session.persist( m );
+					session.flush();
+					session.clear();
+					m = session.get( Matrix.class, m.getId() );
+					assertEquals( 1.1f, m.getMvalues().get( 1 ), 0.01f );
 				}
 		);
 	}

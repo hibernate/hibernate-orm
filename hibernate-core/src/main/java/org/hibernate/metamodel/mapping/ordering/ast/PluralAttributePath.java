@@ -52,8 +52,21 @@ public class PluralAttributePath implements DomainPath {
 		final ModelPart subPart = pluralAttributeMapping.findSubPart( name, null );
 
 		if ( subPart != null ) {
-			assert subPart instanceof CollectionPart;
-			return new CollectionPartPath( this, (CollectionPart) subPart );
+			if ( subPart instanceof CollectionPart ) {
+				return new CollectionPartPath( this, (CollectionPart) subPart );
+			}
+			else if ( !( subPart instanceof EmbeddableValuedModelPart ) ) {
+				final CollectionPartPath elementPath = new CollectionPartPath(
+						this,
+						pluralAttributeMapping.getElementDescriptor()
+				);
+
+				return new DomainPathContinuation(
+						elementPath.getNavigablePath().append( name ),
+						this,
+						pluralAttributeMapping.getElementDescriptor()
+				);
+			}
 		}
 
 		// the above checks for explicit element or index descriptor references

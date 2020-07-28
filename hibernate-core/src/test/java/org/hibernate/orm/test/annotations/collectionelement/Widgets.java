@@ -5,11 +5,15 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.orm.test.annotations.collectionelement;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
 
 @Entity
+@Inheritance(strategy = InheritanceType.JOINED)
 public class Widgets {
 	private String name;
 	private int id;
@@ -18,6 +22,7 @@ public class Widgets {
 
 	}
 
+	@Column(name = "name_1")
 	public String getName() {
 		return name;
 	}
@@ -36,4 +41,14 @@ public class Widgets {
 		this.id = id;
 	}
 
+	@Entity
+	public static class Widget1 extends Widgets{
+		private String name1;
+	}
+
+	@Entity
+	public static class Widget2 extends Widgets{
+		private String name2;
+	}
 }
+

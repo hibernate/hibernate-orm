@@ -33,9 +33,8 @@ public class TestBasicOps {
 	public void testLoadAndStore(SessionFactoryScope scope) {
 		Query q = new Query( new Location( "first", Location.Type.COUNTY ) );
 		scope.inTransaction(
-				session -> {
-					session.save( q );
-				}
+				session ->
+						session.save( q )
 		);
 
 		scope.inTransaction(
@@ -52,47 +51,37 @@ public class TestBasicOps {
 	@Test
 	@TestForIssue(jiraKey = "HHH-7072")
 	public void testEmbeddableWithNullables(SessionFactoryScope scope) {
-		scope.inSession(
+		scope.inTransaction(
 				session -> {
+					Query q = new Query( new Location( null, Location.Type.COMMUNE ) );
+					session.save( q );
+					session.getTransaction().commit();
+					session.clear();
+
 					Transaction transaction = session.beginTransaction();
-					try {
-						Query q = new Query( new Location( null, Location.Type.COMMUNE ) );
-						session.save( q );
-						transaction.commit();
-						session.clear();
+					q.getIncludedLocations().add( new Location( null, Location.Type.COUNTY ) );
+					session.update( q );
+					transaction.commit();
+					session.clear();
 
-						transaction = session.beginTransaction();
-						q.getIncludedLocations().add( new Location( null, Location.Type.COUNTY ) );
-						session.update( q );
-						transaction.commit();
-						session.clear();
-
-						transaction = session.beginTransaction();
-						q = (Query) session.get( Query.class, q.getId() );
+					transaction = session.beginTransaction();
+					q = session.get( Query.class, q.getId() );
 //		assertEquals( 2, q.getIncludedLocations().size() );
-						transaction.commit();
-						session.clear();
+					transaction.commit();
+					session.clear();
 
-						transaction = session.beginTransaction();
-						Iterator<Location> itr = q.getIncludedLocations().iterator();
-						itr.next();
-						itr.remove();
-						session.update( q );
-						transaction.commit();
-						session.clear();
+					transaction = session.beginTransaction();
+					Iterator<Location> itr = q.getIncludedLocations().iterator();
+					itr.next();
+					itr.remove();
+					session.update( q );
+					transaction.commit();
+					session.clear();
 
-						transaction = session.beginTransaction();
-						q = (Query) session.get( Query.class, q.getId() );
-						assertEquals( 1, q.getIncludedLocations().size() );
-						session.delete( q );
-						transaction.commit();
-					}
-					catch (Exception e) {
-						if ( transaction.isActive() ) {
-							transaction.rollback();
-						}
-						throw e;
-					}
+					session.beginTransaction();
+					q = session.get( Query.class, q.getId() );
+					assertEquals( 1, q.getIncludedLocations().size() );
+					session.delete( q );
 				}
 		);
 	}

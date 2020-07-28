@@ -201,50 +201,48 @@ public class InPredicate<T>
 				}
 			}
 			else {
-				Expression lastValue = null;
 				buffer.append( '(' );
 				String sep = "";
 				for ( Expression value : values) {
-					lastValue = value;
 					buffer.append( sep )
 							.append( ( (Renderable) value )
 									.render( renderingContext ) );
 					sep = ", ";
 				}
 
+				if ( renderingContext.getCriteriaLiteralHandlingMode() == LiteralHandlingMode.BIND ) {
+					Expression lastValue = values.get( values.size() - 1 );
+					if ( lastValue instanceof LiteralExpression ) {
+						final int bindValueCount = values.size();
+						int bindValueMaxCount = bindValueCount;
 
-				if (renderingContext.getCriteriaLiteralHandlingMode() == LiteralHandlingMode.BIND &&
-						lastValue instanceof LiteralExpression) {
+						final SessionFactoryImplementor sfi = criteriaBuilder().getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
 
-					int bindValueCount = values.size();
-					int bindValueMaxCount = bindValueCount;
+						boolean inClauseParameterPaddingEnabled = sfi.getSessionFactoryOptions().inClauseParameterPaddingEnabled() &&
+								bindValueCount > 2;
 
-					final SessionFactoryImplementor sfi = criteriaBuilder().getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
-					final Dialect dialect = sfi.getServiceRegistry().getService(JdbcServices.class).getJdbcEnvironment().getDialect();
-					final int inExprLimit = dialect.getInExpressionCountLimit();
+						if ( inClauseParameterPaddingEnabled ) {
+							final Dialect dialect = sfi.getServiceRegistry().getService( JdbcServices.class ).getJdbcEnvironment().getDialect();
+							final int inExprLimit = dialect.getInExpressionCountLimit();
 
-					boolean inClauseParameterPaddingEnabled = sfi.getSessionFactoryOptions().inClauseParameterPaddingEnabled() &&
-									bindValueCount > 2;
+							int bindValuePaddingCount = MathHelper.ceilingPowerOfTwo(bindValueCount);
 
-					if ( inClauseParameterPaddingEnabled ) {
-						int bindValuePaddingCount = MathHelper.ceilingPowerOfTwo( bindValueCount );
+							if ( inExprLimit > 0 && bindValuePaddingCount > inExprLimit ) {
+								bindValuePaddingCount = Math.max(bindValueCount, inExprLimit);
+							}
 
-						if (inExprLimit > 0 && bindValuePaddingCount > inExprLimit ) {
-							bindValuePaddingCount = Math.max(bindValueCount, inExprLimit);
-						}
+							if ( bindValueCount < bindValuePaddingCount ) {
+								bindValueMaxCount = bindValuePaddingCount;
+							}
 
-						if ( bindValueCount < bindValuePaddingCount ) {
-							bindValueMaxCount = bindValuePaddingCount;
-						}
-
-						for (int i = bindValueCount; i < bindValueMaxCount; i++) {
-							buffer.append( sep )
-									.append( ( (Renderable) lastValue )
-											.render( renderingContext ) );
+							for (int i = bindValueCount; i < bindValueMaxCount; i++) {
+								buffer.append( sep )
+										.append( ( (Renderable) lastValue )
+												.render( renderingContext ) );
+							}
 						}
 					}
 				}
-
 
 				buffer.append( ')' );
 			}

@@ -24,6 +24,7 @@ import javax.persistence.TypedQuery;
 import org.hibernate.CacheMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
+import org.hibernate.dialect.CockroachDB192Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.dialect.Oracle8iDialect;
@@ -1296,6 +1297,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = CockroachDB192Dialect.class, comment = "https://github.com/cockroachdb/cockroach/issues/26710")
 	public void test_hql_sqrt_function_example() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::hql-sqrt-function-example[]

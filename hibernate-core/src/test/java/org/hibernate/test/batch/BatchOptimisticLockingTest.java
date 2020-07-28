@@ -18,6 +18,7 @@ import javax.persistence.OptimisticLockException;
 import javax.persistence.Version;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.CockroachDB192Dialect;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
@@ -91,7 +92,21 @@ public class BatchOptimisticLockingTest extends
 			} );
 		}
 		catch (Exception expected) {
-			assertEquals( OptimisticLockException.class, expected.getClass());
+			assertEquals( OptimisticLockException.class, expected.getClass() );
+			if ( getDialect() instanceof CockroachDB192Dialect ) {
+				// CockroachDB always runs in SERIALIZABLE isolation, and uses SQL state 40001 to indicate
+				// serialization failure.
+				assertEquals(
+						"org.hibernate.exception.LockAcquisitionException: could not execute batch",
+						expected.getMessage()
+				);
+			}
+			else {
+				assertEquals(
+						"Batch update returned unexpected row count from update [1]; actual row count: 0; expected: 1; statement executed: update Person set name=?, version=? where id=? and version=?",
+						expected.getMessage()
+				);
+			}
 		}
 	}
 

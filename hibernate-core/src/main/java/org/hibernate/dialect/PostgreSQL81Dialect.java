@@ -648,5 +648,4 @@ public class PostgreSQL81Dialect extends Dialect {
 	public boolean supportsSelectAliasInGroupByClause() {
 		return true;
 	}
-
 }

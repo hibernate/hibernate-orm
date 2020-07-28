@@ -4,26 +4,24 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.internal.util.xml;
+package org.hibernate.envers.configuration.internal;
+
+import org.dom4j.DocumentFactory;
 
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 
-import org.dom4j.DocumentFactory;
-import org.dom4j.io.SAXReader;
-import org.xml.sax.EntityResolver;
-
 /**
- * Small helper class that lazily loads DOM and SAX reader and keep them for fast use afterwards.
+ * Small helper class that lazily loads DOM factory and keep them for fast use afterwards.
  *
- * @deprecated Currently only used for integration with HCANN.  The rest of Hibernate uses StAX now
- * for XML processing.  See {@link org.hibernate.boot.jaxb.internal.stax}
+ * This was part of Hibernate ORM core, but is used exclusively by Hibernate Envers now:
+ * keep visibility lower so to not expose Dom4j to public API.
+ * The rest of Hibernate uses StAX now for XML processing.  See {@link org.hibernate.boot.jaxb.internal.stax}
  */
-@Deprecated
-public final class XMLHelper {
+final class XMLHelper {
 	private final DocumentFactory documentFactory;
 
-	public XMLHelper() {
+	XMLHelper() {
 		PrivilegedAction<DocumentFactory> action = new PrivilegedAction<DocumentFactory>() {
 			public DocumentFactory run() {
 				final ClassLoader originalTccl = Thread.currentThread().getContextClassLoader();
@@ -53,25 +51,8 @@ public final class XMLHelper {
 				: action.run();
 	}
 
-	public DocumentFactory getDocumentFactory() {
+	DocumentFactory getDocumentFactory() {
 		return documentFactory;
 	}
 
-	public SAXReader createSAXReader(ErrorLogger errorLogger, EntityResolver entityResolver) {
-		SAXReader saxReader = new SAXReader();
-		try {
-			saxReader.setFeature( "http://apache.org/xml/features/nonvalidating/load-external-dtd", false );
-			saxReader.setFeature( "http://xml.org/sax/features/external-general-entities", false );
-			saxReader.setFeature( "http://xml.org/sax/features/external-parameter-entities", false );
-		}
-		catch (Exception e) {
-			throw new RuntimeException( e );
-		}
-		saxReader.setMergeAdjacentText( true );
-		saxReader.setValidation( true );
-		saxReader.setErrorHandler( errorLogger );
-		saxReader.setEntityResolver( entityResolver );
-
-		return saxReader;
-	}
 }

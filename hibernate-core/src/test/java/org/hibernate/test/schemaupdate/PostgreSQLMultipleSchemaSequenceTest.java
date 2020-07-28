@@ -31,6 +31,8 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator;
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
@@ -48,6 +50,7 @@ import static org.junit.Assert.fail;
  * @author Vlad Mihalcea
  */
 @RequiresDialect(PostgreSQL81Dialect.class)
+@RequiresDialectFeature(DialectChecks.SupportSchemaCreation.class)
 public class PostgreSQLMultipleSchemaSequenceTest extends BaseUnitTestCase {
 
 	private File output;

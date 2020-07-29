@@ -118,14 +118,14 @@ public interface QueryProducer {
 	 * implicit mapping to the specified Java type.
 	 *
 	 * @param sqlString Native (SQL) query string
-	 * @param resultSetMapping The explicit (named) result mapping
+	 * @param resultSetMappingName The explicit result mapping name
 	 *
 	 * @return The NativeQuery instance for manipulation and execution
 	 *
 	 * @see javax.persistence.EntityManager#createNativeQuery(String,Class)
 	 * @see javax.persistence.SqlResultSetMapping
 	 */
-	NativeQuery createNativeQuery(String sqlString, String resultSetMapping);
+	NativeQuery createNativeQuery(String sqlString, String resultSetMappingName);
 
 	/**
 	 * Get a NativeQuery instance for a named native SQL query

@@ -38,7 +38,7 @@ public class StandardScalarResultBuilder implements ScalarResultBuilder {
 		this.explicitJavaTypeDescriptor = null;
 	}
 
-	StandardScalarResultBuilder(String explicitName, BasicType<?> explicitType) {
+	public StandardScalarResultBuilder(String explicitName, BasicType<?> explicitType) {
 		assert explicitName != null;
 		this.explicitName = explicitName;
 
@@ -48,7 +48,7 @@ public class StandardScalarResultBuilder implements ScalarResultBuilder {
 		this.explicitJavaTypeDescriptor = null;
 	}
 
-	StandardScalarResultBuilder(String explicitName, JavaTypeDescriptor<?> explicitJavaTypeDescriptor) {
+	public StandardScalarResultBuilder(String explicitName, JavaTypeDescriptor<?> explicitJavaTypeDescriptor) {
 		assert explicitName != null;
 		this.explicitName = explicitName;
 

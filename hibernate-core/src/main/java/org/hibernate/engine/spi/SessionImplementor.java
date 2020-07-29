@@ -102,7 +102,7 @@ public interface SessionImplementor extends Session, SharedSessionContractImplem
 	NativeQueryImplementor createNativeQuery(String sqlString, Class resultClass);
 
 	@Override
-	NativeQueryImplementor createNativeQuery(String sqlString, String resultSetMapping);
+	NativeQueryImplementor createNativeQuery(String sqlString, String resultSetMappingName);
 
 	@Override
 	NativeQueryImplementor getNamedNativeQuery(String name);

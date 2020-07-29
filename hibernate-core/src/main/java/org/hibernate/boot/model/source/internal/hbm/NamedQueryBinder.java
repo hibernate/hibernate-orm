@@ -17,9 +17,10 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryReturnType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryScalarReturnType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmQueryParamType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSynchronizeType;
-import org.hibernate.boot.spi.HbmResultSetMappingDefinition;
-import org.hibernate.boot.spi.NamedHqlQueryDefinition;
-import org.hibernate.boot.spi.NamedNativeQueryDefinition;
+import org.hibernate.boot.query.HbmResultSetMappingDefinition;
+import org.hibernate.boot.query.HbmResultSetMappingDefinitionBuilder;
+import org.hibernate.boot.query.NamedHqlQueryDefinition;
+import org.hibernate.boot.query.NamedNativeQueryDefinitionBuilder;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.StringHelper;
 
@@ -103,7 +104,7 @@ public class NamedQueryBinder {
 
 		final String registrationName = prefix + namedQueryBinding.getName();
 
-		final NamedNativeQueryDefinition.Builder builder = new NamedNativeQueryDefinition.Builder( registrationName )
+		final NamedNativeQueryDefinitionBuilder builder = new NamedNativeQueryDefinitionBuilder( registrationName )
 				.setComment( namedQueryBinding.getComment() )
 				.setCacheable( namedQueryBinding.isCacheable() )
 				.setCacheMode( namedQueryBinding.getCacheMode() )
@@ -114,7 +115,7 @@ public class NamedQueryBinder {
 				.setFetchSize( namedQueryBinding.getFetchSize() )
 				.setResultSetMappingName( namedQueryBinding.getResultsetRef() );
 
-		final HbmResultSetMappingDefinition.Builder implicitResultSetMappingBuilder = new HbmResultSetMappingDefinition.Builder( registrationName );
+		final HbmResultSetMappingDefinitionBuilder implicitResultSetMappingBuilder = new HbmResultSetMappingDefinitionBuilder( registrationName );
 
 		boolean foundQuery = false;
 
@@ -160,8 +161,8 @@ public class NamedQueryBinder {
 
 	private static boolean processNamedQueryContentItem(
 			Object content,
-			NamedNativeQueryDefinition.Builder queryBuilder,
-			HbmResultSetMappingDefinition.Builder implicitResultSetMappingBuilder,
+			NamedNativeQueryDefinitionBuilder queryBuilder,
+			HbmResultSetMappingDefinitionBuilder implicitResultSetMappingBuilder,
 			JaxbHbmNamedNativeQueryType namedQueryBinding,
 			HbmLocalMetadataBuildingContext context) {
 		if ( content instanceof String ) {

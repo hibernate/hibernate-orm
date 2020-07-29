@@ -51,6 +51,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.transaction.internal.TransactionImpl;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.id.uuid.StandardRandomStrategy;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.jdbc.WorkExecutorVisitable;
@@ -62,6 +63,7 @@ import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.query.Query;
 import org.hibernate.query.hql.spi.HqlQueryImplementor;
 import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
+import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryInterpretationCache;
@@ -690,34 +692,34 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@Override
-	public NativeQueryImplementor createNativeQuery(String sqlString, String resultSetMapping) {
-//		checkOpen();
-//		pulseTransactionCoordinator();
-//		delayedAfterCompletion();
-//
-//		final NativeQueryImplementor query;
-//		try {
-//			if ( StringHelper.isNotEmpty( resultSetMapping ) ) {
-//				final ResultSetMappingDescriptor resultSetMappingDescriptor = getFactory().getQueryEngine()
-//						.getNamedQueryRepository()
-//						.getResultSetMappingDescriptor( resultSetMapping );
-//
-//				if ( resultSetMappingDescriptor == null ) {
-//					throw new HibernateException( "Could not resolve specified result-set mapping name : " + resultSetMapping );
-//				}
-//
-//				query = new NativeQueryImpl( sqlString, resultSetMappingDescriptor, this );
-//			}
-//			else {
-//				query = new NativeQueryImpl( sqlString, this );
-//			}
-//		}
-//		catch (RuntimeException he) {
-//			throw getExceptionConverter().convert( he );
-//		}
-//
-//		return query;
-		throw new NotYetImplementedFor6Exception( getClass() );
+	public NativeQueryImplementor createNativeQuery(String sqlString, String resultSetMappingName) {
+		checkOpen();
+		pulseTransactionCoordinator();
+		delayedAfterCompletion();
+
+		final NativeQueryImplementor query;
+		try {
+			if ( StringHelper.isNotEmpty( resultSetMappingName ) ) {
+				final NamedResultSetMappingMemento resultSetMappingMemento = getFactory().getQueryEngine()
+						.getNamedQueryRepository()
+						.getResultSetMappingMemento( resultSetMappingName );
+
+				if ( resultSetMappingMemento == null ) {
+					throw new HibernateException( "Could not resolve specified result-set mapping name : " + resultSetMappingName );
+				}
+				
+				query = new NativeQueryImpl( sqlString, resultSetMappingMemento, this );
+			}
+			else {
+				query = new NativeQueryImpl( sqlString, this );
+			}
+		}
+		catch (RuntimeException he) {
+			throw getExceptionConverter().convert( he );
+		}
+
+		return query;
+//		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 

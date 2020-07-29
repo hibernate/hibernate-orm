@@ -23,10 +23,10 @@ import org.hibernate.annotations.CacheModeType;
 import org.hibernate.annotations.FlushModeType;
 import org.hibernate.annotations.QueryHints;
 import org.hibernate.boot.internal.NamedHqlQueryDefinitionImpl;
-import org.hibernate.boot.internal.NamedNativeQueryDefinitionImpl;
+import org.hibernate.boot.query.NamedNativeQueryDefinitionBuilder;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.spi.NamedHqlQueryDefinition;
-import org.hibernate.boot.spi.NamedNativeQueryDefinition;
+import org.hibernate.boot.query.NamedHqlQueryDefinition;
+import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.cfg.BinderHelper;
 import org.hibernate.internal.CoreMessageLogger;
 
@@ -105,7 +105,7 @@ public abstract class QueryBinder {
 				? null
 				: queryAnn.resultClass().getName();
 
-		final NamedNativeQueryDefinition.Builder builder = new NamedNativeQueryDefinitionImpl.Builder( registrationName )
+		final NamedNativeQueryDefinitionBuilder builder = new NamedNativeQueryDefinitionBuilder( registrationName )
 				.setSqlString( queryString )
 				.setResultSetMappingName( resultSetMappingName )
 				.setResultSetMappingClassName( resultSetMappingClassName )
@@ -154,7 +154,7 @@ public abstract class QueryBinder {
 				? null
 				: queryAnn.resultClass().getName();
 
-		final NamedNativeQueryDefinition.Builder builder = new NamedNativeQueryDefinitionImpl.Builder( registrationName )
+		final NamedNativeQueryDefinitionBuilder builder = new NamedNativeQueryDefinitionBuilder( registrationName )
 				.setSqlString( queryAnn.query() )
 				.setResultSetMappingName( resultSetMappingName )
 				.setResultSetMappingClassName( resultSetMappingClassName )

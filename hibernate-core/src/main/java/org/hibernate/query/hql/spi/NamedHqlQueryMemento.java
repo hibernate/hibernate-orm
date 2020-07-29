@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.LockOptions;
-import org.hibernate.boot.spi.NamedHqlQueryDefinition;
+import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
 import org.hibernate.query.named.AbstractNamedQueryMemento;

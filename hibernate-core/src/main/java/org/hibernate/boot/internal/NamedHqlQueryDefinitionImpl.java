@@ -12,7 +12,7 @@ import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
 import org.hibernate.boot.spi.AbstractNamedQueryDefinition;
-import org.hibernate.boot.spi.NamedHqlQueryDefinition;
+import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
 import org.hibernate.query.hql.spi.NamedHqlQueryMemento;

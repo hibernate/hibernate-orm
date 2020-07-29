@@ -13,7 +13,7 @@ import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.AbstractNamedQueryDefinition;
-import org.hibernate.boot.spi.NamedNativeQueryDefinition;
+import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.query.sql.internal.NamedNativeQueryMementoImpl;

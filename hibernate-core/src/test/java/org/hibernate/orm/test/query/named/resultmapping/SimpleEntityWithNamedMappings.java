@@ -19,6 +19,13 @@ import javax.persistence.SqlResultSetMapping;
 		name = "name",
 		columns = @ColumnResult( name = "name" )
 )
+@SqlResultSetMapping(
+		name = "id_name",
+		columns = {
+				@ColumnResult( name = "id" ),
+				@ColumnResult( name = "name" )
+		}
+)
 public class SimpleEntityWithNamedMappings {
 	@Id
 	private Integer id;

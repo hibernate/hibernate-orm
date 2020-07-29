@@ -13,7 +13,6 @@ import org.hibernate.query.results.ResultSetMappingImpl;
 import org.hibernate.query.spi.QueryEngine;
 
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
@@ -28,8 +27,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @SessionFactory
 public class SimpleNamedMappingTests {
 	@Test
-	@FailureExpected( reason = "Memento-ization of row-reader not yet implemented" )
-	public void testMapping(SessionFactoryScope sessionFactoryScope) {
+	public void testMappingResolution(SessionFactoryScope sessionFactoryScope) {
 		final QueryEngine queryEngine = sessionFactoryScope.getSessionFactory().getQueryEngine();
 		final NamedQueryRepository namedQueryRepository = queryEngine.getNamedQueryRepository();
 		final NamedResultSetMappingMemento mappingMemento = namedQueryRepository.getResultSetMappingMemento( "name" );

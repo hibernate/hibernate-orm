@@ -52,7 +52,7 @@ public interface QueryProducerImplementor extends QueryProducer {
 	<R> NativeQueryImplementor<R> createNativeQuery(String sqlString, Class<R> resultClass);
 
 	@Override
-	NativeQueryImplementor createNativeQuery(String sqlString, String resultSetMapping);
+	NativeQueryImplementor createNativeQuery(String sqlString, String resultSetMappingName);
 
 	@Override
 	NativeQueryImplementor getNamedNativeQuery(String name);

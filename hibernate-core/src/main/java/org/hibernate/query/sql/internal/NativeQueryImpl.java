@@ -44,6 +44,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.internal.AbstractSharedSessionContract;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
@@ -57,6 +58,7 @@ import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.internal.ParameterMetadataImpl;
 import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.internal.QueryParameterBindingsImpl;
+import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.results.Builders;
 import org.hibernate.query.results.EntityResultBuilder;
 import org.hibernate.query.results.LegacyFetchBuilder;
@@ -157,6 +159,22 @@ public class NativeQueryImpl<R>
 		//		and `javax.persistence.NamedNativeQuery#resultClass`
 
 		// todo (6.0) : relatedly, does `resultSetMappingName` come from `NamedNativeQuery#resultSetMapping`?
+	}
+
+	public NativeQueryImpl(
+			String sqlString,
+			NamedResultSetMappingMemento resultSetMappingMemento,
+			AbstractSharedSessionContract session) {
+		super( session );
+
+		this.sqlString = sqlString;
+		resultSetMappingMemento.resolve( resultSetMapping, (s) -> {}, getSessionFactory() );
+
+		final ParameterInterpretation parameterInterpretation = resolveParameterInterpretation( session );
+
+		this.parameterMetadata = parameterInterpretation.toParameterMetadata( session );
+		this.occurrenceOrderedParamList = parameterInterpretation.getOccurrenceOrderedParameters();
+		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, session.getFactory() );
 	}
 
 	private ParameterInterpretation resolveParameterInterpretation(SharedSessionContractImplementor session) {

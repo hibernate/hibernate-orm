@@ -17,7 +17,7 @@ import javax.persistence.StoredProcedureParameter;
 
 import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.boot.spi.NamedProcedureCallDefinition;
+import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.annotations.QueryHintDefinition;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;

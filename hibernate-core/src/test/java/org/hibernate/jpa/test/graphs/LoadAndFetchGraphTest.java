@@ -186,7 +186,10 @@ public class LoadAndFetchGraphTest extends BaseEntityManagerFunctionalTestCase {
 					assertFalse( Hibernate.isInitialized( cEntity.getC() ) );
 					assertFalse( Hibernate.isInitialized( cEntity.getdList() ) );
 
-					assertEquals( 1L, statistics.getPrepareStatementCount() );
+					assertTrue( Hibernate.isInitialized( cEntity.getEagerC() ) );
+
+					// 1 + 1 for the eager C
+					assertEquals( 2L, statistics.getPrepareStatementCount() );
 				} );
 	}
 
@@ -217,7 +220,12 @@ public class LoadAndFetchGraphTest extends BaseEntityManagerFunctionalTestCase {
 						assertTrue( Hibernate.isInitialized( dEntity.getE() ) );
 					} );
 
-					assertEquals( 1L, statistics.getPrepareStatementCount() );
+					// With LOAD semantic, attributes that are not mentioned in the graph are LAZY or EAGER,
+					// depending on the mapping.
+					assertTrue( Hibernate.isInitialized( cEntity.getEagerC() ) );
+
+					// 1 + 1 for the eager C
+					assertEquals( 2L, statistics.getPrepareStatementCount() );
 				} );
 	}
 
@@ -246,6 +254,10 @@ public class LoadAndFetchGraphTest extends BaseEntityManagerFunctionalTestCase {
 					cEntity.getdList().forEach( dEntity -> {
 						assertTrue( Hibernate.isInitialized( dEntity.getE() ) );
 					} );
+
+					// With FETCH semantic, attributes that are not mentioned in the graph are LAZY,
+					// even if they were EAGER in the mapping.
+					assertFalse( Hibernate.isInitialized( cEntity.getEagerC() ) );
 
 					assertEquals( 1L, statistics.getPrepareStatementCount() );
 				} );
@@ -366,6 +378,9 @@ public class LoadAndFetchGraphTest extends BaseEntityManagerFunctionalTestCase {
 		@ManyToOne(fetch = FetchType.LAZY)
 		private CEntity c;
 
+		@OneToOne(fetch = FetchType.EAGER)
+		private CEntity eagerC;
+
 		@OneToMany(
 				fetch = FetchType.LAZY,
 				mappedBy = "c",
@@ -417,6 +432,14 @@ public class LoadAndFetchGraphTest extends BaseEntityManagerFunctionalTestCase {
 
 		public void setC(CEntity c) {
 			this.c = c;
+		}
+
+		public CEntity getEagerC() {
+			return eagerC;
+		}
+
+		public void setEagerC(CEntity eagerC) {
+			this.eagerC = eagerC;
 		}
 
 		public List<DEntity> getdList() {

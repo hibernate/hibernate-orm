@@ -441,8 +441,10 @@ public abstract class Loader {
 						loadedKeys,
 						returnProxies
 				);
-				// Signal that a new row starts. Used in initializeEntitiesAndCollections
-				nullSeparatedHydratedObjects.add( null );
+				if ( nullSeparatedHydratedObjects != null ) {
+					// Signal that a new row starts. Used in initializeEntitiesAndCollections
+					nullSeparatedHydratedObjects.add( null );
+				}
 				if ( !keyToRead.equals( loadedKeys[0] ) ) {
 					throw new AssertionFailure(
 							String.format(
@@ -1051,8 +1053,10 @@ public abstract class Loader {
 					forcedResultTransformer
 			);
 			results.add( result );
-			// Signal that a new row starts. Used in initializeEntitiesAndCollections
-			nullSeparatedHydratedObjects.add( null );
+			if ( nullSeparatedHydratedObjects != null ) {
+				// Signal that a new row starts. Used in initializeEntitiesAndCollections
+				nullSeparatedHydratedObjects.add( null );
+			}
 			if ( createSubselects ) {
 				subselectResultKeys.add( keys );
 				keys = new EntityKey[entitySpan]; //can't reuse in this case

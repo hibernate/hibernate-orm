@@ -68,6 +68,7 @@ import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
+import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.hql.internal.HolderInstantiator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -380,8 +381,8 @@ public abstract class Loader {
 			final boolean returnProxies) throws HibernateException {
 
 		final int entitySpan = getEntityPersisters().length;
-		final List hydratedObjects = entitySpan == 0 ?
-				null : new ArrayList( entitySpan );
+		final List<Object> hydratedObjects = entitySpan == 0 ?
+				null : new ArrayList<>( entitySpan );
 
 		final Object result;
 		try {
@@ -405,7 +406,7 @@ public abstract class Loader {
 		}
 
 		initializeEntitiesAndCollections(
-				hydratedObjects,
+				hydratedObjects == null ? null : Collections.singletonList( hydratedObjects ),
 				resultSet,
 				session,
 				queryParameters.isReadOnly( session )
@@ -422,14 +423,21 @@ public abstract class Loader {
 			final EntityKey keyToRead) throws HibernateException {
 
 		final int entitySpan = getEntityPersisters().length;
-		final List hydratedObjects = entitySpan == 0 ?
-				null : new ArrayList( entitySpan );
+		final List<List<Object>> hydratedObjectsPerRow = entitySpan == 0 ?
+				null : new ArrayList<>( entitySpan );
 
 		Object result = null;
 		final EntityKey[] loadedKeys = new EntityKey[entitySpan];
 
 		try {
 			do {
+				List<Object> hydratedObjects;
+				if ( hydratedObjectsPerRow == null ) {
+					hydratedObjects = null;
+				}
+				else {
+					hydratedObjects = new ArrayList<>( entitySpan );
+				}
 				Object loaded = getRowFromResultSet(
 						resultSet,
 						session,
@@ -440,6 +448,9 @@ public abstract class Loader {
 						loadedKeys,
 						returnProxies
 				);
+				if ( hydratedObjects != null && !hydratedObjects.isEmpty() ) {
+					hydratedObjectsPerRow.add( hydratedObjects );
+				}
 				if ( !keyToRead.equals( loadedKeys[0] ) ) {
 					throw new AssertionFailure(
 							String.format(
@@ -465,7 +476,7 @@ public abstract class Loader {
 		}
 
 		initializeEntitiesAndCollections(
-				hydratedObjects,
+				hydratedObjectsPerRow,
 				resultSet,
 				session,
 				queryParameters.isReadOnly( session )
@@ -696,7 +707,7 @@ public abstract class Loader {
 			final QueryParameters queryParameters,
 			final LockMode[] lockModesArray,
 			final EntityKey optionalObjectKey,
-			final List hydratedObjects,
+			final List<Object> hydratedObjects,
 			final EntityKey[] keys,
 			boolean returnProxies) throws SQLException, HibernateException {
 		return getRowFromResultSet(
@@ -718,7 +729,7 @@ public abstract class Loader {
 			final QueryParameters queryParameters,
 			final LockMode[] lockModesArray,
 			final EntityKey optionalObjectKey,
-			final List hydratedObjects,
+			final List<Object> hydratedObjects,
 			final EntityKey[] keys,
 			boolean returnProxies,
 			ResultTransformer forcedResultTransformer) throws SQLException, HibernateException {
@@ -782,7 +793,7 @@ public abstract class Loader {
 			SharedSessionContractImplementor session,
 			EntityKey[] keys,
 			LockMode[] lockModes,
-			List hydratedObjects) throws SQLException {
+			List<Object> hydratedObjects) throws SQLException {
 		final int entitySpan = persisters.length;
 
 		final int numberOfPersistersToProcess;
@@ -985,7 +996,7 @@ public abstract class Loader {
 		final int entitySpan = getEntityPersisters().length;
 		final boolean createSubselects = isSubselectLoadingEnabled();
 		final List<EntityKey[]> subselectResultKeys = createSubselects ? new ArrayList<>() : null;
-		final List<Object> hydratedObjects = entitySpan == 0 ? null : new ArrayList<>( entitySpan * 10 );
+		final List<List<Object>> hydratedObjectsPerRow = entitySpan == 0 ? null : new ArrayList<>();
 
 		final List results = getRowsFromResultSet(
 				rs,
@@ -994,12 +1005,12 @@ public abstract class Loader {
 				returnProxies,
 				forcedResultTransformer,
 				maxRows,
-				hydratedObjects,
+				hydratedObjectsPerRow,
 				subselectResultKeys
 		);
 
 		initializeEntitiesAndCollections(
-				hydratedObjects,
+				hydratedObjectsPerRow,
 				rs,
 				session,
 				queryParameters.isReadOnly( session ),
@@ -1018,7 +1029,7 @@ public abstract class Loader {
 			boolean returnProxies,
 			ResultTransformer forcedResultTransformer,
 			int maxRows,
-			List<Object> hydratedObjects,
+			List<List<Object>> hydratedObjectsPerRow,
 			List<EntityKey[]> subselectResultKeys) throws SQLException {
 		final int entitySpan = getEntityPersisters().length;
 		final boolean createSubselects = isSubselectLoadingEnabled();
@@ -1036,6 +1047,13 @@ public abstract class Loader {
 			if ( debugEnabled ) {
 				LOG.debugf( "Result set row: %s", count );
 			}
+			List<Object> hydratedObjects;
+			if ( hydratedObjectsPerRow == null ) {
+				hydratedObjects = null;
+			}
+			else {
+				hydratedObjects = new ArrayList<>( entitySpan );
+			}
 			Object result = getRowFromResultSet(
 					rs,
 					session,
@@ -1048,6 +1066,9 @@ public abstract class Loader {
 					forcedResultTransformer
 			);
 			results.add( result );
+			if ( hydratedObjects != null && !hydratedObjects.isEmpty() ) {
+				hydratedObjectsPerRow.add( hydratedObjects );
+			}
 			if ( createSubselects ) {
 				subselectResultKeys.add( keys );
 				keys = new EntityKey[entitySpan]; //can't reuse in this case
@@ -1138,12 +1159,12 @@ public abstract class Loader {
 	}
 
 	private void initializeEntitiesAndCollections(
-			final List hydratedObjects,
+			final List<List<Object>> hydratedObjectsPerRow,
 			final Object resultSetId,
 			final SharedSessionContractImplementor session,
 			final boolean readOnly) throws HibernateException {
 		initializeEntitiesAndCollections(
-				hydratedObjects,
+				hydratedObjectsPerRow,
 				resultSetId,
 				session,
 				readOnly,
@@ -1152,7 +1173,7 @@ public abstract class Loader {
 	}
 
 	private void initializeEntitiesAndCollections(
-			final List hydratedObjects,
+			final List<List<Object>> hydratedObjectsPerRow,
 			final Object resultSetId,
 			final SharedSessionContractImplementor session,
 			final boolean readOnly,
@@ -1184,22 +1205,34 @@ public abstract class Loader {
 			post = null;
 		}
 
-		if ( hydratedObjects != null ) {
-			int hydratedObjectsSize = hydratedObjects.size();
-			LOG.tracev( "Total objects hydrated: {0}", hydratedObjectsSize );
+		if ( hydratedObjectsPerRow != null && !hydratedObjectsPerRow.isEmpty() ) {
+			if ( LOG.isTraceEnabled() ) {
+				int hydratedObjectsSize = 0;
+				for ( List<Object> hydratedObjects : hydratedObjectsPerRow ) {
+					hydratedObjectsSize += hydratedObjects.size();
+				}
+				LOG.tracev( "Total objects hydrated: {0}", hydratedObjectsSize );
+			}
 
-			if ( hydratedObjectsSize != 0 ) {
-				final Iterable<PreLoadEventListener> listeners = session
-					.getFactory()
-					.getServiceRegistry()
-					.getService( EventListenerRegistry.class )
-					.getEventListenerGroup( EventType.PRE_LOAD )
-					.listeners();
+			final Iterable<PreLoadEventListener> listeners = session
+				.getFactory()
+				.getServiceRegistry()
+				.getService( EventListenerRegistry.class )
+				.getEventListenerGroup( EventType.PRE_LOAD )
+				.listeners();
 
-				for ( Object hydratedObject : hydratedObjects ) {
+			GraphImplementor<?> fetchGraphLoadContextToRestore = session.getFetchGraphLoadContext();
+			for ( List<?> hydratedObjectsForRow : hydratedObjectsPerRow ) {
+				for ( Object hydratedObject : hydratedObjectsForRow ) {
 					TwoPhaseLoad.initializeEntity( hydratedObject, readOnly, session, pre, listeners );
 				}
 
+				// HHH-14124: TwoPhaseLoad has nasty side-effects in order to handle sub-graphs.
+				// That's very fragile, but someone would need to spend much more time on this
+				// in order to implement it correctly, and apparently that's already been done in ORM 6.0.
+				// So for now, we'll just ensure side-effects (and whatever bugs they lead to)
+				// are limited to each row.
+				session.setFetchGraphLoadContext( fetchGraphLoadContextToRestore );
 			}
 		}
 
@@ -1215,9 +1248,11 @@ public abstract class Loader {
 			}
 		}
 
-		if ( hydratedObjects != null ) {
-			for ( Object hydratedObject : hydratedObjects ) {
-				TwoPhaseLoad.afterInitialize( hydratedObject, session );
+		if ( hydratedObjectsPerRow != null ) {
+			for ( List<?> hydratedObjectsForRow : hydratedObjectsPerRow ) {
+				for ( Object hydratedObject : hydratedObjectsForRow ) {
+					TwoPhaseLoad.afterInitialize( hydratedObject, session );
+				}
 			}
 		}
 
@@ -1226,19 +1261,21 @@ public abstract class Loader {
 		// endCollectionLoad to ensure the collection is in the
 		// persistence context.
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-		if ( hydratedObjects != null && hydratedObjects.size() > 0 ) {
-			for ( Object hydratedObject : hydratedObjects ) {
-				TwoPhaseLoad.postLoad( hydratedObject, session, post );
-				if ( afterLoadActions != null ) {
-					for ( AfterLoadAction afterLoadAction : afterLoadActions ) {
-						final EntityEntry entityEntry = persistenceContext.getEntry( hydratedObject );
-						if ( entityEntry == null ) {
-							// big problem
-							throw new HibernateException(
-									"Could not locate EntityEntry immediately after two-phase load"
-							);
+		if ( hydratedObjectsPerRow != null && !hydratedObjectsPerRow.isEmpty() ) {
+			for ( List<?> hydratedObjectsForRow : hydratedObjectsPerRow ) {
+				for ( Object hydratedObject : hydratedObjectsForRow ) {
+					TwoPhaseLoad.postLoad( hydratedObject, session, post );
+					if ( afterLoadActions != null ) {
+						for ( AfterLoadAction afterLoadAction : afterLoadActions ) {
+							final EntityEntry entityEntry = persistenceContext.getEntry( hydratedObject );
+							if ( entityEntry == null ) {
+								// big problem
+								throw new HibernateException(
+										"Could not locate EntityEntry immediately after two-phase load"
+								);
+							}
+							afterLoadAction.afterLoad( session, hydratedObject, (Loadable) entityEntry.getPersister() );
 						}
-						afterLoadAction.afterLoad( session, hydratedObject, (Loadable) entityEntry.getPersister() );
 					}
 				}
 			}
@@ -1585,7 +1622,7 @@ public abstract class Loader {
 			final Object optionalObject,
 			final EntityKey optionalObjectKey,
 			final LockMode[] lockModes,
-			final List hydratedObjects,
+			final List<Object> hydratedObjects,
 			final SharedSessionContractImplementor session) throws HibernateException, SQLException {
 		final int cols = persisters.length;
 		final EntityAliases[] entityAliases = getEntityAliases();
@@ -1652,7 +1689,7 @@ public abstract class Loader {
 			final EntityKey key,
 			final Object object,
 			final LockMode requestedLockMode,
-			List hydratedObjects,
+			List<Object> hydratedObjects,
 			final SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
 		if ( !persister.isInstance( object ) ) {
@@ -1720,7 +1757,7 @@ public abstract class Loader {
 			final LockMode lockMode,
 			final EntityKey optionalObjectKey,
 			final Object optionalObject,
-			final List hydratedObjects,
+			final List<Object> hydratedObjects,
 			final SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
 		final String instanceClass = getInstanceClass(

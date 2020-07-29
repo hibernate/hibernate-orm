@@ -1282,7 +1282,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		final SqmPath sqmPluralPath = consumeDomainPath( ctx.path() );
 
 		if ( sqmPluralPath.getReferencedPathSource() instanceof PluralPersistentAttribute ) {
-			return new SqmMemberOfPredicate( sqmPluralPath, creationContext.getNodeBuilder() );
+			return new SqmMemberOfPredicate( (SqmExpression) ctx.expression().accept( this ), sqmPluralPath, creationContext.getNodeBuilder() );
 		}
 		else {
 			throw new SemanticException( "Path argument to MEMBER OF must be a plural attribute" );

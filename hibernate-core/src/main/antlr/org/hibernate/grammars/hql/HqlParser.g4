@@ -373,7 +373,7 @@ predicate
 	| expression (NOT)? LIKE expression (likeEscape)?		# LikePredicate
 	| expression comparisonOperator expression				# ComparisonPredicate
 	| EXISTS expression										# ExistsPredicate
-	| MEMBER OF path										# MemberOfPredicate
+	| expression MEMBER OF path								# MemberOfPredicate
 	| NOT predicate											# NegatedPredicate
 	| predicate AND predicate								# AndPredicate
 	| predicate OR predicate								# OrPredicate

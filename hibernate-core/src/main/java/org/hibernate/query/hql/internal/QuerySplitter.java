@@ -513,7 +513,7 @@ public class QuerySplitter {
 		@Override
 		public SqmMemberOfPredicate visitMemberOfPredicate(SqmMemberOfPredicate predicate) {
 			final SqmPath pathCopy = sqmPathCopyMap.get( predicate.getPluralPath().getNavigablePath() );
-			return new SqmMemberOfPredicate( pathCopy, predicate.nodeBuilder() );
+			return new SqmMemberOfPredicate( predicate.getLeftHandExpression(), pathCopy, predicate.nodeBuilder() );
 		}
 
 		@Override

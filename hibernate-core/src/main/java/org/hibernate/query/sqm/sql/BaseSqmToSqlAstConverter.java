@@ -16,10 +16,12 @@ import java.util.function.Supplier;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.dialect.function.TimestampaddFunction;
 import org.hibernate.dialect.function.TimestampdiffFunction;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
@@ -55,6 +57,7 @@ import org.hibernate.query.sqm.spi.JdbcParameterBySqmParameterAccess;
 import org.hibernate.query.sqm.sql.internal.BasicValuedPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.EmbeddableValuedPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.EntityValuedPathInterpretation;
+import org.hibernate.query.sqm.sql.internal.PluralValuedSimplePathInterpretation;
 import org.hibernate.query.sqm.sql.internal.SqlAstQuerySpecProcessingStateImpl;
 import org.hibernate.query.sqm.sql.internal.SqmParameterInterpretation;
 import org.hibernate.query.sqm.sql.internal.SqmPathInterpretation;
@@ -113,6 +116,7 @@ import org.hibernate.query.sqm.tree.predicate.SqmGroupedPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmInListPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmInSubQueryPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmLikePredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmMemberOfPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmNegatedPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmNullnessPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmOrPredicate;
@@ -143,6 +147,7 @@ import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.CastTarget;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.Duration;
 import org.hibernate.sql.ast.tree.expression.DurationUnit;
@@ -166,6 +171,7 @@ import org.hibernate.sql.ast.tree.predicate.InListPredicate;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
 import org.hibernate.sql.ast.tree.predicate.Junction;
 import org.hibernate.sql.ast.tree.predicate.LikePredicate;
+import org.hibernate.sql.ast.tree.predicate.MemberOfPredicate;
 import org.hibernate.sql.ast.tree.predicate.NegatedPredicate;
 import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
@@ -177,6 +183,7 @@ import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.internal.JdbcParametersImpl;
 import org.hibernate.sql.exec.spi.JdbcParameters;
 
+import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.jboss.logging.Logger;
 
@@ -965,7 +972,7 @@ public abstract class BaseSqmToSqlAstConverter
 
 	@Override
 	public SqmPathInterpretation<?> visitPluralValuedPath(SqmPluralValuedSimplePath sqmPath) {
-		return (SqmPathInterpretation) sqmPath;
+		return PluralValuedSimplePathInterpretation.from( sqmPath, this, this );
 	}
 
 
@@ -2159,6 +2166,70 @@ public abstract class BaseSqmToSqlAstConverter
 		disjunction.add( (Predicate) predicate.getLeftHandPredicate().accept( this ) );
 		disjunction.add( (Predicate) predicate.getRightHandPredicate().accept( this ) );
 		return disjunction;
+	}
+
+	@Override
+	public MemberOfPredicate visitMemberOfPredicate(SqmMemberOfPredicate predicate) {
+		inferableTypeAccessStack.push( () -> determineValueMapping( predicate.getLeftHandExpression() ) );
+
+		final Expression lhs;
+		try {
+			lhs = (Expression) predicate.getLeftHandExpression().accept( this );
+		}
+		finally {
+			inferableTypeAccessStack.pop();
+		}
+
+		final SqmPath<?> pluralPath = predicate.getPluralPath();
+		final PluralAttributeMapping mappingModelExpressable = (PluralAttributeMapping) SqmMappingModelHelper.resolveMappingModelExpressable(
+				pluralPath,
+				getCreationContext().getDomainModel(),
+				getFromClauseAccess()::findTableGroup
+		);
+
+		return new MemberOfPredicate(
+				lhs,
+				predicate.isNegated(),
+				createSubQuery( pluralPath, mappingModelExpressable )
+		);
+	}
+
+	private QuerySpec createSubQuery(SqmPath<?> pluralPath, PluralAttributeMapping mappingModelExpressable) {
+		QuerySpec querySpec = new QuerySpec( true );
+
+		final TableGroup rootTableGroup = mappingModelExpressable.createRootTableGroup(
+				pluralPath.getNavigablePath(),
+				null,
+				true,
+				LockOptions.NONE.getLockMode(),
+				sqlAliasBaseManager,
+				getSqlExpressionResolver(),
+				() -> querySpec::applyPredicate,
+				creationContext
+				);
+
+		final MutableInteger count = new MutableInteger();
+		mappingModelExpressable.getElementDescriptor().visitColumns(
+				( (containingTableExpression, columnExpression, isColumnExpressionFormula, jdbcMapping) -> {
+					ColumnReference columnReference = new ColumnReference(
+							rootTableGroup.getPrimaryTableReference(),
+							columnExpression,
+							isColumnExpressionFormula,
+							jdbcMapping,
+							creationContext.getSessionFactory()
+					);
+					final int valuesPosition = count.getAndIncrement();
+					querySpec.getSelectClause().addSqlSelection(
+							new SqlSelectionImpl(
+									valuesPosition + 1,
+									valuesPosition,
+									columnReference
+							)
+					);
+				} )
+		);
+		querySpec.getFromClause().addRoot( rootTableGroup );
+		return querySpec;
 	}
 
 	@Override

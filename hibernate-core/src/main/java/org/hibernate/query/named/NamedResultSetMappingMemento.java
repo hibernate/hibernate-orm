@@ -28,7 +28,15 @@ import org.hibernate.query.results.ResultSetMapping;
  */
 @Incubating
 public interface NamedResultSetMappingMemento {
+	/**
+	 * The name associated with this memento
+	 */
 	String getName();
 
+	/**
+	 * Resolve this memento.  Generally speaking, this involves building ResultBuilder instances for
+	 * each defined result and registering them with the passed `resultSetMapping`.  Any known
+	 * query spaces should be passed to the `querySpaceConsumer`
+	 */
 	void resolve(ResultSetMapping resultSetMapping, Consumer<String> querySpaceConsumer, SessionFactoryImplementor sessionFactory);
 }

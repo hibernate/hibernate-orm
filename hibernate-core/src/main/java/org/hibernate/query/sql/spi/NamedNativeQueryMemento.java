@@ -8,12 +8,12 @@ package org.hibernate.query.sql.spi;
 
 import java.util.Set;
 
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.named.AbstractNamedQueryMemento;
-import org.hibernate.query.named.NamedQueryProducer;
+import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.sql.internal.NamedNativeQueryMementoImpl;
 
 /**
@@ -21,7 +21,7 @@ import org.hibernate.query.sql.internal.NamedNativeQueryMementoImpl;
  *
  * @author Steve Ebersole
  */
-public interface NamedNativeQueryMemento extends NamedQueryProducer {
+public interface NamedNativeQueryMemento extends NamedQueryMemento {
 	/**
 	 * Informational access to the SQL query string
 	 */
@@ -35,11 +35,13 @@ public interface NamedNativeQueryMemento extends NamedQueryProducer {
 	/**
 	 * Convert the memento into an untyped executable query
 	 */
-	NativeQueryImplementor toQuery(SharedSessionContractImplementor session);
+	@Override
+	NativeQueryImplementor<?> toQuery(SharedSessionContractImplementor session);
 
 	/**
 	 * Convert the memento into a typed executable query
 	 */
+	@Override
 	<T> NativeQueryImplementor<T> toQuery(SharedSessionContractImplementor session, Class<T> resultType);
 
 	/**

@@ -11,7 +11,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.SingleIdEntityLoader;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.query.named.NamedQueryProducer;
+import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.named.NamedQueryRepository;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
@@ -24,7 +24,7 @@ import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
  */
 public class SingleIdEntityLoaderProvidedQueryImpl<T> implements SingleIdEntityLoader<T> {
 	private final EntityMappingType entityDescriptor;
-	private final NamedQueryProducer namedQueryMemento;
+	private final NamedQueryMemento namedQueryMemento;
 
 	public SingleIdEntityLoaderProvidedQueryImpl(
 			EntityMappingType entityDescriptor,
@@ -38,7 +38,7 @@ public class SingleIdEntityLoaderProvidedQueryImpl<T> implements SingleIdEntityL
 		}
 	}
 
-	private static NamedQueryProducer resolveNamedQuery(
+	private static NamedQueryMemento resolveNamedQuery(
 			String queryName,
 			SessionFactoryImplementor sf) {
 		final NamedQueryRepository namedQueryRepository = sf.getQueryEngine().getNamedQueryRepository();

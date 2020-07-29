@@ -22,9 +22,7 @@ import org.hibernate.internal.FilterJdbcParameter;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
-import org.hibernate.metamodel.mapping.Association;
 import org.hibernate.metamodel.mapping.CollectionPart;
-import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -76,6 +74,7 @@ import org.hibernate.sql.ast.tree.predicate.InListPredicate;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
 import org.hibernate.sql.ast.tree.predicate.Junction;
 import org.hibernate.sql.ast.tree.predicate.LikePredicate;
+import org.hibernate.sql.ast.tree.predicate.MemberOfPredicate;
 import org.hibernate.sql.ast.tree.predicate.NegatedPredicate;
 import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
@@ -195,7 +194,7 @@ public abstract class AbstractSqlAstWalker
 		if ( fromClause == null || fromClause.getRoots().isEmpty() ) {
 			String fromDual = getDialect().getFromDual();
 			if ( !fromDual.isEmpty() ) {
-				appendSql(" ");
+				appendSql( " " );
 				appendSql( fromDual );
 			}
 		}
@@ -221,7 +220,7 @@ public abstract class AbstractSqlAstWalker
 			appendSql( " order by " );
 
 			String separator = NO_SEPARATOR;
-			for (SortSpecification sortSpecification : sortSpecifications ) {
+			for ( SortSpecification sortSpecification : sortSpecifications ) {
 				appendSql( separator );
 				visitSortSpecification( sortSpecification );
 				separator = COMA_SEPARATOR;
@@ -243,7 +242,7 @@ public abstract class AbstractSqlAstWalker
 	public void visitSortSpecification(SortSpecification sortSpecification) {
 		NullPrecedence nullPrecedence = sortSpecification.getNullPrecedence();
 		final boolean hasNullPrecedence = nullPrecedence != null && nullPrecedence != NullPrecedence.NONE;
-		if ( hasNullPrecedence && ! dialect.supportsNullPrecedence() ) {
+		if ( hasNullPrecedence && !dialect.supportsNullPrecedence() ) {
 			appendSql( "case when (" );
 			sortSpecification.getSortExpression().accept( this );
 			appendSql( ") is null then " );
@@ -440,7 +439,7 @@ public abstract class AbstractSqlAstWalker
 		final TableGroup joinedGroup = tableGroupJoin.getJoinedGroup();
 
 		if ( joinedGroup instanceof VirtualTableGroup ) {
-			processTableGroupJoins( tableGroupJoin.getJoinedGroup());
+			processTableGroupJoins( tableGroupJoin.getJoinedGroup() );
 		}
 		else {
 			appendSql( EMPTY_STRING );
@@ -921,6 +920,18 @@ public abstract class AbstractSqlAstWalker
 						conversion.getUnit(), getDialect()
 				)
 		);
+	}
+
+	@Override
+	public void visitMemberOfPredicate(MemberOfPredicate memberOfPredicate) {
+		memberOfPredicate.getLeftHandExpression().accept( this );
+		if ( memberOfPredicate.isNegated() ) {
+			appendSql( " not " );
+		}
+		appendSql( " in (" );
+
+		visitQuerySpec( memberOfPredicate.getQuerySpec() );
+		appendSql( ")" );
 	}
 
 	@Override

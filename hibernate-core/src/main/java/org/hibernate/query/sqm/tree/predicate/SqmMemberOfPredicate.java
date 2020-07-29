@@ -9,22 +9,33 @@ package org.hibernate.query.sqm.tree.predicate;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
  * @author Steve Ebersole
  */
 public class SqmMemberOfPredicate extends AbstractNegatableSqmPredicate {
+	private final SqmExpression leftHandExpression;
 	private final SqmPath<?> pluralPath;
 
-	public SqmMemberOfPredicate(SqmPath<?> pluralPath, NodeBuilder nodeBuilder) {
-		this( pluralPath, false, nodeBuilder );
+	public SqmMemberOfPredicate(SqmExpression leftHandExpression, SqmPath<?> pluralPath, NodeBuilder nodeBuilder) {
+		this( leftHandExpression, pluralPath, false, nodeBuilder );
 	}
 
 	@SuppressWarnings("WeakerAccess")
-	public SqmMemberOfPredicate(SqmPath pluralPath, boolean negated, NodeBuilder nodeBuilder) {
+	public SqmMemberOfPredicate(
+			SqmExpression leftHandExpression,
+			SqmPath pluralPath,
+			boolean negated,
+			NodeBuilder nodeBuilder) {
 		super( negated, nodeBuilder );
 
 		this.pluralPath = pluralPath;
+		this.leftHandExpression = leftHandExpression;
+	}
+
+	public SqmExpression getLeftHandExpression() {
+		return leftHandExpression;
 	}
 
 	public SqmPath<?> getPluralPath() {

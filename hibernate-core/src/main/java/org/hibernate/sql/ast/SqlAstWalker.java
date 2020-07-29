@@ -45,6 +45,7 @@ import org.hibernate.sql.ast.tree.predicate.InListPredicate;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
 import org.hibernate.sql.ast.tree.predicate.Junction;
 import org.hibernate.sql.ast.tree.predicate.LikePredicate;
+import org.hibernate.sql.ast.tree.predicate.MemberOfPredicate;
 import org.hibernate.sql.ast.tree.predicate.NegatedPredicate;
 import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.predicate.SelfRenderingPredicate;
@@ -150,4 +151,6 @@ public interface SqlAstWalker {
 	void visitDuration(Duration duration);
 
 	void visitConversion(Conversion conversion);
+
+	void visitMemberOfPredicate(MemberOfPredicate memberOfPredicate);
 }

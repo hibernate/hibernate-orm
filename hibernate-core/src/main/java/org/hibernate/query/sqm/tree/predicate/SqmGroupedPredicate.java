@@ -16,7 +16,7 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 /**
  * @author Steve Ebersole
  */
-public class SqmGroupedPredicate extends AbstractSqmPredicate implements SqmPredicate {
+public class SqmGroupedPredicate extends AbstractSqmPredicate {
 	private final SqmPredicate subPredicate;
 
 	public SqmGroupedPredicate(SqmPredicate subPredicate, NodeBuilder nodeBuilder) {

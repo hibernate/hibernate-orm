@@ -173,6 +173,7 @@ public class ProcedureCallImpl<R>
 	 */
 	ProcedureCallImpl(SharedSessionContractImplementor session, NamedCallableQueryMemento memento) {
 		super( session );
+
 		this.procedureName = memento.getCallableName();
 
 		this.parameterMetadata = new ProcedureParameterMetadataImpl( memento, session );
@@ -189,6 +190,58 @@ public class ProcedureCallImpl<R>
 		);
 
 		applyOptions( memento );
+	}
+
+	/**
+	 * The named/stored copy constructor
+	 *
+	 * @param session The session
+	 * @param memento The named/stored memento
+	 */
+	ProcedureCallImpl(
+			SharedSessionContractImplementor session,
+			NamedCallableQueryMemento memento,
+			Class<?>... resultTypes) {
+		super( session );
+
+		this.procedureName = memento.getCallableName();
+
+		this.parameterMetadata = new ProcedureParameterMetadataImpl( memento, session );
+		this.paramBindings = new ProcedureParamBindings( parameterMetadata, getSessionFactory() );
+
+		this.synchronizedQuerySpaces = CollectionHelper.makeCopy( memento.getQuerySpaces() );
+
+		Util.resolveResultSetMappings(
+				null,
+				resultTypes,
+				resultSetMapping,
+				synchronizedQuerySpaces::add,
+				getSession().getFactory()
+		);
+
+		applyOptions( memento );
+	}
+
+	public ProcedureCallImpl(
+			SharedSessionContractImplementor session,
+			NamedCallableQueryMementoImpl memento,
+			String... resultSetMappingNames) {
+		super( session );
+
+		this.procedureName = memento.getCallableName();
+
+		this.parameterMetadata = new ProcedureParameterMetadataImpl( memento, session );
+		this.paramBindings = new ProcedureParamBindings( parameterMetadata, getSessionFactory() );
+
+		this.synchronizedQuerySpaces = CollectionHelper.makeCopy( memento.getQuerySpaces() );
+
+		Util.resolveResultSetMappings(
+				resultSetMappingNames,
+				null,
+				resultSetMapping,
+				synchronizedQuerySpaces::add,
+				getSession().getFactory()
+		);
 	}
 
 	@Override

@@ -19,6 +19,7 @@ import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.procedure.spi.ParameterStrategy;
+import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.query.named.AbstractNamedQueryMemento;
 import org.hibernate.query.named.NamedQueryMemento;
@@ -112,8 +113,32 @@ public class NamedCallableQueryMementoImpl extends AbstractNamedQueryMemento imp
 	}
 
 	@Override
-	public ProcedureCall makeProcedureCall(SharedSessionContractImplementor session) {
-		return new ProcedureCallImpl( session, this );
+	public ProcedureCallImplementor<?> makeProcedureCall(SharedSessionContractImplementor session) {
+		return new ProcedureCallImpl<>( session, this );
+	}
+
+	@Override
+	public ProcedureCall makeProcedureCall(
+			SharedSessionContractImplementor session,
+			String... resultSetMappingNames) {
+		return new ProcedureCallImpl( session, this, resultSetMappingNames );
+	}
+
+	@Override
+	public ProcedureCall makeProcedureCall(
+			SharedSessionContractImplementor session,
+			Class<?>... resultSetJavaTypes) {
+		return null;
+	}
+
+	@Override
+	public ProcedureCallImplementor<?> toQuery(SharedSessionContractImplementor session) {
+		return makeProcedureCall( session );
+	}
+
+	@Override
+	public <T> ProcedureCallImplementor<T> toQuery(SharedSessionContractImplementor session, Class<T> javaType) {
+		return new ProcedureCallImpl( session, this, javaType );
 	}
 
 	@Override

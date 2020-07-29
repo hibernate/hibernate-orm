@@ -69,6 +69,24 @@ public interface NamedCallableQueryMemento extends NamedQueryMemento {
 	 */
 	ProcedureCall makeProcedureCall(SharedSessionContractImplementor session);
 
+	/**
+	 * Convert the memento back into an executable (connected) form.
+	 *
+	 * @param session The session to connect the procedure call to
+	 *
+	 * @return The executable call
+	 */
+	ProcedureCall makeProcedureCall(SharedSessionContractImplementor session, String... resultSetMappingNames);
+
+	/**
+	 * Convert the memento back into an executable (connected) form.
+	 *
+	 * @param session The session to connect the procedure call to
+	 *
+	 * @return The executable call
+	 */
+	ProcedureCall makeProcedureCall(SharedSessionContractImplementor session, Class<?>... resultSetJavaTypes);
+
 	interface ParameterMemento extends NamedQueryMemento.ParameterMemento {
 		ProcedureParameterImplementor resolve(SharedSessionContractImplementor session);
 	}

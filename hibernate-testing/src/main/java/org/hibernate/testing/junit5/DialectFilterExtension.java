@@ -169,7 +169,6 @@ public class DialectFilterExtension implements ExecutionCondition {
 				}
 				return dialectAccess.get().getDialect();
 			}
-
 			return emScope.get().getDialect();
 		}
 

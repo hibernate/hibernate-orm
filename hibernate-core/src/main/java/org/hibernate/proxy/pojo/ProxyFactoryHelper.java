@@ -38,13 +38,7 @@ public final class ProxyFactoryHelper {
 	}
 
 	public static Set<Class> extractProxyInterfaces(final PersistentClass persistentClass, final String entityName) {
-		/*
-		 * We need to preserve the order of the interfaces they were put into the set, since javassist will choose the
-		 * first one's class-loader to construct the proxy class with. This is also the reason why HibernateProxy.class
-		 * should be the last one in the order (on JBossAS7 its class-loader will be org.hibernate module's class-
-		 * loader, which will not see the classes inside deployed apps.  See HHH-3078
-		 */
-		final Set<Class> proxyInterfaces = new java.util.LinkedHashSet<Class>();
+		final Set<Class> proxyInterfaces = new java.util.HashSet<>();
 		final Class mappedClass = persistentClass.getMappedClass();
 		final Class proxyInterface = persistentClass.getProxyInterface();
 

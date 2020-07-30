@@ -1255,7 +1255,7 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 
 
 	/**
-	 * Pick which bytecode enhancing library to use. Currently supports javassist and bytebuddy, bytebuddy being the default since version 5.3.
+	 * Pick which bytecode enhancing library to use. Currently only supports bytebuddy.
 	 */
 	String BYTECODE_PROVIDER = "hibernate.bytecode.provider";
 

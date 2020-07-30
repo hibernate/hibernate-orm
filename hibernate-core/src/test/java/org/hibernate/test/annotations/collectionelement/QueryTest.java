@@ -15,6 +15,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
  * @author Steve Ebersole
+ * @author Benjamin Maurer
  */
 public class QueryTest extends BaseCoreFunctionalTestCase {
 	@Override
@@ -28,6 +29,15 @@ public class QueryTest extends BaseCoreFunctionalTestCase {
 		// performs syntax checking of the MEMBER OF predicate against a basic collection
 		Session s = openSession();
 		s.createQuery( "from EntityWithAnElementCollection e where 'abc' member of e.someStrings" ).list();
+		s.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-14125" )
+	public void testSelectElementCollectionProperty() {
+		// Selecting property directly works for basic types and associated entities, should also work for ElementCollection
+		Session s = openSession();
+		s.createQuery( "select e.someStrings from EntityWithAnElementCollection e" ).list();
 		s.close();
 	}
 }

@@ -112,6 +112,8 @@ public final class DocHelper {
 	 * The Dialect.
 	 */
 	private Dialect dialect;
+	
+	private Metadata metadata;
 
 	/**
 	 * Constructor.
@@ -127,6 +129,8 @@ public final class DocHelper {
 		if (metadata == null) {
 			throw new IllegalArgumentException("Hibernate Configuration cannot be null");
 		}
+		
+		this.metadata = metadata;
 
 		StandardServiceRegistryBuilder builder = new StandardServiceRegistryBuilder();
 		builder.applySettings(properties);
@@ -405,7 +409,7 @@ public final class DocHelper {
 	public String getSQLTypeName(Column column) {
 
 		try {
-			return column.getSqlType(dialect, null);
+			return column.getSqlType(dialect, metadata);
 		} catch (HibernateException ex) {
 
 			// TODO: Fix this when we find a way to get the type or

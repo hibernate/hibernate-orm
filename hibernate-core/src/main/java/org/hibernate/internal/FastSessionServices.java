@@ -6,8 +6,7 @@
  */
 package org.hibernate.internal;
 
-import java.util.Collections;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.Map;
 import java.util.Objects;
 import javax.persistence.CacheRetrieveMode;
@@ -19,6 +18,7 @@ import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.BaselineSessionEventsListenerBuilder;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
@@ -45,7 +45,6 @@ import org.hibernate.event.spi.RefreshEventListener;
 import org.hibernate.event.spi.ReplicateEventListener;
 import org.hibernate.event.spi.ResolveNaturalIdEventListener;
 import org.hibernate.event.spi.SaveOrUpdateEventListener;
-import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.internal.util.CacheModeHelper;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
@@ -53,11 +52,6 @@ import org.hibernate.jpa.internal.util.LockOptionsHelper;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-
-import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_SCOPE;
-import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_TIMEOUT;
-import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_RETRIEVE_MODE;
-import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_STORE_MODE;
 
 /**
  * Internal component.
@@ -81,10 +75,26 @@ import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_STORE_MODE;
  */
 public final class FastSessionServices {
 
+	private enum DefaultAvailableSetting {
+
+		FLUSH_MODE( org.hibernate.jpa.AvailableSettings.FLUSH_MODE ),
+		JPA_LOCK_SCOPE( org.hibernate.cfg.AvailableSettings.JPA_LOCK_SCOPE ),
+		JPA_LOCK_TIMEOUT( org.hibernate.cfg.AvailableSettings.JPA_LOCK_TIMEOUT ),
+		JPA_SHARED_CACHE_RETRIEVE_MODE( org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_RETRIEVE_MODE ),
+		JPA_SHARED_CACHE_STORE_MODE( org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_STORE_MODE ),
+		SPEC_HINT_TIMEOUT( QueryHints.SPEC_HINT_TIMEOUT );
+
+		String key;
+
+		DefaultAvailableSetting(String key) {
+			this.key = key;
+		}
+	}
+
 	/**
 	 * Default session properties
 	 */
-	final Map<String, Object> defaultSessionProperties;
+	final EnumMap<DefaultAvailableSetting, Object> defaultSessionProperties;
 
 	// All session events need to be iterated frequently:
 	final EventListenerGroup<AutoFlushEventListener> eventListenerGroup_AUTO_FLUSH;
@@ -185,14 +195,23 @@ public final class FastSessionServices {
 		this.initialSessionFlushMode = initializeDefaultFlushMode( defaultSessionProperties );
 	}
 
-	private static FlushMode initializeDefaultFlushMode(Map<String, Object> defaultSessionProperties) {
-		Object setMode = defaultSessionProperties.get( AvailableSettings.FLUSH_MODE );
+	private static FlushMode initializeDefaultFlushMode(EnumMap<DefaultAvailableSetting, Object> defaultSessionProperties) {
+		Object setMode = defaultSessionProperties.get( DefaultAvailableSetting.FLUSH_MODE );
 		return ConfigurationHelper.getFlushMode( setMode, FlushMode.AUTO );
 	}
 
-	private static LockOptions initializeDefaultLockOptions(final Map<String, Object> defaultSessionProperties) {
+	private static LockOptions initializeDefaultLockOptions(EnumMap<DefaultAvailableSetting, Object> defaultSessionProperties) {
 		LockOptions def = new LockOptions();
-		LockOptionsHelper.applyPropertiesToLockOptions( defaultSessionProperties, () -> def );
+		LockOptionsHelper.applyPropertiesToLockOptions( key -> {
+			switch (key) {
+				case AvailableSettings.JPA_LOCK_SCOPE:
+					return defaultSessionProperties.get( DefaultAvailableSetting.JPA_LOCK_SCOPE );
+				case AvailableSettings.JPA_LOCK_TIMEOUT:
+					return defaultSessionProperties.get( DefaultAvailableSetting.JPA_LOCK_TIMEOUT );
+				default:
+					throw new IllegalStateException( "unknown property key: " + key );
+			}
+		}, () -> def );
 		return def;
 	}
 
@@ -220,32 +239,24 @@ public final class FastSessionServices {
 		return true;
 	}
 
-	private static Map<String, Object> initializeDefaultSessionProperties(SessionFactoryImpl sf) {
-		HashMap<String,Object> p = new HashMap<>();
+	private static EnumMap<DefaultAvailableSetting, Object> initializeDefaultSessionProperties(SessionFactoryImpl sf) {
+		EnumMap<DefaultAvailableSetting, Object> p = new EnumMap<>( DefaultAvailableSetting.class );
 
 		//Static defaults:
-		p.put( AvailableSettings.FLUSH_MODE, FlushMode.AUTO.name() );
-		p.put( JPA_LOCK_SCOPE, PessimisticLockScope.EXTENDED.name() );
-		p.put( JPA_LOCK_TIMEOUT, LockOptions.WAIT_FOREVER );
-		p.put( JPA_SHARED_CACHE_RETRIEVE_MODE, CacheModeHelper.DEFAULT_RETRIEVE_MODE );
-		p.put( JPA_SHARED_CACHE_STORE_MODE, CacheModeHelper.DEFAULT_STORE_MODE );
+		p.put( DefaultAvailableSetting.FLUSH_MODE, FlushMode.AUTO.name() );
+		p.put( DefaultAvailableSetting.JPA_LOCK_SCOPE, PessimisticLockScope.EXTENDED.name() );
+		p.put( DefaultAvailableSetting.JPA_LOCK_TIMEOUT, LockOptions.WAIT_FOREVER );
+		p.put( DefaultAvailableSetting.JPA_SHARED_CACHE_RETRIEVE_MODE, CacheModeHelper.DEFAULT_RETRIEVE_MODE );
+		p.put( DefaultAvailableSetting.JPA_SHARED_CACHE_STORE_MODE, CacheModeHelper.DEFAULT_STORE_MODE );
 
 		//Defaults defined by SessionFactory configuration:
-		final String[] ENTITY_MANAGER_SPECIFIC_PROPERTIES = {
-				JPA_LOCK_SCOPE,
-				JPA_LOCK_TIMEOUT,
-				AvailableSettings.FLUSH_MODE,
-				JPA_SHARED_CACHE_RETRIEVE_MODE,
-				JPA_SHARED_CACHE_STORE_MODE,
-				QueryHints.SPEC_HINT_TIMEOUT
-		};
 		final Map<String, Object> properties = sf.getProperties();
-		for ( String key : ENTITY_MANAGER_SPECIFIC_PROPERTIES ) {
-			if ( properties.containsKey( key ) ) {
-				p.put( key, properties.get( key ) );
+		for ( DefaultAvailableSetting settingEnum : DefaultAvailableSetting.values() ) {
+			if ( properties.containsKey( settingEnum.key ) ) {
+				p.put( settingEnum, properties.get( settingEnum.key ) );
 			}
 		}
-		return Collections.unmodifiableMap( p );
+		return p;
 	}
 
 	/**
@@ -253,7 +264,7 @@ public final class FastSessionServices {
 	 * @return either the CacheStoreMode as defined in the Session specific properties, or as defined in the
 	 *  properties shared across all sessions (the defaults).
 	 */
-	CacheStoreMode getCacheStoreMode(final Map<String, Object> properties) {
+	CacheStoreMode getCacheStoreMode(EnumMap<DefaultAvailableSetting, Object> properties) {
 		if ( properties == null ) {
 			return this.defaultCacheStoreMode;
 		}
@@ -267,7 +278,7 @@ public final class FastSessionServices {
 	 * @return either the CacheRetrieveMode as defined in the Session specific properties, or as defined in the
 	 *  properties shared across all sessions (the defaults).
 	 */
-	CacheRetrieveMode getCacheRetrieveMode(Map<String, Object> properties) {
+	CacheRetrieveMode getCacheRetrieveMode(EnumMap<DefaultAvailableSetting, Object> properties) {
 		if ( properties == null ) {
 			return this.defaultCacheRetrieveMode;
 		}
@@ -276,12 +287,12 @@ public final class FastSessionServices {
 		}
 	}
 
-	private static CacheRetrieveMode determineCacheRetrieveMode(Map<String, Object> settings) {
-		return ( CacheRetrieveMode ) settings.get( JPA_SHARED_CACHE_RETRIEVE_MODE );
+	private static CacheRetrieveMode determineCacheRetrieveMode(EnumMap<DefaultAvailableSetting, Object> settings) {
+		return ( CacheRetrieveMode ) settings.get( DefaultAvailableSetting.JPA_SHARED_CACHE_RETRIEVE_MODE );
 	}
 
-	private static CacheStoreMode determineCacheStoreMode(Map<String, Object> settings) {
-		return ( CacheStoreMode ) settings.get( JPA_SHARED_CACHE_STORE_MODE );
+	private static CacheStoreMode determineCacheStoreMode(EnumMap<DefaultAvailableSetting, Object> settings) {
+		return ( CacheStoreMode ) settings.get( DefaultAvailableSetting.JPA_SHARED_CACHE_STORE_MODE );
 	}
 
 	public ConnectionObserverStatsBridge getDefaultJdbcObserver() {

@@ -7,6 +7,7 @@
 package org.hibernate.jpa.internal.util;
 
 import java.util.Map;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import javax.persistence.PersistenceException;
 import javax.persistence.PessimisticLockScope;
@@ -23,15 +24,17 @@ public final class LockOptionsHelper {
 	}
 
 	/**
-	 * Applies configuration properties on a {@link LockOptions} instance, passed as a supplier
+	 * Applies function to get property on a {@link LockOptions} instance, passed as a supplier
 	 * so to make it possible to skip allocating the {@link LockOptions} instance if there's
 	 * nothing to set.
 	 *
-	 * @param props The configuration properties
+	 * @param func The function to return setting of some key
 	 * @param lockOptionsSupplier The reference to the lock to modify
 	 */
-	public static void applyPropertiesToLockOptions(final Map<String, Object> props, final Supplier<LockOptions> lockOptionsSupplier) {
-		Object lockScope = props.get( JPA_LOCK_SCOPE );
+	public static void applyPropertiesToLockOptions(
+			final Function<String, Object> func,
+			final Supplier<LockOptions> lockOptionsSupplier) {
+		Object lockScope = func.apply( JPA_LOCK_SCOPE );
 		if ( lockScope instanceof String && PessimisticLockScope.valueOf( (String) lockScope ) == PessimisticLockScope.EXTENDED ) {
 			lockOptionsSupplier.get().setScope( true );
 		}
@@ -43,7 +46,7 @@ public final class LockOptionsHelper {
 			throw new PersistenceException( "Unable to parse " + JPA_LOCK_SCOPE + ": " + lockScope );
 		}
 
-		Object lockTimeout = props.get( JPA_LOCK_TIMEOUT );
+		Object lockTimeout = func.apply( JPA_LOCK_TIMEOUT );
 		int timeout = 0;
 		boolean timeoutSet = false;
 		if ( lockTimeout instanceof String ) {
@@ -74,4 +77,17 @@ public final class LockOptionsHelper {
 		}
 	}
 
+	/**
+	 * Applies configuration properties on a {@link LockOptions} instance, passed as a supplier
+	 * so to make it possible to skip allocating the {@link LockOptions} instance if there's
+	 * nothing to set.
+	 *
+	 * @param props The configuration properties
+	 * @param lockOptionsSupplier The reference to the lock to modify
+	 */
+	public static void applyPropertiesToLockOptions(
+			final Map<String, Object> props,
+			final Supplier<LockOptions> lockOptionsSupplier) {
+		applyPropertiesToLockOptions( props::get, lockOptionsSupplier );
+	}
 }

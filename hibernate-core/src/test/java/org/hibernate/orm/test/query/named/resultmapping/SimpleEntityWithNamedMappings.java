@@ -7,6 +7,7 @@
 package org.hibernate.orm.test.query.named.resultmapping;
 
 import javax.persistence.ColumnResult;
+import javax.persistence.ConstructorResult;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.SqlResultSetMapping;
@@ -25,6 +26,16 @@ import javax.persistence.SqlResultSetMapping;
 				@ColumnResult( name = "id" ),
 				@ColumnResult( name = "name" )
 		}
+)
+@SqlResultSetMapping(
+		name = "id_name_dto",
+		classes = @ConstructorResult(
+				targetClass = SimpleEntityWithNamedMappings.DropDownDto.class,
+				columns = {
+						@ColumnResult( name = "id" ),
+						@ColumnResult( name = "name" )
+				}
+		)
 )
 public class SimpleEntityWithNamedMappings {
 	@Id
@@ -54,5 +65,23 @@ public class SimpleEntityWithNamedMappings {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public static class DropDownDto {
+		private final Integer id;
+		private final String text;
+
+		public DropDownDto(Integer id, String text) {
+			this.id = id;
+			this.text = text;
+		}
+
+		public Integer getId() {
+			return id;
+		}
+
+		public String getText() {
+			return text;
+		}
 	}
 }

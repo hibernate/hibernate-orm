@@ -155,10 +155,11 @@ public class NativeQueryImpl<R>
 			SharedSessionContractImplementor session) {
 		this( memento, session );
 
-		// todo (6.0) : need to add handling for `javax.persistence.NamedNativeQuery#resultSetMapping`
-		//		and `javax.persistence.NamedNativeQuery#resultClass`
-
-		// todo (6.0) : relatedly, does `resultSetMappingName` come from `NamedNativeQuery#resultSetMapping`?
+		session.getFactory()
+				.getQueryEngine()
+				.getNamedQueryRepository()
+				.getResultSetMappingMemento( resultSetMappingName )
+				.resolve( resultSetMapping, (s) -> {}, getSessionFactory() );
 	}
 
 	public NativeQueryImpl(

@@ -6,11 +6,15 @@
  */
 package org.hibernate.query.internal;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
+import org.hibernate.query.results.EntityResultBuilder;
+import org.hibernate.query.results.InstantiationResultBuilder;
+import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.ResultSetMapping;
 import org.hibernate.query.results.ScalarResultBuilder;
 
@@ -22,14 +26,24 @@ import org.hibernate.query.results.ScalarResultBuilder;
 public class NamedResultSetMappingMementoImpl implements NamedResultSetMappingMemento {
 	private final String name;
 
-	private final List<ScalarResultBuilder> scalarResultBuilders;
+	private final List<ResultBuilder> resultBuilders;
 
 	public NamedResultSetMappingMementoImpl(
 			String name,
+			List<EntityResultBuilder> entityResultBuilders,
+			List<InstantiationResultBuilder> instantiationResultBuilders,
 			List<ScalarResultBuilder> scalarResultBuilders,
 			SessionFactoryImplementor factory) {
 		this.name = name;
-		this.scalarResultBuilders = scalarResultBuilders;
+
+		final int totalNumberOfBuilders = entityResultBuilders.size()
+				+ instantiationResultBuilders.size()
+				+ scalarResultBuilders.size();
+		this.resultBuilders = new ArrayList<>( totalNumberOfBuilders );
+
+		resultBuilders.addAll( entityResultBuilders );
+		resultBuilders.addAll( instantiationResultBuilders );
+		resultBuilders.addAll( scalarResultBuilders );
 	}
 
 	@Override
@@ -42,16 +56,6 @@ public class NamedResultSetMappingMementoImpl implements NamedResultSetMappingMe
 			ResultSetMapping resultSetMapping,
 			Consumer<String> querySpaceConsumer,
 			SessionFactoryImplementor sessionFactory) {
-		scalarResultBuilders.forEach(
-				builder -> resultSetMapping.addResultBuilder(
-						(jdbcResultsMetadata, legacyFetchResolver, sqlSelectionConsumer, sessionFactory1) ->
-								builder.buildReturn(
-										jdbcResultsMetadata,
-										legacyFetchResolver,
-										sqlSelectionConsumer,
-										sessionFactory
-								)
-				)
-		);
+		resultBuilders.forEach( resultSetMapping::addResultBuilder );
 	}
 }

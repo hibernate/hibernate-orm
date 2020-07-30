@@ -6,13 +6,10 @@
  */
 package org.hibernate.orm.test.query.named.resultmapping;
 
-import java.time.Instant;
+import java.util.List;
 
 import org.hibernate.query.named.NamedResultSetMappingMemento;
-import org.hibernate.query.sql.spi.NativeQueryImplementor;
 
-import org.hibernate.testing.orm.domain.StandardDomainModel;
-import org.hibernate.testing.orm.domain.helpdesk.Incident;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -20,32 +17,60 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
 
 /**
  * @author Steve Ebersole
  */
-@DomainModel( standardModels = StandardDomainModel.HELPDESK )
+@DomainModel( annotatedClasses = SimpleEntityWithNamedMappings.class )
 @SessionFactory
 public class UsageTests {
 	@Test
-	public void testSimpleScalarMappings(SessionFactoryScope scope) {
+	public void testSimpleScalarMapping(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					// make sure it is in the repository
 					final NamedResultSetMappingMemento mappingMemento = session.getSessionFactory()
 							.getQueryEngine()
 							.getNamedQueryRepository()
-							.getResultSetMappingMemento( "incident_summary" );
+							.getResultSetMappingMemento( "id_name" );
 					assertThat( mappingMemento, notNullValue() );
 
 					// apply it to a native-query
-					final String qryString = "select id, description, reported from incident";
-					session.createNativeQuery( qryString, "incident_summary" ).list();
+					final String qryString = "select id, name from SimpleEntityWithNamedMappings";
+					session.createNativeQuery( qryString, "id_name" ).list();
 
 					// todo (6.0) : should also try executing the ProcedureCall once that functionality is implemented
-					session.createStoredProcedureCall( "abc", "incident_summary" );
+					session.createStoredProcedureCall( "abc", "id_name" );
+				}
+		);
+	}
+
+	@Test
+	public void testSimpleInstantiationOfScalars(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					// make sure it is in the repository
+					final NamedResultSetMappingMemento mappingMemento = session.getSessionFactory()
+							.getQueryEngine()
+							.getNamedQueryRepository()
+							.getResultSetMappingMemento( "id_name_dto" );
+					assertThat( mappingMemento, notNullValue() );
+
+					// apply it to a native-query
+					final String qryString = "select id, name from SimpleEntityWithNamedMappings";
+					final List<SimpleEntityWithNamedMappings.DropDownDto> results
+							= session.createNativeQuery( qryString, "id_name_dto" ).list();
+					assertThat( results.size(), is( 1 ) );
+
+					final SimpleEntityWithNamedMappings.DropDownDto dto = results.get( 0 );
+					assertThat( dto.getId(), is( 1 ) );
+					assertThat( dto.getText(), is( "test" ) );
+
+					// todo (6.0) : should also try executing the ProcedureCall once that functionality is implemented
+					session.createStoredProcedureCall( "abc", "id_name_dto" );
 				}
 		);
 	}
@@ -54,7 +79,7 @@ public class UsageTests {
 	public void prepareData(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.save( new Incident( 1, "test", Instant.now() ) );
+					session.save( new SimpleEntityWithNamedMappings( 1, "test" ) );
 				}
 		);
 	}
@@ -63,7 +88,7 @@ public class UsageTests {
 	public void cleanUpData(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "delete Incident" ).executeUpdate();
+					session.createQuery( "delete SimpleEntityWithNamedMappings" ).executeUpdate();
 				}
 		);
 	}

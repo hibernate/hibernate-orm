@@ -56,7 +56,7 @@ public class BidirectionalLazyGroupsInEmbeddableTest extends BaseCoreFunctionalT
 	}
 
 	@Test
-	@Ignore("Test is failing with ByteBuddy if the mappings are moved to the fields.")
+	@Ignore("Test is failing with Javassist and also fails with ByteBuddy if the mappings are moved to the fields.")
 	public void test() {
 
 		doInHibernate(

@@ -43,5 +43,5 @@ public @interface RequiresDialect {
 	/**
 	 * the Dialect version
 	 */
-	int version();
+	int version() default -1;
 }

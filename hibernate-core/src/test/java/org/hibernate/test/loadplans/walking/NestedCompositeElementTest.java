@@ -6,6 +6,8 @@
  */
 package org.hibernate.test.loadplans.walking;
 
+import org.hibernate.LockMode;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.walking.spi.MetamodelGraphWalker;
 
@@ -27,6 +29,13 @@ public class NestedCompositeElementTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testWalkingKeyManyToOneGraphs() {
 		final EntityPersister ep = (EntityPersister) sessionFactory().getClassMetadata( Customer.class );
-		MetamodelGraphWalker.visitEntity( new LoggingAssociationVisitationStrategy(), ep );
+		MetamodelGraphWalker.visitEntity(
+				new LoggingAssociationVisitationStrategy(
+						sessionFactory(),
+						new LoadQueryInfluencers(),
+						LockMode.NONE
+				),
+				ep
+		);
 	}
 }

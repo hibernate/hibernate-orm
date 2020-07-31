@@ -150,7 +150,7 @@ public class MetamodelGraphWalker {
 			final AssociationAttributeDefinition associationAttributeDefinition =
 					(AssociationAttributeDefinition) attributeDefinition;
 			final AssociationKey associationKey = associationAttributeDefinition.getAssociationKey();
-			if ( isDuplicateAssociationKey( associationKey ) ) {
+			if ( isDuplicateAttributeDefinition( associationAttributeDefinition ) ) {
 				log.debug( "Property path deemed to be circular : " + subPath.getFullPath() );
 				strategy.foundCircularAssociation( associationAttributeDefinition );
 				// EARLY EXIT!!!
@@ -325,5 +325,17 @@ public class MetamodelGraphWalker {
 	 */
 	protected boolean isDuplicateAssociationKey(AssociationKey associationKey) {
 		return visitedAssociationKeys.contains( associationKey ) || strategy.isDuplicateAssociationKey( associationKey );
+	}
+
+	protected boolean isDuplicateAttributeDefinition(AssociationAttributeDefinition attributeDefinition) {
+		if ( isDuplicateAssociationKey( attributeDefinition.getAssociationKey() ) ) {
+			if ( attributeDefinition.getAssociationNature() == AssociationAttributeDefinition.AssociationNature.ENTITY ) {
+				return strategy.isDuplicateAssociatedEntity( attributeDefinition );
+			}
+			else {
+				return true;
+			}
+		}
+		return false;
 	}
 }

@@ -36,6 +36,7 @@ import org.hibernate.loader.plan.spi.CompositeFetch;
 import org.hibernate.loader.plan.spi.EntityFetch;
 import org.hibernate.loader.plan.spi.EntityReference;
 import org.hibernate.loader.plan.spi.EntityReturn;
+import org.hibernate.loader.plan.spi.Fetch;
 import org.hibernate.loader.plan.spi.FetchSource;
 import org.hibernate.loader.plan.spi.Return;
 import org.hibernate.persister.entity.Joinable;
@@ -638,6 +639,34 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 	@Override
 	public boolean isDuplicateAssociationKey(AssociationKey associationKey) {
 		return fetchedAssociationKeySourceMap.containsKey( associationKey );
+	}
+
+	@Override
+	public boolean isDuplicateAssociatedEntity(AssociationAttributeDefinition attributeDefinition) {
+		if ( attributeDefinition.getAssociationNature() != AssociationAttributeDefinition.AssociationNature.ENTITY ) {
+			return false;  // EARLY EXIT
+		}
+
+		final Joinable currentEntityPersister = (Joinable) currentSource().resolveEntityReference()
+				.getEntityPersister();
+		final AssociationKey currentEntityReferenceAssociationKey =
+				new AssociationKey( currentEntityPersister.getTableName(), currentEntityPersister.getKeyColumnNames() );
+		final AssociationKey associationKey = attributeDefinition.getAssociationKey();
+		final FetchSource registeredFetchSource = registeredFetchSource( associationKey );
+		final EntityReference registeredOwner;
+		if ( registeredFetchSource == null ) {
+			registeredOwner = null;
+		}
+		else if ( registeredFetchSource instanceof Fetch ) {
+			registeredOwner = ( (Fetch) registeredFetchSource ).getSource().resolveEntityReference();
+		}
+		else {
+			registeredOwner = registeredFetchSource.resolveEntityReference();
+		}
+		return isDuplicateAssociationKey( associationKey ) &&
+				( !currentEntityReferenceAssociationKey.equals( attributeDefinition.getAssociationKey() ) ||
+						( registeredOwner != null && !currentEntityPersister.equals( registeredOwner.getEntityPersister() ) ) ||
+						currentEntityPersister.equals( attributeDefinition.toEntityDefinition().getEntityPersister() ) );
 	}
 
 	@Override

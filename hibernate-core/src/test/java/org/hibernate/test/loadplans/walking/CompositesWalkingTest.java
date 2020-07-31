@@ -6,8 +6,11 @@
  */
 package org.hibernate.test.loadplans.walking;
 
+import org.hibernate.LockMode;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.walking.spi.MetamodelGraphWalker;
 
@@ -30,7 +33,14 @@ public class CompositesWalkingTest extends BaseUnitTestCase {
 				.buildSessionFactory();
 		try {
 			final EntityPersister ep = (EntityPersister) sf.getClassMetadata( TestCourse.class );
-			MetamodelGraphWalker.visitEntity( new LoggingAssociationVisitationStrategy(), ep );
+			MetamodelGraphWalker.visitEntity(
+					new LoggingAssociationVisitationStrategy(
+							(SessionFactoryImplementor) sf,
+							new LoadQueryInfluencers(),
+							LockMode.NONE
+					),
+					ep
+			);
 		}
 		finally {
 			sf.close();

@@ -6,12 +6,16 @@
  */
 package org.hibernate.test.loadplans.walking;
 
-import org.hibernate.internal.util.StringHelper;
+import org.hibernate.LockMode;
+import org.hibernate.annotations.common.util.StringHelper;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.loader.plan.build.internal.FetchStyleLoadPlanBuildingAssociationVisitationStrategy;
 import org.hibernate.loader.plan.spi.FetchSource;
+import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.persister.walking.spi.AnyMappingDefinition;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
 import org.hibernate.persister.walking.spi.AssociationKey;
-import org.hibernate.persister.walking.spi.AssociationVisitationStrategy;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.CollectionDefinition;
 import org.hibernate.persister.walking.spi.CollectionElementDefinition;
@@ -23,17 +27,32 @@ import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
 /**
  * @author Steve Ebersole
  */
-public class LoggingAssociationVisitationStrategy implements AssociationVisitationStrategy {
+public class LoggingAssociationVisitationStrategy extends FetchStyleLoadPlanBuildingAssociationVisitationStrategy {
 	private int depth = 1;
+
+	/**
+	 * Constructs a FetchStyleLoadPlanBuildingAssociationVisitationStrategy.
+	 *
+	 * @param sessionFactory       The session factory
+	 * @param loadQueryInfluencers The options which can influence the SQL query needed to perform the load.
+	 * @param lockMode             The lock mode.
+	 */
+	public LoggingAssociationVisitationStrategy(
+			SessionFactoryImplementor sessionFactory,
+			LoadQueryInfluencers loadQueryInfluencers, LockMode lockMode) {
+		super( sessionFactory, loadQueryInfluencers, lockMode );
+	}
 
 	@Override
 	public void start() {
 		System.out.println( ">> Start" );
+		super.start();
 	}
 
 	@Override
 	public void finish() {
 		System.out.println( "<< Finish" );
+		super.finish();
 	}
 
 	@Override
@@ -45,6 +64,7 @@ public class LoggingAssociationVisitationStrategy implements AssociationVisitati
 						entityDefinition.getEntityPersister().getEntityName()
 				)
 		);
+		super.startingEntity( entityDefinition );
 	}
 
 	@Override
@@ -56,6 +76,7 @@ public class LoggingAssociationVisitationStrategy implements AssociationVisitati
 						entityDefinition.getEntityPersister().getEntityName()
 				)
 		);
+		super.finishingEntity( entityDefinition );
 	}
 
 	@Override
@@ -68,6 +89,7 @@ public class LoggingAssociationVisitationStrategy implements AssociationVisitati
 						entityIdentifierDefinition.getEntityDefinition().getEntityPersister().getEntityName()
 				)
 		);
+		super.startingEntityIdentifier( entityIdentifierDefinition );
 	}
 
 	@Override
@@ -79,6 +101,7 @@ public class LoggingAssociationVisitationStrategy implements AssociationVisitati
 						entityIdentifierDefinition.getEntityDefinition().getEntityPersister().getEntityName()
 				)
 		);
+		super.finishingEntityIdentifier( entityIdentifierDefinition );
 	}
 
 	@Override
@@ -90,12 +113,12 @@ public class LoggingAssociationVisitationStrategy implements AssociationVisitati
 						attributeDefinition.getName()
 				)
 		);
-		return true;
+		return super.startingAttribute( attributeDefinition );
 	}
 
 	@Override
 	public void finishingAttribute(AttributeDefinition attributeDefinition) {
-		// nothing to do
+		super.finishingAttribute( attributeDefinition );
 	}
 
 	@Override
@@ -107,6 +130,7 @@ public class LoggingAssociationVisitationStrategy implements AssociationVisitati
 						compositionDefinition.getName()
 				)
 		);
+		super.startingComposite( compositionDefinition );
 	}
 
 	@Override
@@ -118,6 +142,7 @@ public class LoggingAssociationVisitationStrategy implements AssociationVisitati
 						compositionDefinition.getName()
 				)
 		);
+		super.finishingComposite( compositionDefinition );
 	}
 
 	@Override
@@ -129,6 +154,7 @@ public class LoggingAssociationVisitationStrategy implements AssociationVisitati
 						collectionDefinition.getCollectionPersister().getRole()
 				)
 		);
+		super.startingCollection( collectionDefinition );
 	}
 
 	@Override
@@ -140,6 +166,7 @@ public class LoggingAssociationVisitationStrategy implements AssociationVisitati
 						collectionDefinition.getCollectionPersister().getRole()
 				)
 		);
+		super.finishingCollection( collectionDefinition );
 	}
 
 
@@ -152,6 +179,7 @@ public class LoggingAssociationVisitationStrategy implements AssociationVisitati
 						collectionIndexDefinition.getCollectionDefinition().getCollectionPersister().getRole()
 				)
 		);
+		super.startingCollectionIndex( collectionIndexDefinition );
 	}
 
 	@Override
@@ -163,6 +191,7 @@ public class LoggingAssociationVisitationStrategy implements AssociationVisitati
 						collectionIndexDefinition.getCollectionDefinition().getCollectionPersister().getRole()
 				)
 		);
+		super.finishingCollectionIndex( collectionIndexDefinition );
 	}
 
 	@Override
@@ -174,6 +203,7 @@ public class LoggingAssociationVisitationStrategy implements AssociationVisitati
 						elementDefinition.getCollectionDefinition().getCollectionPersister().getRole()
 				)
 		);
+		super.startingCollectionElements( elementDefinition );
 	}
 
 	@Override
@@ -185,11 +215,12 @@ public class LoggingAssociationVisitationStrategy implements AssociationVisitati
 						elementDefinition.getCollectionDefinition().getCollectionPersister().getRole()
 				)
 		);
+		super.finishingCollectionElements( elementDefinition );
 	}
 
 	@Override
 	public void foundAny(AnyMappingDefinition anyDefinition) {
-		// nothing to do
+		super.foundAny( anyDefinition );
 	}
 
 	@Override
@@ -201,11 +232,12 @@ public class LoggingAssociationVisitationStrategy implements AssociationVisitati
 						associationKey.toString()
 				)
 		);
+		super.associationKeyRegistered( associationKey );
 	}
 
 	@Override
 	public FetchSource registeredFetchSource(AssociationKey associationKey) {
-		return null;
+		return super.registeredFetchSource( associationKey );
 	}
 
 	@Override
@@ -219,11 +251,21 @@ public class LoggingAssociationVisitationStrategy implements AssociationVisitati
 						attributeDefinition.getAssociationKey().toString()
 				)
 		);
+		super.foundCircularAssociation( attributeDefinition );
 	}
 
 	@Override
 	public boolean isDuplicateAssociationKey(AssociationKey associationKey) {
-		return false;  //To change body of implemented methods use File | Settings | File Templates.
+		return super.isDuplicateAssociationKey( associationKey );
 	}
 
+	@Override
+	public boolean isDuplicateAssociatedEntity(AssociationAttributeDefinition attributeDefinition) {
+		return super.isDuplicateAssociatedEntity( attributeDefinition );
+	}
+
+	@Override
+	public LoadPlan buildLoadPlan() {
+		return null;
+	}
 }

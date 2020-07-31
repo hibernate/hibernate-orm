@@ -155,4 +155,8 @@ public interface AssociationVisitationStrategy {
 	public void foundCircularAssociation(AssociationAttributeDefinition attributeDefinition);
 	public boolean isDuplicateAssociationKey(AssociationKey associationKey);
 
+	default boolean isDuplicateAssociatedEntity(AssociationAttributeDefinition attributeDefinition) {
+		return isDuplicateAssociationKey( attributeDefinition.getAssociationKey() );
+	}
+
 }

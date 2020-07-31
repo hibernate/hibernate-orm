@@ -23,7 +23,6 @@ import javax.persistence.criteria.Root;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
@@ -60,7 +59,6 @@ public class LoadGraphFindByIdTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-10842")
-	@FailureExpected( jiraKey = "HHH-10842" )
 	public void findByPrimaryKeyWithId() {
 		doInJPA( this::entityManagerFactory, em -> {
 			User result = em.find( User.class, 1L, createProperties( em ) );

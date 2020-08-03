@@ -276,7 +276,7 @@ public class PostgreSQL81Dialect extends Dialect {
 		/*
 		 * Parent's implementation for (aliases, lockOptions) ignores aliases.
 		 */
-		if ( "".equals( aliases ) ) {
+		if ( aliases != null && aliases.isEmpty() ) {
 			LockMode lockMode = lockOptions.getLockMode();
 			final Iterator<Map.Entry<String, LockMode>> itr = lockOptions.getAliasLockIterator();
 			while ( itr.hasNext() ) {

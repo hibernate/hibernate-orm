@@ -566,7 +566,7 @@ public class Ejb3Column {
 					}
 
 					final String columnName;
-					if ( "".equals( col.name() ) ) {
+					if ( col.name() != null && col.name().isEmpty() ) {
 						columnName = null;
 					}
 					else {

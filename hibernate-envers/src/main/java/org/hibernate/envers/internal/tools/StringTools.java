@@ -15,7 +15,7 @@ import java.util.Locale;
  */
 public abstract class StringTools {
 	public static boolean isEmpty(String s) {
-		return s == null || "".equals( s );
+		return s == null || s.isEmpty();
 	}
 
 	public static boolean isEmpty(Object o) {

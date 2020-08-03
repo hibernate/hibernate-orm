@@ -367,7 +367,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			}
 
 			final String name;
-			if ( "".equals( colName ) ) {
+			if ( colName != null && colName.isEmpty() ) {
 				name = normalizer.normalizeIdentifierQuotingAsString( defaultName );
 			}
 			else {

@@ -10,27 +10,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
-import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.sql.ast.SqlAstWalker;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.update.Assignment;
-import org.hibernate.sql.results.graph.DomainResult;
-import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.ast.tree.update.Assignable;
 
 /**
  * @author Steve Ebersole
  */
-public class EmbeddableValuedPathInterpretation<T> implements AssignableSqmPathInterpretation<T> {
+public class EmbeddableValuedPathInterpretation<T> extends AbstractSqmPathInterpretation<T> implements Assignable {
 
 	/**
 	 * Static factory
@@ -39,7 +33,8 @@ public class EmbeddableValuedPathInterpretation<T> implements AssignableSqmPathI
 			SqmEmbeddedValuedSimplePath<T> sqmPath,
 			SqmToSqlAstConverter converter,
 			SemanticQueryWalker sqmWalker) {
-		final TableGroup tableGroup = converter.getFromClauseAccess().findTableGroup( sqmPath.getLhs().getNavigablePath() );
+		final TableGroup tableGroup = converter.getFromClauseAccess()
+				.findTableGroup( sqmPath.getLhs().getNavigablePath() );
 
 		final EmbeddableValuedModelPart mapping = (EmbeddableValuedModelPart) tableGroup.getModelPart().findSubPart(
 				sqmPath.getReferencedPathSource().getPathName(),
@@ -59,36 +54,19 @@ public class EmbeddableValuedPathInterpretation<T> implements AssignableSqmPathI
 		);
 	}
 
-
 	private final Expression sqlExpression;
-
-	private final SqmEmbeddedValuedSimplePath<T> sqmPath;
-	private final EmbeddableValuedModelPart mapping;
-	private final TableGroup tableGroup;
 
 	public EmbeddableValuedPathInterpretation(
 			Expression sqlExpression,
 			SqmEmbeddedValuedSimplePath<T> sqmPath,
 			EmbeddableValuedModelPart mapping,
 			TableGroup tableGroup) {
+		super( sqmPath, mapping, tableGroup );
 		this.sqlExpression = sqlExpression;
-		this.sqmPath = sqmPath;
-		this.mapping = mapping;
-		this.tableGroup = tableGroup;
 	}
 
 	public Expression getSqlExpression() {
 		return sqlExpression;
-	}
-
-	@Override
-	public NavigablePath getNavigablePath() {
-		return sqmPath.getNavigablePath();
-	}
-
-	@Override
-	public ModelPart getExpressionType() {
-		return mapping;
 	}
 
 	@Override
@@ -97,29 +75,8 @@ public class EmbeddableValuedPathInterpretation<T> implements AssignableSqmPathI
 	}
 
 	@Override
-	public DomainResult<T> createDomainResult(String resultVariable, DomainResultCreationState creationState) {
-		return mapping.createDomainResult( getNavigablePath(), tableGroup, resultVariable, creationState );
-	}
-
-	@Override
-	public void applySqlSelections(DomainResultCreationState creationState) {
-		mapping.applySqlSelections( getNavigablePath(), tableGroup, creationState );
-	}
-
-	@Override
-	public void applySqlAssignments(
-			Expression newValueExpression,
-			AssignmentContext assignmentProcessingState,
-			Consumer<Assignment> assignmentConsumer,
-			SqlAstCreationContext creationContext) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
-
-
-
-	@Override
 	public String toString() {
-		return "EmbeddableValuedPathInterpretation(" + sqmPath.getNavigablePath().getFullPath() + ')';
+		return "EmbeddableValuedPathInterpretation(" + getNavigablePath().getFullPath() + ')';
 	}
 
 	@Override
@@ -130,7 +87,7 @@ public class EmbeddableValuedPathInterpretation<T> implements AssignableSqmPathI
 		else if ( sqlExpression instanceof SqlTuple ) {
 			final SqlTuple sqlTuple = (SqlTuple) sqlExpression;
 			for ( Expression expression : sqlTuple.getExpressions() ) {
-				if ( ! ( expression instanceof ColumnReference ) ) {
+				if ( !( expression instanceof ColumnReference ) ) {
 					throw new IllegalArgumentException( "Expecting ColumnReference, found : " + expression );
 				}
 				columnReferenceConsumer.accept( (ColumnReference) expression );

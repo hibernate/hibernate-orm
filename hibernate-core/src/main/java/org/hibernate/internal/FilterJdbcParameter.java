@@ -10,6 +10,7 @@ import java.util.Objects;
 
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
@@ -37,17 +38,7 @@ public class FilterJdbcParameter {
 	}
 
 	public JdbcParameterBinding getBinding() {
-		return new JdbcParameterBinding() {
-			@Override
-			public JdbcMapping getBindType() {
-				return jdbcMapping;
-			}
-
-			@Override
-			public Object getBindValue() {
-				return jdbcParameterValue;
-			}
-		};
+		return new JdbcParameterBindingImpl( jdbcMapping, jdbcParameterValue );
 	}
 
 	@Override

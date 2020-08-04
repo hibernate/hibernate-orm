@@ -31,28 +31,27 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.LoadEvent;
 import org.hibernate.event.spi.LoadEventListener;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.loader.entity.CacheEntityLoaderHelper;
 import org.hibernate.loader.ast.spi.MultiIdEntityLoader;
+import org.hibernate.loader.entity.CacheEntityLoaderHelper;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.MultiLoadOptions;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
-import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
-import org.hibernate.sql.results.internal.RowTransformerPassThruImpl;
 import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
+import org.hibernate.sql.results.internal.RowTransformerPassThruImpl;
 
 import org.jboss.logging.Logger;
 
@@ -276,17 +275,7 @@ public class MultiIdEntityLoaderStandardImpl<T> implements MultiIdEntityLoader<T
 						final JdbcParameter parameter = paramItr.next();
 						jdbcParameterBindings.addBinding(
 								parameter,
-								new JdbcParameterBinding() {
-									@Override
-									public JdbcMapping getBindType() {
-										return type;
-									}
-
-									@Override
-									public Object getBindValue() {
-										return value;
-									}
-								}
+								new JdbcParameterBindingImpl( type, value )
 						);
 					},
 					session

@@ -20,9 +20,11 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.Bindable;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.QueryParameterBinding;
@@ -36,8 +38,8 @@ import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
-import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
@@ -196,17 +198,7 @@ public class SqmUtil {
 									final JdbcParameter jdbcParameter = jdbcParams.get( position++ );
 									jdbcParameterBindings.addBinding(
 											jdbcParameter,
-											new JdbcParameterBinding() {
-												@Override
-												public JdbcMapping getBindType() {
-													return jdbcType;
-												}
-
-												@Override
-												public Object getBindValue() {
-													return null;
-												}
-											}
+											new JdbcParameterBindingImpl( jdbcType, null )
 									);
 								}
 							},
@@ -237,18 +229,7 @@ public class SqmUtil {
 						final JdbcParameter jdbcParameter = jdbcParams.get( i );
 						jdbcParameterBindings.addBinding(
 								jdbcParameter,
-								new JdbcParameterBinding() {
-
-									@Override
-									public JdbcMapping getBindType() {
-										return StandardBasicTypes.SERIALIZABLE;
-									}
-
-									@Override
-									public Object getBindValue() {
-										return null;
-									}
-								}
+								new JdbcParameterBindingImpl( StandardBasicTypes.SERIALIZABLE, null )
 						);
 					}
 				}
@@ -268,9 +249,22 @@ public class SqmUtil {
 			List<JdbcParameter> jdbcParams,
 			Object bindValue,
 			SharedSessionContractImplementor session) {
-		final MappingModelExpressable mappingExpressable = session.getFactory()
-				.getDomainModel()
-				.resolveMappingExpressable( parameterType );
+		final MappingModelExpressable mappingExpressable;
+		if ( parameterType == null ) {
+			EntityPersister entityDescriptor = session.getFactory()
+					.getDomainModel()
+					.findEntityDescriptor( bindValue.getClass() );
+			assert entityDescriptor != null;
+			final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
+			mappingExpressable = identifierMapping;
+			bindValue = identifierMapping.getIdentifier( bindValue, session );
+		}
+		else {
+			mappingExpressable = session.getFactory()
+					.getDomainModel()
+					.resolveMappingExpressable( parameterType );
+		}
+
 		mappingExpressable.visitJdbcValues(
 				bindValue,
 				Clause.IRRELEVANT,
@@ -282,18 +276,7 @@ public class SqmUtil {
 						final JdbcParameter jdbcParameter = jdbcParams.get( position );
 						jdbcParameterBindings.addBinding(
 								jdbcParameter,
-								new JdbcParameterBinding() {
-
-									@Override
-									public JdbcMapping getBindType() {
-										return jdbcMapping;
-									}
-
-									@Override
-									public Object getBindValue() {
-										return jdbcValue;
-									}
-								}
+								new JdbcParameterBindingImpl( jdbcMapping, jdbcValue )
 						);
 						position++;
 					}

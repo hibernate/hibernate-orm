@@ -7,19 +7,15 @@
 package org.hibernate.query.sqm.sql.internal;
 
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
-import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.results.graph.DomainResult;
-import org.hibernate.sql.results.graph.DomainResultCreationState;
 
 /**
  * @author Koen Aers
  */
-public class EntityValuedPathInterpretation<T> implements SqmPathInterpretation<T> {
+public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpretation<T> {
 
 	public static <T> EntityValuedPathInterpretation<T> from(
 			SqmEntityValuedSimplePath<T> sqmPath,
@@ -29,46 +25,19 @@ public class EntityValuedPathInterpretation<T> implements SqmPathInterpretation<
 				.findTableGroup( sqmPath.getLhs().getNavigablePath() );
 		final EntityValuedModelPart mapping = (EntityValuedModelPart) tableGroup
 				.getModelPart()
-				.findSubPart( sqmPath.getReferencedPathSource().getPathName(),null );
+				.findSubPart( sqmPath.getReferencedPathSource().getPathName(), null );
 		return new EntityValuedPathInterpretation<>(
 				sqmPath,
 				tableGroup,
-				mapping);
+				mapping
+		);
 	}
-
-	private EntityValuedModelPart mapping = null;
-	private TableGroup tableGroup = null;
-	private SqmEntityValuedSimplePath sqmPath = null;
 
 	private EntityValuedPathInterpretation(
 			SqmEntityValuedSimplePath sqmPath,
 			TableGroup tableGroup,
 			EntityValuedModelPart mapping) {
-		this.tableGroup = tableGroup;
-		this.mapping = mapping;
-		this.sqmPath = sqmPath;
-	}
-
-	@Override
-	public DomainResult<T> createDomainResult(
-			String resultVariable,
-			DomainResultCreationState creationState) {
-		return mapping.createDomainResult(
-				getNavigablePath(),
-				tableGroup,
-				resultVariable,
-				creationState
-		);
-	}
-
-	@Override
-	public NavigablePath getNavigablePath() {
-		return sqmPath.getNavigablePath();
-	}
-
-	@Override
-	public ModelPart getExpressionType() {
-		return mapping;
+		super( sqmPath, mapping, tableGroup );
 	}
 
 	@Override

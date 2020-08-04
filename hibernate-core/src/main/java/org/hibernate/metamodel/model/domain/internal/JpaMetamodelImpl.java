@@ -138,7 +138,7 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 
 	@Override
 	public <X> ManagedDomainType<X> findManagedType(Class<X> cls) {
-		ManagedType<?> type = jpaEntityTypeMap.get( cls );
+		ManagedType<?> type = jpaEntityTypeMap.get( cls.getName() );
 		if ( type == null ) {
 			type = jpaMappedSuperclassTypeMap.get( cls );
 		}
@@ -160,7 +160,7 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 
 	@Override
 	public <X> EntityDomainType<X> findEntityType(Class<X> cls) {
-		final EntityType<?> entityType = jpaEntityTypeMap.get( cls );
+		final EntityType<?> entityType = jpaEntityTypeMap.get( cls.getName() );
 		if ( entityType == null ) {
 			return null;
 		}
@@ -413,7 +413,7 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 	public <T> EntityDomainType<T> resolveEntityReference(Class<T> javaType) {
 		// try the incoming Java type as a "strict" entity reference
 		{
-			final EntityDomainType<?> descriptor = jpaEntityTypeMap.get( javaType );
+			final EntityDomainType<?> descriptor = jpaEntityTypeMap.get( javaType.getName() );
 			if ( descriptor != null ) {
 				return (EntityDomainType<T>) descriptor;
 			}

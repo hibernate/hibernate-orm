@@ -19,7 +19,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
@@ -29,10 +28,10 @@ import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 
@@ -96,17 +95,7 @@ public class NaturalIdLoaderStandardImpl<T> implements NaturalIdLoader<T> {
 						final JdbcParameter jdbcParam = jdbcParamItr.next();
 						jdbcParamBindings.addBinding(
 								jdbcParam,
-								new JdbcParameterBinding() {
-									@Override
-									public JdbcMapping getBindType() {
-										return jdbcMapping;
-									}
-
-									@Override
-									public Object getBindValue() {
-										return jdbcValue;
-									}
-								}
+								new JdbcParameterBindingImpl( jdbcMapping, jdbcValue )
 						);
 					},
 					session
@@ -189,17 +178,7 @@ public class NaturalIdLoaderStandardImpl<T> implements NaturalIdLoader<T> {
 					final JdbcParameter jdbcParam = jdbcParamItr.next();
 					jdbcParamBindings.addBinding(
 							jdbcParam,
-							new JdbcParameterBinding() {
-								@Override
-								public JdbcMapping getBindType() {
-									return type;
-								}
-
-								@Override
-								public Object getBindValue() {
-									return value;
-								}
-							}
+							new JdbcParameterBindingImpl( type, value )
 					);
 				},
 				session
@@ -285,17 +264,7 @@ public class NaturalIdLoaderStandardImpl<T> implements NaturalIdLoader<T> {
 						assert jdbcParamItr.hasNext();
 						jdbcParamBindings.addBinding(
 								jdbcParamItr.next(),
-								new JdbcParameterBinding() {
-									@Override
-									public JdbcMapping getBindType() {
-										return jdbcMapping;
-									}
-
-									@Override
-									public Object getBindValue() {
-										return jdbcValue;
-									}
-								}
+								new JdbcParameterBindingImpl( jdbcMapping, jdbcValue )
 						);
 					},
 					session

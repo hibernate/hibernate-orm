@@ -19,7 +19,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.SingleUniqueKeyEntityLoader;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
@@ -30,10 +29,10 @@ import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 
@@ -99,17 +98,7 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 					final JdbcParameter jdbcParameter = jdbcParamItr.next();
 					jdbcParameterBindings.addBinding(
 							jdbcParameter,
-							new JdbcParameterBinding() {
-								@Override
-								public JdbcMapping getBindType() {
-									return jdbcMapping;
-								}
-
-								@Override
-								public Object getBindValue() {
-									return jdbcValue;
-								}
-							}
+							new JdbcParameterBindingImpl( jdbcMapping, jdbcValue )
 					);
 				},
 				session
@@ -193,17 +182,7 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 					final JdbcParameter jdbcParameter = jdbcParamItr.next();
 					jdbcParameterBindings.addBinding(
 							jdbcParameter,
-							new JdbcParameterBinding() {
-								@Override
-								public JdbcMapping getBindType() {
-									return jdbcMapping;
-								}
-
-								@Override
-								public Object getBindValue() {
-									return jdbcValue;
-								}
-							}
+							new JdbcParameterBindingImpl( jdbcMapping, jdbcValue )
 					);
 				},
 				session

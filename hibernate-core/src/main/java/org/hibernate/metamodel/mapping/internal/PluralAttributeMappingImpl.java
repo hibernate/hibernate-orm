@@ -19,7 +19,6 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.List;
@@ -80,8 +79,8 @@ import org.jboss.logging.Logger;
 /**
  * @author Steve Ebersole
  */
-public class PluralAttributeMappingImpl extends AbstractAttributeMapping implements PluralAttributeMapping,
-		FetchOptions {
+public class PluralAttributeMappingImpl extends AbstractAttributeMapping
+		implements PluralAttributeMapping, FetchOptions {
 	private static final Logger log = Logger.getLogger( PluralAttributeMappingImpl.class );
 
 	public interface Aware {
@@ -100,7 +99,6 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 	private final FetchTiming fetchTiming;
 	private final FetchStyle fetchStyle;
 
-	private final CascadeStyle cascadeStyle;
 	private final String bidirectionalAttributeName;
 	private final Boolean isInverse;
 
@@ -176,7 +174,6 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 		this.identifierDescriptor = identifierDescriptor;
 		this.fetchTiming = fetchTiming;
 		this.fetchStyle = fetchStyle;
-		this.cascadeStyle = cascadeStyle;
 		this.collectionDescriptor = collectionDescriptor;
 
 		this.bidirectionalAttributeName = StringHelper.subStringNullIfEmpty( bootDescriptor.getMappedByProperty(), '.');
@@ -315,12 +312,7 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 		final boolean hasManyToManyOrder = bootDescriptor.getManyToManyOrdering() != null;
 
 		if ( hasOrder || hasManyToManyOrder ) {
-			final TranslationContext context = new TranslationContext() {
-				@Override
-				public JpaCompliance getJpaCompliance() {
-					return collectionDescriptor.getFactory().getSessionFactoryOptions().getJpaCompliance();
-				}
-			};
+			final TranslationContext context = () -> collectionDescriptor.getFactory().getSessionFactoryOptions().getJpaCompliance();
 
 			if ( hasOrder ) {
 				if ( log.isDebugEnabled() ) {
@@ -634,8 +626,7 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 				lockMode,
 				primaryTableReference,
 				sqlAliasBase,
-				(tableExpression) -> entityMappingType
-						.containsTableReference( tableExpression ),
+				entityMappingType::containsTableReference,
 				(tableExpression, tg) -> entityMappingType.createTableReferenceJoin(
 						tableExpression,
 						sqlAliasBase,

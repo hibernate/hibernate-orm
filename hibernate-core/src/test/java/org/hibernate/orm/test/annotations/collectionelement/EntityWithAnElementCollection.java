@@ -8,7 +8,6 @@ package org.hibernate.orm.test.annotations.collectionelement;
 
 import java.util.HashSet;
 import java.util.Set;
-
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -22,10 +21,10 @@ import javax.persistence.Table;
  */
 @Entity
 // HHH-7732 -- "EntityWithAnElementCollection" is too long for Oracle.
-@Table( name = "EWAEC" )
+@Table(name = "EWAEC")
 public class EntityWithAnElementCollection {
 	private Long id;
-	private Set<String> someStrings = new HashSet<String>();
+	private Set<String> someStrings = new HashSet<>();
 
 	@Id
 	public Long getId() {
@@ -38,14 +37,18 @@ public class EntityWithAnElementCollection {
 
 	@ElementCollection
 	// HHH-7732 -- "EntityWithAnElementCollection_someStrings" is too long for Oracle.
-	@JoinTable( 
-			name = "SomeStrings", 
-			joinColumns = @JoinColumn( name = "EWAEC_ID") )
+	@JoinTable(
+			name = "SomeStrings",
+			joinColumns = @JoinColumn(name = "EWAEC_ID"))
 	public Set<String> getSomeStrings() {
 		return someStrings;
 	}
 
 	public void setSomeStrings(Set<String> someStrings) {
 		this.someStrings = someStrings;
+	}
+
+	public void addSomeString(String someString) {
+		this.someStrings.add( someString );
 	}
 }

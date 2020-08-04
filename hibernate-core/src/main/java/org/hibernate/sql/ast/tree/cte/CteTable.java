@@ -15,18 +15,17 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.mapping.Bindable;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.mutation.internal.cte.CteStrategy;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.from.StandardTableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
+import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
-import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 
@@ -123,20 +122,9 @@ public class CteTable {
 					Clause.IRRELEVANT,
 					(value, type) -> {
 						final JdbcParameter jdbcParameter = new JdbcParameterImpl( type );
-						JdbcParameterBinding jdbcParameterBinding = new JdbcParameterBinding() {
-							@Override
-							public JdbcMapping getBindType() {
-								return type;
-							}
-
-							@Override
-							public Object getBindValue() {
-								return value;
-							}
-						};
 						jdbcParameterBindings.addBinding(
 								jdbcParameter,
-								jdbcParameterBinding
+								new JdbcParameterBindingImpl( type, value )
 						);
 					},
 					executionContext.getSession()

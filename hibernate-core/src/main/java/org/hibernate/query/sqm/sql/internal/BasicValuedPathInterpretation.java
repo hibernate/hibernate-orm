@@ -10,15 +10,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
-import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.query.NavigablePath;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.sql.ast.SqlAstWalker;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
@@ -26,14 +22,12 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.ast.tree.update.Assignment;
-import org.hibernate.sql.results.graph.DomainResult;
-import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.ast.tree.update.Assignable;
 
 /**
  * @author Steve Ebersole
  */
-public class BasicValuedPathInterpretation<T> implements AssignableSqmPathInterpretation<T>, DomainResultProducer<T> {
+public class BasicValuedPathInterpretation<T> extends AbstractSqmPathInterpretation<T> implements Assignable,  DomainResultProducer<T> {
 	/**
 	 * Static factory
 	 */
@@ -86,62 +80,18 @@ public class BasicValuedPathInterpretation<T> implements AssignableSqmPathInterp
 
 	private final ColumnReference columnReference;
 
-	private final SqmBasicValuedSimplePath<T> sqmPath;
-	private final BasicValuedModelPart mapping;
-	private final TableGroup tableGroup;
-
 	private BasicValuedPathInterpretation(
 			ColumnReference columnReference,
 			SqmBasicValuedSimplePath<T> sqmPath,
 			BasicValuedModelPart mapping,
 			TableGroup tableGroup) {
+		super(sqmPath,mapping,tableGroup);
 		assert columnReference != null;
 		this.columnReference = columnReference;
-
-		assert sqmPath != null;
-		this.sqmPath = sqmPath;
-
-		assert mapping != null;
-		this.mapping = mapping;
-
-		assert tableGroup != null;
-		this.tableGroup = tableGroup;
 	}
-
-	@Override
-	public NavigablePath getNavigablePath() {
-		return sqmPath.getNavigablePath();
-	}
-
-	@Override
-	public ModelPart getExpressionType() {
-		return mapping;
-	}
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// DomainResultProducer
-
-	@Override
-	public DomainResult<T> createDomainResult(
-			String resultVariable,
-			DomainResultCreationState creationState) {
-		return mapping.createDomainResult( getNavigablePath(), tableGroup, resultVariable, creationState );
-	}
-
-	@Override
-	public void applySqlSelections(DomainResultCreationState creationState) {
-		mapping.applySqlSelections( getNavigablePath(), tableGroup, creationState );
-	}
-
-	@Override
-	public void applySqlAssignments(
-			Expression newValueExpression,
-			AssignmentContext assignmentProcessingState,
-			Consumer<Assignment> assignmentConsumer,
-			SqlAstCreationContext creationContext) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
 
 	@Override
 	public void accept(SqlAstWalker sqlTreeWalker) {
@@ -150,7 +100,7 @@ public class BasicValuedPathInterpretation<T> implements AssignableSqmPathInterp
 
 	@Override
 	public String toString() {
-		return "BasicValuedPathInterpretation(" + sqmPath.getNavigablePath().getFullPath() + ')';
+		return "BasicValuedPathInterpretation(" + getNavigablePath().getFullPath() + ')';
 	}
 
 	@Override

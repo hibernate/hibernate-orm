@@ -26,9 +26,12 @@ import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.mapping.ColumnConsumer;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.BasicValuedCollectionPart;
+import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -38,9 +41,9 @@ import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.BinaryArithmeticOperator;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.QueryLogger;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.TemporalUnit;
-import org.hibernate.query.QueryLogger;
 import org.hibernate.query.UnaryArithmeticOperator;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.spi.QueryOptions;
@@ -182,9 +185,9 @@ import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.internal.JdbcParametersImpl;
 import org.hibernate.sql.exec.spi.JdbcParameters;
-
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.type.spi.TypeConfiguration;
+
 import org.jboss.logging.Logger;
 
 import static org.hibernate.internal.util.NullnessHelper.coalesce;
@@ -972,7 +975,7 @@ public abstract class BaseSqmToSqlAstConverter
 
 	@Override
 	public SqmPathInterpretation<?> visitPluralValuedPath(SqmPluralValuedSimplePath sqmPath) {
-		return PluralValuedSimplePathInterpretation.from( sqmPath, this, this );
+		return PluralValuedSimplePathInterpretation.from( sqmPath, this );
 	}
 
 
@@ -1129,7 +1132,10 @@ public abstract class BaseSqmToSqlAstConverter
 			() -> null
 	);
 
-	private void resolveSqmParameter(SqmParameter expression, MappingModelExpressable valueMapping, Consumer<JdbcParameter> jdbcParameterConsumer) {
+	private void resolveSqmParameter(
+			SqmParameter expression,
+			MappingModelExpressable valueMapping,
+			Consumer<JdbcParameter> jdbcParameterConsumer) {
 		valueMapping.visitJdbcTypes(
 				jdbcMapping -> jdbcParameterConsumer.accept( new JdbcParameterImpl( jdbcMapping ) ),
 				getCurrentClauseStack().getCurrent(),
@@ -2170,8 +2176,26 @@ public abstract class BaseSqmToSqlAstConverter
 
 	@Override
 	public MemberOfPredicate visitMemberOfPredicate(SqmMemberOfPredicate predicate) {
-		inferableTypeAccessStack.push( () -> determineValueMapping( predicate.getLeftHandExpression() ) );
+		final SqmPath<?> pluralPath = predicate.getPluralPath();
+		final PluralAttributeMapping mappingModelExpressable = (PluralAttributeMapping) SqmMappingModelHelper.resolveMappingModelExpressable(
+				pluralPath,
+				getCreationContext().getDomainModel(),
+				getFromClauseAccess()::findTableGroup
+		);
 
+		final CollectionPart elementDescriptor = mappingModelExpressable.getElementDescriptor();
+
+		if ( elementDescriptor instanceof EntityCollectionPart ) {
+			inferableTypeAccessStack.push(
+					() -> ( (EntityCollectionPart) elementDescriptor ).getEntityMappingType().getIdentifierMapping() );
+		}
+		else if ( elementDescriptor instanceof BasicValuedCollectionPart ) {
+			inferableTypeAccessStack.push( () -> elementDescriptor );
+		}
+		else {
+			throw new NotYetImplementedFor6Exception(
+					"Member of with Collection of Embeddable has not yet been implemented" );
+		}
 		final Expression lhs;
 		try {
 			lhs = (Expression) predicate.getLeftHandExpression().accept( this );
@@ -2180,23 +2204,15 @@ public abstract class BaseSqmToSqlAstConverter
 			inferableTypeAccessStack.pop();
 		}
 
-		final SqmPath<?> pluralPath = predicate.getPluralPath();
-		final PluralAttributeMapping mappingModelExpressable = (PluralAttributeMapping) SqmMappingModelHelper.resolveMappingModelExpressable(
-				pluralPath,
-				getCreationContext().getDomainModel(),
-				getFromClauseAccess()::findTableGroup
-		);
-
 		return new MemberOfPredicate(
 				lhs,
 				predicate.isNegated(),
-				createSubQuery( pluralPath, mappingModelExpressable )
+				createMemberOfSubQuery( pluralPath, mappingModelExpressable )
 		);
 	}
 
-	private QuerySpec createSubQuery(SqmPath<?> pluralPath, PluralAttributeMapping mappingModelExpressable) {
-		QuerySpec querySpec = new QuerySpec( true );
-
+	private QuerySpec createMemberOfSubQuery(SqmPath<?> pluralPath, PluralAttributeMapping mappingModelExpressable) {
+		final QuerySpec querySpec = new QuerySpec( true );
 		final TableGroup rootTableGroup = mappingModelExpressable.createRootTableGroup(
 				pluralPath.getNavigablePath(),
 				null,
@@ -2206,30 +2222,53 @@ public abstract class BaseSqmToSqlAstConverter
 				getSqlExpressionResolver(),
 				() -> querySpec::applyPredicate,
 				creationContext
-				);
-
-		final MutableInteger count = new MutableInteger();
-		mappingModelExpressable.getElementDescriptor().visitColumns(
-				( (containingTableExpression, columnExpression, isColumnExpressionFormula, jdbcMapping) -> {
-					ColumnReference columnReference = new ColumnReference(
-							rootTableGroup.getPrimaryTableReference(),
-							columnExpression,
-							isColumnExpressionFormula,
-							jdbcMapping,
-							creationContext.getSessionFactory()
-					);
-					final int valuesPosition = count.getAndIncrement();
-					querySpec.getSelectClause().addSqlSelection(
-							new SqlSelectionImpl(
-									valuesPosition + 1,
-									valuesPosition,
-									columnReference
-							)
-					);
-				} )
 		);
 		querySpec.getFromClause().addRoot( rootTableGroup );
+
+		final CollectionPart elementDescriptor = mappingModelExpressable.getElementDescriptor();
+		final ColumnConsumer columnConsumer = createMemberOfColumnConsumer( querySpec, rootTableGroup );
+
+		if ( elementDescriptor instanceof EntityCollectionPart ) {
+			( (EntityCollectionPart) elementDescriptor ).getEntityMappingType()
+					.getIdentifierMapping().visitColumns( columnConsumer );
+		}
+		else if ( elementDescriptor instanceof BasicValuedCollectionPart ) {
+			elementDescriptor.visitColumns( columnConsumer );
+		}
+		else {
+			throw new NotYetImplementedFor6Exception(
+					"Member of with Collection of Embeddable has not yet been implemented" );
+		}
+
+		final Predicate predicate = mappingModelExpressable.getKeyDescriptor().generateJoinPredicate(
+				getFromClauseAccess().findTableGroup( pluralPath.getNavigablePath().getParent() ),
+				rootTableGroup,
+				null,
+				getSqlExpressionResolver(),
+				creationContext
+		);
+		querySpec.applyPredicate( predicate );
+
 		return querySpec;
+	}
+
+	private ColumnConsumer createMemberOfColumnConsumer(QuerySpec querySpec, TableGroup rootTableGroup) {
+		final MutableInteger count = new MutableInteger();
+		return (containingTableExpression, columnExpression, isColumnExpressionFormula, jdbcMapping) -> {
+			ColumnReference columnReference = new ColumnReference(
+					rootTableGroup.getPrimaryTableReference(),
+					columnExpression,
+					isColumnExpressionFormula,
+					jdbcMapping,
+					creationContext.getSessionFactory()
+			);
+
+			final int valuesPosition = count.getAndIncrement();
+
+			querySpec.getSelectClause().addSqlSelection(
+					new SqlSelectionImpl( valuesPosition + 1, valuesPosition, columnReference )
+			);
+		};
 	}
 
 	@Override
@@ -2263,17 +2302,6 @@ public abstract class BaseSqmToSqlAstConverter
 
 		return new ComparisonPredicate( lhs, predicate.getSqmOperator(), rhs );
 	}
-
-//	@SuppressWarnings("unchecked")
-//	private Expression toSqlExpression(Object value) {
-//		if ( value instanceof SqmExpressionInterpretation ) {
-//			return ( (SqmExpressionInterpretation) value ).toSqlExpression( this );
-//		}
-//
-//		// any other special cases?
-//
-//		return (Expression) value;
-//	}
 
 	@Override
 	public BetweenPredicate visitBetweenPredicate(SqmBetweenPredicate predicate) {

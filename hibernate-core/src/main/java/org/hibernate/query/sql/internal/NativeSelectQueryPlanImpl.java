@@ -19,12 +19,12 @@ import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.sql.spi.NativeSelectQueryPlan;
+import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
-import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
@@ -91,18 +91,7 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 
 						jdbcParameterBindings.addBinding(
 								jdbcParameter,
-
-								new JdbcParameterBinding() {
-									@Override
-									public JdbcMapping getBindType() {
-										return jdbcMapping;
-									}
-
-									@Override
-									public Object getBindValue() {
-										return binding.getBindValue();
-									}
-								}
+								new JdbcParameterBindingImpl( jdbcMapping, binding.getBindValue() )
 						);
 					}
 			);
@@ -158,18 +147,7 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 
 						jdbcParameterBindings.addBinding(
 								jdbcParameter,
-
-								new JdbcParameterBinding() {
-									@Override
-									public JdbcMapping getBindType() {
-										return jdbcMapping;
-									}
-
-									@Override
-									public Object getBindValue() {
-										return binding.getBindValue();
-									}
-								}
+								new JdbcParameterBindingImpl( jdbcMapping, binding.getBindValue() )
 						);
 					}
 			);

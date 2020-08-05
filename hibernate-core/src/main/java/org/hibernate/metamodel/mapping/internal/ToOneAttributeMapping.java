@@ -14,6 +14,7 @@ import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.metamodel.mapping.AssociationKey;
+import org.hibernate.metamodel.mapping.ColumnConsumer;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
@@ -611,5 +612,12 @@ public class ToOneAttributeMapping extends AbstractSingularAttributeMapping
 	@Override
 	public String toString() {
 		return "SingularAssociationAttributeMapping {" + navigableRole + "}";
+	}
+
+	@Override
+	public void visitColumns(ColumnConsumer consumer) {
+		if ( foreignKeyDirection == ForeignKeyDirection.FROM_PARENT ) {
+			foreignKeyDescriptor.visitReferringColumns( consumer );
+		}
 	}
 }

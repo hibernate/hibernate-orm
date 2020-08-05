@@ -673,7 +673,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 
 	@Override
 	public boolean hasAnyUpdatableColumns() {
-		return true;
+		return false;
 	}
 
 	public boolean isSubselectLoadable() {

@@ -43,7 +43,7 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.basic.BasicResult;
-import org.hibernate.sql.results.internal.RowTransformerPassThruImpl;
+import org.hibernate.sql.results.internal.RowTransformerDatabaseSnapshotImpl;
 
 import org.jboss.logging.Logger;
 
@@ -242,7 +242,7 @@ class DatabaseSnapshotExecutor {
 						return null;
 					}
 				},
-				RowTransformerPassThruImpl.instance(),
+				RowTransformerDatabaseSnapshotImpl.instance(),
 				true
 		);
 
@@ -251,12 +251,14 @@ class DatabaseSnapshotExecutor {
 		}
 
 		final int size = list.size();
-		final Object[] values = new Object[size];
-		for ( int i = 0; i < size; i++ ) {
-			values[i] = list.get( i );
-		}
+		assert size <= 1;
 
-		return values;
+		if ( size == 0 ) {
+			return null;
+		}
+		else {
+			return (Object[]) list.get( 0 );
+		}
 	}
 
 }

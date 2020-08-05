@@ -3,6 +3,22 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.3.18.Final (August 5th, 2020)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31849/tab/release-report-all-issues
+
+** Bug
+    * [HHH-12268] - LazyInitializationException thrown from lazy collection when batch fetching enabled and owning entity refreshed with lock
+    * [HHH-13110] - @PreUpdate method on a Embeddable null on the parent caused NullPointerException
+    * [HHH-13936] - No auto transaction joining from SessionImpl.doFlush
+    * [HHH-14077] - CVE-2019-14900 SQL injection issue using JPA Criteria API
+
+** Task
+    * [HHH-14013] - Upgrade to Hibernate Validator 6.0.20.Final
+    * [HHH-14096] - Removal of unused code: XMLHelper and its SAXReader factory helper
+    * [HHH-14103] - Add test cases showing that an entity's transient attribute can be overridden to be persistent in entity subclasses
+
 Changes in 5.3.17.Final (April 30th, 2020)
 ------------------------------------------------------------------------------------------------------------------------
 

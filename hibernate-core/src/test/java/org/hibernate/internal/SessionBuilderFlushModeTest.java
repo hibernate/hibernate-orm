@@ -7,6 +7,8 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 
 import org.hibernate.testing.TestForIssue;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -22,6 +24,8 @@ import static org.junit.Assert.assertEquals;
 @RunWith(Parameterized.class)
 public class SessionBuilderFlushModeTest {
 
+	private static SessionFactory sessionFactory;
+
 	@Parameters
 	public static FlushMode[] parameters() {
 		return FlushMode.values();
@@ -30,12 +34,23 @@ public class SessionBuilderFlushModeTest {
 	@Parameter
 	public FlushMode flushMode;
 
-	@Test
-	public void testFlushMode() {
-		try (final SessionFactory sessionFactory = new MetadataSources( new StandardServiceRegistryBuilder().build() ).buildMetadata().buildSessionFactory()) {
-			try (final Session session = sessionFactory.withOptions().flushMode( flushMode ).openSession()) {
-				assertEquals( flushMode, session.getHibernateFlushMode() );
-			}
+	@BeforeClass
+	public static void setup() {
+		sessionFactory = new MetadataSources( new StandardServiceRegistryBuilder().build() ).buildMetadata().buildSessionFactory();
+	}
+
+	@AfterClass
+	public static void tearDown() {
+		if ( sessionFactory != null ) {
+			sessionFactory.close();
 		}
 	}
+
+	@Test
+	public void testFlushMode() {
+		try (final Session session = sessionFactory.withOptions().flushMode( flushMode ).openSession()) {
+			assertEquals( flushMode, session.getHibernateFlushMode() );
+		}
+	}
+
 }

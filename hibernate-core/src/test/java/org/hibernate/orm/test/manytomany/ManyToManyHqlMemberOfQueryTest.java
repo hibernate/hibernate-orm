@@ -31,6 +31,7 @@ import javax.persistence.TemporalType;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -104,6 +105,17 @@ public class ManyToManyHqlMemberOfQueryTest {
 		);
 	}
 
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery( "delete from Call" ).executeUpdate();
+					session.createQuery( "delete from Person" ).executeUpdate();
+					session.createQuery( "delete from Phone" ).executeUpdate();
+				}
+		);
+	}
+
 	@Test
 	public void testMemberOf(SessionFactoryScope scope) {
 		scope.inTransaction(
@@ -155,7 +167,7 @@ public class ManyToManyHqlMemberOfQueryTest {
 		@Temporal(TemporalType.TIMESTAMP)
 		private Date createdOn;
 
-		@ManyToMany( cascade = CascadeType.ALL)
+		@ManyToMany(cascade = CascadeType.ALL)
 		private List<Phone> phones = new ArrayList<>();
 
 		@ElementCollection

@@ -56,7 +56,6 @@ public class StandardSqmUpdateTranslator
 		extends BaseSqmToSqlAstConverter
 		implements SimpleSqmUpdateTranslator {
 
-
 	public StandardSqmUpdateTranslator(
 			SqlAstCreationContext creationContext,
 			QueryOptions queryOptions,
@@ -292,4 +291,5 @@ public class StandardSqmUpdateTranslator
 
 		return assignments;
 	}
+
 }

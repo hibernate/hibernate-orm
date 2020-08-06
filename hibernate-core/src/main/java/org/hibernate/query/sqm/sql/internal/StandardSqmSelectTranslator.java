@@ -73,7 +73,6 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.results.graph.DomainResult;
-import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.EntityGraphTraversalState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
@@ -93,7 +92,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 @SuppressWarnings("unchecked")
 public class StandardSqmSelectTranslator
 		extends BaseSqmToSqlAstConverter
-		implements DomainResultCreationState, SqmSelectTranslator {
+		implements SqmSelectTranslator {
 
 	// prepare for 10 root selections to avoid list growth in most cases
 	private final List<DomainResult> domainResults = CollectionHelper.arrayList( 10 );

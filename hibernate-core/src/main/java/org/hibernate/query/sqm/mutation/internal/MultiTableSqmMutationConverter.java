@@ -6,7 +6,6 @@
  */
 package org.hibernate.query.sqm.mutation.internal;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -30,7 +29,6 @@ import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.update.SqmAssignment;
 import org.hibernate.query.sqm.tree.update.SqmSetClause;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlAstProcessingState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
@@ -41,9 +39,6 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.update.Assignable;
 import org.hibernate.sql.ast.tree.update.Assignment;
-import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.sql.results.graph.Fetch;
-import org.hibernate.sql.results.graph.FetchParent;
 
 /**
  * Specialized BaseSqmToSqlAstConverter implementation used during conversion
@@ -56,7 +51,7 @@ import org.hibernate.sql.results.graph.FetchParent;
  *
  * @author Steve Ebersole
  */
-public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter implements DomainResultCreationState {
+public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter {
 	private final EntityMappingType mutatingEntityDescriptor;
 	private final TableGroup mutatingTableGroup;
 
@@ -211,16 +206,6 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter imp
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	@Override
-	public SqlAstCreationState getSqlAstCreationState() {
-		return this;
-	}
-
-	@Override
-	public List<Fetch> visitFetches(FetchParent fetchParent) {
-		return Collections.emptyList();
-	}
 
 	public void visitSelectClause(
 			SqmSelectClause sqmSelectClause,

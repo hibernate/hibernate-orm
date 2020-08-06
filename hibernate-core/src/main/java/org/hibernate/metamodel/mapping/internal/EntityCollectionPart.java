@@ -166,9 +166,8 @@ public class EntityCollectionPart
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		return fkTargetModelPart.createDomainResult( navigablePath, tableGroup, resultVariable, creationState );
 	}
-
 
 	@Override
 	public void visitColumns(ColumnConsumer consumer) {

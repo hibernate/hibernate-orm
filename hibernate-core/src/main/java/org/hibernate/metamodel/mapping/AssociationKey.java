@@ -20,6 +20,10 @@ public class AssociationKey {
 		this.columns = columns;
 	}
 
+	public String getTable() {
+		return table;
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {

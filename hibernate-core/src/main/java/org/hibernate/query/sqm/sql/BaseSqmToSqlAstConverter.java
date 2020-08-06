@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.sql;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,12 +22,10 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.dialect.function.TimestampaddFunction;
 import org.hibernate.dialect.function.TimestampdiffFunction;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.CollectionPart;
-import org.hibernate.metamodel.mapping.ColumnConsumer;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -137,6 +136,7 @@ import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlAstProcessingState;
 import org.hibernate.sql.ast.spi.SqlAstQuerySpecProcessingState;
 import org.hibernate.sql.ast.spi.SqlAstTreeHelper;
@@ -150,7 +150,6 @@ import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.CastTarget;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.Duration;
 import org.hibernate.sql.ast.tree.expression.DurationUnit;
@@ -185,7 +184,9 @@ import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.internal.JdbcParametersImpl;
 import org.hibernate.sql.exec.spi.JdbcParameters;
-import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
@@ -204,7 +205,7 @@ import static org.hibernate.type.spi.TypeConfiguration.isDuration;
  */
 public abstract class BaseSqmToSqlAstConverter
 		extends BaseSemanticQueryWalker
-		implements SqmToSqlAstConverter, JdbcParameterBySqmParameterAccess, FromClauseAccess {
+		implements SqmToSqlAstConverter, JdbcParameterBySqmParameterAccess, FromClauseAccess, DomainResultCreationState {
 
 	private static final Logger log = Logger.getLogger( BaseSqmToSqlAstConverter.class );
 
@@ -2213,6 +2214,15 @@ public abstract class BaseSqmToSqlAstConverter
 
 	private QuerySpec createMemberOfSubQuery(SqmPath<?> pluralPath, PluralAttributeMapping mappingModelExpressable) {
 		final QuerySpec querySpec = new QuerySpec( true );
+		processingStateStack.push(
+				new SqlAstQuerySpecProcessingStateImpl(
+						querySpec,
+						processingStateStack.getCurrent(),
+						this,
+						currentClauseStack::getCurrent
+				)
+		);
+
 		final TableGroup rootTableGroup = mappingModelExpressable.createRootTableGroup(
 				pluralPath.getNavigablePath(),
 				null,
@@ -2223,22 +2233,17 @@ public abstract class BaseSqmToSqlAstConverter
 				() -> querySpec::applyPredicate,
 				creationContext
 		);
+
 		querySpec.getFromClause().addRoot( rootTableGroup );
 
 		final CollectionPart elementDescriptor = mappingModelExpressable.getElementDescriptor();
-		final ColumnConsumer columnConsumer = createMemberOfColumnConsumer( querySpec, rootTableGroup );
 
-		if ( elementDescriptor instanceof EntityCollectionPart ) {
-			( (EntityCollectionPart) elementDescriptor ).getEntityMappingType()
-					.getIdentifierMapping().visitColumns( columnConsumer );
-		}
-		else if ( elementDescriptor instanceof BasicValuedCollectionPart ) {
-			elementDescriptor.visitColumns( columnConsumer );
-		}
-		else {
-			throw new NotYetImplementedFor6Exception(
-					"Member of with Collection of Embeddable has not yet been implemented" );
-		}
+		elementDescriptor.createDomainResult(
+				pluralPath.getNavigablePath(),
+				rootTableGroup,
+				null,
+				this
+		);
 
 		final Predicate predicate = mappingModelExpressable.getKeyDescriptor().generateJoinPredicate(
 				getFromClauseAccess().findTableGroup( pluralPath.getNavigablePath().getParent() ),
@@ -2249,26 +2254,8 @@ public abstract class BaseSqmToSqlAstConverter
 		);
 		querySpec.applyPredicate( predicate );
 
+		processingStateStack.pop();
 		return querySpec;
-	}
-
-	private ColumnConsumer createMemberOfColumnConsumer(QuerySpec querySpec, TableGroup rootTableGroup) {
-		final MutableInteger count = new MutableInteger();
-		return (containingTableExpression, columnExpression, isColumnExpressionFormula, jdbcMapping) -> {
-			ColumnReference columnReference = new ColumnReference(
-					rootTableGroup.getPrimaryTableReference(),
-					columnExpression,
-					isColumnExpressionFormula,
-					jdbcMapping,
-					creationContext.getSessionFactory()
-			);
-
-			final int valuesPosition = count.getAndIncrement();
-
-			querySpec.getSelectClause().addSqlSelection(
-					new SqlSelectionImpl( valuesPosition + 1, valuesPosition, columnReference )
-			);
-		};
 	}
 
 	@Override
@@ -2452,5 +2439,15 @@ public abstract class BaseSqmToSqlAstConverter
 	@Override
 	public Object visitExistsPredicate(SqmExistsPredicate predicate) {
 		return new ExistsPredicate( (QuerySpec) predicate.getExpression().accept( this ) );
+	}
+
+	@Override
+	public SqlAstCreationState getSqlAstCreationState() {
+		return this;
+	}
+
+	@Override
+	public List<Fetch> visitFetches(FetchParent fetchParent) {
+		return Collections.emptyList();
 	}
 }

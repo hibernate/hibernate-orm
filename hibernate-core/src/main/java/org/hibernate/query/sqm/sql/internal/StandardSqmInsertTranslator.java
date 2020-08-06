@@ -6,6 +6,8 @@
  */
 package org.hibernate.query.sqm.sql.internal;
 
+import java.util.List;
+
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -27,7 +29,6 @@ import org.hibernate.query.sqm.tree.insert.SqmValues;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -37,19 +38,13 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.ast.tree.update.Assignable;
 import org.hibernate.sql.results.graph.DomainResult;
-import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.sql.results.graph.Fetch;
-import org.hibernate.sql.results.graph.FetchParent;
-
-import java.util.Collections;
-import java.util.List;
 
 /**
  * @author Steve Ebersole
  */
 public class StandardSqmInsertTranslator
 		extends BaseSqmToSqlAstConverter
-		implements SqmInsertTranslator, DomainResultCreationState {
+		implements SqmInsertTranslator {
 
 	private final List<DomainResult> domainResults = CollectionHelper.arrayList( 10 );
 
@@ -229,13 +224,4 @@ public class StandardSqmInsertTranslator
 		return new SelectStatement( querySpec, domainResults );
 	}
 
-	@Override
-	public SqlAstCreationState getSqlAstCreationState() {
-		return this;
-	}
-
-	@Override
-	public List<Fetch> visitFetches(FetchParent fetchParent) {
-		return Collections.emptyList();
-	}
 }

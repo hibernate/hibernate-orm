@@ -83,6 +83,7 @@ public class ToOneAttributeMapping extends AbstractSingularAttributeMapping
 	private ForeignKeyDescriptor foreignKeyDescriptor;
 	private ForeignKeyDirection foreignKeyDirection;
 	private String identifyingColumnsTableExpression;
+	private boolean isKeyReferringSide;
 
 	public ToOneAttributeMapping(
 			String name,
@@ -184,6 +185,8 @@ public class ToOneAttributeMapping extends AbstractSingularAttributeMapping
 
 	public void setForeignKeyDescriptor(ForeignKeyDescriptor foreignKeyDescriptor) {
 		this.foreignKeyDescriptor = foreignKeyDescriptor;
+		assert identifyingColumnsTableExpression != null;
+		isKeyReferringSide = foreignKeyDescriptor.getAssociationKey().getTable().equals( identifyingColumnsTableExpression );
 	}
 
 	public void setIdentifyingColumnsTableExpression(String tableExpression) {
@@ -310,7 +313,7 @@ public class ToOneAttributeMapping extends AbstractSingularAttributeMapping
 
 				We have a cirularity but it is not bidirectional
 			 */
-			if ( referringPrimaryKey ) {
+			if ( isKeyReferringSide ) {
 				final TableGroup parentTableGroup = creationState
 						.getSqlAstCreationState()
 						.getFromClauseAccess()
@@ -462,13 +465,13 @@ public class ToOneAttributeMapping extends AbstractSingularAttributeMapping
 		 */
 
 		boolean selectByUniqueKey;
-		if ( referringPrimaryKey ) {
+		if ( isKeyReferringSide ) {
 			// case 1.2
 			keyResult = foreignKeyDescriptor.createDomainResult( fetchablePath, parentTableGroup, creationState );
 			selectByUniqueKey = false;
 		}
 		else {
-			keyResult = ((EntityPersister) getDeclaringType()).getIdentifierMapping()
+			keyResult = ( (EntityPersister) getDeclaringType() ).getIdentifierMapping()
 					.createDomainResult( fetchablePath, parentTableGroup, null, creationState );
 			// case 1.1
 			selectByUniqueKey = true;
@@ -616,7 +619,7 @@ public class ToOneAttributeMapping extends AbstractSingularAttributeMapping
 
 	@Override
 	public void visitColumns(ColumnConsumer consumer) {
-		if ( foreignKeyDirection == ForeignKeyDirection.FROM_PARENT ) {
+		if ( isKeyReferringSide ) {
 			foreignKeyDescriptor.visitReferringColumns( consumer );
 		}
 	}

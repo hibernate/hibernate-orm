@@ -76,6 +76,11 @@ public class StandardTableGroup extends AbstractTableGroup {
 	}
 
 	@Override
+	public TableReference getTableReference(String tableExpression) {
+		return getTableReferenceInternal( tableExpression );
+	}
+
+	@Override
 	public TableReference getPrimaryTableReference() {
 		return primaryTableReference;
 	}
@@ -89,13 +94,12 @@ public class StandardTableGroup extends AbstractTableGroup {
 		if ( tableJoins == null ) {
 			tableJoins = new ArrayList<>();
 		}
-
 		tableJoins.add( join );
 	}
 
 	@Override
 	public TableReference getTableReferenceInternal(String tableExpression) {
-		final TableReference tableReference = super.getTableReferenceInternal( tableExpression );
+		TableReference tableReference = primaryTableReference.getTableReference( tableExpression );
 		if ( tableReference != null ) {
 			return tableReference;
 		}
@@ -105,7 +109,7 @@ public class StandardTableGroup extends AbstractTableGroup {
 				for ( int i = 0; i < tableJoins.size(); i++ ) {
 					final TableReferenceJoin join = tableJoins.get( i );
 					assert join != null;
-					if ( join.getJoinedTableReference().getTableReference( tableExpression ) != null ) {
+					if ( join.getJoinedTableReference().getTableExpression().equals( tableExpression ) ) {
 						return join.getJoinedTableReference();
 					}
 				}
@@ -128,13 +132,9 @@ public class StandardTableGroup extends AbstractTableGroup {
 	protected TableReference potentiallyCreateTableReference(String tableExpression) {
 		final TableReferenceJoin join = tableReferenceJoinCreator.apply( tableExpression, this );
 		if ( join != null ) {
-			if ( tableJoins == null ) {
-				tableJoins = new ArrayList<>();
-			}
-			tableJoins.add( join );
+			addTableReferenceJoin( join );
 			return join.getJoinedTableReference();
 		}
-
 		return null;
 	}
 }

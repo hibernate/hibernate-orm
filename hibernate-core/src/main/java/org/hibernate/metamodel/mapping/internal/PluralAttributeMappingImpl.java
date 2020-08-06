@@ -8,6 +8,7 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.hibernate.LockMode;
@@ -696,7 +697,7 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping
 				creationContext.getSessionFactory()
 		);
 
-		final Consumer<TableGroup> tableGroupFinalizer;
+
 		final BiFunction<String, TableGroup, TableReferenceJoin> tableReferenceJoinCreator;
 		final java.util.function.Predicate<String> tableReferenceJoinNameChecker;
 		if ( elementDescriptor instanceof EntityCollectionPart || indexDescriptor instanceof EntityCollectionPart ) {
@@ -715,19 +716,11 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping
 					creationContext
 			);
 
-			tableReferenceJoinNameChecker = mappingType::containsTableReference;
-			tableReferenceJoinCreator = (tableExpression, tableGroup) -> mappingType.createTableReferenceJoin(
-					tableExpression,
-					sqlAliasBase,
-					associatedPrimaryTable,
-					canUseInnerJoin && !getAttributeMetadataAccess().resolveAttributeMetadata( null ).isNullable(),
-					sqlExpressionResolver,
-					creationContext
-			);
+			final boolean useInnerJoin = canUseInnerJoin && !getAttributeMetadataAccess()
+					.resolveAttributeMetadata( null ).isNullable();
 
-			tableGroupFinalizer = tableGroup -> {
-				final SqlAstJoinType joinType = canUseInnerJoin && !getAttributeMetadataAccess().resolveAttributeMetadata(
-						null ).isNullable()
+			final Function<TableGroup,TableReferenceJoin> tableGroupFinalizer = tableGroup -> {
+				final SqlAstJoinType joinType = useInnerJoin
 						? SqlAstJoinType.INNER
 						: SqlAstJoinType.LEFT;
 				final TableReferenceJoin associationJoin = new TableReferenceJoin(
@@ -741,7 +734,31 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping
 								creationContext
 						)
 				);
-				( (StandardTableGroup) tableGroup ).addTableReferenceJoin( associationJoin );
+				return associationJoin;
+			};
+
+			tableReferenceJoinNameChecker = mappingType::containsTableReference;
+			tableReferenceJoinCreator = (tableExpression, tableGroup) -> {
+				if ( associatedPrimaryTable.getTableExpression().equals( tableExpression ) ) {
+					TableReferenceJoin tableReferenceJoin = tableGroupFinalizer.apply( tableGroup );
+					return tableReferenceJoin;
+				}
+				else {
+					StandardTableGroup standardTableGroup = (StandardTableGroup) tableGroup;
+					if ( standardTableGroup.getTableReferenceJoins().isEmpty() ) {
+						TableReferenceJoin tableReferenceJoin = tableGroupFinalizer.apply( tableGroup );
+						standardTableGroup.addTableReferenceJoin( tableReferenceJoin );
+					}
+
+				}
+				return mappingType.createTableReferenceJoin(
+						tableExpression,
+						sqlAliasBase,
+						associatedPrimaryTable,
+						useInnerJoin,
+						sqlExpressionResolver,
+						creationContext
+				);
 			};
 		}
 		else {
@@ -751,7 +768,6 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping
 				);
 			};
 			tableReferenceJoinNameChecker = s -> false;
-			tableGroupFinalizer = null;
 		}
 
 		final StandardTableGroup tableGroup = new StandardTableGroup(
@@ -765,12 +781,9 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping
 				creationContext.getSessionFactory()
 		);
 
-		if ( tableGroupFinalizer != null ) {
-			tableGroupFinalizer.accept( tableGroup );
-		}
-
 		return tableGroup;
 	}
+
 
 	@Override
 	public TableGroup createRootTableGroup(

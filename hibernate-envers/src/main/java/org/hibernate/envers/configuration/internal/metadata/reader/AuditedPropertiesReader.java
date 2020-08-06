@@ -43,6 +43,7 @@ import org.hibernate.envers.internal.EnversMessageLogger;
 import org.hibernate.envers.internal.tools.MappingTools;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.envers.internal.tools.StringTools;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
@@ -617,7 +618,7 @@ public class AuditedPropertiesReader {
 
 	private void setPropertyRelationMappedBy(XProperty property, PropertyAuditingData propertyData) {
 		final OneToMany oneToMany = property.getAnnotation( OneToMany.class );
-		if ( oneToMany != null && !"".equals( oneToMany.mappedBy() ) ) {
+		if ( oneToMany != null && StringHelper.isNotEmpty( oneToMany.mappedBy() ) ) {
 			propertyData.setRelationMappedBy( oneToMany.mappedBy() );
 		}
 	}
@@ -626,7 +627,7 @@ public class AuditedPropertiesReader {
 		final AuditMappedBy auditMappedBy = property.getAnnotation( AuditMappedBy.class );
 		if ( auditMappedBy != null ) {
 			propertyData.setAuditMappedBy( auditMappedBy.mappedBy() );
-			if ( !"".equals( auditMappedBy.positionMappedBy() ) ) {
+			if ( StringHelper.isNotEmpty( auditMappedBy.positionMappedBy() ) ) {
 				propertyData.setPositionMappedBy( auditMappedBy.positionMappedBy() );
 			}
 		}

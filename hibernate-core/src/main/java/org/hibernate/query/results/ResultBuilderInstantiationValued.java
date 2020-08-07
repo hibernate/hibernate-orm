@@ -7,9 +7,9 @@
 package org.hibernate.query.results;
 
 /**
- * Nominal extension to ResultBuilder for cases involving scalar results
+ * Nominal extension to ResultBuilder for cases involving dynamic-instantiation results
  *
  * @author Steve Ebersole
  */
-public interface ScalarResultBuilder extends ResultBuilder {
+public interface ResultBuilderInstantiationValued extends ResultBuilder {
 }

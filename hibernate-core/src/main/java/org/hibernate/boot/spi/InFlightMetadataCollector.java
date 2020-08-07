@@ -33,7 +33,7 @@ import org.hibernate.boot.model.source.spi.LocalMetadataBuildingContext;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
-import org.hibernate.boot.query.NamedResultSetMappingDefinition;
+import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
 import org.hibernate.cfg.AnnotatedClassType;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.JPAIndexHolder;
@@ -154,7 +154,7 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	/**
 	 * Adds the metadata for a named SQL result set mapping to this collector.
 	 */
-	void addResultSetMapping(NamedResultSetMappingDefinition resultSetMappingDefinition) throws DuplicateMappingException;
+	void addResultSetMapping(NamedResultSetMappingDescriptor resultSetMappingDefinition) throws DuplicateMappingException;
 
 	/**
 	 * Adds metadata for a named stored procedure call to this collector.
@@ -271,7 +271,7 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 
 	void addDefaultNamedNativeQuery(NamedNativeQueryDefinition query);
 
-	void addDefaultResultSetMapping(NamedResultSetMappingDefinition definition);
+	void addDefaultResultSetMapping(NamedResultSetMappingDescriptor definition);
 
 	void addDefaultNamedProcedureCall(NamedProcedureCallDefinitionImpl procedureCallDefinition);
 

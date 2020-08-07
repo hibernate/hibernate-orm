@@ -22,10 +22,10 @@ import org.hibernate.boot.model.source.internal.hbm.HbmLocalMetadataBuildingCont
 public class HbmResultSetMappingDefinitionBuilder {
 	private final String registrationName;
 
-	private NamedResultSetMappingDefinition.ResultMapping  rootEntityReturn;
-	private NamedResultSetMappingDefinition.ResultMapping  rootCollectionReturn;
-	private List<NamedResultSetMappingDefinition.ResultMapping> joinReturns;
-	private List<HbmResultSetMappingDefinition.ScalarMappingDefinition> rootScalarReturns;
+	private ResultDescriptor rootEntityReturn;
+	private ResultDescriptor rootCollectionReturn;
+	private List<ResultDescriptor> joinReturns;
+	private List<HbmResultSetMappingDescriptor.ScalarDescriptor> rootScalarReturns;
 
 	public HbmResultSetMappingDefinitionBuilder(String queryRegistrationName) {
 		this.registrationName = queryRegistrationName;
@@ -37,7 +37,7 @@ public class HbmResultSetMappingDefinitionBuilder {
 
 	public HbmResultSetMappingDefinitionBuilder addReturn(JaxbHbmNativeQueryScalarReturnType returnMapping) {
 		rootScalarReturns.add(
-				new HbmResultSetMappingDefinition.ScalarMappingDefinition(
+				new HbmResultSetMappingDescriptor.ScalarDescriptor(
 						returnMapping.getColumn(),
 						returnMapping.getType()
 				)
@@ -61,7 +61,7 @@ public class HbmResultSetMappingDefinitionBuilder {
 		return rootEntityReturn != null || rootCollectionReturn != null || rootScalarReturns != null;
 	}
 
-	public HbmResultSetMappingDefinition build(HbmLocalMetadataBuildingContext context) {
+	public HbmResultSetMappingDescriptor build(HbmLocalMetadataBuildingContext context) {
 		if ( rootCollectionReturn != null
 				&& ( rootEntityReturn != null || rootScalarReturns != null ) ) {
 			throw new MappingException(
@@ -79,7 +79,7 @@ public class HbmResultSetMappingDefinitionBuilder {
 			}
 		}
 
-		return new HbmResultSetMappingDefinition(
+		return new HbmResultSetMappingDescriptor(
 				registrationName,
 				rootEntityReturn,
 				rootCollectionReturn,

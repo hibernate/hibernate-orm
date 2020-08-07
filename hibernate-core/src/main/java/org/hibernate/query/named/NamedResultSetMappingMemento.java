@@ -9,7 +9,7 @@ package org.hibernate.query.named;
 import java.util.function.Consumer;
 
 import org.hibernate.Incubating;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.internal.ResultSetMappingResolutionContext;
 import org.hibernate.query.results.ResultSetMapping;
 
 /**
@@ -38,5 +38,8 @@ public interface NamedResultSetMappingMemento {
 	 * each defined result and registering them with the passed `resultSetMapping`.  Any known
 	 * query spaces should be passed to the `querySpaceConsumer`
 	 */
-	void resolve(ResultSetMapping resultSetMapping, Consumer<String> querySpaceConsumer, SessionFactoryImplementor sessionFactory);
+	void resolve(
+			ResultSetMapping resultSetMapping,
+			Consumer<String> querySpaceConsumer,
+			ResultSetMappingResolutionContext context);
 }

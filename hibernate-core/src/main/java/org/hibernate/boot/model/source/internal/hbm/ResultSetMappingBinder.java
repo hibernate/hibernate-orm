@@ -24,7 +24,7 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryReturnType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryScalarReturnType;
 import org.hibernate.boot.jaxb.hbm.spi.NativeQueryNonScalarRootReturn;
 import org.hibernate.boot.jaxb.hbm.spi.ResultSetMappingBindingDefinition;
-import org.hibernate.boot.query.HbmResultSetMappingDefinition;
+import org.hibernate.boot.query.HbmResultSetMappingDescriptor;
 import org.hibernate.boot.query.HbmResultSetMappingDefinitionBuilder;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryCollectionReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryJoinReturn;
@@ -56,7 +56,7 @@ public abstract class ResultSetMappingBinder {
 	 *
 	 * @return The ResultSet mapping descriptor
 	 */
-	public static HbmResultSetMappingDefinition bind(
+	public static HbmResultSetMappingDescriptor bind(
 			ResultSetMappingBindingDefinition resultSetMappingSource,
 			HbmLocalMetadataBuildingContext context) {
 		if ( resultSetMappingSource.getName() == null ) {
@@ -80,7 +80,7 @@ public abstract class ResultSetMappingBinder {
 			}
 		}
 
-		final HbmResultSetMappingDefinition mappingDefinition = builder.build( context );
+		final HbmResultSetMappingDescriptor mappingDefinition = builder.build( context );
 		context.getMetadataCollector().addResultSetMapping( mappingDefinition );
 		return mappingDefinition;
 	}

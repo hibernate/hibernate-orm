@@ -4,12 +4,15 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.query.results;
+package org.hibernate.query.results.complete;
+
+import org.hibernate.query.results.FetchBuilder;
+import org.hibernate.sql.results.graph.Fetchable;
 
 /**
- * Nominal extension to ResultBuilder for cases involving dynamic-instantiation results
- *
  * @author Steve Ebersole
  */
-public interface InstantiationResultBuilder extends ResultBuilder {
+public interface CompleteFetchBuilder extends FetchBuilder, ModelPartReference {
+	@Override
+	Fetchable getReferencedPart();
 }

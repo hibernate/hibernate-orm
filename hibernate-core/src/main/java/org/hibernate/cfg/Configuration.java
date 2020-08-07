@@ -46,7 +46,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
-import org.hibernate.boot.query.NamedResultSetMappingDefinition;
+import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.internal.CoreLogging;
@@ -100,7 +100,7 @@ public class Configuration {
 	private Map<String, NamedHqlQueryDefinition> namedQueries;
 	private Map<String, NamedNativeQueryDefinition> namedSqlQueries;
 	private Map<String, NamedProcedureCallDefinition> namedProcedureCallMap;
-	private Map<String, NamedResultSetMappingDefinition> sqlResultSetMappings;
+	private Map<String, NamedResultSetMappingDescriptor> sqlResultSetMappings;
 	private Map<String, NamedEntityGraphDefinition> namedEntityGraphMap;
 
 	private Map<String, SqmFunctionDescriptor> customFunctionDescriptors;

@@ -153,9 +153,16 @@ public class NamedQueryRepositoryImpl implements NamedQueryRepository {
 				}
 		);
 
+		final ResultSetMappingResolutionContext resolutionContext = new ResultSetMappingResolutionContext() {
+			@Override
+			public SessionFactoryImplementor getSessionFactory() {
+				return sessionFactory;
+			}
+		};
+
 		bootMetamodel.visitNamedResultSetMappingDefinition(
 				namedResultSetMappingDefinition -> {
-					final NamedResultSetMappingMemento resolved = namedResultSetMappingDefinition.resolve( sessionFactory );
+					final NamedResultSetMappingMemento resolved = namedResultSetMappingDefinition.resolve( resolutionContext );
 					resultSetMappingMementoMap.put( namedResultSetMappingDefinition.getRegistrationName(), resolved );
 				}
 		);

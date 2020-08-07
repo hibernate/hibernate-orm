@@ -17,7 +17,9 @@ import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
+import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.basic.BasicResult;
@@ -35,7 +37,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 @Internal
 public class ResultSetMappingImpl implements ResultSetMapping {
 	private List<ResultBuilder> resultBuilders;
-	private Map<String, Map<String,LegacyFetchBuilder>> legacyFetchBuilders;
+	private Map<String, Map<String, DynamicFetchBuilderLegacy>> legacyFetchBuilders;
 
 	@Override
 	public int getNumberOfResultBuilders() {
@@ -62,8 +64,8 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 	}
 
 	@Override
-	public void addLegacyFetchBuilder(LegacyFetchBuilder fetchBuilder) {
-		final Map<String, LegacyFetchBuilder> existingFetchBuildersByOwner;
+	public void addLegacyFetchBuilder(DynamicFetchBuilderLegacy fetchBuilder) {
+		final Map<String, DynamicFetchBuilderLegacy> existingFetchBuildersByOwner;
 
 		if ( legacyFetchBuilders == null ) {
 			legacyFetchBuilders = new HashMap<>();
@@ -73,7 +75,7 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 			existingFetchBuildersByOwner = legacyFetchBuilders.get( fetchBuilder.getOwnerAlias() );
 		}
 
-		final Map<String, LegacyFetchBuilder> fetchBuildersByOwner;
+		final Map<String, DynamicFetchBuilderLegacy> fetchBuildersByOwner;
 		if ( existingFetchBuildersByOwner == null ) {
 			fetchBuildersByOwner = new HashMap<>();
 			legacyFetchBuilders.put( fetchBuilder.getOwnerAlias(), fetchBuildersByOwner );
@@ -82,7 +84,7 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 			fetchBuildersByOwner = existingFetchBuildersByOwner;
 		}
 
-		final LegacyFetchBuilder previousBuilder = fetchBuildersByOwner.put( fetchBuilder.getFetchedAttributeName(), fetchBuilder );
+		final DynamicFetchBuilderLegacy previousBuilder = fetchBuildersByOwner.put( fetchBuilder.getFetchableName(), fetchBuilder );
 		if ( previousBuilder != null ) {
 			// todo (6.0) : error?  log?  nothing?
 		}
@@ -92,7 +94,6 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 	public JdbcValuesMapping resolve(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			SessionFactoryImplementor sessionFactory) {
-		final List<SqlSelection> sqlSelections = new ArrayList<>( jdbcResultsMetadata.getColumnCount() );
 
 		final int numberOfResults;
 
@@ -103,7 +104,14 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 			numberOfResults = resultBuilders.size();
 		}
 
+		final List<SqlSelection> sqlSelections = new ArrayList<>( jdbcResultsMetadata.getColumnCount() );
 		final List<DomainResult<?>> domainResults = new ArrayList<>( numberOfResults );
+
+		final DomainResultCreationStateImpl creationState = new DomainResultCreationStateImpl(
+				resultBuilders,
+				legacyFetchBuilders,
+				sessionFactory
+		);
 
 		for ( int i = 0; i < numberOfResults; i++ ) {
 			final ResultBuilder resultBuilder = resultBuilders != null
@@ -120,23 +128,23 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 				);
 			}
 			else {
-				domainResult = resultBuilder.buildReturn(
+				domainResult = resultBuilder.buildResult(
 						jdbcResultsMetadata,
-						(ownerAlias, fetchName) -> {
+						domainResults.size(),
+						(entityName, fetchableName) -> {
 							if ( legacyFetchBuilders == null ) {
 								return null;
 							}
 
-							final Map<String, LegacyFetchBuilder> fetchBuildersForOwner = legacyFetchBuilders.get(
-									ownerAlias );
-							if ( fetchBuildersForOwner == null ) {
+							final Map<String, DynamicFetchBuilderLegacy> fetchBuilderMap = legacyFetchBuilders.get( entityName );
+							if ( fetchBuilderMap == null ) {
 								return null;
 							}
 
-							return fetchBuildersForOwner.get( fetchName );
+							return fetchBuilderMap.get( fetchableName );
 						},
 						sqlSelections::add,
-						sessionFactory
+						creationState
 				);
 			}
 			domainResults.add( domainResult );
@@ -164,7 +172,7 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 
 		final String name = jdbcResultsMetadata.resolveColumnName( jdbcPosition );
 
-		final SqlSelectionImpl sqlSelection = new SqlSelectionImpl( valuesArrayPosition, jdbcMapping );
+		final SqlSelectionImpl sqlSelection = new SqlSelectionImpl( valuesArrayPosition, (BasicValuedMapping) jdbcMapping );
 		sqlSelectionConsumer.accept( sqlSelection );
 
 		return new BasicResult( valuesArrayPosition, name, jdbcMapping.getJavaTypeDescriptor() );

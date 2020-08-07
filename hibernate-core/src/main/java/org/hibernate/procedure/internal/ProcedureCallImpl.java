@@ -131,7 +131,7 @@ public class ProcedureCallImpl<R>
 				resultClasses,
 				resultSetMapping,
 				synchronizedQuerySpaces::add,
-				getSession().getFactory()
+				() -> getSession().getFactory()
 		);
 	}
 
@@ -161,7 +161,7 @@ public class ProcedureCallImpl<R>
 				resultSetMappingNames,
 				resultSetMapping,
 				synchronizedQuerySpaces::add,
-				getSession().getFactory()
+				() -> getSession().getFactory()
 		);
 	}
 
@@ -186,7 +186,7 @@ public class ProcedureCallImpl<R>
 				memento.getResultSetMappingClasses(),
 				resultSetMapping,
 				synchronizedQuerySpaces::add,
-				getSession().getFactory()
+				() -> getSession().getFactory()
 		);
 
 		applyOptions( memento );
@@ -216,7 +216,7 @@ public class ProcedureCallImpl<R>
 				resultTypes,
 				resultSetMapping,
 				synchronizedQuerySpaces::add,
-				getSession().getFactory()
+				() -> getSession().getFactory()
 		);
 
 		applyOptions( memento );
@@ -240,7 +240,7 @@ public class ProcedureCallImpl<R>
 				null,
 				resultSetMapping,
 				synchronizedQuerySpaces::add,
-				getSession().getFactory()
+				() -> getSession().getFactory()
 		);
 	}
 

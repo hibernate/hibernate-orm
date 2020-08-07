@@ -23,6 +23,7 @@ import org.hibernate.sql.results.graph.entity.EntityResult;
  * @author Steve Ebersole
  */
 public class EntityResultImpl extends AbstractEntityResultGraphNode implements EntityResult {
+
 	private final String resultVariable;
 
 	public EntityResultImpl(

@@ -10,6 +10,7 @@ import java.util.function.BiConsumer;
 
 import org.hibernate.Incubating;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
+import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 
 /**
@@ -17,13 +18,20 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
  * or {@link org.hibernate.procedure.ProcedureCall} / {@link javax.persistence.StoredProcedureQuery}
  * instances.
  *
- * Collects builders for results and fetches and manages resolving them via JdbcValuesMappingProducer
- *
- * @see org.hibernate.query.NativeQuery#addScalar
- * @see org.hibernate.query.NativeQuery#addEntity
- * @see org.hibernate.query.NativeQuery#addJoin
- * @see org.hibernate.query.NativeQuery#addFetch
- * @see org.hibernate.query.NativeQuery#addRoot
+ * Can be defined<ul>
+ *     <li>
+ *         statically via {@link javax.persistence.SqlResultSetMapping} or `hbm.xml` mapping
+ *     </li>
+ *     <li>
+ *         dynamically via Hibernate-specific APIs:<ul>
+ *             <li>{@link org.hibernate.query.NativeQuery#addScalar}</li>
+ *             <li>{@link org.hibernate.query.NativeQuery#addEntity}</li>
+ *             <li>{@link org.hibernate.query.NativeQuery#addJoin}</li>
+ *             <li>{@link org.hibernate.query.NativeQuery#addFetch}</li>
+ *             <li>{@link org.hibernate.query.NativeQuery#addRoot}</li>
+ *         </ul>
+ *     </li>
+ * </ul>
  *
  * @author Steve Ebersole
  */
@@ -34,7 +42,7 @@ public interface ResultSetMapping extends JdbcValuesMappingProducer {
 	void visitResultBuilders(BiConsumer<Integer, ResultBuilder> resultBuilderConsumer);
 
 	void addResultBuilder(ResultBuilder resultBuilder);
-	void addLegacyFetchBuilder(LegacyFetchBuilder fetchBuilder);
+	void addLegacyFetchBuilder(DynamicFetchBuilderLegacy fetchBuilder);
 
 	NamedResultSetMappingMemento toMemento(String name);
 }

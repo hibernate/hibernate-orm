@@ -4,25 +4,32 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.query.results;
+package org.hibernate.query.results.dynamic;
 
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.query.results.FetchBuilder;
 
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractPropertyContainer<T extends AbstractPropertyContainer<T>> implements PropertyContainer {
-	private Map<String,FetchBuilder> fetchBuilderMap;
+public abstract class AbstractFetchBuilderContainer<T extends AbstractFetchBuilderContainer<T>>
+		implements DynamicFetchBuilderContainer {
+	private Map<String, DynamicFetchBuilder> fetchBuilderMap;
 
 	protected abstract String getPropertyBase();
 
 	@Override
+	public DynamicFetchBuilder findFetchBuilder(String fetchableName) {
+		return fetchBuilderMap == null ? null : fetchBuilderMap.get( fetchableName );
+	}
+
+	@Override
 	public T addProperty(String propertyName, String columnAlias) {
-		final FetchBuilder fetchBuilder = addProperty( propertyName );
+		final DynamicFetchBuilder fetchBuilder = addProperty( propertyName );
 		fetchBuilder.addColumnAlias( columnAlias );
 
 		return (T) this;
@@ -30,14 +37,14 @@ public abstract class AbstractPropertyContainer<T extends AbstractPropertyContai
 
 	@Override
 	public T addProperty(String propertyName, String... columnAliases) {
-		final FetchBuilder fetchBuilder = addProperty( propertyName );
+		final DynamicFetchBuilder fetchBuilder = addProperty( propertyName );
 		ArrayHelper.forEach( columnAliases, fetchBuilder::addColumnAlias );
 
 		return (T) this;
 	}
 
 	@Override
-	public FetchBuilder addProperty(String propertyName) {
+	public DynamicFetchBuilder addProperty(String propertyName) {
 		if ( fetchBuilderMap == null ) {
 			fetchBuilderMap = new HashMap<>();
 		}
@@ -56,7 +63,11 @@ public abstract class AbstractPropertyContainer<T extends AbstractPropertyContai
 			}
 		}
 
-		final FetchBuilder fetchBuilder = new StandardFetchBuilderImpl();
+		final DynamicFetchBuilderStandard fetchBuilder = new DynamicFetchBuilderStandard(
+				this,
+				propertyName
+		);
+
 		fetchBuilderMap.put( propertyName, fetchBuilder );
 
 		return fetchBuilder;

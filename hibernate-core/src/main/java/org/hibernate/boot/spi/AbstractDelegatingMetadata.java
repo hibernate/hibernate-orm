@@ -21,7 +21,7 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
-import org.hibernate.boot.query.NamedResultSetMappingDefinition;
+import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -144,12 +144,12 @@ public abstract class AbstractDelegatingMetadata implements MetadataImplementor 
 	}
 
 	@Override
-	public NamedResultSetMappingDefinition getResultSetMapping(String name) {
+	public NamedResultSetMappingDescriptor getResultSetMapping(String name) {
 		return delegate.getResultSetMapping( name );
 	}
 
 	@Override
-	public void visitNamedResultSetMappingDefinition(Consumer<NamedResultSetMappingDefinition> definitionConsumer) {
+	public void visitNamedResultSetMappingDefinition(Consumer<NamedResultSetMappingDescriptor> definitionConsumer) {
 		delegate.visitNamedResultSetMappingDefinition( definitionConsumer );
 	}
 

@@ -9,12 +9,11 @@ package org.hibernate.procedure.internal;
 import java.util.function.Consumer;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.query.internal.ResultSetMappingResolutionContext;
 import org.hibernate.query.named.NamedQueryRepository;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.results.ResultSetMapping;
-import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 
 import org.jboss.logging.Logger;
 
@@ -34,16 +33,16 @@ public class Util {
 			Class[] resultSetMappingClasses,
 			ResultSetMapping resultSetMapping,
 			Consumer<String> querySpaceConsumer,
-			SessionFactoryImplementor sessionFactory) {
+			ResultSetMappingResolutionContext context) {
 		if ( ! ArrayHelper.isEmpty( resultSetMappingNames ) ) {
 			// cannot specify both
 			if ( ! ArrayHelper.isEmpty( resultSetMappingClasses ) ) {
 				throw new IllegalArgumentException( "Cannot specify both result-set mapping names and classes" );
 			}
-			resolveResultSetMappingNames( resultSetMappingNames, resultSetMapping, querySpaceConsumer, sessionFactory );
+			resolveResultSetMappingNames( resultSetMappingNames, resultSetMapping, querySpaceConsumer, context );
 		}
 		else if ( ! ArrayHelper.isEmpty( resultSetMappingClasses ) ) {
-			resolveResultSetMappingClasses( resultSetMappingClasses, resultSetMapping, querySpaceConsumer, sessionFactory );
+			resolveResultSetMappingClasses( resultSetMappingClasses, resultSetMapping, querySpaceConsumer, context );
 		}
 
 		// otherwise, nothing to resolve
@@ -53,15 +52,15 @@ public class Util {
 			String[] resultSetMappingNames,
 			ResultSetMapping resultSetMapping,
 			Consumer<String> querySpaceConsumer,
-			SessionFactoryImplementor sessionFactory) {
-		final NamedQueryRepository namedQueryRepository = sessionFactory.getQueryEngine().getNamedQueryRepository();
+			ResultSetMappingResolutionContext context) {
+		final NamedQueryRepository namedQueryRepository = context.getSessionFactory().getQueryEngine().getNamedQueryRepository();
 
 		for ( String resultSetMappingName : resultSetMappingNames ) {
 			final NamedResultSetMappingMemento memento = namedQueryRepository.getResultSetMappingMemento( resultSetMappingName );
 			memento.resolve(
 					resultSetMapping,
 					querySpaceConsumer,
-					sessionFactory
+					context
 			);
 		}
 	}
@@ -70,7 +69,7 @@ public class Util {
 			Class[] resultSetMappingClasses,
 			ResultSetMapping resultSetMapping,
 			Consumer<String> querySpaceConsumer,
-			SessionFactoryImplementor sessionFactory) {
+			ResultSetMappingResolutionContext context) {
 		throw new NotYetImplementedFor6Exception( Util.class );
 
 //		final DomainMetamodel domainModel = sessionFactory.getDomainModel();

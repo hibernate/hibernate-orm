@@ -7,14 +7,14 @@
 package org.hibernate.boot.query;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.internal.ResultSetMappingResolutionContext;
+import org.hibernate.query.internal.ScalarResultMappingMemento;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
-import org.hibernate.query.results.Builders;
-import org.hibernate.query.results.ScalarResultBuilder;
 import org.hibernate.type.BasicType;
 
 /**
@@ -27,22 +27,22 @@ import org.hibernate.type.BasicType;
  *
  * @author Steve Ebersole
  */
-public class HbmResultSetMappingDefinition implements NamedResultSetMappingDefinition {
+public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescriptor {
 	// todo (6.0) : see note on org.hibernate.boot.query.SqlResultSetMappingDefinition
 
 	private final String registrationName;
 
-	private final ResultMapping rootEntityReturn;
-	private final ResultMapping  rootCollectionReturn;
-	private final List<ResultMapping> joinReturns;
-	private final List<ScalarMappingDefinition> scalarResultMappings;
+	private final ResultDescriptor rootEntityReturn;
+	private final ResultDescriptor rootCollectionReturn;
+	private final List<ResultDescriptor> joinReturns;
+	private final List<ScalarDescriptor> scalarResultMappings;
 
-	public HbmResultSetMappingDefinition(
+	public HbmResultSetMappingDescriptor(
 			String registrationName,
-			ResultMapping  rootEntityReturn,
-			ResultMapping  rootCollectionReturn,
-			List<ResultMapping> joinReturns,
-			List<ScalarMappingDefinition> scalarResultMappings) {
+			ResultDescriptor rootEntityReturn,
+			ResultDescriptor rootCollectionReturn,
+			List<ResultDescriptor> joinReturns,
+			List<ScalarDescriptor> scalarResultMappings) {
 		this.registrationName = registrationName;
 
 		this.rootEntityReturn = rootEntityReturn;
@@ -57,16 +57,16 @@ public class HbmResultSetMappingDefinition implements NamedResultSetMappingDefin
 	}
 
 	@Override
-	public NamedResultSetMappingMemento resolve(SessionFactoryImplementor factory) {
-		final List<ScalarResultBuilder> scalarResultBuilders;
+	public NamedResultSetMappingMemento resolve(ResultSetMappingResolutionContext resolutionContext) {
+		final List<ScalarResultMappingMemento> scalarResultMementos;
 		if ( scalarResultMappings == null || scalarResultMappings.isEmpty() ) {
-			scalarResultBuilders = null;
+			scalarResultMementos = Collections.emptyList();
 		}
 		else {
-			scalarResultBuilders = new ArrayList<>( scalarResultMappings.size() );
+			scalarResultMementos = new ArrayList<>( scalarResultMappings.size() );
 			scalarResultMappings.forEach(
 					resultMapping -> {
-						scalarResultBuilders.add( resultMapping.resolve( factory ) );
+						scalarResultMementos.add( resultMapping.resolve( resolutionContext ) );
 					}
 			);
 		}
@@ -81,12 +81,12 @@ public class HbmResultSetMappingDefinition implements NamedResultSetMappingDefin
 	/**
 	 * @see org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryReturnType
 	 */
-	public interface RootEntityMappingDefinition extends ResultMapping {
+	public interface RootEntityDescriptor extends ResultDescriptor {
 		String getEntityName();
 
 		String getSqlAlias();
 
-		List<HbmPropertyMappingDefinition> getProperties();
+		List<HbmPropertyDescriptor> getProperties();
 
 		String getDiscriminatorColumnName();
 
@@ -96,7 +96,7 @@ public class HbmResultSetMappingDefinition implements NamedResultSetMappingDefin
 	/**
 	 * @see org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryPropertyReturnType
 	 */
-	public interface HbmPropertyMappingDefinition extends ResultMapping {
+	public interface HbmPropertyDescriptor extends ResultDescriptor {
 		String getPropertyPath();
 		List<String> getColumnNames();
 	}
@@ -104,12 +104,12 @@ public class HbmResultSetMappingDefinition implements NamedResultSetMappingDefin
 	/**
 	 * @see org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryJoinReturnType
 	 */
-	public interface JoinMappingDefinition extends ResultMapping {
+	public interface JoinDescriptor extends ResultDescriptor {
 		String getJoinedPropertyPath();
 
 		String getSqlAlias();
 
-		List<HbmPropertyMappingDefinition> getProperties();
+		List<HbmPropertyDescriptor> getProperties();
 
 		LockMode getLockMode();
 	}
@@ -117,12 +117,12 @@ public class HbmResultSetMappingDefinition implements NamedResultSetMappingDefin
 	/**
 	 * @see org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryCollectionLoadReturnType
 	 */
-	public interface RootCollectionMappingDefinition extends ResultMapping {
+	public interface RootCollectionDescriptor extends ResultDescriptor {
 		String getCollectionRole();
 
 		String getSqlAlias();
 
-		List<HbmPropertyMappingDefinition> getProperties();
+		List<HbmPropertyDescriptor> getProperties();
 
 		LockMode getLockMode();
 	}
@@ -130,11 +130,11 @@ public class HbmResultSetMappingDefinition implements NamedResultSetMappingDefin
 	/**
 	 * @see org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryScalarReturnType
 	 */
-	public static class ScalarMappingDefinition implements ResultMapping {
+	public static class ScalarDescriptor implements ResultDescriptor {
 		private final String columnName;
 		private final String hibernateTypeName;
 
-		public ScalarMappingDefinition(String columnName, String hibernateTypeName) {
+		public ScalarDescriptor(String columnName, String hibernateTypeName) {
 			this.columnName = columnName;
 			this.hibernateTypeName = hibernateTypeName;
 		}
@@ -148,9 +148,10 @@ public class HbmResultSetMappingDefinition implements NamedResultSetMappingDefin
 		}
 
 		@Override
-		public ScalarResultBuilder resolve(SessionFactoryImplementor factory) {
+		public ScalarResultMappingMemento resolve(ResultSetMappingResolutionContext resolutionContext) {
 			if ( hibernateTypeName != null ) {
-				final BasicType<?> namedType = factory.getTypeConfiguration()
+				final BasicType<?> namedType = resolutionContext.getSessionFactory()
+						.getTypeConfiguration()
 						.getBasicTypeRegistry()
 						.getRegisteredType( hibernateTypeName );
 
@@ -158,12 +159,12 @@ public class HbmResultSetMappingDefinition implements NamedResultSetMappingDefin
 					throw new IllegalArgumentException( "Could not resolve named type : " + hibernateTypeName );
 				}
 
-				return Builders.scalar( columnName );
+				return new ScalarResultMappingMemento( columnName, namedType, resolutionContext );
 			}
 
 			// todo (6.0) : column name may be optional in HBM - double check
 
-			return Builders.scalar( columnName );
+			return new ScalarResultMappingMemento( columnName, null, resolutionContext );
 		}
 	}
 

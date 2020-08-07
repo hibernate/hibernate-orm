@@ -9,6 +9,8 @@ package org.hibernate.orm.test.query.named.resultmapping;
 import javax.persistence.ColumnResult;
 import javax.persistence.ConstructorResult;
 import javax.persistence.Entity;
+import javax.persistence.EntityResult;
+import javax.persistence.FieldResult;
 import javax.persistence.Id;
 import javax.persistence.SqlResultSetMapping;
 
@@ -34,6 +36,16 @@ import javax.persistence.SqlResultSetMapping;
 				columns = {
 						@ColumnResult( name = "id" ),
 						@ColumnResult( name = "name" )
+				}
+		)
+)
+@SqlResultSetMapping(
+		name = "entity",
+		entities = @EntityResult(
+				entityClass = SimpleEntityWithNamedMappings.class,
+				fields = {
+						@FieldResult( name = "id", column = "id" ),
+						@FieldResult( name = "name", column = "name" )
 				}
 		)
 )

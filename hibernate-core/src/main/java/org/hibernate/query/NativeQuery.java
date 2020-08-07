@@ -121,6 +121,19 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	/**
 	 * Declare a scalar query result with an explicit conversion
 	 *
+	 * @param jdbcJavaType The Java type expected by the converter as its "relational model" type.
+	 * @param domainJavaType The Java type expected by the converter as its "object model" type.
+	 * @param converter The conversion to apply.  Consumes the JDBC value based on `relationalJavaType`.
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @since 6.0
+	 */
+	<O,R> NativeQuery<T> addScalar(String columnAlias, Class<O> domainJavaType, Class<R> jdbcJavaType, AttributeConverter<O,R> converter);
+
+	/**
+	 * Declare a scalar query result with an explicit conversion
+	 *
 	 * @param relationalJavaType The Java type expected by the converter as its
 	 * "relational" type.
 	 * @param converter The conversion to apply.  Consumes the JDBC value based
@@ -131,6 +144,25 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 * @since 6.0
 	 */
 	<C> NativeQuery<T> addScalar(String columnAlias, Class<C> relationalJavaType, Class<? extends AttributeConverter<?,C>> converter);
+
+	/**
+	 * Declare a scalar query result with an explicit conversion
+	 *
+	 * @param jdbcJavaType The Java type expected by the converter as its "relational model" type.
+	 * @param domainJavaType The Java type expected by the converter as its "object model" type.
+	 * @param converter The conversion to apply.  Consumes the JDBC value based on `jdbcJavaType`.
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @since 6.0
+	 */
+	<O,R> NativeQuery<T> addScalar(
+			String columnAlias,
+			Class<O> domainJavaType,
+			Class<R> jdbcJavaType,
+			Class<? extends AttributeConverter<O,R>> converter);
+
+	<J> InstantiationResultNode<J> addInstantiation(Class<J> targetJavaType);
 
 	/**
 	 * Defines a result based on a specified attribute.  Differs from adding a scalar in that
@@ -319,6 +351,14 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 * ResultNode which can be a query result
 	 */
 	interface ReturnableResultNode extends ResultNode {
+	}
+
+	interface InstantiationResultNode<J> extends ReturnableResultNode {
+		default InstantiationResultNode<J> addBasicArgument(String columnAlias) {
+			return addBasicArgument( columnAlias, null );
+		}
+
+		InstantiationResultNode<J> addBasicArgument(String columnAlias, String argumentAlias);
 	}
 
 	/**

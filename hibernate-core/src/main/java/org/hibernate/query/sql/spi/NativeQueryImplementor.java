@@ -34,7 +34,7 @@ import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.named.NameableQuery;
-import org.hibernate.query.results.EntityResultBuilder;
+import org.hibernate.query.results.dynamic.DynamicResultBuilderEntityStandard;
 import org.hibernate.query.spi.QueryImplementor;
 
 /**
@@ -64,7 +64,17 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	<C> NativeQueryImplementor<R> addScalar(String columnAlias, Class<C> relationalJavaType, AttributeConverter<?,C> converter);
 
 	@Override
+	<O, J> NativeQueryImplementor<R> addScalar(String columnAlias, Class<O> domainJavaType, Class<J> jdbcJavaType, AttributeConverter<O, J> converter);
+
+	@Override
 	<C> NativeQueryImplementor<R> addScalar(String columnAlias, Class<C> relationalJavaType, Class<? extends AttributeConverter<?,C>> converter);
+
+	@Override
+	<O, J> NativeQueryImplementor<R> addScalar(
+			String columnAlias,
+			Class<O> domainJavaType,
+			Class<J> jdbcJavaType,
+			Class<? extends AttributeConverter<O, J>> converter);
 
 	@Override
 	NativeQueryImplementor<R> addAttributeResult(String columnAlias, Class<?> entityJavaType, String attributePath);
@@ -76,7 +86,7 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	NativeQueryImplementor<R> addAttributeResult(String columnAlias, SingularAttribute<?, ?> attribute);
 
 	@Override
-	EntityResultBuilder addRoot(String tableAlias, String entityName);
+	DynamicResultBuilderEntityStandard addRoot(String tableAlias, String entityName);
 
 	@Override
 	NativeQueryImplementor<R> addEntity(String entityName);

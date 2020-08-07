@@ -22,7 +22,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
-import org.hibernate.boot.query.SqlResultSetMappingDefinition;
+import org.hibernate.boot.query.SqlResultSetMappingDescriptor;
 
 /**
  * @author Emmanuel Bernard
@@ -46,7 +46,7 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 			return;
 		}
 
-		final SqlResultSetMappingDefinition mappingDefinition = SqlResultSetMappingDefinition.from( ann, context );
+		final SqlResultSetMappingDescriptor mappingDefinition = SqlResultSetMappingDescriptor.from( ann, context );
 
 		if ( isDefault ) {
 			context.getMetadataCollector().addDefaultResultSetMapping( mappingDefinition );

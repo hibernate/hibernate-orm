@@ -17,7 +17,7 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
-import org.hibernate.boot.query.NamedResultSetMappingDefinition;
+import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.Mapping;
@@ -147,12 +147,12 @@ public interface Metadata extends Mapping {
 	 *
 	 * @return The named result set mapping metadata, or {@code null} if none found.
 	 */
-	NamedResultSetMappingDefinition getResultSetMapping(String name);
+	NamedResultSetMappingDescriptor getResultSetMapping(String name);
 
 	/**
 	 * Visit all named SQL result set mapping definitions
 	 */
-	void visitNamedResultSetMappingDefinition(Consumer<NamedResultSetMappingDefinition> definitionConsumer);
+	void visitNamedResultSetMappingDefinition(Consumer<NamedResultSetMappingDescriptor> definitionConsumer);
 
 	/**
 	 * Retrieve a type definition by name.

@@ -16,8 +16,17 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.RuntimeMetamodels;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.query.results.dynamic.DynamicResultBuilderAttribute;
+import org.hibernate.query.results.dynamic.DynamicResultBuilderBasic;
+import org.hibernate.query.results.dynamic.DynamicResultBuilderBasicConverted;
+import org.hibernate.query.results.dynamic.DynamicResultBuilderBasicStandard;
+import org.hibernate.query.results.dynamic.DynamicResultBuilderEntityCalculated;
+import org.hibernate.query.results.dynamic.DynamicResultBuilderEntityStandard;
+import org.hibernate.query.results.dynamic.DynamicResultBuilderInstantiation;
+import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
@@ -25,51 +34,90 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * @author Steve Ebersole
  */
 public class Builders {
-	public static ScalarResultBuilder scalar(String columnAlias) {
-		return new StandardScalarResultBuilder( columnAlias );
+	public static DynamicResultBuilderBasic scalar(String columnAlias) {
+		return scalar( columnAlias, columnAlias );
 	}
 
-	public static ScalarResultBuilder scalar(
-			String columnAlias,
-			BasicType<?> type) {
-		return new StandardScalarResultBuilder( columnAlias, type );
+	public static DynamicResultBuilderBasic scalar(String columnAlias, String resultAlias) {
+		return new DynamicResultBuilderBasicStandard( columnAlias, resultAlias );
 	}
 
-	public static ScalarResultBuilder scalar(
+	public static DynamicResultBuilderBasic scalar(String columnAlias, BasicType<?> type) {
+		return scalar( columnAlias, columnAlias, type );
+	}
+
+	public static DynamicResultBuilderBasic scalar(String columnAlias, String resultAlias, BasicType<?> type) {
+		return new DynamicResultBuilderBasicStandard( columnAlias, resultAlias, type );
+	}
+
+	public static DynamicResultBuilderBasic scalar(
 			String columnAlias,
+			Class<?> javaType,
+			SessionFactoryImplementor factory) {
+		return scalar( columnAlias, columnAlias, javaType, factory );
+	}
+
+	public static DynamicResultBuilderBasic scalar(
+			String columnAlias,
+			String resultAlias,
 			Class<?> javaType,
 			SessionFactoryImplementor factory) {
 		final JavaTypeDescriptor<?> javaTypeDescriptor = factory.getTypeConfiguration()
 				.getJavaTypeDescriptorRegistry()
 				.getDescriptor( javaType );
 
-		return new StandardScalarResultBuilder( columnAlias, javaTypeDescriptor );
+		return new DynamicResultBuilderBasicStandard( columnAlias, resultAlias, javaTypeDescriptor );
 	}
 
-	public static <C> ResultBuilder scalar(
+	public static <R> ResultBuilder converted(
 			String columnAlias,
-			Class<C> relationalJavaType,
-			AttributeConverter<?, C> converter,
+			Class<R> jdbcJavaType,
+			AttributeConverter<?, R> converter,
 			SessionFactoryImplementor sessionFactory) {
-		return ConvertedResultBuilder.from( columnAlias, relationalJavaType, converter, sessionFactory );
+		return converted( columnAlias, null, jdbcJavaType, converter, sessionFactory );
 	}
 
-	public static <C> ResultBuilder scalar(
+	public static <O,R> ResultBuilder converted(
 			String columnAlias,
-			Class<C> relationalJavaType,
-			Class<? extends AttributeConverter<?, C>> converterJavaType,
+			Class<O> domainJavaType,
+			Class<R> jdbcJavaType,
+			AttributeConverter<O, R> converter,
 			SessionFactoryImplementor sessionFactory) {
-		return ConvertedResultBuilder.from( columnAlias, relationalJavaType, converterJavaType, sessionFactory );
+		return new DynamicResultBuilderBasicConverted( columnAlias, domainJavaType, jdbcJavaType, converter, sessionFactory );
 	}
 
-	public static ScalarResultBuilder scalar(int position) {
+	public static <R> ResultBuilder converted(
+			String columnAlias,
+			Class<R> jdbcJavaType,
+			Class<? extends AttributeConverter<?, R>> converterJavaType,
+			SessionFactoryImplementor sessionFactory) {
+		return converted( columnAlias, null, jdbcJavaType, (Class) converterJavaType, sessionFactory );
+	}
+
+	public static <O,R> ResultBuilder converted(
+			String columnAlias,
+			Class<O> domainJavaType,
+			Class<R> jdbcJavaType,
+			Class<? extends AttributeConverter<O,R>> converterJavaType,
+			SessionFactoryImplementor sessionFactory) {
+		return new DynamicResultBuilderBasicConverted( columnAlias, domainJavaType, jdbcJavaType, converterJavaType, sessionFactory );
+	}
+
+	public static ResultBuilderBasicValued scalar(int position) {
 		// will be needed for interpreting legacy HBM <resultset/> mappings
 		throw new NotYetImplementedFor6Exception();
 	}
 
-	public static ScalarResultBuilder scalar(int position, BasicType<?> type) {
+	public static ResultBuilderBasicValued scalar(int position, BasicType<?> type) {
 		// will be needed for interpreting legacy HBM <resultset/> mappings
 		throw new NotYetImplementedFor6Exception();
+	}
+
+	public static <J> DynamicResultBuilderInstantiation<J> instantiation(Class<J> targetJavaType, SessionFactoryImplementor factory) {
+		final JavaTypeDescriptor<J> targetJtd = factory.getTypeConfiguration()
+				.getJavaTypeDescriptorRegistry()
+				.getDescriptor( targetJavaType );
+		return new DynamicResultBuilderInstantiation<>( targetJtd );
 	}
 
 	public static ResultBuilder attributeResult(
@@ -97,7 +145,7 @@ public class Builders {
 
 		if ( attributeMapping instanceof SingularAttributeMapping ) {
 			final SingularAttributeMapping singularAttributeMapping = (SingularAttributeMapping) attributeMapping;
-			return new AttributeResultBuilder( singularAttributeMapping, columnAlias, fullEntityName, attributePath );
+			return new DynamicResultBuilderAttribute( singularAttributeMapping, columnAlias, fullEntityName, attributePath );
 		}
 
 		throw new IllegalArgumentException(
@@ -128,8 +176,14 @@ public class Builders {
 	 * @param entityName
 	 * @return
 	 */
-	public static EntityResultBuilder entity(String tableAlias, String entityName) {
-		throw new NotYetImplementedFor6Exception( );
+	public static DynamicResultBuilderEntityStandard entity(
+			String tableAlias,
+			String entityName,
+			SessionFactoryImplementor sessionFactory) {
+		final RuntimeMetamodels runtimeMetamodels = sessionFactory.getRuntimeMetamodels();
+		final EntityMappingType entityMapping = runtimeMetamodels.getEntityMappingType( entityName );
+
+		return new DynamicResultBuilderEntityStandard( entityMapping, tableAlias );
 	}
 
 	/**
@@ -140,25 +194,32 @@ public class Builders {
 	 * @see org.hibernate.query.NativeQuery#addEntity(String, Class)
 	 * @see org.hibernate.query.NativeQuery#addEntity(String, String)
 	 */
-	public static CalculatedEntityResultBuilder entityCalculated(String tableAlias, String entityName) {
-		return entityCalculated( tableAlias, entityName, null );
+	public static DynamicResultBuilderEntityCalculated entityCalculated(
+			String tableAlias,
+			String entityName,
+			SessionFactoryImplementor sessionFactory) {
+		return entityCalculated( tableAlias, entityName, null,sessionFactory );
 	}
 
 	/**
 	 * Creates a EntityResultBuilder that does not allow any further configuring of the mapping.
 	 *
-	 * @see #entityCalculated(String, String)
+	 * @see #entityCalculated(String, String, SessionFactoryImplementor)
 	 * @see org.hibernate.query.NativeQuery#addEntity(String, Class, LockMode)
 	 * @see org.hibernate.query.NativeQuery#addEntity(String, String, LockMode)
 	 */
-	public static CalculatedEntityResultBuilder entityCalculated(
+	public static DynamicResultBuilderEntityCalculated entityCalculated(
 			String tableAlias,
 			String entityName,
-			LockMode explicitLockMode) {
-		return new CalculatedEntityResultBuilder( tableAlias, entityName, explicitLockMode );
+			LockMode explicitLockMode,
+			SessionFactoryImplementor sessionFactory) {
+		final RuntimeMetamodels runtimeMetamodels = sessionFactory.getRuntimeMetamodels();
+		final EntityMappingType entityMapping = runtimeMetamodels.getEntityMappingType( entityName );
+
+		return new DynamicResultBuilderEntityCalculated( entityMapping, tableAlias, explicitLockMode, sessionFactory );
 	}
 
-	public static LegacyFetchBuilder fetch(String tableAlias, String ownerTableAlias, String joinPropertyName) {
+	public static DynamicFetchBuilderLegacy fetch(String tableAlias, String ownerTableAlias, String joinPropertyName) {
 		throw new NotYetImplementedFor6Exception( );
 	}
 }

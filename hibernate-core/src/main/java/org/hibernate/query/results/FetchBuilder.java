@@ -6,13 +6,15 @@
  */
 package org.hibernate.query.results;
 
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 import org.hibernate.Incubating;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.NativeQuery;
+import org.hibernate.query.NavigablePath;
+import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
@@ -21,13 +23,16 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
  * Responsible for building a single {@link DomainResult} instance as part of
  * the overall mapping of native / procedure query results.
  *
+ * @apiNote By definition a fetch is a reference to the fetched ModelPart
  * @author Steve Ebersole
  */
 @Incubating
-public interface FetchBuilder extends NativeQuery.ReturnProperty {
+public interface FetchBuilder {
+
 	Fetch buildFetch(
 			FetchParent parent,
-			JdbcValuesMetadata jdbcResultsMetadata,
+			NavigablePath fetchPath, JdbcValuesMetadata jdbcResultsMetadata,
+			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			Consumer<SqlSelection> sqlSelectionConsumer,
-			SessionFactoryImplementor sessionFactory);
+			DomainResultCreationState domainResultCreationState);
 }

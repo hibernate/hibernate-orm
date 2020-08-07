@@ -4,15 +4,15 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.query.results;
+package org.hibernate.query.internal;
 
-import org.hibernate.query.NativeQuery;
+import java.util.function.Consumer;
+
+import org.hibernate.query.results.ResultBuilder;
 
 /**
  * @author Steve Ebersole
  */
-public interface LegacyFetchBuilder extends FetchBuilder, NativeQuery.FetchReturn {
-	String getOwnerAlias();
-	String getFetchAlias();
-	String getFetchedAttributeName();
+public interface ResultMappingMemento {
+	ResultBuilder resolve(Consumer<String> querySpaceConsumer, ResultSetMappingResolutionContext context);
 }

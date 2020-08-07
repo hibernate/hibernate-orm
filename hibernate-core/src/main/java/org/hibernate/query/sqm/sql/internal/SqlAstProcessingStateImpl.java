@@ -87,9 +87,7 @@ public class SqlAstProcessingStateImpl implements SqlAstProcessingState, SqlExpr
 			expressionMap.put( key, expression );
 		}
 
-		final Expression result = normalize( expression );
-
-		return result;
+		return expression;
 	}
 
 	@SuppressWarnings("WeakerAccess")

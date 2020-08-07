@@ -6,9 +6,10 @@
  */
 package org.hibernate.boot.query;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.internal.FetchMappingMemento;
+import org.hibernate.query.internal.ResultMappingMemento;
+import org.hibernate.query.internal.ResultSetMappingResolutionContext;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
-import org.hibernate.query.results.ResultBuilder;
 
 /**
  * Models the "boot view" of a ResultSet mapping used in the mapping
@@ -20,21 +21,15 @@ import org.hibernate.query.results.ResultBuilder;
  *
  * @author Steve Ebersole
  */
-public interface NamedResultSetMappingDefinition {
+public interface NamedResultSetMappingDescriptor {
 	/**
 	 * The name under which the result-set-mapping is to be registered
 	 */
 	String getRegistrationName();
 
 	/**
-	 * Contract for the individual result mappings
-	 */
-	interface ResultMapping {
-		ResultBuilder resolve(SessionFactoryImplementor factory);
-	}
-
-	/**
 	 * Create the named runtime memento instance
+	 * @param resolutionContext
 	 */
-	NamedResultSetMappingMemento resolve(SessionFactoryImplementor factory);
+	NamedResultSetMappingMemento resolve(ResultSetMappingResolutionContext resolutionContext);
 }

@@ -17,6 +17,7 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.BasicValuedSingularAttributeMapping;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
+import org.hibernate.query.NativeQuery;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
@@ -71,6 +72,25 @@ public class NativeQueryResultBuilderTests {
 				}
 		);
 	}
+
+	@Test
+	public void fullyImplicitTest2(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final String sql = "select count(theString) from EntityOfBasics";
+					final NativeQueryImplementor<?> query = session.createNativeQuery( sql );
+
+					final List<?> results = query.list();
+					assertThat( results.size(), is( 1 ) );
+
+					final Object result = results.get( 0 );
+					assertThat( result, instanceOf( Long.class ) );
+
+					assertThat( result, is( 1L ) );
+				}
+		);
+	}
+
 	@Test
 	public void explicitOrderTest(SessionFactoryScope scope) {
 		scope.inTransaction(
@@ -174,6 +194,7 @@ public class NativeQueryResultBuilderTests {
 					final NativeQueryImplementor<?> query = session.createNativeQuery( sql );
 					query.addScalar(
 							"converted_gender",
+							EntityOfBasics.Gender.class,
 							Character.class,
 							new EntityOfBasics.GenderConverter()
 					);
@@ -194,6 +215,7 @@ public class NativeQueryResultBuilderTests {
 					final NativeQueryImplementor<?> query = session.createNativeQuery( sql );
 					query.addScalar(
 							"converted_gender",
+							EntityOfBasics.Gender.class,
 							Character.class,
 							EntityOfBasics.GenderConverter.class
 					);
@@ -295,5 +317,36 @@ public class NativeQueryResultBuilderTests {
 		scope.inTransaction(
 				session -> session.createQuery( "delete EntityOfBasics" ).executeUpdate()
 		);
+	}
+
+	public static class DTO {
+		private Integer key;
+		private String text;
+
+		public DTO(Integer key, String text) {
+			this.key = key;
+			this.text = text;
+		}
+	}
+
+	public static class Bean {
+		private Integer key;
+		private String text;
+
+		public Integer getKey() {
+			return key;
+		}
+
+		public void setKey(Integer key) {
+			this.key = key;
+		}
+
+		public String getText() {
+			return text;
+		}
+
+		public void setText(String text) {
+			this.text = text;
+		}
 	}
 }

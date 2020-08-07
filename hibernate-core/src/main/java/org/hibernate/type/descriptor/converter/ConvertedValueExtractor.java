@@ -9,7 +9,6 @@ package org.hibernate.type.descriptor.converter;
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-
 import javax.persistence.AttributeConverter;
 import javax.persistence.PersistenceException;
 

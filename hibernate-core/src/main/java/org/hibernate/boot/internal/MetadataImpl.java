@@ -33,7 +33,7 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
-import org.hibernate.boot.query.NamedResultSetMappingDefinition;
+import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
 import org.hibernate.boot.spi.SessionFactoryBuilderFactory;
 import org.hibernate.boot.spi.SessionFactoryBuilderImplementor;
 import org.hibernate.boot.spi.SessionFactoryBuilderService;
@@ -89,7 +89,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private final Map<String, NamedHqlQueryDefinition> namedQueryMap;
 	private final Map<String, NamedNativeQueryDefinition> namedNativeQueryMap;
 	private final Map<String, NamedProcedureCallDefinition> namedProcedureCallMap;
-	private final Map<String, NamedResultSetMappingDefinition> sqlResultSetMappingMap;
+	private final Map<String, NamedResultSetMappingDescriptor> sqlResultSetMappingMap;
 	private final Map<String, NamedEntityGraphDefinition> namedEntityGraphMap;
 	private final Map<String, SqmFunctionDescriptor> sqlFunctionMap;
 	private final Database database;
@@ -110,7 +110,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			Map<String, NamedHqlQueryDefinition> namedQueryMap,
 			Map<String, NamedNativeQueryDefinition> namedNativeQueryMap,
 			Map<String, NamedProcedureCallDefinition> namedProcedureCallMap,
-			Map<String, NamedResultSetMappingDefinition> sqlResultSetMappingMap,
+			Map<String, NamedResultSetMappingDescriptor> sqlResultSetMappingMap,
 			Map<String, NamedEntityGraphDefinition> namedEntityGraphMap,
 			Map<String, SqmFunctionDescriptor> sqlFunctionMap,
 			Database database,
@@ -253,12 +253,12 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
-	public NamedResultSetMappingDefinition getResultSetMapping(String name) {
+	public NamedResultSetMappingDescriptor getResultSetMapping(String name) {
 		return sqlResultSetMappingMap.get( name );
 	}
 
 	@Override
-	public void visitNamedResultSetMappingDefinition(Consumer<NamedResultSetMappingDefinition> definitionConsumer) {
+	public void visitNamedResultSetMappingDefinition(Consumer<NamedResultSetMappingDescriptor> definitionConsumer) {
 		sqlResultSetMappingMap.values().forEach( definitionConsumer );
 	}
 
@@ -346,14 +346,6 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		final Map<String, NamedCallableQueryMemento> map = new HashMap<>();
 		if ( namedProcedureCallMap != null ) {
 			namedProcedureCallMap.forEach( (key, value) -> map.put( key, value.resolve( sessionFactory ) ) );
-		}
-		return map;
-	}
-
-	private Map<String, NamedResultSetMappingMemento> buildResultSetMappingMementos(SessionFactoryImplementor sessionFactory) {
-		final HashMap<String, NamedResultSetMappingMemento> map = new HashMap<>();
-		if ( sqlResultSetMappingMap != null ) {
-			sqlResultSetMappingMap.forEach( (key, value) -> map.put( key, value.resolve( sessionFactory ) ) );
 		}
 		return map;
 	}

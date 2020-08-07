@@ -58,12 +58,14 @@ import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.internal.ParameterMetadataImpl;
 import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.internal.QueryParameterBindingsImpl;
+import org.hibernate.query.internal.ResultSetMappingResolutionContext;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.results.Builders;
-import org.hibernate.query.results.EntityResultBuilder;
-import org.hibernate.query.results.LegacyFetchBuilder;
 import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.ResultSetMappingImpl;
+import org.hibernate.query.results.dynamic.DynamicResultBuilderEntityStandard;
+import org.hibernate.query.results.dynamic.DynamicResultBuilderInstantiation;
+import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.query.spi.AbstractQuery;
 import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.NonSelectQueryPlan;
@@ -96,7 +98,7 @@ import static org.hibernate.jpa.QueryHints.HINT_NATIVE_LOCKMODE;
 @SuppressWarnings("WeakerAccess")
 public class NativeQueryImpl<R>
 		extends AbstractQuery<R>
-		implements NativeQueryImplementor<R>, ExecutionContext {
+		implements NativeQueryImplementor<R>, ExecutionContext, ResultSetMappingResolutionContext {
 	private final String sqlString;
 
 	private final ParameterMetadataImplementor parameterMetadata;
@@ -159,7 +161,7 @@ public class NativeQueryImpl<R>
 				.getQueryEngine()
 				.getNamedQueryRepository()
 				.getResultSetMappingMemento( resultSetMappingName )
-				.resolve( resultSetMapping, (s) -> {}, getSessionFactory() );
+				.resolve( resultSetMapping, (s) -> {}, this );
 	}
 
 	public NativeQueryImpl(
@@ -169,7 +171,7 @@ public class NativeQueryImpl<R>
 		super( session );
 
 		this.sqlString = sqlString;
-		resultSetMappingMemento.resolve( resultSetMapping, (s) -> {}, getSessionFactory() );
+		resultSetMappingMemento.resolve( resultSetMapping, (s) -> {}, this );
 
 		final ParameterInterpretation parameterInterpretation = resolveParameterInterpretation( session );
 
@@ -518,9 +520,18 @@ public class NativeQueryImpl<R>
 	@Override
 	public <C> NativeQueryImplementor<R> addScalar(
 			String columnAlias,
-			Class<C> relationalJavaType,
+			Class<C> jdbcJavaType,
 			AttributeConverter<?, C> converter) {
-		return registerBuilder( Builders.scalar( columnAlias, relationalJavaType, converter, getSessionFactory() ) );
+		return registerBuilder( Builders.converted( columnAlias, jdbcJavaType, converter, getSessionFactory() ) );
+	}
+
+	@Override
+	public <O, J> NativeQueryImplementor<R> addScalar(
+			String columnAlias,
+			Class<O> domainJavaType,
+			Class<J> jdbcJavaType,
+			AttributeConverter<O, J> converter) {
+		return registerBuilder( Builders.converted( columnAlias, domainJavaType, jdbcJavaType, converter, getSessionFactory() ) );
 	}
 
 	@Override
@@ -528,7 +539,26 @@ public class NativeQueryImpl<R>
 			String columnAlias,
 			Class<C> relationalJavaType,
 			Class<? extends AttributeConverter<?, C>> converter) {
-		return registerBuilder( Builders.scalar( columnAlias, relationalJavaType, converter, getSessionFactory() ) );
+		return registerBuilder( Builders.converted( columnAlias, relationalJavaType, converter, getSessionFactory() ) );
+	}
+
+	@Override
+	public <O, J> NativeQueryImplementor<R> addScalar(
+			String columnAlias,
+			Class<O> domainJavaType,
+			Class<J> jdbcJavaType,
+			Class<? extends AttributeConverter<O, J>> converterJavaType) {
+		return registerBuilder( Builders.converted( columnAlias, domainJavaType, jdbcJavaType, converterJavaType, getSessionFactory() ) );
+	}
+
+	@Override
+	public <J> InstantiationResultNode<J> addInstantiation(Class<J> targetJavaType) {
+		final DynamicResultBuilderInstantiation<J> builder = Builders.instantiation(
+				targetJavaType,
+				getSessionFactory()
+		);
+		registerBuilder( builder );
+		return builder;
 	}
 
 	@Override
@@ -557,17 +587,18 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public EntityResultBuilder addRoot(String tableAlias, String entityName) {
-		final EntityResultBuilder resultBuilder = Builders.entity(
+	public DynamicResultBuilderEntityStandard addRoot(String tableAlias, String entityName) {
+		final DynamicResultBuilderEntityStandard resultBuilder = Builders.entity(
 				tableAlias,
-				entityName
+				entityName,
+				getSessionFactory()
 		);
 		resultSetMapping.addResultBuilder( resultBuilder );
 		return resultBuilder;
 	}
 
 	@Override
-	public EntityResultBuilder addRoot(String tableAlias, Class entityType) {
+	public DynamicResultBuilderEntityStandard addRoot(String tableAlias, Class entityType) {
 		return addRoot( tableAlias, entityType.getName() );
 	}
 
@@ -578,13 +609,13 @@ public class NativeQueryImpl<R>
 
 	@Override
 	public NativeQueryImplementor<R> addEntity(String tableAlias, String entityName) {
-		registerBuilder( Builders.entityCalculated( tableAlias, entityName ) );
+		registerBuilder( Builders.entityCalculated( tableAlias, entityName, getSessionFactory() ) );
 		return this;
 	}
 
 	@Override
 	public NativeQueryImplementor<R> addEntity(String tableAlias, String entityName, LockMode lockMode) {
-		registerBuilder( Builders.entityCalculated( tableAlias, entityName, lockMode ) );
+		registerBuilder( Builders.entityCalculated( tableAlias, entityName, lockMode, getSessionFactory() ) );
 		return this;
 	}
 
@@ -605,7 +636,7 @@ public class NativeQueryImpl<R>
 
 	@Override
 	public FetchReturn addFetch(String tableAlias, String ownerTableAlias, String joinPropertyName) {
-		final LegacyFetchBuilder fetchBuilder = Builders.fetch( tableAlias, ownerTableAlias, joinPropertyName );
+		final DynamicFetchBuilderLegacy fetchBuilder = Builders.fetch( tableAlias, ownerTableAlias, joinPropertyName );
 		resultSetMapping.addLegacyFetchBuilder( fetchBuilder );
 		return fetchBuilder;
 	}

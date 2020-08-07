@@ -28,5 +28,7 @@ public interface JdbcValuesMappingProducer {
 	 * {@link org.hibernate.sql.results.graph.DomainResult} and
 	 * {@link org.hibernate.sql.results.graph.Fetch}
 	 */
-	JdbcValuesMapping resolve(JdbcValuesMetadata jdbcResultsMetadata, SessionFactoryImplementor sessionFactory);
+	JdbcValuesMapping resolve(
+			JdbcValuesMetadata jdbcResultsMetadata,
+			SessionFactoryImplementor sessionFactory);
 }

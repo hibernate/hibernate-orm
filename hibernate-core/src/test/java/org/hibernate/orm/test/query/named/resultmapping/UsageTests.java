@@ -11,6 +11,7 @@ import java.util.List;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -27,6 +28,7 @@ import static org.hamcrest.Matchers.notNullValue;
 @DomainModel( annotatedClasses = SimpleEntityWithNamedMappings.class )
 @SessionFactory
 public class UsageTests {
+	// select a.{*}
 	@Test
 	public void testSimpleScalarMapping(SessionFactoryScope scope) {
 		scope.inTransaction(
@@ -71,6 +73,34 @@ public class UsageTests {
 
 					// todo (6.0) : should also try executing the ProcedureCall once that functionality is implemented
 					session.createStoredProcedureCall( "abc", "id_name_dto" );
+				}
+		);
+	}
+
+	@Test
+	@FailureExpected( reason = "Entity result mappings not yet implemented" )
+	public void testSimpleEntityResultMapping(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					// make sure it is in the repository
+					final NamedResultSetMappingMemento mappingMemento = session.getSessionFactory()
+							.getQueryEngine()
+							.getNamedQueryRepository()
+							.getResultSetMappingMemento( "entity" );
+					assertThat( mappingMemento, notNullValue() );
+
+					// apply it to a native-query
+					final String qryString = "select id, name from SimpleEntityWithNamedMappings";
+					final List<SimpleEntityWithNamedMappings> results
+							= session.createNativeQuery( qryString, "entity" ).list();
+					assertThat( results.size(), is( 1 ) );
+
+					final SimpleEntityWithNamedMappings entity = results.get( 0 );
+					assertThat( entity.getId(), is( 1 ) );
+					assertThat( entity.getName(), is( "test" ) );
+
+					// todo (6.0) : should also try executing the ProcedureCall once that functionality is implemented
+					session.createStoredProcedureCall( "abc", "entity" );
 				}
 		);
 	}

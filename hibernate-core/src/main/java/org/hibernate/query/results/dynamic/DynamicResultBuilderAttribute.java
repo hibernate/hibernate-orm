@@ -4,37 +4,33 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.query.results;
+package org.hibernate.query.results.dynamic;
 
-import java.util.List;
 import java.util.Locale;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
-import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.BasicValuedSingularAttributeMapping;
-import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
+import org.hibernate.query.results.SqlSelectionImpl;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.sql.results.graph.Fetch;
-import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
 /**
+ * DynamicResultBuilder based on a named mapped attribute
+ *
  * @author Steve Ebersole
  */
-public class AttributeResultBuilder implements ResultBuilder {
+public class DynamicResultBuilderAttribute implements DynamicResultBuilder {
 	private final BasicValuedSingularAttributeMapping attributeMapping;
 	private final String columnAlias;
 	private final String entityName;
 	private final String attributePath;
 
-	public AttributeResultBuilder(
+	public DynamicResultBuilderAttribute(
 			SingularAttributeMapping attributeMapping,
 			String columnAlias,
 			String entityName,
@@ -59,13 +55,16 @@ public class AttributeResultBuilder implements ResultBuilder {
 	}
 
 	@Override
-	public DomainResult<?> buildReturn(
+	public DomainResult<?> buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
-			BiFunction<String, String, LegacyFetchBuilder> legacyFetchResolver,
+			int resultPosition,
+			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			Consumer<SqlSelection> sqlSelectionConsumer,
-			SessionFactoryImplementor sessionFactory) {
+			DomainResultCreationState domainResultCreationState) {
 		final int resultSetPosition = jdbcResultsMetadata.resolveColumnPosition( columnAlias );
 		final int valuesArrayPosition = resultSetPosition - 1;
+
+		// todo (6.0) : TableGroups + `attributeMapping#buldResult`
 
 		final SqlSelectionImpl sqlSelection = new SqlSelectionImpl( valuesArrayPosition, attributeMapping );
 		sqlSelectionConsumer.accept( sqlSelection );

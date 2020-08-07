@@ -6,6 +6,8 @@
  */
 package org.hibernate.orm.test.query.named.resultmapping;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.internal.ResultSetMappingResolutionContext;
 import org.hibernate.query.named.NamedQueryRepository;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.results.ResultSetMapping;
@@ -33,7 +35,15 @@ public class SimpleNamedMappingTests {
 		final NamedResultSetMappingMemento mappingMemento = namedQueryRepository.getResultSetMappingMemento( "name" );
 
 		final ResultSetMapping mapping = new ResultSetMappingImpl();
-		mappingMemento.resolve( mapping, querySpace -> {}, sessionFactoryScope.getSessionFactory() );
+
+		final ResultSetMappingResolutionContext resolutionContext = new ResultSetMappingResolutionContext() {
+			@Override
+			public SessionFactoryImplementor getSessionFactory() {
+				return sessionFactoryScope.getSessionFactory();
+			}
+		};
+
+		mappingMemento.resolve( mapping, querySpace -> {}, resolutionContext );
 
 		assertThat( mapping.getNumberOfResultBuilders(), is( 1 ) );
 	}

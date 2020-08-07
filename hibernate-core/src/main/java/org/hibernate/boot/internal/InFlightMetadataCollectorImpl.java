@@ -61,7 +61,7 @@ import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
-import org.hibernate.boot.query.NamedResultSetMappingDefinition;
+import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
 import org.hibernate.boot.spi.NaturalIdUniqueKeyBinder;
 import org.hibernate.cfg.AnnotatedClassType;
 import org.hibernate.cfg.AvailableSettings;
@@ -142,7 +142,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	private final Map<String, NamedHqlQueryDefinition> namedQueryMap = new HashMap<>();
 	private final Map<String, NamedNativeQueryDefinition> namedNativeQueryMap = new HashMap<>();
 	private final Map<String, NamedProcedureCallDefinition> namedProcedureCallMap = new HashMap<>();
-	private final Map<String, NamedResultSetMappingDefinition> sqlResultSetMappingMap = new HashMap<>();
+	private final Map<String, NamedResultSetMappingDescriptor> sqlResultSetMappingMap = new HashMap<>();
 
 	private final Map<String, NamedEntityGraphDefinition> namedEntityGraphMap = new HashMap<>();
 	private final Map<String, FetchProfile> fetchProfileMap = new HashMap<>();
@@ -648,17 +648,17 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	// result-set mapping handling
 
 	@Override
-	public NamedResultSetMappingDefinition getResultSetMapping(String name) {
+	public NamedResultSetMappingDescriptor getResultSetMapping(String name) {
 		return sqlResultSetMappingMap.get( name );
 	}
 
 	@Override
-	public void visitNamedResultSetMappingDefinition(Consumer<NamedResultSetMappingDefinition> definitionConsumer) {
+	public void visitNamedResultSetMappingDefinition(Consumer<NamedResultSetMappingDescriptor> definitionConsumer) {
 		sqlResultSetMappingMap.values().forEach( definitionConsumer );
 	}
 
 	@Override
-	public void addResultSetMapping(NamedResultSetMappingDefinition resultSetMappingDescriptor) {
+	public void addResultSetMapping(NamedResultSetMappingDescriptor resultSetMappingDescriptor) {
 		if ( resultSetMappingDescriptor == null ) {
 			throw new IllegalArgumentException( "Result-set mapping was null" );
 		}
@@ -675,8 +675,8 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		applyResultSetMapping( resultSetMappingDescriptor );
 	}
 
-	public void applyResultSetMapping(NamedResultSetMappingDefinition resultSetMappingDescriptor) {
-		final NamedResultSetMappingDefinition old = sqlResultSetMappingMap.put(
+	public void applyResultSetMapping(NamedResultSetMappingDescriptor resultSetMappingDescriptor) {
+		final NamedResultSetMappingDescriptor old = sqlResultSetMappingMap.put(
 				resultSetMappingDescriptor.getRegistrationName(),
 				resultSetMappingDescriptor
 		);
@@ -689,7 +689,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	}
 
 	@Override
-	public void addDefaultResultSetMapping(NamedResultSetMappingDefinition definition) {
+	public void addDefaultResultSetMapping(NamedResultSetMappingDescriptor definition) {
 		final String name = definition.getRegistrationName();
 		if ( !defaultSqlResultSetMappingNames.contains( name ) ) {
 			sqlResultSetMappingMap.remove( name );

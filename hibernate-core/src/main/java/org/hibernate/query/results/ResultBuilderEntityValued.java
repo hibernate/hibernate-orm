@@ -6,30 +6,26 @@
  */
 package org.hibernate.query.results;
 
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.NativeQuery;
+import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.results.graph.Fetch;
-import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
 /**
+ * Specialization of ResultBuilder for building an EntityResult
+ *
  * @author Steve Ebersole
  */
-public class StandardFetchBuilderImpl implements FetchBuilder {
+public interface ResultBuilderEntityValued extends ResultBuilder {
 	@Override
-	public Fetch buildFetch(
-			FetchParent parent,
+	EntityResult buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
+			int resultPosition,
+			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			Consumer<SqlSelection> sqlSelectionConsumer,
-			SessionFactoryImplementor sessionFactory) {
-		return null;
-	}
-
-	@Override
-	public NativeQuery.ReturnProperty addColumnAlias(String columnAlias) {
-		return null;
-	}
+			DomainResultCreationState domainResultCreationState);
 }

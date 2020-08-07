@@ -7,28 +7,51 @@
 package org.hibernate.query.results;
 
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.descriptor.ValueExtractor;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * SqlSelection for NativeQuery
+ * SqlSelection used in {@link ResultSetMapping} resolution.  Doubles as its own
+ * {@link Expression} as well.
  *
  * @author Steve Ebersole
  */
-public class SqlSelectionImpl implements SqlSelection {
+public class SqlSelectionImpl implements SqlSelection, Expression {
 	private final int valuesArrayPosition;
 	private final BasicValuedMapping valueMapping;
+	private final JdbcMapping jdbcMapping;
 
 	public SqlSelectionImpl(int valuesArrayPosition, BasicValuedMapping valueMapping) {
 		this.valuesArrayPosition = valuesArrayPosition;
 		this.valueMapping = valueMapping;
+		this.jdbcMapping = valueMapping.getJdbcMapping();
+	}
+
+	public SqlSelectionImpl(int valuesArrayPosition, JdbcMapping jdbcMapping) {
+		this.valuesArrayPosition = valuesArrayPosition;
+		this.jdbcMapping = jdbcMapping;
+
+		this.valueMapping = null;
 	}
 
 	@Override
 	public ValueExtractor getJdbcValueExtractor() {
-		return valueMapping.getJdbcMapping().getJdbcValueExtractor();
+		return jdbcMapping.getJdbcValueExtractor();
+	}
+
+	@Override
+	public SqlSelection createSqlSelection(
+			int jdbcPosition,
+			int valuesArrayPosition,
+			JavaTypeDescriptor javaTypeDescriptor,
+			TypeConfiguration typeConfiguration) {
+		return this;
 	}
 
 	@Override

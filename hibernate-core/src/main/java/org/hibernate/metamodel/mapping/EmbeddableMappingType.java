@@ -347,6 +347,9 @@ public class EmbeddableMappingType implements ManagedMappingType {
 			TypeConfiguration typeConfiguration) {
 		attributeMappings.forEach(
 				(s, attributeMapping) -> {
+					if ( attributeMapping instanceof PluralAttributeMapping ) {
+						return;
+					}
 					if ( attributeMapping instanceof ToOneAttributeMapping ) {
 						( (ToOneAttributeMapping) attributeMapping ).getKeyTargetMatchPart().visitJdbcTypes(
 								action,

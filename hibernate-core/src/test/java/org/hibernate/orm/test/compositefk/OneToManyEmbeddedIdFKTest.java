@@ -123,7 +123,6 @@ public class OneToManyEmbeddedIdFKTest {
 	}
 
 	@Test
-	@FailureExpected(reason = "Embedded parameters has not yet been implemented ")
 	public void testEmbeddedIdParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -135,7 +134,7 @@ public class OneToManyEmbeddedIdFKTest {
 					).setParameter( "id", superUserKey ).uniqueResult();
 
 					assertThat( system, is( notNullValue() ) );
-					assertThat( system.getUsers().size(), is( 2 ) );
+					assertThat( system.getUsers().size(), is( 1 ) );
 				}
 		);
 	}

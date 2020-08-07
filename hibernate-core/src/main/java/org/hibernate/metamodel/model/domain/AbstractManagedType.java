@@ -11,6 +11,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -44,8 +46,8 @@ public abstract class AbstractManagedType<J>
 	private final ManagedDomainType<? super J> superType;
 	private final RepresentationMode representationMode;
 
-	private final Map<String, SingularPersistentAttribute<J, ?>> declaredSingularAttributes = new HashMap<>();
-	private final Map<String, PluralPersistentAttribute<J, ?, ?>> declaredPluralAttributes = new HashMap<>();
+	private final Map<String, SingularPersistentAttribute<J, ?>> declaredSingularAttributes = new LinkedHashMap<>();
+	private final Map<String, PluralPersistentAttribute<J, ?, ?>> declaredPluralAttributes = new LinkedHashMap<>();
 
 	private final List<ManagedDomainType> subTypes = new ArrayList<>();
 
@@ -104,7 +106,7 @@ public abstract class AbstractManagedType<J>
 	@Override
 	@SuppressWarnings("unchecked")
 	public Set<Attribute<? super J, ?>> getAttributes() {
-		final HashSet attributes = new HashSet<>( getDeclaredAttributes() );
+		final HashSet attributes = new LinkedHashSet( getDeclaredAttributes() );
 
 		if ( getSuperType() != null ) {
 			attributes.addAll( getSuperType().getAttributes() );
@@ -120,7 +122,7 @@ public abstract class AbstractManagedType<J>
 			return Collections.emptySet();
 		}
 
-		final HashSet attributes = new HashSet<>( declaredSingularAttributes.values() );
+		final HashSet attributes = new LinkedHashSet( declaredSingularAttributes.values() );
 		attributes.addAll( declaredPluralAttributes.values() );
 		return attributes;
 	}

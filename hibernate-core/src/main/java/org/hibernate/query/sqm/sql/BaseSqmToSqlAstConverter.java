@@ -29,7 +29,6 @@ import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.metamodel.mapping.internal.BasicValuedCollectionPart;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
@@ -2178,25 +2177,17 @@ public abstract class BaseSqmToSqlAstConverter
 	@Override
 	public MemberOfPredicate visitMemberOfPredicate(SqmMemberOfPredicate predicate) {
 		final SqmPath<?> pluralPath = predicate.getPluralPath();
-		final PluralAttributeMapping mappingModelExpressable = (PluralAttributeMapping) SqmMappingModelHelper.resolveMappingModelExpressable(
-				pluralPath,
-				getCreationContext().getDomainModel(),
-				getFromClauseAccess()::findTableGroup
-		);
+		final PluralAttributeMapping mappingModelExpressable = (PluralAttributeMapping) determineValueMapping(pluralPath);
 
-		final CollectionPart elementDescriptor = mappingModelExpressable.getElementDescriptor();
-
-		if ( elementDescriptor instanceof EntityCollectionPart ) {
+		if ( mappingModelExpressable.getElementDescriptor() instanceof EntityCollectionPart ) {
 			inferableTypeAccessStack.push(
-					() -> ( (EntityCollectionPart) elementDescriptor ).getEntityMappingType().getIdentifierMapping() );
-		}
-		else if ( elementDescriptor instanceof BasicValuedCollectionPart ) {
-			inferableTypeAccessStack.push( () -> elementDescriptor );
+					() -> ( (EntityCollectionPart) mappingModelExpressable.getElementDescriptor() ).getEntityMappingType()
+							.getIdentifierMapping() );
 		}
 		else {
-			throw new NotYetImplementedFor6Exception(
-					"Member of with Collection of Embeddable has not yet been implemented" );
+			inferableTypeAccessStack.push( () -> mappingModelExpressable );
 		}
+
 		final Expression lhs;
 		try {
 			lhs = (Expression) predicate.getLeftHandExpression().accept( this );
@@ -2233,6 +2224,8 @@ public abstract class BaseSqmToSqlAstConverter
 				() -> querySpec::applyPredicate,
 				creationContext
 		);
+
+		fromClauseIndex.registerTableGroup( pluralPath.getNavigablePath(), rootTableGroup );
 
 		querySpec.getFromClause().addRoot( rootTableGroup );
 

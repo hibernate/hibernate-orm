@@ -167,6 +167,10 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 		return column;
 	}
 
+	public Class getResolvedJavaClass() {
+		return resolvedJavaClass;
+	}
+
 	@Override
 	public long getColumnLength() {
 		if ( column != null && column instanceof Column ) {

@@ -10,9 +10,11 @@ import java.util.List;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
 
-import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
-import org.hibernate.testing.orm.junit.FailureExpected;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,19 +25,18 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * @author Andrea Boriero
  */
-@FailureExpected( reason = "Support for embedded-valued parameters not yet implemented" )
-public class EmbeddableAsParameterTest extends SessionFactoryBasedFunctionalTest {
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				Person.class,
-		};
-	}
+@DomainModel(
+		annotatedClasses = {
+				EmbeddableAsParameterTest.Person.class,
+				EmbeddableAsParameterTest.EntityTest.class
+		}
+)
+@SessionFactory
+public class EmbeddableAsParameterTest {
 
 	@Test
-	public void testAsParameterInWhereClause() {
-		inTransaction(
+	public void testAsParameterInWhereClause(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					List results = session.createQuery( "select p from Person p where p.name = :name" ).
 							setParameter( "name", new Name( "Fab", "Fab" ) ).list();
@@ -45,19 +46,32 @@ public class EmbeddableAsParameterTest extends SessionFactoryBasedFunctionalTest
 	}
 
 	@Test
-	public void testAsParameterReuseInWhereClause() {
-		inTransaction(
+	public void testAsParameterReuseInWhereClause(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
-					List results = session.createQuery( "select p from Person p where p.name = :name or p.name = :name " ).
-							setParameter( "name", new Name( "Fab", "Fab" ) ).list();
+					List results = session.createQuery( "select p from Person p where p.name = :name or p.name = :name " )
+							.
+									setParameter( "name", new Name( "Fab", "Fab" ) )
+							.list();
 					assertThat( results.size(), is( 1 ) );
 				}
 		);
 	}
 
+	@Test
+	public void testAsParameterReuseInWhereClause2(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					List results = session.createQuery( "select p from Person p where p.embeddableTest = :embeddable" ).
+							setParameter( "embeddable", new EmbeddableTest() ).list();
+					assertThat( results.size(), is( 0 ) );
+				}
+		);
+	}
+
 	@BeforeEach
-	public void setUp() {
-		inTransaction(
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Person person = new Person(
 							1,
@@ -70,8 +84,8 @@ public class EmbeddableAsParameterTest extends SessionFactoryBasedFunctionalTest
 	}
 
 	@AfterEach
-	public void tearDown() {
-		inTransaction(
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					session.createQuery( "delete Person" ).executeUpdate();
 				}
@@ -84,6 +98,8 @@ public class EmbeddableAsParameterTest extends SessionFactoryBasedFunctionalTest
 		private Integer id;
 
 		private Name name;
+
+		private EmbeddableTest embeddableTest;
 
 		private Integer age;
 
@@ -123,6 +139,46 @@ public class EmbeddableAsParameterTest extends SessionFactoryBasedFunctionalTest
 
 		public void setAge(Integer age) {
 			this.age = age;
+		}
+
+		public EmbeddableTest getEmbeddableTest() {
+			return embeddableTest;
+		}
+
+		public void setEmbeddableTest(EmbeddableTest embeddableTest) {
+			this.embeddableTest = embeddableTest;
+		}
+	}
+
+	@Embeddable
+	public static class EmbeddableTest {
+		private String street;
+
+		@OneToMany
+		private List<EntityTest> entityTests;
+
+	}
+
+	@Entity(name = "EmbeddableTest")
+	public static class EntityTest {
+		@Id
+		private Long id;
+		private String name;
+
+		public Long getId() {
+			return id;
+		}
+
+		public void setId(Long id) {
+			this.id = id;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
 		}
 	}
 

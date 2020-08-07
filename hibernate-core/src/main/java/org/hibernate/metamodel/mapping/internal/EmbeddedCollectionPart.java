@@ -40,12 +40,14 @@ import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.from.CompositeTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
+import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
 import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableFetchImpl;
+import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableResultImpl;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -90,6 +92,20 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 		this.containingTableExpression = containingTableExpression;
 		this.columnExpressions = columnExpressions;
 		this.sqlAliasStem = sqlAliasStem;
+	}
+
+	@Override
+	public <T> DomainResult<T> createDomainResult(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			String resultVariable,
+			DomainResultCreationState creationState) {
+		return new EmbeddableResultImpl<>(
+				navigablePath,
+				this,
+				resultVariable,
+				creationState
+		);
 	}
 
 	@Override

@@ -18,6 +18,6 @@ import org.hibernate.metamodel.spi.ManagedTypeRepresentationStrategy;
  *
  * @author Steve Ebersole
  */
-public interface EmbeddableDomainType<J> extends ManagedDomainType<J>, EmbeddableType<J> {
+public interface EmbeddableDomainType<J> extends ManagedDomainType<J>, EmbeddableType<J>, AllowableParameterType<J> {
 	ManagedTypeRepresentationStrategy getRepresentationStrategy();
 }

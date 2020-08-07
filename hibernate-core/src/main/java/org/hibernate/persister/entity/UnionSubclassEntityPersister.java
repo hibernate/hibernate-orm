@@ -417,7 +417,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	protected boolean[] getTableHasColumns() {
-		return new boolean[] {true};
+		return ArrayHelper.TRUE;
 	}
 
 	@Override

@@ -8,6 +8,8 @@ package org.hibernate.bytecode.enhance.internal.tracker;
 
 import java.util.Arrays;
 
+import org.hibernate.internal.util.collections.ArrayHelper;
+
 /**
  * small low memory class to keep track of changed fields
  * <p/>
@@ -22,7 +24,7 @@ public final class SimpleFieldTracker implements DirtyTracker {
 	private boolean suspended;
 
 	public SimpleFieldTracker() {
-		names = new String[0];
+		names = ArrayHelper.EMPTY_STRING_ARRAY;
 	}
 
 	@Override
@@ -49,7 +51,7 @@ public final class SimpleFieldTracker implements DirtyTracker {
 	@Override
 	public void clear() {
 		if ( !isEmpty() ) {
-			names = new String[0];
+			names = ArrayHelper.EMPTY_STRING_ARRAY;
 		}
 	}
 

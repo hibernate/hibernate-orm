@@ -223,7 +223,7 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 						typesByPropertyPath.remove( path );
 						// Set everything to empty to signal action has to be taken!
 						// org.hibernate.hql.internal.ast.tree.DotNode#dereferenceEntityJoin() is reacting to this
-						String[] empty = new String[0];
+						String[] empty = ArrayHelper.EMPTY_STRING_ARRAY;
 						columnsByPropertyPath.put( path, empty );
 						columnReadersByPropertyPath.put( path, empty );
 						columnReaderTemplatesByPropertyPath.put( path, empty );

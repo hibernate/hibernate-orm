@@ -84,7 +84,7 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( MappingMetamodelImpl.class );
 
 	private static final String INVALID_IMPORT = "";
-	private static final String[] EMPTY_IMPLEMENTORS = new String[0];
+	private static final String[] EMPTY_IMPLEMENTORS = ArrayHelper.EMPTY_STRING_ARRAY;
 
 	private final SessionFactoryImplementor sessionFactory;
 

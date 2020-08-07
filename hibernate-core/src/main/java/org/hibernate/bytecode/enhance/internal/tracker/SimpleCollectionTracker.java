@@ -9,6 +9,7 @@ package org.hibernate.bytecode.enhance.internal.tracker;
 import java.util.Arrays;
 
 import org.hibernate.bytecode.enhance.spi.CollectionTracker;
+import org.hibernate.internal.util.collections.ArrayHelper;
 
 /**
  * small low memory class to keep track of the number of elements in a collection
@@ -21,8 +22,8 @@ public final class SimpleCollectionTracker implements CollectionTracker {
 	private int[] sizes;
 
 	public SimpleCollectionTracker() {
-		names = new String[0];
-		sizes = new int[0];
+		names = ArrayHelper.EMPTY_STRING_ARRAY;
+		sizes = ArrayHelper.EMPTY_INT_ARRAY;
 	}
 
 	@Override

@@ -14,6 +14,7 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 
 import org.hibernate.HibernateException;
+import org.hibernate.internal.util.collections.ArrayHelper;
 
 /**
  * An object that is shallow-cloneable
@@ -22,7 +23,7 @@ import org.hibernate.HibernateException;
  */
 public class Cloneable {
 
-	private static final Object[] READER_METHOD_ARGS = new Object[0];
+	private static final Object[] READER_METHOD_ARGS = ArrayHelper.EMPTY_OBJECT_ARRAY;
 
 	/**
 	 * Essentially performs a shallow copy of this SessionEventListenerConfig

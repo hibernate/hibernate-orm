@@ -14,6 +14,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.zip.ZipInputStream;
 
+import org.hibernate.internal.util.collections.ArrayHelper;
+
 /**
  * A helper for reading byte code from various input sources.
  *
@@ -43,7 +45,7 @@ public class ByteCodeHelper {
 		}
 
 		final byte[] buffer = new byte[409600];
-		byte[] classBytes = new byte[0];
+		byte[] classBytes = ArrayHelper.EMPTY_BYTE_ARRAY;
 
 		try {
 			int r = inputStream.read( buffer );

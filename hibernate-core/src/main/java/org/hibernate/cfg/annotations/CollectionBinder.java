@@ -1229,7 +1229,7 @@ public abstract class CollectionBinder {
 						ConstraintMode foreignKeyValue = joinTableAnn.foreignKey().value();
 						if ( joinTableAnn.joinColumns().length != 0 ) {
 							final JoinColumn joinColumnAnn = joinTableAnn.joinColumns()[0];
-							if ( "".equals( foreignKeyName ) ) {
+							if ( foreignKeyName != null && foreignKeyName.isEmpty() ) {
 								foreignKeyName = joinColumnAnn.foreignKey().name();
 								foreignKeyDefinition = joinColumnAnn.foreignKey().foreignKeyDefinition();
 							}
@@ -1447,7 +1447,7 @@ public abstract class CollectionBinder {
 					ConstraintMode foreignKeyValue = joinTableAnn.inverseForeignKey().value();
 					if ( joinTableAnn.inverseJoinColumns().length != 0 ) {
 						final JoinColumn joinColumnAnn = joinTableAnn.inverseJoinColumns()[0];
-						if ( "".equals( foreignKeyName ) ) {
+						if ( foreignKeyName != null && foreignKeyName.isEmpty() ) {
 							foreignKeyName = joinColumnAnn.foreignKey().name();
 							foreignKeyDefinition = joinColumnAnn.foreignKey().foreignKeyDefinition();
 						}

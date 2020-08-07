@@ -20,6 +20,7 @@ import javax.xml.stream.events.XMLEvent;
 import javax.xml.stream.util.EventReaderDelegate;
 
 import org.hibernate.boot.xsd.MappingXsdSupport;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * A StAX EventReader for {@code hbm.xml} files to add namespaces in documents
@@ -66,7 +67,7 @@ public class HbmEventReader extends EventReaderDelegate {
 	private StartElement applyNamespace(StartElement startElement) {
 		final List<Namespace> targetNamespaces = new ArrayList<>();
 
-		if ( "".equals( startElement.getName().getNamespaceURI() ) ) {
+		if ( StringHelper.isEmpty( startElement.getName().getNamespaceURI() ) ) {
 			// add the default namespace mapping
 			targetNamespaces.add( xmlEventFactory.createNamespace( MappingXsdSupport.INSTANCE.hbmXsd().getNamespaceUri() ) );
 		}

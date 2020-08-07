@@ -60,7 +60,7 @@ public class NamedQueryBinder {
 		for ( Object content : namedQueryBinding.getContent() ) {
 			if ( content instanceof String ) {
 				final String hqlString = StringHelper.nullIfEmpty( ( (String) content ).trim() );
-				if ( !StringHelper.isEmpty( hqlString ) ) {
+				if ( StringHelper.isNotEmpty( hqlString ) ) {
 					queryBuilder.setHqlString( hqlString );
 					foundQuery = true;
 				}

@@ -15,6 +15,7 @@ import java.util.List;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 
@@ -46,7 +47,7 @@ public class CustomSQLTest extends LegacyTestCase {
 
 	@Test
     @RequiresDialectFeature( NonIdentityGeneratorChecker.class )
-    @SkipForDialect( value = {PostgreSQL81Dialect.class, PostgreSQLDialect.class}, jiraKey = "HHH-6704")
+    @SkipForDialect( value = {PostgreSQL81Dialect.class, PostgreSQLDialect.class, CockroachDialect.class}, jiraKey = "HHH-6704")
 	public void testInsert() throws HibernateException, SQLException {
 		Session s = openSession();
 		s.beginTransaction();

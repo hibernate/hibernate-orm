@@ -44,17 +44,22 @@ public class BasicSametable extends BaseEnversJPAFunctionalTestCase {
 	public void initData() {
 		EntityManager em = getEntityManager();
 
-		// We need first to modify the columns in the middle (join table) to allow null values. Hbm2ddl doesn't seem
-		// to allow this.
 		em.getTransaction().begin();
 		Session session = (Session) em.getDelegate();
 		session.createNativeQuery( "DROP TABLE children" ).executeUpdate();
+		session.createNativeQuery( "DROP TABLE children_AUD" ).executeUpdate();
+		em.getTransaction().commit();
+		em.clear();
+
+		// We need first to modify the columns in the middle (join table) to allow null values. Hbm2ddl doesn't seem
+		// to allow this.
+		em.getTransaction().begin();
+		session = (Session) em.getDelegate();
 		session.createNativeQuery(
 				"CREATE TABLE children ( parent_id " + getDialect().getTypeName( Types.INTEGER ) +
 						", child1_id " + getDialect().getTypeName( Types.INTEGER ) + getDialect().getNullColumnString() +
 						", child2_id " + getDialect().getTypeName( Types.INTEGER ) + getDialect().getNullColumnString() + " )"
 		).executeUpdate();
-		session.createNativeQuery( "DROP TABLE children_AUD" ).executeUpdate();
 		session.createNativeQuery(
 				"CREATE TABLE children_AUD ( REV " + getDialect().getTypeName( Types.INTEGER ) + " NOT NULL" +
 						", REVEND " + getDialect().getTypeName( Types.INTEGER ) +

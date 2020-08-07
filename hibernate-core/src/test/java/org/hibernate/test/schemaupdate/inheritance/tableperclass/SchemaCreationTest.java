@@ -17,6 +17,7 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
@@ -87,7 +88,7 @@ public class SchemaCreationTest {
 					isUniqueConstraintCreated = true;
 				}
 			}
-			else if ( dialect instanceof PostgreSQL81Dialect) {
+			else if ( dialect instanceof PostgreSQL81Dialect || dialect instanceof CockroachDialect ) {
 				if (statement.toLowerCase().startsWith("alter table if exists category add constraint")
 						&& statement.toLowerCase().contains("unique (code)")) {
 					isUniqueConstraintCreated = true;

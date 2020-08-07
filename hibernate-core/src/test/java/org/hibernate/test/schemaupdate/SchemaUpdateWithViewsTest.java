@@ -13,6 +13,7 @@ import javax.persistence.Id;
 import javax.persistence.Index;
 import javax.persistence.Table;
 
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -22,6 +23,7 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
@@ -38,6 +40,7 @@ import org.junit.Test;
  */
 @TestForIssue(jiraKey = "HHH-1872")
 @RequiresDialect(PostgreSQL81Dialect.class)
+@SkipForDialect(value = CockroachDialect.class, comment = "https://github.com/cockroachdb/cockroach/issues/24897")
 public class SchemaUpdateWithViewsTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	protected ServiceRegistry serviceRegistry;

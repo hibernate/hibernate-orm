@@ -52,6 +52,7 @@ import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.InterbaseDialect;
 import org.hibernate.dialect.MckoiDialect;
 import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.Oracle12cDialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.PointbaseDialect;
@@ -388,6 +389,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = CockroachDialect.class, comment = "https://github.com/cockroachdb/cockroach/issues/43007")
 	public void testQuery() throws Exception {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();
@@ -2290,6 +2292,8 @@ public class FooBarTest extends LegacyTestCase {
 					!( SybaseDialect.class.isAssignableFrom( getDialect().getClass() ) ) &&
 					!( SQLServerDialect.class.isAssignableFrom( getDialect().getClass() ) ) &&
 					!( getDialect() instanceof PostgreSQLDialect ) && !(getDialect() instanceof PostgreSQL81Dialect ) &&
+					!(getDialect() instanceof CockroachDialect ) &&
+
 					!( getDialect() instanceof AbstractHANADialect) ) {
 				// SybaseAnywhereDialect supports implicit conversions from strings to ints
 				s.createQuery(
@@ -2365,7 +2369,8 @@ public class FooBarTest extends LegacyTestCase {
 
 		s.delete(bar);
 
-		if ( getDialect() instanceof DB2Dialect || getDialect() instanceof PostgreSQLDialect || getDialect() instanceof PostgreSQL81Dialect ) {
+		if ( getDialect() instanceof DB2Dialect || getDialect() instanceof PostgreSQLDialect || getDialect() instanceof PostgreSQL81Dialect || getDialect() instanceof CockroachDialect
+		) {
 			s.createQuery( "select one from One one join one.manies many group by one order by count(many)" ).iterate();
 			s.createQuery( "select one from One one join one.manies many group by one having count(many) < 5" )
 					.iterate();

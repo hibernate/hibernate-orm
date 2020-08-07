@@ -41,11 +41,15 @@ public class LazyManyToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCa
 	public void setup() {
 		doInHibernate(
 				this::sessionFactory, session -> {
+					session.createNativeQuery( getDialect().getDropTableString( "MATERIAL_RATINGS" ) ).executeUpdate();
+					session.createNativeQuery( getDialect().getDropTableString( "BUILDING_RATINGS" ) ).executeUpdate();
+					session.createNativeQuery( getDialect().getDropTableString( "ASSOCIATION_TABLE" ) ).executeUpdate();
+					session.createNativeQuery( getDialect().getDropTableString( "MAIN_TABLE" ) ).executeUpdate();
+				}
+		);
 
-					session.createNativeQuery( "drop table MATERIAL_RATINGS" ).executeUpdate();
-					session.createNativeQuery( "drop table BUILDING_RATINGS" ).executeUpdate();
-					session.createNativeQuery( "drop table ASSOCIATION_TABLE" ).executeUpdate();
-					session.createNativeQuery( "drop table MAIN_TABLE" ).executeUpdate();
+		doInHibernate(
+				this::sessionFactory, session -> {
 
 					session.createNativeQuery(
 							"create table MAIN_TABLE( " +

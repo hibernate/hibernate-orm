@@ -6,30 +6,19 @@
  */
 package org.hibernate.test.hql;
 
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hibernate.testing.junit4.ExtraAssertions.assertClassAssignability;
-import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.QueryException;
@@ -41,6 +30,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.CUBRIDDialect;
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.H2Dialect;
@@ -715,7 +705,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		session = openSession();
 		session.beginTransaction();
 		List results = session.createQuery( "from Human h where h.nickName in (:nickNames)" )
-				.setParameter("nickNames", Collections.emptySet() )
+				.setParameter( "nickNames", Collections.emptySet() )
 				.list();
 		assertEquals( 0, results.size() );
 		session.getTransaction().commit();
@@ -1017,6 +1007,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = CockroachDialect.class, comment = "https://github.com/cockroachdb/cockroach/issues/41943")
 	public void testExpressionWithParamInFunction() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -1047,7 +1038,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		else {
 			s.createQuery( "from Animal where lower(upper('foo') || upper(:bar)) like 'f%'" ).setParameter( "bar", "xyz" ).list();
 		}
-		
+
 		if ( getDialect() instanceof AbstractHANADialect ) {
 			s.createQuery( "from Animal where abs(cast(1 as double) - cast(:param as double)) = 1.0" ).setParameter( "param", 1 ).list();
 		}
@@ -1467,6 +1458,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		// (1) pregnant is defined as a property of the class (Mammal) itself
 		// (2) description is defined as a property of the superclass (Animal)
 		// (3) name is defined as a property of a particular subclass (Human)
+
+		new SyntaxChecker( "from Zoo z join z.mammals as m where m.name.first = 'John'" ).checkAll();
 
 		new SyntaxChecker( "from Zoo z join z.mammals as m where m.pregnant = false" ).checkAll();
 		new SyntaxChecker( "select m.pregnant from Zoo z join z.mammals as m where m.pregnant = false" ).checkAll();
@@ -2891,6 +2884,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = CockroachDialect.class, comment = "https://github.com/cockroachdb/cockroach/issues/41943")
 	@SuppressWarnings( {"UnusedAssignment", "UnusedDeclaration"})
 	public void testSelectExpressions() {
 		createTestBaseData();
@@ -3224,7 +3218,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testStandardFunctions() throws Exception {
+	@SkipForDialect(value = CockroachDialect.class, strictMatching = true)
+	public void testStandardFunctions() {
 		Session session = openSession();
 		Transaction t = session.beginTransaction();
 		Product p = new Product();
@@ -3729,7 +3724,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		 * <link>http://www.postgresql.org/docs/current/static/release-8-3.html</link>
 		 */
 		if ( getDialect() instanceof PostgreSQLDialect || getDialect() instanceof PostgreSQL81Dialect
-				|| getDialect() instanceof HSQLDialect ) {
+				|| getDialect() instanceof HSQLDialect
+				|| getDialect() instanceof CockroachDialect ) {
 			hql = "from Animal a where bit_length(str(a.bodyWeight)) = 24";
 		}
 		else {
@@ -3738,7 +3734,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 		session.createQuery(hql).list();
 		if ( getDialect() instanceof PostgreSQLDialect || getDialect() instanceof PostgreSQL81Dialect
-				|| getDialect() instanceof HSQLDialect ) {
+				|| getDialect() instanceof HSQLDialect
+				|| getDialect() instanceof CockroachDialect ) {
 			hql = "select bit_length(str(a.bodyWeight)) from Animal a";
 		}
 		else {

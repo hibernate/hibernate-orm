@@ -16,6 +16,7 @@ import javax.persistence.criteria.CriteriaQuery;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseDialect;
@@ -212,6 +213,7 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-12257")
+	@SkipForDialect( value = CockroachDialect.class )
 	public void testRefreshWithExplicitHigherLevelLockMode() {
 		doInHibernate( this::sessionFactory, session -> {
 						   A a = session.get( A.class, id );

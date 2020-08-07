@@ -1120,9 +1120,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			this.statementInspector = sessionFactoryOptions.getStatementInspector();
 			this.connectionHandlingMode = sessionFactoryOptions.getPhysicalConnectionHandlingMode();
 			this.autoClose = sessionFactoryOptions.isAutoCloseSessionEnabled();
-			this.flushMode = sessionFactoryOptions.isFlushBeforeCompletionEnabled()
-					? FlushMode.AUTO
-					: FlushMode.MANUAL;
 
 			final CurrentTenantIdentifierResolver currentTenantIdentifierResolver = sessionFactory.getCurrentTenantIdentifierResolver();
 			if ( currentTenantIdentifierResolver != null ) {

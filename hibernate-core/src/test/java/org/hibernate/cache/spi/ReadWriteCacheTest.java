@@ -19,6 +19,9 @@ import org.hibernate.Transaction;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.cfg.Configuration;
 
+import org.hibernate.dialect.CockroachDialect;
+
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Before;
@@ -60,6 +63,7 @@ public class ReadWriteCacheTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = CockroachDialect.class, comment = "CockroachDB uses SERIALIZABLE isolation, and does not support this")
 	public void testDelete() throws InterruptedException {
 		bookId = 1L;
 
@@ -136,6 +140,7 @@ public class ReadWriteCacheTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = CockroachDialect.class, comment = "CockroachDB uses SERIALIZABLE isolation, and does not support this")
 	public void testUpdate() throws InterruptedException {
 		bookId = 4L;
 

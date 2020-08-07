@@ -41,9 +41,12 @@ public class LazyOneToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCas
 	public void setup() {
 		doInHibernate(
 				this::sessionFactory, session -> {
+					session.createNativeQuery( getDialect().getDropTableString( "MAIN_TABLE" ) ).executeUpdate();
+				}
+		);
 
-					session.createNativeQuery( "DROP TABLE MAIN_TABLE" ).executeUpdate();
-
+		doInHibernate(
+				this::sessionFactory, session -> {
 					session.createNativeQuery(
 							"create table MAIN_TABLE( " +
 									"ID integer not null, NAME varchar(255) not null, CODE varchar(10) not null, " +

@@ -32,6 +32,7 @@ import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseAnywhereDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TeradataDialect;
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.engine.query.spi.ReturnMetadata;
@@ -169,7 +170,8 @@ public class HQLTest extends QueryTranslatorTestCase {
 			Oracle8iDialect.class,
 			AbstractHANADialect.class,
 			PostgreSQL81Dialect.class,
-			MySQLDialect.class
+			MySQLDialect.class,
+			CockroachDialect.class
 	} )
 
 	public void testRowValueConstructorSyntaxInInListBeingTranslated() {
@@ -404,6 +406,10 @@ public class HQLTest extends QueryTranslatorTestCase {
 			// MySQL dialects are smarter now wrt cast targets.  For example, float (as a db type) is not
 			// valid as a cast target for MySQL.  The new parser uses the dialect handling for casts, the old
 			// parser does not; so the outputs do not match here...
+			return;
+		}
+		if ( getDialect() instanceof CockroachDialect ) {
+			// CockroachDB turns "float" into "float4" so the outputs won't match.
 			return;
 		}
 		assertTranslation( "from Animal where abs(cast(1 as float) - cast(:param as float)) = 1.0" );
@@ -793,7 +799,8 @@ public class HQLTest extends QueryTranslatorTestCase {
 				|| getDialect() instanceof SybaseASE15Dialect
 				|| getDialect() instanceof SybaseAnywhereDialect
 				|| getDialect() instanceof SQLServerDialect
-				|| getDialect() instanceof IngresDialect) {
+				|| getDialect() instanceof IngresDialect
+		) {
 			// SybaseASE15Dialect and SybaseAnywhereDialect support '||'
 			// MySQL uses concat(x, y, z)
 			// SQL Server replaces '||' with '+'
@@ -890,6 +897,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 
 		if ( getDialect() instanceof Oracle8iDialect ) return; // the new hiearchy...
 		if ( getDialect() instanceof PostgreSQLDialect || getDialect() instanceof PostgreSQL81Dialect ) return;
+		if ( getDialect() instanceof CockroachDB192Dialect ) return;
 		if ( getDialect() instanceof TeradataDialect) return;
 		if ( ! H2Dialect.class.isInstance( getDialect() ) ) {
 			// H2 has no year function
@@ -1070,6 +1078,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@SkipForDialect(CockroachDialect.class)
 	public void testSelectStandardFunctionsNoParens() throws Exception {
 		assertTranslation( "select current_date, current_time, current_timestamp from Animal" );
 	}

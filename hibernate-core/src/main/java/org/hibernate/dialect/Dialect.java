@@ -6,7 +6,13 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.*;
+import org.hibernate.HibernateException;
+import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
+import org.hibernate.MappingException;
+import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.NullPrecedence;
+import org.hibernate.ScrollMode;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Sequence;
@@ -1585,7 +1591,7 @@ public abstract class Dialect implements ConversionContext {
 				return new InlineStrategy( this );
 			}
 		}
-		
+
 		return new PersistentTableStrategy(
 				new IdTable( entityDescriptor, name -> name ),
 				AfterUseAction.CLEAN,
@@ -1784,11 +1790,11 @@ public abstract class Dialect implements ConversionContext {
 	 * Build an instance of a {@link SQLExceptionConversionDelegate} for
 	 * interpreting dialect-specific error or SQLState codes.
 	 * <p/>
-	 * When {@link #buildSQLExceptionConverter} returns null, the default 
+	 * When {@link #buildSQLExceptionConverter} returns null, the default
 	 * {@link SQLExceptionConverter} is used to interpret SQLState and
 	 * error codes. If this method is overridden to return a non-null value,
 	 * the default {@link SQLExceptionConverter} will use the returned
-	 * {@link SQLExceptionConversionDelegate} in addition to the following 
+	 * {@link SQLExceptionConversionDelegate} in addition to the following
 	 * standard delegates:
 	 * <ol>
 	 *     <li>a "static" delegate based on the JDBC 4 defined SQLException hierarchy;</li>
@@ -2941,7 +2947,7 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public String getQueryHintString(String query, List<String> hintList) {
 		final String hints = String.join( ", ", hintList );
-		return StringHelper.isEmpty(hints) ? query : getQueryHintString(query, hints);
+		return StringHelper.isEmpty( hints) ? query : getQueryHintString( query, hints);
 	}
 
 	/**
@@ -3010,7 +3016,7 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	public void augmentRecognizedTableTypes(List<String> tableTypesList) {
-		// nohing to do
+		// nothing to do
 	}
 
 	/**

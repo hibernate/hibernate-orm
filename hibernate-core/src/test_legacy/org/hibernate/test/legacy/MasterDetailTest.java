@@ -26,6 +26,7 @@ import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MckoiDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SAPDBDialect;
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.jdbc.AbstractWork;
@@ -196,6 +197,7 @@ public class MasterDetailTest extends LegacyTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = CockroachDialect.class, comment = "https://github.com/cockroachdb/cockroach/issues/27871")
 	public void testSelfManyToOne() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -220,6 +222,7 @@ public class MasterDetailTest extends LegacyTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = CockroachDialect.class, comment = "https://github.com/cockroachdb/cockroach/issues/27871")
 	public void testExample() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

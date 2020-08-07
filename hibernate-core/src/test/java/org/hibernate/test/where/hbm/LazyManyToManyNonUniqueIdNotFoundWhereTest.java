@@ -8,9 +8,7 @@ package org.hibernate.test.where.hbm;
 
 import java.util.HashSet;
 import java.util.Set;
-
 import org.hibernate.Hibernate;
-
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.After;
@@ -37,10 +35,15 @@ public class LazyManyToManyNonUniqueIdNotFoundWhereTest extends BaseCoreFunction
 		doInHibernate(
 				this::sessionFactory, session -> {
 
-					session.createNativeQuery( "drop table MATERIAL_RATINGS" ).executeUpdate();
-					session.createNativeQuery( "drop table BUILDING_RATINGS" ).executeUpdate();
-					session.createNativeQuery( "drop table ASSOCIATION_TABLE" ).executeUpdate();
-					session.createNativeQuery( "drop table MAIN_TABLE" ).executeUpdate();
+					session.createNativeQuery( getDialect().getDropTableString( "MATERIAL_RATINGS" )).executeUpdate();
+					session.createNativeQuery( getDialect().getDropTableString( "BUILDING_RATINGS" )).executeUpdate();
+					session.createNativeQuery( getDialect().getDropTableString( "ASSOCIATION_TABLE" )).executeUpdate();
+					session.createNativeQuery( getDialect().getDropTableString( "MAIN_TABLE" )).executeUpdate();
+				}
+		);
+
+		doInHibernate(
+				this::sessionFactory, session -> {
 
 					session.createNativeQuery(
 							"create table MAIN_TABLE( " +
@@ -156,7 +159,7 @@ public class LazyManyToManyNonUniqueIdNotFoundWhereTest extends BaseCoreFunction
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12875")
+	@TestForIssue( jiraKey = "HHH-12875" )
 	public void testInitializeFromUniqueAssociationTable() {
 		doInHibernate(
 				this::sessionFactory, session -> {
@@ -185,7 +188,7 @@ public class LazyManyToManyNonUniqueIdNotFoundWhereTest extends BaseCoreFunction
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12875")
+	@TestForIssue( jiraKey = "HHH-12875" )
 	public void testInitializeFromNonUniqueAssociationTable() {
 		doInHibernate(
 				this::sessionFactory, session -> {

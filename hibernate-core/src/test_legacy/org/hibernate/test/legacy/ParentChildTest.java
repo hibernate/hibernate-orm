@@ -38,6 +38,7 @@ import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.IngresDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.TeradataDialect;
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.internal.SessionImpl;
 import org.hibernate.jdbc.AbstractWork;
@@ -1094,6 +1095,7 @@ public class ParentChildTest extends LegacyTestCase {
 	}
 
 	@Test
+	@SkipForDialect( value = CockroachDialect.class )
 	public void testLocking() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -1209,7 +1211,8 @@ public class ParentChildTest extends LegacyTestCase {
 	}
 
 	 @Test
-	public void testLoadAfterNonExists() throws HibernateException, SQLException {
+	 @SkipForDialect(value = CockroachDialect.class, comment = "Uses READ_COMMITTED isolation")
+	 public void testLoadAfterNonExists() throws HibernateException, SQLException {
 		Session session = openSession();
 		if ( ( getDialect() instanceof MySQLDialect ) || ( getDialect() instanceof IngresDialect ) ) {
 			session.doWork(

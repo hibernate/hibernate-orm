@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Locale;
 
 import org.hibernate.MappingException;
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -104,6 +105,7 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 	@SkipForDialect(value = Oracle8iDialect.class, jiraKey = "HHH-10161", comment = "Cannot convert untyped null (assumed to be BINARY type) to NUMBER")
 	@SkipForDialect(value = PostgreSQL9Dialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
 	@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
+	@SkipForDialect(value = CockroachDialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
 	@SkipForDialect(value = SybaseDialect.class, comment = "Null == null on Sybase")
 	public void testQueryWithNullParameter(){
 		Chaos c0 = new Chaos();
@@ -189,6 +191,7 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 	@SkipForDialect(value = Oracle8iDialect.class, jiraKey = "HHH-10161", comment = "Cannot convert untyped null (assumed to be BINARY type) to NUMBER")
 	@SkipForDialect(value = PostgreSQL9Dialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
 	@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
+	@SkipForDialect(value = CockroachDialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
 	@SkipForDialect(value = SybaseDialect.class, comment = "Null == null on Sybase")
 	public void testNativeQueryWithNullParameter(){
 		Chaos c0 = new Chaos();

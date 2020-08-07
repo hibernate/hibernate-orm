@@ -26,6 +26,7 @@ import org.hibernate.boot.jaxb.spi.Binder;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 
+import org.hibernate.internal.util.StringHelper;
 import org.jboss.logging.Logger;
 
 /**
@@ -152,7 +153,7 @@ public abstract class AbstractBinder implements Binder {
 
 	@SuppressWarnings("unused")
 	protected static boolean hasNamespace(StartElement startElement) {
-		return ! "".equals( startElement.getName().getNamespaceURI() );
+		return StringHelper.isNotEmpty( startElement.getName().getNamespaceURI() );
 	}
 
 	@SuppressWarnings("unchecked")

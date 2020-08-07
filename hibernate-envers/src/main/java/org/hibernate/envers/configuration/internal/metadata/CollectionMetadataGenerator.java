@@ -553,7 +553,7 @@ public final class CollectionMetadataGenerator {
 				final IdMappingData referencedIdMapping = mainGenerator.getEntitiesConfigurations()
 						.get( referencedEntityName ).getIdMappingData();
 				final int currentIndex = queryGeneratorBuilder == null ? 0 : queryGeneratorBuilder.getCurrentIndex();
-				if ( "".equals( mapKey ) ) {
+				if ( mapKey != null && mapKey.isEmpty() ) {
 					// The key of the map is the id of the entity.
 					return new MiddleComponentData(
 							new MiddleMapKeyIdComponentMapper(

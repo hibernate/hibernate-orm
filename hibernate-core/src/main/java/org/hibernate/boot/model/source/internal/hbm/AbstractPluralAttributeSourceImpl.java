@@ -34,6 +34,7 @@ import org.hibernate.boot.model.source.spi.PluralAttributeSource;
 import org.hibernate.boot.model.source.spi.TableSpecificationSource;
 import org.hibernate.boot.model.source.spi.ToolingHintContext;
 import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.internal.util.collections.ArrayHelper;
 
 /**
  * @author Steve Ebersole
@@ -169,7 +170,7 @@ public abstract class AbstractPluralAttributeSourceImpl
 
 	private static String[] extractSynchronizedTableNames(PluralAttributeInfo pluralAttributeElement) {
 		if ( pluralAttributeElement.getSynchronize().isEmpty() ) {
-			return new String[0];
+			return ArrayHelper.EMPTY_STRING_ARRAY;
 		}
 
 		final String[] names = new String[pluralAttributeElement.getSynchronize().size()];

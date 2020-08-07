@@ -6,6 +6,7 @@
  */
 package org.hibernate.type.internal;
 
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypeDescriptorIndicatorCapable;
@@ -20,7 +21,7 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
 public class StandardBasicTypeImpl<J>
 		extends AbstractSingleColumnStandardBasicType
 		implements SqlTypeDescriptorIndicatorCapable {
-	public static final String[] NO_REG_KEYS = new String[0];
+	public static final String[] NO_REG_KEYS = ArrayHelper.EMPTY_STRING_ARRAY;
 
 	public StandardBasicTypeImpl(JavaTypeDescriptor<J> jtd, SqlTypeDescriptor std) {
 		//noinspection unchecked

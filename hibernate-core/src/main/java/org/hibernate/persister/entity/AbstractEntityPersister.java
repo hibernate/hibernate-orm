@@ -2416,7 +2416,7 @@ public abstract class AbstractEntityPersister
 	@Override
 	public int[] resolveAttributeIndexes(String[] attributeNames) {
 		if ( attributeNames == null || attributeNames.length == 0 ) {
-			return new int[0];
+			return ArrayHelper.EMPTY_INT_ARRAY;
 		}
 		int[] fields = new int[attributeNames.length];
 		int counter = 0;

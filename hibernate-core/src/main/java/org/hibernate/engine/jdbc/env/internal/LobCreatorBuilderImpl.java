@@ -20,6 +20,7 @@ import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.NonContextualLobCreator;
 import org.hibernate.engine.jdbc.env.spi.LobCreatorBuilder;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 
 import org.jboss.logging.Logger;
@@ -66,8 +67,8 @@ public class LobCreatorBuilderImpl implements LobCreatorBuilder {
 		return new LobCreatorBuilderImpl( false );
 	}
 
-	private static final Class[] NO_ARG_SIG = new Class[0];
-	private static final Object[] NO_ARGS = new Object[0];
+	private static final Class[] NO_ARG_SIG = ArrayHelper.EMPTY_CLASS_ARRAY;
+	private static final Object[] NO_ARGS = ArrayHelper.EMPTY_OBJECT_ARRAY;
 
 	/**
 	 * Basically here we are simply checking whether we can call the {@link java.sql.Connection} methods for

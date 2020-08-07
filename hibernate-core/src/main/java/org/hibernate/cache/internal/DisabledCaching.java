@@ -20,6 +20,7 @@ import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 
 /**
@@ -179,7 +180,7 @@ public class DisabledCaching implements CacheImplementor {
 
 	@Override
 	public String[] getSecondLevelCacheRegionNames() {
-		return new String[0];
+		return ArrayHelper.EMPTY_STRING_ARRAY;
 	}
 
 	@Override

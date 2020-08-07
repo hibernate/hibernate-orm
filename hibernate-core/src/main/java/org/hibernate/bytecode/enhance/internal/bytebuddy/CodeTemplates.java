@@ -25,6 +25,7 @@ import org.hibernate.engine.spi.CompositeOwner;
 import org.hibernate.engine.spi.CompositeTracker;
 import org.hibernate.engine.spi.ExtendedSelfDirtinessTracker;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
+import org.hibernate.internal.util.collections.ArrayHelper;
 
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.field.FieldDescription;
@@ -82,7 +83,7 @@ class CodeTemplates {
 				@Advice.FieldValue(value = EnhancerConstants.TRACKER_FIELD_NAME, readOnly = false) DirtyTracker $$_hibernate_tracker,
 				@Advice.FieldValue(value = EnhancerConstants.TRACKER_COLLECTION_NAME, readOnly = false) CollectionTracker $$_hibernate_collectionTracker) {
 			if ( $$_hibernate_collectionTracker == null ) {
-				returned = ( $$_hibernate_tracker == null ) ? new String[0] : $$_hibernate_tracker.get();
+				returned = ( $$_hibernate_tracker == null ) ? ArrayHelper.EMPTY_STRING_ARRAY : $$_hibernate_tracker.get();
 			}
 			else {
 				if ( $$_hibernate_tracker == null ) {
@@ -99,7 +100,7 @@ class CodeTemplates {
 		static void $$_hibernate_getDirtyAttributes(
 				@Advice.Return(readOnly = false) String[] returned,
 				@Advice.FieldValue(value = EnhancerConstants.TRACKER_FIELD_NAME) DirtyTracker $$_hibernate_tracker) {
-			returned = $$_hibernate_tracker == null ? new String[0] : $$_hibernate_tracker.get();
+			returned = $$_hibernate_tracker == null ? ArrayHelper.EMPTY_STRING_ARRAY : $$_hibernate_tracker.get();
 		}
 	}
 

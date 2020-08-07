@@ -9,6 +9,7 @@ package org.hibernate.sql.results.internal;
 import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.query.named.RowReaderMemento;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.results.LoadingLogger;
@@ -190,12 +191,12 @@ public class StandardRowReader<T> implements RowReader<T> {
 		return new RowReaderMemento() {
 			@Override
 			public Class<?>[] getResultClasses() {
-				return new Class[0];
+				return ArrayHelper.EMPTY_CLASS_ARRAY;
 			}
 
 			@Override
 			public String[] getResultMappingNames() {
-				return new String[0];
+				return ArrayHelper.EMPTY_STRING_ARRAY;
 			}
 		};
 	}

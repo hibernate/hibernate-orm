@@ -6,6 +6,7 @@
  */
 package org.hibernate.internal;
 
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 
 /**
@@ -92,7 +93,7 @@ public class EmptyScrollableResults implements ScrollableResultsImplementor {
 
 	@Override
 	public Object[] get() {
-		return new Object[0];
+		return ArrayHelper.EMPTY_OBJECT_ARRAY;
 	}
 
 //	@Override

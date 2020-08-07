@@ -23,6 +23,7 @@ import org.hibernate.PropertyNotFoundException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.property.access.internal.PropertyAccessStrategyMixedImpl;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.type.PrimitiveType;
@@ -41,8 +42,8 @@ public final class ReflectHelper {
 	private static final Pattern JAVA_CONSTANT_PATTERN = Pattern.compile(
 			"[a-z\\d]+\\.([A-Z]+[a-z\\d]+)+\\$?([A-Z]{1}[a-z\\d]+)*\\.[A-Z_\\$]+", Pattern.UNICODE_CHARACTER_CLASS);
 
-	public static final Class[] NO_PARAM_SIGNATURE = new Class[0];
-	public static final Object[] NO_PARAMS = new Object[0];
+	public static final Class[] NO_PARAM_SIGNATURE = ArrayHelper.EMPTY_CLASS_ARRAY;
+	public static final Object[] NO_PARAMS = ArrayHelper.EMPTY_OBJECT_ARRAY;
 
 	public static final Class[] SINGLE_OBJECT_PARAM_SIGNATURE = new Class[] { Object.class };
 

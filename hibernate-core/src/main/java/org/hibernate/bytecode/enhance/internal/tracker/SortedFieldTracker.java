@@ -6,6 +6,8 @@
  */
 package org.hibernate.bytecode.enhance.internal.tracker;
 
+import org.hibernate.internal.util.collections.ArrayHelper;
+
 /**
  * small low memory class to keep track of changed fields
  *
@@ -19,7 +21,7 @@ public final class SortedFieldTracker implements DirtyTracker {
 	private boolean suspended;
 
 	public SortedFieldTracker() {
-		names = new String[0];
+		names = ArrayHelper.EMPTY_STRING_ARRAY;
 	}
 
 	@Override
@@ -75,7 +77,7 @@ public final class SortedFieldTracker implements DirtyTracker {
 	@Override
 	public void clear() {
 		if ( !isEmpty() ) {
-			names = new String[0];
+			names = ArrayHelper.EMPTY_STRING_ARRAY;
 		}
 	}
 

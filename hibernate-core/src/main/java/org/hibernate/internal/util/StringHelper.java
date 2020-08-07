@@ -16,13 +16,14 @@ import java.util.StringTokenizer;
 
 import org.hibernate.boot.model.source.internal.hbm.CommaSeparatedStringHelper;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.internal.AliasConstantsHelper;
 
 public final class StringHelper {
 
 	private static final int ALIAS_TRUNCATE_LENGTH = 10;
 	public static final String WHITESPACE = " \n\r\f\t";
-	public static final String[] EMPTY_STRINGS = new String[0];
+	public static final String[] EMPTY_STRINGS = ArrayHelper.EMPTY_STRING_ARRAY;
 
 	private StringHelper() { /* static methods only - hide constructor */
 	}

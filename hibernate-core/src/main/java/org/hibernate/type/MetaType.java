@@ -18,12 +18,13 @@ import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.collections.ArrayHelper;
 
 /**
  * @author Gavin King
  */
 public class MetaType extends AbstractType {
-	public static final String[] REGISTRATION_KEYS = new String[0];
+	public static final String[] REGISTRATION_KEYS = ArrayHelper.EMPTY_STRING_ARRAY;
 
 	private final Type baseType;
 	private final Map<Object,String> discriminatorValuesToEntityNameMap;

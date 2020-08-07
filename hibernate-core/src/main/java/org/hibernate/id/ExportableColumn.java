@@ -13,6 +13,7 @@ import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.engine.spi.Mapping;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
@@ -103,7 +104,7 @@ public class ExportableColumn extends Column {
 
 		@Override
 		public boolean[] getColumnInsertability() {
-			return new boolean[] { true };
+			return ArrayHelper.TRUE;
 		}
 
 		@Override
@@ -113,7 +114,7 @@ public class ExportableColumn extends Column {
 
 		@Override
 		public boolean[] getColumnUpdateability() {
-			return new boolean[] { true };
+			return ArrayHelper.TRUE;
 		}
 
 		@Override

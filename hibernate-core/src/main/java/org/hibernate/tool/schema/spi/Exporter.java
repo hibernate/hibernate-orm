@@ -9,6 +9,7 @@ package org.hibernate.tool.schema.spi;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.Exportable;
+import org.hibernate.internal.util.collections.ArrayHelper;
 
 /**
  * Defines a contract for exporting of database objects (tables, sequences, etc) for use in SQL {@code CREATE} and
@@ -19,7 +20,7 @@ import org.hibernate.boot.model.relational.Exportable;
  * @author Steve Ebersole
  */
 public interface Exporter<T extends Exportable> {
-	String[] NO_COMMANDS = new String[0];
+	String[] NO_COMMANDS = ArrayHelper.EMPTY_STRING_ARRAY;
 
 	/**
 	 * Get the commands needed for creation.

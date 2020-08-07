@@ -14,6 +14,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.spi.BasicProxyFactory;
 import org.hibernate.cfg.Environment;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.proxy.ProxyConfiguration;
 
 import net.bytebuddy.NamingStrategy;
@@ -23,7 +24,7 @@ import net.bytebuddy.dynamic.scaffold.subclass.ConstructorStrategy;
 
 public class BasicProxyFactoryImpl implements BasicProxyFactory {
 
-	private static final Class[] NO_INTERFACES = new Class[0];
+	private static final Class[] NO_INTERFACES = ArrayHelper.EMPTY_CLASS_ARRAY;
 	private static final String PROXY_NAMING_SUFFIX = Environment.useLegacyProxyClassnames() ? "HibernateBasicProxy$" : "HibernateBasicProxy";
 
 	private final Class proxyClass;

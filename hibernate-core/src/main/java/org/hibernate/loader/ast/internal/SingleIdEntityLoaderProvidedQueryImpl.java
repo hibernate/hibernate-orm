@@ -9,6 +9,7 @@ package org.hibernate.loader.ast.internal;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.ast.spi.SingleIdEntityLoader;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.named.NamedQueryMemento;
@@ -84,6 +85,6 @@ public class SingleIdEntityLoaderProvidedQueryImpl<T> implements SingleIdEntityL
 
 	@Override
 	public Object[] loadDatabaseSnapshot(Object id, SharedSessionContractImplementor session) {
-		return new Object[0];
+		return ArrayHelper.EMPTY_OBJECT_ARRAY;
 	}
 }

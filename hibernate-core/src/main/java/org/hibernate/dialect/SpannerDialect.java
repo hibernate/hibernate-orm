@@ -20,6 +20,7 @@ import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.env.spi.SchemaNameResolver;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Constraint;
 import org.hibernate.mapping.ForeignKey;
@@ -788,12 +789,12 @@ public class SpannerDialect extends Dialect {
 
 		@Override
 		public String[] getSqlCreateStrings(T exportable, Metadata metadata) {
-			return new String[0];
+			return ArrayHelper.EMPTY_STRING_ARRAY;
 		}
 
 		@Override
 		public String[] getSqlDropStrings(T exportable, Metadata metadata) {
-			return new String[0];
+			return ArrayHelper.EMPTY_STRING_ARRAY;
 		}
 	}
 

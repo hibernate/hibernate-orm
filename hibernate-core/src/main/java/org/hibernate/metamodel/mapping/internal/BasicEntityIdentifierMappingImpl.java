@@ -276,6 +276,14 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 	}
 
 	@Override
+	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+		if ( value == null ) {
+			return null;
+		}
+		return propertyAccess.getGetter().get( value );
+	}
+
+	@Override
 	public Fetch generateFetch(
 			FetchParent fetchParent,
 			NavigablePath fetchablePath,

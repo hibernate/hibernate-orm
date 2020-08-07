@@ -712,6 +712,10 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 			throw new NotYetImplementedFor6Exception( "Resolution of embedded-valued SqmExpressable nodes not yet implemented" );
 		}
 
+		if ( sqmExpressable instanceof EmbeddableTypeImpl ) {
+			return (MappingModelExpressable) sqmExpressable;
+		}
+
 		throw new UnsupportedOperationException( "Cannot determine proper mapping model expressable for " + sqmExpressable );
 	}
 

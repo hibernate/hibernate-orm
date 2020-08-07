@@ -42,6 +42,7 @@ import org.hibernate.metamodel.model.domain.internal.MapMember;
 import org.hibernate.metamodel.model.domain.internal.MappedSuperclassTypeImpl;
 import org.hibernate.metamodel.model.domain.internal.PluralAttributeBuilder;
 import org.hibernate.metamodel.model.domain.internal.SingularAttributeImpl;
+import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationStrategy;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.internal.PropertyAccessMapImpl;
@@ -244,7 +245,7 @@ public class AttributeFactory {
 							.getJavaTypeDescriptorRegistry();
 					final JavaTypeDescriptor javaTypeDescriptor = registry.resolveDescriptor( embeddableClass );
 
-					final ManagedTypeRepresentationStrategy representationStrategy = context.getTypeConfiguration()
+					final EmbeddableRepresentationStrategy representationStrategy = context.getTypeConfiguration()
 							.getMetadataBuildingContext()
 							.getBuildingOptions()
 							.getManagedTypeRepresentationResolver()

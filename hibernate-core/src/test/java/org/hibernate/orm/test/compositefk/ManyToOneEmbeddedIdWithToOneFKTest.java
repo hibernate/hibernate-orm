@@ -19,7 +19,6 @@ import org.hibernate.Hibernate;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -150,7 +149,6 @@ public class ManyToOneEmbeddedIdWithToOneFKTest {
 	}
 
 	@Test
-	@FailureExpected(reason = "Embedded parameters has not yet been implemented ")
 	public void testEmbeddedIdParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -159,7 +157,7 @@ public class ManyToOneEmbeddedIdWithToOneFKTest {
 					PK superUserKey = new PK( dataCenter, "Fab" );
 
 					System system = session.createQuery(
-							"from System e join fetch e.user u where u.id = :id",
+							"from System e join fetch e.dataCenterUser u where u.id = :id",
 							System.class
 					).setParameter( "id", superUserKey ).uniqueResult();
 

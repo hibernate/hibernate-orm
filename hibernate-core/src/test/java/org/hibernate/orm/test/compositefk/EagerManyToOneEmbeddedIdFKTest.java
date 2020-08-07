@@ -128,7 +128,6 @@ public class EagerManyToOneEmbeddedIdFKTest {
 	}
 
 	@Test
-	@FailureExpected(reason = "Embedded parameters has not yet been implemented ")
 	public void testEmbeddedIdParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

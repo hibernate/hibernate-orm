@@ -10,6 +10,8 @@ import java.util.Objects;
 
 import org.hibernate.dialect.CUBRIDDialect;
 import org.hibernate.dialect.Cache71Dialect;
+import org.hibernate.dialect.CockroachDB192Dialect;
+import org.hibernate.dialect.CockroachDB201Dialect;
 import org.hibernate.dialect.DB2390Dialect;
 import org.hibernate.dialect.DB2390V8Dialect;
 import org.hibernate.dialect.DB2400Dialect;
@@ -88,6 +90,12 @@ public class DefaultDialectSelector implements LazyServiceResolver<Dialect> {
 	private static Class<? extends Dialect> caseC(final String name) {
 		if ( name.equals( "Cache71" ) ) {
 			return Cache71Dialect.class;
+		}
+		if ( name.equals( "CockroachDB192" ) ) {
+			return CockroachDB192Dialect.class;
+		}
+		if ( name.equals( "CockroachDB201" ) ) {
+			return CockroachDB201Dialect.class;
 		}
 		if ( name.equals( "CUBRID" ) ) {
 			return CUBRIDDialect.class;

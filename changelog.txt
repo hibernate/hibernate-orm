@@ -3,6 +3,29 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.4.20.Final (August 10, 2020)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31844
+
+** Bug
+    * [HHH-14129] - Bidirectional relationship with @NotNull fails to save
+    * [HHH-14124] - Entity graph (fetch graph) is incorrectly applied to query results beyond the first one
+    * [HHH-14109] - IN Clause Parameter Padding not working if parameter count is between last valid power of 2 number and 'in expression limit'
+    * [HHH-13974] - FlushMode set through SessionBuilder#flushMode() is ignored
+
+** Improvement
+    * [HHH-14142] - Make constructor of StatelessSessionImpl public
+    * [HHH-14137] - Empty String Check Performance Improvement
+    * [HHH-14133] - Fix mistake in example code for 'second level cache' in user guide
+
+** Task
+    * [HHH-14144] - Explicitly set localization assumptions for the build and testsuite
+    * [HHH-14143] - Detect illegal concurrent usage of LogicalConnectionManagedImpl
+    * [HHH-14126] - Add CockroachDB to DefaultDialectSelector and update documentation to mention the new dialect
+    * [HHH-14033] - SQL script parsing problem with multi-line comments
+
+
 Changes in 5.4.19.Final (July 27, 2020)
 ------------------------------------------------------------------------------------------------------------------------
 

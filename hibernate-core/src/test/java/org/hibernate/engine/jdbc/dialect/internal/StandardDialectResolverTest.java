@@ -97,6 +97,11 @@ public class StandardDialectResolverTest extends BaseUnitTestCase {
 	}
 
 	@Test
+	public void testResolveDialectForPresto() throws SQLException {
+		runDialectTest( "Presto", 340, 0, PrestoDialect.class );
+	}
+
+	@Test
 	public void testResolveDialectInternalForMariaDB103() throws SQLException {
 		runMariaDBDialectTest( 10, 3, MariaDB103Dialect.class );
 	}

@@ -463,6 +463,22 @@ public enum Database {
 			return null;
 		}
 	},
+	PRESTO {
+		@Override
+		public Class<? extends Dialect> latestDialect() {
+			return PrestoDialect.class;
+		}
+
+		@Override
+		public Dialect resolveDialect(DialectResolutionInfo info) {
+			String databaseName = info.getDatabaseName();
+			if ( "Presto".equals( databaseName ) ) {
+				return latestDialectInstance( this );
+			}
+
+			return null;
+		}
+	},
 	PROGRESS {
 		@Override
 		public Class<? extends Dialect> latestDialect() {

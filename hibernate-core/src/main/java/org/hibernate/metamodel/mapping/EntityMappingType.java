@@ -40,7 +40,7 @@ import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCH
  *
  * @author Steve Ebersole
  */
-public interface EntityMappingType extends ManagedMappingType, Loadable {
+public interface EntityMappingType extends ManagedMappingType, EntityValuedModelPart, Loadable {
 	/**
 	 * Safety-net.
 	 *

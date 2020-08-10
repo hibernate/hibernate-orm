@@ -7,16 +7,14 @@
 package org.hibernate.query.results.dynamic;
 
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.query.results.FromClauseAccessImpl;
+import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.query.results.TableGroupImpl;
-import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
@@ -54,9 +52,8 @@ public class DynamicResultBuilderEntityCalculated implements DynamicResultBuilde
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
 			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
-			Consumer<SqlSelection> sqlSelectionConsumer,
 			DomainResultCreationState domainResultCreationState) {
-		final FromClauseAccessImpl fromClauseAccess = ResultsHelper.extractFromClauseAccess( domainResultCreationState );
+		final DomainResultCreationStateImpl creationStateImpl = ResultsHelper.impl( domainResultCreationState );
 
 		TableGroupImpl.TableReferenceImpl tableReference = new TableGroupImpl.TableReferenceImpl(
 				entityMapping.getEntityName(),
@@ -73,7 +70,7 @@ public class DynamicResultBuilderEntityCalculated implements DynamicResultBuilde
 				explicitLockMode
 		);
 
-		fromClauseAccess.registerTableGroup( navigablePath, tableGroup );
+		creationStateImpl.getFromClauseAccess().registerTableGroup( navigablePath, tableGroup );
 
 		return (EntityResult) entityMapping.createDomainResult(
 				navigablePath,

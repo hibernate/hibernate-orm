@@ -6068,6 +6068,7 @@ public abstract class AbstractEntityPersister
 
 		return new BasicEntityIdentifierMappingImpl(
 				this,
+				bootEntityDescriptor.getIdentifierProperty().getName(),
 				getTableName(),
 				rootTableKeyColumnNames[0],
 				(BasicType) idType,

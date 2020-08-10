@@ -14,8 +14,6 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
-import org.jboss.logging.Logger;
-
 /**
  * A QueryResultAssembler implementation representing handling for dynamic-
  * instantiations targeting a List (per-"row"),
@@ -24,30 +22,28 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public class DynamicInstantiationAssemblerListImpl implements DomainResultAssembler<List> {
-	private static final Logger log = Logger.getLogger( DynamicInstantiationAssemblerListImpl.class );
-
-	private final JavaTypeDescriptor<List> listJavaDescriptor;
+public class DynamicInstantiationAssemblerListImpl implements DomainResultAssembler<List<?>> {
+	private final JavaTypeDescriptor<List<?>> listJavaDescriptor;
 	private final List<ArgumentReader<?>> argumentReaders;
 
 	public DynamicInstantiationAssemblerListImpl(
-			JavaTypeDescriptor<List> listJavaDescriptor,
+			JavaTypeDescriptor<List<?>> listJavaDescriptor,
 			List<ArgumentReader<?>> argumentReaders) {
 		this.listJavaDescriptor = listJavaDescriptor;
 		this.argumentReaders = argumentReaders;
 	}
 
 	@Override
-	public JavaTypeDescriptor<List> getAssembledJavaTypeDescriptor() {
+	public JavaTypeDescriptor<List<?>> getAssembledJavaTypeDescriptor() {
 		return listJavaDescriptor;
 	}
 
 	@Override
-	public List assemble(
+	public List<?> assemble(
 			RowProcessingState rowProcessingState,
 			JdbcValuesSourceProcessingOptions options) {
 		final ArrayList<Object> result = new ArrayList<>();
-		for ( ArgumentReader argumentReader : argumentReaders ) {
+		for ( ArgumentReader<?> argumentReader : argumentReaders ) {
 			result.add( argumentReader.assemble( rowProcessingState, options ) );
 		}
 		return result;

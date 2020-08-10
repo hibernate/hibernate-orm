@@ -78,7 +78,6 @@ public class UsageTests {
 	}
 
 	@Test
-	@FailureExpected( reason = "Entity result mappings not yet implemented" )
 	public void testSimpleEntityResultMapping(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -90,7 +89,7 @@ public class UsageTests {
 					assertThat( mappingMemento, notNullValue() );
 
 					// apply it to a native-query
-					final String qryString = "select id, name from SimpleEntityWithNamedMappings";
+					final String qryString = "select id, name, notes from SimpleEntityWithNamedMappings";
 					final List<SimpleEntityWithNamedMappings> results
 							= session.createNativeQuery( qryString, "entity" ).list();
 					assertThat( results.size(), is( 1 ) );

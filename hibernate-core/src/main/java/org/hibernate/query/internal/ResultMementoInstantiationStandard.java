@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.query.named.ResultMementoInstantiation;
 import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.complete.CompleteResultBuilderInstantiation;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -17,23 +18,12 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 /**
  * @author Steve Ebersole
  */
-public class InstantiationResultMappingMemento implements ResultMappingMemento {
-	public static class ArgumentMemento {
-		private final ResultMappingMemento argumentMemento;
-
-		public ArgumentMemento(ResultMappingMemento argumentMemento) {
-			this.argumentMemento = argumentMemento;
-		}
-
-		public ResultBuilder resolve(Consumer<String> querySpaceConsumer, ResultSetMappingResolutionContext context) {
-			return argumentMemento.resolve( querySpaceConsumer, context );
-		}
-	}
+public class ResultMementoInstantiationStandard implements ResultMementoInstantiation {
 
 	private final JavaTypeDescriptor<?> instantiatedJtd;
 	private final List<ArgumentMemento> argumentMementos;
 
-	public InstantiationResultMappingMemento(
+	public ResultMementoInstantiationStandard(
 			JavaTypeDescriptor<?> instantiatedJtd,
 			List<ArgumentMemento> argumentMementos) {
 		this.instantiatedJtd = instantiatedJtd;

@@ -9,13 +9,11 @@ package org.hibernate.query.results.dynamic;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
 
 import org.hibernate.query.DynamicInstantiationNature;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.results.Builders;
 import org.hibernate.query.results.ResultBuilderInstantiationValued;
-import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.instantiation.internal.ArgumentDomainResult;
@@ -59,7 +57,6 @@ public class DynamicResultBuilderInstantiation<J>
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
 			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
-			Consumer<SqlSelection> sqlSelectionConsumer,
 			DomainResultCreationState domainResultCreationState) {
 		if ( argumentResultBuilders.isEmpty() ) {
 			throw new IllegalStateException( "DynamicResultBuilderInstantiation defined no arguments" );
@@ -70,12 +67,11 @@ public class DynamicResultBuilderInstantiation<J>
 		for ( int i = 0; i < argumentResultBuilders.size(); i++ ) {
 			final InstantiationArgument argument = argumentResultBuilders.get( i );
 
-			final ArgumentDomainResult<Object> argumentDomainResult = new ArgumentDomainResult<>(
+			final ArgumentDomainResult<?> argumentDomainResult = new ArgumentDomainResult(
 					argument.argumentBuilder.buildResult(
 							jdbcResultsMetadata,
 							i,
 							legacyFetchResolver,
-							sqlSelectionConsumer,
 							domainResultCreationState
 					)
 			);

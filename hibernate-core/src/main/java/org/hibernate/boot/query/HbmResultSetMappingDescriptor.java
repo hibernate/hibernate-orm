@@ -13,7 +13,7 @@ import java.util.List;
 import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.internal.ResultSetMappingResolutionContext;
-import org.hibernate.query.internal.ScalarResultMappingMemento;
+import org.hibernate.query.internal.ResultMementoBasicStandard;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.type.BasicType;
 
@@ -58,7 +58,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 
 	@Override
 	public NamedResultSetMappingMemento resolve(ResultSetMappingResolutionContext resolutionContext) {
-		final List<ScalarResultMappingMemento> scalarResultMementos;
+		final List<ResultMementoBasicStandard> scalarResultMementos;
 		if ( scalarResultMappings == null || scalarResultMappings.isEmpty() ) {
 			scalarResultMementos = Collections.emptyList();
 		}
@@ -148,7 +148,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 		}
 
 		@Override
-		public ScalarResultMappingMemento resolve(ResultSetMappingResolutionContext resolutionContext) {
+		public ResultMementoBasicStandard resolve(ResultSetMappingResolutionContext resolutionContext) {
 			if ( hibernateTypeName != null ) {
 				final BasicType<?> namedType = resolutionContext.getSessionFactory()
 						.getTypeConfiguration()
@@ -159,12 +159,12 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 					throw new IllegalArgumentException( "Could not resolve named type : " + hibernateTypeName );
 				}
 
-				return new ScalarResultMappingMemento( columnName, namedType, resolutionContext );
+				return new ResultMementoBasicStandard( columnName, namedType, resolutionContext );
 			}
 
 			// todo (6.0) : column name may be optional in HBM - double check
 
-			return new ScalarResultMappingMemento( columnName, null, resolutionContext );
+			return new ResultMementoBasicStandard( columnName, null, resolutionContext );
 		}
 	}
 

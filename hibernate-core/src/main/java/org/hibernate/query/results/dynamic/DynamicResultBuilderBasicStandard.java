@@ -7,13 +7,12 @@
 package org.hibernate.query.results.dynamic;
 
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.query.results.SqlSelectionImpl;
-import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
@@ -76,7 +75,6 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
 			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
-			Consumer<SqlSelection> sqlSelectionConsumer,
 			DomainResultCreationState domainResultCreationState) {
 		final SessionFactoryImplementor sessionFactory = domainResultCreationState.getSqlAstCreationState()
 				.getCreationContext()
@@ -106,8 +104,15 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 			basicType = typeConfiguration.getBasicTypeRegistry().resolve( javaTypeDescriptor, sqlTypeDescriptor );
 		}
 
-		final SqlSelectionImpl sqlSelection = new SqlSelectionImpl( valuesArrayPosition, (BasicValuedMapping) basicType );
-		sqlSelectionConsumer.accept( sqlSelection );
+		final SqlExpressionResolver sqlExpressionResolver = domainResultCreationState.getSqlAstCreationState().getSqlExpressionResolver();
+		sqlExpressionResolver.resolveSqlSelection(
+				sqlExpressionResolver.resolveSqlExpression(
+						columnName,
+						state -> new SqlSelectionImpl( valuesArrayPosition, (BasicValuedMapping) basicType )
+				),
+				basicType.getJavaTypeDescriptor(),
+				sessionFactory.getTypeConfiguration()
+		);
 
 		return new BasicResult<>( valuesArrayPosition, resultAlias, explicitJavaTypeDescriptor );
 	}

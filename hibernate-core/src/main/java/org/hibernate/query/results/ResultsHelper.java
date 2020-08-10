@@ -24,18 +24,6 @@ public class ResultsHelper {
 		return unwrap( creationState );
 	}
 
-	public static FromClauseAccessImpl extractFromClauseAccess(DomainResultCreationState creationState) {
-		return unwrap( creationState ).getFromClauseAccess();
-	}
-
-	public static SqlAstCreationStateImpl extractSqlAstCreationState(DomainResultCreationState creationState) {
-		return unwrap( creationState ).getSqlAstCreationState();
-	}
-
-	public static SqlAstProcessingStateImpl extractSqlAstProcessingState(DomainResultCreationState creationState) {
-		return unwrap( creationState ).getSqlAstCreationState().getCurrentProcessingState();
-	}
-
 	private static DomainResultCreationStateImpl unwrap(DomainResultCreationState creationState) {
 		if ( creationState instanceof DomainResultCreationStateImpl ) {
 			return ( (DomainResultCreationStateImpl) creationState );

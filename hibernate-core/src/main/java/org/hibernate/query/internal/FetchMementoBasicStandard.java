@@ -9,6 +9,10 @@ package org.hibernate.query.internal;
 import java.util.function.Consumer;
 
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
+import org.hibernate.metamodel.mapping.MappingType;
+import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.query.NavigablePath;
+import org.hibernate.query.named.FetchMementoBasic;
 import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.complete.CompleteFetchBuilderBasicPart;
 
@@ -18,13 +22,33 @@ import org.hibernate.query.results.complete.CompleteFetchBuilderBasicPart;
  *
  * @author Steve Ebersole
  */
-public class BasicFetchMemento implements FetchMappingMemento {
+public class FetchMementoBasicStandard implements FetchMementoBasic {
+	private final NavigablePath navigablePath;
 	private final BasicValuedModelPart fetchedAttribute;
 	private final String columnAlias;
 
-	public BasicFetchMemento(BasicValuedModelPart fetchedAttribute, String columnAlias) {
+	public FetchMementoBasicStandard(
+			NavigablePath navigablePath,
+			BasicValuedModelPart fetchedAttribute,
+			String columnAlias) {
+		this.navigablePath = navigablePath;
 		this.fetchedAttribute = fetchedAttribute;
 		this.columnAlias = columnAlias;
+	}
+
+	@Override
+	public NavigablePath getNavigablePath() {
+		return navigablePath;
+	}
+
+	@Override
+	public ModelPart getReferencedModelPart() {
+		return fetchedAttribute;
+	}
+
+	@Override
+	public MappingType getMappingType() {
+		return fetchedAttribute.getPartMappingType();
 	}
 
 	@Override
@@ -32,6 +56,6 @@ public class BasicFetchMemento implements FetchMappingMemento {
 			Parent parent,
 			Consumer<String> querySpaceConsumer,
 			ResultSetMappingResolutionContext context) {
-		return new CompleteFetchBuilderBasicPart( fetchedAttribute, columnAlias );
+		return new CompleteFetchBuilderBasicPart( navigablePath, fetchedAttribute, columnAlias );
 	}
 }

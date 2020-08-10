@@ -61,6 +61,11 @@ public class EmbeddableForeignKeyResultImpl<T>
 		);
 	}
 
+	@Override
+	public boolean containsAnyNonScalarResults() {
+		return true;
+	}
+
 	private void generateFetches(
 			List<SqlSelection> sqlSelections,
 			NavigablePath navigablePath,

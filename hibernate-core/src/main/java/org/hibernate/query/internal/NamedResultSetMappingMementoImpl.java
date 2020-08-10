@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.query.named.NamedResultSetMappingMemento;
+import org.hibernate.query.named.ResultMemento;
 import org.hibernate.query.results.ResultSetMapping;
 
 /**
@@ -19,13 +20,13 @@ import org.hibernate.query.results.ResultSetMapping;
  */
 public class NamedResultSetMappingMementoImpl implements NamedResultSetMappingMemento {
 	private final String name;
-	private final List<ResultMappingMemento> resultMappingMementos;
+	private final List<ResultMemento> resultMementos;
 
 	public NamedResultSetMappingMementoImpl(
 			String name,
-			List<ResultMappingMemento> resultMappingMementos) {
+			List<ResultMemento> resultMementos) {
 		this.name = name;
-		this.resultMappingMementos = resultMappingMementos;
+		this.resultMementos = resultMementos;
 	}
 
 	@Override
@@ -38,7 +39,7 @@ public class NamedResultSetMappingMementoImpl implements NamedResultSetMappingMe
 			ResultSetMapping resultSetMapping,
 			Consumer<String> querySpaceConsumer,
 			ResultSetMappingResolutionContext context) {
-		resultMappingMementos.forEach(
+		resultMementos.forEach(
 				memento -> resultSetMapping.addResultBuilder( memento.resolve( querySpaceConsumer, context ) )
 		);
 	}

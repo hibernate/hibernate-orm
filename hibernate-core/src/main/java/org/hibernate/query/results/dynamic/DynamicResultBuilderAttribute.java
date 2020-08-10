@@ -8,12 +8,12 @@ package org.hibernate.query.results.dynamic;
 
 import java.util.Locale;
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
 
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.BasicValuedSingularAttributeMapping;
+import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.query.results.SqlSelectionImpl;
-import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
@@ -59,15 +59,21 @@ public class DynamicResultBuilderAttribute implements DynamicResultBuilder {
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
 			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
-			Consumer<SqlSelection> sqlSelectionConsumer,
 			DomainResultCreationState domainResultCreationState) {
 		final int resultSetPosition = jdbcResultsMetadata.resolveColumnPosition( columnAlias );
 		final int valuesArrayPosition = resultSetPosition - 1;
 
 		// todo (6.0) : TableGroups + `attributeMapping#buldResult`
 
-		final SqlSelectionImpl sqlSelection = new SqlSelectionImpl( valuesArrayPosition, attributeMapping );
-		sqlSelectionConsumer.accept( sqlSelection );
+		final SqlExpressionResolver sqlExpressionResolver = domainResultCreationState.getSqlAstCreationState().getSqlExpressionResolver();
+		sqlExpressionResolver.resolveSqlSelection(
+				sqlExpressionResolver.resolveSqlExpression(
+						columnAlias,
+						state -> new SqlSelectionImpl( valuesArrayPosition, attributeMapping )
+				),
+				attributeMapping.getJavaTypeDescriptor(),
+				domainResultCreationState.getSqlAstCreationState().getCreationContext().getSessionFactory().getTypeConfiguration()
+		);
 
 		return new BasicResult<>(
 				valuesArrayPosition,

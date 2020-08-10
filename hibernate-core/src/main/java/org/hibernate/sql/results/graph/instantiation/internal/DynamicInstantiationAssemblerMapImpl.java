@@ -24,18 +24,18 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class DynamicInstantiationAssemblerMapImpl implements DomainResultAssembler<Map> {
-	private final JavaTypeDescriptor<Map> mapJavaDescriptor;
+public class DynamicInstantiationAssemblerMapImpl implements DomainResultAssembler<Map<?,?>> {
+	private final JavaTypeDescriptor<Map<?,?>> mapJavaDescriptor;
 	private final List<ArgumentReader<?>> argumentReaders;
 
 	public DynamicInstantiationAssemblerMapImpl(
-			JavaTypeDescriptor<Map> mapJavaDescriptor,
+			JavaTypeDescriptor<Map<?,?>> mapJavaDescriptor,
 			List<ArgumentReader<?>> argumentReaders) {
 		this.mapJavaDescriptor = mapJavaDescriptor;
 		this.argumentReaders = argumentReaders;
 
 		final Set<String> aliases = new HashSet<>();
-		for ( ArgumentReader argumentReader : argumentReaders ) {
+		for ( ArgumentReader<?> argumentReader : argumentReaders ) {
 			if ( argumentReader.getAlias() == null ) {
 				throw new IllegalStateException( "alias for Map dynamic instantiation argument cannot be null" );
 			}
@@ -48,17 +48,17 @@ public class DynamicInstantiationAssemblerMapImpl implements DomainResultAssembl
 	}
 
 	@Override
-	public JavaTypeDescriptor<Map> getAssembledJavaTypeDescriptor() {
+	public JavaTypeDescriptor<Map<?,?>> getAssembledJavaTypeDescriptor() {
 		return mapJavaDescriptor;
 	}
 
 	@Override
-	public Map assemble(
+	public Map<?,?> assemble(
 			RowProcessingState rowProcessingState,
 			JdbcValuesSourceProcessingOptions options) {
 		final HashMap<String,Object> result = new HashMap<>();
 
-		for ( ArgumentReader argumentReader : argumentReaders ) {
+		for ( ArgumentReader<?> argumentReader : argumentReaders ) {
 			result.put(
 					argumentReader.getAlias(),
 					argumentReader.assemble( rowProcessingState, options )

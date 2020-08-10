@@ -7,12 +7,10 @@
 package org.hibernate.query.results;
 
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
 
 import org.hibernate.Incubating;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
-import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
@@ -28,11 +26,9 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
  */
 @Incubating
 public interface FetchBuilder {
-
 	Fetch buildFetch(
 			FetchParent parent,
 			NavigablePath fetchPath, JdbcValuesMetadata jdbcResultsMetadata,
 			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
-			Consumer<SqlSelection> sqlSelectionConsumer,
 			DomainResultCreationState domainResultCreationState);
 }

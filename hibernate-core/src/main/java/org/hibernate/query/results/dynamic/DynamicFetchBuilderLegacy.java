@@ -8,15 +8,13 @@ package org.hibernate.query.results.dynamic;
 
 import java.util.List;
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.query.results.FromClauseAccessImpl;
+import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.ResultsHelper;
-import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
@@ -64,11 +62,10 @@ public class DynamicFetchBuilderLegacy implements DynamicFetchBuilder, NativeQue
 			NavigablePath fetchPath,
 			JdbcValuesMetadata jdbcResultsMetadata,
 			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
-			Consumer<SqlSelection> sqlSelectionConsumer,
 			DomainResultCreationState domainResultCreationState) {
-		final FromClauseAccessImpl fromClauseAccess = ResultsHelper.extractFromClauseAccess( domainResultCreationState );
+		final DomainResultCreationStateImpl creationState = ResultsHelper.impl( domainResultCreationState );
 
-		final TableGroup ownerTableGroup = fromClauseAccess.findByAlias( ownerTableAlias );
+		final TableGroup ownerTableGroup = creationState.getFromClauseAccess().findByAlias( ownerTableAlias );
 
 		// todo (6.0) : create the TableGroupJoin for the fetch and then build the fetch
 

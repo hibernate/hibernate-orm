@@ -14,9 +14,9 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * @author Steve Ebersole
  */
 public class ArgumentDomainResult<A> implements DomainResult<A> {
-	private final DomainResult realDomainResult;
+	private final DomainResult<A> realDomainResult;
 
-	public ArgumentDomainResult(DomainResult realDomainResult) {
+	public ArgumentDomainResult(DomainResult<A> realDomainResult) {
 		this.realDomainResult = realDomainResult;
 	}
 
@@ -26,15 +26,19 @@ public class ArgumentDomainResult<A> implements DomainResult<A> {
 	}
 
 	@Override
+	public boolean containsAnyNonScalarResults() {
+		return realDomainResult.containsAnyNonScalarResults();
+	}
+
+	@Override
+	@SuppressWarnings("rawtypes")
 	public JavaTypeDescriptor getResultJavaTypeDescriptor() {
 		return realDomainResult.getResultJavaTypeDescriptor();
 	}
 
 	@Override
-	public ArgumentReader<A> createResultAssembler(
-			AssemblerCreationState creationState) {
-		//noinspection unchecked
-		return new ArgumentReader(
+	public ArgumentReader<A> createResultAssembler(AssemblerCreationState creationState) {
+		return new ArgumentReader<>(
 				realDomainResult.createResultAssembler( creationState ),
 				getResultVariable()
 		);

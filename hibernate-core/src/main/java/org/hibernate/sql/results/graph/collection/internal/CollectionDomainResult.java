@@ -74,6 +74,11 @@ public class CollectionDomainResult implements DomainResult, CollectionResultGra
 	}
 
 	@Override
+	public boolean containsAnyNonScalarResults() {
+		return true;
+	}
+
+	@Override
 	public JavaTypeDescriptor getResultJavaTypeDescriptor() {
 		return loadingAttribute.getJavaTypeDescriptor();
 	}

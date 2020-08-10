@@ -56,8 +56,13 @@ public interface Fetch extends DomainResultGraphNode {
 	 */
 	boolean hasTableGroup();
 
+	@Override
+	default boolean containsAnyNonScalarResults() {
+		return true;
+	}
+
 	/**
 	 * Create the assembler for this fetch
 	 */
-	DomainResultAssembler createAssembler(FetchParentAccess parentAccess, AssemblerCreationState creationState);
+	DomainResultAssembler<?> createAssembler(FetchParentAccess parentAccess, AssemblerCreationState creationState);
 }

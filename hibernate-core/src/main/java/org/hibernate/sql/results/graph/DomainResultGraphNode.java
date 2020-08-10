@@ -17,6 +17,13 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * @author Steve Ebersole
  */
 public interface DomainResultGraphNode {
+	/**
+	 * Does this node contain any non-scalar (sub-)results?
+	 */
+	default boolean containsAnyNonScalarResults() {
+		return false;
+	}
+
 	// todo (6.0) : result variable (selection alias)?  - even fetches can have alias
 
 	JavaTypeDescriptor getResultJavaTypeDescriptor();

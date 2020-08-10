@@ -7,10 +7,8 @@
 package org.hibernate.query.results.dynamic;
 
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
 
 import org.hibernate.query.results.ResultBuilderEntityValued;
-import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
@@ -24,6 +22,5 @@ public interface DynamicResultBuilderEntity extends DynamicResultBuilder, Result
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
 			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
-			Consumer<SqlSelection> sqlSelectionConsumer,
 			DomainResultCreationState domainResultCreationState);
 }

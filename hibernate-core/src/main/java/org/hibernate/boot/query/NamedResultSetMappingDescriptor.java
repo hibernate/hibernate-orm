@@ -6,8 +6,6 @@
  */
 package org.hibernate.boot.query;
 
-import org.hibernate.query.internal.FetchMappingMemento;
-import org.hibernate.query.internal.ResultMappingMemento;
 import org.hibernate.query.internal.ResultSetMappingResolutionContext;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 

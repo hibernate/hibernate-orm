@@ -7,6 +7,7 @@
 package org.hibernate.query.results.complete;
 
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.ResultBuilder;
 
@@ -17,10 +18,10 @@ import org.hibernate.query.results.ResultBuilder;
  * @author Steve Ebersole
  */
 public interface ModelPartReference {
+	NavigablePath getNavigablePath();
+
 	/**
 	 * The part of the domain model that is referenced
 	 */
 	ModelPart getReferencedPart();
-
-
 }

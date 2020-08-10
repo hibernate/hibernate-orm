@@ -63,9 +63,9 @@ import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.results.Builders;
 import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.ResultSetMappingImpl;
+import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.query.results.dynamic.DynamicResultBuilderEntityStandard;
 import org.hibernate.query.results.dynamic.DynamicResultBuilderInstantiation;
-import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.query.spi.AbstractQuery;
 import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.NonSelectQueryPlan;
@@ -105,11 +105,11 @@ public class NativeQueryImpl<R>
 	private final List<QueryParameterImplementor<?>> occurrenceOrderedParamList;
 	private final QueryParameterBindings parameterBindings;
 
+	private final ResultSetMappingImpl resultSetMapping;
+
 	private final QueryOptionsImpl queryOptions = new QueryOptionsImpl();
 
 	private Set<String> querySpaces;
-
-	private ResultSetMappingImpl resultSetMapping = new ResultSetMappingImpl();
 
 	private Object collectionKey;
 	private NativeQueryInterpreter nativeQueryInterpreter;
@@ -125,10 +125,29 @@ public class NativeQueryImpl<R>
 		this.sqlString = memento.getSqlString();
 
 		final ParameterInterpretation parameterInterpretation = resolveParameterInterpretation( session );
-
 		this.parameterMetadata = parameterInterpretation.toParameterMetadata( session );
 		this.occurrenceOrderedParamList = parameterInterpretation.getOccurrenceOrderedParameters();
 		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, session.getFactory() );
+
+		this.resultSetMapping = new ResultSetMappingImpl( sqlString );
+
+		applyOptions( memento );
+	}
+
+	private NativeQueryImpl(
+			String resultMappingIdentifier,
+			NamedNativeQueryMemento memento,
+			SharedSessionContractImplementor session) {
+		super( session );
+
+		this.sqlString = memento.getSqlString();
+
+		final ParameterInterpretation parameterInterpretation = resolveParameterInterpretation( session );
+		this.parameterMetadata = parameterInterpretation.toParameterMetadata( session );
+		this.occurrenceOrderedParamList = parameterInterpretation.getOccurrenceOrderedParameters();
+		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, session.getFactory() );
+
+		this.resultSetMapping = new ResultSetMappingImpl( resultMappingIdentifier );
 
 		applyOptions( memento );
 	}
@@ -155,7 +174,7 @@ public class NativeQueryImpl<R>
 			NamedNativeQueryMemento memento,
 			String resultSetMappingName,
 			SharedSessionContractImplementor session) {
-		this( memento, session );
+		this( resultSetMappingName, memento, session );
 
 		session.getFactory()
 				.getQueryEngine()
@@ -171,6 +190,8 @@ public class NativeQueryImpl<R>
 		super( session );
 
 		this.sqlString = sqlString;
+
+		this.resultSetMapping = new ResultSetMappingImpl( resultSetMappingMemento.getName() );
 		resultSetMappingMemento.resolve( resultSetMapping, (s) -> {}, this );
 
 		final ParameterInterpretation parameterInterpretation = resolveParameterInterpretation( session );
@@ -231,6 +252,8 @@ public class NativeQueryImpl<R>
 		this.parameterMetadata = parameterInterpretation.toParameterMetadata( session );
 		this.occurrenceOrderedParamList = parameterInterpretation.getOccurrenceOrderedParameters();
 		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, session.getFactory() );
+
+		this.resultSetMapping = new ResultSetMappingImpl( sqlString );
 	}
 
 	@Override

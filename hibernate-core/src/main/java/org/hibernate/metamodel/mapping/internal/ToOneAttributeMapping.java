@@ -14,9 +14,7 @@ import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.metamodel.mapping.AssociationKey;
-import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
-import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
@@ -227,6 +225,8 @@ public class ToOneAttributeMapping extends AbstractSingularAttributeMapping
 
 		if ( creationState.isAssociationKeyVisited( associationKey ) ) {
 			NavigablePath parentNavigablePath = fetchablePath.getParent();
+			assert parentNavigablePath.equals( fetchParent.getNavigablePath() );
+
 			ModelPart modelPart = creationState.resolveModelPart( parentNavigablePath );
 			if ( modelPart instanceof EmbeddedIdentifierMappingImpl ) {
 				while ( parentNavigablePath instanceof EntityIdentifierNavigablePath ) {
@@ -235,6 +235,7 @@ public class ToOneAttributeMapping extends AbstractSingularAttributeMapping
 			}
 			while ( modelPart instanceof EmbeddableValuedFetchable ) {
 				parentNavigablePath = parentNavigablePath.getParent();
+				assert parentNavigablePath != null;
 				modelPart = creationState.resolveModelPart( parentNavigablePath );
 			}
 

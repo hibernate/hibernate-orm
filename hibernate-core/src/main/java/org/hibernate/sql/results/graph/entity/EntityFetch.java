@@ -12,4 +12,8 @@ import org.hibernate.sql.results.graph.Fetch;
  * @author Steve Ebersole
  */
 public interface EntityFetch extends EntityResultGraphNode, Fetch {
+	@Override
+	default boolean containsAnyNonScalarResults() {
+		return true;
+	}
 }

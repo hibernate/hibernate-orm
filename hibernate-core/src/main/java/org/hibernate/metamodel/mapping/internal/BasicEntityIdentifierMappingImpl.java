@@ -50,23 +50,29 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Andrea Boriero
  */
 public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMapping, FetchOptions {
+
+	private final NavigableRole idRole;
+	private final String attributeName;
+
 	private final PropertyAccess propertyAccess;
 	private final EntityPersister entityPersister;
-	private final SessionFactoryImplementor sessionFactory;
-	private final NavigableRole idRole;
+
 	private final String rootTable;
 	private final String pkColumnName;
+
 	private final BasicType idType;
+
+	private final SessionFactoryImplementor sessionFactory;
 
 	public BasicEntityIdentifierMappingImpl(
 			EntityPersister entityPersister,
+			String attributeName,
 			String rootTable,
 			String pkColumnName,
 			BasicType idType,
-			MappingModelCreationProcess creationProcess
-	) {
-		assert entityPersister.hasIdentifierProperty();
-		assert entityPersister.getIdentifierPropertyName() != null;
+			MappingModelCreationProcess creationProcess) {
+		assert attributeName != null;
+		this.attributeName = attributeName;
 		this.rootTable = rootTable;
 		this.pkColumnName = pkColumnName;
 		this.idType = idType;
@@ -86,6 +92,11 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 	@Override
 	public PropertyAccess getPropertyAccess() {
 		return propertyAccess;
+	}
+
+	@Override
+	public String getAttributeName() {
+		return attributeName;
 	}
 
 	@Override

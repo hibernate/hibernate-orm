@@ -9,70 +9,239 @@ package org.hibernate.query.results;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
+import org.hibernate.Internal;
+import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.AssociationKey;
+import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
+import org.hibernate.query.results.dynamic.LegacyFetchResolver;
+import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
+import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
+import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.SqlAstProcessingState;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.results.ResultsLogger;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
  */
-public class DomainResultCreationStateImpl implements DomainResultCreationState {
-	private final List<ResultBuilder> resultBuilders;
-	private final Map<String, Map<String, DynamicFetchBuilderLegacy>> legacyFetchBuilders;
-	private final SqlAstCreationStateImpl sqlAstCreationState;
+@Internal
+public class DomainResultCreationStateImpl
+		implements DomainResultCreationState, SqlAstCreationState, SqlAstProcessingState, SqlExpressionResolver {
+
+	private final String stateIdentifier;
 	private final FromClauseAccessImpl fromClauseAccess;
 
+	private final Consumer<SqlSelection> sqlSelectionConsumer;
+	private final Map<String,SqlSelectionImpl> sqlSelectionMap = new HashMap<>();
+	private boolean allowPositionalSelections = true;
+
+	private final SqlAliasBaseManager sqlAliasBaseManager;
+
 	private final LegacyFetchResolverImpl legacyFetchResolver;
+	private final SessionFactoryImplementor sessionFactory;
+
 
 	public DomainResultCreationStateImpl(
-			List<ResultBuilder> resultBuilders,
+			String stateIdentifier,
 			Map<String, Map<String, DynamicFetchBuilderLegacy>> legacyFetchBuilders,
+			Consumer<SqlSelection> sqlSelectionConsumer,
 			SessionFactoryImplementor sessionFactory) {
-		this.resultBuilders = resultBuilders;
-		this.legacyFetchBuilders = legacyFetchBuilders;
+		this.stateIdentifier = stateIdentifier;
+		this.sqlSelectionConsumer = sqlSelectionConsumer;
 		this.fromClauseAccess = new FromClauseAccessImpl();
-		this.sqlAstCreationState = new SqlAstCreationStateImpl( fromClauseAccess, sessionFactory );
+		this.sqlAliasBaseManager = new SqlAliasBaseManager();
 
-		this.legacyFetchResolver = new LegacyFetchResolverImpl();
+		this.legacyFetchResolver = new LegacyFetchResolverImpl( legacyFetchBuilders );
+
+		this.sessionFactory = sessionFactory;
 	}
 
+	public LegacyFetchResolver getLegacyFetchResolver() {
+		return legacyFetchResolver;
+	}
+
+	public SessionFactoryImplementor getSessionFactory() {
+		return sessionFactory;
+	}
+
+	public int getNumberOfProcessedSelections() {
+		return sqlSelectionMap.size();
+	}
+
+	public boolean arePositionalSelectionsAllowed() {
+		return allowPositionalSelections;
+	}
+
+	public void disallowPositionalSelections() {
+		ResultsLogger.LOGGER.debugf( "Disallowing positional selections : %s", stateIdentifier );
+		this.allowPositionalSelections = false;
+	}
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// DomainResultCreationState
+
+	@Override
 	public FromClauseAccessImpl getFromClauseAccess() {
 		return fromClauseAccess;
 	}
 
 	@Override
-	public SqlAstCreationStateImpl getSqlAstCreationState() {
-		return sqlAstCreationState;
+	public DomainResultCreationStateImpl getSqlAstCreationState() {
+		return this;
 	}
 
-	@FunctionalInterface
-	public interface LegacyFetchResolver {
-		DynamicFetchBuilderLegacy resolve(String ownerTableAlias, String fetchedPartPath);
+	@Override
+	public SqlAliasBaseManager getSqlAliasBaseManager() {
+		return sqlAliasBaseManager;
+	}
+
+	@Override
+	public boolean forceIdentifierSelection() {
+		return false;
+	}
+
+	@Override
+	public void registerVisitedAssociationKey(AssociationKey associationKey) {
+	}
+
+	@Override
+	public boolean isAssociationKeyVisited(AssociationKey associationKey) {
+		return false;
+	}
+
+	@Override
+	public ModelPart resolveModelPart(NavigablePath navigablePath) {
+		final TableGroup tableGroup = fromClauseAccess.findTableGroup( navigablePath );
+		if ( tableGroup != null ) {
+			return tableGroup.getModelPart();
+		}
+
+		if ( navigablePath.getParent() != null ) {
+			final TableGroup parentTableGroup = fromClauseAccess.findTableGroup( navigablePath.getParent() );
+			if ( parentTableGroup != null ) {
+				return parentTableGroup.getModelPart().findSubPart( navigablePath.getLocalName(), null );
+			}
+		}
+
+		return null;
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// SqlAstCreationState
+
+	@Override
+	public DomainResultCreationStateImpl getSqlExpressionResolver() {
+		return getCurrentProcessingState();
+	}
+
+	@Override
+	public LockMode determineLockMode(String identificationVariable) {
+		return LockMode.READ;
+	}
+
+	@Override
+	public DomainResultCreationStateImpl getCurrentProcessingState() {
+		return this;
+	}
+
+	public SqlAstCreationContext getCreationContext() {
+		return getSessionFactory();
+	}
+
+	@Override
+	public SqlAliasBaseGenerator getSqlAliasBaseGenerator() {
+		return sqlAliasBaseManager;
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// SqlAstProcessingState
+
+	@Override
+	public SqlAstProcessingState getParentState() {
+		return null;
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// SqlExpressionResolver
+
+	@Override
+	public Expression resolveSqlExpression(
+			String key,
+			Function<SqlAstProcessingState, Expression> creator) {
+		final SqlSelectionImpl existing = sqlSelectionMap.get( key );
+		if ( existing != null ) {
+			return existing;
+		}
+
+		final Expression created = creator.apply( this );
+
+		if ( created instanceof SqlSelectionImpl ) {
+			sqlSelectionMap.put( key, (SqlSelectionImpl) created );
+			sqlSelectionConsumer.accept( (SqlSelectionImpl) created );
+		}
+		else if ( created instanceof ColumnReference ) {
+			final ColumnReference columnReference = (ColumnReference) created;
+
+			final SqlSelectionImpl sqlSelection = new SqlSelectionImpl(
+					sqlSelectionMap.size() + 1,
+					columnReference.getJdbcMapping()
+			);
+
+			sqlSelectionMap.put( key, sqlSelection );
+			sqlSelectionConsumer.accept( sqlSelection );
+		}
+
+		return created;
+	}
+
+	@Override
+	public SqlSelection resolveSqlSelection(
+			Expression expression,
+			JavaTypeDescriptor javaTypeDescriptor,
+			TypeConfiguration typeConfiguration) {
+		assert expression instanceof SqlSelectionImpl;
+		return (SqlSelection) expression;
 	}
 
 	private static class LegacyFetchResolverImpl implements LegacyFetchResolver {
-		private final Map<String,Map<String, DynamicFetchBuilderLegacy>> legacyFetchResolvers;
+		private final Map<String,Map<String, DynamicFetchBuilderLegacy>> legacyFetchBuilders;
 
-		public LegacyFetchResolverImpl() {
-			this.legacyFetchResolvers = new HashMap<>();
+		public LegacyFetchResolverImpl(Map<String, Map<String, DynamicFetchBuilderLegacy>> legacyFetchBuilders) {
+			this.legacyFetchBuilders = legacyFetchBuilders;
 		}
 
 		@Override
 		public DynamicFetchBuilderLegacy resolve(String ownerTableAlias, String fetchedPartPath) {
-			final Map<String, DynamicFetchBuilderLegacy> fetchBuilders = legacyFetchResolvers.get( ownerTableAlias );
+			if ( legacyFetchBuilders == null ) {
+				return null;
+			}
+
+			final Map<String, DynamicFetchBuilderLegacy> fetchBuilders = legacyFetchBuilders.get( ownerTableAlias );
 			if ( fetchBuilders == null ) {
 				return null;
 			}
 
 			return fetchBuilders.get( fetchedPartPath );
 		}
-	}
-
-	public LegacyFetchResolver getLegacyFetchResolver() {
-		return legacyFetchResolver;
 	}
 
 	@Override

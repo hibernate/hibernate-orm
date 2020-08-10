@@ -6,6 +6,8 @@
  */
 package org.hibernate.sql.results.graph.embeddable.internal;
 
+import java.util.List;
+
 import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
@@ -18,6 +20,8 @@ import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.DomainResultGraphNode;
+import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -27,6 +31,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  */
 public class EmbeddableResultImpl<T> extends AbstractFetchParent implements EmbeddableResultGraphNode, DomainResult<T> {
 	private final String resultVariable;
+	private final boolean containsAnyNonScalars;
 
 	public EmbeddableResultImpl(
 			NavigablePath navigablePath,
@@ -56,11 +61,29 @@ public class EmbeddableResultImpl<T> extends AbstractFetchParent implements Embe
 		);
 
 		afterInitialize( creationState );
+
+		// after-after-initialize :D
+		containsAnyNonScalars = determineIfContainedAnyScalars( fetches );
+	}
+
+	private static boolean determineIfContainedAnyScalars(List<Fetch> fetches) {
+		for ( int i = 0; i < fetches.size(); i++ ) {
+			if ( fetches.get( i ).containsAnyNonScalarResults() ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	@Override
 	public String getResultVariable() {
 		return resultVariable;
+	}
+
+	@Override
+	public boolean containsAnyNonScalarResults() {
+		return containsAnyNonScalars;
 	}
 
 	@Override

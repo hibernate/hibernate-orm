@@ -10,6 +10,7 @@ import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.internal.util.StringHelper;
@@ -32,13 +33,13 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 
 	private final DynamicInstantiationNature nature;
 	private final JavaTypeDescriptor<R> javaTypeDescriptor;
-	private final List<ArgumentDomainResult> argumentResults;
+	private final List<ArgumentDomainResult<?>> argumentResults;
 
 	public DynamicInstantiationResultImpl(
 			String resultVariable,
 			DynamicInstantiationNature nature,
 			JavaTypeDescriptor<R> javaTypeDescriptor,
-			List<ArgumentDomainResult> argumentResults) {
+			List<ArgumentDomainResult<?>> argumentResults) {
 		this.resultVariable = resultVariable;
 		this.nature = nature;
 		this.javaTypeDescriptor = javaTypeDescriptor;
@@ -46,13 +47,26 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 	}
 
 	@Override
-	public JavaTypeDescriptor getResultJavaTypeDescriptor() {
+	public JavaTypeDescriptor<R> getResultJavaTypeDescriptor() {
 		return javaTypeDescriptor;
 	}
 
 	@Override
 	public String getResultVariable() {
 		return resultVariable;
+	}
+
+	@Override
+	public boolean containsAnyNonScalarResults() {
+		//noinspection ForLoopReplaceableByForEach
+		for ( int i = 0; i < argumentResults.size(); i++ ) {
+			final ArgumentDomainResult<?> argumentResult = argumentResults.get( i );
+			if ( argumentResult.containsAnyNonScalarResults() ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	@Override
@@ -64,7 +78,7 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 		final List<ArgumentReader<?>> argumentReaders = new ArrayList<>();
 
 		if ( argumentResults != null ) {
-			for ( ArgumentDomainResult argumentResult : argumentResults ) {
+			for ( ArgumentDomainResult<?> argumentResult : argumentResults ) {
 				final String argumentAlias = argumentResult.getResultVariable();
 				if ( argumentAlias == null ) {
 					areAllArgumentsAliased = false;
@@ -107,7 +121,7 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 				log.debug( "One or more arguments for List dynamic instantiation (`new list(...)`) specified an alias; ignoring" );
 			}
 			return (DomainResultAssembler<R>) new DynamicInstantiationAssemblerListImpl(
-					(JavaTypeDescriptor<List>) javaTypeDescriptor,
+					(JavaTypeDescriptor<List<?>>) javaTypeDescriptor,
 					argumentReaders
 			);
 		}
@@ -121,21 +135,21 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 				);
 			}
 			return (DomainResultAssembler<R>) new DynamicInstantiationAssemblerMapImpl(
-					(JavaTypeDescriptor) javaTypeDescriptor,
+					(JavaTypeDescriptor<Map<?,?>>) javaTypeDescriptor,
 					argumentReaders
 			);
 		}
 		else {
 			// find a constructor matching argument types
 			constructor_loop:
-			for ( Constructor constructor : javaTypeDescriptor.getJavaType().getDeclaredConstructors() ) {
+			for ( Constructor<?> constructor : javaTypeDescriptor.getJavaType().getDeclaredConstructors() ) {
 				if ( constructor.getParameterTypes().length != argumentReaders.size() ) {
 					continue;
 				}
 
 				for ( int i = 0; i < argumentReaders.size(); i++ ) {
-					final ArgumentReader argumentReader = argumentReaders.get( i );
-					final JavaTypeDescriptor argumentTypeDescriptor = creationState.getSqlAstCreationContext()
+					final ArgumentReader<?> argumentReader = argumentReaders.get( i );
+					final JavaTypeDescriptor<?> argumentTypeDescriptor = creationState.getSqlAstCreationContext()
 							.getDomainModel()
 							.getTypeConfiguration()
 							.getJavaTypeDescriptorRegistry()
@@ -159,6 +173,7 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 				}
 
 				constructor.setAccessible( true );
+				//noinspection rawtypes
 				return new DynamicInstantiationAssemblerConstructorImpl(
 						constructor,
 						javaTypeDescriptor,
@@ -185,7 +200,10 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 				);
 			}
 
-			return new DynamicInstantiationAssemblerInjectionImpl( javaTypeDescriptor, argumentReaders );
+			return new DynamicInstantiationAssemblerInjectionImpl<>(
+					javaTypeDescriptor,
+					argumentReaders
+			);
 		}
 	}
 }

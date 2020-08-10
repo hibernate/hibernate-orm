@@ -10,7 +10,8 @@ import java.util.function.Consumer;
 import javax.persistence.ColumnResult;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.results.ResultBuilder;
+import org.hibernate.query.named.ResultMementoBasic;
+import org.hibernate.query.results.ResultBuilderBasicValued;
 import org.hibernate.query.results.complete.CompleteResultBuilderBasicValuedStandard;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -44,7 +45,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Steve Ebersole
  */
-public class ScalarResultMappingMemento implements ResultMappingMemento {
+public class ResultMementoBasicStandard implements ResultMementoBasic {
 
 	public final String explicitColumnName;
 
@@ -54,7 +55,7 @@ public class ScalarResultMappingMemento implements ResultMappingMemento {
 	/**
 	 * Creation of ScalarResultMappingMemento for JPA descriptor
 	 */
-	public ScalarResultMappingMemento(
+	public ResultMementoBasicStandard(
 			ColumnResult definition,
 			ResultSetMappingResolutionContext context) {
 		this.explicitColumnName = definition.name();
@@ -73,7 +74,7 @@ public class ScalarResultMappingMemento implements ResultMappingMemento {
 		explicitType = null;
 	}
 
-	public ScalarResultMappingMemento(
+	public ResultMementoBasicStandard(
 			String explicitColumnName,
 			BasicType<?> explicitType,
 			ResultSetMappingResolutionContext context) {
@@ -85,21 +86,9 @@ public class ScalarResultMappingMemento implements ResultMappingMemento {
 	}
 
 	@Override
-	public ResultBuilder resolve(
+	public ResultBuilderBasicValued resolve(
 			Consumer<String> querySpaceConsumer,
 			ResultSetMappingResolutionContext context) {
-		return new CompleteResultBuilderBasicValuedStandard( this, context );
-	}
-
-	public String getExplicitColumnName() {
-		return explicitColumnName;
-	}
-
-	public BasicType<?> getExplicitType() {
-		return explicitType;
-	}
-
-	public JavaTypeDescriptor<?> getExplicitJavaTypeDescriptor() {
-		return explicitJavaTypeDescriptor;
+		return new CompleteResultBuilderBasicValuedStandard( explicitColumnName, explicitType, explicitJavaTypeDescriptor );
 	}
 }

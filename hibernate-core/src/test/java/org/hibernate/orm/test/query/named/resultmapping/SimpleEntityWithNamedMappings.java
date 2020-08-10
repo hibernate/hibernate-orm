@@ -6,10 +6,12 @@
  */
 package org.hibernate.orm.test.query.named.resultmapping;
 
+import javax.persistence.Basic;
 import javax.persistence.ColumnResult;
 import javax.persistence.ConstructorResult;
 import javax.persistence.Entity;
 import javax.persistence.EntityResult;
+import javax.persistence.FetchType;
 import javax.persistence.FieldResult;
 import javax.persistence.Id;
 import javax.persistence.SqlResultSetMapping;
@@ -40,7 +42,7 @@ import javax.persistence.SqlResultSetMapping;
 		)
 )
 @SqlResultSetMapping(
-		name = "entity",
+		name = "entity-id-name",
 		entities = @EntityResult(
 				entityClass = SimpleEntityWithNamedMappings.class,
 				fields = {
@@ -49,18 +51,45 @@ import javax.persistence.SqlResultSetMapping;
 				}
 		)
 )
+@SqlResultSetMapping(
+		name = "entity-id-notes",
+		entities = @EntityResult(
+				entityClass = SimpleEntityWithNamedMappings.class,
+				fields = {
+						@FieldResult( name = "id", column = "id" ),
+						@FieldResult( name = "notes", column = "notes" )
+				}
+		)
+)
+@SqlResultSetMapping(
+		name = "entity",
+		entities = @EntityResult(
+				entityClass = SimpleEntityWithNamedMappings.class,
+				fields = {
+						@FieldResult( name = "id", column = "id" ),
+						@FieldResult( name = "name", column = "name" ),
+						@FieldResult( name = "notes", column = "notes" )
+				}
+		)
+)
 public class SimpleEntityWithNamedMappings {
 	@Id
 	private Integer id;
 
 	private String name;
+	private String notes;
 
 	protected SimpleEntityWithNamedMappings() {
 	}
 
 	public SimpleEntityWithNamedMappings(Integer id, String name) {
+		this( id, name, null );
+	}
+
+	public SimpleEntityWithNamedMappings(Integer id, String name, String notes) {
 		this.id = id;
 		this.name = name;
+		this.notes = notes;
 	}
 
 	public Integer getId() {
@@ -77,6 +106,15 @@ public class SimpleEntityWithNamedMappings {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	@Basic( fetch = FetchType.LAZY )
+	public String getNotes() {
+		return notes;
+	}
+
+	public void setNotes(String notes) {
+		this.notes = notes;
 	}
 
 	public static class DropDownDto {

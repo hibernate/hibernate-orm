@@ -77,7 +77,7 @@ import org.hibernate.type.VersionType;
  * @see org.hibernate.persister.spi.PersisterFactory
  * @see org.hibernate.persister.spi.PersisterClassResolver
  */
-public interface EntityPersister extends EntityDefinition, EntityValuedModelPart, InFlightEntityMappingType, Loadable, RootTableGroupProducer {
+public interface EntityPersister extends EntityDefinition, InFlightEntityMappingType, Loadable, RootTableGroupProducer {
 
 	/**
 	 * The property name of the "special" identifier property in HQL

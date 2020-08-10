@@ -22,12 +22,12 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 public class DynamicInstantiationAssemblerConstructorImpl<R> implements DomainResultAssembler<R> {
 	private final Constructor<R> targetConstructor;
 	private final JavaTypeDescriptor<R> resultType;
-	private final List<ArgumentReader> argumentReaders;
+	private final List<ArgumentReader<?>> argumentReaders;
 
 	public DynamicInstantiationAssemblerConstructorImpl(
 			Constructor<R> targetConstructor,
 			JavaTypeDescriptor<R> resultType,
-			List<ArgumentReader> argumentReaders) {
+			List<ArgumentReader<?>> argumentReaders) {
 		this.targetConstructor = targetConstructor;
 		this.resultType = resultType;
 		this.argumentReaders = argumentReaders;

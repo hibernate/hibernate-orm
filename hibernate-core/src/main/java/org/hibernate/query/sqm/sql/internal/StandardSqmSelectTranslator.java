@@ -28,6 +28,7 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.loader.MultipleBagFetchException;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -294,12 +295,16 @@ public class StandardSqmSelectTranslator
 					final Fetch fetch = buildFetch( fetchablePath, fetchParent, fetchable, isKeyFetchable );
 
 					if ( fetch != null ) {
-						if ( fetch.getTiming() == FetchTiming.IMMEDIATE &&
-								fetchable instanceof PluralAttributeMapping &&
-								( (PluralAttributeMapping) fetchable ).getMappedTypeDescriptor()
-										.getCollectionSemantics() instanceof BagSemantics ) {
-							bagRoles.add( fetchable.getNavigableRole().getNavigableName() );
+						if ( fetch.getTiming() == FetchTiming.IMMEDIATE && fetchable instanceof PluralAttributeMapping ) {
+							final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) fetchable;
+							final CollectionClassification collectionClassification = pluralAttributeMapping.getMappedTypeDescriptor()
+									.getCollectionSemantics()
+									.getCollectionClassification();
+							if ( collectionClassification == CollectionClassification.BAG ) {
+								bagRoles.add( fetchable.getNavigableRole().getNavigableName() );
+							}
 						}
+
 						fetches.add( fetch );
 					}
 				}

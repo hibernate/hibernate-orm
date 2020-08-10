@@ -9,13 +9,11 @@ package org.hibernate.query.results.complete;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
 
 import org.hibernate.query.DynamicInstantiationNature;
 import org.hibernate.query.results.ResultBuilderInstantiationValued;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.query.results.ResultBuilder;
-import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.instantiation.internal.ArgumentDomainResult;
@@ -46,19 +44,17 @@ public class CompleteResultBuilderInstantiation
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
 			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
-			Consumer<SqlSelection> sqlSelectionConsumer,
 			DomainResultCreationState domainResultCreationState) {
 		final List<ArgumentDomainResult<?>> argumentDomainResults = new ArrayList<>( argumentResultBuilders.size() );
 
 		for ( int i = 0; i < argumentResultBuilders.size(); i++ ) {
 			final ResultBuilder argumentResultBuilder = argumentResultBuilders.get( i );
 
-			final ArgumentDomainResult<Object> argumentDomainResult = new ArgumentDomainResult<>(
+			@SuppressWarnings({"unchecked", "rawtypes"}) final ArgumentDomainResult<?> argumentDomainResult = new ArgumentDomainResult(
 					argumentResultBuilder.buildResult(
 							jdbcResultsMetadata,
 							i,
 							legacyFetchResolver,
-							sqlSelectionConsumer,
 							domainResultCreationState
 					)
 			);
@@ -66,7 +62,7 @@ public class CompleteResultBuilderInstantiation
 			argumentDomainResults.add( argumentDomainResult );
 		}
 
-		return new DynamicInstantiationResultImpl(
+		return new DynamicInstantiationResultImpl<>(
 				null,
 				DynamicInstantiationNature.CLASS,
 				javaTypeDescriptor,

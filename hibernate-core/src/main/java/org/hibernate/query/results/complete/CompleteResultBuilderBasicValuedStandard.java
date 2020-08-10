@@ -7,23 +7,21 @@
 package org.hibernate.query.results.complete;
 
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.query.internal.ResultSetMappingResolutionContext;
-import org.hibernate.query.internal.ScalarResultMappingMemento;
+import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.ResultsHelper;
-import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.query.results.SqlSelectionImpl;
-import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
-import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.query.results.ResultsHelper.impl;
 
 /**
  * ResultBuilder for scalar results defined via:<ul>
@@ -37,15 +35,16 @@ public class CompleteResultBuilderBasicValuedStandard implements CompleteResultB
 
 	private final String explicitColumnName;
 
-	private final BasicType<?> explicitType;
+	private final BasicValuedMapping explicitType;
 	private final JavaTypeDescriptor<?> explicitJavaTypeDescriptor;
 
 	public CompleteResultBuilderBasicValuedStandard(
-			ScalarResultMappingMemento memento,
-			ResultSetMappingResolutionContext context) {
-		this.explicitColumnName = memento.getExplicitColumnName();
-		this.explicitType = memento.getExplicitType();
-		this.explicitJavaTypeDescriptor = memento.getExplicitJavaTypeDescriptor();
+			String explicitColumnName,
+			BasicValuedMapping explicitType,
+			JavaTypeDescriptor<?> explicitJavaTypeDescriptor) {
+		this.explicitColumnName = explicitColumnName;
+		this.explicitType = explicitType;
+		this.explicitJavaTypeDescriptor = explicitJavaTypeDescriptor;
 	}
 
 	@Override
@@ -53,11 +52,9 @@ public class CompleteResultBuilderBasicValuedStandard implements CompleteResultB
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
 			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
-			Consumer<SqlSelection> sqlSelectionConsumer,
 			DomainResultCreationState domainResultCreationState) {
-		final SessionFactoryImplementor sessionFactory = domainResultCreationState.getSqlAstCreationState()
-				.getCreationContext()
-				.getSessionFactory();
+		final DomainResultCreationStateImpl creationStateImpl = impl( domainResultCreationState );
+		final SessionFactoryImplementor sessionFactory = creationStateImpl.getSessionFactory();
 
 		final int jdbcPosition;
 		final String columnName;
@@ -73,7 +70,7 @@ public class CompleteResultBuilderBasicValuedStandard implements CompleteResultB
 
 		final int valuesArrayPosition = ResultsHelper.jdbcPositionToValuesArrayPosition( jdbcPosition );
 
-		final BasicType<?> basicType;
+		final BasicValuedMapping basicType;
 
 		if ( explicitType != null ) {
 			basicType = explicitType;
@@ -94,10 +91,16 @@ public class CompleteResultBuilderBasicValuedStandard implements CompleteResultB
 			basicType = typeConfiguration.getBasicTypeRegistry().resolve( javaTypeDescriptor, sqlTypeDescriptor );
 		}
 
-		final SqlSelectionImpl sqlSelection = new SqlSelectionImpl( valuesArrayPosition, (BasicValuedMapping) basicType );
-		sqlSelectionConsumer.accept( sqlSelection );
+		creationStateImpl.resolveSqlSelection(
+				creationStateImpl.resolveSqlExpression(
+						columnName,
+						processingState -> new SqlSelectionImpl( valuesArrayPosition, basicType )
+				),
+				explicitJavaTypeDescriptor,
+				sessionFactory.getTypeConfiguration()
+		);
 
-		return new BasicResult<>( valuesArrayPosition, columnName, basicType.getJavaTypeDescriptor() );
+		return new BasicResult<>( valuesArrayPosition, columnName, basicType.getMappedTypeDescriptor().getMappedJavaTypeDescriptor() );
 	}
 
 }

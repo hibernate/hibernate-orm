@@ -36,8 +36,14 @@ import org.hibernate.type.spi.TypeConfiguration;
 @Incubating
 @Internal
 public class ResultSetMappingImpl implements ResultSetMapping {
+	private final String mappingIdentifier;
+
 	private List<ResultBuilder> resultBuilders;
 	private Map<String, Map<String, DynamicFetchBuilderLegacy>> legacyFetchBuilders;
+
+	public ResultSetMappingImpl(String mappingIdentifier) {
+		this.mappingIdentifier = mappingIdentifier;
+	}
 
 	@Override
 	public int getNumberOfResultBuilders() {
@@ -108,8 +114,9 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 		final List<DomainResult<?>> domainResults = new ArrayList<>( numberOfResults );
 
 		final DomainResultCreationStateImpl creationState = new DomainResultCreationStateImpl(
-				resultBuilders,
+				mappingIdentifier,
 				legacyFetchBuilders,
+				sqlSelections::add,
 				sessionFactory
 		);
 
@@ -131,22 +138,15 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 				domainResult = resultBuilder.buildResult(
 						jdbcResultsMetadata,
 						domainResults.size(),
-						(entityName, fetchableName) -> {
-							if ( legacyFetchBuilders == null ) {
-								return null;
-							}
-
-							final Map<String, DynamicFetchBuilderLegacy> fetchBuilderMap = legacyFetchBuilders.get( entityName );
-							if ( fetchBuilderMap == null ) {
-								return null;
-							}
-
-							return fetchBuilderMap.get( fetchableName );
-						},
-						sqlSelections::add,
+						creationState.getLegacyFetchResolver()::resolve,
 						creationState
 				);
 			}
+
+			if ( domainResult.containsAnyNonScalarResults() ) {
+				creationState.disallowPositionalSelections();
+			}
+
 			domainResults.add( domainResult );
 		}
 

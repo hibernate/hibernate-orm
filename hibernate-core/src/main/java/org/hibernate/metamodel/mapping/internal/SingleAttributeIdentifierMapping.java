@@ -17,4 +17,6 @@ public interface SingleAttributeIdentifierMapping extends EntityIdentifierMappin
 	 * Access to the identifier attribute's PropertyAccess
 	 */
 	PropertyAccess getPropertyAccess();
+
+	String getAttributeName();
 }

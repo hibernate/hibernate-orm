@@ -6,30 +6,69 @@
  */
 package org.hibernate.query.results;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Consumer;
+import java.util.function.Function;
+
+import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
+import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.SqlAstProcessingState;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * SqlAstCreationState implementation for result-set mapping handling
  *
  * @author Steve Ebersole
  */
-public class SqlAstCreationStateImpl implements SqlAstCreationState {
-	private final SessionFactoryImplementor sessionFactory;
+@Internal
+public class SqlAstCreationStateImpl implements SqlAstCreationState, SqlAstProcessingState, SqlExpressionResolver {
+
 	private final FromClauseAccessImpl fromClauseAccess;
-	private final SqlAstProcessingStateImpl processingState;
+	private final SqlAliasBaseManager sqlAliasBaseManager;
+
+	private final Consumer<SqlSelection> sqlSelectionConsumer;
+	private final Map<String,SqlSelectionImpl> sqlSelectionMap = new HashMap<>();
+
+	private final SessionFactoryImplementor sessionFactory;
 
 	public SqlAstCreationStateImpl(
 			FromClauseAccessImpl fromClauseAccess,
+			SqlAliasBaseManager sqlAliasBaseManager,
+			Consumer<SqlSelection> sqlSelectionConsumer,
 			SessionFactoryImplementor sessionFactory) {
-		this.sessionFactory = sessionFactory;
 		this.fromClauseAccess = fromClauseAccess;
-		this.processingState = new SqlAstProcessingStateImpl( this, fromClauseAccess );
+		this.sqlAliasBaseManager = sqlAliasBaseManager;
+		this.sqlSelectionConsumer = sqlSelectionConsumer;
+		this.sessionFactory = sessionFactory;
 	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// SqlAstProcessingState
+
+	@Override
+	public SqlAstProcessingState getParentState() {
+		return null;
+	}
+
+	@Override
+	public SqlAstCreationState getSqlAstCreationState() {
+		return this;
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// SqlAstCreationState
 
 	@Override
 	public SqlAstCreationContext getCreationContext() {
@@ -37,13 +76,13 @@ public class SqlAstCreationStateImpl implements SqlAstCreationState {
 	}
 
 	@Override
-	public SqlAstProcessingStateImpl getCurrentProcessingState() {
-		return processingState;
+	public SqlAstCreationStateImpl getCurrentProcessingState() {
+		return this;
 	}
 
 	@Override
-	public SqlAstProcessingStateImpl getSqlExpressionResolver() {
-		return processingState;
+	public SqlAstCreationStateImpl getSqlExpressionResolver() {
+		return this;
 	}
 
 	@Override
@@ -53,13 +92,31 @@ public class SqlAstCreationStateImpl implements SqlAstCreationState {
 
 	@Override
 	public SqlAliasBaseGenerator getSqlAliasBaseGenerator() {
-		return stem -> {
-			throw new UnsupportedOperationException();
-		};
+		return sqlAliasBaseManager;
 	}
 
 	@Override
 	public LockMode determineLockMode(String identificationVariable) {
+		return LockMode.READ;
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// SqlExpressionResolver
+
+
+	@Override
+	public Expression resolveSqlExpression(
+			String key,
+			Function<SqlAstProcessingState, Expression> creator) {
+		return null;
+	}
+
+	@Override
+	public SqlSelection resolveSqlSelection(
+			Expression expression,
+			JavaTypeDescriptor javaTypeDescriptor,
+			TypeConfiguration typeConfiguration) {
 		return null;
 	}
 }

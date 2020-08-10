@@ -23,6 +23,10 @@ public interface EntityResultGraphNode extends DomainResultGraphNode, FetchParen
 	NavigablePath getNavigablePath();
 
 	EntityValuedModelPart getEntityValuedModelPart();
+	@Override
+	default boolean containsAnyNonScalarResults() {
+		return true;
+	}
 
 	@Override
 	default JavaTypeDescriptor getResultJavaTypeDescriptor() {

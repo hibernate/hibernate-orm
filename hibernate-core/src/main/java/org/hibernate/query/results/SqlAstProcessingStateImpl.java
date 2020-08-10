@@ -8,8 +8,10 @@ package org.hibernate.query.results;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
+import org.hibernate.Internal;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlAstProcessingState;
@@ -23,17 +25,22 @@ import org.hibernate.type.spi.TypeConfiguration;
 /**
  * @author Steve Ebersole
  */
+@Internal
 public class SqlAstProcessingStateImpl implements SqlAstProcessingState, SqlExpressionResolver {
-	private final SqlAstCreationState sqlAstCreationState;
 	private final FromClauseAccessImpl fromClauseAccess;
 
 	private final Map<String,SqlSelectionImpl> sqlSelectionMap = new HashMap<>();
+	private final Consumer<SqlSelection> sqlSelectionConsumer;
+
+	private final SqlAstCreationState sqlAstCreationState;
 
 	public SqlAstProcessingStateImpl(
-			SqlAstCreationState sqlAstCreationState,
-			FromClauseAccessImpl fromClauseAccess) {
-		this.sqlAstCreationState = sqlAstCreationState;
+			FromClauseAccessImpl fromClauseAccess,
+			Consumer<SqlSelection> sqlSelectionConsumer,
+			SqlAstCreationState sqlAstCreationState) {
 		this.fromClauseAccess = fromClauseAccess;
+		this.sqlSelectionConsumer = sqlSelectionConsumer;
+		this.sqlAstCreationState = sqlAstCreationState;
 	}
 
 	@Override
@@ -69,6 +76,7 @@ public class SqlAstProcessingStateImpl implements SqlAstProcessingState, SqlExpr
 
 		if ( created instanceof SqlSelectionImpl ) {
 			sqlSelectionMap.put( key, (SqlSelectionImpl) created );
+			sqlSelectionConsumer.accept( (SqlSelectionImpl) created );
 		}
 		else if ( created instanceof ColumnReference ) {
 			final ColumnReference columnReference = (ColumnReference) created;
@@ -77,7 +85,9 @@ public class SqlAstProcessingStateImpl implements SqlAstProcessingState, SqlExpr
 					sqlSelectionMap.size() + 1,
 					columnReference.getJdbcMapping()
 			);
+
 			sqlSelectionMap.put( key, sqlSelection );
+			sqlSelectionConsumer.accept( sqlSelection );
 		}
 
 		return created;

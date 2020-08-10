@@ -34,7 +34,7 @@ public class SimpleNamedMappingTests {
 		final NamedQueryRepository namedQueryRepository = queryEngine.getNamedQueryRepository();
 		final NamedResultSetMappingMemento mappingMemento = namedQueryRepository.getResultSetMappingMemento( "name" );
 
-		final ResultSetMapping mapping = new ResultSetMappingImpl();
+		final ResultSetMapping mapping = new ResultSetMappingImpl( "test" );
 
 		final ResultSetMappingResolutionContext resolutionContext = new ResultSetMappingResolutionContext() {
 			@Override

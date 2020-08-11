@@ -208,6 +208,14 @@ processTestResources {
 	}
 }
 
+// Keep system properties in sync with gradle.properties!
+test {
+	systemProperty 'user.language', 'en'
+	systemProperty 'user.country', 'US'
+	systemProperty 'user.timezone', 'UTC'
+	systemProperty 'file.encoding', 'UTF-8'
+}
+
 // Enable the experimental features of ByteBuddy with JDK 15+
 test {
 	if ( Integer.valueOf( gradle.ext.testedJavaVersionAsEnum.getMajorVersion() ) >= 15 ) {

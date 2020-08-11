@@ -7,6 +7,7 @@
 package org.hibernate.jpa.test.graphs;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import javax.persistence.CascadeType;
@@ -17,6 +18,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.TypedQuery;
 
@@ -62,110 +64,119 @@ public class LoadAndFetchGraphTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Before
 	public void setUp() {
-		doInJPA(
-				this::entityManagerFactory, entityManager -> {
-					AEntity a1 = new AEntity();
-					a1.setId( 1 );
-					a1.setLabel( "A1" );
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			// Create the model twice, with different IDs,
+			// because we also need to test what happens when multiple results are loaded by a query.
+			for ( int offset : new int[]{ 0, 10000 } ) {
+				AEntity a1 = new AEntity();
+				a1.setId( offset + 1 );
+				a1.setLabel( "A1" );
 
-					AEntity a2 = new AEntity();
-					a2.setId( 2 );
-					a2.setLabel( "A2" );
+				AEntity a2 = new AEntity();
+				a2.setId( offset + 2 );
+				a2.setLabel( "A2" );
 
-					entityManager.persist( a1 );
-					entityManager.persist( a2 );
+				entityManager.persist( a1 );
+				entityManager.persist( a2 );
 
-					BEntity b1 = new BEntity();
-					b1.setId( 1 );
-					b1.setLabel( "B1" );
+				BEntity b1 = new BEntity();
+				b1.setId( offset + 1 );
+				b1.setLabel( "B1" );
 
-					BEntity b2 = new BEntity();
-					b2.setId( 2 );
-					b2.setLabel( "B2" );
+				BEntity b2 = new BEntity();
+				b2.setId( offset + 2 );
+				b2.setLabel( "B2" );
 
-					entityManager.persist( b1 );
-					entityManager.persist( b2 );
+				entityManager.persist( b1 );
+				entityManager.persist( b2 );
 
-					EEntity e1 = new EEntity();
-					e1.setId( 1 );
-					e1.setLabel( "E1" );
+				EEntity e1 = new EEntity();
+				e1.setId( offset + 1 );
+				e1.setLabel( "E1" );
 
-					EEntity e2 = new EEntity();
-					e2.setId( 2 );
-					e2.setLabel( "E2" );
+				EEntity e2 = new EEntity();
+				e2.setId( offset + 2 );
+				e2.setLabel( "E2" );
 
-					EEntity e3 = new EEntity();
-					e3.setId( 3 );
-					e3.setLabel( "E3" );
+				EEntity e3 = new EEntity();
+				e3.setId( offset + 3 );
+				e3.setLabel( "E3" );
 
-					EEntity e4 = new EEntity();
-					e4.setId( 4 );
-					e4.setLabel( "E4" );
+				EEntity e4 = new EEntity();
+				e4.setId( offset + 4 );
+				e4.setLabel( "E4" );
 
-					entityManager.persist( e1 );
-					entityManager.persist( e2 );
-					entityManager.persist( e3 );
-					entityManager.persist( e4 );
+				entityManager.persist( e1 );
+				entityManager.persist( e2 );
+				entityManager.persist( e3 );
+				entityManager.persist( e4 );
 
-					DEntity d1 = new DEntity();
-					d1.setId( 1 );
-					d1.setLabel( "D1" );
-					d1.setE( e1 );
+				DEntity d1 = new DEntity();
+				d1.setId( offset + 1 );
+				d1.setLabel( "D1" );
+				d1.setE( e1 );
 
-					DEntity d2 = new DEntity();
-					d2.setId( 2 );
-					d2.setLabel( "D2" );
-					d2.setE( e2 );
+				DEntity d2 = new DEntity();
+				d2.setId( offset + 2 );
+				d2.setLabel( "D2" );
+				d2.setE( e2 );
 
-					CEntity c1 = new CEntity();
-					c1.setId( 1 );
-					c1.setLabel( "C1" );
-					c1.setA( a1 );
-					c1.setB( b1 );
-					c1.addD( d1 );
-					c1.addD( d2 );
+				CEntity c1 = new CEntity();
+				c1.setId( offset + 1 );
+				c1.setLabel( "C1" );
+				c1.setA( a1 );
+				c1.setB( b1 );
+				c1.addD( d1 );
+				c1.addD( d2 );
 
-					entityManager.persist( c1 );
+				entityManager.persist( c1 );
 
-					DEntity d3 = new DEntity();
-					d3.setId( 3 );
-					d3.setLabel( "D3" );
-					d3.setE( e3 );
+				DEntity d3 = new DEntity();
+				d3.setId( offset + 3 );
+				d3.setLabel( "D3" );
+				d3.setE( e3 );
 
-					DEntity d4 = new DEntity();
-					d4.setId( 4 );
-					d4.setLabel( "D4" );
-					d4.setE( e4 );
+				DEntity d4 = new DEntity();
+				d4.setId( offset + 4 );
+				d4.setLabel( "D4" );
+				d4.setE( e4 );
 
-					CEntity c2 = new CEntity();
-					c2.setId( 2 );
-					c2.setLabel( "C2" );
-					c2.setA( a2 );
-					c2.setB( b2 );
-					c2.addD( d3 );
-					c2.addD( d4 );
+				CEntity c2 = new CEntity();
+				c2.setId( offset + 2 );
+				c2.setLabel( "C2" );
+				c2.setA( a2 );
+				c2.setB( b2 );
+				c2.addD( d3 );
+				c2.addD( d4 );
 
-					entityManager.persist( c2 );
+				entityManager.persist( c2 );
 
-					CEntity c3 = new CEntity();
-					c3.setId( 3 );
-					c3.setLabel( "C3" );
+				CEntity c3 = new CEntity();
+				c3.setId( offset + 3 );
+				c3.setLabel( "C3" );
 
-					entityManager.persist( c3 );
+				entityManager.persist( c3 );
 
-					c1.setC( c2 );
-					c2.setC( c3 );
+				CEntity c4 = new CEntity();
+				c4.setId( offset + 4 );
+				c4.setLabel( "C4" );
 
-					int id = 5;
-					for ( int i = 0; i < 10; i++ ) {
-						DEntity dn = new DEntity();
-						dn.setId( id++ );
-						dn.setLabel( "label" );
-						dn.setE( e3 );
-						entityManager.persist( dn );
-					}
+				entityManager.persist( c4 );
 
-				} );
+				c1.setC( c2 );
+				c2.setC( c3 );
+				c1.setEagerC( c4 );
+
+				int id = 5;
+				for ( int i = 0; i < 10; i++ ) {
+					DEntity dn = new DEntity();
+					dn.setId( offset + id++ );
+					dn.setLabel( "label" );
+					dn.setE( e3 );
+					entityManager.persist( dn );
+				}
+			}
+		} );
 	}
 
 	@Test
@@ -186,7 +197,10 @@ public class LoadAndFetchGraphTest extends BaseEntityManagerFunctionalTestCase {
 					assertFalse( Hibernate.isInitialized( cEntity.getC() ) );
 					assertFalse( Hibernate.isInitialized( cEntity.getdList() ) );
 
-					assertEquals( 1L, statistics.getPrepareStatementCount() );
+					assertTrue( Hibernate.isInitialized( cEntity.getEagerC() ) );
+
+					// 1 + 1 for the eager C
+					assertEquals( 2L, statistics.getPrepareStatementCount() );
 				} );
 	}
 
@@ -217,7 +231,12 @@ public class LoadAndFetchGraphTest extends BaseEntityManagerFunctionalTestCase {
 						assertTrue( Hibernate.isInitialized( dEntity.getE() ) );
 					} );
 
-					assertEquals( 1L, statistics.getPrepareStatementCount() );
+					// With LOAD semantic, attributes that are not mentioned in the graph are LAZY or EAGER,
+					// depending on the mapping.
+					assertTrue( Hibernate.isInitialized( cEntity.getEagerC() ) );
+
+					// 1 + 1 for the eager C
+					assertEquals( 2L, statistics.getPrepareStatementCount() );
 				} );
 	}
 
@@ -247,6 +266,10 @@ public class LoadAndFetchGraphTest extends BaseEntityManagerFunctionalTestCase {
 						assertTrue( Hibernate.isInitialized( dEntity.getE() ) );
 					} );
 
+					// With FETCH semantic, attributes that are not mentioned in the graph are LAZY,
+					// even if they were EAGER in the mapping.
+					assertFalse( Hibernate.isInitialized( cEntity.getEagerC() ) );
+
 					assertEquals( 1L, statistics.getPrepareStatementCount() );
 				} );
 	}
@@ -272,8 +295,89 @@ public class LoadAndFetchGraphTest extends BaseEntityManagerFunctionalTestCase {
 					assertTrue( Hibernate.isInitialized( cEntity.getC().getA() ) );
 					assertFalse( Hibernate.isInitialized( cEntity.getC().getC() ) );
 
+					// With FETCH semantic, attributes that are not mentioned in the graph are LAZY,
+					// even if they were EAGER in the mapping.
+					assertFalse( Hibernate.isInitialized( cEntity.getEagerC() ) );
+
 					assertEquals( 1L, statistics.getPrepareStatementCount() );
 				} );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-14124")
+	public void testQueryByIdWithLoadGraphMultipleResults() {
+		Statistics statistics = entityManagerFactory().unwrap( SessionFactory.class ).getStatistics();
+		statistics.clear();
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			EntityGraph<CEntity> entityGraph = entityManager.createEntityGraph( CEntity.class );
+			entityGraph.addAttributeNodes( "a", "b" );
+			entityGraph.addSubgraph( "dList" ).addAttributeNodes( "e" );
+
+			TypedQuery<CEntity> query = entityManager.createQuery(
+					"select c from CEntity as c where c.id in :cid ",
+					CEntity.class
+			);
+			query.setHint( GraphSemantic.LOAD.getJpaHintName(), entityGraph );
+			query.setParameter( "cid", Arrays.asList( 1, 10001 ) );
+
+			List<CEntity> cEntityList = query.getResultList();
+			assertEquals( 2, cEntityList.size() );
+
+			for ( CEntity cEntity : cEntityList ) {
+				assertTrue( Hibernate.isInitialized( cEntity.getA() ) );
+				assertTrue( Hibernate.isInitialized( cEntity.getB() ) );
+				assertFalse( Hibernate.isInitialized( cEntity.getC() ) );
+				assertTrue( Hibernate.isInitialized( cEntity.getdList() ) );
+				cEntity.getdList().forEach( dEntity -> {
+					assertTrue( Hibernate.isInitialized( dEntity.getE() ) );
+				} );
+
+				// With LOAD semantic, attributes that are not mentioned in the graph are LAZY or EAGER,
+				// depending on the mapping.
+				assertTrue( Hibernate.isInitialized( cEntity.getEagerC() ) );
+			}
+
+			// 1 + 2 for the eager C
+			assertEquals( 3L, statistics.getPrepareStatementCount() );
+		} );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-14124")
+	public void testQueryByIdWithFetchGraphMultipleResults() {
+		Statistics statistics = entityManagerFactory().unwrap( SessionFactory.class ).getStatistics();
+		statistics.clear();
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			EntityGraph<CEntity> entityGraph = entityManager.createEntityGraph( CEntity.class );
+			entityGraph.addAttributeNodes( "a", "b" );
+			entityGraph.addSubgraph( "dList" ).addAttributeNodes( "e" );
+
+			TypedQuery<CEntity> query = entityManager.createQuery(
+					"select c from CEntity as c where c.id in :cid ",
+					CEntity.class
+			);
+			query.setHint( GraphSemantic.FETCH.getJpaHintName(), entityGraph );
+			query.setParameter( "cid", Arrays.asList( 1, 10001 ) );
+
+			List<CEntity> cEntityList = query.getResultList();
+			assertEquals( 2, cEntityList.size() );
+
+			for ( CEntity cEntity : cEntityList ) {
+				assertTrue( Hibernate.isInitialized( cEntity.getA() ) );
+				assertTrue( Hibernate.isInitialized( cEntity.getB() ) );
+				assertFalse( Hibernate.isInitialized( cEntity.getC() ) );
+				assertTrue( Hibernate.isInitialized( cEntity.getdList() ) );
+				cEntity.getdList().forEach( dEntity -> {
+					assertTrue( Hibernate.isInitialized( dEntity.getE() ) );
+				} );
+
+				// With FETCH semantic, attributes that are not mentioned in the graph are LAZY,
+				// even if they were EAGER in the mapping.
+				assertFalse( Hibernate.isInitialized( cEntity.getEagerC() ) );
+			}
+
+			assertEquals( 1L, statistics.getPrepareStatementCount() );
+		} );
 	}
 
 	@Entity(name = "AEntity")
@@ -366,6 +470,9 @@ public class LoadAndFetchGraphTest extends BaseEntityManagerFunctionalTestCase {
 		@ManyToOne(fetch = FetchType.LAZY)
 		private CEntity c;
 
+		@OneToOne(fetch = FetchType.EAGER)
+		private CEntity eagerC;
+
 		@OneToMany(
 				fetch = FetchType.LAZY,
 				mappedBy = "c",
@@ -417,6 +524,14 @@ public class LoadAndFetchGraphTest extends BaseEntityManagerFunctionalTestCase {
 
 		public void setC(CEntity c) {
 			this.c = c;
+		}
+
+		public CEntity getEagerC() {
+			return eagerC;
+		}
+
+		public void setEagerC(CEntity eagerC) {
+			this.eagerC = eagerC;
 		}
 
 		public List<DEntity> getdList() {

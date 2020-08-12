@@ -29,7 +29,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 public class SqlAstProcessingStateImpl implements SqlAstProcessingState, SqlExpressionResolver {
 	private final FromClauseAccessImpl fromClauseAccess;
 
-	private final Map<String,SqlSelectionImpl> sqlSelectionMap = new HashMap<>();
+	private final Map<String, SqlSelectionImpl> sqlSelectionMap = new HashMap<>();
 	private final Consumer<SqlSelection> sqlSelectionConsumer;
 
 	private final SqlAstCreationState sqlAstCreationState;

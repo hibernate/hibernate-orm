@@ -34,6 +34,7 @@ import org.hibernate.sql.results.ResultsLogger;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -47,8 +48,9 @@ public class DomainResultCreationStateImpl
 	private final String stateIdentifier;
 	private final FromClauseAccessImpl fromClauseAccess;
 
+	private final JdbcValuesMetadata jdbcResultsMetadata;
 	private final Consumer<SqlSelection> sqlSelectionConsumer;
-	private final Map<String,SqlSelectionImpl> sqlSelectionMap = new HashMap<>();
+	private final Map<String, SqlSelectionImpl> sqlSelectionMap = new HashMap<>();
 	private boolean allowPositionalSelections = true;
 
 	private final SqlAliasBaseManager sqlAliasBaseManager;
@@ -59,10 +61,12 @@ public class DomainResultCreationStateImpl
 
 	public DomainResultCreationStateImpl(
 			String stateIdentifier,
+			JdbcValuesMetadata jdbcResultsMetadata,
 			Map<String, Map<String, DynamicFetchBuilderLegacy>> legacyFetchBuilders,
 			Consumer<SqlSelection> sqlSelectionConsumer,
 			SessionFactoryImplementor sessionFactory) {
 		this.stateIdentifier = stateIdentifier;
+		this.jdbcResultsMetadata = jdbcResultsMetadata;
 		this.sqlSelectionConsumer = sqlSelectionConsumer;
 		this.fromClauseAccess = new FromClauseAccessImpl();
 		this.sqlAliasBaseManager = new SqlAliasBaseManager();
@@ -92,6 +96,11 @@ public class DomainResultCreationStateImpl
 		ResultsLogger.LOGGER.debugf( "Disallowing positional selections : %s", stateIdentifier );
 		this.allowPositionalSelections = false;
 	}
+
+	public JdbcValuesMetadata getJdbcResultsMetadata() {
+		return jdbcResultsMetadata;
+	}
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// DomainResultCreationState
@@ -200,14 +209,19 @@ public class DomainResultCreationStateImpl
 		}
 		else if ( created instanceof ColumnReference ) {
 			final ColumnReference columnReference = (ColumnReference) created;
+			final String columnExpression = columnReference.getColumnExpression();
+			final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( columnExpression );
+			final int valuesArrayPosition = ResultsHelper.jdbcPositionToValuesArrayPosition( jdbcPosition );
 
 			final SqlSelectionImpl sqlSelection = new SqlSelectionImpl(
-					sqlSelectionMap.size() + 1,
+					valuesArrayPosition,
 					columnReference.getJdbcMapping()
 			);
 
 			sqlSelectionMap.put( key, sqlSelection );
 			sqlSelectionConsumer.accept( sqlSelection );
+
+			return sqlSelection;
 		}
 
 		return created;
@@ -218,6 +232,9 @@ public class DomainResultCreationStateImpl
 			Expression expression,
 			JavaTypeDescriptor javaTypeDescriptor,
 			TypeConfiguration typeConfiguration) {
+		if ( expression == null ) {
+			throw new IllegalArgumentException( "Expression cannot be null" );
+		}
 		assert expression instanceof SqlSelectionImpl;
 		return (SqlSelection) expression;
 	}

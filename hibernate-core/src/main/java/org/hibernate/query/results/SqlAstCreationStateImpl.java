@@ -37,7 +37,7 @@ public class SqlAstCreationStateImpl implements SqlAstCreationState, SqlAstProce
 	private final SqlAliasBaseManager sqlAliasBaseManager;
 
 	private final Consumer<SqlSelection> sqlSelectionConsumer;
-	private final Map<String,SqlSelectionImpl> sqlSelectionMap = new HashMap<>();
+	private final Map<String, SqlSelectionImpl> sqlSelectionMap = new HashMap<>();
 
 	private final SessionFactoryImplementor sessionFactory;
 

@@ -4,18 +4,13 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.orm.test.query.named.resultmapping;
+package org.hibernate.orm.test.query.resultmapping;
 
 import java.util.List;
 
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
-import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -25,57 +20,7 @@ import static org.hamcrest.Matchers.notNullValue;
 /**
  * @author Steve Ebersole
  */
-@DomainModel( annotatedClasses = SimpleEntityWithNamedMappings.class )
-@SessionFactory
-public class UsageTests {
-	// select a.{*}
-	@Test
-	public void testSimpleScalarMapping(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					// make sure it is in the repository
-					final NamedResultSetMappingMemento mappingMemento = session.getSessionFactory()
-							.getQueryEngine()
-							.getNamedQueryRepository()
-							.getResultSetMappingMemento( "id_name" );
-					assertThat( mappingMemento, notNullValue() );
-
-					// apply it to a native-query
-					final String qryString = "select id, name from SimpleEntityWithNamedMappings";
-					session.createNativeQuery( qryString, "id_name" ).list();
-
-					// todo (6.0) : should also try executing the ProcedureCall once that functionality is implemented
-					session.createStoredProcedureCall( "abc", "id_name" );
-				}
-		);
-	}
-
-	@Test
-	public void testSimpleInstantiationOfScalars(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					// make sure it is in the repository
-					final NamedResultSetMappingMemento mappingMemento = session.getSessionFactory()
-							.getQueryEngine()
-							.getNamedQueryRepository()
-							.getResultSetMappingMemento( "id_name_dto" );
-					assertThat( mappingMemento, notNullValue() );
-
-					// apply it to a native-query
-					final String qryString = "select id, name from SimpleEntityWithNamedMappings";
-					final List<SimpleEntityWithNamedMappings.DropDownDto> results
-							= session.createNativeQuery( qryString, "id_name_dto" ).list();
-					assertThat( results.size(), is( 1 ) );
-
-					final SimpleEntityWithNamedMappings.DropDownDto dto = results.get( 0 );
-					assertThat( dto.getId(), is( 1 ) );
-					assertThat( dto.getText(), is( "test" ) );
-
-					// todo (6.0) : should also try executing the ProcedureCall once that functionality is implemented
-					session.createStoredProcedureCall( "abc", "id_name_dto" );
-				}
-		);
-	}
+public class EntityResultTests extends BaseUsageTest {
 
 	@Test
 	public void testSimpleEntityResultMapping(SessionFactoryScope scope) {
@@ -90,8 +35,9 @@ public class UsageTests {
 
 					// apply it to a native-query
 					final String qryString = "select id, name, notes from SimpleEntityWithNamedMappings";
-					final List<SimpleEntityWithNamedMappings> results
-							= session.createNativeQuery( qryString, "entity" ).list();
+					final List<SimpleEntityWithNamedMappings> results = session
+							.createNativeQuery( qryString, "entity" )
+							.list();
 					assertThat( results.size(), is( 1 ) );
 
 					final SimpleEntityWithNamedMappings entity = results.get( 0 );
@@ -104,20 +50,60 @@ public class UsageTests {
 		);
 	}
 
-	@BeforeEach
-	public void prepareData(SessionFactoryScope scope) {
+	@Test
+	public void testImplicitAttributeMapping(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.save( new SimpleEntityWithNamedMappings( 1, "test" ) );
+					// make sure it is in the repository
+					final NamedResultSetMappingMemento mappingMemento = session.getSessionFactory()
+							.getQueryEngine()
+							.getNamedQueryRepository()
+							.getResultSetMappingMemento(
+									"entity-none" );
+					assertThat( mappingMemento, notNullValue() );
+
+					// apply it to a native-query
+					final String qryString = "select id, name, notes from SimpleEntityWithNamedMappings";
+					final List<SimpleEntityWithNamedMappings> results = session
+							.createNativeQuery( qryString, "entity-none" )
+							.list();
+					assertThat( results.size(), is( 1 ) );
+
+					final SimpleEntityWithNamedMappings entity = results.get( 0 );
+					assertThat( entity.getId(), is( 1 ) );
+					assertThat( entity.getName(), is( "test" ) );
+
+					// todo (6.0) : should also try executing the ProcedureCall once that functionality is implemented
+					session.createStoredProcedureCall( "abc", "entity-none" );
 				}
 		);
 	}
 
-	@AfterEach
-	public void cleanUpData(SessionFactoryScope scope) {
+	@Test
+	public void testMixedAttributeMapping(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "delete SimpleEntityWithNamedMappings" ).executeUpdate();
+					// make sure it is in the repository
+					final NamedResultSetMappingMemento mappingMemento = session.getSessionFactory()
+							.getQueryEngine()
+							.getNamedQueryRepository()
+							.getResultSetMappingMemento(
+									"entity-id-notes" );
+					assertThat( mappingMemento, notNullValue() );
+
+					// apply it to a native-query
+					final String qryString = "select id, name, notes from SimpleEntityWithNamedMappings";
+					final List<SimpleEntityWithNamedMappings> results = session
+							.createNativeQuery( qryString, "entity-id-notes" )
+							.list();
+					assertThat( results.size(), is( 1 ) );
+
+					final SimpleEntityWithNamedMappings entity = results.get( 0 );
+					assertThat( entity.getId(), is( 1 ) );
+					assertThat( entity.getName(), is( "test" ) );
+
+					// todo (6.0) : should also try executing the ProcedureCall once that functionality is implemented
+					session.createStoredProcedureCall( "abc", "entity-id-notes" );
 				}
 		);
 	}

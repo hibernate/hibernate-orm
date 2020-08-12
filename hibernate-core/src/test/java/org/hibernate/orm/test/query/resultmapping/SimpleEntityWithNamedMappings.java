@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.orm.test.query.named.resultmapping;
+package org.hibernate.orm.test.query.resultmapping;
 
 import javax.persistence.Basic;
 import javax.persistence.ColumnResult;
@@ -49,6 +49,12 @@ import javax.persistence.SqlResultSetMapping;
 						@FieldResult( name = "id", column = "id" ),
 						@FieldResult( name = "name", column = "name" )
 				}
+		)
+)
+@SqlResultSetMapping(
+		name = "entity-none",
+		entities = @EntityResult(
+				entityClass = SimpleEntityWithNamedMappings.class
 		)
 )
 @SqlResultSetMapping(

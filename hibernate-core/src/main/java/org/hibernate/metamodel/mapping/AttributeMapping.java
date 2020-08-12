@@ -7,13 +7,14 @@
 package org.hibernate.metamodel.mapping;
 
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.sql.results.graph.Fetchable;
 
 /**
  * Describes an attribute at the mapping model level.
  *
  * @author Steve Ebersole
  */
-public interface AttributeMapping extends ModelPart, ValueMapping {
+public interface AttributeMapping extends ModelPart, ValueMapping, Fetchable {
 	String getAttributeName();
 
 	@Override

@@ -34,6 +34,7 @@ import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping
 import org.hibernate.query.EntityIdentifierNavigablePath;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.internal.FetchMementoBasicStandard;
+import org.hibernate.query.internal.ImplicitModelPartResultMemento;
 import org.hibernate.query.internal.ModelPartResultMementoBasicImpl;
 import org.hibernate.query.internal.NamedResultSetMappingMementoImpl;
 import org.hibernate.query.internal.ResultMementoBasicStandard;
@@ -46,6 +47,7 @@ import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.named.ResultMemento;
 import org.hibernate.query.named.ResultMementoBasic;
 import org.hibernate.query.named.ResultMementoInstantiation.ArgumentMemento;
+import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -271,9 +273,6 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 			final RuntimeMetamodels runtimeMetamodels = resolutionContext.getSessionFactory().getRuntimeMetamodels();
 			final EntityMappingType entityDescriptor = runtimeMetamodels.getEntityMappingType( entityName );
 			final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
-			final String identifierAttributeName = identifierMapping instanceof SingleAttributeIdentifierMapping
-					? ( (SingleAttributeIdentifierMapping) identifierMapping ).getAttributeName()
-					: EntityIdentifierMapping.ROLE_LOCAL_NAME;
 
 			final MutableObject<ResultMemento> identifierMementoReference = new MutableObject<>();
 
@@ -284,29 +283,64 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 			);
 
 			final Map<String, FetchMemento> fetchMementos = new HashMap<>();
-			fetchMappings.forEach(
-					(attrName, attrMapping) -> {
-						if ( EntityIdentifierMapping.ROLE_LOCAL_NAME.equals( attrName )
-								|| identifierAttributeName.equals( attrName ) ) {
+
+
+			entityDescriptor.visitAttributeMappings(
+					attributeMapping -> {
+						final String fetchableName = attributeMapping.getFetchableName();
+						final String attrNameName = attributeMapping.getAttributeName();
+
+						final boolean isIdentifier = ResultsHelper.isIdentifier(
+								identifierMapping,
+								fetchableName,
+								attrNameName
+						);
+
+						final AttributeFetchDescriptor fetchDescriptor = fetchMappings.get( fetchableName );
+
+						if ( isIdentifier ) {
+							final ResultMemento idResultMemento;
+
 							final EntityIdentifierNavigablePath idPath = new EntityIdentifierNavigablePath( navigablePath );
-							identifierMementoReference.set( attrMapping.asResultMemento( idPath, resolutionContext ) );
+							if ( fetchDescriptor == null ) {
+								final AttributeFetchDescriptor idRoleFetchDescriptor = fetchMappings.get( EntityIdentifierMapping.ROLE_LOCAL_NAME );
+								if ( idRoleFetchDescriptor == null ) {
+									idResultMemento = ResultsHelper.implicitIdentifierResult( identifierMapping, idPath, resolutionContext );
+								}
+								else {
+									idResultMemento = idRoleFetchDescriptor.asResultMemento( idPath, resolutionContext );
+								}
+							}
+							else {
+								idResultMemento = fetchDescriptor.asResultMemento( idPath, resolutionContext );
+							}
+
+							identifierMementoReference.set( idResultMemento );
 						}
 						else {
-							fetchMementos.put( attrName, attrMapping.resolve( resolutionContext ) );
+							final NavigablePath fetchPath = navigablePath.append( fetchableName );
+
+							final FetchMemento fetchMemento;
+							if ( fetchDescriptor == null ) {
+								fetchMemento = ResultsHelper.implicitFetch( attributeMapping, fetchPath, resolutionContext );
+							}
+							else {
+								fetchMemento = fetchDescriptor.resolve( resolutionContext );
+							}
+
+							fetchMementos.put( fetchableName, fetchMemento );
 						}
-					}
+					},
+					null
 			);
 
 			if ( identifierMementoReference.isNotSet() ) {
-				throw new IllegalStateException(
-						String.format(
-								Locale.ROOT,
-								"Entity identifier mapping not specified for @EntityResult(%s) for ResultSet mapping `%s`",
-								entityDescriptor.getEntityName(),
-								resultSetMappingName
-						)
-				);
+				final EntityIdentifierNavigablePath idPath = new EntityIdentifierNavigablePath( navigablePath );
+				identifierMementoReference.set( new ImplicitModelPartResultMemento( idPath, identifierMapping ) );
 			}
+
+			assert entityDescriptor.getNumberOfAttributeMappings() == fetchMementos.size();
+			assert identifierMementoReference.isSet();
 
 			return new ResultMementoEntityStandard(
 					entityDescriptor,

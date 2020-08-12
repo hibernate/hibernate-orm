@@ -115,6 +115,7 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 
 		final DomainResultCreationStateImpl creationState = new DomainResultCreationStateImpl(
 				mappingIdentifier,
+				jdbcResultsMetadata,
 				legacyFetchBuilders,
 				sqlSelections::add,
 				sessionFactory

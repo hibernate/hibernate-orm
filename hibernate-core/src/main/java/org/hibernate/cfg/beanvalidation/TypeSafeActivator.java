@@ -350,6 +350,7 @@ class TypeSafeActivator {
 			}
 			hasNotNull = true;
 		}
+		property.setOptional( !hasNotNull );
 		return hasNotNull;
 	}
 

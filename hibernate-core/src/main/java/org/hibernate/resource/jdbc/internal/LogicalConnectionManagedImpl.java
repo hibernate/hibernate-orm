@@ -14,6 +14,7 @@ import java.sql.SQLException;
 
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
+import org.hibernate.HibernateException;
 import org.hibernate.ResourceClosedException;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -27,6 +28,9 @@ import org.jboss.logging.Logger;
 
 /**
  * Represents a LogicalConnection where we manage obtaining and releasing the Connection as needed.
+ * This implementation does not claim to be threadsafe and is not designed to be used by multiple
+ * threads, yet we do apply a limited amount of care to be able to void obscure exceptions when
+ * this class is used in the wrong way.
  *
  * @author Steve Ebersole
  */
@@ -189,23 +193,33 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 	}
 
 	private void releaseConnection() {
-		if ( physicalConnection == null ) {
+		//Some managed containers might trigger this release concurrently:
+		//this is not how they should do things, still we make a local
+		//copy of the variable to prevent confusing errors due to a race conditions
+		//(to trigger a more clear error, if any).
+		final Connection localVariableConnection = this.physicalConnection;
+		if ( localVariableConnection == null ) {
 			return;
 		}
 
 		try {
-			if ( !physicalConnection.isClosed() ) {
-				sqlExceptionHelper.logAndClearWarnings( physicalConnection );
+			if ( ! localVariableConnection.isClosed() ) {
+				sqlExceptionHelper.logAndClearWarnings( localVariableConnection );
 			}
-			jdbcConnectionAccess.releaseConnection( physicalConnection );
+			jdbcConnectionAccess.releaseConnection( localVariableConnection );
 		}
 		catch (SQLException e) {
 			throw sqlExceptionHelper.convert( e, "Unable to release JDBC Connection" );
 		}
 		finally {
 			observer.jdbcConnectionReleaseEnd();
-			physicalConnection = null;
+			boolean concurrentUsageDetected = ( this.physicalConnection == null );
+			this.physicalConnection = null;
 			getResourceRegistry().releaseResources();
+			if ( concurrentUsageDetected ) {
+				throw new HibernateException( "Detected concurrent management of connection resources." +
+						" This might indicate a multi-threaded use of Hibernate in combination with managed resources, which is not supported." );
+			}
 		}
 	}
 

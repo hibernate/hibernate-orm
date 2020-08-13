@@ -6,8 +6,6 @@
  */
 package org.hibernate.sql.results.graph.entity;
 
-import java.util.ArrayList;
-
 import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -16,7 +14,7 @@ import org.hibernate.metamodel.mapping.EntityRowIdMapping;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
-import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
+import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.query.EntityIdentifierNavigablePath;
@@ -68,23 +66,14 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 
 		final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
 
+		final EntityIdentifierNavigablePath identifierNavigablePath = new EntityIdentifierNavigablePath( navigablePath );
 		if ( navigablePath.getParent() == null && !creationState.forceIdentifierSelection() ) {
 			identifierResult = null;
-			if ( identifierMapping instanceof SingleAttributeIdentifierMapping ) {
-				identifierMapping.createDomainResult(
-						new EntityIdentifierNavigablePath( navigablePath ),
-						entityTableGroup,
-						null,
-						creationState
-				);
-			}
-			else {
-				visitCompositeIdentifierMapping( navigablePath, creationState, identifierMapping, entityTableGroup );
-			}
+			visitIdentifierMapping( identifierNavigablePath, creationState, identifierMapping, entityTableGroup );
 		}
 		else {
 			identifierResult = identifierMapping.createDomainResult(
-					new EntityIdentifierNavigablePath( navigablePath ),
+					identifierNavigablePath,
 					entityTableGroup,
 					null,
 					creationState
@@ -131,33 +120,42 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 		}
 	}
 
-	private void visitCompositeIdentifierMapping(
-			NavigablePath navigablePath,
+	private void visitIdentifierMapping(
+			EntityIdentifierNavigablePath navigablePath,
 			DomainResultCreationState creationState,
 			EntityIdentifierMapping identifierMapping,
 			TableGroup entityTableGroup) {
-		ManagedMappingType mappingType = (ManagedMappingType) identifierMapping.getPartMappingType();
-		fetches = new ArrayList<>();
-		mappingType.visitAttributeMappings(
-				attributeMapping -> {
-					if ( attributeMapping instanceof ToOneAttributeMapping ) {
-						( (ToOneAttributeMapping) attributeMapping ).getForeignKeyDescriptor().createDomainResult(
-								new EntityIdentifierNavigablePath( navigablePath ),
-								entityTableGroup,
-								null,
-								creationState
-						);
+		final MappingType mappingType = identifierMapping.getPartMappingType();
+		if ( mappingType instanceof ManagedMappingType ) {
+			( (ManagedMappingType) mappingType ).visitAttributeMappings(
+					attributeMapping -> {
+						if ( attributeMapping instanceof ToOneAttributeMapping ) {
+							( (ToOneAttributeMapping) attributeMapping ).getForeignKeyDescriptor().createDomainResult(
+									navigablePath,
+									entityTableGroup,
+									null,
+									creationState
+							);
+						}
+						else {
+							attributeMapping.createDomainResult(
+									navigablePath,
+									entityTableGroup,
+									null,
+									creationState
+							);
+						}
 					}
-					else {
-						attributeMapping.createDomainResult(
-								new EntityIdentifierNavigablePath( navigablePath ),
-								entityTableGroup,
-								null,
-								creationState
-						);
-					}
-				}
-		);
+			);
+		}
+		else {
+			identifierMapping.createDomainResult(
+					navigablePath,
+					entityTableGroup,
+					null,
+					creationState
+			);
+		}
 	}
 
 	protected EntityDiscriminatorMapping getDiscriminatorMapping(

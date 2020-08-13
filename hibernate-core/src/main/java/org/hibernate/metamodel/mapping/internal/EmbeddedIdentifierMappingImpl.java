@@ -37,7 +37,8 @@ import org.hibernate.sql.ast.tree.from.TableReference;
  *
  * @author Andrea Boriero
  */
-public class EmbeddedIdentifierMappingImpl extends AbstractCompositeIdentifierMapping {
+public class EmbeddedIdentifierMappingImpl extends AbstractCompositeIdentifierMapping
+		implements SingleAttributeIdentifierMapping {
 	private final String name;
 	private final PropertyAccess propertyAccess;
 
@@ -175,6 +176,16 @@ public class EmbeddedIdentifierMappingImpl extends AbstractCompositeIdentifierMa
 	public Collection<SingularAttributeMapping> getAttributes() {
 		//noinspection unchecked
 		return (Collection) getEmbeddableTypeDescriptor().getAttributeMappings();
+	}
+
+	@Override
+	public PropertyAccess getPropertyAccess() {
+		return propertyAccess;
+	}
+
+	@Override
+	public String getAttributeName() {
+		return name;
 	}
 
 }

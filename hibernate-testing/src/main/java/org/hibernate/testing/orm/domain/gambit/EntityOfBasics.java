@@ -21,9 +21,11 @@ import javax.persistence.AttributeConverter;
 import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
+import javax.persistence.EntityResult;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.Id;
+import javax.persistence.SqlResultSetMapping;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
@@ -32,6 +34,10 @@ import org.hibernate.annotations.SqlTypeCode;
 /**
  * @author Steve Ebersole
  */
+@SqlResultSetMapping(
+		name = "entity-of-basics-implicit",
+		entities = @EntityResult( entityClass = EntityOfBasics.class )
+)
 @Entity
 public class EntityOfBasics {
 

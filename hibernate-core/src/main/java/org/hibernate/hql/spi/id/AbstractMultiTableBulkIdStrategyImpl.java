@@ -142,12 +142,20 @@ public abstract class AbstractMultiTableBulkIdStrategyImpl<TT extends IdTableInf
 			final Column column = (Column) itr.next();
 			buffer.append( column.getQuotedName( dialect ) ).append( ' ' );
 			buffer.append( column.getSqlType( dialect, metadata ) );
+
+			final int sqlTypeCode = column.getSqlTypeCode( metadata );
+			final String columnAnnotation = dialect.getCreateTemporaryTableColumnAnnotation( sqlTypeCode );
+			if ( !columnAnnotation.isEmpty() ) {
+				buffer.append(" ").append( columnAnnotation );
+			}
+
 			if ( column.isNullable() ) {
 				buffer.append( dialect.getNullColumnString() );
 			}
 			else {
 				buffer.append( " not null" );
 			}
+
 			if ( itr.hasNext() ) {
 				buffer.append( ", " );
 			}

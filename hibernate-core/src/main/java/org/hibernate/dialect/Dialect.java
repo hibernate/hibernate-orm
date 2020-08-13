@@ -3050,4 +3050,14 @@ public abstract class Dialect implements ConversionContext {
 	public boolean supportsSelectAliasInGroupByClause() {
 		return false;
 	}
+
+	/**
+	 * Annotation to be appended to the end of each COLUMN clause for temporary tables.
+	 *
+	 * @param sqlTypeCode The SQL type code
+	 * @return The annotation to be appended (e.g. "COLLATE DATABASE_DEFAULT" in SQLServer SQL)
+	 */
+	public String getCreateTemporaryTableColumnAnnotation(int sqlTypeCode) {
+		return "";
+	}
 }

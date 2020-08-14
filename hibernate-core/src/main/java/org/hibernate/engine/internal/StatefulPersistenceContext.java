@@ -846,7 +846,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public Object getLoadedCollectionOwnerOrNull(PersistentCollection collection) {
 		final CollectionEntry ce = getCollectionEntry( collection );
-		if ( ce.getLoadedPersister() == null ) {
+		if ( ce == null || ce.getLoadedPersister() == null ) {
 			return null;
 		}
 

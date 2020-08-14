@@ -20,16 +20,16 @@ import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.sql.results.graph.DomainResultGraphNode;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
+import org.hibernate.sql.results.graph.embeddable.EmbeddableResult;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public class EmbeddableResultImpl<T> extends AbstractFetchParent implements EmbeddableResultGraphNode, DomainResult<T> {
+public class EmbeddableResultImpl<T> extends AbstractFetchParent implements EmbeddableResultGraphNode, DomainResult<T>, EmbeddableResult<T> {
 	private final String resultVariable;
 	private final boolean containsAnyNonScalars;
 

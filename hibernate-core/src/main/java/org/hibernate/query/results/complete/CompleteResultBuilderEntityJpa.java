@@ -6,51 +6,51 @@
  */
 package org.hibernate.query.results.complete;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.function.BiFunction;
 
 import org.hibernate.LockMode;
+import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.FetchBuilder;
-import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.ResultBuilderBasicValued;
 import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
-import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
 /**
+ * CompleteResultBuilderEntityValued implementation specific to JPA.  In JPA
+ * mappings, fetches contains also entity-identifier-related fetches - so we will
+ * need to look for that one here in the fetches and handle it specially.
+ *
+ * This differs from Hibernate's specific mapping declarations which split identifier related
+ * fetches separately
+ *
  * @author Steve Ebersole
  */
-public class CompleteResultBuilderEntityStandard implements CompleteResultBuilderEntityValued {
+public class CompleteResultBuilderEntityJpa implements CompleteResultBuilderEntityValued {
 	private final NavigablePath navigablePath;
 	private final EntityMappingType entityDescriptor;
 	private final LockMode lockMode;
-	private final ResultBuilder identifierResultBuilder;
 	private final ResultBuilderBasicValued discriminatorResultBuilder;
-	private final HashMap<String, FetchBuilder> fetchBuilderMap;
+	private final HashMap<String, FetchBuilder> explicitFetchBuilderMap;
 
-	public CompleteResultBuilderEntityStandard(
+	public CompleteResultBuilderEntityJpa(
 			NavigablePath navigablePath,
 			EntityMappingType entityDescriptor,
 			LockMode lockMode,
-			ResultBuilder identifierResultBuilder,
 			ResultBuilderBasicValued discriminatorResultBuilder,
-			HashMap<String, FetchBuilder> fetchBuilderMap) {
+			HashMap<String, FetchBuilder> explicitFetchBuilderMap) {
 		this.navigablePath = navigablePath;
 		this.entityDescriptor = entityDescriptor;
 		this.lockMode = lockMode;
-		this.identifierResultBuilder = identifierResultBuilder;
 		this.discriminatorResultBuilder = discriminatorResultBuilder;
-		this.fetchBuilderMap = fetchBuilderMap;
+		this.explicitFetchBuilderMap = explicitFetchBuilderMap;
 	}
 
 	@Override
@@ -70,49 +70,53 @@ public class CompleteResultBuilderEntityStandard implements CompleteResultBuilde
 			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState domainResultCreationState) {
 		final DomainResultCreationStateImpl impl = ResultsHelper.impl( domainResultCreationState );
+		impl.disallowPositionalSelections();
 
-		// we just want it added to the registry
-		impl.getFromClauseAccess().resolveTableGroup(
-				navigablePath,
-				np -> entityDescriptor.createRootTableGroup(
-						navigablePath,
-						null,
-						false,
-						lockMode,
-						impl.getSqlAliasBaseManager(),
-						impl.getSqlAstCreationState().getSqlExpressionResolver(),
-						() -> predicate -> {},
-						impl.getSqlAstCreationState().getCreationContext()
-				)
-		);
+		impl.pushExplicitFetchMementoResolver( explicitFetchBuilderMap::get );
 
-		final DomainResult<?> identifierResult = identifierResultBuilder.buildResult(
-				jdbcResultsMetadata,
-				resultPosition,
-				legacyFetchResolver,
-				domainResultCreationState
-		);
+		try {
+			// we just want it added to the registry
+			impl.getFromClauseAccess().resolveTableGroup(
+					navigablePath,
+					np -> entityDescriptor.createRootTableGroup(
+							navigablePath,
+							null,
+							false,
+							lockMode,
+							impl.getSqlAliasBaseManager(),
+							impl.getSqlAstCreationState().getSqlExpressionResolver(),
+							() -> predicate -> {},
+							impl.getSqlAstCreationState().getCreationContext()
+					)
+			);
 
-		final BasicResult<?> discriminatorResult;
-		if ( discriminatorResultBuilder != null ) {
-			discriminatorResult = discriminatorResultBuilder.buildResult(
-					jdbcResultsMetadata,
-					resultPosition,
-					legacyFetchResolver,
+			final EntityDiscriminatorMapping discriminatorMapping = entityDescriptor.getDiscriminatorMapping();
+			final BasicResult<?> discriminatorResult;
+			if ( discriminatorMapping == null ) {
+				assert discriminatorResultBuilder == null;
+				discriminatorResult = null;
+			}
+			else {
+				assert discriminatorResultBuilder != null;
+				discriminatorResult = discriminatorResultBuilder.buildResult(
+						jdbcResultsMetadata,
+						resultPosition,
+						legacyFetchResolver,
+						domainResultCreationState
+				);
+			}
+
+			return new EntityResultImpl(
+					navigablePath,
+					entityDescriptor,
+					null,
+					lockMode,
+					discriminatorResult,
 					domainResultCreationState
 			);
 		}
-		else {
-			discriminatorResult = null;
+		finally {
+			impl.popExplicitFetchMementoResolver();
 		}
-
-		return new EntityResultImpl(
-				navigablePath,
-				entityDescriptor,
-				null,
-				lockMode,
-				discriminatorResult,
-				domainResultCreationState
-		);
 	}
 }

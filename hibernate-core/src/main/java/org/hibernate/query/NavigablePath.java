@@ -134,15 +134,34 @@ public class NavigablePath implements DotIdentifierSequence {
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
+	public boolean equals(Object other) {
+		if ( this == other ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+
+		if ( other instanceof EntityIdentifierNavigablePath ) {
+			final EntityIdentifierNavigablePath otherPath = (EntityIdentifierNavigablePath) other;
+			return otherPath.equals( this );
+		}
+
+		if ( ! ( other instanceof NavigablePath ) ) {
 			return false;
 		}
 
-		final NavigablePath other = (NavigablePath) o;
-		return Objects.equals( getFullPath(), other.getFullPath() );
+		final NavigablePath otherPath = (NavigablePath) other;
+
+		// todo (6.0) : checking the full paths is definitely better performance
+		//		But I'm not sure it is correct in all cases.  Take cases referencing
+		//		an identifier at some level - the actual EntityIdentifierNavigablePath
+		//		subclass has special handling for one path using the "role name" (`"{id}"`)
+		//		while the other might instead use the attribute name
+//		return Objects.equals( getFullPath(), otherPath.getFullPath() );
+
+		if ( getParent() == null ) {
+			return otherPath.getParent() == null;
+		}
+
+		return getParent().equals( otherPath.getParent() )
+				&& getLocalName().equals( otherPath.getLocalName() );
 	}
 }

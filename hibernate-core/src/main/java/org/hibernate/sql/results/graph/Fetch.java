@@ -61,6 +61,8 @@ public interface Fetch extends DomainResultGraphNode {
 		return true;
 	}
 
+	DomainResult<?> asResult(DomainResultCreationState creationState);
+
 	/**
 	 * Create the assembler for this fetch
 	 */

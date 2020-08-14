@@ -63,6 +63,7 @@ import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.results.Builders;
 import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.ResultSetMappingImpl;
+import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.query.results.dynamic.DynamicResultBuilderEntityStandard;
 import org.hibernate.query.results.dynamic.DynamicResultBuilderInstantiation;
@@ -129,7 +130,29 @@ public class NativeQueryImpl<R>
 		this.occurrenceOrderedParamList = parameterInterpretation.getOccurrenceOrderedParameters();
 		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, session.getFactory() );
 
-		this.resultSetMapping = new ResultSetMappingImpl( sqlString );
+		if ( memento.getResultMappingName() != null ) {
+			this.resultSetMapping = new ResultSetMappingImpl( memento.getResultMappingName() );
+			final NamedResultSetMappingMemento resultSetMappingMemento = getSessionFactory().getQueryEngine()
+					.getNamedQueryRepository()
+					.getResultSetMappingMemento( memento.getResultMappingName() );
+			resultSetMappingMemento.resolve(
+					resultSetMapping,
+					querySpace -> addSynchronizedQuerySpace( querySpace ),
+					this
+			);
+		}
+		else if ( memento.getResultMappingClass() != null ) {
+			this.resultSetMapping = new ResultSetMappingImpl( memento.getResultMappingName() );
+			resultSetMapping.addResultBuilder(
+					ResultsHelper.implicitEntityResultBuilder(
+							memento.getResultMappingClass(),
+							this
+					)
+			);
+		}
+		else {
+			this.resultSetMapping = new ResultSetMappingImpl( sqlString );
+		}
 
 		applyOptions( memento );
 	}

@@ -11,11 +11,13 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.results.graph.AbstractFetchParent;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
+import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
@@ -30,6 +32,8 @@ import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
  * @author Steve Ebersole
  */
 public class EmbeddableFetchImpl extends AbstractFetchParent implements EmbeddableResultGraphNode, Fetch {
+	private final EmbeddableValuedFetchable embeddedPartDescriptor;
+
 	private final FetchParent fetchParent;
 	private final FetchTiming fetchTiming;
 	private final boolean hasTableGroup;
@@ -44,6 +48,7 @@ public class EmbeddableFetchImpl extends AbstractFetchParent implements Embeddab
 			boolean nullable,
 			DomainResultCreationState creationState) {
 		super( embeddedPartDescriptor.getEmbeddableTypeDescriptor(), navigablePath );
+		this.embeddedPartDescriptor = embeddedPartDescriptor;
 
 		this.fetchParent = fetchParent;
 		this.fetchTiming = fetchTiming;
@@ -100,6 +105,18 @@ public class EmbeddableFetchImpl extends AbstractFetchParent implements Embeddab
 	@Override
 	public Fetchable getFetchedMapping() {
 		return getReferencedMappingContainer();
+	}
+
+	@Override
+	public DomainResult<?> asResult(DomainResultCreationState creationState) {
+		return embeddedPartDescriptor.createDomainResult(
+				getNavigablePath(),
+				ResultsHelper.impl( creationState )
+						.getFromClauseAccess()
+						.getTableGroup( fetchParent.getNavigablePath() ),
+				null,
+				creationState
+		);
 	}
 
 	@Override

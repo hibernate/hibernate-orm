@@ -12,13 +12,69 @@ import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
  * @author Andrea Boriero
  */
 public class EntityIdentifierNavigablePath extends NavigablePath {
+	private final String identifierAttributeName;
 
-	public EntityIdentifierNavigablePath(NavigablePath parent) {
+	public EntityIdentifierNavigablePath(NavigablePath parent, String identifierAttributeName) {
 		super( parent, EntityIdentifierMapping.ROLE_LOCAL_NAME );
+		this.identifierAttributeName = identifierAttributeName;
 	}
 
 	@Override
 	public String getLocalName() {
 		return EntityIdentifierMapping.ROLE_LOCAL_NAME;
+	}
+
+	@Override
+	public int hashCode() {
+		return getParent().getFullPath().hashCode();
+	}
+
+	@Override
+	public boolean equals(Object other) {
+		if ( other == null ) {
+			return false;
+		}
+
+		if ( other == this ) {
+			return true;
+		}
+
+		if ( ! ( other instanceof NavigablePath ) ) {
+			return false;
+		}
+
+		final NavigablePath otherPath = (NavigablePath) other;
+
+		if ( getFullPath().equals( ( (NavigablePath) other ).getFullPath() ) ) {
+			return true;
+		}
+
+		if ( getParent() == null ) {
+			if ( otherPath.getParent() != null ) {
+				return false;
+			}
+
+			//noinspection RedundantIfStatement
+			if ( localNamesMatch(  otherPath) ) {
+				return true;
+
+			}
+
+			return false;
+		}
+
+		if ( otherPath.getParent() == null ) {
+			return false;
+		}
+
+		return getParent().equals( otherPath.getParent() )
+				&& localNamesMatch( otherPath );
+	}
+
+	private boolean localNamesMatch(NavigablePath otherPath) {
+		final String otherLocalName = otherPath.getLocalName();
+
+		return otherLocalName.equals( getLocalName() )
+				|| otherLocalName.equals( identifierAttributeName );
 	}
 }

@@ -6,7 +6,6 @@
  */
 package org.hibernate.query.named;
 
-import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.NavigablePath;
 
 /**
@@ -21,8 +20,4 @@ public interface ModelPartReferenceMemento extends ResultMappingMementoNode {
 	 */
 	NavigablePath getNavigablePath();
 
-	/**
-	 * The referenced domain model part
-	 */
-	ModelPart getReferencedModelPart();
 }

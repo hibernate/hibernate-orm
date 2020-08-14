@@ -9,7 +9,6 @@ package org.hibernate.query.internal;
 import java.util.function.Consumer;
 
 import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.named.FetchMemento;
 import org.hibernate.query.results.FetchBuilder;
@@ -28,11 +27,6 @@ public class ImplicitAttributeFetchMemento implements FetchMemento {
 	}
 
 	@Override
-	public MappingType getMappingType() {
-		return attributeMapping.getPartMappingType();
-	}
-
-	@Override
 	public FetchBuilder resolve(
 			Parent parent,
 			Consumer<String> querySpaceConsumer,
@@ -45,8 +39,4 @@ public class ImplicitAttributeFetchMemento implements FetchMemento {
 		return navigablePath;
 	}
 
-	@Override
-	public AttributeMapping getReferencedModelPart() {
-		return attributeMapping;
-	}
 }

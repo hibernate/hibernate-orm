@@ -82,6 +82,16 @@ public class NamedNativeQueryMementoImpl extends AbstractNamedQueryMemento imple
 	}
 
 	@Override
+	public String getResultMappingName() {
+		return resultSetMappingName;
+	}
+
+	@Override
+	public Class<?> getResultMappingClass() {
+		return resultSetMappingClass;
+	}
+
+	@Override
 	public NamedNativeQueryMemento makeCopy(String name) {
 		return new NamedNativeQueryMementoImpl(
 				name,
@@ -108,8 +118,7 @@ public class NamedNativeQueryMementoImpl extends AbstractNamedQueryMemento imple
 
 	@Override
 	public NativeQueryImplementor toQuery(SharedSessionContractImplementor session) {
-		//noinspection unchecked
-		return toQuery( session, (Class) null );
+		return new NativeQueryImpl( this, session );
 	}
 
 	@Override

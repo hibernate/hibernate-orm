@@ -4,33 +4,33 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.query.results;
+package org.hibernate.query.internal;
 
 import java.util.function.BiFunction;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
-import org.hibernate.query.results.implicit.ImplicitFetchBuilder;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.sql.results.graph.Fetchable;
+import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
 /**
- * FetchBuilder used when an explicit mapping was not given
- *
  * @author Steve Ebersole
  */
-public class ImplicitAttributeFetchBuilder implements FetchBuilder, ImplicitFetchBuilder {
+public class FetchBuilderJpa implements FetchBuilder {
 	private final NavigablePath navigablePath;
-	private final AttributeMapping attributeMapping;
+	private final String attributePath;
 
-	public ImplicitAttributeFetchBuilder(NavigablePath navigablePath, AttributeMapping attributeMapping) {
+	public FetchBuilderJpa(NavigablePath navigablePath, String attributePath) {
 		this.navigablePath = navigablePath;
-		this.attributeMapping = attributeMapping;
+		this.attributePath = attributePath;
 	}
 
 	@Override
@@ -41,8 +41,11 @@ public class ImplicitAttributeFetchBuilder implements FetchBuilder, ImplicitFetc
 			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState domainResultCreationState) {
 		assert fetchPath.equals( navigablePath );
+		assert fetchPath.getFullPath().endsWith( attributePath );
 
-		return attributeMapping.generateFetch(
+		final FetchableContainer container = parent.getReferencedMappingContainer();
+		final Fetchable subPart = (Fetchable) container.findSubPart( fetchPath.getLocalName(), null );
+		return subPart.generateFetch(
 				parent,
 				fetchPath,
 				FetchTiming.IMMEDIATE,

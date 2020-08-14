@@ -9,8 +9,6 @@ package org.hibernate.query.internal;
 import java.util.function.Consumer;
 
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
-import org.hibernate.metamodel.mapping.MappingType;
-import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.named.FetchMementoBasic;
 import org.hibernate.query.results.FetchBuilder;
@@ -39,16 +37,6 @@ public class FetchMementoBasicStandard implements FetchMementoBasic {
 	@Override
 	public NavigablePath getNavigablePath() {
 		return navigablePath;
-	}
-
-	@Override
-	public ModelPart getReferencedModelPart() {
-		return fetchedAttribute;
-	}
-
-	@Override
-	public MappingType getMappingType() {
-		return fetchedAttribute.getPartMappingType();
 	}
 
 	@Override

@@ -8,6 +8,8 @@ package org.hibernate.query.sql.spi;
 
 import java.util.Set;
 
+import javax.persistence.SqlResultSetMapping;
+
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -31,6 +33,18 @@ public interface NamedNativeQueryMemento extends NamedQueryMemento {
 	 * The affected query spaces.
 	 */
 	Set<String> getQuerySpaces();
+
+	/**
+	 * An explicit ResultSet mapping by name
+	 *
+	 * @see SqlResultSetMapping#name
+	 */
+	String getResultMappingName();
+
+	/**
+	 * An implicit entity mapping by entity class
+	 */
+	Class<?> getResultMappingClass();
 
 	/**
 	 * Convert the memento into an untyped executable query

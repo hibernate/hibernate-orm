@@ -8,12 +8,15 @@ package org.hibernate.query.internal;
 
 import java.util.function.Consumer;
 
-import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.BasicValuedModelPart;
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
+import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.named.ModelPartResultMemento;
-import org.hibernate.query.named.ModelPartResultMementoBasic;
-import org.hibernate.query.results.ImplicitModelPartResultBuilder;
+import org.hibernate.query.results.implicit.ImplicitModelPartResultBuilderBasic;
+import org.hibernate.query.results.implicit.ImplicitModelPartResultBuilderEmbeddable;
+import org.hibernate.query.results.implicit.ImplicitModelPartResultBuilderEntity;
 import org.hibernate.query.results.ResultBuilder;
 
 /**
@@ -34,18 +37,21 @@ public class ImplicitModelPartResultMemento implements ModelPartResultMemento {
 	}
 
 	@Override
-	public ModelPart getReferencedModelPart() {
-		return referencedModelPart;
-	}
-
-	@Override
 	public ResultBuilder resolve(
 			Consumer<String> querySpaceConsumer,
 			ResultSetMappingResolutionContext context) {
-		return new ImplicitModelPartResultBuilder(
-				navigablePath,
-				null,
-				referencedModelPart
-		);
+		if ( referencedModelPart instanceof BasicValuedModelPart ) {
+			return new ImplicitModelPartResultBuilderBasic( navigablePath, (BasicValuedModelPart) referencedModelPart );
+		}
+
+		if ( referencedModelPart instanceof EmbeddableValuedModelPart ) {
+			return new ImplicitModelPartResultBuilderEmbeddable( navigablePath, (EmbeddableValuedModelPart) referencedModelPart );
+		}
+
+		if ( referencedModelPart instanceof EntityValuedModelPart ) {
+			return new ImplicitModelPartResultBuilderEntity( navigablePath, (EntityValuedModelPart) referencedModelPart );
+		}
+
+		throw new IllegalStateException( "Unknown type of model part : "+ referencedModelPart );
 	}
 }

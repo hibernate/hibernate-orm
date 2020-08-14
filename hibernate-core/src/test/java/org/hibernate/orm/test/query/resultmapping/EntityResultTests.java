@@ -47,7 +47,8 @@ import static org.hamcrest.Matchers.notNullValue;
 				DiscriminatedRoot.class,
 				DiscriminatedSubType1.class,
 				DiscriminatedSubType2.class,
-				EntityOfBasics.class
+				EntityOfBasics.class,
+				EntityWithEmbedded.class
 		}
 )
 @ServiceRegistry(
@@ -230,6 +231,38 @@ public class EntityResultTests extends BaseUsageTest {
 		);
 	}
 
+	@Test
+	public void testImplicitEmbeddedMapping(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final EntityWithEmbedded result = (EntityWithEmbedded) session
+							.getNamedNativeQuery( EntityWithEmbedded.IMPLICIT )
+							.getSingleResult();
+					assertThat( result, notNullValue() );
+					assertThat( result.getId(), is( 1 ) );
+					assertThat( result.getCompoundName(), notNullValue() );
+					assertThat( result.getCompoundName().getFirstPart(), is( "hi" ) );
+					assertThat( result.getCompoundName().getSecondPart(), is( "there" ) );
+				}
+		);
+	}
+
+	@Test
+	public void testExplicitEmbeddedMapping(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final EntityWithEmbedded result = (EntityWithEmbedded) session
+							.getNamedNativeQuery( EntityWithEmbedded.EXPLICIT )
+							.getSingleResult();
+					assertThat( result, notNullValue() );
+					assertThat( result.getId(), is( 1 ) );
+					assertThat( result.getCompoundName(), notNullValue() );
+					assertThat( result.getCompoundName().getFirstPart(), is( "hi" ) );
+					assertThat( result.getCompoundName().getSecondPart(), is( "there" ) );
+				}
+		);
+	}
+
 	private static final Instant THEN = Instant.now( Clock.systemUTC() );
 	private static final Date THEN_TIMESTAMP = Timestamp.from( THEN );
 	private static final Date THEN_DATE = java.sql.Date.from( THEN  );
@@ -267,6 +300,16 @@ public class EntityResultTests extends BaseUsageTest {
 					entityOfBasics.setTheInstant( THEN );
 
 					session.save( entityOfBasics );
+
+					// embedded values
+					final EntityWithEmbedded entityWithEmbedded = new EntityWithEmbedded(
+							1,
+							new EntityWithEmbedded.CompoundName(
+									"hi",
+									"there"
+							)
+					);
+					session.persist( entityWithEmbedded );
 				}
 		);
 	}
@@ -279,6 +322,8 @@ public class EntityResultTests extends BaseUsageTest {
 					session.createQuery( "delete DiscriminatedRoot" ).executeUpdate();
 					// converted values data
 					session.createQuery( "delete EntityOfBasics" ).executeUpdate();
+					// embedded values
+					session.createQuery( "delete EntityWithEmbedded" ).executeUpdate();
 				}
 		);
 	}

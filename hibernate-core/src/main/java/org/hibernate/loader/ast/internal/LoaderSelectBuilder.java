@@ -35,6 +35,7 @@ import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -64,6 +65,7 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
+import org.hibernate.sql.results.graph.BiDirectionalFetch;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.EntityGraphTraversalState;
 import org.hibernate.sql.results.graph.Fetch;
@@ -72,11 +74,13 @@ import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.collection.internal.CollectionDomainResult;
 import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
+import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.internal.StandardEntityGraphTraversalStateImpl;
 
 import org.jboss.logging.Logger;
 
+import static org.hibernate.query.results.ResultsHelper.attributeName;
 import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
 /**
@@ -469,11 +473,44 @@ public class LoaderSelectBuilder {
 			List<Fetch> fetches,
 			List<String> bagRoles) {
 		return (fetchable, isKeyFetchable) -> {
-			NavigablePath panrentNavigablePath = fetchParent.getNavigablePath();
+			final NavigablePath parentNavigablePath = fetchParent.getNavigablePath();
+			final NavigablePath fetchablePath;
+
 			if ( isKeyFetchable ) {
-				panrentNavigablePath = new EntityIdentifierNavigablePath( panrentNavigablePath );
+				final EntityIdentifierMapping identifierMapping;
+				if ( fetchParent instanceof BiDirectionalFetch ) {
+					final BiDirectionalFetch parentAsBiDirectionalFetch = (BiDirectionalFetch) fetchParent;
+					final Fetchable biDirectionalFetchedMapping = parentAsBiDirectionalFetch.getFetchedMapping();
+					if ( biDirectionalFetchedMapping instanceof EntityValuedFetchable ) {
+						identifierMapping = ( (EntityValuedFetchable) biDirectionalFetchedMapping )
+								.getEntityMappingType()
+								.getIdentifierMapping();
+					}
+					else {
+						identifierMapping = null;
+					}
+				}
+				else {
+					final FetchableContainer fetchableContainer = fetchParent.getReferencedMappingContainer();
+					if ( fetchableContainer instanceof EntityValuedModelPart ) {
+						final EntityValuedModelPart entityValuedModelPart = (EntityValuedModelPart) fetchableContainer;
+						identifierMapping = entityValuedModelPart.getEntityMappingType().getIdentifierMapping();
+					}
+					else {
+						identifierMapping = null;
+					}
+				}
+
+				if ( identifierMapping != null ) {
+					fetchablePath = new EntityIdentifierNavigablePath( parentNavigablePath, attributeName( identifierMapping ) );
+				}
+				else {
+					fetchablePath = parentNavigablePath.append( fetchable.getFetchableName() );
+				}
 			}
-			final NavigablePath fetchablePath = panrentNavigablePath.append( fetchable.getFetchableName() );
+			else {
+				fetchablePath = parentNavigablePath.append( fetchable.getFetchableName() );
+			}
 
 			final Fetch biDirectionalFetch = fetchable.resolveCircularFetch(
 					fetchablePath,

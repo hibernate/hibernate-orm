@@ -27,6 +27,8 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
+import static org.hibernate.query.results.ResultsHelper.attributeName;
+
 /**
  * AbstractFetchParent sub-class for entity-valued graph nodes
  *
@@ -72,7 +74,10 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 			identifierResult = null;
 			if ( identifierMapping instanceof SingleAttributeIdentifierMapping ) {
 				identifierMapping.createDomainResult(
-						new EntityIdentifierNavigablePath( navigablePath ),
+						new EntityIdentifierNavigablePath(
+								navigablePath,
+								attributeName( identifierMapping )
+						),
 						entityTableGroup,
 						null,
 						creationState
@@ -84,7 +89,10 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 		}
 		else {
 			identifierResult = identifierMapping.createDomainResult(
-					new EntityIdentifierNavigablePath( navigablePath ),
+					new EntityIdentifierNavigablePath(
+							navigablePath,
+							attributeName( identifierMapping )
+					),
 					entityTableGroup,
 					null,
 					creationState
@@ -142,7 +150,10 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 				attributeMapping -> {
 					if ( attributeMapping instanceof ToOneAttributeMapping ) {
 						( (ToOneAttributeMapping) attributeMapping ).getForeignKeyDescriptor().createDomainResult(
-								new EntityIdentifierNavigablePath( navigablePath ),
+								new EntityIdentifierNavigablePath(
+										navigablePath,
+										attributeName( identifierMapping )
+								),
 								entityTableGroup,
 								null,
 								creationState
@@ -150,7 +161,10 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 					}
 					else {
 						attributeMapping.createDomainResult(
-								new EntityIdentifierNavigablePath( navigablePath ),
+								new EntityIdentifierNavigablePath(
+										navigablePath,
+										attributeName( identifierMapping )
+								),
 								entityTableGroup,
 								null,
 								creationState

@@ -13,7 +13,6 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.query.named.ModelPartResultMementoBasic;
 import org.hibernate.query.results.ResultBuilderBasicValued;
 import org.hibernate.query.results.complete.CompleteResultBuilderBasicModelPart;
-import org.hibernate.query.results.complete.CompleteResultBuilderBasicValuedStandard;
 
 /**
  * @author Steve Ebersole
@@ -35,11 +34,6 @@ public class ModelPartResultMementoBasicImpl implements ModelPartResultMementoBa
 	@Override
 	public NavigablePath getNavigablePath() {
 		return navigablePath;
-	}
-
-	@Override
-	public BasicValuedModelPart getReferencedModelPart() {
-		return modelPart;
 	}
 
 	@Override

@@ -7,16 +7,20 @@
 package org.hibernate.query.results.complete;
 
 import java.util.List;
-import java.util.function.Function;
 
 import org.hibernate.LockMode;
+import org.hibernate.internal.util.MutableObject;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
+import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
+import org.hibernate.query.EntityIdentifierNavigablePath;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
-import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
@@ -38,22 +42,57 @@ public class EntityResultImpl implements EntityResult {
 	private final String resultAlias;
 	private final LockMode lockMode;
 
+	@SuppressWarnings( { "PointlessNullCheck" } )
 	public EntityResultImpl(
 			NavigablePath navigablePath,
 			EntityValuedModelPart entityValuedModelPart,
 			String resultAlias,
 			LockMode lockMode,
-			DomainResult identifierResult,
-			BasicResult discriminatorResult,
-			Function<FetchParent,List<Fetch>> fetchesProducer) {
+			BasicResult<?> discriminatorResult,
+			DomainResultCreationState creationState) {
 		this.navigablePath = navigablePath;
 		this.entityValuedModelPart = entityValuedModelPart;
 		this.resultAlias = resultAlias;
 		this.lockMode = lockMode;
-		this.identifierResult = identifierResult;
 		this.discriminatorResult = discriminatorResult;
 
-		this.fetches = fetchesProducer.apply( this );
+		this.fetches = creationState.visitFetches( this );
+
+		final EntityIdentifierMapping identifierMapping = entityValuedModelPart
+				.getEntityMappingType()
+				.getIdentifierMapping();
+		final String idAttributeName = identifierMapping instanceof SingleAttributeIdentifierMapping
+				? ( (SingleAttributeIdentifierMapping) identifierMapping ).getAttributeName()
+				: null;
+
+		final MutableObject<Fetch> idFetchRef = new MutableObject<>();
+
+		for ( int i = 0; i < this.fetches.size(); i++ ) {
+			final Fetch fetch = this.fetches.get( i );
+			final String fetchLocalName = fetch.getNavigablePath().getLocalName();
+
+			if ( fetchLocalName.equals( EntityIdentifierMapping.ROLE_LOCAL_NAME )
+					|| ( idAttributeName != null && fetchLocalName.equals( idAttributeName ) ) ) {
+				// we found the id fetch
+				idFetchRef.set( fetch );
+				this.fetches.remove( i );
+				break;
+			}
+		}
+
+		if ( idFetchRef.isNotSet() ) {
+			identifierResult = ResultsHelper.implicitIdentifierResult(
+					identifierMapping,
+					new EntityIdentifierNavigablePath(
+							navigablePath,
+							ResultsHelper.attributeName( identifierMapping )
+					),
+					creationState
+			);
+		}
+		else {
+			this.identifierResult = idFetchRef.get().asResult( creationState );
+		}
 	}
 
 	@Override

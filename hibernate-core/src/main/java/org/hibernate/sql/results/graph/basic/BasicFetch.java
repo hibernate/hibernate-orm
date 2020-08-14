@@ -10,7 +10,9 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
+import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
@@ -67,6 +69,18 @@ public class BasicFetch<T> implements Fetch, BasicResultGraphNode<T> {
 	@Override
 	public boolean hasTableGroup() {
 		return fetchTiming == FetchTiming.IMMEDIATE;
+	}
+
+	@Override
+	public DomainResult<?> asResult(DomainResultCreationState creationState) {
+		return valuedMapping.createDomainResult(
+				navigablePath,
+				ResultsHelper.impl( creationState )
+						.getFromClauseAccess()
+						.getTableGroup( fetchParent.getNavigablePath() ),
+				getResultVariable(),
+				creationState
+		);
 	}
 
 	@Override

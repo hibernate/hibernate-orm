@@ -6,6 +6,8 @@
  */
 package org.hibernate.sql.results.graph.entity;
 
+import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 
 /**
@@ -15,5 +17,10 @@ public interface EntityFetch extends EntityResultGraphNode, Fetch {
 	@Override
 	default boolean containsAnyNonScalarResults() {
 		return true;
+	}
+
+	@Override
+	default DomainResult<?> asResult(DomainResultCreationState creationState) {
+		throw new UnsupportedOperationException( "EntityFetch -> DomainResult not supported" );
 	}
 }

@@ -15,8 +15,14 @@ import java.util.function.Function;
 import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.internal.util.collections.Stack;
+import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.mapping.AssociationKey;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.query.EntityIdentifierNavigablePath;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.query.results.dynamic.LegacyFetchResolver;
@@ -34,9 +40,13 @@ import org.hibernate.sql.results.ResultsLogger;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.sql.results.graph.FetchableContainer;
+import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.query.results.ResultsHelper.attributeName;
 
 /**
  * @author Steve Ebersole
@@ -58,6 +68,9 @@ public class DomainResultCreationStateImpl
 	private final LegacyFetchResolverImpl legacyFetchResolver;
 	private final SessionFactoryImplementor sessionFactory;
 
+	private final Stack<Function<String, FetchBuilder>> fetchBuilderResolverStack = new StandardStack<>( fetchableName -> null );
+	private final Stack<NavigablePath> relativePathStack = new StandardStack<>();
+	private boolean processingKeyFetches = false;
 
 	public DomainResultCreationStateImpl(
 			String stateIdentifier,
@@ -99,6 +112,26 @@ public class DomainResultCreationStateImpl
 
 	public JdbcValuesMetadata getJdbcResultsMetadata() {
 		return jdbcResultsMetadata;
+	}
+
+	public void pushExplicitFetchMementoResolver(Function<String, FetchBuilder> resolver) {
+		fetchBuilderResolverStack.push( resolver );
+	}
+
+	public Function<String, FetchBuilder> popExplicitFetchMementoResolver() {
+		return fetchBuilderResolverStack.pop();
+	}
+
+	@SuppressWarnings( "unused" )
+	public void withExplicitFetchMementoResolver(Function<String, FetchBuilder> resolver, Runnable runnable) {
+		pushExplicitFetchMementoResolver( resolver );
+		try {
+			runnable.run();
+		}
+		finally {
+			final Function<String, FetchBuilder> popped = popExplicitFetchMementoResolver();
+			assert popped == resolver;
+		}
 	}
 
 
@@ -263,7 +296,81 @@ public class DomainResultCreationStateImpl
 
 	@Override
 	public List<Fetch> visitFetches(FetchParent fetchParent) {
-		throw new UnsupportedOperationException();
+		final FetchableContainer fetchableContainer = fetchParent.getReferencedMappingContainer();
+
+		final List<Fetch> fetches = CollectionHelper.arrayList( fetchableContainer.getNumberOfFetchables() );
+
+		boolean previous = this.processingKeyFetches;
+		this.processingKeyFetches = true;
+
+		if ( fetchableContainer instanceof EntityValuedFetchable ) {
+			final EntityValuedFetchable entityValuedFetchable = (EntityValuedFetchable) fetchableContainer;
+			final EntityIdentifierMapping identifierMapping = entityValuedFetchable.getEntityMappingType().getIdentifierMapping();
+			relativePathStack.push(
+					new EntityIdentifierNavigablePath(
+							relativePathStack.getCurrent(),
+							attributeName( identifierMapping )
+					)
+			);
+
+			try {
+				entityValuedFetchable.getEntityMappingType().visitKeyFetchables(
+						fetchable -> {
+							// depends whether these fetchables are the identifier mapping or
+							// the identifier sub-attribuates (if composite)
+							final String fetchableName = fetchable.getFetchableName();
+							final NavigablePath fetchPath = fetchParent.getNavigablePath().append( fetchableName );
+							final NavigablePath relativePath = relativePathStack.isEmpty()
+									? new NavigablePath( fetchableName )
+									: relativePathStack.getCurrent().append( fetchableName );
+						},
+						null
+				);
+			}
+			finally {
+				this.processingKeyFetches = previous;
+				this.relativePathStack.pop();
+			}
+		}
+
+
+
+		fetchableContainer.visitFetchables(
+				fetchable -> {
+					final String fetchableName = fetchable.getFetchableName();
+					final NavigablePath fetchPath = fetchParent.getNavigablePath().append( fetchableName );
+					final NavigablePath relativePath = relativePathStack.isEmpty()
+							? new NavigablePath( fetchableName )
+							: relativePathStack.getCurrent().append( fetchableName );
+
+					relativePathStack.push( relativePath );
+					try {
+						final FetchBuilder explicitFetchBuilder = fetchBuilderResolverStack
+								.getCurrent()
+								.apply( relativePath.getFullPath() );
+						final FetchBuilder fetchBuilder = explicitFetchBuilder != null
+								? explicitFetchBuilder
+								: ResultsHelper.implicitFetchBuilder( fetchPath, fetchable );
+
+						final Fetch fetch = fetchBuilder.buildFetch(
+								fetchParent,
+								fetchPath,
+								jdbcResultsMetadata,
+								(s, s2) -> {
+									throw new UnsupportedOperationException();
+								},
+								this
+						);
+						fetches.add( fetch );
+					}
+					finally {
+						relativePathStack.pop();
+					}
+				},
+				null
+		);
+
+		return fetches;
 	}
 
 }

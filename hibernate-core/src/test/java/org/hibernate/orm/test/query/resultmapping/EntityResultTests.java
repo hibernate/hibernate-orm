@@ -11,8 +11,6 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -29,13 +27,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import org.hamcrest.BaseMatcher;
-import org.hamcrest.Description;
-import org.hamcrest.Matcher;
-import sun.util.calendar.BaseCalendar;
-
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.notNullValue;
 
 /**
@@ -164,36 +158,9 @@ public class EntityResultTests extends BaseUsageTest {
 
 					final Set<Integer> idsFound = new HashSet<>();
 					results.forEach( result -> idsFound.add( result.getId() ) );
-					assertThat( idsFound, containsExpectedValues( 1, 2, 3, 4 ) );
+					assertThat( idsFound, containsInAnyOrder( 1, 2, 3, 4 ) );
 				}
 		);
-	}
-
-	private <T> Matcher<? extends Collection<T>> containsExpectedValues(T... values) {
-		return new BaseMatcher<Collection<T>>() {
-			@Override
-			public void describeTo(Description description) {
-				description.appendText( "contain expected values" );
-			}
-
-			@Override
-			public boolean matches(Object item) {
-				if ( ! Collection.class.isInstance( item ) ) {
-					return false;
-				}
-
-				//noinspection unchecked
-				final Collection<Integer> set = (Collection<Integer>) item;
-				final boolean containedAll = set.containsAll( Arrays.asList( values ) );
-
-				//noinspection RedundantIfStatement
-				if ( ! containedAll  ) {
-					return false;
-				}
-
-				return true;
-			}
-		};
 	}
 
 	@Test

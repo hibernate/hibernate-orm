@@ -73,6 +73,7 @@ public class H2Dialect extends Dialect {
 		}
 	};
 
+	private final boolean supportsTuplesInSubqueries;
 	private final String querySequenceString;
 	private final SequenceInformationExtractor sequenceInformationExtractor;
 
@@ -83,6 +84,7 @@ public class H2Dialect extends Dialect {
 		super();
 
 		int buildId = Integer.MIN_VALUE;
+		boolean supportsTuplesInSubqueries = false;
 
 		try {
 			// HHH-2300
@@ -94,6 +96,7 @@ public class H2Dialect extends Dialect {
 			if ( ! ( majorVersion > 1 || minorVersion > 2 || buildId >= 139 ) ) {
 				LOG.unsupportedMultiTableBulkHqlJpaql( majorVersion, minorVersion, buildId );
 			}
+			supportsTuplesInSubqueries = majorVersion > 1 || minorVersion > 4 || buildId >= 198;
 		}
 		catch ( Exception e ) {
 			// probably H2 not in the classpath, though in certain app server environments it might just mean we are
@@ -111,6 +114,7 @@ public class H2Dialect extends Dialect {
 			this.sequenceInformationExtractor = SequenceInformationExtractorNoOpImpl.INSTANCE;
 			this.querySequenceString = null;
 		}
+		this.supportsTuplesInSubqueries = supportsTuplesInSubqueries;
 
 		registerColumnType( Types.BOOLEAN, "boolean" );
 		registerColumnType( Types.BIGINT, "bigint" );
@@ -432,7 +436,7 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public boolean supportsTuplesInSubqueries() {
-		return false;
+		return supportsTuplesInSubqueries;
 	}
 
 	// Do not drop constraints explicitly, just do this by cascading instead.

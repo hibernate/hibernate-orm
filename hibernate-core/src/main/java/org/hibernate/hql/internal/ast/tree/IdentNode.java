@@ -214,7 +214,7 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 				final boolean shouldSkipWrappingInParenthesis =
 						(isInDistinctCount && ! dialect.requiresParensForTupleDistinctCounts())
 						|| isInNonDistinctCount
-						|| getWalker().isInSelect() && !getWalker().isInCase() && !isInCount // HHH-14156
+						|| getWalker().isInSelect() && !getWalker().isInCase() && !isInCount && dialect.supportsTuplesInSubqueries() // HHH-14156
 						|| getWalker().getCurrentTopLevelClauseType() == HqlSqlTokenTypes.ORDER
 						|| getWalker().getCurrentTopLevelClauseType() == HqlSqlTokenTypes.GROUP;
 				if ( ! shouldSkipWrappingInParenthesis ) {

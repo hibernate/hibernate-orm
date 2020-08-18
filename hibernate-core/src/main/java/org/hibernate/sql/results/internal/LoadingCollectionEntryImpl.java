@@ -30,7 +30,7 @@ public class LoadingCollectionEntryImpl implements LoadingCollectionEntry {
 	private final Object key;
 	private final PersistentCollection collectionInstance;
 
-	private List loadingState;
+	private List loadingState = new ArrayList();
 
 	public LoadingCollectionEntryImpl(
 			CollectionPersister collectionDescriptor,
@@ -68,9 +68,6 @@ public class LoadingCollectionEntryImpl implements LoadingCollectionEntry {
 
 	@Override
 	public void load(Consumer<List> loadingEntryConsumer) {
-		if ( loadingState == null ) {
-			loadingState = new ArrayList();
-		}
 		loadingEntryConsumer.accept( loadingState );
 	}
 

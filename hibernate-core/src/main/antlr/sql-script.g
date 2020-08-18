@@ -56,7 +56,7 @@ script
     ;
 
 statement
-	: { statementStarted(); } (statementPart)*  DELIMITER { statementEnded(); }
+	: { statementStarted(); } (statementPart)* DELIMITER (WS_CHAR)* { statementEnded(); }
 	;
 
 statementPart
@@ -71,8 +71,11 @@ quotedString
 	;
 
 nonSkippedChar
-	: c:CHAR {
-   		out( c );
+	: w:WS_CHAR {
+   		out( w );
+   	}
+   	| o:OTHER_CHAR {
+   		out( o );
    	}
 	;
 
@@ -105,18 +108,13 @@ QUOTED_TEXT
 protected
 ESCqs :	'\'' '\'' ;
 
-CHAR
-	: ( ' ' | '\t' ) => ( ' ' | '\t' )
-    | ~( ';' | '\n' | '\r' )
+WS_CHAR
+	: ' '
+	| '\t'
+	| ( "\r\n" | '\r' | '\n' ) {newline();}
     ;
 
-NEWLINE
-	: ( '\r' | '\n' | '\r''\n' ) {
-		newline();
-		// skip the entire match from the lexer stream
-		$setType( Token.SKIP );
-	}
-	;
+OTHER_CHAR	: ~( ';' | ' ' | '\t' | '\n' | '\r' );
 
 LINE_COMMENT
 	// match `//` or `--` followed by anything other than \n or \r until NEWLINE

@@ -5858,8 +5858,9 @@ public abstract class AbstractEntityPersister
 		final EntityMetamodel currentEntityMetamodel = this.getEntityMetamodel();
 		int stateArrayPosition = getStateArrayInitialPosition( creationProcess );
 
+		NonIdentifierAttribute[] properties = currentEntityMetamodel.getProperties();
 		for ( int i = 0; i < currentEntityMetamodel.getPropertySpan(); i++ ) {
-			final NonIdentifierAttribute runtimeAttrDefinition = currentEntityMetamodel.getProperties()[i];
+			final NonIdentifierAttribute runtimeAttrDefinition = properties[i];
 			final Property bootProperty = bootEntityDescriptor.getProperty( runtimeAttrDefinition.getName() );
 
 			if ( superMappingType != null && superMappingType.findAttributeMapping( bootProperty.getName() ) != null ) {

@@ -506,7 +506,9 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 			String root = StringHelper.root( propertyName );
 			while ( iterator.hasNext() ) {
 				Property prop = (Property) iterator.next();
-				if ( prop.getName().equals( root ) ) {
+				if ( prop.getName().equals( root )
+						|| (prop instanceof Backref || prop instanceof IndexBackref)
+						&& prop.getName().equals( propertyName ) ) {
 					return prop;
 				}
 			}

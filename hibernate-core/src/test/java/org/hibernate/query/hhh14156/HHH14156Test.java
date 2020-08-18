@@ -7,9 +7,6 @@ import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 
-import org.hibernate.dialect.PostgreSQL82Dialect;
-
-import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -19,7 +16,6 @@ import org.junit.Test;
  * @author Christian Beikov
  */
 @TestForIssue( jiraKey = "HHH-14156" )
-@RequiresDialect( PostgreSQL82Dialect.class )
 public class HHH14156Test extends BaseCoreFunctionalTestCase {
 
 	@Override

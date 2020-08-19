@@ -48,7 +48,7 @@ public class SqmMutationStrategyHelper {
 		final SessionFactoryImplementor sessionFactory = creationContext.getSessionFactory();
 		final SessionFactoryOptions options = sessionFactory.getSessionFactoryOptions();
 
-		final SqmMultiTableMutationStrategy specifiedStrategy = options.getSqmMultiTableMutationStrategy();
+		final SqmMultiTableMutationStrategy specifiedStrategy = options.getCustomSqmMultiTableMutationStrategy();
 		if ( specifiedStrategy != null ) {
 			return specifiedStrategy;
 		}

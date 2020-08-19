@@ -858,17 +858,17 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
-	public HqlTranslator getHqlTranslator() {
+	public HqlTranslator getCustomHqlTranslator() {
 		return hqlTranslator;
 	}
 
 	@Override
-	public SqmTranslatorFactory getSqmTranslatorFactory() {
+	public SqmTranslatorFactory getCustomSqmTranslatorFactory() {
 		return sqmTranslatorFactory;
 	}
 
 	@Override
-	public SqmMultiTableMutationStrategy getSqmMultiTableMutationStrategy() {
+	public SqmMultiTableMutationStrategy getCustomSqmMultiTableMutationStrategy() {
 		return sqmMultiTableMutationStrategy;
 	}
 
@@ -878,7 +878,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
-	public SqmFunctionRegistry getSqmFunctionRegistry() {
+	public SqmFunctionRegistry getCustomSqmFunctionRegistry() {
 		return this.sqmFunctionRegistry;
 	}
 

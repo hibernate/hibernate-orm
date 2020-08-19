@@ -30,7 +30,7 @@ import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 public interface NamedQueryRepository {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// NamedHqlQueryMemento
+	// Named HQL Memento
 
 	NamedHqlQueryMemento getHqlQueryMemento(String queryName);
 	void visitHqlQueryMementos(Consumer<NamedHqlQueryMemento> action);
@@ -38,7 +38,7 @@ public interface NamedQueryRepository {
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// NamedNativeQueryMemento
+	// Named NativeQuery Memento
 
 	NamedNativeQueryMemento getNativeQueryMemento(String queryName);
 	void visitNativeQueryMementos(Consumer<NamedNativeQueryMemento> action);
@@ -46,7 +46,7 @@ public interface NamedQueryRepository {
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// NamedCallableQueryMemento
+	// Named CallableQuery Memento
 
 	NamedCallableQueryMemento getCallableQueryMemento(String name);
 	void visitCallableQueryMementos(Consumer<NamedCallableQueryMemento> action);
@@ -54,7 +54,7 @@ public interface NamedQueryRepository {
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// ResultSetMappingDescriptor
+	// Named ResultSetMapping memento
 
 	NamedResultSetMappingMemento getResultSetMappingMemento(String mappingName);
 	void visitResultSetMappingMementos(Consumer<NamedResultSetMappingMemento> action);
@@ -64,13 +64,23 @@ public interface NamedQueryRepository {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// boot-time
 
+	/**
+	 * Perform a validity check on all named queries
+	 */
 	Map<String, HibernateException> checkNamedQueries(QueryEngine queryPlanCache);
 
+	/**
+	 * Prepare for runtime use
+	 */
 	void prepare(SessionFactoryImplementor sessionFactory, MetadataImplementor bootMetamodel, BootstrapContext bootstrapContext);
 
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// shut down
 
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Shutdown
+
+	/**
+	 * Release any held resources
+	 */
 	void close();
 
 }

@@ -19,16 +19,15 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmIdentifierGeneratorDefinitionType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedNativeQueryType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedQueryType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmTypeDefinitionType;
-import org.hibernate.boot.jaxb.hbm.spi.ResultSetMappingBindingDefinition;
 import org.hibernate.boot.model.TypeDefinitionRegistry;
 import org.hibernate.boot.model.TypeDefinitionRegistryStandardImpl;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.model.source.internal.OverriddenMappingDefaults;
 import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
 import org.hibernate.boot.model.source.spi.ToolingHintContext;
+import org.hibernate.boot.query.HbmResultSetMappingDescriptor;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
-import org.hibernate.boot.query.HbmResultSetMappingDescriptor;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MappingDefaults;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -243,10 +242,12 @@ public class MappingDocument implements HbmLocalMetadataBuildingContext, Metadat
 
 	@Override
 	public void processResultSetMappings() {
-		for ( ResultSetMappingBindingDefinition resultSetMappingBinding : documentRoot.getResultset() ) {
-			final HbmResultSetMappingDescriptor binding = ResultSetMappingBinder.bind( resultSetMappingBinding, this );
-			getMetadataCollector().addResultSetMapping( binding );
-		}
+		documentRoot.getResultset().forEach(
+				(hbmResultSetMapping) -> {
+					getMetadataCollector().addResultSetMapping(
+							new HbmResultSetMappingDescriptor( hbmResultSetMapping, rootBuildingContext ) );
+				}
+		);
 	}
 
 	@Override

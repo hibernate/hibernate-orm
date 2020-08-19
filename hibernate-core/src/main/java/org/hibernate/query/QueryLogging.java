@@ -23,11 +23,11 @@ import static org.jboss.logging.Logger.Level.ERROR;
  */
 @MessageLogger( projectCode = "HHH" )
 @ValidIdRange( min = 90003001, max = 90003500 )
-public interface QueryLogger extends BasicLogger {
+public interface QueryLogging extends BasicLogger {
 	String LOGGER_NAME = "org.hibernate.orm.query";
 
 	Logger QUERY_LOGGER = Logger.getLogger( LOGGER_NAME );
-	QueryLogger QUERY_MESSAGE_LOGGER = Logger.getMessageLogger( QueryLogger.class, LOGGER_NAME );
+	QueryLogging QUERY_MESSAGE_LOGGER = Logger.getMessageLogger( QueryLogging.class, LOGGER_NAME );
 
 	boolean TRACE_ENABLED = QUERY_LOGGER.isTraceEnabled();
 	boolean DEBUG_ENABLED = QUERY_LOGGER.isDebugEnabled();

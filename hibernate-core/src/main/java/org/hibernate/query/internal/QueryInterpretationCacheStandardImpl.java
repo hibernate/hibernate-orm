@@ -10,7 +10,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.hibernate.internal.util.collections.BoundedConcurrentHashMap;
-import org.hibernate.query.QueryLogger;
+import org.hibernate.query.QueryLogging;
 import org.hibernate.query.spi.HqlInterpretation;
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
@@ -30,7 +30,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class QueryInterpretationCacheStandardImpl implements QueryInterpretationCache {
-	private static final Logger log = QueryLogger.subLogger( "plan.cache" );
+	private static final Logger log = QueryLogging.subLogger( "plan.cache" );
 
 	/**
 	 * The default strong reference count.
@@ -140,8 +140,9 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 		return nativeQueryParamCache.computeIfAbsent(
 				queryString,
 				s -> {
-					log.debugf( "Creating and caching SqmStatement - %s", queryString );
-					return creator.apply( queryString );
+					final ParameterInterpretation interpretation = creator.apply( queryString );
+					log.debugf( "Creating and caching NativeQuery ParameterInterpretation - %s", interpretation );
+					return interpretation;
 				}
 		);
 	}

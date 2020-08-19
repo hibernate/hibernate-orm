@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm;
 
-import org.hibernate.query.QueryLogger;
+import org.hibernate.query.QueryLogging;
 
 import org.jboss.logging.Logger;
 
@@ -14,7 +14,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public interface SqmTreeTransformationLogger {
-	String LOGGER_NAME = QueryLogger.subLoggerName( "sqm.transform" );
+	String LOGGER_NAME = QueryLogging.subLoggerName( "sqm.transform" );
 
 	Logger LOGGER = Logger.getLogger( LOGGER_NAME );
 

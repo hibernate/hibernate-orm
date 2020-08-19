@@ -63,7 +63,6 @@ import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.results.Builders;
 import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.ResultSetMappingImpl;
-import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.query.results.dynamic.DynamicResultBuilderEntityStandard;
 import org.hibernate.query.results.dynamic.DynamicResultBuilderInstantiation;
@@ -137,14 +136,14 @@ public class NativeQueryImpl<R>
 					.getResultSetMappingMemento( memento.getResultMappingName() );
 			resultSetMappingMemento.resolve(
 					resultSetMapping,
-					querySpace -> addSynchronizedQuerySpace( querySpace ),
+					this::addSynchronizedQuerySpace,
 					this
 			);
 		}
 		else if ( memento.getResultMappingClass() != null ) {
 			this.resultSetMapping = new ResultSetMappingImpl( memento.getResultMappingName() );
 			resultSetMapping.addResultBuilder(
-					ResultsHelper.implicitEntityResultBuilder(
+					Builders.implicitEntityResultBuilder(
 							memento.getResultMappingClass(),
 							this
 					)
@@ -203,7 +202,7 @@ public class NativeQueryImpl<R>
 				.getQueryEngine()
 				.getNamedQueryRepository()
 				.getResultSetMappingMemento( resultSetMappingName )
-				.resolve( resultSetMapping, (s) -> {}, this );
+				.resolve( resultSetMapping, this::addSynchronizedQuerySpace, this );
 	}
 
 	public NativeQueryImpl(
@@ -215,7 +214,11 @@ public class NativeQueryImpl<R>
 		this.sqlString = sqlString;
 
 		this.resultSetMapping = new ResultSetMappingImpl( resultSetMappingMemento.getName() );
-		resultSetMappingMemento.resolve( resultSetMapping, (s) -> {}, this );
+		resultSetMappingMemento.resolve(
+				resultSetMapping,
+				this::addSynchronizedQuerySpace,
+				this
+		);
 
 		final ParameterInterpretation parameterInterpretation = resolveParameterInterpretation( session );
 
@@ -238,20 +241,7 @@ public class NativeQueryImpl<R>
 								.getService( NativeQueryInterpreter.class )
 								.recognizeParameters( sqlString, parameterRecognizer );
 
-						return new ParameterInterpretation() {
-							@Override
-							public List<QueryParameterImplementor<?>> getOccurrenceOrderedParameters() {
-								return parameterRecognizer.getParameterList();
-							}
-
-							@Override
-							public ParameterMetadataImplementor toParameterMetadata(SharedSessionContractImplementor session1) {
-								return new ParameterMetadataImpl(
-										parameterRecognizer.getPositionalQueryParameters(),
-										parameterRecognizer.getNamedQueryParameters()
-								);
-							}
-						};
+						return new ParameterInterpretationImpl( sqlString, parameterRecognizer );
 					}
 			);
 	}
@@ -1210,5 +1200,46 @@ public class NativeQueryImpl<R>
 	@Override
 	protected void applyEntityGraphQueryHint(String hintName, RootGraphImplementor entityGraph) {
 		throw new HibernateException( "A native SQL query cannot use EntityGraphs" );
+	}
+
+	private static class ParameterInterpretationImpl implements ParameterInterpretation {
+		private final String sqlString;
+		private final List<QueryParameterImplementor<?>> parameterList;
+		private final Map<Integer, QueryParameterImplementor<?>> positionalParameters;
+		private final Map<String, QueryParameterImplementor<?>> namedParameters;
+
+		public ParameterInterpretationImpl(String sqlString, ParameterRecognizerImpl parameterRecognizer) {
+			this.sqlString = sqlString;
+			this.parameterList = parameterRecognizer.getParameterList();
+			this.positionalParameters = parameterRecognizer.getPositionalQueryParameters();
+			this.namedParameters = parameterRecognizer.getNamedQueryParameters();
+		}
+
+		@Override
+		public List<QueryParameterImplementor<?>> getOccurrenceOrderedParameters() {
+			return parameterList;
+		}
+
+		@Override
+		public ParameterMetadataImplementor toParameterMetadata(SharedSessionContractImplementor session1) {
+			return new ParameterMetadataImpl( positionalParameters, namedParameters );
+		}
+
+		@Override
+		public String toString() {
+			final StringBuilder buffer = new StringBuilder( "ParameterInterpretationImpl (" )
+					.append( sqlString )
+					.append( ") : {" );
+
+			for ( int i = 0, size = parameterList.size(); i < size; i++ ) {
+				buffer.append( System.lineSeparator() ).append( "    " );
+
+				if ( i != size - 1 ) {
+					buffer.append( "," );
+				}
+			}
+
+			return buffer.append( System.lineSeparator() ).append( "}" ).toString();
+		}
 	}
 }

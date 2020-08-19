@@ -25,7 +25,7 @@ public abstract class AbstractQueryParameter<T> implements QueryParameterImpleme
 
 	@Override
 	public void disallowMultiValuedBinding() {
-		QueryLogger.QUERY_MESSAGE_LOGGER.debugf( "QueryParameter#disallowMultiValuedBinding() called : %s", this );
+		QueryLogging.QUERY_MESSAGE_LOGGER.debugf( "QueryParameter#disallowMultiValuedBinding() called : %s", this );
 		this.allowMultiValuedBinding = true;
 	}
 

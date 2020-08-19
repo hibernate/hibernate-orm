@@ -7,7 +7,7 @@
 package org.hibernate.query.hql;
 
 import org.hibernate.HibernateException;
-import org.hibernate.query.QueryLogger;
+import org.hibernate.query.QueryLogging;
 
 import org.jboss.logging.BasicLogger;
 import org.jboss.logging.Logger;
@@ -25,7 +25,7 @@ import static org.jboss.logging.Logger.Level.ERROR;
 @MessageLogger( projectCode = "HHH" )
 @ValidIdRange( min = 90003501, max = 90004000 )
 public interface HqlLogger extends BasicLogger {
-	String LOGGER_NAME = QueryLogger.subLoggerName( "hql" );
+	String LOGGER_NAME = QueryLogging.subLoggerName( "hql" );
 
 	HqlLogger QUERY_LOGGER = Logger.getMessageLogger( HqlLogger.class, LOGGER_NAME );
 

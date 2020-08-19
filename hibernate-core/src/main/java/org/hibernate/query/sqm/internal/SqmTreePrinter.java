@@ -9,7 +9,7 @@ package org.hibernate.query.sqm.internal;
 import java.util.Locale;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.query.QueryLogger;
+import org.hibernate.query.QueryLogging;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.cte.SqmCteConsumer;
@@ -95,7 +95,6 @@ import org.hibernate.query.sqm.tree.update.SqmAssignment;
 import org.hibernate.query.sqm.tree.update.SqmSetClause;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 
-import org.hibernate.sql.ast.tree.insert.Values;
 import org.jboss.logging.Logger;
 
 /**
@@ -111,7 +110,7 @@ import org.jboss.logging.Logger;
 public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	private static final Logger log = Logger.getLogger( SqmTreePrinter.class );
 
-	private static final Logger LOGGER = QueryLogger.subLogger( "sqm.ast" );
+	private static final Logger LOGGER = QueryLogging.subLogger( "sqm.ast" );
 	private static final boolean DEBUG_ENABLED = LOGGER.isDebugEnabled();
 
 	public static void logTree(SqmQuerySpec sqmQuerySpec, String header) {

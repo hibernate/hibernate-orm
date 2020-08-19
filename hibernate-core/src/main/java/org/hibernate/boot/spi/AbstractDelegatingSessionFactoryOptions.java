@@ -124,8 +124,8 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
-	public SqmMultiTableMutationStrategy getSqmMultiTableMutationStrategy() {
-		return delegate.getSqmMultiTableMutationStrategy();
+	public SqmMultiTableMutationStrategy getCustomSqmMultiTableMutationStrategy() {
+		return delegate.getCustomSqmMultiTableMutationStrategy();
 	}
 
 	@Override
@@ -395,13 +395,13 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
-	public HqlTranslator getHqlTranslator() {
-		return delegate.getHqlTranslator();
+	public HqlTranslator getCustomHqlTranslator() {
+		return delegate.getCustomHqlTranslator();
 	}
 
 	@Override
-	public SqmTranslatorFactory getSqmTranslatorFactory() {
-		return delegate.getSqmTranslatorFactory();
+	public SqmTranslatorFactory getCustomSqmTranslatorFactory() {
+		return delegate.getCustomSqmTranslatorFactory();
 	}
 
 	@Override
@@ -465,8 +465,8 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
-	public SqmFunctionRegistry getSqmFunctionRegistry() {
-		return delegate().getSqmFunctionRegistry();
+	public SqmFunctionRegistry getCustomSqmFunctionRegistry() {
+		return delegate().getCustomSqmFunctionRegistry();
 	}
 
 	@Override

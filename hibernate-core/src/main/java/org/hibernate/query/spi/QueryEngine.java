@@ -10,7 +10,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -19,7 +18,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
-import org.hibernate.query.QueryLogger;
+import org.hibernate.query.QueryLogging;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.hql.internal.StandardHqlTranslator;
 import org.hibernate.query.hql.spi.SqmCreationOptions;
@@ -54,7 +53,7 @@ public class QueryEngine {
 			SessionFactoryImplementor sessionFactory,
 			MetadataImplementor metadata) {
 		final SqmCreationContext sqmCreationContext = sessionFactory;
-		final SessionFactoryOptions queryEngineOptions = sessionFactory.getSessionFactoryOptions();
+		final QueryEngineOptions queryEngineOptions = sessionFactory.getSessionFactoryOptions();
 		final SqmCreationOptions sqmCreationOptions = new SqmCreationOptionsStandard( sessionFactory );
 
 		final Dialect dialect = sessionFactory.getJdbcServices().getDialect();
@@ -75,7 +74,7 @@ public class QueryEngine {
 				sessionFactory.getServiceRegistry().getService( NativeQueryInterpreter.class ),
 				buildInterpretationCache( sessionFactory.getProperties() ),
 				dialect,
-				queryEngineOptions.getSqmFunctionRegistry(),
+				queryEngineOptions.getCustomSqmFunctionRegistry(),
 				sessionFactory.getServiceRegistry()
 		);
 	}
@@ -235,12 +234,12 @@ public class QueryEngine {
 //	}
 
 	private static HqlTranslator resolveHqlTranslator(
-			SessionFactoryOptions runtimeOptions,
+			QueryEngineOptions runtimeOptions,
 			Dialect dialect,
 			SqmCreationContext sqmCreationContext,
 			SqmCreationOptions sqmCreationOptions) {
-		if ( runtimeOptions.getHqlTranslator() != null ) {
-			return runtimeOptions.getHqlTranslator();
+		if ( runtimeOptions.getCustomHqlTranslator() != null ) {
+			return runtimeOptions.getCustomHqlTranslator();
 		}
 
 		if ( dialect.getHqlTranslator() != null ) {
@@ -251,10 +250,10 @@ public class QueryEngine {
 	}
 
 	private static SqmTranslatorFactory resolveSqmTranslatorFactory(
-			SessionFactoryOptions runtimeOptions,
+			QueryEngineOptions runtimeOptions,
 			Dialect dialect) {
-		if ( runtimeOptions.getSqmTranslatorFactory() != null ) {
-			return runtimeOptions.getSqmTranslatorFactory();
+		if ( runtimeOptions.getCustomSqmTranslatorFactory() != null ) {
+			return runtimeOptions.getCustomSqmTranslatorFactory();
 		}
 
 		if ( dialect.getSqmTranslatorFactory() != null ) {
@@ -304,7 +303,7 @@ public class QueryEngine {
 				StringBuilder failingQueries = new StringBuilder( "Errors in named queries: " );
 				String sep = "";
 				for ( Map.Entry<String, HibernateException> entry : errors.entrySet() ) {
-					QueryLogger.QUERY_MESSAGE_LOGGER.namedQueryError( entry.getKey(), entry.getValue() );
+					QueryLogging.QUERY_MESSAGE_LOGGER.namedQueryError( entry.getKey(), entry.getValue() );
 					failingQueries.append( sep ).append( entry.getKey() );
 					sep = ", ";
 				}

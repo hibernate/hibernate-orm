@@ -20,7 +20,6 @@ import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.mapping.AssociationKey;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.EntityIdentifierNavigablePath;
 import org.hibernate.query.NavigablePath;
@@ -350,7 +349,7 @@ public class DomainResultCreationStateImpl
 								.apply( relativePath.getFullPath() );
 						final FetchBuilder fetchBuilder = explicitFetchBuilder != null
 								? explicitFetchBuilder
-								: ResultsHelper.implicitFetchBuilder( fetchPath, fetchable );
+								: Builders.implicitFetchBuilder( fetchPath, fetchable );
 
 						final Fetch fetch = fetchBuilder.buildFetch(
 								fetchParent,

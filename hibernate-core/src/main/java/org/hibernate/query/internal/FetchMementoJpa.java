@@ -28,7 +28,8 @@ public class FetchMementoJpa implements FetchMemento {
 	@Override
 	public FetchBuilder resolve(
 			Parent parent,
-			Consumer<String> querySpaceConsumer, ResultSetMappingResolutionContext context) {
+			Consumer<String> querySpaceConsumer,
+			ResultSetMappingResolutionContext context) {
 		final String[] names = attributePath.split( "\\." );
 
 		NavigablePath fetchPath = parent.getNavigablePath();

@@ -34,12 +34,6 @@ import javax.persistence.Table;
 		)
 )
 @SqlResultSetMapping(
-		name = "root-mixed",
-		entities = @EntityResult(
-				entityClass = DiscriminatedRoot.class
-		)
-)
-@SqlResultSetMapping(
 		name = "root-explicit",
 		entities = @EntityResult(
 				entityClass = DiscriminatedRoot.class,

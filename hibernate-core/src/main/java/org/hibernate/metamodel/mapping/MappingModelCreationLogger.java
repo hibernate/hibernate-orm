@@ -6,8 +6,6 @@
  */
 package org.hibernate.metamodel.mapping;
 
-import org.hibernate.query.QueryLogger;
-
 import org.jboss.logging.BasicLogger;
 import org.jboss.logging.Logger;
 import org.jboss.logging.annotations.MessageLogger;

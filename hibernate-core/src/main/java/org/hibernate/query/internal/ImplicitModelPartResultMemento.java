@@ -45,6 +45,7 @@ public class ImplicitModelPartResultMemento implements ModelPartResultMemento {
 		}
 
 		if ( referencedModelPart instanceof EmbeddableValuedModelPart ) {
+			// todo (6.0) : can this really happen?
 			return new ImplicitModelPartResultBuilderEmbeddable( navigablePath, (EmbeddableValuedModelPart) referencedModelPart );
 		}
 

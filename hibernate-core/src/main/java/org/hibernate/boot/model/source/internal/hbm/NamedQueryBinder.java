@@ -17,7 +17,7 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryReturnType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryScalarReturnType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmQueryParamType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSynchronizeType;
-import org.hibernate.boot.query.HbmResultSetMappingDefinitionBuilder;
+import org.hibernate.boot.query.ImplicitHbmResultSetMappingDescriptorBuilder;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinitionBuilder;
 import org.hibernate.internal.log.DeprecationLogger;
@@ -114,7 +114,11 @@ public class NamedQueryBinder {
 				.setFetchSize( namedQueryBinding.getFetchSize() )
 				.setResultSetMappingName( namedQueryBinding.getResultsetRef() );
 
-		final HbmResultSetMappingDefinitionBuilder implicitResultSetMappingBuilder = new HbmResultSetMappingDefinitionBuilder( registrationName );
+		final ImplicitHbmResultSetMappingDescriptorBuilder
+				implicitResultSetMappingBuilder = new ImplicitHbmResultSetMappingDescriptorBuilder(
+				registrationName,
+				context
+		);
 
 		boolean foundQuery = false;
 
@@ -153,6 +157,8 @@ public class NamedQueryBinder {
 			}
 
 			context.getMetadataCollector().addResultSetMapping( implicitResultSetMappingBuilder.build( context ) );
+
+			builder.setResultSetMappingName( implicitResultSetMappingBuilder.getRegistrationName() );
 		}
 
 		context.getMetadataCollector().addNamedNativeQuery( builder.build() );
@@ -161,7 +167,7 @@ public class NamedQueryBinder {
 	private static boolean processNamedQueryContentItem(
 			Object content,
 			NamedNativeQueryDefinitionBuilder queryBuilder,
-			HbmResultSetMappingDefinitionBuilder implicitResultSetMappingBuilder,
+			ImplicitHbmResultSetMappingDescriptorBuilder implicitResultSetMappingBuilder,
 			JaxbHbmNamedNativeQueryType namedQueryBinding,
 			HbmLocalMetadataBuildingContext context) {
 		if ( content instanceof String ) {

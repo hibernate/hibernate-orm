@@ -106,52 +106,6 @@ public class ResultsHelper {
 		);
 	}
 
-	public static ModelPartResultMemento implicitEntityResult(
-			String entityName,
-			ResultSetMappingResolutionContext resolutionContext) {
-		final SessionFactoryImplementor sessionFactory = resolutionContext.getSessionFactory();
-		final EntityMappingType entityMappingType = resolutionContext.getSessionFactory()
-				.getRuntimeMetamodels()
-				.getEntityMappingType( entityName );
-		return new ImplicitModelPartResultMemento( new NavigablePath( entityName ), entityMappingType );
-	}
-
-	public static FetchMemento implicitFetch(
-			AttributeMapping attributeMapping,
-			NavigablePath attributePath,
-			ResultSetMappingResolutionContext resolutionContext) {
-		return new ImplicitAttributeFetchMemento( attributePath, attributeMapping );
-	}
-
-	public static ResultBuilder implicitEntityResultBuilder(
-			Class<?> resultMappingClass,
-			ResultSetMappingResolutionContext resolutionContext) {
-		final EntityMappingType entityMappingType = resolutionContext
-				.getSessionFactory()
-				.getRuntimeMetamodels()
-				.getEntityMappingType( resultMappingClass );
-		return new ImplicitModelPartResultBuilderEntity( entityMappingType );
-	}
-
-	public static ImplicitFetchBuilder implicitFetchBuilder(NavigablePath fetchPath, Fetchable fetchable) {
-		if ( fetchable instanceof BasicValuedModelPart ) {
-			final BasicValuedModelPart basicValuedFetchable = (BasicValuedModelPart) fetchable;
-			return new ImplicitFetchBuilderBasic( fetchPath, basicValuedFetchable );
-		}
-
-		if ( fetchable instanceof EmbeddableValuedFetchable ) {
-			final EmbeddableValuedFetchable embeddableValuedFetchable = (EmbeddableValuedFetchable) fetchable;
-			return new ImplicitFetchBuilderEmbeddable( fetchPath, embeddableValuedFetchable );
-		}
-
-		if ( fetchable instanceof EntityValuedFetchable ) {
-			final EntityValuedFetchable entityValuedFetchable = (EntityValuedFetchable) fetchable;
-			throw new NotYetImplementedFor6Exception( "Support for implicit entity-valued fetches is not yet implemented" );
-		}
-
-		throw new UnsupportedOperationException();
-	}
-
 	public static String attributeName(EntityIdentifierMapping identifierMapping) {
 		return identifierMapping instanceof SingleAttributeIdentifierMapping
 				? ( (SingleAttributeIdentifierMapping) identifierMapping ).getAttributeName()

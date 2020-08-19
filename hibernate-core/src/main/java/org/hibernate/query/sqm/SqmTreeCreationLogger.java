@@ -7,7 +7,7 @@
 package org.hibernate.query.sqm;
 
 import org.hibernate.Internal;
-import org.hibernate.query.QueryLogger;
+import org.hibernate.query.QueryLogging;
 
 import org.jboss.logging.Logger;
 
@@ -19,7 +19,7 @@ import org.jboss.logging.Logger;
 @SuppressWarnings("unused")
 @Internal
 public interface SqmTreeCreationLogger {
-	String LOGGER_NAME = QueryLogger.subLoggerName( "sqm.creation" );
+	String LOGGER_NAME = QueryLogging.subLoggerName( "sqm.creation" );
 
 	Logger LOGGER = Logger.getLogger( LOGGER_NAME );
 

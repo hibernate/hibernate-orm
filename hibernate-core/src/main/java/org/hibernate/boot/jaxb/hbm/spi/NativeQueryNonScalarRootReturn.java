@@ -16,7 +16,7 @@ import org.hibernate.LockMode;
  * @author Strong Liu
  * @author Steve Ebersole
  */
-public interface NativeQueryNonScalarRootReturn {
+public interface NativeQueryNonScalarRootReturn extends NativeQueryReturn {
 	/**
 	 * Access the alias associated with this return
 	 *

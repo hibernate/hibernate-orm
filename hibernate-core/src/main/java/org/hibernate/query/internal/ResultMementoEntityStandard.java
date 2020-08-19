@@ -13,12 +13,11 @@ import java.util.function.Consumer;
 import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.QueryLogging;
 import org.hibernate.query.named.FetchMemento;
-import org.hibernate.query.named.ResultMemento;
 import org.hibernate.query.named.ResultMementoBasic;
 import org.hibernate.query.named.ResultMementoEntity;
 import org.hibernate.query.results.FetchBuilder;
-import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.ResultBuilderBasicValued;
 import org.hibernate.query.results.ResultBuilderEntityValued;
 import org.hibernate.query.results.complete.CompleteResultBuilderEntityStandard;
@@ -30,22 +29,24 @@ public class ResultMementoEntityStandard implements ResultMementoEntity, FetchMe
 	private final NavigablePath navigablePath;
 	private final EntityMappingType entityDescriptor;
 	private final LockMode lockMode;
-	private final ResultMemento identifierMemento;
 	private final ResultMementoBasic discriminatorMemento;
 	private final Map<String, FetchMemento> fetchMementoMap;
 
 	public ResultMementoEntityStandard(
 			EntityMappingType entityDescriptor,
 			LockMode lockMode,
-			ResultMemento identifierMemento,
 			ResultMementoBasic discriminatorMemento,
 			Map<String, FetchMemento> fetchMementoMap) {
 		this.navigablePath = new NavigablePath( entityDescriptor.getEntityName() );
 		this.entityDescriptor = entityDescriptor;
 		this.lockMode = lockMode;
-		this.identifierMemento = identifierMemento;
 		this.discriminatorMemento = discriminatorMemento;
 		this.fetchMementoMap = fetchMementoMap;
+
+		QueryLogging.QUERY_LOGGER.debugf(
+				"Created ResultMementoEntityStandard - %s",
+				navigablePath
+		);
 	}
 
 	@Override
@@ -57,11 +58,6 @@ public class ResultMementoEntityStandard implements ResultMementoEntity, FetchMe
 	public ResultBuilderEntityValued resolve(
 			Consumer<String> querySpaceConsumer,
 			ResultSetMappingResolutionContext context) {
-		final ResultBuilder identifierResultBuilder = identifierMemento.resolve(
-				querySpaceConsumer,
-				context
-		);
-
 		final ResultBuilderBasicValued discriminatorResultBuilder = discriminatorMemento != null
 				? discriminatorMemento.resolve( querySpaceConsumer, context )
 				: null;
@@ -79,7 +75,6 @@ public class ResultMementoEntityStandard implements ResultMementoEntity, FetchMe
 				navigablePath,
 				entityDescriptor,
 				lockMode,
-				identifierResultBuilder,
 				discriminatorResultBuilder,
 				fetchBuilderMap
 		);

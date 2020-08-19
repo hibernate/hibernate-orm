@@ -19,7 +19,6 @@ import javax.persistence.SqlResultSetMapping;
 
 import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.boot.BootLogging;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -148,7 +147,7 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 
 		@Override
 		public ResultMemento resolve(ResultSetMappingResolutionContext resolutionContext) {
-			BootLogging.LOGGER.debugf(
+			BootQueryLogging.LOGGER.debugf(
 					"Generating ScalarResultMappingMemento for JPA ColumnResult(%s) for ResultSet mapping `%s`",
 					columnResult.name(),
 					mappingName
@@ -204,7 +203,7 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 
 		@Override
 		public ResultMemento resolve(ResultSetMappingResolutionContext resolutionContext) {
-			BootLogging.LOGGER.debugf(
+			BootQueryLogging.LOGGER.debugf(
 					"Generating InstantiationResultMappingMemento for JPA ConstructorResult(%s) for ResultSet mapping `%s`",
 					targetJavaType.getName(),
 					mappingName

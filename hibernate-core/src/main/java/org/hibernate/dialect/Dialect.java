@@ -3156,7 +3156,7 @@ public abstract class Dialect implements ConversionContext {
 	 * Return an HqlTranslator specific for the Dialect.  Return {@code null}
 	 * to use Hibernate's standard translator.
 	 *
-	 * Note that {@link SessionFactoryOptions#getHqlTranslator()} has higher precedence
+	 * Note that {@link SessionFactoryOptions#getCustomHqlTranslator()} has higher precedence
 	 *
 	 * @see org.hibernate.query.hql.internal.StandardHqlTranslator
 	 * @see QueryEngine#getHqlTranslator()
@@ -3169,7 +3169,7 @@ public abstract class Dialect implements ConversionContext {
 	 * Return an SqmToSqlAstConverterFactory specific for the Dialect.  Return {@code null}
 	 * to use Hibernate's standard translator.
 	 *
-	 * Note that {@link SessionFactoryOptions#getSqmTranslatorFactory()} has higher
+	 * Note that {@link SessionFactoryOptions#getCustomSqmTranslatorFactory()} has higher
 	 * precedence as it comes directly from the user config
 	 *
 	 * @see org.hibernate.query.sqm.sql.internal.StandardSqmSelectTranslator

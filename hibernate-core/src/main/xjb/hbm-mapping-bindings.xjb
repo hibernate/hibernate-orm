@@ -356,6 +356,10 @@
 			<inheritance:implements>org.hibernate.boot.jaxb.hbm.spi.NativeQueryNonScalarRootReturn</inheritance:implements>
 		</jaxb:bindings>
 
+		<jaxb:bindings node="//xsd:complexType[@name='NativeQueryScalarReturnType']">
+			<inheritance:implements>org.hibernate.boot.jaxb.hbm.spi.NativeQueryReturn</inheritance:implements>
+		</jaxb:bindings>
+
 
 		<jaxb:bindings node="//xsd:complexType[@name='FilterParameterType']//xsd:attribute[@name='name']">
 				<jaxb:property name="parameterName"/>

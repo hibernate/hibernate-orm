@@ -11,12 +11,13 @@
  * These result-set mappings are used to map the values in the JDBC {@link java.sql.ResultSet}
  * into the query result graph.
  *
- * NOTE : Handling the different sources of results and fetches is split into 2 packages
- * for performance reasons.  The classes in {@link org.hibernate.query.results.complete}
+ * NOTE : Handling the different sources of results and fetches is split into multiple packages
+ * and multiple impls for performance reasons.  The classes in {@link org.hibernate.query.results.complete}
  * represent result/fetch definitions that are completely known up-front and are faster to
  * resolve.  The definitions in {@link org.hibernate.query.results.dynamic} are built incrementally
  * via Hibernate's {@link org.hibernate.query.NativeQuery} contract need to resolve themselves
- * against other dynamic result/fetch definitions and therefore take more resources to resolve
+ * against other dynamic result/fetch definitions and therefore take more resources to resolve.  The
+ * classes in {@link org.hibernate.query.results.implicit} represent results that are implied
  *
  * @see org.hibernate.query.results.ResultSetMapping
  *

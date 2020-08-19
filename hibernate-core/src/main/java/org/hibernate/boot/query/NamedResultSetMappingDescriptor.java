@@ -8,6 +8,7 @@ package org.hibernate.boot.query;
 
 import org.hibernate.query.internal.ResultSetMappingResolutionContext;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
+import org.hibernate.query.spi.QueryEngine;
 
 /**
  * Models the "boot view" of a ResultSet mapping used in the mapping
@@ -26,8 +27,10 @@ public interface NamedResultSetMappingDescriptor {
 	String getRegistrationName();
 
 	/**
-	 * Create the named runtime memento instance
-	 * @param resolutionContext
+	 * Create a representation of the described ResultSet mapping for the purpose of
+	 * being stored in Hibernate's {@link org.hibernate.query.named.NamedQueryRepository}
+	 *
+	 * @see QueryEngine#getNamedQueryRepository()
 	 */
 	NamedResultSetMappingMemento resolve(ResultSetMappingResolutionContext resolutionContext);
 }

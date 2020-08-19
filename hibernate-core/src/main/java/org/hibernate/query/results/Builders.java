@@ -16,9 +16,12 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.RuntimeMetamodels;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.query.NavigablePath;
+import org.hibernate.query.internal.ResultSetMappingResolutionContext;
 import org.hibernate.query.results.dynamic.DynamicResultBuilderAttribute;
 import org.hibernate.query.results.dynamic.DynamicResultBuilderBasic;
 import org.hibernate.query.results.dynamic.DynamicResultBuilderBasicConverted;
@@ -27,6 +30,13 @@ import org.hibernate.query.results.dynamic.DynamicResultBuilderEntityCalculated;
 import org.hibernate.query.results.dynamic.DynamicResultBuilderEntityStandard;
 import org.hibernate.query.results.dynamic.DynamicResultBuilderInstantiation;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
+import org.hibernate.query.results.implicit.ImplicitFetchBuilder;
+import org.hibernate.query.results.implicit.ImplicitFetchBuilderBasic;
+import org.hibernate.query.results.implicit.ImplicitFetchBuilderEmbeddable;
+import org.hibernate.query.results.implicit.ImplicitModelPartResultBuilderEntity;
+import org.hibernate.sql.results.graph.Fetchable;
+import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
+import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
@@ -221,5 +231,34 @@ public class Builders {
 
 	public static DynamicFetchBuilderLegacy fetch(String tableAlias, String ownerTableAlias, String joinPropertyName) {
 		throw new NotYetImplementedFor6Exception( );
+	}
+
+	public static ResultBuilder implicitEntityResultBuilder(
+			Class<?> resultMappingClass,
+			ResultSetMappingResolutionContext resolutionContext) {
+		final EntityMappingType entityMappingType = resolutionContext
+				.getSessionFactory()
+				.getRuntimeMetamodels()
+				.getEntityMappingType( resultMappingClass );
+		return new ImplicitModelPartResultBuilderEntity( entityMappingType );
+	}
+
+	public static ImplicitFetchBuilder implicitFetchBuilder(NavigablePath fetchPath, Fetchable fetchable) {
+		if ( fetchable instanceof BasicValuedModelPart ) {
+			final BasicValuedModelPart basicValuedFetchable = (BasicValuedModelPart) fetchable;
+			return new ImplicitFetchBuilderBasic( fetchPath, basicValuedFetchable );
+		}
+
+		if ( fetchable instanceof EmbeddableValuedFetchable ) {
+			final EmbeddableValuedFetchable embeddableValuedFetchable = (EmbeddableValuedFetchable) fetchable;
+			return new ImplicitFetchBuilderEmbeddable( fetchPath, embeddableValuedFetchable );
+		}
+
+		if ( fetchable instanceof EntityValuedFetchable ) {
+			final EntityValuedFetchable entityValuedFetchable = (EntityValuedFetchable) fetchable;
+			throw new NotYetImplementedFor6Exception( "Support for implicit entity-valued fetches is not yet implemented" );
+		}
+
+		throw new UnsupportedOperationException();
 	}
 }

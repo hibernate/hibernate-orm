@@ -38,7 +38,7 @@ import org.hibernate.query.BinaryArithmeticOperator;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.TemporalUnit;
-import org.hibernate.query.QueryLogger;
+import org.hibernate.query.QueryLogging;
 import org.hibernate.query.UnaryArithmeticOperator;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.spi.QueryOptions;
@@ -707,7 +707,7 @@ public abstract class BaseSqmToSqlAstConverter
 		// add any additional join restrictions
 		if ( sqmJoin.getJoinPredicate() != null ) {
 			if ( sqmJoin.isFetched() ) {
-				QueryLogger.QUERY_MESSAGE_LOGGER.debugf( "Join fetch [" + sqmJoin.getNavigablePath() + "] is restricted" );
+				QueryLogging.QUERY_MESSAGE_LOGGER.debugf( "Join fetch [" + sqmJoin.getNavigablePath() + "] is restricted" );
 			}
 
 			if ( joinedTableGroupJoin == null ) {

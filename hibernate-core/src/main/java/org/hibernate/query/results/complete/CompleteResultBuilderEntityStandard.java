@@ -34,7 +34,6 @@ public class CompleteResultBuilderEntityStandard implements CompleteResultBuilde
 	private final NavigablePath navigablePath;
 	private final EntityMappingType entityDescriptor;
 	private final LockMode lockMode;
-	private final ResultBuilder identifierResultBuilder;
 	private final ResultBuilderBasicValued discriminatorResultBuilder;
 	private final HashMap<String, FetchBuilder> fetchBuilderMap;
 
@@ -42,13 +41,11 @@ public class CompleteResultBuilderEntityStandard implements CompleteResultBuilde
 			NavigablePath navigablePath,
 			EntityMappingType entityDescriptor,
 			LockMode lockMode,
-			ResultBuilder identifierResultBuilder,
 			ResultBuilderBasicValued discriminatorResultBuilder,
 			HashMap<String, FetchBuilder> fetchBuilderMap) {
 		this.navigablePath = navigablePath;
 		this.entityDescriptor = entityDescriptor;
 		this.lockMode = lockMode;
-		this.identifierResultBuilder = identifierResultBuilder;
 		this.discriminatorResultBuilder = discriminatorResultBuilder;
 		this.fetchBuilderMap = fetchBuilderMap;
 	}
@@ -84,13 +81,6 @@ public class CompleteResultBuilderEntityStandard implements CompleteResultBuilde
 						() -> predicate -> {},
 						impl.getSqlAstCreationState().getCreationContext()
 				)
-		);
-
-		final DomainResult<?> identifierResult = identifierResultBuilder.buildResult(
-				jdbcResultsMetadata,
-				resultPosition,
-				legacyFetchResolver,
-				domainResultCreationState
 		);
 
 		final BasicResult<?> discriminatorResult;

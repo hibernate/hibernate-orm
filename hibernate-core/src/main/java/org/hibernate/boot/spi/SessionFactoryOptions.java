@@ -33,6 +33,7 @@ import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.QueryLiteralRendering;
 import org.hibernate.query.criteria.LiteralHandlingMode;
 import org.hibernate.query.hql.HqlTranslator;
+import org.hibernate.query.spi.QueryEngineOptions;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
@@ -47,7 +48,7 @@ import org.hibernate.tuple.entity.EntityTuplizerFactory;
  *
  * @since 5.0
  */
-public interface SessionFactoryOptions {
+public interface SessionFactoryOptions extends QueryEngineOptions {
 	/**
 	 * Get the UUID unique to this SessionFactoryOptions.  Will be the
 	 * same value available as {@link SessionFactoryImplementor#getUuid()}.
@@ -143,12 +144,6 @@ public interface SessionFactoryOptions {
 			}
 		};
 	}
-
-	HqlTranslator getHqlTranslator();
-
-	SqmTranslatorFactory getSqmTranslatorFactory();
-
-	SqmMultiTableMutationStrategy getSqmMultiTableMutationStrategy();
 
 	StatementInspector getStatementInspector();
 
@@ -262,8 +257,6 @@ public interface SessionFactoryOptions {
 	 */
 	EntityNotFoundDelegate getEntityNotFoundDelegate();
 
-	Map<String, SqmFunctionDescriptor> getCustomSqlFunctionMap();
-
 	void setCheckNullability(boolean enabled);
 
 	boolean isPreferUserTransaction();
@@ -328,8 +321,6 @@ public interface SessionFactoryOptions {
 	default boolean isEnhancementAsProxyEnabled() {
 		return false;
 	}
-
-	SqmFunctionRegistry getSqmFunctionRegistry();
 
 	/**
 	 * Controls whether Hibernate should try to map named parameter names

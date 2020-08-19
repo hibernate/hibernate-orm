@@ -13,6 +13,7 @@ import java.util.function.Consumer;
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.ColumnConsumer;
@@ -242,5 +243,20 @@ public class BasicValuedCollectionPart
 	@Override
 	public void visitColumns(ColumnConsumer consumer) {
 		consumer.accept( tableExpression, columnExpression, false, getJdbcMapping() );
+	}
+
+	@Override
+	public void visitDisassembledJdbcValues(
+			Object value, Clause clause, JdbcValuesConsumer valuesConsumer, SharedSessionContractImplementor session) {
+		valuesConsumer.consume( value, getJdbcMapping() );
+	}
+
+	@Override
+	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+		if ( valueConverter != null ) {
+			//noinspection unchecked
+			return valueConverter.toRelationalValue( value );
+		}
+		return value;
 	}
 }

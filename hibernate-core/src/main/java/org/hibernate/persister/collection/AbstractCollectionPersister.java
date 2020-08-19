@@ -57,6 +57,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
+import org.hibernate.loader.ast.internal.CollectionElementLoaderByIndex;
 import org.hibernate.loader.ast.internal.CollectionLoaderBatchKey;
 import org.hibernate.loader.ast.internal.CollectionLoaderNamedQuery;
 import org.hibernate.loader.ast.internal.CollectionLoaderSingleKey;
@@ -138,7 +139,6 @@ public abstract class AbstractCollectionPersister
 	private final String sqlUpdateRowString;
 	private final String sqlDeleteRowString;
 	private final String sqlSelectSizeString;
-	private final String sqlSelectRowByIndexString;
 	private final String sqlDetectRowByIndexString;
 	private final String sqlDetectRowByElementString;
 
@@ -246,7 +246,8 @@ public abstract class AbstractCollectionPersister
 	private final Comparator comparator;
 
 	private CollectionLoader collectionLoader;
-
+	private volatile CollectionLoader standardCollectionLoader;
+	private CollectionElementLoaderByIndex collectionElementLoaderByIndex;
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// "mapping model"
@@ -263,10 +264,10 @@ public abstract class AbstractCollectionPersister
 	public AbstractCollectionPersister(
 			Collection collectionBootDescriptor,
 			CollectionDataAccess cacheAccessStrategy,
-			PersisterCreationContext pcc) throws MappingException, CacheException {
-		assert pcc instanceof RuntimeModelCreationContext;
+			PersisterCreationContext persisterCreationContext) throws MappingException, CacheException {
+		assert persisterCreationContext instanceof RuntimeModelCreationContext;
 
-		final RuntimeModelCreationContext creationContext = (RuntimeModelCreationContext) pcc;
+		final RuntimeModelCreationContext creationContext = (RuntimeModelCreationContext) persisterCreationContext;
 
 		final Value elementBootDescriptor = collectionBootDescriptor.getElement();
 		final Value indexBootDescriptor = collectionBootDescriptor instanceof IndexedCollection
@@ -558,7 +559,6 @@ public abstract class AbstractCollectionPersister
 		sqlSelectSizeString = generateSelectSizeString( collectionBootDescriptor.isIndexed() && !collectionBootDescriptor.isMap() );
 		sqlDetectRowByIndexString = generateDetectRowByIndexString();
 		sqlDetectRowByElementString = generateDetectRowByElementString();
-		sqlSelectRowByIndexString = generateSelectRowByIndexString();
 
 		logStaticSQL();
 
@@ -727,6 +727,14 @@ public abstract class AbstractCollectionPersister
 		collectionLoader = queryLoaderName == null
 				? createCollectionLoader( LoadQueryInfluencers.NONE )
 				: new CollectionLoaderNamedQuery( queryLoaderName, this, attributeMapping );
+		if ( attributeMapping.getIndexDescriptor() != null ) {
+			collectionElementLoaderByIndex = new CollectionElementLoaderByIndex(
+					attributeMapping,
+					baseIndex,
+					LoadQueryInfluencers.NONE,
+					getFactory()
+			);
+		}
 	}
 
 	protected void logStaticSQL() {
@@ -747,8 +755,6 @@ public abstract class AbstractCollectionPersister
 		}
 	}
 
-	private volatile CollectionLoader standardCollectionLoader;
-
 	@Override
 	public void initialize(Object key, SharedSessionContractImplementor session) throws HibernateException {
 //		getAppropriateInitializer( key, session ).initialize( key, session );
@@ -763,7 +769,12 @@ public abstract class AbstractCollectionPersister
 			synchronized (this) {
 				localCopy = standardCollectionLoader;
 				if ( localCopy == null ) {
-					localCopy = createCollectionLoader( LoadQueryInfluencers.NONE );
+					if ( queryLoaderName != null ) {
+						localCopy = collectionLoader;
+					}
+					else {
+						localCopy = createCollectionLoader( LoadQueryInfluencers.NONE );
+					}
 					standardCollectionLoader  = localCopy;
 				}
 			}
@@ -1190,20 +1201,6 @@ public abstract class AbstractCollectionPersister
 				.toStatementString();
 	}
 
-	protected String generateSelectRowByIndexString() {
-		if ( !hasIndex() ) {
-			return null;
-		}
-		return new SimpleSelect( dialect )
-				.setTableName( getTableName() )
-				.addCondition( getKeyColumnNames(), "=?" )
-				.addCondition( getIndexColumnNames(), "=?" )
-				.addCondition( indexFormulas, "=?" )
-				.addWhereToken( sqlWhereString )
-				.addColumns( getElementColumnNames(), elementColumnAliases )
-				.addColumns( indexFormulas, indexColumnAliases )
-				.toStatementString();
-	}
 
 	protected String generateDetectRowByElementString() {
 		return new SimpleSelect( dialect )
@@ -2170,40 +2167,7 @@ public abstract class AbstractCollectionPersister
 
 	@Override
 	public Object getElementByIndex(Object key, Object index, SharedSessionContractImplementor session, Object owner) {
-		try {
-			final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
-			PreparedStatement st = jdbcCoordinator
-					.getStatementPreparer()
-					.prepareStatement( sqlSelectRowByIndexString );
-			try {
-				getKeyType().nullSafeSet( st, key, 1, session );
-				getIndexType().nullSafeSet( st, incrementIndexByBase( index ), keyColumnNames.length + 1, session );
-				ResultSet rs = jdbcCoordinator.getResultSetReturn().extract( st );
-				try {
-					if ( rs.next() ) {
-						return getElementType().nullSafeGet( rs, elementColumnAliases, session, owner );
-					}
-					else {
-						return null;
-					}
-				}
-				finally {
-					jdbcCoordinator.getResourceRegistry().release( rs, st );
-				}
-			}
-			finally {
-				jdbcCoordinator.getResourceRegistry().release( st );
-				jdbcCoordinator.afterStatementExecution();
-			}
-		}
-		catch ( SQLException sqle ) {
-			throw getSQLExceptionHelper().convert(
-					sqle,
-					"could not read row: " +
-							MessageHelper.collectionInfoString( this, key, getFactory() ),
-					sqlSelectSizeString
-			);
-		}
+		return collectionElementLoaderByIndex.load( key, index, session );
 	}
 
 	@Override

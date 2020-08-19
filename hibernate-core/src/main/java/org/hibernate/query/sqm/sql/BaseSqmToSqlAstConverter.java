@@ -2213,41 +2213,45 @@ public abstract class BaseSqmToSqlAstConverter
 						currentClauseStack::getCurrent
 				)
 		);
+		try {
 
-		final TableGroup rootTableGroup = mappingModelExpressable.createRootTableGroup(
-				pluralPath.getNavigablePath(),
-				null,
-				true,
-				LockOptions.NONE.getLockMode(),
-				sqlAliasBaseManager,
-				getSqlExpressionResolver(),
-				() -> querySpec::applyPredicate,
-				creationContext
-		);
+			final TableGroup rootTableGroup = mappingModelExpressable.createRootTableGroup(
+					pluralPath.getNavigablePath(),
+					null,
+					true,
+					LockOptions.NONE.getLockMode(),
+					sqlAliasBaseManager,
+					getSqlExpressionResolver(),
+					() -> querySpec::applyPredicate,
+					creationContext
+			);
 
-		fromClauseIndex.registerTableGroup( pluralPath.getNavigablePath(), rootTableGroup );
+			fromClauseIndex.registerTableGroup( pluralPath.getNavigablePath(), rootTableGroup );
 
-		querySpec.getFromClause().addRoot( rootTableGroup );
+			querySpec.getFromClause().addRoot( rootTableGroup );
 
-		final CollectionPart elementDescriptor = mappingModelExpressable.getElementDescriptor();
+			final CollectionPart elementDescriptor = mappingModelExpressable.getElementDescriptor();
 
-		elementDescriptor.createDomainResult(
-				pluralPath.getNavigablePath(),
-				rootTableGroup,
-				null,
-				this
-		);
+			elementDescriptor.createDomainResult(
+					pluralPath.getNavigablePath(),
+					rootTableGroup,
+					null,
+					this
+			);
 
-		final Predicate predicate = mappingModelExpressable.getKeyDescriptor().generateJoinPredicate(
-				getFromClauseAccess().findTableGroup( pluralPath.getNavigablePath().getParent() ),
-				rootTableGroup,
-				null,
-				getSqlExpressionResolver(),
-				creationContext
-		);
-		querySpec.applyPredicate( predicate );
+			final Predicate predicate = mappingModelExpressable.getKeyDescriptor().generateJoinPredicate(
+					getFromClauseAccess().findTableGroup( pluralPath.getNavigablePath().getParent() ),
+					rootTableGroup,
+					null,
+					getSqlExpressionResolver(),
+					creationContext
+			);
+			querySpec.applyPredicate( predicate );
+		}
+		finally {
+			processingStateStack.pop();
+		}
 
-		processingStateStack.pop();
 		return querySpec;
 	}
 

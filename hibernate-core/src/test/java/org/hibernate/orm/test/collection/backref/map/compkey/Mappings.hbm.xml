@@ -15,7 +15,7 @@
     a backref.  We want to make sure the backref works properly with
     the component.
 -->
-<hibernate-mapping package="org.hibernate.test.collection.backref.map.compkey" default-access="field">
+<hibernate-mapping package="org.hibernate.orm.test.collection.backref.map.compkey" default-access="field">
 
     <class name="Product" table="t_product">
         <id name="name"/>

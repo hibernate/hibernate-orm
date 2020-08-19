@@ -19,6 +19,7 @@ import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
  * @author Steve Ebersole
  */
 public interface ExecutionContext {
+
 	SharedSessionContractImplementor getSession();
 
 	QueryOptions getQueryOptions();

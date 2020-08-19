@@ -7,6 +7,7 @@
 package org.hibernate.loader.ast.internal;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -33,6 +34,7 @@ import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.loader.ast.spi.Loader;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
@@ -130,6 +132,32 @@ public class LoaderSelectBuilder {
 		return process.generateSelect();
 	}
 
+
+	public static SelectStatement createSelect(
+			Loadable loadable,
+			List<? extends ModelPart> partsToSelect,
+			List<ModelPart> restrictedParts,
+			DomainResult cachedDomainResult,
+			int numberOfKeysToLoad,
+			LoadQueryInfluencers loadQueryInfluencers,
+			LockOptions lockOptions,
+			Consumer<JdbcParameter> jdbcParameterConsumer,
+			SessionFactoryImplementor sessionFactory) {
+		final LoaderSelectBuilder process = new LoaderSelectBuilder(
+				sessionFactory,
+				loadable,
+				partsToSelect,
+				restrictedParts,
+				cachedDomainResult,
+				numberOfKeysToLoad,
+				loadQueryInfluencers,
+				lockOptions,
+				jdbcParameterConsumer
+		);
+
+		return process.generateSelect();
+	}
+
 	/**
 	 * Create an SQL AST select-statement used for subselect-based CollectionLoader
 	 *
@@ -169,13 +197,14 @@ public class LoaderSelectBuilder {
 	private final SqlAstCreationContext creationContext;
 	private final Loadable loadable;
 	private final List<? extends ModelPart> partsToSelect;
-	private final ModelPart restrictedPart;
+	private final List<ModelPart> restrictedParts;
 	private final DomainResult cachedDomainResult;
 	private final int numberOfKeysToLoad;
 	private final LoadQueryInfluencers loadQueryInfluencers;
 	private final LockOptions lockOptions;
 	private final Consumer<JdbcParameter> jdbcParameterConsumer;
 	private final EntityGraphTraversalState entityGraphTraversalState;
+	private boolean forceIdentifierSelection;
 
 	private int fetchDepth;
 	private Map<OrderByFragment, TableGroup> orderByFragments;
@@ -184,7 +213,7 @@ public class LoaderSelectBuilder {
 			SqlAstCreationContext creationContext,
 			Loadable loadable,
 			List<? extends ModelPart> partsToSelect,
-			ModelPart restrictedPart,
+			List<ModelPart> restrictedParts,
 			DomainResult cachedDomainResult,
 			int numberOfKeysToLoad,
 			LoadQueryInfluencers loadQueryInfluencers,
@@ -193,10 +222,20 @@ public class LoaderSelectBuilder {
 		this.creationContext = creationContext;
 		this.loadable = loadable;
 		this.partsToSelect = partsToSelect;
-		this.restrictedPart = restrictedPart;
+		this.restrictedParts = restrictedParts;
 		this.cachedDomainResult = cachedDomainResult;
 		this.numberOfKeysToLoad = numberOfKeysToLoad;
 		this.loadQueryInfluencers = loadQueryInfluencers;
+		if ( numberOfKeysToLoad > 1 ) {
+			forceIdentifierSelection = true;
+		}
+		else {
+			for ( ModelPart restrictedPart : restrictedParts ) {
+				if ( restrictedPart instanceof ForeignKeyDescriptor ) {
+					forceIdentifierSelection = true;
+				}
+			}
+		}
 
 		EntityGraphTraversalState entityGraphTraversalState = null;
 		if ( loadQueryInfluencers != null ) {
@@ -215,6 +254,29 @@ public class LoaderSelectBuilder {
 		this.jdbcParameterConsumer = jdbcParameterConsumer;
 	}
 
+	private LoaderSelectBuilder(
+			SqlAstCreationContext creationContext,
+			Loadable loadable,
+			List<? extends ModelPart> partsToSelect,
+			ModelPart restrictedPart,
+			DomainResult cachedDomainResult,
+			int numberOfKeysToLoad,
+			LoadQueryInfluencers loadQueryInfluencers,
+			LockOptions lockOptions,
+			Consumer<JdbcParameter> jdbcParameterConsumer) {
+		this(
+				creationContext,
+				loadable,
+				partsToSelect,
+				Arrays.asList( restrictedPart ),
+				cachedDomainResult,
+				numberOfKeysToLoad,
+				loadQueryInfluencers,
+				lockOptions,
+				jdbcParameterConsumer
+		);
+	}
+
 	private SelectStatement generateSelect() {
 		final NavigablePath rootNavigablePath = new NavigablePath( loadable.getRootPathName() );
 
@@ -227,7 +289,7 @@ public class LoaderSelectBuilder {
 				new SimpleFromClauseAccessImpl(),
 				lockOptions,
 				this::visitFetches,
-				numberOfKeysToLoad > 1 || restrictedPart instanceof ForeignKeyDescriptor,
+				forceIdentifierSelection,
 				creationContext
 		);
 
@@ -281,19 +343,21 @@ public class LoaderSelectBuilder {
 			domainResults = Collections.singletonList( domainResult );
 		}
 
-		final int numberOfKeyColumns = restrictedPart.getJdbcTypeCount(
-				creationContext.getDomainModel().getTypeConfiguration()
-		);
+		for ( ModelPart restrictedPart : restrictedParts ) {
+			final int numberOfRestrictionColumns = restrictedPart.getJdbcTypeCount(
+					creationContext.getDomainModel().getTypeConfiguration()
+			);
 
-		applyKeyRestriction(
-				rootQuerySpec,
-				rootNavigablePath,
-				rootTableGroup,
-				restrictedPart,
-				numberOfKeyColumns,
-				jdbcParameterConsumer,
-				sqlAstCreationState
-		);
+			applyRestriction(
+					rootQuerySpec,
+					rootNavigablePath,
+					rootTableGroup,
+					restrictedPart,
+					numberOfRestrictionColumns,
+					jdbcParameterConsumer,
+					sqlAstCreationState
+			);
+		}
 
 		if ( loadable instanceof PluralAttributeMapping ) {
 			final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) loadable;
@@ -310,60 +374,60 @@ public class LoaderSelectBuilder {
 		return new SelectStatement( rootQuerySpec, domainResults );
 	}
 
-	private void applyKeyRestriction(
+	private void applyRestriction(
 			QuerySpec rootQuerySpec,
 			NavigablePath rootNavigablePath,
 			TableGroup rootTableGroup,
-			ModelPart keyPart,
-			int numberOfKeyColumns,
+			ModelPart modelPart,
+			int numberColumns,
 			Consumer<JdbcParameter> jdbcParameterConsumer,
 			LoaderSqlAstCreationState sqlAstCreationState) {
 		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 
-		if ( numberOfKeyColumns == 1 ) {
-			assert keyPart instanceof BasicValuedModelPart;
-			final BasicValuedModelPart basicKeyPart = (BasicValuedModelPart) keyPart;
+		if ( numberColumns == 1 ) {
+			modelPart.visitColumns(
+					(containingTableExpression, columnExpression, isColumnExpressionFormula, jdbcMapping) -> {
+						final TableReference tableReference = rootTableGroup.resolveTableReference(
+								containingTableExpression );
+						final ColumnReference columnRef =
+								(ColumnReference) sqlExpressionResolver.resolveSqlExpression(
+										createColumnReferenceKey( tableReference, columnExpression ),
+										p -> new ColumnReference(
+												tableReference,
+												columnExpression,
+												isColumnExpressionFormula,
+												jdbcMapping,
+												creationContext.getSessionFactory()
+										)
 
-			final JdbcMapping jdbcMapping = basicKeyPart.getJdbcMapping();
+								);
+						if ( numberOfKeysToLoad == 1 ) {
+							final JdbcParameter jdbcParameter = new JdbcParameterImpl( jdbcMapping );
+							jdbcParameterConsumer.accept( jdbcParameter );
 
-			final String tableExpression = basicKeyPart.getContainingTableExpression();
-			final String columnExpression = basicKeyPart.getMappedColumnExpression();
-			final TableReference tableReference = rootTableGroup.resolveTableReference( tableExpression );
-			final ColumnReference columnRef = (ColumnReference) sqlExpressionResolver.resolveSqlExpression(
-					createColumnReferenceKey( tableReference, columnExpression ),
-					p -> new ColumnReference(
-							tableReference,
-							columnExpression,
-							false,
-							jdbcMapping,
-							creationContext.getSessionFactory()
-					)
+							rootQuerySpec.applyPredicate(
+									new ComparisonPredicate( columnRef, ComparisonOperator.EQUAL, jdbcParameter )
+							);
+						}
+						else {
+							final InListPredicate predicate = new InListPredicate( columnRef );
+							for ( int i = 0; i < numberOfKeysToLoad; i++ ) {
+								for ( int j = 0; j < numberColumns; j++ ) {
+									final JdbcParameter jdbcParameter = new JdbcParameterImpl( columnRef.getJdbcMapping() );
+									jdbcParameterConsumer.accept( jdbcParameter );
+									predicate.addExpression( jdbcParameter );
+								}
+							}
+							rootQuerySpec.applyPredicate( predicate );
+						}
+					}
 			);
 
-			if ( numberOfKeysToLoad == 1 ) {
-				final JdbcParameter jdbcParameter = new JdbcParameterImpl( jdbcMapping );
-				jdbcParameterConsumer.accept( jdbcParameter );
-
-				rootQuerySpec.applyPredicate(
-						new ComparisonPredicate( columnRef, ComparisonOperator.EQUAL, jdbcParameter )
-				);
-			}
-			else {
-				final InListPredicate predicate = new InListPredicate( columnRef );
-				for ( int i = 0; i < numberOfKeysToLoad; i++ ) {
-					for ( int j = 0; j < numberOfKeyColumns; j++ ) {
-						final JdbcParameter jdbcParameter = new JdbcParameterImpl( columnRef.getJdbcMapping() );
-						jdbcParameterConsumer.accept( jdbcParameter );
-						predicate.addExpression( jdbcParameter );
-					}
-				}
-				rootQuerySpec.applyPredicate( predicate );
-			}
 		}
 		else {
-			final List<ColumnReference> columnReferences = new ArrayList<>( numberOfKeyColumns );
+			final List<ColumnReference> columnReferences = new ArrayList<>( numberColumns );
 
-			keyPart.visitColumns(
+			modelPart.visitColumns(
 					(containingTableExpression, columnExpression, isColumnExpressionFormula, jdbcMapping) -> {
 						final TableReference tableReference = rootTableGroup.resolveTableReference( containingTableExpression );
 						columnReferences.add(
@@ -381,18 +445,18 @@ public class LoaderSelectBuilder {
 					}
 			);
 
-			final SqlTuple tuple = new SqlTuple( columnReferences, keyPart );
+			final SqlTuple tuple = new SqlTuple( columnReferences, modelPart );
 			final InListPredicate predicate = new InListPredicate( tuple );
 
 			for ( int i = 0; i < numberOfKeysToLoad; i++ ) {
-				final List<JdbcParameter> tupleParams = new ArrayList<>( numberOfKeyColumns );
-				for ( int j = 0; j < numberOfKeyColumns; j++ ) {
+				final List<JdbcParameter> tupleParams = new ArrayList<>( numberColumns );
+				for ( int j = 0; j < numberColumns; j++ ) {
 					final ColumnReference columnReference = columnReferences.get( j );
 					final JdbcParameter jdbcParameter = new JdbcParameterImpl( columnReference.getJdbcMapping() );
 					jdbcParameterConsumer.accept( jdbcParameter );
 					tupleParams.add( jdbcParameter );
 				}
-				final SqlTuple paramTuple = new SqlTuple( tupleParams, keyPart );
+				final SqlTuple paramTuple = new SqlTuple( tupleParams, modelPart );
 				predicate.addExpression( paramTuple );
 			}
 
@@ -719,7 +783,6 @@ public class LoaderSelectBuilder {
 		final SessionFactoryImplementor sessionFactory = sqlAstCreationContext.getSessionFactory();
 
 		assert loadable instanceof PluralAttributeMapping;
-		assert restrictedPart == null || restrictedPart instanceof ForeignKeyDescriptor;
 
 		final PluralAttributeMapping attributeMapping = (PluralAttributeMapping) loadable;
 		final ForeignKeyDescriptor fkDescriptor = attributeMapping.getKeyDescriptor();

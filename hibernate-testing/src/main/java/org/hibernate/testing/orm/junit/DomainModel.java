@@ -102,6 +102,9 @@ public @interface DomainModel {
 
 	SharedCacheMode sharedCacheMode() default SharedCacheMode.ENABLE_SELECTIVE;
 
+	boolean overrideCacheStrategy() default true;
+	String concurrencyStrategy() default "";
+
 	AccessType accessType() default AccessType.READ_WRITE;
 
 	@interface ExtraQueryImport {

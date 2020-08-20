@@ -6,11 +6,24 @@
  */
 package org.hibernate.testing.orm.junit;
 
+import java.sql.Blob;
+import java.sql.Clob;
+import java.sql.NClob;
+import java.util.Iterator;
 import java.util.Optional;
 
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
+import org.hibernate.mapping.RootClass;
+import org.hibernate.mapping.SimpleValue;
+import org.hibernate.type.BlobType;
+import org.hibernate.type.ClobType;
+import org.hibernate.type.NClobType;
 
 import org.hibernate.testing.orm.domain.DomainModelDescriptor;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
@@ -109,7 +122,13 @@ public class DomainModelExtension
 					metadataSources.addQueryImport( importedClass.getSimpleName(), importedClass );
 				}
 
-				return (MetadataImplementor) metadataSources.buildMetadata();
+				MetadataImplementor metadataImplementor = (MetadataImplementor) metadataSources.buildMetadata();
+				applyCacheSettings(
+						metadataImplementor,
+						domainModelAnnotation.overrideCacheStrategy(),
+						domainModelAnnotation.concurrencyStrategy()
+				);
+				return metadataImplementor;
 			};
 		}
 
@@ -122,6 +141,64 @@ public class DomainModelExtension
 		locateExtensionStore( testInstance, context ).put( MODEL_KEY, scope );
 
 		return scope;
+	}
+
+	protected static final void applyCacheSettings(Metadata metadata, boolean overrideCacheStrategy, String cacheConcurrencyStrategy) {
+		if ( !overrideCacheStrategy ) {
+			return;
+		}
+
+		if ( cacheConcurrencyStrategy.equals( "" ) ) {
+			return;
+		}
+
+		for ( PersistentClass entityBinding : metadata.getEntityBindings() ) {
+			if ( entityBinding.isInherited() ) {
+				continue;
+			}
+
+			boolean hasLob = false;
+
+			final Iterator props = entityBinding.getPropertyClosureIterator();
+			while ( props.hasNext() ) {
+				final Property prop = (Property) props.next();
+				if ( prop.getValue().isSimpleValue() ) {
+					if ( isLob( ( (SimpleValue) prop.getValue() ).getTypeName() ) ) {
+						hasLob = true;
+						break;
+					}
+				}
+			}
+
+			if ( !hasLob ) {
+				( (RootClass) entityBinding ).setCacheConcurrencyStrategy( cacheConcurrencyStrategy );
+				entityBinding.setCached( true );
+			}
+		}
+
+		for ( Collection collectionBinding : metadata.getCollectionBindings() ) {
+			boolean isLob = false;
+
+			if ( collectionBinding.getElement().isSimpleValue() ) {
+				isLob = isLob( ( (SimpleValue) collectionBinding.getElement() ).getTypeName() );
+			}
+
+			if ( !isLob ) {
+				collectionBinding.setCacheConcurrencyStrategy( cacheConcurrencyStrategy );
+			}
+		}
+	}
+
+	private static boolean isLob(String typeName) {
+		return "blob".equals( typeName )
+				|| "clob".equals( typeName )
+				|| "nclob".equals( typeName )
+				|| Blob.class.getName().equals( typeName )
+				|| Clob.class.getName().equals( typeName )
+				|| NClob.class.getName().equals( typeName )
+				|| BlobType.class.getName().equals( typeName )
+				|| ClobType.class.getName().equals( typeName )
+				|| NClobType.class.getName().equals( typeName );
 	}
 
 	@Override
@@ -172,7 +249,6 @@ public class DomainModelExtension
 
 			final StandardServiceRegistry registry = serviceRegistryScope.getRegistry();
 			model = producer.produceModel( registry );
-
 			return model;
 		}
 
@@ -203,4 +279,8 @@ public class DomainModelExtension
 			model = null;
 		}
 	}
+
+	protected void afterMetadataBuilt(Metadata metadata) {
+	}
+
 }

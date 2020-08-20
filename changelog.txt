@@ -3,6 +3,38 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.0.0.Alpha6 (August 20, 2020)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31848
+
+** Bug
+    * [HHH-13828] - Drop EntityPersister extending the internal interface InFlightEntityMappingType
+
+** Improvement
+    * [HHH-14172] - Drop any/all usage of Javassist
+    * [HHH-14167] - JpaCompliance for @OrderBy handling
+    * [HHH-13745] - Verify HqlTranslator usability without SessionFactory
+
+** New Feature
+    * [HHH-13132] - HQL inline EntityGraph support
+    * [HHH-1523] - Rebuild fetches from query-cache hits
+
+** Task
+    * [HHH-14174] - Implent Collection#getElementByIndex
+    * [HHH-14173] - @Parent support
+    * [HHH-14171] - `@Formula` support
+    * [HHH-14170] - Implement RowId support
+    * [HHH-14169] - Implement SQM `member of` predicate
+    * [HHH-14168] - Support for custom Type/UserType impls
+    * [HHH-14166] - Allow nulls-precedence in HQL/SQM
+    * [HHH-14165] - Implement support for embeddable-valued QueryParameters
+    * [HHH-14164] - Verify / enable query result caching
+    * [HHH-14163] - Named ResultSet mappings
+    * [HHH-14162] - NativeQuery support
+    * [HHH-14161] - NamedQuery support
+
+
 
 Changes in 6.0.0.Alpha5 (April 24, 2020)
 ------------------------------------------------------------------------------------------------------------------------

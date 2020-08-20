@@ -657,7 +657,7 @@ Enables the query cache. You still need to set individual queries to be cachable
 Enable/disable the second-level cache, which is enabled by default, although the default `RegionFactor` is `NoCachingRegionFactory` (meaning there is no actual caching implementation).
 
 `*hibernate.cache.query_cache_factory*` (e.g. fully-qualified class name)::
-A custom https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/cache/spi/QueryCacheFactory.html[`QueryCacheFactory`] interface. The default is the built-in `StandardQueryCacheFactory`.
+A custom https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/cache/spi/TimestampsCacheFactory.html[`TimestampsCacheFactory`] interface. The default is the built-in `StandardTimestampsCacheFactory`.
 
 `*hibernate.cache.region_prefix*` (e.g. A string)::
 A prefix for second-level cache region names.

@@ -43,7 +43,7 @@ Besides provider specific configuration, there are a number of configurations op
 `hibernate.cache.query_cache_factory`::
 	Query result caching is handled by a special contract that deals with staleness-based invalidation of the results.
 	The default implementation does not allow stale results at all. Use this for applications that would like to relax that.
-	Names an implementation of `org.hibernate.cache.spi.QueryCacheFactory`.
+	Names an implementation of `org.hibernate.cache.spi.TimestampsCacheFactory`.
 `hibernate.cache.use_minimal_puts`::
 	Optimizes second-level cache operations to minimize writes, at the cost of more frequent reads. Providers typically set this appropriately.
 `hibernate.cache.region_prefix`::

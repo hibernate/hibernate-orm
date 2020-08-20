@@ -731,7 +731,7 @@ See the <<chapters/domain/basic_types.adoc#mapping-column-read-and-write-example
 [[annotations-hibernate-columntransformers]]
 ==== `@ColumnTransformers`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ColumnTransformers.html[`@ColumnTransformers`] annotation iis used to group multiple <<annotations-hibernate-columntransformer>> annotations.
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ColumnTransformers.html[`@ColumnTransformers`] annotation is used to group multiple <<annotations-hibernate-columntransformer>> annotations.
 
 [[annotations-hibernate-creationtimestamp]]
 ==== `@CreationTimestamp`

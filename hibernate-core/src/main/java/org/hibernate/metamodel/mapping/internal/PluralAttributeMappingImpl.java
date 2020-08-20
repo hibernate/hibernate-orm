@@ -29,7 +29,6 @@ import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.CollectionIdentifierDescriptor;
 import org.hibernate.metamodel.mapping.CollectionMappingType;
 import org.hibernate.metamodel.mapping.CollectionPart;
-import org.hibernate.metamodel.mapping.ColumnConsumer;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
@@ -42,9 +41,7 @@ import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragmentTranslator;
 import org.hibernate.metamodel.mapping.ordering.TranslationContext;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.property.access.spi.PropertyAccess;
@@ -112,7 +109,8 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping
 	private final IndexMetadata indexMetadata;
 
 	private ForeignKeyDescriptor fkDescriptor;
-	private ForeignKeyDescriptor manyToManyFkDescriptor;
+	private ForeignKeyDescriptor elementFkDescriptor;
+	private ForeignKeyDescriptor indexFkDescriptor;
 
 	private OrderByFragment orderByFragment;
 	private OrderByFragment manyToManyOrderByFragment;
@@ -243,68 +241,34 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping
 			Property bootProperty,
 			Collection bootDescriptor,
 			MappingModelCreationProcess creationProcess) {
-		if ( collectionDescriptor.getElementType() instanceof EntityType
-				|| collectionDescriptor.getIndexType() instanceof EntityType ) {
+		final Dialect dialect = creationProcess.getCreationContext()
+				.getSessionFactory()
+				.getJdbcServices()
+				.getDialect();
+		if ( collectionDescriptor.getElementType() instanceof EntityType ) {
 			creationProcess.registerForeignKeyPostInitCallbacks(
 					() -> {
-						final EntityPersister associatedEntityDescriptor;
-						final ModelPart fkTargetPart;
-						final Value fkBootDescriptorSource;
-						if ( collectionDescriptor.getElementType() instanceof EntityType ) {
-							final EntityType elementEntityType = (EntityType) collectionDescriptor.getElementType();
-							associatedEntityDescriptor = creationProcess.getEntityPersister( elementEntityType.getAssociatedEntityName() );
-							if ( ( (AbstractEntityPersister) associatedEntityDescriptor ).getTableName()
-									.equals( ( (AbstractCollectionPersister) collectionDescriptor ).getTableName() ) ) {
-								fkTargetPart = creationProcess
-										.getEntityPersister( bootDescriptor.getOwner().getEntityName() )
-										.getIdentifierMapping();
-							}
-							else {
-								fkTargetPart = associatedEntityDescriptor.getIdentifierMapping();
-							}
-							fkBootDescriptorSource = bootDescriptor.getElement();
-						}
-						else {
-							assert collectionDescriptor.getIndexType() != null;
-							assert bootDescriptor instanceof IndexedCollection;
 
-							final EntityType indexEntityType = (EntityType) collectionDescriptor.getIndexType();
-							associatedEntityDescriptor = creationProcess.getEntityPersister( indexEntityType.getAssociatedEntityName() );
-							fkTargetPart = indexEntityType.isReferenceToPrimaryKey()
-									? associatedEntityDescriptor.getIdentifierMapping()
-									: associatedEntityDescriptor.findSubPart( indexEntityType.getRHSUniqueKeyPropertyName() );
-							fkBootDescriptorSource = ( (IndexedCollection) bootDescriptor ).getIndex();
-						}
+						elementFkDescriptor = createForeignKeyDescriptor(
+								bootDescriptor.getElement(),
+								(EntityType) collectionDescriptor.getElementType(),
+								creationProcess,
+								dialect
+						);
+						return true;
+					}
+			);
+		}
+		if ( collectionDescriptor.getIndexType() instanceof EntityType ) {
+			creationProcess.registerForeignKeyPostInitCallbacks(
+					() -> {
+						indexFkDescriptor = createForeignKeyDescriptor(
+								( (IndexedCollection) bootDescriptor ).getIndex(),
+								(EntityType) collectionDescriptor.getIndexType(),
+								creationProcess,
+								dialect
+						);
 
-						final Dialect dialect = creationProcess.getCreationContext()
-								.getSessionFactory()
-								.getJdbcServices()
-								.getDialect();
-						if ( fkTargetPart instanceof BasicValuedModelPart ) {
-							final BasicValuedModelPart basicFkTargetPart = (BasicValuedModelPart) fkTargetPart;
-							final Joinable collectionDescriptorAsJoinable = (Joinable) collectionDescriptor;
-							manyToManyFkDescriptor = new SimpleForeignKeyDescriptor(
-									collectionDescriptorAsJoinable.getTableName(),
-									fkBootDescriptorSource.getColumnIterator().next().getText( dialect ),
-									basicFkTargetPart.getContainingTableExpression(),
-									basicFkTargetPart.getMappedColumnExpression(),
-									basicFkTargetPart.getJdbcMapping()
-							);
-						}
-						else if ( fkTargetPart instanceof EmbeddableValuedModelPart ) {
-							manyToManyFkDescriptor = MappingModelCreationHelper.buildEmbeddedForeignKeyDescriptor(
-									(EmbeddableValuedModelPart) fkTargetPart,
-									this,
-									fkBootDescriptorSource,
-									dialect,
-									creationProcess
-							);
-						}
-						else {
-							throw new NotYetImplementedFor6Exception(
-									"Support for composite foreign keys not yet implemented : " + collectionDescriptor.getRole()
-							);
-						}
 						return true;
 					}
 			);
@@ -345,6 +309,44 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping
 						context
 				);
 			}
+		}
+	}
+
+	private ForeignKeyDescriptor createForeignKeyDescriptor(
+			Value fkBootDescriptorSource,
+			EntityType entityType,
+			MappingModelCreationProcess creationProcess,
+			Dialect dialect) {
+		final EntityPersister associatedEntityDescriptor =  creationProcess.getEntityPersister( entityType.getAssociatedEntityName() );
+		final ModelPart fkTargetPart = entityType.isReferenceToPrimaryKey()
+				? associatedEntityDescriptor.getIdentifierMapping()
+				: associatedEntityDescriptor.findSubPart( entityType.getRHSUniqueKeyPropertyName() );
+
+		if ( fkTargetPart instanceof BasicValuedModelPart ) {
+			final BasicValuedModelPart basicFkTargetPart = (BasicValuedModelPart) fkTargetPart;
+			final Joinable collectionDescriptorAsJoinable = (Joinable) collectionDescriptor;
+			return new SimpleForeignKeyDescriptor(
+					collectionDescriptorAsJoinable.getTableName(),
+					fkBootDescriptorSource.getColumnIterator().next().getText( dialect ),
+					basicFkTargetPart.getContainingTableExpression(),
+					basicFkTargetPart.getMappedColumnExpression(),
+					basicFkTargetPart.getJdbcMapping()
+			);
+		}
+		else if ( fkTargetPart instanceof EmbeddableValuedModelPart ) {
+			return MappingModelCreationHelper.buildEmbeddedForeignKeyDescriptor(
+					(EmbeddableValuedModelPart) fkTargetPart,
+					this,
+					fkBootDescriptorSource,
+					dialect,
+					creationProcess
+			);
+		}
+		else {
+			throw new NotYetImplementedFor6Exception(
+					"Support for composite foreign keys not yet implemented : " + collectionDescriptor
+							.getRole()
+			);
 		}
 	}
 
@@ -698,68 +700,121 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping
 				creationContext.getSessionFactory()
 		);
 
+		final EntityMappingType elementDescriptorEntityMappingType;
+		if ( elementDescriptor instanceof EntityCollectionPart ) {
+			elementDescriptorEntityMappingType = ( (EntityCollectionPart) elementDescriptor ).getEntityMappingType();
+		}
+		else {
+			elementDescriptorEntityMappingType = null;
+		}
+
+		final EntityMappingType indexDescriptorEntityMappingType;
+		if ( indexDescriptor instanceof EntityCollectionPart ) {
+			indexDescriptorEntityMappingType = ( (EntityCollectionPart) indexDescriptor ).getEntityMappingType();
+		}
+		else {
+			indexDescriptorEntityMappingType = null;
+		}
 
 		final BiFunction<String, TableGroup, TableReferenceJoin> tableReferenceJoinCreator;
-		final java.util.function.Predicate<String> tableReferenceJoinNameChecker;
-		if ( elementDescriptor instanceof EntityCollectionPart || indexDescriptor instanceof EntityCollectionPart ) {
-			final EntityCollectionPart entityPartDescriptor;
-			if ( elementDescriptor instanceof EntityCollectionPart ) {
-				entityPartDescriptor = (EntityCollectionPart) elementDescriptor;
-			}
-			else {
-				entityPartDescriptor = (EntityCollectionPart) indexDescriptor;
-			}
 
-			final EntityMappingType mappingType = entityPartDescriptor.getEntityMappingType();
-			final TableReference associatedPrimaryTable = mappingType.createPrimaryTableReference(
+		final java.util.function.Predicate<String> tableReferenceJoinNameChecker = createTableReferenceJoinNameChecker(
+				elementDescriptorEntityMappingType,
+				indexDescriptorEntityMappingType
+		);
+
+		final TableReference elementAssociatedPrimaryTable;
+		final Function<TableGroup, TableReferenceJoin> elementTableGroupFinalizer;
+		// todo (6.0) : not sure it is
+		final boolean elementUseInnerJoin;
+		if ( elementDescriptorEntityMappingType != null ) {
+			elementUseInnerJoin = canUseInnerJoin && !getAttributeMetadataAccess()
+					.resolveAttributeMetadata( elementDescriptorEntityMappingType ).isNullable();
+			final SqlAstJoinType joinType = elementUseInnerJoin
+					? SqlAstJoinType.INNER
+					: SqlAstJoinType.LEFT;
+			elementAssociatedPrimaryTable = elementDescriptorEntityMappingType.createPrimaryTableReference(
 					sqlAliasBase,
 					sqlExpressionResolver,
 					creationContext
 			);
 
-			final boolean useInnerJoin = canUseInnerJoin && !getAttributeMetadataAccess()
-					.resolveAttributeMetadata( null ).isNullable();
+			elementTableGroupFinalizer = createTableGroupFinalizer(
+					sqlExpressionResolver,
+					creationContext,
+					collectionTableReference,
+					elementAssociatedPrimaryTable,
+					joinType,
+					elementFkDescriptor
+			);
+		}
+		else {
+			elementAssociatedPrimaryTable = null;
+			elementTableGroupFinalizer = null;
+			elementUseInnerJoin = false;
+		}
 
-			final Function<TableGroup,TableReferenceJoin> tableGroupFinalizer = tableGroup -> {
-				final SqlAstJoinType joinType = useInnerJoin
-						? SqlAstJoinType.INNER
-						: SqlAstJoinType.LEFT;
-				final TableReferenceJoin associationJoin = new TableReferenceJoin(
-						joinType,
-						associatedPrimaryTable,
-						manyToManyFkDescriptor.generateJoinPredicate(
-								collectionTableReference,
-								associatedPrimaryTable,
-								joinType,
-								sqlExpressionResolver,
-								creationContext
-						)
-				);
-				return associationJoin;
-			};
+		TableReference indexAssociatedPrimaryTable;
+		final Function<TableGroup, TableReferenceJoin> indexTableGroupFinalizer;
+		final boolean indexUseInnerJoin;
+		if ( indexDescriptorEntityMappingType != null ) {
+			indexUseInnerJoin = canUseInnerJoin && !getAttributeMetadataAccess()
+					.resolveAttributeMetadata( indexDescriptorEntityMappingType ).isNullable();
+			final SqlAstJoinType joinType = indexUseInnerJoin
+					? SqlAstJoinType.INNER
+					: SqlAstJoinType.LEFT;
+			indexAssociatedPrimaryTable = indexDescriptorEntityMappingType.createPrimaryTableReference(
+					sqlAliasBase,
+					sqlExpressionResolver,
+					creationContext
+			);
 
-			tableReferenceJoinNameChecker = mappingType::containsTableReference;
+			indexTableGroupFinalizer = createTableGroupFinalizer(
+					sqlExpressionResolver,
+					creationContext,
+					collectionTableReference,
+					indexAssociatedPrimaryTable,
+					joinType,
+					indexFkDescriptor
+			);
+		}
+		else {
+			indexAssociatedPrimaryTable = null;
+			indexTableGroupFinalizer = null;
+			indexUseInnerJoin = false;
+		}
+
+		if ( elementDescriptorEntityMappingType != null || indexDescriptorEntityMappingType != null ) {
 			tableReferenceJoinCreator = (tableExpression, tableGroup) -> {
-				if ( associatedPrimaryTable.getTableExpression().equals( tableExpression ) ) {
-					TableReferenceJoin tableReferenceJoin = tableGroupFinalizer.apply( tableGroup );
-					return tableReferenceJoin;
+				if ( elementDescriptorEntityMappingType != null
+						&& elementDescriptorEntityMappingType.containsTableReference( tableExpression ) ) {
+					return createTableReferenceJoin(
+							sqlExpressionResolver,
+							creationContext,
+							sqlAliasBase,
+							elementDescriptorEntityMappingType,
+							elementAssociatedPrimaryTable,
+							elementTableGroupFinalizer,
+							elementUseInnerJoin,
+							tableExpression,
+							tableGroup
+					);
 				}
-				else {
-					StandardTableGroup standardTableGroup = (StandardTableGroup) tableGroup;
-					if ( standardTableGroup.getTableReferenceJoins().isEmpty() ) {
-						TableReferenceJoin tableReferenceJoin = tableGroupFinalizer.apply( tableGroup );
-						standardTableGroup.addTableReferenceJoin( tableReferenceJoin );
-					}
-
+				else if ( indexDescriptorEntityMappingType != null
+						&& indexDescriptorEntityMappingType.containsTableReference( tableExpression ) ) {
+					return createTableReferenceJoin(
+							sqlExpressionResolver,
+							creationContext,
+							sqlAliasBase,
+							indexDescriptorEntityMappingType,
+							indexAssociatedPrimaryTable,
+							indexTableGroupFinalizer,
+							indexUseInnerJoin,
+							tableExpression,
+							tableGroup
+					);
 				}
-				return mappingType.createTableReferenceJoin(
-						tableExpression,
-						sqlAliasBase,
-						associatedPrimaryTable,
-						useInnerJoin,
-						sqlExpressionResolver,
-						creationContext
-				);
+				throw new IllegalStateException( "could not create join for table `" + tableExpression + "`" );
 			};
 		}
 		else {
@@ -768,7 +823,6 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping
 						"element-collection cannot contain joins : " + collectionTableReference.getTableExpression() + " -> " + tableExpression
 				);
 			};
-			tableReferenceJoinNameChecker = s -> false;
 		}
 
 		final StandardTableGroup tableGroup = new StandardTableGroup(
@@ -785,6 +839,75 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping
 		return tableGroup;
 	}
 
+	private TableReferenceJoin createTableReferenceJoin(
+			SqlExpressionResolver sqlExpressionResolver,
+			SqlAstCreationContext creationContext,
+			SqlAliasBase sqlAliasBase,
+			EntityMappingType elementDescriptorEntityMappingType,
+			TableReference elementAssociatedPrimaryTable,
+			Function<TableGroup, TableReferenceJoin> elementTableGroupFinalizer,
+			boolean useInnerJoin,
+			String tableExpression, TableGroup tableGroup) {
+		if ( elementAssociatedPrimaryTable.getTableExpression().equals( tableExpression ) ) {
+			TableReferenceJoin tableReferenceJoin = elementTableGroupFinalizer.apply( tableGroup );
+			return tableReferenceJoin;
+		}
+		else {
+			StandardTableGroup standardTableGroup = (StandardTableGroup) tableGroup;
+			if ( standardTableGroup.getTableReferenceJoins().isEmpty() ) {
+				TableReferenceJoin tableReferenceJoin = elementTableGroupFinalizer.apply( tableGroup );
+				standardTableGroup.addTableReferenceJoin( tableReferenceJoin );
+			}
+		}
+		return elementDescriptorEntityMappingType.createTableReferenceJoin(
+				tableExpression,
+				sqlAliasBase,
+				elementAssociatedPrimaryTable,
+				useInnerJoin,
+				sqlExpressionResolver,
+				creationContext
+		);
+	}
+
+	private Function<TableGroup, TableReferenceJoin> createTableGroupFinalizer(
+			SqlExpressionResolver sqlExpressionResolver,
+			SqlAstCreationContext creationContext,
+			TableReference collectionTableReference,
+			TableReference elementAssociatedPrimaryTable,
+			SqlAstJoinType joinType,
+			ForeignKeyDescriptor elementFkDescriptor) {
+		return tableGroup -> {
+
+			final TableReferenceJoin associationJoin = new TableReferenceJoin(
+					joinType,
+					elementAssociatedPrimaryTable,
+					elementFkDescriptor.generateJoinPredicate(
+							collectionTableReference,
+							elementAssociatedPrimaryTable,
+							joinType,
+							sqlExpressionResolver,
+							creationContext
+					)
+			);
+			return associationJoin;
+		};
+	}
+
+	private java.util.function.Predicate<String> createTableReferenceJoinNameChecker(
+			EntityMappingType elementDescriptorEntityMappingType,
+			EntityMappingType indexDescriptorEntityMappingType) {
+		return tableExpression -> {
+			if ( elementDescriptorEntityMappingType != null
+					&& elementDescriptorEntityMappingType.containsTableReference( tableExpression ) ) {
+				return true;
+			}
+			if ( indexDescriptorEntityMappingType != null
+					&& indexDescriptorEntityMappingType.containsTableReference( tableExpression ) ) {
+				return true;
+			}
+			return false;
+		};
+	}
 
 	@Override
 	public TableGroup createRootTableGroup(

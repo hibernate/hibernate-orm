@@ -54,7 +54,7 @@ public class TableBasedDeleteHandlerImpl
 
 		final ProcessedWhereClause processedWhereClause = processWhereClause( deleteStatement.getWhereClause() );
 		this.idSelectParameterSpecifications = processedWhereClause.getIdSelectParameterSpecifications();
-		this.idInsertSelect = generateIdInsertSelect( bulkTargetAlias, idTableInfo, processedWhereClause );
+		this.idInsertSelect = generateIdInsertSelect( bulkTargetAlias, idTableInfo, processedWhereClause ).toStatementString();
 		log.tracev( "Generated ID-INSERT-SELECT SQL (multi-table delete) : {0}", idInsertSelect );
 		
 		final String idSubselect = generateIdSubselect( targetedPersister, idTableInfo );
@@ -101,7 +101,7 @@ public class TableBasedDeleteHandlerImpl
 
 	@Override
 	public String[] getSqlStatements() {
-		return deletes.toArray( new String[deletes.size()] );
+		return deletes.toArray( new String[0] );
 	}
 
 	@Override

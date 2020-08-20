@@ -116,16 +116,16 @@ public abstract class AbstractTableBasedBulkIdHandler {
 	}
 
 	/**
-	 * Generate the {@code INSERT}-{@code SELECT} statement for holding matching ids.  This is the
-	 * {@code INSERT} used to populate the bulk-id table with ids matching the restrictions defined in the
+	 * Return the {@link InsertSelect} for holding matching ids.  This is the
+	 * {@link InsertSelect} used to populate the bulk-id table with ids matching the restrictions defined in the
 	 * original {@code WHERE} clause
 	 *
 	 * @param tableAlias The table alias to use for the entity
 	 * @param whereClause The processed representation for the user-defined {@code WHERE} clause.
 	 *
-	 * @return The {@code INSERT}-{@code SELECT} for populating the bulk-id table.
+	 * @return The {@link InsertSelect} for populating the bulk-id table.
 	 */
-	protected String generateIdInsertSelect(
+	protected InsertSelect generateIdInsertSelect(
 			String tableAlias,
 			IdTableInfo idTableInfo,
 			ProcessedWhereClause whereClause) {
@@ -139,7 +139,7 @@ public abstract class AbstractTableBasedBulkIdHandler {
 		}
 		insert.setTableName( idTableInfo.getQualifiedIdTableName() );
 		insert.setSelect( select );
-		return insert.toStatementString();
+		return insert;
 	}
 
 	protected Select generateIdSelect(

@@ -58,6 +58,10 @@ public class InsertSelect {
 		return this;
 	}
 
+	public Select getSelect() {
+		return this.select;
+	}
+
 	public String toStatementString() {
 		if ( tableName == null ) {
 			throw new HibernateException( "no table name defined for insert-select" );

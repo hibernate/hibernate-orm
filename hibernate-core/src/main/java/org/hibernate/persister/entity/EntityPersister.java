@@ -9,6 +9,7 @@ package org.hibernate.persister.entity;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
@@ -33,7 +34,6 @@ import org.hibernate.internal.TableGroupFilterAliasGenerator;
 import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.InFlightEntityMappingType;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.persister.walking.spi.EntityDefinition;
@@ -77,7 +77,8 @@ import org.hibernate.type.VersionType;
  * @see org.hibernate.persister.spi.PersisterFactory
  * @see org.hibernate.persister.spi.PersisterClassResolver
  */
-public interface EntityPersister extends EntityDefinition, InFlightEntityMappingType, Loadable, RootTableGroupProducer {
+public interface EntityPersister
+		extends EntityMappingType, Loadable, RootTableGroupProducer, EntityDefinition {
 
 	/**
 	 * The property name of the "special" identifier property in HQL
@@ -89,18 +90,13 @@ public interface EntityPersister extends EntityDefinition, InFlightEntityMapping
 	 * entity persisters before calling {@link #postInstantiate()}.
 	 *
 	 * @deprecated The legacy "walking model" is deprecated in favor of the newer "mapping model".
-	 * This method is no longer called by Hibernate.  See {@link #prepareMappingModel} instead
+	 * This method is no longer called by Hibernate.  See {@link InFlightEntityMappingType#prepareMappingModel} instead
 	 */
 	@Deprecated
 	void generateEntityDefinition();
 
-	@Override
-	default int getNumberOfFetchables() {
-		return getNumberOfAttributeMappings();
-	}
-
 	/**
-	 * Finish the initialization of this object. {@link #prepareMappingModel}
+	 * Finish the initialization of this object. {@link InFlightEntityMappingType#prepareMappingModel}
 	 * must be called for all entity persisters before calling this method.
 	 * <p/>
 	 * Called only once per {@link org.hibernate.SessionFactory} lifecycle,
@@ -120,18 +116,6 @@ public interface EntityPersister extends EntityDefinition, InFlightEntityMapping
 	@Override
 	default String getSqlAliasStem() {
 		return SqlAliasStemHelper.INSTANCE.generateStemFromEntityName( getEntityName() );
-	}
-
-	@Override
-	default int getNumberOfAttributeMappings() {
-		// for backwards-compatibility
-		return getAttributeMappings().size();
-	}
-
-	@Override
-	default int getNumberOfDeclaredAttributeMappings() {
-		// for backwards-compatibility
-		return getAttributeMappings().size();
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -235,6 +219,13 @@ public interface EntityPersister extends EntityDefinition, InFlightEntityMapping
 	 */
 	default String[] getSynchronizedQuerySpaces() {
 		return (String[]) getQuerySpaces();
+	}
+
+	default void visitQuerySpaces(Consumer<String> querySpaceConsumer) {
+		final String[] spaces = getSynchronizedQuerySpaces();
+		for ( int i = 0; i < spaces.length; i++ ) {
+			querySpaceConsumer.accept( spaces[ i ] );
+		}
 	}
 
 	/**

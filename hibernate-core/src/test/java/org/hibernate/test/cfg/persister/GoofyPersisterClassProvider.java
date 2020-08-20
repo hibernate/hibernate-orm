@@ -699,16 +699,6 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public void linkWithSuperType(MappingModelCreationProcess creationProcess) {
-
-		}
-
-		@Override
-		public void prepareMappingModel(MappingModelCreationProcess creationProcess) {
-
-		}
-
-		@Override
 		public java.util.Collection<AttributeMapping> getAttributeMappings() {
 			return null;
 		}

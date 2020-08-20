@@ -230,7 +230,8 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public abstract class AbstractEntityPersister
 		implements OuterJoinLoadable, Queryable, ClassMetadata, UniqueKeyLoadable,
-		SQLLoadable, LazyPropertyInitializer, PostInsertIdentityPersister, Lockable, org.hibernate.persister.entity.Queryable {
+				SQLLoadable, LazyPropertyInitializer, PostInsertIdentityPersister, Lockable,
+				org.hibernate.persister.entity.Queryable, InFlightEntityMappingType {
 
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractEntityPersister.class );
 

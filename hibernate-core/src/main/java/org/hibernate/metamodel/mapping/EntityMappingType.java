@@ -79,6 +79,8 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 		return this;
 	}
 
+	void visitQuerySpaces(Consumer<String> querySpaceConsumer);
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Inheritance

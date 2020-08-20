@@ -811,16 +811,6 @@ public class CustomPersister implements EntityPersister {
 	}
 
 	@Override
-	public void linkWithSuperType(MappingModelCreationProcess creationProcess) {
-
-	}
-
-	@Override
-	public void prepareMappingModel(MappingModelCreationProcess creationProcess) {
-
-	}
-
-	@Override
 	public Collection<AttributeMapping> getAttributeMappings() {
 		return null;
 	}

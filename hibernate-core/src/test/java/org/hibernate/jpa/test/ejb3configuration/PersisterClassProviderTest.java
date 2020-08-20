@@ -677,16 +677,6 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
-		public void linkWithSuperType(MappingModelCreationProcess creationProcess) {
-
-		}
-
-		@Override
-		public void prepareMappingModel(MappingModelCreationProcess creationProcess) {
-
-		}
-
-		@Override
 		public EntityIdentifierMapping getIdentifierMapping() {
 			return null;
 		}

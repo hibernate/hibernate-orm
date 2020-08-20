@@ -62,13 +62,17 @@ public class MappingModelCreationProcess {
 	 */
 	private void execute() {
 		for ( EntityPersister entityPersister : entityPersisterMap.values() ) {
-			entityPersister.linkWithSuperType( this );
+			if ( entityPersister instanceof InFlightEntityMappingType ) {
+				( (InFlightEntityMappingType) entityPersister ).linkWithSuperType( this );
+			}
 		}
 
 		for ( EntityPersister entityPersister : entityPersisterMap.values() ) {
 			currentlyProcessingRole = entityPersister.getEntityName();
 
-			entityPersister.prepareMappingModel( this );
+			if ( entityPersister instanceof InFlightEntityMappingType ) {
+				( (InFlightEntityMappingType) entityPersister ).prepareMappingModel( this );
+			}
 		}
 
 		MappingModelCreationLogger.LOGGER.debugf( "Starting generic post-init callbacks" );

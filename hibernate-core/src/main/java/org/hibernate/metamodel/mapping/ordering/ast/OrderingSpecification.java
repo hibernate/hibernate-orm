@@ -20,13 +20,19 @@ public class OrderingSpecification implements Node {
 	private String collation;
 	private SortOrder sortOrder;
 	private NullPrecedence nullPrecedence = NullPrecedence.NONE;
+	private String orderByValue;
 
-	public OrderingSpecification(OrderingExpression orderingExpression) {
-		this.orderingExpression = orderingExpression;
+	public String getOrderByValue() {
+		return orderByValue;
 	}
 
-	public OrderingSpecification(OrderingExpression orderingExpression, SortOrder sortOrder) {
+	public OrderingSpecification(OrderingExpression orderingExpression, String orderByValue) {
 		this.orderingExpression = orderingExpression;
+		this.orderByValue = orderByValue;
+	}
+
+	public OrderingSpecification(OrderingExpression orderingExpression, String orderByValue,SortOrder sortOrder) {
+		this(orderingExpression, orderByValue);
 		this.sortOrder = sortOrder;
 	}
 
@@ -56,5 +62,9 @@ public class OrderingSpecification implements Node {
 
 	public void setNullPrecedence(NullPrecedence nullPrecedence) {
 		this.nullPrecedence = nullPrecedence;
+	}
+
+	public void setOrderByValue(String orderByValue) {
+		this.orderByValue = orderByValue;
 	}
 }

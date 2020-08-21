@@ -62,6 +62,7 @@ public class ColumnReference implements OrderingExpression, SequencePart {
 			QuerySpec ast,
 			TableGroup tableGroup,
 			String collation,
+			String modelPartName,
 			SortOrder sortOrder,
 			SqlAstCreationState creationState) {
 		TableReference tableReference;

@@ -9,6 +9,7 @@ package org.hibernate.metamodel.mapping.ordering.ast;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.internal.AbstractDomainPath;
 import org.hibernate.metamodel.mapping.ordering.TranslationContext;
 import org.hibernate.query.NavigablePath;
 
@@ -17,7 +18,7 @@ import org.hibernate.query.NavigablePath;
  *
  * @author Steve Ebersole
  */
-public class DomainPathContinuation implements DomainPath {
+public class DomainPathContinuation extends AbstractDomainPath {
 	private final NavigablePath navigablePath;
 	private final DomainPath lhs;
 	private final ModelPart referencedModelPart;

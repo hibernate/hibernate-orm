@@ -36,6 +36,7 @@ public class OrderByFragmentImpl implements OrderByFragment {
 					ast,
 					tableGroup,
 					orderingSpec.getCollation(),
+					orderingSpec.getOrderByValue(),
 					orderingSpec.getSortOrder(),
 					creationState
 			);

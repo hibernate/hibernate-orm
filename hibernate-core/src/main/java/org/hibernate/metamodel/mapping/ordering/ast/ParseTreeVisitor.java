@@ -70,7 +70,7 @@ public class ParseTreeVisitor extends OrderingParserBaseVisitor<Object> {
 			}
 		}
 
-		final OrderingSpecification result = new OrderingSpecification( orderingExpression );
+		final OrderingSpecification result = new OrderingSpecification( orderingExpression,  parsedSpec.expression().getText());
 
 		if ( parsedSpec.collationSpecification() != null ) {
 			result.setCollation( parsedSpec.collationSpecification().identifier().getText() );

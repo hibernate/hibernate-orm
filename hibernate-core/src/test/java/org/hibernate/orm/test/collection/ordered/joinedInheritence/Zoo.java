@@ -4,10 +4,9 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.collection.ordered.joinedInheritence;
+package org.hibernate.orm.test.collection.ordered.joinedInheritence;
 
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -26,9 +25,9 @@ public class Zoo {
 	private Long id;
 	private String name;
 	private String city;
-	private Set<Tiger> tigers = new HashSet<Tiger>();
-	private Set<Lion> lions = new HashSet<Lion>();
-	private Set<Animal> animals = new HashSet<Animal>();
+	private Set<Tiger> tigers = new HashSet<>();
+	private Set<Lion> lions = new HashSet<>();
+	private Set<Animal> animals = new HashSet<>();
 
 	@Id
 	@GeneratedValue( generator = "increment" )
@@ -59,7 +58,7 @@ public class Zoo {
 
 	@OneToMany
 	@JoinColumn
-	@javax.persistence.OrderBy( "weight" )
+	@javax.persistence.OrderBy( "details" )
 	public Set<Tiger> getTigers() {
 		return tigers;
 	}

@@ -20,5 +20,5 @@ public interface OrderingExpression extends Node {
 	/**
 	 * Apply the SQL AST sort-specifications associated with this ordering-expression
 	 */
-	void apply(QuerySpec ast, TableGroup tableGroup, String collation, SortOrder sortOrder, SqlAstCreationState creationState);
+	void apply(QuerySpec ast, TableGroup tableGroup, String collation, String modelPartName, SortOrder sortOrder, SqlAstCreationState creationState);
 }

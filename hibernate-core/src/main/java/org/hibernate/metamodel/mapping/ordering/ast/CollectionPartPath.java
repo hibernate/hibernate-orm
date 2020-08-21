@@ -9,6 +9,7 @@ package org.hibernate.metamodel.mapping.ordering.ast;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.AbstractDomainPath;
 import org.hibernate.metamodel.mapping.internal.EmbeddedCollectionPart;
 import org.hibernate.metamodel.mapping.ordering.TranslationContext;
 import org.hibernate.query.NavigablePath;
@@ -18,7 +19,7 @@ import org.hibernate.query.NavigablePath;
  *
  * @author Steve Ebersole
  */
-public class CollectionPartPath implements DomainPath {
+public class CollectionPartPath extends AbstractDomainPath {
 	private final NavigablePath navigablePath;
 	private final PluralAttributePath lhs;
 	private final CollectionPart referencedPart;

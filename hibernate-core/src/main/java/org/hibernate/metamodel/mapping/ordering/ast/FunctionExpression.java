@@ -49,6 +49,7 @@ public class FunctionExpression implements OrderingExpression {
 			QuerySpec ast,
 			TableGroup tableGroup,
 			String collation,
+			String modelPartName,
 			SortOrder sortOrder,
 			SqlAstCreationState creationState) {
 		throw new NotYetImplementedFor6Exception( getClass() );

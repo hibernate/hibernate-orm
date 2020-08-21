@@ -27,13 +27,13 @@ public class Person {
 	private Long id;
 	private String name;
 
-	private Set<String> nickNamesAscendingNaturalSort = new HashSet<String>();
-	private Set<String> nickNamesDescendingNaturalSort = new HashSet<String>();
+	private Set<String> nickNamesAscendingNaturalSort = new HashSet<>();
+	private Set<String> nickNamesDescendingNaturalSort = new HashSet<>();
 
-	private Set<Address> addressesAscendingNaturalSort = new HashSet<Address>();
-	private Set<Address> addressesDescendingNaturalSort = new HashSet<Address>();
-	private Set<Address> addressesCityAscendingSort = new HashSet<Address>();
-	private Set<Address> addressesCityDescendingSort = new HashSet<Address>();
+	private Set<Address> addressesAscendingNaturalSort = new HashSet<>();
+	private Set<Address> addressesDescendingNaturalSort = new HashSet<>();
+	private Set<Address> addressesCityAscendingSort = new HashSet<>();
+	private Set<Address> addressesCityDescendingSort = new HashSet<>();
 
 
 	@Id

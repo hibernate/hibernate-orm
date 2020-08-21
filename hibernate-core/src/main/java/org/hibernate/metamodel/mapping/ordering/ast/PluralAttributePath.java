@@ -10,17 +10,17 @@ import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.AbstractDomainPath;
 import org.hibernate.metamodel.mapping.ordering.TranslationContext;
 import org.hibernate.query.NavigablePath;
 
 /**
  * Represents the collection as a DomainPath
  *
- * @see RootSequencePart
- *
  * @author Steve Ebersole
+ * @see RootSequencePart
  */
-public class PluralAttributePath implements DomainPath {
+public class PluralAttributePath extends AbstractDomainPath {
 	private final NavigablePath navigablePath;
 	private final PluralAttributeMapping pluralAttributeMapping;
 
@@ -66,6 +66,9 @@ public class PluralAttributePath implements DomainPath {
 						this,
 						pluralAttributeMapping.getElementDescriptor()
 				);
+			}
+			else {
+				return new DomainPathContinuation( navigablePath.append( name ), this, subPart );
 			}
 		}
 

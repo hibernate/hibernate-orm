@@ -18,6 +18,7 @@ import org.hibernate.QueryException;
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.CockroachDB192Dialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
@@ -169,7 +170,8 @@ public class HQLTest extends QueryTranslatorTestCase {
 		Oracle8iDialect.class,
 		AbstractHANADialect.class,
 		PostgreSQL81Dialect.class,
-		MySQLDialect.class
+		MySQLDialect.class,
+		CockroachDB192Dialect.class
 	} )
 
     public void testRowValueConstructorSyntaxInInListBeingTranslated() {
@@ -404,6 +406,10 @@ public class HQLTest extends QueryTranslatorTestCase {
 			// MySQL dialects are smarter now wrt cast targets.  For example, float (as a db type) is not
 			// valid as a cast target for MySQL.  The new parser uses the dialect handling for casts, the old
 			// parser does not; so the outputs do not match here...
+			return;
+		}
+		if ( getDialect() instanceof CockroachDB192Dialect ) {
+			// CockroachDB turns "float" into "float4" so the outputs won't match.
 			return;
 		}
 		assertTranslation( "from Animal where abs(cast(1 as float) - cast(:param as float)) = 1.0" );
@@ -890,6 +896,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 
 		if ( getDialect() instanceof Oracle8iDialect ) return; // the new hiearchy...
 		if ( getDialect() instanceof PostgreSQLDialect || getDialect() instanceof PostgreSQL81Dialect ) return;
+		if ( getDialect() instanceof CockroachDB192Dialect ) return;
 		if ( getDialect() instanceof TeradataDialect) return;
 		if ( ! H2Dialect.class.isInstance( getDialect() ) ) {
 			// H2 has no year function
@@ -1070,6 +1077,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@SkipForDialect(CockroachDB192Dialect.class)
 	public void testSelectStandardFunctionsNoParens() throws Exception {
 		assertTranslation( "select current_date, current_time, current_timestamp from Animal" );
 	}

@@ -85,6 +85,7 @@ dependencies {
 	testRuntime( libraries.mssql )
 	testRuntime( libraries.informix )
 	testRuntime( libraries.hana )
+	testRuntime( libraries.cockroachdb )
 
 	asciidoclet 'org.asciidoctor:asciidoclet:1.+'
 
@@ -205,6 +206,14 @@ processTestResources {
 			filter( ReplaceTokens, tokens: dbBundle[db] )
 		}
 	}
+}
+
+// Keep system properties in sync with gradle.properties!
+test {
+	systemProperty 'user.language', 'en'
+	systemProperty 'user.country', 'US'
+	systemProperty 'user.timezone', 'UTC'
+	systemProperty 'file.encoding', 'UTF-8'
 }
 
 // Enable the experimental features of ByteBuddy with JDK 15+

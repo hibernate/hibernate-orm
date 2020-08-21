@@ -481,7 +481,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 
 		for ( String currentFile : importFiles.split( "," ) ) {
 			final String resourceName = currentFile.trim();
-			if ( "".equals( resourceName ) ) {
+			if ( resourceName != null && resourceName.isEmpty() ) {
 				//skip empty resource names
 				continue;
 			}

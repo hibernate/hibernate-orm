@@ -252,6 +252,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 			}
 
 			AnnotationBinder.bindClass( clazz, inheritanceStatePerClass, rootMetadataBuildingContext );
+			AnnotationBinder.bindFetchProfilesForClass( clazz, rootMetadataBuildingContext );
 			processedEntityNames.add( clazz.getName() );
 		}
 	}
@@ -301,7 +302,9 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 
 	@Override
 	public void postProcessEntityHierarchies() {
-
+		for ( String annotatedPackage : annotatedPackages ) {
+			AnnotationBinder.bindFetchProfilesForPackage( annotatedPackage, rootMetadataBuildingContext );
+		}
 	}
 
 	@Override

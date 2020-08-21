@@ -28,7 +28,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
@@ -85,7 +84,6 @@ import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.io.StreamCopier;
 import org.hibernate.loader.BatchLoadSizingStrategy;
@@ -3053,4 +3051,13 @@ public abstract class Dialect implements ConversionContext {
 		return false;
 	}
 
+	/**
+	 * Annotation to be appended to the end of each COLUMN clause for temporary tables.
+	 *
+	 * @param sqlTypeCode The SQL type code
+	 * @return The annotation to be appended (e.g. "COLLATE DATABASE_DEFAULT" in SQLServer SQL)
+	 */
+	public String getCreateTemporaryTableColumnAnnotation(int sqlTypeCode) {
+		return "";
+	}
 }

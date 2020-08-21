@@ -193,9 +193,9 @@ public final class OuterJoinableAssociation {
 
 	public void addManyToManyJoin(JoinFragment outerjoin, QueryableCollection collection) throws MappingException {
 		String manyToManyFilter = collection.getManyToManyFilterFragment( rhsAlias, enabledFilters );
-		String condition = "".equals( manyToManyFilter )
+		String condition = (manyToManyFilter != null && manyToManyFilter.isEmpty())
 				? on
-				: "".equals( on )
+				: (on != null && on.isEmpty())
 				? manyToManyFilter
 				: on + " and " + manyToManyFilter;
 		outerjoin.addJoin(

@@ -470,6 +470,10 @@ public class QueryTranslatorImpl implements FilterTranslator {
 		return statementExecutor.getSqlStatements();
 	}
 
+	protected StatementExecutor getStatementExecutor() {
+		return statementExecutor;
+	}
+
 	/**
 	 * The SQL query string to be called; implemented by all subclasses
 	 */

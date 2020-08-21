@@ -44,7 +44,7 @@ public class MultiLineImportExtractorTest {
 
 				assertThat( commands[1], is( "INSERT INTO test_data VALUES (1, 'sample')" ) );
 
-				assertThat( commands[2], is( "DELETE  FROM test_data" ) );
+				assertThat( commands[2], is( "DELETE\n  FROM test_data" ) );
 
 				assertThat( commands[3], startsWith( "INSERT INTO test_data VALUES (2," ) );
 				assertThat( commands[3], containsString( "-- line 2" ) );
@@ -52,7 +52,7 @@ public class MultiLineImportExtractorTest {
 				assertThat( commands[4], startsWith( "INSERT INTO test_data VALUES (3" ) );
 				assertThat( commands[4], not( containsString( "third record" ) ) );
 
-				assertThat( commands[5], containsString( "INSERT INTO test_data (id, text)" ) );
+				assertThat( commands[5], startsWith( "INSERT INTO test_data\nVALUES\n" ) );
 			}
 		}
 	}

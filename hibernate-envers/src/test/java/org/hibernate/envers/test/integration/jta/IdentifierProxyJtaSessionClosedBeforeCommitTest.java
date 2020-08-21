@@ -41,7 +41,7 @@ import static org.junit.Assert.assertEquals;
  * @author Chris Cranford
  */
 @TestForIssue(jiraKey="HHH-13191")
-@RequiresDialectFeature(DialectChecks.SupportsNoColumnInsert.class)
+@RequiresDialectFeature({ DialectChecks.SupportsNoColumnInsert.class, DialectChecks.SupportsIdentityColumns.class })
 public class IdentifierProxyJtaSessionClosedBeforeCommitTest extends BaseEnversJPAFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

@@ -16,11 +16,13 @@ import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
+import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributesMetadata;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.Assigned;
@@ -702,10 +704,23 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	@Override
 	public final Object instantiate(Serializable id, SharedSessionContractImplementor session) {
 		Object result = getInstantiator().instantiate( id );
+		linkToSession( result, session );
 		if ( id != null ) {
 			setIdentifier( result, id, session );
 		}
 		return result;
+	}
+
+	protected void linkToSession(Object entity, SharedSessionContractImplementor session) {
+		if ( session == null ) {
+			return;
+		}
+		if ( entity instanceof PersistentAttributeInterceptable ) {
+			final BytecodeLazyAttributeInterceptor interceptor = getEntityMetamodel().getBytecodeEnhancementMetadata().extractLazyInterceptor( entity );
+			if ( interceptor != null ) {
+				interceptor.setSession( session );
+			}
+		}
 	}
 
 	@Override

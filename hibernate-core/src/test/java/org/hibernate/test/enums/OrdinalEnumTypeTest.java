@@ -109,6 +109,46 @@ public class OrdinalEnumTypeTest extends BaseCoreFunctionalTestCase {
 		} );
 	}
 
+	@Test
+	@TestForIssue(jiraKey = "HHH-10282")
+	public void hqlTestEnumShortHandSyntax() {
+		doInHibernate( this::sessionFactory, session -> {
+			session.createQuery(
+				"select id from Person where originalHairColor = BLONDE")
+				.getResultList();
+		} );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-10282")
+	public void hqlTestEnumQualifiedShortHandSyntax() {
+		doInHibernate( this::sessionFactory, session -> {
+			session.createQuery(
+					"select id from Person where originalHairColor = HairColor.BLONDE")
+					.getResultList();
+		} );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-10282")
+	public void hqlTestEnumShortHandSyntaxInPredicate() {
+		doInHibernate( this::sessionFactory, session -> {
+			session.createQuery(
+					"select id from Person where originalHairColor in (BLONDE, BROWN)")
+					.getResultList();
+		} );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-10282")
+	public void hqlTestEnumQualifiedShortHandSyntaxInPredicate() {
+		doInHibernate( this::sessionFactory, session -> {
+			session.createQuery(
+					"select id from Person where originalHairColor in (HairColor.BLONDE, HairColor.BROWN)")
+					.getResultList();
+		} );
+	}
+
 	@Entity(name = "Person")
 	public static class Person {
 

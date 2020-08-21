@@ -33,8 +33,8 @@ import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
-import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.hql.spi.SqmCreationState;
+import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -61,29 +61,38 @@ public class SqmPolymorphicRootDescriptor<T> implements EntityDomainType<T> {
 
 		final EntityDomainType<?> firstImplementor = implementorsList.get( 0 );
 
-		// basically we want to "expose" only the attributes that all the implementors expose...
-		// 		- visit all of the attributes defined on the first implementor and check it against
-		// 		all of the others
-		final List<EntityDomainType<?>> subList = implementorsList.subList( 1, implementors.size() - 1 );
-		firstImplementor.visitAttributes(
-				attribute -> {
-					// for each of its attributes, check whether the other implementors also expose it
-					for ( EntityDomainType navigable : subList ) {
-						if ( navigable.findAttribute( attribute.getName() ) == null ) {
-							// we found an implementor that does not expose that attribute,
-							// so break-out to the next attribute
-							break;
-						}
-
-						// if we get here - they all had it.  so put it in the workMap
-						//
-						// todo (6.0) : Atm We use the attribute from the first implementor directly for each implementor
-						//		need to handle this in QuerySplitter somehow
+		if ( implementorsList.size() == 1 ) {
+			firstImplementor.visitAttributes(
+					attribute -> {
 						workMap.put( attribute.getName(), attribute );
 					}
+			);
+		}
+		else {
+			// basically we want to "expose" only the attributes that all the implementors expose...
+			// 		- visit all of the attributes defined on the first implementor and check it against
+			// 		all of the others
+			final List<EntityDomainType<?>> subList = implementorsList.subList( 1, implementors.size() - 1 );
+			firstImplementor.visitAttributes(
+					attribute -> {
+						// for each of its attributes, check whether the other implementors also expose it
+						for ( EntityDomainType navigable : subList ) {
+							if ( navigable.findAttribute( attribute.getName() ) == null ) {
+								// we found an implementor that does not expose that attribute,
+								// so break-out to the next attribute
+								break;
+							}
 
-				}
-		);
+							// if we get here - they all had it.  so put it in the workMap
+							//
+							// todo (6.0) : Atm We use the attribute from the first implementor directly for each implementor
+							//		need to handle this in QuerySplitter somehow
+							workMap.put( attribute.getName(), attribute );
+						}
+
+					}
+			);
+		}
 		this.commonAttributes = Collections.unmodifiableMap( workMap );
 	}
 

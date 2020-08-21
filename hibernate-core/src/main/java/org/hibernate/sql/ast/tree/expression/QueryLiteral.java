@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import java.util.function.Consumer;
 
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.metamodel.mapping.ConvertibleModelPart;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.SqlAstWalker;
@@ -21,7 +22,6 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
-import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -95,10 +95,19 @@ public class QueryLiteral<T> implements Literal, DomainResultProducer<T> {
 			int startPosition,
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext) throws SQLException {
+		Object literalValue = getLiteralValue();
+		// Convert the literal value if needed to the JDBC type on demand to still serve the domain model type through getLiteralValue()
+		if ( type instanceof ConvertibleModelPart ) {
+			ConvertibleModelPart convertibleModelPart = (ConvertibleModelPart) type;
+			if ( convertibleModelPart.getValueConverter() != null ) {
+				//noinspection unchecked
+				literalValue = convertibleModelPart.getValueConverter().toRelationalValue( literalValue );
+			}
+		}
 		//noinspection unchecked
-		( (BasicType<?>) getExpressionType() ).getJdbcValueBinder().bind(
+		type.getJdbcMapping().getJdbcValueBinder().bind(
 				statement,
-				getLiteralValue(),
+				literalValue,
 				startPosition,
 				executionContext.getSession()
 		);

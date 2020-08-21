@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import javax.persistence.TemporalType;
 
+import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.QueryParameterBinding;
@@ -31,6 +32,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 	private boolean isMultiValued;
 
 	private AllowableParameterType<T> bindType;
+	private MappingModelExpressable<T> type;
 	private TemporalType explicitTemporalPrecision;
 
 	private T bindValue;
@@ -227,6 +229,15 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 		this.explicitTemporalPrecision = temporalTypePrecision;
 	}
 
+	@Override
+	public MappingModelExpressable getType() {
+		return type;
+	}
+
+	@Override
+	public void setType(MappingModelExpressable type) {
+		this.type = type;
+	}
 
 	private void validate(T value) {
 		QueryParameterBindingValidator.INSTANCE.validate( getBindType(), value );

@@ -12,7 +12,6 @@ import org.hibernate.Transaction;
 
 import org.junit.Test;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -56,7 +55,6 @@ public class FilterInheritanceTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-8895")
-	@FailureExpected( jiraKey = "none", message = "v6 imperfection" )
 	public void testSelectFromHuman() throws Exception {
 		doInHibernate( this::sessionFactory, session -> {
 			session.enableFilter( "nameFilter" ).setParameter( "name", "unimportant" );

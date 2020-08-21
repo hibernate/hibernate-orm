@@ -10,6 +10,7 @@ import java.util.Collection;
 import javax.persistence.TemporalType;
 
 import org.hibernate.Incubating;
+import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -104,4 +105,18 @@ public interface QueryParameterBinding<T> {
 	 * @return The currently bound values
 	 */
 	Collection<T> getBindValues();
+
+	/**
+	 * Returns the inferred mapping model expressable i.e. the model reference against which this parameter is compared.
+	 *
+	 * @return the inferred mapping model expressable or <code>null</code>
+	 */
+	MappingModelExpressable<T> getType();
+
+	/**
+	 * Sets the mapping model expressable for this parameter.
+	 *
+	 * @param type The mapping model expressable
+	 */
+	void setType(MappingModelExpressable<T> type);
 }

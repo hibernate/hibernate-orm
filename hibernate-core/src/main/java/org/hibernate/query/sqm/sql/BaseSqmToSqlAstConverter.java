@@ -25,10 +25,10 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
+import org.hibernate.metamodel.mapping.Association;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
-import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -1038,7 +1038,7 @@ public abstract class BaseSqmToSqlAstConverter
 
 		final QueryParameterImplementor<?> queryParameter = domainParameterXref.getQueryParameter( sqmParameter );
 		final QueryParameterBinding<?> binding = domainParameterBindings.getBinding( queryParameter );
-
+		binding.setType(valueMapping);
 		return new SqmParameterInterpretation(
 				sqmParameter,
 				queryParameter,
@@ -1079,6 +1079,13 @@ public abstract class BaseSqmToSqlAstConverter
 			);
 		}
 
+		// The model type of an enum literal is always inferred
+		if ( sqmExpression instanceof SqmEnumLiteral<?> ) {
+			final Supplier<MappingModelExpressable> currentExpressableSupplier = inferableTypeAccessStack.getCurrent();
+			if ( currentExpressableSupplier != null ) {
+				return currentExpressableSupplier.get();
+			}
+		}
 
 		log.debugf( "Determining mapping-model type for generalized SqmExpression : %s", sqmExpression );
 		final SqmExpressable<?> nodeType = sqmExpression.getNodeType();
@@ -1147,8 +1154,8 @@ public abstract class BaseSqmToSqlAstConverter
 			SqmParameter expression,
 			MappingModelExpressable valueMapping,
 			Consumer<JdbcParameter> jdbcParameterConsumer) {
-		if ( valueMapping instanceof EntityValuedModelPart ) {
-			( (EntityValuedModelPart) valueMapping ).getEntityMappingType().getIdentifierMapping().visitJdbcTypes(
+		if ( valueMapping instanceof Association ) {
+			( (Association) valueMapping ).getForeignKeyDescriptor().visitJdbcTypes(
 					jdbcMapping -> jdbcParameterConsumer.accept( new JdbcParameterImpl( jdbcMapping ) ),
 					getCurrentClauseStack().getCurrent(),
 					getCreationContext().getDomainModel().getTypeConfiguration()
@@ -2201,8 +2208,7 @@ public abstract class BaseSqmToSqlAstConverter
 
 		if ( mappingModelExpressable.getElementDescriptor() instanceof EntityCollectionPart ) {
 			inferableTypeAccessStack.push(
-					() -> ( (EntityCollectionPart) mappingModelExpressable.getElementDescriptor() ).getEntityMappingType()
-							.getIdentifierMapping() );
+					() -> ( (EntityCollectionPart) mappingModelExpressable.getElementDescriptor() ).getKeyTargetMatchPart() );
 		}
 		else {
 			inferableTypeAccessStack.push( () -> mappingModelExpressable );
@@ -2471,8 +2477,15 @@ public abstract class BaseSqmToSqlAstConverter
 				predicate.isNegated()
 		);
 
-		for ( SqmExpression expression : predicate.getListExpressions() ) {
-			inPredicate.addExpression( (Expression) expression.accept( this ) );
+		inferableTypeAccessStack.push( () -> determineValueMapping( predicate.getTestExpression() ) );
+
+		try {
+			for ( SqmExpression expression : predicate.getListExpressions() ) {
+				inPredicate.addExpression( (Expression) expression.accept( this ) );
+			}
+		}
+		finally {
+			inferableTypeAccessStack.pop();
 		}
 
 		return inPredicate;

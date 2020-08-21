@@ -228,7 +228,7 @@ public class InPredicate<T>
 							int bindValuePaddingCount = MathHelper.ceilingPowerOfTwo(bindValueCount);
 
 							if ( inExprLimit > 0 && bindValuePaddingCount > inExprLimit ) {
-								bindValuePaddingCount = Math.max(bindValueCount, inExprLimit);
+								bindValuePaddingCount = inExprLimit;
 							}
 
 							if ( bindValueCount < bindValuePaddingCount ) {

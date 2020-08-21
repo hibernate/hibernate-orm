@@ -100,7 +100,7 @@ public class InClauseParameterPaddingCriteriaTest extends BaseEntityManagerFunct
 
 
 	@Test
-	public void testInClauseParameterPadding2() {
+	public void testInClauseParameterBindingPadding() {
 		sqlStatementInterceptor.clear();
 
 		doInJPA( this::entityManagerFactory, entityManager -> {

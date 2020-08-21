@@ -102,7 +102,9 @@ public abstract class AbstractManagedType<J>
 	@Override
 	public void visitDeclaredAttributes(Consumer<PersistentAttribute<J, ?>> action) {
 		declaredSingularAttributes.values().forEach( action );
-		declaredPluralAttributes.values().forEach( action );
+		if ( declaredPluralAttributes != null ) {
+			declaredPluralAttributes.values().forEach( action );
+		}
 	}
 
 	@Override

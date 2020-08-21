@@ -31,25 +31,21 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class SqmEnumLiteral<E extends Enum<E>> implements SqmExpression<E>, SqmExpressable<E>, SemanticPathPart {
+public class SqmEnumLiteral<E extends Enum<E>> extends AbstractSqmExpression<E> implements SqmExpression<E>, SqmExpressable<E>, SemanticPathPart {
 	private final E enumValue;
 	private final EnumJavaTypeDescriptor<E> referencedEnumTypeDescriptor;
 	private final String enumValueName;
-	private final NodeBuilder nodeBuilder;
-
-	private SqmExpressable<E> expressable;
 
 	public SqmEnumLiteral(
 			E enumValue,
 			EnumJavaTypeDescriptor<E> referencedEnumTypeDescriptor,
 			String enumValueName,
 			NodeBuilder nodeBuilder) {
+		super( null, nodeBuilder );
 		this.enumValue = enumValue;
 		this.referencedEnumTypeDescriptor = referencedEnumTypeDescriptor;
 		this.enumValueName = enumValueName;
-		this.nodeBuilder = nodeBuilder;
-
-		this.expressable = this;
+		setExpressableType( this );
 	}
 
 	public Enum getEnumValue() {
@@ -64,7 +60,6 @@ public class SqmEnumLiteral<E extends Enum<E>> implements SqmExpression<E>, SqmE
 	public EnumJavaTypeDescriptor<E> getExpressableJavaTypeDescriptor() {
 		return referencedEnumTypeDescriptor;
 	}
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SemanticPathPart
@@ -97,17 +92,6 @@ public class SqmEnumLiteral<E extends Enum<E>> implements SqmExpression<E>, SqmE
 						enumValueName
 				)
 		);
-	}
-
-	@Override
-	public SqmExpressable<E> getNodeType() {
-		return expressable;
-	}
-
-	@Override
-	public void applyInferableType(SqmExpressable<?> type) {
-		//noinspection unchecked
-//		this.expressable = (SqmExpressable) type;
 	}
 
 	@Override
@@ -146,73 +130,8 @@ public class SqmEnumLiteral<E extends Enum<E>> implements SqmExpression<E>, SqmE
 	}
 
 	@Override
-	public <X> SqmExpression<X> as(Class<X> type) {
-		return nodeBuilder().cast( this, type );
-	}
-
-	@Override
-	public SqmPredicate isNull() {
-		return nodeBuilder().isNull( this );
-	}
-
-	@Override
-	public SqmPredicate isNotNull() {
-		return nodeBuilder().isNotNull( this );
-	}
-
-	@Override
-	public SqmPredicate in(Object... values) {
-		return nodeBuilder().in( this, values );
-	}
-
-	@Override
-	public SqmPredicate in(Expression<?>... values) {
-		return nodeBuilder().in( this, values );
-	}
-
-	@Override
-	public SqmPredicate in(Collection<?> values) {
-		return nodeBuilder().in( this, values );
-	}
-
-	@Override
-	public SqmPredicate in(Expression<Collection<?>> values) {
-		return nodeBuilder().in( this, values );
-	}
-
-	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitEnumLiteral( this );
 	}
 
-	@Override
-	public JavaTypeDescriptor<E> getJavaTypeDescriptor() {
-		return getExpressableJavaTypeDescriptor();
-	}
-
-	@Override
-	public NodeBuilder nodeBuilder() {
-		return nodeBuilder;
-	}
-
-	@Override
-	public List<? extends JpaSelection<?>> getSelectionItems() {
-		// per-JPA
-		throw new IllegalStateException( "Not a compound selection" );
-	}
-
-	@Override
-	public boolean isCompoundSelection() {
-		return false;
-	}
-
-	@Override
-	public JpaSelection<E> alias(String name) {
-		return null;
-	}
-
-	@Override
-	public String getAlias() {
-		return null;
-	}
 }

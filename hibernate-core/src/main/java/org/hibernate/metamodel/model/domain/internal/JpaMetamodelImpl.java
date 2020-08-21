@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 import javax.persistence.EntityGraph;
 import javax.persistence.NamedAttributeNode;
 import javax.persistence.NamedEntityGraph;
@@ -76,6 +77,7 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 	private final Map<String, EntityDomainType<?>> jpaEntityTypeMap = new ConcurrentHashMap<>();
 	private final Map<Class<?>, MappedSuperclassDomainType<?>> jpaMappedSuperclassTypeMap = new ConcurrentHashMap<>();
 	private final Map<Class, EmbeddableDomainType<?>> jpaEmbeddableDescriptorMap = new ConcurrentHashMap<>();
+	private final Map<String, Map<Class<?>, Enum<?>>> allowedEnumLiteralTexts = new ConcurrentHashMap<>();
 
 	private final transient Map<String, RootGraphImplementor> entityGraphMap = new ConcurrentHashMap<>();
 
@@ -249,6 +251,11 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 	@Override
 	public Set<EmbeddableType<?>> getEmbeddables() {
 		return new HashSet<>( jpaEmbeddableDescriptorMap.values() );
+	}
+
+	@Override
+	public Map<String, Map<Class<?>, Enum<?>>> getAllowedEnumLiteralTexts() {
+		return allowedEnumLiteralTexts;
 	}
 
 	@Override
@@ -493,6 +500,34 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 			for ( EmbeddableDomainType<?> embeddable : context.getEmbeddableTypeSet() ) {
 				this.jpaEmbeddableDescriptorMap.put( embeddable.getJavaType(), embeddable );
 			}
+			Stream.concat(
+					context.getEntityTypesByEntityName().values().stream(),
+					Stream.concat(
+							context.getMappedSuperclassTypeMap().values().stream(),
+							context.getEmbeddableTypeSet().stream()
+					)
+			).forEach( managedDomainType -> {
+				managedDomainType.visitAttributes( persistentAttribute -> {
+					if ( persistentAttribute.getJavaType() != null && persistentAttribute.getJavaType().isEnum() ) {
+						@SuppressWarnings("unchecked")
+						Class<Enum<?>> enumClass = (Class<Enum<?>>) persistentAttribute.getJavaType();
+						Enum<?>[] enumConstants = enumClass.getEnumConstants();
+						for ( Enum<?> enumConstant : enumConstants ) {
+							String qualifiedEnumLiteral = enumConstant.getDeclaringClass()
+									.getSimpleName() + "." + enumConstant.name();
+
+							this.allowedEnumLiteralTexts.computeIfAbsent(
+									enumConstant.name(),
+									k -> new ConcurrentHashMap<>()
+							).put( enumClass, enumConstant );
+							this.allowedEnumLiteralTexts.computeIfAbsent(
+									qualifiedEnumLiteral,
+									k -> new ConcurrentHashMap<>()
+							).put( enumClass, enumConstant );
+						}
+					}
+				} );
+			} );
 		}
 
 		applyNamedEntityGraphs( namedEntityGraphDefinitions );

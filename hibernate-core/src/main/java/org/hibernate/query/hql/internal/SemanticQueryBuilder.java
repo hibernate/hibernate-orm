@@ -165,6 +165,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.jboss.logging.Logger;
 
 import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
@@ -230,7 +231,6 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	public SemanticQueryBuilder(SqmCreationOptions creationOptions, SqmCreationContext creationContext) {
 		this.creationOptions = creationOptions;
 		this.creationContext = creationContext;
-
 		this.dotIdentifierConsumerStack = new StandardStack<>( new BasicDotIdentifierConsumer( this ) );
 	}
 
@@ -1283,28 +1283,99 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 	@Override
 	public SqmComparisonPredicate visitComparisonPredicate(HqlParser.ComparisonPredicateContext ctx) {
+		final ComparisonOperator comparisonOperator = (ComparisonOperator) ctx.comparisonOperator().accept( this );
+		final List<HqlParser.ExpressionContext> expressionContexts = ctx.expression();
+		final SqmExpression left;
+		final SqmExpression right;
+		final HqlParser.ExpressionContext leftExpressionContext = expressionContexts.get( 0 );
+		final HqlParser.ExpressionContext rightExpressionContext = expressionContexts.get( 1 );
+		switch (comparisonOperator) {
+			case EQUAL:
+			case NOT_EQUAL: {
+				Map<Class<?>, Enum<?>> possibleEnumValues;
+				if ( ( possibleEnumValues = getPossibleEnumValues( leftExpressionContext ) ) != null ) {
+					right = (SqmExpression) rightExpressionContext.accept( this );
+					left = resolveEnumShorthandLiteral(
+							leftExpressionContext,
+							possibleEnumValues,
+							right.getJavaType()
+					);
+					break;
+				}
+				else if ( ( possibleEnumValues = getPossibleEnumValues( rightExpressionContext ) ) != null ) {
+					left = (SqmExpression) leftExpressionContext.accept( this );
+					right = resolveEnumShorthandLiteral(
+							rightExpressionContext,
+							possibleEnumValues,
+							left.getJavaType()
+					);
+					break;
+				}
+			}
+			default: {
+				left = (SqmExpression) leftExpressionContext.accept( this );
+				right = (SqmExpression) rightExpressionContext.accept( this );
+				break;
+			}
+		}
 		return new SqmComparisonPredicate(
-				(SqmExpression) ctx.expression().get( 0 ).accept(this),
-				(ComparisonOperator) ctx.comparisonOperator().accept( this ),
-				(SqmExpression) ctx.expression().get( 1 ).accept(this),
+				left,
+				comparisonOperator,
+				right,
 				creationContext.getNodeBuilder()
 		);
 	}
 
+	private SqmExpression resolveEnumShorthandLiteral(HqlParser.ExpressionContext expressionContext, Map<Class<?>, Enum<?>> possibleEnumValues, Class<?> enumType) {
+		final Enum<?> enumValue;
+		if ( possibleEnumValues != null && ( enumValue = possibleEnumValues.get( enumType ) ) != null ) {
+			DotIdentifierConsumer dotIdentifierConsumer = dotIdentifierConsumerStack.getCurrent();
+			dotIdentifierConsumer.consumeIdentifier( enumValue.getClass().getCanonicalName(), true, false );
+			dotIdentifierConsumer.consumeIdentifier( enumValue.name(), false, true );
+			return (SqmExpression) dotIdentifierConsumerStack.getCurrent().getConsumedPart();
+		}
+		else {
+			return (SqmExpression) expressionContext.accept( this );
+		}
+	}
+
+	private Map<Class<?>, Enum<?>> getPossibleEnumValues(HqlParser.ExpressionContext expressionContext) {
+		ParseTree ctx;
+		// Traverse the expression structure according to the grammar
+		if ( expressionContext instanceof HqlParser.PathExpressionContext
+				&& expressionContext.getChildCount() == 1
+				&& ( ctx = expressionContext.getChild( 0 ) ) instanceof HqlParser.PathContext
+				&& ctx.getChildCount() == 1
+				&& ( ctx = ctx.getChild( 0 ) ) instanceof HqlParser.GeneralPathFragmentContext
+				&& ctx.getChildCount() == 1
+				&& ( ctx = ctx.getChild( 0 ) ) instanceof HqlParser.DotIdentifierSequenceContext
+				// With childCount == 1 we could have a simple enum literal e.g. ENUM_VALUE
+				// With childCount == 2 we could have a qualified enum literal e.g. EnumName.ENUM_VALUE
+				&& ( ctx.getChildCount() == 1 || ctx.getChildCount() == 2 && ctx.getChild( 1 ) instanceof HqlParser.DotIdentifierSequenceContinuationContext )
+				&& ctx.getChild( 0 ) instanceof HqlParser.IdentifierContext
+		) {
+			return creationContext.getJpaMetamodel().getAllowedEnumLiteralTexts().get( ctx.getText() );
+		}
+		return null;
+	}
+
 	@Override
 	public SqmPredicate visitLikePredicate(HqlParser.LikePredicateContext ctx) {
+		final List<HqlParser.ExpressionContext> expressionContexts = ctx.expression();
 		if ( ctx.likeEscape() != null ) {
 			return new SqmLikePredicate(
-					(SqmExpression) ctx.expression().get( 0 ).accept( this ),
-					(SqmExpression) ctx.expression().get( 1 ).accept( this ),
+					(SqmExpression) expressionContexts.get( 0 ).accept( this ),
+					(SqmExpression) expressionContexts.get( 1 ).accept( this ),
 					(SqmExpression) ctx.likeEscape().expression().accept( this ),
+					ctx.NOT() != null,
 					creationContext.getNodeBuilder()
 			);
 		}
 		else {
 			return new SqmLikePredicate(
-					(SqmExpression) ctx.expression().get( 0 ).accept( this ),
-					(SqmExpression) ctx.expression().get( 1 ).accept( this ),
+					(SqmExpression) expressionContexts.get( 0 ).accept( this ),
+					(SqmExpression) expressionContexts.get( 1 ).accept( this ),
+					ctx.NOT() != null,
 					creationContext.getNodeBuilder()
 			);
 		}
@@ -1315,7 +1386,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		final SqmPath sqmPluralPath = consumeDomainPath( ctx.path() );
 
 		if ( sqmPluralPath.getReferencedPathSource() instanceof PluralPersistentAttribute ) {
-			return new SqmMemberOfPredicate( (SqmExpression) ctx.expression().accept( this ), sqmPluralPath, creationContext.getNodeBuilder() );
+			return new SqmMemberOfPredicate( (SqmExpression) ctx.expression().accept( this ), sqmPluralPath, ctx.NOT() != null, creationContext.getNodeBuilder() );
 		}
 		else {
 			throw new SemanticException( "Path argument to MEMBER OF must be a plural attribute" );
@@ -1325,28 +1396,39 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	@Override
 	public SqmPredicate visitInPredicate(HqlParser.InPredicateContext ctx) {
 		final SqmExpression testExpression = (SqmExpression) ctx.expression().accept( this );
+		final HqlParser.InListContext inListContext = ctx.inList();
+		if ( inListContext instanceof HqlParser.ExplicitTupleInListContext ) {
+			final HqlParser.ExplicitTupleInListContext tupleExpressionListContext = (HqlParser.ExplicitTupleInListContext) inListContext;
+			final List<HqlParser.ExpressionContext> expressionContexts = tupleExpressionListContext.expression();
 
-		if ( ctx.inList() instanceof HqlParser.ExplicitTupleInListContext ) {
-			final HqlParser.ExplicitTupleInListContext tupleExpressionListContext = (HqlParser.ExplicitTupleInListContext) ctx.inList();
-
-			parameterDeclarationContextStack.push( () -> tupleExpressionListContext.expression().size() == 1 );
+			final boolean isEnum = testExpression.getJavaType().isEnum();
+			parameterDeclarationContextStack.push( () -> expressionContexts.size() == 1 );
 			try {
-				final List<SqmExpression<?>> listExpressions = new ArrayList<>( tupleExpressionListContext.expression().size() );
-				for ( HqlParser.ExpressionContext expressionContext : tupleExpressionListContext.expression() ) {
-					final SqmExpression listItemExpression = (SqmExpression) expressionContext.accept( this );
-
-					listExpressions.add( listItemExpression );
+				final List<SqmExpression<?>> listExpressions = new ArrayList<>( expressionContexts.size() );
+				for ( HqlParser.ExpressionContext expressionContext : expressionContexts ) {
+					final Map<Class<?>, Enum<?>> possibleEnumValues;
+					if ( isEnum && (possibleEnumValues = getPossibleEnumValues( expressionContext )) != null ) {
+						listExpressions.add( resolveEnumShorthandLiteral( expressionContext, possibleEnumValues, testExpression.getJavaType() ) );
+					}
+					else {
+						listExpressions.add( (SqmExpression) expressionContext.accept( this ) );
+					}
 				}
 
 				//noinspection unchecked
-				return new SqmInListPredicate( testExpression, listExpressions, creationContext.getNodeBuilder() );
+				return new SqmInListPredicate(
+						testExpression,
+						listExpressions,
+						ctx.NOT() != null,
+						creationContext.getNodeBuilder()
+				);
 			}
 			finally {
 				parameterDeclarationContextStack.pop();
 			}
 		}
-		else if ( ctx.inList() instanceof HqlParser.SubQueryInListContext ) {
-			final HqlParser.SubQueryInListContext subQueryContext = (HqlParser.SubQueryInListContext) ctx.inList();
+		else if ( inListContext instanceof HqlParser.SubQueryInListContext ) {
+			final HqlParser.SubQueryInListContext subQueryContext = (HqlParser.SubQueryInListContext) inListContext;
 			final SqmExpression subQueryExpression = (SqmExpression) subQueryContext.expression().accept( this );
 
 			if ( !(subQueryExpression instanceof SqmSubQuery) ) {
@@ -1360,6 +1442,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 			return new SqmInSubQueryPredicate(
 					testExpression,
 					(SqmSubQuery) subQueryExpression,
+					ctx.NOT() != null,
 					creationContext.getNodeBuilder()
 			);
 		}
@@ -1378,20 +1461,22 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	@Override
 	@SuppressWarnings("unchecked")
 	public Object visitEntityTypeExpression(HqlParser.EntityTypeExpressionContext ctx) {
+		final HqlParser.ParameterContext parameterContext = ctx.entityTypeReference().parameter();
+		final HqlParser.PathContext pathContext = ctx.entityTypeReference().path();
 		// can be one of 2 forms:
 		//		1) TYPE( some.path )
 		//		2) TYPE( :someParam )
-		if ( ctx.entityTypeReference().parameter() != null ) {
+		if ( parameterContext != null ) {
 			// we have form (2)
 			return new SqmParameterizedEntityType(
-					(SqmParameter) ctx.entityTypeReference().parameter().accept( this ),
+					(SqmParameter) parameterContext.accept( this ),
 					creationContext.getNodeBuilder()
 			);
 		}
-		else if ( ctx.entityTypeReference().path() != null ) {
+		else if ( pathContext != null ) {
 			// we have form (1)
 			return new SqmPathEntityType(
-					(SqmPath<?>) ctx.entityTypeReference().path().accept( this ),
+					(SqmPath<?>) pathContext.accept( this ),
 					creationContext.getNodeBuilder()
 			);
 		}

@@ -13,6 +13,7 @@ import org.hibernate.sql.ast.SqlAstWalker;
  * @author Steve Ebersole
  */
 public class JdbcParameterImpl extends AbstractJdbcParameter {
+
 	public JdbcParameterImpl(JdbcMapping jdbcMapping) {
 		super( jdbcMapping );
 	}

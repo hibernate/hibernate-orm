@@ -21,8 +21,10 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.Bindable;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.IllegalQueryOperationException;
@@ -211,7 +213,7 @@ public class SqmUtil {
 					final Iterator<?> valueItr = bindValues.iterator();
 
 					// the original SqmParameter is the one we are processing.. create a binding for it..
-					createValueBindings( jdbcParameterBindings, parameterType, jdbcParams, valueItr.next(), session );
+					createValueBindings( jdbcParameterBindings, domainParamBinding, parameterType, jdbcParams, valueItr.next(), session );
 
 					// an then one for each of the expansions
 					final List<SqmParameter> expansions = domainParameterXref.getExpansions( sqmParameter );
@@ -220,7 +222,7 @@ public class SqmUtil {
 					while ( valueItr.hasNext() ) {
 						final SqmParameter expansionSqmParam = expansions.get( expansionPosition++ );
 						final List<JdbcParameter> expansionJdbcParams = jdbcParamMap.get( expansionSqmParam );
-						createValueBindings( jdbcParameterBindings, parameterType, expansionJdbcParams, valueItr.next(), session );
+						createValueBindings( jdbcParameterBindings, domainParamBinding, parameterType, expansionJdbcParams, valueItr.next(), session );
 					}
 				}
 				else if ( domainParamBinding.getBindValue() == null ) {
@@ -235,7 +237,7 @@ public class SqmUtil {
 				}
 				else {
 					final Object bindValue = domainParamBinding.getBindValue();
-					createValueBindings( jdbcParameterBindings, parameterType, jdbcParams, bindValue, session );
+					createValueBindings( jdbcParameterBindings, domainParamBinding, parameterType, jdbcParams, bindValue, session );
 				}
 			}
 		}
@@ -245,24 +247,50 @@ public class SqmUtil {
 
 	private static void createValueBindings(
 			JdbcParameterBindings jdbcParameterBindings,
+			final QueryParameterBinding<?> domainParamBinding,
 			AllowableParameterType<?> parameterType,
 			List<JdbcParameter> jdbcParams,
 			Object bindValue,
 			SharedSessionContractImplementor session) {
+		final MappingMetamodel domainModel = session.getFactory().getDomainModel();
 		final MappingModelExpressable mappingExpressable;
 		if ( parameterType == null ) {
-			EntityPersister entityDescriptor = session.getFactory()
-					.getDomainModel()
-					.findEntityDescriptor( bindValue.getClass() );
-			assert entityDescriptor != null;
-			final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
-			mappingExpressable = identifierMapping;
-			bindValue = identifierMapping.getIdentifier( bindValue, session );
+			if ( domainParamBinding.getType() != null ) {
+				final MappingModelExpressable type = domainParamBinding.getType();
+				if ( type instanceof EntityIdentifierMapping ) {
+					mappingExpressable = type;
+					EntityIdentifierMapping identifierMapping = (EntityIdentifierMapping) type;
+					if ( !identifierMapping.getJavaTypeDescriptor().getJavaType().isInstance( bindValue ) ) {
+						bindValue = identifierMapping.getIdentifier( bindValue, session );
+					}
+				}
+				else if ( type instanceof ToOneAttributeMapping ) {
+					ToOneAttributeMapping association = (ToOneAttributeMapping) type;
+					if ( association.getReferencedPropertyName() == null ) {
+						bindValue = association.getEntityMappingType().getIdentifierMapping().getIdentifier(
+								bindValue,
+								session
+						);
+					}
+					else {
+						bindValue = association.getEntityMappingType()
+								.findAttributeMapping( association.getReferencedPropertyName() )
+								.getPropertyAccess()
+								.getGetter()
+								.get( bindValue );
+					}
+					mappingExpressable = association.getForeignKeyDescriptor();
+				}
+				else {
+					mappingExpressable = type;
+				}
+			}
+			else {
+				throw new IllegalStateException( "Parameter has no type by which it can be bound: " + jdbcParameterBindings );
+			}
 		}
 		else {
-			mappingExpressable = session.getFactory()
-					.getDomainModel()
-					.resolveMappingExpressable( parameterType );
+			mappingExpressable = domainModel.resolveMappingExpressable( parameterType );
 		}
 
 		mappingExpressable.visitJdbcValues(

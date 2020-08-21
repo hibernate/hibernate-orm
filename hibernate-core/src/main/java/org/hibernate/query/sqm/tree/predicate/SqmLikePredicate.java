@@ -46,6 +46,14 @@ public class SqmLikePredicate extends AbstractNegatableSqmPredicate {
 		this( matchExpression, pattern, null, nodeBuilder );
 	}
 
+	public SqmLikePredicate(
+			SqmExpression<?> matchExpression,
+			SqmExpression<?> pattern,
+			boolean negated,
+			NodeBuilder nodeBuilder) {
+		this( matchExpression, pattern, null, negated, nodeBuilder );
+	}
+
 	public SqmExpression<?> getMatchExpression() {
 		return matchExpression;
 	}

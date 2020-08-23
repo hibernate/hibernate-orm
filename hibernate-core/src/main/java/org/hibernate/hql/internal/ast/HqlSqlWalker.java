@@ -141,7 +141,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 	private ArrayList<ParameterSpecification> parameterSpecs = new ArrayList<>();
 	private int numberOfParametersInSetClause;
 
-	private ArrayList assignmentSpecifications = new ArrayList();
+	private ArrayList<AssignmentSpecification> assignmentSpecifications = new ArrayList<>();
 
 	private JoinType impliedJoinType = JoinType.INNER_JOIN;
 
@@ -1393,7 +1393,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		}
 	}
 
-	public ArrayList getAssignmentSpecifications() {
+	public ArrayList<AssignmentSpecification> getAssignmentSpecifications() {
 		return assignmentSpecifications;
 	}
 

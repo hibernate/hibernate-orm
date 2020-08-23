@@ -40,11 +40,13 @@ public class MultiLineImportExtractorTest {
 				assertThat( commands, notNullValue() );
 				assertThat( commands.length, is( 6 ) );
 
+				// for Windows compatibility, System.lineSeparator() has to be used instead of just "\n"
+
 				assertThat( commands[0], startsWith( "CREATE TABLE test_data" ) );
 
 				assertThat( commands[1], is( "INSERT INTO test_data VALUES (1, 'sample')" ) );
 
-				assertThat( commands[2], is( "DELETE\n  FROM test_data" ) );
+				assertThat( commands[2], is( "DELETE" + System.lineSeparator() + "  FROM test_data" ) );
 
 				assertThat( commands[3], startsWith( "INSERT INTO test_data VALUES (2," ) );
 				assertThat( commands[3], containsString( "-- line 2" ) );
@@ -52,7 +54,7 @@ public class MultiLineImportExtractorTest {
 				assertThat( commands[4], startsWith( "INSERT INTO test_data VALUES (3" ) );
 				assertThat( commands[4], not( containsString( "third record" ) ) );
 
-				assertThat( commands[5], startsWith( "INSERT INTO test_data\nVALUES\n" ) );
+				assertThat( commands[5], startsWith( "INSERT INTO test_data" + System.lineSeparator() + "VALUES" + System.lineSeparator() ) );
 			}
 		}
 	}

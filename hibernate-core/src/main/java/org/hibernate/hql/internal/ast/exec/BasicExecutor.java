@@ -64,9 +64,7 @@ public abstract class BasicExecutor implements StatementExecutor {
 		);
 	}
 
-	int doExecute(String sql, QueryParameters parameters,
-				  List<ParameterSpecification> parameterSpecifications,
-				  SharedSessionContractImplementor session)
+	int doExecute(String sql, QueryParameters parameters, List<ParameterSpecification> parameterSpecifications, SharedSessionContractImplementor session)
 			throws HibernateException{
 		try {
 			PreparedStatement st = null;

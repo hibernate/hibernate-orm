@@ -144,12 +144,12 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 				persistentClass.getEntityName()
 		);
 		if ( persistentClass.isPolymorphic() ) {
-			Iterator iter = persistentClass.getSubclassIterator();
+			Iterator<Subclass> subclassIter = persistentClass.getSubclassIterator();
 			int k = 1;
-			while ( iter.hasNext() ) {
-				Subclass sc = (Subclass) iter.next();
-				subclassClosure[k++] = sc.getEntityName();
-				subclassByDiscriminatorValue.put( sc.getSubclassId(), sc.getEntityName() );
+			while ( subclassIter.hasNext() ) {
+				Subclass subclass = subclassIter.next();
+				subclassClosure[k++] = subclass.getEntityName();
+				subclassByDiscriminatorValue.put( subclass.getSubclassId(), subclass.getEntityName() );
 			}
 		}
 
@@ -160,16 +160,15 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		int spacesSize = 1 + persistentClass.getSynchronizedTables().size();
 		spaces = new String[spacesSize];
 		spaces[0] = tableName;
-		Iterator iter = persistentClass.getSynchronizedTables().iterator();
+		Iterator<String> iter = persistentClass.getSynchronizedTables().iterator();
 		for ( int i = 1; i < spacesSize; i++ ) {
-			spaces[i] = (String) iter.next();
+			spaces[i] = iter.next();
 		}
 
-		HashSet subclassTables = new HashSet();
-		iter = persistentClass.getSubclassTableClosureIterator();
-		while ( iter.hasNext() ) {
-			final Table table = (Table) iter.next();
-			subclassTables.add( determineTableName( table, jdbcEnvironment ) );
+		HashSet<String> subclassTables = new HashSet();
+		Iterator<Table> subclassTableIter = persistentClass.getSubclassTableClosureIterator();
+		while ( subclassTableIter.hasNext() ) {
+			subclassTables.add( determineTableName( subclassTableIter.next(), jdbcEnvironment ) );
 		}
 		subclassSpaces = ArrayHelper.toStringArray( subclassTables );
 
@@ -177,22 +176,18 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 		if ( isMultiTable() ) {
 			int idColumnSpan = getIdentifierColumnSpan();
-			ArrayList tableNames = new ArrayList();
-			ArrayList keyColumns = new ArrayList();
-			if ( !isAbstract() ) {
-				tableNames.add( tableName );
-				keyColumns.add( getIdentifierColumnNames() );
-			}
-			iter = persistentClass.getSubclassTableClosureIterator();
-			while ( iter.hasNext() ) {
-				Table tab = (Table) iter.next();
+			ArrayList<String> tableNames = new ArrayList<>();
+			ArrayList<String[]> keyColumns = new ArrayList<>();
+			Iterator<Table> tableIter = persistentClass.getSubclassTableClosureIterator();
+			while ( tableIter.hasNext() ) {
+				Table tab = tableIter.next();
 				if ( !tab.isAbstractUnionTable() ) {
 					final String tableName = determineTableName( tab, jdbcEnvironment );
 					tableNames.add( tableName );
 					String[] key = new String[idColumnSpan];
-					Iterator citer = tab.getPrimaryKey().getColumnIterator();
+					Iterator<Column> citer = tab.getPrimaryKey().getColumnIterator();
 					for ( int k = 0; k < idColumnSpan; k++ ) {
-						key[k] = ( (Column) citer.next() ).getQuotedName( factory.getDialect() );
+						key[k] = citer.next().getQuotedName( factory.getDialect() );
 					}
 					keyColumns.add( key );
 				}

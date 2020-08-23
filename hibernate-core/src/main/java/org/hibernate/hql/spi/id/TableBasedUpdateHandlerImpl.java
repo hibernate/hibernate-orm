@@ -43,7 +43,6 @@ public class TableBasedUpdateHandlerImpl
 	private final String[] updates;
 	private final ParameterSpecification[][] assignmentParameterSpecifications;
 
-	@SuppressWarnings("unchecked")
 	public TableBasedUpdateHandlerImpl(
 			SessionFactoryImplementor factory,
 			HqlSqlWalker walker,
@@ -90,7 +89,7 @@ public class TableBasedUpdateHandlerImpl
 			}
 			if ( affected ) {
 				updates[tableIndex] = update.toStatementString();
-				assignmentParameterSpecifications[tableIndex] = parameterList.toArray( new ParameterSpecification[parameterList.size()] );
+				assignmentParameterSpecifications[tableIndex] = parameterList.toArray( new ParameterSpecification[0] );
 			}
 		}
 	}

@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -33,8 +34,9 @@ import org.hibernate.hql.internal.ast.exec.DeleteExecutor;
 import org.hibernate.hql.internal.ast.exec.InsertExecutor;
 import org.hibernate.hql.internal.ast.exec.MultiTableDeleteExecutor;
 import org.hibernate.hql.internal.ast.exec.MultiTableUpdateExecutor;
+import org.hibernate.hql.internal.ast.exec.SimpleUpdateExecutor;
 import org.hibernate.hql.internal.ast.exec.StatementExecutor;
-import org.hibernate.hql.internal.ast.exec.UpdateExecutor;
+import org.hibernate.hql.internal.ast.exec.IdSubselectUpdateExecutor;
 import org.hibernate.hql.internal.ast.tree.AggregatedSelectExpression;
 import org.hibernate.hql.internal.ast.tree.FromElement;
 import org.hibernate.hql.internal.ast.tree.QueryNode;
@@ -60,8 +62,6 @@ import antlr.ANTLRException;
 import antlr.RecognitionException;
 import antlr.TokenStreamException;
 import antlr.collections.AST;
-
-import static java.util.Collections.singleton;
 
 /**
  * A QueryTranslator that uses an Antlr-based parser.
@@ -609,13 +609,14 @@ public class QueryTranslatorImpl implements FilterTranslator {
 			final FromElement fromElement = walker.getFinalFromClause().getFromElement();
 			final Queryable persister = fromElement.getQueryable();
 
-			boolean affectsExtraTables = persister.isMultiTable()
-					&& !singleton( persister.getTableName() ).containsAll( walker.getQuerySpaces() );
-			if ( affectsExtraTables ) {
+			if ( persister.isMultiTable() && affectsExtraTables( walker, persister ) ) {
 				return new MultiTableUpdateExecutor( walker );
 			}
+			else if ( persister.isMultiTable() && walker.getQuerySpaces().size() > 1 ) {
+				return new IdSubselectUpdateExecutor( walker );
+			}
 			else {
-				return new UpdateExecutor( walker );
+				return new SimpleUpdateExecutor( walker );
 			}
 		}
 		else if ( walker.getStatementType() == HqlSqlTokenTypes.INSERT ) {
@@ -625,6 +626,16 @@ public class QueryTranslatorImpl implements FilterTranslator {
 			throw new QueryException( "Unexpected statement type" );
 		}
 	}
+
+	private static boolean affectsExtraTables(HqlSqlWalker walker, Queryable persister) {
+		String[] tableNames = persister.getConstraintOrderedTableNameClosure();
+		return IntStream.range( 0, tableNames.length ).filter(
+				table -> walker.getAssignmentSpecifications().stream().anyMatch(
+						assign -> assign.affectsTable( tableNames[table] )
+				)
+		).count() > 1;
+	}
+
 	@Override
 	public ParameterTranslations getParameterTranslations() {
 		if ( paramTranslations == null ) {

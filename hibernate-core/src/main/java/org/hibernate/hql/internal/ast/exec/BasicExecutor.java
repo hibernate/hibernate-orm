@@ -8,7 +8,6 @@ package org.hibernate.hql.internal.ast.exec;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.HibernateException;
@@ -17,46 +16,22 @@ import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
-import org.hibernate.hql.internal.ast.HqlSqlWalker;
-import org.hibernate.hql.internal.ast.QuerySyntaxException;
-import org.hibernate.hql.internal.ast.SqlGenerator;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.entity.Queryable;
 
-import antlr.RecognitionException;
-
 /**
- * Implementation of BasicExecutor.
+ * Base implementation of {@link StatementExecutor}.
  *
  * @author Steve Ebersole
  */
-public class BasicExecutor implements StatementExecutor {
-	private final Queryable persister;
-	private final String sql;
-	private final List parameterSpecifications;
+public abstract class BasicExecutor implements StatementExecutor {
 
-	public BasicExecutor(HqlSqlWalker walker, Queryable persister) {
+	final Queryable persister;
+	String sql;
+	List<ParameterSpecification> parameterSpecifications;
+
+	public BasicExecutor(Queryable persister) {
 		this.persister = persister;
-		try {
-			SqlGenerator gen = new SqlGenerator( walker.getSessionFactoryHelper().getFactory() );
-			gen.statement( walker.getAST() );
-			if ( walker.getStatementType() == HqlSqlTokenTypes.UPDATE ) {
-				// workaround for a problem where HqlSqlWalker actually generates
-				// broken SQL with undefined aliases in the where clause, because
-				// that is what MultiTableUpdateExecutor is expecting to get
-				String alias = walker.getFinalFromClause().getFromElement().getTableAlias();
-				sql = gen.getSQL().replace( alias + ".", "" );
-			}
-			else {
-				sql = gen.getSQL();
-			}
-			gen.getParseErrorHandler().throwQueryException();
-			parameterSpecifications = gen.getCollectedParameters();
-		}
-		catch ( RecognitionException e ) {
-			throw QuerySyntaxException.convert( e );
-		}
 	}
 
 	@Override
@@ -65,42 +40,43 @@ public class BasicExecutor implements StatementExecutor {
 	}
 
 	@Override
-	public int execute(QueryParameters parameters, SharedSessionContractImplementor session) throws HibernateException {
-		return doExecute(
-			parameters,
-			session,
-			session.getJdbcServices().getDialect()
-					.addSqlHintOrComment(
-						sql,
-						parameters,
-						session.getFactory().getSessionFactoryOptions().isCommentsEnabled()
-					),
-			parameterSpecifications
-		);
-	}
-	
-	protected int doExecute(QueryParameters parameters, SharedSessionContractImplementor session, String sql,
-			List parameterSpecifications) throws HibernateException {
+	public int execute(QueryParameters parameters, SharedSessionContractImplementor session)
+			throws HibernateException {
+
 		BulkOperationCleanupAction action = new BulkOperationCleanupAction( session, persister );
 		if ( session.isEventSource() ) {
-			( (EventSource) session ).getActionQueue().addAction( action );
+			( (EventSource) session).getActionQueue().addAction( action );
 		}
 		else {
 			action.getAfterTransactionCompletionProcess().doAfterTransactionCompletion( true, session );
 		}
 
-		PreparedStatement st = null;
-		RowSelection selection = parameters.getRowSelection();
+		return doExecute(
+				session.getJdbcServices().getDialect()
+						.addSqlHintOrComment(
+								sql,
+								parameters,
+								session.getFactory().getSessionFactoryOptions().isCommentsEnabled()
+						),
+				parameters,
+				parameterSpecifications,
+				session
+		);
+	}
 
+	int doExecute(String sql, QueryParameters parameters,
+				  List<ParameterSpecification> parameterSpecifications,
+				  SharedSessionContractImplementor session)
+			throws HibernateException{
 		try {
+			PreparedStatement st = null;
 			try {
 				st = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( sql, false );
-				Iterator paramSpecItr = parameterSpecifications.iterator();
 				int pos = 1;
-				while ( paramSpecItr.hasNext() ) {
-					final ParameterSpecification paramSpec = (ParameterSpecification) paramSpecItr.next();
-					pos += paramSpec.bind( st, parameters, session, pos );
+				for ( ParameterSpecification parameter: parameterSpecifications) {
+					pos += parameter.bind( st, parameters, session, pos );
 				}
+				RowSelection selection = parameters.getRowSelection();
 				if ( selection != null ) {
 					if ( selection.getTimeout() != null ) {
 						st.setQueryTimeout( selection.getTimeout() );
@@ -117,7 +93,9 @@ public class BasicExecutor implements StatementExecutor {
 			}
 		}
 		catch( SQLException sqle ) {
-			throw session.getJdbcServices().getSqlExceptionHelper().convert( sqle, "could not execute update query", sql );
+			throw session.getJdbcServices().getSqlExceptionHelper()
+					.convert( sqle, "could not execute update query", sql);
 		}
 	}
+
 }

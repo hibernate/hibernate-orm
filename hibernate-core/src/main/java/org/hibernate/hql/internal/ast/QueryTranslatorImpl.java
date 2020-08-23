@@ -29,18 +29,16 @@ import org.hibernate.hql.internal.QueryExecutionRequestException;
 import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.internal.antlr.HqlTokenTypes;
 import org.hibernate.hql.internal.antlr.SqlTokenTypes;
-import org.hibernate.hql.internal.ast.exec.BasicExecutor;
 import org.hibernate.hql.internal.ast.exec.DeleteExecutor;
+import org.hibernate.hql.internal.ast.exec.InsertExecutor;
 import org.hibernate.hql.internal.ast.exec.MultiTableDeleteExecutor;
 import org.hibernate.hql.internal.ast.exec.MultiTableUpdateExecutor;
 import org.hibernate.hql.internal.ast.exec.StatementExecutor;
+import org.hibernate.hql.internal.ast.exec.UpdateExecutor;
 import org.hibernate.hql.internal.ast.tree.AggregatedSelectExpression;
 import org.hibernate.hql.internal.ast.tree.FromElement;
-import org.hibernate.hql.internal.ast.tree.InsertStatement;
 import org.hibernate.hql.internal.ast.tree.QueryNode;
 import org.hibernate.hql.internal.ast.tree.Statement;
-import org.hibernate.hql.internal.ast.tree.UpdateStatement;
-import org.hibernate.hql.internal.ast.util.ASTPrinter;
 import org.hibernate.hql.internal.ast.util.ASTUtil;
 import org.hibernate.hql.internal.ast.util.NodeTraverser;
 import org.hibernate.hql.internal.ast.util.TokenPrinters;
@@ -597,7 +595,6 @@ public class QueryTranslatorImpl implements FilterTranslator {
 	}
 
 	private StatementExecutor buildAppropriateStatementExecutor(HqlSqlWalker walker) {
-		final Statement statement = (Statement) walker.getAST();
 		if ( walker.getStatementType() == HqlSqlTokenTypes.DELETE ) {
 			final FromElement fromElement = walker.getFinalFromClause().getFromElement();
 			final Queryable persister = fromElement.getQueryable();
@@ -605,7 +602,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 				return new MultiTableDeleteExecutor( walker );
 			}
 			else {
-				return new DeleteExecutor( walker, persister );
+				return new DeleteExecutor( walker );
 			}
 		}
 		else if ( walker.getStatementType() == HqlSqlTokenTypes.UPDATE ) {
@@ -618,11 +615,11 @@ public class QueryTranslatorImpl implements FilterTranslator {
 				return new MultiTableUpdateExecutor( walker );
 			}
 			else {
-				return new BasicExecutor( walker, persister );
+				return new UpdateExecutor( walker );
 			}
 		}
 		else if ( walker.getStatementType() == HqlSqlTokenTypes.INSERT ) {
-			return new BasicExecutor( walker, ( (InsertStatement) statement ).getIntoClause().getQueryable() );
+			return new InsertExecutor( walker );
 		}
 		else {
 			throw new QueryException( "Unexpected statement type" );

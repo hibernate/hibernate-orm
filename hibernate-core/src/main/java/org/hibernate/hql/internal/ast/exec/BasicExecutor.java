@@ -17,6 +17,7 @@ import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.hql.internal.ast.QuerySyntaxException;
 import org.hibernate.hql.internal.ast.SqlGenerator;
@@ -40,7 +41,16 @@ public class BasicExecutor implements StatementExecutor {
 		try {
 			SqlGenerator gen = new SqlGenerator( walker.getSessionFactoryHelper().getFactory() );
 			gen.statement( walker.getAST() );
-			sql = gen.getSQL();
+			if ( walker.getStatementType() == HqlSqlTokenTypes.UPDATE ) {
+				// workaround for a problem where HqlSqlWalker actually generates
+				// broken SQL with undefined aliases in the where clause, because
+				// that is what MultiTableUpdateExecutor is expecting to get
+				String alias = walker.getFinalFromClause().getFromElement().getTableAlias();
+				sql = gen.getSQL().replace( alias + ".", "" );
+			}
+			else {
+				sql = gen.getSQL();
+			}
 			gen.getParseErrorHandler().throwQueryException();
 			parameterSpecifications = gen.getCollectedParameters();
 		}

@@ -63,6 +63,8 @@ import antlr.RecognitionException;
 import antlr.TokenStreamException;
 import antlr.collections.AST;
 
+import static java.util.Collections.singleton;
+
 /**
  * A QueryTranslator that uses an Antlr-based parser.
  *
@@ -609,10 +611,10 @@ public class QueryTranslatorImpl implements FilterTranslator {
 		else if ( walker.getStatementType() == HqlSqlTokenTypes.UPDATE ) {
 			final FromElement fromElement = walker.getFinalFromClause().getFromElement();
 			final Queryable persister = fromElement.getQueryable();
-			if ( persister.isMultiTable() ) {
-				// even here, if only properties mapped to the "base table" are referenced
-				// in the set and where clauses, this could be handled by the BasicDelegate.
-				// TODO : decide if it is better performance-wise to doAfterTransactionCompletion that check, or to simply use the MultiTableUpdateDelegate
+
+			boolean affectsExtraTables = persister.isMultiTable()
+					&& !singleton( persister.getTableName() ).containsAll( walker.getQuerySpaces() );
+			if ( affectsExtraTables ) {
 				return new MultiTableUpdateExecutor( walker );
 			}
 			else {

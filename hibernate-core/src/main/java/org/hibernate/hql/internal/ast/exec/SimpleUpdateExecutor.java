@@ -7,30 +7,35 @@
 package org.hibernate.hql.internal.ast.exec;
 
 import antlr.RecognitionException;
-import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
+import org.hibernate.AssertionFailure;
 import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.hql.internal.ast.QuerySyntaxException;
 import org.hibernate.hql.internal.ast.SqlGenerator;
-import org.hibernate.hql.internal.ast.tree.InsertStatement;
-import org.hibernate.hql.internal.ast.tree.Statement;
-import org.hibernate.param.ParameterSpecification;
-import org.hibernate.persister.entity.Queryable;
-
-import java.util.List;
 
 /**
- * Executes HQL insert statements.
+ * Executes HQL bulk updates against a single table, where the
+ * query only touches columns from the table it's updating, and
+ * so we don't need to use a subselect.
  *
  * @author Gavin King
  */
-public class InsertExecutor extends BasicExecutor {
-	public InsertExecutor(HqlSqlWalker walker) {
-		super( ( (InsertStatement) walker.getAST() ).getIntoClause().getQueryable() );
+public class SimpleUpdateExecutor extends BasicExecutor {
+	public SimpleUpdateExecutor(HqlSqlWalker walker) {
+		super( walker.getFinalFromClause().getFromElement().getQueryable() );
+
+		if ( persister.isMultiTable() && walker.getQuerySpaces().size() > 1 ) {
+			throw new AssertionFailure("not a simple update");
+		}
+
 		try {
 			SqlGenerator gen = new SqlGenerator( walker.getSessionFactoryHelper().getFactory() );
 			gen.statement( walker.getAST() );
-			sql = gen.getSQL();
 			gen.getParseErrorHandler().throwQueryException();
+			// workaround for a problem where HqlSqlWalker actually generates
+			// broken SQL with undefined aliases in the where clause, because
+			// that is what MultiTableUpdateExecutor is expecting to get
+			String alias = walker.getFinalFromClause().getFromElement().getTableAlias();
+			sql = gen.getSQL().replace( alias + ".", "" );
 			parameterSpecifications = gen.getCollectedParameters();
 		}
 		catch ( RecognitionException e ) {

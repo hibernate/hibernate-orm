@@ -594,10 +594,9 @@ public class QueryTranslatorImpl implements FilterTranslator {
 		}
 	}
 
-	private StatementExecutor buildAppropriateStatementExecutor(HqlSqlWalker walker) {
+	protected StatementExecutor buildAppropriateStatementExecutor(HqlSqlWalker walker) {
 		if ( walker.getStatementType() == HqlSqlTokenTypes.DELETE ) {
-			final FromElement fromElement = walker.getFinalFromClause().getFromElement();
-			final Queryable persister = fromElement.getQueryable();
+			final Queryable persister = walker.getFinalFromClause().getFromElement().getQueryable();
 			if ( persister.isMultiTable() ) {
 				return new MultiTableDeleteExecutor( walker );
 			}
@@ -606,9 +605,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 			}
 		}
 		else if ( walker.getStatementType() == HqlSqlTokenTypes.UPDATE ) {
-			final FromElement fromElement = walker.getFinalFromClause().getFromElement();
-			final Queryable persister = fromElement.getQueryable();
-
+			final Queryable persister = walker.getFinalFromClause().getFromElement().getQueryable();
 			if ( persister.isMultiTable() && affectsExtraTables( walker, persister ) ) {
 				return new MultiTableUpdateExecutor( walker );
 			}

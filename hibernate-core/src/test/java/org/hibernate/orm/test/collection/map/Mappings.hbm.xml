@@ -10,7 +10,7 @@
 	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 
-<hibernate-mapping package="org.hibernate.test.collection.map">
+<hibernate-mapping package="org.hibernate.orm.test.collection.map">
 
     <class name="Parent">
 		<id name="name" column="NAME" type="string" />

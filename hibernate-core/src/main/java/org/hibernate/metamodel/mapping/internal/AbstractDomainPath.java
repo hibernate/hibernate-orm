@@ -62,7 +62,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 			SessionFactoryImplementor sessionFactory,
 			SqlExpressionResolver sqlExprResolver) {
 		if ( referenceModelPart instanceof BasicValuedModelPart ) {
-			assSortSpecification(
+			addSortSpecification(
 					(BasicValuedModelPart) referenceModelPart,
 					ast,
 					tableGroup,
@@ -92,7 +92,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 			);
 		}
 		else if ( referenceModelPart instanceof EmbeddableValuedModelPart ) {
-			assSortSpecification(
+			addSortSpecification(
 					(EmbeddableValuedModelPart) referenceModelPart,
 					ast,
 					tableGroup,
@@ -105,11 +105,12 @@ public abstract class AbstractDomainPath implements DomainPath {
 			);
 		}
 		else {
-			throw new NotYetImplementedFor6Exception( "Ordering for " + getReferenceModelPart() + "not yet supported" );
+			// sure it can happen
+			throw new NotYetImplementedFor6Exception( "Ordering for " + getReferenceModelPart() + "not supported" );
 		}
 	}
 
-	private void assSortSpecification(
+	private void addSortSpecification(
 			EmbeddableValuedModelPart embeddableValuedModelPart,
 			QuerySpec ast,
 			TableGroup tableGroup,
@@ -151,7 +152,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 		else {
 			ModelPart subPart = embeddableValuedModelPart.findSubPart( modelPartName, null );
 			assert subPart instanceof BasicValuedModelPart;
-			assSortSpecification(
+			addSortSpecification(
 					(BasicValuedModelPart) subPart,
 					ast,
 					tableGroup,
@@ -162,7 +163,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 		}
 	}
 
-	private void assSortSpecification(
+	private void addSortSpecification(
 			BasicValuedModelPart basicValuedPart,
 			QuerySpec ast,
 			TableGroup tableGroup,

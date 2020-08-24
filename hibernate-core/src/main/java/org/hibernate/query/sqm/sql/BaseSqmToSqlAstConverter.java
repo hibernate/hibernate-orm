@@ -28,6 +28,7 @@ import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
+import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -380,9 +381,7 @@ public abstract class BaseSqmToSqlAstConverter
 		final List<SqmCteTableColumn> sqmCteColumns = sqmCteTable.getColumns();
 		final List<CteColumn> sqlCteColumns = new ArrayList<>( sqmCteColumns.size() );
 
-		for ( int i = 0; i < sqmCteColumns.size(); i++ ) {
-			final SqmCteTableColumn sqmCteTableColumn = sqmCteColumns.get( i );
-
+		for ( final SqmCteTableColumn sqmCteTableColumn : sqmCteColumns ) {
 			sqlCteColumns.add(
 					new CteColumn(
 							sqmCteTableColumn.getColumnName(),
@@ -1148,11 +1147,20 @@ public abstract class BaseSqmToSqlAstConverter
 			SqmParameter expression,
 			MappingModelExpressable valueMapping,
 			Consumer<JdbcParameter> jdbcParameterConsumer) {
-		valueMapping.visitJdbcTypes(
-				jdbcMapping -> jdbcParameterConsumer.accept( new JdbcParameterImpl( jdbcMapping ) ),
-				getCurrentClauseStack().getCurrent(),
-				getCreationContext().getDomainModel().getTypeConfiguration()
-		);
+		if ( valueMapping instanceof EntityValuedModelPart ) {
+			( (EntityValuedModelPart) valueMapping ).getEntityMappingType().getIdentifierMapping().visitJdbcTypes(
+					jdbcMapping -> jdbcParameterConsumer.accept( new JdbcParameterImpl( jdbcMapping ) ),
+					getCurrentClauseStack().getCurrent(),
+					getCreationContext().getDomainModel().getTypeConfiguration()
+			);
+		}
+		else {
+			valueMapping.visitJdbcTypes(
+					jdbcMapping -> jdbcParameterConsumer.accept( new JdbcParameterImpl( jdbcMapping ) ),
+					getCurrentClauseStack().getCurrent(),
+					getCreationContext().getDomainModel().getTypeConfiguration()
+			);
+		}
 	}
 
 	@Override

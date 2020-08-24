@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.sql.internal;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
@@ -45,8 +46,9 @@ public class PluralValuedSimplePathInterpretation<T> extends AbstractSqmPathInte
 		super(sqmPath, mapping, tableGroup);
 		this.sqlExpression = sqlExpression;
 	}
+
 	@Override
 	public void accept(SqlAstWalker sqlTreeWalker) {
-		sqlExpression.accept( sqlTreeWalker );
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 }

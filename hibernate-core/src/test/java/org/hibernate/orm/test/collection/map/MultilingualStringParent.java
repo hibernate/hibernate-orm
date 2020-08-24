@@ -1,4 +1,4 @@
-package org.hibernate.test.collection.map;
+package org.hibernate.orm.test.collection.map;
 
 import javax.persistence.*;
 

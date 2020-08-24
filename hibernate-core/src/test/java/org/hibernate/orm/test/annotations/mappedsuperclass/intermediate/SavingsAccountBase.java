@@ -17,7 +17,8 @@ import javax.persistence.MappedSuperclass;
  */
 @MappedSuperclass
 public abstract class SavingsAccountBase extends Account {
-	@Column(name = "SAVACC_WITHDRAWALLIMIT")
+	@Column(name = "SAVACC_WITHDRAWALLIMIT",
+			precision = 8, scale = 2)
 	private BigDecimal withdrawalLimit;
 
 	protected SavingsAccountBase() {

@@ -77,7 +77,7 @@ public class LocalTimeJavaDescriptor extends AbstractTemporalTypeDescriptor<Loca
 			return null;
 		}
 
-		if ( LocalDate.class.isAssignableFrom( type ) ) {
+		if ( LocalTime.class.isAssignableFrom( type ) ) {
 			return (X) value;
 		}
 

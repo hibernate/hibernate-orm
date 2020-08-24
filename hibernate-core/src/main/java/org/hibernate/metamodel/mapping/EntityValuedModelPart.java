@@ -68,7 +68,10 @@ public interface EntityValuedModelPart extends FetchableContainer {
 			Consumer<JdbcMapping> action,
 			Clause clause,
 			TypeConfiguration typeConfiguration) {
-		getEntityMappingType().visitJdbcTypes( action, clause, typeConfiguration );
+		getEntityMappingType().getAttributeMappings().forEach(
+				attributeMapping ->
+						attributeMapping.visitJdbcTypes( action, clause, typeConfiguration )
+		);
 	}
 
 	@Override
@@ -91,6 +94,8 @@ public interface EntityValuedModelPart extends FetchableContainer {
 			Clause clause,
 			JdbcValuesConsumer consumer,
 			SharedSessionContractImplementor session) {
-		getEntityMappingType().visitJdbcValues( value, clause, consumer, session );
-	}
+		getEntityMappingType().getAttributeMappings().forEach(
+				attributeMapping ->
+						attributeMapping.visitJdbcValues( value, clause, consumer, session )
+		);	}
 }

@@ -58,6 +58,7 @@ public class H2Dialect extends Dialect {
 	private final LimitHandler limitHandler;
 
 	private final boolean cascadeConstraints;
+	private final boolean useLocalTime;
 
 	private final int version;
 
@@ -85,6 +86,8 @@ public class H2Dialect extends Dialect {
 
 		// Prior to 1.4.200 the 'cascade' in 'drop table' was implicit
 		cascadeConstraints = version > 140 || version == 140 && buildId >= 200;
+		// 1.4.200 introduced changes in current_time and current_timestamp
+		useLocalTime = version > 140 || version == 140 && buildId >= 200;
 
 		getDefaultProperties().setProperty( AvailableSettings.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 		// http://code.google.com/p/h2database/issues/detail?id=235
@@ -167,6 +170,21 @@ public class H2Dialect extends Dialect {
 		CommonFunctionFactory.varPopSamp( queryEngine );
 		CommonFunctionFactory.format_formatdatetime( queryEngine );
 		CommonFunctionFactory.rownum( queryEngine );
+	}
+
+	@Override
+	public String currentTime() {
+		return useLocalTime ? "localtime" : super.currentTime();
+	}
+
+	@Override
+	public String currentTimestamp() {
+		return useLocalTime ? "localtimestamp" : super.currentTimestamp();
+	}
+
+	@Override
+	public String currentTimestampWithTimeZone() {
+		return "current_timestamp";
 	}
 
 	/**

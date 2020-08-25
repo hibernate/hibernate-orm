@@ -24,6 +24,8 @@ import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.StringType;
+import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.sql.SmallIntTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
@@ -609,6 +611,21 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	protected String wrapDateLiteral(String date) {
 		//possibly not needed
 		return "cast('" + date + "' as date)";
+	}
+
+	@Override
+	public String getCreateTemporaryTableColumnAnnotation(int sqlTypeCode) {
+		switch (sqlTypeCode) {
+			case Types.CHAR:
+			case Types.NCHAR:
+			case Types.VARCHAR:
+			case Types.NVARCHAR:
+			case Types.LONGVARCHAR:
+			case Types.LONGNVARCHAR:
+				return "collate database_default";
+			default:
+				return "";
+		}
 	}
 
 }

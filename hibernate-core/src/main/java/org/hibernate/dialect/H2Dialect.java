@@ -61,6 +61,7 @@ public class H2Dialect extends Dialect {
 
 	private final int version;
 
+	private final boolean supportsTuplesInSubqueries;
 	private final SequenceInformationExtractor sequenceInformationExtractor;
 	private final String querySequenceString;
 
@@ -78,11 +79,13 @@ public class H2Dialect extends Dialect {
 
 		//Note: H2 'bit' is a synonym for 'boolean', not a proper bit type
 //		registerColumnType( Types.BIT, "bit" );
-
+		final int majorVersion = version / 100;
+		final int minorVersion = version % 100 / 10;
 		if ( version < 120 || version == 120 && buildId < 139 ) {
-			LOG.unsupportedMultiTableBulkHqlJpaql( version / 100, version % 100 / 10, buildId );
-		}
 
+			LOG.unsupportedMultiTableBulkHqlJpaql( majorVersion, minorVersion, buildId );
+		}
+		supportsTuplesInSubqueries = majorVersion > 1 || minorVersion > 4 || buildId >= 198;
 		// Prior to 1.4.200 the 'cascade' in 'drop table' was implicit
 		cascadeConstraints = version > 140 || version == 140 && buildId >= 200;
 
@@ -350,12 +353,12 @@ public class H2Dialect extends Dialect {
 		// see http://groups.google.com/group/h2-database/browse_thread/thread/562d8a49e2dabe99?hl=en
 		return true;
 	}
-	
+
 	@Override
 	public boolean supportsTuplesInSubqueries() {
-		return false;
+		return supportsTuplesInSubqueries;
 	}
-	
+
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
 		return new H2IdentityColumnSupport();

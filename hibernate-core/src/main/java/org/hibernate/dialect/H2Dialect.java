@@ -101,6 +101,12 @@ public class H2Dialect extends Dialect {
 			this.sequenceInformationExtractor = SequenceInformationExtractorNoOpImpl.INSTANCE;
 			this.querySequenceString = null;
 		}
+
+		if ( version < 200 ) {
+			// prior to version 2.0, H2 reported NUMERIC columns as DECIMAL,
+			// which caused problems for schema update tool
+			registerColumnType( Types.NUMERIC, "decimal($p,$s)" );
+		}
 	}
 
 	private static int parseBuildId(DialectResolutionInfo info) {

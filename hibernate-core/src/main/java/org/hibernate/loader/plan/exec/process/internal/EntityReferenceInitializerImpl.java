@@ -214,6 +214,12 @@ public class EntityReferenceInitializerImpl implements EntityReferenceInitialize
 							? LockMode.READ
 							: requestedLockMode;
 
+					final EnhancementAsProxyLazinessInterceptor enhancementAsProxyLazinessInterceptor = (EnhancementAsProxyLazinessInterceptor) interceptor;
+					if ( enhancementAsProxyLazinessInterceptor.isInitializing() ) {
+						return;
+					}
+
+					enhancementAsProxyLazinessInterceptor.setInitializing();
 					loadFromResultSet(
 							resultSet,
 							context,

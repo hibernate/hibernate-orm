@@ -488,26 +488,76 @@ public abstract class Dialect implements ConversionContext {
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "current_instant", "instant" ); //deprecated legacy!
 	}
 
+	/**
+	 * Translation of the HQL/JPQL {@code current_date} function, which
+	 * maps to the Java type {@code java.sql.Date}, and of the HQL
+	 * {@code local_date} function which maps to the Java type
+	 * {@code java.sql.LocalDate}.
+	 */
 	public String currentDate() {
 		return "current_date";
 	}
 
+	/**
+	 * Translation of the HQL/JPQL {@code current_time} function, which
+	 * maps to the Java type {@code java.sql.Time} which is a time with
+	 * no time zone. This contradicts ANSI SQL where {@code current_time}
+	 * has the type {@code TIME WITH TIME ZONE}.
+	 * <p>
+	 * It is recommended to override this in dialects for databases which
+	 * support {@code localtime} or {@code time at local}.
+	 */
 	public String currentTime() {
 		return "current_time";
 	}
 
+	/**
+	 * Translation of the HQL/JPQL {@code current_timestamp} function,
+	 * which maps to the Java type {@code java.sql.Timestamp} which is
+	 * a datetime with no time zone. This contradicts ANSI SQL where
+	 * {@code current_timestamp} has the type
+	 * {@code TIMESTAMP WITH TIME ZONE}.
+	 * <p>
+	 * It is recommended to override this in dialects for databases which
+	 * support {@code localtimestamp} or {@code timestamp at local}.
+	 */
 	public String currentTimestamp() {
 		return "current_timestamp";
 	}
 
+	/**
+	 * Translation of the HQL {@code local_time} function, which maps to
+	 * the Java type {@code java.time.LocalTime} which is a time with no
+	 * time zone. It should usually be the same SQL function as for
+	 * {@link #currentTime()}.
+	 * <p>
+	 * It is recommended to override this in dialects for databases which
+	 * support {@code localtime} or {@code current_time at local}.
+	 */
 	public String currentLocalTime() {
 		return currentTime();
 	}
 
+	/**
+	 * Translation of the HQL {@code local_datetime} function, which maps
+	 * to the Java type {@code java.time.LocalDateTime} which is a datetime
+	 * with no time zone. It should usually be the same SQL function as for
+	 * {@link #currentTimestamp()}.
+	 * <p>
+	 * It is recommended to override this in dialects for databases which
+	 * support {@code localtimestamp} or {@code current_timestamp at local}.
+	 */
 	public String currentLocalTimestamp() {
 		return currentTimestamp();
 	}
 
+	/**
+	 * Translation of the HQL {@code offset_datetime} function, which maps
+	 * to the Java type {@code java.time.OffsetDateTime} which is a datetime
+	 * with a time zone. This in principle correctly maps to the ANSI SQL
+	 * {@code current_timestamp} which has the type
+	 * {@code TIMESTAMP WITH TIME ZONE}.
+	 */
 	public String currentTimestampWithTimeZone() {
 		return currentTimestamp();
 	}

@@ -204,6 +204,21 @@ public class HSQLDialect extends Dialect {
 	}
 
 	@Override
+	public String currentTime() {
+		return "localtime";
+	}
+
+	@Override
+	public String currentTimestamp() {
+		return "localtimestamp";
+	}
+
+	@Override
+	public String currentTimestampWithTimeZone() {
+		return "current_timestamp";
+	}
+
+	@Override
 	public String castPattern(CastType from, CastType to) {
 		if ( from== BOOLEAN
 				&& (to== INTEGER || to== LONG)) {

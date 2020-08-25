@@ -118,6 +118,21 @@ public class PostgreSQLDialect extends Dialect {
 		return version;
 	}
 
+	@Override
+	public String currentTime() {
+		return "localtime";
+	}
+
+	@Override
+	public String currentTimestamp() {
+		return "localtimestamp";
+	}
+
+	@Override
+	public String currentTimestampWithTimeZone() {
+		return "current_timestamp";
+	}
+
 	/**
 	 * The {@code extract()} function returns {@link TemporalUnit#DAY_OF_WEEK}
 	 * numbered from 0 to 6. This isn't consistent with what most other

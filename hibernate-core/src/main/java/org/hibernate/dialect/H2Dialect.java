@@ -210,8 +210,12 @@ public class H2Dialect extends Dialect {
 		registerFunction( "curtime", new NoArgSQLFunction( "curtime", StandardBasicTypes.TIME ) );
 		registerFunction( "curtimestamp", new NoArgSQLFunction( "curtimestamp", StandardBasicTypes.TIME ) );
 		registerFunction( "current_date", new NoArgSQLFunction( "current_date", StandardBasicTypes.DATE ) );
-		registerFunction( "current_time", new NoArgSQLFunction( "current_time", StandardBasicTypes.TIME ) );
-		registerFunction( "current_timestamp", new NoArgSQLFunction( "current_timestamp", StandardBasicTypes.TIMESTAMP ) );
+		// H2 made a nasty breaking change that changed the type of
+		// - current_timestamp to timestamp with time zone
+		// - current_time to time with time zone
+		// and also refuses to implicitly convert the type
+		registerFunction( "current_time", new NoArgSQLFunction( buildId >= 200 ? "localtime" : "current_time", StandardBasicTypes.TIME ) );
+		registerFunction( "current_timestamp", new NoArgSQLFunction( buildId >= 200 ? "localtimestamp" : "current_timestamp", StandardBasicTypes.TIMESTAMP ) );
 		registerFunction( "datediff", new StandardSQLFunction( "datediff", StandardBasicTypes.INTEGER ) );
 		registerFunction( "dayname", new StandardSQLFunction( "dayname", StandardBasicTypes.STRING ) );
 		registerFunction( "dayofmonth", new StandardSQLFunction( "dayofmonth", StandardBasicTypes.INTEGER ) );

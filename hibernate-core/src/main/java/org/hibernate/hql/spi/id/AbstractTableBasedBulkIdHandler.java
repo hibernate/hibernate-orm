@@ -9,6 +9,7 @@ package org.hibernate.hql.spi.id;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
@@ -16,6 +17,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.hql.internal.ast.SqlGenerator;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.persister.entity.Queryable;
@@ -93,7 +95,6 @@ public abstract class AbstractTableBasedBulkIdHandler {
 	 *
 	 * @return The bulk-id-ready {@code WHERE} clause representation
 	 */
-	@SuppressWarnings("unchecked")
 	protected ProcessedWhereClause processWhereClause(AST whereClause) {
 		if ( whereClause.getNumberOfChildren() != 0 ) {
 			// If a where clause was specified in the update/delete query, use it to limit the
@@ -130,10 +131,9 @@ public abstract class AbstractTableBasedBulkIdHandler {
 			IdTableInfo idTableInfo,
 			ProcessedWhereClause whereClause) {
 
-		final Dialect dialect = sessionFactory.getJdbcServices().getJdbcEnvironment().getDialect();
 		final Select select = generateIdSelect( tableAlias, whereClause );
 
-		InsertSelect insert = new InsertSelect( dialect );
+		InsertSelect insert = new InsertSelect( walker.getDialect() );
 		if ( sessionFactory.getSessionFactoryOptions().isCommentsEnabled() ) {
 			insert.setComment( "insert-select for " + getTargetedQueryable().getEntityName() + " ids" );
 		}
@@ -142,24 +142,50 @@ public abstract class AbstractTableBasedBulkIdHandler {
 		return insert.toStatementString();
 	}
 
-	protected Select generateIdSelect(
-			String tableAlias,
-			ProcessedWhereClause whereClause) {
-
-		final Dialect dialect = sessionFactory.getJdbcServices().getJdbcEnvironment().getDialect();
-
-		final Select select = new Select( dialect );
-		final SelectValues selectClause = new SelectValues( dialect ).addColumns(
+	Select generateIdSelect(String tableAlias, ProcessedWhereClause whereClause) {
+		return generateIdSelect(
 				tableAlias,
-				getTargetedQueryable().getIdentifierColumnNames(),
-				getTargetedQueryable().getIdentifierColumnNames()
+				whereClause.getUserWhereClauseFragment(),
+				walker.getDialect(),
+				getTargetedQueryable(),
+				this::addAnyExtraIdSelectValues
 		);
-		addAnyExtraIdSelectValues( selectClause );
+	}
+
+	public static String generateIdSelect(
+			String tableAlias,
+			String whereClause,
+			Dialect dialect,
+			Queryable queryable) {
+		return generateIdSelect(
+				tableAlias,
+				whereClause,
+				dialect,
+				queryable,
+				selectValues -> {}
+		)
+				.toStatementString();
+	}
+
+	private static Select generateIdSelect(
+			String tableAlias,
+			String whereClause,
+			Dialect dialect,
+			Queryable queryable,
+			Consumer<SelectValues> addAnyExtraIdSelectValues) {
+
+		final Select select = new Select(dialect);
+		final SelectValues selectClause = new SelectValues(dialect).addColumns(
+				tableAlias,
+				queryable.getIdentifierColumnNames(),
+				queryable.getIdentifierColumnNames()
+		);
+		addAnyExtraIdSelectValues.accept( selectClause );
 		select.setSelectClause( selectClause.render() );
 
-		String rootTableName = getTargetedQueryable().getTableName();
-		String fromJoinFragment = getTargetedQueryable().fromJoinFragment( tableAlias, true, false );
-		String whereJoinFragment = getTargetedQueryable().whereJoinFragment( tableAlias, true, false );
+		String rootTableName = queryable.getTableName();
+		String fromJoinFragment = queryable.fromJoinFragment(tableAlias, true, false );
+		String whereJoinFragment = queryable.whereJoinFragment(tableAlias, true, false );
 
 		select.setFromClause( rootTableName + ' ' + tableAlias + fromJoinFragment );
 
@@ -173,12 +199,10 @@ public abstract class AbstractTableBasedBulkIdHandler {
 			}
 		}
 
-		if ( whereClause.getUserWhereClauseFragment().length() > 0 ) {
-			if ( whereJoinFragment.length() > 0 ) {
-				whereJoinFragment += " and ";
-			}
+		if ( !whereClause.isEmpty() && !whereJoinFragment.isEmpty() ) {
+			whereJoinFragment += " and ";
 		}
-		select.setWhereClause( whereJoinFragment + whereClause.getUserWhereClauseFragment() );
+		select.setWhereClause( whereJoinFragment + whereClause);
 		return select;
 	}
 
@@ -211,11 +235,11 @@ public abstract class AbstractTableBasedBulkIdHandler {
 		String[] columnNames;
 		if ( keyType.isComponentType() ) {
 			ComponentType componentType = (ComponentType) keyType;
-			List<String> columns = new ArrayList<>(componentType.getPropertyNames().length );
+			List<String> columns = new ArrayList<>( componentType.getPropertyNames().length );
 			for ( String propertyName : componentType.getPropertyNames() ) {
 				Collections.addAll( columns, persister.toColumns( propertyName ) );
 			}
-			columnNames = columns.toArray( new String[columns.size()] );
+			columnNames = columns.toArray( StringHelper.EMPTY_STRINGS );
 		}
 		else {
 			columnNames = persister.getIdentifierColumnNames();

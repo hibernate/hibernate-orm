@@ -11,6 +11,10 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.hql.internal.ast.QuerySyntaxException;
 import org.hibernate.hql.internal.ast.SqlGenerator;
+import org.hibernate.param.ParameterSpecification;
+import org.hibernate.persister.entity.Queryable;
+
+import java.util.List;
 
 /**
  * Executes HQL bulk updates against a single table, where the
@@ -20,8 +24,28 @@ import org.hibernate.hql.internal.ast.SqlGenerator;
  * @author Gavin King
  */
 public class SimpleUpdateExecutor extends BasicExecutor {
+
+	private final Queryable persister;
+	private final String sql;
+	private final List<ParameterSpecification> parameterSpecifications;
+
+	@Override
+	public Queryable getPersister() {
+		return persister;
+	}
+
+	@Override
+	public String getSql() {
+		return sql;
+	}
+
+	@Override
+	public List<ParameterSpecification> getParameterSpecifications() {
+		return parameterSpecifications;
+	}
+
 	public SimpleUpdateExecutor(HqlSqlWalker walker) {
-		super( walker.getFinalFromClause().getFromElement().getQueryable() );
+		persister = walker.getFinalFromClause().getFromElement().getQueryable();
 
 		if ( persister.isMultiTable() && walker.getQuerySpaces().size() > 1 ) {
 			throw new AssertionFailure("not a simple update");

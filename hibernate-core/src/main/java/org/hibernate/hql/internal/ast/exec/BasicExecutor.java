@@ -26,24 +26,20 @@ import org.hibernate.persister.entity.Queryable;
  */
 public abstract class BasicExecutor implements StatementExecutor {
 
-	final Queryable persister;
-	String sql;
-	List<ParameterSpecification> parameterSpecifications;
-
-	public BasicExecutor(Queryable persister) {
-		this.persister = persister;
-	}
+	abstract Queryable getPersister();
+	abstract String getSql();
+	abstract List<ParameterSpecification> getParameterSpecifications();
 
 	@Override
 	public String[] getSqlStatements() {
-		return new String[] { sql };
+		return new String[] { getSql() };
 	}
 
 	@Override
 	public int execute(QueryParameters parameters, SharedSessionContractImplementor session)
 			throws HibernateException {
 
-		BulkOperationCleanupAction action = new BulkOperationCleanupAction( session, persister );
+		BulkOperationCleanupAction action = new BulkOperationCleanupAction( session, getPersister() );
 		if ( session.isEventSource() ) {
 			( (EventSource) session).getActionQueue().addAction( action );
 		}
@@ -54,12 +50,12 @@ public abstract class BasicExecutor implements StatementExecutor {
 		return doExecute(
 				session.getJdbcServices().getDialect()
 						.addSqlHintOrComment(
-								sql,
+								getSql(),
 								parameters,
 								session.getFactory().getSessionFactoryOptions().isCommentsEnabled()
 						),
 				parameters,
-				parameterSpecifications,
+				getParameterSpecifications(),
 				session
 		);
 	}

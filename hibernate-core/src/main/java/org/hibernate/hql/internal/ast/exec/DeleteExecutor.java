@@ -21,8 +21,10 @@ import org.hibernate.hql.internal.ast.QuerySyntaxException;
 import org.hibernate.hql.internal.ast.SqlGenerator;
 import org.hibernate.hql.internal.ast.tree.DeleteStatement;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
+import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.Joinable;
+import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.Delete;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
@@ -45,10 +47,29 @@ import antlr.collections.AST;
 public class DeleteExecutor extends BasicExecutor {
 	private static final Logger LOG = Logger.getLogger( DeleteExecutor.class );
 
+	private final String sql;
+	private final List<ParameterSpecification> parameterSpecifications;
+	private final Queryable persister;
+
 	private final List<String> deletes = new ArrayList<>();
 
+	@Override
+	Queryable getPersister() {
+		return persister;
+	}
+
+	@Override
+	public String getSql() {
+		return sql;
+	}
+
+	@Override
+	public List<ParameterSpecification> getParameterSpecifications() {
+		return parameterSpecifications;
+	}
+
 	public DeleteExecutor(HqlSqlWalker walker) {
-		super( walker.getFinalFromClause().getFromElement().getQueryable() );
+		persister = walker.getFinalFromClause().getFromElement().getQueryable();
 
 		final SessionFactoryImplementor factory = walker.getSessionFactoryHelper().getFactory();
 
@@ -81,8 +102,7 @@ public class DeleteExecutor extends BasicExecutor {
 
 			final boolean commentsEnabled = factory.getSessionFactoryOptions().isCommentsEnabled();
 			final MetamodelImplementor metamodel = factory.getMetamodel();
-			final Dialect dialect = factory.getJdbcServices().getJdbcEnvironment().getDialect();
-			final boolean notSupportingTuplesInSubqueries = !dialect.supportsTuplesInSubqueries();
+			final boolean notSupportingTuplesInSubqueries = !walker.getDialect().supportsTuplesInSubqueries();
 			// If many-to-many, delete the FK row in the collection table.
 			for ( Type type : persister.getPropertyTypes() ) {
 				if ( type.isCollectionType() ) {

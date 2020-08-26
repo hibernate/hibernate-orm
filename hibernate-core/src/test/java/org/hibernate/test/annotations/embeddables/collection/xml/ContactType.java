@@ -1,5 +1,7 @@
 package org.hibernate.test.annotations.embeddables.collection.xml;
 
+import org.hibernate.internal.util.StringHelper;
+
 import java.io.Serializable;
 
 /**
@@ -71,7 +73,7 @@ public class ContactType implements Serializable {
 			result += "id: " + id;
 		}
 		result += ", version: " + version;
-		if ( type != null && !type.trim().isEmpty() ) {
+		if ( !StringHelper.isBlank( type ) ) {
 			result += ", type: " + type;
 		}
 		return result;

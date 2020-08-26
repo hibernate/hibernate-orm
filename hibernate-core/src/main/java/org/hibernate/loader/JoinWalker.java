@@ -1112,7 +1112,7 @@ public class JoinWalker {
 						collectionSuffix,
 						join.getJoinType() == JoinType.LEFT_OUTER_JOIN
 				);
-				if ( selectFragment.trim().length() > 0 ) {
+				if ( !StringHelper.isBlank( selectFragment ) ) {
 					buf.append( ", " ).append( selectFragment );
 				}
 				if ( joinable.consumesEntityAlias() ) {

@@ -41,7 +41,6 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings("unused")
 public class DisjunctionRestrictionProducer implements MatchingIdRestrictionProducer {
 	@Override
 	public Junction produceRestriction(
@@ -67,54 +66,65 @@ public class DisjunctionRestrictionProducer implements MatchingIdRestrictionProd
 			final ColumnReference idColumnReference = new ColumnReference(
 					mutatingTableReference,
 					idColumn,
+					// id columns cannot be formulas and cannot have custom read and write expressions
 					false,
+					null,
+					null,
 					basicIdMapping.getJdbcMapping(),
 					sessionFactory
 			);
 
-			for ( int i = 0; i < matchingIdValues.size(); i++ ) {
-				final Object matchingId = matchingIdValues.get( i );
-
-				predicate.add(
-						new ComparisonPredicate(
-								idColumnReference,
-								ComparisonOperator.EQUAL,
-								new JdbcLiteral<>( matchingId, basicIdMapping.getJdbcMapping() )
-						)
-				);
-
-			}
+			matchingIdValues.forEach(
+					matchingId -> predicate.add(
+							new ComparisonPredicate(
+									idColumnReference,
+									ComparisonOperator.EQUAL,
+									new JdbcLiteral<>( matchingId, basicIdMapping.getJdbcMapping() )
+							)
+					)
+			);
 		}
 		else {
 			final List<ColumnReference> columnReferences = new ArrayList<>( idColumnCount );
 			final List<JdbcMapping> jdbcMappings = new ArrayList<>( idColumnCount );
 			identifierMapping.visitColumns(
-					(containingTableExpression, columnExpression, isColumnExpressionFormula, jdbcMapping) -> {
-						columnReferences.add( new ColumnReference( mutatingTableReference, columnExpression, isColumnExpressionFormula, jdbcMapping, sessionFactory ) );
+					(containingTableExpression, columnExpression, isFormula, readFragment, writeFragment, jdbcMapping) -> {
+						columnReferences.add(
+								new ColumnReference(
+										mutatingTableReference,
+										columnExpression,
+										false,
+										null,
+										null,
+										jdbcMapping,
+										sessionFactory
+								)
+						);
 						jdbcMappings.add( jdbcMapping );
 					}
 			);
 
-			for ( int i = 0; i < matchingIdValues.size(); i++ ) {
-				final Junction idMatch = new Junction( Junction.Nature.CONJUNCTION );
+			matchingIdValues.forEach(
+					matchingId -> {
+						final Junction idMatch = new Junction( Junction.Nature.CONJUNCTION );
 
-				final Object matchingId = matchingIdValues.get( i );
-				assert matchingId instanceof Object[];
+						assert matchingId instanceof Object[];
 
-				final Object[] matchingIdParts = (Object[]) matchingId;
+						final Object[] matchingIdParts = (Object[]) matchingId;
 
-				for ( int p = 0; p < matchingIdParts.length; p++ ) {
-					idMatch.add(
-							new ComparisonPredicate(
-									columnReferences.get( p ),
-									ComparisonOperator.EQUAL,
-									new JdbcLiteral<>( matchingIdParts[ p ], jdbcMappings.get( p ) )
-							)
-					);
-				}
+						for ( int p = 0; p < matchingIdParts.length; p++ ) {
+							idMatch.add(
+									new ComparisonPredicate(
+											columnReferences.get( p ),
+											ComparisonOperator.EQUAL,
+											new JdbcLiteral<>( matchingIdParts[ p ], jdbcMappings.get( p ) )
+									)
+							);
+						}
 
-				predicate.add( idMatch );
-			}
+						predicate.add( idMatch );
+					}
+			);
 		}
 
 		return predicate;

@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.test.annotations.various.readwriteexpression;
+package org.hibernate.orm.test.columntransformer;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -18,6 +18,12 @@ import org.hibernate.annotations.ColumnTransformer;
 @Entity
 @Table(name="t_staff")
 public class Staff {
+
+	/**
+	 * For Hibernate
+	 */
+	private Staff() {
+	}
 
 	public Staff(double sizeInInches, double radius, double diameter, Integer id) {
 		this.sizeInInches = sizeInInches;

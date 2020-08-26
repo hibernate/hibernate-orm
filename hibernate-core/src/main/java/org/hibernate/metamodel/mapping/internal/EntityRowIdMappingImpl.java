@@ -88,6 +88,12 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping {
 								columnTableReference,
 								rowIdName,
 								false,
+								// todo (6.0) : allowing custom read / write transformers on ROW_ID might
+								//		be an easy way to allow customization of the how ROW_ID is rendered
+								//		- e.g. quickly testing whether that syntax works for a db without
+								//			having to write a Dialect
+								null,
+								null,
 								JavaObjectType.INSTANCE,
 								sqlAstCreationState.getCreationContext().getSessionFactory()
 						)

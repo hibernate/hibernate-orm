@@ -23,8 +23,10 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.Selectable;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
@@ -71,6 +73,7 @@ public class EmbeddableMappingType implements ManagedMappingType {
 		);
 
 		creationProcess.registerInitializationCallback(
+				"EmbeddableMappingType#finishInitialization",
 				() -> mappingType.finishInitialization(
 						bootDescriptor,
 						compositeType,
@@ -101,6 +104,7 @@ public class EmbeddableMappingType implements ManagedMappingType {
 		);
 
 		creationProcess.registerInitializationCallback(
+				"EmbeddableMappingType(" + embeddedRole + ")#finishInitialization",
 				() -> mappingType.finishInitialization(
 						bootDescriptor,
 						compositeType,
@@ -111,7 +115,7 @@ public class EmbeddableMappingType implements ManagedMappingType {
 		return mappingType;
 	}
 
-	private final JavaTypeDescriptor embeddableJtd;
+	private final JavaTypeDescriptor<?> embeddableJtd;
 	private final EmbeddableRepresentationStrategy representationStrategy;
 
 	private final SessionFactoryImplementor sessionFactory;
@@ -125,7 +129,7 @@ public class EmbeddableMappingType implements ManagedMappingType {
 	private final boolean createEmptyCompositesEnabled;
 
 	private EmbeddableMappingType(
-			@SuppressWarnings("unused") Component bootDescriptor,
+			Component bootDescriptor,
 			EmbeddableRepresentationStrategy representationStrategy,
 			Function<EmbeddableMappingType, EmbeddableValuedModelPart> embeddedPartBuilder,
 			SessionFactoryImplementor sessionFactory) {
@@ -166,6 +170,12 @@ public class EmbeddableMappingType implements ManagedMappingType {
 
 			final Type subtype = subtypes[attributeIndex];
 			if ( subtype instanceof BasicType ) {
+				final BasicValue basicValue = (BasicValue) bootPropertyDescriptor.getValue();
+				final Selectable selectable = basicValue.getColumn();
+
+				final String mappedColumnExpression = mappedColumnExpressions.get( columnPosition++ );
+				assert mappedColumnExpression.equals( selectable.getText( creationProcess.getCreationContext().getSessionFactory().getDialect() ) );
+
 				attributeMappings.put(
 						bootPropertyDescriptor.getName(),
 						MappingModelCreationHelper.buildBasicAttributeMapping(
@@ -174,10 +184,12 @@ public class EmbeddableMappingType implements ManagedMappingType {
 								attributeIndex,
 								bootPropertyDescriptor,
 								this,
-								(BasicType) subtype,
+								(BasicType<?>) subtype,
 								containingTableExpression,
-								mappedColumnExpressions.get( columnPosition++ ),
+								mappedColumnExpression,
 								false,
+								selectable.getCustomReadExpression(),
+								selectable.getCustomWriteExpression(),
 								representationStrategy.resolvePropertyAccess( bootPropertyDescriptor ),
 								compositeType.getCascadeStyle( attributeIndex ),
 								creationProcess
@@ -187,6 +199,16 @@ public class EmbeddableMappingType implements ManagedMappingType {
 			else if ( subtype instanceof CompositeType ) {
 				final CompositeType subCompositeType = (CompositeType) subtype;
 				final int columnSpan = subCompositeType.getColumnSpan( creationProcess.getCreationContext().getSessionFactory() );
+
+				final List<String> customReadExpressions = new ArrayList<>( columnSpan );
+				final List<String> customWriteExpressions = new ArrayList<>( columnSpan );
+
+				final Iterator<Selectable> columnIterator = bootDescriptor.getColumnIterator();
+				while ( columnIterator.hasNext() ) {
+					final Selectable selectable = columnIterator.next();
+					customReadExpressions.add( selectable.getCustomReadExpression() );
+					customWriteExpressions.add( selectable.getCustomWriteExpression() );
+				}
 
 				attributeMappings.put(
 						bootPropertyDescriptor.getName(),
@@ -198,6 +220,10 @@ public class EmbeddableMappingType implements ManagedMappingType {
 								subCompositeType,
 								containingTableExpression,
 								ArrayHelper.toStringArray( mappedColumnExpressions.subList( columnPosition, columnPosition + columnSpan ) ),
+//								ArrayHelper.toStringArray( customReadExpressions.subList( columnPosition, columnPosition + columnSpan ) ),
+//								ArrayHelper.toStringArray( customWriteExpressions.subList( columnPosition, columnPosition + columnSpan ) ),
+								ArrayHelper.toStringArray( customReadExpressions ),
+								ArrayHelper.toStringArray( customWriteExpressions ),
 								representationStrategy.resolvePropertyAccess( bootPropertyDescriptor ),
 								compositeType.getCascadeStyle( attributeIndex ),
 								creationProcess

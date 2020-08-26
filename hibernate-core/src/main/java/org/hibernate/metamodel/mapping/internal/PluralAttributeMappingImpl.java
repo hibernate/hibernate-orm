@@ -247,8 +247,8 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping
 				.getDialect();
 		if ( collectionDescriptor.getElementType() instanceof EntityType ) {
 			creationProcess.registerForeignKeyPostInitCallbacks(
+					"To-many key - " + getNavigableRole(),
 					() -> {
-
 						elementFkDescriptor = createForeignKeyDescriptor(
 								bootDescriptor.getElement(),
 								(EntityType) collectionDescriptor.getElementType(),
@@ -261,6 +261,7 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping
 		}
 		if ( collectionDescriptor.getIndexType() instanceof EntityType ) {
 			creationProcess.registerForeignKeyPostInitCallbacks(
+					"To-many index - " + getNavigableRole(),
 					() -> {
 						indexFkDescriptor = createForeignKeyDescriptor(
 								( (IndexedCollection) bootDescriptor ).getIndex(),

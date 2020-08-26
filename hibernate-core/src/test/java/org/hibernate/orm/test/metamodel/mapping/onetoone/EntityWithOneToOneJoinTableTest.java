@@ -47,14 +47,18 @@ public class EntityWithOneToOneJoinTableTest {
 		final ToOneAttributeMapping otherAttributeMapping = (ToOneAttributeMapping) other;
 
 		final ForeignKeyDescriptor foreignKeyDescriptor = otherAttributeMapping.getForeignKeyDescriptor();
-		foreignKeyDescriptor.visitReferringColumns( (keyTable, keyColumn, isKeyColumnFormula, jdbcMapping) -> {
-			assertThat( keyTable, is( "Entity_SimpleEntity" ) );
-			assertThat( keyColumn, is( "other_id" ) );
-		} );
+		foreignKeyDescriptor.visitReferringColumns(
+				(keyTable, keyColumn, isKeyColumnFormula, readFragment, writeFragment, jdbcMapping) -> {
+					assertThat( keyTable, is( "Entity_SimpleEntity" ) );
+					assertThat( keyColumn, is( "other_id" ) );
+				}
+		);
 
-		foreignKeyDescriptor.visitTargetColumns( (targetTable, targetColumn, isTargetColumnFormula, jdbcMapping) -> {
-			assertThat( targetTable, is( "SIMPLE_ENTITY" ) );
-			assertThat( targetColumn, is( "id" ) );
-		} );
+		foreignKeyDescriptor.visitTargetColumns(
+				(targetTable, targetColumn, isTargetColumnFormula, readFragment, writeFragment, jdbcMapping) -> {
+					assertThat( targetTable, is( "SIMPLE_ENTITY" ) );
+					assertThat( targetColumn, is( "id" ) );
+				}
+		);
 	}
 }

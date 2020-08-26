@@ -240,15 +240,17 @@ public class Ejb3Column {
 			this.mappingColumn.setSqlType( sqlType );
 			this.mappingColumn.setUnique( unique );
 
-			if(writeExpression != null && !writeExpression.matches("[^?]*\\?[^?]*")) {
+			if ( writeExpression != null && !writeExpression.matches("[^?]*\\?[^?]*" ) ) {
 				throw new AnnotationException(
 						"@WriteExpression must contain exactly one value placeholder ('?') character: property ["
 								+ propertyName + "] and column [" + logicalColumnName + "]"
 				);
 			}
+
 			if ( readExpression != null) {
-				this.mappingColumn.setCustomRead( readExpression );
+				this.mappingColumn.setResolvedCustomRead( readExpression );
 			}
+
 			if ( writeExpression != null) {
 				this.mappingColumn.setCustomWrite( writeExpression );
 			}
@@ -657,14 +659,8 @@ public class Ejb3Column {
 
 		if ( StringHelper.isEmpty( annotation.forColumn() )
 				|| annotation.forColumn().equals( nonNullLogicalColumnName ) ) {
-			readExpression = annotation.read();
-			if ( StringHelper.isEmpty( readExpression ) ) {
-				readExpression = null;
-			}
-			writeExpression = annotation.write();
-			if ( StringHelper.isEmpty( writeExpression ) ) {
-				writeExpression = null;
-			}
+			readExpression = StringHelper.nullIfEmpty( annotation.read() );
+			writeExpression = StringHelper.nullIfEmpty( annotation.write() );
 		}
 	}
 

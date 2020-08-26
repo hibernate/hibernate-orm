@@ -9,11 +9,9 @@ package org.hibernate.metamodel.mapping.internal;
 import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
-import org.hibernate.MappingException;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.ColumnConsumer;
 import org.hibernate.metamodel.mapping.ConvertibleModelPart;
@@ -26,7 +24,6 @@ import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.Template;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -51,9 +48,12 @@ public class BasicValuedSingularAttributeMapping
 		extends AbstractSingularAttributeMapping
 		implements SingularAttributeMapping, BasicValuedModelPart, ConvertibleModelPart {
 	private final NavigableRole navigableRole;
+
 	private final String tableExpression;
 	private final String mappedColumnExpression;
-	private final boolean isMappedColumnExpressionFormula;
+	private final boolean isFormula;
+	private final String customReadExpression;
+	private final String customWriteExpression;
 
 	private final JdbcMapping jdbcMapping;
 	private final BasicValueConverter valueConverter;
@@ -69,7 +69,9 @@ public class BasicValuedSingularAttributeMapping
 			FetchStrategy mappedFetchStrategy,
 			String tableExpression,
 			String mappedColumnExpression,
-			boolean isMappedColumnExpressionFormula,
+			boolean isFormula,
+			String customReadExpression,
+			String customWriteExpression,
 			BasicValueConverter valueConverter,
 			JdbcMapping jdbcMapping,
 			ManagedMappingType declaringType,
@@ -78,7 +80,7 @@ public class BasicValuedSingularAttributeMapping
 		this.navigableRole = navigableRole;
 		this.tableExpression = tableExpression;
 		this.mappedColumnExpression = mappedColumnExpression;
-		this.isMappedColumnExpressionFormula = isMappedColumnExpressionFormula;
+		this.isFormula = isFormula;
 		this.valueConverter = valueConverter;
 		this.jdbcMapping = jdbcMapping;
 
@@ -87,6 +89,15 @@ public class BasicValuedSingularAttributeMapping
 		}
 		else {
 			domainTypeDescriptor = valueConverter.getDomainJavaDescriptor();
+		}
+
+		this.customReadExpression = customReadExpression;
+
+		if ( isFormula ) {
+			this.customWriteExpression = null;
+		}
+		else {
+			this.customWriteExpression = customWriteExpression;
 		}
 	}
 
@@ -112,7 +123,17 @@ public class BasicValuedSingularAttributeMapping
 
 	@Override
 	public boolean isMappedColumnExpressionFormula() {
-		return isMappedColumnExpressionFormula;
+		return isFormula;
+	}
+
+	@Override
+	public String getCustomReadExpression() {
+		return customReadExpression;
+	}
+
+	@Override
+	public String getCustomWriteExpression() {
+		return customWriteExpression;
 	}
 
 	@Override
@@ -165,6 +186,8 @@ public class BasicValuedSingularAttributeMapping
 								tableAlias,
 								columnExpression,
 								isMappedColumnExpressionFormula(),
+								customReadExpression,
+								customWriteExpression,
 								jdbcMapping,
 								creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
 						)
@@ -194,6 +217,8 @@ public class BasicValuedSingularAttributeMapping
 								tableReference.getIdentificationVariable(),
 								getMappedColumnExpression(),
 								isMappedColumnExpressionFormula(),
+								customReadExpression,
+								customWriteExpression,
 								jdbcMapping,
 								creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
 						)
@@ -261,6 +286,13 @@ public class BasicValuedSingularAttributeMapping
 
 	@Override
 	public void visitColumns(ColumnConsumer consumer) {
-		consumer.accept( tableExpression, mappedColumnExpression, isMappedColumnExpressionFormula, jdbcMapping );
+		consumer.accept(
+				tableExpression,
+				mappedColumnExpression,
+				isFormula,
+				customReadExpression,
+				customWriteExpression,
+				jdbcMapping
+		);
 	}
 }

@@ -34,12 +34,10 @@ import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.loader.ast.spi.Loader;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.CollectionPart;
-import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
@@ -281,7 +279,7 @@ public class LoaderSelectBuilder {
 		final NavigablePath rootNavigablePath = new NavigablePath( loadable.getRootPathName() );
 
 		final QuerySpec rootQuerySpec = new QuerySpec( true );
-		final List<DomainResult> domainResults;
+		final List<DomainResult<?>> domainResults;
 
 		final LoaderSqlAstCreationState sqlAstCreationState = new LoaderSqlAstCreationState(
 				rootQuerySpec,
@@ -325,7 +323,10 @@ public class LoaderSelectBuilder {
 			// use the one passed to the constructor or create one (maybe always create and pass?)
 			//		allows re-use as they can be re-used to save on memory - they
 			//		do not share state between
+
+			//noinspection rawtypes
 			final DomainResult domainResult;
+
 			if ( this.cachedDomainResult != null ) {
 				// used the one passed to the constructor
 				domainResult = this.cachedDomainResult;
@@ -340,6 +341,7 @@ public class LoaderSelectBuilder {
 				);
 			}
 
+			//noinspection unchecked
 			domainResults = Collections.singletonList( domainResult );
 		}
 
@@ -371,7 +373,7 @@ public class LoaderSelectBuilder {
 			);
 		}
 
-		return new SelectStatement( rootQuerySpec, domainResults );
+		return new SelectStatement( rootQuerySpec, (List) domainResults );
 	}
 
 	private void applyRestriction(
@@ -386,16 +388,18 @@ public class LoaderSelectBuilder {
 
 		if ( numberColumns == 1 ) {
 			modelPart.visitColumns(
-					(containingTableExpression, columnExpression, isColumnExpressionFormula, jdbcMapping) -> {
+					(table, column, isFormula, customReadExpr, customWriteExpr, jdbcMapping) -> {
 						final TableReference tableReference = rootTableGroup.resolveTableReference(
-								containingTableExpression );
+								table );
 						final ColumnReference columnRef =
 								(ColumnReference) sqlExpressionResolver.resolveSqlExpression(
-										createColumnReferenceKey( tableReference, columnExpression ),
+										createColumnReferenceKey( tableReference, column ),
 										p -> new ColumnReference(
 												tableReference,
-												columnExpression,
-												isColumnExpressionFormula,
+												column,
+												isFormula,
+												customReadExpr,
+												customWriteExpr,
 												jdbcMapping,
 												creationContext.getSessionFactory()
 										)
@@ -428,15 +432,17 @@ public class LoaderSelectBuilder {
 			final List<ColumnReference> columnReferences = new ArrayList<>( numberColumns );
 
 			modelPart.visitColumns(
-					(containingTableExpression, columnExpression, isColumnExpressionFormula, jdbcMapping) -> {
-						final TableReference tableReference = rootTableGroup.resolveTableReference( containingTableExpression );
+					(table, column, isFormula, customReadExpr, customWriteExpr, jdbcMapping) -> {
+						final TableReference tableReference = rootTableGroup.resolveTableReference( table );
 						columnReferences.add(
 								(ColumnReference) sqlExpressionResolver.resolveSqlExpression(
-										createColumnReferenceKey( tableReference, columnExpression ),
+										createColumnReferenceKey( tableReference, column ),
 										p -> new ColumnReference(
 												tableReference,
-												columnExpression,
-												isColumnExpressionFormula,
+												column,
+												isFormula,
+												customReadExpr,
+												customWriteExpr,
 												jdbcMapping,
 												creationContext.getSessionFactory()
 										)
@@ -802,6 +808,8 @@ public class LoaderSelectBuilder {
 							rootTableGroup.resolveTableReference( simpleFkDescriptor.getContainingTableExpression() ),
 							simpleFkDescriptor.getMappedColumnExpression(),
 							false,
+							null,
+							null,
 							simpleFkDescriptor.getJdbcMapping(),
 							this.creationContext.getSessionFactory()
 					)
@@ -810,14 +818,16 @@ public class LoaderSelectBuilder {
 		else {
 			final List<ColumnReference> columnReferences = new ArrayList<>( jdbcTypeCount );
 			fkDescriptor.visitColumns(
-					(containingTableExpression, columnExpression, isColumnExpressionFormula, jdbcMapping) ->
+					(table, column, isFormula, customReadExpr, customWriteExpr, jdbcMapping) ->
 						columnReferences.add(
 								(ColumnReference) sqlAstCreationState.getSqlExpressionResolver().resolveSqlExpression(
-										createColumnReferenceKey( containingTableExpression, columnExpression ),
+										createColumnReferenceKey( table, column ),
 										sqlAstProcessingState -> new ColumnReference(
-												rootTableGroup.resolveTableReference( containingTableExpression ),
-												columnExpression,
-												isColumnExpressionFormula,
+												rootTableGroup.resolveTableReference( table ),
+												column,
+												isFormula,
+												customReadExpr,
+												customWriteExpr,
 												jdbcMapping,
 												this.creationContext.getSessionFactory()
 										)
@@ -867,15 +877,17 @@ public class LoaderSelectBuilder {
 
 		final MutableInteger count = new MutableInteger();
 		fkDescriptor.visitTargetColumns(
-				(containingTableExpression, columnExpression, isColumnExpressionFormula, jdbcMapping) -> {
+				(table, column, isFormula, customReadExpr, customWriteExpr, jdbcMapping) -> {
 					// for each column, resolve a SqlSelection and add it to the sub-query select-clause
-					final TableReference tableReference = ownerTableGroup.resolveTableReference( containingTableExpression );
+					final TableReference tableReference = ownerTableGroup.resolveTableReference( table );
 					final Expression expression = sqlExpressionResolver.resolveSqlExpression(
-							createColumnReferenceKey( tableReference, columnExpression ),
+							createColumnReferenceKey( tableReference, column ),
 							sqlAstProcessingState -> new ColumnReference(
 									tableReference,
-									columnExpression,
-									isColumnExpressionFormula,
+									column,
+									isFormula,
+									customReadExpr,
+									customWriteExpr,
 									jdbcMapping,
 									sessionFactory
 							)

@@ -41,16 +41,11 @@ import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.UUIDCharType;
 
-import org.jboss.logging.Logger;
-
 /**
  * @author Steve Ebersole
  */
 @SuppressWarnings("WeakerAccess")
 public final class ExecuteWithIdTableHelper {
-	private static final Logger log = Logger.getLogger( ExecuteWithIdTableHelper.class );
-	public static final boolean debugging = log.isDebugEnabled();
-
 	private ExecuteWithIdTableHelper() {
 	}
 
@@ -76,7 +71,16 @@ public final class ExecuteWithIdTableHelper {
 		for ( int i = 0; i < idTable.getIdTableColumns().size(); i++ ) {
 			final IdTableColumn column = idTable.getIdTableColumns().get( i );
 			idTableInsert.addTargetColumnReferences(
-					new ColumnReference( idTableReference, column.getColumnName(), false, column.getJdbcMapping(), factory )
+					new ColumnReference(
+							idTableReference,
+							column.getColumnName(),
+							// id columns cannot be formulas and cannot have custom read and write expressions
+							false,
+							null,
+							null,
+							column.getJdbcMapping(),
+							factory
+					)
 			);
 		}
 
@@ -88,7 +92,7 @@ public final class ExecuteWithIdTableHelper {
 		final MutableInteger positionWrapper = new MutableInteger();
 
 		mutatingEntityDescriptor.getIdentifierMapping().visitColumns(
-				(containingTableExpression, columnExpression, isColumnExpressionFormula, jdbcMapping) -> {
+				(containingTableExpression, columnExpression, isFormula, readFragment, writeFragment, jdbcMapping) -> {
 					final int jdbcPosition = positionWrapper.getAndIncrement();
 					final TableReference tableReference = mutatingTableGroup.resolveTableReference( containingTableExpression );
 					matchingIdSelection.getSelectClause().addSqlSelection(
@@ -100,7 +104,9 @@ public final class ExecuteWithIdTableHelper {
 											sqlAstProcessingState -> new ColumnReference(
 													tableReference,
 													columnExpression,
-													isColumnExpressionFormula,
+													false,
+													null,
+													null,
 													jdbcMapping,
 													factory
 											)
@@ -192,6 +198,8 @@ public final class ExecuteWithIdTableHelper {
 										tableReference,
 										idTableColumn.getColumnName(),
 										false,
+										null,
+										null,
 										idTableColumn.getJdbcMapping(),
 										executionContext.getSession().getFactory()
 								)
@@ -214,6 +222,8 @@ public final class ExecuteWithIdTableHelper {
 									idTableReference,
 									idTable.getSessionUidColumn().getColumnName(),
 									false,
+									null,
+									null,
 									idTable.getSessionUidColumn().getJdbcMapping(),
 									executionContext.getSession().getFactory()
 							),

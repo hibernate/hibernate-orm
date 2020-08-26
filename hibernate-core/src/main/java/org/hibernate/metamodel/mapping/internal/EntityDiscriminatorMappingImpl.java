@@ -50,6 +50,8 @@ public class EntityDiscriminatorMappingImpl extends AbstractEntityDiscriminatorM
 								tableReference.getIdentificationVariable(),
 								getMappedColumnExpression(),
 								false,
+								null,
+								null,
 								getJdbcMapping(),
 								creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
 						)
@@ -67,5 +69,15 @@ public class EntityDiscriminatorMappingImpl extends AbstractEntityDiscriminatorM
 	@Override
 	public EntityMappingType findContainingEntityMapping() {
 		return getEntityDescriptor();
+	}
+
+	@Override
+	public String getCustomReadExpression() {
+		return null;
+	}
+
+	@Override
+	public String getCustomWriteExpression() {
+		return null;
 	}
 }

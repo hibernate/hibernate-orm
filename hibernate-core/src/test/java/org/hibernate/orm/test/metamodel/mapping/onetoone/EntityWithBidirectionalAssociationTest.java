@@ -51,15 +51,19 @@ public class EntityWithBidirectionalAssociationTest {
 		final ToOneAttributeMapping childAttributeMapping = (ToOneAttributeMapping) childAssociation;
 
 		ForeignKeyDescriptor foreignKeyDescriptor = childAttributeMapping.getForeignKeyDescriptor();
-		foreignKeyDescriptor.visitReferringColumns( (keyTable, keyColumn, isKeyColumnFormula, jdbcMapping) -> {
-			assertThat( keyTable, is( "PARENT" ) );
-			assertThat( keyColumn, is( "child_id" ) );
-		} );
+		foreignKeyDescriptor.visitReferringColumns(
+				(keyTable, keyColumn, isKeyColumnFormula, readFragment, writeFragment, jdbcMapping) -> {
+					assertThat( keyTable, is( "PARENT" ) );
+					assertThat( keyColumn, is( "child_id" ) );
+				}
+		);
 
-		foreignKeyDescriptor.visitTargetColumns( (targetTable, targetColumn, isTargetColumnFormula, jdbcMapping) -> {
-			assertThat( targetTable, is( "CHILD" ) );
-			assertThat( targetColumn, is( "id" ) );
-		} );
+		foreignKeyDescriptor.visitTargetColumns(
+				(targetTable, targetColumn, isTargetColumnFormula, readFragment, writeFragment, jdbcMapping) -> {
+					assertThat( targetTable, is( "CHILD" ) );
+					assertThat( targetColumn, is( "id" ) );
+				}
+		);
 
 		final EntityPersister childDescriptor = scope.getSessionFactory()
 				.getMetamodel()
@@ -72,15 +76,19 @@ public class EntityWithBidirectionalAssociationTest {
 		final ToOneAttributeMapping parentAttributeMapping = (ToOneAttributeMapping) parentAssociation;
 
 		foreignKeyDescriptor = parentAttributeMapping.getForeignKeyDescriptor();
-		foreignKeyDescriptor.visitReferringColumns( (keyTable, keyColumn, isKeyColumnFormula, jdbcMapping) -> {
-			assertThat( keyTable, is( "PARENT" ) );
-			assertThat( keyColumn, is( "child_id" ) );
-		} );
+		foreignKeyDescriptor.visitReferringColumns(
+				(keyTable, keyColumn, isKeyColumnFormula, readFragment, writeFragment, jdbcMapping) -> {
+					assertThat( keyTable, is( "PARENT" ) );
+					assertThat( keyColumn, is( "child_id" ) );
+				}
+		);
 
-		foreignKeyDescriptor.visitTargetColumns( (targetTable, targetColumn, isTargetColumnFormula, jdbcMapping) -> {
-			assertThat( targetTable, is( "CHILD" ) );
-			assertThat( targetColumn, is( "id" ) );
-		} );
+		foreignKeyDescriptor.visitTargetColumns(
+				(targetTable, targetColumn, isTargetColumnFormula, readFragment, writeFragment, jdbcMapping) -> {
+					assertThat( targetTable, is( "CHILD" ) );
+					assertThat( targetColumn, is( "id" ) );
+				}
+		);
 	}
 
 	@Entity(name = "Parent")

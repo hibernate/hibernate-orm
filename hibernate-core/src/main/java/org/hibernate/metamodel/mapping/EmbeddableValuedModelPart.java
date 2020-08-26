@@ -44,6 +44,9 @@ public interface EmbeddableValuedModelPart extends ModelPart, Fetchable, Fetchab
 	 */
 	List<String> getMappedColumnExpressions();
 
+	List<String> getCustomReadExpressions();
+	List<String> getCustomWriteExpressions();
+
 	/**
 	 * @see org.hibernate.annotations.Parent
 	 */

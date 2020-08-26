@@ -42,13 +42,13 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 	private final CollectionPersister collectionDescriptor;
 	private final String containingTableName;
 	private final String columnName;
-	private final BasicType type;
+	private final BasicType<?> type;
 
 	public CollectionIdentifierDescriptorImpl(
 			CollectionPersister collectionDescriptor,
 			String containingTableName,
 			String columnName,
-			BasicType type) {
+			BasicType<?> type) {
 		this.navigableRole = collectionDescriptor.getNavigableRole().append( Nature.ID.getName() );
 		this.collectionDescriptor = collectionDescriptor;
 		this.containingTableName = containingTableName;
@@ -72,6 +72,16 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 	}
 
 	@Override
+	public String getCustomReadExpression() {
+		return null;
+	}
+
+	@Override
+	public String getCustomWriteExpression() {
+		return null;
+	}
+
+	@Override
 	public MappingType getPartMappingType() {
 		return type;
 	}
@@ -87,7 +97,7 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 	}
 
 	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
+	public JavaTypeDescriptor<?> getJavaTypeDescriptor() {
 		return getMappedTypeDescriptor().getMappedJavaTypeDescriptor();
 	}
 
@@ -139,6 +149,8 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 								tableGroup.getPrimaryTableReference().getIdentificationVariable(),
 								columnName,
 								false,
+								null,
+								null,
 								type,
 								sessionFactory
 						)
@@ -159,7 +171,7 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 		);
 	}
 
-	public DomainResult createDomainResult(
+	public DomainResult<?> createDomainResult(
 			NavigablePath collectionPath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
@@ -178,6 +190,8 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 								tableGroup.getPrimaryTableReference().getIdentificationVariable(),
 								columnName,
 								false,
+								null,
+								null,
 								type,
 								sessionFactory
 						)
@@ -187,7 +201,7 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 		);
 
 		//noinspection unchecked
-		return new BasicResult(
+		return new BasicResult<Object>(
 				sqlSelection.getValuesArrayPosition(),
 				null,
 				type.getJavaTypeDescriptor(),

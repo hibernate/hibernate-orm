@@ -57,6 +57,8 @@ public class BasicValuedPathInterpretation<T> extends AbstractSqmPathInterpretat
 						tableReference.getIdentificationVariable(),
 						mapping.getMappedColumnExpression(),
 						mapping.isMappedColumnExpressionFormula(),
+						mapping.getCustomReadExpression(),
+						mapping.getCustomWriteExpression(),
 						mapping.getJdbcMapping(),
 						sqlAstCreationState.getCreationContext().getSessionFactory()
 				)

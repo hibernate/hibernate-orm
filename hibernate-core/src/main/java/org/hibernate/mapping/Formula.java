@@ -54,6 +54,16 @@ public class Formula implements Selectable, Serializable {
 	}
 
 	@Override
+	public String getCustomReadExpression() {
+		return getFormula();
+	}
+
+	@Override
+	public String getCustomWriteExpression() {
+		return null;
+	}
+
+	@Override
 	public String getAlias(Dialect dialect) {
 		return "formula" + AliasConstantsHelper.get( uniqueInteger );
 	}

@@ -36,7 +36,6 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
-import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.OneToMany;
@@ -207,6 +206,8 @@ public class MappingModelCreationHelper {
 									rootTableName,
 									rootTableKeyColumnNames[columnsConsumedSoFar],
 									false,
+									null,
+									null,
 									entityPersister.getRepresentationStrategy().resolvePropertyAccess( bootIdSubProperty ),
 									CascadeStyles.ALL,
 									creationProcess
@@ -276,6 +277,8 @@ public class MappingModelCreationHelper {
 			String tableExpression,
 			String attrColumnName,
 			boolean isAttrFormula,
+			String readExpr,
+			String writeExpr,
 			PropertyAccess propertyAccess,
 			CascadeStyle cascadeStyle,
 			MappingModelCreationProcess creationProcess) {
@@ -369,6 +372,8 @@ public class MappingModelCreationHelper {
 					tableExpression,
 					attrColumnName,
 					false,
+					null,
+					null,
 					valueConverter,
 					mappingBasicType.getJdbcMapping(),
 					declaringType,
@@ -385,6 +390,8 @@ public class MappingModelCreationHelper {
 					tableExpression,
 					attrColumnName,
 					isAttrFormula,
+					readExpr,
+					writeExpr,
 					null,
 					attrType,
 					declaringType,
@@ -402,6 +409,8 @@ public class MappingModelCreationHelper {
 			CompositeType attrType,
 			String tableExpression,
 			String[] attrColumnNames,
+			String[] attrColCustomReadExprs,
+			String[] attrColCustomWriteExprs,
 			PropertyAccess propertyAccess,
 			CascadeStyle cascadeStyle,
 			MappingModelCreationProcess creationProcess) {
@@ -423,6 +432,8 @@ public class MappingModelCreationHelper {
 						stateArrayPosition,
 						tableExpression,
 						attrColumnNames,
+						attrColCustomReadExprs,
+						attrColCustomWriteExprs,
 						attributeMetadataAccess,
 						component.getParentProperty(),
 						FetchStrategy.IMMEDIATE_JOIN,
@@ -629,6 +640,7 @@ public class MappingModelCreationHelper {
 				);
 
 				final BasicValue index = (BasicValue) ( (IndexedCollection) bootValueMapping ).getIndex();
+				final Selectable column = index.getColumnIterator().next();
 				indexDescriptor = new BasicValuedCollectionPart(
 						collectionDescriptor,
 						CollectionPart.Nature.INDEX,
@@ -636,7 +648,9 @@ public class MappingModelCreationHelper {
 						// no converter
 						null,
 						tableExpression,
-						index.getColumnIterator().next().getText( dialect )
+						column.getText( dialect ),
+						column.getCustomReadExpression(),
+						column.getCustomWriteExpression()
 				);
 
 				break;
@@ -683,7 +697,9 @@ public class MappingModelCreationHelper {
 						// no converter
 						null,
 						tableExpression,
-						index.getColumnIterator().next().getText( dialect )
+						index.getColumnIterator().next().getText( dialect ),
+						null,
+						null
 				);
 
 				collectionMappingType = new CollectionMappingTypeImpl(
@@ -804,6 +820,7 @@ public class MappingModelCreationHelper {
 		);
 
 		creationProcess.registerInitializationCallback(
+				"PluralAttributeMapping(" + bootValueMapping.getRole() + ")#finishInitialization",
 				() -> {
 					try {
 						pluralAttributeMapping.finishInitialization( bootProperty, bootValueMapping, creationProcess );
@@ -822,7 +839,8 @@ public class MappingModelCreationHelper {
 				}
 		);
 
-		creationProcess.registerForeignKeyPostInitCallbacks(
+		creationProcess.registerInitializationCallback(
+				"PluralAttributeMapping(" + bootValueMapping.getRole() + ") - key descriptor",
 				() -> {
 					interpretPluralAttributeMappingKeyDescriptor(
 							pluralAttributeMapping,
@@ -851,7 +869,7 @@ public class MappingModelCreationHelper {
 			attributeMappingSubPart = attributeMapping.findSubPart( collectionDescriptor.getMappedByProperty(), null );
 		}
 
-		if ( attributeMappingSubPart != null && attributeMappingSubPart instanceof ToOneAttributeMapping ) {
+		if ( attributeMappingSubPart instanceof ToOneAttributeMapping ) {
 			final ToOneAttributeMapping referencedAttributeMapping = (ToOneAttributeMapping) attributeMappingSubPart;
 
 			setRefererencedAttributeForeignKeyDescriptor(
@@ -1003,16 +1021,14 @@ public class MappingModelCreationHelper {
 			MappingModelCreationProcess creationProcess) {
 		final List<String> mappedColumnExpressions = fkTarget.getMappedColumnExpressions();
 		final List<String> targetColumnExpressions = new ArrayList<>( mappedColumnExpressions.size() );
-		mappedColumnExpressions.forEach(
-				column ->
-						targetColumnExpressions.add( column ) );
+		targetColumnExpressions.addAll( mappedColumnExpressions );
 
 		final List<String> keyColumnExpressions;
 		Table keyTableExpression;
 		if ( bootValueMapping instanceof Collection ) {
-			final Collection collectioBootValueMapping = (Collection) bootValueMapping;
-			keyTableExpression = collectioBootValueMapping.getCollectionTable();
-			final KeyValue key = collectioBootValueMapping.getKey();
+			final Collection collectionBootValueMapping = (Collection) bootValueMapping;
+			keyTableExpression = collectionBootValueMapping.getCollectionTable();
+			final KeyValue key = collectionBootValueMapping.getKey();
 			keyColumnExpressions = new ArrayList<>( key.getColumnSpan() );
 			key.getColumnIterator().forEachRemaining(
 					column ->
@@ -1089,13 +1105,16 @@ public class MappingModelCreationHelper {
 
 		if ( bootMapKeyDescriptor instanceof BasicValue ) {
 			final BasicValue basicValue = (BasicValue) bootMapKeyDescriptor;
+			final Selectable selectable = basicValue.getColumnIterator().next();
 			return new BasicValuedCollectionPart(
 					collectionDescriptor,
 					CollectionPart.Nature.INDEX,
 					basicValue.resolve().getJdbcMapping(),
 					basicValue.resolve().getValueConverter(),
 					tableExpression,
-					basicValue.getColumnIterator().next().getText( dialect )
+					selectable.getText( dialect ),
+					selectable.getCustomReadExpression(),
+					selectable.getCustomWriteExpression()
 			);
 		}
 
@@ -1104,9 +1123,17 @@ public class MappingModelCreationHelper {
 			final CompositeType compositeType = (CompositeType) component.getType();
 
 			final List<String> columnExpressions = CollectionHelper.arrayList( component.getColumnSpan() );
-			final Iterator<Selectable> columnIterator = component.getColumnIterator();
-			while ( columnIterator.hasNext() ) {
-				columnExpressions.add( columnIterator.next().getText( dialect ) );
+			final List<String> customReadExpressions = CollectionHelper.arrayList( component.getColumnSpan() );
+			final List<String> customWriteExpressions = CollectionHelper.arrayList( component.getColumnSpan() );
+
+			final Iterator<Selectable> selectableItr = component.getColumnIterator();
+
+			while ( selectableItr.hasNext() ) {
+				final Selectable selectable = selectableItr.next();
+
+				columnExpressions.add( selectable.getText( dialect ) );
+				customReadExpressions.add( selectable.getCustomReadExpression() );
+				customWriteExpressions.add( selectable.getCustomWriteExpression() );
 			}
 
 			final EmbeddableMappingType mappingType = EmbeddableMappingType.from(
@@ -1120,6 +1147,8 @@ public class MappingModelCreationHelper {
 							component.getParentProperty(),
 							tableExpression,
 							columnExpressions,
+							customReadExpressions,
+							customWriteExpressions,
 							sqlAliasStem
 					),
 					creationProcess
@@ -1141,6 +1170,7 @@ public class MappingModelCreationHelper {
 			);
 
 			creationProcess.registerInitializationCallback(
+					"PluralAttributeMapping( " + bootValueMapping.getRole() + ") - index descriptor",
 					() -> {
 						try {
 							indexDescriptor.finishInitialization(
@@ -1180,13 +1210,16 @@ public class MappingModelCreationHelper {
 
 		if ( element instanceof BasicValue ) {
 			final BasicValue basicElement = (BasicValue) element;
+			final Selectable selectable = basicElement.getColumnIterator().next();
 			return new BasicValuedCollectionPart(
 					collectionDescriptor,
 					CollectionPart.Nature.ELEMENT,
 					basicElement.resolve().getJdbcMapping(),
 					basicElement.resolve().getValueConverter(),
 					tableExpression,
-					basicElement.getColumnIterator().next().getText( dialect )
+					selectable.getText( dialect ),
+					selectable.getCustomReadExpression(),
+					selectable.getCustomWriteExpression()
 			);
 		}
 
@@ -1195,9 +1228,16 @@ public class MappingModelCreationHelper {
 			final CompositeType compositeType = (CompositeType) collectionDescriptor.getElementType();
 
 			final List<String> columnExpressions = CollectionHelper.arrayList( component.getColumnSpan() );
-			final Iterator<Selectable> columnIterator = component.getColumnIterator();
-			while ( columnIterator.hasNext() ) {
-				columnExpressions.add( columnIterator.next().getText( dialect ) );
+			final List<String> customReadExpressions = CollectionHelper.arrayList( component.getColumnSpan() );
+			final List<String> customWriteExpressions = CollectionHelper.arrayList( component.getColumnSpan() );
+
+			final Iterator<Selectable> selectableItr = component.getColumnIterator();
+			while ( selectableItr.hasNext() ) {
+				final Selectable selectable = selectableItr.next();
+
+				columnExpressions.add( selectable.getText( dialect ) );
+				customReadExpressions.add( selectable.getCustomWriteExpression() );
+				customWriteExpressions.add( selectable.getCustomWriteExpression() );
 			}
 
 			final EmbeddableMappingType mappingType = EmbeddableMappingType.from(
@@ -1211,6 +1251,8 @@ public class MappingModelCreationHelper {
 							component.getParentProperty(),
 							tableExpression,
 							columnExpressions,
+							customReadExpressions,
+							customWriteExpressions,
 							sqlAliasStem
 					),
 					creationProcess
@@ -1232,6 +1274,7 @@ public class MappingModelCreationHelper {
 			);
 
 			creationProcess.registerInitializationCallback(
+					"EntityCollectionPart( " + elementDescriptor.getNavigableRole() + ")#finishInitialization",
 					() -> {
 						try {
 							elementDescriptor.finishInitialization(
@@ -1340,6 +1383,7 @@ public class MappingModelCreationHelper {
 			);
 
 			creationProcess.registerForeignKeyPostInitCallbacks(
+					"To-one key - " + navigableRole,
 					() -> {
 						final Dialect dialect = creationProcess.getCreationContext()
 								.getSessionFactory()

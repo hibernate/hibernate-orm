@@ -7,6 +7,7 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -19,6 +20,7 @@ import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.NavigablePath;
@@ -67,28 +69,37 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 		this.targetColumnExpressions = targetColumnExpressions;
 		this.mappingType = mappingType;
 		jdbcMappings = new ArrayList<>();
-		mappingType.getAttributes().forEach(
-				attribute -> {
-					final TypeConfiguration typeConfiguration = creationProcess.getCreationContext()
-							.getTypeConfiguration();
-					if ( attribute instanceof ToOneAttributeMapping ) {
-						ToOneAttributeMapping associationAttributeMapping = (ToOneAttributeMapping) attribute;
-						associationAttributeMapping.getAssociatedEntityMappingType()
-								.getEntityPersister()
-								.getIdentifierMapping()
-								.visitJdbcTypes(
-										jdbcMappings::add,
-										null,
-										typeConfiguration
-								);
+
+		creationProcess.registerInitializationCallback(
+				"Embedded (composite) FK descriptor " + mappingType.getNavigableRole(),
+				() -> {
+					// todo (6.0) : how to make sure things we need are ready to go?
+					// 		- e.g., here, we need access to the sub-attributes
+					final Collection<SingularAttributeMapping> subAttributes = mappingType.getAttributes();
+					if ( subAttributes.isEmpty() ) {
+						// todo (6.0) : ^^ for now, this is the only way we "know" that the embeddable has not been finalized yet
+						return false;
 					}
-					else {
-						attribute.visitJdbcTypes(
-								jdbcMappings::add,
-								null,
-								typeConfiguration
-						);
-					}
+
+					subAttributes.forEach(
+							attribute -> {
+								final TypeConfiguration typeConfiguration = creationProcess
+										.getCreationContext()
+										.getTypeConfiguration();
+								if ( attribute instanceof ToOneAttributeMapping ) {
+									final ToOneAttributeMapping associationAttributeMapping = (ToOneAttributeMapping) attribute;
+									associationAttributeMapping.getAssociatedEntityMappingType()
+											.getEntityPersister()
+											.getIdentifierMapping()
+											.visitJdbcTypes( jdbcMappings::add, null, typeConfiguration );
+								}
+								else {
+									attribute.visitJdbcTypes( jdbcMappings::add, null, typeConfiguration );
+								}
+							}
+					);
+
+					return true;
 				}
 		);
 	}
@@ -119,6 +130,8 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 												identificationVariable,
 												columnExpression,
 												false,
+												null,
+												null,
 												jdbcMapping,
 												creationState.getSqlAstCreationState()
 														.getCreationContext()
@@ -171,6 +184,8 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 											identificationVariable,
 											columnExpression,
 											false,
+											null,
+											null,
 											jdbcMapping,
 											creationState.getSqlAstCreationState()
 													.getCreationContext()
@@ -256,25 +271,28 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 			List<String> rhsColumnExpressions) {
 		final Junction predicate = new Junction( Junction.Nature.CONJUNCTION );
 		for ( int i = 0; i < lhsExpressions.size(); i++ ) {
-			JdbcMapping jdbcMapping = jdbcMappings.get( i );
-			ComparisonPredicate comparisonPredicate =
-					new ComparisonPredicate(
-							new ColumnReference(
-									lhs,
-									lhsExpressions.get( i ),
-									false,
-									jdbcMapping,
-									creationContext.getSessionFactory()
-							),
-							ComparisonOperator.EQUAL,
-							new ColumnReference(
-									rhs,
-									rhsColumnExpressions.get( i ),
-									false,
-									jdbcMapping,
-									creationContext.getSessionFactory()
-							)
-					);
+			final JdbcMapping jdbcMapping = jdbcMappings.get( i );
+			final ComparisonPredicate comparisonPredicate = new ComparisonPredicate(
+					new ColumnReference(
+							lhs,
+							lhsExpressions.get( i ),
+							false,
+							null,
+							null,
+							jdbcMapping,
+							creationContext.getSessionFactory()
+					),
+					ComparisonOperator.EQUAL,
+					new ColumnReference(
+							rhs,
+							rhsColumnExpressions.get( i ),
+							false,
+							null,
+							null,
+							jdbcMapping,
+							creationContext.getSessionFactory()
+					)
+			);
 			predicate.add( comparisonPredicate );
 		}
 		return predicate;
@@ -316,14 +334,28 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 	@Override
 	public void visitReferringColumns(ColumnConsumer consumer) {
 		for ( int i = 0; i < keyColumnExpressions.size(); i++ ) {
-			consumer.accept( keyColumnContainingTable, keyColumnExpressions.get( i ), false, jdbcMappings.get( i ) );
+			consumer.accept(
+					keyColumnContainingTable,
+					keyColumnExpressions.get( i ),
+					false,
+					null,
+					null,
+					jdbcMappings.get( i )
+			);
 		}
 	}
 
 	@Override
 	public void visitTargetColumns(ColumnConsumer consumer) {
 		for ( int i = 0; i < keyColumnExpressions.size(); i++ ) {
-			consumer.accept( targetColumnContainingTable, targetColumnExpressions.get( i ), false, jdbcMappings.get( i ) );
+			consumer.accept(
+					targetColumnContainingTable,
+					targetColumnExpressions.get( i ),
+					false,
+					null,
+					null,
+					jdbcMappings.get( i )
+			);
 		}
 	}
 

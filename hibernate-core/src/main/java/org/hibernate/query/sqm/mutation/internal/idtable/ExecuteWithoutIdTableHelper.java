@@ -53,13 +53,15 @@ public final class ExecuteWithoutIdTableHelper {
 		matchingIdSelect.getFromClause().addRoot( matchingIdSelectTableGroup );
 
 		rootEntityPersister.getIdentifierMapping().visitColumns(
-				(containingTableExpression, columnExpression, isColumnExpressionFormula, jdbcMapping) -> {
+				(containingTableExpression, columnExpression, isFormula, readFragment, writeFragment, jdbcMapping) -> {
 					final ColumnReference columnReference = (ColumnReference) sqlExpressionResolver.resolveSqlExpression(
 							SqlExpressionResolver.createColumnReferenceKey( rootTableReference, columnExpression ),
 							sqlAstProcessingState -> new ColumnReference(
 									rootTableReference,
 									columnExpression,
-									isColumnExpressionFormula,
+									false,
+									null,
+									null,
 									jdbcMapping,
 									sessionFactory
 							)

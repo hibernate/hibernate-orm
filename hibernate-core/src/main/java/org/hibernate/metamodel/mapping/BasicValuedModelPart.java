@@ -28,6 +28,10 @@ public interface BasicValuedModelPart extends BasicValuedMapping, ModelPart, Fet
 		return false;
 	}
 
+	String getCustomReadExpression();
+
+	String getCustomWriteExpression();
+
 	@Override
 	default MappingType getPartMappingType() {
 		return this::getJavaTypeDescriptor;

@@ -35,6 +35,8 @@ public class MappingModelHelper {
 						basicPart.getContainingTableExpression(),
 						basicPart.getMappedColumnExpression(),
 						basicPart.isMappedColumnExpressionFormula(),
+						basicPart.getCustomReadExpression(),
+						basicPart.getCustomWriteExpression(),
 						basicPart.getJdbcMapping(),
 						sessionFactory
 				);
@@ -46,6 +48,8 @@ public class MappingModelHelper {
 								basicPart.getContainingTableExpression(),
 								basicPart.getMappedColumnExpression(),
 								basicPart.isMappedColumnExpressionFormula(),
+								basicPart.getCustomReadExpression(),
+								basicPart.getCustomWriteExpression(),
 								basicPart.getJdbcMapping(),
 								sessionFactory
 						)
@@ -55,24 +59,28 @@ public class MappingModelHelper {
 		else {
 			final List<ColumnReference> columnReferences = new ArrayList<>( jdbcTypeCount );
 			modelPart.visitColumns(
-					(containingTableExpression, columnExpression, isColumnExpressionFormula, jdbcMapping) -> {
+					(table, column, isFormula, readFragment, writeFragment, jdbcMapping) -> {
 						final ColumnReference colRef;
 						if ( sqlExpressionResolver == null ) {
 							colRef = new ColumnReference(
-									containingTableExpression,
-									columnExpression,
-									isColumnExpressionFormula,
+									table,
+									column,
+									isFormula,
+									readFragment,
+									writeFragment,
 									jdbcMapping,
 									sessionFactory
 							);
 						}
 						else {
 							colRef = (ColumnReference) sqlExpressionResolver.resolveSqlExpression(
-									createColumnReferenceKey( containingTableExpression, columnExpression ),
+									createColumnReferenceKey( table, column ),
 									sqlAstProcessingState -> new ColumnReference(
-											containingTableExpression,
-											columnExpression,
-											isColumnExpressionFormula,
+											table,
+											column,
+											isFormula,
+											readFragment,
+											writeFragment,
 											jdbcMapping,
 											sessionFactory
 									)

@@ -43,7 +43,6 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings("unused")
 public class InPredicateRestrictionProducer implements MatchingIdRestrictionProducer {
 	@Override
 	public InListPredicate produceRestriction(
@@ -69,23 +68,36 @@ public class InPredicateRestrictionProducer implements MatchingIdRestrictionProd
 			final Expression inFixture = new ColumnReference(
 					mutatingTableReference,
 					idColumn,
+					// id columns cannot be formulas and cannot have custom read and write expressions
 					false,
+					null,
+					null,
 					basicIdMapping.getJdbcMapping(),
 					sessionFactory
 			);
 			predicate = new InListPredicate( inFixture );
 
-			for ( int i = 0; i < matchingIdValues.size(); i++ ) {
-				final Object matchingId = matchingIdValues.get( i );
-				predicate.addExpression( new JdbcLiteral<>( matchingId, basicIdMapping.getJdbcMapping() ) );
-			}
+			matchingIdValues.forEach(
+					matchingId -> predicate.addExpression( new JdbcLiteral<>( matchingId, basicIdMapping.getJdbcMapping() ) )
+			);
 		}
 		else {
 			final List<ColumnReference> columnReferences = new ArrayList<>( idColumnCount );
 			final List<JdbcMapping> jdbcMappings = new ArrayList<>( idColumnCount );
 			identifierMapping.visitColumns(
-					(containingTableExpression, columnExpression, isColumnExpressionFormula, jdbcMapping) -> {
-						columnReferences.add( new ColumnReference( mutatingTableReference, columnExpression, isColumnExpressionFormula, jdbcMapping, sessionFactory ) );
+					(containingTableExpression, columnExpression, isFormula, readFragment, writeFragment, jdbcMapping) -> {
+						columnReferences.add(
+								new ColumnReference(
+										mutatingTableReference,
+										columnExpression,
+										// id columns cannot be formulas and cannot have custom read and write expressions
+										false,
+										null,
+										null,
+										jdbcMapping,
+										sessionFactory
+								)
+						);
 						jdbcMappings.add( jdbcMapping );
 					}
 			);
@@ -93,20 +105,21 @@ public class InPredicateRestrictionProducer implements MatchingIdRestrictionProd
 			final Expression inFixture = new SqlTuple( columnReferences, identifierMapping );
 			predicate = new InListPredicate( inFixture );
 
-			for ( int i = 0; i < matchingIdValues.size(); i++ ) {
-				final Object matchingId = matchingIdValues.get( i );
-				assert matchingId instanceof Object[];
-				final Object[] matchingIdParts = (Object[]) matchingId;
+			matchingIdValues.forEach(
+					matchingId -> {
+						assert matchingId instanceof Object[];
+						final Object[] matchingIdParts = (Object[]) matchingId;
 
-				final List<JdbcLiteral> tupleParts = new ArrayList<>( idColumnCount );
-				for ( int p = 0; p < matchingIdParts.length; p++ ) {
-					tupleParts.add(
-							new JdbcLiteral<>( matchingIdParts[p],jdbcMappings.get( p ) )
-					);
-				}
+						final List<JdbcLiteral<?>> tupleParts = new ArrayList<>( idColumnCount );
+						for ( int p = 0; p < matchingIdParts.length; p++ ) {
+							tupleParts.add(
+									new JdbcLiteral<>( matchingIdParts[p],jdbcMappings.get( p ) )
+							);
+						}
 
-				predicate.addExpression( new SqlTuple( tupleParts, identifierMapping ) );
-			}
+						predicate.addExpression( new SqlTuple( tupleParts, identifierMapping ) );
+					}
+			);
 		}
 
 		return predicate;

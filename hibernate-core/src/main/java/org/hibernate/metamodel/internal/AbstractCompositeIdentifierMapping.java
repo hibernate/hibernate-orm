@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.internal;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
@@ -21,7 +22,6 @@ import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
@@ -46,6 +46,8 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
+ * Base implementation for composite identifier mappings
+ *
  * @author Andrea Boriero
  */
 public abstract class AbstractCompositeIdentifierMapping
@@ -55,6 +57,8 @@ public abstract class AbstractCompositeIdentifierMapping
 
 	private final StateArrayContributorMetadataAccess attributeMetadataAccess;
 	private final List<String> columnNames;
+	private final List<String> customReadExpressions;
+	private final List<String> customWriteExpressions;
 
 	private final EntityMappingType entityMapping;
 	private final EmbeddableMappingType embeddableDescriptor;
@@ -75,6 +79,8 @@ public abstract class AbstractCompositeIdentifierMapping
 		this.sessionFactory = sessionFactory;
 
 		this.columnNames = Arrays.asList( columnNames );
+		this.customReadExpressions = new ArrayList<>( columnNames.length );
+		this.customWriteExpressions = new ArrayList<>( columnNames.length );
 
 		this.navigableRole = entityMapping.getNavigableRole()
 				.appendContainer( EntityIdentifierMapping.ROLE_LOCAL_NAME );
@@ -91,7 +97,7 @@ public abstract class AbstractCompositeIdentifierMapping
 	}
 
 	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
+	public JavaTypeDescriptor<?> getJavaTypeDescriptor() {
 		return getEmbeddableTypeDescriptor().getMappedJavaTypeDescriptor();
 	}
 
@@ -113,6 +119,16 @@ public abstract class AbstractCompositeIdentifierMapping
 	@Override
 	public List<String> getMappedColumnExpressions() {
 		return columnNames;
+	}
+
+	@Override
+	public List<String> getCustomReadExpressions() {
+		return customReadExpressions;
+	}
+
+	@Override
+	public List<String> getCustomWriteExpressions() {
+		return customWriteExpressions;
 	}
 
 	@Override

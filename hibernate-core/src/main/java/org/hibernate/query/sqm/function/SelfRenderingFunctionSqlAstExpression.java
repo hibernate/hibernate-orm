@@ -155,6 +155,16 @@ public class SelfRenderingFunctionSqlAstExpression
 	}
 
 	@Override
+	public String getCustomReadExpression() {
+		return null;
+	}
+
+	@Override
+	public String getCustomWriteExpression() {
+		return null;
+	}
+
+	@Override
 	public JdbcMapping getJdbcMapping() {
 		if ( type instanceof SqlExpressable ) {
 			return ( (SqlExpressable) type ).getJdbcMapping();

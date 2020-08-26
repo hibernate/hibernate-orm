@@ -71,7 +71,7 @@ public class StandardSqmUpdateTranslator
 	}
 
 	@Override
-	public SimpleSqmUpdateTranslation translate(SqmUpdateStatement sqmUpdate) {
+	public SimpleSqmUpdateTranslation translate(SqmUpdateStatement<?> sqmUpdate) {
 		final UpdateStatement sqlUpdateAst = visitUpdateStatement( sqmUpdate );
 		return new SimpleSqmUpdateTranslation(
 				sqlUpdateAst,
@@ -236,7 +236,7 @@ public class StandardSqmUpdateTranslator
 
 					// create one JdbcParameter for each column in the assigned path
 					assignedPathInterpretation.getExpressionType().visitColumns(
-							(containingTableExpression, columnExpression, isColumnExpressionFormula, jdbcMapping) -> {
+							(containingTableExpression, columnExpression, isFormula, customReadExpr, customWriteExpr, jdbcMapping) -> {
 								final JdbcParameter jdbcParameter = new JdbcParameterImpl( jdbcMapping );
 								jdbcParametersForSqm.add( jdbcParameter );
 								assignments.add(
@@ -245,7 +245,9 @@ public class StandardSqmUpdateTranslator
 														// we do not want a qualifier (table alias) here
 														(String) null,
 														columnExpression,
-														isColumnExpressionFormula,
+														isFormula,
+														customReadExpr,
+														customWriteExpr,
 														jdbcMapping,
 														getCreationContext().getSessionFactory()
 												),

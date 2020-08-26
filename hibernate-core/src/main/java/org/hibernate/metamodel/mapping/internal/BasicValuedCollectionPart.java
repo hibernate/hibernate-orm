@@ -42,6 +42,8 @@ import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static org.hibernate.metamodel.relational.RuntimeRelationModelHelper.DEFAULT_COLUMN_WRITE_EXPRESSION;
+
 /**
  * Models a basic collection element/value or index/key
  *
@@ -57,6 +59,8 @@ public class BasicValuedCollectionPart
 
 	private final String tableExpression;
 	private final String columnExpression;
+	private final String customColumnReadExpr;
+	private final String customColumnWriteExpr;
 
 	public BasicValuedCollectionPart(
 			CollectionPersister collectionDescriptor,
@@ -64,7 +68,9 @@ public class BasicValuedCollectionPart
 			JdbcMapping mapper,
 			BasicValueConverter valueConverter,
 			String tableExpression,
-			String columnExpression) {
+			String columnExpression,
+			String customColumnReadExpr,
+			String customColumnWriteExpr) {
 		this.navigableRole = collectionDescriptor.getNavigableRole().append( nature.getName() );
 		this.collectionDescriptor = collectionDescriptor;
 		this.nature = nature;
@@ -72,6 +78,13 @@ public class BasicValuedCollectionPart
 		this.valueConverter = valueConverter;
 		this.tableExpression = tableExpression;
 		this.columnExpression = columnExpression;
+
+		this.customColumnReadExpr = customColumnReadExpr == null
+				? columnExpression
+				: customColumnReadExpr;
+		this.customColumnWriteExpr = customColumnWriteExpr == null
+				? DEFAULT_COLUMN_WRITE_EXPRESSION
+				: customColumnWriteExpr;
 	}
 
 	@Override
@@ -92,6 +105,16 @@ public class BasicValuedCollectionPart
 	@Override
 	public String getMappedColumnExpression() {
 		return columnExpression;
+	}
+
+	@Override
+	public String getCustomReadExpression() {
+		return null;
+	}
+
+	@Override
+	public String getCustomWriteExpression() {
+		return null;
 	}
 
 	@Override
@@ -137,6 +160,8 @@ public class BasicValuedCollectionPart
 								tableGroup.getPrimaryTableReference().getIdentificationVariable(),
 								columnExpression,
 								false,
+								customColumnReadExpr,
+								customColumnWriteExpr,
 								mapper,
 								creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
 						)
@@ -242,7 +267,14 @@ public class BasicValuedCollectionPart
 
 	@Override
 	public void visitColumns(ColumnConsumer consumer) {
-		consumer.accept( tableExpression, columnExpression, false, getJdbcMapping() );
+		consumer.accept(
+				tableExpression,
+				columnExpression,
+				false,
+				customColumnReadExpr,
+				customColumnWriteExpr,
+				getJdbcMapping()
+		);
 	}
 
 	@Override

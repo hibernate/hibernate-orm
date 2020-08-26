@@ -56,15 +56,19 @@ public class ManyToOneJoinTableTest {
 		final ToOneAttributeMapping simpleAttributeMapping = (ToOneAttributeMapping) simpleEntityAssociation;
 
 		ForeignKeyDescriptor foreignKeyDescriptor = simpleAttributeMapping.getForeignKeyDescriptor();
-		foreignKeyDescriptor.visitReferringColumns( (keyTable, keyColumn, isKeyColumnFormula, jdbcMapping) -> {
-			assertThat( keyTable, is( "other_simple" ) );
-			assertThat( keyColumn, is( "RHS_ID" ) );
-		} );
+		foreignKeyDescriptor.visitReferringColumns(
+				(keyTable, keyColumn, isKeyColumnFormula, readFragment, writeFragment, jdbcMapping) -> {
+					assertThat( keyTable, is( "other_simple" ) );
+					assertThat( keyColumn, is( "RHS_ID" ) );
+				}
+		);
 
-		foreignKeyDescriptor.visitTargetColumns( (targetTable, targetColumn, isTargetColumnFormula, jdbcMapping) -> {
-			assertThat( targetTable, is( "simple_entity" ) );
-			assertThat( targetColumn, is( "id" ) );
-		} );
+		foreignKeyDescriptor.visitTargetColumns(
+				(targetTable, targetColumn, isTargetColumnFormula, readFragment, writeFragment, jdbcMapping) -> {
+					assertThat( targetTable, is( "simple_entity" ) );
+					assertThat( targetColumn, is( "id" ) );
+				}
+		);
 
 		final ModelPart anotherEntityAssociation = otherDescriptor.findSubPart( "anotherEntity" );
 
@@ -73,15 +77,19 @@ public class ManyToOneJoinTableTest {
 		final ToOneAttributeMapping anotherAttributeMapping = (ToOneAttributeMapping) anotherEntityAssociation;
 
 		foreignKeyDescriptor = anotherAttributeMapping.getForeignKeyDescriptor();
-		foreignKeyDescriptor.visitReferringColumns( (keyTable, keyColumn, isKeyColumnFormula, jdbcMapping) -> {
-			assertThat( keyTable, is( "other_another" ) );
-			assertThat( keyColumn, is( "RHS_ID" ) );
-		} );
+		foreignKeyDescriptor.visitReferringColumns(
+				(keyTable, keyColumn, isKeyColumnFormula, readFragment, writeFragment, jdbcMapping) -> {
+					assertThat( keyTable, is( "other_another" ) );
+					assertThat( keyColumn, is( "RHS_ID" ) );
+				}
+		);
 
-		foreignKeyDescriptor.visitTargetColumns( (targetTable, targetColumn, isTargetColumnFormula, jdbcMapping) -> {
-			assertThat( targetTable, is( "another_entity" ) );
-			assertThat( targetColumn, is( "id" ) );
-		} );
+		foreignKeyDescriptor.visitTargetColumns(
+				(targetTable, targetColumn, isTargetColumnFormula, readFragment, writeFragment, jdbcMapping) -> {
+					assertThat( targetTable, is( "another_entity" ) );
+					assertThat( targetColumn, is( "id" ) );
+				}
+		);
 
 
 		final EntityPersister simpleDescriptor = scope.getSessionFactory()
@@ -95,15 +103,19 @@ public class ManyToOneJoinTableTest {
 		ToOneAttributeMapping otherAttributeMapping = (ToOneAttributeMapping) otherEntityEntityAssociation;
 
 		foreignKeyDescriptor = otherAttributeMapping.getForeignKeyDescriptor();
-		foreignKeyDescriptor.visitReferringColumns( (keyTable, keyColumn, isKeyColumnFormula, jdbcMapping) -> {
-			assertThat( keyTable, is( "other_simple" ) );
-			assertThat( keyColumn, is( "LHS_ID" ) );
-		} );
+		foreignKeyDescriptor.visitReferringColumns(
+				(keyTable, keyColumn, isKeyColumnFormula, readFragment, writeFragment, jdbcMapping) -> {
+					assertThat( keyTable, is( "other_simple" ) );
+					assertThat( keyColumn, is( "LHS_ID" ) );
+				}
+		);
 
-		foreignKeyDescriptor.visitTargetColumns( (targetTable, targetColumn, isTargetColumnFormula, jdbcMapping) -> {
-			assertThat( targetTable, is( "other_entity" ) );
-			assertThat( targetColumn, is( "id" ) );
-		} );
+		foreignKeyDescriptor.visitTargetColumns(
+				(targetTable, targetColumn, isTargetColumnFormula, readFragment, writeFragment, jdbcMapping) -> {
+					assertThat( targetTable, is( "other_entity" ) );
+					assertThat( targetColumn, is( "id" ) );
+				}
+		);
 
 
 		final EntityPersister anotherDescriptor = scope.getSessionFactory()
@@ -117,15 +129,19 @@ public class ManyToOneJoinTableTest {
 		otherAttributeMapping = (ToOneAttributeMapping) otherEntityEntityAssociation;
 
 		foreignKeyDescriptor = otherAttributeMapping.getForeignKeyDescriptor();
-		foreignKeyDescriptor.visitReferringColumns( (keyTable, keyColumn, isKeyColumnFormula, jdbcMapping) -> {
-			assertThat( keyTable, is( "another_entity" ) );
-			assertThat( keyColumn, is( "other_id" ) );
-		} );
+		foreignKeyDescriptor.visitReferringColumns(
+				(keyTable, keyColumn, isKeyColumnFormula, readFragment, writeFragment, jdbcMapping) -> {
+					assertThat( keyTable, is( "another_entity" ) );
+					assertThat( keyColumn, is( "other_id" ) );
+				}
+		);
 
-		foreignKeyDescriptor.visitTargetColumns( (targetTable, targetColumn, isTargetColumnFormula, jdbcMapping) -> {
-			assertThat( targetTable, is( "other_entity" ) );
-			assertThat( targetColumn, is( "id" ) );
-		} );
+		foreignKeyDescriptor.visitTargetColumns(
+				(targetTable, targetColumn, isTargetColumnFormula, readFragment, writeFragment, jdbcMapping) -> {
+					assertThat( targetTable, is( "other_entity" ) );
+					assertThat( targetColumn, is( "id" ) );
+				}
+		);
 
 	}
 

@@ -61,8 +61,10 @@ public class EmbeddedAttributeMapping
 
 	private final String tableExpression;
 	private final String[] attrColumnNames;
+	private final String[] customReadExpressions;
+	private final String[] customWriteExpressions;
 	private final EmbeddableMappingType embeddableMappingType;
-	private final PropertyAccess parentInjectionAttributeProperyAccess;
+	private final PropertyAccess parentInjectionAttributePropertyAccess;
 
 	@SuppressWarnings("WeakerAccess")
 	public EmbeddedAttributeMapping(
@@ -71,6 +73,8 @@ public class EmbeddedAttributeMapping
 			int stateArrayPosition,
 			String tableExpression,
 			String[] attrColumnNames,
+			String[] customReadExpressions,
+			String[] customWriteExpressions,
 			StateArrayContributorMetadataAccess attributeMetadataAccess,
 			String parentInjectionAttributeName,
 			FetchStrategy mappedFetchStrategy,
@@ -85,18 +89,23 @@ public class EmbeddedAttributeMapping
 				declaringType,
 				propertyAccess
 		);
+		this.navigableRole = navigableRole;
+
 		if ( parentInjectionAttributeName != null ) {
-			parentInjectionAttributeProperyAccess = PropertyAccessStrategyBasicImpl.INSTANCE.buildPropertyAccess(
+			parentInjectionAttributePropertyAccess = PropertyAccessStrategyBasicImpl.INSTANCE.buildPropertyAccess(
 					embeddableMappingType.getMappedJavaTypeDescriptor().getJavaType(),
 					parentInjectionAttributeName
 			);
 		}
 		else {
-			parentInjectionAttributeProperyAccess = null;
+			parentInjectionAttributePropertyAccess = null;
 		}
-		this.navigableRole = navigableRole;
+
 		this.tableExpression = tableExpression;
 		this.attrColumnNames = attrColumnNames;
+		this.customReadExpressions = customReadExpressions;
+		this.customWriteExpressions = customWriteExpressions;
+
 		this.embeddableMappingType = embeddableMappingType;
 	}
 
@@ -121,8 +130,18 @@ public class EmbeddedAttributeMapping
 	}
 
 	@Override
+	public List<String> getCustomReadExpressions() {
+		return Arrays.asList( customReadExpressions );
+	}
+
+	@Override
+	public List<String> getCustomWriteExpressions() {
+		return Arrays.asList( customWriteExpressions );
+	}
+
+	@Override
 	public PropertyAccess getParentInjectionAttributePropertyAccess() {
-		return parentInjectionAttributeProperyAccess;
+		return parentInjectionAttributePropertyAccess;
 	}
 
 	@Override
@@ -213,11 +232,15 @@ public class EmbeddedAttributeMapping
 		final TableReference tableReference = tableGroup.resolveTableReference( getContainingTableExpression() );
 		getEmbeddableTypeDescriptor().visitJdbcTypes(
 				new Consumer<JdbcMapping>() {
-					private int index = 0;
+					private int position = -1;
 
 					@Override
 					public void accept(JdbcMapping jdbcMapping) {
-						final String attrColumnExpr = attrColumnNames[ index++ ];
+						position++;
+
+						final String attrColumnExpr = attrColumnNames[ position ];
+						final String attrColumnCustomReadExpr = customReadExpressions[ position ];
+						final String attrColumnCustomWriteExpr = customWriteExpressions[ position ];
 
 						final Expression columnReference = sqlAstCreationState.getSqlExpressionResolver().resolveSqlExpression(
 								SqlExpressionResolver.createColumnReferenceKey(
@@ -228,6 +251,8 @@ public class EmbeddedAttributeMapping
 										tableReference.getIdentificationVariable(),
 										attrColumnExpr,
 										false,
+										attrColumnCustomReadExpr,
+										attrColumnCustomWriteExpr,
 										jdbcMapping,
 										sqlAstCreationState.getCreationContext().getSessionFactory()
 								)

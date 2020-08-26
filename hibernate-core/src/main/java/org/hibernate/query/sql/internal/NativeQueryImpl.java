@@ -122,9 +122,9 @@ public class NativeQueryImpl<R>
 			SharedSessionContractImplementor session) {
 		super( session );
 
-		this.sqlString = memento.getSqlString();
+		final ParameterInterpretation parameterInterpretation = resolveParameterInterpretation( memento.getSqlString(), session );
 
-		final ParameterInterpretation parameterInterpretation = resolveParameterInterpretation( session );
+		this.sqlString = parameterInterpretation.getAdjustedSqlString();
 		this.parameterMetadata = parameterInterpretation.toParameterMetadata( session );
 		this.occurrenceOrderedParamList = parameterInterpretation.getOccurrenceOrderedParameters();
 		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, session.getFactory() );
@@ -162,9 +162,9 @@ public class NativeQueryImpl<R>
 			SharedSessionContractImplementor session) {
 		super( session );
 
-		this.sqlString = memento.getSqlString();
+		final ParameterInterpretation parameterInterpretation = resolveParameterInterpretation( memento.getSqlString(), session );
 
-		final ParameterInterpretation parameterInterpretation = resolveParameterInterpretation( session );
+		this.sqlString = parameterInterpretation.getAdjustedSqlString();
 		this.parameterMetadata = parameterInterpretation.toParameterMetadata( session );
 		this.occurrenceOrderedParamList = parameterInterpretation.getOccurrenceOrderedParameters();
 		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, session.getFactory() );
@@ -211,8 +211,6 @@ public class NativeQueryImpl<R>
 			AbstractSharedSessionContract session) {
 		super( session );
 
-		this.sqlString = sqlString;
-
 		this.resultSetMapping = new ResultSetMappingImpl( resultSetMappingMemento.getName() );
 		resultSetMappingMemento.resolve(
 				resultSetMapping,
@@ -220,14 +218,17 @@ public class NativeQueryImpl<R>
 				this
 		);
 
-		final ParameterInterpretation parameterInterpretation = resolveParameterInterpretation( session );
+		final ParameterInterpretation parameterInterpretation = resolveParameterInterpretation( sqlString, session );
 
+		this.sqlString = parameterInterpretation.getAdjustedSqlString();
 		this.parameterMetadata = parameterInterpretation.toParameterMetadata( session );
 		this.occurrenceOrderedParamList = parameterInterpretation.getOccurrenceOrderedParameters();
 		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, session.getFactory() );
 	}
 
-	private ParameterInterpretation resolveParameterInterpretation(SharedSessionContractImplementor session) {
+	private ParameterInterpretation resolveParameterInterpretation(
+			String sqlString,
+			SharedSessionContractImplementor session) {
 		final SessionFactoryImplementor sessionFactory = session.getFactory();
 		final QueryEngine queryEngine = sessionFactory.getQueryEngine();
 		final QueryInterpretationCache interpretationCache = queryEngine.getInterpretationCache();
@@ -257,11 +258,11 @@ public class NativeQueryImpl<R>
 	public NativeQueryImpl(String sqlString, SharedSessionContractImplementor session) {
 		super( session );
 
-		this.sqlString = sqlString;
-
 		this.querySpaces = new HashSet<>();
 
-		final ParameterInterpretation parameterInterpretation = resolveParameterInterpretation( session );
+		final ParameterInterpretation parameterInterpretation = resolveParameterInterpretation( sqlString, session );
+
+		this.sqlString = parameterInterpretation.getAdjustedSqlString();
 		this.parameterMetadata = parameterInterpretation.toParameterMetadata( session );
 		this.occurrenceOrderedParamList = parameterInterpretation.getOccurrenceOrderedParameters();
 		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, session.getFactory() );
@@ -1209,7 +1210,7 @@ public class NativeQueryImpl<R>
 		private final Map<String, QueryParameterImplementor<?>> namedParameters;
 
 		public ParameterInterpretationImpl(String sqlString, ParameterRecognizerImpl parameterRecognizer) {
-			this.sqlString = sqlString;
+			this.sqlString = parameterRecognizer.getAdjustedSqlString();
 			this.parameterList = parameterRecognizer.getParameterList();
 			this.positionalParameters = parameterRecognizer.getPositionalQueryParameters();
 			this.namedParameters = parameterRecognizer.getNamedQueryParameters();
@@ -1223,6 +1224,11 @@ public class NativeQueryImpl<R>
 		@Override
 		public ParameterMetadataImplementor toParameterMetadata(SharedSessionContractImplementor session1) {
 			return new ParameterMetadataImpl( positionalParameters, namedParameters );
+		}
+
+		@Override
+		public String getAdjustedSqlString() {
+			return sqlString;
 		}
 
 		@Override

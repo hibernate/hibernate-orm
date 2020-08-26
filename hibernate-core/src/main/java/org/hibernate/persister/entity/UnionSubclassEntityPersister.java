@@ -389,7 +389,14 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 					() -> columnConsumer -> {
 						final String[] keyColumnNames = constraintOrderedKeyColumnNames[tablePosition];
 						for ( String column : keyColumnNames ) {
-							columnConsumer.accept( tableName, column, false, null );
+							columnConsumer.accept(
+									tableName,
+									column,
+									false,
+									null,
+									null,
+									null
+							);
 						}
 					}
 			);

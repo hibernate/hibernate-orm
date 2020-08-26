@@ -472,8 +472,17 @@ public final class StringHelper {
 		return string == null || string.isEmpty();
 	}
 
-	public static boolean isEmptyOrWhiteSpace(String string) {
+	public static boolean isBlank(String string) {
 		return isEmpty( string ) || isEmpty( string.trim() );
+	}
+
+	/**
+	 * @deprecated use {@link #isBlank(String)}
+	 * @return
+	 */
+	@Deprecated
+	public static boolean isEmptyOrWhitespace(String string) {
+		return isBlank(string);
 	}
 
 	public static String qualify(String prefix, String name) {

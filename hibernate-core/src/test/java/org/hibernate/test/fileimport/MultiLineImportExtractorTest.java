@@ -54,7 +54,7 @@ public class MultiLineImportExtractorTest {
 				assertThat( commands[4], startsWith( "INSERT INTO test_data VALUES (3" ) );
 				assertThat( commands[4], not( containsString( "third record" ) ) );
 
-				assertThat( commands[5], startsWith( "INSERT INTO test_data VALUES" ) );
+				assertThat( commands[5].replace( "\t", "" ), is( "INSERT INTO test_data VALUES (     4       , NULL     )" ) );
 			}
 		}
 	}

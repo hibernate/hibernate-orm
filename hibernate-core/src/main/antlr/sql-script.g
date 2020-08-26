@@ -42,6 +42,11 @@ options {
     protected void statementEnded() {
     	// by default, nothing to do
     }
+
+     protected void skip() {
+        	// by default, nothing to do
+     }
+
 }
 
 
@@ -52,11 +57,11 @@ options {
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 script
-	: (statement)+ EOF
+	: (newLineToSkip)* (statement)+ EOF
     ;
 
 statement
-	: { statementStarted(); } (statementPart)* DELIMITER (WS_CHAR)* { statementEnded(); }
+	: { statementStarted(); } (statementPart (afterStatementPartNewline)*)*  DELIMITER (newLineToSkip)* { statementEnded(); }
 	;
 
 statementPart
@@ -70,12 +75,22 @@ quotedString
 	}
 	;
 
+afterStatementPartNewline
+   : NEWLINE {
+   		out(" ");
+   }
+   ;
+
+newLineToSkip
+	: NEWLINE {
+		skip();
+	}
+	;
+
+
 nonSkippedChar
-	: w:WS_CHAR {
-   		out( w );
-   	}
-   	| o:OTHER_CHAR {
-   		out( o );
+	: c:CHAR {
+   		out( c );
    	}
 	;
 
@@ -108,13 +123,14 @@ QUOTED_TEXT
 protected
 ESCqs :	'\'' '\'' ;
 
-WS_CHAR
-	: ' '
-	| '\t'
-	| ( "\r\n" | '\r' | '\n' ) {newline();}
+CHAR
+	: ( ' ' | '\t' ) => ( ' ' | '\t' )
+    | ~( ';' | '\n' | '\r' )
     ;
 
-OTHER_CHAR	: ~( ';' | ' ' | '\t' | '\n' | '\r' );
+NEWLINE
+	: ( '\r' | '\n' | '\r''\n' )
+	;
 
 LINE_COMMENT
 	// match `//` or `--` followed by anything other than \n or \r until NEWLINE

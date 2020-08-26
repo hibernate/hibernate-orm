@@ -33,9 +33,9 @@ public class MultiLineImportExtractorTest {
 	public void testExtraction() throws IOException {
 		final ClassLoader classLoader = ClassLoader.getSystemClassLoader();
 
-		try ( final InputStream stream = classLoader.getResourceAsStream( IMPORT_FILE ) ) {
+		try (final InputStream stream = classLoader.getResourceAsStream( IMPORT_FILE )) {
 			assertThat( stream, notNullValue() );
-			try ( final InputStreamReader reader = new InputStreamReader( stream ) ) {
+			try (final InputStreamReader reader = new InputStreamReader( stream )) {
 				final String[] commands = extractor.extractCommands( reader );
 				assertThat( commands, notNullValue() );
 				assertThat( commands.length, is( 6 ) );
@@ -46,7 +46,7 @@ public class MultiLineImportExtractorTest {
 
 				assertThat( commands[1], is( "INSERT INTO test_data VALUES (1, 'sample')" ) );
 
-				assertThat( commands[2], is( "DELETE" + System.lineSeparator() + "  FROM test_data" ) );
+				assertThat( commands[2], is( "DELETE   FROM test_data" ) );
 
 				assertThat( commands[3], startsWith( "INSERT INTO test_data VALUES (2," ) );
 				assertThat( commands[3], containsString( "-- line 2" ) );
@@ -54,7 +54,7 @@ public class MultiLineImportExtractorTest {
 				assertThat( commands[4], startsWith( "INSERT INTO test_data VALUES (3" ) );
 				assertThat( commands[4], not( containsString( "third record" ) ) );
 
-				assertThat( commands[5], startsWith( "INSERT INTO test_data" + System.lineSeparator() + "VALUES" + System.lineSeparator() ) );
+				assertThat( commands[5], startsWith( "INSERT INTO test_data VALUES" ) );
 			}
 		}
 	}

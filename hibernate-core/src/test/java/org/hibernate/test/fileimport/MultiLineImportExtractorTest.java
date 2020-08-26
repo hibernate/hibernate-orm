@@ -9,6 +9,7 @@ package org.hibernate.test.fileimport;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.StringReader;
 
 import org.hibernate.tool.hbm2ddl.MultipleLinesSqlCommandExtractor;
 
@@ -58,4 +59,13 @@ public class MultiLineImportExtractorTest {
 			}
 		}
 	}
+
+	@Test
+	public void testExtractionFromEmptyScript() throws IOException {
+		StringReader reader = new StringReader( "" );
+		final String[] commands = extractor.extractCommands( reader );
+		assertThat( commands, notNullValue() );
+		assertThat( commands.length, is( 0 ) );
+	}
+
 }

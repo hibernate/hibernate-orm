@@ -16,13 +16,14 @@ import org.hibernate.hql.internal.ast.QuerySyntaxException;
 import org.hibernate.hql.internal.ast.SqlGenerator;
 import org.hibernate.hql.internal.ast.tree.AssignmentSpecification;
 import org.hibernate.hql.internal.ast.tree.UpdateStatement;
+import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.entity.Queryable;
-import org.hibernate.sql.Select;
-import org.hibernate.sql.SelectValues;
 import org.hibernate.sql.Update;
 
 import java.util.List;
 import java.util.stream.IntStream;
+
+import static org.hibernate.hql.spi.id.AbstractTableBasedBulkIdHandler.generateIdSelect;
 
 /**
  * Executes HQL bulk updates against a single table, using a subselect
@@ -33,8 +34,25 @@ import java.util.stream.IntStream;
  */
 public class IdSubselectUpdateExecutor extends BasicExecutor {
 
+	private final Queryable persister;
+	private final String sql;
+	private final List<ParameterSpecification> parameterSpecifications;
+
+	public Queryable getPersister() {
+		return persister;
+	}
+	@Override
+	public String getSql() {
+		return sql;
+	}
+
+	@Override
+	public List<ParameterSpecification> getParameterSpecifications() {
+		return parameterSpecifications;
+	}
+
 	public IdSubselectUpdateExecutor(HqlSqlWalker walker) {
-		super( walker.getFinalFromClause().getFromElement().getQueryable() );
+		persister = walker.getFinalFromClause().getFromElement().getQueryable();
 
 		Dialect dialect = walker.getDialect();
 		UpdateStatement updateStatement = (UpdateStatement) walker.getAST();
@@ -98,41 +116,5 @@ public class IdSubselectUpdateExecutor extends BasicExecutor {
 		catch ( RecognitionException e ) {
 			throw QuerySyntaxException.convert( e );
 		}
-
-	}
-
-	//TODO: this is a copy/paste of a method from AbstractTableBasedBulkIdHandler
-	private String generateIdSelect(String tableAlias, String whereClause, Dialect dialect, Queryable queryable) {
-		Select select = new Select( dialect );
-		SelectValues selectClause = new SelectValues( dialect ).addColumns(
-				tableAlias,
-				queryable.getIdentifierColumnNames(),
-				queryable.getIdentifierColumnNames()
-		);
-		select.setSelectClause( selectClause.render() );
-
-		String rootTableName = queryable.getTableName();
-		String fromJoinFragment = queryable.fromJoinFragment( tableAlias, true, false );
-		String whereJoinFragment = queryable.whereJoinFragment( tableAlias, true, false );
-
-		select.setFromClause( rootTableName + ' ' + tableAlias + fromJoinFragment );
-
-		if ( whereJoinFragment == null ) {
-			whereJoinFragment = "";
-		}
-		else {
-			whereJoinFragment = whereJoinFragment.trim();
-			if ( whereJoinFragment.startsWith( "and" ) ) {
-				whereJoinFragment = whereJoinFragment.substring( 4 );
-			}
-		}
-
-		if ( !whereClause.isEmpty() ) {
-			if ( whereJoinFragment.length() > 0 ) {
-				whereJoinFragment += " and ";
-			}
-		}
-		select.setWhereClause( whereJoinFragment + whereClause );
-		return select.toStatementString();
 	}
 }

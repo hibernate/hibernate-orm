@@ -61,7 +61,7 @@ script
     ;
 
 statement
-	: { statementStarted(); } (statementPart (afterStatementPartNewline)*)*  DELIMITER (newLineToSkip)* { statementEnded(); }
+	: { statementStarted(); } (statementPart (afterStatementPartNewline)*)* DELIMITER (newLineToSkip)* { statementEnded(); }
 	;
 
 statementPart
@@ -76,8 +76,8 @@ quotedString
 	;
 
 afterStatementPartNewline
-   : NEWLINE {
-   		out(" ");
+   : n:NEWLINE {
+   		out( " " );
    }
    ;
 

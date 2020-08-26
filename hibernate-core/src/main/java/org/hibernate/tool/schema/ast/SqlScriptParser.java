@@ -14,7 +14,6 @@ import java.util.function.Consumer;
 
 import org.hibernate.hql.internal.ast.util.ASTUtil;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.tool.schema.SchemaToolingLogging;
 
 import antlr.RecognitionException;
 import antlr.Token;
@@ -65,6 +64,7 @@ public class SqlScriptParser extends GeneratedSqlScriptParser {
 	 */
 	@Override
 	protected void out(String text) {
+		SqlScriptLogging.SCRIPT_LOGGER.tracef( "#out(`%s`) [text]", text );
 		currentStatementBuffer.append( text );
 	}
 
@@ -73,13 +73,15 @@ public class SqlScriptParser extends GeneratedSqlScriptParser {
 	 */
 	@Override
 	protected void out(Token token) {
+		SqlScriptLogging.SCRIPT_LOGGER.tracef( "#out(`%s`) [token]", token.getText() );
+
 		currentStatementBuffer.append( token.getText() );
 	}
 
 	@Override
 	protected void statementStarted() {
 		if ( currentStatementBuffer != null ) {
-			SchemaToolingLogging.LOGGER.debugf( "`#currentStatementBuffer` was not null at `#statementStart`" );
+			SqlScriptLogging.SCRIPT_LOGGER.debugf( "`#currentStatementBuffer` was not null at `#statementStart`" );
 		}
 		currentStatementBuffer = new StringBuilder();
 	}
@@ -90,7 +92,7 @@ public class SqlScriptParser extends GeneratedSqlScriptParser {
 	@Override
 	protected void statementEnded() {
 		final String statementText = currentStatementBuffer.toString().trim();
-		SchemaToolingLogging.LOGGER.debugf( "Import statement : %s", statementText );
+		SqlScriptLogging.AST_LOGGER.debugf( "Import statement : %s", statementText );
 		commandConsumer.accept( statementText );
 
 		currentStatementBuffer = null;
@@ -142,7 +144,7 @@ public class SqlScriptParser extends GeneratedSqlScriptParser {
 
 	@Override
 	public void reportWarning(String message) {
-		SchemaToolingLogging.LOGGER.debugf( "SqlScriptParser recognition warning : " + message );
+		SqlScriptLogging.SCRIPT_LOGGER.debugf( "SqlScriptParser recognition warning : " + message );
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -153,7 +155,7 @@ public class SqlScriptParser extends GeneratedSqlScriptParser {
 
 	@Override
 	public void traceIn(String ruleName) {
-		if ( ! SchemaToolingLogging.AST_TRACE_ENABLED ) {
+		if ( ! SqlScriptLogging.AST_TRACE_ENABLED ) {
 			return;
 		}
 
@@ -162,12 +164,12 @@ public class SqlScriptParser extends GeneratedSqlScriptParser {
 		}
 
 		final String prefix = StringHelper.repeat( '-', ( traceDepth++ * depthIndent ) );
-		SchemaToolingLogging.AST_LOGGER.tracef( "%s-> %s", prefix, ruleName );
+		SqlScriptLogging.AST_LOGGER.tracef( "%s-> %s", prefix, ruleName );
 	}
 
 	@Override
 	public void traceOut(String ruleName) {
-		if ( ! SchemaToolingLogging.AST_TRACE_ENABLED ) {
+		if ( ! SqlScriptLogging.AST_TRACE_ENABLED ) {
 			return;
 		}
 
@@ -176,6 +178,6 @@ public class SqlScriptParser extends GeneratedSqlScriptParser {
 		}
 
 		final String prefix = StringHelper.repeat( '-', ( --traceDepth * depthIndent ) );
-		SchemaToolingLogging.AST_LOGGER.tracef( "<-%s %s", prefix, ruleName );
+		SqlScriptLogging.AST_LOGGER.tracef( "<-%s %s", prefix, ruleName );
 	}
 }

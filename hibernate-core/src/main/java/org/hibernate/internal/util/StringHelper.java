@@ -624,7 +624,7 @@ public final class StringHelper {
 	}
 
 	public static String moveAndToBeginning(String filter) {
-		if ( filter.trim().length() > 0 ) {
+		if ( !isBlank( filter ) ) {
 			filter += " and ";
 			if ( filter.startsWith( " and " ) ) {
 				filter = filter.substring( 4 );

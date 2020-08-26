@@ -13,5 +13,5 @@ import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
  * @author Steve Ebersole
  */
 public interface SimpleSqmUpdateTranslator extends SqmTranslator, SqmToSqlAstConverter, JdbcParameterBySqmParameterAccess {
-	SimpleSqmUpdateTranslation translate(SqmUpdateStatement sqmUpdate);
+	SimpleSqmUpdateTranslation translate(SqmUpdateStatement<?> sqmUpdate);
 }

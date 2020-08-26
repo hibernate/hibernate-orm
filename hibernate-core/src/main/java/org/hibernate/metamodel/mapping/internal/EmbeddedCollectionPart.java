@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
-import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -62,9 +61,11 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 	private final EmbeddableMappingType embeddableMappingType;
 
 	private final String containingTableExpression;
-
-	private final PropertyAccess parentInjectionAttributeProperyAccess;
 	private final List<String> columnExpressions;
+	private final List<String> customReadExpressions;
+	private final List<String> customWriteExpressions;
+
+	private final PropertyAccess parentInjectionAttributePropertyAccess;
 	private final String sqlAliasStem;
 
 	@SuppressWarnings("WeakerAccess")
@@ -75,18 +76,22 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 			String parentInjectionAttributeName,
 			String containingTableExpression,
 			List<String> columnExpressions,
+			List<String> customReadExpressions,
+			List<String> customWriteExpressions,
 			String sqlAliasStem) {
+		this.customReadExpressions = customReadExpressions;
+		this.customWriteExpressions = customWriteExpressions;
 		this.navigableRole = collectionDescriptor.getNavigableRole().appendContainer( nature.getName() );
 		this.collectionDescriptor = collectionDescriptor;
 		this.nature = nature;
 		if ( parentInjectionAttributeName != null ) {
-			parentInjectionAttributeProperyAccess = PropertyAccessStrategyBasicImpl.INSTANCE.buildPropertyAccess(
+			parentInjectionAttributePropertyAccess = PropertyAccessStrategyBasicImpl.INSTANCE.buildPropertyAccess(
 					embeddableMappingType.getMappedJavaTypeDescriptor().getJavaType(),
 					parentInjectionAttributeName
 			);
 		}
 		else {
-			parentInjectionAttributeProperyAccess = null;
+			parentInjectionAttributePropertyAccess = null;
 		}
 		this.embeddableMappingType = embeddableMappingType;
 
@@ -135,8 +140,18 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 	}
 
 	@Override
+	public List<String> getCustomReadExpressions() {
+		return customReadExpressions;
+	}
+
+	@Override
+	public List<String> getCustomWriteExpressions() {
+		return customWriteExpressions;
+	}
+
+	@Override
 	public PropertyAccess getParentInjectionAttributePropertyAccess() {
-		return parentInjectionAttributeProperyAccess;
+		return parentInjectionAttributePropertyAccess;
 	}
 
 	@Override
@@ -204,7 +219,7 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 
 		final List<Expression> expressions = new ArrayList<>();
 		getEmbeddableTypeDescriptor().visitColumns(
-				(tableExpression, columnExpression, isColumnExpressionFormula, jdbcMapping) ->{
+				(tableExpression, columnExpression, isFormula, readFragment, writeFragment, jdbcMapping) ->{
 					assert containingTableExpression.equals( tableExpression );
 					assert columnExpressions.contains( columnExpression );
 					expressions.add(
@@ -213,7 +228,9 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 									sqlAstProcessingState -> new ColumnReference(
 											tableGroup.resolveTableReference( tableExpression ),
 											columnExpression,
-											isColumnExpressionFormula,
+											isFormula,
+											readFragment,
+											writeFragment,
 											jdbcMapping,
 											sqlAstCreationState.getCreationContext().getSessionFactory()
 									)
@@ -264,7 +281,7 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 	}
 
 	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
+	public JavaTypeDescriptor<?> getJavaTypeDescriptor() {
 		return getEmbeddableTypeDescriptor().getJavaTypeDescriptor();
 	}
 

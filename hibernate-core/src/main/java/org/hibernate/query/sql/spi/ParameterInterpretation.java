@@ -26,4 +26,6 @@ public interface ParameterInterpretation {
 	 * Create the ParameterMetadata representation of this interpretation
 	 */
 	ParameterMetadataImplementor toParameterMetadata(SharedSessionContractImplementor session);
+
+	String getAdjustedSqlString();
 }

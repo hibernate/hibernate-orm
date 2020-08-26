@@ -15,37 +15,44 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NonTransientException;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 
 /**
  * @author Steve Ebersole
  */
 public class MappingModelCreationProcess {
+	private final String EOL = System.lineSeparator();
+
 	/**
 	 * Triggers creation of the mapping model
 	 */
 	public static void process(
 			Map<String,EntityPersister> entityPersisterMap,
+			SqmFunctionRegistry functionRegistry,
 			RuntimeModelCreationContext creationContext) {
 		final MappingModelCreationProcess process = new MappingModelCreationProcess(
 				entityPersisterMap,
+				functionRegistry,
 				creationContext
 		);
 		process.execute();
 	}
 
 	private final Map<String,EntityPersister> entityPersisterMap;
+	private final SqmFunctionRegistry functionRegistry;
 
 	private final RuntimeModelCreationContext creationContext;
 
 	private String currentlyProcessingRole;
 
-	private List<PostInitCallback> postInitCallbacks;
-	private List<PostInitCallback> foreignKeyPostInitCallbacks;
+	private List<PostInitCallbackEntry> postInitCallbacks;
 
 	private MappingModelCreationProcess(
-			Map<String,EntityPersister> entityPersisterMap,
+			Map<String, EntityPersister> entityPersisterMap,
+			SqmFunctionRegistry functionRegistry,
 			RuntimeModelCreationContext creationContext) {
 		this.entityPersisterMap = entityPersisterMap;
+		this.functionRegistry = functionRegistry;
 		this.creationContext = creationContext;
 	}
 
@@ -55,6 +62,10 @@ public class MappingModelCreationProcess {
 
 	public EntityPersister getEntityPersister(String name) {
 		return entityPersisterMap.get( name );
+	}
+
+	public SqmFunctionRegistry getSqmFunctionRegistry() {
+		return functionRegistry;
 	}
 
 	/**
@@ -75,41 +86,63 @@ public class MappingModelCreationProcess {
 			}
 		}
 
-		MappingModelCreationLogger.LOGGER.debugf( "Starting generic post-init callbacks" );
-		executePostInitCallbacks( postInitCallbacks );
-
-		MappingModelCreationLogger.LOGGER.debugf( "Starting foreign-key post-init callbacks" );
-		executePostInitCallbacks( foreignKeyPostInitCallbacks );
+		executePostInitCallbacks();
 	}
 
-	private void executePostInitCallbacks(List<PostInitCallback> postInitCallbacks) {
+	private void executePostInitCallbacks() {
+		MappingModelCreationLogger.LOGGER.debugf( "Starting post-init callbacks" );
+
 		while ( postInitCallbacks != null && !postInitCallbacks.isEmpty() ) {
 
 			// copy to avoid CCME
-			final ArrayList<PostInitCallback> copy = new ArrayList<>( postInitCallbacks );
+			final ArrayList<PostInitCallbackEntry> copy = new ArrayList<>( postInitCallbacks );
 
+			// NOTE : this is *not* the same as the lengths between `copy` and `postInitCallbacks`
+			boolean anyCompleted = false;
+
+			//noinspection ForLoopReplaceableByForEach
 			for ( int i = 0; i < copy.size(); i++ ) {
-				final PostInitCallback callback = copy.get( i );
-
+				final PostInitCallbackEntry callbackEntry = copy.get( i );
 				try {
-					final boolean completed = callback.process();
+					final boolean completed = callbackEntry.process();
 					if ( completed ) {
-						postInitCallbacks.remove( callback );
+						anyCompleted = true;
+						postInitCallbacks.remove( callbackEntry );
 					}
 				}
 				catch (Exception e) {
 					if ( e instanceof NonTransientException ) {
-						MappingModelCreationLogger.LOGGER.debugf( "Mapping-model creation encountered non-transient error : %s", e );
+						MappingModelCreationLogger.LOGGER.debugf(
+								"Mapping-model creation encountered non-transient error : %s",
+								e
+						);
 						throw e;
 					}
 
-					MappingModelCreationLogger.LOGGER.debugf( "Mapping-model creation encountered (possibly) transient error : %s", e );
+					final String format = "Mapping-model creation encountered (possibly) transient error : %s";
+					if ( MappingModelCreationLogger.TRACE_ENABLED ) {
+						MappingModelCreationLogger.LOGGER.tracef( e, format, e );
+					}
+					else {
+						MappingModelCreationLogger.LOGGER.debugf( format, e );
+					}
 				}
 			}
 
-			if ( copy.size() == postInitCallbacks.size() ) {
+			if ( ! anyCompleted ) {
 				// none of the remaining callbacks could complete fully, this is an error
-				throw new IllegalStateException( "No post-init callbacks could complete" );
+				final StringBuilder buff = new StringBuilder(
+						"MappingModelCreationProcess$PostInitCallback queue could not be processed..."
+				);
+
+				postInitCallbacks.forEach(
+						callbackEntry -> buff.append( EOL )
+								.append( "        - " ).append( callbackEntry )
+				);
+
+				buff.append( EOL );
+
+				throw new IllegalStateException( buff.toString() );
 			}
 		}
 	}
@@ -130,18 +163,15 @@ public class MappingModelCreationProcess {
 		}
 	}
 
-	public void registerInitializationCallback(PostInitCallback callback) {
+	public void registerInitializationCallback(String description, PostInitCallback callback) {
 		if ( postInitCallbacks == null ) {
 			postInitCallbacks = new ArrayList<>();
 		}
-		postInitCallbacks.add( callback );
+		postInitCallbacks.add( new PostInitCallbackEntry( description, callback ) );
 	}
 
-	public void registerForeignKeyPostInitCallbacks(PostInitCallback callback) {
-		if ( foreignKeyPostInitCallbacks == null ) {
-			foreignKeyPostInitCallbacks = new ArrayList<>();
-		}
-		foreignKeyPostInitCallbacks.add( callback );
+	public void registerForeignKeyPostInitCallbacks(String description, PostInitCallback callback) {
+		registerInitializationCallback( description, callback );
 	}
 
 	@FunctionalInterface
@@ -155,5 +185,28 @@ public class MappingModelCreationProcess {
 	@FunctionalInterface
 	public interface SubPartMappingProducer<T> {
 		T produceSubMapping(String role, MappingModelCreationProcess creationProcess);
+	}
+
+	private static class PostInitCallbackEntry {
+		private final String description;
+		private final PostInitCallback callback;
+
+		public PostInitCallbackEntry(String description, PostInitCallback callback) {
+			this.description = description;
+			this.callback = callback;
+		}
+
+		private boolean process() {
+			MappingModelCreationLogger.LOGGER.debugf(
+					"Starting MappingModelCreationProcess.PostInitCallbackEntry processing : %s",
+					description
+			);
+			return callback.process();
+		}
+
+		@Override
+		public String toString() {
+			return "MappingModelCreationProcess.PostInitCallbackEntry - " + description;
+		}
 	}
 }

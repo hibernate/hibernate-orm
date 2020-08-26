@@ -160,7 +160,6 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 			MetadataImplementor bootModel,
 			BootstrapContext bootstrapContext,
 			SessionFactoryImplementor sessionFactory) {
-
 		final RuntimeModelCreationContext runtimeModelCreationContext = new RuntimeModelCreationContext() {
 			@Override
 			public BootstrapContext getBootstrapContext() {
@@ -207,6 +206,7 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 
 		MappingModelCreationProcess.process(
 				entityPersisterMap,
+				sessionFactory.getQueryEngine().getSqmFunctionRegistry(),
 				runtimeModelCreationContext
 		);
 

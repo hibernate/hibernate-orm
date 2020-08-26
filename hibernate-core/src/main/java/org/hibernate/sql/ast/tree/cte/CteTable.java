@@ -45,11 +45,8 @@ public class CteTable {
 		final int numberOfColumns = entityDescriptor.getIdentifierMapping().getJdbcTypeCount( sessionFactory.getTypeConfiguration() );
 		cteColumns = new ArrayList<>( numberOfColumns );
 		entityDescriptor.getIdentifierMapping().visitColumns(
-				(containingTableExpression, columnExpression, isColumnExpressionFormula, jdbcMapping) -> cteColumns.add(
-						new CteColumn(
-								"cte_" + columnExpression,
-								jdbcMapping
-						)
+				(containingTableExpression, columnExpression, isFormula, readFragment, writeFragment, jdbcMapping) -> cteColumns.add(
+						new CteColumn("cte_" + columnExpression, jdbcMapping )
 				)
 		);
 	}
@@ -168,10 +165,13 @@ public class CteTable {
 					new SqlSelectionImpl(
 							i + 1,
 							i,
+							// todo (6.0) : handle read/write transformers for the CTE columns
 							new ColumnReference(
 									tableReference,
 									cteColumn.getColumnExpression(),
 									false,
+									null,
+									null,
 									cteColumn.getJdbcMapping(),
 									sessionFactory
 							)

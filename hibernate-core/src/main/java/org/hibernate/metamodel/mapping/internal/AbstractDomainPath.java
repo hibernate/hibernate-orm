@@ -122,7 +122,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 		if ( embeddableValuedModelPart.getFetchableName()
 				.equals( modelPartName ) || ELEMENT_TOKEN.equals( modelPartName ) ) {
 			embeddableValuedModelPart.visitColumns(
-					(tableExpression, columnExpression, isColumnExpressionFormula, jdbcMapping) -> {
+					(tableExpression, columnExpression, isFormula, customReadExpression, customWriteExpression, jdbcMapping) -> {
 						final TableReference tableReference = tableGroup.resolveTableReference( tableExpression );
 						ast.addSortSpecification(
 								new SortSpecification(
@@ -134,7 +134,9 @@ public abstract class AbstractDomainPath implements DomainPath {
 												sqlAstProcessingState -> new ColumnReference(
 														tableReference,
 														columnExpression,
-														isColumnExpressionFormula,
+														isFormula,
+														customReadExpression,
+														customWriteExpression,
 														jdbcMapping,
 														sessionFactory
 												)
@@ -175,6 +177,8 @@ public abstract class AbstractDomainPath implements DomainPath {
 								tableReference,
 								basicValuedPart.getMappedColumnExpression(),
 								basicValuedPart.isMappedColumnExpressionFormula(),
+								basicValuedPart.getCustomReadExpression(),
+								basicValuedPart.getCustomWriteExpression(),
 								basicValuedPart.getJdbcMapping(),
 								creationState.getCreationContext().getSessionFactory()
 						),

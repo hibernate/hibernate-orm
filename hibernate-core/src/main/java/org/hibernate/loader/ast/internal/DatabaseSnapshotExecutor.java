@@ -24,7 +24,6 @@ import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
@@ -46,6 +45,8 @@ import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.internal.RowTransformerDatabaseSnapshotImpl;
 
 import org.jboss.logging.Logger;
+
+import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
 /**
  * @author Steve Ebersole
@@ -94,10 +95,12 @@ class DatabaseSnapshotExecutor {
 		jdbcParameters = new ArrayList<>(
 				entityDescriptor.getIdentifierMapping().getJdbcTypeCount( sessionFactory.getTypeConfiguration() )
 		);
+
+		//noinspection rawtypes
 		final List<DomainResult> domainResults = new ArrayList<>();
 
 		entityDescriptor.getIdentifierMapping().visitColumns(
-				(tab, col, isColFormula, jdbcMapping) -> {
+				(tab, col, isColFormula, readFragment, writeFragment, jdbcMapping) -> {
 					final TableReference tableReference = rootTableGroup.resolveTableReference( tab );
 
 					final JdbcParameter jdbcParameter = new JdbcParameterImpl( jdbcMapping );
@@ -105,11 +108,13 @@ class DatabaseSnapshotExecutor {
 
 					final ColumnReference columnReference = (ColumnReference) state.getSqlExpressionResolver()
 							.resolveSqlExpression(
-									SqlExpressionResolver.createColumnReferenceKey( tableReference, col ),
+									createColumnReferenceKey( tableReference, col ),
 									s -> new ColumnReference(
 											tableReference,
 											col,
 											isColFormula,
+											readFragment,
+											writeFragment,
 											jdbcMapping,
 											sessionFactory
 									)
@@ -131,7 +136,7 @@ class DatabaseSnapshotExecutor {
 
 					//noinspection unchecked
 					domainResults.add(
-							new BasicResult(
+							new BasicResult<Object>(
 									sqlSelection.getValuesArrayPosition(),
 									null,
 									jdbcMapping.getJavaTypeDescriptor()
@@ -144,20 +149,19 @@ class DatabaseSnapshotExecutor {
 				contributorMapping -> {
 					rootPath.append( contributorMapping.getAttributeName() );
 					contributorMapping.visitColumns(
-							(containingTableExpression, columnExpression, isColumnExpressionFormula, jdbcMapping) -> {
+							(table, column, isFormula, customReadExpr, customWriteExpr, jdbcMapping) -> {
 								final TableReference tableReference = rootTableGroup.resolveTableReference(
-										containingTableExpression );
+										table );
 
 								final ColumnReference columnReference = (ColumnReference) state.getSqlExpressionResolver()
 										.resolveSqlExpression(
-												SqlExpressionResolver.createColumnReferenceKey(
-														tableReference,
-														columnExpression
-												),
+												createColumnReferenceKey( tableReference, column ),
 												s -> new ColumnReference(
 														tableReference,
-														columnExpression,
-														isColumnExpressionFormula,
+														column,
+														isFormula,
+														customReadExpr,
+														customWriteExpr,
 														jdbcMapping,
 														sessionFactory
 												)
@@ -172,7 +176,7 @@ class DatabaseSnapshotExecutor {
 
 								//noinspection unchecked
 								domainResults.add(
-										new BasicResult(
+										new BasicResult<Object>(
 												sqlSelection.getValuesArrayPosition(),
 												null,
 												jdbcMapping.getJavaTypeDescriptor()
@@ -218,7 +222,7 @@ class DatabaseSnapshotExecutor {
 		);
 		assert !paramItr.hasNext();
 
-		final List list = JdbcSelectExecutorStandardImpl.INSTANCE.list(
+		final List<?> list = JdbcSelectExecutorStandardImpl.INSTANCE.list(
 				jdbcSelect,
 				jdbcParameterBindings,
 				new ExecutionContext() {

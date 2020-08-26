@@ -211,6 +211,7 @@ public class StandardSqmInsertTranslator
 	@Override
 	public Values visitValues(SqmValues sqmValues) {
 		Values values = new Values();
+		//noinspection rawtypes
 		for ( SqmExpression expression : sqmValues.getExpressions() ) {
 			values.getExpressions().add( (Expression) expression.accept( this ) );
 		}
@@ -218,7 +219,7 @@ public class StandardSqmInsertTranslator
 	}
 
 	@Override
-	public SelectStatement visitSelectStatement(SqmSelectStatement statement) {
+	public SelectStatement visitSelectStatement(SqmSelectStatement<?> statement) {
 		final QuerySpec querySpec = visitQuerySpec( statement.getQuerySpec() );
 
 		return new SelectStatement( querySpec, domainResults );

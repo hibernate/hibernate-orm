@@ -7,14 +7,17 @@
 package org.hibernate.metamodel.mapping;
 
 /**
+ * Consumer used to visit columns for a given model part
+ *
  * @author Steve Ebersole
  */
 @FunctionalInterface
 public interface ColumnConsumer {
-	// todo (6.0) : pass values `updateable`, `checkable`, etc
 	void accept(
 			String containingTableExpression,
 			String columnExpression,
-			boolean isColumnExpressionFormula,
+			boolean isFormula,
+			String customReadExpression,
+			String customWriteExpression,
 			JdbcMapping jdbcMapping);
 }

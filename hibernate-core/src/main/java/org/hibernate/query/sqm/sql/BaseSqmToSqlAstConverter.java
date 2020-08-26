@@ -191,6 +191,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 import org.jboss.logging.Logger;
 
 import static org.hibernate.internal.util.NullnessHelper.coalesce;
+import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 import static org.hibernate.query.BinaryArithmeticOperator.MULTIPLY;
 import static org.hibernate.query.BinaryArithmeticOperator.SUBTRACT;
 import static org.hibernate.query.TemporalUnit.DAY;
@@ -327,27 +328,27 @@ public abstract class BaseSqmToSqlAstConverter
 	// Statements
 
 	@Override
-	public Object visitUpdateStatement(SqmUpdateStatement statement) {
+	public Object visitUpdateStatement(SqmUpdateStatement<?> statement) {
 		throw new AssertionFailure( "UpdateStatement not supported" );
 	}
 
 	@Override
-	public Object visitDeleteStatement(SqmDeleteStatement statement) {
+	public Object visitDeleteStatement(SqmDeleteStatement<?> statement) {
 		throw new AssertionFailure( "DeleteStatement not supported" );
 	}
 
 	@Override
-	public Object visitInsertSelectStatement(SqmInsertSelectStatement statement) {
+	public Object visitInsertSelectStatement(SqmInsertSelectStatement<?> statement) {
 		throw new AssertionFailure( "InsertStatement not supported" );
 	}
 
 	@Override
-	public Object visitInsertValuesStatement(SqmInsertValuesStatement statement) {
+	public Object visitInsertValuesStatement(SqmInsertValuesStatement<?> statement) {
 		throw new AssertionFailure( "InsertStatement not supported" );
 	}
 
 	@Override
-	public SelectStatement visitSelectStatement(SqmSelectStatement statement) {
+	public SelectStatement visitSelectStatement(SqmSelectStatement<?> statement) {
 		throw new AssertionFailure( "SelectStatement not supported" );
 	}
 
@@ -2294,9 +2295,9 @@ public abstract class BaseSqmToSqlAstConverter
 		final Expression upperBound;
 
 		inferableTypeAccessStack.push(
-				() -> coalesce(
-						determineValueMapping( predicate.getLowerBound() ),
-						determineValueMapping( predicate.getUpperBound() )
+				() -> coalesceSuppliedValues(
+						() -> determineValueMapping( predicate.getLowerBound() ),
+						() -> determineValueMapping( predicate.getUpperBound() )
 				)
 		);
 
@@ -2308,9 +2309,9 @@ public abstract class BaseSqmToSqlAstConverter
 		}
 
 		inferableTypeAccessStack.push(
-				() -> coalesce(
-						determineValueMapping( predicate.getExpression() ),
-						determineValueMapping( predicate.getUpperBound() )
+				() -> coalesceSuppliedValues(
+						() -> determineValueMapping( predicate.getExpression() ),
+						() -> determineValueMapping( predicate.getUpperBound() )
 				)
 		);
 		try {
@@ -2321,9 +2322,9 @@ public abstract class BaseSqmToSqlAstConverter
 		}
 
 		inferableTypeAccessStack.push(
-				() -> coalesce(
-						determineValueMapping( predicate.getExpression() ),
-						determineValueMapping( predicate.getLowerBound() )
+				() -> coalesceSuppliedValues(
+						() -> determineValueMapping( predicate.getExpression() ),
+						() -> determineValueMapping( predicate.getLowerBound() )
 				)
 		);
 		try {

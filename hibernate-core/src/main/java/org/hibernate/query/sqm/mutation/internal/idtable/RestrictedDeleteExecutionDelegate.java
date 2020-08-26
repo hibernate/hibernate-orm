@@ -65,7 +65,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 
 	private final EntityMappingType entityDescriptor;
 	private final IdTable idTable;
-	private final SqmDeleteStatement sqmDelete;
+	private final SqmDeleteStatement<?> sqmDelete;
 	private final DomainParameterXref domainParameterXref;
 	private final SessionFactoryImplementor sessionFactory;
 
@@ -81,7 +81,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 	public RestrictedDeleteExecutionDelegate(
 			EntityMappingType entityDescriptor,
 			IdTable idTable,
-			SqmDeleteStatement sqmDelete,
+			SqmDeleteStatement<?> sqmDelete,
 			DomainParameterXref domainParameterXref,
 			BeforeUseAction beforeUseAction,
 			AfterUseAction afterUseAction,
@@ -285,7 +285,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 		 */
 		final List<ColumnReference> deletingTableColumnRefs = new ArrayList<>();
 		tableKeyColumnVisitationSupplier.get().accept(
-				(containingTableExpression, columnExpression, isColumnExpressionFormula, jdbcMapping) -> {
+				(containingTableExpression, columnExpression, isFormula, readFragment, writeFragment, jdbcMapping) -> {
 					assert targetTableReference.getTableExpression().equals( containingTableExpression );
 
 					final Expression expression = sqlExpressionResolver.resolveSqlExpression(
@@ -293,7 +293,9 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 							sqlAstProcessingState -> new ColumnReference(
 									rootTableGroup.getPrimaryTableReference(),
 									columnExpression,
-									isColumnExpressionFormula,
+									false,
+									null,
+									null,
 									jdbcMapping,
 									sessionFactory
 							)
@@ -457,13 +459,19 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 		final TableKeyExpressionCollector keyColumnCollector = new TableKeyExpressionCollector( entityDescriptor );
 
 		tableKeyColumnVisitationSupplier.get().accept(
-				(containingTableExpression, columnExpression, isColumnExpressionFormula, jdbcMapping) -> {
+				(containingTableExpression, columnExpression, isFormula, readFragment, writeFragment, jdbcMapping) -> {
 					assert containingTableExpression.equals( tableExpression );
+					assert ! isFormula;
+					assert readFragment == null;
+					assert writeFragment == null;
+
 					keyColumnCollector.apply(
 							new ColumnReference(
 									(String) null,
 									columnExpression,
-									isColumnExpressionFormula,
+									false,
+									null,
+									null,
 									jdbcMapping,
 									factory
 							)

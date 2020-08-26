@@ -381,6 +381,16 @@ public class Column implements Selectable, Serializable, Cloneable {
 		return getName();
 	}
 
+	@Override
+	public String getCustomReadExpression() {
+		return customRead;
+	}
+
+	@Override
+	public String getCustomWriteExpression() {
+		return customWrite;
+	}
+
 	public Integer getPrecision() {
 		return precision;
 	}
@@ -423,6 +433,11 @@ public class Column implements Selectable, Serializable, Cloneable {
 
 	public String getCustomRead() {
 		return customRead;
+	}
+
+	public void setResolvedCustomRead(String customRead) {
+		assert customRead == null || ! StringHelper.isEmpty( customRead.trim() );
+		this.customRead = safeInterning( customRead );
 	}
 
 	public void setCustomRead(String customRead) {

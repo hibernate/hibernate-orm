@@ -7,6 +7,7 @@
 package org.hibernate.cfg;
 
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
@@ -240,18 +241,18 @@ public class Ejb3Column {
 			this.mappingColumn.setSqlType( sqlType );
 			this.mappingColumn.setUnique( unique );
 
-			if(writeExpression != null && !writeExpression.matches("[^?]*\\?[^?]*")) {
-				throw new AnnotationException(
-						"@WriteExpression must contain exactly one value placeholder ('?') character: property ["
-								+ propertyName + "] and column [" + logicalColumnName + "]"
-				);
+			if ( writeExpression != null ) {
+				final int numberOfJdbcParams = StringHelper.count( writeExpression, '?' );
+				if ( numberOfJdbcParams != 1 ) {
+					throw new AnnotationException(
+							"@WriteExpression must contain exactly one value placeholder ('?') character: property ["
+							+ propertyName + "] and column [" + logicalColumnName + "]"
+					);
+				}
 			}
-			if ( readExpression != null) {
-				this.mappingColumn.setCustomRead( readExpression );
-			}
-			if ( writeExpression != null) {
-				this.mappingColumn.setCustomWrite( writeExpression );
-			}
+
+			this.mappingColumn.setResolvedCustomRead( readExpression );
+			this.mappingColumn.setCustomWrite( writeExpression );
 		}
 	}
 
@@ -657,14 +658,8 @@ public class Ejb3Column {
 
 		if ( StringHelper.isEmpty( annotation.forColumn() )
 				|| annotation.forColumn().equals( nonNullLogicalColumnName ) ) {
-			readExpression = annotation.read();
-			if ( StringHelper.isEmpty( readExpression ) ) {
-				readExpression = null;
-			}
-			writeExpression = annotation.write();
-			if ( StringHelper.isEmpty( writeExpression ) ) {
-				writeExpression = null;
-			}
+			readExpression = StringHelper.nullIfEmpty( annotation.read() );
+			writeExpression = StringHelper.nullIfEmpty( annotation.write() );
 		}
 	}
 

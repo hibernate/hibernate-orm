@@ -72,7 +72,7 @@ public class ImplicitFetchBuilderEmbeddable implements ImplicitFetchBuilder {
 		);
 
 		fetchable.visitColumns(
-				(table, column, isColumnFormula, jdbcMapping) -> {
+				(table, column, isColumnFormula, readFragment, writeFragment, jdbcMapping) -> {
 					final TableReference tableReference = tableGroup.getTableReference( table );
 
 					final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( column );

@@ -77,6 +77,16 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 	}
 
 	@Override
+	public String getCustomReadExpression() {
+		return null;
+	}
+
+	@Override
+	public String getCustomWriteExpression() {
+		return null;
+	}
+
+	@Override
 	public MappingType getPartMappingType() {
 		return versionBasicType;
 	}
@@ -143,6 +153,8 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 								columnTableReference,
 								columnExpression,
 								false,
+								null,
+								null,
 								versionBasicType,
 								sqlAstCreationState.getCreationContext().getSessionFactory()
 						)
@@ -181,6 +193,8 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 								columnTableReference,
 								columnExpression,
 								false,
+								null,
+								null,
 								versionBasicType,
 								sqlAstCreationState.getCreationContext().getSessionFactory()
 						)

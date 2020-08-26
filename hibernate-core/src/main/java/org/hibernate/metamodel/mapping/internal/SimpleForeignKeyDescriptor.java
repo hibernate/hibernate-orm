@@ -70,7 +70,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	}
 
 	@Override
-	public DomainResult createCollectionFetchDomainResult(
+	public DomainResult<?> createCollectionFetchDomainResult(
 			NavigablePath collectionPath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
@@ -90,6 +90,8 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 											identificationVariable,
 											targetColumnExpression,
 											false,
+											null,
+											null,
 											jdbcMapping,
 											creationState.getSqlAstCreationState()
 													.getCreationContext()
@@ -101,7 +103,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			);
 
 			//noinspection unchecked
-			return new BasicResult(
+			return new BasicResult<Object>(
 					sqlSelection.getValuesArrayPosition(),
 					null,
 					jdbcMapping.getJavaTypeDescriptor()
@@ -141,6 +143,8 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 										identificationVariable,
 										keyColumnExpression,
 										false,
+										null,
+										null,
 										jdbcMapping,
 										creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
 								)
@@ -170,6 +174,8 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 							lhs,
 							keyColumnExpression,
 							false,
+							null,
+							null,
 							jdbcMapping,
 							creationContext.getSessionFactory()
 					),
@@ -178,6 +184,8 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 							rhs,
 							targetColumnExpression,
 							false,
+							null,
+							null,
 							jdbcMapping,
 							creationContext.getSessionFactory()
 					)
@@ -189,6 +197,8 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 							lhs,
 							targetColumnExpression,
 							false,
+							null,
+							null,
 							jdbcMapping,
 							creationContext.getSessionFactory()
 					),
@@ -197,6 +207,8 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 							rhs,
 							keyColumnExpression,
 							false,
+							null,
+							null,
 							jdbcMapping,
 							creationContext.getSessionFactory()
 					)
@@ -275,7 +287,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	}
 
 	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
+	public JavaTypeDescriptor<?> getJavaTypeDescriptor() {
 		return jdbcMapping.getJavaTypeDescriptor();
 	}
 
@@ -291,12 +303,26 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 
 	@Override
 	public void visitReferringColumns(ColumnConsumer consumer) {
-		consumer.accept( keyColumnContainingTable, keyColumnExpression, false, jdbcMapping );
+		consumer.accept(
+				keyColumnContainingTable,
+				keyColumnExpression,
+				false,
+				null,
+				null,
+				jdbcMapping
+		);
 	}
 
 	@Override
 	public void visitTargetColumns(ColumnConsumer consumer) {
-		consumer.accept( targetColumnContainingTable, targetColumnExpression, false, jdbcMapping );
+		consumer.accept(
+				targetColumnContainingTable,
+				targetColumnExpression,
+				false,
+				null,
+				null,
+				jdbcMapping
+		);
 	}
 
 	@Override
@@ -344,6 +370,16 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	@Override
 	public String getMappedColumnExpression() {
 		return keyColumnExpression;
+	}
+
+	@Override
+	public String getCustomReadExpression() {
+		return null;
+	}
+
+	@Override
+	public String getCustomWriteExpression() {
+		return null;
 	}
 
 	@Override

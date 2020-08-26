@@ -1,11 +1,15 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.test.annotations.various.readwriteexpression;
+package org.hibernate.orm.test.columntransformer;
+import java.util.List;
+import java.util.Set;
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -18,6 +22,16 @@ import org.hibernate.annotations.ColumnTransformer;
 @Entity
 @Table(name="t_staff")
 public class Staff {
+
+	/**
+	 * For Hibernate
+	 */
+	private Staff() {
+	}
+
+	public Staff(Integer id) {
+		this( -1, -1, -1, id );
+	}
 
 	public Staff(double sizeInInches, double radius, double diameter, Integer id) {
 		this.sizeInInches = sizeInInches;
@@ -63,4 +77,19 @@ public class Staff {
 	public String getKooky() { return kooky; }
 	public void setKooky(String kooky) { this.kooky = kooky; }
 	private String kooky;
+
+	@ElementCollection
+	@CollectionTable( name = "integers" )
+	@Column( name = "integer_val" )
+	@ColumnTransformer( forColumn = "integer_val", read = "integer_val + 20", write = "? - 20")
+	public List<Integer> getIntegers() { return integers; }
+	public void setIntegers(List<Integer> integers) { this.integers = integers; }
+	private List<Integer> integers;
+
+	@ElementCollection
+	@CollectionTable( name = "integers2" )
+	@Column( name = "integer_val2" )
+	public List<Integer> getIntegers2() { return integers2; }
+	public void setIntegers2(List<Integer> integers2) { this.integers2 = integers2; }
+	private List<Integer> integers2;
 }

@@ -122,12 +122,14 @@ import org.hibernate.loader.entity.CacheEntityLoaderHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
+import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.Value;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.mapping.AttributeMapping;
@@ -152,7 +154,6 @@ import org.hibernate.metamodel.mapping.internal.EntityVersionMappingImpl;
 import org.hibernate.metamodel.mapping.internal.InFlightEntityMappingType;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
-import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -199,7 +200,6 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetchable;
-import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.entity.internal.EntityResultImpl;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tuple.GenerationTiming;
@@ -1409,6 +1409,8 @@ public abstract class AbstractEntityPersister
 										rootTableReference.getIdentificationVariable(),
 										rootPkColumnName,
 										false,
+										null,
+										null,
 										jdbcMapping,
 										getFactory()
 								)
@@ -1424,6 +1426,8 @@ public abstract class AbstractEntityPersister
 										joinedTableReference.getIdentificationVariable(),
 										fkColumnName,
 										false,
+										null,
+										null,
 										jdbcMapping,
 										getFactory()
 								)
@@ -5905,6 +5909,7 @@ public abstract class AbstractEntityPersister
 		// generation of `staticFetchableList` because we need to wait until after all sub-classes have had their
 		// `#prepareMappingModel` called (and their declared attribute mappings resolved)
 		creationProcess.registerInitializationCallback(
+				"Entity(" + getEntityName() + ") `staticFetchableList` generator",
 				() -> {
 					staticFetchableList = new ArrayList<>( attributeMappings.size() );
 					visitAttributeMappings( attributeMapping -> staticFetchableList.add( (Fetchable) attributeMapping ) );
@@ -6136,6 +6141,8 @@ public abstract class AbstractEntityPersister
 
 		final String tableExpression = getPropertyTableName( attrName );
 		final String[] attrColumnNames = getPropertyColumnNames( propertyIndex );
+		final String[] customReadExprs = getSubclassPropertyColumnReaderClosure()[ propertyIndex ];
+		final String[] customWriteExprs = getPropertyColumnWriters( propertyIndex );
 
 		final PropertyAccess propertyAccess = getRepresentationStrategy().resolvePropertyAccess( bootProperty );
 
@@ -6146,10 +6153,12 @@ public abstract class AbstractEntityPersister
 					stateArrayPosition,
 					bootProperty,
 					this,
-					(BasicType) attrType,
+					(BasicType<?>) attrType,
 					tableExpression,
 					attrColumnNames[0],
 					false,
+					null,
+					null,
 					propertyAccess,
 					tupleAttrDefinition.getCascadeStyle(),
 					creationProcess
@@ -6157,17 +6166,44 @@ public abstract class AbstractEntityPersister
 		}
 
 		if ( attrType instanceof BasicType ) {
+			final Value bootValue = bootProperty.getValue();
+
 			final String attrColumnExpression;
 			final boolean isAttrColumnExpressionFormula;
-			if ( attrColumnNames[0] != null ) {
+			final String customReadExpr;
+			final String customWriteExpr;
+
+			if ( bootValue instanceof DependantValue ) {
 				attrColumnExpression = attrColumnNames[0];
 				isAttrColumnExpressionFormula = false;
+				customReadExpr = null;
+				customWriteExpr = null;
 			}
 			else {
-				final String[] attrColumnFormulaTemplate = propertyColumnFormulaTemplates[ propertyIndex ];
-				attrColumnExpression = attrColumnFormulaTemplate[0];
-				isAttrColumnExpressionFormula = true;
+				final BasicValue basicBootValue = (BasicValue) bootValue;
+
+				if ( attrColumnNames[ 0 ] != null ) {
+					attrColumnExpression = attrColumnNames[ 0 ];
+					isAttrColumnExpressionFormula = false;
+
+					final Iterator<Selectable> selectableIterator = basicBootValue.getColumnIterator();
+					assert selectableIterator.hasNext();
+					final Selectable selectable = selectableIterator.next();
+
+					assert attrColumnExpression.equals( selectable.getText( creationProcess.getCreationContext().getSessionFactory().getDialect() ) );
+
+					customReadExpr = selectable.getCustomReadExpression();
+					customWriteExpr = selectable.getCustomWriteExpression();
+				}
+				else {
+					final String[] attrColumnFormulaTemplate = propertyColumnFormulaTemplates[ propertyIndex ];
+					attrColumnExpression = attrColumnFormulaTemplate[ 0 ];
+					isAttrColumnExpressionFormula = true;
+					customReadExpr = null;
+					customWriteExpr = null;
+				}
 			}
+
 			return MappingModelCreationHelper.buildBasicAttributeMapping(
 					attrName,
 					getNavigableRole().append( bootProperty.getName() ),
@@ -6178,6 +6214,8 @@ public abstract class AbstractEntityPersister
 					tableExpression,
 					attrColumnExpression,
 					isAttrColumnExpressionFormula,
+					customReadExpr,
+					customWriteExpr,
 					propertyAccess,
 					tupleAttrDefinition.getCascadeStyle(),
 					creationProcess
@@ -6192,6 +6230,8 @@ public abstract class AbstractEntityPersister
 					(CompositeType) attrType,
 					tableExpression,
 					attrColumnNames,
+					customReadExprs,
+					customWriteExprs,
 					propertyAccess,
 					tupleAttrDefinition.getCascadeStyle(),
 					creationProcess
@@ -6210,7 +6250,7 @@ public abstract class AbstractEntityPersister
 			);
 		}
 		else if ( attrType instanceof EntityType ) {
-			ToOneAttributeMapping attributeMapping = MappingModelCreationHelper.buildSingularAssociationAttributeMapping(
+			return MappingModelCreationHelper.buildSingularAssociationAttributeMapping(
 					attrName,
 					getNavigableRole().append( attrName ),
 					stateArrayPosition,
@@ -6221,7 +6261,6 @@ public abstract class AbstractEntityPersister
 					tupleAttrDefinition.getCascadeStyle(),
 					creationProcess
 			);
-			return attributeMapping;
 		}
 
 		// todo (6.0) : for now ignore any non basic-typed attributes

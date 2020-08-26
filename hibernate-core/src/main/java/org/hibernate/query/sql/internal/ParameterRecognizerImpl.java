@@ -37,6 +37,7 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 	private int ordinalParameterImplicitPosition;
 
 	private List<QueryParameterImplementor<?>> parameterList;
+	private StringBuilder sqlStringBuffer = new StringBuilder();
 
 	@SuppressWarnings("WeakerAccess")
 	public ParameterRecognizerImpl(SessionFactoryImplementor factory) {
@@ -79,6 +80,9 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 		return parameterList;
 	}
 
+	public String getAdjustedSqlString() {
+		return sqlStringBuffer.toString();
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Recognition code
@@ -113,6 +117,7 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 		}
 
 		parameterList.add( parameter );
+		sqlStringBuffer.append( "?" );
 	}
 
 	@Override
@@ -143,6 +148,7 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 		}
 
 		parameterList.add( parameter );
+		sqlStringBuffer.append( "?" );
 	}
 
 	@Override
@@ -177,10 +183,11 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 		}
 
 		parameterList.add( parameter );
+		sqlStringBuffer.append( "?" );
 	}
 
 	@Override
 	public void other(char character) {
-		// don't care...
+		sqlStringBuffer.append( character );
 	}
 }

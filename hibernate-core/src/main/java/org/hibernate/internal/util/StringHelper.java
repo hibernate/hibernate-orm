@@ -478,6 +478,29 @@ public final class StringHelper {
 		return results;
 	}
 
+	public static int count(String text, char match) {
+		if ( text == null ) {
+			return 0;
+		}
+
+		text = text.trim();
+
+		if ( text.isEmpty() ) {
+			return 0;
+		}
+
+		int count = 0;
+
+		for ( int i = 0, max = text.length(); i < max; i++ ) {
+			final char check = text.charAt( i );
+			if ( check == match ) {
+				count++;
+			}
+		}
+
+		return count;
+	}
+
 	public static int countUnquoted(String string, char character) {
 		if ( '\'' == character ) {
 			throw new IllegalArgumentException( "Unquoted count of quotes is invalid" );

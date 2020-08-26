@@ -78,4 +78,14 @@ public class JoinedSubclassDiscriminatorMappingImpl extends AbstractEntityDiscri
 	public EntityMappingType findContainingEntityMapping() {
 		return getEntityDescriptor();
 	}
+
+	@Override
+	public String getCustomReadExpression() {
+		return null;
+	}
+
+	@Override
+	public String getCustomWriteExpression() {
+		return null;
+	}
 }

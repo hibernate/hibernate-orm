@@ -134,6 +134,8 @@ public class EmbeddedIdentifierMappingImpl extends AbstractCompositeIdentifierMa
 												tableReference.getIdentificationVariable(),
 												attrColumnExpr,
 												false,
+												null,
+												null,
 												jdbcMapping,
 												sqlAstCreationState.getCreationContext().getSessionFactory()
 										)
@@ -173,8 +175,8 @@ public class EmbeddedIdentifierMappingImpl extends AbstractCompositeIdentifierMa
 	}
 
 	@Override
+	@SuppressWarnings( { "unchecked", "rawtypes" } )
 	public Collection<SingularAttributeMapping> getAttributes() {
-		//noinspection unchecked
 		return (Collection) getEmbeddableTypeDescriptor().getAttributeMappings();
 	}
 

@@ -51,7 +51,7 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 
 	protected CteDeleteHandler(
 			CteTable cteTable,
-			SqmDeleteStatement sqmDeleteStatement,
+			SqmDeleteStatement<?> sqmDeleteStatement,
 			DomainParameterXref domainParameterXref,
 			CteStrategy strategy,
 			SessionFactoryImplementor sessionFactory) {
@@ -63,8 +63,8 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 	}
 
 	@Override
-	public SqmDeleteStatement getSqmDeleteOrUpdateStatement() {
-		return (SqmDeleteStatement) super.getSqmDeleteOrUpdateStatement();
+	public SqmDeleteStatement<?> getSqmDeleteOrUpdateStatement() {
+		return (SqmDeleteStatement<?>) super.getSqmDeleteOrUpdateStatement();
 	}
 
 	@Override
@@ -138,7 +138,7 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 			QuerySpec cteDefinition,
 			String targetTable,
 			Supplier<Consumer<ColumnConsumer>> columnsToMatchVisitationSupplier,
-			MappingModelExpressable cteType,
+			MappingModelExpressable<?> cteType,
 			QuerySpec cteSubQuery,
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext) {
@@ -185,7 +185,7 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 			QuerySpec cteDefinition,
 			String targetTable,
 			Supplier<Consumer<ColumnConsumer>> columnsToMatchVisitationSupplier,
-			MappingModelExpressable cteType,
+			MappingModelExpressable<?> cteType,
 			QuerySpec cteSubQuery,
 			ExecutionContext executionContext) {
 		final DeleteStatement deleteStatement = generateCteConsumer(
@@ -207,7 +207,7 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 	private DeleteStatement generateCteConsumer(
 			String targetTable,
 			Supplier<Consumer<ColumnConsumer>> columnsToMatchVisitationSupplier,
-			MappingModelExpressable cteType,
+			MappingModelExpressable<?> cteType,
 			QuerySpec cteSubQuery,
 			ExecutionContext executionContext) {
 		final SessionFactoryImplementor sessionFactory = executionContext.getSession().getFactory();
@@ -221,15 +221,18 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 		final List<ColumnReference> columnsToMatchReferences = new ArrayList<>();
 
 		columnsToMatchVisitationSupplier.get().accept(
-				(containingTableExpression, columnExpression, isColumnExpressionFormula, jdbcMapping) -> columnsToMatchReferences.add(
-						new ColumnReference(
-								targetTableReference,
-								columnExpression,
-								isColumnExpressionFormula,
-								jdbcMapping,
-								sessionFactory
+				(containingTableExpression, columnExpression, isFormula, customReadExpr, customWriteExpr, jdbcMapping) ->
+						columnsToMatchReferences.add(
+								new ColumnReference(
+										targetTableReference,
+										columnExpression,
+										isFormula,
+										customReadExpr,
+										customWriteExpr,
+										jdbcMapping,
+										sessionFactory
+								)
 						)
-				)
 		);
 
 		final Expression columnsToMatchExpression;

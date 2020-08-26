@@ -136,7 +136,15 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 
 	@Override
 	public void visitColumns(ColumnConsumer consumer) {
-		consumer.accept( getContainingTableExpression(), getMappedColumnExpression(), false, getJdbcMapping() );
+		consumer.accept(
+				getContainingTableExpression(),
+				getMappedColumnExpression(),
+				// identifiers cannot be formula nor can they define custom read/write expressions
+				false,
+				null,
+				null,
+				getJdbcMapping()
+		);
 	}
 
 	@Override
@@ -202,6 +210,8 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 						rootTableReference.getIdentificationVariable(),
 						pkColumnName,
 						false,
+						null,
+						null,
 						( (BasicValuedMapping) entityPersister.getIdentifierType() ).getJdbcMapping(),
 						sessionFactory
 				)
@@ -237,6 +247,8 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 						rootTable,
 						pkColumnName,
 						false,
+						null,
+						null,
 						( (BasicValuedModelPart) entityPersister.getIdentifierType() ).getJdbcMapping(),
 						sessionFactory
 				)
@@ -258,6 +270,16 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 	@Override
 	public String getMappedColumnExpression() {
 		return pkColumnName;
+	}
+
+	@Override
+	public String getCustomReadExpression() {
+		return null;
+	}
+
+	@Override
+	public String getCustomWriteExpression() {
+		return null;
 	}
 
 	@Override

@@ -20,6 +20,8 @@ import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.update.Assignable;
 
+import static org.hibernate.metamodel.relational.RuntimeRelationModelHelper.DEFAULT_COLUMN_WRITE_EXPRESSION;
+
 /**
  * Models a reference to a Column in a SQL AST
  *
@@ -29,38 +31,73 @@ import org.hibernate.sql.ast.tree.update.Assignable;
 public class ColumnReference implements Expression, Assignable {
 	private final String qualifier;
 	private final String columnExpression;
-	private final boolean isColumnExpressionFormula;
-	private final String referenceExpression;
+	private final boolean isFormula;
+	private final String readExpression;
+	private final String writeExpression;
 	private final JdbcMapping jdbcMapping;
 
 	public ColumnReference(
 			String qualifier,
 			String columnExpression,
-			boolean isColumnExpressionFormula,
+			boolean isFormula,
+			String customReadExpression,
+			String customWriteExpression,
 			JdbcMapping jdbcMapping,
 			SessionFactoryImplementor sessionFactory) {
 		this.qualifier = StringHelper.nullIfEmpty( qualifier );
-		if ( isColumnExpressionFormula ) {
+
+		if ( isFormula ) {
 			assert qualifier != null;
 			this.columnExpression = StringHelper.replace( columnExpression, Template.TEMPLATE, qualifier );
 		}
 		else {
 			this.columnExpression = columnExpression;
 		}
-		this.isColumnExpressionFormula = isColumnExpressionFormula;
-		this.referenceExpression = this.qualifier == null || isColumnExpressionFormula
-				? this.columnExpression
-				: this.qualifier + "." + this.columnExpression;
+
+		this.isFormula = isFormula;
+
+		if ( isFormula ) {
+			this.readExpression = this.columnExpression;
+		}
+		else if ( customReadExpression == null ) {
+			this.readExpression = this.qualifier == null
+					? this.columnExpression
+					: this.qualifier + "." + this.columnExpression;
+		}
+		else {
+			this.readExpression = customReadExpression;
+		}
+
+		if ( isFormula ) {
+			this.writeExpression = null;
+		}
+		else if ( customWriteExpression == null ) {
+			this.writeExpression = DEFAULT_COLUMN_WRITE_EXPRESSION;
+		}
+		else {
+			this.writeExpression = customWriteExpression;
+		}
+
 		this.jdbcMapping = jdbcMapping;
 	}
 
 	public ColumnReference(
 			TableReference tableReference,
 			String columnExpression,
-			boolean isColumnExpressionFormula,
+			boolean isFormula,
+			String customReadExpression,
+			String customWriteExpression,
 			JdbcMapping jdbcMapping,
 			SessionFactoryImplementor sessionFactory) {
-		this( tableReference.getIdentificationVariable(), columnExpression, isColumnExpressionFormula, jdbcMapping, sessionFactory );
+		this(
+				tableReference.getIdentificationVariable(),
+				columnExpression,
+				isFormula,
+				customReadExpression,
+				customWriteExpression,
+				jdbcMapping,
+				sessionFactory
+		);
 	}
 
 	public String getQualifier() {
@@ -72,11 +109,11 @@ public class ColumnReference implements Expression, Assignable {
 	}
 
 	public boolean isColumnExpressionFormula() {
-		return isColumnExpressionFormula;
+		return isFormula;
 	}
 
 	public String getExpressionText() {
-		return referenceExpression;
+		return readExpression;
 	}
 
 	public String renderSqlFragment(SessionFactoryImplementor sessionFactory) {
@@ -103,7 +140,7 @@ public class ColumnReference implements Expression, Assignable {
 				Locale.ROOT,
 				"%s(%s)",
 				getClass().getSimpleName(),
-				referenceExpression
+				readExpression
 		);
 	}
 
@@ -117,12 +154,12 @@ public class ColumnReference implements Expression, Assignable {
 		}
 
 		final ColumnReference that = (ColumnReference) o;
-		return referenceExpression.equals( that.referenceExpression );
+		return readExpression.equals( that.readExpression );
 	}
 
 	@Override
 	public int hashCode() {
-		return referenceExpression.hashCode();
+		return readExpression.hashCode();
 	}
 
 	@Override

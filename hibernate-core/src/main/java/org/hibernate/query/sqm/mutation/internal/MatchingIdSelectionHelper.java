@@ -77,10 +77,12 @@ public class MatchingIdSelectionHelper {
 		final TableGroup mutatingTableGroup = sqmConverter.getMutatingTableGroup();
 		idSelectionQuery.getFromClause().addRoot( mutatingTableGroup );
 
+		//noinspection rawtypes
 		final List<DomainResult> domainResults = new ArrayList<>();
+
 		final MutableInteger i = new MutableInteger();
 		targetEntityDescriptor.getIdentifierMapping().visitColumns(
-				(containingTableExpression, columnExpression, isColumnExpressionFormula, jdbcMapping) -> {
+				(containingTableExpression, columnExpression, isFormula, readFragment, writeFragment, jdbcMapping) -> {
 					final int position = i.getAndIncrement();
 					final TableReference tableReference = mutatingTableGroup.resolveTableReference( containingTableExpression );
 					final Expression expression = sqmConverter.getSqlExpressionResolver().resolveSqlExpression(
@@ -88,7 +90,9 @@ public class MatchingIdSelectionHelper {
 							sqlAstProcessingState -> new ColumnReference(
 									tableReference,
 									columnExpression,
-									isColumnExpressionFormula,
+									isFormula,
+									null,
+									null,
 									jdbcMapping,
 									sessionFactory
 							)
@@ -142,7 +146,7 @@ public class MatchingIdSelectionHelper {
 
 		final MutableInteger i = new MutableInteger();
 		targetEntityDescriptor.getIdentifierMapping().visitColumns(
-				(containingTableExpression, columnExpression, isColumnExpressionFormula, jdbcMapping) -> {
+				(containingTableExpression, columnExpression, isFormula, readFragment, writeFragment, jdbcMapping) -> {
 					final int position = i.getAndIncrement();
 					final TableReference tableReference = mutatingTableGroup.resolveTableReference( containingTableExpression );
 					final Expression expression = sqmConverter.getSqlExpressionResolver().resolveSqlExpression(
@@ -150,7 +154,10 @@ public class MatchingIdSelectionHelper {
 							sqlAstProcessingState -> new ColumnReference(
 									tableReference,
 									columnExpression,
-									isColumnExpressionFormula,
+									// id columns cannot be formulas and cannot have custom read and write expressions
+									false,
+									null,
+									null,
 									jdbcMapping,
 									sessionFactory
 							)

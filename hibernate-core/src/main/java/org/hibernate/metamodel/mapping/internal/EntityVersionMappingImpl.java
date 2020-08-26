@@ -82,7 +82,7 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 	}
 
 	@Override
-	public MappingType getMappedTypeDescriptor() {
+	public MappingType getMappedType() {
 		return versionBasicType;
 	}
 

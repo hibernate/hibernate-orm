@@ -38,13 +38,13 @@ public abstract class AbstractAttributeMapping implements AttributeMapping {
 
 	@Override
 	public MappingType getPartMappingType() {
-		return getMappedTypeDescriptor();
+		return getMappedType();
 	}
 
 	@Override
 	@SuppressWarnings("rawtypes")
 	public JavaTypeDescriptor getJavaTypeDescriptor() {
-		return getMappedTypeDescriptor().getMappedJavaTypeDescriptor();
+		return getMappedType().getMappedJavaTypeDescriptor();
 	}
 
 	void setForeignKeyDescriptor(ForeignKeyDescriptor foreignKeyDescriptor){

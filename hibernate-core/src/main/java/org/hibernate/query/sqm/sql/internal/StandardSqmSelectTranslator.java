@@ -18,7 +18,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.collection.spi.BagSemantics;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -296,7 +295,7 @@ public class StandardSqmSelectTranslator
 					if ( fetch != null ) {
 						if ( fetch.getTiming() == FetchTiming.IMMEDIATE && fetchable instanceof PluralAttributeMapping ) {
 							final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) fetchable;
-							final CollectionClassification collectionClassification = pluralAttributeMapping.getMappedTypeDescriptor()
+							final CollectionClassification collectionClassification = pluralAttributeMapping.getMappedType()
 									.getCollectionSemantics()
 									.getCollectionClassification();
 							if ( collectionClassification == CollectionClassification.BAG ) {

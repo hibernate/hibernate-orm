@@ -9,11 +9,9 @@ package org.hibernate.metamodel.mapping.internal;
 import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
-import org.hibernate.MappingException;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.ColumnConsumer;
 import org.hibernate.metamodel.mapping.ConvertibleModelPart;
@@ -26,7 +24,6 @@ import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.Template;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -96,7 +93,7 @@ public class BasicValuedSingularAttributeMapping
 	}
 
 	@Override
-	public MappingType getMappedTypeDescriptor() {
+	public MappingType getMappedType() {
 		return getJdbcMapping();
 	}
 
@@ -142,7 +139,7 @@ public class BasicValuedSingularAttributeMapping
 		return new BasicResult(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
-				getMappedTypeDescriptor().getMappedJavaTypeDescriptor(),
+				getMappedType().getMappedJavaTypeDescriptor(),
 				valueConverter,
 				navigablePath
 		);
@@ -169,7 +166,7 @@ public class BasicValuedSingularAttributeMapping
 								creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
 						)
 				),
-				valueConverter == null ? getMappedTypeDescriptor().getMappedJavaTypeDescriptor() : valueConverter.getRelationalJavaDescriptor(),
+				valueConverter == null ? getMappedType().getMappedJavaTypeDescriptor() : valueConverter.getRelationalJavaDescriptor(),
 				creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
 		);
 	}
@@ -198,7 +195,7 @@ public class BasicValuedSingularAttributeMapping
 								creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
 						)
 				),
-				valueConverter == null ? getMappedTypeDescriptor().getMappedJavaTypeDescriptor() : valueConverter.getRelationalJavaDescriptor(),
+				valueConverter == null ? getMappedType().getMappedJavaTypeDescriptor() : valueConverter.getRelationalJavaDescriptor(),
 				creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
 		);
 	}

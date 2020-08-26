@@ -54,7 +54,7 @@ public class EntityDiscriminatorMappingImpl extends AbstractEntityDiscriminatorM
 								creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
 						)
 				),
-				getMappedTypeDescriptor().getMappedJavaTypeDescriptor(),
+				getMappedType().getMappedJavaTypeDescriptor(),
 				creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
 		);
 	}

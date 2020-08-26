@@ -139,11 +139,11 @@ public abstract class AbstractEntityDiscriminatorMapping implements EntityDiscri
 
 	@Override
 	public JavaTypeDescriptor getJavaTypeDescriptor() {
-		return getMappedTypeDescriptor().getMappedJavaTypeDescriptor();
+		return getMappedType().getMappedJavaTypeDescriptor();
 	}
 
 	@Override
-	public MappingType getMappedTypeDescriptor() {
+	public MappingType getMappedType() {
 		return mappingType;
 	}
 

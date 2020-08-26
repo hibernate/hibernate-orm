@@ -189,7 +189,7 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Assoc
 					final CollectionKey collectionKey = circ.resolveCollectionKey( rowProcessingState );
 					final EntityKey entityKey = new EntityKey(
 							collectionKey.getKey(),
-							(EntityPersister) ( (AttributeMapping) fetchable ).getMappedTypeDescriptor()
+							(EntityPersister) ( (AttributeMapping) fetchable ).getMappedType()
 					);
 
 					final SharedSessionContractImplementor session = rowProcessingState.getJdbcValuesSourceProcessingState()

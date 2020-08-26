@@ -198,7 +198,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 					final DomainResultAssembler stateAssembler;
 					if ( fetch == null ) {
-						stateAssembler = new NullValueAssembler( attributeMapping.getMappedTypeDescriptor().getMappedJavaTypeDescriptor() );
+						stateAssembler = new NullValueAssembler( attributeMapping.getMappedType().getMappedJavaTypeDescriptor() );
 					}
 					else {
 						stateAssembler = fetch.createAssembler( this, creationState );

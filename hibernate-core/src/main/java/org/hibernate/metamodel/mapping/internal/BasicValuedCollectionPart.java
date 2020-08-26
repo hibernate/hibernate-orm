@@ -163,7 +163,7 @@ public class BasicValuedCollectionPart
 	}
 
 	@Override
-	public MappingType getMappedTypeDescriptor() {
+	public MappingType getMappedType() {
 		return this::getJavaTypeDescriptor;
 	}
 

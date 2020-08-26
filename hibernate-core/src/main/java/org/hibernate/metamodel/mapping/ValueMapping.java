@@ -22,7 +22,7 @@ public interface ValueMapping extends MappingModelExpressable {
 	/**
 	 * Descriptor for the type of this mapping
 	 */
-	MappingType getMappedTypeDescriptor();
+	MappingType getMappedType();
 
 	/**
 	 * Treat operation.  Asks the ValueMapping to treat itself as the

@@ -125,7 +125,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 	}
 
 	@Override
-	public MappingType getMappedTypeDescriptor() {
+	public MappingType getMappedType() {
 		return getJdbcMapping()::getJavaTypeDescriptor;
 	}
 
@@ -163,7 +163,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 
 	@Override
 	public JavaTypeDescriptor getJavaTypeDescriptor() {
-		return getMappedTypeDescriptor().getMappedJavaTypeDescriptor();
+		return getMappedType().getMappedJavaTypeDescriptor();
 	}
 
 	@Override
@@ -217,7 +217,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 		return new BasicResult(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
-				entityPersister.getIdentifierMapping().getMappedTypeDescriptor().getMappedJavaTypeDescriptor(),
+				entityPersister.getIdentifierMapping().getMappedType().getMappedJavaTypeDescriptor(),
 				navigablePath
 		);
 	}

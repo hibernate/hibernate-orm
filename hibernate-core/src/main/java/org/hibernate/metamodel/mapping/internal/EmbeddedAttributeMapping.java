@@ -101,7 +101,7 @@ public class EmbeddedAttributeMapping
 	}
 
 	@Override
-	public EmbeddableMappingType getMappedTypeDescriptor() {
+	public EmbeddableMappingType getMappedType() {
 		return getEmbeddableTypeDescriptor();
 	}
 
@@ -247,14 +247,14 @@ public class EmbeddedAttributeMapping
 	public ModelPart findSubPart(
 			String name,
 			EntityMappingType treatTargetType) {
-		return getMappedTypeDescriptor().findSubPart( name, treatTargetType );
+		return getMappedType().findSubPart( name, treatTargetType );
 	}
 
 	@Override
 	public void visitSubParts(
 			Consumer<ModelPart> consumer,
 			EntityMappingType treatTargetType) {
-		getMappedTypeDescriptor().visitSubParts( consumer, treatTargetType );
+		getMappedType().visitSubParts( consumer, treatTargetType );
 	}
 
 	@Override

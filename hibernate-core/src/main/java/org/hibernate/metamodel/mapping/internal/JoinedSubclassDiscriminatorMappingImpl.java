@@ -51,7 +51,7 @@ public class JoinedSubclassDiscriminatorMappingImpl extends AbstractEntityDiscri
 				columnReference ->
 						expressionResolver.resolveSqlSelection(
 								columnReference,
-								getMappedTypeDescriptor().getMappedJavaTypeDescriptor(),
+								getMappedType().getMappedJavaTypeDescriptor(),
 								creationState.getSqlAstCreationState()
 										.getCreationContext()
 										.getDomainModel()
@@ -64,7 +64,7 @@ public class JoinedSubclassDiscriminatorMappingImpl extends AbstractEntityDiscri
 						getMappedColumnExpression(),
 						sqlAstProcessingState -> caseSearchedExpression
 				),
-				getMappedTypeDescriptor().getMappedJavaTypeDescriptor(),
+				getMappedType().getMappedJavaTypeDescriptor(),
 				creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
 		);
 	}

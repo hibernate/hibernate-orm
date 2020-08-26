@@ -100,7 +100,7 @@ public class CompleteResultBuilderBasicValuedStandard implements CompleteResultB
 				sessionFactory.getTypeConfiguration()
 		);
 
-		return new BasicResult<>( valuesArrayPosition, columnName, basicType.getMappedTypeDescriptor().getMappedJavaTypeDescriptor() );
+		return new BasicResult<>( valuesArrayPosition, columnName, basicType.getMappedType().getMappedJavaTypeDescriptor() );
 	}
 
 }

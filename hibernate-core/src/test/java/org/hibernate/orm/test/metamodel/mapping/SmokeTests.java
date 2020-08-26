@@ -66,7 +66,7 @@ public class SmokeTests {
 
 		final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
 		assertThat(
-				identifierMapping.getMappedTypeDescriptor().getMappedJavaTypeDescriptor().getJavaType(),
+				identifierMapping.getMappedType().getMappedJavaTypeDescriptor().getJavaType(),
 				sameInstance( Integer.class )
 		);
 
@@ -154,7 +154,7 @@ public class SmokeTests {
 		assertThat( part, instanceOf( ToOneAttributeMapping.class ) );
 		final ToOneAttributeMapping attrMapping = (ToOneAttributeMapping) part;
 		assertThat( attrMapping.getAttributeName(), is( "simpleEntity" ) );
-		assertThat( attrMapping.getMappedTypeDescriptor(), is( simpleEntityDescriptor ) );
+		assertThat( attrMapping.getMappedType(), is( simpleEntityDescriptor ) );
 		assertThat(
 				attrMapping.getJavaTypeDescriptor(),
 				is( simpleEntityDescriptor.getJavaTypeDescriptor() )

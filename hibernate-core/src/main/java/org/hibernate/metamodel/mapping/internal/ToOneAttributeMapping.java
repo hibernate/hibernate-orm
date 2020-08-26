@@ -206,7 +206,7 @@ public class ToOneAttributeMapping extends AbstractSingularAttributeMapping
 	}
 
 	@Override
-	public EntityMappingType getMappedTypeDescriptor() {
+	public EntityMappingType getMappedType() {
 		return getEntityMappingType();
 	}
 

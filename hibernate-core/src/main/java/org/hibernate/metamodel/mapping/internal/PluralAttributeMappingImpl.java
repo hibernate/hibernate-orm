@@ -357,7 +357,7 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping
 
 	@Override
 	@SuppressWarnings("rawtypes")
-	public CollectionMappingType getMappedTypeDescriptor() {
+	public CollectionMappingType getMappedType() {
 		return collectionMappingType;
 	}
 

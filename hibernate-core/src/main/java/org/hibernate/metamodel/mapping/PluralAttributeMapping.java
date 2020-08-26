@@ -29,7 +29,7 @@ public interface PluralAttributeMapping
 	CollectionPart getIndexDescriptor();
 
 	@Override
-	CollectionMappingType getMappedTypeDescriptor();
+	CollectionMappingType getMappedType();
 
 	interface IndexMetadata {
 		CollectionPart getIndexDescriptor();

@@ -82,13 +82,13 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 	}
 
 	@Override
-	public MappingType getMappedTypeDescriptor() {
+	public MappingType getMappedType() {
 		return type;
 	}
 
 	@Override
 	public JavaTypeDescriptor getJavaTypeDescriptor() {
-		return getMappedTypeDescriptor().getMappedJavaTypeDescriptor();
+		return getMappedType().getMappedJavaTypeDescriptor();
 	}
 
 	@Override

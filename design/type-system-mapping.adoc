@@ -1,79 +1,56 @@
 = Mapping model
 
-[plantuml,SqmTypeSystem,png]
-.Mapping type system
+The mapping model encompasses the complete mapping of objects to/from database.  It is the
+model used to drive read and write operations.
+
+[NOTE]
+----
+As of 6.0, only read operations are implemented to use this mapping model.  Future versions will hopefully
+move writing to use this mapping model as well
+----
+
+[plantuml,MasppingTypeSystem,png]
+.Mapping type model (org.hibernate.metamodel.mapping)
 ....
 @startuml
 skinparam handwritten true
 
 interface MappingType
+interface ManagedMappingType
 
+interface MappingModelExpressable
 interface ValueMapping
 interface BasicType
 interface ModelPart
 interface ModelPartContainer
 
-MappingType <|--
+MappingType <|-- BasicType
+MappingType <|-- JdbcMapping
+MappingType <|-- ManagedMappingType
+MappingType <|-- CollectionMappingType
+
+ManagedMappingType <|-- EmbeddableMappingType
+ManagedMappingType <|-- EntityMappingType
+
+MappingModelExpressable <|-- ValueMapping
+MappingModelExpressable <|-- ModelPart
 
 ValueMapping <|-- BasicType
-ValueMapping <|-- ModelPart
-ModelPartContainer <|-- EntityMapping
-ModelPartContainer <|-- EmbeddableMapping
-ModelPart <|-- EmbeddableMapping
+
+ModelPart <|-- BasicValuedModelPart
+ModelPart <|-- EmbeddableValuedModelPart
+ModelPart <|-- EntityValuedModelPart
 ModelPart <|-- AttributeMapping
 ModelPart <|-- EntityIdentifierMapping
 ModelPart <|-- EntityVersionMapping
 ModelPart <|-- EntityDiscriminatorMapping
+ModelPart <|-- CollectionPart
 
+ModelPartContainer <|-- EntityMappingType
+ModelPartContainer <|-- EmbeddableMappingType
 
 @enduml
 ....
-
-[source,JAVA]
-----
-interface ValueMapping {
-	Type getMappingType();
-	<X> X getCapability(Class<X> capabilityType);
-	...
-}
-
-interface ModelPart extends ValueMapping {
-	<T> DomainResult<T> createDomainResult(...);
-	void applySqlSelections(...);
-	...
-}
-
-interface ModelPartContainer extends ValueMapping {
-    void visitSubMappings(Consumer<ModelPart> action);
-    ModelPart findSubPart(String name);
-    ModelPart resolveSubPart(String path);
-}
-
-interface EntityMapping extends ModelPartContainer {
-    default EntityPersister getEntityPersister() {
-    	return getCapability( EntityPersister.class );
-    }
-
-    default EntityIdentifierMapping getIdentifierMapping() {
-    	return getCapability( EntityIdentifierMapping.class );
-    }
-
-    default EntityVersionMapping getVersionMapping() {
-    	return getCapability( EntityVersionMapping.class );
-    }
-
-    default EntityDiscriminatorMapping getDiscriminatorMapping() {
-    	return getCapability( EntityDiscriminatorMapping.class );
-    }
-
-    ...
-}
-
-interface EmbeddableMapping extends ModelPart, ModelPartContainer {
-	...
-}
-----
-
 
 == Relationship with legacy "persister walking" SPI
 

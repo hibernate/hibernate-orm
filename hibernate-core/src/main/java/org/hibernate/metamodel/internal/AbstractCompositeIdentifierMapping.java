@@ -81,7 +81,7 @@ public abstract class AbstractCompositeIdentifierMapping
 	}
 
 	@Override
-	public EmbeddableMappingType getMappedTypeDescriptor() {
+	public EmbeddableMappingType getMappedType() {
 		return embeddableDescriptor;
 	}
 

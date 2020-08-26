@@ -34,12 +34,10 @@ import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.loader.ast.spi.Loader;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.CollectionPart;
-import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
@@ -654,7 +652,7 @@ public class LoaderSelectBuilder {
 
 				if ( fetch.getTiming() == FetchTiming.IMMEDIATE && fetchable instanceof PluralAttributeMapping ) {
 					final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) fetchable;
-					if ( pluralAttributeMapping.getMappedTypeDescriptor()
+					if ( pluralAttributeMapping.getMappedType()
 							.getCollectionSemantics() instanceof BagSemantics ) {
 						bagRoles.add( fetchable.getNavigableRole().getNavigableName() );
 					}

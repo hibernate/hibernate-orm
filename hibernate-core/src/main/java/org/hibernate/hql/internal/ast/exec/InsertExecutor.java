@@ -24,8 +24,27 @@ import java.util.List;
  * @author Gavin King
  */
 public class InsertExecutor extends BasicExecutor {
+	private final Queryable persister;
+	private final String sql;
+	private final List<ParameterSpecification> parameterSpecifications;
+
+	@Override
+	public Queryable getPersister() {
+		return persister;
+	}
+
+	@Override
+	public String getSql() {
+		return sql;
+	}
+
+	@Override
+	public List<ParameterSpecification> getParameterSpecifications() {
+		return parameterSpecifications;
+	}
+
 	public InsertExecutor(HqlSqlWalker walker) {
-		super( ( (InsertStatement) walker.getAST() ).getIntoClause().getQueryable() );
+		persister = ( (InsertStatement) walker.getAST() ).getIntoClause().getQueryable();
 		try {
 			SqlGenerator gen = new SqlGenerator( walker.getSessionFactoryHelper().getFactory() );
 			gen.statement( walker.getAST() );

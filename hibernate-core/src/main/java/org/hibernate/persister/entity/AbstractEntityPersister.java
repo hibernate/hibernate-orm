@@ -65,6 +65,9 @@ import org.hibernate.classic.Lifecycle;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.lock.LockingStrategy;
+import org.hibernate.engine.FetchStrategy;
+import org.hibernate.engine.FetchStyle;
+import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.internal.CacheHelper;
 import org.hibernate.engine.internal.ImmutableEntityEntryFactory;
@@ -119,6 +122,7 @@ import org.hibernate.loader.ast.spi.NaturalIdLoader;
 import org.hibernate.loader.ast.spi.SingleIdEntityLoader;
 import org.hibernate.loader.ast.spi.SingleUniqueKeyEntityLoader;
 import org.hibernate.loader.entity.CacheEntityLoaderHelper;
+import org.hibernate.mapping.Any;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
@@ -147,6 +151,8 @@ import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.Queryable;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMapping;
+import org.hibernate.metamodel.mapping.StateArrayContributorMetadata;
+import org.hibernate.metamodel.mapping.internal.DiscriminatedAssociationAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.BasicEntityIdentifierMappingImpl;
 import org.hibernate.metamodel.mapping.internal.EntityDiscriminatorMappingImpl;
 import org.hibernate.metamodel.mapping.internal.EntityRowIdMappingImpl;
@@ -210,6 +216,7 @@ import org.hibernate.tuple.ValueGeneration;
 import org.hibernate.tuple.entity.EntityBasedAssociationAttribute;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
+import org.hibernate.type.AnyType;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CollectionType;
@@ -220,6 +227,7 @@ import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 import org.hibernate.type.VersionType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -903,29 +911,32 @@ public abstract class AbstractEntityPersister
 
 		iter = bootDescriptor.getSubclassPropertyClosureIterator();
 		while ( iter.hasNext() ) {
-			Property prop = (Property) iter.next();
+			final Property prop = (Property) iter.next();
 			names.add( prop.getName() );
 			classes.add( prop.getPersistentClass().getEntityName() );
-			boolean isDefinedBySubclass = !thisClassProperties.contains( prop );
-			definedBySubclass.add( Boolean.valueOf( isDefinedBySubclass ) );
-			propNullables.add( Boolean.valueOf( prop.isOptional() || isDefinedBySubclass ) ); //TODO: is this completely correct?
 			types.add( prop.getType() );
 
-			Iterator colIter = prop.getColumnIterator();
-			String[] cols = new String[prop.getColumnSpan()];
-			String[] readers = new String[prop.getColumnSpan()];
-			String[] readerTemplates = new String[prop.getColumnSpan()];
-			String[] forms = new String[prop.getColumnSpan()];
-			int[] colnos = new int[prop.getColumnSpan()];
-			int[] formnos = new int[prop.getColumnSpan()];
-			int l = 0;
+			final boolean isDefinedBySubclass = !thisClassProperties.contains( prop );
+			definedBySubclass.add( Boolean.valueOf( isDefinedBySubclass ) );
+			propNullables.add( Boolean.valueOf( prop.isOptional() || isDefinedBySubclass ) ); //TODO: is this completely correct?
+
 			final boolean lazy = ! EnhancementHelper.includeInBaseFetchGroup(
 					prop,
 					entityMetamodel.isInstrumented(),
 					creationContext.getSessionFactory().getSessionFactoryOptions().isEnhancementAsProxyEnabled()
 			);
+
+			final Iterator colIter = prop.getColumnIterator();
+			String[] cols = new String[ prop.getColumnSpan() ];
+			String[] readers = new String[ prop.getColumnSpan() ];
+			String[] readerTemplates = new String[ prop.getColumnSpan() ];
+			String[] forms = new String[ prop.getColumnSpan() ];
+			int[] colnos = new int[ prop.getColumnSpan() ];
+			int[] formnos = new int[ prop.getColumnSpan() ];
+
+			int l = 0;
 			while ( colIter.hasNext() ) {
-				Selectable thing = (Selectable) colIter.next();
+				final Selectable thing = (Selectable) colIter.next();
 				if ( thing.isFormula() ) {
 					String template = thing.getTemplate( dialect, factory.getQueryEngine().getSqmFunctionRegistry() );
 					formnos[l] = formulaTemplates.size();
@@ -6134,6 +6145,8 @@ public abstract class AbstractEntityPersister
 			int stateArrayPosition,
 			MappingModelCreationProcess creationProcess) {
 
+		final SessionFactoryImplementor sessionFactory = creationProcess.getCreationContext().getSessionFactory();
+
 		final String attrName = tupleAttrDefinition.getName();
 		final Type attrType = tupleAttrDefinition.getType();
 
@@ -6190,7 +6203,7 @@ public abstract class AbstractEntityPersister
 					assert selectableIterator.hasNext();
 					final Selectable selectable = selectableIterator.next();
 
-					assert attrColumnExpression.equals( selectable.getText( creationProcess.getCreationContext().getSessionFactory().getDialect() ) );
+					assert attrColumnExpression.equals( selectable.getText( sessionFactory.getDialect() ) );
 
 					customReadExpr = selectable.getCustomReadExpression();
 					customWriteExpr = selectable.getCustomWriteExpression();
@@ -6218,6 +6231,72 @@ public abstract class AbstractEntityPersister
 					customWriteExpr,
 					propertyAccess,
 					tupleAttrDefinition.getCascadeStyle(),
+					creationProcess
+			);
+		}
+		else if ( attrType instanceof AnyType ) {
+			// todo (6.0) : determine a "base JTD"?
+			final JavaTypeDescriptor<Object> baseAssociationJtd = sessionFactory
+					.getTypeConfiguration()
+					.getJavaTypeDescriptorRegistry()
+					.getDescriptor( Object.class );
+
+			return new DiscriminatedAssociationAttributeMapping(
+					navigableRole.append( bootProperty.getName() ),
+					baseAssociationJtd,
+					superMappingType,
+					stateArrayPosition,
+					entityMappingType -> new StateArrayContributorMetadata() {
+
+						private final MutabilityPlan<?> mutabilityPlan = baseAssociationJtd.getMutabilityPlan();
+
+						private final boolean nullable = bootProperty.isOptional();
+						private final boolean insertable = bootProperty.isInsertable();
+						private final boolean updateable = bootProperty.isUpdateable();
+						private final boolean optimisticallyLocked = bootProperty.isOptimisticLocked();
+
+						@Override
+						public PropertyAccess getPropertyAccess() {
+							return propertyAccess;
+						}
+
+						@Override
+						public MutabilityPlan<?> getMutabilityPlan() {
+							return mutabilityPlan;
+						}
+
+						@Override
+						public boolean isNullable() {
+							return nullable;
+						}
+
+						@Override
+						public boolean isInsertable() {
+							return insertable;
+						}
+
+						@Override
+						public boolean isUpdatable() {
+							return updateable;
+						}
+
+						@Override
+						public boolean isIncludedInDirtyChecking() {
+							return updateable;
+						}
+
+						@Override
+						public boolean isIncludedInOptimisticLocking() {
+							return optimisticallyLocked;
+						}
+					},
+					bootProperty.isLazy()
+							? new FetchStrategy( FetchTiming.DELAYED, FetchStyle.SELECT )
+							: new FetchStrategy( FetchTiming.IMMEDIATE, FetchStyle.SELECT ),
+					propertyAccess,
+					bootProperty,
+					(AnyType) attrType,
+					(Any) bootProperty.getValue(),
 					creationProcess
 			);
 		}

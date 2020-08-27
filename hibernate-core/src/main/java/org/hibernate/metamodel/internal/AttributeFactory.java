@@ -37,17 +37,18 @@ import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
+import org.hibernate.metamodel.model.domain.internal.AnyMappingDomainTypeImpl;
 import org.hibernate.metamodel.model.domain.internal.EmbeddableTypeImpl;
 import org.hibernate.metamodel.model.domain.internal.MapMember;
 import org.hibernate.metamodel.model.domain.internal.MappedSuperclassTypeImpl;
 import org.hibernate.metamodel.model.domain.internal.PluralAttributeBuilder;
 import org.hibernate.metamodel.model.domain.internal.SingularAttributeImpl;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
-import org.hibernate.metamodel.spi.ManagedTypeRepresentationStrategy;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.internal.PropertyAccessMapImpl;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.tuple.entity.EntityMetamodel;
+import org.hibernate.type.CompositeType;
 import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -214,8 +215,19 @@ public class AttributeFactory {
 				return context.resolveBasicType( typeContext.getJpaBindableType() );
 			}
 			case ENTITY: {
-				final org.hibernate.type.EntityType type = (EntityType) typeContext.getHibernateValue().getType();
-				return context.locateEntityType( type.getAssociatedEntityName() );
+				final org.hibernate.type.Type type = typeContext.getHibernateValue().getType();
+				if ( type instanceof org.hibernate.type.EntityType ) {
+					final org.hibernate.type.EntityType entityType = (EntityType) type;
+					return context.locateEntityType( entityType.getAssociatedEntityName() );
+				}
+
+				assert type instanceof CompositeType;
+				final JavaTypeDescriptor<Y> objectJtd = (JavaTypeDescriptor<Y>) context
+						.getTypeConfiguration()
+						.getJavaTypeDescriptorRegistry()
+						.getDescriptor( Object.class );
+
+				return new AnyMappingDomainTypeImpl<>( objectJtd );
 			}
 			case EMBEDDABLE: {
 				final Component component = (Component) typeContext.getHibernateValue();

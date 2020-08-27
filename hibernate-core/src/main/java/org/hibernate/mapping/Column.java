@@ -270,19 +270,18 @@ public class Column implements Selectable, Serializable, Cloneable {
 	}
 
 	private Size getColumnDefaultSize(Dialect dialect, Mapping mapping) {
-		Size defaultSize;
 		Type type = getValue().getType();
+
 		if ( type instanceof EntityType ) {
 			type = getTypeForEntityValue( mapping, type );
 		}
 		if ( type instanceof ComponentType ) {
 			type = getTypeForComponentValue( mapping, type );
 		}
-		defaultSize = dialect.getDefaultSizeStrategy().resolveDefaultSize(
-					( (JdbcMapping) type ).getSqlTypeDescriptor(),
-					( (JdbcMapping) type ).getJavaTypeDescriptor()
-			);
-		return defaultSize;
+		return dialect.getDefaultSizeStrategy().resolveDefaultSize(
+				( (JdbcMapping) type ).getSqlTypeDescriptor(),
+				( (JdbcMapping) type ).getJavaTypeDescriptor()
+		);
 	}
 
 	private Type getTypeForComponentValue(Mapping mapping, Type type) {

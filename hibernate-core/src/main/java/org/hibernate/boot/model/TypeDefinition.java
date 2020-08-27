@@ -11,12 +11,12 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.model.process.internal.UserTypeResolution;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -50,7 +50,7 @@ import org.hibernate.usertype.UserType;
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class TypeDefinition implements Serializable {
-	private static final AtomicInteger nameCounter = new AtomicInteger();
+	public static final MutableInteger NAME_COUNTER = new MutableInteger();
 
 	private final String name;
 	private final Class typeImplementorClass;
@@ -118,7 +118,7 @@ public class TypeDefinition implements Serializable {
 			return reusableResolution;
 		}
 		else {
-			final String name = this.name + ":" + nameCounter.getAndIncrement();
+			final String name = this.name + ":" + NAME_COUNTER.getAndIncrement();
 
 			final ManagedBean typeBean = context.getBootstrapContext()
 					.getServiceRegistry()
@@ -156,7 +156,7 @@ public class TypeDefinition implements Serializable {
 		return mergedParameters;
 	}
 
-	private static void injectParameters(Object customType, Supplier<Properties> parameterSupplier) {
+	public static void injectParameters(Object customType, Supplier<Properties> parameterSupplier) {
 		if ( customType instanceof ParameterizedType ) {
 			final Properties parameterValues = parameterSupplier.get();
 			if ( parameterValues != null ) {
@@ -229,7 +229,7 @@ public class TypeDefinition implements Serializable {
 			MutabilityPlan explicitMutabilityPlan,
 			Map localTypeParams,
 			MetadataBuildingContext buildingContext) {
-		name = name + ':' + nameCounter.getAndIncrement();
+		name = name + ':' + NAME_COUNTER.getAndIncrement();
 
 		final ManagedBean typeBean = buildingContext.getBootstrapContext()
 				.getServiceRegistry()

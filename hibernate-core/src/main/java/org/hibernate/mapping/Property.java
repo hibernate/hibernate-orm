@@ -219,7 +219,7 @@ public class Property implements Serializable, MetaAttributable {
 	}
 
 	public boolean isValid(Mapping mapping) throws MappingException {
-		return getValue().isValid(mapping);
+		return getValue().isValid( mapping );
 	}
 
 	public String toString() {

@@ -13,9 +13,11 @@ import java.util.function.Supplier;
 import org.hibernate.graph.spi.GraphHelper;
 import org.hibernate.metamodel.AttributeClassification;
 import org.hibernate.metamodel.internal.MetadataContext;
+import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
+import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
@@ -120,6 +122,10 @@ public class SingularAttributeImpl<D,J>
 			String alias,
 			boolean fetched,
 			SqmCreationState creationState) {
+		if ( getType() instanceof AnyMappingDomainType ) {
+			throw new SemanticException( "An @Any attribute cannot be join fetched" );
+		}
+
 		//noinspection unchecked
 		return new SqmSingularJoin(
 				lhs,

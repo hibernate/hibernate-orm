@@ -87,7 +87,9 @@ import org.hibernate.boot.model.source.spi.Sortable;
 import org.hibernate.boot.model.source.spi.TableSource;
 import org.hibernate.boot.model.source.spi.TableSpecificationSource;
 import org.hibernate.boot.model.source.spi.VersionAttributeSource;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.InFlightMetadataCollector.EntityTableXref;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -142,15 +144,22 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UnionSubclass;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.mapping.Value;
+import org.hibernate.resource.beans.spi.ManagedBean;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.tuple.GeneratedValueGeneration;
 import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BlobType;
 import org.hibernate.type.ClobType;
+import org.hibernate.type.CustomType;
 import org.hibernate.type.DiscriminatorType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.NClobType;
+import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.usertype.UserType;
+
+import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 
 /**
  * Responsible for coordinating the binding of all information inside entity tags ({@code <class/>}, etc).
@@ -2364,58 +2373,51 @@ public class ModelBinder {
 				anyMapping.getDiscriminatorSource().getTypeSource()
 		);
 
-		if ( discriminatorTypeResolution != null ) {
-			anyBinding.setMetaType( discriminatorTypeResolution.typeName );
-			try {
-				final DiscriminatorType metaType = (DiscriminatorType) sourceDocument.getMetadataCollector()
-						.getTypeConfiguration()
-						.getBasicTypeRegistry()
-						.getRegisteredType( discriminatorTypeResolution.typeName );
+		final String discriminatorTypeName;
+		final DiscriminatorType<?> discriminatorType;
+		if ( discriminatorTypeResolution != null && discriminatorTypeResolution.typeName != null ) {
+			discriminatorTypeName = discriminatorTypeResolution.typeName;
+			discriminatorType = resolveExplicitlyNamedAnyDiscriminatorType(
+					discriminatorTypeResolution.typeName,
+					discriminatorTypeResolution.parameters
+			);
+		}
+		else {
+			discriminatorTypeName = StandardBasicTypes.STRING.getTypeName();
+			discriminatorType = StandardBasicTypes.STRING;
+		}
 
-				final HashMap discriminatorValueToEntityNameMap = new HashMap();
-				for ( Map.Entry<String,String> discriminatorValueMappings : anyMapping.getDiscriminatorSource().getValueMappings().entrySet() ) {
+		anyBinding.setMetaType( discriminatorTypeName );
+
+		final HashMap<Object,String> discriminatorValueToEntityNameMap = new HashMap<>();
+
+		anyMapping.getDiscriminatorSource().getValueMappings().forEach(
+				(discriminatorValueString, entityName) -> {
 					try {
-						final Object discriminatorValue = metaType.stringToObject( discriminatorValueMappings.getKey() );
-						final String mappedEntityName = sourceDocument.qualifyClassName( discriminatorValueMappings.getValue() );
-
-						//noinspection unchecked
-						discriminatorValueToEntityNameMap.put( discriminatorValue, mappedEntityName );
+						final Object discriminatorValue = discriminatorType.stringToObject( discriminatorValueString );
+						discriminatorValueToEntityNameMap.put( discriminatorValue, entityName );
 					}
 					catch (Exception e) {
 						throw new MappingException(
 								String.format(
 										Locale.ENGLISH,
 										"Unable to interpret <meta-value value=\"%s\" class=\"%s\"/> defined as part of <any/> attribute [%s]",
-										discriminatorValueMappings.getKey(),
-										discriminatorValueMappings.getValue(),
+										discriminatorValueString,
+										entityName,
 										attributeRole.getFullPath()
 								),
 								e,
 								sourceDocument.getOrigin()
 						);
 					}
-
 				}
-				anyBinding.setMetaValues( discriminatorValueToEntityNameMap );
-			}
-			catch (ClassCastException e) {
-				throw new MappingException(
-						String.format(
-								Locale.ENGLISH,
-								"Specified meta-type [%s] for <any/> attribute [%s] did not implement DiscriminatorType",
-								discriminatorTypeResolution.typeName,
-								attributeRole.getFullPath()
-						),
-						e,
-						sourceDocument.getOrigin()
-				);
-			}
-		}
+		);
+		anyBinding.setMetaValues( discriminatorValueToEntityNameMap );
 
 		relationalObjectBinder.bindColumnOrFormula(
 				sourceDocument,
 				anyMapping.getDiscriminatorSource().getRelationalValueSource(),
-				anyBinding,
+				anyBinding.getMetaMapping(),
 				true,
 				context -> implicitNamingStrategy.determineAnyDiscriminatorColumnName(
 						anyMapping.getDiscriminatorSource()
@@ -2425,10 +2427,74 @@ public class ModelBinder {
 		relationalObjectBinder.bindColumnsAndFormulas(
 				sourceDocument,
 				anyMapping.getKeySource().getRelationalValueSources(),
-				anyBinding,
+				anyBinding.getKeyMapping(),
 				true,
 				context -> implicitNamingStrategy.determineAnyKeyColumnName(
 						anyMapping.getKeySource()
+				)
+		);
+	}
+
+	private DiscriminatorType<?> resolveExplicitlyNamedAnyDiscriminatorType(String typeName, Properties parameters) {
+		final BootstrapContext bootstrapContext = metadataBuildingContext.getBootstrapContext();
+
+		if ( isEmpty( parameters ) ) {
+			// can use a standard one
+			final BasicType<?> basicTypeByName = bootstrapContext
+					.getTypeConfiguration()
+					.getBasicTypeRegistry()
+					.getRegisteredType( typeName );
+			if ( basicTypeByName != null ) {
+				return (DiscriminatorType<?>) basicTypeByName;
+			}
+		}
+
+		// see if it is a named TypeDefinition
+		final TypeDefinition typeDefinition = metadataBuildingContext.getTypeDefinitionRegistry().resolve( typeName );
+		if ( typeDefinition != null ) {
+			final BasicValue.Resolution<?> resolution = typeDefinition.resolve(
+					parameters,
+					null,
+					metadataBuildingContext
+			);
+
+			return (DiscriminatorType<?>) resolution.getLegacyResolvedBasicType();
+		}
+
+		final ClassLoaderService classLoaderService = bootstrapContext
+				.getServiceRegistry()
+				.getService( ClassLoaderService.class );
+
+		try {
+			final Class<?> typeJavaType = classLoaderService.classForName( typeName );
+			final String beanName = typeName + ":" + TypeDefinition.NAME_COUNTER.getAndIncrement();
+
+			final ManagedBeanRegistry beanRegistry = bootstrapContext
+					.getServiceRegistry()
+					.getService( ManagedBeanRegistry.class );
+			final ManagedBean<?> bean = beanRegistry.getBean( beanName, typeJavaType );
+			final Object typeInstance = bean.getBeanInstance();
+			TypeDefinition.injectParameters( typeInstance, () -> parameters );
+
+			if ( typeInstance instanceof UserType ) {
+				return new CustomType(
+						(UserType) typeInstance,
+						bootstrapContext.getTypeConfiguration()
+				);
+			}
+
+			assert typeInstance instanceof BasicType;
+			return (DiscriminatorType<?>) typeInstance;
+		}
+		catch (ClassLoadingException e) {
+			log.debugf( "Unable to load explicit any-discriminator type name as Java Class - %s", typeName );
+		}
+
+		throw new org.hibernate.MappingException(
+				String.format(
+						Locale.ROOT,
+						"Unable to resolve explicit any-discriminator type name - %s",
+						typeName
 				)
 		);
 	}
@@ -3566,7 +3632,7 @@ public class ModelBinder {
 
 				getCollectionBinding().setManyToManyOrdering( elementSource.getOrder() );
 
-				if ( !CollectionHelper.isEmpty( elementSource.getFilterSources() )
+				if ( ! CollectionHelper.isEmpty( elementSource.getFilterSources() )
 						|| elementSource.getWhere() != null ) {
 					if ( getCollectionBinding().getFetchMode() == FetchMode.JOIN
 							&& elementBinding.getFetchMode() != FetchMode.JOIN ) {

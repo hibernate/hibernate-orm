@@ -38,6 +38,10 @@ public class MetaType extends AbstractType {
 		}
 	}
 
+	public Type getBaseType() {
+		return baseType;
+	}
+
 	public String[] getRegistrationKeys() {
 		return REGISTRATION_KEYS;
 	}

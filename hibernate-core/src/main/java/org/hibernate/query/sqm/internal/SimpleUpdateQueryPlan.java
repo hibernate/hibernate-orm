@@ -12,6 +12,7 @@ import java.util.Map;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryParameterImplementor;
@@ -48,7 +49,8 @@ public class SimpleUpdateQueryPlan implements NonSelectQueryPlan {
 
 	@Override
 	public int executeUpdate(ExecutionContext executionContext) {
-		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
+		final SharedSessionContractImplementor session = executionContext.getSession();
+		final SessionFactoryImplementor factory = session.getFactory();
 		final JdbcServices jdbcServices = factory.getJdbcServices();
 
 		if ( jdbcUpdate == null ) {
@@ -87,14 +89,14 @@ public class SimpleUpdateQueryPlan implements NonSelectQueryPlan {
 				jdbcParamsXref,
 				factory.getDomainModel(),
 				tableGroupAccess::findTableGroup,
-				executionContext.getSession()
+				session
 		);
 		jdbcUpdate.bindFilterJdbcParameters( jdbcParameterBindings );
 
 		return jdbcServices.getJdbcMutationExecutor().execute(
 				jdbcUpdate,
 				jdbcParameterBindings,
-				sql -> executionContext.getSession()
+				sql -> session
 						.getJdbcCoordinator()
 						.getStatementPreparer()
 						.prepareStatement( sql ),

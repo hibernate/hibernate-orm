@@ -33,12 +33,11 @@ public class StandardTableGroup extends AbstractTableGroup {
 			TableGroupProducer tableGroupProducer,
 			LockMode lockMode,
 			TableReference primaryTableReference,
-			List<TableReferenceJoin> tableJoins,
 			SqlAliasBase sqlAliasBase,
 			SessionFactoryImplementor sessionFactory) {
 		super( navigablePath, tableGroupProducer, lockMode, sqlAliasBase, sessionFactory );
 		this.primaryTableReference = primaryTableReference;
-		this.tableJoins = tableJoins;
+		this.tableJoins = Collections.emptyList();
 		this.tableReferenceJoinCreator = null;
 		this.tableReferenceJoinNameChecker = s -> {
 			for ( int i = 0; i < tableJoins.size(); i++ ) {

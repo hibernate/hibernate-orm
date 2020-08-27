@@ -9,6 +9,7 @@ package org.hibernate.engine.spi;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import javax.persistence.FlushModeType;
 import javax.persistence.TransactionRequiredException;
@@ -465,6 +466,16 @@ public interface SharedSessionContractImplementor
 	 * @return the PersistenceContext associated to this session.
 	 */
 	PersistenceContext getPersistenceContextInternal();
+
+	/**
+	 * detect in-memory changes, determine if the changes are to tables
+	 * named in the query and, if so, complete execution the flush
+	 *
+	 * @param querySpaces the tables named in the query.
+	 *
+	 * @return true if flush is required, false otherwise.
+	 */
+	boolean autoFlushIfRequired(Set<String> querySpaces) throws HibernateException;
 
 	default boolean isEnforcingFetchGraph() {
 		return false;

@@ -187,6 +187,7 @@ public class PersistentMapTest {
 					List<User> list = q.list();
 
 					assertEquals( 1, list.size() );
+					session.delete( list.get( 0 ) );
 				}
 		);
 	}
@@ -209,11 +210,11 @@ public class PersistentMapTest {
 						session.beginTransaction();
 
 
-						user = session.get( User.class, 1 );
+						user = session.get( User.class, user.id );
 						user.userDatas.clear();
 						session.update( user );
 
-						Query q = session.createQuery( "DELETE FROM " + UserData.class.getName() + " d WHERE d.user = :user" );
+						Query<UserData> q = session.createQuery( "DELETE FROM " + UserData.class.getName() + " d WHERE d.user = :user" );
 						q.setParameter( "user", user );
 						q.executeUpdate();
 
@@ -361,30 +362,31 @@ select
 	@Test
 	@TestForIssue(jiraKey = "HHH-11038")
 	public void testMapKeyColumnNonInsertableNonUpdatableUnidirOneToMany(SessionFactoryScope scope) {
-		User user = new User();
-		scope.inTransaction(
+
+		Integer userId = scope.fromTransaction(
 				session -> {
+					User user = new User();
 					Detail detail = new Detail();
 					detail.description = "desc";
 					detail.detailType = "trivial";
 					user.details.put( detail.detailType, detail );
 					session.persist( user );
+					return user.getId();
 				}
 		);
 
 		scope.inTransaction(
 				session -> {
-					User u = session.get( User.class, user.id );
-					u.details.clear();
+					User user = session.get( User.class, userId);
+					user.details.clear();
 				}
 		);
 
 		scope.inTransaction(
 				session -> {
-					User u = session.get( User.class, user.id );
-					session.delete( u );
+					User user = session.get( User.class, userId );
+					session.delete( user );
 					session.createQuery( "delete from " + User.class.getName() ).executeUpdate();
-
 				}
 		);
 	}
@@ -408,6 +410,10 @@ select
 		@MapKeyColumn(name = "detailType", insertable = false, updatable = false)
 		@JoinColumn
 		private Map<String, Detail> details = new HashMap<>();
+
+		public Integer getId() {
+			return id;
+		}
 	}
 
 	@Entity

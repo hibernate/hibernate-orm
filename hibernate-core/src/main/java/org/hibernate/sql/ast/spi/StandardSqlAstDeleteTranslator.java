@@ -30,7 +30,8 @@ public class StandardSqlAstDeleteTranslator extends AbstractSqlAstTranslator imp
 	@Override
 	public JdbcDelete translate(DeleteStatement sqlAst) {
 		appendSql( "delete from " );
-		appendSql( sqlAst.getTargetTable().getTableExpression() );
+
+		renderTableReference( sqlAst.getTargetTable() );
 
 		if ( sqlAst.getRestriction() != null ) {
 			appendSql( " where " );

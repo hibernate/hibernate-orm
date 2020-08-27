@@ -169,7 +169,6 @@ public final class ExecuteWithIdTableHelper {
 				entityDescriptor,
 				LockMode.NONE,
 				idTableReference,
-				Collections.emptyList(),
 				null,
 				executionContext.getSession().getFactory()
 		);

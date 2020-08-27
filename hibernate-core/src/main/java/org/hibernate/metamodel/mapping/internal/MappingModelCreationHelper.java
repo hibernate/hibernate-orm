@@ -33,6 +33,7 @@ import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.mapping.Any;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
@@ -90,6 +91,7 @@ import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
@@ -1259,6 +1261,24 @@ public class MappingModelCreationHelper {
 			);
 
 			return (CollectionPart) mappingType.getEmbeddedValueMapping();
+		}
+
+		if ( element instanceof Any ) {
+			final Any anyBootMapping = (Any) element;
+
+			final SessionFactoryImplementor sessionFactory = creationProcess.getCreationContext().getSessionFactory();
+			final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
+			final JavaTypeDescriptorRegistry jtdRegistry = typeConfiguration.getJavaTypeDescriptorRegistry();
+			final JavaTypeDescriptor<Object> baseJtd = jtdRegistry.getDescriptor(Object.class);
+
+			return new DiscriminatedCollectionPart(
+					CollectionPart.Nature.ELEMENT,
+					collectionDescriptor.getNavigableRole(),
+					baseJtd,
+					anyBootMapping,
+					anyBootMapping.getType(),
+					creationProcess
+			);
 		}
 
 		if ( element instanceof OneToMany || element instanceof ToOne ) {

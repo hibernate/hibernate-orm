@@ -1,8 +1,8 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
 
 // $Id$
@@ -14,7 +14,7 @@
 			@MetaValue(value = "L", targetEntity = LongProperty.class)
 			})
 
-package org.hibernate.test.annotations.any;
+package org.hibernate.orm.test.any.annotations;
 
 import org.hibernate.annotations.AnyMetaDef;
 import org.hibernate.annotations.MetaValue;

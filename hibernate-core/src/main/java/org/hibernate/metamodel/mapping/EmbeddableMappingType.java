@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -18,15 +19,19 @@ import java.util.function.Function;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cfg.Environment;
+import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.mapping.Any;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
+import org.hibernate.metamodel.mapping.internal.DiscriminatedAssociationAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
@@ -34,6 +39,7 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -41,12 +47,15 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableResultImpl;
+import org.hibernate.type.AnyType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -154,8 +163,10 @@ public class EmbeddableMappingType implements ManagedMappingType {
 			Component bootDescriptor,
 			CompositeType compositeType,
 			MappingModelCreationProcess creationProcess) {
-		final String containingTableExpression = valueMapping.getContainingTableExpression();
+		final SessionFactoryImplementor sessionFactory = creationProcess.getCreationContext().getSessionFactory();
+		final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
 
+		final String containingTableExpression = valueMapping.getContainingTableExpression();
 		final List<String> mappedColumnExpressions = valueMapping.getMappedColumnExpressions();
 
 		final Type[] subtypes = compositeType.getSubtypes();
@@ -174,7 +185,7 @@ public class EmbeddableMappingType implements ManagedMappingType {
 				final Selectable selectable = basicValue.getColumn();
 
 				final String mappedColumnExpression = mappedColumnExpressions.get( columnPosition++ );
-				assert mappedColumnExpression.equals( selectable.getText( creationProcess.getCreationContext().getSessionFactory().getDialect() ) );
+				assert mappedColumnExpression.equals( selectable.getText( sessionFactory.getDialect() ) );
 
 				attributeMappings.put(
 						bootPropertyDescriptor.getName(),
@@ -196,9 +207,112 @@ public class EmbeddableMappingType implements ManagedMappingType {
 						)
 				);
 			}
+			else if ( subtype instanceof AnyType ) {
+				final Any bootValueMapping = (Any) bootPropertyDescriptor.getValue();
+				final AnyType anyType = (AnyType) subtype;
+
+				final PropertyAccess propertyAccess = representationStrategy.resolvePropertyAccess( bootPropertyDescriptor );
+				final boolean nullable = bootValueMapping.isNullable();
+				final boolean insertable = bootPropertyDescriptor.isInsertable();
+				final boolean updateable = bootPropertyDescriptor.isUpdateable();
+				final boolean includeInOptimisticLocking = bootPropertyDescriptor.isOptimisticLocked();
+				final CascadeStyle cascadeStyle = compositeType.getCascadeStyle( attributeIndex );
+				final MutabilityPlan mutabilityPlan;
+
+				if ( updateable ) {
+					mutabilityPlan = new MutabilityPlan() {
+						@Override
+						public boolean isMutable() {
+							return true;
+						}
+
+						@Override
+						public Object deepCopy(Object value) {
+							if ( value == null ) {
+								return null;
+							}
+
+							return anyType.deepCopy( value, creationProcess.getCreationContext().getSessionFactory() );
+						}
+
+						@Override
+						public Serializable disassemble(Object value) {
+							throw new NotYetImplementedFor6Exception( getClass() );
+						}
+
+						@Override
+						public Object assemble(Serializable cached) {
+							throw new NotYetImplementedFor6Exception( getClass() );
+						}
+					};
+				}
+				else {
+					mutabilityPlan = ImmutableMutabilityPlan.INSTANCE;
+				}
+
+				final StateArrayContributorMetadataAccess attributeMetadataAccess = entityMappingType -> new StateArrayContributorMetadata() {
+					@Override
+					public PropertyAccess getPropertyAccess() {
+						return propertyAccess;
+					}
+
+					@Override
+					public MutabilityPlan getMutabilityPlan() {
+						return mutabilityPlan;
+					}
+
+					@Override
+					public boolean isNullable() {
+						return nullable;
+					}
+
+					@Override
+					public boolean isInsertable() {
+						return insertable;
+					}
+
+					@Override
+					public boolean isUpdatable() {
+						return updateable;
+					}
+
+					@Override
+					public boolean isIncludedInDirtyChecking() {
+						// todo (6.0) : do not believe this is correct
+						return updateable;
+					}
+
+					@Override
+					public boolean isIncludedInOptimisticLocking() {
+						return includeInOptimisticLocking;
+					}
+
+					@Override
+					public CascadeStyle getCascadeStyle() {
+						return cascadeStyle;
+					}
+				};
+
+				attributeMappings.put(
+						bootPropertyDescriptor.getName(),
+						new DiscriminatedAssociationAttributeMapping(
+								valueMapping.getNavigableRole().append( bootPropertyDescriptor.getName() ),
+								typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Object.class ),
+								this,
+								attributeIndex,
+								attributeMetadataAccess,
+								bootPropertyDescriptor.isLazy() ? FetchTiming.DELAYED : FetchTiming.IMMEDIATE,
+								propertyAccess,
+								bootPropertyDescriptor,
+								anyType,
+								bootValueMapping,
+								creationProcess
+						)
+				);
+			}
 			else if ( subtype instanceof CompositeType ) {
 				final CompositeType subCompositeType = (CompositeType) subtype;
-				final int columnSpan = subCompositeType.getColumnSpan( creationProcess.getCreationContext().getSessionFactory() );
+				final int columnSpan = subCompositeType.getColumnSpan( sessionFactory );
 
 				final List<String> customReadExpressions = new ArrayList<>( columnSpan );
 				final List<String> customWriteExpressions = new ArrayList<>( columnSpan );

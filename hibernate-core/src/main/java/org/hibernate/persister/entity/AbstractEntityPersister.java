@@ -6290,9 +6290,7 @@ public abstract class AbstractEntityPersister
 							return optimisticallyLocked;
 						}
 					},
-					bootProperty.isLazy()
-							? new FetchStrategy( FetchTiming.DELAYED, FetchStyle.SELECT )
-							: new FetchStrategy( FetchTiming.IMMEDIATE, FetchStyle.SELECT ),
+					bootProperty.isLazy() ? FetchTiming.DELAYED : FetchTiming.IMMEDIATE,
 					propertyAccess,
 					bootProperty,
 					(AnyType) attrType,
@@ -6348,7 +6346,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public JavaTypeDescriptor getMappedJavaTypeDescriptor() {
+	public JavaTypeDescriptor<?> getMappedJavaTypeDescriptor() {
 		return javaTypeDescriptor;
 	}
 

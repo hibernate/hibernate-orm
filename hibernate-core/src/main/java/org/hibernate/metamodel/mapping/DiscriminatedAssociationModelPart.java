@@ -7,6 +7,7 @@
 package org.hibernate.metamodel.mapping;
 
 import org.hibernate.sql.results.graph.Fetchable;
+import org.hibernate.sql.results.graph.FetchableContainer;
 
 /**
  * A discriminated association.  This is similar to an association to
@@ -20,9 +21,9 @@ import org.hibernate.sql.results.graph.Fetchable;
  *
  * @author Steve Ebersole
  */
-public interface DiscriminatedAssociationModelPart extends Fetchable {
+public interface DiscriminatedAssociationModelPart extends Fetchable, FetchableContainer {
 	BasicValuedModelPart getDiscriminatorPart();
-	ModelPart getKeyPart();
+	BasicValuedModelPart getKeyPart();
 
 	EntityMappingType resolveDiscriminatorValue(Object discriminatorValue);
 }

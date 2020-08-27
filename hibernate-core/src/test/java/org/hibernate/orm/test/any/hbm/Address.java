@@ -4,19 +4,18 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.orm.test.any;
-
+package org.hibernate.orm.test.any.hbm;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
- * todo: describe Person
+ * todo: describe Address
  *
  * @author Steve Ebersole
  */
-public class Person {
+public class Address {
 	private Long id;
-	private String name;
-	private Object data;
-
+	private Set lines = new HashSet();
 
 	public Long getId() {
 		return id;
@@ -26,19 +25,11 @@ public class Person {
 		this.id = id;
 	}
 
-	public String getName() {
-		return name;
+	public Set getLines() {
+		return lines;
 	}
 
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public Object getData() {
-		return data;
-	}
-
-	public void setData(Object data) {
-		this.data = data;
+	public void setLines(Set lines) {
+		this.lines = lines;
 	}
 }

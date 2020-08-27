@@ -16,6 +16,7 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.internal.util.JavaHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -87,6 +88,10 @@ public class DomainModelExtension
 				final DomainModel domainModelAnnotation = testDomainAnnotationWrapper.get();
 
 				final MetadataSources metadataSources = new MetadataSources( serviceRegistry );
+
+				for ( String annotatedPackageName : domainModelAnnotation.annotatedPackageNames() ) {
+					metadataSources.addPackage( JavaHelper.getPackageFor( annotatedPackageName ) );
+				}
 
 				for ( StandardDomainModel standardDomainModel : domainModelAnnotation.standardModels() ) {
 					standardDomainModel.getDescriptor().applyDomainModel( metadataSources );

@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.orm.test.any;
+package org.hibernate.orm.test.any.hbm;
 
 import org.hibernate.Hibernate;
 import org.hibernate.stat.spi.StatisticsImplementor;
@@ -12,10 +12,10 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.test.annotations.any.IntegerProperty;
-import org.hibernate.test.annotations.any.Property;
-import org.hibernate.test.annotations.any.PropertySet;
-import org.hibernate.test.annotations.any.StringProperty;
+import org.hibernate.orm.test.any.annotations.IntegerProperty;
+import org.hibernate.orm.test.any.annotations.Property;
+import org.hibernate.orm.test.any.annotations.PropertySet;
+import org.hibernate.orm.test.any.annotations.StringProperty;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,7 +28,7 @@ import static org.junit.Assert.assertTrue;
 
 @DomainModel(
 		annotatedClasses = { StringProperty.class, IntegerProperty.class },
-		xmlMappings = "org/hibernate/orm/test/any/AnyTestEagerPropertySet.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/any/hbm/AnyTestEagerPropertySet.hbm.xml"
 )
 @SessionFactory( generateStatistics = true )
 public class AnyEagerHbmTest {

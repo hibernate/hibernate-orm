@@ -6,12 +6,14 @@
  */
 package org.hibernate;
 
+import org.hibernate.metamodel.mapping.NonTransientException;
+
 /**
  * Thrown from methods added for 6.0 that are not yet implemented.
  *
  * todo (6.0) : prior going final, we need to find all usages of this and implement all methods (or throw a different exception)
  */
-public class NotYetImplementedFor6Exception extends RuntimeException {
+public class NotYetImplementedFor6Exception extends RuntimeException implements NonTransientException {
 	public NotYetImplementedFor6Exception(String message) {
 		super( message );
 	}

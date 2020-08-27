@@ -9,73 +9,57 @@ package org.hibernate.metamodel.mapping.internal;
 import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
-import org.hibernate.engine.FetchStrategy;
-import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.mapping.Any;
-import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
- * Singular, any-valued attribute
- *
- * @see org.hibernate.annotations.Any
- *
  * @author Steve Ebersole
  */
-public class DiscriminatedAssociationAttributeMapping
-		extends AbstractSingularAttributeMapping
-		implements DiscriminatedAssociationModelPart {
-	private final NavigableRole navigableRole;
+public class DiscriminatedCollectionPart implements DiscriminatedAssociationModelPart, CollectionPart {
+	private final Nature nature;
+
+	private final NavigableRole partRole;
 	private final DiscriminatedAssociationMapping discriminatorMapping;
 
-	public DiscriminatedAssociationAttributeMapping(
-			NavigableRole attributeRole,
-			JavaTypeDescriptor<?> baseAssociationJtd,
-			ManagedMappingType declaringType,
-			int stateArrayPosition,
-			StateArrayContributorMetadataAccess attributeMetadataAccess,
-			FetchTiming fetchTiming,
-			PropertyAccess propertyAccess,
-			Property bootProperty,
-			AnyType anyType,
+	public DiscriminatedCollectionPart(
+			Nature nature,
+			NavigableRole collectionRole,
+			JavaTypeDescriptor<Object> baseAssociationJtd,
 			Any bootValueMapping,
+			AnyType anyType,
 			MappingModelCreationProcess creationProcess) {
-		super(
-				bootProperty.getName(),
-				stateArrayPosition,
-				attributeMetadataAccess,
-				fetchTiming == FetchTiming.IMMEDIATE
-						? new FetchStrategy( FetchTiming.IMMEDIATE, FetchStyle.SELECT )
-						: new FetchStrategy( FetchTiming.DELAYED, FetchStyle.SELECT ),
-				declaringType,
-				propertyAccess
-		);
-		this.navigableRole = attributeRole;
+		this.nature = nature;
+		this.partRole = collectionRole.append( nature.getName() );
 
 		this.discriminatorMapping = DiscriminatedAssociationMapping.from(
-				attributeRole,
+				partRole,
 				baseAssociationJtd,
 				this,
 				anyType,
 				bootValueMapping,
 				creationProcess
 		);
+	}
+
+	@Override
+	public Nature getNature() {
+		return nature;
 	}
 
 	@Override
@@ -91,6 +75,16 @@ public class DiscriminatedAssociationAttributeMapping
 	@Override
 	public EntityMappingType resolveDiscriminatorValue(Object discriminatorValue) {
 		return discriminatorMapping.resolveDiscriminatorValueToEntityName( discriminatorValue );
+	}
+
+	@Override
+	public String getFetchableName() {
+		return nature.getName();
+	}
+
+	@Override
+	public FetchOptions getMappedFetchOptions() {
+		return discriminatorMapping;
 	}
 
 	@Override
@@ -114,24 +108,37 @@ public class DiscriminatedAssociationAttributeMapping
 	}
 
 	@Override
-	public NavigableRole getNavigableRole() {
-		return navigableRole;
+	public <T> DomainResult<T> createDomainResult(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			String resultVariable,
+			DomainResultCreationState creationState) {
+		return discriminatorMapping.createDomainResult(
+				navigablePath,
+				tableGroup,
+				resultVariable,
+				creationState
+		);
 	}
 
 	@Override
-	public MappingType getMappedType() {
+	public MappingType getPartMappingType() {
 		return discriminatorMapping;
 	}
 
 	@Override
-	public int getNumberOfFetchables() {
-		return 2;
+	public JavaTypeDescriptor<?> getJavaTypeDescriptor() {
+		return discriminatorMapping.getJavaTypeDescriptor();
 	}
 
 	@Override
-	public void visitFetchables(Consumer<Fetchable> fetchableConsumer, EntityMappingType treatTargetType) {
-		fetchableConsumer.accept( getDiscriminatorPart() );
-		fetchableConsumer.accept( getKeyPart() );
+	public NavigableRole getNavigableRole() {
+		return partRole;
+	}
+
+	@Override
+	public EntityMappingType findContainingEntityMapping() {
+		return discriminatorMapping.getModelPart().findContainingEntityMapping();
 	}
 
 	@Override
@@ -151,5 +158,10 @@ public class DiscriminatedAssociationAttributeMapping
 	public void visitSubParts(Consumer<ModelPart> consumer, EntityMappingType treatTargetType) {
 		consumer.accept( getDiscriminatorPart() );
 		consumer.accept( getKeyPart() );
+	}
+
+	@Override
+	public int getNumberOfFetchables() {
+		return 2;
 	}
 }

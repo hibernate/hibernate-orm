@@ -39,14 +39,14 @@ import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import static org.hibernate.metamodel.mapping.internal.DiscriminatedAssociationMapping.KEY_ROLE_NAME;
-
 /**
  * Acts as a ModelPart for the key portion of an any-valued mapping
  *
  * @author Steve Ebersole
  */
 public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
+	public static final String ROLE_NAME = "{key}";
+
 	private final NavigableRole navigableRole;
 	private final String table;
 	private final String column;
@@ -56,9 +56,8 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 
 	public AnyKeyPart(
 			NavigableRole navigableRole,
-			String table,
+			DiscriminatedAssociationModelPart anyPart, String table,
 			String column,
-			DiscriminatedAssociationModelPart anyPart,
 			boolean nullable,
 			JdbcMapping jdbcMapping) {
 		this.navigableRole = navigableRole;
@@ -101,7 +100,7 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 
 	@Override
 	public String getPartName() {
-		return KEY_ROLE_NAME;
+		return ROLE_NAME;
 	}
 
 	@Override
@@ -126,7 +125,7 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 
 	@Override
 	public FetchOptions getMappedFetchOptions() {
-		return null;
+		return this;
 	}
 
 	@Override
@@ -149,7 +148,7 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 				.getCreationContext()
 				.getSessionFactory();
 
-		final TableGroup tableGroup = fromClauseAccess.getTableGroup( fetchParent.getNavigablePath() );
+		final TableGroup tableGroup = fromClauseAccess.getTableGroup( fetchParent.getNavigablePath().getParent() );
 		final TableReference tableReference = tableGroup.getTableReference( table );
 
 		final Expression columnReference = sqlExpressionResolver.resolveSqlExpression(

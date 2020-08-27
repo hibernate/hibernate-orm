@@ -61,6 +61,7 @@ import org.hibernate.mapping.SyntheticProperty;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
+import org.hibernate.type.DiscriminatorType;
 
 import org.jboss.logging.Logger;
 
@@ -953,46 +954,53 @@ public class BinderHelper {
 			EntityBinder entityBinder,
 			boolean optional,
 			MetadataBuildingContext context) {
+		final XProperty xProperty = inferredData.getProperty();
+
 		//All FK columns should be in the same table
-		Any value = new Any( context, columns[0].getTable() );
-		AnyMetaDef metaAnnDef = inferredData.getProperty().getAnnotation( AnyMetaDef.class );
+		final Any value = new Any( context, columns[0].getTable() );
 
 		value.setLazy( lazy );
-		if ( metaAnnDef != null ) {
-			//local has precedence over general and can be mapped for future reference if named
-			bindAnyMetaDefs( inferredData.getProperty(), context );
-		}
-		else {
-			metaAnnDef = context.getMetadataCollector().getAnyMetaDef( anyMetaDefName );
-		}
-		if ( metaAnnDef != null ) {
-			value.setIdentifierType( metaAnnDef.idType() );
-			value.setMetaType( metaAnnDef.metaType() );
 
-			HashMap values = new HashMap();
-			org.hibernate.type.Type metaType = context.getMetadataCollector().getTypeConfiguration().getBasicTypeRegistry().getRegisteredType( value.getMetaType() );
-			for (MetaValue metaValue : metaAnnDef.metaValues()) {
-				try {
-					Object discrim = ( (org.hibernate.type.DiscriminatorType) metaType ).stringToObject( metaValue
-							.value() );
-					String entityName = metaValue.targetEntity().getName();
-					values.put( discrim, entityName );
-				}
-				catch (ClassCastException cce) {
-					throw new MappingException( "metaType was not a DiscriminatorType: "
-							+ metaType.getName() );
-				}
-				catch (Exception e) {
-					throw new MappingException( "could not interpret metaValue", e );
-				}
-			}
-			if ( !values.isEmpty() ) {
-				value.setMetaValues( values );
-			}
+		final AnyMetaDef metaDefToUse;
+		final AnyMetaDef localMetaDefAnn = xProperty.getAnnotation( AnyMetaDef.class );
+		if ( localMetaDefAnn != null ) {
+			//local has precedence over general and can be mapped for future reference if named
+			bindAnyMetaDefs(xProperty, context );
+			metaDefToUse = localMetaDefAnn;
 		}
 		else {
-			throw new AnnotationException( "Unable to find @AnyMetaDef for an @(ManyTo)Any mapping: "
-					+ StringHelper.qualify( propertyHolder.getPath(), inferredData.getPropertyName() ) );
+			metaDefToUse = context.getMetadataCollector().getAnyMetaDef( anyMetaDefName );
+			if ( metaDefToUse == null ) {
+				throw new AnnotationException(
+						"Unable to find @AnyMetaDef for an @(ManyTo)Any mapping: "
+								+ StringHelper.qualify( propertyHolder.getPath(), inferredData.getPropertyName() )
+				);
+			}
+		}
+
+		value.setIdentifierType( metaDefToUse.idType() );
+		value.setMetaType( metaDefToUse.metaType() );
+
+		final HashMap<Object,String> values = new HashMap<>();
+		final DiscriminatorType<?> metaType = (DiscriminatorType<?>) context.getMetadataCollector()
+				.getTypeConfiguration()
+				.getBasicTypeRegistry()
+				.getRegisteredType( value.getMetaType() );
+
+		for (int i = 0; i < metaDefToUse.metaValues().length; i++) {
+			final MetaValue metaValue = metaDefToUse.metaValues()[ i ];
+			try {
+				final Object discriminator = metaType.stringToObject( metaValue.value() );
+				final String entityName = metaValue.targetEntity().getName();
+				values.put( discriminator, entityName );
+			}
+			catch (Exception e) {
+				throw new MappingException( "Could not interpret @MetaValue", e );
+			}
+		}
+
+		if ( !values.isEmpty() ) {
+			value.setMetaValues( values );
 		}
 
 		value.setCascadeDeleteEnabled( cascadeOnDelete );

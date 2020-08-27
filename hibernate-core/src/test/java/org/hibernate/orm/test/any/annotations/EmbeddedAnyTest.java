@@ -1,14 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.test.annotations.any;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+package org.hibernate.orm.test.any.annotations;
 
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
@@ -21,67 +17,63 @@ import javax.persistence.Table;
 import org.hibernate.annotations.Any;
 import org.hibernate.annotations.AnyMetaDef;
 import org.hibernate.annotations.MetaValue;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.junit.Test;
 
-public class EmbeddedAnyTest extends BaseEntityManagerFunctionalTestCase {
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[]{ Foo.class, Bar1.class, Bar2.class };
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+@DomainModel( annotatedClasses = { EmbeddedAnyTest.Foo.class, EmbeddedAnyTest.Bar1.class, EmbeddedAnyTest.Bar2.class } )
+@SessionFactory
+public class EmbeddedAnyTest {
+	@BeforeEach
+	public void createTestData(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final Foo foo1 = new Foo();
+					foo1.setId( 1 );
+
+					final Bar1 bar1 = new Bar1();
+					bar1.setId( 1 );
+					bar1.setBar1( "bar 1" );
+					bar1.setBarType( "1" );
+
+					final FooEmbeddable foo1Embedded = new FooEmbeddable();
+					foo1Embedded.setBar( bar1 );
+
+					foo1.setFooEmbedded( foo1Embedded );
+
+					session.persist( bar1 );
+					session.persist( foo1 );
+				}
+		);
+	}
+
+	@AfterEach
+	public void dropTestData(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery( "delete Bar2" ).executeUpdate();
+					session.createQuery( "delete Bar1" ).executeUpdate();
+					session.createQuery( "delete Foo" ).executeUpdate();
+				}
+		);
 	}
 
 	@Test
-	public void testEmbeddedAny() {
-		doInJPA( this::entityManagerFactory, em -> {
-			Foo foo1 = new Foo();
-			foo1.setId( 1 );
-
-			Bar1 bar1 = new Bar1();
-			bar1.setId( 1 );
-			bar1.setBar1( "bar 1" );
-			bar1.setBarType( "1" );
-
-			FooEmbeddable foo1Embedded = new FooEmbeddable();
-			foo1Embedded.setBar( bar1 );
-
-			foo1.setFooEmbedded( foo1Embedded );
-
-			em.persist( bar1 );
-			em.persist( foo1 );
-		} );
-
-		doInJPA( this::entityManagerFactory, em -> {
-			Foo foo2 = new Foo();
-			foo2.setId( 2 );
-
-			Bar2 bar2 = new Bar2();
-			bar2.setId( 2 );
-			bar2.setBar2( "bar 2" );
-			bar2.setBarType( "2" );
-
-			FooEmbeddable foo2Embedded = new FooEmbeddable();
-			foo2Embedded.setBar( bar2 );
-
-			foo2.setFooEmbedded( foo2Embedded );
-
-			em.persist( bar2 );
-			em.persist( foo2 );
-		} );
-
-		doInJPA( this::entityManagerFactory, em -> {
-			Foo foo1 = em.find( Foo.class, 1 );
-
-			assertTrue( foo1.getFooEmbedded().getBar() instanceof Bar1 );
-			assertEquals( "bar 1", ( (Bar1) foo1.getFooEmbedded().getBar() ).getBar1() );
-		} );
-
-		doInJPA( this::entityManagerFactory, em -> {
-			Foo foo2 = em.find( Foo.class, 2 );
-
-			assertTrue( foo2.getFooEmbedded().getBar() instanceof Bar2 );
-			assertEquals( "bar 2", ( (Bar2) foo2.getFooEmbedded().getBar() ).getBar2() );
-		} );
+	public void testEmbeddedAny(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final Foo foo = session.find( Foo.class, 1 );
+					assertTrue( foo.getFooEmbedded().getBar() instanceof Bar1 );
+					assertEquals( "bar 1", ( (Bar1) foo.getFooEmbedded().getBar() ).getBar1() );
+				}
+		);
 	}
 
 	@Entity(name = "Foo")

@@ -96,6 +96,7 @@ public @interface DomainModel {
 	Class<? extends DomainModelDescriptor>[] modelDescriptorClasses() default {};
 	Class[] annotatedClasses() default {};
 	String[] annotatedClassNames() default {};
+	String[] annotatedPackageNames() default {};
 	String[] xmlMappings() default {};
 	ExtraQueryImport[] extraQueryImports() default {};
 	Class<?>[] extraQueryImportClasses() default {};

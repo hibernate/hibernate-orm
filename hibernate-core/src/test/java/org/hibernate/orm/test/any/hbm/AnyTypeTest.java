@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.orm.test.any;
+package org.hibernate.orm.test.any.hbm;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.query.SemanticException;
@@ -27,7 +27,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
  */
 @TestForIssue(jiraKey = "HHH-1663")
 @ServiceRegistry( settings = @ServiceRegistry.Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ) )
-@DomainModel( xmlMappings = "org/hibernate/orm/test/any/Person.hbm.xml" )
+@DomainModel( xmlMappings = "org/hibernate/orm/test/any/hbm/Person.hbm.xml" )
 @SessionFactory
 public class AnyTypeTest {
 

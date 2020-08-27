@@ -42,25 +42,29 @@ import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnRefere
  * @author Steve Ebersole
  */
 public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions {
-	public static final String PART_NAME = EntityDiscriminatorMapping.ROLE_NAME;
+	public static final String ROLE_NAME = EntityDiscriminatorMapping.ROLE_NAME;
 
 	private final NavigableRole navigableRole;
 	private final DiscriminatedAssociationModelPart declaringType;
 
 	private final String table;
 	private final String column;
+	private final boolean nullable;
+
 	private final MetaType metaType;
 
 	public AnyDiscriminatorPart(
-			NavigableRole attributeRole,
+			NavigableRole partRole,
 			DiscriminatedAssociationModelPart declaringType,
 			String table,
 			String column,
+			boolean nullable,
 			MetaType metaType) {
-		this.navigableRole = attributeRole.append( PART_NAME );
+		this.navigableRole = partRole;
 		this.declaringType = declaringType;
 		this.table = table;
 		this.column = column;
+		this.nullable = nullable;
 		this.metaType = metaType;
 	}
 
@@ -104,7 +108,7 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions 
 
 	@Override
 	public String getPartName() {
-		return PART_NAME;
+		return ROLE_NAME;
 	}
 
 	@Override
@@ -171,7 +175,7 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions 
 				fetchParent,
 				fetchablePath,
 				this,
-				false,
+				nullable,
 				null,
 				fetchTiming,
 				creationState

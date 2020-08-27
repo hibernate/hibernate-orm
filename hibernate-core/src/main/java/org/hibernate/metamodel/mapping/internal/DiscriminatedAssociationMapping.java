@@ -6,24 +6,33 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.mapping.Any;
+import org.hibernate.mapping.Selectable;
 import org.hibernate.metamodel.RuntimeMetamodels;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.MappingType;
+import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.DomainResultGraphNode;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
@@ -31,6 +40,9 @@ import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
+import org.hibernate.type.AnyType;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.MetaType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -39,11 +51,67 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * @author Steve Ebersole
  */
 public class DiscriminatedAssociationMapping implements MappingType, FetchOptions {
-	public static final String KEY_ROLE_NAME = "{key}";
+
+	public static DiscriminatedAssociationMapping from(
+			NavigableRole containerRole,
+			JavaTypeDescriptor<?> baseAssociationJtd,
+			DiscriminatedAssociationModelPart declaringModelPart,
+			AnyType anyType,
+			Any bootValueMapping,
+			MappingModelCreationProcess creationProcess) {
+		final SessionFactoryImplementor sessionFactory = creationProcess.getCreationContext().getSessionFactory();
+
+		final JdbcEnvironment jdbcEnvironment = sessionFactory.getJdbcServices().getJdbcEnvironment();
+		final String tableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
+				bootValueMapping.getTable().getQualifiedTableName(),
+				jdbcEnvironment.getDialect()
+		);
+
+		assert bootValueMapping.getColumnSpan() == 2;
+		final Iterator<Selectable> columnIterator = bootValueMapping.getColumnIterator();
+
+		assert columnIterator.hasNext();
+		final Selectable metaColumn = columnIterator.next();
+		assert columnIterator.hasNext();
+		final Selectable keyColumn = columnIterator.next();
+		assert ! columnIterator.hasNext();
+
+		final AnyDiscriminatorPart discriminatorPart = new AnyDiscriminatorPart(
+				containerRole.append( AnyDiscriminatorPart.ROLE_NAME),
+				declaringModelPart,
+				tableName,
+				metaColumn.getText( jdbcEnvironment.getDialect() ),
+				bootValueMapping.isNullable(),
+				(MetaType) anyType.getDiscriminatorType()
+		);
+
+
+		final BasicType<?> keyType = (BasicType<?>) anyType.getIdentifierType();
+		final BasicValuedModelPart keyPart = new AnyKeyPart(
+				containerRole.append( AnyKeyPart.ROLE_NAME),
+				declaringModelPart,
+				tableName,
+				keyColumn.getText( jdbcEnvironment.getDialect() ),
+				bootValueMapping.isNullable(),
+				keyType
+		);
+
+		return new DiscriminatedAssociationMapping(
+				declaringModelPart,
+				discriminatorPart,
+				keyPart,
+				baseAssociationJtd,
+				bootValueMapping.isLazy()
+						? FetchTiming.DELAYED
+						: FetchTiming.IMMEDIATE,
+				bootValueMapping.getMetaValues(),
+				sessionFactory
+		);
+	}
 
 	private final DiscriminatedAssociationModelPart modelPart;
 	private final AnyDiscriminatorPart discriminatorPart;
-	private final Fetchable keyPart;
+	private final BasicValuedModelPart keyPart;
 
 	private final JavaTypeDescriptor<?> baseAssociationJtd;
 
@@ -64,9 +132,10 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 	public DiscriminatedAssociationMapping(
 			DiscriminatedAssociationModelPart modelPart,
 			AnyDiscriminatorPart discriminatorPart,
-			Fetchable keyPart,
+			BasicValuedModelPart keyPart,
 			JavaTypeDescriptor<?> baseAssociationJtd,
 			FetchTiming fetchTiming,
+			Map<Object,String> discriminatorValueMappings,
 			SessionFactoryImplementor sessionFactory) {
 		this.modelPart = modelPart;
 		this.discriminatorPart = discriminatorPart;
@@ -75,8 +144,8 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		this.fetchTiming = fetchTiming;
 
 		final RuntimeMetamodels runtimeMetamodels = sessionFactory.getRuntimeMetamodels();
-		discriminatorPart.getMetaType().getDiscriminatorValuesToEntityNameMap().forEach(
-				(value, entityName) -> discriminatorValueMappings.add(
+		discriminatorValueMappings.forEach(
+				(value, entityName) -> this.discriminatorValueMappings.add(
 						new ValueMapping( value, runtimeMetamodels.getEntityMappingType( entityName ) )
 				)
 		);
@@ -90,7 +159,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		return discriminatorPart;
 	}
 
-	public Fetchable getKeyPart() {
+	public BasicValuedModelPart getKeyPart() {
 		return keyPart;
 	}
 
@@ -137,69 +206,159 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 			LockMode lockMode,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final Fetch discriminatorValueFetch = getDiscriminatorPart().generateFetch(
-				fetchParent,
-				fetchablePath.append( AnyDiscriminatorPart.PART_NAME ),
-				FetchTiming.IMMEDIATE,
-				selected,
-				lockMode,
-				resultVariable,
-				creationState
-		);
-
-		final Fetch keyValueFetch = getKeyPart().generateFetch(
-				fetchParent,
-				fetchablePath.append( ForeignKeyDescriptor.PART_NAME ),
-				FetchTiming.IMMEDIATE,
-				selected,
-				lockMode,
-				resultVariable,
-				creationState
-		);
-
 		return new AnyValuedFetch(
 				fetchablePath,
+				baseAssociationJtd,
 				modelPart,
-				discriminatorValueFetch,
-				keyValueFetch,
 				fetchTiming,
-				fetchParent
+				fetchParent,
+				creationState
 		);
 	}
 
-	private static class AnyValuedFetch implements Fetch {
+	public <T> DomainResult<T> createDomainResult(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			String resultVariable,
+			DomainResultCreationState creationState) {
+		return new AnyValuedResult<>(
+				navigablePath,
+				baseAssociationJtd,
+				modelPart,
+				resultVariable
+		);
+	}
+
+	private static abstract class AnyValuedResultGraphNode implements DomainResultGraphNode, FetchParent {
 		private final NavigablePath navigablePath;
 
-		private final DiscriminatedAssociationModelPart fetchedPart;
+		private final DiscriminatedAssociationModelPart graphedPart;
+		private final JavaTypeDescriptor<?> baseAssociationJtd;
 
-		private final Fetch discriminatorValueFetch;
-		private final Fetch keyValueFetch;
-		private final FetchTiming fetchTiming;
-		private final FetchParent fetchParent;
+		private Fetch discriminatorValueFetch;
+		private Fetch keyValueFetch;
 
-		public AnyValuedFetch(
+		public AnyValuedResultGraphNode(
 				NavigablePath navigablePath,
-				DiscriminatedAssociationModelPart fetchedPart,
-				Fetch discriminatorValueFetch,
-				Fetch keyValueFetch,
-				FetchTiming fetchTiming,
-				FetchParent fetchParent) {
+				DiscriminatedAssociationModelPart graphedPart,
+				JavaTypeDescriptor<?> baseAssociationJtd) {
 			this.navigablePath = navigablePath;
-			this.fetchedPart = fetchedPart;
-			this.discriminatorValueFetch = discriminatorValueFetch;
-			this.keyValueFetch = keyValueFetch;
-			this.fetchTiming = fetchTiming;
-			this.fetchParent = fetchParent;
+			this.graphedPart = graphedPart;
+			this.baseAssociationJtd = baseAssociationJtd;
 		}
 
-		@Override
-		public JavaTypeDescriptor<?> getResultJavaTypeDescriptor() {
-			return fetchedPart.getJavaTypeDescriptor();
+		protected void afterInitialize(DomainResultCreationState creationState) {
+			final List<Fetch> fetches = creationState.visitFetches( this );
+			assert fetches.size() == 2;
+
+			discriminatorValueFetch = fetches.get( 0 );
+			keyValueFetch = fetches.get( 1 );
+		}
+
+		public Fetch getDiscriminatorValueFetch() {
+			return discriminatorValueFetch;
+		}
+
+		public Fetch getKeyValueFetch() {
+			return keyValueFetch;
+		}
+
+		public JavaTypeDescriptor<?> getBaseAssociationJtd() {
+			return baseAssociationJtd;
 		}
 
 		@Override
 		public NavigablePath getNavigablePath() {
 			return navigablePath;
+		}
+
+		@Override
+		public JavaTypeDescriptor<?> getResultJavaTypeDescriptor() {
+			return baseAssociationJtd;
+		}
+
+		@Override
+		public boolean containsAnyNonScalarResults() {
+			return true;
+		}
+
+		@Override
+		public DiscriminatedAssociationModelPart getReferencedMappingContainer() {
+			return graphedPart;
+		}
+
+		@Override
+		public DiscriminatedAssociationModelPart getReferencedMappingType() {
+			return graphedPart;
+		}
+
+		@Override
+		public List<Fetch> getFetches() {
+			return Arrays.asList( discriminatorValueFetch, keyValueFetch );
+		}
+
+		@Override
+		public Fetch findFetch(Fetchable fetchable) {
+			assert graphedPart.getDiscriminatorPart() == fetchable
+					|| graphedPart.getKeyPart() == fetchable;
+
+			if ( graphedPart.getDiscriminatorPart() == fetchable ) {
+				return discriminatorValueFetch;
+			}
+
+			if ( graphedPart.getKeyPart() == fetchable ) {
+				return keyValueFetch;
+			}
+
+			throw new IllegalArgumentException( "Given Fetchable [" + fetchable + "] did not match either discriminator nor key mapping" );
+		}
+	}
+
+	private static class AnyValuedResult<T> extends AnyValuedResultGraphNode implements DomainResult<T> {
+		private final String resultVariable;
+
+		public AnyValuedResult(
+				NavigablePath navigablePath,
+				JavaTypeDescriptor<?> baseAssociationJtd,
+				DiscriminatedAssociationModelPart fetchedPart,
+				String resultVariable) {
+			super( navigablePath, fetchedPart, baseAssociationJtd );
+			this.resultVariable = resultVariable;
+		}
+
+		@Override
+		public String getResultVariable() {
+			return resultVariable;
+		}
+
+		@Override
+		public DomainResultAssembler<T> createResultAssembler(AssemblerCreationState creationState) {
+			return new AnyResultAssembler<>(
+					getNavigablePath(),
+					getReferencedMappingContainer(),
+					true,
+					getDiscriminatorValueFetch().createAssembler( null, creationState ),
+					getKeyValueFetch().createAssembler( null, creationState )
+			);
+		}
+	}
+
+	private static class AnyValuedFetch extends AnyValuedResultGraphNode implements Fetch {
+		private final FetchTiming fetchTiming;
+		private final FetchParent fetchParent;
+
+		public AnyValuedFetch(
+				NavigablePath navigablePath,
+				JavaTypeDescriptor<?> baseAssociationJtd,
+				DiscriminatedAssociationModelPart fetchedPart,
+				FetchTiming fetchTiming,
+				FetchParent fetchParent,
+				DomainResultCreationState creationState) {
+			super( navigablePath, fetchedPart, baseAssociationJtd );
+			this.fetchTiming = fetchTiming;
+			this.fetchParent = fetchParent;
+
+			afterInitialize( creationState );
 		}
 
 		@Override
@@ -209,7 +368,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 
 		@Override
 		public DiscriminatedAssociationModelPart getFetchedMapping() {
-			return fetchedPart;
+			return getReferencedMappingContainer();
 		}
 
 		@Override
@@ -231,21 +390,22 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		public DomainResultAssembler<?> createAssembler(
 				FetchParentAccess parentAccess,
 				AssemblerCreationState creationState) {
-			return new AnyResultAssembler(
-					navigablePath,
-					fetchedPart,
-					fetchTiming,
-					discriminatorValueFetch.createAssembler( parentAccess, creationState ),
-					keyValueFetch.createAssembler( parentAccess, creationState )
+			return new AnyResultAssembler<>(
+					getNavigablePath(),
+					getFetchedMapping(),
+					fetchTiming == FetchTiming.IMMEDIATE,
+					getDiscriminatorValueFetch().createAssembler( parentAccess, creationState ),
+					getKeyValueFetch().createAssembler( parentAccess, creationState )
 			);
 		}
 	}
 
-	private static class AnyResultAssembler implements DomainResultAssembler<Object> {
+	private static class AnyResultAssembler<T> implements DomainResultAssembler<T> {
 		private final NavigablePath fetchedPath;
 
 		private final DiscriminatedAssociationModelPart fetchedPart;
-		private final FetchTiming fetchTiming;
+
+		private final boolean eager;
 
 		private final DomainResultAssembler<?> discriminatorValueAssembler;
 		private final DomainResultAssembler<?> keyValueAssembler;
@@ -253,18 +413,18 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		public AnyResultAssembler(
 				NavigablePath fetchedPath,
 				DiscriminatedAssociationModelPart fetchedPart,
-				FetchTiming fetchTiming,
+				boolean eager,
 				DomainResultAssembler<?> discriminatorValueAssembler,
 				DomainResultAssembler<?> keyValueAssembler) {
 			this.fetchedPath = fetchedPath;
 			this.fetchedPart = fetchedPart;
-			this.fetchTiming = fetchTiming;
+			this.eager = eager;
 			this.discriminatorValueAssembler = discriminatorValueAssembler;
 			this.keyValueAssembler = keyValueAssembler;
 		}
 
 		@Override
-		public Object assemble(
+		public T assemble(
 				RowProcessingState rowProcessingState,
 				JdbcValuesSourceProcessingOptions options) {
 			final Object discriminatorValue = discriminatorValueAssembler.assemble( rowProcessingState, options );
@@ -283,17 +443,18 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 					.getJdbcValuesSourceProcessingState()
 					.getSession();
 
-			return session.internalLoad(
+			//noinspection unchecked
+			return (T) session.internalLoad(
 					entityMapping.getEntityName(),
 					keyValue,
-					fetchTiming != FetchTiming.DELAYED,
+					eager,
 					// should not be null since we checked already.  null would indicate bad data (ala, not-found handling)
 					false
 			);
 		}
 
 		@Override
-		public JavaTypeDescriptor<Object> getAssembledJavaTypeDescriptor() {
+		public JavaTypeDescriptor<T> getAssembledJavaTypeDescriptor() {
 			//noinspection unchecked
 			return fetchedPart.getJavaTypeDescriptor();
 		}

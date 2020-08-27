@@ -222,7 +222,7 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 			EntityMappingType entityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
 		return new LocalTemporaryTableStrategy(
-				new IdTable( entityDescriptor, basename -> "#" + basename ),
+				new IdTable( entityDescriptor, basename -> "#" + basename, this ),
 //				// sql-server, at least needed this dropped after use; strange!
 				this::getTypeName,
 				AfterUseAction.DROP,

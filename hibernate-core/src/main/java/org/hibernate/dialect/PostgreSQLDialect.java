@@ -502,7 +502,7 @@ public class PostgreSQLDialect extends Dialect {
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
 		return new LocalTemporaryTableStrategy(
-				new IdTable( rootEntityDescriptor, base -> "HT_" + base ),
+				new IdTable( rootEntityDescriptor, base -> "HT_" + base, this ),
 				() -> new TempIdTableExporter( true, this::getTypeName ) {
 					@Override
 					protected String getCreateCommand() {

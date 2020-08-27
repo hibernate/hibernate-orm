@@ -20,7 +20,7 @@ import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.dialect.SQLServer2005Dialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 
 import org.hibernate.testing.AfterClassOnce;
@@ -35,7 +35,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 /**
  * @author Nathan Xu
  */
-@RequiresDialect( SQLServer2005Dialect.class )
+@RequiresDialect( SQLServerDialect.class )
 @TestForIssue( jiraKey = "HHH-3326" )
 public class SQLServerDialectTempTableCollationTest extends BaseCoreFunctionalTestCase {
 

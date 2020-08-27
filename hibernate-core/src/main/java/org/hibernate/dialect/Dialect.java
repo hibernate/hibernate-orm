@@ -1593,7 +1593,7 @@ public abstract class Dialect implements ConversionContext {
 		}
 
 		return new PersistentTableStrategy(
-				new IdTable( entityDescriptor, name -> name ),
+				new IdTable( entityDescriptor, name -> name, this ),
 				AfterUseAction.CLEAN,
 				PhysicalIdTableExporter::new,
 				runtimeModelCreationContext.getSessionFactory()

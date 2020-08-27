@@ -244,7 +244,7 @@ public class TeradataDialect extends Dialect {
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
 		return new GlobalTemporaryTableStrategy(
-				new IdTable( rootEntityDescriptor, basename -> "HT_" + basename ),
+				new IdTable( rootEntityDescriptor, basename -> "HT_" + basename, this ),
 				() -> new TempIdTableExporter( false, this::getTypeName ) {
 					@Override
 					public String getCreateOptions() {

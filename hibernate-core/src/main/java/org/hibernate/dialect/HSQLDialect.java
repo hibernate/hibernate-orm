@@ -441,7 +441,7 @@ public class HSQLDialect extends Dialect {
 
 		if ( version < 200 ) {
 			return new GlobalTemporaryTableStrategy(
-					new IdTable( rootEntityDescriptor, name -> "HT_" + name ),
+					new IdTable( rootEntityDescriptor, name -> "HT_" + name, this ),
 					() -> new TempIdTableExporter( false, this::getTypeName ),
 					// Version 1.8 GLOBAL TEMPORARY table definitions persist beyond the end
 					// of the session (by default, data is cleared at commit).
@@ -453,7 +453,7 @@ public class HSQLDialect extends Dialect {
 			return new LocalTemporaryTableStrategy(
 					// With HSQLDB 2.0, the table name is qualified with MODULE to assist the drop
 					// statement (in-case there is a global name beginning with HT_)
-					new IdTable( rootEntityDescriptor, name -> "MODULE.HT_" + name ),
+					new IdTable( rootEntityDescriptor, name -> "MODULE.HT_" + name, this ),
 					() -> new TempIdTableExporter( true, this::getTypeName ) {
 						@Override
 						protected String getCreateCommand() {

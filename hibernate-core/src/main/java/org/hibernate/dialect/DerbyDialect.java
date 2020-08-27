@@ -721,7 +721,7 @@ public class DerbyDialect extends Dialect {
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
 		return new LocalTemporaryTableStrategy(
-				new IdTable( rootEntityDescriptor, basename -> "HT_" + basename ),
+				new IdTable( rootEntityDescriptor, basename -> "HT_" + basename, this ),
 				() -> new TempIdTableExporter( true, this::getTypeName ) {
 					@Override
 					protected String getCreateCommand() {

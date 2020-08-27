@@ -262,7 +262,7 @@ public class H2Dialect extends Dialect {
 			EntityMappingType entityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
 		return new LocalTemporaryTableStrategy(
-				new IdTable( entityDescriptor, basename -> "HT_" + basename ),
+				new IdTable( entityDescriptor, basename -> "HT_" + basename, this ),
 				this::getTypeName,
 				AfterUseAction.CLEAN,
 				TempTableDdlTransactionHandling.NONE,

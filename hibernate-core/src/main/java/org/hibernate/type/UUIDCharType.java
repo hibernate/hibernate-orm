@@ -21,7 +21,12 @@ public class UUIDCharType extends AbstractSingleColumnStandardBasicType<UUID> im
 	public static final UUIDCharType INSTANCE = new UUIDCharType();
 
 	public UUIDCharType() {
-		super( VarcharTypeDescriptor.INSTANCE, UUIDTypeDescriptor.INSTANCE );
+		super( VarcharTypeDescriptor.INSTANCE, new UUIDTypeDescriptor() {
+			@Override
+			public long getDefaultSqlLength(Dialect dialect) {
+				return 36;
+			}
+		} );
 	}
 
 	public String getName() {

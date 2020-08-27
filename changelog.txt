@@ -3,6 +3,37 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.4.21.Final (August 27, 2020)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31844
+
+** Bug
+    * [HHH-14193] - MultipleLinesSqlCommandExtractor should tolerate empty input scripts
+    * [HHH-14187] -  Lazy loading fails if an entity appears twice in the object graph when enhancement as proxy is enabled
+    * [HHH-14183] - LocalTimeJavaDescriptor attempts casting to LocalDate
+    * [HHH-14179] - MultiLineImportExtractorTest fails on Windows
+    * [HHH-14175] - StatefulPersistenceContext#getLoadedCollectionOwnerOrNull could NPE on missing CollectionEntry
+    * [HHH-14159] - StandardQueryCacheFactory mentioned in the docs but does not exist
+    * [HHH-14156] - IN subquery predicate with entity aliases produces wrong SQL "too few columns in subquery"
+    * [HHH-14154] - Incorrect SQL generated from Criteria API when concat() and function() methods are used together
+    * [HHH-14153] - HQL update query on abstract entity generates temporary table
+    * [HHH-14152] - Query fails after upgrading to 5.4.20.Final
+    * [HHH-14149] - Improve efficiency of LazyAttributesMetadata#getLazyAttributeNames
+    * [HHH-13380] - Bytecode enhanced entities might throw LazyInitializationException from custom equals/hashcode implementations
+
+** Improvement
+    * [HHH-14190] - Rename isEmptyOrWhitespace() to isBlank() and improve its efficiency
+    * [HHH-14160] - Use a runtime used class for testing Bean Validation presence
+
+** Patch
+    * [HHH-14181] - HQL update/delete query resulted in same table being updated twice
+    * [HHH-3326] - Temporary tables created in SQLServer use the collation for tempdb, not the application database
+
+** Task
+    * [HHH-14150] - Upgrade to Byteman 4.0.13
+
+
 Changes in 5.4.20.Final (August 10, 2020)
 ------------------------------------------------------------------------------------------------------------------------
 

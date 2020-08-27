@@ -83,7 +83,6 @@ public class CteTable {
 				null,
 				LockMode.NONE,
 				tableValueConstructorReference,
-				Collections.emptyList(),
 				null,
 				sessionFactory
 		);

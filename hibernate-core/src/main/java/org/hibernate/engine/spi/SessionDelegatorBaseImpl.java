@@ -372,6 +372,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public boolean autoFlushIfRequired(Set<String> querySpaces) throws HibernateException {
+		return delegate.autoFlushIfRequired( querySpaces );
+	}
+
+	@Override
 	public SessionEventListenerManager getEventListenerManager() {
 		return delegate.getEventListenerManager();
 	}

@@ -12,6 +12,7 @@ import java.util.Map;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.MappingModelHelper;
@@ -62,7 +63,8 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 
 	@Override
 	public int executeUpdate(ExecutionContext executionContext) {
-		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
+		final SharedSessionContractImplementor session = executionContext.getSession();
+		final SessionFactoryImplementor factory = session.getFactory();
 		final JdbcServices jdbcServices = factory.getJdbcServices();
 
 		if ( jdbcDelete == null ) {
@@ -98,7 +100,7 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 				jdbcParamsXref,
 				factory.getDomainModel(),
 				sqmInterpretation.getFromClauseAccess()::findTableGroup,
-				executionContext.getSession()
+				session
 		);
 		jdbcDelete.bindFilterJdbcParameters( jdbcParameterBindings );
 
@@ -151,7 +153,7 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 		return jdbcServices.getJdbcMutationExecutor().execute(
 				jdbcDelete,
 				jdbcParameterBindings,
-				sql -> executionContext.getSession()
+				sql -> session
 						.getJdbcCoordinator()
 						.getStatementPreparer()
 						.prepareStatement( sql ),

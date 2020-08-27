@@ -45,7 +45,6 @@ public final class ExecuteWithoutIdTableHelper {
 				rootEntityPersister,
 				LockMode.PESSIMISTIC_WRITE,
 				rootTableReference,
-				Collections.emptyList(),
 				null,
 				sessionFactory
 		);

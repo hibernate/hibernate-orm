@@ -12,6 +12,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcMutation;
@@ -35,11 +36,14 @@ public class StandardJdbcMutationExecutor implements JdbcMutationExecutor {
 			Function<String, PreparedStatement> statementCreator,
 			BiConsumer<Integer, PreparedStatement> expectationCheck,
 			ExecutionContext executionContext) {
-		final LogicalConnectionImplementor logicalConnection = executionContext.getSession()
+		final SharedSessionContractImplementor session = executionContext.getSession();
+		session.autoFlushIfRequired( jdbcMutation.getAffectedTableNames() );
+
+		final LogicalConnectionImplementor logicalConnection = session
 				.getJdbcCoordinator()
 				.getLogicalConnection();
 
-		final JdbcServices jdbcServices = executionContext.getSession().getJdbcServices();
+		final JdbcServices jdbcServices = session.getJdbcServices();
 
 		final String sql = jdbcMutation.getSql();
 		try {
@@ -63,14 +67,14 @@ public class StandardJdbcMutationExecutor implements JdbcMutationExecutor {
 					);
 				}
 
-				executionContext.getSession().getEventListenerManager().jdbcExecuteStatementStart();
+				session.getEventListenerManager().jdbcExecuteStatementStart();
 				try {
 					int rows = preparedStatement.executeUpdate();
 					expectationCheck.accept( rows, preparedStatement );
 					return rows;
 				}
 				finally {
-					executionContext.getSession().getEventListenerManager().jdbcExecuteStatementEnd();
+					session.getEventListenerManager().jdbcExecuteStatementEnd();
 				}
 			}
 			finally {

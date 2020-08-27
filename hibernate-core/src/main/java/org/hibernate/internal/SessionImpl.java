@@ -1288,11 +1288,8 @@ public class SessionImpl
 		delayedAfterCompletion();
 	}
 
-	/**
-	 * detect in-memory changes, determine if the changes are to tables
-	 * named in the query and, if so, complete execution the flush
-	 */
-	protected boolean autoFlushIfRequired(Set querySpaces) throws HibernateException {
+	@Override
+	public boolean autoFlushIfRequired(Set<String> querySpaces) throws HibernateException {
 		checkOpen();
 		if ( !isTransactionInProgress() ) {
 			// do not auto-flush while outside a transaction

@@ -8,6 +8,7 @@ package org.hibernate.internal;
 
 import java.io.Serializable;
 import java.sql.Connection;
+import java.util.Set;
 import javax.transaction.SystemException;
 
 import org.hibernate.CacheMode;
@@ -563,6 +564,11 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	public PersistenceContext getPersistenceContextInternal() {
 		//In this case implemented the same as #getPersistenceContext
 		return temporaryPersistenceContext;
+	}
+
+	@Override
+	public boolean autoFlushIfRequired(Set<String> querySpaces) throws HibernateException {
+		return false;
 	}
 
 //	@Override

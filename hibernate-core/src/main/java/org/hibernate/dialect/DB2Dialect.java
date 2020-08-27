@@ -407,7 +407,7 @@ public class DB2Dialect extends Dialect {
 			// Starting in DB2 9.7, "real" global temporary tables that can be shared between sessions
 			// are supported; (obviously) data is not shared between sessions.
 			return new GlobalTemporaryTableStrategy(
-					new IdTable( rootEntityDescriptor, name -> "HT_" + name ),
+					new IdTable( rootEntityDescriptor, name -> "HT_" + name, this ),
 					() -> new TempIdTableExporter( false, this::getTypeName ) {
 						@Override
 						protected String getCreateOptions() {

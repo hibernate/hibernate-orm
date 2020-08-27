@@ -57,11 +57,15 @@ public class TempIdTableExporter implements IdTableExporter {
 			}
 
 			buffer.append( column.getColumnName() ).append( ' ' );
-			final String databaseTypeName = databaseTypeNameResolver.apply(
-					column.getJdbcMapping().getSqlTypeDescriptor().getSqlType()
-			);
+			final int sqlTypeCode = column.getJdbcMapping().getSqlTypeDescriptor().getSqlType();
+			final String databaseTypeName = databaseTypeNameResolver.apply( sqlTypeCode );
 
 			buffer.append( " " ).append( databaseTypeName ).append( " " );
+
+			final String columnAnnotation = idTable.getDialect().getCreateTemporaryTableColumnAnnotation( sqlTypeCode );
+			if ( !columnAnnotation.isEmpty() ) {
+				buffer.append(" ").append( columnAnnotation );
+			}
 
 			// id values cannot be null
 			buffer.append( " not null" );

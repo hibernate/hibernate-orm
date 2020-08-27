@@ -44,7 +44,7 @@ public class HANARowStoreDialect extends AbstractHANADialect {
 			EntityMappingType entityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
 		return new GlobalTemporaryTableStrategy(
-				new IdTable( entityDescriptor, basename -> "HT_" + basename ),
+				new IdTable( entityDescriptor, basename -> "HT_" + basename, this ),
 				() -> new PhysicalIdTableExporter() {
 					@Override
 					protected String getCreateCommand() {

@@ -226,7 +226,7 @@ public class TimesTenDialect extends Dialect {
 			RuntimeModelCreationContext runtimeModelCreationContext) {
 		return new GlobalTemporaryTableStrategy(
 				new IdTable( rootEntityDescriptor,
-						name -> name.length() > 30 ? name.substring( 0, 30 ) : name ),
+						name -> name.length() > 30 ? name.substring( 0, 30 ) : name, this ),
 				() -> new TempIdTableExporter( false, this::getTypeName ) {
 					@Override
 					protected String getCreateOptions() {

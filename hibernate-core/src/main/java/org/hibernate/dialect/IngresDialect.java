@@ -320,7 +320,7 @@ public class IngresDialect extends Dialect {
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
 		return new GlobalTemporaryTableStrategy(
-				new IdTable( rootEntityDescriptor, name -> "session." + name ),
+				new IdTable( rootEntityDescriptor, name -> "session." + name, this ),
 				() -> new TempIdTableExporter( false, this::getTypeName ) {
 					@Override
 					protected String getCreateOptions() {

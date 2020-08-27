@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.function.Function;
 
 import org.hibernate.boot.model.relational.Exportable;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.persister.entity.Joinable;
 
@@ -24,9 +25,12 @@ public class IdTable implements Exportable {
 	private IdTableSessionUidColumn sessionUidColumn;
 	private final List<IdTableColumn> columns = new ArrayList<>();
 
+	private final Dialect dialect;
+
 	public IdTable(
 			EntityMappingType entityDescriptor,
-			Function<String,String> idTableNameAdjuster) {
+			Function<String,String> idTableNameAdjuster,
+			Dialect dialect) {
 		this.entityDescriptor = entityDescriptor;
 
 		this.qualifiedTableName = idTableNameAdjuster.apply(
@@ -42,6 +46,8 @@ public class IdTable implements Exportable {
 						)
 				)
 		);
+
+		this.dialect = dialect;
 	}
 
 	public EntityMappingType getEntityDescriptor() {
@@ -78,5 +84,9 @@ public class IdTable implements Exportable {
 	@Override
 	public String getExportIdentifier() {
 		return getQualifiedTableName();
+	}
+
+	public Dialect getDialect() {
+		return this.dialect;
 	}
 }

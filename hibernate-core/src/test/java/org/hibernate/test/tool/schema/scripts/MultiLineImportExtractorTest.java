@@ -9,6 +9,7 @@ package org.hibernate.test.tool.schema.scripts;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.StringReader;
 import java.util.List;
 
 import org.hibernate.dialect.Dialect;
@@ -46,7 +47,7 @@ public class MultiLineImportExtractorTest {
 
 				assertThat( commands.get( 1 ), is( "INSERT INTO test_data VALUES (1, 'sample')" ) );
 
-				assertThat( commands.get( 2 ), is( "DELETE  FROM test_data" ) );
+				assertThat( commands.get( 2 ), is( "DELETE   FROM test_data" ) );
 
 				assertThat( commands.get( 3 ), startsWith( "INSERT INTO test_data VALUES (2," ) );
 				assertThat( commands.get( 3 ), containsString( "-- line 2" ) );
@@ -54,8 +55,16 @@ public class MultiLineImportExtractorTest {
 				assertThat( commands.get( 4 ), startsWith( "INSERT INTO test_data VALUES (3" ) );
 				assertThat( commands.get( 4 ), not( containsString( "third record" ) ) );
 
-				assertThat( commands.get( 5 ), startsWith( "INSERT INTO test_data" +  System.lineSeparator() + "VALUES" ) );
+				assertThat( commands.get( 5 ).replace( "\t", "" ), is( "INSERT INTO test_data VALUES (     4       , NULL     )" ) );
 			}
 		}
+	}
+
+	@Test
+	public void testExtractionFromEmptyScript() {
+		StringReader reader = new StringReader( "" );
+		final List<String> commands = extractor.extractCommands( reader, Dialect.getDialect() );
+		assertThat( commands, notNullValue() );
+		assertThat( commands.size(), is( 0 ) );
 	}
 }

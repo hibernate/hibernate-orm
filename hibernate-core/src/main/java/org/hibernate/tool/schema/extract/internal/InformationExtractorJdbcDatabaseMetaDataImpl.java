@@ -72,7 +72,7 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 						""
 				)
 		);
-		if ( ! StringHelper.isEmptyOrWhiteSpace( extraPhysycalTableTypesConfig ) ) {
+		if ( ! StringHelper.isBlank( extraPhysycalTableTypesConfig ) ) {
 			this.extraPhysicalTableTypes = StringHelper.splitTrimmingTokens(
 					",;",
 					extraPhysycalTableTypesConfig,

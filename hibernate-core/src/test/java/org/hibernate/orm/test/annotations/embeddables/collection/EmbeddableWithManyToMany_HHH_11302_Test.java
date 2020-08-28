@@ -26,6 +26,7 @@ import javax.persistence.Table;
 import javax.persistence.Version;
 
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.internal.util.StringHelper;
 
 import org.hibernate.testing.TestForIssue;
 
@@ -114,7 +115,7 @@ public class EmbeddableWithManyToMany_HHH_11302_Test
 				result += "id: " + id;
 			}
 			result += ", version: " + version;
-			if ( type != null && !type.trim().isEmpty() ) {
+			if ( !StringHelper.isBlank( type ) ) {
 				result += ", type: " + type;
 			}
 			return result;

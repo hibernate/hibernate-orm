@@ -539,8 +539,30 @@ public final class StringHelper {
 		return string == null || string.isEmpty();
 	}
 
-	public static boolean isEmptyOrWhiteSpace(String string) {
-		return isEmpty( string ) || isEmpty( string.trim() );
+	public static boolean isBlank(String string) {
+		//TODO use Java 11's more efficient String#isBlank - currently we still require Java 8 compatibility
+		if ( string == null || string.isEmpty() ) {
+			return true;
+		}
+		else {
+			//Else: we need to check all characters, preferably without using String#trim() so to
+			//not allocate temporary strings
+			for ( int i = 0; i < string.length(); i++ ) {
+				if ( ! Character.isWhitespace( string.charAt( i ) ) ) {
+					return false;
+				}
+			}
+			return true;
+		}
+	}
+
+	/**
+	 * @deprecated use {@link #isBlank(String)}
+	 * @return
+	 */
+	@Deprecated
+	public static boolean isEmptyOrWhitespace(String string) {
+		return isBlank(string);
 	}
 
 	public static String qualify(String prefix, String name) {
@@ -669,7 +691,7 @@ public final class StringHelper {
 	}
 
 	public static String moveAndToBeginning(String filter) {
-		if ( filter.trim().length() > 0 ) {
+		if ( !isBlank( filter ) ) {
 			filter += " and ";
 			if ( filter.startsWith( " and " ) ) {
 				filter = filter.substring( 4 );

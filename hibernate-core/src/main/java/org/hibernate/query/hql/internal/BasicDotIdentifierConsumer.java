@@ -9,18 +9,22 @@ package org.hibernate.query.hql.internal;
 import java.lang.reflect.Field;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.QueryLogging;
+import org.hibernate.query.hql.HqlLogging;
 import org.hibernate.query.hql.spi.DotIdentifierConsumer;
 import org.hibernate.query.hql.spi.SemanticPathPart;
+import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
-import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmEnumLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -45,8 +49,6 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
-	private static final Logger log = Logger.getLogger( BasicDotIdentifierConsumer.class );
-
 	private final SqmCreationState creationState;
 
 	private String pathSoFar;
@@ -84,7 +86,7 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 			pathSoFar += ( '.' + identifier );
 		}
 
-		log.tracef(
+		HqlLogging.QUERY_LOGGER.tracef(
 				"BasicDotIdentifierHandler#consumeIdentifier( %s, %s, %s ) - %s",
 				identifier,
 				isBase,
@@ -112,6 +114,14 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 				String identifier,
 				boolean isTerminal,
 				SqmCreationState creationState) {
+			HqlLogging.QUERY_LOGGER.tracef(
+					"BaseLocalSequencePart#consumeIdentifier( %s, %s, %s ) - %s",
+					identifier,
+					isBase,
+					isTerminal,
+					pathSoFar
+			);
+
 			if ( isBase ) {
 				isBase = false;
 
@@ -119,7 +129,7 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 						.getCurrent()
 						.getPathRegistry();
 
-				final SqmFrom pathRootByAlias = sqmPathRegistry.findFromByAlias( identifier );
+				final SqmFrom<?,?> pathRootByAlias = sqmPathRegistry.findFromByAlias( identifier );
 				if ( pathRootByAlias != null ) {
 					// identifier is an alias (identification variable)
 					validateAsRoot( pathRootByAlias );
@@ -144,7 +154,7 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 					}
 					else {
 						pathRootByExposedNavigable.registerImplicitJoinPath( sqmPath );
-						return new DomainPathPart( pathRootByAlias );
+						return new DomainPathPart( pathRootByExposedNavigable );
 					}
 				}
 			}
@@ -161,11 +171,19 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 			//
 			// todo (6.0) : finish this logic.  and see above note in `! isTerminal` block
 
-			if ( !isTerminal ) {
+			final SqmCreationContext creationContext = creationState.getCreationContext();
+
+			if ( ! isTerminal ) {
 				return this;
 			}
 
-			final SqmCreationContext creationContext = creationState.getCreationContext();
+			final String importableName = creationContext.getJpaMetamodel().qualifyImportableName( pathSoFar );
+			if ( importableName != null ) {
+				final EntityDomainType<?> entityDomainType = creationContext.getJpaMetamodel().entity( importableName );
+				if ( entityDomainType != null ) {
+					return new SqmLiteralEntityType( entityDomainType, creationContext.getNodeBuilder() );
+				}
+			}
 
 			final SqmFunctionDescriptor functionDescriptor = creationContext.getQueryEngine()
 					.getSqmFunctionRegistry()

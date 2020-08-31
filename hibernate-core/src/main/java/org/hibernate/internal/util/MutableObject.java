@@ -6,6 +6,7 @@
  */
 package org.hibernate.internal.util;
 
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -38,6 +39,14 @@ public class MutableObject<T> {
 	public void set(T reference, Consumer<T> existingConsumer) {
 		if ( this.reference != null ) {
 			existingConsumer.accept( this.reference );
+		}
+
+		this.reference = reference;
+	}
+
+	public void set(T reference, BiConsumer<T,T> existingConsumer) {
+		if ( this.reference != null ) {
+			existingConsumer.accept( reference, this.reference );
 		}
 
 		this.reference = reference;

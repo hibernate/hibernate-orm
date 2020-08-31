@@ -149,7 +149,7 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 	public MappingMetamodelImpl(SessionFactoryImplementor sessionFactory, TypeConfiguration typeConfiguration) {
 		this.sessionFactory = sessionFactory;
 		this.typeConfiguration = typeConfiguration;
-		this.jpaMetamodel = new JpaMetamodelImpl( typeConfiguration );
+		this.jpaMetamodel = new JpaMetamodelImpl( typeConfiguration, sessionFactory.getSessionFactoryOptions().getJpaCompliance() );
 	}
 
 	public JpaMetamodel getJpaMetamodel() {

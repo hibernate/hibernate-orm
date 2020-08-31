@@ -44,6 +44,16 @@ import org.hibernate.query.spi.QueryImplementor;
 public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQuery<R>, NameableQuery {
 	NativeQueryImplementor setCollectionKey(Object key);
 
+	@Override
+	default LockOptions getLockOptions() {
+		return null;
+	}
+
+	@Override
+	default LockModeType getLockMode() {
+		return null;
+	}
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// covariant overrides - NativeQuery
 

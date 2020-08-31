@@ -35,6 +35,9 @@ import org.hibernate.engine.spi.ExceptionConverter;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.loader.MultipleBagFetchException;
+import org.hibernate.query.SemanticException;
+import org.hibernate.query.sqm.InterpretationException;
+import org.hibernate.query.sqm.ParsingException;
 
 /**
  * @author Andrea Boriero
@@ -134,7 +137,16 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 				handlePersistenceException( converted );
 				return converted;
 			}
+			else if ( cause instanceof SemanticException ) {
+				return new IllegalArgumentException( cause );
+			}
 			else if ( cause instanceof QueryException ) {
+				return new IllegalArgumentException( cause );
+			}
+			else if ( cause instanceof InterpretationException ) {
+				return new IllegalArgumentException( cause );
+			}
+			else if ( cause instanceof ParsingException ) {
 				return new IllegalArgumentException( cause );
 			}
 			else if ( cause instanceof MultipleBagFetchException ) {

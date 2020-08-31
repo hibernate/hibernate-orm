@@ -36,9 +36,9 @@ import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.HEMLogging;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.metamodel.internal.InflightRuntimeMetamodel;
 import org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting;
 import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
@@ -71,6 +71,7 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 	}
 
 	private final TypeConfiguration typeConfiguration;
+	private final JpaCompliance jpaCompliance;
 
 	private final Map<String, EntityDomainType<?>> jpaEntityTypeMap = new ConcurrentHashMap<>();
 	private final Map<Class<?>, MappedSuperclassDomainType<?>> jpaMappedSuperclassTypeMap = new ConcurrentHashMap<>();
@@ -85,13 +86,19 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 	private final Map<String, ImportInfo<?>> nameToImportMap = new ConcurrentHashMap<>();
 
 
-	public JpaMetamodelImpl(TypeConfiguration typeConfiguration) {
+	public JpaMetamodelImpl(TypeConfiguration typeConfiguration, JpaCompliance jpaCompliance) {
 		this.typeConfiguration = typeConfiguration;
+		this.jpaCompliance = jpaCompliance;
 	}
 
 	@Override
 	public TypeConfiguration getTypeConfiguration() {
 		return typeConfiguration;
+	}
+
+	@Override
+	public JpaCompliance getJpaCompliance() {
+		return jpaCompliance;
 	}
 
 	@Override
@@ -452,25 +459,6 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 		}
 
 		throw new IllegalArgumentException( "Could not resolve entity reference : " + javaType.getName() );
-	}
-
-	public static JpaMetamodel buildMetamodel(
-			RuntimeModelCreationContext runtimeModelCreationContext,
-			MetadataImplementor bootMetamodel,
-			InflightRuntimeMetamodel inflightRuntimeMetamodel,
-			JpaStaticMetaModelPopulationSetting jpaStaticMetaModelPopulationSetting,
-			java.util.Collection<NamedEntityGraphDefinition> namedEntityGraphDefinitions) {
-		final JpaMetamodelImpl jpaMetamodel = new JpaMetamodelImpl( inflightRuntimeMetamodel.getTypeConfiguration() );
-
-		jpaMetamodel.processJpa(
-				bootMetamodel,
-				inflightRuntimeMetamodel.getEntityProxyInterfaceMap(),
-				jpaStaticMetaModelPopulationSetting,
-				namedEntityGraphDefinitions,
-				runtimeModelCreationContext
-		);
-
-		return jpaMetamodel;
 	}
 
 	public void processJpa(

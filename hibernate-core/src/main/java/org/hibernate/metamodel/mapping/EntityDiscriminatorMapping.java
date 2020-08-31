@@ -13,6 +13,11 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  */
 public interface EntityDiscriminatorMapping extends VirtualModelPart, BasicValuedModelPart {
 	String ROLE_NAME = "{discriminator}";
+	String LEGACY_HQL_ROLE_NAME = "class";
+
+	static boolean matchesRoleName(String name) {
+		return ROLE_NAME.equals( name ) || LEGACY_HQL_ROLE_NAME.equals( name );
+	}
 
 	@Override
 	default String getPartName() {

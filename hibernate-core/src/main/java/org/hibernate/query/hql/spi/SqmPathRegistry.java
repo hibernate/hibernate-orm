@@ -89,5 +89,4 @@ public interface SqmPathRegistry {
 	 * Find an SqmSelection by its position in the SqmSelectClause
 	 */
 	SqmSelection findSelectionByPosition(int position);
-
 }

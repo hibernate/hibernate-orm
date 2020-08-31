@@ -12,15 +12,21 @@ import javax.persistence.metamodel.EntityType;
 import org.hibernate.graph.internal.SubGraphImpl;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Value;
+import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.model.domain.AbstractIdentifiableType;
+import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.query.hql.spi.SqmCreationState;
+import org.hibernate.query.sqm.IllegalPathUsageException;
 import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -33,6 +39,7 @@ public class EntityTypeImpl<J>
 		extends AbstractIdentifiableType<J>
 		implements EntityDomainType<J>, Serializable {
 	private final String jpaEntityName;
+	private final SqmPathSource<?> discriminatorPathSource;
 
 	public EntityTypeImpl(
 			JavaTypeDescriptor<J> javaTypeDescriptor,
@@ -50,6 +57,63 @@ public class EntityTypeImpl<J>
 		);
 
 		this.jpaEntityName = persistentClass.getJpaEntityName();
+
+		if ( persistentClass.hasSubclasses() ) {
+			final Value discriminator = persistentClass.getDiscriminator();
+			final DomainType discriminatorType;
+			if ( discriminator != null ) {
+				discriminatorType = (DomainType) discriminator.getType();
+			}
+			else {
+				discriminatorType = StandardBasicTypes.STRING;
+			}
+
+			discriminatorPathSource = new SqmPathSource() {
+				@Override
+				public String getPathName() {
+					return EntityDiscriminatorMapping.ROLE_NAME;
+				}
+
+				@Override
+				public DomainType<?> getSqmPathType() {
+					// the BasicType for Class?
+					return discriminatorType;
+				}
+
+				@Override
+				public SqmPathSource<?> findSubPathSource(String name) {
+					throw new IllegalPathUsageException( "Entity discriminator cannot be de-referenced" );
+				}
+
+				@Override
+				public SqmPath<?> createSqmPath(SqmPath lhs, SqmCreationState creationState) {
+					return new SqmBasicValuedSimplePath(
+							lhs.getNavigablePath().append( EntityDiscriminatorMapping.ROLE_NAME ),
+							this,
+							lhs,
+							creationState.getCreationContext().getNodeBuilder()
+					);
+				}
+
+				@Override
+				public BindableType getBindableType() {
+					return BindableType.SINGULAR_ATTRIBUTE;
+				}
+
+				@Override
+				public Class<?> getBindableJavaType() {
+					return getExpressableJavaTypeDescriptor().getJavaType();
+				}
+
+				@Override
+				public JavaTypeDescriptor<?> getExpressableJavaTypeDescriptor() {
+					return discriminatorType.getExpressableJavaTypeDescriptor();
+				}
+			};
+		}
+		else {
+			discriminatorPathSource = null;
+		}
 	}
 
 	@Override
@@ -81,6 +145,10 @@ public class EntityTypeImpl<J>
 
 		if ( "id".equalsIgnoreCase( name ) ) {
 			// todo (6.0) : probably need special handling here for non-aggregated composite ids
+		}
+
+		if ( EntityDiscriminatorMapping.matchesRoleName( name ) ) {
+			return discriminatorPathSource;
 		}
 
 		return null;

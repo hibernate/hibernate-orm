@@ -13,6 +13,7 @@ import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.jpa.JpaComplianceStub;
 import org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.internal.JpaMetamodelImpl;
@@ -60,7 +61,7 @@ public class HqlTranslationNoFactoryTests {
 		final MetadataImplementor bootModel = modelScope.getDomainModel();
 		final TypeConfiguration typeConfiguration = bootModel.getTypeConfiguration();
 
-		final JpaMetamodelImpl jpaMetamodel = new JpaMetamodelImpl( typeConfiguration );
+		final JpaMetamodelImpl jpaMetamodel = new JpaMetamodelImpl( typeConfiguration, new JpaComplianceStub() );
 
 		// todo (6.0) (quarkus) : we should limit the type of the last argument here from `RuntimeModelCreationContext`
 		//  		which assumes access to SessionFactory

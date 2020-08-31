@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.persistence.LockModeType;
 import javax.persistence.Parameter;
 import javax.persistence.PersistenceException;
 import javax.persistence.Tuple;
@@ -39,6 +40,7 @@ import org.hibernate.query.spi.HqlInterpretation;
 import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
+import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
@@ -52,7 +54,6 @@ import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
-import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
@@ -300,7 +301,7 @@ public class QuerySqmImpl<R>
 		return parameterBindings;
 	}
 
-	private boolean isSelect() {
+	protected Boolean isSelectQuery() {
 		return sqmStatement instanceof SqmSelectStatement;
 	}
 
@@ -314,7 +315,7 @@ public class QuerySqmImpl<R>
 	}
 
 	@Override
-	public Query<R> applyGraph(RootGraph graph, GraphSemantic semantic) {
+	public HqlQueryImplementor<R> applyGraph(RootGraph graph, GraphSemantic semantic) {
 		queryOptions.applyGraph( (RootGraphImplementor<?>) graph, semantic );
 		return this;
 	}
@@ -359,21 +360,23 @@ public class QuerySqmImpl<R>
 	}
 
 	@Override
-	protected boolean canApplyAliasSpecificLockModes() {
-		return isSelect();
-	}
-
-	@Override
-	protected void verifySettingLockMode() {
-		if ( !isSelect() ) {
-			throw new IllegalStateException( "Illegal attempt to set lock mode on a non-SELECT query" );
+	public LockModeType getLockMode() {
+		if ( ! isSelectQuery() ) {
+			throw new IllegalStateException( "Illegal attempt to access lock-mode for non-select query" );
 		}
+
+		return super.getLockMode();
 	}
 
 	@Override
-	protected void verifySettingAliasSpecificLockModes() {
-		// todo : add a specific Dialect check as well? - if not supported, maybe that can trigger follow-on locks?
-		verifySettingLockMode();
+	public HqlQueryImplementor<R> setLockMode(LockModeType lockModeType) {
+		if ( ! LockModeType.NONE.equals( lockModeType ) ) {
+			if ( ! isSelectQuery() ) {
+				throw new IllegalStateException( "Illegal attempt to access lock-mode for non-select query" );
+			}
+		}
+
+		return (HqlQueryImplementor<R>) super.setLockMode( lockModeType );
 	}
 
 	@Override

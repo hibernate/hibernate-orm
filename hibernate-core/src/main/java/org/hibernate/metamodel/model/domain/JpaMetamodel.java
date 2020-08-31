@@ -15,6 +15,7 @@ import javax.persistence.metamodel.ManagedType;
 
 import org.hibernate.Incubating;
 import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -114,4 +115,6 @@ public interface JpaMetamodel extends javax.persistence.metamodel.Metamodel {
 	<T> RootGraphImplementor<T> findEntityGraphByName(String name);
 
 	<T> List<RootGraphImplementor<? super T>> findEntityGraphsByJavaType(Class<T> entityClass);
+
+	JpaCompliance getJpaCompliance();
 }

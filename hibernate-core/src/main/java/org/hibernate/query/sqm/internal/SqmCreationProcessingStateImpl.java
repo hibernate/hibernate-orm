@@ -19,13 +19,14 @@ public class SqmCreationProcessingStateImpl implements SqmCreationProcessingStat
 	private final SqmCreationState creationState;
 	private final SqmQuery<?> processingQuery;
 
-	private final SqmPathRegistryImpl processingIndex = new SqmPathRegistryImpl( this );
+	private final SqmPathRegistryImpl processingIndex;
 
 	public SqmCreationProcessingStateImpl(
 			SqmQuery<?> processingQuery,
 			SqmCreationState creationState) {
 		this.processingQuery = processingQuery;
 		this.creationState = creationState;
+		this.processingIndex = new SqmPathRegistryImpl( this );
 	}
 
 	@Override

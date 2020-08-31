@@ -30,7 +30,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import org.antlr.v4.runtime.tree.TerminalNode;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.NullPrecedence;
 import org.hibernate.QueryException;
@@ -58,7 +57,7 @@ import org.hibernate.query.SemanticException;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.TrimSpec;
 import org.hibernate.query.UnaryArithmeticOperator;
-import org.hibernate.query.hql.HqlLogger;
+import org.hibernate.query.hql.HqlLogging;
 import org.hibernate.query.hql.spi.DotIdentifierConsumer;
 import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationOptions;
@@ -76,6 +75,7 @@ import org.hibernate.query.sqm.UnknownEntityException;
 import org.hibernate.query.sqm.function.NamedSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.internal.ParameterCollector;
+import org.hibernate.query.sqm.internal.SqmCreationProcessingStateImpl;
 import org.hibernate.query.sqm.internal.SqmDmlCreationProcessingState;
 import org.hibernate.query.sqm.internal.SqmQuerySpecCreationProcessingStateStandardImpl;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
@@ -92,6 +92,7 @@ import org.hibernate.query.sqm.tree.domain.SqmMaxIndexPath;
 import org.hibernate.query.sqm.tree.domain.SqmMinElementPath;
 import org.hibernate.query.sqm.tree.domain.SqmMinIndexPath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.query.sqm.tree.expression.SqmAny;
@@ -164,6 +165,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.jboss.logging.Logger;
 
 import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.tree.TerminalNode;
 
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_TIME;
@@ -171,7 +173,17 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.hibernate.grammars.hql.HqlParser.IDENTIFIER;
-import static org.hibernate.query.TemporalUnit.*;
+import static org.hibernate.query.TemporalUnit.DATE;
+import static org.hibernate.query.TemporalUnit.DAY_OF_MONTH;
+import static org.hibernate.query.TemporalUnit.DAY_OF_WEEK;
+import static org.hibernate.query.TemporalUnit.DAY_OF_YEAR;
+import static org.hibernate.query.TemporalUnit.NANOSECOND;
+import static org.hibernate.query.TemporalUnit.OFFSET;
+import static org.hibernate.query.TemporalUnit.TIME;
+import static org.hibernate.query.TemporalUnit.TIMEZONE_HOUR;
+import static org.hibernate.query.TemporalUnit.TIMEZONE_MINUTE;
+import static org.hibernate.query.TemporalUnit.WEEK_OF_MONTH;
+import static org.hibernate.query.TemporalUnit.WEEK_OF_YEAR;
 import static org.hibernate.type.descriptor.DateTimeUtils.DATE_TIME;
 import static org.hibernate.type.spi.TypeConfiguration.isJdbcTemporalType;
 
@@ -310,7 +322,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 		final SqmRoot<?> root = new SqmRoot<>(
 				visitEntityName( ctx.dmlTarget().entityName() ),
-				visitIdentificationVariableDef( ctx.dmlTarget().identificationVariableDef() ),
+				applyJpaCompliance( visitIdentificationVariableDef( ctx.dmlTarget().identificationVariableDef() ) ),
 				creationContext.getNodeBuilder()
 		);
 
@@ -323,15 +335,26 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 			);
 
 			processingStateStack.push( processingState );
-			processingState.getPathRegistry().register( root );
 
 			try {
 				insertStatement.setSelectQuerySpec( visitQuerySpec( ctx.querySpec() ) );
 
-				for ( HqlParser.DotIdentifierSequenceContext stateFieldCtx : ctx.targetFieldsSpec().dotIdentifierSequence() ) {
-					final SqmPath stateField = (SqmPath) visitDotIdentifierSequence( stateFieldCtx );
-					// todo : validate each resolved stateField...
-					insertStatement.addInsertTargetStateField( stateField );
+				final SqmCreationProcessingState stateFieldsProcessingState = new SqmCreationProcessingStateImpl(
+						insertStatement,
+						this
+				);
+				stateFieldsProcessingState.getPathRegistry().register( root );
+
+				processingStateStack.push( stateFieldsProcessingState );
+				try {
+					for ( HqlParser.DotIdentifierSequenceContext stateFieldCtx : ctx.targetFieldsSpec().dotIdentifierSequence() ) {
+						final SqmPath stateField = (SqmPath) visitDotIdentifierSequence( stateFieldCtx );
+						// todo : validate each resolved stateField...
+						insertStatement.addInsertTargetStateField( stateField );
+					}
+				}
+				finally {
+					processingStateStack.pop();
 				}
 
 				return insertStatement;
@@ -560,7 +583,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 	@Override
 	public SqmSelection visitSelection(HqlParser.SelectionContext ctx) {
-		final String resultIdentifier = visitResultIdentifier( ctx.resultIdentifier() );
+		final String resultIdentifier = applyJpaCompliance( visitResultIdentifier( ctx.resultIdentifier() ) );
 		final SqmSelectableNode selectableNode = visitSelectableNode( ctx );
 
 		//noinspection unchecked
@@ -746,7 +769,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		}
 		if ( sortExpression instanceof SqmLiteral
 				|| sortExpression instanceof SqmParameter ) {
-			HqlLogger.QUERY_LOGGER.debugf( "Questionable sorting by constant value : %s", sortExpression );
+			HqlLogging.QUERY_LOGGER.debugf( "Questionable sorting by constant value : %s", sortExpression );
 		}
 
 		final String collation;
@@ -903,8 +926,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 			final SqmFromClause fromClause = new SqmFromClause( parserFromClause==null ? 0 : parserFromClause.fromClauseSpace().size() );
 			if ( parserFromClause!=null ) {
 				for ( HqlParser.FromClauseSpaceContext parserSpace : parserFromClause.fromClauseSpace() ) {
-					final SqmRoot sqmPathRoot = visitFromClauseSpace(parserSpace);
-					fromClause.addRoot(sqmPathRoot);
+					final SqmRoot sqmPathRoot = visitFromClauseSpace( parserSpace );
+					fromClause.addRoot( sqmPathRoot );
 				}
 			}
 			return fromClause;
@@ -935,14 +958,15 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	}
 
 	@Override
+	@SuppressWarnings( { "rawtypes", "unchecked" } )
 	public SqmRoot visitPathRoot(HqlParser.PathRootContext ctx) {
 		final String name = ctx.entityName().fullNameText;
 
 		log.debugf( "Handling root path - %s", name );
 
-		final EntityDomainType entityDescriptor = getCreationContext().getJpaMetamodel().resolveHqlEntityReference(
-				name
-		);
+		final EntityDomainType entityDescriptor = getCreationContext()
+				.getJpaMetamodel()
+				.resolveHqlEntityReference( name );
 
 		checkFQNEntityNameJpaComplianceViolationIfNeeded( name, entityDescriptor );
 
@@ -962,14 +986,11 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 			}
 		}
 
-		final String alias = visitIdentificationVariableDef( ctx.identificationVariableDef() );
-
-		//noinspection unchecked
-		final SqmRoot sqmRoot = new SqmRoot(
-				entityDescriptor,
-				alias,
-				creationContext.getNodeBuilder()
+		final String alias = applyJpaCompliance(
+				visitIdentificationVariableDef( ctx.identificationVariableDef() )
 		);
+
+		final SqmRoot sqmRoot = new SqmRoot( entityDescriptor, alias, creationContext.getNodeBuilder() );
 
 		processingStateStack.getCurrent().getPathRegistry().register( sqmRoot );
 
@@ -1007,6 +1028,18 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		}
 
 		return null;
+	}
+
+	private String applyJpaCompliance(String text) {
+		if ( text == null ) {
+			return null;
+		}
+
+		if ( getCreationOptions().useStrictJpaCompliance() ) {
+			return text.toLowerCase(  Locale.getDefault() );
+		}
+
+		return text;
 	}
 
 	@Override
@@ -1217,7 +1250,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	@Override
 	public SqmEmptinessPredicate visitIsEmptyPredicate(HqlParser.IsEmptyPredicateContext ctx) {
 		return new SqmEmptinessPredicate(
-				(SqmPath) ctx.expression().accept( this ),
+				(SqmPluralValuedSimplePath<?>) ctx.expression().accept( this ),
 				ctx.NOT() != null,
 				creationContext.getNodeBuilder()
 		);

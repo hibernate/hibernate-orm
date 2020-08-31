@@ -8,23 +8,23 @@ package org.hibernate.query.sqm.tree.predicate;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 
 /**
  * @author Steve Ebersole
  */
 public class SqmEmptinessPredicate extends AbstractNegatableSqmPredicate {
-	private final SqmPath<?> pluralPath;
+	private final SqmPluralValuedSimplePath<?> pluralPath;
 
 	public SqmEmptinessPredicate(
-			SqmPath pluralPath,
+			SqmPluralValuedSimplePath pluralPath,
 			boolean negated,
 			NodeBuilder nodeBuilder) {
 		super( negated, nodeBuilder );
 		this.pluralPath = pluralPath;
 	}
 
-	public SqmPath<?> getPluralPath() {
+	public SqmPluralValuedSimplePath<?> getPluralPath() {
 		return pluralPath;
 	}
 

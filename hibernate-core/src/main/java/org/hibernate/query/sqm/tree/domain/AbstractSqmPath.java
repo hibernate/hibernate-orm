@@ -18,6 +18,7 @@ import javax.persistence.metamodel.MapAttribute;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 
+import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
@@ -154,7 +155,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	@SuppressWarnings("unchecked")
 	public SqmExpression<Class<? extends T>> type() {
 		if ( pathTypeExpression == null ) {
-			final String discriminatorPathName = "{type}";
+			final String discriminatorPathName = EntityDiscriminatorMapping.ROLE_NAME;
 			final NavigablePath discriminatorNavigablePath = getNavigablePath().append( discriminatorPathName );
 
 			final DomainType sqmNodeType = getReferencedPathSource().getSqmPathType();

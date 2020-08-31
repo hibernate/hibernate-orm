@@ -146,7 +146,7 @@ selectStatement
 		from
 		( #(WHERE { out(" where "); } whereExpr ) )?
 		( #(GROUP { out(" group by "); } groupExprs ( #(HAVING { out(" having "); } booleanExpr[false]) )? ) )?
-		( #(ORDER { out(" order by "); } orderExprs ) )?
+		( #(ORDER { out(" order by "); } orderBySqlFragmentOrExprs ) )?
 	)
 	;
 
@@ -189,6 +189,11 @@ whereClause
 whereClauseExpr
 	: (SQL_TOKEN) => conditionList
 	| booleanExpr[ false ]
+	;
+
+orderBySqlFragmentOrExprs
+	: sqlToken // for the purpose of mapping-defined orderBy SQL fragment
+	| orderExprs
 	;
 
 orderExprs { String ordExp = null; String ordDir = null; String ordNul = null; }
@@ -277,7 +282,7 @@ distinctOrAll
 	;
 
 countExpr
-	// Syntacitic predicate resolves star all by itself, avoiding a conflict with STAR in expr.
+	// Syntactic predicate resolves star all by itself, avoiding a conflict with STAR in expr.
 	: ROW_STAR { out("*"); }
 	| simpleExpr
 	;

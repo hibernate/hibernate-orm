@@ -24,15 +24,17 @@ import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
 import org.hibernate.NullPrecedence;
 import org.hibernate.Session;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.SQLServer2008Dialect;
-import org.hibernate.dialect.SQLServer2012Dialect;
-import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.graph.RootGraph;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
+import org.hibernate.query.Query;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
@@ -513,6 +515,28 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 
 		s.getTransaction().commit();
 		s.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-14148" )
+	@RequiresDialect(value = { H2Dialect.class, MySQLDialect.class, SQLServer2008Dialect.class },
+			comment = "By default H2 places NULL values first, so testing 'NULLS LAST' expression. " +
+					"For MySQL and SQL Server 2008 testing overridden Dialect#renderOrderByElement(String, String, String, NullPrecedence) method. " +
+					"MySQL and SQL Server 2008 does not support NULLS FIRST / LAST syntax at the moment, so transforming the expression to 'CASE WHEN ...'.")
+	public void testNullPrecedenceWithOrderBySqlFragment() {
+		inTransaction( session -> {
+			final RootGraph<Order> graph = session.createEntityGraph( Order.class );
+			graph.addAttributeNodes( "itemList" );
+
+			Query<Order> query = session.createQuery( "from Order", Order.class );
+			query.applyFetchGraph( graph );
+			query.getResultList(); // before HHH-14148 is fixed, incorrect SQL would be generated ending with " nulls last nulls last"
+		} );
+	}
+
+	@Override
+	protected void configure(Configuration configuration) {
+		configuration.setProperty( AvailableSettings.DEFAULT_NULL_ORDERING, "last" );
 	}
 
 	@Override

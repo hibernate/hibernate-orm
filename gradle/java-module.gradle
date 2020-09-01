@@ -340,8 +340,8 @@ task copyResourcesToIntelliJOutFolder(type: Task, dependsOn: project.tasks.proce
 task setDataBase {
 	inputs.property( "db", db )
 	doLast {
-		processTestResources.execute()
-		copyResourcesToIntelliJOutFolder.execute()
+		processTestResources
+		copyResourcesToIntelliJOutFolder
 
 		println( 'Setting current database to ' + db )
 	}

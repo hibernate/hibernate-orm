@@ -839,17 +839,29 @@ public class CommonFunctionFactory {
 	}
 
 	public static void dateTimeTimestamp(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "date" )
-				.setExactArgumentCount( 1 )
-				.setInvariantType( StandardBasicTypes.DATE )
+		date( queryEngine );
+		time( queryEngine );
+		timestamp( queryEngine );
+	}
+
+	public static void timestamp(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "timestamp" )
+				.setArgumentCountBetween( 1, 2 )
+				.setInvariantType( StandardBasicTypes.TIMESTAMP )
 				.register();
+	}
+
+	public static void time(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "time" )
 				.setExactArgumentCount( 1 )
 				.setInvariantType( StandardBasicTypes.TIME )
 				.register();
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "timestamp" )
-				.setArgumentCountBetween( 1, 2 )
-				.setInvariantType( StandardBasicTypes.TIMESTAMP )
+	}
+
+	public static void date(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "date" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardBasicTypes.DATE )
 				.register();
 	}
 

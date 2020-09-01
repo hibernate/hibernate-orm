@@ -269,7 +269,7 @@ public abstract class AbstractSaveEventListener
 		boolean substitute = substituteValuesIfNecessary( entity, id, values, persister, source );
 
 		if ( persister.hasCollections() ) {
-			substitute = substitute || visitCollectionsBeforeSave( entity, id, values, types, source );
+			substitute = visitCollectionsBeforeSave( entity, id, values, types, source ) || substitute;
 		}
 
 		if ( substitute ) {

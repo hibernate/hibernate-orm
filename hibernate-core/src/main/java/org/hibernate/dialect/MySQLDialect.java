@@ -39,6 +39,7 @@ import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
 import org.hibernate.query.sqm.mutation.internal.idtable.LocalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.internal.idtable.TempIdTableExporter;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.type.StandardBasicTypes;
 
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
@@ -202,7 +203,10 @@ public class MySQLDialect extends Dialect {
 		CommonFunctionFactory.weekQuarter( queryEngine );
 		CommonFunctionFactory.daynameMonthname( queryEngine );
 		CommonFunctionFactory.lastDay( queryEngine );
-		CommonFunctionFactory.dateTimeTimestamp( queryEngine );
+		CommonFunctionFactory.date( queryEngine );
+		CommonFunctionFactory.timestamp( queryEngine );
+		time( queryEngine );
+
 		CommonFunctionFactory.utcDateTimeTimestamp( queryEngine );
 		CommonFunctionFactory.rand( queryEngine );
 		CommonFunctionFactory.crc32( queryEngine );
@@ -239,6 +243,13 @@ public class MySQLDialect extends Dialect {
 			// we want the standard default precision of 6 (microseconds)
 			CommonFunctionFactory.sysdateExplicitMicros( queryEngine );
 		}
+	}
+
+	private void time(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "time" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardBasicTypes.STRING )
+				.register();
 	}
 
 	@Override

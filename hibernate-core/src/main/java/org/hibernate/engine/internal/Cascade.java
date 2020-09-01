@@ -545,8 +545,9 @@ public final class Cascade {
 		final boolean deleteOrphans = style.hasOrphanDelete()
 				&& action.deleteOrphans()
 				&& elemType.isEntityType()
+				&& child instanceof PersistentCollection
 				// a newly instantiated collection can't have orphans
-				&& child instanceof PersistentCollection;
+				&& ! ( (PersistentCollection) child ).isNewlyInstantiated();
 
 		if ( deleteOrphans ) {
 			final boolean traceEnabled = LOG.isTraceEnabled();

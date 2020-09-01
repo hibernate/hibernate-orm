@@ -10,10 +10,17 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import javax.persistence.TemporalType;
 
+import org.hibernate.boot.Metadata;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.event.service.spi.EventListenerRegistry;
+import org.hibernate.event.spi.EventType;
+import org.hibernate.integrator.spi.Integrator;
+import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.type.StandardBasicTypes;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
@@ -32,6 +39,13 @@ public class NativeQueryParameterTests {
 							.setParameter( 1, "ABC-123" )
 							.list();
 				}
+		);
+	}
+
+	@Test
+	public void testJpaStylePositionalParametersInNativeSql(SessionFactoryScope scope) {
+		scope.inTransaction(
+				s -> s.createNativeQuery( "select t.subject from ticket t where t.key = ?1" ).setParameter( 1, "ABC-123" ).list()
 		);
 	}
 

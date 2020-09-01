@@ -7,6 +7,7 @@
 package org.hibernate.query.results;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +49,10 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 	@Override
 	public int getNumberOfResultBuilders() {
 		return resultBuilders == null ? 0 : resultBuilders.size();
+	}
+
+	public List<ResultBuilder> getResultBuilders() {
+		return Collections.unmodifiableList( resultBuilders );
 	}
 
 	@Override

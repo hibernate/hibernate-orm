@@ -474,7 +474,7 @@ public class QuerySplitter {
 		@Override
 		public SqmEmptinessPredicate visitIsEmptyPredicate(SqmEmptinessPredicate predicate) {
 			return new SqmEmptinessPredicate(
-					(SqmPath) predicate.getPluralPath().accept( this ),
+					(SqmPluralValuedSimplePath<?>) predicate.getPluralPath().accept( this ),
 					predicate.isNegated(),
 					predicate.nodeBuilder()
 			);
@@ -483,7 +483,7 @@ public class QuerySplitter {
 		@Override
 		public SqmNullnessPredicate visitIsNullPredicate(SqmNullnessPredicate predicate) {
 			return new SqmNullnessPredicate(
-					(SqmExpression) predicate.getExpression().accept( this ),
+					(SqmExpression<?>) predicate.getExpression().accept( this ),
 					predicate.isNegated(),
 					predicate.nodeBuilder()
 			);
@@ -492,9 +492,9 @@ public class QuerySplitter {
 		@Override
 		public SqmBetweenPredicate visitBetweenPredicate(SqmBetweenPredicate predicate) {
 			return new SqmBetweenPredicate(
-					(SqmExpression) predicate.getExpression().accept( this ),
-					(SqmExpression) predicate.getLowerBound().accept( this ),
-					(SqmExpression) predicate.getUpperBound().accept( this ),
+					(SqmExpression<?>) predicate.getExpression().accept( this ),
+					(SqmExpression<?>) predicate.getLowerBound().accept( this ),
+					(SqmExpression<?>) predicate.getUpperBound().accept( this ),
 					predicate.isNegated(),
 					predicate.nodeBuilder()
 			);
@@ -503,9 +503,9 @@ public class QuerySplitter {
 		@Override
 		public SqmLikePredicate visitLikePredicate(SqmLikePredicate predicate) {
 			return new SqmLikePredicate(
-					(SqmExpression) predicate.getMatchExpression().accept( this ),
-					(SqmExpression) predicate.getPattern().accept( this ),
-					(SqmExpression) predicate.getEscapeCharacter().accept( this ),
+					(SqmExpression<?>) predicate.getMatchExpression().accept( this ),
+					(SqmExpression<?>) predicate.getPattern().accept( this ),
+					(SqmExpression<?>) predicate.getEscapeCharacter().accept( this ),
 					predicate.nodeBuilder()
 			);
 		}

@@ -8,6 +8,7 @@ package org.hibernate.query.hql.internal;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.SemanticException;
+import org.hibernate.query.hql.HqlLogging;
 import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.hql.spi.SqmCreationState;
@@ -25,6 +26,7 @@ public class DomainPathPart implements SemanticPathPart {
 	@SuppressWarnings("WeakerAccess")
 	public DomainPathPart(SqmPath<?> basePath) {
 		this.currentPath = basePath;
+		assert currentPath != null;
 	}
 
 	@Override
@@ -32,6 +34,11 @@ public class DomainPathPart implements SemanticPathPart {
 			String name,
 			boolean isTerminal,
 			SqmCreationState creationState) {
+		HqlLogging.QUERY_LOGGER.tracef(
+				"Resolving DomainPathPart(%s) sub-part : %s",
+				currentPath,
+				name
+		);
 		final SqmPath<?> lhs = currentPath;
 		final SqmPathSource subPathSource = lhs.getReferencedPathSource().findSubPathSource( name );
 		if ( subPathSource == null ) {

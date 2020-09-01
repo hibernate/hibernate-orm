@@ -9,7 +9,7 @@ package org.hibernate.query.hql.internal;
 import org.hibernate.QueryException;
 import org.hibernate.grammars.hql.HqlLexer;
 import org.hibernate.grammars.hql.HqlParser;
-import org.hibernate.query.hql.HqlLogger;
+import org.hibernate.query.hql.HqlLogging;
 import org.hibernate.query.sqm.InterpretationException;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.sqm.internal.SqmTreePrinter;
@@ -42,7 +42,7 @@ public class StandardHqlTranslator implements HqlTranslator {
 
 	@Override
 	public SqmStatement translate(String query) {
-		HqlLogger.QUERY_LOGGER.debugf( "HQL : " + query );
+		HqlLogging.QUERY_LOGGER.debugf( "HQL : " + query );
 
 		final HqlParser.StatementContext hqlParseTree = parseHql( query );
 

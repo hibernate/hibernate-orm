@@ -8,7 +8,7 @@ package org.hibernate.query.hql.internal;
 
 import org.hibernate.grammars.hql.HqlLexer;
 import org.hibernate.grammars.hql.HqlParser;
-import org.hibernate.query.hql.HqlLogger;
+import org.hibernate.query.hql.HqlLogging;
 
 import org.jboss.logging.Logger;
 
@@ -22,7 +22,7 @@ import org.antlr.v4.runtime.Token;
  * @author Steve Ebersole
  */
 public class HqlParseTreeBuilder {
-	private static final Logger LOGGER = HqlLogger.subLogger( "reservedWordAsIdentifier" );
+	private static final Logger LOGGER = HqlLogging.subLogger( "reservedWordAsIdentifier" );
 	private static final boolean DEBUG_ENABLED = LOGGER.isDebugEnabled();
 
 	/**

@@ -6,13 +6,15 @@
  */
 package org.hibernate.query.sqm;
 
+import org.hibernate.HibernateException;
+
 /**
  * Represents a general uncaught problem performing the interpretation.  This might indicate
  * a semantic (user sqm) problem or a bug in the parser.
  *
  * @author Steve Ebersole
  */
-public class InterpretationException extends RuntimeException {
+public class InterpretationException extends HibernateException {
 	public InterpretationException(String query) {
 		this( query, null );
 	}

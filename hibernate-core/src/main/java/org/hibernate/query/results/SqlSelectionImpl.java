@@ -10,6 +10,7 @@ import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.sql.ast.SqlAstWalker;
+import org.hibernate.sql.ast.spi.SqlExpressionAccess;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -22,7 +23,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Steve Ebersole
  */
-public class SqlSelectionImpl implements SqlSelection, Expression {
+public class SqlSelectionImpl implements SqlSelection, Expression, SqlExpressionAccess {
 	private final int valuesArrayPosition;
 	private final BasicValuedMapping valueMapping;
 	private final JdbcMapping jdbcMapping;
@@ -67,5 +68,10 @@ public class SqlSelectionImpl implements SqlSelection, Expression {
 	@Override
 	public void accept(SqlAstWalker sqlAstWalker) {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Expression getSqlExpression() {
+		return this;
 	}
 }

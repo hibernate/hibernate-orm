@@ -20,7 +20,7 @@ import org.hibernate.jpa.test.metamodel.Order_;
 import org.junit.Test;
 
 /**
- * Similar to {@link org.hibernate.test.jpa.ql.OnKeywordTest}, but here testing from JPA criteria queries.
+ * Similar to {@link org.hibernate.orm.test.query.hql.OnKeywordTest}, but here testing from JPA criteria queries.
  *
  * @author Steve Ebersole
  */

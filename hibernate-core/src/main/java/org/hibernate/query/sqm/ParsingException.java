@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm;
 
+import org.hibernate.HibernateException;
 import org.hibernate.query.SemanticException;
 
 /**
@@ -14,7 +15,7 @@ import org.hibernate.query.SemanticException;
  *
  * @author Steve Ebersole
  */
-public class ParsingException extends RuntimeException {
+public class ParsingException extends HibernateException {
 	public ParsingException(String message) {
 		super( message );
 	}

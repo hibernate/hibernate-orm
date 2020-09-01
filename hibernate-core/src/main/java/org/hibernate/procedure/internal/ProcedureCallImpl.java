@@ -26,6 +26,7 @@ import javax.persistence.TemporalType;
 import javax.persistence.TransactionRequiredException;
 
 import org.hibernate.HibernateException;
+import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -33,7 +34,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
@@ -54,6 +54,7 @@ import org.hibernate.query.results.ResultSetMapping;
 import org.hibernate.query.results.ResultSetMappingImpl;
 import org.hibernate.query.spi.AbstractQuery;
 import org.hibernate.query.spi.MutableQueryOptions;
+import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.result.NoMoreReturnsException;
@@ -63,8 +64,6 @@ import org.hibernate.result.UpdateCountOutput;
 import org.hibernate.result.spi.ResultContext;
 import org.hibernate.sql.results.NoMoreOutputsException;
 
-import org.jboss.logging.Logger;
-
 /**
  * Standard implementation of {@link org.hibernate.procedure.ProcedureCall}
  *
@@ -73,10 +72,6 @@ import org.jboss.logging.Logger;
 public class ProcedureCallImpl<R>
 		extends AbstractQuery<R>
 		implements ProcedureCallImplementor<R>, ResultContext {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			ProcedureCallImpl.class.getName()
-	);
 
 	private final String procedureName;
 
@@ -270,6 +265,11 @@ public class ProcedureCallImpl<R>
 	@Override
 	public MutableQueryOptions getQueryOptions() {
 		return queryOptions;
+	}
+
+	@Override
+	public QueryImplementor<R> setLockMode(String alias, LockMode lockMode) {
+		throw new IllegalStateException( "Cannot set LockMode on a procedure-call" );
 	}
 
 	@Override
@@ -599,21 +599,6 @@ public class ProcedureCallImpl<R>
 		);
 
 		return mementos;
-	}
-
-	@Override
-	protected boolean canApplyAliasSpecificLockModes() {
-		return false;
-	}
-
-	@Override
-	protected void verifySettingLockMode() {
-		throw new IllegalStateException( "Illegal attempt to set lock mode on a ProcedureCall / StoredProcedureQuery" );
-	}
-
-	@Override
-	protected void verifySettingAliasSpecificLockModes() {
-		throw new IllegalStateException( "Illegal attempt to set lock mode on a ProcedureCall / StoredProcedureQuery" );
 	}
 
 	@Override

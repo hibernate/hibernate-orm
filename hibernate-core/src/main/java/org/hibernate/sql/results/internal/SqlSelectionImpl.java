@@ -9,6 +9,7 @@ package org.hibernate.sql.results.internal;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.SqlExpressable;
 import org.hibernate.sql.ast.SqlAstWalker;
+import org.hibernate.sql.ast.spi.SqlExpressionAccess;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -34,7 +35,7 @@ import java.util.Objects;
  *
  * @author Steve Ebersole
  */
-public class SqlSelectionImpl implements SqlSelection {
+public class SqlSelectionImpl implements SqlSelection, SqlExpressionAccess {
 	private final int jdbcPosition;
 	private final int valuesArrayPosition;
 	private final Expression sqlExpression;
@@ -93,5 +94,10 @@ public class SqlSelectionImpl implements SqlSelection {
 	@Override
 	public int hashCode() {
 		return Objects.hash( jdbcPosition, valuesArrayPosition, sqlExpression );
+	}
+
+	@Override
+	public Expression getSqlExpression() {
+		return sqlExpression;
 	}
 }

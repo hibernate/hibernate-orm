@@ -151,7 +151,7 @@ public interface MappingModelCreationLogger extends BasicLogger {
 |90003501
 |90004000
 |org.hibernate.orm.query.hql
-|org.hibernate.query.hql.HqlLogger
+|org.hibernate.query.hql.HqlLogging
 
 |90004001
 |90005000

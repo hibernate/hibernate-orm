@@ -12,8 +12,9 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.function.Function;
 
+import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.query.hql.HqlLogger;
+import org.hibernate.query.hql.HqlLogging;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.sqm.AliasCollisionException;
@@ -31,6 +32,7 @@ import org.hibernate.query.sqm.tree.select.SqmSelection;
  */
 public class SqmPathRegistryImpl implements SqmPathRegistry {
 	private final SqmCreationProcessingState associatedProcessingState;
+	private final JpaCompliance jpaCompliance;
 
 	private final Map<NavigablePath, SqmPath> sqmPathByPath = new HashMap<>();
 	private final Map<NavigablePath, SqmFrom> sqmFromByPath = new HashMap<>();
@@ -41,6 +43,7 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 
 	public SqmPathRegistryImpl(SqmCreationProcessingState associatedProcessingState) {
 		this.associatedProcessingState = associatedProcessingState;
+		this.jpaCompliance = associatedProcessingState.getCreationState().getCreationContext().getJpaMetamodel().getJpaCompliance();
 	}
 
 	@Override
@@ -60,7 +63,12 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 
 			final String alias = sqmPath.getExplicitAlias();
 			if ( alias != null ) {
-				final SqmFrom previousFrom = sqmFromByAlias.put( alias, sqmFrom );
+				final String aliasToUse = jpaCompliance.isJpaQueryComplianceEnabled()
+						? alias.toLowerCase( Locale.getDefault() )
+						: alias;
+
+				final SqmFrom previousFrom = sqmFromByAlias.put( aliasToUse, sqmFrom );
+
 				if ( previousFrom != null ) {
 					throw new AliasCollisionException(
 							String.format(
@@ -148,7 +156,12 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 
 	@Override
 	public SqmFrom findFromByAlias(String alias) {
-		final SqmFrom registered = sqmFromByAlias.get( alias );
+		final String localAlias = jpaCompliance.isJpaQueryComplianceEnabled()
+				? alias.toLowerCase( Locale.getDefault() )
+				: alias;
+
+		final SqmFrom registered = sqmFromByAlias.get( localAlias );
+
 		if ( registered != null ) {
 			return registered;
 		}
@@ -167,10 +180,11 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 		//  	(configurable?) option would be to simply pick the first one as a perf optimization
 
 		SqmFrom found = null;
-		for ( SqmFrom fromElement : sqmFromByPath.values() ) {
+		for ( Map.Entry<NavigablePath, SqmFrom> entry : sqmFromByPath.entrySet() ) {
+			final SqmFrom fromElement = entry.getValue();
 			if ( definesAttribute( fromElement.getReferencedPathSource(), navigableName ) ) {
 				if ( found != null ) {
-//					throw new IllegalStateException( "Multiple from-elements expose unqualified attribute : " + navigableName );
+					throw new IllegalStateException( "Multiple from-elements expose unqualified attribute : " + navigableName );
 				}
 				found = fromElement;
 			}
@@ -178,13 +192,18 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 
 		if ( found == null ) {
 			if ( associatedProcessingState.getParentProcessingState() != null ) {
-				HqlLogger.QUERY_LOGGER.debugf(
+				HqlLogging.QUERY_LOGGER.debugf(
 						"Unable to resolve unqualified attribute [%s] in local from-clause; checking parent ",
 						navigableName
 				);
 				found = associatedProcessingState.getParentProcessingState().getPathRegistry().findFromExposing( navigableName );
 			}
 		}
+
+		HqlLogging.QUERY_LOGGER.debugf(
+				"Unable to resolve unqualified attribute [%s] in local from-clause",
+				navigableName
+		);
 
 		return found;
 	}

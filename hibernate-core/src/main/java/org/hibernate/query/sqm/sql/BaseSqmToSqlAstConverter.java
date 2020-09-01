@@ -22,10 +22,12 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.dialect.function.TimestampaddFunction;
 import org.hibernate.dialect.function.TimestampdiffFunction;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -39,9 +41,9 @@ import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.BinaryArithmeticOperator;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.QueryLogging;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.TemporalUnit;
-import org.hibernate.query.QueryLogging;
 import org.hibernate.query.UnaryArithmeticOperator;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.spi.QueryOptions;
@@ -59,6 +61,7 @@ import org.hibernate.query.sqm.sql.internal.BasicValuedPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.EmbeddableValuedPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.EntityValuedPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.PluralValuedSimplePathInterpretation;
+import org.hibernate.query.sqm.sql.internal.SqlAstProcessingStateImpl;
 import org.hibernate.query.sqm.sql.internal.SqlAstQuerySpecProcessingStateImpl;
 import org.hibernate.query.sqm.sql.internal.SqmParameterInterpretation;
 import org.hibernate.query.sqm.sql.internal.SqmPathInterpretation;
@@ -112,6 +115,7 @@ import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
 import org.hibernate.query.sqm.tree.predicate.SqmAndPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmBetweenPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmEmptinessPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmExistsPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmGroupedPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmInListPredicate;
@@ -156,6 +160,7 @@ import org.hibernate.sql.ast.tree.expression.Every;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.ExtractUnit;
 import org.hibernate.sql.ast.tree.expression.Format;
+import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.Star;
@@ -186,11 +191,12 @@ import org.hibernate.sql.exec.spi.JdbcParameters;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
 
-import static org.hibernate.internal.util.NullnessHelper.coalesce;
 import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 import static org.hibernate.query.BinaryArithmeticOperator.MULTIPLY;
 import static org.hibernate.query.BinaryArithmeticOperator.SUBTRACT;
@@ -217,6 +223,8 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	private final SqlAstCreationContext creationContext;
+	private final SessionFactoryImplementor sessionFactory;
+
 	private final QueryOptions queryOptions;
 	private final LoadQueryInfluencers loadQueryInfluencers;
 
@@ -247,7 +255,10 @@ public abstract class BaseSqmToSqlAstConverter
 			DomainParameterXref domainParameterXref,
 			QueryParameterBindings domainParameterBindings) {
 		super( creationContext.getServiceRegistry() );
+
 		this.creationContext = creationContext;
+		this.sessionFactory = creationContext.getSessionFactory();
+
 		this.queryOptions = queryOptions;
 		this.loadQueryInfluencers = loadQueryInfluencers;
 		this.domainParameterXref = domainParameterXref;
@@ -2286,6 +2297,68 @@ public abstract class BaseSqmToSqlAstConverter
 		}
 
 		return new ComparisonPredicate( lhs, predicate.getSqmOperator(), rhs );
+	}
+
+	@Override
+	public Object visitIsEmptyPredicate(SqmEmptinessPredicate predicate) {
+		final QuerySpec subQuerySpec = new QuerySpec( false, 1 );
+
+		final SqlAstProcessingState parentState = getProcessingStateStack().getCurrent();
+
+		final SqlAstProcessingStateImpl subQueryState = new SqlAstProcessingStateImpl(
+				parentState,
+				this,
+				currentClauseStack::getCurrent
+		);
+
+		getProcessingStateStack().push( subQueryState );
+
+		final SqmPluralValuedSimplePath<?> sqmPluralPath = predicate.getPluralPath();
+
+		final NavigablePath pluralPathNavPath = sqmPluralPath.getNavigablePath();
+		final NavigablePath parentNavPath = pluralPathNavPath.getParent();
+		assert parentNavPath != null;
+
+		final TableGroup parentTableGroup = parentState
+				.getSqlAstCreationState()
+				.getFromClauseAccess()
+				.getTableGroup( parentNavPath );
+
+		subQueryState.getSqlAstCreationState().getFromClauseAccess().registerTableGroup( parentNavPath, parentTableGroup );
+
+		final SqmPathInterpretation<?> sqmPathInterpretation = visitPluralValuedPath( sqmPluralPath );
+
+
+		final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) sqmPathInterpretation.getExpressionType();
+
+		// note : do not add to `parentTableGroup` as a join
+
+		final TableGroupJoin tableGroupJoin = pluralAttributeMapping.createTableGroupJoin(
+				pluralPathNavPath,
+				parentTableGroup,
+				sqmPluralPath.getExplicitAlias(),
+				SqlAstJoinType.LEFT,
+				LockMode.NONE,
+				sqlAliasBaseManager,
+				subQueryState,
+				creationContext
+		);
+
+		final TableGroup collectionTableGroup = tableGroupJoin.getJoinedGroup();
+
+		subQuerySpec.getFromClause().addRoot( collectionTableGroup );
+		subQuerySpec.applyPredicate( tableGroupJoin.getPredicate() );
+
+		final ForeignKeyDescriptor collectionKeyDescriptor = pluralAttributeMapping.getKeyDescriptor();
+		final int jdbcTypeCount = collectionKeyDescriptor.getJdbcTypeCount( sessionFactory.getTypeConfiguration() );
+		assert jdbcTypeCount > 0;
+
+		final JdbcLiteral<Integer> jdbcLiteral = new JdbcLiteral<>( 1, StandardBasicTypes.INTEGER );
+		subQuerySpec.getSelectClause().addSqlSelection(
+				new SqlSelectionImpl(1,0, jdbcLiteral )
+		);
+
+		return new ExistsPredicate( subQuerySpec );
 	}
 
 	@Override

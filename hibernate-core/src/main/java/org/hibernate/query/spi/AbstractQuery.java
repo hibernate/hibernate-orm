@@ -58,6 +58,7 @@ import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.ParameterMetadata;
+import org.hibernate.query.QueryLogging;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
@@ -67,6 +68,9 @@ import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
+import static org.hibernate.LockMode.UPGRADE;
+import static org.hibernate.LockOptions.NONE;
+import static org.hibernate.LockOptions.READ;
 import static org.hibernate.LockOptions.WAIT_FOREVER;
 import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_SCOPE;
 import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_TIMEOUT;
@@ -143,12 +147,6 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		return session;
 	}
 
-	protected abstract boolean canApplyAliasSpecificLockModes();
-
-	protected abstract void verifySettingLockMode();
-
-	protected abstract void verifySettingAliasSpecificLockModes();
-
 	protected abstract QueryParameterBindings getQueryParameterBindings();
 
 	@Override
@@ -164,27 +162,44 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 
 	@Override
 	public int getMaxResults() {
+		getSession().checkOpen();
 		return getQueryOptions().getLimit().getMaxRowsJpa();
 	}
 
 	@Override
 	public QueryImplementor<R> setMaxResults(int maxResult) {
+		if ( maxResult < 0 ) {
+			throw new IllegalArgumentException( "max-results cannot be negative" );
+		}
+
+		getSession().checkOpen();
+
 		getQueryOptions().getLimit().setMaxRows( maxResult );
+
 		return this;
 	}
 
 	@Override
 	public int getFirstResult() {
+		getSession().checkOpen();
 		return getQueryOptions().getLimit().getFirstRowJpa();
 	}
 
 	@Override
 	public QueryImplementor<R> setFirstResult(int startPosition) {
+		getSession().checkOpen();
+
+		if ( startPosition < 0 ) {
+			throw new IllegalArgumentException( "first-result value cannot be negative : " + startPosition );
+		}
+
 		getQueryOptions().getLimit().setFirstRow( startPosition );
+
 		return this;
 	}
 
 	@Override
+	@SuppressWarnings( "rawtypes" )
 	public QueryImplementor<R> setTupleTransformer(TupleTransformer transformer) {
 		getQueryOptions().setTupleTransformer( transformer );
 		return this;
@@ -197,24 +212,19 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	public LockModeType getLockMode() {
-		return LockModeTypeHelper.getLockModeType( getQueryOptions().getLockOptions().getLockMode() );
-	}
-
-	@Override
 	public FlushMode getHibernateFlushMode() {
 		return getQueryOptions().getFlushMode();
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public QueryImplementor setHibernateFlushMode(FlushMode flushMode) {
+	public QueryImplementor<R> setHibernateFlushMode(FlushMode flushMode) {
 		getQueryOptions().setFlushMode( flushMode );
 		return this;
 	}
 
 	@Override
 	public FlushModeType getFlushMode() {
+		getSession().checkOpen();
 		final FlushMode flushMode = getQueryOptions().getFlushMode() == null
 				? getSession().getHibernateFlushMode()
 				: getQueryOptions().getFlushMode();
@@ -222,8 +232,8 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public QueryImplementor setFlushMode(FlushModeType flushModeType) {
+	public QueryImplementor<R> setFlushMode(FlushModeType flushModeType) {
+		getSession().checkOpen();
 		setHibernateFlushMode( FlushModeTypeHelper.getFlushMode( flushModeType ) );
 		return this;
 	}
@@ -234,8 +244,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public QueryImplementor setCacheMode(CacheMode cacheMode) {
+	public QueryImplementor<R> setCacheMode(CacheMode cacheMode) {
 		getQueryOptions().setCacheMode( cacheMode );
 		return this;
 	}
@@ -246,8 +255,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public QueryImplementor setCacheable(boolean cacheable) {
+	public QueryImplementor<R> setCacheable(boolean cacheable) {
 		getQueryOptions().setResultCachingEnabled( cacheable );
 		return this;
 	}
@@ -258,8 +266,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public QueryImplementor setCacheRegion(String cacheRegion) {
+	public QueryImplementor<R> setCacheRegion(String cacheRegion) {
 		getQueryOptions().setResultCacheRegionName( cacheRegion );
 		return this;
 	}
@@ -270,8 +277,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public QueryImplementor setTimeout(int timeout) {
+	public QueryImplementor<R> setTimeout(int timeout) {
 		getQueryOptions().setTimeout( timeout );
 		return this;
 	}
@@ -282,8 +288,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public QueryImplementor setFetchSize(int fetchSize) {
+	public QueryImplementor<R> setFetchSize(int fetchSize) {
 		getQueryOptions().setFetchSize( fetchSize );
 		return this;
 	}
@@ -296,8 +301,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public QueryImplementor setReadOnly(boolean readOnly) {
+	public QueryImplementor<R> setReadOnly(boolean readOnly) {
 		getQueryOptions().setReadOnly( readOnly );
 		return this;
 	}
@@ -308,8 +312,14 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public QueryImplementor setLockOptions(LockOptions lockOptions) {
+	public LockModeType getLockMode() {
+		getSession().checkOpen( false );
+
+		return LockModeTypeHelper.getLockModeType( getQueryOptions().getLockOptions().getLockMode() );
+	}
+
+	@Override
+	public QueryImplementor<R> setLockOptions(LockOptions lockOptions) {
 		getQueryOptions().getLockOptions().setLockMode( lockOptions.getLockMode() );
 		getQueryOptions().getLockOptions().setScope( lockOptions.getScope() );
 		getQueryOptions().getLockOptions().setTimeOut( lockOptions.getTimeOut() );
@@ -318,23 +328,14 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public QueryImplementor setLockMode(String alias, LockMode lockMode) {
-		if ( !LockMode.NONE.equals( lockMode ) ) {
-			verifySettingAliasSpecificLockModes();
-		}
-
+	public QueryImplementor<R> setLockMode(String alias, LockMode lockMode) {
 		getQueryOptions().getLockOptions().setAliasSpecificLockMode( alias, lockMode );
 		return this;
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public QueryImplementor setLockMode(LockModeType lockModeType) {
-		if ( !LockModeType.NONE.equals( lockModeType ) ) {
-			verifySettingLockMode();
-		}
-
+	public QueryImplementor<R> setLockMode(LockModeType lockModeType) {
+		getSession().checkOpen();
 		getQueryOptions().getLockOptions().setLockMode( LockModeTypeHelper.getLockMode( lockModeType ) );
 		return this;
 	}
@@ -345,15 +346,13 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public QueryImplementor setComment(String comment) {
+	public QueryImplementor<R> setComment(String comment) {
 		getQueryOptions().setComment( comment );
 		return this;
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public QueryImplementor addQueryHint(String hint) {
+	public QueryImplementor<R> addQueryHint(String hint) {
 		getQueryOptions().addDatabaseHint( hint );
 		return this;
 	}
@@ -375,14 +374,8 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		getSession().checkOpen( false );
 
 		final Map<String,Object> hints = new HashMap<>();
-		collectBaselineHints( hints );
 		collectHints( hints );
 		return hints;
-	}
-
-	@SuppressWarnings("WeakerAccess")
-	protected void collectBaselineHints(Map<String, Object> hints) {
-		// nothing to do in this form
 	}
 
 	protected void collectHints(Map<String, Object> hints) {
@@ -428,7 +421,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		}
 	}
 
-	protected void putIfNotNull(Map<String, Object> hints, String hintName, Enum hintValue) {
+	protected void putIfNotNull(Map<String, Object> hints, String hintName, Enum<?> hintValue) {
 		// centralized spot to handle the decision whether to put enums directly into the hints map
 		// or whether to put the enum name
 		if ( hintValue != null ) {
@@ -446,6 +439,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	@Override
 	public QueryImplementor<R> setHint(String hintName, Object value) {
 		getSession().checkOpen( true );
+
 		boolean applied = false;
 		try {
 			if ( HINT_TIMEOUT.equals( hintName ) ) {
@@ -492,27 +486,22 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 				applied = applyNativeQueryLockMode( value );
 			}
 			else if ( hintName.startsWith( ALIAS_SPECIFIC_LOCK_MODE ) ) {
-				if ( canApplyAliasSpecificLockModes() ) {
-					// extract the alias
-					final String alias = hintName.substring( ALIAS_SPECIFIC_LOCK_MODE.length() + 1 );
-					// determine the LockMode
-					try {
-						final LockMode lockMode = LockModeTypeHelper.interpretLockMode( value );
-						applyAliasSpecificLockModeHint( alias, lockMode );
-					}
-					catch ( Exception e ) {
-						log.unableToDetermineLockModeValue( hintName, value );
-						applied = false;
-					}
+				// extract the alias
+				final String alias = hintName.substring( ALIAS_SPECIFIC_LOCK_MODE.length() + 1 );
+				// determine the LockMode
+				try {
+					final LockMode lockMode = LockModeTypeHelper.interpretLockMode( value );
+					applyAliasSpecificLockModeHint( alias, lockMode );
+					applied = true;
 				}
-				else {
-					//noinspection ConstantConditions
+				catch ( Exception e ) {
+					log.unableToDetermineLockModeValue( hintName, value );
 					applied = false;
 				}
 			}
 			else if ( HINT_FETCHGRAPH.equals( hintName ) || HINT_LOADGRAPH.equals( hintName ) ) {
 				if (value instanceof RootGraphImplementor ) {
-					applyEntityGraphQueryHint( hintName, (RootGraphImplementor) value );
+					applyEntityGraphQueryHint( hintName, (RootGraphImplementor<?>) value );
 				}
 				else {
 					log.warnf( "The %s hint was set, but the value was not an EntityGraph!", hintName );
@@ -682,29 +671,34 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		return true;
 	}
 
+	@SuppressWarnings( "UnusedReturnValue" )
 	protected boolean applyLockModeTypeHint(LockModeType lockModeType) {
 		getLockOptions().setLockMode( LockModeTypeHelper.getLockMode( lockModeType ) );
 		return true;
 	}
 
+	@SuppressWarnings( "UnusedReturnValue" )
 	protected boolean applyHibernateLockModeHint(LockMode lockMode) {
-		getLockOptions().setLockMode( lockMode );
+		final LockOptions lockOptions;
+		if ( lockMode == LockMode.NONE ) {
+			lockOptions = NONE;
+		}
+		else if ( lockMode == LockMode.READ ) {
+			lockOptions = READ;
+		}
+		else if ( lockMode == UPGRADE || lockMode == LockMode.PESSIMISTIC_WRITE ) {
+			lockOptions = LockOptions.UPGRADE;
+		}
+
 		return true;
 	}
 
-	/**
-	 * Apply the alias specific lock modes.  Assumes {@link #canApplyAliasSpecificLockModes()} has already been
-	 * called and returned {@code true}.
-	 *
-	 * @param alias The alias to apply the 'lockMode' to.
-	 * @param lockMode The LockMode to apply.
-	 */
 	@SuppressWarnings("WeakerAccess")
 	protected void applyAliasSpecificLockModeHint(String alias, LockMode lockMode) {
-		getLockOptions().setAliasSpecificLockMode( alias, lockMode );
+		setLockMode( alias, lockMode );
 	}
 
-	protected abstract void applyEntityGraphQueryHint(String hintName, RootGraphImplementor entityGraph);
+	protected abstract void applyEntityGraphQueryHint(String hintName, RootGraphImplementor<?> entityGraph);
 
 	/**
 	 * Apply the follow-on-locking hint.
@@ -719,19 +713,20 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 
 
 
-
-
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// QueryParameter handling
 
 	@Override
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings( {"unchecked", "rawtypes"} )
 	public Set<Parameter<?>> getParameters() {
+		getSession().checkOpen( false );
 		return (Set) ( (ParameterMetadata) getParameterMetadata() ).getRegistrations();
 	}
 
 	@Override
 	public Parameter<?> getParameter(String name) {
+		getSession().checkOpen( false );
+
 		try {
 			return getParameterMetadata().getQueryParameter( name );
 		}
@@ -743,7 +738,10 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> Parameter<T> getParameter(String name, Class<T> type) {
+		getSession().checkOpen( false );
+
 		try {
+			//noinspection rawtypes
 			final QueryParameter parameter = getParameterMetadata().getQueryParameter( name );
 			if ( !parameter.getParameterType().isAssignableFrom( type ) ) {
 				throw new IllegalArgumentException(
@@ -761,6 +759,8 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 
 	@Override
 	public Parameter<?> getParameter(int position) {
+		getSession().checkOpen( false );
+
 		try {
 			return getParameterMetadata().getQueryParameter( position );
 		}
@@ -770,8 +770,10 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings( {"unchecked", "rawtypes"} )
 	public <T> Parameter<T> getParameter(int position, Class<T> type) {
+		getSession().checkOpen( false );
+
 		try {
 			final QueryParameter parameter = getParameterMetadata().getQueryParameter( position );
 			if ( !parameter.getParameterType().isAssignableFrom( type ) ) {
@@ -790,14 +792,15 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 
 	@Override
 	public boolean isBound(Parameter<?> param) {
-		final QueryParameterImplementor qp = getParameterMetadata().resolve( param );
+		getSession().checkOpen();
+
+		final QueryParameterImplementor<?> qp = getParameterMetadata().resolve( param );
 		return qp != null && getQueryParameterBindings().isBound( qp );
 	}
 
-	@SuppressWarnings("WeakerAccess")
+	@SuppressWarnings( {"WeakerAccess", "unchecked", "rawtypes"} )
 	protected <P> QueryParameterBinding<P> locateBinding(Parameter<P> parameter) {
 		if ( parameter instanceof QueryParameterImplementor ) {
-			//noinspection unchecked
 			return locateBinding( (QueryParameterImplementor) parameter );
 		}
 		else if ( parameter.getName() != null ) {
@@ -814,20 +817,20 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 
 	@SuppressWarnings("WeakerAccess")
 	protected <P> QueryParameterBinding<P> locateBinding(QueryParameterImplementor<P> parameter) {
-		//noinspection unchecked
+		getSession().checkOpen();
 		return getQueryParameterBindings().getBinding( parameter );
 	}
 
-	@SuppressWarnings("WeakerAccess")
+	@SuppressWarnings( {"WeakerAccess", "unchecked"} )
 	protected <P> QueryParameterBinding<P> locateBinding(String name) {
-		//noinspection unchecked
-		return (QueryParameterBinding) getQueryParameterBindings().getBinding( name );
+		getSession().checkOpen();
+		return (QueryParameterBinding<P>) getQueryParameterBindings().getBinding( name );
 	}
 
-	@SuppressWarnings("WeakerAccess")
+	@SuppressWarnings( {"WeakerAccess", "unchecked"} )
 	protected <P> QueryParameterBinding<P> locateBinding(int position) {
-		//noinspection unchecked
-		return (QueryParameterBinding) getQueryParameterBindings().getBinding( position );
+		getSession().checkOpen();
+		return (QueryParameterBinding<P>) getQueryParameterBindings().getBinding( position );
 	}
 
 	@Override
@@ -920,7 +923,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		return this;
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings( {"unchecked", "rawtypes"} )
 	private <P> void setParameter(Parameter<P> parameter, Object value, AllowableParameterType type) {
 		if ( parameter instanceof QueryParameter ) {
 			setParameter( (QueryParameter) parameter, value, type );
@@ -943,6 +946,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 			setParameter( name, typedValueWrapper.getValue(), typedValueWrapper.getType() );
 		}
 		else if ( value instanceof Collection ) {
+			//noinspection rawtypes
 			setParameterList( name, (Collection) value );
 		}
 		else {
@@ -958,7 +962,9 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 			final TypedParameterValue typedParameterValue = (TypedParameterValue) value;
 			setParameter( position, typedParameterValue.getValue(), typedParameterValue.getType() );
 		}
+
 		if ( value instanceof Collection ) {
+			//noinspection rawtypes
 			setParameterList( Integer.toString( position ), (Collection) value );
 		}
 		else {
@@ -968,21 +974,21 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings( {"unchecked", "rawtypes"} )
 	public <P> QueryImplementor<R> setParameter(QueryParameter<P> parameter, P value, AllowableParameterType type) {
 		locateBinding( parameter ).setBindValue( value,  type );
 		return this;
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings( {"unchecked", "rawtypes"} )
 	public QueryImplementor<R> setParameter(String name, Object value, AllowableParameterType type) {
 		locateBinding( name ).setBindValue( value, type );
 		return this;
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings( {"unchecked", "rawtypes"} )
 	public QueryImplementor setParameter(int position, Object value, AllowableParameterType type) {
 		locateBinding( position ).setBindValue( value, type );
 		return this;
@@ -1012,29 +1018,29 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		return this;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	public QueryImplementor setParameterList(String name, Collection values) {
+	@SuppressWarnings( {"rawtypes", "unchecked"} )
+	public QueryImplementor<R> setParameterList(String name, Collection values) {
 		locateBinding( name ).setBindValues( values );
 		return this;
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings( {"unchecked", "rawtypes"} )
 	public QueryImplementor<R> setParameterList(int position, Collection values) {
 		locateBinding( position ).setBindValues( values );
 		return this;
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings( {"unchecked", "rawtypes"} )
 	public QueryImplementor<R> setParameterList(String name, Collection values, AllowableParameterType type) {
 		locateBinding( name ).setBindValues( values, type );
 		return this;
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings( {"unchecked", "rawtypes"} )
 	public QueryImplementor<R> setParameterList(int position, Collection values, AllowableParameterType type) {
 		locateBinding( position ).setBindValues( values, type );
 		return this;
@@ -1053,21 +1059,21 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings( {"unchecked", "rawtypes"} )
 	public QueryImplementor<R> setParameterList(String name, Object[] values, AllowableParameterType type) {
 		locateBinding( name ).setBindValues( Arrays.asList( values ), type );
 		return this;
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings( {"unchecked", "rawtypes"} )
 	public QueryImplementor<R> setParameterList(int position, Object[] values, AllowableParameterType type) {
 		locateBinding( position ).setBindValues( Arrays.asList( values ), type );
 		return this;
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings( {"unchecked", "rawtypes"} )
 	public QueryImplementor<R> setParameterList(String name, Collection values, Class javaType) {
 		final JavaTypeDescriptor javaDescriptor = getSession().getFactory()
 				.getTypeConfiguration()
@@ -1102,7 +1108,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings( {"unchecked", "rawtypes"} )
 	public QueryImplementor<R> setParameterList(int position, Collection values, Class javaType) {
 		final JavaTypeDescriptor javaDescriptor = getSession().getFactory()
 				.getTypeConfiguration()
@@ -1137,14 +1143,14 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings( {"unchecked", "rawtypes"} )
 	public QueryImplementor<R> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType) {
 		locateBinding( (QueryParameter) param ).setBindValue( value, temporalType );
 		return this;
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings( {"unchecked", "rawtypes"} )
 	public QueryImplementor<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType) {
 		locateBinding( (QueryParameter) param ).setBindValue( value, temporalType );
 		return this;
@@ -1175,8 +1181,10 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings( {"unchecked", "rawtypes"} )
 	public <T> T getParameterValue(Parameter<T> param) {
+		QueryLogging.QUERY_LOGGER.tracef( "#getParameterValue(%s)", param );
+
 		final QueryParameterImplementor qp = getParameterMetadata().resolve( param );
 		if ( qp == null ) {
 			throw new IllegalArgumentException( "The parameter [" + param + "] is not part of this Query" );
@@ -1184,7 +1192,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 
 		final QueryParameterBinding binding = getQueryParameterBindings().getBinding( qp );
 		if ( binding == null || !binding.isBound() ) {
-			throw new IllegalStateException( "The parameter [" + param + "] has not yet been bound" );
+			throw new IllegalStateException( "Parameter value not yet bound : " + param.toString() );
 		}
 
 		if ( binding.isMultiValued() ) {
@@ -1197,14 +1205,14 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 
 	@Override
 	public Object getParameterValue(String name) {
-		final QueryParameterImplementor qp = getParameterMetadata().getQueryParameter( name );
-		if ( qp == null ) {
-			throw new IllegalArgumentException( "The parameter [" + name + "] is not part of this Query" );
+		final QueryParameterImplementor<?> parameter = getParameterMetadata().getQueryParameter( name );
+		if ( parameter == null ) {
+			throw new IllegalArgumentException( "Could not resolve parameter by name - " + name );
 		}
 
-		final QueryParameterBinding binding = getQueryParameterBindings().getBinding( qp );
+		final QueryParameterBinding<?> binding = getQueryParameterBindings().getBinding( parameter );
 		if ( binding == null || !binding.isBound() ) {
-			throw new IllegalStateException( "The parameter [" + name + "] has not yet been bound" );
+			throw new IllegalStateException( "Parameter value not yet bound : " + parameter.toString() );
 		}
 
 		if ( binding.isMultiValued() ) {
@@ -1217,12 +1225,12 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 
 	@Override
 	public Object getParameterValue(int position) {
-		final QueryParameterImplementor qp = getParameterMetadata().getQueryParameter( position );
-		if ( qp == null ) {
-			throw new IllegalArgumentException( "The parameter [" + position + "] is not part of this Query" );
+		final QueryParameterImplementor<?> parameter = getParameterMetadata().getQueryParameter( position );
+		if ( parameter == null ) {
+			throw new IllegalArgumentException( "Could not resolve parameter by position - " + position );
 		}
 
-		final QueryParameterBinding binding = getQueryParameterBindings().getBinding( qp );
+		final QueryParameterBinding<?> binding = getQueryParameterBindings().getBinding( parameter );
 		if ( binding == null || !binding.isBound() ) {
 			throw new IllegalStateException( "The parameter [" + position + "] has not yet been bound" );
 		}
@@ -1271,7 +1279,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 
 	@Override
 	public QueryImplementor<R> setProperties(Object bean) {
-		Class clazz = bean.getClass();
+		final Class<?> clazz = bean.getClass();
 		for ( String paramName : getParameterMetadata().getNamedParameterNames() ) {
 			try {
 				final PropertyAccess propertyAccess = BuiltInPropertyAccessStrategies.BASIC.getStrategy().buildPropertyAccess(
@@ -1279,16 +1287,16 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 						paramName
 				);
 				final Getter getter = propertyAccess.getGetter();
-				final Class retType = getter.getReturnType();
+				final Class<?> retType = getter.getReturnType();
 				final Object object = getter.get( bean );
 				if ( Collection.class.isAssignableFrom( retType ) ) {
-					setParameterList( paramName, (Collection) object );
+					setParameterList( paramName, (Collection<?>) object );
 				}
 				else if ( retType.isArray() ) {
 					setParameterList( paramName, (Object[]) object );
 				}
 				else {
-					AllowableParameterType type = determineType( paramName, retType );
+					AllowableParameterType<?> type = determineType( paramName, retType );
 					setParameter( paramName, object, type );
 				}
 			}
@@ -1300,8 +1308,8 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@SuppressWarnings("WeakerAccess")
-	protected AllowableParameterType determineType(String namedParam, Class retType) {
-		AllowableParameterType type = locateBinding( namedParam ).getBindType();
+	protected AllowableParameterType<?> determineType(String namedParam, Class<?> retType) {
+		AllowableParameterType<?> type = locateBinding( namedParam ).getBindType();
 		if ( type == null ) {
 			type = getParameterMetadata().getQueryParameter( namedParam ).getHibernateType();
 		}
@@ -1312,8 +1320,8 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public QueryImplementor setProperties(Map map) {
+	@SuppressWarnings( "rawtypes" )
+	public QueryImplementor<R> setProperties(Map map) {
 		for ( String paramName : getParameterMetadata().getNamedParameterNames() ) {
 			final Object object = map.get( paramName );
 			if ( object == null ) {
@@ -1417,12 +1425,12 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	public ScrollableResultsImplementor scroll() {
+	public ScrollableResultsImplementor<?> scroll() {
 		return scroll( getSession().getFactory().getJdbcServices().getJdbcEnvironment().getDialect().defaultScrollMode() );
 	}
 
 	@Override
-	public ScrollableResultsImplementor scroll(ScrollMode scrollMode) {
+	public ScrollableResultsImplementor<?> scroll(ScrollMode scrollMode) {
 		beforeQuery( false );
 		try {
 			return doScroll( scrollMode );
@@ -1432,10 +1440,10 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		}
 	}
 
-	protected abstract ScrollableResultsImplementor doScroll(ScrollMode scrollMode);
+	protected abstract ScrollableResultsImplementor<?> doScroll(ScrollMode scrollMode);
 
 	@Override
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings( {"unchecked", "rawtypes"} )
 	public Stream<R> stream() {
 		final ScrollableResultsImplementor scrollableResults = scroll( ScrollMode.FORWARD_ONLY );
 		final ScrollableResultsIterator<R> iterator = new ScrollableResultsIterator<>( scrollableResults );

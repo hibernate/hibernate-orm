@@ -108,7 +108,7 @@ public class JpaDescriptorParser {
 	private Persistence getPersistence() {
 		Persistence persistence = null;
 		String persistenceXmlLocation = context.getPersistenceXmlLocation();
-		InputStream stream = xmlParserHelper.getInputStreamForResource( persistenceXmlLocation );
+		final InputStream stream = xmlParserHelper.getInputStreamForResource( persistenceXmlLocation );
 		if ( stream == null ) {
 			return null;
 		}
@@ -122,12 +122,13 @@ public class JpaDescriptorParser {
 					Diagnostic.Kind.WARNING, "Unable to parse persistence.xml: " + e.getMessage()
 			);
 		}
-
-		try {
-			stream.close();
-		}
-		catch (IOException e) {
-			// eat it
+		finally {
+			try {
+				stream.close();
+			}
+			catch (IOException e) {
+				// eat it
+			}
 		}
 
 		return persistence;
@@ -135,29 +136,29 @@ public class JpaDescriptorParser {
 
 	private void loadEntityMappings(Collection<String> mappingFileNames) {
 		for ( String mappingFile : mappingFileNames ) {
-			InputStream stream = xmlParserHelper.getInputStreamForResource( mappingFile );
+			final InputStream stream = xmlParserHelper.getInputStreamForResource( mappingFile );
 			if ( stream == null ) {
 				continue;
 			}
-			EntityMappings mapping = null;
 			try {
-				Schema schema = xmlParserHelper.getSchema( ORM_SCHEMA );
-				mapping = xmlParserHelper.getJaxbRoot( stream, EntityMappings.class, schema );
+				final Schema schema = xmlParserHelper.getSchema( ORM_SCHEMA );
+				final EntityMappings mapping = xmlParserHelper.getJaxbRoot( stream, EntityMappings.class, schema );
+				if ( mapping != null ) {
+					entityMappings.add( mapping );
+				}
 			}
 			catch (XmlParsingException e) {
 				context.logMessage(
 						Diagnostic.Kind.WARNING, "Unable to parse " + mappingFile + ": " + e.getMessage()
 				);
 			}
-			if ( mapping != null ) {
-				entityMappings.add( mapping );
-			}
-
-			try {
-				stream.close();
-			}
-			catch (IOException e) {
-				// eat it
+			finally {
+				try {
+					stream.close();
+				}
+				catch (IOException e) {
+					// eat it
+				}
 			}
 		}
 	}

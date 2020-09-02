@@ -133,7 +133,7 @@ public abstract class HibernateAbstractStatistics implements Statistics {
 
 	@Override
 	public Set<String> getChildrenNames() {
-		return Collections.unmodifiableSet( childrenNames );
+		return childrenNames;
 	}
 
 	@Override

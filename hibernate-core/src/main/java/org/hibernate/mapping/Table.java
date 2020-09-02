@@ -420,9 +420,10 @@ public class Table implements RelationalModel, Serializable, Exportable {
 				throw new HibernateException( "Missing column: " + col.getName() + " in " + Table.qualify( tableInfo.getCatalog(), tableInfo.getSchema(), tableInfo.getName()));
 			}
 			else {
-				final boolean typesMatch = col.getSqlType( dialect, mapping ).toLowerCase(Locale.ROOT)
-						.startsWith( columnInfo.getTypeName().toLowerCase(Locale.ROOT) )
-						|| columnInfo.getTypeCode() == col.getSqlTypeCode( mapping );
+				final boolean typesMatch =
+						dialect.equivalentTypes( columnInfo.getTypeCode(), col.getSqlTypeCode( mapping ) )
+						|| col.getSqlType( dialect, mapping ).toLowerCase(Locale.ROOT)
+								.startsWith( columnInfo.getTypeName().toLowerCase(Locale.ROOT) );
 				if ( !typesMatch ) {
 					throw new HibernateException(
 							"Wrong column type in " +

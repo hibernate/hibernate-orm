@@ -314,12 +314,13 @@ fromTable
 	// Write the table node (from fragment) and all the join fragments associated with it.
 	: #( a:FROM_FRAGMENT  { out(a); } (tableJoin [ a ])* { fromFragmentSeparator(a); } )
 	| #( b:JOIN_FRAGMENT  { out(b); } (tableJoin [ b ])* { fromFragmentSeparator(b); } )
-	| #( e:ENTITY_JOIN    { out(e); } (tableJoin [ e ])* { fromFragmentSeparator(e); } )
+	| #( c:ENTITY_JOIN    { out(c); } (tableJoin [ c ])* { fromFragmentSeparator(c); } )
 	;
 
 tableJoin [ AST parent ]
-	: #( c:JOIN_FRAGMENT { out(" "); out(c); } (tableJoin [ c ] )* )
-	| #( d:FROM_FRAGMENT { nestedFromFragment(d,parent); } (tableJoin [ d ] )* )
+	: #( d:JOIN_FRAGMENT { out(" "); out(d); } (tableJoin [ d ] )* )
+	| #( e:FROM_FRAGMENT { nestedFromFragment(e,parent); } (tableJoin [ e ] )* )
+	| #( f:ENTITY_JOIN   { out(" "); out(f); } (tableJoin [ f ] )* )
 	;
 
 booleanOp[ boolean parens ]

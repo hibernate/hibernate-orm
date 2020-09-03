@@ -106,7 +106,7 @@ class OracleSDOSupport implements SpatialDialect, Serializable, WithCustomJPAFil
 	}
 
 	public String getOGCSpatialRelateSQL(String arg1, String arg2, int spatialRelation) {
-		final StringBuffer ogcFunction = new StringBuffer( "MDSYS." );
+		final StringBuilder ogcFunction = new StringBuilder( "MDSYS." );
 		switch ( spatialRelation ) {
 			case SpatialRelation.INTERSECTS:
 				ogcFunction.append( "OGC_INTERSECTS" );
@@ -229,7 +229,7 @@ class OracleSDOSupport implements SpatialDialect, Serializable, WithCustomJPAFil
 	 */
 	@Override
 	public String getSpatialFilterExpression(String columnName) {
-		final StringBuffer buffer = new StringBuffer( "SDO_FILTER(" );
+		final StringBuilder buffer = new StringBuilder( "SDO_FILTER(" );
 		buffer.append( columnName );
 		buffer.append( ",?) = 'TRUE' " );
 		return buffer.toString();
@@ -245,7 +245,7 @@ class OracleSDOSupport implements SpatialDialect, Serializable, WithCustomJPAFil
 	 */
 	@Override
 	public String getSpatialAggregateSQL(String columnName, int aggregation) {
-		final StringBuffer aggregateFunction = new StringBuffer();
+		final StringBuilder aggregateFunction = new StringBuilder();
 		final SpatialAggregate sa = new SpatialAggregate( aggregation );
 
 		if ( sa.getAggregateSyntax() == null ) {

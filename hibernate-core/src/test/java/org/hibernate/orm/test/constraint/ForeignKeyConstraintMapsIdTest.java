@@ -4,10 +4,9 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.constraint;
+package org.hibernate.orm.test.constraint;
 
 import java.util.Iterator;
-
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.ForeignKey;
@@ -18,10 +17,10 @@ import javax.persistence.OneToOne;
 
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.mapping.Table;
-import org.junit.Test;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;

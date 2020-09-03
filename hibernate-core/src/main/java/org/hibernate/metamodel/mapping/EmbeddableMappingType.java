@@ -185,7 +185,6 @@ public class EmbeddableMappingType implements ManagedMappingType {
 				final Selectable selectable = basicValue.getColumn();
 
 				final String mappedColumnExpression = mappedColumnExpressions.get( columnPosition++ );
-				assert mappedColumnExpression.equals( selectable.getText( sessionFactory.getDialect() ) );
 
 				attributeMappings.put(
 						bootPropertyDescriptor.getName(),

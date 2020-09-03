@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.constraint;
+package org.hibernate.orm.test.constraint;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
 import javax.persistence.AssociationOverride;
 import javax.persistence.AssociationOverrides;
 import javax.persistence.CollectionTable;
@@ -47,10 +46,10 @@ import javax.persistence.SecondaryTable;
 
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.mapping.Column;
-import org.junit.Test;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -188,6 +187,15 @@ public class ForeignKeyConstraintTest extends BaseNonConfigCoreFunctionalTestCas
 			}
 		}
 		fail( "ForeignKey '" + foreignKeyName + "' could not be found!" );
+	}
+
+	@Test
+	public void testGet(){
+		inTransaction(
+				session -> {
+					session.get( Student.class, 1l );
+				}
+		);
 	}
 
 	private void assertNoForeignKey(String foreignKeyName, String... columns) {

@@ -49,14 +49,21 @@ import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.internal.BasicEntityIdentifierMappingImpl;
 import org.hibernate.metamodel.mapping.internal.JoinedSubclassDiscriminatorMappingImpl;
+import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
+import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.InFragment;
 import org.hibernate.sql.Insert;
 import org.hibernate.sql.SelectFragment;
+import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -64,14 +71,17 @@ import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
+import org.hibernate.sql.ast.tree.from.StandardTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.entity.internal.EntityResultJoinedSubclassImpl;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.CompositeType;
 import org.hibernate.type.DiscriminatorType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
@@ -1092,6 +1102,10 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		return subclassTableIsLazyClosure[j];
 	}
 
+	@Override
+	protected boolean shouldProcessSuperMapping() {
+		return false;
+	}
 
 	protected boolean isClassOrSuperclassTable(int j) {
 		return isClassOrSuperclassTable[j];
@@ -1190,6 +1204,99 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
+	protected EntityVersionMapping generateVersionMapping(
+			MappingModelCreationProcess creationProcess, PersistentClass bootEntityDescriptor) {
+		if ( getVersionType() == null ) {
+			return null;
+		}
+		else {
+			if ( getTableName().equals( getVersionedTableName() ) ) {
+				final int versionPropertyIndex = getVersionProperty();
+				final String versionPropertyName = getPropertyNames()[versionPropertyIndex];
+				return creationProcess.processSubPart(
+						versionPropertyName,
+						(role, process) -> generateVersionMapping(
+								this,
+								bootEntityDescriptor,
+								process
+						)
+				);
+			}
+			else if ( getSuperMappingType() != null ) {
+				return getSuperMappingType().getVersionMapping();
+			}
+		}
+		return null;
+	}
+
+	@Override
+	protected EntityDiscriminatorMapping generateDiscriminatorMapping() {
+		EntityMappingType superMappingType = getSuperMappingType();
+		if ( superMappingType != null ) {
+			return superMappingType.getDiscriminatorMapping();
+		}
+		else {
+			return super.generateDiscriminatorMapping();
+		}
+	}
+
+	@Override
+	protected EntityIdentifierMapping generateIdentifierMapping(MappingModelCreationProcess creationProcess, PersistentClass bootEntityDescriptor) {
+		final Type idType = getIdentifierType();
+
+		if ( idType instanceof CompositeType ) {
+			final CompositeType cidType = (CompositeType) idType;
+
+			// NOTE: the term `isEmbedded` here uses Hibernate's older (pre-JPA) naming for its "non-aggregated"
+			// composite-id support.  It unfortunately conflicts with the JPA usage of "embedded".  Here we normalize
+			// the legacy naming to the more descriptive encapsulated versus non-encapsulated phrasing
+
+			final boolean encapsulated = ! cidType.isEmbedded();
+			if ( encapsulated ) {
+				// we have an `@EmbeddedId`
+				return MappingModelCreationHelper.buildEncapsulatedCompositeIdentifierMapping(
+						this,
+						bootEntityDescriptor.getIdentifierProperty(),
+						bootEntityDescriptor.getIdentifierProperty().getName(),
+						getTableName(),
+						tableKeyColumns[0],
+						cidType,
+						creationProcess
+				);
+			}
+
+			// otherwise we have a non-encapsulated composite-identifier
+			return generateNonEncapsulatedCompositeIdentifierMapping( creationProcess, bootEntityDescriptor, cidType );
+		}
+
+		return new BasicEntityIdentifierMappingImpl(
+				this,
+				bootEntityDescriptor.getIdentifierProperty().getName(),
+				getTableName(),
+				tableKeyColumns[0][0],
+				(BasicType) idType,
+				creationProcess
+		);
+	}
+
+	protected EntityIdentifierMapping generateNonEncapsulatedCompositeIdentifierMapping(
+			MappingModelCreationProcess creationProcess,
+			PersistentClass bootEntityDescriptor,
+			CompositeType cidType) {
+		assert declaredAttributeMappings != null;
+
+		return MappingModelCreationHelper.buildNonEncapsulatedCompositeIdentifierMapping(
+				this,
+				getTableName(),
+				tableKeyColumns[0],
+				cidType,
+				bootEntityDescriptor,
+				declaredAttributeMappings::put,
+				creationProcess
+		);
+	}
+
+	@Override
 	public FilterAliasGenerator getFilterAliasGenerator(String rootAlias) {
 		return new DynamicFilterAliasGenerator(subclassTableNameClosure, rootAlias);
 	}
@@ -1225,16 +1332,56 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			SqlExpressionResolver sqlExpressionResolver,
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
 			SqlAstCreationContext creationContext) {
-		return super.createRootTableGroup(
-				navigablePath,
-				explicitSourceAlias,
-				canUseInnerJoins,
-				lockMode,
-				aliasBaseGenerator,
+		final SqlAliasBase sqlAliasBase = aliasBaseGenerator.createSqlAliasBase( getSqlAliasStem() );
+
+		final TableReference primaryTableReference = createPrimaryTableReference(
+				sqlAliasBase,
 				sqlExpressionResolver,
-				additionalPredicateCollectorAccess,
 				creationContext
 		);
+
+		StandardTableGroup standardTableGroup = new StandardTableGroup(
+				navigablePath,
+				this,
+				lockMode,
+				primaryTableReference,
+				sqlAliasBase,
+				(tableExpression) -> ArrayHelper.contains( getSubclassTableNames(), tableExpression ),
+				(tableExpression, tableGroup) -> null,
+				getFactory()
+		);
+
+		final String primaryTableName = primaryTableReference.getTableExpression();
+		for ( int i = 1; i < getSubclassTableSpan(); i++ ) {
+			final String subclassTableName = getSubclassTableName( i );
+			if ( !subclassTableName.equals( primaryTableName ) ) {
+				final boolean isNullableTable = isNullableSubclassTable( i );
+				final TableReference joinedTableReference = new TableReference(
+						subclassTableName,
+						sqlAliasBase.generateNewAlias(),
+						isNullableTable,
+						getFactory()
+				);
+
+				TableReferenceJoin tableReferenceJoin = new TableReferenceJoin(
+						determineSubclassTableJoinType(
+								i,
+								canUseInnerJoins,
+								true,
+								Collections.emptySet()
+						),
+						joinedTableReference,
+						generateJoinPredicate(
+								primaryTableReference,
+								joinedTableReference,
+								i,
+								sqlExpressionResolver
+						)
+				);
+				standardTableGroup.addTableReferenceJoin( tableReferenceJoin );
+			}
+		}
+		return standardTableGroup;
 	}
 
 	@Override

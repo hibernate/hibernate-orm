@@ -771,7 +771,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 	}
 
 	/*private String renderOrderByPropertiesSelect() {
-		StringBuffer buf = new StringBuffer(10);
+		StringBuilder buf = new StringBuilder(10);
 
 		//add the columns we are ordering by to the select ID select clause
 		Iterator iter = orderByTokens.iterator();

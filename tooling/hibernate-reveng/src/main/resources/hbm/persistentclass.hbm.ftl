@@ -76,6 +76,7 @@
  <#elseif clazz.identifier?exists>
  	<#if c2j.isComponent(clazz.identifier)>
  	 	<composite-id
+ 	 	    name="${clazz.entityName}Id"
         	class="${clazz.identifier.getComponentClassName()}"
         	<#if clazz.identifierMapper?exists>mapped="true"</#if>>
         	<#foreach property in clazz.identifier.propertyIterator>

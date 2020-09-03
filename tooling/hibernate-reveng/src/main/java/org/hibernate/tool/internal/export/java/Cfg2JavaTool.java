@@ -13,7 +13,7 @@ import java.util.Map.Entry;
 import java.util.Properties;
 
 import org.hibernate.boot.internal.NamedHqlQueryDefinitionImpl;
-import org.hibernate.boot.spi.NamedHqlQueryDefinition;
+import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Array;
 import org.hibernate.mapping.Collection;

@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.spi.NamedHqlQueryDefinition;
+import org.hibernate.boot.query.NamedHqlQueryDefinition;
 
 public class DaoHelper {
 	

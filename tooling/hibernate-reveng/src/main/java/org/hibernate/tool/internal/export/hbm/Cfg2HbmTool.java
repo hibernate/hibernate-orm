@@ -12,8 +12,8 @@ import java.util.function.Consumer;
 
 import org.hibernate.FetchMode;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.spi.NamedHqlQueryDefinition;
-import org.hibernate.boot.spi.NamedNativeQueryDefinition;
+import org.hibernate.boot.query.NamedHqlQueryDefinition;
+import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryCollectionReturn;

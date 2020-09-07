@@ -661,26 +661,6 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
-	public String getForUpdateNowaitString() {
-		return " for update nowait";
-	}
-
-	@Override
-	public String getForUpdateString(String aliases) {
-		return getForUpdateString() + " of " + aliases;
-	}
-
-	@Override
-	public String getForUpdateNowaitString(String aliases) {
-		return getForUpdateString() + " of " + aliases + " nowait";
-	}
-
-	@Override
-	public boolean forUpdateOfColumns() {
-		return true;
-	}
-
-	@Override
 	public String getFromDual() {
 		return "from dual";
 	}
@@ -936,7 +916,32 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public boolean supportsNoWait() {
+		return getVersion() >= 9;
+	}
+
+	@Override
+	public boolean supportsSkipLocked() {
+		return getVersion() >= 10;
+	}
+
+	@Override
+	public boolean forUpdateOfColumns() {
 		return true;
+	}
+
+	@Override
+	public String getForUpdateNowaitString() {
+		return " for update nowait";
+	}
+
+	@Override
+	public String getForUpdateString(String aliases) {
+		return " for update of " + aliases;
+	}
+
+	@Override
+	public String getForUpdateNowaitString(String aliases) {
+		return " for update of " + aliases + " nowait";
 	}
 
 	@Override
@@ -946,45 +951,40 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public String getForUpdateSkipLockedString(String aliases) {
-		return getForUpdateString() + " of " + aliases + " skip locked";
+		return " for update of " + aliases + " skip locked";
 	}
 
-	@Override
-	public boolean supportsSkipLocked() {
-		return true;
+	private String withTimeout(String lockString, int timeout) {
+		switch (timeout) {
+			case LockOptions.NO_WAIT:
+				return supportsNoWait() ? lockString + " nowait" : lockString;
+			case LockOptions.SKIP_LOCKED:
+				return supportsSkipLocked() ? lockString + " skip locked" : lockString;
+			case LockOptions.WAIT_FOREVER:
+				return lockString;
+			default:
+				return supportsNoWait() ? lockString + " wait " + Math.round(timeout / 1e3f) : lockString;
+		}
 	}
 
 	@Override
 	public String getWriteLockString(int timeout) {
-		if ( getVersion() >= 10 && timeout == LockOptions.SKIP_LOCKED ) {
-			return getForUpdateSkipLockedString();
-		}
-		else if ( getVersion() >= 9 && timeout == LockOptions.NO_WAIT ) {
-			return " for update nowait";
-		}
-		else if ( getVersion() >= 9 && timeout > 0 ) {
-			// convert from milliseconds to seconds
-			final float seconds = timeout / 1e3f;
-			return " for update wait " + Math.round( seconds );
-		}
-		else {
-			return super.getWriteLockString( timeout );
-		}
+		return withTimeout( getForUpdateString(), timeout );
 	}
 
 	@Override
 	public String getWriteLockString(String aliases, int timeout) {
-		if ( getVersion() >= 10 && timeout == LockOptions.SKIP_LOCKED ) {
-			return getForUpdateSkipLockedString( aliases );
-		}
-		else {
-			return super.getWriteLockString( aliases, timeout );
-		}
+		return withTimeout( getForUpdateString(aliases), timeout );
 	}
 
 	@Override
 	public String getReadLockString(int timeout) {
 		return getWriteLockString( timeout );
+	}
+
+	@Override
+	public String getReadLockString(String aliases, int timeout) {
+		return getWriteLockString( aliases, timeout );
 	}
 
 	public static Replacer datetimeFormat(String format, boolean useFm) {

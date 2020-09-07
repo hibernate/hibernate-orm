@@ -606,16 +606,6 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
-	public String getForUpdateNowaitString() {
-		return getForUpdateString() + " nowait ";
-	}
-
-	@Override
-	public String getForUpdateNowaitString(String aliases) {
-		return getForUpdateString( aliases ) + " nowait ";
-	}
-
-	@Override
 	public CallableStatementSupport getCallableStatementSupport() {
 		return PostgresCallableStatementSupport.INSTANCE;
 	}
@@ -646,11 +636,6 @@ public class PostgreSQLDialect extends Dialect {
 	@Override
 	public boolean supportsNationalizedTypes() {
 		return false;
-	}
-
-	@Override
-	public boolean supportsNoWait() {
-		return true;
 	}
 
 	@Override
@@ -711,75 +696,73 @@ public class PostgreSQLDialect extends Dialect {
 		return "timestamp with time zone '" + timestamp + "'";
 	}
 
+	private String withTimeout(String lockString, int timeout) {
+		switch (timeout) {
+			case LockOptions.NO_WAIT:
+				return supportsNoWait() ? lockString + " nowait" : lockString;
+			case LockOptions.SKIP_LOCKED:
+				return supportsSkipLocked() ? lockString + " skip locked" : lockString;
+			default:
+				return lockString;
+		}
+	}
+
 	@Override
 	public String getWriteLockString(int timeout) {
-		if ( getVersion() >= 950 && timeout == LockOptions.SKIP_LOCKED ) {
-			return getForUpdateSkipLockedString();
-		}
-		else if ( timeout == LockOptions.NO_WAIT ) {
-			return " for update nowait";
-		}
-		else {
-			return " for update";
-		}
+		return withTimeout( getForUpdateString(), timeout );
 	}
 
 	@Override
 	public String getWriteLockString(String aliases, int timeout) {
-		if ( getVersion() >= 950 && timeout == LockOptions.SKIP_LOCKED ) {
-			return getForUpdateSkipLockedString( aliases );
-		}
-		else if ( timeout == LockOptions.NO_WAIT ) {
-			return String.format( " for update of %s nowait", aliases );
-		}
-		else {
-			return " for update of " + aliases;
-		}
+		return withTimeout( getForUpdateString( aliases ), timeout );
 	}
 
 	@Override
 	public String getReadLockString(int timeout) {
-		if ( getVersion() >= 950 && timeout == LockOptions.SKIP_LOCKED ) {
-			return " for share skip locked";
-		}
-		else if ( timeout == LockOptions.NO_WAIT ) {
-			return " for share nowait";
-		}
-		else {
-			return " for share";
-		}
+		return withTimeout(" for share", timeout );
 	}
 
 	@Override
 	public String getReadLockString(String aliases, int timeout) {
-		if ( getVersion() >= 950 && timeout == LockOptions.SKIP_LOCKED ) {
-			return String.format( " for share of %s skip locked", aliases );
-		}
-		else if ( timeout == LockOptions.NO_WAIT ) {
-			return String.format( " for share of %s nowait", aliases );
-		}
-		else {
-			return " for share of " + aliases;
-		}
+		return withTimeout(" for share of " + aliases, timeout );
+	}
+
+	@Override
+	public String getForUpdateNowaitString() {
+		return supportsNoWait()
+				? " for update nowait"
+				: getForUpdateString();
+	}
+
+	@Override
+	public String getForUpdateNowaitString(String aliases) {
+		return supportsNoWait()
+				? " for update of " + aliases + " nowait"
+				: getForUpdateString(aliases);
 	}
 
 	@Override
 	public String getForUpdateSkipLockedString() {
-		return getVersion() >= 940
+		return supportsSkipLocked()
 				? " for update skip locked"
-				: super.getForUpdateSkipLockedString();
+				: getForUpdateString();
 	}
 
 	@Override
 	public String getForUpdateSkipLockedString(String aliases) {
-		return getVersion() >= 940
-				? getForUpdateString() + " of " + aliases + " skip locked"
-				: super.getForUpdateSkipLockedString( aliases );
+		return supportsSkipLocked()
+				? " for update of " + aliases + " skip locked"
+				: getForUpdateString( aliases );
+	}
+
+	@Override
+	public boolean supportsNoWait() {
+		return getVersion() >= 810;
 	}
 
 	@Override
 	public boolean supportsSkipLocked() {
-		return getVersion() >= 940;
+		return getVersion() >= 950;
 	}
 
 	@Override

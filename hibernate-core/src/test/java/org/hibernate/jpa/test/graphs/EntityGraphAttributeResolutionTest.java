@@ -183,7 +183,7 @@ public class EntityGraphAttributeResolutionTest extends BaseEntityManagerFunctio
 
 		@Enumerated(EnumType.STRING)
 		@ElementCollection(targetClass = Permission.class)
-		@CollectionTable(name = "USERS_PERMISSIONS", joinColumns = @JoinColumn(name = "uid"))
+		@CollectionTable(name = "USERS_PERMISSIONS", joinColumns = @JoinColumn(name = "user_id"))
 		private Set<Permission> permissions = EnumSet.of( Permission.FOO );
 
 		@ManyToMany(fetch = FetchType.LAZY)

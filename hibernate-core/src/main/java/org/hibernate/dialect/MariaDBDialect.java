@@ -92,34 +92,31 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	@Override
-	public String getWriteLockString(int timeout) {
-		if ( getMariaVersion() < 1030 ) {
-			return super.getWriteLockString( timeout );
-		}
-
-		if ( timeout == LockOptions.NO_WAIT ) {
-			return getForUpdateNowaitString();
-		}
-
-		if ( timeout > 0 ) {
-			return getForUpdateString() + " wait " + timeout;
-		}
-
-		return getForUpdateString();
+	public boolean supportsSkipLocked() {
+		//only supported on MySQL
+		return false;
 	}
 
 	@Override
-	public String getForUpdateNowaitString() {
-		return getMariaVersion() < 1030
-				? super.getForUpdateNowaitString()
-				: getForUpdateString() + " nowait";
+	public boolean supportsNoWait() {
+		return getVersion() >= 1030;
 	}
 
 	@Override
-	public String getForUpdateNowaitString(String aliases) {
-		return getMariaVersion() < 1030
-				? super.getForUpdateNowaitString( aliases )
-				: getForUpdateString( aliases ) + " nowait";
+	public boolean supportsWait() {
+		return getVersion() >= 1030;
+	}
+
+	@Override
+	boolean supportsForShare() {
+		//only supported on MySQL
+		return false;
+	}
+
+	@Override
+	boolean supportsAliasLocks() {
+		//only supported on MySQL
+		return false;
 	}
 
 }

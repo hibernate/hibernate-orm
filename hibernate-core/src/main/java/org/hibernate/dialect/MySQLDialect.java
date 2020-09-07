@@ -814,95 +814,81 @@ public class MySQLDialect extends Dialect {
 				.replace("S", "%f");
 	}
 
+	private String withTimeout(String lockString, int timeout) {
+		switch (timeout) {
+			case LockOptions.NO_WAIT:
+				return supportsNoWait() ? lockString + " nowait" : lockString;
+			case LockOptions.SKIP_LOCKED:
+				return supportsSkipLocked() ? lockString + " skip locked" : lockString;
+			case LockOptions.WAIT_FOREVER:
+				return lockString;
+			default:
+				return supportsWait() ? lockString + " wait " + timeout : lockString;
+		}
+	}
+
 	@Override
 	public String getWriteLockString(int timeout) {
-		if ( getVersion() >= 800 ) {
-			switch (timeout) {
-				case LockOptions.NO_WAIT:
-					return getForUpdateNowaitString();
-				case LockOptions.SKIP_LOCKED:
-					return getForUpdateSkipLockedString();
-			}
-		}
-		return " for update";
+		return withTimeout( getForUpdateString(), timeout );
 	}
 
 	@Override
 	public String getWriteLockString(String aliases, int timeout) {
-		if ( getVersion() >= 800 ) {
-			switch (timeout) {
-				case LockOptions.NO_WAIT:
-					return getForUpdateNowaitString(aliases);
-				case LockOptions.SKIP_LOCKED:
-					return getForUpdateSkipLockedString(aliases);
-			}
-		}
-		return super.getWriteLockString( aliases, timeout );
+		return withTimeout( getForUpdateString(aliases), timeout );
 	}
 
 	@Override
 	public String getReadLockString(int timeout) {
-		if ( getVersion() >= 800 ) {
-			String readLockString = " for share";
-			switch (timeout) {
-				case LockOptions.NO_WAIT:
-					return readLockString + " nowait ";
-				case LockOptions.SKIP_LOCKED:
-					return readLockString + " skip locked ";
-			}
-		}
-		return " lock in share mode";
+		return withTimeout( supportsForShare() ? " for share" : " lock in share mode", timeout );
 	}
 
 	@Override
 	public String getReadLockString(String aliases, int timeout) {
-		if ( getVersion() < 800 ) {
-			return super.getReadLockString( aliases, timeout );
+		if ( supportsAliasLocks() && supportsForShare() ) {
+			return withTimeout(" for share of " + aliases, timeout );
 		}
-
-		String readLockString = String.format( " for share of %s ", aliases );
-		switch (timeout) {
-			case LockOptions.NO_WAIT:
-				return readLockString + " nowait ";
-			case LockOptions.SKIP_LOCKED:
-				return readLockString + " skip locked ";
+		else {
+			// fall back to locking all aliases
+			return getReadLockString( timeout );
 		}
-		return readLockString;
 	}
 
 	@Override
 	public String getForUpdateSkipLockedString() {
-		return getVersion() >= 800
+		return supportsSkipLocked()
 				? " for update skip locked"
-				: super.getForUpdateSkipLockedString();
+				: getForUpdateString();
 	}
 
 	@Override
 	public String getForUpdateSkipLockedString(String aliases) {
-		return getVersion() >= 800
-				? getForUpdateString() + " of " + aliases + " skip locked"
-				: super.getForUpdateSkipLockedString( aliases );
+		return supportsSkipLocked() && supportsAliasLocks()
+				? getForUpdateString( aliases ) + " skip locked"
+				// fall back to skip locking all aliases
+				: getForUpdateSkipLockedString();
 	}
 
 	@Override
 	public String getForUpdateNowaitString() {
-		return getVersion() >= 800
-				? getForUpdateString() + " nowait "
-				: super.getForUpdateNowaitString();
+		return supportsNoWait()
+				? " for update nowait"
+				: getForUpdateString();
 	}
 
 	@Override
 	public String getForUpdateNowaitString(String aliases) {
-		return getVersion() >= 800
-				? getForUpdateString( aliases ) + " nowait "
-				: super.getForUpdateNowaitString( aliases );
+		return supportsNoWait() && supportsAliasLocks()
+				? getForUpdateString( aliases ) + " nowait"
+				// fall back to nowait locking all aliases
+				: getForUpdateNowaitString();
 	}
 
 	@Override
 	public String getForUpdateString(String aliases) {
-		return getVersion() >= 800
-				? getForUpdateString() + " of " + aliases
-				: super.getForUpdateString( aliases );
+		return supportsAliasLocks()
+				? " for update of " + aliases
+				// fall back to locking all aliases
+				: getForUpdateString();
 	}
 
 	@Override
@@ -910,7 +896,21 @@ public class MySQLDialect extends Dialect {
 		return getVersion() >= 800;
 	}
 
+	@Override
 	public boolean supportsNoWait() {
+		return getVersion() >= 800;
+	}
+
+	public boolean supportsWait() {
+		//only supported on MariaDB
+		return false;
+	}
+
+	boolean supportsForShare() {
+		return getVersion() >= 800;
+	}
+
+	boolean supportsAliasLocks() {
 		return getVersion() >= 800;
 	}
 }

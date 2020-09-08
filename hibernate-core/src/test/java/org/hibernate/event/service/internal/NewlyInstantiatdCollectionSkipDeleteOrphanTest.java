@@ -27,6 +27,8 @@ import org.hibernate.Transaction;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.DynamicUpdate;
 
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.After;
@@ -39,6 +41,7 @@ import org.junit.Test;
  * @author Nathan Xu
  */
 @TestForIssue( jiraKey = "HHH-14178" )
+@RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
 public class NewlyInstantiatdCollectionSkipDeleteOrphanTest extends BaseCoreFunctionalTestCase {
 
 	private UnversionedParent up;
@@ -177,6 +180,8 @@ public class NewlyInstantiatdCollectionSkipDeleteOrphanTest extends BaseCoreFunc
 		private Integer id;
 		private Long version;
 
+		private String name;
+
 		@Id
 		@GeneratedValue(strategy = GenerationType.IDENTITY)
 		@Column(name = "Id", nullable = false)
@@ -186,6 +191,14 @@ public class NewlyInstantiatdCollectionSkipDeleteOrphanTest extends BaseCoreFunc
 
 		public void setId(Integer id) {
 			this.id = id;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
 		}
 
 		@Version
@@ -265,11 +278,13 @@ public class NewlyInstantiatdCollectionSkipDeleteOrphanTest extends BaseCoreFunc
 	}
 
 	@Entity(name = "UnversionedParent")
-	@Table(name = "UnversionedParent")
+	@Table(name = "UnversParent")
 	@DynamicUpdate
 	public static class UnversionedParent {
 		private Integer id;
 		private Set<VersionedMappingUnversionedParent> versionedMappings;
+
+		private String name;
 
 		@Id
 		@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -289,6 +304,14 @@ public class NewlyInstantiatdCollectionSkipDeleteOrphanTest extends BaseCoreFunc
 					c.getId().setParentId(id);
 				});
 			}
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
 		}
 
 		@OneToMany(mappedBy="parent", cascade={ javax.persistence.CascadeType.DETACH, javax.persistence.CascadeType.MERGE, javax.persistence.CascadeType.REFRESH, javax.persistence.CascadeType.REMOVE }, orphanRemoval=true)
@@ -346,12 +369,13 @@ public class NewlyInstantiatdCollectionSkipDeleteOrphanTest extends BaseCoreFunc
 	}
 
 	@Entity(name = "VersionedParent")
-	@Table(name = "VersionedParent")
+	@Table(name = "VersParent")
 	@DynamicUpdate
 	public static class VersionedParent {
 		private Integer id;
 		private Long version;
 		private Set<VersionedMappingVersionedParent> children;
+		private String name;
 
 		@Id
 		@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -371,6 +395,14 @@ public class NewlyInstantiatdCollectionSkipDeleteOrphanTest extends BaseCoreFunc
 					c.getId().setParentId(id);
 				});
 			}
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
 		}
 
 		@Version
@@ -438,12 +470,13 @@ public class NewlyInstantiatdCollectionSkipDeleteOrphanTest extends BaseCoreFunc
 	}
 
 	@Entity(name = "VersionedMappingUnversionedParent")
-	@Table(name = "VersionedMappingUnversionedParent")
+	@Table(name = "VersdMapUnversParent")
 	@DynamicUpdate
 	public static class VersionedMappingUnversionedParent {
 		private MappingId id;
 		private Child child;
 		private Long version;
+		private String name;
 
 		@EmbeddedId
 		public MappingId getId() {
@@ -462,6 +495,14 @@ public class NewlyInstantiatdCollectionSkipDeleteOrphanTest extends BaseCoreFunc
 
 		public void setVersion(Long version) {
 			this.version = version;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
 		}
 
 		protected UnversionedParent parent;
@@ -551,12 +592,13 @@ public class NewlyInstantiatdCollectionSkipDeleteOrphanTest extends BaseCoreFunc
 	}
 
 	@Entity(name = "VersionedMappingVersionedParent")
-	@Table(name = "VersionedMappingVersionedParent")
+	@Table(name = "VersMapVersParent")
 	@DynamicUpdate
 	public static class VersionedMappingVersionedParent {
 		private MappingId id;
 		private Child child;
 		private Long version;
+		private String name;
 
 		@EmbeddedId
 		public MappingId getId() {
@@ -575,6 +617,14 @@ public class NewlyInstantiatdCollectionSkipDeleteOrphanTest extends BaseCoreFunc
 
 		public void setVersion(Long version) {
 			this.version = version;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
 		}
 
 		protected VersionedParent parent;

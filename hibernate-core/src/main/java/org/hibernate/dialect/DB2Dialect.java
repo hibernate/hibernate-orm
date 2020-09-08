@@ -329,6 +329,15 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsSkipLocked() {
+		return true;
+	}
+
+	@Override
+	public String getForUpdateSkipLockedString() {
+		return getForUpdateString() + " skip locked data";
+	}
+	@Override
 	public boolean supportsOuterJoinForUpdate() {
 		return false;
 	}

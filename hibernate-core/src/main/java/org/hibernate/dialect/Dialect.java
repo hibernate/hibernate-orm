@@ -1054,7 +1054,7 @@ public abstract class Dialect implements ConversionContext {
 	 * @return The Hibernate {@link Type} name.
 	 * @throws HibernateException If no mapping was specified for that type.
 	 */
-	@SuppressWarnings( {"UnusedDeclaration"})
+	@SuppressWarnings("UnusedDeclaration")
 	public String getHibernateTypeName(int code) throws HibernateException {
 		final String result = hibernateTypeNames.get( code );
 		if ( result == null ) {
@@ -1299,7 +1299,7 @@ public abstract class Dialect implements ConversionContext {
 		return getForUpdateString( lockOptions.getLockMode(), lockOptions.getTimeOut() );
 	}
 
-	@SuppressWarnings( {"deprecation"})
+	@SuppressWarnings("deprecation")
 	private String getForUpdateString(LockMode lockMode, int timeout){
 		switch ( lockMode ) {
 			case UPGRADE:
@@ -1536,7 +1536,6 @@ public abstract class Dialect implements ConversionContext {
 	 * @param keyColumnNames a map of key columns indexed by aliased table names.
 	 * @return the modified SQL string.
 	 */
-	@SuppressWarnings("deprecation")
 	public String applyLocksToSql(String sql, LockOptions aliasedLockOptions, Map<String, String[]> keyColumnNames) {
 		return sql + new ForUpdateFragment( this, aliasedLockOptions, keyColumnNames ).toFragmentString();
 	}
@@ -2791,7 +2790,7 @@ public abstract class Dialect implements ConversionContext {
 	 * @return Returns {@code true} if the database supports accepting bind params as args, {@code false} otherwise. The
 	 * default is {@code true}.
 	 */
-	@SuppressWarnings( {"UnusedDeclaration"})
+	@SuppressWarnings("UnusedDeclaration")
 	public boolean supportsBindAsCallableArgument() {
 		return true;
 	}

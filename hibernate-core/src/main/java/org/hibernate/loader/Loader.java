@@ -68,7 +68,6 @@ import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
-import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.hql.internal.HolderInstantiator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -381,8 +380,8 @@ public abstract class Loader {
 			final boolean returnProxies) throws HibernateException {
 
 		final int entitySpan = getEntityPersisters().length;
-		final List<Object> hydratedObjects = entitySpan == 0 ?
-				null : new ArrayList<>( entitySpan );
+		final List hydratedObjects = entitySpan == 0 ?
+				null : new ArrayList( entitySpan );
 
 		final Object result;
 		try {
@@ -423,8 +422,8 @@ public abstract class Loader {
 			final EntityKey keyToRead) throws HibernateException {
 
 		final int entitySpan = getEntityPersisters().length;
-		final List<Object> nullSeparatedHydratedObjects = entitySpan == 0 ?
-				null : new ArrayList<>( entitySpan );
+		final List hydratedObjects = entitySpan == 0 ?
+				null : new ArrayList( entitySpan );
 
 		Object result = null;
 		final EntityKey[] loadedKeys = new EntityKey[entitySpan];
@@ -437,14 +436,10 @@ public abstract class Loader {
 						queryParameters,
 						getLockModes( queryParameters.getLockOptions() ),
 						null,
-						nullSeparatedHydratedObjects,
+						hydratedObjects,
 						loadedKeys,
 						returnProxies
 				);
-				if ( nullSeparatedHydratedObjects != null ) {
-					// Signal that a new row starts. Used in initializeEntitiesAndCollections
-					nullSeparatedHydratedObjects.add( null );
-				}
 				if ( !keyToRead.equals( loadedKeys[0] ) ) {
 					throw new AssertionFailure(
 							String.format(
@@ -470,7 +465,7 @@ public abstract class Loader {
 		}
 
 		initializeEntitiesAndCollections(
-				nullSeparatedHydratedObjects,
+				hydratedObjects,
 				resultSet,
 				session,
 				queryParameters.isReadOnly( session )
@@ -701,7 +696,7 @@ public abstract class Loader {
 			final QueryParameters queryParameters,
 			final LockMode[] lockModesArray,
 			final EntityKey optionalObjectKey,
-			final List<Object> hydratedObjects,
+			final List hydratedObjects,
 			final EntityKey[] keys,
 			boolean returnProxies) throws SQLException, HibernateException {
 		return getRowFromResultSet(
@@ -723,7 +718,7 @@ public abstract class Loader {
 			final QueryParameters queryParameters,
 			final LockMode[] lockModesArray,
 			final EntityKey optionalObjectKey,
-			final List<Object> hydratedObjects,
+			final List hydratedObjects,
 			final EntityKey[] keys,
 			boolean returnProxies,
 			ResultTransformer forcedResultTransformer) throws SQLException, HibernateException {
@@ -787,7 +782,7 @@ public abstract class Loader {
 			SharedSessionContractImplementor session,
 			EntityKey[] keys,
 			LockMode[] lockModes,
-			List<Object> hydratedObjects) throws SQLException {
+			List hydratedObjects) throws SQLException {
 		final int entitySpan = persisters.length;
 
 		final int numberOfPersistersToProcess;
@@ -990,7 +985,7 @@ public abstract class Loader {
 		final int entitySpan = getEntityPersisters().length;
 		final boolean createSubselects = isSubselectLoadingEnabled();
 		final List<EntityKey[]> subselectResultKeys = createSubselects ? new ArrayList<>() : null;
-		final List<Object> nullSeparatedHydratedObjectsPerRow = entitySpan == 0 ? null : new ArrayList<>();
+		final List<Object> hydratedObjects = entitySpan == 0 ? null : new ArrayList<>( entitySpan * 10 );
 
 		final List results = getRowsFromResultSet(
 				rs,
@@ -999,12 +994,12 @@ public abstract class Loader {
 				returnProxies,
 				forcedResultTransformer,
 				maxRows,
-				nullSeparatedHydratedObjectsPerRow,
+				hydratedObjects,
 				subselectResultKeys
 		);
 
 		initializeEntitiesAndCollections(
-				nullSeparatedHydratedObjectsPerRow,
+				hydratedObjects,
 				rs,
 				session,
 				queryParameters.isReadOnly( session ),
@@ -1023,7 +1018,7 @@ public abstract class Loader {
 			boolean returnProxies,
 			ResultTransformer forcedResultTransformer,
 			int maxRows,
-			List<Object> nullSeparatedHydratedObjects,
+			List<Object> hydratedObjects,
 			List<EntityKey[]> subselectResultKeys) throws SQLException {
 		final int entitySpan = getEntityPersisters().length;
 		final boolean createSubselects = isSubselectLoadingEnabled();
@@ -1047,16 +1042,12 @@ public abstract class Loader {
 					queryParameters,
 					lockModesArray,
 					optionalObjectKey,
-					nullSeparatedHydratedObjects,
+					hydratedObjects,
 					keys,
 					returnProxies,
 					forcedResultTransformer
 			);
 			results.add( result );
-			if ( nullSeparatedHydratedObjects != null ) {
-				// Signal that a new row starts. Used in initializeEntitiesAndCollections
-				nullSeparatedHydratedObjects.add( null );
-			}
 			if ( createSubselects ) {
 				subselectResultKeys.add( keys );
 				keys = new EntityKey[entitySpan]; //can't reuse in this case
@@ -1147,12 +1138,12 @@ public abstract class Loader {
 	}
 
 	private void initializeEntitiesAndCollections(
-			final List<Object> nullSeparatedHydratedObjects,
+			final List hydratedObjects,
 			final Object resultSetId,
 			final SharedSessionContractImplementor session,
 			final boolean readOnly) throws HibernateException {
 		initializeEntitiesAndCollections(
-				nullSeparatedHydratedObjects,
+				hydratedObjects,
 				resultSetId,
 				session,
 				readOnly,
@@ -1161,7 +1152,7 @@ public abstract class Loader {
 	}
 
 	private void initializeEntitiesAndCollections(
-			final List<Object> nullSeparatedHydratedObjects,
+			final List hydratedObjects,
 			final Object resultSetId,
 			final SharedSessionContractImplementor session,
 			final boolean readOnly,
@@ -1193,40 +1184,22 @@ public abstract class Loader {
 			post = null;
 		}
 
-		if ( nullSeparatedHydratedObjects != null && !nullSeparatedHydratedObjects.isEmpty() ) {
-			if ( LOG.isTraceEnabled() ) {
-				int hydratedObjectsSize = 0;
-				for ( Object hydratedObject : nullSeparatedHydratedObjects ) {
-					if ( hydratedObject != null ) {
-						++hydratedObjectsSize;
-					}
-				}
-				LOG.tracev( "Total objects hydrated: {0}", hydratedObjectsSize );
-			}
+		if ( hydratedObjects != null ) {
+			int hydratedObjectsSize = hydratedObjects.size();
+			LOG.tracev( "Total objects hydrated: {0}", hydratedObjectsSize );
 
-			final Iterable<PreLoadEventListener> listeners = session
-				.getFactory()
-				.getServiceRegistry()
-				.getService( EventListenerRegistry.class )
-				.getEventListenerGroup( EventType.PRE_LOAD )
-				.listeners();
+			if ( hydratedObjectsSize != 0 ) {
+				final Iterable<PreLoadEventListener> listeners = session
+					.getFactory()
+					.getServiceRegistry()
+					.getService( EventListenerRegistry.class )
+					.getEventListenerGroup( EventType.PRE_LOAD )
+					.listeners();
 
-			GraphImplementor<?> fetchGraphLoadContextToRestore = session.getFetchGraphLoadContext();
-			for ( Object hydratedObject : nullSeparatedHydratedObjects ) {
-				if ( hydratedObject == null ) {
-					// This is a hack to signal that we're starting to process a new row
-
-					// HHH-14124: TwoPhaseLoad has nasty side-effects in order to handle sub-graphs.
-					// That's very fragile, but someone would need to spend much more time on this
-					// in order to implement it correctly, and apparently that's already been done in ORM 6.0.
-					// So for now, we'll just ensure side-effects (and whatever bugs they lead to)
-					// are limited to each row.
-					session.setFetchGraphLoadContext( fetchGraphLoadContextToRestore );
-
-					continue;
+				for ( Object hydratedObject : hydratedObjects ) {
+					TwoPhaseLoad.initializeEntity( hydratedObject, readOnly, session, pre, listeners );
 				}
 
-				TwoPhaseLoad.initializeEntity( hydratedObject, readOnly, session, pre, listeners );
 			}
 		}
 
@@ -1242,13 +1215,8 @@ public abstract class Loader {
 			}
 		}
 
-		if ( nullSeparatedHydratedObjects != null ) {
-			for ( Object hydratedObject : nullSeparatedHydratedObjects ) {
-				if ( hydratedObject == null ) {
-					// This is a hack to signal that we're starting to process a new row
-					// Ignore
-					continue;
-				}
+		if ( hydratedObjects != null ) {
+			for ( Object hydratedObject : hydratedObjects ) {
 				TwoPhaseLoad.afterInitialize( hydratedObject, session );
 			}
 		}
@@ -1258,13 +1226,8 @@ public abstract class Loader {
 		// endCollectionLoad to ensure the collection is in the
 		// persistence context.
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-		if ( nullSeparatedHydratedObjects != null && !nullSeparatedHydratedObjects.isEmpty() ) {
-			for ( Object hydratedObject : nullSeparatedHydratedObjects ) {
-				if ( hydratedObject == null ) {
-					// This is a hack to signal that we're starting to process a new row
-					// Ignore
-					continue;
-				}
+		if ( hydratedObjects != null && hydratedObjects.size() > 0 ) {
+			for ( Object hydratedObject : hydratedObjects ) {
 				TwoPhaseLoad.postLoad( hydratedObject, session, post );
 				if ( afterLoadActions != null ) {
 					for ( AfterLoadAction afterLoadAction : afterLoadActions ) {
@@ -1622,7 +1585,7 @@ public abstract class Loader {
 			final Object optionalObject,
 			final EntityKey optionalObjectKey,
 			final LockMode[] lockModes,
-			final List<Object> hydratedObjects,
+			final List hydratedObjects,
 			final SharedSessionContractImplementor session) throws HibernateException, SQLException {
 		final int cols = persisters.length;
 		final EntityAliases[] entityAliases = getEntityAliases();
@@ -1689,7 +1652,7 @@ public abstract class Loader {
 			final EntityKey key,
 			final Object object,
 			final LockMode requestedLockMode,
-			List<Object> hydratedObjects,
+			List hydratedObjects,
 			final SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
 		if ( !persister.isInstance( object ) ) {
@@ -1757,7 +1720,7 @@ public abstract class Loader {
 			final LockMode lockMode,
 			final EntityKey optionalObjectKey,
 			final Object optionalObject,
-			final List<Object> hydratedObjects,
+			final List hydratedObjects,
 			final SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
 		final String instanceClass = getInstanceClass(

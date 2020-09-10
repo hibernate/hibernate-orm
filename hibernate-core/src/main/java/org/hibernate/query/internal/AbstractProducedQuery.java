@@ -1438,7 +1438,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 			getProducer().setCacheMode( effectiveCacheMode );
 		}
 		if ( entityGraphQueryHint != null && entityGraphQueryHint.getSemantic() == GraphSemantic.FETCH ) {
-			getProducer().setFetchGraphLoadContext( entityGraphQueryHint.getGraph() );
+			getProducer().setFetchGraphEnabled( true );
 		}
 	}
 
@@ -1451,7 +1451,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 			getProducer().setCacheMode( sessionCacheMode );
 			sessionCacheMode = null;
 		}
-		getProducer().setFetchGraphLoadContext( null );
+		getProducer().setFetchGraphEnabled( false );
 	}
 
 	@Override

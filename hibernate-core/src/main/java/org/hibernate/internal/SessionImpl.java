@@ -130,7 +130,6 @@ import org.hibernate.event.spi.SaveOrUpdateEventListener;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.internal.RootGraphImpl;
-import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.hql.spi.QueryTranslator;
 import org.hibernate.internal.CriteriaImpl.CriterionEntry;
@@ -216,7 +215,7 @@ public class SessionImpl
 
 	private transient TransactionObserver transactionObserver;
 	
-	private transient GraphImplementor fetchGraphLoadContext;
+	private transient boolean fetchGraphEnabled;
 
 	public SessionImpl(SessionFactoryImpl factory, SessionCreationOptions options) {
 		super( factory, options );
@@ -3317,7 +3316,7 @@ public class SessionImpl
 			}
 			
 			if ( getLoadQueryInfluencers().getEffectiveEntityGraph().getSemantic() == GraphSemantic.FETCH ) {
-				setFetchGraphLoadContext( getLoadQueryInfluencers().getEffectiveEntityGraph().getGraph() );
+				setFetchGraphEnabled( true );
 			}
 
 			return loadAccess.load( (Serializable) primaryKey );
@@ -3364,7 +3363,7 @@ public class SessionImpl
 		finally {
 			getLoadQueryInfluencers().getEffectiveEntityGraph().clear();
 			getLoadQueryInfluencers().setReadOnly( null );
-			setFetchGraphLoadContext( null );
+			setFetchGraphEnabled( false );
 		}
 	}
 
@@ -3739,13 +3738,13 @@ public class SessionImpl
 	}
 	
 	@Override
-	public GraphImplementor getFetchGraphLoadContext() {
-		return this.fetchGraphLoadContext;
+	public boolean isFetchGraphEnabled() {
+		return this.fetchGraphEnabled;
 	}
 	
 	@Override
-	public void setFetchGraphLoadContext(GraphImplementor fetchGraphLoadContext) {
-		this.fetchGraphLoadContext = fetchGraphLoadContext;
+	public void setFetchGraphEnabled(boolean enabled) {
+		this.fetchGraphEnabled = enabled;
 	}
 
 	/**

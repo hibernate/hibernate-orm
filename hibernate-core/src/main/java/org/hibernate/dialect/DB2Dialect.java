@@ -6,6 +6,7 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.LockOptions;
 import org.hibernate.NullPrecedence;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -56,6 +57,13 @@ public class DB2Dialect extends Dialect {
 
 	// * can't select a parameter unless wrapped
 	//   in a cast or function call
+
+	private static final String FOR_READ_ONLY_SQL = " for read only with rs";
+	private static final String FOR_SHARE_SQL = FOR_READ_ONLY_SQL + " use and keep share locks";
+	private static final String FOR_UPDATE_SQL = FOR_READ_ONLY_SQL + " use and keep update locks";
+	private static final String SKIP_LOCKED_SQL = " skip locked data";
+	private static final String FOR_SHARE_SKIP_LOCKED_SQL = FOR_SHARE_SQL + SKIP_LOCKED_SQL;
+	private static final String FOR_UPDATE_SKIP_LOCKED_SQL = FOR_UPDATE_SQL + SKIP_LOCKED_SQL;
 
 	private final int version;
 
@@ -324,8 +332,22 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
+	public String getReadLockString(int timeout) {
+		return timeout==LockOptions.SKIP_LOCKED
+				? FOR_SHARE_SKIP_LOCKED_SQL
+				: FOR_SHARE_SQL;
+	}
+
+	@Override
+	public String getWriteLockString(int timeout) {
+		return timeout==LockOptions.SKIP_LOCKED
+				? FOR_UPDATE_SKIP_LOCKED_SQL
+				: FOR_UPDATE_SQL;
+	}
+
+	@Override
 	public String getForUpdateString() {
-		return " for read only with rs use and keep update locks";
+		return FOR_UPDATE_SQL;
 	}
 
 	@Override
@@ -335,7 +357,7 @@ public class DB2Dialect extends Dialect {
 
 	@Override
 	public String getForUpdateSkipLockedString() {
-		return getForUpdateString() + " skip locked data";
+		return FOR_UPDATE_SKIP_LOCKED_SQL;
 	}
 	@Override
 	public boolean supportsOuterJoinForUpdate() {

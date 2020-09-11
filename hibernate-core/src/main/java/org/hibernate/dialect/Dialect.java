@@ -1396,10 +1396,11 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Is <tt>FOR UPDATE OF</tt> syntax supported?
+	 * Does the <tt>FOR UPDATE OF</tt> clause accept a list of columns
+	 * instead of a list of table aliases?
 	 *
-	 * @return True if the database supports <tt>FOR UPDATE OF</tt> syntax;
-	 * false otherwise.
+	 * @return True if the database <tt>FOR UPDATE OF</tt> clause takes
+	 * a column list; false otherwise.
 	 */
 	public boolean forUpdateOfColumns() {
 		// by default we report no support

@@ -222,25 +222,9 @@ public class RDMSOS2200Dialect extends Dialect {
 	}
 
 	/**
-	 * The RDMS DB supports the 'FOR UPDATE OF' clause. However, the RDMS-JDBC
-	 * driver does not support this feature, so a false is return.
-	 * The base dialect also returns a false, but we will leave this over-ride
-	 * in to make sure it stays false.
-	 * <p/>
-	 * {@inheritDoc}
-	 */
-	@Override
-	public boolean forUpdateOfColumns() {
-		return false;
-	}
-
-	/**
-	 * Since the RDMS-JDBC driver does not support for updates, this string is
-	 * set to an empty string. Whenever, the driver does support this feature,
-	 * the returned string should be " FOR UPDATE OF". Note that RDMS does not
-	 * support the string 'FOR UPDATE' string.
-	 * <p/>
-	 * {@inheritDoc}
+	 * <TT>FOR UPDATE</TT> only supported for cursors
+	 *
+	 * @return the empty string
 	 */
 	@Override
 	public String getForUpdateString() {

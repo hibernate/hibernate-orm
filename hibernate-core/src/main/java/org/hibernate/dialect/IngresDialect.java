@@ -293,15 +293,16 @@ public class IngresDialect extends Dialect {
 
 	// lock acquisition support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	/**
+	 * <TT>FOR UPDATE</TT> only supported for cursors
+	 *
+	 * @return the empty string
+	 */
 	@Override
-	public boolean supportsOuterJoinForUpdate() {
-		return getVersion() >= 930;
+	public String getForUpdateString() {
+		return "";
 	}
 
-	@Override
-	public boolean forUpdateOfColumns() {
-		return getVersion() >= 930;
-	}
 
 	// current timestamp support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

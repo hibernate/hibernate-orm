@@ -415,11 +415,7 @@ public final class TwoPhaseLoad {
 	}
 
 	/**
-	 * Check if eager of the association is overridden (i.e. skipping metamodel strategy), including (order sensitive):
-	 * <ol>
-	 *     <li>fetch graph</li>
-	 *     <li>fetch profile</li>
-	 * </ol>
+	 * Check if eager of the association is overridden by anything.
 	 *
 	 * @param session session
 	 * @param entityName entity name
@@ -437,7 +433,6 @@ public final class TwoPhaseLoad {
 		// Performance: check type.isCollectionType() first, as type.isAssociationType() is megamorphic
 		if ( associationType.isCollectionType() || associationType.isAssociationType()  ) {
 
-			// check 'fetch graph' first; skip 'fetch profile' if 'fetch graph' takes effect
 			Boolean overridingEager = isEagerFetchGraph( session, associationName, associationType );
 
 			if ( overridingEager != null ) {
@@ -454,7 +449,6 @@ public final class TwoPhaseLoad {
 				return overridingEager;
 			}
 			
-			// check 'fetch profile' next; skip 'metamodel' if 'fetch profile' takes effect
 			overridingEager = isEagerFetchProfile( session, entityName, associationName );
 
 			if ( overridingEager != null ) {
@@ -470,7 +464,6 @@ public final class TwoPhaseLoad {
 				return overridingEager;
 			}
 		}
-		// let 'metamodel' decide eagerness
 		return null;
 	}
 

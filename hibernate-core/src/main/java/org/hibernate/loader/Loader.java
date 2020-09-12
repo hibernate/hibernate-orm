@@ -406,7 +406,7 @@ public abstract class Loader {
 		}
 
 		initializeEntitiesAndCollections(
-				hydratedObjects,
+				hydratedObjects == null ? null : Collections.singletonList( hydratedObjects ),
 				resultSet,
 				session,
 				queryParameters.isReadOnly( session )
@@ -423,7 +423,7 @@ public abstract class Loader {
 			final EntityKey keyToRead) throws HibernateException {
 
 		final int entitySpan = getEntityPersisters().length;
-		final List<Object> nullSeparatedHydratedObjects = entitySpan == 0 ?
+		final List<List<Object>> hydratedObjectsPerRow = entitySpan == 0 ?
 				null : new ArrayList<>( entitySpan );
 
 		Object result = null;
@@ -431,18 +431,26 @@ public abstract class Loader {
 
 		try {
 			do {
+				List<Object> hydratedObjects;
+				if ( hydratedObjectsPerRow == null ) {
+					hydratedObjects = null;
+				}
+				else {
+					hydratedObjects = new ArrayList<>( entitySpan );
+				}
 				Object loaded = getRowFromResultSet(
 						resultSet,
 						session,
 						queryParameters,
 						getLockModes( queryParameters.getLockOptions() ),
 						null,
-						nullSeparatedHydratedObjects,
+						hydratedObjects,
 						loadedKeys,
 						returnProxies
 				);
-				// Signal that a new row starts. Used in initializeEntitiesAndCollections
-				nullSeparatedHydratedObjects.add( null );
+				if ( hydratedObjects != null && !hydratedObjects.isEmpty() ) {
+					hydratedObjectsPerRow.add( hydratedObjects );
+				}
 				if ( !keyToRead.equals( loadedKeys[0] ) ) {
 					throw new AssertionFailure(
 							String.format(
@@ -468,7 +476,7 @@ public abstract class Loader {
 		}
 
 		initializeEntitiesAndCollections(
-				nullSeparatedHydratedObjects,
+				hydratedObjectsPerRow,
 				resultSet,
 				session,
 				queryParameters.isReadOnly( session )
@@ -988,7 +996,7 @@ public abstract class Loader {
 		final int entitySpan = getEntityPersisters().length;
 		final boolean createSubselects = isSubselectLoadingEnabled();
 		final List<EntityKey[]> subselectResultKeys = createSubselects ? new ArrayList<>() : null;
-		final List<Object> nullSeparatedHydratedObjectsPerRow = entitySpan == 0 ? null : new ArrayList<>();
+		final List<List<Object>> hydratedObjectsPerRow = entitySpan == 0 ? null : new ArrayList<>();
 
 		final List results = getRowsFromResultSet(
 				rs,
@@ -997,12 +1005,12 @@ public abstract class Loader {
 				returnProxies,
 				forcedResultTransformer,
 				maxRows,
-				nullSeparatedHydratedObjectsPerRow,
+				hydratedObjectsPerRow,
 				subselectResultKeys
 		);
 
 		initializeEntitiesAndCollections(
-				nullSeparatedHydratedObjectsPerRow,
+				hydratedObjectsPerRow,
 				rs,
 				session,
 				queryParameters.isReadOnly( session ),
@@ -1021,7 +1029,7 @@ public abstract class Loader {
 			boolean returnProxies,
 			ResultTransformer forcedResultTransformer,
 			int maxRows,
-			List<Object> nullSeparatedHydratedObjects,
+			List<List<Object>> hydratedObjectsPerRow,
 			List<EntityKey[]> subselectResultKeys) throws SQLException {
 		final int entitySpan = getEntityPersisters().length;
 		final boolean createSubselects = isSubselectLoadingEnabled();
@@ -1039,20 +1047,28 @@ public abstract class Loader {
 			if ( debugEnabled ) {
 				LOG.debugf( "Result set row: %s", count );
 			}
+			List<Object> hydratedObjects;
+			if ( hydratedObjectsPerRow == null ) {
+				hydratedObjects = null;
+			}
+			else {
+				hydratedObjects = new ArrayList<>( entitySpan );
+			}
 			Object result = getRowFromResultSet(
 					rs,
 					session,
 					queryParameters,
 					lockModesArray,
 					optionalObjectKey,
-					nullSeparatedHydratedObjects,
+					hydratedObjects,
 					keys,
 					returnProxies,
 					forcedResultTransformer
 			);
 			results.add( result );
-			// Signal that a new row starts. Used in initializeEntitiesAndCollections
-			nullSeparatedHydratedObjects.add( null );
+			if ( hydratedObjects != null && !hydratedObjects.isEmpty() ) {
+				hydratedObjectsPerRow.add( hydratedObjects );
+			}
 			if ( createSubselects ) {
 				subselectResultKeys.add( keys );
 				keys = new EntityKey[entitySpan]; //can't reuse in this case
@@ -1143,12 +1159,12 @@ public abstract class Loader {
 	}
 
 	private void initializeEntitiesAndCollections(
-			final List<Object> nullSeparatedHydratedObjects,
+			final List<List<Object>> hydratedObjectsPerRow,
 			final Object resultSetId,
 			final SharedSessionContractImplementor session,
 			final boolean readOnly) throws HibernateException {
 		initializeEntitiesAndCollections(
-				nullSeparatedHydratedObjects,
+				hydratedObjectsPerRow,
 				resultSetId,
 				session,
 				readOnly,
@@ -1157,7 +1173,7 @@ public abstract class Loader {
 	}
 
 	private void initializeEntitiesAndCollections(
-			final List<Object> nullSeparatedHydratedObjects,
+			final List<List<Object>> hydratedObjectsPerRow,
 			final Object resultSetId,
 			final SharedSessionContractImplementor session,
 			final boolean readOnly,
@@ -1189,13 +1205,11 @@ public abstract class Loader {
 			post = null;
 		}
 
-		if ( nullSeparatedHydratedObjects != null && !nullSeparatedHydratedObjects.isEmpty() ) {
+		if ( hydratedObjectsPerRow != null && !hydratedObjectsPerRow.isEmpty() ) {
 			if ( LOG.isTraceEnabled() ) {
 				int hydratedObjectsSize = 0;
-				for ( Object hydratedObject : nullSeparatedHydratedObjects ) {
-					if ( hydratedObject != null ) {
-						++hydratedObjectsSize;
-					}
+				for ( List<Object> hydratedObjects : hydratedObjectsPerRow ) {
+					hydratedObjectsSize += hydratedObjects.size();
 				}
 				LOG.tracev( "Total objects hydrated: {0}", hydratedObjectsSize );
 			}
@@ -1208,21 +1222,17 @@ public abstract class Loader {
 				.listeners();
 
 			GraphImplementor<?> fetchGraphLoadContextToRestore = session.getFetchGraphLoadContext();
-			for ( Object hydratedObject : nullSeparatedHydratedObjects ) {
-				if ( hydratedObject == null ) {
-					// This is a hack to signal that we're starting to process a new row
-
-					// HHH-14124: TwoPhaseLoad has nasty side-effects in order to handle sub-graphs.
-					// That's very fragile, but someone would need to spend much more time on this
-					// in order to implement it correctly, and apparently that's already been done in ORM 6.0.
-					// So for now, we'll just ensure side-effects (and whatever bugs they lead to)
-					// are limited to each row.
-					session.setFetchGraphLoadContext( fetchGraphLoadContextToRestore );
-
-					continue;
+			for ( List<?> hydratedObjectsForRow : hydratedObjectsPerRow ) {
+				for ( Object hydratedObject : hydratedObjectsForRow ) {
+					TwoPhaseLoad.initializeEntity( hydratedObject, readOnly, session, pre, listeners );
 				}
 
-				TwoPhaseLoad.initializeEntity( hydratedObject, readOnly, session, pre, listeners );
+				// HHH-14124: TwoPhaseLoad has nasty side-effects in order to handle sub-graphs.
+				// That's very fragile, but someone would need to spend much more time on this
+				// in order to implement it correctly, and apparently that's already been done in ORM 6.0.
+				// So for now, we'll just ensure side-effects (and whatever bugs they lead to)
+				// are limited to each row.
+				session.setFetchGraphLoadContext( fetchGraphLoadContextToRestore );
 			}
 		}
 
@@ -1238,14 +1248,11 @@ public abstract class Loader {
 			}
 		}
 
-		if ( nullSeparatedHydratedObjects != null ) {
-			for ( Object hydratedObject : nullSeparatedHydratedObjects ) {
-				if ( hydratedObject == null ) {
-					// This is a hack to signal that we're starting to process a new row
-					// Ignore
-					continue;
+		if ( hydratedObjectsPerRow != null ) {
+			for ( List<?> hydratedObjectsForRow : hydratedObjectsPerRow ) {
+				for ( Object hydratedObject : hydratedObjectsForRow ) {
+					TwoPhaseLoad.afterInitialize( hydratedObject, session );
 				}
-				TwoPhaseLoad.afterInitialize( hydratedObject, session );
 			}
 		}
 
@@ -1254,24 +1261,21 @@ public abstract class Loader {
 		// endCollectionLoad to ensure the collection is in the
 		// persistence context.
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-		if ( nullSeparatedHydratedObjects != null && !nullSeparatedHydratedObjects.isEmpty() ) {
-			for ( Object hydratedObject : nullSeparatedHydratedObjects ) {
-				if ( hydratedObject == null ) {
-					// This is a hack to signal that we're starting to process a new row
-					// Ignore
-					continue;
-				}
-				TwoPhaseLoad.postLoad( hydratedObject, session, post );
-				if ( afterLoadActions != null ) {
-					for ( AfterLoadAction afterLoadAction : afterLoadActions ) {
-						final EntityEntry entityEntry = persistenceContext.getEntry( hydratedObject );
-						if ( entityEntry == null ) {
-							// big problem
-							throw new HibernateException(
-									"Could not locate EntityEntry immediately after two-phase load"
-							);
+		if ( hydratedObjectsPerRow != null && !hydratedObjectsPerRow.isEmpty() ) {
+			for ( List<?> hydratedObjectsForRow : hydratedObjectsPerRow ) {
+				for ( Object hydratedObject : hydratedObjectsForRow ) {
+					TwoPhaseLoad.postLoad( hydratedObject, session, post );
+					if ( afterLoadActions != null ) {
+						for ( AfterLoadAction afterLoadAction : afterLoadActions ) {
+							final EntityEntry entityEntry = persistenceContext.getEntry( hydratedObject );
+							if ( entityEntry == null ) {
+								// big problem
+								throw new HibernateException(
+										"Could not locate EntityEntry immediately after two-phase load"
+								);
+							}
+							afterLoadAction.afterLoad( session, hydratedObject, (Loadable) entityEntry.getPersister() );
 						}
-						afterLoadAction.afterLoad( session, hydratedObject, (Loadable) entityEntry.getPersister() );
 					}
 				}
 			}

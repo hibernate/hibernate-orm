@@ -207,10 +207,11 @@ public final class TwoPhaseLoad {
 		String[] propertyNames = persister.getPropertyNames();
 		final Type[] types = persister.getPropertyTypes();
 		
-		final GraphImplementor<?> fetchGraphContext = session.getFetchGraphLoadContext();
+		GraphImplementor<?> fetchGraphContext = session.getFetchGraphLoadContext();
 		
 		for ( int i = 0; i < hydratedState.length; i++ ) {
 			final Object value = hydratedState[i];
+			
 			if ( debugEnabled ) {
 				LOG.debugf(
 					"Processing attribute `%s` : value = %s",
@@ -494,11 +495,11 @@ public final class TwoPhaseLoad {
 	}
 	
 	private static Boolean isEagerFetchGraph(SharedSessionContractImplementor session, String associationName, Type associationType) {
-		final GraphImplementor<?> context = session.getFetchGraphLoadContext();
+		GraphImplementor<?> context = session.getFetchGraphLoadContext();
 		
 		if ( context != null ) {
 			// 'fetch graph' is in effect, so null should not be returned
-			final AttributeNodeImplementor<Object> attributeNode = context.findAttributeNode( associationName );
+			AttributeNodeImplementor<Object> attributeNode = context.findAttributeNode( associationName );
 			if ( attributeNode != null ) {
 				if ( associationType.isCollectionType() ) {
 					// to do: deal with Map's key and value
@@ -506,7 +507,7 @@ public final class TwoPhaseLoad {
 				}
 				else {
 					// set 'fetchGraphContext' to sub-graph so graph is explored further (internal loading)
-					final GraphImplementor<?> subContext = attributeNode.getSubGraphMap().get( associationType.getReturnedClass() );
+					GraphImplementor<?> subContext = attributeNode.getSubGraphMap().get( associationType.getReturnedClass() );
 					if ( subContext != null ) {
 						session.setFetchGraphLoadContext( subContext );
 					}

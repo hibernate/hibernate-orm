@@ -32,8 +32,6 @@ import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PostLoadEventListener;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
-import org.hibernate.graph.spi.AttributeNodeImplementor;
-import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
@@ -41,7 +39,6 @@ import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.stat.internal.StatsHelper;
 import org.hibernate.stat.spi.StatisticsImplementor;
-import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 
@@ -121,13 +118,18 @@ public final class TwoPhaseLoad {
 			final boolean readOnly,
 			final SharedSessionContractImplementor session,
 			final PreLoadEvent preLoadEvent) {
+		final PersistenceContext persistenceContext = session.getPersistenceContext();
+		final EntityEntry entityEntry = persistenceContext.getEntry( entity );
+		if ( entityEntry == null ) {
+			throw new AssertionFailure( "possible non-threadsafe access to the session" );
+		}
 		final EventListenerGroup<PreLoadEventListener> listenerGroup = session
 			.getFactory()
 			.getServiceRegistry()
 			.getService( EventListenerRegistry.class )
 			.getEventListenerGroup( EventType.PRE_LOAD );
 		final Iterable<PreLoadEventListener> listeners = listenerGroup.listeners();
-		initializeEntity( entity, readOnly, session, preLoadEvent, listeners, EntityResolver.DEFAULT );
+		doInitializeEntity( entity, entityEntry, readOnly, session, preLoadEvent, listeners );
 	}
 
 	/**
@@ -150,46 +152,22 @@ public final class TwoPhaseLoad {
 		final SharedSessionContractImplementor session,
 		final PreLoadEvent preLoadEvent,
 		final Iterable<PreLoadEventListener> preLoadEventListeners) {
-		initializeEntity( entity, readOnly, session, preLoadEvent, preLoadEventListeners, EntityResolver.DEFAULT );
-	}
-
-	/**
-	 * Perform the second step of 2-phase load. Fully initialize the entity
-	 * instance.
-	 * <p/>
-	 * After processing a JDBC result set, we "resolve" all the associations
-	 * between the entities which were instantiated and had their state
-	 * "hydrated" into an array
-	 *
-	 * @param entity The entity being loaded
-	 * @param readOnly Is the entity being loaded as read-only
-	 * @param session The Session
-	 * @param preLoadEvent The (re-used) pre-load event
-	 * @param preLoadEventListeners the pre-load event listeners
-	 * @param entityResolver the resolver used for to-one entity associations
-	 *                       (not used when an entity is a bytecode-enhanced lazy entity)
-	 */
-	public static void initializeEntity(
-			final Object entity,
-			final boolean readOnly,
-			final SharedSessionContractImplementor session,
-			final PreLoadEvent preLoadEvent,
-			final Iterable<PreLoadEventListener> preLoadEventListeners,
-			final EntityResolver entityResolver) {
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		final EntityEntry entityEntry = persistenceContext.getEntry( entity );
 		if ( entityEntry == null ) {
 			throw new AssertionFailure( "possible non-threadsafe access to the session" );
 		}
-		initializeEntityEntryLoadedState( entity, entityEntry, session, entityResolver );
-		initializeEntityFromEntityEntryLoadedState( entity, entityEntry, readOnly, session, preLoadEvent, preLoadEventListeners );
+		doInitializeEntity( entity, entityEntry, readOnly, session, preLoadEvent, preLoadEventListeners );
 	}
 
-	public static void initializeEntityEntryLoadedState(
+	private static void doInitializeEntity(
 			final Object entity,
 			final EntityEntry entityEntry,
+			final boolean readOnly,
 			final SharedSessionContractImplementor session,
-			final EntityResolver entityResolver) throws HibernateException {
+			final PreLoadEvent preLoadEvent,
+			final Iterable<PreLoadEventListener> preLoadEventListeners) throws HibernateException {
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		final EntityPersister persister = entityEntry.getPersister();
 		final Serializable id = entityEntry.getId();
 		final Object[] hydratedState = entityEntry.getLoadedState();
@@ -206,12 +184,8 @@ public final class TwoPhaseLoad {
 		String entityName = persister.getEntityName();
 		String[] propertyNames = persister.getPropertyNames();
 		final Type[] types = persister.getPropertyTypes();
-		
-		GraphImplementor<?> fetchGraphContext = session.getFetchGraphLoadContext();
-		
 		for ( int i = 0; i < hydratedState.length; i++ ) {
 			final Object value = hydratedState[i];
-			
 			if ( debugEnabled ) {
 				LOG.debugf(
 					"Processing attribute `%s` : value = %s",
@@ -233,7 +207,7 @@ public final class TwoPhaseLoad {
 					// IMPLEMENTATION NOTE: this is a lazy collection property on a bytecode-enhanced entity.
 					// HHH-10989: We need to resolve the collection so that a CollectionReference is added to StatefulPersistentContext.
 					// As mentioned above, hydratedState[i] needs to remain LazyPropertyInitializer.UNFETCHED_PROPERTY
-					// so do not assign the resolved, uninitialized PersistentCollection back to hydratedState[i].
+					// so do not assign the resolved, unitialized PersistentCollection back to hydratedState[i].
 					Boolean overridingEager = getOverridingEager( session, entityName, propertyNames[i], types[i], debugEnabled );
 					types[i].resolve( value, session, entity, overridingEager );
 				}
@@ -249,36 +223,14 @@ public final class TwoPhaseLoad {
 
 				// we know value != LazyPropertyInitializer.UNFETCHED_PROPERTY
 				Boolean overridingEager = getOverridingEager( session, entityName, propertyNames[i], types[i], debugEnabled );
-				hydratedState[i] = types[i].isEntityType()
-						? entityResolver.resolve( (EntityType) types[i], value, session, entity, overridingEager )
-						: types[i].resolve( value, session, entity, overridingEager );
+				hydratedState[i] = types[i].resolve( value, session, entity, overridingEager );
 			}
 			else {
 				if ( debugEnabled ) {
 					LOG.debugf( "Skipping <unknown> attribute : `%s`", propertyNames[i] );
 				}
 			}
-
-			if ( session.getFetchGraphLoadContext() != fetchGraphContext ) {
-				session.setFetchGraphLoadContext( fetchGraphContext );
-			}
 		}
-	}
-
-	public static void initializeEntityFromEntityEntryLoadedState(
-			final Object entity,
-			final EntityEntry entityEntry,
-			final boolean readOnly,
-			final SharedSessionContractImplementor session,
-			final PreLoadEvent preLoadEvent,
-			final Iterable<PreLoadEventListener> preLoadEventListeners) throws HibernateException {
-
-		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-		final EntityPersister persister = entityEntry.getPersister();
-		final Serializable id = entityEntry.getId();
-		final Object[] hydratedState = entityEntry.getLoadedState();
-
-		final boolean debugEnabled = LOG.isDebugEnabled();
 
 		//Must occur after resolving identifiers!
 		if ( session.isEventSource() ) {
@@ -415,45 +367,27 @@ public final class TwoPhaseLoad {
 	}
 
 	/**
-	 * Check if eager of the association is overridden by anything.
+	 * Check if eager of the association is overriden by anything.
 	 *
 	 * @param session session
 	 * @param entityName entity name
 	 * @param associationName association name
-	 * @param associationType association type
-	 * @param isDebugEnabled if debug log level enabled
+	 *
 	 * @return null if there is no overriding, true if it is overridden to eager and false if it is overridden to lazy
 	 */
 	private static Boolean getOverridingEager(
 			final SharedSessionContractImplementor session,
 			final String entityName,
 			final String associationName,
-			final Type associationType,
+			final Type type,
 			final boolean isDebugEnabled) {
 		// Performance: check type.isCollectionType() first, as type.isAssociationType() is megamorphic
-		if ( associationType.isCollectionType() || associationType.isAssociationType()  ) {
+		if ( type.isCollectionType() || type.isAssociationType()  ) {
+			final Boolean overridingEager = isEagerFetchProfile( session, entityName, associationName );
 
-			Boolean overridingEager = isEagerFetchGraph( session, associationName, associationType );
-
-			if ( overridingEager != null ) {
-				//This method is very hot, and private so let's piggy back on the fact that the caller already knows the debugging state.
-				if ( isDebugEnabled ) {
-					LOG.debugf(
-							"Overriding eager fetching using fetch graph. EntityName: %s, associationName: %s, eager fetching: %s",
-							entityName,
-							associationName,
-							overridingEager
-					);
-				}
-
-				return overridingEager;
-			}
-			
-			overridingEager = isEagerFetchProfile( session, entityName, associationName );
-
-			if ( overridingEager != null ) {
-				//This method is very hot, and private so let's piggy back on the fact that the caller already knows the debugging state.
-				if ( isDebugEnabled ) {
+			//This method is very hot, and private so let's piggy back on the fact that the caller already knows the debugging state.
+			if ( isDebugEnabled ) {
+				if ( overridingEager != null ) {
 					LOG.debugf(
 							"Overriding eager fetching using active fetch profile. EntityName: %s, associationName: %s, eager fetching: %s",
 							entityName,
@@ -461,8 +395,9 @@ public final class TwoPhaseLoad {
 							overridingEager
 					);
 				}
-				return overridingEager;
 			}
+
+			return overridingEager;
 		}
 		return null;
 	}
@@ -486,51 +421,6 @@ public final class TwoPhaseLoad {
 
 		return null;
 	}
-	
-	private static Boolean isEagerFetchGraph(SharedSessionContractImplementor session, String associationName, Type associationType) {
-		GraphImplementor<?> context = session.getFetchGraphLoadContext();
-		
-		if ( context != null ) {
-			// 'fetch graph' is in effect, so null should not be returned
-			AttributeNodeImplementor<Object> attributeNode = context.findAttributeNode( associationName );
-			if ( attributeNode != null ) {
-				if ( associationType.isCollectionType() ) {
-					session.setFetchGraphLoadContext( null );
-				}
-				else {
-					// set 'fetchGraphContext' to sub-graph so graph is explored further (internal loading)
-					GraphImplementor<?> subContext = attributeNode.getSubGraphMap().get( associationType.getReturnedClass() );
-					if ( subContext != null ) {
-						session.setFetchGraphLoadContext( subContext );
-					} else {
-						session.setFetchGraphLoadContext( null );
-					}
-				}
-				// explicit 'fetch graph' applies, so fetch eagerly
-				return true;
-			}
-			else {
-				// implicit 'fetch graph' applies, so fetch lazily
-				return false;
-			}
-		}
-
-		return null;
-	}
-
-	/**
-	 * This method will be removed.
-	 * @deprecated Use {@link #postLoad(Object, SharedSessionContractImplementor, PostLoadEvent)}
-	 * instead.
-	 */
-	@Deprecated
-	public static void postLoad(
-			final Object entity,
-			final SharedSessionContractImplementor session,
-			final PostLoadEvent postLoadEvent,
-			final Iterable<PostLoadEventListener> postLoadEventListeners) {
-		postLoad( entity, session, postLoadEvent );
-	}
 
 	/**
 	 * PostLoad cannot occur during initializeEntity, as that call occurs *before*
@@ -545,16 +435,41 @@ public final class TwoPhaseLoad {
 	 * @param postLoadEvent The (re-used) post-load event
 	 */
 	public static void postLoad(
-		final Object entity,
-		final SharedSessionContractImplementor session,
-		final PostLoadEvent postLoadEvent) {
+			final Object entity,
+			final SharedSessionContractImplementor session,
+			final PostLoadEvent postLoadEvent,
+			final Iterable<PostLoadEventListener> postLoadEventListeners) {
+
 		if ( session.isEventSource() ) {
-			final EntityEntry entityEntry = session.getPersistenceContextInternal().getEntry( entity );
+			final PersistenceContext persistenceContext
+					= session.getPersistenceContextInternal();
+			final EntityEntry entityEntry = persistenceContext.getEntry( entity );
 
 			postLoadEvent.setEntity( entity ).setId( entityEntry.getId() ).setPersister( entityEntry.getPersister() );
 
-			session.getFactory().getFastSessionServices().firePostLoadEvent( postLoadEvent );
+			for ( PostLoadEventListener listener : postLoadEventListeners ) {
+				listener.onPostLoad( postLoadEvent );
+			}
 		}
+	}
+
+	/**
+	 * This method will be removed.
+	 * @deprecated Use {@link #postLoad(Object, SharedSessionContractImplementor, PostLoadEvent, Iterable)}
+	 * instead.
+	 */
+	@Deprecated
+	public static void postLoad(
+		final Object entity,
+		final SharedSessionContractImplementor session,
+		final PostLoadEvent postLoadEvent) {
+
+		final EventListenerGroup<PostLoadEventListener> listenerGroup = session.getFactory()
+			.getServiceRegistry()
+			.getService( EventListenerRegistry.class )
+			.getEventListenerGroup( EventType.POST_LOAD );
+
+		postLoad( entity, session, postLoadEvent, listenerGroup.listeners() );
 	}
 
 	private static boolean useMinimalPuts(SharedSessionContractImplementor session, EntityEntry entityEntry) {
@@ -628,24 +543,5 @@ public final class TwoPhaseLoad {
 				persister,
 				false
 		);
-	}
-
-	/**
-	 * Implementations determine how a to-one associations is resolved.
-	 *
-	 * @see #initializeEntity(Object, boolean, SharedSessionContractImplementor, PreLoadEvent, Iterable, EntityResolver)
-	 */
-	public interface EntityResolver {
-
-		Object resolve(
-				EntityType entityType,
-				Object value,
-				SharedSessionContractImplementor session,
-				Object owner,
-				Boolean overridingEager
-		);
-
-		EntityResolver DEFAULT = (entityType, value, session, owner, overridingEager) ->
-				entityType.resolve( value, session, owner, overridingEager );
 	}
 }

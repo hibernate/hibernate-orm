@@ -215,6 +215,8 @@ public class SessionImpl
 
 	private transient TransactionObserver transactionObserver;
 
+	private transient boolean enforcingFetchGraph;
+
 	public SessionImpl(SessionFactoryImpl factory, SessionCreationOptions options) {
 		super( factory, options );
 
@@ -3313,6 +3315,10 @@ public class SessionImpl
 				loadAccess.with( lockOptions );
 			}
 
+			if ( getLoadQueryInfluencers().getEffectiveEntityGraph().getSemantic() == GraphSemantic.FETCH ) {
+				setEnforcingFetchGraph( true );
+			}
+
 			return loadAccess.load( (Serializable) primaryKey );
 		}
 		catch ( EntityNotFoundException ignored ) {
@@ -3357,6 +3363,7 @@ public class SessionImpl
 		finally {
 			getLoadQueryInfluencers().getEffectiveEntityGraph().clear();
 			getLoadQueryInfluencers().setReadOnly( null );
+			setEnforcingFetchGraph( false );
 		}
 	}
 
@@ -3728,6 +3735,16 @@ public class SessionImpl
 	public List getEntityGraphs(Class entityClass) {
 		checkOpen();
 		return getEntityManagerFactory().findEntityGraphsByType( entityClass );
+	}
+
+	@Override
+	public boolean isEnforcingFetchGraph() {
+		return this.enforcingFetchGraph;
+	}
+
+	@Override
+	public void setEnforcingFetchGraph(boolean enforcingFetchGraph) {
+		this.enforcingFetchGraph = enforcingFetchGraph;
 	}
 
 	/**

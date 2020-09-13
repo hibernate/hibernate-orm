@@ -204,7 +204,7 @@ public final class TwoPhaseLoad {
 		String entityName = persister.getEntityName();
 		String[] propertyNames = persister.getPropertyNames();
 		final Type[] types = persister.getPropertyTypes();
-		
+
 		for ( int i = 0; i < hydratedState.length; i++ ) {
 			final Object value = hydratedState[i];
 			if ( debugEnabled ) {
@@ -406,7 +406,11 @@ public final class TwoPhaseLoad {
 	}
 
 	/**
-	 * Check if eager of the association is overridden by anything.
+	 * Check if eager of the association is overridden (i.e. skipping metamodel strategy), including (order sensitive):
+	 * <ol>
+	 *     <li>fetch graph</li>
+	 *     <li>fetch profile</li>
+	 * </ol>
 	 *
 	 * @param session session
 	 * @param entityName entity name
@@ -423,6 +427,12 @@ public final class TwoPhaseLoad {
 			final boolean isDebugEnabled) {
 		// Performance: check type.isCollectionType() first, as type.isAssociationType() is megamorphic
 		if ( associationType.isCollectionType() || associationType.isAssociationType()  ) {
+
+			// we can return false invariably for if the entity has been covered by entity graph,
+			// its associated JOIN has been present in the SQL generated and hence it would be loaded anyway
+			if ( session.isEnforcingFetchGraph() ) {
+				return false;
+			}
 
 			// check 'fetch profile' next; skip 'metamodel' if 'fetch profile' takes effect
 			final Boolean overridingEager = isEagerFetchProfile( session, entityName, associationName );

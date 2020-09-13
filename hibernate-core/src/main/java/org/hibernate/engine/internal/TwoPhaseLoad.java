@@ -206,90 +206,61 @@ public final class TwoPhaseLoad {
 		String entityName = persister.getEntityName();
 		String[] propertyNames = persister.getPropertyNames();
 		final Type[] types = persister.getPropertyTypes();
+		
+		final GraphImplementor<?> fetchGraphContext = session.getFetchGraphLoadContext();
+		
+		for ( int i = 0; i < hydratedState.length; i++ ) {
+			final Object value = hydratedState[i];
+			if ( debugEnabled ) {
+				LOG.debugf(
+					"Processing attribute `%s` : value = %s",
+					propertyNames[i],
+					value == LazyPropertyInitializer.UNFETCHED_PROPERTY ? "<un-fetched>" : value == PropertyAccessStrategyBackRefImpl.UNKNOWN ? "<unknown>" : value
+				);
+			}
 
-		GraphImplementor fetchGraphContext = session.getFetchGraphLoadContext();
-		if ( fetchGraphContext != null && !fetchGraphContext.appliesTo( entity.getClass() ) ) {
-			LOG.warnf( "Entity graph specified is not applicable to the entity [%s]. Ignored.", entity);
-			fetchGraphContext = null;
-			session.setFetchGraphLoadContext( null );
-		}
-
-		try {
-			for ( int i = 0; i < hydratedState.length; i++ ) {
-				final Object value = hydratedState[i];
+			if ( value == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
 				if ( debugEnabled ) {
-					LOG.debugf(
-							"Processing attribute `%s` : value = %s",
-							propertyNames[i],
-							value == LazyPropertyInitializer.UNFETCHED_PROPERTY ?
-									"<un-fetched>" :
-									value == PropertyAccessStrategyBackRefImpl.UNKNOWN ? "<unknown>" : value
-					);
+					LOG.debugf( "Resolving <un-fetched> attribute : `%s`", propertyNames[i] );
 				}
 
-				if ( value == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
-					if ( debugEnabled ) {
-						LOG.debugf( "Resolving <un-fetched> attribute : `%s`", propertyNames[i] );
-					}
-
-					// IMPLEMENTATION NOTE: This is a lazy property on a bytecode-enhanced entity.
-					// hydratedState[i] needs to remain LazyPropertyInitializer.UNFETCHED_PROPERTY so that
-					// setPropertyValues() below (ultimately AbstractEntityTuplizer#setPropertyValues) works properly
-					// No resolution is necessary, unless the lazy property is a collection.
-					if ( types[i].isCollectionType() ) {
-						// IMPLEMENTATION NOTE: this is a lazy collection property on a bytecode-enhanced entity.
-						// HHH-10989: We need to resolve the collection so that a CollectionReference is added to StatefulPersistentContext.
-						// As mentioned above, hydratedState[i] needs to remain LazyPropertyInitializer.UNFETCHED_PROPERTY
-						// so do not assign the resolved, uninitialized PersistentCollection back to hydratedState[i].
-						Boolean overridingEager = getOverridingEager(
-								session,
-								entityName,
-								propertyNames[i],
-								types[i],
-								debugEnabled
-						);
-						types[i].resolve( value, session, entity, overridingEager );
-					}
+				// IMPLEMENTATION NOTE: This is a lazy property on a bytecode-enhanced entity.
+				// hydratedState[i] needs to remain LazyPropertyInitializer.UNFETCHED_PROPERTY so that
+				// setPropertyValues() below (ultimately AbstractEntityTuplizer#setPropertyValues) works properly
+				// No resolution is necessary, unless the lazy property is a collection.
+				if ( types[i].isCollectionType() ) {
+					// IMPLEMENTATION NOTE: this is a lazy collection property on a bytecode-enhanced entity.
+					// HHH-10989: We need to resolve the collection so that a CollectionReference is added to StatefulPersistentContext.
+					// As mentioned above, hydratedState[i] needs to remain LazyPropertyInitializer.UNFETCHED_PROPERTY
+					// so do not assign the resolved, uninitialized PersistentCollection back to hydratedState[i].
+					Boolean overridingEager = getOverridingEager( session, entityName, propertyNames[i], types[i], debugEnabled );
+					types[i].resolve( value, session, entity, overridingEager );
 				}
-				else if ( value != PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
-					if ( debugEnabled ) {
-						final boolean isLazyEnhanced = persister.getBytecodeEnhancementMetadata()
-								.getLazyAttributesMetadata()
-								.getLazyAttributeNames()
-								.contains( propertyNames[i] );
-						LOG.debugf(
-								"Attribute (`%s`)  - enhanced for lazy-loading? - %s",
-								propertyNames[i],
-								isLazyEnhanced
-						);
-					}
-
-					// we know value != LazyPropertyInitializer.UNFETCHED_PROPERTY
-					Boolean overridingEager = getOverridingEager(
-							session,
-							entityName,
-							propertyNames[i],
-							types[i],
-							debugEnabled
-					);
-					hydratedState[i] = types[i].isEntityType()
-							? entityResolver.resolve( (EntityType) types[i], value, session, entity, overridingEager )
-							: types[i].resolve( value, session, entity, overridingEager );
-				}
-				else {
-					if ( debugEnabled ) {
-						LOG.debugf( "Skipping <unknown> attribute : `%s`", propertyNames[i] );
-					}
+			}
+			else if ( value != PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
+				if ( debugEnabled ) {
+					final boolean isLazyEnhanced = persister.getBytecodeEnhancementMetadata()
+						.getLazyAttributesMetadata()
+						.getLazyAttributeNames()
+						.contains( propertyNames[i] );
+					LOG.debugf( "Attribute (`%s`)  - enhanced for lazy-loading? - %s", propertyNames[i], isLazyEnhanced );
 				}
 
+				// we know value != LazyPropertyInitializer.UNFETCHED_PROPERTY
+				Boolean overridingEager = getOverridingEager( session, entityName, propertyNames[i], types[i], debugEnabled );
+				hydratedState[i] = types[i].isEntityType()
+						? entityResolver.resolve( (EntityType) types[i], value, session, entity, overridingEager )
+						: types[i].resolve( value, session, entity, overridingEager );
+			}
+			else {
+				if ( debugEnabled ) {
+					LOG.debugf( "Skipping <unknown> attribute : `%s`", propertyNames[i] );
+				}
+			}
+
+			if ( session.getFetchGraphLoadContext() != fetchGraphContext ) {
 				session.setFetchGraphLoadContext( fetchGraphContext );
 			}
-		}
-		finally {
-			// HHH-14097
-			// Fetch entity graph should be applied only once on top level (for root hydrated object)
-			// e.g., see org.hibernate.loader.Loader for details
-			session.setFetchGraphLoadContext( null );
 		}
 	}
 

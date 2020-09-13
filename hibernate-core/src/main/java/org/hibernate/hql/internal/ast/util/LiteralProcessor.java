@@ -219,12 +219,14 @@ public class LiteralProcessor implements HqlSqlTokenTypes {
 	}
 
 	private String determineIntegerRepresentation(String text, int type) {
+		Class<?> javaTypeClass = Integer.class;
 		try {
 			if ( type == NUM_BIG_INTEGER ) {
 				String literalValue = text;
 				if ( literalValue.endsWith( "bi" ) || literalValue.endsWith( "BI" ) ) {
 					literalValue = literalValue.substring( 0, literalValue.length() - 2 );
 				}
+				javaTypeClass = BigInteger.class;
 				return new BigInteger( literalValue ).toString();
 			}
 			if ( type == NUM_INT ) {
@@ -242,10 +244,11 @@ public class LiteralProcessor implements HqlSqlTokenTypes {
 			if ( literalValue.endsWith( "l" ) || literalValue.endsWith( "L" ) ) {
 				literalValue = literalValue.substring( 0, literalValue.length() - 1 );
 			}
+			javaTypeClass = Long.class;
 			return Long.valueOf( literalValue ).toString();
 		}
 		catch (Throwable t) {
-			throw new HibernateException( "Could not parse literal [" + text + "] as integer", t );
+			throw new HibernateException( "Could not parse literal [" + text + "] as " + javaTypeClass.getName(), t );
 		}
 	}
 

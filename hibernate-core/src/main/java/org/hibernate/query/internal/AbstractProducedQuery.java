@@ -1437,9 +1437,6 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 			sessionCacheMode = getProducer().getCacheMode();
 			getProducer().setCacheMode( effectiveCacheMode );
 		}
-		if ( entityGraphQueryHint != null && entityGraphQueryHint.getSemantic() == GraphSemantic.FETCH ) {
-			getProducer().setFetchGraphLoadContext( entityGraphQueryHint.getGraph() );
-		}
 	}
 
 	protected void afterQuery() {
@@ -1451,7 +1448,6 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 			getProducer().setCacheMode( sessionCacheMode );
 			sessionCacheMode = null;
 		}
-		getProducer().setFetchGraphLoadContext( null );
 	}
 
 	@Override

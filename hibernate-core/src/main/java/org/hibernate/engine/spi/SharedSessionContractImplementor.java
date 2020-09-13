@@ -522,4 +522,11 @@ public interface SharedSessionContractImplementor
 	 */
 	PersistenceContext getPersistenceContextInternal();
 
+	default boolean isEnforcingFetchGraph() {
+		return false;
+	}
+
+	default void setEnforcingFetchGraph(boolean enforcingFetchGraph) {
+	}
+
 }

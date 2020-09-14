@@ -91,13 +91,23 @@ public class FromClause extends HqlSqlWalkerNode implements HqlSqlTokenTypes, Di
 		}
 	}
 
+	void moveFromElementToEnd(FromElement element) {
+		fromElements.remove( element );
+		fromElements.add( element );
+	}
+
 	public void finishInit() {
-		// Insert EntityJoinFromElements while maintaining their original position during depth-first traversal.
+		// Insert the from elements into the AST in the same order as they were added to the HQL AST
 		FromElement lastFromElement = null;
 		for ( FromElement fromElement : fromElements ) {
-			if ( fromElement instanceof EntityJoinFromElement ) {
-				assert lastFromElement != null;
-				ASTUtil.insertChild( lastFromElement, fromElement );
+			if ( fromElement instanceof ComponentJoin ) {
+				// Component joins are no "real" joins, so they can't be put into the AST
+				continue;
+			}
+			fromElement.setFirstChild( null );
+			fromElement.setNextSibling( null );
+			if ( lastFromElement != null ) {
+				ASTUtil.appendChild( lastFromElement, fromElement );
 			}
 			lastFromElement = fromElement;
 		}

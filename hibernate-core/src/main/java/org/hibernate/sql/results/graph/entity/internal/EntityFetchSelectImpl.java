@@ -63,6 +63,7 @@ public class EntityFetchSelectImpl extends AbstractNonJoinedEntityFetch {
 
 					if ( selectByUniqueKey ) {
 						return new EntitySelectFetchByUniqueKeyInitializer(
+								parentAccess,
 								getFetchedMapping(),
 								(ToOneAttributeMapping) getFetchedMapping(),
 								getNavigablePath(),
@@ -72,6 +73,7 @@ public class EntityFetchSelectImpl extends AbstractNonJoinedEntityFetch {
 						);
 					}
 					return new EntitySelectFetchInitializer(
+							parentAccess,
 							getFetchedMapping(),
 							getNavigablePath(),
 							entityPersister,

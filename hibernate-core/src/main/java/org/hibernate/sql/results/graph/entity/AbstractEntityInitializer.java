@@ -333,7 +333,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 //					entityKey.getIdentifier(),
 //					entityDescriptor.getEntityName()
 //			);
-			return null;
+			return entityDescriptor;
 		}
 
 		final EntityPersister concreteType = session.getFactory().getMetamodel().findEntityDescriptor( concreteEntityName );
@@ -771,6 +771,11 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				listener.onPostLoad( postLoadEvent );
 			}
 		}
+	}
+
+	@Override
+	public EntityPersister getConcreteDescriptor() {
+		return concreteDescriptor;
 	}
 
 	@Override

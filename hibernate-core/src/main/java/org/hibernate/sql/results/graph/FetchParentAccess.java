@@ -16,7 +16,7 @@ import org.hibernate.query.NavigablePath;
  *
  * @author Steve Ebersole
  */
-public interface FetchParentAccess {
+public interface FetchParentAccess extends Initializer {
 	FetchParentAccess findFirstEntityDescriptorAccess();
 
 	Object getParentKey();

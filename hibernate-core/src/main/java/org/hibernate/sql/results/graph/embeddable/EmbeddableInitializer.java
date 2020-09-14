@@ -14,7 +14,7 @@ import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 /**
  * @author Steve Ebersole
  */
-public interface EmbeddableInitializer extends Initializer, FetchParentAccess {
+public interface EmbeddableInitializer extends FetchParentAccess {
 	@Override
 	EmbeddableValuedModelPart getInitializedPart();
 

@@ -106,6 +106,7 @@ public class CircularFetchImpl implements BiDirectionalFetch, Association {
 				() -> {
 					if ( timing == FetchTiming.IMMEDIATE ) {
 						return new EntitySelectFetchInitializer(
+								parentAccess,
 								referencedModelPart,
 								getReferencedPath(),
 								entityMappingType.getEntityPersister(),

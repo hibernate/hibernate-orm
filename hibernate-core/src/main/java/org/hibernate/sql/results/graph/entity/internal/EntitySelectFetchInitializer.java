@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.results.graph.entity.internal;
 
+import java.util.Collection;
 import java.util.function.Consumer;
 
 import org.hibernate.NotYetImplementedFor6Exception;
@@ -14,6 +15,7 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.persister.entity.EntityPersister;
@@ -21,11 +23,11 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.AbstractFetchParentAccess;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
+import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.graph.entity.EntityLoadingLogger;
-import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
-import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
@@ -37,6 +39,7 @@ import static org.hibernate.internal.log.LoggingHelper.toLoggableString;
 public class EntitySelectFetchInitializer extends AbstractFetchParentAccess implements EntityInitializer {
 	private static final String CONCRETE_NAME = EntitySelectFetchInitializer.class.getSimpleName();
 
+	private FetchParentAccess parentAccess;
 	private final NavigablePath navigablePath;
 	private final boolean isEnhancedForLazyLoading;
 	private final boolean nullable;
@@ -48,11 +51,13 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 	protected Object entityInstance;
 
 	public EntitySelectFetchInitializer(
+			FetchParentAccess parentAccess,
 			EntityValuedModelPart referencedModelPart,
 			NavigablePath fetchedNavigable,
 			EntityPersister concreteDescriptor,
 			DomainResultAssembler identifierAssembler,
 			boolean nullable) {
+		this.parentAccess = parentAccess;
 		this.navigablePath = fetchedNavigable;
 		this.concreteDescriptor = concreteDescriptor;
 		this.identifierAssembler = identifierAssembler;
@@ -81,6 +86,20 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 
 	@Override
 	public void initializeInstance(RowProcessingState rowProcessingState) {
+		Collection<AttributeMapping> attributeMappings;
+		if ( parentAccess instanceof EmbeddableInitializer ) {
+			attributeMappings = ( (EmbeddableInitializer) parentAccess ).getInitializedPart()
+					.getEmbeddableTypeDescriptor()
+					.getAttributeMappings();
+		}
+		else {
+			attributeMappings = ( (EntityInitializer) parentAccess ).getConcreteDescriptor().getAttributeMappings();
+		}
+
+		if ( !attributeMappings.contains( referencedModelPart ) ) {
+			return;
+		}
+
 		if ( entityInstance != null ) {
 			return;
 		}
@@ -225,6 +244,11 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 		else {
 			super.registerResolutionListener( listener );
 		}
+	}
+
+	@Override
+	public EntityPersister getConcreteDescriptor() {
+		return concreteDescriptor;
 	}
 
 	@Override

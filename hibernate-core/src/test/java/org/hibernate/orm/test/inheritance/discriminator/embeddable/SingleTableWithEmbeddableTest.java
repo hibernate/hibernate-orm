@@ -4,8 +4,15 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.inheritance.discriminator.embeddable;
+package org.hibernate.orm.test.inheritance.discriminator.embeddable;
 
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import javax.persistence.CollectionTable;
 import javax.persistence.Embeddable;
 import javax.persistence.Embedded;
@@ -22,54 +29,48 @@ import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderColumn;
 import javax.persistence.Table;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.junit.Test;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Andrea Boriero
  */
 @TestForIssue(jiraKey = "HHH-11037")
-public class TablePerClassWithEmbeddableTest extends BaseCoreFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {Person.class, Employee.class};
-	}
+@DomainModel(
+		annotatedClasses = {
+				SingleTableWithEmbeddableTest.Person.class, SingleTableWithEmbeddableTest.Employee.class
+		}
+)
+@SessionFactory
+public class SingleTableWithEmbeddableTest {
 
 	@Test
-	public void testSelectFromEmbeddedField() {
-		doInHibernate( this::sessionFactory, session -> {
+	public void testSelectFromEmbeddedField(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			session.createNativeQuery( "select * from employee_emb_person_map" ).getResultList();
 		} );
 	}
 
 	@Test
-	public void testSelectFromSubclass() {
-		doInHibernate( this::sessionFactory, session -> {
+	public void testSelectFromSubclass(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			session.createNativeQuery( "select * from embeddable_person_map" ).getResultList();
 		} );
 	}
 
 	@Test
-	public void testSelectFromParent() {
-		doInHibernate( this::sessionFactory, session -> {
+	public void testSelectFromParent(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			session.createNativeQuery( "select * from person_map" ).getResultList();
 		} );
 	}
 
 	@Entity(name = "Person")
-	@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+	@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 	public static abstract class Person implements Serializable {
 
 		@Id

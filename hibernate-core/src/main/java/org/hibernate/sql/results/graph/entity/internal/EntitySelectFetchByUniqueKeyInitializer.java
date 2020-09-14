@@ -15,6 +15,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
+import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 /**
@@ -24,13 +25,14 @@ public class EntitySelectFetchByUniqueKeyInitializer extends EntitySelectFetchIn
 	private final ToOneAttributeMapping fetchedAttribute;
 
 	public EntitySelectFetchByUniqueKeyInitializer(
+			FetchParentAccess parentAccess,
 			EntityValuedModelPart referencedModelPart,
 			ToOneAttributeMapping fetchedAttribute,
 			NavigablePath fetchedNavigable,
 			EntityPersister concreteDescriptor,
 			DomainResultAssembler identifierAssembler,
 			boolean nullable) {
-		super( referencedModelPart, fetchedNavigable, concreteDescriptor, identifierAssembler, nullable );
+		super( parentAccess, referencedModelPart, fetchedNavigable, concreteDescriptor, identifierAssembler, nullable );
 		this.fetchedAttribute = fetchedAttribute;
 	}
 

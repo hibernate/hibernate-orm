@@ -158,6 +158,11 @@ public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess imp
 	}
 
 	@Override
+	public EntityPersister getConcreteDescriptor() {
+		return getEntityDescriptor();
+	}
+
+	@Override
 	public String toString() {
 		return "EntityDelayedFetchInitializer(" + LoggingHelper.toLoggableString( navigablePath ) + ")";
 	}

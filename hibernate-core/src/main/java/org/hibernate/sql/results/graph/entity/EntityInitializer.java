@@ -6,11 +6,8 @@
  */
 package org.hibernate.sql.results.graph.entity;
 
-import org.hibernate.LockMode;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.sql.results.graph.FetchParentAccess;
-import org.hibernate.sql.results.graph.Initializer;
-import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -18,12 +15,14 @@ import org.hibernate.persister.entity.EntityPersister;
  *
  * @author Steve Ebersole
  */
-public interface EntityInitializer extends Initializer, FetchParentAccess {
+public interface EntityInitializer extends FetchParentAccess {
 
 	/**
 	 * Get the descriptor for the type of entity being initialized
 	 */
 	EntityPersister getEntityDescriptor();
+
+	EntityPersister getConcreteDescriptor();
 
 	@Override
 	default FetchParentAccess findFirstEntityDescriptorAccess() {

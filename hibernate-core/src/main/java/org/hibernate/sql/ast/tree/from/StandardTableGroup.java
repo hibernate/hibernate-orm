@@ -109,8 +109,10 @@ public class StandardTableGroup extends AbstractTableGroup {
 				for ( int i = 0; i < tableJoins.size(); i++ ) {
 					final TableReferenceJoin join = tableJoins.get( i );
 					assert join != null;
-					if ( join.getJoinedTableReference().getTableExpression().equals( tableExpression ) ) {
-						return join.getJoinedTableReference();
+					final TableReference resolveTableReference = join.getJoinedTableReference()
+							.getTableReference( tableExpression );
+					if ( resolveTableReference != null ) {
+						return resolveTableReference;
 					}
 				}
 			}

@@ -218,6 +218,14 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
+	public boolean containsTableReference(String tableExpression) {
+		if ( tableName.equals( tableExpression ) ) {
+			return true;
+		}
+		return super.containsTableReference( tableExpression );
+	}
+
+	@Override
 	public TableGroup createRootTableGroup(
 			NavigablePath navigablePath,
 			String explicitSourceAlias,

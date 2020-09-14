@@ -6520,11 +6520,11 @@ public abstract class AbstractEntityPersister
 		}
 
 		//noinspection unchecked
-		attributeMappings.forEach( (Consumer) fetchableConsumer );
+		attributeMappings.forEach( fetchableConsumer );
 
 		if ( treatTargetType.isTypeOrSuperType( this ) ) {
 			visitSubTypeAttributeMappings(
-					attributeMapping -> fetchableConsumer.accept( (Fetchable) attributeMapping )
+					attributeMapping -> fetchableConsumer.accept( attributeMapping )
 			);
 		}
 	}

@@ -642,6 +642,9 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 	}
 
 	public void setWithClauseFragment(AST ast, String withClauseFragment) {
+		// Normally, the from element is added first, but since the with clause could introduce joins,
+		// we have to move the from element to the end to retain the proper join order
+		getFromClause().moveFromElementToEnd( this );
 		this.withClauseAst = ast;
 		this.withClauseFragment = withClauseFragment;
 	}

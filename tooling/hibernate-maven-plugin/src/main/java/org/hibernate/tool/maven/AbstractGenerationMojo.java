@@ -77,7 +77,7 @@ public abstract class AbstractGenerationMojo extends AbstractMojo {
 
     // For configuration
     /** The name of a property file, e.g. hibernate.properties. */
-    @Parameter(defaultValue = "${project.basedir}/src/main/hibernate/hibernate.properties")
+    @Parameter(defaultValue = "${project.basedir}/src/main/resources/hibernate.properties")
     private File propertyFile;
 
     // Not exposed for now

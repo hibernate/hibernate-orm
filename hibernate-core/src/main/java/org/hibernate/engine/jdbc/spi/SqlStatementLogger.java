@@ -6,15 +6,14 @@
  */
 package org.hibernate.engine.jdbc.spi;
 
-import java.sql.Statement;
-import java.util.concurrent.TimeUnit;
-
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.internal.Formatter;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.build.AllowSysOut;
-
 import org.jboss.logging.Logger;
+
+import java.sql.Statement;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Centralize logging for SQL statements.
@@ -27,6 +26,7 @@ public class SqlStatementLogger {
 
 	private boolean logToStdout;
 	private boolean format;
+	private final boolean highlight;
 
 	/**
 	 * Configuration value that indicates slow query. (In milliseconds) 0 - disabled.
@@ -37,29 +37,42 @@ public class SqlStatementLogger {
 	 * Constructs a new SqlStatementLogger instance.
 	 */
 	public SqlStatementLogger() {
-		this( false, false );
+		this( false, false, false );
 	}
 
 	/**
 	 * Constructs a new SqlStatementLogger instance.
 	 *
 	 * @param logToStdout Should we log to STDOUT in addition to our internal logger.
-	 * @param format Should we format the statements prior to logging
+	 * @param format Should we format the statements in the console and log
 	 */
 	public SqlStatementLogger(boolean logToStdout, boolean format) {
-		this( logToStdout, format, 0 );
+		this( logToStdout, format, false );
 	}
 
 	/**
 	 * Constructs a new SqlStatementLogger instance.
 	 *
 	 * @param logToStdout Should we log to STDOUT in addition to our internal logger.
-	 * @param format Should we format the statements prior to logging
+	 * @param format Should we format the statements in the console and log
+	 * @param highlight Should we highlight the statements in the console
+	 */
+	public SqlStatementLogger(boolean logToStdout, boolean format, boolean highlight) {
+		this( logToStdout, format, highlight, 0 );
+	}
+
+	/**
+	 * Constructs a new SqlStatementLogger instance.
+	 *
+	 * @param logToStdout Should we log to STDOUT in addition to our internal logger.
+	 * @param format Should we format the statements in the console and log
+	 * @param highlight Should we highlight the statements in the console
 	 * @param logSlowQuery Should we logs query which executed slower than specified milliseconds. 0 - disabled.
 	 */
-	public SqlStatementLogger(boolean logToStdout, boolean format, long logSlowQuery) {
+	public SqlStatementLogger(boolean logToStdout, boolean format, boolean highlight, long logSlowQuery) {
 		this.logToStdout = logToStdout;
 		this.format = format;
+		this.highlight = highlight;
 		this.logSlowQuery = logSlowQuery;
 	}
 
@@ -120,14 +133,18 @@ public class SqlStatementLogger {
 	 */
 	@AllowSysOut
 	public void logStatement(String statement, Formatter formatter) {
-		if ( format ) {
-			if ( logToStdout || LOG.isDebugEnabled() ) {
+		if ( logToStdout || LOG.isDebugEnabled() ) {
+			if ( format ) {
 				statement = formatter.format( statement );
+			}
+			if ( highlight ) {
+				statement = FormatStyle.HIGHLIGHT.getFormatter().format( statement );
 			}
 		}
 		LOG.debug( statement );
 		if ( logToStdout ) {
-			System.out.println( "Hibernate: " + statement );
+			String prefix = highlight ? "\u001b[35m[Hibernate]\u001b[0m " : "Hibernate: ";
+			System.out.println( prefix + statement );
 		}
 	}
 

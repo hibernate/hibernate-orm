@@ -58,7 +58,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 			}
 			finally {
 				jdbcExecuteStatementEnd();
-				sqlStatementLogger.logSlowQuery( statement, executeStartNanos );
+				sqlStatementLogger.logSlowQuery( getStatementSql( statement ), executeStartNanos );
 			}
 			postExtract( rs, statement );
 			return rs;
@@ -91,7 +91,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 			}
 			finally {
 				jdbcExecuteStatementEnd();
-				sqlStatementLogger.logSlowQuery( callableStatement, executeStartNanos );
+				sqlStatementLogger.logSlowQuery( getStatementSql( callableStatement ), executeStartNanos );
 			}
 			postExtract( rs, callableStatement );
 			return rs;
@@ -146,7 +146,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 			}
 			finally {
 				jdbcExecuteStatementEnd();
-				sqlStatementLogger.logSlowQuery( statement, executeStartNanos );
+				sqlStatementLogger.logSlowQuery( getStatementSql( statement ), executeStartNanos );
 			}
 			postExtract( rs, statement );
 			return rs;
@@ -176,7 +176,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 			}
 			finally {
 				jdbcExecuteStatementEnd();
-				sqlStatementLogger.logSlowQuery( statement, executeStartNanos );
+				sqlStatementLogger.logSlowQuery( getStatementSql( statement ), executeStartNanos );
 			}
 			postExtract( rs, statement );
 			return rs;
@@ -201,7 +201,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 		}
 		finally {
 			jdbcExecuteStatementEnd();
-			sqlStatementLogger.logSlowQuery( statement, executeStartNanos );
+			sqlStatementLogger.logSlowQuery( getStatementSql( statement ), executeStartNanos );
 		}
 	}
 
@@ -221,7 +221,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 		}
 		finally {
 			jdbcExecuteStatementEnd();
-			sqlStatementLogger.logSlowQuery( statement, executeStartNanos );
+			sqlStatementLogger.logSlowQuery( getStatementSql( statement ), executeStartNanos );
 		}
 	}
 
@@ -231,4 +231,8 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 		}
 	}
 
+	private String getStatementSql(Statement statement) {
+		String sql = jdbcCoordinator.getResourceRegistry().getStatementSql( statement );
+		return sql != null ? sql : statement.toString();
+	}
 }

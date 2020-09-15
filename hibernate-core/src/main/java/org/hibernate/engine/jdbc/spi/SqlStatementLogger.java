@@ -6,6 +6,7 @@
  */
 package org.hibernate.engine.jdbc.spi;
 
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.concurrent.TimeUnit;
 
@@ -129,19 +130,6 @@ public class SqlStatementLogger {
 		if ( logToStdout ) {
 			System.out.println( "Hibernate: " + statement );
 		}
-	}
-
-	/**
-	 * Log a slow SQL query
-	 *
-	 * @param statement SQL statement.
-	 * @param startTimeNanos Start time in nanoseconds.
-	 */
-	public void logSlowQuery(Statement statement, long startTimeNanos) {
-		if ( logSlowQuery < 1 ) {
-			return;
-		}
-		logSlowQuery( statement.toString(), startTimeNanos );
 	}
 
 	/**

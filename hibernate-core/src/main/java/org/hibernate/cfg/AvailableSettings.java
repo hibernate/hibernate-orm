@@ -743,6 +743,11 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	String FORMAT_SQL ="hibernate.format_sql";
 
 	/**
+	 * Enable highlighting of SQL logged to the console using ANSI escape codes
+	 */
+	String HIGHLIGHT_SQL ="hibernate.highlight_sql";
+
+	/**
 	 * Add comments to the generated SQL
 	 */
 	String USE_SQL_COMMENTS ="hibernate.use_sql_comments";

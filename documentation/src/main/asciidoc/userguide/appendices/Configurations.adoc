@@ -621,6 +621,9 @@ Write all SQL statements to the console. This is an alternative to setting the l
 `*hibernate.format_sql*` (e.g. `true` or `false` (default value))::
 Pretty-print the SQL in the log and console.
 
+`*hibernate.highlight_sql*` (e.g. `true` (default value) or `false`)::
+Colorize the SQL in the console using ANSI escape codes.
+
 `*hibernate.use_sql_comments*` (e.g. `true` or `false` (default value))::
 If true, Hibernate generates comments inside the SQL, for easier debugging.
 

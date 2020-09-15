@@ -69,6 +69,10 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	 */
 	void addEntityBinding(PersistentClass persistentClass) throws DuplicateMappingException;
 
+	default void addEntityBindingForMappedSuperclass(String mappedSuperclassName, PersistentClass persistentClass ){
+
+	}
+
 	/**
 	 * Needed for SecondPass handling
 	 */

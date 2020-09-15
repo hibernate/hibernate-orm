@@ -325,6 +325,11 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		entityBindingMap.put( entityName, persistentClass );
 	}
 
+	@Override
+	public void addEntityBindingForMappedSuperclass(String className, PersistentClass persistentClass) {
+		entityBindingMap.putIfAbsent( className, persistentClass );
+	}
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Collection handling
 

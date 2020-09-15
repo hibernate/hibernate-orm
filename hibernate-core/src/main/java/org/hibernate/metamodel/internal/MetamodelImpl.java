@@ -93,6 +93,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 
 	private final Map<String,String> imports = new ConcurrentHashMap<>();
 	private final Map<String,EntityPersister> entityPersisterMap = new ConcurrentHashMap<>();
+	private final Map<String,EntityPersister> mappedSuperclassPersisterMap = new ConcurrentHashMap<>();
 	private final Map<Class,String> entityProxyInterfaceMap = new ConcurrentHashMap<>();
 	private final Map<String,CollectionPersister> collectionPersisterMap = new ConcurrentHashMap<>();
 	private final Map<String,Set<String>> collectionRolesByEntityParticipant = new ConcurrentHashMap<>();
@@ -212,6 +213,37 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 								)
 						);
 					}
+				}
+			}
+		}
+
+		for ( final MappedSuperclass mappedSuperclass : mappingMetadata.getMappedSuperclassMappingsCopy() ) {
+			final String mappedSuperclassName = mappedSuperclass.getMappedClass().getName();
+			final PersistentClass entityBinding = mappingMetadata.getEntityBinding( mappedSuperclassName );
+			if ( entityBinding != null ) {
+				final EntityPersister entityPersister = entityPersisterMap.get( entityBinding.getClassName() );
+				if ( entityPersister != null ) {
+					/*
+					If the MappedSuperclass has a parent with an associated EntityPersister then the parent EntityPersister
+					will be used when the MappedSuperclass is used in an association.
+					 E.g.
+					   @Inheritance(strategy = InheritanceType.JOINED)
+						class Person {
+							...
+						}
+
+						@MappedSuperclass
+    					class Employee extends Person {
+    						...
+    					}
+
+    					@Entity
+						public class Task {
+							...
+							private Employee employee;
+						}
+					 */
+					mappedSuperclassPersisterMap.putIfAbsent( mappedSuperclassName, entityPersister );
 				}
 			}
 		}
@@ -701,7 +733,10 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 	public EntityPersister entityPersister(String entityName) throws MappingException {
 		EntityPersister result = entityPersisterMap.get( entityName );
 		if ( result == null ) {
-			throw new MappingException( "Unknown entity: " + entityName );
+			result = mappedSuperclassPersisterMap.get( entityName );
+			if ( result == null ) {
+				throw new MappingException( "Unknown entity: " + entityName );
+			}
 		}
 		return result;
 	}
@@ -718,7 +753,11 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 		}
 
 		if ( entityPersister == null ) {
-			throw new UnknownEntityTypeException( "Unable to locate persister: " + byClass.getName() );
+			entityPersister = mappedSuperclassPersisterMap.get( byClass.getName() );
+			if ( entityPersister == null ) {
+
+				throw new UnknownEntityTypeException( "Unable to locate persister: " + byClass.getName() );
+			}
 		}
 
 		return entityPersister;
@@ -726,9 +765,12 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 
 	@Override
 	public EntityPersister locateEntityPersister(String byName) {
-		final EntityPersister entityPersister = entityPersisterMap.get( byName );
+		EntityPersister entityPersister = entityPersisterMap.get( byName );
 		if ( entityPersister == null ) {
-			throw new UnknownEntityTypeException( "Unable to locate persister: " + byName );
+			entityPersister = mappedSuperclassPersisterMap.get( byName );
+			if ( entityPersister == null ) {
+				throw new UnknownEntityTypeException( "Unable to locate persister: " + byName );
+			}
 		}
 		return entityPersister;
 	}

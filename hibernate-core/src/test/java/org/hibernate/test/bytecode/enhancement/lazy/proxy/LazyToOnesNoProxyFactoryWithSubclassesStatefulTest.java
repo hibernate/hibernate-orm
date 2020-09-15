@@ -31,6 +31,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.property.access.spi.Getter;
+import org.hibernate.property.access.spi.Setter;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.stat.Statistics;
@@ -426,6 +427,11 @@ public class LazyToOnesNoProxyFactoryWithSubclassesStatefulTest extends BaseNonC
 		@Override
 		public Getter getIdentifierGetter() {
 			return pojoEntityTuplizer.getIdentifierGetter();
+		}
+
+		@Override
+		public Setter getIdentifiersSetter() {
+			return pojoEntityTuplizer.getIdentifiersSetter();
 		}
 
 		@Override

@@ -16,15 +16,18 @@ import javax.persistence.ManyToOne;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.OneToMany;
 
+import org.hibernate.Hibernate;
+
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.legacy.Custom;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.hamcrest.CoreMatchers;
-
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Andrea Boriero
@@ -39,31 +42,33 @@ public class MappedSuperclassAsLazyAssociationTest extends BaseCoreFunctionalTes
 				Person.class,
 				Custom.class,
 				Employee.class,
-				FloatingEmployee.class,
-				AnotherEmployee.class,
+				InTrainingEmployee.class,
+				RemoteEmployee.class,
 				Task.class
 		};
 	}
 
 	@Before
 	public void setUp() {
-		AnotherEmployee anotherEmployee = new AnotherEmployee();
-		anotherEmployee.setName( "another" );
-		anotherEmployee.setSecondName( "second" );
+		RemoteEmployee remoteEmployee = new RemoteEmployee();
+		remoteEmployee.setName( "another" );
+		remoteEmployee.setSecondName( "second" );
+		remoteEmployee.setTitle( "Software Engineer" );
 
-		FloatingEmployee floatingEmployee = new FloatingEmployee();
+		InTrainingEmployee floatingEmployee = new InTrainingEmployee();
 		floatingEmployee.setName( "floating" );
 
 		Task task = new Task();
 		task.setName( "task" );
+		task.setEmployee( remoteEmployee );
+		task.setFloatingEmployee( floatingEmployee );
 
 		inTransaction(
 				session -> {
-					session.save( anotherEmployee );
+					session.save( remoteEmployee );
 
 					session.save( floatingEmployee );
 
-					task.setEmployee( anotherEmployee );
 					session.save( task );
 				} );
 		taskName = task.getName();
@@ -75,8 +80,8 @@ public class MappedSuperclassAsLazyAssociationTest extends BaseCoreFunctionalTes
 				session -> {
 					session.createQuery( "delete from Task" ).executeUpdate();
 					session.createQuery( "delete from Task" ).executeUpdate();
-					session.createQuery( "delete from FloatingEmployee" ).executeUpdate();
-					session.createQuery( "delete from AnotherEmployee" ).executeUpdate();
+					session.createQuery( "delete from InTrainingEmployee" ).executeUpdate();
+					session.createQuery( "delete from RemoteEmployee" ).executeUpdate();
 					session.createQuery( "delete from Person" ).executeUpdate();
 				}
 		);
@@ -87,7 +92,12 @@ public class MappedSuperclassAsLazyAssociationTest extends BaseCoreFunctionalTes
 		inTransaction(
 				session -> {
 					Task task = session.get( Task.class, taskName );
-					assertThat( task.getEmployee(), CoreMatchers.instanceOf( AnotherEmployee.class ) );
+					assertFalse( Hibernate.isInitialized( task.getEmployee() ) );
+					assertThat( task.getEmployee().getName(), is( "another" ) );
+					assertThat( task.getEmployee().getTitle(), is( "Software Engineer" ) );
+
+					assertTrue( Hibernate.isInitialized( task.getEmployee() ) );
+
 				}
 		);
 	}
@@ -96,10 +106,14 @@ public class MappedSuperclassAsLazyAssociationTest extends BaseCoreFunctionalTes
 	public void testHql() {
 		inTransaction(
 				session -> {
-					List<Task> list = session.createQuery( "select t from Task t join t.employee", Task.class ).list();
+					List<Task> list = session.createQuery( "select t from Task t", Task.class ).list();
 
 					Task task = list.get( 0 );
-					assertThat( task.getEmployee(), CoreMatchers.instanceOf( AnotherEmployee.class ) );
+					assertFalse( Hibernate.isInitialized( task.getEmployee() ) );
+					assertThat( task.getEmployee().getName(), is( "another" ) );
+					assertThat( task.getEmployee().getTitle(), is( "Software Engineer" ) );
+
+					assertTrue( Hibernate.isInitialized( task.getEmployee() ) );
 				}
 		);
 	}
@@ -127,6 +141,8 @@ public class MappedSuperclassAsLazyAssociationTest extends BaseCoreFunctionalTes
 	public static abstract class Employee extends Person {
 		private List<Task> tasks;
 
+		private String title;
+
 		@OneToMany
 		public List<Task> getTasks() {
 			return tasks;
@@ -135,14 +151,33 @@ public class MappedSuperclassAsLazyAssociationTest extends BaseCoreFunctionalTes
 		protected void setTasks(List<Task> tasks) {
 			this.tasks = tasks;
 		}
+
+		public String getTitle() {
+			return title;
+		}
+
+		public void setTitle(String title) {
+			this.title = title;
+		}
 	}
 
-	@Entity(name = "FloatingEmployee")
-	public static class FloatingEmployee extends Employee {
+	@MappedSuperclass
+	public static abstract class FloatingEmployee extends Employee {
+
 	}
 
-	@Entity(name = "AnotherEmployee")
-	public static class AnotherEmployee extends Employee {
+	@Entity(name = "InTrainingEmployee")
+	public static class InTrainingEmployee extends FloatingEmployee {
+
+	}
+
+	@MappedSuperclass
+	public static abstract class NoFloatingEmployee extends Employee {
+
+	}
+
+	@Entity(name = "RemoteEmployee")
+	public static class RemoteEmployee extends NoFloatingEmployee {
 		private String secondName;
 
 		public String getSecondName() {
@@ -158,24 +193,35 @@ public class MappedSuperclassAsLazyAssociationTest extends BaseCoreFunctionalTes
 	public static class Task {
 		private String name;
 
-		private Employee employee;
+		private NoFloatingEmployee employee;
+
+		private FloatingEmployee floatingEmployee;
 
 		@Id
 		public String getName() {
 			return name;
 		}
 
-		@ManyToOne(fetch = FetchType.LAZY)
-		public Employee getEmployee() {
-			return employee;
-		}
-
 		protected void setName(String name) {
 			this.name = name;
 		}
 
-		protected void setEmployee(Employee employee) {
+		@ManyToOne(fetch = FetchType.LAZY)
+		public NoFloatingEmployee getEmployee() {
+			return employee;
+		}
+
+		protected void setEmployee(NoFloatingEmployee employee) {
 			this.employee = employee;
+		}
+
+		@ManyToOne(fetch = FetchType.LAZY)
+		public FloatingEmployee getFloatingEmployee() {
+			return floatingEmployee;
+		}
+
+		public void setFloatingEmployee(FloatingEmployee floatingEmployee) {
+			this.floatingEmployee = floatingEmployee;
 		}
 	}
 

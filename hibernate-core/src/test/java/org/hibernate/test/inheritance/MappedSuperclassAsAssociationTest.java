@@ -39,16 +39,16 @@ public class MappedSuperclassAsAssociationTest extends BaseCoreFunctionalTestCas
 				Custom.class,
 				Employee.class,
 				FloatingEmployee.class,
-				AnotherEmployee.class,
+				RemoteEmployee.class,
 				Task.class
 		};
 	}
 
 	@Before
 	public void setUp() {
-		AnotherEmployee anotherEmployee = new AnotherEmployee();
-		anotherEmployee.setName( "another" );
-		anotherEmployee.setSecondName( "second" );
+		RemoteEmployee remoteEmployee = new RemoteEmployee();
+		remoteEmployee.setName( "another" );
+		remoteEmployee.setSecondName( "second" );
 
 		FloatingEmployee floatingEmployee = new FloatingEmployee();
 		floatingEmployee.setName( "floating" );
@@ -58,11 +58,11 @@ public class MappedSuperclassAsAssociationTest extends BaseCoreFunctionalTestCas
 
 		inTransaction(
 				session -> {
-					session.save( anotherEmployee );
+					session.save( remoteEmployee );
 
 					session.save( floatingEmployee );
 
-					task.setEmployee( anotherEmployee );
+					task.setEmployee( remoteEmployee );
 					session.save( task );
 				} );
 		taskName = task.getName();
@@ -75,7 +75,7 @@ public class MappedSuperclassAsAssociationTest extends BaseCoreFunctionalTestCas
 					session.createQuery( "delete from Task" ).executeUpdate();
 					session.createQuery( "delete from Task" ).executeUpdate();
 					session.createQuery( "delete from FloatingEmployee" ).executeUpdate();
-					session.createQuery( "delete from AnotherEmployee" ).executeUpdate();
+					session.createQuery( "delete from RemoteEmployee" ).executeUpdate();
 					session.createQuery( "delete from Person" ).executeUpdate();
 				}
 		);
@@ -86,7 +86,7 @@ public class MappedSuperclassAsAssociationTest extends BaseCoreFunctionalTestCas
 		inTransaction(
 				session -> {
 					Task task = session.get( Task.class, taskName );
-					assertThat( task.getEmployee(), CoreMatchers.instanceOf( AnotherEmployee.class ) );
+					assertThat( task.getEmployee(), CoreMatchers.instanceOf( RemoteEmployee.class ) );
 				}
 		);
 	}
@@ -98,7 +98,8 @@ public class MappedSuperclassAsAssociationTest extends BaseCoreFunctionalTestCas
 					List<Task> list = session.createQuery( "select t from Task t join t.employee", Task.class ).list();
 
 					Task task = list.get( 0 );
-					assertThat( task.getEmployee(), CoreMatchers.instanceOf( AnotherEmployee.class ) );
+					String name = task.getName();
+					assertThat( task.getEmployee(), CoreMatchers.instanceOf( RemoteEmployee.class ) );
 				}
 		);
 	}
@@ -140,8 +141,8 @@ public class MappedSuperclassAsAssociationTest extends BaseCoreFunctionalTestCas
 	public static class FloatingEmployee extends Employee {
 	}
 
-	@Entity(name = "AnotherEmployee")
-	public static class AnotherEmployee extends Employee {
+	@Entity(name = "RemoteEmployee")
+	public static class RemoteEmployee extends Employee {
 		private String secondName;
 
 		public String getSecondName() {

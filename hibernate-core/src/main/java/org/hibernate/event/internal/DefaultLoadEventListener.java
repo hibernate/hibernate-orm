@@ -424,7 +424,19 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			EntityKey keyToLoad,
 			PersistenceContext persistenceContext) {
 		// return new uninitialized proxy
-		Object proxy = persister.createProxy( event.getEntityId(), event.getSession() );
+		final Object proxy;
+		final String entityClassName = event.getEntityClassName();
+		if ( persister.getEntityMetamodel().getName().equals( entityClassName ) ) {
+			proxy = persister.createProxy( event.getEntityId(), event.getSession() );
+		}
+		else {
+			proxy = persister.createProxyForMappedSuperclass(
+					event.getEntityId(),
+					entityClassName,
+					event.getSession()
+			);
+		}
+
 		persistenceContext.getBatchFetchQueue().addBatchLoadableEntityKey( keyToLoad );
 		persistenceContext.addProxy( keyToLoad, proxy );
 		return proxy;

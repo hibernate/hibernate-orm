@@ -17,7 +17,6 @@ import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
-import org.hibernate.bytecode.spi.NotInstrumentedException;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
@@ -32,6 +31,7 @@ import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.walking.spi.EntityDefinition;
+import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.Type;
@@ -646,6 +646,14 @@ public interface EntityPersister extends EntityDefinition {
 	Object createProxy(Serializable id, SharedSessionContractImplementor session)
 	throws HibernateException;
 
+	default Object createProxyForMappedSuperclass(
+			Serializable id,
+			String mappedSuperclassName,
+			SharedSessionContractImplementor session)
+			throws HibernateException{
+		return null;
+	}
+
 	/**
 	 * Is this a new transient instance?
 	 */
@@ -848,5 +856,8 @@ public interface EntityPersister extends EntityDefinition {
 	@Deprecated
 	default boolean canIdentityInsertBeDelayed() {
 		return false;
+	}
+
+	default void addMappedSuperclassSubclassProxyFacorty(String mappedSuperclassName, ProxyFactory proxyFactory) {
 	}
 }

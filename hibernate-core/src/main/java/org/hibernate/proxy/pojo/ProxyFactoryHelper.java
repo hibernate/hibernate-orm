@@ -16,6 +16,7 @@ import org.hibernate.MappingException;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Subclass;
@@ -83,10 +84,14 @@ public final class ProxyFactoryHelper {
 	public static void validateProxyability(final PersistentClass persistentClass) {
 		Iterator properties = persistentClass.getPropertyIterator();
 		Class clazz = persistentClass.getMappedClass();
+		validateProxyability( properties, clazz );
+	}
+
+	public static void validateProxyability(final Iterator properties, Class mappedClass) {
 		while ( properties.hasNext() ) {
 			Property property = (Property) properties.next();
-			validateGetterSetterMethodProxyability( "Getter", property.getGetter( clazz ).getMethod() );
-			validateGetterSetterMethodProxyability( "Setter", property.getSetter( clazz ).getMethod() );
+			validateGetterSetterMethodProxyability( "Getter", property.getGetter( mappedClass ).getMethod() );
+			validateGetterSetterMethodProxyability( "Setter", property.getSetter( mappedClass ).getMethod() );
 		}
 	}
 

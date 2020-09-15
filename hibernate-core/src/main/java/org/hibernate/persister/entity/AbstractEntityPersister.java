@@ -123,6 +123,7 @@ import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
+import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.sql.Alias;
 import org.hibernate.sql.Delete;
 import org.hibernate.sql.Insert;
@@ -293,6 +294,9 @@ public abstract class AbstractEntityPersister
 
 	private final Map subclassPropertyAliases = new HashMap();
 	private final Map subclassPropertyColumnNames = new HashMap();
+
+	private Map<String,ProxyFactory> mappedSuperclassSubclassProxyFactory;
+
 
 	/**
 	 * Warning:
@@ -5011,8 +5015,24 @@ public abstract class AbstractEntityPersister
 		return entityMetamodel.getOptimisticLockStyle();
 	}
 
+	@Override
 	public Object createProxy(Serializable id, SharedSessionContractImplementor session) throws HibernateException {
 		return entityMetamodel.getTuplizer().createProxy( id, session );
+	}
+
+	@Override
+	public Object createProxyForMappedSuperclass(
+			Serializable id, String mappedSuperclassName, SharedSessionContractImplementor session)
+			throws HibernateException {
+		return mappedSuperclassSubclassProxyFactory.get( mappedSuperclassName ).getProxy( id, session );
+	}
+
+	@Override
+	public void addMappedSuperclassSubclassProxyFacorty(String mappedSuperclassName, ProxyFactory proxyFactory) {
+		if ( mappedSuperclassSubclassProxyFactory == null ) {
+			mappedSuperclassSubclassProxyFactory = new HashMap<>();
+		}
+		mappedSuperclassSubclassProxyFactory.put( mappedSuperclassName, proxyFactory );
 	}
 
 	public String toString() {

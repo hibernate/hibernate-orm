@@ -6,9 +6,7 @@
  */
 package org.hibernate.tuple.entity;
 
-import java.lang.reflect.Method;
 import java.util.Map;
-import java.util.Set;
 
 import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
@@ -16,7 +14,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.bytecode.spi.BytecodeProvider;
-import org.hibernate.bytecode.spi.ProxyFactoryFactory;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.cfg.Environment;
 import org.hibernate.classic.Lifecycle;
@@ -31,9 +28,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.proxy.ProxyFactory;
-import org.hibernate.proxy.pojo.ProxyFactoryHelper;
 import org.hibernate.tuple.Instantiator;
-import org.hibernate.type.CompositeType;
 
 /**
  * An {@link EntityTuplizer} specific to the pojo entity mode.
@@ -80,49 +75,13 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 
 	@Override
 	protected ProxyFactory buildProxyFactory(PersistentClass persistentClass, Getter idGetter, Setter idSetter) {
-		// determine the id getter and setter methods from the proxy interface (if any)
-		// determine all interfaces needed by the resulting proxy
-		final String entityName = getEntityName();
-		final Class mappedClass = persistentClass.getMappedClass();
-		final Class proxyInterface = persistentClass.getProxyInterface();
-
-		final Set<Class> proxyInterfaces = ProxyFactoryHelper.extractProxyInterfaces( persistentClass, entityName );
-
-		Method proxyGetIdentifierMethod = ProxyFactoryHelper.extractProxyGetIdentifierMethod( idGetter, proxyInterface );
-		Method proxySetIdentifierMethod = ProxyFactoryHelper.extractProxySetIdentifierMethod( idSetter, proxyInterface );
-
-		ProxyFactory pf = buildProxyFactoryInternal( persistentClass, idGetter, idSetter );
-		try {
-
-			ProxyFactoryHelper.validateGetterSetterMethodProxyability( "Getter", proxyGetIdentifierMethod );
-			ProxyFactoryHelper.validateGetterSetterMethodProxyability( "Setter", proxySetIdentifierMethod );
-
-			ProxyFactoryHelper.validateProxyability( persistentClass );
-
-			pf.postInstantiate(
-					entityName,
-					mappedClass,
-					proxyInterfaces,
-					proxyGetIdentifierMethod,
-					proxySetIdentifierMethod,
-					persistentClass.hasEmbeddedIdentifier() ?
-							(CompositeType) persistentClass.getIdentifier().getType() :
-							null
-			);
-		}
-		catch (HibernateException he) {
-			LOG.unableToCreateProxyFactory( entityName, he );
-			pf = null;
-		}
-		return pf;
-	}
-
-	protected ProxyFactory buildProxyFactoryInternal(
-			PersistentClass persistentClass,
-			Getter idGetter,
-			Setter idSetter) {
-		ProxyFactoryFactory proxyFactory = getFactory().getServiceRegistry().getService( ProxyFactoryFactory.class );
-		return proxyFactory.buildProxyFactory( getFactory() );
+		return new PojoPoxyBuilder().buildProxyFactory(
+				persistentClass,
+				getEntityName(),
+				idGetter,
+				idSetter,
+				getFactory()
+		);
 	}
 
 	@Override

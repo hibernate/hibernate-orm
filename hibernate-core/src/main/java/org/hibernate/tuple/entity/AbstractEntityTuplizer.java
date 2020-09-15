@@ -780,6 +780,11 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	}
 
 	@Override
+	public Setter getIdentifiersSetter() {
+		return idSetter;
+	}
+
+	@Override
 	public Getter getVersionGetter() {
 		final EntityMetamodel entityMetamodel = getEntityMetamodel();
 		if ( entityMetamodel.isVersioned() ) {

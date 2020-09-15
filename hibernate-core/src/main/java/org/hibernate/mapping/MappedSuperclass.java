@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.hibernate.boot.spi.MetadataBuildingContext;
+
 /**
  * Represents a @MappedSuperclass.
  * A @MappedSuperclass can be a superclass of an @Entity (root or not)
@@ -29,15 +31,17 @@ import java.util.List;
 public class MappedSuperclass {
 	private final MappedSuperclass superMappedSuperclass;
 	private final PersistentClass superPersistentClass;
+	private MetadataBuildingContext metadataBuildingContext;
 	private final List declaredProperties;
 	private Class mappedClass;
 	private Property identifierProperty;
 	private Property version;
 	private Component identifierMapper;
 
-	public MappedSuperclass(MappedSuperclass superMappedSuperclass, PersistentClass superPersistentClass) {
+	public MappedSuperclass(MappedSuperclass superMappedSuperclass, PersistentClass superPersistentClass, MetadataBuildingContext metadataBuildingContext) {
 		this.superMappedSuperclass = superMappedSuperclass;
 		this.superPersistentClass = superPersistentClass;
+		this.metadataBuildingContext = metadataBuildingContext;
 		this.declaredProperties = new ArrayList();
 	}
 
@@ -209,5 +213,9 @@ public class MappedSuperclass {
 		}
 
 		return false;
+	}
+
+	public Class getProxyInterface() {
+		return metadataBuildingContext.getBootstrapContext().getClassLoaderAccess().classForName( mappedClass.getName() );
 	}
 }

@@ -21,7 +21,6 @@ import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.proxy.ProxyFactory;
-import org.hibernate.proxy.map.MapProxyFactory;
 import org.hibernate.tuple.DynamicMapInstantiator;
 import org.hibernate.tuple.Instantiator;
 
@@ -69,24 +68,13 @@ public class DynamicMapEntityTuplizer extends AbstractEntityTuplizer {
 
 	@Override
 	protected ProxyFactory buildProxyFactory(PersistentClass mappingInfo, Getter idGetter, Setter idSetter) {
-
-		ProxyFactory pf = new MapProxyFactory();
-		try {
-			//TODO: design new lifecycle for ProxyFactory
-			pf.postInstantiate(
-					getEntityName(),
-					null,
-					null,
-					null,
-					null,
-					null
-			);
-		}
-		catch (HibernateException he) {
-			LOG.unableToCreateProxyFactory( getEntityName(), he );
-			pf = null;
-		}
-		return pf;
+		return new DynamicMapProxyBuilder().buildProxyFactory(
+				mappingInfo,
+				getEntityName(),
+				idGetter,
+				idSetter,
+				getFactory()
+		);
 	}
 
 	@Override

@@ -71,6 +71,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.persister.spi.PersisterFactory;
+import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.Type;
@@ -244,6 +245,11 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 						}
 					 */
 					mappedSuperclassPersisterMap.putIfAbsent( mappedSuperclassName, entityPersister );
+					ProxyFactory proxyFactory = entityPersister.getEntityMetamodel().buildMappedSuperclassProxyFactory(
+							mappedSuperclass,
+							sessionFactory
+					);
+					entityPersister.addMappedSuperclassSubclassProxyFacorty( mappedSuperclassName, proxyFactory );
 				}
 			}
 		}

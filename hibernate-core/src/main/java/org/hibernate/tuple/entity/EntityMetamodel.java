@@ -31,9 +31,11 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Component;
+import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.tuple.IdentifierProperty;
 import org.hibernate.tuple.InDatabaseValueGenerationStrategy;
@@ -420,6 +422,11 @@ public class EntityMetamodel implements Serializable {
 		else {
 			entityTuplizer = entityTuplizerFactory.constructTuplizer( tuplizerClassName, this, persistentClass );
 		}
+	}
+
+	public ProxyFactory buildMappedSuperclassProxyFactory(MappedSuperclass mappedSuperclass, SessionFactoryImplementor sessionFactory ){
+		final ProxyBuilder proxyBuilder = ProxyFactoryBuilder.build( entityMode );
+		return proxyBuilder.buildProxyFactory( mappedSuperclass, entityTuplizer.getIdentifierGetter(), entityTuplizer.getIdentifiersSetter(), sessionFactory );
 	}
 
 	private static GenerationStrategyPair buildGenerationStrategyPair(

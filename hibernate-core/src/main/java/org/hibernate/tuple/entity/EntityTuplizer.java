@@ -15,6 +15,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.property.access.spi.Getter;
+import org.hibernate.property.access.spi.Setter;
 import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.tuple.Tuplizer;
 
@@ -267,6 +268,13 @@ public interface EntityTuplizer extends Tuplizer {
 	 * @return The getter for the identifier property.
 	 */
 	Getter getIdentifierGetter();
+
+	/**
+	 * Retrieve the setter for the identifier property.  May return null.
+	 *
+	 * @return The setter for the identifier property.
+	 */
+	Setter getIdentifiersSetter();
 
 	/**
 	 * Retrieve the getter for the version property.  May return null.

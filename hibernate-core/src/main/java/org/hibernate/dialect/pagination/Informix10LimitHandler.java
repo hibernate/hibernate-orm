@@ -21,8 +21,8 @@ public class Informix10LimitHandler extends AbstractLimitHandler {
 	@Override
 	public String processSql(String sql, RowSelection selection) {
 		final boolean hasOffset = LimitHelper.hasFirstRow( selection );
-		String sqlOffset = hasOffset ? " SKIP " + selection.getFirstRow() : "";
-		String sqlLimit = " FIRST " + getMaxOrLimit( selection );
+		String sqlOffset = hasOffset ? " skip " + selection.getFirstRow() : "";
+		String sqlLimit = " first " + getMaxOrLimit( selection );
 		String sqlOffsetLimit = sqlOffset + sqlLimit;
 		String result = new StringBuilder( sql.length() + 10 )
 				.append( sql )

@@ -49,7 +49,7 @@ public class SQLServer2012Dialect extends SQLServer2008Dialect {
 	@Override
 	public String getQuerySequencesString() {
 		// The upper-case name should work on both case-sensitive and case-insensitive collations.
-		return "select * from INFORMATION_SCHEMA.SEQUENCES";
+		return "select * from information_schema.sequences";
 	}
 
 	@Override

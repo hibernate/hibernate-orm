@@ -101,7 +101,7 @@ public class ForUpdateFragment {
 			}
 			return "";
 		}
-		// TODO:  pass lockmode
+		// TODO:  pass lock mode
 		if(isNowaitEnabled) {
 			return dialect.getForUpdateNowaitString( aliases.toString() );
 		}

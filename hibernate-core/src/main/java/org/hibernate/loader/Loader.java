@@ -1975,7 +1975,7 @@ public abstract class Loader {
 			final String result = persister.getSubclassForDiscriminatorValue( discriminatorValue );
 
 			if ( result == null ) {
-				//woops we got an instance of another class hierarchy branch
+				//whoops we got an instance of another class hierarchy branch
 				throw new WrongClassException(
 						"Discriminator: " + discriminatorValue,
 						id,

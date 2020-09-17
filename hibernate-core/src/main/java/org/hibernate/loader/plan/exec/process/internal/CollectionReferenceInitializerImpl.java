@@ -128,7 +128,7 @@ public class CollectionReferenceInitializerImpl implements CollectionReferenceIn
 		// todo : try org.hibernate.loader.plan.exec.process.spi.ResultSetProcessingContext.getOwnerProcessingState() ??
 		//			-- specifically to return its ResultSetProcessingContext.EntityReferenceProcessingState#getEntityInstance()
 		if ( collectionOwner == null ) {
-			//TODO: This is assertion is disabled because there is a bug that means the
+			//TODO: This assertion is disabled because there is a bug that means the
 			//	  original owner of a transient, uninitialized collection is not known
 			//	  if the collection is re-referenced by a different object associated
 			//	  with the current Session

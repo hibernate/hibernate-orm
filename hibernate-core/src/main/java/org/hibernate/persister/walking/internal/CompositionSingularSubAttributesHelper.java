@@ -171,7 +171,7 @@ public final class CompositionSingularSubAttributesHelper {
 												"Cannot build AnyMappingDefinition from non-any-typed attribute"
 										);
 									}
-									// todo : not sure how lazy is propogated into the component for a subattribute of type any
+									// todo : not sure how lazy is propagated into the component for a sub-attribute of type any
 									return new StandardAnyTypeDefinition( (AnyType) aType, false );
 								}
 

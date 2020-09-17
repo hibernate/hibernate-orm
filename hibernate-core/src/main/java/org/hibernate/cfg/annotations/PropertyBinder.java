@@ -212,8 +212,8 @@ public class PropertyBinder {
 	private Property bind(Property prop) {
 		if (isId) {
 			final RootClass rootClass = ( RootClass ) holder.getPersistentClass();
-			//if an xToMany, it as to be wrapped today.
-			//FIXME this pose a problem as the PK is the class instead of the associated class which is not really compliant with the spec
+			//if an xToMany, it has to be wrapped today.
+			//FIXME this poses a problem as the PK is the class instead of the associated class which is not really compliant with the spec
 			if ( isXToMany || entityBinder.wrapIdsInEmbeddedComponents() ) {
 				Component identifier = (Component) rootClass.getIdentifier();
 				if (identifier == null) {

@@ -49,7 +49,7 @@ public class OneToOneSecondPass implements SecondPass {
 	private String cascadeStrategy;
 	private Ejb3JoinColumn[] joinColumns;
 
-	//that suck, we should read that from the property mainly
+	//that sucks, we should read that from the property mainly
 	public OneToOneSecondPass(
 			String mappedBy,
 			String ownerEntity,

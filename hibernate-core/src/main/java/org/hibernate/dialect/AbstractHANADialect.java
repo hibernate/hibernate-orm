@@ -428,7 +428,7 @@ public abstract class AbstractHANADialect extends Dialect {
 	// stream passed in via
 	// PreparedStatement.setCharacterStream(int,Reader,long)
 	// after the stream has been processed. this causes problems later if we are
-	// using non-contexual lob creation and HANA then closes our StringReader.
+	// using non-contextual lob creation and HANA then closes our StringReader.
 	// see test case LobLocatorTest
 
 	private static class HANAClobTypeDescriptor extends ClobTypeDescriptor {
@@ -932,8 +932,7 @@ public abstract class AbstractHANADialect extends Dialect {
 
 		registerHanaKeywords();
 
-		// createBlob() and createClob() are not supported by the HANA JDBC
-		// driver
+		// createBlob() and createClob() are not supported by the HANA JDBC driver
 		getDefaultProperties().setProperty( AvailableSettings.NON_CONTEXTUAL_LOB_CREATION, "true" );
 
 		// getGeneratedKeys() is not supported by the HANA JDBC driver

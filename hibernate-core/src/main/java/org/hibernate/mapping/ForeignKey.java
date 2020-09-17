@@ -121,7 +121,7 @@ public class ForeignKey extends Constraint {
 	}
 
 	/**
-	 * Validates that columnspan of the foreignkey and the primarykey is the same.
+	 * Validates that column span of the foreign key and the primary key is the same.
 	 * <p/>
 	 * Furthermore it aligns the length of the underlying tables columns.
 	 */

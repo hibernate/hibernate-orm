@@ -529,7 +529,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 					int[] dirty = persister.resolveAttributeIndexes( ( (SelfDirtinessTracker) entity ).$$_hibernate_getDirtyAttributes() );
 
 					// HHH-12051 - filter non-updatable attributes
-					// TODO: add Updateability to EnhancementContext and skip dirty tracking of those attributes
+					// TODO: add Updatability to EnhancementContext and skip dirty tracking of those attributes
 					int count = 0;
 					for ( int i : dirty ) {
 						if ( persister.getPropertyUpdateability()[i] ) {
@@ -573,7 +573,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		boolean dirtyCheckPossible = true;
 
 		if ( dirtyProperties == null ) {
-			// Interceptor returned null, so do the dirtycheck ourself, if possible
+			// Interceptor returned null, so do the dirty check ourself, if possible
 			try {
 				session.getEventListenerManager().dirtyCalculationStart();
 

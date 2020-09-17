@@ -438,7 +438,7 @@ public class DB2Dialect extends Dialect {
 	/**
 	 * {@inheritDoc}
 	 * <p/>
-	 * NOTE : DB2 is know to support parameters in the <tt>SELECT</tt> clause, but only in casted form
+	 * NOTE : DB2 is known to support parameters in the <tt>SELECT</tt> clause, but only in casted form
 	 * (see {@link #requiresCastingOfParametersInSelectClause()}).
 	 */
 	@Override
@@ -566,7 +566,7 @@ public class DB2Dialect extends Dialect {
 			// we have one of:
 			//		* ASC + NULLS LAST
 			//		* DESC + NULLS FIRST
-			// so just drop the null precedence.  *NOTE: we could pass along the null precedence here,
+			// so just drop the null precedence.  *NOTE*: we could pass along the null precedence here,
 			// but only DB2 9.7 or greater understand it; dropping it is more portable across DB2 versions
 			return super.renderOrderByElement( expression, collation, order, NullPrecedence.NONE );
 		}

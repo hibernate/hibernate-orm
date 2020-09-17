@@ -60,7 +60,7 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	 * Constructs a SQLServer2005LimitHandler
 	 */
 	public SQLServer2005LimitHandler() {
-		// NOP
+		// NOOP
 	}
 
 	@Override
@@ -363,7 +363,7 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 		}
 		else {
 			// rather than taking the first match, we now iterate all matches
-			// until we determine a match that isn't considered "ignorable'.
+			// until we determine a match that isn't considered "ignorable".
 			while ( matcher.find() && matcher.groupCount() > 0 ) {
 				final int position = matcher.start();
 				if ( !isPositionIgnorable( ignoreRangeList, position ) ) {

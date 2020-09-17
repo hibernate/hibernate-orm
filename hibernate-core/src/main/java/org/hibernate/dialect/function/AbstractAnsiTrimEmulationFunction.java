@@ -44,7 +44,7 @@ public abstract class AbstractAnsiTrimEmulationFunction implements SQLFunction {
 	@Override
 	public final String render(Type argumentType, List args, SessionFactoryImplementor factory) throws QueryException {
 		// According to both the ANSI-SQL and JPA specs, trim takes a variable number of parameters between 1 and 4.
-		// at least one paramer (trimSource) is required.  From the SQL spec:
+		// at least one parameter (trimSource) is required.  From the SQL spec:
 		//
 		// <trim function> ::=
 		//      TRIM <left paren> <trim operands> <right paren>

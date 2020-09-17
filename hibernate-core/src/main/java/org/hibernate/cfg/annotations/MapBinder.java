@@ -185,7 +185,7 @@ public class MapBinder extends CollectionBinder {
 		}
 		else {
 			//this is a true Map mapping
-			//TODO ugly copy/pastle from CollectionBinder.bindManyToManySecondPass
+			//TODO ugly copy/paste from CollectionBinder.bindManyToManySecondPass
 			String mapKeyType;
 			Class target = void.class;
 			/*
@@ -322,7 +322,7 @@ public class MapBinder extends CollectionBinder {
 						column.setTable( mapValue.getCollectionTable() );
 					}
 					elementBinder.setColumns( elementColumns );
-					//do not call setType as it extract the type from @Type
+					//do not call setType as it extracts the type from @Type
 					//the algorithm generally does not apply for map key anyway
 					elementBinder.setKey(true);
 					elementBinder.setType(
@@ -338,7 +338,7 @@ public class MapBinder extends CollectionBinder {
 			}
 			//FIXME pass the Index Entity JoinColumns
 			if ( !collection.isOneToMany() ) {
-				//index column shoud not be null
+				//index column should not be null
 				for (Ejb3JoinColumn col : mapKeyManyToManyColumns) {
 					col.forceNotNull();
 				}

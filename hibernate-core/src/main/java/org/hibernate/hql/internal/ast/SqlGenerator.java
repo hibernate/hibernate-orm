@@ -337,7 +337,7 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 
 	@Override
 	protected void fromFragmentSeparator(AST a) {
-		// check two "adjecent" nodes at the top of the from-clause tree
+		// check two "adjacent" nodes at the top of the from-clause tree
 		AST next = a.getNextSibling();
 		if ( next == null || !hasText( a ) ) {
 			return;
@@ -373,7 +373,7 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 		else if ( right.getRealOrigin() == left ||
 				( right.getRealOrigin() != null && right.getRealOrigin() == left.getRealOrigin() ) ) {
 			// right represents a joins originating from left; or
-			// both right and left reprersent joins originating from the same FromElement
+			// both right and left represent joins originating from the same FromElement
 			if ( right.getJoinSequence() != null && right.getJoinSequence().isThetaStyle() ) {
 				writeCrossJoinSeparator();
 			}

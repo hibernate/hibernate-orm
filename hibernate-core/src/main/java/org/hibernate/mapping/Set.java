@@ -86,7 +86,7 @@ public class Set extends Collection {
 			}
 			if ( pk.getColumnSpan() == getKey().getColumnSpan() ) {
 				//for backward compatibility, allow a set with no not-null
-				//element columns, using all columns in the row locater SQL
+				//element columns, using all columns in the row locator SQL
 				//TODO: create an implicit not null constraint on all cols?
 			}
 			else {

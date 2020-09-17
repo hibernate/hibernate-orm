@@ -607,7 +607,7 @@ public class LoadQueryJoinAndFetchProcessor {
 			// 		when processing the Join part of this we are able to look up the "lhs table alias" because we know
 			// 		the 'lhs' QuerySpace.
 			//
-			// Good idea to be able resolve a Join by lookup on the rhs and lhs uid?  If so, Fetch
+			// Good idea to be able to resolve a Join by lookup on the rhs and lhs uid?  If so, Fetch
 
 			// for many-to-many we have 3 table aliases.  By way of example, consider a normal m-n: User<->Role
 			// where User is the FetchOwner and Role (User.roles) is the Fetch.  We'd have:

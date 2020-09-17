@@ -96,7 +96,7 @@ public class MappedSuperclass {
 	}
 
 	public Property getIdentifierProperty() {
-		//get direct identifiermapper or the one from the super mappedSuperclass
+		//get direct identifierMapper or the one from the super mappedSuperclass
 		// or the one from the super persistentClass
 		Property propagatedIdentifierProp = identifierProperty;
 		if ( propagatedIdentifierProp == null ) {
@@ -142,7 +142,7 @@ public class MappedSuperclass {
 	}
 
 	public Component getIdentifierMapper() {
-		//get direct identifiermapper or the one from the super mappedSuperclass
+		//get direct identifierMapper or the one from the super mappedSuperclass
 		// or the one from the super persistentClass
 		Component propagatedMapper = identifierMapper;
 		if ( propagatedMapper == null ) {

@@ -223,7 +223,7 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 			}
 		}
 
-		// clear the fields that are marked as dirty in the dirtyness tracker
+		// clear the fields that are marked as dirty in the dirtiness tracker
 		if ( entity instanceof SelfDirtinessTracker ) {
 			( (SelfDirtinessTracker) entity ).$$_hibernate_clearDirtyAttributes();
 		}

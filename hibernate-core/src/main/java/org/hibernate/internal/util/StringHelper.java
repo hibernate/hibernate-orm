@@ -156,7 +156,7 @@ public final class StringHelper {
 		// enclosed in parentheses (HHH-10383)
 		// Examples:
 		// 1) "... IN (?1", we assume that "?1" does not need to be enclosed because there
-		// there is already a right-parenthesis; we assume there will be a matching right-parenthesis.
+		// is already a right-parenthesis; we assume there will be a matching right-parenthesis.
 		// 2) "... IN ?1", we assume that "?1" needs to be enclosed in parentheses, because there
 		// is no left-parenthesis.
 
@@ -441,8 +441,8 @@ public final class StringHelper {
 		if ( string == null ) {
 			return 0;
 		}
-		// Impl note: takes advantage of the fact that an escpaed single quote
-		// embedded within a quote-block can really be handled as two seperate
+		// Impl note: takes advantage of the fact that an escaped single quote
+		// embedded within a quote-block can really be handled as two separate
 		// quote-blocks for the purposes of this method...
 		int count = 0;
 		int stringLength = string.length();
@@ -601,7 +601,7 @@ public final class StringHelper {
 	 */
 	private static String cleanAlias(String alias) {
 		char[] chars = alias.toCharArray();
-		// short cut check...
+		// shortcut check...
 		if ( !Character.isLetter( chars[0] ) ) {
 			for ( int i = 1; i < chars.length; i++ ) {
 				// as soon as we encounter our first letter, return the substring

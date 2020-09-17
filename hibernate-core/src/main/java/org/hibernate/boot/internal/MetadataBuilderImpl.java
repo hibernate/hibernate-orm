@@ -121,7 +121,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		this.sources = sources;
 		this.options = new MetadataBuildingOptionsImpl( serviceRegistry );
 		this.bootstrapContext = new BootstrapContextImpl( serviceRegistry, options );
-		//this is needed only fro implementig deprecated method
+		//this is needed only for implementing deprecated method
 		options.setBootstrapContext( bootstrapContext );
 
 		for ( MetadataSourcesContributor contributor :

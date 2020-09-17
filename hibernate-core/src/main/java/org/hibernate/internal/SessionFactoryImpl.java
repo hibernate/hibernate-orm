@@ -447,7 +447,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	public Session openSession() throws HibernateException {
 		final CurrentTenantIdentifierResolver currentTenantIdentifierResolver = getCurrentTenantIdentifierResolver();
-		//We can only use reuse the defaultSessionOpenOptions as a constant when there is no TenantIdentifierResolver
+		//We can only reuse the defaultSessionOpenOptions as a constant when there is no TenantIdentifierResolver
 		if ( currentTenantIdentifierResolver != null ) {
 			return this.withOptions().openSession();
 		}
@@ -458,7 +458,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	public Session openTemporarySession() throws HibernateException {
 		final CurrentTenantIdentifierResolver currentTenantIdentifierResolver = getCurrentTenantIdentifierResolver();
-		//We can only use reuse the defaultSessionOpenOptions as a constant when there is no TenantIdentifierResolver
+		//We can only reuse the defaultSessionOpenOptions as a constant when there is no TenantIdentifierResolver
 		if ( currentTenantIdentifierResolver != null ) {
 			return buildTemporarySessionOpenOptions()
 					.openSession();
@@ -1088,7 +1088,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			return interceptor;
 		}
 
-		// prefer the SF-scoped interceptor, prefer that to any Session-scoped interceptor prototype
+		// prefer the SessionFactory-scoped interceptor, prefer that to any Session-scoped interceptor prototype
 		final Interceptor optionsInterceptor = options.getInterceptor();
 		if ( optionsInterceptor != null && optionsInterceptor != EmptyInterceptor.INSTANCE ) {
 			return optionsInterceptor;
@@ -1299,7 +1299,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		@SuppressWarnings("unchecked")
 		public T connectionReleaseMode(ConnectionReleaseMode connectionReleaseMode) {
 			// NOTE : Legacy behavior (when only ConnectionReleaseMode was exposed) was to always acquire a
-			// Connection using ConnectionAcquisitionMode.AS_NEEDED..
+			// Connection using ConnectionAcquisitionMode.AS_NEEDED.
 
 			final PhysicalConnectionHandlingMode handlingMode = PhysicalConnectionHandlingMode.interpret(
 					ConnectionAcquisitionMode.AS_NEEDED,
@@ -1367,7 +1367,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		@SuppressWarnings("unchecked")
 		public T clearEventListeners() {
 			if ( listeners == null ) {
-				//Needs to initialize explicitly to an empty list as otherwise "null" immplies the default listeners will be applied
+				//Needs to initialize explicitly to an empty list as otherwise "null" implies the default listeners will be applied
 				this.listeners = new ArrayList<SessionEventListener>( 3 );
 			}
 			else {

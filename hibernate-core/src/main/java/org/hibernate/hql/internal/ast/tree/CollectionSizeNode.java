@@ -53,7 +53,7 @@ public class CollectionSizeNode extends SqlNode implements SelectExpression {
 		// where <owner-key-column> = alias_.<collection-key-column>
 
 		// Note that `collectionPropertyMapping.toColumns(.., COLLECTION_SIZE)` returns the complete `count(...)` SQL
-		// expression, hence he expectation for a single expression regardless of the number of columns in the key.
+		// expression, hence the expectation for a single expression regardless of the number of columns in the key.
 
 		final String collectionTableAlias = collectionOwnerFromElement.getFromClause()
 				.getAliasGenerator()

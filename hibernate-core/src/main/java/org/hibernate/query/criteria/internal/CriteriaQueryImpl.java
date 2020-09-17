@@ -174,7 +174,7 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 
 	@Override
 	public CriteriaQuery<T> where(Predicate... predicates) {
-		// TODO : assuming this should be a conjuntion, but the spec does not say specifically...
+		// TODO : assuming this should be a conjunction, but the spec does not say specifically...
 		queryStructure.setRestriction( criteriaBuilder().and( predicates ) );
 		return this;
 	}

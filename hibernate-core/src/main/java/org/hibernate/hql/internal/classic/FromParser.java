@@ -165,7 +165,7 @@ public class FromParser implements Parser {
 				// (AS is always optional, for consistency with SQL/OQL)
 
 				// process the "new" HQL style where aliases are assigned
-				// _after_ the class name or path expression ie. using
+				// _after_ the class name or path expression, ie. using
 				// the AS construction
 
 				if ( entityName != null ) {
@@ -315,8 +315,8 @@ public class FromParser implements Parser {
 
 	public void end(QueryTranslatorImpl q) {
 		if ( afterMemberDeclarations ) {
-			//The exception throwned by the AST query translator contains the error token location, represented by line and column,
-			//but it hard to get that info here.
+			//The exception thrown by the AST query translator contains the error token location, represented by line and column,
+			//but it is hard to get that info here.
 			throw new QueryException( "alias not specified for IN" );
 		}
 	}

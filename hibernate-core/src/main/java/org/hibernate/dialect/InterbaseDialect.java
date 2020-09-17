@@ -42,7 +42,7 @@ public class InterbaseDialect extends Dialect {
 	};
 
 	/**
-	 * Constructs a InterbaseDialect
+	 * Constructs an InterbaseDialect
 	 */
 	public InterbaseDialect() {
 		super();

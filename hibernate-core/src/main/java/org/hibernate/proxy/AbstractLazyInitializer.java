@@ -188,7 +188,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 
 	protected void permissiveInitialization() {
 		if ( session == null ) {
-			//we have a detached collection thats set to null, reattach
+			//we have a detached collection that is set to null, reattach
 			if ( sessionFactoryUuid == null ) {
 				throw new LazyInitializationException( "could not initialize proxy [" + entityName + "#" + id + "] - no Session" );
 			}

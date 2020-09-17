@@ -120,7 +120,7 @@ public class ManyToOneType extends EntityType {
 
 	@Override
 	public boolean isAlwaysDirtyChecked() {
-		// always need to dirty-check, even when non-updateable;
+		// always need to dirty-check, even when non-updatable;
 		// this ensures that when the association is updated,
 		// the entity containing this association will be updated
 		// in the cache

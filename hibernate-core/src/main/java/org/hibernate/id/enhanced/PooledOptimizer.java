@@ -72,7 +72,7 @@ public class PooledOptimizer extends AbstractOptimizer implements InitialValueAw
 		if ( generationState.hiValue == null ) {
 			generationState.value = callback.getNextValue();
 			// unfortunately not really safe to normalize this
-			// to 1 as an initial value like we do the others
+			// to 1 as an initial value like we do for the others
 			// because we would not be able to control this if
 			// we are using a sequence...
 			if ( generationState.value.lt( 1 ) ) {

@@ -554,11 +554,11 @@ public abstract class CollectionBinder {
 
 		collection.setInverse( isMappedBy );
 
-		//many to many may need some second pass informations
+		//many to many may need some second pass information
 		if ( !oneToMany && isMappedBy ) {
 			metadataCollector.addMappedBy( getCollectionType().getName(), mappedBy, propertyName );
 		}
-		//TODO reducce tableBinder != null and oneToMany
+		//TODO reduce tableBinder != null and oneToMany
 		XClass collectionType = getCollectionType();
 		if ( inheritanceStatePerClass == null) throw new AssertionFailure( "inheritanceStatePerClass not set" );
 		SecondPass sp = getSecondPass(

@@ -31,7 +31,7 @@ public class CacheableResultTransformer implements ResultTransformer {
 
 	// array with the i-th element indicating whether the i-th
 	// expression returned by a query is included in the tuple;
-	// IMPLLEMENTATION NOTE:
+	// IMPLEMENTATION NOTE:
 	// "joined" and "fetched" associations may use the same SQL,
 	// but result in different tuple and cached values. This is
 	// because "fetched" associations are excluded from the tuple.

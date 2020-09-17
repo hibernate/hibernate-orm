@@ -30,13 +30,13 @@ import org.hibernate.type.Type;
 public class PathExpressionParser implements Parser {
 
 	//TODO: this class does too many things! we need a different
-	//kind of path expression parser for each of the diffferent
+	//kind of path expression parser for each of the different
 	//ways in which path expressions can occur
 
 	//We should actually rework this class to not implement Parser
 	//and just process path expressions in the most convenient way.
 
-	//The class is now way to complex!
+	//The class is now way too complex!
 
 	private int dotcount;
 	private String currentName;

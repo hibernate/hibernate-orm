@@ -470,7 +470,7 @@ aggregateExpr
 // Establishes the list of aliases being used by this query.
 fromClause {
 		// NOTE: This references the INPUT AST! (see http://www.antlr.org/doc/trees.html#Action%20Translation)
-		// the ouput AST (#fromClause) has not been built yet.
+		// the output AST (#fromClause) has not been built yet.
 		prepareFromClauseInputTree(#fromClause_in);
 	}
 	: #(f:FROM { pushFromClause(#fromClause,f); handleClauseStart( FROM ); } fromElementList ) {

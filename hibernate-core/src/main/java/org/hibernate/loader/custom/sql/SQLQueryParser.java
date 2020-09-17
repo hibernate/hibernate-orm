@@ -74,8 +74,8 @@ public class SQLQueryParser {
 		return processedSql;
 	}
 
-	// TODO: should "record" how many properties we have reffered to - and if we
-	//       don't get'em'all we throw an exception! Way better than trial and error ;)
+	// TODO: should "record" how many properties we have referred to - and if we
+	//       don't get them all we throw an exception! Way better than trial and error ;)
 	protected String substituteBrackets(String sqlQuery) throws QueryException {
 
 		if ( PREPARED_STATEMENT_PATTERN.matcher( sqlQuery.trim() ).matches() ) {
@@ -94,7 +94,7 @@ public class SQLQueryParser {
 				break;
 			}
 
-			// apend everything up until the next encountered open brace
+			// append everything up until the next encountered open brace
 			result.append( sqlQuery.substring( curr, left ) );
 
 			if ( ( right = sqlQuery.indexOf( '}', left + 1 ) ) < 0 ) {
@@ -206,7 +206,7 @@ public class SQLQueryParser {
 		else {
 			String[] columnAliases;
 
-			// Let return-propertys override whatever the persister has for aliases.
+			// Let return-properties override whatever the persister has for aliases.
 			columnAliases = ( String[] ) fieldResults.get(propertyName);
 			if ( columnAliases==null ) {
 				columnAliases = collectionPersister.getCollectionPropertyColumnAliases( propertyName, collectionSuffix );
@@ -247,7 +247,7 @@ public class SQLQueryParser {
 
 			String[] columnAliases;
 
-			// Let return-propertys override whatever the persister has for aliases.
+			// Let return-propertiess override whatever the persister has for aliases.
 			columnAliases = (String[]) fieldResults.get( propertyName );
 			if ( columnAliases == null ) {
 				columnAliases = persister.getSubclassPropertyColumnAliases( propertyName, suffix );

@@ -400,7 +400,7 @@ public class PersistentAttributesEnhancer extends EnhancerImpl {
 			String toArrayMethod = isMap ? "values().toArray()" : "toArray()";
 
 			// only remove elements not in the new collection or else we would loose those elements
-			// don't use iterator to avoid ConcurrentModException
+			// don't use iterator to avoid ConcurrentModificationException
 			fieldWriter.insertBefore(
 					String.format(
 							"  if (this.%3$s != null && %1$s) {%n" +
@@ -561,7 +561,7 @@ public class PersistentAttributesEnhancer extends EnhancerImpl {
 		managedCtClass.addInterface( compositeOwnerCtClass );
 
 		if ( enhancementContext.isCompositeClass( managedCtClass ) ) {
-			// if a composite have a embedded field we need to implement the TRACKER_CHANGER_NAME method as well
+			// if a composite has an embedded field we need to implement the TRACKER_CHANGER_NAME method as well
 			MethodWriter.write(
 					managedCtClass,
 					"public void %1$s(String name) {%n" +

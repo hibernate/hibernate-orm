@@ -52,7 +52,7 @@ import org.hibernate.type.Type;
  */
 public class CustomLoader extends Loader {
 
-	// Currently *not* cachable if autodiscover types is in effect (e.g. "select * ...")
+	// Currently *not* cacheable if auto-discover types are in effect (e.g. "select * ...")
 
 	private final String sql;
 	private final Set<Serializable> querySpaces = new HashSet<>();

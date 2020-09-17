@@ -208,7 +208,7 @@ public class BootstrapServiceRegistryBuilder {
 		final ClassLoaderService classLoaderService;
 		if ( providedClassLoaderService == null ) {
 			// Use a set.  As an example, in JPA, OsgiClassLoader may be in both
-			// the providedClassLoaders and the overridenClassLoader.
+			// the providedClassLoaders and the overriddenClassLoader.
 			final Set<ClassLoader> classLoaders = new HashSet<ClassLoader>();
 
 			if ( providedClassLoaders != null )  {

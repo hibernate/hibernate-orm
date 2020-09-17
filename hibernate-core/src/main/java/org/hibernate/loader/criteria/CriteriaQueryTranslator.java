@@ -213,7 +213,7 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 		}
 
 		if ( parent.equals( rootCriteria ) ) {
-			// if its the root criteria, we are done
+			// if it's the root criteria, we are done
 			return path;
 		}
 		else {
@@ -255,7 +255,7 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 				final AssociationType atype = (AssociationType) type;
 				final CollectionType ctype = type.isCollectionType() ? (CollectionType)type : null;
 				final Type elementType = (ctype != null) ? ctype.getElementType( sessionFactory ) : null;
-				// is the association a collection of components or value-types? (i.e a colloction of valued types?)
+				// is the association a collection of components or value-types? (i.e a collection of valued types?)
 				if ( ctype != null  && elementType.isComponentType() ) {
 					provider = new ComponentCollectionCriteriaInfoProvider( helper.getCollectionPersister(ctype.getRole()) );
 				}

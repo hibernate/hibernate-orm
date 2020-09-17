@@ -197,7 +197,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			this.transactionCoordinator = sharedOptions.getTransactionCoordinator();
 			this.jdbcCoordinator = sharedOptions.getJdbcCoordinator();
 
-			// todo : "wrap" the transaction to no-op comit/rollback attempts?
+			// todo : "wrap" the transaction to no-op commit/rollback attempts?
 			this.currentHibernateTransaction = sharedOptions.getTransaction();
 
 			if ( sharedOptions.shouldAutoJoinTransactions() ) {
@@ -243,7 +243,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	private StatementInspector interpret(StatementInspector statementInspector) {
 		if ( statementInspector == null ) {
 			// If there is no StatementInspector specified, map to the call
-			//		to the (deprecated) Interceptor #onPrepareStatement method
+			//		to the (deprecated) Interceptor#onPrepareStatement method
 			return (StatementInspector) interceptor::onPrepareStatement;
 		}
 		return statementInspector;
@@ -286,7 +286,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override
 	public UUID getSessionIdentifier() {
 		if ( this.sessionIdentifier == null ) {
-			//Lazily initialized: otherwise all the UUID generations will cause of significant amount of contention.
+			//Lazily initialized: otherwise all the UUID generations will cause significant amount of contention.
 			this.sessionIdentifier = StandardRandomStrategy.INSTANCE.generateUUID( null );
 		}
 		return sessionIdentifier;
@@ -853,7 +853,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				}
 			}
 			else if ( queryPlan.getTranslators()[0].getReturnTypes().length == 1 ) {
-				// if we have only a single return expression, its java type should match with the requested type
+				// if we have only a single return expression, its java type should match the requested type
 				final Type queryResultType = queryPlan.getTranslators()[0].getReturnTypes()[0];
 				if ( !resultClass.isAssignableFrom( queryResultType.getReturnedClass() ) ) {
 					throw new IllegalArgumentException(

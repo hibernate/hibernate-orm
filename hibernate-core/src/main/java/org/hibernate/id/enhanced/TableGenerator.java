@@ -737,7 +737,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 		if ( table == null ) {
 			table = namespace.createTable( qualifiedTableName.getObjectName(), false );
 
-			// todo : note sure the best solution here.  do we add the columns if missing?  other?
+			// todo : not sure the best solution here.  do we add the columns if missing?  other?
 			final Column segmentColumn = new ExportableColumn(
 					database,
 					table,

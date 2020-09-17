@@ -117,7 +117,7 @@ public class SelectClause extends SelectExpressionList {
 			throw new IllegalStateException( "SelectClause was already prepared!" );
 		}
 
-		//explicit = true;	// This is an explict Select.
+		//explicit = true;	// This is an explicit Select.
 		//ArrayList sqlResultTypeList = new ArrayList();
 		ArrayList queryReturnTypeList = new ArrayList();
 
@@ -177,7 +177,7 @@ public class SelectClause extends SelectExpressionList {
 			}
 		}
 
-		//init the aliases, after initing the constructornode
+		//init the aliases, after initiating the constructorNode
 		initAliases( selectExpressions );
 
 		if ( !getWalker().isShallowQuery() ) {
@@ -196,7 +196,7 @@ public class SelectClause extends SelectExpressionList {
 					FromElement origin = null;
 					if ( fromElement.getRealOrigin() == null ) {
 						// work around that crazy issue where the tree contains
-						// "empty" FromElements (no text); afaict, this is caused
+						// "empty" FromElements (no text); AFAICT, this is caused
 						// by FromElementFactory.createCollectionJoin()
 						if ( fromElement.getOrigin() == null ) {
 							throw new QueryException( "Unable to determine origin of join fetch [" + fromElement.getDisplayText() + "]" );

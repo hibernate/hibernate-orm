@@ -177,7 +177,7 @@ insertStatement
 	;
 
 setClause
-	// Simply re-use comparisionExpr, because it already correctly defines the EQ rule the
+	// Simply re-use comparisonExpr, because it already correctly defines the EQ rule the
 	// way it is needed here; not the most aptly named, but ah
 	: #( SET { out(" set "); } comparisonExpr[false] ( { out(", "); } comparisonExpr[false] )* )
 	;

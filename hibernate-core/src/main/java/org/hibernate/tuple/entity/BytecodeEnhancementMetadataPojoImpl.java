@@ -145,7 +145,7 @@ public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhanc
 		final PersistentAttributeInterceptable entity = (PersistentAttributeInterceptable) entityTuplizer
 				.instantiate( identifier, session );
 
-		// clear the fields that are marked as dirty in the dirtyness tracker
+		// clear the fields that are marked as dirty in the dirtiness tracker
 		if ( entity instanceof SelfDirtinessTracker ) {
 			( (SelfDirtinessTracker) entity ).$$_hibernate_clearDirtyAttributes();
 		}

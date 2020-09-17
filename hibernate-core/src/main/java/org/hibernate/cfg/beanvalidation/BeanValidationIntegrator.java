@@ -146,7 +146,7 @@ public class BeanValidationIntegrator implements Integrator {
 		}
 		else {
 			// otherwise check the validation modes
-			// todo : in many ways this duplicates thew checks done on the TypeSafeActivator when a ValidatorFactory could not be obtained
+			// todo : in many ways this duplicates the checks done on the TypeSafeActivator when a ValidatorFactory could not be obtained
 			validateMissingBeanValidationApi( modes );
 		}
 	}

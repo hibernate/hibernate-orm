@@ -384,7 +384,7 @@ public class SimpleValueBinder {
 		this.explicitType = explicitType;
 	}
 
-	//FIXME raise an assertion failure  if setResolvedTypeMapping(String) and setResolvedTypeMapping(Type) are use at the same time
+	//FIXME raise an assertion failure  if setResolvedTypeMapping(String) and setResolvedTypeMapping(Type) are used at the same time
 
 	public void setExplicitType(Type typeAnn) {
 		if ( typeAnn != null ) {
@@ -500,7 +500,7 @@ public class SimpleValueBinder {
 				simpleValue.setTypeParameters( typeDef.getParametersAsProperties() );
 			}
 			if ( typeParameters != null && typeParameters.size() != 0 ) {
-				//explicit type params takes precedence over type def params
+				//explicit type params take precedence over type def params
 				simpleValue.setTypeParameters( typeParameters );
 			}
 			simpleValue.setTypeName( type );

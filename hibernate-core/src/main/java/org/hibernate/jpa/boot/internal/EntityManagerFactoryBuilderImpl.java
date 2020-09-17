@@ -199,7 +199,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		Map mergedIntegrationSettings = null;
 		Properties properties = persistenceUnit.getProperties();
 		if ( properties != null ) {
-			// original integratin setting entries take precedence
+			// original integration setting entries take precedence
 			mergedIntegrationSettings = new HashMap( properties );
 			mergedIntegrationSettings.putAll( integrationSettings );
 		}
@@ -884,7 +884,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		// `IS_JTA_TXN_COORD` is a value set during `#normalizeTransactionCoordinator` to indicate whether
 		// the execution environment "is JTA" as best as it can tell..
 		//
-		// we use this value when JTA was not explicitly specified in regards the DataSource
+		// we use this value when JTA was not explicitly specified in regards to the DataSource
 		final boolean isJtaTransactionCoordinator = (boolean) mergedSettings.configurationValues.remove( IS_JTA_TXN_COORD );
 		final boolean isJta = useJtaDataSource == null ? isJtaTransactionCoordinator : useJtaDataSource;
 

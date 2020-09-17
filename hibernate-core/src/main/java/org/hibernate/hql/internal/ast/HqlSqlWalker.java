@@ -795,7 +795,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 			}
 
 			// After that, process the JOINs.
-			// Invoke a delegate to do the work, as this is farily complex.
+			// Invoke a delegate to do the work, as this is fairly complex.
 			JoinProcessor joinProcessor = new JoinProcessor( this );
 			joinProcessor.processJoins( qn );
 
@@ -952,7 +952,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 				parameterSpecs.add( 0, paramSpec );
 
 				if ( sessionFactoryHelper.getFactory().getDialect().requiresCastingOfParametersInSelectClause() ) {
-					// we need to wrtap the param in a cast()
+					// we need to wrap the param in a cast()
 					MethodNode versionMethodNode = (MethodNode) getASTFactory().create(
 							HqlSqlTokenTypes.METHOD_CALL,
 							"("
@@ -1348,7 +1348,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 	}
 
 	public boolean isShallowQuery() {
-		// select clauses for insert statements should alwasy be treated as shallow
+		// select clauses for insert statements should always be treated as shallow
 		return getStatementType() == INSERT || queryTranslatorImpl.isShallowQuery();
 	}
 

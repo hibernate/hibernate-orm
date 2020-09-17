@@ -162,7 +162,7 @@ public class Property implements Serializable, MetaAttributable {
 
 	public boolean isUpdateable() {
 		// if the property mapping consists of all formulas,
-		// make it non-updateable
+		// make it non-updatable
 		return updateable && !ArrayHelper.isAllFalse( value.getColumnUpdateability() );
 	}
 

@@ -1248,7 +1248,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	 * @return {@code true} indicates they can be applied, {@code false} otherwise.
 	 */
 	protected boolean canApplyAliasSpecificLockModeHints() {
-		// only procedure/function calls cannot i believe
+		// only procedure/function calls cannot I believe
 		return true;
 	}
 

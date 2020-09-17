@@ -436,7 +436,7 @@ public class SchemaManagementToolCoordinator {
 		 */
 		public static final MigrateSettingSelector INSTANCE = new MigrateSettingSelector();
 
-		// todo : should this define new migrattor-specific settings?
+		// todo : should this define new migrator-specific settings?
 		// for now we reuse the CREATE settings where applicable
 
 		@Override

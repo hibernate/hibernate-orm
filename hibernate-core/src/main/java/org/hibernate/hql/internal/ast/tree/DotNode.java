@@ -162,7 +162,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 		// Set the attributes of the property reference expression.
 		String propName = property.getText();
 		propertyName = propName;
-		// If the uresolved property path isn't set yet, just use the property name.
+		// If the unresolved property path isn't set yet, just use the property name.
 		if ( propertyPath == null ) {
 			propertyPath = propName;
 		}
@@ -559,7 +559,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 			return true;
 		}
 
-		// otherwise (subquery case) dont reuse the fromElement if we are processing the from-clause of the subquery
+		// otherwise (subquery case) don't reuse the fromElement if we are processing the from-clause of the subquery
 		return getWalker().getCurrentClauseType() != SqlTokenTypes.FROM;
 	}
 

@@ -481,7 +481,7 @@ public class AttributeFactory {
 				final org.hibernate.type.Type elementType = elementValue.getType();
 
 				// First, determine the type of the elements and use that to help determine the
-				// collection type)
+				// collection type
 				final Attribute.PersistentAttributeType elementPersistentAttributeType;
 				final Attribute.PersistentAttributeType persistentAttributeType;
 				if ( elementType.isAnyType() ) {
@@ -826,7 +826,7 @@ public class AttributeFactory {
 				}
 			};
 
-			// interpret the key, if one
+			// interpret the key, if one exists
 			if ( keyPersistentAttributeType != null ) {
 				this.keyValueContext = new ValueContext() {
 					public Value getHibernateValue() {

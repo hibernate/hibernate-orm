@@ -198,7 +198,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 			// command executions.
 			//
 			// Possible to just move the sql generation for dml stuff, but for
-			// consistency-sake probably best to just move responsiblity for
+			// consistency-sake probably best to just move responsibility for
 			// the generation phase completely into the delegates
 			// (QueryLoader/StatementExecutor) themselves.  Also, not sure why
 			// QueryLoader currently even has a dependency on this at all; does
@@ -538,7 +538,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 	@Override
 	public void validateScrollability() throws HibernateException {
 		// Impl Note: allows multiple collection fetches as long as the
-		// entire fecthed graph still "points back" to a single
+		// entire fetched graph still "points back" to a single
 		// root entity for return
 
 		errorIfDML();

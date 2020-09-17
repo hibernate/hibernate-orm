@@ -74,7 +74,7 @@ public class OneToMany implements Value {
 	}
 
 	public void createForeignKey() {
-		// no foreign key element of for a one-to-many
+		// no foreign key element for a one-to-many
 	}
 
 	public Iterator<Selectable> getColumnIterator() {

@@ -23,7 +23,7 @@ final public class Transformers {
 	public static final ToListResultTransformer TO_LIST = ToListResultTransformer.INSTANCE;
 
 	/**
-	 * Creates a resulttransformer that will inject aliased values into
+	 * Creates a ResultTransformer that will inject aliased values into
 	 * instances of Class via property methods or fields.
 	 */
 	public static ResultTransformer aliasToBean(Class target) {

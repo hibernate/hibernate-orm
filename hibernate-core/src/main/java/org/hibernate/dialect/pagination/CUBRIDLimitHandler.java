@@ -18,7 +18,7 @@ public class CUBRIDLimitHandler extends AbstractLimitHandler {
 	public static final CUBRIDLimitHandler INSTANCE = new CUBRIDLimitHandler();
 
 	private CUBRIDLimitHandler() {
-		// NOP
+		// NOOP
 	}
 
 	@Override

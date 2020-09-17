@@ -242,7 +242,7 @@ public final class PrimitiveWrapperHelper {
 			return (PrimitiveWrapperDescriptor<X>) DoubleDescriptor.INSTANCE;
 		}
 
-		// most likely void.class, which we can't really handle here
+		// most likely Void.class, which we can't really handle here
 		throw new IllegalArgumentException( "Unrecognized wrapper type class : " + wrapperClass.getName() );
 	}
 

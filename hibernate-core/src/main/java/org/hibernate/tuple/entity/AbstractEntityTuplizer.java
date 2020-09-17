@@ -248,7 +248,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 
 	@Override
 	public void setIdentifier(Object entity, Serializable id) throws HibernateException {
-		// 99% of the time the session is not needed.  Its only needed for certain brain-dead
+		// 99% of the time the session is not needed.  It's only needed for certain brain-dead
 		// interpretations of JPA 2 "derived identity" support
 		setIdentifier( entity, id, null );
 	}
@@ -506,7 +506,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 
 	@Override
 	public void resetIdentifier(Object entity, Serializable currentId, Object currentVersion) {
-		// 99% of the time the session is not needed.  Its only needed for certain brain-dead
+		// 99% of the time the session is not needed.  It's only needed for certain brain-dead
 		// interpretations of JPA 2 "derived identity" support
 		resetIdentifier( entity, currentId, currentVersion, null );
 	}
@@ -696,7 +696,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 
 	@Override
 	public final Object instantiate(Serializable id) throws HibernateException {
-		// 99% of the time the session is not needed.  Its only needed for certain brain-dead
+		// 99% of the time the session is not needed.  It's only needed for certain brain-dead
 		// interpretations of JPA 2 "derived identity" support
 		return instantiate( id, null );
 	}

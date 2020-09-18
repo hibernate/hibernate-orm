@@ -37,6 +37,7 @@ import org.hibernate.QueryException;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
@@ -586,7 +587,9 @@ public abstract class AbstractEntityPersister
 
 		this.navigableRole = new NavigableRole( persistentClass.getEntityName() );
 
-		if ( creationContext.getSessionFactory().getSessionFactoryOptions().isSecondLevelCacheEnabled() ) {
+		SessionFactoryOptions sessionFactoryOptions = creationContext.getSessionFactory().getSessionFactoryOptions();
+
+		if ( sessionFactoryOptions.isSecondLevelCacheEnabled() ) {
 			this.canWriteToCache = determineCanWriteToCache( persistentClass, cacheAccessStrategy );
 			this.canReadFromCache = determineCanReadFromCache( persistentClass, cacheAccessStrategy );
 			this.cacheAccessStrategy = cacheAccessStrategy;
@@ -737,7 +740,8 @@ public abstract class AbstractEntityPersister
 			final boolean lazy = ! EnhancementHelper.includeInBaseFetchGroup(
 					prop,
 					entityMetamodel.isInstrumented(),
-					creationContext.getSessionFactory().getSessionFactoryOptions().isEnhancementAsProxyEnabled()
+					sessionFactoryOptions.isEnhancementAsProxyEnabled(),
+					sessionFactoryOptions.isCollectionsInDefaultFetchGroupEnabled()
 			);
 
 			if ( lazy ) {
@@ -813,7 +817,8 @@ public abstract class AbstractEntityPersister
 			final boolean lazy = ! EnhancementHelper.includeInBaseFetchGroup(
 					prop,
 					entityMetamodel.isInstrumented(),
-					creationContext.getSessionFactory().getSessionFactoryOptions().isEnhancementAsProxyEnabled()
+					sessionFactoryOptions.isEnhancementAsProxyEnabled(),
+					sessionFactoryOptions.isCollectionsInDefaultFetchGroupEnabled()
 			);
 			while ( colIter.hasNext() ) {
 				Selectable thing = (Selectable) colIter.next();
@@ -924,7 +929,7 @@ public abstract class AbstractEntityPersister
 
 		this.cacheEntryHelper = buildCacheEntryHelper();
 
-		if ( creationContext.getSessionFactory().getSessionFactoryOptions().isSecondLevelCacheEnabled() ) {
+		if ( sessionFactoryOptions.isSecondLevelCacheEnabled() ) {
 			this.invalidateCache = canWriteToCache && determineWhetherToInvalidateCache( persistentClass, creationContext );
 		}
 		else {

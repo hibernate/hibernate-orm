@@ -449,6 +449,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	public boolean isCollectionsInDefaultFetchGroupEnabled() {
+		return delegate.isCollectionsInDefaultFetchGroupEnabled();
+	}
+
+	@Override
 	public boolean isOmitJoinOfSuperclassTablesEnabled() {
 		return delegate.isOmitJoinOfSuperclassTablesEnabled();
 	}

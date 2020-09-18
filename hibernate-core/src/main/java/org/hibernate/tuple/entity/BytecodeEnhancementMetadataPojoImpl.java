@@ -38,11 +38,12 @@ public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhanc
 			PersistentClass persistentClass,
 			Set<String> identifierAttributeNames,
 			CompositeType nonAggregatedCidMapper,
-			boolean allowEnhancementAsProxy) {
+			boolean allowEnhancementAsProxy,
+			boolean collectionsInDefaultFetchGroupEnabled) {
 		final Class mappedClass = persistentClass.getMappedClass();
 		final boolean enhancedForLazyLoading = PersistentAttributeInterceptable.class.isAssignableFrom( mappedClass );
 		final LazyAttributesMetadata lazyAttributesMetadata = enhancedForLazyLoading
-				? LazyAttributesMetadata.from( persistentClass, true, allowEnhancementAsProxy )
+				? LazyAttributesMetadata.from( persistentClass, true, allowEnhancementAsProxy, collectionsInDefaultFetchGroupEnabled )
 				: LazyAttributesMetadata.nonEnhanced( persistentClass.getEntityName() );
 
 		return new BytecodeEnhancementMetadataPojoImpl(

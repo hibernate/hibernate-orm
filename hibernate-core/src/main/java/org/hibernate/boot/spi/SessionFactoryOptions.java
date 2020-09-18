@@ -315,5 +315,9 @@ public interface SessionFactoryOptions {
 		return false;
 	}
 
+	default boolean isCollectionsInDefaultFetchGroupEnabled() {
+		return false;
+	}
+
 	boolean isOmitJoinOfSuperclassTablesEnabled();
 }

@@ -249,8 +249,10 @@ public class TableStructure implements DatabaseStructure {
 		);
 
 		Table table = namespace.locateTable( logicalQualifiedTableName.getObjectName() );
+		boolean tableCreated = false;
 		if ( table == null ) {
 			table = namespace.createTable( logicalQualifiedTableName.getObjectName(), false );
+			tableCreated = true;
 		}
 
 		this.tableNameText = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
@@ -268,17 +270,19 @@ public class TableStructure implements DatabaseStructure {
 		this.updateQuery = "update " + tableNameText +
 				" set " + valueColumnNameText + "= ?" +
 				" where " + valueColumnNameText + "=?";
+		if ( tableCreated ) {
+			ExportableColumn valueColumn = new ExportableColumn(
+					database,
+					table,
+					valueColumnNameText,
+					LongType.INSTANCE
+			);
 
-		ExportableColumn valueColumn = new ExportableColumn(
-				database,
-				table,
-				valueColumnNameText,
-				LongType.INSTANCE
-		);
-		table.addColumn( valueColumn );
+			table.addColumn( valueColumn );
 
-		table.addInitCommand(
-				new InitCommand( "insert into " + tableNameText + " values ( " + initialValue + " )" )
-		);
+			table.addInitCommand(
+					new InitCommand( "insert into " + tableNameText + " values ( " + initialValue + " )" )
+			);
+		}
 	}
 }

@@ -230,38 +230,55 @@ public class EnhancerImpl implements Enhancer {
 
 					Implementation isDirty = StubMethod.INSTANCE, getDirtyNames = StubMethod.INSTANCE, clearDirtyNames = StubMethod.INSTANCE;
 					for ( AnnotatedFieldDescription collectionField : collectionFields ) {
+						String collectionFieldName = collectionField.getName();
+						Class adviceIsDirty;
+						Class adviceGetDirtyNames;
+						Class adviceClearDirtyNames;
 						if ( collectionField.getType().asErasure().isAssignableTo( Map.class ) ) {
+							adviceIsDirty = CodeTemplates.MapAreCollectionFieldsDirty.class;
+							adviceGetDirtyNames = CodeTemplates.MapGetCollectionFieldDirtyNames.class;
+							adviceClearDirtyNames = CodeTemplates.MapGetCollectionClearDirtyNames.class;
+						}
+						else {
+							adviceIsDirty = CodeTemplates.CollectionAreCollectionFieldsDirty.class;
+							adviceGetDirtyNames = CodeTemplates.CollectionGetCollectionFieldDirtyNames.class;
+							adviceClearDirtyNames = CodeTemplates.CollectionGetCollectionClearDirtyNames.class;
+						}
+						if ( collectionField.isVisibleTo( managedCtClass ) ) {
+							FieldDescription fieldDescription = collectionField.getFieldDescription();
 							isDirty = Advice.withCustomMapping()
-									.bind( CodeTemplates.FieldName.class, collectionField.getName() )
-									.bind( CodeTemplates.FieldValue.class, collectionField.getFieldDescription() )
-									.to( CodeTemplates.MapAreCollectionFieldsDirty.class, adviceLocator )
+									.bind( CodeTemplates.FieldName.class, collectionFieldName )
+									.bind( CodeTemplates.FieldValue.class, fieldDescription )
+									.to( adviceIsDirty, adviceLocator )
 									.wrap( isDirty );
 							getDirtyNames = Advice.withCustomMapping()
-									.bind( CodeTemplates.FieldName.class, collectionField.getName() )
-									.bind( CodeTemplates.FieldValue.class, collectionField.getFieldDescription() )
-									.to( CodeTemplates.MapGetCollectionFieldDirtyNames.class, adviceLocator )
+									.bind( CodeTemplates.FieldName.class, collectionFieldName )
+									.bind( CodeTemplates.FieldValue.class, fieldDescription )
+									.to( adviceGetDirtyNames, adviceLocator )
 									.wrap( getDirtyNames );
 							clearDirtyNames = Advice.withCustomMapping()
-									.bind( CodeTemplates.FieldName.class, collectionField.getName() )
-									.bind( CodeTemplates.FieldValue.class, collectionField.getFieldDescription() )
-									.to( CodeTemplates.MapGetCollectionClearDirtyNames.class, adviceLocator )
+									.bind( CodeTemplates.FieldName.class, collectionFieldName )
+									.bind( CodeTemplates.FieldValue.class, fieldDescription )
+									.to( adviceClearDirtyNames, adviceLocator )
 									.wrap( clearDirtyNames );
 						}
 						else {
+							CodeTemplates.GetterMapping getterMapping = new CodeTemplates.GetterMapping(
+									collectionField.getFieldDescription() );
 							isDirty = Advice.withCustomMapping()
-									.bind( CodeTemplates.FieldName.class, collectionField.getName() )
-									.bind( CodeTemplates.FieldValue.class, collectionField.getFieldDescription() )
-									.to( CodeTemplates.CollectionAreCollectionFieldsDirty.class, adviceLocator )
+									.bind( CodeTemplates.FieldName.class, collectionFieldName )
+									.bind( CodeTemplates.FieldValue.class, getterMapping )
+									.to( adviceIsDirty, adviceLocator )
 									.wrap( isDirty );
 							getDirtyNames = Advice.withCustomMapping()
-									.bind( CodeTemplates.FieldName.class, collectionField.getName() )
-									.bind( CodeTemplates.FieldValue.class, collectionField.getFieldDescription() )
-									.to( CodeTemplates.CollectionGetCollectionFieldDirtyNames.class, adviceLocator )
+									.bind( CodeTemplates.FieldName.class, collectionFieldName )
+									.bind( CodeTemplates.FieldValue.class, getterMapping )
+									.to( adviceGetDirtyNames, adviceLocator )
 									.wrap( getDirtyNames );
 							clearDirtyNames = Advice.withCustomMapping()
-									.bind( CodeTemplates.FieldName.class, collectionField.getName() )
-									.bind( CodeTemplates.FieldValue.class, collectionField.getFieldDescription() )
-									.to( CodeTemplates.CollectionGetCollectionClearDirtyNames.class, adviceLocator )
+									.bind( CodeTemplates.FieldName.class, collectionFieldName )
+									.bind( CodeTemplates.FieldValue.class, getterMapping )
+									.to( adviceClearDirtyNames, adviceLocator )
 									.wrap( clearDirtyNames );
 						}
 					}

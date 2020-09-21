@@ -332,6 +332,11 @@ public interface PersistenceContext {
 	Object narrowProxy(Object proxy, EntityPersister persister, EntityKey key, Object object)
 			throws HibernateException;
 
+	default Object narrowProxy(Object proxy, String entityName, EntityPersister persister, EntityKey key, Object object)
+			throws HibernateException {
+		return narrowProxy( proxy, persister, key, object );
+	}
+
 	/**
 	 * Return the existing proxy associated with the given <tt>EntityKey</tt>, or the
 	 * third argument (the entity associated with the key) if no proxy exists. Init

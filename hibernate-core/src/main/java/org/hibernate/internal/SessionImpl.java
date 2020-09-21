@@ -2657,6 +2657,7 @@ public class SessionImpl
 
 	private class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T> {
 		private final EntityPersister entityPersister;
+		private String entityName;
 
 		private LockOptions lockOptions;
 		private CacheMode cacheMode;
@@ -2665,14 +2666,22 @@ public class SessionImpl
 
 		private IdentifierLoadAccessImpl(EntityPersister entityPersister) {
 			this.entityPersister = entityPersister;
+			entityName = entityPersister.getEntityName();
 		}
 
 		private IdentifierLoadAccessImpl(String entityName) {
 			this( locateEntityPersister( entityName ) );
+			if ( entityPersister.isMappedSuperclassSubclass( entityName ) ) {
+				this.entityName = entityName;
+			}
 		}
 
 		private IdentifierLoadAccessImpl(Class<T> entityClass) {
 			this( locateEntityPersister( entityClass ) );
+			String entityName = entityClass.getName();
+			if ( entityPersister.isMappedSuperclassSubclass( entityName ) ) {
+				this.entityName = entityName;
+			}
 		}
 
 		@Override
@@ -2739,18 +2748,18 @@ public class SessionImpl
 		@SuppressWarnings("unchecked")
 		protected T doGetReference(Serializable id) {
 			if ( this.lockOptions != null ) {
-				LoadEvent event = new LoadEvent( id, entityPersister.getEntityName(), lockOptions, SessionImpl.this, getReadOnlyFromLoadQueryInfluencers() );
+				LoadEvent event = new LoadEvent( id, entityName, lockOptions, SessionImpl.this, getReadOnlyFromLoadQueryInfluencers() );
 				fireLoad( event, LoadEventListener.LOAD );
 				return (T) event.getResult();
 			}
 
-			LoadEvent event = new LoadEvent( id, entityPersister.getEntityName(), false, SessionImpl.this, getReadOnlyFromLoadQueryInfluencers() );
+			LoadEvent event = new LoadEvent( id, entityName, false, SessionImpl.this, getReadOnlyFromLoadQueryInfluencers() );
 			boolean success = false;
 			try {
 				fireLoad( event, LoadEventListener.LOAD );
 				if ( event.getResult() == null ) {
 					getFactory().getEntityNotFoundDelegate().handleEntityNotFound(
-							entityPersister.getEntityName(),
+							entityName,
 							id
 					);
 				}
@@ -2775,12 +2784,12 @@ public class SessionImpl
 		@SuppressWarnings("unchecked")
 		protected final T doLoad(Serializable id) {
 			if ( this.lockOptions != null ) {
-				LoadEvent event = new LoadEvent( id, entityPersister.getEntityName(), lockOptions, SessionImpl.this, getReadOnlyFromLoadQueryInfluencers() );
+				LoadEvent event = new LoadEvent( id, entityName, lockOptions, SessionImpl.this, getReadOnlyFromLoadQueryInfluencers() );
 				fireLoad( event, LoadEventListener.GET );
 				return (T) event.getResult();
 			}
 
-			LoadEvent event = new LoadEvent( id, entityPersister.getEntityName(), false, SessionImpl.this, getReadOnlyFromLoadQueryInfluencers() );
+			LoadEvent event = new LoadEvent( id, entityName, false, SessionImpl.this, getReadOnlyFromLoadQueryInfluencers() );
 			boolean success = false;
 			try {
 				fireLoad( event, LoadEventListener.GET );

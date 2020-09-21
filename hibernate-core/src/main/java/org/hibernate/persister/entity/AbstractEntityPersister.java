@@ -96,6 +96,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.FilterHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
 import org.hibernate.jdbc.TooManyRowsAffectedException;
@@ -5030,9 +5031,17 @@ public abstract class AbstractEntityPersister
 	@Override
 	public void addMappedSuperclassSubclassProxyFacorty(String mappedSuperclassName, ProxyFactory proxyFactory) {
 		if ( mappedSuperclassSubclassProxyFactory == null ) {
-			mappedSuperclassSubclassProxyFactory = new HashMap<>();
+			mappedSuperclassSubclassProxyFactory = CollectionHelper.mapOfSize( 1 );
 		}
 		mappedSuperclassSubclassProxyFactory.put( mappedSuperclassName, proxyFactory );
+	}
+
+	@Override
+	public boolean isMappedSuperclassSubclass(String className) {
+		if ( mappedSuperclassSubclassProxyFactory == null ) {
+			return false;
+		}
+		return mappedSuperclassSubclassProxyFactory.containsKey( className );
 	}
 
 	public String toString() {

@@ -747,6 +747,48 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 	}
 
+	@Override
+	@SuppressWarnings("unchecked")
+	public Object narrowProxy(Object proxy, String entityName, EntityPersister persister, EntityKey key, Object object)
+			throws HibernateException {
+		if ( !persister.isMappedSuperclassSubclass( entityName ) ) {
+			return narrowProxy( proxy, persister, key, object );
+		}
+
+		final boolean alreadyNarrow = proxy.getClass().getName().equals( entityName );
+
+		if ( !alreadyNarrow ) {
+			LOG.narrowingMappedSuperclassProxy( entityName );
+
+			// If an impl is passed, there is really no point in creating a proxy.
+			// It would just be extra processing.  Just return the impl
+			if ( object != null ) {
+				removeProxyByKey( key );
+				return object;
+			}
+
+			// Otherwise, create the narrowed proxy
+			final HibernateProxy narrowedProxy = (HibernateProxy) persister.createProxyForMappedSuperclass(
+					key.getIdentifier(),
+					entityName,
+					session
+			);
+
+			// set the read-only/modifiable mode in the new proxy to what it was in the original proxy
+			final boolean readOnlyOrig = ((HibernateProxy) proxy).getHibernateLazyInitializer().isReadOnly();
+			narrowedProxy.getHibernateLazyInitializer().setReadOnly( readOnlyOrig );
+
+			return narrowedProxy;
+		}
+		else {
+			if ( object != null ) {
+				final LazyInitializer li = ( (HibernateProxy) proxy ).getHibernateLazyInitializer();
+				li.setImplementation( object );
+			}
+			return proxy;
+		}
+	}
+
 	private Object removeProxyByKey(final EntityKey key) {
 		if ( proxiesByKey != null ) {
 			return proxiesByKey.remove( key );

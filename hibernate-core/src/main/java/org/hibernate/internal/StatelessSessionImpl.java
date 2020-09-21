@@ -321,7 +321,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 							LOG.debug( "Ignoring NO_PROXY to honor laziness" );
 						}
 
-						return persistenceContext.narrowProxy( proxy, persister, entityKey, null );
+						return persistenceContext.narrowProxy( proxy, entityName, persister, entityKey, null );
 					}
 
 					// specialized handling for entities with subclasses with a HibernateProxy factory
@@ -329,7 +329,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 						// entities with subclasses that define a ProxyFactory can create
 						// a HibernateProxy.
 						LOG.debugf( "Creating a HibernateProxy for to-one association with subclasses to honor laziness" );
-						return createProxy( entityKey );
+						return createProxy( entityKey, entityName );
 					}
 					return bytecodeEnhancementMetadata.createEnhancedProxy( entityKey, false, this );
 				}
@@ -343,10 +343,10 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 				if ( persister.hasProxy() ) {
 					final Object existingProxy = persistenceContext.getProxy( entityKey );
 					if ( existingProxy != null ) {
-						return persistenceContext.narrowProxy( existingProxy, persister, entityKey, null );
+						return persistenceContext.narrowProxy( existingProxy, entityName, persister, entityKey, null );
 					}
 					else {
-						return createProxy( entityKey );
+						return createProxy( entityKey, entityName );
 					}
 				}
 			}
@@ -365,8 +365,15 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		}
 	}
 
-	private Object createProxy(EntityKey entityKey) {
-		final Object proxy = entityKey.getPersister().createProxy( entityKey.getIdentifier(), this );
+	private Object createProxy(EntityKey entityKey, String entityName) {
+		final EntityPersister persister = entityKey.getPersister();
+		final Object proxy;
+		if ( persister.isMappedSuperclassSubclass( entityName ) ) {
+			proxy = persister.createProxyForMappedSuperclass( entityKey.getIdentifier(), entityName, this );
+		}
+		else {
+			proxy = persister.createProxy( entityKey.getIdentifier(), this );
+		}
 		getPersistenceContext().addProxy( entityKey, proxy );
 		return proxy;
 	}

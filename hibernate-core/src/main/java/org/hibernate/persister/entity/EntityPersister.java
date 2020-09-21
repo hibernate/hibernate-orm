@@ -860,4 +860,8 @@ public interface EntityPersister extends EntityDefinition {
 
 	default void addMappedSuperclassSubclassProxyFacorty(String mappedSuperclassName, ProxyFactory proxyFactory) {
 	}
+
+	default boolean isMappedSuperclassSubclass(String className){
+		return false;
+	}
 }

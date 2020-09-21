@@ -17,6 +17,7 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.OneToMany;
 
 import org.hibernate.Hibernate;
+import org.hibernate.proxy.HibernateProxy;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.legacy.Custom;
@@ -27,6 +28,7 @@ import org.junit.Test;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -51,7 +53,7 @@ public class MappedSuperclassAsLazyAssociationTest extends BaseCoreFunctionalTes
 	@Before
 	public void setUp() {
 		RemoteEmployee remoteEmployee = new RemoteEmployee();
-		remoteEmployee.setName( "another" );
+		remoteEmployee.setName( "remote" );
 		remoteEmployee.setSecondName( "second" );
 		remoteEmployee.setTitle( "Software Engineer" );
 
@@ -93,7 +95,7 @@ public class MappedSuperclassAsLazyAssociationTest extends BaseCoreFunctionalTes
 				session -> {
 					Task task = session.get( Task.class, taskName );
 					assertFalse( Hibernate.isInitialized( task.getEmployee() ) );
-					assertThat( task.getEmployee().getName(), is( "another" ) );
+					assertThat( task.getEmployee().getName(), is( "remote" ) );
 					assertThat( task.getEmployee().getTitle(), is( "Software Engineer" ) );
 
 					assertTrue( Hibernate.isInitialized( task.getEmployee() ) );
@@ -103,6 +105,59 @@ public class MappedSuperclassAsLazyAssociationTest extends BaseCoreFunctionalTes
 	}
 
 	@Test
+	public void testNarrowingProxy() {
+		inTransaction(
+				session -> {
+					session.load( Person.class, "remote" );
+					session.load( Employee.class, "remote" );
+					session.load( NoFloatingEmployee.class, "remote" );
+					session.load( RemoteEmployee.class, "remote" );
+				}
+		);
+	}
+
+	@Test
+	public void testGetMappedSuperclass() {
+		inTransaction(
+				session -> {
+					session.get( Employee.class, "remote" );
+					session.load( RemoteEmployee.class, "remote" );
+				}
+		);
+	}
+
+	@Test
+	public void testNarrowedProxyIsInitializedIfOriginalProxyIsInitialized() {
+		inTransaction(
+				session -> {
+					Task task = session.get( Task.class, taskName );
+					NoFloatingEmployee employee = task.getEmployee();
+					assertTrue( ( employee instanceof HibernateProxy ) && !Hibernate.isInitialized( employee ) );
+					Hibernate.initialize( employee );
+					assertTrue( Hibernate.isInitialized( employee ) );
+
+					RemoteEmployee remoteEmployee = session.load( RemoteEmployee.class, employee.getName() );
+					assertTrue( Hibernate.isInitialized( remoteEmployee ) );
+					assertTrue( session.contains( remoteEmployee ) );
+				}
+		);
+	}
+
+	@Test
+	public void testNarrowedProxy() {
+		inTransaction(
+				session -> {
+					Task task = session.get( Task.class, taskName );
+					NoFloatingEmployee employee = task.getEmployee();
+					assertTrue( ( employee instanceof HibernateProxy ) && !Hibernate.isInitialized( employee ) );
+					session.createQuery( "from RemoteEmployee where name = 'remote'" ).uniqueResult();
+
+				}
+		);
+	}
+
+
+	@Test
 	public void testHql() {
 		inTransaction(
 				session -> {
@@ -110,10 +165,44 @@ public class MappedSuperclassAsLazyAssociationTest extends BaseCoreFunctionalTes
 
 					Task task = list.get( 0 );
 					assertFalse( Hibernate.isInitialized( task.getEmployee() ) );
-					assertThat( task.getEmployee().getName(), is( "another" ) );
+					assertThat( task.getEmployee().getName(), is( "remote" ) );
 					assertThat( task.getEmployee().getTitle(), is( "Software Engineer" ) );
 
 					assertTrue( Hibernate.isInitialized( task.getEmployee() ) );
+				}
+		);
+
+
+	}
+
+	@Test
+	public void testUniqueResult() {
+		inTransaction(
+				session -> {
+					RemoteEmployee RemoteEmployee = (RemoteEmployee) session.createQuery( "from Person where id = :id" )
+							.setString( "id", "remote" )
+							.uniqueResult();
+					assertNotNull( RemoteEmployee );
+
+				}
+		);
+
+		inTransaction(
+				session -> {
+					Employee employee = (Employee) session.createQuery( "from Person where id = :id" )
+							.setString( "id", "remote" )
+							.uniqueResult();
+					assertNotNull( employee );
+
+				}
+		);
+
+		inTransaction(
+				session -> {
+					Person person = (Person) session.createQuery( "from Person where id = :id" )
+							.setString( "id", "remote" )
+							.uniqueResult();
+					assertNotNull( person );
 				}
 		);
 	}

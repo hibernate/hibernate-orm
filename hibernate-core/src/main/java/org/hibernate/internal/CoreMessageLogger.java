@@ -1864,4 +1864,8 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Ignoring ServiceConfigurationError caught while trying to instantiate service '%s'.", id = 505)
 	void ignoringServiceConfigurationError(Class<?> serviceContract, @Cause ServiceConfigurationError error);
 
+	@LogMessage(level = WARN)
+	@Message(value = "Narrowing proxy to %s - this operation breaks ==", id = 506)
+	void narrowingMappedSuperclassProxy(String concreteProxyClass);
+
 }

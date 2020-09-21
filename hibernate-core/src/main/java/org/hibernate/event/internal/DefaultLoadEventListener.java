@@ -292,7 +292,13 @@ public class DefaultLoadEventListener implements LoadEventListener {
 						LOG.debug( "Ignoring NO_PROXY to honor laziness" );
 					}
 
-					return persistenceContext.narrowProxy( proxy, persister, keyToLoad, null );
+					return persistenceContext.narrowProxy(
+							proxy,
+							event.getEntityClassName(),
+							persister,
+							keyToLoad,
+							null
+					);
 				}
 
 				// specialized handling for entities with subclasses with a HibernateProxy factory
@@ -373,8 +379,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 						.handleEntityNotFound( persister.getEntityName(), keyToLoad.getIdentifier() );
 			}
 		}
-
-		return persistenceContext.narrowProxy( proxy, persister, keyToLoad, impl );
+		return persistenceContext.narrowProxy( proxy, event.getEntityClassName(), persister, keyToLoad, impl );
 	}
 
 	/**
@@ -426,15 +431,15 @@ public class DefaultLoadEventListener implements LoadEventListener {
 		// return new uninitialized proxy
 		final Object proxy;
 		final String entityClassName = event.getEntityClassName();
-		if ( persister.getEntityMetamodel().getName().equals( entityClassName ) ) {
-			proxy = persister.createProxy( event.getEntityId(), event.getSession() );
-		}
-		else {
+		if ( persister.isMappedSuperclassSubclass( entityClassName ) ) {
 			proxy = persister.createProxyForMappedSuperclass(
 					event.getEntityId(),
 					entityClassName,
 					event.getSession()
 			);
+		}
+		else {
+			proxy = persister.createProxy( event.getEntityId(), event.getSession() );
 		}
 
 		persistenceContext.getBatchFetchQueue().addBatchLoadableEntityKey( keyToLoad );

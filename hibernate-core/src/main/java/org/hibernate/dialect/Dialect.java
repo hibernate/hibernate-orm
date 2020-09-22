@@ -598,6 +598,37 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
+	 * Do the given JDBC type codes, as defined in {@link Types} represent
+	 * essentially the same type in this dialect of SQL? The default
+	 * implementation treats {@link Types#NUMERIC NUMERIC} and
+	 * {@link Types#DECIMAL DECIMAL} as the same type, and
+	 * {@link Types#FLOAT FLOAT}, {@link Types#REAL REAL}, and
+	 * {@link Types#DOUBLE DOUBLE} as essentially the same type, since the
+	 * ANSI SQL specification fails to meaningfully distinguish them.
+	 *
+	 * @param typeCode1 the first JDBC type code
+	 * @param typeCode2 the second JDBC type code
+	 *
+	 * @return {@code true} if the two type codes are equivalent
+	 */
+	public boolean equivalentTypes(int typeCode1, int typeCode2) {
+		return typeCode1==typeCode2
+			|| isNumericOrDecimal(typeCode1) && isNumericOrDecimal(typeCode2)
+			|| isFloatOrRealOrDouble(typeCode1) && isFloatOrRealOrDouble(typeCode2);
+	}
+
+	private static boolean isNumericOrDecimal(int typeCode) {
+		return typeCode == Types.NUMERIC
+			|| typeCode == Types.DECIMAL;
+	}
+
+	private static boolean isFloatOrRealOrDouble(int typeCode) {
+		return typeCode == Types.FLOAT
+			|| typeCode == Types.REAL
+			|| typeCode == Types.DOUBLE;
+	}
+
+	/**
 	 * Get an instance of the dialect specified by the current <tt>System</tt> properties.
 	 *
 	 * @return The specified Dialect

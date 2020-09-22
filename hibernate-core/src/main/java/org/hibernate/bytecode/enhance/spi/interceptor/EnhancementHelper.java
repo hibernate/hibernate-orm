@@ -129,7 +129,7 @@ public class EnhancementHelper {
 		finally {
 			if ( isTempSession ) {
 				try {
-					// Commit the JDBC transaction is we started one.
+					// Commit the JDBC transaction if we started one.
 					if ( !isJta ) {
 						BytecodeLogger.LOGGER.debug( "Enhancement interception Helper#performWork committing transaction on temporary Session" );
 						session.getTransaction().commit();

@@ -41,15 +41,16 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.IntegerTypeDescriptor;
 import org.hibernate.type.descriptor.java.StringTypeDescriptor;
+import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ExceptionUtil;
-import org.hibernate.type.descriptor.sql.BlobTypeDescriptor;
-import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.junit.Test;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
@@ -278,6 +279,36 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-14206" )
+	public void testPrimitiveTypeConverterAutoApplied() {
+		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+
+		try {
+			MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
+					.addAnnotatedClass( Tester5.class )
+					.getMetadataBuilder()
+					.applyAttributeConverter( IntegerToVarcharConverter.class, true )
+					.build();
+
+			PersistentClass tester = metadata.getEntityBinding( Tester5.class.getName() );
+			Property codeProp = tester.getProperty( "code" );
+			SimpleValue nameValue = (SimpleValue) codeProp.getValue();
+			Type type = nameValue.getType();
+			assertNotNull( type );
+			if ( !AttributeConverterTypeAdapter.class.isInstance( type ) ) {
+				fail( "AttributeConverter not applied to primitive type field: code(int)" );
+			}
+			AttributeConverterTypeAdapter basicType = assertTyping( AttributeConverterTypeAdapter.class, type );
+			assertSame( IntegerTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
+			SqlTypeDescriptor sqlTypeDescriptor = basicType.getSqlTypeDescriptor();
+			assertEquals( VarcharTypeDescriptor.INSTANCE.getSqlType(), sqlTypeDescriptor.getSqlType() );
+		}
+		finally {
+			StandardServiceRegistryBuilder.destroy( ssr );
+		}
+	}
+
+	@Test
 	public void testBasicTimestampUsage() {
 		Configuration cfg = new Configuration();
 		cfg.addAttributeConverter( InstantConverter.class, false );
@@ -502,6 +533,24 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			this.name = name;
 			this.code = code;
 			this.convertibleEnum = convertibleEnum;
+		}
+	}
+
+	@Entity(name = "T5")
+	@SuppressWarnings("UnusedDeclaration")
+	public static class Tester5 {
+		@Id
+		private Long id;
+		private String name;
+		private int code;
+
+		public Tester5() {
+		}
+
+		public Tester5(Long id, String name, int code) {
+			this.id = id;
+			this.name = name;
+			this.code = code;
 		}
 	}
 

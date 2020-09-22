@@ -42,7 +42,6 @@ import static org.junit.Assert.assertTrue;
  * @author Andrea Boriero
  * @author Nathan Xu
  */
-@TestForIssue(jiraKey = "HHH-14097")
 public class LoadAndFetchGraphTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
@@ -180,6 +179,7 @@ public class LoadAndFetchGraphTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@TestForIssue(jiraKey = "HHH-14097")
 	public void testQueryById() {
 		Statistics statistics = entityManagerFactory().unwrap( SessionFactory.class ).getStatistics();
 		statistics.clear();
@@ -205,6 +205,7 @@ public class LoadAndFetchGraphTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@TestForIssue(jiraKey = "HHH-14097")
 	public void testQueryByIdWithLoadGraph() {
 		Statistics statistics = entityManagerFactory().unwrap( SessionFactory.class ).getStatistics();
 		statistics.clear();
@@ -241,6 +242,7 @@ public class LoadAndFetchGraphTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@TestForIssue(jiraKey = "HHH-14097")
 	public void testQueryByIdWithFetchGraph() {
 		Statistics statistics = entityManagerFactory().unwrap( SessionFactory.class ).getStatistics();
 		statistics.clear();
@@ -275,6 +277,7 @@ public class LoadAndFetchGraphTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@TestForIssue(jiraKey = "HHH-14097")
 	public void testQueryByIdWithFetchGraph2() {
 		Statistics statistics = entityManagerFactory().unwrap( SessionFactory.class ).getStatistics();
 		statistics.clear();

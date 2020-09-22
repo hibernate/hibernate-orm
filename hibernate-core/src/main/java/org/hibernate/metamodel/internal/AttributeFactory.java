@@ -405,7 +405,7 @@ public class AttributeFactory {
 				final boolean isManyToMany = isManyToMany( member );
 
 				// First, determine the type of the elements and use that to help determine the
-				// collection type)
+				// collection type
 				final AttributeClassification elementClassification;
 				final AttributeClassification attributeClassification;
 				if ( elementType.isAnyType() ) {

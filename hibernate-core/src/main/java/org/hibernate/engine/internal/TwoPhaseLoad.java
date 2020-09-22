@@ -403,27 +403,40 @@ public final class TwoPhaseLoad {
 	}
 
 	/**
-	 * Check if eager of the association is overriden by anything.
+	 * Check if eager of the association is overridden (i.e. skipping metamodel strategy), including (order sensitive):
+	 * <ol>
+	 *     <li>fetch graph</li>
+	 *     <li>fetch profile</li>
+	 * </ol>
 	 *
 	 * @param session session
 	 * @param entityName entity name
 	 * @param associationName association name
-	 *
+	 * @param associationType association type
+	 * @param isDebugEnabled if debug log level enabled
 	 * @return null if there is no overriding, true if it is overridden to eager and false if it is overridden to lazy
 	 */
 	private static Boolean getOverridingEager(
 			final SharedSessionContractImplementor session,
 			final String entityName,
 			final String associationName,
-			final Type type,
+			final Type associationType,
 			final boolean isDebugEnabled) {
 		// Performance: check type.isCollectionType() first, as type.isAssociationType() is megamorphic
-		if ( type.isCollectionType() || type.isAssociationType()  ) {
+		if ( associationType.isCollectionType() || associationType.isAssociationType()  ) {
+
+			// we can return false invariably for if the entity has been covered by entity graph,
+			// its associated JOIN has been present in the SQL generated and hence it would be loaded anyway
+			if ( session.isEnforcingFetchGraph() ) {
+				return false;
+			}
+
+			// check 'fetch profile' next; skip 'metamodel' if 'fetch profile' takes effect
 			final Boolean overridingEager = isEagerFetchProfile( session, entityName, associationName );
 
-			//This method is very hot, and private so let's piggy back on the fact that the caller already knows the debugging state.
-			if ( isDebugEnabled ) {
-				if ( overridingEager != null ) {
+			if ( overridingEager != null ) {
+				//This method is very hot, and private so let's piggy back on the fact that the caller already knows the debugging state.
+				if ( isDebugEnabled ) {
 					LOG.debugf(
 							"Overriding eager fetching using active fetch profile. EntityName: %s, associationName: %s, eager fetching: %s",
 							entityName,
@@ -431,10 +444,10 @@ public final class TwoPhaseLoad {
 							overridingEager
 					);
 				}
+				return overridingEager;
 			}
-
-			return overridingEager;
 		}
+		// let 'metamodel' decide eagerness
 		return null;
 	}
 

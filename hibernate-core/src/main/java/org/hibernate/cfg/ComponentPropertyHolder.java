@@ -58,7 +58,7 @@ import org.hibernate.mapping.Table;
  * @author Emmanuel Bernard
  */
 public class ComponentPropertyHolder extends AbstractPropertyHolder {
-	//TODO introduce a overrideTable() method for columns held by sec table rather than the hack
+	//TODO introduce an overrideTable() method for columns held by sec table rather than the hack
 	//     joinsPerRealTableName in ClassPropertyHolder
 	private Component component;
 	private boolean isOrWithinEmbeddedId;

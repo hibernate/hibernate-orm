@@ -38,7 +38,7 @@ public final class XmlHelper {
 			return null;
 		}
 		// getElementsByTagName gives the corresponding elements in the whole
-		// descendance. We want only children
+		// descendants. We want only children
 
 		NodeList children = element.getChildNodes();
 		ArrayList goodChildren = new ArrayList();

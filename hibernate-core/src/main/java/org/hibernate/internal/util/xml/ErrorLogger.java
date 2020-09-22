@@ -31,7 +31,7 @@ public class ErrorLogger implements ErrorHandler, Serializable {
 			ErrorLogger.class.getName()
 	);
 
-	// lazily initalized
+	// lazily initialized
 	private List<SAXParseException> errors;
 	private String file;
 

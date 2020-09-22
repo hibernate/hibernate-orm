@@ -86,7 +86,7 @@ public class NaturalIdCacheKey implements Serializable {
 					@Override
 					public String initialize() {
 						//Complex toString is needed as naturalIds for entities are not simply based on a single value like primary keys
-						//the only same way to differentiate the keys is to included the disassembled values in the string.
+						//the only same way to differentiate the keys is to include the disassembled values in the string.
 						final StringBuilder toStringBuilder = new StringBuilder().append( entityName ).append(
 								"##NaturalId[" );
 						for ( int i = 0; i < naturalIdValues.length; i++ ) {

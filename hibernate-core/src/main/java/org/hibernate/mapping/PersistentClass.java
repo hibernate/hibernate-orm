@@ -1008,6 +1008,6 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		this.superMappedSuperclass = superMappedSuperclass;
 	}
 
-	// End of @Mappedsuperclass support
+	// End of @MappedSuperclass support
 
 }

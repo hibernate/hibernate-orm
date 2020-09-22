@@ -569,7 +569,7 @@ public final class AnnotationBinder {
 			LOG.unsupportedMappedSuperclassWithEntityInheritance( clazzToProcess.getName() );
 		}
 
-		//TODO: be more strict with secondarytable allowance (not for ids, not for secondary table join columns etc)
+		//TODO: be more strict with secondary table allowance (not for ids, not for secondary table join columns etc)
 		InheritanceState inheritanceState = inheritanceStatePerClass.get( clazzToProcess );
 		AnnotatedClassType classType = context.getMetadataCollector().getClassType( clazzToProcess );
 
@@ -1097,7 +1097,7 @@ public final class AnnotationBinder {
 			);
 			AccessType propertyAccessor = entityBinder.getPropertyAccessor( compositeClass );
 			//In JPA 2, there is a shortcut if the IdClass is the Pk of the associated class pointed to by the id
-			//it ought to be treated as an embedded and not a real IdClass (at least in the Hibernate's internal way
+			//it ought to be treated as an embedded and not a real IdClass (at least in the Hibernate's internal way)
 			final boolean isFakeIdClass = isIdClassPkOfTheAssociatedEntity(
 					elementsToProcess,
 					compositeClass,
@@ -1673,7 +1673,7 @@ public final class AnnotationBinder {
 								}
 							}
 							if ( isRequiredAnnotationPresent ) {
-								//create a PropertyData fpr the specJ property holding the mapping
+								//create a PropertyData for the specJ property holding the mapping
 								PropertyData specJPropertyData = new PropertyInferredData(
 										declaringClass,
 										//same dec
@@ -2116,7 +2116,7 @@ public final class AnnotationBinder {
 				}
 				{
 					Column[] keyColumns = null;
-					//JPA 2 has priority and has different default column values, differenciate legacy from JPA 2
+					//JPA 2 has priority and has different default column values, differentiate legacy from JPA 2
 					Boolean isJPA2 = null;
 					if ( property.isAnnotationPresent( MapKeyColumn.class ) ) {
 						isJPA2 = Boolean.TRUE;
@@ -2147,7 +2147,7 @@ public final class AnnotationBinder {
 				}
 				{
 					JoinColumn[] joinKeyColumns = null;
-					//JPA 2 has priority and has different default column values, differenciate legacy from JPA 2
+					//JPA 2 has priority and has different default column values, differentiate legacy from JPA 2
 					Boolean isJPA2 = null;
 					if ( property.isAnnotationPresent( MapKeyJoinColumns.class ) ) {
 						isJPA2 = Boolean.TRUE;
@@ -2649,7 +2649,7 @@ public final class AnnotationBinder {
 			}
 			associationTableBinder.setUniqueConstraints( uniqueConstraints );
 			associationTableBinder.setJpaIndex( jpaIndexes );
-			//set check constaint in the second pass
+			//set check constraint in the second pass
 			annJoins = joins.length == 0 ? null : joins;
 			annInverseJoins = inverseJoins == null || inverseJoins.length == 0 ? null : inverseJoins;
 		}
@@ -2687,7 +2687,7 @@ public final class AnnotationBinder {
 			boolean isIdentifierMapper,
 			MetadataBuildingContext buildingContext,
 			boolean isComponentEmbedded,
-			boolean isId, //is a identifier
+			boolean isId, //is an identifier
 			Map<XClass, InheritanceState> inheritanceStatePerClass,
 			String referencedEntityName, //is a component who is overridden by a @MapsId
 			Ejb3JoinColumn[] columns) {
@@ -2834,7 +2834,7 @@ public final class AnnotationBinder {
 		//add elements of the embeddable superclass
 		XClass superClass = xClassProcessed.getSuperclass();
 		while ( superClass != null && superClass.isAnnotationPresent( MappedSuperclass.class ) ) {
-			//FIXME: proper support of typevariables incl var resolved at upper levels
+			//FIXME: proper support of type variables incl var resolved at upper levels
 			propContainer = new PropertyContainer( superClass, xClassProcessed, propertyAccessor );
 			addElementsOfClass( classElements, propContainer, buildingContext );
 			superClass = superClass.getSuperclass();
@@ -3146,7 +3146,7 @@ public final class AnnotationBinder {
 		final JoinColumn joinColumn = property.getAnnotation( JoinColumn.class );
 		final JoinColumns joinColumns = property.getAnnotation( JoinColumns.class );
 
-		//Make sure that JPA1 key-many-to-one columns are read only tooj
+		//Make sure that JPA1 key-many-to-one columns are read only too
 		boolean hasSpecjManyToOne=false;
 		if ( context.getBuildingOptions().isSpecjProprietarySyntaxEnabled() ) {
 			String columnName = "";
@@ -3298,7 +3298,7 @@ public final class AnnotationBinder {
 			KeyValue identifier = propertyHolder.getIdentifier();
 			if ( identifier == null ) {
 				//this is a @OneToOne in an @EmbeddedId (the persistentClass.identifier is not set yet, it's being built)
-				//by definition the PK cannot refers to itself so it cannot map to itself
+				//by definition the PK cannot refer to itself so it cannot map to itself
 				mapToPK = false;
 			}
 			else {
@@ -3635,7 +3635,7 @@ public final class AnnotationBinder {
 			InheritanceState state = new InheritanceState( clazz, inheritanceStatePerClass, buildingContext );
 			if ( superclassState != null ) {
 				//the classes are ordered thus preventing an NPE
-				//FIXME if an entity has subclasses annotated @MappedSperclass wo sub @Entity this is wrong
+				//FIXME if an entity has subclasses annotated @MappedSuperclass wo sub @Entity this is wrong
 				superclassState.setHasSiblings( true );
 				InheritanceState superEntityState = InheritanceState.getInheritanceStateOfSuperEntity(
 						clazz, inheritanceStatePerClass

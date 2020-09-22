@@ -26,7 +26,6 @@ import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
-import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.QueryProducerImplementor;
@@ -466,5 +465,12 @@ public interface SharedSessionContractImplementor
 	 * @return the PersistenceContext associated to this session.
 	 */
 	PersistenceContext getPersistenceContextInternal();
+
+	default boolean isEnforcingFetchGraph() {
+		return false;
+	}
+
+	default void setEnforcingFetchGraph(boolean enforcingFetchGraph) {
+	}
 
 }

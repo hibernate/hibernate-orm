@@ -1378,7 +1378,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 			}
 		}
 		if ( elementsForProperty.size() == 0 && defaults.canUseJavaAnnotations() ) {
-			//we have nothing, so Java annotations might occurs
+			//we have nothing, so Java annotations might occur
 			Annotation annotation = getPhysicalAnnotation( Version.class );
 			if ( annotation != null ) {
 				annotationList.add( annotation );
@@ -2872,7 +2872,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 			secondaryTables.add( AnnotationFactory.create( annotation ) );
 		}
 		/*
-		 * You can't have both secondary table in XML and Java,
+		 * You can't have both secondary tables in XML and Java,
 		 * since there would be no way to "remove" a secondary table
 		 */
 		if ( secondaryTables.size() == 0 && defaults.canUseJavaAnnotations() ) {

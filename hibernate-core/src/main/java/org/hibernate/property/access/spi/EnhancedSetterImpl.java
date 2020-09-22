@@ -45,7 +45,7 @@ public class EnhancedSetterImpl extends SetterFieldImpl {
 			( (CompositeTracker) value ).$$_hibernate_setOwner( propertyName, (CompositeOwner) target );
 		}
 
-		// This marks the attribute as initialized, so it doesn't get lazy loaded afterwards
+		// This marks the attribute as initialized, so it doesn't get lazily loaded afterwards
 		if ( target instanceof PersistentAttributeInterceptable ) {
 			PersistentAttributeInterceptor interceptor = ( (PersistentAttributeInterceptable) target ).$$_hibernate_getInterceptor();
 			if ( interceptor instanceof BytecodeLazyAttributeInterceptor ) {

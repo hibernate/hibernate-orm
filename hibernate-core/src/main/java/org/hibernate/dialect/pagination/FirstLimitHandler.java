@@ -35,5 +35,4 @@ public class FirstLimitHandler extends AbstractNoOffsetLimitHandler {
 	public boolean bindLimitParametersFirst() {
 		return true;
 	}
-
 }

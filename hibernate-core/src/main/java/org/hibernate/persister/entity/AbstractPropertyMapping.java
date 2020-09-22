@@ -174,7 +174,7 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 				logDuplicateRegistration( path, existingType, type );
 			}
 			else if ( !( existingType instanceof AssociationType ) ) {
-				// Workaround for org.hibernate.cfg.annotations.PropertyBinder.bind() adding a component for *ToOne ids
+				// Workaround for org.hibernate.cfg.annotations.PropertyBinder#bind() adding a component for *ToOne ids
 				logDuplicateRegistration( path, existingType, type );
 			}
 			else {
@@ -215,7 +215,7 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 						duplicateIncompatiblePaths.add( path );
 						typesByPropertyPath.remove( path );
 						// Set everything to empty to signal action has to be taken!
-						// org.hibernate.hql.internal.ast.tree.DotNode.dereferenceEntityJoin() is reacting to this
+						// org.hibernate.hql.internal.ast.tree.DotNode#dereferenceEntityJoin() is reacting to this
 						String[] empty = new String[0];
 						columnsByPropertyPath.put( path, empty );
 						columnReadersByPropertyPath.put( path, empty );
@@ -319,7 +319,7 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 					//      referenced property in the mapping file (ok?)
 					columns = columnsByPropertyPath.get( foreignKeyProperty );
 					if ( columns == null ) {
-						return; //get em on the second pass!
+						return; //get 'em on the second pass!
 					}
 					columnReaders = columnReadersByPropertyPath.get( foreignKeyProperty );
 					columnReaderTemplates = columnReaderTemplatesByPropertyPath.get( foreignKeyProperty );

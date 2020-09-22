@@ -186,6 +186,8 @@ public class SessionImpl
 
 	private transient TransactionObserver transactionObserver;
 
+	private transient boolean isEnforcingFetchGraph;
+
 	public SessionImpl(SessionFactoryImpl factory, SessionCreationOptions options) {
 		super( factory, options );
 
@@ -2758,10 +2760,14 @@ public class SessionImpl
 				loadAccess.with( lockOptions );
 			}
 
+			if ( getLoadQueryInfluencers().getEffectiveEntityGraph().getSemantic() == GraphSemantic.FETCH ) {
+				setEnforcingFetchGraph( true );
+			}
+
 			return loadAccess.load( primaryKey );
 		}
 		catch ( EntityNotFoundException ignored ) {
-			// DefaultLoadEventListener.returnNarrowedProxy may throw ENFE (see HHH-7861 for details),
+			// DefaultLoadEventListener#returnNarrowedProxy() may throw ENFE (see HHH-7861 for details),
 			// which find() should not throw.  Find() should return null if the entity was not found.
 			if ( log.isDebugEnabled() ) {
 				String entityName = entityClass != null ? entityClass.getName(): null;
@@ -2783,7 +2789,7 @@ public class SessionImpl
 		}
 		catch ( JDBCException e ) {
 			if ( accessTransaction().isActive() && accessTransaction().getRollbackOnly() ) {
-				// Assume this is the similar to the WildFly / IronJacamar "feature" described under HHH-12472.
+				// Assume this is similar to the WildFly / IronJacamar "feature" described under HHH-12472.
 				// Just log the exception and return null.
 				if ( log.isDebugEnabled() ) {
 					log.debug( "JDBCException was thrown for a transaction marked for rollback; " +
@@ -2802,6 +2808,7 @@ public class SessionImpl
 		finally {
 			getLoadQueryInfluencers().getEffectiveEntityGraph().clear();
 			getLoadQueryInfluencers().setReadOnly( null );
+			setEnforcingFetchGraph( false );
 		}
 	}
 
@@ -3209,9 +3216,9 @@ public class SessionImpl
 
 		loadQueryInfluencers = (LoadQueryInfluencers) ois.readObject();
 
-		// LoadQueryInfluencers.getEnabledFilters() tries to validate each enabled
-		// filter, which will fail when called before FilterImpl.afterDeserialize( factory );
-		// Instead lookup the filter by name and then call FilterImpl.afterDeserialize( factory ).
+		// LoadQueryInfluencers#getEnabledFilters() tries to validate each enabled
+		// filter, which will fail when called before FilterImpl#afterDeserialize( factory );
+		// Instead lookup the filter by name and then call FilterImpl#afterDeserialize( factory ).
 		for ( String filterName : loadQueryInfluencers.getEnabledFilterNames() ) {
 			( (FilterImpl) loadQueryInfluencers.getEnabledFilter( filterName ) ).afterDeserialize( getFactory() );
 		}
@@ -3224,4 +3231,15 @@ public class SessionImpl
 		}
 		return readOnly;
 	}
+
+	@Override
+	public boolean isEnforcingFetchGraph() {
+		return this.isEnforcingFetchGraph;
+	}
+
+	@Override
+	public void setEnforcingFetchGraph(boolean isEnforcingFetchGraph) {
+		this.isEnforcingFetchGraph = isEnforcingFetchGraph;
+	}
+
 }

@@ -163,7 +163,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		}
 
 		//SPACES
-		//TODO: i'm not sure, but perhaps we should exclude
+		//TODO: I'm not sure, but perhaps we should exclude
 		//      abstract denormalized tables?
 
 		int spacesSize = 1 + persistentClass.getSynchronizedTables().size();

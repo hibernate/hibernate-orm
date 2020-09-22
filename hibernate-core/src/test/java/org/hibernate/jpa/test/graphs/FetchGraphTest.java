@@ -154,7 +154,7 @@ public class FetchGraphTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Entity(name = "Trigger")
-	@Table(name = "Trigger")
+	@Table(name = "TriggerEntity")
 	static class Trigger {
 		@Id
 		@GeneratedValue(strategy = GenerationType.IDENTITY)

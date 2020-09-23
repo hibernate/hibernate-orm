@@ -43,6 +43,7 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.NonAggregatedIdentifierMappingImpl;
 import org.hibernate.metamodel.mapping.internal.SimpleForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -272,7 +273,7 @@ public class LoaderSelectBuilder {
 		}
 
 		for ( ModelPart restrictedPart : restrictedParts ) {
-			if ( restrictedPart instanceof ForeignKeyDescriptor ) {
+			if ( restrictedPart instanceof ForeignKeyDescriptor || restrictedPart instanceof NonAggregatedIdentifierMappingImpl ) {
 				return true;
 			}
 		}

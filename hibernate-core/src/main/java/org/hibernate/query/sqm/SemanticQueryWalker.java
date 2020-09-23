@@ -10,6 +10,7 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.sqm.tree.cte.SqmCteConsumer;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
+import org.hibernate.query.sqm.tree.domain.NonAggregatedCompositeSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelation;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
@@ -132,10 +133,12 @@ public interface SemanticQueryWalker<T> {
 
 	T visitEmbeddableValuedPath(SqmEmbeddedValuedSimplePath<?> path);
 
+	T visitNonAggregatedCompositeValuedPath(NonAggregatedCompositeSimplePath path);
+
 	T visitEntityValuedPath(SqmEntityValuedSimplePath<?> path);
 
 	T visitPluralValuedPath(SqmPluralValuedSimplePath<?> path);
-
+	
 	T visitIndexedPluralAccessPath(SqmIndexedCollectionAccessPath path);
 
 	T visitMaxElementPath(SqmMaxElementPath path);

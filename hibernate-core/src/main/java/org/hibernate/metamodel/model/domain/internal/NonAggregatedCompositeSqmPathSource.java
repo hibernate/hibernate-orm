@@ -11,6 +11,8 @@ import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.IllegalPathUsageException;
 import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.tree.domain.NonAggregatedCompositeSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 
 /**
@@ -38,7 +40,11 @@ public class NonAggregatedCompositeSqmPathSource extends AbstractSqmPathSource i
 
 	@Override
 	public SqmPath createSqmPath(SqmPath lhs, SqmCreationState creationState) {
-		// todo (6.0) : I think this will require a specialized SqmPath as well...
-		throw new NotYetImplementedFor6Exception( getClass() );
+		return new NonAggregatedCompositeSimplePath(
+				lhs.getNavigablePath().append( getPathName() ),
+				this,
+				lhs,
+				creationState.getCreationContext().getNodeBuilder()
+		);
 	}
 }

@@ -61,6 +61,7 @@ import org.hibernate.query.sqm.spi.JdbcParameterBySqmParameterAccess;
 import org.hibernate.query.sqm.sql.internal.BasicValuedPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.EmbeddableValuedPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.EntityValuedPathInterpretation;
+import org.hibernate.query.sqm.sql.internal.NonAggregatedCompositeValuedPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.PluralValuedSimplePathInterpretation;
 import org.hibernate.query.sqm.sql.internal.SqlAstProcessingStateImpl;
 import org.hibernate.query.sqm.sql.internal.SqlAstQuerySpecProcessingStateImpl;
@@ -71,6 +72,7 @@ import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.cte.SqmCteTable;
 import org.hibernate.query.sqm.tree.cte.SqmCteTableColumn;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
+import org.hibernate.query.sqm.tree.domain.NonAggregatedCompositeSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
@@ -977,6 +979,11 @@ public abstract class BaseSqmToSqlAstConverter
 	@Override
 	public SqmPathInterpretation<?> visitEmbeddableValuedPath(SqmEmbeddedValuedSimplePath<?> sqmPath) {
 		return EmbeddableValuedPathInterpretation.from( sqmPath, this, this );
+	}
+
+	@Override
+	public Object visitNonAggregatedCompositeValuedPath(NonAggregatedCompositeSimplePath sqmPath) {
+		return NonAggregatedCompositeValuedPathInterpretation.from( sqmPath, this, this );
 	}
 
 	@Override

@@ -144,7 +144,9 @@ public class EntityTypeImpl<J>
 		}
 
 		if ( "id".equalsIgnoreCase( name ) ) {
-			// todo (6.0) : probably need special handling here for non-aggregated composite ids
+			if ( hasIdClass() ) {
+				return getIdentifierDescriptor();
+			}
 		}
 
 		if ( EntityDiscriminatorMapping.matchesRoleName( name ) ) {

@@ -15,6 +15,7 @@ import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.cte.SqmCteConsumer;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
+import org.hibernate.query.sqm.tree.domain.NonAggregatedCompositeSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelation;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
@@ -545,6 +546,13 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	@Override
 	public Object visitEmbeddableValuedPath(SqmEmbeddedValuedSimplePath path) {
 		logWithIndentation( "-> [embedded-path] - `%s`", path.getNavigablePath().getFullPath() );
+
+		return null;
+	}
+
+	@Override
+	public Object visitNonAggregatedCompositeValuedPath(NonAggregatedCompositeSimplePath path) {
+		logWithIndentation( "-> [non-aggregated-composite-path] - `%s`", path.getNavigablePath().getFullPath() );
 
 		return null;
 	}

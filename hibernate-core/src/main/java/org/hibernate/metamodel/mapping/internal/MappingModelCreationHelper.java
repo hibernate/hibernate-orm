@@ -152,24 +152,22 @@ public class MappingModelCreationHelper {
 			PersistentClass bootEntityDescriptor,
 			BiConsumer<String,SingularAttributeMapping> idSubAttributeConsumer,
 			MappingModelCreationProcess creationProcess) {
-		final SessionFactoryImplementor sessionFactory = creationProcess.getCreationContext().getSessionFactory();
 		final Component bootCompositeDescriptor = (Component) bootEntityDescriptor.getIdentifier();
-
-		final PropertyAccess propertyAccess = PropertyAccessStrategyMapImpl.INSTANCE.buildPropertyAccess(
-				null,
-				EntityIdentifierMapping.ROLE_LOCAL_NAME
-		);
-
-		final StateArrayContributorMetadataAccess attributeMetadataAccess = getStateArrayContributorMetadataAccess(
-				propertyAccess
-		);
 
 		final EmbeddableMappingType embeddableMappingType = EmbeddableMappingType.from(
 				bootCompositeDescriptor,
 				cidType,
 				attributeMappingType -> {
+					final SessionFactoryImplementor sessionFactory = creationProcess.getCreationContext().getSessionFactory();
+					final PropertyAccess propertyAccess = PropertyAccessStrategyMapImpl.INSTANCE.buildPropertyAccess(
+							null,
+							EntityIdentifierMapping.ROLE_LOCAL_NAME
+					);
+					final StateArrayContributorMetadataAccess attributeMetadataAccess = getStateArrayContributorMetadataAccess(
+							propertyAccess
+					);
 					final Component bootIdDescriptor = (Component) bootEntityDescriptor.getIdentifier();
-
+					final Component idClass = bootEntityDescriptor.getIdentifierMapper();
 					final List<SingularAttributeMapping> idAttributeMappings = new ArrayList<>( bootIdDescriptor.getPropertySpan() );
 
 					//noinspection unchecked
@@ -243,7 +241,9 @@ public class MappingModelCreationHelper {
 						}
 
 						idAttributeMappings.add( idSubAttribute );
-						idSubAttributeConsumer.accept( idSubAttribute.getAttributeName(), idSubAttribute );
+						if ( idClass == null ) {
+							idSubAttributeConsumer.accept( idSubAttribute.getAttributeName(), idSubAttribute );
+						}
 					}
 
 					return new NonAggregatedIdentifierMappingImpl(

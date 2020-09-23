@@ -25,7 +25,7 @@ public class ScriptSourceInputNonExistentImpl implements ScriptSourceInput {
 	public static final ScriptSourceInputNonExistentImpl INSTANCE = new ScriptSourceInputNonExistentImpl();
 
 	@Override
-	public List<String> extract(Function<Reader, List<String>> extracter) {
+	public List<String> extract(Function<Reader, List<String>> extractor) {
 		return Collections.emptyList();
 	}
 }

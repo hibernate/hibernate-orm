@@ -31,13 +31,13 @@ public abstract class AbstractScriptSourceInput implements ScriptSourceInput {
 	protected abstract void releaseReader(Reader reader);
 
 	@Override
-	public List<String> extract(Function<Reader, List<String>> extracter) {
+	public List<String> extract(Function<Reader, List<String>> extractor) {
 		log.executingImportScript( getScriptDescription() );
 
 		final Reader inputReader = prepareReader();
 
 		try {
-			return extracter.apply( inputReader );
+			return extractor.apply( inputReader );
 		}
 		finally {
 			releaseReader( inputReader );

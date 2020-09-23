@@ -20,5 +20,5 @@ public interface ScriptSourceInput {
 	/**
 	 * Allows managed access to the input's Reader, returning a result
 	 */
-	List<String> extract(Function<Reader,List<String>> extracter);
+	List<String> extract(Function<Reader,List<String>> extractor);
 }

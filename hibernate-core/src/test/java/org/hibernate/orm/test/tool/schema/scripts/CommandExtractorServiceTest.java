@@ -10,7 +10,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.tool.schema.internal.script.MultiLineSqlScriptExtracter;
+import org.hibernate.tool.schema.internal.script.MultiLineSqlScriptExtractor;
 import org.hibernate.tool.schema.spi.SqlScriptCommandExtractor;
 
 import org.hibernate.testing.RequiresDialect;
@@ -36,6 +36,6 @@ public class CommandExtractorServiceTest extends MultiLineImportFileTest {
 	@Override
 	protected void prepareBasicRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
 		super.prepareBasicRegistryBuilder( serviceRegistryBuilder );
-		serviceRegistryBuilder.addService( SqlScriptCommandExtractor.class, MultiLineSqlScriptExtracter.INSTANCE );
+		serviceRegistryBuilder.addService( SqlScriptCommandExtractor.class, MultiLineSqlScriptExtractor.INSTANCE );
 	}
 }

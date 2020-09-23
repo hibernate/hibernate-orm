@@ -23,7 +23,7 @@ import org.hibernate.tool.schema.SourceType;
 import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.internal.ExceptionHandlerLoggedImpl;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
-import org.hibernate.tool.schema.internal.script.MultiLineSqlScriptExtracter;
+import org.hibernate.tool.schema.internal.script.MultiLineSqlScriptExtractor;
 import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExceptionHandler;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
@@ -76,7 +76,7 @@ public class StatementsWithoutTerminalCharsImportFileTest extends BaseUnitTestCa
 				//		specify anything as single-line is the default
 				.applySetting(
 						Environment.HBM2DDL_IMPORT_FILES_SQL_EXTRACTOR,
-						MultiLineSqlScriptExtracter.INSTANCE
+						MultiLineSqlScriptExtractor.INSTANCE
 				)
 				.build();
 	}

@@ -13,7 +13,7 @@ import java.io.StringReader;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.tool.schema.internal.script.MultiLineSqlScriptExtracter;
+import org.hibernate.tool.schema.internal.script.MultiLineSqlScriptExtractor;
 
 import org.junit.jupiter.api.Test;
 
@@ -44,7 +44,7 @@ public class SchemaManagementScriptTests {
 		final String commands = firstCommand + "; " + secondCommand + "; " + thirdCommand + ";";
 		final Reader reader = new BufferedReader( new StringReader( commands ) );
 
-		final MultiLineSqlScriptExtracter extractor = new MultiLineSqlScriptExtracter();
+		final MultiLineSqlScriptExtractor extractor = new MultiLineSqlScriptExtractor();
 		final String[] extractedCommands = extractor.extractCommands( reader, dialect ).toArray( new String[0] );
 
 		assertThat( extractedCommands.length, is( 3 ) );
@@ -62,7 +62,7 @@ public class SchemaManagementScriptTests {
 		final String commands = firstCommand + "; " + secondCommand + "; " + thirdCommand + ";";
 		final Reader reader = new BufferedReader( new StringReader( commands ) );
 
-		final MultiLineSqlScriptExtracter extractor = new MultiLineSqlScriptExtracter();
+		final MultiLineSqlScriptExtractor extractor = new MultiLineSqlScriptExtractor();
 		final String[] extractedCommands = extractor.extractCommands( reader, dialect ).toArray( new String[0] );
 
 		assertThat( extractedCommands.length, is( 3 ) );
@@ -84,7 +84,7 @@ public class SchemaManagementScriptTests {
 		final String commands = firstCommand + "; " + secondCommand + "; " + thirdCommand + ";";
 		final Reader reader = new BufferedReader( new StringReader( commands ) );
 
-		final MultiLineSqlScriptExtracter extractor = new MultiLineSqlScriptExtracter();
+		final MultiLineSqlScriptExtractor extractor = new MultiLineSqlScriptExtractor();
 		final String[] extractedCommands = extractor.extractCommands( reader, dialect ).toArray( new String[0] );
 
 		assertThat( extractedCommands.length, is( 3 ) );

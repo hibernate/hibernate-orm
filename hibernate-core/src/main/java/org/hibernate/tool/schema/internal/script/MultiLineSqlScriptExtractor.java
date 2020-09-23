@@ -34,10 +34,10 @@ import org.antlr.v4.runtime.misc.ParseCancellationException;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  * @author Steve Ebersole
  */
-public class MultiLineSqlScriptExtracter implements SqlScriptCommandExtractor {
+public class MultiLineSqlScriptExtractor implements SqlScriptCommandExtractor {
 	public static final String SHORT_NAME = "multi-line";
 
-	public static final MultiLineSqlScriptExtracter INSTANCE = new MultiLineSqlScriptExtracter();
+	public static final MultiLineSqlScriptExtractor INSTANCE = new MultiLineSqlScriptExtractor();
 
 	@Override
 	public List<String> extractCommands(Reader reader, Dialect dialect) {

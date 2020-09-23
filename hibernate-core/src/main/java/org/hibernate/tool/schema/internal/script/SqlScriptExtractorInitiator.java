@@ -43,8 +43,8 @@ public class SqlScriptExtractorInitiator implements StandardServiceInitiator<Sql
 		if ( explicitSettingName.isEmpty() || SingleLineSqlScriptExtractor.SHORT_NAME.equals( explicitSettingName ) ) {
 			return SingleLineSqlScriptExtractor.INSTANCE;
 		}
-		else if ( MultiLineSqlScriptExtracter.SHORT_NAME.equals( explicitSettingName ) ) {
-			return MultiLineSqlScriptExtracter.INSTANCE;
+		else if ( MultiLineSqlScriptExtractor.SHORT_NAME.equals( explicitSettingName ) ) {
+			return MultiLineSqlScriptExtractor.INSTANCE;
 		}
 
 		final ClassLoaderService classLoaderService = registry.getService( ClassLoaderService.class );

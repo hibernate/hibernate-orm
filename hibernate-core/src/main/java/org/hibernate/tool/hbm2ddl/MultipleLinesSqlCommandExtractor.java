@@ -6,7 +6,7 @@
  */
 package org.hibernate.tool.hbm2ddl;
 
-import org.hibernate.tool.schema.internal.script.MultiLineSqlScriptExtracter;
+import org.hibernate.tool.schema.internal.script.MultiLineSqlScriptExtractor;
 
 /**
  * Class responsible for extracting SQL statements from import script. Supports instructions/comments and quoted
@@ -14,8 +14,8 @@ import org.hibernate.tool.schema.internal.script.MultiLineSqlScriptExtracter;
  * 
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  *
- * @deprecated Use {@link MultiLineSqlScriptExtracter} instead
+ * @deprecated Use {@link MultiLineSqlScriptExtractor} instead
  */
 @Deprecated
-public class MultipleLinesSqlCommandExtractor extends MultiLineSqlScriptExtracter {
+public class MultipleLinesSqlCommandExtractor extends MultiLineSqlScriptExtractor {
 }

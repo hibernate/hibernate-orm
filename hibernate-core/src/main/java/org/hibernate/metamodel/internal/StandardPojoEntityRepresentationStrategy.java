@@ -29,7 +29,9 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Backref;
+import org.hibernate.mapping.Component;
 import org.hibernate.mapping.IndexBackref;
+import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Subclass;
@@ -74,6 +76,7 @@ public class StandardPojoEntityRepresentationStrategy implements EntityRepresent
 	private final String identifierPropertyName;
 	private final PropertyAccess identifierPropertyAccess;
 	private final Map<String, PropertyAccess> propertyAccessMap = new ConcurrentHashMap<>();
+	private final StandardPojoEmbeddableRepresentationStrategy mapsIdRepresentationStrategy;
 
 	public StandardPojoEntityRepresentationStrategy(
 			PersistentClass bootDescriptor,
@@ -101,12 +104,22 @@ public class StandardPojoEntityRepresentationStrategy implements EntityRepresent
 		final Property identifierProperty = bootDescriptor.getIdentifierProperty();
 		if ( identifierProperty == null ) {
 			identifierPropertyName = null;
-			identifierPropertyAccess = PropertyAccessStrategyEmbeddedImpl.INSTANCE.buildPropertyAccess(
-					proxyJtd != null ? proxyJtd.getJavaType() : mappedJtd.getJavaType(),
-					"id"
-			);
+			identifierPropertyAccess = null;
+
+			final KeyValue bootDescriptorIdentifier = bootDescriptor.getIdentifier();
+
+			if ( bootDescriptorIdentifier != null && bootDescriptorIdentifier instanceof Component ) {
+				mapsIdRepresentationStrategy = new StandardPojoEmbeddableRepresentationStrategy(
+						bootDescriptor.getDeclaredIdentifierMapper(),
+						creationContext
+				);
+			}
+			else {
+				mapsIdRepresentationStrategy = null;
+			}
 		}
 		else {
+			mapsIdRepresentationStrategy = null;
 			identifierPropertyName = identifierProperty.getName();
 			identifierPropertyAccess = makePropertyAccess( identifierProperty );
 		}
@@ -390,6 +403,10 @@ public class StandardPojoEntityRepresentationStrategy implements EntityRepresent
 			return identifierPropertyAccess;
 		}
 
-		return propertyAccessMap.get( bootAttributeDescriptor.getName() );
+		PropertyAccess propertyAccess = propertyAccessMap.get( bootAttributeDescriptor.getName() );
+		if ( propertyAccess != null ) {
+			return propertyAccess;
+		}
+		return mapsIdRepresentationStrategy.resolvePropertyAccess( bootAttributeDescriptor );
 	}
 }

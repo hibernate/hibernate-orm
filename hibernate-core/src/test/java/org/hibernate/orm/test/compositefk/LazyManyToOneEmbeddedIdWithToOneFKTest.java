@@ -198,6 +198,25 @@ public class LazyManyToOneEmbeddedIdWithToOneFKTest {
 		);
 	}
 
+	@Test
+	public void testHql2(SessionFactoryScope scope) {
+		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		statementInspector.clear();
+		scope.inTransaction(
+				session -> {
+					// intentionally set the Subsystem description to "sub2", only the Subsystem.id value is used for the parameter binding
+					Subsystem subsystem = new Subsystem( 2, "sub2" );
+					PK userKey = new PK( subsystem, "Fab" );
+					SystemUser systemUser = session.createQuery(
+							"from SystemUser s where s.pk = :id",
+							SystemUser.class
+					).setParameter( "id", userKey ).uniqueResult();
+
+					assertThat( systemUser.getPk().getSubsystem().getDescription(), is( "sub1" ) );
+				}
+		);
+	}
+
 	@Entity(name = "System")
 	public static class System {
 		@Id
@@ -287,6 +306,22 @@ public class LazyManyToOneEmbeddedIdWithToOneFKTest {
 		}
 
 		private PK() {
+		}
+
+		public Subsystem getSubsystem() {
+			return subsystem;
+		}
+
+		public void setSubsystem(Subsystem subsystem) {
+			this.subsystem = subsystem;
+		}
+
+		public String getUsername() {
+			return username;
+		}
+
+		public void setUsername(String username) {
+			this.username = username;
 		}
 
 		@Override

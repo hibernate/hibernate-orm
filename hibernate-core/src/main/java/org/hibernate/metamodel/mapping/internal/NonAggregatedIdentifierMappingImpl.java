@@ -6,21 +6,21 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.mapping.Component;
 import org.hibernate.metamodel.internal.AbstractCompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
-import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
-import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.type.ComponentType;
 
 /**
  * A "non-aggregated" composite identifier.
@@ -33,6 +33,8 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentifierMapping {
 
 	private final List<SingularAttributeMapping> idAttributeMappings;
+	private final Component bootCidDescriptor;
+	private final Component bootIdClassDescriptor;
 
 	public NonAggregatedIdentifierMappingImpl(
 			EmbeddableMappingType embeddableDescriptor,
@@ -53,7 +55,10 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 				rootTableKeyColumnNames,
 				creationProcess.getCreationContext().getSessionFactory()
 		);
+
 		this.idAttributeMappings = idAttributeMappings;
+		this.bootCidDescriptor = bootCidDescriptor;
+		this.bootIdClassDescriptor = bootIdClassDescriptor;
 	}
 
 	@Override
@@ -68,24 +73,29 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 
 	@Override
 	public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
-		return entity;
+		if ( entity instanceof HibernateProxy ) {
+			return ( (HibernateProxy) entity ).getHibernateLazyInitializer().getIdentifier();
+		}
+		final Serializable disassemble = bootIdClassDescriptor.getType().disassemble( entity, session, null );
+		return bootCidDescriptor.getType().assemble( disassemble, session, null );
 	}
 
 	@Override
 	public void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session) {
-		// nothing to do
+		final SessionFactoryImplementor factory = session.getFactory();
+		final Object[] propertyValues = ( (ComponentType) bootCidDescriptor.getType() )
+				.getPropertyValues( id, session );
+		final MutableInteger index = new MutableInteger();
+		getAttributes().forEach(
+				attribute ->
+						attribute.getPropertyAccess()
+								.getSetter()
+								.set( entity, propertyValues[index.getAndIncrement()], factory )
+		);
 	}
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// EmbeddableValuedFetchable
-
-	@Override
-	public Expression toSqlExpression(
-			TableGroup tableGroup,
-			Clause clause,
-			SqmToSqlAstConverter walker,
-			SqlAstCreationState sqlAstCreationState) {
-		return null;
-	}
 
 	@Override
 	public String getSqlAliasStem() {

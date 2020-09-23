@@ -15,6 +15,8 @@ import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.ColumnConsumer;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
@@ -26,14 +28,20 @@ import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.from.CompositeTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
+import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
@@ -206,6 +214,74 @@ public abstract class AbstractCompositeIdentifierMapping
 			Clause clause,
 			TypeConfiguration typeConfiguration) {
 		embeddableDescriptor.visitJdbcTypes( action, clause, typeConfiguration );
+	}
+
+	@Override
+	public void visitJdbcValues(
+			Object value,
+			Clause clause,
+			JdbcValuesConsumer valuesConsumer,
+			SharedSessionContractImplementor session) {
+		getEmbeddableTypeDescriptor().getAttributeMappings().forEach(
+				attributeMapping -> {
+					final Object o = attributeMapping.getPropertyAccess().getGetter().get( value );
+					if ( attributeMapping instanceof ToOneAttributeMapping ) {
+						final EntityMappingType associatedEntityMappingType =
+								( (ToOneAttributeMapping) attributeMapping ).getAssociatedEntityMappingType();
+						final EntityIdentifierMapping identifierMapping =
+								associatedEntityMappingType.getIdentifierMapping();
+						final Object identifier = identifierMapping.getIdentifier( o, session );
+						identifierMapping.visitJdbcValues( identifier, clause, valuesConsumer, session );
+					}
+					else {
+						attributeMapping.visitJdbcValues( o, clause, valuesConsumer, session );
+					}
+				}
+		);
+	}
+
+	@Override
+	public Expression toSqlExpression(
+			TableGroup tableGroup,
+			Clause clause,
+			SqmToSqlAstConverter walker,
+			SqlAstCreationState sqlAstCreationState) {
+		final List<String> attrColumnNames = getMappedColumnExpressions();
+		final List<ColumnReference> columnReferences = CollectionHelper.arrayList( attrColumnNames.size() );
+		final TableReference tableReference = tableGroup.resolveTableReference( getContainingTableExpression() );
+		getEmbeddableTypeDescriptor().visitJdbcTypes(
+				new Consumer<JdbcMapping>() {
+					private int index = 0;
+
+					@Override
+					public void accept(JdbcMapping jdbcMapping) {
+						final String attrColumnExpr = attrColumnNames.get( index++ );
+
+						final Expression columnReference = sqlAstCreationState.getSqlExpressionResolver()
+								.resolveSqlExpression(
+										SqlExpressionResolver.createColumnReferenceKey(
+												tableReference,
+												attrColumnExpr
+										),
+										sqlAstProcessingState -> new ColumnReference(
+												tableReference.getIdentificationVariable(),
+												attrColumnExpr,
+												false,
+												null,
+												null,
+												jdbcMapping,
+												sqlAstCreationState.getCreationContext().getSessionFactory()
+										)
+								);
+
+						columnReferences.add( (ColumnReference) columnReference );
+					}
+				},
+				clause,
+				sqlAstCreationState.getCreationContext().getSessionFactory().getTypeConfiguration()
+		);
+
+		return new SqlTuple( columnReferences, this );
 	}
 
 	@Override

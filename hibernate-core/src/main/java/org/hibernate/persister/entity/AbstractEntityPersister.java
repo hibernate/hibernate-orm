@@ -163,6 +163,7 @@ import org.hibernate.metamodel.mapping.internal.InFlightEntityMappingType;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.mapping.internal.SimpleNaturalIdMapping;
+import org.hibernate.metamodel.mapping.internal.NonAggregatedIdentifierMappingImpl;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -6494,6 +6495,10 @@ public abstract class AbstractEntityPersister
 					return subDefinedAttribute;
 				}
 			}
+		}
+
+		if ( identifierMapping instanceof NonAggregatedIdentifierMappingImpl ) {
+			return ( (NonAggregatedIdentifierMappingImpl) identifierMapping ).findSubPart( name, treatTargetType );
 		}
 
 		return null;

@@ -17,6 +17,7 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.hql.internal.HolderInstantiator;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.Loader;
 import org.hibernate.type.Type;
 
@@ -200,10 +201,10 @@ public class ScrollableResultsImpl extends AbstractScrollableResults implements 
 					true
 			);
 			if ( result != null && result.getClass().isArray() ) {
-				currentRow = (Object[]) result;
+				currentRow = ArrayHelper.toObjectArray( result );
 			}
 			else {
-				currentRow = new Object[] {result};
+				currentRow = new Object[] { result };
 			}
 
 			if ( getHolderInstantiator() != null ) {

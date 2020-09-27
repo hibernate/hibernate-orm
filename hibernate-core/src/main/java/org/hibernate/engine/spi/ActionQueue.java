@@ -228,6 +228,10 @@ public class ActionQueue {
 		isTransactionCoordinatorShared = false;
 	}
 
+	public ExecutableList<AbstractEntityInsertAction> getInsertions() {
+		return insertions;
+	}
+
 	public void clear() {
 		EXECUTABLE_LISTS_MAP.forEach( (k,listProvider) -> {
 			ExecutableList<?> l = listProvider.get( this );

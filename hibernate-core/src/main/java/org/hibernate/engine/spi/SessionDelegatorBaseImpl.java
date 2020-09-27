@@ -841,6 +841,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public void amend(Object object) {
+		delegate.amend( object );
+	}
+
+	@Override
 	public void saveOrUpdate(Object object) {
 		delegate.saveOrUpdate( object );
 	}

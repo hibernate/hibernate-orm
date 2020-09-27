@@ -69,6 +69,7 @@ import org.hibernate.TypeHelper;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.UnresolvableObjectException;
+import org.hibernate.action.internal.AbstractEntityInsertAction;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.criterion.NaturalIdentifier;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
@@ -84,6 +85,7 @@ import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.EffectiveEntityGraph;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.ExecutableList;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -636,6 +638,25 @@ public class SessionImpl
 		fastSessionServices.eventListenerGroup_SAVE.fireEventOnEachListener( event, SaveOrUpdateEventListener::onSaveOrUpdate );
 		checkNoUnresolvedActionsAfterOperation();
 		return event.getResultId();
+	}
+
+	@Override
+	public void amend(Object object) throws HibernateException {
+		ExecutableList<AbstractEntityInsertAction> insertions = actionQueue.getInsertions();
+		if ( insertions != null ) {
+			Iterator<AbstractEntityInsertAction> it = insertions.iterator();
+			while ( it.hasNext() ) {
+				AbstractEntityInsertAction action = it.next();
+				if ( action.getInstance() == object ) {
+					Object[] state = action.getState();
+					EntityPersister persister = action.getPersister();
+					for ( int i = 0; i < persister.getPropertyNames().length; i++ ) {
+							state[i] = persister.getPropertyValue( object, i );
+					}
+					break;
+				}
+			}
+		}
 	}
 
 

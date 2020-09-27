@@ -419,6 +419,18 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	Serializable save(String entityName, Object object);
 
 	/**
+	 * Amend the given persistent instance which persisted in this session.
+	 * It will save an unnecessary update if called before session flushing.
+	 * This method has no side effects.
+	 *
+	 * @param object a persistent instance of a persistent class
+	 *
+	 * @see Session#save(Object)
+	 * @see Session#update(Object)
+	 */
+	void amend(Object object);
+
+	/**
 	 * Either {@link #save(Object)} or {@link #update(Object)} the given
 	 * instance, depending upon resolution of the unsaved-value checks (see the
 	 * manual for discussion of unsaved-value checking).

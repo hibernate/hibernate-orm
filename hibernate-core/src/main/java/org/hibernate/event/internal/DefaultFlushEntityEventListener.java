@@ -8,12 +8,14 @@ package org.hibernate.event.internal;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Iterator;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;
 import org.hibernate.StaleObjectStateException;
+import org.hibernate.action.internal.AbstractEntityInsertAction;
 import org.hibernate.action.internal.DelayedPostInsertIdentifier;
 import org.hibernate.action.internal.EntityUpdateAction;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
@@ -22,6 +24,7 @@ import org.hibernate.engine.internal.Nullability;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.ExecutableList;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
@@ -470,6 +473,21 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
 			int[] dirtyProperties = event.getDirtyProperties();
 			if ( dirtyProperties != null && dirtyProperties.length != 0 ) {
+				final ExecutableList<AbstractEntityInsertAction> insertions = event.getSession().getActionQueue().getInsertions();
+				if ( insertions != null ) {
+					final Iterator<AbstractEntityInsertAction> it = insertions.iterator();
+					while ( it.hasNext() ) {
+						final AbstractEntityInsertAction insertAction = it.next();
+						if ( insertAction.getInstance() == event.getEntity() ) {
+							final Object[] oldState = insertAction.getState();
+							final Object[] newState = event.getPropertyValues();
+							for ( int i = 0; i < dirtyProperties.length; i++ ) {
+								oldState[dirtyProperties[i]] = newState[dirtyProperties[i]];
+							}
+							return false;
+						}
+					}
+				}
 				return true; //TODO: suck into event class
 			}
 			else {

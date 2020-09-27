@@ -39,8 +39,8 @@ public class OneToOneUnidirectionalTest extends BaseEntityManagerFunctionalTestC
 			PhoneDetails details = new PhoneDetails( "T-Mobile", "GSM" );
 
 			phone.setDetails( details );
-			entityManager.persist( phone );
 			entityManager.persist( details );
+			entityManager.persist( phone );
 		} );
 	}
 

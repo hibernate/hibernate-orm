@@ -1,0 +1,47 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
+package org.hibernate.query.sqm.tree.select;
+
+import org.hibernate.query.criteria.JpaOrder;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
+
+import org.hibernate.testing.TestForIssue;
+import org.junit.Test;
+
+import static org.hibernate.NullPrecedence.FIRST;
+import static org.hibernate.SortOrder.ASCENDING;
+import static org.hibernate.SortOrder.DESCENDING;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotSame;
+import static org.mockito.Mockito.mock;
+
+/**
+ * @author seregamorph
+ */
+@TestForIssue(jiraKey = "HHH-13884")
+public class HHH13884Test {
+
+	@Test
+	public void testDefaultSqmSortSpecificationReverse() {
+		SqmExpression sortExpression = mock( SqmExpression.class );
+		String collation = "collation";
+
+		SqmSortSpecification order = new SqmSortSpecification( sortExpression, collation, ASCENDING, FIRST );
+
+		assertEquals( sortExpression, order.getSortExpression() );
+		assertEquals( collation, order.getCollation() );
+		assertEquals( ASCENDING, order.getSortOrder() );
+		assertEquals( FIRST, order.getNullPrecedence() );
+
+		JpaOrder reversed = order.reverse();
+
+		assertEquals( DESCENDING, reversed.getSortOrder() );
+		assertEquals( FIRST, reversed.getNullPrecedence() );
+
+		assertNotSame( "Order.reverse() should create new instance", order, reversed );
+	}
+}

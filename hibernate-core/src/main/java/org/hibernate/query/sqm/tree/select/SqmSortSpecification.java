@@ -18,7 +18,8 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 public class SqmSortSpecification implements JpaOrder {
 	private final SqmExpression sortExpression;
 	private final String collation;
-	private SortOrder sortOrder;
+	private final SortOrder sortOrder;
+
 	private NullPrecedence nullPrecedence;
 
 	public SqmSortSpecification(
@@ -73,8 +74,8 @@ public class SqmSortSpecification implements JpaOrder {
 
 	@Override
 	public JpaOrder reverse() {
-		this.sortOrder = this.sortOrder == null ? SortOrder.DESCENDING : sortOrder.reverse();
-		return this;
+		SortOrder newSortOrder = this.sortOrder == null ? SortOrder.DESCENDING : sortOrder.reverse();
+		return new SqmSortSpecification( sortExpression, collation, newSortOrder, nullPrecedence );
 	}
 
 	@Override

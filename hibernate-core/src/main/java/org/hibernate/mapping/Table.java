@@ -8,12 +8,14 @@ package org.hibernate.mapping;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -42,6 +44,7 @@ import org.jboss.logging.Logger;
 @SuppressWarnings("deprecation")
 public class Table implements RelationalModel, Serializable, Exportable {
 	private static final Logger log = Logger.getLogger( Table.class );
+	private static final Column[] EMPTY_COLUMN_ARRAY = new Column[0];
 
 	private Identifier catalog;
 	private Identifier schema;
@@ -858,40 +861,38 @@ public class Table implements RelationalModel, Serializable, Exportable {
 		return identifier == null ? null : identifier.render();
 	}
 
-
 	public static class ForeignKeyKey implements Serializable {
-		String referencedClassName;
-		List<Column> columns;
-		List<Column> referencedColumns;
+		private final String referencedClassName;
+		private final Column[] columns;
+		private final Column[] referencedColumns;
 
 		ForeignKeyKey(List<Column> columns, String referencedClassName, List<Column> referencedColumns) {
+			Objects.requireNonNull( columns );
+			Objects.requireNonNull( referencedClassName );
 			this.referencedClassName = referencedClassName;
-			this.columns = new ArrayList<>();
-			this.columns.addAll( columns );
+			this.columns = columns.toArray( EMPTY_COLUMN_ARRAY );
 			if ( referencedColumns != null ) {
-				this.referencedColumns = new ArrayList<>();
-				this.referencedColumns.addAll( referencedColumns );
+				this.referencedColumns = referencedColumns.toArray( EMPTY_COLUMN_ARRAY );
 			}
 			else {
-				this.referencedColumns = Collections.emptyList();
+				this.referencedColumns = EMPTY_COLUMN_ARRAY;
 			}
 		}
 
 		public int hashCode() {
-			return columns.hashCode() + referencedColumns.hashCode();
+			return Arrays.hashCode( columns ) + Arrays.hashCode( referencedColumns );
 		}
 
 		public boolean equals(Object other) {
 			ForeignKeyKey fkk = (ForeignKeyKey) other;
-			return fkk != null && fkk.columns.equals( columns ) && fkk.referencedColumns.equals( referencedColumns );
+			return fkk != null && Arrays.equals( fkk.columns, columns ) && Arrays.equals( fkk.referencedColumns, referencedColumns );
 		}
 
 		@Override
 		public String toString() {
-			return "ForeignKeyKey{" +
-					"columns=" + columns +
-					", referencedClassName='" + referencedClassName + '\'' +
-					", referencedColumns=" + referencedColumns +
+			return "ForeignKeyKey{columns=" + Arrays.toString( columns ) +
+					", referencedClassName='" + referencedClassName +
+					"', referencedColumns=" + Arrays.toString( referencedColumns ) +
 					'}';
 		}
 	}

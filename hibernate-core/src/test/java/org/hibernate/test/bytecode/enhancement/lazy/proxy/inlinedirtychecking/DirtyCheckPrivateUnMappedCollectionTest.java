@@ -21,6 +21,7 @@ import javax.persistence.MappedSuperclass;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Environment;
 
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
@@ -35,6 +36,8 @@ import org.junit.runner.RunWith;
 @CustomEnhancementContext({ DirtyCheckEnhancementContext.class })
 public class DirtyCheckPrivateUnMappedCollectionTest extends BaseNonConfigCoreFunctionalTestCase {
 
+	boolean skipTest;
+
 	@Override
 	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
 		super.configureStandardServiceRegistryBuilder( ssrb );
@@ -45,11 +48,21 @@ public class DirtyCheckPrivateUnMappedCollectionTest extends BaseNonConfigCoreFu
 
 	@Override
 	protected void applyMetadataSources(MetadataSources sources) {
-		sources.addAnnotatedClass( Measurement.class );
+		String byteCodeProvider = Environment.getProperties().getProperty( AvailableSettings.BYTECODE_PROVIDER );
+		if ( byteCodeProvider != null && !Environment.BYTECODE_PROVIDER_NAME_BYTEBUDDY.equals( byteCodeProvider ) ) {
+			// skip the test if the bytecode provider is Javassist
+			skipTest = true;
+		}
+		else {
+			sources.addAnnotatedClass( Measurement.class );
+		}
 	}
 
 	@Test
 	public void testIt() {
+		if ( skipTest ) {
+			return;
+		}
 		inTransaction(
 				session -> {
 					Tag tag = new Tag();

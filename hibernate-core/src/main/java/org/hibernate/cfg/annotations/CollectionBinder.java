@@ -47,6 +47,7 @@ import org.hibernate.annotations.LazyGroup;
 import org.hibernate.annotations.Loader;
 import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.annotations.OrderBy;
 import org.hibernate.annotations.Parameter;
@@ -101,6 +102,7 @@ import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 
@@ -1210,14 +1212,24 @@ public abstract class CollectionBinder {
 							key.setForeignKeyDefinition( StringHelper.nullIfEmpty( fkOverride.foreignKeyDefinition() ) );
 						}
 						else {
-							final JoinColumn joinColumnAnn = property.getAnnotation( JoinColumn.class );
-							if ( joinColumnAnn != null ) {
-								if ( joinColumnAnn.foreignKey().value() == ConstraintMode.NO_CONSTRAINT ) {
-									key.setForeignKeyName( "none" );
-								}
-								else {
-									key.setForeignKeyName( StringHelper.nullIfEmpty( joinColumnAnn.foreignKey().name() ) );
-									key.setForeignKeyDefinition( StringHelper.nullIfEmpty( joinColumnAnn.foreignKey().foreignKeyDefinition() ) );
+							final OneToMany oneToManyAnn = property.getAnnotation( OneToMany.class );
+							final OnDelete onDeleteAnn = property.getAnnotation( OnDelete.class );
+							if ( oneToManyAnn != null && !oneToManyAnn.mappedBy().isEmpty()
+									&& ( onDeleteAnn == null || onDeleteAnn.action() != OnDeleteAction.CASCADE ) ) {
+								// foreign key should be up to @ManyToOne side
+								// @OnDelete generate "on delete cascade" foreign key
+								key.setForeignKeyName( "none" );
+							}
+							else {
+								final JoinColumn joinColumnAnn = property.getAnnotation( JoinColumn.class );
+								if ( joinColumnAnn != null ) {
+									if ( joinColumnAnn.foreignKey().value() == ConstraintMode.NO_CONSTRAINT ) {
+										key.setForeignKeyName( "none" );
+									}
+									else {
+										key.setForeignKeyName( StringHelper.nullIfEmpty( joinColumnAnn.foreignKey().name() ) );
+										key.setForeignKeyDefinition( StringHelper.nullIfEmpty( joinColumnAnn.foreignKey().foreignKeyDefinition() ) );
+									}
 								}
 							}
 						}
@@ -1679,13 +1691,13 @@ public abstract class CollectionBinder {
 		final String mappedBy = columns[0].getMappedBy();
 		if ( StringHelper.isNotEmpty( mappedBy ) ) {
 			final Property property = referencedEntity.getRecursiveProperty( mappedBy );
-			Iterator mappedByColumns;
+			Iterator<Selectable> mappedByColumns;
 			if ( property.getValue() instanceof Collection ) {
 				mappedByColumns = ( (Collection) property.getValue() ).getKey().getColumnIterator();
 			}
 			else {
 				//find the appropriate reference key, can be in a join
-				Iterator joinsIt = referencedEntity.getJoinIterator();
+				Iterator<Join> joinsIt = referencedEntity.getJoinIterator();
 				KeyValue key = null;
 				while ( joinsIt.hasNext() ) {
 					Join join = (Join) joinsIt.next();
@@ -1694,7 +1706,9 @@ public abstract class CollectionBinder {
 						break;
 					}
 				}
-				if ( key == null ) key = property.getPersistentClass().getIdentifier();
+				if ( key == null ) {
+					key = property.getPersistentClass().getIdentifier();
+				}
 				mappedByColumns = key.getColumnIterator();
 			}
 			while ( mappedByColumns.hasNext() ) {

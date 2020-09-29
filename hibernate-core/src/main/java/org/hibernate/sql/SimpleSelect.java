@@ -148,7 +148,7 @@ public class SimpleSelect {
 		);
 
 		if ( comment != null ) {
-			buf.append( "/* " ).append( comment ).append( " */ " );
+			buf.append( "/* " ).append( Dialect.escapeComment( comment ) ).append( " */ " );
 		}
 
 		buf.append( "select " );

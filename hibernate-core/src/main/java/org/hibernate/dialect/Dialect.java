@@ -24,6 +24,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -139,6 +140,9 @@ public abstract class Dialect implements ConversionContext {
 	 * Characters used as closing for quoting SQL identifiers
 	 */
 	public static final String CLOSED_QUOTE = "`\"]";
+
+	private static final Pattern ESCAPE_CLOSING_COMMENT_PATTERN = Pattern.compile( "\\*/" );
+	private static final Pattern ESCAPE_OPENING_COMMENT_PATTERN = Pattern.compile( "/\\*" );
 
 	private final TypeNames typeNames = new TypeNames();
 	private final TypeNames hibernateTypeNames = new TypeNames();
@@ -3002,6 +3006,14 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	protected String prependComment(String sql, String comment) {
-		return  "/* " + comment + " */ " + sql;
+		return "/* " + escapeComment( comment ) + " */ " + sql;
+	}
+
+	public static String escapeComment(String comment) {
+		if ( StringHelper.isNotEmpty( comment ) ) {
+			final String escaped = ESCAPE_CLOSING_COMMENT_PATTERN.matcher( comment ).replaceAll( "*\\\\/" );
+			return ESCAPE_OPENING_COMMENT_PATTERN.matcher( escaped ).replaceAll( "/\\\\*" );
+		}
+		return comment;
 	}
 }

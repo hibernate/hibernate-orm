@@ -117,7 +117,7 @@ public class DirtyCheckPrivateUnMappedCollectionTest extends BaseNonConfigCoreFu
 		}
 	}
 
-	@Entity
+	@Entity(name = "Measurement")
 	public static class Measurement extends AbstractMeasurement {
 	}
 

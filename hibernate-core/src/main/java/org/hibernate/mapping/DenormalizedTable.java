@@ -111,10 +111,12 @@ public class DenormalizedTable extends Table {
 
 	@Override
 	public Iterator getUniqueKeyIterator() {
-		Iterator iter = includedTable.getUniqueKeyIterator();
-		while ( iter.hasNext() ) {
-			UniqueKey uk = (UniqueKey) iter.next();
-			createUniqueKey( uk.getColumns() );
+		if ( !includedTable.isPhysicalTable() ) {
+			Iterator iter = includedTable.getUniqueKeyIterator();
+			while ( iter.hasNext() ) {
+				UniqueKey uk = (UniqueKey) iter.next();
+				createUniqueKey( uk.getColumns() );
+			}
 		}
 		return getUniqueKeys().values().iterator();
 	}

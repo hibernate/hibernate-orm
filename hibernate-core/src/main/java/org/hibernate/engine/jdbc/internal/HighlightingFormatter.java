@@ -48,10 +48,10 @@ public class HighlightingFormatter implements Formatter {
 	 * @param stringCode the ANSI escape code to use for highlighting SQL strings
 	 */
 	public HighlightingFormatter(String keywordCode, String stringCode, String quotedCode) {
-		keywordEscape =escape(keywordCode);
-		stringEscape = escape(stringCode);
-		quotedEscape = escape(quotedCode);
-		normalEscape = escape("0");
+		keywordEscape =escape( keywordCode );
+		stringEscape = escape( stringCode );
+		quotedEscape = escape( quotedCode );
+		normalEscape = escape( "0" );
 	}
 
 	@Override
@@ -60,46 +60,47 @@ public class HighlightingFormatter implements Formatter {
 		StringBuilder result = new StringBuilder();
 		boolean inString = false;
 		boolean inQuoted = false;
-		for (StringTokenizer tokenizer = new StringTokenizer( sql, symbolsAndWs, true );
+		for ( StringTokenizer tokenizer = new StringTokenizer( sql, symbolsAndWs, true );
 				tokenizer.hasMoreTokens(); ) {
 			String token = tokenizer.nextToken();
-			switch (token) {
+			switch ( token ) {
 				case "\"":
 				case "`": // for MySQL
-					if (inString) {
-						result.append(token);
+					if ( inString ) {
+						result.append( token );
 					}
-					else if (inQuoted) {
+					else if ( inQuoted ) {
 						inQuoted = false;
-						result.append(token).append(normalEscape);
+						result.append( token ).append( normalEscape );
 					}
 					else {
 						inQuoted = true;
-						result.append(quotedEscape).append(token);
+						result.append( quotedEscape ).append( token );
 					}
 					break;
 				case "'":
-					if (inQuoted) {
-						result.append("'");
+					if ( inQuoted ) {
+						result.append( "'" );
 					}
-					else if (inString) {
+					else if ( inString ) {
 						inString = false;
-						result.append("'").append(normalEscape);
+						result.append( "'" ).append( normalEscape );
 					}
 					else {
 						inString = true;
-						result.append(stringEscape).append("'");
+						result.append( stringEscape ).append( "'" );
 					}
 					break;
 				default:
 					if ( KEYWORDS.contains( token.toUpperCase() ) ) {
-						result.append(keywordEscape).append(token).append(normalEscape);
+						result.append( keywordEscape ).append( token ).append( normalEscape );
 					}
 					else {
-						result.append(token);
+						result.append( token );
 					}
 			}
 		}
 		return result.toString();
 	}
+
 }

@@ -19,7 +19,7 @@ import java.util.StringTokenizer;
  *
  * @author Gavin King
  */
-public class HighlightingFormatter implements Formatter {
+public final class HighlightingFormatter implements Formatter {
 
 	private static final Set<String> KEYWORDS = new HashSet<>( AnsiSqlKeywords.INSTANCE.sql2003() );
 	static {
@@ -33,6 +33,7 @@ public class HighlightingFormatter implements Formatter {
 					"36", // cyan
 					"32"
 			);
+	private static final String SYMBOLS_AND_WS = "=><!+-*/()',.|&`\"?" + StringHelper.WHITESPACE;
 
 	private static String escape(String code) {
 		return "\u001b[" + code + "m";
@@ -56,11 +57,10 @@ public class HighlightingFormatter implements Formatter {
 
 	@Override
 	public String format(String sql) {
-		String symbolsAndWs = "=><!+-*/()',.|&`\"?" + StringHelper.WHITESPACE;
 		StringBuilder result = new StringBuilder();
 		boolean inString = false;
 		boolean inQuoted = false;
-		for ( StringTokenizer tokenizer = new StringTokenizer( sql, symbolsAndWs, true );
+		for ( StringTokenizer tokenizer = new StringTokenizer( sql, SYMBOLS_AND_WS, true );
 				tokenizer.hasMoreTokens(); ) {
 			String token = tokenizer.nextToken();
 			switch ( token ) {
@@ -80,15 +80,15 @@ public class HighlightingFormatter implements Formatter {
 					break;
 				case "'":
 					if ( inQuoted ) {
-						result.append( "'" );
+						result.append( '\'' );
 					}
 					else if ( inString ) {
 						inString = false;
-						result.append( "'" ).append( normalEscape );
+						result.append( '\'' ).append( normalEscape );
 					}
 					else {
 						inString = true;
-						result.append( stringEscape ).append( "'" );
+						result.append( stringEscape ).append( '\'' );
 					}
 					break;
 				default:

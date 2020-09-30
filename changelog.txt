@@ -3,6 +3,45 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.4.22.Final (September 30, 2020)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31844
+
+** Bug
+    * [HHH-14231] - java.lang.ClassCastException: [B cannot be cast to [Ljava.lang.Object; while using JPA 2.2 query.getResultStream().findFirst()
+    * [HHH-14230] - ClassCastException raised by ForeignKeyKey.toString()
+    * [HHH-14223] - NullPointerException when implicit joining over @JoinFormula/@JoinColumnOrFormula
+    * [HHH-14220] - EnhancementException failure with MappedSuperclass with a un-mapped collection
+    * [HHH-14219] - Duplicated rows of sequence table if generator shared by multiple entities
+    * [HHH-14213] - Could not parse literal [9223372036854775808] as integer
+    * [HHH-14212] - @EntityGraph annotation log warning message "Entity graph specified is not applicable to the entity ... . Ignored." and works as if  EntityGraph.EntityGraphType.LOAD would set.
+    * [HHH-14206] - Auto-apply converter not applied to primitives
+    * [HHH-14201] - Wrong order of joins in SQL
+    * [HHH-14199] - setDataBase gradle task failed
+    * [HHH-14197] - Criteria API doubly-nested subquery generates invalid SQL - missing subquery root
+    * [HHH-14148] - Invalid SQL when null precedence, @OrderBy and entity graph are used
+    * [HHH-13201] - FromElement orign check fails when fetching @ElementCollection and association
+    * [HHH-13058] - Criteria API correlated subquery with outer join generates incorrect SQL
+    * [HHH-9422] - Metamodel Generator should close streams opened to persistence.xml and referenced mapping files
+
+** Improvement
+    * [HHH-14242] - Micro optimisations of ActionQueue: redundant branch evaluation
+    * [HHH-14238] - Option to always include collection fields in the default fetch group
+    * [HHH-14236] - Improve efficiency of ForeignKeyKey
+    * [HHH-14218] - Correct some typos in code comments
+    * [HHH-14205] - Replace StringBuffer usage with StringBuilder when possible
+    * [HHH-14031] - Update h2 database from 1.4.196 to 1.4.197
+
+** New Feature
+    * [HHH-14198] - Expose CompositeUserTypes through JPA Metamodel
+
+** Task
+    * [HHH-14217] - Use ANSI escape codes to highlight output of hibernate.show_sql
+    * [HHH-14204] - Schema validator should be more forgiving of column type mismatches
+    * [HHH-14203] - DB2 requires the restrict keyword to drop the schema
+
+
 Changes in 5.4.21.Final (August 27, 2020)
 ------------------------------------------------------------------------------------------------------------------------
 

@@ -9,6 +9,9 @@ package org.hibernate.query.criteria.internal;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Order;
 
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
+
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
@@ -26,9 +29,9 @@ public class HHH13884Test {
 
 	@Test
 	public void testDefaultReversedOrderImpl() {
-		Expression<?> expression = mock( Expression.class );
+		SqmExpression<?> expression = mock( SqmExpression.class );
 
-		OrderImpl order = new OrderImpl( expression );
+		SqmSortSpecification order = new SqmSortSpecification( expression );
 
 		assertEquals( expression, order.getExpression() );
 		assertTrue( "Order should be ascending by default", order.isAscending() );

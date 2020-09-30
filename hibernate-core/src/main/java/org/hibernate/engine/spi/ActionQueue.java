@@ -45,6 +45,7 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.engine.internal.NonNullableTransientDependencies;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
@@ -105,7 +106,7 @@ public class ActionQueue {
 	 */
 	private static final LinkedHashMap<Class<? extends Executable>,ListProvider> EXECUTABLE_LISTS_MAP;
 	static {
-		EXECUTABLE_LISTS_MAP = new LinkedHashMap<Class<? extends Executable>,ListProvider>( 8 );
+		EXECUTABLE_LISTS_MAP = new LinkedHashMap<>( CollectionHelper.determineProperSizing( 8 ) );
 
 		EXECUTABLE_LISTS_MAP.put(
 				OrphanRemovalAction.class,
@@ -1101,7 +1102,7 @@ public class ActionQueue {
 			}
 
 			/**
-			 * Check if the this {@link BatchIdentifier} has a parent or grand parent
+			 * Check if this {@link BatchIdentifier} has a parent or grand parent
 			 * matching the given {@link BatchIdentifier} reference.
 			 *
 			 * @param batchIdentifier {@link BatchIdentifier} reference
@@ -1268,7 +1269,9 @@ public class ActionQueue {
 				for ( int i = 0; i < propertyValues.length; i++ ) {
 					Object value = propertyValues[i];
 					Type type = propertyTypes[i];
-					addParentChildEntityNameByPropertyAndValue( action, batchIdentifier, type, value );
+					if ( value != null ) {
+						addParentChildEntityNameByPropertyAndValue( action, batchIdentifier, type, value );
+					}
 				}
 
 				if ( identifierType.isComponentType() ) {
@@ -1300,11 +1303,9 @@ public class ActionQueue {
 					if ( !batchIdentifier.getEntityName().equals( entityName ) ) {
 						batchIdentifier.getParentEntityNames().add( entityName );
 					}
-					if ( value != null ) {
-						String valueClass = value.getClass().getName();
-						if ( !valueClass.equals( entityName ) ) {
-							batchIdentifier.getParentEntityNames().add( valueClass );
-						}
+					String valueClass = value.getClass().getName();
+					if ( !valueClass.equals( entityName ) ) {
+						batchIdentifier.getParentEntityNames().add( valueClass );
 					}
 					if ( !rootEntityName.equals( entityName ) ) {
 						batchIdentifier.getParentEntityNames().add( rootEntityName );

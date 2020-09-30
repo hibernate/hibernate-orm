@@ -72,6 +72,8 @@ public class InsertOrderingWithCascadeOnPersist extends BaseCoreFunctionalTestCa
 			newResult.setMarketBid( newBid );
 			session.persist( newBid );
 			session.persist( newResult );
+
+
 		} );
 	}
 

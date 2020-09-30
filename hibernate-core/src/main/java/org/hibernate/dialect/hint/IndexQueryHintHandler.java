@@ -35,7 +35,7 @@ public class IndexQueryHintHandler implements QueryHintHandler {
 			String endToken = matcher.group( 2 );
 
 			return new StringBuilder( startToken )
-					.append( " use index (" )
+					.append( " USE INDEX (" )
 					.append( hints )
 					.append( ") " )
 					.append( endToken )

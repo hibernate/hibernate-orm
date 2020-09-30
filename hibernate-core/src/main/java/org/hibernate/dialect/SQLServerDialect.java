@@ -124,7 +124,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public String getCurrentSchemaCommand() {
-		return "select schema_name()";
+		return "SELECT SCHEMA_NAME()";
 	}
 
 	@Override

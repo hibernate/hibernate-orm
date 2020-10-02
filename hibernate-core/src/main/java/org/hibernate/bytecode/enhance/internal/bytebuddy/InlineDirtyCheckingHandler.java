@@ -63,7 +63,7 @@ final class InlineDirtyCheckingHandler implements Implementation, ByteCodeAppend
 					&& !( persistentField.getType().asErasure().isAssignableTo( Collection.class )
 					&& enhancementContext.isMappedCollection( persistentField ) ) ) {
 				implementation = new InlineDirtyCheckingHandler( implementation, managedCtClass,
-						persistentField.asDefined(), enhancementContext.isLazyLoadable(persistentField) );
+						persistentField.asDefined(), enhancementContext.isLazyLoadable( persistentField ) );
 			}
 
 			if ( enhancementContext.isCompositeClass( persistentField.getType().asErasure() )
@@ -102,40 +102,40 @@ final class InlineDirtyCheckingHandler implements Implementation, ByteCodeAppend
 			Context implementationContext,
 			MethodDescription instrumentedMethod) {
 
-		// Skip comparaison when lazy not loaded
-		Label uninitializedLazy = new Label();
+		// Skip comparison when lazy not loaded
+		final Label uninitializedLazy = new Label();
 
-		if (checkLazyUninitialized) {
+		if ( checkLazyUninitialized ) {
 			// No dirty check is required for non initialized lazy fields.
-			Label skipUnitializedCheckWithPersistentAttributeInterceptor = new Label();
-			Label skipUnitializedCheck = new Label();
+			final Label skipUninitializedCheckWithPersistentAttributeInterceptor = new Label();
+			final Label skipUninitializedCheck = new Label();
 
-			// if (value !== null || value !== false || value !== 0 || ...) => np
+			// if ( value !== null || value !== false || value !== 0 || ... ) => no need to detect lazy values
 			methodVisitor.visitVarInsn( Type.getType( persistentField.getType().asErasure().getDescriptor() ).getOpcode( Opcodes.ILOAD ), 1 );
 			if ( persistentField.getType().isPrimitive() ) {
 				if ( persistentField.getType().represents( long.class ) ) {
-					methodVisitor.visitInsn( Opcodes.LCONST_0);
+					methodVisitor.visitInsn( Opcodes.LCONST_0 );
 					methodVisitor.visitInsn( Opcodes.LCMP );
-					methodVisitor.visitJumpInsn( Opcodes.IFNE, skipUnitializedCheck );
+					methodVisitor.visitJumpInsn( Opcodes.IFNE, skipUninitializedCheck );
 				}
 				else if ( persistentField.getType().represents( float.class ) ) {
-					methodVisitor.visitInsn( Opcodes.FCONST_0);
+					methodVisitor.visitInsn( Opcodes.FCONST_0 );
 					methodVisitor.visitInsn( Opcodes.FCMPL );
-					methodVisitor.visitJumpInsn( Opcodes.IFNE, skipUnitializedCheck );
+					methodVisitor.visitJumpInsn( Opcodes.IFNE, skipUninitializedCheck );
 				}
 				else if ( persistentField.getType().represents( double.class ) ) {
-					methodVisitor.visitInsn( Opcodes.DCONST_0);
+					methodVisitor.visitInsn( Opcodes.DCONST_0 );
 					methodVisitor.visitInsn( Opcodes.DCMPL );
-					methodVisitor.visitJumpInsn( Opcodes.IFNE, skipUnitializedCheck );
+					methodVisitor.visitJumpInsn( Opcodes.IFNE, skipUninitializedCheck );
 				}
 				else {
-					methodVisitor.visitJumpInsn( Opcodes.IFNE, skipUnitializedCheck );
+					methodVisitor.visitJumpInsn( Opcodes.IFNE, skipUninitializedCheck );
 				}
 			}
 			else {
-				methodVisitor.visitJumpInsn( Opcodes.IFNONNULL, skipUnitializedCheck );
+				methodVisitor.visitJumpInsn( Opcodes.IFNONNULL, skipUninitializedCheck );
 			}
-	 
+
 			// if ( this.$$_hibernate_getInterceptor() != null )
 			methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
 			methodVisitor.visitMethodInsn(
@@ -149,19 +149,19 @@ final class InlineDirtyCheckingHandler implements Implementation, ByteCodeAppend
 			methodVisitor.visitInsn( Opcodes.DUP );
 
 			// if ( this.$$_hibernate_getInterceptor() == null ) => no dirty check
-			methodVisitor.visitJumpInsn( Opcodes.IFNULL, skipUnitializedCheckWithPersistentAttributeInterceptor );
+			methodVisitor.visitJumpInsn( Opcodes.IFNULL, skipUninitializedCheckWithPersistentAttributeInterceptor );
 
-			// if ( !this.$$_hibernate_getInterceptor() instanceof LazyAttributeLoadingInterceptor) => no dirty check
+			// if ( !this.$$_hibernate_getInterceptor() instanceof LazyAttributeLoadingInterceptor ) => no dirty check
 			methodVisitor.visitInsn( Opcodes.DUP );
-			methodVisitor.visitTypeInsn( Opcodes.INSTANCEOF, Type.getInternalName(LazyAttributeLoadingInterceptor.class) );
-			methodVisitor.visitJumpInsn( Opcodes.IFEQ, skipUnitializedCheckWithPersistentAttributeInterceptor );
-			methodVisitor.visitTypeInsn( Opcodes.CHECKCAST, Type.getInternalName(LazyAttributeLoadingInterceptor.class) );
-			
-			// call interceptor.isAttributeLoaded(fieldName)
+			methodVisitor.visitTypeInsn( Opcodes.INSTANCEOF, Type.getInternalName( LazyAttributeLoadingInterceptor.class ) );
+			methodVisitor.visitJumpInsn( Opcodes.IFEQ, skipUninitializedCheckWithPersistentAttributeInterceptor );
+			methodVisitor.visitTypeInsn( Opcodes.CHECKCAST, Type.getInternalName( LazyAttributeLoadingInterceptor.class ) );
+
+			// call interceptor.isAttributeLoaded( fieldName )
 			methodVisitor.visitLdcInsn( persistentField.getName() );
 			methodVisitor.visitMethodInsn(
 					Opcodes.INVOKEVIRTUAL,
-					Type.getInternalName(LazyAttributeLoadingInterceptor.class),
+					Type.getInternalName( LazyAttributeLoadingInterceptor.class ),
 					"isAttributeLoaded",
 					Type.getMethodDescriptor(
 							Type.BOOLEAN_TYPE,
@@ -170,20 +170,20 @@ final class InlineDirtyCheckingHandler implements Implementation, ByteCodeAppend
 					false
 			);
 
-			// When field is not initialized, Comparaison is useless
-			// if (interceptor.isAttributeLoaded(fieldName)) goto skipUnitializedCheck
-			methodVisitor.visitJumpInsn( Opcodes.IFNE, skipUnitializedCheck);
- 
-			// Sure that the lazy is not initialized. No need for comparaison, directly set dirty
+			// When field is not initialized, comparison is useless
+			// if ( interceptor.isAttributeLoaded( fieldName ) ) goto skipUninitializedCheck
+			methodVisitor.visitJumpInsn( Opcodes.IFNE, skipUninitializedCheck );
+
+			// Sure that the lazy is not initialized. No need for comparison, directly set dirty
 			methodVisitor.visitJumpInsn( Opcodes.GOTO, uninitializedLazy );
-			
-			methodVisitor.visitLabel( skipUnitializedCheckWithPersistentAttributeInterceptor );
+
+			methodVisitor.visitLabel( skipUninitializedCheckWithPersistentAttributeInterceptor );
 			if ( implementationContext.getClassFileVersion().isAtLeast( ClassFileVersion.JAVA_V6 ) ) {
-				methodVisitor.visitFrame( Opcodes.F_SAME1, 0, null, 1, new Object[]{Type.getInternalName(PersistentAttributeInterceptor.class)} );
+				methodVisitor.visitFrame( Opcodes.F_SAME1, 0, null, 1, new Object[]{Type.getInternalName( PersistentAttributeInterceptor.class )} );
 			}
 			methodVisitor.visitInsn( Opcodes.POP );
 
-			methodVisitor.visitLabel( skipUnitializedCheck );
+			methodVisitor.visitLabel( skipUninitializedCheck );
 			if ( implementationContext.getClassFileVersion().isAtLeast( ClassFileVersion.JAVA_V6 ) ) {
 				methodVisitor.visitFrame( Opcodes.F_SAME, 0, null, 0, null );
 			}
@@ -234,11 +234,10 @@ final class InlineDirtyCheckingHandler implements Implementation, ByteCodeAppend
 			);
 			branchCode = Opcodes.IFNE;
 		}
-
 		Label skip = new Label();
 		methodVisitor.visitJumpInsn( branchCode, skip );
 
-		methodVisitor.visitLabel(uninitializedLazy);
+		methodVisitor.visitLabel( uninitializedLazy );
 		if ( implementationContext.getClassFileVersion().isAtLeast( ClassFileVersion.JAVA_V6 ) ) {
 			methodVisitor.visitFrame( Opcodes.F_SAME, 0, null, 0, null );
 		}

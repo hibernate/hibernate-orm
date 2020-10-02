@@ -70,8 +70,6 @@ public class TestDirtyCheckOnLazy extends BaseEntityManagerFunctionalTestCase {
      */
     @Test
     public void testNoUpdate() {
-        byte[] testArray = new byte[]{0x2A};
-
         doInJPA( this::entityManagerFactory, new JPATransactionVoidFunction() {
             @Override
             public void accept(EntityManager em) {

@@ -299,8 +299,6 @@ task changeLogFile( dependsOn: [releaseChecks] ) {
     }
 }
 
-
-
 task addVersionCommit( dependsOn: [changeLogFile] ) {
     group = "Release"
     description = "Adds a commit for the released version and push the changes to github"
@@ -413,15 +411,14 @@ class ChangeLogFile {
         }
         def apiString = "https://hibernate.atlassian.net/rest/api/2/search/?jql=project=HHH%20AND%20fixVersion=${restReleaseVersion}%20order%20by%20issuetype%20ASC"
         def apiUrl = new URL( apiString )
-        def releseNotes = new JsonSlurper().parse( apiUrl )
-
-
+        def jsonReleaseNotes = new JsonSlurper().parse( apiUrl )
         def releaseDate = new Date().format( 'MMMM dd, YYYY' )
-        def versionId = releseNotes.issues.get( 0 ).fields.fixVersions.get( 0 ).id
+        def versionId = getVersionId( jsonReleaseNotes, restReleaseVersion )
+
         ReleaseNote releaseNotes = new ReleaseNote( releaseVersion, releaseDate, versionId )
 
         def issuetype
-        releseNotes.issues.each {
+        jsonReleaseNotes.issues.each {
             issue ->
                 if ( issuetype != issue.fields.issuetype.name ) {
                     issuetype = issue.fields.issuetype.name
@@ -432,6 +429,17 @@ class ChangeLogFile {
         }
         releaseNotes.addEmptyLine()
         return releaseNotes.notes
+    }
+
+    private static getVersionId(jsonReleaseNotes, String restReleaseVersion) {
+        def fixVersions = jsonReleaseNotes.issues.get( 0 ).fields.fixVersions
+
+        for ( def fixVersion : fixVersions ) {
+            if ( fixVersion.name.equals( restReleaseVersion ) ) {
+                return fixVersion.id
+            }
+        }
+        throw new GradleException( "Unable to determine the version id of the current release." )
     }
 }
 

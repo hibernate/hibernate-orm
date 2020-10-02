@@ -323,7 +323,7 @@ class MetadataContext {
 			if ( value instanceof Component ) {
 				final Component component = (Component) value;
 				if ( component.getPropertySpan() > 1 ) {
-					//FIXME we are an Hibernate embedded id (ie not type)
+					//FIXME we are dealing with a Hibernate embedded id (ie not type)
 				}
 				else {
 					//FIXME take care of declared vs non declared property
@@ -406,7 +406,7 @@ class MetadataContext {
 			// nothing to do...
 		}
 
-		// todo : this does not account for @MappeSuperclass, mainly because this is not being tracked in our
+		// todo : this does not account for @MappedSuperclass, mainly because this is not being tracked in our
 		// internal metamodel as populated from the annotations properly
 		ManagedTypeDescriptor<? super X> superType = managedType.getSuperType();
 		if ( superType != null ) {
@@ -455,7 +455,7 @@ class MetadataContext {
 			// appropriate attribute declarer in such cases and so the incoming metamodelClass most likely
 			// does not represent the declarer in such cases.
 			//
-			// As a result, in the case of embeddable classes we simply use getField rather than get
+			// As a result, in the case of embeddable classes we simply use getField rather than
 			// getDeclaredField
 			final boolean allowNonDeclaredFieldReference =
 					attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED
@@ -478,7 +478,7 @@ class MetadataContext {
 			}
 			catch (IllegalArgumentException e) {
 				// most likely a mismatch in the type we are injecting and the defined field; this represents a
-				// mismatch in how the annotation processor interpretted the attribute and how our metamodel
+				// mismatch in how the annotation processor interpreted the attribute and how our metamodel
 				// and/or annotation binder did.
 
 //              This is particularly the case as arrays are nto handled propery by the StaticMetamodel generator

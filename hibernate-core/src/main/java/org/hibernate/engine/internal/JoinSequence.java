@@ -484,7 +484,7 @@ public class JoinSequence {
 	 * @return {@link this}, for method chaining
 	 */
 	public JoinSequence addCondition(String condition) {
-		if ( condition.trim().length() != 0 ) {
+		if ( !StringHelper.isBlank( condition ) ) {
 			if ( !condition.startsWith( " and " ) ) {
 				conditions.append( " and " );
 			}

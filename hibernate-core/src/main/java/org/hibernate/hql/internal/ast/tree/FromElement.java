@@ -413,7 +413,7 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 		else if ( !getWalker().isInFrom() ) {
 			// HHH-276 : implied joins in a subselect where clause - The destination needs to be added
 			// to the destination's from clause.
-			getFromClause().addChild( this );	// Not sure if this is will fix everything, but it works.
+			getFromClause().addChild( this );	// Not sure if this will fix everything, but it works.
 		}
 		else {
 			// Otherwise, the destination node was implied by the FROM clause and the FROM clause processor
@@ -612,7 +612,7 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 	}
 
 	public void setInProjectionList(boolean inProjectionList) {
-		// Do nothing, eplicit from elements are *always* in the projection list.
+		// Do nothing, explicit from elements are *always* in the projection list.
 	}
 
 	public boolean inProjectionList() {
@@ -642,6 +642,9 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 	}
 
 	public void setWithClauseFragment(AST ast, String withClauseFragment) {
+		// Normally, the from element is added first, but since the with clause could introduce joins,
+		// we have to move the from element to the end to retain the proper join order
+		getFromClause().moveFromElementToEnd( this );
 		this.withClauseAst = ast;
 		this.withClauseFragment = withClauseFragment;
 	}

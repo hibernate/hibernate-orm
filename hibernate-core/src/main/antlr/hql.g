@@ -162,7 +162,7 @@ tokens
 	}
 
 	/**
-	 * This method is overriden in the sub class in order to provide the
+	 * This method is overridden in the sub class in order to provide the
 	 * 'keyword as identifier' hack.
 	 * @param token The token to retry as an identifier.
 	 * @param ex The exception to throw if it cannot be retried as an identifier.
@@ -547,7 +547,7 @@ aliasedExpression
 //
 // Note that the above precedence levels map to the rules below...
 // Once you have a precedence chart, writing the appropriate rules as below
-// is usually very straightfoward
+// is usually very straightforward
 
 logicalExpression
 	: expression
@@ -1032,7 +1032,7 @@ NUM_INT
 				(											// hex
 					// the 'e'|'E' and float suffix stuff look
 					// like hex digits, hence the (...)+ doesn't
-					// know when to stop: ambig.  ANTLR resolves
+					// know when to stop: ambiguous.  ANTLR resolves
 					// it correctly by matching immediately.  It
 					// is therefore ok to hush warning.
 					options { warnWhenFollowAmbig=false; }

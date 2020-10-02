@@ -72,7 +72,7 @@ public abstract class ProxyVisitor extends AbstractVisitor {
 		}
 		else {
 			if ( !isCollectionSnapshotValid( collection ) ) {
-				throw new HibernateException( "could not reassociate uninitialized transient collection" );
+				throw new HibernateException( "could not re-associate uninitialized transient collection" );
 			}
 			CollectionPersister collectionPersister = session.getFactory()
 					.getCollectionPersister( collection.getRole() );

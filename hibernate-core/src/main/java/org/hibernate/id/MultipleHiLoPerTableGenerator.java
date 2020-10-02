@@ -318,7 +318,7 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 		if ( table == null ) {
 			table = namespace.createTable( qualifiedTableName.getObjectName(), false );
 
-			// todo : note sure the best solution here.  do we add the columns if missing?  other?
+			// todo : not sure the best solution here.  do we add the columns if missing?  other?
 			table.setPrimaryKey( new PrimaryKey( table ) );
 
 			final Column pkColumn = new ExportableColumn(

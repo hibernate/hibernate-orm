@@ -303,15 +303,11 @@ task copyResourcesToIntelliJOutFolder {
 
  Afterward, you can run any test from the IDE against that particular DB.
  */
-task setDataBase {
-	inputs.property( "db", db )
-	doLast {
-		processTestResources.execute()
-		copyResourcesToIntelliJOutFolder.execute()
-
-		println( 'Setting current database to ' + db )
-	}
+task setDataBase dependsOn( processTestResources, copyResourcesToIntelliJOutFolder ) {
+	println( 'Setting current database to ' + db )
 }
+
+copyResourcesToIntelliJOutFolder.mustRunAfter processTestResources
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Report configs

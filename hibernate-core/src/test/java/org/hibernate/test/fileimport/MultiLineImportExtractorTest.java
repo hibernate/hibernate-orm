@@ -9,6 +9,7 @@ package org.hibernate.test.fileimport;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.StringReader;
 
 import org.hibernate.tool.hbm2ddl.MultipleLinesSqlCommandExtractor;
 
@@ -33,18 +34,20 @@ public class MultiLineImportExtractorTest {
 	public void testExtraction() throws IOException {
 		final ClassLoader classLoader = ClassLoader.getSystemClassLoader();
 
-		try ( final InputStream stream = classLoader.getResourceAsStream( IMPORT_FILE ) ) {
+		try (final InputStream stream = classLoader.getResourceAsStream( IMPORT_FILE )) {
 			assertThat( stream, notNullValue() );
-			try ( final InputStreamReader reader = new InputStreamReader( stream ) ) {
+			try (final InputStreamReader reader = new InputStreamReader( stream )) {
 				final String[] commands = extractor.extractCommands( reader );
 				assertThat( commands, notNullValue() );
 				assertThat( commands.length, is( 6 ) );
+
+				// for Windows compatibility, System.lineSeparator() has to be used instead of just "\n"
 
 				assertThat( commands[0], startsWith( "CREATE TABLE test_data" ) );
 
 				assertThat( commands[1], is( "INSERT INTO test_data VALUES (1, 'sample')" ) );
 
-				assertThat( commands[2], is( "DELETE  FROM test_data" ) );
+				assertThat( commands[2], is( "DELETE   FROM test_data" ) );
 
 				assertThat( commands[3], startsWith( "INSERT INTO test_data VALUES (2," ) );
 				assertThat( commands[3], containsString( "-- line 2" ) );
@@ -52,8 +55,17 @@ public class MultiLineImportExtractorTest {
 				assertThat( commands[4], startsWith( "INSERT INTO test_data VALUES (3" ) );
 				assertThat( commands[4], not( containsString( "third record" ) ) );
 
-				assertThat( commands[5], containsString( "INSERT INTO test_data (id, text)" ) );
+				assertThat( commands[5].replace( "\t", "" ), is( "INSERT INTO test_data VALUES (     4       , NULL     )" ) );
 			}
 		}
 	}
+
+	@Test
+	public void testExtractionFromEmptyScript() throws IOException {
+		StringReader reader = new StringReader( "" );
+		final String[] commands = extractor.extractCommands( reader );
+		assertThat( commands, notNullValue() );
+		assertThat( commands.length, is( 0 ) );
+	}
+
 }

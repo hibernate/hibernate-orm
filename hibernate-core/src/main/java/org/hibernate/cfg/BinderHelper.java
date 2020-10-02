@@ -311,7 +311,7 @@ public class BinderHelper {
 				columnsList.append( ") " );
 
 				if ( associatedEntity != null ) {
-					//overidden destination
+					//overridden destination
 					columnsList.append( "of " )
 							.append( associatedEntity.getEntityName() )
 							.append( "." )
@@ -438,7 +438,7 @@ public class BinderHelper {
 				|| "embedded".equals( property.getPropertyAccessorName() ) ) {
 			return;
 		}
-// FIXME cannot use subproperties becasue the caller needs top level properties
+// FIXME cannot use subproperties because the caller needs top level properties
 //		if ( property.isComposite() ) {
 //			Iterator subProperties = ( (Component) property.getValue() ).getPropertyIterator();
 //			while ( subProperties.hasNext() ) {
@@ -459,7 +459,7 @@ public class BinderHelper {
 	}
 
 	/**
-	 * Retrieve the property by path in a recursive way, including IndetifierProperty in the loop
+	 * Retrieve the property by path in a recursive way, including IdentifierProperty in the loop
 	 * If propertyName is null or empty, the IdentifierProperty is returned
 	 */
 	public static Property findPropertyByName(PersistentClass associatedClass, String propertyName) {
@@ -685,7 +685,7 @@ public class BinderHelper {
 			if ( gen == null ) {
 				throw new AnnotationException( "Unknown named generator (@GeneratedValue#generatorName): " + generatorName );
 			}
-			//This is quite vague in the spec but a generator could override the generate choice
+			//This is quite vague in the spec but a generator could override the generator choice
 			String identifierGeneratorStrategy = gen.getStrategy();
 			//yuk! this is a hack not to override 'AUTO' even if generator is set
 			final boolean avoidOverriding =

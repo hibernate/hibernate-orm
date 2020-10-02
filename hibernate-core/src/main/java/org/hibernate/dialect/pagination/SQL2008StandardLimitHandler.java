@@ -21,7 +21,7 @@ public class SQL2008StandardLimitHandler extends AbstractLimitHandler {
 	 * Constructs a SQL2008StandardLimitHandler
 	 */
 	private SQL2008StandardLimitHandler() {
-		// NOP
+		// NOOP
 	}
 
 	@Override

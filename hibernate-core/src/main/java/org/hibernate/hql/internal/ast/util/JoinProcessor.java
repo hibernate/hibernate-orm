@@ -228,7 +228,7 @@ public class JoinProcessor implements SqlTokenTypes {
 			while ( liter.hasNext() ) {
 				FromElement fromElement = liter.next();
 
-				// We found an implied from element that is used in the WITH clause of another from element, so it need to become part of it's join sequence
+				// We found an implied from element that is used in the WITH clause of another from element, so it need to become part of its join sequence
 				if ( fromElement instanceof ImpliedFromElement
 						&& fromElement.getOrigin().getWithClauseFragment() != null
 						&& fromElement.getOrigin().getWithClauseFragment().contains( fromElement.getTableAlias() ) ) {

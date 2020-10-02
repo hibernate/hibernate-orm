@@ -15,6 +15,7 @@ import org.hibernate.bytecode.BytecodeLogger;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.SessionFactoryRegistry;
+import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.ToOne;
@@ -30,7 +31,8 @@ public class EnhancementHelper {
 	public static boolean includeInBaseFetchGroup(
 			Property bootMapping,
 			boolean isEnhanced,
-			boolean allowEnhancementAsProxy) {
+			boolean allowEnhancementAsProxy,
+			boolean collectionsInDefaultFetchGroupEnabled) {
 		final Value value = bootMapping.getValue();
 
 		if ( ! isEnhanced ) {
@@ -63,7 +65,8 @@ public class EnhancementHelper {
 			return true;
 		}
 
-		return ! bootMapping.isLazy();
+		return collectionsInDefaultFetchGroupEnabled && ( value instanceof Collection )
+				|| ! bootMapping.isLazy();
 	}
 
 	public static <T> T performWork(
@@ -129,7 +132,7 @@ public class EnhancementHelper {
 		finally {
 			if ( isTempSession ) {
 				try {
-					// Commit the JDBC transaction is we started one.
+					// Commit the JDBC transaction if we started one.
 					if ( !isJta ) {
 						BytecodeLogger.LOGGER.debug( "Enhancement interception Helper#performWork committing transaction on temporary Session" );
 						session.getTransaction().commit();

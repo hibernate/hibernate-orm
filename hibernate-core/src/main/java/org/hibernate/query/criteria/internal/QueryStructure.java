@@ -318,18 +318,33 @@ public class QueryStructure<T> implements Serializable {
 						final FromImplementor correlationParent = correlationRoot.getCorrelationParent();
 						correlationParent.prepareAlias( renderingContext );
 						final String correlationRootAlias = correlationParent.getAlias();
-						for ( Join<?, ?> correlationJoin : correlationRoot.getJoins() ) {
-							final JoinImplementor correlationJoinImpl = (JoinImplementor) correlationJoin;
-							// IMPL NOTE: reuse the sep from above!
+						if ( correlationRoot.canBeReplacedByCorrelatedParentInSubQuery() ) {
+							for ( Join<?, ?> correlationJoin : correlationRoot.getJoins() ) {
+								final JoinImplementor correlationJoinImpl = (JoinImplementor) correlationJoin;
+								// IMPL NOTE: reuse the sep from above!
+								jpaqlQuery.append( sep );
+								correlationJoinImpl.prepareAlias( renderingContext );
+								jpaqlQuery.append( correlationRootAlias )
+										.append( '.' )
+										.append( correlationJoinImpl.getAttribute().getName() )
+										.append( " as " )
+										.append( correlationJoinImpl.getAlias() );
+								sep = ", ";
+								renderJoins( jpaqlQuery, renderingContext, correlationJoinImpl.getJoins() );
+							}
+						}
+						else {
+							correlationRoot.prepareAlias( renderingContext );
 							jpaqlQuery.append( sep );
-							correlationJoinImpl.prepareAlias( renderingContext );
-							jpaqlQuery.append( correlationRootAlias )
-									.append( '.' )
-									.append( correlationJoinImpl.getAttribute().getName() )
-									.append( " as " )
-									.append( correlationJoinImpl.getAlias() );
 							sep = ", ";
-							renderJoins( jpaqlQuery, renderingContext, correlationJoinImpl.getJoins() );
+							jpaqlQuery.append( correlationRoot.renderTableExpression( renderingContext ) );
+							renderJoins( jpaqlQuery, renderingContext, correlationRoot.getJoins() );
+							if ( correlationRoot instanceof Root ) {
+								Set<TreatedRoot> treats = ( (RootImpl) correlationRoot ).getTreats();
+								for ( TreatedRoot treat : treats ) {
+									renderJoins( jpaqlQuery, renderingContext, treat.getJoins() );
+								}
+							}
 						}
 					}
 				}
@@ -341,18 +356,46 @@ public class QueryStructure<T> implements Serializable {
 	}
 
 	protected void renderWhereClause(StringBuilder jpaqlQuery, RenderingContext renderingContext) {
-		if ( getRestriction() == null ) {
+		final String correlationRestrictionWhereFragment = getCorrelationRestrictionsWhereFragment();
+		if ( getRestriction() == null && correlationRestrictionWhereFragment.isEmpty() ) {
 			return;
 		}
 
 		renderingContext.getClauseStack().push( Clause.WHERE );
 		try {
-			jpaqlQuery.append( " where " )
-					.append( ( (Renderable) getRestriction() ).render( renderingContext ) );
+			jpaqlQuery.append( " where " );
+			jpaqlQuery.append( correlationRestrictionWhereFragment );
+			if ( getRestriction() != null ) {
+				if ( !correlationRestrictionWhereFragment.isEmpty() ) {
+					jpaqlQuery.append( " and ( " );
+				}
+				jpaqlQuery.append( ( (Renderable) getRestriction() ).render( renderingContext ) );
+				if ( !correlationRestrictionWhereFragment.isEmpty() ) {
+					jpaqlQuery.append( " )" );
+				}
+			}
 		}
 		finally {
 			renderingContext.getClauseStack().pop();
 		}
+	}
+
+	private String getCorrelationRestrictionsWhereFragment() {
+		if ( !isSubQuery || correlationRoots == null ) {
+			return "";
+		}
+		StringBuilder buffer = new StringBuilder();
+		String sep = "";
+		for ( FromImplementor<?, ?> correlationRoot : correlationRoots ) {
+			if ( !correlationRoot.canBeReplacedByCorrelatedParentInSubQuery() ) {
+				buffer.append( sep );
+				sep = " and ";
+				buffer.append( correlationRoot.getAlias() )
+						.append( "=" )
+						.append( correlationRoot.getCorrelationParent().getAlias() );
+			}
+		}
+		return buffer.toString();
 	}
 
 	protected void renderGroupByClause(StringBuilder jpaqlQuery, RenderingContext renderingContext) {
@@ -395,7 +438,7 @@ public class QueryStructure<T> implements Serializable {
 	private void renderJoins(
 			StringBuilder jpaqlQuery,
 			RenderingContext renderingContext,
-			Collection<Join<?,?>> joins) {
+			Collection<? extends Join<?,?>> joins) {
 		if ( joins == null ) {
 			return;
 		}
@@ -428,7 +471,7 @@ public class QueryStructure<T> implements Serializable {
 	private void renderFetches(
 			StringBuilder jpaqlQuery,
 			RenderingContext renderingContext,
-			Collection<Fetch> fetches) {
+			Collection<? extends Fetch> fetches) {
 		if ( fetches == null ) {
 			return;
 		}

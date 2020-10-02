@@ -63,8 +63,7 @@ public class AlternativeNamingStrategy extends EJB3NamingStrategy {
 			return tableName;
 		}
 		else {
-			//use of a stringbuffer to workaround a JDK bug
-			return new StringBuffer( ownerEntityTable ).append( "_" )
+			return new StringBuilder( ownerEntityTable ).append( "_" )
 					.append(
 							associatedEntityTable != null ?
 									associatedEntityTable :

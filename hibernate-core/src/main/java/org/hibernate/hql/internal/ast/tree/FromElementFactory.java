@@ -226,7 +226,7 @@ public class FromElementFactory implements SqlTokenTypes {
 		}
 
 		if ( explicitSubqueryFromElement ) {
-			// Treat explict from elements in sub-queries properly.
+			// Treat explicit from elements in sub-queries properly.
 			elem.setInProjectionList( true );
 		}
 
@@ -361,14 +361,16 @@ public class FromElementFactory implements SqlTokenTypes {
 		destination.initializeCollection( fromClause, classAlias, tableAlias );
 		destination.setType( JOIN_FRAGMENT );        // Tag this node as a JOIN.
 		destination.setIncludeSubclasses( false );    // Don't include subclasses in the join.
-		destination.setCollectionJoin( true );        // This is a clollection join.
+		destination.setCollectionJoin( true );        // This is a collection join.
 		destination.setJoinSequence( collectionJoinSequence );
 		destination.setOrigin( origin, false );
 		destination.setCollectionTableAlias( tableAlias );
 //		origin.addDestination( destination );
 // This was the cause of HHH-242
 //		origin.setType( FROM_FRAGMENT );			// Set the parent node type so that the AST is properly formed.
-		origin.setText( "" );                        // The destination node will have all the FROM text.
+		if ( origin.getQueryableCollection() != null && !origin.inProjectionList() ) {
+			origin.setText( "" );                        // The destination node will have all the FROM text.
+		}
 		origin.setCollectionJoin( true );            // The parent node is a collection join too (voodoo - see JoinProcessor)
 		fromClause.addCollectionJoinFromElementByPath( path, destination );
 		fromClause.getWalker().addQuerySpaces( queryableCollection.getCollectionSpaces() );
@@ -544,7 +546,7 @@ public class FromElementFactory implements SqlTokenTypes {
 
 	private String[] getColumns() {
 		if ( columns == null ) {
-			throw new IllegalStateException( "No foriegn key columns were supplied!" );
+			throw new IllegalStateException( "No foreign key columns were supplied!" );
 		}
 		return columns;
 	}

@@ -81,9 +81,9 @@ public final class Nullability {
 			  *
 			  *
 			  * In the previous implementation, not-null stuffs where checked
-			  * filtering by level one only updateable
+			  * filtering by level one only updatable
 			  * or insertable columns. So setting a sub component as update="false"
-			  * has no effect on not-null check if the main component had good checkeability
+			  * has no effect on not-null check if the main component had good checkability
 			  * In this implementation, we keep this feature.
 			  * However, I never see any documentation mentioning that, but it's for
 			  * sure a limitation.
@@ -104,7 +104,7 @@ public final class Nullability {
 						GenerationTiming.NEVER == inMemoryValueGenerationStrategies[i].getGenerationTiming() ) {
 					final Object value = values[i];
 					if ( !nullability[i] && value == null ) {
-						//check basic level one nullablilty
+						//check basic level one nullability
 						throw new PropertyValueException(
 								"not-null property references a null or transient value",
 								persister.getEntityName(),

@@ -175,7 +175,7 @@ class OracleSpatialFunctions extends SpatialFunctionsRegistry {
 
 	static String getOGCSpatialAnalysisSQL(List args, int spatialAnalysisFunction) {
 		boolean[] geomArgs;
-		final StringBuffer ogcFunction = new StringBuffer( "MDSYS." );
+		final StringBuilder ogcFunction = new StringBuilder( "MDSYS." );
 		boolean isGeomReturn = true;
 		switch ( spatialAnalysisFunction ) {
 			case SpatialAnalysis.BUFFER:
@@ -240,7 +240,7 @@ class OracleSpatialFunctions extends SpatialFunctionsRegistry {
 		return ogcFunction.toString();
 	}
 
-	private static StringBuffer wrapInSTGeometry(String geomColumn, StringBuffer toAdd) {
+	private static StringBuilder wrapInSTGeometry(String geomColumn, StringBuilder toAdd) {
 		return toAdd.append( "MDSYS.ST_GEOMETRY(" ).append( geomColumn )
 				.append( ")" );
 	}

@@ -352,7 +352,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			return dbValue;
 		}
 		else {
-			// for a mutable natural there is a likelihood that the the information will already be
+			// for a mutable natural id there is a likelihood that the information will already be
 			// snapshot-cached.
 			final int[] props = persister.getNaturalIdentifierProperties();
 			final Object[] entitySnapshot = getDatabaseSnapshot( id, persister );
@@ -530,8 +530,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 			When a virtual method is called via an interface the JVM needs to resolve which concrete
 			implementation to call.  This takes CPU cycles and is a performance penalty.  It also prevents method
-			in-ling which further degrades performance.  Casting to an implementation and making a direct method call
-			removes the virtual call, and allows the methods to be in-lined.  In this critical code path, it has a very
+			inlining which further degrades performance.  Casting to an implementation and making a direct method call
+			removes the virtual call, and allows the methods to be inlined.  In this critical code path, it has a very
 			large impact on performance to make virtual method calls.
 		*/
 		if (persister.getEntityEntryFactory() instanceof MutableEntityEntryFactory) {
@@ -846,7 +846,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public Object getLoadedCollectionOwnerOrNull(PersistentCollection collection) {
 		final CollectionEntry ce = getCollectionEntry( collection );
-		if ( ce.getLoadedPersister() == null ) {
+		if ( ce == null || ce.getLoadedPersister() == null ) {
 			return null;
 		}
 
@@ -1957,7 +1957,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 			persister = locateProperPersister( persister );
 
-			// 'justAddedLocally' is meant to handle the case where we would get double stats jounaling
+			// 'justAddedLocally' is meant to handle the case where we would get double stats journaling
 			//	from a single load event.  The first put journal would come from the natural id resolution;
 			// the second comes from the entity loading.  In this condition, we want to avoid the multiple
 			// 'put' stats incrementing.
@@ -2164,7 +2164,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 			// todo : couple of things wrong here:
 			//		1) should be using access strategy, not plain evict..
-			//		2) should prefer session-cached values if any (requires interaction from removeLocalNaturalIdCrossReference
+			//		2) should prefer session-cached values if any (requires interaction from removeLocalNaturalIdCrossReference)
 
 			persister = locateProperPersister( persister );
 			final NaturalIdDataAccess naturalIdCacheAccessStrategy = persister.getNaturalIdCacheAccessStrategy();

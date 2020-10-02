@@ -228,7 +228,7 @@ public class EntityUpdateAction extends EntityAction {
 					session
 			);
 			if ( persister.hasUpdateGeneratedProperties() ) {
-				// this entity defines proeprty generation, so process those generated
+				// this entity defines property generation, so process those generated
 				// values...
 				persister.processUpdateGeneratedProperties( id, instance, state, session );
 				if ( persister.isVersionPropertyGenerated() ) {

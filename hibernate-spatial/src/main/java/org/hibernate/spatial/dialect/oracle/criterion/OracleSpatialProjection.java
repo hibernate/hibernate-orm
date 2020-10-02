@@ -49,7 +49,7 @@ public class OracleSpatialProjection extends SimpleProjection {
 		if ( dialect instanceof SpatialDialect ) {
 			final SpatialDialect seDialect = (SpatialDialect) dialect;
 
-			return new StringBuffer(
+			return new StringBuilder(
 					seDialect.getSpatialAggregateSQL(
 							columns[0], this.aggregate
 					)

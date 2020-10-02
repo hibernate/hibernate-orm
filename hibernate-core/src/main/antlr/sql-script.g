@@ -42,6 +42,11 @@ options {
     protected void statementEnded() {
     	// by default, nothing to do
     }
+
+     protected void skip() {
+        	// by default, nothing to do
+     }
+
 }
 
 
@@ -52,11 +57,11 @@ options {
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 script
-	: (statement)+ EOF
+	: (newLineToSkip)* (statement)* EOF
     ;
 
 statement
-	: { statementStarted(); } (statementPart)*  DELIMITER { statementEnded(); }
+	: { statementStarted(); } (statementPart (afterStatementPartNewline)*)* DELIMITER (newLineToSkip)* { statementEnded(); }
 	;
 
 statementPart
@@ -69,6 +74,19 @@ quotedString
 		out( q );
 	}
 	;
+
+afterStatementPartNewline
+   : n:NEWLINE {
+   		out( " " );
+   }
+   ;
+
+newLineToSkip
+	: NEWLINE {
+		skip();
+	}
+	;
+
 
 nonSkippedChar
 	: c:CHAR {
@@ -111,11 +129,7 @@ CHAR
     ;
 
 NEWLINE
-	: ( '\r' | '\n' | '\r''\n' ) {
-		newline();
-		// skip the entire match from the lexer stream
-		$setType( Token.SKIP );
-	}
+	: ( '\r' | '\n' | '\r''\n' )
 	;
 
 LINE_COMMENT
@@ -127,7 +141,7 @@ LINE_COMMENT
 	;
 
 /**
- * Note : this comes from the great Terrance Parr (author of Antlr) -
+ * Note : this comes from the great Terence Parr (author of Antlr) -
  *
  * https://theantlrguy.atlassian.net/wiki/spaces/ANTLR3/pages/2687360/How+do+I+match+multi-line+comments
  */

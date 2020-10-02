@@ -15,7 +15,7 @@ import java.util.Set;
  *
  * @author Steve Ebersole
  */
-public class AnsiSqlKeywords {
+public final class AnsiSqlKeywords {
 	/**
 	 * Singleton access
 	 */
@@ -23,7 +23,7 @@ public class AnsiSqlKeywords {
 
 	private final Set<String> keywordsSql2003;
 
-	public AnsiSqlKeywords() {
+	private AnsiSqlKeywords() {
 		final Set<String> keywordsSql2003 = new HashSet<String>();
 		keywordsSql2003.add( "ADD" );
 		keywordsSql2003.add( "ALL" );
@@ -280,6 +280,5 @@ public class AnsiSqlKeywords {
 	public Set<String> sql2003() {
 		return keywordsSql2003;
 	}
-
 
 }

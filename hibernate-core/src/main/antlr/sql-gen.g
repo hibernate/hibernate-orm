@@ -177,7 +177,7 @@ insertStatement
 	;
 
 setClause
-	// Simply re-use comparisionExpr, because it already correctly defines the EQ rule the
+	// Simply re-use comparisonExpr, because it already correctly defines the EQ rule the
 	// way it is needed here; not the most aptly named, but ah
 	: #( SET { out(" set "); } comparisonExpr[false] ( { out(", "); } comparisonExpr[false] )* )
 	;
@@ -193,11 +193,13 @@ whereClauseExpr
 
 orderExprs { String ordExp = null; String ordDir = null; String ordNul = null; }
 	// TODO: remove goofy space before the comma when we don't have to regression test anymore.
-	// Dialect is provided a hook to render each ORDER BY element, so the expression is being captured instead of
+	// Dialect is provided a hook to render each ORDER BY element(except SQL_TOKEN), so the expression is being captured instead of
 	// printing to the SQL output directly. See Dialect#renderOrderByElement(String, String, String, NullPrecedence).
-	: { captureExpressionStart(); } ( expr ) { captureExpressionFinish(); ordExp = resetCapture(); }
+	: { captureExpressionStart(); } ( e:expr ) { captureExpressionFinish(); ordExp = resetCapture(); }
 	    (dir:orderDirection { ordDir = #dir.getText(); })? (ordNul=nullOrdering)?
-	        { out( renderOrderByElement( ordExp, ordDir, ordNul ) ); }
+	    // SQL Tokens can be passed through as-is.
+	    // These tokens could be mapping defined order by fragments which are already rendered via the dialect hook
+	        { out( #e.getType() == SQL_TOKEN ? ordExp : renderOrderByElement( ordExp, ordDir, ordNul ) ); }
 	    ( {out(", "); } orderExprs )?
 	;
 
@@ -277,7 +279,7 @@ distinctOrAll
 	;
 
 countExpr
-	// Syntacitic predicate resolves star all by itself, avoiding a conflict with STAR in expr.
+	// Syntactic predicate resolves star all by itself, avoiding a conflict with STAR in expr.
 	: ROW_STAR { out("*"); }
 	| simpleExpr
 	;
@@ -309,12 +311,13 @@ fromTable
 	// Write the table node (from fragment) and all the join fragments associated with it.
 	: #( a:FROM_FRAGMENT  { out(a); } (tableJoin [ a ])* { fromFragmentSeparator(a); } )
 	| #( b:JOIN_FRAGMENT  { out(b); } (tableJoin [ b ])* { fromFragmentSeparator(b); } )
-	| #( e:ENTITY_JOIN    { out(e); } (tableJoin [ e ])* { fromFragmentSeparator(e); } )
+	| #( c:ENTITY_JOIN    { out(c); } (tableJoin [ c ])* { fromFragmentSeparator(c); } )
 	;
 
 tableJoin [ AST parent ]
-	: #( c:JOIN_FRAGMENT { out(" "); out(c); } (tableJoin [ c ] )* )
-	| #( d:FROM_FRAGMENT { nestedFromFragment(d,parent); } (tableJoin [ d ] )* )
+	: #( d:JOIN_FRAGMENT { out(" "); out(d); } (tableJoin [ d ] )* )
+	| #( e:FROM_FRAGMENT { nestedFromFragment(e,parent); } (tableJoin [ e ] )* )
+	| #( f:ENTITY_JOIN   { out(" "); out(f); } (tableJoin [ f ] )* )
 	;
 
 booleanOp[ boolean parens ]

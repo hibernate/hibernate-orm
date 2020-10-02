@@ -8,12 +8,14 @@ package org.hibernate.mapping;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -39,9 +41,10 @@ import org.jboss.logging.Logger;
  *
  * @author Gavin King
  */
-@SuppressWarnings("unchecked")
+@SuppressWarnings("deprecation")
 public class Table implements RelationalModel, Serializable, Exportable {
 	private static final Logger log = Logger.getLogger( Table.class );
+	private static final Column[] EMPTY_COLUMN_ARRAY = new Column[0];
 
 	private Identifier catalog;
 	private Identifier schema;
@@ -50,14 +53,14 @@ public class Table implements RelationalModel, Serializable, Exportable {
 	/**
 	 * contains all columns, including the primary key
 	 */
-	private Map columns = new LinkedHashMap();
+	private Map<String, Column> columns = new LinkedHashMap<>();
 	private KeyValue idValue;
 	private PrimaryKey primaryKey;
-	private Map<ForeignKeyKey, ForeignKey> foreignKeys = new LinkedHashMap<ForeignKeyKey, ForeignKey>();
-	private Map<String, Index> indexes = new LinkedHashMap<String, Index>();
-	private Map<String,UniqueKey> uniqueKeys = new LinkedHashMap<String,UniqueKey>();
+	private Map<ForeignKeyKey, ForeignKey> foreignKeys = new LinkedHashMap<>();
+	private Map<String, Index> indexes = new LinkedHashMap<>();
+	private Map<String,UniqueKey> uniqueKeys = new LinkedHashMap<>();
 	private int uniqueInteger;
-	private List<String> checkConstraints = new ArrayList<String>();
+	private List<String> checkConstraints = new ArrayList<>();
 	private String rowId;
 	private String subselect;
 	private boolean isAbstract;
@@ -246,7 +249,7 @@ public class Table implements RelationalModel, Serializable, Exportable {
 	}
 
 	public Column getColumn(int n) {
-		Iterator iter = columns.values().iterator();
+		Iterator<Column> iter = columns.values().iterator();
 		for ( int i = 0; i < n - 1; i++ ) {
 			iter.next();
 		}
@@ -280,7 +283,7 @@ public class Table implements RelationalModel, Serializable, Exportable {
 		return columns.size();
 	}
 
-	public Iterator getColumnIterator() {
+	public Iterator<Column> getColumnIterator() {
 		return columns.values().iterator();
 	}
 
@@ -288,7 +291,7 @@ public class Table implements RelationalModel, Serializable, Exportable {
 		return indexes.values().iterator();
 	}
 
-	public Iterator getForeignKeyIterator() {
+	public Iterator<ForeignKey> getForeignKeyIterator() {
 		return foreignKeys.values().iterator();
 	}
 
@@ -410,7 +413,7 @@ public class Table implements RelationalModel, Serializable, Exportable {
 	}
 
 	public void validateColumns(Dialect dialect, Mapping mapping, TableMetadata tableInfo) {
-		Iterator iter = getColumnIterator();
+		Iterator<Column> iter = getColumnIterator();
 		while ( iter.hasNext() ) {
 			Column col = (Column) iter.next();
 
@@ -420,9 +423,10 @@ public class Table implements RelationalModel, Serializable, Exportable {
 				throw new HibernateException( "Missing column: " + col.getName() + " in " + Table.qualify( tableInfo.getCatalog(), tableInfo.getSchema(), tableInfo.getName()));
 			}
 			else {
-				final boolean typesMatch = col.getSqlType( dialect, mapping ).toLowerCase(Locale.ROOT)
-						.startsWith( columnInfo.getTypeName().toLowerCase(Locale.ROOT) )
-						|| columnInfo.getTypeCode() == col.getSqlTypeCode( mapping );
+				final boolean typesMatch =
+						dialect.equivalentTypes( columnInfo.getTypeCode(), col.getSqlTypeCode( mapping ) )
+						|| col.getSqlType( dialect, mapping ).toLowerCase(Locale.ROOT)
+								.startsWith( columnInfo.getTypeName().toLowerCase(Locale.ROOT) );
 				if ( !typesMatch ) {
 					throw new HibernateException(
 							"Wrong column type in " +
@@ -437,7 +441,7 @@ public class Table implements RelationalModel, Serializable, Exportable {
 
 	}
 
-	public Iterator sqlAlterStrings(
+	public Iterator<String> sqlAlterStrings(
 			Dialect dialect,
 			Metadata metadata,
 			TableInformation tableInfo,
@@ -459,8 +463,8 @@ public class Table implements RelationalModel, Serializable, Exportable {
 				.append( ' ' )
 				.append( dialect.getAddColumnString() );
 
-		Iterator iter = getColumnIterator();
-		List results = new ArrayList();
+		Iterator<Column> iter = getColumnIterator();
+		List<String> results = new ArrayList<>();
 
 		while ( iter.hasNext() ) {
 			final Column column = (Column) iter.next();
@@ -537,7 +541,7 @@ public class Table implements RelationalModel, Serializable, Exportable {
 			pkname = ( (Column) getPrimaryKey().getColumnIterator().next() ).getQuotedName( dialect );
 		}
 
-		Iterator iter = getColumnIterator();
+		Iterator<Column> iter = getColumnIterator();
 		while ( iter.hasNext() ) {
 			Column col = (Column) iter.next();
 
@@ -666,7 +670,7 @@ public class Table implements RelationalModel, Serializable, Exportable {
 		return uniqueKey;
 	}
 
-	public UniqueKey createUniqueKey(List keyColumns) {
+	public UniqueKey createUniqueKey(List<Column> keyColumns) {
 		String keyName = Constraint.generateName( "UK_", this, keyColumns );
 		UniqueKey uk = getOrCreateUniqueKey( keyName );
 		uk.addColumns( keyColumns.iterator() );
@@ -692,16 +696,16 @@ public class Table implements RelationalModel, Serializable, Exportable {
 	public void createForeignKeys() {
 	}
 
-	public ForeignKey createForeignKey(String keyName, List keyColumns, String referencedEntityName, String keyDefinition) {
+	public ForeignKey createForeignKey(String keyName, List<Column> keyColumns, String referencedEntityName, String keyDefinition) {
 		return createForeignKey( keyName, keyColumns, referencedEntityName, keyDefinition, null );
 	}
 
 	public ForeignKey createForeignKey(
 			String keyName,
-			List keyColumns,
+			List<Column> keyColumns,
 			String referencedEntityName,
 			String keyDefinition,
-			List referencedColumns) {
+			List<Column> referencedColumns) {
 		final ForeignKeyKey key = new ForeignKeyKey( keyColumns, referencedEntityName, referencedColumns );
 
 		ForeignKey fk = foreignKeys.get( key );
@@ -825,14 +829,14 @@ public class Table implements RelationalModel, Serializable, Exportable {
 		return checkConstraints.iterator();
 	}
 
-	public Iterator sqlCommentStrings(Dialect dialect, String defaultCatalog, String defaultSchema) {
-		List comments = new ArrayList();
+	public Iterator<String> sqlCommentStrings(Dialect dialect, String defaultCatalog, String defaultSchema) {
+		List<String> comments = new ArrayList<>();
 		if ( dialect.supportsCommentOn() ) {
 			String tableName = getQualifiedName( dialect, defaultCatalog, defaultSchema );
 			if ( comment != null ) {
 				comments.add( "comment on table " + tableName + " is '" + comment + "'" );
 			}
-			Iterator iter = getColumnIterator();
+			Iterator<Column> iter = getColumnIterator();
 			while ( iter.hasNext() ) {
 				Column column = (Column) iter.next();
 				String columnComment = column.getComment();
@@ -857,47 +861,45 @@ public class Table implements RelationalModel, Serializable, Exportable {
 		return identifier == null ? null : identifier.render();
 	}
 
-
 	public static class ForeignKeyKey implements Serializable {
-		String referencedClassName;
-		List columns;
-		List referencedColumns;
+		private final String referencedClassName;
+		private final Column[] columns;
+		private final Column[] referencedColumns;
 
-		ForeignKeyKey(List columns, String referencedClassName, List referencedColumns) {
+		ForeignKeyKey(List<Column> columns, String referencedClassName, List<Column> referencedColumns) {
+			Objects.requireNonNull( columns );
+			Objects.requireNonNull( referencedClassName );
 			this.referencedClassName = referencedClassName;
-			this.columns = new ArrayList();
-			this.columns.addAll( columns );
+			this.columns = columns.toArray( EMPTY_COLUMN_ARRAY );
 			if ( referencedColumns != null ) {
-				this.referencedColumns = new ArrayList();
-				this.referencedColumns.addAll( referencedColumns );
+				this.referencedColumns = referencedColumns.toArray( EMPTY_COLUMN_ARRAY );
 			}
 			else {
-				this.referencedColumns = Collections.EMPTY_LIST;
+				this.referencedColumns = EMPTY_COLUMN_ARRAY;
 			}
 		}
 
 		public int hashCode() {
-			return columns.hashCode() + referencedColumns.hashCode();
+			return Arrays.hashCode( columns ) + Arrays.hashCode( referencedColumns );
 		}
 
 		public boolean equals(Object other) {
 			ForeignKeyKey fkk = (ForeignKeyKey) other;
-			return fkk != null && fkk.columns.equals( columns ) && fkk.referencedColumns.equals( referencedColumns );
+			return fkk != null && Arrays.equals( fkk.columns, columns ) && Arrays.equals( fkk.referencedColumns, referencedColumns );
 		}
 
 		@Override
 		public String toString() {
-			return "ForeignKeyKey{" +
-					"columns=" + String.join( ",", columns ) +
-					", referencedClassName='" + referencedClassName + '\'' +
-					", referencedColumns=" + String.join( ",", referencedColumns ) +
+			return "ForeignKeyKey{columns=" + Arrays.toString( columns ) +
+					", referencedClassName='" + referencedClassName +
+					"', referencedColumns=" + Arrays.toString( referencedColumns ) +
 					'}';
 		}
 	}
 
 	public void addInitCommand(InitCommand command) {
 		if ( initCommands == null ) {
-			initCommands = new ArrayList<InitCommand>();
+			initCommands = new ArrayList<>();
 		}
 		initCommands.add( command );
 	}

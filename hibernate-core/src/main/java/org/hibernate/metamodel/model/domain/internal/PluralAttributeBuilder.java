@@ -147,6 +147,6 @@ public class PluralAttributeBuilder<D, C, E, K> {
 					builder
 			);
 		}
-		throw new UnsupportedOperationException( "Unkown collection: " + collectionClass );
+		throw new UnsupportedOperationException( "Unknown collection: " + collectionClass );
 	}
 }

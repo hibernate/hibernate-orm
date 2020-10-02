@@ -415,7 +415,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 		//
 		// This second condition is a special case which allows
 		// an entity to be merged during the same transaction
-		// (though during a seperate operation) in which it was
+		// (though during a separate operation) in which it was
 		// originally persisted/saved
 		boolean changed = !persister.getVersionType().isSame(
 				persister.getVersion( target ),

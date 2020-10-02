@@ -57,7 +57,7 @@ public class BasicTestingJdbcServiceImpl implements JdbcServices, ServiceRegistr
 	public void prepare(boolean allowAggressiveRelease) throws SQLException {
 		dialect = ConnectionProviderBuilder.getCorrespondingDialect();
 		connectionProvider = ConnectionProviderBuilder.buildConnectionProvider( allowAggressiveRelease );
-		sqlStatementLogger = new SqlStatementLogger( true, false );
+		sqlStatementLogger = new SqlStatementLogger( true, false, false );
 
 		Connection jdbcConnection = connectionProvider.getConnection();
 		try {

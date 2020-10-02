@@ -1248,7 +1248,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	 * @return {@code true} indicates they can be applied, {@code false} otherwise.
 	 */
 	protected boolean canApplyAliasSpecificLockModeHints() {
-		// only procedure/function calls cannot i believe
+		// only procedure/function calls cannot I believe
 		return true;
 	}
 
@@ -1438,7 +1438,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 			getProducer().setCacheMode( effectiveCacheMode );
 		}
 		if ( entityGraphQueryHint != null && entityGraphQueryHint.getSemantic() == GraphSemantic.FETCH ) {
-			getProducer().setFetchGraphLoadContext( entityGraphQueryHint.getGraph() );
+			getProducer().setEnforcingFetchGraph( true );
 		}
 	}
 
@@ -1451,7 +1451,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 			getProducer().setCacheMode( sessionCacheMode );
 			sessionCacheMode = null;
 		}
-		getProducer().setFetchGraphLoadContext( null );
+		getProducer().setEnforcingFetchGraph( false );
 	}
 
 	@Override

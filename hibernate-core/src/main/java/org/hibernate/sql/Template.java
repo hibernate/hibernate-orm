@@ -268,7 +268,7 @@ public final class Template {
 					result.append( trimOperands.from ).append( ' ' );
 				}
 				else if ( trimOperands.trimSpec != null || trimOperands.trimChar != null ) {
-					// I think ANSI SQL says that the 'from' is not optional if either trim-spec or trim-char are specified
+					// I think ANSI SQL says that the 'from' is not optional if either trim-spec or trim-char is specified
 					result.append( "from " );
 				}
 

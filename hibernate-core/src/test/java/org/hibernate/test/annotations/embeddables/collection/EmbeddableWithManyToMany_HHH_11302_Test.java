@@ -27,6 +27,7 @@ import javax.persistence.Version;
 
 import org.hibernate.AnnotationException;
 
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -142,7 +143,7 @@ public class EmbeddableWithManyToMany_HHH_11302_Test
 				result += "id: " + id;
 			}
 			result += ", version: " + version;
-			if ( type != null && !type.trim().isEmpty() ) {
+			if ( !StringHelper.isBlank( type ) ) {
 				result += ", type: " + type;
 			}
 			return result;

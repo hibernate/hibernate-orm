@@ -10,8 +10,8 @@
 ext {
 
     junitVersion = '4.12'
-    h2Version = '1.4.196'
-    bytemanVersion = '4.0.8' //Compatible with JDK14
+    h2Version = '1.4.197'
+    bytemanVersion = '4.0.13' //Compatible with JDK16
     jnpVersion = '5.0.6.CR1'
 
     hibernateCommonsVersion = '5.1.0.Final'
@@ -111,7 +111,7 @@ ext {
             h2:              "com.h2database:h2:${h2Version}",
             hsqldb:          "org.hsqldb:hsqldb:2.3.2",
             derby:           "org.apache.derby:derby:10.11.1.1",
-            postgresql:      'org.postgresql:postgresql:42.2.2',
+            postgresql:      'org.postgresql:postgresql:42.2.16',
             mysql:           'mysql:mysql-connector-java:8.0.17',
             mariadb:         'org.mariadb.jdbc:mariadb-java-client:2.2.3',
             cockroachdb:     'org.postgresql:postgresql:42.2.8',

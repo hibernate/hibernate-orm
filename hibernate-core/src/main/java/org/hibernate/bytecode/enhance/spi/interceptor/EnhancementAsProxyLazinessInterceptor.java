@@ -18,7 +18,6 @@ import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.engine.spi.Status;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.tuple.entity.EntityTuplizer;
@@ -37,9 +36,9 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 	private final boolean inLineDirtyChecking;
 	private Set<String> writtenFieldNames;
 
-	private boolean initialized;
+	private Status status;
 
-	private boolean initializeBeforeWrite;
+	private final boolean initializeBeforeWrite;
 
 	public EnhancementAsProxyLazinessInterceptor(
 			String entityName,
@@ -63,6 +62,7 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 		// if self-dirty tracking is enabled but DynamicUpdate is not enabled then we need to initialise the entity
 		// 	because the pre-computed update statement contains even not dirty properties and so we need all the values
 		initializeBeforeWrite = !inLineDirtyChecking || !entityPersister.getEntityMetamodel().isDynamicUpdate();
+		status = Status.UNINITIALIZED;
 	}
 
 	public EntityKey getEntityKey() {
@@ -72,7 +72,7 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 	@Override
 	protected Object handleRead(Object target, String attributeName, Object value) {
 		// it is illegal for this interceptor to still be attached to the entity after initialization
-		if ( initialized ) {
+		if ( isInitialized() ) {
 			throw new IllegalStateException( "EnhancementAsProxyLazinessInterceptor interception on an initialized instance" );
 		}
 
@@ -125,7 +125,7 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 							isTempSession
 					);
 
-					initialized = true;
+					setInitialized();
 
 					if ( writtenValues != null ) {
 						// here is the replaying of the explicitly set values we prepared above
@@ -189,7 +189,7 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 			// Add an entry for this entity in the PC of the temp Session
 			session.getPersistenceContextInternal().addEntity(
 					target,
-					Status.READ_ONLY,
+					org.hibernate.engine.spi.Status.READ_ONLY,
 					// loaded state
 					ArrayHelper.filledArray(
 							LazyPropertyInitializer.UNFETCHED_PROPERTY,
@@ -215,7 +215,7 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 
 	@Override
 	protected Object handleWrite(Object target, String attributeName, Object oldValue, Object newValue) {
-		if ( initialized ) {
+		if ( isInitialized() ) {
 			throw new IllegalStateException( "EnhancementAsProxyLazinessInterceptor interception on an initialized instance" );
 		}
 
@@ -251,7 +251,7 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 				forceInitialize( target, attributeName );
 			}
 			finally {
-				initialized = true;
+				setInitialized();
 			}
 
 			if ( inLineDirtyChecking ) {
@@ -279,14 +279,14 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 
 	@Override
 	public void attributeInitialized(String name) {
-		if ( initialized ) {
+		if ( status == Status.INITIALIZED ) {
 			throw new UnsupportedOperationException( "Expected call to EnhancementAsProxyLazinessInterceptor#attributeInitialized" );
 		}
 	}
 
 	@Override
 	public boolean isAttributeLoaded(String fieldName) {
-		if ( initialized ) {
+		if ( isInitialized() ) {
 			throw new UnsupportedOperationException( "Call to EnhancementAsProxyLazinessInterceptor#isAttributeLoaded on an interceptor which is marked as initialized" );
 		}
 		// Only fields from the identifier are loaded (until it's initialized)
@@ -295,7 +295,7 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 
 	@Override
 	public boolean hasAnyUninitializedAttributes() {
-		if ( initialized ) {
+		if ( isInitialized() ) {
 			throw new UnsupportedOperationException( "Call to EnhancementAsProxyLazinessInterceptor#hasAnyUninitializedAttributes on an interceptor which is marked as initialized" );
 		}
 		return true;
@@ -306,8 +306,26 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 		return entityKey.getIdentifier();
 	}
 
+	public boolean isInitializing() {
+		return status == Status.INITIALIZING;
+	}
+
+	public void setInitializing() {
+		status = Status.INITIALIZING;
+	}
+
 	//Mostly useful for testing
 	public boolean isInitialized() {
-		return initialized;
+		return status == Status.INITIALIZED;
+	}
+
+	private void setInitialized() {
+		status = Status.INITIALIZED;
+	}
+
+	private enum Status {
+		UNINITIALIZED,
+		INITIALIZING,
+		INITIALIZED
 	}
 }

@@ -433,6 +433,18 @@ public final class ArrayHelper {
 		return trimmed;
 	}
 
+	public static Object[] toObjectArray(Object array) {
+		if ( array instanceof Object[] ) {
+			return ( Object[] ) array;
+		}
+		final int arrayLength = Array.getLength( array );
+		final Object[] outputArray = new Object[ arrayLength ];
+		for ( int i = 0; i < arrayLength; ++i ) {
+			outputArray[ i ] = Array.get( array, i );
+		}
+		return outputArray;
+	}
+
 	@AllowSysOut
 	public static void main(String... args) {
 		int[] batchSizes = ArrayHelper.getBatchSizes( 32 );

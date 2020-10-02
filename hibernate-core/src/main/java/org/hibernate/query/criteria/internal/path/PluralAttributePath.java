@@ -52,9 +52,9 @@ public class PluralAttributePath<X> extends AbstractPathImpl<X> implements Seria
 				return attribute.getDeclaringType().getJavaType().getName() + '.' + attribute.getName();
 			}
 			case MAPPED_SUPERCLASS: {
-				// the attribute is declared in a mappedsuperclass
+				// the attribute is declared in a mappedSuperclass
 				if ( getPathSource().getModel().getBindableType() == Bindable.BindableType.ENTITY_TYPE ) {
-					// the role will be assigned to the "nearest" EnityType subclass of the MappedSuperclassType
+					// the role will be assigned to the "nearest" EntityType subclass of the MappedSuperclassType
 					final EntityType entityTypeNearestDeclaringType = locateNearestSubclassEntity(
 							(MappedSuperclassType) attribute.getDeclaringType(),
 							(EntityType) getPathSource().getModel()
@@ -89,7 +89,7 @@ public class PluralAttributePath<X> extends AbstractPathImpl<X> implements Seria
 					entityType = (EntityType) singularAttribute.getDeclaringType();
 				}
 				else if ( singularAttribute.getDeclaringType().getPersistenceType() == Type.PersistenceType.MAPPED_SUPERCLASS ){
-					// find the "nearest" EnityType subclass of the MappedSuperclassType
+					// find the "nearest" EntityType subclass of the MappedSuperclassType
 					entityType = locateNearestSubclassEntity(
 							(MappedSuperclassType) singularAttribute.getDeclaringType(),
 							(EntityType) parentPath.getModel()

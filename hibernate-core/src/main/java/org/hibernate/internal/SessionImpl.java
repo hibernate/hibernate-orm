@@ -130,7 +130,6 @@ import org.hibernate.event.spi.SaveOrUpdateEventListener;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.internal.RootGraphImpl;
-import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.hql.spi.QueryTranslator;
 import org.hibernate.internal.CriteriaImpl.CriterionEntry;
@@ -215,8 +214,8 @@ public class SessionImpl
 	private transient LoadEvent loadEvent; //cached LoadEvent instance
 
 	private transient TransactionObserver transactionObserver;
-	
-	private transient GraphImplementor fetchGraphLoadContext;
+
+	private transient boolean isEnforcingFetchGraph;
 
 	public SessionImpl(SessionFactoryImpl factory, SessionCreationOptions options) {
 		super( factory, options );
@@ -1915,7 +1914,7 @@ public class SessionImpl
 		}
 
 		// Since isLookupByNaturalKey is true there can be only one CriterionEntry and getCriterion() will
-		// return an instanceof NaturalIdentifier
+		// return an instance of NaturalIdentifier
 		final CriterionEntry criterionEntry = criteria.iterateExpressionEntries().next();
 		final NaturalIdentifier naturalIdentifier = (NaturalIdentifier) criterionEntry.getCriterion();
 
@@ -1936,7 +1935,7 @@ public class SessionImpl
 			final Object naturalIdValue = naturalIdValues.get( naturalIdProperty );
 
 			if ( naturalIdValue == null ) {
-				// A NaturalId property is missing from the critera query, can't use NaturalIdLoadAccess
+				// A NaturalId property is missing from the criteria query, can't use NaturalIdLoadAccess
 				return null;
 			}
 
@@ -3315,15 +3314,15 @@ public class SessionImpl
 				lockOptions = buildLockOptions( lockModeType, properties );
 				loadAccess.with( lockOptions );
 			}
-			
-			if ( getLoadQueryInfluencers().getEffectiveEntityGraph().getSemantic() == GraphSemantic.FETCH ) {
-				setFetchGraphLoadContext( getLoadQueryInfluencers().getEffectiveEntityGraph().getGraph() );
-			}
 
+			if ( getLoadQueryInfluencers().getEffectiveEntityGraph().getSemantic() == GraphSemantic.FETCH ) {
+				setEnforcingFetchGraph( true );
+			}
+			
 			return loadAccess.load( (Serializable) primaryKey );
 		}
 		catch ( EntityNotFoundException ignored ) {
-			// DefaultLoadEventListener.returnNarrowedProxy may throw ENFE (see HHH-7861 for details),
+			// DefaultLoadEventListener#returnNarrowedProxy() may throw ENFE (see HHH-7861 for details),
 			// which find() should not throw.  Find() should return null if the entity was not found.
 			if ( log.isDebugEnabled() ) {
 				String entityName = entityClass != null ? entityClass.getName(): null;
@@ -3345,7 +3344,7 @@ public class SessionImpl
 		}
 		catch ( JDBCException e ) {
 			if ( accessTransaction().isActive() && accessTransaction().getRollbackOnly() ) {
-				// Assume this is the similar to the WildFly / IronJacamar "feature" described under HHH-12472.
+				// Assume this is similar to the WildFly / IronJacamar "feature" described under HHH-12472.
 				// Just log the exception and return null.
 				if ( log.isDebugEnabled() ) {
 					log.debug( "JDBCException was thrown for a transaction marked for rollback; " +
@@ -3364,7 +3363,7 @@ public class SessionImpl
 		finally {
 			getLoadQueryInfluencers().getEffectiveEntityGraph().clear();
 			getLoadQueryInfluencers().setReadOnly( null );
-			setFetchGraphLoadContext( null );
+			setEnforcingFetchGraph( false );
 		}
 	}
 
@@ -3737,16 +3736,6 @@ public class SessionImpl
 		checkOpen();
 		return getEntityManagerFactory().findEntityGraphsByType( entityClass );
 	}
-	
-	@Override
-	public GraphImplementor getFetchGraphLoadContext() {
-		return this.fetchGraphLoadContext;
-	}
-	
-	@Override
-	public void setFetchGraphLoadContext(GraphImplementor fetchGraphLoadContext) {
-		this.fetchGraphLoadContext = fetchGraphLoadContext;
-	}
 
 	/**
 	 * Used by JDK serialization...
@@ -3788,9 +3777,9 @@ public class SessionImpl
 
 		loadQueryInfluencers = (LoadQueryInfluencers) ois.readObject();
 
-		// LoadQueryInfluencers.getEnabledFilters() tries to validate each enabled
-		// filter, which will fail when called before FilterImpl.afterDeserialize( factory );
-		// Instead lookup the filter by name and then call FilterImpl.afterDeserialize( factory ).
+		// LoadQueryInfluencers#getEnabledFilters() tries to validate each enabled
+		// filter, which will fail when called before FilterImpl#afterDeserialize( factory );
+		// Instead lookup the filter by name and then call FilterImpl#afterDeserialize( factory ).
 		for ( String filterName : loadQueryInfluencers.getEnabledFilterNames() ) {
 			( (FilterImpl) loadQueryInfluencers.getEnabledFilter( filterName ) ).afterDeserialize( getFactory() );
 		}
@@ -3803,4 +3792,15 @@ public class SessionImpl
 		}
 		return readOnly;
 	}
+
+	@Override
+	public boolean isEnforcingFetchGraph() {
+		return this.isEnforcingFetchGraph;
+	}
+
+	@Override
+	public void setEnforcingFetchGraph(boolean isEnforcingFetchGraph) {
+		this.isEnforcingFetchGraph = isEnforcingFetchGraph;
+	}
+
 }

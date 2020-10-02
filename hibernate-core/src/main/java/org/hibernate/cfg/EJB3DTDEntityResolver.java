@@ -41,8 +41,22 @@ public class EJB3DTDEntityResolver extends DTDEntityResolver {
 	public InputSource resolveEntity(String publicId, String systemId) {
 		LOG.tracev( "Resolving XML entity {0} : {1}", publicId, systemId );
 		if ( systemId != null ) {
-			if ( systemId.endsWith( "orm_2_1.xsd" ) ) {
+			if ( systemId.endsWith( "orm_3_0.xsd" ) ) {
+				InputStream dtdStream = getStreamFromClasspath( "orm_3_0.xsd" );
+				final InputSource source = buildInputSource( publicId, systemId, dtdStream, false );
+				if ( source != null ) {
+					return source;
+				}
+			}
+			else if ( systemId.endsWith( "orm_2_1.xsd" ) ) {
 				InputStream dtdStream = getStreamFromClasspath( "orm_2_1.xsd" );
+				final InputSource source = buildInputSource( publicId, systemId, dtdStream, false );
+				if ( source != null ) {
+					return source;
+				}
+			}
+			else if ( systemId.endsWith( "orm_2_2.xsd" ) ) {
+				InputStream dtdStream = getStreamFromClasspath( "orm_2_2.xsd" );
 				final InputSource source = buildInputSource( publicId, systemId, dtdStream, false );
 				if ( source != null ) {
 					return source;
@@ -58,6 +72,20 @@ public class EJB3DTDEntityResolver extends DTDEntityResolver {
 			else if ( systemId.endsWith( "orm_1_0.xsd" ) ) {
 				InputStream dtdStream = getStreamFromClasspath( "orm_1_0.xsd" );
 				final InputSource source = buildInputSource( publicId, systemId, dtdStream, false );
+				if ( source != null ) {
+					return source;
+				}
+			}
+			else if ( systemId.endsWith( "persistence_3_0.xsd" ) ) {
+				InputStream dtdStream = getStreamFromClasspath( "persistence_3_0.xsd" );
+				final InputSource source = buildInputSource( publicId, systemId, dtdStream, true );
+				if ( source != null ) {
+					return source;
+				}
+			}
+			else if ( systemId.endsWith( "persistence_2_2.xsd" ) ) {
+				InputStream dtdStream = getStreamFromClasspath( "persistence_2_2.xsd" );
+				final InputSource source = buildInputSource( publicId, systemId, dtdStream, true );
 				if ( source != null ) {
 					return source;
 				}

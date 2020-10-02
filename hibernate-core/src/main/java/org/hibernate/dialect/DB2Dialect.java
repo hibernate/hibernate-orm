@@ -190,6 +190,11 @@ public class DB2Dialect extends Dialect {
 				.register();
 	}
 
+	@Override
+	public String[] getDropSchemaCommand(String schemaName) {
+		return new String[] {"drop schema " + schemaName + " restrict"};
+	}
+
 	/**
 	 * Since we're using {@code seconds_between()} and
 	 * {@code add_seconds()}, it makes sense to use
@@ -626,6 +631,7 @@ public class DB2Dialect extends Dialect {
 	 * if expression has not been explicitly specified.
 	 * @param nullPrecedence Nulls precedence. Default value: {@link NullPrecedence#NONE}.
 	 *
+	 * @return SQL string.
 	 */
 	@Override
 	public String renderOrderByElement(String expression, String collation, String order, NullPrecedence nullPrecedence) {

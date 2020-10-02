@@ -18,6 +18,7 @@ import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cfg.NotYetImplementedException;
@@ -138,6 +139,8 @@ public class EntityMetamodel implements Serializable {
 
 		versioned = persistentClass.isVersioned();
 
+		SessionFactoryOptions sessionFactoryOptions = sessionFactory.getSessionFactoryOptions();
+
 		if ( persistentClass.hasPojoRepresentation() ) {
 			final Component identifierMapperComponent = persistentClass.getIdentifierMapper();
 			final CompositeType nonAggregatedCidMapper;
@@ -161,7 +164,8 @@ public class EntityMetamodel implements Serializable {
 					persistentClass,
 					idAttributeNames,
 					nonAggregatedCidMapper,
-					sessionFactory.getSessionFactoryOptions().isEnhancementAsProxyEnabled()
+					sessionFactoryOptions.isEnhancementAsProxyEnabled(),
+					sessionFactoryOptions.isCollectionsInDefaultFetchGroupEnabled()
 			);
 		}
 		else {
@@ -243,7 +247,8 @@ public class EntityMetamodel implements Serializable {
 			boolean lazy = ! EnhancementHelper.includeInBaseFetchGroup(
 					prop,
 					bytecodeEnhancementMetadata.isEnhancedForLazyLoading(),
-					sessionFactory.getSessionFactoryOptions().isEnhancementAsProxyEnabled()
+					sessionFactoryOptions.isEnhancementAsProxyEnabled(),
+					sessionFactoryOptions.isCollectionsInDefaultFetchGroupEnabled()
 			);
 
 			if ( lazy ) {

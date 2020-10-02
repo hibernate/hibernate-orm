@@ -44,6 +44,7 @@ import org.hibernate.QueryException;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
@@ -671,7 +672,9 @@ public abstract class AbstractEntityPersister
 
 		this.navigableRole = new NavigableRole( bootDescriptor.getEntityName() );
 
-		if ( creationContext.getSessionFactory().getSessionFactoryOptions().isSecondLevelCacheEnabled() ) {
+		SessionFactoryOptions sessionFactoryOptions = creationContext.getSessionFactory().getSessionFactoryOptions();
+
+		if ( sessionFactoryOptions.isSecondLevelCacheEnabled() ) {
 			this.canWriteToCache = determineCanWriteToCache( bootDescriptor, cacheAccessStrategy );
 			this.canReadFromCache = determineCanReadFromCache( bootDescriptor, cacheAccessStrategy );
 			this.cacheAccessStrategy = cacheAccessStrategy;
@@ -851,7 +854,8 @@ public abstract class AbstractEntityPersister
 			final boolean lazy = ! EnhancementHelper.includeInBaseFetchGroup(
 					prop,
 					entityMetamodel.isInstrumented(),
-					creationContext.getSessionFactory().getSessionFactoryOptions().isEnhancementAsProxyEnabled()
+					sessionFactoryOptions.isEnhancementAsProxyEnabled(),
+					sessionFactoryOptions.isCollectionsInDefaultFetchGroupEnabled()
 			);
 
 			if ( lazy ) {
@@ -917,12 +921,6 @@ public abstract class AbstractEntityPersister
 			definedBySubclass.add( Boolean.valueOf( isDefinedBySubclass ) );
 			propNullables.add( Boolean.valueOf( prop.isOptional() || isDefinedBySubclass ) ); //TODO: is this completely correct?
 
-			final boolean lazy = ! EnhancementHelper.includeInBaseFetchGroup(
-					prop,
-					entityMetamodel.isInstrumented(),
-					creationContext.getSessionFactory().getSessionFactoryOptions().isEnhancementAsProxyEnabled()
-			);
-
 			final Iterator colIter = prop.getColumnIterator();
 			String[] cols = new String[ prop.getColumnSpan() ];
 			String[] readers = new String[ prop.getColumnSpan() ];
@@ -932,6 +930,12 @@ public abstract class AbstractEntityPersister
 			int[] formnos = new int[ prop.getColumnSpan() ];
 
 			int l = 0;
+			final boolean lazy = ! EnhancementHelper.includeInBaseFetchGroup(
+					prop,
+					entityMetamodel.isInstrumented(),
+					sessionFactoryOptions.isEnhancementAsProxyEnabled(),
+					sessionFactoryOptions.isCollectionsInDefaultFetchGroupEnabled()
+			);
 			while ( colIter.hasNext() ) {
 				final Selectable thing = (Selectable) colIter.next();
 				if ( thing.isFormula() ) {
@@ -1041,7 +1045,7 @@ public abstract class AbstractEntityPersister
 
 		this.cacheEntryHelper = buildCacheEntryHelper();
 
-		if ( creationContext.getSessionFactory().getSessionFactoryOptions().isSecondLevelCacheEnabled() ) {
+		if ( sessionFactoryOptions.isSecondLevelCacheEnabled() ) {
 			this.invalidateCache = canWriteToCache && determineWhetherToInvalidateCache( bootDescriptor, creationContext );
 		}
 		else {
@@ -1190,7 +1194,7 @@ public abstract class AbstractEntityPersister
 			}
 
 			if ( columnNumbers.size() == 0 && formulaNumbers.size() == 0 ) {
-				// only one-to-one is lazy fetched
+				// only one-to-one is lazily fetched
 				continue;
 			}
 
@@ -1792,8 +1796,8 @@ public abstract class AbstractEntityPersister
 
 	public String[] getIdentifierAliases(String suffix) {
 		// NOTE: this assumes something about how propertySelectFragment is implemented by the subclass!
-		// was toUnqotedAliasStrings( getIdentifierColumnNames() ) before - now tried
-		// to remove that unqoting and missing aliases..
+		// was toUnquotedAliasStrings( getIdentifierColumnNames() ) before - now tried
+		// to remove that unquoting and missing aliases..
 		return new Alias( suffix ).toAliasStrings( getIdentifierAliases() );
 	}
 
@@ -1804,8 +1808,8 @@ public abstract class AbstractEntityPersister
 
 	public String getDiscriminatorAlias(String suffix) {
 		// NOTE: this assumes something about how propertySelectFragment is implemented by the subclass!
-		// toUnqotedAliasStrings( getdiscriminatorColumnName() ) before - now tried
-		// to remove that unqoting and missing aliases..
+		// toUnquotedAliasStrings( getDiscriminatorColumnName() ) before - now tried
+		// to remove that unquoting and missing aliases..
 		return entityMetamodel.hasSubclasses() ?
 				new Alias( suffix ).toAliasString( getDiscriminatorAlias() ) :
 				null;
@@ -2041,7 +2045,7 @@ public abstract class AbstractEntityPersister
 		}
 
 		if ( isVersionPropertyGenerated() ) {
-			// the difficulty here is exactly what do we update in order to
+			// the difficulty here is exactly what we update in order to
 			// force the version to be incremented in the db...
 			throw new HibernateException( "LockMode.FORCE is currently not supported for generated version properties" );
 		}
@@ -2530,7 +2534,7 @@ public abstract class AbstractEntityPersister
 
 		// aliases for composite-id's
 		if ( getIdentifierType().isComponentType() ) {
-			// Fetch embedded identifiers propertynames from the "virtual" identifier component
+			// Fetch embedded identifiers property names from the "virtual" identifier component
 			CompositeType componentId = (CompositeType) getIdentifierType();
 			String[] idPropertyNames = componentId.getPropertyNames();
 			String[] idAliases = getIdentifierAliases();
@@ -2559,7 +2563,7 @@ public abstract class AbstractEntityPersister
 					);
 				}
 				else {
-					// embedded composite ids ( alias.idname1, alias.idname2 )
+					// embedded composite ids ( alias.idName1, alias.idName2 )
 					subclassPropertyAliases.put( idPropertyNames[i], new String[] {idAliases[i]} );
 					subclassPropertyColumnNames.put( idPropertyNames[i], new String[] {idColumnNames[i]} );
 				}
@@ -2799,7 +2803,7 @@ public abstract class AbstractEntityPersister
 			}
 		}
 
-		// select the correct row by either pk or rowid
+		// select the correct row by either pk or row id
 		if ( useRowId ) {
 			update.addPrimaryKeyColumns( new String[] {rowIdName} ); //TODO: eventually, rowIdName[j]
 		}
@@ -3188,7 +3192,7 @@ public abstract class AbstractEntityPersister
 						//      should be using the entity root table as the driving table;
 						//      another option here would be to choose some non-optional joined
 						//      table to use as the driving table.  In all likelihood, just using
-						//      the root table is much simplier
+						//      the root table is much simpler
 						//  2) Need to add the FK columns corresponding to each joined table
 						//      to the generated select list; these would then be used when
 						//      iterating the result set to determine whether all non-optional
@@ -4337,7 +4341,7 @@ public abstract class AbstractEntityPersister
 		final String drivingAlias = generateTableAlias(
 				getRootAlias(),
 				drivingTable
-		); //we *could* regerate this inside each called method!
+		); //we *could* regenerate this inside each called method!
 		final String where = createWhereByKey( drivingTable, drivingAlias );
 		final String from = createFrom( drivingTable, drivingAlias );
 

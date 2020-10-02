@@ -202,6 +202,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean orderInsertsEnabled;
 	private boolean postInsertIdentifierDelayed;
 	private boolean enhancementAsProxyEnabled;
+	private boolean collectionsInDefaultFetchGroupEnabled;
 
 	// JPA callbacks
 	private boolean callbacksEnabled;
@@ -1183,6 +1184,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
+	public boolean isCollectionsInDefaultFetchGroupEnabled() {
+		return collectionsInDefaultFetchGroupEnabled;
+	}
+
+	@Override
 	public boolean isOmitJoinOfSuperclassTablesEnabled() {
 		return omitJoinOfSuperclassTablesEnabled;
 	}
@@ -1484,6 +1490,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	public void enableGeneratorNameScopeCompliance(boolean enabled) {
 		mutableJpaCompliance().setGeneratorNameScopeCompliance( enabled );
+	}
+
+
+	public void enableCollectionInDefaultFetchGroup(boolean enabled) {
+		this.collectionsInDefaultFetchGroupEnabled = enabled;
 	}
 
 	public void disableRefreshDetachedEntity() {

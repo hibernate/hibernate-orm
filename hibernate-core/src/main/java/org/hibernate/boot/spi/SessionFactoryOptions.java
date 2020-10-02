@@ -348,5 +348,9 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 */
 	boolean isUseOfJdbcNamedParametersEnabled();
 
+	default boolean isCollectionsInDefaultFetchGroupEnabled() {
+		return false;
+	}
+
 	boolean isOmitJoinOfSuperclassTablesEnabled();
 }

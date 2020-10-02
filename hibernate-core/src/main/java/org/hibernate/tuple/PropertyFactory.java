@@ -10,6 +10,7 @@ import java.lang.reflect.Constructor;
 
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper;
 import org.hibernate.engine.internal.UnsavedValueFactory;
 import org.hibernate.engine.spi.IdentifierValue;
@@ -169,10 +170,12 @@ public final class PropertyFactory {
 		boolean alwaysDirtyCheck = type.isAssociationType() &&
 				( (AssociationType) type ).isAlwaysDirtyChecked();
 
+		SessionFactoryOptions sessionFactoryOptions = sessionFactory.getSessionFactoryOptions();
 		final boolean lazy = ! EnhancementHelper.includeInBaseFetchGroup(
 				property,
 				lazyAvailable,
-				sessionFactory.getSessionFactoryOptions().isEnhancementAsProxyEnabled()
+				sessionFactoryOptions.isEnhancementAsProxyEnabled(),
+				sessionFactoryOptions.isCollectionsInDefaultFetchGroupEnabled()
 		);
 
 		switch ( nature ) {

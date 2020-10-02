@@ -1180,7 +1180,7 @@ public class ActionQueue {
 					if ( prevBatchIdentifier.hasAnyParentEntityNames( batchIdentifier ) ) {
 						prevBatchIdentifier.parent = batchIdentifier;
 					}
-					if ( batchIdentifier.hasAnyChildEntityNames( prevBatchIdentifier ) ) {
+					else if ( batchIdentifier.hasAnyChildEntityNames( prevBatchIdentifier ) ) {
 						prevBatchIdentifier.parent = batchIdentifier;
 					}
 				}
@@ -1192,7 +1192,7 @@ public class ActionQueue {
 						nextBatchIdentifier.parent = batchIdentifier;
 						nextBatchIdentifier.getParentEntityNames().add( batchIdentifier.getEntityName() );
 					}
-					if ( batchIdentifier.hasAnyChildEntityNames( nextBatchIdentifier ) ) {
+					else if ( batchIdentifier.hasAnyChildEntityNames( nextBatchIdentifier ) ) {
 						nextBatchIdentifier.parent = batchIdentifier;
 						nextBatchIdentifier.getParentEntityNames().add( batchIdentifier.getEntityName() );
 					}

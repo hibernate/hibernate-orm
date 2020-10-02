@@ -51,6 +51,12 @@ public class ConfigXsdSupport {
 			"http://xmlns.jcp.org/xml/ns/persistence"
 	);
 
+	private final XsdDescriptor jpa30 = LocalXsdResolver.buildXsdDescriptor(
+			"org/hibernate/jpa/persistence_3_0.xsd",
+			"3.0",
+			"https://jakarta.ee/xml/ns/persistence"
+	);
+
 	private final XsdDescriptor cfgXml = LocalXsdResolver.buildXsdDescriptor(
 			"org/hibernate/xsd/cfg/legacy-configuration-4.0.xsd",
 			"4.0" ,
@@ -74,6 +80,9 @@ public class ConfigXsdSupport {
 			}
 			case "2.2": {
 				return jpa22;
+			}
+			case "3.0": {
+				return jpa30;
 			}
 			default: {
 				throw new IllegalArgumentException( "Unrecognized JPA persistence.xml XSD version : `" + version + "`" );

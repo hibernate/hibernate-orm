@@ -34,7 +34,7 @@ import org.xml.sax.SAXException;
 public class LocalXsdResolver {
 	private static final Logger log = Logger.getLogger( LocalXsdResolver.class );
 
-	private static final List<String> VALID_JPA_VERSIONS = Arrays.asList( "1.0", "2.0", "2.1", "2.2" );
+	private static final List<String> VALID_JPA_VERSIONS = Arrays.asList( "1.0", "2.0", "2.1", "2.2", "3.0" );
 
 	public static String latestJpaVerison() {
 		return "2.2";

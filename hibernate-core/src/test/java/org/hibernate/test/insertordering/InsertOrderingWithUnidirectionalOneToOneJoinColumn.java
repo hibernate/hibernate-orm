@@ -7,8 +7,6 @@
 package org.hibernate.test.insertordering;
 
 import java.io.Serializable;
-import java.util.Map;
-
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.persistence.EmbeddedId;
@@ -18,20 +16,20 @@ import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.Query;
 
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 
 /**
  * @author Chris Cranford
  */
 @TestForIssue(jiraKey = "HHH-12569")
-public class InsertOrderingWithUnidirectionalOneToOneJoinColumn extends BaseEntityManagerFunctionalTestCase  {
+@RequiresDialectFeature(DialectChecks.SupportsJdbcDriverProxying.class)
+public class InsertOrderingWithUnidirectionalOneToOneJoinColumn extends BaseInsertOrderingTest  {
 	@Embeddable
 	public static class PersonAddressId implements Serializable {
 		@Column(name = "id")
@@ -90,30 +88,31 @@ public class InsertOrderingWithUnidirectionalOneToOneJoinColumn extends BaseEnti
 		return new Class<?>[] { Person.class, Address.class };
 	}
 
-	@Override
-	protected void addConfigOptions(Map options) {
-		super.addConfigOptions( options );
-		options.put( AvailableSettings.ORDER_INSERTS, "true" );
-	}
-
 	@Test
 	public void testBatchingWithEmbeddableId() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInHibernate( this::sessionFactory, session -> {
 			final PersonAddressId id = new PersonAddressId();
 			id.setId( 1 );
 
 			Person person = new Person();
 			person.setId( id );
-			entityManager.persist( person );
+			session.persist( person );
 
 			Address address = new Address();
 			address.setId( id );
 			address.setPerson( person );
-			entityManager.persist( address );
+			session.persist( address );
+
+			clearBatches();
 		} );
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Query query = entityManager.createQuery( "FROM Person" );
+		verifyContainsBatches(
+				new Batch( "insert into Person (id) values (?)" ),
+				new Batch( "insert into Address (id) values (?)" )
+		);
+
+		doInHibernate( this::sessionFactory, session -> {
+			Query query = session.createQuery( "FROM Person" );
 			assertEquals( 1, query.getResultList().size() );
 		} );
 	}

@@ -6,72 +6,36 @@
  */
 package org.hibernate.test.insertordering;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
-import javax.persistence.SequenceGenerator;
-
-import org.hibernate.cfg.Environment;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.test.util.jdbc.PreparedStatementSpyConnectionProvider;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 
 /**
  * @author Vlad Mihalcea
  */
 @TestForIssue(jiraKey = "HHH-11996")
 @RequiresDialectFeature(DialectChecks.SupportsJdbcDriverProxying.class)
-public class InsertOrderingWithMultipleManyToOne
-		extends BaseNonConfigCoreFunctionalTestCase {
-
-	private PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider( false, false );
+public class InsertOrderingWithMultipleManyToOne extends BaseInsertOrderingTest {
 
 	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class<?>[] {
 			Parent.class,
 			ChildA.class,
 			ChildB.class,
 		};
 	}
 
-	@Override
-	protected void addSettings(Map settings) {
-		settings.put( Environment.ORDER_INSERTS, "true" );
-		settings.put( Environment.STATEMENT_BATCH_SIZE, "10" );
-		settings.put(
-				org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER,
-				connectionProvider
-		);
-	}
-
-	@Override
-	public void releaseResources() {
-		super.releaseResources();
-		connectionProvider.stop();
-	}
-
 	@Test
-	public void testBatching() throws SQLException {
+	public void testBatching() {
 		doInHibernate( this::sessionFactory, session -> {
 			Parent parent = new Parent();
 			session.persist(parent);
@@ -84,18 +48,16 @@ public class InsertOrderingWithMultipleManyToOne
 			childB.setParent(parent);
 			session.persist(childB);
 
-			connectionProvider.clear();
+			clearBatches();
 		} );
 
-		assertEquals( 3, connectionProvider.getPreparedStatements().size() );
-		/*PreparedStatement addressPreparedStatement = connectionProvider.getPreparedStatement(
-				"insert into Address (ID) values (?)" );
-		verify( addressPreparedStatement, times( 2 ) ).addBatch();
-		verify( addressPreparedStatement, times( 1 ) ).executeBatch();
-		PreparedStatement personPreparedStatement = connectionProvider.getPreparedStatement(
-				"insert into Person (ID) values (?)" );
-		verify( personPreparedStatement, times( 4 ) ).addBatch();
-		verify( personPreparedStatement, times( 1 ) ).executeBatch();*/
+		verifyPreparedStatementCount( 3 );
+		/*
+		Map<String, Integer> expectedBatching = new HashMap<>();
+		expectedBatching.put( "insert into Address (ID) values (?)", 2 );
+		expectedBatching.put( "insert into Person (ID) values (?)", 4 );
+		verifyBatching( expectedBatching );
+		*/
 	}
 
 	@Entity(name = "Parent")

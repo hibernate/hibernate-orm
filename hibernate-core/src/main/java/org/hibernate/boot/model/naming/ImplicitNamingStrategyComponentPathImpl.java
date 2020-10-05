@@ -8,6 +8,7 @@ package org.hibernate.boot.model.naming;
 
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.loader.PropertyPath;
 
 /**
  * An ImplicitNamingStrategy implementation which uses full composite paths
@@ -26,7 +27,13 @@ public class ImplicitNamingStrategyComponentPathImpl extends ImplicitNamingStrat
 	protected String transformAttributePath(AttributePath attributePath) {
 		final StringBuilder sb = new StringBuilder();
 		process( attributePath, sb );
-		return sb.toString();
+		int start = sb.indexOf(PropertyPath.IDENTIFIER_MAPPER_PROPERTY);
+		if (start < 0) {
+			return sb.toString();
+		}
+		else {
+			return sb.replace(start, start + PropertyPath.IDENTIFIER_MAPPER_PROPERTY.length(), "id").toString();
+		}
 	}
 
 	public static void process(AttributePath attributePath, StringBuilder sb) {

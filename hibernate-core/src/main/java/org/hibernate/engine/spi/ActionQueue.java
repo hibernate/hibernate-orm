@@ -1101,7 +1101,7 @@ public class ActionQueue {
 			}
 
 			/**
-			 * Check if the this {@link BatchIdentifier} has a parent or grand parent
+			 * Check if this {@link BatchIdentifier} has a parent or grand parent
 			 * matching the given {@link BatchIdentifier} reference.
 			 *
 			 * @param batchIdentifier {@link BatchIdentifier} reference

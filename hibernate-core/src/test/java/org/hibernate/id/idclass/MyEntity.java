@@ -23,12 +23,12 @@ public class MyEntity {
 	private String notes;
 
 	public MyEntityId getId() {
-		return new MyEntityId( idB, idA );
+		return new MyEntityId( idA, idB );
 	}
 
 	public void setId(MyEntityId id) {
-		this.idB = id.getIdA();
-		this.idA = id.getIdB();
+		this.idA = id.getIdA();
+		this.idB = id.getIdB();
 	}
 
 	public String getNotes() {

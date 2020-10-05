@@ -9,6 +9,7 @@ package org.hibernate.id.idclass;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl;
 import org.hibernate.cfg.Configuration;
 
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -21,10 +22,10 @@ public class IdClassNamingStrategyTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected void configure(Configuration configuration) {
-		/*
-		 * With this implicit naming strategy, we got the following mapping:
-		 *
-		 * create table MyEntity (
+        /*
+         * With this implicit naming strategy, we got the following mapping:
+         *
+         * create table MyEntity (
          *   id_idA bigint not null,
          *   id_idB bigint not null,
          *   _identifierMapper_idA bigint not null, <-- ??
@@ -32,11 +33,12 @@ public class IdClassNamingStrategyTest extends BaseCoreFunctionalTestCase {
          *   notes varchar(255),
          *   primary key (id_idA, id_idB)
          * )
-		 */
+         */
 		configuration.setImplicitNamingStrategy( new ImplicitNamingStrategyComponentPathImpl() );
 	}
 
 	@Test
+	@TestForIssue(jiraKey = "HHH-14241")
 	public void test() {
 		inTransaction( ( session ) -> {
 			MyEntity entity = new MyEntity();

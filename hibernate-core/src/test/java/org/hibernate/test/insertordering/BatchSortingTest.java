@@ -4,33 +4,32 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.engine.spi;
+package org.hibernate.test.insertordering;
 
-import org.hibernate.cfg.Environment;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.jta.TestingJtaBootstrap;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
-
-import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
+
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.TestForIssue;
+import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 
 /*
  * @author gajendra.jatav(raaz2.gajendra@gmail.com)
  */
-public class BatchSortingTest extends BaseNonConfigCoreFunctionalTestCase {
-
-    @Override
-    protected void addSettings(Map settings) {
-        settings.put( Environment.ORDER_INSERTS, "true" );
-        settings.put( Environment.ORDER_UPDATES, "true" );
-        settings.put( Environment.STATEMENT_BATCH_SIZE, "5" );
-        TestingJtaBootstrap.prepare( settings );
-    }
+@RequiresDialectFeature(DialectChecks.SupportsJdbcDriverProxying.class)
+public class BatchSortingTest extends BaseInsertOrderingTest {
 
     protected Class<?>[] getAnnotatedClasses() {
         return new Class<?>[]{
@@ -59,7 +58,10 @@ public class BatchSortingTest extends BaseNonConfigCoreFunctionalTestCase {
             country.setDistricts( geoDistricts );
             session.persist( geoDistrict );
             session.persist( nation );
+            clearBatches();
         });
+
+        verifyPreparedStatementCount( 4 );
     }
 
     @Entity(name = "GeoCountry")

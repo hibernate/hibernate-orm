@@ -6,27 +6,25 @@
  */
 package org.hibernate.test.insertordering;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
-
+import java.util.ArrayList;
+import java.util.List;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
-import static org.hibernate.cfg.AvailableSettings.ORDER_INSERTS;
-import static org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE;
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.TestForIssue;
+import org.junit.Test;
+
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 
 @TestForIssue(jiraKey = "HHH-12105")
-public class InsertOrderingWithBidirectionalOneToOneFlushProblem
-		extends BaseNonConfigCoreFunctionalTestCase {
+@RequiresDialectFeature(DialectChecks.SupportsJdbcDriverProxying.class)
+public class InsertOrderingWithBidirectionalOneToOneFlushProblem extends BaseInsertOrderingTest {
 
 	@Test
 	public void testInsertSortingWithFlushPersistLeftBeforeRight() {
@@ -36,7 +34,10 @@ public class InsertOrderingWithBidirectionalOneToOneFlushProblem
 					TopEntity top1 = new TopEntity();
 
 					session.persist(top1);
+					clearBatches();
 					session.flush();
+
+					verifyContainsBatches( new Batch( "insert into TopEntity (id) values (?)" ) );
 
 					LeftEntity left = new LeftEntity();
 					RightEntity right = new RightEntity();
@@ -54,7 +55,15 @@ public class InsertOrderingWithBidirectionalOneToOneFlushProblem
 					session.persist(left);
 					session.persist(right);
 					session.persist(top2);
+
+					clearBatches();
 				}
+		);
+
+		verifyContainsBatches(
+				new Batch( "insert into TopEntity (id) values (?)" ),
+				new Batch( "insert into LeftEntity (top_id, id) values (?, ?)" ),
+				new Batch( "insert into RightEntity (left_id, top_id, id) values (?, ?, ?)" )
 		);
 	}
 
@@ -66,7 +75,10 @@ public class InsertOrderingWithBidirectionalOneToOneFlushProblem
 					TopEntity top1 = new TopEntity();
 
 					session.persist(top1);
+					clearBatches();
 					session.flush();
+
+					verifyContainsBatches( new Batch( "insert into TopEntity (id) values (?)" ) );
 
 					LeftEntity left = new LeftEntity();
 					RightEntity right = new RightEntity();
@@ -84,19 +96,21 @@ public class InsertOrderingWithBidirectionalOneToOneFlushProblem
 					session.persist(right);
 					session.persist(left);
 					session.persist(top2);
+
+					clearBatches();
 				}
+		);
+
+		verifyContainsBatches(
+				new Batch( "insert into TopEntity (id) values (?)" ),
+				new Batch( "insert into LeftEntity (top_id, id) values (?, ?)" ),
+				new Batch( "insert into RightEntity (left_id, top_id, id) values (?, ?, ?)" )
 		);
 	}
 
 	@Override
-	protected void addSettings(Map settings) {
-		settings.put( ORDER_INSERTS, "true" );
-		settings.put( STATEMENT_BATCH_SIZE, "10" );
-	}
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[]{
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class<?>[]{
 				LeftEntity.class, RightEntity.class, TopEntity.class,
 		};
 	}

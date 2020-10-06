@@ -1102,7 +1102,7 @@ public class ActionQueue {
 			}
 
 			/**
-			 * Check if the this {@link BatchIdentifier} has a parent or grand parent
+			 * Check if this {@link BatchIdentifier} has a parent or grand parent
 			 * matching the given {@link BatchIdentifier} reference.
 			 *
 			 * @param batchIdentifier {@link BatchIdentifier} reference
@@ -1269,7 +1269,9 @@ public class ActionQueue {
 				for ( int i = 0; i < propertyValues.length; i++ ) {
 					Object value = propertyValues[i];
 					Type type = propertyTypes[i];
-					addParentChildEntityNameByPropertyAndValue( action, batchIdentifier, type, value );
+					if ( value != null ) {
+						addParentChildEntityNameByPropertyAndValue( action, batchIdentifier, type, value );
+					}
 				}
 
 				if ( identifierType.isComponentType() ) {

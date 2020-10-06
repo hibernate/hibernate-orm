@@ -1155,8 +1155,6 @@ public class ActionQueue {
 								.getRootEntityName()
 				);
 
-				// the entity associated with the current action.
-				Object currentEntity = action.getInstance();
 				int index = latestBatches.indexOf( batchIdentifier );
 
 				if ( index != -1 )  {
@@ -1266,8 +1264,8 @@ public class ActionQueue {
 
 				for ( int i = 0; i < propertyValues.length; i++ ) {
 					Object value = propertyValues[i];
-					Type type = propertyTypes[i];
 					if ( value != null ) {
+						Type type = propertyTypes[i];
 						addParentChildEntityNameByPropertyAndValue( action, batchIdentifier, type, value );
 					}
 				}

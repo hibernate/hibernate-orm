@@ -28,7 +28,7 @@ import org.hibernate.service.spi.ServiceInitiator;
 public class StandardServiceRegistryImpl extends AbstractServiceRegistryImpl implements StandardServiceRegistry {
 
 	//Access to this field requires synchronization on -this-
-	private Map configurationValues;
+	private Map<String, Object> configurationValues;
 
 	/**
 	 * Constructs a StandardServiceRegistryImpl.  Should not be instantiated directly; use
@@ -41,12 +41,11 @@ public class StandardServiceRegistryImpl extends AbstractServiceRegistryImpl imp
 	 *
 	 * @see org.hibernate.boot.registry.StandardServiceRegistryBuilder
 	 */
-	@SuppressWarnings( {"unchecked"})
 	public StandardServiceRegistryImpl(
 			BootstrapServiceRegistry bootstrapServiceRegistry,
 			List<StandardServiceInitiator> serviceInitiators,
 			List<ProvidedService> providedServices,
-			Map<?, ?> configurationValues) {
+			Map<String, Object> configurationValues) {
 		this( true, bootstrapServiceRegistry, serviceInitiators, providedServices, configurationValues );
 	}
 
@@ -63,13 +62,12 @@ public class StandardServiceRegistryImpl extends AbstractServiceRegistryImpl imp
 	 *
 	 * @see org.hibernate.boot.registry.StandardServiceRegistryBuilder
 	 */
-	@SuppressWarnings( {"unchecked"})
 	public StandardServiceRegistryImpl(
 			boolean autoCloseRegistry,
 			BootstrapServiceRegistry bootstrapServiceRegistry,
 			List<StandardServiceInitiator> serviceInitiators,
 			List<ProvidedService> providedServices,
-			Map<?, ?> configurationValues) {
+			Map<String, Object> configurationValues) {
 		super( bootstrapServiceRegistry, autoCloseRegistry );
 
 		this.configurationValues = configurationValues;
@@ -114,12 +112,12 @@ public class StandardServiceRegistryImpl extends AbstractServiceRegistryImpl imp
 	public synchronized void resetAndReactivate(BootstrapServiceRegistry bootstrapServiceRegistry,
 									List<StandardServiceInitiator> serviceInitiators,
 									List<ProvidedService> providedServices,
-									Map<?, ?> configurationValues) {
+									Map<String, Object> configurationValues) {
 		if ( super.isActive() ) {
 			throw new IllegalStateException( "Can't reactivate an active registry!" );
 		}
 		super.resetParent( bootstrapServiceRegistry );
-		this.configurationValues = new HashMap( configurationValues );
+		this.configurationValues = new HashMap<>( configurationValues );
 		super.reactivate();
 		applyServiceRegistrations( serviceInitiators, providedServices );
 	}

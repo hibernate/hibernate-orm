@@ -52,7 +52,7 @@ public class DisabledCaching implements CacheImplementor {
 	}
 
 	@Override
-	public boolean containsEntity(Class entityClass, Serializable identifier) {
+	public boolean containsEntity(Class<?> entityClass, Serializable identifier) {
 		return false;
 	}
 
@@ -62,7 +62,7 @@ public class DisabledCaching implements CacheImplementor {
 	}
 
 	@Override
-	public void evictEntityData(Class entityClass, Serializable identifier) {
+	public void evictEntityData(Class<?> entityClass, Serializable identifier) {
 		// nothing to do
 
 	}
@@ -74,7 +74,7 @@ public class DisabledCaching implements CacheImplementor {
 	}
 
 	@Override
-	public void evictEntityData(Class entityClass) {
+	public void evictEntityData(Class<?> entityClass) {
 		// nothing to do
 	}
 
@@ -89,7 +89,7 @@ public class DisabledCaching implements CacheImplementor {
 	}
 
 	@Override
-	public void evictNaturalIdData(Class entityClass) {
+	public void evictNaturalIdData(Class<?> entityClass) {
 		// nothing to do
 	}
 
@@ -218,9 +218,8 @@ public class DisabledCaching implements CacheImplementor {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <T> T unwrap(Class<T> cls) {
-		return (T) this;
+		return cls.cast( this );
 	}
 
 	@Override

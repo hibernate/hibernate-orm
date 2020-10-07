@@ -25,15 +25,15 @@ import org.hibernate.sql.results.graph.FetchParent;
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractSetSemantics<S extends Set<?>> implements CollectionSemantics<S> {
+public abstract class AbstractSetSemantics<S extends Set<Object>> implements CollectionSemantics<S> {
 	@Override
+	@SuppressWarnings( { "rawtypes", "unchecked" } )
 	public Class<S> getCollectionJavaType() {
-		//noinspection unchecked
 		return (Class) Set.class;
 	}
 
 	@Override
-	public Iterator getElementIterator(Set rawCollection) {
+	public Iterator<Object> getElementIterator(S rawCollection) {
 		if ( rawCollection == null ) {
 			return null;
 		}
@@ -41,8 +41,7 @@ public abstract class AbstractSetSemantics<S extends Set<?>> implements Collecti
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public void visitElements(S rawCollection, Consumer action) {
+	public void visitElements(S rawCollection, Consumer<Object> action) {
 		if ( rawCollection != null ) {
 			rawCollection.forEach( action );
 		}

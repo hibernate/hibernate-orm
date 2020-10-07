@@ -41,10 +41,10 @@ public class LazyAttributesMetadata implements Serializable {
 
 		int i = -1;
 		int x = 0;
-		final Iterator itr = mappedEntity.getPropertyClosureIterator();
+		final Iterator<Property> itr = mappedEntity.getPropertyClosureIterator();
 		while ( itr.hasNext() ) {
 			i++;
-			final Property property = (Property) itr.next();
+			final Property property = itr.next();
 			final boolean lazy = ! EnhancementHelper.includeInBaseFetchGroup(
 					property,
 					isEnhanced,

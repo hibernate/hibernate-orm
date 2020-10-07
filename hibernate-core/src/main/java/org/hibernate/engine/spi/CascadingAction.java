@@ -49,7 +49,7 @@ public interface CascadingAction {
 	 * @param collection The collection instance.
 	 * @return The children iterator.
 	 */
-	Iterator getCascadableChildrenIterator(
+	Iterator<Object> getCascadableChildrenIterator(
 			EventSource session,
 			CollectionType collectionType,
 			Object collection);

@@ -72,20 +72,19 @@ public class StandardArraySemantics implements CollectionSemantics<Object[]> {
 
 	@Override
 	public PersistentCollection wrap(
-			Object rawCollection,
+			Object[] rawCollection,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
 		return new PersistentArrayHolder( session, rawCollection );
 	}
 
 	@Override
-	public Iterator getElementIterator(Object[] rawCollection) {
+	public Iterator<Object> getElementIterator(Object[] rawCollection) {
 		return Arrays.stream( rawCollection ).iterator();
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public void visitElements(Object[] array, Consumer action) {
+	public void visitElements(Object[] array, Consumer<Object> action) {
 		if ( array == null ) {
 			return;
 		}

@@ -38,6 +38,7 @@ import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.JoinedSubclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
@@ -50,7 +51,6 @@ import org.jboss.logging.Logger;
  *
  * @author Emmanuel Bernard
  */
-@SuppressWarnings("unchecked")
 public class TableBinder {
 	//TODO move it to a getter/setter strategy
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, TableBinder.class.getName() );
@@ -554,7 +554,7 @@ public class TableBinder {
 			LOG.debugf( "Retrieving property %s.%s", associatedClass.getEntityName(), mappedByProperty );
 
 			final Property property = associatedClass.getRecursiveProperty( columns[0].getMappedBy() );
-			Iterator mappedByColumns;
+			Iterator<Selectable> mappedByColumns;
 			if ( property.getValue() instanceof Collection ) {
 				Collection collection = ( (Collection) property.getValue() );
 				Value element = collection.getElement();
@@ -580,7 +580,7 @@ public class TableBinder {
 			 * if columns are implicit, then create the columns based on the
 			 * referenced entity id columns
 			 */
-			Iterator idColumns;
+			Iterator<Selectable> idColumns;
 			if ( referencedEntity instanceof JoinedSubclass ) {
 				idColumns = referencedEntity.getKey().getColumnIterator();
 			}
@@ -655,7 +655,7 @@ public class TableBinder {
 				}
 				else {
 					//explicit referencedColumnName
-					Iterator idColItr = referencedEntity.getKey().getColumnIterator();
+					Iterator<Selectable> idColItr = referencedEntity.getKey().getColumnIterator();
 					org.hibernate.mapping.Column col;
 					//works cause the pk has to be on the primary table
 					Table table = referencedEntity.getTable();
@@ -706,7 +706,7 @@ public class TableBinder {
 
 	public static void linkJoinColumnWithValueOverridingNameIfImplicit(
 			PersistentClass referencedEntity,
-			Iterator columnIterator,
+			Iterator<Selectable> columnIterator,
 			Ejb3JoinColumn[] columns,
 			SimpleValue value) {
 		for (Ejb3JoinColumn joinCol : columns) {
@@ -723,10 +723,10 @@ public class TableBinder {
 	}
 
 	public static void createUniqueConstraint(Value value) {
-		Iterator iter = value.getColumnIterator();
-		ArrayList cols = new ArrayList();
+		Iterator<Selectable> iter = value.getColumnIterator();
+		ArrayList<Column> cols = new ArrayList<>();
 		while ( iter.hasNext() ) {
-			cols.add( iter.next() );
+			cols.add( (Column) iter.next() );
 		}
 		value.getTable().createUniqueKey( cols );
 	}

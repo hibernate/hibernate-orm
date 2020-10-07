@@ -26,6 +26,6 @@ public interface RefreshEventListener extends Serializable {
      */
 	public void onRefresh(RefreshEvent event) throws HibernateException;
 	
-	public void onRefresh(RefreshEvent event, Map refreshedAlready) throws HibernateException;
+	public void onRefresh(RefreshEvent event, Map<Object, Object> refreshedAlready) throws HibernateException;
 
 }

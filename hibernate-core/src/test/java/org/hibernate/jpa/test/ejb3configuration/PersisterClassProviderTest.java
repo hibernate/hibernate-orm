@@ -264,7 +264,7 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
-		public VersionType getVersionType() {
+		public VersionType<Object> getVersionType() {
 			return null;
 		}
 

@@ -104,6 +104,7 @@ import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 
@@ -118,7 +119,7 @@ import static org.hibernate.cfg.BinderHelper.toAliasTableMap;
  * @author inger
  * @author Emmanuel Bernard
  */
-@SuppressWarnings({"unchecked", "serial", "WeakerAccess", "deprecation"})
+@SuppressWarnings({"serial", "WeakerAccess", "deprecation"})
 public abstract class CollectionBinder {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, CollectionBinder.class.getName());
 
@@ -610,11 +611,12 @@ public abstract class CollectionBinder {
 		propertyHolder.addProperty( prop, declaringClass );
 	}
 
+	@SuppressWarnings( "unchecked" )
 	private void applySortingAndOrdering(Collection collection) {
 		boolean hadOrderBy = false;
 		boolean hadExplicitSort = false;
 
-		Class<? extends Comparator> comparatorClass = null;
+		Class<? extends Comparator<?>> comparatorClass = null;
 
 		if ( jpaOrderBy == null && sqlOrderBy == null ) {
 			if ( deprecatedSort != null ) {
@@ -628,7 +630,7 @@ public abstract class CollectionBinder {
 				}
 				else if ( deprecatedSort.type() == SortType.COMPARATOR ) {
 					isSortedCollection = true;
-					comparatorClass = deprecatedSort.comparator();
+					comparatorClass = (Class<? extends Comparator<?>>) deprecatedSort.comparator();
 				}
 			}
 			else if ( naturalSort != null ) {
@@ -780,7 +782,7 @@ public abstract class CollectionBinder {
 			final MetadataBuildingContext buildingContext) {
 		return new CollectionSecondPass( buildingContext, collection ) {
 			@Override
-			public void secondPass(java.util.Map persistentClasses, java.util.Map inheritedMetas) throws MappingException {
+			public void secondPass(java.util.Map<String, PersistentClass> persistentClasses, java.util.Map<String, PersistentClass> inheritedMetas) throws MappingException {
 				bindStarToManySecondPass(
 						persistentClasses,
 						collType,
@@ -803,7 +805,7 @@ public abstract class CollectionBinder {
 	 * return true if it's a Fk, false if it's an association table
 	 */
 	protected boolean bindStarToManySecondPass(
-			Map persistentClasses,
+			Map<String, PersistentClass> persistentClasses,
 			XClass collType,
 			Ejb3JoinColumn[] fkJoinColumns,
 			Ejb3JoinColumn[] keyColumns,
@@ -815,7 +817,7 @@ public abstract class CollectionBinder {
 			TableBinder associationTableBinder,
 			boolean ignoreNotFound,
 			MetadataBuildingContext buildingContext) {
-		PersistentClass persistentClass = (PersistentClass) persistentClasses.get( collType.getName() );
+		PersistentClass persistentClass = persistentClasses.get( collType.getName() );
 		boolean reversePropertyInJoin = false;
 		if ( persistentClass != null && StringHelper.isNotEmpty( this.mappedBy ) ) {
 			try {
@@ -876,7 +878,7 @@ public abstract class CollectionBinder {
 
 	protected void bindOneToManySecondPass(
 			Collection collection,
-			Map persistentClasses,
+			Map<String, PersistentClass> persistentClasses,
 			Ejb3JoinColumn[] fkJoinColumns,
 			XClass collectionType,
 			boolean cascadeDeleteEnabled,
@@ -898,7 +900,7 @@ public abstract class CollectionBinder {
 		oneToMany.setIgnoreNotFound( ignoreNotFound );
 
 		String assocClass = oneToMany.getReferencedEntityName();
-		PersistentClass associatedClass = (PersistentClass) persistentClasses.get( assocClass );
+		PersistentClass associatedClass = persistentClasses.get( assocClass );
 		if ( jpaOrderBy != null ) {
 			final String orderByFragment = buildOrderByClauseFromHql(
 					jpaOrderBy.value(),
@@ -1278,7 +1280,7 @@ public abstract class CollectionBinder {
 
 	private void bindManyToManySecondPass(
 			Collection collValue,
-			Map persistentClasses,
+			Map<String, PersistentClass> persistentClasses,
 			Ejb3JoinColumn[] joinColumns,
 			Ejb3JoinColumn[] inverseJoinColumns,
 			Ejb3Column[] elementColumns,
@@ -1294,7 +1296,7 @@ public abstract class CollectionBinder {
 			throw new IllegalArgumentException( "null was passed for argument property" );
 		}
 
-		final PersistentClass collectionEntity = (PersistentClass) persistentClasses.get( collType.getName() );
+		final PersistentClass collectionEntity = persistentClasses.get( collType.getName() );
 		final String hqlOrderBy = extractHqlOrderBy( jpaOrderBy );
 
 		boolean isCollectionOfEntities = collectionEntity != null;
@@ -1603,7 +1605,7 @@ public abstract class CollectionBinder {
 			else {
 				holder.prepare( property );
 
-				final BasicValueBinder elementBinder = new BasicValueBinder( BasicValueBinder.Kind.COLLECTION_ELEMENT, buildingContext );
+				final BasicValueBinder<?> elementBinder = new BasicValueBinder<>( BasicValueBinder.Kind.COLLECTION_ELEMENT, buildingContext );
 				elementBinder.setReturnedClassName( collType.getName() );
 				if ( elementColumns == null || elementColumns.length == 0 ) {
 					elementColumns = new Ejb3Column[1];
@@ -1725,13 +1727,13 @@ public abstract class CollectionBinder {
 		final String mappedBy = columns[0].getMappedBy();
 		if ( StringHelper.isNotEmpty( mappedBy ) ) {
 			final Property property = referencedEntity.getRecursiveProperty( mappedBy );
-			Iterator mappedByColumns;
+			Iterator<Selectable> mappedByColumns;
 			if ( property.getValue() instanceof Collection ) {
 				mappedByColumns = ( (Collection) property.getValue() ).getKey().getColumnIterator();
 			}
 			else {
 				//find the appropriate reference key, can be in a join
-				Iterator joinsIt = referencedEntity.getJoinIterator();
+				Iterator<Join> joinsIt = referencedEntity.getJoinIterator();
 				KeyValue key = null;
 				while ( joinsIt.hasNext() ) {
 					Join join = (Join) joinsIt.next();

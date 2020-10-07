@@ -35,8 +35,8 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 
 	@SuppressWarnings({"rawtypes", "unchecked"})
 	public static <E> VersionResolution<E> from(
-			Function<TypeConfiguration, Class> implicitJavaTypeAccess,
-			Function<TypeConfiguration, BasicJavaDescriptor> explicitJtdAccess,
+			Function<TypeConfiguration, Class<?>> implicitJavaTypeAccess,
+			Function<TypeConfiguration, BasicJavaDescriptor<?>> explicitJtdAccess,
 			Function<TypeConfiguration, SqlTypeDescriptor> explicitStdAccess,
 			TypeConfiguration typeConfiguration,
 			@SuppressWarnings("unused") MetadataBuildingContext context) {

@@ -89,16 +89,13 @@ import static org.hibernate.event.spi.EventType.UPDATE;
  * @author Steve Ebersole
  */
 public class EventListenerRegistryImpl implements EventListenerRegistry, Stoppable {
-	@SuppressWarnings("rawtypes")
-	private final EventListenerGroup[] eventListeners;
+	private final EventListenerGroup<?>[] eventListeners;
 	private final Map<Class<?>,Object> listenerClassToInstanceMap = new HashMap<>();
 
-	@SuppressWarnings("rawtypes")
-	private EventListenerRegistryImpl(EventListenerGroup[] eventListeners) {
+	private EventListenerRegistryImpl(EventListenerGroup<?>[] eventListeners) {
 		this.eventListeners = eventListeners;
 	}
 
-	@SuppressWarnings({ "unchecked" })
 	public <T> EventListenerGroup<T> getEventListenerGroup(EventType<T> eventType) {
 		if ( eventListeners.length < eventType.ordinal() + 1 ) {
 			// eventTpe is a custom EventType that has not been registered.
@@ -106,7 +103,8 @@ public class EventListenerRegistryImpl implements EventListenerRegistry, Stoppab
 			// accommodate it.
 			throw new HibernateException( "Unable to find listeners for type [" + eventType.eventName() + "]" );
 		}
-		final EventListenerGroup<T> listeners = eventListeners[ eventType.ordinal() ];
+		@SuppressWarnings( "unchecked" )
+		final EventListenerGroup<T> listeners = (EventListenerGroup<T>) eventListeners[ eventType.ordinal() ];
 		if ( listeners == null ) {
 			throw new HibernateException( "Unable to find listeners for type [" + eventType.eventName() + "]" );
 		}
@@ -129,8 +127,8 @@ public class EventListenerRegistryImpl implements EventListenerRegistry, Stoppab
 		setListeners( type, resolveListenerInstances( type, listenerClasses ) );
 	}
 
-	@SuppressWarnings( {"unchecked"})
 	private <T> T[] resolveListenerInstances(EventType<T> type, Class<? extends T>... listenerClasses) {
+		@SuppressWarnings( "unchecked" )
 		T[] listeners = (T[]) Array.newInstance( type.baseListenerInterface(), listenerClasses.length );
 		for ( int i = 0; i < listenerClasses.length; i++ ) {
 			listeners[i] = resolveListenerInstance( listenerClasses[i] );
@@ -138,8 +136,8 @@ public class EventListenerRegistryImpl implements EventListenerRegistry, Stoppab
 		return listeners;
 	}
 
-	@SuppressWarnings( {"unchecked"})
 	private <T> T resolveListenerInstance(Class<T> listenerClass) {
+		@SuppressWarnings( "unchecked" )
 		T listenerInstance = (T) listenerClassToInstanceMap.get( listenerClass );
 		if ( listenerInstance == null ) {
 			listenerInstance = instantiateListener( listenerClass );
@@ -353,12 +351,11 @@ public class EventListenerRegistryImpl implements EventListenerRegistry, Stoppab
 			);
 		}
 
-		@SuppressWarnings({"rawtypes", "unchecked"})
 		public <T> void prepareListeners(
 				EventType<T> type,
 				T defaultListener,
 				Function<EventType<T>,EventListenerGroupImpl<T>> groupCreator) {
-			final EventListenerGroupImpl listenerGroup = groupCreator.apply( type );
+			final EventListenerGroupImpl<T> listenerGroup = groupCreator.apply( type );
 
 			if ( defaultListener != null ) {
 				listenerGroup.appendListener( defaultListener );
@@ -372,18 +369,17 @@ public class EventListenerRegistryImpl implements EventListenerRegistry, Stoppab
 			return (EventListenerGroup<T>) listenerGroupMap.get( eventType );
 		}
 
-		@SuppressWarnings("rawtypes")
-		public EventListenerRegistry buildRegistry(Map<String, EventType> registeredEventTypes) {
+		public EventListenerRegistry buildRegistry(Map<String, EventType<?>> registeredEventTypes) {
 			// validate contiguity of the event-type ordinals and build the EventListenerGroups array
 
-			final ArrayList<EventType> eventTypeList = new ArrayList<>( registeredEventTypes.values() );
+			final ArrayList<EventType<?>> eventTypeList = new ArrayList<>( registeredEventTypes.values() );
 			eventTypeList.sort( Comparator.comparing( EventType::ordinal ) );
 
-			final EventListenerGroup[] eventListeners = new EventListenerGroup[ eventTypeList.size() ];
+			final EventListenerGroup<?>[] eventListeners = new EventListenerGroup[ eventTypeList.size() ];
 
 			int previous = -1;
 			for ( int i = 0; i < eventTypeList.size(); i++ ) {
-				final EventType eventType = eventTypeList.get( i );
+				final EventType<?> eventType = eventTypeList.get( i );
 
 				assert i == eventType.ordinal();
 				assert i - 1 == previous;

@@ -34,8 +34,7 @@ import org.hibernate.service.spi.Stoppable;
  * @author Steve Ebersole
  */
 public class EventEngine {
-	@SuppressWarnings("rawtypes")
-	private final Map<String,EventType> registeredEventTypes;
+	private final Map<String,EventType<?>> registeredEventTypes;
 	private final EventListenerRegistry listenerRegistry;
 
 	private final CallbackRegistryImplementor callbackRegistry;
@@ -85,13 +84,12 @@ public class EventEngine {
 				sessionFactory.getSessionFactoryOptions().isJpaBootstrap()
 		);
 
-		final Map<String,EventType> eventTypes = new HashMap<>();
+		final Map<String,EventType<?>> eventTypes = new HashMap<>();
 		EventType.registerStandardTypes( eventTypes );
 
 		final EventEngineContributions contributionManager = new EventEngineContributions() {
 			@Override
-			public <T> EventType<T> findEventType(String name) {
-				//noinspection unchecked
+			public  EventType<?> findEventType(String name) {
 				return eventTypes.get( name );
 			}
 
@@ -169,13 +167,12 @@ public class EventEngine {
 	}
 
 	public Collection<EventType<?>> getRegisteredEventTypes() {
-		//noinspection unchecked,rawtypes
-		return (Collection) registeredEventTypes.values();
+		return registeredEventTypes.values();
 	}
 
 	public <T> EventType<T> findRegisteredEventType(String name) {
 		//noinspection unchecked
-		return registeredEventTypes.get( name );
+		return (EventType<T>) registeredEventTypes.get( name );
 	}
 
 	public EventListenerRegistry getListenerRegistry() {

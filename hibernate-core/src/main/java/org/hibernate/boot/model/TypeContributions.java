@@ -26,7 +26,7 @@ public interface TypeContributions {
 	 * Add the JavaTypeDescriptor to the {@link TypeConfiguration}'s
 	 * {@link JavaTypeDescriptorRegistry}
 	 */
-	void contributeJavaTypeDescriptor(JavaTypeDescriptor descriptor);
+	<T> void contributeJavaTypeDescriptor(JavaTypeDescriptor<T> descriptor);
 
 	/**
 	 * Add the JavaTypeDescriptor to the {@link TypeConfiguration}'s
@@ -34,7 +34,7 @@ public interface TypeContributions {
 	 */
 	void contributeSqlTypeDescriptor(SqlTypeDescriptor descriptor);
 
-	void contributeType(BasicType type);
+	<T> void contributeType(BasicType<T> type);
 
 	/**
 	 * @deprecated (since 5.3) Use {@link #contributeType(BasicType)} instead.  Basic
@@ -47,7 +47,7 @@ public interface TypeContributions {
 	 * registration keys and call {@link #contributeType(BasicType)} instead
 	 */
 	@Deprecated
-	void contributeType(BasicType type, String... keys);
+	<T> void contributeType(BasicType<T> type, String... keys);
 
 	/**
 	 * @deprecated (since 5.3) Use {@link #contributeType(BasicType)} instead.
@@ -60,5 +60,5 @@ public interface TypeContributions {
 	 * and call {@link #contributeType(BasicType)} instead
 	 */
 	@Deprecated
-	void contributeType(UserType type, String... keys);
+	<T> void contributeType(UserType<T> type, String... keys);
 }

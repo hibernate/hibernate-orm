@@ -14,15 +14,15 @@ import org.hibernate.usertype.UserType;
 /**
  * @author Steve Ebersole
  */
-public class BasicTypeRegistration {
-	private final BasicType basicType;
+public class BasicTypeRegistration<T> {
+	private final BasicType<T> basicType;
 	private final String[] registrationKeys;
 
-	public BasicTypeRegistration(BasicType basicType) {
+	public BasicTypeRegistration(BasicType<T> basicType) {
 		this( basicType, basicType.getRegistrationKeys() );
 	}
 
-	public BasicTypeRegistration(BasicType basicType, String[] registrationKeys) {
+	public BasicTypeRegistration(BasicType<T> basicType, String[] registrationKeys) {
 		this.basicType = basicType;
 		this.registrationKeys = registrationKeys;
 	}
@@ -31,7 +31,7 @@ public class BasicTypeRegistration {
 		this( new CustomType( type, keys, typeConfiguration ), keys );
 	}
 
-	public BasicType getBasicType() {
+	public BasicType<T> getBasicType() {
 		return basicType;
 	}
 

@@ -93,12 +93,12 @@ public class BasicValueBinder<T> implements SqlTypeDescriptorIndicators {
 	// in-flight info
 
 	private String explicitBasicTypeName;
-	private Map explicitLocalTypeParams;
+	private Map<String, String> explicitLocalTypeParams;
 
 	private Function<TypeConfiguration,SqlTypeDescriptor> explicitSqlTypeAccess;
-	private Function<TypeConfiguration, BasicJavaDescriptor> explicitJtdAccess;
-	private Function<TypeConfiguration, MutabilityPlan> explicitMutabilityAccess;
-	private Function<TypeConfiguration, Class> implicitJavaTypeAccess;
+	private Function<TypeConfiguration, BasicJavaDescriptor<?>> explicitJtdAccess;
+	private Function<TypeConfiguration, MutabilityPlan<?>> explicitMutabilityAccess;
+	private Function<TypeConfiguration, Class<?>> implicitJavaTypeAccess;
 
 	private AccessType accessType;
 
@@ -239,12 +239,12 @@ public class BasicValueBinder<T> implements SqlTypeDescriptorIndicators {
 
 		// If we get into this method we know that there is a Java type for the value
 		//		and that it is safe to load on the app classloader.
-		final Class modelJavaType = resolveJavaType( modelTypeXClass, buildingContext );
+		final Class<?> modelJavaType = resolveJavaType( modelTypeXClass, buildingContext );
 		if ( modelJavaType == null ) {
 			throw new IllegalStateException( "BasicType requires Java type" );
 		}
 
-		final Class modelPropertyJavaType = buildingContext.getBootstrapContext()
+		final Class<?> modelPropertyJavaType = buildingContext.getBootstrapContext()
 				.getReflectionManager()
 				.toClass( modelXProperty.getType() );
 
@@ -380,12 +380,12 @@ public class BasicValueBinder<T> implements SqlTypeDescriptorIndicators {
 		implicitJavaTypeAccess = typeConfiguration -> Integer.class;
 	}
 
+	@SuppressWarnings( "unchecked" )
 	private void prepareCollectionElement(XProperty attributeXProperty, XClass elementTypeXClass) {
 
 		// todo (6.0) : @SqlType / @SqlTypeDescriptor
 
 		Class<T> javaType;
-		//noinspection unchecked
 		if ( elementTypeXClass == null && attributeXProperty.isArray() ) {
 			javaType = buildingContext.getBootstrapContext()
 					.getReflectionManager()
@@ -608,7 +608,7 @@ public class BasicValueBinder<T> implements SqlTypeDescriptorIndicators {
 		}
 	}
 
-	private static Class resolveJavaType(XClass returnedClassOrElement, MetadataBuildingContext buildingContext) {
+	private static Class<?> resolveJavaType(XClass returnedClassOrElement, MetadataBuildingContext buildingContext) {
 		return buildingContext.getBootstrapContext()
 					.getReflectionManager()
 					.toClass( returnedClassOrElement );
@@ -685,8 +685,7 @@ public class BasicValueBinder<T> implements SqlTypeDescriptorIndicators {
 		this.explicitLocalTypeParams = extractTypeParams( typeAnn.parameters() );
 	}
 
-	@SuppressWarnings("unchecked")
-	private Map extractTypeParams(Parameter[] parameters) {
+	private Map<String, String> extractTypeParams(Parameter[] parameters) {
 		if ( parameters == null || parameters.length == 0 ) {
 			return Collections.emptyMap();
 		}
@@ -695,7 +694,7 @@ public class BasicValueBinder<T> implements SqlTypeDescriptorIndicators {
 			return Collections.singletonMap( parameters[0].name(), parameters[0].value() );
 		}
 
-		final Map map = new HashMap();
+		final Map<String, String> map = new HashMap<>();
 		for ( Parameter parameter: parameters ) {
 			map.put( parameter.name(), parameter.value() );
 		}

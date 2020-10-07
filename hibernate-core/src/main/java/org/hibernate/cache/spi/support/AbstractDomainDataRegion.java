@@ -123,7 +123,7 @@ public abstract class AbstractDomainDataRegion extends AbstractRegion implements
 
 	private Map<NavigableRole, EntityDataAccess> generateEntityDataAccessMap(
 			DomainDataRegionConfig regionConfig) {
-		final List<EntityDataCachingConfig> entityCaching = regionConfig.getEntityCaching();
+		final List<? extends EntityDataCachingConfig> entityCaching = regionConfig.getEntityCaching();
 		if ( entityCaching.isEmpty() ) {
 			return Collections.emptyMap();
 		}
@@ -140,7 +140,7 @@ public abstract class AbstractDomainDataRegion extends AbstractRegion implements
 	}
 
 	private Map<NavigableRole, NaturalIdDataAccess> generateNaturalIdDataAccessMap(DomainDataRegionConfig regionConfig) {
-		final List<NaturalIdDataCachingConfig> naturalIdCaching = regionConfig.getNaturalIdCaching();
+		final List<? extends NaturalIdDataCachingConfig> naturalIdCaching = regionConfig.getNaturalIdCaching();
 		if ( naturalIdCaching.isEmpty() ) {
 			return Collections.emptyMap();
 		}
@@ -158,7 +158,7 @@ public abstract class AbstractDomainDataRegion extends AbstractRegion implements
 
 	private Map<NavigableRole, CollectionDataAccess> generateCollectionDataAccessMap(
 			DomainDataRegionConfig regionConfig) {
-		final List<CollectionDataCachingConfig> collectionCaching = regionConfig.getCollectionCaching();
+		final List<? extends CollectionDataCachingConfig> collectionCaching = regionConfig.getCollectionCaching();
 		if ( collectionCaching.isEmpty() ) {
 			return Collections.emptyMap();
 		}

@@ -16,23 +16,23 @@ import org.hibernate.query.sqm.function.NamedSqmFunctionDescriptor;
  *
  * @author David Channon
  */
-public class StandardSQLFunction extends NamedSqmFunctionDescriptor {
-	private final AllowableFunctionReturnType type;
+public class StandardSQLFunction<T> extends NamedSqmFunctionDescriptor {
+	private final AllowableFunctionReturnType<T> type;
 
 	public StandardSQLFunction(String name) {
 		this( name, null );
 	}
 
-	public StandardSQLFunction(String name, AllowableFunctionReturnType type) {
+	public StandardSQLFunction(String name, AllowableFunctionReturnType<T> type) {
 		this( name, true, type );
 	}
 
-	public StandardSQLFunction(String name, boolean useParentheses, AllowableFunctionReturnType type) {
+	public StandardSQLFunction(String name, boolean useParentheses, AllowableFunctionReturnType<T> type) {
 		super( name, useParentheses, null, null );
 		this.type = type;
 	}
 
-	public AllowableFunctionReturnType getType() {
+	public AllowableFunctionReturnType<T> getType() {
 		return type;
 	}
 }

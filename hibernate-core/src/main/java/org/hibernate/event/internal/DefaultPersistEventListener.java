@@ -52,7 +52,7 @@ public class DefaultPersistEventListener
 	 *
 	 */
 	public void onPersist(PersistEvent event) throws HibernateException {
-		onPersist( event, new IdentityHashMap( 10 ) );
+		onPersist( event, new IdentityHashMap<>( 10 ) );
 	}
 
 	/**
@@ -61,7 +61,7 @@ public class DefaultPersistEventListener
 	 * @param event The create event to be handled.
 	 *
 	 */
-	public void onPersist(PersistEvent event, Map createCache) throws HibernateException {
+	public void onPersist(PersistEvent event, Map<Object, Object> createCache) throws HibernateException {
 		final SessionImplementor source = event.getSession();
 		final Object object = event.getObject();
 
@@ -147,7 +147,7 @@ public class DefaultPersistEventListener
 	}
 
 	@SuppressWarnings({"unchecked"})
-	protected void entityIsPersistent(PersistEvent event, Map createCache) {
+	protected void entityIsPersistent(PersistEvent event, Map<Object, Object> createCache) {
 		LOG.trace( "Ignoring persistent instance" );
 		final EventSource source = event.getSession();
 
@@ -162,7 +162,7 @@ public class DefaultPersistEventListener
 		}
 	}
 
-	private void justCascade(Map createCache, EventSource source, Object entity, EntityPersister persister) {
+	private void justCascade(Map<Object, Object> createCache, EventSource source, Object entity, EntityPersister persister) {
 		//TODO: merge into one method!
 		cascadeBeforeSave( source, persister, entity, createCache );
 		cascadeAfterSave( source, persister, entity, createCache );
@@ -174,8 +174,7 @@ public class DefaultPersistEventListener
 	 * @param event The save event to be handled.
 	 * @param createCache The copy cache of entity instance to merge/copy instance.
 	 */
-	@SuppressWarnings({"unchecked"})
-	protected void entityIsTransient(PersistEvent event, Map createCache) {
+	protected void entityIsTransient(PersistEvent event, Map<Object, Object> createCache) {
 		LOG.trace( "Saving transient instance" );
 
 		final EventSource source = event.getSession();
@@ -186,8 +185,7 @@ public class DefaultPersistEventListener
 		}
 	}
 
-	@SuppressWarnings({"unchecked"})
-	private void entityIsDeleted(PersistEvent event, Map createCache) {
+	private void entityIsDeleted(PersistEvent event, Map<Object, Object> createCache) {
 		final EventSource source = event.getSession();
 
 		final Object entity = source.getPersistenceContextInternal().unproxy( event.getObject() );

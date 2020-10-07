@@ -49,7 +49,6 @@ import org.hibernate.type.spi.TypeConfiguration;
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings({"unchecked", "rawtypes"})
 public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicators, Resolvable {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( BasicValue.class );
 
@@ -61,12 +60,12 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 	// incoming "configuration" values
 
 	private String explicitTypeName;
-	private Map explicitLocalTypeParams;
+	private Map<Object, Object> explicitLocalTypeParams;
 
-	private Function<TypeConfiguration,BasicJavaDescriptor> explicitJavaTypeAccess;
-	private Function<TypeConfiguration,SqlTypeDescriptor> explicitSqlTypeAccess;
-	private Function<TypeConfiguration,MutabilityPlan> explicitMutabilityPlanAccess;
-	private Function<TypeConfiguration,Class> implicitJavaTypeAccess;
+	private Function<TypeConfiguration, BasicJavaDescriptor<?>> explicitJavaTypeAccess;
+	private Function<TypeConfiguration, SqlTypeDescriptor> explicitSqlTypeAccess;
+	private Function<TypeConfiguration, MutabilityPlan<?>> explicitMutabilityPlanAccess;
+	private Function<TypeConfiguration, Class<?>> implicitJavaTypeAccess;
 
 	private boolean isNationalized;
 	private boolean isLob;
@@ -146,8 +145,7 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 		super.setJpaAttributeConverterDescriptor( descriptor );
 	}
 
-	@SuppressWarnings({"rawtypes"})
-	public void setExplicitJavaTypeAccess(Function<TypeConfiguration, BasicJavaDescriptor> explicitJavaTypeAccess) {
+	public void setExplicitJavaTypeAccess(Function<TypeConfiguration, BasicJavaDescriptor<?>> explicitJavaTypeAccess) {
 		this.explicitJavaTypeAccess = explicitJavaTypeAccess;
 	}
 
@@ -155,11 +153,11 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 		this.explicitSqlTypeAccess = sqlTypeAccess;
 	}
 
-	public void setExplicitMutabilityPlanAccess(Function<TypeConfiguration, MutabilityPlan> explicitMutabilityPlanAccess) {
+	public void setExplicitMutabilityPlanAccess(Function<TypeConfiguration, MutabilityPlan<?>> explicitMutabilityPlanAccess) {
 		this.explicitMutabilityPlanAccess = explicitMutabilityPlanAccess;
 	}
 
-	public void setImplicitJavaTypeAccess(Function<TypeConfiguration, Class> implicitJavaTypeAccess) {
+	public void setImplicitJavaTypeAccess(Function<TypeConfiguration, Class<?>> implicitJavaTypeAccess) {
 		this.implicitJavaTypeAccess = implicitJavaTypeAccess;
 	}
 
@@ -445,17 +443,15 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 		return typeConfiguration.getJavaTypeDescriptorRegistry().resolveDescriptor( impliedJavaType );
 	}
 
-
-	@SuppressWarnings({"unchecked", "rawtypes"})
 	private static Resolution interpretExplicitlyNamedType(
 			String name,
 			EnumType enumerationStyle,
-			Function<TypeConfiguration, Class> implicitJavaTypeAccess,
-			Function<TypeConfiguration, BasicJavaDescriptor> explicitJtdAccess,
+			Function<TypeConfiguration, Class<?>> implicitJavaTypeAccess,
+			Function<TypeConfiguration, BasicJavaDescriptor<?>> explicitJtdAccess,
 			Function<TypeConfiguration, SqlTypeDescriptor> explicitStdAccess,
-			Function<TypeConfiguration, MutabilityPlan> explicitMutabilityPlanAccess,
+			Function<TypeConfiguration, MutabilityPlan<?>> explicitMutabilityPlanAccess,
 			ConverterDescriptor converterDescriptor,
-			Map localTypeParams,
+			Map<Object, Object> localTypeParams,
 			SqlTypeDescriptorIndicators stdIndicators,
 			TypeConfiguration typeConfiguration,
 			MetadataBuildingContext context) {
@@ -497,7 +493,7 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 		// see if it is a named basic type
 		final BasicType basicTypeByName = typeConfiguration.getBasicTypeRegistry().getRegisteredType( name );
 		if ( basicTypeByName != null ) {
-			final BasicValueConverter valueConverter;
+			final BasicValueConverter<?, ?> valueConverter;
 			final JavaTypeDescriptor<?> domainJtd;
 			if ( converterDescriptor == null ) {
 				valueConverter = null;
@@ -618,8 +614,7 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 						.getServiceRegistry()
 						.getService( ClassLoaderService.class );
 				try {
-					//noinspection rawtypes
-					final Class<AttributeConverter> converterClass = cls.classForName( converterClassName );
+					final Class<AttributeConverter<?, ?>> converterClass = cls.classForName( converterClassName );
 					attributeConverterDescriptor = new ClassBasedConverterDescriptor(
 							converterClass,
 							false,
@@ -690,7 +685,7 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 		 * Converter, if any, to convert values between the
 		 * domain and relational JavaTypeDescriptor representations
 		 */
-		BasicValueConverter getValueConverter();
+		BasicValueConverter<J, ?> getValueConverter();
 
 		/**
 		 * The resolved MutabilityPlan

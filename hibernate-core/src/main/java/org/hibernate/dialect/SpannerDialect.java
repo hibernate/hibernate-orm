@@ -50,9 +50,14 @@ public class SpannerDialect extends Dialect {
 
 	private static final LockingStrategy LOCKING_STRATEGY = new DoNothingLockingStrategy();
 
-	private static final EmptyExporter NOOP_EXPORTER = new EmptyExporter();
+	private static final EmptyExporter<Exportable> NOOP_EXPORTER = new EmptyExporter<>();
 
 	private static final UniqueDelegate NOOP_UNIQUE_DELEGATE = new DoNothingUniqueDelegate();
+
+	@SuppressWarnings( "unchecked" )
+	private static <T extends Exportable> EmptyExporter<T> emptyExporter() {
+		return (EmptyExporter<T>) NOOP_EXPORTER;
+	}
 
 	public SpannerDialect() {
 		registerColumnType( Types.BOOLEAN, "bool" );
@@ -680,17 +685,17 @@ public class SpannerDialect extends Dialect {
 
 	@Override
 	public Exporter<Sequence> getSequenceExporter() {
-		return NOOP_EXPORTER;
+		return emptyExporter();
 	}
 
 	@Override
 	public Exporter<ForeignKey> getForeignKeyExporter() {
-		return NOOP_EXPORTER;
+		return emptyExporter();
 	}
 
 	@Override
 	public Exporter<Constraint> getUniqueKeyExporter() {
-		return NOOP_EXPORTER;
+		return emptyExporter();
 	}
 
 	@Override

@@ -44,7 +44,7 @@ public class EntityEntryExtraStateHolder implements EntityEntryExtraState {
 			return null;
 		}
 		if ( extraStateType.isAssignableFrom( next.getClass() ) ) {
-			return (T) next;
+			return extraStateType.cast( next );
 		}
 		else {
 			return next.getExtraState( extraStateType );

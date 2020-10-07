@@ -27,15 +27,15 @@ public interface DomainDataRegionConfig {
 	/**
 	 * Retrieve the list of all entity data to be stored in this region
 	 */
-	List<EntityDataCachingConfig> getEntityCaching();
+	List<? extends EntityDataCachingConfig> getEntityCaching();
 
 	/**
 	 * Retrieve the list of all natural-id data to be stored in this region
 	 */
-	List<NaturalIdDataCachingConfig> getNaturalIdCaching();
+	List<? extends NaturalIdDataCachingConfig> getNaturalIdCaching();
 
 	/**
 	 * Retrieve the list of all collection data to be stored in this region
 	 */
-	List<CollectionDataCachingConfig> getCollectionCaching();
+	List<? extends CollectionDataCachingConfig> getCollectionCaching();
 }

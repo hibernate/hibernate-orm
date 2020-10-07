@@ -24,11 +24,10 @@ public class StructuredMapCacheEntry implements CacheEntryStructure {
 	public static final StructuredMapCacheEntry INSTANCE = new StructuredMapCacheEntry();
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Object structure(Object item) {
 		final CollectionCacheEntry entry = (CollectionCacheEntry) item;
 		final Serializable[] state = entry.getState();
-		final Map map = CollectionHelper.mapOfSize( state.length );
+		final Map<Serializable, Serializable> map = CollectionHelper.mapOfSize( state.length );
 		int i = 0;
 		while ( i < state.length ) {
 			map.put( state[i++], state[i++] );
@@ -37,13 +36,14 @@ public class StructuredMapCacheEntry implements CacheEntryStructure {
 	}
 
 	@Override
+	@SuppressWarnings( "unchecked" )
 	public Object destructure(Object structured, SessionFactoryImplementor factory) {
-		final Map<?,?> map = (Map<?,?>) structured;
+		final Map<Serializable, Serializable> map = (Map<Serializable, Serializable>) structured;
 		final Serializable[] state = new Serializable[ map.size()*2 ];
 		int i = 0;
-		for ( Map.Entry me : map.entrySet() ) {
-			state[i++] = (Serializable) me.getKey();
-			state[i++] = (Serializable) me.getValue();
+		for ( Map.Entry<Serializable, Serializable> me : map.entrySet() ) {
+			state[i++] = me.getKey();
+			state[i++] = me.getValue();
 		}
 		return new CollectionCacheEntry(state);
 	}

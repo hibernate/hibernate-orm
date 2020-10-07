@@ -352,7 +352,7 @@ public abstract class AbstractSaveEventListener
 		}
 	}
 
-	protected Map getMergeMap(Object anything) {
+	protected Map<Object, Object> getMergeMap(Object anything) {
 		return null;
 	}
 

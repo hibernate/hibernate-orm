@@ -26,7 +26,7 @@ import org.hibernate.jpa.event.spi.CallbackRegistry;
 class PostCommitEventListenerGroupImpl<T> extends EventListenerGroupImpl<T> {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( PostCommitEventListenerGroupImpl.class );
 
-	private final Class extendedListenerContract;
+	private final Class<?> extendedListenerContract;
 
 	public PostCommitEventListenerGroupImpl(
 			EventType<T> eventType,

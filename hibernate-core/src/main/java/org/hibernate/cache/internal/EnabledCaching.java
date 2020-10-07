@@ -56,15 +56,15 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	private final SessionFactoryImplementor sessionFactory;
 	private final RegionFactory regionFactory;
 
-	private final Map<String,Region> regionsByName = new ConcurrentHashMap<>();
+	private final Map<String, Region> regionsByName = new ConcurrentHashMap<>();
 
 	// A map by name for QueryResultsRegion instances that have the same name as a Region
 	// in #regionsByName.
 	private final Map<String, QueryResultsRegion> queryResultsRegionsByDuplicateName = new ConcurrentHashMap<>();
 
-	private final Map<NavigableRole,EntityDataAccess> entityAccessMap = new ConcurrentHashMap<>();
-	private final Map<NavigableRole,NaturalIdDataAccess> naturalIdAccessMap = new ConcurrentHashMap<>();
-	private final Map<NavigableRole,CollectionDataAccess> collectionAccessMap = new ConcurrentHashMap<>();
+	private final Map<NavigableRole, EntityDataAccess> entityAccessMap = new ConcurrentHashMap<>();
+	private final Map<NavigableRole, NaturalIdDataAccess> naturalIdAccessMap = new ConcurrentHashMap<>();
+	private final Map<NavigableRole, CollectionDataAccess> collectionAccessMap = new ConcurrentHashMap<>();
 
 	private final TimestampsCache timestampsCache;
 
@@ -73,7 +73,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 
 
 	private final Set<String> legacySecondLevelCacheNames = new LinkedHashSet<>();
-	private final Map<String,Set<NaturalIdDataAccess>> legacyNaturalIdAccessesForRegion = new ConcurrentHashMap<>();
+	private final Map<String, Set<NaturalIdDataAccess>> legacyNaturalIdAccessesForRegion = new ConcurrentHashMap<>();
 
 	public EnabledCaching(SessionFactoryImplementor sessionFactory) {
 		this.sessionFactory = sessionFactory;
@@ -220,7 +220,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	// Entity data
 
 	@Override
-	public boolean containsEntity(Class entityClass, Serializable identifier) {
+	public boolean containsEntity(Class<?> entityClass, Serializable identifier) {
 		return containsEntity( entityClass.getName(), identifier );
 	}
 
@@ -261,7 +261,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	}
 
 	@Override
-	public void evictEntityData(Class entityClass) {
+	public void evictEntityData(Class<?> entityClass) {
 		evictEntityData( entityClass.getName() );
 	}
 
@@ -306,7 +306,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	// Natural-id data
 
 	@Override
-	public void evictNaturalIdData(Class entityClass) {
+	public void evictNaturalIdData(Class<?> entityClass) {
 		evictNaturalIdData( entityClass.getName() );
 	}
 
@@ -538,14 +538,13 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <T> T unwrap(Class<T> cls) {
 		if ( org.hibernate.Cache.class.isAssignableFrom( cls ) ) {
-			return (T) this;
+			return cls.cast( this );
 		}
 
 		if ( RegionFactory.class.isAssignableFrom( cls ) ) {
-			return (T) regionFactory;
+			return cls.cast( regionFactory );
 		}
 
 		throw new PersistenceException( "Hibernate cannot unwrap Cache as " + cls.getName() );

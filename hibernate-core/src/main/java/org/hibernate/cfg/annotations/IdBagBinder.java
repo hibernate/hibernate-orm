@@ -44,7 +44,7 @@ public class IdBagBinder extends BagBinder {
 
 	@Override
 	protected boolean bindStarToManySecondPass(
-			Map persistentClasses,
+			Map<String, PersistentClass> persistentClasses,
 			XClass collType,
 			Ejb3JoinColumn[] fkJoinColumns,
 			Ejb3JoinColumn[] keyColumns,
@@ -83,7 +83,7 @@ public class IdBagBinder extends BagBinder {
 				Nullability.FORCED_NOT_NULL,
 				propertyHolder,
 				propertyData,
-				Collections.EMPTY_MAP,
+				Collections.emptyMap(),
 				buildingContext
 		);
 
@@ -92,7 +92,7 @@ public class IdBagBinder extends BagBinder {
 			idColumn.setNullable( false );
 		}
 
-		final BasicValueBinder valueBinder = new BasicValueBinder( BasicValueBinder.Kind.COLLECTION_ID, buildingContext );
+		final BasicValueBinder<?> valueBinder = new BasicValueBinder<>( BasicValueBinder.Kind.COLLECTION_ID, buildingContext );
 
 		final Table table = collection.getCollectionTable();
 		valueBinder.setTable( table );

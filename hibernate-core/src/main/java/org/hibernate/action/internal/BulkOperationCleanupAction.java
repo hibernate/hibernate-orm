@@ -106,8 +106,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 	 * @param session The session to which this request is tied.
 	 * @param tableSpaces The table spaces.
 	 */
-	@SuppressWarnings({ "unchecked" })
-	public BulkOperationCleanupAction(SharedSessionContractImplementor session, Set tableSpaces) {
+	public BulkOperationCleanupAction(SharedSessionContractImplementor session, Set<String> tableSpaces) {
 		final LinkedHashSet<String> spacesList = new LinkedHashSet<>( tableSpaces );
 
 		final SessionFactoryImplementor factory = session.getFactory();
@@ -154,7 +153,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 	 * @return True if there are affected table spaces and any of the incoming
 	 * check table spaces occur in that set.
 	 */
-	private boolean affectedEntity(Set affectedTableSpaces, Serializable[] checkTableSpaces) {
+	private boolean affectedEntity(Set<? extends Serializable> affectedTableSpaces, Serializable[] checkTableSpaces) {
 		if ( affectedTableSpaces == null || affectedTableSpaces.isEmpty() ) {
 			return true;
 		}

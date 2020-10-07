@@ -19,7 +19,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 /**
  * @author Steve Ebersole
  */
-public class StandardOrderedMapSemantics extends AbstractMapSemantics<LinkedHashMap<?,?>> {
+public class StandardOrderedMapSemantics extends AbstractMapSemantics<LinkedHashMap<Object, Object>> {
 	/**
 	 * Singleton access
 	 */
@@ -34,7 +34,7 @@ public class StandardOrderedMapSemantics extends AbstractMapSemantics<LinkedHash
 	}
 
 	@Override
-	public LinkedHashMap<?, ?> instantiateRaw(
+	public LinkedHashMap<Object, Object> instantiateRaw(
 			int anticipatedSize,
 			CollectionPersister collectionDescriptor) {
 		return anticipatedSize < 1 ? CollectionHelper.linkedMap() : CollectionHelper.linkedMapOfSize( anticipatedSize );
@@ -50,14 +50,14 @@ public class StandardOrderedMapSemantics extends AbstractMapSemantics<LinkedHash
 
 	@Override
 	public PersistentCollection wrap(
-			Object rawCollection,
+			LinkedHashMap<Object, Object> rawCollection,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentMap( session, (Map) rawCollection );
+		return new PersistentMap( session, rawCollection );
 	}
 
 	@Override
-	public Iterator getElementIterator(LinkedHashMap rawCollection) {
+	public Iterator<Object> getElementIterator(LinkedHashMap<Object, Object> rawCollection) {
 		return rawCollection.values().iterator();
 	}
 }

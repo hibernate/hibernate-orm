@@ -290,7 +290,7 @@ public interface MetadataBuilder {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	MetadataBuilder applyBasicType(BasicType type);
+	<T> MetadataBuilder applyBasicType(BasicType<T> type);
 
 	/**
 	 * Specify an additional or overridden basic type mapping supplying specific
@@ -301,7 +301,7 @@ public interface MetadataBuilder {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	MetadataBuilder applyBasicType(BasicType type, String... keys);
+	<T> MetadataBuilder applyBasicType(BasicType<T> type, String... keys);
 
 	/**
 	 * Register an additional or overridden custom type mapping.
@@ -311,7 +311,7 @@ public interface MetadataBuilder {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	MetadataBuilder applyBasicType(UserType type, String... keys);
+	<T> MetadataBuilder applyBasicType(UserType type, String... keys);
 
 	/**
 	 * Apply an explicit TypeContributor (implicit application via ServiceLoader will still happen too)
@@ -417,7 +417,7 @@ public interface MetadataBuilder {
 	 *
 	 * @return {@code this} for method chaining
 	 */
-	MetadataBuilder applyAttributeConverter(AttributeConverter attributeConverter, boolean autoApply);
+	<O,R> MetadataBuilder applyAttributeConverter(AttributeConverter<O,R> attributeConverter, boolean autoApply);
 
 	MetadataBuilder applyIdGenerationTypeInterpreter(IdGeneratorStrategyInterpreter interpreter);
 

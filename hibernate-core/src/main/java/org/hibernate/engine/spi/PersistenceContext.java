@@ -484,7 +484,7 @@ public interface PersistenceContext {
 	 * @deprecated Use {@link #containsNullifiableEntityKey(Supplier)} or {@link #registerNullifiableEntityKey(EntityKey)} or {@link #isNullifiableEntityKeysEmpty()}
 	 */
 	@Deprecated
-	HashSet getNullifiableEntityKeys();
+	HashSet<EntityKey> getNullifiableEntityKeys();
 
 	/**
 	 * Get the mapping from key value to entity instance
@@ -492,7 +492,7 @@ public interface PersistenceContext {
 	 * for specific access needs. Consider using #iterateEntities instead.
 	 */
 	@Deprecated
-	Map getEntitiesByKey();
+	Map<EntityKey, Object> getEntitiesByKey();
 
 	/**
 	 * Provides access to the entity/EntityEntry combos associated with the persistence context in a manner that
@@ -508,7 +508,7 @@ public interface PersistenceContext {
 	 * {@link #reentrantSafeEntityEntries}
 	 */
 	@Deprecated
-	Map getEntityEntries();
+	Map<Object, EntityEntry> getEntityEntries();
 
 	int getNumberOfManagedEntities();
 
@@ -517,7 +517,7 @@ public interface PersistenceContext {
 	 * @deprecated use {@link #removeCollectionEntry(PersistentCollection)} or {@link #getCollectionEntriesSize()}, {@link #forEachCollectionEntry(BiConsumer,boolean)}.
 	 */
 	@Deprecated
-	Map getCollectionEntries();
+	Map<PersistentCollection, CollectionEntry> getCollectionEntries();
 
 	/**
 	 * Execute some action on each entry of the collectionEntries map, optionally iterating on a defensive copy.
@@ -534,7 +534,7 @@ public interface PersistenceContext {
 	 * N.B. This might return an immutable map: do not use for mutations!
 	 */
 	@Deprecated
-	Map getCollectionsByKey();
+	Map<CollectionKey, PersistentCollection> getCollectionsByKey();
 
 	/**
 	 * How deep are we cascaded?
@@ -604,13 +604,13 @@ public interface PersistenceContext {
 	 * @return The id of the entityName instance which is said to own the child; null if an appropriate owner not
 	 * located.
 	 */
-	Object getOwnerId(String entityName, String propertyName, Object childEntity, Map mergeMap);
+	Object getOwnerId(String entityName, String propertyName, Object childEntity, Map<Object, Object> mergeMap);
 
 	/**
 	 * Search the persistence context for an index of the child object,
 	 * given a collection role
 	 */
-	Object getIndexInOwner(String entity, String property, Object childObject, Map mergeMap);
+	Object getIndexInOwner(String entity, String property, Object childObject, Map<Object, Object> mergeMap);
 
 	/**
 	 * Record the fact that the association belonging to the keyed
@@ -798,7 +798,7 @@ public interface PersistenceContext {
 	/**
 	 * A read-only iterator on all entities managed by this persistence context
 	 */
-	Iterator managedEntitiesIterator();
+	Iterator<Object> managedEntitiesIterator();
 
 	/**
 	 * Provides centralized access to natural-id-related functionality.

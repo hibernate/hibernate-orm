@@ -43,7 +43,7 @@ public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFa
 	}
 
 	@Override
-	public RegionFactory initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+	public RegionFactory initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 		final RegionFactory regionFactory = resolveRegionFactory( configurationValues, registry );
 
 		LOG.debugf( "Cache region factory : %s", regionFactory.getClass().getName() );
@@ -52,8 +52,8 @@ public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFa
 	}
 
 
-	@SuppressWarnings({"unchecked", "WeakerAccess"})
-	protected RegionFactory resolveRegionFactory(Map configurationValues, ServiceRegistryImplementor registry) {
+	@SuppressWarnings({"WeakerAccess"})
+	protected RegionFactory resolveRegionFactory(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 		final Properties p = new Properties();
 		p.putAll( configurationValues );
 
@@ -126,8 +126,8 @@ public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFa
 		return NoCachingRegionFactory.INSTANCE;
 	}
 
-	@SuppressWarnings({"WeakerAccess", "unused"})
-	protected RegionFactory getFallback(Map configurationValues, ServiceRegistryImplementor registry) {
+	@SuppressWarnings({"WeakerAccess"})
+	protected RegionFactory getFallback(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 		return null;
 	}
 }

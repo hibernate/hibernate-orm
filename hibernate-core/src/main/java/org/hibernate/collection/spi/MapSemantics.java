@@ -16,9 +16,9 @@ import java.util.function.Consumer;
  * @author Steve Ebersole
  */
 public interface MapSemantics<M> extends CollectionSemantics<M> {
-	Iterator getKeyIterator(M rawMap);
+	Iterator<Object> getKeyIterator(M rawMap);
 
-	void visitKeys(M rawMap, Consumer action);
+	void visitKeys(M rawMap, Consumer<Object> action);
 
-	void visitEntries(M rawMap, BiConsumer action);
+	void visitEntries(M rawMap, BiConsumer<Object, Object> action);
 }

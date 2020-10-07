@@ -17,6 +17,8 @@ import javax.persistence.Table;
 
 import org.hibernate.StatelessSession;
 import org.hibernate.Transaction;
+import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
@@ -126,7 +128,7 @@ public class StatelessSessionPersistentContextTest extends BaseCoreFunctionalTes
 		);
 		assertTrue(
 				"StatelessSession: PersistenceContext has not been cleared",
-				persistenceContextInternal.getCollectionsByKey() == Collections.emptyMap()
+				persistenceContextInternal.getCollectionsByKey() == Collections.<CollectionKey, PersistentCollection>emptyMap()
 		);
 	}
 

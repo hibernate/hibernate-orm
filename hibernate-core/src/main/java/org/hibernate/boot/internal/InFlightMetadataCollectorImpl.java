@@ -158,7 +158,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	private final Set<String> defaultSqlResultSetMappingNames = new HashSet<>();
 	private final Set<String> defaultNamedProcedureNames = new HashSet<>();
 	private Map<String, AnyMetaDef> anyMetaDefs;
-	private Map<Class, MappedSuperclass> mappedSuperClasses;
+	private Map<Class<?>, MappedSuperclass> mappedSuperClasses;
 	private Map<XClass, Map<String, PropertyData>> propertiesAnnotatedWithMapsId;
 	private Map<XClass, Map<String, PropertyData>> propertiesAnnotatedWithIdAndToOne;
 	private Map<String, String> mappedByResolver;
@@ -385,7 +385,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	// attribute converters
 
 	@Override
-	public void addAttributeConverter(Class<? extends AttributeConverter> converterClass) {
+	public <X, Y> void addAttributeConverter(Class<? extends AttributeConverter<X, Y>> converterClass) {
 		attributeConverterManager.addConverter(
 				new ClassBasedConverterDescriptor( converterClass, getBootstrapContext().getClassmateContext() )
 		);
@@ -1107,7 +1107,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 
 	@Override
-	public void addMappedSuperclass(Class type, MappedSuperclass mappedSuperclass) {
+	public void addMappedSuperclass(Class<?> type, MappedSuperclass mappedSuperclass) {
 		if ( mappedSuperClasses == null ) {
 			mappedSuperClasses = new HashMap<>();
 		}
@@ -1115,7 +1115,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	}
 
 	@Override
-	public MappedSuperclass getMappedSuperclass(Class type) {
+	public MappedSuperclass getMappedSuperclass(Class<?> type) {
 		if ( mappedSuperClasses == null ) {
 			return null;
 		}
@@ -1264,12 +1264,11 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
-	public void addUniqueConstraints(Table table, List uniqueConstraints) {
+	public void addUniqueConstraints(Table table, List<String[]> uniqueConstraints) {
 		List<UniqueConstraintHolder> constraintHolders = new ArrayList<>( uniqueConstraints.size() );
 
 		int keyNameBase = determineCurrentNumberOfUniqueConstraintHolders( table );
-		for ( String[] columns : ( List<String[]> ) uniqueConstraints ) {
+		for ( String[] columns : uniqueConstraints ) {
 			final String keyName = "key" + keyNameBase++;
 			constraintHolders.add(
 					new UniqueConstraintHolder().setName( keyName ).setColumns( columns )
@@ -1279,7 +1278,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	}
 
 	private int determineCurrentNumberOfUniqueConstraintHolders(Table table) {
-		List currentHolders = uniqueConstraintHoldersByTable == null ? null : uniqueConstraintHoldersByTable.get( table );
+		List<UniqueConstraintHolder> currentHolders = uniqueConstraintHoldersByTable == null ? null : uniqueConstraintHoldersByTable.get( table );
 		return currentHolders == null
 				? 0
 				: currentHolders.size();
@@ -1848,9 +1847,9 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			final MetadataBuildingContext buildingContext) throws MappingException {
 		table.createForeignKeys();
 
-		Iterator itr = table.getForeignKeyIterator();
+		Iterator<ForeignKey> itr = table.getForeignKeyIterator();
 		while ( itr.hasNext() ) {
-			final ForeignKey fk = (ForeignKey) itr.next();
+			final ForeignKey fk = itr.next();
 			if ( !done.contains( fk ) ) {
 				done.add( fk );
 				final String referencedEntityName = fk.getReferencedEntityName();
@@ -1939,14 +1938,13 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		return columnNames;
 	}
 
-	@SuppressWarnings("unchecked")
-	private List<Identifier> extractColumnNames(List columns) {
+	private List<Identifier> extractColumnNames(List<Column> columns) {
 		if ( columns == null || columns.isEmpty() ) {
 			return Collections.emptyList();
 		}
 
 		final List<Identifier> columnNames = CollectionHelper.arrayList( columns.size() );
-		for ( Column column : (List<Column>) columns ) {
+		for ( Column column : columns ) {
 			columnNames.add( getDatabase().toIdentifier( column.getQuotedName() ) );
 		}
 		return columnNames;

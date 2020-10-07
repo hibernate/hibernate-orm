@@ -238,20 +238,20 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	@Override
-	public MetadataBuilder applyBasicType(BasicType type) {
-		options.basicTypeRegistrations.add( new BasicTypeRegistration( type ) );
+	public <T> MetadataBuilder applyBasicType(BasicType<T> type) {
+		options.basicTypeRegistrations.add( new BasicTypeRegistration<T>( type ) );
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder applyBasicType(BasicType type, String... keys) {
-		options.basicTypeRegistrations.add( new BasicTypeRegistration( type, keys ) );
+	public <T> MetadataBuilder applyBasicType(BasicType<T> type, String... keys) {
+		options.basicTypeRegistrations.add( new BasicTypeRegistration<T>( type, keys ) );
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder applyBasicType(UserType type, String... keys) {
-		options.basicTypeRegistrations.add( new BasicTypeRegistration( type, keys, getTypeConfiguration() ) );
+	public <T> MetadataBuilder applyBasicType(UserType type, String... keys) {
+		options.basicTypeRegistrations.add( new BasicTypeRegistration<T>( type, keys, getTypeConfiguration() ) );
 		return this;
 	}
 
@@ -262,22 +262,22 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	@Override
-	public void contributeType(BasicType type) {
-		options.basicTypeRegistrations.add( new BasicTypeRegistration( type ) );
+	public <T> void contributeType(BasicType<T> type) {
+		options.basicTypeRegistrations.add( new BasicTypeRegistration<T>( type ) );
 	}
 
 	@Override
-	public void contributeType(BasicType type, String... keys) {
-		options.basicTypeRegistrations.add( new BasicTypeRegistration( type, keys ) );
+	public <T> void contributeType(BasicType<T> type, String... keys) {
+		options.basicTypeRegistrations.add( new BasicTypeRegistration<T>( type, keys ) );
 	}
 
 	@Override
-	public void contributeType(UserType type, String[] keys) {
-		options.basicTypeRegistrations.add( new BasicTypeRegistration( type, keys, getTypeConfiguration() ) );
+	public <T> void contributeType(UserType<T> type, String[] keys) {
+		options.basicTypeRegistrations.add( new BasicTypeRegistration<T>( type, keys, getTypeConfiguration() ) );
 	}
 
 	@Override
-	public void contributeJavaTypeDescriptor(JavaTypeDescriptor descriptor) {
+	public <T> void contributeJavaTypeDescriptor(JavaTypeDescriptor<T> descriptor) {
 		this.bootstrapContext.getTypeConfiguration().getJavaTypeDescriptorRegistry().addDescriptor( descriptor );
 	}
 
@@ -361,7 +361,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	@Override
-	public MetadataBuilder applyAttributeConverter(AttributeConverter attributeConverter, boolean autoApply) {
+	public <O,R> MetadataBuilder applyAttributeConverter(AttributeConverter<O,R> attributeConverter, boolean autoApply) {
 		bootstrapContext.addAttributeConverterDescriptor(
 				new InstanceBasedConverterDescriptor( attributeConverter, autoApply, bootstrapContext.getClassmateContext() )
 		);
@@ -386,9 +386,8 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <T extends MetadataBuilder> T unwrap(Class<T> type) {
-		return (T) this;
+		return type.cast( this );
 	}
 
 	@Override
@@ -529,7 +528,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		// todo (6.0) : remove bootstrapContext property along with the deprecated methods
 		private BootstrapContext bootstrapContext;
 
-		private ArrayList<BasicTypeRegistration> basicTypeRegistrations = new ArrayList<>();
+		private ArrayList<BasicTypeRegistration<?>> basicTypeRegistrations = new ArrayList<>();
 
 		private ImplicitNamingStrategy implicitNamingStrategy;
 		private PhysicalNamingStrategy physicalNamingStrategy;
@@ -715,7 +714,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		}
 
 		@Override
-		public List<BasicTypeRegistration> getBasicTypeRegistrations() {
+		public List<BasicTypeRegistration<?>> getBasicTypeRegistrations() {
 			return basicTypeRegistrations;
 		}
 

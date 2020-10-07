@@ -8,6 +8,7 @@ package org.hibernate.annotations;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
+import java.util.Comparator;
 
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
@@ -36,5 +37,5 @@ public @interface Sort {
 	 *
 	 * TODO find a way to use {@code Class<Comparator>} -> see HHH-8164
 	 */
-	Class comparator() default void.class;
+	Class<?> comparator() default void.class;
 }

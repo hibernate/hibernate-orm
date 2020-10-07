@@ -244,7 +244,7 @@ public abstract class CollectionType extends AbstractType implements Association
 	 * @param session The session from which the request is originating.
 	 * @return The iterator.
 	 */
-	public Iterator getElementsIterator(Object collection, SharedSessionContractImplementor session) {
+	public Iterator<Object> getElementsIterator(Object collection, SharedSessionContractImplementor session) {
 		return getElementsIterator( collection );
 	}
 
@@ -254,8 +254,9 @@ public abstract class CollectionType extends AbstractType implements Association
 	 * @param collection The collection to be iterated
 	 * @return The iterator.
 	 */
-	protected Iterator getElementsIterator(Object collection) {
-		return ( (Collection) collection ).iterator();
+	@SuppressWarnings( "unchecked" )
+	protected Iterator<Object> getElementsIterator(Object collection) {
+		return ( (Collection<Object>) collection ).iterator();
 	}
 
 	@Override
@@ -706,7 +707,7 @@ public abstract class CollectionType extends AbstractType implements Association
 			final Object target,
 			final SharedSessionContractImplementor session,
 			final Object owner,
-			final Map copyCache) throws HibernateException {
+			final Map<Object, Object> copyCache) throws HibernateException {
 		if ( original == null ) {
 			return null;
 		}

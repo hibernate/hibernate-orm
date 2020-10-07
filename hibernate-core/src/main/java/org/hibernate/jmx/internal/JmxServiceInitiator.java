@@ -28,7 +28,7 @@ public class JmxServiceInitiator implements StandardServiceInitiator<JmxService>
 	}
 
 	@Override
-	public JmxService initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+	public JmxService initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 		return ConfigurationHelper.getBoolean( AvailableSettings.JMX_ENABLED, configurationValues, false )
 				? new JmxServiceImpl( configurationValues )
 				: DisabledJmxServiceImpl.INSTANCE;

@@ -38,7 +38,7 @@ import org.jboss.logging.Logger;
  * @author Matthew Inger
  * @author Emmanuel Bernard
  */
-@SuppressWarnings({"unchecked", "serial"})
+@SuppressWarnings({"serial"})
 public class ListBinder extends CollectionBinder {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, ListBinder.class.getName() );
 
@@ -82,7 +82,7 @@ public class ListBinder extends CollectionBinder {
 			final MetadataBuildingContext buildingContext) {
 		return new CollectionSecondPass( getBuildingContext(), ListBinder.this.collection ) {
 			@Override
-            public void secondPass(Map persistentClasses, Map inheritedMetas)
+            public void secondPass(Map<String, PersistentClass> persistentClasses, Map<String, PersistentClass> inheritedMetas)
 					throws MappingException {
 				bindStarToManySecondPass(
 						persistentClasses,
@@ -116,7 +116,7 @@ public class ListBinder extends CollectionBinder {
 			List list = (List) this.collection;
 			if ( !list.isOneToMany() ) indexColumn.forceNotNull();
 			indexColumn.setPropertyHolder( valueHolder );
-			final BasicValueBinder valueBinder = new BasicValueBinder( BasicValueBinder.Kind.LIST_INDEX, buildingContext );
+			final BasicValueBinder<?> valueBinder = new BasicValueBinder<>( BasicValueBinder.Kind.LIST_INDEX, buildingContext );
 			valueBinder.setColumns( new Ejb3Column[] { indexColumn } );
 			valueBinder.setExplicitType( "integer" );
 			SimpleValue indexValue = valueBinder.make();

@@ -42,6 +42,7 @@ public class TrimFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 	@Override
 	public void render(SqlAppender sqlAppender, List<SqlAstNode> sqlAstArguments, SqlAstWalker walker) {
 		final TrimSpec specification = ( (TrimSpecification) sqlAstArguments.get( 0 ) ).getSpecification();
+		@SuppressWarnings( "unchecked" )
 		final Character trimCharacter = ( (QueryLiteral<Character>) sqlAstArguments.get( 1 ) ).getLiteralValue();
 		final Expression sourceExpr = (Expression) sqlAstArguments.get( 2 );
 

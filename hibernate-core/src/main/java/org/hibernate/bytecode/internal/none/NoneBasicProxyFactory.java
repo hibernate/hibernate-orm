@@ -16,10 +16,10 @@ import org.hibernate.bytecode.spi.BasicProxyFactory;
  */
 final class NoneBasicProxyFactory implements BasicProxyFactory {
 
-	private final Class superClass;
-	private final Class[] interfaces;
+	private final Class<?> superClass;
+	private final Class<?>[] interfaces;
 
-	public NoneBasicProxyFactory(Class superClass, Class[] interfaces) {
+	public NoneBasicProxyFactory(Class<?> superClass, Class<?>[] interfaces) {
 		this.superClass = superClass;
 		this.interfaces = interfaces;
 	}

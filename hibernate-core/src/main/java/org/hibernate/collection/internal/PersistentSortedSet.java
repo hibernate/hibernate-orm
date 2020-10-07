@@ -138,45 +138,39 @@ public class PersistentSortedSet extends PersistentSet implements SortedSet {
 	/**
 	 * wrapper for subSets to propagate write to its backing set
 	 */
-	class SubSetProxy extends SetProxy implements SortedSet {
-		SubSetProxy(SortedSet s) {
+	class SubSetProxy extends SetProxy implements SortedSet<Object> {
+		SubSetProxy(SortedSet<Object> s) {
 			super( s );
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
-		public Comparator comparator() {
-			return ( (SortedSet) this.set ).comparator();
+		public Comparator<Object> comparator() {
+			return ( (SortedSet<Object>) this.set ).comparator();
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public Object first() {
-			return ( (SortedSet) this.set ).first();
+			return ( (SortedSet<Object>) this.set ).first();
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
-		public SortedSet headSet(Object toValue) {
-			return new SubSetProxy( ( (SortedSet) this.set ).headSet( toValue ) );
+		public SortedSet<Object> headSet(Object toValue) {
+			return new SubSetProxy( ( (SortedSet<Object>) this.set ).headSet( toValue ) );
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public Object last() {
-			return ( (SortedSet) this.set ).last();
+			return ( (SortedSet<Object>) this.set ).last();
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
-		public SortedSet subSet(Object fromValue, Object toValue) {
-			return new SubSetProxy( ( (SortedSet) this.set ).subSet( fromValue, toValue ) );
+		public SortedSet<Object> subSet(Object fromValue, Object toValue) {
+			return new SubSetProxy( ( (SortedSet<Object>) this.set ).subSet( fromValue, toValue ) );
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
-		public SortedSet tailSet(Object fromValue) {
-			return new SubSetProxy( ( (SortedSet) this.set ).tailSet( fromValue ) );
+		public SortedSet<Object> tailSet(Object fromValue) {
+			return new SubSetProxy( ( (SortedSet<Object>) this.set ).tailSet( fromValue ) );
 		}
 	}
 }

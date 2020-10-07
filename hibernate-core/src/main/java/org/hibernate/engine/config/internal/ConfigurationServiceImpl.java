@@ -29,7 +29,7 @@ public class ConfigurationServiceImpl implements ConfigurationService, ServiceRe
 			ConfigurationServiceImpl.class.getName()
 	);
 
-	private final Map settings;
+	private final Map<String, Object> settings;
 	private ServiceRegistryImplementor serviceRegistry;
 
 	/**
@@ -37,13 +37,12 @@ public class ConfigurationServiceImpl implements ConfigurationService, ServiceRe
 	 *
 	 * @param settings The map of settings
 	 */
-	@SuppressWarnings( "unchecked" )
-	public ConfigurationServiceImpl(Map settings) {
+	public ConfigurationServiceImpl(Map<String, Object> settings) {
 		this.settings = Collections.unmodifiableMap( settings );
 	}
 
 	@Override
-	public Map getSettings() {
+	public Map<String, Object> getSettings() {
 		return settings;
 	}
 
@@ -75,14 +74,13 @@ public class ConfigurationServiceImpl implements ConfigurationService, ServiceRe
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <T> T cast(Class<T> expected, Object candidate){
 		if (candidate == null) {
 			return null;
 		}
 
 		if ( expected.isInstance( candidate ) ) {
-			return (T) candidate;
+			return expected.cast( candidate );
 		}
 
 		Class<T> target;

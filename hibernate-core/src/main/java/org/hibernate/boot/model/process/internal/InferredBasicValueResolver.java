@@ -41,7 +41,7 @@ public class InferredBasicValueResolver {
 	 */
 	@SuppressWarnings({"unchecked", "rawtypes"})
 	public static BasicValue.Resolution from(
-			Function<TypeConfiguration, BasicJavaDescriptor> explicitJavaTypeAccess,
+			Function<TypeConfiguration, BasicJavaDescriptor<?>> explicitJavaTypeAccess,
 			Function<TypeConfiguration, SqlTypeDescriptor> explicitSqlTypeAccess,
 			Supplier<JavaTypeDescriptor> reflectedJtdResolver,
 			SqlTypeDescriptorIndicators stdIndicators,

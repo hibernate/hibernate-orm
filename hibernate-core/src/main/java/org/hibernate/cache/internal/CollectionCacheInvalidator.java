@@ -157,7 +157,7 @@ public class CollectionCacheInvalidator
 			if ( PROPAGATE_EXCEPTION ) {
 				throw new IllegalStateException( e );
 			}
-			// don't let decaching influence other logic
+			// don't let detaching influence other logic
 			LOG.error( "", e );
 		}
 	}

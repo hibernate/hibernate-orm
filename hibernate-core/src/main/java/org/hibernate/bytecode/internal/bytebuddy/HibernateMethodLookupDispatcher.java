@@ -200,10 +200,9 @@ public class HibernateMethodLookupDispatcher {
 			}
 		}
 
-		@SuppressWarnings({ "unchecked", "rawtypes" })
-		private final Function<Stream, Object> stackFrameExtractFunction = new Function<Stream, Object>() {
+		private final Function<Stream<?>, Object> stackFrameExtractFunction = new Function<Stream<?>, Object>() {
 			@Override
-			public Object apply(Stream stream) {
+			public Object apply(Stream<?> stream) {
 				return stream.map( stackFrameGetDeclaringClassFunction )
 						.limit( MAX_STACK_FRAMES )
 						.toArray( Class<?>[]::new );

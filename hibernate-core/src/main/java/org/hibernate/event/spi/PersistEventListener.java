@@ -32,6 +32,6 @@ public interface PersistEventListener extends Serializable {
      * @param event The create event to be handled.
      * @throws HibernateException
      */
-	public void onPersist(PersistEvent event, Map createdAlready) throws HibernateException;
+	public void onPersist(PersistEvent event, Map<Object, Object> createdAlready) throws HibernateException;
 
 }

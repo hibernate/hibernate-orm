@@ -67,7 +67,7 @@ public class PropertyBinder {
 	private boolean insertable = true;
 	private boolean updatable = true;
 	private String cascade;
-	private BasicValueBinder basicValueBinder;
+	private BasicValueBinder<?> basicValueBinder;
 	private XClass declaringClass;
 	private boolean declaringClassSet;
 	private boolean embedded;
@@ -176,7 +176,7 @@ public class PropertyBinder {
 		final String containerClassName = holder.getClassName();
 		holder.startingProperty( property );
 
-		basicValueBinder = new BasicValueBinder( BasicValueBinder.Kind.ATTRIBUTE, buildingContext );
+		basicValueBinder = new BasicValueBinder<>( BasicValueBinder.Kind.ATTRIBUTE, buildingContext );
 		basicValueBinder.setPropertyName( name );
 		basicValueBinder.setReturnedClassName( returnedClassName );
 		basicValueBinder.setColumns( columns );
@@ -482,7 +482,7 @@ public class PropertyBinder {
 		this.returnedClass = returnedClass;
 	}
 
-	public BasicValueBinder getBasicValueBinder() {
+	public BasicValueBinder<?> getBasicValueBinder() {
 		return basicValueBinder;
 	}
 

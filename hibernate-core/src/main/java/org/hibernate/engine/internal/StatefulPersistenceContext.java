@@ -171,7 +171,6 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	private ConcurrentMap<EntityKey, Object> getOrInitializeProxiesByKey() {
 		if ( proxiesByKey == null ) {
-			//noinspection unchecked
 			proxiesByKey = new ConcurrentReferenceHashMap<>(
 					INIT_COLL_SIZE,
 					.75f,
@@ -418,7 +417,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		if ( entitiesByKey != null ) {
 			entity = entitiesByKey.remove( key );
 			if ( entitiesByUniqueKey != null ) {
-				final Iterator itr = entitiesByUniqueKey.values().iterator();
+				final Iterator<Object> itr = entitiesByUniqueKey.values().iterator();
 				while ( itr.hasNext() ) {
 					if ( itr.next() == entity ) {
 						itr.remove();
@@ -699,11 +698,10 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Object narrowProxy(Object proxy, EntityPersister persister, EntityKey key, Object object)
 			throws HibernateException {
 
-		final Class concreteProxyClass = persister.getConcreteProxyClass();
+		final Class<?> concreteProxyClass = persister.getConcreteProxyClass();
 		final boolean alreadyNarrow = concreteProxyClass.isInstance( proxy );
 
 		if ( !alreadyNarrow ) {
@@ -1080,7 +1078,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public HashSet getNullifiableEntityKeys() {
+	public HashSet<EntityKey> getNullifiableEntityKeys() {
 		if ( nullifiableEntityKeys == null ) {
 			nullifiableEntityKeys = new HashSet<>();
 		}
@@ -1094,12 +1092,12 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	 */
 	@Deprecated
 	@Override
-	public Map getEntitiesByKey() {
+	public Map<EntityKey, Object> getEntitiesByKey() {
 		return entitiesByKey == null ? Collections.emptyMap() : entitiesByKey;
 	}
 
 	@Override
-	public Iterator managedEntitiesIterator() {
+	public Iterator<Object> managedEntitiesIterator() {
 		if ( entitiesByKey == null ) {
 			return Collections.emptyIterator();
 		}
@@ -1114,7 +1112,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public Map getEntityEntries() {
+	public Map<Object, EntityEntry> getEntityEntries() {
 		return null;
 	}
 
@@ -1125,7 +1123,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	 */
 	@Override
 	@Deprecated
-	public Map getCollectionEntries() {
+	public Map<PersistentCollection, CollectionEntry> getCollectionEntries() {
 		return getOrInitializeCollectionEntries();
 	}
 
@@ -1144,7 +1142,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public Map getCollectionsByKey() {
+	public Map<CollectionKey, PersistentCollection> getCollectionsByKey() {
 		if ( collectionsByKey == null ) {
 			return Collections.emptyMap();
 		}
@@ -1252,7 +1250,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public Object getOwnerId(String entityName, String propertyName, Object childEntity, Map mergeMap) {
+	public Object getOwnerId(String entityName, String propertyName, Object childEntity, Map<Object, Object> mergeMap) {
 		final String collectionRole = entityName + '.' + propertyName;
 		final EntityPersister persister = session.getFactory().getMetamodel().entityPersister( entityName );
 		final CollectionPersister collectionPersister = session.getFactory().getMetamodel().collectionPersister( collectionRole );
@@ -1319,8 +1317,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		// 		NOTE: decided to put this here rather than in the above loop as I was nervous about the performance
 		//		of the loop-in-loop especially considering this is far more likely the 'edge case'
 		if ( mergeMap != null ) {
-			for ( Object o : mergeMap.entrySet() ) {
-				final Entry mergeMapEntry = (Entry) o;
+			for ( Map.Entry<Object, Object> mergeMapEntry : mergeMap.entrySet() ) {
 				if ( mergeMapEntry.getKey() instanceof HibernateProxy ) {
 					final HibernateProxy proxy = (HibernateProxy) mergeMapEntry.getKey();
 					if ( persister.isSubclassEntityName( proxy.getHibernateLazyInitializer().getEntityName() ) ) {
@@ -1379,7 +1376,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public Object getIndexInOwner(String entity, String property, Object childEntity, Map mergeMap) {
+	public Object getIndexInOwner(String entity, String property, Object childEntity, Map<Object, Object> mergeMap) {
 		final MetamodelImplementor metamodel = session.getFactory().getMetamodel();
 		final EntityPersister persister = metamodel.entityPersister( entity );
 		final CollectionPersister cp = metamodel.collectionPersister( entity + '.' + property );

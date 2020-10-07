@@ -79,7 +79,7 @@ public class NamedNativeQueryDefinitionImpl extends AbstractNamedQueryDefinition
 
 	@Override
 	public NamedNativeQueryMemento resolve(SessionFactoryImplementor factory) {
-		final Class resultSetMappingClass = StringHelper.isNotEmpty( resultSetMappingClassName )
+		final Class<?> resultSetMappingClass = StringHelper.isNotEmpty( resultSetMappingClassName )
 				? factory.getServiceRegistry().getService( ClassLoaderService.class ).classForName( resultSetMappingClassName )
 				: null;
 

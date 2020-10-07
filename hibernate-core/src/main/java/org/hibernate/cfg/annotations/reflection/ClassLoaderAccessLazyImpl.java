@@ -24,7 +24,7 @@ public class ClassLoaderAccessLazyImpl implements ClassLoaderAccess {
 	}
 
 	@Override
-	public <T> Class<T> classForName(String name) {
+	public Class<?> classForName(String name) {
 		return null;
 	}
 

@@ -27,7 +27,7 @@ public interface ConfigurationService extends Service {
 	 *
 	 * @return The immutable map of config settings.
 	 */
-	public Map getSettings();
+	public Map<String, Object> getSettings();
 
 	/**
 	 * Get the named setting, using the specified converter.

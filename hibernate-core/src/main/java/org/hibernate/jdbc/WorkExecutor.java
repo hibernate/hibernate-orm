@@ -33,7 +33,7 @@ public class WorkExecutor<T> {
 	 * @throws SQLException Thrown during execution of the underlying JDBC interaction.
 	 * @throws org.hibernate.HibernateException Generally indicates a wrapped SQLException.
 	 */
-	public <T> T executeWork(Work work, Connection connection) throws SQLException {
+	public T executeWork(Work work, Connection connection) throws SQLException {
 		work.execute( connection );
 		return null;
 	}
@@ -51,7 +51,7 @@ public class WorkExecutor<T> {
 	 * @throws SQLException Thrown during execution of the underlying JDBC interaction.
 	 * @throws org.hibernate.HibernateException Generally indicates a wrapped SQLException.
 	 */
-	public <T> T executeReturningWork(ReturningWork<T> work, Connection connection) throws SQLException {
+	public T executeReturningWork(ReturningWork<T> work, Connection connection) throws SQLException {
 		return work.execute( connection );
 	}
 }

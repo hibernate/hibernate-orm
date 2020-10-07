@@ -32,6 +32,7 @@ public class ServiceRegistryTestingImpl
 		extends StandardServiceRegistryImpl
 		implements ServiceRegistryImplementor {
 
+	@SuppressWarnings( {"rawtypes", "unchecked"} )
 	public static ServiceRegistryTestingImpl forUnitTesting() {
 		return new ServiceRegistryTestingImpl(
 				true,
@@ -41,11 +42,11 @@ public class ServiceRegistryTestingImpl
 						dialectFactoryService(),
 						connectionProviderService()
 				),
-				Environment.getProperties()
+				(Map) Environment.getProperties()
 		);
 	}
 
-	public static ServiceRegistryTestingImpl forUnitTesting(Map settings) {
+	public static ServiceRegistryTestingImpl forUnitTesting(Map<String, Object> settings) {
 		return new ServiceRegistryTestingImpl(
 				true,
 				new BootstrapServiceRegistryBuilder().build(),
@@ -74,7 +75,7 @@ public class ServiceRegistryTestingImpl
 			BootstrapServiceRegistry bootstrapServiceRegistry,
 			List<StandardServiceInitiator> serviceInitiators,
 			List<ProvidedService> providedServices,
-			Map<?, ?> configurationValues) {
+			Map<String, Object> configurationValues) {
 		super( autoCloseRegistry, bootstrapServiceRegistry, serviceInitiators, providedServices, configurationValues );
 	}
 }

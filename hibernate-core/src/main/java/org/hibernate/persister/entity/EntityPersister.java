@@ -359,7 +359,7 @@ public interface EntityPersister
 	 *
 	 * @return The type of the version property; or null, if not versioned.
 	 */
-	VersionType getVersionType();
+	VersionType<Object> getVersionType();
 
 	/**
 	 * If {@link #isVersioned()}, then what is the index of the property

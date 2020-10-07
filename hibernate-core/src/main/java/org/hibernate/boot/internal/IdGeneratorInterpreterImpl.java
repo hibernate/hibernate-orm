@@ -115,7 +115,7 @@ public class IdGeneratorInterpreterImpl implements IdGeneratorStrategyInterprete
 						return IncrementGenerator.class.getName();
 					}
 
-					final Class javaType = context.getIdType();
+					final Class<?> javaType = context.getIdType();
 					if ( UUID.class.isAssignableFrom( javaType ) ) {
 						return UUIDGenerator.class.getName();
 					}
@@ -227,7 +227,7 @@ public class IdGeneratorInterpreterImpl implements IdGeneratorStrategyInterprete
 						return IncrementGenerator.class.getName();
 					}
 
-					final Class javaType = context.getIdType();
+					final Class<?> javaType = context.getIdType();
 					if ( UUID.class.isAssignableFrom( javaType ) ) {
 						return UUIDGenerator.class.getName();
 					}

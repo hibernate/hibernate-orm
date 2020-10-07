@@ -103,7 +103,6 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		logFlushResults( event );
 	}
 
-	@SuppressWarnings( value = {"unchecked"} )
 	private void logFlushResults(FlushEvent event) {
 		if ( !LOG.isDebugEnabled() ) {
 			return;
@@ -164,7 +163,7 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 
 	protected Object getAnything() {
 		if ( jpaBootstrap ) {
-			return new IdentityHashMap( 10 );
+			return new IdentityHashMap<>( 10 );
 		}
 		else {
 			return null;
@@ -243,7 +242,6 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 	 * process any unreferenced collections and then inspect all known collections,
 	 * scheduling creates/removes/updates
 	 */
-	@SuppressWarnings("unchecked")
 	private int flushCollections(final EventSource session, final PersistenceContext persistenceContext) throws HibernateException {
 		LOG.trace( "Processing unreferenced collections" );
 

@@ -83,7 +83,7 @@ public abstract class AbstractRegionFactory implements RegionFactory {
 	}
 
 	@Override
-	public final void start(SessionFactoryOptions settings, Map configValues) throws CacheException {
+	public final void start(SessionFactoryOptions settings, Map<String, Object> configValues) throws CacheException {
 		if ( started.compareAndSet( false, true ) ) {
 			synchronized (this) {
 				this.options = settings;
@@ -103,7 +103,7 @@ public abstract class AbstractRegionFactory implements RegionFactory {
 		}
 	}
 
-	protected abstract void prepareForUse(SessionFactoryOptions settings, Map configValues);
+	protected abstract void prepareForUse(SessionFactoryOptions settings, Map<String, Object> configValues);
 
 	@Override
 	public final void stop() {

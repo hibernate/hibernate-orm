@@ -169,7 +169,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	private final transient SessionFactoryOptions sessionFactoryOptions;
 	private final transient Settings settings;
-	private final transient Map<String,Object> properties;
+	private final transient Map<String, Object> properties;
 
 	private final transient SessionFactoryServiceRegistry serviceRegistry;
 	private final transient EventEngine eventEngine;
@@ -472,7 +472,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		if ( aggregatedConfig.getEventListenerMap() != null ) {
 			final ClassLoaderService cls = serviceRegistry.getService( ClassLoaderService.class );
 			final EventListenerRegistry eventListenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
-			for ( Map.Entry<EventType, Set<String>> entry : aggregatedConfig.getEventListenerMap().entrySet() ) {
+			for ( Map.Entry<EventType<?>, Set<String>> entry : aggregatedConfig.getEventListenerMap().entrySet() ) {
 				final EventListenerGroup group = eventListenerRegistry.getEventListenerGroup( entry.getKey() );
 				for ( String listenerClassName : entry.getValue() ) {
 					try {

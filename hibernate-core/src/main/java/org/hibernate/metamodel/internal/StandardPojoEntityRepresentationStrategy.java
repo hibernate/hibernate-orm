@@ -160,10 +160,10 @@ public class StandardPojoEntityRepresentationStrategy implements EntityRepresent
 			BytecodeProvider bytecodeProvider,
 			RuntimeModelCreationContext creationContext) {
 
-		final Set<Class> proxyInterfaces = new java.util.HashSet<>();
+		final Set<Class<?>> proxyInterfaces = new java.util.HashSet<>();
 
-		final Class mappedClass = mappedJtd.getJavaType();
-		Class proxyInterface;
+		final Class<?> mappedClass = mappedJtd.getJavaType();
+		Class<?> proxyInterface;
 		if ( proxyJtd != null ) {
 			proxyInterface = proxyJtd.getJavaType();
 		}

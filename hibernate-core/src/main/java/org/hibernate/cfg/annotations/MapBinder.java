@@ -94,7 +94,7 @@ public class MapBinder extends CollectionBinder {
 			final TableBinder assocTableBinder,
 			final MetadataBuildingContext buildingContext) {
 		return new CollectionSecondPass( buildingContext, MapBinder.this.collection ) {
-			public void secondPass(Map persistentClasses, Map inheritedMetas)
+			public void secondPass(Map<String, PersistentClass> persistentClasses, Map<String, PersistentClass> inheritedMetas)
 					throws MappingException {
 				bindStarToManySecondPass(
 						persistentClasses, collType, fkJoinColumns, keyColumns, inverseColumns, elementColumns,
@@ -138,9 +138,9 @@ public class MapBinder extends CollectionBinder {
 		}
 	}
 
-	private boolean propertyIteratorContainsColumn(Iterator propertyIterator, Column column) {
-		for ( Iterator it = propertyIterator; it.hasNext(); ) {
-			final Property property = (Property) it.next();
+	private boolean propertyIteratorContainsColumn(Iterator<Property> propertyIterator, Column column) {
+		for ( Iterator<Property> it = propertyIterator; it.hasNext(); ) {
+			final Property property = it.next();
 			for ( Iterator<Selectable> selectableIterator = property.getColumnIterator(); selectableIterator.hasNext(); ) {
 				final Selectable selectable = selectableIterator.next();
 				if ( column.equals( selectable ) ) {
@@ -156,7 +156,7 @@ public class MapBinder extends CollectionBinder {
 
 	private void bindKeyFromAssociationTable(
 			XClass collType,
-			Map persistentClasses,
+			Map<String, PersistentClass> persistentClasses,
 			String mapKeyPropertyName,
 			XProperty property,
 			boolean isEmbedded,
@@ -166,7 +166,7 @@ public class MapBinder extends CollectionBinder {
 			String targetPropertyName) {
 		if ( mapKeyPropertyName != null ) {
 			//this is an EJB3 @MapKey
-			PersistentClass associatedClass = (PersistentClass) persistentClasses.get( collType.getName() );
+			PersistentClass associatedClass = persistentClasses.get( collType.getName() );
 			if ( associatedClass == null ) throw new AnnotationException( "Associated class not found: " + collType );
 			Property mapProperty = BinderHelper.findPropertyByName( associatedClass, mapKeyPropertyName );
 			if ( mapProperty == null ) {
@@ -189,7 +189,7 @@ public class MapBinder extends CollectionBinder {
 			//this is a true Map mapping
 			//TODO ugly copy/paste from CollectionBinder.bindManyToManySecondPass
 			String mapKeyType;
-			Class target = void.class;
+			Class<?> target = void.class;
 			/*
 			 * target has priority over reflection for the map key type
 			 * JPA 2 has priority
@@ -203,7 +203,7 @@ public class MapBinder extends CollectionBinder {
 			else {
 				mapKeyType = property.getMapKey().getName();
 			}
-			PersistentClass collectionEntity = (PersistentClass) persistentClasses.get( mapKeyType );
+			PersistentClass collectionEntity = persistentClasses.get( mapKeyType );
 			boolean isIndexOfEntities = collectionEntity != null;
 			ManyToOne element = null;
 			org.hibernate.mapping.Map mapValue = (org.hibernate.mapping.Map) this.collection;
@@ -301,7 +301,7 @@ public class MapBinder extends CollectionBinder {
 					mapValue.setIndex( component );
 				}
 				else {
-					final BasicValueBinder elementBinder = new BasicValueBinder( BasicValueBinder.Kind.MAP_KEY, buildingContext );
+					final BasicValueBinder<?> elementBinder = new BasicValueBinder<>( BasicValueBinder.Kind.MAP_KEY, buildingContext );
 					elementBinder.setReturnedClassName( mapKeyType );
 
 					Ejb3Column[] elementColumns = mapKeyColumns;
@@ -421,11 +421,11 @@ public class MapBinder extends CollectionBinder {
 
 		if ( value instanceof Component ) {
 			Component component = (Component) value;
-			Iterator properties = component.getPropertyIterator();
+			Iterator<Property> properties = component.getPropertyIterator();
 			Component indexComponent = new Component( getBuildingContext(), collection );
 			indexComponent.setComponentClassName( component.getComponentClassName() );
 			while ( properties.hasNext() ) {
-				Property current = (Property) properties.next();
+				Property current = properties.next();
 				Property newProperty = new Property();
 				newProperty.setCascade( current.getCascade() );
 				newProperty.setValueGenerationStrategy( current.getValueGenerationStrategy() );
@@ -498,7 +498,7 @@ public class MapBinder extends CollectionBinder {
 				targetValue = new BasicValue( getBuildingContext(), collection.getCollectionTable() );
 				targetValue.copyTypeFrom( sourceValue );
 			}
-			Iterator columns = sourceValue.getColumnIterator();
+			Iterator<Selectable> columns = sourceValue.getColumnIterator();
 			Random random = new Random();
 			while ( columns.hasNext() ) {
 				Object current = columns.next();

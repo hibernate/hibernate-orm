@@ -57,7 +57,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 	 *
 	 * @param event The refresh event to be handled.
 	 */
-	public void onRefresh(RefreshEvent event, Map refreshedAlready) {
+	public void onRefresh(RefreshEvent event, Map<Object, Object> refreshedAlready) {
 
 		final EventSource source = event.getSession();
 		boolean isTransient;

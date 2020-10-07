@@ -48,13 +48,13 @@ public interface CollectionSemantics<C> {
 			SharedSessionContractImplementor session);
 
 	PersistentCollection wrap(
-			Object rawCollection,
+			C rawCollection,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session);
 
-	Iterator getElementIterator(C rawCollection);
+	Iterator<Object> getElementIterator(C rawCollection);
 
-	void visitElements(C rawCollection, Consumer action);
+	void visitElements(C rawCollection, Consumer<Object> action);
 
 	/**
 	 * todo (6.0) : clean this contract up!

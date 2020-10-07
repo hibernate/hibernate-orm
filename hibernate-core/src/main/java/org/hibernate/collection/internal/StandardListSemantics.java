@@ -32,7 +32,7 @@ import org.hibernate.sql.results.graph.FetchParent;
  *
  * @author Steve Ebersole
  */
-public class StandardListSemantics implements CollectionSemantics<List> {
+public class StandardListSemantics implements CollectionSemantics<List<Object>> {
 	/**
 	 * Singleton access
 	 */
@@ -47,25 +47,25 @@ public class StandardListSemantics implements CollectionSemantics<List> {
 	}
 
 	@Override
-	public Class<List> getCollectionJavaType() {
-		return List.class;
+	@SuppressWarnings( { "rawtypes", "unchecked" } )
+	public Class<List<Object>> getCollectionJavaType() {
+		return (Class) List.class;
 	}
 
 	@Override
-	public List instantiateRaw(
+	public List<Object> instantiateRaw(
 			int anticipatedSize,
 			CollectionPersister collectionDescriptor) {
 		return CollectionHelper.arrayList( anticipatedSize );
 	}
 
 	@Override
-	public Iterator getElementIterator(List rawCollection) {
+	public Iterator<Object> getElementIterator(List<Object> rawCollection) {
 		return rawCollection.iterator();
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public void visitElements(List rawCollection, Consumer action) {
+	public void visitElements(List<Object> rawCollection, Consumer<Object> action) {
 		rawCollection.forEach( action );
 	}
 
@@ -151,9 +151,9 @@ public class StandardListSemantics implements CollectionSemantics<List> {
 
 	@Override
 	public PersistentCollection wrap(
-			Object rawCollection,
+			List<Object> rawCollection,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentList( session, (List) rawCollection );
+		return new PersistentList( session, rawCollection );
 	}
 }

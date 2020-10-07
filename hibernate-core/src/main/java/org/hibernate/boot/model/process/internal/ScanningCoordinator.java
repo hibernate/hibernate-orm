@@ -115,7 +115,7 @@ public class ScanningCoordinator {
 				scannerImplClass = (Class<? extends Scanner>) scannerSetting;
 			}
 			else {
-				scannerImplClass = classLoaderAccess.classForName( scannerSetting.toString() );
+				scannerImplClass = (Class<? extends  Scanner>) classLoaderAccess.classForName( scannerSetting.toString() );
 			}
 
 

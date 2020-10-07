@@ -32,6 +32,6 @@ public interface MergeEventListener extends Serializable {
      * @param event The merge event to be handled.
      * @throws HibernateException
      */
-	public void onMerge(MergeEvent event, Map copiedAlready) throws HibernateException;
+	public void onMerge(MergeEvent event, Map<Object, Object> copiedAlready) throws HibernateException;
 
 }

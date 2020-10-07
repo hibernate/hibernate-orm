@@ -205,7 +205,7 @@ public abstract class AbstractCollectionPersister
 	private final boolean subselectLoadable;
 
 	// extra information about the element type
-	private final Class elementClass;
+	private final Class<?> elementClass;
 	private final String entityName;
 
 	private final Dialect dialect;
@@ -243,7 +243,7 @@ public abstract class AbstractCollectionPersister
 
 	private Map collectionPropertyColumnAliases = new HashMap();
 
-	private final Comparator comparator;
+	private final Comparator<Object> comparator;
 
 	private CollectionLoader collectionLoader;
 	private volatile CollectionLoader standardCollectionLoader;
@@ -652,7 +652,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	@Override
-	public Comparator<?> getSortingComparator() {
+	public Comparator<Object> getSortingComparator() {
 		return comparator;
 	}
 

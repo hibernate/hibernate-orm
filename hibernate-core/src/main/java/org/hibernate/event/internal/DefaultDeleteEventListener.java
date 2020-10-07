@@ -69,7 +69,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 	 * @throws HibernateException
 	 */
 	public void onDelete(DeleteEvent event) throws HibernateException {
-		onDelete( event, new IdentitySet() );
+		onDelete( event, new IdentitySet<>() );
 	}
 
 	/**
@@ -80,7 +80,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 	 *
 	 * @throws HibernateException
 	 */
-	public void onDelete(DeleteEvent event, Set transientEntities) throws HibernateException {
+	public void onDelete(DeleteEvent event, Set<Object> transientEntities) throws HibernateException {
 
 		final EventSource source = event.getSession();
 
@@ -210,7 +210,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 			Object entity,
 			boolean cascadeDeleteEnabled,
 			EntityPersister persister,
-			Set transientEntities) {
+			Set<Object> transientEntities) {
 		LOG.handlingTransientEntity();
 		if ( transientEntities.contains( entity ) ) {
 			LOG.trace( "Already handled transient entity; skipping" );
@@ -240,7 +240,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 			final boolean isCascadeDeleteEnabled,
 			final boolean isOrphanRemovalBeforeUpdates,
 			final EntityPersister persister,
-			final Set transientEntities) {
+			final Set<Object> transientEntities) {
 
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev(
@@ -347,7 +347,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 			EntityPersister persister,
 			Object entity,
 			EntityEntry entityEntry,
-			Set transientEntities) throws HibernateException {
+			Set<Object> transientEntities) throws HibernateException {
 
 		CacheMode cacheMode = session.getCacheMode();
 		session.setCacheMode( CacheMode.GET );
@@ -374,7 +374,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 			EventSource session,
 			EntityPersister persister,
 			Object entity,
-			Set transientEntities) throws HibernateException {
+			Set<Object> transientEntities) throws HibernateException {
 
 		CacheMode cacheMode = session.getCacheMode();
 		session.setCacheMode( CacheMode.GET );

@@ -76,7 +76,7 @@ public final class EntityCopyAllowedLoggedObserver implements EntityCopyObserver
 		}
 		if ( detachedEntitiesForManaged == null ) {
 			// There were no existing representations for this particular managed entity;
-			detachedEntitiesForManaged = new IdentitySet();
+			detachedEntitiesForManaged = new IdentitySet<>();
 			managedToMergeEntitiesXref.put( managedEntity, detachedEntitiesForManaged );
 			incrementEntityNameCount( entityName );
 		}
@@ -135,7 +135,7 @@ public final class EntityCopyAllowedLoggedObserver implements EntityCopyObserver
 		if ( managedToMergeEntitiesXref != null ) {
 			for ( Map.Entry<Object,Set<Object>> entry : managedToMergeEntitiesXref.entrySet() ) {
 				Object managedEntity = entry.getKey();
-				Set mergeEntities = entry.getValue();
+				Set<Object> mergeEntities = entry.getValue();
 				StringBuilder sb = new StringBuilder( "Details: merged ")
 						.append( mergeEntities.size() )
 						.append( " representations of the same entity " )

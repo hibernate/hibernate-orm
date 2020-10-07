@@ -63,7 +63,7 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 			ThreadLocalSessionContext.class.getName()
 	);
 
-	private static final Class[] SESSION_PROXY_INTERFACES = new Class[] {
+	private static final Class<?>[] SESSION_PROXY_INTERFACES = new Class<?>[] {
 			Session.class,
 			SessionImplementor.class,
 			EventSource.class,
@@ -241,7 +241,6 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 		return CONTEXT_TL.get();
 	}
 
-	@SuppressWarnings({"unchecked"})
 	private static void doBind(org.hibernate.Session session, SessionFactory factory) {
 		Session orphanedPreviousSession = sessionMap().put( factory, session );
 		terminateOrphanedSession( orphanedPreviousSession );

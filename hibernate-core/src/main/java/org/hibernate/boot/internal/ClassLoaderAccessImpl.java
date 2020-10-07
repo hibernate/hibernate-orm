@@ -47,7 +47,6 @@ public class ClassLoaderAccessImpl implements ClassLoaderAccess {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Class<?> classForName(String name) {
 		if ( name == null ) {
 			throw new IllegalArgumentException( "Name of class to load cannot be null" );

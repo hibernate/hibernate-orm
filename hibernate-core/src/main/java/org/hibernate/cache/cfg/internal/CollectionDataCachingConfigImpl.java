@@ -42,11 +42,11 @@ public class CollectionDataCachingConfigImpl
 	}
 
 	@Override
-	public Comparator getOwnerVersionComparator() {
+	public Comparator<?> getOwnerVersionComparator() {
 		if ( !isVersioned() ) {
 			return null;
 		}
-		return ( (VersionType) collectionDescriptor.getOwner().getVersion().getType() ).getComparator();
+		return ( (VersionType<?>) collectionDescriptor.getOwner().getVersion().getType() ).getComparator();
 	}
 
 	@Override

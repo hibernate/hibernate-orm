@@ -53,7 +53,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultMergeEventListener.class );
 
 	@Override
-	protected Map getMergeMap(Object anything) {
+	protected Map<Object, Object> getMergeMap(Object anything) {
 		return ( (MergeContext) anything ).invertMap();
 	}
 
@@ -90,7 +90,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 	 *
 	 * @throws HibernateException
 	 */
-	public void onMerge(MergeEvent event, Map copiedAlready) throws HibernateException {
+	public void onMerge(MergeEvent event, Map<Object, Object> copiedAlready) throws HibernateException {
 
 		final MergeContext copyCache = (MergeContext) copiedAlready;
 		final EventSource source = event.getSession();
@@ -191,7 +191,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 
 	}
 
-	protected void entityIsPersistent(MergeEvent event, Map copyCache) {
+	protected void entityIsPersistent(MergeEvent event, Map<Object, Object> copyCache) {
 		LOG.trace( "Ignoring persistent instance" );
 
 		//TODO: check that entry.getIdentifier().equals(requestedId)
@@ -208,7 +208,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 		event.setResult( entity );
 	}
 
-	protected void entityIsTransient(MergeEvent event, Map copyCache) {
+	protected void entityIsTransient(MergeEvent event, Map<Object, Object> copyCache) {
 
 		LOG.trace( "Merging transient instance" );
 
@@ -264,7 +264,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 			String entityName,
 			Serializable requestedId,
 			EventSource source,
-			Map copyCache) {
+			Map<Object, Object> copyCache) {
 		//this bit is only *really* absolutely necessary for handling
 		//requestedId, but is also good if we merge multiple object
 		//graphs, since it helps ensure uniqueness
@@ -276,7 +276,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 		}
 	}
 
-	protected void entityIsDetached(MergeEvent event, Map copyCache) {
+	protected void entityIsDetached(MergeEvent event, Map<Object, Object> copyCache) {
 
 		LOG.trace( "Merging detached instance" );
 
@@ -448,7 +448,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 			final Object entity,
 			final Object target,
 			final SessionImplementor source,
-			final Map copyCache) {
+			final Map<Object, Object> copyCache) {
 		final Object[] copiedValues = TypeHelper.replace(
 				persister.getPropertyValues( entity ),
 				persister.getPropertyValues( target ),
@@ -466,7 +466,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 			final Object entity,
 			final Object target,
 			final SessionImplementor source,
-			final Map copyCache,
+			final Map<Object, Object> copyCache,
 			final ForeignKeyDirection foreignKeyDirection) {
 
 		final Object[] copiedValues;
@@ -512,7 +512,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 			final EventSource source,
 			final EntityPersister persister,
 			final Object entity,
-			final Map copyCache
+			final Map<Object, Object> copyCache
 	) {
 		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
 		persistenceContext.incrementCascadeLevel();

@@ -20,14 +20,14 @@ import org.hibernate.type.VersionType;
  * @author Steve Ebersole
  */
 public class VersionTypeSeedParameterSpecification implements ParameterSpecification {
-	private final VersionType type;
+	private final VersionType<?> type;
 
 	/**
 	 * Constructs a version seed parameter bind specification.
 	 *
 	 * @param type The version type.
 	 */
-	public VersionTypeSeedParameterSpecification(VersionType type) {
+	public VersionTypeSeedParameterSpecification(VersionType<?> type) {
 		this.type = type;
 	}
 

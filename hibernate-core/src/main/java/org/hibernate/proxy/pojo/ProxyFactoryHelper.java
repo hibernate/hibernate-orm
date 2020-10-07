@@ -37,10 +37,10 @@ public final class ProxyFactoryHelper {
 		//not meant to be instantiated
 	}
 
-	public static Set<Class> extractProxyInterfaces(final PersistentClass persistentClass, final String entityName) {
-		final Set<Class> proxyInterfaces = new java.util.HashSet<>();
-		final Class mappedClass = persistentClass.getMappedClass();
-		final Class proxyInterface = persistentClass.getProxyInterface();
+	public static Set<Class<?>> extractProxyInterfaces(final PersistentClass persistentClass, final String entityName) {
+		final Set<Class<?>> proxyInterfaces = new java.util.HashSet<>();
+		final Class<?> mappedClass = persistentClass.getMappedClass();
+		final Class<?> proxyInterface = persistentClass.getProxyInterface();
 
 		if ( proxyInterface != null && !mappedClass.equals( proxyInterface ) ) {
 			if ( !proxyInterface.isInterface() ) {

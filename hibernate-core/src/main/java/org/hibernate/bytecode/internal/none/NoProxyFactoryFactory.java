@@ -23,7 +23,7 @@ final class NoProxyFactoryFactory implements ProxyFactoryFactory {
 	}
 
 	@Override
-	public BasicProxyFactory buildBasicProxyFactory(Class superClass, Class[] interfaces) {
+	public BasicProxyFactory buildBasicProxyFactory(Class<?> superClass, Class<?>[] interfaces) {
 		return new NoneBasicProxyFactory( superClass, interfaces );
 	}
 }

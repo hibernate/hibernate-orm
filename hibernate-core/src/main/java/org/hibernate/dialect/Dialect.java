@@ -1168,7 +1168,7 @@ public abstract class Dialect implements ConversionContext {
 	 * @deprecated use {@link #getNativeIdentifierGeneratorStrategy()} instead
 	 */
 	@Deprecated
-	public Class getNativeIdentifierGeneratorClass() {
+	public Class<?> getNativeIdentifierGeneratorClass() {
 		return getIdentityColumnSupport().supportsIdentityColumns()
 				? IdentityGenerator.class
 				: SequenceStyleGenerator.class;
@@ -3359,12 +3359,12 @@ public abstract class Dialect implements ConversionContext {
 		 *
 		 * @return a non-null {@link Size}
 		 */
-		Size resolveDefaultSize(SqlTypeDescriptor sqlType, JavaTypeDescriptor javaType);
+		Size resolveDefaultSize(SqlTypeDescriptor sqlType, JavaTypeDescriptor<?> javaType);
 	}
 
 	public class DefaultSizeStrategyImpl implements DefaultSizeStrategy {
 		@Override
-		public Size resolveDefaultSize(SqlTypeDescriptor sqlType, JavaTypeDescriptor javaType) {
+		public Size resolveDefaultSize(SqlTypeDescriptor sqlType, JavaTypeDescriptor<?> javaType) {
 			final Size size = new Size();
 			int jdbcTypeCode = sqlType.getJdbcTypeCode();
 

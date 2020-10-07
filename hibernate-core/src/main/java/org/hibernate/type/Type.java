@@ -535,7 +535,7 @@ public interface Type extends Serializable {
 			Object target,
 			SharedSessionContractImplementor session,
 			Object owner,
-			Map copyCache) throws HibernateException;
+			Map<Object, Object> copyCache) throws HibernateException;
 
 	/**
 	 * During merge, replace the existing (target) value in the entity we are merging to

@@ -407,9 +407,10 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 		}
 	}
 
+	@SuppressWarnings( "unchecked" )
 	private <X> Class<X> resolveRequestedClass(String entityName) {
 		try {
-			return getServiceRegistry().getService( ClassLoaderService.class ).classForName( entityName );
+			return (Class<X>) getServiceRegistry().getService( ClassLoaderService.class ).classForName( entityName );
 		}
 		catch (ClassLoadingException e) {
 			return null;

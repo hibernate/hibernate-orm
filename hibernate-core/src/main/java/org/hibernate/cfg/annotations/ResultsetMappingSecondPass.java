@@ -41,7 +41,7 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 	}
 
 	@Override
-	public void doSecondPass(Map persistentClasses) throws MappingException {
+	public void doSecondPass(Map<String, PersistentClass> persistentClasses) throws MappingException {
 		if ( ann == null ) {
 			return;
 		}
@@ -201,7 +201,7 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 		return context.getMetadataCollector().getDatabase().toIdentifier( name ).render();
 	}
 
-	private List<String> getFollowers(Iterator parentPropIter, String reducedName, String name) {
+	private List<String> getFollowers(Iterator<Property> parentPropIter, String reducedName, String name) {
 		boolean hasFollowers = false;
 		List<String> followers = new ArrayList<>();
 		while ( parentPropIter.hasNext() ) {
@@ -217,9 +217,9 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 		return followers;
 	}
 
-	private Iterator getSubPropertyIterator(PersistentClass pc, String reducedName) {
+	private Iterator<Property> getSubPropertyIterator(PersistentClass pc, String reducedName) {
 		Value value = pc.getRecursiveProperty( reducedName ).getValue();
-		Iterator parentPropIter;
+		Iterator<Property> parentPropIter;
 		if ( value instanceof Component ) {
 			Component comp = (Component) value;
 			parentPropIter = comp.getPropertyIterator();
@@ -262,10 +262,10 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 		return parentPropIter;
 	}
 
-	private static int getIndexOfFirstMatchingProperty(List propertyNames, String follower) {
+	private static int getIndexOfFirstMatchingProperty(List<String> propertyNames, String follower) {
 		int propertySize = propertyNames.size();
 		for (int propIndex = 0; propIndex < propertySize; propIndex++) {
-			if ( ( (String) propertyNames.get( propIndex ) ).startsWith( follower ) ) {
+			if ( propertyNames.get( propIndex ).startsWith( follower ) ) {
 				return propIndex;
 			}
 		}

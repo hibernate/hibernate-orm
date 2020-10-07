@@ -34,8 +34,8 @@ public abstract class AbstractCurrentSessionContext implements CurrentSessionCon
 		return factory;
 	}
 
-	protected SessionBuilder baseSessionBuilder() {
-		final SessionBuilder builder = factory.withOptions();
+	protected SessionBuilder<?> baseSessionBuilder() {
+		final SessionBuilder<?> builder = factory.withOptions();
 		final CurrentTenantIdentifierResolver resolver = factory.getCurrentTenantIdentifierResolver();
 		if ( resolver != null ) {
 			builder.tenantIdentifier( resolver.resolveCurrentTenantIdentifier() );

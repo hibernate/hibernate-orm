@@ -40,10 +40,10 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 
 	private static final String INSTANTIATOR_PROXY_NAMING_SUFFIX = "HibernateInstantiator";
 	private static final String OPTIMIZER_PROXY_NAMING_SUFFIX = "HibernateAccessOptimizer";
-	private static final ElementMatcher.Junction newInstanceMethodName = ElementMatchers.named( "newInstance" );
-	private static final ElementMatcher.Junction getPropertyValuesMethodName = ElementMatchers.named( "getPropertyValues" );
-	private static final ElementMatcher.Junction setPropertyValuesMethodName = ElementMatchers.named( "setPropertyValues" );
-	private static final ElementMatcher.Junction getPropertyNamesMethodName = ElementMatchers.named( "getPropertyNames" );
+	private static final ElementMatcher.Junction<? super MethodDescription> newInstanceMethodName = ElementMatchers.named( "newInstance" );
+	private static final ElementMatcher.Junction<? super MethodDescription> getPropertyValuesMethodName = ElementMatchers.named( "getPropertyValues" );
+	private static final ElementMatcher.Junction<? super MethodDescription> setPropertyValuesMethodName = ElementMatchers.named( "setPropertyValues" );
+	private static final ElementMatcher.Junction<? super MethodDescription> getPropertyNamesMethodName = ElementMatchers.named( "getPropertyNames" );
 
 	private final ByteBuddyState byteBuddyState;
 
@@ -61,11 +61,11 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 
 	@Override
 	public ReflectionOptimizer getReflectionOptimizer(
-			final Class clazz,
+			final Class<?> clazz,
 			final String[] getterNames,
 			final String[] setterNames,
-			final Class[] types) {
-		final Class fastClass;
+			final Class<?>[] types) {
+		final Class<?> fastClass;
 		if ( !clazz.isInterface() && !Modifier.isAbstract( clazz.getModifiers() ) ) {
 			// we only provide a fast class instantiator if the class can be instantiated
 			final Constructor<?> constructor = findConstructor( clazz );
@@ -86,7 +86,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 		final Method[] setters = new Method[setterNames.length];
 		findAccessors( clazz, getterNames, setterNames, types, getters, setters );
 
-		final Class bulkAccessor = byteBuddyState.load( clazz, byteBuddy -> byteBuddy
+		final Class<?> bulkAccessor = byteBuddyState.load( clazz, byteBuddy -> byteBuddy
 				.with( new NamingStrategy.SuffixingRandom( OPTIMIZER_PROXY_NAMING_SUFFIX,
 						new NamingStrategy.SuffixingRandom.BaseNameResolver.ForFixedValue( clazz.getName() ) ) )
 				.subclass( ReflectionOptimizer.AccessOptimizer.class )
@@ -115,11 +115,11 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 
 	private static class GetPropertyValues implements ByteCodeAppender {
 
-		private final Class clazz;
+		private final Class<?> clazz;
 
 		private final Method[] getters;
 
-		public GetPropertyValues(Class clazz, Method[] getters) {
+		public GetPropertyValues(Class<?> clazz, Method[] getters) {
 			this.clazz = clazz;
 			this.getters = getters;
 		}
@@ -162,11 +162,11 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 
 	private static class SetPropertyValues implements ByteCodeAppender {
 
-		private final Class clazz;
+		private final Class<?> clazz;
 
 		private final Method[] setters;
 
-		public SetPropertyValues(Class clazz, Method[] setters) {
+		public SetPropertyValues(Class<?> clazz, Method[] setters) {
 			this.clazz = clazz;
 			this.setters = setters;
 		}
@@ -209,10 +209,10 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 	}
 
 	private static void findAccessors(
-			Class clazz,
+			Class<?> clazz,
 			String[] getterNames,
 			String[] setterNames,
-			Class[] types,
+			Class<?>[] types,
 			Method[] getters,
 			Method[] setters) {
 		final int length = types.length;
@@ -220,8 +220,8 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 			throw new BulkAccessorException( "bad number of accessors" );
 		}
 
-		final Class[] getParam = new Class[0];
-		final Class[] setParam = new Class[1];
+		final Class<?>[] getParam = new Class<?>[0];
+		final Class<?>[] setParam = new Class<?>[1];
 		for ( int i = 0; i < length; i++ ) {
 			if ( getterNames[i] != null ) {
 				final Method getter = findAccessor( clazz, getterNames[i], getParam, i );
@@ -239,8 +239,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
-	private static Method findAccessor(Class clazz, String name, Class[] params, int index)
+	private static Method findAccessor(Class<?> clazz, String name, Class<?>[] params, int index)
 			throws BulkAccessorException {
 		try {
 			final Method method = clazz.getDeclaredMethod( name, params );
@@ -255,7 +254,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 		}
 	}
 
-	private static Constructor<?> findConstructor(Class clazz) {
+	private static Constructor<?> findConstructor(Class<?> clazz) {
 		try {
 			return clazz.getDeclaredConstructor();
 		}

@@ -79,7 +79,7 @@ public class ComponentTuplizerFactory implements Serializable {
 	@SuppressWarnings({ "unchecked" })
 	public ComponentTuplizer constructTuplizer(String tuplizerClassName, Component metadata) {
 		try {
-			Class<? extends ComponentTuplizer> tuplizerClass = classLoaderAccess.classForName( tuplizerClassName );
+			Class<? extends ComponentTuplizer> tuplizerClass = (Class<? extends ComponentTuplizer>) classLoaderAccess.classForName( tuplizerClassName );
 			return constructTuplizer( tuplizerClass, metadata );
 		}
 		catch ( ClassLoadingException e ) {

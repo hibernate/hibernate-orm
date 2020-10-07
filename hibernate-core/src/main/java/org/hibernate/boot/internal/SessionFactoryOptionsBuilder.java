@@ -217,7 +217,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private SqmFunctionRegistry sqmFunctionRegistry;
 	private SqmTranslatorFactory sqmTranslatorFactory;
 	private Boolean useOfJdbcNamedParametersEnabled;
-	private Map querySubstitutions;
+	private Map<String, String> querySubstitutions;
 	private boolean namedQueryStartupCheckingEnabled;
 	private boolean conventionalJavaConstants;
 	private final boolean procedureParameterNullPassingEnabled;
@@ -979,7 +979,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
-	public Map getQuerySubstitutions() {
+	public Map<String, String> getQuerySubstitutions() {
 		return querySubstitutions;
 	}
 
@@ -1341,8 +1341,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.currentTenantIdentifierResolver = resolver;
 	}
 
-	@SuppressWarnings("unchecked")
-	public void applyQuerySubstitutions(Map substitutions) {
+	public void applyQuerySubstitutions(Map<String, String> substitutions) {
 		this.querySubstitutions.putAll( substitutions );
 	}
 

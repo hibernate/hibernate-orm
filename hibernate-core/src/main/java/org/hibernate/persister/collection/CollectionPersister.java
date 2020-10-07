@@ -371,7 +371,7 @@ public interface CollectionPersister extends CollectionDefinition {
 	 * @see CollectionClassification#SORTED_MAP
 	 * @see CollectionClassification#SORTED_SET
 	 */
-	Comparator<?> getSortingComparator();
+	Comparator<Object> getSortingComparator();
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

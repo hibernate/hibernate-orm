@@ -41,7 +41,7 @@ public class JmxServiceImpl implements JmxService, Stoppable {
 	private final String defaultDomain;
 	private final String sessionFactoryName;
 
-	public JmxServiceImpl(Map configValues) {
+	public JmxServiceImpl(Map<String, Object> configValues) {
 		usePlatformServer = ConfigurationHelper.getBoolean( AvailableSettings.JMX_PLATFORM_SERVER, configValues );
 		agentId = (String) configValues.get( AvailableSettings.JMX_AGENT_ID );
 		defaultDomain = (String) configValues.get( AvailableSettings.JMX_DOMAIN_NAME );

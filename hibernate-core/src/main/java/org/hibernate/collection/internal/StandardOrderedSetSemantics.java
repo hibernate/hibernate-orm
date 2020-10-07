@@ -19,7 +19,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 /**
  * @author Steve Ebersole
  */
-public class StandardOrderedSetSemantics extends AbstractSetSemantics<LinkedHashSet<?>> {
+public class StandardOrderedSetSemantics extends AbstractSetSemantics<LinkedHashSet<Object>> {
 	/**
 	 * Singleton access
 	 */
@@ -34,7 +34,7 @@ public class StandardOrderedSetSemantics extends AbstractSetSemantics<LinkedHash
 	}
 
 	@Override
-	public LinkedHashSet<?> instantiateRaw(
+	public LinkedHashSet<Object> instantiateRaw(
 			int anticipatedSize,
 			CollectionPersister collectionDescriptor) {
 		return anticipatedSize < 1 ? CollectionHelper.linkedSet() : CollectionHelper.linkedSetOfSize( anticipatedSize );
@@ -50,14 +50,14 @@ public class StandardOrderedSetSemantics extends AbstractSetSemantics<LinkedHash
 
 	@Override
 	public PersistentCollection wrap(
-			Object rawCollection,
+			LinkedHashSet<Object> rawCollection,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentSet( session, (Set) rawCollection );
+		return new PersistentSet( session, rawCollection );
 	}
 
 	@Override
-	public Iterator getElementIterator(LinkedHashSet rawCollection) {
+	public Iterator<Object> getElementIterator(LinkedHashSet<Object> rawCollection) {
 		return rawCollection.iterator();
 	}
 }

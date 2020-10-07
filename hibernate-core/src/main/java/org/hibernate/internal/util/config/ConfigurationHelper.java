@@ -313,7 +313,7 @@ public final class ConfigurationHelper {
 	 * @param properties The properties object
 	 * @return The property value; may be null.
 	 */
-	public static String extractPropertyValue(String propertyName, Map properties) {
+	public static String extractPropertyValue(String propertyName, Map<Object, Object> properties) {
 		String value = (String) properties.get( propertyName );
 		if ( value == null ) {
 			return null;
@@ -327,7 +327,7 @@ public final class ConfigurationHelper {
 
 	public static String extractValue(
 			String name,
-			Map values,
+			Map<Object, Object> values,
 			Supplier<String> fallbackValueFactory) {
 		final String value = extractPropertyValue( name, values );
 		if ( value != null ) {
@@ -350,8 +350,8 @@ public final class ConfigurationHelper {
 	 * @param properties The properties object
 	 * @return The resulting map; never null, though perhaps empty.
 	 */
-	public static Map toMap(String propertyName, String delim, Properties properties) {
-		Map map = new HashMap();
+	public static Map<Object, Object> toMap(String propertyName, String delim, Properties properties) {
+		Map<Object, Object> map = new HashMap<>();
 		String value = extractPropertyValue( propertyName, properties );
 		if ( value != null ) {
 			StringTokenizer tokens = new StringTokenizer( value, delim );
@@ -375,8 +375,8 @@ public final class ConfigurationHelper {
 	 * @param properties The properties object
 	 * @return The resulting map; never null, though perhaps empty.
 	 */
-	public static Map toMap(String propertyName, String delim, Map properties) {
-		Map map = new HashMap();
+	public static Map<String, String> toMap(String propertyName, String delim, Map<Object, Object> properties) {
+		Map<String, String> map = new HashMap<>();
 		String value = extractPropertyValue( propertyName, properties );
 		if ( value != null ) {
 			StringTokenizer tokens = new StringTokenizer( value, delim );

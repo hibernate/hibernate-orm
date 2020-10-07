@@ -83,10 +83,10 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 		// determine the id getter and setter methods from the proxy interface (if any)
 		// determine all interfaces needed by the resulting proxy
 		final String entityName = getEntityName();
-		final Class mappedClass = persistentClass.getMappedClass();
-		final Class proxyInterface = persistentClass.getProxyInterface();
+		final Class<?> mappedClass = persistentClass.getMappedClass();
+		final Class<?> proxyInterface = persistentClass.getProxyInterface();
 
-		final Set<Class> proxyInterfaces = ProxyFactoryHelper.extractProxyInterfaces( persistentClass, entityName );
+		final Set<Class<?>> proxyInterfaces = ProxyFactoryHelper.extractProxyInterfaces( persistentClass, entityName );
 
 		Method proxyGetIdentifierMethod = ProxyFactoryHelper.extractProxyGetIdentifierMethod( idGetter, proxyInterface );
 		Method proxySetIdentifierMethod = ProxyFactoryHelper.extractProxySetIdentifierMethod( idSetter, proxyInterface );

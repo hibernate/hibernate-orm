@@ -116,18 +116,18 @@ public class ParameterBinder {
 
 	private static int bindNamedParameters(
 			final PreparedStatement ps,
-			final Map namedParams,
+			final Map<String, TypedValue> namedParams,
 			final int start,
 			final NamedParameterSource source,
 			final SessionImplementor session) throws SQLException, HibernateException {
 		if ( namedParams != null ) {
 			// assumes that types are all of span 1
-			final Iterator iter = namedParams.entrySet().iterator();
+			final Iterator<Map.Entry<String, TypedValue>> iter = namedParams.entrySet().iterator();
 			int result = 0;
 			while ( iter.hasNext() ) {
-				final Map.Entry e = (Map.Entry) iter.next();
-				final String name = (String) e.getKey();
-				final TypedValue typedVal = (TypedValue) e.getValue();
+				final Map.Entry<String, TypedValue> e = iter.next();
+				final String name = e.getKey();
+				final TypedValue typedVal = e.getValue();
 				final int[] locations = source.getNamedParameterLocations( name );
 				for ( int location : locations ) {
 					if ( LOG.isDebugEnabled() ) {

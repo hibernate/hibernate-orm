@@ -17,7 +17,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 /**
  * @author Steve Ebersole
  */
-public class StandardSetSemantics extends AbstractSetSemantics<Set<?>> {
+public class StandardSetSemantics extends AbstractSetSemantics<Set<Object>> {
 	/**
 	 * Singleton access
 	 */
@@ -32,7 +32,7 @@ public class StandardSetSemantics extends AbstractSetSemantics<Set<?>> {
 	}
 
 	@Override
-	public Set<?> instantiateRaw(
+	public Set<Object> instantiateRaw(
 			int anticipatedSize,
 			CollectionPersister collectionDescriptor) {
 		return anticipatedSize < 1 ? new HashSet<>() : CollectionHelper.setOfSize( anticipatedSize );
@@ -48,10 +48,10 @@ public class StandardSetSemantics extends AbstractSetSemantics<Set<?>> {
 
 	@Override
 	public PersistentSet wrap(
-			Object rawCollection,
+			Set<Object> rawCollection,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentSet( session, (Set) rawCollection );
+		return new PersistentSet( session, rawCollection );
 	}
 
 }

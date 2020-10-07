@@ -218,9 +218,9 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		// 		valid while the TypeConfiguration is scoped to SessionFactory
 	}
 
-	public void addBasicTypeRegistrationContributions(List<BasicTypeRegistration> contributions) {
-		for ( BasicTypeRegistration basicTypeRegistration : contributions ) {
-			BasicType basicType = basicTypeRegistration.getBasicType();
+	public void addBasicTypeRegistrationContributions(List<BasicTypeRegistration<?>> contributions) {
+		for ( BasicTypeRegistration<?> basicTypeRegistration : contributions ) {
+			BasicType<?> basicType = basicTypeRegistration.getBasicType();
 
 			basicTypeRegistry.register(
 					basicType,

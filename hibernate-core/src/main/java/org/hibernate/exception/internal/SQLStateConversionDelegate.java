@@ -54,7 +54,7 @@ public class SQLStateConversionDelegate extends AbstractSQLExceptionConversionDe
 		return Collections.unmodifiableSet( categories );
 	}
 
-	private static final Set DATA_CATEGORIES = buildDataCategories();
+	private static final Set<String> DATA_CATEGORIES = buildDataCategories();
 	private static Set<String> buildDataCategories() {
 		HashSet<String> categories = new HashSet<>(
 				Arrays.asList(
@@ -65,7 +65,7 @@ public class SQLStateConversionDelegate extends AbstractSQLExceptionConversionDe
 		return Collections.unmodifiableSet( categories );
 	}
 
-	private static final Set INTEGRITY_VIOLATION_CATEGORIES = buildContraintCategories();
+	private static final Set<String> INTEGRITY_VIOLATION_CATEGORIES = buildContraintCategories();
 	private static Set<String> buildContraintCategories() {
 		HashSet<String> categories = new HashSet<>(
 				Arrays.asList(
@@ -77,7 +77,7 @@ public class SQLStateConversionDelegate extends AbstractSQLExceptionConversionDe
 		return Collections.unmodifiableSet( categories );
 	}
 
-	private static final Set CONNECTION_CATEGORIES = buildConnectionCategories();
+	private static final Set<String> CONNECTION_CATEGORIES = buildConnectionCategories();
 	private static Set<String> buildConnectionCategories() {
 		HashSet<String> categories = new HashSet<>();
 		categories.add(

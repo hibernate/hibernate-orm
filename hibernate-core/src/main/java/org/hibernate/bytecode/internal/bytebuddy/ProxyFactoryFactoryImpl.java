@@ -30,7 +30,7 @@ public class ProxyFactoryFactoryImpl implements ProxyFactoryFactory {
 	}
 
 	@Override
-	public BasicProxyFactory buildBasicProxyFactory(Class superClass, Class[] interfaces) {
+	public BasicProxyFactory buildBasicProxyFactory(Class<?> superClass, Class<?>[] interfaces) {
 		return new BasicProxyFactoryImpl( superClass, interfaces, byteBuddyState );
 	}
 }

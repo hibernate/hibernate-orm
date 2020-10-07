@@ -25,5 +25,5 @@ public interface DeleteEventListener extends Serializable {
      */
 	public void onDelete(DeleteEvent event) throws HibernateException;
 
-	public void onDelete(DeleteEvent event, Set transientEntities) throws HibernateException;
+	public void onDelete(DeleteEvent event, Set<Object> transientEntities) throws HibernateException;
 }

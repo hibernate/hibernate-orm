@@ -55,7 +55,7 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 	}
 
 	@Override
-	public List<BasicTypeRegistration> getBasicTypeRegistrations() {
+	public List<BasicTypeRegistration<?>> getBasicTypeRegistrations() {
 		return delegate.getBasicTypeRegistrations();
 	}
 

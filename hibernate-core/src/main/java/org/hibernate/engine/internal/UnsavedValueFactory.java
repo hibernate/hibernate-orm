@@ -35,7 +35,7 @@ public class UnsavedValueFactory {
 	 *
 	 * @throws InstantiationException if something went wrong
 	 */
-	private static Object instantiate(Constructor constructor) {
+	private static Object instantiate(Constructor<?> constructor) {
 		try {
 			return constructor.newInstance();
 		}
@@ -61,7 +61,7 @@ public class UnsavedValueFactory {
 			String unsavedValue,
 			Getter identifierGetter,
 			Type identifierType,
-			Constructor constructor) {
+			Constructor<?> constructor) {
 		if ( unsavedValue == null ) {
 			if ( identifierGetter != null && constructor != null ) {
 				// use the id value of a newly instantiated instance as the unsaved-value
@@ -69,7 +69,7 @@ public class UnsavedValueFactory {
 				return new IdentifierValue( defaultValue );
 			}
 			else if ( identifierGetter != null && (identifierType instanceof PrimitiveType) ) {
-				final Serializable defaultValue = ( (PrimitiveType) identifierType ).getDefaultValue();
+				final Serializable defaultValue = ( (PrimitiveType<?>) identifierType ).getDefaultValue();
 				return new IdentifierValue( defaultValue );
 			}
 			else {
@@ -90,7 +90,7 @@ public class UnsavedValueFactory {
 		}
 		else {
 			try {
-				return new IdentifierValue( (Serializable) ( (IdentifierType) identifierType ).stringToObject( unsavedValue ) );
+				return new IdentifierValue( (Serializable) ( (IdentifierType<?>) identifierType ).stringToObject( unsavedValue ) );
 			}
 			catch ( ClassCastException cce ) {
 				throw new MappingException( "Bad identifier type: " + identifierType.getName() );
@@ -117,8 +117,8 @@ public class UnsavedValueFactory {
 	public static VersionValue getUnsavedVersionValue(
 			String versionUnsavedValue, 
 			Getter versionGetter,
-			VersionType versionType,
-			Constructor constructor) {
+			VersionType<?> versionType,
+			Constructor<?> constructor) {
 		
 		if ( versionUnsavedValue == null ) {
 			if ( constructor!=null ) {

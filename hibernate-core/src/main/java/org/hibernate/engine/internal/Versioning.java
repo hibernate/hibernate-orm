@@ -38,7 +38,7 @@ public final class Versioning {
 	 * @param session The originating session
 	 * @return The initial optimistic locking value
 	 */
-	private static Object seed(VersionType versionType, SharedSessionContractImplementor session) {
+	private static Object seed(VersionType<?> versionType, SharedSessionContractImplementor session) {
 		final Object seed = versionType.seed( session );
 		LOG.tracef( "Seeding: %s", seed );
 		return seed;
@@ -59,7 +59,7 @@ public final class Versioning {
 	public static boolean seedVersion(
 			Object[] fields,
 			int versionProperty,
-			VersionType versionType,
+			VersionType<?> versionType,
 			SharedSessionContractImplementor session) {
 		final Object initialVersion = fields[versionProperty];
 		if (
@@ -87,8 +87,7 @@ public final class Versioning {
 	 * @param session The originating session
 	 * @return The incremented optimistic locking value.
 	 */
-	@SuppressWarnings("unchecked")
-	public static Object increment(Object version, VersionType versionType, SharedSessionContractImplementor session) {
+	public static Object increment(Object version, VersionType<Object> versionType, SharedSessionContractImplementor session) {
 		final Object next = versionType.next( version, session );
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracef(

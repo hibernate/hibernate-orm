@@ -156,7 +156,7 @@ public class LazyAttributeLoadingInterceptor extends AbstractLazyLoadInterceptor
 				( (SelfDirtinessTracker) target ).$$_hibernate_clearDirtyAttributes();
 				tracker = ( (SelfDirtinessTracker) target ).$$_hibernate_getCollectionTracker();
 			}
-			tracker.add( fieldName, ( (Collection) value ).size() );
+			tracker.add( fieldName, ( (Collection<?>) value ).size() );
 		}
 	}
 

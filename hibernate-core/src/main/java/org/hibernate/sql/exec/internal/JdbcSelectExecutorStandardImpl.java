@@ -270,7 +270,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 					executionContext.getSession()
 			);
 
-			cachedResults = queryCache.get(
+			cachedResults = (List<Object[]>) queryCache.get(
 					// todo (6.0) : QueryCache#get takes the `queryResultsCacheKey` see tat discussion above
 					queryResultsCacheKey,
 					// todo (6.0) : `querySpaces` and `session` make perfect sense as args, but its odd passing those into this method just to pass along

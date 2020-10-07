@@ -44,7 +44,7 @@ public interface Cache extends javax.persistence.Cache {
 	 * @return True if the underlying cache contains corresponding data; false
 	 * otherwise.
 	 */
-	boolean containsEntity(Class entityClass, Serializable identifier);
+	boolean containsEntity(Class<?> entityClass, Serializable identifier);
 
 	/**
 	 * Determine whether the cache contains data for the given entity "instance".
@@ -67,7 +67,7 @@ public interface Cache extends javax.persistence.Cache {
 	 *
 	 * @since 5.3
 	 */
-	void evictEntityData(Class entityClass, Serializable identifier);
+	void evictEntityData(Class<?> entityClass, Serializable identifier);
 
 	/**
 	 * Evicts the entity data for a particular entity "instance".
@@ -87,7 +87,7 @@ public interface Cache extends javax.persistence.Cache {
 	 *
 	 * @since 5.3
 	 */
-	void evictEntityData(Class entityClass);
+	void evictEntityData(Class<?> entityClass);
 
 	/**
 	 * Evicts all entity data from the given region (i.e. for all entities of
@@ -118,7 +118,7 @@ public interface Cache extends javax.persistence.Cache {
 	 *
 	 * @since 5.3
 	 */
-	void evictNaturalIdData(Class entityClass);
+	void evictNaturalIdData(Class<?> entityClass);
 
 	/**
 	 * Evict cached data for the given entity's natural-id

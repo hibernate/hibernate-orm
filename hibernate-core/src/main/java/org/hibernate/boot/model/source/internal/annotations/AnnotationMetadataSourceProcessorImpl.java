@@ -336,7 +336,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 			rootMetadataBuildingContext.getMetadataCollector().addAttributeConverter( descriptor );
 		}
 
-		public void addAttributeConverter(Class<? extends AttributeConverter> converterClass) {
+		public <X, Y> void addAttributeConverter(Class<? extends AttributeConverter<X, Y>> converterClass) {
 			rootMetadataBuildingContext.getMetadataCollector().addAttributeConverter( converterClass );
 		}
 	}

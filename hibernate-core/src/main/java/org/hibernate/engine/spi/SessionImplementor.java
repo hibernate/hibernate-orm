@@ -150,7 +150,7 @@ public interface SessionImplementor extends Session, SharedSessionContractImplem
 	 * @deprecated  OperationalContext should cover this overload I believe; Gail?
 	 */
 	@Deprecated
-	void delete(String entityName, Object child, boolean isCascadeDeleteEnabled, Set transientEntities);
+	void delete(String entityName, Object child, boolean isCascadeDeleteEnabled, Set<Object> transientEntities);
 
 	/**
 	 * @deprecated  OperationalContext should cover this overload I believe; Gail?

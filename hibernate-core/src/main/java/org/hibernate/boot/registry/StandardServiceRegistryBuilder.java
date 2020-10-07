@@ -47,13 +47,13 @@ public class StandardServiceRegistryBuilder {
 	public static StandardServiceRegistryBuilder forJpa(BootstrapServiceRegistry bootstrapServiceRegistry) {
 		final LoadedConfig loadedConfig = new LoadedConfig( null ) {
 			@Override
-			protected void addConfigurationValues(Map configurationValues) {
+			protected void addConfigurationValues(Map<String, Object> configurationValues) {
 				// here, do nothing
 			}
 		};
 		return new StandardServiceRegistryBuilder(
 				bootstrapServiceRegistry,
-				new HashMap(),
+				new HashMap<>(),
 				loadedConfig
 		) {
 			@Override
@@ -70,7 +70,7 @@ public class StandardServiceRegistryBuilder {
 	 */
 	public static final String DEFAULT_CFG_RESOURCE_NAME = "hibernate.cfg.xml";
 
-	private final Map settings;
+	private final Map<String, Object> settings;
 	private final List<StandardServiceInitiator> initiators;
 	private final List<ProvidedService> providedServices = new ArrayList<>();
 
@@ -104,7 +104,7 @@ public class StandardServiceRegistryBuilder {
 	 */
 	protected StandardServiceRegistryBuilder(
 			BootstrapServiceRegistry bootstrapServiceRegistry,
-			Map settings,
+			Map<String, Object> settings,
 			LoadedConfig loadedConfig) {
 		this.bootstrapServiceRegistry = bootstrapServiceRegistry;
 		this.configLoader = new ConfigLoader( bootstrapServiceRegistry );
@@ -135,10 +135,11 @@ public class StandardServiceRegistryBuilder {
 	 *
 	 * @param bootstrapServiceRegistry Provided bootstrap registry to use.
 	 */
+	@SuppressWarnings( {"rawtypes", "unchecked"} )
 	public StandardServiceRegistryBuilder(
 			BootstrapServiceRegistry bootstrapServiceRegistry,
 			LoadedConfig loadedConfigBaseline) {
-		this.settings = Environment.getProperties();
+		this.settings = (Map) Environment.getProperties();
 		this.bootstrapServiceRegistry = bootstrapServiceRegistry;
 		this.configLoader = new ConfigLoader( bootstrapServiceRegistry );
 		this.aggregatedCfgXml = loadedConfigBaseline;
@@ -185,9 +186,9 @@ public class StandardServiceRegistryBuilder {
 	 * @see #configure()
 	 * @see #configure(String)
 	 */
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings({"rawtypes", "unchecked"})
 	public StandardServiceRegistryBuilder loadProperties(String resourceName) {
-		settings.putAll( configLoader.loadProperties( resourceName ) );
+		settings.putAll( (Map) configLoader.loadProperties( resourceName ) );
 		return this;
 	}
 
@@ -204,9 +205,9 @@ public class StandardServiceRegistryBuilder {
 	 * @see #configure()
 	 * @see #configure(String)
 	 */
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings({"rawtypes", "unchecked"})
 	public StandardServiceRegistryBuilder loadProperties(File file) {
-		settings.putAll( configLoader.loadProperties( file ) );
+		settings.putAll( (Map) configLoader.loadProperties( file ) );
 		return this;
 	}
 
@@ -242,7 +243,6 @@ public class StandardServiceRegistryBuilder {
 		return configure( configLoader.loadConfigXmlUrl( url ) );
 	}
 
-	@SuppressWarnings({"unchecked"})
 	public StandardServiceRegistryBuilder configure(LoadedConfig loadedConfig) {
 		aggregatedCfgXml.merge( loadedConfig );
 		settings.putAll( loadedConfig.getConfigurationValues() );
@@ -342,12 +342,11 @@ public class StandardServiceRegistryBuilder {
 	 *
 	 * @return The StandardServiceRegistry.
 	 */
-	@SuppressWarnings("unchecked")
 	public StandardServiceRegistry build() {
 		applyServiceContributingIntegrators();
 		applyServiceContributors();
 
-		final Map settingsCopy = new HashMap( settings );
+		final Map<String, Object> settingsCopy = new HashMap<>( settings );
 		settingsCopy.put( org.hibernate.boot.cfgxml.spi.CfgXmlAccessService.LOADED_CONFIG_KEY, aggregatedCfgXml );
 		ConfigurationHelper.resolvePlaceHolders( settingsCopy );
 
@@ -391,7 +390,7 @@ public class StandardServiceRegistryBuilder {
 	 * This allows code to configure the builder and access that to configure Configuration object.
 	 */
 	@Deprecated
-	public Map getSettings() {
+	public Map<String, Object> getSettings() {
 		return settings;
 	}
 

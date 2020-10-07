@@ -4828,8 +4828,9 @@ public abstract class AbstractEntityPersister
 		return !entityMetamodel.getIdentifierProperty().isVirtual();
 	}
 
-	public VersionType getVersionType() {
-		return (VersionType) locateVersionType();
+	@SuppressWarnings( "unchecked" )
+	public VersionType<Object> getVersionType() {
+		return (VersionType<Object>) locateVersionType();
 	}
 
 	private Type locateVersionType() {

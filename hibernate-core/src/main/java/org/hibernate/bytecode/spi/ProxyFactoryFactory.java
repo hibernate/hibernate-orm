@@ -41,5 +41,5 @@ public interface ProxyFactoryFactory extends Service {
 	 * @param interfaces Interfaces to be proxied (or null if none).
 	 * @return The proxy class
 	 */
-	public BasicProxyFactory buildBasicProxyFactory(Class superClass, Class[] interfaces);
+	public BasicProxyFactory buildBasicProxyFactory(Class<?> superClass, Class<?>[] interfaces);
 }

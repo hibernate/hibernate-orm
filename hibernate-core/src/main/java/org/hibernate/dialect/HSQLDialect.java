@@ -126,7 +126,7 @@ public class HSQLDialect extends Dialect {
 
 	private static int reflectedVersion(int version) {
 		try {
-			final Class props = ReflectHelper.classForName("org.hsqldb.persist.HsqlDatabaseProperties");
+			final Class<?> props = ReflectHelper.classForName("org.hsqldb.persist.HsqlDatabaseProperties");
 			final String versionString = (String) props.getDeclaredField("THIS_VERSION").get( null );
 
 			return Integer.parseInt( versionString.substring(0, 1) ) * 100

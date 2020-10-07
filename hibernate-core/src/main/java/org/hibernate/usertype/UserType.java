@@ -48,7 +48,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  *
  * @author Gavin King
  */
-public interface UserType {
+public interface UserType<T> {
 
 	/**
 	 * Return the SQL type codes for the columns mapped by this type. The
@@ -63,7 +63,7 @@ public interface UserType {
 	 *
 	 * @return Class
 	 */
-	Class returnedClass();
+	Class<T> returnedClass();
 
 	/**
 	 * Compare two instances of the class mapped by this type for persistence "equality".

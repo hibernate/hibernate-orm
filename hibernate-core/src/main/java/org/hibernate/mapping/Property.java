@@ -73,7 +73,7 @@ public class Property implements Serializable, MetaAttributable {
 		return value.getColumnSpan();
 	}
 	
-	public Iterator getColumnIterator() {
+	public Iterator<Selectable> getColumnIterator() {
 		return value.getColumnIterator();
 	}
 	

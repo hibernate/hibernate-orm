@@ -50,7 +50,7 @@ public class OracleTypesHelper {
 		}
 	}
 
-	private Class locateOracleTypesClass() {
+	private Class<?> locateOracleTypesClass() {
 		try {
 			return ReflectHelper.classForName( ORACLE_TYPES_CLASS_NAME );
 		}

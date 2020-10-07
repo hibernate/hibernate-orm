@@ -65,7 +65,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			throw new HibernateException( "Unable to locate persister: " + event.getEntityClassName() );
 		}
 
-		final Class idClass = persister.getIdentifierType().getReturnedClass();
+		final Class<?> idClass = persister.getIdentifierType().getReturnedClass();
 		if ( idClass != null &&
 				!idClass.isInstance( event.getEntityId() ) &&
 				!(event.getEntityId() instanceof DelayedPostInsertIdentifier) ) {
@@ -123,7 +123,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			final EntityPersister persister,
 			final LoadEvent event,
 			final LoadEventListener.LoadType loadType,
-			final Class idClass) {
+			final Class<?> idClass) {
 		// we may have the jpa requirement of allowing find-by-id where id is the "simple pk value" of a
 		// dependent objects parent.  This is part of its generally goofy derived identity "feature"
 		final EntityIdentifierMapping idMapping = persister.getIdentifierMapping();
@@ -135,7 +135,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 				if ( singleIdAttribute.getMappedType() instanceof EntityMappingType ) {
 					final EntityMappingType dependentIdTargetMapping = (EntityMappingType) singleIdAttribute.getMappedType();
 					final EntityIdentifierMapping dependentIdTargetIdMapping = dependentIdTargetMapping.getIdentifierMapping();
-					final JavaTypeDescriptor dependentParentIdJtd = dependentIdTargetIdMapping.getMappedType().getMappedJavaTypeDescriptor();
+					final JavaTypeDescriptor<?> dependentParentIdJtd = dependentIdTargetIdMapping.getMappedType().getMappedJavaTypeDescriptor();
 					if ( dependentParentIdJtd.getJavaType().isInstance( event.getEntityId() ) ) {
 						// yep that's what we have...
 						loadByDerivedIdentitySimplePkValue(

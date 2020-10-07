@@ -55,7 +55,7 @@ public class DynamicFilterParameterSpecification implements ParameterSpecificati
 		final Type type = session.getLoadQueryInfluencers().getFilterParameterType(fullParamName);
 		if ( Collection.class.isInstance( value ) ) {
 			int positions = 0;
-			Iterator itr = ( ( Collection ) value ).iterator();
+			Iterator<?> itr = ( ( Collection<?> ) value ).iterator();
 			while ( itr.hasNext() ) {
 				Object next = itr.next();
 				qp.bindDynamicParameter( type, next );

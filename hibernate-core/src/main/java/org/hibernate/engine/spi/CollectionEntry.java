@@ -380,7 +380,7 @@ public final class CollectionEntry implements Serializable {
 	/**
 	 * Get the collection orphans (entities which were removed from the collection)
 	 */
-	public Collection getOrphans(String entityName, PersistentCollection collection) throws HibernateException {
+	public Collection<Object> getOrphans(String entityName, PersistentCollection collection) throws HibernateException {
 		if ( snapshot == null ) {
 			throw new AssertionFailure( "no collection snapshot for orphan delete" );
 		}

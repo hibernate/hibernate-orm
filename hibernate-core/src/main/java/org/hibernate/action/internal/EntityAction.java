@@ -31,7 +31,7 @@ import org.jboss.logging.Logger;
  * @author Gavin King
  */
 public abstract class EntityAction
-		implements Executable, Serializable, Comparable, AfterTransactionCompletionProcess {
+		implements Executable, Serializable, Comparable<EntityAction>, AfterTransactionCompletionProcess {
 	private static final Logger LOG = Logger.getLogger(EntityAction.class);
 
 	private final String entityName;
@@ -157,8 +157,7 @@ public abstract class EntityAction
 	}
 
 	@Override
-	public int compareTo(Object other) {
-		final EntityAction action = (EntityAction) other;
+	public int compareTo(EntityAction action) {
 		//sort first by entity name
 		final int roleComparison = entityName.compareTo( action.entityName );
 		if ( roleComparison != 0 ) {

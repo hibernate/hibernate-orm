@@ -297,7 +297,7 @@ public class CustomPersister implements EntityPersister {
 	/**
 	 * @see EntityPersister#getVersionType()
 	 */
-	public VersionType getVersionType() {
+	public VersionType<Object> getVersionType() {
 		return null;
 	}
 

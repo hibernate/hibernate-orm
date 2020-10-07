@@ -8,6 +8,7 @@ package org.hibernate.cfg;
 import java.io.Serializable;
 
 import org.hibernate.MappingException;
+import org.hibernate.mapping.PersistentClass;
 
 /**
  * Second pass operation
@@ -16,7 +17,7 @@ import org.hibernate.MappingException;
  */
 public interface SecondPass extends Serializable {
 
-	void doSecondPass(java.util.Map persistentClasses)
+	void doSecondPass(java.util.Map<String, PersistentClass> persistentClasses)
 				throws MappingException;
 
 }

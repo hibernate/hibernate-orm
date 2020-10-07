@@ -25,7 +25,7 @@ public interface ClassLoaderAccess {
 	 *
 	 * @return The Class.
 	 */
-	public <T> Class<T> classForName(String name);
+	public Class<?> classForName(String name);
 
 	/**
 	 * Locate a resource by name

@@ -51,8 +51,7 @@ public class EntityEntryContext {
 
 	private transient IdentityHashMap<Object,ManagedEntity> nonEnhancedEntityXref;
 
-	@SuppressWarnings( {"unchecked"})
-	private transient Map.Entry<Object,EntityEntry>[] reentrantSafeEntries = new Map.Entry[0];
+	private transient Map.Entry<Object,EntityEntry>[] reentrantSafeEntries = new EntityEntryCrossRefImpl[0];
 	private transient boolean dirty;
 
 	/**
@@ -488,7 +487,7 @@ public class EntityEntryContext {
 		EntityEntry entry = null;
 
 		final String entityEntryClassName = new String( entityEntryClassNameArr );
-		final Class entityEntryClass =   rtn.getSession().getFactory().getServiceRegistry().getService( ClassLoaderService.class ).classForName( entityEntryClassName );
+		final Class<?> entityEntryClass =   rtn.getSession().getFactory().getServiceRegistry().getService( ClassLoaderService.class ).classForName( entityEntryClassName );
 
 		try {
 			final Method deserializeMethod = entityEntryClass.getDeclaredMethod( "deserialize", ObjectInputStream.class,	PersistenceContext.class );

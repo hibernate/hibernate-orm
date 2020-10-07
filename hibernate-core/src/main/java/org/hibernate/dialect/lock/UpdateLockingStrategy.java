@@ -84,7 +84,7 @@ public class UpdateLockingStrategy implements LockingStrategy {
 			final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
 			final PreparedStatement st = jdbcCoordinator.getStatementPreparer().prepareStatement( sql );
 			try {
-				final VersionType lockableVersionType = lockable.getVersionType();
+				final VersionType<?> lockableVersionType = lockable.getVersionType();
 				lockableVersionType.nullSafeSet( st, version, 1, session );
 				int offset = 2;
 

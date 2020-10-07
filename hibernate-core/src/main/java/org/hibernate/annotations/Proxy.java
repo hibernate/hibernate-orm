@@ -28,5 +28,5 @@ public @interface Proxy {
 	/**
 	 * Proxy class or interface used.  Default is to use the entity class name.
 	 */
-	Class proxyClass() default void.class;
+	Class<?> proxyClass() default void.class;
 }

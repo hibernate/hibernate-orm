@@ -71,7 +71,7 @@ public interface MetadataBuildingOptions {
 	 *
 	 * @return The BasicType registrations
 	 */
-	List<BasicTypeRegistration> getBasicTypeRegistrations();
+	List<BasicTypeRegistration<?>> getBasicTypeRegistrations();
 
 	/**
 	 * Retrieve the Hibernate Commons Annotations ReflectionManager to use.

@@ -231,9 +231,9 @@ public class EnhancerImpl implements Enhancer {
 					Implementation isDirty = StubMethod.INSTANCE, getDirtyNames = StubMethod.INSTANCE, clearDirtyNames = StubMethod.INSTANCE;
 					for ( AnnotatedFieldDescription collectionField : collectionFields ) {
 						String collectionFieldName = collectionField.getName();
-						Class adviceIsDirty;
-						Class adviceGetDirtyNames;
-						Class adviceClearDirtyNames;
+						Class<?> adviceIsDirty;
+						Class<?> adviceGetDirtyNames;
+						Class<?> adviceClearDirtyNames;
 						if ( collectionField.getType().asErasure().isAssignableTo( Map.class ) ) {
 							adviceIsDirty = CodeTemplates.MapAreCollectionFieldsDirty.class;
 							adviceGetDirtyNames = CodeTemplates.MapGetCollectionFieldDirtyNames.class;

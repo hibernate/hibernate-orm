@@ -39,7 +39,7 @@ public interface BytecodeProvider extends Service {
 	 * @param types The types of all properties to be accessed.
 	 * @return The reflection optimization delegate.
 	 */
-	ReflectionOptimizer getReflectionOptimizer(Class clazz, String[] getterNames, String[] setterNames, Class[] types);
+	ReflectionOptimizer getReflectionOptimizer(Class<?> clazz, String[] getterNames, String[] setterNames, Class<?>[] types);
 
 	/**
 	 * Returns a byte code enhancer that implements the enhancements described in the supplied enhancement context.

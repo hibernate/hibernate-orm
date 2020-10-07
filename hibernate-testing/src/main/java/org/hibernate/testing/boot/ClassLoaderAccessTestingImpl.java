@@ -21,10 +21,9 @@ public class ClassLoaderAccessTestingImpl implements ClassLoaderAccess {
 	public static final ClassLoaderAccessTestingImpl INSTANCE = new ClassLoaderAccessTestingImpl();
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public <T> Class<T> classForName(String name) {
+	public Class<?> classForName(String name) {
 		try {
-			return (Class<T>) getClass().getClassLoader().loadClass( name );
+			return getClass().getClassLoader().loadClass( name );
 		}
 		catch (ClassNotFoundException e) {
 			throw new ClassLoadingException( "Could not load class by name : " + name, e );

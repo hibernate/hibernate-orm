@@ -426,7 +426,7 @@ public interface SessionFactoryBuilder {
 	 * @deprecated This is a legacy feature and should never be needed anymore...
 	 */
 	@Deprecated
-	SessionFactoryBuilder applyQuerySubstitutions(Map substitutions);
+	SessionFactoryBuilder applyQuerySubstitutions(Map<String, String> substitutions);
 
 	/**
 	 * Should we strictly adhere to JPA Query Language (JPQL) syntax, or more broadly support

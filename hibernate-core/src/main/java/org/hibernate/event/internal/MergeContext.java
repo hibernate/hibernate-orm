@@ -77,7 +77,7 @@ import org.jboss.logging.Logger;
  *
  * @author Gail Badner
  */
-public class MergeContext implements Map {
+public class MergeContext implements Map<Object, Object> {
 	private static final Logger LOG = Logger.getLogger( MergeContext.class );
 
 	private final EventSource session;
@@ -87,7 +87,7 @@ public class MergeContext implements Map {
 		// key is an entity to be merged;
 		// value is the associated managed entity (result) in the persistence context.
 
-	private Map<Object,Object> managedToMergeEntityXref = new IdentityHashMap<Object,Object>( 10 );
+	private Map<Object,Object> managedToMergeEntityXref = new IdentityHashMap<>( 10 );
 		// maintains the inverse of the mergeToManagedEntityXref for performance reasons.
 		// key is the managed entity result in the persistence context.
 		// value is the associated entity to be merged; if multiple
@@ -151,7 +151,7 @@ public class MergeContext implements Map {
 	 *
 	 * @see Collections#unmodifiableSet(java.util.Set)
 	 */
-	public Set entrySet() {
+	public Set<Map.Entry<Object, Object>> entrySet() {
 		return Collections.unmodifiableSet( mergeToManagedEntityXref.entrySet() );
 	}
 
@@ -182,7 +182,7 @@ public class MergeContext implements Map {
 	 *
 	 * @see Collections#unmodifiableSet(java.util.Set)
 	 */
-	public Set keySet() {
+	public Set<Object> keySet() {
 		return Collections.unmodifiableSet( mergeToManagedEntityXref.keySet() );
 	}
 
@@ -289,9 +289,8 @@ public class MergeContext implements Map {
 	 * but associated value in <code>map</code> is different from the previous value in this MergeContext.
 	 * @throws IllegalStateException if internal cross-references are out of sync,
 	 */
-	public void putAll(Map map) {
-		for ( Object o : map.entrySet() ) {
-			Entry entry = (Entry) o;
+	public void putAll(Map<?, ?> map) {
+		for ( Map.Entry<?, ?> entry : map.entrySet() ) {
 			put( entry.getKey(), entry.getValue() );
 		}
 	}
@@ -321,7 +320,7 @@ public class MergeContext implements Map {
 	 *
 	 * @see Collections#unmodifiableSet(java.util.Set)
 	 */
-	public Collection values() {
+	public Collection<Object> values() {
 		return Collections.unmodifiableSet( managedToMergeEntityXref.keySet() );
 	}
 
@@ -369,7 +368,7 @@ public class MergeContext implements Map {
 	 *
 	 * @see Collections#unmodifiableMap(java.util.Map)
 	 */
-	public Map invertMap() {
+	public Map<Object, Object> invertMap() {
 		return Collections.unmodifiableMap( managedToMergeEntityXref );
 	}
 

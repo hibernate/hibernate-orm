@@ -520,7 +520,7 @@ public final class Cascade {
 				LOG.tracev( "Cascade {0} for collection: {1}", action, collectionType.getRole() );
 			}
 
-			final Iterator itr = action.getCascadableChildrenIterator( eventSource, collectionType, child );
+			final Iterator<Object> itr = action.getCascadableChildrenIterator( eventSource, collectionType, child );
 			while ( itr.hasNext() ) {
 				cascadeProperty(
 						action,
@@ -571,11 +571,11 @@ public final class Cascade {
 	 */
 	private static void deleteOrphans(EventSource eventSource, String entityName, PersistentCollection pc) throws HibernateException {
 		//TODO: suck this logic into the collection!
-		final Collection orphans;
+		final Collection<Object> orphans;
 		if ( pc.wasInitialized() ) {
 			final CollectionEntry ce = eventSource.getPersistenceContextInternal().getCollectionEntry( pc );
 			orphans = ce==null
-					? java.util.Collections.EMPTY_LIST
+					? java.util.Collections.emptyList()
 					: ce.getOrphans( entityName, pc );
 		}
 		else {
@@ -585,7 +585,7 @@ public final class Cascade {
 		for ( Object orphan : orphans ) {
 			if ( orphan != null ) {
 				LOG.tracev( "Deleting orphaned entity instance: {0}", entityName );
-				eventSource.delete( entityName, orphan, false, new HashSet() );
+				eventSource.delete( entityName, orphan, false, new HashSet<>() );
 			}
 		}
 	}

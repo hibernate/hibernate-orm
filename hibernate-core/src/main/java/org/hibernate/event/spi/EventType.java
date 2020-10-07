@@ -83,16 +83,16 @@ public final class EventType<T> {
 	 * Maintain a map of {@link EventType} instances keyed by name for lookup by name as well as {@link #values()}
 	 * resolution.
 	 */
-	@SuppressWarnings({"rawtypes", "Convert2Lambda"})
-	private static final Map<String,EventType> STANDARD_TYPE_BY_NAME_MAP = AccessController.doPrivileged(
-			new PrivilegedAction<Map<String, EventType>>() {
+	@SuppressWarnings("Convert2Lambda")
+	private static final Map<String,EventType<?>> STANDARD_TYPE_BY_NAME_MAP = AccessController.doPrivileged(
+			new PrivilegedAction<Map<String, EventType<?>>>() {
 				@Override
-				public Map<String, EventType> run() {
-					final Map<String, EventType> typeByNameMap = new HashMap<>();
+				public Map<String, EventType<?>> run() {
+					final Map<String, EventType<?>> typeByNameMap = new HashMap<>();
 					for ( Field field : EventType.class.getDeclaredFields() ) {
 						if ( EventType.class.isAssignableFrom( field.getType() ) ) {
 							try {
-								final EventType typeField = (EventType) field.get( null );
+								final EventType<?> typeField = (EventType<?>) field.get( null );
 								typeByNameMap.put( typeField.eventName(), typeField );
 							}
 							catch (Exception t) {
@@ -123,12 +123,11 @@ public final class EventType<T> {
 	 *
 	 * @throws HibernateException If eventName is null, or if eventName does not correlate to any known event type.
 	 */
-	@SuppressWarnings("rawtypes")
-	public static EventType resolveEventTypeByName(final String eventName) {
+	public static EventType<?> resolveEventTypeByName(final String eventName) {
 		if ( eventName == null ) {
 			throw new HibernateException( "event name to resolve cannot be null" );
 		}
-		final EventType eventType = STANDARD_TYPE_BY_NAME_MAP.get( eventName );
+		final EventType<?> eventType = STANDARD_TYPE_BY_NAME_MAP.get( eventName );
 		if ( eventType == null ) {
 			throw new HibernateException( "Unable to locate proper event type for event name [" + eventName + "]" );
 		}
@@ -138,8 +137,7 @@ public final class EventType<T> {
 	/**
 	 * Get a collection of all the standard {@link EventType} instances.
 	 */
-	@SuppressWarnings("rawtypes")
-	public static Collection<EventType> values() {
+	public static Collection<EventType<?>> values() {
 		return STANDARD_TYPE_BY_NAME_MAP.values();
 	}
 
@@ -148,8 +146,7 @@ public final class EventType<T> {
 	 *
 	 * Simply copy the values into its (passed) Map
 	 */
-	@SuppressWarnings("rawtypes")
-	static void registerStandardTypes(Map<String, EventType> eventTypes) {
+	static void registerStandardTypes(Map<String, EventType<?>> eventTypes) {
 		eventTypes.putAll( STANDARD_TYPE_BY_NAME_MAP );
 	}
 
@@ -169,8 +166,7 @@ public final class EventType<T> {
 		return eventName;
 	}
 
-	@SuppressWarnings("rawtypes")
-	public Class baseListenerInterface() {
+	public Class<T> baseListenerInterface() {
 		return baseListenerInterface;
 	}
 

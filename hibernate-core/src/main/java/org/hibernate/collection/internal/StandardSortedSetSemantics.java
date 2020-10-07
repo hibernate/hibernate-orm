@@ -18,7 +18,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 /**
  * @author Steve Ebersole
  */
-public class StandardSortedSetSemantics extends AbstractSetSemantics<SortedSet<?>> {
+public class StandardSortedSetSemantics extends AbstractSetSemantics<SortedSet<Object>> {
 	/**
 	 * Singleton access
 	 */
@@ -33,16 +33,16 @@ public class StandardSortedSetSemantics extends AbstractSetSemantics<SortedSet<?
 	}
 
 	@Override
-	public Class<SortedSet<?>> getCollectionJavaType() {
-		//noinspection unchecked
+	@SuppressWarnings( { "rawtypes", "unchecked" } )
+	public Class<SortedSet<Object>> getCollectionJavaType() {
 		return (Class) SortedSet.class;
 	}
 
 	@Override
-	public SortedSet instantiateRaw(
+	public SortedSet<Object> instantiateRaw(
 			int anticipatedSize,
 			CollectionPersister collectionDescriptor) {
-		return new TreeSet( collectionDescriptor.getSortingComparator() );
+		return new TreeSet<>( collectionDescriptor.getSortingComparator() );
 	}
 
 	@Override
@@ -55,14 +55,14 @@ public class StandardSortedSetSemantics extends AbstractSetSemantics<SortedSet<?
 
 	@Override
 	public PersistentCollection wrap(
-			Object rawCollection,
+			SortedSet<Object> rawCollection,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentSortedSet( session, (SortedSet) rawCollection );
+		return new PersistentSortedSet( session, rawCollection );
 	}
 
 	@Override
-	public Iterator getElementIterator(SortedSet<?> rawCollection) {
+	public Iterator<Object> getElementIterator(SortedSet<Object> rawCollection) {
 		return rawCollection.iterator();
 	}
 }

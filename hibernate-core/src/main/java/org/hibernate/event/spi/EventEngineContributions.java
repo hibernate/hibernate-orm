@@ -19,7 +19,7 @@ public interface EventEngineContributions {
 	/**
 	 * Return the EventType by name, if one
 	 */
-	<T> EventType<T> findEventType(String name);
+	EventType<?> findEventType(String name);
 
 	/**
 	 * Register a custom event type.

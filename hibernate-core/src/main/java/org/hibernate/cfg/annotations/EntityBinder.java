@@ -324,7 +324,7 @@ public class EntityBinder {
 
 		//set persister if needed
 		Persister persisterAnn = annotatedClass.getAnnotation( Persister.class );
-		Class persister = null;
+		Class<?> persister = null;
 		if ( persisterAnn != null ) {
 			persister = persisterAnn.impl();
 		}
@@ -520,7 +520,6 @@ public class EntityBinder {
 		}
 	}
 
-	@SuppressWarnings({ "unchecked" })
 	public void setProxy(Proxy proxy) {
 		if ( proxy != null ) {
 			lazy = proxy.lazy();
@@ -883,12 +882,12 @@ public class EntityBinder {
 		 * Those operations has to be done after the id definition of the persistence class.
 		 * ie after the properties parsing
 		 */
-		Iterator joins = secondaryTables.values().iterator();
-		Iterator joinColumns = secondaryTableJoins.values().iterator();
+		Iterator<Join> joins = secondaryTables.values().iterator();
+		Iterator<Object> joinColumns = secondaryTableJoins.values().iterator();
 
 		while ( joins.hasNext() ) {
 			Object uncastedColumn = joinColumns.next();
-			Join join = (Join) joins.next();
+			Join join = joins.next();
 			createPrimaryColumnsToSecondaryTable( uncastedColumn, propertyHolder, join );
 		}
 	}
@@ -1239,10 +1238,10 @@ public class EntityBinder {
 		//comment and index are processed here
 		if ( table == null ) return;
 		String appliedTable = table.appliesTo();
-		Iterator tables = persistentClass.getTableClosureIterator();
+		Iterator<Table> tables = persistentClass.getTableClosureIterator();
 		Table hibTable = null;
 		while ( tables.hasNext() ) {
-			Table pcTable = (Table) tables.next();
+			Table pcTable = tables.next();
 			if ( pcTable.getQuotedName().equals( appliedTable ) ) {
 				//we are in the correct table to find columns
 				hibTable = pcTable;

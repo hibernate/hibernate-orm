@@ -119,7 +119,7 @@ public class JPAMetadataProvider implements MetadataProvider {
 				defaults.put( "catalog", xmlDefaults.getCatalog() );
 				defaults.put( "delimited-identifier", xmlDefaults.getDelimitedIdentifier() );
 				defaults.put( "cascade-persist", xmlDefaults.getCascadePersist() );
-				List<Class> entityListeners = new ArrayList<>();
+				List<Class<?>> entityListeners = new ArrayList<>();
 				for ( String className : xmlContext.getDefaultEntityListeners() ) {
 					try {
 						entityListeners.add( classLoaderAccess.classForName( className ) );
@@ -130,7 +130,6 @@ public class JPAMetadataProvider implements MetadataProvider {
 				}
 				defaults.put( EntityListeners.class, entityListeners );
 				for ( Element element : xmlContext.getAllDocuments() ) {
-					@SuppressWarnings( "unchecked" )
 					List<Element> elements = element.elements( "sequence-generator" );
 					List<SequenceGenerator> sequenceGenerators = ( List<SequenceGenerator> ) defaults.get( SequenceGenerator.class );
 					if ( sequenceGenerators == null ) {
@@ -160,7 +159,7 @@ public class JPAMetadataProvider implements MetadataProvider {
 						namedQueries = new ArrayList<>();
 						defaults.put( NamedQuery.class, namedQueries );
 					}
-					List<NamedQuery> currentNamedQueries = JPAOverriddenAnnotationReader.buildNamedQueries(
+					List<NamedQuery> currentNamedQueries = (List<NamedQuery>) JPAOverriddenAnnotationReader.buildNamedQueries(
 							element,
 							false,
 							xmlDefaults,
@@ -173,7 +172,7 @@ public class JPAMetadataProvider implements MetadataProvider {
 						namedNativeQueries = new ArrayList<>();
 						defaults.put( NamedNativeQuery.class, namedNativeQueries );
 					}
-					List<NamedNativeQuery> currentNamedNativeQueries = JPAOverriddenAnnotationReader.buildNamedQueries(
+					List<NamedNativeQuery> currentNamedNativeQueries = (List<NamedNativeQuery>) JPAOverriddenAnnotationReader.buildNamedQueries(
 							element,
 							true,
 							xmlDefaults,

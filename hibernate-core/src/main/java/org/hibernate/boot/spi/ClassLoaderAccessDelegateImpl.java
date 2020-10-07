@@ -17,7 +17,7 @@ public abstract class ClassLoaderAccessDelegateImpl implements ClassLoaderAccess
 	protected abstract ClassLoaderAccess getDelegate();
 
 	@Override
-	public <T> Class<T> classForName(String name) {
+	public Class<?> classForName(String name) {
 		return getDelegate().classForName( name );
 	}
 

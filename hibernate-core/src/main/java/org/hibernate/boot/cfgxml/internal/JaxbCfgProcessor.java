@@ -94,7 +94,6 @@ public class JaxbCfgProcessor {
 		return staxFactory;
 	}
 
-	@SuppressWarnings( { "unchecked" })
 	private JaxbCfgHibernateConfiguration unmarshal(XMLEventReader staxEventReader, final Origin origin) {
 		XMLEvent event;
 		try {

@@ -26,14 +26,14 @@ import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Namespace;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.spi.BootstrapContext;
-import org.hibernate.boot.spi.MetadataBuildingOptions;
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.MetadataBuildingOptions;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryBuilderFactory;
 import org.hibernate.boot.spi.SessionFactoryBuilderImplementor;
 import org.hibernate.boot.spi.SessionFactoryBuilderService;
@@ -56,7 +56,6 @@ import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
 import org.hibernate.query.internal.NamedQueryRepositoryImpl;
 import org.hibernate.query.named.NamedQueryRepository;
-import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -79,7 +78,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private final MutableIdentifierGeneratorFactory identifierGeneratorFactory;
 
 	private final Map<String,PersistentClass> entityBindingMap;
-	private final Map<Class, MappedSuperclass> mappedSuperclassMap;
+	private final Map<Class<?>, MappedSuperclass> mappedSuperclassMap;
 	private final Map<String,Collection> collectionBindingMap;
 	private final Map<String, TypeDefinition> typeDefinitionMap;
 	private final Map<String, FilterDefinition> filterDefinitionMap;
@@ -100,7 +99,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			MetadataBuildingOptions metadataBuildingOptions,
 			MutableIdentifierGeneratorFactory identifierGeneratorFactory,
 			Map<String, PersistentClass> entityBindingMap,
-			Map<Class, MappedSuperclass> mappedSuperclassMap,
+			Map<Class<?>, MappedSuperclass> mappedSuperclassMap,
 			Map<String, Collection> collectionBindingMap,
 			Map<String, TypeDefinition> typeDefinitionMap,
 			Map<String, FilterDefinition> filterDefinitionMap,
@@ -369,6 +368,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
+	@SuppressWarnings( {"unchecked", "rawtypes"} )
 	public void initSessionFactory(SessionFactoryImplementor sessionFactory) {
 		final ServiceRegistryImplementor sessionFactoryServiceRegistry = sessionFactory.getServiceRegistry();
 
@@ -378,18 +378,15 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		final ConfigurationService cfgService = sessionFactoryServiceRegistry.getService( ConfigurationService.class );
 		final ClassLoaderService classLoaderService = sessionFactoryServiceRegistry.getService( ClassLoaderService.class );
 
-		for ( Map.Entry entry : ( (Map<?, ?>) cfgService.getSettings() ).entrySet() ) {
-			if ( !String.class.isInstance( entry.getKey() ) ) {
-				continue;
-			}
-			final String propertyName = (String) entry.getKey();
+		for ( Map.Entry<String, Object> entry : cfgService.getSettings().entrySet() ) {
+			final String propertyName = entry.getKey();
 			if ( !propertyName.startsWith( org.hibernate.jpa.AvailableSettings.EVENT_LISTENER_PREFIX ) ) {
 				continue;
 			}
 			final String eventTypeName = propertyName.substring(
 					org.hibernate.jpa.AvailableSettings.EVENT_LISTENER_PREFIX.length() + 1
 			);
-			final EventType eventType = EventType.resolveEventTypeByName( eventTypeName );
+			final EventType<?> eventType = EventType.resolveEventTypeByName( eventTypeName );
 			final EventListenerGroup eventListenerGroup = eventListenerRegistry.getEventListenerGroup( eventType );
 			for ( String listenerImpl : LISTENER_SEPARATION_PATTERN.split( ( (String) entry.getValue() ) ) ) {
 				eventListenerGroup.appendListener( instantiate( listenerImpl, classLoaderService ) );
@@ -461,7 +458,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		return fetchProfileMap;
 	}
 
-	public Map<Class, MappedSuperclass> getMappedSuperclassMap() {
+	public Map<Class<?>, MappedSuperclass> getMappedSuperclassMap() {
 		return mappedSuperclassMap;
 	}
 

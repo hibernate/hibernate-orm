@@ -8,6 +8,8 @@ package org.hibernate.cache.cfg.spi;
 
 import java.util.Comparator;
 
+import org.hibernate.type.VersionType;
+
 /**
  * Specialized DomainDataCachingConfig describing the requested
  * caching config for a particular persistent collection's data
@@ -18,5 +20,5 @@ public interface CollectionDataCachingConfig extends DomainDataCachingConfig {
 	/**
 	 * The comparator to be used with the owning entity's version (if it has one).
 	 */
-	Comparator getOwnerVersionComparator();
+	Comparator<?> getOwnerVersionComparator();
 }

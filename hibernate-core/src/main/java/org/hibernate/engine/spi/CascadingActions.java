@@ -470,7 +470,7 @@ public class CascadingActions {
 	 *
 	 * @return The children iterator.
 	 */
-	public static Iterator getAllElementsIterator(
+	public static Iterator<Object> getAllElementsIterator(
 			EventSource session,
 			CollectionType collectionType,
 			Object collection) {
@@ -481,7 +481,7 @@ public class CascadingActions {
 	 * Iterate just the elements of the collection that are already there. Don't load
 	 * any new elements from the database.
 	 */
-	public static Iterator getLoadedElementsIterator(
+	public static Iterator<Object> getLoadedElementsIterator(
 			SharedSessionContractImplementor session,
 			CollectionType collectionType,
 			Object collection) {

@@ -56,7 +56,7 @@ public interface EventSource extends SessionImplementor {
 	/**
 	 * Cascade delete an entity instance
 	 */
-	void delete(String entityName, Object child, boolean isCascadeDeleteEnabled, Set transientEntities);
+	void delete(String entityName, Object child, boolean isCascadeDeleteEnabled, Set<Object> transientEntities);
 	/**
 	 * A specialized type of deletion for orphan removal that must occur prior to queued inserts and updates.
 	 */

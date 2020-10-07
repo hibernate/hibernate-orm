@@ -1347,7 +1347,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	}
 
 	private static class MergedSettings {
-		private final Map configurationValues = new ConcurrentHashMap( 16, 0.75f, 1 );
+		private final Map<Object, Object> configurationValues = new ConcurrentHashMap<>( 16, 0.75f, 1 );
 
 		private Map<String, JaccPermissionDeclarations> jaccPermissionsByContextId;
 		private List<CacheRegionDefinition> cacheRegionDefinitions;
@@ -1384,7 +1384,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			configurationValues.putAll( loadedConfig.getConfigurationValues() );
 		}
 
-		public Map getConfigurationValues() {
+		public Map<Object, Object> getConfigurationValues() {
 			return configurationValues;
 		}
 

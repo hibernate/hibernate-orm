@@ -38,7 +38,7 @@ public class StructuredCacheEntry implements CacheEntryStructure {
 	@Override
 	@SuppressWarnings("unchecked")
 	public Object destructure(Object structured, SessionFactoryImplementor factory) {
-		final Map map = (Map) structured;
+		final Map<String, Object> map = (Map<String, Object>) structured;
 		final String subclass = (String) map.get( SUBCLASS_KEY );
 		final Object version = map.get( VERSION_KEY );
 		final EntityPersister subclassPersister = factory.getEntityPersister( subclass );
@@ -55,11 +55,10 @@ public class StructuredCacheEntry implements CacheEntryStructure {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Object structure(Object item) {
 		final CacheEntry entry = (CacheEntry) item;
 		final String[] names = persister.getPropertyNames();
-		final Map map = new HashMap( names.length + 3, 1f );
+		final Map<String, Object> map = new HashMap<>( names.length + 3, 1f );
 		map.put( SUBCLASS_KEY, entry.getSubclass() );
 		map.put( VERSION_KEY, entry.getVersion() );
 		for ( int i=0; i<names.length; i++ ) {

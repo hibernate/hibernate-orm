@@ -142,7 +142,6 @@ import org.dom4j.Element;
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
  */
-@SuppressWarnings("unchecked")
 public class JPAOverriddenAnnotationReader implements AnnotationReader {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( JPAOverriddenAnnotationReader.class );
 
@@ -155,7 +154,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 		METHOD
 	}
 
-	private static final Map<Class, String> annotationToXml;
+	private static final Map<Class<?>, String> annotationToXml;
 
 	static {
 		annotationToXml = new HashMap<>();
@@ -246,7 +245,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 	private String propertyName;
 	private PropertyType propertyType;
 	private transient Annotation[] annotations;
-	private transient Map<Class, Annotation> annotationsMap;
+	private transient Map<Class<?>, Annotation> annotationsMap;
 	private transient List<Element> elementsForProperty;
 	private AccessibleObject mirroredAttribute;
 
@@ -262,7 +261,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 		this.classLoaderAccess = classLoaderAccess;
 
 		if ( el instanceof Class ) {
-			Class clazz = (Class) el;
+			Class<?> clazz = (Class<?>) el;
 			className = clazz.getName();
 		}
 		else if ( el instanceof Field ) {
@@ -324,7 +323,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 
 	public <T extends Annotation> T getAnnotation(Class<T> annotationType) {
 		initAnnotations();
-		return (T) annotationsMap.get( annotationType );
+		return annotationType.cast( annotationsMap.get( annotationType ) );
 	}
 
 	public <T extends Annotation> boolean isAnnotationPresent(Class<T> annotationType) {
@@ -525,7 +524,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 						defaults
 				);
 				try {
-					final Class converterClass = classLoaderAccess.classForName( converterClassName );
+					final Class<?> converterClass = classLoaderAccess.classForName( converterClassName );
 					convertAnnotationDescriptor.setValue( "converter", converterClass );
 				}
 				catch (ClassLoadingException e) {
@@ -582,7 +581,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 	}
 
 	private void checkForOrphanProperties(Element tree) {
-		Class clazz;
+		Class<?> clazz;
 		try {
 			clazz = classLoaderAccess.classForName( className );
 		}
@@ -723,7 +722,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 	private EntityListeners getEntityListeners(Element tree, XMLContext.Default defaults) {
 		Element element = tree != null ? tree.element( "entity-listeners" ) : null;
 		if ( element != null ) {
-			List<Class> entityListenerClasses = new ArrayList<>();
+			List<Class<?>> entityListenerClasses = new ArrayList<>();
 			for ( Element subelement : element.elements( "entity-listener" ) ) {
 				String className = subelement.attributeValue( "class" );
 				try {
@@ -1141,7 +1140,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 	private void addTargetClass(Element element, AnnotationDescriptor ad, String nodeName, XMLContext.Default defaults) {
 		String className = element.attributeValue( nodeName );
 		if ( className != null ) {
-			Class clazz;
+			Class<?> clazz;
 			try {
 				clazz = classLoaderAccess.classForName( XMLContext.buildSafeClassName( className, defaults ) );
 			}
@@ -1240,7 +1239,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 			String mapKeyClassName = subelement.attributeValue( "class" );
 			AnnotationDescriptor ad = new AnnotationDescriptor( MapKeyClass.class );
 			if ( StringHelper.isNotEmpty( mapKeyClassName ) ) {
-				Class clazz;
+				Class<?> clazz;
 				try {
 					clazz = classLoaderAccess.classForName(
 							XMLContext.buildSafeClassName( mapKeyClassName, defaults )
@@ -1847,7 +1846,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 			copyIntegerAttribute( column, element, "length" );
 			copyIntegerAttribute( column, element, "precision" );
 			copyIntegerAttribute( column, element, "scale" );
-			return (Column) AnnotationFactory.create( column );
+			return AnnotationFactory.create( column );
 		}
 		else {
 			if ( isMandatory ) {
@@ -1983,7 +1982,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 			AnnotationDescriptor annSubgraphNode = new AnnotationDescriptor( NamedSubgraph.class );
 			copyStringAttribute( annSubgraphNode, subgraphNode, "name", true );
 			String clazzName = subgraphNode.attributeValue( "class" );
-			Class clazz;
+			Class<?> clazz;
 			try {
 				clazz = classLoaderAccess.classForName(
 						XMLContext.buildSafeClassName( clazzName, defaults )
@@ -2020,7 +2019,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 		if ( element == null ) {
 			return new ArrayList<>();
 		}
-		List namedStoredProcedureElements = element.elements( "named-stored-procedure-query" );
+		List<Element> namedStoredProcedureElements = element.elements( "named-stored-procedure-query" );
 		List<NamedStoredProcedureQuery> namedStoredProcedureQueries = new ArrayList<>();
 		for ( Object obj : namedStoredProcedureElements ) {
 			Element subElement = (Element) obj;
@@ -2042,7 +2041,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 					parameterDescriptor.setValue( "mode", ParameterMode.valueOf( modeValue.toUpperCase(Locale.ROOT) ) );
 				}
 				String clazzName = parameterElement.attributeValue( "class" );
-				Class clazz;
+				Class<?> clazz;
 				try {
 					clazz = classLoaderAccess.classForName(
 							XMLContext.buildSafeClassName( clazzName, defaults )
@@ -2061,10 +2060,10 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 			);
 
 			elements = subElement.elements( "result-class" );
-			List<Class> returnClasses = new ArrayList<>();
+			List<Class<?>> returnClasses = new ArrayList<>();
 			for ( Element classElement : elements ) {
 				String clazzName = classElement.getTextTrim();
-				Class clazz;
+				Class<?> clazz;
 				try {
 					clazz = classLoaderAccess.classForName(
 							XMLContext.buildSafeClassName( clazzName, defaults )
@@ -2198,7 +2197,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 			ClassLoaderAccess classLoaderAccess) {
 		final AnnotationDescriptor entityResultDescriptor = new AnnotationDescriptor( EntityResult.class );
 
-		final Class entityClass = resolveClassReference( entityResultElement.attributeValue( "entity-class" ), defaults, classLoaderAccess );
+		final Class<?> entityClass = resolveClassReference( entityResultElement.attributeValue( "entity-class" ), defaults, classLoaderAccess );
 		entityResultDescriptor.setValue( "entityClass", entityClass );
 
 		copyStringAttribute( entityResultDescriptor, entityResultElement, "discriminator-column", false );
@@ -2217,7 +2216,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 		return AnnotationFactory.create( entityResultDescriptor );
 	}
 
-	private static Class resolveClassReference(
+	private static Class<?> resolveClassReference(
 			String className,
 			XMLContext.Default defaults,
 			ClassLoaderAccess classLoaderAccess) {
@@ -2257,7 +2256,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 			ClassLoaderAccess classLoaderAccess) {
 		AnnotationDescriptor constructorResultDescriptor = new AnnotationDescriptor( ConstructorResult.class );
 
-		final Class entityClass = resolveClassReference( constructorResultElement.attributeValue( "target-class" ), defaults, classLoaderAccess );
+		final Class<?> entityClass = resolveClassReference( constructorResultElement.attributeValue( "target-class" ), defaults, classLoaderAccess );
 		constructorResultDescriptor.setValue( "targetClass", entityClass );
 
 		List<ColumnResult> columnResultAnnotations = new ArrayList<>();
@@ -2288,6 +2287,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 		}
 	}
 
+	@SuppressWarnings( "unchecked" )
 	private NamedQueries getNamedQueries(Element tree, XMLContext.Default defaults) {
 		//TODO avoid the Proxy Creation (@NamedQueries) when possible
 		List<NamedQuery> queries = (List<NamedQuery>) buildNamedQueries( tree, false, defaults, classLoaderAccess );
@@ -2404,7 +2404,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 		}
 	}
 
-
+	@SuppressWarnings( "unchecked" )
 	private NamedNativeQueries getNamedNativeQueries(
 			Element tree,
 			XMLContext.Default defaults) {
@@ -2464,20 +2464,19 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 		ann.setValue( "hints", queryHints.toArray( new QueryHint[queryHints.size()] ) );
 	}
 
-	public static List buildNamedQueries(
+	public static List<?> buildNamedQueries(
 			Element element,
 			boolean isNative,
 			XMLContext.Default defaults,
 			ClassLoaderAccess classLoaderAccess) {
 		if ( element == null ) {
-			return new ArrayList();
+			return new ArrayList<>();
 		}
-		List namedQueryElementList = isNative ?
+		List<Element> namedQueryElementList = isNative ?
 				element.elements( "named-native-query" ) :
 				element.elements( "named-query" );
-		List namedQueries = new ArrayList();
-		for ( Object aNamedQueryElementList : namedQueryElementList ) {
-			Element subelement = (Element) aNamedQueryElementList;
+		List<?> namedQueries = new ArrayList<>();
+		for ( Element subelement : namedQueryElementList ) {
 			AnnotationDescriptor ann = new AnnotationDescriptor(
 					isNative ? NamedNativeQuery.class : NamedQuery.class
 			);
@@ -2491,7 +2490,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 			buildQueryHints( elements, ann );
 			String clazzName = subelement.attributeValue( "result-class" );
 			if ( StringHelper.isNotEmpty( clazzName ) ) {
-				Class clazz;
+				Class<?> clazz;
 				try {
 					clazz = classLoaderAccess.classForName(
 							XMLContext.buildSafeClassName( clazzName, defaults )
@@ -2688,7 +2687,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 			Attribute attr = element.attribute( "class" );
 			if ( attr != null ) {
 				AnnotationDescriptor ad = new AnnotationDescriptor( IdClass.class );
-				Class clazz;
+				Class<?> clazz;
 				try {
 					clazz = classLoaderAccess.classForName( XMLContext.buildSafeClassName( attr.getValue(), defaults )
 					);
@@ -2924,7 +2923,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 		}
 	}
 	private static void buildIndex(AnnotationDescriptor annotation, Element element){
-		List indexElementList = element.elements( "index" );
+		List<Element> indexElementList = element.elements( "index" );
 		Index[] indexes = new Index[indexElementList.size()];
 		for(int i=0;i<indexElementList.size();i++){
 			Element subelement = (Element)indexElementList.get( i );
@@ -2937,16 +2936,16 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 		annotation.setValue( "indexes", indexes );
 	}
 	private static void buildUniqueConstraints(AnnotationDescriptor annotation, Element element) {
-		List uniqueConstraintElementList = element.elements( "unique-constraint" );
+		List<Element> uniqueConstraintElementList = element.elements( "unique-constraint" );
 		UniqueConstraint[] uniqueConstraints = new UniqueConstraint[uniqueConstraintElementList.size()];
 		int ucIndex = 0;
-		Iterator ucIt = uniqueConstraintElementList.listIterator();
+		Iterator<Element> ucIt = uniqueConstraintElementList.listIterator();
 		while ( ucIt.hasNext() ) {
 			Element subelement = (Element) ucIt.next();
 			List<Element> columnNamesElements = subelement.elements( "column-name" );
 			String[] columnNames = new String[columnNamesElements.size()];
 			int columnNameIndex = 0;
-			Iterator it = columnNamesElements.listIterator();
+			Iterator<Element> it = columnNamesElements.listIterator();
 			while ( it.hasNext() ) {
 				Element columnNameElt = (Element) it.next();
 				columnNames[columnNameIndex++] = columnNameElt.getTextTrim();
@@ -2963,10 +2962,10 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 		if ( element == null ) {
 			return new PrimaryKeyJoinColumn[] { };
 		}
-		List pkJoinColumnElementList = element.elements( "primary-key-join-column" );
+		List<Element> pkJoinColumnElementList = element.elements( "primary-key-join-column" );
 		PrimaryKeyJoinColumn[] pkJoinColumns = new PrimaryKeyJoinColumn[pkJoinColumnElementList.size()];
 		int index = 0;
-		Iterator pkIt = pkJoinColumnElementList.listIterator();
+		Iterator<Element> pkIt = pkJoinColumnElementList.listIterator();
 		while ( pkIt.hasNext() ) {
 			Element subelement = (Element) pkIt.next();
 			AnnotationDescriptor pkAnn = new AnnotationDescriptor( PrimaryKeyJoinColumn.class );

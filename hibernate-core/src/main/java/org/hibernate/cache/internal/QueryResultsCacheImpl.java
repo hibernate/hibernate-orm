@@ -48,10 +48,9 @@ public class QueryResultsCacheImpl implements QueryResultsCache {
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
 	public boolean put(
 			final QueryKey key,
-			final List results,
+			final List<?> results,
 			final SharedSessionContractImplementor session) throws HibernateException {
 		if ( SecondLevelCacheLogger.DEBUG_ENABLED ) {
 			SecondLevelCacheLogger.INSTANCE.debugf( "Caching query results in region: %s; timestamp=%s", cacheRegion.getName(), session.getTransactionStartTimestamp() );
@@ -78,8 +77,7 @@ public class QueryResultsCacheImpl implements QueryResultsCache {
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
-	public List get(
+	public List<?> get(
 			final QueryKey key,
 			final Set<String> spaces,
 			final SharedSessionContractImplementor session) throws HibernateException {
@@ -110,8 +108,7 @@ public class QueryResultsCacheImpl implements QueryResultsCache {
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
-	public List get(
+	public List<?> get(
 			final QueryKey key,
 			final String[] spaces,
 			final SharedSessionContractImplementor session) throws HibernateException {
@@ -160,9 +157,9 @@ public class QueryResultsCacheImpl implements QueryResultsCache {
 
 	public static class CacheItem implements Serializable {
 		private final long timestamp;
-		private final List results;
+		private final List<?> results;
 
-		CacheItem(long timestamp, List results) {
+		CacheItem(long timestamp, List<?> results) {
 			this.timestamp = timestamp;
 			this.results = results;
 		}

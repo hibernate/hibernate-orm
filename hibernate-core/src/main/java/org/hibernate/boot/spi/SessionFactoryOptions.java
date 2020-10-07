@@ -187,7 +187,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 
 	boolean isJtaTrackByThread();
 
-	Map getQuerySubstitutions();
+	Map<String, String> getQuerySubstitutions();
 
 	/**
 	 * @deprecated Use {@link JpaCompliance#isJpaQueryComplianceEnabled()} instead

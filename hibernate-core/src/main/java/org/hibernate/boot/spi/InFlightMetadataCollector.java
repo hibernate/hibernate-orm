@@ -231,7 +231,7 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 
 	void addAttributeConverter(ConverterDescriptor descriptor);
 
-	void addAttributeConverter(Class<? extends AttributeConverter> converterClass);
+	<X, Y> void addAttributeConverter(Class<? extends AttributeConverter<X, Y>> converterClass);
 
 	ConverterAutoApplyHandler getAttributeConverterAutoApplyHandler();
 
@@ -281,8 +281,8 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	AnnotatedClassType addClassType(XClass clazz);
 	AnnotatedClassType getClassType(XClass clazz);
 
-	void addMappedSuperclass(Class type, MappedSuperclass mappedSuperclass);
-	MappedSuperclass getMappedSuperclass(Class type);
+	void addMappedSuperclass(Class<?> type, MappedSuperclass mappedSuperclass);
+	MappedSuperclass getMappedSuperclass(Class<?> type);
 
 	PropertyData getPropertyAnnotatedWithMapsId(XClass persistentXClass, String propertyName);
 	void addPropertyAnnotatedWithMapsId(XClass entity, PropertyData propertyAnnotatedElement);
@@ -325,7 +325,7 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	void addMappedBy(String name, String mappedBy, String propertyName);
 	String getFromMappedBy(String ownerEntityName, String propertyName);
 
-	void addUniqueConstraints(Table table, List uniqueConstraints);
+	void addUniqueConstraints(Table table, List<String[]> uniqueConstraints);
 	void addUniqueConstraintHolders(Table table, List<UniqueConstraintHolder> uniqueConstraints);
 	void addJpaIndexHolders(Table table, List<JPAIndexHolder> jpaIndexHolders);
 

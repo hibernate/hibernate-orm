@@ -28,10 +28,10 @@ import org.hibernate.sql.results.graph.FetchParent;
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractBagSemantics<B extends Collection<?>> implements BagSemantics<B> {
+public abstract class AbstractBagSemantics<B extends Collection<Object>> implements BagSemantics<B> {
 	@Override
+	@SuppressWarnings( { "rawtypes", "unchecked" } )
 	public Class<B> getCollectionJavaType() {
-		//noinspection unchecked
 		return (Class) Collection.class;
 	}
 
@@ -41,7 +41,7 @@ public abstract class AbstractBagSemantics<B extends Collection<?>> implements B
 			int anticipatedSize,
 			CollectionPersister collectionDescriptor) {
 		if ( anticipatedSize < 1 ) {
-			return (B) new ArrayList();
+			return (B) new ArrayList<>();
 		}
 		else {
 			return (B) CollectionHelper.arrayList( anticipatedSize );
@@ -49,7 +49,7 @@ public abstract class AbstractBagSemantics<B extends Collection<?>> implements B
 	}
 
 	@Override
-	public Iterator getElementIterator(B rawCollection) {
+	public Iterator<Object> getElementIterator(B rawCollection) {
 		if ( rawCollection == null ) {
 			return null;
 		}
@@ -57,8 +57,7 @@ public abstract class AbstractBagSemantics<B extends Collection<?>> implements B
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public void visitElements(B rawCollection, Consumer action) {
+	public void visitElements(B rawCollection, Consumer<Object> action) {
 		if ( rawCollection != null ) {
 			rawCollection.forEach( action );
 		}

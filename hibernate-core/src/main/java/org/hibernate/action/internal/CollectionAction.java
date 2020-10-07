@@ -29,7 +29,7 @@ import org.hibernate.pretty.MessageHelper;
  *
  * @author Gavin King
  */
-public abstract class CollectionAction implements Executable, Serializable, Comparable {
+public abstract class CollectionAction implements Executable, Serializable, Comparable<CollectionAction> {
 	private transient CollectionPersister persister;
 	private transient SharedSessionContractImplementor session;
 	private final PersistentCollection collection;
@@ -146,9 +146,7 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 	}
 
 	@Override
-	public int compareTo(Object other) {
-		final CollectionAction action = (CollectionAction) other;
-
+	public int compareTo(CollectionAction action) {
 		// sort first by role name
 		final int roleComparison = collectionRole.compareTo( action.collectionRole );
 		if ( roleComparison != 0 ) {

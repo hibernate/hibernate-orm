@@ -200,7 +200,7 @@ public abstract class SimpleValue implements KeyValue {
 					.getServiceRegistry()
 					.getService( ClassLoaderService.class );
 			try {
-				final Class<? extends AttributeConverter> converterClass = cls.classForName( converterClassName );
+				final Class<? extends AttributeConverter<?, ?>> converterClass = cls.classForName( converterClassName );
 				this.attributeConverterDescriptor = new ClassBasedConverterDescriptor(
 						converterClass,
 						false,

@@ -307,11 +307,11 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 
 	public abstract boolean isDiscriminatorInsertable();
 
-	public abstract Iterator getPropertyClosureIterator();
+	public abstract Iterator<Property> getPropertyClosureIterator();
 
-	public abstract Iterator getTableClosureIterator();
+	public abstract Iterator<Table> getTableClosureIterator();
 
-	public abstract Iterator getKeyClosureIterator();
+	public abstract Iterator<KeyValue> getKeyClosureIterator();
 
 	protected void addSubclassProperty(Property prop) {
 		subclassProperties.add( prop );
@@ -325,23 +325,23 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		subclassTables.add( subclassTable );
 	}
 
-	public Iterator getSubclassPropertyClosureIterator() {
-		ArrayList iters = new ArrayList();
+	public Iterator<Property> getSubclassPropertyClosureIterator() {
+		ArrayList<Iterator<Property>> iters = new ArrayList<>();
 		iters.add( getPropertyClosureIterator() );
 		iters.add( subclassProperties.iterator() );
 		for ( int i = 0; i < subclassJoins.size(); i++ ) {
 			Join join = subclassJoins.get( i );
 			iters.add( join.getPropertyIterator() );
 		}
-		return new JoinedIterator( iters );
+		return new JoinedIterator<>( iters );
 	}
 
-	public Iterator getSubclassJoinClosureIterator() {
-		return new JoinedIterator( getJoinClosureIterator(), subclassJoins.iterator() );
+	public Iterator<Join> getSubclassJoinClosureIterator() {
+		return new JoinedIterator<>( getJoinClosureIterator(), subclassJoins.iterator() );
 	}
 
-	public Iterator getSubclassTableClosureIterator() {
-		return new JoinedIterator( getTableClosureIterator(), subclassTables.iterator() );
+	public Iterator<Table> getSubclassTableClosureIterator() {
+		return new JoinedIterator<>( getTableClosureIterator(), subclassTables.iterator() );
 	}
 
 	public boolean isClassOrSuperclassJoin(Join join) {
@@ -674,11 +674,11 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		return getClass().getName() + '(' + getEntityName() + ')';
 	}
 
-	public Iterator getJoinIterator() {
+	public Iterator<Join> getJoinIterator() {
 		return joins.iterator();
 	}
 
-	public Iterator getJoinClosureIterator() {
+	public Iterator<Join> getJoinClosureIterator() {
 		return joins.iterator();
 	}
 
@@ -725,14 +725,14 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	 *
 	 * @return An iterator over the "normal" properties.
 	 */
-	public Iterator getPropertyIterator() {
-		ArrayList iterators = new ArrayList();
+	public Iterator<Property> getPropertyIterator() {
+		ArrayList<Iterator<Property>> iterators = new ArrayList<>();
 		iterators.add( properties.iterator() );
 		for ( int i = 0; i < joins.size(); i++ ) {
 			Join join = joins.get( i );
 			iterators.add( join.getPropertyIterator() );
 		}
-		return new JoinedIterator( iterators );
+		return new JoinedIterator<>( iterators );
 	}
 
 	/**
@@ -985,14 +985,14 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	}
 
 	// The following methods are added to support @MappedSuperclass in the metamodel
-	public Iterator getDeclaredPropertyIterator() {
-		ArrayList iterators = new ArrayList();
+	public Iterator<Property> getDeclaredPropertyIterator() {
+		ArrayList<Iterator<Property>> iterators = new ArrayList<>();
 		iterators.add( declaredProperties.iterator() );
 		for ( int i = 0; i < joins.size(); i++ ) {
 			Join join = joins.get( i );
 			iterators.add( join.getDeclaredPropertyIterator() );
 		}
-		return new JoinedIterator( iterators );
+		return new JoinedIterator<>( iterators );
 	}
 
 	public void addMappedsuperclassProperty(Property p) {

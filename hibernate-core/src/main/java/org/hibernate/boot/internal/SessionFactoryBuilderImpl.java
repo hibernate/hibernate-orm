@@ -269,7 +269,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
-	public SessionFactoryBuilder applyQuerySubstitutions(@SuppressWarnings("rawtypes") Map substitutions) {
+	public SessionFactoryBuilder applyQuerySubstitutions(Map<String, String> substitutions) {
 		this.optionsBuilder.applyQuerySubstitutions( substitutions );
 		return this;
 	}
@@ -454,9 +454,8 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <T extends SessionFactoryBuilder> T unwrap(Class<T> type) {
-		return (T) this;
+		return type.cast( this );
 	}
 
 	@Override

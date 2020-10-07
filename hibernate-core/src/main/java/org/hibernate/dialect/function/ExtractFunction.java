@@ -47,7 +47,8 @@ public class ExtractFunction
 	}
 
 	@Override
-	protected <T> SelfRenderingSqmFunction generateSqmFunctionExpression(
+	@SuppressWarnings( "unchecked" )
+	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 			List<SqmTypedNode<?>> arguments,
 			AllowableFunctionReturnType<T> impliedResultType,
 			QueryEngine queryEngine,
@@ -58,25 +59,25 @@ public class ExtractFunction
 		TemporalUnit unit = field.getUnit();
 		switch ( unit ) {
 			case NANOSECOND:
-				return extractNanoseconds( expression, queryEngine, typeConfiguration );
+				return (SelfRenderingSqmFunction<T>) extractNanoseconds( expression, queryEngine, typeConfiguration );
 			case NATIVE:
 				throw new SemanticException("can't extract() the field TemporalUnit.NATIVE");
 			case OFFSET:
 				// use format(arg, 'xxx') to get the offset
-				return extractOffsetUsingFormat( expression, queryEngine, typeConfiguration );
+				return (SelfRenderingSqmFunction<T>) extractOffsetUsingFormat( expression, queryEngine, typeConfiguration );
 			case DATE:
 			case TIME:
 				// use cast(arg as Type) to get the date or time part
 				// which might be javax.sql.Date / javax.sql.Time or
 				// java.time.LocalDate / java.time.LocalTime depending
 				// on the type of the expression we're extracting from
-				return extractDateOrTimeUsingCast( expression, field.getType(), queryEngine, typeConfiguration );
+				return (SelfRenderingSqmFunction<T>) extractDateOrTimeUsingCast( expression, field.getType(), queryEngine, typeConfiguration );
 			case WEEK_OF_MONTH:
 				// use ceiling(extract(day of month, arg)/7.0)
-				return extractWeek( expression, field, DAY_OF_MONTH, queryEngine, typeConfiguration);
+				return (SelfRenderingSqmFunction<T>) extractWeek( expression, field, DAY_OF_MONTH, queryEngine, typeConfiguration);
 			case WEEK_OF_YEAR:
 				// use ceiling(extract(day of year, arg)/7.0)
-				return extractWeek( expression, field, DAY_OF_YEAR, queryEngine, typeConfiguration);
+				return (SelfRenderingSqmFunction<T>) extractWeek( expression, field, DAY_OF_YEAR, queryEngine, typeConfiguration);
 			default:
 				// otherwise it's something we expect the SQL dialect
 				// itself to understand, either natively, or via the

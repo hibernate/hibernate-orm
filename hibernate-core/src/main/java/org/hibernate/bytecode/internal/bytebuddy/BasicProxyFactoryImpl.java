@@ -23,14 +23,13 @@ import net.bytebuddy.dynamic.scaffold.subclass.ConstructorStrategy;
 
 public class BasicProxyFactoryImpl implements BasicProxyFactory {
 
-	private static final Class[] NO_INTERFACES = new Class[0];
+	private static final Class<?>[] NO_INTERFACES = new Class<?>[0];
 	private static final String PROXY_NAMING_SUFFIX = Environment.useLegacyProxyClassnames() ? "HibernateBasicProxy$" : "HibernateBasicProxy";
 
-	private final Class proxyClass;
+	private final Class<?> proxyClass;
 	private final ProxyConfiguration.Interceptor interceptor;
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public BasicProxyFactoryImpl(Class superClass, Class[] interfaces, ByteBuddyState byteBuddyState) {
+	public BasicProxyFactoryImpl(Class<?> superClass, Class<?>[] interfaces, ByteBuddyState byteBuddyState) {
 		if ( superClass == null && ( interfaces == null || interfaces.length < 1 ) ) {
 			throw new AssertionFailure( "attempting to build proxy without any superclass or interfaces" );
 		}

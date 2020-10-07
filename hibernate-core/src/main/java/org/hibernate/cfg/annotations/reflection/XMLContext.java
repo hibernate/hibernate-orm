@@ -61,7 +61,6 @@ public class XMLContext implements Serializable {
 	 * @param doc The xml document to add
 	 * @return Add an xml document to this context and return the list of added class names.
 	 */
-	@SuppressWarnings( "unchecked" )
 	public List<String> addDocument(Document doc) {
 		hasContext = true;
 		List<String> addedClasses = new ArrayList<>();
@@ -170,7 +169,6 @@ public class XMLContext implements Serializable {
 		List<String> localAddedClasses = new ArrayList<>();
 		Element listeners = element.element( "entity-listeners" );
 		if ( listeners != null ) {
-			@SuppressWarnings( "unchecked" )
 			List<Element> elements = listeners.elements( "entity-listener" );
 			for (Element listener : elements) {
 				String listenerClassName = buildSafeClassName( listener.attributeValue( "class" ), packageName );
@@ -199,7 +197,7 @@ public class XMLContext implements Serializable {
 			final boolean autoApply = Boolean.parseBoolean( autoApplyAttribute );
 
 			try {
-				final Class<? extends AttributeConverter> attributeConverterClass = classLoaderAccess.classForName(
+				final Class<? extends AttributeConverter<?, ?>> attributeConverterClass = (Class<? extends AttributeConverter<?, ?>>)classLoaderAccess.classForName(
 						className
 				);
 				attributeConverterInfoList.add(

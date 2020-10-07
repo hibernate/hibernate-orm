@@ -342,7 +342,7 @@ public interface PersistentCollection {
 	 *
 	 * @return The iterator
 	 */
-	Iterator queuedAdditionIterator();
+	Iterator<Object> queuedAdditionIterator();
 
 	/**
 	 * Get the "queued" orphans
@@ -351,7 +351,7 @@ public interface PersistentCollection {
 	 *
 	 * @return The orphaned elements
 	 */
-	Collection getQueuedOrphans(String entityName);
+	Collection<Object> getQueuedOrphans(String entityName);
 
 	/**
 	 * Get the current collection key value
@@ -446,7 +446,7 @@ public interface PersistentCollection {
 	 *
 	 * @return The orphans
 	 */
-	Collection getOrphans(Serializable snapshot, String entityName);
+	Collection<Object> getOrphans(Serializable snapshot, String entityName);
 
 	void initializeEmptyCollection(CollectionPersister persister);
 

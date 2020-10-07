@@ -23,8 +23,8 @@ public class QuerySpacesHelper {
 	private QuerySpacesHelper() {
 	}
 
-	public String[] toStringArray(Set spacesSet) {
-		return (String[]) spacesSet.toArray( new String[0] );
+	public String[] toStringArray(Set<String> spacesSet) {
+		return spacesSet.toArray( new String[0] );
 	}
 
 	public Set<String> toStringSet(String[] spacesArray) {

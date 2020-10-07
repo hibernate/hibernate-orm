@@ -36,9 +36,9 @@ public class NaturalIdDataCachingConfigImpl
 	}
 
 	private boolean hasAnyMutableNaturalIdProps() {
-		final Iterator itr = rootEntityDescriptor.getDeclaredPropertyIterator();
+		final Iterator<Property> itr = rootEntityDescriptor.getDeclaredPropertyIterator();
 		while ( itr.hasNext() ) {
-			final Property prop = (Property) itr.next();
+			final Property prop = itr.next();
 			if ( prop.isNaturalIdentifier() && prop.isUpdateable() ) {
 				return true;
 			}

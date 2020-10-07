@@ -18,7 +18,7 @@ import org.hibernate.persister.collection.CollectionPersister;
  *
  * @author Steve Ebersole
  */
-public class StandardBagSemantics extends AbstractBagSemantics<Collection<?>> {
+public class StandardBagSemantics extends AbstractBagSemantics<Collection<Object>> {
 	/**
 	 * Singleton access
 	 */
@@ -42,10 +42,10 @@ public class StandardBagSemantics extends AbstractBagSemantics<Collection<?>> {
 
 	@Override
 	public PersistentCollection wrap(
-			Object rawCollection,
+			Collection<Object> rawCollection,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentBag( session, (Collection) rawCollection );
+		return new PersistentBag( session, rawCollection );
 	}
 
 }

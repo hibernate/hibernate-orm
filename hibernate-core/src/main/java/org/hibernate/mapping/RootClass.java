@@ -126,18 +126,18 @@ public class RootClass extends PersistentClass implements TableOwner {
 	}
 
 	@Override
-	public Iterator getPropertyClosureIterator() {
+	public Iterator<Property> getPropertyClosureIterator() {
 		return getPropertyIterator();
 	}
 
 	@Override
-	public Iterator getTableClosureIterator() {
-		return new SingletonIterator( getTable() );
+	public Iterator<Table> getTableClosureIterator() {
+		return new SingletonIterator<>( getTable() );
 	}
 
 	@Override
-	public Iterator getKeyClosureIterator() {
-		return new SingletonIterator( getKey() );
+	public Iterator<KeyValue> getKeyClosureIterator() {
+		return new SingletonIterator<>( getKey() );
 	}
 
 	@Override

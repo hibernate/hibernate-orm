@@ -8,11 +8,9 @@ package org.hibernate.cache.cfg.internal;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 
 import org.hibernate.cache.cfg.spi.CollectionDataCachingConfig;
 import org.hibernate.cache.cfg.spi.DomainDataCachingConfig;
@@ -34,15 +32,15 @@ import org.hibernate.type.VersionType;
 public class DomainDataRegionConfigImpl implements DomainDataRegionConfig {
 	private final String regionName;
 
-	private final List<EntityDataCachingConfig> entityConfigs;
-	private final List<NaturalIdDataCachingConfig> naturalIdConfigs;
-	private final List<CollectionDataCachingConfig> collectionConfigs;
+	private final List<? extends EntityDataCachingConfig> entityConfigs;
+	private final List<? extends NaturalIdDataCachingConfig> naturalIdConfigs;
+	private final List<? extends CollectionDataCachingConfig> collectionConfigs;
 
 	private DomainDataRegionConfigImpl(
 			String regionName,
-			List<EntityDataCachingConfig> entityConfigs,
-			List<NaturalIdDataCachingConfig> naturalIdConfigs,
-			List<CollectionDataCachingConfig> collectionConfigs) {
+			List<? extends EntityDataCachingConfig> entityConfigs,
+			List<? extends NaturalIdDataCachingConfig> naturalIdConfigs,
+			List<? extends CollectionDataCachingConfig> collectionConfigs) {
 		this.regionName = regionName;
 		this.entityConfigs = entityConfigs;
 		this.naturalIdConfigs = naturalIdConfigs;
@@ -55,17 +53,17 @@ public class DomainDataRegionConfigImpl implements DomainDataRegionConfig {
 	}
 
 	@Override
-	public List<EntityDataCachingConfig> getEntityCaching() {
+	public List<? extends EntityDataCachingConfig> getEntityCaching() {
 		return entityConfigs;
 	}
 
 	@Override
-	public List<NaturalIdDataCachingConfig> getNaturalIdCaching() {
+	public List<? extends NaturalIdDataCachingConfig> getNaturalIdCaching() {
 		return naturalIdConfigs;
 	}
 
 	@Override
-	public List<CollectionDataCachingConfig> getCollectionCaching() {
+	public List<? extends CollectionDataCachingConfig> getCollectionCaching() {
 		return collectionConfigs;
 	}
 
@@ -99,7 +97,7 @@ public class DomainDataRegionConfigImpl implements DomainDataRegionConfig {
 					x -> new EntityDataCachingConfigImpl(
 							rootEntityName,
 							bootEntityDescriptor.isVersioned()
-									? (Supplier<Comparator>) () -> ( (VersionType) bootEntityDescriptor.getVersion().getType() ).getComparator()
+									? () -> ( (VersionType<?>) bootEntityDescriptor.getVersion().getType() ).getComparator()
 									: null,
 							bootEntityDescriptor.isMutable(),
 							accessType
@@ -151,11 +149,10 @@ public class DomainDataRegionConfigImpl implements DomainDataRegionConfig {
 			);
 		}
 
-		@SuppressWarnings("unchecked")
-		private <T extends DomainDataCachingConfig> List<T> finalize(Map configs) {
+		private <T extends DomainDataCachingConfig> List<T> finalize(Map<NavigableRole, T> configs) {
 			return configs == null
 					? Collections.emptyList()
-					: Collections.unmodifiableList( new ArrayList( configs.values() ) );
+					: Collections.unmodifiableList( new ArrayList<>( configs.values() ) );
 		}
 
 		private <T extends DomainDataCachingConfig> List<T> finalize(List<T> configs) {

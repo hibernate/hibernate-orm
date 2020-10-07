@@ -238,7 +238,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public VersionType getVersionType() {
+		public VersionType<Object> getVersionType() {
 			return null;
 		}
 
@@ -962,7 +962,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public Comparator<?> getSortingComparator() {
+		public Comparator<Object> getSortingComparator() {
 			return null;
 		}
 

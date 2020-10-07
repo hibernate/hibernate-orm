@@ -33,10 +33,10 @@ public final class BytecodeProviderImpl implements BytecodeProvider {
 
 	@Override
 	public ReflectionOptimizer getReflectionOptimizer(
-			Class clazz,
+			Class<?> clazz,
 			String[] getterNames,
 			String[] setterNames,
-			Class[] types) {
+			Class<?>[] types) {
 		throw new HibernateException( "Using the ReflectionOptimizer is not possible when the configured BytecodeProvider is 'none'. Disable " + AvailableSettings.USE_REFLECTION_OPTIMIZER + " or use a different BytecodeProvider");
 	}
 

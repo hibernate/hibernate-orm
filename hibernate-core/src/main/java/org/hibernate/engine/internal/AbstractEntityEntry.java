@@ -440,7 +440,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 			return null;
 		}
 		if ( extraStateType.isAssignableFrom( next.getClass() ) ) {
-			return (T) next;
+			return extraStateType.cast( next );
 		}
 		else {
 			return next.getExtraState( extraStateType );

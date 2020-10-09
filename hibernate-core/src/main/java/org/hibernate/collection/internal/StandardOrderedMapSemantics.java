@@ -58,6 +58,6 @@ public class StandardOrderedMapSemantics extends AbstractMapSemantics<LinkedHash
 
 	@Override
 	public Iterator getElementIterator(LinkedHashMap rawCollection) {
-		return rawCollection.entrySet().iterator();
+		return rawCollection.values().iterator();
 	}
 }

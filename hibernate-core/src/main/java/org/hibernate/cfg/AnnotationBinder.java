@@ -147,6 +147,8 @@ import org.hibernate.cfg.annotations.QueryBinder;
 import org.hibernate.cfg.annotations.SimpleValueBinder;
 import org.hibernate.cfg.annotations.TableBinder;
 import org.hibernate.engine.OptimisticLockStyle;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.internal.CoreMessageLogger;
@@ -709,15 +711,17 @@ public final class AnnotationBinder {
 				else {
 					final PrimaryKeyJoinColumn pkJoinColumn = clazzToProcess.getAnnotation( PrimaryKeyJoinColumn.class );
 					final PrimaryKeyJoinColumns pkJoinColumns = clazzToProcess.getAnnotation( PrimaryKeyJoinColumns.class );
-
-					if ( pkJoinColumns != null && pkJoinColumns.foreignKey().value() == ConstraintMode.NO_CONSTRAINT ) {
+					final boolean noConstraintByDefault = context.getBuildingOptions().isNoConstraintByDefault();
+					if ( pkJoinColumns != null && ( pkJoinColumns.foreignKey().value() == ConstraintMode.NO_CONSTRAINT
+							|| pkJoinColumns.foreignKey().value() == ConstraintMode.PROVIDER_DEFAULT && noConstraintByDefault ) ) {
 						// don't apply a constraint based on ConstraintMode
 						key.setForeignKeyName( "none" );
 					}
 					else if ( pkJoinColumns != null && !StringHelper.isEmpty( pkJoinColumns.foreignKey().name() ) ) {
 						key.setForeignKeyName( pkJoinColumns.foreignKey().name() );
 					}
-					else if ( pkJoinColumn != null && pkJoinColumn.foreignKey().value() == ConstraintMode.NO_CONSTRAINT ) {
+					else if ( pkJoinColumn != null && ( pkJoinColumn.foreignKey().value() == ConstraintMode.NO_CONSTRAINT
+							|| pkJoinColumn.foreignKey().value() == ConstraintMode.PROVIDER_DEFAULT && noConstraintByDefault )) {
 						// don't apply a constraint based on ConstraintMode
 						key.setForeignKeyName( "none" );
 					}
@@ -3088,7 +3092,8 @@ public final class AnnotationBinder {
 				property,
 				propertyHolder.getOverriddenForeignKey( StringHelper.qualify( propertyHolder.getPath(), propertyName ) ),
 				joinColumn,
-				joinColumns
+				joinColumns,
+				context
 		);
 
 		String path = propertyHolder.getPath() + "." + propertyName;
@@ -3434,9 +3439,13 @@ public final class AnnotationBinder {
 			XProperty property,
 			javax.persistence.ForeignKey fkOverride,
 			JoinColumn joinColumn,
-			JoinColumns joinColumns) {
-		if ( ( joinColumn != null && joinColumn.foreignKey().value() == ConstraintMode.NO_CONSTRAINT )
-				|| ( joinColumns != null && joinColumns.foreignKey().value() == ConstraintMode.NO_CONSTRAINT ) ) {
+			JoinColumns joinColumns,
+			MetadataBuildingContext context) {
+		final boolean noConstraintByDefault = context.getBuildingOptions().isNoConstraintByDefault();
+		if ( ( joinColumn != null && ( joinColumn.foreignKey().value() == ConstraintMode.NO_CONSTRAINT
+				|| joinColumn.foreignKey().value() == ConstraintMode.PROVIDER_DEFAULT && noConstraintByDefault ) )
+				|| ( joinColumns != null && ( joinColumns.foreignKey().value() == ConstraintMode.NO_CONSTRAINT
+				|| joinColumns.foreignKey().value() == ConstraintMode.PROVIDER_DEFAULT && noConstraintByDefault ) ) ) {
 			value.setForeignKeyName( "none" );
 		}
 		else {
@@ -3445,7 +3454,8 @@ public final class AnnotationBinder {
 				value.setForeignKeyName( fk.name() );
 			}
 			else {
-				if ( fkOverride != null && fkOverride.value() == ConstraintMode.NO_CONSTRAINT ) {
+				if ( fkOverride != null && ( fkOverride.value() == ConstraintMode.NO_CONSTRAINT
+						|| fkOverride.value() == ConstraintMode.PROVIDER_DEFAULT && noConstraintByDefault ) ) {
 					value.setForeignKeyName( "none" );
 				}
 				else if ( fkOverride != null ) {

@@ -159,6 +159,11 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 	}
 
 	@Override
+	public boolean isNoConstraintByDefault() {
+		return delegate.isNoConstraintByDefault();
+	}
+
+	@Override
 	public List<MetadataSourceType> getSourceProcessOrdering() {
 		return delegate.getSourceProcessOrdering();
 	}

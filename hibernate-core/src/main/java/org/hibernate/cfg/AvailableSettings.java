@@ -1529,6 +1529,19 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 */
 	String HBM2DDL_HALT_ON_ERROR = "hibernate.hbm2ddl.halt_on_error";
 
+	/**
+	 * <p>
+	 * This setting is used when you use {@link javax.persistence.ConstraintMode#PROVIDER_DEFAULT} strategy for foreign key mapping.
+	 * valid value is {@code CONSTRAINT} and {@code NO_CONSTRAINT}.
+	 * </p>
+	 * <p>
+	 * The default value is CONSTRAINT.
+	 * </p>
+	 *
+	 * @since 5.4
+	 */
+	String HBM2DDL_DEFAULT_CONSTRAINT_MODE = "hibernate.hbm2ddl.default_constraint_mode";
+
 	String JMX_ENABLED = "hibernate.jmx.enabled";
 	String JMX_PLATFORM_SERVER = "hibernate.jmx.usePlatformServer";
 	String JMX_AGENT_ID = "hibernate.jmx.agentId";

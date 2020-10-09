@@ -985,7 +985,9 @@ public class EntityBinder {
 		else {
 			javax.persistence.SecondaryTable jpaSecondaryTable = findMatchingSecondaryTable( join );
 			if ( jpaSecondaryTable != null ) {
-				if ( jpaSecondaryTable.foreignKey().value() == ConstraintMode.NO_CONSTRAINT ) {
+				final boolean noConstraintByDefault = context.getBuildingOptions().isNoConstraintByDefault();
+				if ( jpaSecondaryTable.foreignKey().value() == ConstraintMode.NO_CONSTRAINT
+						|| jpaSecondaryTable.foreignKey().value() == ConstraintMode.PROVIDER_DEFAULT && noConstraintByDefault ) {
 					( (SimpleValue) join.getKey() ).setForeignKeyName( "none" );
 				}
 				else {

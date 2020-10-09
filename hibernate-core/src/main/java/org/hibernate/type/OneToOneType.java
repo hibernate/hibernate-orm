@@ -11,8 +11,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.Mapping;
@@ -188,15 +190,32 @@ public class OneToOneType extends EntityType {
 
 	@Override
 	public Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner) throws HibernateException {
-		return null;
+		if (value == null) {
+			return null;
+		}
+
+		Object id = ForeignKeys.getEntityIdentifierIfNotUnsaved( getAssociatedEntityName(), value, session );
+
+		if ( id == null ) {
+			throw new AssertionFailure(
+				"cannot cache a reference to an object with a null id: " +
+				getAssociatedEntityName()
+			);
+		}
+
+		return getIdentifierType( session ).disassemble( id, session, owner );
 	}
 
 	@Override
 	public Object assemble(Serializable oid, SharedSessionContractImplementor session, Object owner) throws HibernateException {
-		//this should be a call to resolve(), not resolveIdentifier(), 
-		//'cos it might be a property-ref, and we did not cache the
-		//referenced value
-		return resolve( session.getContextEntityIdentifier(owner), session, owner );
+		//the owner of the association is not the owner of the id
+		Serializable id = ( Serializable ) getIdentifierType( session ).assemble( oid, session, null );
+
+		if ( id == null ) {
+			return null;
+		}
+
+		return resolveIdentifier( id, session );
 	}
 	
 	/**

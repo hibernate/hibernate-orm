@@ -216,7 +216,7 @@ public final class Context {
 	}
 
 	public boolean isFullyXmlConfigured() {
-		return Boolean.TRUE == fullyXmlConfigured;
+		return fullyXmlConfigured != null && fullyXmlConfigured.booleanValue();
 	}
 
 	public void mappingDocumentFullyXmlConfigured(boolean fullyXmlConfigured) {

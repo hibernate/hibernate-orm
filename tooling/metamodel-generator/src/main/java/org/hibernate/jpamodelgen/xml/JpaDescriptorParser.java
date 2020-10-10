@@ -218,21 +218,25 @@ public class JpaDescriptorParser {
 	}
 
 	private FileTimeStampChecker loadTimeStampCache() {
-		FileTimeStampChecker serializedTimeStampCheck = new FileTimeStampChecker();
-		File file = null;
-		try {
-			file = getSerializationTmpFile();
-			if ( file.exists() ) {
-				ObjectInputStream in = new ObjectInputStream( new FileInputStream( file ) );
-				serializedTimeStampCheck = (FileTimeStampChecker) in.readObject();
-				in.close();
+		final File file = getSerializationTmpFile();
+		if ( file.exists() ) {
+			try {
+				try ( java.io.FileInputStream fileInputStream = new java.io.FileInputStream( file ) ) {
+					try ( java.io.ObjectInputStream in = new java.io.ObjectInputStream( fileInputStream ) ) {
+						return (org.hibernate.jpamodelgen.util.FileTimeStampChecker) in.readObject();
+					}
+				}
+			}
+			catch (java.io.IOException e) {
+				//handled in the outer scope
+			}
+			catch (ClassNotFoundException e) {
+				//handled in the outer scope
 			}
 		}
-		catch (Exception e) {
-			// ignore - if the de-serialization failed we just have to keep parsing the xml
-			context.logMessage( Diagnostic.Kind.OTHER, "Error de-serializing  " + file );
-		}
-		return serializedTimeStampCheck;
+		// ignore - if the de-serialization failed we just have to keep parsing the xml
+		context.logMessage( Diagnostic.Kind.OTHER, "Error de-serializing  " + file );
+		return new FileTimeStampChecker();
 	}
 
 	private void parseEntities(Collection<Entity> entities, String defaultPackageName) {

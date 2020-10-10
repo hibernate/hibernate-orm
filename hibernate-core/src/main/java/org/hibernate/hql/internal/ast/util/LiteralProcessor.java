@@ -49,7 +49,7 @@ public class LiteralProcessor implements HqlSqlTokenTypes {
 	/**
 	 * In what format should Float and Double literal values be sent to the database?
 	 */
-	public static DecimalLiteralFormat DECIMAL_LITERAL_FORMAT = DecimalLiteralFormat.EXACT;
+	public final static DecimalLiteralFormat DECIMAL_LITERAL_FORMAT = DecimalLiteralFormat.EXACT;
 
 	private HqlSqlWalker walker;
 

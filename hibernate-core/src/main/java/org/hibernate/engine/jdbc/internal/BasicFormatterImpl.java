@@ -110,34 +110,23 @@ public class BasicFormatterImpl implements Formatter {
 
 			while ( tokens.hasMoreTokens() ) {
 				token = tokens.nextToken();
-				lcToken = token.toLowerCase(Locale.ROOT);
+				lcToken = token.toLowerCase( Locale.ROOT );
 
-				if ( "'".equals( token ) ) {
-					String t;
-					do {
-						t = tokens.nextToken();
-						token += t;
+				switch ( token ) {
+					case "'":
+						// cannot handle single quotes
+						concatUntil( "'" );
+						break;
+					case "\"": {
+						concatUntil( "\"" );
+						break;
 					}
-					// cannot handle single quotes
-					while ( !"'".equals( t ) && tokens.hasMoreTokens() );
-				}
-				else if ( "\"".equals( token ) ) {
-					String t;
-					do {
-						t = tokens.nextToken();
-						token += t;
+					// SQL Server uses "[" and "]" to escape reserved words
+					// see SQLServerDialect.openQuote and SQLServerDialect.closeQuote
+					case "[": {
+						concatUntil( "]" );
+						break;
 					}
-					while ( !"\"".equals( t )  && tokens.hasMoreTokens() );
-				}
-				// SQL Server uses "[" and "]" to escape reserved words
-				// see SQLServerDialect.openQuote and SQLServerDialect.closeQuote
-				else if ( "[".equals( token ) ) {
-					String t;
-					do {
-						t = tokens.nextToken();
-						token += t;
-					}
-					while ( !"]".equals( t ) && tokens.hasMoreTokens());
 				}
 
 				if ( afterByOrSetOrFromOrSelect && ",".equals( token ) ) {
@@ -201,6 +190,17 @@ public class BasicFormatterImpl implements Formatter {
 
 			}
 			return result.toString();
+		}
+
+		private void concatUntil(String closure) {
+			String t;
+			StringBuilder s = new StringBuilder( token );
+			do {
+				t = tokens.nextToken();
+				s.append( t );
+			}
+			while ( !closure.equals( t ) && tokens.hasMoreTokens() );
+			token = s.toString();
 		}
 
 		private void commaAfterOn() {

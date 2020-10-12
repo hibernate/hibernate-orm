@@ -129,60 +129,7 @@ public class BasicFormatterImpl implements Formatter {
 					}
 				}
 
-				if ( afterByOrSetOrFromOrSelect && ",".equals( token ) ) {
-					commaAfterByOrFromOrSelect();
-				}
-				else if ( afterOn && ",".equals( token ) ) {
-					commaAfterOn();
-				}
-
-				else if ( "(".equals( token ) ) {
-					openParen();
-				}
-				else if ( ")".equals( token ) ) {
-					closeParen();
-				}
-
-				else if ( BEGIN_CLAUSES.contains( lcToken ) ) {
-					beginNewClause();
-				}
-
-				else if ( END_CLAUSES.contains( lcToken ) ) {
-					endNewClause();
-				}
-
-				else if ( "select".equals( lcToken ) ) {
-					select();
-				}
-
-				else if ( DML.contains( lcToken ) ) {
-					updateOrInsertOrDelete();
-				}
-
-				else if ( "values".equals( lcToken ) ) {
-					values();
-				}
-
-				else if ( "on".equals( lcToken ) ) {
-					on();
-				}
-
-				else if ( afterBetween && lcToken.equals( "and" ) ) {
-					misc();
-					afterBetween = false;
-				}
-
-				else if ( LOGICAL.contains( lcToken ) ) {
-					logical();
-				}
-
-				else if ( isWhitespace( token ) ) {
-					white();
-				}
-
-				else {
-					misc();
-				}
+				doProcess();
 
 				if ( !isWhitespace( token ) ) {
 					lastToken = lcToken;
@@ -203,34 +150,204 @@ public class BasicFormatterImpl implements Formatter {
 			token = s.toString();
 		}
 
-		private void commaAfterOn() {
-			out();
-			indent--;
-			newline();
-			afterOn = false;
-			afterByOrSetOrFromOrSelect = true;
+		private void doProcess() {
+			handleCommaAfterByFromSelect();
 		}
 
-		private void commaAfterByOrFromOrSelect() {
-			out();
-			newline();
-		}
-
-		private void logical() {
-			if ( "end".equals( lcToken ) ) {
-				indent--;
+		private void handleCommaAfterByFromSelect() {
+			if ( afterByOrSetOrFromOrSelect && ",".equals( token ) ) {
+				out();
+				newline();
+				return;
 			}
-			newline();
-			out();
-			beginLine = false;
+			handleCommaAfterOn();
 		}
 
-		private void on() {
-			indent++;
-			afterOn = true;
-			newline();
-			out();
-			beginLine = false;
+		private void handleCommaAfterOn() {
+			if ( afterOn && ",".equals( token ) ) {
+				out();
+				indent--;
+				newline();
+				afterOn = false;
+				afterByOrSetOrFromOrSelect = true;
+				return;
+			}
+			handleOpenParen();
+		}
+
+		private void handleOpenParen() {
+			if ( "(".equals( token ) ) {
+				if ( isFunctionName( lastToken ) || inFunction > 0 ) {
+					inFunction++;
+				}
+				beginLine = false;
+				if ( inFunction > 0 ) {
+					out();
+				}
+				else {
+					out();
+					if ( !afterByOrSetOrFromOrSelect ) {
+						indent++;
+						newline();
+						beginLine = true;
+					}
+				}
+				parensSinceSelect++;
+				return;
+			}
+			handleCloseParen();
+		}
+
+		private void handleCloseParen() {
+			if ( ")".equals( token ) ) {
+				parensSinceSelect--;
+				if ( parensSinceSelect < 0 ) {
+					indent--;
+					parensSinceSelect = parenCounts.removeLast();
+					afterByOrSetOrFromOrSelect = afterByOrFromOrSelects.removeLast();
+				}
+				if ( inFunction > 0 ) {
+					inFunction--;
+				}
+				else {
+					if ( !afterByOrSetOrFromOrSelect ) {
+						indent--;
+						newline();
+					}
+				}
+				out();
+				beginLine = false;
+				return;
+			}
+			handleBeginNewClause();
+		}
+
+		private void handleBeginNewClause() {
+			if ( BEGIN_CLAUSES.contains( lcToken ) ) {
+				if ( !afterBeginBeforeEnd ) {
+					if ( afterOn ) {
+						indent--;
+						afterOn = false;
+					}
+					indent--;
+					newline();
+				}
+				out();
+				beginLine = false;
+				afterBeginBeforeEnd = true;
+				return;
+			}
+			handleEndNewClause();
+		}
+
+		private void handleEndNewClause() {
+			if ( END_CLAUSES.contains( lcToken ) ) {
+				if ( !afterBeginBeforeEnd ) {
+					indent--;
+					if ( afterOn ) {
+						indent--;
+						afterOn = false;
+					}
+					newline();
+				}
+				out();
+				if ( !"union".equals( lcToken ) ) {
+					indent++;
+				}
+				newline();
+				afterBeginBeforeEnd = false;
+				afterByOrSetOrFromOrSelect = "by".equals( lcToken )
+						|| "set".equals( lcToken )
+						|| "from".equals( lcToken );
+				return;
+			}
+			handleSelect();
+		}
+
+		private void handleSelect() {
+			if ( "select".equals( lcToken ) ) {
+				out();
+				indent++;
+				newline();
+				parenCounts.addLast( parensSinceSelect );
+				afterByOrFromOrSelects.addLast( afterByOrSetOrFromOrSelect );
+				parensSinceSelect = 0;
+				afterByOrSetOrFromOrSelect = true;
+				return;
+			}
+			handleUpdateInsertDelete();
+		}
+
+		private void handleUpdateInsertDelete() {
+			if ( DML.contains( lcToken ) ) {
+				out();
+				indent++;
+				beginLine = false;
+				if ( "update".equals( lcToken ) ) {
+					newline();
+				}
+				if ( "insert".equals( lcToken ) ) {
+					afterInsert = true;
+				}
+				return;
+			}
+			handleValues();
+		}
+
+		private void handleValues() {
+			if ( "values".equals( lcToken ) ) {
+				indent--;
+				newline();
+				out();
+				indent++;
+				newline();
+				return;
+			}
+			handleOn();
+		}
+
+		private void handleOn() {
+			if ( "on".equals( lcToken ) ) {
+				indent++;
+				afterOn = true;
+				newline();
+				out();
+				beginLine = false;
+				return;
+			}
+			handleAfterBetweenAnd();
+		}
+
+		private void handleAfterBetweenAnd() {
+			if ( afterBetween && "and".equals( lcToken ) ) {
+				misc();
+				afterBetween = false;
+				return;
+			}
+			handelLogical();
+		}
+
+		private void handelLogical() {
+			if ( LOGICAL.contains( lcToken ) ) {
+				if ( "end".equals( lcToken ) ) {
+					indent--;
+				}
+				newline();
+				out();
+				beginLine = false;
+				return;
+			}
+			handleWhiteSpace();
+		}
+
+		private void handleWhiteSpace() {
+			if ( isWhitespace( token ) ) {
+				if ( !beginLine ) {
+					result.append( " " );
+				}
+				return;
+			}
+			misc();
 		}
 
 		private void misc() {
@@ -250,118 +367,8 @@ public class BasicFormatterImpl implements Formatter {
 			}
 		}
 
-		private void white() {
-			if ( !beginLine ) {
-				result.append( " " );
-			}
-		}
-
-		private void updateOrInsertOrDelete() {
-			out();
-			indent++;
-			beginLine = false;
-			if ( "update".equals( lcToken ) ) {
-				newline();
-			}
-			if ( "insert".equals( lcToken ) ) {
-				afterInsert = true;
-			}
-		}
-
-		private void select() {
-			out();
-			indent++;
-			newline();
-			parenCounts.addLast( parensSinceSelect );
-			afterByOrFromOrSelects.addLast( afterByOrSetOrFromOrSelect );
-			parensSinceSelect = 0;
-			afterByOrSetOrFromOrSelect = true;
-		}
-
 		private void out() {
 			result.append( token );
-		}
-
-		private void endNewClause() {
-			if ( !afterBeginBeforeEnd ) {
-				indent--;
-				if ( afterOn ) {
-					indent--;
-					afterOn = false;
-				}
-				newline();
-			}
-			out();
-			if ( !"union".equals( lcToken ) ) {
-				indent++;
-			}
-			newline();
-			afterBeginBeforeEnd = false;
-			afterByOrSetOrFromOrSelect = "by".equals( lcToken )
-					|| "set".equals( lcToken )
-					|| "from".equals( lcToken );
-		}
-
-		private void beginNewClause() {
-			if ( !afterBeginBeforeEnd ) {
-				if ( afterOn ) {
-					indent--;
-					afterOn = false;
-				}
-				indent--;
-				newline();
-			}
-			out();
-			beginLine = false;
-			afterBeginBeforeEnd = true;
-		}
-
-		private void values() {
-			indent--;
-			newline();
-			out();
-			indent++;
-			newline();
-		}
-
-		private void closeParen() {
-			parensSinceSelect--;
-			if ( parensSinceSelect < 0 ) {
-				indent--;
-				parensSinceSelect = parenCounts.removeLast();
-				afterByOrSetOrFromOrSelect = afterByOrFromOrSelects.removeLast();
-			}
-			if ( inFunction > 0 ) {
-				inFunction--;
-				out();
-			}
-			else {
-				if ( !afterByOrSetOrFromOrSelect ) {
-					indent--;
-					newline();
-				}
-				out();
-			}
-			beginLine = false;
-		}
-
-		private void openParen() {
-			if ( isFunctionName( lastToken ) || inFunction > 0 ) {
-				inFunction++;
-			}
-			beginLine = false;
-			if ( inFunction > 0 ) {
-				out();
-			}
-			else {
-				out();
-				if ( !afterByOrSetOrFromOrSelect ) {
-					indent++;
-					newline();
-					beginLine = true;
-				}
-			}
-			parensSinceSelect++;
 		}
 
 		private static boolean isFunctionName(String tok) {

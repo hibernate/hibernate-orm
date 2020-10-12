@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import javax.persistence.Embeddable;
 import javax.persistence.Embedded;
@@ -23,8 +24,6 @@ import javax.persistence.Table;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.orm.test.metamodel.mapping.SmokeTests.OtherEntity;
-import org.hibernate.orm.test.metamodel.mapping.SmokeTests.SimpleEntity;
 import org.hibernate.query.Query;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.stat.spi.StatisticsImplementor;
@@ -38,8 +37,12 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import org.hamcrest.core.AllOf;
+
+import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -325,21 +328,15 @@ public class SmokeTests {
 
 		final ExecutorService executor = Executors.newFixedThreadPool( 5 );
 
-		try {
-			for ( int f = 0; f < numberOfForks; f++ ) {
-				final ArrayList<Callable<String>> tasks = CollectionHelper.arrayList( numberOfIterations );
+		for ( int f = 0; f < numberOfForks; f++ ) {
+			final ArrayList<Callable<String>> tasks = CollectionHelper.arrayList( numberOfIterations );
 
-				for ( int i = 0; i < numberOfIterations; i++ ) {
-					tasks.add( () -> executeQueriesForConcurrency( scope ) );
-				}
-
-				executor.invokeAll( tasks );
+			for ( int i = 0; i < numberOfIterations; i++ ) {
+				tasks.add( () -> executeQueriesForConcurrency( scope ) );
 			}
-		}
-		finally {
-			// make sure all iterations/tasks have completed
-			executor.shutdown();
-			executor.awaitTermination( 15, TimeUnit.SECONDS );
+
+			final List<Future<String>> futures = executor.invokeAll( tasks, 1, TimeUnit.SECONDS );
+			assertThat( "some task cannot complete before timeout", futures.stream().noneMatch( Future::isCancelled ), is( true ) );
 		}
 	}
 

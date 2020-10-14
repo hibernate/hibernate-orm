@@ -10,6 +10,7 @@ import java.util.Arrays;
 
 import org.hibernate.HibernateException;
 import org.hibernate.TypeMismatchException;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.internal.ast.QuerySyntaxException;
@@ -81,11 +82,18 @@ public class BinaryLogicOperatorNode extends AbstractSelectExpression implements
 			if ( lhsColumnSpan > 1 ) {
 				// for dialects which are known to not support ANSI-SQL row-value-constructor syntax,
 				// we should mutate the tree.
-				if ( !sessionFactory.getDialect().supportsRowValueConstructorSyntax() ) {
+				if ( !useRowValueConstructorSyntax( sessionFactory.getDialect() ) ) {
 					mutateRowValueConstructorSyntax( lhsColumnSpan );
 				}
 			}
 		}
+	}
+
+	private boolean useRowValueConstructorSyntax(Dialect dialect) {
+		if ( isInsideSetClause() ) {
+			return dialect.supportsRowValueConstructorSyntaxInSet();
+		}
+		return dialect.supportsRowValueConstructorSyntax();
 	}
 
 	private int getColumnSpan(Type type, SessionFactoryImplementor sfi) {

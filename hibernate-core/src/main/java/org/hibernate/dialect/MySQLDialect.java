@@ -458,6 +458,11 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsRowValueConstructorSyntaxInSet() {
+		return false;
+	}
+
+	@Override
 	public String renderOrderByElement(String expression, String collation, String order, NullPrecedence nulls) {
 		final StringBuilder orderByElement = new StringBuilder();
 		if ( nulls != NullPrecedence.NONE ) {

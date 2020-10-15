@@ -1199,6 +1199,26 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	}
 
 	@Override
+	public ManagedResources getManagedResources() {
+		return managedResources;
+	}
+
+	/**
+	 * Used by extensions : Hibernate Reactive
+	 */
+	@Override
+	public MetadataImplementor metadata() {
+		if ( this.metadata == null ) {
+			this.metadata = MetadataBuildingProcess.complete(
+					managedResources,
+					metamodelBuilder.getBootstrapContext(),
+					metamodelBuilder.getMetadataBuildingOptions()
+			);
+		}
+		return metadata;
+	}
+
+	@Override
 	public EntityManagerFactoryBuilder withValidatorFactory(Object validatorFactory) {
 		this.validatorFactory = validatorFactory;
 
@@ -1218,20 +1238,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	@Override
 	public void cancel() {
 		// todo : close the bootstrap registry (not critical, but nice to do)
-	}
-
-	/**
-	 * Used by extensions : Hibernate Reactive
-	 */
-	protected MetadataImplementor metadata() {
-		if ( this.metadata == null ) {
-			this.metadata = MetadataBuildingProcess.complete(
-					managedResources,
-					metamodelBuilder.getBootstrapContext(),
-					metamodelBuilder.getMetadataBuildingOptions()
-			);
-		}
-		return metadata;
 	}
 
 	@Override

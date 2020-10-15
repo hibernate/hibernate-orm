@@ -1,0 +1,51 @@
+= Hibernate ORM Gradle Plugin
+
+A Gradle plugin for introducing Hibernate tasks and capabilities into a build.
+
+
+== Set up
+
+```
+plugins {
+  id 'org.hibernate.orm' version='X'
+}
+
+// HibernateOrmSpec
+hibernate {
+  ...
+}
+```
+
+== Bytecode Enhancement
+
+The plugin can perform build-time enhancement of the domain classes.  This is controlled
+by the `enhancement` portion of the `hibernate` extension:
+
+```
+hibernate {
+  // EnhancementSpec
+  enhancement {
+    // available options - all default to false
+    lazyInitialization( true )
+  }
+}
+```
+
+== DSL
+
+The `hibernate` DSL extension is the main entry into configuring the plugin
+
+```
+hibernate {
+}
+```
+
+At this time, there is no configuration at this level.
+
+== Capa
+
+== Tasks
+
+== Additional Resources
+
+* https://plugins.gradle.org/plugin/org.hibernate.orm

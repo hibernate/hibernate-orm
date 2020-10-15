@@ -10,6 +10,7 @@ buildscript {
 		jcenter()
 		mavenCentral()
 	}
+
 	dependencies {
 		classpath 'org.hibernate.build.gradle:hibernate-matrix-testing:3.0.0.Final'
 		classpath 'org.hibernate.build.gradle:version-injection-plugin:1.0.0'

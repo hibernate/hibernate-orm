@@ -255,7 +255,7 @@ Both `READ_WRITE` and `TRANSACTIONAL` use write-through caching, while `NONSTRIC
 For this reason, `NONSTRICT_READ_WRITE` is not very suitable if entities are changed frequently.
 
 When using clustering, the second-level cache entries are spread across multiple nodes.
-When using http://blog.infinispan.org/2015/10/hibernate-second-level-cache.html[Infinispan distributed cache], only `READ_WRITE` and `NONSTRICT_READ_WRITE` are available for read-write caches.
+When using https://infinispan.org/blog/2015/10/01/hibernate-second-level-cache/[Infinispan distributed cache], only `READ_WRITE` and `NONSTRICT_READ_WRITE` are available for read-write caches.
 Bear in mind that `NONSTRICT_READ_WRITE` offers a weaker consistency guarantee since stale updates are possible.
 
 [NOTE]

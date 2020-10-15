@@ -4,26 +4,83 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-apply plugin: 'groovy'
+plugins {
+	id "groovy"
 
-description = "Gradle plugin for integrating Hibernate functionality into your build"
+	id 'java-gradle-plugin'
+	id "com.gradle.plugin-publish" version "0.12.0"
+	id "nu.studer.credentials" version "2.1"
+
+	// for publishing snapshots
+	id 'maven-publish'
+	id 'org.hibernate.build.maven-repo-auth'
+
+	id 'idea'
+	id 'eclipse'
+}
+
+description = "Gradle plugin for integrating Hibernate aspects into your build"
 
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
-apply plugin: 'java-gradle-plugin'
-apply plugin: 'maven'
 
+ext {
+	pluginId = 'org.hibernate.orm'
+	pluginVersion = project.version
+
+	//noinspection GrUnresolvedAccess
+	publishKey = credentials.'hibernate.gradle.publish.key'
+	//noinspection GrUnresolvedAccess
+	publishSecret = credentials.'hibernate.gradle.publish.secret'
+
+	project.setProperty( 'gradle.publish.key', ext.publishKey )
+	project.setProperty( 'gradle.publish.secret', ext.publishSecret )
+}
 
 dependencies {
 	compile( project( ':hibernate-core' ) )
 	compile( libraries.jpa )
 	compile( libraries.javassist )
 	compile( libraries.byteBuddy )
-	compile gradleApi()
-	compile localGroovy()
 }
 
-tasks.withType( GroovyCompile ) {
-	options.encoding = 'UTF-8'
-	sourceCompatibility = project.baselineJavaVersion
-	targetCompatibility = project.baselineJavaVersion
+gradlePlugin {
+	plugins {
+		ormPlugin {
+			id = project.pluginId
+			implementationClass = 'org.hibernate.orm.tooling.gradle.HibernateOrmPlugin'
+		}
+	}
+}
+
+pluginBundle {
+	website = 'https://github.com/hibernate/hibernate-orm/tree/master/tooling/hibernate-gradle-plugin'
+	vcsUrl = 'https://github.com/hibernate/hibernate-orm/tree/master/tooling/hibernate-gradle-plugin'
+	tags = ['hibernate','orm','bytecode','enhancement','bytebuddy']
+
+	plugins {
+		ormPlugin {
+			id = project.pluginId
+			displayName = 'Gradle plugin for Hibernate ORM'
+			description = 'Applies Hibernate aspects into the build'
+		}
+	}
+}
+
+if ( project.version.toString().endsWith( '-SNAPSHOT' ) ) {
+	tasks.publishPlugins.enabled = false
+}
+else {
+	tasks.publish.enabled = false
+	tasks.release.dependsOn( tasks.publishPlugins )
+}
+
+tasks.publishPlugins {
+	doFirst {
+		if ( project.publishKey == null ) {
+			throw new RuntimeException( "`hibernate.gradle.publish.key` not found" )
+		}
+		if ( project.publishKey == null ) {
+			throw new RuntimeException( "`hibernate.gradle.publish.secret` not found" )
+		}
+	}
 }

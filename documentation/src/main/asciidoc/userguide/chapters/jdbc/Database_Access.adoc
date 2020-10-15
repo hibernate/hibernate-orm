@@ -110,7 +110,7 @@ See http://proxool.sourceforge.net/configure.html[proxool  configuration].
 To use the HikariCP this integration, the application must include the `hibernate-hikari` module jar (as well as its dependencies) on the classpath.
 ====
 
-Hibernate also provides support for applications to use http://brettwooldridge.github.io/HikariCP/[Hikari] connection pool.
+Hibernate also provides support for applications to use https://github.com/brettwooldridge/HikariCP/[HikariCP] connection pool.
 
 Set all of your Hikari settings in Hibernate prefixed by `hibernate.hikari.` and this `ConnectionProvider` will pick them up and pass them along to Hikari.
 Additionally, this `ConnectionProvider` will pick up the following Hibernate-specific properties and map them to the corresponding Hikari ones (any `hibernate.hikari.` prefixed ones have precedence):

@@ -1136,7 +1136,7 @@ Programmatically::
 TimeZone.setDefault( TimeZone.getTimeZone( "UTC" ) );
 ----
 
-However, as explained in http://in.relation.to/2016/09/12/jdbc-time-zone-configuration-property/[this article], this is not always practical, especially for front-end nodes.
+However, as explained in https://in.relation.to/2016/09/12/jdbc-time-zone-configuration-property/[this article], this is not always practical, especially for front-end nodes.
 For this reason, Hibernate offers the `hibernate.jdbc.time_zone` configuration property which can be configured:
 
 Declaratively, at the `SessionFactory` level::

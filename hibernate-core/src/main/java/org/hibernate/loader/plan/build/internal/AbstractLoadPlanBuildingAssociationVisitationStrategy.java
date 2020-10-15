@@ -12,8 +12,6 @@ import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.FetchStrategy;
-import org.hibernate.engine.FetchStyle;
-import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.PropertyPath;
@@ -44,6 +42,7 @@ import org.hibernate.persister.walking.spi.AnyMappingDefinition;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
 import org.hibernate.persister.walking.spi.AssociationKey;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
+import org.hibernate.persister.walking.spi.AttributeSource;
 import org.hibernate.persister.walking.spi.CollectionDefinition;
 import org.hibernate.persister.walking.spi.CollectionElementDefinition;
 import org.hibernate.persister.walking.spi.CollectionIndexDefinition;
@@ -666,7 +665,8 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 
 		// go ahead and build the bidirectional fetch
 		if ( attributeDefinition.getAssociationNature() == AssociationAttributeDefinition.AssociationNature.ENTITY ) {
-			final Joinable currentEntityPersister = (Joinable) currentSource().resolveEntityReference().getEntityPersister();
+			final Joinable currentEntityPersister = locateJoinable( attributeDefinition.getSource() );
+			
 			final AssociationKey currentEntityReferenceAssociationKey =
 					new AssociationKey( currentEntityPersister.getTableName(), currentEntityPersister.getKeyColumnNames() );
 			// if associationKey is equal to currentEntityReferenceAssociationKey
@@ -688,6 +688,14 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 		else {
 			// Do nothing for collection
 		}
+	}
+
+	private Joinable locateJoinable(AttributeSource source) {
+		if ( source instanceof CompositionDefinition ) {
+			return locateJoinable( ( (CompositionDefinition) source ).getSource() );
+		}
+
+		return (Joinable) ( (EntityDefinition) source ).getEntityPersister();
 	}
 
 // TODO: is the following still useful???

@@ -16,6 +16,7 @@ import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 
 /**
  * The Hibernate implementation of the JPA EntityGraph contract.
@@ -79,13 +80,14 @@ public class RootGraphImpl<J> extends AbstractGraph<J> implements EntityGraph<J>
 
 	@Override
 	public boolean appliesTo(EntityTypeDescriptor<? super J> entityType) {
-		if ( this.getGraphedType().equals( entityType ) ) {
+		final ManagedTypeDescriptor<J> managedTypeDescriptor = getGraphedType();
+		if ( managedTypeDescriptor.equals( entityType ) ) {
 			return true;
 		}
 
-		IdentifiableTypeDescriptor superType = entityType.getSupertype();
+		IdentifiableTypeDescriptor<? super J> superType = entityType.getSupertype();
 		while ( superType != null ) {
-			if ( superType.equals( entityType ) ) {
+			if ( managedTypeDescriptor.equals( superType ) ) {
 				return true;
 			}
 			superType = superType.getSupertype();

@@ -1162,6 +1162,7 @@ public abstract class CollectionBinder {
 			Collection collValue,
 			Ejb3JoinColumn[] joinColumns,
 			boolean cascadeDeleteEnabled,
+			boolean noConstraintByDefault,
 			XProperty property,
 			PropertyHolder propertyHolder,
 			MetadataBuildingContext buildingContext) {
@@ -1206,7 +1207,8 @@ public abstract class CollectionBinder {
 			else {
 				final CollectionTable collectionTableAnn = property.getAnnotation( CollectionTable.class );
 				if ( collectionTableAnn != null ) {
-					if ( collectionTableAnn.foreignKey().value() == ConstraintMode.NO_CONSTRAINT ) {
+					if ( collectionTableAnn.foreignKey().value() == ConstraintMode.NO_CONSTRAINT
+							|| collectionTableAnn.foreignKey().value() == ConstraintMode.PROVIDER_DEFAULT && noConstraintByDefault ) {
 						key.setForeignKeyName( "none" );
 					}
 					else {
@@ -1237,7 +1239,8 @@ public abstract class CollectionBinder {
 								foreignKeyValue = joinColumnAnn.foreignKey().value();
 							}
 						}
-						if ( foreignKeyValue == ConstraintMode.NO_CONSTRAINT ) {
+						if ( foreignKeyValue == ConstraintMode.NO_CONSTRAINT
+								|| foreignKeyValue == ConstraintMode.PROVIDER_DEFAULT && noConstraintByDefault ) {
 							key.setForeignKeyName( "none" );
 						}
 						else {
@@ -1249,7 +1252,8 @@ public abstract class CollectionBinder {
 						final javax.persistence.ForeignKey fkOverride = propertyHolder.getOverriddenForeignKey(
 								StringHelper.qualify( propertyHolder.getPath(), property.getName() )
 						);
-						if ( fkOverride != null && fkOverride.value() == ConstraintMode.NO_CONSTRAINT ) {
+						if ( fkOverride != null && ( fkOverride.value() == ConstraintMode.NO_CONSTRAINT ||
+								fkOverride.value() == ConstraintMode.PROVIDER_DEFAULT && noConstraintByDefault ) ) {
 							key.setForeignKeyName( "none" );
 						}
 						else if ( fkOverride != null ) {
@@ -1259,7 +1263,8 @@ public abstract class CollectionBinder {
 						else {
 							final JoinColumn joinColumnAnn = property.getAnnotation( JoinColumn.class );
 							if ( joinColumnAnn != null ) {
-								if ( joinColumnAnn.foreignKey().value() == ConstraintMode.NO_CONSTRAINT ) {
+								if ( joinColumnAnn.foreignKey().value() == ConstraintMode.NO_CONSTRAINT
+										|| joinColumnAnn.foreignKey().value() == ConstraintMode.PROVIDER_DEFAULT && noConstraintByDefault ) {
 									key.setForeignKeyName( "none" );
 								}
 								else {
@@ -1455,7 +1460,8 @@ public abstract class CollectionBinder {
 							foreignKeyValue = joinColumnAnn.foreignKey().value();
 						}
 					}
-					if ( joinTableAnn.inverseForeignKey().value() == ConstraintMode.NO_CONSTRAINT ) {
+					if ( joinTableAnn.inverseForeignKey().value() == ConstraintMode.NO_CONSTRAINT
+							|| joinTableAnn.inverseForeignKey().value() == ConstraintMode.PROVIDER_DEFAULT && buildingContext.getBuildingOptions().isNoConstraintByDefault() ) {
 						element.setForeignKeyName( "none" );
 					}
 					else {
@@ -1689,7 +1695,8 @@ public abstract class CollectionBinder {
 		catch (AnnotationException ex) {
 			throw new AnnotationException( "Unable to map collection " + collValue.getOwner().getClassName() + "." + property.getName(), ex );
 		}
-		SimpleValue key = buildCollectionKey( collValue, joinColumns, cascadeDeleteEnabled, property, propertyHolder, buildingContext );
+		SimpleValue key = buildCollectionKey( collValue, joinColumns, cascadeDeleteEnabled,
+				buildingContext.getBuildingOptions().isNoConstraintByDefault(), property, propertyHolder, buildingContext );
 		if ( property.isAnnotationPresent( ElementCollection.class ) && joinColumns.length > 0 ) {
 			joinColumns[0].setJPA2ElementCollection( true );
 		}

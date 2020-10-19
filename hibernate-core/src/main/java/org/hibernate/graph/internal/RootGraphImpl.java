@@ -16,6 +16,7 @@ import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
+import org.hibernate.metamodel.model.domain.ManagedDomainType;
 
 /**
  * The Hibernate implementation of the JPA EntityGraph contract.
@@ -79,13 +80,14 @@ public class RootGraphImpl<J> extends AbstractGraph<J> implements EntityGraph<J>
 
 	@Override
 	public boolean appliesTo(EntityDomainType<? super J> entityType) {
-		if ( this.getGraphedType().equals( entityType ) ) {
+		final ManagedDomainType<J> managedTypeDescriptor = getGraphedType();
+		if ( managedTypeDescriptor.equals( entityType ) ) {
 			return true;
 		}
 
-		IdentifiableDomainType superType = entityType.getSupertype();
+		IdentifiableDomainType<? super J> superType = entityType.getSupertype();
 		while ( superType != null ) {
-			if ( superType.equals( entityType ) ) {
+			if ( managedTypeDescriptor.equals( superType ) ) {
 				return true;
 			}
 			superType = superType.getSupertype();
@@ -100,7 +102,7 @@ public class RootGraphImpl<J> extends AbstractGraph<J> implements EntityGraph<J>
 	}
 
 	@Override
-	public boolean appliesTo(Class<? super J> type) {
+	public boolean appliesTo(Class type) {
 		return appliesTo( jpaMetamodel().entity( type ) );
 	}
 }

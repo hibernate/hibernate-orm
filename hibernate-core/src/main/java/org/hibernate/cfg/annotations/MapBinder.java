@@ -347,7 +347,8 @@ public class MapBinder extends CollectionBinder {
 			if ( element != null ) {
 				final javax.persistence.ForeignKey foreignKey = getMapKeyForeignKey( property );
 				if ( foreignKey != null ) {
-					if ( foreignKey.value() == ConstraintMode.NO_CONSTRAINT ) {
+					if ( foreignKey.value() == ConstraintMode.NO_CONSTRAINT
+							|| foreignKey.value() == ConstraintMode.PROVIDER_DEFAULT && getBuildingContext().getBuildingOptions().isNoConstraintByDefault() ) {
 						element.setForeignKeyName( "none" );
 					}
 					else {

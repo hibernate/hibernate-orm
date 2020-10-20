@@ -129,7 +129,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 				}
 			}
 			catch (Exception e) {
-				log.unableToObtainConnectionToQueryMetadata( e.getMessage() );
+				log.unableToObtainConnectionToQueryMetadata( e );
 			}
 		}
 

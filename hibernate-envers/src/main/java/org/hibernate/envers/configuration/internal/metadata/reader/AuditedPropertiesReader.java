@@ -263,10 +263,7 @@ public class AuditedPropertiesReader {
 			final Property property = propertyIter.next();
 			addPersistentProperty( property );
 			// See HHH-6636
-			if ( "embedded".equals( property.getPropertyAccessorName() )
-					&& !PropertyPath.IDENTIFIER_MAPPER_PROPERTY.equals( property.getName() )
-					&& (property.isInsertable() || property.isUpdateable())
-			) {
+			if ( "embedded".equals( property.getPropertyAccessorName() ) && !PropertyPath.IDENTIFIER_MAPPER_PROPERTY.equals( property.getName() ) ) {
 				createPropertiesGroupMapping( property );
 			}
 		}

@@ -1161,8 +1161,8 @@ public interface CoreMessageLogger extends BasicLogger {
 	void unableToObtainConnectionMetadata(String message);
 
 	@LogMessage(level = WARN)
-	@Message(value = "Could not obtain connection to query metadata : %s", id = 342)
-	void unableToObtainConnectionToQueryMetadata(String message);
+	@Message(value = "Could not obtain connection to query metadata", id = 342)
+	void unableToObtainConnectionToQueryMetadata(@Cause Exception e);
 
 	@LogMessage(level = ERROR)
 	@Message(value = "Could not obtain initial context", id = 343)

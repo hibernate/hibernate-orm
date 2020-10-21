@@ -1,7 +1,6 @@
 package org.hibernate.test.mapping.hhh99999.entity;
 
 import java.io.Serializable;
-import java.util.List;
 import java.util.Objects;
 
 import javax.persistence.Basic;
@@ -12,8 +11,6 @@ import javax.persistence.Id;
 import javax.persistence.IdClass;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.OrderBy;
 import javax.persistence.Table;
 
 @Entity
@@ -40,10 +37,6 @@ public class PlayerStat implements Serializable
     @JoinColumn(name = "game_id", referencedColumnName = "game_id")
     @JoinColumn(name = "is_home", referencedColumnName = "is_home")
     private Score score;
-
-    @OneToMany(mappedBy = "playerStat")
-    @OrderBy("period")
-    private List<Stat> stats;
 
     public PlayerStat()
     {
@@ -131,16 +124,6 @@ public class PlayerStat implements Serializable
     public void setScore(Score score)
     {
         this.score = score;
-    }
-
-    public List<Stat> getStats()
-    {
-        return stats;
-    }
-
-    public void setStats(List<Stat> stats)
-    {
-        this.stats = stats;
     }
 
     @Override

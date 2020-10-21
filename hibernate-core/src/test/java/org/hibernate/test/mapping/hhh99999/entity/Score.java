@@ -1,7 +1,7 @@
 package org.hibernate.test.mapping.hhh99999.entity;
 
 import java.io.Serializable;
-import java.util.Map;
+import java.util.List;
 import java.util.Objects;
 
 import javax.persistence.Basic;
@@ -9,9 +9,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
-import javax.persistence.MapKey;
 import javax.persistence.OneToMany;
-import javax.persistence.OrderBy;
 import javax.persistence.Table;
 
 @Entity
@@ -38,9 +36,7 @@ public class Score implements Serializable
     private Integer finalScore;
 
     @OneToMany(mappedBy = "score")
-    @MapKey(name = "jerseyNbr")
-    @OrderBy("starter DESC, jerseyNbr")
-    private Map<Integer, PlayerStat> playerStats;
+    private List<PlayerStat> playerStats;
 
     public Score()
     {
@@ -114,12 +110,12 @@ public class Score implements Serializable
         this.finalScore = finalScore;
     }
 
-    public Map<Integer, PlayerStat> getPlayerStats()
+    public List<PlayerStat> getPlayerStats()
     {
         return playerStats;
     }
 
-    public void setPlayerStats(Map<Integer, PlayerStat> playerStats)
+    public void setPlayerStats(List<PlayerStat> playerStats)
     {
         this.playerStats = playerStats;
     }

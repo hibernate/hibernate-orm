@@ -9,8 +9,6 @@ public class PlayerStatId implements Serializable
 
     private Integer playerId;
 
-    private Integer rosterId;
-
     private ScoreId score;
 
     public PlayerStatId()
@@ -19,13 +17,12 @@ public class PlayerStatId implements Serializable
 
     public PlayerStatId(PlayerStatId p)
     {
-        this(p.getGameId(), p.getHome(), p.getPlayerId(), p.getRosterId());
+        this(p.getGameId(), p.getHome(), p.getPlayerId());
     }
 
-    public PlayerStatId(Integer gameId, Boolean home, Integer playerId, Integer rosterId)
+    public PlayerStatId(Integer gameId, Boolean home, Integer playerId)
     {
         this.playerId = Objects.requireNonNull(playerId);
-        this.rosterId = Objects.requireNonNull(rosterId);
 
         this.score = new ScoreId(gameId, home);
     }
@@ -60,16 +57,6 @@ public class PlayerStatId implements Serializable
         this.playerId = playerId;
     }
 
-    public Integer getRosterId()
-    {
-        return rosterId;
-    }
-
-    public void setRosterId(Integer rosterId)
-    {
-        this.rosterId = rosterId;
-    }
-
     public ScoreId getScoreId()
     {
         return score;
@@ -86,7 +73,6 @@ public class PlayerStatId implements Serializable
         final int prime = 31;
         int result = 1;
         result = prime * result + ( (playerId == null) ? 0 : playerId.hashCode() );
-        result = prime * result + ( (rosterId == null) ? 0 : rosterId.hashCode() );
         result = prime * result + ( (score == null) ? 0 : score.hashCode() );
         return result;
     }
@@ -108,13 +94,6 @@ public class PlayerStatId implements Serializable
         }
         else if ( !playerId.equals( other.playerId ) )
             return false;
-        if ( rosterId == null )
-        {
-            if ( other.rosterId != null )
-                return false;
-        }
-        else if ( !rosterId.equals( other.rosterId ) )
-            return false;
         if ( score == null )
         {
             if ( other.score != null )
@@ -128,6 +107,6 @@ public class PlayerStatId implements Serializable
     @Override
     public String toString()
     {
-        return "[" + playerId + ", " + rosterId + ", " + score + "]";
+        return "[" + playerId + ", " + score + "]";
     }
 }

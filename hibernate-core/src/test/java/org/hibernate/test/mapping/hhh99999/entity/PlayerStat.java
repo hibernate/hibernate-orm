@@ -24,10 +24,6 @@ public class PlayerStat implements Serializable
     @Column(name = "player_id")
     private Integer playerId;
 
-    @Id
-    @Column(name = "roster_id")
-    private Integer rosterId;
-
     @Basic(optional = false)
     @Column(name = "jersey_nbr")
     private Integer jerseyNbr;
@@ -44,23 +40,22 @@ public class PlayerStat implements Serializable
 
     public PlayerStat(PlayerStat p)
     {
-        this(p.getGameId(), p.getHome(), p.getPlayerId(), p.getRosterId(), p.getJerseyNbr());
+        this(p.getGameId(), p.getHome(), p.getPlayerId(), p.getJerseyNbr());
     }
 
     public PlayerStat(Integer jerseyNbr)
     {
-        this(null, null, null, null, jerseyNbr);
+        this(null, null, null, jerseyNbr);
     }
 
-    public PlayerStat(Integer gameId, Boolean home, Integer playerId, Integer rosterId)
+    public PlayerStat(Integer gameId, Boolean home, Integer playerId)
     {
-        this(gameId, home, playerId, rosterId, null);
+        this(gameId, home, playerId, null);
     }
 
-    public PlayerStat(Integer gameId, Boolean home, Integer playerId, Integer rosterId, Integer jerseyNbr)
+    public PlayerStat(Integer gameId, Boolean home, Integer playerId, Integer jerseyNbr)
     {
         this.playerId = Objects.requireNonNull(playerId);
-        this.rosterId = Objects.requireNonNull(rosterId);
         this.jerseyNbr = jerseyNbr;
 
         this.score = new Score(gameId, home);
@@ -96,16 +91,6 @@ public class PlayerStat implements Serializable
         this.playerId = playerId;
     }
 
-    public Integer getRosterId()
-    {
-        return rosterId;
-    }
-
-    public void setRosterId(Integer rosterId)
-    {
-        this.rosterId = rosterId;
-    }
-
     public Integer getJerseyNbr()
     {
         return jerseyNbr;
@@ -132,7 +117,6 @@ public class PlayerStat implements Serializable
         final int prime = 31;
         int result = 1;
         result = prime * result + ( (playerId == null) ? 0 : playerId.hashCode() );
-        result = prime * result + ( (rosterId == null) ? 0 : rosterId.hashCode() );
         result = prime * result + ( (score == null) ? 0 : score.hashCode() );
         return result;
     }
@@ -154,13 +138,6 @@ public class PlayerStat implements Serializable
         }
         else if ( !playerId.equals( other.playerId ) )
             return false;
-        if ( rosterId == null )
-        {
-            if ( other.rosterId != null )
-                return false;
-        }
-        else if ( !rosterId.equals( other.rosterId ) )
-            return false;
         if ( score == null )
         {
             if ( other.score != null )
@@ -174,6 +151,6 @@ public class PlayerStat implements Serializable
     @Override
     public String toString()
     {
-        return "[" + playerId + ", " + rosterId + ", " + jerseyNbr + "]";
+        return "[" + playerId + ", " + jerseyNbr + "]";
     }
 }

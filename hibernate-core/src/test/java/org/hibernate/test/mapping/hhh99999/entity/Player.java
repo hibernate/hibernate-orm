@@ -1,4 +1,4 @@
-package org.hibernate.test.mapping.hhh99999;
+package org.hibernate.test.mapping.hhh99999.entity;
 
 import java.io.Serializable;
 import java.util.List;
@@ -12,8 +12,8 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "\"Clubs\"")
-public class Club implements Serializable
+@Table(name = "\"Players\"")
+public class Player implements Serializable
 {
     private static final long serialVersionUID = 1L;
 
@@ -25,32 +25,29 @@ public class Club implements Serializable
     @Column
     private String name;
 
-    @OneToMany(mappedBy = "club")
-    private List<RefpoolMember> refpoolMembers;
+    @OneToMany(mappedBy = "player")
+    private List<TeamMember> teamMembers;
 
-    @OneToMany(mappedBy = "club")
-    private List<Team> teams;
-
-    public Club()
+    public Player()
     {
     }
 
-    public Club(Club c)
+    public Player(Player p)
     {
-        this(c.getId(), c.getName());
+        this(p.getId(), p.getName());
     }
 
-    public Club(Integer id)
+    public Player(Integer id)
     {
         this(id, null);
     }
 
-    public Club(String name)
+    public Player(String name)
     {
         this(null, name);
     }
 
-    public Club(Integer id, String name)
+    public Player(Integer id, String name)
     {
         this.id = Objects.requireNonNull(id);
         this.name = name;
@@ -76,24 +73,14 @@ public class Club implements Serializable
         this.name = name;
     }
 
-    public List<RefpoolMember> getRefpoolMembers()
+    public List<TeamMember> getTeamMembers()
     {
-        return refpoolMembers;
+        return teamMembers;
     }
 
-    public void setRefpoolMembers(List<RefpoolMember> refpoolMembers)
+    public void setTeamMembers(List<TeamMember> teamMembers)
     {
-        this.refpoolMembers = refpoolMembers;
-    }
-
-    public List<Team> getTeams()
-    {
-        return teams;
-    }
-
-    public void setTeams(List<Team> teams)
-    {
-        this.teams = teams;
+        this.teamMembers = teamMembers;
     }
 
     @Override
@@ -114,7 +101,7 @@ public class Club implements Serializable
             return false;
         if ( getClass() != obj.getClass() )
             return false;
-        Club other = ( Club ) obj;
+        Player other = ( Player ) obj;
         if ( id == null )
         {
             if ( other.id != null )

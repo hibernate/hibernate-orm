@@ -1,4 +1,4 @@
-package org.hibernate.test.mapping.hhh99999;
+package org.hibernate.test.mapping.hhh99999.entity;
 
 import java.io.Serializable;
 import java.util.Map;

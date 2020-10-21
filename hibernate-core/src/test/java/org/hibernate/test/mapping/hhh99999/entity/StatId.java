@@ -1,66 +1,30 @@
-package org.hibernate.test.mapping.hhh99999;
+package org.hibernate.test.mapping.hhh99999.entity;
 
 import java.io.Serializable;
 import java.util.Objects;
 
-import javax.persistence.Basic;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Id;
-import javax.persistence.IdClass;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
-
-@Entity
-@Table(name = "\"Stats\"")
-@IdClass(StatId.class)
-public class Stat implements Serializable
+public class StatId implements Serializable
 {
     private static final long serialVersionUID = 1L;
 
-    @Id
-    @Column
     private Integer period;
 
-    @Basic(optional = false)
-    @Column
-    private Integer pts;
+    private PlayerStatId playerStat;
 
-    @Id
-    @ManyToOne(optional = false, fetch = FetchType.EAGER)
-    @JoinColumn(name = "game_id", referencedColumnName = "game_id")
-    @JoinColumn(name = "is_home", referencedColumnName = "is_home")
-    @JoinColumn(name = "player_id", referencedColumnName = "player_id")
-    @JoinColumn(name = "roster_id", referencedColumnName = "roster_id")
-    private PlayerStat playerStat;
-
-    public Stat()
+    public StatId()
     {
     }
 
-    public Stat(Stat s)
+    public StatId(StatId s)
     {
-        this(s.getGameId(), s.getHome(), s.getPlayerId(), s.getRosterId(), s.getPeriod(), s.getPts());
+        this(s.getGameId(), s.getHome(), s.getPlayerId(), s.getRosterId(), s.getPeriod());
     }
 
-    public Stat(Integer pts)
-    {
-        this(null, null, null, null, null, pts);
-    }
-
-    public Stat(Integer gameId, Boolean home, Integer playerId, Integer rosterId, Integer period)
-    {
-        this(gameId, home, playerId, rosterId, period, null);
-    }
-
-    public Stat(Integer gameId, Boolean home, Integer playerId, Integer rosterId, Integer period, Integer pts)
+    public StatId(Integer gameId, Boolean home, Integer playerId, Integer rosterId, Integer period)
     {
         this.period = Objects.requireNonNull(period);
-        this.pts = pts;
 
-        this.playerStat = new PlayerStat(gameId, home, playerId, rosterId);
+        this.playerStat = new PlayerStatId(gameId, home, playerId, rosterId);
     }
 
     public Integer getGameId()
@@ -113,24 +77,14 @@ public class Stat implements Serializable
         this.period = period;
     }
 
-    public Integer getPts()
-    {
-        return pts;
-    }
-
-    public void setPts(Integer pts)
-    {
-        this.pts = pts;
-    }
-
-    public PlayerStat getPlayerStat()
+    public PlayerStatId getPlayerStatId()
     {
         return playerStat;
     }
 
-    public void setPlayerStat(PlayerStat playerStat)
+    public void setPlayerStatId(PlayerStatId playerStatId)
     {
-        this.playerStat = playerStat;
+        this.playerStat = playerStatId;
     }
 
     @Override
@@ -152,7 +106,7 @@ public class Stat implements Serializable
             return false;
         if ( getClass() != obj.getClass() )
             return false;
-        Stat other = ( Stat ) obj;
+        StatId other = ( StatId ) obj;
         if ( period == null )
         {
             if ( other.period != null )
@@ -173,6 +127,6 @@ public class Stat implements Serializable
     @Override
     public String toString()
     {
-        return "[" + period + ", " + pts + "]";
+        return "[" + period + ", " + playerStat + "]";
     }
 }

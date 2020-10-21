@@ -1,30 +1,57 @@
-package org.hibernate.test.mapping.hhh99999;
+package org.hibernate.test.mapping.hhh99999.entity;
 
 import java.io.Serializable;
-import java.util.Objects;
 
-public class AssignmentId implements Serializable
+import javax.persistence.Basic;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.Id;
+import javax.persistence.IdClass;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+
+@Entity
+@Table(name = "\"Assignments\"")
+@IdClass(AssignmentId.class)
+public class Assignment implements Serializable
 {
     private static final long serialVersionUID = 1L;
 
-    private Integer game;
+    @Basic
+    @Column(name = "was_absent")
+    private Boolean wasAbsent = Boolean.FALSE;
 
-    private RefpoolMemberId refpoolMember;
+    @Id
+    @ManyToOne(optional = false, fetch = FetchType.EAGER)
+    @JoinColumn(name = "game_id")
+    private Game game;
 
-    public AssignmentId()
+    @Id
+    @ManyToOne(optional = false, fetch = FetchType.EAGER)
+    @JoinColumn(name = "referee_id", referencedColumnName = "referee_id")
+    @JoinColumn(name = "club_id", referencedColumnName = "club_id")
+    @JoinColumn(name = "season_start_year", referencedColumnName = "season_start_year")
+    private RefpoolMember refpoolMember;
+
+    public Assignment()
     {
     }
 
-    public AssignmentId(AssignmentId a)
+    public Assignment(Assignment a)
     {
         this(a.getRefereeId(), a.getClubId(), a.getSeasonStartYear(), a.getGameId());
+
+        this.wasAbsent = a.getWasAbsent();
     }
 
-    public AssignmentId(Integer refereeId, Integer clubId, Integer seasonStartYear, Integer gameId)
+    public Assignment(Integer refereeId, Integer clubId, Integer seasonStartYear, Integer gameId)
     {
-        this.game = Objects.requireNonNull(gameId);
+        this.game = new Game();
+        this.game.setId(gameId);
 
-        this.refpoolMember = new RefpoolMemberId(refereeId, clubId, seasonStartYear);
+        this.refpoolMember = new RefpoolMember(refereeId, clubId, seasonStartYear);
     }
 
     public Integer getRefereeId()
@@ -59,22 +86,42 @@ public class AssignmentId implements Serializable
 
     public Integer getGameId()
     {
-        return game;
+        return game.getId();
     }
 
     public void setGameId(Integer gameId)
     {
-        this.game = gameId;
+        game.setId(gameId);
     }
 
-    public RefpoolMemberId getRefpoolMemberId()
+    public Boolean getWasAbsent()
+    {
+        return wasAbsent;
+    }
+
+    public void setWasAbsent(Boolean wasAbsent)
+    {
+        this.wasAbsent = wasAbsent;
+    }
+
+    public Game getGame()
+    {
+        return game;
+    }
+
+    public void setGame(Game game)
+    {
+        this.game = game;
+    }
+
+    public RefpoolMember getRefpoolMember()
     {
         return refpoolMember;
     }
 
-    public void setRefpoolMemberId(RefpoolMemberId refpoolMemberId)
+    public void setRefpoolMember(RefpoolMember refpoolMember)
     {
-        this.refpoolMember = refpoolMemberId;
+        this.refpoolMember = refpoolMember;
     }
 
     @Override
@@ -96,7 +143,7 @@ public class AssignmentId implements Serializable
             return false;
         if ( getClass() != obj.getClass() )
             return false;
-        AssignmentId other = ( AssignmentId ) obj;
+        Assignment other = ( Assignment ) obj;
         if ( game == null )
         {
             if ( other.game != null )
@@ -117,6 +164,6 @@ public class AssignmentId implements Serializable
     @Override
     public String toString()
     {
-        return "[" + game + ", " + refpoolMember + "]";
+        return "[" + wasAbsent + "]";
     }
 }

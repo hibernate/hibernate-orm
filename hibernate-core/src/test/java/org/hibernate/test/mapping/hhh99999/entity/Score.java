@@ -1,15 +1,12 @@
 package org.hibernate.test.mapping.hhh99999.entity;
 
 import java.io.Serializable;
-import java.util.List;
-import java.util.Objects;
 
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
-import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 @Entity
@@ -35,39 +32,8 @@ public class Score implements Serializable
     @Column(name = "final_score")
     private Integer finalScore;
 
-    @OneToMany(mappedBy = "score")
-    private List<PlayerStat> playerStats;
-
     public Score()
     {
-    }
-
-    public Score(Score s)
-    {
-        this(s.getGameId(), s.getHome(), s.getRosterId(), s.getFinalScore());
-    }
-
-    public Score(Integer gameId, Boolean home)
-    {
-        this(gameId, home, null);
-    }
-
-    public Score(Integer rosterId, Integer finalScore)
-    {
-        this(null, null, rosterId, finalScore);
-    }
-
-    public Score(Integer gameId, Boolean home, Integer rosterId)
-    {
-        this(gameId, home, rosterId, null);
-    }
-
-    public Score(Integer gameId, Boolean home, Integer rosterId, Integer finalScore)
-    {
-        this.gameId = Objects.requireNonNull(gameId);
-        this.home = Objects.requireNonNull(home);
-        this.rosterId = rosterId;
-        this.finalScore = finalScore;
     }
 
     public Integer getGameId()
@@ -108,16 +74,6 @@ public class Score implements Serializable
     public void setFinalScore(Integer finalScore)
     {
         this.finalScore = finalScore;
-    }
-
-    public List<PlayerStat> getPlayerStats()
-    {
-        return playerStats;
-    }
-
-    public void setPlayerStats(List<PlayerStat> playerStats)
-    {
-        this.playerStats = playerStats;
     }
 
     @Override

@@ -1,7 +1,6 @@
 package org.hibernate.test.mapping.hhh99999.entity;
 
 import java.io.Serializable;
-import java.util.Objects;
 
 public class PlayerStatId implements Serializable
 {
@@ -9,22 +8,11 @@ public class PlayerStatId implements Serializable
 
     private Integer playerId;
 
+    // nested composite PK @IdClass: named like relationship in entity class
     private ScoreId score;
 
     public PlayerStatId()
     {
-    }
-
-    public PlayerStatId(PlayerStatId p)
-    {
-        this(p.getGameId(), p.getHome(), p.getPlayerId());
-    }
-
-    public PlayerStatId(Integer gameId, Boolean home, Integer playerId)
-    {
-        this.playerId = Objects.requireNonNull(playerId);
-
-        this.score = new ScoreId(gameId, home);
     }
 
     public Integer getGameId()

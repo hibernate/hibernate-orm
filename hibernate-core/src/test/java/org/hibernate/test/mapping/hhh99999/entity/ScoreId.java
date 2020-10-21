@@ -1,7 +1,6 @@
 package org.hibernate.test.mapping.hhh99999.entity;
 
 import java.io.Serializable;
-import java.util.Objects;
 
 public class ScoreId implements Serializable
 {
@@ -13,17 +12,6 @@ public class ScoreId implements Serializable
 
     public ScoreId()
     {
-    }
-
-    public ScoreId(ScoreId s)
-    {
-        this(s.getGameId(), s.getHome());
-    }
-
-    public ScoreId(Integer gameId, Boolean home)
-    {
-        this.gameId = Objects.requireNonNull(gameId);
-        this.home = Objects.requireNonNull(home);
     }
 
     public Integer getGameId()

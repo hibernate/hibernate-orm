@@ -1,7 +1,6 @@
 package org.hibernate.test.mapping.hhh99999.entity;
 
 import java.io.Serializable;
-import java.util.Objects;
 
 import javax.persistence.Basic;
 import javax.persistence.Column;
@@ -36,29 +35,6 @@ public class PlayerStat implements Serializable
 
     public PlayerStat()
     {
-    }
-
-    public PlayerStat(PlayerStat p)
-    {
-        this(p.getGameId(), p.getHome(), p.getPlayerId(), p.getJerseyNbr());
-    }
-
-    public PlayerStat(Integer jerseyNbr)
-    {
-        this(null, null, null, jerseyNbr);
-    }
-
-    public PlayerStat(Integer gameId, Boolean home, Integer playerId)
-    {
-        this(gameId, home, playerId, null);
-    }
-
-    public PlayerStat(Integer gameId, Boolean home, Integer playerId, Integer jerseyNbr)
-    {
-        this.playerId = Objects.requireNonNull(playerId);
-        this.jerseyNbr = jerseyNbr;
-
-        this.score = new Score(gameId, home);
     }
 
     public Integer getGameId()

@@ -28,6 +28,10 @@ public class Score implements Serializable
     @Column(name = "is_home", insertable = false, updatable = false)
     private Boolean home;
 
+    @Basic(optional = false)
+    @Column(name = "roster_id")
+    private Integer rosterId;
+
     @Basic
     @Column(name = "final_score")
     private Integer finalScore;
@@ -36,10 +40,6 @@ public class Score implements Serializable
     @ManyToOne(optional = false, fetch = FetchType.EAGER)
     @JoinColumn(name = "game_id")
     private Game game;
-
-    @ManyToOne(optional = false, fetch = FetchType.EAGER)
-    @JoinColumn(name = "roster_id")
-    private Roster roster;
 
     @OneToMany(mappedBy = "score")
     @MapKey(name = "jerseyNbr")
@@ -55,14 +55,14 @@ public class Score implements Serializable
         this(s.getGameId(), s.getHome(), s.getRosterId(), s.getFinalScore());
     }
 
-    public Score(Integer finalScore)
-    {
-        this(null, null, null, finalScore);
-    }
-
     public Score(Integer gameId, Boolean home)
     {
         this(gameId, home, null);
+    }
+
+    public Score(Integer rosterId, Integer finalScore)
+    {
+        this(null, null, rosterId, finalScore);
     }
 
     public Score(Integer gameId, Boolean home, Integer rosterId)
@@ -73,13 +73,11 @@ public class Score implements Serializable
     public Score(Integer gameId, Boolean home, Integer rosterId, Integer finalScore)
     {
         this.home = Objects.requireNonNull(home);
+        this.rosterId = rosterId;
         this.finalScore = finalScore;
 
         this.game = new Game();
         this.game.setId(gameId);
-
-        this.roster = new Roster();
-        this.roster.setId(rosterId);
     }
 
     public Integer getGameId()
@@ -104,12 +102,12 @@ public class Score implements Serializable
 
     public Integer getRosterId()
     {
-        return roster.getId();
+        return rosterId;
     }
 
     public void setRosterId(Integer rosterId)
     {
-        roster.setId(rosterId);
+        this.rosterId = rosterId;
     }
 
     public Integer getFinalScore()
@@ -130,16 +128,6 @@ public class Score implements Serializable
     public void setGame(Game game)
     {
         this.game = game;
-    }
-
-    public Roster getRoster()
-    {
-        return roster;
-    }
-
-    public void setRoster(Roster roster)
-    {
-        this.roster = roster;
     }
 
     public Map<Integer, PlayerStat> getPlayerStats()
@@ -192,6 +180,6 @@ public class Score implements Serializable
     @Override
     public String toString()
     {
-        return "[" + home + ", " + finalScore + "]";
+        return "[" + home + ", " + rosterId + ", " + finalScore + "]";
     }
 }

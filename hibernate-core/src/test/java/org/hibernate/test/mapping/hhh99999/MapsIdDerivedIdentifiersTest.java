@@ -7,17 +7,10 @@ import java.util.Map;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.hql.spi.id.inline.InlineIdsOrClauseBulkIdStrategy;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.test.mapping.hhh99999.entity.Assignment;
-import org.hibernate.test.mapping.hhh99999.entity.Club;
 import org.hibernate.test.mapping.hhh99999.entity.Game;
-import org.hibernate.test.mapping.hhh99999.entity.Player;
 import org.hibernate.test.mapping.hhh99999.entity.PlayerStat;
-import org.hibernate.test.mapping.hhh99999.entity.RefpoolMember;
-import org.hibernate.test.mapping.hhh99999.entity.Roster;
 import org.hibernate.test.mapping.hhh99999.entity.Score;
 import org.hibernate.test.mapping.hhh99999.entity.Stat;
-import org.hibernate.test.mapping.hhh99999.entity.Team;
-import org.hibernate.test.mapping.hhh99999.entity.TeamMember;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,17 +24,10 @@ public class MapsIdDerivedIdentifiersTest extends BaseEntityManagerFunctionalTes
     @Override
     protected Class<?>[] getAnnotatedClasses()
     {
-        return new Class<?>[] { Assignment.class,
-                                Club.class,
-                                Game.class,
-                                Player.class,
+        return new Class<?>[] { Game.class,
                                 PlayerStat.class,
-                                RefpoolMember.class,
-                                Roster.class,
                                 Score.class,
-                                Stat.class,
-                                Team.class,
-                                TeamMember.class };
+                                Stat.class };
     }
     
     @Override

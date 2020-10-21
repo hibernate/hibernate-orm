@@ -2,6 +2,7 @@ package org.hibernate.test.mapping.hhh99999.entity;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Objects;
 
 import javax.persistence.Basic;
 import javax.persistence.Column;
@@ -22,6 +23,14 @@ public class PlayerStat implements Serializable
 {
     private static final long serialVersionUID = 1L;
 
+    @Id
+    @Column(name = "player_id")
+    private Integer playerId;
+
+    @Id
+    @Column(name = "roster_id")
+    private Integer rosterId;
+
     @Basic(optional = false)
     @Column(name = "jersey_nbr")
     private Integer jerseyNbr;
@@ -31,12 +40,6 @@ public class PlayerStat implements Serializable
     @JoinColumn(name = "game_id", referencedColumnName = "game_id")
     @JoinColumn(name = "is_home", referencedColumnName = "is_home")
     private Score score;
-
-    @Id
-    @ManyToOne(optional = false, fetch = FetchType.EAGER)
-    @JoinColumn(name = "player_id", referencedColumnName = "player_id")
-    @JoinColumn(name = "roster_id", referencedColumnName = "roster_id")
-    private TeamMember teamMember;
 
     @OneToMany(mappedBy = "playerStat")
     @OrderBy("period")
@@ -63,10 +66,11 @@ public class PlayerStat implements Serializable
 
     public PlayerStat(Integer gameId, Boolean home, Integer playerId, Integer rosterId, Integer jerseyNbr)
     {
+        this.playerId = Objects.requireNonNull(playerId);
+        this.rosterId = Objects.requireNonNull(rosterId);
         this.jerseyNbr = jerseyNbr;
 
         this.score = new Score(gameId, home);
-        this.teamMember = new TeamMember(playerId, rosterId);
     }
 
     public Integer getGameId()
@@ -91,22 +95,22 @@ public class PlayerStat implements Serializable
 
     public Integer getPlayerId()
     {
-        return teamMember.getPlayerId();
+        return playerId;
     }
 
     public void setPlayerId(Integer playerId)
     {
-        teamMember.setPlayerId(playerId);
+        this.playerId = playerId;
     }
 
     public Integer getRosterId()
     {
-        return teamMember.getRosterId();
+        return rosterId;
     }
 
     public void setRosterId(Integer rosterId)
     {
-        teamMember.setRosterId(rosterId);
+        this.rosterId = rosterId;
     }
 
     public Integer getJerseyNbr()
@@ -129,16 +133,6 @@ public class PlayerStat implements Serializable
         this.score = score;
     }
 
-    public TeamMember getTeamMember()
-    {
-        return teamMember;
-    }
-
-    public void setTeamMember(TeamMember teamMember)
-    {
-        this.teamMember = teamMember;
-    }
-
     public List<Stat> getStats()
     {
         return stats;
@@ -154,8 +148,9 @@ public class PlayerStat implements Serializable
     {
         final int prime = 31;
         int result = 1;
+        result = prime * result + ( (playerId == null) ? 0 : playerId.hashCode() );
+        result = prime * result + ( (rosterId == null) ? 0 : rosterId.hashCode() );
         result = prime * result + ( (score == null) ? 0 : score.hashCode() );
-        result = prime * result + ( (teamMember == null) ? 0 : teamMember.hashCode() );
         return result;
     }
 
@@ -169,6 +164,20 @@ public class PlayerStat implements Serializable
         if ( getClass() != obj.getClass() )
             return false;
         PlayerStat other = ( PlayerStat ) obj;
+        if ( playerId == null )
+        {
+            if ( other.playerId != null )
+                return false;
+        }
+        else if ( !playerId.equals( other.playerId ) )
+            return false;
+        if ( rosterId == null )
+        {
+            if ( other.rosterId != null )
+                return false;
+        }
+        else if ( !rosterId.equals( other.rosterId ) )
+            return false;
         if ( score == null )
         {
             if ( other.score != null )
@@ -176,19 +185,12 @@ public class PlayerStat implements Serializable
         }
         else if ( !score.equals( other.score ) )
             return false;
-        if ( teamMember == null )
-        {
-            if ( other.teamMember != null )
-                return false;
-        }
-        else if ( !teamMember.equals( other.teamMember ) )
-            return false;
         return true;
     }
 
     @Override
     public String toString()
     {
-        return "[" + jerseyNbr + "]";
+        return "[" + playerId + ", " + rosterId + ", " + jerseyNbr + "]";
     }
 }

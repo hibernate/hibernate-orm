@@ -2,7 +2,6 @@ package org.hibernate.test.mapping.hhh99999.entity;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -42,9 +41,6 @@ public class Game implements Serializable
     @Basic(optional = false)
     @Column(name = "scheduled_tipoff")
     private LocalDateTime scheduledTipoff;
-
-    @OneToMany(mappedBy = "game")
-    private List<Assignment> assignments;
 
     @OneToMany(mappedBy = "game")
     @MapKeyColumn(name = "is_home")
@@ -100,16 +96,6 @@ public class Game implements Serializable
     public void setScheduledTipoff(LocalDateTime scheduledTipoff)
     {
         this.scheduledTipoff = scheduledTipoff;
-    }
-
-    public List<Assignment> getAssignments()
-    {
-        return assignments;
-    }
-
-    public void setAssignments(List<Assignment> assignments)
-    {
-        this.assignments = assignments;
     }
 
     public Map<Boolean, Score> getScores()

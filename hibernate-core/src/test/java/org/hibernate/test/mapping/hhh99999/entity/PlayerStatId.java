@@ -1,14 +1,17 @@
 package org.hibernate.test.mapping.hhh99999.entity;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 public class PlayerStatId implements Serializable
 {
     private static final long serialVersionUID = 1L;
 
-    private ScoreId score;
+    private Integer playerId;
 
-    private TeamMemberId teamMember;
+    private Integer rosterId;
+
+    private ScoreId score;
 
     public PlayerStatId()
     {
@@ -21,8 +24,10 @@ public class PlayerStatId implements Serializable
 
     public PlayerStatId(Integer gameId, Boolean home, Integer playerId, Integer rosterId)
     {
+        this.playerId = Objects.requireNonNull(playerId);
+        this.rosterId = Objects.requireNonNull(rosterId);
+
         this.score = new ScoreId(gameId, home);
-        this.teamMember = new TeamMemberId(playerId, rosterId);
     }
 
     public Integer getGameId()
@@ -47,22 +52,22 @@ public class PlayerStatId implements Serializable
 
     public Integer getPlayerId()
     {
-        return teamMember.getPlayerId();
+        return playerId;
     }
 
     public void setPlayerId(Integer playerId)
     {
-        teamMember.setPlayerId(playerId);
+        this.playerId = playerId;
     }
 
     public Integer getRosterId()
     {
-        return teamMember.getRosterId();
+        return rosterId;
     }
 
     public void setRosterId(Integer rosterId)
     {
-        teamMember.setRosterId(rosterId);
+        this.rosterId = rosterId;
     }
 
     public ScoreId getScoreId()
@@ -75,23 +80,14 @@ public class PlayerStatId implements Serializable
         this.score = scoreId;
     }
 
-    public TeamMemberId getTeamMemberId()
-    {
-        return teamMember;
-    }
-
-    public void setTeamMemberId(TeamMemberId teamMemberId)
-    {
-        this.teamMember = teamMemberId;
-    }
-
     @Override
     public int hashCode()
     {
         final int prime = 31;
         int result = 1;
+        result = prime * result + ( (playerId == null) ? 0 : playerId.hashCode() );
+        result = prime * result + ( (rosterId == null) ? 0 : rosterId.hashCode() );
         result = prime * result + ( (score == null) ? 0 : score.hashCode() );
-        result = prime * result + ( (teamMember == null) ? 0 : teamMember.hashCode() );
         return result;
     }
 
@@ -105,6 +101,20 @@ public class PlayerStatId implements Serializable
         if ( getClass() != obj.getClass() )
             return false;
         PlayerStatId other = ( PlayerStatId ) obj;
+        if ( playerId == null )
+        {
+            if ( other.playerId != null )
+                return false;
+        }
+        else if ( !playerId.equals( other.playerId ) )
+            return false;
+        if ( rosterId == null )
+        {
+            if ( other.rosterId != null )
+                return false;
+        }
+        else if ( !rosterId.equals( other.rosterId ) )
+            return false;
         if ( score == null )
         {
             if ( other.score != null )
@@ -112,19 +122,12 @@ public class PlayerStatId implements Serializable
         }
         else if ( !score.equals( other.score ) )
             return false;
-        if ( teamMember == null )
-        {
-            if ( other.teamMember != null )
-                return false;
-        }
-        else if ( !teamMember.equals( other.teamMember ) )
-            return false;
         return true;
     }
 
     @Override
     public String toString()
     {
-        return "[" + score + ", " + teamMember + "]";
+        return "[" + playerId + ", " + rosterId + ", " + score + "]";
     }
 }

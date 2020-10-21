@@ -28,8 +28,6 @@ import org.junit.Test;
 @TestForIssue( jiraKey = "HHH-13812" )
 public class MapsIdDerivedIdentifiersTest extends BaseEntityManagerFunctionalTestCase
 {
-    private static final Integer CLUB_ID = Integer.valueOf( 999 );
-            
     @Override
     protected Class<?>[] getAnnotatedClasses()
     {

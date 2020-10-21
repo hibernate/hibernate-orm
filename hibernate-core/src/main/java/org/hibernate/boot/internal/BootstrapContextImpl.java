@@ -13,11 +13,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.annotations.common.reflection.ClassLoaderDelegate;
-import org.hibernate.annotations.common.reflection.ClassLoadingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.java.JavaReflectionManager;
-import org.hibernate.annotations.common.util.StandardClassLoaderDelegateImpl;
 import org.hibernate.boot.AttributeConverterInfo;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.archive.scan.internal.StandardScanOptions;
@@ -313,32 +310,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 	private JavaReflectionManager generateHcannReflectionManager() {
 		final JavaReflectionManager reflectionManager = new JavaReflectionManager();
 		reflectionManager.setMetadataProvider( new JPAMetadataProvider( this ) );
-		reflectionManager.injectClassLoaderDelegate( generateHcannClassLoaderDelegate() );
 		return reflectionManager;
 	}
 
-	private ClassLoaderDelegate generateHcannClassLoaderDelegate() {
-		//	class loading here needs to be drastically different for 7.0
-		//		but luckily 7.0 will do away with HCANN use and be easier to
-		//		implement this.
-		//
-		// todo (6.0) : *if possible* make similar change in 6.0
-		// 		possibly using the JPA temp class loader or create our own "throw awy" ClassLoader;
-		//		the trouble there is that we eventually need to load the Class into the real
-		//		ClassLoader prior to use
-
-		final ClassLoaderService classLoaderService = getServiceRegistry().getService( ClassLoaderService.class );
-
-		return new ClassLoaderDelegate() {
-			@Override
-			public <T> Class<T> classForName(String className) throws ClassLoadingException {
-				try {
-					return classLoaderService.classForName( className );
-				}
-				catch (org.hibernate.boot.registry.classloading.spi.ClassLoadingException e) {
-					return StandardClassLoaderDelegateImpl.INSTANCE.classForName( className );
-				}
-			}
-		};
-	}
 }

@@ -1,4 +1,4 @@
-package org.hibernate.test.mapping.hhh99999.entity;
+package org.hibernate.test.mapping.hhh14276.entity;
 
 import java.io.Serializable;
 
@@ -85,48 +85,5 @@ public class PlayerStat implements Serializable
     public void setScore(Score score)
     {
         this.score = score;
-    }
-
-    @Override
-    public int hashCode()
-    {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( (playerId == null) ? 0 : playerId.hashCode() );
-        result = prime * result + ( (score == null) ? 0 : score.hashCode() );
-        return result;
-    }
-
-    @Override
-    public boolean equals(Object obj)
-    {
-        if ( this == obj )
-            return true;
-        if ( obj == null )
-            return false;
-        if ( getClass() != obj.getClass() )
-            return false;
-        PlayerStat other = ( PlayerStat ) obj;
-        if ( playerId == null )
-        {
-            if ( other.playerId != null )
-                return false;
-        }
-        else if ( !playerId.equals( other.playerId ) )
-            return false;
-        if ( score == null )
-        {
-            if ( other.score != null )
-                return false;
-        }
-        else if ( !score.equals( other.score ) )
-            return false;
-        return true;
-    }
-
-    @Override
-    public String toString()
-    {
-        return "[" + playerId + ", " + jerseyNbr + "]";
     }
 }

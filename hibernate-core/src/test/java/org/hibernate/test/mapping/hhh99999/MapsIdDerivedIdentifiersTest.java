@@ -2,7 +2,6 @@ package org.hibernate.test.mapping.hhh99999;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
-import java.util.List;
 import java.util.Map;
 
 import org.hibernate.cfg.AvailableSettings;
@@ -44,7 +43,6 @@ public class MapsIdDerivedIdentifiersTest extends BaseEntityManagerFunctionalTes
                                 Score.class,
                                 Stat.class,
                                 Team.class,
-                                TeamMember.class,
                                 TeamMember.class };
     }
     
@@ -60,49 +58,7 @@ public class MapsIdDerivedIdentifiersTest extends BaseEntityManagerFunctionalTes
     {
         doInJPA( this::entityManagerFactory, em ->
         {
-            Club club = new Club( 1, "Boston Celtics" );
-            club.setId( CLUB_ID );
-            
-            em.persist( club );
-            
-            Integer clubId = club.getId();
-            
-            List<Team> teams = club.getTeams();
-            
-            // the below order is the order in which the teams shall be ordered upon retrieval (after refresh below)
-            // sort logic: if "over" then by age group ascending, if under by age group descending, then by gender DESC,
-            // then by ordinal nbr
-            
-            teams.add( new Team( clubId, "O20M", Integer.valueOf( 1 ) ) ); // over 20 male, 1st team
-            teams.add( new Team( clubId, "O20M", Integer.valueOf( 2 ) ) ); // over 20 male, 2nd team
-            teams.add( new Team( clubId, "O20F", Integer.valueOf( 1 ) ) ); // over 20 female, 1st team
-            teams.add( new Team( clubId, "O35M", Integer.valueOf( 1 ) ) ); // over 35 male, 1st team
-            teams.add( new Team( clubId, "U20M", Integer.valueOf( 1 ) ) ); // under 20 male, 1st team
-            teams.add( new Team( clubId, "U20F", Integer.valueOf( 1 ) ) ); // under 20 female, 1st team
-            teams.add( new Team( clubId, "U18M", Integer.valueOf( 1 ) ) ); // under 18 male, 1st team
-            teams.add( new Team( clubId, "U18F", Integer.valueOf( 1 ) ) ); // under 18 female, 1st team
-            teams.add( new Team( clubId, "U16M", Integer.valueOf( 1 ) ) ); // under 16 male, 1st team
-            teams.add( new Team( clubId, "U16F", Integer.valueOf( 1 ) ) ); // under 16 female, 1st team
-            teams.add( new Team( clubId, "U14M", Integer.valueOf( 1 ) ) ); // under 14 male, 1st team
-            teams.add( new Team( clubId, "U14F", Integer.valueOf( 1 ) ) ); // under 14 female, 1st team
-            
-            for ( Team team : teams )
-            {
-                System.out.println( "-------- Inserting team: " + team );
-                
-                em.merge( team );
-            }
-            
-            System.out.println( "----------- EM flush!" );
-            em.flush();
-            
-            // CALL REFRESH, otherwise the list above will be taken, which is still in order of insert/add
-            System.out.println( "----------- EM refresh club!" );
-            em.refresh( club );
-            
-            System.out.println( "Number of teams: " + club.getTeams().size() );
-            
-            System.out.println( "----------- TA commit!" );
+            // do nothing
         } );
     }
     
@@ -113,11 +69,11 @@ public class MapsIdDerivedIdentifiersTest extends BaseEntityManagerFunctionalTes
      * @throws Exception
      */
     @Test
-    public void testCaseWhenInOrderBy() throws Exception
+    public void testMapsIdDerivedIdentifiers() throws Exception
     {
         doInJPA( this::entityManagerFactory, em ->
         {
-            System.out.println( "Starting test for HHH-99999..." );
+            // do nothing
         });
     }
 }

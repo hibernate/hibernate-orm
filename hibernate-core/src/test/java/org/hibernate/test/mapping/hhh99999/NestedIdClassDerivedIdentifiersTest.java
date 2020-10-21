@@ -17,7 +17,7 @@ import org.junit.Test;
  * This template demonstrates how to develop a test case for Hibernate ORM, using the Java Persistence API.
  */
 @TestForIssue( jiraKey = "HHH-99999" )
-public class MapsIdDerivedIdentifiersTest extends BaseEntityManagerFunctionalTestCase
+public class NestedIdClassDerivedIdentifiersTest extends BaseEntityManagerFunctionalTestCase
 {
     @Override
     protected Class<?>[] getAnnotatedClasses()
@@ -43,7 +43,7 @@ public class MapsIdDerivedIdentifiersTest extends BaseEntityManagerFunctionalTes
     }
     
     @Test
-    public void testMapsIdDerivedIdentifiers() throws Exception
+    public void testNestedIdClassDerivedIdentifiers() throws Exception
     {
         doInJPA( this::entityManagerFactory, em ->
         {

@@ -7,7 +7,7 @@ public class ScoreId implements Serializable
 {
     private static final long serialVersionUID = 1L;
 
-    private Integer game;
+    private Integer gameId;
 
     private Boolean home;
 
@@ -22,18 +22,18 @@ public class ScoreId implements Serializable
 
     public ScoreId(Integer gameId, Boolean home)
     {
-        this.game = Objects.requireNonNull(gameId);
+        this.gameId = Objects.requireNonNull(gameId);
         this.home = Objects.requireNonNull(home);
     }
 
     public Integer getGameId()
     {
-        return game;
+        return gameId;
     }
 
     public void setGameId(Integer gameId)
     {
-        this.game = gameId;
+        this.gameId = gameId;
     }
 
     public Boolean getHome()
@@ -51,7 +51,7 @@ public class ScoreId implements Serializable
     {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ( (game == null) ? 0 : game.hashCode() );
+        result = prime * result + ( (gameId == null) ? 0 : gameId.hashCode() );
         result = prime * result + ( (home == null) ? 0 : home.hashCode() );
         return result;
     }
@@ -66,12 +66,12 @@ public class ScoreId implements Serializable
         if ( getClass() != obj.getClass() )
             return false;
         ScoreId other = ( ScoreId ) obj;
-        if ( game == null )
+        if ( gameId == null )
         {
-            if ( other.game != null )
+            if ( other.gameId != null )
                 return false;
         }
-        else if ( !game.equals( other.game ) )
+        else if ( !gameId.equals( other.gameId ) )
             return false;
         if ( home == null )
         {
@@ -86,6 +86,6 @@ public class ScoreId implements Serializable
     @Override
     public String toString()
     {
-        return "[" + game + ", " + home + "]";
+        return "[" + gameId + ", " + home + "]";
     }
 }

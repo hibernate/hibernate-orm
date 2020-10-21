@@ -7,7 +7,6 @@ import java.util.Map;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.hql.spi.id.inline.InlineIdsOrClauseBulkIdStrategy;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.test.mapping.hhh99999.entity.Game;
 import org.hibernate.test.mapping.hhh99999.entity.PlayerStat;
 import org.hibernate.test.mapping.hhh99999.entity.Score;
 import org.hibernate.test.mapping.hhh99999.entity.Stat;
@@ -24,8 +23,7 @@ public class MapsIdDerivedIdentifiersTest extends BaseEntityManagerFunctionalTes
     @Override
     protected Class<?>[] getAnnotatedClasses()
     {
-        return new Class<?>[] { Game.class,
-                                PlayerStat.class,
+        return new Class<?>[] { PlayerStat.class,
                                 Score.class,
                                 Stat.class };
     }

@@ -7,11 +7,8 @@ import java.util.Objects;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.MapKey;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderBy;
@@ -25,7 +22,11 @@ public class Score implements Serializable
     private static final long serialVersionUID = 1L;
 
     @Id
-    @Column(name = "is_home", insertable = false, updatable = false)
+    @Column(name = "game_id")
+    private Integer gameId;
+
+    @Id
+    @Column(name = "is_home")
     private Boolean home;
 
     @Basic(optional = false)
@@ -35,11 +36,6 @@ public class Score implements Serializable
     @Basic
     @Column(name = "final_score")
     private Integer finalScore;
-
-    @Id
-    @ManyToOne(optional = false, fetch = FetchType.EAGER)
-    @JoinColumn(name = "game_id")
-    private Game game;
 
     @OneToMany(mappedBy = "score")
     @MapKey(name = "jerseyNbr")
@@ -72,22 +68,20 @@ public class Score implements Serializable
 
     public Score(Integer gameId, Boolean home, Integer rosterId, Integer finalScore)
     {
+        this.gameId = Objects.requireNonNull(gameId);
         this.home = Objects.requireNonNull(home);
         this.rosterId = rosterId;
         this.finalScore = finalScore;
-
-        this.game = new Game();
-        this.game.setId(gameId);
     }
 
     public Integer getGameId()
     {
-        return game.getId();
+        return gameId;
     }
 
     public void setGameId(Integer gameId)
     {
-        game.setId(gameId);
+        this.gameId = gameId;
     }
 
     public Boolean getHome()
@@ -120,16 +114,6 @@ public class Score implements Serializable
         this.finalScore = finalScore;
     }
 
-    public Game getGame()
-    {
-        return game;
-    }
-
-    public void setGame(Game game)
-    {
-        this.game = game;
-    }
-
     public Map<Integer, PlayerStat> getPlayerStats()
     {
         return playerStats;
@@ -145,7 +129,7 @@ public class Score implements Serializable
     {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ( (game == null) ? 0 : game.hashCode() );
+        result = prime * result + ( (gameId == null) ? 0 : gameId.hashCode() );
         result = prime * result + ( (home == null) ? 0 : home.hashCode() );
         return result;
     }
@@ -160,12 +144,12 @@ public class Score implements Serializable
         if ( getClass() != obj.getClass() )
             return false;
         Score other = ( Score ) obj;
-        if ( game == null )
+        if ( gameId == null )
         {
-            if ( other.game != null )
+            if ( other.gameId != null )
                 return false;
         }
-        else if ( !game.equals( other.game ) )
+        else if ( !gameId.equals( other.gameId ) )
             return false;
         if ( home == null )
         {
@@ -180,6 +164,6 @@ public class Score implements Serializable
     @Override
     public String toString()
     {
-        return "[" + home + ", " + rosterId + ", " + finalScore + "]";
+        return "[" + gameId + ", " + home + ", " + rosterId + ", " + finalScore + "]";
     }
 }

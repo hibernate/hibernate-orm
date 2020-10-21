@@ -146,7 +146,7 @@ public class CollectionSizeNode extends SqlNode implements SelectExpression {
 
 	@Override
 	public boolean isScalar() {
-		return false;
+		return true;
 	}
 
 	@Override

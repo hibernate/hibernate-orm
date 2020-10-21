@@ -7,7 +7,6 @@
 package org.hibernate.envers.configuration.internal.metadata.reader;
 
 import org.hibernate.MappingException;
-import org.hibernate.annotations.common.reflection.ClassLoadingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.envers.AuditTable;
@@ -96,29 +95,24 @@ public final class AnnotationsMetadataReader {
 			return auditData;
 		}
 
-		try {
-			final XClass xclass = reflectionManager.classForName( pc.getClassName() );
+		final XClass xclass = reflectionManager.toXClass( pc.getMappedClass() );
 
-			final ModificationStore defaultStore = getDefaultAudited( xclass );
-			if ( defaultStore != null ) {
-				auditData.setDefaultAudited( true );
-			}
-
-			new AuditedPropertiesReader(
-					defaultStore,
-					new PersistentClassPropertiesSource( xclass ),
-					auditData,
-					globalCfg,
-					reflectionManager,
-					""
-			).read();
-
-			addAuditTable( xclass );
-			addAuditSecondaryTables( xclass );
+		final ModificationStore defaultStore = getDefaultAudited( xclass );
+		if ( defaultStore != null ) {
+			auditData.setDefaultAudited( true );
 		}
-		catch (ClassLoadingException e) {
-			throw new MappingException( e );
-		}
+
+		new AuditedPropertiesReader(
+				defaultStore,
+				new PersistentClassPropertiesSource( xclass ),
+				auditData,
+				globalCfg,
+				reflectionManager,
+				""
+		).read();
+
+		addAuditTable( xclass );
+		addAuditSecondaryTables( xclass );
 
 		return auditData;
 	}

@@ -75,6 +75,21 @@ public interface ClassLoaderService extends Service, Stoppable {
 
 	<T> T generateProxy(InvocationHandler handler, Class... interfaces);
 
+	/**
+	 * Loading a Package from the classloader. In case it's not found or an
+	 * internal error (such as @see {@link LinkageError} occurs, we
+	 * return null rather than throwing an exception.
+	 * This is significantly different than loading a Class, as in all
+	 * currently known usages, being unable to load the Package will
+	 * only result in ignoring annotations on it - which is totally
+	 * fine when the object doesn't exist.
+	 * In case of other errors, implementations are expected to log
+	 * a warning but it's still not treated as a fatal error.
+	 * @param packageName
+	 * @return the matching Package, or null.
+	 */
+	Package packageForNameOrNull(String packageName);
+
 	interface Work<T> {
 		T doWork(ClassLoader classLoader);
 	}

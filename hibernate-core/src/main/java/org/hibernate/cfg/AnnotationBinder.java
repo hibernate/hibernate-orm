@@ -123,7 +123,7 @@ import org.hibernate.annotations.Tuplizers;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
 import org.hibernate.annotations.Where;
-import org.hibernate.annotations.common.reflection.ClassLoadingException;
+import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XMethod;
@@ -132,6 +132,7 @@ import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.TypeDefinition;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.InFlightMetadataCollector.EntityTableXref;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -146,8 +147,6 @@ import org.hibernate.cfg.annotations.QueryBinder;
 import org.hibernate.cfg.annotations.SimpleValueBinder;
 import org.hibernate.cfg.annotations.TableBinder;
 import org.hibernate.engine.OptimisticLockStyle;
-import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.internal.CoreMessageLogger;
@@ -306,19 +305,12 @@ public final class AnnotationBinder {
 		}
 	}
 
-	public static void bindPackage(String packageName, MetadataBuildingContext context) {
-		XPackage pckg;
-		try {
-			pckg = context.getBootstrapContext().getReflectionManager().packageForName( packageName );
-		}
-		catch (ClassLoadingException e) {
-			LOG.packageNotFound( packageName );
+	public static void bindPackage(ClassLoaderService cls, String packageName, MetadataBuildingContext context) {
+		final Package packaze = cls.packageForNameOrNull( packageName );
+		if ( packaze == null ) {
 			return;
 		}
-		catch ( ClassNotFoundException cnf ) {
-			LOG.packageNotFound( packageName );
-			return;
-		}
+		final XPackage pckg = context.getBootstrapContext().getReflectionManager().toXPackage( packaze );
 
 		if ( pckg.isAnnotationPresent( SequenceGenerator.class ) ) {
 			SequenceGenerator ann = pckg.getAnnotation( SequenceGenerator.class );
@@ -1423,20 +1415,13 @@ public final class AnnotationBinder {
 		bindFetchProfiles( clazzToProcess, context );
 	}
 
-	public static void bindFetchProfilesForPackage(String packageName, MetadataBuildingContext context) {
-		XPackage pckg;
-		try {
-			pckg = context.getBootstrapContext().getReflectionManager().packageForName( packageName );
-		}
-		catch (ClassLoadingException e) {
-			LOG.packageNotFound( packageName );
+	public static void bindFetchProfilesForPackage(ClassLoaderService cls, String packageName, MetadataBuildingContext context) {
+		final Package packaze = cls.packageForNameOrNull( packageName );
+		if ( packaze == null ) {
 			return;
 		}
-		catch ( ClassNotFoundException cnf ) {
-			LOG.packageNotFound( packageName );
-			return;
-		}
-
+		final ReflectionManager reflectionManager = context.getBootstrapContext().getReflectionManager();
+		final XPackage pckg = reflectionManager.toXPackage( packaze );
 		bindFetchProfiles( pckg, context );
 	}
 

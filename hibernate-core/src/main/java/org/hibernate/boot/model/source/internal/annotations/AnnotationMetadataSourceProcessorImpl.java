@@ -17,8 +17,6 @@ import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.MappedSuperclass;
 
-import org.hibernate.AnnotationException;
-import org.hibernate.annotations.common.reflection.ClassLoadingException;
 import org.hibernate.annotations.common.reflection.MetadataProviderInjector;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
@@ -59,6 +57,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 	private final LinkedHashSet<String> annotatedPackages = new LinkedHashSet<String>();
 
 	private final List<XClass> xClasses = new ArrayList<XClass>();
+	private final ClassLoaderService classLoaderService;
 
 	public AnnotationMetadataSourceProcessorImpl(
 			ManagedResources managedResources,
@@ -74,6 +73,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 		}
 
 		final AttributeConverterManager attributeConverterManager = new AttributeConverterManager( rootMetadataBuildingContext );
+		this.classLoaderService = rootMetadataBuildingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class );
 
 		if ( rootMetadataBuildingContext.getBuildingOptions().isXmlMappingEnabled() ) {
 
@@ -97,25 +97,24 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 
 					final List<String> classNames = jpaMetadataProvider.getXMLContext().addDocument( dom4jDocument );
 					for ( String className : classNames ) {
-						xClasses.add( toXClass( className, reflectionManager ) );
+						xClasses.add( toXClass( className, reflectionManager, classLoaderService ) );
 					}
 				}
 				jpaMetadataProvider.getXMLContext().applyDiscoveredAttributeConverters( attributeConverterManager );
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		}
 
-		final ClassLoaderService cls = rootMetadataBuildingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class );
 		for ( String className : managedResources.getAnnotatedClassNames() ) {
-			final Class annotatedClass = cls.classForName( className );
-			categorizeAnnotatedClass( annotatedClass, attributeConverterManager );
+			final Class annotatedClass = classLoaderService.classForName( className );
+			categorizeAnnotatedClass( annotatedClass, attributeConverterManager, classLoaderService );
 		}
 
 		for ( Class annotatedClass : managedResources.getAnnotatedClassReferences() ) {
-			categorizeAnnotatedClass( annotatedClass, attributeConverterManager );
+			categorizeAnnotatedClass( annotatedClass, attributeConverterManager, classLoaderService );
 		}
 	}
 
-	private void categorizeAnnotatedClass(Class annotatedClass, AttributeConverterManager attributeConverterManager) {
+	private void categorizeAnnotatedClass(Class annotatedClass, AttributeConverterManager attributeConverterManager, ClassLoaderService cls) {
 		final XClass xClass = reflectionManager.toXClass( annotatedClass );
 		// categorize it, based on assumption it does not fall into multiple categories
 		if ( xClass.isAnnotationPresent( Converter.class ) ) {
@@ -135,13 +134,8 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 	}
 
 	@SuppressWarnings("deprecation")
-	private XClass toXClass(String className, ReflectionManager reflectionManager) {
-		try {
-			return reflectionManager.classForName( className );
-		}
-		catch ( ClassLoadingException e ) {
-			throw new AnnotationException( "Unable to load class defined in XML: " + className, e );
-		}
+	private XClass toXClass(String className, ReflectionManager reflectionManager, ClassLoaderService cls) {
+		return reflectionManager.toXClass( cls.classForName( className ) );
 	}
 
 //	private Document toDom4jDocument(MappingBinder.DelayedOrmXmlData delayedOrmXmlData) {
@@ -192,7 +186,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 
 		AnnotationBinder.bindDefaults( rootMetadataBuildingContext );
 		for ( String annotatedPackage : annotatedPackages ) {
-			AnnotationBinder.bindPackage( annotatedPackage, rootMetadataBuildingContext );
+			AnnotationBinder.bindPackage( classLoaderService, annotatedPackage, rootMetadataBuildingContext );
 		}
 	}
 
@@ -303,7 +297,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 	@Override
 	public void postProcessEntityHierarchies() {
 		for ( String annotatedPackage : annotatedPackages ) {
-			AnnotationBinder.bindFetchProfilesForPackage( annotatedPackage, rootMetadataBuildingContext );
+			AnnotationBinder.bindFetchProfilesForPackage( classLoaderService, annotatedPackage, rootMetadataBuildingContext );
 		}
 	}
 

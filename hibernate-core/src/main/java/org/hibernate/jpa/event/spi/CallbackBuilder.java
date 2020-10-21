@@ -28,11 +28,11 @@ public interface CallbackBuilder {
 		void registerCallbacks(Class entityClass, Callback[] callbacks);
 	}
 
-	void buildCallbacksForEntity(String entityClassName, CallbackRegistrar callbackRegistrar);
+	void buildCallbacksForEntity(Class entityClass, CallbackRegistrar callbackRegistrar);
 
 	void buildCallbacksForEmbeddable(
 			Property embeddableProperty,
-			String entityClassName,
+			Class entityClass,
 			CallbackRegistrar callbackRegistrar);
 
 	void release();

@@ -25,7 +25,6 @@ import javax.persistence.Version;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.annotations.common.reflection.ClassLoadingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
@@ -787,13 +786,7 @@ public class AuditedPropertiesReader {
 		}
 
 		public ComponentPropertiesSource(ReflectionManager reflectionManager, Component component) {
-			try {
-				this.xclass = reflectionManager.classForName( component.getComponentClassName() );
-			}
-			catch ( ClassLoadingException e ) {
-				throw new MappingException( e );
-			}
-
+			this.xclass = reflectionManager.toXClass( component.getOwner().getMappedClass() );
 			this.component = component;
 		}
 

@@ -23,9 +23,9 @@ import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
-import org.hibernate.annotations.common.reflection.ClassLoadingException;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AccessType;
 import org.hibernate.cfg.AnnotatedClassType;
@@ -224,12 +224,10 @@ public class MapBinder extends CollectionBinder {
 					keyXClass = null;
 				}
 				else {
-					try {
-						keyXClass = buildingContext.getBootstrapContext().getReflectionManager().classForName( mapKeyType );
-					}
-					catch (ClassLoadingException e) {
-						throw new AnnotationException( "Unable to find class: " + mapKeyType, e );
-					}
+					BootstrapContext bootstrapContext = buildingContext.getBootstrapContext();
+					Class<Object> mapKeyClass = bootstrapContext.getClassLoaderAccess().classForName( mapKeyType );
+					keyXClass = bootstrapContext.getReflectionManager().toXClass( mapKeyClass );
+
 					classType = buildingContext.getMetadataCollector().getClassType( keyXClass );
 					// force in case of attribute override naming the key
 					if ( isEmbedded || mappingDefinedAttributeOverrideOnMapKey( property ) ) {

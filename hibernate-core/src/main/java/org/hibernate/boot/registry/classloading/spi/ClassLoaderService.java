@@ -75,6 +75,13 @@ public interface ClassLoaderService extends Service, Stoppable {
 
 	<T> T generateProxy(InvocationHandler handler, Class... interfaces);
 
+	/**
+	 *
+	 * @param packageName
+	 * @return
+	 */
+	Package packageForNameOrNull(String packageName);
+
 	interface Work<T> {
 		T doWork(ClassLoader classLoader);
 	}

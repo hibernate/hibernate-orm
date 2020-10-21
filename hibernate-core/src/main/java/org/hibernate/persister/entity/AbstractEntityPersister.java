@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -23,7 +22,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
@@ -69,6 +67,7 @@ import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityEntry;
@@ -254,9 +253,7 @@ public abstract class AbstractEntityPersister
 
 	private final LockModeEnumMap<LockingStrategy> lockers = new LockModeEnumMap<>();
 
-	private UniqueEntityLoader noneLockLoader;
-	private UniqueEntityLoader readLockLoader;
-	private final Map<Object, UniqueEntityLoader> loaders = new ConcurrentHashMap<>();
+	private final EntityLoaderLazyCollection loaders = new EntityLoaderLazyCollection();
 
 	// SQL strings
 	private String sqlVersionSelectString;
@@ -4293,61 +4290,38 @@ public abstract class AbstractEntityPersister
 	protected void doPostInstantiate() {
 	}
 
-	/**
-	 * "Needed" by subclasses to override the createLoader strategy
-	 *
-	 * @deprecated Because there are better patterns for this
-	 */
-	@Deprecated
-	protected Map getLoaders() {
-		return loaders;
-	}
-
 	//Relational based Persisters should be content with this implementation
 	protected void createLoaders() {
-		// We load the entity loaders for the most common lock modes.
-
-		noneLockLoader = createEntityLoader( LockMode.NONE );
-		readLockLoader = createEntityLoader( LockMode.READ );
-
-
-		// The loaders for the other lock modes are lazily loaded and will later be stored in this map,
-		//		unless this setting is disabled
+		// The loaders for each lock mode are lazily loaded, unless this setting is disabled
 		if ( ! factory.getSessionFactoryOptions().isDelayBatchFetchLoaderCreationsEnabled() ) {
-			for ( LockMode lockMode : EnumSet.complementOf( EnumSet.of( LockMode.NONE, LockMode.READ, LockMode.WRITE ) ) ) {
-				loaders.put( lockMode, createEntityLoader( lockMode ) );
+			for ( LockMode lockMode : LockMode.values() ) {
+				//Trigger eager initialization
+				loaders.getOrBuildByLockMode( lockMode, this::createEntityLoader );
 			}
+			//Also, we have two special internal fetch profiles to eagerly initialize in this case:
+			loaders.getOrCreateByInternalFetchProfileMerge( this::buildMergeCascadeEntityLoader );
+			loaders.getOrCreateByInternalFetchProfileRefresh( this::buildRefreshCascadeEntityLoader );
 		}
+		else {
+			//At least initialize this one: it's almost certain to be used,
+			//and also will allow to report mapping errors during initialization.
+			loaders.getOrBuildByLockMode( LockMode.NONE, this::createEntityLoader );
+		}
+	}
 
+	private UniqueEntityLoader buildMergeCascadeEntityLoader(LockMode ignored) {
+		return new CascadeEntityLoader( this, CascadingActions.MERGE, getFactory() );
+	}
 
-		// And finally, create the internal merge and refresh load plans
-
-		loaders.put(
-				"merge",
-				new CascadeEntityLoader( this, CascadingActions.MERGE, getFactory() )
-		);
-		loaders.put(
-				"refresh",
-				new CascadeEntityLoader( this, CascadingActions.REFRESH, getFactory() )
-		);
+	private UniqueEntityLoader buildRefreshCascadeEntityLoader(LockMode ignored) {
+		return new CascadeEntityLoader( this, CascadingActions.REFRESH, getFactory() );
 	}
 
 	protected final UniqueEntityLoader getLoaderByLockMode(LockMode lockMode) {
-		if ( LockMode.NONE == lockMode ) {
-			return noneLockLoader;
-		}
-		else if ( LockMode.READ == lockMode ) {
-			return readLockLoader;
-		}
-
-		return loaders.computeIfAbsent( lockMode, this::generateDelayedEntityLoader );
+		return loaders.getOrBuildByLockMode( lockMode, this::createEntityLoader );
 	}
 
-	private UniqueEntityLoader generateDelayedEntityLoader(Object lockModeObject) {
-		// Unfortunately, the loaders map mixes LockModes and Strings as keys so we need to accept an Object.
-		// The cast is safe as we will always call this method with a LockMode.
-		LockMode lockMode = (LockMode) lockModeObject;
-
+	private UniqueEntityLoader generateDelayedEntityLoader(final LockMode lockMode) {
 		switch ( lockMode ) {
 			case NONE:
 			case READ:
@@ -4367,7 +4341,7 @@ public abstract class AbstractEntityPersister
 						&& hasSubclasses()
 						&& !getFactory().getDialect().supportsOuterJoinForUpdate();
 
-				return disableForUpdate ? readLockLoader : createEntityLoader( lockMode );
+				return disableForUpdate ? getLoaderByLockMode( LockMode.READ ) : createEntityLoader( lockMode );
 			}
 			default: {
 				throw new IllegalStateException( String.format( Locale.ROOT, "Lock mode %1$s not supported by entity loaders.", lockMode ) );
@@ -4433,7 +4407,7 @@ public abstract class AbstractEntityPersister
 				loaded = CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache( loadEvent, this, entityKey );
 			}
 			if ( loaded == null ) {
-				loaded = readLockLoader.load(
+				loaded = getLoaderByLockMode( LockMode.READ ).load(
 						identifier,
 						entity,
 						session,
@@ -4527,7 +4501,8 @@ public abstract class AbstractEntityPersister
 			// Next, we consider whether an 'internal' fetch profile has been set.
 			// This indicates a special fetch profile Hibernate needs applied
 			// (for its merge loading process e.g.).
-			return loaders.get( session.getLoadQueryInfluencers().getInternalFetchProfile() );
+			final String internalFetchProfile = session.getLoadQueryInfluencers().getInternalFetchProfile();
+			return getLoaderByString( internalFetchProfile );
 		}
 		else if ( isAffectedByEnabledFetchProfiles( session ) ) {
 			// If the session has associated influencers we need to adjust the
@@ -4542,6 +4517,19 @@ public abstract class AbstractEntityPersister
 		}
 		else {
 			return getLoaderByLockMode( lockOptions.getLockMode() );
+		}
+	}
+
+	private UniqueEntityLoader getLoaderByString(String internalFetchProfile) {
+		if ( "merge".equals( internalFetchProfile ) ) {
+			return loaders.getOrCreateByInternalFetchProfileMerge( this::buildMergeCascadeEntityLoader );
+		}
+		else if ( "refresh".equals( internalFetchProfile ) ) {
+			return loaders.getOrCreateByInternalFetchProfileRefresh( this::buildRefreshCascadeEntityLoader );
+		}
+		else {
+			//At this time there's no code storing any other fetch profiles; also, the map implementation isn't supporting the option.
+			return null;
 		}
 	}
 

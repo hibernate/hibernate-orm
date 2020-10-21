@@ -4,7 +4,6 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
 import java.util.Map;
 
-import org.hibernate.Version;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.hql.spi.id.inline.InlineIdsOrClauseBulkIdStrategy;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
@@ -40,7 +39,6 @@ public class NestedIdClassDerivedIdentifiersTest extends BaseEntityManagerFuncti
         doInJPA( this::entityManagerFactory, em ->
         {
             // do nothing
-            System.out.println( "Hibernate version: " + Version.getVersionString() );
         } );
     }
     

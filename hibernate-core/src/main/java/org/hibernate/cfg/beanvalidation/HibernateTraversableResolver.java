@@ -12,8 +12,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.validation.Path;
 import javax.validation.TraversableResolver;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.Hibernate;
-import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.CollectionType;

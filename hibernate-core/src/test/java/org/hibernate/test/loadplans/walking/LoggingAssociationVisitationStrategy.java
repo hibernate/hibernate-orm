@@ -6,7 +6,7 @@
  */
 package org.hibernate.test.loadplans.walking;
 
-import org.hibernate.annotations.common.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.plan.spi.FetchSource;
 import org.hibernate.persister.walking.spi.AnyMappingDefinition;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;

@@ -8,6 +8,7 @@ public class PlayerStatId implements Serializable
 
     private Integer playerId;
 
+    // nested composite PK @IdClass: named like relationship in entity class
     private ScoreId score;
 
     public PlayerStatId()

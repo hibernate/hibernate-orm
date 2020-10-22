@@ -651,7 +651,7 @@ Sets the associated collection cache concurrency strategy for the designated reg
 === Infinispan properties
 
 For more details about how to customize the Infinispan second-level cache provider, check out the
-http://infinispan.org/docs/stable/user_guide/user_guide.html#configuration_properties[Infinispan User Guide]
+https://infinispan.org/docs/stable/titles/integrating/integrating.html#configuration_properties[Infinispan User Guide].
 
 [[configurations-transactions]]
 === Transactions properties

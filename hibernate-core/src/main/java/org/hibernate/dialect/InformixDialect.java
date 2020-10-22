@@ -319,7 +319,7 @@ public class InformixDialect extends Dialect {
 
 	@Override
 	public String getSelectClauseNullString(int sqlType) {
-		String typeName = getTypeName( sqlType, 1, 1, 0 );
+		String typeName = getCastTypeName( sqlType);
 		//trim off the length/precision/scale
 		final int loc = typeName.indexOf( '(' );
 		if ( loc > -1 ) {

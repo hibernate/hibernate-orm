@@ -27,7 +27,7 @@ plugins {
     //      (or proper Gradle build-init feature) would be
     //      incredibly useful.  Same with groupId, package-name,
     //      etc.
-    id( "org.hibernate.orm" ) version "@@ormVersion@@"
+    id( "org.hibernate.orm" ) version "@ormVersion@"
 }
 
 group = "your.org"
@@ -38,7 +38,7 @@ repositories {
 }
 
 dependencies {
-    val ormVersion = "6.0.0.Alpha6"
+    val ormVersion = "@ormVersion@"
     val junit5Version = "5.3.1"
     val h2Version = "1.4.199"
 

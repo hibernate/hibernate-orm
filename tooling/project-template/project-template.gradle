@@ -8,7 +8,6 @@ import org.apache.tools.ant.filters.ReplaceTokens
  */
 plugins {
     id 'base'
-    id 'distribution'
 
     // for publishing snapshots
     id 'maven-publish'
@@ -19,23 +18,87 @@ plugins {
     id "nu.studer.credentials" version "2.1"
 }
 
+version = '0.1'
 
-task processTemplateResources(type:ProcessResources) {
-    filter( ReplaceTokens, tokens: [ 'ormVersion' : project.version.toString() ] )
+ext {
+    processedTemplateDir = project.layout.buildDirectory.dir('resources/template')
+    archiveDir = project.layout.buildDirectory.dir('distributions')
 }
 
-distributions {
-    main {
-        contents {
-            from project.layout.buildDirectory.dir( 'resources/template' )
-        }
+task processTemplateResources(type:Copy) {
+    inputs.files( 'src/template/resources' )
+    outputs.dir( processedTemplateDir )
+
+    description = 'Copies the template sources into the build dir, performing some replacements'
+
+    from( 'src/template/resources' ) {
+        filter( ReplaceTokens, tokens: [ 'ormVersion' : project.version.toString() ] )
+    }
+    into processedTemplateDir.get().asFile
+}
+
+task templateTgz(type:Tar) {
+    description = 'Bundles the template project into a TGZ archive'
+
+    inputs.files( processedTemplateDir )
+    outputs.dir( archiveDir )
+
+    dependsOn project.tasks.processTemplateResources
+
+    compression = Compression.GZIP
+
+    from processedTemplateDir.get().asFile
+
+    destinationDirectory = archiveDir
+}
+
+task templateZip(type:Zip) {
+    description = 'Bundles the template project into a Zip archive'
+
+    inputs.files( processedTemplateDir )
+    outputs.dir( archiveDir )
+
+    dependsOn project.tasks.processTemplateResources
+
+    from processedTemplateDir.get().asFile
+
+    destinationDirectory = archiveDir
+}
+
+bintray {
+    user = credentials.'personal.bintray.user'
+    key = credentials.'personal.bintray.key'
+
+    filesSpec {
+        from distTar
+        from distZip
+    }
+
+    pkg {
+        userOrg = 'hibernate'
+        repo = 'generic'
+        name = 'orm-project-template'
     }
 }
 
-tasks.distTar.compression( Compression.GZIP )
+task assembleDist( dependsOn: [tasks.templateTgz, tasks.templateZip] )
+task release( dependsOn: tasks.assembleDist )
 
-task release
-tasks.release.dependsOn tasks.assembleDist
+tasks.publish {
+    dependsOn tasks.assembleDist
+}
+
+tasks.bintrayUpload {
+    dependsOn tasks.assembleDist
+    doFirst {
+        if ( credentials.'personal.bintray.user' == null ) {
+            throw new GradleException( "BinTray user not known, cannot perform upload" );
+        }
+        if ( credentials.'personal.bintray.key' == null ) {
+            throw new GradleException( "BinTray API key not known, cannot perform upload" );
+        }
+    }
+}
 
 if ( version.toString().endsWith( "-SNAPSHOT" ) ) {
     tasks.bintrayUpload.enabled = false
@@ -44,25 +107,4 @@ if ( version.toString().endsWith( "-SNAPSHOT" ) ) {
 else {
     tasks.publish.enabled = false
     tasks.release.dependsOn tasks.bintrayUpload
-}
-
-publishing {
-    publications {
-        template(MavenPublication) {
-            artifact distTar
-            artifact distZip
-        }
-    }
-}
-
-bintray {
-    user = credentials.'bintray.user'
-    key = credentials.'bintray.key'
-    publications = ['template']
-
-    pkg {
-        userOrg = 'hibernate'
-        repo = 'generic'
-        name = 'orm-project-template'
-    }
 }

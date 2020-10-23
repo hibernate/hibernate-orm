@@ -73,6 +73,7 @@ pluginBundle {
 	}
 }
 
+
 task release
 
 if ( project.version.toString().endsWith( '-SNAPSHOT' ) ) {

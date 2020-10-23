@@ -12,7 +12,7 @@ import javax.persistence.Convert;
 import javax.persistence.Converts;
 import javax.persistence.JoinTable;
 
-import org.hibernate.annotations.common.AssertionFailure;
+import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.spi.MetadataBuildingContext;

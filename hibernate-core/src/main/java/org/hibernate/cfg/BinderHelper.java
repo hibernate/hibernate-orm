@@ -1083,7 +1083,7 @@ public class BinderHelper {
 		if ( declaringClass != null ) {
 			final InheritanceState inheritanceState = inheritanceStatePerClass.get( declaringClass );
 			if ( inheritanceState == null ) {
-				throw new org.hibernate.annotations.common.AssertionFailure(
+				throw new AssertionFailure(
 						"Declaring class is not found in the inheritance state hierarchy: " + declaringClass
 				);
 			}

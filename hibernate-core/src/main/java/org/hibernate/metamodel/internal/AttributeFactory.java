@@ -16,8 +16,8 @@ import javax.persistence.OneToOne;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.Type;
 
-import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.AssertionFailure;
 import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.HEMLogging;
 import org.hibernate.mapping.Collection;

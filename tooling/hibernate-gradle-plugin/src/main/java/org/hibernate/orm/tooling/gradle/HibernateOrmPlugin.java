@@ -13,6 +13,9 @@ import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 
+import org.hibernate.orm.tooling.gradle.enhance.EnhancementTask;
+import org.hibernate.orm.tooling.gradle.metamodel.JpaMetamodelGenerationTask;
+
 /**
  * @author Steve Ebersole
  */
@@ -34,6 +37,6 @@ public class HibernateOrmPlugin implements Plugin<Project> {
 		final SourceSet mainSourceSet = sourceSets.getByName( SourceSet.MAIN_SOURCE_SET_NAME );
 
 		EnhancementTask.apply( ormDsl, mainSourceSet, project );
-		MetamodelGenTask.apply( ormDsl, mainSourceSet, project );
+		JpaMetamodelGenerationTask.apply( ormDsl, mainSourceSet, project );
 	}
 }

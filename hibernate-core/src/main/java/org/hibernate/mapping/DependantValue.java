@@ -27,6 +27,10 @@ public class DependantValue extends SimpleValue implements Resolvable {
 		this.wrappedValue = prototype;
 	}
 
+	public KeyValue getWrappedValue() {
+		return wrappedValue;
+	}
+
 	public Type getType() throws MappingException {
 		return wrappedValue.getType();
 	}

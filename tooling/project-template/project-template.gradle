@@ -1,0 +1,68 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ */
+plugins {
+    id 'base'
+    id 'distribution'
+
+    // for publishing snapshots
+    id 'maven-publish'
+    id 'org.hibernate.build.maven-repo-auth'
+
+    // publishing to BinTray
+    id "com.jfrog.bintray"
+    id "nu.studer.credentials" version "2.1"
+}
+
+
+task processTemplateResources(type:ProcessResources) {
+    filter( ReplaceTokens, tokens: [ 'ormVersion' : project.version.toString() ] )
+}
+
+distributions {
+    main {
+        contents {
+            from project.layout.buildDirectory.dir( 'resources/template' )
+        }
+    }
+}
+
+tasks.distTar.compression( Compression.GZIP )
+
+task release
+tasks.release.dependsOn tasks.assembleDist
+
+if ( version.toString().endsWith( "-SNAPSHOT" ) ) {
+    tasks.bintrayUpload.enabled = false
+    tasks.release.dependsOn tasks.publish
+}
+else {
+    tasks.publish.enabled = false
+    tasks.release.dependsOn tasks.bintrayUpload
+}
+
+publishing {
+    publications {
+        template(MavenPublication) {
+            artifact distTar
+            artifact distZip
+        }
+    }
+}
+
+bintray {
+    user = credentials.'bintray.user'
+    key = credentials.'bintray.key'
+    publications = ['template']
+
+    pkg {
+        userOrg = 'hibernate'
+        repo = 'generic'
+        name = 'orm-project-template'
+    }
+}

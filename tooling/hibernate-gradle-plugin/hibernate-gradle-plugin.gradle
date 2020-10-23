@@ -4,10 +4,12 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-plugins {
-	id "groovy"
 
+plugins {
 	id 'java-gradle-plugin'
+	id 'com.github.sebersole.testkit-junit5' version '0.9.2'
+
+	// for portal publishing
 	id "com.gradle.plugin-publish" version "0.12.0"
 	id "nu.studer.credentials" version "2.1"
 
@@ -21,7 +23,8 @@ plugins {
 
 description = "Gradle plugin for integrating Hibernate aspects into your build"
 
-apply from: rootProject.file( 'gradle/published-java-module.gradle' )
+apply from: rootProject.file( 'gradle/base-information.gradle' )
+apply from: rootProject.file( 'gradle/libraries.gradle' )
 
 ext {
 	pluginId = 'org.hibernate.orm'
@@ -32,15 +35,19 @@ ext {
 	//noinspection GrUnresolvedAccess
 	publishSecret = credentials.'hibernate.gradle.publish.secret'
 
-	project.setProperty( 'gradle.publish.key', ext.publishKey )
-	project.setProperty( 'gradle.publish.secret', ext.publishSecret )
+	if ( publishKey != null && publishSecret != null ) {
+		project.'gradle.publish.key' = publishKey
+		project.'gradle.publish.secret' = publishSecret
+	}
 }
 
 dependencies {
-	compile( project( ':hibernate-core' ) )
-	compile( libraries.jpa )
-	compile( libraries.javassist )
-	compile( libraries.byteBuddy )
+	implementation( project( ':hibernate-core' ) )
+	implementation( libraries.jpa )
+	implementation( libraries.javassist )
+	implementation( libraries.byteBuddy )
+
+	testImplementation project( ':hibernate-testing' )
 }
 
 gradlePlugin {
@@ -66,8 +73,11 @@ pluginBundle {
 	}
 }
 
+task release
+
 if ( project.version.toString().endsWith( '-SNAPSHOT' ) ) {
 	tasks.publishPlugins.enabled = false
+	tasks.release.dependsOn tasks.publish
 }
 else {
 	tasks.publish.enabled = false
@@ -76,11 +86,29 @@ else {
 
 tasks.publishPlugins {
 	doFirst {
-		if ( project.publishKey == null ) {
-			throw new RuntimeException( "`hibernate.gradle.publish.key` not found" )
+		if ( project.'gradle.publish.key' == null ) {
+			throw new RuntimeException( "`gradle.publish.key` not found" )
 		}
-		if ( project.publishKey == null ) {
-			throw new RuntimeException( "`hibernate.gradle.publish.secret` not found" )
+		if ( project.'gradle.publish.secret' == null ) {
+			throw new RuntimeException( "`gradle.publish.secret` not found" )
 		}
 	}
 }
+
+
+// for SNAPSHOT version
+publishing {
+	publications {
+		plugin( MavenPublication ) {
+			from components.java
+		}
+	}
+
+	repositories {
+		maven {
+			name 'jboss-snapshots-repository'
+			url 'https://repository.jboss.org/nexus/content/repositories/snapshots'
+		}
+	}
+}
+

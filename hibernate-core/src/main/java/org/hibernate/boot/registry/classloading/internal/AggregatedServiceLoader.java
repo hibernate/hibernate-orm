@@ -194,8 +194,7 @@ abstract class AggregatedServiceLoader<S> {
 			Set<S> result = new LinkedHashSet<>();
 
 			// Always try the aggregated class loader first
-			Iterator<? extends Supplier<S>> providerIterator = providerStream( aggregatedClassLoaderServiceLoader )
-					.iterator();
+			Iterator<? extends Supplier<S>> providerIterator = providerStream( aggregatedClassLoaderServiceLoader ).iterator();
 			while ( providerIterator.hasNext() ) {
 				Supplier<S> provider = providerIterator.next();
 				collectServiceIfNotDuplicate( result, alreadyEncountered, provider );

@@ -10,8 +10,8 @@
 ext {
 
     junitVersion = '4.12'
-    junitVintageVersion = '5.3.1'
-    junit5Version = '5.3.1'
+    junitVintageVersion = '5.4.2'
+    junit5Version = '5.4.2'
 
     h2Version = '1.4.199'
     bytemanVersion = '4.0.13' //Compatible with JDK14

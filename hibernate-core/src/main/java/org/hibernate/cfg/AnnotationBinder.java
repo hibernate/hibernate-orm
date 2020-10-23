@@ -84,6 +84,7 @@ import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.Check;
 import org.hibernate.annotations.CollectionId;
 import org.hibernate.annotations.Columns;
+import org.hibernate.annotations.Comment;
 import org.hibernate.annotations.DiscriminatorFormula;
 import org.hibernate.annotations.DiscriminatorOptions;
 import org.hibernate.annotations.Fetch;
@@ -146,8 +147,6 @@ import org.hibernate.cfg.annotations.QueryBinder;
 import org.hibernate.cfg.annotations.SimpleValueBinder;
 import org.hibernate.cfg.annotations.TableBinder;
 import org.hibernate.engine.OptimisticLockStyle;
-import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.internal.CoreMessageLogger;
@@ -2004,6 +2003,7 @@ public final class AnnotationBinder {
 					elementColumns = Ejb3Column.buildColumnFromAnnotation(
 							new Column[] { ann },
 							formulaAnn,
+							property.getAnnotation( Comment.class ),
 							nullability,
 							propertyHolder,
 							virtualProperty,
@@ -2016,6 +2016,7 @@ public final class AnnotationBinder {
 					elementColumns = Ejb3Column.buildColumnFromAnnotation(
 							anns.columns(),
 							null,
+							property.getAnnotation( Comment.class ),
 							nullability,
 							propertyHolder,
 							virtualProperty,
@@ -2027,6 +2028,7 @@ public final class AnnotationBinder {
 					elementColumns = Ejb3Column.buildColumnFromAnnotation(
 							null,
 							null,
+							property.getAnnotation( Comment.class ),
 							nullability,
 							propertyHolder,
 							virtualProperty,
@@ -2056,6 +2058,7 @@ public final class AnnotationBinder {
 					Ejb3Column[] mapColumns = Ejb3Column.buildColumnFromAnnotation(
 							keyColumns,
 							null,
+							property.getAnnotation( Comment.class ),
 							Nullability.FORCED_NOT_NULL,
 							propertyHolder,
 							isJPA2 ? inferredData : mapKeyVirtualProperty,
@@ -2104,6 +2107,7 @@ public final class AnnotationBinder {
 					PropertyData mapKeyVirtualProperty = new WrappedInferredData( inferredData, "mapkey" );
 					Ejb3JoinColumn[] mapJoinColumns = Ejb3JoinColumn.buildJoinColumnsWithDefaultColumnSuffix(
 							joinKeyColumns,
+							property.getAnnotation( Comment.class ),
 							null,
 							entityBinder.getSecondaryTables(),
 							propertyHolder,

@@ -11,7 +11,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 
-import org.hibernate.annotations.common.AssertionFailure;
+import org.hibernate.AssertionFailure;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Map;
 import org.hibernate.mapping.Property;

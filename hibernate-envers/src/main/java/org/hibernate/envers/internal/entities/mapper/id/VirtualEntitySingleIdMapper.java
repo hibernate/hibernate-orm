@@ -13,6 +13,8 @@ import java.util.Map;
 
 import org.hibernate.Session;
 import org.hibernate.envers.boot.internal.EnversService;
+import org.hibernate.envers.internal.entities.EntitiesConfigurations;
+import org.hibernate.envers.internal.entities.EntityConfiguration;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.property.access.spi.Getter;
@@ -25,7 +27,7 @@ import org.hibernate.type.EntityType;
  * An extension to the {@link SingleIdMapper} implementation that supports the use case of an {@code @IdClass}
  * mapping that contains an entity association where the {@code @IdClass} stores the primary key of the
  * associated entity rather than the entity object itself.
- *
+ * <p>
  * Internally this mapper is capable of transforming the primary key values into the associated entity object
  * and vice versa depending upon the operation.
  *
@@ -203,8 +205,16 @@ public class VirtualEntitySingleIdMapper extends SingleIdMapper {
 	}
 
 	private static IdMapper resolveEntityIdMapper(ServiceRegistry serviceRegistry, String entityName) {
-		final EnversService enversService = serviceRegistry.getService( EnversService.class );
-		return enversService.getEntitiesConfigurations().get( entityName ).getIdMapper();
+		final EntitiesConfigurations entitiesConfigurations = serviceRegistry.getService( EnversService.class )
+				.getEntitiesConfigurations();
+
+		final EntityConfiguration auditedEntityConfiguration = entitiesConfigurations.get( entityName );
+		if ( auditedEntityConfiguration != null ) {
+			return auditedEntityConfiguration.getIdMapper();
+		}
+		else {
+			return entitiesConfigurations.getNotVersionEntityConfiguration( entityName ).getIdMapper();
+		}
 	}
 
 }

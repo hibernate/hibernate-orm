@@ -7,12 +7,16 @@
 package org.hibernate.test.jpa.ql;
 
 import org.hibernate.Session;
+import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.test.jpa.AbstractJPATest;
 import org.hibernate.test.jpa.MapContent;
 import org.hibernate.test.jpa.MapOwner;
 import org.hibernate.test.jpa.Relationship;
+import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
+@TestForIssue(jiraKey = "HHH-14279")
 public class MapIssueTest extends AbstractJPATest {
 
 	@Override
@@ -25,6 +29,7 @@ public class MapIssueTest extends AbstractJPATest {
 	}
 
 	@Test
+	@RequiresDialect(value = PostgreSQL81Dialect.class, comment = "Requires support for using a correlated column in a join condition which H2 apparently does not support.")
 	public void testWhereSubqueryMapKeyIsEntityWhereWithKey() {
 		Session s = openSession();
 		s.beginTransaction();

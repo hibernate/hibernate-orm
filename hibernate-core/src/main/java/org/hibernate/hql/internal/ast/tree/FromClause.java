@@ -94,6 +94,9 @@ public class FromClause extends HqlSqlWalkerNode implements HqlSqlTokenTypes, Di
 	void moveFromElementToEnd(FromElement element) {
 		fromElements.remove( element );
 		fromElements.add( element );
+		// We must move destinations which must come after the from element as well
+		fromElements.removeAll( element.getDestinations() );
+		fromElements.addAll( element.getDestinations() );
 	}
 
 	public void finishInit() {

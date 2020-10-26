@@ -94,9 +94,7 @@ dependencies {
 	asciidoclet 'org.asciidoctor:asciidoclet:1.+'
 
 	if ( db.equalsIgnoreCase( 'oracle' ) ) {
-		testRuntime( libraries.oracle ) {
-			exclude group: 'com.oracle.jdbc', module: 'xmlparserv2'
-		}
+		testRuntime( libraries.oracle )
 	}
 	else if ( db.equalsIgnoreCase( 'db2' ) ) {
 		testRuntime( libraries.db2 )

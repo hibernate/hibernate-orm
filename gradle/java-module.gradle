@@ -89,7 +89,7 @@ dependencies {
 
 	asciidoclet 'org.asciidoctor:asciidoclet:1.+'
 
-	if ( db.equalsIgnoreCase( 'oracle' ) ) {
+	if ( db.equalsIgnoreCase( 'oracle' ) || db.equalsIgnoreCase( 'oracle_docker' ) ) {
 		testRuntime( libraries.oracle )
 	}
 	else if ( db.equalsIgnoreCase( 'db2' ) ) {

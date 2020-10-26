@@ -117,57 +117,9 @@ task javadocJar(type: Jar) {
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Javadoc
 
+apply from: rootProject.file( 'gradle/javadoc.gradle' )
+
 javadoc {
-	exclude( "**/internal/*" )
-	exclude( "**/generated-src/**" )
-
-	final int currentYear = new GregorianCalendar().get( Calendar.YEAR )
-
-	configure( options ) {
-		// this is the config needed to use asciidoclet for Javadoc rendering.  It relies on a build from John's PR @ https://github.com/asciidoctor/asciidoclet/pull/91
-		// however, the PR does not work for me in that Javadocs with `@asciidoclet` are not rendered using asciidoc(tor/let).  Also tried the preferable `@asciidoc`
-		// with the same result.  Leaving all this config in place however as the outcome is the same as not enabling it.
-		// todo (6.0) : need to find out why the asciidoclet PR does not work
-		//
-		// Travis CI JDK 11 build did not like this
-//		docletpath = configurations.asciidoclet.files.asType(List)
-//		doclet = 'org.asciidoctor.Asciidoclet'
-		windowTitle = "$project.name JavaDocs"
-		docTitle = "$project.name JavaDocs ($project.version)"
-		bottom = "Copyright &copy; 2001-$currentYear <a href=\"http://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."
-		use = true
-		encoding = 'UTF-8'
-		links += [
-				'https://docs.oracle.com/javase/8/docs/api/',
-				'http://docs.jboss.org/hibernate/beanvalidation/spec/2.0/api/',
-				'http://docs.jboss.org/cdi/api/2.0/',
-				'https://javaee.github.io/javaee-spec/javadocs/'
-		]
-		tags = [ "apiNote", 'implSpec', 'implNote', 'todo' ]
-		
-		if ( JavaVersion.current().isJava11Compatible() ) {
-			//The need to set `--source 1.8` applies to all JVMs after 11, and also to 11
-			// but after excluding the first two builds; see also specific comments on
-			// https://bugs.openjdk.java.net/browse/JDK-8212233?focusedCommentId=14245762
-			// For now, let's be compatible with JDK 11.0.3+. We can improve on it if people
-			// complain they cannot build with JDK 11.0.0, 11.0.1 and 11.0.2.
-			System.out.println("Forcing Javadoc in Java 8 compatible mode");
-			options.source = project.baselineJavaVersion
-		}
-
-		if ( JavaVersion.current().isJava8Compatible() ) {
-			addStringOption( 'Xdoclint:none', '-quiet' )
-		}
-
-		tags(
-				'todo:X"',
-				'apiNote:a:"API Note:"',
-				'implSpec:a:"Implementation Specification:"',
-				'implNote:a:"Implementation Note:"'
-		)
-	}
-		options.addStringOption( 'Xdoclint:none', '-quiet' )
-
 	doFirst {
 		// ordering problems if we try to do this during config phase :(
 		classpath += project.sourceSets.main.output.classesDirs + project.sourceSets.main.compileClasspath + project.configurations.provided

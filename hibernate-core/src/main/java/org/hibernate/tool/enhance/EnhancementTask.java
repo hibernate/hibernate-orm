@@ -241,11 +241,15 @@ public class EnhancementTask extends Task {
 
 	private void walkDir(File dir, FileFilter classesFilter, FileFilter dirFilter) {
 		File[] dirs = dir.listFiles( dirFilter );
-		for ( File dir1 : dirs ) {
-			walkDir( dir1, classesFilter, dirFilter );
+		if ( dirs != null ) {
+			for ( File dir1 : dirs ) {
+				walkDir( dir1, classesFilter, dirFilter );
+			}
 		}
 		File[] files = dir.listFiles( classesFilter );
-		Collections.addAll( sourceSet, files );
+		if ( files != null ) {
+			Collections.addAll( sourceSet, files );
+		}
 	}
 
 	private void writeOutEnhancedClass(byte[] enhancedBytecode, File file) throws BuildException {

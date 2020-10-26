@@ -17,7 +17,7 @@ import org.locationtech.jts.geom.Polygon;
  */
 public class EnvelopeAdapter {
 
-	private static GeometryFactory geomFactory = new GeometryFactory();
+	private static volatile GeometryFactory geomFactory = new GeometryFactory();
 
 	private EnvelopeAdapter() {
 	}

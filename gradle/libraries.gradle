@@ -116,7 +116,7 @@ ext {
             mariadb:         'org.mariadb.jdbc:mariadb-java-client:2.2.3',
             cockroachdb:     'org.postgresql:postgresql:42.2.8',
 
-            oracle:          'com.oracle.jdbc:ojdbc8:12.2.0.1',
+            oracle:          'com.oracle.database.jdbc:ojdbc8:19.8.0.0',
             mssql:           'com.microsoft.sqlserver:mssql-jdbc:7.2.1.jre8',
             db2:             'com.ibm.db2:db2jcc:10.5',
             hana:            'com.sap.cloud.db.jdbc:ngdbc:2.4.59',

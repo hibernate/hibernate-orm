@@ -137,9 +137,17 @@ public class StandardRefCursorSupport implements RefCursorSupport {
 	 */
 	public static boolean supportsRefCursors(DatabaseMetaData meta) {
 		try {
-			return meta.supportsRefCursors();
+			final boolean mightSupportIt = meta.supportsRefCursors();
+			// Some databases cheat and don't actually support it correctly: add some additional checks.
+			if ( mightSupportIt ) {
+				if ( "Oracle JDBC driver".equals( meta.getDriverName() ) && meta.getDriverMajorVersion() < 19 ) {
+					return false;
+				}
+			}
+			return mightSupportIt;
 		}
-		catch (SQLException throwable) {
+		catch (Exception throwable) {
+			//If the driver is not compatible with the Java 8 contract, the method might not exit.
 			log.debug( "Unexpected error trying to gauge level of JDBC REF_CURSOR support : " + throwable.getMessage() );
 			return false;
 		}

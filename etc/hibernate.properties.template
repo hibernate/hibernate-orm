@@ -54,7 +54,7 @@ hibernate.connection.url @DB_URL@
 
 #hibernate.dialect org.hibernate.dialect.OracleDialect
 #hibernate.dialect org.hibernate.dialect.Oracle9Dialect
-#hibernate.connection.driver_class oracle.jdbc.driver.OracleDriver
+#hibernate.connection.driver_class oracle.jdbc.OracleDriver
 #hibernate.connection.username ora
 #hibernate.connection.password ora
 #hibernate.connection.url jdbc:oracle:thin:@localhost:1521:test

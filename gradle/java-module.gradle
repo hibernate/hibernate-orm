@@ -91,7 +91,7 @@ dependencies {
 
 	if ( db.equalsIgnoreCase( 'oracle' ) ) {
 		testRuntime( libraries.oracle ) {
-			exclude group: 'com.oracle.jdbc', module: 'xmlparserv2'
+			exclude group: 'com.oracle.database.xml', module: 'xmlparserv2'
 		}
 	}
 	else if ( db.equalsIgnoreCase( 'db2' ) ) {

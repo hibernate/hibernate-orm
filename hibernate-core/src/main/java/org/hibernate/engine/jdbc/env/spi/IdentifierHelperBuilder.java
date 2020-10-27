@@ -8,7 +8,6 @@ package org.hibernate.engine.jdbc.env.spi;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -32,7 +31,10 @@ public class IdentifierHelperBuilder {
 
 	private NameQualifierSupport nameQualifierSupport = NameQualifierSupport.BOTH;
 
-	private Set<String> reservedWords = new TreeSet<String>( String.CASE_INSENSITIVE_ORDER );
+	//TODO interesting computer science puzzle: find a more compact representation?
+	// we only need "contains" on this set, and it has to be case sensitive and efficient.
+	private final TreeSet<String> reservedWords = new TreeSet<>( String.CASE_INSENSITIVE_ORDER );
+
 	private boolean globallyQuoteIdentifiers = false;
 	private boolean skipGlobalQuotingForColumnDefinitions = false;
 	private boolean autoQuoteKeywords = true;

@@ -11,7 +11,6 @@ import java.util.Set;
 import javax.persistence.Column;
 
 import org.hibernate.MappingException;
-import org.hibernate.annotations.common.reflection.ClassLoadingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
@@ -310,14 +309,7 @@ public class RevisionInfoConfiguration {
 		for ( PersistentClass persistentClass : metadata.getEntityBindings() ) {
 			// Ensure we're in POJO, not dynamic model, mapping.
 			if (persistentClass.getClassName() != null) {
-				XClass clazz;
-				try {
-					clazz = reflectionManager.classForName( persistentClass.getClassName() );
-				}
-				catch (ClassLoadingException e) {
-					throw new MappingException( e );
-				}
-
+				XClass clazz = reflectionManager.toXClass( persistentClass.getMappedClass() );
 				final RevisionEntity revisionEntity = clazz.getAnnotation( RevisionEntity.class );
 				if ( revisionEntity != null ) {
 					if (revisionEntityFound) {

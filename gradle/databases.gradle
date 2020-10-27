@@ -76,10 +76,20 @@ ext {
                 ],
                 oracle : [
                         'db.dialect' : 'org.hibernate.dialect.Oracle10gDialect',
-                        'jdbc.driver': 'oracle.jdbc.driver.OracleDriver',
+                        'jdbc.driver': 'oracle.jdbc.OracleDriver',
                         'jdbc.user'  : 'hibernate_orm_test',
                         'jdbc.pass'  : 'hibernate_orm_test',
                         'jdbc.url'   : 'jdbc:oracle:thin:@localhost:1521/xe'
+                ],
+                // Uses the default settings for using https://hub.docker.com/_/oracle-database-enterprise-edition
+                // After registering to get access (see instructions at above link), start it for testing with:
+                // docker run --ulimit memlock=-1:-1 -it --rm=true --memory-swappiness=0 --name ORCLCDB -p 1521:1521 store/oracle/database-enterprise:12.2.0.1-slim
+                oracle_docker : [
+                        'db.dialect' : 'org.hibernate.dialect.Oracle12cDialect',
+                        'jdbc.driver': 'oracle.jdbc.OracleDriver',
+                        'jdbc.user'  : 'sys as sysdba',
+                        'jdbc.pass'  : 'Oradoc_db1',
+                        'jdbc.url'   : 'jdbc:oracle:thin:@localhost:1521:ORCLCDB'
                 ],
                 mssql : [
                         'db.dialect' : 'org.hibernate.dialect.SQLServer2012Dialect',

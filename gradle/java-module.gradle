@@ -23,6 +23,10 @@ buildscript {
 import de.thetaphi.forbiddenapis.gradle.CheckForbiddenApis
 import org.apache.tools.ant.filters.ReplaceTokens
 
+/**
+ * Support for modules that contain Java code
+ */
+
 apply from: rootProject.file( 'gradle/base-information.gradle' )
 apply from: rootProject.file( 'gradle/libraries.gradle' )
 apply from: rootProject.file( 'gradle/databases.gradle' )
@@ -107,10 +111,8 @@ dependencies {
 	testRuntime( libraries.hana )
 	testRuntime( libraries.cockroachdb )
 
-	if ( db.equalsIgnoreCase( 'oracle' ) ) {
-		testRuntime( libraries.oracle ) {
-			exclude group: 'com.oracle.jdbc', module: 'xmlparserv2'
-		}
+	if ( db.equalsIgnoreCase( 'oracle' ) || db.equalsIgnoreCase( 'oracle_docker' ) ) {
+		testRuntime( libraries.oracle )
 	}
 	else if ( db.equalsIgnoreCase( 'db2' ) ) {
 		testRuntime( libraries.db2 )
@@ -196,10 +198,10 @@ tasks.withType( Test.class ).each { test ->
 	test.jvmArgs += [
 			'-XX:+HeapDumpOnOutOfMemoryError',
 			"-XX:HeapDumpPath=${file( "${buildDir}/OOM-dump.hprof" ).absolutePath}",
-			'-XX:MetaspaceSize=512M'
+			'-XX:MetaspaceSize=256M'
 	]
 
-	test.maxHeapSize = '4G'
+	test.maxHeapSize = '3G'
 
 	test.systemProperties['hibernate.test.validatefailureexpected'] = true
 	test.systemProperties += System.properties.findAll { it.key.startsWith( "hibernate." ) }

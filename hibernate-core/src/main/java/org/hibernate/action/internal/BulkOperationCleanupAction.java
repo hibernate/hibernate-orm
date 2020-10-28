@@ -189,9 +189,8 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 
 				for ( NaturalIdCleanup cleanup : naturalIdCleanups ) {
 					cleanup.release();
-
 				}
-				entityCleanups.clear();
+				naturalIdCleanups.clear();
 
 				for ( CollectionCleanup cleanup : collectionCleanups ) {
 					cleanup.release();

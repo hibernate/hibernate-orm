@@ -201,8 +201,6 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			constraintOrderedKeyColumnNames = new String[][] {getIdentifierColumnNames()};
 		}
 
-		initLockers();
-
 		initSubclassPropertyAliasesMap( persistentClass );
 
 		postConstruct( creationContext.getMetadata() );

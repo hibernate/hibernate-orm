@@ -248,7 +248,7 @@ public abstract class AbstractEntityPersister
 	// dynamic filters attached to the class-level
 	private final FilterHelper filterHelper;
 
-	private final Set<String> affectingFetchProfileNames = new HashSet<>();
+	private volatile Set<String> affectingFetchProfileNames;
 
 	private final Map uniqueKeyLoaders = new HashMap();
 
@@ -4466,6 +4466,9 @@ public abstract class AbstractEntityPersister
 	}
 
 	public void registerAffectingFetchProfile(String fetchProfileName) {
+		if ( affectingFetchProfileNames == null ) {
+			this.affectingFetchProfileNames = new HashSet<>();
+		}
 		affectingFetchProfileNames.add( fetchProfileName );
 	}
 
@@ -4474,9 +4477,12 @@ public abstract class AbstractEntityPersister
 	}
 
 	private boolean isAffectedByEnabledFetchProfiles(SharedSessionContractImplementor session) {
-		for ( String s : session.getLoadQueryInfluencers().getEnabledFetchProfileNames() ) {
-			if ( affectingFetchProfileNames.contains( s ) ) {
-				return true;
+		final Set<String> fetchProfileNames = this.affectingFetchProfileNames;
+		if ( fetchProfileNames != null ) {
+			for ( String s : session.getLoadQueryInfluencers().getEnabledFetchProfileNames() ) {
+				if ( fetchProfileNames.contains( s ) ) {
+					return true;
+				}
 			}
 		}
 		return false;

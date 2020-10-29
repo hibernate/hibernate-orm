@@ -23,6 +23,8 @@ import org.hibernate.procedure.ProcedureCallMemento;
 
 import org.jboss.logging.Logger;
 
+import static org.hibernate.internal.util.collections.CollectionHelper.toSmallMap;
+
 /**
  * @author Steve Ebersole
  */
@@ -45,21 +47,21 @@ public class NamedQueryRepository {
 		for ( NamedQueryDefinition namedQueryDefinition : namedQueryDefinitions ) {
 			namedQueryDefinitionMap.put( namedQueryDefinition.getName(), namedQueryDefinition );
 		}
-		this.namedQueryDefinitionMap = Collections.unmodifiableMap( namedQueryDefinitionMap );
+		this.namedQueryDefinitionMap = toSmallMap( namedQueryDefinitionMap );
 
 
 		final HashMap<String, NamedSQLQueryDefinition> namedSqlQueryDefinitionMap = new HashMap<String, NamedSQLQueryDefinition>();
 		for ( NamedSQLQueryDefinition namedSqlQueryDefinition : namedSqlQueryDefinitions ) {
 			namedSqlQueryDefinitionMap.put( namedSqlQueryDefinition.getName(), namedSqlQueryDefinition );
 		}
-		this.namedSqlQueryDefinitionMap = Collections.unmodifiableMap( namedSqlQueryDefinitionMap );
+		this.namedSqlQueryDefinitionMap = toSmallMap( namedSqlQueryDefinitionMap );
 
 		final HashMap<String, ResultSetMappingDefinition> namedSqlResultSetMappingMap = new HashMap<String, ResultSetMappingDefinition>();
 		for ( ResultSetMappingDefinition resultSetMappingDefinition : namedSqlResultSetMappings ) {
 			namedSqlResultSetMappingMap.put( resultSetMappingDefinition.getName(), resultSetMappingDefinition );
 		}
-		this.namedSqlResultSetMappingMap = Collections.unmodifiableMap( namedSqlResultSetMappingMap );
-		this.procedureCallMementoMap = Collections.unmodifiableMap( namedProcedureCalls );
+		this.namedSqlResultSetMappingMap = toSmallMap( namedSqlResultSetMappingMap );
+		this.procedureCallMementoMap = toSmallMap( namedProcedureCalls );
 	}
 
 	public NamedQueryRepository(
@@ -67,10 +69,10 @@ public class NamedQueryRepository {
 			Map<String,NamedSQLQueryDefinition> namedSqlQueryDefinitionMap,
 			Map<String,ResultSetMappingDefinition> namedSqlResultSetMappingMap,
 			Map<String, ProcedureCallMemento> namedProcedureCallMap) {
-		this.namedQueryDefinitionMap = Collections.unmodifiableMap( namedQueryDefinitionMap );
-		this.namedSqlQueryDefinitionMap = Collections.unmodifiableMap( namedSqlQueryDefinitionMap );
-		this.namedSqlResultSetMappingMap = Collections.unmodifiableMap( namedSqlResultSetMappingMap );
-		this.procedureCallMementoMap = Collections.unmodifiableMap( namedProcedureCallMap );
+		this.namedQueryDefinitionMap = toSmallMap( namedQueryDefinitionMap );
+		this.namedSqlQueryDefinitionMap = toSmallMap( namedSqlQueryDefinitionMap );
+		this.namedSqlResultSetMappingMap = toSmallMap( namedSqlResultSetMappingMap );
+		this.procedureCallMementoMap = toSmallMap( namedProcedureCallMap );
 	}
 
 
@@ -109,7 +111,7 @@ public class NamedQueryRepository {
 			);
 		}
 
-		this.namedQueryDefinitionMap = Collections.unmodifiableMap( copy );
+		this.namedQueryDefinitionMap = toSmallMap( copy );
 	}
 
 	public synchronized void registerNamedSQLQueryDefinition(String name, NamedSQLQueryDefinition definition) {
@@ -127,7 +129,7 @@ public class NamedQueryRepository {
 			);
 		}
 
-		this.namedSqlQueryDefinitionMap = Collections.unmodifiableMap( copy );
+		this.namedSqlQueryDefinitionMap = toSmallMap( copy );
 	}
 
 	public synchronized void registerNamedProcedureCallMemento(String name, ProcedureCallMemento memento) {
@@ -141,7 +143,7 @@ public class NamedQueryRepository {
 			);
 		}
 
-		this.procedureCallMementoMap = Collections.unmodifiableMap( copy );
+		this.procedureCallMementoMap = toSmallMap( copy );
 	}
 
 	public Map<String,HibernateException> checkNamedQueries(QueryPlanCache queryPlanCache) {
@@ -159,8 +161,6 @@ public class NamedQueryRepository {
 			catch ( HibernateException e ) {
 				errors.put( namedQueryDefinition.getName(), e );
 			}
-
-
 		}
 
 		// Check native-sql queries
@@ -199,4 +199,5 @@ public class NamedQueryRepository {
 
 		return errors;
 	}
+
 }

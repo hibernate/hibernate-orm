@@ -317,6 +317,14 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 //		return values.toArray( new Object[values.size()] );
 	}
 
+	@Override
+	public boolean isMultiValuedBinding(QueryParameter parameter) {
+		if ( parameterListBindingMap == null ) {
+			return false;
+		}
+		return parameterListBindingMap.containsKey( parameter );
+	}
+
 	/**
 	 * @deprecated (since 5.2) expect a different approach to org.hibernate.engine.spi.QueryParameters in 6.0
 	 */

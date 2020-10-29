@@ -49,6 +49,20 @@ public class StoredProcedureApiTests extends BaseNonConfigCoreFunctionalTestCase
 	}
 
 	@Test
+	public void parameterValueAccessByName() {
+		inTransaction(
+				session -> {
+					final ProcedureCall call = session.createStoredProcedureCall( "test" );
+
+					call.registerStoredProcedureParameter("a", Integer.class, ParameterMode.IN);
+					call.registerStoredProcedureParameter( "b", String.class, ParameterMode.OUT);
+					call.setParameter( "a", 1 );
+					call.getParameterValue( "a" );
+				}
+		);
+	}
+
+	@Test
 	public void testInvalidParameterReference() {
 		inTransaction(
 				session -> {

@@ -41,7 +41,11 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractPropertyMapping.class );
 
 	private final Map<String, Type> typesByPropertyPath = new HashMap<>();
-	private final Set<String> duplicateIncompatiblePaths = new HashSet<>();
+
+	//This field is only used during initialization, no need for threadsafety:
+	//FIXME get rid of the field, or at least clear it after boot? Not urgent as we typically won't initialize it at all.
+	private Set<String> duplicateIncompatiblePaths = null;
+
 	private final Map<String, String[]> columnsByPropertyPath = new HashMap<>();
 	private final Map<String, String[]> columnReadersByPropertyPath = new HashMap<>();
 	private final Map<String, String[]> columnReaderTemplatesByPropertyPath = new HashMap<>();
@@ -168,7 +172,7 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 			String[] formulaTemplates,
 			Mapping factory) {
 		Type existingType = typesByPropertyPath.get( path );
-		if ( existingType != null || duplicateIncompatiblePaths.contains( path ) ) {
+		if ( existingType != null || ( duplicateIncompatiblePaths != null && duplicateIncompatiblePaths.contains( path ) ) ) {
 			// If types match or the new type is not an association type, there is nothing for us to do
 			if ( type == existingType || existingType == null || !( type instanceof AssociationType ) ) {
 				logDuplicateRegistration( path, existingType, type );
@@ -212,6 +216,9 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 						logIncompatibleRegistration( path, existingType, type );
 					}
 					if ( commonType == null ) {
+						if ( duplicateIncompatiblePaths == null ) {
+							duplicateIncompatiblePaths = new HashSet<>();
+						}
 						duplicateIncompatiblePaths.add( path );
 						typesByPropertyPath.remove( path );
 						// Set everything to empty to signal action has to be taken!

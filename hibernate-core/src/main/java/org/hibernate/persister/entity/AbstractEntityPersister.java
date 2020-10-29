@@ -250,11 +250,11 @@ public abstract class AbstractEntityPersister
 
 	private volatile Set<String> affectingFetchProfileNames;
 
-	private final Map uniqueKeyLoaders = new HashMap();
-
 	private final LockModeEnumMap<LockingStrategy> lockers = new LockModeEnumMap<>();
 
 	private final EntityLoaderLazyCollection loaders = new EntityLoaderLazyCollection();
+
+	private volatile Map<String,EntityLoader> uniqueKeyLoaders;
 
 	// SQL strings
 	private String sqlVersionSelectString;
@@ -2433,7 +2433,8 @@ public abstract class AbstractEntityPersister
 				&& propertyName.indexOf( '.' ) < 0; //ugly little workaround for fact that createUniqueKeyLoaders() does not handle component properties
 
 		if ( useStaticLoader ) {
-			return (EntityLoader) uniqueKeyLoaders.get( propertyName );
+			final Map<String, EntityLoader> uniqueKeyLoaders = this.uniqueKeyLoaders;
+			return uniqueKeyLoaders == null ? null : uniqueKeyLoaders.get( propertyName );
 		}
 		else {
 			return createUniqueKeyLoader(
@@ -2453,6 +2454,9 @@ public abstract class AbstractEntityPersister
 		String[] propertyNames = getPropertyNames();
 		for ( int i = 0; i < entityMetamodel.getPropertySpan(); i++ ) {
 			if ( propertyUniqueness[i] ) {
+				if ( uniqueKeyLoaders == null ) {
+					this.uniqueKeyLoaders = new HashMap<>();
+				}
 				//don't need filters for the static loaders
 				uniqueKeyLoaders.put(
 						propertyNames[i],

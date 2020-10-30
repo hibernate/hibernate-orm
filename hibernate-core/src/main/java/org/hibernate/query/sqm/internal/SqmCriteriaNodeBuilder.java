@@ -39,6 +39,7 @@ import org.hibernate.SortOrder;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
+import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
@@ -104,6 +105,7 @@ import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 import static java.util.Arrays.asList;
 import static org.hibernate.query.internal.QueryHelper.highestPrecedenceType;
@@ -777,8 +779,52 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 		return new SqmLiteralNull( getTypeConfiguration().standardBasicTypeForJavaType( resultClass ), this );
 	}
 
+	class MultiValueParameterType<T> implements AllowableParameterType<T> {
+		private final JavaTypeDescriptor<T> javaTypeDescriptor;
+
+		public MultiValueParameterType(Class<T> type) {
+			this.javaTypeDescriptor = domainModelAccess.get()
+					.getTypeConfiguration()
+					.getJavaTypeDescriptorRegistry()
+					.getDescriptor( type );
+		}
+
+		@Override
+		public JavaTypeDescriptor<T> getExpressableJavaTypeDescriptor() {
+			return javaTypeDescriptor;
+		}
+
+		@Override
+		public PersistenceType getPersistenceType() {
+			return PersistenceType.BASIC;
+		}
+
+		@Override
+		public Class<T> getJavaType() {
+			return javaTypeDescriptor.getJavaType();
+		}
+	}
+
 	@Override
 	public <T> JpaCriteriaParameter<T> parameter(Class<T> paramClass) {
+		if ( Collection.class.isAssignableFrom( paramClass ) ) {
+			// a Collection-valued, multi-valued parameter
+			return new JpaCriteriaParameter(
+					new MultiValueParameterType( Collection.class ),
+					true,
+					this
+			);
+		}
+
+		if ( paramClass.isArray() ) {
+			// an array-valued, multi-valued parameter
+			return new JpaCriteriaParameter(
+					new MultiValueParameterType( Object[].class ),
+					true,
+					this
+			);
+		}
+
 		//noinspection unchecked
 		return new JpaCriteriaParameter<>(
 				getTypeConfiguration().standardBasicTypeForJavaType( paramClass ),
@@ -789,6 +835,24 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 
 	@Override
 	public <T> JpaCriteriaParameter<T> parameter(Class<T> paramClass, String name) {
+		if ( Collection.class.isAssignableFrom( paramClass ) ) {
+			// a multi-valued parameter
+			return new JpaCriteriaParameter(
+					new MultiValueParameterType<>( Collection.class ),
+					true,
+					this
+			);
+		}
+
+		if ( paramClass.isArray() ) {
+			// an array-valued, multi-valued parameter
+			return new JpaCriteriaParameter(
+					new MultiValueParameterType( Object[].class ),
+					true,
+					this
+			);
+		}
+
 		//noinspection unchecked
 		return new JpaCriteriaParameter<>(
 				name,

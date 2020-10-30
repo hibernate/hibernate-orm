@@ -81,6 +81,7 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 					nodeBuilder().getServiceRegistry()
 			);
 		}
+
 		return parameters == null ? Collections.emptySet() : Collections.unmodifiableSet( parameters );
 	}
 
@@ -121,15 +122,13 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 				sqmParameters = new HashSet<>();
 			}
 
-			sqmParameters.add( parameter );
-
 			if ( parameter instanceof SqmJpaCriteriaParameterWrapper<?> ) {
 				if ( jpaCriteriaParamResolutions == null ) {
 					jpaCriteriaParamResolutions = new IdentityHashMap<>();
 				}
 
 				final SqmJpaCriteriaParameterWrapper<?> wrapper = (SqmJpaCriteriaParameterWrapper<?>) parameter;
-				final JpaCriteriaParameter criteriaParameter = wrapper.getJpaCriteriaParameter();
+				final JpaCriteriaParameter<?> criteriaParameter = wrapper.getJpaCriteriaParameter();
 
 				final List<SqmJpaCriteriaParameterWrapper<?>> sqmParametersForCriteriaParameter = jpaCriteriaParamResolutions.computeIfAbsent(
 						criteriaParameter,
@@ -139,29 +138,30 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 				sqmParametersForCriteriaParameter.add( wrapper );
 				sqmParameters.add( wrapper );
 			}
-
-			if ( parameter instanceof JpaCriteriaParameter ) {
-				final JpaCriteriaParameter criteriaParameter = (JpaCriteriaParameter) parameter;
-
-				if ( jpaCriteriaParamResolutions == null ) {
-					jpaCriteriaParamResolutions = new IdentityHashMap<>();
-				}
-
-				final List<SqmJpaCriteriaParameterWrapper<?>> sqmParametersForCriteriaParameter = jpaCriteriaParamResolutions.computeIfAbsent(
-						criteriaParameter,
-						jcp -> new ArrayList<>()
-				);
-
-
-				//noinspection unchecked
-				final SqmJpaCriteriaParameterWrapper wrapper = new SqmJpaCriteriaParameterWrapper<>(
-						criteriaParameter.getHibernateType(),
-						criteriaParameter,
-						criteriaParameter.nodeBuilder()
-				);
-
-				sqmParametersForCriteriaParameter.add( wrapper );
-				sqmParameters.add( wrapper );
+			else if ( parameter instanceof JpaCriteriaParameter ) {
+				throw new UnsupportedOperationException();
+//				final JpaCriteriaParameter<?> criteriaParameter = (JpaCriteriaParameter<?>) parameter;
+//
+//				if ( jpaCriteriaParamResolutions == null ) {
+//					jpaCriteriaParamResolutions = new IdentityHashMap<>();
+//				}
+//
+//				final List<SqmJpaCriteriaParameterWrapper<?>> sqmParametersForCriteriaParameter = jpaCriteriaParamResolutions.computeIfAbsent(
+//						criteriaParameter,
+//						jcp -> new ArrayList<>()
+//				);
+//
+//				final SqmJpaCriteriaParameterWrapper<?> wrapper = new SqmJpaCriteriaParameterWrapper(
+//						criteriaParameter.getHibernateType(),
+//						criteriaParameter,
+//						criteriaParameter.nodeBuilder()
+//				);
+//
+//				sqmParametersForCriteriaParameter.add( wrapper );
+//				sqmParameters.add( wrapper );
+			}
+			else {
+				sqmParameters.add( parameter );
 			}
 		}
 

@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.internal;
 
+import java.util.Arrays;
 import java.util.Collection;
 import javax.persistence.TemporalType;
 
@@ -22,6 +23,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
+	private final QueryParameter<T> queryParameter;
 	private final QueryParameterBindingTypeResolver typeResolver;
 	private final boolean isBindingValidationRequired;
 
@@ -40,6 +42,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 			QueryParameter<T> queryParameter,
 			QueryParameterBindingTypeResolver typeResolver,
 			boolean isBindingValidationRequired) {
+		this.queryParameter = queryParameter;
 		this.typeResolver = typeResolver;
 		this.isBindingValidationRequired = isBindingValidationRequired;
 		this.bindType = queryParameter.getHibernateType();
@@ -50,6 +53,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 			QueryParameterBindingTypeResolver typeResolver,
 			AllowableParameterType<T> bindType,
 			boolean isBindingValidationRequired) {
+		this.queryParameter = queryParameter;
 		this.typeResolver = typeResolver;
 		this.isBindingValidationRequired = isBindingValidationRequired;
 		this.bindType = bindType;
@@ -90,11 +94,37 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 
 	@Override
 	public void setBindValue(T value) {
+		if ( handleAsMultiValue( value ) ) {
+			return;
+		}
+
 		if ( isBindingValidationRequired ) {
 			validate( value );
 		}
 
 		bindValue( value );
+	}
+
+	private boolean handleAsMultiValue(T value) {
+		if ( ! queryParameter.allowsMultiValuedBinding() ) {
+			return false;
+		}
+
+		if ( value == null ) {
+			return false;
+		}
+
+		if ( value instanceof Collection ) {
+			setBindValues( (Collection) value );
+			return true;
+		}
+
+		if ( value.getClass().isArray() ) {
+			setBindValues( (Collection) Arrays.asList( (Object[]) value ) );
+			return true;
+		}
+
+		return false;
 	}
 
 	private void bindValue(T value) {
@@ -109,6 +139,10 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 
 	@Override
 	public void setBindValue(T value, AllowableParameterType<T> clarifiedType) {
+		if ( handleAsMultiValue( value ) ) {
+			return;
+		}
+
 		if ( isBindingValidationRequired ) {
 			validate( value, clarifiedType );
 		}
@@ -122,6 +156,10 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 
 	@Override
 	public void setBindValue(T value, TemporalType temporalTypePrecision) {
+		if ( handleAsMultiValue( value ) ) {
+			return;
+		}
+
 		if ( isBindingValidationRequired ) {
 			validate( value, temporalTypePrecision );
 		}

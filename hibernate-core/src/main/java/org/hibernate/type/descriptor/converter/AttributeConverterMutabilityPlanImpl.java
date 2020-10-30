@@ -6,6 +6,8 @@
  */
 package org.hibernate.type.descriptor.converter;
 
+import java.io.Serializable;
+
 import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
 import org.hibernate.type.descriptor.java.MutableMutabilityPlan;
 
@@ -22,16 +24,37 @@ import org.hibernate.type.descriptor.java.MutableMutabilityPlan;
  */
 public class AttributeConverterMutabilityPlanImpl<T> extends MutableMutabilityPlan<T> {
 	private final JpaAttributeConverter converter;
+	private final boolean mutable;
 
-	public AttributeConverterMutabilityPlanImpl(JpaAttributeConverter converter) {
+	public AttributeConverterMutabilityPlanImpl(JpaAttributeConverter converter, boolean mutable) {
 		this.converter = converter;
+		this.mutable = mutable;
+	}
 
-		throw new UnsupportedOperationException(  );
+	@Override
+	public boolean isMutable() {
+		return mutable;
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	protected T deepCopyNotNull(T value) {
 		return (T) converter.toDomainValue( converter.toRelationalValue( value ) );
+	}
+
+	@Override
+	public Serializable disassemble(T value) {
+		if ( mutable ) {
+			return (Serializable) converter.toRelationalValue( value );
+		}
+		return (Serializable) value;
+	}
+
+	@Override
+	public T assemble(Serializable cached) {
+		if ( mutable ) {
+			return (T) converter.toDomainValue( cached );
+		}
+		return (T) cached;
 	}
 }

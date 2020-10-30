@@ -51,7 +51,8 @@ public class AttributeConverterTypeAdapter<T> extends AbstractSingleColumnStanda
 			JpaAttributeConverter<? extends T,?> attributeConverter,
 			SqlTypeDescriptor std,
 			JavaTypeDescriptor<?> relationalJtd,
-			JavaTypeDescriptor<T> domainJtd) {
+			JavaTypeDescriptor<T> domainJtd,
+			MutabilityPlan<T> mutabilityPlan) {
 		//noinspection rawtypes
 		super( std, (JavaTypeDescriptor) relationalJtd );
 		this.name = name;
@@ -60,9 +61,14 @@ public class AttributeConverterTypeAdapter<T> extends AbstractSingleColumnStanda
 		this.relationalJtd = relationalJtd;
 		this.attributeConverter = attributeConverter;
 
-		this.mutabilityPlan = domainJtd.getMutabilityPlan().isMutable()
-				? new AttributeConverterMutabilityPlanImpl<>( attributeConverter )
-				: ImmutableMutabilityPlan.INSTANCE;
+		if ( mutabilityPlan == null ) {
+			this.mutabilityPlan = domainJtd.getMutabilityPlan().isMutable()
+					? new AttributeConverterMutabilityPlanImpl<>( attributeConverter, true )
+					: ImmutableMutabilityPlan.INSTANCE;
+		}
+		else {
+			this.mutabilityPlan = mutabilityPlan;
+		}
 
 		log.debugf( "Created AttributeConverterTypeAdapter -> %s", name );
 	}
@@ -103,9 +109,6 @@ public class AttributeConverterTypeAdapter<T> extends AbstractSingleColumnStanda
 		final Object converted = converter.convertToDatabaseColumn( value );
 		super.nullSafeSet( st, converted, index, options );
 	}
-
-
-
 
 
 	@Override

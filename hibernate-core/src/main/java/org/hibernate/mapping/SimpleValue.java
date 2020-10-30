@@ -660,7 +660,8 @@ public abstract class SimpleValue implements KeyValue {
 				jpaAttributeConverter,
 				sqlTypeDescriptorAdapter,
 				jpaAttributeConverter.getRelationalJavaTypeDescriptor(),
-				jpaAttributeConverter.getDomainJavaTypeDescriptor()
+				jpaAttributeConverter.getDomainJavaTypeDescriptor(),
+				null
 		);
 	}
 

@@ -34,6 +34,7 @@ import org.hibernate.annotations.SqlTypeCode;
 /**
  * @author Steve Ebersole
  */
+@SuppressWarnings( "unused" )
 @SqlResultSetMapping(
 		name = "entity-of-basics-implicit",
 		entities = @EntityResult( entityClass = EntityOfBasics.class )
@@ -69,6 +70,8 @@ public class EntityOfBasics {
 	private LocalTime theLocalTime;
 	private ZonedDateTime theZonedDateTime;
 	private OffsetDateTime theOffsetDateTime;
+
+	private MutableValue mutableValue;
 
 	public EntityOfBasics() {
 	}
@@ -253,6 +256,27 @@ public class EntityOfBasics {
 
 	public void setTheBoolean(Boolean theBoolean) {
 		this.theBoolean = theBoolean;
+	}
+
+	@Convert( converter = MutableValueConverter.class )
+	public MutableValue getMutableValue() {
+		return mutableValue;
+	}
+
+	public void setMutableValue(MutableValue mutableValue) {
+		this.mutableValue = mutableValue;
+	}
+
+	public static class MutableValueConverter implements AttributeConverter<MutableValue,String> {
+		@Override
+		public String convertToDatabaseColumn(MutableValue attribute) {
+			return attribute == null ? null : attribute.getState();
+		}
+
+		@Override
+		public MutableValue convertToEntityAttribute(String dbData) {
+			return dbData == null ? null : new MutableValue( dbData );
+		}
 	}
 
 	public static class GenderConverter implements AttributeConverter<Gender,Character> {

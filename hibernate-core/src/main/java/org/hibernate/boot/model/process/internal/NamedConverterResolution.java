@@ -21,13 +21,13 @@ import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
+import org.hibernate.type.descriptor.converter.AttributeConverterMutabilityPlanImpl;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
-import org.hibernate.type.internal.StandardBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -114,14 +114,15 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 				? explicitMutabilityPlanAccess.apply( typeConfiguration )
 				: null;
 
+		final MutabilityPlan mutabilityPlan = explicitMutabilityPlan != null
+				? explicitMutabilityPlan
+				: new AttributeConverterMutabilityPlanImpl( converter, true );
 		return new NamedConverterResolution(
 				domainJtd,
 				relationalJtd,
 				relationalStd,
 				converter,
-				explicitMutabilityPlan != null
-						? explicitMutabilityPlan
-						: domainJtd.getMutabilityPlan()
+				mutabilityPlan
 		);
 	}
 
@@ -195,7 +196,8 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 				valueConverter,
 				relationalStd,
 				relationalJtd,
-				domainJtd
+				domainJtd,
+				mutabilityPlan
 		);
 	}
 

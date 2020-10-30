@@ -594,6 +594,19 @@ public class BasicValueBinder<T> implements SqlTypeDescriptorIndicators {
 				return ImmutableMutabilityPlan.instance();
 			}
 
+			// see if the value's type Class is annotated `@Immutable`
+			final Class attributeType = implicitJavaTypeAccess.apply( typeConfiguration );
+			if ( attributeType.isAnnotationPresent( Immutable.class ) ) {
+				return ImmutableMutabilityPlan.instance();
+			}
+
+			// if the value is converted, see if the converter Class is annotated `@Immutable`
+			if ( converterDescriptor != null ) {
+				if ( converterDescriptor.getAttributeConverterClass().isAnnotationPresent( Immutable.class ) ) {
+					return ImmutableMutabilityPlan.instance();
+				}
+			}
+
 			return null;
 		};
 

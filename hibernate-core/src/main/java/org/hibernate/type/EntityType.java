@@ -511,7 +511,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		}
 
 		final EntityPersister persister = getAssociatedEntityPersister( factory );
-		if ( !persister.getEntityTuplizer().isInstance( value ) ) {
+		if ( ! persister.isInstance( value ) ) {
 			// it should be the id type...
 			if ( persister.getIdentifierType().getReturnedClass().isInstance( value ) ) {
 				return associatedEntityName + "#" + value;

@@ -310,7 +310,7 @@ public final class AnnotationBinder {
 		if ( packaze == null ) {
 			return;
 		}
-		final XPackage pckg = context.getBootstrapContext().getReflectionManager().toXPackage( packaze );
+		final XPackage pckg = HCANNHelper.toXPackage( context.getBootstrapContext().getReflectionManager(), packaze );
 
 		if ( pckg.isAnnotationPresent( SequenceGenerator.class ) ) {
 			SequenceGenerator ann = pckg.getAnnotation( SequenceGenerator.class );
@@ -1419,7 +1419,7 @@ public final class AnnotationBinder {
 			return;
 		}
 		final ReflectionManager reflectionManager = context.getBootstrapContext().getReflectionManager();
-		final XPackage pckg = reflectionManager.toXPackage( packaze );
+		final XPackage pckg = HCANNHelper.toXPackage( reflectionManager, packaze );
 		bindFetchProfiles( pckg, context );
 	}
 

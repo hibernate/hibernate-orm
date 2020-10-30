@@ -6,8 +6,12 @@
  */
 package org.hibernate.cfg.annotations;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Member;
+import java.lang.reflect.Method;
 
+import org.hibernate.AssertionFailure;
+import org.hibernate.HibernateException;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.annotations.common.reflection.java.JavaXMember;
 
@@ -16,35 +20,47 @@ import org.hibernate.annotations.common.reflection.java.JavaXMember;
  *
  * @author Steve Ebersole
  */
-public final class HCANNHelper {
+public class HCANNHelper {
+	private static Method getMemberMethod;
+	static {
+		// The following is in a static block to avoid problems lazy-initializing
+		// and making accessible in a multi-threaded context. See HHH-11289.
+		final Class<?> javaXMemberClass = JavaXMember.class;
+		try {
+			getMemberMethod = javaXMemberClass.getDeclaredMethod( "getMember" );
+			// NOTE : no need to check accessibility here - we know it is protected
+			getMemberMethod.setAccessible( true );
+		}
+		catch (NoSuchMethodException e) {
+			throw new AssertionFailure(
+					"Could not resolve JavaXMember#getMember method in order to access XProperty member signature",
+					e
+			);
+		}
+		catch (Exception e) {
+			throw new HibernateException( "Could not access org.hibernate.annotations.common.reflection.java.JavaXMember#getMember method", e );
+		}
+	}
 
-	/**
-	 * @deprecated Prefer using {@link #annotatedElementSignature(JavaXMember)}
-	 */
-	@Deprecated
 	public static String annotatedElementSignature(XProperty xProperty) {
 		return getUnderlyingMember( xProperty ).toString();
 	}
 
-	public static String annotatedElementSignature(final JavaXMember jxProperty) {
-		return getUnderlyingMember( jxProperty ).toString();
-	}
-
-	/**
-	 * @deprecated Prefer using {@link #getUnderlyingMember(JavaXMember)}
-	 */
-	@Deprecated
 	public static Member getUnderlyingMember(XProperty xProperty) {
-		if (xProperty instanceof JavaXMember) {
-			JavaXMember jx = (JavaXMember)xProperty;
-			return jx.getMember();
+		try {
+			return (Member) getMemberMethod.invoke( xProperty );
 		}
-		else {
-			throw new org.hibernate.HibernateException( "Can only extract Member from a XProperty which is a JavaXMember" );
+		catch (IllegalAccessException e) {
+			throw new AssertionFailure(
+					"Could not resolve member signature from XProperty reference",
+					e
+			);
 		}
-	}
-
-	public static Member getUnderlyingMember(final JavaXMember jxProperty) {
-		return jxProperty.getMember();
+		catch (InvocationTargetException e) {
+			throw new AssertionFailure(
+					"Could not resolve member signature from XProperty reference",
+					e.getCause()
+			);
+		}
 	}
 }

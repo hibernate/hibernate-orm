@@ -107,7 +107,9 @@ public final class JPAMetadataProvider implements MetadataProvider {
 		return reader;
 	}
 
-	@Override
+	// @Override
+	// FIXME this method was introduced in HCANN 5.1.1: we can't mark it as @Override yet,
+	// but it's expected to be invoked when we're running with the right HCANN version.
 	public void reset() {
 		//It's better to remove the HashMap, as it could grow rather large:
 		//when doing a clear() the internal buckets array is not scaled down.

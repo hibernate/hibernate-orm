@@ -37,6 +37,13 @@ public interface SynchronizeableQuery<T> {
 	SynchronizeableQuery<T> addSynchronizedQuerySpace(String querySpace);
 
 	/**
+	 * Adds a table expression as a query space.
+	 */
+	default SynchronizeableQuery<T> addSynchronizedTable(String tableExpression) {
+		return addSynchronizedQuerySpace( tableExpression );
+	}
+
+	/**
 	 * Adds an entity name for (a) auto-flush checking and (b) query result cache invalidation checking.  Same as
 	 * {@link #addSynchronizedQuerySpace} for all tables associated with the given entity.
 	 *

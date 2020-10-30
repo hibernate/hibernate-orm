@@ -25,7 +25,7 @@ ext {
     javassistVersion = '3.24.0-GA'
     byteBuddyVersion = '1.10.17'
 
-    agroalVersion = '1.8'
+    agroalVersion = '1.9'
 
     assertjVersion = '3.14.0'
 

@@ -21,7 +21,7 @@ import org.hibernate.query.spi.QueryInterpretationCache;
 public class SqmInterpretationsKey implements QueryInterpretationCache.Key {
 	@SuppressWarnings("WeakerAccess")
 	public static SqmInterpretationsKey generateFrom(QuerySqmImpl query) {
-		if ( !isCacheable( query ) ) {
+		if ( ! isCacheable( query ) ) {
 			return null;
 		}
 
@@ -44,6 +44,13 @@ public class SqmInterpretationsKey implements QueryInterpretationCache.Key {
 	@SuppressWarnings("RedundantIfStatement")
 	private static boolean isCacheable(QuerySqmImpl<?> query) {
 		assert query.getQueryOptions().getAppliedGraph() != null;
+
+		if ( QuerySqmImpl.CRITERIA_HQL_STRING.equals( query.getQueryString() ) ) {
+			// for now at least, skip caching Criteria-based plans
+			//		- especially wrt parameters atm; this works with HQL because the parameters
+			//			are part of the query string; with Criteria, they are not.
+			return false;
+		}
 
 		if ( query.getSession().getLoadQueryInfluencers().hasEnabledFilters() ) {
 			// At the moment we cannot cache query plan if there is filter enabled.

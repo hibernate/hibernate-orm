@@ -72,6 +72,11 @@ public class QuerySqmImpl<R>
 		extends AbstractQuery<R>
 		implements HqlQueryImplementor<R>, ExecutionContext {
 
+	/**
+	 * The value used for {@link #getQueryString} for Criteria-based queries
+	 */
+	public static final String CRITERIA_HQL_STRING = "<criteria>";
+
 	private final String hqlString;
 	private final SqmStatement sqmStatement;
 	private final Class resultType;
@@ -212,7 +217,7 @@ public class QuerySqmImpl<R>
 			throw new IllegalArgumentException( "Non-select queries cannot be typed" );
 		}
 
-		this.hqlString = "<criteria>";
+		this.hqlString = CRITERIA_HQL_STRING;
 		this.sqmStatement = sqmStatement;
 		this.resultType = resultType;
 

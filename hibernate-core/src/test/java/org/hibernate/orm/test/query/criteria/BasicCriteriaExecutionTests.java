@@ -6,175 +6,153 @@
  */
 package org.hibernate.orm.test.query.criteria;
 
-import java.util.List;
-import java.util.Map;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Root;
 
-import org.hibernate.IrrelevantEntity;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaRoot;
-import org.hibernate.query.spi.QueryParameterImplementor;
-import org.hibernate.query.sqm.tree.expression.SqmParameter;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.domain.gambit.BasicEntity;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-/**
- * @author Steve Ebersole
- */
-public class BasicCriteriaExecutionTests extends BaseNonConfigCoreFunctionalTestCase {
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] { BasicEntity.class };
-	}
+@DomainModel( annotatedClasses = BasicEntity.class )
+@SessionFactory
+public class BasicCriteriaExecutionTests {
 
 	@Test
-	public void testExecutingBasicCriteriaQuery() {
-		final CriteriaBuilder criteriaBuilder = sessionFactory().getCriteriaBuilder();
-
-		final CriteriaQuery<Object> criteria = criteriaBuilder.createQuery();
-
-		final Root<BasicEntity> root = criteria.from( BasicEntity.class );
-
-		criteria.select( root );
-
-		inSession(
-				session -> session.createQuery( criteria ).list()
-		);
-	}
-
-	@Test
-	public void testIt() {
-		inSession(
+	public void testExecutingBasicCriteriaQuery(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
-					CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
-					CriteriaQuery<BasicEntity> criteria = criteriaBuilder.createQuery( BasicEntity.class );
-					criteria.from( BasicEntity.class );
-					List<BasicEntity> results = session.createQuery( criteria ).list();
+					final HibernateCriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+
+					final CriteriaQuery<Object> criteria = criteriaBuilder.createQuery();
+					final Root<BasicEntity> root = criteria.from( BasicEntity.class );
+					criteria.select( root );
+
+					session.createQuery( criteria ).list();
 				}
 		);
 	}
 
 	@Test
-	public void testExecutingBasicCriteriaQueryInStatelessSession() {
-		final CriteriaBuilder criteriaBuilder = sessionFactory().getCriteriaBuilder();
-
-		final CriteriaQuery<Object> criteria = criteriaBuilder.createQuery();
-
-		final Root<BasicEntity> root = criteria.from( BasicEntity.class );
-
-		criteria.select( root );
-
-		inStatelessSession(
-				session -> session.createQuery( criteria ).list()
+	public void testIt(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final HibernateCriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+					CriteriaQuery<BasicEntity> criteria = criteriaBuilder.createQuery( BasicEntity.class );
+					criteria.from( BasicEntity.class );
+					session.createQuery( criteria ).list();
+				}
 		);
 	}
 
 	@Test
-	public void testExecutingBasicCriteriaQueryLiteralPredicate() {
-		final CriteriaBuilder criteriaBuilder = sessionFactory().getCriteriaBuilder();
+	public void testExecutingBasicCriteriaQueryInStatelessSession(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final HibernateCriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
 
-		final CriteriaQuery<Object> criteria = criteriaBuilder.createQuery();
+					final CriteriaQuery<Object> criteria = criteriaBuilder.createQuery();
+					final Root<BasicEntity> root = criteria.from( BasicEntity.class );
+					criteria.select( root );
 
-		final Root<BasicEntity> root = criteria.from( BasicEntity.class );
-
-		criteria.select( root );
-
-		criteria.where( criteriaBuilder.equal( criteriaBuilder.literal( 1 ), criteriaBuilder.literal( 1 ) ) );
-
-		inSession(
-				session -> session.createQuery( criteria ).list()
+					session.createQuery( criteria ).list();
+				}
 		);
 	}
 
 	@Test
-	public void testExecutingBasicCriteriaQueryLiteralPredicateInStatelessSession() {
-		final CriteriaBuilder criteriaBuilder = sessionFactory().getCriteriaBuilder();
+	public void testExecutingBasicCriteriaQueryLiteralPredicate(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final HibernateCriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
 
-		final CriteriaQuery<Object> criteria = criteriaBuilder.createQuery();
+					final CriteriaQuery<Object> criteria = criteriaBuilder.createQuery();
+					final Root<BasicEntity> root = criteria.from( BasicEntity.class );
+					criteria.select( root );
+					criteria.where(
+							criteriaBuilder.equal(
+									criteriaBuilder.literal( 1 ),
+									criteriaBuilder.literal( 1 )
+							)
+					);
 
-		final Root<BasicEntity> root = criteria.from( BasicEntity.class );
-
-		criteria.select( root );
-
-		criteria.where( criteriaBuilder.equal( criteriaBuilder.literal( 1 ), criteriaBuilder.literal( 1 ) ) );
-
-		inStatelessSession(
-				session -> session.createQuery( criteria ).list()
+					session.createQuery( criteria ).list();
+				}
 		);
 	}
 
 	@Test
-	public void testExecutingBasicCriteriaQueryParameterPredicate() {
-		final CriteriaBuilder criteriaBuilder = sessionFactory().getCriteriaBuilder();
-
-		final CriteriaQuery<Object> criteria = criteriaBuilder.createQuery();
-
-		final Root<BasicEntity> root = criteria.from( BasicEntity.class );
-
-		criteria.select( root );
-
-		Map<QueryParameterImplementor,Map<SqmParameter, List<JdbcParameter>>> parameterResolutionMap;
-
-		final ParameterExpression<Integer> param = criteriaBuilder.parameter( Integer.class );
-
-		criteria.where( criteriaBuilder.equal( param, param ) );
-
-		inSession(
-				session -> session.createQuery( criteria ).setParameter( param, 1 ).list()
+	public void testExecutingBasicCriteriaQueryLiteralPredicateInStatelessSession(SessionFactoryScope scope) {
+		scope.inStatelessTransaction(
+				session -> {
+					final HibernateCriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+					final CriteriaQuery<Object> criteria = criteriaBuilder.createQuery();
+					final Root<BasicEntity> root = criteria.from( BasicEntity.class );
+					criteria.select( root );
+					criteria.where(
+							criteriaBuilder.equal(
+									criteriaBuilder.literal( 1 ),
+									criteriaBuilder.literal( 1 )
+							)
+					);
+					session.createQuery( criteria ).list();
+				}
 		);
 	}
 
 	@Test
-	public void testExecutingBasicCriteriaQueryParameterPredicateInStatelessSession() {
-		final CriteriaBuilder criteriaBuilder = sessionFactory().getCriteriaBuilder();
+	public void testExecutingBasicCriteriaQueryParameterPredicate(SessionFactoryScope scope) {
+		scope.inStatelessTransaction(
+				session -> {
+					final HibernateCriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
 
-		final CriteriaQuery<Object> criteria = criteriaBuilder.createQuery();
+					final CriteriaQuery<Object> criteria = criteriaBuilder.createQuery();
+					final Root<BasicEntity> root = criteria.from( BasicEntity.class );
+					criteria.select( root );
+					final ParameterExpression<Integer> param = criteriaBuilder.parameter( Integer.class );
+					criteria.where( criteriaBuilder.equal( param, param ) );
 
-		final Root<BasicEntity> root = criteria.from( BasicEntity.class );
-
-		criteria.select( root );
-
-		final ParameterExpression<Integer> param = criteriaBuilder.parameter( Integer.class );
-
-		criteria.where( criteriaBuilder.equal( param, param ) );
-
-		inStatelessSession(
-				session -> session.createQuery( criteria ).setParameter( param, 1 ).list()
+					session.createQuery( criteria ).setParameter( param, 1 ).list();
+				}
 		);
 	}
 
 	@Test
-	public void testCriteriaEntityJoin() {
-		final HibernateCriteriaBuilder criteriaBuilder = sessionFactory().getCriteriaBuilder();
+	public void testExecutingBasicCriteriaQueryParameterPredicateInStatelessSession(SessionFactoryScope scope) {
+		scope.inStatelessTransaction(
+				session -> {
+					final HibernateCriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
 
-		final JpaCriteriaQuery<Object> criteria = criteriaBuilder.createQuery();
+					final CriteriaQuery<Object> criteria = criteriaBuilder.createQuery();
+					final Root<BasicEntity> root = criteria.from( BasicEntity.class );
+					criteria.select( root );
+					final ParameterExpression<Integer> param = criteriaBuilder.parameter( Integer.class );
+					criteria.where( criteriaBuilder.equal( param, param ) );
 
-		final JpaRoot<BasicEntity> root = criteria.from( BasicEntity.class );
-		root.join( BasicEntity.class );
-
-		criteria.select( root );
-
-		inSession(
-				session -> session.createQuery( criteria ).list()
+					session.createQuery( criteria ).setParameter( param, 1 ).list();
+				}
 		);
 	}
 
-	@Entity(name = "BasicEntity")
-	public static class BasicEntity {
+	@Test
+	public void testCriteriaEntityJoin(SessionFactoryScope scope) {
+		scope.inStatelessTransaction(
+				session -> {
+					final HibernateCriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
 
-		@Id
-		@GeneratedValue
-		private Integer id;
+					final JpaCriteriaQuery<Object> criteria = criteriaBuilder.createQuery();
+					final JpaRoot<BasicEntity> root = criteria.from( BasicEntity.class );
+					root.join( BasicEntity.class );
+					criteria.select( root );
 
+					session.createQuery( criteria ).list();
+				}
+		);
 	}
 }

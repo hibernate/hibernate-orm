@@ -14,6 +14,7 @@ import java.util.function.Function;
 
 import org.hibernate.Interceptor;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.StatelessSession;
 import org.hibernate.Transaction;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -232,6 +233,25 @@ public class SessionFactoryExtension
 		}
 
 		@Override
+		public SessionFactoryImplementor getSessionFactory() {
+			if ( sessionFactory == null ) {
+				sessionFactory = createSessionFactory();
+			}
+
+			return sessionFactory;
+		}
+
+		@Override
+		public MetadataImplementor getMetadataImplementor() {
+			return modelScope.getDomainModel();
+		}
+
+		@Override
+		public StatementInspector getStatementInspector() {
+			return getSessionFactory().getSessionFactoryOptions().getStatementInspector();
+		}
+
+		@Override
 		public void close() {
 			if ( ! active ) {
 				return;
@@ -257,15 +277,6 @@ public class SessionFactoryExtension
 					sessionFactory = null;
 				}
 			}
-		}
-
-		@Override
-		public SessionFactoryImplementor getSessionFactory() {
-			if ( sessionFactory == null ) {
-				sessionFactory = createSessionFactory();
-			}
-
-			return sessionFactory;
 		}
 
 		private SessionFactoryImplementor createSessionFactory() {
@@ -415,13 +426,76 @@ public class SessionFactoryExtension
 		}
 
 		@Override
-		public MetadataImplementor getMetadataImplementor() {
-			return modelScope.getDomainModel();
+		public void inStatelessSession(Consumer<StatelessSession> action) {
+			log.trace( "#inStatelessSession(Consumer)" );
+
+			try ( final StatelessSession statelessSession = getSessionFactory().openStatelessSession(); ) {
+				log.trace( "StatelessSession opened, calling action" );
+				action.accept( statelessSession );
+			}
+			finally {
+				log.trace( "StatelessSession close - auto-close block" );
+			}
 		}
 
 		@Override
-		public StatementInspector getStatementInspector() {
-			return getSessionFactory().getSessionFactoryOptions().getStatementInspector();
+		public void inStatelessTransaction(Consumer<StatelessSession> action) {
+			log.trace( "#inStatelessTransaction(Consumer)" );
+
+			try ( final StatelessSession statelessSession = getSessionFactory().openStatelessSession(); ) {
+				log.trace( "StatelessSession opened, calling action" );
+				inStatelessTransaction( statelessSession, action );
+			}
+			finally {
+				log.trace( "StatelessSession close - auto-close block" );
+			}
+		}
+
+		@Override
+		public void inStatelessTransaction(StatelessSession session, Consumer<StatelessSession> action) {
+			log.trace( "inStatelessTransaction(StatelessSession,Consumer)" );
+
+			final Transaction txn = session.beginTransaction();
+			log.trace( "Started transaction" );
+
+			try {
+				log.trace( "Calling action in txn" );
+				action.accept( session );
+				log.trace( "Called action - in txn" );
+
+				if ( !txn.getRollbackOnly() ) {
+					log.trace( "Committing transaction" );
+					txn.commit();
+					log.trace( "Committed transaction" );
+				}
+				else {
+					try {
+						log.trace( "Rollback transaction marked for rollback only" );
+						txn.rollback();
+					}
+					catch (Exception e) {
+						log.error( "Rollback failure", e );
+					}
+				}
+			}
+			catch (Exception e) {
+				log.tracef(
+						"Error calling action: %s (%s) - rolling back",
+						e.getClass().getName(),
+						e.getMessage()
+				);
+				try {
+					txn.rollback();
+				}
+				catch (Exception ignore) {
+					log.trace( "Was unable to roll back transaction" );
+					// really nothing else we can do here - the attempt to
+					//		rollback already failed and there is nothing else
+					// 		to clean up.
+				}
+
+				throw e;
+			}
 		}
 	}
 }

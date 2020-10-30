@@ -9,6 +9,7 @@ package org.hibernate.testing.orm.junit;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import org.hibernate.StatelessSession;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -19,18 +20,18 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
  */
 public interface SessionFactoryScope {
 	SessionFactoryImplementor getSessionFactory();
+	MetadataImplementor getMetadataImplementor();
+	StatementInspector getStatementInspector();
 
 	void inSession(Consumer<SessionImplementor> action);
-
 	void inTransaction(Consumer<SessionImplementor> action);
 	void inTransaction(SessionImplementor session, Consumer<SessionImplementor> action);
 
 	<T> T fromSession(Function<SessionImplementor, T> action);
-
 	<T> T fromTransaction(Function<SessionImplementor, T> action);
 	<T> T fromTransaction(SessionImplementor session, Function<SessionImplementor, T> action);
 
-	MetadataImplementor getMetadataImplementor();
-
-	StatementInspector getStatementInspector();
+	void inStatelessSession(Consumer<StatelessSession> action);
+	void inStatelessTransaction(Consumer<StatelessSession> action);
+	void inStatelessTransaction(StatelessSession session, Consumer<StatelessSession> action);
 }

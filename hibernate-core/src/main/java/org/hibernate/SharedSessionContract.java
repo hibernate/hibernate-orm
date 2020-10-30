@@ -17,6 +17,7 @@ import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.QueryProducer;
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 
 /**
  * Contract methods shared between {@link Session} and {@link StatelessSession}.
@@ -153,7 +154,7 @@ public interface SharedSessionContract extends QueryProducer, Serializable {
 	 * @return an instance of CriteriaBuilder
 	 * @throws IllegalStateException if the StatelessSession has been closed
 	 */
-	CriteriaBuilder getCriteriaBuilder();
+	HibernateCriteriaBuilder getCriteriaBuilder();
 
 	@Override
 	<T> org.hibernate.query.Query<T> createQuery(String queryString, Class<T> resultType);

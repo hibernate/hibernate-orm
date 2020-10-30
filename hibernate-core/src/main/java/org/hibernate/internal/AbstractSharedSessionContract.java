@@ -15,7 +15,6 @@ import java.util.TimeZone;
 import java.util.UUID;
 import javax.persistence.FlushModeType;
 import javax.persistence.TransactionRequiredException;
-import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.CriteriaUpdate;
@@ -61,6 +60,7 @@ import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.internal.ProcedureCallImpl;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.query.Query;
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.hql.spi.HqlQueryImplementor;
 import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
@@ -908,7 +908,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@Override
-	public CriteriaBuilder getCriteriaBuilder() {
+	public HibernateCriteriaBuilder getCriteriaBuilder() {
 		checkOpen();
 		return getFactory().getCriteriaBuilder();
 	}

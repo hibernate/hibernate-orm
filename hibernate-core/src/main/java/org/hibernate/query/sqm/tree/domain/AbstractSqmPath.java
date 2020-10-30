@@ -25,12 +25,13 @@ import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.IllegalPathUsageException;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -217,24 +218,32 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public SqmPath get(String attributeName) {
+	public SqmPath<?> get(String attributeName) {
 
 		// todo (6.0) : this is similar to the idea of  creating an SqmExpression for a Navigable
 		//		should make these stylistically consistent, either -
 		//			1) add `Navigable#createCriteriaExpression` (ala, the exist `#createSqmExpression`)
 		//			2) remove `Navigable#createSqmExpression` and use the approach used here instead.
 
+		if ( getReferencedPathSource().getSqmPathType() instanceof BasicType ) {
+			throw new IllegalStateException( "Cannot resolve path `" + attributeName + "` relative to a basic-valued path: `" + getNavigablePath() + "`" );
+		}
+
 		return resolvePath(
 				attributeName,
 				(pathSource, name) -> {
-					final SqmPathSource subNavigable = getReferencedPathSource().findSubPathSource( attributeName );
+					final SqmPathSource<?> subNavigable = getReferencedPathSource().findSubPathSource( attributeName );
+
+					if ( subNavigable == null ) {
+						throw new IllegalArgumentException( "Could not resolve attribute named `" + attributeName + "` relative to `" + getNavigablePath() + "`" );
+					}
 
 					if ( subNavigable instanceof SingularPersistentAttribute ) {
-						return createSingularPath( (SingularPersistentAttribute) subNavigable );
+						return createSingularPath( (SingularPersistentAttribute<?,?>) subNavigable );
 					}
 					else {
 						assert subNavigable instanceof PluralPersistentAttribute;
-						return createPluralPath( (PluralPersistentAttribute) subNavigable );
+						return createPluralPath( (PluralPersistentAttribute<?,?,?>) subNavigable );
 					}
 				}
 		);

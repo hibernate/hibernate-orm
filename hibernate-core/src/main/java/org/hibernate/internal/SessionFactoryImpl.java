@@ -380,7 +380,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 			//As last operation, delete all caches from ReflectionManager
 			//(not modelled as a listener as we want this to be last)
-			metadata.getMetadataBuildingOptions().getReflectionManager().reset();
+			bootMetamodel.getMetadataBuildingOptions().getReflectionManager().reset();
 		}
 		catch (Exception e) {
 			for ( Integrator integrator : serviceRegistry.getService( IntegratorService.class ).getIntegrators() ) {

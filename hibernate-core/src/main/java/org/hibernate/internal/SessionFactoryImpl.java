@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
@@ -56,6 +55,7 @@ import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Settings;
+import org.hibernate.cfg.annotations.HCANNHelper;
 import org.hibernate.context.internal.JTASessionContext;
 import org.hibernate.context.internal.ManagedSessionContext;
 import org.hibernate.context.internal.ThreadLocalSessionContext;
@@ -391,7 +391,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 			//As last operation, delete all caches from ReflectionManager
 			//(not modelled as a listener as we want this to be last)
-			metadata.getMetadataBuildingOptions().getReflectionManager().reset();
+			HCANNHelper.resetIfResetMethodExists( metadata.getMetadataBuildingOptions().getReflectionManager() );
 		}
 		catch (Exception e) {
 			for ( Integrator integrator : serviceRegistry.getService( IntegratorService.class ).getIntegrators() ) {

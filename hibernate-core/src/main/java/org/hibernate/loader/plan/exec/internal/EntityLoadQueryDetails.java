@@ -13,7 +13,6 @@ import java.util.Collections;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.loader.plan.exec.process.internal.AbstractRowReader;
 import org.hibernate.loader.plan.exec.process.internal.EntityReferenceInitializerImpl;
@@ -34,8 +33,6 @@ import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.persister.entity.Queryable;
 
-import org.jboss.logging.Logger;
-
 /**
  * Handles interpreting a LoadPlan (for loading of an entity) by:<ul>
  *     <li>generating the SQL query to perform</li>
@@ -46,7 +43,6 @@ import org.jboss.logging.Logger;
  * @author Gail Badner
  */
 public class EntityLoadQueryDetails extends AbstractLoadQueryDetails {
-	private static final Logger log = CoreLogging.logger( EntityLoadQueryDetails.class );
 
 	private final EntityReferenceAliases entityReferenceAliases;
 	private final ReaderCollector readerCollector;

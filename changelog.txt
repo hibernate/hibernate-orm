@@ -3,6 +3,50 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.4.23.Final (November 01, 2020)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31887
+
+** Bug
+    * [HHH-14279] - Broken 'with key(...)' operator on entity-key maps
+    * [HHH-14275] - Broken link to Infinispan User Guide in Hibernate 5.3 User Guide
+    * [HHH-14260] - Dead links in user guide
+    * [HHH-14259] - HHH-13980 is not merged into 5.4
+    * [HHH-14249] - MultiLineImport fails when script contains blank spaces or tabs at the end of the last sql statement
+    * [HHH-14247] - Automatic release scripts, wrong Jira release url
+    * [HHH-14227] - Insert statements are not ordered with entities that use inheritance and reference a subclass
+
+** Improvement
+    * [HHH-14305] - Analyse retained heap after bootstrap to trim memory consumption
+    * [HHH-14304] - Replacing eager initialization of LockingStrategy within AbstractEntityPersister
+    * [HHH-14303] - Upgrade to JBoss Loging 3.4.1.Final
+    * [HHH-14302] - Upgrade to Agroal 1.9
+    * [HHH-14301] - Upgrade to Byte Buddy 1.10.17
+    * [HHH-14300] - Update to Hibernate Validator 6.1.6.Final
+    * [HHH-14299] - Upgrade to Hibernate Commons Annotations 5.1.2.Final
+    * [HHH-14293] - Clear JPAMetadataProvider and ReflectionManager caches after SessionFactory initialization
+    * [HHH-14292] - Avoid defensive copy for keywords set in NormalizingIdentifierHelperImpl
+    * [HHH-14290] - Upgrade to Hibernate Commons Annotations 5.1.1.Final
+    * [HHH-14289] - Detection of JDBC support for RefCursors was returning false even for Oracle JDBC drivers supporting it
+    * [HHH-14268] - Include stacktrace at WARN level in case of an error occurs when getting the connection metadata
+    * [HHH-14248] - improve ActionQueue in minor way to improve its maintainability
+    * [HHH-14245] - Jakarta EE 8 Persistence test failure for com.sun.ts.tests.jpa.core.criteriaapi.CriteriaBuilder.Client.sizeCollectionTest(Client.java:7436)
+    * [HHH-10715] - We should try to reduce the static field usage only when this is absolutely necessary
+
+** Sub-task
+    * [HHH-14196] - Add parsing of persistence.xml/orm.xml documents in the EE 9 namespace
+
+** Task
+    * [HHH-14298] - Evolve HCANNHelper to maintain compatibility with 5.1.0 while benefitting from 5.1.1 features
+    * [HHH-14284] - Update Oracle JDBC driver configuration to test with version 19.8.0.0
+    * [HHH-14283] - Review tuning of JVM parameters for the build
+    * [HHH-14282] - StandardRefCursorSupport can rely on having JDK8 as baseline today
+    * [HHH-14278] - No longer use the AssertionFailure and StringHelper implementations from HCANN
+    * [HHH-14269] - Confusing method names unableToObjectConnectionMetadata and unableToObjectConnectionToQueryMetadata
+    * [HHH-13895] - Upgrade the PostgreSQL JDBC driver used for testing to v. 42.2.16
+
+
 Changes in 5.4.22.Final (September 30, 2020)
 ------------------------------------------------------------------------------------------------------------------------
 

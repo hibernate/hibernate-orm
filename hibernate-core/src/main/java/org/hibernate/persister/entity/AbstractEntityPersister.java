@@ -4316,11 +4316,11 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	private UniqueEntityLoader buildMergeCascadeEntityLoader(LockMode ignored) {
+	protected UniqueEntityLoader buildMergeCascadeEntityLoader(LockMode ignored) {
 		return new CascadeEntityLoader( this, CascadingActions.MERGE, getFactory() );
 	}
 
-	private UniqueEntityLoader buildRefreshCascadeEntityLoader(LockMode ignored) {
+	protected UniqueEntityLoader buildRefreshCascadeEntityLoader(LockMode ignored) {
 		return new CascadeEntityLoader( this, CascadingActions.REFRESH, getFactory() );
 	}
 

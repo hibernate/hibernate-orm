@@ -18,6 +18,7 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -113,7 +114,12 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 		addIfSet( providedClassLoaders, AvailableSettings.HIBERNATE_CLASSLOADER, configValues );
 		addIfSet( providedClassLoaders, AvailableSettings.ENVIRONMENT_CLASSLOADER, configValues );
 
-		return new ClassLoaderServiceImpl( providedClassLoaders,TcclLookupPrecedence.AFTER );
+                TcclLookupPrecedence providedPrecedence = TcclLookupPrecedence.AFTER;
+                final String tcclLookupPrecedence = (String) configValues.get( AvailableSettings.TC_CLASSLOADER );
+                if ( tcclLookupPrecedence != null ) {
+                        providedPrecedence =  TcclLookupPrecedence.valueOf( tcclLookupPrecedence.toUpperCase( Locale.ROOT ) );
+                }
+		return new ClassLoaderServiceImpl( providedClassLoaders,providedPrecedence );
 	}
 
 	private static void addIfSet(List<ClassLoader> providedClassLoaders, String name, Map configVales) {

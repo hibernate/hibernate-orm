@@ -7,6 +7,7 @@
 package org.hibernate.metamodel.model.domain;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -331,13 +332,18 @@ public abstract class AbstractIdentifiableType<J>
 				throw new IllegalStateException( "Non-aggregated id attributes were already set" );
 			}
 
-			for ( SingularPersistentAttribute idAttribute : (Set<SingularPersistentAttribute>) idAttributes ) {
-				if ( AbstractIdentifiableType.this == idAttribute.getDeclaringType() ) {
-					addAttribute( idAttribute );
-				}
+			if ( idAttributes.isEmpty() ) {
+				AbstractIdentifiableType.this.nonAggregatedIdAttributes = Collections.EMPTY_SET;
 			}
+			else {
+				for ( SingularPersistentAttribute idAttribute : (Set<SingularPersistentAttribute>) idAttributes ) {
+					if ( AbstractIdentifiableType.this == idAttribute.getDeclaringType() ) {
+						addAttribute( idAttribute );
+					}
+				}
 
-			AbstractIdentifiableType.this.nonAggregatedIdAttributes = (Set) idAttributes;
+				AbstractIdentifiableType.this.nonAggregatedIdAttributes = (Set) idAttributes;
+			}
 		}
 
 		@Override

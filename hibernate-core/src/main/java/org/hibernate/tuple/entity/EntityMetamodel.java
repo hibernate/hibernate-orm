@@ -29,6 +29,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -118,8 +119,8 @@ public class EntityMetamodel implements Serializable {
 	private final boolean explicitPolymorphism;
 	private final boolean inherited;
 	private final boolean hasSubclasses;
-	private final Set subclassEntityNames = new HashSet();
-	private final Map entityNameByInheritenceClassMap = new HashMap();
+	private final Set subclassEntityNames;
+	private final Map<Class,String> entityNameByInheritenceClassMap;
 
 	private final BytecodeEnhancementMetadata bytecodeEnhancementMetadata;
 
@@ -395,19 +396,23 @@ public class EntityMetamodel implements Serializable {
 		hasMutableProperties = foundMutable;
 
 		iter = persistentClass.getSubclassIterator();
+		final Set<String> subclassEntityNamesLocal = new HashSet<>();
 		while ( iter.hasNext() ) {
-			subclassEntityNames.add( ( (PersistentClass) iter.next() ).getEntityName() );
+			subclassEntityNamesLocal.add( ( (PersistentClass) iter.next() ).getEntityName() );
 		}
-		subclassEntityNames.add( name );
+		subclassEntityNamesLocal.add( name );
+		subclassEntityNames = CollectionHelper.toSmallSet( subclassEntityNamesLocal );
 
+		HashMap<Class, String> entityNameByInheritenceClassMapLocal = new HashMap<Class, String>();
 		if ( persistentClass.hasPojoRepresentation() ) {
-			entityNameByInheritenceClassMap.put( persistentClass.getMappedClass(), persistentClass.getEntityName() );
+			entityNameByInheritenceClassMapLocal.put( persistentClass.getMappedClass(), persistentClass.getEntityName() );
 			iter = persistentClass.getSubclassIterator();
 			while ( iter.hasNext() ) {
 				final PersistentClass pc = ( PersistentClass ) iter.next();
-				entityNameByInheritenceClassMap.put( pc.getMappedClass(), pc.getEntityName() );
+				entityNameByInheritenceClassMapLocal.put( pc.getMappedClass(), pc.getEntityName() );
 			}
 		}
+		entityNameByInheritenceClassMap = CollectionHelper.toSmallMap( entityNameByInheritenceClassMapLocal );
 	}
 
 	private static GenerationStrategyPair buildGenerationStrategyPair(
@@ -947,7 +952,7 @@ public class EntityMetamodel implements Serializable {
 	 * @return The mapped entity-name, or null if no such mapping was found.
 	 */
 	public String findEntityNameByEntityClass(Class inheritenceClass) {
-		return ( String ) entityNameByInheritenceClassMap.get( inheritenceClass );
+		return entityNameByInheritenceClassMap.get( inheritenceClass );
 	}
 
 	@Override

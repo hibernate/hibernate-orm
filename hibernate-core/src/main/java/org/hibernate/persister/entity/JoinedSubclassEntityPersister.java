@@ -641,8 +641,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 		subclassNamesBySubclassTable = buildSubclassNamesBySubclassTableMapping( persistentClass, factory );
 
-		initLockers();
-
 		initSubclassPropertyAliasesMap( persistentClass );
 
 		postConstruct( creationContext.getMetadata() );

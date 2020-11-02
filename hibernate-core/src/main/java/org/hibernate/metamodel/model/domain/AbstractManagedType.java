@@ -9,6 +9,7 @@ package org.hibernate.metamodel.model.domain;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -28,6 +29,7 @@ import javax.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.graph.internal.SubGraphImpl;
 import org.hibernate.graph.spi.SubGraphImplementor;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.model.domain.internal.AttributeContainer;
 import org.hibernate.metamodel.model.domain.internal.DomainModelHelper;
@@ -47,7 +49,7 @@ public abstract class AbstractManagedType<J>
 	private final RepresentationMode representationMode;
 
 	private final Map<String, SingularPersistentAttribute<J, ?>> declaredSingularAttributes = new LinkedHashMap<>();
-	private final Map<String, PluralPersistentAttribute<J, ?, ?>> declaredPluralAttributes = new LinkedHashMap<>();
+	private volatile Map<String, PluralPersistentAttribute<J, ?, ?>> declaredPluralAttributes ;
 
 	private final List<ManagedDomainType> subTypes = new ArrayList<>();
 
@@ -118,12 +120,21 @@ public abstract class AbstractManagedType<J>
 	@Override
 	@SuppressWarnings("unchecked")
 	public Set<Attribute<J, ?>> getDeclaredAttributes() {
-		if ( declaredSingularAttributes.isEmpty() && declaredPluralAttributes.isEmpty() ) {
+		final boolean isDeclaredSingularAttributesEmpty = CollectionHelper.isEmpty( declaredSingularAttributes );
+		final boolean isDeclaredPluralAttributes = CollectionHelper.isEmpty( declaredPluralAttributes );
+		if ( isDeclaredSingularAttributesEmpty && isDeclaredPluralAttributes ) {
 			return Collections.emptySet();
 		}
-
-		final HashSet attributes = new LinkedHashSet( declaredSingularAttributes.values() );
-		attributes.addAll( declaredPluralAttributes.values() );
+		final HashSet attributes;
+		if ( !isDeclaredSingularAttributesEmpty ) {
+			attributes = new LinkedHashSet( declaredSingularAttributes.values() );
+			if ( !isDeclaredPluralAttributes ) {
+				attributes.addAll( declaredPluralAttributes.values() );
+			}
+		}
+		else {
+			attributes = new LinkedHashSet( declaredPluralAttributes.values() );
+		}
 		return attributes;
 	}
 
@@ -191,6 +202,9 @@ public abstract class AbstractManagedType<J>
 		}
 
 		// next plural
+		if ( declaredPluralAttributes == null ) {
+			return null;
+		}
 		attribute = declaredPluralAttributes.get( name );
 		//noinspection RedundantIfStatement
 		if ( attribute != null ) {
@@ -347,18 +361,17 @@ public abstract class AbstractManagedType<J>
 	@Override
 	@SuppressWarnings("unchecked")
 	public Set<PluralAttribute<? super J, ?, ?>> getPluralAttributes() {
-		final Set attributes = getDeclaredPluralAttributes();
-
+		HashSet attributes = declaredPluralAttributes == null ? new HashSet<PluralAttribute<? super J, ?, ?>>() : new HashSet<PluralAttribute<? super J, ?, ?>>( declaredPluralAttributes.values() );
 		if ( getSuperType() != null ) {
 			attributes.addAll( getSuperType().getPluralAttributes() );
 		}
-
 		return attributes;
 	}
 
 	@Override
 	public Set<PluralAttribute<J, ?, ?>> getDeclaredPluralAttributes() {
-		return new HashSet<>( declaredPluralAttributes.values() );
+		return declaredPluralAttributes == null ?
+				Collections.EMPTY_SET : new HashSet<>( declaredPluralAttributes.values() );
 	}
 
 	@Override
@@ -380,8 +393,9 @@ public abstract class AbstractManagedType<J>
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public PluralPersistentAttribute<? super J, ?, ?> findDeclaredPluralAttribute(String name) {
-		return declaredPluralAttributes.get( name );
+		return declaredPluralAttributes == null ? null : declaredPluralAttributes.get( name );
 	}
 
 	private <E> void checkTypeForPluralAttributes(
@@ -429,7 +443,7 @@ public abstract class AbstractManagedType<J>
 	@Override
 	@SuppressWarnings( "unchecked")
 	public CollectionAttribute<J, ?> getDeclaredCollection(String name) {
-		final PluralAttribute attribute = findDeclaredPluralAttribute( name );
+		final PluralPersistentAttribute<? super J, ?, ?> attribute = findDeclaredPluralAttribute( name );
 		basicCollectionCheck( attribute, name );
 		return ( CollectionAttribute<J, ?> ) attribute;
 	}
@@ -476,7 +490,7 @@ public abstract class AbstractManagedType<J>
 	@Override
 	@SuppressWarnings( "unchecked")
 	public SetPersistentAttribute<J, ?> getDeclaredSet(String name) {
-		final PluralAttribute attribute = findDeclaredPluralAttribute( name );
+		final PluralPersistentAttribute<? super J, ?, ?> attribute = findDeclaredPluralAttribute( name );
 		basicSetCheck( attribute, name );
 		return (SetPersistentAttribute) attribute;
 	}
@@ -523,7 +537,7 @@ public abstract class AbstractManagedType<J>
 	@Override
 	@SuppressWarnings("unchecked")
 	public ListPersistentAttribute<J, ?> getDeclaredList(String name) {
-		final PluralAttribute attribute = findDeclaredPluralAttribute( name );
+		final PluralPersistentAttribute<? super J, ?, ?> attribute = findDeclaredPluralAttribute( name );
 		basicListCheck( attribute, name );
 		return (ListPersistentAttribute) attribute;
 	}
@@ -570,7 +584,7 @@ public abstract class AbstractManagedType<J>
 	@Override
 	@SuppressWarnings("unchecked")
 	public MapPersistentAttribute<J, ?, ?> getDeclaredMap(String name) {
-		final PluralAttribute attribute = findDeclaredPluralAttribute( name );
+		final PluralPersistentAttribute<? super J, ?, ?> attribute = findDeclaredPluralAttribute( name );
 		basicMapCheck( attribute, name );
 		return (MapPersistentAttribute) attribute;
 	}
@@ -598,7 +612,7 @@ public abstract class AbstractManagedType<J>
 	@Override
 	@SuppressWarnings("unchecked")
 	public <K, V> MapAttribute<J, K, V> getDeclaredMap(String name, Class<K> keyType, Class<V> valueType) {
-		final PluralAttribute attribute = findDeclaredPluralAttribute( name );
+		final PluralPersistentAttribute<? super J, ?, ?> attribute = findDeclaredPluralAttribute( name );
 		checkMapValueType( attribute, name, valueType );
 		final MapAttribute<J, K, V> mapAttribute = ( MapAttribute<J, K, V> ) attribute;
 		checkMapKeyType( mapAttribute, name, keyType );
@@ -645,7 +659,10 @@ public abstract class AbstractManagedType<J>
 				declaredSingularAttributes.put( attribute.getName(), (SingularPersistentAttribute) attribute );
 			}
 			else if ( attribute instanceof PluralPersistentAttribute ) {
-				declaredPluralAttributes.put(attribute.getName(), (PluralPersistentAttribute) attribute );
+				if ( AbstractManagedType.this.declaredPluralAttributes == null ) {
+					AbstractManagedType.this.declaredPluralAttributes = new HashMap<>();
+				}
+				AbstractManagedType.this.declaredPluralAttributes.put( attribute.getName(), (PluralPersistentAttribute<J,?,?>) attribute );
 			}
 			else {
 				throw new IllegalArgumentException(

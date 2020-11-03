@@ -477,13 +477,7 @@ class FromElementType {
 			// B) otherwise, we need to use the persister's
 			// table name as the column qualification
 			// 2) otherwise (not correlated), use the given alias
-			if ( isCorrelation() ) {
-				if ( isMultiTable() && ( !isUpdateQuery() || inWhereClause() ) ) {
-					return propertyMapping.toColumns( tableAlias, path );
-				}
-				else if ( isInsertQuery() ) {
-					return propertyMapping.toColumns( tableAlias, path );
-				}
+			if ( isUpdateQuery() && isCorrelation() ) {
 				return propertyMapping.toColumns( extractTableName(), path );
 			}
 			return propertyMapping.toColumns( tableAlias, path );

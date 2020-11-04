@@ -10,7 +10,7 @@ import org.hibernate.Incubating;
 
 /**
  * Contract for Query impls that can be converted to a named query memento to be
- * stored in the {@link NamedQueryRepository}
+ * stored in the {@link NamedObjectRepository}
  *
  * @author Steve Ebersole
  */

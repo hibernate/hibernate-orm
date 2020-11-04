@@ -13,7 +13,7 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.MappedSuperclass;
-import org.hibernate.query.named.NamedQueryRepository;
+import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -38,7 +38,7 @@ public interface MetadataImplementor extends Metadata, Mapping {
 	 */
 	TypeConfiguration getTypeConfiguration();
 
-	NamedQueryRepository buildNamedQueryRepository(SessionFactoryImplementor sessionFactory);
+	NamedObjectRepository buildNamedQueryRepository(SessionFactoryImplementor sessionFactory);
 
 	void validate() throws MappingException;
 

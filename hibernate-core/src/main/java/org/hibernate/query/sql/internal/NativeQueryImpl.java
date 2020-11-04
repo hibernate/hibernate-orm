@@ -139,7 +139,7 @@ public class NativeQueryImpl<R>
 					if ( memento.getResultMappingName() != null ) {
 						final NamedResultSetMappingMemento resultSetMappingMemento = session.getFactory()
 								.getQueryEngine()
-								.getNamedQueryRepository()
+								.getNamedObjectRepository()
 								.getResultSetMappingMemento( memento.getResultMappingName() );
 						resultSetMappingMemento.resolve( resultSetMapping, querySpaceConsumer, context );
 						return true;
@@ -240,7 +240,7 @@ public class NativeQueryImpl<R>
 				(resultSetMapping, querySpaceConsumer, context) -> {
 					final NamedResultSetMappingMemento mappingMemento = session.getFactory()
 							.getQueryEngine()
-							.getNamedQueryRepository()
+							.getNamedObjectRepository()
 							.getResultSetMappingMemento( resultSetMappingName );
 					assert mappingMemento != null;
 					mappingMemento.resolve( resultSetMapping, querySpaceConsumer, context );

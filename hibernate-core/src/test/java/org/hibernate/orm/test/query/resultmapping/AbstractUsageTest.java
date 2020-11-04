@@ -17,7 +17,7 @@ import org.junit.jupiter.api.BeforeEach;
  */
 @DomainModel( annotatedClasses = SimpleEntityWithNamedMappings.class )
 @SessionFactory
-public class BaseUsageTest {
+public abstract class AbstractUsageTest {
 	@BeforeEach
 	public void prepareData(SessionFactoryScope scope) {
 		scope.inTransaction(

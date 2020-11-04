@@ -11,7 +11,7 @@ import javax.persistence.FlushModeType;
 import org.hibernate.CacheMode;
 import org.hibernate.query.Query;
 import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
-import org.hibernate.query.named.NamedQueryRepository;
+import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.spi.QueryImplementor;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -31,14 +31,14 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class SimpleNamedQueryTests {
 	@Test
 	public void testBinding(SessionFactoryScope scope) {
-		final NamedQueryRepository namedQueryRepository = scope.getSessionFactory()
+		final NamedObjectRepository namedObjectRepository = scope.getSessionFactory()
 				.getQueryEngine()
-				.getNamedQueryRepository();
+				.getNamedObjectRepository();
 
-		final NamedHqlQueryMemento simpleMemento = namedQueryRepository.getHqlQueryMemento( "simple" );
+		final NamedHqlQueryMemento simpleMemento = namedObjectRepository.getHqlQueryMemento( "simple" );
 		assertThat( simpleMemento, notNullValue() );
 
-		final NamedHqlQueryMemento restrictedMemento = namedQueryRepository.getHqlQueryMemento( "restricted" );
+		final NamedHqlQueryMemento restrictedMemento = namedObjectRepository.getHqlQueryMemento( "restricted" );
 		assertThat( restrictedMemento, notNullValue() );
 	}
 
@@ -50,14 +50,14 @@ public class SimpleNamedQueryTests {
 					session.createNamedQuery( "restricted" ).setParameter( "name", "a name" ).list();
 				}
 		);
-		final NamedQueryRepository namedQueryRepository = scope.getSessionFactory()
+		final NamedObjectRepository namedObjectRepository = scope.getSessionFactory()
 				.getQueryEngine()
-				.getNamedQueryRepository();
+				.getNamedObjectRepository();
 
-		final NamedHqlQueryMemento simpleMemento = namedQueryRepository.getHqlQueryMemento( "simple" );
+		final NamedHqlQueryMemento simpleMemento = namedObjectRepository.getHqlQueryMemento( "simple" );
 		assertThat( simpleMemento, notNullValue() );
 
-		final NamedHqlQueryMemento restrictedMemento = namedQueryRepository.getHqlQueryMemento( "restricted" );
+		final NamedHqlQueryMemento restrictedMemento = namedObjectRepository.getHqlQueryMemento( "restricted" );
 		assertThat( restrictedMemento, notNullValue() );
 	}
 

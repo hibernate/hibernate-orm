@@ -12,7 +12,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.SingleIdEntityLoader;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.named.NamedQueryMemento;
-import org.hibernate.query.named.NamedQueryRepository;
+import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 
@@ -41,14 +41,14 @@ public class SingleIdEntityLoaderProvidedQueryImpl<T> implements SingleIdEntityL
 	private static NamedQueryMemento resolveNamedQuery(
 			String queryName,
 			SessionFactoryImplementor sf) {
-		final NamedQueryRepository namedQueryRepository = sf.getQueryEngine().getNamedQueryRepository();
+		final NamedObjectRepository namedObjectRepository = sf.getQueryEngine().getNamedObjectRepository();
 
-		final NamedNativeQueryMemento nativeQueryMemento = namedQueryRepository.getNativeQueryMemento( queryName );
+		final NamedNativeQueryMemento nativeQueryMemento = namedObjectRepository.getNativeQueryMemento( queryName );
 		if ( nativeQueryMemento != null ) {
 			return nativeQueryMemento;
 		}
 
-		return namedQueryRepository.getHqlQueryMemento( queryName );
+		return namedObjectRepository.getHqlQueryMemento( queryName );
 	}
 
 	@Override

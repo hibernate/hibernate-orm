@@ -18,9 +18,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
 
 /**
- * @author Steve Ebersole
+ * Tests for basic-valued SqlResultSetMapping handling and usage
  */
-public class BasicResultTests extends BaseUsageTest {
+public class BasicResultTests extends AbstractUsageTest {
 	@Test
 	public void testSimpleScalarMapping(SessionFactoryScope scope) {
 		scope.inTransaction(
@@ -28,7 +28,7 @@ public class BasicResultTests extends BaseUsageTest {
 					// make sure it is in the repository
 					final NamedResultSetMappingMemento mappingMemento = session.getSessionFactory()
 							.getQueryEngine()
-							.getNamedQueryRepository()
+							.getNamedObjectRepository()
 							.getResultSetMappingMemento( "name" );
 					assertThat( mappingMemento, notNullValue() );
 
@@ -52,7 +52,7 @@ public class BasicResultTests extends BaseUsageTest {
 					// make sure it is in the repository
 					final NamedResultSetMappingMemento mappingMemento = session.getSessionFactory()
 							.getQueryEngine()
-							.getNamedQueryRepository()
+							.getNamedObjectRepository()
 							.getResultSetMappingMemento( "id_name" );
 					assertThat( mappingMemento, notNullValue() );
 

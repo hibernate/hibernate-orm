@@ -27,7 +27,7 @@ import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
  * @author Steve Ebersole
  */
 @Incubating
-public interface NamedQueryRepository {
+public interface NamedObjectRepository {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Named HQL Memento

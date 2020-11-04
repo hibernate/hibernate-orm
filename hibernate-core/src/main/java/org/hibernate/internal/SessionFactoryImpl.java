@@ -310,7 +310,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			this.queryEngine.prepare( this, bootMetamodel, bootstrapContext );
 
 			if ( options.isNamedQueryStartupCheckingEnabled() ) {
-				queryEngine.getNamedQueryRepository().checkNamedQueries( queryEngine );
+				queryEngine.getNamedObjectRepository().checkNamedQueries( queryEngine );
 			}
 
 			// todo (6.0) : manage old getMultiTableBulkIdStrategy
@@ -854,7 +854,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		try {
 			final ProcedureCallImplementor unwrapped = query.unwrap( ProcedureCallImplementor.class );
 			if ( unwrapped != null ) {
-				getQueryEngine().getNamedQueryRepository().registerCallableQueryMemento(
+				getQueryEngine().getNamedObjectRepository().registerCallableQueryMemento(
 						name,
 						unwrapped.toMemento( name )
 				);
@@ -871,13 +871,13 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			if ( hibernateQuery != null ) {
 				// create and register the proper NamedQueryDefinition...
 				if ( hibernateQuery instanceof NativeQueryImplementor ) {
-					getQueryEngine().getNamedQueryRepository().registerNativeQueryMemento(
+					getQueryEngine().getNamedObjectRepository().registerNativeQueryMemento(
 							name,
 							( (NativeQueryImplementor) hibernateQuery ).toMemento( name )
 					);
 				}
 				else {
-					getQueryEngine().getNamedQueryRepository().registerHqlQueryMemento(
+					getQueryEngine().getNamedObjectRepository().registerHqlQueryMemento(
 							name,
 							( ( HqlQueryImplementor ) hibernateQuery ).toMemento( name )
 					);

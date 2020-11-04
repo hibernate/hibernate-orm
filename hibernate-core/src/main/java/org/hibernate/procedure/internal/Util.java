@@ -11,7 +11,7 @@ import java.util.function.Consumer;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.query.internal.ResultSetMappingResolutionContext;
-import org.hibernate.query.named.NamedQueryRepository;
+import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.results.ResultSetMapping;
 
@@ -53,10 +53,10 @@ public class Util {
 			ResultSetMapping resultSetMapping,
 			Consumer<String> querySpaceConsumer,
 			ResultSetMappingResolutionContext context) {
-		final NamedQueryRepository namedQueryRepository = context.getSessionFactory().getQueryEngine().getNamedQueryRepository();
+		final NamedObjectRepository namedObjectRepository = context.getSessionFactory().getQueryEngine().getNamedObjectRepository();
 
 		for ( String resultSetMappingName : resultSetMappingNames ) {
-			final NamedResultSetMappingMemento memento = namedQueryRepository.getResultSetMappingMemento( resultSetMappingName );
+			final NamedResultSetMappingMemento memento = namedObjectRepository.getResultSetMappingMemento( resultSetMappingName );
 			memento.resolve(
 					resultSetMapping,
 					querySpaceConsumer,

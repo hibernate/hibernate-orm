@@ -22,7 +22,8 @@ import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.hql.internal.StandardHqlTranslator;
 import org.hibernate.query.hql.spi.SqmCreationOptions;
-import org.hibernate.query.internal.NamedQueryRepositoryImpl;
+import org.hibernate.query.internal.NamedObjectRepositoryImpl;
+import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.SqmStatement;
@@ -39,7 +40,7 @@ import org.junit.jupiter.api.Test;
 /**
  * Tests making sure that HQL queries can fully be translated without a SessionFactory.
  *
- * todo (6.0) : have a way to directly load these translations into the {@link org.hibernate.query.named.NamedQueryRepository}
+ * todo (6.0) : have a way to directly load these translations into the {@link NamedObjectRepository}
  * 		directly.  For example Quarkus could store its build-time translations and directly here during boot-strap of the SF
  *
  * @author Steve Ebersole
@@ -116,7 +117,7 @@ public class HqlTranslationNoFactoryTests {
 				jpaMetamodel,
 				// we don't want strict JPA query compliance
 				false,
-				new NamedQueryRepositoryImpl( Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap() ),
+				new NamedObjectRepositoryImpl( Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap() ),
 				// NativeQueryInterpreter
 				null,
 				// this is exclusively to build the SqmFunctionRegistry, maybe Quarkus should just build it directly and pass

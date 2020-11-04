@@ -113,7 +113,6 @@ import org.hibernate.event.spi.SaveOrUpdateEventListener;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.internal.RootGraphImpl;
-import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.QueryHints;
@@ -3023,7 +3022,7 @@ public class SessionImpl
 		checkOpen();
 		try {
 			final NamedCallableQueryMemento memento = getFactory().getQueryEngine()
-					.getNamedQueryRepository()
+					.getNamedObjectRepository()
 					.getCallableQueryMemento( name );
 			if ( memento == null ) {
 				throw new IllegalArgumentException( "No @NamedStoredProcedureQuery was found with that name : " + name );

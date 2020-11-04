@@ -55,7 +55,7 @@ import static org.hamcrest.Matchers.notNullValue;
 				)
 		}
 )
-public class EntityResultTests extends BaseUsageTest {
+public class EntityResultTests extends AbstractUsageTest {
 
 	@Test
 	public void testSimpleEntityResultMapping(SessionFactoryScope scope) {
@@ -64,7 +64,7 @@ public class EntityResultTests extends BaseUsageTest {
 					// make sure it is in the repository
 					final NamedResultSetMappingMemento mappingMemento = session.getSessionFactory()
 							.getQueryEngine()
-							.getNamedQueryRepository()
+							.getNamedObjectRepository()
 							.getResultSetMappingMemento( "entity" );
 					assertThat( mappingMemento, notNullValue() );
 
@@ -92,7 +92,7 @@ public class EntityResultTests extends BaseUsageTest {
 					// make sure it is in the repository
 					final NamedResultSetMappingMemento mappingMemento = session.getSessionFactory()
 							.getQueryEngine()
-							.getNamedQueryRepository()
+							.getNamedObjectRepository()
 							.getResultSetMappingMemento(
 									"entity-none" );
 					assertThat( mappingMemento, notNullValue() );
@@ -121,7 +121,7 @@ public class EntityResultTests extends BaseUsageTest {
 					// make sure it is in the repository
 					final NamedResultSetMappingMemento mappingMemento = session.getSessionFactory()
 							.getQueryEngine()
-							.getNamedQueryRepository()
+							.getNamedObjectRepository()
 							.getResultSetMappingMemento(
 									"entity-id-notes" );
 					assertThat( mappingMemento, notNullValue() );

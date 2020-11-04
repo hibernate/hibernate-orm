@@ -517,7 +517,7 @@ public class QuerySqmImpl<R>
 	}
 
 	@Override
-	protected ScrollableResultsImplementor doScroll(ScrollMode scrollMode) {
+	public ScrollableResultsImplementor<R> scroll(ScrollMode scrollMode) {
 		SqmUtil.verifyIsSelectStatement( getSqmStatement() );
 		getSession().prepareForQueryExecution( requiresTxn( getLockOptions().findGreatestLockMode() ) );
 

@@ -60,6 +60,11 @@ public class ScrollableResultsConsumer<R> implements ResultsConsumer<ScrollableR
 		}
 	}
 
+	@Override
+	public boolean canResultsBeCached() {
+		return false;
+	}
+
 	private boolean containsCollectionFetches(JdbcValuesMapping valuesMapping) {
 		return false;
 	}

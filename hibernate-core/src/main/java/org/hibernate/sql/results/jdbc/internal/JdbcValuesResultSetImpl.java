@@ -11,7 +11,6 @@ import java.sql.SQLException;
 import org.hibernate.CacheMode;
 import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.cache.spi.QueryResultsCache;
-import org.hibernate.query.Limit;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.exec.ExecutionException;
@@ -37,15 +36,6 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 	private final SqlSelection[] sqlSelections;
 	private final Object[] currentRowJdbcValues;
 
-	// todo (6.0) - manage limit-based skips
-
-	private final int numberOfRowsToProcess;
-
-	// we start position at -1 prior to any next call so that the first next call
-	//		increments position to 0, which is the first row
-	private int position = -1;
-
-
 	public JdbcValuesResultSetImpl(
 			ResultSetAccess resultSetAccess,
 			QueryKey queryCacheKey,
@@ -57,23 +47,8 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 		this.valuesMapping = valuesMapping;
 		this.executionContext = executionContext;
 
-		// todo (6.0) : decide how to handle paged/limited results
-		this.numberOfRowsToProcess = interpretNumberOfRowsToProcess( queryOptions );
-
 		this.sqlSelections = valuesMapping.getSqlSelections().toArray( new SqlSelection[0] );
 		this.currentRowJdbcValues = new Object[ sqlSelections.length ];
-	}
-
-	private static int interpretNumberOfRowsToProcess(QueryOptions queryOptions) {
-		if ( queryOptions == null || queryOptions.getLimit() == null ) {
-			return -1;
-		}
-		final Limit limit = queryOptions.getLimit();
-		if ( limit.getMaxRows() == null ) {
-			return -1;
-		}
-
-		return limit.getMaxRows();
 	}
 
 	private static QueryCachePutManager resolveQueryCachePutManager(
@@ -100,30 +75,164 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 
 	@Override
 	protected final boolean processNext(RowProcessingState rowProcessingState) {
-		if ( numberOfRowsToProcess != -1 && position > numberOfRowsToProcess ) {
-			// numberOfRowsToProcess != -1 means we had some limit, and
-			//		position > numberOfRowsToProcess means we have exceeded the
-			// 		number of limited rows
+		return advance(
+				() -> {
+					try {
+						//noinspection RedundantIfStatement
+						if ( ! resultSetAccess.getResultSet().next() ) {
+							return false;
+						}
+
+						return true;
+					}
+					catch (SQLException e) {
+						throw makeExecutionException( "Error advancing (next) ResultSet position", e );
+					}
+				}
+		);
+	}
+
+	@Override
+	protected boolean processPrevious(RowProcessingState rowProcessingState) {
+		return advance(
+				() -> {
+					try {
+						//noinspection RedundantIfStatement
+						if ( ! resultSetAccess.getResultSet().previous() ) {
+							return false;
+						}
+						return true;
+					}
+					catch (SQLException e) {
+						throw makeExecutionException( "Error advancing (previous) ResultSet position", e );
+					}
+				}
+		);
+	}
+
+	@Override
+	protected boolean processScroll(int numberOfRows, RowProcessingState rowProcessingState) {
+		return advance(
+				() -> {
+					try {
+						//noinspection RedundantIfStatement
+						if ( ! resultSetAccess.getResultSet().relative( numberOfRows ) ) {
+							return false;
+						}
+
+						return true;
+					}
+					catch (SQLException e) {
+						throw makeExecutionException( "Error advancing (scroll) ResultSet position", e );
+					}
+				}
+		);
+	}
+
+	@Override
+	public int getPosition() {
+		try {
+			return resultSetAccess.getResultSet().getRow() - 1;
+		}
+		catch (SQLException e) {
+			throw makeExecutionException( "Error calling ResultSet#getRow", e );
+		}
+	}
+
+	@Override
+	protected boolean processPosition(int position, RowProcessingState rowProcessingState) {
+		return advance(
+				() -> {
+					try {
+						//noinspection RedundantIfStatement
+						if ( ! resultSetAccess.getResultSet().absolute( position ) ) {
+							return false;
+						}
+
+						return true;
+					}
+					catch (SQLException e) {
+						throw makeExecutionException( "Error advancing (scroll) ResultSet position", e );
+					}
+				}
+		);
+	}
+
+	@Override
+	public boolean isBeforeFirst(RowProcessingState rowProcessingState) {
+		try {
+			return resultSetAccess.getResultSet().isBeforeFirst();
+		}
+		catch (SQLException e) {
+			throw makeExecutionException( "Error calling ResultSet#isBeforeFirst", e );
+		}
+	}
+
+	@Override
+	public boolean first(RowProcessingState rowProcessingState) {
+		return advance(
+				() -> {
+					try {
+						//noinspection RedundantIfStatement
+						if ( ! resultSetAccess.getResultSet().first() ) {
+							return false;
+						}
+
+						return true;
+					}
+					catch (SQLException e) {
+						throw makeExecutionException( "Error advancing (first) ResultSet position", e );
+					}
+				}
+		);
+	}
+
+	@Override
+	public boolean isAfterLast(RowProcessingState rowProcessingState) {
+		try {
+			return resultSetAccess.getResultSet().isAfterLast();
+		}
+		catch (SQLException e) {
+			throw makeExecutionException( "Error calling ResultSet#isAfterLast", e );
+		}
+	}
+
+	@Override
+	public boolean last(RowProcessingState rowProcessingState) {
+		return advance(
+				() -> {
+					try {
+						//noinspection RedundantIfStatement
+						if ( ! resultSetAccess.getResultSet().last() ) {
+							return false;
+						}
+
+						return true;
+					}
+					catch (SQLException e) {
+						throw makeExecutionException( "Error advancing (last) ResultSet position", e );
+					}
+				}
+		);
+	}
+
+	@FunctionalInterface
+	private interface Advancer {
+		boolean advance();
+	}
+
+	private boolean advance(Advancer advancer) {
+		final boolean hasResult = advancer.advance();
+		if ( ! hasResult ) {
 			return false;
 		}
 
-		position++;
-
 		try {
-			if ( !resultSetAccess.getResultSet().next() ) {
-				return false;
-			}
-		}
-		catch (SQLException e) {
-			throw makeExecutionException( "Error advancing JDBC ResultSet", e );
-		}
-
-		try {
-			readCurrentRowValues( rowProcessingState );
+			readCurrentRowValues();
 			return true;
 		}
 		catch (SQLException e) {
-			throw makeExecutionException( "Error reading JDBC row values", e );
+			throw makeExecutionException( "Error reading ResultSet row values", e );
 		}
 	}
 
@@ -137,7 +246,7 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 		);
 	}
 
-	private void readCurrentRowValues(RowProcessingState rowProcessingState) throws SQLException {
+	private void readCurrentRowValues() throws SQLException {
 		for ( final SqlSelection sqlSelection : sqlSelections ) {
 			currentRowJdbcValues[ sqlSelection.getValuesArrayPosition() ] = sqlSelection.getJdbcValueExtractor().extract(
 					resultSetAccess.getResultSet(),

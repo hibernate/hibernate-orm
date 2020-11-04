@@ -32,6 +32,7 @@ import org.hibernate.NonUniqueResultException;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.SharedSessionContract;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
@@ -99,29 +100,23 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	}
 
 	/**
-	 * Return the query results as <tt>ScrollableResults</tt>. The
-	 * scrollability of the returned results depends upon JDBC driver
-	 * support for scrollable <tt>ResultSet</tt>s.<br>
+	 * Returns scrollable access to the query results.
 	 *
-	 * @see ScrollableResults
+	 * This form calls {@link #scroll(ScrollMode)} using {@link Dialect#defaultScrollMode()}
 	 *
-	 * @return the result iterator
+	 * @apiNote The exact behavior of this method depends somewhat
+	 * on the JDBC driver's {@link java.sql.ResultSet} scrolling support
 	 */
-	ScrollableResults scroll();
+	ScrollableResults<R> scroll();
 
 	/**
-	 * Return the query results as ScrollableResults. The scrollability of the returned results
-	 * depends upon JDBC driver support for scrollable ResultSets.
+	 * Returns scrollable access to the query results.  The capabilities of the
+	 * returned ScrollableResults depend on the specified ScrollMode.
 	 *
-	 * @param scrollMode The scroll mode
-	 *
-	 * @return the result iterator
-	 *
-	 * @see ScrollableResults
-	 * @see ScrollMode
-	 *
+	 * @apiNote The exact behavior of this method depends somewhat
+	 * on the JDBC driver's {@link java.sql.ResultSet} scrolling support
 	 */
-	ScrollableResults scroll(ScrollMode scrollMode);
+	ScrollableResults<R> scroll(ScrollMode scrollMode);
 
 	/**
 	 * Return the query results as a <tt>List</tt>. If the query contains

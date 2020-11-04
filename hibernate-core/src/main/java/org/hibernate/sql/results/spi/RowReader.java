@@ -40,7 +40,7 @@ public interface RowReader<R> {
 	 * todo (6.0) : JdbcValuesSourceProcessingOptions is available through RowProcessingState - why pass it in separately
 	 * 		should use one approach or the other
 	 */
-	R readRow(RowProcessingState processingState, JdbcValuesSourceProcessingOptions options) throws SQLException;
+	R readRow(RowProcessingState processingState, JdbcValuesSourceProcessingOptions options);
 
 	/**
 	 * Called at the end of processing all rows

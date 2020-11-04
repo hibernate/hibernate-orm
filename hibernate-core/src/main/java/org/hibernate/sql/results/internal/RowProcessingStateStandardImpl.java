@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.results.internal;
 
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -38,6 +39,8 @@ public class RowProcessingStateStandardImpl implements RowProcessingState {
 
 	private final RowReader<?> rowReader;
 	private final JdbcValues jdbcValues;
+
+	// todo (6.0) : why doesn't this just use the array from JdbcValues?
 	private Object[] currentRowJdbcValues;
 
 	public RowProcessingStateStandardImpl(
@@ -70,8 +73,67 @@ public class RowProcessingStateStandardImpl implements RowProcessingState {
 		return rowReader;
 	}
 
-	public boolean next() throws SQLException {
+	public boolean next() {
 		if ( jdbcValues.next( this ) ) {
+			currentRowJdbcValues = jdbcValues.getCurrentRowValuesArray();
+			return true;
+		}
+		else {
+			currentRowJdbcValues = null;
+			return false;
+		}
+	}
+
+	public boolean previous() {
+		if ( jdbcValues.previous( this ) ) {
+			currentRowJdbcValues = jdbcValues.getCurrentRowValuesArray();
+			return true;
+		}
+		else {
+			currentRowJdbcValues = null;
+			return false;
+		}
+	}
+
+	public boolean scroll(int i) {
+		if ( jdbcValues.scroll( i, this ) ) {
+			currentRowJdbcValues = jdbcValues.getCurrentRowValuesArray();
+			return true;
+		}
+		else {
+			currentRowJdbcValues = null;
+			return false;
+		}
+	}
+
+	public boolean position(int i) {
+		if ( jdbcValues.position( i, this ) ) {
+			currentRowJdbcValues = jdbcValues.getCurrentRowValuesArray();
+			return true;
+		}
+		else {
+			currentRowJdbcValues = null;
+			return false;
+		}
+	}
+
+	public int getPosition() {
+		return jdbcValues.getPosition();
+	}
+
+	public boolean first() {
+		if ( jdbcValues.first( this ) ) {
+			currentRowJdbcValues = jdbcValues.getCurrentRowValuesArray();
+			return true;
+		}
+		else {
+			currentRowJdbcValues = null;
+			return false;
+		}
+	}
+
+	public boolean last() {
+		if ( jdbcValues.last( this ) ) {
 			currentRowJdbcValues = jdbcValues.getCurrentRowValuesArray();
 			return true;
 		}

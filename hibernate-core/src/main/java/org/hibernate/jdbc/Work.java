@@ -14,6 +14,7 @@ import java.sql.SQLException;
  *
  * @author Steve Ebersole
  */
+@FunctionalInterface
 public interface Work {
 	/**
 	 * Execute the discrete work encapsulated by this work instance using the supplied connection.

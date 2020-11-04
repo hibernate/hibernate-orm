@@ -12,7 +12,6 @@ import java.util.Map;
 import javax.persistence.Tuple;
 import javax.persistence.TupleElement;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -33,8 +32,8 @@ import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
-import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.internal.RowTransformerJpaTupleImpl;
@@ -176,6 +175,40 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		}
 	}
 
+
+
+
+
+	@Override
+	public ScrollableResultsImplementor<R> performScroll(ScrollMode scrollMode, ExecutionContext executionContext) {
+		final SharedSessionContractImplementor session = executionContext.getSession();
+
+		final CacheableSqmInterpretation sqmInterpretation = resolveCacheableSqmInterpretation( executionContext );
+
+		final JdbcParameterBindings jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
+				executionContext.getQueryParameterBindings(),
+				domainParameterXref,
+				sqmInterpretation.getJdbcParamsXref(),
+				session.getFactory().getDomainModel(),
+				sqmInterpretation.getTableGroupAccess()::findTableGroup,
+				session
+		);
+		sqmInterpretation.getJdbcSelect().bindFilterJdbcParameters( jdbcParameterBindings );
+
+		try {
+			return session.getFactory().getJdbcServices().getJdbcSelectExecutor().scroll(
+					sqmInterpretation.getJdbcSelect(),
+					scrollMode,
+					jdbcParameterBindings,
+					executionContext,
+					rowTransformer
+			);
+		}
+		finally {
+			domainParameterXref.clearExpansions();
+		}
+	}
+
 	private volatile CacheableSqmInterpretation cacheableSqmInterpretation;
 
 	private CacheableSqmInterpretation resolveCacheableSqmInterpretation(ExecutionContext executionContext) {
@@ -264,47 +297,5 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		Map<QueryParameterImplementor<?>, Map<SqmParameter, List<JdbcParameter>>> getJdbcParamsXref() {
 			return jdbcParamsXref;
 		}
-	}
-
-
-
-
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public ScrollableResultsImplementor performScroll(ScrollMode scrollMode, ExecutionContext executionContext) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-
-//		final SqmSelectToSqlAstConverter sqmConverter = getSqmSelectToSqlAstConverter( executionContext );
-//
-//		final SqmSelectInterpretation interpretation = sqmConverter.interpret( sqm );
-//
-//		final JdbcSelect jdbcSelect = SqlAstSelectToJdbcSelectConverter.interpret(
-//				interpretation,
-//				executionContext.getSession().getSessionFactory()
-//		);
-//
-//		final Map<QueryParameterImplementor<?>, Map<SqmParameter, List<JdbcParameter>>> jdbcParamsXref =
-//				SqmConsumeHelper.generateJdbcParamsXref( domainParameterXref, sqmConverter );
-//
-//		final JdbcParameterBindings jdbcParameterBindings = QueryHelper.createJdbcParameterBindings(
-//				executionContext.getDomainParameterBindingContext().getQueryParameterBindings(),
-//				domainParameterXref,
-//				jdbcParamsXref,
-//				executionContext.getSession()
-//		);
-//
-//		try {
-//			return JdbcSelectExecutorStandardImpl.INSTANCE.scroll(
-//					jdbcSelect,
-//					scrollMode,
-//					jdbcParameterBindings,
-//					executionContext,
-//					rowTransformer
-//			);
-//		}
-//		finally {
-//			domainParameterXref.clearExpansions();
-//		}
 	}
 }

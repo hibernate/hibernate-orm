@@ -156,6 +156,11 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 	}
 
 	@Override
+	public boolean position(int position) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
 	public boolean last() {
 		throw new NotYetImplementedFor6Exception( getClass() );
 

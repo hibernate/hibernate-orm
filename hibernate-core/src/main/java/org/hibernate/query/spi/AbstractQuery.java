@@ -1425,22 +1425,9 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	public ScrollableResultsImplementor<?> scroll() {
+	public ScrollableResultsImplementor<R> scroll() {
 		return scroll( getSession().getFactory().getJdbcServices().getJdbcEnvironment().getDialect().defaultScrollMode() );
 	}
-
-	@Override
-	public ScrollableResultsImplementor<?> scroll(ScrollMode scrollMode) {
-		beforeQuery( false );
-		try {
-			return doScroll( scrollMode );
-		}
-		finally {
-			afterQuery();
-		}
-	}
-
-	protected abstract ScrollableResultsImplementor<?> doScroll(ScrollMode scrollMode);
 
 	@Override
 	@SuppressWarnings( {"unchecked", "rawtypes"} )

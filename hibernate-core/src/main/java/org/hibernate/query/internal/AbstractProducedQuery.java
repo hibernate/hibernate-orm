@@ -11,7 +11,6 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
@@ -44,6 +43,7 @@ import org.hibernate.PropertyNotFoundException;
 import org.hibernate.QueryParameterException;
 import org.hibernate.ScrollMode;
 import org.hibernate.TypeMismatchException;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.query.spi.EntityGraphQueryHint;
 import org.hibernate.engine.spi.ExceptionConverter;
 import org.hibernate.engine.spi.QueryParameters;
@@ -1390,51 +1390,25 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	public ScrollableResultsImplementor scroll() {
-		return scroll( getSession().getJdbcServices().getJdbcEnvironment().getDialect().defaultScrollMode() );
+	public ScrollableResultsImplementor<R> scroll() {
+		final Dialect dialect = getSession().getJdbcServices().getJdbcEnvironment().getDialect();
+		return scroll( dialect.defaultScrollMode() );
 	}
 
 	@Override
-	public ScrollableResultsImplementor scroll(ScrollMode scrollMode) {
-		beforeQuery();
-		try {
-			return doScroll( scrollMode );
-		}
-		finally {
-			afterQuery();
-		}
-	}
-
-	protected ScrollableResultsImplementor doScroll(ScrollMode scrollMode) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-
-//		if ( getMaxResults() == 0 ) {
-//			return EmptyScrollableResults.INSTANCE;
-//		}
-//
-//		final String query = getQueryParameterBindings().expandListValuedParameters( getQueryString(), getSession() );
-//		QueryParameters queryParameters = makeQueryParametersForExecution( query );
-//		queryParameters.setScrollMode( scrollMode );
-//		return getSession().scroll( query, queryParameters );
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
 	public Stream<R> stream() {
 		if (getMaxResults() == 0){
 			final Spliterator<R> spliterator = Spliterators.emptySpliterator();
 			return StreamSupport.stream( spliterator, false );
 		}
-		final ScrollableResultsImplementor scrollableResults = scroll( ScrollMode.FORWARD_ONLY );
+		final ScrollableResultsImplementor<R> scrollableResults = scroll( ScrollMode.FORWARD_ONLY );
 		final ScrollableResultsIterator<R> iterator = new ScrollableResultsIterator<>( scrollableResults );
 		final Spliterator<R> spliterator = Spliterators.spliteratorUnknownSize( iterator, Spliterator.NONNULL );
 
-		final Stream<R> stream = new StreamDecorator(
+		return new StreamDecorator<>(
 				StreamSupport.stream( spliterator, false ),
 				scrollableResults::close
 		);
-
-		return stream;
 	}
 
 	@Override

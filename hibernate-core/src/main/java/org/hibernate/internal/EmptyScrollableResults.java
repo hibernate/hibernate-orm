@@ -46,6 +46,11 @@ public class EmptyScrollableResults implements ScrollableResultsImplementor {
 	}
 
 	@Override
+	public boolean position(int position) {
+		return false;
+	}
+
+	@Override
 	public boolean last() {
 		return true;
 	}

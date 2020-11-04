@@ -81,16 +81,15 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 			persistenceContext.initializeNonLazyCollections();
 			return results;
 		}
-		catch (SQLException e) {
-			throw session.getJdbcServices().getSqlExceptionHelper().convert(
-					e,
-					"Error processing return rows"
-			);
-		}
 		finally {
 			rowReader.finishUp( jdbcValuesSourceProcessingState );
 			jdbcValuesSourceProcessingState.finishUp();
 			jdbcValues.finishUp( session );
 		}
+	}
+
+	@Override
+	public boolean canResultsBeCached() {
+		return true;
 	}
 }

@@ -6,8 +6,6 @@
  */
 package org.hibernate.sql.results.jdbc.spi;
 
-import java.sql.SQLException;
-
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
@@ -21,19 +19,45 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 public interface JdbcValues {
 	JdbcValuesMapping getValuesMapping();
 
-	// todo : ? - add ResultSet.previous() and ResultSet.absolute(int) style methods (to support ScrollableResults)?
+	/**
+	 * Advances the "cursor position" and returns a boolean indicating whether
+	 * there is a row available to read via {@link #getCurrentRowValuesArray()}.
+	 *
+	 * @return {@code true} if there are results
+	 */
+	boolean next(RowProcessingState rowProcessingState);
 
 	/**
-	 * Think JDBC's {@code ResultSet#next}.  Advances the "cursor position"
-	 * and return a boolean indicating whether advancing positioned the
-	 * cursor beyond the set of available results.
+	 * Advances the "cursor position" in reverse and returns a boolean indicating whether
+	 * there is a row available to read via {@link #getCurrentRowValuesArray()}.
 	 *
-	 * @return {@code true} indicates the call did not position the cursor beyond
-	 * the available results ({@link #getCurrentRowValuesArray} will not return
-	 * null); false indicates we are now beyond the end of the available results
-	 * ({@link #getCurrentRowValuesArray} will return null)
+	 * @return {@code true} if there are results available
 	 */
-	boolean next(RowProcessingState rowProcessingState) throws SQLException;
+	boolean previous(RowProcessingState rowProcessingState);
+
+	/**
+	 * Advances the "cursor position" the indicated number of rows and returns a boolean
+	 * indicating whether there is a row available to read via {@link #getCurrentRowValuesArray()}.
+	 *
+	 * @param numberOfRows The number of rows to advance.  This can also be negative meaning to
+	 * move in reverse
+	 *
+	 * @return {@code true} if there are results available
+	 */
+	boolean scroll(int numberOfRows, RowProcessingState rowProcessingState);
+
+	/**
+	 * Moves the "cursor position" to the specified position
+	 */
+	boolean position(int position, RowProcessingState rowProcessingState);
+
+	int getPosition();
+
+	boolean isBeforeFirst(RowProcessingState rowProcessingState);
+	boolean first(RowProcessingState rowProcessingState);
+
+	boolean isAfterLast(RowProcessingState rowProcessingState);
+	boolean last(RowProcessingState rowProcessingState);
 
 	/**
 	 * Get the JDBC values for the row currently positioned at within
@@ -45,11 +69,7 @@ public interface JdbcValues {
 	Object[] getCurrentRowValuesArray();
 
 	/**
-	 * todo (6.0) : is this needed?
-	 * 		^^ it's supposed to give impls a chance to write to the query cache
-	 * 		or release ResultSet it.  But that could technically be handled by the
-	 * 		case of `#next` returning false the first time.
-	 * @param session
+	 * Give implementations a chance to finish processing
 	 */
 	void finishUp(SharedSessionContractImplementor session);
 }

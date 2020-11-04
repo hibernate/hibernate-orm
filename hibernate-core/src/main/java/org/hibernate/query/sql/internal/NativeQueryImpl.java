@@ -539,7 +539,7 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	protected ScrollableResultsImplementor doScroll(ScrollMode scrollMode) {
+	public ScrollableResultsImplementor<R> scroll(ScrollMode scrollMode) {
 		return resolveSelectQueryPlan().performScroll( scrollMode, this );
 	}
 

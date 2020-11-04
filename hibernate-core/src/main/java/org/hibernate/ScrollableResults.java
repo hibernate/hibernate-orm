@@ -60,6 +60,13 @@ public interface ScrollableResults<R> extends AutoCloseable, Closeable {
 	boolean scroll(int positions);
 
 	/**
+	 * Moves the result cursor to the specified position.
+	 *
+	 * @return {@code true} if there is a result at the new location
+	 */
+	boolean position(int position);
+
+	/**
 	 * Go to the last result.
 	 *
 	 * @return {@code true} if there are any results

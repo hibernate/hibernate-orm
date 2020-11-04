@@ -16,7 +16,8 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.spi.RowReader;
 
 /**
- * Base implementation of the ScrollableResults interface.
+ * Base implementation of the ScrollableResults interface intended for sharing between
+ * {@link ScrollableResultsImpl} and {@link FetchingScrollableResultsImpl}
  *
  * @author Steve Ebersole
  */
@@ -91,7 +92,9 @@ public abstract class AbstractScrollableResults<R> implements ScrollableResultsI
 			return;
 		}
 
-		getJdbcValues().finishUp( persistenceContext );
+		rowReader.finishUp( jdbcValuesSourceProcessingState );
+		jdbcValues.finishUp( persistenceContext );
+
 		getPersistenceContext().getJdbcCoordinator().afterStatementExecution();
 
 		this.closed = true;

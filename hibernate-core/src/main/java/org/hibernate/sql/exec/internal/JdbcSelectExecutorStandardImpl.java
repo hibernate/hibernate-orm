@@ -20,6 +20,8 @@ import org.hibernate.ScrollMode;
 import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.cache.spi.QueryResultsCache;
 import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.AfterLoadAction;
 import org.hibernate.query.internal.ScrollableResultsIterator;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
@@ -37,6 +39,7 @@ import org.hibernate.sql.results.jdbc.internal.JdbcValuesSourceProcessingStateSt
 import org.hibernate.sql.results.jdbc.internal.ResultSetAccess;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.sql.results.spi.ResultsConsumer;
@@ -62,11 +65,11 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 
 	@Override
 	public <R> List<R> list(
-		JdbcSelect jdbcSelect,
-		JdbcParameterBindings jdbcParameterBindings,
-		ExecutionContext executionContext,
-		RowTransformer<R> rowTransformer,
-		boolean uniqueFilter) {
+			JdbcSelect jdbcSelect,
+			JdbcParameterBindings jdbcParameterBindings,
+			ExecutionContext executionContext,
+			RowTransformer<R> rowTransformer,
+			boolean uniqueFilter) {
 		return executeQuery(
 				jdbcSelect,
 				jdbcParameterBindings,
@@ -162,6 +165,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 
 		final JdbcValues jdbcValues = resolveJdbcValuesSource(
 				jdbcSelect,
+				resultsConsumer.canResultsBeCached(),
 				executionContext,
 				new DeferredResultSetAccess(
 						jdbcSelect,
@@ -238,22 +242,27 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 	@SuppressWarnings("unchecked")
 	private JdbcValues resolveJdbcValuesSource(
 			JdbcSelect jdbcSelect,
+			boolean canBeCached,
 			ExecutionContext executionContext,
 			ResultSetAccess resultSetAccess) {
+		final SharedSessionContractImplementor session = executionContext.getSession();
+		final SessionFactoryImplementor factory = session.getFactory();
+		final boolean queryCacheEnabled = factory.getSessionFactoryOptions().isQueryCacheEnabled();
+
 		final List<Object[]> cachedResults;
 
-		final boolean queryCacheEnabled = executionContext.getSession().getFactory().getSessionFactoryOptions().isQueryCacheEnabled();
+
 		final CacheMode cacheMode = JdbcExecHelper.resolveCacheMode( executionContext );
 
-		final JdbcValuesMapping jdbcValuesMapping = jdbcSelect.getJdbcValuesMappingProducer()
-				.resolve( resultSetAccess, executionContext.getSession().getFactory() );
+		final JdbcValuesMappingProducer mappingProducer = jdbcSelect.getJdbcValuesMappingProducer();
+		final JdbcValuesMapping jdbcValuesMapping = mappingProducer.resolve( resultSetAccess, factory );
 
 		final QueryKey queryResultsCacheKey;
 
 		if ( queryCacheEnabled && cacheMode.isGetEnabled() ) {
 			SqlExecLogger.INSTANCE.debugf( "Reading Query result cache data per CacheMode#isGetEnabled [%s]", cacheMode.name() );
 
-			final QueryResultsCache queryCache = executionContext.getSession().getFactory()
+			final QueryResultsCache queryCache = factory
 					.getCache()
 					.getQueryResultsCache( executionContext.getQueryOptions().getResultCacheRegionName() );
 
@@ -267,7 +276,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 					jdbcSelect.getSql(),
 					executionContext.getQueryOptions().getLimit(),
 					executionContext.getQueryParameterBindings(),
-					executionContext.getSession()
+					session
 			);
 
 			cachedResults = queryCache.get(
@@ -276,7 +285,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 					// todo (6.0) : `querySpaces` and `session` make perfect sense as args, but its odd passing those into this method just to pass along
 					//		atm we do not even collect querySpaces, but we need to
 					jdbcSelect.getAffectedTableNames(),
-					executionContext.getSession()
+					session
 			);
 
 			// todo (6.0) : `querySpaces` and `session` are used in QueryCache#get to verify "up-to-dateness" via UpdateTimestampsCache
@@ -298,17 +307,14 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		if ( cachedResults == null || cachedResults.isEmpty() ) {
 			return new JdbcValuesResultSetImpl(
 					resultSetAccess,
-					queryResultsCacheKey,
+					canBeCached ? queryResultsCacheKey : null,
 					executionContext.getQueryOptions(),
 					jdbcValuesMapping,
 					executionContext
 			);
 		}
 		else {
-			return new JdbcValuesCacheHit(
-					cachedResults,
-					jdbcValuesMapping
-			);
+			return new JdbcValuesCacheHit( cachedResults, jdbcValuesMapping );
 		}
 	}
 

@@ -9,6 +9,7 @@ package org.hibernate.query.spi;
 import java.io.Serializable;
 
 import org.hibernate.Incubating;
+import org.hibernate.ScrollMode;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.Query;
 
@@ -27,4 +28,10 @@ public interface QueryImplementor<R> extends Query<R> {
 	void setOptionalObject(Object optionalObject);
 
 	QueryParameterBindings getParameterBindings();
+
+	@Override
+	ScrollableResultsImplementor<R> scroll();
+
+	@Override
+	ScrollableResultsImplementor<R> scroll(ScrollMode scrollMode);
 }

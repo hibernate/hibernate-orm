@@ -442,9 +442,9 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			//configurationValues not assigned yet, using directly the properties of the PU
 			Properties puProperties = persistenceUnit.getProperties();
 			if( puProperties != null ) {
-				final String tcclLookupPrecedence = puProperties.getProperty( org.hibernate.cfg.AvailableSettings.TC_CLASSLOADER );
+				final TcclLookupPrecedence tcclLookupPrecedence = TcclLookupPrecedence.from( puProperties );
 				if( tcclLookupPrecedence != null ) {
-					bsrBuilder.applyTcclLookupPrecedence( TcclLookupPrecedence.valueOf( tcclLookupPrecedence.toUpperCase( Locale.ROOT ) ) );
+					bsrBuilder.applyTcclLookupPrecedence( tcclLookupPrecedence );
 				}
 			}
 		}

@@ -114,10 +114,9 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 		addIfSet( providedClassLoaders, AvailableSettings.HIBERNATE_CLASSLOADER, configValues );
 		addIfSet( providedClassLoaders, AvailableSettings.ENVIRONMENT_CLASSLOADER, configValues );
 
-		TcclLookupPrecedence providedPrecedence = TcclLookupPrecedence.AFTER;
-		final String tcclLookupPrecedence = (String) configValues.get( AvailableSettings.TC_CLASSLOADER );
-		if ( tcclLookupPrecedence != null ) {
-			providedPrecedence =  TcclLookupPrecedence.valueOf( tcclLookupPrecedence.toUpperCase( Locale.ROOT ) );
+		TcclLookupPrecedence providedPrecedence = TcclLookupPrecedence.from( configValues );
+		if ( providedPrecedence == null ) {
+			providedPrecedence = TcclLookupPrecedence.AFTER;
 		}
 		return new ClassLoaderServiceImpl( providedClassLoaders,providedPrecedence );
 	}

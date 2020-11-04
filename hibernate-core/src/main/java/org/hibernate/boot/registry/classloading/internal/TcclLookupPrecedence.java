@@ -6,6 +6,9 @@
  */
 package org.hibernate.boot.registry.classloading.internal;
 
+import java.util.Map;
+import org.hibernate.cfg.AvailableSettings;
+
 /**
  * Defines when the lookup in the current thread context {@link ClassLoader} should be
  * done according to the other ones.
@@ -30,5 +33,33 @@ public enum TcclLookupPrecedence {
 	 * the former hasn't been found in the other {@code ClassLoader}s.
 	 * This is the default value.
 	 */
-	AFTER
+	AFTER;
+        
+        /**
+         * Resolves precedence on the base of AvailableSettings.TC_CLASSLOADER parameter in settings.
+         * 
+         * @param settings Any integration settings passed by the EE container or SE application.
+         * 
+         * @return precedence or null.
+         */
+	public static TcclLookupPrecedence from(Map<?,?> settings) {
+		final String explicitSetting = (String) settings.get( AvailableSettings.TC_CLASSLOADER );
+		if ( explicitSetting == null ) {
+        		return null;
+		}
+
+		if ( NEVER.name().equalsIgnoreCase( explicitSetting ) ) {
+			return NEVER;
+		}
+
+		if ( BEFORE.name().equalsIgnoreCase( explicitSetting ) ) {
+			return BEFORE;
+		}
+                
+		if ( AFTER.name().equalsIgnoreCase( explicitSetting ) ) {
+			return AFTER;
+		}                
+
+		throw new IllegalArgumentException( "Unknown precedence: " + explicitSetting );
+	}        
 }

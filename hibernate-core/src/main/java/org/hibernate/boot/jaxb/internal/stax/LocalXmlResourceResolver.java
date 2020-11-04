@@ -42,6 +42,12 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 			else if ( JPA_XSD_MAPPING.matches( namespace ) ) {
 				return openUrlStream( JPA_XSD_MAPPING.getMappedLocalUrl() );
 			}
+			else if ( PERSISTENCE_ORM_XSD_MAPPING.matches( namespace ) ) {
+				return openUrlStream( PERSISTENCE_ORM_XSD_MAPPING.getMappedLocalUrl() );
+			}
+			else if ( PERSISTENCE_ORM_XSD_MAPPING2.matches( namespace ) ) {
+				return openUrlStream( PERSISTENCE_ORM_XSD_MAPPING2.getMappedLocalUrl() );
+			}
 			else if ( HBM_XSD_MAPPING.matches( namespace ) ) {
 				return openUrlStream( HBM_XSD_MAPPING.getMappedLocalUrl() );
 			}
@@ -152,7 +158,23 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 			"http://xmlns.jcp.org/xml/ns/persistence/orm",
 			"org/hibernate/jpa/orm_2_1.xsd"
 	);
+	
+	/**
+	 * Maps the namespace for the orm.xml xsd for Jakarta Persistence 2.2
+	 */
+	public static final NamespaceSchemaMapping PERSISTENCE_ORM_XSD_MAPPING = new NamespaceSchemaMapping(
+			"http://xmlns.jcp.org/xml/ns/persistence/orm",
+			"org/hibernate/jpa/orm_2_2.xsd"
+	);
 
+	/**
+	 * Maps the namespace for the orm.xml xsd for Jakarta Persistence 3.0
+	 */
+	public static final NamespaceSchemaMapping PERSISTENCE_ORM_XSD_MAPPING2 = new NamespaceSchemaMapping(
+			"https://jakarta.ee/xml/ns/persistence/orm",
+			"org/hibernate/jpa/orm_3_0.xsd"
+	);
+	
 	public static final NamespaceSchemaMapping HBM_XSD_MAPPING = new NamespaceSchemaMapping(
 			"http://www.hibernate.org/xsd/orm/hbm",
 			"org/hibernate/xsd/mapping/legacy-mapping-4.0.xsd"

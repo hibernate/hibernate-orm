@@ -150,7 +150,7 @@ public class SqlScriptParser extends GeneratedSqlScriptParser {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// trace logging hooks
 
-	private final int depthIndent = 2;
+	private static final int depthIndent = 2;
 	private int traceDepth;
 
 	@Override

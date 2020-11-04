@@ -123,7 +123,7 @@ import org.hibernate.annotations.Tuplizers;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
 import org.hibernate.annotations.Where;
-import org.hibernate.annotations.common.reflection.ClassLoadingException;
+import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XMethod;
@@ -132,6 +132,7 @@ import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.TypeDefinition;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.InFlightMetadataCollector.EntityTableXref;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -304,19 +305,12 @@ public final class AnnotationBinder {
 		}
 	}
 
-	public static void bindPackage(String packageName, MetadataBuildingContext context) {
-		XPackage pckg;
-		try {
-			pckg = context.getBootstrapContext().getReflectionManager().packageForName( packageName );
-		}
-		catch (ClassLoadingException e) {
-			LOG.packageNotFound( packageName );
+	public static void bindPackage(ClassLoaderService cls, String packageName, MetadataBuildingContext context) {
+		final Package packaze = cls.packageForNameOrNull( packageName );
+		if ( packaze == null ) {
 			return;
 		}
-		catch ( ClassNotFoundException cnf ) {
-			LOG.packageNotFound( packageName );
-			return;
-		}
+		final XPackage pckg = context.getBootstrapContext().getReflectionManager().toXPackage( packaze );
 
 		if ( pckg.isAnnotationPresent( SequenceGenerator.class ) ) {
 			SequenceGenerator ann = pckg.getAnnotation( SequenceGenerator.class );
@@ -707,15 +701,17 @@ public final class AnnotationBinder {
 				else {
 					final PrimaryKeyJoinColumn pkJoinColumn = clazzToProcess.getAnnotation( PrimaryKeyJoinColumn.class );
 					final PrimaryKeyJoinColumns pkJoinColumns = clazzToProcess.getAnnotation( PrimaryKeyJoinColumns.class );
-
-					if ( pkJoinColumns != null && pkJoinColumns.foreignKey().value() == ConstraintMode.NO_CONSTRAINT ) {
+					final boolean noConstraintByDefault = context.getBuildingOptions().isNoConstraintByDefault();
+					if ( pkJoinColumns != null && ( pkJoinColumns.foreignKey().value() == ConstraintMode.NO_CONSTRAINT
+							|| pkJoinColumns.foreignKey().value() == ConstraintMode.PROVIDER_DEFAULT && noConstraintByDefault ) ) {
 						// don't apply a constraint based on ConstraintMode
 						key.setForeignKeyName( "none" );
 					}
 					else if ( pkJoinColumns != null && !StringHelper.isEmpty( pkJoinColumns.foreignKey().name() ) ) {
 						key.setForeignKeyName( pkJoinColumns.foreignKey().name() );
 					}
-					else if ( pkJoinColumn != null && pkJoinColumn.foreignKey().value() == ConstraintMode.NO_CONSTRAINT ) {
+					else if ( pkJoinColumn != null && ( pkJoinColumn.foreignKey().value() == ConstraintMode.NO_CONSTRAINT
+							|| pkJoinColumn.foreignKey().value() == ConstraintMode.PROVIDER_DEFAULT && noConstraintByDefault )) {
 						// don't apply a constraint based on ConstraintMode
 						key.setForeignKeyName( "none" );
 					}
@@ -1419,20 +1415,13 @@ public final class AnnotationBinder {
 		bindFetchProfiles( clazzToProcess, context );
 	}
 
-	public static void bindFetchProfilesForPackage(String packageName, MetadataBuildingContext context) {
-		XPackage pckg;
-		try {
-			pckg = context.getBootstrapContext().getReflectionManager().packageForName( packageName );
-		}
-		catch (ClassLoadingException e) {
-			LOG.packageNotFound( packageName );
+	public static void bindFetchProfilesForPackage(ClassLoaderService cls, String packageName, MetadataBuildingContext context) {
+		final Package packaze = cls.packageForNameOrNull( packageName );
+		if ( packaze == null ) {
 			return;
 		}
-		catch ( ClassNotFoundException cnf ) {
-			LOG.packageNotFound( packageName );
-			return;
-		}
-
+		final ReflectionManager reflectionManager = context.getBootstrapContext().getReflectionManager();
+		final XPackage pckg = reflectionManager.toXPackage( packaze );
 		bindFetchProfiles( pckg, context );
 	}
 
@@ -3093,7 +3082,8 @@ public final class AnnotationBinder {
 				property,
 				propertyHolder.getOverriddenForeignKey( StringHelper.qualify( propertyHolder.getPath(), propertyName ) ),
 				joinColumn,
-				joinColumns
+				joinColumns,
+				context
 		);
 
 		String path = propertyHolder.getPath() + "." + propertyName;
@@ -3439,9 +3429,13 @@ public final class AnnotationBinder {
 			XProperty property,
 			javax.persistence.ForeignKey fkOverride,
 			JoinColumn joinColumn,
-			JoinColumns joinColumns) {
-		if ( ( joinColumn != null && joinColumn.foreignKey().value() == ConstraintMode.NO_CONSTRAINT )
-				|| ( joinColumns != null && joinColumns.foreignKey().value() == ConstraintMode.NO_CONSTRAINT ) ) {
+			JoinColumns joinColumns,
+			MetadataBuildingContext context) {
+		final boolean noConstraintByDefault = context.getBuildingOptions().isNoConstraintByDefault();
+		if ( ( joinColumn != null && ( joinColumn.foreignKey().value() == ConstraintMode.NO_CONSTRAINT
+				|| joinColumn.foreignKey().value() == ConstraintMode.PROVIDER_DEFAULT && noConstraintByDefault ) )
+				|| ( joinColumns != null && ( joinColumns.foreignKey().value() == ConstraintMode.NO_CONSTRAINT
+				|| joinColumns.foreignKey().value() == ConstraintMode.PROVIDER_DEFAULT && noConstraintByDefault ) ) ) {
 			value.setForeignKeyName( "none" );
 		}
 		else {
@@ -3450,7 +3444,8 @@ public final class AnnotationBinder {
 				value.setForeignKeyName( fk.name() );
 			}
 			else {
-				if ( fkOverride != null && fkOverride.value() == ConstraintMode.NO_CONSTRAINT ) {
+				if ( fkOverride != null && ( fkOverride.value() == ConstraintMode.NO_CONSTRAINT
+						|| fkOverride.value() == ConstraintMode.PROVIDER_DEFAULT && noConstraintByDefault ) ) {
 					value.setForeignKeyName( "none" );
 				}
 				else if ( fkOverride != null ) {

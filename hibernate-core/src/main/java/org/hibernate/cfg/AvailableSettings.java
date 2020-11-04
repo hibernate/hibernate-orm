@@ -1529,6 +1529,19 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 */
 	String HBM2DDL_HALT_ON_ERROR = "hibernate.hbm2ddl.halt_on_error";
 
+	/**
+	 * <p>
+	 * This setting is used when you use {@link javax.persistence.ConstraintMode#PROVIDER_DEFAULT} strategy for foreign key mapping.
+	 * valid value is {@code CONSTRAINT} and {@code NO_CONSTRAINT}.
+	 * </p>
+	 * <p>
+	 * The default value is CONSTRAINT.
+	 * </p>
+	 *
+	 * @since 5.4
+	 */
+	String HBM2DDL_DEFAULT_CONSTRAINT_MODE = "hibernate.hbm2ddl.default_constraint_mode";
+
 	String JMX_ENABLED = "hibernate.jmx.enabled";
 	String JMX_PLATFORM_SERVER = "hibernate.jmx.usePlatformServer";
 	String JMX_AGENT_ID = "hibernate.jmx.agentId";
@@ -1652,12 +1665,17 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	/**
 	 * Controls how the individual Loaders for an entity are created.
 	 *
-	 * When `true` (the default), only the minimal set of Loaders are
-	 * created.  These include the handling for {@link org.hibernate.LockMode#READ}
-	 * and {@link org.hibernate.LockMode#NONE} as well as specialized Loaders for
-	 * merge and refresh handling.
+	 * When `true` (the default), the loaders are only created on first
+	 * access; this ensures that all access patterns which are not useful
+	 * to the application are never instantiated, possibly saving a
+	 * substantial amount of memory for applications having many entities.
+	 * The only exception is the loader for <code>LockMode.NONE</code>,
+	 * which will always be eagerly initialized; this is necessary to
+	 * detect mapping errors.
 	 *
-	 * `false` indicates that all loaders should be created up front
+	 * `false` indicates that all loaders should be created up front; this
+	 * will consume more memory but ensures all necessary memory is
+	 * allocated right away.
 	 *
 	 * @since 5.3
 	 */

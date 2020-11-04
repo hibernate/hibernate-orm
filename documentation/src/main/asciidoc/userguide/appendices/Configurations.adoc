@@ -684,7 +684,7 @@ Sets the associated collection cache concurrency strategy for the designated reg
 === Infinispan properties
 
 For more details about how to customize the Infinispan second-level cache provider, check out the
-http://infinispan.org/docs/stable/user_guide/user_guide.html#configuration_properties[Infinispan User Guide].
+https://infinispan.org/docs/stable/titles/integrating/integrating.html#configuration_properties[Infinispan User Guide].
 
 [[configurations-transactions]]
 === Transactions properties
@@ -903,6 +903,9 @@ If enabled, allows schema update and validation to support synonyms. Due to the 
 
 `*hibernate.hbm2ddl.extra_physical_table_types*` (e.g. `BASE TABLE`)::
 Identifies a comma-separated list of values to specify extra table types, other than the default `TABLE` value, to recognize as defining a physical table by schema update, creation and validation.
+
+`*hibernate.hbm2ddl.default_constraint_mode*` (`CONSTRAINT` (default value) or `NO_CONSTRAINT`)::
+Default `javax.persistence.ConstraintMode` for foreign key mapping if `PROVIDER_DEFAULT` strategy used.
 
 `*hibernate.schema_update.unique_constraint_strategy*` (e.g. `DROP_RECREATE_QUIETLY`, `RECREATE_QUIETLY`, `SKIP`)::
 Unique columns and unique keys both use unique constraints in most dialects.

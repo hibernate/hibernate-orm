@@ -231,6 +231,16 @@ public interface MetadataBuildingOptions {
 	boolean isSpecjProprietarySyntaxEnabled();
 
 	/**
+	 * Should we create constraint by default?
+	 *
+	 * @see javax.persistence.ConstraintMode#PROVIDER_DEFAULT
+	 * @see org.hibernate.cfg.AvailableSettings#DEFAULT_CONSTRAINT_MODE
+	 *
+	 * @return {@code true} if not create constraint by default; {@code false} otherwise.
+	 */
+	boolean isNoConstraintByDefault();
+
+	/**
 	 * Retrieve the ordering in which sources should be processed.
 	 *
 	 * @return The order in which sources should be processed.

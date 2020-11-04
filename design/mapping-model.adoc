@@ -1,0 +1,424 @@
+:link-parallelArrays: https://en.wikipedia.org/wiki/Parallel_array["parallel arrays"]
+= Domain Model Mappings
+
+:toc2:
+:toclevels: 3
+:sectanchors:
+:numbered:
+
+Describes Hibernate's handling of domain model metadata
+
+== Mapping sources
+
+Mapping sources include `hbm.xml` files, `orm.xml` files and annotated classes.  There are
+other specialized forms of sources, but they all come back to locating annotated classes
+and XML mappings.
+
+The main actors in managing the sources include:
+
+`MetadataSources`::
+Used to collect mapping sources to be processed together
+
+`JaxbHbmHibernateMapping`::
+Main JAXB binding for a `hbm.xml` mapping document
+
+`Binding`::
+Represents an XML mapping within the `MetadataSources`.  Wraps either a
+`JaxbHbmHibernateMapping` or DOM `Document` representing a JPA `orm.xml`.
+
+`MappingBinder`::
+Responsible for generating `Binding` instances.
+
+The handling for XML mappings is as follows:
+
+[plantuml,hbm,png]
+.hbm.xml processing
+----
+@startuml
+skinparam handwritten true
+
+Application -> MetadataSources : add(hbm.xml)
+MetadataSources -> MappingBinder : parse(hbm.xml)
+MappingBinder -> JAXB : bind(hbm.xml)
+MappingBinder <- JAXB : JaxbHbmHibernateMapping
+MetadataSources <- MappingBinder : Binding<JaxbHbmHibernateMapping>
+
+@enduml
+----
+
+[plantuml,orm,png]
+.orm.xml processing
+----
+@startuml
+skinparam handwritten true
+
+Application -> MetadataSources : add(orm.xml)
+MetadataSources -> MappingBinder : parse(orm.xml)
+MappingBinder -> DOM : bind(orm.xml)
+MappingBinder <- DOM : Document
+MetadataSources <- MappingBinder : Binding<Document>
+
+@enduml
+----
+
+NOTE: `MetadataSources` receives XML files without any knowledge of whether the file
+is a Hibernate mapping (`hbm.xml`) or a JPA mapping (`orm.xml`).  `MappingBinder` makes
+that distinction based on doctype, schema, etc.
+
+
+== Boot-time metamodel
+
+The `org.hibernate.mapping` package defines most of the boot-time model.
+
+
+[plantuml,bootmodel,png]
+.Boot model actors
+----
+@startmindmap
+skinparam handwritten true
++ Boot model
+++ PersistentClass
+++ Property
+++ Value
+++ IdGenerator
+++ TypeDef
+-- Table
+-- Selectable
+-- PrimaryKey
+-- Constraint
+@endmindmap
+----
+
+=== PersistentClass
+
+Models an entity
+
+[plantuml,persistentclass,png]
+.PersistentClass hierarchy
+----
+@startuml
+interface Value
+
+class Property
+Property -- Value : value >
+
+class PersistentClass {
+    entityName : String
+}
+PersistentClass *- Property : properties >
+
+class RootClass {
+    table : Table
+}
+
+class JoinedSubclass {
+    table : Table
+}
+
+class UnionSubclass {
+    table : Table
+}
+
+PersistentClass <|-- RootClass
+PersistentClass <|-- Subclass
+Subclass <|-- JoinedSubclass
+Subclass <|-- SingleTableSubclass
+Subclass <|-- UnionSubclass
+@enduml
+----
+
+
+=== Value
+
+Models a value.  A value ultimately corresponds to a `org.hibernate.type.Type`.  We will discuss
+this "simple" distinction when we talk about Types in the run-time metamodel section.
+
+
+[plantuml,value,png]
+.Value hierarchy
+----
+@startuml
+class SimpleValue
+note left of SimpleValue : By itself represents\na basic value
+class OneToMany
+note top of OneToMany : Used as element descriptor for\none-to-many collections
+
+Value <|-- KeyValue
+Value <|-- OneToMany
+
+KeyValue <|-- SimpleValue
+
+SimpleValue <|-- DependentValue
+
+SimpleValue <|-- Component
+
+SimpleValue <|-- Any
+
+SimpleValue <|-- ToOne
+ToOne <|-- ManyToOne
+ToOne <|-- OneToOne
+
+Value <|-- Collection
+Collection <|-- Bag
+Collection <|-- Set
+Collection <|-- IdentifierCollection
+IdentifierCollection <|-- IdentifierBag
+Collection <|-- IndexedCollection
+IndexedCollection <|-- List
+List <|-- Array
+IndexedCollection <|-- Map
+
+@enduml
+----
+
+
+=== Database model
+
+[plantuml,db,png]
+.Database model
+----
+@startuml
+class Identifier
+Identifier : String text
+Identifier : boolean quoted
+
+Selectable <|-- Column
+Column : Identifider name
+
+Selectable <|-- Formula
+Formula : String fragment
+
+Constraint <|-- PrimaryKey
+Constraint <|-- UniqueKey
+Constraint <|-- ForeignKey
+
+class Table
+Table : Identifier name
+Table : Identifier schema
+Table : Identifier catalog
+Table : PrimaryKey : primaryKey
+Table : Selectable : selectables
+
+class Index
+class Sequence
+
+interface Exportable
+Exportable <|-- Table
+Exportable <|-- Constraint
+Exportable <|-- Index
+Exportable <|-- Sequence
+Exportable <|-- AuxilaryDatabaseObject
+
+interface TableOwner
+TableOwner : Table table
+
+TableOwner <|-- RootClass
+TableOwner <|-- JoinedSubclass
+TableOwner <|-- UnionSubclass
+@enduml
+----
+
+
+=== Transition from sources to boot-time model
+
+The boot-time metamodel is built iteratively.  The general paradigm in this transition is to
+instantiate one of these boot-time objects which are then populated in multiple later steps (via
+setters, additions, etc).
+
+The main actors in this process are `HbmMetadataSourceProcessorImpl` and `AnnotationMetadataSourceProcessorImpl`.
+
+
+[plantuml,source2boot,png]
+.Transition sources to boot-time model
+----
+@startuml
+skinparam handwritten true
+autonumber
+
+Application -> MetadataBuilder : build()
+MetadataBuilder -> MetadataBuildingProcess : build()
+MetadataBuildingProcess -> MetadataSourceProcessor
+
+MetadataSourceProcessor -> HbmMetadataSourceProcessorImpl : process hbm.xml Bindings
+
+MetadataSourceProcessor -> AnnotationMetadataSourceProcessorImpl : process annotations + orm.xml Bindings
+
+MetadataBuilder <- MetadataBuildingProcess : Metadata
+Application <- MetadataBuilder : Metadata
+
+@enduml
+----
+
+
+== Run-time metamodel
+
+
+[plantuml,runtimemodel,png]
+.Run-time model actors
+----
+@startmindmap
+skinparam handwritten true
++ Boot model
+++ EntityPersister
+++ CollectionPersister
+++ Tuplizer
+-- Type
+-- IdentifierGenerator
+@endmindmap
+----
+
+=== EntityPersister
+
+Manages persistence of an entity to/from its defined table(s).  Maintains flattened
+state regarding various aspects of the entity's value mappings as {link-parallelArrays}.
+An entity's value mappings include:
+    * identifier
+    * attribute state
+    * (discriminator)
+    * (version)
+
+[plantuml,entitypersister,png]
+.EntityPersister hierarchy
+----
+@startuml
+skinparam handwritten true
+interface EntityPersister
+
+abstract class AbstractEntityPersister
+EntityPersister <|-- AbstractEntityPersister
+
+AbstractEntityPersister <|-- SingleTableEntityPersister
+AbstractEntityPersister <|-- JoinedEntityPersister
+AbstractEntityPersister <|-- UnionEntityPersister
+@enduml
+----
+
+
+=== CollectionPersister
+
+Manages persistence of a collection to its defined table(s).  Maintains flattened
+state as {link-parallelArrays} regarding various aspects of the value mappings making
+up the collection.  These aspects include:
+    * key -- the FK
+    * element
+    * (identifier) -- @IdBag
+    * (list-index | map-key)
+
+[plantuml,collectionpersister,png]
+.CollectionPersister hierarchy
+----
+@startuml
+skinparam handwritten true
+interface CollectionPersister
+
+abstract class AbstractCollectionPersister
+CollectionPersister <|-- CollectionPersister
+
+AbstractCollectionPersister <|-- BasicCollectionPersister
+AbstractCollectionPersister <|-- OneToManyCollectionPersister
+
+note left of BasicCollectionPersister : collection mappings\nwith a collection table
+@enduml
+----
+
+=== Type
+
+Describes a value mapping which is some form of non-identified state.
+
+[plantuml,type,png]
+.Type hierarchy
+----
+@startuml
+skinparam handwritten true
+
+interface Type
+
+interface IdentifierType
+Type <|-- IdentifierType
+
+interface DiscriminatorType
+IdentifierType <|-- DiscriminatorType
+
+interface VersionType
+Type <|-- VersionType
+
+interface BasicType
+Type <|-- BasicType
+
+interface CompositeType
+Type <|-- CompositeType
+CompositeType *- Type : subtypes
+
+interface AssociationType
+Type <|-- AssociationType
+
+interface AnyType {
+  discriminatorType : DiscriminatorType
+  identifierType : IdentifierType
+}
+AssociationType <|-- AnyType
+CompositeType <|-- AnyType
+
+interface UserType
+interface CustomType
+CustomType -- UserType : wrappedUserType
+Type <|-- CustomType
+@enduml
+----
+
+`IdentifierType`::
+Specialized Type contract for types that can be used as an identifier
+
+`DiscriminatorType`::
+Specialized Type contract for types that can be used as a discriminator
+
+`VersionType`::
+Specialized Type contract for types that can be used as a version
+
+`BasicType`::
+Mapping to a single column
+
+`CompositeType`::
+Mapping to one or more columns
+
+`AssociationType`::
+Mapping to an entity association
+
+`AnyType`::
+Models a discriminated association which is similar to an association referencing a
+discriminated-subclass entity in that the mapping involves a discriminator.  However,
+in an ANY mapping the discriminator is on the referring side.  This will map to at least
+2 columns - one for the discriminator plus one or more identifier columns.
+
+`EntityType`::
+Models a foreign-key, which "from this side" is a to-one.  Could map to a single column or multiple.
+
+`CollectionType`::
+Models a foreign-key, which "from this side" is a to-many.  Will map to at
+
+
+=== Transition from boot-time model to run-time model
+
+This transition involves processing the boot model objects (`PersistentClass`, `Value`, etc) and building
+the corresponding run-time counterparts (`EntityPersister`, `Type`, etc).
+
+The main actors in this transition are the `SessionFactory` itself, `MetamodelImplementor` and
+`TypeConfiguration`:
+
+
+[plantuml,boot2run,png]
+.Transition boot-time model to run-time model
+----
+@startuml
+skinparam handwritten true
+
+Application -> SessionFactoryBuilder : build()
+SessionFactoryBuilder -> SessionFactory : new
+SessionFactory -> TypeConfiguration : scope
+
+...
+
+@enduml
+----
+
+##

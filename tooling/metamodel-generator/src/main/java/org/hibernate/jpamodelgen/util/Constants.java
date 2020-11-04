@@ -6,8 +6,6 @@
  */
 package org.hibernate.jpamodelgen.util;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -34,46 +32,52 @@ public final class Constants {
 	public static final String CONVERT = "javax.persistence.Convert";
 	public static final String HIBERNATE_TYPE = "org.hibernate.annotations.Type";
 
-	public static final Map<String, String> COLLECTIONS = new HashMap<String, String>();
+	public static final Map<String, String> COLLECTIONS = allCollectionTypes();
 
-	static {
-		COLLECTIONS.put( java.util.Collection.class.getName(), "javax.persistence.metamodel.CollectionAttribute" );
-		COLLECTIONS.put( java.util.Set.class.getName(), "javax.persistence.metamodel.SetAttribute" );
-		COLLECTIONS.put( java.util.List.class.getName(), "javax.persistence.metamodel.ListAttribute" );
-		COLLECTIONS.put( java.util.Map.class.getName(), "javax.persistence.metamodel.MapAttribute" );
+	private static java.util.Map<String, String> allCollectionTypes() {
+		Map<String, String> map = new java.util.HashMap<>();
+		map.put( java.util.Collection.class.getName(), "javax.persistence.metamodel.CollectionAttribute" );
+		map.put( java.util.Set.class.getName(), "javax.persistence.metamodel.SetAttribute" );
+		map.put( java.util.List.class.getName(), "javax.persistence.metamodel.ListAttribute" );
+		map.put( java.util.Map.class.getName(), "javax.persistence.metamodel.MapAttribute" );
 
 		// Hibernate also supports the SortedSet and SortedMap interfaces
-		COLLECTIONS.put( java.util.SortedSet.class.getName(), "javax.persistence.metamodel.SetAttribute" );
-		COLLECTIONS.put( java.util.SortedMap.class.getName(), "javax.persistence.metamodel.MapAttribute" );
+		map.put( java.util.SortedSet.class.getName(), "javax.persistence.metamodel.SetAttribute" );
+		map.put( java.util.SortedMap.class.getName(), "javax.persistence.metamodel.MapAttribute" );
+		return java.util.Collections.unmodifiableMap( map );
 	}
 
-	public static final List<String> BASIC_TYPES = new ArrayList<String>();
+	public static final List<String> BASIC_TYPES = allBasicTypes();
 
-	static {
-		BASIC_TYPES.add( java.lang.String.class.getName() );
-		BASIC_TYPES.add( java.lang.Boolean.class.getName() );
-		BASIC_TYPES.add( java.lang.Byte.class.getName() );
-		BASIC_TYPES.add( java.lang.Character.class.getName() );
-		BASIC_TYPES.add( java.lang.Short.class.getName() );
-		BASIC_TYPES.add( java.lang.Integer.class.getName() );
-		BASIC_TYPES.add( java.lang.Long.class.getName() );
-		BASIC_TYPES.add( java.lang.Float.class.getName() );
-		BASIC_TYPES.add( java.lang.Double.class.getName() );
-		BASIC_TYPES.add( java.math.BigInteger.class.getName() );
-		BASIC_TYPES.add( java.math.BigDecimal.class.getName() );
-		BASIC_TYPES.add( java.util.Date.class.getName() );
-		BASIC_TYPES.add( java.util.Calendar.class.getName() );
-		BASIC_TYPES.add( java.sql.Date.class.getName() );
-		BASIC_TYPES.add( java.sql.Time.class.getName() );
-		BASIC_TYPES.add( java.sql.Timestamp.class.getName() );
-		BASIC_TYPES.add( java.sql.Blob.class.getName() );
+	private static java.util.List<String> allBasicTypes() {
+		java.util.ArrayList<String> strings = new java.util.ArrayList<>();
+		strings.add( java.lang.String.class.getName() );
+		strings.add( java.lang.Boolean.class.getName() );
+		strings.add( java.lang.Byte.class.getName() );
+		strings.add( java.lang.Character.class.getName() );
+		strings.add( java.lang.Short.class.getName() );
+		strings.add( java.lang.Integer.class.getName() );
+		strings.add( java.lang.Long.class.getName() );
+		strings.add( java.lang.Float.class.getName() );
+		strings.add( java.lang.Double.class.getName() );
+		strings.add( java.math.BigInteger.class.getName() );
+		strings.add( java.math.BigDecimal.class.getName() );
+		strings.add( java.util.Date.class.getName() );
+		strings.add( java.util.Calendar.class.getName() );
+		strings.add( java.sql.Date.class.getName() );
+		strings.add( java.sql.Time.class.getName() );
+		strings.add( java.sql.Timestamp.class.getName() );
+		strings.add( java.sql.Blob.class.getName() );
+		return java.util.Collections.unmodifiableList( strings );
 	}
 
-	public static final List<String> BASIC_ARRAY_TYPES = new ArrayList<String>();
+	public static final List<String> BASIC_ARRAY_TYPES = allBasicArrayTypes();
 
-	static {
-		BASIC_ARRAY_TYPES.add( java.lang.Character.class.getName() );
-		BASIC_ARRAY_TYPES.add( java.lang.Byte.class.getName() );
+	private static java.util.List<String> allBasicArrayTypes() {
+		java.util.ArrayList<String> strings = new java.util.ArrayList<>();
+		strings.add( java.lang.Character.class.getName() );
+		strings.add( java.lang.Byte.class.getName() );
+		return java.util.Collections.unmodifiableList( strings );
 	}
 
 	public static final String PATH_SEPARATOR = "/";

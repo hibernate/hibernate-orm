@@ -89,10 +89,8 @@ dependencies {
 
 	asciidoclet 'org.asciidoctor:asciidoclet:1.+'
 
-	if ( db.equalsIgnoreCase( 'oracle' ) ) {
-		testRuntime( libraries.oracle ) {
-			exclude group: 'com.oracle.jdbc', module: 'xmlparserv2'
-		}
+	if ( db.equalsIgnoreCase( 'oracle' ) || db.equalsIgnoreCase( 'oracle_docker' ) ) {
+		testRuntime( libraries.oracle )
 	}
 	else if ( db.equalsIgnoreCase( 'db2' ) ) {
 		testRuntime( libraries.db2 )
@@ -176,10 +174,10 @@ tasks.withType( Test.class ).all { task ->
 	task.jvmArgs += [
 			'-XX:+HeapDumpOnOutOfMemoryError',
 			"-XX:HeapDumpPath=${file( "${buildDir}/OOM-dump.hprof" ).absolutePath}",
-			'-XX:MetaspaceSize=512M'
+			'-XX:MetaspaceSize=256M'
 	]
 
-	task.maxHeapSize = '4G'
+	task.maxHeapSize = '3G'
 
 	task.systemProperties['hibernate.test.validatefailureexpected'] = true
 	task.systemProperties += System.properties.findAll { it.key.startsWith( "hibernate." ) }

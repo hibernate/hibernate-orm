@@ -9,6 +9,9 @@ package org.hibernate.graph;
 import javax.persistence.EntityGraph;
 import javax.persistence.EntityManager;
 
+import org.hibernate.graph.spi.RootGraphImplementor;
+
+import org.hibernate.testing.TestForIssue;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -188,5 +191,12 @@ public class EntityGraphsTest extends AbstractEntityGraphTest {
 		EntityGraph<GraphParsingTestEntity> g2 = parseGraph( "map.value(description)" );
 		EntityGraph<GraphParsingTestEntity> expected = parseGraph( "map.value(name, description) " );
 		checkMerge( expected, g1, g2 );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-14264" )
+	public void testRootGraphAppliesToChildEntityClass() {
+		RootGraphImplementor<GraphParsingTestEntity> rootGraphImplementor = parseGraph( GraphParsingTestEntity.class, "name, description" );
+		Assert.assertTrue( rootGraphImplementor.appliesTo( GraphParsingTestSubentity.class ) );
 	}
 }

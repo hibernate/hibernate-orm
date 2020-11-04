@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -23,7 +22,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
@@ -69,6 +67,7 @@ import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityEntry;
@@ -96,6 +95,8 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.FilterHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.internal.util.collections.LockModeEnumMap;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
 import org.hibernate.jdbc.TooManyRowsAffectedException;
@@ -210,7 +211,7 @@ public abstract class AbstractEntityPersister
 	private final boolean[] propertyUniqueness;
 	private final boolean[] propertySelectable;
 
-	private final List<Integer> lobProperties = new ArrayList<>();
+	private final List<Integer> lobProperties;
 
 	//information about lazy properties of this class
 	private final String[] lazyPropertyNames;
@@ -247,13 +248,13 @@ public abstract class AbstractEntityPersister
 	// dynamic filters attached to the class-level
 	private final FilterHelper filterHelper;
 
-	private final Set<String> affectingFetchProfileNames = new HashSet<>();
+	private volatile Set<String> affectingFetchProfileNames;
 
-	private final Map uniqueKeyLoaders = new HashMap();
-	private final Map lockers = new HashMap();
-	private UniqueEntityLoader noneLockLoader;
-	private UniqueEntityLoader readLockLoader;
-	private final Map<Object, UniqueEntityLoader> loaders = new ConcurrentHashMap<>();
+	private final LockModeEnumMap<LockingStrategy> lockers = new LockModeEnumMap<>();
+
+	private final EntityLoaderLazyCollection loaders = new EntityLoaderLazyCollection();
+
+	private volatile Map<String,EntityLoader> uniqueKeyLoaders;
 
 	// SQL strings
 	private String sqlVersionSelectString;
@@ -698,6 +699,7 @@ public abstract class AbstractEntityPersister
 		ArrayList lazyTypes = new ArrayList();
 		ArrayList lazyColAliases = new ArrayList();
 
+		final ArrayList<Integer> lobPropertiesLocalCollector = new ArrayList<>();
 		iter = persistentClass.getPropertyClosureIterator();
 		i = 0;
 		boolean foundFormula = false;
@@ -759,12 +761,13 @@ public abstract class AbstractEntityPersister
 			propertyUniqueness[i] = prop.getValue().isAlternateUniqueKey();
 
 			if ( prop.isLob() && dialect.forceLobAsLastValue() ) {
-				lobProperties.add( i );
+				lobPropertiesLocalCollector.add( i );
 			}
 
 			i++;
 
 		}
+		this.lobProperties = CollectionHelper.toSmallList( lobPropertiesLocalCollector );
 		hasFormulaProperties = foundFormula;
 		lazyPropertyColumnAliases = ArrayHelper.to2DStringArray( lazyColAliases );
 		lazyPropertyNames = ArrayHelper.toStringArray( lazyNames );
@@ -1956,25 +1959,12 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	protected void initLockers() {
-		lockers.put( LockMode.READ, generateLocker( LockMode.READ ) );
-		lockers.put( LockMode.UPGRADE, generateLocker( LockMode.UPGRADE ) );
-		lockers.put( LockMode.UPGRADE_NOWAIT, generateLocker( LockMode.UPGRADE_NOWAIT ) );
-		lockers.put( LockMode.UPGRADE_SKIPLOCKED, generateLocker( LockMode.UPGRADE_SKIPLOCKED ) );
-		lockers.put( LockMode.FORCE, generateLocker( LockMode.FORCE ) );
-		lockers.put( LockMode.PESSIMISTIC_READ, generateLocker( LockMode.PESSIMISTIC_READ ) );
-		lockers.put( LockMode.PESSIMISTIC_WRITE, generateLocker( LockMode.PESSIMISTIC_WRITE ) );
-		lockers.put( LockMode.PESSIMISTIC_FORCE_INCREMENT, generateLocker( LockMode.PESSIMISTIC_FORCE_INCREMENT ) );
-		lockers.put( LockMode.OPTIMISTIC, generateLocker( LockMode.OPTIMISTIC ) );
-		lockers.put( LockMode.OPTIMISTIC_FORCE_INCREMENT, generateLocker( LockMode.OPTIMISTIC_FORCE_INCREMENT ) );
-	}
-
 	protected LockingStrategy generateLocker(LockMode lockMode) {
 		return factory.getDialect().getLockingStrategy( this, lockMode );
 	}
 
 	private LockingStrategy getLocker(LockMode lockMode) {
-		return (LockingStrategy) lockers.get( lockMode );
+		return lockers.computeIfAbsent( lockMode, this::generateLocker );
 	}
 
 	public void lock(
@@ -2443,7 +2433,8 @@ public abstract class AbstractEntityPersister
 				&& propertyName.indexOf( '.' ) < 0; //ugly little workaround for fact that createUniqueKeyLoaders() does not handle component properties
 
 		if ( useStaticLoader ) {
-			return (EntityLoader) uniqueKeyLoaders.get( propertyName );
+			final Map<String, EntityLoader> uniqueKeyLoaders = this.uniqueKeyLoaders;
+			return uniqueKeyLoaders == null ? null : uniqueKeyLoaders.get( propertyName );
 		}
 		else {
 			return createUniqueKeyLoader(
@@ -2463,6 +2454,9 @@ public abstract class AbstractEntityPersister
 		String[] propertyNames = getPropertyNames();
 		for ( int i = 0; i < entityMetamodel.getPropertySpan(); i++ ) {
 			if ( propertyUniqueness[i] ) {
+				if ( uniqueKeyLoaders == null ) {
+					this.uniqueKeyLoaders = new HashMap<>();
+				}
 				//don't need filters for the static loaders
 				uniqueKeyLoaders.put(
 						propertyNames[i],
@@ -4303,61 +4297,38 @@ public abstract class AbstractEntityPersister
 	protected void doPostInstantiate() {
 	}
 
-	/**
-	 * "Needed" by subclasses to override the createLoader strategy
-	 *
-	 * @deprecated Because there are better patterns for this
-	 */
-	@Deprecated
-	protected Map getLoaders() {
-		return loaders;
-	}
-
 	//Relational based Persisters should be content with this implementation
 	protected void createLoaders() {
-		// We load the entity loaders for the most common lock modes.
-
-		noneLockLoader = createEntityLoader( LockMode.NONE );
-		readLockLoader = createEntityLoader( LockMode.READ );
-
-
-		// The loaders for the other lock modes are lazily loaded and will later be stored in this map,
-		//		unless this setting is disabled
+		// The loaders for each lock mode are lazily loaded, unless this setting is disabled
 		if ( ! factory.getSessionFactoryOptions().isDelayBatchFetchLoaderCreationsEnabled() ) {
-			for ( LockMode lockMode : EnumSet.complementOf( EnumSet.of( LockMode.NONE, LockMode.READ, LockMode.WRITE ) ) ) {
-				loaders.put( lockMode, createEntityLoader( lockMode ) );
+			for ( LockMode lockMode : LockMode.values() ) {
+				//Trigger eager initialization
+				loaders.getOrBuildByLockMode( lockMode, this::createEntityLoader );
 			}
+			//Also, we have two special internal fetch profiles to eagerly initialize in this case:
+			loaders.getOrCreateByInternalFetchProfileMerge( this::buildMergeCascadeEntityLoader );
+			loaders.getOrCreateByInternalFetchProfileRefresh( this::buildRefreshCascadeEntityLoader );
 		}
+		else {
+			//At least initialize this one: it's almost certain to be used,
+			//and also will allow to report mapping errors during initialization.
+			loaders.getOrBuildByLockMode( LockMode.NONE, this::createEntityLoader );
+		}
+	}
 
+	protected UniqueEntityLoader buildMergeCascadeEntityLoader(LockMode ignored) {
+		return new CascadeEntityLoader( this, CascadingActions.MERGE, getFactory() );
+	}
 
-		// And finally, create the internal merge and refresh load plans
-
-		loaders.put(
-				"merge",
-				new CascadeEntityLoader( this, CascadingActions.MERGE, getFactory() )
-		);
-		loaders.put(
-				"refresh",
-				new CascadeEntityLoader( this, CascadingActions.REFRESH, getFactory() )
-		);
+	protected UniqueEntityLoader buildRefreshCascadeEntityLoader(LockMode ignored) {
+		return new CascadeEntityLoader( this, CascadingActions.REFRESH, getFactory() );
 	}
 
 	protected final UniqueEntityLoader getLoaderByLockMode(LockMode lockMode) {
-		if ( LockMode.NONE == lockMode ) {
-			return noneLockLoader;
-		}
-		else if ( LockMode.READ == lockMode ) {
-			return readLockLoader;
-		}
-
-		return loaders.computeIfAbsent( lockMode, this::generateDelayedEntityLoader );
+		return loaders.getOrBuildByLockMode( lockMode, this::createEntityLoader );
 	}
 
-	private UniqueEntityLoader generateDelayedEntityLoader(Object lockModeObject) {
-		// Unfortunately, the loaders map mixes LockModes and Strings as keys so we need to accept an Object.
-		// The cast is safe as we will always call this method with a LockMode.
-		LockMode lockMode = (LockMode) lockModeObject;
-
+	private UniqueEntityLoader generateDelayedEntityLoader(final LockMode lockMode) {
 		switch ( lockMode ) {
 			case NONE:
 			case READ:
@@ -4377,7 +4348,7 @@ public abstract class AbstractEntityPersister
 						&& hasSubclasses()
 						&& !getFactory().getDialect().supportsOuterJoinForUpdate();
 
-				return disableForUpdate ? readLockLoader : createEntityLoader( lockMode );
+				return disableForUpdate ? getLoaderByLockMode( LockMode.READ ) : createEntityLoader( lockMode );
 			}
 			default: {
 				throw new IllegalStateException( String.format( Locale.ROOT, "Lock mode %1$s not supported by entity loaders.", lockMode ) );
@@ -4443,7 +4414,7 @@ public abstract class AbstractEntityPersister
 				loaded = CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache( loadEvent, this, entityKey );
 			}
 			if ( loaded == null ) {
-				loaded = readLockLoader.load(
+				loaded = getLoaderByLockMode( LockMode.READ ).load(
 						identifier,
 						entity,
 						session,
@@ -4499,6 +4470,9 @@ public abstract class AbstractEntityPersister
 	}
 
 	public void registerAffectingFetchProfile(String fetchProfileName) {
+		if ( affectingFetchProfileNames == null ) {
+			this.affectingFetchProfileNames = new HashSet<>();
+		}
 		affectingFetchProfileNames.add( fetchProfileName );
 	}
 
@@ -4507,9 +4481,12 @@ public abstract class AbstractEntityPersister
 	}
 
 	private boolean isAffectedByEnabledFetchProfiles(SharedSessionContractImplementor session) {
-		for ( String s : session.getLoadQueryInfluencers().getEnabledFetchProfileNames() ) {
-			if ( affectingFetchProfileNames.contains( s ) ) {
-				return true;
+		final Set<String> fetchProfileNames = this.affectingFetchProfileNames;
+		if ( fetchProfileNames != null ) {
+			for ( String s : session.getLoadQueryInfluencers().getEnabledFetchProfileNames() ) {
+				if ( fetchProfileNames.contains( s ) ) {
+					return true;
+				}
 			}
 		}
 		return false;
@@ -4537,7 +4514,8 @@ public abstract class AbstractEntityPersister
 			// Next, we consider whether an 'internal' fetch profile has been set.
 			// This indicates a special fetch profile Hibernate needs applied
 			// (for its merge loading process e.g.).
-			return loaders.get( session.getLoadQueryInfluencers().getInternalFetchProfile() );
+			final String internalFetchProfile = session.getLoadQueryInfluencers().getInternalFetchProfile();
+			return getLoaderByString( internalFetchProfile );
 		}
 		else if ( isAffectedByEnabledFetchProfiles( session ) ) {
 			// If the session has associated influencers we need to adjust the
@@ -4552,6 +4530,19 @@ public abstract class AbstractEntityPersister
 		}
 		else {
 			return getLoaderByLockMode( lockOptions.getLockMode() );
+		}
+	}
+
+	private UniqueEntityLoader getLoaderByString(String internalFetchProfile) {
+		if ( "merge".equals( internalFetchProfile ) ) {
+			return loaders.getOrCreateByInternalFetchProfileMerge( this::buildMergeCascadeEntityLoader );
+		}
+		else if ( "refresh".equals( internalFetchProfile ) ) {
+			return loaders.getOrCreateByInternalFetchProfileRefresh( this::buildRefreshCascadeEntityLoader );
+		}
+		else {
+			//At this time there's no code storing any other fetch profiles; also, the map implementation isn't supporting the option.
+			return null;
 		}
 	}
 
@@ -5969,9 +5960,8 @@ public abstract class AbstractEntityPersister
 //			}
 //		}
 
-		this.attributeDefinitions = Collections.unmodifiableList(
-				new ArrayList<>( attributeDefinitionsByName.values() )
-		);
+		this.attributeDefinitions = CollectionHelper.toSmallList( new ArrayList<>( attributeDefinitionsByName.values() ) );
+
 //		// todo : leverage the attribute definitions housed on EntityMetamodel
 //		// 		for that to work, we'd have to be able to walk our super entity persister(s)
 //		this.attributeDefinitions = new Iterable<AttributeDefinition>() {

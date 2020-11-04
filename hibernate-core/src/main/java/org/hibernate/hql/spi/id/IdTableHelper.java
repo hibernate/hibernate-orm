@@ -122,21 +122,21 @@ public class IdTableHelper {
 
 			try {
 				// TODO: session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().createStatement();
-				Statement statement = connection.createStatement();
+				try ( java.sql.Statement statement = connection.createStatement() ) {
 
-				for ( String dropStatement : dropStatements ) {
-					try {
-						jdbcServices.getSqlStatementLogger().logStatement( dropStatement );
-						statement.execute( dropStatement );
+					for ( String dropStatement : dropStatements ) {
+						try {
+							jdbcServices.getSqlStatementLogger().logStatement( dropStatement );
+							statement.execute( dropStatement );
+						}
+						catch (java.sql.SQLException e) {
+							log.debugf( "Error attempting to cleanup id-table : [%s]", e.getMessage() );
+						}
 					}
-					catch (SQLException e) {
-						log.debugf( "Error attempting to cleanup id-table : [%s]", e.getMessage() );
-					}
+
+					// TODO
+					// session.getTransactionCoordinator().getJdbcCoordinator().release( statement );
 				}
-
-				// TODO
-//				session.getTransactionCoordinator().getJdbcCoordinator().release( statement );
-				statement.close();
 			}
 			catch (SQLException e) {
 				log.error( "Unable to use JDBC Connection to create Statement", e );

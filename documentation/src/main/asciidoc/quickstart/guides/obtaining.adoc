@@ -11,7 +11,7 @@ hibernate-spatial:: Hibernate's Spatial/GIS data-type support
 hibernate-osgi:: Hibernate support for running in OSGi containers.
 hibernate-agroal:: Integrates the http://agroal.github.io/[Agroal] connection pooling library into Hibernate
 hibernate-c3p0:: Integrates the http://www.mchange.com/projects/c3p0/[C3P0] connection pooling library into Hibernate
-hibernate-hikaricp:: Integrates the http://brettwooldridge.github.io/HikariCP/[HikariCP] connection pooling library into Hibernate
+hibernate-hikaricp:: Integrates the https://github.com/brettwooldridge/HikariCP/[HikariCP] connection pooling library into Hibernate
 hibernate-vibur:: Integrates the http://www.vibur.org/[Vibur DBCP] connection pooling library into Hibernate
 hibernate-proxool:: Integrates the http://proxool.sourceforge.net/[Proxool] connection pooling library into Hibernate
 hibernate-jcache:: Integrates the https://jcp.org/en/jsr/detail?id=107$$[JCache] caching specification into Hibernate,

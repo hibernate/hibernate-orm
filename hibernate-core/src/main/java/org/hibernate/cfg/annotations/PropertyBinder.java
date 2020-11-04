@@ -13,6 +13,7 @@ import javax.persistence.Id;
 import javax.persistence.Lob;
 
 import org.hibernate.AnnotationException;
+import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.AttributeAccessor;
 import org.hibernate.annotations.Generated;
@@ -20,7 +21,6 @@ import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.annotations.ValueGenerationType;
-import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.spi.MetadataBuildingContext;

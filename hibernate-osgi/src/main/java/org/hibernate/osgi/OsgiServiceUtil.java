@@ -87,8 +87,8 @@ public class OsgiServiceUtil implements Stoppable {
 
 	@Override
 	public void stop() {
-		for (String key : serviceTrackers.keySet()) {
-			serviceTrackers.get( key ).close();
+		for ( java.util.Map.Entry<String, org.osgi.util.tracker.ServiceTracker> entry : serviceTrackers.entrySet() ) {
+			entry.getValue().close();
 		}
 		serviceTrackers.clear();
 	}

@@ -101,8 +101,8 @@ public class GroupsPerOperation {
 		DDL("ddl", HIBERNATE_GROUP_PREFIX + "ddl");
 
 
-		private String exposedName;
-		private String groupPropertyName;
+		private final String exposedName;
+		private final String groupPropertyName;
 
 		Operation(String exposedName, String groupProperty) {
 			this.exposedName = exposedName;

@@ -61,7 +61,7 @@ public class EventEngine {
 				continue;
 			}
 
-			this.callbackBuilder.buildCallbacksForEntity( persistentClass.getClassName(), callbackRegistry );
+			this.callbackBuilder.buildCallbacksForEntity( persistentClass.getMappedClass(), callbackRegistry );
 
 			for ( Iterator<Property> propertyIterator = persistentClass.getDeclaredPropertyIterator(); propertyIterator.hasNext(); ) {
 				final Property property = propertyIterator.next();
@@ -69,7 +69,7 @@ public class EventEngine {
 				if ( property.getType().isComponentType() ) {
 					this.callbackBuilder.buildCallbacksForEmbeddable(
 							property,
-							persistentClass.getClassName(),
+							persistentClass.getMappedClass(),
 							callbackRegistry
 					);
 				}

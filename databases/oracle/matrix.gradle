@@ -4,6 +4,4 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-// Expected to match the jar name: drop a copy of ojdbc8.jar in a local directory,
-// then point the environment variable ADDITIONAL_REPO to that directory.
-jdbcDependency name : 'ojdbc8'
+jdbcDependency 'com.oracle.database.jdbc:ojdbc8:19.8.0.0'

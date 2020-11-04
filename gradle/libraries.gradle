@@ -14,8 +14,8 @@ ext {
     bytemanVersion = '4.0.13' //Compatible with JDK16
     jnpVersion = '5.0.6.CR1'
 
-    hibernateCommonsVersion = '5.1.0.Final'
-    hibernateValidatorVersion = '6.1.5.Final'
+    hibernateCommonsVersion = '5.1.2.Final'
+    hibernateValidatorVersion = '6.1.6.Final'
     validationApiVersion = '2.0.1.Final'
     elVersion = '3.0.1-b09'
 
@@ -23,9 +23,9 @@ ext {
     weldVersion = '3.0.0.Final'
 
     javassistVersion = '3.24.0-GA'
-    byteBuddyVersion = '1.10.10'
+    byteBuddyVersion = '1.10.17'
 
-    agroalVersion = '1.8'
+    agroalVersion = '1.9'
 
     assertjVersion = '3.14.0'
 
@@ -75,7 +75,7 @@ ext {
             activation:     'javax.activation:javax.activation-api:1.2.0',
 
             // logging
-            logging:        'org.jboss.logging:jboss-logging:3.3.2.Final',
+            logging:        'org.jboss.logging:jboss-logging:3.4.1.Final',
             logging_annotations: 'org.jboss.logging:jboss-logging-annotations:2.1.0.Final',
             logging_processor:  'org.jboss.logging:jboss-logging-processor:2.1.0.Final',
 
@@ -116,7 +116,7 @@ ext {
             mariadb:         'org.mariadb.jdbc:mariadb-java-client:2.2.3',
             cockroachdb:     'org.postgresql:postgresql:42.2.8',
 
-            oracle:          'com.oracle.jdbc:ojdbc8:12.2.0.1',
+            oracle:          'com.oracle.database.jdbc:ojdbc8:19.8.0.0',
             mssql:           'com.microsoft.sqlserver:mssql-jdbc:7.2.1.jre8',
             db2:             'com.ibm.db2:db2jcc:10.5',
             hana:            'com.sap.cloud.db.jdbc:ngdbc:2.4.59',

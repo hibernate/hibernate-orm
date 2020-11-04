@@ -39,9 +39,9 @@ import org.dom4j.Element;
  * @author Emmanuel Bernard
  */
 @SuppressWarnings("unchecked")
-public class JPAMetadataProvider implements MetadataProvider {
+public final class JPAMetadataProvider implements MetadataProvider {
 
-	private final MetadataProvider delegate = new JavaMetadataProvider();
+	private static final MetadataProvider STATELESS_BASE_DELEGATE = new JavaMetadataProvider();
 
 	private final ClassLoaderAccess classLoaderAccess;
 	private final XMLContext xmlContext;
@@ -53,7 +53,7 @@ public class JPAMetadataProvider implements MetadataProvider {
 	private final boolean xmlMappingEnabled;
 
 	private Map<Object, Object> defaults;
-	private Map<AnnotatedElement, AnnotationReader> cache = new HashMap<AnnotatedElement, AnnotationReader>(100);
+	private Map<AnnotatedElement, AnnotationReader> cache;
 
 	/**
 	 * @deprecated Use {@link JPAMetadataProvider#JPAMetadataProvider(BootstrapContext)} instead.
@@ -91,17 +91,27 @@ public class JPAMetadataProvider implements MetadataProvider {
 	//all of the above can be safely rebuilt from XMLContext: only XMLContext this object is serialized
 	@Override
 	public AnnotationReader getAnnotationReader(AnnotatedElement annotatedElement) {
+		if ( cache == null ) {
+			cache =  new HashMap<>(50 );
+		}
 		AnnotationReader reader = cache.get( annotatedElement );
 		if (reader == null) {
 			if ( xmlContext.hasContext() ) {
 				reader = new JPAOverriddenAnnotationReader( annotatedElement, xmlContext, classLoaderAccess );
 			}
 			else {
-				reader = delegate.getAnnotationReader( annotatedElement );
+				reader = STATELESS_BASE_DELEGATE.getAnnotationReader( annotatedElement );
 			}
-			cache.put(annotatedElement, reader);
+			cache.put( annotatedElement, reader );
 		}
 		return reader;
+	}
+
+	@Override
+	public void reset() {
+		//It's better to remove the HashMap, as it could grow rather large:
+		//when doing a clear() the internal buckets array is not scaled down.
+		this.cache = null;
 	}
 
 	@Override

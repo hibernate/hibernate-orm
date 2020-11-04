@@ -57,16 +57,23 @@ options {
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 script
-	: (newLineToSkip)* (statement)* EOF
+	: blankSpacesToSkip (statement blankSpacesToSkip)* EOF
     ;
 
 statement
-	: { statementStarted(); } (statementPart (afterStatementPartNewline)*)* DELIMITER (newLineToSkip)* { statementEnded(); }
+	: { statementStarted(); } statementFirstPart (statementPart (afterStatementPartNewline)*)* DELIMITER  { statementEnded(); }
+	;
+	
+statementFirstPart
+	: quotedString
+	| nonSkippedChar
 	;
 
 statementPart
 	: quotedString
 	| nonSkippedChar
+	| nonSkippedSpace
+	| nonSkippedTab
 	;
 
 quotedString
@@ -75,11 +82,15 @@ quotedString
 	}
 	;
 
+blankSpacesToSkip
+	: (newLineToSkip | spaceToSkip | tabToSkip)*
+	;
+
 afterStatementPartNewline
-   : n:NEWLINE {
-   		out( " " );
-   }
-   ;
+	: n:NEWLINE {
+		out( " " );
+	}
+	;
 
 newLineToSkip
 	: NEWLINE {
@@ -87,11 +98,34 @@ newLineToSkip
 	}
 	;
 
+spaceToSkip
+	: SPACE {
+		skip();	
+	}
+	;
+	
+tabToSkip
+	: TAB {
+		skip();	
+	}
+	;
+
+nonSkippedSpace
+	: s:SPACE {
+		out( s );
+	}
+	;
+
+nonSkippedTab
+	: t:TAB {
+		out( t );
+	}
+	;
 
 nonSkippedChar
 	: c:CHAR {
-   		out( c );
-   	}
+		out( c );
+	}
 	;
 
 
@@ -124,9 +158,16 @@ protected
 ESCqs :	'\'' '\'' ;
 
 CHAR
-	: ( ' ' | '\t' ) => ( ' ' | '\t' )
-    | ~( ';' | '\n' | '\r' )
-    ;
+	: ~( ';' | '\n' | '\r' | ' ' | '\t')
+	;
+    
+SPACE
+	: ' '
+	;
+
+TAB
+	: '\t'
+	;
 
 NEWLINE
 	: ( '\r' | '\n' | '\r''\n' )

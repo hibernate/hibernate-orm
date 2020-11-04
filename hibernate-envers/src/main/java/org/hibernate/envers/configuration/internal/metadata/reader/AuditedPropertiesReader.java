@@ -25,10 +25,11 @@ import javax.persistence.Version;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.annotations.common.reflection.ClassLoadingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.envers.AuditJoinTable;
 import org.hibernate.envers.AuditMappedBy;
 import org.hibernate.envers.AuditOverride;
@@ -432,8 +433,10 @@ public class AuditedPropertiesReader {
 			// Marking component properties as placed directly in class (not inside another component).
 			componentData.setBeanName( null );
 
+			final ClassLoaderService classLoaderService = globalCfg.getEnversService().getClassLoaderService();
+
 			final PersistentPropertiesSource componentPropertiesSource = new ComponentPropertiesSource(
-					reflectionManager,
+					classLoaderService, reflectionManager,
 					propertyValue
 			);
 			final AuditedPropertiesReader audPropReader = new AuditedPropertiesReader(
@@ -459,7 +462,10 @@ public class AuditedPropertiesReader {
 			componentPropertiesSource = new DynamicComponentSource( reflectionManager, propertyValue, property );
 		}
 		else {
-			componentPropertiesSource = new ComponentPropertiesSource( reflectionManager, propertyValue );
+			final ClassLoaderService classLoaderService = this.globalCfg.getEnversService().getClassLoaderService();
+			componentPropertiesSource = new ComponentPropertiesSource(
+					classLoaderService,
+					reflectionManager, propertyValue );
 		}
 
 		final ComponentAuditedPropertiesReader audPropReader = new ComponentAuditedPropertiesReader(
@@ -786,14 +792,17 @@ public class AuditedPropertiesReader {
 			this.component = component;
 		}
 
-		public ComponentPropertiesSource(ReflectionManager reflectionManager, Component component) {
+		public ComponentPropertiesSource(
+				ClassLoaderService classLoaderService,
+				ReflectionManager reflectionManager,
+				Component component) {
 			try {
-				this.xclass = reflectionManager.classForName( component.getComponentClassName() );
+				Class<Object> objectClass = classLoaderService.classForName( component.getComponentClassName() );
+				this.xclass = reflectionManager.toXClass( objectClass );
 			}
 			catch ( ClassLoadingException e ) {
 				throw new MappingException( e );
 			}
-
 			this.component = component;
 		}
 

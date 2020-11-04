@@ -17,10 +17,10 @@ import java.util.List;
 import java.util.Locale;
 
 import org.hibernate.HibernateException;
-import org.hibernate.annotations.common.util.StringHelper;
 import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.Mapping;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * A relational constraint.

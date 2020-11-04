@@ -31,7 +31,6 @@ import org.hibernate.annotations.AnyMetaDef;
 import org.hibernate.annotations.AnyMetaDefs;
 import org.hibernate.annotations.MetaValue;
 import org.hibernate.annotations.SqlFragmentAlias;
-import org.hibernate.annotations.common.reflection.ClassLoadingException;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XPackage;
@@ -1069,7 +1068,7 @@ public class BinderHelper {
 		if ( declaringClass != null ) {
 			final InheritanceState inheritanceState = inheritanceStatePerClass.get( declaringClass );
 			if ( inheritanceState == null ) {
-				throw new org.hibernate.annotations.common.AssertionFailure(
+				throw new AssertionFailure(
 						"Declaring class is not found in the inheritance state hierarchy: " + declaringClass
 				);
 			}
@@ -1097,14 +1096,8 @@ public class BinderHelper {
 			PropertyHolder propertyHolder,
 			String propertyName,
 			MetadataBuildingContext buildingContext) {
-		final XClass persistentXClass;
-		try {
-			persistentXClass = buildingContext.getBootstrapContext().getReflectionManager()
-					.classForName( propertyHolder.getPersistentClass().getClassName() );
-		}
-		catch ( ClassLoadingException e ) {
-			throw new AssertionFailure( "PersistentClass name cannot be converted into a Class", e);
-		}
+		final XClass persistentXClass = buildingContext.getBootstrapContext().getReflectionManager()
+					.toXClass( propertyHolder.getPersistentClass().getMappedClass() );
 		if ( propertyHolder.isInIdClass() ) {
 			PropertyData pd = buildingContext.getMetadataCollector().getPropertyAnnotatedWithIdAndToOne(
 					persistentXClass,

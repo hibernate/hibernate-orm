@@ -211,4 +211,73 @@ public final class CollectionHelper {
 	public static boolean isEmpty(Object[] objects) {
 		return objects == null || objects.length == 0;
 	}
+
+	/**
+	 * Use to convert sets which will be retained for a long time,
+	 * such as for the lifetime of the Hibernate ORM instance.
+	 * The returned Set might be immutable, but there is no guarantee of this:
+	 * consider it immutable but don't rely on this.
+	 * The goal is to save memory.
+	 * @param set
+	 * @param <T>
+	 * @return
+	 */
+	public static <T> Set<T> toSmallSet(Set<T> set) {
+		switch ( set.size() ) {
+			case 0:
+				return Collections.EMPTY_SET;
+			case 1:
+				return Collections.singleton( set.iterator().next() );
+			default:
+				//TODO assert tests pass even if this is set to return an unmodifiable Set
+				return set;
+		}
+	}
+
+	/**
+	 * Use to convert Maps which will be retained for a long time,
+	 * such as for the lifetime of the Hibernate ORM instance.
+	 * The returned Map might be immutable, but there is no guarantee of this:
+	 * consider it immutable but don't rely on this.
+	 * The goal is to save memory.
+	 * @param map
+	 * @param <K>
+	 * @param <V>
+	 * @return
+	 */
+	public static <K, V> Map<K, V> toSmallMap(final Map<K, V> map) {
+		switch ( map.size() ) {
+			case 0:
+				return Collections.EMPTY_MAP;
+			case 1:
+				Map.Entry<K, V> entry = map.entrySet().iterator().next();
+				return Collections.singletonMap( entry.getKey(), entry.getValue() );
+			default:
+				//TODO assert tests pass even if this is set to return an unmodifiable Map
+				return map;
+		}
+	}
+
+	/**
+	 * Use to convert ArrayList instances which will be retained for a long time,
+	 * such as for the lifetime of the Hibernate ORM instance.
+	 * The returned List might be immutable, but there is no guarantee of this:
+	 * consider it immutable but don't rely on this.
+	 * The goal is to save memory.
+	 * @param arrayList
+	 * @param <V>
+	 * @return
+	 */
+	public static <V> List<V> toSmallList(ArrayList<V> arrayList) {
+		switch ( arrayList.size() ) {
+			case 0:
+				return Collections.EMPTY_LIST;
+			case 1:
+				return Collections.singletonList( arrayList.get( 0 ) );
+			default:
+				arrayList.trimToSize();
+				return arrayList;
+		}
+	}
+
 }

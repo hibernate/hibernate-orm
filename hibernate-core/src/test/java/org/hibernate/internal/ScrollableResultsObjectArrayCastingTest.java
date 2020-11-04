@@ -9,6 +9,8 @@ import javax.persistence.TypedQuery;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Before;
 import org.junit.Test;
@@ -20,6 +22,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
  * @author Nathan Xu
  */
 @TestForIssue( jiraKey = "HHH-14231" )
+@RequiresDialectFeature( DialectChecks.SupportsExpectedLobUsagePattern.class )
 public class ScrollableResultsObjectArrayCastingTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
@@ -31,7 +34,7 @@ public class ScrollableResultsObjectArrayCastingTest extends BaseEntityManagerFu
 	public void SetUp() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Product product = new Product();
-			product.binaryValue = "".getBytes();
+			product.binaryValue = new byte[] { 1, 2, 3 };
 			entityManager.persist( product );
 		} );
 	}

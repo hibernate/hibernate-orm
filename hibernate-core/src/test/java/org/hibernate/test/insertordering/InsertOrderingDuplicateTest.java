@@ -7,9 +7,7 @@
 package org.hibernate.test.insertordering;
 
 import java.math.BigDecimal;
-import java.sql.SQLException;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -20,22 +18,19 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 
-import org.hibernate.cfg.Environment;
-
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.verify;
 
 /**
  * @author Vlad Mihalcea
  */
 @TestForIssue(jiraKey = "HHH-11634")
-public class InsertOrderingDuplicateTest
-		extends BaseNonConfigCoreFunctionalTestCase {
+@RequiresDialectFeature(DialectChecks.SupportsJdbcDriverProxying.class)
+public class InsertOrderingDuplicateTest extends BaseInsertOrderingTest {
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
@@ -47,19 +42,8 @@ public class InsertOrderingDuplicateTest
 		};
 	}
 
-	@Override
-	protected void addSettings(Map settings) {
-		settings.put( Environment.ORDER_INSERTS, "true" );
-		settings.put( Environment.STATEMENT_BATCH_SIZE, "10" );
-	}
-
-	@Override
-	public void releaseResources() {
-		super.releaseResources();
-	}
-
 	@Test
-	public void testBatching() throws SQLException {
+	public void testBatching() {
 
 		doInHibernate( this::sessionFactory, session -> {
 			SaleDocumentItem saleDocumentItem = new SaleDocumentItem();
@@ -82,9 +66,17 @@ public class InsertOrderingDuplicateTest
 			session.persist(correction);
 
 			saleDocument.setCorerctionsubject( correction);
-		} );
-	}
 
+			clearBatches();
+		} );
+
+		verifyContainsBatches(
+				new Batch( "insert into SaleDocumentSummary (sale_number, totalPrice, id) values (?, ?, ?)" ),
+				new Batch( "insert into Product (description, name, price, quantity, id) values (?, ?, ?, ?, ?)" ),
+				new Batch( "insert into SaleDocument (ID_SALE_DOCUMENT_CORRECTION, sale_number, totalPrice, id) values (?, ?, ?, ?)", 2 ),
+				new Batch( "insert into SaleDocumentItem (lp, product_id, quantity, ID_SALE_DOCUMENT, ID_SALE_DOCUMENT_SUMAMRY, id) values (?, ?, ?, ?, ?, ?)" )
+		);
+	}
 
 	@Entity(name = "Product")
 	public static class Product {

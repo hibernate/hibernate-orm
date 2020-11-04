@@ -12,12 +12,12 @@ import org.hibernate.mapping.Property;
 final class EmptyCallbackBuilder implements CallbackBuilder {
 
 	@Override
-	public void buildCallbacksForEntity(String entityClassName, CallbackRegistrar callbackRegistrar) {
+	public void buildCallbacksForEntity(Class entityClass, CallbackRegistrar callbackRegistrar) {
 		//no-op
 	}
 
 	@Override
-	public void buildCallbacksForEmbeddable(Property embeddableProperty, String entityClassName, CallbackRegistrar callbackRegistrar) {
+	public void buildCallbacksForEmbeddable(Property embeddableProperty, Class entityClass, CallbackRegistrar callbackRegistrar) {
 		//no-op
 	}
 

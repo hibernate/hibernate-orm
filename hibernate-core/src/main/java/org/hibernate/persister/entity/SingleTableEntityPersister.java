@@ -8,6 +8,7 @@ package org.hibernate.persister.entity;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -27,6 +28,7 @@ import org.hibernate.internal.DynamicFilterAliasGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.Join;
@@ -88,7 +90,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	private final int[] subclassFormulaTableNumberClosure;
 
 	// discriminator column
-	private final Map<Object, String> subclassesByDiscriminatorValue = new HashMap<Object, String>();
+	private final Map<Object, String> subclassesByDiscriminatorValue;
 	private final boolean forceDiscriminator;
 	private final String discriminatorColumnName;
 	private final String discriminatorColumnReaders;
@@ -105,9 +107,10 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	private final String[][] constraintOrderedKeyColumnNames;
 
 	//private final Map propertyTableNumbersByName = new HashMap();
-	private final Map<String, Integer> propertyTableNumbersByNameAndSubclass = new HashMap<String, Integer>();
+	private final Map<String, Integer> propertyTableNumbersByNameAndSubclass;
 
-	private final Map<String, String> sequentialSelectStringsByEntityName = new HashMap<String, String>();
+	//Efficiency note: try to not allocate an HashMap if we're not going to need it.
+	private final Map<String, String> sequentialSelectStringsByEntityName;
 
 	private static final Object NULL_DISCRIMINATOR = new MarkerObject( "<null discriminator>" );
 	private static final Object NOT_NULL_DISCRIMINATOR = new MarkerObject( "<not null discriminator>" );
@@ -277,6 +280,8 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		isNullableSubclassTable = ArrayHelper.toBooleanArray( isNullables );
 		hasSequentialSelects = hasDeferred;
 
+		this.sequentialSelectStringsByEntityName = hasSequentialSelects ? new HashMap<>() : Collections.EMPTY_MAP;
+
 		// DISCRIMINATOR
 
 		if ( persistentClass.isPolymorphic() ) {
@@ -367,6 +372,9 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		ArrayList<Integer> formulaJoinedNumbers = new ArrayList<Integer>();
 		ArrayList<Integer> propertyJoinNumbers = new ArrayList<Integer>();
 
+		final HashMap<String, Integer> propertyTableNumbersByNameAndSubclassLocal = new HashMap<>();
+		final Map<Object, String> subclassesByDiscriminatorValueLocal = new HashMap<>();
+
 		iter = persistentClass.getSubclassPropertyClosureIterator();
 		while ( iter.hasNext() ) {
 			Property prop = (Property) iter.next();
@@ -374,7 +382,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			propertyJoinNumbers.add( join );
 
 			//propertyTableNumbersByName.put( prop.getName(), join );
-			propertyTableNumbersByNameAndSubclass.put(
+			propertyTableNumbersByNameAndSubclassLocal.put(
 					prop.getPersistentClass().getEntityName() + '.' + prop.getName(),
 					join
 			);
@@ -390,6 +398,9 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 				}
 			}
 		}
+
+		propertyTableNumbersByNameAndSubclass = CollectionHelper.toSmallMap( propertyTableNumbersByNameAndSubclassLocal );
+
 		subclassColumnTableNumberClosure = ArrayHelper.toIntArray( columnJoinNumbers );
 		subclassFormulaTableNumberClosure = ArrayHelper.toIntArray( formulaJoinedNumbers );
 		subclassPropertyTableNumberClosure = ArrayHelper.toIntArray( propertyJoinNumbers );
@@ -398,7 +409,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		subclassClosure = new String[subclassSpan];
 		subclassClosure[0] = getEntityName();
 		if ( persistentClass.isPolymorphic() ) {
-			addSubclassByDiscriminatorValue( discriminatorValue, getEntityName() );
+			addSubclassByDiscriminatorValue( subclassesByDiscriminatorValueLocal, discriminatorValue, getEntityName() );
 		}
 
 		// SUBCLASSES
@@ -409,15 +420,16 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 				Subclass sc = (Subclass) iter.next();
 				subclassClosure[k++] = sc.getEntityName();
 				if ( sc.isDiscriminatorValueNull() ) {
-					addSubclassByDiscriminatorValue( NULL_DISCRIMINATOR, sc.getEntityName() );
+					addSubclassByDiscriminatorValue( subclassesByDiscriminatorValueLocal, NULL_DISCRIMINATOR, sc.getEntityName() );
 				}
 				else if ( sc.isDiscriminatorValueNotNull() ) {
-					addSubclassByDiscriminatorValue( NOT_NULL_DISCRIMINATOR, sc.getEntityName() );
+					addSubclassByDiscriminatorValue( subclassesByDiscriminatorValueLocal, NOT_NULL_DISCRIMINATOR, sc.getEntityName() );
 				}
 				else {
 					try {
 						DiscriminatorType dtype = (DiscriminatorType) discriminatorType;
 						addSubclassByDiscriminatorValue(
+								subclassesByDiscriminatorValueLocal,
 								dtype.stringToObject( sc.getDiscriminatorValue() ),
 								sc.getEntityName()
 						);
@@ -432,7 +444,8 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			}
 		}
 
-		initLockers();
+		// Don't hold a reference to an empty HashMap:
+		this.subclassesByDiscriminatorValue = CollectionHelper.toSmallMap( subclassesByDiscriminatorValueLocal );
 
 		initSubclassPropertyAliasesMap( persistentClass );
 
@@ -440,7 +453,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 	}
 
-	private void addSubclassByDiscriminatorValue(Object discriminatorValue, String entityName) {
+	private static void addSubclassByDiscriminatorValue(Map<Object, String> subclassesByDiscriminatorValue, Object discriminatorValue, String entityName) {
 		String mappedEntityName = subclassesByDiscriminatorValue.put( discriminatorValue, entityName );
 		if ( mappedEntityName != null ) {
 			throw new MappingException(

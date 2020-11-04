@@ -45,7 +45,7 @@ public enum TcclLookupPrecedence {
 	public static TcclLookupPrecedence from(Map<?,?> settings) {
 		final String explicitSetting = (String) settings.get( AvailableSettings.TC_CLASSLOADER );
 		if ( explicitSetting == null ) {
-        		return null;
+			return null;
 		}
 
 		if ( NEVER.name().equalsIgnoreCase( explicitSetting ) ) {

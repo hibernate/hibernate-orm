@@ -17,7 +17,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
-import org.hibernate.query.named.NamedQueryRepository;
+import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryInterpretationCache;
@@ -28,15 +28,15 @@ import org.jboss.logging.Logger;
 /**
  * @author Steve Ebersole
  */
-public class NamedQueryRepositoryImpl implements NamedQueryRepository {
-	private static final Logger log = Logger.getLogger( NamedQueryRepository.class );
+public class NamedObjectRepositoryImpl implements NamedObjectRepository {
+	private static final Logger log = Logger.getLogger( NamedObjectRepository.class );
 
 	private final Map<String, NamedHqlQueryMemento> hqlMementoMap;
 	private final Map<String, NamedNativeQueryMemento> sqlMementoMap;
 	private final Map<String, NamedCallableQueryMemento> callableMementoMap;
 	private final Map<String, NamedResultSetMappingMemento> resultSetMappingMementoMap;
 
-	public NamedQueryRepositoryImpl(
+	public NamedObjectRepositoryImpl(
 			Map<String,NamedHqlQueryMemento> hqlMementoMap,
 			Map<String,NamedNativeQueryMemento> sqlMementoMap,
 			Map<String,NamedCallableQueryMemento> callableMementoMap,

@@ -7,6 +7,7 @@
 package org.hibernate.boot.query;
 
 import org.hibernate.query.internal.ResultSetMappingResolutionContext;
+import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.spi.QueryEngine;
 
@@ -15,7 +16,7 @@ import org.hibernate.query.spi.QueryEngine;
  * of native and procedure queries.
  *
  * Ultimately used to generate a NamedResultSetMappingMemento that is
- * stored in the {@link org.hibernate.query.named.NamedQueryRepository}
+ * stored in the {@link NamedObjectRepository}
  * for availability at runtime
  *
  * @author Steve Ebersole
@@ -28,9 +29,9 @@ public interface NamedResultSetMappingDescriptor {
 
 	/**
 	 * Create a representation of the described ResultSet mapping for the purpose of
-	 * being stored in Hibernate's {@link org.hibernate.query.named.NamedQueryRepository}
+	 * being stored in Hibernate's {@link NamedObjectRepository}
 	 *
-	 * @see QueryEngine#getNamedQueryRepository()
+	 * @see QueryEngine#getNamedObjectRepository()
 	 */
 	NamedResultSetMappingMemento resolve(ResultSetMappingResolutionContext resolutionContext);
 }

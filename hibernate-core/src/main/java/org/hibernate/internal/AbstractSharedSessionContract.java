@@ -701,7 +701,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		try {
 			if ( StringHelper.isNotEmpty( resultSetMappingName ) ) {
 				final NamedResultSetMappingMemento resultSetMappingMemento = getFactory().getQueryEngine()
-						.getNamedQueryRepository()
+						.getNamedObjectRepository()
 						.getResultSetMappingMemento( resultSetMappingName );
 
 				if ( resultSetMappingMemento == null ) {
@@ -772,7 +772,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 		// first see if it is a named HQL query
 		final NamedHqlQueryMemento namedHqlDescriptor = getFactory().getQueryEngine()
-				.getNamedQueryRepository()
+				.getNamedObjectRepository()
 				.getHqlQueryMemento( queryName );
 
 		if ( namedHqlDescriptor != null ) {
@@ -784,7 +784,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 		// otherwise, see if it is a named native query
 		final NamedNativeQueryMemento namedNativeDescriptor = getFactory().getQueryEngine()
-				.getNamedQueryRepository()
+				.getNamedObjectRepository()
 				.getNativeQueryMemento( queryName );
 
 		if ( namedNativeDescriptor != null ) {
@@ -806,7 +806,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override
 	public NativeQueryImplementor getNamedNativeQuery(String queryName) {
 		final NamedNativeQueryMemento namedNativeDescriptor = getFactory().getQueryEngine()
-				.getNamedQueryRepository()
+				.getNamedObjectRepository()
 				.getNativeQueryMemento( queryName );
 
 		if ( namedNativeDescriptor != null ) {
@@ -819,7 +819,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override
 	public NativeQueryImplementor getNamedNativeQuery(String queryName, String resultSetMapping) {
 		final NamedNativeQueryMemento namedNativeDescriptor = getFactory().getQueryEngine()
-				.getNamedQueryRepository()
+				.getNamedObjectRepository()
 				.getNativeQueryMemento( queryName );
 
 		if ( namedNativeDescriptor != null ) {
@@ -834,7 +834,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	public ProcedureCall getNamedProcedureCall(String name) {
 		checkOpen();
 
-		final NamedCallableQueryMemento memento = factory.getQueryEngine().getNamedQueryRepository().getCallableQueryMemento( name );
+		final NamedCallableQueryMemento memento = factory.getQueryEngine().getNamedObjectRepository().getCallableQueryMemento( name );
 		if ( memento == null ) {
 			throw new IllegalArgumentException(
 					"Could not find named stored procedure call with that registration name : " + name

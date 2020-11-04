@@ -20,7 +20,7 @@ import static org.hamcrest.Matchers.notNullValue;
 /**
  * @author Steve Ebersole
  */
-public class InstantiationResultTests extends BaseUsageTest {
+public class InstantiationResultTests extends AbstractUsageTest {
 
 	@Test
 	public void testSimpleInstantiationOfScalars(SessionFactoryScope scope) {
@@ -29,7 +29,7 @@ public class InstantiationResultTests extends BaseUsageTest {
 					// make sure it is in the repository
 					final NamedResultSetMappingMemento mappingMemento = session.getSessionFactory()
 							.getQueryEngine()
-							.getNamedQueryRepository()
+							.getNamedObjectRepository()
 							.getResultSetMappingMemento(
 									"id_name_dto" );
 					assertThat( mappingMemento, notNullValue() );

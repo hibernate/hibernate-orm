@@ -54,9 +54,8 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
-import org.hibernate.query.internal.NamedQueryRepositoryImpl;
-import org.hibernate.query.named.NamedQueryRepository;
-import org.hibernate.query.named.NamedResultSetMappingMemento;
+import org.hibernate.query.internal.NamedObjectRepositoryImpl;
+import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -317,8 +316,8 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
-	public NamedQueryRepository buildNamedQueryRepository(SessionFactoryImplementor sessionFactory) {
-		return new NamedQueryRepositoryImpl(
+	public NamedObjectRepository buildNamedQueryRepository(SessionFactoryImplementor sessionFactory) {
+		return new NamedObjectRepositoryImpl(
 				CollectionHelper.mapOfSize( namedQueryMap.size() ),
 				CollectionHelper.mapOfSize( namedNativeQueryMap.size() ),
 				CollectionHelper.mapOfSize( namedProcedureCallMap.size() ),

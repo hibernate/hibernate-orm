@@ -24,7 +24,7 @@ import org.hibernate.query.hql.internal.StandardHqlTranslator;
 import org.hibernate.query.hql.spi.SqmCreationOptions;
 import org.hibernate.query.internal.QueryInterpretationCacheDisabledImpl;
 import org.hibernate.query.internal.QueryInterpretationCacheStandardImpl;
-import org.hibernate.query.named.NamedQueryRepository;
+import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.internal.SqmCreationOptionsStandard;
@@ -79,7 +79,7 @@ public class QueryEngine {
 		);
 	}
 
-	private final NamedQueryRepository namedQueryRepository;
+	private final NamedObjectRepository namedObjectRepository;
 	private final SqmCriteriaNodeBuilder criteriaBuilder;
 	private final HqlTranslator hqlTranslator;
 	private final SqmTranslatorFactory sqmTranslatorFactory;
@@ -89,7 +89,7 @@ public class QueryEngine {
 
 	public QueryEngine(
 			Supplier<JpaMetamodel> jpaMetamodelAccess,
-			NamedQueryRepository namedQueryRepository,
+			NamedObjectRepository namedObjectRepository,
 			HqlTranslator hqlTranslator,
 			SqmTranslatorFactory sqmTranslatorFactory,
 			NativeQueryInterpreter nativeQueryInterpreter,
@@ -97,7 +97,7 @@ public class QueryEngine {
 			Dialect dialect,
 			SqmFunctionRegistry userDefinedRegistry,
 			ServiceRegistry serviceRegistry) {
-		this.namedQueryRepository = namedQueryRepository;
+		this.namedObjectRepository = namedObjectRepository;
 		this.sqmTranslatorFactory = sqmTranslatorFactory;
 		this.nativeQueryInterpreter = nativeQueryInterpreter;
 		this.interpretationCache = interpretationCache;
@@ -133,11 +133,11 @@ public class QueryEngine {
 	public QueryEngine(
 			JpaMetamodel jpaMetamodel,
 			boolean useStrictJpaCompliance,
-			NamedQueryRepository namedQueryRepository,
+			NamedObjectRepository namedObjectRepository,
 			NativeQueryInterpreter nativeQueryInterpreter,
 			Dialect dialect,
 			ServiceRegistry serviceRegistry) {
-		this.namedQueryRepository = namedQueryRepository;
+		this.namedObjectRepository = namedObjectRepository;
 		this.sqmTranslatorFactory = null;
 		this.nativeQueryInterpreter = nativeQueryInterpreter;
 
@@ -293,11 +293,11 @@ public class QueryEngine {
 			SessionFactoryImplementor sessionFactory,
 			MetadataImplementor bootMetamodel,
 			BootstrapContext bootstrapContext) {
-		namedQueryRepository.prepare( sessionFactory, bootMetamodel, bootstrapContext );
+		namedObjectRepository.prepare( sessionFactory, bootMetamodel, bootstrapContext );
 
 		//checking for named queries
 		if ( sessionFactory.getSessionFactoryOptions().isNamedQueryStartupCheckingEnabled() ) {
-			final Map<String, HibernateException> errors = namedQueryRepository.checkNamedQueries( this );
+			final Map<String, HibernateException> errors = namedObjectRepository.checkNamedQueries( this );
 
 			if ( !errors.isEmpty() ) {
 				StringBuilder failingQueries = new StringBuilder( "Errors in named queries: " );
@@ -312,8 +312,8 @@ public class QueryEngine {
 		}
 	}
 
-	public NamedQueryRepository getNamedQueryRepository() {
-		return namedQueryRepository;
+	public NamedObjectRepository getNamedObjectRepository() {
+		return namedObjectRepository;
 	}
 
 	public SqmCriteriaNodeBuilder getCriteriaBuilder() {
@@ -341,8 +341,8 @@ public class QueryEngine {
 	}
 
 	public void close() {
-		if ( namedQueryRepository != null ) {
-			namedQueryRepository.close();
+		if ( namedObjectRepository != null ) {
+			namedObjectRepository.close();
 		}
 
 		if ( criteriaBuilder != null ) {

@@ -30,7 +30,7 @@ import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
-import org.hibernate.query.named.NamedQueryRepository;
+import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.type.Type;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -230,7 +230,7 @@ public abstract class AbstractDelegatingMetadata implements MetadataImplementor 
 
 
 	@Override
-	public NamedQueryRepository buildNamedQueryRepository(SessionFactoryImplementor sessionFactory) {
+	public NamedObjectRepository buildNamedQueryRepository(SessionFactoryImplementor sessionFactory) {
 		return delegate.buildNamedQueryRepository( sessionFactory );
 	}
 }

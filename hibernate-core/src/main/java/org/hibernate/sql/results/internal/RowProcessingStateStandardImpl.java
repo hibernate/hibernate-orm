@@ -6,30 +6,25 @@
  */
 package org.hibernate.sql.results.internal;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.List;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.sql.results.graph.entity.EntityFetch;
-import org.hibernate.sql.results.jdbc.internal.JdbcValuesSourceProcessingStateStandardImpl;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.entity.EntityFetch;
+import org.hibernate.sql.results.jdbc.internal.JdbcValuesSourceProcessingStateStandardImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.sql.results.spi.RowReader;
 
-import org.jboss.logging.Logger;
-
 /**
- * @author Steve Ebersole
+ * Standard RowProcessingState implementation
  */
 public class RowProcessingStateStandardImpl implements RowProcessingState {
-	private static final Logger log = Logger.getLogger( RowProcessingStateStandardImpl.class );
 	private static final Initializer[] NO_INITIALIZERS = new Initializer[0];
 
 	private final JdbcValuesSourceProcessingStateStandardImpl resultSetProcessingState;
@@ -39,9 +34,6 @@ public class RowProcessingStateStandardImpl implements RowProcessingState {
 
 	private final RowReader<?> rowReader;
 	private final JdbcValues jdbcValues;
-
-	// todo (6.0) : why doesn't this just use the array from JdbcValues?
-	private Object[] currentRowJdbcValues;
 
 	public RowProcessingStateStandardImpl(
 			JdbcValuesSourceProcessingStateStandardImpl resultSetProcessingState,
@@ -74,47 +66,19 @@ public class RowProcessingStateStandardImpl implements RowProcessingState {
 	}
 
 	public boolean next() {
-		if ( jdbcValues.next( this ) ) {
-			currentRowJdbcValues = jdbcValues.getCurrentRowValuesArray();
-			return true;
-		}
-		else {
-			currentRowJdbcValues = null;
-			return false;
-		}
+		return jdbcValues.next( this );
 	}
 
 	public boolean previous() {
-		if ( jdbcValues.previous( this ) ) {
-			currentRowJdbcValues = jdbcValues.getCurrentRowValuesArray();
-			return true;
-		}
-		else {
-			currentRowJdbcValues = null;
-			return false;
-		}
+		return jdbcValues.previous( this );
 	}
 
 	public boolean scroll(int i) {
-		if ( jdbcValues.scroll( i, this ) ) {
-			currentRowJdbcValues = jdbcValues.getCurrentRowValuesArray();
-			return true;
-		}
-		else {
-			currentRowJdbcValues = null;
-			return false;
-		}
+		return jdbcValues.scroll( i, this );
 	}
 
 	public boolean position(int i) {
-		if ( jdbcValues.position( i, this ) ) {
-			currentRowJdbcValues = jdbcValues.getCurrentRowValuesArray();
-			return true;
-		}
-		else {
-			currentRowJdbcValues = null;
-			return false;
-		}
+		return jdbcValues.position( i, this );
 	}
 
 	public int getPosition() {
@@ -122,30 +86,16 @@ public class RowProcessingStateStandardImpl implements RowProcessingState {
 	}
 
 	public boolean first() {
-		if ( jdbcValues.first( this ) ) {
-			currentRowJdbcValues = jdbcValues.getCurrentRowValuesArray();
-			return true;
-		}
-		else {
-			currentRowJdbcValues = null;
-			return false;
-		}
+		return jdbcValues.first( this );
 	}
 
 	public boolean last() {
-		if ( jdbcValues.last( this ) ) {
-			currentRowJdbcValues = jdbcValues.getCurrentRowValuesArray();
-			return true;
-		}
-		else {
-			currentRowJdbcValues = null;
-			return false;
-		}
+		return jdbcValues.last( this );
 	}
 
 	@Override
 	public Object getJdbcValue(int position) {
-		return currentRowJdbcValues[ position ];
+		return jdbcValues.getCurrentRowValuesArray()[ position ];
 	}
 
 	@Override
@@ -154,7 +104,6 @@ public class RowProcessingStateStandardImpl implements RowProcessingState {
 
 	@Override
 	public void finishRowProcessing() {
-		currentRowJdbcValues = null;
 	}
 
 	@Override

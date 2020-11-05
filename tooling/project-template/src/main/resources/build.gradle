@@ -19,18 +19,12 @@ repositories {
 dependencies {
     def ormVersion = "@ormVersion@"
 
-    implementation( "org.hibernate.orm", "hibernate-core", ormVersion )
+    implementation group: 'org.hibernate', name: 'hibernate-core', version: ormVersion
 
     // Use JUnit test framework
     testImplementation 'junit:junit:4.13'
 
     runtimeOnly 'com.h2database:h2:1.4.200'
-}
-
-jar {
-    manifest {
-        attributes 'Main-Class': 'org.mydomain.MainClass'
-    }
 }
 
 test {

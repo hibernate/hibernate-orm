@@ -1,0 +1,43 @@
+<!--
+    * Hibernate, Relational Persistence for Idiomatic Java
+
+    * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+    * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+-->
+<persistence xmlns="http://xmlns.jcp.org/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence
+             http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd"
+             version="2.1">
+
+    <persistence-unit name="h2-example">
+        <description>
+            Persistence unit for H2
+        </description>
+
+        <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+
+        <class>org.mydomain.SimpleEntity</class>
+
+        <properties>
+            <property name="javax.persistence.jdbc.driver" value="org.h2.Driver" />
+
+            <property name="javax.persistence.jdbc.url" value="jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1" />
+            <!-- Uncomment below in order to obtain a materialized H2 instance as an alternative to the in-memory H2 database above -->
+            <!-- <property name="javax.persistence.jdbc.url" value="jdbc:h2:tcp://localhost/~/db1;DB_CLOSE_DELAY=-1" /> -->
+
+            <property name="javax.persistence.jdbc.user" value="sa" />
+            <property name="javax.persistence.jdbc.password" value="" />
+
+            <property name="hibernate.dialect" value="org.hibernate.dialect.H2Dialect" />
+            <property name="hibernate.show_sql" value="true" />
+            <property name="hibernate.highlight_sql" value="true"/>
+            <property name="hibernate.format_sql" value="true"/>
+            <property name="hibernate.use_sql_comments" value="true"/>
+
+            <property name="javax.persistence.schema-generation.database.action" value="create-drop" />
+        </properties>
+
+    </persistence-unit>
+
+</persistence>

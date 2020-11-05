@@ -1,0 +1,6 @@
+A template for projects wanting to use Hibernate ORM.
+
+Useful to either:
+
+1. Bootstrap a new user project
+2. Bootstrap a test-case project

@@ -48,4 +48,12 @@ public class MutableInteger {
 	public void increase() {
 		++value;
 	}
+
+	public void plus(int i) {
+		value += i;
+	}
+
+	public void minus(int i) {
+		value -= i;
+	}
 }

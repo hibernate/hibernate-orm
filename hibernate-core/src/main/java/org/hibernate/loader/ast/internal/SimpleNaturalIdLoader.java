@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
@@ -17,11 +18,12 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.loader.ast.spi.NaturalIdLoader;
-import org.hibernate.metamodel.mapping.NaturalIdMapping;
+import org.hibernate.loader.NaturalIdPostLoadListener;
+import org.hibernate.loader.NaturalIdPreLoadListener;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
+import org.hibernate.metamodel.mapping.internal.SimpleNaturalIdMapping;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.ast.Clause;
@@ -36,123 +38,81 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 
 /**
- * @author Steve Ebersole
+ * NaturalIdLoader for simple natural-ids
  */
-public class NaturalIdLoaderStandardImpl<T> implements NaturalIdLoader<T> {
-	private final EntityPersister entityDescriptor;
-	private	final NaturalIdMapping naturalIdMapping;
+public class SimpleNaturalIdLoader<T> extends AbstractNaturalIdLoader<T> {
 
-	public NaturalIdLoaderStandardImpl(EntityPersister entityDescriptor) {
-		this.entityDescriptor = entityDescriptor;
-		this.naturalIdMapping = entityDescriptor.getNaturalIdMapping();
-
-		if ( ! entityDescriptor.hasNaturalIdentifier() ) {
-			throw new HibernateException( "Entity does not define natural-id : " + entityDescriptor.getEntityName() );
-		}
-
-		// todo (6.0) : account for nullable attributes that are part of the natural-id (is-null-or-equals)
-		// todo (6.0) : cache the SQL AST and JdbcParameter list
+	public SimpleNaturalIdLoader(
+			SimpleNaturalIdMapping naturalIdMapping,
+			NaturalIdPreLoadListener preLoadListener,
+			NaturalIdPostLoadListener postLoadListener,
+			EntityMappingType entityDescriptor,
+			MappingModelCreationProcess creationProcess) {
+		super( naturalIdMapping, preLoadListener, postLoadListener, entityDescriptor, creationProcess );
 	}
 
 	@Override
-	public EntityPersister getLoadable() {
-		return entityDescriptor;
+	protected SimpleNaturalIdMapping naturalIdMapping() {
+		return (SimpleNaturalIdMapping) super.naturalIdMapping();
 	}
 
 	@Override
-	public T load(Object naturalIdToLoad, LoadOptions options, SharedSessionContractImplementor session) {
-		final SessionFactoryImplementor sessionFactory = session.getFactory();
+	protected void applyNaturalIdAsJdbcParameters(
+			Object naturalIdToLoad,
+			List<JdbcParameter> jdbcParameters,
+			JdbcParameterBindings jdbcParamBindings,
+			SharedSessionContractImplementor session) {
+		assert jdbcParameters.size() == 1;
 
-		final List<JdbcParameter> jdbcParameters = new ArrayList<>();
-		final SelectStatement sqlSelect = LoaderSelectBuilder.createSelect(
-				entityDescriptor,
-				Collections.emptyList(),
-				naturalIdMapping,
-				null,
-				1,
-				session.getLoadQueryInfluencers(),
-				LockOptions.READ,
-				jdbcParameters::add,
-				sessionFactory
-		);
+		final Object bindableValue = reduceNaturalId( naturalIdToLoad );
 
-		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
-		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
-		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
-
-		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory ).translate( sqlSelect );
-
-		final JdbcParameterBindings jdbcParamBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
-		final Iterator<JdbcParameter> jdbcParamItr = jdbcParameters.iterator();
-
-		for ( int i = 0; i < naturalIdMapping.getNaturalIdAttributes().size(); i++ ) {
-			final SingularAttributeMapping attrMapping = naturalIdMapping.getNaturalIdAttributes().get( i );
-			attrMapping.visitJdbcValues(
-					naturalIdToLoad,
-					Clause.WHERE,
-					(jdbcValue, jdbcMapping) -> {
-						assert jdbcParamItr.hasNext();
-						final JdbcParameter jdbcParam = jdbcParamItr.next();
-						jdbcParamBindings.addBinding(
-								jdbcParam,
-								new JdbcParameterBindingImpl( jdbcMapping, jdbcValue )
-						);
-					},
-					session
-			);
-		}
-
-		//noinspection unchecked
-		final List<T> results = session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
-				jdbcSelect,
-				jdbcParamBindings,
-				new ExecutionContext() {
-					@Override
-					public SharedSessionContractImplementor getSession() {
-						return session;
-					}
-
-					@Override
-					public QueryOptions getQueryOptions() {
-						return QueryOptions.NONE;
-					}
-
-					@Override
-					public QueryParameterBindings getQueryParameterBindings() {
-						return QueryParameterBindings.NO_PARAM_BINDINGS;
-					}
-
-					@Override
-					public Callback getCallback() {
-						return afterLoadAction -> {
-						};
-					}
+		final SingularAttributeMapping attributeMapping = naturalIdMapping().getNaturalIdAttributes().get( 0 );
+		attributeMapping.visitJdbcValues(
+				bindableValue,
+				Clause.WHERE,
+				(jdbcValue, jdbcMapping) -> {
+					final JdbcParameter jdbcParam = jdbcParameters.get( 0 );
+					jdbcParamBindings.addBinding(
+							jdbcParam,
+							new JdbcParameterBindingImpl( jdbcMapping, jdbcValue )
+					);
 				},
-				row -> (T) row[0],
-				true
+				session
 		);
-
-		if ( results.size() > 1 ) {
-			throw new HibernateException(
-					String.format(
-							"Loading by natural-id returned more that one row : %s",
-							entityDescriptor.getEntityName()
-					)
-			);
-		}
-
-		return results.get( 0 );
 	}
 
 	@Override
-	public Object[] resolveIdToNaturalId(Object id, SharedSessionContractImplementor session) {
+	protected Object resolveNaturalIdBindValue(Object naturalIdToLoad, SharedSessionContractImplementor session) {
+		return reduceNaturalId( naturalIdToLoad );
+	}
+
+	@SuppressWarnings( "rawtypes" )
+	private Object reduceNaturalId(Object naturalIdToLoad) {
+		if ( naturalIdToLoad instanceof Map ) {
+			final Map valueMap = (Map) naturalIdToLoad;
+			assert valueMap.size() == 1;
+			assert valueMap.containsKey( naturalIdMapping().getAttribute().getAttributeName() );
+			return valueMap.get( naturalIdMapping().getAttribute().getAttributeName() );
+		}
+
+		if ( naturalIdToLoad instanceof Object[] ) {
+			final Object[] values = (Object[]) naturalIdToLoad;
+			assert values.length == 1;
+			return values[0];
+		}
+
+		return naturalIdToLoad;
+	}
+
+	@Override
+	public Object resolveIdToNaturalId(Object id, SharedSessionContractImplementor session) {
 		final SessionFactoryImplementor sessionFactory = session.getFactory();
 
 		final List<JdbcParameter> jdbcParameters = new ArrayList<>();
 		final SelectStatement sqlSelect = LoaderSelectBuilder.createSelect(
-				entityDescriptor,
-				naturalIdMapping.getNaturalIdAttributes(),
-				entityDescriptor.getIdentifierMapping(),
+				entityDescriptor(),
+				naturalIdMapping().getNaturalIdAttributes(),
+				entityDescriptor().getIdentifierMapping(),
 				null,
 				1,
 				session.getLoadQueryInfluencers(),
@@ -170,7 +130,7 @@ public class NaturalIdLoaderStandardImpl<T> implements NaturalIdLoader<T> {
 		final JdbcParameterBindings jdbcParamBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
 		final Iterator<JdbcParameter> jdbcParamItr = jdbcParameters.iterator();
 
-		entityDescriptor.getIdentifierMapping().visitJdbcValues(
+		entityDescriptor().getIdentifierMapping().visitJdbcValues(
 				id,
 				Clause.WHERE,
 				(value, type) -> {
@@ -218,7 +178,7 @@ public class NaturalIdLoaderStandardImpl<T> implements NaturalIdLoader<T> {
 			throw new HibernateException(
 					String.format(
 							"Resolving id to natural-id returned more that one row : %s #%s",
-							entityDescriptor.getEntityName(),
+							entityDescriptor().getEntityName(),
 							id
 					)
 			);
@@ -228,16 +188,26 @@ public class NaturalIdLoaderStandardImpl<T> implements NaturalIdLoader<T> {
 	}
 
 	@Override
+	protected boolean isSimple() {
+		return true;
+	}
+
+	@Override
 	public Object resolveNaturalIdToId(
-			Object[] naturalIdValues,
+			Object naturalIdValue,
 			SharedSessionContractImplementor session) {
+		final Object bindValue = reduceNaturalId( naturalIdValue );
+
 		final SessionFactoryImplementor sessionFactory = session.getFactory();
+		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
+		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
+		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
 
 		final List<JdbcParameter> jdbcParameters = new ArrayList<>();
 		final SelectStatement sqlSelect = LoaderSelectBuilder.createSelect(
-				entityDescriptor,
-				Collections.singletonList( entityDescriptor.getIdentifierMapping() ),
-				naturalIdMapping,
+				entityDescriptor(),
+				Collections.singletonList( entityDescriptor().getIdentifierMapping() ),
+				naturalIdMapping(),
 				null,
 				1,
 				session.getLoadQueryInfluencers(),
@@ -245,34 +215,29 @@ public class NaturalIdLoaderStandardImpl<T> implements NaturalIdLoader<T> {
 				jdbcParameters::add,
 				sessionFactory
 		);
-
-		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
-		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
-		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
+		assert jdbcParameters.size() == 1;
 
 		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory ).translate( sqlSelect );
 
 		final JdbcParameterBindings jdbcParamBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
 		final Iterator<JdbcParameter> jdbcParamItr = jdbcParameters.iterator();
 
-		for ( int i = 0; i < naturalIdMapping.getNaturalIdAttributes().size(); i++ ) {
-			final SingularAttributeMapping attrMapping = naturalIdMapping.getNaturalIdAttributes().get( i );
-			attrMapping.visitJdbcValues(
-					naturalIdValues[i],
-					Clause.WHERE,
-					(jdbcValue, jdbcMapping) -> {
-						assert jdbcParamItr.hasNext();
-						jdbcParamBindings.addBinding(
-								jdbcParamItr.next(),
-								new JdbcParameterBindingImpl( jdbcMapping, jdbcValue )
-						);
-					},
-					session
-			);
-		}
-		assert !jdbcParamItr.hasNext();
+		final SingularAttributeMapping attributeMapping = naturalIdMapping().getAttribute();
+		attributeMapping.visitJdbcValues(
+				bindValue,
+				Clause.WHERE,
+				(jdbcValue, jdbcMapping) -> {
+					assert jdbcParamItr.hasNext();
+					jdbcParamBindings.addBinding(
+							jdbcParamItr.next(),
+							new JdbcParameterBindingImpl( jdbcMapping, jdbcValue )
+					);
+				},
+				session
+		);
 
-		final List<Object[]> results = session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
+
+		final List<?> results = session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
 				jdbcSelect,
 				jdbcParamBindings,
 				new ExecutionContext() {
@@ -297,7 +262,7 @@ public class NaturalIdLoaderStandardImpl<T> implements NaturalIdLoader<T> {
 						};
 					}
 				},
-				row -> row,
+				row -> row[0],
 				true
 		);
 
@@ -305,8 +270,8 @@ public class NaturalIdLoaderStandardImpl<T> implements NaturalIdLoader<T> {
 			throw new HibernateException(
 					String.format(
 							"Resolving natural-id to id returned more that one row : %s [%s]",
-							entityDescriptor.getEntityName(),
-							StringHelper.join( ", ", naturalIdValues )
+							entityDescriptor().getEntityName(),
+							bindValue
 					)
 			);
 		}

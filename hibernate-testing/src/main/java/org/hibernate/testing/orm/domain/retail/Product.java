@@ -13,6 +13,8 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
+import org.hibernate.annotations.NaturalId;
+
 /**
  * @author Steve Ebersole
  */
@@ -24,6 +26,22 @@ public class Product {
 	private Vendor vendor;
 
 	private MonetaryAmount currentSellPrice;
+
+	public Product() {
+	}
+
+	public Product(Integer id, UUID sku, Vendor vendor) {
+		this.id = id;
+		this.sku = sku;
+		this.vendor = vendor;
+	}
+
+	public Product(Integer id, UUID sku, Vendor vendor, MonetaryAmount currentSellPrice) {
+		this.id = id;
+		this.sku = sku;
+		this.vendor = vendor;
+		this.currentSellPrice = currentSellPrice;
+	}
 
 	@Id
 	public Integer getId() {
@@ -44,6 +62,7 @@ public class Product {
 		this.vendor = vendor;
 	}
 
+	@NaturalId
 	public UUID getSku() {
 		return sku;
 	}

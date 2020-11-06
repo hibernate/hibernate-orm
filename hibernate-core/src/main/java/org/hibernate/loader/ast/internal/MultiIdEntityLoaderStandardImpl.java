@@ -32,10 +32,10 @@ import org.hibernate.event.spi.LoadEvent;
 import org.hibernate.event.spi.LoadEventListener;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.loader.ast.spi.MultiIdEntityLoader;
+import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.loader.entity.CacheEntityLoaderHelper;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.MultiLoadOptions;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.ast.Clause;
@@ -77,9 +77,10 @@ public class MultiIdEntityLoaderStandardImpl<T> implements MultiIdEntityLoader<T
 	}
 
 	@Override
-	public List<T> load(Object[] ids, MultiLoadOptions loadOptions, SharedSessionContractImplementor session) {
-		// todo (6.0) : account for all of the `loadOptions`...
-		//		for now just do a simple load
+	public List<T> load(Object[] ids, MultiIdLoadOptions loadOptions, SharedSessionContractImplementor session) {
+		// todo (6.0) : account for all of the `loadOptions` for now just do a simple load
+		//		^^ atm this is handled in `MultiIdentifierLoadAccess`.  Need to decide on the design we want here...
+		//		- see `SimpleNaturalIdMultiLoadAccessImpl` for example of alternative
 
 		assert ids != null;
 
@@ -99,7 +100,7 @@ public class MultiIdEntityLoaderStandardImpl<T> implements MultiIdEntityLoader<T
 	private List<T> performOrderedMultiLoad(
 			Object[] ids,
 			SharedSessionContractImplementor session,
-			MultiLoadOptions loadOptions) {
+			MultiIdLoadOptions loadOptions) {
 		if ( log.isTraceEnabled() ) {
 			log.tracef( "#performOrderedMultiLoad(`%s`, ..)", entityDescriptor.getEntityName() );
 		}
@@ -367,7 +368,7 @@ public class MultiIdEntityLoaderStandardImpl<T> implements MultiIdEntityLoader<T
 	private List<T> performUnorderedMultiLoad(
 			Object[] ids,
 			SharedSessionContractImplementor session,
-			MultiLoadOptions loadOptions) {
+			MultiIdLoadOptions loadOptions) {
 		assert !loadOptions.isOrderReturnEnabled();
 		assert ids != null;
 

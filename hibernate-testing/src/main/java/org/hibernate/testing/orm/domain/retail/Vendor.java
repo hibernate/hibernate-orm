@@ -50,4 +50,12 @@ public class Vendor {
 	public void setName(String name) {
 		this.name = name;
 	}
+
+	public String getBillingEntity() {
+		return billingEntity;
+	}
+
+	public void setBillingEntity(String billingEntity) {
+		this.billingEntity = billingEntity;
+	}
 }

@@ -8,9 +8,25 @@ package org.hibernate.metamodel.mapping;
 
 import java.util.List;
 
+import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
+import org.hibernate.loader.ast.spi.NaturalIdLoader;
+
 /**
- * @author Steve Ebersole
+ * Mapping for an entity's natural-id, if one is defined
  */
 public interface NaturalIdMapping extends VirtualModelPart {
+	String PART_NAME = "{natural-id}";
+
+	/**
+	 * The attribute(s) making up the natural-id.
+	 */
 	List<SingularAttributeMapping> getNaturalIdAttributes();
+
+	@Override
+	default String getPartName() {
+		return PART_NAME;
+	}
+
+	NaturalIdLoader getNaturalIdLoader();
+	MultiNaturalIdLoader getMultiNaturalIdLoader();
 }

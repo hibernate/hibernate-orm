@@ -32,6 +32,8 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.TableGroupFilterAliasGenerator;
 import org.hibernate.loader.ast.spi.Loadable;
+import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
+import org.hibernate.loader.ast.spi.NaturalIdLoader;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.internal.InFlightEntityMappingType;
@@ -409,6 +411,12 @@ public interface EntityPersister
 	 */
 	boolean hasLazyProperties();
 
+	default NaturalIdLoader getNaturalIdLoader() {
+		throw new UnsupportedOperationException(
+				"EntityPersister implementation `" + getClass().getName() + "` does not support `#getNaturalIdLoader`"
+		);
+	}
+
 	/**
 	 * Load the id for the entity based on the natural id.
 	 * @return
@@ -447,7 +455,7 @@ public interface EntityPersister
 	 *
 	 * @return The loaded, matching entities
 	 */
-	List multiLoad(Object[] ids, SharedSessionContractImplementor session, MultiLoadOptions loadOptions);
+	List multiLoad(Object[] ids, SharedSessionContractImplementor session, MultiIdLoadOptions loadOptions);
 
 	/**
 	 * Do a version check (optional operation)

@@ -10,11 +10,16 @@ import java.util.Optional;
 
 /**
  * Loads an entity by its natural identifier.
- * 
+ *
+ * This is a generic form of load-by-natural-id covering both a single attribute
+ * and multiple attributes as the natural-id.  For natural-ids defined by a single
+ * attribute, {@link SimpleNaturalIdLoadAccess} offers simplified access.
+ *
  * @author Eric Dalquist
  * @author Steve Ebersole
  *
  * @see org.hibernate.annotations.NaturalId
+ * @see Session#byNaturalId
  */
 public interface NaturalIdLoadAccess<T> {
 	/**
@@ -35,6 +40,15 @@ public interface NaturalIdLoadAccess<T> {
 	 * @return {@code this}, for method chaining
 	 */
 	NaturalIdLoadAccess<T> using(String attributeName, Object value);
+
+	/**
+	 * Set multiple natural-id attribute values at once.  The passed array is
+	 * expected to have an even number of elements, with the attribute name followed
+	 * by its value.  E.g.  `using( "system", "matrix", "username", "neo" )`
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	NaturalIdLoadAccess<T> using(Object... mappings);
 
 	/**
 	 * For entities with mutable natural ids, should Hibernate perform "synchronization" prior to performing

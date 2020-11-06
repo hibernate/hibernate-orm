@@ -7,7 +7,9 @@
 package org.hibernate.loader.entity;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Incubating;
 import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.WrongClassException;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
@@ -23,18 +25,14 @@ import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
-import org.hibernate.event.internal.AbstractLockUpgradeEventListener;
-import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.LoadEvent;
 import org.hibernate.event.spi.LoadEventListener;
 import org.hibernate.event.spi.PostLoadEvent;
-import org.hibernate.event.spi.PostLoadEventListener;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.FastSessionServices;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
@@ -44,10 +42,12 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 
+import static org.hibernate.loader.ast.internal.LoaderHelper.upgradeLock;
+
 /**
  * @author Vlad Mihalcea
  */
-public class CacheEntityLoaderHelper extends AbstractLockUpgradeEventListener {
+public class CacheEntityLoaderHelper {
 
 	public static final CacheEntityLoaderHelper INSTANCE = new CacheEntityLoaderHelper();
 
@@ -60,6 +60,46 @@ public class CacheEntityLoaderHelper extends AbstractLockUpgradeEventListener {
 	}
 
 	private CacheEntityLoaderHelper() {
+	}
+
+	@Incubating
+	public PersistenceContextEntry loadFromSessionCache(
+			EntityKey keyToLoad,
+			LoadEventListener.LoadType options,
+			LockOptions lockOptions,
+			SharedSessionContractImplementor session) {
+		final Object old = session.getEntityUsingInterceptor( keyToLoad );
+
+		if ( old != null ) {
+			// this object was already loaded
+			EntityEntry oldEntry = session.getPersistenceContext().getEntry( old );
+			if ( options.isCheckDeleted() ) {
+				Status status = oldEntry.getStatus();
+				if ( status == Status.DELETED || status == Status.GONE ) {
+					LoadingLogger.LOGGER.debug(
+							"Load request found matching entity in context, but it is scheduled for removal; returning null" );
+					return new PersistenceContextEntry( old, EntityStatus.REMOVED_ENTITY_MARKER );
+				}
+			}
+			if ( options.isAllowNulls() ) {
+				final EntityPersister persister = session.getFactory()
+						.getRuntimeMetamodels()
+						.getMappingMetamodel()
+						.getEntityDescriptor( keyToLoad.getEntityName() );
+				if ( ! persister.isInstance( old ) ) {
+					LOG.debugf(
+							"Load request found matching entity in context, but the matched entity was of an inconsistent return type.  " +
+									"Setting status as `%s`",
+							EntityStatus.INCONSISTENT_RTN_CLASS_MARKER
+					);
+					return new PersistenceContextEntry( old, EntityStatus.INCONSISTENT_RTN_CLASS_MARKER );
+				}
+			}
+
+			upgradeLock( old, oldEntry, lockOptions, session );
+		}
+
+		return new PersistenceContextEntry( old, EntityStatus.MANAGED );
 	}
 
 	/**

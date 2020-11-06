@@ -56,6 +56,7 @@ import org.hibernate.SessionEventListener;
 import org.hibernate.SessionException;
 import org.hibernate.SharedSessionBuilder;
 import org.hibernate.SimpleNaturalIdLoadAccess;
+import org.hibernate.NaturalIdMultiLoadAccess;
 import org.hibernate.Transaction;
 import org.hibernate.TransientObjectException;
 import org.hibernate.TypeMismatchException;
@@ -114,6 +115,7 @@ import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.internal.RootGraphImpl;
 import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.internal.util.CacheModeHelper;
@@ -121,9 +123,9 @@ import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.jpa.internal.util.LockOptionsHelper;
+import org.hibernate.loader.ast.spi.NaturalIdLoader;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.MultiLoadOptions;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
@@ -1105,8 +1107,8 @@ public class SessionImpl
 	}
 
 	@Override
-	public IdentifierLoadAccessImpl byId(String entityName) {
-		return new IdentifierLoadAccessImpl( entityName );
+	public <T> IdentifierLoadAccessImpl<T> byId(String entityName) {
+		return new IdentifierLoadAccessImpl<>( entityName );
 	}
 
 	@Override
@@ -1116,17 +1118,17 @@ public class SessionImpl
 
 	@Override
 	public <T> MultiIdentifierLoadAccess<T> byMultipleIds(Class<T> entityClass) {
-		return new MultiIdentifierLoadAccessImpl<>( locateEntityPersister( entityClass ) );
+		return new MultiIdentifierLoadAccessImpl<>( this, requireEntityPersister( entityClass ) );
 	}
 
 	@Override
-	public MultiIdentifierLoadAccess byMultipleIds(String entityName) {
-		return new MultiIdentifierLoadAccessImpl( locateEntityPersister( entityName ) );
+	public <T> MultiIdentifierLoadAccess<T> byMultipleIds(String entityName) {
+		return new MultiIdentifierLoadAccessImpl<>( this, requireEntityPersister( entityName ) );
 	}
 
 	@Override
-	public NaturalIdLoadAccess byNaturalId(String entityName) {
-		return new NaturalIdLoadAccessImpl( entityName );
+	public <T> NaturalIdLoadAccess<T> byNaturalId(String entityName) {
+		return new NaturalIdLoadAccessImpl<>( entityName );
 	}
 
 	@Override
@@ -1135,13 +1137,23 @@ public class SessionImpl
 	}
 
 	@Override
-	public SimpleNaturalIdLoadAccess bySimpleNaturalId(String entityName) {
-		return new SimpleNaturalIdLoadAccessImpl( entityName );
+	public <T> SimpleNaturalIdLoadAccess<T> bySimpleNaturalId(String entityName) {
+		return new SimpleNaturalIdLoadAccessImpl<>( entityName );
 	}
 
 	@Override
 	public <T> SimpleNaturalIdLoadAccess<T> bySimpleNaturalId(Class<T> entityClass) {
 		return new SimpleNaturalIdLoadAccessImpl<>( entityClass );
+	}
+
+	@Override
+	public <T> NaturalIdMultiLoadAccess<T> byMultipleNaturalId(Class<T> entityClass) {
+		return new NaturalIdMultiLoadAccessStandard<>( requireEntityPersister( entityClass ), this );
+	}
+
+	@Override
+	public <T> NaturalIdMultiLoadAccess<T> byMultipleNaturalId(String entityName) {
+		return new NaturalIdMultiLoadAccessStandard<>( requireEntityPersister( entityName ), this );
 	}
 
 	private void fireLoad(LoadEvent event, LoadType loadType) {
@@ -2109,11 +2121,11 @@ public class SessionImpl
 		}
 
 		private IdentifierLoadAccessImpl(String entityName) {
-			this( locateEntityPersister( entityName ) );
+			this( requireEntityPersister( entityName ) );
 		}
 
 		private IdentifierLoadAccessImpl(Class<T> entityClass) {
-			this( locateEntityPersister( entityClass ) );
+			this( requireEntityPersister( entityClass ) );
 		}
 
 		@Override
@@ -2237,157 +2249,11 @@ public class SessionImpl
 		}
 	}
 
-	private class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, MultiLoadOptions {
-		private final EntityPersister entityPersister;
-
-		private LockOptions lockOptions;
-		private CacheMode cacheMode;
-
-		private RootGraphImplementor<T> rootGraph;
-		private GraphSemantic graphSemantic;
-
-		private Integer batchSize;
-		private boolean sessionCheckingEnabled;
-		private boolean returnOfDeletedEntitiesEnabled;
-		private boolean orderedReturnEnabled = true;
-
-		public MultiIdentifierLoadAccessImpl(EntityPersister entityPersister) {
-			this.entityPersister = entityPersister;
-		}
-
-		@Override
-		public LockOptions getLockOptions() {
-			return lockOptions;
-		}
-
-		@Override
-		public final MultiIdentifierLoadAccess<T> with(LockOptions lockOptions) {
-			this.lockOptions = lockOptions;
-			return this;
-		}
-
-		@Override
-		public MultiIdentifierLoadAccess<T> with(CacheMode cacheMode) {
-			this.cacheMode = cacheMode;
-			return this;
-		}
-
-		@Override
-		public MultiIdentifierLoadAccess<T> with(RootGraph<T> graph, GraphSemantic semantic) {
-			this.rootGraph = (RootGraphImplementor<T>) graph;
-			this.graphSemantic = semantic;
-			return this;
-		}
-
-		@Override
-		public Integer getBatchSize() {
-			return batchSize;
-		}
-
-		@Override
-		public MultiIdentifierLoadAccess<T> withBatchSize(int batchSize) {
-			if ( batchSize < 1 ) {
-				this.batchSize = null;
-			}
-			else {
-				this.batchSize = batchSize;
-			}
-			return this;
-		}
-
-		@Override
-		public boolean isSessionCheckingEnabled() {
-			return sessionCheckingEnabled;
-		}
-
-		@Override
-		public boolean isSecondLevelCacheCheckingEnabled() {
-			return cacheMode == CacheMode.NORMAL || cacheMode == CacheMode.GET;
-		}
-
-		@Override
-		public MultiIdentifierLoadAccess<T> enableSessionCheck(boolean enabled) {
-			this.sessionCheckingEnabled = enabled;
-			return this;
-		}
-
-		@Override
-		public boolean isReturnOfDeletedEntitiesEnabled() {
-			return returnOfDeletedEntitiesEnabled;
-		}
-
-		@Override
-		public MultiIdentifierLoadAccess<T> enableReturnOfDeletedEntities(boolean enabled) {
-			this.returnOfDeletedEntitiesEnabled = enabled;
-			return this;
-		}
-
-		@Override
-		public boolean isOrderReturnEnabled() {
-			return orderedReturnEnabled;
-		}
-
-		@Override
-		public MultiIdentifierLoadAccess<T> enableOrderedReturn(boolean enabled) {
-			this.orderedReturnEnabled = enabled;
-			return this;
-		}
-
-		@Override
-		@SuppressWarnings("unchecked")
-		public <K> List<T> multiLoad(K... ids) {
-			return perform( () -> entityPersister.multiLoad( ids, SessionImpl.this, this ) );
-		}
-
-		public List<T> perform(Supplier<List<T>> executor) {
-			CacheMode sessionCacheMode = getCacheMode();
-			boolean cacheModeChanged = false;
-			if ( cacheMode != null ) {
-				// naive check for now...
-				// todo : account for "conceptually equal"
-				if ( cacheMode != sessionCacheMode ) {
-					setCacheMode( cacheMode );
-					cacheModeChanged = true;
-				}
-			}
-
-			try {
-				if ( graphSemantic != null ) {
-					if ( rootGraph == null ) {
-						throw new IllegalArgumentException( "Graph semantic specified, but no RootGraph was supplied" );
-					}
-					loadQueryInfluencers.getEffectiveEntityGraph().applyGraph( rootGraph, graphSemantic );
-				}
-
-				try {
-					return executor.get();
-				}
-				finally {
-					if ( graphSemantic != null ) {
-						loadQueryInfluencers.getEffectiveEntityGraph().clear();
-					}
-				}
-			}
-			finally {
-				if ( cacheModeChanged ) {
-					// change it back
-					setCacheMode( sessionCacheMode );
-				}
-			}
-		}
-
-		@Override
-		@SuppressWarnings("unchecked")
-		public <K> List<T> multiLoad(List<K> ids) {
-			return perform( () -> entityPersister.multiLoad( ids.toArray( new Object[0] ), SessionImpl.this, this ) );
-		}
-	}
-
-	private EntityPersister locateEntityPersister(Class entityClass) {
+	private EntityPersister requireEntityPersister(Class entityClass) {
 		return getFactory().getMetamodel().locateEntityPersister( entityClass );
 	}
 
-	private EntityPersister locateEntityPersister(String entityName) {
+	private EntityPersister requireEntityPersister(String entityName) {
 		return getFactory().getMetamodel().locateEntityPersister( entityName );
 	}
 
@@ -2406,6 +2272,14 @@ public class SessionImpl
 			}
 		}
 
+		public LockOptions getLockOptions() {
+			return lockOptions;
+		}
+
+		public boolean isSynchronizationEnabled() {
+			return synchronizationEnabled;
+		}
+
 		public BaseNaturalIdLoadAccessImpl<T> with(LockOptions lockOptions) {
 			this.lockOptions = lockOptions;
 			return this;
@@ -2418,16 +2292,14 @@ public class SessionImpl
 		protected final Object resolveNaturalId(Map<String, Object> naturalIdParameters) {
 			performAnyNeededCrossReferenceSynchronizations();
 
-			final ResolveNaturalIdEvent event =
-					new ResolveNaturalIdEvent( naturalIdParameters, entityPersister, SessionImpl.this );
-			fireResolveNaturalId( event );
+			final Object resolvedId = entityPersister()
+					.getNaturalIdMapping()
+					.getNaturalIdLoader()
+					.resolveNaturalIdToId( naturalIdParameters, SessionImpl.this );
 
-			if ( event.getEntityId() == PersistenceContext.NaturalIdHelper.INVALID_NATURAL_ID_REFERENCE ) {
-				return null;
-			}
-			else {
-				return event.getEntityId();
-			}
+			return resolvedId == PersistenceContext.NaturalIdHelper.INVALID_NATURAL_ID_REFERENCE
+					? null
+					: resolvedId;
 		}
 
 		protected void performAnyNeededCrossReferenceSynchronizations() {
@@ -2500,11 +2372,11 @@ public class SessionImpl
 		}
 
 		private NaturalIdLoadAccessImpl(String entityName) {
-			this( locateEntityPersister( entityName ) );
+			this( requireEntityPersister( entityName ) );
 		}
 
 		private NaturalIdLoadAccessImpl(Class entityClass) {
-			this( locateEntityPersister( entityClass ) );
+			this( requireEntityPersister( entityClass ) );
 		}
 
 		@Override
@@ -2515,6 +2387,12 @@ public class SessionImpl
 		@Override
 		public NaturalIdLoadAccess<T> using(String attributeName, Object value) {
 			naturalIdParameters.put( attributeName, value );
+			return this;
+		}
+
+		@Override
+		public NaturalIdLoadAccess<T> using(Object... mappings) {
+			CollectionHelper.collectMapEntries( naturalIdParameters::put, mappings );
 			return this;
 		}
 
@@ -2556,8 +2434,9 @@ public class SessionImpl
 		}
 	}
 
-	private class SimpleNaturalIdLoadAccessImpl<T> extends BaseNaturalIdLoadAccessImpl<T>
-			implements SimpleNaturalIdLoadAccess<T> {
+	private class SimpleNaturalIdLoadAccessImpl<T>
+			extends BaseNaturalIdLoadAccessImpl<T>
+			implements SimpleNaturalIdLoadAccess<T>, NaturalIdLoader.LoadOptions {
 		private final String naturalIdAttributeName;
 
 		private SimpleNaturalIdLoadAccessImpl(EntityPersister entityPersister) {
@@ -2577,11 +2456,21 @@ public class SessionImpl
 		}
 
 		private SimpleNaturalIdLoadAccessImpl(String entityName) {
-			this( locateEntityPersister( entityName ) );
+			this( requireEntityPersister( entityName ) );
+		}
+
+		@Override
+		public LockOptions getLockOptions() {
+			return super.getLockOptions();
+		}
+
+		@Override
+		public boolean isSynchronizationEnabled() {
+			return super.isSynchronizationEnabled();
 		}
 
 		private SimpleNaturalIdLoadAccessImpl(Class entityClass) {
-			this( locateEntityPersister( entityClass ) );
+			this( requireEntityPersister( entityClass ) );
 		}
 
 		@Override
@@ -2602,7 +2491,7 @@ public class SessionImpl
 		@Override
 		@SuppressWarnings("unchecked")
 		public T getReference(Object naturalIdValue) {
-			final Object entityId = resolveNaturalId( getNaturalIdParameters( naturalIdValue ) );
+			final Object entityId = entityPersister().getNaturalIdLoader().resolveNaturalIdToId( naturalIdValue, SessionImpl.this );
 			if ( entityId == null ) {
 				return null;
 			}
@@ -2610,19 +2499,9 @@ public class SessionImpl
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public T load(Object naturalIdValue) {
-			final Object entityId = resolveNaturalId( getNaturalIdParameters( naturalIdValue ) );
-			if ( entityId == null ) {
-				return null;
-			}
-			try {
-				return (T) this.getIdentifierLoadAccess().load( entityId );
-			}
-			catch (EntityNotFoundException | ObjectNotFoundException e) {
-				// OK
-			}
-			return null;
+			//noinspection unchecked
+			return (T) entityPersister().getNaturalIdLoader().load( naturalIdValue, this, SessionImpl.this );
 		}
 
 		@Override

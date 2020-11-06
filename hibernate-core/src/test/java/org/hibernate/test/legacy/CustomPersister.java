@@ -53,11 +53,10 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityRowIdMapping;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
-import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.MultiLoadOptions;
+import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
@@ -329,7 +328,7 @@ public class CustomPersister implements EntityPersister {
 	}
 
 	@Override
-	public List multiLoad(Object[] ids, SharedSessionContractImplementor session, MultiLoadOptions loadOptions) {
+	public List multiLoad(Object[] ids, SharedSessionContractImplementor session, MultiIdLoadOptions loadOptions) {
 		return Collections.emptyList();
 	}
 

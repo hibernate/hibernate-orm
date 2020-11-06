@@ -39,6 +39,7 @@ import org.hibernate.Session;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SharedSessionBuilder;
 import org.hibernate.SimpleNaturalIdLoadAccess;
+import org.hibernate.NaturalIdMultiLoadAccess;
 import org.hibernate.Transaction;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.cache.spi.CacheTransactionSynchronization;
@@ -911,7 +912,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public IdentifierLoadAccess byId(String entityName) {
+	public <T> IdentifierLoadAccess<T> byId(String entityName) {
 		return delegate.byId( entityName );
 	}
 
@@ -921,7 +922,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public MultiIdentifierLoadAccess byMultipleIds(String entityName) {
+	public <T> MultiIdentifierLoadAccess<T> byMultipleIds(String entityName) {
 		return delegate.byMultipleIds( entityName );
 	}
 
@@ -931,7 +932,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public NaturalIdLoadAccess byNaturalId(String entityName) {
+	public <T> NaturalIdLoadAccess<T> byNaturalId(String entityName) {
 		return delegate.byNaturalId( entityName );
 	}
 
@@ -941,13 +942,23 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public SimpleNaturalIdLoadAccess bySimpleNaturalId(String entityName) {
+	public <T> SimpleNaturalIdLoadAccess<T> bySimpleNaturalId(String entityName) {
 		return delegate.bySimpleNaturalId( entityName );
 	}
 
 	@Override
 	public <T> SimpleNaturalIdLoadAccess<T> bySimpleNaturalId(Class<T> entityClass) {
 		return delegate.bySimpleNaturalId( entityClass );
+	}
+
+	@Override
+	public <T> NaturalIdMultiLoadAccess<T> byMultipleNaturalId(Class<T> entityClass) {
+		return delegate.byMultipleNaturalId( entityClass );
+	}
+
+	@Override
+	public <T> NaturalIdMultiLoadAccess<T> byMultipleNaturalId(String entityName) {
+		return delegate.byMultipleNaturalId( entityName );
 	}
 
 	@Override

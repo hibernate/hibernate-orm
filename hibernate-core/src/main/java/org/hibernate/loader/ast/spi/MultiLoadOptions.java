@@ -1,35 +1,17 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.persister.entity;
+package org.hibernate.loader.ast.spi;
 
 import org.hibernate.LockOptions;
 
 /**
- * Encapsulation of the options for performing a load by multiple identifiers.
- *
- * @author Steve Ebersole
+ * Base contract for options for multi-load operations
  */
 public interface MultiLoadOptions {
-	/**
-	 * Check the first-level cache first, and only if the entity is not found in the cache
-	 * should Hibernate hit the database.
-	 *
-	 * @return the session cache is checked first
-	 */
-	boolean isSessionCheckingEnabled();
-
-	/**
-	 * Check the second-level cache first, and only if the entity is not found in the cache
-	 * should Hibernate hit the database.
-	 *
-	 * @return the session factory cache is checked first
-	 */
-	boolean isSecondLevelCacheCheckingEnabled();
-
 	/**
 	 * Should we returned entities that are scheduled for deletion.
 	 *

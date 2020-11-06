@@ -784,7 +784,7 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	 *
 	 * @throws HibernateException If the specified entity name cannot be resolved as an entity name
 	 */
-	IdentifierLoadAccess byId(String entityName);
+	<T> IdentifierLoadAccess<T> byId(String entityName);
 
 	/**
 	 * Create a {@link MultiIdentifierLoadAccess} instance to retrieve multiple entities at once
@@ -808,7 +808,7 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	 *
 	 * @throws HibernateException If the specified entity name cannot be resolved as an entity name
 	 */
-	MultiIdentifierLoadAccess byMultipleIds(String entityName);
+	<T> MultiIdentifierLoadAccess<T> byMultipleIds(String entityName);
 
 	/**
 	 * Create an {@link IdentifierLoadAccess} instance to retrieve the specified entity by
@@ -832,7 +832,7 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	 *
 	 * @throws HibernateException If the specified entity name cannot be resolved as an entity name
 	 */
-	NaturalIdLoadAccess byNaturalId(String entityName);
+	<T> NaturalIdLoadAccess<T> byNaturalId(String entityName);
 
 	/**
 	 * Create a {@link NaturalIdLoadAccess} instance to retrieve the specified entity by
@@ -857,7 +857,7 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	 * @throws HibernateException If the specified entityClass cannot be resolved as a mapped entity, or if the
 	 * entity does not define a natural-id or if its natural-id is made up of multiple attributes.
 	 */
-	SimpleNaturalIdLoadAccess bySimpleNaturalId(String entityName);
+	<T> SimpleNaturalIdLoadAccess<T> bySimpleNaturalId(String entityName);
 
 	/**
 	 * Create a {@link SimpleNaturalIdLoadAccess} instance to retrieve the specified entity by
@@ -871,6 +871,16 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	 * entity does not define a natural-id or if its natural-id is made up of multiple attributes.
 	 */
 	<T> SimpleNaturalIdLoadAccess<T> bySimpleNaturalId(Class<T> entityClass);
+
+	/**
+	 * Access to load multiple entities by natural-id
+	 */
+	<T> NaturalIdMultiLoadAccess<T> byMultipleNaturalId(Class<T> entityClass);
+
+	/**
+	 * Access to load multiple entities by natural-id
+	 */
+	<T> NaturalIdMultiLoadAccess<T> byMultipleNaturalId(String entityName);
 
 	/**
 	 * Enable the named filter for this current session.

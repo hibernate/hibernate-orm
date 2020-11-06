@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -39,6 +40,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.SimpleForeignKeyDescriptor;
@@ -109,7 +111,7 @@ public class LoaderSelectBuilder {
 			Loadable loadable,
 			List<? extends ModelPart> partsToSelect,
 			ModelPart restrictedPart,
-			DomainResult cachedDomainResult,
+			DomainResult<?> cachedDomainResult,
 			int numberOfKeysToLoad,
 			LoadQueryInfluencers loadQueryInfluencers,
 			LockOptions lockOptions,
@@ -135,7 +137,7 @@ public class LoaderSelectBuilder {
 			Loadable loadable,
 			List<? extends ModelPart> partsToSelect,
 			List<ModelPart> restrictedParts,
-			DomainResult cachedDomainResult,
+			DomainResult<?> cachedDomainResult,
 			int numberOfKeysToLoad,
 			LoadQueryInfluencers loadQueryInfluencers,
 			LockOptions lockOptions,
@@ -216,6 +218,8 @@ public class LoaderSelectBuilder {
 			int numberOfKeysToLoad,
 			LoadQueryInfluencers loadQueryInfluencers,
 			LockOptions lockOptions,
+			EntityGraphTraversalState entityGraphTraversalState,
+			boolean forceIdentifierSelection,
 			Consumer<JdbcParameter> jdbcParameterConsumer) {
 		this.creationContext = creationContext;
 		this.loadable = loadable;
@@ -224,32 +228,70 @@ public class LoaderSelectBuilder {
 		this.cachedDomainResult = cachedDomainResult;
 		this.numberOfKeysToLoad = numberOfKeysToLoad;
 		this.loadQueryInfluencers = loadQueryInfluencers;
+		this.lockOptions = lockOptions;
+		this.entityGraphTraversalState = entityGraphTraversalState;
+		this.forceIdentifierSelection = forceIdentifierSelection;
+		this.jdbcParameterConsumer = jdbcParameterConsumer;
+	}
+
+	private LoaderSelectBuilder(
+			SqlAstCreationContext creationContext,
+			Loadable loadable,
+			List<? extends ModelPart> partsToSelect,
+			List<ModelPart> restrictedParts,
+			DomainResult cachedDomainResult,
+			int numberOfKeysToLoad,
+			LoadQueryInfluencers loadQueryInfluencers,
+			LockOptions lockOptions,
+			Consumer<JdbcParameter> jdbcParameterConsumer) {
+		this.creationContext = creationContext;
+		this.loadable = loadable;
+		this.partsToSelect = partsToSelect;
+		this.restrictedParts = restrictedParts;
+		this.cachedDomainResult = cachedDomainResult;
+		this.numberOfKeysToLoad = numberOfKeysToLoad;
+		this.loadQueryInfluencers = loadQueryInfluencers;
+
+		this.forceIdentifierSelection = determineWhetherToForceIdSelection( numberOfKeysToLoad, restrictedParts );
+		this.entityGraphTraversalState = determineGraphTraversalState( loadQueryInfluencers );
+
+		this.lockOptions = lockOptions != null ? lockOptions : LockOptions.NONE;
+		this.jdbcParameterConsumer = jdbcParameterConsumer;
+	}
+
+	private static boolean determineWhetherToForceIdSelection(int numberOfKeysToLoad, List<ModelPart> restrictedParts) {
 		if ( numberOfKeysToLoad > 1 ) {
-			forceIdentifierSelection = true;
+			return true;
 		}
-		else {
-			for ( ModelPart restrictedPart : restrictedParts ) {
-				if ( restrictedPart instanceof ForeignKeyDescriptor ) {
-					forceIdentifierSelection = true;
-				}
+
+		if ( restrictedParts.size() == 1 ) {
+			final ModelPart restrictedPart = restrictedParts.get( 0 );
+			if ( Objects.equals( restrictedPart.getPartName(), NaturalIdMapping.PART_NAME ) ) {
+				return true;
 			}
 		}
 
-		EntityGraphTraversalState entityGraphTraversalState = null;
+		for ( ModelPart restrictedPart : restrictedParts ) {
+			if ( restrictedPart instanceof ForeignKeyDescriptor ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private static EntityGraphTraversalState determineGraphTraversalState(LoadQueryInfluencers loadQueryInfluencers) {
 		if ( loadQueryInfluencers != null ) {
 			final EffectiveEntityGraph effectiveEntityGraph = loadQueryInfluencers.getEffectiveEntityGraph();
 			if ( effectiveEntityGraph != null ) {
 				final GraphSemantic graphSemantic = effectiveEntityGraph.getSemantic();
 				final RootGraphImplementor rootGraphImplementor = effectiveEntityGraph.getGraph();
 				if ( graphSemantic != null && rootGraphImplementor != null ) {
-					entityGraphTraversalState = new StandardEntityGraphTraversalStateImpl( graphSemantic, rootGraphImplementor );
+					return new StandardEntityGraphTraversalStateImpl( graphSemantic, rootGraphImplementor );
 				}
 			}
 		}
-		this.entityGraphTraversalState = entityGraphTraversalState;
-
-		this.lockOptions = lockOptions != null ? lockOptions : LockOptions.NONE;
-		this.jdbcParameterConsumer = jdbcParameterConsumer;
+		return null;
 	}
 
 	private LoaderSelectBuilder(

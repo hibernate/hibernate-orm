@@ -6,6 +6,8 @@
  */
 package org.hibernate.testing.orm.domain;
 
+import java.util.Locale;
+import javax.money.CurrencyUnit;
 import javax.money.Monetary;
 import javax.money.MonetaryAmount;
 import javax.persistence.AttributeConverter;
@@ -27,6 +29,6 @@ public class MonetaryAmountConverter implements AttributeConverter<MonetaryAmoun
 			return null;
 		}
 
-		return Monetary.getDefaultAmountFactory().setNumber( dbData ).create();
+		return Monetary.getDefaultAmountFactory().setNumber( dbData ).setCurrency( Monetary.getCurrency( Locale.US ) ).create();
 	}
 }

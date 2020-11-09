@@ -12,12 +12,14 @@ import java.util.Map;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
+import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.hql.spi.SqmCreationOptions;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
+import org.hibernate.query.sqm.internal.SqmQuerySpecCreationProcessingStateStandardImpl;
 import org.hibernate.query.sqm.spi.BaseSemanticQueryWalker;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
@@ -119,9 +121,11 @@ public class QuerySplitter {
 	private static class UnmappedPolymorphismReplacer extends BaseSemanticQueryWalker implements SqmCreationState {
 		private final SqmRoot unmappedPolymorphicFromElement;
 		private final EntityDomainType mappedDescriptor;
+		private final SqmCreationContext creationContext;
+		private final Stack<SqmCreationProcessingState> processingStateStack = new StandardStack<>();
 
 		private Map<NavigablePath, SqmPath> sqmPathCopyMap = new HashMap<>();
-		private Map<SqmFrom,SqmFrom> sqmFromCopyMap = new HashMap<>();
+		private Map<SqmFrom, SqmFrom> sqmFromCopyMap = new HashMap<>();
 
 		private UnmappedPolymorphismReplacer(
 				SqmRoot unmappedPolymorphicFromElement,
@@ -130,6 +134,7 @@ public class QuerySplitter {
 			super( sessionFactory.getServiceRegistry() );
 			this.unmappedPolymorphicFromElement = unmappedPolymorphicFromElement;
 			this.mappedDescriptor = mappedDescriptor;
+			this.creationContext = sessionFactory;
 		}
 
 		@Override
@@ -155,7 +160,21 @@ public class QuerySplitter {
 		@Override
 		public SqmSelectStatement visitSelectStatement(SqmSelectStatement statement) {
 			final SqmSelectStatement copy = new SqmSelectStatement( statement.nodeBuilder() );
-			copy.setQuerySpec( visitQuerySpec( statement.getQuerySpec() ) );
+
+			processingStateStack.push(
+					new SqmQuerySpecCreationProcessingStateStandardImpl(
+							processingStateStack.getCurrent(),
+							copy,
+							this
+					)
+			);
+			try {
+				copy.setQuerySpec( visitQuerySpec( statement.getQuerySpec() ) );
+			}
+			finally {
+				processingStateStack.pop();
+			}
+
 			return copy;
 		}
 
@@ -171,10 +190,14 @@ public class QuerySplitter {
 			sqmQuerySpec.setWhereClause( visitWhereClause( querySpec.getWhereClause() ) );
 			sqmQuerySpec.setGroupByClause( visitGroupByClause( querySpec.getGroupByClause() ) );
 			sqmQuerySpec.setOrderByClause( visitOrderByClause( querySpec.getOrderByClause() ) );
-			sqmQuerySpec.setLimitExpression( (SqmExpression) querySpec.getLimitExpression().accept( this ) );
-			sqmQuerySpec.setOffsetExpression( (SqmExpression) querySpec.getOffsetExpression().accept( this ) );
+			if ( querySpec.getLimitExpression() != null ) {
+				sqmQuerySpec.setLimitExpression( (SqmExpression) querySpec.getLimitExpression().accept( this ) );
+			}
+			if ( querySpec.getOffsetExpression() != null ) {
+				sqmQuerySpec.setOffsetExpression( (SqmExpression) querySpec.getOffsetExpression().accept( this ) );
+			}
 
-			return querySpec;
+			return sqmQuerySpec;
 		}
 
 		private SqmFromClause currentFromClauseCopy = null;
@@ -196,6 +219,9 @@ public class QuerySplitter {
 
 		@Override
 		public SqmGroupByClause visitGroupByClause(SqmGroupByClause clause) {
+			if ( clause == null ) {
+				return null;
+			}
 			final SqmGroupByClause result = new SqmGroupByClause();
 			clause.visitGroupings(
 					grouping -> result.addGrouping(
@@ -213,6 +239,9 @@ public class QuerySplitter {
 
 		@Override
 		public SqmHavingClause visitHavingClause(SqmHavingClause clause) {
+			if ( clause == null || clause.getPredicate() == null ) {
+				return null;
+			}
 			return new SqmHavingClause(
 					(SqmPredicate) clause.getPredicate().accept( this )
 			);
@@ -220,26 +249,28 @@ public class QuerySplitter {
 
 		@Override
 		public SqmRoot visitRootPath(SqmRoot sqmRoot) {
+			final SqmFrom sqmFrom = sqmFromCopyMap.get( sqmRoot );
+			if ( sqmFrom != null ) {
+				return (SqmRoot) sqmFrom;
+			}
+			final EntityDomainType pathSource;
+			if ( sqmRoot == unmappedPolymorphicFromElement ) {
+				pathSource = mappedDescriptor;
+			}
+			else {
+				pathSource = sqmRoot.getReferencedPathSource();
+			}
+			final SqmRoot copy = new SqmRoot(
+					pathSource,
+					sqmRoot.getExplicitAlias(),
+					sqmRoot.nodeBuilder()
+			);
 			return (SqmRoot) getProcessingStateStack().getCurrent().getPathRegistry().resolvePath(
-					sqmRoot.getNavigablePath(),
+					copy.getNavigablePath(),
 					navigablePath -> {
-						final SqmRoot copy;
-						if ( sqmRoot == unmappedPolymorphicFromElement ) {
-							copy = new SqmRoot(
-									mappedDescriptor,
-									sqmRoot.getExplicitAlias(),
-									sqmRoot.nodeBuilder()
-							);
-						}
-						else {
-							copy = new SqmRoot(
-									sqmRoot.getReferencedPathSource(),
-									sqmRoot.getExplicitAlias(),
-									sqmRoot.nodeBuilder()
-							);
-						}
 						sqmFromCopyMap.put( sqmRoot, copy );
 						sqmPathCopyMap.put( sqmRoot.getNavigablePath(), copy );
+						currentFromClauseCopy.addRoot( copy );
 						return copy;
 					}
 			);
@@ -247,16 +278,22 @@ public class QuerySplitter {
 
 		@Override
 		public SqmCrossJoin visitCrossJoin(SqmCrossJoin join) {
+			final SqmFrom sqmFrom = sqmFromCopyMap.get( join );
+			if ( sqmFrom != null ) {
+				return (SqmCrossJoin) sqmFrom;
+			}
 			return (SqmCrossJoin) getProcessingStateStack().getCurrent().getPathRegistry().resolvePath(
 					join.getNavigablePath(),
 					navigablePath -> {
+						final SqmRoot sqmRoot = (SqmRoot) sqmFromCopyMap.get( join.findRoot() );
 						final SqmCrossJoin copy = new SqmCrossJoin(
 								join.getReferencedPathSource(),
 								join.getExplicitAlias(),
-								(SqmRoot) sqmFromCopyMap.get( join.findRoot() )
+								sqmRoot
 						);
 						sqmFromCopyMap.put( join, copy );
 						sqmPathCopyMap.put( join.getNavigablePath(), copy );
+						sqmRoot.addSqmJoin( copy );
 						return copy;
 					}
 			);
@@ -264,17 +301,23 @@ public class QuerySplitter {
 
 		@Override
 		public SqmEntityJoin visitQualifiedEntityJoin(SqmEntityJoin join) {
+			final SqmFrom sqmFrom = sqmFromCopyMap.get( join );
+			if ( sqmFrom != null ) {
+				return (SqmEntityJoin) sqmFrom;
+			}
 			return (SqmEntityJoin) getProcessingStateStack().getCurrent().getPathRegistry().resolvePath(
 					join.getNavigablePath(),
 					navigablePath -> {
+						final SqmRoot sqmRoot = (SqmRoot) sqmFromCopyMap.get( join.findRoot() );
 						final SqmEntityJoin copy = new SqmEntityJoin(
 								join.getReferencedPathSource(),
 								join.getExplicitAlias(),
 								join.getSqmJoinType(),
-								(SqmRoot) sqmFromCopyMap.get( join.findRoot() )
+								sqmRoot
 						);
 						sqmFromCopyMap.put( join, copy );
 						sqmPathCopyMap.put( join.getNavigablePath(), copy );
+						sqmRoot.addSqmJoin( copy );
 						return copy;
 					}
 			);
@@ -282,12 +325,17 @@ public class QuerySplitter {
 
 		@Override
 		public SqmAttributeJoin visitQualifiedAttributeJoin(SqmAttributeJoin join) {
+			SqmFrom sqmFrom = sqmFromCopyMap.get( join );
+			if ( sqmFrom != null ) {
+				return (SqmAttributeJoin) sqmFrom;
+			}
 			return (SqmAttributeJoin) getProcessingStateStack().getCurrent().getPathRegistry().resolvePath(
 					join.getNavigablePath(),
 					navigablePath -> {
-						SqmAttributeJoin copy = join.makeCopy(getProcessingStateStack().getCurrent());
+						SqmAttributeJoin copy = join.makeCopy( getProcessingStateStack().getCurrent() );
 						sqmFromCopyMap.put( join, copy );
 						sqmPathCopyMap.put( join.getNavigablePath(), copy );
+						( (SqmFrom<?, ?>) copy.getParent() ).addSqmJoin( copy );
 						return copy;
 					}
 			);
@@ -427,7 +475,7 @@ public class QuerySplitter {
 
 		@Override
 		public SqmWhereClause visitWhereClause(SqmWhereClause whereClause) {
-			if ( whereClause == null ) {
+			if ( whereClause == null || whereClause.getPredicate() == null ) {
 				return null;
 			}
 			return new SqmWhereClause(
@@ -535,7 +583,7 @@ public class QuerySplitter {
 
 		@Override
 		public SqmOrderByClause visitOrderByClause(SqmOrderByClause orderByClause) {
-			if ( orderByClause == null ) {
+			if ( orderByClause == null || orderByClause.getSortSpecifications().isEmpty() ) {
 				return null;
 			}
 
@@ -620,21 +668,14 @@ public class QuerySplitter {
 			);
 		}
 
-//		@Override
-//		public SqmQuerySpecCreationProcessingState getCurrentQuerySpecProcessingState() {
-//			// todo (6.0) : not sure these are needed
-//			throw new NotYetImplementedFor6Exception(  );
-//		}
-
 		@Override
 		public Stack<SqmCreationProcessingState> getProcessingStateStack() {
-			// todo (6.0) : not sure these are needed
-			throw new NotYetImplementedFor6Exception(  );
+			return processingStateStack;
 		}
 
 		@Override
 		public SqmCreationContext getCreationContext() {
-			throw new NotYetImplementedFor6Exception(  );
+			return creationContext;
 		}
 
 		@Override

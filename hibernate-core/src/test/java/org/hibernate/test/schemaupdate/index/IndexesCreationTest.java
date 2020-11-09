@@ -13,7 +13,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.PostgreSQL81Dialect;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 
 import org.hibernate.testing.RequiresDialect;
@@ -27,7 +27,7 @@ import static org.junit.Assert.assertTrue;
 
 @TestForIssue(jiraKey = "HHH-11913")
 @RequiresDialect(H2Dialect.class)
-@RequiresDialect(PostgreSQL81Dialect.class)
+@RequiresDialect(PostgreSQLDialect.class)
 @RequiresDialect(MySQLDialect.class)
 public class IndexesCreationTest extends BaseUnitTestCase {
 	private StandardServiceRegistry ssr;

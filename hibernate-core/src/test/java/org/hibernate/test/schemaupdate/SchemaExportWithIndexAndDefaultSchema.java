@@ -16,7 +16,7 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.PostgreSQL81Dialect;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
@@ -37,7 +37,7 @@ import static org.junit.Assert.assertThat;
  */
 @TestForIssue(jiraKey = "HHH-9866")
 @RunWith(CustomRunner.class)
-@RequiresDialect(PostgreSQL81Dialect.class)
+@RequiresDialect(PostgreSQLDialect.class)
 public class SchemaExportWithIndexAndDefaultSchema {
 	protected ServiceRegistry serviceRegistry;
 	protected MetadataImplementor metadata;

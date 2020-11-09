@@ -7,7 +7,7 @@
 package org.hibernate.jpa.test.lock;
 
 import org.hibernate.dialect.CockroachDialect;
-import org.hibernate.dialect.PostgreSQL82Dialect;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.testing.RequiresDialect;
@@ -25,7 +25,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect(PostgreSQL82Dialect.class)
+@RequiresDialect(PostgreSQLDialect.class)
 @SkipForDialect(value = CockroachDialect.class, comment = "https://github.com/cockroachdb/cockroach/issues/41335")
 @TestForIssue( jiraKey = "HHH-13493")
 public class NativeSQLQueryTimeoutTest extends BaseEntityManagerFunctionalTestCase {

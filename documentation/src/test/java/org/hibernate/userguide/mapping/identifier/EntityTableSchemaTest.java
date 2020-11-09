@@ -11,7 +11,7 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.PostgreSQL82Dialect;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.RequiresDialect;
@@ -20,7 +20,7 @@ import org.junit.Test;
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect(PostgreSQL82Dialect.class)
+@RequiresDialect(PostgreSQLDialect.class)
 public class EntityTableSchemaTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override

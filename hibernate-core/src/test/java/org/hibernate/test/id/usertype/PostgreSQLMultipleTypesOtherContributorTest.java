@@ -18,7 +18,7 @@ import javax.persistence.Table;
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.boot.spi.MetadataBuilderContributor;
-import org.hibernate.dialect.PostgreSQL82Dialect;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.NativeQuery;
@@ -40,7 +40,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect(PostgreSQL82Dialect.class)
+@RequiresDialect(PostgreSQLDialect.class)
 public class PostgreSQLMultipleTypesOtherContributorTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override

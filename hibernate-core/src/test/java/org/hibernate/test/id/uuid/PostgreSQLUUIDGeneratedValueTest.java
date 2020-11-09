@@ -12,7 +12,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
-import org.hibernate.dialect.PostgreSQL82Dialect;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.type.PostgresUUIDType;
@@ -28,7 +28,7 @@ import static org.junit.Assert.assertNotNull;
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect(PostgreSQL82Dialect.class)
+@RequiresDialect(PostgreSQLDialect.class)
 public class PostgreSQLUUIDGeneratedValueTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override

@@ -10,7 +10,7 @@ import javax.sql.DataSource;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.PostgreSQL81Dialect;
+import org.hibernate.dialect.PostgreSQLDialect;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.util.ReflectionUtil;
@@ -18,7 +18,7 @@ import org.hibernate.testing.util.ReflectionUtil;
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect(PostgreSQL81Dialect.class)
+@RequiresDialect(PostgreSQLDialect.class)
 public class PostgreSQLSkipAutoCommitTest extends AbstractSkipAutoCommitTest {
 
 	@Override

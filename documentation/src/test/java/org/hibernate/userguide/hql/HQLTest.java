@@ -28,7 +28,7 @@ import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.dialect.Oracle8iDialect;
-import org.hibernate.dialect.PostgreSQL81Dialect;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.type.StringType;
@@ -1917,7 +1917,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@RequiresDialect(H2Dialect.class)
-	@RequiresDialect(PostgreSQL81Dialect.class)
+	@RequiresDialect(PostgreSQLDialect.class)
 	@RequiresDialect(MySQL5Dialect.class)
 	public void test_hql_relational_comparisons_example_3() {
 
@@ -2122,7 +2122,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@RequiresDialect(H2Dialect.class)
-	@RequiresDialect(PostgreSQL81Dialect.class)
+	@RequiresDialect(PostgreSQLDialect.class)
 	@RequiresDialect(MySQL5Dialect.class)
 	public void test_hql_between_predicate_example_2() {
 
@@ -2379,7 +2379,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@RequiresDialect(H2Dialect.class)
-	@RequiresDialect(PostgreSQL81Dialect.class)
+	@RequiresDialect(PostgreSQLDialect.class)
 	@RequiresDialect(MySQL5Dialect.class)
 	public void test_hql_group_by_example_3() {
 
@@ -2401,7 +2401,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@RequiresDialect(H2Dialect.class)
-	@RequiresDialect(PostgreSQL81Dialect.class)
+	@RequiresDialect(PostgreSQLDialect.class)
 	@RequiresDialect(MySQL5Dialect.class)
 	public void test_hql_group_by_example_4() {
 

@@ -160,6 +160,14 @@ else {
 		}
 	}
 
+	// Configure JVM Options
+	tasks.withType( JavaCompile ).configureEach {
+		options.forkOptions.jvmArgs.addAll( getProperty( 'toolchain.compiler.jvmargs' ).toString().split( ' ' ) )
+	}
+	tasks.withType( Javadoc ).configureEach {
+		options.setJFlags( getProperty( 'toolchain.javadoc.jvmargs' ).toString().split( ' ' ).toList().findAll( { !it.isEmpty() } ) )
+	}
+
 	// Display version of Java tools
 	tasks.withType( JavaCompile ).configureEach {
 		doFirst {
@@ -219,6 +227,10 @@ if ( gradle.ext.javaToolchainEnabled ) {
 		javaLauncher = javaToolchains.launcherFor {
 			languageVersion = gradle.ext.javaVersions.test.launcher
 		}
+
+		// Configure JVM Options
+		jvmArgs.addAll( getProperty( 'toolchain.launcher.jvmargs' ).toString().split( ' ' ) )
+
 		// Display version of Java tools
 		doFirst {
 			logger.lifecycle "Testing with '${javaLauncher.get().metadata.installationPath}'"

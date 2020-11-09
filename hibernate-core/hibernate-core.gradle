@@ -273,6 +273,18 @@ task testJavassist(type: Test) {
     //If you want to ensure that integration tests are run every time when you invoke
     //this task, uncomment the following line.
     //outputs.upToDateWhen { false }
+
+    if ( gradle.ext.javaToolchainEnabled ) {
+        // Configure version of Java tools
+        javaLauncher = javaToolchains.launcherFor {
+            languageVersion = gradle.ext.javaVersions.test.launcher
+        }
+
+        //  Display version of Java tools
+        doFirst {
+            logger.lifecycle "Testing javassist with '${javaLauncher.get().metadata.installationPath}'"
+        }
+    }
 }
 
 check.dependsOn testJavassist

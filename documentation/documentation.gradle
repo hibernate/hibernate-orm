@@ -140,6 +140,11 @@ task aggregateJavadocs(type: Javadoc) {
 		}
 
 		options.addStringOption( 'Xdoclint:none', '-quiet' )
+
+		if ( gradle.ext.javaToolchainEnabled ) {
+			options.setJFlags( getProperty( 'toolchain.javadoc.jvmargs' ).toString().
+							split( ' ' ).toList().findAll( { !it.isEmpty() } ) )
+		}
 	}
 
 	if ( gradle.ext.javaToolchainEnabled ) {

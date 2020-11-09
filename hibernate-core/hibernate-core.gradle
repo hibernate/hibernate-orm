@@ -280,7 +280,10 @@ task testJavassist(type: Test) {
             languageVersion = gradle.ext.javaVersions.test.launcher
         }
 
-        //  Display version of Java tools
+        //  Configure JVM Options
+        jvmArgs.addAll( getProperty( 'toolchain.launcher.jvmargs' ).toString().split( ' ' ) )
+
+        // Display version of Java tools
         doFirst {
             logger.lifecycle "Testing javassist with '${javaLauncher.get().metadata.installationPath}'"
         }

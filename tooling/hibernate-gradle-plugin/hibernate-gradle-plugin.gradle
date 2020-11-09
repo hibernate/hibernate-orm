@@ -24,6 +24,15 @@ dependencies {
 
 tasks.withType( GroovyCompile ) {
 	options.encoding = 'UTF-8'
-	sourceCompatibility = project.baselineJavaVersion
-	targetCompatibility = project.baselineJavaVersion
+}
+
+if ( !gradle.ext.javaToolchainEnabled ) {
+	tasks.withType( GroovyCompile ) {
+		sourceCompatibility = JavaVersion.toVersion( gradle.ext.baselineJavaVersion )
+		targetCompatibility = JavaVersion.toVersion( gradle.ext.baselineJavaVersion )
+	}
+}
+else {
+	logger.warn( "[WARN] Toolchains are not yet supported for Groovy compilation." +
+			" Using the JDK that runs Gradle for Groovy compilation." )
 }

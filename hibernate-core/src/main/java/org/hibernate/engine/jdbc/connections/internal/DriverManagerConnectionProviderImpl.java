@@ -168,11 +168,17 @@ public class DriverManagerConnectionProviderImpl
 
 	@Override
 	public Connection getConnection() throws SQLException {
+		if ( state == null ) {
+			throw new IllegalStateException( "Cannot get a connection as the driver manager is not properly initialized" );
+		}
 		return state.getConnection();
 	}
 
 	@Override
 	public void closeConnection(Connection conn) throws SQLException {
+		if ( state == null ) {
+			throw new IllegalStateException( "Cannot close a connection as the driver manager is not properly initialized" );
+		}
 		state.closeConnection( conn );
 	}
 
@@ -204,13 +210,17 @@ public class DriverManagerConnectionProviderImpl
 
 	@Override
 	public void stop() {
-		state.stop();
+		if ( state != null ) {
+			state.stop();
+		}
 	}
 
 	//CHECKSTYLE:START_ALLOW_FINALIZER
 	@Override
 	protected void finalize() throws Throwable {
-		state.stop();
+		if ( state != null ) {
+			state.stop();
+		}
 		super.finalize();
 	}
 	//CHECKSTYLE:END_ALLOW_FINALIZER

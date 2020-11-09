@@ -18,7 +18,7 @@ import javax.persistence.Id;
 import javax.persistence.Lob;
 import javax.persistence.Table;
 
-import org.hibernate.dialect.PostgreSQL81Dialect;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.query.Query;
 
 import org.hibernate.testing.*;
@@ -37,7 +37,7 @@ import static org.junit.Assert.fail;
  * @author Andrea Boriero
  */
 @TestForIssue(jiraKey = "HHH-11614")
-@RequiresDialect(PostgreSQL81Dialect.class)
+@RequiresDialect(PostgreSQLDialect.class)
 public class PostgreSqlLobStringTest extends BaseCoreFunctionalTestCase {
 
 	private final String value1 = "abc";

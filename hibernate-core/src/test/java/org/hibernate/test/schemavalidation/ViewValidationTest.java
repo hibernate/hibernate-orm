@@ -18,8 +18,9 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.testing.SkipForDialect;
+
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
 import org.hibernate.tool.schema.JdbcMetadaAccessStrategy;
 
@@ -35,7 +36,7 @@ import org.junit.Test;
  * @author Andrea Boriero
  */
 @RequiresDialects({
-		@RequiresDialect(PostgreSQL81Dialect.class),
+		@RequiresDialect(PostgreSQLDialect.class),
 		@RequiresDialect(H2Dialect.class)
 })
 @SkipForDialect(value = CockroachDialect.class, comment = "https://github.com/cockroachdb/cockroach/issues/10028")

@@ -12,7 +12,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 
 import org.hibernate.Session;
-import org.hibernate.dialect.PostgreSQL82Dialect;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.RequiresDialect;
@@ -26,7 +26,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect(PostgreSQL82Dialect.class)
+@RequiresDialect(PostgreSQLDialect.class)
 public class PostgreSQLFunctionWhereClauseTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override

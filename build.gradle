@@ -55,11 +55,14 @@ task release {
 			"the fact that subprojects will appropriately define a release task " +
 			"themselves if they have any release-related activities to perform"
 
-	// Force to release with JDK 8. Releasing with JDK 11 is not supported yet:
-	// - the hibernate-orm-modules tests do not run due to an issue with the ASM version currently used by Gradle
 	doFirst {
-		if ( !JavaVersion.current().isJava8() || !gradle.ext.testedJavaVersionAsEnum.isJava8() ) {
-			throw new IllegalStateException( "Please use JDK 8 to perform the release." )
+		def javaVersionsInUse = [gradle.ext.javaVersions.main.compiler, gradle.ext.javaVersions.main.release,
+								 gradle.ext.javaVersions.test.compiler, gradle.ext.javaVersions.test.release,
+								 gradle.ext.javaVersions.test.launcher].toSet()
+		// Force to release with JDK 8. Releasing with JDK 11 is not supported yet:
+	// - the hibernate-orm-modules tests do not run due to an issue with the ASM version currently used by Gradle
+		if ( javaVersionsInUse != [JavaLanguageVersion.of( 8 )].toSet() ) {
+			throw new IllegalStateException( "Please use JDK 8 to perform the release. Currently using: ${javaVersionsInUse}" )
 		}
 	}
 }
@@ -101,8 +104,8 @@ buildScanRecipes {
 
 //idea {
 //    project {
-//		jdkName = baselineJavaVersion
-//		languageLevel = baselineJavaVersion
+//		jdkName = gradle.ext.baselineJavaVersion
+//		languageLevel = gradle.ext.baselineJavaVersion
 //
 //		vcs = 'Git'
 //    }

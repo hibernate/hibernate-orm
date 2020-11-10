@@ -934,13 +934,29 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			TableGroup tableGroup,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
+		final String columnReferenceKey;
+		final String discriminatorExpression;
+		if ( isDiscriminatorFormula() ) {
+			discriminatorExpression = getDiscriminatorFormulaTemplate();
+			columnReferenceKey = SqlExpressionResolver.createColumnReferenceKey(
+					tableGroup.getPrimaryTableReference(),
+					getDiscriminatorFormulaTemplate()
+			);
+		}
+		else {
+			discriminatorExpression = getDiscriminatorColumnName();
+			columnReferenceKey = SqlExpressionResolver.createColumnReferenceKey(
+					tableGroup.getPrimaryTableReference(),
+					getDiscriminatorColumnName()
+			);
+		}
 		return new ComparisonPredicate(
 				sqlExpressionResolver.resolveSqlExpression(
-						SqlExpressionResolver.createColumnReferenceKey( tableGroup.getPrimaryTableReference(), getDiscriminatorColumnName() ),
+						columnReferenceKey,
 						sqlAstProcessingState -> new ColumnReference(
 								tableGroup.getPrimaryTableReference().getIdentificationVariable(),
-								getDiscriminatorColumnName(),
-								false,
+								discriminatorExpression,
+								isDiscriminatorFormula(),
 								null,
 								null,
 								( (BasicType<?>) getDiscriminatorType() ).getJdbcMapping(),

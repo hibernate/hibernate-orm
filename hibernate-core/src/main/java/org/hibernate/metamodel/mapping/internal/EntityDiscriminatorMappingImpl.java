@@ -28,8 +28,9 @@ public class EntityDiscriminatorMappingImpl extends AbstractEntityDiscriminatorM
 			EntityPersister entityDescriptor,
 			String tableExpression,
 			String mappedColumnExpression,
+			boolean isFormula,
 			BasicType mappingType) {
-		super( entityDescriptor, tableExpression, mappedColumnExpression, mappingType );
+		super( entityDescriptor, tableExpression, mappedColumnExpression, isFormula, mappingType );
 		this.navigableRole = entityDescriptor.getNavigableRole().append( EntityDiscriminatorMapping.ROLE_NAME );
 	}
 
@@ -49,7 +50,7 @@ public class EntityDiscriminatorMappingImpl extends AbstractEntityDiscriminatorM
 						sqlAstProcessingState -> new ColumnReference(
 								tableReference.getIdentificationVariable(),
 								getMappedColumnExpression(),
-								false,
+								isMappedColumnExpressionFormula(),
 								null,
 								null,
 								getJdbcMapping(),

@@ -76,22 +76,36 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		final Selectable keyColumn = columnIterator.next();
 		assert ! columnIterator.hasNext();
 
+		final String discriminatorExpression;
+		if ( metaColumn.isFormula() ) {
+			discriminatorExpression = metaColumn.getTemplate( jdbcEnvironment.getDialect(), creationProcess.getSqmFunctionRegistry() );
+		}
+		else {
+			discriminatorExpression = metaColumn.getText( jdbcEnvironment.getDialect() );
+		}
 		final AnyDiscriminatorPart discriminatorPart = new AnyDiscriminatorPart(
 				containerRole.append( AnyDiscriminatorPart.ROLE_NAME),
 				declaringModelPart,
 				tableName,
-				metaColumn.getText( jdbcEnvironment.getDialect() ),
+				discriminatorExpression,
 				bootValueMapping.isNullable(),
 				(MetaType) anyType.getDiscriminatorType()
 		);
 
 
 		final BasicType<?> keyType = (BasicType<?>) anyType.getIdentifierType();
+		final String keyExpression;
+		if ( keyColumn.isFormula() ) {
+			keyExpression = keyColumn.getTemplate( jdbcEnvironment.getDialect(), creationProcess.getSqmFunctionRegistry() );
+		}
+		else {
+			keyExpression = keyColumn.getText( jdbcEnvironment.getDialect() );
+		}
 		final BasicValuedModelPart keyPart = new AnyKeyPart(
 				containerRole.append( AnyKeyPart.ROLE_NAME),
 				declaringModelPart,
 				tableName,
-				keyColumn.getText( jdbcEnvironment.getDialect() ),
+				keyExpression,
 				bootValueMapping.isNullable(),
 				keyType
 		);

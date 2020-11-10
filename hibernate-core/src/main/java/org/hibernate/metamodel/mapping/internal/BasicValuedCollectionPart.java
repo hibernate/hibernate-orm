@@ -42,8 +42,6 @@ import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import static org.hibernate.metamodel.relational.RuntimeRelationModelHelper.DEFAULT_COLUMN_WRITE_EXPRESSION;
-
 /**
  * Models a basic collection element/value or index/key
  *
@@ -61,6 +59,7 @@ public class BasicValuedCollectionPart
 	private final String columnExpression;
 	private final String customColumnReadExpr;
 	private final String customColumnWriteExpr;
+	private final boolean isFormula;
 
 	public BasicValuedCollectionPart(
 			CollectionPersister collectionDescriptor,
@@ -70,7 +69,8 @@ public class BasicValuedCollectionPart
 			String tableExpression,
 			String columnExpression,
 			String customColumnReadExpr,
-			String customColumnWriteExpr) {
+			String customColumnWriteExpr,
+			boolean isFormula) {
 		this.navigableRole = collectionDescriptor.getNavigableRole().append( nature.getName() );
 		this.collectionDescriptor = collectionDescriptor;
 		this.nature = nature;
@@ -80,6 +80,7 @@ public class BasicValuedCollectionPart
 		this.columnExpression = columnExpression;
 		this.customColumnReadExpr = customColumnReadExpr;
 		this.customColumnWriteExpr = customColumnWriteExpr;
+		this.isFormula = isFormula;
 	}
 
 	@Override
@@ -128,6 +129,11 @@ public class BasicValuedCollectionPart
 	}
 
 	@Override
+	public boolean isMappedColumnExpressionFormula() {
+		return isFormula;
+	}
+
+	@Override
 	public <T> DomainResult<T> createDomainResult(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
@@ -154,7 +160,7 @@ public class BasicValuedCollectionPart
 						sqlAstProcessingState -> new ColumnReference(
 								tableGroup.getPrimaryTableReference().getIdentificationVariable(),
 								columnExpression,
-								false,
+								isFormula,
 								customColumnReadExpr,
 								customColumnWriteExpr,
 								mapper,
@@ -265,7 +271,7 @@ public class BasicValuedCollectionPart
 		consumer.accept(
 				tableExpression,
 				columnExpression,
-				false,
+				isFormula,
 				customColumnReadExpr,
 				customColumnWriteExpr,
 				getJdbcMapping()

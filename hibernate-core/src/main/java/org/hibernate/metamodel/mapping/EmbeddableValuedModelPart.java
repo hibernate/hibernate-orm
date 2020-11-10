@@ -44,6 +44,12 @@ public interface EmbeddableValuedModelPart extends ModelPart, Fetchable, Fetchab
 	 */
 	List<String> getMappedColumnExpressions();
 
+	/**
+	 * Whether the column expressions to which this embedded value at a specific column index
+	 * is a formula.
+	 */
+	boolean[] getMappedColumnFormulas();
+
 	List<String> getCustomReadExpressions();
 	List<String> getCustomWriteExpressions();
 

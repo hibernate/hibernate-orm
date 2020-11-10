@@ -1386,11 +1386,19 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	public EntityDiscriminatorMapping getDiscriminatorMapping(TableGroup tableGroup) {
 		if ( hasSubclasses() ) {
 			if ( explicitDiscriminatorColumnName == null ) {
+				final String discriminatorColumnExpression;
+				if ( getDiscriminatorFormulaTemplate() == null ) {
+					discriminatorColumnExpression = getDiscriminatorColumnName();
+				}
+				else {
+					discriminatorColumnExpression = getDiscriminatorFormulaTemplate();
+				}
 				CaseSearchedExpressionInfo info = getCaseSearchedExpression( tableGroup );
 				return new JoinedSubclassDiscriminatorMappingImpl(
 						this,
 						getTableName(),
-						getDiscriminatorColumnName(),
+						discriminatorColumnExpression,
+						getDiscriminatorFormulaTemplate() != null,
 						info.caseSearchedExpression,
 						info.columnReferences,
 						(BasicType) getDiscriminatorType()

@@ -13,6 +13,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
 import org.hibernate.metamodel.mapping.AssociationKey;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.ColumnConsumer;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -20,7 +21,6 @@ import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.NavigablePath;
@@ -50,24 +50,30 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 
 	private final String keyColumnContainingTable;
 	private final List<String> keyColumnExpressions;
+	private final boolean[] keyFormulas;
 	private final String targetColumnContainingTable;
 	private final List<String> targetColumnExpressions;
+	private final boolean[] targetFormulas;
 	private final EmbeddableValuedModelPart mappingType;
 	private final List<JdbcMapping> jdbcMappings;
 	private AssociationKey associationKey;
 
 	public EmbeddedForeignKeyDescriptor(
-			EmbeddedIdentifierMappingImpl mappingType,
+			EmbeddableValuedModelPart mappingType,
 			String keyColumnContainingTable,
 			List<String> keyColumnExpressions,
+			boolean[] keyFormulas,
 			String targetColumnContainingTable,
 			List<String> targetColumnExpressions,
+			boolean[] targetFormulas,
 			MappingModelCreationProcess creationProcess) {
 		this.keyColumnContainingTable = keyColumnContainingTable;
 		this.keyColumnExpressions = keyColumnExpressions;
+		this.keyFormulas = keyFormulas;
 		this.targetColumnContainingTable = targetColumnContainingTable;
 		this.targetColumnExpressions = targetColumnExpressions;
 		this.mappingType = mappingType;
+		this.targetFormulas = targetFormulas;
 		jdbcMappings = new ArrayList<>();
 
 		creationProcess.registerInitializationCallback(
@@ -75,7 +81,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 				() -> {
 					// todo (6.0) : how to make sure things we need are ready to go?
 					// 		- e.g., here, we need access to the sub-attributes
-					final Collection<SingularAttributeMapping> subAttributes = mappingType.getAttributes();
+					final Collection<AttributeMapping> subAttributes = mappingType.getEmbeddableTypeDescriptor().getAttributeMappings();
 					if ( subAttributes.isEmpty() ) {
 						// todo (6.0) : ^^ for now, this is the only way we "know" that the embeddable has not been finalized yet
 						return false;
@@ -119,6 +125,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 			for ( int i = 0; i < keyColumnExpressions.size(); i++ ) {
 				final JdbcMapping jdbcMapping = jdbcMappings.get( i );
 				final String columnExpression = targetColumnExpressions.get( i );
+				final boolean formula = targetFormulas[i];
 				final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 						sqlExpressionResolver.resolveSqlExpression(
 								SqlExpressionResolver.createColumnReferenceKey(
@@ -129,7 +136,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 										new ColumnReference(
 												identificationVariable,
 												columnExpression,
-												false,
+												formula,
 												null,
 												null,
 												jdbcMapping,
@@ -172,6 +179,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 		List<SqlSelection> sqlSelections = new ArrayList<>(size);
 		for ( int i = 0; i < size; i++ ) {
 			final String columnExpression = keyColumnExpressions.get( i );
+			final boolean formula = keyFormulas[i];
 			final JdbcMapping jdbcMapping = jdbcMappings.get( i );
 			final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 					sqlExpressionResolver.resolveSqlExpression(
@@ -183,7 +191,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 									new ColumnReference(
 											identificationVariable,
 											columnExpression,
-											false,
+											formula,
 											null,
 											null,
 											jdbcMapping,
@@ -255,11 +263,11 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 		final String lhsTableExpression = lhs.getTableExpression();
 		if ( lhsTableExpression.equals( keyColumnContainingTable ) ) {
 			assert rhsTableExpression.equals( targetColumnContainingTable );
-			return getPredicate( lhs, rhs, creationContext, keyColumnExpressions, targetColumnExpressions );
+			return getPredicate( lhs, rhs, creationContext, keyColumnExpressions, keyFormulas, targetColumnExpressions, targetFormulas );
 		}
 		else {
 			assert rhsTableExpression.equals( keyColumnContainingTable );
-			return getPredicate( lhs, rhs, creationContext, targetColumnExpressions, keyColumnExpressions );
+			return getPredicate( lhs, rhs, creationContext, targetColumnExpressions, targetFormulas, keyColumnExpressions, keyFormulas );
 		}
 	}
 
@@ -268,7 +276,9 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 			TableReference rhs,
 			SqlAstCreationContext creationContext,
 			List<String> lhsExpressions,
-			List<String> rhsColumnExpressions) {
+			boolean[] lhsFormulas,
+			List<String> rhsColumnExpressions,
+			boolean[] rhsFormulas) {
 		final Junction predicate = new Junction( Junction.Nature.CONJUNCTION );
 		for ( int i = 0; i < lhsExpressions.size(); i++ ) {
 			final JdbcMapping jdbcMapping = jdbcMappings.get( i );
@@ -276,7 +286,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 					new ColumnReference(
 							lhs,
 							lhsExpressions.get( i ),
-							false,
+							lhsFormulas[i],
 							null,
 							null,
 							jdbcMapping,
@@ -286,7 +296,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 					new ColumnReference(
 							rhs,
 							rhsColumnExpressions.get( i ),
-							false,
+							rhsFormulas[i],
 							null,
 							null,
 							jdbcMapping,
@@ -337,7 +347,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 			consumer.accept(
 					keyColumnContainingTable,
 					keyColumnExpressions.get( i ),
-					false,
+					keyFormulas[i],
 					null,
 					null,
 					jdbcMappings.get( i )
@@ -351,7 +361,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 			consumer.accept(
 					targetColumnContainingTable,
 					targetColumnExpressions.get( i ),
-					false,
+					targetFormulas[i],
 					null,
 					null,
 					jdbcMappings.get( i )

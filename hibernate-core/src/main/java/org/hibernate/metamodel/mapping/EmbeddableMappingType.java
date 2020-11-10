@@ -313,12 +313,14 @@ public class EmbeddableMappingType implements ManagedMappingType {
 				final CompositeType subCompositeType = (CompositeType) subtype;
 				final int columnSpan = subCompositeType.getColumnSpan( sessionFactory );
 
+				final List<Boolean> formulas = new ArrayList<>( columnSpan );
 				final List<String> customReadExpressions = new ArrayList<>( columnSpan );
 				final List<String> customWriteExpressions = new ArrayList<>( columnSpan );
 
 				final Iterator<Selectable> columnIterator = bootDescriptor.getColumnIterator();
 				while ( columnIterator.hasNext() ) {
 					final Selectable selectable = columnIterator.next();
+					formulas.add( selectable.isFormula() );
 					customReadExpressions.add( selectable.getCustomReadExpression() );
 					customWriteExpressions.add( selectable.getCustomWriteExpression() );
 				}
@@ -333,6 +335,7 @@ public class EmbeddableMappingType implements ManagedMappingType {
 								subCompositeType,
 								containingTableExpression,
 								ArrayHelper.toStringArray( mappedColumnExpressions.subList( columnPosition, columnPosition + columnSpan ) ),
+								ArrayHelper.toBooleanArray( formulas ),
 //								ArrayHelper.toStringArray( customReadExpressions.subList( columnPosition, columnPosition + columnSpan ) ),
 //								ArrayHelper.toStringArray( customWriteExpressions.subList( columnPosition, columnPosition + columnSpan ) ),
 								ArrayHelper.toStringArray( customReadExpressions ),

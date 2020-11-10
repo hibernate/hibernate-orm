@@ -61,6 +61,7 @@ public class EmbeddedAttributeMapping
 
 	private final String tableExpression;
 	private final String[] attrColumnNames;
+	private final boolean[] formulas;
 	private final String[] customReadExpressions;
 	private final String[] customWriteExpressions;
 	private final EmbeddableMappingType embeddableMappingType;
@@ -73,6 +74,7 @@ public class EmbeddedAttributeMapping
 			int stateArrayPosition,
 			String tableExpression,
 			String[] attrColumnNames,
+			boolean[] formulas,
 			String[] customReadExpressions,
 			String[] customWriteExpressions,
 			StateArrayContributorMetadataAccess attributeMetadataAccess,
@@ -103,6 +105,7 @@ public class EmbeddedAttributeMapping
 
 		this.tableExpression = tableExpression;
 		this.attrColumnNames = attrColumnNames;
+		this.formulas = formulas;
 		this.customReadExpressions = customReadExpressions;
 		this.customWriteExpressions = customWriteExpressions;
 
@@ -127,6 +130,11 @@ public class EmbeddedAttributeMapping
 	@Override
 	public List<String> getMappedColumnExpressions() {
 		return Arrays.asList( attrColumnNames );
+	}
+
+	@Override
+	public boolean[] getMappedColumnFormulas() {
+		return formulas;
 	}
 
 	@Override
@@ -239,6 +247,7 @@ public class EmbeddedAttributeMapping
 						position++;
 
 						final String attrColumnExpr = attrColumnNames[ position ];
+						final boolean isFormula = formulas[ position ];
 						final String attrColumnCustomReadExpr = customReadExpressions[ position ];
 						final String attrColumnCustomWriteExpr = customWriteExpressions[ position ];
 
@@ -250,7 +259,7 @@ public class EmbeddedAttributeMapping
 								sqlAstProcessingState -> new ColumnReference(
 										tableReference.getIdentificationVariable(),
 										attrColumnExpr,
-										false,
+										isFormula,
 										attrColumnCustomReadExpr,
 										attrColumnCustomWriteExpr,
 										jdbcMapping,

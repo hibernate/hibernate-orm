@@ -51,21 +51,27 @@ import org.hibernate.type.spi.TypeConfiguration;
 public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicValuedModelPart, FetchOptions {
 	private final String keyColumnContainingTable;
 	private final String keyColumnExpression;
+	private final boolean keyFormula;
 	private final String targetColumnContainingTable;
 	private final String targetColumnExpression;
+	private final boolean targetFormula;
 	private final JdbcMapping jdbcMapping;
 	private AssociationKey associationKey;
 
 	public SimpleForeignKeyDescriptor(
 			String keyColumnContainingTable,
 			String keyColumnExpression,
+			boolean keyFormula,
 			String targetColumnContainingTable,
 			String targetColumnExpression,
+			boolean targetFormula,
 			JdbcMapping jdbcMapping) {
 		this.keyColumnContainingTable = keyColumnContainingTable;
 		this.keyColumnExpression = keyColumnExpression;
+		this.keyFormula = keyFormula;
 		this.targetColumnContainingTable = targetColumnContainingTable;
 		this.targetColumnExpression = targetColumnExpression;
+		this.targetFormula = targetFormula;
 		this.jdbcMapping = jdbcMapping;
 	}
 
@@ -89,7 +95,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 									new ColumnReference(
 											identificationVariable,
 											targetColumnExpression,
-											false,
+											targetFormula,
 											null,
 											null,
 											jdbcMapping,
@@ -142,7 +148,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 								new ColumnReference(
 										identificationVariable,
 										keyColumnExpression,
-										false,
+										keyFormula,
 										null,
 										null,
 										jdbcMapping,
@@ -173,7 +179,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 					new ColumnReference(
 							lhs,
 							keyColumnExpression,
-							false,
+							keyFormula,
 							null,
 							null,
 							jdbcMapping,
@@ -183,7 +189,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 					new ColumnReference(
 							rhs,
 							targetColumnExpression,
-							false,
+							targetFormula,
 							null,
 							null,
 							jdbcMapping,
@@ -196,7 +202,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 					new ColumnReference(
 							lhs,
 							targetColumnExpression,
-							false,
+							targetFormula,
 							null,
 							null,
 							jdbcMapping,
@@ -206,7 +212,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 					new ColumnReference(
 							rhs,
 							keyColumnExpression,
-							false,
+							keyFormula,
 							null,
 							null,
 							jdbcMapping,
@@ -306,7 +312,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 		consumer.accept(
 				keyColumnContainingTable,
 				keyColumnExpression,
-				false,
+				keyFormula,
 				null,
 				null,
 				jdbcMapping
@@ -318,7 +324,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 		consumer.accept(
 				targetColumnContainingTable,
 				targetColumnExpression,
-				false,
+				targetFormula,
 				null,
 				null,
 				jdbcMapping

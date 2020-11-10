@@ -5944,10 +5944,18 @@ public abstract class AbstractEntityPersister
 			return null;
 		}
 		else {
+			final String discriminatorColumnExpression;
+			if ( getDiscriminatorFormulaTemplate() == null ) {
+				discriminatorColumnExpression = getDiscriminatorColumnReaders();
+			}
+			else {
+				discriminatorColumnExpression = getDiscriminatorFormulaTemplate();
+			}
 			return new EntityDiscriminatorMappingImpl(
 					this,
 					getTableName(),
-					getDiscriminatorColumnReaders(),
+					discriminatorColumnExpression,
+					getDiscriminatorFormulaTemplate() != null,
 					(BasicType) getDiscriminatorType()
 			);
 		}
@@ -6129,6 +6137,15 @@ public abstract class AbstractEntityPersister
 		);
 	}
 
+	private boolean[] getPropertyFormulas(int propertyIndex) {
+		String[] propertyColumnFormulaTemplate = this.propertyColumnFormulaTemplates[propertyIndex];
+		boolean[] formulas = new boolean[propertyColumnFormulaTemplate.length];
+		for ( int i = 0; i < propertyColumnFormulaTemplate.length; i++ ) {
+			formulas[i] = propertyColumnFormulaTemplate[i] != null;
+		}
+		return formulas;
+	}
+
 	private AttributeMapping generateNonIdAttributeMapping(
 			NonIdentifierAttribute tupleAttrDefinition,
 			Property bootProperty,
@@ -6144,6 +6161,7 @@ public abstract class AbstractEntityPersister
 
 		final String tableExpression = getPropertyTableName( attrName );
 		final String[] attrColumnNames = getPropertyColumnNames( propertyIndex );
+		final boolean[] formulas = getPropertyFormulas( propertyIndex );
 		final String[] customReadExprs = getSubclassPropertyColumnReaderClosure()[ propertyIndex ];
 		final String[] customWriteExprs = getPropertyColumnWriters( propertyIndex );
 
@@ -6297,6 +6315,7 @@ public abstract class AbstractEntityPersister
 					(CompositeType) attrType,
 					tableExpression,
 					attrColumnNames,
+					formulas,
 					customReadExprs,
 					customWriteExprs,
 					propertyAccess,

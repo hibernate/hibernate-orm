@@ -59,6 +59,7 @@ public abstract class AbstractCompositeIdentifierMapping
 	private final List<String> columnNames;
 	private final List<String> customReadExpressions;
 	private final List<String> customWriteExpressions;
+	private final boolean[] formulas;
 
 	private final EntityMappingType entityMapping;
 	private final EmbeddableMappingType embeddableDescriptor;
@@ -81,6 +82,7 @@ public abstract class AbstractCompositeIdentifierMapping
 		this.columnNames = Arrays.asList( columnNames );
 		this.customReadExpressions = new ArrayList<>( columnNames.length );
 		this.customWriteExpressions = new ArrayList<>( columnNames.length );
+		this.formulas = new boolean[columnNames.length];
 
 		this.navigableRole = entityMapping.getNavigableRole()
 				.appendContainer( EntityIdentifierMapping.ROLE_LOCAL_NAME );
@@ -119,6 +121,11 @@ public abstract class AbstractCompositeIdentifierMapping
 	@Override
 	public List<String> getMappedColumnExpressions() {
 		return columnNames;
+	}
+
+	@Override
+	public boolean[] getMappedColumnFormulas() {
+		return formulas;
 	}
 
 	@Override

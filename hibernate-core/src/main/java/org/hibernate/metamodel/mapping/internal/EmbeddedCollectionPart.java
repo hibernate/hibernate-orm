@@ -64,6 +64,7 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 	private final List<String> columnExpressions;
 	private final List<String> customReadExpressions;
 	private final List<String> customWriteExpressions;
+	private final boolean[] formulas;
 
 	private final PropertyAccess parentInjectionAttributePropertyAccess;
 	private final String sqlAliasStem;
@@ -78,6 +79,7 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 			List<String> columnExpressions,
 			List<String> customReadExpressions,
 			List<String> customWriteExpressions,
+			boolean[] formulas,
 			String sqlAliasStem) {
 		this.customReadExpressions = customReadExpressions;
 		this.customWriteExpressions = customWriteExpressions;
@@ -97,6 +99,7 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 
 		this.containingTableExpression = containingTableExpression;
 		this.columnExpressions = columnExpressions;
+		this.formulas = formulas;
 		this.sqlAliasStem = sqlAliasStem;
 	}
 
@@ -137,6 +140,11 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 	@Override
 	public List<String> getMappedColumnExpressions() {
 		return columnExpressions;
+	}
+
+	@Override
+	public boolean[] getMappedColumnFormulas() {
+		return formulas;
 	}
 
 	@Override

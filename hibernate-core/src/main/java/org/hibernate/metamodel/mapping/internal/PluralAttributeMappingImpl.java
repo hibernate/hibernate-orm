@@ -24,6 +24,7 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.List;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.CollectionIdentifierDescriptor;
@@ -324,13 +325,26 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping
 				: associatedEntityDescriptor.findSubPart( entityType.getRHSUniqueKeyPropertyName() );
 
 		if ( fkTargetPart instanceof BasicValuedModelPart ) {
+			final boolean keyFormula;
+			final String keyColumnExpression;
+			Selectable selectable = fkBootDescriptorSource.getColumnIterator().next();
+			if ( selectable.isFormula() ) {
+				keyColumnExpression = selectable.getTemplate( dialect, creationProcess.getSqmFunctionRegistry() );
+				keyFormula = true;
+			}
+			else {
+				keyColumnExpression = selectable.getText( dialect );
+				keyFormula = false;
+			}
 			final BasicValuedModelPart basicFkTargetPart = (BasicValuedModelPart) fkTargetPart;
 			final Joinable collectionDescriptorAsJoinable = (Joinable) collectionDescriptor;
 			return new SimpleForeignKeyDescriptor(
 					collectionDescriptorAsJoinable.getTableName(),
-					fkBootDescriptorSource.getColumnIterator().next().getText( dialect ),
+					keyColumnExpression,
+					keyFormula,
 					basicFkTargetPart.getContainingTableExpression(),
 					basicFkTargetPart.getMappedColumnExpression(),
+					basicFkTargetPart.isMappedColumnExpressionFormula(),
 					basicFkTargetPart.getJdbcMapping()
 			);
 		}

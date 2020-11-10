@@ -8,13 +8,14 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.NaturalIdPostLoadListener;
 import org.hibernate.loader.NaturalIdPreLoadListener;
-import org.hibernate.loader.ast.internal.MultiNaturalIdLoaderImpl;
+import org.hibernate.loader.ast.internal.MultiNaturalIdLoaderStandard;
 import org.hibernate.loader.ast.internal.SimpleNaturalIdLoader;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
@@ -56,7 +57,30 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping {
 				declaringType,
 				creationProcess
 		);
-		this.multiLoader = new MultiNaturalIdLoaderImpl<>( declaringType, creationProcess );
+		this.multiLoader = new MultiNaturalIdLoaderStandard<>( declaringType, creationProcess );
+	}
+
+	@Override
+	public Object normalizeValue(Object incoming, SharedSessionContractImplementor session) {
+		return normalizeValue( incoming );
+	}
+
+	@SuppressWarnings( "rawtypes" )
+	public Object normalizeValue(Object naturalIdToLoad) {
+		if ( naturalIdToLoad instanceof Map ) {
+			final Map valueMap = (Map) naturalIdToLoad;
+			assert valueMap.size() == 1;
+			assert valueMap.containsKey( getAttribute().getAttributeName() );
+			return valueMap.get( getAttribute().getAttributeName() );
+		}
+
+		if ( naturalIdToLoad instanceof Object[] ) {
+			final Object[] values = (Object[]) naturalIdToLoad;
+			assert values.length == 1;
+			return values[0];
+		}
+
+		return naturalIdToLoad;
 	}
 
 	public SingularAttributeMapping getAttribute() {

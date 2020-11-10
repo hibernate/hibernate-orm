@@ -10,7 +10,7 @@ import java.util.List;
 
 import org.hibernate.CacheMode;
 import org.hibernate.LockOptions;
-import org.hibernate.SimpleNaturalIdMultiLoadAccess;
+import org.hibernate.NaturalIdMultiLoadAccess;
 import org.hibernate.engine.spi.EffectiveEntityGraph;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.graph.GraphSemantic;
@@ -22,7 +22,7 @@ import org.hibernate.persister.entity.EntityPersister;
 /**
  * @author Steve Ebersole
  */
-public class SimpleNaturalIdMultiLoadAccessImpl<T> implements SimpleNaturalIdMultiLoadAccess<T>, MultiNaturalIdLoadOptions {
+public class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAccess<T>, MultiNaturalIdLoadOptions {
 	private final EntityPersister entityDescriptor;
 	private final SessionImpl session;
 
@@ -36,51 +36,51 @@ public class SimpleNaturalIdMultiLoadAccessImpl<T> implements SimpleNaturalIdMul
 	private boolean returnOfDeletedEntitiesEnabled;
 	private boolean orderedReturnEnabled = true;
 
-	public SimpleNaturalIdMultiLoadAccessImpl(EntityPersister entityDescriptor, SessionImpl session) {
+	public NaturalIdMultiLoadAccessStandard(EntityPersister entityDescriptor, SessionImpl session) {
 		this.entityDescriptor = entityDescriptor;
 		this.session = session;
 	}
 
 	@Override
-	public SimpleNaturalIdMultiLoadAccess<T> with(LockOptions lockOptions) {
+	public NaturalIdMultiLoadAccess<T> with(LockOptions lockOptions) {
 		this.lockOptions = lockOptions;
 		return this;
 	}
 
 	@Override
-	public SimpleNaturalIdMultiLoadAccess<T> with(CacheMode cacheMode) {
+	public NaturalIdMultiLoadAccess<T> with(CacheMode cacheMode) {
 		this.cacheMode = cacheMode;
 		return this;
 	}
 
 	@Override
-	public SimpleNaturalIdMultiLoadAccess<T> with(RootGraph<T> graph, GraphSemantic semantic) {
+	public NaturalIdMultiLoadAccess<T> with(RootGraph<T> graph, GraphSemantic semantic) {
 		this.rootGraph = (RootGraphImplementor<T>) graph;
 		this.graphSemantic = semantic;
 		return this;
 	}
 
 	@Override
-	public SimpleNaturalIdMultiLoadAccess<T> withBatchSize(int batchSize) {
+	public NaturalIdMultiLoadAccess<T> withBatchSize(int batchSize) {
 		this.batchSize = batchSize;
 		return this;
 	}
 
 	@Override
-	public SimpleNaturalIdMultiLoadAccess<T> enableReturnOfDeletedEntities(boolean enabled) {
+	public NaturalIdMultiLoadAccess<T> enableReturnOfDeletedEntities(boolean enabled) {
 		returnOfDeletedEntitiesEnabled = enabled;
 		return this;
 	}
 
 	@Override
-	public SimpleNaturalIdMultiLoadAccess<T> enableOrderedReturn(boolean enabled) {
+	public NaturalIdMultiLoadAccess<T> enableOrderedReturn(boolean enabled) {
 		orderedReturnEnabled = enabled;
 		return this;
 	}
 
 	@Override
 	@SuppressWarnings( "unchecked" )
-	public <K> List<T> multiLoad(K... ids) {
+	public List<T> multiLoad(Object... ids) {
 		final CacheMode sessionCacheMode = session.getCacheMode();
 		boolean cacheModeChanged = false;
 
@@ -132,7 +132,7 @@ public class SimpleNaturalIdMultiLoadAccessImpl<T> implements SimpleNaturalIdMul
 	}
 
 	@Override
-	public <K> List<T> multiLoad(List<K> ids) {
+	public List<T> multiLoad(List<?> ids) {
 		return multiLoad( ids.toArray( new Object[ 0 ] ) );
 	}
 

@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
@@ -64,7 +63,7 @@ public class SimpleNaturalIdLoader<T> extends AbstractNaturalIdLoader<T> {
 			SharedSessionContractImplementor session) {
 		assert jdbcParameters.size() == 1;
 
-		final Object bindableValue = reduceNaturalId( naturalIdToLoad );
+		final Object bindableValue = naturalIdMapping().normalizeValue( naturalIdToLoad, session );
 
 		final SingularAttributeMapping attributeMapping = naturalIdMapping().getNaturalIdAttributes().get( 0 );
 		attributeMapping.visitJdbcValues(
@@ -83,25 +82,7 @@ public class SimpleNaturalIdLoader<T> extends AbstractNaturalIdLoader<T> {
 
 	@Override
 	protected Object resolveNaturalIdBindValue(Object naturalIdToLoad, SharedSessionContractImplementor session) {
-		return reduceNaturalId( naturalIdToLoad );
-	}
-
-	@SuppressWarnings( "rawtypes" )
-	private Object reduceNaturalId(Object naturalIdToLoad) {
-		if ( naturalIdToLoad instanceof Map ) {
-			final Map valueMap = (Map) naturalIdToLoad;
-			assert valueMap.size() == 1;
-			assert valueMap.containsKey( naturalIdMapping().getAttribute().getAttributeName() );
-			return valueMap.get( naturalIdMapping().getAttribute().getAttributeName() );
-		}
-
-		if ( naturalIdToLoad instanceof Object[] ) {
-			final Object[] values = (Object[]) naturalIdToLoad;
-			assert values.length == 1;
-			return values[0];
-		}
-
-		return naturalIdToLoad;
+		return naturalIdMapping().normalizeValue( naturalIdToLoad, session );
 	}
 
 	@Override
@@ -196,7 +177,7 @@ public class SimpleNaturalIdLoader<T> extends AbstractNaturalIdLoader<T> {
 	public Object resolveNaturalIdToId(
 			Object naturalIdValue,
 			SharedSessionContractImplementor session) {
-		final Object bindValue = reduceNaturalId( naturalIdValue );
+		final Object bindValue = naturalIdMapping().normalizeValue( naturalIdValue, session );
 
 		final SessionFactoryImplementor sessionFactory = session.getFactory();
 		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();

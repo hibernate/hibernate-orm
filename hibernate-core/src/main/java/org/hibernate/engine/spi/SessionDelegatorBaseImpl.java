@@ -39,7 +39,7 @@ import org.hibernate.Session;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SharedSessionBuilder;
 import org.hibernate.SimpleNaturalIdLoadAccess;
-import org.hibernate.SimpleNaturalIdMultiLoadAccess;
+import org.hibernate.NaturalIdMultiLoadAccess;
 import org.hibernate.Transaction;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.cache.spi.CacheTransactionSynchronization;
@@ -952,13 +952,13 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public <T> SimpleNaturalIdMultiLoadAccess<T> byMultipleSimpleNaturalId(Class<T> entityClass) {
-		return delegate.byMultipleSimpleNaturalId( entityClass );
+	public <T> NaturalIdMultiLoadAccess<T> byMultipleNaturalId(Class<T> entityClass) {
+		return delegate.byMultipleNaturalId( entityClass );
 	}
 
 	@Override
-	public <T> SimpleNaturalIdMultiLoadAccess<T> byMultipleSimpleNaturalId(String entityName) {
-		return delegate.byMultipleSimpleNaturalId( entityName );
+	public <T> NaturalIdMultiLoadAccess<T> byMultipleNaturalId(String entityName) {
+		return delegate.byMultipleNaturalId( entityName );
 	}
 
 	@Override

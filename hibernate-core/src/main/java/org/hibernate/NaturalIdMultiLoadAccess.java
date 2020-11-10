@@ -7,14 +7,17 @@
 package org.hibernate;
 
 import java.util.List;
+import java.util.Map;
+import java.util.function.Supplier;
 
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
+import org.hibernate.internal.util.collections.CollectionHelper;
 
 /**
  * Defines the ability to load multiple entities by simple natural-id simultaneously.
  */
-public interface SimpleNaturalIdMultiLoadAccess<T> {
+public interface NaturalIdMultiLoadAccess<T> {
 	/**
 	 * Specify the {@link LockOptions} to use when retrieving the entity.
 	 *
@@ -22,7 +25,7 @@ public interface SimpleNaturalIdMultiLoadAccess<T> {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	SimpleNaturalIdMultiLoadAccess<T> with(LockOptions lockOptions);
+	NaturalIdMultiLoadAccess<T> with(LockOptions lockOptions);
 
 	/**
 	 * Specify the {@link CacheMode} to use when retrieving the entity.
@@ -31,19 +34,19 @@ public interface SimpleNaturalIdMultiLoadAccess<T> {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	SimpleNaturalIdMultiLoadAccess<T> with(CacheMode cacheMode);
+	NaturalIdMultiLoadAccess<T> with(CacheMode cacheMode);
 
 	/**
 	 * Define a load graph to be used when retrieving the entity
 	 */
-	default SimpleNaturalIdMultiLoadAccess<T> with(RootGraph<T> graph) {
+	default NaturalIdMultiLoadAccess<T> with(RootGraph<T> graph) {
 		return with( graph, GraphSemantic.LOAD );
 	}
 
 	/**
 	 * Define a load or fetch graph to be used when retrieving the entity
 	 */
-	SimpleNaturalIdMultiLoadAccess<T> with(RootGraph<T> graph, GraphSemantic semantic);
+	NaturalIdMultiLoadAccess<T> with(RootGraph<T> graph, GraphSemantic semantic);
 
 	/**
 	 * Specify a batch size for loading the entities (how many at a time).  The default is
@@ -57,7 +60,7 @@ public interface SimpleNaturalIdMultiLoadAccess<T> {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	SimpleNaturalIdMultiLoadAccess<T> withBatchSize(int batchSize);
+	NaturalIdMultiLoadAccess<T> withBatchSize(int batchSize);
 
 	/**
 	 * Should the multi-load operation be allowed to return entities that are locally
@@ -71,7 +74,7 @@ public interface SimpleNaturalIdMultiLoadAccess<T> {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	SimpleNaturalIdMultiLoadAccess<T> enableReturnOfDeletedEntities(boolean enabled);
+	NaturalIdMultiLoadAccess<T> enableReturnOfDeletedEntities(boolean enabled);
 
 	/**
 	 * Should the return List be ordered and positional in relation to the
@@ -90,7 +93,7 @@ public interface SimpleNaturalIdMultiLoadAccess<T> {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	SimpleNaturalIdMultiLoadAccess<T> enableOrderedReturn(boolean enabled);
+	NaturalIdMultiLoadAccess<T> enableOrderedReturn(boolean enabled);
 
 	/**
 	 * Perform a load of multiple entities by natural-id.
@@ -98,12 +101,11 @@ public interface SimpleNaturalIdMultiLoadAccess<T> {
 	 * See {@link #enableOrderedReturn} and {@link #enableReturnOfDeletedEntities}
 	 * for options which effect the size and "shape" of the return list.
 	 *
-	 * @param <K> The natural-id type
-	 * @param ids The natural-ids to load
+	 * @param ids The natural-id values to load
 	 *
 	 * @return The managed entities.
 	 */
-	<K> List<T> multiLoad(K... ids);
+	List<T> multiLoad(Object... ids);
 
 	/**
 	 * Perform a load of multiple entities by natural-id.
@@ -111,11 +113,18 @@ public interface SimpleNaturalIdMultiLoadAccess<T> {
 	 * See {@link #enableOrderedReturn} and {@link #enableReturnOfDeletedEntities}
 	 * for options which effect the size and "shape" of the return list.
 	 *
-	 * @param ids The natural-id to load
-	 * @param <K> The identifier type
+	 * @param ids The natural-id values to load
 	 *
 	 * @return The managed entities.
 	 */
-	<K> List<T> multiLoad(List<K> ids);
+	List<T> multiLoad(List<?> ids);
 
+	/**
+	 * Helper for creating a Map that represents the value of a compound natural-id
+	 * for use in loading.  The passed array is expected to have an even number of elements
+	 * representing key, value pairs.  E.g.  `using( "system", "matrix", "username", "neo" )`
+	 */
+	static Map<String,?> compoundValue(Object... elements) {
+		return CollectionHelper.asMap( elements );
+	}
 }

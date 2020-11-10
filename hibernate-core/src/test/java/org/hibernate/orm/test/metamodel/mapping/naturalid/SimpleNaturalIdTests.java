@@ -13,7 +13,7 @@ import java.util.UUID;
 import javax.money.Monetary;
 
 import org.hibernate.SimpleNaturalIdLoadAccess;
-import org.hibernate.SimpleNaturalIdMultiLoadAccess;
+import org.hibernate.NaturalIdMultiLoadAccess;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.MappingMetamodel;
@@ -127,7 +127,7 @@ public class SimpleNaturalIdTests {
 	public void testMultiLoad(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final SimpleNaturalIdMultiLoadAccess<Product> loadAccess = session.byMultipleSimpleNaturalId( Product.class );
+					final NaturalIdMultiLoadAccess<Product> loadAccess = session.byMultipleNaturalId( Product.class );
 					loadAccess.enableOrderedReturn( false );
 					final List<Product> products = loadAccess.multiLoad( uuid );
 					assertThat( products.size(), is( 1 ) );

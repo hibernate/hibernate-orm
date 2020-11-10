@@ -8,6 +8,7 @@ package org.hibernate.metamodel.mapping;
 
 import java.util.List;
 
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
 
@@ -29,4 +30,6 @@ public interface NaturalIdMapping extends VirtualModelPart {
 
 	NaturalIdLoader getNaturalIdLoader();
 	MultiNaturalIdLoader getMultiNaturalIdLoader();
+
+	Object normalizeValue(Object incoming, SharedSessionContractImplementor session);
 }

@@ -8,6 +8,7 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -16,7 +17,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.NaturalIdPostLoadListener;
 import org.hibernate.loader.NaturalIdPreLoadListener;
 import org.hibernate.loader.ast.internal.CompoundNaturalIdLoader;
-import org.hibernate.loader.ast.internal.MultiNaturalIdLoaderImpl;
+import org.hibernate.loader.ast.internal.MultiNaturalIdLoaderStandard;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
 import org.hibernate.metamodel.mapping.ColumnConsumer;
@@ -68,7 +69,27 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 				declaringType,
 				creationProcess
 		);
-		multiLoader = new MultiNaturalIdLoaderImpl<>( declaringType, creationProcess );
+		multiLoader = new MultiNaturalIdLoaderStandard<>( declaringType, creationProcess );
+	}
+
+	@Override
+	@SuppressWarnings( "rawtypes" )
+	public Object normalizeValue(Object incoming, SharedSessionContractImplementor session) {
+		if ( incoming instanceof Object[] ) {
+			return incoming;
+		}
+
+		if ( incoming instanceof Map ) {
+			final Map valueMap = (Map) incoming;
+			final List<SingularAttributeMapping> attributes = getNaturalIdAttributes();
+			final Object[] values = new Object[ attributes.size() ];
+			for ( int i = 0; i < attributes.size(); i++ ) {
+				values[ i ] = valueMap.get( attributes.get( i ).getAttributeName() );
+			}
+			return values;
+		}
+
+		throw new UnsupportedOperationException( "Do not know how to normalize compound natural-id value : " + incoming );
 	}
 
 	@Override

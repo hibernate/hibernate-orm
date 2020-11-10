@@ -15,6 +15,7 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 import org.hibernate.NaturalIdLoadAccess;
+import org.hibernate.NaturalIdMultiLoadAccess;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
 import org.hibernate.mapping.PersistentClass;
@@ -177,6 +178,27 @@ public class CompoundNaturalIdTests {
 							.loadOptional();
 					assertThat( optionalAccount.isPresent(), is( true ) );
 					verifyEntity( optionalAccount.get() );
+				}
+		);
+	}
+
+	@Test
+	public void testMultiLoad(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final NaturalIdMultiLoadAccess<Account> loadAccess = session.byMultipleNaturalId( Account.class );
+					loadAccess.enableOrderedReturn( false );
+					final List<Account> accounts = loadAccess.multiLoad(
+							NaturalIdMultiLoadAccess.compoundValue( "system", "matrix", "username", "neo" ),
+							NaturalIdMultiLoadAccess.compoundValue( "system", "matrix", "username", "trinity" )
+					);
+					assertThat( accounts.size(), is( 2 ) );
+
+					final List<Account> byMap = loadAccess.multiLoad( VALUE_NAP );
+					assertThat( byMap.size(), is( 1 ) );
+
+					final List<Account> byArray = loadAccess.multiLoad( new Object[] { VALUE_ARRAY } );
+					assertThat( byArray.size(), is( 1 ) );
 				}
 		);
 	}

@@ -9,7 +9,6 @@ package org.hibernate.loader.ast.internal;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
@@ -18,7 +17,6 @@ import org.hibernate.LockOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.spi.BatchFetchQueue;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -26,7 +24,6 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
-import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.LoadEvent;
 import org.hibernate.event.spi.LoadEventListener;
@@ -34,14 +31,12 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.loader.ast.spi.MultiIdEntityLoader;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.loader.entity.CacheEntityLoaderHelper;
-import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
@@ -58,15 +53,15 @@ import org.jboss.logging.Logger;
 /**
  * @author Steve Ebersole
  */
-public class MultiIdEntityLoaderStandardImpl<T> implements MultiIdEntityLoader<T> {
-	private static final Logger log = Logger.getLogger( MultiIdEntityLoaderStandardImpl.class );
+public class MultiIdLoaderStandard<T> implements MultiIdEntityLoader<T> {
+	private static final Logger log = Logger.getLogger( MultiIdLoaderStandard.class );
 
 	private final EntityPersister entityDescriptor;
 	private final SessionFactoryImplementor sessionFactory;
 
 	private int idJdbcTypeCount = -1;
 
-	public MultiIdEntityLoaderStandardImpl(EntityPersister entityDescriptor, SessionFactoryImplementor sessionFactory) {
+	public MultiIdLoaderStandard(EntityPersister entityDescriptor, SessionFactoryImplementor sessionFactory) {
 		this.entityDescriptor = entityDescriptor;
 		this.sessionFactory = sessionFactory;
 	}
@@ -335,34 +330,6 @@ public class MultiIdEntityLoaderStandardImpl<T> implements MultiIdEntityLoader<T
 				RowTransformerPassThruImpl.instance(),
 				true
 		);
-	}
-
-	private static class LoadingEntityCollector {
-		private final SubselectFetch subselectFetch;
-		private final BatchFetchQueue batchFetchQueue;
-
-		LoadingEntityCollector(
-				EntityValuedModelPart loadingEntityDescriptor,
-				QuerySpec loadingSqlAst,
-				List<JdbcParameter> jdbcParameters,
-				JdbcParameterBindings jdbcParameterBindings,
-				BatchFetchQueue batchFetchQueue) {
-			this.batchFetchQueue = batchFetchQueue;
-			this.subselectFetch = new SubselectFetch(
-					loadingEntityDescriptor,
-					loadingSqlAst,
-					loadingSqlAst.getFromClause().getRoots().get( 0 ),
-					jdbcParameters,
-					jdbcParameterBindings,
-					new HashSet<>()
-			);
-
-		}
-
-		void collectLoadingEntityKey(EntityKey entityKey) {
-			subselectFetch.getResultingEntityKeys().add( entityKey );
-			batchFetchQueue.addSubselect( entityKey, subselectFetch );
-		}
 	}
 
 	private List<T> performUnorderedMultiLoad(

@@ -56,7 +56,7 @@ import org.hibernate.SessionEventListener;
 import org.hibernate.SessionException;
 import org.hibernate.SharedSessionBuilder;
 import org.hibernate.SimpleNaturalIdLoadAccess;
-import org.hibernate.SimpleNaturalIdMultiLoadAccess;
+import org.hibernate.NaturalIdMultiLoadAccess;
 import org.hibernate.Transaction;
 import org.hibernate.TransientObjectException;
 import org.hibernate.TypeMismatchException;
@@ -1147,13 +1147,13 @@ public class SessionImpl
 	}
 
 	@Override
-	public <T> SimpleNaturalIdMultiLoadAccess<T> byMultipleSimpleNaturalId(Class<T> entityClass) {
-		return new SimpleNaturalIdMultiLoadAccessImpl<>( requireEntityPersister( entityClass ), this );
+	public <T> NaturalIdMultiLoadAccess<T> byMultipleNaturalId(Class<T> entityClass) {
+		return new NaturalIdMultiLoadAccessStandard<>( requireEntityPersister( entityClass ), this );
 	}
 
 	@Override
-	public <T> SimpleNaturalIdMultiLoadAccess<T> byMultipleSimpleNaturalId(String entityName) {
-		return new SimpleNaturalIdMultiLoadAccessImpl<>( requireEntityPersister( entityName ), this );
+	public <T> NaturalIdMultiLoadAccess<T> byMultipleNaturalId(String entityName) {
+		return new NaturalIdMultiLoadAccessStandard<>( requireEntityPersister( entityName ), this );
 	}
 
 	private void fireLoad(LoadEvent event, LoadType loadType) {

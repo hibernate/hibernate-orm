@@ -110,8 +110,7 @@ import org.hibernate.internal.util.collections.LockModeEnumMap;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
 import org.hibernate.jdbc.TooManyRowsAffectedException;
-import org.hibernate.loader.ast.internal.MultiIdEntityLoaderStandardImpl;
-import org.hibernate.loader.ast.internal.SimpleNaturalIdLoader;
+import org.hibernate.loader.ast.internal.MultiIdLoaderStandard;
 import org.hibernate.loader.ast.internal.Preparable;
 import org.hibernate.loader.ast.internal.SingleIdEntityLoaderDynamicBatch;
 import org.hibernate.loader.ast.internal.SingleIdEntityLoaderProvidedQueryImpl;
@@ -749,7 +748,7 @@ public abstract class AbstractEntityPersister
 		//  		to load at once.  i.e. it limits the number of the generated IN-list JDBC-parameters in a given
 		//  		PreparedStatement, opting to split the load into multiple JDBC operations to work around database
 		//			limits on number of parameters, number of IN-list values, etc
-		multiIdEntityLoader = new MultiIdEntityLoaderStandardImpl( this, factory );
+		multiIdEntityLoader = new MultiIdLoaderStandard( this, factory );
 
 		Iterator iter = bootDescriptor.getIdentifier().getColumnIterator();
 		int i = 0;

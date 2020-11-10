@@ -362,12 +362,27 @@ public final class CollectionHelper {
 		}
 	}
 
-	public static void collectMapEntries(BiConsumer<String, Object> mapEntryConsumer, Object[] mappings) {
+	@SuppressWarnings( "unchecked" )
+	public static <K,V> void collectMapEntries(BiConsumer<K, V> mapEntryConsumer, Object[] mappings) {
 		// even numbered
 		assert mappings.length %2 == 0;
 
 		for ( int i = 0; i < mappings.length; i += 2 ) {
-			mapEntryConsumer.accept( (String) mappings[i], mappings[i+1] );
+			mapEntryConsumer.accept( (K) mappings[i], (V) mappings[i+1] );
 		}
+	}
+
+	@SuppressWarnings( "unchecked" )
+	public static <K,S> Map<K, S> asMap(Object[] elements) {
+		assert elements != null;
+		assert elements.length % 2 == 0;
+
+		final HashMap<K,S> map = new HashMap<>();
+		collectMapEntries( map::put, elements );
+		for ( int i = 0; i < elements.length; i += 2 ) {
+			map.put( (K) elements[ i ], (S) elements[ i+1 ] );
+		}
+
+		return map;
 	}
 }

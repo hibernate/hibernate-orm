@@ -872,8 +872,15 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	 */
 	<T> SimpleNaturalIdLoadAccess<T> bySimpleNaturalId(Class<T> entityClass);
 
-	<T> SimpleNaturalIdMultiLoadAccess<T> byMultipleSimpleNaturalId(Class<T> entityClass);
-	<T> SimpleNaturalIdMultiLoadAccess<T> byMultipleSimpleNaturalId(String entityName);
+	/**
+	 * Access to load multiple entities by natural-id
+	 */
+	<T> NaturalIdMultiLoadAccess<T> byMultipleNaturalId(Class<T> entityClass);
+
+	/**
+	 * Access to load multiple entities by natural-id
+	 */
+	<T> NaturalIdMultiLoadAccess<T> byMultipleNaturalId(String entityName);
 
 	/**
 	 * Enable the named filter for this current session.

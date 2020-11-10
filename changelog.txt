@@ -8,8 +8,6 @@ Changes in 5.3.19.Final (November 10th, 2020)
 
 https://hibernate.atlassian.net/projects/HHH/versions/31874/tab/release-report-all-issues
 
-Release notes - Hibernate ORM - Version 5.3.19
-
 ** Bug
     * [HHH-13310] - getParameterValue() not working for collections
     * [HHH-14275] - Broken link to Infinispan User Guide in Hibernate 5.3 User Guide

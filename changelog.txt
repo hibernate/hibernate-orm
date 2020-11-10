@@ -3,6 +3,24 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.3.19.Final (November 10th, 2020)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31874/tab/release-report-all-issues
+
+Release notes - Hibernate ORM - Version 5.3.19
+
+** Bug
+    * [HHH-13310] - getParameterValue() not working for collections
+    * [HHH-14275] - Broken link to Infinispan User Guide in Hibernate 5.3 User Guide
+
+** Task
+    * [HHH-14309] - Improve `BulkOperationCleanupAction#affectedEntity`
+
+** Sub-task
+    * [HHH-14196] - Add parsing of persistence.xml/orm.xml documents in the EE 9 namespace
+
+
 Changes in 5.3.18.Final (August 5th, 2020)
 ------------------------------------------------------------------------------------------------------------------------
 

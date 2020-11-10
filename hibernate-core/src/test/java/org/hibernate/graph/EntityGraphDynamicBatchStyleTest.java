@@ -21,13 +21,14 @@ import org.hibernate.testing.TestForIssue;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.hamcrest.CoreMatchers;
+
 import static javax.persistence.CascadeType.MERGE;
 import static javax.persistence.CascadeType.PERSIST;
 import static javax.persistence.CascadeType.REMOVE;
-import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hibernate.loader.BatchFetchStyle.PADDED;
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import static org.hibernate.testing.transaction.TransactionUtil2.inTransaction;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -35,7 +36,7 @@ import static org.junit.Assert.assertTrue;
  * @author Nathan Xu
  */
 @TestForIssue( jiraKey = "HHH-14312" )
-public class EntityGraphPaddedBatchStyleTest extends BaseEntityManagerFunctionalTestCase {
+public class EntityGraphDynamicBatchStyleTest extends BaseEntityManagerFunctionalTestCase {
 	private static final int BATCH_SIZE = 5;
 	private static final int NUM_OF_LOCATIONS = (BATCH_SIZE * 2) + 1;
 
@@ -49,14 +50,14 @@ public class EntityGraphPaddedBatchStyleTest extends BaseEntityManagerFunctional
 
 	@Override
 	protected void addConfigOptions(Map options) {
-		options.put( AvailableSettings.BATCH_FETCH_STYLE, PADDED );
-		options.put( AvailableSettings.DEFAULT_BATCH_FETCH_SIZE, BATCH_SIZE );
+		options.put( AvailableSettings.BATCH_FETCH_STYLE, BatchFetchStyle.DYNAMIC );
+		options.put( AvailableSettings.DEFAULT_BATCH_FETCH_SIZE, BATCH_SIZE);
 	}
 
 	@Before
 	public void setUp() {
-		doInJPA(
-				this::entityManagerFactory,
+		inTransaction(
+				entityManagerFactory(),
 				entityManager -> {
 					final Fruit fruit = new Fruit( 1, "Goji" );
 
@@ -73,8 +74,8 @@ public class EntityGraphPaddedBatchStyleTest extends BaseEntityManagerFunctional
 
 	@Test
 	public void testEntityGraphSemantic() {
-		doInJPA(
-				this::entityManagerFactory,
+		inTransaction(
+				entityManagerFactory(),
 				entityManager -> {
 					final Map<String, Object> hints = Collections.singletonMap(
 							GraphSemantic.FETCH.getJpaHintName(),
@@ -97,6 +98,7 @@ public class EntityGraphPaddedBatchStyleTest extends BaseEntityManagerFunctional
 	@Entity(name = "Fruit")
 	@Table(name = "Fruit")
 	static class Fruit {
+
 		@Id
 		Integer id;
 

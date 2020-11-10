@@ -92,11 +92,6 @@ public class CompoundNaturalIdLoader<T> extends AbstractNaturalIdLoader<T> {
 	}
 
 	@Override
-	public Object resolveIdToNaturalId(Object id, SharedSessionContractImplementor session) {
-		return null;
-	}
-
-	@Override
 	protected boolean isSimple() {
 		return false;
 	}

@@ -39,9 +39,9 @@ import static org.hamcrest.Matchers.notNullValue;
 /**
  * Tests for composite (multiple attributes) natural-ids
  */
-@DomainModel( annotatedClasses = CompositeNaturalIdTests.Account.class )
+@DomainModel( annotatedClasses = CompoundNaturalIdTests.Account.class )
 @SessionFactory
-public class CompositeNaturalIdTests {
+public class CompoundNaturalIdTests {
 	public static final Object[] VALUE_ARRAY = new Object[] { "matrix", "neo" };
 	public static final Map<String,String> VALUE_NAP = toMap( "system", "matrix", "username", "neo" );
 
@@ -60,8 +60,8 @@ public class CompositeNaturalIdTests {
 	public void prepareTestData(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.persist( new Account( 1, "neo", "matrix" ) );
-					session.persist( new Account( 2, "trinity", "matrix" ) );
+					session.persist( new Account( 1, "neo", "matrix", "neo@nebuchadnezzar.zion.net" ) );
+					session.persist( new Account( 2, "trinity", "matrix", "trin@nebuchadnezzar.zion.net" ) );
 				}
 		);
 	}

@@ -9,10 +9,10 @@ package org.hibernate.loader.ast;
 import org.jboss.logging.Logger;
 
 /**
- * @author Steve Ebersole
+ * Logging for loaders
  */
 public interface LoaderLogging {
-	String LOGGER_NAME = "";
+	String LOGGER_NAME = "org.hibernate.orm.loader";
 
 	Logger LOADER_LOGGER = Logger.getLogger( LOGGER_NAME );
 

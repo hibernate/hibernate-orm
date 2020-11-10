@@ -275,6 +275,14 @@ Please report your mapping that causes the problem to us so we can examine the d
 +
 The default value is `false` which means Hibernate will use an algorithm to determine if the insert can be delayed or if the insert should be performed immediately.
 
+`*hibernate.id.sequence.increment_size_mismatch_strategy*` (e.g. `LOG`, `FIX` or `EXCEPTION` (default value))::
+This setting defines the `org.hibernate.id.SequenceMismatchStrategy` used when
+Hibernate detects a mismatch between a sequence configuration in an entity mapping
+and its database sequence object counterpart.
++
+The default value is given by the `org.hibernate.id.SequenceMismatchStrategy#EXCEPTION`,
+meaning that an Exception is thrown when detecting such a conflict.
+
 ==== Quoting options
 
 `*hibernate.globally_quoted_identifiers*` (e.g. `true` or `false` (default value))::
@@ -510,6 +518,30 @@ The default value is `org.hibernate.query.criteria.LiteralHandlingMode#AUTO`.
 Raises an exception when in-memory pagination over collection fetch is about to be performed.
 +
 Disabled by default. Set to true to enable.
+
+`*hibernate.query.immutable_entity_update_query_handling_mode*` (e.g. `EXCEPTION` or `WARNING` (default value))::
+Defines how `Immutable` entities are handled when executing a bulk update query.
++
+By default, the (`ImmutableEntityUpdateQueryHandlingMode#WARNING`) mode is used, meaning that
+a warning log message is issued when an `@Immutable` entity is to be updated via a bulk update statement.
++
+If the (`ImmutableEntityUpdateQueryHandlingMode#EXCEPTION`) mode is used, then a `HibernateException` is thrown instead.
+
+`*hibernate.query.in_clause_parameter_padding*` (e.g. `true` or `false` (default value))::
+By default, the IN clause expands to include all bind parameter values.
++
+However, for database systems supporting execution plan caching,
+there's a better chance of hitting the cache if the number of possible IN clause parameters lowers.
++
+For this reason, we can expand the bind parameters to power-of-two: 4, 8, 16, 32, 64.
+This way, an IN clause with 5, 6, or 7 bind parameters will use the 8 IN clause,
+therefore reusing its execution plan.
+
+`*hibernate.query.omit_join_of_superclass_tables*` (e.g. `false` or `true` (default value))::
+When you use `javax.persistence.InheritanceType#JOINED` strategy for inheritance mapping and query
+a value from an entity, all superclass tables are joined in the query regardless you need them.
++
+With this setting set to true only superclass tables which are really needed are joined.
 
 ==== Multi-table bulk HQL operations
 

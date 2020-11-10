@@ -143,7 +143,7 @@ public class UpdateDetachedTest extends BaseCoreFunctionalTestCase{
 	@Test
 	@TestForIssue(jiraKey = "HHH-14319")
 	public void testUpdateDetachedWithAttachedPersistentSet() {
-		final Bar bar = new Bar( 4, "Bar" );
+		final Bar bar = new Bar( 5, "Bar" );
 		final Set<Comment> comments = new HashSet<>();
 		comments.add( new Comment( "abc", "me" ) );
 		bar.comments = comments;

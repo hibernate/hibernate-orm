@@ -14,7 +14,9 @@ import org.hibernate.loader.entity.UniqueEntityLoader;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 
 /**
- * @author Steve Ebersole
+ * A walking/plan based BatchingEntityLoaderBuilder that builds entity-loader instances
+ * building its batch-fetch SQL based on padding - using a set number of parameters, but
+ * setting "unneeded ones" to null.
  */
 public class PaddedBatchingEntityLoaderBuilder extends AbstractBatchingEntityLoaderBuilder {
 	/**

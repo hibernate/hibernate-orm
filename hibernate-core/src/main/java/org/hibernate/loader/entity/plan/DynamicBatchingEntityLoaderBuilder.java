@@ -14,7 +14,9 @@ import org.hibernate.loader.entity.UniqueEntityLoader;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 
 /**
- * @author Steve Ebersole
+ * A walking/plan based BatchingEntityLoaderBuilder that builds entity-loader instances
+ * capable of dynamically building its batch-fetch SQL based on the actual number of
+ * entity ids waiting to be batch fetched.
  */
 public class DynamicBatchingEntityLoaderBuilder extends AbstractBatchingEntityLoaderBuilder {
 	/**

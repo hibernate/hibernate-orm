@@ -21,7 +21,7 @@ import org.hibernate.pretty.MessageHelper;
 import org.jboss.logging.Logger;
 
 /**
- * @author Steve Ebersole
+ * Batching entity loader using dynamic where-clause
  */
 public class DynamicBatchingEntityLoader extends BatchingEntityLoader {
 	private static final Logger log = Logger.getLogger( DynamicBatchingEntityLoader.class );

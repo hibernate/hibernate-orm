@@ -20,7 +20,7 @@ import org.hibernate.loader.entity.UniqueEntityLoader;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 
 /**
- * @author Steve Ebersole
+ * Batching entity loader using padded where-clause
  */
 public class PaddedBatchingEntityLoader extends BatchingEntityLoader {
 	private final int[] batchSizes;

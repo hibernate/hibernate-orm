@@ -16,6 +16,7 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.loader.entity.UniqueEntityLoader;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 
 /**
@@ -60,6 +61,11 @@ public class PaddedBatchingEntityLoader extends BatchingEntityLoader {
 	}
 
 	@Override
+	public Object load(Serializable id, Object optionalObject, SharedSessionContractImplementor session) {
+		return load( id, optionalObject, session, LockOptions.NONE, null );
+	}
+
+	@Override
 	public Object load(
 			Serializable id,
 			Object optionalObject,
@@ -75,6 +81,16 @@ public class PaddedBatchingEntityLoader extends BatchingEntityLoader {
 				.getEntityBatch( persister(), id, batchSizes[0], persister().getEntityMode() );
 
 		final int numberOfIds = ArrayHelper.countNonNull( batch );
+
+		if ( numberOfIds <= 1 ) {
+			final Object result =  ( (UniqueEntityLoader) loaders[batchSizes.length-1] ).load( id, optionalObject, session, lockOptions );
+			if ( result == null ) {
+				// There was no entity with the specified ID. Make sure the EntityKey does not remain
+				// in the batch to avoid including it in future batches that get executed.
+				BatchFetchQueueHelper.removeBatchLoadableEntityKey( id, persister(), session );
+			}
+			return result;
+		}
 
 		// Uses the first batch-size bigger than the number of actual ids in the batch
 		int indexToUse = batchSizes.length-1;
@@ -93,7 +109,7 @@ public class PaddedBatchingEntityLoader extends BatchingEntityLoader {
 			idsToLoad[i] = id;
 		}
 
-		final List results = loaders[indexToUse].loadEntityBatch(
+		final List<?> results = loaders[indexToUse].loadEntityBatch(
 				session,
 				idsToLoad,
 				persister().getIdentifierType(),

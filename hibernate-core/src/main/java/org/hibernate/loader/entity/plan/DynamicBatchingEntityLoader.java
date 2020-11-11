@@ -12,7 +12,6 @@ import java.util.List;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.internal.BatchFetchQueueHelper;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
@@ -69,11 +68,8 @@ public class DynamicBatchingEntityLoader extends BatchingEntityLoader {
 		}
 
 		final EntityLoader dynamicLoader = entityLoaderBuilder.withBatchSize( idsToLoad.length ).byPrimaryKey();
-		final QueryParameters qp = buildQueryParameters( id, idsToLoad, optionalObject, lockOptions );
 
-
-
-		final List results = dynamicLoader.loadEntityBatch(
+		final List<?> results = dynamicLoader.loadEntityBatch(
 				session,
 				idsToLoad,
 				persister().getIdentifierType(),

@@ -27,9 +27,7 @@ import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import javax.persistence.CacheRetrieveMode;
@@ -106,6 +104,7 @@ import static org.hibernate.jpa.QueryHints.HINT_FETCH_SIZE;
 import static org.hibernate.jpa.QueryHints.HINT_FLUSH_MODE;
 import static org.hibernate.jpa.QueryHints.HINT_FOLLOW_ON_LOCKING;
 import static org.hibernate.jpa.QueryHints.HINT_LOADGRAPH;
+import static org.hibernate.jpa.QueryHints.HINT_NATIVE_SPACES;
 import static org.hibernate.jpa.QueryHints.HINT_READONLY;
 import static org.hibernate.jpa.QueryHints.HINT_TIMEOUT;
 import static org.hibernate.jpa.QueryHints.SPEC_HINT_TIMEOUT;
@@ -1110,6 +1109,9 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 				final CacheStoreMode storeMode = value != null ? CacheStoreMode.valueOf( value.toString() ) : null;
 				applied = applyJpaCacheStoreMode( storeMode );
 			}
+			else if ( HINT_NATIVE_SPACES.equals( hintName ) ) {
+				applied = applyQuerySpaces( value );
+			}
 			else if ( QueryHints.HINT_NATIVE_LOCKMODE.equals( hintName ) ) {
 				applied = applyNativeQueryLockMode( value );
 			}
@@ -1160,6 +1162,12 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		}
 
 		return this;
+	}
+
+	protected boolean applyQuerySpaces(Object value) {
+		throw new IllegalStateException(
+				"Illegal attempt to apply native-query spaces to a non-native query"
+		);
 	}
 
 	protected void handleUnrecognizedHint(String hintName, Object value) {

@@ -48,11 +48,15 @@ public abstract class QueryBinder {
 			NamedQuery queryAnn,
 			MetadataBuildingContext context,
 			boolean isDefault) {
-		if ( queryAnn == null ) return;
+		if ( queryAnn == null ) {
+			return;
+		}
+
 		if ( BinderHelper.isEmptyAnnotationValue( queryAnn.name() ) ) {
 			throw new AnnotationException( "A named query must have a name when used in class or package level" );
 		}
-		//EJBQL Query
+
+		// JPA-QL Query
 		QueryHintDefinition hints = new QueryHintDefinition( queryAnn.hints() );
 		String queryName = queryAnn.query();
 		NamedQueryDefinition queryDefinition = new NamedQueryDefinitionBuilder( queryAnn.name() )
@@ -114,14 +118,17 @@ public abstract class QueryBinder {
 
 		if ( !BinderHelper.isEmptyAnnotationValue( resultSetMapping ) ) {
 			//sql result set usage
-			builder.setResultSetRef( resultSetMapping )
-					.createNamedQueryDefinition();
+			builder.setResultSetRef( resultSetMapping ).createNamedQueryDefinition();
 		}
 		else if ( !void.class.equals( queryAnn.resultClass() ) ) {
 			//class mapping usage
 			//FIXME should be done in a second pass due to entity name?
-			final NativeSQLQueryRootReturn entityQueryReturn =
-					new NativeSQLQueryRootReturn( "alias1", queryAnn.resultClass().getName(), new HashMap(), LockMode.READ );
+			final NativeSQLQueryRootReturn entityQueryReturn = new NativeSQLQueryRootReturn(
+					"alias1",
+					queryAnn.resultClass().getName(),
+					new HashMap(),
+					LockMode.READ
+			);
 			builder.setQueryReturns( new NativeSQLQueryReturn[] {entityQueryReturn} );
 		}
 		else {
@@ -153,59 +160,50 @@ public abstract class QueryBinder {
 			throw new AnnotationException( "A named query must have a name when used in class or package level" );
 		}
 
-		NamedSQLQueryDefinition query;
-		String resultSetMapping = queryAnn.resultSetMapping();
+		final String resultSetMapping = queryAnn.resultSetMapping();
+
+		final NamedSQLQueryDefinitionBuilder builder = new NamedSQLQueryDefinitionBuilder()
+				.setName( queryAnn.name() )
+				.setQuery( queryAnn.query() )
+				.setCacheable( queryAnn.cacheable() )
+				.setCacheRegion(
+						BinderHelper.isEmptyAnnotationValue( queryAnn.cacheRegion() )
+								? null
+								: queryAnn.cacheRegion()
+				)
+				.setTimeout( queryAnn.timeout() < 0 ? null : queryAnn.timeout() )
+				.setFetchSize( queryAnn.fetchSize() < 0 ? null : queryAnn.fetchSize() )
+				.setFlushMode( getFlushMode( queryAnn.flushMode() ) )
+				.setCacheMode( getCacheMode( queryAnn.cacheMode() ) )
+				.setReadOnly( queryAnn.readOnly() )
+				.setComment( BinderHelper.isEmptyAnnotationValue( queryAnn.comment() ) ? null : queryAnn.comment() )
+				.setParameterTypes( null )
+				.setCallable( queryAnn.callable() );
+
+
 		if ( !BinderHelper.isEmptyAnnotationValue( resultSetMapping ) ) {
 			//sql result set usage
-			query = new NamedSQLQueryDefinitionBuilder().setName( queryAnn.name() )
-					.setQuery( queryAnn.query() )
-					.setResultSetRef( resultSetMapping )
-					.setQuerySpaces( null )
-					.setCacheable( queryAnn.cacheable() )
-					.setCacheRegion(
-							BinderHelper.isEmptyAnnotationValue( queryAnn.cacheRegion() ) ?
-									null :
-									queryAnn.cacheRegion()
-					)
-					.setTimeout( queryAnn.timeout() < 0 ? null : queryAnn.timeout() )
-					.setFetchSize( queryAnn.fetchSize() < 0 ? null : queryAnn.fetchSize() )
-					.setFlushMode( getFlushMode( queryAnn.flushMode() ) )
-					.setCacheMode( getCacheMode( queryAnn.cacheMode() ) )
-					.setReadOnly( queryAnn.readOnly() )
-					.setComment( BinderHelper.isEmptyAnnotationValue( queryAnn.comment() ) ? null : queryAnn.comment() )
-					.setParameterTypes( null )
-					.setCallable( queryAnn.callable() )
-					.createNamedQueryDefinition();
+			builder.setResultSetRef( resultSetMapping );
 		}
-		else if ( !void.class.equals( queryAnn.resultClass() ) ) {
+		else if ( ! void.class.equals( queryAnn.resultClass() ) ) {
 			//class mapping usage
 			//FIXME should be done in a second pass due to entity name?
-			final NativeSQLQueryRootReturn entityQueryReturn =
-					new NativeSQLQueryRootReturn( "alias1", queryAnn.resultClass().getName(), new HashMap(), LockMode.READ );
-			query = new NamedSQLQueryDefinitionBuilder().setName( queryAnn.name() )
-					.setQuery( queryAnn.query() )
-					.setQueryReturns( new NativeSQLQueryReturn[] {entityQueryReturn} )
-					.setQuerySpaces( null )
-					.setCacheable( queryAnn.cacheable() )
-					.setCacheRegion(
-							BinderHelper.isEmptyAnnotationValue( queryAnn.cacheRegion() ) ?
-									null :
-									queryAnn.cacheRegion()
-					)
-					.setTimeout( queryAnn.timeout() < 0 ? null : queryAnn.timeout() )
-					.setFetchSize( queryAnn.fetchSize() < 0 ? null : queryAnn.fetchSize() )
-					.setFlushMode( getFlushMode( queryAnn.flushMode() ) )
-					.setCacheMode( getCacheMode( queryAnn.cacheMode() ) )
-					.setReadOnly( queryAnn.readOnly() )
-					.setComment( BinderHelper.isEmptyAnnotationValue( queryAnn.comment() ) ? null : queryAnn.comment() )
-					.setParameterTypes( null )
-					.setCallable( queryAnn.callable() )
-					.createNamedQueryDefinition();
+			final NativeSQLQueryRootReturn entityQueryReturn = new NativeSQLQueryRootReturn(
+					"alias1",
+					queryAnn.resultClass().getName(),
+					new HashMap(),
+					LockMode.READ
+			);
+			builder.setQueryReturns( new NativeSQLQueryReturn[] {entityQueryReturn} );
 		}
 		else {
-			throw new NotYetImplementedException( "Pure native scalar queries are not yet supported" );
+			LOG.debugf( "Raw scalar native-query (no explicit result mappings) found : %s", queryAnn.name()  );
 		}
+
+		final NamedSQLQueryDefinition query = builder.createNamedQueryDefinition();
+
 		context.getMetadataCollector().addNamedNativeQuery( query );
+
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf( "Binding named native query: %s => %s", query.getName(), queryAnn.query() );
 		}

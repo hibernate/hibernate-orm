@@ -364,59 +364,67 @@ public final class AnnotationBinder {
 		context.getMetadataCollector().addIdentifierGenerator( buildIdGenerator( def, context ) );
 	}
 
-	private static void bindQueries(XAnnotatedElement annotatedElement, MetadataBuildingContext context) {
-		{
-			SqlResultSetMapping ann = annotatedElement.getAnnotation( SqlResultSetMapping.class );
-			QueryBinder.bindSqlResultSetMapping( ann, context, false );
-		}
-		{
-			SqlResultSetMappings ann = annotatedElement.getAnnotation( SqlResultSetMappings.class );
-			if ( ann != null ) {
-				for ( SqlResultSetMapping current : ann.value() ) {
-					QueryBinder.bindSqlResultSetMapping( current, context, false );
-				}
+	private static void bindNamedJpaQueries(XAnnotatedElement annotatedElement, MetadataBuildingContext context) {
+		QueryBinder.bindSqlResultSetMapping(
+				annotatedElement.getAnnotation( SqlResultSetMapping.class ),
+				context,
+				false
+		);
+
+		final SqlResultSetMappings ann = annotatedElement.getAnnotation( SqlResultSetMappings.class );
+		if ( ann != null ) {
+			for ( SqlResultSetMapping current : ann.value() ) {
+				QueryBinder.bindSqlResultSetMapping( current, context, false );
 			}
 		}
-		{
-			NamedQuery ann = annotatedElement.getAnnotation( NamedQuery.class );
-			QueryBinder.bindQuery( ann, context, false );
-		}
-		{
-			org.hibernate.annotations.NamedQuery ann = annotatedElement.getAnnotation(
-					org.hibernate.annotations.NamedQuery.class
-			);
-			QueryBinder.bindQuery( ann, context );
-		}
-		{
-			NamedQueries ann = annotatedElement.getAnnotation( NamedQueries.class );
-			QueryBinder.bindQueries( ann, context, false );
-		}
-		{
-			org.hibernate.annotations.NamedQueries ann = annotatedElement.getAnnotation(
-					org.hibernate.annotations.NamedQueries.class
-			);
-			QueryBinder.bindQueries( ann, context );
-		}
-		{
-			NamedNativeQuery ann = annotatedElement.getAnnotation( NamedNativeQuery.class );
-			QueryBinder.bindNativeQuery( ann, context, false );
-		}
-		{
-			org.hibernate.annotations.NamedNativeQuery ann = annotatedElement.getAnnotation(
-					org.hibernate.annotations.NamedNativeQuery.class
-			);
-			QueryBinder.bindNativeQuery( ann, context );
-		}
-		{
-			NamedNativeQueries ann = annotatedElement.getAnnotation( NamedNativeQueries.class );
-			QueryBinder.bindNativeQueries( ann, context, false );
-		}
-		{
-			org.hibernate.annotations.NamedNativeQueries ann = annotatedElement.getAnnotation(
-					org.hibernate.annotations.NamedNativeQueries.class
-			);
-			QueryBinder.bindNativeQueries( ann, context );
-		}
+
+		QueryBinder.bindQuery(
+				annotatedElement.getAnnotation( NamedQuery.class ),
+				context,
+				false
+		);
+
+		QueryBinder.bindQueries(
+				annotatedElement.getAnnotation( NamedQueries.class ),
+				context,
+				false
+		);
+
+		QueryBinder.bindNativeQuery(
+				annotatedElement.getAnnotation( NamedNativeQuery.class ),
+				context,
+				false
+		);
+
+		QueryBinder.bindNativeQueries(
+				annotatedElement.getAnnotation( NamedNativeQueries.class ),
+				context,
+				false
+		);
+	}
+
+	private static void bindQueries(XAnnotatedElement annotatedElement, MetadataBuildingContext context) {
+		bindNamedJpaQueries( annotatedElement, context );
+
+		QueryBinder.bindQuery(
+				annotatedElement.getAnnotation( org.hibernate.annotations.NamedQuery.class ),
+				context
+		);
+
+		QueryBinder.bindQueries(
+				annotatedElement.getAnnotation( org.hibernate.annotations.NamedQueries.class ),
+				context
+		);
+
+		QueryBinder.bindNativeQuery(
+				annotatedElement.getAnnotation( org.hibernate.annotations.NamedNativeQuery.class ),
+				context
+		);
+
+		QueryBinder.bindNativeQueries(
+				annotatedElement.getAnnotation( org.hibernate.annotations.NamedNativeQueries.class ),
+				context
+		);
 
 		// NamedStoredProcedureQuery handling ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		bindNamedStoredProcedureQuery(

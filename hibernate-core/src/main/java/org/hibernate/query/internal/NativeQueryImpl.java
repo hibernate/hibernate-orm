@@ -19,6 +19,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.StringTokenizer;
 import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
 import javax.persistence.Parameter;
@@ -32,6 +33,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollMode;
+import org.hibernate.SynchronizeableQuery;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.query.spi.EntityGraphQueryHint;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryConstructorReturn;
@@ -438,12 +440,18 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 		return this;
 	}
 
+	@Override
+	public SynchronizeableQuery<T> addSynchronizedQuerySpace(String... querySpaces) {
+		addQuerySpaces( querySpaces );
+		return this;
+	}
+
 	protected void addQuerySpaces(String... spaces) {
 		if ( spaces != null ) {
 			if ( querySpaces == null ) {
 				querySpaces = new ArrayList<>();
 			}
-			querySpaces.addAll( Arrays.asList( (String[]) spaces ) );
+			querySpaces.addAll( Arrays.asList( spaces ) );
 		}
 	}
 
@@ -554,6 +562,33 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 	public NativeQueryImplementor<T> addQueryHint(String hint) {
 		super.addQueryHint( hint );
 		return this;
+	}
+
+	@Override
+	protected boolean applyQuerySpaces(Object value) {
+		if ( value == null ) {
+			return false;
+		}
+
+		if ( value instanceof List ) {
+			this.querySpaces.addAll( (List) value );
+			return true;
+		}
+
+		if ( value instanceof String[] ) {
+			addSynchronizedQuerySpace( (String[]) value );
+			return true;
+		}
+
+		if ( value instanceof String ) {
+			final StringTokenizer spaces = new StringTokenizer( (String) value, "," );
+			while ( spaces.hasMoreTokens() ) {
+				addQuerySpaces( spaces.nextToken() );
+			}
+			return true;
+		}
+
+		return false;
 	}
 
 	@Override

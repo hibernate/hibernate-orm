@@ -1,8 +1,9 @@
 # Typically *NIX text editors, by default, append '~' to files on saving to make backups
 *~
 
-# Gradle work directory
+# Gradle work directory and caches
 .gradle
+.gradletasknamecache
 
 # Build output directies
 /target

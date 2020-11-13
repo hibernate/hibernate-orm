@@ -8,6 +8,7 @@ package org.hibernate.tuple.entity;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -44,6 +45,7 @@ import org.hibernate.tuple.PropertyFactory;
 import org.hibernate.tuple.ValueGeneration;
 import org.hibernate.tuple.ValueGenerator;
 import org.hibernate.type.AssociationType;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
@@ -97,7 +99,7 @@ public class EntityMetamodel implements Serializable {
 
 	private final Map<String, Integer> propertyIndexes = new HashMap<>();
 	private final boolean hasCollections;
-	private final boolean hasMutableProperties;
+	private final BitSet mutablePropertiesIndexes;
 	private final boolean hasLazyProperties;
 	private final boolean hasNonIdentifierPropertyNamedId;
 
@@ -208,7 +210,7 @@ public class EntityMetamodel implements Serializable {
 		int tempVersionProperty = NO_VERSION_INDX;
 		boolean foundCascade = false;
 		boolean foundCollection = false;
-		boolean foundMutable = false;
+		BitSet mutableIndexes = new BitSet();
 		boolean foundNonIdentifierPropertyNamedId = false;
 		boolean foundUpdateableNaturalIdProperty = false;
 
@@ -318,8 +320,9 @@ public class EntityMetamodel implements Serializable {
 				foundCollection = true;
 			}
 
-			if ( propertyTypes[i].isMutable() && propertyCheckability[i] ) {
-				foundMutable = true;
+			// Component types are dirty tracked as well so they are not exactly mutable for the "maybeDirty" check
+			if ( propertyTypes[i].isMutable() && propertyCheckability[i] && !( propertyTypes[i] instanceof ComponentType ) ) {
+				mutableIndexes.set( i );
 			}
 
 			mapPropertyToIndex(prop, i);
@@ -395,7 +398,7 @@ public class EntityMetamodel implements Serializable {
 		}
 
 		hasCollections = foundCollection;
-		hasMutableProperties = foundMutable;
+		mutablePropertiesIndexes = mutableIndexes;
 
 		iter = persistentClass.getSubclassIterator();
 		final Set<String> subclassEntityNamesLocal = new HashSet<>();
@@ -890,7 +893,11 @@ public class EntityMetamodel implements Serializable {
 	}
 
 	public boolean hasMutableProperties() {
-		return hasMutableProperties;
+		return !mutablePropertiesIndexes.isEmpty();
+	}
+
+	public BitSet getMutablePropertiesIndexes() {
+		return mutablePropertiesIndexes;
 	}
 
 	public boolean hasNonIdentifierPropertyNamedId() {

@@ -33,6 +33,7 @@ import org.hibernate.engine.spi.Status;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.pretty.MessageHelper;
+import org.hibernate.proxy.HibernateProxy;
 
 /**
  * A base implementation of EntityEntry
@@ -346,7 +347,24 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 	@SuppressWarnings( {"SimplifiableIfStatement"})
 	private boolean isUnequivocallyNonDirty(Object entity) {
 		if ( entity instanceof SelfDirtinessTracker ) {
-			return ! persister.hasCollections() && ! ( (SelfDirtinessTracker) entity ).$$_hibernate_hasDirtyAttributes();
+			boolean uninitializedProxy = false;
+			if ( entity instanceof PersistentAttributeInterceptable ) {
+				final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) entity;
+				final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
+				if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
+					EnhancementAsProxyLazinessInterceptor enhancementAsProxyLazinessInterceptor = (EnhancementAsProxyLazinessInterceptor) interceptor;
+					// When a proxy has dirty attributes, we have to treat it like a normal entity to flush changes
+					uninitializedProxy = !enhancementAsProxyLazinessInterceptor.isInitialized() && !( (SelfDirtinessTracker) entity ).$$_hibernate_hasDirtyAttributes();
+				}
+			}
+			else if ( entity instanceof HibernateProxy ) {
+				uninitializedProxy = ( (HibernateProxy) entity ).getHibernateLazyInitializer()
+						.isUninitialized();
+			}
+			// we never have to check an uninitialized proxy
+			return uninitializedProxy || !persister.hasCollections()
+					&& !persister.hasMutableProperties()
+					&& !( (SelfDirtinessTracker) entity ).$$_hibernate_hasDirtyAttributes();
 		}
 
 		if ( entity instanceof PersistentAttributeInterceptable ) {

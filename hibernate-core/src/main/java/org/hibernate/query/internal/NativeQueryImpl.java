@@ -489,9 +489,9 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 		}
 
 		if ( value instanceof Collection ) {
-//			if ( querySpaces == null ) {
-//				querySpaces = new ArrayList<>();
-//			}
+			if ( querySpaces == null ) {
+				querySpaces = new ArrayList<>();
+			}
 			querySpaces.addAll( (Collection<String>) value );
 			return true;
 		}

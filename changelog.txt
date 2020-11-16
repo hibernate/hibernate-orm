@@ -3,6 +3,22 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.3.20.Final (November 16th, 2020)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31894/tab/release-report-all-issues
+
+** Bug
+    * [HHH-14257] - An Entity A with a map collection having as index an Embeddable with a an association to the Entity A fails with a NPE
+
+** Task
+    * [HHH-14225] - CVE-2020-25638 Potential for SQL injection on use_sql_comments logging enabled
+    * [HHH-14324] - Add .gradletasknamecache to .gitignore
+
+** Improvement
+    * [HHH-14325] - Add Query hint for specifying "query spaces" for native queries
+
+
 Changes in 5.3.19.Final (November 10th, 2020)
 ------------------------------------------------------------------------------------------------------------------------
 

@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 import javax.xml.transform.dom.DOMSource;
@@ -62,6 +63,7 @@ public class MetadataSources implements Serializable {
 
 	private final ServiceRegistry serviceRegistry;
 	private final ClassLoaderService classLoaderService;
+	private final boolean disableXmlMappingBinders;
 
 	private XmlMappingBinderAccess xmlMappingBinderAccess;
 
@@ -94,6 +96,19 @@ public class MetadataSources implements Serializable {
 		}
 		this.serviceRegistry = serviceRegistry;
 		this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+		this.disableXmlMappingBinders = false;
+	}
+
+	/**
+	 * Consider this an SPI, used by Quarkus
+	 * @param serviceRegistry
+	 * @param disableXmlMappingBinders
+	 */
+	public MetadataSources(ServiceRegistry serviceRegistry, boolean disableXmlMappingBinders) {
+		Objects.requireNonNull( serviceRegistry );
+		this.serviceRegistry = serviceRegistry;
+		this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+		this.disableXmlMappingBinders = disableXmlMappingBinders;
 	}
 
 	protected static boolean isExpectedServiceRegistryType(ServiceRegistry serviceRegistry) {
@@ -102,6 +117,9 @@ public class MetadataSources implements Serializable {
 	}
 
 	public XmlMappingBinderAccess getXmlMappingBinderAccess() {
+		if ( disableXmlMappingBinders ) {
+			return null;
+		}
 		if ( xmlMappingBinderAccess == null ) {
 			xmlMappingBinderAccess = new XmlMappingBinderAccess( serviceRegistry );
 		}

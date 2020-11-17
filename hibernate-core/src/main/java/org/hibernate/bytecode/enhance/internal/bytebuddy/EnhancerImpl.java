@@ -411,7 +411,7 @@ public class EnhancerImpl implements Enhancer {
 				continue;
 			}
 			AnnotatedFieldDescription annotatedField = new AnnotatedFieldDescription( enhancementContext, ctField );
-			if ( enhancementContext.isPersistentField( annotatedField ) && !enhancementContext.isMappedCollection( annotatedField ) ) {
+			if ( enhancementContext.isPersistentField( annotatedField ) && enhancementContext.isMappedCollection( annotatedField ) ) {
 				if ( ctField.getType().asErasure().isAssignableTo( Collection.class ) || ctField.getType().asErasure().isAssignableTo( Map.class ) ) {
 					collectionList.add( annotatedField );
 				}
@@ -441,7 +441,7 @@ public class EnhancerImpl implements Enhancer {
 		for ( FieldDescription ctField : managedCtSuperclass.getDeclaredFields() ) {
 			if ( !Modifier.isStatic( ctField.getModifiers() ) ) {
 				AnnotatedFieldDescription annotatedField = new AnnotatedFieldDescription( enhancementContext, ctField );
-				if ( enhancementContext.isPersistentField( annotatedField ) && !enhancementContext.isMappedCollection( annotatedField ) ) {
+				if ( enhancementContext.isPersistentField( annotatedField ) && enhancementContext.isMappedCollection( annotatedField ) ) {
 					if ( ctField.getType().asErasure().isAssignableTo( Collection.class ) || ctField.getType().asErasure().isAssignableTo( Map.class ) ) {
 						collectionList.add( annotatedField );
 					}

@@ -26,6 +26,7 @@ import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.EntityEntryFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.ValueInclusion;
 import org.hibernate.id.IdentifierGenerator;
@@ -883,6 +884,25 @@ public interface EntityPersister
 	 * @return A set of unique indexes of the attribute names found in the metamodel
 	 */
 	int[] resolveAttributeIndexes(String[] attributeNames);
+
+	/**
+	 * Like {@link #resolveAttributeIndexes(String[])} but also always returns mutable attributes
+	 *
+	 *
+	 * @param values
+	 * @param loadedState
+	 * @param attributeNames Array of names to be resolved
+	 *
+	 * @param session
+	 * @return A set of unique indexes of the attribute names found in the metamodel
+	 */
+	default int[] resolveDirtyAttributeIndexes(
+			Object[] values,
+			Object[] loadedState,
+			String[] attributeNames,
+			SessionImplementor session) {
+		return resolveAttributeIndexes( attributeNames );
+	}
 
 	boolean canUseReferenceCacheEntries();
 

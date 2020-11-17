@@ -22,6 +22,7 @@ import org.hibernate.engine.internal.Nullability;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
@@ -39,6 +40,7 @@ import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
+import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.Type;
 
@@ -525,18 +527,13 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
 		if ( dirtyProperties == null ) {
 			if ( entity instanceof SelfDirtinessTracker ) {
-				if ( ( (SelfDirtinessTracker) entity ).$$_hibernate_hasDirtyAttributes() ) {
-					int[] dirty = persister.resolveAttributeIndexes( ( (SelfDirtinessTracker) entity ).$$_hibernate_getDirtyAttributes() );
-
-					// HHH-12051 - filter non-updatable attributes
-					// TODO: add Updatability to EnhancementContext and skip dirty tracking of those attributes
-					int count = 0;
-					for ( int i : dirty ) {
-						if ( persister.getPropertyUpdateability()[i] ) {
-							dirty[count++] = i;
-						}
-					}
-					dirtyProperties = count == 0 ? ArrayHelper.EMPTY_INT_ARRAY : count == dirty.length ? dirty : Arrays.copyOf( dirty, count );
+				if ( ( (SelfDirtinessTracker) entity ).$$_hibernate_hasDirtyAttributes() || persister.hasMutableProperties() ) {
+					dirtyProperties = persister.resolveDirtyAttributeIndexes(
+							values,
+							loadedState,
+							( (SelfDirtinessTracker) entity ).$$_hibernate_getDirtyAttributes(),
+							session
+					);
 				}
 				else {
 					dirtyProperties = ArrayHelper.EMPTY_INT_ARRAY;

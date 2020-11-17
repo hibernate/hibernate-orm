@@ -4350,7 +4350,7 @@ public abstract class AbstractEntityPersister
 		if ( ! factory.getSessionFactoryOptions().isDelayBatchFetchLoaderCreationsEnabled() ) {
 			for ( LockMode lockMode : LockMode.values() ) {
 				//Trigger eager initialization
-				loaders.getOrBuildByLockMode( lockMode, this::createEntityLoader );
+				getLoaderByLockMode( lockMode );
 			}
 			//Also, we have two special internal fetch profiles to eagerly initialize in this case:
 			loaders.getOrCreateByInternalFetchProfileMerge( this::buildMergeCascadeEntityLoader );
@@ -4359,7 +4359,7 @@ public abstract class AbstractEntityPersister
 		else {
 			//At least initialize this one: it's almost certain to be used,
 			//and also will allow to report mapping errors during initialization.
-			loaders.getOrBuildByLockMode( LockMode.NONE, this::createEntityLoader );
+			getLoaderByLockMode( LockMode.NONE );
 		}
 	}
 
@@ -4372,7 +4372,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	protected final UniqueEntityLoader getLoaderByLockMode(LockMode lockMode) {
-		return loaders.getOrBuildByLockMode( lockMode, this::createEntityLoader );
+		return loaders.getOrBuildByLockMode( lockMode, this::generateDelayedEntityLoader );
 	}
 
 	private UniqueEntityLoader generateDelayedEntityLoader(final LockMode lockMode) {

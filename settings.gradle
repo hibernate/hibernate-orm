@@ -33,6 +33,7 @@ include 'hibernate-jcache'
 include 'hibernate-ehcache'
 include 'hibernate-infinispan'
 include 'hibernate-jipijapa'
+include 'hibernate-micrometer'
 
 include 'hibernate-orm-modules'
 include 'hibernate-graalvm'

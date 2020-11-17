@@ -3,6 +3,36 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.4.24.Final (November 17, 2020)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31892
+
+** Bug
+    * [HHH-14333] - Pessimistic Lock causes FOR UPDATE on outer join statements
+    * [HHH-14329] - DirtinessTracker usage for enhanced entities doesn't respect mutable types
+    * [HHH-14322] - HBM many-to-one property-ref broken since 5.3.2 due to HHH-12684
+    * [HHH-14317] - Avoid closing datasource in AgroalConnectionProvider if datasource is not initialized
+    * [HHH-14316] - Avoid accessing state in DriverManagerConnectionProviderImpl if null
+    * [HHH-14312] - Padded batch style entity loader ignores entity graph 
+    * [HHH-14310] - Document hibernate.query.in_clause_parameter_padding
+    * [HHH-14288] - Complex batch insert query stopped to work
+    * [HHH-14279] - Broken 'with key(...)' operator on entity-key maps
+    * [HHH-14276] - Nested ID class using derived identifiers fails with strange AnnotationException: unable to find column reference in the @MapsId mapping: `game_id`
+    * [HHH-14257] - An Entity A with a map collection having as index an Embeddable with a an association to the Entity A fails with a NPE
+    * [HHH-13310] - getParameterValue() not working for collections
+
+** Improvement
+    * [HHH-14332] - Make it easier for Quarkus SPI to avoid loading XML
+    * [HHH-14325] - Add Query hint for specifying "query spaces" for native queries
+    * [HHH-14158] - Upgrade Javassist to the latest version
+
+** Task
+    * [HHH-14324] - Add .gradletasknamecache to .gitignore
+    * [HHH-14309] - Improve `BulkOperationCleanupAction#affectedEntity`
+    * [HHH-14225] - CVE-2020-25638 Potential for SQL injection on use_sql_comments logging enabled
+
+
 Changes in 5.4.23.Final (November 01, 2020)
 ------------------------------------------------------------------------------------------------------------------------
 

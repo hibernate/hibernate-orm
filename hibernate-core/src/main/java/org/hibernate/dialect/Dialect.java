@@ -92,6 +92,8 @@ import java.sql.*;
 import java.time.temporal.TemporalAccessor;
 import java.util.Date;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.hibernate.type.descriptor.DateTimeUtils.*;
 
@@ -130,6 +132,15 @@ public abstract class Dialect implements ConversionContext {
 	 * Characters used as closing for quoting SQL identifiers
 	 */
 	public static final String CLOSED_QUOTE = "`\"]";
+	private static final Pattern SINGLE_QUOTE_PATTERN = Pattern.compile(
+			"'",
+			Pattern.LITERAL
+	);
+
+	private static final Pattern ESCAPE_CLOSING_COMMENT_PATTERN = Pattern.compile( "\\*/" );
+	private static final Pattern ESCAPE_OPENING_COMMENT_PATTERN = Pattern.compile( "/\\*" );
+
+	public static final String TWO_SINGLE_QUOTES_REPLACEMENT = Matcher.quoteReplacement( "''" );
 
 	private final TypeNames typeNames = new TypeNames();
 	private final TypeNames hibernateTypeNames = new TypeNames();
@@ -1372,7 +1383,7 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * Get the string to append to SELECT statements to acquire WRITE locks
-	 * for this dialect.  Location of the of the returned string is treated
+	 * for this dialect.  Location of the returned string is treated
 	 * the same as getForUpdateString.
 	 *
 	 * @param timeout in milliseconds, -1 for indefinite wait and 0 for no wait.
@@ -1400,7 +1411,7 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * Get the string to append to SELECT statements to acquire READ locks
-	 * for this dialect.  Location of the of the returned string is treated
+	 * for this dialect.  Location of the returned string is treated
 	 * the same as getForUpdateString.
 	 *
 	 * @param timeout in milliseconds, -1 for indefinite wait and 0 for no wait.
@@ -1413,7 +1424,7 @@ public abstract class Dialect implements ConversionContext {
 	/**
 	 * Get the string to append to SELECT statements to acquire READ locks
 	 * for this dialect given the aliases of the columns to be read locked.
-	 * Location of the of the returned string is treated
+	 * Location of the returned string is treated
 	 * the same as getForUpdateString.
 	 *
 	 * @param aliases The columns to be read locked.
@@ -1430,8 +1441,8 @@ public abstract class Dialect implements ConversionContext {
 	 * Does the <tt>FOR UPDATE OF</tt> clause accept a list of columns
 	 * instead of a list of table aliases?
 	 *
-	 * @return True if the database <tt>FOR UPDATE OF</tt> clause takes
-	 * a column list; false otherwise.
+	 * @return True if the database supports <tt>FOR UPDATE OF</tt> syntax;
+	 * false otherwise.
 	 */
 	public boolean forUpdateOfColumns() {
 		// by default we report no support
@@ -1528,7 +1539,7 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * Some dialects support an alternative means to <tt>SELECT FOR UPDATE</tt>,
-	 * whereby a "lock hint" is appends to the table name in the from clause.
+	 * whereby a "lock hint" is appended to the table name in the from clause.
 	 * <p/>
 	 * contributed by <a href="http://sourceforge.net/users/heschulz">Helge Schulz</a>
 	 *
@@ -1543,7 +1554,7 @@ public abstract class Dialect implements ConversionContext {
 	}
 	/**
 	 * Some dialects support an alternative means to <tt>SELECT FOR UPDATE</tt>,
-	 * whereby a "lock hint" is appends to the table name in the from clause.
+	 * whereby a "lock hint" is appended to the table name in the from clause.
 	 * <p/>
 	 * contributed by <a href="http://sourceforge.net/users/heschulz">Helge Schulz</a>
 	 *
@@ -1835,7 +1846,7 @@ public abstract class Dialect implements ConversionContext {
 	 * <p/>
 	 * It is strongly recommended that specific Dialect implementations override this
 	 * method, since interpretation of a SQL error is much more accurate when based on
-	 * the a vendor-specific ErrorCode rather than the SQLState.
+	 * the vendor-specific ErrorCode rather than the SQLState.
 	 * <p/>
 	 * Specific Dialects may override to return whatever is most appropriate for that vendor.
 	 *
@@ -2604,7 +2615,7 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * Does this dialect require that references to result variables
-	 * (i.e, select expresssion aliases) in an ORDER BY clause be
+	 * (i.e, select expression aliases) in an ORDER BY clause be
 	 * replaced by column positions (1-origin) as defined
 	 * by the select clause?
 
@@ -3019,6 +3030,8 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * By default interpret this based on DatabaseMetaData.
+	 *
+	 * @return The NameQualifierSupport.
 	 */
 	public NameQualifierSupport getNameQualifierSupport() {
 		return null;
@@ -3156,7 +3169,7 @@ public abstract class Dialect implements ConversionContext {
 	 * @return escaped String
 	 */
 	protected String escapeLiteral(String literal) {
-		return literal.replace("'", "''");
+		return SINGLE_QUOTE_PATTERN.matcher( literal ).replaceAll( TWO_SINGLE_QUOTES_REPLACEMENT );
 	}
 
 	/**
@@ -3180,7 +3193,15 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	protected String prependComment(String sql, String comment) {
-		return  "/* " + comment + " */ " + sql;
+		return "/* " + escapeComment( comment ) + " */ " + sql;
+	}
+
+	public static String escapeComment(String comment) {
+		if ( StringHelper.isNotEmpty( comment ) ) {
+			final String escaped = ESCAPE_CLOSING_COMMENT_PATTERN.matcher( comment ).replaceAll( "*\\\\/" );
+			return ESCAPE_OPENING_COMMENT_PATTERN.matcher( escaped ).replaceAll( "/\\\\*" );
+		}
+		return comment;
 	}
 
 	/**

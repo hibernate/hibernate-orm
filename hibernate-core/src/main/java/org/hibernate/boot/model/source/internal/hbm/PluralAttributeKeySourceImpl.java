@@ -74,16 +74,31 @@ public class PluralAttributeKeySourceImpl
 
 	public PluralAttributeKeySourceImpl(
 			MappingDocument mappingDocument,
-			final JaxbHbmManyToOneType jaxbKey,
+			final JaxbHbmKeyType jaxbKey,
+			final JaxbHbmManyToOneType jaxbManyToOne,
 			final AttributeSourceContainer container) {
 		super( mappingDocument );
 
-		this.explicitFkName = StringHelper.nullIfEmpty( jaxbKey.getForeignKey() );
-		this.referencedPropertyName = StringHelper.nullIfEmpty( jaxbKey.getPropertyRef() );
-		this.cascadeDeletesAtFkLevel = jaxbKey.getOnDelete() != null
-				&& "cascade".equals( jaxbKey.getOnDelete().value() );
-		this.nullable = jaxbKey.isNotNull() == null || !jaxbKey.isNotNull();
-		this.updateable = jaxbKey.isUpdate();
+		this.explicitFkName = StringHelper.nullIfEmpty( jaxbManyToOne.getForeignKey() );
+		this.referencedPropertyName = StringHelper.nullIfEmpty( jaxbManyToOne.getPropertyRef() );
+		if ( jaxbKey.getOnDelete() == null ) {
+			this.cascadeDeletesAtFkLevel = jaxbManyToOne.getOnDelete() != null && "cascade".equals( jaxbManyToOne.getOnDelete().value() );
+		}
+		else {
+			this.cascadeDeletesAtFkLevel = "cascade".equals( jaxbKey.getOnDelete().value() );
+		}
+		if ( jaxbKey.isNotNull() == null ) {
+			this.nullable = jaxbManyToOne.isNotNull() == null || !jaxbManyToOne.isNotNull();
+		}
+		else {
+			this.nullable = !jaxbKey.isNotNull();
+		}
+		if ( jaxbKey.isUpdate() == null ) {
+			this.updateable = jaxbManyToOne.isUpdate();
+		}
+		else {
+			this.updateable = jaxbKey.isUpdate();
+		}
 
 		this.valueSources = RelationalValueSourceHelper.buildValueSources(
 				sourceMappingDocument(),
@@ -106,7 +121,7 @@ public class PluralAttributeKeySourceImpl
 
 					@Override
 					public List getColumnOrFormulaElements() {
-						return jaxbKey.getColumnOrFormula();
+						return jaxbKey.getColumn();
 					}
 
 				}

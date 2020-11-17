@@ -89,4 +89,11 @@ public @interface NamedNativeQuery {
 	 * Whether the results should be read-only.  Default is {@code false}.
 	 */
 	boolean readOnly() default false;
+
+	/**
+	 * The query spaces to apply for the query.
+	 *
+	 * @see org.hibernate.SynchronizeableQuery
+	 */
+	String[] querySpaces() default {};
 }

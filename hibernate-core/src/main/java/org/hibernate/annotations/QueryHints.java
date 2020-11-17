@@ -144,4 +144,17 @@ public class QueryHints {
 	 */
 	public static final String PASS_DISTINCT_THROUGH = "hibernate.query.passDistinctThrough";
 
+	/**
+	 * Hint for specifying query spaces to be applied to a native (SQL) query.
+	 *
+	 * Passed value can be any of:<ul>
+	 *     <li>List of the spaces</li>
+	 *     <li>array of the spaces</li>
+	 *     <li>String "whitespace"-separated list of the spaces</li>
+	 * </ul>
+	 *
+	 * @see org.hibernate.SynchronizeableQuery
+	 */
+	public static final String NATIVE_SPACES = "org.hibernate.query.native.spaces";
+
 }

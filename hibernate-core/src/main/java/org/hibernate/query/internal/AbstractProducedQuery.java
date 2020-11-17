@@ -25,6 +25,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.Spliterators;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import javax.persistence.CacheRetrieveMode;
@@ -101,6 +104,7 @@ import static org.hibernate.jpa.QueryHints.HINT_FETCH_SIZE;
 import static org.hibernate.jpa.QueryHints.HINT_FLUSH_MODE;
 import static org.hibernate.jpa.QueryHints.HINT_FOLLOW_ON_LOCKING;
 import static org.hibernate.jpa.QueryHints.HINT_LOADGRAPH;
+import static org.hibernate.jpa.QueryHints.HINT_NATIVE_SPACES;
 import static org.hibernate.jpa.QueryHints.HINT_READONLY;
 import static org.hibernate.jpa.QueryHints.HINT_TIMEOUT;
 import static org.hibernate.jpa.QueryHints.SPEC_HINT_TIMEOUT;
@@ -749,57 +753,104 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	@Override
 	public <T> T getParameterValue(Parameter<T> parameter) {
 		LOGGER.tracef( "#getParameterValue(%s)", parameter );
-
 		getProducer().checkOpen( false );
 
-		if ( !getParameterMetadata().containsReference( (QueryParameter) parameter ) ) {
-			throw new IllegalArgumentException( "Parameter reference [" + parameter + "] did not come from this query" );
-		}
-
-		final QueryParameterBinding<T> binding = getQueryParameterBindings().getBinding( (QueryParameter<T>) parameter );
-		LOGGER.debugf( "Checking whether parameter reference [%s] is bound : %s", parameter, binding.isBound() );
-		if ( !binding.isBound() ) {
-			throw new IllegalStateException( "Parameter value not yet bound : " + parameter.toString() );
-		}
-		return binding.getBindValue();
+		return (T) getParameterValue(
+				(QueryParameter) parameter,
+				(queryParameter) -> new IllegalStateException( "Parameter value not yet bound : " + queryParameter.toString() ),
+				(queryParameter, e) -> {
+					final String message = "Parameter reference [" + queryParameter + "] did not come from this query";
+					if ( e == null ) {
+						return new IllegalArgumentException( message );
+					}
+					return new IllegalArgumentException( message, e );
+				},
+				(queryParameter, isBound) -> LOGGER.debugf(
+						"Checking whether parameter reference [%s] is bound : %s",
+						queryParameter,
+						isBound
+				)
+		);
 	}
 
 	@Override
 	public Object getParameterValue(String name) {
 		getProducer().checkOpen( false );
 
-		final QueryParameterBinding binding;
-		try {
-			binding = getQueryParameterBindings().getBinding( name );
-		}
-		catch (QueryParameterException e) {
-			throw new IllegalArgumentException( "Could not resolve parameter by name - " + name, e );
-		}
-
-		LOGGER.debugf( "Checking whether named parameter [%s] is bound : %s", name, binding.isBound() );
-		if ( !binding.isBound() ) {
-			throw new IllegalStateException( "Parameter value not yet bound : " + name );
-		}
-		return binding.getBindValue();
+		final QueryParameter<Object> queryParameter = getParameterMetadata().getQueryParameter( name );
+		return getParameterValue(
+				queryParameter,
+				(parameter) -> new IllegalStateException( "Parameter value not yet bound : " + parameter.getName() ),
+				(parameter, e) -> {
+					final String message = "Could not resolve parameter by name - " + parameter.getName();
+					if ( e == null ) {
+						return new IllegalArgumentException( message );
+					}
+					return new IllegalArgumentException( message, e );
+				},
+				(parameter, isBound) -> LOGGER.debugf(
+						"Checking whether positional named [%s] is bound : %s",
+						parameter.getName(),
+						isBound
+				)
+		);
 	}
 
 	@Override
 	public Object getParameterValue(int position) {
 		getProducer().checkOpen( false );
 
-		final QueryParameterBinding binding;
+		final QueryParameter<Object> queryParameter = getParameterMetadata().getQueryParameter( position );
+		return getParameterValue(
+				queryParameter,
+				(parameter) -> new IllegalStateException( "Parameter value not yet bound : " + parameter.getPosition() ),
+				(parameter, e) -> {
+					String message = "Could not resolve parameter by position - " + parameter.getPosition();
+					if ( e == null ) {
+						return new IllegalArgumentException( message );
+					}
+					return new IllegalArgumentException( message, e );
+				},
+				(parameter, isBound) -> LOGGER.debugf(
+						"Checking whether positional parameter [%s] is bound : %s",
+						parameter.getPosition(),
+						isBound
+				)
+		);
+	}
+
+	private Object getParameterValue(
+			QueryParameter queryParameter,
+			Function<QueryParameter, IllegalStateException> notBoundParamenterException,
+			BiFunction<QueryParameter, QueryParameterException, IllegalArgumentException> couldNotResolveParameterException,
+			BiConsumer<QueryParameter, Boolean> boundCheckingLogger) {
 		try {
-			binding = getQueryParameterBindings().getBinding( position );
+			final QueryParameterBindings parameterBindings = getQueryParameterBindings();
+
+			if ( queryParameter == null ) {
+				throw couldNotResolveParameterException.apply( queryParameter, null );
+			}
+			if ( parameterBindings.isMultiValuedBinding( queryParameter ) ) {
+				final QueryParameterListBinding<Object> queryParameterListBinding = parameterBindings
+						.getQueryParameterListBinding( queryParameter );
+				final Collection<Object> bindValues = queryParameterListBinding.getBindValues();
+				if ( bindValues == null ) {
+					throw notBoundParamenterException.apply( queryParameter );
+				}
+				return bindValues;
+			}
+
+			final QueryParameterBinding<Object> binding = parameterBindings.getBinding( queryParameter );
+			final boolean bound = binding.isBound();
+			boundCheckingLogger.accept( queryParameter, bound );
+			if ( !bound ) {
+				throw notBoundParamenterException.apply( queryParameter );
+			}
+			return binding.getBindValue();
 		}
 		catch (QueryParameterException e) {
-			throw new IllegalArgumentException( "Could not resolve parameter by position - " + position, e );
+			throw couldNotResolveParameterException.apply( queryParameter, e );
 		}
-
-		LOGGER.debugf( "Checking whether positional  parameter [%s] is bound : %s", (Integer) position, (Boolean) binding.isBound() );
-		if ( !binding.isBound() ) {
-			throw new IllegalStateException( "Parameter value not yet bound : " + position );
-		}
-		return binding.getBindValue();
 	}
 
 	@Override
@@ -1058,6 +1109,9 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 				final CacheStoreMode storeMode = value != null ? CacheStoreMode.valueOf( value.toString() ) : null;
 				applied = applyJpaCacheStoreMode( storeMode );
 			}
+			else if ( HINT_NATIVE_SPACES.equals( hintName ) ) {
+				applied = applyQuerySpaces( value );
+			}
 			else if ( QueryHints.HINT_NATIVE_LOCKMODE.equals( hintName ) ) {
 				applied = applyNativeQueryLockMode( value );
 			}
@@ -1108,6 +1162,12 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		}
 
 		return this;
+	}
+
+	protected boolean applyQuerySpaces(Object value) {
+		throw new IllegalStateException(
+				"Illegal attempt to apply native-query spaces to a non-native query"
+		);
 	}
 
 	protected void handleUnrecognizedHint(String hintName, Object value) {

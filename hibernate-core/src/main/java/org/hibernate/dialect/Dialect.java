@@ -84,6 +84,7 @@ import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.io.StreamCopier;
 import org.hibernate.loader.BatchLoadSizingStrategy;
@@ -151,6 +152,10 @@ public abstract class Dialect implements ConversionContext {
 			"'",
 			Pattern.LITERAL
 	);
+
+	private static final Pattern ESCAPE_CLOSING_COMMENT_PATTERN = Pattern.compile( "\\*/" );
+	private static final Pattern ESCAPE_OPENING_COMMENT_PATTERN = Pattern.compile( "/\\*" );
+
 	public static final String TWO_SINGLE_QUOTES_REPLACEMENT = Matcher.quoteReplacement( "''" );
 
 	private final TypeNames typeNames = new TypeNames();
@@ -3075,7 +3080,15 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	protected String prependComment(String sql, String comment) {
-		return  "/* " + comment + " */ " + sql;
+		return "/* " + escapeComment( comment ) + " */ " + sql;
+	}
+
+	public static String escapeComment(String comment) {
+		if ( StringHelper.isNotEmpty( comment ) ) {
+			final String escaped = ESCAPE_CLOSING_COMMENT_PATTERN.matcher( comment ).replaceAll( "*\\\\/" );
+			return ESCAPE_OPENING_COMMENT_PATTERN.matcher( escaped ).replaceAll( "/\\\\*" );
+		}
+		return comment;
 	}
 
 	public boolean supportsSelectAliasInGroupByClause() {

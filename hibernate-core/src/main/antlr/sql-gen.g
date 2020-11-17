@@ -265,7 +265,6 @@ selectExpr
 	| arithmeticExpr
 	| selectBooleanExpr[false]
 	| parameter
-	| sn:SQL_NODE { out(sn); }
 	| { out("("); } selectStatement { out(")"); }
 	;
 

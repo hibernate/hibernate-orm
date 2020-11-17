@@ -130,17 +130,29 @@ task aggregateJavadocs(type: Javadoc) {
 				'https://javaee.github.io/javaee-spec/javadocs/'
 		]
 		
-		if ( JavaVersion.current().isJava11Compatible() ) {
+		if ( gradle.ext.javaVersions.main.compiler.asInt() >= 11 ) {
 			//The need to set `--source 1.8` applies to all JVMs after 11, and also to 11
 			// but after excluding the first two builds; see also specific comments on
 			// https://bugs.openjdk.java.net/browse/JDK-8212233?focusedCommentId=14245762
 			// For now, let's be compatible with JDK 11.0.3+. We can improve on it if people
 			// complain they cannot build with JDK 11.0.0, 11.0.1 and 11.0.2.
-			System.out.println("Forcing Javadoc in Java 8 compatible mode");
-			options.source = project.baselineJavaVersion
+			logger.lifecycle "Forcing Javadoc in Java 8 compatible mode"
+			options.source = gradle.ext.baselineJavaVersion
 		}
 
 		options.addStringOption( 'Xdoclint:none', '-quiet' )
+
+		if ( gradle.ext.javaToolchainEnabled ) {
+			options.setJFlags( getProperty( 'toolchain.javadoc.jvmargs' ).toString().
+							split( ' ' ).toList().findAll( { !it.isEmpty() } ) )
+		}
+	}
+
+	if ( gradle.ext.javaToolchainEnabled ) {
+		// Display version of Java tools
+		doFirst {
+			logger.lifecycle "Aggregating javadoc with '${javadocTool.get().metadata.installationPath}'"
+		}
 	}
 
     // process each project, building up:

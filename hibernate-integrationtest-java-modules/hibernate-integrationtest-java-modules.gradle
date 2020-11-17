@@ -24,11 +24,31 @@ apply from: rootProject.file( 'gradle/java-module.gradle' )
 // so we have to use https://github.com/java9-modularity/gradle-modules-plugin
 apply plugin: "org.javamodularity.moduleplugin"
 
-// Override -source and -target to the version being tested (11+, since this module is enabled)
-ext.baselineJavaVersion = gradle.ext.testedJavaVersion
-tasks.withType( JavaCompile ) {
-	sourceCompatibility = project.baselineJavaVersion
-	targetCompatibility = project.baselineJavaVersion
+// In this module, the "main" code is actually just test code that happens
+// to be built independently so as to generate a Java module.
+// So, let's override settings for compilation of the main code, just for this particular case.
+def testJavaVersions = gradle.ext.javaVersions.test
+tasks.compileJava {
+	if ( !gradle.ext.javaToolchainEnabled ) {
+		sourceCompatibility = JavaVersion.toVersion( testJavaVersions.release )
+		targetCompatibility = JavaVersion.toVersion( testJavaVersions.release )
+	}
+	else {
+		javaCompiler = javaToolchains.compilerFor {
+			languageVersion = testJavaVersions.compiler
+		}
+
+		// Remove JDK8-only options (if any) that are incompatible with options.release
+		for ( it = options.compilerArgs.listIterator(); it.hasNext(); ) {
+			if ( it.next() in ['-source', '-target'] ) {
+				it.remove()
+				it.next()
+				it.remove()
+			}
+		}
+
+		options.release = testJavaVersions.release.asInt()
+	}
 }
 
 // Checkstyle fails for module-info

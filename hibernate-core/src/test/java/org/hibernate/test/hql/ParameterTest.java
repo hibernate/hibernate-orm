@@ -7,6 +7,7 @@
 package org.hibernate.test.hql;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -155,5 +156,103 @@ public class ParameterTest extends BaseCoreFunctionalTestCase {
 
 		s.getTransaction().commit();
 		s.close();
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-13310")
+	public void testGetParameterListValue() {
+		inTransaction(
+				session -> {
+					Query query = session.createQuery( "from Animal a where a.id in :ids" );
+					query.setParameterList( "ids", Arrays.asList( 1L, 2L ) );
+
+					Object parameterListValue = query.getParameterValue( "ids" );
+					assertThat( parameterListValue, is( Arrays.asList( 1L, 2L ) ) );
+				}
+		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-13310")
+	public void testGetParameterListValueAfterParameterExpansion() {
+		inTransaction(
+				session -> {
+					Query query = session.createQuery( "from Animal a where a.id in :ids" );
+					query.setParameterList( "ids", Arrays.asList( 1L, 2L ) );
+					query.list();
+
+					Object parameterListValue = query.getParameterValue( "ids" );
+					assertThat( parameterListValue, is( Arrays.asList( 1L, 2L ) ) );
+				}
+		);
+	}
+
+	@Test(expected = IllegalStateException.class)
+	@TestForIssue(jiraKey = "HHH-13310")
+	public void testGetNotBoundParameterListValue() {
+		inTransaction(
+				session -> {
+					Query query = session.createQuery( "from Animal a where a.id in :ids" );
+					query.getParameterValue( "ids" );
+				}
+		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-13310")
+	public void testGetPositionalParameterListValue() {
+		inTransaction(
+				session -> {
+					Query query = session.createQuery( "from Animal a where a.id in ?1" );
+					query.setParameter( 1, Arrays.asList( 1L, 2L ) );
+
+					Object parameterListValue = query.getParameterValue( 1 );
+					assertThat( parameterListValue, is( Arrays.asList( 1L, 2L ) ) );
+
+					query.list();
+				}
+		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-13310")
+	public void testGetPositionalParameterValue() {
+		inTransaction(
+				session -> {
+					Query query = session.createQuery( "from Animal a where a.id = ?1" );
+					query.setParameter( 1,  1L  );
+
+					Object parameterListValue = query.getParameterValue( 1 );
+					assertThat( parameterListValue, is( 1L ) );
+
+					query.list();
+				}
+		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-13310")
+	public void testGetParameterByPositionListValueAfterParameterExpansion() {
+		inTransaction(
+				session -> {
+					Query query = session.createQuery( "from Animal a where a.id in ?1" );
+					query.setParameterList( 1, Arrays.asList( 1L, 2L ) );
+					query.list();
+
+					Object parameterListValue = query.getParameterValue( 1 );
+					assertThat( parameterListValue, is( Arrays.asList( 1L, 2L ) ) );
+				}
+		);
+	}
+
+	@Test(expected = IllegalStateException.class)
+	@TestForIssue(jiraKey = "HHH-13310")
+	public void testGetPositionalNotBoundParameterListValue() {
+		inTransaction(
+				session -> {
+					Query query = session.createQuery( "from Animal a where a.id in ?1" );
+					query.getParameterValue( 1 );
+				}
+		);
 	}
 }

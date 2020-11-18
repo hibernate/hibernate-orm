@@ -10,15 +10,20 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 
+import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.mapping.Component;
+import org.hibernate.mapping.ManyToOne;
+import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.internal.AbstractCompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.ComponentType;
 
@@ -76,21 +81,47 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 		if ( entity instanceof HibernateProxy ) {
 			return ( (HibernateProxy) entity ).getHibernateLazyInitializer().getIdentifier();
 		}
-		final Serializable disassemble = bootIdClassDescriptor.getType().disassemble( entity, session, null );
-		return bootCidDescriptor.getType().assemble( disassemble, session, null );
+		final Serializable disassemble = bootCidDescriptor.getType().disassemble( entity, session, null );
+		return bootIdClassDescriptor.getType().assemble( disassemble, session, null );
 	}
 
 	@Override
 	public void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session) {
 		final SessionFactoryImplementor factory = session.getFactory();
-		final Object[] propertyValues = ( (ComponentType) bootCidDescriptor.getType() )
+		final Object[] propertyValues = ( (ComponentType) bootIdClassDescriptor.getType() )
 				.getPropertyValues( id, session );
 		final MutableInteger index = new MutableInteger();
 		getAttributes().forEach(
-				attribute ->
-						attribute.getPropertyAccess()
-								.getSetter()
-								.set( entity, propertyValues[index.getAndIncrement()], factory )
+				attribute -> {
+					final int position = index.getAndIncrement();
+					Object propertyValue = propertyValues[position];
+					final Property property = bootIdClassDescriptor.getProperty( position );
+					if ( attribute instanceof ToOneAttributeMapping && !( property.getValue() instanceof ManyToOne ) ) {
+						final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attribute;
+						final EntityPersister entityPersister = toOneAttributeMapping.getEntityMappingType()
+								.getEntityPersister();
+						final EntityKey entityKey = session.generateEntityKey(
+								propertyValue,
+								entityPersister
+						);
+						final PersistenceContext persistenceContext = session.getPersistenceContext();
+						// it is conceivable there is a proxy, so check that first
+						propertyValue = persistenceContext.getProxy( entityKey );
+						if ( propertyValue == null ) {
+							// otherwise look for an initialized version
+							propertyValue = persistenceContext.getEntity( entityKey );
+							if ( propertyValue == null ) {
+								// get the association out of the entity itself
+								propertyValue = factory.getMetamodel()
+										.findEntityDescriptor( entity.getClass() )
+										.getPropertyValue( entity, toOneAttributeMapping.getAttributeName() );
+							}
+						}
+					}
+					attribute.getPropertyAccess()
+							.getSetter()
+							.set( entity, propertyValue, factory );
+				}
 		);
 	}
 

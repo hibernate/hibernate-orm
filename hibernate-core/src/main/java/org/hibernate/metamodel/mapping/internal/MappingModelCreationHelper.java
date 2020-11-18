@@ -166,8 +166,11 @@ public class MappingModelCreationHelper {
 					final StateArrayContributorMetadataAccess attributeMetadataAccess = getStateArrayContributorMetadataAccess(
 							propertyAccess
 					);
-					final Component bootIdDescriptor = (Component) bootEntityDescriptor.getIdentifier();
 					final Component idClass = bootEntityDescriptor.getIdentifierMapper();
+					Component bootIdDescriptor = bootEntityDescriptor.getDeclaredIdentifierMapper();
+					if ( bootIdDescriptor == null ) {
+						bootIdDescriptor = (Component) bootEntityDescriptor.getIdentifier();
+					}
 					final List<SingularAttributeMapping> idAttributeMappings = new ArrayList<>( bootIdDescriptor.getPropertySpan() );
 
 					//noinspection unchecked
@@ -253,8 +256,8 @@ public class MappingModelCreationHelper {
 							attributeMetadataAccess,
 							rootTableName,
 							rootTableKeyColumnNames,
+							bootIdDescriptor,
 							bootCompositeDescriptor,
-							bootEntityDescriptor.getDeclaredIdentifierMapper(),
 							creationProcess
 					);
 				},

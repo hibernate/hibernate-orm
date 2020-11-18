@@ -112,6 +112,7 @@ import org.hibernate.internal.util.collections.LockModeEnumMap;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
 import org.hibernate.jdbc.TooManyRowsAffectedException;
+import org.hibernate.loader.PropertyPath;
 import org.hibernate.loader.ast.internal.MultiIdLoaderStandard;
 import org.hibernate.loader.ast.internal.Preparable;
 import org.hibernate.loader.ast.internal.SingleIdEntityLoaderDynamicBatch;
@@ -158,6 +159,7 @@ import org.hibernate.metamodel.mapping.StateArrayContributorMetadata;
 import org.hibernate.metamodel.mapping.internal.BasicEntityIdentifierMappingImpl;
 import org.hibernate.metamodel.mapping.internal.CompoundNaturalIdMapping;
 import org.hibernate.metamodel.mapping.internal.DiscriminatedAssociationAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EntityDiscriminatorMappingImpl;
 import org.hibernate.metamodel.mapping.internal.EntityRowIdMappingImpl;
 import org.hibernate.metamodel.mapping.internal.EntityVersionMappingImpl;
@@ -5309,8 +5311,8 @@ public abstract class AbstractEntityPersister
 		else {
 			final Object[] values = new Object[ getNumberOfAttributeMappings() ];
 			for ( int i = 0; i < attributeMappings.size(); i++ ) {
-				AttributeMapping attributeMapping = attributeMappings.get( i );
-				AttributeMetadataAccess attributeMetadataAccess = attributeMapping.getAttributeMetadataAccess();
+				final AttributeMapping attributeMapping = attributeMappings.get( i );
+				final AttributeMetadataAccess attributeMetadataAccess = attributeMapping.getAttributeMetadataAccess();
 				values[ i ] = attributeMetadataAccess
 						.resolveAttributeMetadata( this )
 						.getPropertyAccess()
@@ -5334,12 +5336,26 @@ public abstract class AbstractEntityPersister
 	@Override
 	public Object getPropertyValue(Object object, String propertyName) {
 		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			if ( attributeMappings.get( i ).getAttributeName().equals( propertyName ) ) {
-				return attributeMappings.get( i ).getAttributeMetadataAccess()
+			final AttributeMapping attributeMapping = attributeMappings.get( i );
+			final String attributeName = attributeMapping.getAttributeName();
+			if ( attributeName.equals( propertyName ) ) {
+				return attributeMapping.getAttributeMetadataAccess()
 						.resolveAttributeMetadata( this )
 						.getPropertyAccess()
 						.getGetter()
 						.get( object );
+			}
+			else if ( attributeName.equals( PropertyPath.IDENTIFIER_MAPPER_PROPERTY ) && attributeMapping instanceof EmbeddedAttributeMapping ) {
+				final EmbeddedAttributeMapping embeddedAttributeMapping = (EmbeddedAttributeMapping) attributeMapping;
+				final AttributeMapping mapping = embeddedAttributeMapping.getMappedType()
+						.findAttributeMapping( propertyName );
+				if ( mapping != null ) {
+					return mapping.getAttributeMetadataAccess()
+							.resolveAttributeMetadata( this )
+							.getPropertyAccess()
+							.getGetter()
+							.get( object );
+				}
 			}
 		}
 		return null;

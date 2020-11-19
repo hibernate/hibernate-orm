@@ -94,5 +94,5 @@ public interface JpaQueryStructure<T> extends JpaCriteriaNode {
 
 	<X> JpaExpression<X> getOffset();
 
-	JpaQueryStructure<T> setOffset(JpaExpression offset);
+	JpaQueryStructure<T> setOffset(JpaExpression<?> offset);
 }

@@ -17,40 +17,29 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
  */
 public class SqmSortSpecification implements JpaOrder {
 	private final SqmExpression sortExpression;
-	private final String collation;
 	private final SortOrder sortOrder;
 
 	private NullPrecedence nullPrecedence;
 
 	public SqmSortSpecification(
 			SqmExpression sortExpression,
-			String collation,
 			SortOrder sortOrder,
 			NullPrecedence nullPrecedence) {
 		this.sortExpression = sortExpression;
-		this.collation = collation;
 		this.sortOrder = sortOrder;
 		this.nullPrecedence = nullPrecedence;
 	}
 
 	public SqmSortSpecification(SqmExpression sortExpression) {
-		this( sortExpression, null, SortOrder.ASCENDING, null );
+		this( sortExpression, SortOrder.ASCENDING, null );
 	}
 
 	public SqmSortSpecification(SqmExpression sortExpression, SortOrder sortOrder) {
-		this( sortExpression, null, sortOrder, null );
-	}
-
-	public SqmSortSpecification(SqmExpression sortExpression, SortOrder sortOrder, NullPrecedence nullPrecedence) {
-		this( sortExpression, null, sortOrder, nullPrecedence );
+		this( sortExpression, sortOrder, null );
 	}
 
 	public SqmExpression getSortExpression() {
 		return sortExpression;
-	}
-
-	public String getCollation() {
-		return collation;
 	}
 
 	public SortOrder getSortOrder() {
@@ -75,7 +64,7 @@ public class SqmSortSpecification implements JpaOrder {
 	@Override
 	public JpaOrder reverse() {
 		SortOrder newSortOrder = this.sortOrder == null ? SortOrder.DESCENDING : sortOrder.reverse();
-		return new SqmSortSpecification( sortExpression, collation, newSortOrder, nullPrecedence );
+		return new SqmSortSpecification( sortExpression, newSortOrder, nullPrecedence );
 	}
 
 	@Override

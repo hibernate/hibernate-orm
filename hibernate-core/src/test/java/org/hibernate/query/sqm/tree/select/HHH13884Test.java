@@ -28,12 +28,10 @@ public class HHH13884Test {
 	@Test
 	public void testDefaultSqmSortSpecificationReverse() {
 		SqmExpression sortExpression = mock( SqmExpression.class );
-		String collation = "collation";
 
-		SqmSortSpecification order = new SqmSortSpecification( sortExpression, collation, ASCENDING, FIRST );
+		SqmSortSpecification order = new SqmSortSpecification( sortExpression, ASCENDING, FIRST );
 
 		assertEquals( sortExpression, order.getSortExpression() );
-		assertEquals( collation, order.getCollation() );
 		assertEquals( ASCENDING, order.getSortOrder() );
 		assertEquals( FIRST, order.getNullPrecedence() );
 

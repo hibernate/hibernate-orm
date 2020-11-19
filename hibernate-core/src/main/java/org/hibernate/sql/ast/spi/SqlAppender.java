@@ -27,4 +27,18 @@ public interface SqlAppender {
 	 * Add the passed fragment into the in-flight buffer
 	 */
 	void appendSql(String fragment);
+
+	void appendSql(char fragment);
+
+	default void appendQuoted(String value, char quoteChar) {
+		appendSql( quoteChar );
+		for ( int i = 0; i < value.length(); i++ ) {
+			final char c = value.charAt( i );
+			if ( c == quoteChar ) {
+				appendSql( quoteChar );
+			}
+			appendSql( c );
+		}
+		appendSql( quoteChar );
+	}
 }

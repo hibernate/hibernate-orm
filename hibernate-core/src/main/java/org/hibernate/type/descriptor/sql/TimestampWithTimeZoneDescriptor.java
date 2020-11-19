@@ -75,13 +75,13 @@ public class TimestampWithTimeZoneDescriptor implements SqlTypeDescriptor {
 					int index,
 					WrapperOptions wrapperOptions) throws SQLException {
 				try {
-					final OffsetDateTime dateTime = javaTypeDescriptor.unwrap( value, OffsetDateTime.class, wrapperOptions.getSession() );
+					final OffsetDateTime dateTime = javaTypeDescriptor.unwrap( value, OffsetDateTime.class, wrapperOptions );
 					// supposed to be supported in JDBC 4.2
 					st.setObject( index, dateTime, Types.TIMESTAMP_WITH_TIMEZONE );
 				}
 				catch (SQLException|AbstractMethodError e) {
 					// fall back to treating it as a JDBC Timestamp
-					final Timestamp timestamp = javaTypeDescriptor.unwrap( value, Timestamp.class, wrapperOptions.getSession() );
+					final Timestamp timestamp = javaTypeDescriptor.unwrap( value, Timestamp.class, wrapperOptions );
 					st.setTimestamp( index, timestamp );
 				}
 			}
@@ -94,13 +94,13 @@ public class TimestampWithTimeZoneDescriptor implements SqlTypeDescriptor {
 					WrapperOptions wrapperOptions)
 					throws SQLException {
 				try {
-					final OffsetDateTime dateTime = javaTypeDescriptor.unwrap( value, OffsetDateTime.class, wrapperOptions.getSession() );
+					final OffsetDateTime dateTime = javaTypeDescriptor.unwrap( value, OffsetDateTime.class, wrapperOptions );
 					// supposed to be supported in JDBC 4.2
 					st.setObject( name, dateTime, Types.TIMESTAMP_WITH_TIMEZONE );
 				}
 				catch (SQLException|AbstractMethodError e) {
 					// fall back to treating it as a JDBC Timestamp
-					final Timestamp timestamp = javaTypeDescriptor.unwrap( value, Timestamp.class, wrapperOptions.getSession() );
+					final Timestamp timestamp = javaTypeDescriptor.unwrap( value, Timestamp.class, wrapperOptions );
 					st.setTimestamp( name, timestamp );
 				}
 			}
@@ -114,11 +114,11 @@ public class TimestampWithTimeZoneDescriptor implements SqlTypeDescriptor {
 			protected X doExtract(ResultSet rs, int position, WrapperOptions wrapperOptions) throws SQLException {
 				try {
 					// supposed to be supported in JDBC 4.2
-					return javaTypeDescriptor.wrap( rs.getObject( position, OffsetDateTime.class ), wrapperOptions.getSession() );
+					return javaTypeDescriptor.wrap( rs.getObject( position, OffsetDateTime.class ), wrapperOptions );
 				}
 				catch (SQLException|AbstractMethodError e) {
 					// fall back to treating it as a JDBC Timestamp
-					return javaTypeDescriptor.wrap( rs.getTimestamp( position ), wrapperOptions.getSession() );
+					return javaTypeDescriptor.wrap( rs.getTimestamp( position ), wrapperOptions );
 				}
 			}
 
@@ -126,11 +126,11 @@ public class TimestampWithTimeZoneDescriptor implements SqlTypeDescriptor {
 			protected X doExtract(CallableStatement statement, int position, WrapperOptions wrapperOptions) throws SQLException {
 				try {
 					// supposed to be supported in JDBC 4.2
-					return javaTypeDescriptor.wrap( statement.getObject( position, OffsetDateTime.class ), wrapperOptions.getSession() );
+					return javaTypeDescriptor.wrap( statement.getObject( position, OffsetDateTime.class ), wrapperOptions );
 				}
 				catch (SQLException|AbstractMethodError e) {
 					// fall back to treating it as a JDBC Timestamp
-					return javaTypeDescriptor.wrap( statement.getTimestamp( position ), wrapperOptions.getSession() );
+					return javaTypeDescriptor.wrap( statement.getTimestamp( position ), wrapperOptions );
 				}
 			}
 
@@ -138,11 +138,11 @@ public class TimestampWithTimeZoneDescriptor implements SqlTypeDescriptor {
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions wrapperOptions) throws SQLException {
 				try {
 					// supposed to be supported in JDBC 4.2
-					return javaTypeDescriptor.wrap( statement.getObject( name, OffsetDateTime.class ), wrapperOptions.getSession() );
+					return javaTypeDescriptor.wrap( statement.getObject( name, OffsetDateTime.class ), wrapperOptions );
 				}
 				catch (SQLException|AbstractMethodError e) {
 					// fall back to treating it as a JDBC Timestamp
-					return javaTypeDescriptor.wrap( statement.getTimestamp( name ), wrapperOptions.getSession() );
+					return javaTypeDescriptor.wrap( statement.getTimestamp( name ), wrapperOptions );
 				}
 			}
 		};

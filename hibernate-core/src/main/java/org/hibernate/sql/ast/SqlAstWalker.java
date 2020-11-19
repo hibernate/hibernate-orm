@@ -14,6 +14,7 @@ import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.CastTarget;
+import org.hibernate.sql.ast.tree.expression.Collate;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.Duration;
@@ -45,7 +46,6 @@ import org.hibernate.sql.ast.tree.predicate.InListPredicate;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
 import org.hibernate.sql.ast.tree.predicate.Junction;
 import org.hibernate.sql.ast.tree.predicate.LikePredicate;
-import org.hibernate.sql.ast.tree.predicate.MemberOfPredicate;
 import org.hibernate.sql.ast.tree.predicate.NegatedPredicate;
 import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.predicate.SelfRenderingPredicate;
@@ -114,6 +114,8 @@ public interface SqlAstWalker {
 
 	void visitTuple(SqlTuple tuple);
 
+	void visitCollate(Collate collate);
+
 	void visitParameter(JdbcParameter jdbcParameter);
 
 	void visitJdbcLiteral(JdbcLiteral jdbcLiteral);
@@ -152,5 +154,4 @@ public interface SqlAstWalker {
 
 	void visitConversion(Conversion conversion);
 
-	void visitMemberOfPredicate(MemberOfPredicate memberOfPredicate);
 }

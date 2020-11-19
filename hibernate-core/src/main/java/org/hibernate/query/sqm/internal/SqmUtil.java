@@ -231,7 +231,7 @@ public class SqmUtil {
 						final JdbcParameter jdbcParameter = jdbcParams.get( i );
 						jdbcParameterBindings.addBinding(
 								jdbcParameter,
-								new JdbcParameterBindingImpl( StandardBasicTypes.SERIALIZABLE, null )
+								new JdbcParameterBindingImpl( null, null )
 						);
 					}
 				}

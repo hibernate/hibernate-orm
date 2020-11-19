@@ -918,4 +918,9 @@ public class MySQLDialect extends Dialect {
 	boolean supportsAliasLocks() {
 		return getVersion() >= 800;
 	}
+
+	@Override
+	public boolean supportsGroupByRollup() {
+		return true;
+	}
 }

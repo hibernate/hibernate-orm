@@ -10,6 +10,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -19,6 +20,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.query.QueryLogging;
+import org.hibernate.query.criteria.LiteralHandlingMode;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.hql.internal.StandardHqlTranslator;
 import org.hibernate.query.hql.spi.SqmCreationOptions;
@@ -68,6 +70,7 @@ public class QueryEngine {
 
 		return new QueryEngine(
 				() -> sessionFactory.getRuntimeMetamodels().getJpaMetamodel(),
+				sessionFactory.getSessionFactoryOptions().getCriteriaLiteralHandlingMode(),
 				metadata.buildNamedQueryRepository( sessionFactory ),
 				hqlTranslator,
 				sqmTranslatorFactory,
@@ -89,6 +92,7 @@ public class QueryEngine {
 
 	public QueryEngine(
 			Supplier<JpaMetamodel> jpaMetamodelAccess,
+			LiteralHandlingMode criteriaLiteralHandlingMode,
 			NamedObjectRepository namedObjectRepository,
 			HqlTranslator hqlTranslator,
 			SqmTranslatorFactory sqmTranslatorFactory,
@@ -106,7 +110,8 @@ public class QueryEngine {
 		this.criteriaBuilder = new SqmCriteriaNodeBuilder(
 				this,
 				jpaMetamodelAccess,
-				serviceRegistry
+				serviceRegistry,
+				criteriaLiteralHandlingMode
 		);
 
 		this.sqmFunctionRegistry = new SqmFunctionRegistry();
@@ -132,6 +137,7 @@ public class QueryEngine {
 	 */
 	public QueryEngine(
 			JpaMetamodel jpaMetamodel,
+			LiteralHandlingMode criteriaLiteralHandlingMode,
 			boolean useStrictJpaCompliance,
 			NamedObjectRepository namedObjectRepository,
 			NativeQueryInterpreter nativeQueryInterpreter,
@@ -147,7 +153,8 @@ public class QueryEngine {
 		this.criteriaBuilder = new SqmCriteriaNodeBuilder(
 				this,
 				() -> jpaMetamodel,
-				serviceRegistry
+				serviceRegistry,
+				criteriaLiteralHandlingMode
 		);
 
 		final SqmCreationContext sqmCreationContext = new SqmCreationContext() {

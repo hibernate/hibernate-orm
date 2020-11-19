@@ -6,6 +6,7 @@
  */
 package org.hibernate.testing.orm.junit;
 
+import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
 
 /**
@@ -211,6 +212,18 @@ abstract public class DialectFeatureChecks {
 	public static class DoesNotSupportNullPrecedence implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return !dialect.supportsNullPrecedence();
+		}
+	}
+
+	public static class SupportsPadWithChar implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return !(dialect instanceof DerbyDialect );
+		}
+	}
+
+	public static class SupportsGroupByRollup implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.supportsGroupByRollup();
 		}
 	}
 }

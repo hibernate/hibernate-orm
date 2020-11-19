@@ -37,7 +37,6 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 import org.hibernate.sql.results.internal.RowTransformerPassThruImpl;
-import org.hibernate.type.SerializableType;
 
 /**
  * Batch support for natural-id multi loading
@@ -139,10 +138,17 @@ public class MultiNaturalIdLoadingBatcher {
 
 		if ( needsExecution ) {
 			while ( jdbcParamItr.hasNext() ) {
+				final JdbcParameterBindings jdbcParamBindingsRef = jdbcParamBindings;
+				final Iterator<JdbcParameter> jdbcParamItrRef = jdbcParamItr;
 				// pad the remaining parameters with null
-				jdbcParamBindings.addBinding(
-						jdbcParamItr.next(),
-						new JdbcParameterBindingImpl( SerializableType.INSTANCE, null )
+				entityDescriptor.getNaturalIdMapping().visitJdbcValues(
+						null,
+						Clause.IRRELEVANT,
+						(jdbcValue, jdbcMapping) -> jdbcParamBindingsRef.addBinding(
+								jdbcParamItrRef.next(),
+								new JdbcParameterBindingImpl( jdbcMapping, jdbcValue )
+						),
+						session
 				);
 			}
 			final List<E> batchResults = performLoad( jdbcParamBindings, session );

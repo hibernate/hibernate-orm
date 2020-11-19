@@ -76,7 +76,7 @@ public class OrderByColumnNameTest {
 		);
 	}
 
-	@Entity
+	@Entity(name = "Product")
 	public static class Product {
 		@Id
 		@GeneratedValue
@@ -103,7 +103,7 @@ public class OrderByColumnNameTest {
 		}
 	}
 
-	@Entity
+	@Entity(name = "Widgets")
 	@Inheritance(strategy = InheritanceType.JOINED)
 	public static class Widgets {
 		private String name;
@@ -134,13 +134,13 @@ public class OrderByColumnNameTest {
 
 	}
 
-	@Entity
-	public static class Widget1 extends org.hibernate.orm.test.annotations.collectionelement.Widgets {
+	@Entity(name = "Widget1")
+	public static class Widget1 extends Widgets {
 		private String name1;
 	}
 
-	@Entity
-	public static class Widget2 extends org.hibernate.orm.test.annotations.collectionelement.Widgets {
+	@Entity(name = "Widget2")
+	public static class Widget2 extends Widgets {
 		private String name2;
 	}
 

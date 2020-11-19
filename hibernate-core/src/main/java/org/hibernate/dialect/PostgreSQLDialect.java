@@ -606,6 +606,11 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
+		return true;
+	}
+
+	@Override
 	public CallableStatementSupport getCallableStatementSupport() {
 		return PostgresCallableStatementSupport.INSTANCE;
 	}
@@ -766,6 +771,11 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsGroupByRollup() {
+		return getVersion() >= 950;
+	}
+
+	@Override
 	public void augmentRecognizedTableTypes(List<String> tableTypesList) {
 		super.augmentRecognizedTableTypes( tableTypesList );
 		if ( getVersion() >= 930 ) {
@@ -832,7 +842,7 @@ public class PostgreSQLDialect extends Dialect {
 						X value,
 						int index,
 						WrapperOptions wrapperOptions) throws SQLException {
-					st.setObject( index, javaTypeDescriptor.unwrap( value, UUID.class, wrapperOptions.getSession() ), Types.OTHER );
+					st.setObject( index, javaTypeDescriptor.unwrap( value, UUID.class, wrapperOptions ), Types.OTHER );
 				}
 
 				@Override
@@ -841,7 +851,7 @@ public class PostgreSQLDialect extends Dialect {
 						X value,
 						String name,
 						WrapperOptions wrapperOptions) throws SQLException {
-					st.setObject( name, javaTypeDescriptor.unwrap( value, UUID.class, wrapperOptions.getSession() ), Types.OTHER );
+					st.setObject( name, javaTypeDescriptor.unwrap( value, UUID.class, wrapperOptions ), Types.OTHER );
 				}
 			};
 		}
@@ -851,17 +861,17 @@ public class PostgreSQLDialect extends Dialect {
 			return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 				@Override
 				protected X doExtract(ResultSet rs, int position, WrapperOptions wrapperOptions) throws SQLException {
-					return javaTypeDescriptor.wrap( rs.getObject( position ), wrapperOptions.getSession() );
+					return javaTypeDescriptor.wrap( rs.getObject( position ), wrapperOptions );
 				}
 
 				@Override
 				protected X doExtract(CallableStatement statement, int position, WrapperOptions wrapperOptions) throws SQLException {
-					return javaTypeDescriptor.wrap( statement.getObject( position ), wrapperOptions.getSession() );
+					return javaTypeDescriptor.wrap( statement.getObject( position ), wrapperOptions );
 				}
 
 				@Override
 				protected X doExtract(CallableStatement statement, String name, WrapperOptions wrapperOptions) throws SQLException {
-					return javaTypeDescriptor.wrap( statement.getObject( name ), wrapperOptions.getSession() );
+					return javaTypeDescriptor.wrap( statement.getObject( name ), wrapperOptions );
 				}
 			};
 		}

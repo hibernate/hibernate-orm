@@ -6,11 +6,15 @@
  */
 package org.hibernate.sql.ast.spi;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.TimeZone;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.NullPrecedence;
@@ -18,6 +22,8 @@ import org.hibernate.SortOrder;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SessionLazyDelegatorBaseImpl;
 import org.hibernate.internal.FilterJdbcParameter;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.Stack;
@@ -28,9 +34,12 @@ import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.BasicValuedCollectionPart;
 import org.hibernate.persister.entity.Loadable;
-import org.hibernate.query.QueryLiteralRendering;
+import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.UnaryArithmeticOperator;
+import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.sql.internal.EmbeddableValuedPathInterpretation;
+import org.hibernate.query.sqm.sql.internal.NonAggregatedCompositeValuedPathInterpretation;
+import org.hibernate.query.sqm.sql.internal.SqmParameterInterpretation;
 import org.hibernate.query.sqm.tree.expression.Conversion;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
@@ -40,6 +49,7 @@ import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.CastTarget;
+import org.hibernate.sql.ast.tree.expression.Collate;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.Duration;
@@ -52,6 +62,7 @@ import org.hibernate.sql.ast.tree.expression.Format;
 import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.Literal;
+import org.hibernate.sql.ast.tree.expression.LiteralAsParameter;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
 import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
@@ -74,7 +85,6 @@ import org.hibernate.sql.ast.tree.predicate.InListPredicate;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
 import org.hibernate.sql.ast.tree.predicate.Junction;
 import org.hibernate.sql.ast.tree.predicate.LikePredicate;
-import org.hibernate.sql.ast.tree.predicate.MemberOfPredicate;
 import org.hibernate.sql.ast.tree.predicate.NegatedPredicate;
 import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
@@ -84,28 +94,24 @@ import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.exec.internal.JdbcParametersImpl;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
+import org.hibernate.type.IntegerType;
 import org.hibernate.type.descriptor.sql.JdbcLiteralFormatter;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.query.TemporalUnit.NANOSECOND;
-import static org.hibernate.sql.ast.spi.SqlAppender.CLOSE_PARENTHESIS;
-import static org.hibernate.sql.ast.spi.SqlAppender.COMA_SEPARATOR;
-import static org.hibernate.sql.ast.spi.SqlAppender.EMPTY_STRING;
-import static org.hibernate.sql.ast.spi.SqlAppender.NO_SEPARATOR;
-import static org.hibernate.sql.ast.spi.SqlAppender.NULL_KEYWORD;
-import static org.hibernate.sql.ast.spi.SqlAppender.OPEN_PARENTHESIS;
-import static org.hibernate.sql.ast.spi.SqlAppender.PARAM_MARKER;
 
 /**
  * @author Steve Ebersole
  */
 public abstract class AbstractSqlAstWalker
-		implements SqlAstWalker, SqlTypeDescriptorIndicators {
+		implements SqlAstWalker, SqlTypeDescriptorIndicators, SqlAppender {
+
+	private static final QueryLiteral<Integer> ONE_LITERAL = new QueryLiteral<>( 1, IntegerType.INSTANCE );
 
 	// pre-req state
 	private final SessionFactoryImplementor sessionFactory;
-	private final SqlAppender sqlAppender = this::appendSql;
 
 	// In-flight state
 	private final StringBuilder sqlBuffer = new StringBuilder();
@@ -118,6 +124,8 @@ public abstract class AbstractSqlAstWalker
 	private final Stack<Clause> clauseStack = new StandardStack<>();
 
 	private final Dialect dialect;
+	private transient AbstractSqmSelfRenderingFunctionDescriptor castFunction;
+	private transient LazySession session;
 
 	public Dialect getDialect() {
 		return dialect;
@@ -133,10 +141,75 @@ public abstract class AbstractSqlAstWalker
 		return sessionFactory;
 	}
 
+	protected AbstractSqmSelfRenderingFunctionDescriptor castFunction() {
+		if ( castFunction == null ) {
+			castFunction = (AbstractSqmSelfRenderingFunctionDescriptor) sessionFactory
+					.getQueryEngine()
+					.getSqmFunctionRegistry()
+					.findFunctionDescriptor( "cast" );
+		}
+		return castFunction;
+	}
+
+	protected SessionLazyDelegatorBaseImpl getSession() {
+		if ( session == null ) {
+			session = new LazySession( sessionFactory );
+		}
+		return session;
+	}
+
+	/**
+	 * A lazy session implementation that is needed for rendering literals.
+	 * Usually, only the {@link org.hibernate.type.descriptor.WrapperOptions} interface is needed,
+	 * but for creating LOBs, it might be to have a full blown session.
+	 */
+	private static class LazySession extends SessionLazyDelegatorBaseImpl {
+
+		private final SessionFactoryImplementor sessionFactory;
+		private SessionImplementor session;
+
+		public LazySession(SessionFactoryImplementor sessionFactory) {
+			this.sessionFactory = sessionFactory;
+		}
+
+		public void cleanup() {
+			if ( session != null ) {
+				session.close();
+				session = null;
+			}
+		}
+
+		@Override
+		protected SessionImplementor delegate() {
+			if ( session == null ) {
+				session = (SessionImplementor) sessionFactory.openTemporarySession();
+			}
+			return session;
+		}
+
+		@Override
+		public boolean useStreamForLobBinding() {
+			return sessionFactory.getFastSessionServices().useStreamForLobBinding();
+		}
+
+		@Override
+		public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
+			return sessionFactory.getFastSessionServices().remapSqlTypeDescriptor( sqlTypeDescriptor );
+		}
+
+		@Override
+		public TimeZone getJdbcTimeZone() {
+			return sessionFactory.getSessionFactoryOptions().getJdbcTimeZone();
+		}
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// for tests, for now
 	public String getSql() {
+		if ( session != null ) {
+			session.cleanup();
+			session = null;
+		}
 		return sqlBuffer.toString();
 	}
 
@@ -152,16 +225,16 @@ public abstract class AbstractSqlAstWalker
 
 	@SuppressWarnings("unused")
 	protected SqlAppender getSqlAppender() {
-		return sqlAppender;
+		return this;
 	}
 
-	@SuppressWarnings("WeakerAccess")
-	protected void appendSql(String fragment) {
+	@Override
+	public void appendSql(String fragment) {
 		sqlBuffer.append( fragment );
 	}
 
-	@SuppressWarnings("WeakerAccess")
-	protected void appendSql(char fragment) {
+	@Override
+	public void appendSql(char fragment) {
 		sqlBuffer.append( fragment );
 	}
 
@@ -187,21 +260,20 @@ public abstract class AbstractSqlAstWalker
 		if ( !querySpec.isRoot() ) {
 			appendSql( " (" );
 		}
-
 		visitSelectClause( querySpec.getSelectClause() );
+		visitFromClause( querySpec.getFromClause() );
+		visitWhereClause( querySpec );
+		visitGroupByClause( querySpec );
+		visitHavingClause( querySpec );
+		visitOrderBy( querySpec );
+		visitLimitOffsetClause( querySpec );
 
-		FromClause fromClause = querySpec.getFromClause();
-		if ( fromClause == null || fromClause.getRoots().isEmpty() ) {
-			String fromDual = getDialect().getFromDual();
-			if ( !fromDual.isEmpty() ) {
-				appendSql( " " );
-				appendSql( fromDual );
-			}
+		if ( !querySpec.isRoot() ) {
+			appendSql( ")" );
 		}
-		else {
-			visitFromClause( fromClause );
-		}
+	}
 
+	protected final void visitWhereClause(QuerySpec querySpec) {
 		final Predicate whereClauseRestrictions = querySpec.getWhereClauseRestrictions();
 		if ( whereClauseRestrictions != null && !whereClauseRestrictions.isEmpty() ) {
 			appendSql( " where " );
@@ -214,23 +286,152 @@ public abstract class AbstractSqlAstWalker
 				clauseStack.pop();
 			}
 		}
+	}
 
+	protected final void visitGroupByClause(QuerySpec querySpec) {
+		List<Expression> groupByClauseExpressions = querySpec.getGroupByClauseExpressions();
+		if ( !groupByClauseExpressions.isEmpty() ) {
+			appendSql( " group by " );
+
+			clauseStack.push( Clause.GROUP );
+			String separator = NO_SEPARATOR;
+			try {
+				for ( Expression groupByClauseExpression : groupByClauseExpressions ) {
+					appendSql( separator );
+					groupByClauseExpression.accept( this );
+					separator = COMA_SEPARATOR;
+				}
+			}
+			finally {
+				clauseStack.pop();
+			}
+		}
+	}
+
+	protected final void visitHavingClause(QuerySpec querySpec) {
+		final Predicate havingClauseRestrictions = querySpec.getHavingClauseRestrictions();
+		if ( havingClauseRestrictions != null && !havingClauseRestrictions.isEmpty() ) {
+			appendSql( " having " );
+
+			clauseStack.push( Clause.HAVING );
+			try {
+				havingClauseRestrictions.accept( this );
+			}
+			finally {
+				clauseStack.pop();
+			}
+		}
+	}
+
+	protected final void visitOrderBy(QuerySpec querySpec) {
 		final List<SortSpecification> sortSpecifications = querySpec.getSortSpecifications();
 		if ( sortSpecifications != null && !sortSpecifications.isEmpty() ) {
 			appendSql( " order by " );
 
-			String separator = NO_SEPARATOR;
-			for ( SortSpecification sortSpecification : sortSpecifications ) {
-				appendSql( separator );
-				visitSortSpecification( sortSpecification );
-				separator = COMA_SEPARATOR;
+			clauseStack.push( Clause.ORDER );
+			try {
+				String separator = NO_SEPARATOR;
+				for ( SortSpecification sortSpecification : sortSpecifications ) {
+					appendSql( separator );
+					visitSortSpecification( sortSpecification );
+					separator = COMA_SEPARATOR;
+				}
+			}
+			finally {
+				clauseStack.pop();
 			}
 		}
+	}
 
-		visitLimitOffsetClause( querySpec );
+	protected void emulateTupleComparison(final List<? extends Expression> lhsExpressions, final List<? extends Expression> rhsExpressions, ComparisonOperator operator) {
+		String separator = NO_SEPARATOR;
 
-		if ( !querySpec.isRoot() ) {
-			appendSql( ")" );
+		final boolean isCurrentWhereClause = clauseStack.getCurrent() == Clause.WHERE;
+		if ( isCurrentWhereClause ) {
+			appendSql( OPEN_PARENTHESIS );
+		}
+
+		final int size = lhsExpressions.size();
+		final String operatorText = operator.sqlText();
+		assert size == rhsExpressions.size();
+
+		switch ( operator ) {
+			case EQUAL:
+			case NOT_EQUAL:
+				for ( int i = 0; i < size; i++ ) {
+					appendSql( separator );
+					lhsExpressions.get( i ).accept( this );
+					appendSql( operatorText );
+					rhsExpressions.get( i ).accept( this );
+					separator = " and ";
+				}
+				break;
+			case LESS_THAN_OR_EQUAL:
+			case GREATER_THAN_OR_EQUAL:
+				// Render (a, b) <= (1, 2) as: (a = 1 and b = 2) or (a < 1 or a = 1 and b < 2)
+				appendSql( OPEN_PARENTHESIS );
+				for ( int i = 0; i < size; i++ ) {
+					appendSql( separator );
+					lhsExpressions.get( i ).accept( this );
+					appendSql( operatorText );
+					rhsExpressions.get( i ).accept( this );
+					separator = " and ";
+				}
+				appendSql( CLOSE_PARENTHESIS );
+				appendSql( " or " );
+				separator = NO_SEPARATOR;
+			case LESS_THAN:
+			case GREATER_THAN:
+				// Render (a, b) < (1, 2) as: (a < 1 or a = 1 and b < 2)
+				appendSql( OPEN_PARENTHESIS );
+				for ( int i = 0; i < size; i++ ) {
+					int j = 0;
+					// Render the equals parts
+					for ( ; j < i; j++ ) {
+						appendSql( separator );
+						lhsExpressions.get( i ).accept( this );
+						appendSql( '=' );
+						rhsExpressions.get( i ).accept( this );
+						separator = " and ";
+					}
+					// Render the actual operator part for the current component
+					appendSql( separator );
+					lhsExpressions.get( i ).accept( this );
+					appendSql( operatorText );
+					rhsExpressions.get( i ).accept( this );
+					separator = " or ";
+				}
+				appendSql( CLOSE_PARENTHESIS );
+				break;
+		}
+
+		if ( isCurrentWhereClause ) {
+			appendSql( CLOSE_PARENTHESIS );
+		}
+	}
+
+	protected void renderSelectTupleComparison(final List<SqlSelection> lhsExpressions, SqlTuple tuple, ComparisonOperator operator) {
+		if ( dialect.supportsRowValueConstructorSyntax() ) {
+			appendSql( OPEN_PARENTHESIS );
+			String separator = NO_SEPARATOR;
+			for ( SqlSelection lhsExpression : lhsExpressions ) {
+				appendSql( separator );
+				lhsExpression.getExpression().accept( this );
+				separator = COMA_SEPARATOR;
+			}
+			appendSql( CLOSE_PARENTHESIS );
+			appendSql( " " );
+			appendSql( operator.sqlText() );
+			appendSql( " " );
+			tuple.accept( this );
+		}
+		else {
+			final List<Expression> lhs = new ArrayList<>( lhsExpressions.size() );
+			for ( SqlSelection lhsExpression : lhsExpressions ) {
+				lhs.add( lhsExpression.getExpression() );
+			}
+
+			emulateTupleComparison( lhs, tuple.getExpressions(), operator );
 		}
 	}
 
@@ -258,12 +459,6 @@ public abstract class AbstractSqlAstWalker
 
 		sortSpecification.getSortExpression().accept( this );
 
-		final String collation = sortSpecification.getCollation();
-		if ( collation != null ) {
-			appendSql( " collate " );
-			appendSql( collation );
-		}
-
 		final SortOrder sortOrder = sortSpecification.getSortOrder();
 		if ( sortOrder == SortOrder.ASCENDING ) {
 			appendSql( " asc" );
@@ -284,25 +479,25 @@ public abstract class AbstractSqlAstWalker
 	@Override
 	public void visitLimitOffsetClause(QuerySpec querySpec) {
 		if ( querySpec.getOffsetClauseExpression() != null ) {
-			renderOffset( querySpec );
+			renderOffset( querySpec.getOffsetClauseExpression() );
 		}
 
 		if ( querySpec.getLimitClauseExpression() != null ) {
-			renderLimit( querySpec );
+			renderLimit( querySpec.getLimitClauseExpression() );
 		}
 	}
 
 	@SuppressWarnings("WeakerAccess")
-	protected void renderOffset(QuerySpec querySpec) {
+	protected void renderOffset(Expression offsetExpression) {
 		appendSql( " offset " );
-		querySpec.getOffsetClauseExpression().accept( this );
+		offsetExpression.accept( this );
 		appendSql( " rows" );
 	}
 
 	@SuppressWarnings("WeakerAccess")
-	protected void renderLimit(QuerySpec querySpec) {
+	protected void renderLimit(Expression limitExpression) {
 		appendSql( " fetch first " );
-		querySpec.getLimitClauseExpression().accept( this );
+		limitExpression.accept( this );
 		appendSql( " rows only" );
 	}
 
@@ -343,13 +538,22 @@ public abstract class AbstractSqlAstWalker
 
 	@Override
 	public void visitFromClause(FromClause fromClause) {
-		appendSql( " from " );
+		if ( fromClause == null || fromClause.getRoots().isEmpty() ) {
+			String fromDual = getDialect().getFromDual();
+			if ( !fromDual.isEmpty() ) {
+				appendSql( " " );
+				appendSql( fromDual );
+			}
+		}
+		else {
+			appendSql( " from " );
 
-		String separator = NO_SEPARATOR;
-		for ( TableGroup root : fromClause.getRoots() ) {
-			appendSql( separator );
-			renderTableGroup( root );
-			separator = COMA_SEPARATOR;
+			String separator = NO_SEPARATOR;
+			for ( TableGroup root : fromClause.getRoots() ) {
+				appendSql( separator );
+				renderTableGroup( root );
+				separator = COMA_SEPARATOR;
+			}
 		}
 	}
 
@@ -399,12 +603,12 @@ public abstract class AbstractSqlAstWalker
 
 	@SuppressWarnings("WeakerAccess")
 	protected void renderTableReference(TableReference tableReference) {
-		sqlAppender.appendSql( tableReference.getTableExpression() );
+		appendSql( tableReference.getTableExpression() );
 
 		final String identificationVariable = tableReference.getIdentificationVariable();
 		if ( identificationVariable != null ) {
-			sqlAppender.appendSql( getDialect().getTableAliasSeparator() );
-			sqlAppender.appendSql( identificationVariable );
+			appendSql( getDialect().getTableAliasSeparator() );
+			appendSql( identificationVariable );
 		}
 	}
 
@@ -416,14 +620,14 @@ public abstract class AbstractSqlAstWalker
 		}
 
 		for ( TableReferenceJoin tableJoin : joins ) {
-			sqlAppender.appendSql( EMPTY_STRING );
-			sqlAppender.appendSql( tableJoin.getJoinType().getText() );
-			sqlAppender.appendSql( " join " );
+			appendSql( EMPTY_STRING );
+			appendSql( tableJoin.getJoinType().getText() );
+			appendSql( " join " );
 
 			renderTableReference( tableJoin.getJoinedTableReference() );
 
 			if ( tableJoin.getJoinPredicate() != null && !tableJoin.getJoinPredicate().isEmpty() ) {
-				sqlAppender.appendSql( " on " );
+				appendSql( " on " );
 				tableJoin.getJoinPredicate().accept( this );
 			}
 		}
@@ -588,6 +792,12 @@ public abstract class AbstractSqlAstWalker
 		if ( isCurrentWhereClause ) {
 			appendSql( CLOSE_PARENTHESIS );
 		}
+	}
+
+	@Override
+	public void visitCollate(Collate collate) {
+		collate.getExpression().accept( this );
+		dialect.appendCollate( this, collate.getCollation() );
 	}
 
 	@Override
@@ -907,7 +1117,7 @@ public abstract class AbstractSqlAstWalker
 	@Override
 	public void visitDuration(Duration duration) {
 		duration.getMagnitude().accept( this );
-		sqlAppender.appendSql(
+		appendSql(
 				duration.getUnit().conversionFactor( NANOSECOND, getDialect() )
 		);
 	}
@@ -915,23 +1125,11 @@ public abstract class AbstractSqlAstWalker
 	@Override
 	public void visitConversion(Conversion conversion) {
 		conversion.getDuration().getMagnitude().accept( this );
-		sqlAppender.appendSql(
+		appendSql(
 				conversion.getDuration().getUnit().conversionFactor(
 						conversion.getUnit(), getDialect()
 				)
 		);
-	}
-
-	@Override
-	public void visitMemberOfPredicate(MemberOfPredicate memberOfPredicate) {
-		memberOfPredicate.getLeftHandExpression().accept( this );
-		if ( memberOfPredicate.isNegated() ) {
-			appendSql( " not " );
-		}
-		appendSql( " in (" );
-
-		visitQuerySpec( memberOfPredicate.getQuerySpec() );
-		appendSql( ")" );
 	}
 
 	@Override
@@ -966,72 +1164,18 @@ public abstract class AbstractSqlAstWalker
 		every.getSubquery().accept( this );
 	}
 
-	//	@Override
-//	public void visitGenericParameter(GenericParameter parameter) {
-//		visitJdbcParameterBinder( parameter.getParameterBinder() );
-//
-//		if ( parameter instanceof JdbcParameter ) {
-//			jdbcParameters.addParameter( (JdbcParameter) parameter );
-//		}
-//	}
-
-	protected void visitJdbcParameterBinder(JdbcParameterBinder jdbcParameterBinder) {
-		parameterBinders.add( jdbcParameterBinder );
-
-		// todo (6.0) : ? wrap in cast function call if the literal occurs in SELECT (?based on Dialect?)
-
-		appendSql( "?" );
-	}
-
-//	@Override
-//	public void visitNamedParameter(NamedParameter namedParameter) {
-//		visitJdbcParameterBinder( namedParameter );
-//	}
-//
-//	@Override
-//	public void visitPositionalParameter(PositionalParameter positionalParameter) {
-//		visitJdbcParameterBinder( positionalParameter );
-//	}
-
-
 	@Override
 	public void visitJdbcLiteral(JdbcLiteral jdbcLiteral) {
-		renderAsLiteral( jdbcLiteral );
+		visitLiteral( jdbcLiteral );
 	}
 
 	@Override
 	public void visitQueryLiteral(QueryLiteral queryLiteral) {
-		final QueryLiteralRendering queryLiteralRendering = getSessionFactory().getSessionFactoryOptions().getQueryLiteralRenderingMode();
-
-		switch( queryLiteralRendering ) {
-			case AS_LITERAL: {
-				renderAsLiteral( queryLiteral );
-				break;
-			}
-			case AS_PARAM: {
-				visitJdbcParameterBinder( queryLiteral );
-				break;
-			}
-			case AUTO:
-			case AS_PARAM_OUTSIDE_SELECT: {
-				if ( clauseStack.getCurrent() == Clause.SELECT ) {
-					renderAsLiteral( queryLiteral );
-				}
-				else {
-					visitJdbcParameterBinder( queryLiteral );
-				}
-				break;
-			}
-			default: {
-				throw new IllegalArgumentException(
-						"Unrecognized QueryLiteralRendering : " + queryLiteralRendering
-				);
-			}
-		}
+		visitLiteral( queryLiteral );
 	}
 
 	@SuppressWarnings("unchecked")
-	private void renderAsLiteral(Literal literal) {
+	private void visitLiteral(Literal literal) {
 		if ( literal.getLiteralValue() == null ) {
 			// todo : not sure we allow this "higher up"
 			appendSql( SqlAppender.NULL_KEYWORD );
@@ -1040,13 +1184,25 @@ public abstract class AbstractSqlAstWalker
 			assert literal.getExpressionType().getJdbcTypeCount( getTypeConfiguration() ) == 1;
 			final JdbcMapping jdbcMapping = literal.getJdbcMapping();
 			final JdbcLiteralFormatter literalFormatter = jdbcMapping.getSqlTypeDescriptor().getJdbcLiteralFormatter( jdbcMapping.getJavaTypeDescriptor() );
-			appendSql(
-					literalFormatter.toJdbcLiteral(
-							literal.getLiteralValue(),
-							dialect,
-							null
-					)
-			);
+			if ( literalFormatter == null ) {
+				parameterBinders.add( literal );
+
+				if ( clauseStack.getCurrent() == Clause.SELECT && dialect.requiresCastingOfParametersInSelectClause() ) {
+					castFunction().render( this, Collections.singletonList( new LiteralAsParameter<>( literal ) ), this );
+				}
+				else {
+					parameterBinders.add( literal );
+				}
+			}
+			else {
+				appendSql(
+						literalFormatter.toJdbcLiteral(
+								literal.getLiteralValue(),
+								dialect,
+								getSession()
+						)
+				);
+			}
 		}
 	}
 
@@ -1069,7 +1225,7 @@ public abstract class AbstractSqlAstWalker
 
 	@Override
 	public void visitSelfRenderingExpression(SelfRenderingExpression expression) {
-		expression.renderToSql( sqlAppender, this, getSessionFactory() );
+		expression.renderToSql( this, this, getSessionFactory() );
 	}
 
 //	@Override
@@ -1118,33 +1274,167 @@ public abstract class AbstractSqlAstWalker
 
 	@Override
 	public void visitInListPredicate(InListPredicate inListPredicate) {
-		inListPredicate.getTestExpression().accept( this );
-		if ( inListPredicate.isNegated() ) {
-			appendSql( " not" );
-		}
-		appendSql( " in (" );
-		if ( inListPredicate.getListExpressions().isEmpty() ) {
-			appendSql( NULL_KEYWORD );
-		}
-		else {
+		final SqlTuple lhsTuple;
+		if ( ( lhsTuple = getTuple( inListPredicate.getTestExpression() ) ) != null && !dialect.supportsRowValueConstructorSyntaxInInList() ) {
+			final ComparisonOperator comparisonOperator = inListPredicate.isNegated() ? ComparisonOperator.NOT_EQUAL : ComparisonOperator.EQUAL;
 			String separator = NO_SEPARATOR;
 			for ( Expression expression : inListPredicate.getListExpressions() ) {
 				appendSql( separator );
-				expression.accept( this );
-				separator = COMA_SEPARATOR;
+				emulateTupleComparison( lhsTuple.getExpressions(), getTuple( expression ).getExpressions(), comparisonOperator );
+				separator = " or ";
 			}
 		}
-		appendSql( CLOSE_PARENTHESIS );
+		else {
+			inListPredicate.getTestExpression().accept( this );
+			if ( inListPredicate.isNegated() ) {
+				appendSql( " not" );
+			}
+			appendSql( " in (" );
+			if ( inListPredicate.getListExpressions().isEmpty() ) {
+				appendSql( NULL_KEYWORD );
+			}
+			else {
+				String separator = NO_SEPARATOR;
+				for ( Expression expression : inListPredicate.getListExpressions() ) {
+					appendSql( separator );
+					expression.accept( this );
+					separator = COMA_SEPARATOR;
+				}
+			}
+			appendSql( CLOSE_PARENTHESIS );
+		}
+	}
+
+	protected final SqlTuple getTuple(Expression expression) {
+		if ( expression instanceof SqlTuple ) {
+			return (SqlTuple) expression;
+		}
+		else if ( expression instanceof SqmParameterInterpretation ) {
+			final Expression resolvedExpression = ( (SqmParameterInterpretation) expression ).getResolvedExpression();
+			if ( resolvedExpression instanceof SqlTuple ) {
+				return (SqlTuple) resolvedExpression;
+			}
+		}
+		else if ( expression instanceof EmbeddableValuedPathInterpretation<?> ) {
+			return ( (EmbeddableValuedPathInterpretation<?>) expression ).getSqlExpression();
+		}
+		else if ( expression instanceof NonAggregatedCompositeValuedPathInterpretation<?> ) {
+			return ( (NonAggregatedCompositeValuedPathInterpretation<?>) expression ).getSqlExpression();
+		}
+		return null;
 	}
 
 	@Override
 	public void visitInSubQueryPredicate(InSubQueryPredicate inSubQueryPredicate) {
-		inSubQueryPredicate.getTestExpression().accept( this );
-		if ( inSubQueryPredicate.isNegated() ) {
-			appendSql( " not" );
+		final SqlTuple lhsTuple;
+		if ( ( lhsTuple = getTuple( inSubQueryPredicate.getTestExpression() ) ) != null && !dialect.supportsRowValueConstructorSyntaxInInList() ) {
+			emulateTupleSubQueryPredicate(
+					inSubQueryPredicate,
+					inSubQueryPredicate.isNegated(),
+					inSubQueryPredicate.getSubQuery(),
+					lhsTuple,
+					ComparisonOperator.EQUAL
+			);
 		}
-		appendSql( " in " );
-		visitQuerySpec( inSubQueryPredicate.getSubQuery() );
+		else {
+			inSubQueryPredicate.getTestExpression().accept( this );
+			if ( inSubQueryPredicate.isNegated() ) {
+				appendSql( " not" );
+			}
+			appendSql( " in " );
+			visitQuerySpec( inSubQueryPredicate.getSubQuery() );
+		}
+	}
+
+	protected void emulateTupleSubQueryPredicate(
+			Predicate predicate,
+			boolean negated,
+			QuerySpec subQuery,
+			SqlTuple lhsTuple,
+			ComparisonOperator tupleComparisonOperator) {
+		if ( subQuery.getLimitClauseExpression() == null && subQuery.getOffsetClauseExpression() == null ) {
+			// We can only emulate the tuple sub query predicate as exists predicate when there are no limit/offsets
+			if ( negated ) {
+				appendSql( "not " );
+			}
+			appendSql( "exists (select 1" );
+			visitFromClause( subQuery.getFromClause() );
+
+			appendSql( " where " );
+
+			// TODO: use HAVING clause if it has a group by
+			clauseStack.push( Clause.WHERE );
+			try {
+				renderSelectTupleComparison(
+						subQuery.getSelectClause().getSqlSelections(),
+						lhsTuple,
+						tupleComparisonOperator
+				);
+				appendSql( " and (" );
+				final Predicate whereClauseRestrictions = subQuery.getWhereClauseRestrictions();
+				if ( whereClauseRestrictions != null ) {
+					whereClauseRestrictions.accept( this );
+				}
+				appendSql( ')' );
+			}
+			finally {
+				clauseStack.pop();
+			}
+
+			appendSql( ")" );
+		}
+		else {
+			// TODO: We could use nested queries and use row numbers to emulate this
+			throw new IllegalArgumentException( "Can't emulate in predicate with tuples and limit/offset: " + predicate );
+		}
+	}
+
+	/**
+	 * An optimized emulation for relational tuple subquery comparisons.
+	 * The idea of this method is to use limit 1 to select the max or min tuple and only compare against that.
+	 */
+	protected void emulateQuantifiedTupleSubQueryPredicate(
+			Predicate predicate,
+			QuerySpec subQuery,
+			SqlTuple lhsTuple,
+			ComparisonOperator tupleComparisonOperator) {
+		if ( subQuery.getLimitClauseExpression() == null && subQuery.getOffsetClauseExpression() == null ) {
+			// We can only emulate the tuple sub query predicate as exists predicate when there are no limit/offsets
+			lhsTuple.accept( this );
+			appendSql( " " );
+			appendSql( tupleComparisonOperator.sqlText() );
+			appendSql( " " );
+
+			appendSql( "(" );
+			visitSelectClause( subQuery.getSelectClause() );
+			visitFromClause( subQuery.getFromClause() );
+			visitWhereClause( subQuery );
+
+			appendSql( " order by " );
+			boolean asc = tupleComparisonOperator == ComparisonOperator.LESS_THAN || tupleComparisonOperator == ComparisonOperator.LESS_THAN_OR_EQUAL;
+			final List<SqlSelection> sqlSelections = subQuery.getSelectClause().getSqlSelections();
+			final String order;
+			if ( tupleComparisonOperator == ComparisonOperator.LESS_THAN || tupleComparisonOperator == ComparisonOperator.LESS_THAN_OR_EQUAL ) {
+				// Default order is asc so we don't need to specify the order explicitly
+				order = "";
+			}
+			else {
+				order = " desc";
+			}
+			appendSql( "1" );
+			appendSql( order );
+			for ( int i = 1; i < sqlSelections.size(); i++ ) {
+				appendSql( COMA_SEPARATOR );
+				appendSql( Integer.toString( i + 1 ) );
+				appendSql( order );
+			}
+			renderLimit( ONE_LITERAL );
+			appendSql( ")" );
+		}
+		else {
+			// TODO: We could use nested queries and use row numbers to emulate this
+			throw new IllegalArgumentException( "Can't emulate in predicate with tuples and limit/offset: " + predicate );
+		}
 	}
 
 	@Override
@@ -1199,19 +1489,19 @@ public abstract class AbstractSqlAstWalker
 	@Override
 	public void visitNullnessPredicate(NullnessPredicate nullnessPredicate) {
 		final Expression expression = nullnessPredicate.getExpression();
+		final String predicateValue;
+		if ( nullnessPredicate.isNegated() ) {
+			predicateValue = " is not null";
+		}
+		else {
+			predicateValue = " is null";
+		}
 		if ( expression instanceof EmbeddableValuedPathInterpretation ) {
 			final EmbeddableValuedPathInterpretation embeddableValuedPathInterpretation = (EmbeddableValuedPathInterpretation) expression;
 
 			final Expression sqlExpression = embeddableValuedPathInterpretation.getSqlExpression();
-			String predicateValue;
-			if ( nullnessPredicate.isNegated() ) {
-				predicateValue = " is not null";
-			}
-			else {
-				predicateValue = " is null";
-			}
-			if ( sqlExpression instanceof SqlTuple ) {
-				SqlTuple tuple = (SqlTuple) sqlExpression;
+			final SqlTuple tuple;
+			if ( ( tuple = getTuple( sqlExpression ) ) != null ) {
 				String separator = NO_SEPARATOR;
 
 				boolean isCurrentWhereClause = clauseStack.getCurrent() == Clause.WHERE;
@@ -1232,22 +1522,12 @@ public abstract class AbstractSqlAstWalker
 			}
 			else {
 				expression.accept( this );
-				if ( nullnessPredicate.isNegated() ) {
-					appendSql( " is not null" );
-				}
-				else {
-					appendSql( " is null" );
-				}
+				appendSql( predicateValue );
 			}
 		}
 		else {
 			expression.accept( this );
-			if ( nullnessPredicate.isNegated() ) {
-				appendSql( " is not null" );
-			}
-			else {
-				appendSql( " is null" );
-			}
+			appendSql( predicateValue );
 		}
 	}
 
@@ -1267,11 +1547,105 @@ public abstract class AbstractSqlAstWalker
 //			// transform this into a
 //		}
 //
-		comparisonPredicate.getLeftHandExpression().accept( this );
-		appendSql( " " );
-		appendSql( comparisonPredicate.getOperator().sqlText() );
-		appendSql( " " );
-		comparisonPredicate.getRightHandExpression().accept( this );
+		final SqlTuple lhsTuple;
+		final SqlTuple rhsTuple;
+		if ( ( lhsTuple = getTuple( comparisonPredicate.getLeftHandExpression() ) ) != null ) {
+			final Expression rhsExpression = comparisonPredicate.getRightHandExpression();
+			final boolean all;
+			final QuerySpec subquery;
+
+			// Handle emulation of quantified comparison
+			if ( rhsExpression instanceof QuerySpec ) {
+				subquery = (QuerySpec) rhsExpression;
+				all = true;
+			}
+			else if ( rhsExpression instanceof Every ) {
+				subquery = ( (Every) rhsExpression ).getSubquery();
+				all = true;
+			}
+			else if ( rhsExpression instanceof Any ) {
+				subquery = ( (Any) rhsExpression ).getSubquery();
+				all = false;
+			}
+			else {
+				subquery = null;
+				all = false;
+			}
+
+			final ComparisonOperator operator = comparisonPredicate.getOperator();
+			if ( subquery != null && !dialect.supportsRowValueConstructorSyntaxInQuantifiedPredicates() ) {
+				// For quantified relational comparisons, we can do an optimized emulation
+				if ( all && operator != ComparisonOperator.EQUAL && operator != ComparisonOperator.NOT_EQUAL && dialect.supportsRowValueConstructorSyntax() ) {
+					emulateQuantifiedTupleSubQueryPredicate(
+							comparisonPredicate,
+							subquery,
+							lhsTuple,
+							operator
+					);
+				}
+				else {
+					emulateTupleSubQueryPredicate(
+							comparisonPredicate,
+							all,
+							subquery,
+							lhsTuple,
+							all ? operator.negated() : operator
+					);
+				}
+			}
+			else if ( !dialect.supportsRowValueConstructorSyntax() ) {
+				rhsTuple = getTuple( rhsExpression );
+				assert rhsTuple != null;
+				emulateTupleComparison(
+						lhsTuple.getExpressions(),
+						rhsTuple.getExpressions(),
+						operator
+				);
+			}
+			else {
+				comparisonPredicate.getLeftHandExpression().accept( this );
+				appendSql( " " );
+				appendSql( operator.sqlText() );
+				appendSql( " " );
+				rhsExpression.accept( this );
+			}
+		}
+		else if ( ( rhsTuple = getTuple( comparisonPredicate.getRightHandExpression() ) ) != null ) {
+			final Expression lhsExpression = comparisonPredicate.getLeftHandExpression();
+
+			if ( lhsExpression instanceof QuerySpec ) {
+				final QuerySpec subquery = (QuerySpec) lhsExpression;
+
+				if ( dialect.supportsRowValueConstructorSyntax() ) {
+					lhsExpression.accept( this );
+					appendSql( " " );
+					appendSql( comparisonPredicate.getOperator().sqlText() );
+					appendSql( " " );
+					comparisonPredicate.getRightHandExpression().accept( this );
+				}
+				else {
+					emulateTupleSubQueryPredicate(
+							comparisonPredicate,
+							false,
+							subquery,
+							rhsTuple,
+							// Since we switch the order of operands, we have to invert the operator
+							comparisonPredicate.getOperator().invert()
+					);
+				}
+			}
+			else {
+				throw new IllegalStateException(
+						"Unsupported tuple comparison combination. LHS is neither a tuple nor a tuple subquery but RHS is a tuple: " + comparisonPredicate );
+			}
+		}
+		else {
+			comparisonPredicate.getLeftHandExpression().accept( this );
+			appendSql( " " );
+			appendSql( comparisonPredicate.getOperator().sqlText() );
+			appendSql( " " );
+			comparisonPredicate.getRightHandExpression().accept( this );
+		}
 	}
 
 

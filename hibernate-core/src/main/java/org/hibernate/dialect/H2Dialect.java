@@ -197,6 +197,11 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsTemporalLiteralOffset() {
+		return true;
+	}
+
+	@Override
 	public String toBooleanValueString(boolean bool) {
 		return String.valueOf( bool );
 	}

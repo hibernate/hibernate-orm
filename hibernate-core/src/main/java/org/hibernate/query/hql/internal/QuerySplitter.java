@@ -6,7 +6,9 @@
  */
 package org.hibernate.query.hql.internal;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.hibernate.NotYetImplementedFor6Exception;
@@ -58,8 +60,6 @@ import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationArgument;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationTarget;
-import org.hibernate.query.sqm.tree.select.SqmGroupByClause;
-import org.hibernate.query.sqm.tree.select.SqmHavingClause;
 import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectClause;
@@ -188,7 +188,8 @@ public class QuerySplitter {
 			sqmQuerySpec.setFromClause( visitFromClause( querySpec.getFromClause() ) );
 			sqmQuerySpec.setSelectClause( visitSelectClause( querySpec.getSelectClause() ) );
 			sqmQuerySpec.setWhereClause( visitWhereClause( querySpec.getWhereClause() ) );
-			sqmQuerySpec.setGroupByClause( visitGroupByClause( querySpec.getGroupByClause() ) );
+			sqmQuerySpec.setGroupByClauseExpressions( visitGroupByClause( querySpec.getGroupByClauseExpressions() ) );
+			sqmQuerySpec.setHavingClausePredicate( visitHavingClause( querySpec.getHavingClausePredicate() ) );
 			sqmQuerySpec.setOrderByClause( visitOrderByClause( querySpec.getOrderByClause() ) );
 			if ( querySpec.getLimitExpression() != null ) {
 				sqmQuerySpec.setLimitExpression( (SqmExpression) querySpec.getLimitExpression().accept( this ) );
@@ -218,33 +219,23 @@ public class QuerySplitter {
 		}
 
 		@Override
-		public SqmGroupByClause visitGroupByClause(SqmGroupByClause clause) {
-			if ( clause == null ) {
-				return null;
+		public List<SqmExpression<?>> visitGroupByClause(List<SqmExpression<?>> groupByClauseExpressions) {
+			if ( groupByClauseExpressions.isEmpty() ) {
+				return groupByClauseExpressions;
 			}
-			final SqmGroupByClause result = new SqmGroupByClause();
-			clause.visitGroupings(
-					grouping -> result.addGrouping(
-							(SqmExpression) grouping.getExpression().accept( this ),
-							grouping.getCollation()
-					)
-			);
-			return result;
+			List<SqmExpression<?>> expressions = new ArrayList<>( groupByClauseExpressions.size() );
+			for ( SqmExpression<?> groupByClauseExpression : groupByClauseExpressions ) {
+				expressions.add( (SqmExpression<?>) groupByClauseExpression.accept( this ) );
+			}
+			return expressions;
 		}
 
 		@Override
-		public SqmGroupByClause.SqmGrouping visitGrouping(SqmGroupByClause.SqmGrouping grouping) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public SqmHavingClause visitHavingClause(SqmHavingClause clause) {
-			if ( clause == null || clause.getPredicate() == null ) {
+		public SqmPredicate visitHavingClause(SqmPredicate sqmPredicate) {
+			if ( sqmPredicate == null ) {
 				return null;
 			}
-			return new SqmHavingClause(
-					(SqmPredicate) clause.getPredicate().accept( this )
-			);
+			return (SqmPredicate) sqmPredicate.accept( this );
 		}
 
 		@Override
@@ -598,7 +589,6 @@ public class QuerySplitter {
 		public SqmSortSpecification visitSortSpecification(SqmSortSpecification sortSpecification) {
 			return new SqmSortSpecification(
 					(SqmExpression) sortSpecification.getSortExpression().accept( this ),
-					sortSpecification.getCollation(),
 					sortSpecification.getSortOrder(),
 					sortSpecification.getNullPrecedence()
 			);
@@ -638,7 +628,7 @@ public class QuerySplitter {
 		}
 
 		@Override
-		public SqmLiteral visitLiteral(SqmLiteral literal) {
+		public SqmLiteral visitLiteral(SqmLiteral<?> literal) {
 			return new SqmLiteral(
 					literal.getLiteralValue(),
 					literal.getNodeType(),

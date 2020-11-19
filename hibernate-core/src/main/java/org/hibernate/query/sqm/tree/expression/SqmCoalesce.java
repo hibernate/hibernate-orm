@@ -69,7 +69,7 @@ public class SqmCoalesce<T> extends AbstractSqmExpression<T> implements JpaCoale
 
 	@Override
 	public SqmCoalesce<T> value(T value) {
-		value( nodeBuilder().literal( value ) );
+		value( nodeBuilder().value( value ) );
 		return this;
 	}
 
@@ -91,7 +91,7 @@ public class SqmCoalesce<T> extends AbstractSqmExpression<T> implements JpaCoale
 	@SuppressWarnings("unchecked")
 	public SqmCoalesce<T> values(T... values) {
 		for ( T value : values ) {
-			value( nodeBuilder().literal( value ) );
+			value( nodeBuilder().value( value ) );
 		}
 		return this;
 	}

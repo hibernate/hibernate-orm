@@ -6,6 +6,8 @@
  */
 package org.hibernate.query.sqm.spi;
 
+import java.util.List;
+
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.cte.SqmCteConsumer;
@@ -33,6 +35,7 @@ import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
 import org.hibernate.query.sqm.tree.expression.SqmCastTarget;
 import org.hibernate.query.sqm.tree.expression.SqmCoalesce;
+import org.hibernate.query.sqm.tree.expression.SqmCollate;
 import org.hibernate.query.sqm.tree.expression.SqmCollectionSize;
 import org.hibernate.query.sqm.tree.expression.SqmDurationUnit;
 import org.hibernate.query.sqm.tree.expression.SqmEnumLiteral;
@@ -77,10 +80,9 @@ import org.hibernate.query.sqm.tree.predicate.SqmMemberOfPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmNegatedPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmNullnessPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmOrPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
-import org.hibernate.query.sqm.tree.select.SqmGroupByClause;
-import org.hibernate.query.sqm.tree.select.SqmHavingClause;
 import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectClause;
@@ -195,7 +197,7 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 	}
 
 	@Override
-	public Object visitQuerySpec(SqmQuerySpec querySpec) {
+	public Object visitQuerySpec(SqmQuerySpec<?> querySpec) {
 		visitFromClause( querySpec.getFromClause() );
 		visitSelectClause( querySpec.getSelectClause() );
 		visitWhereClause( querySpec.getWhereClause() );
@@ -453,21 +455,16 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 	}
 
 	@Override
-	public Object visitGroupByClause(SqmGroupByClause clause) {
-		clause.visitGroupings( this::visitGrouping );
-		return clause;
+	public Object visitGroupByClause(List<SqmExpression<?>> groupByClauseExpressions) {
+		if ( groupByClauseExpressions != null ) {
+			groupByClauseExpressions.forEach( e -> e.accept( this ) );
+		}
+		return groupByClauseExpressions;
 	}
 
 	@Override
-	public Object visitGrouping(SqmGroupByClause.SqmGrouping grouping) {
-		grouping.getExpression().accept( this );
-		return grouping;
-	}
-
-	@Override
-	public Object visitHavingClause(SqmHavingClause clause) {
-		clause.getPredicate().accept( this );
-		return clause;
+	public Object visitHavingClause(SqmPredicate sqmPredicate) {
+		return sqmPredicate.accept( this );
 	}
 
 	@Override
@@ -587,13 +584,19 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 	}
 
 	@Override
-	public Object visitLiteral(SqmLiteral literal) {
+	public Object visitLiteral(SqmLiteral<?> literal) {
 		return literal;
 	}
 
 	@Override
-	public Object visitTuple(SqmTuple sqmTuple) {
+	public Object visitTuple(SqmTuple<?> sqmTuple) {
 		return sqmTuple;
+	}
+
+	@Override
+	public Object visitCollate(SqmCollate<?> sqmCollate) {
+		sqmCollate.getExpression().accept( this );
+		return sqmCollate;
 	}
 
 	@Override

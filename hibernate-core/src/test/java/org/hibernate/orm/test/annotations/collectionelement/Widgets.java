@@ -41,12 +41,12 @@ public class Widgets {
 		this.id = id;
 	}
 
-	@Entity
+	@Entity(name = "Widget1")
 	public static class Widget1 extends Widgets{
 		private String name1;
 	}
 
-	@Entity
+	@Entity(name = "Widget2")
 	public static class Widget2 extends Widgets{
 		private String name2;
 	}

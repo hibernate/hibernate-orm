@@ -12,8 +12,14 @@ package org.hibernate.query;
  */
 public enum ComparisonOperator {
 	EQUAL {
+		@Override
 		public ComparisonOperator negated() {
 			return NOT_EQUAL;
+		}
+
+		@Override
+		public ComparisonOperator invert() {
+			return EQUAL;
 		}
 
 		@Override
@@ -23,8 +29,14 @@ public enum ComparisonOperator {
 	},
 
 	NOT_EQUAL {
+		@Override
 		public ComparisonOperator negated() {
 			return EQUAL;
+		}
+
+		@Override
+		public ComparisonOperator invert() {
+			return NOT_EQUAL;
 		}
 
 		@Override
@@ -34,8 +46,14 @@ public enum ComparisonOperator {
 	},
 
 	LESS_THAN {
+		@Override
 		public ComparisonOperator negated() {
 			return GREATER_THAN_OR_EQUAL;
+		}
+
+		@Override
+		public ComparisonOperator invert() {
+			return GREATER_THAN;
 		}
 
 		@Override
@@ -45,8 +63,14 @@ public enum ComparisonOperator {
 	},
 
 	LESS_THAN_OR_EQUAL {
+		@Override
 		public ComparisonOperator negated() {
 			return GREATER_THAN;
+		}
+
+		@Override
+		public ComparisonOperator invert() {
+			return GREATER_THAN_OR_EQUAL;
 		}
 
 		@Override
@@ -56,8 +80,14 @@ public enum ComparisonOperator {
 	},
 
 	GREATER_THAN {
+		@Override
 		public ComparisonOperator negated() {
 			return LESS_THAN_OR_EQUAL;
+		}
+
+		@Override
+		public ComparisonOperator invert() {
+			return LESS_THAN;
 		}
 
 		@Override
@@ -67,8 +97,14 @@ public enum ComparisonOperator {
 	},
 
 	GREATER_THAN_OR_EQUAL {
+		@Override
 		public ComparisonOperator negated() {
 			return LESS_THAN;
+		}
+
+		@Override
+		public ComparisonOperator invert() {
+			return LESS_THAN_OR_EQUAL;
 		}
 
 		@Override
@@ -78,5 +114,6 @@ public enum ComparisonOperator {
 	};
 
 	public abstract ComparisonOperator negated();
+	public abstract ComparisonOperator invert();
 	public abstract String sqlText();
 }

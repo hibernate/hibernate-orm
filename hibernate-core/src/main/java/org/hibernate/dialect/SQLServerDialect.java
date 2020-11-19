@@ -354,6 +354,11 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	public boolean supportsGroupByRollup() {
+		return true;
+	}
+
+	@Override
 	public SequenceSupport getSequenceSupport() {
 		return getVersion() < 11
 				? NoSequenceSupport.INSTANCE

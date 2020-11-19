@@ -6,6 +6,8 @@
  */
 package org.hibernate.query.sqm;
 
+import java.util.List;
+
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.sqm.tree.cte.SqmCteConsumer;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
@@ -30,6 +32,7 @@ import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
 import org.hibernate.query.sqm.tree.expression.SqmCastTarget;
 import org.hibernate.query.sqm.tree.expression.SqmCoalesce;
+import org.hibernate.query.sqm.tree.expression.SqmCollate;
 import org.hibernate.query.sqm.tree.expression.SqmCollectionSize;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmDurationUnit;
@@ -75,10 +78,9 @@ import org.hibernate.query.sqm.tree.predicate.SqmMemberOfPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmNegatedPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmNullnessPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmOrPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
-import org.hibernate.query.sqm.tree.select.SqmGroupByClause;
-import org.hibernate.query.sqm.tree.select.SqmHavingClause;
 import org.hibernate.query.sqm.tree.select.SqmJpaCompoundSelection;
 import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
@@ -165,11 +167,9 @@ public interface SemanticQueryWalker<T> {
 
 	T visitValues(SqmValues values);
 
-	T visitGroupByClause(SqmGroupByClause clause);
+	T visitGroupByClause(List<SqmExpression<?>> groupByClauseExpressions);
 
-	T visitGrouping(SqmGroupByClause.SqmGrouping grouping);
-
-	T visitHavingClause(SqmHavingClause clause);
+	T visitHavingClause(SqmPredicate clause);
 
 	T visitDynamicInstantiation(SqmDynamicInstantiation<?> sqmDynamicInstantiation);
 
@@ -189,6 +189,8 @@ public interface SemanticQueryWalker<T> {
 
 	T visitTuple(SqmTuple<?> sqmTuple);
 
+	T visitCollate(SqmCollate<?> sqmCollate);
+
 	T visitBinaryArithmeticExpression(SqmBinaryArithmetic<?> expression);
 
 	T visitSubQueryExpression(SqmSubQuery<?> expression);
@@ -200,6 +202,7 @@ public interface SemanticQueryWalker<T> {
 	T visitSearchedCaseExpression(SqmCaseSearched<?> expression);
 
 	T visitAny(SqmAny<?> sqmAny);
+
 	T visitEvery(SqmEvery<?> sqmEvery);
 
 	T visitPositionalParameterExpression(SqmPositionalParameter<?> expression);

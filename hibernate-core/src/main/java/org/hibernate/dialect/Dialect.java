@@ -73,6 +73,7 @@ import org.hibernate.sql.*;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.ANSICaseExpressionWalker;
 import org.hibernate.sql.ast.spi.CaseExpressionWalker;
+import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
@@ -2578,7 +2579,7 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Is this dialect known to support  what ANSI-SQL terms "row value constructor" syntax, 
+	 * Is this dialect known to support  what ANSI-SQL terms "row value constructor" syntax,
 	 * sometimes called tuple syntax, in the SET clause;
 	 * <p/>
 	 * Basically, does it support syntax like
@@ -2588,6 +2589,22 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public boolean supportsRowValueConstructorSyntaxInSet() {
 		return supportsRowValueConstructorSyntax();
+	}
+
+	/**
+	 * Is this dialect known to support what ANSI-SQL terms "row value
+	 * constructor" syntax; sometimes called tuple syntax with quantified predicates.
+	 * <p/>
+	 * Basically, does it support syntax like
+	 * "... where (FIRST_NAME, LAST_NAME) = ALL (select ...) ...".
+	 *
+	 * @return True if this SQL dialect is known to support "row value
+	 * constructor" syntax with quantified predicates; false otherwise.
+	 * @since 6.0
+	 */
+	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
+		// return false here, as most databases do not properly support this construct...
+		return false;
 	}
 
 	/**
@@ -2601,6 +2618,17 @@ public abstract class Dialect implements ConversionContext {
 	 * @since 3.2
 	 */
 	public boolean supportsRowValueConstructorSyntaxInInList() {
+		return false;
+	}
+
+	/**
+	 * Is this dialect known to support ROLLUP functions in the GROUP BY clause.
+	 *
+	 * @return True if this SQL dialect supports ROLLUP functions; false otherwise.
+	 * @since 6.0
+	 */
+	public boolean supportsGroupByRollup() {
+		// return false here, as most databases do not properly support this construct...
 		return false;
 	}
 
@@ -3165,6 +3193,14 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
+	 * Appends the collate clause for the given collation name to the SQL appender.
+	 */
+	public void appendCollate(SqlAppender sqlAppender, String collationName) {
+		sqlAppender.appendSql( " collate " );
+		sqlAppender.appendSql( collationName );
+	}
+
+	/**
 	 * Check whether the JDBC {@link java.sql.Connection} supports creating LOBs via {@link Connection#createBlob()},
 	 * {@link Connection#createNClob()} or {@link Connection#createClob()}.
 	 *
@@ -3564,66 +3600,73 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	protected String wrapTimestampLiteral(String timestamp) {
-		return wrapAsJdbcTimestampLiteral(timestamp);
+		return wrapAsJdbcTimestampLiteral( timestamp );
 	}
 
 	protected String wrapDateLiteral(String date) {
-		return wrapAsJdbcDateLiteral(date);
+		return wrapAsJdbcDateLiteral( date );
 	}
 
 	protected String wrapTimeLiteral(String time) {
-		return wrapAsJdbcTimeLiteral(time);
+		return wrapAsJdbcTimeLiteral( time );
 	}
 
-	public String formatDateTimeLiteral(TemporalAccessor temporalAccessor, TemporalType precision) {
+	public String formatDateTimeLiteral(
+			TemporalAccessor temporalAccessor,
+			TemporalType precision,
+			TimeZone jdbcTimeZone) {
 		switch ( precision ) {
 			case DATE:
-				return wrapDateLiteral( formatAsDate(temporalAccessor) );
+				return wrapDateLiteral( formatAsDate( temporalAccessor ) );
 			case TIME:
-				return wrapTimeLiteral( formatAsTime(temporalAccessor) );
+				return wrapTimeLiteral( formatAsTime( temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone ) );
 			case TIMESTAMP:
-				return wrapTimestampLiteral( formatAsTimestamp(temporalAccessor) );
+				return wrapTimestampLiteral( formatAsTimestamp( temporalAccessor, jdbcTimeZone ) );
 			default:
 				throw new IllegalArgumentException();
 		}
 	}
 
-	protected String formatAsTimestamp(TemporalAccessor temporalAccessor) {
-		return formatAsTimestampWithMicros(temporalAccessor);
+	protected String formatAsTimestamp(TemporalAccessor temporalAccessor, TimeZone jdbcTimeZone) {
+		return formatAsTimestampWithMicros( temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
 	}
 
-	public String formatDateTimeLiteral(Date date, TemporalType precision) {
+	public String formatDateTimeLiteral(Date date, TemporalType precision, TimeZone jdbcTimeZone) {
 		switch ( precision ) {
 			case DATE:
-				return wrapDateLiteral( formatAsDate(date) );
+				return wrapDateLiteral( formatAsDate( date ) );
 			case TIME:
-				return wrapTimeLiteral( formatAsTime(date) );
+				return wrapTimeLiteral( formatAsTime( date ) );
 			case TIMESTAMP:
-				return wrapTimestampLiteral( formatAsTimestamp(date) );
+				return wrapTimestampLiteral( formatAsTimestamp( date, jdbcTimeZone) );
 			default:
 				throw new IllegalArgumentException();
 		}
 	}
 
-	protected String formatAsTimestamp(Date date) {
-		return formatAsTimestampWithMicros(date);
+	protected String formatAsTimestamp(Date date, TimeZone jdbcTimeZone) {
+		return formatAsTimestampWithMicros( date, jdbcTimeZone );
 	}
 
-	public String formatDateTimeLiteral(Calendar calendar, TemporalType precision) {
+	public String formatDateTimeLiteral(Calendar calendar, TemporalType precision, TimeZone jdbcTimeZone) {
 		switch ( precision ) {
 			case DATE:
-				return wrapDateLiteral( formatAsDate(calendar) );
+				return wrapDateLiteral( formatAsDate( calendar ) );
 			case TIME:
-				return wrapTimeLiteral( formatAsTime(calendar) );
+				return wrapTimeLiteral( formatAsTime( calendar ) );
 			case TIMESTAMP:
-				return wrapTimestampLiteral( formatAsTimestamp(calendar) );
+				return wrapTimestampLiteral( formatAsTimestamp( calendar, jdbcTimeZone ) );
 			default:
 				throw new IllegalArgumentException();
 		}
 	}
 
-	protected String formatAsTimestamp(Calendar calendar) {
-		return formatAsTimestampWithMicros(calendar);
+	protected String formatAsTimestamp(Calendar calendar, TimeZone jdbcTimeZone) {
+		return formatAsTimestampWithMicros( calendar, jdbcTimeZone );
+	}
+
+	public boolean supportsTemporalLiteralOffset() {
+		return false;
 	}
 
 	// deprecated limit/offset support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

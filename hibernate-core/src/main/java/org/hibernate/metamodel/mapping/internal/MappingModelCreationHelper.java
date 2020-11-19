@@ -50,6 +50,7 @@ import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.MappingMetamodel;
+import org.hibernate.metamodel.internal.AbstractCompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.CollectionIdentifierDescriptor;
 import org.hibernate.metamodel.mapping.CollectionMappingType;
@@ -1012,7 +1013,7 @@ public class MappingModelCreationHelper {
 		}
 		else {
 			throw new NotYetImplementedFor6Exception(
-					"Support for composite foreign-keys not yet implemented: " +
+					"Support for" + fkTarget.getClass() + " foreign-keys not yet implemented: " +
 							bootProperty.getPersistentClass().getEntityName() + " -> " + bootProperty.getName()
 			);
 		}
@@ -1047,7 +1048,7 @@ public class MappingModelCreationHelper {
 							keyColumnExpressions.add( column.getText( dialect ) ) );
 		}
 		return new EmbeddedForeignKeyDescriptor(
-				(EmbeddedIdentifierMappingImpl) fkTarget,
+				(AbstractCompositeIdentifierMapping) fkTarget,
 				getTableIdentifierExpression( keyTableExpression, creationProcess ),
 				keyColumnExpressions,
 				fkTarget.getContainingTableExpression(),

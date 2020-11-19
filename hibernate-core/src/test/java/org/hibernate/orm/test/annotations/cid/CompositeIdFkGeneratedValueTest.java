@@ -4,11 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.annotations.cid;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
+package org.hibernate.orm.test.annotations.cid;
 
 import java.io.Serializable;
 import java.util.Objects;
@@ -21,12 +17,15 @@ import javax.persistence.IdClass;
 import javax.persistence.ManyToOne;
 import javax.persistence.PersistenceException;
 
-import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SQLServer2012Dialect;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * This tests the design demonstrated in the <a href=
@@ -45,11 +44,27 @@ import org.junit.Test;
  * @see <a href='https://hibernate.atlassian.net/browse/HHH-4848'>HHH-4848</a> introduced the regression
  */
 @TestForIssue(jiraKey = "HHH-10956")
-public class CompositeIdFkGeneratedValueTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				CompositeIdFkGeneratedValueTest.Head.class,
+				CompositeIdFkGeneratedValueTest.Node.class,
+				CompositeIdFkGeneratedValueTest.HeadS.class,
+				CompositeIdFkGeneratedValueTest.NodeS.class,
+				CompositeIdFkGeneratedValueTest.HeadA.class,
+				CompositeIdFkGeneratedValueTest.NodeA.class,
+				CompositeIdFkGeneratedValueTest.HeadT.class,
+				CompositeIdFkGeneratedValueTest.NodeT.class,
+				CompositeIdFkGeneratedValueTest.ComplexNodeS.class,
+				CompositeIdFkGeneratedValueTest.ComplexNodeT.class,
+				CompositeIdFkGeneratedValueTest.ComplexNodeA.class,
+		}
+)
+@SessionFactory
+public class CompositeIdFkGeneratedValueTest {
 
 	@Test
-	public void testCompositePkWithoutIdentifierGenerator() {
-		doInHibernate( this::sessionFactory, session -> {
+	public void testCompositePkWithoutIdentifierGenerator(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			Head head = new Head();
 			head.name = "Head by Sequence";
 			session.persist( head );
@@ -63,7 +78,7 @@ public class CompositeIdFkGeneratedValueTest extends BaseCoreFunctionalTestCase 
 			System.out.println( "VALUE =>" + node.name + "=" + node.nid + ":" + node.hid.hid );
 		} );
 
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			Head head = new Head();
 			head.name = "Head by Sequence";
 			session.persist( head );
@@ -86,8 +101,8 @@ public class CompositeIdFkGeneratedValueTest extends BaseCoreFunctionalTestCase 
 	}
 
 	@Test
-	public void testCompositePkWithIdentityAndFKBySequence() {
-		doInHibernate( this::sessionFactory, session -> {
+	public void testCompositePkWithIdentityAndFKBySequence(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			HeadS head = new HeadS();
 			head.name = "Head by Sequence";
 			session.persist( head );
@@ -102,8 +117,8 @@ public class CompositeIdFkGeneratedValueTest extends BaseCoreFunctionalTestCase 
 	}
 
 	@Test
-	public void testCompositePkWithSequenceGeneratorAndNullValue() throws Exception {
-		doInHibernate( this::sessionFactory, session -> {
+	public void testCompositePkWithSequenceGeneratorAndNullValue(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			try {
 				NodeS node = new NodeS();
 				node.name = "Node by Sequence";
@@ -120,8 +135,8 @@ public class CompositeIdFkGeneratedValueTest extends BaseCoreFunctionalTestCase 
 	}
 
 	@Test
-	public void testCompositePkWithIdentityAndFKByTable() {
-		doInHibernate( this::sessionFactory, session -> {
+	public void testCompositePkWithIdentityAndFKByTable(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			HeadT head = new HeadT();
 			head.name = "Head by Table";
 			session.persist( head );
@@ -136,8 +151,8 @@ public class CompositeIdFkGeneratedValueTest extends BaseCoreFunctionalTestCase 
 	}
 
 	@Test
-	public void testCompositePkWithIdentityAndFKByAuto() {
-		doInHibernate( this::sessionFactory, session -> {
+	public void testCompositePkWithIdentityAndFKByAuto(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			HeadA head = new HeadA();
 			head.name = "Head by Auto";
 			session.persist( head );
@@ -152,8 +167,8 @@ public class CompositeIdFkGeneratedValueTest extends BaseCoreFunctionalTestCase 
 	}
 
 	@Test
-	public void testCompositePkWithSequenceIdentifierGeneratorAndFKBySequence2() {
-		doInHibernate( this::sessionFactory, session -> {
+	public void testCompositePkWithSequenceIdentifierGeneratorAndFKBySequence2(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			HeadS head = new HeadS();
 			head.name = "Head by Sequence";
 			session.persist( head );
@@ -177,8 +192,8 @@ public class CompositeIdFkGeneratedValueTest extends BaseCoreFunctionalTestCase 
 	}
 
 	@Test
-	public void testCompositePkWithIdentityAndFKByTable2() {
-		doInHibernate( this::sessionFactory, session -> {
+	public void testCompositePkWithIdentityAndFKByTable2(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			HeadT head = new HeadT();
 			head.name = "Head by Table";
 			session.persist( head );
@@ -202,8 +217,8 @@ public class CompositeIdFkGeneratedValueTest extends BaseCoreFunctionalTestCase 
 	}
 
 	@Test
-	public void testCompositePkWithIdentityAndFKByAuto2() {
-		doInHibernate( this::sessionFactory, session -> {
+	public void testCompositePkWithIdentityAndFKByAuto2(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			HeadA head = new HeadA();
 			head.name = "Head by Auto";
 			session.persist( head );
@@ -224,23 +239,6 @@ public class CompositeIdFkGeneratedValueTest extends BaseCoreFunctionalTestCase 
 			System.out.println( "VALUE =>" + node2.name + "=" + node2.nid + ":" + node2.hid.hid + " with parent="
 					+ ( node2.parent == null ? null : node2.parent.nid + ":" + node2.parent.hid.hid ) );
 		} );
-	}
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[]{
-				Head.class,
-				Node.class,
-				HeadS.class,
-				NodeS.class,
-				HeadA.class,
-				NodeA.class,
-				HeadT.class,
-				NodeT.class,
-				ComplexNodeS.class,
-				ComplexNodeT.class,
-				ComplexNodeA.class,
-		};
 	}
 
 	@Entity(name = "Head")

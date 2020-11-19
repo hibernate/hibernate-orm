@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.test.annotations.cid;
+package org.hibernate.orm.test.annotations.cid;
 
 import java.io.Serializable;
 import java.util.Objects;
@@ -15,32 +15,31 @@ import javax.persistence.Id;
 import javax.persistence.IdClass;
 import javax.persistence.ManyToOne;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.FailureExpected;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
 @TestForIssue(jiraKey = "HHH-10956")
-@RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
-public class CompositeIdFkGeneratedValueIdentityTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				HeadI.class,
-				NodeI.class,
-				ComplexNodeI.class,
-		};
-	}
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
+@DomainModel(
+		annotatedClasses = {
+				CompositeIdFkGeneratedValueIdentityTest.HeadI.class,
+				CompositeIdFkGeneratedValueIdentityTest.NodeI.class,
+				CompositeIdFkGeneratedValueIdentityTest.ComplexNodeI.class
+		}
+)
+@SessionFactory
+public class CompositeIdFkGeneratedValueIdentityTest {
 
 	@Test
-	@FailureExpected(jiraKey = "HHH-9662", message = "Could not set field value [POST_INSERT_INDICATOR]")
-	public void testCompositePkWithIdentityAndFKByIdentity() {
-		doInHibernate( this::sessionFactory, session -> {
+	@FailureExpected(jiraKey = "HHH-9662", reason = "Could not set field value [POST_INSERT_INDICATOR]")
+	public void testCompositePkWithIdentityAndFKByIdentity(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			HeadI head = new HeadI();
 			head.name = "Head by Identity";
 			session.persist( head );
@@ -62,8 +61,8 @@ public class CompositeIdFkGeneratedValueIdentityTest extends BaseCoreFunctionalT
 	}
 
 	@Test
-	public void testCompositePkWithIdentityAndFKByIdentity2() {
-		doInHibernate( this::sessionFactory, session -> {
+	public void testCompositePkWithIdentityAndFKByIdentity2(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			HeadI head = new HeadI();
 			head.name = "Head by Identity";
 			session.persist( head );

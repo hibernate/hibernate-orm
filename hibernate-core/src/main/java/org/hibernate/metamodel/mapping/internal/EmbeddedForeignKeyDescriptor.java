@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
+import org.hibernate.metamodel.internal.AbstractCompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.AssociationKey;
 import org.hibernate.metamodel.mapping.ColumnConsumer;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
@@ -48,16 +49,16 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, ModelPart {
 
+	private final EmbeddableValuedModelPart mappingType;
 	private final String keyColumnContainingTable;
 	private final List<String> keyColumnExpressions;
 	private final String targetColumnContainingTable;
 	private final List<String> targetColumnExpressions;
-	private final EmbeddableValuedModelPart mappingType;
 	private final List<JdbcMapping> jdbcMappings;
 	private AssociationKey associationKey;
 
 	public EmbeddedForeignKeyDescriptor(
-			EmbeddedIdentifierMappingImpl mappingType,
+			AbstractCompositeIdentifierMapping mappingType,
 			String keyColumnContainingTable,
 			List<String> keyColumnExpressions,
 			String targetColumnContainingTable,

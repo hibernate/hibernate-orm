@@ -29,7 +29,8 @@ public class QueryImpl<R> extends AbstractProducedQuery<R> implements Query<R> {
 		this.queryParameterBindings = QueryParameterBindingsImpl.from(
 				parameterMetadata,
 				producer.getFactory(),
-				producer.isQueryParametersValidationEnabled()
+				producer.isQueryParametersValidationEnabled(),
+				false
 		);
 	}
 

@@ -81,6 +81,7 @@ public class GetHqlQueryPlanTest extends BaseCoreFunctionalTestCase {
 			QueryParameterBindings queryParameterBindings = QueryParameterBindingsImpl.from(
 					plan.getParameterMetadata(),
 					(SessionFactoryImplementor) session.getSessionFactory(),
+					false,
 					false
 			);
 

@@ -559,7 +559,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	private Map<String,HibernateException> checkNamedQueries() throws HibernateException {
-		return namedQueryRepository.checkNamedQueries( queryPlanCache );
+		return namedQueryRepository.checkNamedQueries( queryPlanCache, sessionFactoryOptions.jdbcStyleParamsZeroBased() );
 	}
 
 	@Override

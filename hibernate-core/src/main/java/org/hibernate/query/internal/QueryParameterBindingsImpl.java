@@ -56,8 +56,6 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	private final ParameterMetadata parameterMetadata;
 	private final boolean queryParametersValidationEnabled;
 
-	private final int ordinalParamValueOffset;
-
 	private final int jdbcStyleOrdinalCountBase;
 
 	private Map<QueryParameter, QueryParameterBinding> parameterBindingMap;
@@ -67,7 +65,8 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	public static QueryParameterBindingsImpl from(
 			ParameterMetadata parameterMetadata,
 			SessionFactoryImplementor sessionFactory,
-			boolean queryParametersValidationEnabled) {
+			boolean queryParametersValidationEnabled,
+			boolean isOrdinalParameterZeroBased) {
 		if ( parameterMetadata == null ) {
 			throw new QueryParameterException( "Query parameter metadata cannot be null" );
 		}
@@ -75,37 +74,30 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 		return new QueryParameterBindingsImpl(
 				sessionFactory,
 				parameterMetadata,
-				queryParametersValidationEnabled
+				queryParametersValidationEnabled,
+				isOrdinalParameterZeroBased
 		);
 	}
 
 	private QueryParameterBindingsImpl(
 			SessionFactoryImplementor sessionFactory,
 			ParameterMetadata parameterMetadata,
-			boolean queryParametersValidationEnabled) {
+			boolean queryParametersValidationEnabled,
+			boolean isOrdinalParameterZeroBased) {
 		this.sessionFactory = sessionFactory;
 		this.parameterMetadata = parameterMetadata;
 		this.queryParametersValidationEnabled = queryParametersValidationEnabled;
 
 		this.parameterBindingMap = CollectionHelper.concurrentMap( parameterMetadata.getParameterCount() );
 
-		this.jdbcStyleOrdinalCountBase = sessionFactory.getSessionFactoryOptions().jdbcStyleParamsZeroBased() ? 0 : 1;
+		this.jdbcStyleOrdinalCountBase = isOrdinalParameterZeroBased ? 0 : 1;
 
 		if ( parameterMetadata.hasPositionalParameters() ) {
-			int smallestOrdinalParamLabel = Integer.MAX_VALUE;
 			for ( QueryParameter queryParameter : parameterMetadata.getPositionalParameters() ) {
 				if ( queryParameter.getPosition() == null ) {
 					throw new HibernateException( "Non-ordinal parameter ended up in ordinal param list" );
 				}
-
-				if ( queryParameter.getPosition() < smallestOrdinalParamLabel ) {
-					smallestOrdinalParamLabel = queryParameter.getPosition();
-				}
 			}
-			ordinalParamValueOffset = smallestOrdinalParamLabel;
-		}
-		else {
-			ordinalParamValueOffset = 0;
 		}
 	}
 
@@ -186,6 +178,10 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	@SuppressWarnings("unchecked")
 	public QueryParameterBinding getBinding(String name) {
 		return getBinding( parameterMetadata.getQueryParameter( name ) );
+	}
+
+	public int getJdbcStyleOrdinalCountBase() {
+		return jdbcStyleOrdinalCountBase;
 	}
 
 	public void verifyParametersBound(boolean reserveFirstParameter) {

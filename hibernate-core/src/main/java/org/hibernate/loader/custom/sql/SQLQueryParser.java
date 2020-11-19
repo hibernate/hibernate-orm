@@ -41,6 +41,7 @@ public class SQLQueryParser {
 	private List<ParameterBinder> paramValueBinders;
 
 	interface ParserContext {
+		boolean isZeroBased();
 		boolean isEntityAlias(String aliasName);
 		SQLLoadable getEntityPersisterByAlias(String alias);
 		String getEntitySuffixByAlias(String alias);
@@ -281,7 +282,7 @@ public class SQLQueryParser {
 	 * @return The SQL query with parameter substitution complete.
 	 */
 	private String substituteParams(String sqlString) {
-		final ParameterSubstitutionRecognizer recognizer = new ParameterSubstitutionRecognizer( factory );
+		final ParameterSubstitutionRecognizer recognizer = new ParameterSubstitutionRecognizer( context.isZeroBased() );
 		ParameterParser.parse( sqlString, recognizer );
 
 		paramValueBinders = recognizer.getParameterValueBinders();
@@ -295,10 +296,13 @@ public class SQLQueryParser {
 		int jdbcPositionalParamCount;
 		private List<ParameterBinder> paramValueBinders;
 
+		@Deprecated
 		public ParameterSubstitutionRecognizer(SessionFactoryImplementor factory) {
-			this.jdbcPositionalParamCount = factory.getSessionFactoryOptions().jdbcStyleParamsZeroBased()
-					? 0
-					: 1;
+			this( factory.getSessionFactoryOptions().jdbcStyleParamsZeroBased() );
+		}
+
+		public ParameterSubstitutionRecognizer(boolean zeroBased) {
+			this.jdbcPositionalParamCount = zeroBased ? 0 : 1;
 		}
 
 		@Override

@@ -29,8 +29,22 @@ public interface NativeQueryInterpreter extends Service {
 	 *
 	 * @return a meta-data object describing the parameters of the given query.
 	 *         Must not be {@code null}.
+	 * @deprecated Use {@link #getParameterMetadata(String, boolean)} instead
 	 */
+	@Deprecated
 	ParameterMetadataImpl getParameterMetadata(String nativeQuery);
+
+	/**
+	 * Returns a meta-data object with information about the named and ordinal
+	 * parameters contained in the given native query.
+	 *
+	 * @param nativeQuery the native query to analyze.
+	 * @param zeroBased Whether parameters are zero based or one based.
+	 *
+	 * @return a meta-data object describing the parameters of the given query.
+	 *         Must not be {@code null}.
+	 */
+	ParameterMetadataImpl getParameterMetadata(String nativeQuery, boolean zeroBased);
 
 	/**
 	 * Creates a new query plan for the specified native query.

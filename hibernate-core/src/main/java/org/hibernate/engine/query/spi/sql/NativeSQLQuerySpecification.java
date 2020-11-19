@@ -24,6 +24,7 @@ import org.hibernate.internal.util.collections.ArrayHelper;
  */
 public class NativeSQLQuerySpecification {
 	private final String queryString;
+	private final boolean zeroBased;
 	private final NativeSQLQueryReturn[] queryReturns;
 	private final Set querySpaces;
 	private final int hashCode;
@@ -31,8 +32,10 @@ public class NativeSQLQuerySpecification {
 	public NativeSQLQuerySpecification(
 			String queryString,
 			NativeSQLQueryReturn[] queryReturns,
-			Collection querySpaces) {
+			Collection querySpaces,
+			boolean zeroBased) {
 		this.queryString = queryString;
+		this.zeroBased = zeroBased;
 		this.queryReturns = queryReturns;
 		if ( querySpaces == null ) {
 			this.querySpaces = Collections.EMPTY_SET;
@@ -45,6 +48,7 @@ public class NativeSQLQuerySpecification {
 		// pre-determine and cache the hashcode
 		int hashCode = queryString.hashCode();
 		hashCode = 29 * hashCode + this.querySpaces.hashCode();
+		hashCode = 29 * hashCode + Boolean.hashCode(zeroBased);
 		if ( this.queryReturns != null ) {
 			hashCode = 29 * hashCode + ArrayHelper.toList( this.queryReturns ).hashCode();
 		}
@@ -63,6 +67,10 @@ public class NativeSQLQuerySpecification {
 		return querySpaces;
 	}
 
+	public boolean isZeroBased() {
+		return zeroBased;
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
@@ -76,6 +84,7 @@ public class NativeSQLQuerySpecification {
 
 		return querySpaces.equals( that.querySpaces )
 				&& queryString.equals( that.queryString )
+				&& zeroBased == that.zeroBased
 				&& Arrays.equals( queryReturns, that.queryReturns );
 	}
 

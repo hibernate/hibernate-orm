@@ -146,7 +146,12 @@ public class NamedQueryRepository {
 		this.procedureCallMementoMap = toSmallMap( copy );
 	}
 
+	@Deprecated
 	public Map<String,HibernateException> checkNamedQueries(QueryPlanCache queryPlanCache) {
+		return checkNamedQueries( queryPlanCache, false );
+	}
+
+	public Map<String,HibernateException> checkNamedQueries(QueryPlanCache queryPlanCache, final boolean isOrdinalParameterZeroBased) {
 		Map<String,HibernateException> errors = new HashMap<String,HibernateException>();
 
 		// Check named HQL queries
@@ -180,14 +185,16 @@ public class NamedQueryRepository {
 					spec = new NativeSQLQuerySpecification(
 							namedSQLQueryDefinition.getQueryString(),
 							definition.getQueryReturns(),
-							namedSQLQueryDefinition.getQuerySpaces()
+							namedSQLQueryDefinition.getQuerySpaces(),
+							isOrdinalParameterZeroBased
 					);
 				}
 				else {
 					spec =  new NativeSQLQuerySpecification(
 							namedSQLQueryDefinition.getQueryString(),
 							namedSQLQueryDefinition.getQueryReturns(),
-							namedSQLQueryDefinition.getQuerySpaces()
+							namedSQLQueryDefinition.getQuerySpaces(),
+							isOrdinalParameterZeroBased
 					);
 				}
 				queryPlanCache.getNativeSQLQueryPlan( spec );

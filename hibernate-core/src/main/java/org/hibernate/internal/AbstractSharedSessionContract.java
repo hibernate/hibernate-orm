@@ -623,7 +623,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		// then as a native query
 		final NamedSQLQueryDefinition nativeQueryDefinition = factory.getNamedQueryRepository().getNamedSQLQueryDefinition( name );
 		if ( nativeQueryDefinition != null ) {
-			return createNativeQuery( nativeQueryDefinition, true );
+			return createNativeQuery( nativeQueryDefinition, factory.getSessionFactoryOptions().jdbcStyleParamsZeroBased() );
 		}
 
 		throw getExceptionConverter().convert( new IllegalArgumentException( "No query defined for that name [" + name + "]" ) );
@@ -653,16 +653,18 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				queryDefinition.getQueryString(),
 				isOrdinalParameterZeroBased
 		);
-		return getNativeQueryImplementor( queryDefinition, parameterMetadata );
+		return getNativeQueryImplementor( queryDefinition, parameterMetadata, isOrdinalParameterZeroBased );
 	}
 
 	private NativeQueryImplementor getNativeQueryImplementor(
 			NamedSQLQueryDefinition queryDefinition,
-			ParameterMetadata parameterMetadata) {
+			ParameterMetadata parameterMetadata,
+			boolean isOrdinalParameterZeroBased) {
 		final NativeQueryImpl query = new NativeQueryImpl(
 				queryDefinition,
 				this,
-				parameterMetadata
+				parameterMetadata,
+				isOrdinalParameterZeroBased
 		);
 		applyQuerySettingsAndHints( query );
 		query.setComment( queryDefinition.getComment() != null ? queryDefinition.getComment() : queryDefinition.getName() );
@@ -918,10 +920,12 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			resultClassChecking( resultType, queryDefinition );
 		}
 
+		final boolean jdbcStyleParamsZeroBased = factory.getSessionFactoryOptions().jdbcStyleParamsZeroBased();
 		final NativeQueryImpl query = new NativeQueryImpl(
 				queryDefinition,
 				this,
-				factory.getQueryPlanCache().getSQLParameterMetadata( queryDefinition.getQueryString(), false )
+				factory.getQueryPlanCache().getSQLParameterMetadata( queryDefinition.getQueryString(), jdbcStyleParamsZeroBased ),
+				jdbcStyleParamsZeroBased
 		);
 		if ( Tuple.class.equals( resultType ) ) {
 			query.setResultTransformer( new NativeQueryTupleTransformer() );
@@ -1051,7 +1055,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 		final NamedSQLQueryDefinition nativeQueryDefinition = factory.getNamedQueryRepository().getNamedSQLQueryDefinition( name );
 		if ( nativeQueryDefinition != null ) {
-			return createNativeQuery( nativeQueryDefinition, true );
+			return createNativeQuery( nativeQueryDefinition, factory.getSessionFactoryOptions().jdbcStyleParamsZeroBased() );
 		}
 
 		throw getExceptionConverter().convert( new IllegalArgumentException( "No query defined for that name [" + name + "]" ) );
@@ -1096,7 +1100,8 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 					queryString,
 					false,
 					this,
-					getFactory().getQueryPlanCache().getSQLParameterMetadata( queryString, isOrdinalParameterZeroBased )
+					getFactory().getQueryPlanCache().getSQLParameterMetadata( queryString, isOrdinalParameterZeroBased ),
+					isOrdinalParameterZeroBased
 			);
 			query.setComment( "dynamic native SQL query" );
 			applyQuerySettingsAndHints( query );

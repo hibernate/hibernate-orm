@@ -68,6 +68,15 @@ public class SQLCustomQuery implements CustomQuery, Serializable {
 			final NativeSQLQueryReturn[] queryReturns,
 			final Collection additionalQuerySpaces,
 			final SessionFactoryImplementor factory) throws HibernateException {
+		this( sqlQuery, queryReturns, additionalQuerySpaces, false, factory );
+	}
+
+	public SQLCustomQuery(
+			final String sqlQuery,
+			final NativeSQLQueryReturn[] queryReturns,
+			final Collection additionalQuerySpaces,
+			final boolean zeroBased,
+			final SessionFactoryImplementor factory) throws HibernateException {
 
 		LOG.tracev( "Starting processing of sql query [{0}]", sqlQuery );
 		SQLQueryReturnProcessor processor = new SQLQueryReturnProcessor(queryReturns, factory);
@@ -116,7 +125,7 @@ public class SQLCustomQuery implements CustomQuery, Serializable {
 //
 //		String[] suffixes = BasicLoader.generateSuffixes(entityPersisters.length);
 
-		SQLQueryParser parser = new SQLQueryParser( sqlQuery, new ParserContext( aliasContext ), factory );
+		SQLQueryParser parser = new SQLQueryParser( sqlQuery, new ParserContext( aliasContext, zeroBased ), factory );
 		this.sql = parser.process();
 
 		this.paramValueBinders = parser.getParameterValueBinders();
@@ -207,9 +216,15 @@ public class SQLCustomQuery implements CustomQuery, Serializable {
 	private static class ParserContext implements SQLQueryParser.ParserContext {
 
 		private final SQLQueryReturnProcessor.ResultAliasContext aliasContext;
+		private final boolean zeroBased;
 
-		public ParserContext(SQLQueryReturnProcessor.ResultAliasContext aliasContext) {
+		public ParserContext(SQLQueryReturnProcessor.ResultAliasContext aliasContext, boolean zeroBased) {
 			this.aliasContext = aliasContext;
+			this.zeroBased = zeroBased;
+		}
+
+		public boolean isZeroBased() {
+			return zeroBased;
 		}
 
 		public boolean isEntityAlias(String alias) {

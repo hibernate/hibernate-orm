@@ -35,6 +35,15 @@ public class NativeQueryInterpreterStandardImpl implements NativeQueryInterprete
 	}
 
 	@Override
+	public ParameterMetadataImpl getParameterMetadata(String nativeQuery, boolean zeroBased) {
+		final ParamLocationRecognizer recognizer = ParamLocationRecognizer.parseLocations( nativeQuery, zeroBased );
+		return new ParameterMetadataImpl(
+				recognizer.getOrdinalParameterDescriptionMap(),
+				recognizer.getNamedParameterDescriptionMap()
+		);
+	}
+
+	@Override
 	public NativeSQLQueryPlan createQueryPlan(
 			NativeSQLQuerySpecification specification,
 			SessionFactoryImplementor sessionFactory) {
@@ -42,6 +51,7 @@ public class NativeQueryInterpreterStandardImpl implements NativeQueryInterprete
 				specification.getQueryString(),
 				specification.getQueryReturns(),
 				specification.getQuerySpaces(),
+				specification.isZeroBased(),
 				sessionFactory
 		);
 

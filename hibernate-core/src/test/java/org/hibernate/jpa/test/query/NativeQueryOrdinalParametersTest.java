@@ -95,7 +95,7 @@ public class NativeQueryOrdinalParametersTest extends BaseEntityManagerFunctiona
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			NativeQuery sqlQuery = entityManager.unwrap( Session.class ).createSQLQuery( sqlString );
-			sqlQuery.setString( 1, "Super Mario Brothers" ).setCacheable( true );
+			sqlQuery.setString( 0, "Super Mario Brothers" ).setCacheable( true );
 
 			List results = sqlQuery.list();
 			assertEquals( 1, results.size() );
@@ -106,7 +106,7 @@ public class NativeQueryOrdinalParametersTest extends BaseEntityManagerFunctiona
 			assertEquals( 1, list.size() );
 
 			sqlQuery = entityManager.unwrap( Session.class ).createSQLQuery( sqlString );
-			sqlQuery.setString( 1, "Super Mario Brothers" ).setCacheable( true );
+			sqlQuery.setString( 0, "Super Mario Brothers" ).setCacheable( true );
 
 			results = sqlQuery.list();
 			assertEquals( 1, results.size() );

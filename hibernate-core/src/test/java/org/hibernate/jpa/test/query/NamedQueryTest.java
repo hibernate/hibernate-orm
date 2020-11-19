@@ -130,7 +130,7 @@ public class NamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 					 final Session session = entityManager.unwrap( Session.class );
 					 final org.hibernate.query.Query sessionQuery = session.createSQLQuery(
 							 "select * from Game g where title = ?" );
-					 sessionQuery.setParameter( 1, GAME_TITLES[0] );
+					 sessionQuery.setParameter( 0, GAME_TITLES[0] );
 					 list = sessionQuery.getResultList();
 
 					 query.setParameter( 1, GAME_TITLES[0] );

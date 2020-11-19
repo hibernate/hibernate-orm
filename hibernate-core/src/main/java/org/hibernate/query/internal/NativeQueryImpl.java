@@ -81,11 +81,13 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 	 * @param queryDef The representation of the defined <sql-query/>.
 	 * @param session The session to which this NativeQuery belongs.
 	 * @param parameterMetadata Metadata about parameters found in the query.
+	 * @param isOrdinalParameterZeroBased Whether parameters are zero based or one based.
 	 */
 	public NativeQueryImpl(
 			NamedSQLQueryDefinition queryDef,
 			SharedSessionContractImplementor session,
-			ParameterMetadata parameterMetadata) {
+			ParameterMetadata parameterMetadata,
+			boolean isOrdinalParameterZeroBased) {
 		super( session, parameterMetadata );
 
 		this.sqlString = queryDef.getQueryString();
@@ -115,7 +117,8 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 		this.queryParameterBindings = QueryParameterBindingsImpl.from(
 				parameterMetadata,
 				session.getFactory(),
-				session.isQueryParametersValidationEnabled()
+				session.isQueryParametersValidationEnabled(),
+				isOrdinalParameterZeroBased
 		);
 	}
 
@@ -123,7 +126,8 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 			String sqlString,
 			boolean callable,
 			SharedSessionContractImplementor session,
-			ParameterMetadata sqlParameterMetadata) {
+			ParameterMetadata sqlParameterMetadata,
+			boolean isOrdinalParameterZeroBased) {
 		super( session, sqlParameterMetadata );
 
 		this.queryReturns = new ArrayList<>();
@@ -134,7 +138,8 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 		this.queryParameterBindings = QueryParameterBindingsImpl.from(
 				sqlParameterMetadata,
 				session.getFactory(),
-				session.isQueryParametersValidationEnabled()
+				session.isQueryParametersValidationEnabled(),
+				isOrdinalParameterZeroBased
 		);
 	}
 
@@ -183,7 +188,8 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 		return new NativeSQLQuerySpecification(
 				getQueryParameterBindings().expandListValuedParameters( getQueryString(), getProducer() ),
 				queryReturns.toArray( new NativeSQLQueryReturn[queryReturns.size()] ),
-				querySpaces
+				querySpaces,
+				queryParameterBindings.getJdbcStyleOrdinalCountBase() == 0
 		);
 	}
 

@@ -39,7 +39,8 @@ public class CollectionFilterImpl extends org.hibernate.query.internal.AbstractP
 		this.queryParameterBindings = QueryParameterBindingsImpl.from(
 				parameterMetadata,
 				session.getFactory(),
-				session.isQueryParametersValidationEnabled()
+				session.isQueryParametersValidationEnabled(),
+				false
 		);
 	}
 

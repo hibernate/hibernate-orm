@@ -196,7 +196,7 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 		assertEquals(HEIGHT_CENTIMETERS, heightViaSql, 0.01d);
 		Double expiryViaSql =
 				( (Number)s.createSQLQuery("select pwd_expiry_weeks from UEmployee where person_id=?")
-						.setLong(1, e.getId())
+						.setLong(0, e.getId())
 						.uniqueResult()
 				).doubleValue();
 		assertEquals(PASSWORD_EXPIRY_WEEKS, expiryViaSql, 0.01d);
@@ -239,7 +239,7 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 		assertEquals(2.54d, heightViaSql, 0.01d);
 		expiryViaSql =
 				( (Number)s.createSQLQuery("select pwd_expiry_weeks from UEmployee where person_id=?")
-						.setLong(1, e.getId())
+						.setLong(0, e.getId())
 						.uniqueResult()
 				).doubleValue();
 		assertEquals(1d, expiryViaSql, 0.01d);

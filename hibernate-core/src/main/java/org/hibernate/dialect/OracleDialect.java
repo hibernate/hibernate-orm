@@ -795,6 +795,11 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsGroupByRollup() {
+		return true;
+	}
+
+	@Override
 	public int getInExpressionCountLimit() {
 		return PARAM_LIST_SIZE_LIMIT;
 	}

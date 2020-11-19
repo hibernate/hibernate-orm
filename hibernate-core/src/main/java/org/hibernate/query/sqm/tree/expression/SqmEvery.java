@@ -18,8 +18,8 @@ public class SqmEvery<T> extends AbstractSqmExpression<T> {
 
 	private final SqmSubQuery<T> subquery;
 
-	public SqmEvery(SqmSubQuery<T> subquery, SqmExpressable<T> type, NodeBuilder criteriaBuilder) {
-		super(type, criteriaBuilder);
+	public SqmEvery(SqmSubQuery<T> subquery, NodeBuilder criteriaBuilder) {
+		super( subquery.getNodeType(), criteriaBuilder );
 		this.subquery = subquery;
 	}
 

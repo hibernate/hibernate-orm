@@ -44,13 +44,13 @@ public class SqmQuerySpec<T> implements SqmCteConsumer, SqmNode, SqmFromClauseCo
 	private SqmSelectClause selectClause;
 	private SqmWhereClause whereClause;
 
-	private SqmGroupByClause groupByClause;
-	private SqmHavingClause havingClause;
+	private List<SqmExpression<?>> groupByClauseExpressions = Collections.emptyList();
+	private SqmPredicate havingClausePredicate;
 
 	private SqmOrderByClause orderByClause;
 
-	private SqmExpression limitExpression;
-	private SqmExpression offsetExpression;
+	private SqmExpression<?> limitExpression;
+	private SqmExpression<?> offsetExpression;
 
 	public SqmQuerySpec(NodeBuilder nodeBuilder) {
 		this.nodeBuilder = nodeBuilder;
@@ -100,20 +100,22 @@ public class SqmQuerySpec<T> implements SqmCteConsumer, SqmNode, SqmFromClauseCo
 		whereClause.applyPredicate( predicate );
 	}
 
-	public SqmGroupByClause getGroupByClause() {
-		return groupByClause;
+	public List<SqmExpression<?>> getGroupByClauseExpressions() {
+		return groupByClauseExpressions;
 	}
 
-	public void setGroupByClause(SqmGroupByClause groupByClause) {
-		this.groupByClause = groupByClause;
+	public void setGroupByClauseExpressions(List<SqmExpression<?>> groupByClauseExpressions) {
+		this.groupByClauseExpressions = groupByClauseExpressions == null
+				? Collections.emptyList()
+				: groupByClauseExpressions;
 	}
 
-	public SqmHavingClause getHavingClause() {
-		return havingClause;
+	public SqmPredicate getHavingClausePredicate() {
+		return havingClausePredicate;
 	}
 
-	public void setHavingClause(SqmHavingClause havingClause) {
-		this.havingClause = havingClause;
+	public void setHavingClausePredicate(SqmPredicate havingClausePredicate) {
+		this.havingClausePredicate = havingClausePredicate;
 	}
 
 	public SqmOrderByClause getOrderByClause() {
@@ -124,7 +126,7 @@ public class SqmQuerySpec<T> implements SqmCteConsumer, SqmNode, SqmFromClauseCo
 		this.orderByClause = orderByClause;
 	}
 
-	public SqmExpression getLimitExpression() {
+	public SqmExpression<?> getLimitExpression() {
 		return limitExpression;
 	}
 
@@ -135,7 +137,7 @@ public class SqmQuerySpec<T> implements SqmCteConsumer, SqmNode, SqmFromClauseCo
 		this.limitExpression = limitExpression;
 	}
 
-	public SqmExpression getOffsetExpression() {
+	public SqmExpression<?> getOffsetExpression() {
 		return offsetExpression;
 	}
 
@@ -157,7 +159,7 @@ public class SqmQuerySpec<T> implements SqmCteConsumer, SqmNode, SqmFromClauseCo
 	}
 
 	@Override
-	public SqmQuerySpec setDistinct(boolean distinct) {
+	public SqmQuerySpec<T> setDistinct(boolean distinct) {
 		assert getSelectClause() != null;
 		getSelectClause().makeDistinct( distinct );
 		return this;
@@ -171,7 +173,7 @@ public class SqmQuerySpec<T> implements SqmCteConsumer, SqmNode, SqmFromClauseCo
 	}
 
 	@Override
-	public SqmQuerySpec setSelection(JpaSelection<T> selection) {
+	public SqmQuerySpec<T> setSelection(JpaSelection<T> selection) {
 		assert getSelectClause() != null;
 		// NOTE : this call comes from JPA which inherently supports just a
 		// single (possibly "compound") selection
@@ -187,7 +189,7 @@ public class SqmQuerySpec<T> implements SqmCteConsumer, SqmNode, SqmFromClauseCo
 	}
 
 	@Override
-	public SqmQuerySpec addRoot(JpaRoot<?> root) {
+	public SqmQuerySpec<T> addRoot(JpaRoot<?> root) {
 		if ( getFromClause() == null ) {
 			setFromClause( new SqmFromClause() );
 		}
@@ -231,90 +233,48 @@ public class SqmQuerySpec<T> implements SqmCteConsumer, SqmNode, SqmFromClauseCo
 	}
 
 	@Override
-	public List<SqmExpression> getGroupingExpressions() {
-		if ( getGroupByClause() == null ) {
-			return Collections.emptyList();
-		}
-
-		final List<SqmExpression> list = new ArrayList<>();
-		getGroupByClause().visitGroupings(
-				sqmGrouping -> list.add( sqmGrouping.getExpression() )
-		);
-		return list;
+	public List<SqmExpression<?>> getGroupingExpressions() {
+		return groupByClauseExpressions;
 	}
 
 	@Override
 	public SqmQuerySpec<T> setGroupingExpressions(List<? extends JpaExpression<?>> groupExpressions) {
-		if ( getGroupByClause() == null ) {
-			setGroupByClause( new SqmGroupByClause() );
-		}
-		else {
-			getGroupByClause().clearGroupings();
-		}
-
+		this.groupByClauseExpressions = new ArrayList<>( groupExpressions.size() );
 		for ( JpaExpression<?> groupExpression : groupExpressions ) {
-			getGroupByClause().addGrouping( (SqmExpression) groupExpression );
+			this.groupByClauseExpressions.add( (SqmExpression<?>) groupExpression );
 		}
-
 		return this;
 	}
 
 	@Override
 	public SqmQuerySpec<T> setGroupingExpressions(JpaExpression<?>... groupExpressions) {
-		if ( getGroupByClause() == null ) {
-			setGroupByClause( new SqmGroupByClause() );
-		}
-		else {
-			getGroupByClause().clearGroupings();
-		}
-
+		this.groupByClauseExpressions = new ArrayList<>( groupExpressions.length );
 		for ( JpaExpression<?> groupExpression : groupExpressions ) {
-			getGroupByClause().addGrouping( (SqmExpression) groupExpression );
+			this.groupByClauseExpressions.add( (SqmExpression<?>) groupExpression );
 		}
-
 		return this;
 	}
 
 	@Override
 	public SqmPredicate getGroupRestriction() {
-		if ( getHavingClause() == null ) {
-			return null;
-		}
-		return getHavingClause().getPredicate();
+		return havingClausePredicate;
 	}
 
 	@Override
 	public SqmQuerySpec<T> setGroupRestriction(JpaPredicate restriction) {
-		if ( getHavingClause() == null ) {
-			setHavingClause( new SqmHavingClause( (SqmPredicate) restriction ) );
-		}
-		else {
-			getHavingClause().setPredicate( (SqmPredicate) restriction );
-		}
+		havingClausePredicate = (SqmPredicate) restriction;
 		return this;
 	}
 
 	@Override
 	public SqmQuerySpec<T> setGroupRestriction(Expression<Boolean> restriction) {
-		final SqmPredicate predicate = nodeBuilder.wrap( restriction );
-		if ( getHavingClause() == null ) {
-			setHavingClause( new SqmHavingClause( predicate ));
-		}
-		else {
-			getHavingClause().setPredicate( predicate );
-		}
+		havingClausePredicate = nodeBuilder.wrap( restriction );
 		return this;
 	}
 
 	@Override
 	public SqmQuerySpec<T> setGroupRestriction(Predicate... restrictions) {
-		final SqmPredicate predicate = nodeBuilder.wrap( restrictions );
-		if ( getHavingClause() == null ) {
-			setHavingClause( new SqmHavingClause( predicate ));
-		}
-		else {
-			getHavingClause().setPredicate( predicate );
-		}
+		havingClausePredicate = nodeBuilder.wrap( restrictions );
 		return this;
 	}
 
@@ -341,25 +301,25 @@ public class SqmQuerySpec<T> implements SqmCteConsumer, SqmNode, SqmFromClauseCo
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public SqmExpression getLimit() {
+	public SqmExpression<?> getLimit() {
 		return getLimitExpression();
 	}
 
 	@Override
 	public SqmQuerySpec<T> setLimit(JpaExpression<?> limit) {
-		setLimitExpression( (SqmExpression) limit );
+		setLimitExpression( (SqmExpression<?>) limit );
 		return this;
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public SqmExpression getOffset() {
+	public SqmExpression<?> getOffset() {
 		return getOffsetExpression();
 	}
 
 	@Override
-	public SqmQuerySpec<T> setOffset(JpaExpression offset) {
-		setOffsetExpression( (SqmExpression) offset );
+	public SqmQuerySpec<T> setOffset(JpaExpression<?> offset) {
+		setOffsetExpression( (SqmExpression<?>) offset );
 		return this;
 	}
 }

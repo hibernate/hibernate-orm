@@ -221,7 +221,7 @@ public class SessionImpl
 			//There might be custom properties for this session that affect the LockOptions state
 			LockOptionsHelper.applyPropertiesToLockOptions( this.properties, this::getLockOptionsForWrite );
 		}
-		getSession().setCacheMode( fastSessionServices.initialSessionCacheMode );
+		setCacheMode( fastSessionServices.initialSessionCacheMode );
 
 		// NOTE : pulse() already handles auto-join-ability correctly
 		getTransactionCoordinator().pulse();
@@ -235,7 +235,7 @@ public class SessionImpl
 			else {
 				initialMode = ConfigurationHelper.getFlushMode( getSessionProperty( AvailableSettings.FLUSH_MODE ), FlushMode.AUTO );
 			}
-			getSession().setHibernateFlushMode( initialMode );
+			setHibernateFlushMode( initialMode );
 		}
 
 		if ( log.isTraceEnabled() ) {
@@ -2872,7 +2872,7 @@ public class SessionImpl
 			LockOptionsHelper.applyPropertiesToLockOptions( properties, this::getLockOptionsForWrite );
 		}
 		else if ( JPA_SHARED_CACHE_RETRIEVE_MODE.equals( propertyName ) || JPA_SHARED_CACHE_STORE_MODE.equals(  propertyName ) ) {
-			getSession().setCacheMode(
+			setCacheMode(
 					CacheModeHelper.interpretCacheMode(
 							determineCacheStoreMode( properties ),
 							determineCacheRetrieveMode( properties )

@@ -241,7 +241,7 @@ public abstract class AbstractCompositeIdentifierMapping
 	}
 
 	@Override
-	public Expression toSqlExpression(
+	public SqlTuple toSqlExpression(
 			TableGroup tableGroup,
 			Clause clause,
 			SqmToSqlAstConverter walker,

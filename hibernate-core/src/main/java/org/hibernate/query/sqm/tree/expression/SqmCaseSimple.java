@@ -129,7 +129,7 @@ public class SqmCaseSimple<T,R>
 
 	@Override
 	public JpaSimpleCase<T, R> when(T condition, R result) {
-		when( nodeBuilder().literal( condition ), nodeBuilder().literal( result ) );
+		when( nodeBuilder().literal( condition ), nodeBuilder().value( result ) );
 		return this;
 	}
 
@@ -142,7 +142,7 @@ public class SqmCaseSimple<T,R>
 
 	@Override
 	public JpaSimpleCase<T, R> otherwise(R result) {
-		otherwise( nodeBuilder().literal( result ) );
+		otherwise( nodeBuilder().value( result ) );
 		return this;
 	}
 

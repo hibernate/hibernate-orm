@@ -9,6 +9,7 @@ package org.hibernate.query.sqm.sql.internal;
 import java.util.List;
 import java.util.function.Function;
 
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.query.SemanticException;
@@ -49,9 +50,13 @@ public class SqmParameterInterpretation implements Expression, DomainResultProdu
 		assert jdbcParameters != null;
 		assert jdbcParameters.size() > 0;
 
-		this.resolvedExpression = jdbcParameters.size() == 1
-				? jdbcParameters.get( 0 )
-				: new SqlTuple( jdbcParameters, valueMapping );
+		this.resolvedExpression = valueMapping instanceof EmbeddableValuedModelPart
+				? new SqlTuple( jdbcParameters, valueMapping )
+				: jdbcParameters.get( 0 );
+	}
+
+	public Expression getResolvedExpression() {
+		return resolvedExpression;
 	}
 
 	@Override

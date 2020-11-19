@@ -32,6 +32,7 @@ import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.EmbeddedCollectionPart;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
@@ -87,6 +88,7 @@ import org.hibernate.query.sqm.tree.expression.SqmByUnit;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
 import org.hibernate.query.sqm.tree.expression.SqmCastTarget;
+import org.hibernate.query.sqm.tree.expression.SqmCollate;
 import org.hibernate.query.sqm.tree.expression.SqmDistinct;
 import org.hibernate.query.sqm.tree.expression.SqmDurationUnit;
 import org.hibernate.query.sqm.tree.expression.SqmEnumLiteral;
@@ -105,6 +107,7 @@ import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
 import org.hibernate.query.sqm.tree.expression.SqmStar;
 import org.hibernate.query.sqm.tree.expression.SqmToDuration;
 import org.hibernate.query.sqm.tree.expression.SqmTrimSpecification;
+import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
@@ -128,6 +131,7 @@ import org.hibernate.query.sqm.tree.predicate.SqmMemberOfPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmNegatedPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmNullnessPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmOrPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
@@ -156,6 +160,7 @@ import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.CastTarget;
+import org.hibernate.sql.ast.tree.expression.Collate;
 import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.Duration;
 import org.hibernate.sql.ast.tree.expression.DurationUnit;
@@ -166,6 +171,7 @@ import org.hibernate.sql.ast.tree.expression.Format;
 import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
+import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Star;
 import org.hibernate.sql.ast.tree.expression.TrimSpecification;
 import org.hibernate.sql.ast.tree.expression.UnaryOperation;
@@ -180,7 +186,6 @@ import org.hibernate.sql.ast.tree.predicate.InListPredicate;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
 import org.hibernate.sql.ast.tree.predicate.Junction;
 import org.hibernate.sql.ast.tree.predicate.LikePredicate;
-import org.hibernate.sql.ast.tree.predicate.MemberOfPredicate;
 import org.hibernate.sql.ast.tree.predicate.NegatedPredicate;
 import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
@@ -404,7 +409,7 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
-	public QuerySpec visitQuerySpec(SqmQuerySpec sqmQuerySpec) {
+	public QuerySpec visitQuerySpec(SqmQuerySpec<?> sqmQuerySpec) {
 		final QuerySpec sqlQuerySpec = new QuerySpec( processingStateStack.isEmpty(), sqmQuerySpec.getFromClause().getNumberOfRoots() );
 
 		additionalRestrictions = null;
@@ -444,8 +449,10 @@ public abstract class BaseSqmToSqlAstConverter
 				sqlQuerySpec.applyPredicate( additionalRestrictions );
 			}
 
-			// todo : group-by
-			// todo : having
+			sqlQuerySpec.setGroupByClauseExpressions( visitGroupByClause( sqmQuerySpec.getGroupByClauseExpressions() ) );
+			if ( sqmQuerySpec.getHavingClausePredicate() != null ) {
+				sqlQuerySpec.setHavingClauseRestrictions( visitHavingClause( sqmQuerySpec.getHavingClausePredicate() ) );
+			}
 
 			if ( sqmQuerySpec.getOrderByClause() != null ) {
 				currentClauseStack.push( Clause.ORDER );
@@ -494,6 +501,38 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
+	public List<Expression> visitGroupByClause(List<SqmExpression<?>> groupByClauseExpressions) {
+		if ( !groupByClauseExpressions.isEmpty() ) {
+			currentClauseStack.push( Clause.GROUP );
+			try {
+				List<Expression> expressions = new ArrayList<>( groupByClauseExpressions.size() );
+				for ( SqmExpression<?> groupByClauseExpression : groupByClauseExpressions ) {
+					expressions.add( (Expression) groupByClauseExpression.accept( this ) );
+				}
+				return expressions;
+			}
+			finally {
+				currentClauseStack.pop();
+			}
+		}
+		return Collections.emptyList();
+	}
+
+	@Override
+	public Predicate visitHavingClause(SqmPredicate sqmPredicate) {
+		if ( sqmPredicate == null ) {
+			return null;
+		}
+		currentClauseStack.push( Clause.HAVING );
+		try {
+			return (Predicate) sqmPredicate.accept( this );
+		}
+		finally {
+			currentClauseStack.pop();
+		}
+	}
+
+	@Override
 	public Void visitOrderByClause(SqmOrderByClause orderByClause) {
 		super.visitOrderByClause( orderByClause );
 		return null;
@@ -503,7 +542,7 @@ public abstract class BaseSqmToSqlAstConverter
 	public SortSpecification visitSortSpecification(SqmSortSpecification sortSpecification) {
 		return new SortSpecification(
 				(Expression) sortSpecification.getSortExpression().accept( this ),
-				sortSpecification.getCollation(),
+				null,
 				sortSpecification.getSortOrder(),
 				sortSpecification.getNullPrecedence()
 		);
@@ -1001,7 +1040,7 @@ public abstract class BaseSqmToSqlAstConverter
 	// General expressions
 
 	@Override
-	public Expression visitLiteral(SqmLiteral literal) {
+	public Expression visitLiteral(SqmLiteral<?> literal) {
 		if ( literal instanceof SqmLiteralNull ) {
 			return new QueryLiteral<>( null, (BasicValuedMapping) inferableTypeAccessStack.getCurrent().get() );
 		}
@@ -1196,6 +1235,24 @@ public abstract class BaseSqmToSqlAstConverter
 		return consumeSqmParameter( supplier.get() );
 	}
 
+	@Override
+	public Object visitTuple(SqmTuple<?> sqmTuple) {
+		final List<SqmExpression<?>> groupedExpressions = sqmTuple.getGroupedExpressions();
+		final int size = groupedExpressions.size();
+		final List<Expression> expressions = new ArrayList<>( size );
+		for ( int i = 0; i < size; i++ ) {
+			expressions.add( (Expression) groupedExpressions.get( i ).accept( this ) );
+		}
+		return new SqlTuple( expressions, null );
+	}
+
+	@Override
+	public Object visitCollate(SqmCollate<?> sqmCollate) {
+		return new Collate(
+				(Expression) sqmCollate.getExpression().accept( this ),
+				sqmCollate.getCollation()
+		);
+	}
 
 	@Override
 	public Expression visitFunction(SqmFunction sqmFunction) {
@@ -2209,13 +2266,17 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
-	public MemberOfPredicate visitMemberOfPredicate(SqmMemberOfPredicate predicate) {
+	public InSubQueryPredicate visitMemberOfPredicate(SqmMemberOfPredicate predicate) {
 		final SqmPath<?> pluralPath = predicate.getPluralPath();
 		final PluralAttributeMapping mappingModelExpressable = (PluralAttributeMapping) determineValueMapping(pluralPath);
 
 		if ( mappingModelExpressable.getElementDescriptor() instanceof EntityCollectionPart ) {
 			inferableTypeAccessStack.push(
 					() -> ( (EntityCollectionPart) mappingModelExpressable.getElementDescriptor() ).getKeyTargetMatchPart() );
+		}
+		else if ( mappingModelExpressable.getElementDescriptor() instanceof EmbeddedCollectionPart ) {
+			inferableTypeAccessStack.push(
+					() -> mappingModelExpressable.getElementDescriptor() );
 		}
 		else {
 			inferableTypeAccessStack.push( () -> mappingModelExpressable );
@@ -2229,15 +2290,15 @@ public abstract class BaseSqmToSqlAstConverter
 			inferableTypeAccessStack.pop();
 		}
 
-		return new MemberOfPredicate(
+		return new InSubQueryPredicate(
 				lhs,
-				predicate.isNegated(),
-				createMemberOfSubQuery( pluralPath, mappingModelExpressable )
+				createMemberOfSubQuery( pluralPath, mappingModelExpressable ),
+				predicate.isNegated()
 		);
 	}
 
 	private QuerySpec createMemberOfSubQuery(SqmPath<?> pluralPath, PluralAttributeMapping mappingModelExpressable) {
-		final QuerySpec querySpec = new QuerySpec( true );
+		final QuerySpec querySpec = new QuerySpec( false );
 		processingStateStack.push(
 				new SqlAstQuerySpecProcessingStateImpl(
 						querySpec,

@@ -9,6 +9,7 @@ package org.hibernate.dialect;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.function.CastStrEmulation;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.DerbyConcatEmulation;
 import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
@@ -27,6 +28,7 @@ import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.CastType;
+import org.hibernate.query.CastTypeKind;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.internal.idtable.AfterUseAction;
@@ -41,7 +43,9 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNo
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.sql.DecimalTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SmallIntTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
@@ -87,11 +91,14 @@ public class DerbyDialect extends Dialect {
 		registerColumnType( Types.BIT, 1, "boolean" ); //no bit
 		registerColumnType( Types.BIT, "smallint" ); //no bit
 		registerColumnType( Types.TINYINT, "smallint" ); //no tinyint
+		registerColumnType( Types.CHAR, "char(1)" );
 
 		//HHH-12827: map them both to the same type to
 		//           avoid problems with schema update
 //		registerColumnType( Types.DECIMAL, "decimal($p,$s)" );
 		registerColumnType( Types.NUMERIC, "decimal($p,$s)" );
+		registerColumnType( Types.FLOAT, "float" );
+		registerColumnType( Types.DOUBLE, "double" );
 
 		registerColumnType( Types.BINARY, "varchar($l) for bit data" );
 		registerColumnType( Types.BINARY, 254, "char($l) for bit data" );
@@ -165,7 +172,7 @@ public class DerbyDialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().register( "concat", new DerbyConcatEmulation() );
 
 		//no way I can see to pad with anything other than spaces
-		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "lpad", "case when length(?1)<?2 then substr(char('',?2)||?1,length(?1)) else ?1 end" )
+		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "lpad", "case when length(?1)<?2 then substr(char('',?2)||?1,length(?1)+1) else ?1 end" )
 				.setInvariantType( StandardBasicTypes.STRING )
 				.setExactArgumentCount( 2 )
 				.setArgumentListSignature("(string, length)")
@@ -250,6 +257,12 @@ public class DerbyDialect extends Dialect {
 			case LONG:
 				if ( from == BOOLEAN && getVersion() >= 1070 ) {
 					return "case ?1 when false then 0 when true then 1 end";
+				}
+				break;
+			case STRING:
+				// See https://issues.apache.org/jira/browse/DERBY-2072
+				if ( from.getKind() == CastTypeKind.NUMERIC ) {
+					return "cast(cast(?1 as char(38)) as ?2)";
 				}
 				break;
 		}
@@ -440,9 +453,16 @@ public class DerbyDialect extends Dialect {
 	}
 
 	protected SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
-		return sqlCode == Types.NUMERIC
-				? DecimalTypeDescriptor.INSTANCE
-				: super.getSqlTypeDescriptorOverride(sqlCode);
+		switch ( sqlCode ) {
+			case Types.BOOLEAN:
+				return SmallIntTypeDescriptor.INSTANCE;
+			case Types.NUMERIC:
+				return DecimalTypeDescriptor.INSTANCE;
+			case Types.TIMESTAMP_WITH_TIMEZONE:
+				return TimestampTypeDescriptor.INSTANCE;
+			default:
+				return super.getSqlTypeDescriptorOverride(sqlCode);
+		}
 	}
 
 	@Override
@@ -737,5 +757,10 @@ public class DerbyDialect extends Dialect {
 				TempTableDdlTransactionHandling.NONE,
 				runtimeModelCreationContext.getSessionFactory()
 		);
+	}
+
+	@Override
+	public boolean supportsGroupByRollup() {
+		return true;
 	}
 }

@@ -116,7 +116,7 @@ public class SqmCaseSearched<R>
 
 	@Override
 	public SqmCaseSearched<R> when(Expression<Boolean> condition, R result) {
-		when( nodeBuilder().wrap( condition ), nodeBuilder().literal( result ) );
+		when( nodeBuilder().wrap( condition ), nodeBuilder().value( result ) );
 		return this;
 	}
 
@@ -129,7 +129,7 @@ public class SqmCaseSearched<R>
 
 	@Override
 	public JpaExpression<R> otherwise(R result) {
-		otherwise( nodeBuilder().literal( result ) );
+		otherwise( nodeBuilder().value( result ) );
 		return this;
 	}
 

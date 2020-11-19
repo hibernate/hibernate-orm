@@ -32,6 +32,7 @@ import javax.persistence.criteria.Subquery;
 import org.hibernate.NullPrecedence;
 import org.hibernate.SortOrder;
 import org.hibernate.metamodel.model.domain.DomainType;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
  * Hibernate extensions to the JPA CriteriaBuilder.
@@ -329,6 +330,8 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	<K, M extends Map<K, ?>> JpaExpression<Set<K>> keys(M map);
 
 	<K, L extends List<?>> JpaExpression<Set<K>> indexes(L list);
+
+	<T> SqmExpression<T> value(T value);
 
 	<V, C extends Collection<V>> JpaExpression<Collection<V>> values(C collection);
 

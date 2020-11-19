@@ -33,13 +33,23 @@ import java.time.*;
  * @author Gavin King
  */
 public enum CastType {
-	STRING,
-	BOOLEAN,
-	INTEGER, LONG, FLOAT, DOUBLE, FIXED,
-	DATE, TIME, TIMESTAMP,
-	OFFSET_TIMESTAMP, ZONE_TIMESTAMP,
-	NULL,
-	OTHER;
+	STRING(CastTypeKind.TEXT),
+	BOOLEAN(CastTypeKind.BOOLEAN),
+	INTEGER(CastTypeKind.NUMERIC), LONG(CastTypeKind.NUMERIC), FLOAT(CastTypeKind.NUMERIC), DOUBLE(CastTypeKind.NUMERIC), FIXED(CastTypeKind.NUMERIC),
+	DATE(CastTypeKind.TEMPORAL), TIME(CastTypeKind.TEMPORAL), TIMESTAMP(CastTypeKind.TEMPORAL),
+	OFFSET_TIMESTAMP(CastTypeKind.TEMPORAL), ZONE_TIMESTAMP(CastTypeKind.TEMPORAL),
+	NULL(null),
+	OTHER(null);
+
+	private final CastTypeKind kind;
+
+	CastType(CastTypeKind kind) {
+		this.kind = kind;
+	}
+
+	public CastTypeKind getKind() {
+		return kind;
+	}
 
 	public static CastType from(Class javaClass) {
 		if (String.class.equals(javaClass)) {

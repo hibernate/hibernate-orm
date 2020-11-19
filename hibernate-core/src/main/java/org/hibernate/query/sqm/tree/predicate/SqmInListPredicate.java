@@ -74,11 +74,11 @@ public class SqmInListPredicate<T> extends AbstractNegatableSqmPredicate impleme
 	public SqmInPredicate<T> value(Object value) {
 		if ( value instanceof Collection ) {
 			( (Collection) value ).forEach(
-					v -> addExpression( nodeBuilder().literal( v ) )
+					v -> addExpression( nodeBuilder().value( v ) )
 			);
 			return this;
 		}
-		addExpression( nodeBuilder().literal( value ) );
+		addExpression( nodeBuilder().value( value ) );
 		return this;
 	}
 

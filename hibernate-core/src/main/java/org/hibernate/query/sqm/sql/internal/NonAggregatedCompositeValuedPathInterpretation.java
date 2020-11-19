@@ -13,6 +13,7 @@ import org.hibernate.query.sqm.tree.domain.NonAggregatedCompositeSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 
 /**
@@ -30,7 +31,7 @@ public class NonAggregatedCompositeValuedPathInterpretation<T> extends AbstractS
 		final NonAggregatedIdentifierMappingImpl mapping = (NonAggregatedIdentifierMappingImpl) tableGroup.getModelPart()
 				.findSubPart( sqmPath.getReferencedPathSource().getPathName(), null );
 
-		return new NonAggregatedCompositeValuedPathInterpretation(
+		return new NonAggregatedCompositeValuedPathInterpretation<>(
 				mapping.toSqlExpression(
 						tableGroup,
 						converter.getCurrentClauseStack().getCurrent(),
@@ -43,15 +44,19 @@ public class NonAggregatedCompositeValuedPathInterpretation<T> extends AbstractS
 		);
 	}
 
-	private final Expression sqlExpression;
+	private final SqlTuple sqlExpression;
 
 	public NonAggregatedCompositeValuedPathInterpretation(
-			Expression sqlExpression,
+			SqlTuple sqlExpression,
 			SqmPath<T> sqmPath,
 			ModelPart mapping,
 			TableGroup tableGroup) {
 		super( sqmPath, mapping, tableGroup );
 		this.sqlExpression = sqlExpression;
+	}
+
+	public SqlTuple getSqlExpression() {
+		return sqlExpression;
 	}
 
 	@Override

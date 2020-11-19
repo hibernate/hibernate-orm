@@ -10,12 +10,14 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Root;
 
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaRoot;
 
 import org.hibernate.testing.orm.domain.gambit.BasicEntity;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
@@ -106,7 +108,9 @@ public class BasicCriteriaExecutionTests {
 		);
 	}
 
+	// Doing ... where ? = ? ... is only allowed in a few DBs. Since this is useless, we don't bother to emulate this
 	@Test
+	@RequiresDialect(H2Dialect.class)
 	public void testExecutingBasicCriteriaQueryParameterPredicate(SessionFactoryScope scope) {
 		scope.inStatelessTransaction(
 				session -> {
@@ -123,7 +127,9 @@ public class BasicCriteriaExecutionTests {
 		);
 	}
 
+	// Doing ... where ? = ? ... is only allowed in a few DBs. Since this is useless, we don't bother to emulate this
 	@Test
+	@RequiresDialect(H2Dialect.class)
 	public void testExecutingBasicCriteriaQueryParameterPredicateInStatelessSession(SessionFactoryScope scope) {
 		scope.inStatelessTransaction(
 				session -> {

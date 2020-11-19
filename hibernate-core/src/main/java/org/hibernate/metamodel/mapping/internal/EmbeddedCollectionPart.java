@@ -210,7 +210,7 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 	}
 
 	@Override
-	public Expression toSqlExpression(
+	public SqlTuple toSqlExpression(
 			TableGroup tableGroup,
 			Clause clause,
 			SqmToSqlAstConverter walker,

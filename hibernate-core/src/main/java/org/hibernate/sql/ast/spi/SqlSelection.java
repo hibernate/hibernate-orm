@@ -8,6 +8,7 @@ package org.hibernate.sql.ast.spi;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.sql.ast.SqlAstWalker;
@@ -45,6 +46,11 @@ public interface SqlSelection {
 	default int getJdbcResultSetIndex() {
 		return getValuesArrayPosition() + 1;
 	}
+
+	/**
+	 * The underlying expression.
+	 */
+	Expression getExpression();
 
 	/**
 	 * Get the type of the expression

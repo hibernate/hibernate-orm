@@ -21,6 +21,8 @@ import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.search.MeterNotFoundException;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 
+import static org.junit.Assert.assertEquals;
+
 /**
  *  @author Erin Schnabel
  *  @author Donnchadh O Donnabhain
@@ -60,22 +62,7 @@ public class MicrometerStatisticsTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testSave() {
-		// prepare some test data...
-		Session session = openSession();
-		session.beginTransaction();
-		Account account = new Account( new AccountId( 1), "testAcct");
-		session.save( account );
-		session.getTransaction().commit();
-		session.close();
-
-		// clean up
-		session = openSession();
-		session.beginTransaction();
-		session.delete( account );
-		session.getTransaction().commit();
-		session.close();
-
+	public void testMicrometerMetrics() {
 		Assert.assertNotNull(registry.get("hibernate.sessions.open").functionCounter());
 		Assert.assertNotNull(registry.get("hibernate.sessions.closed").functionCounter());
 
@@ -123,16 +110,31 @@ public class MicrometerStatisticsTest extends BaseCoreFunctionalTestCase {
 		Assert.assertNotNull(registry.get("hibernate.cache.query.puts").functionCounter());
 		Assert.assertNotNull(registry.get("hibernate.cache.query.plan").tags("result", "hit").functionCounter());
 		Assert.assertNotNull(registry.get("hibernate.cache.query.plan").tags("result", "miss").functionCounter());
-	}
 
-	void testSecondLevelCacheMetrics() {
-		Assert.assertNotNull(registry.get("hibernate.second.level.cache.requests").tags("result", "hit", "region", "region1").functionCounter());
-		Assert.assertNotNull(registry.get("hibernate.second.level.cache.requests").tags("result", "hit", "region", "region2").functionCounter());
-		Assert.assertNotNull(registry.get("hibernate.second.level.cache.requests").tags("result", "miss", "region", "region1").functionCounter());
-		Assert.assertNotNull(registry.get("hibernate.second.level.cache.requests").tags("result", "miss", "region", "region2").functionCounter());
-		Assert.assertNotNull(registry.get("hibernate.second.level.cache.puts").tags("region", "region1").functionCounter());
-		Assert.assertNotNull(registry.get("hibernate.second.level.cache.puts").tags("region", "region2").functionCounter());
+		// prepare some test data...
+		Session session = openSession();
+		session.beginTransaction();
+		Account account = new Account( new AccountId( 1), "testAcct");
+		session.save( account );
+		session.getTransaction().commit();
+		session.close();
 
+		Assert.assertEquals( 1, registry.get("hibernate.sessions.open").functionCounter().count(), 0 );
+		Assert.assertEquals( 1, registry.get("hibernate.sessions.closed").functionCounter().count(), 0 );
+		Assert.assertEquals( 1, registry.get("hibernate.entities.inserts").functionCounter().count(), 0 );
+		Assert.assertEquals( 1, registry.get("hibernate.transactions").tags("result", "success").functionCounter().count(), 0 );
+
+		// clean up
+		session = openSession();
+		session.beginTransaction();
+		session.delete( account );
+		session.getTransaction().commit();
+		session.close();
+
+		Assert.assertEquals( 2, registry.get("hibernate.sessions.open").functionCounter().count(), 0 );
+		Assert.assertEquals( 2, registry.get("hibernate.sessions.closed").functionCounter().count(), 0 );
+		Assert.assertEquals( 1, registry.get("hibernate.entities.deletes").functionCounter().count(), 0 );
+		Assert.assertEquals( 2, registry.get("hibernate.transactions").tags("result", "success").functionCounter().count(), 0 );
 	}
 
 	void verifyMeterNotFoundException(String name) {

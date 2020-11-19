@@ -90,23 +90,7 @@ public class MicrometerCacheStatisticsTest extends BaseNonConfigCoreFunctionalTe
 	}
 
 	@Test
-	public void testSave() {
-
-		// prepare some test data...
-		Session session = openSession();
-		session.beginTransaction();
-		Account account = new Account( new AccountId( 1), "testAcct");
-		session.save( account );
-		session.getTransaction().commit();
-		session.close();
-
-		// clean up
-		session = openSession();
-		session.beginTransaction();
-		session.delete( account );
-		session.getTransaction().commit();
-		session.close();
-
+	public void testMicrometerMetrics() {
 		Assert.assertNotNull(registry.get("hibernate.sessions.open").functionCounter());
 		Assert.assertNotNull(registry.get("hibernate.sessions.closed").functionCounter());
 
@@ -139,6 +123,7 @@ public class MicrometerCacheStatisticsTest extends BaseNonConfigCoreFunctionalTe
 		Assert.assertNotNull(registry.get("hibernate.cache.natural.id.requests").tags("result", "hit").functionCounter());
 		Assert.assertNotNull(registry.get("hibernate.cache.natural.id.requests").tags("result", "miss").functionCounter());
 		Assert.assertNotNull(registry.get("hibernate.cache.natural.id.puts").functionCounter());
+
 		Assert.assertNotNull(registry.get("hibernate.query.natural.id.executions").functionCounter());
 		Assert.assertNotNull(registry.get("hibernate.query.natural.id.executions.max").timeGauge());
 
@@ -154,6 +139,46 @@ public class MicrometerCacheStatisticsTest extends BaseNonConfigCoreFunctionalTe
 		Assert.assertNotNull(registry.get("hibernate.cache.query.puts").functionCounter());
 		Assert.assertNotNull(registry.get("hibernate.cache.query.plan").tags("result", "hit").functionCounter());
 		Assert.assertNotNull(registry.get("hibernate.cache.query.plan").tags("result", "miss").functionCounter());
+
+		// prepare some test data...
+		Session session = openSession();
+		session.beginTransaction();
+		Person person = new Person( 1, "testAcct");
+		session.save( person );
+		session.getTransaction().commit();
+		session.close();
+
+		Assert.assertEquals( 1, registry.get("hibernate.sessions.open").functionCounter().count(), 0 );
+		Assert.assertEquals( 1, registry.get("hibernate.sessions.closed").functionCounter().count(), 0 );
+		Assert.assertEquals( 1, registry.get("hibernate.entities.inserts").functionCounter().count(), 0 );
+		Assert.assertEquals( 1, registry.get("hibernate.transactions").tags("result", "success").functionCounter().count(), 0 );
+		Assert.assertEquals( 1, registry.get("hibernate.cache.natural.id.puts").functionCounter().count(), 0);
+		Assert.assertEquals(2, registry.get("hibernate.second.level.cache.puts").tags("region", REGION).functionCounter().count(), 0);
+
+		final String queryString = "select p from Person p";
+		inTransaction(
+				// Only way to generate query region (to be accessible via stats) is to execute the query
+				s -> s.createQuery( queryString ).setCacheable( true ).setCacheRegion( REGION ).list()
+		);
+
+		Assert.assertEquals( 2, registry.get("hibernate.sessions.open").functionCounter().count(), 0 );
+		Assert.assertEquals( 2, registry.get("hibernate.sessions.closed").functionCounter().count(), 0 );
+		Assert.assertEquals( 0, registry.get("hibernate.entities.deletes").functionCounter().count(), 0 );
+		Assert.assertEquals( 2, registry.get("hibernate.transactions").tags("result", "success").functionCounter().count(), 0 );
+		Assert.assertEquals( 1, registry.get("hibernate.cache.natural.id.puts").functionCounter().count(), 0);
+		Assert.assertEquals(3, registry.get("hibernate.second.level.cache.puts").tags("region", REGION).functionCounter().count(), 0);
+
+		// clean up
+		session = openSession();
+		session.beginTransaction();
+		session.delete( person );
+		session.getTransaction().commit();
+		session.close();
+
+		Assert.assertEquals( 3, registry.get("hibernate.sessions.open").functionCounter().count(), 0 );
+		Assert.assertEquals( 3, registry.get("hibernate.sessions.closed").functionCounter().count(), 0 );
+		Assert.assertEquals( 1, registry.get("hibernate.entities.deletes").functionCounter().count(), 0 );
+		Assert.assertEquals( 3, registry.get("hibernate.transactions").tags("result", "success").functionCounter().count(), 0 );
 	}
 
 	@Entity( name = "Person" )
@@ -167,6 +192,14 @@ public class MicrometerCacheStatisticsTest extends BaseNonConfigCoreFunctionalTe
 
 		@NaturalId
 		public String name;
+
+		protected Person() {
+		}
+
+		public Person(int id, String name) {
+			this.id = id;
+			this.name = name;
+		}
 
 		@ElementCollection
 		@Cache( region = REGION, usage = CacheConcurrencyStrategy.READ_WRITE )

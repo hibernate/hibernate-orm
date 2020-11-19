@@ -20,6 +20,7 @@ import org.hibernate.envers.internal.tools.EntityTools;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
+import org.jboss.logging.Logger;
 
 import javax.persistence.PersistenceException;
 
@@ -28,8 +29,10 @@ import javax.persistence.PersistenceException;
  * @author HernпїЅn Chanfreau
  * @author Michal Skowronek (mskowr at o2 dot pl)
  * @author Chris Cranford
+ * @author Luke Chen
  */
 public class ToOneIdMapper extends AbstractToOneMapper {
+	private static final Logger log = Logger.getLogger( ToOneIdMapper.class );
 	private final IdMapper delegate;
 	private final String referencedEntityName;
 	private final boolean nonInsertableFake;
@@ -67,8 +70,10 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 		if ( lazyMapping && entity instanceof HibernateProxy ) {
 			try {
 				entity = ((HibernateProxy) entity).getHibernateLazyInitializer().getImplementation();
-			} catch ( PersistenceException e ) {
-				// Ignore the exception and fallback to call mapToMapFromEntity directly
+			}
+			catch ( PersistenceException e ) {
+				log.debug( "Ignore PersistenceException while initializing the entity, " +
+					"and fallback to call mapToMapFromEntity directly" );
 			}
 		}
 

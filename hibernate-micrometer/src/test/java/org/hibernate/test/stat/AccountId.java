@@ -6,9 +6,9 @@
  */
 package org.hibernate.test.stat;
 
-/**
- * @author Donnchadh O Donnabhain
- */
+import javax.persistence.Embeddable;
+
+@Embeddable
 public class AccountId implements java.io.Serializable {
     private final int id;
 

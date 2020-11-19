@@ -6,10 +6,8 @@
  */
 package org.hibernate.test.stat;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-
 import javax.persistence.Cacheable;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
@@ -25,7 +23,6 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.stat.HibernateMetrics;
-import org.hibernate.stat.Statistics;
 
 import org.hibernate.testing.cache.CachingRegionFactory;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
@@ -36,7 +33,6 @@ import org.junit.Test;
 
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import org.hamcrest.CoreMatchers;
 
 /**
  * @author Erin Schnabel
@@ -48,14 +44,12 @@ public class MicrometerCacheStatisticsTest extends BaseNonConfigCoreFunctionalTe
 	protected void applyMetadataSources(MetadataSources metadataSources) {
 		super.applyMetadataSources( metadataSources );
 		metadataSources.addAnnotatedClass( Person.class );
+		metadataSources.addAnnotatedClass( Account.class );
+		metadataSources.addAnnotatedClass( AccountId.class );
 	}
 
 	private static final String REGION = "TheRegion";
 	private static final String PREFIX = "test";
-
-	public String[] getMappings() {
-		return new String[] { "stat/Account.hbm.xml" };
-	}
 
 	private SimpleMeterRegistry registry = new SimpleMeterRegistry();
 	private HibernateMetrics hibernateMetrics;

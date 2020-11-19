@@ -6,11 +6,21 @@
  */
 package org.hibernate.test.stat;
 
-/**
- * @author Donnchadh O Donnabhain
- */
+import javax.persistence.Basic;
+import javax.persistence.EmbeddedId;
+import javax.persistence.Entity;
+import javax.persistence.Table;
+
+import org.hibernate.annotations.NaturalId;
+
+@Entity
+@Table( name = "t_acct" )
 public class Account {
+    @EmbeddedId
     private AccountId accountId;
+
+    @Basic( optional = false )
+    @NaturalId
     private String shortCode;
     
     protected Account() {
@@ -20,10 +30,12 @@ public class Account {
         this.accountId = accountId;
         this.shortCode = shortCode;
     }
-    public String getShortCode() {
-        return shortCode;
-    }
+
     public AccountId getAccountId() {
         return accountId;
+    }
+
+    public String getShortCode() {
+        return shortCode;
     }
 }

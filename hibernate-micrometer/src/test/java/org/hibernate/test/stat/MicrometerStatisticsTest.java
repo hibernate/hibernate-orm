@@ -6,8 +6,6 @@
  */
 package org.hibernate.test.stat;
 
-import java.util.concurrent.TimeUnit;
-
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
@@ -29,8 +27,9 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
  */
 public class MicrometerStatisticsTest extends BaseCoreFunctionalTestCase {
 
-	public String[] getMappings() {
-		return new String[] { "stat/Account.hbm.xml" };
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class<?>[] { Account.class, AccountId.class };
 	}
 
 	private SimpleMeterRegistry registry = new SimpleMeterRegistry();

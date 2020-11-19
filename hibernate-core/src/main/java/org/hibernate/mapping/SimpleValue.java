@@ -499,7 +499,7 @@ public class SimpleValue implements KeyValue {
 			throw new MappingException( msg );
 		}
 
-		return result;
+		return type = result;
 	}
 
 	@Override

@@ -54,10 +54,10 @@ public class EmbeddableValuedPathInterpretation<T> extends AbstractSqmPathInterp
 		);
 	}
 
-	private final Expression sqlExpression;
+	private final SqlTuple sqlExpression;
 
 	public EmbeddableValuedPathInterpretation(
-			Expression sqlExpression,
+			SqlTuple sqlExpression,
 			SqmEmbeddedValuedSimplePath<T> sqmPath,
 			EmbeddableValuedModelPart mapping,
 			TableGroup tableGroup) {
@@ -65,7 +65,7 @@ public class EmbeddableValuedPathInterpretation<T> extends AbstractSqmPathInterp
 		this.sqlExpression = sqlExpression;
 	}
 
-	public Expression getSqlExpression() {
+	public SqlTuple getSqlExpression() {
 		return sqlExpression;
 	}
 
@@ -81,20 +81,11 @@ public class EmbeddableValuedPathInterpretation<T> extends AbstractSqmPathInterp
 
 	@Override
 	public void visitColumnReferences(Consumer<ColumnReference> columnReferenceConsumer) {
-		if ( sqlExpression instanceof ColumnReference ) {
-			columnReferenceConsumer.accept( (ColumnReference) sqlExpression );
-		}
-		else if ( sqlExpression instanceof SqlTuple ) {
-			final SqlTuple sqlTuple = (SqlTuple) sqlExpression;
-			for ( Expression expression : sqlTuple.getExpressions() ) {
-				if ( !( expression instanceof ColumnReference ) ) {
-					throw new IllegalArgumentException( "Expecting ColumnReference, found : " + expression );
-				}
-				columnReferenceConsumer.accept( (ColumnReference) expression );
+		for ( Expression expression : sqlExpression.getExpressions() ) {
+			if ( !( expression instanceof ColumnReference ) ) {
+				throw new IllegalArgumentException( "Expecting ColumnReference, found : " + expression );
 			}
-		}
-		else {
-			// error or warning...
+			columnReferenceConsumer.accept( (ColumnReference) expression );
 		}
 	}
 

@@ -61,6 +61,11 @@ public class SqlSelectionImpl implements SqlSelection, Expression, SqlExpression
 	}
 
 	@Override
+	public Expression getExpression() {
+		return this;
+	}
+
+	@Override
 	public MappingModelExpressable getExpressionType() {
 		return valueMapping;
 	}

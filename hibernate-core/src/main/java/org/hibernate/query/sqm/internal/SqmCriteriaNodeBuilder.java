@@ -36,6 +36,7 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.NullPrecedence;
 import org.hibernate.QueryException;
 import org.hibernate.SortOrder;
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
@@ -52,6 +53,7 @@ import org.hibernate.query.criteria.JpaCoalesce;
 import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaSelection;
+import org.hibernate.query.criteria.LiteralHandlingMode;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -104,6 +106,7 @@ import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
@@ -124,21 +127,25 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 		return new SqmCriteriaNodeBuilder( 
 				sf.getQueryEngine(),
 				() -> sf.getRuntimeMetamodels().getJpaMetamodel(),
-				sf.getServiceRegistry()
+				sf.getServiceRegistry(),
+				sf.getSessionFactoryOptions().getCriteriaLiteralHandlingMode()
 		);
 	}
 
 	private final QueryEngine queryEngine;
 	private final Supplier<JpaMetamodel> domainModelAccess;
 	private final ServiceRegistry serviceRegistry;
+	private final LiteralHandlingMode criteriaLiteralHandlingMode;
 
 	public SqmCriteriaNodeBuilder(
 			QueryEngine queryEngine,
 			Supplier<JpaMetamodel> domainModelAccess,
-			ServiceRegistry serviceRegistry) {
+			ServiceRegistry serviceRegistry,
+			LiteralHandlingMode criteriaLiteralHandlingMode) {
 		this.queryEngine = queryEngine;
 		this.domainModelAccess = domainModelAccess;
 		this.serviceRegistry = serviceRegistry;
+		this.criteriaLiteralHandlingMode = criteriaLiteralHandlingMode;
 	}
 
 	@Override
@@ -573,17 +580,17 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 
 	@Override
 	public <N extends Number> SqmExpression<N> sum(Expression<? extends N> x, N y) {
-		return createSqmArithmeticNode( BinaryArithmeticOperator.ADD, (SqmExpression) x, literal( y ) );
+		return createSqmArithmeticNode( BinaryArithmeticOperator.ADD, (SqmExpression) x, value( y ) );
 	}
 
 	@Override
 	public <N extends Number> SqmExpression<N> sum(N x, Expression<? extends N> y) {
-		return createSqmArithmeticNode( BinaryArithmeticOperator.ADD, literal( x ), (SqmExpression) y );
+		return createSqmArithmeticNode( BinaryArithmeticOperator.ADD, value( x ), (SqmExpression) y );
 	}
 
 	@Override
 	public <N extends Number> SqmExpression<N> prod(Expression<? extends N> x, Expression<? extends N> y) {
-		return createSqmArithmeticNode( BinaryArithmeticOperator.ADD, literal( x ), (SqmExpression) y );
+		return createSqmArithmeticNode( BinaryArithmeticOperator.ADD, value( x ), (SqmExpression) y );
 	}
 
 	@Override
@@ -610,7 +617,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.SUBTRACT,
 				(SqmExpression) x,
-				literal( y )
+				value( y )
 		);
 	}
 
@@ -618,7 +625,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 	public <N extends Number> SqmExpression<N> diff(N x, Expression<? extends N> y) {
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.SUBTRACT,
-				literal( x ),
+				value( x ),
 				(SqmExpression) y
 		);
 	}
@@ -637,7 +644,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.QUOT,
 				(SqmExpression) x,
-				literal( y )
+				value( y )
 		);
 	}
 
@@ -645,7 +652,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 	public SqmExpression<Number> quot(Number x, Expression<? extends Number> y) {
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.QUOT,
-				literal( x ),
+				value( x ),
 				(SqmExpression) y
 		);
 	}
@@ -664,7 +671,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.MODULO,
 				(SqmExpression) x,
-				literal( y )
+				value( y )
 		);
 	}
 
@@ -672,7 +679,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 	public SqmExpression<Integer> mod(Integer x, Expression<Integer> y) {
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.MODULO,
-				literal( x ),
+				value( x ),
 				(SqmExpression) y
 		);
 	}
@@ -882,7 +889,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 	@Override
 	public SqmExpression<String> concat(Expression<String> x, String y) {
 		final SqmExpression xSqmExpression = (SqmExpression) x;
-		final SqmExpression ySqmExpression = literal( y );
+		final SqmExpression ySqmExpression = value( y );
 		//noinspection unchecked
 		return getFunctionDescriptor( "concat" ).generateSqmExpression(
 				asList( xSqmExpression, ySqmExpression ),
@@ -898,7 +905,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 
 	@Override
 	public SqmExpression<String> concat(String x, Expression<String> y) {
-		final SqmExpression xSqmExpression = literal( x );
+		final SqmExpression xSqmExpression = value( x );
 		final SqmExpression ySqmExpression = (SqmExpression) y;
 		//noinspection unchecked
 		return getFunctionDescriptor( "concat" ).generateSqmExpression(
@@ -915,8 +922,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 
 	@Override
 	public SqmExpression<String> concat(String x, String y) {
-		final SqmExpression xSqmExpression = literal( x );
-		final SqmExpression ySqmExpression = literal( y );
+		final SqmExpression xSqmExpression = value( x );
+		final SqmExpression ySqmExpression = value( y );
 		//noinspection unchecked
 		return getFunctionDescriptor( "concat" ).generateSqmExpression(
 				asList( xSqmExpression, ySqmExpression ),
@@ -958,7 +965,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 	public SqmFunction<String> substring(Expression<String> source, int from) {
 		return createSubstringNode(
 				(SqmExpression) source,
-				literal( from ),
+				value( from ),
 				null
 		);
 	}
@@ -976,8 +983,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 	public SqmFunction<String> substring(Expression<String> source, int from, int len) {
 		return createSubstringNode(
 				(SqmExpression) source,
-				literal( from ),
-				literal( len )
+				value( from ),
+				value( len )
 		);
 	}
 
@@ -1148,7 +1155,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 	public SqmFunction<Integer> locate(Expression<String> source, String pattern) {
 		return createLocateFunctionNode(
 				(SqmExpression<String>) source,
-				literal( pattern ),
+				value( pattern ),
 				null
 		);
 	}
@@ -1166,8 +1173,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 	public SqmFunction<Integer> locate(Expression<String> source, String pattern, int startPosition) {
 		return createLocateFunctionNode(
 				(SqmExpression<String>) source,
-				literal( pattern ),
-				literal( startPosition )
+				value( pattern ),
+				value( startPosition )
 		);
 	}
 
@@ -1281,6 +1288,27 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 	}
 
 	@Override
+	public <T> SqmExpression<T> value(T value) {
+		if ( criteriaLiteralHandlingMode == LiteralHandlingMode.INLINE ) {
+			return literal( value );
+		}
+		else {
+			final BasicType basicType;
+			if ( value == null ) {
+				basicType = null;
+			}
+			else {
+				basicType = getTypeConfiguration().getBasicTypeForJavaType( value.getClass() );
+			}
+			return new JpaCriteriaParameter<>(
+					basicType,
+					value,
+					this
+			);
+		}
+	}
+
+	@Override
 	public <V, C extends Collection<V>> SqmExpression<Collection<V>> values(C collection) {
 		throw new NotYetImplementedFor6Exception();
 	}
@@ -1326,7 +1354,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 
 	@Override
 	public <Y> JpaCoalesce<Y> coalesce(Expression<? extends Y> x, Y y) {
-		return coalesce( x, literal( y ) );
+		return coalesce( x, value( y ) );
 	}
 
 	@Override
@@ -1338,7 +1366,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 	@Override
 	public <Y> SqmExpression<Y> nullif(Expression<Y> x, Y y) {
 		//noinspection unchecked
-		return createNullifFunctionNode( (SqmExpression) x, literal( y ) );
+		return createNullifFunctionNode( (SqmExpression) x, value( y ) );
 	}
 
 	private <Y> SqmExpression<Y> createNullifFunctionNode(SqmExpression<Y> first, SqmExpression<Y> second) {
@@ -1498,8 +1526,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 	public <Y extends Comparable<? super Y>> SqmPredicate between(Expression<? extends Y> value, Y lower, Y upper) {
 		return new SqmBetweenPredicate(
 				(SqmExpression) value,
-				literal( lower ),
-				literal( upper ),
+				value( lower ),
+				value( upper ),
 				false,
 				this
 		);
@@ -1520,7 +1548,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.EQUAL,
-				literal( y ),
+				value( y ),
 				this
 		);
 	}
@@ -1540,7 +1568,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.NOT_EQUAL,
-				literal( y ),
+				value( y ),
 				this
 		);
 	}
@@ -1560,7 +1588,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.GREATER_THAN,
-				literal( y ),
+				value( y ),
 				this
 		);
 	}
@@ -1580,7 +1608,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.GREATER_THAN_OR_EQUAL,
-				literal( y ),
+				value( y ),
 				this
 		);
 	}
@@ -1600,7 +1628,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.LESS_THAN,
-				literal( y ),
+				value( y ),
 				this
 		);
 	}
@@ -1620,7 +1648,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.LESS_THAN_OR_EQUAL,
-				literal( y ),
+				value( y ),
 				this
 		);
 	}
@@ -1640,7 +1668,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.GREATER_THAN,
-				literal( y ),
+				value( y ),
 				this
 		);
 	}
@@ -1660,7 +1688,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.GREATER_THAN_OR_EQUAL,
-				literal( y ),
+				value( y ),
 				this
 		);
 	}
@@ -1680,7 +1708,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.LESS_THAN,
-				literal( y ),
+				value( y ),
 				this
 		);
 	}
@@ -1700,7 +1728,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.LESS_THAN_OR_EQUAL,
-				literal( y ),
+				value( y ),
 				this
 		);
 	}
@@ -1748,7 +1776,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 	public SqmPredicate like(Expression<String> searchString, String pattern) {
 		return new SqmLikePredicate(
 				(SqmExpression) searchString,
-				literal( pattern ),
+				value( pattern ),
 				this
 		);
 	}
@@ -1777,7 +1805,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 	public SqmPredicate like(Expression<String> searchString, String pattern, Expression<Character> escapeChar) {
 		return new SqmLikePredicate(
 				(SqmExpression) searchString,
-				literal( pattern ),
+				value( pattern ),
 				(SqmExpression) escapeChar,
 				this
 		);
@@ -1787,7 +1815,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 	public SqmPredicate like(Expression<String> searchString, String pattern, char escapeChar) {
 		return new SqmLikePredicate(
 				(SqmExpression) searchString,
-				literal( pattern ),
+				value( pattern ),
 				literal( escapeChar ),
 				this
 		);

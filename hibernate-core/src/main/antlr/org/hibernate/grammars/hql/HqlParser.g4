@@ -277,15 +277,7 @@ mapKeyNavigablePath
 // GROUP BY clause
 
 groupByClause
-	:	GROUP BY groupingSpecification
-	;
-
-groupingSpecification
-	:	groupingValue ( COMMA groupingValue )*
-	;
-
-groupingValue
-	:	expression collationSpecification?
+	:	GROUP BY expression ( COMMA expression )*
 	;
 
 
@@ -312,7 +304,7 @@ orderByFragment
 	;
 
 sortSpecification
-	: sortExpression collationSpecification? orderingSpecification? nullsPrecedence?
+	: sortExpression orderingSpecification? nullsPrecedence?
 	;
 
 nullsPrecedence
@@ -320,8 +312,8 @@ nullsPrecedence
 	;
 
 sortExpression
-	: identifier
-	| INTEGER_LITERAL
+	: identifier collationSpecification?
+	| INTEGER_LITERAL collationSpecification?
 	| expression
 	;
 
@@ -404,23 +396,23 @@ likeEscape
 
 expression
 	//highest to lowest precedence
-	: LEFT_PAREN expression RIGHT_PAREN				# GroupedExpression
-	| LEFT_PAREN subQuery RIGHT_PAREN				# SubQueryExpression
-	| caseList										# CaseExpression
-	| literal										# LiteralExpression
-	| parameter										# ParameterExpression
-	| entityTypeReference							# EntityTypeExpression
-	| entityIdReference								# EntityIdExpression
-	| entityVersionReference						# EntityVersionExpression
-	| entityNaturalIdReference						# EntityNaturalIdExpression
-	| path											# PathExpression
-	| function										# FunctionExpression
-	| signOperator expression						# UnaryExpression
-	| expression datetimeField  					# ToDurationExpression
-	| expression BY datetimeField					# FromDurationExpression
-	| expression multiplicativeOperator expression	# MultiplicationExpression
-	| expression additiveOperator expression		# AdditionExpression
-	| expression DOUBLE_PIPE expression				# ConcatenationExpression
+	: LEFT_PAREN expression RIGHT_PAREN					# GroupedExpression
+	| LEFT_PAREN subQuery RIGHT_PAREN					# SubQueryExpression
+	| caseList collationSpecification?					# CaseExpression
+	| literal collationSpecification?					# LiteralExpression
+	| parameter collationSpecification?					# ParameterExpression
+	| entityTypeReference								# EntityTypeExpression
+	| entityIdReference collationSpecification?			# EntityIdExpression
+	| entityVersionReference collationSpecification?	# EntityVersionExpression
+	| entityNaturalIdReference collationSpecification?	# EntityNaturalIdExpression
+	| path collationSpecification?						# PathExpression
+	| function collationSpecification?					# FunctionExpression
+	| signOperator expression							# UnaryExpression
+	| expression datetimeField  						# ToDurationExpression
+	| expression BY datetimeField						# FromDurationExpression
+	| expression multiplicativeOperator expression		# MultiplicationExpression
+	| expression additiveOperator expression			# AdditionExpression
+	| expression DOUBLE_PIPE expression					# ConcatenationExpression
 	;
 
 multiplicativeOperator
@@ -568,7 +560,9 @@ day: INTEGER_LITERAL;
 hour: INTEGER_LITERAL;
 minute: INTEGER_LITERAL;
 second: INTEGER_LITERAL | FLOAT_LITERAL;
-zoneId: STRING_LITERAL;
+zoneId
+	: IDENTIFIER (SLASH IDENTIFIER)?
+	| STRING_LITERAL;
 
 jdbcTimestampLiteral
 	: TIMESTAMP_ESCAPE_START (dateTime | genericTemporalLiteralText) RIGHT_BRACE

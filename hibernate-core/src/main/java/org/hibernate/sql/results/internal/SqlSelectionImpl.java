@@ -46,7 +46,8 @@ public class SqlSelectionImpl implements SqlSelection, SqlExpressionAccess {
 		this.sqlExpression = sqlExpression;
 	}
 
-	public Expression getWrappedSqlExpression() {
+	@Override
+	public Expression getExpression() {
 		return sqlExpression;
 	}
 
@@ -69,7 +70,7 @@ public class SqlSelectionImpl implements SqlSelection, SqlExpressionAccess {
 
 	@Override
 	public MappingModelExpressable getExpressionType() {
-		return getWrappedSqlExpression().getExpressionType();
+		return getExpression().getExpressionType();
 	}
 
 	@Override

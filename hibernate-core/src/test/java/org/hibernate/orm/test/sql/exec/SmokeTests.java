@@ -201,7 +201,7 @@ public class SmokeTests {
 		scope.inTransaction(
 				session -> {
 					final QueryImplementor<String> query = session.createQuery(
-							"select :param from SimpleEntity e",
+							"select cast(:param as String) from SimpleEntity e",
 							String.class
 					);
 					final String attribute1 = query.setParameter( "param", "items" ).uniqueResult();

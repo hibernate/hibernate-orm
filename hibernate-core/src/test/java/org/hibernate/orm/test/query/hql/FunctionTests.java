@@ -8,11 +8,16 @@ package org.hibernate.orm.test.query.hql;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+
+import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
+import org.hibernate.testing.orm.junit.DialectFeatureCheck;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.FailureExpected;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -95,9 +100,9 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 	public void testConcatFunctionParameters(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					assertThat( session.createQuery("select :hello||:world").setParameter("hello","hello").setParameter("world","world").getSingleResult(), is("helloworld") );
-					assertThat( session.createQuery("select ?1||?2").setParameter(1,"hello").setParameter(2,"world").getSingleResult(), is("helloworld") );
-					assertThat( session.createQuery("select ?1||?1").setParameter(1,"hello").getSingleResult(), is("hellohello") );
+					assertThat( session.createQuery("select cast(:hello as String)||cast(:world as String)").setParameter("hello","hello").setParameter("world","world").getSingleResult(), is("helloworld") );
+					assertThat( session.createQuery("select cast(?1 as String)||cast(?2 as String)").setParameter(1,"hello").setParameter(2,"world").getSingleResult(), is("helloworld") );
+					assertThat( session.createQuery("select cast(?1 as String)||cast(?1 as String)").setParameter(1,"hello").getSingleResult(), is("hellohello") );
 				}
 		);
 	}
@@ -320,6 +325,7 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsPadWithChar.class)
 	public void testPadFunction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -955,11 +961,20 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 	}
 
 	@Test
-	public void testGroupingFunctions() {
+	public void testGrouping() {
 		inTransaction(
 				session -> {
 					session.createQuery("select max(e.theDouble), e.gender, e.theInt from EntityOfBasics e group by e.gender, e.theInt")
 							.list();
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsGroupByRollup.class)
+	public void testGroupingFunctions() {
+		inTransaction(
+				session -> {
 					session.createQuery("select avg(e.theDouble), e.gender, e.theInt from EntityOfBasics e group by rollup(e.gender, e.theInt)")
 							.list();
 					session.createQuery("select sum(e.theDouble), e.gender, e.theInt from EntityOfBasics e group by cube(e.gender, e.theInt)")

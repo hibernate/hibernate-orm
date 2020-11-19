@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.internal;
 
+import java.util.List;
 import java.util.Locale;
 
 import org.hibernate.NotYetImplementedFor6Exception;
@@ -36,6 +37,7 @@ import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
 import org.hibernate.query.sqm.tree.expression.SqmCastTarget;
 import org.hibernate.query.sqm.tree.expression.SqmCoalesce;
+import org.hibernate.query.sqm.tree.expression.SqmCollate;
 import org.hibernate.query.sqm.tree.expression.SqmCollectionSize;
 import org.hibernate.query.sqm.tree.expression.SqmDistinct;
 import org.hibernate.query.sqm.tree.expression.SqmDurationUnit;
@@ -81,10 +83,9 @@ import org.hibernate.query.sqm.tree.predicate.SqmMemberOfPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmNegatedPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmNullnessPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmOrPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
-import org.hibernate.query.sqm.tree.select.SqmGroupByClause;
-import org.hibernate.query.sqm.tree.select.SqmHavingClause;
 import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectClause;
@@ -394,21 +395,18 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	// query-spec
 
 	@Override
-	public Object visitQuerySpec(SqmQuerySpec querySpec) {
+	public Object visitQuerySpec(SqmQuerySpec<?> querySpec) {
 		processStanza(
 				"query-spec",
 				() -> {
 					visitSelectClause( querySpec.getSelectClause() );
-
 					visitFromClause( querySpec.getFromClause() );
-
-					visitGroupByClause( querySpec.getGroupByClause() );
-					visitHavingClause( querySpec.getHavingClause() );
-
 					visitWhereClause( querySpec.getWhereClause() );
 
-					visitOrderByClause( querySpec.getOrderByClause() );
+					visitGroupByClause( querySpec.getGroupByClauseExpressions() );
+					visitHavingClause( querySpec.getHavingClausePredicate() );
 
+					visitOrderByClause( querySpec.getOrderByClause() );
 					visitLimitExpression( querySpec.getLimitExpression() );
 					visitOffsetExpression( querySpec.getOffsetExpression() );
 				}
@@ -418,11 +416,11 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	}
 
 	@Override
-	public Object visitGroupByClause(SqmGroupByClause clause) {
-		if ( clause != null ) {
+	public Object visitGroupByClause(List<SqmExpression<?>> groupByClauseExpressions) {
+		if ( groupByClauseExpressions != null && !groupByClauseExpressions.isEmpty() ) {
 			processStanza(
 					"group-by",
-					() -> clause.visitGroupings( this::visitGrouping )
+					() -> groupByClauseExpressions.forEach( e -> e.accept( this ) )
 			);
 		}
 
@@ -430,21 +428,11 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	}
 
 	@Override
-	public Object visitGrouping(SqmGroupByClause.SqmGrouping grouping) {
-		processStanza(
-				"grouping",
-				() -> grouping.getExpression().accept( this )
-		);
-
-		return null;
-	}
-
-	@Override
-	public Object visitHavingClause(SqmHavingClause clause) {
-		if ( clause != null ) {
+	public Object visitHavingClause(SqmPredicate predicate) {
+		if ( predicate != null ) {
 			processStanza(
 					"having",
-					() -> clause.getPredicate().accept( this )
+					() -> predicate.accept( this )
 			);
 		}
 
@@ -909,6 +897,11 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 
 	@Override
 	public Object visitTuple(SqmTuple sqmTuple) {
+		return null;
+	}
+
+	@Override
+	public Object visitCollate(SqmCollate<?> sqmCollate) {
 		return null;
 	}
 

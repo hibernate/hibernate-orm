@@ -22,6 +22,7 @@ import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.LockTimeoutException;
@@ -49,6 +50,7 @@ import java.sql.Types;
 import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -491,18 +493,18 @@ public class FirebirdDialect extends Dialect {
 	}
 
 	@Override
-	protected String formatAsTimestamp(Date date) {
-		return formatAsTimestampWithMillis(date);
+	protected String formatAsTimestamp(Date date, TimeZone jdbcTimeZone) {
+		return formatAsTimestampWithMillis( date, jdbcTimeZone );
 	}
 
 	@Override
-	protected String formatAsTimestamp(Calendar calendar) {
-		return formatAsTimestampWithMillis(calendar);
+	protected String formatAsTimestamp(Calendar calendar, TimeZone jdbcTimeZone) {
+		return formatAsTimestampWithMillis( calendar, jdbcTimeZone );
 	}
 
 	@Override
-	protected String formatAsTimestamp(TemporalAccessor temporalAccessor) {
-		return formatAsTimestampWithMillis(temporalAccessor);
+	protected String formatAsTimestamp(TemporalAccessor temporalAccessor, TimeZone jdbcTimeZone) {
+		return formatAsTimestampWithMillis( temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
 	}
 
 	@Override

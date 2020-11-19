@@ -7,6 +7,7 @@
 package org.hibernate.sql.ast.tree.select;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -38,6 +39,10 @@ public class QuerySpec implements SqlAstNode, PredicateContainer, Expression, Ct
 	private final SelectClause selectClause = new SelectClause();
 
 	private Predicate whereClauseRestrictions;
+
+	private List<Expression> groupByClauseExpressions = Collections.emptyList();
+	private Predicate havingClauseRestrictions;
+
 	private List<SortSpecification> sortSpecifications;
 	private Expression limitClauseExpression;
 	private Expression offsetClauseExpression;
@@ -75,6 +80,22 @@ public class QuerySpec implements SqlAstNode, PredicateContainer, Expression, Ct
 	@Override
 	public void applyPredicate(Predicate predicate) {
 		this.whereClauseRestrictions = SqlAstTreeHelper.combinePredicates( this.whereClauseRestrictions, predicate );
+	}
+
+	public List<Expression> getGroupByClauseExpressions() {
+		return groupByClauseExpressions;
+	}
+
+	public void setGroupByClauseExpressions(List<Expression> groupByClauseExpressions) {
+		this.groupByClauseExpressions = groupByClauseExpressions == null ? Collections.emptyList() : groupByClauseExpressions;
+	}
+
+	public Predicate getHavingClauseRestrictions() {
+		return havingClauseRestrictions;
+	}
+
+	public void setHavingClauseRestrictions(Predicate havingClauseRestrictions) {
+		this.havingClauseRestrictions = havingClauseRestrictions;
 	}
 
 	public List<SortSpecification> getSortSpecifications() {

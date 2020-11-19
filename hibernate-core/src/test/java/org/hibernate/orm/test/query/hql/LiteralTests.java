@@ -70,8 +70,8 @@ public class LiteralTests {
 	public void testJdbcTimestampLiteral(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "from EntityOfBasics e1 where e1.theDate = {ts 1999-12-31 12:30:00}" ).list();
-					session.createQuery( "from EntityOfBasics e1 where e1.theDate = {ts '1999-12-31 12:30:00'}" ).list();
+					session.createQuery( "from EntityOfBasics e1 where e1.theTimestamp = {ts 1999-12-31 12:30:00}" ).list();
+					session.createQuery( "from EntityOfBasics e1 where e1.theTimestamp = {ts '1999-12-31 12:30:00'}" ).list();
 				}
 		);
 	}

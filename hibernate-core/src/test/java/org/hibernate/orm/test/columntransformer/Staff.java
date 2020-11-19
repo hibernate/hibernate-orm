@@ -72,7 +72,7 @@ public class Staff {
 
 	@Column(name="kooky")
 	@ColumnTransformer(
-			read = "cast( kooky as VARCHAR )"
+			read = "cast( kooky as VARCHAR(255) )"
 	)
 	public String getKooky() { return kooky; }
 	public void setKooky(String kooky) { this.kooky = kooky; }

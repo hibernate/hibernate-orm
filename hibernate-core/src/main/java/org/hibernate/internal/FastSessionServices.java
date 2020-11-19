@@ -200,7 +200,7 @@ public final class FastSessionServices {
 		return elr.getEventListenerGroup( type );
 	}
 
-	SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
+	public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
 		if ( !sqlTypeDescriptor.canBeRemapped() ) {
 			return sqlTypeDescriptor;
 		}
@@ -286,6 +286,10 @@ public final class FastSessionServices {
 
 	public ConnectionObserverStatsBridge getDefaultJdbcObserver() {
 		return defaultJdbcObservers;
+	}
+
+	public boolean useStreamForLobBinding() {
+		return useStreamForLobBinding;
 	}
 
 	public void firePostLoadEvent(final PostLoadEvent postLoadEvent) {

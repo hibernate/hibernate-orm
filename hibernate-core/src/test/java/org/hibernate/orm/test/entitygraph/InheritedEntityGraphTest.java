@@ -221,19 +221,19 @@ public class InheritedEntityGraphTest {
 
     }
 
-    @Entity
+    @Entity(name = "Bar")
     public static class Bar {
         @Id @GeneratedValue
         public long id;
 
     }
 
-    @Entity
+    @Entity(name = "Foo")
     public static class Foo extends MappedSupperclass {
 
     }
 
-    @Entity
+    @Entity(name = "Foo2")
     public static class Foo2 {
         @Id @GeneratedValue
         public long id;

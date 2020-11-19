@@ -52,6 +52,8 @@ import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.tree.SqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
+import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
+import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
@@ -230,6 +232,17 @@ public class QuerySqmImpl<R>
 		}
 
 		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, producer.getFactory() );
+		// Parameters might be created through HibernateCriteriaBuilder.value which we need to bind here
+		for ( SqmParameter<?> sqmParameter : this.domainParameterXref.getParameterResolutions().getSqmParameters() ) {
+			if ( sqmParameter instanceof SqmJpaCriteriaParameterWrapper<?> ) {
+				final JpaCriteriaParameter<Object> jpaCriteriaParameter = ( (SqmJpaCriteriaParameterWrapper<Object>) sqmParameter ).getJpaCriteriaParameter();
+				final Object value = jpaCriteriaParameter.getValue();
+				// We don't set a null value, unless the type is also null which is the case when using HibernateCriteriaBuilder.value
+				if ( value != null || jpaCriteriaParameter.getNodeType() == null ) {
+					setParameter( jpaCriteriaParameter, value );
+				}
+			}
+		}
 	}
 
 	private static <T> void checkQueryReturnType(SqmSelectStatement<T> sqm, Class<T> resultClass, SessionFactoryImplementor sessionFactory) {

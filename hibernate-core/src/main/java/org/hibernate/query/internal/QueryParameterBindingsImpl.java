@@ -6,23 +6,23 @@
  */
 package org.hibernate.query.internal;
 
+import java.util.Arrays;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 
 import org.hibernate.Incubating;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.QueryException;
 import org.hibernate.QueryParameterException;
 import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * Manages the group of QueryParameterBinding for a particular query.
@@ -179,21 +179,50 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 
 	@Override
 	public QueryKey.ParameterBindingsMemento generateQueryKeyMemento() {
-		// todo (6.0) : need to decide how to handle
-		if ( parameterMetadata.getParameterCount() == 0 && CollectionHelper.isEmpty( parameterBindingMap ) ) {
-			return new QueryKey.ParameterBindingsMemento() {
-				@Override
-				public int hashCode() {
-					return QueryParameterBindingsImpl.class.hashCode();
-				}
-
-				@Override
-				public boolean equals(Object obj) {
-					return obj instanceof QueryKey.ParameterBindingsMemento;
-				}
-			};
+		final int size = parameterBindingMap.size();
+		final Object[] values = new Object[size];
+		int i = 0;
+		int hashCode = 0;
+		for ( QueryParameterBinding binding : parameterBindingMap.values() ) {
+			JavaTypeDescriptor javaTypeDescriptor = binding.getBindType().getExpressableJavaTypeDescriptor();
+			final Object value = javaTypeDescriptor.getMutabilityPlan().deepCopy( binding.getBindValue() );
+			hashCode = 31 * hashCode + javaTypeDescriptor.extractHashCode( value );
+			values[i] = value;
 		}
 
-		throw new NotYetImplementedFor6Exception( getClass() );
+		return new ParameterBindingsMementoImpl( values, hashCode);
+	}
+
+	private static class ParameterBindingsMementoImpl implements QueryKey.ParameterBindingsMemento {
+		private final Object[] values;
+		private final int hashCode;
+
+		private ParameterBindingsMementoImpl(Object[] values, int hashCode) {
+			this.values = values;
+			this.hashCode = hashCode;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if ( this == o ) {
+				return true;
+			}
+			if ( o == null || getClass() != o.getClass() ) {
+				return false;
+			}
+
+			ParameterBindingsMementoImpl queryKey = (ParameterBindingsMementoImpl) o;
+
+			if ( hashCode != queryKey.hashCode ) {
+				return false;
+			}
+			// Probably incorrect - comparing Object[] arrays with Arrays.equals
+			return Arrays.equals( values, queryKey.values );
+		}
+
+		@Override
+		public int hashCode() {
+			return hashCode;
+		}
 	}
 }

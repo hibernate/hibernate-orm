@@ -35,8 +35,6 @@ import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.graph.basic.BasicResultAssembler;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
-import org.hibernate.type.CustomType;
-import org.hibernate.type.EnumType;
 import org.hibernate.type.internal.StandardBasicTypeImpl;
 
 import org.hibernate.testing.hamcrest.AssignableMatcher;
@@ -170,7 +168,7 @@ public class SmokeTests {
 					assertThat( sqlSelection.getJdbcValueExtractor(), notNullValue() );
 
 					assertThat( sqlSelection, instanceOf( SqlSelectionImpl.class ) );
-					final Expression selectedExpression = ( (SqlSelectionImpl) sqlSelection ).getWrappedSqlExpression();
+					final Expression selectedExpression = sqlSelection.getExpression();
 					assertThat( selectedExpression, instanceOf( ColumnReference.class ) );
 					final ColumnReference columnReference = (ColumnReference) selectedExpression;
 					assertThat( columnReference.renderSqlFragment( scope.getSessionFactory() ), is( "s1_0.gender" ) );

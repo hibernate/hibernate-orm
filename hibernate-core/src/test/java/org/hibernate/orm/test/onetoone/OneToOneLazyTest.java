@@ -78,7 +78,7 @@ public class OneToOneLazyTest {
 		);
 	}
 
-	@Entity
+	@Entity(name = "Book")
 	public static class Book {
 
 		@Id
@@ -109,7 +109,7 @@ public class OneToOneLazyTest {
 		}
 	}
 
-	@Entity
+	@Entity(name = "Title")
 	public static class Title {
 
 		@Id

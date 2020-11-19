@@ -30,6 +30,7 @@ public class JpaCriteriaParameter<T>
 		extends AbstractSqmExpression<T>
 		implements SqmParameter<T>, QueryParameterImplementor<T>, DomainResultProducer<T> {
 	private final String name;
+	private final T value;
 	private boolean allowsMultiValuedBinding;
 
 	public JpaCriteriaParameter(
@@ -39,6 +40,7 @@ public class JpaCriteriaParameter<T>
 			NodeBuilder nodeBuilder) {
 		super( type, nodeBuilder );
 		this.name = name;
+		this.value = null;
 		this.allowsMultiValuedBinding = allowsMultiValuedBinding;
 	}
 	public JpaCriteriaParameter(
@@ -48,9 +50,19 @@ public class JpaCriteriaParameter<T>
 		this( null, type, allowsMultiValuedBinding, nodeBuilder );
 	}
 
+	public JpaCriteriaParameter(AllowableParameterType<T> type, T value, NodeBuilder criteriaBuilder) {
+		super( type, criteriaBuilder );
+		this.name = null;
+		this.value = value;
+	}
+
 	@Override
 	public String getName() {
 		return name;
+	}
+
+	public T getValue() {
+		return value;
 	}
 
 	@Override

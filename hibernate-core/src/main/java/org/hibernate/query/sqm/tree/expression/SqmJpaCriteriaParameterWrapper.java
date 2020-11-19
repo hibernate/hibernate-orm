@@ -11,6 +11,7 @@ import java.util.function.Consumer;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 
@@ -50,8 +51,9 @@ public class SqmJpaCriteriaParameterWrapper<T>
 
 	@Override
 	public AllowableParameterType<T> getNodeType() {
-		if ( super.getNodeType() instanceof AllowableParameterType ) {
-			return ( (AllowableParameterType<T>) super.getNodeType() );
+		SqmExpressable<T> nodeType = super.getNodeType();
+		if ( nodeType == null || nodeType instanceof AllowableParameterType ) {
+			return ( (AllowableParameterType<T>) nodeType );
 		}
 
 		throw new IllegalStateException( "Expecting AllowableParameterType as node type" );

@@ -32,7 +32,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
-import javax.persistence.Table;
 
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
@@ -642,8 +641,7 @@ public class MultipleSessionCollectionTest {
 		);
 	}
 
-	@Entity
-	@Table(name = "Parent")
+	@Entity(name = "Parent")
 	public static class Parent {
 		@Id
 		@GeneratedValue
@@ -665,8 +663,7 @@ public class MultipleSessionCollectionTest {
 
 	}
 
-	@Entity
-	@Table(name = "Child")
+	@Entity(name = "Child")
 	public static class Child {
 		@Id
 		@GeneratedValue

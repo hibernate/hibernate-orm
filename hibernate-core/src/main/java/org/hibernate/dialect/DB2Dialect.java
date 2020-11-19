@@ -572,6 +572,8 @@ public class DB2Dialect extends Dialect {
 			// Therefore here we overwrite the sql type descriptors to
 			// use the non-N variants which are supported.
 			switch ( sqlCode ) {
+				case Types.BOOLEAN:
+					return SmallIntTypeDescriptor.INSTANCE;
 				case Types.NCHAR:
 					return CharTypeDescriptor.INSTANCE;
 				case Types.NCLOB:
@@ -675,6 +677,11 @@ public class DB2Dialect extends Dialect {
 
 	@Override
 	public boolean supportsPartitionBy() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsGroupByRollup() {
 		return true;
 	}
 

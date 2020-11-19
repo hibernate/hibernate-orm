@@ -27,36 +27,7 @@ public class MappingModelHelper {
 			SessionFactoryImplementor sessionFactory) {
 		final int jdbcTypeCount = modelPart.getJdbcTypeCount( sessionFactory.getTypeConfiguration() );
 
-		if ( jdbcTypeCount == 1 ) {
-			assert modelPart instanceof BasicValuedModelPart;
-			final BasicValuedModelPart basicPart = (BasicValuedModelPart) modelPart;
-			if ( sqlExpressionResolver == null ) {
-				return new ColumnReference(
-						basicPart.getContainingTableExpression(),
-						basicPart.getMappedColumnExpression(),
-						basicPart.isMappedColumnExpressionFormula(),
-						basicPart.getCustomReadExpression(),
-						basicPart.getCustomWriteExpression(),
-						basicPart.getJdbcMapping(),
-						sessionFactory
-				);
-			}
-			else {
-				return sqlExpressionResolver.resolveSqlExpression(
-						createColumnReferenceKey( basicPart.getContainingTableExpression(), basicPart.getMappedColumnExpression() ),
-						sqlAstProcessingState -> new ColumnReference(
-								basicPart.getContainingTableExpression(),
-								basicPart.getMappedColumnExpression(),
-								basicPart.isMappedColumnExpressionFormula(),
-								basicPart.getCustomReadExpression(),
-								basicPart.getCustomWriteExpression(),
-								basicPart.getJdbcMapping(),
-								sessionFactory
-						)
-				);
-			}
-		}
-		else {
+		if ( modelPart instanceof EmbeddableValuedModelPart ) {
 			final List<ColumnReference> columnReferences = new ArrayList<>( jdbcTypeCount );
 			modelPart.visitColumns(
 					(table, column, isFormula, readFragment, writeFragment, jdbcMapping) -> {
@@ -90,6 +61,35 @@ public class MappingModelHelper {
 					}
 			);
 			return new SqlTuple( columnReferences, modelPart );
+		}
+		else {
+			assert modelPart instanceof BasicValuedModelPart;
+			final BasicValuedModelPart basicPart = (BasicValuedModelPart) modelPart;
+			if ( sqlExpressionResolver == null ) {
+				return new ColumnReference(
+						basicPart.getContainingTableExpression(),
+						basicPart.getMappedColumnExpression(),
+						basicPart.isMappedColumnExpressionFormula(),
+						basicPart.getCustomReadExpression(),
+						basicPart.getCustomWriteExpression(),
+						basicPart.getJdbcMapping(),
+						sessionFactory
+				);
+			}
+			else {
+				return sqlExpressionResolver.resolveSqlExpression(
+						createColumnReferenceKey( basicPart.getContainingTableExpression(), basicPart.getMappedColumnExpression() ),
+						sqlAstProcessingState -> new ColumnReference(
+								basicPart.getContainingTableExpression(),
+								basicPart.getMappedColumnExpression(),
+								basicPart.isMappedColumnExpressionFormula(),
+								basicPart.getCustomReadExpression(),
+								basicPart.getCustomWriteExpression(),
+								basicPart.getJdbcMapping(),
+								sessionFactory
+						)
+				);
+			}
 		}
 	}
 

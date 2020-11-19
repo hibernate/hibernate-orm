@@ -454,7 +454,6 @@ public class CompositeIdTest {
 	}
 
 	@Test
-	@FailureExpected(reason = "Criteria and EmbeddableId as predicate value has not yet been implemented")
 	public void testQueryInAndComposite(SessionFactoryScope scope) {
 
 		scope.inTransaction(

@@ -7,6 +7,8 @@
 package org.hibernate.type.descriptor;
 
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
@@ -33,14 +35,18 @@ public final class DateTimeUtils {
 	public static final String FORMAT_STRING_TIMESTAMP = "yyyy-MM-dd HH:mm:ss";
 	public static final String FORMAT_STRING_TIMESTAMP_WITH_MILLIS = FORMAT_STRING_TIMESTAMP + ".SSS";
 	public static final String FORMAT_STRING_TIMESTAMP_WITH_MICROS = FORMAT_STRING_TIMESTAMP + ".SSSSSS";
-	public static final String FORMAT_STRING_TIMESTAMP_WITH_OFFSET = FORMAT_STRING_TIMESTAMP_WITH_MICROS + "xxx";
+	public static final String FORMAT_STRING_TIMESTAMP_WITH_MILLIS_AND_OFFSET = FORMAT_STRING_TIMESTAMP_WITH_MILLIS + "xxx";
+	public static final String FORMAT_STRING_TIMESTAMP_WITH_MICROS_AND_OFFSET = FORMAT_STRING_TIMESTAMP_WITH_MICROS + "xxx";
 
 	public static final DateTimeFormatter DATE_TIME_FORMATTER_DATE = DateTimeFormatter.ofPattern( FORMAT_STRING_DATE, Locale.ENGLISH );
 	public static final DateTimeFormatter DATE_TIME_FORMATTER_TIME_WITH_OFFSET = DateTimeFormatter.ofPattern( FORMAT_STRING_TIME_WITH_OFFSET, Locale.ENGLISH );
 	public static final DateTimeFormatter DATE_TIME_FORMATTER_TIME = DateTimeFormatter.ofPattern( FORMAT_STRING_TIME, Locale.ENGLISH );
 	public static final DateTimeFormatter DATE_TIME_FORMATTER_TIMESTAMP_WITH_MILLIS = DateTimeFormatter.ofPattern(FORMAT_STRING_TIMESTAMP_WITH_MILLIS, Locale.ENGLISH );
 	public static final DateTimeFormatter DATE_TIME_FORMATTER_TIMESTAMP_WITH_MICROS = DateTimeFormatter.ofPattern(FORMAT_STRING_TIMESTAMP_WITH_MICROS, Locale.ENGLISH );
-	public static final DateTimeFormatter DATE_TIME_FORMATTER_TIMESTAMP_WITH_OFFSET = DateTimeFormatter.ofPattern( FORMAT_STRING_TIMESTAMP_WITH_OFFSET, Locale.ENGLISH );
+	public static final DateTimeFormatter DATE_TIME_FORMATTER_TIMESTAMP_WITH_MILLIS_AND_OFFSET = DateTimeFormatter.ofPattern(
+			FORMAT_STRING_TIMESTAMP_WITH_MILLIS_AND_OFFSET, Locale.ENGLISH );
+	public static final DateTimeFormatter DATE_TIME_FORMATTER_TIMESTAMP_WITH_MICROS_AND_OFFSET = DateTimeFormatter.ofPattern(
+			FORMAT_STRING_TIMESTAMP_WITH_MICROS_AND_OFFSET, Locale.ENGLISH );
 
 	public static final String JDBC_ESCAPE_START_DATE = "{d '";
 	public static final String JDBC_ESCAPE_START_TIME = "{t '";
@@ -65,6 +71,21 @@ public final class DateTimeUtils {
 			.optionalStart().appendZoneOrOffsetId().optionalEnd()
 			.toFormatter();
 
+	private static final ThreadLocal<SimpleDateFormat> LOCAL_DATE_FORMAT = ThreadLocal.withInitial( DateTimeUtils::simpleDateFormatDate );
+	private static final ThreadLocal<SimpleDateFormat> LOCAL_TIME_FORMAT = ThreadLocal.withInitial( DateTimeUtils::simpleDateFormatTime );
+	private static final ThreadLocal<SimpleDateFormat> TIMESTAMP_WITH_MILLIS_FORMAT = ThreadLocal.withInitial(
+			() -> new SimpleDateFormat(
+					FORMAT_STRING_TIMESTAMP_WITH_MILLIS,
+					Locale.ENGLISH
+			)
+	);
+	private static final ThreadLocal<SimpleDateFormat> TIMESTAMP_WITH_MICROS_FORMAT = ThreadLocal.withInitial(
+			() -> new SimpleDateFormat(
+					FORMAT_STRING_TIMESTAMP_WITH_MICROS,
+					Locale.ENGLISH
+			)
+	);
+
 	/**
 	 * Pattern used for parsing literal offset datetimes in HQL.
 	 *
@@ -82,35 +103,89 @@ public final class DateTimeUtils {
 			.appendOffset("+HH:mm", "+00")
 			.toFormatter();
 
-	public static String formatAsTimestampWithMicros(TemporalAccessor temporalAccessor) {
-		return temporalAccessor.isSupported(ChronoField.OFFSET_SECONDS)
-				? DATE_TIME_FORMATTER_TIMESTAMP_WITH_OFFSET.format( temporalAccessor )
-				: DATE_TIME_FORMATTER_TIMESTAMP_WITH_MICROS.format( temporalAccessor );
+	public static String formatAsTimestampWithMicros(TemporalAccessor temporalAccessor, boolean supportsOffset, TimeZone jdbcTimeZone) {
+		if ( temporalAccessor.isSupported(ChronoField.OFFSET_SECONDS) ) {
+			if ( supportsOffset ) {
+				return DATE_TIME_FORMATTER_TIMESTAMP_WITH_MICROS_AND_OFFSET.format( temporalAccessor );
+			}
+			else {
+				return DATE_TIME_FORMATTER_TIMESTAMP_WITH_MICROS.format(
+						LocalDateTime.ofInstant(
+								Instant.from( temporalAccessor ),
+								jdbcTimeZone.toZoneId()
+						)
+				);
+			}
+		}
+		else {
+			return DATE_TIME_FORMATTER_TIMESTAMP_WITH_MICROS.format( temporalAccessor );
+		}
 	}
 
-	public static String formatAsTimestampWithMillis(TemporalAccessor temporalAccessor) {
-		return DATE_TIME_FORMATTER_TIMESTAMP_WITH_MILLIS.format( temporalAccessor );
+	public static String formatAsTimestampWithMillis(TemporalAccessor temporalAccessor, boolean supportsOffset, TimeZone jdbcTimeZone) {
+		if ( temporalAccessor.isSupported(ChronoField.OFFSET_SECONDS) ) {
+			if ( supportsOffset ) {
+				return DATE_TIME_FORMATTER_TIMESTAMP_WITH_MILLIS_AND_OFFSET.format( temporalAccessor );
+			}
+			else {
+				return DATE_TIME_FORMATTER_TIMESTAMP_WITH_MILLIS.format(
+						LocalDateTime.ofInstant(
+								Instant.from( temporalAccessor ),
+								jdbcTimeZone.toZoneId()
+						)
+				);
+			}
+		}
+		else {
+			return DATE_TIME_FORMATTER_TIMESTAMP_WITH_MILLIS.format( temporalAccessor );
+		}
 	}
 
 	public static String formatAsDate(TemporalAccessor temporalAccessor) {
 		return DATE_TIME_FORMATTER_DATE.format( temporalAccessor );
 	}
 
-	public static String formatAsTime(TemporalAccessor temporalAccessor) {
+	public static String formatAsTime(TemporalAccessor temporalAccessor, boolean supportsOffset, TimeZone jdbcTimeZone) {
 		if ( temporalAccessor.isSupported(ChronoField.OFFSET_SECONDS) ) {
-			return DATE_TIME_FORMATTER_TIME_WITH_OFFSET.format(temporalAccessor);
+			if ( supportsOffset ) {
+				return DATE_TIME_FORMATTER_TIME_WITH_OFFSET.format( temporalAccessor );
+			}
+			else {
+				return DATE_TIME_FORMATTER_TIME.format(
+					LocalDateTime.ofInstant(
+							Instant.from( temporalAccessor ),
+							jdbcTimeZone.toZoneId()
+					)
+				);
+			}
 		}
 		else {
-			return DATE_TIME_FORMATTER_TIME.format(temporalAccessor);
+			return DATE_TIME_FORMATTER_TIME.format( temporalAccessor );
 		}
 	}
 
-	public static String formatAsTimestampWithMillis(java.util.Date date) {
-		return simpleDateFormatTimestampWithMillis().format( date );
+	public static String formatAsTimestampWithMillis(java.util.Date date, TimeZone jdbcTimeZone) {
+		final SimpleDateFormat simpleDateFormat = TIMESTAMP_WITH_MILLIS_FORMAT.get();
+		final TimeZone originalTimeZone = simpleDateFormat.getTimeZone();
+		try {
+			simpleDateFormat.setTimeZone( jdbcTimeZone );
+			return simpleDateFormat.format( date );
+		}
+		finally {
+			simpleDateFormat.setTimeZone( originalTimeZone );
+		}
 	}
 
-	public static String formatAsTimestampWithMicros(java.util.Date date) {
-		return simpleDateFormatTimestampWithMicros().format( date );
+	public static String formatAsTimestampWithMicros(java.util.Date date, TimeZone jdbcTimeZone) {
+		final SimpleDateFormat simpleDateFormat = TIMESTAMP_WITH_MICROS_FORMAT.get();
+		final TimeZone originalTimeZone = simpleDateFormat.getTimeZone();
+		try {
+			simpleDateFormat.setTimeZone( jdbcTimeZone );
+			return simpleDateFormat.format( date );
+		}
+		finally {
+			simpleDateFormat.setTimeZone( originalTimeZone );
+		}
 	}
 
 	public static String wrapAsJdbcDateLiteral(String literal) {
@@ -137,16 +212,8 @@ public final class DateTimeUtils {
 		return "timestamp '" + literal + "'";
 	}
 
-	public static SimpleDateFormat simpleDateFormatTimestampWithMillis() {
-		return new SimpleDateFormat(FORMAT_STRING_TIMESTAMP_WITH_MILLIS, Locale.ENGLISH );
-	}
-
-	public static SimpleDateFormat simpleDateFormatTimestampWithMicros() {
-		return new SimpleDateFormat(FORMAT_STRING_TIMESTAMP_WITH_MICROS, Locale.ENGLISH );
-	}
-
 	public static String formatAsDate(java.util.Date date) {
-		return simpleDateFormatDate().format( date );
+		return LOCAL_DATE_FORMAT.get().format( date );
 	}
 
 	public static SimpleDateFormat simpleDateFormatDate() {
@@ -154,15 +221,23 @@ public final class DateTimeUtils {
 	}
 
 	public static String formatAsTime(java.util.Date date) {
-		return simpleDateFormatTime().format( date );
+		return LOCAL_TIME_FORMAT.get().format( date );
 	}
 
 	public static SimpleDateFormat simpleDateFormatTime() {
 		return new SimpleDateFormat( FORMAT_STRING_TIME, Locale.ENGLISH );
 	}
 
-	public static String formatAsTimestampWithMillis(java.util.Calendar calendar) {
-		return simpleDateFormatTimestampWithMillis( calendar.getTimeZone() ).format( calendar.getTime() );
+	public static String formatAsTimestampWithMillis(java.util.Calendar calendar, TimeZone jdbcTimeZone) {
+		final SimpleDateFormat simpleDateFormat = TIMESTAMP_WITH_MILLIS_FORMAT.get();
+		final TimeZone originalTimeZone = simpleDateFormat.getTimeZone();
+		try {
+			simpleDateFormat.setTimeZone( jdbcTimeZone );
+			return simpleDateFormat.format( calendar.getTime() );
+		}
+		finally {
+			simpleDateFormat.setTimeZone( originalTimeZone );
+		}
 	}
 
 	public static SimpleDateFormat simpleDateFormatTimestampWithMillis(TimeZone timeZone) {
@@ -171,8 +246,16 @@ public final class DateTimeUtils {
 		return formatter;
 	}
 
-	public static String formatAsTimestampWithMicros(java.util.Calendar calendar) {
-		return simpleDateFormatTimestampWithMicros( calendar.getTimeZone() ).format( calendar.getTime() );
+	public static String formatAsTimestampWithMicros(java.util.Calendar calendar, TimeZone jdbcTimeZone) {
+		final SimpleDateFormat simpleDateFormat = TIMESTAMP_WITH_MICROS_FORMAT.get();
+		final TimeZone originalTimeZone = simpleDateFormat.getTimeZone();
+		try {
+			simpleDateFormat.setTimeZone( jdbcTimeZone );
+			return simpleDateFormat.format( calendar.getTime() );
+		}
+		finally {
+			simpleDateFormat.setTimeZone( originalTimeZone );
+		}
 	}
 
 	public static SimpleDateFormat simpleDateFormatTimestampWithMicros(TimeZone timeZone) {
@@ -182,7 +265,15 @@ public final class DateTimeUtils {
 	}
 
 	public static String formatAsDate(java.util.Calendar calendar) {
-		return simpleDateFormatDate( calendar.getTimeZone() ).format( calendar.getTime() );
+		final SimpleDateFormat simpleDateFormat = LOCAL_DATE_FORMAT.get();
+		final TimeZone originalTimeZone = simpleDateFormat.getTimeZone();
+		try {
+			simpleDateFormat.setTimeZone( calendar.getTimeZone() );
+			return simpleDateFormat.format( calendar.getTime() );
+		}
+		finally {
+			simpleDateFormat.setTimeZone( originalTimeZone );
+		}
 	}
 
 	public static SimpleDateFormat simpleDateFormatDate(TimeZone timeZone) {
@@ -192,7 +283,15 @@ public final class DateTimeUtils {
 	}
 
 	public static String formatAsTime(java.util.Calendar calendar) {
-		return simpleDateFormatTime( calendar.getTimeZone() ).format( calendar.getTime() );
+		final SimpleDateFormat simpleDateFormat = LOCAL_TIME_FORMAT.get();
+		final TimeZone originalTimeZone = simpleDateFormat.getTimeZone();
+		try {
+			simpleDateFormat.setTimeZone( calendar.getTimeZone() );
+			return simpleDateFormat.format( calendar.getTime() );
+		}
+		finally {
+			simpleDateFormat.setTimeZone( originalTimeZone );
+		}
 	}
 
 	public static SimpleDateFormat simpleDateFormatTime(TimeZone timeZone) {

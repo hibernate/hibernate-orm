@@ -222,7 +222,6 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected(jiraKey = "none", message = "not implemented method of QueryParameterBindingsImpl in v6")
 	public void testHqlFilters() {
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// HQL test

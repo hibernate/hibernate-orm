@@ -13,6 +13,7 @@ import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
 import org.hibernate.sql.results.graph.Fetchable;
@@ -54,7 +55,7 @@ public interface EmbeddableValuedModelPart extends ModelPart, Fetchable, Fetchab
 		return null;
 	}
 
-	Expression toSqlExpression(
+	SqlTuple toSqlExpression(
 			TableGroup tableGroup,
 			Clause clause,
 			SqmToSqlAstConverter walker,

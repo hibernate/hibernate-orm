@@ -26,6 +26,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.MapKeyEnumerated;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderColumn;
+import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
@@ -283,6 +284,7 @@ public class OneToManyHqlMemberOfQueryTest {
 	}
 
 	@Entity(name = "Call")
+	@Table(name = "phone_call")
 	public static class Call {
 
 		@Id

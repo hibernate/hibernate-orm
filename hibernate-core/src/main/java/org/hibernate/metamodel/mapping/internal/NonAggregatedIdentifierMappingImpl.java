@@ -51,7 +51,7 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 			Component bootCidDescriptor,
 			Component bootIdClassDescriptor,
 			MappingModelCreationProcess creationProcess) {
-		// todo (6.0) : handle MapsId and IdClass
+		// todo (6.0) : handle MapsId
 		super(
 				attributeMetadataAccess,
 				embeddableDescriptor,

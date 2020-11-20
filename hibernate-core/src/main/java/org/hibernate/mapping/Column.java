@@ -273,10 +273,10 @@ public class Column implements Selectable, Serializable, Cloneable {
 		Type type = getValue().getType();
 
 		if ( type instanceof EntityType ) {
-			type = getTypeForEntityValue( mapping, type );
+			type = getTypeForEntityValue( mapping, type, getTypeIndex() );
 		}
 		if ( type instanceof ComponentType ) {
-			type = getTypeForComponentValue( mapping, type );
+			type = getTypeForComponentValue( mapping, type, getTypeIndex() );
 		}
 		return dialect.getDefaultSizeStrategy().resolveDefaultSize(
 				( (JdbcMapping) type ).getSqlTypeDescriptor(),
@@ -284,20 +284,42 @@ public class Column implements Selectable, Serializable, Cloneable {
 		);
 	}
 
-	private Type getTypeForComponentValue(Mapping mapping, Type type) {
-		type = ( (ComponentType) type ).getSubtypes()[getTypeIndex()];
-		if ( type instanceof EntityType ) {
-			type = getTypeForEntityValue( mapping, type );
+	private Type getTypeForComponentValue(Mapping mapping, Type type, int typeIndex) {
+		final Type[] subtypes = ( (ComponentType) type ).getSubtypes();
+		int currentSubtypesColumnSpans = 0;
+		for ( int i = 0; i <= subtypes.length; i++ ) {
+			Type subtype = subtypes[i];
+			int subtypeColumnSpan = subtype.getColumnSpan( mapping );
+			currentSubtypesColumnSpans += subtypeColumnSpan;
+			if ( currentSubtypesColumnSpans - 1 >= typeIndex ) {
+				if ( subtype instanceof EntityType ) {
+					return getTypeForEntityValue( mapping, subtype, subtypeColumnSpan - i );
+				}
+				if ( subtype instanceof ComponentType ) {
+					return getTypeForComponentValue( mapping, subtype, subtypeColumnSpan - i );
+				}
+				if ( i == typeIndex ) {
+					return subtype;
+				}
+			}
 		}
-		return type;
+
+		throw new HibernateException(
+				String.format(
+						Locale.ROOT,
+						"Unable to resolve org.hibernate.type.Type for column `%s.%s`",
+						getValue().getTable().getName(),
+						getName()
+				)
+		);
 	}
 
-	private Type getTypeForEntityValue(Mapping mapping, Type type) {
+	private Type getTypeForEntityValue(Mapping mapping, Type type, int typeIndex) {
 		while ( !( type instanceof JdbcMapping ) ) {
 			//ManyToOneType doesn't implement JdbcMapping
 			type = mapping.getIdentifierType( ( (EntityType) type ).getAssociatedEntityName() );
 			if ( type instanceof ComponentType ) {
-				type = ( (ComponentType) type ).getSubtypes()[getTypeIndex()];
+				type = ( (ComponentType) type ).getSubtypes()[typeIndex];
 			}
 		}
 		return type;

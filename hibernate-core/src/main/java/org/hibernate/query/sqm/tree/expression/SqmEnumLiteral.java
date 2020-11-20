@@ -8,22 +8,16 @@ package org.hibernate.query.sqm.tree.expression;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.Collection;
-import java.util.List;
 import java.util.Locale;
-import javax.persistence.criteria.Expression;
 
 import org.hibernate.query.SemanticException;
-import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * Specialized SQM literal defined by an enum reference.  E.g.
@@ -31,7 +25,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class SqmEnumLiteral<E extends Enum<E>> extends AbstractSqmExpression<E> implements SqmExpression<E>, SqmExpressable<E>, SemanticPathPart {
+public class SqmEnumLiteral<E extends Enum<E>> extends AbstractSqmExpression<E> implements SqmExpressable<E>, SemanticPathPart {
 	private final E enumValue;
 	private final EnumJavaTypeDescriptor<E> referencedEnumTypeDescriptor;
 	private final String enumValueName;

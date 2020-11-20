@@ -6,7 +6,7 @@
  */
 
 //$Id$
-package org.hibernate.test.annotations.cid;
+package org.hibernate.orm.test.annotations.cid;
 import javax.persistence.AttributeOverride;
 import javax.persistence.Column;
 import javax.persistence.EmbeddedId;

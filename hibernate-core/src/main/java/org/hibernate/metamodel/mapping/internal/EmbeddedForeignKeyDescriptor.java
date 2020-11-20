@@ -384,6 +384,56 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 	}
 
 	@Override
+	public <T> DomainResult<T> createDomainResult(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			String resultVariable,
+			DomainResultCreationState creationState) {
+		//noinspection unchecked
+		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
+		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
+		final TableReference tableReference = tableGroup.resolveTableReference( keyColumnContainingTable );
+		final String identificationVariable = tableReference.getIdentificationVariable();
+		int size = keyColumnExpressions.size();
+		List<SqlSelection> sqlSelections = new ArrayList<>(size);
+		for ( int i = 0; i < size; i++ ) {
+			final String columnExpression = keyColumnExpressions.get( i );
+			final JdbcMapping jdbcMapping = jdbcMappings.get( i );
+			final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
+					sqlExpressionResolver.resolveSqlExpression(
+							SqlExpressionResolver.createColumnReferenceKey(
+									tableReference,
+									columnExpression
+							),
+							s ->
+									new ColumnReference(
+											identificationVariable,
+											columnExpression,
+											false,
+											null,
+											null,
+											jdbcMapping,
+											creationState.getSqlAstCreationState()
+													.getCreationContext()
+													.getSessionFactory()
+									)
+					),
+					jdbcMapping.getJavaTypeDescriptor(),
+					sqlAstCreationState.getCreationContext().getDomainModel().getTypeConfiguration()
+			);
+			sqlSelections.add( sqlSelection );
+		}
+
+		return new EmbeddableForeignKeyResultImpl(
+				sqlSelections,
+				navigablePath,
+				mappingType,
+				resultVariable,
+				creationState
+		);
+	}
+
+	@Override
 	public EntityMappingType findContainingEntityMapping() {
 		throw new UnsupportedOperationException();
 	}

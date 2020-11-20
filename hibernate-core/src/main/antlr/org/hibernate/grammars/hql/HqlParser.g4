@@ -391,7 +391,7 @@ comparisonOperator
 inList
 	: ELEMENTS? LEFT_PAREN dotIdentifierSequence RIGHT_PAREN		# PersistentCollectionReferenceInList
 	| LEFT_PAREN expression (COMMA expression)*	RIGHT_PAREN			# ExplicitTupleInList
-	| expression													# SubQueryInList
+	| expression													# SubQueryOrParamInList
 	;
 
 likeEscape

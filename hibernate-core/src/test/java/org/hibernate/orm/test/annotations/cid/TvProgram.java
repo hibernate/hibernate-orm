@@ -6,7 +6,7 @@
  */
 
 //$Id$
-package org.hibernate.test.annotations.cid;
+package org.hibernate.orm.test.annotations.cid;
 import java.util.Date;
 import javax.persistence.AssociationOverride;
 import javax.persistence.AssociationOverrides;

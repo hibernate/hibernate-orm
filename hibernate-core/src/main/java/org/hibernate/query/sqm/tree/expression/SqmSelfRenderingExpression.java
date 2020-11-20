@@ -16,7 +16,7 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 /**
  * @author Steve Ebersole
  */
-public class SqmSelfRenderingExpression<T> extends AbstractSqmExpression<T> implements SqmExpression<T> {
+public class SqmSelfRenderingExpression<T> extends AbstractSqmExpression<T> {
 	private final Function<SemanticQueryWalker, Expression> renderer;
 
 	public SqmSelfRenderingExpression(

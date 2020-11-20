@@ -23,7 +23,7 @@ import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
  */
 public class SqmLiteral<T>
 		extends AbstractSqmExpression<T>
-		implements SqmExpression<T>, DomainResultProducer<T> {
+		implements DomainResultProducer<T> {
 	private final T value;
 
 	public SqmLiteral(T value, SqmExpressable<T> inherentType, NodeBuilder nodeBuilder) {

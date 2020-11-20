@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.tree.predicate;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import javax.persistence.criteria.Expression;
@@ -71,6 +72,12 @@ public class SqmInListPredicate<T> extends AbstractNegatableSqmPredicate impleme
 
 	@Override
 	public SqmInPredicate<T> value(Object value) {
+		if ( value instanceof Collection ) {
+			( (Collection) value ).forEach(
+					v -> addExpression( nodeBuilder().literal( v ) )
+			);
+			return this;
+		}
 		addExpression( nodeBuilder().literal( value ) );
 		return this;
 	}

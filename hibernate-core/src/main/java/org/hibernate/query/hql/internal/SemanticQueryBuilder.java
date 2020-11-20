@@ -1407,8 +1407,12 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 				final List<SqmExpression<?>> listExpressions = new ArrayList<>( expressionContexts.size() );
 				for ( HqlParser.ExpressionContext expressionContext : expressionContexts ) {
 					final Map<Class<?>, Enum<?>> possibleEnumValues;
-					if ( isEnum && (possibleEnumValues = getPossibleEnumValues( expressionContext )) != null ) {
-						listExpressions.add( resolveEnumShorthandLiteral( expressionContext, possibleEnumValues, testExpression.getJavaType() ) );
+					if ( isEnum && ( possibleEnumValues = getPossibleEnumValues( expressionContext ) ) != null ) {
+						listExpressions.add( resolveEnumShorthandLiteral(
+								expressionContext,
+								possibleEnumValues,
+								testExpression.getJavaType()
+						) );
 					}
 					else {
 						listExpressions.add( (SqmExpression) expressionContext.accept( this ) );
@@ -1427,21 +1431,33 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 				parameterDeclarationContextStack.pop();
 			}
 		}
-		else if ( inListContext instanceof HqlParser.SubQueryInListContext ) {
-			final HqlParser.SubQueryInListContext subQueryContext = (HqlParser.SubQueryInListContext) inListContext;
-			final SqmExpression subQueryExpression = (SqmExpression) subQueryContext.expression().accept( this );
+		else if ( inListContext instanceof HqlParser.SubQueryOrParamInListContext ) {
+			final HqlParser.SubQueryOrParamInListContext subQueryOrParamInListContext = (HqlParser.SubQueryOrParamInListContext) inListContext;
+			final SqmExpression sqmExpression = (SqmExpression) subQueryOrParamInListContext.expression().accept( this );
 
-			if ( !(subQueryExpression instanceof SqmSubQuery) ) {
+			if ( !( sqmExpression instanceof SqmSubQuery ) ) {
+				if ( sqmExpression instanceof SqmParameter ) {
+						final List<SqmExpression<?>> listExpressions = new ArrayList<>( 1 );
+						listExpressions.add( sqmExpression );
+
+						return new SqmInListPredicate(
+								testExpression,
+								listExpressions,
+								ctx.NOT() != null,
+								creationContext.getNodeBuilder()
+						);
+				}
 				throw new ParsingException(
-						"Was expecting a SubQueryExpression, but found " + subQueryExpression.getClass().getSimpleName()
-								+ " : " + subQueryContext.expression().toString()
+						"Was expecting a SubQueryExpression or a SqmParameter, but found " + sqmExpression.getClass()
+								.getSimpleName()
+								+ " : " + subQueryOrParamInListContext.expression().toString()
 				);
 			}
 
 			//noinspection unchecked
 			return new SqmInSubQueryPredicate(
 					testExpression,
-					(SqmSubQuery) subQueryExpression,
+					(SqmSubQuery) sqmExpression,
 					ctx.NOT() != null,
 					creationContext.getNodeBuilder()
 			);

@@ -4,26 +4,30 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.annotations.cid;
 
-import java.io.Serializable;
-import javax.persistence.EmbeddedId;
+//$Id$
+package org.hibernate.orm.test.annotations.cid;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+
 
 /**
  * @author Artur Legan
  */
 @Entity
-public class A implements Serializable{
+public class C {
 
-	@EmbeddedId
-	private AId aId;
+	@Id
+	@GeneratedValue
+	private Long id;
 
-	public AId getAId() {
-		return aId;
+
+	public Long getId() {
+		return id;
 	}
 
-	public void setAId(AId aId) {
-		this.aId = aId;
+	public void setId(Long id) {
+		this.id = id;
 	}
 }

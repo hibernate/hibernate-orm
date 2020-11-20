@@ -6,15 +6,28 @@
  */
 
 //$Id$
-package org.hibernate.test.annotations.cid;
+package org.hibernate.orm.test.annotations.cid;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
+
 /**
- * @author Emmanuel Bernard
+ * @author Artur Legan
  */
 @Entity
-public class Presenter {
+public class B {
+
 	@Id
-	public String name;
+	@GeneratedValue
+	private Long id;
+
+
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
 }

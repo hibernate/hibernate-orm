@@ -5924,15 +5924,7 @@ public abstract class AbstractEntityPersister
 			accessOptimizer = null;
 		}
 
-		if ( isMultiTable() ) {
-			sqmMultiTableMutationStrategy = interpretSqmMultiTableStrategy(
-					this,
-					creationProcess
-			);
-		}
-		else {
-			sqmMultiTableMutationStrategy = null;
-		}
+
 
 		// register a callback for after all `#prepareMappingModel` calls have finished.  here we want to delay the
 		// generation of `staticFetchableList` because we need to wait until after all sub-classes have had their
@@ -5946,6 +5938,26 @@ public abstract class AbstractEntityPersister
 					return true;
 				}
 		);
+
+		if ( isMultiTable() ) {
+			creationProcess.registerInitializationCallback(
+					"Entity(" + getEntityName() + ") `sqmMultiTableMutationStrategy` interpretation",
+					() -> {
+						sqmMultiTableMutationStrategy = interpretSqmMultiTableStrategy(
+								this,
+								creationProcess
+						);
+						if ( sqmMultiTableMutationStrategy == null ) {
+							return false;
+						}
+						return true;
+					}
+			);
+
+		}
+		else {
+			sqmMultiTableMutationStrategy = null;
+		}
 	}
 
 	private void prepareMappingModel(MappingModelCreationProcess creationProcess, PersistentClass bootEntityDescriptor) {
@@ -6026,8 +6038,13 @@ public abstract class AbstractEntityPersister
 			MappingModelCreationProcess creationProcess) {
 		assert entityMappingDescriptor.isMultiTable();
 
-		if ( entityMappingDescriptor.getSuperMappingType() != null ) {
-			return entityMappingDescriptor.getSuperMappingType().getSqmMultiTableMutationStrategy();
+		EntityMappingType superMappingType = entityMappingDescriptor.getSuperMappingType();
+		if ( superMappingType != null ) {
+			SqmMultiTableMutationStrategy sqmMultiTableMutationStrategy = superMappingType
+					.getSqmMultiTableMutationStrategy();
+			if ( sqmMultiTableMutationStrategy != null ) {
+				return sqmMultiTableMutationStrategy;
+			}
 		}
 
 		// we need the boot model so we can have access to the Table

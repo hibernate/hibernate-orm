@@ -928,7 +928,7 @@ public class MappingModelCreationHelper {
 		}
 		else {
 			throw new NotYetImplementedFor6Exception(
-					"Support for composite foreign keys not yet implemented: " + bootValueMapping.getRole()
+					"Support for " + fkTarget.getClass() + " foreign keys not yet implemented: " + bootValueMapping.getRole()
 			);
 		}
 	}

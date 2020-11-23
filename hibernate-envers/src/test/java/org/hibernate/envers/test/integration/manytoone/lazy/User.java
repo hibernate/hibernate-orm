@@ -23,7 +23,7 @@ import java.util.List;
  * @author Luke Chen
  */
 @Entity
-@Table(name = "user")
+@Table(name = "user_tbl")
 public class User {
 
     @Id

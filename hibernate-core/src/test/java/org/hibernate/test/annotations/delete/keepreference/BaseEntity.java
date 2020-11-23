@@ -6,26 +6,38 @@
  */
 package org.hibernate.test.annotations.delete.keepreference;
 
+import javax.persistence.ColumnResult;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
+import javax.persistence.SqlResultSetMapping;
 
 /**
  * @author Richard Bizik
  */
 @MappedSuperclass
+@SqlResultSetMapping(
+		name = "deleted_selection",
+		columns = @ColumnResult( name = "deleted", type = Boolean.class )
+)
 public class BaseEntity {
 
 	@Id
-	@GeneratedValue
-	private Long id;
+	private Integer id;
 	private boolean deleted;
 
-	public Long getId() {
+	protected BaseEntity() {
+	}
+
+	public BaseEntity(Integer id) {
+		this.id = id;
+	}
+
+	public Integer getId() {
 		return id;
 	}
 
-	public void setId(Long id) {
+	private void setId(Integer id) {
 		this.id = id;
 	}
 

@@ -17,12 +17,19 @@ import javax.persistence.ManyToOne;
  * @author Richard Bizik
  */
 @Entity
-@SQLDelete(sql = "UPDATE trooper SET deleted = true WHERE id = ?", keepReference = true)
+@SQLDelete(sql = "UPDATE trooper SET deleted = true WHERE id = ?", soft = true)
 @Where(clause = "deleted = false")
 public class Trooper extends BaseEntity{
 	private String code;
 	@ManyToOne(optional = false, fetch = FetchType.LAZY)
 	private DeathStar deathStar;
+
+	public Trooper() {
+	}
+
+	public Trooper(Integer id) {
+		super( id );
+	}
 
 	public String getCode() {
 		return code;

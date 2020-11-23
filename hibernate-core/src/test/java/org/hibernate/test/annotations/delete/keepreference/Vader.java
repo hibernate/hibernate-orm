@@ -18,13 +18,20 @@ import javax.persistence.OneToOne;
  * @author Richard Bizik
  */
 @Entity
-@SQLDelete(sql = "UPDATE vader SET deleted = true WHERE id = ?", keepReference = true)
+@SQLDelete(sql = "UPDATE vader SET deleted = true WHERE id = ?", soft = true)
 @Where(clause = "deleted = false")
 public  class Vader extends BaseEntity{
 
 	private String name = "Darth Vader";
 	@OneToOne(optional = false, fetch = FetchType.LAZY, mappedBy = "vader")
 	private DeathStar deathStar;
+
+	public Vader() {
+	}
+
+	public Vader(Integer id) {
+		super( id );
+	}
 
 	public String getName() {
 		return name;

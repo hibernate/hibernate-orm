@@ -8,12 +8,19 @@ import javax.persistence.FetchType;
 import javax.persistence.OneToOne;
 
 @Entity
-@SQLDelete(sql = "UPDATE universe SET deleted = true WHERE id = ?", keepReference = true)
+@SQLDelete(sql = "UPDATE universe SET deleted = true WHERE id = ?", soft = true)
 @Where(clause = "deleted = false")
 public class Universe extends BaseEntity {
 
 	@OneToOne(optional = true, fetch = FetchType.EAGER, mappedBy = "universe")
 	DeathStar deathStar;
+
+	public Universe() {
+	}
+
+	public Universe(Integer id) {
+		super( id );
+	}
 
 	public DeathStar getDeathStar() {
 		return deathStar;

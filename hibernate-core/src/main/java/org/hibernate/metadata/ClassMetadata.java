@@ -75,7 +75,7 @@ public interface ClassMetadata {
 	/**
 	 * Should references to this class be kept after entity is marked for deletion?
 	 */
-	boolean keepReference();
+	boolean isSoftDelete();
 
 	/**
 	 * Get the index of the version property

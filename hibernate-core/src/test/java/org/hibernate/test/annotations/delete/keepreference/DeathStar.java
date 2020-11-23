@@ -17,7 +17,7 @@ import java.util.Set;
  * @author Richard Bizik
  */
 @Entity
-@SQLDelete(sql = "UPDATE deathstar SET deleted = true WHERE id = ?", keepReference = true)
+@SQLDelete(sql = "UPDATE deathstar SET deleted = true WHERE id = ?", soft = true)
 @Where(clause = "deleted = false")
 public class DeathStar extends BaseEntity {
 
@@ -25,10 +25,17 @@ public class DeathStar extends BaseEntity {
 	@OneToOne(optional = false, cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	private Vader vader;
 	@OneToMany(cascade = CascadeType.MERGE, orphanRemoval = true, mappedBy = "deathStar",fetch = FetchType.EAGER)
-	private Set<Trooper> troppers;
+	private Set<Trooper> troopers;
 	@NotNull
 	@OneToOne(optional = false, fetch = FetchType.EAGER)
 	private Universe universe;
+
+	public DeathStar() {
+	}
+
+	public DeathStar(Integer id) {
+		super( id );
+	}
 
 	public Vader getVader() {
 		return vader;
@@ -38,12 +45,12 @@ public class DeathStar extends BaseEntity {
 		this.vader = vader;
 	}
 
-	public Set<Trooper> getTroppers() {
-		return troppers;
+	public Set<Trooper> getTroopers() {
+		return troopers;
 	}
 
-	public void setTroppers(Set<Trooper> troppers) {
-		this.troppers = troppers;
+	public void setTroopers(Set<Trooper> troopers) {
+		this.troopers = troopers;
 	}
 
 	public Universe getUniverse() {

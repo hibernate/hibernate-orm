@@ -6,111 +6,131 @@
  */
 package org.hibernate.test.annotations.delete.keepreference;
 
-import org.assertj.core.util.Sets;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
-import java.util.List;
+import org.assertj.core.util.Sets;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Richard Bizik
  */
 public class KeepReferenceTest extends BaseCoreFunctionalTestCase {
 
+	@Before
+	public void createTestDate() {
+		inTransaction(
+				(session) -> {
+					final Universe universe = new Universe( 1 );
+					session.save( universe );
 
-	@Test
-	@TestForIssue( jiraKey = "HHH-13900")
-	public void keepReferenceShouldKeepReference(){
-		Transaction transaction;
-		Session session = openSession();
-		transaction = session.beginTransaction();
+					final DeathStar deathStar = new DeathStar( 1 );
+					deathStar.setUniverse( universe );
+					universe.setDeathStar( deathStar );
 
-		Universe universe = new Universe();
-		session.save(universe);
+					final Vader vader = new Vader( 1 );
+					vader.setDeathStar( deathStar );
 
-		DeathStar deathStar = new DeathStar();
-		deathStar.setUniverse(universe);
-		universe.setDeathStar(deathStar);
+					deathStar.setVader( vader );
+					session.save( deathStar );
 
-		Vader vader = new Vader();
-		vader.setDeathStar(deathStar);
+					final Trooper trooper = new Trooper( 1 );
+					trooper.setCode( "TK-421" );
+					trooper.setDeathStar( deathStar );
+					deathStar.setTroopers( Sets.newLinkedHashSet( trooper ) );
 
-		deathStar.setVader(vader);
-		session.save(deathStar);
-
-		Trooper trooper = new Trooper();
-		trooper.setCode("TK-421");
-		trooper.setDeathStar(deathStar);
-		deathStar.setTroppers(Sets.newLinkedHashSet(trooper));
-
-		session.save(trooper);
-
-		transaction.commit();
-		session.clear();
-
-		transaction = session.beginTransaction();
-		deathStar = session.get(DeathStar.class, deathStar.getId());
-		assertEquals(1, deathStar.getTroppers().size());
-		assertNotNull(deathStar.getVader());
-		transaction.commit();
-		session.clear();
-
-		transaction = session.beginTransaction();
-		session.delete(deathStar);
-		transaction.commit();
-		session.clear();
-
-		transaction = session.beginTransaction();
-
-		//universe should not be deleted
-		universe = session.get(Universe.class, universe.getId());
-		assertNotNull(universe);
-		//deathStar should be deleted
-		deathStar = session.get(DeathStar.class, deathStar.getId());
-		assertNull(deathStar);
-		List universes = session.createSQLQuery("SELECT * from universe").list();
-		List deathStars = session.createSQLQuery("SELECT * from deathstar").list();
-		List troopers = session.createSQLQuery("SELECT * from trooper").list();
-		List vaders = session.createSQLQuery("SELECT * from vader").list();
-
-		assertEquals(1, universes.size());
-		assertEquals(1, deathStars.size());
-		assertEquals(1, troopers.size());
-		assertEquals(1, vaders.size());
-
-		//check if deleted is set
-		assertTrue((Boolean)((Object[])deathStars.get(0))[1]);
-		assertTrue((Boolean)((Object[])troopers.get(0))[1]);
-		assertTrue((Boolean)((Object[])vaders.get(0))[1]);
-		//universe should not be delted
-		assertFalse((Boolean)((Object[])universes.get(0))[1]);
-
-		//check if references are kept
-		assertNotNull(((Object[])deathStars.get(0))[2]);
-		assertNotNull(((Object[])troopers.get(0))[3]);
-
-		session.close();
-
-		cleanupData();
+					session.save( trooper );
+				}
+		);
 	}
 
-	private void cleanupData() {
-		doInHibernate( this::sessionFactory, s -> {
-			s.createSQLQuery("delete from trooper").executeUpdate();
-			s.createSQLQuery("delete from deathstar").executeUpdate();
-			s.createSQLQuery("delete from vader").executeUpdate();
-			s.createSQLQuery("delete from universe").executeUpdate();
-		});
+	@After
+	public void dropTestData() {
+		inTransaction(
+				(session) -> {
+					session.createSQLQuery( "delete from trooper" ).executeUpdate();
+					session.createSQLQuery( "delete from deathstar" ).executeUpdate();
+					session.createSQLQuery( "delete from vader" ).executeUpdate();
+					session.createSQLQuery( "delete from universe" ).executeUpdate();
+				}
+		);
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-13900" )
+	public void keepReferenceShouldKeepReference() {
+		inTransaction(
+				(session) -> {
+					// verify test data is set-up properly
+					final DeathStar deathStar = session.get( DeathStar.class, 1 );
+
+					assertNotNull( deathStar );
+					assertNotNull( deathStar.getVader() );
+					assertEquals( 1, deathStar.getTroopers().size() );
+
+					// delete it...
+					session.delete( deathStar );
+					session.flush();
+
+					assertFalse( session.contains( DeathStar.class.getName(), deathStar.getId() ) );
+				}
+		);
+
+		inTransaction(
+				(session) -> {
+					// verify data after delete...
+
+					// first check the existence of the entities relative to the Session based on the soft-delete
+
+					// DeathStar should be soft-deleted - check by load as well as query
+					final DeathStar deathStar = session.get( DeathStar.class, 1 );
+					assertNull( deathStar );
+					final DeathStar deathStar2 = session.createQuery( "select d from DeathStar d join fetch d.troopers", DeathStar.class ).uniqueResult();
+					assertNull( deathStar2 );
+
+					// Universe should not be
+					final Universe universe = session.get( Universe.class, 1 );
+					assertNotNull( universe );
+
+					// Trooper should have been soft-deleted
+					final Trooper trooper = session.get( Trooper.class, 1 );
+					assertNull( trooper );
+
+					// Vader should have been soft-deleted
+					final Vader vader = session.get( Vader.class, 1 );
+					assertNull( vader );
+
+
+					// check the database to make sure that the soft-deleted rows still exist and are soft-deleted
+
+					// universe should not have been deleted
+					final boolean universeDeleted = (boolean) session.createNativeQuery( "SELECT deleted from universe", "deleted_selection" ).uniqueResult();
+					assertFalse( universeDeleted );
+
+					// the others should have
+
+					final boolean deathstarDeleted = (boolean) session.createNativeQuery( "SELECT deleted from deathstar", "deleted_selection" ).uniqueResult();
+					assertTrue( deathstarDeleted );
+
+					final boolean trooperDeleted = (boolean) session.createNativeQuery( "SELECT deleted from trooper", "deleted_selection" ).uniqueResult();
+					assertTrue( trooperDeleted );
+
+					final boolean vaderDeleted = (boolean) session.createNativeQuery( "SELECT deleted from vader", "deleted_selection" ).uniqueResult();
+					assertTrue( vaderDeleted );
+				}
+		);
 	}
 
 	@Override
-	protected Class[] getAnnotatedClasses() {
+	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] {
 				BaseEntity.class,
 				Universe.class,

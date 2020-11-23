@@ -66,7 +66,7 @@ public class EntityMetamodel implements Serializable {
 
 	private final IdentifierProperty identifierAttribute;
 	private final boolean versioned;
-	private final boolean keepReference;
+	private final boolean softDelete;
 
 	private final int propertySpan;
 	private final int versionPropertyIndex;
@@ -140,7 +140,7 @@ public class EntityMetamodel implements Serializable {
 		);
 
 		versioned = persistentClass.isVersioned();
-		keepReference = persistentClass.isCustomSQLDeleteNullifiable();
+		softDelete = persistentClass.isCustomSoftDelete();
 
 		if ( persistentClass.hasPojoRepresentation() ) {
 			final Component identifierMapperComponent = persistentClass.getIdentifierMapper();
@@ -949,8 +949,8 @@ public class EntityMetamodel implements Serializable {
 		return versioned;
 	}
 
-	public boolean keepReference() {
-		return keepReference;
+	public boolean isSoftDelete() {
+		return softDelete;
 	}
 
 	public boolean isAbstract() {

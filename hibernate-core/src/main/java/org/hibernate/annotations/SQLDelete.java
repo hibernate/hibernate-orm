@@ -40,5 +40,5 @@ public @interface SQLDelete {
 	/**
 	 * Use for soft delete operations if you want to keep the references to entities marked as deleted.
 	 */
-	boolean keepReference() default false;
+	boolean soft() default false;
 }

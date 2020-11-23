@@ -364,7 +364,10 @@ public class EntityBinder {
 			);
 		}
 		if ( sqlDelete != null ) {
-			persistentClass.setCustomSQLDelete( sqlDelete.sql(), sqlDelete.callable(), sqlDelete.keepReference(),
+			persistentClass.setCustomSQLDelete(
+					sqlDelete.sql(),
+					sqlDelete.callable(),
+					sqlDelete.soft(),
 					ExecuteUpdateResultCheckStyle.fromExternalName( sqlDelete.check().toString().toLowerCase(Locale.ROOT) )
 			);
 		}

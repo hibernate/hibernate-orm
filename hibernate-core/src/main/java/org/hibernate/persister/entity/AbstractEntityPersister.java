@@ -4740,8 +4740,9 @@ public abstract class AbstractEntityPersister
 		return entityMetamodel.isVersioned();
 	}
 
-	public boolean keepReference(){
-		return entityMetamodel.keepReference();
+	@Override
+	public boolean isSoftDelete(){
+		return entityMetamodel.isSoftDelete();
 	}
 
 	public boolean isIdentifierAssignedByInsert() {

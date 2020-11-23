@@ -282,9 +282,9 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 		new ForeignKeys.Nullifier(  entity, true, false, session, persister ).nullifyTransientReferences( entityEntry.getDeletedState() );
 		new Nullability( session ).checkNullability( entityEntry.getDeletedState(), persister, Nullability.NullabilityCheckType.DELETE );
 
-//		if ( persister.getClassMetadata() != null && !persister.getClassMetadata().keepReference() ) {
+		if ( persister.getClassMetadata() != null && ! persister.getClassMetadata().isSoftDelete() ) {
 			persistenceContext.registerNullifiableEntityKey( key );
-//		}
+		}
 
 		if ( isOrphanRemovalBeforeUpdates ) {
 			// TODO: The removeOrphan concept is a temporary "hack" for HHH-6484.  This should be removed once action/task

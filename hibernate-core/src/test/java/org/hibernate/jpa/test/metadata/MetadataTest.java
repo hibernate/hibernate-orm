@@ -269,6 +269,13 @@ public class MetadataTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	public void testEmptyPluralAttributeSet() throws Exception {
+		final EntityType<Feline> entityType = entityManagerFactory().getMetamodel().entity( Feline.class );
+		final Set<PluralAttribute<? super Feline, ?, ?>> attributes = entityType.getPluralAttributes();
+		assertEquals( 0, attributes.size() );
+	}
+
+	@Test
 	public void testElementCollection() throws Exception {
 		final EntityType<House> entityType = entityManagerFactory().getMetamodel().entity( House.class );
 		final SetAttribute<House,Room> rooms = entityType.getDeclaredSet( "rooms", Room.class );

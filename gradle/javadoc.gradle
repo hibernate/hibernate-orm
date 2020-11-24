@@ -45,7 +45,7 @@ javadoc {
             // For now, let's be compatible with JDK 11.0.3+. We can improve on it if people
             // complain they cannot build with JDK 11.0.0, 11.0.1 and 11.0.2.
             System.out.println("Forcing Javadoc in Java 8 compatible mode");
-            options.source = project.baselineJavaVersion
+            options.source = gradle.ext.baselineJavaVersion
         }
 
         addStringOption( 'Xdoclint:none', '-quiet' )

@@ -152,8 +152,8 @@ public class EntityResultTests extends AbstractUsageTest {
 							"select id as id_alias,"
 							+ "   type_code as type_code_alias,"
 							+ "   root_name as root_name_alias,"
-							+ "   subtype1_name as subtype1_name_alias,"
-							+ "   subtype2_name as subtype2_name_alias"
+							+ "   subtype1_name as sub_type1_name_alias,"
+							+ "   subtype2_name as sub_type2_name_alias"
 							+ " from discriminated_entity";
 
 					final List<DiscriminatedRoot> results = session.createNativeQuery( qryString, "root-explicit" ).list();

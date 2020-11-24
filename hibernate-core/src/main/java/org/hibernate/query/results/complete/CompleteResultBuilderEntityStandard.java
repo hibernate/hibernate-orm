@@ -30,19 +30,19 @@ public class CompleteResultBuilderEntityStandard implements CompleteResultBuilde
 	private final EntityMappingType entityDescriptor;
 	private final LockMode lockMode;
 	private final ResultBuilderBasicValued discriminatorResultBuilder;
-	private final HashMap<String, FetchBuilder> fetchBuilderMap;
+	private final HashMap<String, FetchBuilder> explicitFetchBuilderMap;
 
 	public CompleteResultBuilderEntityStandard(
 			NavigablePath navigablePath,
 			EntityMappingType entityDescriptor,
 			LockMode lockMode,
 			ResultBuilderBasicValued discriminatorResultBuilder,
-			HashMap<String, FetchBuilder> fetchBuilderMap) {
+			HashMap<String, FetchBuilder> explicitFetchBuilderMap) {
 		this.navigablePath = navigablePath;
 		this.entityDescriptor = entityDescriptor;
 		this.lockMode = lockMode;
 		this.discriminatorResultBuilder = discriminatorResultBuilder;
-		this.fetchBuilderMap = fetchBuilderMap;
+		this.explicitFetchBuilderMap = explicitFetchBuilderMap;
 	}
 
 	@Override
@@ -62,41 +62,49 @@ public class CompleteResultBuilderEntityStandard implements CompleteResultBuilde
 			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState domainResultCreationState) {
 		final DomainResultCreationStateImpl impl = ResultsHelper.impl( domainResultCreationState );
+		impl.disallowPositionalSelections();
 
-		// we just want it added to the registry
-		impl.getFromClauseAccess().resolveTableGroup(
-				navigablePath,
-				np -> entityDescriptor.createRootTableGroup(
-						navigablePath,
-						null,
-						false,
-						lockMode,
-						() -> predicate -> {},
-						impl,
-						impl.getCreationContext()
-				)
-		);
+		impl.pushExplicitFetchMementoResolver( explicitFetchBuilderMap::get );
 
-		final BasicResult<?> discriminatorResult;
-		if ( discriminatorResultBuilder != null ) {
-			discriminatorResult = discriminatorResultBuilder.buildResult(
-					jdbcResultsMetadata,
-					resultPosition,
-					legacyFetchResolver,
+		try {
+			// we just want it added to the registry
+			impl.getFromClauseAccess().resolveTableGroup(
+					navigablePath,
+					np -> entityDescriptor.createRootTableGroup(
+							navigablePath,
+							null,
+							false,
+							lockMode,
+							() -> predicate -> {},
+							impl,
+							impl.getCreationContext()
+					)
+			);
+
+			final BasicResult<?> discriminatorResult;
+			if ( discriminatorResultBuilder != null ) {
+				discriminatorResult = discriminatorResultBuilder.buildResult(
+						jdbcResultsMetadata,
+						resultPosition,
+						legacyFetchResolver,
+						domainResultCreationState
+				);
+			}
+			else {
+				discriminatorResult = null;
+			}
+
+			return new EntityResultImpl(
+					navigablePath,
+					entityDescriptor,
+					null,
+					lockMode,
+					discriminatorResult,
 					domainResultCreationState
 			);
 		}
-		else {
-			discriminatorResult = null;
+		finally {
+			impl.popExplicitFetchMementoResolver();
 		}
-
-		return new EntityResultImpl(
-				navigablePath,
-				entityDescriptor,
-				null,
-				lockMode,
-				discriminatorResult,
-				domainResultCreationState
-		);
 	}
 }

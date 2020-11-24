@@ -6,6 +6,8 @@
  */
 package org.hibernate;
 
+import java.util.function.BiFunction;
+
 /**
  * Hibernate often deals with compound names/paths.  This interface defines a standard way of interacting with them
  *
@@ -20,5 +22,16 @@ public interface DotIdentifierSequence {
 
 	default boolean isRoot() {
 		return getParent() == null;
+	}
+
+	default <T> T resolve(T base, BiFunction<T, String, T> resolver) {
+		final T result;
+		if ( getParent() == null ) {
+			result = base;
+		}
+		else {
+			result = resolver.apply( getParent().resolve( base, resolver ), getLocalName() );
+		}
+		return result;
 	}
 }

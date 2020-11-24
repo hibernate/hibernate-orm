@@ -28,7 +28,7 @@ import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.query.internal.FetchMementoJpa;
+import org.hibernate.query.internal.FetchMementoBasicStandard;
 import org.hibernate.query.internal.ModelPartResultMementoBasicImpl;
 import org.hibernate.query.internal.NamedResultSetMappingMementoImpl;
 import org.hibernate.query.internal.ResultMementoBasicStandard;
@@ -41,6 +41,7 @@ import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.named.ResultMemento;
 import org.hibernate.query.named.ResultMementoBasic;
 import org.hibernate.query.named.ResultMementoInstantiation.ArgumentMemento;
+import org.hibernate.query.results.complete.CompleteResultBuilderBasicModelPart;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -395,7 +396,20 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 
 		@Override
 		public FetchMemento resolve(ResultSetMappingResolutionContext resolutionContext) {
-			return new FetchMementoJpa( navigablePath, relativeFetchPath );
+			final RuntimeMetamodels runtimeMetamodels = resolutionContext.getSessionFactory().getRuntimeMetamodels();
+			final EntityMappingType entityMapping = runtimeMetamodels.getEntityMappingType( entityName );
+
+			final ModelPart subPart = entityMapping.resolveSubPart( navigablePath );
+			if ( subPart instanceof BasicValuedModelPart ) {
+				assert columnNames.size() == 1;
+				final BasicValuedModelPart basicPart = (BasicValuedModelPart) subPart;
+
+				return new FetchMementoBasicStandard( navigablePath, basicPart, columnNames.get( 0 ) );
+			}
+			throw new NotYetImplementedFor6Exception(
+					"Only support for basic-valued model-parts have been implemented : " + relativeFetchPath
+							+ " [" + subPart + "]"
+			);
 		}
 	}
 }

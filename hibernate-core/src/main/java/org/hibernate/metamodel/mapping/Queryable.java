@@ -8,6 +8,7 @@ package org.hibernate.metamodel.mapping;
 
 import java.util.function.Consumer;
 
+import org.hibernate.DotIdentifierSequence;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 
 /**
@@ -32,6 +33,10 @@ public interface Queryable extends ModelPart {
 	 * the JpaCompliance.  See {@link SessionFactoryOptions#getJpaCompliance}
 	 */
 	ModelPart findSubPart(String name, EntityMappingType treatTargetType);
+
+	default ModelPart resolveSubPart(DotIdentifierSequence path) {
+		return path.resolve( (ModelPart) this, (part, name) -> ( (Queryable) part ).findSubPart( name, null ) );
+	}
 
 	/**
 	 * For an entity, this form allows for Hibernate's "implicit treat" support -

@@ -219,6 +219,7 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetchable;
+import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.entity.internal.EntityResultImpl;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tuple.GenerationTiming;
@@ -6751,11 +6752,14 @@ public abstract class AbstractEntityPersister
 	public void visitKeyFetchables(
 			Consumer<Fetchable> fetchableConsumer,
 			EntityMappingType treatTargetType) {
-//		if ( getIdentifierMapping() instanceof FetchableContainer ) {
+//		final EntityIdentifierMapping identifierMapping = getIdentifierMapping();
+//		if ( identifierMapping instanceof FetchableContainer ) {
 //			// essentially means the entity has a composite id - ask the embeddable to visit its fetchables
-//			( (FetchableContainer) getIdentifierMapping() ).visitFetchables( fetchableConsumer, treatTargetType );
+//			( (FetchableContainer) identifierMapping ).visitFetchables( fetchableConsumer, treatTargetType );
 //		}
-		// otherwise, nothing to do
+//		else {
+//			fetchableConsumer.accept( (Fetchable) identifierMapping );
+//		}
 	}
 
 	@Override

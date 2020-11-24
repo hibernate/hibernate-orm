@@ -110,7 +110,7 @@ public class StandardPojoEntityRepresentationStrategy implements EntityRepresent
 
 			if ( bootDescriptorIdentifier != null && bootDescriptorIdentifier instanceof Component ) {
 				mapsIdRepresentationStrategy = new StandardPojoEmbeddableRepresentationStrategy(
-						bootDescriptor.getDeclaredIdentifierMapper(),
+						bootDescriptor.getIdentifierMapper(),
 						creationContext
 				);
 			}

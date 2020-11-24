@@ -6,7 +6,7 @@
  */
 
 //$Id$
-package org.hibernate.test.annotations.identifiercollection;
+package org.hibernate.orm.test.annotations.identifiercollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;

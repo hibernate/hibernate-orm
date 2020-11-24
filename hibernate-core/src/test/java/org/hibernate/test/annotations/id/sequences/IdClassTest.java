@@ -6,41 +6,40 @@
  */
 package org.hibernate.test.annotations.id.sequences;
 
-import org.junit.Test;
-
-import org.hibernate.Session;
-import org.hibernate.Transaction;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.test.annotations.id.sequences.entities.Location;
 import org.hibernate.test.annotations.id.sequences.entities.Tower;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
-import static org.junit.Assert.assertNotNull;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author Emmanuel Bernard
  */
 @SuppressWarnings("unchecked")
-public class IdClassTest extends BaseCoreFunctionalTestCase {
+@DomainModel(annotatedClasses = Tower.class)
+@SessionFactory
+public class IdClassTest {
+
 	@Test
-	public void testIdClassInSuperclass() throws Exception {
+	public void testIdClassInSuperclass(SessionFactoryScope scope) {
 		Tower tower = new Tower();
 		tower.latitude = 10.3;
 		tower.longitude = 45.4;
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
-		s.persist( tower );
-		s.flush();
-		s.clear();
-		Location loc = new Location();
-		loc.latitude = tower.latitude;
-		loc.longitude = tower.longitude;
-		assertNotNull( s.get( Tower.class, loc ) );
-		tx.rollback();
-		s.close();
-	}
 
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] { Tower.class };
+		scope.inTransaction(
+				session -> {
+					session.persist( tower );
+					session.flush();
+					session.clear();
+					Location loc = new Location();
+					loc.latitude = tower.latitude;
+					loc.longitude = tower.longitude;
+					assertNotNull( session.get( Tower.class, loc ) );
+				}
+		);
 	}
 }

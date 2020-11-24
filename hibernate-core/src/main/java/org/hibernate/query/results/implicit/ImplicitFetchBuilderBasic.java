@@ -11,6 +11,7 @@ import java.util.function.BiFunction;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.ConvertibleModelPart;
+import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.ResultsHelper;
@@ -71,6 +72,14 @@ public class ImplicitFetchBuilderBasic implements ImplicitFetchBuilder {
 						.getTypeConfiguration()
 		);
 
+		final BasicValueConverter valueConverter;
+		if ( fetchable instanceof ConvertibleModelPart ) {
+			valueConverter = ( (ConvertibleModelPart) fetchable ).getValueConverter();
+		}
+		else {
+			valueConverter = null;
+		}
+
 		return new BasicFetch<>(
 				valuesArrayPosition,
 				parent,
@@ -78,7 +87,7 @@ public class ImplicitFetchBuilderBasic implements ImplicitFetchBuilder {
 				fetchable,
 				// todo (6.0) - we don't know
 				true,
-				( (ConvertibleModelPart) fetchable ).getValueConverter(),
+				valueConverter,
 				FetchTiming.IMMEDIATE,
 				domainResultCreationState
 		);

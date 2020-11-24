@@ -6,12 +6,17 @@
  */
 package org.hibernate.query.results.implicit;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.results.Builders;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
+import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.SqlSelectionImpl;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.ast.SqlAstJoinType;
@@ -35,12 +40,36 @@ import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnRefere
 public class ImplicitFetchBuilderEmbeddable implements ImplicitFetchBuilder {
 	private final NavigablePath fetchPath;
 	private final EmbeddableValuedFetchable fetchable;
+	private final Map<NavigablePath, FetchBuilder> fetchBuilders;
 
 	public ImplicitFetchBuilderEmbeddable(
 			NavigablePath fetchPath,
-			EmbeddableValuedFetchable fetchable) {
+			EmbeddableValuedFetchable fetchable,
+			DomainResultCreationState creationState) {
 		this.fetchPath = fetchPath;
 		this.fetchable = fetchable;
+		final DomainResultCreationStateImpl creationStateImpl = impl( creationState );
+		final NavigablePath relativePath = creationStateImpl.getCurrentRelativePath();
+		final Function<String, FetchBuilder> fetchBuilderResolver = creationStateImpl.getCurrentExplicitFetchMementoResolver();
+		final Map<NavigablePath, FetchBuilder> fetchBuilders = new LinkedHashMap<>( fetchable.getNumberOfFetchables() );
+		fetchable.visitFetchables(
+				subFetchable -> {
+					final NavigablePath subFetchPath = relativePath.append( subFetchable.getFetchableName() );
+					final FetchBuilder explicitFetchBuilder = fetchBuilderResolver
+							.apply( subFetchPath.getFullPath() );
+					if ( explicitFetchBuilder == null ) {
+						fetchBuilders.put(
+								subFetchPath,
+								Builders.implicitFetchBuilder( fetchPath, subFetchable, creationStateImpl )
+						);
+					}
+					else {
+						fetchBuilders.put( subFetchPath, explicitFetchBuilder );
+					}
+				},
+				null
+		);
+		this.fetchBuilders = fetchBuilders;
 	}
 
 	@Override
@@ -70,30 +99,7 @@ public class ImplicitFetchBuilderEmbeddable implements ImplicitFetchBuilder {
 				}
 		);
 
-		fetchable.forEachSelection(
-				(columnIndex, selection) -> {
-					final TableReference tableReference = tableGroup.getTableReference( selection.getContainingTableExpression() );
-
-					final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( selection.getSelectionExpression() );
-					final int valuesArrayPosition = jdbcPositionToValuesArrayPosition( jdbcPosition );
-
-					final Expression expression = creationStateImpl.resolveSqlExpression(
-							createColumnReferenceKey( tableReference, selection.getSelectionExpression() ),
-							processingState -> new SqlSelectionImpl(
-									valuesArrayPosition,
-									selection.getJdbcMapping()
-							)
-					);
-
-					creationStateImpl.resolveSqlSelection(
-							expression,
-							selection.getJdbcMapping().getJavaTypeDescriptor(),
-							creationStateImpl.getSessionFactory().getTypeConfiguration()
-					);
-				}
-		);
-
-		return fetchable.generateFetch(
+		final Fetch fetch = fetchable.generateFetch(
 				parent,
 				fetchPath,
 				FetchTiming.IMMEDIATE,
@@ -102,6 +108,18 @@ public class ImplicitFetchBuilderEmbeddable implements ImplicitFetchBuilder {
 				null,
 				creationState
 		);
+		final FetchParent fetchParent = (FetchParent) fetch;
+		fetchBuilders.forEach(
+				(subFetchPath, fetchBuilder) -> fetchBuilder.buildFetch(
+						fetchParent,
+						subFetchPath,
+						jdbcResultsMetadata,
+						legacyFetchResolver,
+						creationState
+				)
+		);
+
+		return fetch;
 	}
 
 	@Override

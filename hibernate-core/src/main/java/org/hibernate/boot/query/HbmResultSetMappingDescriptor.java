@@ -26,11 +26,14 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryScalarReturnType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmResultSetMappingType;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.internal.FetchMementoBasicStandard;
 import org.hibernate.query.internal.FetchMementoHbmStandard;
 import org.hibernate.query.internal.FetchMementoHbmStandard.FetchParentMemento;
 import org.hibernate.query.internal.ModelPartResultMementoBasicImpl;
@@ -538,9 +541,10 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 					);
 				}
 				navigablePath = fetchParentMemento.getNavigablePath().append( propertyPathParts[ i ] );
+				fetchable = (Fetchable) ( (FetchableContainer) fetchable ).findSubPart( propertyPathParts[i], null );
 			}
 
-			return new FetchMementoHbmStandard( navigablePath, fetchParentMemento, fetchable );
+			return new FetchMementoBasicStandard( navigablePath, (BasicValuedModelPart) fetchable, columnAliases.get( 0 ) );
 		}
 
 		@Override

@@ -20,7 +20,9 @@ import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.mapping.AssociationKey;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.internal.NonAggregatedIdentifierMappingImpl;
 import org.hibernate.query.EntityIdentifierNavigablePath;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
@@ -39,7 +41,9 @@ import org.hibernate.sql.results.ResultsLogger;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
+import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
 import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -113,8 +117,16 @@ public class DomainResultCreationStateImpl
 		return jdbcResultsMetadata;
 	}
 
+	public NavigablePath getCurrentRelativePath() {
+		return relativePathStack.getCurrent();
+	}
+
 	public void pushExplicitFetchMementoResolver(Function<String, FetchBuilder> resolver) {
 		fetchBuilderResolverStack.push( resolver );
+	}
+
+	public Function<String, FetchBuilder> getCurrentExplicitFetchMementoResolver() {
+		return fetchBuilderResolverStack.getCurrent();
 	}
 
 	public Function<String, FetchBuilder> popExplicitFetchMementoResolver() {
@@ -299,75 +311,71 @@ public class DomainResultCreationStateImpl
 
 		final List<Fetch> fetches = CollectionHelper.arrayList( fetchableContainer.getNumberOfFetchables() );
 
+		final Consumer<Fetchable> fetchableConsumer = fetchable -> {
+			final String fetchableName = fetchable.getFetchableName();
+			final NavigablePath fetchPath = fetchParent.getNavigablePath().append( fetchableName );
+			final NavigablePath relativePath = relativePathStack.isEmpty()
+					? new NavigablePath( fetchableName )
+					: relativePathStack.getCurrent().append( fetchableName );
+
+			relativePathStack.push( relativePath );
+			try {
+				final FetchBuilder explicitFetchBuilder = fetchBuilderResolverStack
+						.getCurrent()
+						.apply( relativePath.getFullPath() );
+				final FetchBuilder fetchBuilder = explicitFetchBuilder != null
+						? explicitFetchBuilder
+						: Builders.implicitFetchBuilder( fetchPath, fetchable, this );
+				final Fetch fetch = fetchBuilder.buildFetch(
+						fetchParent,
+						fetchPath,
+						jdbcResultsMetadata,
+						(s, s2) -> {
+							throw new UnsupportedOperationException();
+						},
+						this
+				);
+				fetches.add( fetch );
+			}
+			finally {
+				relativePathStack.pop();
+			}
+		};
+
 		boolean previous = this.processingKeyFetches;
 		this.processingKeyFetches = true;
 
-		if ( fetchableContainer instanceof EntityValuedFetchable ) {
-			final EntityValuedFetchable entityValuedFetchable = (EntityValuedFetchable) fetchableContainer;
+		if ( fetchableContainer instanceof EntityValuedModelPart ) {
+			final EntityValuedModelPart entityValuedFetchable = (EntityValuedModelPart) fetchableContainer;
 			final EntityIdentifierMapping identifierMapping = entityValuedFetchable.getEntityMappingType().getIdentifierMapping();
-			relativePathStack.push(
-					new EntityIdentifierNavigablePath(
-							relativePathStack.getCurrent(),
-							attributeName( identifierMapping )
-					)
-			);
+			final boolean idClass = identifierMapping instanceof NonAggregatedIdentifierMappingImpl;
+			if ( idClass ) {
+				relativePathStack.push(
+						new EntityIdentifierNavigablePath(
+								relativePathStack.getCurrent(),
+								attributeName( identifierMapping )
+						)
+				);
+			}
 
 			try {
-				entityValuedFetchable.getEntityMappingType().visitKeyFetchables(
-						fetchable -> {
-							// depends whether these fetchables are the identifier mapping or
-							// the identifier sub-attribuates (if composite)
-							final String fetchableName = fetchable.getFetchableName();
-							final NavigablePath fetchPath = fetchParent.getNavigablePath().append( fetchableName );
-							final NavigablePath relativePath = relativePathStack.isEmpty()
-									? new NavigablePath( fetchableName )
-									: relativePathStack.getCurrent().append( fetchableName );
-						},
-						null
-				);
+				if ( identifierMapping instanceof FetchableContainer ) {
+					// essentially means the entity has a composite id - ask the embeddable to visit its fetchables
+					( (FetchableContainer) identifierMapping ).visitFetchables( fetchableConsumer, null );
+				}
+				else {
+					fetchableConsumer.accept( (Fetchable) identifierMapping );
+				}
 			}
 			finally {
 				this.processingKeyFetches = previous;
-				this.relativePathStack.pop();
+				if ( idClass ) {
+					this.relativePathStack.pop();
+				}
 			}
 		}
 
-
-
-		fetchableContainer.visitFetchables(
-				fetchable -> {
-					final String fetchableName = fetchable.getFetchableName();
-					final NavigablePath fetchPath = fetchParent.getNavigablePath().append( fetchableName );
-					final NavigablePath relativePath = relativePathStack.isEmpty()
-							? new NavigablePath( fetchableName )
-							: relativePathStack.getCurrent().append( fetchableName );
-
-					relativePathStack.push( relativePath );
-					try {
-						final FetchBuilder explicitFetchBuilder = fetchBuilderResolverStack
-								.getCurrent()
-								.apply( relativePath.getFullPath() );
-						final FetchBuilder fetchBuilder = explicitFetchBuilder != null
-								? explicitFetchBuilder
-								: Builders.implicitFetchBuilder( fetchPath, fetchable );
-
-						final Fetch fetch = fetchBuilder.buildFetch(
-								fetchParent,
-								fetchPath,
-								jdbcResultsMetadata,
-								(s, s2) -> {
-									throw new UnsupportedOperationException();
-								},
-								this
-						);
-						fetches.add( fetch );
-					}
-					finally {
-						relativePathStack.pop();
-					}
-				},
-				null
-		);
+		fetchableContainer.visitFetchables( fetchableConsumer, null );
 
 		return fetches;
 	}

@@ -34,6 +34,7 @@ import org.hibernate.query.results.implicit.ImplicitFetchBuilder;
 import org.hibernate.query.results.implicit.ImplicitFetchBuilderBasic;
 import org.hibernate.query.results.implicit.ImplicitFetchBuilderEmbeddable;
 import org.hibernate.query.results.implicit.ImplicitModelPartResultBuilderEntity;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
 import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
@@ -243,7 +244,10 @@ public class Builders {
 		return new ImplicitModelPartResultBuilderEntity( entityMappingType );
 	}
 
-	public static ImplicitFetchBuilder implicitFetchBuilder(NavigablePath fetchPath, Fetchable fetchable) {
+	public static ImplicitFetchBuilder implicitFetchBuilder(
+			NavigablePath fetchPath,
+			Fetchable fetchable,
+			DomainResultCreationState creationState) {
 		if ( fetchable instanceof BasicValuedModelPart ) {
 			final BasicValuedModelPart basicValuedFetchable = (BasicValuedModelPart) fetchable;
 			return new ImplicitFetchBuilderBasic( fetchPath, basicValuedFetchable );
@@ -251,7 +255,7 @@ public class Builders {
 
 		if ( fetchable instanceof EmbeddableValuedFetchable ) {
 			final EmbeddableValuedFetchable embeddableValuedFetchable = (EmbeddableValuedFetchable) fetchable;
-			return new ImplicitFetchBuilderEmbeddable( fetchPath, embeddableValuedFetchable );
+			return new ImplicitFetchBuilderEmbeddable( fetchPath, embeddableValuedFetchable, creationState );
 		}
 
 		if ( fetchable instanceof EntityValuedFetchable ) {

@@ -7,16 +7,19 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import java.util.Collection;
+import java.util.Iterator;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.internal.AbstractCompositeIdentifierMapping;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.sql.ast.Clause;
 
 /**
  * Support for {@link javax.persistence.EmbeddedId}
@@ -108,4 +111,28 @@ public class EmbeddedIdentifierMappingImpl extends AbstractCompositeIdentifierMa
 		return name;
 	}
 
+	@Override
+	public void visitDisassembledJdbcValues(
+			Object value,
+			Clause clause,
+			JdbcValuesConsumer valuesConsumer,
+			SharedSessionContractImplementor session) {
+		getEmbeddableTypeDescriptor().visitDisassembledJdbcValues( value, clause, valuesConsumer, session );
+	}
+
+	@Override
+	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+		final Collection<SingularAttributeMapping> attributeMappings = getAttributes();
+
+		Object[] result = new Object[attributeMappings.size()];
+		int i = 0;
+		final Iterator<SingularAttributeMapping> iterator = attributeMappings.iterator();
+		while ( iterator.hasNext() ) {
+			AttributeMapping mapping = iterator.next();
+			Object o = mapping.getPropertyAccess().getGetter().get( value );
+			result[i] = mapping.disassemble( o, session );
+			i++;
+		}
+		return result;
+	}
 }

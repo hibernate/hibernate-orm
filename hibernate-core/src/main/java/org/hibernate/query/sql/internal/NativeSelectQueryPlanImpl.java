@@ -8,10 +8,12 @@ package org.hibernate.query.sql.internal;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import org.hibernate.ScrollMode;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
@@ -50,14 +52,21 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 			Set<String> affectedTableNames,
 			List<QueryParameterImplementor<?>> parameterList,
 			JdbcValuesMappingProducer resultSetMapping,
-			RowTransformer<R> rowTransformer) {
+			RowTransformer<R> rowTransformer,
+			SessionFactoryImplementor sessionFactory) {
 		this.sql = sql;
-		this.affectedTableNames = affectedTableNames;
 		this.parameterList = parameterList;
 		this.resultSetMapping = resultSetMapping;
 		this.rowTransformer = rowTransformer != null
 				? rowTransformer
 				: RowTransformerPassThruImpl.instance();
+		if ( affectedTableNames == null ) {
+			affectedTableNames = new HashSet<>();
+		}
+		if ( resultSetMapping != null ) {
+			resultSetMapping.addAffectedTableNames( affectedTableNames, sessionFactory );
+		}
+		this.affectedTableNames = affectedTableNames;
 	}
 
 	@Override
@@ -96,6 +105,8 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 					}
 			);
 		}
+
+		executionContext.getSession().autoFlushIfRequired( affectedTableNames );
 
 		final JdbcSelect jdbcSelect = new JdbcSelect(
 				sql,

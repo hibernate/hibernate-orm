@@ -6,7 +6,10 @@
  */
 package org.hibernate.sql.results.jdbc.spi;
 
+import java.util.Set;
+
 import org.hibernate.Incubating;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.results.ResultSetMapping;
 
@@ -31,4 +34,9 @@ public interface JdbcValuesMappingProducer {
 	JdbcValuesMapping resolve(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			SessionFactoryImplementor sessionFactory);
+
+	default void addAffectedTableNames(Set<String> affectedTableNames, SessionFactoryImplementor sessionFactory) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
 }

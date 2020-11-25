@@ -788,6 +788,9 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				.getNativeQueryMemento( queryName );
 
 		if ( namedNativeDescriptor != null ) {
+			if( resultType == null){
+				resultType = (Class<T>) namedNativeDescriptor.getResultMappingClass();
+			}
 			NativeQueryImplementor query = namedNativeDescriptor.toQuery( this, resultType );
 			query.setComment( "dynamic native SQL query" );
 			applyQuerySettingsAndHints( query );

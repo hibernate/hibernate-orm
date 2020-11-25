@@ -6,11 +6,14 @@
  */
 package org.hibernate.query.results;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -18,7 +21,10 @@ import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -99,6 +105,19 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 		if ( previousBuilder != null ) {
 			// todo (6.0) : error?  log?  nothing?
 		}
+	}
+
+	@Override
+	public void addAffectedTableNames(Set<String> affectedTableNames, SessionFactoryImplementor sessionFactory) {
+		if ( StringHelper.isEmpty( mappingIdentifier ) ) {
+			return;
+		}
+		EntityPersister entityDescriptor = sessionFactory.getMetamodel().findEntityDescriptor( mappingIdentifier );
+		if ( entityDescriptor == null ) {
+			return;
+		}
+
+		Collections.addAll( affectedTableNames, (String[]) entityDescriptor.getQuerySpaces());
 	}
 
 	@Override

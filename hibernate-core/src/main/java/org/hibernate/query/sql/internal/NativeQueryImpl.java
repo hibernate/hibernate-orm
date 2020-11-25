@@ -208,7 +208,10 @@ public class NativeQueryImpl<R>
 			SharedSessionContractImplementor session) {
 		this(
 				memento,
-				() -> new ResultSetMappingImpl( resultJavaType.getName() ),
+				() -> {
+					final String mappingIdentifier = resultJavaType != null ? resultJavaType.getName() : null;
+					return new ResultSetMappingImpl( mappingIdentifier );
+				},
 				(resultSetMapping, querySpaceConsumer, context) -> {
 					if ( resultJavaType != null ) {
 

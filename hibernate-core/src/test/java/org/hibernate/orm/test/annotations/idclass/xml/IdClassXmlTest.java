@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  *
  * @author Hardy Ferentschik
  */
-@FailureExpected( jiraKey = "HHH-4282" )
+//@FailureExpected( jiraKey = "HHH-4282" )
 @DomainModel(
 		annotatedClasses = HabitatSpeciesLink.class,
 		xmlMappings = "org/hibernate/orm/test/annotations/idclass/xml/HabitatSpeciesLink.xml"
@@ -34,8 +34,8 @@ public class IdClassXmlTest {
 		scope.inTransaction(
 				session -> {
 					HabitatSpeciesLink link = new HabitatSpeciesLink();
-					link.setHabitatId( 1l );
-					link.setSpeciesId( 1l );
+					link.setHabitatId( 1L );
+					link.setSpeciesId( 1L );
 					session.persist( link );
 
 					Query q = session.getNamedQuery( "testQuery" );

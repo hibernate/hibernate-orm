@@ -8,12 +8,15 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.internal.AbstractCompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.AssociationKey;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.ColumnConsumer;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -49,7 +52,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, ModelPart {
 
-	private final EmbeddableValuedModelPart mappingType;
+	private final AbstractCompositeIdentifierMapping mappingType;
 	private final String keyColumnContainingTable;
 	private final List<String> keyColumnExpressions;
 	private final String targetColumnContainingTable;
@@ -170,7 +173,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 		final TableReference tableReference = tableGroup.resolveTableReference( keyColumnContainingTable );
 		final String identificationVariable = tableReference.getIdentificationVariable();
 		int size = keyColumnExpressions.size();
-		List<SqlSelection> sqlSelections = new ArrayList<>(size);
+		List<SqlSelection> sqlSelections = new ArrayList<>( size );
 		for ( int i = 0; i < size; i++ ) {
 			final String columnExpression = keyColumnExpressions.get( i );
 			final JdbcMapping jdbcMapping = jdbcMappings.get( i );
@@ -395,7 +398,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 		final TableReference tableReference = tableGroup.resolveTableReference( keyColumnContainingTable );
 		final String identificationVariable = tableReference.getIdentificationVariable();
 		int size = keyColumnExpressions.size();
-		List<SqlSelection> sqlSelections = new ArrayList<>(size);
+		List<SqlSelection> sqlSelections = new ArrayList<>( size );
 		for ( int i = 0; i < size; i++ ) {
 			final String columnExpression = keyColumnExpressions.get( i );
 			final JdbcMapping jdbcMapping = jdbcMappings.get( i );
@@ -442,5 +445,19 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 	public void visitJdbcTypes(
 			Consumer<JdbcMapping> action, Clause clause, TypeConfiguration typeConfiguration) {
 		mappingType.visitJdbcTypes( action, clause, typeConfiguration );
+	}
+
+	@Override
+	public void visitDisassembledJdbcValues(
+			Object value,
+			Clause clause,
+			JdbcValuesConsumer valuesConsumer,
+			SharedSessionContractImplementor session) {
+		mappingType.visitDisassembledJdbcValues( value, clause, valuesConsumer, session );
+	}
+
+	@Override
+	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+		return mappingType.disassemble( value, session );
 	}
 }

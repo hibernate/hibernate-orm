@@ -7,6 +7,7 @@
 package org.hibernate.sql.results.jdbc.internal;
 
 import java.util.List;
+import java.util.Set;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -31,6 +32,11 @@ public class JdbcValuesMappingProducerStandard implements JdbcValuesMappingProdu
 	public JdbcValuesMappingProducerStandard(List<SqlSelection> sqlSelections, List<DomainResult> domainResults) {
 		resolvedMapping = new StandardJdbcValuesMapping( sqlSelections, domainResults );
 	}
+
+//	@Override
+//	public void addAffectedTableNames(Set<String> affectedTableNames, SessionFactoryImplementor sessionFactory) {
+//
+//	}
 
 	@Override
 	public JdbcValuesMapping resolve(

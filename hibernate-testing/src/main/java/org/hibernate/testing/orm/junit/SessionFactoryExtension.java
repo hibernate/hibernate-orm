@@ -20,6 +20,7 @@ import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.StringHelper;
@@ -29,6 +30,7 @@ import org.hibernate.tool.schema.Action;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator.ActionGrouping;
 
+import org.hibernate.testing.junit4.Helper;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.TestExecutionExceptionHandler;
@@ -108,7 +110,7 @@ public class SessionFactoryExtension
 						final SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) sessionFactoryBuilder.build();
 
 						if ( sessionFactoryConfig.exportSchema() ) {
-							prepareSchemaExport( sessionFactory, model );
+							prepareSchemaExport( sessionFactory, model, sessionFactoryConfig.createSecondarySchemas() );
 						}
 
 						return sessionFactory;
@@ -140,7 +142,8 @@ public class SessionFactoryExtension
 
 	private static void prepareSchemaExport(
 			SessionFactoryImplementor sessionFactory,
-			MetadataImplementor model) {
+			MetadataImplementor model,
+			boolean createSecondarySchemas) {
 		final Map<String, Object> baseProperties = sessionFactory.getProperties();
 
 		final ActionGrouping actions = ActionGrouping.interpret( baseProperties );
@@ -154,9 +157,14 @@ public class SessionFactoryExtension
 		final HashMap settings = new HashMap<>( baseProperties );
 		//noinspection unchecked
 		settings.put( AvailableSettings.HBM2DDL_DATABASE_ACTION, Action.CREATE_DROP );
-
+		if ( createSecondarySchemas ) {
+			if ( !( model.getDatabase().getDialect().canCreateSchema() ) ) {
+				throw new UnsupportedOperationException(
+						model.getDatabase().getDialect() + " does not support schema creation" );
+			}
+			settings.put( AvailableSettings.HBM2DDL_CREATE_SCHEMAS, true );
+		}
 		final StandardServiceRegistry serviceRegistry = model.getMetadataBuildingOptions().getServiceRegistry();
-
 
 		SchemaManagementToolCoordinator.process(
 				model,
@@ -171,6 +179,8 @@ public class SessionFactoryExtension
 						}
 				)
 		);
+
+
 	}
 
 	@Override

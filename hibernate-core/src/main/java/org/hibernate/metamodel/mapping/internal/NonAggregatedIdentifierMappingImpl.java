@@ -48,8 +48,8 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 			StateArrayContributorMetadataAccess attributeMetadataAccess,
 			String rootTableName,
 			String[] rootTableKeyColumnNames,
-			Component bootCidDescriptor,
 			Component bootIdClassDescriptor,
+			Component bootCidDescriptor,
 			MappingModelCreationProcess creationProcess) {
 		// todo (6.0) : handle MapsId
 		super(
@@ -78,9 +78,6 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 
 	@Override
 	public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
-		if ( entity instanceof HibernateProxy ) {
-			return ( (HibernateProxy) entity ).getHibernateLazyInitializer().getIdentifier();
-		}
 		final Serializable disassemble = bootCidDescriptor.getType().disassemble( entity, session, null );
 		return bootIdClassDescriptor.getType().assemble( disassemble, session, null );
 	}

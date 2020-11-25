@@ -90,7 +90,7 @@ public class DomainModelExtension
 				final MetadataSources metadataSources = new MetadataSources( serviceRegistry );
 
 				for ( String annotatedPackageName : domainModelAnnotation.annotatedPackageNames() ) {
-					metadataSources.addPackage( JavaHelper.getPackageFor( annotatedPackageName ) );
+					metadataSources.addPackage( annotatedPackageName );
 				}
 
 				for ( StandardDomainModel standardDomainModel : domainModelAnnotation.standardModels() ) {

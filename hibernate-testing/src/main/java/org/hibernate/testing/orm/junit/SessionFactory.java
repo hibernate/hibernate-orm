@@ -44,6 +44,8 @@ public @interface SessionFactory {
 	boolean generateStatistics() default false;
 	boolean exportSchema() default true;
 
+	boolean createSecondarySchemas() default false;
+
 	Class<? extends Interceptor> interceptorClass() default Interceptor.class;
 
 	Class<? extends StatementInspector> statementInspectorClass() default StatementInspector.class;

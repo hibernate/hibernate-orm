@@ -153,10 +153,10 @@ public class MappingModelCreationHelper {
 			PersistentClass bootEntityDescriptor,
 			BiConsumer<String,SingularAttributeMapping> idSubAttributeConsumer,
 			MappingModelCreationProcess creationProcess) {
-		final Component bootCompositeDescriptor = (Component) bootEntityDescriptor.getIdentifier();
+		final Component bootIdClassComponent = (Component) bootEntityDescriptor.getIdentifier();
 
 		final EmbeddableMappingType embeddableMappingType = EmbeddableMappingType.from(
-				bootCompositeDescriptor,
+				bootIdClassComponent,
 				cidType,
 				attributeMappingType -> {
 					final SessionFactoryImplementor sessionFactory = creationProcess.getCreationContext().getSessionFactory();
@@ -167,15 +167,19 @@ public class MappingModelCreationHelper {
 					final StateArrayContributorMetadataAccess attributeMetadataAccess = getStateArrayContributorMetadataAccess(
 							propertyAccess
 					);
-					final Component idClass = bootEntityDescriptor.getIdentifierMapper();
-					Component bootIdDescriptor = bootEntityDescriptor.getDeclaredIdentifierMapper();
-					if ( bootIdDescriptor == null ) {
-						bootIdDescriptor = (Component) bootEntityDescriptor.getIdentifier();
-					}
-					final List<SingularAttributeMapping> idAttributeMappings = new ArrayList<>( bootIdDescriptor.getPropertySpan() );
+					Component bootComponentDescriptor = bootEntityDescriptor.getIdentifierMapper();
+					final List<SingularAttributeMapping> idAttributeMappings;
+					final Iterator<Property> bootIdSubPropertyItr;
+					if ( bootComponentDescriptor == null ) {
+						idAttributeMappings = new ArrayList<>( bootIdClassComponent.getPropertySpan() );
+						bootIdSubPropertyItr = bootIdClassComponent.getPropertyIterator();
 
-					//noinspection unchecked
-					final Iterator<Property> bootIdSubPropertyItr = bootIdDescriptor.getPropertyIterator();
+					}
+					else {
+						idAttributeMappings = new ArrayList<>( bootComponentDescriptor.getPropertySpan() );
+						bootIdSubPropertyItr = bootComponentDescriptor.getPropertyIterator();
+					}
+
 					int columnsConsumedSoFar = 0;
 
 					while ( bootIdSubPropertyItr.hasNext() ) {
@@ -245,7 +249,7 @@ public class MappingModelCreationHelper {
 						}
 
 						idAttributeMappings.add( idSubAttribute );
-						if ( idClass == null ) {
+						if ( bootComponentDescriptor == null ) {
 							idSubAttributeConsumer.accept( idSubAttribute.getAttributeName(), idSubAttribute );
 						}
 					}
@@ -257,8 +261,8 @@ public class MappingModelCreationHelper {
 							attributeMetadataAccess,
 							rootTableName,
 							rootTableKeyColumnNames,
-							bootIdDescriptor,
-							bootCompositeDescriptor,
+							bootIdClassComponent,
+							bootComponentDescriptor,
 							creationProcess
 					);
 				},

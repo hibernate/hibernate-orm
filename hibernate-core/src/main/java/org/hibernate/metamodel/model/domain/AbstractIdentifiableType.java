@@ -347,6 +347,11 @@ public abstract class AbstractIdentifiableType<J>
 		}
 
 		@Override
+		public void applyIdClassAttributes(Set idClassAttributes) {
+			applyNonAggregatedIdAttributes( idClassAttributes );
+		}
+
+		@Override
 		@SuppressWarnings("unchecked")
 		public void applyVersionAttribute(SingularPersistentAttribute versionAttribute) {
 			AbstractIdentifiableType.this.versionAttribute = versionAttribute;

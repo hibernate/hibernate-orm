@@ -1,25 +1,27 @@
 #! /bin/bash
 
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
 java -version
 ./gradlew assemble
 if [ "$RDBMS" == 'mysql' ]; then
   sudo service mysql stop
-  bash ../docker_db.sh mysql_5_7
+  bash $DIR/../docker_db.sh mysql_5_7
 elif [ "$RDBMS" == 'mysql8' ]; then
   sudo service mysql stop
-  bash ../docker_db.sh mysql_8_0
+  bash $DIR/../docker_db.sh mysql_8_0
 elif [ "$RDBMS" == 'mariadb' ]; then
   sudo service mysql stop
-  bash ../docker_db.sh mariadb
+  bash $DIR/../docker_db.sh mariadb
 elif [ "$RDBMS" == 'postgresql' ]; then
   sudo service postgres stop
-  bash ../docker_db.sh postgresql_9_5
+  bash $DIR/../docker_db.sh postgresql_9_5
 elif [ "$RDBMS" == 'db2' ]; then
-  bash ../docker_db.sh db2
+  bash $DIR/../docker_db.sh db2
 elif [ "$RDBMS" == 'oracle' ]; then
-  bash ../docker_db.sh oracle
+  bash $DIR/../docker_db.sh oracle
 elif [ "$RDBMS" == 'mssql' ]; then
-  bash ../docker_db.sh mssql
+  bash $DIR/../docker_db.sh mssql
 fi
 
-exec bash ./build.sh
+exec bash $DIR/build.sh

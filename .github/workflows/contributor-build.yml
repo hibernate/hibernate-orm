@@ -4,7 +4,7 @@
 # See https://docs.github.com/en/free-pro-team@latest/actions
 # for more information about GitHub actions.
 
-name: Hibernate ORM contributor build
+name: Hibernate ORM build
 
 on:
   push:
@@ -17,25 +17,30 @@ on:
       - 'wip/6.0'
 jobs:
   build:
-    name: Build and test on Java 8 against a wide range of DBs
+    name: Java 8
     runs-on: ubuntu-latest
+    # We want to know the test results of all matrix entries
+    continue-on-error: true
     strategy:
+      fail-fast: false
       matrix:
+        # When GitHub Actions supports it: https://github.com/actions/toolkit/issues/399
+        # We will use the experimental flag as indicator whether a failure should cause a workflow failure
         include:
           - rdbms: h2
-            jdk: 8
+            experimental: false
           - rdbms: derby
-            jdk: 8
+            experimental: true
           - rdbms: mariadb
-            jdk: 8
+            experimental: true
           - rdbms: postgresql
-            jdk: 8
+            experimental: true
           - rdbms: oracle
-            jdk: 8
+            experimental: true
           - rdbms: db2
-            jdk: 8
+            experimental: true
           - rdbms: mssql
-            jdk: 8
+            experimental: true
     steps:
       - uses: actions/checkout@v2
       - name: Set up Java 8
@@ -60,20 +65,21 @@ jobs:
       - name: Run build script
         env:
           RDBMS: ${{ matrix.rdbms }}
-          JDK: ${{ matrix.jdk }}
-        run: ./ci/build-guthub.sh
+        run: ./ci/build-github.sh
         shell: bash
       - name: Upload test reports (if Gradle failed)
         uses: actions/upload-artifact@v2
         if: failure()
         with:
-          name: test-reports-java8
+          name: test-reports-java8-${{ matrix.rdbms }}
           path: './**/target/reports/tests/test/'
       - name: Omit produced artifacts from build cache
         run: ./ci/before-cache.sh
   build11:
-    name: Build and test on Java 11
+    name: Java 11
     runs-on: ubuntu-latest
+    # We want to know the test results of all matrix entries
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v2
       - name: Set up Java 11
@@ -96,9 +102,7 @@ jobs:
           # refresh cache every month to avoid unlimited growth
           key: maven-localrepo-${{ steps.get-date.outputs.yearmonth }}
       - name: Run build script
-        env:
-          JDK: 11
-        run: ./ci/build-guthub.sh
+        run: ./ci/build-github.sh
         shell: bash
       - name: Upload test reports (if Gradle failed)
         uses: actions/upload-artifact@v2

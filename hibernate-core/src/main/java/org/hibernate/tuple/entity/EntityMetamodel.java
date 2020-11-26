@@ -169,7 +169,8 @@ public class EntityMetamodel implements Serializable {
 					persistentClass,
 					idAttributeNames,
 					nonAggregatedCidMapper,
-					sessionFactoryOptions.isEnhancementAsProxyEnabled()
+					sessionFactoryOptions.isEnhancementAsProxyEnabled(),
+					sessionFactoryOptions.isCollectionsInDefaultFetchGroupEnabled()
 			);
 		}
 		else {

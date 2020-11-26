@@ -6,6 +6,8 @@
  */
 package org.hibernate.dialect;
 
+import java.time.Duration;
+
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorMariaDBDatabaseImpl;
@@ -72,7 +74,7 @@ public class MariaDB103Dialect extends MariaDB102Dialect {
 		}
 
 		if ( timeout > 0 ) {
-			return getForUpdateString() + " wait " + timeout;
+			return getForUpdateString() + " wait " + getLockWaitTimeoutInSeconds( timeout );
 		}
 
 		return getForUpdateString();
@@ -86,6 +88,11 @@ public class MariaDB103Dialect extends MariaDB102Dialect {
 	@Override
 	public String getForUpdateNowaitString(String aliases) {
 		return getForUpdateString( aliases ) + " nowait";
+	}
+
+	private static long getLockWaitTimeoutInSeconds(int timeoutInMilliseconds) {
+		Duration duration = Duration.ofMillis( timeoutInMilliseconds );
+		return duration.getSeconds();
 	}
 
 }

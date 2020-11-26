@@ -6,275 +6,300 @@
  */
 package org.hibernate.test.cid;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import java.math.BigDecimal;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.persistence.PersistenceException;
-
 import org.hibernate.Hibernate;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.dialect.Oracle8iDialect;
-import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.exception.SQLGrammarException;
 
-import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Gavin King
  */
-public class CompositeIdTest extends BaseCoreFunctionalTestCase {
-	@Override
-	public String[] getMappings() {
-		return new String[] { "cid/Customer.hbm.xml", "cid/Order.hbm.xml", "cid/LineItem.hbm.xml", "cid/Product.hbm.xml" };
-	}
-
-	@Test
-	public void testQuery() {
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		s.createQuery("from LineItem ol where ol.order.id.customerId = 'C111'").list();
-		t.commit();
-		s.close();
-	}
-
-	@Test
-	public void testCompositeIds() {
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		
-		Product p = new Product();
-		p.setProductId("A123");
-		p.setDescription("nipple ring");
-		p.setPrice( new BigDecimal(1.0) );
-		p.setNumberAvailable(1004);
-		s.persist(p);
-		
-		Product p2 = new Product();
-		p2.setProductId("X525");
-		p2.setDescription("nose stud");
-		p2.setPrice( new BigDecimal(3.0) );
-		p2.setNumberAvailable(105);
-		s.persist(p2);
-		
-		Customer c = new Customer();
-		c.setAddress("St Kilda Rd, MEL, 3000");
-		c.setName("Virginia");
-		c.setCustomerId("C111");
-		s.persist(c);
-		
-		Order o = new Order(c);
-		o.setOrderDate( Calendar.getInstance() );
-		LineItem li = new LineItem(o, p);
-		li.setQuantity(2);
-
-		t.commit();
-		s.close();
-		
-		s = openSession();
-		t = s.beginTransaction();
-		o = (Order) s.get( Order.class, new Order.Id("C111", 0) );
-		assertEquals( o.getTotal().intValue(), 2 );
-		o.getCustomer().getName();
-		t.commit();
-		s.close();
-
-		s = openSession();
-		t = s.beginTransaction();
-		s.createQuery("from Customer c left join fetch c.orders o left join fetch o.lineItems li left join fetch li.product p").list();
-		t.commit();
-		s.close();
-		
-		s = openSession();
-		t = s.beginTransaction();
-		s.createQuery("from Order o left join fetch o.lineItems li left join fetch li.product p").list();
-		t.commit();
-		s.close();
-		
-		s = openSession();
-		t = s.beginTransaction();
-		Iterator iter = s.createQuery("select o.id, li.id from Order o join o.lineItems li").list().iterator();
-		while ( iter.hasNext() ) {
-			Object[] stuff = (Object[]) iter.next();
-			assertTrue(stuff.length==2);
+@DomainModel(
+		xmlMappings = {
+				"org/hibernate/test/cid/Customer.hbm.xml",
+				"org/hibernate/test/cid/Order.hbm.xml",
+				"org/hibernate/test/cid/LineItem.hbm.xml",
+				"org/hibernate/test/cid/Product.hbm.xml"
 		}
-		iter = s.createQuery("from Order o join o.lineItems li").list().iterator();
-		while ( iter.hasNext() ) {
-			Object[] stuff = (Object[]) iter.next();
-			assertTrue(stuff.length==2);
-		}
-		t.commit();
-		s.close();
-		
-		s = openSession();
-		t = s.beginTransaction();
-		c = (Customer) s.get( Customer.class, "C111" );
-		Order o2 = new Order(c);
-		o2.setOrderDate( Calendar.getInstance() );
-		s.flush();
-		LineItem li2 = new LineItem(o2, p2);
-		li2.setQuantity(5);
-		List bigOrders = s.createQuery("from Order o where o.total>10.0").list();
-		assertEquals( bigOrders.size(), 1 );
-		t.commit();
-		s.close();
-		
-		s = openSession();
-		t = s.beginTransaction();
-		s.createQuery("delete from LineItem").executeUpdate();
-		s.createQuery("delete from Order").executeUpdate();
-		s.createQuery("delete from Customer").executeUpdate();
-		s.createQuery("delete from Product").executeUpdate();
-		t.commit();
-		s.close();
+)
+@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
+public class CompositeIdTest {
+
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery( "delete from LineItem" ).executeUpdate();
+					session.createQuery( "delete from Order" ).executeUpdate();
+					session.createQuery( "delete from Customer" ).executeUpdate();
+					session.createQuery( "delete from Product" ).executeUpdate();
+				}
+		);
 	}
 
 	@Test
-	public void testNonLazyFetch() {
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		
-		Product p = new Product();
-		p.setProductId("A123");
-		p.setDescription("nipple ring");
-		p.setPrice( new BigDecimal(1.0) );
-		p.setNumberAvailable(1004);
-		s.persist(p);
-		
-		Product p2 = new Product();
-		p2.setProductId("X525");
-		p2.setDescription("nose stud");
-		p2.setPrice( new BigDecimal(3.0) );
-		p2.setNumberAvailable(105);
-		s.persist(p2);
-		
-		Customer c = new Customer();
-		c.setAddress("St Kilda Rd, MEL, 3000");
-		c.setName("Virginia");
-		c.setCustomerId("C111");
-		s.persist(c);
-		
-		Order o = new Order(c);
-		o.setOrderDate( Calendar.getInstance() );
-		LineItem li = new LineItem(o, p);
-		li.setQuantity(2);
-
-		t.commit();
-		s.close();
-		
-		s = openSession();
-		t = s.beginTransaction();
-		o = (Order) s.get( Order.class, new Order.Id("C111", 0) );
-		assertEquals( o.getTotal().intValue(), 2 );
-		o.getCustomer().getName();
-		t.commit();
-		s.close();
-
-		s = openSession();
-		t = s.beginTransaction();
-		o = (Order) s.createQuery("from Order o left join fetch o.lineItems li left join fetch li.product p").uniqueResult();
-		assertTrue( Hibernate.isInitialized( o.getLineItems() ) );
-		li = (LineItem) o.getLineItems().iterator().next();
-		assertTrue( Hibernate.isInitialized( li ) );
-		assertTrue( Hibernate.isInitialized( li.getProduct() ) );
-		t.commit();
-		s.close();
-
-		s = openSession();
-		t = s.beginTransaction();
-		o = (Order) s.createQuery("from Order o").uniqueResult();
-		assertTrue( Hibernate.isInitialized( o.getLineItems() ) );
-		li = (LineItem) o.getLineItems().iterator().next();
-		assertTrue( Hibernate.isInitialized( li ) );
-		assertFalse( Hibernate.isInitialized( li.getProduct() ) );
-		t.commit();
-		s.close();
-		
-		
-		s = openSession();
-		t = s.beginTransaction();
-		s.createQuery("delete from LineItem").executeUpdate();
-		s.createQuery("delete from Order").executeUpdate();
-		s.createQuery("delete from Customer").executeUpdate();
-		s.createQuery("delete from Product").executeUpdate();
-		t.commit();
-		s.close();
-		
+	public void testQuery(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session ->
+						session.createQuery( "from LineItem ol where ol.order.id.customerId = 'C111'" ).list()
+		);
 	}
 
 	@Test
-	public void testMultipleCollectionFetch() {
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		
+	public void testCompositeIds(SessionFactoryScope scope) {
 		Product p = new Product();
-		p.setProductId("A123");
-		p.setDescription("nipple ring");
-		p.setPrice( new BigDecimal(1.0) );
-		p.setNumberAvailable(1004);
-		s.persist(p);
-		
+		p.setProductId( "A123" );
+		p.setDescription( "nipple ring" );
+		p.setPrice( new BigDecimal( 1.0 ) );
+		p.setNumberAvailable( 1004 );
+
 		Product p2 = new Product();
-		p2.setProductId("X525");
-		p2.setDescription("nose stud");
-		p2.setPrice( new BigDecimal(3.0) );
-		p2.setNumberAvailable(105);
-		s.persist(p2);
-		
-		Customer c = new Customer();
-		c.setAddress("St Kilda Rd, MEL, 3000");
-		c.setName("Virginia");
-		c.setCustomerId("C111");
-		s.persist(c);
-		
-		Order o = new Order(c);
-		o.setOrderDate( Calendar.getInstance() );
-		LineItem li = new LineItem(o, p);
-		li.setQuantity(2);
-		LineItem li2 = new LineItem(o, p2);
-		li2.setQuantity(3);
+		p2.setProductId( "X525" );
+		p2.setDescription( "nose stud" );
+		p2.setPrice( new BigDecimal( 3.0 ) );
+		p2.setNumberAvailable( 105 );
 
-		Order o2 = new Order(c);
-		o2.setOrderDate( Calendar.getInstance() );
-		LineItem li3 = new LineItem(o2, p);
-		li3.setQuantity(1);
-		LineItem li4 = new LineItem(o2, p2);
-		li4.setQuantity(1);
+		scope.inTransaction(
+				session -> {
+					session.persist( p );
+					session.persist( p2 );
 
-		t.commit();
-		s.close();
-		
-		s = openSession();
-		t = s.beginTransaction();
-		c = (Customer) s.createQuery("from Customer c left join fetch c.orders o left join fetch o.lineItems li left join fetch li.product p").uniqueResult();
-		assertTrue( Hibernate.isInitialized( c.getOrders() ) );
-		assertEquals( c.getOrders().size(), 2 );
-		assertTrue( Hibernate.isInitialized( ( (Order) c.getOrders().get(0) ).getLineItems() ) );
-		assertTrue( Hibernate.isInitialized( ( (Order) c.getOrders().get(1) ).getLineItems() ) );
-		assertEquals( ( (Order) c.getOrders().get(0) ).getLineItems().size(), 2 );
-		assertEquals( ( (Order) c.getOrders().get(1) ).getLineItems().size(), 2 );
-		t.commit();
-		s.close();
-				
-		s = openSession();
-		t = s.beginTransaction();
-		s.createQuery("delete from LineItem").executeUpdate();
-		s.createQuery("delete from Order").executeUpdate();
-		s.createQuery("delete from Customer").executeUpdate();
-		s.createQuery("delete from Product").executeUpdate();
-		t.commit();
-		s.close();
+					Customer c = new Customer();
+					c.setAddress( "St Kilda Rd, MEL, 3000" );
+					c.setName( "Virginia" );
+					c.setCustomerId( "C111" );
+					session.persist( c );
+
+					Order o = new Order( c );
+					o.setOrderDate( Calendar.getInstance() );
+					LineItem li = new LineItem( o, p );
+					li.setQuantity( 2 );
+				}
+		);
+
+		final SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		statementInspector.clear();
+
+		scope.inTransaction(
+				session -> {
+					Order o = session.get( Order.class, new Order.Id( "C111", 0 ) );
+					statementInspector.assertExecutedCount( 1 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 0,"join", 1 );
+					assertEquals( o.getTotal().intValue(), 2 );
+					o.getCustomer().getName();
+				}
+		);
+
+		statementInspector.clear();
+		scope.inTransaction(
+				session -> {
+					session.createQuery(
+							"from Customer c left join fetch c.orders o left join fetch o.lineItems li left join fetch li.product p" )
+							.list();
+					statementInspector.assertExecutedCount( 1 );
+				}
+		);
+
+		statementInspector.clear();
+		scope.inTransaction(
+				session -> {
+					session.createQuery( "from Order o left join fetch o.lineItems li left join fetch li.product p" )
+							.list();
+					statementInspector.assertExecutedCount( 1 );
+				}
+		);
+
+		statementInspector.clear();
+		scope.inTransaction(
+				session -> {
+					Iterator iter = session.createQuery( "select o.id, li.id from Order o join o.lineItems li" )
+							.list()
+							.iterator();
+					statementInspector.assertExecutedCount( 1 );
+					while ( iter.hasNext() ) {
+						Object[] stuff = (Object[]) iter.next();
+						assertTrue( stuff.length == 2 );
+					}
+					statementInspector.assertExecutedCount( 1 );
+					statementInspector.clear();
+					iter = session.createQuery( "from Order o join o.lineItems li" ).list().iterator();
+					statementInspector.assertExecutedCount( 1 );
+					while ( iter.hasNext() ) {
+						Object[] stuff = (Object[]) iter.next();
+						assertTrue( stuff.length == 2 );
+					}
+					statementInspector.assertExecutedCount( 1 );
+				}
+		);
+
+		statementInspector.clear();
+		scope.inTransaction(
+				session -> {
+					Customer c = session.get( Customer.class, "C111" );
+					statementInspector.assertExecutedCount( 1 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 0,"join", 0 );
+
+					statementInspector.clear();
+					Order o2 = new Order( c );
+					o2.setOrderDate( Calendar.getInstance() );
+					statementInspector.assertExecutedCount( 2 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 0,"join", 0 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 1,"join", 0 );
+
+					statementInspector.clear();
+					session.flush();
+					statementInspector.assertExecutedCount( 4 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 0,"select", 1 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 0,"join", 0 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 1,"insert", 1 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 2,"update", 1 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 3,"update", 1 );
+
+
+					LineItem li2 = new LineItem( o2, p2 );
+					li2.setQuantity( 5 );
+					statementInspector.clear();
+
+					List bigOrders = session.createQuery( "from Order o where o.total>10.0" ).list();
+					statementInspector.assertExecutedCount( 3 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 0,"select", 1 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 0,"join", 0 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 1,"insert", 1 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 2,"select", 2 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 3,"join", 0 );
+
+					assertEquals( bigOrders.size(), 1 );
+				}
+		);
 	}
 
+	@Test
+	public void testNonLazyFetch(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					Product p = new Product();
+					p.setProductId( "A123" );
+					p.setDescription( "nipple ring" );
+					p.setPrice( new BigDecimal( 1.0 ) );
+					p.setNumberAvailable( 1004 );
+					session.persist( p );
+
+					Product p2 = new Product();
+					p2.setProductId( "X525" );
+					p2.setDescription( "nose stud" );
+					p2.setPrice( new BigDecimal( 3.0 ) );
+					p2.setNumberAvailable( 105 );
+					session.persist( p2 );
+
+					Customer c = new Customer();
+					c.setAddress( "St Kilda Rd, MEL, 3000" );
+					c.setName( "Virginia" );
+					c.setCustomerId( "C111" );
+					session.persist( c );
+
+					Order o = new Order( c );
+					o.setOrderDate( Calendar.getInstance() );
+					LineItem li = new LineItem( o, p );
+					li.setQuantity( 2 );
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					Order o = session.get( Order.class, new Order.Id( "C111", 0 ) );
+					assertEquals( o.getTotal().intValue(), 2 );
+					o.getCustomer().getName();
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					Order o = (Order) session.createQuery(
+							"from Order o left join fetch o.lineItems li left join fetch li.product p" )
+							.uniqueResult();
+					assertTrue( Hibernate.isInitialized( o.getLineItems() ) );
+					LineItem li = (LineItem) o.getLineItems().iterator().next();
+					assertTrue( Hibernate.isInitialized( li ) );
+					assertTrue( Hibernate.isInitialized( li.getProduct() ) );
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					Order o = (Order) session.createQuery( "from Order o" ).uniqueResult();
+					assertTrue( Hibernate.isInitialized( o.getLineItems() ) );
+					LineItem li = (LineItem) o.getLineItems().iterator().next();
+					assertTrue( Hibernate.isInitialized( li ) );
+					assertFalse( Hibernate.isInitialized( li.getProduct() ) );
+				}
+		);
+	}
+
+	@Test
+	public void testMultipleCollectionFetch(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					Product p = new Product();
+					p.setProductId( "A123" );
+					p.setDescription( "nipple ring" );
+					p.setPrice( new BigDecimal( 1.0 ) );
+					p.setNumberAvailable( 1004 );
+					session.persist( p );
+
+					Product p2 = new Product();
+					p2.setProductId( "X525" );
+					p2.setDescription( "nose stud" );
+					p2.setPrice( new BigDecimal( 3.0 ) );
+					p2.setNumberAvailable( 105 );
+					session.persist( p2 );
+
+					Customer c = new Customer();
+					c.setAddress( "St Kilda Rd, MEL, 3000" );
+					c.setName( "Virginia" );
+					c.setCustomerId( "C111" );
+					session.persist( c );
+
+					Order o = new Order( c );
+					o.setOrderDate( Calendar.getInstance() );
+					LineItem li = new LineItem( o, p );
+					li.setQuantity( 2 );
+					LineItem li2 = new LineItem( o, p2 );
+					li2.setQuantity( 3 );
+
+					Order o2 = new Order( c );
+					o2.setOrderDate( Calendar.getInstance() );
+					LineItem li3 = new LineItem( o2, p );
+					li3.setQuantity( 1 );
+					LineItem li4 = new LineItem( o2, p2 );
+					li4.setQuantity( 1 );
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					Customer c = (Customer) session.createQuery(
+							"from Customer c left join fetch c.orders o left join fetch o.lineItems li left join fetch li.product p" )
+							.uniqueResult();
+					assertTrue( Hibernate.isInitialized( c.getOrders() ) );
+					assertEquals( c.getOrders().size(), 2 );
+					assertTrue( Hibernate.isInitialized( ( (Order) c.getOrders().get( 0 ) ).getLineItems() ) );
+					assertTrue( Hibernate.isInitialized( ( (Order) c.getOrders().get( 1 ) ).getLineItems() ) );
+					assertEquals( 2, ( (Order) c.getOrders().get( 0 ) ).getLineItems().size() );
+					assertEquals( 2, ( (Order) c.getOrders().get( 1 ) ).getLineItems().size() );
+				}
+		);
+	}
 }
-

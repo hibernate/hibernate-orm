@@ -31,6 +31,12 @@ public class SimpleFromClauseAccessImpl implements FromClauseAccess {
 
 	@Override
 	public void registerTableGroup(NavigablePath navigablePath, TableGroup tableGroup) {
+		SqlTreeCreationLogger.LOGGER.debugf(
+				"Registration of TableGroup [%s] with identifierForTableGroup [%s] for NavigablePath [%s] ",
+				tableGroup,
+				tableGroup.getNavigablePath().getIdentifierForTableGroup(),
+				navigablePath.getIdentifierForTableGroup()
+		);
 		final TableGroup previous = tableGroupMap.put( navigablePath.getIdentifierForTableGroup(), tableGroup );
 		if ( previous != null ) {
 			SqlTreeCreationLogger.LOGGER.debugf(

@@ -38,6 +38,10 @@ public class FromClauseIndex extends SimpleFromClauseAccessImpl {
 	}
 
 	public void register(SqmPath<?> sqmPath, TableGroup tableGroup) {
+		register( sqmPath, tableGroup, null );
+	}
+
+	public void register(SqmPath<?> sqmPath, TableGroup tableGroup, NavigablePath identifierForTableGroup) {
 		registerTableGroup( sqmPath.getNavigablePath(), tableGroup );
 
 		if ( sqmPath.getExplicitAlias() != null ) {
@@ -54,17 +58,20 @@ public class FromClauseIndex extends SimpleFromClauseAccessImpl {
 		if ( sqmPath instanceof SqmAttributeJoin ) {
 			final SqmAttributeJoin sqmJoin = (SqmAttributeJoin) sqmPath;
 			if ( sqmJoin.isFetched() ) {
-				registerJoinFetch( sqmJoin );
+				registerJoinFetch( sqmJoin, identifierForTableGroup );
 			}
 		}
 	}
 
-	private void registerJoinFetch(SqmAttributeJoin sqmJoin) {
+	private void registerJoinFetch(SqmAttributeJoin sqmJoin, NavigablePath identifierForTableGroup) {
 		if ( fetchesByPath == null ) {
 			fetchesByPath = new HashMap<>();
 		}
 		NavigablePath navigablePath = sqmJoin.getNavigablePath();
 		fetchesByPath.put( navigablePath.getIdentifierForTableGroup(), sqmJoin );
+		if ( identifierForTableGroup != null ) {
+			fetchesByPath.put( identifierForTableGroup.getIdentifierForTableGroup(), sqmJoin );
+		}
 	}
 
 	public boolean isResolved(SqmFrom fromElement) {

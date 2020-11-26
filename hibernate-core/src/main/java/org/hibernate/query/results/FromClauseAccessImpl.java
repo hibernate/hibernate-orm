@@ -18,15 +18,10 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
  * @author Steve Ebersole
  */
 public class FromClauseAccessImpl implements FromClauseAccess {
-	private List<TableGroup> rootTableGroups;
 	private Map<String, TableGroup> tableGroupBySqlAlias;
 	private Map<NavigablePath, TableGroup> tableGroupByPath;
 
 	public FromClauseAccessImpl() {
-	}
-
-	public List<TableGroup> getRootTableGroups() {
-		return rootTableGroups;
 	}
 
 	public TableGroup getByAlias(String alias) {
@@ -45,10 +40,6 @@ public class FromClauseAccessImpl implements FromClauseAccess {
 			}
 		}
 
-		if ( rootTableGroups != null && rootTableGroups.size() == 1 ) {
-			return rootTableGroups.get( 0 );
-		}
-
 		return null;
 	}
 
@@ -59,10 +50,6 @@ public class FromClauseAccessImpl implements FromClauseAccess {
 			if ( tableGroup != null ) {
 				return tableGroup;
 			}
-		}
-
-		if ( rootTableGroups != null && rootTableGroups.size() == 1 ) {
-			return rootTableGroups.get( 0 );
 		}
 
 		return null;

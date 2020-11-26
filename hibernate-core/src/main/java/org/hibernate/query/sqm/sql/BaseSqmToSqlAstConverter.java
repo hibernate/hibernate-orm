@@ -8,6 +8,7 @@ package org.hibernate.query.sqm.sql;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -249,6 +250,7 @@ public abstract class BaseSqmToSqlAstConverter
 	private final QueryParameterBindings domainParameterBindings;
 	private final Map<JpaCriteriaParameter<?>,Supplier<SqmJpaCriteriaParameterWrapper<?>>> jpaCriteriaParamResolutions;
 
+	private Map<String,NavigablePath> pluralPersisterElementNavigablePathByFullPath = new HashMap<>();
 
 	private final SqlAliasBaseManager sqlAliasBaseManager = new SqlAliasBaseManager();
 
@@ -673,10 +675,12 @@ public abstract class BaseSqmToSqlAstConverter
 		if ( log.isTraceEnabled() ) {
 			log.tracef( "Visiting explicit joins for `%s`", sqmFrom.getNavigablePath() );
 		}
-
 		sqmFrom.visitSqmJoins(
-				sqmJoin -> consumeExplicitJoin( sqmJoin, lhsTableGroup )
+				sqmJoin -> {
+					consumeExplicitJoin( sqmJoin, lhsTableGroup );
+				}
 		);
+		pluralPersisterElementNavigablePathByFullPath.clear();
 	}
 
 	@SuppressWarnings("WeakerAccess")
@@ -702,6 +706,8 @@ public abstract class BaseSqmToSqlAstConverter
 		final TableGroupJoin joinedTableGroupJoin;
 		final TableGroup joinedTableGroup;
 
+		final NavigablePath sqmJoinNavigablePath = sqmJoin.getNavigablePath();
+		final NavigablePath parentNavigablePath = sqmJoinNavigablePath.getParent();
 		if ( pathSource instanceof PluralPersistentAttribute ) {
 			final ModelPart pluralPart = lhsTableGroup.getModelPart().findSubPart(
 					sqmJoin.getReferencedPathSource().getPathName(),
@@ -712,7 +718,22 @@ public abstract class BaseSqmToSqlAstConverter
 
 			final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) pluralPart;
 
-			final NavigablePath elementPath = sqmJoin.getNavigablePath().append( CollectionPart.Nature.ELEMENT.getName() );
+			NavigablePath elementPath;
+			if ( parentNavigablePath == null ) {
+				elementPath = sqmJoinNavigablePath.append( CollectionPart.Nature.ELEMENT.getName() );
+				pluralPersisterElementNavigablePathByFullPath.put( sqmJoin.getNavigablePath().getFullPath(), elementPath );
+			}
+			else {
+				final NavigablePath elementNavigablePath = pluralPersisterElementNavigablePathByFullPath.get( parentNavigablePath.getFullPath() );
+				if ( elementNavigablePath == null ) {
+					elementPath = sqmJoinNavigablePath.append( CollectionPart.Nature.ELEMENT.getName() );
+					pluralPersisterElementNavigablePathByFullPath.put( sqmJoin.getNavigablePath().getFullPath(), elementPath );
+				}
+				else {
+					elementPath = elementNavigablePath.append( pluralAttributeMapping.getPartName() );
+					pluralPersisterElementNavigablePathByFullPath.put( sqmJoin.getNavigablePath().getFullPath(), elementPath.append( CollectionPart.Nature.ELEMENT.getName()  ) );
+				}
+			}
 
 			joinedTableGroupJoin = pluralAttributeMapping.createTableGroupJoin(
 					elementPath,
@@ -726,7 +747,7 @@ public abstract class BaseSqmToSqlAstConverter
 
 			lhsTableGroup.addTableGroupJoin( joinedTableGroupJoin );
 
-			fromClauseIndex.register( sqmJoin, joinedTableGroup );
+			fromClauseIndex.register( sqmJoin, joinedTableGroup, elementPath );
 			fromClauseIndex.registerTableGroup( elementPath, joinedTableGroup );
 		}
 		else if ( pathSource instanceof EmbeddedSqmPathSource ) {
@@ -740,10 +761,10 @@ public abstract class BaseSqmToSqlAstConverter
 			final NavigablePath joinedPath;
 			final String explicitAlias = sqmJoin.getExplicitAlias();
 			if ( explicitAlias == null ) {
-				joinedPath = sqmJoin.getNavigablePath();
+				joinedPath = sqmJoinNavigablePath;
 			}
 			else {
-				joinedPath = sqmJoin.getNavigablePath().getParent().append( sqmJoin.getAttribute().getName() );
+				joinedPath = parentNavigablePath.append( sqmJoin.getAttribute().getName() );
 			}
 			joinedTableGroupJoin = ( (TableGroupJoinProducer) joinedPart ).createTableGroupJoin(
 					joinedPath,
@@ -780,10 +801,10 @@ public abstract class BaseSqmToSqlAstConverter
 				final NavigablePath joinedPath;
 				final String explicitAlias = sqmJoin.getExplicitAlias();
 				if ( explicitAlias == null ) {
-					joinedPath = sqmJoin.getNavigablePath();
+					joinedPath = sqmJoinNavigablePath;
 				}
 				else {
-					joinedPath = sqmJoin.getNavigablePath().getParent().append( sqmJoin.getAttribute().getName() );
+					joinedPath = parentNavigablePath.append( sqmJoin.getAttribute().getName() );
 				}
 
 				joinedTableGroupJoin = ( (TableGroupJoinProducer) joinedPart ).createTableGroupJoin(
@@ -806,7 +827,7 @@ public abstract class BaseSqmToSqlAstConverter
 		// add any additional join restrictions
 		if ( sqmJoin.getJoinPredicate() != null ) {
 			if ( sqmJoin.isFetched() ) {
-				QueryLogging.QUERY_MESSAGE_LOGGER.debugf( "Join fetch [" + sqmJoin.getNavigablePath() + "] is restricted" );
+				QueryLogging.QUERY_MESSAGE_LOGGER.debugf( "Join fetch [" + sqmJoinNavigablePath + "] is restricted" );
 			}
 
 			if ( joinedTableGroupJoin == null ) {

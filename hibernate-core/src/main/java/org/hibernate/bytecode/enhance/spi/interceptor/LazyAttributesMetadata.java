@@ -34,7 +34,8 @@ public class LazyAttributesMetadata implements Serializable {
 	public static LazyAttributesMetadata from(
 			PersistentClass mappedEntity,
 			boolean isEnhanced,
-			boolean allowEnhancementAsProxy) {
+			boolean allowEnhancementAsProxy,
+			boolean collectionsInDefaultFetchGroupEnabled) {
 		final Map<String, LazyAttributeDescriptor> lazyAttributeDescriptorMap = new LinkedHashMap<>();
 		final Map<String, Set<String>> fetchGroupToAttributesMap = new HashMap<>();
 
@@ -48,7 +49,7 @@ public class LazyAttributesMetadata implements Serializable {
 					property,
 					isEnhanced,
 					allowEnhancementAsProxy,
-					false
+					collectionsInDefaultFetchGroupEnabled
 			);
 			if ( lazy ) {
 				final LazyAttributeDescriptor lazyAttributeDescriptor = LazyAttributeDescriptor.from( property, i, x++ );

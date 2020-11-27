@@ -111,7 +111,7 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 	public void testCoalesceFunction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery("select coalesce(null, e.gender, e.convertedGender, e.ordinalGender) from EntityOfBasics e")
+					session.createQuery("select coalesce(null, e.gender, e.convertedGender) from EntityOfBasics e")
 							.list();
 					session.createQuery("select ifnull(e.gender, e.convertedGender) from EntityOfBasics e")
 							.list();
@@ -157,13 +157,13 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 							.list();
 					session.createQuery("select abs(e.theDouble), sign(e.theDouble), sqrt(e.theDouble) from EntityOfBasics e")
 							.list();
-					session.createQuery("select exp(e.theDouble), ln(e.theDouble) from EntityOfBasics e")
+					session.createQuery("select exp(e.theDouble), ln(e.theDouble + 1) from EntityOfBasics e")
 							.list();
 					session.createQuery("select power(e.theDouble, 2.5) from EntityOfBasics e")
 							.list();
 					session.createQuery("select ceiling(e.theDouble), floor(e.theDouble) from EntityOfBasics e")
 							.list();
-					session.createQuery("select round(e.theDouble, 3) from EntityOfBasics e")
+					session.createQuery("select round(cast(e.theDouble as BigDecimal), 3) from EntityOfBasics e")
 							.list();
 					assertThat( session.createQuery("select abs(-2)").getSingleResult(), is(2) );
 					assertThat( session.createQuery("select sign(-2)").getSingleResult(), is(-1) );

@@ -96,6 +96,11 @@ public class DB2Dialect extends Dialect {
 			registerColumnType( Types.BINARY, "varchar($l) for bit data" ); //should use 'binary' since version 11
 			registerColumnType( Types.BINARY, 254, "char($l) for bit data" ); //should use 'binary' since version 11
 			registerColumnType( Types.VARBINARY, "varchar($l) for bit data" ); //should use 'varbinary' since version 11
+
+			//prior to DB2 11, the 'boolean' type existed,
+			//but was not allowed as a column type
+			registerColumnType( Types.BOOLEAN, "smallint" );
+			registerColumnType( Types.BIT, 1, "smallint" );
 		}
 
 		registerColumnType( Types.BLOB, "blob($l)" );
@@ -560,7 +565,10 @@ public class DB2Dialect extends Dialect {
 
 	@Override
 	protected SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
-		if ( getVersion() < 970 ) {
+		if ( getVersion() < 1100 && sqlCode == Types.BOOLEAN ) {
+			return SmallIntTypeDescriptor.INSTANCE;
+		}
+		else if ( getVersion() < 970 ) {
 			return sqlCode == Types.NUMERIC
 					? DecimalTypeDescriptor.INSTANCE
 					: super.getSqlTypeDescriptorOverride(sqlCode);
@@ -572,8 +580,6 @@ public class DB2Dialect extends Dialect {
 			// Therefore here we overwrite the sql type descriptors to
 			// use the non-N variants which are supported.
 			switch ( sqlCode ) {
-				case Types.BOOLEAN:
-					return SmallIntTypeDescriptor.INSTANCE;
 				case Types.NCHAR:
 					return CharTypeDescriptor.INSTANCE;
 				case Types.NCLOB:

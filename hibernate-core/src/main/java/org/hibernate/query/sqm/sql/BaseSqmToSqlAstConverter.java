@@ -12,6 +12,7 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.hibernate.AssertionFailure;
@@ -137,6 +138,7 @@ import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
@@ -151,6 +153,7 @@ import org.hibernate.sql.ast.spi.SqlAstProcessingState;
 import org.hibernate.sql.ast.spi.SqlAstQuerySpecProcessingState;
 import org.hibernate.sql.ast.spi.SqlAstTreeHelper;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.cte.CteColumn;
 import org.hibernate.sql.ast.tree.cte.CteConsumer;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
@@ -200,7 +203,9 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.type.IntegerType;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
@@ -411,6 +416,7 @@ public abstract class BaseSqmToSqlAstConverter
 	@Override
 	public QuerySpec visitQuerySpec(SqmQuerySpec<?> sqmQuerySpec) {
 		final QuerySpec sqlQuerySpec = new QuerySpec( processingStateStack.isEmpty(), sqmQuerySpec.getFromClause().getNumberOfRoots() );
+		final SqmSelectClause selectClause = sqmQuerySpec.getSelectClause();
 
 		additionalRestrictions = null;
 
@@ -419,6 +425,11 @@ public abstract class BaseSqmToSqlAstConverter
 						sqlQuerySpec,
 						processingStateStack.getCurrent(),
 						this,
+						r -> new SqlSelectionForSqmSelectionCollector(
+								r,
+								selectClause.getSelectionItems()
+										.size()
+						),
 						currentClauseStack::getCurrent
 				)
 		);
@@ -429,10 +440,7 @@ public abstract class BaseSqmToSqlAstConverter
 			// we want to visit the from-clause first
 			visitFromClause( sqmQuerySpec.getFromClause() );
 
-			final SqmSelectClause selectClause = sqmQuerySpec.getSelectClause();
-			if ( selectClause != null ) {
-				visitSelectClause( selectClause );
-			}
+			visitSelectClause( selectClause );
 
 			final SqmWhereClause whereClause = sqmQuerySpec.getWhereClause();
 			if ( whereClause != null && whereClause.getPredicate() != null ) {
@@ -491,8 +499,9 @@ public abstract class BaseSqmToSqlAstConverter
 		try {
 			super.visitSelectClause( selectClause );
 
-			currentQuerySpec().getSelectClause().makeDistinct( selectClause.isDistinct() );
-			return currentQuerySpec().getSelectClause();
+			final SelectClause sqlSelectClause = currentQuerySpec().getSelectClause();
+			sqlSelectClause.makeDistinct( selectClause.isDistinct() );
+			return sqlSelectClause;
 		}
 		finally {
 			shallownessStack.pop();
@@ -501,13 +510,37 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
+	public Object visitSelection(SqmSelection selection) {
+		currentSqlSelectionCollector().next();
+		selection.getSelectableNode().accept( this );
+		return selection;
+	}
+
+	protected Expression resolveGroupOrOrderByExpression(SqmExpression<?> groupByClauseExpression) {
+		if ( groupByClauseExpression instanceof SqmLiteral<?> ) {
+			Object literal = ( (SqmLiteral<?>) groupByClauseExpression ).getLiteralValue();
+			if ( literal instanceof Integer ) {
+				// Integer literals have a special meaning in the GROUP BY and ORDER BY clause i.e. they refer to a select item
+				final int sqmPosition = (Integer) literal;
+				final List<SqlSelection> selections = currentSqlSelectionCollector().getSelections( sqmPosition );
+				final List<Expression> expressions = new ArrayList<>( selections.size() );
+				for ( SqlSelection selection : selections ) {
+					expressions.add( new JdbcLiteral<>( selection.getJdbcResultSetIndex(), IntegerType.INSTANCE ) );
+				}
+				return new SqlTuple( expressions, null );
+			}
+		}
+		return (Expression) groupByClauseExpression.accept( this );
+	}
+
+	@Override
 	public List<Expression> visitGroupByClause(List<SqmExpression<?>> groupByClauseExpressions) {
 		if ( !groupByClauseExpressions.isEmpty() ) {
 			currentClauseStack.push( Clause.GROUP );
 			try {
-				List<Expression> expressions = new ArrayList<>( groupByClauseExpressions.size() );
+				final List<Expression> expressions = new ArrayList<>( groupByClauseExpressions.size() );
 				for ( SqmExpression<?> groupByClauseExpression : groupByClauseExpressions ) {
-					expressions.add( (Expression) groupByClauseExpression.accept( this ) );
+					expressions.add( resolveGroupOrOrderByExpression( groupByClauseExpression ) );
 				}
 				return expressions;
 			}
@@ -541,7 +574,7 @@ public abstract class BaseSqmToSqlAstConverter
 	@Override
 	public SortSpecification visitSortSpecification(SqmSortSpecification sortSpecification) {
 		return new SortSpecification(
-				(Expression) sortSpecification.getSortExpression().accept( this ),
+				resolveGroupOrOrderByExpression( sortSpecification.getSortExpression() ),
 				null,
 				sortSpecification.getSortOrder(),
 				sortSpecification.getNullPrecedence()
@@ -918,6 +951,10 @@ public abstract class BaseSqmToSqlAstConverter
 	private QuerySpec currentQuerySpec() {
 		final SqlAstQuerySpecProcessingState processingState = (SqlAstQuerySpecProcessingState) getProcessingStateStack().getCurrent();
 		return processingState.getInflightQuerySpec();
+	}
+
+	protected SqlSelectionForSqmSelectionCollector currentSqlSelectionCollector() {
+		return (SqlSelectionForSqmSelectionCollector) getProcessingStateStack().getCurrent().getSqlExpressionResolver();
 	}
 
 	@Override
@@ -2674,5 +2711,41 @@ public abstract class BaseSqmToSqlAstConverter
 	@Override
 	public List<Fetch> visitFetches(FetchParent fetchParent) {
 		return Collections.emptyList();
+	}
+
+	protected static class SqlSelectionForSqmSelectionCollector implements SqlExpressionResolver {
+
+		private final SqlExpressionResolver delegate;
+		private final List<SqlSelection>[] sqlSelectionsForSqmSelection;
+		private int index = -1;
+
+		public SqlSelectionForSqmSelectionCollector(SqlExpressionResolver delegate, int sqmSelectionCount) {
+			this.delegate = delegate;
+			sqlSelectionsForSqmSelection = new List[sqmSelectionCount];
+		}
+
+		public void next() {
+			index++;
+		}
+
+		public List<SqlSelection> getSelections(int position) {
+			return sqlSelectionsForSqmSelection[position - 1];
+		}
+
+		@Override
+		public Expression resolveSqlExpression(String key, Function<SqlAstProcessingState, Expression> creator) {
+			return delegate.resolveSqlExpression( key, creator );
+		}
+
+		@Override
+		public SqlSelection resolveSqlSelection(Expression expression, JavaTypeDescriptor javaTypeDescriptor, TypeConfiguration typeConfiguration) {
+			SqlSelection selection = delegate.resolveSqlSelection( expression, javaTypeDescriptor, typeConfiguration );
+			List<SqlSelection> sqlSelectionList = sqlSelectionsForSqmSelection[index];
+			if ( sqlSelectionList == null ) {
+				sqlSelectionsForSqmSelection[index] = sqlSelectionList = new ArrayList<>();
+			}
+			sqlSelectionList.add( selection );
+			return selection;
+		}
 	}
 }

@@ -88,17 +88,20 @@ public class DerbyDialect extends Dialect {
 		super();
 		this.version = version;
 
-		registerColumnType( Types.BIT, 1, "boolean" ); //no bit
-		registerColumnType( Types.BIT, "smallint" ); //no bit
+		if ( getVersion() < 1070) {
+			registerColumnType( Types.BOOLEAN, "smallint" ); //no boolean before 10.7
+			registerColumnType( Types.BIT, 1, "smallint" ); //no bit
+		}
+		else {
+			registerColumnType( Types.BIT, 1, "boolean" ); //no bit
+		}
 		registerColumnType( Types.TINYINT, "smallint" ); //no tinyint
-		registerColumnType( Types.CHAR, "char(1)" );
+		registerColumnType( Types.CHAR, 254, "char($l)" );
 
 		//HHH-12827: map them both to the same type to
 		//           avoid problems with schema update
 //		registerColumnType( Types.DECIMAL, "decimal($p,$s)" );
 		registerColumnType( Types.NUMERIC, "decimal($p,$s)" );
-		registerColumnType( Types.FLOAT, "float" );
-		registerColumnType( Types.DOUBLE, "double" );
 
 		registerColumnType( Types.BINARY, "varchar($l) for bit data" );
 		registerColumnType( Types.BINARY, 254, "char($l) for bit data" );
@@ -453,9 +456,10 @@ public class DerbyDialect extends Dialect {
 	}
 
 	protected SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
+		if ( getVersion() < 1070 && sqlCode == Types.BOOLEAN) {
+			return SmallIntTypeDescriptor.INSTANCE;
+		}
 		switch ( sqlCode ) {
-			case Types.BOOLEAN:
-				return SmallIntTypeDescriptor.INSTANCE;
 			case Types.NUMERIC:
 				return DecimalTypeDescriptor.INSTANCE;
 			case Types.TIMESTAMP_WITH_TIMEZONE:

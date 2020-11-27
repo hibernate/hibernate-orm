@@ -124,11 +124,11 @@ public class StandardFunctionTests {
 					session.createQuery( "select local_time from EntityOfBasics" ).list();
 					session.createQuery( "select local_time() from EntityOfBasics" ).list();
 
-					session.createQuery( "select e from EntityOfBasics e where e.theTimestamp = local_time" ).list();
-					session.createQuery( "select e from EntityOfBasics e where e.theTimestamp = local_time()()" ).list();
+					session.createQuery( "select e from EntityOfBasics e where e.theLocalTime = local_time" ).list();
+					session.createQuery( "select e from EntityOfBasics e where e.theLocalTime = local_time()()" ).list();
 
-					session.createQuery( "select e from EntityOfBasics e where local_time() between e.theTimestamp and e.theTimestamp" ).list();
-					session.createQuery( "select e from EntityOfBasics e where local_time()() between e.theTimestamp and e.theTimestamp" ).list();
+					session.createQuery( "select e from EntityOfBasics e where local_time() between e.theLocalTime and e.theLocalTime" ).list();
+					session.createQuery( "select e from EntityOfBasics e where local_time()() between e.theLocalTime and e.theLocalTime" ).list();
 
 					assertThat(
 							session.createQuery( "select local_time" ).getSingleResult(),
@@ -152,7 +152,7 @@ public class StandardFunctionTests {
 	public void testCoalesceFunction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery("select coalesce(null, e.gender, e.convertedGender, e.ordinalGender) from EntityOfBasics e")
+					session.createQuery("select coalesce(null, e.gender, e.convertedGender) from EntityOfBasics e")
 							.list();
 					session.createQuery("select ifnull(e.gender, e.convertedGender) from EntityOfBasics e")
 							.list();
@@ -195,7 +195,7 @@ public class StandardFunctionTests {
 							.list();
 					session.createQuery("select ceiling(e.theDouble), floor(e.theDouble) from EntityOfBasics e")
 							.list();
-					session.createQuery("select round(e.theDouble, 3) from EntityOfBasics e")
+					session.createQuery("select round(cast(e.theDouble as BigDecimal), 3) from EntityOfBasics e")
 							.list();
 				}
 		);

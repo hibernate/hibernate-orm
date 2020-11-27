@@ -221,6 +221,11 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter {
 				sqlQuerySpec,
 				rootProcessingState,
 				this,
+				r -> new SqlSelectionForSqmSelectionCollector(
+						r,
+						sqmSelectClause.getSelectionItems()
+								.size()
+				),
 				getCurrentClauseStack()::getCurrent
 		) {
 			@Override

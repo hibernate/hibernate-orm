@@ -1258,7 +1258,8 @@ public abstract class Dialect implements ConversionContext {
 	 * @return the SQL equivalent to Oracle's {@code from dual}.
 	 */
 	public String getFromDual() {
-		return "";
+		// The standard SQL solution to get a dual table is to use the VALUES clause
+		return "from (values (0)) as dual";
 	}
 
 	// limit/offset support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2619,6 +2620,10 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public boolean supportsRowValueConstructorSyntaxInInList() {
 		return false;
+	}
+
+	public boolean supportsRowValueConstructorSyntaxInInSubquery() {
+		return supportsRowValueConstructorSyntaxInInList();
 	}
 
 	/**

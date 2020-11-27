@@ -26,6 +26,7 @@ import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
 import org.hibernate.query.sqm.tree.insert.SqmValues;
+import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
@@ -81,10 +82,17 @@ public class StandardSqmInsertTranslator
 		final EntityPersister entityDescriptor = getCreationContext().getDomainModel().getEntityDescriptor( entityName );
 		assert entityDescriptor != null;
 
+		SqmQuerySpec selectQuerySpec = sqmStatement.getSelectQuerySpec();
 		getProcessingStateStack().push(
 				new SqlAstProcessingStateImpl(
 						null,
 						this,
+						r -> new SqlSelectionForSqmSelectionCollector(
+								r,
+								selectQuerySpec.getSelectClause()
+										.getSelectionItems()
+										.size()
+						),
 						getCurrentClauseStack()::getCurrent
 				)
 		);
@@ -118,7 +126,7 @@ public class StandardSqmInsertTranslator
 			}
 
 			insertStatement.setSourceSelectStatement(
-					visitQuerySpec( sqmStatement.getSelectQuerySpec() )
+					visitQuerySpec( selectQuerySpec )
 			);
 
 			return insertStatement;
@@ -190,6 +198,7 @@ public class StandardSqmInsertTranslator
 
 	@Override
 	public Void visitSelection(SqmSelection sqmSelection) {
+		currentSqlSelectionCollector().next();
 		final DomainResultProducer resultProducer = resolveDomainResultProducer( sqmSelection );
 
 //		if ( getProcessingStateStack().depth() > 1 ) {

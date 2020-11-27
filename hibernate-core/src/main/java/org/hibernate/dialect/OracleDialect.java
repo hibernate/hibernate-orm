@@ -911,6 +911,11 @@ public class OracleDialect extends Dialect {
 	 */
 	@Override
 	public boolean supportsRowValueConstructorSyntaxInInList() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInInSubquery() {
 		return getVersion() >= 9;
 	}
 

@@ -6,9 +6,7 @@
  */
 package org.hibernate.sql.ast.spi;
 
-import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -122,6 +120,7 @@ public abstract class AbstractSqlAstWalker
 	private final Set<FilterJdbcParameter> filterJdbcParameters = new HashSet<>();
 
 	private final Stack<Clause> clauseStack = new StandardStack<>();
+	protected final Stack<QuerySpec> querySpecStack = new StandardStack<>();
 
 	private final Dialect dialect;
 	private transient AbstractSqmSelfRenderingFunctionDescriptor castFunction;
@@ -257,19 +256,24 @@ public abstract class AbstractSqlAstWalker
 
 	@Override
 	public void visitQuerySpec(QuerySpec querySpec) {
-		if ( !querySpec.isRoot() ) {
-			appendSql( " (" );
-		}
-		visitSelectClause( querySpec.getSelectClause() );
-		visitFromClause( querySpec.getFromClause() );
-		visitWhereClause( querySpec );
-		visitGroupByClause( querySpec );
-		visitHavingClause( querySpec );
-		visitOrderBy( querySpec );
-		visitLimitOffsetClause( querySpec );
+		try {
+			querySpecStack.push( querySpec );
+			if ( !querySpec.isRoot() ) {
+				appendSql( " (" );
+			}
+			visitSelectClause( querySpec.getSelectClause() );
+			visitFromClause( querySpec.getFromClause() );
+			visitWhereClause( querySpec );
+			visitGroupByClause( querySpec, dialect.supportsSelectAliasInGroupByClause() );
+			visitHavingClause( querySpec );
+			visitOrderBy( querySpec );
+			visitLimitOffsetClause( querySpec );
 
-		if ( !querySpec.isRoot() ) {
-			appendSql( ")" );
+			if ( !querySpec.isRoot() ) {
+				appendSql( ")" );
+			}
+		} finally {
+			querySpecStack.push( querySpec );
 		}
 	}
 
@@ -288,23 +292,74 @@ public abstract class AbstractSqlAstWalker
 		}
 	}
 
-	protected final void visitGroupByClause(QuerySpec querySpec) {
+	protected Expression resolveAliasedExpression(Expression expression) {
+		if ( expression instanceof Literal ) {
+			Object literalValue = ( (Literal) expression ).getLiteralValue();
+			if ( literalValue instanceof Integer ) {
+				return querySpecStack.getCurrent()
+						.getSelectClause()
+						.getSqlSelections()
+						.get( (Integer) literalValue )
+						.getExpression();
+			}
+
+		}
+		return expression;
+	}
+
+	protected final void visitGroupByClause(QuerySpec querySpec, boolean supportsSelectAliases) {
 		List<Expression> groupByClauseExpressions = querySpec.getGroupByClauseExpressions();
 		if ( !groupByClauseExpressions.isEmpty() ) {
-			appendSql( " group by " );
-
 			clauseStack.push( Clause.GROUP );
-			String separator = NO_SEPARATOR;
+			String separator = " group by ";
 			try {
-				for ( Expression groupByClauseExpression : groupByClauseExpressions ) {
-					appendSql( separator );
-					groupByClauseExpression.accept( this );
-					separator = COMA_SEPARATOR;
+				if ( supportsSelectAliases ) {
+					for ( Expression groupByClauseExpression : groupByClauseExpressions ) {
+						if ( groupByClauseExpression instanceof SqlTuple ) {
+							for ( Expression expression : ( (SqlTuple) groupByClauseExpression ).getExpressions() ) {
+								appendSql( separator );
+								renderGroupByItem( expression );
+								separator = COMA_SEPARATOR;
+							}
+						}
+						else {
+							appendSql( separator );
+							renderGroupByItem( groupByClauseExpression );
+						}
+						separator = COMA_SEPARATOR;
+					}
+				}
+				else {
+					for ( Expression groupByClauseExpression : groupByClauseExpressions ) {
+						if ( groupByClauseExpression instanceof SqlTuple ) {
+							for ( Expression expression : ( (SqlTuple) groupByClauseExpression ).getExpressions() ) {
+								appendSql( separator );
+								renderGroupByItem( resolveAliasedExpression( expression ) );
+								separator = COMA_SEPARATOR;
+							}
+						}
+						else {
+							appendSql( separator );
+							renderGroupByItem( resolveAliasedExpression( groupByClauseExpression ) );
+						}
+						separator = COMA_SEPARATOR;
+					}
 				}
 			}
 			finally {
 				clauseStack.pop();
 			}
+		}
+	}
+
+	protected void renderGroupByItem(Expression expression) {
+		// We render an empty group instead of literals as some DBs don't support grouping by literals
+		// Note that integer literals, which refer to select item positions, are handled in #visitGroupByClause
+		if ( expression instanceof Literal ) {
+			appendSql( "()" );
+		}
+		else {
+			expression.accept( this );
 		}
 	}
 
@@ -343,21 +398,33 @@ public abstract class AbstractSqlAstWalker
 		}
 	}
 
-	protected void emulateTupleComparison(final List<? extends Expression> lhsExpressions, final List<? extends Expression> rhsExpressions, ComparisonOperator operator) {
-		String separator = NO_SEPARATOR;
 
+	/**
+	 * A tuple comparison like <code>(a, b) &gt; (1, 2)</code> can be emulated through it logical definition: <code>a &gt; 1 or a = 1 and b &gt; 2</code>.
+	 * The normal tuple comparison emulation is not very index friendly though because of the top level OR predicate.
+	 * Index optimized emulation of tuple comparisons puts an AND predicate on the top level.
+	 * The effect of that is, that the database can do an index seek to efficiently find a superset of matching rows.
+	 * Generally, it is sufficient to just add a broader predicate like for <code>(a, b) &gt; (1, 2)</code> we add <code>a &gt;= 1 and (..)</code>.
+	 * But we can further optimize this if we just remove the non-matching parts from this too broad predicate.
+	 * For <code>(a, b, c) &gt; (1, 2, 3)</code> we use the broad predicate <code>a &gt;= 1</code> and then want to remove rows where <code>a = 1 and (b, c) &lt;= (2, 3)</code>
+	 */
+	protected void emulateTupleComparison(
+			final List<? extends Expression> lhsExpressions,
+			final List<? extends Expression> rhsExpressions,
+			ComparisonOperator operator,
+			boolean indexOptimized) {
 		final boolean isCurrentWhereClause = clauseStack.getCurrent() == Clause.WHERE;
 		if ( isCurrentWhereClause ) {
 			appendSql( OPEN_PARENTHESIS );
 		}
 
 		final int size = lhsExpressions.size();
-		final String operatorText = operator.sqlText();
 		assert size == rhsExpressions.size();
-
 		switch ( operator ) {
 			case EQUAL:
-			case NOT_EQUAL:
+			case NOT_EQUAL: {
+				final String operatorText = operator.sqlText();
+				String separator = NO_SEPARATOR;
 				for ( int i = 0; i < size; i++ ) {
 					appendSql( separator );
 					lhsExpressions.get( i ).accept( this );
@@ -366,46 +433,129 @@ public abstract class AbstractSqlAstWalker
 					separator = " and ";
 				}
 				break;
+			}
 			case LESS_THAN_OR_EQUAL:
+				// Optimized (a, b) <= (1, 2) as: a <= 1 and not (a = 1 and b > 2)
+				// Normal    (a, b) <= (1, 2) as: a <  1 or a = 1 and (b <= 2)
 			case GREATER_THAN_OR_EQUAL:
-				// Render (a, b) <= (1, 2) as: (a = 1 and b = 2) or (a < 1 or a = 1 and b < 2)
-				appendSql( OPEN_PARENTHESIS );
-				for ( int i = 0; i < size; i++ ) {
-					appendSql( separator );
-					lhsExpressions.get( i ).accept( this );
-					appendSql( operatorText );
-					rhsExpressions.get( i ).accept( this );
-					separator = " and ";
-				}
-				appendSql( CLOSE_PARENTHESIS );
-				appendSql( " or " );
-				separator = NO_SEPARATOR;
+				// Optimized (a, b) >= (1, 2) as: a >= 1 and not (a = 1 and b < 2)
+				// Normal    (a, b) >= (1, 2) as: a >  1 or a = 1 and (b >= 2)
 			case LESS_THAN:
-			case GREATER_THAN:
-				// Render (a, b) < (1, 2) as: (a < 1 or a = 1 and b < 2)
-				appendSql( OPEN_PARENTHESIS );
-				for ( int i = 0; i < size; i++ ) {
-					int j = 0;
-					// Render the equals parts
-					for ( ; j < i; j++ ) {
-						appendSql( separator );
-						lhsExpressions.get( i ).accept( this );
-						appendSql( '=' );
-						rhsExpressions.get( i ).accept( this );
-						separator = " and ";
-					}
-					// Render the actual operator part for the current component
-					appendSql( separator );
-					lhsExpressions.get( i ).accept( this );
-					appendSql( operatorText );
-					rhsExpressions.get( i ).accept( this );
-					separator = " or ";
+				// Optimized (a, b) <  (1, 2) as: a <= 1 and not (a = 1 and b >= 2)
+				// Normal    (a, b) <  (1, 2) as: a <  1 or a = 1 and (b < 2)
+			case GREATER_THAN: {
+				// Optimized (a, b) >  (1, 2) as: a >= 1 and not (a = 1 and b <= 2)
+				// Normal    (a, b) >  (1, 2) as: a >  1 or a = 1 and (b > 2)
+				if ( indexOptimized ) {
+					lhsExpressions.get( 0 ).accept( this );
+					appendSql( operator.broader().sqlText() );
+					rhsExpressions.get( 0 ).accept( this );
+					appendSql( " and not " );
+					final String negatedOperatorText = operator.negated().sqlText();
+					emulateTupleComparisonSimple(
+							lhsExpressions,
+							rhsExpressions,
+							negatedOperatorText,
+							negatedOperatorText,
+							true
+					);
 				}
-				appendSql( CLOSE_PARENTHESIS );
+				else {
+					emulateTupleComparisonSimple(
+							lhsExpressions,
+							rhsExpressions,
+							operator.sharper().sqlText(),
+							operator.sqlText(),
+							false
+					);
+				}
 				break;
+			}
 		}
 
 		if ( isCurrentWhereClause ) {
+			appendSql( CLOSE_PARENTHESIS );
+		}
+	}
+
+	private void renderExpressionsAsSubquery(final List<? extends Expression> expressions) {
+		clauseStack.push( Clause.SELECT );
+
+		try {
+			appendSql( "select " );
+
+			String separator = NO_SEPARATOR;
+			for ( Expression expression : expressions ) {
+				appendSql( separator );
+				expression.accept( this );
+				separator = COMA_SEPARATOR;
+			}
+			String fromDual = dialect.getFromDual();
+			if ( !fromDual.isEmpty() ) {
+				appendSql( " " );
+				appendSql( fromDual );
+			}
+		}
+		finally {
+			clauseStack.pop();
+		}
+	}
+
+	private void emulateTupleComparisonSimple(
+			final List<? extends Expression> lhsExpressions,
+			final List<? extends Expression> rhsExpressions,
+			final String operatorText,
+			final String finalOperatorText,
+			final boolean optimized) {
+		// Render (a, b) OP (1, 2) as: (a OP 1 or a = 1 and b FINAL_OP 2)
+
+		final int size = lhsExpressions.size();
+		final int lastIndex = size - 1;
+
+		appendSql( OPEN_PARENTHESIS );
+		String separator = NO_SEPARATOR;
+
+		int i;
+		if ( optimized ) {
+			i = 1;
+		}
+		else {
+			lhsExpressions.get( 0 ).accept( this );
+			appendSql( operatorText );
+			rhsExpressions.get( 0 ).accept( this );
+			separator = " or ";
+			i = 1;
+		}
+
+		for ( ; i < lastIndex; i++ ) {
+			// Render the equals parts
+			appendSql( separator );
+			lhsExpressions.get( i - 1 ).accept( this );
+			appendSql( '=' );
+			rhsExpressions.get( i - 1 ).accept( this );
+
+			// Render the actual operator part for the current component
+			appendSql( " and (" );
+			lhsExpressions.get( i ).accept( this );
+			appendSql( operatorText );
+			rhsExpressions.get( i ).accept( this );
+			separator = " or ";
+		}
+
+		// Render the equals parts
+		appendSql( separator );
+		lhsExpressions.get( lastIndex - 1 ).accept( this );
+		appendSql( '=' );
+		rhsExpressions.get( lastIndex - 1 ).accept( this );
+
+		// Render the actual operator part for the current component
+		appendSql( " and " );
+		lhsExpressions.get( lastIndex ).accept( this );
+		appendSql( finalOperatorText );
+		rhsExpressions.get( lastIndex ).accept( this );
+
+		// Close all opened parenthesis
+		for ( i = optimized ? 1 : 0; i < lastIndex; i++ ) {
 			appendSql( CLOSE_PARENTHESIS );
 		}
 	}
@@ -431,7 +581,7 @@ public abstract class AbstractSqlAstWalker
 				lhs.add( lhsExpression.getExpression() );
 			}
 
-			emulateTupleComparison( lhs, tuple.getExpressions(), operator );
+			emulateTupleComparison( lhs, tuple.getExpressions(), operator, true );
 		}
 	}
 
@@ -441,11 +591,28 @@ public abstract class AbstractSqlAstWalker
 
 	@Override
 	public void visitSortSpecification(SortSpecification sortSpecification) {
-		NullPrecedence nullPrecedence = sortSpecification.getNullPrecedence();
+		final Expression sortExpression = sortSpecification.getSortExpression();
+		final NullPrecedence nullPrecedence = sortSpecification.getNullPrecedence();
+		final SortOrder sortOrder = sortSpecification.getSortOrder();
+		if ( sortExpression instanceof SqlTuple ) {
+			String separator = NO_SEPARATOR;
+			for ( Expression expression : ( (SqlTuple) sortExpression ).getExpressions() ) {
+				appendSql( separator );
+				visitSortSpecification( expression, sortOrder, nullPrecedence );
+				separator = COMA_SEPARATOR;
+			}
+		}
+		else {
+			visitSortSpecification( sortExpression, sortOrder, nullPrecedence );
+		}
+	}
+
+	public void visitSortSpecification(Expression sortExpression, SortOrder sortOrder, NullPrecedence nullPrecedence) {
 		final boolean hasNullPrecedence = nullPrecedence != null && nullPrecedence != NullPrecedence.NONE;
 		if ( hasNullPrecedence && !dialect.supportsNullPrecedence() ) {
+			// TODO: generate "virtual" select items and use them here positionally
 			appendSql( "case when (" );
-			sortSpecification.getSortExpression().accept( this );
+			resolveAliasedExpression( sortExpression ).accept( this );
 			appendSql( ") is null then " );
 			if ( nullPrecedence == NullPrecedence.FIRST ) {
 				appendSql( "0 else 1" );
@@ -457,9 +624,8 @@ public abstract class AbstractSqlAstWalker
 			appendSql( COMA_SEPARATOR );
 		}
 
-		sortSpecification.getSortExpression().accept( this );
+		sortExpression.accept( this );
 
-		final SortOrder sortOrder = sortSpecification.getSortOrder();
 		if ( sortOrder == SortOrder.ASCENDING ) {
 			appendSql( " asc" );
 		}
@@ -1274,14 +1440,75 @@ public abstract class AbstractSqlAstWalker
 
 	@Override
 	public void visitInListPredicate(InListPredicate inListPredicate) {
+		if ( inListPredicate.getListExpressions().isEmpty() ) {
+			appendSql( "false" );
+			return;
+		}
 		final SqlTuple lhsTuple;
-		if ( ( lhsTuple = getTuple( inListPredicate.getTestExpression() ) ) != null && !dialect.supportsRowValueConstructorSyntaxInInList() ) {
-			final ComparisonOperator comparisonOperator = inListPredicate.isNegated() ? ComparisonOperator.NOT_EQUAL : ComparisonOperator.EQUAL;
-			String separator = NO_SEPARATOR;
-			for ( Expression expression : inListPredicate.getListExpressions() ) {
-				appendSql( separator );
-				emulateTupleComparison( lhsTuple.getExpressions(), getTuple( expression ).getExpressions(), comparisonOperator );
-				separator = " or ";
+		if ( ( lhsTuple = getTuple( inListPredicate.getTestExpression() ) ) != null ) {
+			if ( lhsTuple.getExpressions().size() == 1 ) {
+				// Special case for tuples with arity 1 as any DBMS supports scalar IN predicates
+				lhsTuple.getExpressions().get( 0 ).accept( this );
+				if ( inListPredicate.isNegated() ) {
+					appendSql( " not" );
+				}
+				appendSql( " in (" );
+				String separator = NO_SEPARATOR;
+				for ( Expression expression : inListPredicate.getListExpressions() ) {
+					appendSql( separator );
+					getTuple( expression ).getExpressions().get( 0 ).accept( this );
+					separator = COMA_SEPARATOR;
+				}
+				appendSql( CLOSE_PARENTHESIS );
+			}
+			else if ( !dialect.supportsRowValueConstructorSyntaxInInList() ) {
+				final ComparisonOperator comparisonOperator = inListPredicate.isNegated() ?
+						ComparisonOperator.NOT_EQUAL :
+						ComparisonOperator.EQUAL;
+				// Some DBs like Oracle support tuples only for the IN subquery predicate
+				if ( dialect.supportsRowValueConstructorSyntaxInInSubquery() && dialect.supportsUnionAll() ) {
+					inListPredicate.getTestExpression().accept( this );
+					if ( inListPredicate.isNegated() ) {
+						appendSql( " not" );
+					}
+					appendSql( " in (" );
+					String separator = NO_SEPARATOR;
+					for ( Expression expression : inListPredicate.getListExpressions() ) {
+						appendSql( separator );
+						renderExpressionsAsSubquery(
+								getTuple( expression ).getExpressions()
+						);
+						separator = " union all ";
+					}
+					appendSql( CLOSE_PARENTHESIS );
+				}
+				else {
+					String separator = NO_SEPARATOR;
+					for ( Expression expression : inListPredicate.getListExpressions() ) {
+						appendSql( separator );
+						emulateTupleComparison(
+								lhsTuple.getExpressions(),
+								getTuple( expression ).getExpressions(),
+								comparisonOperator,
+								true
+						);
+						separator = " or ";
+					}
+				}
+			}
+			else {
+				inListPredicate.getTestExpression().accept( this );
+				if ( inListPredicate.isNegated() ) {
+					appendSql( " not" );
+				}
+				appendSql( " in (" );
+				String separator = NO_SEPARATOR;
+				for ( Expression expression : inListPredicate.getListExpressions() ) {
+					appendSql( separator );
+					expression.accept( this );
+					separator = COMA_SEPARATOR;
+				}
+				appendSql( CLOSE_PARENTHESIS );
 			}
 		}
 		else {
@@ -1290,16 +1517,11 @@ public abstract class AbstractSqlAstWalker
 				appendSql( " not" );
 			}
 			appendSql( " in (" );
-			if ( inListPredicate.getListExpressions().isEmpty() ) {
-				appendSql( NULL_KEYWORD );
-			}
-			else {
-				String separator = NO_SEPARATOR;
-				for ( Expression expression : inListPredicate.getListExpressions() ) {
-					appendSql( separator );
-					expression.accept( this );
-					separator = COMA_SEPARATOR;
-				}
+			String separator = NO_SEPARATOR;
+			for ( Expression expression : inListPredicate.getListExpressions() ) {
+				appendSql( separator );
+				expression.accept( this );
+				separator = COMA_SEPARATOR;
 			}
 			appendSql( CLOSE_PARENTHESIS );
 		}
@@ -1327,14 +1549,33 @@ public abstract class AbstractSqlAstWalker
 	@Override
 	public void visitInSubQueryPredicate(InSubQueryPredicate inSubQueryPredicate) {
 		final SqlTuple lhsTuple;
-		if ( ( lhsTuple = getTuple( inSubQueryPredicate.getTestExpression() ) ) != null && !dialect.supportsRowValueConstructorSyntaxInInList() ) {
-			emulateTupleSubQueryPredicate(
-					inSubQueryPredicate,
-					inSubQueryPredicate.isNegated(),
-					inSubQueryPredicate.getSubQuery(),
-					lhsTuple,
-					ComparisonOperator.EQUAL
-			);
+		if ( ( lhsTuple = getTuple( inSubQueryPredicate.getTestExpression() ) ) != null ) {
+			if ( lhsTuple.getExpressions().size() == 1 ) {
+				// Special case for tuples with arity 1 as any DBMS supports scalar IN predicates
+				lhsTuple.getExpressions().get( 0 ).accept( this );
+				if ( inSubQueryPredicate.isNegated() ) {
+					appendSql( " not" );
+				}
+				appendSql( " in " );
+				visitQuerySpec( inSubQueryPredicate.getSubQuery() );
+			}
+			else if ( !dialect.supportsRowValueConstructorSyntaxInInSubquery() ) {
+				emulateTupleSubQueryPredicate(
+						inSubQueryPredicate,
+						inSubQueryPredicate.isNegated(),
+						inSubQueryPredicate.getSubQuery(),
+						lhsTuple,
+						ComparisonOperator.EQUAL
+				);
+			}
+			else {
+				inSubQueryPredicate.getTestExpression().accept( this );
+				if ( inSubQueryPredicate.isNegated() ) {
+					appendSql( " not" );
+				}
+				appendSql( " in " );
+				visitQuerySpec( inSubQueryPredicate.getSubQuery() );
+			}
 		}
 		else {
 			inSubQueryPredicate.getTestExpression().accept( this );
@@ -1357,31 +1598,64 @@ public abstract class AbstractSqlAstWalker
 			if ( negated ) {
 				appendSql( "not " );
 			}
-			appendSql( "exists (select 1" );
-			visitFromClause( subQuery.getFromClause() );
 
-			appendSql( " where " );
-
-			// TODO: use HAVING clause if it has a group by
-			clauseStack.push( Clause.WHERE );
 			try {
-				renderSelectTupleComparison(
-						subQuery.getSelectClause().getSqlSelections(),
-						lhsTuple,
-						tupleComparisonOperator
-				);
-				appendSql( " and (" );
-				final Predicate whereClauseRestrictions = subQuery.getWhereClauseRestrictions();
-				if ( whereClauseRestrictions != null ) {
-					whereClauseRestrictions.accept( this );
+				querySpecStack.push( subQuery );
+				appendSql( "exists (select 1" );
+				visitFromClause( subQuery.getFromClause() );
+
+				if ( !subQuery.getGroupByClauseExpressions()
+						.isEmpty() || subQuery.getHavingClauseRestrictions() != null ) {
+					// If we have a group by or having clause, we have to move the tuple comparison emulation to the HAVING clause
+					visitWhereClause( subQuery );
+					visitGroupByClause( subQuery, false );
+
+					appendSql( " having " );
+					clauseStack.push( Clause.HAVING );
+					try {
+						renderSelectTupleComparison(
+								subQuery.getSelectClause().getSqlSelections(),
+								lhsTuple,
+								tupleComparisonOperator
+						);
+						final Predicate havingClauseRestrictions = subQuery.getHavingClauseRestrictions();
+						if ( havingClauseRestrictions != null ) {
+							appendSql( " and (" );
+							havingClauseRestrictions.accept( this );
+							appendSql( ')' );
+						}
+					}
+					finally {
+						clauseStack.pop();
+					}
 				}
-				appendSql( ')' );
+				else {
+					// If we have no group by or having clause, we can move the tuple comparison emulation to the WHERE clause
+					appendSql( " where " );
+					clauseStack.push( Clause.WHERE );
+					try {
+						renderSelectTupleComparison(
+								subQuery.getSelectClause().getSqlSelections(),
+								lhsTuple,
+								tupleComparisonOperator
+						);
+						final Predicate whereClauseRestrictions = subQuery.getWhereClauseRestrictions();
+						if ( whereClauseRestrictions != null ) {
+							appendSql( " and (" );
+							whereClauseRestrictions.accept( this );
+							appendSql( ')' );
+						}
+					}
+					finally {
+						clauseStack.pop();
+					}
+				}
+
+				appendSql( ")" );
 			}
 			finally {
-				clauseStack.pop();
+				querySpecStack.pop();
 			}
-
-			appendSql( ")" );
 		}
 		else {
 			// TODO: We could use nested queries and use row numbers to emulate this
@@ -1405,31 +1679,38 @@ public abstract class AbstractSqlAstWalker
 			appendSql( tupleComparisonOperator.sqlText() );
 			appendSql( " " );
 
-			appendSql( "(" );
-			visitSelectClause( subQuery.getSelectClause() );
-			visitFromClause( subQuery.getFromClause() );
-			visitWhereClause( subQuery );
+			try {
+				querySpecStack.push( subQuery );
+				appendSql( "(" );
+				visitSelectClause( subQuery.getSelectClause() );
+				visitFromClause( subQuery.getFromClause() );
+				visitWhereClause( subQuery );
+				visitGroupByClause( subQuery, dialect.supportsSelectAliasInGroupByClause() );
+				visitHavingClause( subQuery );
 
-			appendSql( " order by " );
-			boolean asc = tupleComparisonOperator == ComparisonOperator.LESS_THAN || tupleComparisonOperator == ComparisonOperator.LESS_THAN_OR_EQUAL;
-			final List<SqlSelection> sqlSelections = subQuery.getSelectClause().getSqlSelections();
-			final String order;
-			if ( tupleComparisonOperator == ComparisonOperator.LESS_THAN || tupleComparisonOperator == ComparisonOperator.LESS_THAN_OR_EQUAL ) {
-				// Default order is asc so we don't need to specify the order explicitly
-				order = "";
-			}
-			else {
-				order = " desc";
-			}
-			appendSql( "1" );
-			appendSql( order );
-			for ( int i = 1; i < sqlSelections.size(); i++ ) {
-				appendSql( COMA_SEPARATOR );
-				appendSql( Integer.toString( i + 1 ) );
+				appendSql( " order by " );
+				final List<SqlSelection> sqlSelections = subQuery.getSelectClause().getSqlSelections();
+				final String order;
+				if ( tupleComparisonOperator == ComparisonOperator.LESS_THAN || tupleComparisonOperator == ComparisonOperator.LESS_THAN_OR_EQUAL ) {
+					// Default order is asc so we don't need to specify the order explicitly
+					order = "";
+				}
+				else {
+					order = " desc";
+				}
+				appendSql( "1" );
 				appendSql( order );
+				for ( int i = 1; i < sqlSelections.size(); i++ ) {
+					appendSql( COMA_SEPARATOR );
+					appendSql( Integer.toString( i + 1 ) );
+					appendSql( order );
+				}
+				renderLimit( ONE_LITERAL );
+				appendSql( ")" );
 			}
-			renderLimit( ONE_LITERAL );
-			appendSql( ")" );
+			finally {
+				querySpecStack.pop();
+			}
 		}
 		else {
 			// TODO: We could use nested queries and use row numbers to emulate this
@@ -1496,33 +1777,14 @@ public abstract class AbstractSqlAstWalker
 		else {
 			predicateValue = " is null";
 		}
-		if ( expression instanceof EmbeddableValuedPathInterpretation ) {
-			final EmbeddableValuedPathInterpretation embeddableValuedPathInterpretation = (EmbeddableValuedPathInterpretation) expression;
-
-			final Expression sqlExpression = embeddableValuedPathInterpretation.getSqlExpression();
-			final SqlTuple tuple;
-			if ( ( tuple = getTuple( sqlExpression ) ) != null ) {
-				String separator = NO_SEPARATOR;
-
-				boolean isCurrentWhereClause = clauseStack.getCurrent() == Clause.WHERE;
-				if ( isCurrentWhereClause ) {
-					appendSql( OPEN_PARENTHESIS );
-				}
-
-				for ( Expression exp : tuple.getExpressions() ) {
-					appendSql( separator );
-					exp.accept( this );
-					appendSql( predicateValue );
-					separator = " and ";
-				}
-
-				if ( isCurrentWhereClause ) {
-					appendSql( CLOSE_PARENTHESIS );
-				}
-			}
-			else {
-				expression.accept( this );
+		final SqlTuple tuple;
+		if ( ( tuple = getTuple( expression ) ) != null ) {
+			String separator = NO_SEPARATOR;
+			for ( Expression exp : tuple.getExpressions() ) {
+				appendSql( separator );
+				exp.accept( this );
 				appendSql( predicateValue );
+				separator = " and ";
 			}
 		}
 		else {
@@ -1573,7 +1835,20 @@ public abstract class AbstractSqlAstWalker
 			}
 
 			final ComparisonOperator operator = comparisonPredicate.getOperator();
-			if ( subquery != null && !dialect.supportsRowValueConstructorSyntaxInQuantifiedPredicates() ) {
+			if ( lhsTuple.getExpressions().size() == 1 ) {
+				// Special case for tuples with arity 1 as any DBMS supports scalar IN predicates
+				lhsTuple.getExpressions().get( 0 ).accept( this );
+				appendSql( " " );
+				appendSql( operator.sqlText() );
+				appendSql( " " );
+				if ( subquery == null ) {
+					getTuple( comparisonPredicate.getRightHandExpression() ).getExpressions().get( 0 ).accept( this );
+				}
+				else {
+					rhsExpression.accept( this );
+				}
+			}
+			else if ( subquery != null && !dialect.supportsRowValueConstructorSyntaxInQuantifiedPredicates() ) {
 				// For quantified relational comparisons, we can do an optimized emulation
 				if ( all && operator != ComparisonOperator.EQUAL && operator != ComparisonOperator.NOT_EQUAL && dialect.supportsRowValueConstructorSyntax() ) {
 					emulateQuantifiedTupleSubQueryPredicate(
@@ -1596,11 +1871,24 @@ public abstract class AbstractSqlAstWalker
 			else if ( !dialect.supportsRowValueConstructorSyntax() ) {
 				rhsTuple = getTuple( rhsExpression );
 				assert rhsTuple != null;
-				emulateTupleComparison(
-						lhsTuple.getExpressions(),
-						rhsTuple.getExpressions(),
-						operator
-				);
+				// Some DBs like Oracle support tuples only for the IN subquery predicate
+				if ( ( operator == ComparisonOperator.EQUAL || operator == ComparisonOperator.NOT_EQUAL ) && dialect.supportsRowValueConstructorSyntaxInInSubquery() ) {
+					comparisonPredicate.getLeftHandExpression().accept( this );
+					if ( operator == ComparisonOperator.NOT_EQUAL ) {
+						appendSql( " not" );
+					}
+					appendSql( " in (" );
+					renderExpressionsAsSubquery( rhsTuple.getExpressions() );
+					appendSql( CLOSE_PARENTHESIS );
+				}
+				else {
+					emulateTupleComparison(
+							lhsTuple.getExpressions(),
+							rhsTuple.getExpressions(),
+							operator,
+							true
+					);
+				}
 			}
 			else {
 				comparisonPredicate.getLeftHandExpression().accept( this );
@@ -1616,7 +1904,15 @@ public abstract class AbstractSqlAstWalker
 			if ( lhsExpression instanceof QuerySpec ) {
 				final QuerySpec subquery = (QuerySpec) lhsExpression;
 
-				if ( dialect.supportsRowValueConstructorSyntax() ) {
+				if ( rhsTuple.getExpressions().size() == 1 ) {
+					// Special case for tuples with arity 1 as any DBMS supports scalar IN predicates
+					lhsExpression.accept( this );
+					appendSql( " " );
+					appendSql( comparisonPredicate.getOperator().sqlText() );
+					appendSql( " " );
+					rhsTuple.getExpressions().get( 0 ).accept( this );
+				}
+				else if ( dialect.supportsRowValueConstructorSyntax() ) {
 					lhsExpression.accept( this );
 					appendSql( " " );
 					appendSql( comparisonPredicate.getOperator().sqlText() );

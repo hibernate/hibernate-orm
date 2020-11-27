@@ -55,7 +55,6 @@ public class CriteriaLiteralWithSingleQuoteTest extends EntityManagerFactoryBase
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = PostgreSQLDialect.class, matchSubTypes = true, reason = "PostgreSQL does not support literals in group by statement")
 	public void testLiteralProjectionAndGroupBy() {
 		inTransaction(
 				entityManager -> {
@@ -89,7 +88,7 @@ public class CriteriaLiteralWithSingleQuoteTest extends EntityManagerFactoryBase
 	public void cleanupData() {
 		inTransaction(
 				entityManager -> {
-					entityManager.createQuery( "delete from Student" );
+					entityManager.createQuery( "delete from Student" ).executeUpdate();
 				}
 		);
 	}
@@ -110,7 +109,6 @@ public class CriteriaLiteralWithSingleQuoteTest extends EntityManagerFactoryBase
 		}
 
 		public void setId(Long id) {
-			this.id = id;
 			this.id = id;
 		}
 

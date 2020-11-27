@@ -277,9 +277,14 @@ mapKeyNavigablePath
 // GROUP BY clause
 
 groupByClause
-	:	GROUP BY expression ( COMMA expression )*
+	:	GROUP BY groupByExpression ( COMMA groupByExpression )*
 	;
 
+groupByExpression
+	: identifier collationSpecification?
+	| INTEGER_LITERAL collationSpecification?
+	| expression
+	;
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //HAVING clause
@@ -396,23 +401,28 @@ likeEscape
 
 expression
 	//highest to lowest precedence
-	: LEFT_PAREN expression RIGHT_PAREN					# GroupedExpression
-	| LEFT_PAREN subQuery RIGHT_PAREN					# SubQueryExpression
-	| caseList collationSpecification?					# CaseExpression
-	| literal collationSpecification?					# LiteralExpression
-	| parameter collationSpecification?					# ParameterExpression
+	: LEFT_PAREN expression RIGHT_PAREN						# GroupedExpression
+	| LEFT_PAREN expression (COMMA expression)* RIGHT_PAREN	# TupleExpression
+	| LEFT_PAREN subQuery RIGHT_PAREN						# SubQueryExpression
+	| primaryExpression collationSpecification?				# CollateExpression
+	| signOperator expression								# UnaryExpression
+	| expression datetimeField  							# ToDurationExpression
+	| expression BY datetimeField							# FromDurationExpression
+	| expression multiplicativeOperator expression			# MultiplicationExpression
+	| expression additiveOperator expression				# AdditionExpression
+	| expression DOUBLE_PIPE expression						# ConcatenationExpression
+	;
+
+primaryExpression
+	: caseList											# CaseExpression
+	| literal											# LiteralExpression
+	| parameter											# ParameterExpression
 	| entityTypeReference								# EntityTypeExpression
-	| entityIdReference collationSpecification?			# EntityIdExpression
-	| entityVersionReference collationSpecification?	# EntityVersionExpression
-	| entityNaturalIdReference collationSpecification?	# EntityNaturalIdExpression
-	| path collationSpecification?						# PathExpression
-	| function collationSpecification?					# FunctionExpression
-	| signOperator expression							# UnaryExpression
-	| expression datetimeField  						# ToDurationExpression
-	| expression BY datetimeField						# FromDurationExpression
-	| expression multiplicativeOperator expression		# MultiplicationExpression
-	| expression additiveOperator expression			# AdditionExpression
-	| expression DOUBLE_PIPE expression					# ConcatenationExpression
+	| entityIdReference									# EntityIdExpression
+	| entityVersionReference							# EntityVersionExpression
+	| entityNaturalIdReference							# EntityNaturalIdExpression
+	| path												# PathExpression
+	| function											# FunctionExpression
 	;
 
 multiplicativeOperator

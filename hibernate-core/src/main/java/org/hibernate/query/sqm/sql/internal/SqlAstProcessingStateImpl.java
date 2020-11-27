@@ -32,6 +32,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 public class SqlAstProcessingStateImpl implements SqlAstProcessingState, SqlExpressionResolver {
 	private final SqlAstProcessingState parentState;
 	private final SqlAstCreationState creationState;
+	private final SqlExpressionResolver expressionResolver;
 	private final Supplier<Clause> currentClauseAccess;
 
 	private final Map<String,Expression> expressionMap = new HashMap<>();
@@ -42,6 +43,18 @@ public class SqlAstProcessingStateImpl implements SqlAstProcessingState, SqlExpr
 			Supplier<Clause> currentClauseAccess) {
 		this.parentState = parentState;
 		this.creationState = creationState;
+		this.expressionResolver = this;
+		this.currentClauseAccess = currentClauseAccess;
+	}
+
+	public SqlAstProcessingStateImpl(
+			SqlAstProcessingState parentState,
+			SqlAstCreationState creationState,
+			Function<SqlExpressionResolver, SqlExpressionResolver> expressionResolverDecorator,
+			Supplier<Clause> currentClauseAccess) {
+		this.parentState = parentState;
+		this.creationState = creationState;
+		this.expressionResolver = expressionResolverDecorator.apply( this );
 		this.currentClauseAccess = currentClauseAccess;
 	}
 
@@ -56,7 +69,7 @@ public class SqlAstProcessingStateImpl implements SqlAstProcessingState, SqlExpr
 
 	@Override
 	public SqlExpressionResolver getSqlExpressionResolver() {
-		return this;
+		return expressionResolver;
 	}
 
 	@Override

@@ -241,6 +241,7 @@ public class StandardSqmSelectTranslator
 
 	@Override
 	public Void visitSelection(SqmSelection sqmSelection) {
+		currentSqlSelectionCollector().next();
 		final DomainResultProducer resultProducer = resolveDomainResultProducer( sqmSelection );
 
 		if ( getProcessingStateStack().depth() > 1 ) {

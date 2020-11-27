@@ -8,12 +8,14 @@ package org.hibernate.query.sqm.sql.internal;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlAstProcessingState;
 import org.hibernate.sql.ast.spi.SqlAstQuerySpecProcessingState;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -35,6 +37,16 @@ public class SqlAstQuerySpecProcessingStateImpl
 			SqlAstCreationState creationState,
 			Supplier<Clause> currentClauseAccess) {
 		super( parent, creationState, currentClauseAccess );
+		this.querySpec = querySpec;
+	}
+
+	public SqlAstQuerySpecProcessingStateImpl(
+			QuerySpec querySpec,
+			SqlAstProcessingState parent,
+			SqlAstCreationState creationState,
+			Function<SqlExpressionResolver, SqlExpressionResolver> expressionResolverDecorator,
+			Supplier<Clause> currentClauseAccess) {
+		super( parent, creationState, expressionResolverDecorator, currentClauseAccess );
 		this.querySpec = querySpec;
 	}
 

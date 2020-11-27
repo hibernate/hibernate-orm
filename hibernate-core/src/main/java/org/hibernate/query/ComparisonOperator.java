@@ -23,6 +23,16 @@ public enum ComparisonOperator {
 		}
 
 		@Override
+		public ComparisonOperator broader() {
+			return EQUAL;
+		}
+
+		@Override
+		public ComparisonOperator sharper() {
+			return EQUAL;
+		}
+
+		@Override
 		public String sqlText() {
 			return "=";
 		}
@@ -36,6 +46,16 @@ public enum ComparisonOperator {
 
 		@Override
 		public ComparisonOperator invert() {
+			return NOT_EQUAL;
+		}
+
+		@Override
+		public ComparisonOperator broader() {
+			return NOT_EQUAL;
+		}
+
+		@Override
+		public ComparisonOperator sharper() {
 			return NOT_EQUAL;
 		}
 
@@ -57,6 +77,16 @@ public enum ComparisonOperator {
 		}
 
 		@Override
+		public ComparisonOperator broader() {
+			return LESS_THAN_OR_EQUAL;
+		}
+
+		@Override
+		public ComparisonOperator sharper() {
+			return LESS_THAN;
+		}
+
+		@Override
 		public String sqlText() {
 			return "<";
 		}
@@ -71,6 +101,16 @@ public enum ComparisonOperator {
 		@Override
 		public ComparisonOperator invert() {
 			return GREATER_THAN_OR_EQUAL;
+		}
+
+		@Override
+		public ComparisonOperator broader() {
+			return LESS_THAN_OR_EQUAL;
+		}
+
+		@Override
+		public ComparisonOperator sharper() {
+			return LESS_THAN;
 		}
 
 		@Override
@@ -91,6 +131,16 @@ public enum ComparisonOperator {
 		}
 
 		@Override
+		public ComparisonOperator broader() {
+			return GREATER_THAN_OR_EQUAL;
+		}
+
+		@Override
+		public ComparisonOperator sharper() {
+			return GREATER_THAN;
+		}
+
+		@Override
 		public String sqlText() {
 			return ">";
 		}
@@ -108,6 +158,16 @@ public enum ComparisonOperator {
 		}
 
 		@Override
+		public ComparisonOperator broader() {
+			return GREATER_THAN_OR_EQUAL;
+		}
+
+		@Override
+		public ComparisonOperator sharper() {
+			return GREATER_THAN;
+		}
+
+		@Override
 		public String sqlText() {
 			return ">=";
 		}
@@ -115,5 +175,7 @@ public enum ComparisonOperator {
 
 	public abstract ComparisonOperator negated();
 	public abstract ComparisonOperator invert();
+	public abstract ComparisonOperator broader();
+	public abstract ComparisonOperator sharper();
 	public abstract String sqlText();
 }

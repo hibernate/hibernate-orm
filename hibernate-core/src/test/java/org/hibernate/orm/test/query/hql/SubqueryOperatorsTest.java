@@ -57,11 +57,11 @@ public class SubqueryOperatorsTest extends SessionFactoryBasedFunctionalTest {
 		inTransaction(
 				session -> {
 					List res0 = session.createQuery(
-							"select (select 1) as one, (select 'foo') as foo order by one, foo, (select 2)" )
+							"select (select cast(1 as Integer)) as one, (select cast('foo' as String)) as foo order by one, foo, (select 2)" )
 							.list();
 					assertThat( res0.size(), is( 1 ) );
 					List res1 = session.createQuery(
-							"select (select 1) as one, (select 'foo') as foo from SimpleEntity o order by one, foo, (select 2)" )
+							"select (select cast(1 as Integer)) as one, (select cast('foo' as String)) as foo from SimpleEntity o order by one, foo, (select 2)" )
 							.list();
 					assertThat( res1.size(), is( 2 ) );
 					List res2 = session.createQuery(
@@ -69,7 +69,7 @@ public class SubqueryOperatorsTest extends SessionFactoryBasedFunctionalTest {
 							.list();
 					assertThat( res2.size(), is( 2 ) );
 					List res3 = session.createQuery(
-							"from SimpleEntity o where o.someString = (select 'aaa') and o.id >= (select 0)" )
+							"from SimpleEntity o where o.someString = (select cast('aaa' as String)) and o.id >= (select cast(0 as Integer))" )
 							.list();
 					assertThat( res3.size(), is( 1 ) );
 					List res4 = session.createQuery(

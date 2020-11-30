@@ -265,7 +265,8 @@ public class DerbyDialect extends Dialect {
 			case STRING:
 				// See https://issues.apache.org/jira/browse/DERBY-2072
 				if ( from.getKind() == CastTypeKind.NUMERIC ) {
-					return "cast(cast(?1 as char(38)) as ?2)";
+					// Use the maximum char capacity here as an intermediate type because Derby doesn't support direct conversion to varchar
+					return "cast(cast(?1 as char(254)) as ?2)";
 				}
 				break;
 		}
@@ -343,6 +344,11 @@ public class DerbyDialect extends Dialect {
 	@Override
 	public String getFromDual() {
 		return "from (values 0) as dual";
+	}
+
+	@Override
+	public boolean supportsSelectQueryWithoutFromClause() {
+		return false;
 	}
 
 	@Override

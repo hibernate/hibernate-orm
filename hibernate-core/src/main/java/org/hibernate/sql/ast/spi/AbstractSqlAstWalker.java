@@ -272,7 +272,8 @@ public abstract class AbstractSqlAstWalker
 			if ( !querySpec.isRoot() ) {
 				appendSql( ")" );
 			}
-		} finally {
+		}
+		finally {
 			querySpecStack.push( querySpec );
 		}
 	}
@@ -705,10 +706,9 @@ public abstract class AbstractSqlAstWalker
 	@Override
 	public void visitFromClause(FromClause fromClause) {
 		if ( fromClause == null || fromClause.getRoots().isEmpty() ) {
-			String fromDual = getDialect().getFromDual();
-			if ( !fromDual.isEmpty() ) {
+			if ( !getDialect().supportsSelectQueryWithoutFromClause() ) {
 				appendSql( " " );
-				appendSql( fromDual );
+				appendSql( getDialect().getFromDual() );
 			}
 		}
 		else {

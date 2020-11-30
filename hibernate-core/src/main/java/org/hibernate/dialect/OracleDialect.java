@@ -666,6 +666,11 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsSelectQueryWithoutFromClause() {
+		return false;
+	}
+
+	@Override
 	public SequenceSupport getSequenceSupport() {
 		return OracleSequenceSupport.INSTANCE;
 	}

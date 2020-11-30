@@ -267,6 +267,11 @@ public class MimerSQLDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsSelectQueryWithoutFromClause() {
+		return false;
+	}
+
+	@Override
 	public boolean supportsOuterJoinForUpdate() {
 		return false;
 	}

@@ -188,6 +188,11 @@ public class MaxDBDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsSelectQueryWithoutFromClause() {
+		return false;
+	}
+
+	@Override
 	@SuppressWarnings("deprecation")
 	public CaseFragment createCaseFragment() {
 		return new DecodeCaseFragment();

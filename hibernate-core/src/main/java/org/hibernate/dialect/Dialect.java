@@ -1262,6 +1262,10 @@ public abstract class Dialect implements ConversionContext {
 		return "from (values (0)) as dual";
 	}
 
+	public boolean supportsSelectQueryWithoutFromClause() {
+		return true;
+	}
+
 	// limit/offset support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**

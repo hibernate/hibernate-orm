@@ -301,6 +301,11 @@ public class RDMSOS2200Dialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsSelectQueryWithoutFromClause() {
+		return false;
+	}
+
+	@Override
 	public LockingStrategy getLockingStrategy(Lockable lockable, LockMode lockMode) {
 		// RDMS has no known variation of a "SELECT ... FOR UPDATE" syntax...
 		switch (lockMode) {

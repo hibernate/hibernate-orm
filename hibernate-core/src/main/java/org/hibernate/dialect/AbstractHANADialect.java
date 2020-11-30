@@ -1341,6 +1341,11 @@ public abstract class AbstractHANADialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsSelectQueryWithoutFromClause() {
+		return false;
+	}
+
+	@Override
 	public String getQueryHintString(String query, List<String> hints) {
 		return query + " with hint (" + String.join( ",", hints ) + ")";
 	}

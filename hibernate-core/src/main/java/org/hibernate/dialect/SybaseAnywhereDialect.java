@@ -108,6 +108,11 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 	}
 
 	@Override
+	public boolean supportsSelectQueryWithoutFromClause() {
+		return false;
+	}
+
+	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
 		return new SybaseAnywhereIdentityColumnSupport();
 	}

@@ -371,6 +371,11 @@ public class IngresDialect extends Dialect {
 		return "from (select 0) as dual";
 	}
 
+	@Override
+	public boolean supportsSelectQueryWithoutFromClause() {
+		return false;
+	}
+
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override

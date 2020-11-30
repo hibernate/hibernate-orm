@@ -564,6 +564,11 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsSelectQueryWithoutFromClause() {
+		return false;
+	}
+
+	@Override
 	protected SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
 		if ( getVersion() < 1100 && sqlCode == Types.BOOLEAN ) {
 			return SmallIntTypeDescriptor.INSTANCE;

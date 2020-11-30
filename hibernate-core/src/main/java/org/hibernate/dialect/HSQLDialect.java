@@ -328,6 +328,12 @@ public class HSQLDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsSelectQueryWithoutFromClause() {
+		// This is only supported when the PostgreSQL compatibility is enabled
+		return false;
+	}
+
+	@Override
 	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
 		return version < 200 ? EXTRACTOR_18 : EXTRACTOR_20;
 	}

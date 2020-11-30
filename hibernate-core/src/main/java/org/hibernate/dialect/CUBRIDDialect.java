@@ -217,6 +217,11 @@ public class CUBRIDDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsSelectQueryWithoutFromClause() {
+		return false;
+	}
+
+	@Override
 	public char openQuote() {
 		return '[';
 	}

@@ -13,7 +13,6 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -66,14 +65,14 @@ public class BitTypeDescriptor implements SqlTypeDescriptor {
 			//we are in the legacy Boolean-to-BIT JDBC type mapping mode
 			return new BasicJdbcLiteralFormatter( javaTypeDescriptor ) {
 				@Override
-				public String toJdbcLiteral(Object value, Dialect dialect, SharedSessionContractImplementor session) {
-					Boolean bool = unwrap( value, Boolean.class, session );
+				public String toJdbcLiteral(Object value, Dialect dialect, WrapperOptions wrapperOptions) {
+					Boolean bool = unwrap( value, Boolean.class, wrapperOptions );
 					return bool ? "1" : "0";
 				}
 			};
 		}
 		else {
-			return (value, dialect, session) -> value.toString();
+			return (value, dialect, wrapperOptions) -> value.toString();
 		}
 	}
 

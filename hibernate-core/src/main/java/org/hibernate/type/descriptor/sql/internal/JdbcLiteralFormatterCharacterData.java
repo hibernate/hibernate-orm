@@ -6,10 +6,8 @@
  */
 package org.hibernate.type.descriptor.sql.internal;
 
-import java.util.Locale;
-
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.BasicJdbcLiteralFormatter;
 
@@ -33,8 +31,8 @@ public class JdbcLiteralFormatterCharacterData extends BasicJdbcLiteralFormatter
 	}
 
 	@Override
-	public String toJdbcLiteral(Object value, Dialect dialect, SharedSessionContractImplementor session) {
-		final String literalValue = unwrap( value, String.class, session );
+	public String toJdbcLiteral(Object value, Dialect dialect, WrapperOptions wrapperOptions) {
+		final String literalValue = unwrap( value, String.class, wrapperOptions );
 
 		final String inlineLiteral = dialect.inlineLiteral( literalValue );
 

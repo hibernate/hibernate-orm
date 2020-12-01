@@ -19,9 +19,10 @@ import org.hibernate.NullPrecedence;
 import org.hibernate.SortOrder;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.spi.AbstractDelegatingWrapperOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.engine.spi.SessionLazyDelegatorBaseImpl;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.FilterJdbcParameter;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.Stack;
@@ -93,6 +94,7 @@ import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.exec.internal.JdbcParametersImpl;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.type.IntegerType;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.sql.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
@@ -124,7 +126,7 @@ public abstract class AbstractSqlAstWalker
 
 	private final Dialect dialect;
 	private transient AbstractSqmSelfRenderingFunctionDescriptor castFunction;
-	private transient LazySession session;
+	private transient LazySessionWrapperOptions lazySessionWrapperOptions;
 
 	public Dialect getDialect() {
 		return dialect;
@@ -150,11 +152,11 @@ public abstract class AbstractSqlAstWalker
 		return castFunction;
 	}
 
-	protected SessionLazyDelegatorBaseImpl getSession() {
-		if ( session == null ) {
-			session = new LazySession( sessionFactory );
+	protected WrapperOptions getWrapperOptions() {
+		if ( lazySessionWrapperOptions == null ) {
+			lazySessionWrapperOptions = new LazySessionWrapperOptions( sessionFactory );
 		}
-		return session;
+		return lazySessionWrapperOptions;
 	}
 
 	/**
@@ -162,12 +164,12 @@ public abstract class AbstractSqlAstWalker
 	 * Usually, only the {@link org.hibernate.type.descriptor.WrapperOptions} interface is needed,
 	 * but for creating LOBs, it might be to have a full blown session.
 	 */
-	private static class LazySession extends SessionLazyDelegatorBaseImpl {
+	private static class LazySessionWrapperOptions extends AbstractDelegatingWrapperOptions {
 
 		private final SessionFactoryImplementor sessionFactory;
 		private SessionImplementor session;
 
-		public LazySession(SessionFactoryImplementor sessionFactory) {
+		public LazySessionWrapperOptions(SessionFactoryImplementor sessionFactory) {
 			this.sessionFactory = sessionFactory;
 		}
 
@@ -184,6 +186,11 @@ public abstract class AbstractSqlAstWalker
 				session = (SessionImplementor) sessionFactory.openTemporarySession();
 			}
 			return session;
+		}
+
+		@Override
+		public SharedSessionContractImplementor getSession() {
+			return delegate();
 		}
 
 		@Override
@@ -205,9 +212,9 @@ public abstract class AbstractSqlAstWalker
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// for tests, for now
 	public String getSql() {
-		if ( session != null ) {
-			session.cleanup();
-			session = null;
+		if ( lazySessionWrapperOptions != null ) {
+			lazySessionWrapperOptions.cleanup();
+			lazySessionWrapperOptions = null;
 		}
 		return sqlBuffer.toString();
 	}
@@ -1365,7 +1372,7 @@ public abstract class AbstractSqlAstWalker
 						literalFormatter.toJdbcLiteral(
 								literal.getLiteralValue(),
 								dialect,
-								getSession()
+								getWrapperOptions()
 						)
 				);
 			}

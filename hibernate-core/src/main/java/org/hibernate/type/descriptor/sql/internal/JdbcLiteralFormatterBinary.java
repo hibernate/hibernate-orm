@@ -7,7 +7,7 @@
 package org.hibernate.type.descriptor.sql.internal;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.BasicJdbcLiteralFormatter;
 
@@ -22,7 +22,7 @@ public class JdbcLiteralFormatterBinary extends BasicJdbcLiteralFormatter {
 	}
 
 	@Override
-	public String toJdbcLiteral(Object value, Dialect dialect, SharedSessionContractImplementor session) {
-		return dialect.formatBinaryliteral( unwrap( value, byte[].class, session ) );
+	public String toJdbcLiteral(Object value, Dialect dialect, WrapperOptions wrapperOptions) {
+		return dialect.formatBinaryliteral( unwrap( value, byte[].class, wrapperOptions ) );
 	}
 }

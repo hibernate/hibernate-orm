@@ -70,7 +70,7 @@ public interface SqlTypeDescriptor extends Serializable {
 	 * todo (6.0) : move to {@link org.hibernate.metamodel.mapping.JdbcMapping}?
 	 */
 	default <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaTypeDescriptor<T> javaTypeDescriptor) {
-		return (value, dialect, session) -> value.toString();
+		return (value, dialect, wrapperOptions) -> value.toString();
 	}
 
 	/**

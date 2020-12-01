@@ -11,7 +11,7 @@ import java.util.TimeZone;
 import javax.persistence.TemporalType;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.BasicJdbcLiteralFormatter;
 
@@ -27,13 +27,13 @@ public class JdbcLiteralFormatterTemporal extends BasicJdbcLiteralFormatter {
 	}
 
 	@Override
-	public String toJdbcLiteral(Object value, Dialect dialect, SharedSessionContractImplementor session) {
+	public String toJdbcLiteral(Object value, Dialect dialect, WrapperOptions wrapperOptions) {
 		final TimeZone jdbcTimeZone;
-		if ( session == null || session.getJdbcTimeZone() == null ) {
+		if ( wrapperOptions == null || wrapperOptions.getJdbcTimeZone() == null ) {
 			jdbcTimeZone = TimeZone.getDefault();
 		}
 		else {
-			jdbcTimeZone = session.getJdbcTimeZone();
+			jdbcTimeZone = wrapperOptions.getJdbcTimeZone();
 		}
 		// for performance reasons, avoid conversions if we can
 		if ( value instanceof java.util.Date ) {
@@ -61,21 +61,21 @@ public class JdbcLiteralFormatterTemporal extends BasicJdbcLiteralFormatter {
 		switch ( precision) {
 			case DATE: {
 				return dialect.formatDateTimeLiteral(
-						unwrap( value, java.sql.Date.class, session ),
+						unwrap( value, java.sql.Date.class, wrapperOptions ),
 						precision,
 						jdbcTimeZone
 				);
 			}
 			case TIME: {
 				return dialect.formatDateTimeLiteral(
-						unwrap( value, java.sql.Time.class, session ),
+						unwrap( value, java.sql.Time.class, wrapperOptions ),
 						precision,
 						jdbcTimeZone
 				);
 			}
 			default: {
 				return dialect.formatDateTimeLiteral(
-						unwrap( value, java.util.Date.class, session ),
+						unwrap( value, java.util.Date.class, wrapperOptions ),
 						precision,
 						jdbcTimeZone
 				);

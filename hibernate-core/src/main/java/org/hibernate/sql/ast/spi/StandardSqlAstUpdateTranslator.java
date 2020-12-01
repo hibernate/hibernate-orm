@@ -41,62 +41,67 @@ public class StandardSqlAstUpdateTranslator
 
 	@Override
 	public JdbcUpdate translate(UpdateStatement sqlAst) {
-		updatingTableAlias = sqlAst.getTargetTable().getIdentificationVariable();
+		try {
+			updatingTableAlias = sqlAst.getTargetTable().getIdentificationVariable();
 
-		appendSql( "update " );
-		appendSql( sqlAst.getTargetTable().getTableExpression() );
+			appendSql( "update " );
+			appendSql( sqlAst.getTargetTable().getTableExpression() );
 
-		appendSql( " set " );
-		boolean firstPass = true;
-		for ( Assignment assignment : sqlAst.getAssignments() ) {
-			if ( firstPass ) {
-				firstPass = false;
-			}
-			else {
-				appendSql( ", " );
-			}
-
-			final List<ColumnReference> columnReferences = assignment.getAssignable().getColumnReferences();
-			if ( columnReferences.size() == 1 ) {
-				columnReferences.get( 0 ).accept( this );
-			}
-			else {
-				appendSql( " (" );
-				for (ColumnReference columnReference : columnReferences) {
-					columnReference.accept( this );
+			appendSql( " set " );
+			boolean firstPass = true;
+			for ( Assignment assignment : sqlAst.getAssignments() ) {
+				if ( firstPass ) {
+					firstPass = false;
 				}
-				appendSql( ") " );
+				else {
+					appendSql( ", " );
+				}
+
+				final List<ColumnReference> columnReferences = assignment.getAssignable().getColumnReferences();
+				if ( columnReferences.size() == 1 ) {
+					columnReferences.get( 0 ).accept( this );
+				}
+				else {
+					appendSql( " (" );
+					for (ColumnReference columnReference : columnReferences) {
+						columnReference.accept( this );
+					}
+					appendSql( ") " );
+				}
+				appendSql( " = " );
+				assignment.getAssignedValue().accept( this );
 			}
-			appendSql( " = " );
-			assignment.getAssignedValue().accept( this );
+
+			if ( sqlAst.getRestriction() != null ) {
+				appendSql( " where " );
+				sqlAst.getRestriction().accept( this );
+			}
+
+			return new JdbcUpdate() {
+				@Override
+				public String getSql() {
+					return StandardSqlAstUpdateTranslator.this.getSql();
+				}
+
+				@Override
+				public List<JdbcParameterBinder> getParameterBinders() {
+					return StandardSqlAstUpdateTranslator.this.getParameterBinders();
+				}
+
+				@Override
+				public Set<FilterJdbcParameter> getFilterJdbcParameters() {
+					return StandardSqlAstUpdateTranslator.this.getFilterJdbcParameters();
+				}
+
+				@Override
+				public Set<String> getAffectedTableNames() {
+					return StandardSqlAstUpdateTranslator.this.getAffectedTableNames();
+				}
+			};
 		}
-
-		if ( sqlAst.getRestriction() != null ) {
-			appendSql( " where " );
-			sqlAst.getRestriction().accept( this );
+		finally {
+			cleanup();
 		}
-
-		return new JdbcUpdate() {
-			@Override
-			public String getSql() {
-				return StandardSqlAstUpdateTranslator.this.getSql();
-			}
-
-			@Override
-			public List<JdbcParameterBinder> getParameterBinders() {
-				return StandardSqlAstUpdateTranslator.this.getParameterBinders();
-			}
-
-			@Override
-			public Set<FilterJdbcParameter> getFilterJdbcParameters() {
-				return StandardSqlAstUpdateTranslator.this.getFilterJdbcParameters();
-			}
-
-			@Override
-			public Set<String> getAffectedTableNames() {
-				return StandardSqlAstUpdateTranslator.this.getAffectedTableNames();
-			}
-		};
 	}
 
 	@Override

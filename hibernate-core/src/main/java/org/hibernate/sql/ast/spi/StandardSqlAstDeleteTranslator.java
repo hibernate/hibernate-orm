@@ -29,36 +29,41 @@ public class StandardSqlAstDeleteTranslator extends AbstractSqlAstTranslator imp
 
 	@Override
 	public JdbcDelete translate(DeleteStatement sqlAst) {
-		appendSql( "delete from " );
+		try {
+			appendSql( "delete from " );
 
-		renderTableReference( sqlAst.getTargetTable() );
+			renderTableReference( sqlAst.getTargetTable() );
 
-		if ( sqlAst.getRestriction() != null ) {
-			appendSql( " where " );
-			sqlAst.getRestriction().accept( this );
+			if ( sqlAst.getRestriction() != null ) {
+				appendSql( " where " );
+				sqlAst.getRestriction().accept( this );
+			}
+
+			return new JdbcDelete() {
+				@Override
+				public String getSql() {
+					return StandardSqlAstDeleteTranslator.this.getSql();
+				}
+
+				@Override
+				public List<JdbcParameterBinder> getParameterBinders() {
+					return StandardSqlAstDeleteTranslator.this.getParameterBinders();
+				}
+
+				@Override
+				public Set<String> getAffectedTableNames() {
+					return StandardSqlAstDeleteTranslator.this.getAffectedTableNames();
+				}
+
+				@Override
+				public Set<FilterJdbcParameter> getFilterJdbcParameters() {
+					return StandardSqlAstDeleteTranslator.this.getFilterJdbcParameters();
+				}
+			};
 		}
-
-		return new JdbcDelete() {
-			@Override
-			public String getSql() {
-				return StandardSqlAstDeleteTranslator.this.getSql();
-			}
-
-			@Override
-			public List<JdbcParameterBinder> getParameterBinders() {
-				return StandardSqlAstDeleteTranslator.this.getParameterBinders();
-			}
-
-			@Override
-			public Set<String> getAffectedTableNames() {
-				return StandardSqlAstDeleteTranslator.this.getAffectedTableNames();
-			}
-
-			@Override
-			public Set<FilterJdbcParameter> getFilterJdbcParameters() {
-				return StandardSqlAstDeleteTranslator.this.getFilterJdbcParameters();
-			}
-		};
+		finally {
+			cleanup();
+		}
 	}
 
 	@Override
@@ -70,48 +75,52 @@ public class StandardSqlAstDeleteTranslator extends AbstractSqlAstTranslator imp
 	@Override
 	public JdbcDelete translate(CteStatement sqlAst) {
 		assert sqlAst.getCteConsumer() instanceof DeleteStatement;
+		try {
+			appendSql( "with " );
+			appendSql( sqlAst.getCteLabel() );
 
-		appendSql( "with " );
-		appendSql( sqlAst.getCteLabel() );
+			appendSql( " (" );
 
-		appendSql( " (" );
+			String separator = "";
 
-		String separator = "";
+			for ( CteColumn cteColumn : sqlAst.getCteTable().getCteColumns() ) {
+				appendSql( separator );
+				appendSql( cteColumn.getColumnExpression() );
+				separator = ", ";
+			}
 
-		for ( CteColumn cteColumn : sqlAst.getCteTable().getCteColumns() ) {
-			appendSql( separator );
-			appendSql( cteColumn.getColumnExpression() );
-			separator = ", ";
+			appendSql( ") as (" );
+
+			visitQuerySpec( sqlAst.getCteDefinition() );
+
+			appendSql( ") " );
+
+			translate( (DeleteStatement) sqlAst.getCteConsumer() );
+
+			return new JdbcDelete() {
+				@Override
+				public String getSql() {
+					return StandardSqlAstDeleteTranslator.this.getSql();
+				}
+
+				@Override
+				public List<JdbcParameterBinder> getParameterBinders() {
+					return StandardSqlAstDeleteTranslator.this.getParameterBinders();
+				}
+
+				@Override
+				public Set<String> getAffectedTableNames() {
+					return StandardSqlAstDeleteTranslator.this.getAffectedTableNames();
+				}
+
+				@Override
+				public Set<FilterJdbcParameter> getFilterJdbcParameters() {
+					return StandardSqlAstDeleteTranslator.this.getFilterJdbcParameters();
+				}
+			};
 		}
-
-		appendSql( ") as (" );
-
-		visitQuerySpec( sqlAst.getCteDefinition() );
-
-		appendSql( ") " );
-
-		translate( (DeleteStatement) sqlAst.getCteConsumer() );
-
-		return new JdbcDelete() {
-			@Override
-			public String getSql() {
-				return StandardSqlAstDeleteTranslator.this.getSql();
-			}
-
-			@Override
-			public List<JdbcParameterBinder> getParameterBinders() {
-				return StandardSqlAstDeleteTranslator.this.getParameterBinders();
-			}
-
-			@Override
-			public Set<String> getAffectedTableNames() {
-				return StandardSqlAstDeleteTranslator.this.getAffectedTableNames();
-			}
-
-			@Override
-			public Set<FilterJdbcParameter> getFilterJdbcParameters() {
-				return StandardSqlAstDeleteTranslator.this.getFilterJdbcParameters();
-			}
-		};
+		finally {
+			cleanup();
+		}
 	}
 }

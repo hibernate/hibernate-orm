@@ -66,37 +66,47 @@ public class StandardSqlAstSelectTranslator
 
 	@Override
 	public JdbcSelect translate(QuerySpec querySpec) {
-		visitQuerySpec( querySpec );
+		try {
+			visitQuerySpec( querySpec );
 
-		return new JdbcSelect(
-				getSql(),
-				getParameterBinders(),
-				new JdbcValuesMappingProducerStandard(
-						querySpec.getSelectClause().getSqlSelections(),
-						Collections.emptyList()
-				),
-				getAffectedTableNames(),
-				getFilterJdbcParameters()
-		);
+			return new JdbcSelect(
+					getSql(),
+					getParameterBinders(),
+					new JdbcValuesMappingProducerStandard(
+							querySpec.getSelectClause().getSqlSelections(),
+							Collections.emptyList()
+					),
+					getAffectedTableNames(),
+					getFilterJdbcParameters()
+			);
+		}
+		finally {
+			cleanup();
+		}
 	}
 
 	@Override
 	public JdbcSelect translate(SelectStatement sqlAstSelect) {
-		logDomainResultGraph( sqlAstSelect.getDomainResultDescriptors() );
-		logSqlAst( sqlAstSelect );
+		try {
+			logDomainResultGraph( sqlAstSelect.getDomainResultDescriptors() );
+			logSqlAst( sqlAstSelect );
 
-		visitQuerySpec( sqlAstSelect.getQuerySpec() );
+			visitQuerySpec( sqlAstSelect.getQuerySpec() );
 
-		return new JdbcSelect(
-				getSql(),
-				getParameterBinders(),
-				new JdbcValuesMappingProducerStandard(
-						sqlAstSelect.getQuerySpec().getSelectClause().getSqlSelections(),
-						sqlAstSelect.getDomainResultDescriptors()
-				),
-				getAffectedTableNames(),
-				getFilterJdbcParameters()
-		);
+			return new JdbcSelect(
+					getSql(),
+					getParameterBinders(),
+					new JdbcValuesMappingProducerStandard(
+							sqlAstSelect.getQuerySpec().getSelectClause().getSqlSelections(),
+							sqlAstSelect.getDomainResultDescriptors()
+					),
+					getAffectedTableNames(),
+					getFilterJdbcParameters()
+			);
+		}
+		finally {
+			cleanup();
+		}
 	}
 
 }

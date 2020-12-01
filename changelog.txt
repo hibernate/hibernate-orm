@@ -3,6 +3,23 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.4.25.Final (December 01, 2020)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31903
+
+** Bug
+    * [HHH-14350] - MariaDB103Dialect requires the lock wait timeout to be expressed in seconds
+    * [HHH-14348] - Lazy collection is fetched during dirty checking with bytecode enhancement
+    * [HHH-14346] - org.hibernate.metamodel.model.domain.internal.AbstractManagedType#getPluralAttributes NPE
+    * [HHH-14343] - Nested ID classes fail with AnnotationException: Column name game_id of x.x.PlayerStat not found in JoinColumns.referencedColumnName
+    * [HHH-14335] - Cache resolution of SimpleValue#getType
+    * [HHH-14251] - Invalid SQL for @Embedded UPDATE
+
+** Improvement
+    * [HHH-14334] - Make dom4j and jaxb-api optional if hibernate.xml_mapping_enabled=false
+
+
 Changes in 5.4.24.Final (November 17, 2020)
 ------------------------------------------------------------------------------------------------------------------------
 

@@ -212,11 +212,14 @@ public abstract class AbstractSqlAstWalker
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// for tests, for now
 	public String getSql() {
+		return sqlBuffer.toString();
+	}
+
+	protected void cleanup() {
 		if ( lazySessionWrapperOptions != null ) {
 			lazySessionWrapperOptions.cleanup();
 			lazySessionWrapperOptions = null;
 		}
-		return sqlBuffer.toString();
 	}
 
 	@SuppressWarnings("WeakerAccess")

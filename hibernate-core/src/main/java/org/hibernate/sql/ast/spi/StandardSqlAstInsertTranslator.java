@@ -33,80 +33,85 @@ public class StandardSqlAstInsertTranslator
 
 	@Override
 	public JdbcInsert translate(InsertStatement sqlAst) {
-		appendSql( "insert into " );
-		appendSql( sqlAst.getTargetTable().getTableExpression() );
+		try {
+			appendSql( "insert into " );
+			appendSql( sqlAst.getTargetTable().getTableExpression() );
 
-		appendSql( " (" );
-		boolean firstPass = true;
+			appendSql( " (" );
+			boolean firstPass = true;
 
-		final List<ColumnReference> targetColumnReferences = sqlAst.getTargetColumnReferences();
-		if ( targetColumnReferences == null ) {
-			renderImplicitTargetColumnSpec();
-		}
-		else {
-			for (ColumnReference targetColumnReference : targetColumnReferences) {
-				if (firstPass) {
-					firstPass = false;
-				}
-				else {
-					appendSql( ", " );
-				}
-
-				appendSql( targetColumnReference.getColumnExpression() );
+			final List<ColumnReference> targetColumnReferences = sqlAst.getTargetColumnReferences();
+			if ( targetColumnReferences == null ) {
+				renderImplicitTargetColumnSpec();
 			}
-		}
+			else {
+				for (ColumnReference targetColumnReference : targetColumnReferences) {
+					if (firstPass) {
+						firstPass = false;
+					}
+					else {
+						appendSql( ", " );
+					}
 
-		appendSql( ") " );
+					appendSql( targetColumnReference.getColumnExpression() );
+				}
+			}
 
-		if ( sqlAst.getSourceSelectStatement()!=null ) {
-			visitQuerySpec( sqlAst.getSourceSelectStatement() );
-		}
-		else {
-			appendSql("values");
-			boolean firstTuple = true;
-			for ( Values values : sqlAst.getValuesList() ) {
-				if (firstTuple) {
-					firstTuple = false;
-				}
-				else {
-					appendSql(", ");
-				}
-				appendSql(" (");
-				boolean firstExpr = true;
-				for ( Expression expression : values.getExpressions() ) {
-					if (firstExpr) {
-						firstExpr = false;
+			appendSql( ") " );
+
+			if ( sqlAst.getSourceSelectStatement()!=null ) {
+				visitQuerySpec( sqlAst.getSourceSelectStatement() );
+			}
+			else {
+				appendSql("values");
+				boolean firstTuple = true;
+				for ( Values values : sqlAst.getValuesList() ) {
+					if (firstTuple) {
+						firstTuple = false;
 					}
 					else {
 						appendSql(", ");
 					}
-					expression.accept( this );
+					appendSql(" (");
+					boolean firstExpr = true;
+					for ( Expression expression : values.getExpressions() ) {
+						if (firstExpr) {
+							firstExpr = false;
+						}
+						else {
+							appendSql(", ");
+						}
+						expression.accept( this );
+					}
+					appendSql(")");
 				}
-				appendSql(")");
 			}
+
+			return new JdbcInsert() {
+				@Override
+				public String getSql() {
+					return StandardSqlAstInsertTranslator.this.getSql();
+				}
+
+				@Override
+				public List<JdbcParameterBinder> getParameterBinders() {
+					return StandardSqlAstInsertTranslator.this.getParameterBinders();
+				}
+
+				@Override
+				public Set<String> getAffectedTableNames() {
+					return StandardSqlAstInsertTranslator.this.getAffectedTableNames();
+				}
+
+				@Override
+				public Set<FilterJdbcParameter> getFilterJdbcParameters() {
+					return StandardSqlAstInsertTranslator.this.getFilterJdbcParameters();
+				}
+			};
 		}
-
-		return new JdbcInsert() {
-			@Override
-			public String getSql() {
-				return StandardSqlAstInsertTranslator.this.getSql();
-			}
-
-			@Override
-			public List<JdbcParameterBinder> getParameterBinders() {
-				return StandardSqlAstInsertTranslator.this.getParameterBinders();
-			}
-
-			@Override
-			public Set<String> getAffectedTableNames() {
-				return StandardSqlAstInsertTranslator.this.getAffectedTableNames();
-			}
-
-			@Override
-			public Set<FilterJdbcParameter> getFilterJdbcParameters() {
-				return StandardSqlAstInsertTranslator.this.getFilterJdbcParameters();
-			}
-		};
+		finally {
+			cleanup();
+		}
 	}
 
 	private void renderImplicitTargetColumnSpec() {
@@ -115,48 +120,52 @@ public class StandardSqlAstInsertTranslator
 	@Override
 	public JdbcInsert translate(CteStatement sqlAst) {
 		assert sqlAst.getCteConsumer() instanceof InsertStatement;
+		try {
+			appendSql( "with " );
+			appendSql( sqlAst.getCteLabel() );
 
-		appendSql( "with " );
-		appendSql( sqlAst.getCteLabel() );
+			appendSql( " (" );
 
-		appendSql( " (" );
+			String separator = "";
 
-		String separator = "";
+			for ( CteColumn cteColumn : sqlAst.getCteTable().getCteColumns() ) {
+				appendSql( separator );
+				appendSql( cteColumn.getColumnExpression() );
+				separator = ", ";
+			}
 
-		for ( CteColumn cteColumn : sqlAst.getCteTable().getCteColumns() ) {
-			appendSql( separator );
-			appendSql( cteColumn.getColumnExpression() );
-			separator = ", ";
+			appendSql( ") as (" );
+
+			visitQuerySpec( sqlAst.getCteDefinition() );
+
+			appendSql( ") " );
+
+			translate( (InsertStatement) sqlAst.getCteConsumer() );
+
+			return new JdbcInsert() {
+				@Override
+				public String getSql() {
+					return StandardSqlAstInsertTranslator.this.getSql();
+				}
+
+				@Override
+				public List<JdbcParameterBinder> getParameterBinders() {
+					return StandardSqlAstInsertTranslator.this.getParameterBinders();
+				}
+
+				@Override
+				public Set<String> getAffectedTableNames() {
+					return StandardSqlAstInsertTranslator.this.getAffectedTableNames();
+				}
+
+				@Override
+				public Set<FilterJdbcParameter> getFilterJdbcParameters() {
+					return StandardSqlAstInsertTranslator.this.getFilterJdbcParameters();
+				}
+			};
 		}
-
-		appendSql( ") as (" );
-
-		visitQuerySpec( sqlAst.getCteDefinition() );
-
-		appendSql( ") " );
-
-		translate( (InsertStatement) sqlAst.getCteConsumer() );
-
-		return new JdbcInsert() {
-			@Override
-			public String getSql() {
-				return StandardSqlAstInsertTranslator.this.getSql();
-			}
-
-			@Override
-			public List<JdbcParameterBinder> getParameterBinders() {
-				return StandardSqlAstInsertTranslator.this.getParameterBinders();
-			}
-
-			@Override
-			public Set<String> getAffectedTableNames() {
-				return StandardSqlAstInsertTranslator.this.getAffectedTableNames();
-			}
-
-			@Override
-			public Set<FilterJdbcParameter> getFilterJdbcParameters() {
-				return StandardSqlAstInsertTranslator.this.getFilterJdbcParameters();
-			}
-		};
+		finally {
+			cleanup();
+		}
 	}
 }

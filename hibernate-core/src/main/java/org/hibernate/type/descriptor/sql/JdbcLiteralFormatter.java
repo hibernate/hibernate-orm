@@ -7,8 +7,7 @@
 package org.hibernate.type.descriptor.sql;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
  * A formatter object for creating JDBC literals of a given type.
@@ -25,5 +24,5 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 public interface JdbcLiteralFormatter<T> {
 	String NULL = "null";
 
-	String toJdbcLiteral(T value, Dialect dialect, SharedSessionContractImplementor session);
+	String toJdbcLiteral(T value, Dialect dialect, WrapperOptions wrapperOptions);
 }

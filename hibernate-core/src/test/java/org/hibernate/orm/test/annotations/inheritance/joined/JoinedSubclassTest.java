@@ -227,12 +227,12 @@ public class JoinedSubclassTest {
 							customer -> session.delete( customer )
 					);
 
-					session.createQuery( "from Account" ).list().forEach(
-							account -> session.delete( account )
-					);
-
 					session.createQuery( "from Client" ).list().forEach(
 							client -> session.delete( client )
+					);
+
+					session.createQuery( "from Account" ).list().forEach(
+							account -> session.delete( account )
 					);
 
 					session.createQuery( "from ProgramExecution" ).list().forEach(

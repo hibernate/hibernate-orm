@@ -7,6 +7,7 @@
 package org.hibernate.internal;
 
 import java.util.List;
+import java.util.Set;
 
 import org.hibernate.CacheMode;
 import org.hibernate.LockOptions;
@@ -16,6 +17,7 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoadOptions;
 import org.hibernate.persister.entity.EntityPersister;
 
@@ -93,6 +95,7 @@ public class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAc
 			}
 		}
 
+		session.autoFlushIfRequired( (Set) CollectionHelper.setOf( entityDescriptor.getQuerySpaces() ) );
 		final LoadQueryInfluencers loadQueryInfluencers = session.getLoadQueryInfluencers();
 
 		try {

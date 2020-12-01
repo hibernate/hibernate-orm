@@ -62,8 +62,14 @@ public class EnumJavaTypeDescriptor<T extends Enum<T>> extends AbstractTypeDescr
 		if ( String.class.equals( type ) ) {
 			return (X) toName( value );
 		}
+		else if ( Long.class.equals( type ) ) {
+			return (X) toLong( value );
+		}
 		else if ( Integer.class.equals( type ) ) {
 			return (X) toInteger( value );
+		}
+		else if ( Short.class.equals( type ) ) {
+			return (X) toShort( value );
 		}
 		else if ( Byte.class.equals( type ) ) {
 			return (X) toByte( value );
@@ -80,8 +86,14 @@ public class EnumJavaTypeDescriptor<T extends Enum<T>> extends AbstractTypeDescr
 		else if ( value instanceof String ) {
 			return fromName( (String) value );
 		}
+		else if ( value instanceof Long ) {
+			return fromLong( (Long) value );
+		}
 		else if ( value instanceof Integer ) {
 			return fromInteger( (Integer) value );
+		}
+		else if ( value instanceof Short ) {
+			return fromShort( (Short) value );
 		}
 		else if ( value instanceof Byte ) {
 			return fromByte( (Byte) value );
@@ -103,11 +115,31 @@ public class EnumJavaTypeDescriptor<T extends Enum<T>> extends AbstractTypeDescr
 	/**
 	 * Convert a value of the enum type to its ordinal value
 	 */
+	public Short toShort(T domainForm) {
+		if ( domainForm == null ) {
+			return null;
+		}
+		return (short) domainForm.ordinal();
+	}
+
+	/**
+	 * Convert a value of the enum type to its ordinal value
+	 */
 	public Integer toInteger(T domainForm) {
 		if ( domainForm == null ) {
 			return null;
 		}
 		return domainForm.ordinal();
+	}
+
+	/**
+	 * Convert a value of the enum type to its ordinal value
+	 */
+	public Long toLong(T domainForm) {
+		if ( domainForm == null ) {
+			return null;
+		}
+		return (long) domainForm.ordinal();
 	}
 
 	/**
@@ -130,11 +162,31 @@ public class EnumJavaTypeDescriptor<T extends Enum<T>> extends AbstractTypeDescr
 	/**
 	 * Interpret a numeric value as the ordinal of the enum type
 	 */
+	public T fromShort(Short relationalForm) {
+		if ( relationalForm == null ) {
+			return null;
+		}
+		return getJavaType().getEnumConstants()[ relationalForm ];
+	}
+
+	/**
+	 * Interpret a numeric value as the ordinal of the enum type
+	 */
 	public T fromInteger(Integer relationalForm) {
 		if ( relationalForm == null ) {
 			return null;
 		}
 		return getJavaType().getEnumConstants()[ relationalForm ];
+	}
+
+	/**
+	 * Interpret a numeric value as the ordinal of the enum type
+	 */
+	public T fromLong(Long relationalForm) {
+		if ( relationalForm == null ) {
+			return null;
+		}
+		return getJavaType().getEnumConstants()[ relationalForm.intValue() ];
 	}
 
 	/**

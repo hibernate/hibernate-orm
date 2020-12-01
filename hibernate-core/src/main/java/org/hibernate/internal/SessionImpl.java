@@ -2415,6 +2415,7 @@ public class SessionImpl
 		@Override
 		@SuppressWarnings("unchecked")
 		public final T load() {
+			autoFlushIfRequired( (Set) CollectionHelper.setOf( entityPersister().getQuerySpaces() ) );
 			final Object entityId = resolveNaturalId( this.naturalIdParameters );
 			if ( entityId == null ) {
 				return null;
@@ -2501,6 +2502,7 @@ public class SessionImpl
 		@Override
 		public T load(Object naturalIdValue) {
 			//noinspection unchecked
+			autoFlushIfRequired( (Set) CollectionHelper.setOf( entityPersister().getQuerySpaces() ) );
 			return (T) entityPersister().getNaturalIdLoader().load( naturalIdValue, this, SessionImpl.this );
 		}
 

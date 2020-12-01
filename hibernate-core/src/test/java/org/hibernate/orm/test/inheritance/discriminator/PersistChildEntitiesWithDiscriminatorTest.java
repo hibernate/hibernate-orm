@@ -14,6 +14,7 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.RequiresDialects;
+import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.test.inheritance.discriminator.InheritingEntity;
 import org.hibernate.test.inheritance.discriminator.ParentEntity;
@@ -22,6 +23,7 @@ import org.junit.jupiter.api.Test;
 /**
  * @author Pawel Stawicki
  */
+@SessionFactory
 @RequiresDialect(value = PostgreSQLDialect.class, version = 800)
 @DomainModel(annotatedClasses = {
 		ParentEntity.class, InheritingEntity.class

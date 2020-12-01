@@ -30,6 +30,7 @@ import org.hibernate.type.descriptor.sql.NClobTypeDescriptor;
 import org.hibernate.type.descriptor.sql.NVarcharTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.TinyIntTypeDescriptor;
+import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
@@ -50,15 +51,27 @@ public class SqlTypeTests {
 	@Test
 	public void verifyResolutions(DomainModelScope scope) {
 		final PersistentClass entityBinding = scope.getDomainModel().getEntityBinding( SimpleEntity.class.getName() );
-
+		final boolean supportsNationalizedTypes = scope.getDomainModel()
+				.getDatabase()
+				.getDialect()
+				.supportsNationalizedTypes();
 		verifyResolution( entityBinding.getProperty( "materializedClob" ), ClobTypeDescriptor.class );
 		verifyResolution( entityBinding.getProperty( "materializedNClob" ), NClobTypeDescriptor.class );
 
 		verifyResolution( entityBinding.getProperty( "jpaMaterializedClob" ), ClobTypeDescriptor.class );
-		verifyResolution( entityBinding.getProperty( "jpaMaterializedNClob" ), NClobTypeDescriptor.class );
+		verifyResolution(
+				entityBinding.getProperty( "jpaMaterializedNClob" ),
+				supportsNationalizedTypes ? NClobTypeDescriptor.class : ClobTypeDescriptor.class
+		);
 
-		verifyResolution( entityBinding.getProperty( "nationalizedString" ), NVarcharTypeDescriptor.class );
-		verifyResolution( entityBinding.getProperty( "nationalizedClob" ), NClobTypeDescriptor.class );
+		verifyResolution(
+				entityBinding.getProperty( "nationalizedString" ),
+				supportsNationalizedTypes ? NVarcharTypeDescriptor.class : VarcharTypeDescriptor.class
+		);
+		verifyResolution(
+				entityBinding.getProperty( "nationalizedClob" ),
+				supportsNationalizedTypes ? NClobTypeDescriptor.class : ClobTypeDescriptor.class
+		);
 
 		verifyResolution( entityBinding.getProperty( "customType" ), CustomSqlTypeDescriptor.class );
 		verifyResolution( entityBinding.getProperty( "customTypeRegistration" ), RegisteredCustomSqlTypeDescriptor.class );

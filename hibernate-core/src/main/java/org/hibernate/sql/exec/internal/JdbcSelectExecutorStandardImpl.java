@@ -70,6 +70,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			ExecutionContext executionContext,
 			RowTransformer<R> rowTransformer,
 			boolean uniqueFilter) {
+		// Only do auto flushing for top level queries
 		return executeQuery(
 				jdbcSelect,
 				jdbcParameterBindings,
@@ -90,6 +91,8 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext,
 			RowTransformer<R> rowTransformer) {
+		final SharedSessionContractImplementor session = executionContext.getSession();
+		session.autoFlushIfRequired( jdbcSelect.getAffectedTableNames() );
 		return executeQuery(
 				jdbcSelect,
 				jdbcParameterBindings,

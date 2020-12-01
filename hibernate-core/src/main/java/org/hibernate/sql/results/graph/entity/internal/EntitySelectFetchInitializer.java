@@ -123,6 +123,12 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 
 		final EntityKey entityKey = new EntityKey( entityIdentifier, concreteDescriptor );
 
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+		entityInstance = persistenceContext.getEntity( entityKey );
+		if ( entityInstance != null ) {
+			return;
+		}
+
 		Initializer initializer = rowProcessingState.getJdbcValuesSourceProcessingState().findInitializer(
 				entityKey );
 
@@ -137,12 +143,6 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 			}
 			initializer.resolveInstance( rowProcessingState );
 			entityInstance = initializer.getInitializedInstance();
-			return;
-		}
-
-		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-		entityInstance = persistenceContext.getEntity( entityKey );
-		if ( entityInstance != null ) {
 			return;
 		}
 

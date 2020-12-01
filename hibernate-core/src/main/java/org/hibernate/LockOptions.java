@@ -245,7 +245,7 @@ public class LockOptions implements Serializable {
 	 * <p/>
 	 * See {@link #getTimeOut} for a discussion of meaning.
 	 *
-	 * @param timeout The new timeout setting.
+	 * @param timeout The new timeout setting, in milliseconds
 	 *
 	 * @return this (for method chaining).
 	 *

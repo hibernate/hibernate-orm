@@ -20,6 +20,7 @@ import org.hibernate.bytecode.enhance.internal.tracker.SimpleFieldTracker;
 import org.hibernate.bytecode.enhance.spi.CollectionTracker;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CompositeOwner;
 import org.hibernate.engine.spi.CompositeTracker;
 import org.hibernate.engine.spi.ExtendedSelfDirtinessTracker;
@@ -170,11 +171,16 @@ class CodeTemplates {
 				@FieldValue Collection<?> collection,
 				@Advice.FieldValue(EnhancerConstants.TRACKER_COLLECTION_NAME) CollectionTracker $$_hibernate_collectionTracker) {
 			if ( !returned && $$_hibernate_collectionTracker != null ) {
-				if ( collection == null && $$_hibernate_collectionTracker.getSize( fieldName ) != -1 ) {
+				final int size = $$_hibernate_collectionTracker.getSize( fieldName );
+				if ( collection == null && size != -1 ) {
 					returned = true;
 				}
-				else if ( collection != null && $$_hibernate_collectionTracker.getSize( fieldName ) != collection.size() ) {
-					returned = true;
+				else if ( collection != null ) {
+					// We only check sizes of non-persistent or initialized persistent collections
+					if ( ( !( collection instanceof PersistentCollection ) || ( (PersistentCollection) collection ).wasInitialized() )
+							&& size != collection.size() ) {
+						returned = true;
+					}
 				}
 			}
 		}
@@ -188,11 +194,16 @@ class CodeTemplates {
 				@FieldValue Map<?, ?> map,
 				@Advice.FieldValue(EnhancerConstants.TRACKER_COLLECTION_NAME) CollectionTracker $$_hibernate_collectionTracker) {
 			if ( !returned && $$_hibernate_collectionTracker != null ) {
-				if ( map == null && $$_hibernate_collectionTracker.getSize( fieldName ) != -1 ) {
+				final int size = $$_hibernate_collectionTracker.getSize( fieldName );
+				if ( map == null && size != -1 ) {
 					returned = true;
 				}
-				else if ( map != null && $$_hibernate_collectionTracker.getSize( fieldName ) != map.size() ) {
-					returned = true;
+				else if ( map != null ) {
+					// We only check sizes of non-persistent or initialized persistent collections
+					if ( ( !( map instanceof PersistentCollection ) || ( (PersistentCollection) map ).wasInitialized() )
+							&& size != map.size() ) {
+						returned = true;
+					}
 				}
 			}
 		}
@@ -206,11 +217,16 @@ class CodeTemplates {
 				@Advice.Argument(0) DirtyTracker tracker,
 				@Advice.FieldValue(EnhancerConstants.TRACKER_COLLECTION_NAME) CollectionTracker $$_hibernate_collectionTracker) {
 			if ( $$_hibernate_collectionTracker != null ) {
-				if ( collection == null && $$_hibernate_collectionTracker.getSize( fieldName ) != -1 ) {
+				final int size = $$_hibernate_collectionTracker.getSize( fieldName );
+				if ( collection == null && size != -1 ) {
 					tracker.add( fieldName );
 				}
-				else if ( collection != null && $$_hibernate_collectionTracker.getSize( fieldName ) != collection.size() ) {
-					tracker.add( fieldName );
+				else if ( collection != null ) {
+					// We only check sizes of non-persistent or initialized persistent collections
+					if ( ( !( collection instanceof PersistentCollection ) || ( (PersistentCollection) collection ).wasInitialized() )
+							&& size != collection.size() ) {
+						tracker.add( fieldName );
+					}
 				}
 			}
 		}
@@ -224,11 +240,16 @@ class CodeTemplates {
 				@Advice.Argument(0) DirtyTracker tracker,
 				@Advice.FieldValue(EnhancerConstants.TRACKER_COLLECTION_NAME) CollectionTracker $$_hibernate_collectionTracker) {
 			if ( $$_hibernate_collectionTracker != null ) {
-				if ( map == null && $$_hibernate_collectionTracker.getSize( fieldName ) != -1 ) {
+				final int size = $$_hibernate_collectionTracker.getSize( fieldName );
+				if ( map == null && size != -1 ) {
 					tracker.add( fieldName );
 				}
-				else if ( map != null && $$_hibernate_collectionTracker.getSize( fieldName ) != map.size() ) {
-					tracker.add( fieldName );
+				else if ( map != null ) {
+					// We only check sizes of non-persistent or initialized persistent collections
+					if ( ( !( map instanceof PersistentCollection ) || ( (PersistentCollection) map ).wasInitialized() )
+							&& size != map.size() ) {
+						tracker.add( fieldName );
+					}
 				}
 			}
 		}
@@ -242,7 +263,8 @@ class CodeTemplates {
 				@Advice.Argument(value = 0, readOnly = false) LazyAttributeLoadingInterceptor lazyInterceptor,
 				@Advice.FieldValue(EnhancerConstants.TRACKER_COLLECTION_NAME) CollectionTracker $$_hibernate_collectionTracker) {
 			if ( lazyInterceptor == null || lazyInterceptor.isAttributeLoaded( fieldName ) ) {
-				if ( collection == null ) {
+				if ( collection == null || collection instanceof PersistentCollection && !( (PersistentCollection) collection )
+						.wasInitialized() ) {
 					$$_hibernate_collectionTracker.add( fieldName, -1 );
 				}
 				else {
@@ -260,7 +282,8 @@ class CodeTemplates {
 				@Advice.Argument(value = 0, readOnly = false) LazyAttributeLoadingInterceptor lazyInterceptor,
 				@Advice.FieldValue(EnhancerConstants.TRACKER_COLLECTION_NAME) CollectionTracker $$_hibernate_collectionTracker) {
 			if ( lazyInterceptor == null || lazyInterceptor.isAttributeLoaded( fieldName ) ) {
-				if ( map == null ) {
+				if ( map == null || map instanceof PersistentCollection && !( (PersistentCollection) map )
+						.wasInitialized() ) {
 					$$_hibernate_collectionTracker.add( fieldName, -1 );
 				}
 				else {

@@ -13,6 +13,11 @@ import java.util.Map;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
+import org.hibernate.boot.model.naming.ObjectNameNormalizer;
+import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
+import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -193,7 +198,12 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 				}
 				final String columnName = joinColumn == null || joinColumn.isNameDeferred() ? "tata_" + column.getName() : joinColumn
 						.getName();
-				value.addColumn( new Column( columnName ) );
+
+				final Database database = buildingContext.getMetadataCollector().getDatabase();
+				final PhysicalNamingStrategy physicalNamingStrategy = buildingContext.getBuildingOptions().getPhysicalNamingStrategy();
+				final Identifier explicitName = database.toIdentifier( columnName );
+				final Identifier physicalName =  physicalNamingStrategy.toPhysicalColumnName( explicitName, database.getJdbcEnvironment() );
+				value.addColumn( new Column( physicalName.render( database.getDialect() ) ) );
 				if ( joinColumn != null ) {
 					applyComponentColumnSizeValueToJoinColumn( column, joinColumn );
 					joinColumn.linkWithValue( value );

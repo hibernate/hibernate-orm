@@ -68,6 +68,7 @@ tokens
 	private boolean inFrom = false;
 	private boolean inCount = false;
 	private boolean inCountDistinct = false;
+	private boolean inSize = false;
 
 	private int statementType;
 	private String statementTypeName;
@@ -107,6 +108,10 @@ tokens
     public final boolean isInCountDistinct() {
         return inCountDistinct;
     }
+
+    public final boolean isInSize() {
+            return inSize;
+        }
 
 	public final int getStatementType() {
 		return statementType;
@@ -691,8 +696,9 @@ collectionFunction
 	;
 
 functionCall
-	: #( COLL_SIZE path:collectionPath ) {
+	: #( COLL_SIZE {inSize=true;} path:collectionPath ) {
 		#functionCall = createCollectionSizeFunction( #path, inSelect );
+		inSize=false;
 	}
 	| #(METHOD_CALL  {inFunctionCall=true;} pathAsIdent ( #(EXPR_LIST (exprOrSubquery [ null ])* ) )? ) {
         processFunction( #functionCall, inSelect );

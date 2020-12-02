@@ -417,7 +417,8 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 			joinIsNeeded = generateJoin;
 		}
 		else {
-			joinIsNeeded = generateJoin || ( getWalker().isInSelect() || getWalker().isInFrom() );
+			joinIsNeeded = generateJoin
+					|| ( getWalker().isInSelect() || getWalker().isInFrom() || ( implicitJoin && getWalker().isInSize() ) );
 		}
 
 		if ( joinIsNeeded ) {

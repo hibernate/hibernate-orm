@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sql.internal;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
@@ -23,6 +24,6 @@ public class NativeNonSelectQueryPlanImpl implements NonSelectQueryPlan {
 
 	@Override
 	public int executeUpdate(ExecutionContext executionContext) {
-		throw new NotYetImplementedException();
+		throw new NotYetImplementedFor6Exception();
 	}
 }

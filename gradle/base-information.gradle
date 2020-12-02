@@ -16,7 +16,6 @@ ext {
 	if ( project.hasProperty( 'releaseVersion' ) ) {
 		ormVersion = new HibernateVersion( project.releaseVersion, project )
 	}
-	baselineJavaVersion = '1.8'
 	jpaVersion = new JpaVersion('2.2')
 }
 

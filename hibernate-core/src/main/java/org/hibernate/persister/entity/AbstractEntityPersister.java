@@ -12,6 +12,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -67,7 +68,6 @@ import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.CascadeStyle;
-import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityEntry;
@@ -81,6 +81,7 @@ import org.hibernate.engine.spi.PersistenceContext.NaturalIdHelper;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.ValueInclusion;
 import org.hibernate.event.spi.EventSource;
@@ -104,9 +105,9 @@ import org.hibernate.loader.custom.sql.SQLQueryParser;
 import org.hibernate.loader.entity.BatchingEntityLoaderBuilder;
 import org.hibernate.loader.entity.CacheEntityLoaderHelper;
 import org.hibernate.loader.entity.CascadeEntityLoader;
-import org.hibernate.loader.entity.DynamicBatchingEntityLoaderBuilder;
 import org.hibernate.loader.entity.EntityLoader;
 import org.hibernate.loader.entity.UniqueEntityLoader;
+import org.hibernate.loader.entity.plan.MultiEntityLoadingSupport;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Formula;
@@ -2260,6 +2261,52 @@ public abstract class AbstractEntityPersister
 		return Arrays.copyOf( fields, counter );
 	}
 
+	@Override
+	public int[] resolveDirtyAttributeIndexes(
+			final Object[] currentState,
+			final Object[] previousState,
+			final String[] attributeNames,
+			final SessionImplementor session) {
+		final BitSet mutablePropertiesIndexes = entityMetamodel.getMutablePropertiesIndexes();
+		final int estimatedSize = attributeNames == null ? 0 : attributeNames.length + mutablePropertiesIndexes.cardinality();
+		final List<Integer> fields = new ArrayList<>( estimatedSize );
+		if ( estimatedSize == 0 ) {
+			return ArrayHelper.EMPTY_INT_ARRAY;
+		}
+		if ( !mutablePropertiesIndexes.isEmpty() ) {
+			// We have to check the state for "mutable" properties as dirty tracking isn't aware of mutable types
+			final Type[] propertyTypes = entityMetamodel.getPropertyTypes();
+			final boolean[] propertyCheckability = entityMetamodel.getPropertyCheckability();
+			mutablePropertiesIndexes.stream().forEach( i -> {
+				// This is kindly borrowed from org.hibernate.type.TypeHelper.findDirty
+				final boolean dirty = currentState[i] != LazyPropertyInitializer.UNFETCHED_PROPERTY &&
+						( previousState[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY ||
+								( propertyCheckability[i]
+										&& propertyTypes[i].isDirty(
+										previousState[i],
+										currentState[i],
+										propertyColumnUpdateable[i],
+										session
+								) ) );
+				if ( dirty ) {
+					fields.add( i );
+				}
+			} );
+		}
+
+		if ( attributeNames != null ) {
+			final boolean[] propertyUpdateability = entityMetamodel.getPropertyUpdateability();
+			for ( String attributeName : attributeNames ) {
+				final Integer index = entityMetamodel.getPropertyIndexOrNull( attributeName );
+				if ( index != null && propertyUpdateability[index] && !fields.contains( index ) ) {
+					fields.add( index );
+				}
+			}
+		}
+
+		return ArrayHelper.toIntArray( fields );
+	}
+
 	protected String[] getSubclassPropertySubclassNameClosure() {
 		return subclassPropertySubclassNameClosure;
 	}
@@ -4303,7 +4350,7 @@ public abstract class AbstractEntityPersister
 		if ( ! factory.getSessionFactoryOptions().isDelayBatchFetchLoaderCreationsEnabled() ) {
 			for ( LockMode lockMode : LockMode.values() ) {
 				//Trigger eager initialization
-				loaders.getOrBuildByLockMode( lockMode, this::createEntityLoader );
+				getLoaderByLockMode( lockMode );
 			}
 			//Also, we have two special internal fetch profiles to eagerly initialize in this case:
 			loaders.getOrCreateByInternalFetchProfileMerge( this::buildMergeCascadeEntityLoader );
@@ -4312,7 +4359,7 @@ public abstract class AbstractEntityPersister
 		else {
 			//At least initialize this one: it's almost certain to be used,
 			//and also will allow to report mapping errors during initialization.
-			loaders.getOrBuildByLockMode( LockMode.NONE, this::createEntityLoader );
+			getLoaderByLockMode( LockMode.NONE );
 		}
 	}
 
@@ -4325,7 +4372,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	protected final UniqueEntityLoader getLoaderByLockMode(LockMode lockMode) {
-		return loaders.getOrBuildByLockMode( lockMode, this::createEntityLoader );
+		return loaders.getOrBuildByLockMode( lockMode, this::generateDelayedEntityLoader );
 	}
 
 	private UniqueEntityLoader generateDelayedEntityLoader(final LockMode lockMode) {
@@ -4461,7 +4508,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public List multiLoad(Serializable[] ids, SharedSessionContractImplementor session, MultiLoadOptions loadOptions) {
-		return DynamicBatchingEntityLoaderBuilder.INSTANCE.multiLoad(
+		return MultiEntityLoadingSupport.multiLoad(
 				this,
 				ids,
 				session,

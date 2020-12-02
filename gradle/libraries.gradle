@@ -22,7 +22,7 @@ ext {
     cdiVersion = '2.0'
     weldVersion = '3.0.0.Final'
 
-    javassistVersion = '3.24.0-GA'
+    javassistVersion = '3.27.0-GA'
     byteBuddyVersion = '1.10.17'
 
     agroalVersion = '1.9'
@@ -118,7 +118,7 @@ ext {
 
             oracle:          'com.oracle.database.jdbc:ojdbc8:19.8.0.0',
             mssql:           'com.microsoft.sqlserver:mssql-jdbc:7.2.1.jre8',
-            db2:             'com.ibm.db2:db2jcc:10.5',
+            db2:             'com.ibm.db2:jcc:11.5.4.0',
             hana:            'com.sap.cloud.db.jdbc:ngdbc:2.4.59',
 
             jodaTime:        "joda-time:joda-time:${jodaTimeVersion}",

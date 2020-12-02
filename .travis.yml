@@ -1,26 +1,56 @@
 dist: trusty
 language: java
-
-jobs:
-  include:
-    - stage: Oracle JDK 8
-      jdk: oraclejdk8
-    - stage: AdoptOpenJDK 11.0.3
-      install:
-        - curl -L -o install-jdk.sh https://github.com/sormuras/bach/raw/master/install-jdk.sh
-        - source ./install-jdk.sh --target ./openjdk11 --url https://github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-11.0.3%2B7/OpenJDK11U-jdk_x64_linux_hotspot_11.0.3_7.tar.gz
-
-before_script:
-  - java -version
-  - ./gradlew assemble
 script:
-  - ./gradlew check -Plog-test-progress=true
+  - ./ci/build-travis.sh
 before_cache:
-  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
-  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
-  - rm -f  $HOME/.gradle/caches/*/fileHashes/fileHashes.bin
-  - rm -f  $HOME/.gradle/caches/*/fileHashes/fileHashes.lock
+  - ./ci/before-cache.sh
 cache:
   directories:
     - $HOME/.gradle/caches/
     - $HOME/.gradle/wrapper/
+matrix:
+  fast_finish: true
+  include:
+    - env: RDBMS=h2
+      jdk: oraclejdk8
+      sudo: required
+#    - env: RDBMS=derby
+#      jdk: oraclejdk8
+#      sudo: required
+#    - env: RDBMS=mariadb
+#      jdk: oraclejdk8
+#      sudo: true
+#      services:
+#        - docker
+#    - env: RDBMS=postgresql
+#      jdk: oraclejdk8
+#      sudo: true
+#      services:
+#        - docker
+#    - env: RDBMS=oracle
+#      jdk: oraclejdk8
+#      sudo: true
+#      services:
+#        - docker
+#    - env: RDBMS=db2
+#      jdk: oraclejdk8
+#      sudo: true
+#      services:
+#        - docker
+#    - env: RDBMS=mssql
+#      jdk: oraclejdk8
+#      sudo: true
+#      services:
+#        - docker
+    - env: JDK=11
+      install:
+        - curl -L -o install-jdk.sh https://github.com/sormuras/bach/raw/master/install-jdk.sh
+        - source ./install-jdk.sh --target ./openjdk11 --url https://github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-11.0.9%2B11.1/OpenJDK11U-jdk_x64_linux_hotspot_11.0.9_11.tar.gz
+  allow_failures:
+#    - env: RDBMS=derby
+#    - env: RDBMS=mariadb
+#    - env: RDBMS=postgresql
+#    - env: RDBMS=oracle
+#    - env: RDBMS=db2
+#    - env: RDBMS=mssql
+    - env: JDK=11

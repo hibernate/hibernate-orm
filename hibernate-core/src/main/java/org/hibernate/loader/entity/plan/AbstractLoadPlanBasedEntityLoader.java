@@ -153,6 +153,10 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 		);
 	}
 
+	public OuterJoinLoadable getEntityPersister() {
+		return entityPersister;
+	}
+
 	@Override
 	protected LoadQueryDetails getStaticLoadQuery() {
 		return staticLoadQuery;
@@ -160,6 +164,25 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 
 	protected String getEntityName() {
 		return entityName;
+	}
+
+	public List<?> loadEntityBatch(
+			Serializable[] idsInBatch,
+			OuterJoinLoadable persister,
+			LockOptions lockOptions,
+			SharedSessionContractImplementor session) {
+		final Type idType = persister.getIdentifierType();
+
+		return loadEntityBatch(
+				session,
+				idsInBatch,
+				persister.getIdentifierType(),
+				null,
+				null,
+				null,
+				persister,
+				lockOptions
+		);
 	}
 
 	/**

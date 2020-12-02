@@ -17,19 +17,11 @@ import org.hibernate.loader.plan.exec.query.internal.QueryBuildingParametersImpl
 import org.hibernate.loader.plan.exec.query.spi.QueryBuildingParameters;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.type.Type;
+
 import org.jboss.logging.Logger;
 
 /**
  * UniqueEntityLoader implementation that is the main functionality for LoadPlan-based Entity loading.
- * <p/>
- * Can handle batch-loading as well as non-pk, unique-key loading,
- * <p/>
- * Much is ultimately delegated to its superclass, AbstractLoadPlanBasedEntityLoader.  However:
- *
- * Loads an entity instance using outerjoin fetching to fetch associated entities.
- * <br>
- * The <tt>EntityPersister</tt> must implement <tt>Loadable</tt>. For other entities,
- * create a customized subclass of <tt>Loader</tt>.
  *
  * @author Gavin King
  * @author Steve Ebersole
@@ -176,4 +168,5 @@ public class EntityLoader extends AbstractLoadPlanBasedEntityLoader  {
 	protected EntityLoadQueryDetails getStaticLoadQuery() {
 		return (EntityLoadQueryDetails) super.getStaticLoadQuery();
 	}
+
 }

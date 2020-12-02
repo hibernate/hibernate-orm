@@ -742,7 +742,8 @@ public abstract class CollectionType extends AbstractType implements Association
 		// need to put the merged elements in a new collection
 		Object result = ( target == null ||
 				target == original ||
-				target == LazyPropertyInitializer.UNFETCHED_PROPERTY ) ?
+				target == LazyPropertyInitializer.UNFETCHED_PROPERTY ||
+				target instanceof PersistentCollection && ( (PersistentCollection) target ).isWrapper( original ) ) ?
 				instantiateResult( original ) : target;
 
 		//for arrays, replaceElements() may return a different reference, since

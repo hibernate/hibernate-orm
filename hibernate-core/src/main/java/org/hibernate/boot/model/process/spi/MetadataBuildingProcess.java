@@ -294,28 +294,30 @@ public class MetadataBuildingProcess {
 
 		metadataCollector.processSecondPasses( rootMetadataBuildingContext );
 
-		Iterable<AdditionalJaxbMappingProducer> producers = classLoaderService.loadJavaServices( AdditionalJaxbMappingProducer.class );
-		if ( producers != null ) {
-			final EntityHierarchyBuilder hierarchyBuilder = new EntityHierarchyBuilder();
-//			final MappingBinder mappingBinder = new MappingBinder( true );
-			// We need to disable validation here.  It seems Envers is not producing valid (according to schema) XML
-			final MappingBinder mappingBinder = options.isXmlMappingEnabled() ? new MappingBinder( classLoaderService, false ) : null;
-			for ( AdditionalJaxbMappingProducer producer : producers ) {
-				log.tracef( "Calling AdditionalJaxbMappingProducer : %s", producer );
-				Collection<MappingDocument> additionalMappings = producer.produceAdditionalMappings(
-						metadataCollector,
-						jandexView,
-						mappingBinder,
-						rootMetadataBuildingContext
-				);
-				for ( MappingDocument mappingDocument : additionalMappings ) {
-					hierarchyBuilder.indexMappingDocument( mappingDocument );
+		if ( options.isXmlMappingEnabled() ) {
+			Iterable<AdditionalJaxbMappingProducer> producers = classLoaderService.loadJavaServices( AdditionalJaxbMappingProducer.class );
+			if ( producers != null ) {
+				final EntityHierarchyBuilder hierarchyBuilder = new EntityHierarchyBuilder();
+				// final MappingBinder mappingBinder = new MappingBinder( true );
+				// We need to disable validation here.  It seems Envers is not producing valid (according to schema) XML
+				final MappingBinder mappingBinder = new MappingBinder( classLoaderService, false );
+				for ( AdditionalJaxbMappingProducer producer : producers ) {
+					log.tracef( "Calling AdditionalJaxbMappingProducer : %s", producer );
+					Collection<MappingDocument> additionalMappings = producer.produceAdditionalMappings(
+							metadataCollector,
+							jandexView,
+							mappingBinder,
+							rootMetadataBuildingContext
+					);
+					for ( MappingDocument mappingDocument : additionalMappings ) {
+						hierarchyBuilder.indexMappingDocument( mappingDocument );
+					}
 				}
-			}
 
-			ModelBinder binder = ModelBinder.prepare( rootMetadataBuildingContext );
-			for ( EntityHierarchySourceImpl entityHierarchySource : hierarchyBuilder.buildHierarchies() ) {
-				binder.bindEntityHierarchy( entityHierarchySource );
+				ModelBinder binder = ModelBinder.prepare( rootMetadataBuildingContext );
+				for ( EntityHierarchySourceImpl entityHierarchySource : hierarchyBuilder.buildHierarchies() ) {
+					binder.bindEntityHierarchy( entityHierarchySource );
+				}
 			}
 		}
 

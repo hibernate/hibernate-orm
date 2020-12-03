@@ -203,23 +203,24 @@ public class ScanningCoordinator {
 			nonLocatedMappingFileNames.addAll( explicitMappingFileNames );
 		}
 
-		for ( MappingFileDescriptor mappingFileDescriptor : scanResult.getLocatedMappingFiles() ) {
-			managedResources.addXmlBinding( xmlMappingBinderAccess.bind( mappingFileDescriptor.getStreamAccess() ) );
-			nonLocatedMappingFileNames.remove( mappingFileDescriptor.getName() );
-		}
-
-		for ( String name : nonLocatedMappingFileNames ) {
-			final URL url = classLoaderService.locateResource( name );
-			if ( url == null ) {
-				throw new MappingException(
-						"Unable to resolve explicitly named mapping-file : " + name,
-						new Origin( SourceType.RESOURCE, name )
-				);
+		if ( xmlMappingBinderAccess != null ) { // xml mapping is not disabled
+			for ( MappingFileDescriptor mappingFileDescriptor : scanResult.getLocatedMappingFiles() ) {
+				managedResources.addXmlBinding( xmlMappingBinderAccess.bind( mappingFileDescriptor.getStreamAccess() ) );
+				nonLocatedMappingFileNames.remove( mappingFileDescriptor.getName() );
 			}
-			final UrlInputStreamAccess inputStreamAccess = new UrlInputStreamAccess( url );
-			managedResources.addXmlBinding( xmlMappingBinderAccess.bind( inputStreamAccess ) );
-		}
 
+			for ( String name : nonLocatedMappingFileNames ) {
+				final URL url = classLoaderService.locateResource( name );
+				if ( url == null ) {
+					throw new MappingException(
+							"Unable to resolve explicitly named mapping-file : " + name,
+							new Origin( SourceType.RESOURCE, name )
+					);
+				}
+				final UrlInputStreamAccess inputStreamAccess = new UrlInputStreamAccess( url );
+				managedResources.addXmlBinding( xmlMappingBinderAccess.bind( inputStreamAccess ) );
+			}
+		}
 
 		// classes and packages ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

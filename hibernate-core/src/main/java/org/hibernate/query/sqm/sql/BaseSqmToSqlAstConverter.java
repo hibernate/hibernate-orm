@@ -15,6 +15,8 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import javax.persistence.TemporalType;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -174,6 +176,7 @@ import org.hibernate.sql.ast.tree.expression.Format;
 import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
+import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Star;
 import org.hibernate.sql.ast.tree.expression.TrimSpecification;
@@ -203,7 +206,6 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
-import org.hibernate.type.IntegerType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -525,7 +527,7 @@ public abstract class BaseSqmToSqlAstConverter
 				final List<SqlSelection> selections = currentSqlSelectionCollector().getSelections( sqmPosition );
 				final List<Expression> expressions = new ArrayList<>( selections.size() );
 				for ( SqlSelection selection : selections ) {
-					expressions.add( new JdbcLiteral<>( selection.getJdbcResultSetIndex(), IntegerType.INSTANCE ) );
+					expressions.add( new SqlSelectionExpression( selection ) );
 				}
 				return new SqlTuple( expressions, null );
 			}
@@ -1784,11 +1786,11 @@ public abstract class BaseSqmToSqlAstConverter
 
 			boolean durationToRight = TypeConfiguration.isDuration( rightOperand.getNodeType() );
 			TypeConfiguration typeConfiguration = getCreationContext().getDomainModel().getTypeConfiguration();
-			boolean temporalTypeToLeft = typeConfiguration.isSqlTemporalType( leftOperand.getNodeType() );
-			boolean temporalTypeToRight = typeConfiguration.isSqlTemporalType( rightOperand.getNodeType() );
-			boolean temporalTypeSomewhereToLeft = adjustedTimestamp != null || temporalTypeToLeft;
+			TemporalType temporalTypeToLeft = typeConfiguration.getSqlTemporalType( leftOperand.getNodeType() );
+			TemporalType temporalTypeToRight = typeConfiguration.getSqlTemporalType( rightOperand.getNodeType() );
+			boolean temporalTypeSomewhereToLeft = adjustedTimestamp != null || temporalTypeToLeft != null;
 
-			if (temporalTypeToLeft && durationToRight) {
+			if (temporalTypeToLeft != null && durationToRight) {
 				if (adjustmentScale != null || negativeAdjustment) {
 					//we can't distribute a scale over a date/timestamp
 					throw new SemanticException("scalar multiplication of temporal value");
@@ -1798,7 +1800,7 @@ public abstract class BaseSqmToSqlAstConverter
 			if (durationToRight && temporalTypeSomewhereToLeft) {
 				return transformDurationArithmetic( expression );
 			}
-			else if (temporalTypeToLeft && temporalTypeToRight) {
+			else if (temporalTypeToLeft != null && temporalTypeToRight != null) {
 				return transformDatetimeArithmetic( expression );
 			}
 			else if (durationToRight && appliedByUnit!=null) {
@@ -1948,14 +1950,14 @@ public abstract class BaseSqmToSqlAstConverter
 		Expression right = cleanly(() -> toSqlExpression( expression.getRightHandOperand().accept(this) ));
 
 		TypeConfiguration typeConfiguration = getCreationContext().getDomainModel().getTypeConfiguration();
-		boolean leftTimestamp = typeConfiguration.isSqlTimestampType( expression.getLeftHandOperand().getNodeType() ) ;
-		boolean rightTimestamp = typeConfiguration.isSqlTimestampType( expression.getRightHandOperand().getNodeType() );
+		TemporalType leftTimestamp = typeConfiguration.getSqlTemporalType( expression.getLeftHandOperand().getNodeType() ) ;
+		TemporalType rightTimestamp = typeConfiguration.getSqlTemporalType( expression.getRightHandOperand().getNodeType() );
 
 		// when we're dealing with Dates, we use
 		// DAY as the smallest unit, otherwise we
 		// use a platform-specific granularity
 
-		TemporalUnit baseUnit = rightTimestamp || leftTimestamp ? NATIVE : DAY;
+		TemporalUnit baseUnit = (rightTimestamp == TemporalType.TIMESTAMP || leftTimestamp == TemporalType.TIMESTAMP) ? NATIVE : DAY;
 
 		if (adjustedTimestamp != null) {
 			if ( appliedByUnit != null ) {

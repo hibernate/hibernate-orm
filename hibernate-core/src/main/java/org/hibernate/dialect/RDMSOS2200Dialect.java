@@ -23,6 +23,7 @@ import org.hibernate.sql.DecodeCaseFragment;
 import org.jboss.logging.Logger;
 
 import java.sql.Types;
+import javax.persistence.TemporalType;
 
 /**
  * This is the Hibernate dialect for the Unisys 2200 Relational Database (RDMS).
@@ -186,7 +187,7 @@ public class RDMSOS2200Dialect extends Dialect {
 	}
 
 	@Override
-	public String timestampaddPattern(TemporalUnit unit, boolean timestamp) {
+	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType) {
 		switch (unit) {
 			case NANOSECOND:
 				return "timestampadd('SQL_TSI_FRAC_SECOND', (?2)/1e3, ?3)";
@@ -198,7 +199,7 @@ public class RDMSOS2200Dialect extends Dialect {
 	}
 
 	@Override
-	public String timestampdiffPattern(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		switch (unit) {
 			case NANOSECOND:
 				return "timestampdiff('SQL_TSI_FRAC_SECOND', ?2, ?3)*1e3";

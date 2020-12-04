@@ -27,6 +27,7 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.query.CastType;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.internal.idtable.AfterUseAction;
@@ -45,6 +46,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Locale;
+import javax.persistence.TemporalType;
 
 /**
  * An SQL dialect for DB2.
@@ -83,8 +85,6 @@ public class DB2Dialect extends Dialect {
 		super();
 		this.version = version;
 
-		registerColumnType( Types.BIT, 1, "boolean" ); //no bit
-		registerColumnType( Types.BIT, "smallint" ); //no bit
 		registerColumnType( Types.TINYINT, "smallint" ); //no tinyint
 
 		//HHH-12827: map them both to the same type to
@@ -107,6 +107,7 @@ public class DB2Dialect extends Dialect {
 		registerColumnType( Types.CLOB, "clob($l)" );
 
 		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp($p)" );
+		registerColumnType( Types.TIME_WITH_TIMEZONE, "time" );
 
 		//not keywords, at least not in DB2 11,
 		//but perhaps they were in older versions?
@@ -121,11 +122,15 @@ public class DB2Dialect extends Dialect {
 
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, NO_BATCH );
 
-		uniqueDelegate = new DB2UniqueDelegate( this );
+		uniqueDelegate = createUniqueDelegate();
 
 		limitHandler = getVersion() < 1110
 				? LegacyDB2LimitHandler.INSTANCE
 				: DB2LimitHandler.INSTANCE;
+	}
+
+	protected UniqueDelegate createUniqueDelegate() {
+		return new DB2UniqueDelegate( this );
 	}
 
 	@Override
@@ -214,10 +219,10 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
-	public String timestampdiffPattern(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		StringBuilder pattern = new StringBuilder();
-		boolean castFrom = !fromTimestamp && !unit.isDateUnit();
-		boolean castTo = !toTimestamp && !unit.isDateUnit();
+		boolean castFrom = fromTemporalType != TemporalType.TIMESTAMP && !unit.isDateUnit();
+		boolean castTo = toTemporalType != TemporalType.TIMESTAMP && !unit.isDateUnit();
 		switch (unit) {
 			case NATIVE:
 			case NANOSECOND:
@@ -265,47 +270,36 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
-	public String timestampaddPattern(TemporalUnit unit, boolean timestamp) {
-		StringBuilder pattern = new StringBuilder();
-		boolean castTo = !timestamp && !unit.isDateUnit();
-		pattern.append("add_");
-		switch (unit) {
-			case NATIVE:
-			case NANOSECOND:
-				pattern.append("second");
-				break;
-			case WEEK:
-				//note: DB2 does not have add_weeks()
-				pattern.append("day");
-				break;
-			case QUARTER:
-				pattern.append("month");
-				break;
-			default:
-				pattern.append("?1");
+	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType) {
+		final StringBuilder pattern = new StringBuilder();
+		final boolean castTo;
+		if ( unit.isDateUnit() ) {
+			castTo = temporalType == TemporalType.TIME;
 		}
-		pattern.append("s(");
+		else {
+			castTo = temporalType == TemporalType.DATE;
+		}
 		if (castTo) {
 			pattern.append("cast(?3 as timestamp)");
 		}
 		else {
 			pattern.append("?3");
 		}
-		pattern.append(",");
+		pattern.append("+(");
+		// DB2 supports temporal arithmetic. See https://www.ibm.com/support/knowledgecenter/en/SSEPGG_9.7.0/com.ibm.db2.luw.sql.ref.doc/doc/r0023457.html
 		switch (unit) {
 			case NANOSECOND:
-				pattern.append("(?2)/1e9");
+				pattern.append("(?2)/1e9) seconds");
 				break;
 			case WEEK:
-				pattern.append("(?2)*7");
+				pattern.append("(?2)*7) days");
 				break;
 			case QUARTER:
-				pattern.append("(?2)*3");
+				pattern.append("(?2)*3) months");
 				break;
 			default:
-				pattern.append("?2");
+				pattern.append("?2) ?1s");
 		}
-		pattern.append(")");
 		return pattern.toString();
 	}
 
@@ -570,10 +564,16 @@ public class DB2Dialect extends Dialect {
 
 	@Override
 	protected SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
-		if ( getVersion() < 1100 && sqlCode == Types.BOOLEAN ) {
+		final int version = getVersion();
+
+		if ( version < 1100 && sqlCode == Types.BOOLEAN ) {
 			return SmallIntTypeDescriptor.INSTANCE;
 		}
-		else if ( getVersion() < 970 ) {
+		else if ( version < 1100 && sqlCode == Types.VARBINARY ) {
+			// Binary literals were only added in 11. See https://www.ibm.com/support/knowledgecenter/SSEPGG_11.1.0/com.ibm.db2.luw.sql.ref.doc/doc/r0000731.html#d79816e393
+			return VarbinaryTypeDescriptor.INSTANCE_WITHOUT_LITERALS;
+		}
+		else if ( version < 970 ) {
 			return sqlCode == Types.NUMERIC
 					? DecimalTypeDescriptor.INSTANCE
 					: super.getSqlTypeDescriptorOverride(sqlCode);
@@ -599,6 +599,11 @@ public class DB2Dialect extends Dialect {
 					return super.getSqlTypeDescriptorOverride(sqlCode);
 			}
 		}
+	}
+
+	@Override
+	public String formatBinaryLiteral(byte[] bytes) {
+		return "BX'" + StandardBasicTypes.BINARY.toString( bytes ) + "'";
 	}
 
 	@Override
@@ -633,6 +638,7 @@ public class DB2Dialect extends Dialect {
 	public boolean supportsNullPrecedence() {
 		return false;
 	}
+
 	/**
 	 * Handle DB2 "support" for null precedence...
 	 *
@@ -710,6 +716,37 @@ public class DB2Dialect extends Dialect {
 			case DAY_OF_YEAR: return "doy";
 			case DAY_OF_WEEK: return "dow";
 			default: return super.translateExtractField( unit );
+		}
+	}
+
+	@Override
+	public String toBooleanValueString(boolean bool) {
+		if ( getVersion() < 1100 ) {
+			return bool ? "1" : "0";
+		}
+		else {
+			return bool ? "true" : "false";
+		}
+	}
+
+	@Override
+	public String castPattern(CastType from, CastType to) {
+		if ( getVersion() < 1100 && from == CastType.BOOLEAN && to == CastType.STRING ) {
+			return "case when ?1 = 1 then 'true' else 'false' end";
+		}
+		else {
+			return super.castPattern( from, to );
+		}
+	}
+
+	@Override
+	public String extractPattern(TemporalUnit unit) {
+		if ( unit == TemporalUnit.WEEK ) {
+			// Not sure why, but `extract(week from '2019-05-27')` wrongly returns 21 and week_iso behaves correct
+			return "week_iso(?2)";
+		}
+		else {
+			return super.extractPattern( unit );
 		}
 	}
 

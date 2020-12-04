@@ -18,5 +18,8 @@ import org.hibernate.query.sqm.tree.SqmQuery;
  */
 public interface SqmSelectQuery<T> extends SqmQuery<T>, JpaSelectCriteria<T>, SqmNode {
 	@Override
+	SqmQuerySpec<T> getQuerySpec();
+
+	@Override
 	SqmSelectQuery<T> distinct(boolean distinct);
 }

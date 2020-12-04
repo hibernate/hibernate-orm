@@ -8,6 +8,8 @@ package org.hibernate.dialect;
 
 import java.sql.Types;
 
+import javax.persistence.TemporalType;
+
 import org.hibernate.PessimisticLockException;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cfg.AvailableSettings;
@@ -186,18 +188,23 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
-	public String timestampaddPattern(TemporalUnit unit, boolean timestamp) {
+	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType) {
 		return "dateadd(?1, ?2, ?3)";
 
 	}
 
 	@Override
-	public String timestampdiffPattern(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		return "datediff(?1, ?2, ?3)";
 	}
 
 	@Override
 	public boolean supportsTemporalLiteralOffset() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsTimezoneTypes() {
 		return true;
 	}
 
@@ -376,7 +383,12 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public String translateDatetimeFormat(String format) {
-		return new Replacer( format, "'", "''" ).replace("e", "u").result(); //NICE!!
+		return new Replacer( format, "'", "''" )
+				.replace("e", "u")
+				.replace( "xxx", "XXX" )
+				.replace( "xx", "XX" )
+				.replace( "x", "X" )
+				.result();
 	}
 
 	public String translateExtractField(TemporalUnit unit) {

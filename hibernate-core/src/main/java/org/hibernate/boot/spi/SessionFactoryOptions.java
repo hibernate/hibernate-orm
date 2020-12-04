@@ -32,6 +32,7 @@ import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.QueryLiteralRendering;
 import org.hibernate.query.criteria.LiteralHandlingMode;
+import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.spi.QueryEngineOptions;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
@@ -277,6 +278,10 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 
 	default LiteralHandlingMode getCriteriaLiteralHandlingMode() {
 		return LiteralHandlingMode.AUTO;
+	}
+
+	default ValueHandlingMode getCriteriaValueHandlingMode() {
+		return ValueHandlingMode.BIND;
 	}
 
 	default QueryLiteralRendering getQueryLiteralRenderingMode() {

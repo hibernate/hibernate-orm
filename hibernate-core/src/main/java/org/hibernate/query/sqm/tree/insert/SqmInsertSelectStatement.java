@@ -18,10 +18,11 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
  * @author Steve Ebersole
  */
 public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> implements JpaCriteriaInsertSelect<T> {
-	private SqmQuerySpec selectQuerySpec;
+	private SqmQuerySpec<T> selectQuerySpec;
 
 	public SqmInsertSelectStatement(SqmRoot<T> targetRoot, NodeBuilder nodeBuilder) {
 		super( targetRoot, SqmQuerySource.HQL, nodeBuilder );
+		this.selectQuerySpec = new SqmQuerySpec<>( nodeBuilder );
 	}
 
 	public SqmInsertSelectStatement(Class<T> targetEntity, NodeBuilder nodeBuilder) {
@@ -34,6 +35,7 @@ public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> i
 				SqmQuerySource.CRITERIA,
 				nodeBuilder
 		);
+		this.selectQuerySpec = new SqmQuerySpec<>( nodeBuilder );
 	}
 
 	public SqmQuerySpec getSelectQuerySpec() {

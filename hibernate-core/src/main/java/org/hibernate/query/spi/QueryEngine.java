@@ -10,7 +10,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -20,7 +19,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.query.QueryLogging;
-import org.hibernate.query.criteria.LiteralHandlingMode;
+import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.hql.internal.StandardHqlTranslator;
 import org.hibernate.query.hql.spi.SqmCreationOptions;
@@ -70,7 +69,7 @@ public class QueryEngine {
 
 		return new QueryEngine(
 				() -> sessionFactory.getRuntimeMetamodels().getJpaMetamodel(),
-				sessionFactory.getSessionFactoryOptions().getCriteriaLiteralHandlingMode(),
+				sessionFactory.getSessionFactoryOptions().getCriteriaValueHandlingMode(),
 				metadata.buildNamedQueryRepository( sessionFactory ),
 				hqlTranslator,
 				sqmTranslatorFactory,
@@ -92,7 +91,7 @@ public class QueryEngine {
 
 	public QueryEngine(
 			Supplier<JpaMetamodel> jpaMetamodelAccess,
-			LiteralHandlingMode criteriaLiteralHandlingMode,
+			ValueHandlingMode criteriaValueHandlingMode,
 			NamedObjectRepository namedObjectRepository,
 			HqlTranslator hqlTranslator,
 			SqmTranslatorFactory sqmTranslatorFactory,
@@ -111,7 +110,7 @@ public class QueryEngine {
 				this,
 				jpaMetamodelAccess,
 				serviceRegistry,
-				criteriaLiteralHandlingMode
+				criteriaValueHandlingMode
 		);
 
 		this.sqmFunctionRegistry = new SqmFunctionRegistry();
@@ -137,7 +136,7 @@ public class QueryEngine {
 	 */
 	public QueryEngine(
 			JpaMetamodel jpaMetamodel,
-			LiteralHandlingMode criteriaLiteralHandlingMode,
+			ValueHandlingMode criteriaValueHandlingMode,
 			boolean useStrictJpaCompliance,
 			NamedObjectRepository namedObjectRepository,
 			NativeQueryInterpreter nativeQueryInterpreter,
@@ -154,7 +153,7 @@ public class QueryEngine {
 				this,
 				() -> jpaMetamodel,
 				serviceRegistry,
-				criteriaLiteralHandlingMode
+				criteriaValueHandlingMode
 		);
 
 		final SqmCreationContext sqmCreationContext = new SqmCreationContext() {

@@ -16,7 +16,9 @@ import org.hibernate.dialect.unique.UniqueDelegate;
  * later, also known as DB2/400.
  *
  * @author Pierrick Rouxel (pierrickrouxel)
+ * @deprecated Use {@link DB2iDialect}
  */
+@Deprecated
 public class DB2400V7R3Dialect extends DB2400Dialect {
 
 	private final UniqueDelegate uniqueDelegate;

@@ -12,7 +12,7 @@ elif [ "$RDBMS" == "oracle" ]; then
 elif [ "$RDBMS" == "db2" ]; then
   goal="-Pdb=db2 -Dhibernate.connection.url=jdbc:db2://localhost:50000/orm_test -Dhibernate.connection.username=orm_test -Dhibernate.connection.password=orm_test"
 elif [ "$RDBMS" == "mssql" ]; then
-  goal="-Pdb=mssql -Dhibernate.connection.url=jdbc:sqlserver://localhost:1433;databaseName= -Dhibernate.connection.username=sa -Dhibernate.connection.password=hibernate_orm_test"
+  goal="-Pdb=mssql -Dhibernate.connection.url=jdbc:sqlserver://localhost:1433;databaseName= -Dhibernate.connection.username=sa -Dhibernate.connection.password=Hibernate_orm_test"
 fi
 
 exec ./gradlew check ${goal} -Plog-test-progress=true --stacktrace

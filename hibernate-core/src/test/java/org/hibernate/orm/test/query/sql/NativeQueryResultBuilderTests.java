@@ -12,6 +12,7 @@ import java.sql.Types;
 import java.time.Instant;
 import java.util.List;
 
+import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.BasicValuedSingularAttributeMapping;
@@ -30,6 +31,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import org.assertj.core.api.Assumptions;
 import org.hamcrest.CustomMatcher;
 import org.hamcrest.Matcher;
 
@@ -77,6 +79,9 @@ public class NativeQueryResultBuilderTests {
 	public void fullyImplicitTest2(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
+					// DB2 returns an Integer for count by default
+					Assumptions.assumeThat( session.getJdbcServices().getDialect() )
+							.isNotInstanceOf( DB2Dialect.class );
 					final String sql = "select count(theString) from EntityOfBasics";
 					final NativeQueryImplementor<?> query = session.createNativeQuery( sql );
 

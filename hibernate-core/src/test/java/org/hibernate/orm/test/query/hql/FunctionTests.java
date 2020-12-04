@@ -793,14 +793,6 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 					session.createQuery("select extract(second from e.theTimestamp) from EntityOfBasics e")
 							.list();
 
-					session.createQuery("select extract(offset hour from e.theTime) from EntityOfBasics e")
-							.list();
-					session.createQuery("select extract(offset minute from e.theTime) from EntityOfBasics e")
-							.list();
-
-					session.createQuery("select extract(offset from e.theTimestamp) from EntityOfBasics e")
-							.list();
-
 					session.createQuery("select extract(time from e.theTimestamp), extract(date from e.theTimestamp) from EntityOfBasics e")
 							.list();
 					session.createQuery("select extract(time from local datetime), extract(date from local datetime) from EntityOfBasics e")
@@ -817,6 +809,22 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 
 					assertThat( session.createQuery("select extract(hour from time 12:30)").getSingleResult(), is(12) );
 					assertThat( session.createQuery("select extract(minute from time 12:30)").getSingleResult(), is(30) );
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTimezoneTypes.class)
+	public void testExtractFunctionTimeZone(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery("select extract(offset hour from e.theZonedDateTime) from EntityOfBasics e")
+							.list();
+					session.createQuery("select extract(offset minute from e.theZonedDateTime) from EntityOfBasics e")
+							.list();
+
+					session.createQuery("select extract(offset from e.theZonedDateTime) from EntityOfBasics e")
+							.list();
 				}
 		);
 	}

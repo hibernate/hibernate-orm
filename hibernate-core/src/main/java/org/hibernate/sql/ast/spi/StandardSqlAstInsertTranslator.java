@@ -11,6 +11,8 @@ import java.util.Set;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.FilterJdbcParameter;
+import org.hibernate.internal.util.collections.Stack;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstInsertTranslator;
 import org.hibernate.sql.ast.tree.cte.CteColumn;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
@@ -65,25 +67,32 @@ public class StandardSqlAstInsertTranslator
 			else {
 				appendSql("values");
 				boolean firstTuple = true;
-				for ( Values values : sqlAst.getValuesList() ) {
-					if (firstTuple) {
-						firstTuple = false;
-					}
-					else {
-						appendSql(", ");
-					}
-					appendSql(" (");
-					boolean firstExpr = true;
-					for ( Expression expression : values.getExpressions() ) {
-						if (firstExpr) {
-							firstExpr = false;
+				final Stack<Clause> clauseStack = getClauseStack();
+				try {
+					clauseStack.push( Clause.VALUES );
+					for ( Values values : sqlAst.getValuesList() ) {
+						if ( firstTuple ) {
+							firstTuple = false;
 						}
 						else {
-							appendSql(", ");
+							appendSql( ", " );
 						}
-						expression.accept( this );
+						appendSql( " (" );
+						boolean firstExpr = true;
+						for ( Expression expression : values.getExpressions() ) {
+							if ( firstExpr ) {
+								firstExpr = false;
+							}
+							else {
+								appendSql( ", " );
+							}
+							expression.accept( this );
+						}
+						appendSql( ")" );
 					}
-					appendSql(")");
+				}
+				finally {
+					clauseStack.pop();
 				}
 			}
 

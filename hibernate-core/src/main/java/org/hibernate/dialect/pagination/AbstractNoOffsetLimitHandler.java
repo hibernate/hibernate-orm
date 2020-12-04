@@ -18,7 +18,7 @@ import static java.lang.String.valueOf;
  */
 public abstract class AbstractNoOffsetLimitHandler extends AbstractLimitHandler {
 
-	private boolean variableLimit;
+	private final boolean variableLimit;
 
 	public AbstractNoOffsetLimitHandler(boolean variableLimit) {
 		this.variableLimit = variableLimit;

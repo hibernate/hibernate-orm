@@ -100,15 +100,14 @@ public class SqlAstProcessingStateImpl implements SqlAstProcessingState, SqlExpr
 			expressionMap.put( key, expression );
 		}
 
-		return expression;
+		return normalize( expression );
 	}
 
 	@SuppressWarnings("WeakerAccess")
 	protected Expression normalize(Expression expression) {
 		final Clause currentClause = currentClauseAccess.get();
 		if ( currentClause == Clause.ORDER
-				|| currentClause == Clause.GROUP
-				|| currentClause == Clause.HAVING ) {
+				|| currentClause == Clause.GROUP ) {
 			// see if this (Sql)Expression is used as a selection, and if so
 			// wrap the (Sql)Expression in a special wrapper with access to both
 			// the (Sql)Expression and the SqlSelection.
@@ -118,7 +117,7 @@ public class SqlAstProcessingStateImpl implements SqlAstProcessingState, SqlExpr
 			// order-by, group-by or having expression
 			final SqlSelection selection = sqlSelectionMap().get( expression );
 			if ( selection != null ) {
-				return new SqlSelectionExpression( selection, expression );
+				return new SqlSelectionExpression( selection );
 			}
 		}
 

@@ -12,7 +12,7 @@ mysql_8_0() {
 
 mariadb() {
     docker rm -f mariadb || true
-    docker run --name mariadb -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -p3306:3306 -d mariadb:10.5.8 --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    docker run --name mariadb -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ALLOW_EMPTY_PASSWORD=true -p3306:3306 -d mariadb:10.5.8 --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
 }
 
 postgresql_9_5() {
@@ -35,7 +35,7 @@ db2() {
 
 mssql() {
     docker rm -f mssql || true
-    docker run --name mssql -d -p 1433:1433 -e "SA_PASSWORD=hibernate_orm_test" -e ACCEPT_EULA=Y microsoft/mssql-server-linux:2017-CU13
+    docker run --name mssql -d -p 1433:1433 -e "SA_PASSWORD=Hibernate_orm_test" -e ACCEPT_EULA=Y microsoft/mssql-server-linux:2017-CU13
 }
 
 oracle() {

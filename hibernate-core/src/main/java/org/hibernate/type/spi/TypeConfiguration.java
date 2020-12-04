@@ -59,6 +59,8 @@ import org.hibernate.type.internal.TypeConfigurationRegistry;
 import java.sql.Time;
 import java.sql.Timestamp;
 
+import javax.persistence.TemporalType;
+
 import static org.hibernate.internal.CoreLogging.messageLogger;
 import static org.hibernate.query.BinaryArithmeticOperator.DIVIDE;
 
@@ -474,8 +476,8 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			SqmExpressable<?> secondType,
 			boolean isDivision) {
 
-		if ( isSqlTemporalType( firstType ) ) {
-			if ( secondType==null || isSqlTemporalType( secondType ) ) {
+		if ( getSqlTemporalType( firstType ) != null ) {
+			if ( secondType==null || getSqlTemporalType( secondType ) != null ) {
 				// special case for subtraction of two dates
 				// or timestamps resulting in a duration
 				return getBasicTypeRegistry().getRegisteredType( Duration.class );
@@ -491,7 +493,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			// or prefix scalar multiplication of a duration
 			return secondType;
 		}
-		else if ( firstType==null && isSqlTemporalType( secondType ) ) {
+		else if ( firstType==null && getSqlTemporalType( secondType ) != null ) {
 			// subtraction of a date or timestamp from a
 			// parameter (which doesn't have a type yet)
 			return getBasicTypeRegistry().getRegisteredType( Duration.class );
@@ -614,47 +616,40 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		);
 	}
 
-	public boolean isSqlTimestampType(SqmExpressable type) {
-		return type != null
-				&& isSqlTimestampType( type.getExpressableJavaTypeDescriptor().getJdbcRecommendedSqlType( getCurrentBaseSqlTypeIndicators() ) );
+	public TemporalType getSqlTemporalType(SqmExpressable type) {
+		if ( type == null ) {
+			return null;
+		}
+		return getSqlTemporalType( type.getExpressableJavaTypeDescriptor().getJdbcRecommendedSqlType( getCurrentBaseSqlTypeIndicators() ) );
 	}
 
-	public static boolean isSqlTimestampType(MappingModelExpressable type) {
+	public static TemporalType getSqlTemporalType(MappingModelExpressable type) {
 		if ( type instanceof BasicValuedMapping ) {
-			return isSqlTimestampType( ( (BasicValuedMapping) type ).getJdbcMapping().getSqlTypeDescriptor() );
+			return getSqlTemporalType( ( (BasicValuedMapping) type ).getJdbcMapping().getSqlTypeDescriptor() );
 		}
 		else if (type instanceof SingleColumnType) {
-			return isSqlTimestampType( ((SingleColumnType) type).sqlType() );
+			return getSqlTemporalType( ((SingleColumnType) type).sqlType() );
 		}
-		return false;
+		return null;
 	}
 
-	public static boolean isSqlTimestampType(SqlTypeDescriptor descriptor) {
-		return isSqlTimestampType( descriptor.getJdbcTypeCode() );
+	public static TemporalType getSqlTemporalType(SqlTypeDescriptor descriptor) {
+		return getSqlTemporalType( descriptor.getJdbcTypeCode() );
 	}
 
-	protected static boolean isSqlTimestampType(int jdbcTypeCode) {
-		return jdbcTypeCode == Types.TIMESTAMP
-				|| jdbcTypeCode == Types.TIMESTAMP_WITH_TIMEZONE;
+	protected static TemporalType getSqlTemporalType(int jdbcTypeCode) {
+		switch ( jdbcTypeCode ) {
+			case Types.TIMESTAMP:
+			case Types.TIMESTAMP_WITH_TIMEZONE:
+				return TemporalType.TIMESTAMP;
+			case Types.TIME:
+			case Types.TIME_WITH_TIMEZONE:
+				return TemporalType.TIME;
+			case Types.DATE:
+				return TemporalType.DATE;
+		}
+		return null;
 	}
-
-	public static boolean isSqlTemporalType(SqlTypeDescriptor descriptor) {
-		return isSqlTemporalType( descriptor.getJdbcTypeCode() );
-	}
-
-	public boolean isSqlTemporalType(SqmExpressable<?> type) {
-		return type != null
-				&& isSqlTemporalType( type.getExpressableJavaTypeDescriptor().getJdbcRecommendedSqlType( getCurrentBaseSqlTypeIndicators() ) );
-	}
-
-	private static boolean isSqlTemporalType(int jdbcTypeCode) {
-		return jdbcTypeCode == Types.TIMESTAMP
-				|| jdbcTypeCode == Types.TIMESTAMP_WITH_TIMEZONE
-				|| jdbcTypeCode == Types.TIME
-				|| jdbcTypeCode == Types.TIME_WITH_TIMEZONE
-				|| jdbcTypeCode == Types.DATE;
-	}
-
 
 	public static boolean isJdbcTemporalType(SqmExpressable<?> type) {
 		return matchesJavaType( type, Date.class );

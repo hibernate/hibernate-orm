@@ -6,10 +6,10 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.HibernateException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.function.CastStrEmulation;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.DerbyConcatEmulation;
 import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
@@ -19,6 +19,7 @@ import org.hibernate.dialect.pagination.DerbyLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.DB2SequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
@@ -50,6 +51,8 @@ import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
+
+import javax.persistence.TemporalType;
 
 import static org.hibernate.query.CastType.BOOLEAN;
 
@@ -120,6 +123,18 @@ public class DerbyDialect extends Dialect {
 				: new DerbyLimitHandler( getVersion() >= 1060 );
 
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, NO_BATCH );
+	}
+
+	@Override
+	public String getTypeName(int code, Size size) throws HibernateException {
+		switch ( code ) {
+			case Types.CHAR:
+				// This is the maximum size for the CHAR datatype on Derby
+				if ( size.getLength() > 254 ) {
+					return "char(254)";
+				}
+		}
+		return super.getTypeName( code, size );
 	}
 
 	@Override
@@ -274,7 +289,7 @@ public class DerbyDialect extends Dialect {
 	}
 
 	@Override
-	public String timestampaddPattern(TemporalUnit unit, boolean timestamp) {
+	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType) {
 		switch (unit) {
 			case NANOSECOND:
 			case NATIVE:
@@ -285,7 +300,7 @@ public class DerbyDialect extends Dialect {
 	}
 
 	@Override
-	public String timestampdiffPattern(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		switch (unit) {
 			case NANOSECOND:
 			case NATIVE:

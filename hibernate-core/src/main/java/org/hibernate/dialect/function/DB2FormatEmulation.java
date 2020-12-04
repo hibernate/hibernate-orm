@@ -16,8 +16,10 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Format;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.List;
+import javax.persistence.TemporalType;
 
 /**
  * DB2's varchar_format() can't handle quoted literal strings in
@@ -43,8 +45,9 @@ public class DB2FormatEmulation
 			SqlAppender sqlAppender,
 			List<SqlAstNode> arguments,
 			SqlAstWalker walker) {
-		Expression datetime = (Expression) arguments.get(0);
-		Format format = (Format) arguments.get(1);
+		final Expression datetime = (Expression) arguments.get(0);
+		final boolean isTime = TypeConfiguration.getSqlTemporalType( datetime.getExpressionType() ) == TemporalType.TIME;
+		final Format format = (Format) arguments.get(1);
 
 		sqlAppender.appendSql("(");
 		String[] bits = OracleDialect.datetimeFormat( format.getFormat(), false ).result().split("\"");
@@ -60,7 +63,15 @@ public class DB2FormatEmulation
 				}
 				if ( i % 2 == 0 ) {
 					sqlAppender.appendSql("varchar_format(");
-					datetime.accept(walker);
+					// Times need to be wrapped into a timestamp to be able to use formatting
+					if ( isTime ) {
+						sqlAppender.appendSql( "timestamp(current_date," );
+						datetime.accept( walker );
+						sqlAppender.appendSql( ")" );
+					}
+					else {
+						datetime.accept( walker );
+					}
 					sqlAppender.appendSql(",'");
 					sqlAppender.appendSql( bit );
 					sqlAppender.appendSql("')");

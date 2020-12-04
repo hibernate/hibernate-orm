@@ -33,7 +33,7 @@ public abstract class AbstractSqmSelectQuery<T>
 
 	public AbstractSqmSelectQuery(Class<T> resultType, NodeBuilder builder) {
 		super( builder );
-		this.sqmQuerySpec = new SqmQuerySpec( builder );
+		this.sqmQuerySpec = new SqmQuerySpec<>( builder );
 		this.resultType = resultType;
 	}
 

@@ -69,7 +69,7 @@ public class BasicValuedPathInterpretation<T> extends AbstractSqmPathInterpretat
 			columnReference = ( (ColumnReference) expression );
 		}
 		else if ( expression instanceof SqlSelectionExpression ) {
-			final Expression selectedExpression = ( (SqlSelectionExpression) expression ).getExpression();
+			final Expression selectedExpression = ( (SqlSelectionExpression) expression ).getSelection().getExpression();
 			assert selectedExpression instanceof ColumnReference;
 			columnReference = (ColumnReference) selectedExpression;
 		}

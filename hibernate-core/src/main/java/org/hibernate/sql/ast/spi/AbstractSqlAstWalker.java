@@ -313,7 +313,9 @@ public abstract class AbstractSqlAstWalker
 						.get( (Integer) literalValue )
 						.getExpression();
 			}
-
+		}
+		else if ( expression instanceof SqlSelectionExpression ) {
+			return ( (SqlSelectionExpression) expression ).getSelection().getExpression();
 		}
 		return expression;
 	}
@@ -667,14 +669,26 @@ public abstract class AbstractSqlAstWalker
 	@SuppressWarnings("WeakerAccess")
 	protected void renderOffset(Expression offsetExpression) {
 		appendSql( " offset " );
-		offsetExpression.accept( this );
+		clauseStack.push( Clause.OFFSET );
+		try {
+			offsetExpression.accept( this );
+		}
+		finally {
+			clauseStack.pop();
+		}
 		appendSql( " rows" );
 	}
 
 	@SuppressWarnings("WeakerAccess")
 	protected void renderLimit(Expression limitExpression) {
 		appendSql( " fetch first " );
-		limitExpression.accept( this );
+		clauseStack.push( Clause.LIMIT );
+		try {
+			limitExpression.accept( this );
+		}
+		finally {
+			clauseStack.pop();
+		}
 		appendSql( " rows only" );
 	}
 
@@ -723,12 +737,17 @@ public abstract class AbstractSqlAstWalker
 		}
 		else {
 			appendSql( " from " );
-
-			String separator = NO_SEPARATOR;
-			for ( TableGroup root : fromClause.getRoots() ) {
-				appendSql( separator );
-				renderTableGroup( root );
-				separator = COMA_SEPARATOR;
+			try {
+				clauseStack.push( Clause.FROM );
+				String separator = NO_SEPARATOR;
+				for ( TableGroup root : fromClause.getRoots() ) {
+					appendSql( separator );
+					renderTableGroup( root );
+					separator = COMA_SEPARATOR;
+				}
+			}
+			finally {
+				clauseStack.pop();
 			}
 		}
 	}
@@ -780,7 +799,14 @@ public abstract class AbstractSqlAstWalker
 	@SuppressWarnings("WeakerAccess")
 	protected void renderTableReference(TableReference tableReference) {
 		appendSql( tableReference.getTableExpression() );
-
+		// todo (6.0) : For now we just skip the alias rendering in the delete and update clauses
+		//  We need some dialect support if we want to support joins in delete and update statements
+		final Clause currentClause = clauseStack.getCurrent();
+		switch ( currentClause ) {
+			case DELETE:
+			case UPDATE:
+				return;
+		}
 		final String identificationVariable = tableReference.getIdentificationVariable();
 		if ( identificationVariable != null ) {
 			appendSql( getDialect().getTableAliasSeparator() );
@@ -978,13 +1004,13 @@ public abstract class AbstractSqlAstWalker
 
 	@Override
 	public void visitSqlSelectionExpression(SqlSelectionExpression expression) {
-		final boolean useSelectionPosition = dialect.replaceResultVariableInOrderByClauseWithPosition();
+		final boolean useSelectionPosition = dialect.supportsOrdinalSelectItemReference();
 
 		if ( useSelectionPosition ) {
 			appendSql( Integer.toString( expression.getSelection().getJdbcResultSetIndex() ) );
 		}
 		else {
-			expression.getExpression().accept( this );
+			expression.getSelection().getExpression().accept( this );
 		}
 	}
 

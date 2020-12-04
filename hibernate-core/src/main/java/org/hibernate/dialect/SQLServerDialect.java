@@ -24,13 +24,13 @@ import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.StringType;
-import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.sql.SmallIntTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 import java.sql.Types;
 import java.util.regex.Pattern;
+
+import javax.persistence.TemporalType;
 
 import static java.util.regex.Pattern.compile;
 import static org.hibernate.query.TemporalUnit.NANOSECOND;
@@ -104,6 +104,11 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	@Override
 	public int getVersion() {
 		return version;
+	}
+
+	@Override
+	public boolean supportsTimezoneTypes() {
+		return getVersion() >= 10;
 	}
 
 	@Override
@@ -494,7 +499,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public String timestampaddPattern(TemporalUnit unit, boolean timestamp) {
+	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType) {
 		// dateadd() supports only especially small magnitudes
 		// since it casts its argument to int (and unfortunately
 		// there's no dateadd_big()) so here we need to use two
@@ -514,7 +519,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public String timestampdiffPattern(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		switch (unit) {
 			case NATIVE:
 				//use microsecond as the "native" precision
@@ -594,7 +599,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	private static final Pattern OFFSET_PATTERN = compile(".*[-+]\\d{2}(:\\d{2})?$");
 
 	@Override
-	public String formatBinaryliteral(byte[] bytes) {
+	public String formatBinaryLiteral(byte[] bytes) {
 		return "0x" + StandardBasicTypes.BINARY.toString( bytes );
 	}
 

@@ -226,4 +226,10 @@ abstract public class DialectFeatureChecks {
 			return dialect.supportsGroupByRollup();
 		}
 	}
+
+	public static class SupportsTimezoneTypes implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.supportsTimezoneTypes();
+		}
+	}
 }

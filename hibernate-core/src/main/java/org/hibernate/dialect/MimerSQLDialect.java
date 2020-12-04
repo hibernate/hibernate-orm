@@ -24,6 +24,8 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 
 import java.sql.Types;
 
+import javax.persistence.TemporalType;
+
 import static org.hibernate.query.CastType.BOOLEAN;
 
 /**
@@ -171,7 +173,7 @@ public class MimerSQLDialect extends Dialect {
 		}
 	}
 
-	public String timestampdiffPattern(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		StringBuilder pattern = new StringBuilder();
 		pattern.append("cast((?3 - ?2) ");
 		switch (unit) {
@@ -217,7 +219,7 @@ public class MimerSQLDialect extends Dialect {
 	}
 
 	@Override
-	public String timestampaddPattern(TemporalUnit unit, boolean timestamp) {
+	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType) {
 		switch ( unit ) {
 			case NATIVE:
 			case NANOSECOND:

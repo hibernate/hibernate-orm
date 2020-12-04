@@ -31,6 +31,7 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.StandardBasicTypes;
 
 import java.sql.Types;
+import javax.persistence.TemporalType;
 
 /**
  * An SQL dialect for Ingres 9.2.
@@ -223,14 +224,19 @@ public class IngresDialect extends Dialect {
 	}
 
 	@Override
-	public String timestampaddPattern(TemporalUnit unit, boolean timestamp) {
+	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType) {
 		return "timestampadd(?1, ?2, ?3)";
 
 	}
 
 	@Override
-	public String timestampdiffPattern(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		return "timestampdiff(?1, ?2, ?3)";
+	}
+
+	@Override
+	public boolean supportsTimezoneTypes() {
+		return true;
 	}
 
 	@Override

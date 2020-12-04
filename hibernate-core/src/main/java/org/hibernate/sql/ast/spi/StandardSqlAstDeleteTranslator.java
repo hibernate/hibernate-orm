@@ -11,11 +11,14 @@ import java.util.Set;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.FilterJdbcParameter;
+import org.hibernate.internal.util.collections.Stack;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.tree.cte.CteColumn;
 import org.hibernate.sql.ast.SqlAstDeleteTranslator;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.exec.spi.JdbcDelete;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 
@@ -27,16 +30,32 @@ public class StandardSqlAstDeleteTranslator extends AbstractSqlAstTranslator imp
 		super( sessionFactory );
 	}
 
+	private String deletingTableAlias;
+
 	@Override
 	public JdbcDelete translate(DeleteStatement sqlAst) {
 		try {
+			deletingTableAlias = sqlAst.getTargetTable().getIdentificationVariable();
+			// todo (6.0) : to support joins we need dialect support
 			appendSql( "delete from " );
-
-			renderTableReference( sqlAst.getTargetTable() );
+			final Stack<Clause> clauseStack = getClauseStack();
+			try {
+				clauseStack.push( Clause.DELETE );
+				renderTableReference( sqlAst.getTargetTable() );
+			}
+			finally {
+				clauseStack.pop();
+			}
 
 			if ( sqlAst.getRestriction() != null ) {
-				appendSql( " where " );
-				sqlAst.getRestriction().accept( this );
+				try {
+					clauseStack.push( Clause.WHERE );
+					appendSql( " where " );
+					sqlAst.getRestriction().accept( this );
+				}
+				finally {
+					clauseStack.pop();
+				}
 			}
 
 			return new JdbcDelete() {
@@ -68,8 +87,17 @@ public class StandardSqlAstDeleteTranslator extends AbstractSqlAstTranslator imp
 
 	@Override
 	public void visitColumnReference(ColumnReference columnReference) {
-		// generally we do not want to render the qualifier
-		appendSql( columnReference.getColumnExpression() );
+		if ( deletingTableAlias != null && deletingTableAlias.equals( columnReference.getQualifier() ) ) {
+			// todo (6.0) : use the Dialect to determine how to handle column references
+			//		- specifically should they use the table-alias, the table-expression
+			//			or neither for its qualifier
+
+			// for now, use the unqualified form
+			appendSql( columnReference.getColumnExpression() );
+		}
+		else {
+			super.visitColumnReference( columnReference );
+		}
 	}
 
 	@Override

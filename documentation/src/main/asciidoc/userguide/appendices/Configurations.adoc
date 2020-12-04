@@ -514,6 +514,16 @@ Always use constants with the `org.hibernate.query.criteria.LiteralHandlingMode#
 Valid options are defined by the `org.hibernate.query.criteria.LiteralHandlingMode` enum.
 The default value is `org.hibernate.query.criteria.LiteralHandlingMode#AUTO`.
 
+`*hibernate.criteria.value_handling_mode*` (e.g. `BIND` (default value) or `INLINE`)::
+By default, Criteria queries uses bind parameters for any value passed through the JPA Criteria API.
++
+The {@link org.hibernate.query.criteria.ValueHandlingMode#BIND} mode (default) will use bind variables for any value.
++
+The {@link org.hibernate.query.criteria.ValueHandlingMode#INLINE} mode will inline values as literals.
++
+The default value is {@link org.hibernate.query.criteria.ValueHandlingMode#BIND}.
+Valid options are defined by the `org.hibernate.query.criteria.ValueHandlingMode` enum.
+
 `*hibernate.query.fail_on_pagination_over_collection_fetch*` (e.g. `true` or `false` (default value))::
 Raises an exception when in-memory pagination over collection fetch is about to be performed.
 +

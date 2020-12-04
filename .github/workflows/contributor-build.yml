@@ -72,7 +72,9 @@ jobs:
         if: failure()
         with:
           name: test-reports-java8-${{ matrix.rdbms }}
-          path: './**/target/reports/tests/test/'
+          path: |
+            ./**/target/reports/tests/test/
+            ./**/target/reports/checkstyle/
       - name: Omit produced artifacts from build cache
         run: ./ci/before-cache.sh
   build11:
@@ -109,6 +111,8 @@ jobs:
         if: failure()
         with:
           name: test-reports-java11
-          path: './**/target/reports/tests/test/'
+          path: |
+            ./**/target/reports/tests/test/
+            ./**/target/reports/checkstyle/
       - name: Omit produced artifacts from build cache
         run: ./ci/before-cache.sh

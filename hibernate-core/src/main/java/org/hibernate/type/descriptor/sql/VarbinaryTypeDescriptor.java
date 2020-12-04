@@ -27,8 +27,16 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public class VarbinaryTypeDescriptor implements SqlTypeDescriptor {
 	public static final VarbinaryTypeDescriptor INSTANCE = new VarbinaryTypeDescriptor();
+	public static final VarbinaryTypeDescriptor INSTANCE_WITHOUT_LITERALS = new VarbinaryTypeDescriptor( false );
+
+	private final boolean supportsLiterals;
 
 	public VarbinaryTypeDescriptor() {
+		this( true );
+	}
+
+	public VarbinaryTypeDescriptor(boolean supportsLiterals) {
+		this.supportsLiterals = supportsLiterals;
 	}
 
 	@Override
@@ -58,7 +66,7 @@ public class VarbinaryTypeDescriptor implements SqlTypeDescriptor {
 	@Override
 	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaTypeDescriptor<T> javaTypeDescriptor) {
 		//noinspection unchecked
-		return new JdbcLiteralFormatterBinary( javaTypeDescriptor );
+		return supportsLiterals ? new JdbcLiteralFormatterBinary( javaTypeDescriptor ) : null;
 	}
 
 	public <X> ValueBinder<X> getBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {

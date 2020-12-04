@@ -48,29 +48,18 @@ public enum Database {
 	DB2 {
 		@Override
 		public Dialect createDialect(DialectResolutionInfo info) {
-//			if ( "DB2 UDB for AS/400".equals( info.getDatabaseName() ) ) {
-//				return new DB2400Dialect();
-//			}
 			String databaseVersion = info.getDatabaseVersion();
-			if ( databaseVersion==null ) {
-				return new DB2Dialect(info);
+			if ( databaseVersion == null ) {
+				return new DB2Dialect( info );
 			}
 			//See https://www.ibm.com/support/knowledgecenter/SSEPEK_12.0.0/java/src/tpc/imjcc_c0053013.html
-			switch ( databaseVersion.substring(0,3) ) {
+			switch ( databaseVersion.substring( 0, 3 ) ) {
 				case "SQL": // Linux, UNIX, Windows
-					return new DB2Dialect(info);
+					return new DB2Dialect( info );
 				case "DSN": // z/OS
-					return new DB2390Dialect(info);
+					return new DB2zDialect( info );
 				case "QSQ": // i
-					final int majorVersion = info.getDatabaseMajorVersion();
-					final int minorVersion = info.getDatabaseMinorVersion();
-
-					if ( majorVersion > 7 || ( majorVersion == 7 && minorVersion >= 3 ) ) {
-						return new DB2400V7R3Dialect();
-					}
-					else {
-						return new DB2400Dialect();
-					}
+					return new DB2iDialect( info );
 				default:
 					return null;
 			}

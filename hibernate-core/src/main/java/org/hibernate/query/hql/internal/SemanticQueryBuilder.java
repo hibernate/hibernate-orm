@@ -83,6 +83,7 @@ import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolv
 import org.hibernate.query.sqm.spi.ParameterDeclarationContext;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
+import org.hibernate.query.sqm.tree.SqmQuery;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
@@ -156,6 +157,7 @@ import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationArgument;
 import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectClause;
+import org.hibernate.query.sqm.tree.select.SqmSelectQuery;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
@@ -223,7 +225,6 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 	private final Stack<ParameterDeclarationContext> parameterDeclarationContextStack = new StandardStack<>();
 	private final Stack<SqmCreationProcessingState> processingStateStack = new StandardStack<>();
-	private final Stack<SqmQuerySpec<?>> querySpecStack = new StandardStack<>();
 
 	private ParameterCollector parameterCollector;
 
@@ -312,8 +313,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		);
 
 		try {
-			//noinspection unchecked
-			selectStatement.setQuerySpec( visitQuerySpec( ctx.querySpec() ) );
+			visitQuerySpec( ctx.querySpec() );
 		}
 		finally {
 			processingStateStack.pop();
@@ -342,7 +342,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 			processingStateStack.push( processingState );
 
 			try {
-				insertStatement.setSelectQuerySpec( visitQuerySpec( ctx.querySpec() ) );
+				visitQuerySpec( ctx.querySpec() );
 
 				final SqmCreationProcessingState stateFieldsProcessingState = new SqmCreationProcessingStateImpl(
 						insertStatement,
@@ -476,87 +476,81 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 	@Override
 	public SqmQuerySpec<?> visitQuerySpec(HqlParser.QuerySpecContext ctx) {
-		final SqmQuerySpec<?> sqmQuerySpec = new SqmQuerySpec<>( creationContext.getNodeBuilder() );
-		querySpecStack.push( sqmQuerySpec );
+		final SqmQuerySpec<?> sqmQuerySpec = currentQuerySpec();
 
+		// visit from-clause first!!!
+		treatHandlerStack.push( new TreatHandlerFromClause() );
 		try {
-			// visit from-clause first!!!
-			treatHandlerStack.push( new TreatHandlerFromClause() );
+			sqmQuerySpec.setFromClause( visitFromClause( ctx.fromClause() ) );
+		}
+		finally {
+			treatHandlerStack.pop();
+		}
+
+		final SqmSelectClause selectClause;
+		if ( ctx.selectClause() != null ) {
+			selectClause = visitSelectClause( ctx.selectClause() );
+		}
+		else {
+			log.debugf( "Encountered implicit select clause : %s", ctx.getText() );
+			selectClause = buildInferredSelectClause( sqmQuerySpec.getFromClause() );
+		}
+		sqmQuerySpec.setSelectClause( selectClause );
+
+		final SqmWhereClause whereClause = new SqmWhereClause( creationContext.getNodeBuilder() );
+		if ( ctx.whereClause() != null ) {
+			treatHandlerStack.push( new TreatHandlerNormal( DowncastLocation.WHERE ) );
 			try {
-				sqmQuerySpec.setFromClause( visitFromClause( ctx.fromClause() ) );
+				whereClause.setPredicate( (SqmPredicate) ctx.whereClause().accept( this ) );
 			}
 			finally {
 				treatHandlerStack.pop();
 			}
-
-			final SqmSelectClause selectClause;
-			if ( ctx.selectClause() != null ) {
-				selectClause = visitSelectClause( ctx.selectClause() );
-			}
-			else {
-				log.debugf( "Encountered implicit select clause : %s", ctx.getText() );
-				selectClause = buildInferredSelectClause( sqmQuerySpec.getFromClause() );
-			}
-			sqmQuerySpec.setSelectClause( selectClause );
-
-			final SqmWhereClause whereClause = new SqmWhereClause( creationContext.getNodeBuilder() );
-			if ( ctx.whereClause() != null ) {
-				treatHandlerStack.push( new TreatHandlerNormal( DowncastLocation.WHERE ) );
-				try {
-					whereClause.setPredicate( (SqmPredicate) ctx.whereClause().accept( this ) );
-				}
-				finally {
-					treatHandlerStack.pop();
-				}
-			}
-			sqmQuerySpec.setWhereClause( whereClause );
-
-			final HqlParser.GroupByClauseContext groupByClauseContext = ctx.groupByClause();
-			if ( groupByClauseContext != null ) {
-				sqmQuerySpec.setGroupByClauseExpressions( visitGroupByClause( groupByClauseContext ) );
-			}
-			final HqlParser.HavingClauseContext havingClauseContext = ctx.havingClause();
-			if ( havingClauseContext != null ) {
-				sqmQuerySpec.setHavingClausePredicate( visitHavingClause( havingClauseContext ) );
-			}
-
-			final SqmOrderByClause orderByClause;
-			final HqlParser.OrderByClauseContext orderByClauseContext = ctx.orderByClause();
-			if ( orderByClauseContext != null ) {
-				if ( creationOptions.useStrictJpaCompliance() && processingStateStack.depth() > 1 ) {
-					throw new StrictJpaComplianceViolation(
-							StrictJpaComplianceViolation.Type.SUBQUERY_ORDER_BY
-					);
-				}
-
-				orderByClause = visitOrderByClause( orderByClauseContext );
-			}
-			else {
-				orderByClause = new SqmOrderByClause();
-			}
-			sqmQuerySpec.setOrderByClause( orderByClause );
-
-
-			if ( ctx.limitClause() != null || ctx.offsetClause() != null ) {
-				if ( getCreationOptions().useStrictJpaCompliance() ) {
-					throw new StrictJpaComplianceViolation(
-							StrictJpaComplianceViolation.Type.LIMIT_OFFSET_CLAUSE
-					);
-				}
-
-				if ( processingStateStack.depth() > 1 && orderByClause == null ) {
-					throw new SemanticException(
-							"limit and offset clause require an order-by clause when used in sub-query" );
-				}
-
-				//noinspection unchecked
-				sqmQuerySpec.setOffsetExpression( visitOffsetClause( ctx.offsetClause() ) );
-				//noinspection unchecked
-				sqmQuerySpec.setLimitExpression( visitLimitClause( ctx.limitClause() ) );
-			}
 		}
-		finally {
-			querySpecStack.pop();
+		sqmQuerySpec.setWhereClause( whereClause );
+
+		final HqlParser.GroupByClauseContext groupByClauseContext = ctx.groupByClause();
+		if ( groupByClauseContext != null ) {
+			sqmQuerySpec.setGroupByClauseExpressions( visitGroupByClause( groupByClauseContext ) );
+		}
+		final HqlParser.HavingClauseContext havingClauseContext = ctx.havingClause();
+		if ( havingClauseContext != null ) {
+			sqmQuerySpec.setHavingClausePredicate( visitHavingClause( havingClauseContext ) );
+		}
+
+		final SqmOrderByClause orderByClause;
+		final HqlParser.OrderByClauseContext orderByClauseContext = ctx.orderByClause();
+		if ( orderByClauseContext != null ) {
+			if ( creationOptions.useStrictJpaCompliance() && processingStateStack.depth() > 1 ) {
+				throw new StrictJpaComplianceViolation(
+						StrictJpaComplianceViolation.Type.SUBQUERY_ORDER_BY
+				);
+			}
+
+			orderByClause = visitOrderByClause( orderByClauseContext );
+		}
+		else {
+			orderByClause = new SqmOrderByClause();
+		}
+		sqmQuerySpec.setOrderByClause( orderByClause );
+
+
+		if ( ctx.limitClause() != null || ctx.offsetClause() != null ) {
+			if ( getCreationOptions().useStrictJpaCompliance() ) {
+				throw new StrictJpaComplianceViolation(
+						StrictJpaComplianceViolation.Type.LIMIT_OFFSET_CLAUSE
+				);
+			}
+
+			if ( processingStateStack.depth() > 1 && orderByClause == null ) {
+				throw new SemanticException(
+						"limit and offset clause require an order-by clause when used in sub-query" );
+			}
+
+			//noinspection unchecked
+			sqmQuerySpec.setOffsetExpression( visitOffsetClause( ctx.offsetClause() ) );
+			//noinspection unchecked
+			sqmQuerySpec.setLimitExpression( visitLimitClause( ctx.limitClause() ) );
 		}
 
 		return sqmQuerySpec;
@@ -930,9 +924,18 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		return (SqmExpression<?>) ctx.expression().accept( this );
 	}
 
+	private SqmQuerySpec<?> currentQuerySpec() {
+		SqmQuery<?> processingQuery = processingStateStack.getCurrent().getProcessingQuery();
+		if ( processingQuery instanceof SqmInsertSelectStatement<?> ) {
+			return ( (SqmInsertSelectStatement<?>) processingQuery ).getSelectQuerySpec();
+		}
+		else {
+			return ( (SqmSelectQuery<?>) processingQuery ).getQuerySpec();
+		}
+	}
+
 	private int getSelectionPosition(SqmSelection<?> selection) {
-		final SqmQuerySpec<?> querySpec = querySpecStack.getCurrent();
-		return querySpec.getSelectClause().getSelections().indexOf( selection ) + 1;
+		return currentQuerySpec().getSelectClause().getSelections().indexOf( selection ) + 1;
 	}
 
 	@Override
@@ -3598,8 +3601,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		);
 
 		try {
-			//noinspection unchecked
-			subQuery.setQuerySpec( (SqmQuerySpec) visitQuerySpec( ctx.querySpec() ) );
+			visitQuerySpec( ctx.querySpec() );
 			return subQuery;
 		}
 		finally {

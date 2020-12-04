@@ -34,6 +34,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import javax.persistence.TemporalType;
+
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 
 /**
@@ -162,7 +164,7 @@ public class CacheDialect extends Dialect {
 	}
 
 	@Override
-	public String timestampaddPattern(TemporalUnit unit, boolean timestamp) {
+	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType) {
 		switch (unit) {
 			case NANOSECOND:
 			case NATIVE:
@@ -173,7 +175,7 @@ public class CacheDialect extends Dialect {
 	}
 
 	@Override
-	public String timestampdiffPattern(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		switch (unit) {
 			case NANOSECOND:
 			case NATIVE:

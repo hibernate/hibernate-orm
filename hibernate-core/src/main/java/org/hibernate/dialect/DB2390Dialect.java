@@ -21,7 +21,9 @@ import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
  * DB2 Universal Database for OS/390, also known as DB2/390.
  *
  * @author Kristoffer Dyrkorn
+ * @deprecated Use {@link DB2zDialect}
  */
+@Deprecated
 public class DB2390Dialect extends DB2Dialect {
 
 	private final int version;

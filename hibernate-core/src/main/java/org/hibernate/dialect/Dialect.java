@@ -582,15 +582,12 @@ public abstract class Dialect implements ConversionContext {
 	 * {@code timestampdiff()} function call. The resulting
 	 * pattern must contain ?1, ?2, and ?3 placeholders
 	 * for the arguments.
-	 *
 	 * @param unit the first argument
-	 * @param fromTimestamp true if the first argument is
+	 * @param fromTemporalType true if the first argument is
 	 *                      a timestamp, false if a date
-	 * @param toTimestamp true if the second argument is
-	 *                    a timestamp, false if a date
+	 * @param toTemporalType true if the second argument is
 	 */
-	public String timestampdiffPattern(TemporalUnit unit,
-				boolean fromTimestamp, boolean toTimestamp) {
+	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		throw new NotYetImplementedFor6Exception();
 	}
 
@@ -599,13 +596,10 @@ public abstract class Dialect implements ConversionContext {
 	 * {@code timestampadd()} function call. The resulting
 	 * pattern must contain ?1, ?2, and ?3 placeholders
 	 * for the arguments.
-	 *
-	 * @param unit the first argument
-	 * @param timestamp true if the third argument is a
-	 *                  timestamp, false if a date
+	 *  @param unit the first argument
+	 * @param temporalType true if the third argument is a
 	 */
-	public String timestampaddPattern(TemporalUnit unit,
-				boolean timestamp) {
+	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType) {
 		throw new NotYetImplementedFor6Exception();
 	}
 
@@ -2672,14 +2666,31 @@ public abstract class Dialect implements ConversionContext {
 	 * @return true if result variable references in the ORDER BY
 	 *              clause should be replaced by column positions;
 	 *         false otherwise.
+	 * @deprecated We now use ordinal rendering by default to produce smaller SQL
+	 * @see #supportsOrdinalSelectItemReference
 	 */
+	@Deprecated
 	public boolean replaceResultVariableInOrderByClauseWithPosition() {
 		return false;
+	}
+
+	/**
+	 * Does this dialect support references to result variables
+	 * (i.e, select items) by column positions (1-origin) as defined
+	 * by the select clause?
+
+	 * @return true if result variable references by column positions are supported;
+	 *         false otherwise.
+	 * @since 6.0.0
+	 */
+	public boolean supportsOrdinalSelectItemReference() {
+		return true;
 	}
 
 	public boolean supportsNullPrecedence() {
 		return true;
 	}
+
 	/**
 	 * Renders an ordering fragment
 	 *
@@ -3418,7 +3429,7 @@ public abstract class Dialect implements ConversionContext {
 		return true;
 	}
 
-	public String formatBinaryliteral(byte[] bytes) {
+	public String formatBinaryLiteral(byte[] bytes) {
 		return "X'" + StandardBasicTypes.BINARY.toString( bytes ) + "'";
 	}
 
@@ -3674,7 +3685,17 @@ public abstract class Dialect implements ConversionContext {
 		return formatAsTimestampWithMicros( calendar, jdbcTimeZone );
 	}
 
+	/**
+	 * Whether the Dialect supports timezone offset in temporal literals.
+	 */
 	public boolean supportsTemporalLiteralOffset() {
+		return false;
+	}
+
+	/**
+	 * Whether the Dialect supports timezone types like {@link Types#TIMESTAMP_WITH_TIMEZONE}.
+	 */
+	public boolean supportsTimezoneTypes() {
 		return false;
 	}
 

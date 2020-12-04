@@ -59,6 +59,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.persistence.TemporalType;
+
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.query.TemporalUnit.*;
 import static org.hibernate.type.descriptor.DateTimeUtils.wrapAsAnsiDateLiteral;
@@ -148,7 +150,7 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
-	public String timestampaddPattern(TemporalUnit unit, boolean timestamp) {
+	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType) {
 		switch ( unit ) {
 			case NANOSECOND:
 				return "(?3 + (?2)/1e3 * interval '1 microsecond')";
@@ -164,8 +166,8 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
-	public String timestampdiffPattern(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
-		if ( !toTimestamp && !fromTimestamp && unit==DAY ) {
+	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
+		if ( toTemporalType != TemporalType.TIMESTAMP && fromTemporalType != TemporalType.TIMESTAMP && unit==DAY ) {
 			// special case: subtraction of two dates
 			// results in an integer number of days
 			// instead of an INTERVAL
@@ -175,25 +177,25 @@ public class PostgreSQLDialect extends Dialect {
 			StringBuilder pattern = new StringBuilder();
 			switch (unit) {
 				case YEAR:
-					extractField(pattern, YEAR, fromTimestamp, toTimestamp, unit);
+					extractField( pattern, YEAR, fromTemporalType, toTemporalType, unit);
 					break;
 				case QUARTER:
 					pattern.append("(");
-					extractField(pattern, YEAR, fromTimestamp, toTimestamp, unit);
+					extractField( pattern, YEAR, fromTemporalType, toTemporalType, unit);
 					pattern.append("+");
-					extractField(pattern, QUARTER, fromTimestamp, toTimestamp, unit);
+					extractField( pattern, QUARTER, fromTemporalType, toTemporalType, unit);
 					pattern.append(")");
 					break;
 				case MONTH:
 					pattern.append("(");
-					extractField(pattern, YEAR, fromTimestamp, toTimestamp, unit);
+					extractField( pattern, YEAR, fromTemporalType, toTemporalType, unit);
 					pattern.append("+");
-					extractField(pattern, MONTH, fromTimestamp, toTimestamp, unit);
+					extractField( pattern, MONTH, fromTemporalType, toTemporalType, unit);
 					pattern.append(")");
 					break;
 				case WEEK: //week is not supported by extract() when the argument is a duration
 				case DAY:
-					extractField(pattern, DAY, fromTimestamp, toTimestamp, unit);
+					extractField( pattern, DAY, fromTemporalType, toTemporalType, unit);
 					break;
 				//in order to avoid multiple calls to extract(),
 				//we use extract(epoch from x - y) * factor for
@@ -203,7 +205,7 @@ public class PostgreSQLDialect extends Dialect {
 				case SECOND:
 				case NANOSECOND:
 				case NATIVE:
-					extractField(pattern, EPOCH, fromTimestamp, toTimestamp, unit);
+					extractField( pattern, EPOCH, fromTemporalType, toTemporalType, unit);
 					break;
 				default:
 					throw new SemanticException("unrecognized field: " + unit);
@@ -215,12 +217,12 @@ public class PostgreSQLDialect extends Dialect {
 	private void extractField(
 			StringBuilder pattern,
 			TemporalUnit unit,
-			boolean fromTimestamp, boolean toTimestamp,
+			TemporalType fromTimestamp, TemporalType toTimestamp,
 			TemporalUnit toUnit) {
 		pattern.append("extract(");
 		pattern.append( translateDurationField(unit) );
 		pattern.append(" from ");
-		if ( !toTimestamp && !fromTimestamp ) {
+		if ( toTimestamp != TemporalType.TIMESTAMP && fromTimestamp != TemporalType.TIMESTAMP ) {
 			// special case subtraction of two
 			// dates results in an integer not
 			// an Interval
@@ -245,6 +247,11 @@ public class PostgreSQLDialect extends Dialect {
 			}
 		}
 		pattern.append(")").append( unit.conversionFactor( toUnit, this ) );
+	}
+
+	@Override
+	public boolean supportsTimezoneTypes() {
+		return true;
 	}
 
 	@Override
@@ -667,7 +674,10 @@ public class PostgreSQLDialect extends Dialect {
 				//TZR is TZ in Postgres
 				.replace("zzz", "TZ")
 				.replace("zz", "TZ")
-				.replace("z", "TZ");
+				.replace("z", "TZ")
+				.replace("xxx", "OF")
+				.replace("xx", "OF")
+				.replace("x", "OF");
 	}
 
 	@Override
@@ -682,7 +692,7 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
-	public String formatBinaryliteral(byte[] bytes) {
+	public String formatBinaryLiteral(byte[] bytes) {
 		return "bytea '\\x" + StandardBasicTypes.BINARY.toString( bytes ) + "'";
 	}
 

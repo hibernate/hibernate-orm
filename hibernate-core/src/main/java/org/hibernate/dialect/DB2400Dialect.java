@@ -18,7 +18,9 @@ import org.hibernate.dialect.sequence.SequenceSupport;
  * DB2 Universal Database for iSeries, also known as DB2/400.
  *
  * @author Peter DeGregorio (pdegregorio)
+ * @deprecated Use {@link DB2iDialect}
  */
+@Deprecated
 public class DB2400Dialect extends DB2Dialect {
 
 	/**

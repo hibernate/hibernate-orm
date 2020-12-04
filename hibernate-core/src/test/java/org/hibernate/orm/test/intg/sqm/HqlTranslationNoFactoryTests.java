@@ -20,6 +20,7 @@ import org.hibernate.metamodel.model.domain.internal.JpaMetamodelImpl;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.criteria.LiteralHandlingMode;
+import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.hql.internal.StandardHqlTranslator;
 import org.hibernate.query.hql.spi.SqmCreationOptions;
@@ -116,7 +117,7 @@ public class HqlTranslationNoFactoryTests {
 
 		final QueryEngine queryEngine = new QueryEngine(
 				jpaMetamodel,
-				LiteralHandlingMode.AUTO,
+				ValueHandlingMode.BIND,
 				// we don't want strict JPA query compliance
 				false,
 				new NamedObjectRepositoryImpl( Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap() ),

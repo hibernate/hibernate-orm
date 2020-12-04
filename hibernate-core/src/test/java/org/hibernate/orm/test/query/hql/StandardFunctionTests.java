@@ -14,7 +14,9 @@ import java.time.LocalTime;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -580,16 +582,6 @@ public class StandardFunctionTests {
 					session.createQuery("select extract(second from e.theTimestamp) from EntityOfBasics e")
 							.list();
 
-					session.createQuery("select extract(offset hour from e.theTime) from EntityOfBasics e")
-							.list();
-
-// the grammar rule is defined as `HOUR | MINUTE` so no idea how both ever worked.
-//					session.createQuery("select extract(offset hour minute from e.theTime) from EntityOfBasics e")
-//							.list();
-
-					session.createQuery("select extract(offset from e.theTimestamp) from EntityOfBasics e")
-							.list();
-
 					session.createQuery("select extract(time from e.theTimestamp), extract(date from e.theTimestamp) from EntityOfBasics e")
 							.list();
 					session.createQuery("select extract(time from local_datetime), extract(date from local_datetime) from EntityOfBasics e")
@@ -611,6 +603,24 @@ public class StandardFunctionTests {
 // `FIELD( temporalValue)` form which here, e.g., would mean this is a valid expression: `week of year( current date )` which is awful imo
 //					session.createQuery("select extract(week of year from current date) from EntityOfBasics e")
 //							.list();
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTimezoneTypes.class)
+	public void testExtractFunctionTimeZone(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery("select extract(offset hour from e.theTime) from EntityOfBasics e")
+							.list();
+
+// the grammar rule is defined as `HOUR | MINUTE` so no idea how both ever worked.
+//					session.createQuery("select extract(offset hour minute from e.theTime) from EntityOfBasics e")
+//							.list();
+
+					session.createQuery("select extract(offset from e.theTimestamp) from EntityOfBasics e")
+							.list();
 				}
 		);
 	}

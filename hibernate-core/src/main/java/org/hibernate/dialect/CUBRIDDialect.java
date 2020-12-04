@@ -24,6 +24,8 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 
 import java.sql.Types;
 
+import javax.persistence.TemporalType;
+
 import static org.hibernate.query.TemporalUnit.*;
 
 /**
@@ -338,7 +340,12 @@ public class CUBRIDDialect extends Dialect {
 	}
 
 	@Override
-	public String timestampaddPattern(TemporalUnit unit, boolean timestamp) {
+	public boolean supportsTimezoneTypes() {
+		return true;
+	}
+
+	@Override
+	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType) {
 		switch (unit) {
 			case NANOSECOND:
 				return "adddate(?3, interval (?2)/1e6 millisecond)";
@@ -350,7 +357,7 @@ public class CUBRIDDialect extends Dialect {
 	}
 
 	@Override
-	public String timestampdiffPattern(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		StringBuilder pattern = new StringBuilder();
 		switch ( unit ) {
 			case DAY:

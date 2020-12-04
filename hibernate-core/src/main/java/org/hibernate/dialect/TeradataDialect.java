@@ -45,6 +45,8 @@ import java.sql.Types;
 import java.util.Iterator;
 import java.util.Map;
 
+import javax.persistence.TemporalType;
+
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 
 /**
@@ -136,7 +138,7 @@ public class TeradataDialect extends Dialect {
 		return 1_000_000_000; //seconds!!
 	}
 
-	public String timestampdiffPattern(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		StringBuilder pattern = new StringBuilder();
 		//TODO: TOTALLY UNTESTED CODE!
 		pattern.append("cast((?3 - ?2) ");
@@ -171,7 +173,7 @@ public class TeradataDialect extends Dialect {
 	}
 
 	@Override
-	public String timestampaddPattern(TemporalUnit unit, boolean timestamp) {
+	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType) {
 		//TODO: TOTALLY UNTESTED CODE!
 		switch ( unit ) {
 			case NANOSECOND:

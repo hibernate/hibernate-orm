@@ -57,6 +57,7 @@ import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.criteria.LiteralHandlingMode;
+import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
@@ -87,6 +88,7 @@ import static org.hibernate.cfg.AvailableSettings.COLLECTION_JOIN_SUBQUERY;
 import static org.hibernate.cfg.AvailableSettings.CONNECTION_HANDLING;
 import static org.hibernate.cfg.AvailableSettings.CONVENTIONAL_JAVA_CONSTANTS;
 import static org.hibernate.cfg.AvailableSettings.CRITERIA_LITERAL_HANDLING_MODE;
+import static org.hibernate.cfg.AvailableSettings.CRITERIA_VALUE_HANDLING_MODE;
 import static org.hibernate.cfg.AvailableSettings.CUSTOM_ENTITY_DIRTINESS_STRATEGY;
 import static org.hibernate.cfg.AvailableSettings.DEFAULT_BATCH_FETCH_SIZE;
 import static org.hibernate.cfg.AvailableSettings.DEFAULT_ENTITY_MODE;
@@ -250,6 +252,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private TimeZone jdbcTimeZone;
 	private boolean queryParametersValidationEnabled;
 	private LiteralHandlingMode criteriaLiteralHandlingMode;
+	private ValueHandlingMode criteriaValueHandlingMode;
 	private ImmutableEntityUpdateQueryHandlingMode immutableEntityUpdateQueryHandlingMode;
 
 	private Map<String, SqmFunctionDescriptor> sqlFunctions;
@@ -540,6 +543,9 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 		this.criteriaLiteralHandlingMode = LiteralHandlingMode.interpret(
 				configurationSettings.get( CRITERIA_LITERAL_HANDLING_MODE )
+		);
+		this.criteriaValueHandlingMode = ValueHandlingMode.interpret(
+				configurationSettings.get( CRITERIA_VALUE_HANDLING_MODE )
 		);
 
 		// added the boolean parameter in case we want to define some form of "all" as discussed
@@ -1141,6 +1147,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public LiteralHandlingMode getCriteriaLiteralHandlingMode() {
 		return this.criteriaLiteralHandlingMode;
+	}
+
+	@Override
+	public ValueHandlingMode getCriteriaValueHandlingMode() {
+		return criteriaValueHandlingMode;
 	}
 
 	@Override

@@ -35,6 +35,7 @@ import org.hibernate.type.StandardBasicTypes;
 
 import java.sql.Types;
 import java.util.Map;
+import javax.persistence.TemporalType;
 
 /**
  * Hibernate Dialect implementation for Cloud Spanner.
@@ -424,8 +425,8 @@ public class SpannerDialect extends Dialect {
 	}
 
 	@Override
-	public String timestampaddPattern(TemporalUnit unit, boolean timestamp) {
-		if ( timestamp ) {
+	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType) {
+		if ( temporalType == TemporalType.TIMESTAMP ) {
 			switch (unit) {
 				case YEAR:
 				case QUARTER:
@@ -450,8 +451,8 @@ public class SpannerDialect extends Dialect {
 	}
 
 	@Override
-	public String timestampdiffPattern(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
-		if ( toTimestamp || fromTimestamp ) {
+	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
+		if ( toTemporalType == TemporalType.TIMESTAMP || fromTemporalType == TemporalType.TIMESTAMP ) {
 			switch (unit) {
 				case YEAR:
 				case QUARTER:

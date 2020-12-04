@@ -9,6 +9,8 @@ package org.hibernate.dialect;
 import java.sql.DatabaseMetaData;
 import java.sql.Types;
 
+import javax.persistence.TemporalType;
+
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.StaleObjectStateException;
@@ -213,9 +215,9 @@ public class HSQLDialect extends Dialect {
 	}
 
 	@Override
-	public String timestampaddPattern(TemporalUnit unit, boolean timestamp) {
+	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType) {
 		StringBuilder pattern = new StringBuilder();
-		boolean castTo = !timestamp && !unit.isDateUnit();
+		boolean castTo = temporalType != TemporalType.TIMESTAMP && !unit.isDateUnit();
 		switch (unit) {
 			case NANOSECOND:
 			case NATIVE:
@@ -236,10 +238,10 @@ public class HSQLDialect extends Dialect {
 	}
 
 	@Override
-	public String timestampdiffPattern(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		StringBuilder pattern = new StringBuilder();
-		boolean castFrom = !fromTimestamp && !unit.isDateUnit();
-		boolean castTo = !toTimestamp && !unit.isDateUnit();
+		boolean castFrom = fromTemporalType != TemporalType.TIMESTAMP && !unit.isDateUnit();
+		boolean castTo = toTemporalType != TemporalType.TIMESTAMP && !unit.isDateUnit();
 		switch (unit) {
 			case NANOSECOND:
 			case NATIVE:

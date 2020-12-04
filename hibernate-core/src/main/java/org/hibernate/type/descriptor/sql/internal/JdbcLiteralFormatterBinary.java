@@ -23,6 +23,6 @@ public class JdbcLiteralFormatterBinary extends BasicJdbcLiteralFormatter {
 
 	@Override
 	public String toJdbcLiteral(Object value, Dialect dialect, WrapperOptions wrapperOptions) {
-		return dialect.formatBinaryliteral( unwrap( value, byte[].class, wrapperOptions ) );
+		return dialect.formatBinaryLiteral( unwrap( value, byte[].class, wrapperOptions ) );
 	}
 }

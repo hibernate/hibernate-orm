@@ -57,6 +57,11 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 	}
 
 	@Override
+	public boolean supportsTimezoneTypes() {
+		return true;
+	}
+
+	@Override
 	protected SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
 		return sqlCode == Types.BOOLEAN
 				? BitTypeDescriptor.INSTANCE

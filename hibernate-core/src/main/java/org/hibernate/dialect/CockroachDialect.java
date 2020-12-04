@@ -18,6 +18,8 @@ import org.hibernate.type.StandardBasicTypes;
 
 import java.sql.Types;
 
+import javax.persistence.TemporalType;
+
 import static org.hibernate.query.TemporalUnit.DAY;
 import static org.hibernate.query.TemporalUnit.NATIVE;
 import static org.hibernate.type.descriptor.DateTimeUtils.wrapAsAnsiDateLiteral;
@@ -105,6 +107,11 @@ public class CockroachDialect extends Dialect {
 				.setExactArgumentCount( 2 )
 				.setArgumentListSignature("(datetime as pattern)")
 				.register();
+	}
+
+	@Override
+	public boolean supportsTimezoneTypes() {
+		return true;
 	}
 
 	@Override
@@ -260,7 +267,7 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
-	public String timestampaddPattern(TemporalUnit unit, boolean timestamp) {
+	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType) {
 		switch ( unit ) {
 			case NANOSECOND:
 				return "(?3 + (?2)/1e3 * interval '1 microsecond')";
@@ -276,7 +283,7 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
-	public String timestampdiffPattern(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		switch (unit) {
 			case YEAR:
 				return "(extract(year from ?3)-extract(year from ?2))";
@@ -285,7 +292,7 @@ public class CockroachDialect extends Dialect {
 			case MONTH:
 				return "(extract(year from ?3)*12-extract(year from ?2)*12+extract(month from ?3)-extract(month from ?2))";
 		}
-		if ( !toTimestamp && !fromTimestamp ) {
+		if ( toTemporalType != TemporalType.TIMESTAMP && fromTemporalType != TemporalType.TIMESTAMP ) {
 			// special case: subtraction of two dates
 			// results in an integer number of days
 			// instead of an INTERVAL

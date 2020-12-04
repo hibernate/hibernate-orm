@@ -54,6 +54,8 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.persistence.TemporalType;
+
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.query.CastType.STRING;
 import static org.hibernate.query.TemporalUnit.*;
@@ -295,7 +297,7 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
-	public String timestampaddPattern(TemporalUnit unit, boolean timestamp) {
+	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType) {
 		StringBuilder pattern = new StringBuilder();
 		pattern.append("(?3 + ");
 		switch ( unit ) {
@@ -359,9 +361,9 @@ public class OracleDialect extends Dialect {
 	@Override
 	public String timestampdiffPattern(
 			TemporalUnit unit,
-			boolean fromTimestamp, boolean toTimestamp) {
+			TemporalType fromTemporalType, TemporalType toTemporalType) {
 		StringBuilder pattern = new StringBuilder();
-		boolean timestamp = toTimestamp || fromTimestamp;
+		boolean timestamp = toTemporalType == TemporalType.TIMESTAMP || fromTemporalType == TemporalType.TIMESTAMP;
 		switch (unit) {
 			case YEAR:
 				extractField(pattern, YEAR, unit);
@@ -486,6 +488,11 @@ public class OracleDialect extends Dialect {
 			registerColumnType( Types.TIMESTAMP, "timestamp($p)" );
 			registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp($p) with time zone" );
 		}
+	}
+
+	@Override
+	public boolean supportsTimezoneTypes() {
+		return getVersion() >= 9;
 	}
 
 	protected void registerBinaryTypeMappings() {
@@ -1087,7 +1094,7 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
-	public String formatBinaryliteral(byte[] bytes) {
+	public String formatBinaryLiteral(byte[] bytes) {
 		return "hextoraw('" + StandardBasicTypes.BINARY.toString( bytes ) + "')";
 	}
 

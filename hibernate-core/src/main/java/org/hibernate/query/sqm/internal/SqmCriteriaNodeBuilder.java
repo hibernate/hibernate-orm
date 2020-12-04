@@ -36,7 +36,6 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.NullPrecedence;
 import org.hibernate.QueryException;
 import org.hibernate.SortOrder;
-import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
@@ -54,6 +53,7 @@ import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.criteria.LiteralHandlingMode;
+import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -128,24 +128,24 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 				sf.getQueryEngine(),
 				() -> sf.getRuntimeMetamodels().getJpaMetamodel(),
 				sf.getServiceRegistry(),
-				sf.getSessionFactoryOptions().getCriteriaLiteralHandlingMode()
+				sf.getSessionFactoryOptions().getCriteriaValueHandlingMode()
 		);
 	}
 
 	private final QueryEngine queryEngine;
 	private final Supplier<JpaMetamodel> domainModelAccess;
 	private final ServiceRegistry serviceRegistry;
-	private final LiteralHandlingMode criteriaLiteralHandlingMode;
+	private final ValueHandlingMode criteriaValueHandlingMode;
 
 	public SqmCriteriaNodeBuilder(
 			QueryEngine queryEngine,
 			Supplier<JpaMetamodel> domainModelAccess,
 			ServiceRegistry serviceRegistry,
-			LiteralHandlingMode criteriaLiteralHandlingMode) {
+			ValueHandlingMode criteriaValueHandlingMode) {
 		this.queryEngine = queryEngine;
 		this.domainModelAccess = domainModelAccess;
 		this.serviceRegistry = serviceRegistry;
-		this.criteriaLiteralHandlingMode = criteriaLiteralHandlingMode;
+		this.criteriaValueHandlingMode = criteriaValueHandlingMode;
 	}
 
 	@Override
@@ -1289,7 +1289,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 
 	@Override
 	public <T> SqmExpression<T> value(T value) {
-		if ( criteriaLiteralHandlingMode == LiteralHandlingMode.INLINE ) {
+		if ( criteriaValueHandlingMode == ValueHandlingMode.INLINE ) {
 			return literal( value );
 		}
 		else {

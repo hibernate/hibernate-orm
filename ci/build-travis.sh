@@ -3,7 +3,7 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 java -version
-./gradlew assemble
+
 if [ "$RDBMS" == 'mysql' ]; then
   sudo service mysql stop
   bash $DIR/../docker_db.sh mysql_5_7

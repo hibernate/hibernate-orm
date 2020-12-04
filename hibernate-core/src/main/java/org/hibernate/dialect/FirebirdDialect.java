@@ -22,7 +22,6 @@ import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.LockTimeoutException;
@@ -53,6 +52,8 @@ import java.util.Date;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.persistence.TemporalType;
 
 import static org.hibernate.query.CastType.*;
 import static org.hibernate.type.descriptor.DateTimeUtils.formatAsTimestampWithMillis;
@@ -133,6 +134,11 @@ public class FirebirdDialect extends Dialect {
 	@Override
 	public int getVersion() {
 		return version;
+	}
+
+	@Override
+	public boolean supportsTimezoneTypes() {
+		return getVersion() >= 400;
 	}
 
 	@Override
@@ -241,7 +247,7 @@ public class FirebirdDialect extends Dialect {
 	}
 
 	@Override
-	public String timestampaddPattern(TemporalUnit unit, boolean timestamp) {
+	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType) {
 		switch (unit) {
 			case NATIVE:
 				return "dateadd((?2) millisecond to ?3)";
@@ -257,7 +263,7 @@ public class FirebirdDialect extends Dialect {
 	}
 
 	@Override
-	public String timestampdiffPattern(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		switch (unit) {
 			case NATIVE:
 				return "datediff(millisecond from ?2 to ?3)";

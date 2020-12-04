@@ -16,14 +16,24 @@ import org.hibernate.Incubating;
 @Incubating
 public enum Clause {
 	/**
-	 * The insert values clause
+	 * The insert clause
 	 */
 	INSERT,
 
 	/**
-	 * The update set clause
+	 * The values clause
+	 */
+	VALUES,
+
+	/**
+	 * The update clause
 	 */
 	UPDATE,
+
+	/**
+	 * The update set clause
+	 */
+	SET,
 
 	/**
 	 * Not used in 5.x.  Intended for use in 6+ as indicator

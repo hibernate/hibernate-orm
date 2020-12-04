@@ -1982,6 +1982,20 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	String CRITERIA_LITERAL_HANDLING_MODE = "hibernate.criteria.literal_handling_mode";
 
 	/**
+	 * By default, Criteria queries uses bind parameters for any value passed through the JPA Criteria API.
+	 *
+	 * The {@link org.hibernate.query.criteria.ValueHandlingMode#BIND} mode (default) will use bind variables for any value.
+	 *
+	 * The {@link org.hibernate.query.criteria.ValueHandlingMode#INLINE} mode will inline values as literals.
+	 * </p>
+	 * The default value is {@link org.hibernate.query.criteria.ValueHandlingMode#BIND}
+	 *
+	 * @since 6.0.0
+	 * @see org.hibernate.query.criteria.ValueHandlingMode
+	 */
+	String CRITERIA_VALUE_HANDLING_MODE = "hibernate.criteria.value_handling_mode";
+
+	/**
 	 * True/false setting indicating whether the value specified for {@link GeneratedValue#generator()}
 	 * should be used as the sequence/table name when no matching {@link javax.persistence.SequenceGenerator}
 	 * or {@link javax.persistence.TableGenerator} is found.

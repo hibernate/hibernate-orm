@@ -12,6 +12,8 @@ import java.util.Set;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.FilterJdbcParameter;
+import org.hibernate.internal.util.collections.Stack;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstUpdateTranslator;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
@@ -43,38 +45,57 @@ public class StandardSqlAstUpdateTranslator
 	public JdbcUpdate translate(UpdateStatement sqlAst) {
 		try {
 			updatingTableAlias = sqlAst.getTargetTable().getIdentificationVariable();
-
+			// todo (6.0) : to support joins we need dialect support
 			appendSql( "update " );
-			appendSql( sqlAst.getTargetTable().getTableExpression() );
+			final Stack<Clause> clauseStack = getClauseStack();
+			try {
+				clauseStack.push( Clause.UPDATE );
+				renderTableReference( sqlAst.getTargetTable() );
+			}
+			finally {
+				clauseStack.pop();
+			}
 
 			appendSql( " set " );
 			boolean firstPass = true;
-			for ( Assignment assignment : sqlAst.getAssignments() ) {
-				if ( firstPass ) {
-					firstPass = false;
-				}
-				else {
-					appendSql( ", " );
-				}
-
-				final List<ColumnReference> columnReferences = assignment.getAssignable().getColumnReferences();
-				if ( columnReferences.size() == 1 ) {
-					columnReferences.get( 0 ).accept( this );
-				}
-				else {
-					appendSql( " (" );
-					for (ColumnReference columnReference : columnReferences) {
-						columnReference.accept( this );
+			try {
+				clauseStack.push( Clause.SET );
+				for ( Assignment assignment : sqlAst.getAssignments() ) {
+					if ( firstPass ) {
+						firstPass = false;
 					}
-					appendSql( ") " );
+					else {
+						appendSql( ", " );
+					}
+
+					final List<ColumnReference> columnReferences = assignment.getAssignable().getColumnReferences();
+					if ( columnReferences.size() == 1 ) {
+						columnReferences.get( 0 ).accept( this );
+					}
+					else {
+						appendSql( " (" );
+						for (ColumnReference columnReference : columnReferences) {
+							columnReference.accept( this );
+						}
+						appendSql( ") " );
+					}
+					appendSql( " = " );
+					assignment.getAssignedValue().accept( this );
 				}
-				appendSql( " = " );
-				assignment.getAssignedValue().accept( this );
+			}
+			finally {
+				clauseStack.pop();
 			}
 
 			if ( sqlAst.getRestriction() != null ) {
 				appendSql( " where " );
-				sqlAst.getRestriction().accept( this );
+				try {
+					clauseStack.push( Clause.WHERE );
+					sqlAst.getRestriction().accept( this );
+				}
+				finally {
+					clauseStack.pop();
+				}
 			}
 
 			return new JdbcUpdate() {

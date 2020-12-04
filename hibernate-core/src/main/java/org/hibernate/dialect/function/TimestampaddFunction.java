@@ -52,7 +52,7 @@ public class TimestampaddFunction
 
 		String pattern = dialect.timestampaddPattern(
 				field.getUnit(),
-				TypeConfiguration.isSqlTimestampType( to.getExpressionType() )
+				TypeConfiguration.getSqlTemporalType( to.getExpressionType() )
 		);
 
 		new PatternRenderer( pattern ).render( sqlAppender, arguments, walker );

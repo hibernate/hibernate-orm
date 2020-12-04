@@ -20,21 +20,13 @@ import org.hibernate.sql.ast.SqlAstWalker;
  */
 public class SqlSelectionExpression implements Expression {
 	private final SqlSelection theSelection;
-	private final Expression theExpression;
 
-	public SqlSelectionExpression(
-			SqlSelection theSelection,
-			Expression theExpression) {
+	public SqlSelectionExpression(SqlSelection theSelection) {
 		this.theSelection = theSelection;
-		this.theExpression = theExpression;
 	}
 
 	public SqlSelection getSelection() {
 		return theSelection;
-	}
-
-	public Expression getExpression() {
-		return theExpression;
 	}
 
 	@Override
@@ -44,6 +36,6 @@ public class SqlSelectionExpression implements Expression {
 
 	@Override
 	public MappingModelExpressable getExpressionType() {
-		return theExpression.getExpressionType();
+		return theSelection.getExpressionType();
 	}
 }

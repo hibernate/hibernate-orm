@@ -54,8 +54,8 @@ public class TimestampdiffFunction
 
 		String pattern = dialect.timestampdiffPattern(
 				field.getUnit(),
-				TypeConfiguration.isSqlTimestampType( from.getExpressionType() ),
-				TypeConfiguration.isSqlTimestampType( to.getExpressionType() )
+				TypeConfiguration.getSqlTemporalType( from.getExpressionType() ),
+				TypeConfiguration.getSqlTemporalType( to.getExpressionType() )
 		);
 
 		new PatternRenderer( pattern ).render( sqlAppender, arguments, walker );

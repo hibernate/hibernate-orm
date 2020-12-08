@@ -130,4 +130,9 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 		//      by default
 		return TopLimitHandler.INSTANCE;
 	}
+
+	@Override
+	public GroupByConstantRenderingStrategy getGroupByConstantRenderingStrategy() {
+		return GroupByConstantRenderingStrategy.EMPTY_GROUPING;
+	}
 }

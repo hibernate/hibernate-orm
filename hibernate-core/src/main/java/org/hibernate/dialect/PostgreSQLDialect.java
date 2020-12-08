@@ -781,8 +781,13 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsGroupByRollup() {
-		return getVersion() >= 950;
+	public GroupBySummarizationRenderingStrategy getGroupBySummarizationRenderingStrategy() {
+		return getVersion() >= 950 ? GroupBySummarizationRenderingStrategy.FUNCTION : GroupBySummarizationRenderingStrategy.NONE;
+	}
+
+	@Override
+	public GroupByConstantRenderingStrategy getGroupByConstantRenderingStrategy() {
+		return getVersion() >= 950 ? GroupByConstantRenderingStrategy.EMPTY_GROUPING : GroupByConstantRenderingStrategy.SUBQUERY;
 	}
 
 	@Override

@@ -8,6 +8,7 @@ package org.hibernate.testing.orm.junit;
 
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.GroupBySummarizationRenderingStrategy;
 
 /**
  * Container class for different implementation of the {@link DialectFeatureCheck} interface.
@@ -223,7 +224,7 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsGroupByRollup implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			return dialect.supportsGroupByRollup();
+			return dialect.getGroupBySummarizationRenderingStrategy() != GroupBySummarizationRenderingStrategy.NONE;
 		}
 	}
 

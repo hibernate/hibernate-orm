@@ -335,6 +335,11 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
+	public GroupByConstantRenderingStrategy getGroupByConstantRenderingStrategy() {
+		return GroupByConstantRenderingStrategy.COLUMN_REFERENCE;
+	}
+
+	@Override
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {

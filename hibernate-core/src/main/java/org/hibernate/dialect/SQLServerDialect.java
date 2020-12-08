@@ -359,8 +359,8 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public boolean supportsGroupByRollup() {
-		return true;
+	public GroupBySummarizationRenderingStrategy getGroupBySummarizationRenderingStrategy() {
+		return GroupBySummarizationRenderingStrategy.CLAUSE;
 	}
 
 	@Override
@@ -636,6 +636,11 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 			default:
 				return "";
 		}
+	}
+
+	@Override
+	public GroupByConstantRenderingStrategy getGroupByConstantRenderingStrategy() {
+		return GroupByConstantRenderingStrategy.EMPTY_GROUPING;
 	}
 
 }

@@ -20,6 +20,7 @@ import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.internal.idtable.AfterUseAction;
 import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
 import org.hibernate.query.sqm.mutation.internal.idtable.LocalTemporaryTableStrategy;
+import org.hibernate.query.sqm.mutation.internal.idtable.TempIdTableExporter;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 
 import java.sql.CallableStatement;
@@ -218,13 +219,23 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 	}
 
 	@Override
+	public GroupByConstantRenderingStrategy getGroupByConstantRenderingStrategy() {
+		return GroupByConstantRenderingStrategy.COLUMN_REFERENCE;
+	}
+
+	@Override
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
 			EntityMappingType entityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
 		return new LocalTemporaryTableStrategy(
 				new IdTable( entityDescriptor, basename -> "#" + basename, this ),
+				() -> new TempIdTableExporter( true, this::getTypeName ) {
+					@Override
+					protected String getCreateCommand() {
+						return "create table";
+					}
+				},
 //				// sql-server, at least needed this dropped after use; strange!
-				this::getTypeName,
 				AfterUseAction.DROP,
 				TempTableDdlTransactionHandling.NONE,
 				runtimeModelCreationContext.getSessionFactory()

@@ -56,6 +56,7 @@ import org.hibernate.query.sqm.tree.expression.SqmPathEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
 import org.hibernate.query.sqm.tree.expression.SqmRestrictedSubQueryExpression;
 import org.hibernate.query.sqm.tree.expression.SqmStar;
+import org.hibernate.query.sqm.tree.expression.SqmSummarization;
 import org.hibernate.query.sqm.tree.expression.SqmToDuration;
 import org.hibernate.query.sqm.tree.expression.SqmTrimSpecification;
 import org.hibernate.query.sqm.tree.expression.SqmTuple;
@@ -932,6 +933,11 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 
 	@Override
 	public Object visitEvery(SqmEvery<?> sqmEvery) {
+		return null;
+	}
+
+	@Override
+	public Object visitSummarization(SqmSummarization<?> sqmSummarization) {
 		return null;
 	}
 

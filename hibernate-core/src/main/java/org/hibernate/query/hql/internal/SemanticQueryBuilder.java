@@ -119,6 +119,7 @@ import org.hibernate.query.sqm.tree.expression.SqmParameterizedEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmPathEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
 import org.hibernate.query.sqm.tree.expression.SqmStar;
+import org.hibernate.query.sqm.tree.expression.SqmSummarization;
 import org.hibernate.query.sqm.tree.expression.SqmToDuration;
 import org.hibernate.query.sqm.tree.expression.SqmTrimSpecification;
 import org.hibernate.query.sqm.tree.expression.SqmTuple;
@@ -3307,31 +3308,19 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 	@Override
 	public SqmExpression<?> visitCube(HqlParser.CubeContext ctx) {
-		List<SqmTypedNode<?>> args = new ArrayList<>();
-		for ( HqlParser.ExpressionContext arg: ctx.expression() ) {
-			args.add( (SqmExpression<?>) arg.accept( this ) );
-		}
-		//ignore DISTINCT
-		return getFunctionDescriptor("cube").generateSqmExpression(
-				args,
-				resolveExpressableTypeBasic( Integer.class ),
-				creationContext.getQueryEngine(),
-				creationContext.getJpaMetamodel().getTypeConfiguration()
+		return new SqmSummarization<>(
+				SqmSummarization.Kind.CUBE,
+				visitExpressions( ctx.expression() ),
+				creationContext.getNodeBuilder()
 		);
 	}
 
 	@Override
 	public SqmExpression<?> visitRollup(HqlParser.RollupContext ctx) {
-		List<SqmTypedNode<?>> args = new ArrayList<>();
-		for ( HqlParser.ExpressionContext arg: ctx.expression() ) {
-			args.add( (SqmExpression<?>) arg.accept( this ) );
-		}
-		//ignore DISTINCT
-		return getFunctionDescriptor("rollup").generateSqmExpression(
-				args,
-				resolveExpressableTypeBasic( Integer.class ),
-				creationContext.getQueryEngine(),
-				creationContext.getJpaMetamodel().getTypeConfiguration()
+		return new SqmSummarization<>(
+				SqmSummarization.Kind.ROLLUP,
+				visitExpressions( ctx.expression() ),
+				creationContext.getNodeBuilder()
 		);
 	}
 

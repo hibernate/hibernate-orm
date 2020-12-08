@@ -549,4 +549,9 @@ public class TeradataDialect extends Dialect {
 		//TODO: is this right?!
 		return TopLimitHandler.INSTANCE;
 	}
+
+	@Override
+	public GroupByConstantRenderingStrategy getGroupByConstantRenderingStrategy() {
+		return GroupByConstantRenderingStrategy.EMPTY_GROUPING;
+	}
 }

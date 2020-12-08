@@ -8,6 +8,7 @@ package org.hibernate.testing.jdbc;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
@@ -51,5 +52,15 @@ public class SQLStatementInspector implements StatementInspector {
 		String query = sqlQueries.get( queryNumber );
 		int actual = query.split( " " + toCheck + " ", -1 ).length - 1;
 		assertThat( "number of " + toCheck,actual, is( expectedNumberOfOccurrences ) );
+	}
+
+	public void assertIsInsert(int queryNumber) {
+		String query = sqlQueries.get( queryNumber );
+		assertTrue( query.toLowerCase( Locale.ROOT ).startsWith( "insert" ) );
+	}
+
+	public void assertIsUpdate(int queryNumber) {
+		String query = sqlQueries.get( queryNumber );
+		assertTrue( query.toLowerCase( Locale.ROOT ).startsWith( "update" ) );
 	}
 }

@@ -52,67 +52,6 @@ public class EmbeddedCircularFetchTests {
 	//		- `org.hibernate.orm.test.fetch.circular.onetoone`
 	//		- `org.hibernate.orm.test.fetch.circular.manytoone`
 
-//	@Test
-//	@TestForIssue(jiraKey = "HHH-9642")
-//	public void testEmbeddedAndOneToManyHql(SessionFactoryScope scope) {
-//		scope.inTransaction(
-//				session -> {
-//					InternetProvider provider = new InternetProvider();
-//					provider.setBrandName( "Fido" );
-//					LegalStructure structure = new LegalStructure();
-//					structure.setCountry( "Canada" );
-//					structure.setName( "Rogers" );
-//					provider.setOwner( structure );
-//					session.persist( provider );
-//					Manager manager = new Manager();
-//					manager.setName( "Bill" );
-//					manager.setEmployer( provider );
-//					structure.getTopManagement().add( manager );
-//					session.persist( manager );
-//				}
-//		);
-//
-//		scope.inTransaction(
-//				session -> {
-//					InternetProvider internetProviderQueried =
-//							(InternetProvider) session.createQuery( "from InternetProvider" ).uniqueResult();
-//					assertFalse( Hibernate.isInitialized( internetProviderQueried.getOwner().getTopManagement() ) );
-//
-//				}
-//		);
-//
-//		scope.inTransaction(
-//				session -> {
-//					InternetProvider internetProviderQueried =
-//							(InternetProvider) session.createQuery(
-//									"from InternetProvider i join fetch i.owner.topManagement" )
-//									.uniqueResult();
-//					assertTrue( Hibernate.isInitialized( internetProviderQueried.getOwner().getTopManagement() ) );
-//
-//				}
-//		);
-//
-//		InternetProvider provider = scope.fromTransaction(
-//				session -> {
-//					InternetProvider internetProviderQueried =
-//							(InternetProvider) session.createQuery(
-//									"from InternetProvider i join fetch i.owner o join fetch o.topManagement" )
-//									.uniqueResult();
-//					assertTrue( Hibernate.isInitialized( internetProviderQueried.getOwner().getTopManagement() ) );
-//					return internetProviderQueried;
-//				}
-//		);
-//
-//		scope.inTransaction(
-//				session -> {
-//					InternetProvider internetProvider = session.get( InternetProvider.class, provider.getId() );
-//					Manager manager = internetProvider.getOwner().getTopManagement().iterator().next();
-//					session.delete( manager );
-//					session.delete( internetProvider );
-//				}
-//		);
-//	}
-
 	@Test
 	@TestForIssue(jiraKey = "HHH-9642")
 	public void testCircularFetchAcrossComponent(SessionFactoryScope scope) {
@@ -141,20 +80,10 @@ public class EmbeddedCircularFetchTests {
 				}
 		);
 
-//		scope.inTransaction(
-//				session -> {
-//					InternetProvider internetProviderQueried =
-//							(InternetProvider) session.createQuery( "from InternetProvider" ).uniqueResult();
-//					assertFalse( Hibernate.isInitialized( internetProviderQueried.getOwner().getTopManagement() ) );
-//
-//				}
-//		);
-
 		scope.inTransaction(
 				session -> {
 					session.getSessionFactory().getStatistics().clear();
 					final RootEntity result = session.createQuery(
-//							"from RootEntity r join fetch r.intermediateComponent.leaves",
 							"from RootEntity r " +
 									"join fetch r.intermediateComponent.leaves l " +
 									"join fetch l.rootEntity",
@@ -166,28 +95,6 @@ public class EmbeddedCircularFetchTests {
 					assertThat( session.getSessionFactory().getStatistics().getPrepareStatementCount(), is( 1L ) );
 				}
 		);
-
-//		InternetProvider provider = scope.fromTransaction(
-//				session -> {
-//					InternetProvider internetProviderQueried =
-//							(InternetProvider) session.createQuery(
-//									"from InternetProvider i join fetch i.owner o join fetch o.topManagement" )
-//									.uniqueResult();
-//					LegalStructure owner = internetProviderQueried.getOwner();
-//					assertTrue( Hibernate.isInitialized( owner ));
-//					assertTrue( Hibernate.isInitialized( owner.getTopManagement() ) );
-//					return internetProviderQueried;
-//				}
-//		);
-//
-//		scope.inTransaction(
-//				session -> {
-//					InternetProvider internetProvider = session.get( InternetProvider.class, provider.getId() );
-//					Manager manager = internetProvider.getOwner().getTopManagement().iterator().next();
-//					session.delete( manager );
-//					session.delete( internetProvider );
-//				}
-//		);
 	}
 
 	@Entity( name = "RootEntity" )

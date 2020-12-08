@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.cid;
+package org.hibernate.orm.test.cid;
 
 import java.math.BigDecimal;
 import java.util.Calendar;
@@ -29,10 +29,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @DomainModel(
 		xmlMappings = {
-				"org/hibernate/test/cid/Customer.hbm.xml",
-				"org/hibernate/test/cid/Order.hbm.xml",
-				"org/hibernate/test/cid/LineItem.hbm.xml",
-				"org/hibernate/test/cid/Product.hbm.xml"
+				"org/hibernate/orm/test/cid/Customer.hbm.xml",
+				"org/hibernate/orm/test/cid/Order.hbm.xml",
+				"org/hibernate/orm/test/cid/LineItem.hbm.xml",
+				"org/hibernate/orm/test/cid/Product.hbm.xml"
 		}
 )
 @SessionFactory(statementInspectorClass = SQLStatementInspector.class)
@@ -97,7 +97,7 @@ public class CompositeIdTest {
 				session -> {
 					Order o = session.get( Order.class, new Order.Id( "C111", 0 ) );
 					statementInspector.assertExecutedCount( 1 );
-					statementInspector.assertNumberOfOccurrenceInQuery( 0,"join", 1 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 1 );
 					assertEquals( o.getTotal().intValue(), 2 );
 					o.getCustomer().getName();
 				}
@@ -136,12 +136,13 @@ public class CompositeIdTest {
 					statementInspector.assertExecutedCount( 1 );
 					statementInspector.clear();
 					iter = session.createQuery( "from Order o join o.lineItems li" ).list().iterator();
-					statementInspector.assertExecutedCount( 1 );
+					statementInspector.assertExecutedCount( 2 );
+					statementInspector.clear();
 					while ( iter.hasNext() ) {
-						Object[] stuff = (Object[]) iter.next();
-						assertTrue( stuff.length == 2 );
+						Order order = (Order) iter.next();
+						assertTrue( Hibernate.isInitialized( order.getLineItems() ) );
 					}
-					statementInspector.assertExecutedCount( 1 );
+					statementInspector.assertExecutedCount( 0 );
 				}
 		);
 
@@ -150,41 +151,96 @@ public class CompositeIdTest {
 				session -> {
 					Customer c = session.get( Customer.class, "C111" );
 					statementInspector.assertExecutedCount( 1 );
-					statementInspector.assertNumberOfOccurrenceInQuery( 0,"join", 0 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 0 );
 
 					statementInspector.clear();
 					Order o2 = new Order( c );
 					o2.setOrderDate( Calendar.getInstance() );
-					statementInspector.assertExecutedCount( 2 );
-					statementInspector.assertNumberOfOccurrenceInQuery( 0,"join", 0 );
-					statementInspector.assertNumberOfOccurrenceInQuery( 1,"join", 0 );
+					statementInspector.assertExecutedCount( 1 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 1 );
 
 					statementInspector.clear();
 					session.flush();
 					statementInspector.assertExecutedCount( 4 );
-					statementInspector.assertNumberOfOccurrenceInQuery( 0,"select", 1 );
-					statementInspector.assertNumberOfOccurrenceInQuery( 0,"join", 0 );
-					statementInspector.assertNumberOfOccurrenceInQuery( 1,"insert", 1 );
-					statementInspector.assertNumberOfOccurrenceInQuery( 2,"update", 1 );
-					statementInspector.assertNumberOfOccurrenceInQuery( 3,"update", 1 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 0, "select", 1 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 0 );
+					statementInspector.assertIsInsert( 1 );
+					statementInspector.assertIsUpdate( 2 );
+					statementInspector.assertIsUpdate( 3 );
 
 
+					statementInspector.clear();
 					LineItem li2 = new LineItem( o2, p2 );
 					li2.setQuantity( 5 );
-					statementInspector.clear();
 
 					List bigOrders = session.createQuery( "from Order o where o.total>10.0" ).list();
 					statementInspector.assertExecutedCount( 3 );
-					statementInspector.assertNumberOfOccurrenceInQuery( 0,"select", 1 );
-					statementInspector.assertNumberOfOccurrenceInQuery( 0,"join", 0 );
-					statementInspector.assertNumberOfOccurrenceInQuery( 1,"insert", 1 );
-					statementInspector.assertNumberOfOccurrenceInQuery( 2,"select", 2 );
-					statementInspector.assertNumberOfOccurrenceInQuery( 3,"join", 0 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 0, "select", 1 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 0 );
+					statementInspector.assertIsInsert( 1 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 2, "select", 2 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 3, "join", 0 );
 
 					assertEquals( bigOrders.size(), 1 );
 				}
 		);
 	}
+
+	@Test
+	public void testNonLazyFetch_2(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					Product p = new Product();
+					p.setProductId( "A123" );
+					p.setDescription( "nipple ring" );
+					p.setPrice( new BigDecimal( 1.0 ) );
+					p.setNumberAvailable( 1004 );
+					session.persist( p );
+
+					Product p2 = new Product();
+					p2.setProductId( "X525" );
+					p2.setDescription( "nose stud" );
+					p2.setPrice( new BigDecimal( 3.0 ) );
+					p2.setNumberAvailable( 105 );
+					session.persist( p2 );
+
+					Customer c = new Customer();
+					c.setAddress( "St Kilda Rd, MEL, 3000" );
+					c.setName( "Virginia" );
+					c.setCustomerId( "C111" );
+					session.persist( c );
+
+					Order o = new Order( c );
+					o.setOrderDate( Calendar.getInstance() );
+					LineItem li = new LineItem( o, p );
+					li.setQuantity( 2 );
+				}
+		);
+
+
+		scope.inTransaction(
+				session -> {
+					Order o = (Order) session.createQuery(
+							"from Order o left join fetch o.lineItems li left join fetch li.product p" )
+							.uniqueResult();
+					assertTrue( Hibernate.isInitialized( o.getLineItems() ) );
+					LineItem li = (LineItem) o.getLineItems().iterator().next();
+					assertTrue( Hibernate.isInitialized( li ) );
+					assertTrue( Hibernate.isInitialized( li.getProduct() ) );
+				}
+		);
+
+//		scope.inTransaction(
+//				session -> {
+//					Order o = (Order) session.createQuery( "from Order o" ).uniqueResult();
+//					assertTrue( Hibernate.isInitialized( o.getLineItems() ) );
+//					LineItem li = (LineItem) o.getLineItems().iterator().next();
+//					assertTrue( Hibernate.isInitialized( li ) );
+//					assertFalse( Hibernate.isInitialized( li.getProduct() ) );
+//				}
+//		);
+	}
+
 
 	@Test
 	public void testNonLazyFetch(SessionFactoryScope scope) {

@@ -18,7 +18,7 @@
      
 -->
 
-<hibernate-mapping package="org.hibernate.test.cid">
+<hibernate-mapping package="org.hibernate.orm.test.cid">
 
     <class name="Customer">
     

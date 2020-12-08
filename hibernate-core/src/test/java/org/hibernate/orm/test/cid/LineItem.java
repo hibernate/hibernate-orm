@@ -6,7 +6,7 @@
  */
 
 //$Id: LineItem.java 4806 2004-11-25 14:37:00Z steveebersole $
-package org.hibernate.test.cid;
+package org.hibernate.orm.test.cid;
 import java.io.Serializable;
 
 /**

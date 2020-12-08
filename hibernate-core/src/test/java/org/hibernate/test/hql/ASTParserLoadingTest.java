@@ -72,11 +72,11 @@ import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.test.cid.Customer;
-import org.hibernate.test.cid.LineItem;
-import org.hibernate.test.cid.LineItem.Id;
-import org.hibernate.test.cid.Order;
-import org.hibernate.test.cid.Product;
+import org.hibernate.orm.test.cid.Customer;
+import org.hibernate.orm.test.cid.LineItem;
+import org.hibernate.orm.test.cid.LineItem.Id;
+import org.hibernate.orm.test.cid.Order;
+import org.hibernate.orm.test.cid.Product;
 import org.junit.Test;
 
 import org.hamcrest.CoreMatchers;

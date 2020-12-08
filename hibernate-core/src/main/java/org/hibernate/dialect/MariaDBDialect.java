@@ -108,6 +108,11 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	@Override
+	public GroupBySummarizationRenderingStrategy getGroupBySummarizationRenderingStrategy() {
+		return GroupBySummarizationRenderingStrategy.CLAUSE;
+	}
+
+	@Override
 	boolean supportsForShare() {
 		//only supported on MySQL
 		return false;

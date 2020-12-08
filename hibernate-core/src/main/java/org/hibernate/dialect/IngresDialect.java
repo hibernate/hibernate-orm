@@ -420,4 +420,9 @@ public class IngresDialect extends Dialect {
 		}
 	}
 
+	@Override
+	public GroupByConstantRenderingStrategy getGroupByConstantRenderingStrategy() {
+		return GroupByConstantRenderingStrategy.COLUMN_REFERENCE;
+	}
+
 }

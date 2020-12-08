@@ -360,10 +360,6 @@ public abstract class Dialect implements ConversionContext {
 
 		CommonFunctionFactory.aggregates(queryEngine);
 
-		//grouping functions cube() and rollup() supported on some databases
-
-		CommonFunctionFactory.groupings(queryEngine);
-
 		//the ANSI SQL-defined aggregate functions any() and every() are only
 		//supported on one database, but can be emulated using sum() and case,
 		//though there is a more natural mapping on some databases
@@ -2625,14 +2621,21 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Is this dialect known to support ROLLUP functions in the GROUP BY clause.
+	 * The strategy to use for rendering summarizations in the GROUP BY clause.
 	 *
-	 * @return True if this SQL dialect supports ROLLUP functions; false otherwise.
 	 * @since 6.0
 	 */
-	public boolean supportsGroupByRollup() {
-		// return false here, as most databases do not properly support this construct...
-		return false;
+	public GroupBySummarizationRenderingStrategy getGroupBySummarizationRenderingStrategy() {
+		return GroupBySummarizationRenderingStrategy.NONE;
+	}
+
+	/**
+	 * The strategy to use for rendering constants in the GROUP BY clause.
+	 *
+	 * @since 6.0
+	 */
+	public GroupByConstantRenderingStrategy getGroupByConstantRenderingStrategy() {
+		return GroupByConstantRenderingStrategy.CONSTANT_EXPRESSION;
 	}
 
 	/**

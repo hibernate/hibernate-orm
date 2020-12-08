@@ -1538,4 +1538,9 @@ public abstract class AbstractHANADialect extends Dialect {
 	protected abstract boolean supportsAsciiStringTypes();
 
 	protected abstract Boolean useUnicodeStringTypesDefault();
+
+	@Override
+	public GroupByConstantRenderingStrategy getGroupByConstantRenderingStrategy() {
+		return GroupByConstantRenderingStrategy.EMPTY_GROUPING;
+	}
 }

@@ -67,6 +67,7 @@ import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
 import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Star;
+import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.expression.TrimSpecification;
 import org.hibernate.sql.ast.tree.expression.UnaryOperation;
 import org.hibernate.sql.ast.tree.from.FromClause;
@@ -369,7 +370,49 @@ public abstract class AbstractSqlAstWalker
 		// We render an empty group instead of literals as some DBs don't support grouping by literals
 		// Note that integer literals, which refer to select item positions, are handled in #visitGroupByClause
 		if ( expression instanceof Literal ) {
-			appendSql( "()" );
+			switch ( dialect.getGroupByConstantRenderingStrategy() ) {
+				case CONSTANT:
+					appendSql( "'0'" );
+					break;
+				case CONSTANT_EXPRESSION:
+					appendSql( "'0' || '0'" );
+					break;
+				case EMPTY_GROUPING:
+					appendSql( "()" );
+					break;
+				case SUBQUERY:
+					appendSql( "(select 1 " );
+					appendSql( dialect.getFromDual() );
+					appendSql( ')' );
+					break;
+				case COLUMN_REFERENCE:
+					// todo (6.0): We need to introduce a dummy from clause item
+//					String fromItem = ", (select 1 x " + dialect.getFromDual() + ") dummy";
+//					sqlBuffer.insert( fromEndIndex, fromItem );
+//					appendSql( "dummy.x" );
+					throw new UnsupportedOperationException( "Column reference strategy is not yet implemented!" );
+			}
+		}
+		else if ( expression instanceof Summarization ) {
+			Summarization summarization = (Summarization) expression;
+			switch ( dialect.getGroupBySummarizationRenderingStrategy() ) {
+				case FUNCTION:
+					appendSql( summarization.getKind().name().toLowerCase() );
+					appendSql( OPEN_PARENTHESIS );
+					renderCommaSeparated( summarization.getGroupings() );
+					appendSql( CLOSE_PARENTHESIS );
+					break;
+				case CLAUSE:
+					renderCommaSeparated( summarization.getGroupings() );
+					appendSql( " with " );
+					appendSql( summarization.getKind().name().toLowerCase() );
+					break;
+				default:
+					// This could theoretically be emulated by rendering all grouping variations of the query and
+					// connect them via union all but that's probably pretty inefficient and would have to happen
+					// on the query spec level
+					throw new UnsupportedOperationException( "Summarization is not supported by DBMS!" );
+			}
 		}
 		else {
 			expression.accept( this );
@@ -497,12 +540,7 @@ public abstract class AbstractSqlAstWalker
 		try {
 			appendSql( "select " );
 
-			String separator = NO_SEPARATOR;
-			for ( Expression expression : expressions ) {
-				appendSql( separator );
-				expression.accept( this );
-				separator = COMA_SEPARATOR;
-			}
+			renderCommaSeparated( expressions );
 			String fromDual = dialect.getFromDual();
 			if ( !fromDual.isEmpty() ) {
 				appendSql( " " );
@@ -985,14 +1023,19 @@ public abstract class AbstractSqlAstWalker
 			appendSql( OPEN_PARENTHESIS );
 		}
 
-		for ( Expression expression : tuple.getExpressions() ) {
-			appendSql( separator );
-			expression.accept( this );
-			separator = COMA_SEPARATOR;
-		}
+		renderCommaSeparated( tuple.getExpressions() );
 
 		if ( isCurrentWhereClause ) {
 			appendSql( CLOSE_PARENTHESIS );
+		}
+	}
+
+	private void renderCommaSeparated(Iterable<? extends Expression> expressions) {
+		String separator = NO_SEPARATOR;
+		for ( Expression expression : expressions ) {
+			appendSql( separator );
+			expression.accept( this );
+			separator = COMA_SEPARATOR;
 		}
 	}
 
@@ -1367,6 +1410,11 @@ public abstract class AbstractSqlAstWalker
 	}
 
 	@Override
+	public void visitSummarization(Summarization every) {
+		// nothing to do... handled within #renderGroupByItem
+	}
+
+	@Override
 	public void visitJdbcLiteral(JdbcLiteral jdbcLiteral) {
 		visitLiteral( jdbcLiteral );
 	}
@@ -1538,12 +1586,7 @@ public abstract class AbstractSqlAstWalker
 					appendSql( " not" );
 				}
 				appendSql( " in (" );
-				String separator = NO_SEPARATOR;
-				for ( Expression expression : inListPredicate.getListExpressions() ) {
-					appendSql( separator );
-					expression.accept( this );
-					separator = COMA_SEPARATOR;
-				}
+				renderCommaSeparated( inListPredicate.getListExpressions() );
 				appendSql( CLOSE_PARENTHESIS );
 			}
 		}
@@ -1553,12 +1596,7 @@ public abstract class AbstractSqlAstWalker
 				appendSql( " not" );
 			}
 			appendSql( " in (" );
-			String separator = NO_SEPARATOR;
-			for ( Expression expression : inListPredicate.getListExpressions() ) {
-				appendSql( separator );
-				expression.accept( this );
-				separator = COMA_SEPARATOR;
-			}
+			renderCommaSeparated( inListPredicate.getListExpressions() );
 			appendSql( CLOSE_PARENTHESIS );
 		}
 	}

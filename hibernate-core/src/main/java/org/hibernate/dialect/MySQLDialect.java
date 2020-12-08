@@ -922,7 +922,7 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsGroupByRollup() {
-		return true;
+	public GroupBySummarizationRenderingStrategy getGroupBySummarizationRenderingStrategy() {
+		return GroupBySummarizationRenderingStrategy.CLAUSE;
 	}
 }

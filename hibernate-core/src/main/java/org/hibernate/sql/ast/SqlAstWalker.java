@@ -30,6 +30,7 @@ import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
 import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Star;
+import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.expression.TrimSpecification;
 import org.hibernate.sql.ast.tree.expression.UnaryOperation;
 import org.hibernate.sql.ast.tree.from.FromClause;
@@ -105,6 +106,8 @@ public interface SqlAstWalker {
 	void visitAny(Any any);
 
 	void visitEvery(Every every);
+
+	void visitSummarization(Summarization every);
 
 	void visitSelfRenderingExpression(SelfRenderingExpression expression);
 

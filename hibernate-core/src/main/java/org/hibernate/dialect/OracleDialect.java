@@ -30,6 +30,8 @@ import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.CastType;
@@ -37,6 +39,11 @@ import org.hibernate.query.SemanticException;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.query.sqm.mutation.internal.idtable.AfterUseAction;
+import org.hibernate.query.sqm.mutation.internal.idtable.GlobalTemporaryTableStrategy;
+import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
+import org.hibernate.query.sqm.mutation.internal.idtable.TempIdTableExporter;
+import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.*;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorOracleDatabaseImpl;
@@ -807,8 +814,13 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsGroupByRollup() {
-		return true;
+	public GroupBySummarizationRenderingStrategy getGroupBySummarizationRenderingStrategy() {
+		return GroupBySummarizationRenderingStrategy.FUNCTION;
+	}
+
+	@Override
+	public GroupByConstantRenderingStrategy getGroupByConstantRenderingStrategy() {
+		return GroupByConstantRenderingStrategy.EMPTY_GROUPING;
 	}
 
 	@Override
@@ -824,6 +836,23 @@ public class OracleDialect extends Dialect {
 	@Override
 	public boolean isEmptyStringTreatedAsNull() {
 		return true;
+	}
+
+	@Override
+	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
+			EntityMappingType rootEntityDescriptor,
+			RuntimeModelCreationContext runtimeModelCreationContext) {
+		return new GlobalTemporaryTableStrategy(
+				new IdTable( rootEntityDescriptor, name -> name.length() > 30 ? name.substring( 0, 30 ) : name, this ),
+				() -> new TempIdTableExporter( false, this::getTypeName ) {
+					@Override
+					protected String getCreateOptions() {
+						return "on commit delete rows";
+					}
+				},
+				AfterUseAction.CLEAN,
+				runtimeModelCreationContext.getSessionFactory()
+		);
 	}
 
 	/**

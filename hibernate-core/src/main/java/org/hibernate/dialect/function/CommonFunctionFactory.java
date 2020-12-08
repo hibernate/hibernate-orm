@@ -1431,15 +1431,6 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
-	public static void groupings(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder("cube")
-				.setMinArgumentCount(1)
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder("rollup")
-				.setMinArgumentCount(1)
-				.register();
-	}
-
 	public static void aggregates(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder("max")
 				.setExactArgumentCount(1)

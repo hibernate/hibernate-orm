@@ -108,6 +108,7 @@ import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
 import org.hibernate.query.sqm.tree.expression.SqmStar;
+import org.hibernate.query.sqm.tree.expression.SqmSummarization;
 import org.hibernate.query.sqm.tree.expression.SqmToDuration;
 import org.hibernate.query.sqm.tree.expression.SqmTrimSpecification;
 import org.hibernate.query.sqm.tree.expression.SqmTuple;
@@ -179,6 +180,7 @@ import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Star;
+import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.expression.TrimSpecification;
 import org.hibernate.sql.ast.tree.expression.UnaryOperation;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -2233,6 +2235,30 @@ public abstract class BaseSqmToSqlAstConverter
 				visitSubQueryExpression( sqmEvery.getSubquery() ),
 				null //resolveMappingExpressable( sqmEvery.getNodeType() )
 		);
+	}
+
+	@Override
+	public Object visitSummarization(SqmSummarization<?> sqmSummarization) {
+		final List<SqmExpression<?>> groupingExpressions = sqmSummarization.getGroupings();
+		final int size = groupingExpressions.size();
+		final List<Expression> expressions = new ArrayList<>( size );
+		for ( int i = 0; i < size; i++ ) {
+			expressions.add( (Expression) groupingExpressions.get( i ).accept( this ) );
+		}
+		return new Summarization(
+				getSummarizationKind(sqmSummarization.getKind()),
+				expressions
+		);
+	}
+
+	private Summarization.Kind getSummarizationKind(SqmSummarization.Kind kind) {
+		switch ( kind ) {
+			case CUBE:
+				return Summarization.Kind.CUBE;
+			case ROLLUP:
+				return Summarization.Kind.ROLLUP;
+		}
+		throw new UnsupportedOperationException( "Unsupported summarization: " + kind );
 	}
 
 	@Override

@@ -698,8 +698,13 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsGroupByRollup() {
-		return true;
+	public GroupBySummarizationRenderingStrategy getGroupBySummarizationRenderingStrategy() {
+		return GroupBySummarizationRenderingStrategy.FUNCTION;
+	}
+
+	@Override
+	public GroupByConstantRenderingStrategy getGroupByConstantRenderingStrategy() {
+		return GroupByConstantRenderingStrategy.EMPTY_GROUPING;
 	}
 
 	@Override

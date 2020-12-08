@@ -49,6 +49,7 @@ import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmPathEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
 import org.hibernate.query.sqm.tree.expression.SqmRestrictedSubQueryExpression;
+import org.hibernate.query.sqm.tree.expression.SqmSummarization;
 import org.hibernate.query.sqm.tree.expression.SqmToDuration;
 import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
@@ -204,6 +205,8 @@ public interface SemanticQueryWalker<T> {
 	T visitAny(SqmAny<?> sqmAny);
 
 	T visitEvery(SqmEvery<?> sqmEvery);
+
+	T visitSummarization(SqmSummarization<?> sqmSummarization);
 
 	T visitPositionalParameterExpression(SqmPositionalParameter<?> expression);
 

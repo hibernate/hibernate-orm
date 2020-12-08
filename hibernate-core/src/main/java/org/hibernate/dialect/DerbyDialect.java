@@ -766,7 +766,7 @@ public class DerbyDialect extends Dialect {
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
 		return new LocalTemporaryTableStrategy(
-				new IdTable( rootEntityDescriptor, basename -> "HT_" + basename, this ),
+				new IdTable( rootEntityDescriptor, basename -> "session.HT_" + basename, this ),
 				() -> new TempIdTableExporter( true, this::getTypeName ) {
 					@Override
 					protected String getCreateCommand() {
@@ -785,7 +785,7 @@ public class DerbyDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsGroupByRollup() {
-		return true;
+	public GroupBySummarizationRenderingStrategy getGroupBySummarizationRenderingStrategy() {
+		return GroupBySummarizationRenderingStrategy.FUNCTION;
 	}
 }

@@ -13,6 +13,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 import static org.hibernate.orm.test.query.sqm.BaseSqmUnitTest.interpretSelect;
@@ -25,7 +26,7 @@ import static org.hibernate.orm.test.query.sqm.BaseSqmUnitTest.interpretSelect;
 		standardModels = StandardDomainModel.GAMBIT
 )
 @ServiceRegistry(
-		settings = @ServiceRegistry.Setting(
+		settings = @Setting(
 				name = AvailableSettings.HBM2DDL_AUTO,
 				value = "create-drop"
 		)

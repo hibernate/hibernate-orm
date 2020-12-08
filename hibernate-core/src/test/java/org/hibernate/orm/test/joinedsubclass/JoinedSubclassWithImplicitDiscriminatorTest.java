@@ -22,6 +22,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -42,7 +43,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 @SessionFactory
 @ServiceRegistry(
 		settings =
-		@ServiceRegistry.Setting(
+		@Setting(
 				name = AvailableSettings.IMPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS,
 				value = "true"))
 public class JoinedSubclassWithImplicitDiscriminatorTest {

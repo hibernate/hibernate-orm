@@ -23,6 +23,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -41,7 +42,7 @@ import static org.junit.Assert.assertTrue;
 )
 @SessionFactory(generateStatistics = true)
 @ServiceRegistry(settings = {
-		@ServiceRegistry.Setting(name = AvailableSettings.IMPLICIT_NAMING_STRATEGY, value = "jpa")
+		@Setting(name = AvailableSettings.IMPLICIT_NAMING_STRATEGY, value = "jpa")
 })
 public class EmbeddedCheckQueryExecutedTest {
 

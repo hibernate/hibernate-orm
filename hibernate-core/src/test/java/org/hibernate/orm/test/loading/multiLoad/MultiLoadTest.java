@@ -36,6 +36,7 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryProducer;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -56,9 +57,9 @@ import static org.junit.Assert.assertTrue;
 @SuppressWarnings("WeakerAccess")
 @ServiceRegistry(
 		settings = {
-				@ServiceRegistry.Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "true" ),
-				@ServiceRegistry.Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
-				@ServiceRegistry.Setting( name = AvailableSettings.HBM2DDL_DATABASE_ACTION, value = "create-drop" )
+				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "true" ),
+				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
+				@Setting( name = AvailableSettings.HBM2DDL_DATABASE_ACTION, value = "create-drop" )
 		}
 )
 @DomainModel(

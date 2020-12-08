@@ -21,6 +21,11 @@ public abstract class AbstractDomainModelDescriptor implements DomainModelDescri
 	}
 
 	@Override
+	public Class[] getAnnotatedClasses() {
+		return annotatedClasses;
+	}
+
+	@Override
 	public void applyDomainModel(MetadataSources sources) {
 		for ( Class annotatedClass : annotatedClasses ) {
 			sources.addAnnotatedClass( annotatedClass );

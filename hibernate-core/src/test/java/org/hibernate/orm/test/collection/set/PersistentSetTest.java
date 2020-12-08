@@ -22,6 +22,7 @@ import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -38,10 +39,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SessionFactory(generateStatistics = true)
 @ServiceRegistry(
 		settings = {
-				@ServiceRegistry.Setting(
+				@Setting(
 						name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "true"
 				),
-				@ServiceRegistry.Setting(
+				@Setting(
 						name = AvailableSettings.USE_QUERY_CACHE, value = "true"
 				)
 		}

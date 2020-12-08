@@ -23,6 +23,7 @@ import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -49,7 +50,7 @@ import static org.hamcrest.Matchers.notNullValue;
 )
 @ServiceRegistry(
 		settings = {
-				@ServiceRegistry.Setting(
+				@Setting(
 						name = AvailableSettings.JDBC_TIME_ZONE,
 						value = "UTC"
 				)

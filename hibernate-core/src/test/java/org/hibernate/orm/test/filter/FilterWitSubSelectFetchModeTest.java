@@ -32,6 +32,7 @@ import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -53,7 +54,7 @@ import static org.junit.Assert.assertThat;
 @SessionFactory
 @ServiceRegistry(
 		settings = {
-				@ServiceRegistry.Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" )
+				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" )
 		}
 )
 @TestForIssue(jiraKey = "HHH-7119")

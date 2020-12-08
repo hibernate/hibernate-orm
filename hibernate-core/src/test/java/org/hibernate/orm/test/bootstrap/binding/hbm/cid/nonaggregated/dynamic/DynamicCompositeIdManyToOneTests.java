@@ -18,6 +18,7 @@ import org.hibernate.persister.entity.EntityPersister;
 
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -33,7 +34,7 @@ import static org.hibernate.testing.transaction.TransactionUtil2.inTransaction;
  * @author Steve Ebersole
  */
 @ServiceRegistry(
-		settings = @ServiceRegistry.Setting( name = AvailableSettings.HBM2DDL_AUTO, value = "create-drop" )
+		settings = @Setting( name = AvailableSettings.HBM2DDL_AUTO, value = "create-drop" )
 )
 public class DynamicCompositeIdManyToOneTests {
 	@Test

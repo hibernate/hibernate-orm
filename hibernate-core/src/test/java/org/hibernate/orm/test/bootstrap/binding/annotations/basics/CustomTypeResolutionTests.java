@@ -42,6 +42,7 @@ import org.hibernate.usertype.UserType;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -55,7 +56,7 @@ import static org.hamcrest.Matchers.instanceOf;
  * @author Steve Ebersole
  */
 @ServiceRegistry(
-		settings = @ServiceRegistry.Setting( name = AvailableSettings.HBM2DDL_AUTO, value = "create-drop" )
+		settings = @Setting( name = AvailableSettings.HBM2DDL_AUTO, value = "create-drop" )
 )
 @DomainModel( annotatedClasses = CustomTypeResolutionTests.Person.class )
 public class CustomTypeResolutionTests {

@@ -16,6 +16,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
@@ -37,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 		}
 )
 @SessionFactory
-@ServiceRegistry(settings = @ServiceRegistry.Setting(name = Environment.AUTO_CLOSE_SESSION, value = "true"))
+@ServiceRegistry(settings = @Setting(name = Environment.AUTO_CLOSE_SESSION, value = "true"))
 public class GenericsTest {
 
 	@SkipForDialect(dialectClass = AbstractHANADialect.class, matchSubTypes = true, reason = "known bug in HANA: rs.next() returns false for org.hibernate.id.enhanced.SequenceStructure$1.getNextValue() for this test")

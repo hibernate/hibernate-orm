@@ -28,6 +28,7 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryProducer;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -50,7 +51,7 @@ import static org.hibernate.testing.hamcrest.CollectionMatchers.hasSize;
 @SessionFactory
 @ServiceRegistry(
 		settings = {
-				@ServiceRegistry.Setting(name = AvailableSettings.HBM2DDL_DATABASE_ACTION, value = "create-drop")
+				@Setting(name = AvailableSettings.HBM2DDL_DATABASE_ACTION, value = "create-drop")
 		}
 )
 public class LazyToOneWithSelectFetchModeTests implements SessionFactoryProducer {

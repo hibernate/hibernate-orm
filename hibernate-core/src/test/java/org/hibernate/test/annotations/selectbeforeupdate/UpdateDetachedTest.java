@@ -8,6 +8,7 @@ package org.hibernate.test.annotations.selectbeforeupdate;
 
 import java.util.HashSet;
 import java.util.Set;
+import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
@@ -280,6 +281,7 @@ public class UpdateDetachedTest extends BaseCoreFunctionalTestCase{
 
 	@Embeddable
 	public static class Comment {
+		@Column(name = "bar_comment")
 		private String comment;
 		private String author;
 

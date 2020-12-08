@@ -356,6 +356,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 		identifierInitializers.forEach( initializer -> initializer.resolveKey( rowProcessingState ) );
 		identifierInitializers.forEach( initializer -> initializer.resolveInstance( rowProcessingState ) );
+		identifierInitializers.forEach( initializer -> initializer.initializeInstance( rowProcessingState ) );
 
 		if ( EntityLoadingLogger.TRACE_ENABLED ) {
 			EntityLoadingLogger.LOGGER.tracef(
@@ -413,7 +414,6 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		if ( missing ) {
 			return;
 		}
-		identifierInitializers.forEach( initializer -> initializer.initializeInstance( rowProcessingState ) );
 
 		final Object entityIdentifier = entityKey.getIdentifier();
 

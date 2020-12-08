@@ -40,8 +40,6 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 	private final Object[] resolvedValues;
 	private final boolean createEmptyCompositesEnabled;
 	private Object compositeInstance;
-	private boolean keyResolved;
-	private boolean instanceResolved;
 
 
 	@SuppressWarnings("WeakerAccess")
@@ -95,7 +93,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 
 	@Override
 	public void resolveKey(RowProcessingState rowProcessingState) {
-		if(keyResolved){
+		if ( compositeInstance != null ) {
 			return;
 		}
 		final PropertyAccess parentInjectionPropertyAccess = embeddedModelPartDescriptor.getParentInjectionAttributePropertyAccess();
@@ -118,19 +116,17 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 					}
 			);
 		}
-		keyResolved = true;
 	}
 
 	@Override
 	public void resolveInstance(RowProcessingState rowProcessingState) {
-		if ( instanceResolved ) {
+		if ( compositeInstance != null ) {
 			return;
 		}
 		compositeInstance = embeddedModelPartDescriptor.getEmbeddableTypeDescriptor()
 				.getRepresentationStrategy()
 				.getInstantiator()
 				.instantiate( rowProcessingState.getSession().getFactory() );
-		instanceResolved = true;
 		EmbeddableLoadingLogger.INSTANCE.debugf(
 				"Created composite instance [%s] : %s",
 				navigablePath,
@@ -202,8 +198,6 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 	@Override
 	public void finishUpRow(RowProcessingState rowProcessingState) {
 		compositeInstance = null;
-		keyResolved = true;
-		instanceResolved = false;
 		clearParentResolutionListeners();
 	}
 

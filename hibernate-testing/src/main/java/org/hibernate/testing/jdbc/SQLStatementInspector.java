@@ -54,6 +54,11 @@ public class SQLStatementInspector implements StatementInspector {
 		assertThat( "number of " + toCheck,actual, is( expectedNumberOfOccurrences ) );
 	}
 
+	public void assertIsSelect(int queryNumber) {
+		String query = sqlQueries.get( queryNumber );
+		assertTrue( query.toLowerCase( Locale.ROOT ).startsWith( "select" ) );
+	}
+
 	public void assertIsInsert(int queryNumber) {
 		String query = sqlQueries.get( queryNumber );
 		assertTrue( query.toLowerCase( Locale.ROOT ).startsWith( "insert" ) );

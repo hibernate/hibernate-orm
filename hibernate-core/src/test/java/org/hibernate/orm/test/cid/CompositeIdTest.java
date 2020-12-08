@@ -17,7 +17,6 @@ import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -38,17 +37,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SessionFactory(statementInspectorClass = SQLStatementInspector.class)
 public class CompositeIdTest {
 
-	@AfterEach
-	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from LineItem" ).executeUpdate();
-					session.createQuery( "delete from Order" ).executeUpdate();
-					session.createQuery( "delete from Customer" ).executeUpdate();
-					session.createQuery( "delete from Product" ).executeUpdate();
-				}
-		);
-	}
+//	@AfterEach
+//	public void tearDown(SessionFactoryScope scope) {
+//		scope.inTransaction(
+//				session -> {
+//					session.createQuery( "delete from LineItem" ).executeUpdate();
+//					session.createQuery( "delete from Order" ).executeUpdate();
+//					session.createQuery( "delete from Customer" ).executeUpdate();
+//					session.createQuery( "delete from Product" ).executeUpdate();
+//				}
+//		);
+//	}
 
 	@Test
 	public void testQuery(SessionFactoryScope scope) {
@@ -162,7 +161,7 @@ public class CompositeIdTest {
 					statementInspector.clear();
 					session.flush();
 					statementInspector.assertExecutedCount( 4 );
-					statementInspector.assertNumberOfOccurrenceInQuery( 0, "select", 1 );
+					statementInspector.assertIsSelect( 0 );
 					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 0 );
 					statementInspector.assertIsInsert( 1 );
 					statementInspector.assertIsUpdate( 2 );
@@ -175,11 +174,11 @@ public class CompositeIdTest {
 
 					List bigOrders = session.createQuery( "from Order o where o.total>10.0" ).list();
 					statementInspector.assertExecutedCount( 3 );
-					statementInspector.assertNumberOfOccurrenceInQuery( 0, "select", 1 );
+					statementInspector.assertIsSelect( 0 );
 					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 0 );
 					statementInspector.assertIsInsert( 1 );
-					statementInspector.assertNumberOfOccurrenceInQuery( 2, "select", 2 );
-					statementInspector.assertNumberOfOccurrenceInQuery( 3, "join", 0 );
+					statementInspector.assertIsSelect( 2 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 2, "join", 0 );
 
 					assertEquals( bigOrders.size(), 1 );
 				}

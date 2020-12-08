@@ -78,13 +78,13 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 			return;
 		}
 
-//		if ( CollectionLoadingLogger.TRACE_ENABLED ) {
-//			CollectionLoadingLogger.INSTANCE.tracef(
-//					"(%s) Beginning Initializer#resolveInstance for collection : %s",
-//					getSimpleConcreteImplName(),
-//					LoggingHelper.toLoggableString( getNavigablePath(), collectionKey.getKey() )
-//			);
-//		}
+		if ( CollectionLoadingLogger.TRACE_ENABLED ) {
+			CollectionLoadingLogger.INSTANCE.tracef(
+					"(%s) Beginning Initializer#resolveInstance for collection : %s",
+					getSimpleConcreteImplName(),
+					LoggingHelper.toLoggableString( getNavigablePath(), collectionKey.getKey() )
+			);
+		}
 
 		// determine the PersistentCollection instance to use and whether
 		// we (this initializer) is responsible for loading its state
@@ -195,14 +195,14 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 					session
 			);
 
-//			if ( CollectionLoadingLogger.DEBUG_ENABLED ) {
-//				CollectionLoadingLogger.INSTANCE.debugf(
-//						"(%s) Created new collection wrapper [%s] : %s",
-//						getSimpleConcreteImplName(),
-//						LoggingHelper.toLoggableString( getNavigablePath(), collectionKey.getKey() ),
-//						toLoggableString( collectionInstance )
-//				);
-//			}
+			if ( CollectionLoadingLogger.DEBUG_ENABLED ) {
+				CollectionLoadingLogger.INSTANCE.debugf(
+						"(%s) Created new collection wrapper [%s] : %s",
+						getSimpleConcreteImplName(),
+						LoggingHelper.toLoggableString( getNavigablePath(), collectionKey.getKey() ),
+						toLoggableString( collectionInstance )
+				);
+			}
 
 			persistenceContext.addUninitializedCollection( collectionDescriptor, collectionInstance, collectionKey.getKey() );
 
@@ -210,14 +210,14 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 		}
 
 		if ( responsibility != null ) {
-//			if ( CollectionLoadingLogger.DEBUG_ENABLED ) {
-//				CollectionLoadingLogger.INSTANCE.debugf(
-//						"(%s) Responsible for loading collection [%s] : %s",
-//						getSimpleConcreteImplName(),
-//						LoggingHelper.toLoggableString( getNavigablePath(), collectionKey.getKey() ),
-//						toLoggableString( collectionInstance )
-//				);
-//			}
+			if ( CollectionLoadingLogger.DEBUG_ENABLED ) {
+				CollectionLoadingLogger.INSTANCE.debugf(
+						"(%s) Responsible for loading collection [%s] : %s",
+						getSimpleConcreteImplName(),
+						LoggingHelper.toLoggableString( getNavigablePath(), collectionKey.getKey() ),
+						toLoggableString( collectionInstance )
+				);
+			}
 
 			if ( getParentAccess() != null ) {
 				getParentAccess().registerResolutionListener(
@@ -287,12 +287,28 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 					collectionAttributeMapping.getCollectionDescriptor(),
 					keyContainerValue
 			);
+
+			if ( CollectionLoadingLogger.DEBUG_ENABLED ) {
+				CollectionLoadingLogger.INSTANCE.debugf(
+						"(%s) Current row collection key : %s",
+						getSimpleConcreteImplName(),
+						LoggingHelper.toLoggableString( getNavigablePath(), this.collectionKey.getKey() )
+				);
+			}
 		}
 		else if ( keyCollectionValue != null ) {
 			this.collectionKey = new CollectionKey(
 					collectionAttributeMapping.getCollectionDescriptor(),
 					keyCollectionValue
 			);
+
+			if ( CollectionLoadingLogger.DEBUG_ENABLED ) {
+				CollectionLoadingLogger.INSTANCE.debugf(
+						"(%s) Current row collection key : %s",
+						getSimpleConcreteImplName(),
+						LoggingHelper.toLoggableString( getNavigablePath(), this.collectionKey.getKey() )
+				);
+			}
 		}
 		else {
 			this.collectionKey = new CollectionKey(
@@ -335,14 +351,14 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 
 		if ( collectionValueKey != null ) {
 			// the row contains an element in the collection...
-//			if ( CollectionLoadingLogger.DEBUG_ENABLED ) {
-//				CollectionLoadingLogger.INSTANCE.debugf(
-//						"(%s) Reading element from row for collection [%s] -> %s",
-//						getSimpleConcreteImplName(),
-//						LoggingHelper.toLoggableString( getNavigablePath(), collectionKey.getKey() ),
-//						toLoggableString( collectionInstance )
-//				);
-//			}
+			if ( CollectionLoadingLogger.DEBUG_ENABLED ) {
+				CollectionLoadingLogger.INSTANCE.debugf(
+						"(%s) Reading element from row for collection [%s] -> %s",
+						getSimpleConcreteImplName(),
+						LoggingHelper.toLoggableString( getNavigablePath(), collectionKey.getKey() ),
+						toLoggableString( collectionInstance )
+				);
+			}
 
 			responsibility.load(
 					loadingState -> readCollectionRow( collectionKey, loadingState, rowProcessingState )

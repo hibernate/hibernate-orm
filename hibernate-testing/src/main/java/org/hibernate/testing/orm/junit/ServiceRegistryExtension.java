@@ -112,7 +112,7 @@ public class ServiceRegistryExtension
 
 	private static void configureServices(ServiceRegistry serviceRegistryAnn, StandardServiceRegistryBuilder ssrb) {
 		try {
-			for ( ServiceRegistry.Setting setting : serviceRegistryAnn.settings() ) {
+			for ( Setting setting : serviceRegistryAnn.settings() ) {
 				ssrb.applySetting( setting.name(), setting.value() );
 			}
 

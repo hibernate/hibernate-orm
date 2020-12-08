@@ -35,8 +35,6 @@ import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.graph.basic.BasicResultAssembler;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
-import org.hibernate.type.CustomType;
-import org.hibernate.type.EnumType;
 import org.hibernate.type.internal.StandardBasicTypeImpl;
 
 import org.hibernate.testing.hamcrest.AssignableMatcher;
@@ -44,6 +42,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -61,7 +60,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 		annotatedClasses = SimpleEntity.class
 )
 @ServiceRegistry(
-		settings = @ServiceRegistry.Setting(
+		settings = @Setting(
 				name = AvailableSettings.HBM2DDL_AUTO,
 				value = "create-drop"
 		)

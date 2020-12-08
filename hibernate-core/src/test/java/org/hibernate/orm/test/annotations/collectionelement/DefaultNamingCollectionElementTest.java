@@ -24,6 +24,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.test.annotations.Country;
 import org.junit.jupiter.api.Test;
 
@@ -53,7 +54,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 )
 @SessionFactory
 @ServiceRegistry(settings = {
-		@ServiceRegistry.Setting(name = AvailableSettings.IMPLICIT_NAMING_STRATEGY, value = "legacy-hbm")
+		@Setting(name = AvailableSettings.IMPLICIT_NAMING_STRATEGY, value = "legacy-hbm")
 })
 public class DefaultNamingCollectionElementTest {
 

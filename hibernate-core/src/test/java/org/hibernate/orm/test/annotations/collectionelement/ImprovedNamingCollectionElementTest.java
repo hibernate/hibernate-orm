@@ -11,6 +11,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -20,7 +21,7 @@ import org.junit.jupiter.api.Test;
  * @author Gail Badner
  */
 @ServiceRegistry(settings = {
-		@ServiceRegistry.Setting(name = AvailableSettings.IMPLICIT_NAMING_STRATEGY, value = "default")
+		@Setting(name = AvailableSettings.IMPLICIT_NAMING_STRATEGY, value = "default")
 })
 public class ImprovedNamingCollectionElementTest extends DefaultNamingCollectionElementTest {
 

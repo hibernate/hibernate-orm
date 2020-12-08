@@ -15,6 +15,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -35,16 +36,16 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @SessionFactory
 @ServiceRegistry(
 		settings = {
-				@ServiceRegistry.Setting(
+				@Setting(
 						name = Environment.ENABLE_LAZY_LOAD_NO_TRANS, value = "true"
 				),
-				@ServiceRegistry.Setting(
+				@Setting(
 						name = AvailableSettings.JTA_PLATFORM, value = "org.hibernate.testing.jta.TestingJtaPlatformImpl"
 				),
-				@ServiceRegistry.Setting(
+				@Setting(
 						name = AvailableSettings.CONNECTION_PROVIDER, value = "org.hibernate.testing.jta.JtaAwareConnectionProviderImpl"
 				),
-				@ServiceRegistry.Setting(
+				@Setting(
 						name = "javax.persistence.transactionType", value = "jta"
 				)
 		}

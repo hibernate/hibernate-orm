@@ -23,6 +23,8 @@ import org.hibernate.dialect.Dialect;
  */
 public interface DomainModelDescriptor {
 
+	Class[] getAnnotatedClasses();
+
 	/**
 	 * Apply the model classes to the given MetadataSources
 	 */

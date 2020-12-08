@@ -23,8 +23,6 @@ import javax.persistence.Table;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.orm.test.metamodel.mapping.SmokeTests.OtherEntity;
-import org.hibernate.orm.test.metamodel.mapping.SmokeTests.SimpleEntity;
 import org.hibernate.query.Query;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.stat.spi.StatisticsImplementor;
@@ -34,6 +32,7 @@ import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -59,8 +58,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 )
 @ServiceRegistry(
 		settings = {
-				@ServiceRegistry.Setting(name = AvailableSettings.POOL_SIZE, value = "15"),
-				@ServiceRegistry.Setting(name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false")
+				@Setting(name = AvailableSettings.POOL_SIZE, value = "15"),
+				@Setting(name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false")
 		}
 )
 @SessionFactory(exportSchema = true)

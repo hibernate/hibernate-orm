@@ -27,6 +27,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,7 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		}
 )
 @SessionFactory
-@ServiceRegistry(settings = @ServiceRegistry.Setting(name = AvailableSettings.FORCE_DISCRIMINATOR_IN_SELECTS_BY_DEFAULT, value = "true"))
+@ServiceRegistry(settings = @Setting(name = AvailableSettings.FORCE_DISCRIMINATOR_IN_SELECTS_BY_DEFAULT, value = "true"))
 public class SingleTableRelationsTest {
 
 	@BeforeEach

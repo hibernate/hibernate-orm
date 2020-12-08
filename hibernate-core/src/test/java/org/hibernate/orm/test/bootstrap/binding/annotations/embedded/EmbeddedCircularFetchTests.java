@@ -25,6 +25,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -42,8 +43,8 @@ import static org.junit.Assert.assertTrue;
 )
 @SessionFactory
 @ServiceRegistry(settings = {
-		@ServiceRegistry.Setting(name = AvailableSettings.IMPLICIT_NAMING_STRATEGY, value = "jpa"),
-		@ServiceRegistry.Setting(name = AvailableSettings.GENERATE_STATISTICS, value = "true")
+		@Setting(name = AvailableSettings.IMPLICIT_NAMING_STRATEGY, value = "jpa"),
+		@Setting(name = AvailableSettings.GENERATE_STATISTICS, value = "true")
 })
 public class EmbeddedCircularFetchTests {
 	// todo (6.0 : this (along with the `org.hibernate.orm.test.sql.exec.onetoone.bidirectional` package)

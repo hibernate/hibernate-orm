@@ -20,6 +20,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -39,7 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @ServiceRegistry(
 		settings = {
-				@ServiceRegistry.Setting( name = AvailableSettings.USE_QUERY_CACHE, value = "true" )
+				@Setting( name = AvailableSettings.USE_QUERY_CACHE, value = "true" )
 		}
 )
 @DomainModel( annotatedClasses = { TestEntity.class, AggregateEntity.class } )

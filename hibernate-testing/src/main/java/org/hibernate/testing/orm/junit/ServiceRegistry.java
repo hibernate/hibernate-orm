@@ -88,8 +88,4 @@ public @interface ServiceRegistry {
 		Class<? extends org.hibernate.service.Service> impl();
 	}
 
-	@interface Setting {
-		String name();
-		String value();
-	}
 }

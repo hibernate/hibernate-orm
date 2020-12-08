@@ -43,29 +43,29 @@ public abstract class AbstractSqlAstTranslator
 		return affectedTableNames;
 	}
 
-//	@Override
-//	protected void renderTableGroup(TableGroup tableGroup) {
-//		super.renderTableGroup( tableGroup );
-//		ModelPartContainer modelPart = tableGroup.getModelPart();
-////		if ( modelPart instanceof AbstractEntityPersister ) {
-////			String[] querySpaces = (String[]) ( (AbstractEntityPersister) modelPart ).getQuerySpaces();
-////			for ( int i = 0; i < querySpaces.length; i++ ) {
-////				registerAffectedTable( querySpaces[i] );
-////			}
-////		}
-//	}
+	@Override
+	protected void renderTableGroup(TableGroup tableGroup) {
+		super.renderTableGroup( tableGroup );
+		ModelPartContainer modelPart = tableGroup.getModelPart();
+		if ( modelPart instanceof AbstractEntityPersister ) {
+			String[] querySpaces = (String[]) ( (AbstractEntityPersister) modelPart ).getQuerySpaces();
+			for ( int i = 0; i < querySpaces.length; i++ ) {
+				registerAffectedTable( querySpaces[i] );
+			}
+		}
+	}
 
-//	@Override
-//	protected void renderTableGroup(TableGroup tableGroup, Predicate predicate) {
-//		super.renderTableGroup( tableGroup, predicate );
-//		ModelPartContainer modelPart = tableGroup.getModelPart();
-////		if ( modelPart instanceof AbstractEntityPersister ) {
-////			String[] querySpaces = (String[]) ( (AbstractEntityPersister) modelPart ).getQuerySpaces();
-////			for ( int i = 0; i < querySpaces.length; i++ ) {
-////				registerAffectedTable( querySpaces[i] );
-////			}
-////		}
-//	}
+	@Override
+	protected void renderTableGroup(TableGroup tableGroup, Predicate predicate) {
+		super.renderTableGroup( tableGroup, predicate );
+		ModelPartContainer modelPart = tableGroup.getModelPart();
+		if ( modelPart instanceof AbstractEntityPersister ) {
+			String[] querySpaces = (String[]) ( (AbstractEntityPersister) modelPart ).getQuerySpaces();
+			for ( int i = 0; i < querySpaces.length; i++ ) {
+				registerAffectedTable( querySpaces[i] );
+			}
+		}
+	}
 
 
 	@Override

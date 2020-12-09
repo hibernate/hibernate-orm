@@ -24,4 +24,9 @@ public interface EntityAssociationMapping extends ModelPart, Association {
 	 * of this association's foreign-key
 	 */
 	ModelPart getKeyTargetMatchPart();
+
+	@Override
+	default boolean incrementFetchDepth(){
+		return true;
+	}
 }

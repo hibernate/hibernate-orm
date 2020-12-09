@@ -43,6 +43,9 @@ public class FromClauseIndex extends SimpleFromClauseAccessImpl {
 
 	public void register(SqmPath<?> sqmPath, TableGroup tableGroup, NavigablePath identifierForTableGroup) {
 		registerTableGroup( sqmPath.getNavigablePath(), tableGroup );
+		if ( identifierForTableGroup != null ) {
+			registerTableGroup( identifierForTableGroup, tableGroup );
+		}
 
 		if ( sqmPath.getExplicitAlias() != null ) {
 			final TableGroup previousAliasReg = tableGroupByAliasXref.put( sqmPath.getExplicitAlias(), tableGroup );
@@ -67,10 +70,12 @@ public class FromClauseIndex extends SimpleFromClauseAccessImpl {
 		if ( fetchesByPath == null ) {
 			fetchesByPath = new HashMap<>();
 		}
-		NavigablePath navigablePath = sqmJoin.getNavigablePath();
-		fetchesByPath.put( navigablePath.getIdentifierForTableGroup(), sqmJoin );
 		if ( identifierForTableGroup != null ) {
 			fetchesByPath.put( identifierForTableGroup.getIdentifierForTableGroup(), sqmJoin );
+		}
+		else {
+			final NavigablePath navigablePath = sqmJoin.getNavigablePath();
+			fetchesByPath.put( navigablePath.getIdentifierForTableGroup(), sqmJoin );
 		}
 	}
 

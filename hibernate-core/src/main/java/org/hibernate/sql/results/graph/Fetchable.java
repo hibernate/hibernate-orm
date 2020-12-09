@@ -39,4 +39,8 @@ public interface Fetchable extends ModelPart {
 			LockMode lockMode,
 			String resultVariable,
 			DomainResultCreationState creationState);
+
+	default boolean incrementFetchDepth(){
+		return false;
+	}
 }

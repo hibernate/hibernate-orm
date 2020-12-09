@@ -289,8 +289,11 @@ public class StandardSqmSelectTranslator
 					return;
 				}
 
+				final boolean incrementFetchDepth = fetchable.incrementFetchDepth();
 				try {
-					fetchDepth++;
+					if ( incrementFetchDepth ) {
+						fetchDepth++;
+					}
 					final Fetch fetch = buildFetch( fetchablePath, fetchParent, fetchable, isKeyFetchable );
 
 					if ( fetch != null ) {
@@ -308,7 +311,9 @@ public class StandardSqmSelectTranslator
 					}
 				}
 				finally {
-					fetchDepth--;
+					if ( incrementFetchDepth ) {
+						fetchDepth--;
+					}
 				}
 		};
 
@@ -398,11 +403,8 @@ public class StandardSqmSelectTranslator
 			// lastly, account for any app-defined max-fetch-depth
 			final Integer maxDepth = getCreationContext().getMaximumFetchDepth();
 			if ( maxDepth != null ) {
-				if ( fetchDepth == maxDepth ) {
+				if ( fetchDepth >= maxDepth ) {
 					joined = false;
-				}
-				else if ( fetchDepth > maxDepth ) {
-					return null;
 				}
 			}
 

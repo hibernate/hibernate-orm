@@ -61,4 +61,9 @@ public interface PluralAttributeMapping
 	String getSeparateCollectionTable();
 
 	boolean isBidirectionalAttributeName(NavigablePath fetchablePath);
+
+	@Override
+	default boolean incrementFetchDepth(){
+		return true;
+	}
 }

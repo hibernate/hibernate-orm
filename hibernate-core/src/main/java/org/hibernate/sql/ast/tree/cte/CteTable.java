@@ -7,7 +7,7 @@
 package org.hibernate.sql.ast.tree.cte;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 
 import org.hibernate.LockMode;
@@ -42,11 +42,11 @@ public class CteTable {
 	public CteTable(EntityMappingType entityDescriptor) {
 		this.sessionFactory = entityDescriptor.getEntityPersister().getFactory();
 
-		final int numberOfColumns = entityDescriptor.getIdentifierMapping().getJdbcTypeCount( sessionFactory.getTypeConfiguration() );
+		final int numberOfColumns = entityDescriptor.getIdentifierMapping().getJdbcTypeCount();
 		cteColumns = new ArrayList<>( numberOfColumns );
-		entityDescriptor.getIdentifierMapping().visitColumns(
-				(containingTableExpression, columnExpression, isFormula, readFragment, writeFragment, jdbcMapping) -> cteColumns.add(
-						new CteColumn("cte_" + columnExpression, jdbcMapping )
+		entityDescriptor.getIdentifierMapping().forEachSelection(
+				(columnIndex, selection) -> cteColumns.add(
+						new CteColumn("cte_" + selection.getSelectionExpression(), selection.getJdbcMapping() )
 				)
 		);
 	}
@@ -105,24 +105,25 @@ public class CteTable {
 		final int numberOfColumns = getCteColumns().size();
 
 		final StringBuilder tableValueCtorExpressionBuffer = new StringBuilder( "values(" );
+		final List<JdbcParameter> jdbcParameters = Arrays.asList( new JdbcParameterImpl[numberOfColumns] );
 		String rowSeparator = "";
 		for ( Object matchingId : matchingValues ) {
 			tableValueCtorExpressionBuffer.append( rowSeparator );
 
-			tableValueCtorExpressionBuffer.append( '(' );
-			StringHelper.repeat( "?", numberOfColumns, ",", tableValueCtorExpressionBuffer );
+			char separator = '(';
+			for ( int i = 0; i < numberOfColumns; i++ ) {
+				tableValueCtorExpressionBuffer.append( separator );
+				tableValueCtorExpressionBuffer.append( '?' );
+				separator = ',';
+				jdbcParameters.set( i, new JdbcParameterImpl( cteColumns.get( i ).getJdbcMapping() ) );
+			}
 			tableValueCtorExpressionBuffer.append( ')' );
 
-			bindable.visitJdbcValues(
+			jdbcParameterBindings.registerParametersForEachJdbcValue(
 					matchingId,
 					Clause.IRRELEVANT,
-					(value, type) -> {
-						final JdbcParameter jdbcParameter = new JdbcParameterImpl( type );
-						jdbcParameterBindings.addBinding(
-								jdbcParameter,
-								new JdbcParameterBindingImpl( type, value )
-						);
-					},
+					bindable,
+					jdbcParameters,
 					executionContext.getSession()
 			);
 

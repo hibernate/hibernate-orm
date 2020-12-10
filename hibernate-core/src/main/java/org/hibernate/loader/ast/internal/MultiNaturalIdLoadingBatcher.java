@@ -19,6 +19,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoadOptions;
+import org.hibernate.metamodel.mapping.Bindable;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.spi.QueryOptions;
@@ -100,54 +101,41 @@ public class MultiNaturalIdLoadingBatcher {
 
 	public <E> List<E> multiLoad(Object[] naturalIdValues, MultiNaturalIdLoadOptions options, SharedSessionContractImplementor session) {
 		final ArrayList<E> multiLoadResults = CollectionHelper.arrayList( naturalIdValues.length );
+		final JdbcParameterBindingsImpl jdbcParamBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
 
-		JdbcParameterBindings jdbcParamBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
-		Iterator<JdbcParameter> jdbcParamItr = jdbcParameters.iterator();
-
-		boolean needsExecution = false;
+		int offset = 0;
 
 		for ( int i = 0; i < naturalIdValues.length; i++ ) {
-			final JdbcParameterBindings jdbcParamBindingsRef = jdbcParamBindings;
-			final Iterator<JdbcParameter> jdbcParamItrRef = jdbcParamItr;
-
 			final Object bindValue = keyValueResolver.resolveKeyToLoad( naturalIdValues[ i ], session );
 			if ( bindValue != null ) {
-				entityDescriptor.getNaturalIdMapping().visitJdbcValues(
+				offset += jdbcParamBindings.registerParametersForEachJdbcValue(
 						bindValue,
 						Clause.IRRELEVANT,
-						(jdbcValue, jdbcMapping) -> jdbcParamBindingsRef.addBinding(
-								jdbcParamItrRef.next(),
-								new JdbcParameterBindingImpl( jdbcMapping, jdbcValue )
-						),
+						offset,
+						entityDescriptor.getNaturalIdMapping(),
+						jdbcParameters,
 						session
 				);
-				needsExecution = true;
 			}
 
-			if ( ! jdbcParamItr.hasNext() ) {
+			if ( offset == jdbcParameters.size() ) {
 				// we've hit the batch mark
 				final List<E> batchResults = performLoad( jdbcParamBindings, session );
 				multiLoadResults.addAll( batchResults );
-
-				jdbcParamBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
-				jdbcParamItr = jdbcParameters.iterator();
-
-				needsExecution = false;
+				jdbcParamBindings.clear();
+				offset = 0;
 			}
 		}
 
-		if ( needsExecution ) {
-			while ( jdbcParamItr.hasNext() ) {
-				final JdbcParameterBindings jdbcParamBindingsRef = jdbcParamBindings;
-				final Iterator<JdbcParameter> jdbcParamItrRef = jdbcParamItr;
+		if ( offset != 0 ) {
+			while ( offset != jdbcParameters.size() ) {
 				// pad the remaining parameters with null
-				entityDescriptor.getNaturalIdMapping().visitJdbcValues(
+				offset += jdbcParamBindings.registerParametersForEachJdbcValue(
 						null,
 						Clause.IRRELEVANT,
-						(jdbcValue, jdbcMapping) -> jdbcParamBindingsRef.addBinding(
-								jdbcParamItrRef.next(),
-								new JdbcParameterBindingImpl( jdbcMapping, jdbcValue )
-						),
+						offset,
+						entityDescriptor.getNaturalIdMapping(),
+						jdbcParameters,
 						session
 				);
 			}

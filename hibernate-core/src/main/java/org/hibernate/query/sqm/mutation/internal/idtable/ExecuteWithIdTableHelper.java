@@ -6,7 +6,6 @@
  */
 package org.hibernate.query.sqm.mutation.internal.idtable;
 
-import java.util.Collections;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -17,7 +16,6 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.transaction.spi.IsolationDelegate;
-import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.NavigablePath;
@@ -89,25 +87,18 @@ public final class ExecuteWithIdTableHelper {
 
 		matchingIdSelection.getFromClause().addRoot( mutatingTableGroup );
 
-		final MutableInteger positionWrapper = new MutableInteger();
-
-		mutatingEntityDescriptor.getIdentifierMapping().visitColumns(
-				(containingTableExpression, columnExpression, isFormula, readFragment, writeFragment, jdbcMapping) -> {
-					final int jdbcPosition = positionWrapper.getAndIncrement();
-					final TableReference tableReference = mutatingTableGroup.resolveTableReference( containingTableExpression );
+		mutatingEntityDescriptor.getIdentifierMapping().forEachSelection(
+				(jdbcPosition, selection) -> {
+					final TableReference tableReference = mutatingTableGroup.resolveTableReference( selection.getContainingTableExpression() );
 					matchingIdSelection.getSelectClause().addSqlSelection(
 							new SqlSelectionImpl(
 									jdbcPosition,
 									jdbcPosition + 1,
 									sqmConverter.getSqlExpressionResolver().resolveSqlExpression(
-											SqlExpressionResolver.createColumnReferenceKey( tableReference, columnExpression ),
+											SqlExpressionResolver.createColumnReferenceKey( tableReference, selection.getSelectionExpression() ),
 											sqlAstProcessingState -> new ColumnReference(
 													tableReference,
-													columnExpression,
-													false,
-													null,
-													null,
-													jdbcMapping,
+													selection,
 													factory
 											)
 									)
@@ -117,7 +108,7 @@ public final class ExecuteWithIdTableHelper {
 		);
 
 		if ( idTable.getSessionUidColumn() != null ) {
-			final int jdbcPosition = positionWrapper.getAndIncrement();
+			final int jdbcPosition = matchingIdSelection.getSelectClause().getSqlSelections().size();
 			matchingIdSelection.getSelectClause().addSqlSelection(
 					new SqlSelectionImpl(
 							jdbcPosition,

@@ -8,9 +8,9 @@ package org.hibernate.sql.exec.internal;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.SqlExpressable;
@@ -114,16 +114,14 @@ public abstract class AbstractJdbcParameter
 	}
 
 	@Override
-	public int getJdbcTypeCount(TypeConfiguration typeConfiguration) {
+	public int getJdbcTypeCount() {
 		return 1;
 	}
 
 	@Override
-	public void visitJdbcTypes(
-			Consumer<JdbcMapping> action,
-			Clause clause,
-			TypeConfiguration typeConfiguration) {
-		action.accept( jdbcMapping );
+	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+		action.accept( offset, jdbcMapping );
+		return getJdbcTypeCount();
 	}
 
 	@Override
@@ -132,20 +130,24 @@ public abstract class AbstractJdbcParameter
 	}
 
 	@Override
-	public void visitDisassembledJdbcValues(
+	public int forEachDisassembledJdbcValue(
 			Object value,
 			Clause clause,
+			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		valuesConsumer.consume( value, jdbcMapping );
+		valuesConsumer.consume( offset, value, jdbcMapping );
+		return getJdbcTypeCount();
 	}
 
 	@Override
-	public void visitJdbcValues(
+	public int forEachJdbcValue(
 			Object value,
 			Clause clause,
+			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		valuesConsumer.consume( value, jdbcMapping );
+		valuesConsumer.consume( offset, value, jdbcMapping );
+		return getJdbcTypeCount();
 	}
 }

@@ -122,23 +122,19 @@ public abstract class AbstractDomainPath implements DomainPath {
 			SqlExpressionResolver sqlExprResolver) {
 		if ( embeddableValuedModelPart.getFetchableName()
 				.equals( modelPartName ) || ELEMENT_TOKEN.equals( modelPartName ) ) {
-			embeddableValuedModelPart.visitColumns(
-					(tableExpression, columnExpression, isFormula, customReadExpression, customWriteExpression, jdbcMapping) -> {
-						final TableReference tableReference = tableGroup.resolveTableReference( tableExpression );
+			embeddableValuedModelPart.forEachSelection(
+					(columnIndex, selection) -> {
+						final TableReference tableReference = tableGroup.resolveTableReference( selection.getContainingTableExpression() );
 						ast.addSortSpecification(
 								new SortSpecification(
 										sqlExprResolver.resolveSqlExpression(
 												SqlExpressionResolver.createColumnReferenceKey(
-														tableExpression,
-														columnExpression
+														selection.getContainingTableExpression(),
+														selection.getSelectionExpression()
 												),
 												sqlAstProcessingState -> new ColumnReference(
 														tableReference,
-														columnExpression,
-														isFormula,
-														customReadExpression,
-														customWriteExpression,
-														jdbcMapping,
+														selection,
 														sessionFactory
 												)
 										),
@@ -176,11 +172,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 				new SortSpecification(
 						new ColumnReference(
 								tableReference,
-								basicValuedPart.getMappedColumnExpression(),
-								basicValuedPart.isMappedColumnExpressionFormula(),
-								basicValuedPart.getCustomReadExpression(),
-								basicValuedPart.getCustomWriteExpression(),
-								basicValuedPart.getJdbcMapping(),
+								basicValuedPart,
 								creationState.getCreationContext().getSessionFactory()
 						),
 						collation,

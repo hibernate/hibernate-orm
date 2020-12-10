@@ -44,15 +44,6 @@ public interface DomainResultProducer<T> {
 	 */
 
 	/**
-	 * Visit all of the SqlExpressableTypes associated with this this Readable.
-	 *
-	 * Used during cacheable SQL AST creation.
-	 */
-	default void visitJdbcTypes(Consumer<JdbcMapping> action, TypeConfiguration typeConfiguration) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
-
-	/**
 	 * Produce the domain query
 	 */
 	default DomainResult<T> createDomainResult(

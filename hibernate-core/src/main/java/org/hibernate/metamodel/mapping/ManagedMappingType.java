@@ -7,8 +7,10 @@
 package org.hibernate.metamodel.mapping;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.function.Consumer;
 
+import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
@@ -41,12 +43,22 @@ public interface ManagedMappingType extends MappingType, FetchableContainer {
 	/**
 	 * Get access to the attributes defined on this class and any supers
 	 */
-	Collection<AttributeMapping> getAttributeMappings();
+	List<AttributeMapping> getAttributeMappings();
 
 	/**
 	 * Visit attributes defined on this class and any supers
 	 */
 	void visitAttributeMappings(Consumer<AttributeMapping> action);
+
+	/**
+	 * Visit attributes defined on this class and any supers
+	 */
+	default void forEachAttributeMapping(IndexedConsumer<AttributeMapping> consumer) {
+		final List<AttributeMapping> attributeMappings = getAttributeMappings();
+		for ( int i = 0; i < attributeMappings.size(); i++ ) {
+			consumer.accept( i, attributeMappings.get( i ) );
+		}
+	}
 
 	/**
 	 * @todo (6.0) : consider dropping this in favor of a form passing the ManagedMappingType

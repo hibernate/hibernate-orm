@@ -8,9 +8,14 @@ package org.hibernate.sql.exec.spi;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.function.BiConsumer;
 
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.mapping.Bindable;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 
 /**
  * Access to all of the externalized JDBC parameter bindings
@@ -53,4 +58,34 @@ public interface JdbcParameterBindings {
 		public void visitBindings(BiConsumer<JdbcParameter, JdbcParameterBinding> action) {
 		}
 	};
+
+	default int registerParametersForEachJdbcValue(
+			Object value,
+			Clause clause,
+			Bindable bindable,
+			List<JdbcParameter> jdbcParameters,
+			SharedSessionContractImplementor session) {
+		return registerParametersForEachJdbcValue( value, clause, 0, bindable, jdbcParameters, session );
+	}
+
+	default int registerParametersForEachJdbcValue(
+			Object value,
+			Clause clause,
+			int offset,
+			Bindable bindable,
+			List<JdbcParameter> jdbcParameters,
+			SharedSessionContractImplementor session) {
+		return bindable.forEachJdbcValue(
+				value,
+				clause,
+				offset,
+				(selectionIndex, jdbcValue, type) -> {
+					addBinding(
+							jdbcParameters.get( selectionIndex ),
+							new JdbcParameterBindingImpl( type, jdbcValue )
+					);
+				},
+				session
+		);
+	}
 }

@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -20,7 +19,8 @@ import org.hibernate.loader.ast.internal.CompoundNaturalIdLoader;
 import org.hibernate.loader.ast.internal.MultiNaturalIdLoaderStandard;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
-import org.hibernate.metamodel.mapping.ColumnConsumer;
+import org.hibernate.mapping.IndexedConsumer;
+import org.hibernate.metamodel.mapping.SelectionConsumer;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
@@ -32,7 +32,6 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Multi-attribute NaturalIdMapping implementation
@@ -56,10 +55,9 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		this.attributes = attributes;
 
 		final List<JdbcMapping> jdbcMappings = new ArrayList<>();
-		final TypeConfiguration typeConfiguration = creationProcess.getCreationContext().getTypeConfiguration();
-		attributes.forEach(
-				(attribute) -> attribute.visitJdbcTypes( jdbcMappings::add, Clause.IRRELEVANT, typeConfiguration )
-		);
+		for ( int i = 0; i < attributes.size(); i++ ) {
+			attributes.get( i ).forEachJdbcType( (index, jdbcMapping) -> jdbcMappings.add( jdbcMapping ) );
+		}
 		this.jdbcMappings = jdbcMappings;
 
 		loader = new CompoundNaturalIdLoader<>(
@@ -133,23 +131,25 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 
 	@Override
 	public void applySqlSelections(NavigablePath navigablePath, TableGroup tableGroup, DomainResultCreationState creationState) {
-		attributes.forEach(
-				(attribute) -> attribute.applySqlSelections( navigablePath, tableGroup, creationState )
-		);
+		for ( int i = 0; i < attributes.size(); i++ ) {
+			attributes.get( i ).applySqlSelections( navigablePath, tableGroup, creationState );
+		}
 	}
 
 	@Override
 	public void applySqlSelections(NavigablePath navigablePath, TableGroup tableGroup, DomainResultCreationState creationState, BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
-		attributes.forEach(
-				(attribute) -> attribute.applySqlSelections( navigablePath, tableGroup, creationState, selectionConsumer )
-		);
+		for ( int i = 0; i < attributes.size(); i++ ) {
+			attributes.get( i ).applySqlSelections( navigablePath, tableGroup, creationState, selectionConsumer );
+		}
 	}
 
 	@Override
-	public void visitColumns(ColumnConsumer consumer) {
-		attributes.forEach(
-				(attribute) -> attribute.visitColumns( consumer )
-		);
+	public int forEachSelection(int offset, SelectionConsumer consumer) {
+		int span = 0;
+		for ( int i = 0; i < attributes.size(); i++ ) {
+			span += attributes.get( i ).forEachSelection( span + offset, consumer );
+		}
+		return span;
 	}
 
 
@@ -157,18 +157,22 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 	// Bindable
 
 	@Override
-	public int getJdbcTypeCount(TypeConfiguration typeConfiguration) {
+	public int getJdbcTypeCount() {
 		return jdbcMappings.size();
 	}
 
 	@Override
-	public List<JdbcMapping> getJdbcMappings(TypeConfiguration typeConfiguration) {
+	public List<JdbcMapping> getJdbcMappings() {
 		return jdbcMappings;
 	}
 
 	@Override
-	public void visitJdbcTypes(Consumer<JdbcMapping> action, Clause clause, TypeConfiguration typeConfiguration) {
-		jdbcMappings.forEach( action );
+	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+		int span = 0;
+		for ( ; span < jdbcMappings.size(); span++ ) {
+			action.accept( span + offset, jdbcMappings.get( span ) );
+		}
+		return span;
 	}
 
 	@Override
@@ -189,28 +193,41 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 	}
 
 	@Override
-	public void visitDisassembledJdbcValues(Object value, Clause clause, JdbcValuesConsumer valuesConsumer, SharedSessionContractImplementor session) {
+	public int forEachDisassembledJdbcValue(
+			Object value,
+			Clause clause,
+			int offset,
+			JdbcValuesConsumer valuesConsumer,
+			SharedSessionContractImplementor session) {
 		assert value instanceof Object[];
 
 		final Object[] incoming = (Object[]) value;
 		assert incoming.length == attributes.size();
-
+		int span = 0;
 		for ( int i = 0; i < attributes.size(); i++ ) {
 			final SingularAttributeMapping attribute = attributes.get( i );
-			attribute.visitDisassembledJdbcValues( incoming[ i ], clause, valuesConsumer, session );
+			span += attribute.forEachDisassembledJdbcValue( incoming[ i ], clause, span + offset, valuesConsumer, session );
 		}
+		return span;
 	}
 
 	@Override
-	public void visitJdbcValues(Object value, Clause clause, JdbcValuesConsumer valuesConsumer, SharedSessionContractImplementor session) {
+	public int forEachJdbcValue(
+			Object value,
+			Clause clause,
+			int offset,
+			JdbcValuesConsumer valuesConsumer,
+			SharedSessionContractImplementor session) {
 		assert value instanceof Object[];
 
 		final Object[] incoming = (Object[]) value;
 		assert incoming.length == attributes.size();
 
+		int span = 0;
 		for ( int i = 0; i < attributes.size(); i++ ) {
 			final SingularAttributeMapping attribute = attributes.get( i );
-			attribute.visitJdbcValues( incoming[ i ], clause, valuesConsumer, session );
+			span += attribute.forEachJdbcValue( incoming[ i ], clause, span + offset, valuesConsumer, session );
 		}
+		return span;
 	}
 }

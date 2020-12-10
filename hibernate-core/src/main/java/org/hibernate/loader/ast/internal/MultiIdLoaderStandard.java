@@ -81,7 +81,7 @@ public class MultiIdLoaderStandard<T> implements MultiIdEntityLoader<T> {
 
 		if ( idJdbcTypeCount < 0 ) {
 			// can't do this in the ctor because of chicken-egg between this ctor and the persisters
-			idJdbcTypeCount = entityDescriptor.getIdentifierMapping().getJdbcTypeCount( sessionFactory.getTypeConfiguration() );
+			idJdbcTypeCount = entityDescriptor.getIdentifierMapping().getJdbcTypeCount();
 		}
 
 		if ( loadOptions.isOrderReturnEnabled() ) {
@@ -258,28 +258,23 @@ public class MultiIdLoaderStandard<T> implements MultiIdEntityLoader<T> {
 		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory ).translate( sqlAst );
 
 		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
-		final Iterator<JdbcParameter> paramItr = jdbcParameters.iterator();
+		int offset = 0;
 
 		for ( int i = 0; i < numberOfIdsInBatch; i++ ) {
 			final Object id = idsInBatch.get( i );
 
-			entityDescriptor.getIdentifierMapping().visitJdbcValues(
+			offset += jdbcParameterBindings.registerParametersForEachJdbcValue(
 					id,
 					Clause.WHERE,
-					(value, type) -> {
-						assert paramItr.hasNext();
-						final JdbcParameter parameter = paramItr.next();
-						jdbcParameterBindings.addBinding(
-								parameter,
-								new JdbcParameterBindingImpl( type, value )
-						);
-					},
+					offset,
+					entityDescriptor.getIdentifierMapping(),
+					jdbcParameters,
 					session
 			);
 		}
 
 		// we should have used all of the JdbcParameter references (created bindings for all)
-		assert !paramItr.hasNext();
+		assert offset == jdbcParameters.size();
 
 		final LoadingEntityCollector loadingEntityCollector;
 

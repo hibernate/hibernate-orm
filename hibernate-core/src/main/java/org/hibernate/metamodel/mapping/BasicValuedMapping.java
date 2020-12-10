@@ -9,9 +9,6 @@ package org.hibernate.metamodel.mapping;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.type.BasicType;
-import org.hibernate.type.spi.TypeConfiguration;
-
 /**
  * Any basic-typed ValueMapping - e.g. a basic-valued singular attribute or a
  * basic-valued collection element
@@ -25,12 +22,12 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public interface BasicValuedMapping extends ValueMapping, SqlExpressable {
 	@Override
-	default int getJdbcTypeCount(TypeConfiguration typeConfiguration) {
+	default int getJdbcTypeCount() {
 		return 1;
 	}
 
 	@Override
-	default List<JdbcMapping> getJdbcMappings(TypeConfiguration typeConfiguration) {
+	default List<JdbcMapping> getJdbcMappings() {
 		return Collections.singletonList( getJdbcMapping() );
 	}
 

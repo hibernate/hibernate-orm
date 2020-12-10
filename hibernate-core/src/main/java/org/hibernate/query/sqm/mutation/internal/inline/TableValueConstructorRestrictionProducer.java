@@ -11,7 +11,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.metamodel.mapping.ColumnConsumer;
+import org.hibernate.metamodel.mapping.SelectionConsumer;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
@@ -48,7 +48,7 @@ public class TableValueConstructorRestrictionProducer implements MatchingIdRestr
 			List<?> matchingIdValues,
 			EntityMappingType entityDescriptor,
 			TableReference mutatingTableReference,
-			Supplier<Consumer<ColumnConsumer>> columnsToMatchVisitationSupplier,
+			Supplier<Consumer<SelectionConsumer>> columnsToMatchVisitationSupplier,
 			ExecutionContext executionContext) {
 		// Not "yet" implemented.  Not sure we will.  This requires the ability to define
 		// "in-line views" with a table-ctor which the SQL AST does not yet define support for

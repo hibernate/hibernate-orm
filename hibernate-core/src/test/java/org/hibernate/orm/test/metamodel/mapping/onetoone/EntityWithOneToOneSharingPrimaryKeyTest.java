@@ -49,16 +49,16 @@ public class EntityWithOneToOneSharingPrimaryKeyTest {
 
 		ForeignKeyDescriptor foreignKeyDescriptor = otherAttributeMapping.getForeignKeyDescriptor();
 		foreignKeyDescriptor.visitReferringColumns(
-				(keyTable, keyColumn, isKeyColumnFormula, readFragment, writeFragment, jdbcMapping) -> {
-					assertThat( keyTable, is( "EntityWithOneToOneSharingPrimaryKey" ) );
-					assertThat( keyColumn, is( "id" ) );
+				(columnIndex, selection) -> {
+					assertThat( selection.getContainingTableExpression(), is( "EntityWithOneToOneSharingPrimaryKey" ) );
+					assertThat( selection.getSelectionExpression(), is( "id" ) );
 				}
 		);
 
 		foreignKeyDescriptor.visitTargetColumns(
-				(targetTable, targetColumn, isTargetColumnFormula, readFragment, writeFragment, jdbcMapping) -> {
-					assertThat( targetTable, is( "SIMPLE_ENTITY" ) );
-					assertThat( targetColumn, is( "id" ) );
+				(columnIndex, selection) -> {
+					assertThat( selection.getContainingTableExpression(), is( "SIMPLE_ENTITY" ) );
+					assertThat( selection.getSelectionExpression(), is( "id" ) );
 				}
 		);
 

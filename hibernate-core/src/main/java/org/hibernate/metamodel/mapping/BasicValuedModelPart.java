@@ -11,26 +11,7 @@ import org.hibernate.sql.results.graph.Fetchable;
 /**
  * @author Steve Ebersole
  */
-public interface BasicValuedModelPart extends BasicValuedMapping, ModelPart, Fetchable {
-	/**
-	 * The table expression (table name or subselect) that contains
-	 * the {@linkplain #getMappedColumnExpression mapped column}
-	 */
-	String getContainingTableExpression();
-
-	/**
-	 * The column expression (column name or formula) to which this basic value
-	 * is mapped
-	 */
-	String getMappedColumnExpression();
-
-	default boolean isMappedColumnExpressionFormula() {
-		return false;
-	}
-
-	String getCustomReadExpression();
-
-	String getCustomWriteExpression();
+public interface BasicValuedModelPart extends BasicValuedMapping, ModelPart, Fetchable, SelectionMapping {
 
 	@Override
 	default MappingType getPartMappingType() {

@@ -11,17 +11,22 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Consumer;
 import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.SingularAttribute;
+import javax.persistence.metamodel.Type;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.internal.SubGraphImpl;
 import org.hibernate.graph.spi.SubGraphImplementor;
+import org.hibernate.mapping.IndexedConsumer;
+import org.hibernate.metamodel.MappingMetamodel;
+import org.hibernate.metamodel.mapping.Bindable;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.model.domain.AbstractManagedType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationStrategy;
@@ -31,7 +36,6 @@ import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Standard Hibernate implementation of JPA's {@link javax.persistence.metamodel.EmbeddableType}
@@ -88,39 +92,52 @@ public class EmbeddableTypeImpl<J>
 	}
 
 	@Override
-	public void visitJdbcValues(
-			Object value, Clause clause, JdbcValuesConsumer valuesConsumer, SharedSessionContractImplementor session) {
-		Object[] disassemble = (Object[]) disassemble( value, session );
-
-		List<JdbcMapping> jdbcMappings = getJdbcMappings( session.getFactory().getTypeConfiguration() );
-		for ( int i = 0; i < disassemble.length; i++ ) {
-			valuesConsumer.consume( disassemble[i], jdbcMappings.get( i ) );
-		}
+	public int forEachJdbcValue(
+			Object value,
+			Clause clause,
+			int offset,
+			JdbcValuesConsumer valuesConsumer,
+			SharedSessionContractImplementor session) {
+		final Object[] disassemble = (Object[]) disassemble( value, session );
+		return forEachJdbcType(
+				(i, jdbcMapping) -> {
+					valuesConsumer.consume( i + offset, disassemble[i], jdbcMapping );
+				}
+		);
 	}
 
 	@Override
-	public void visitJdbcTypes(
-			Consumer<JdbcMapping> action,
-			Clause clause,
-			TypeConfiguration typeConfiguration) {
-		Set<Attribute<? super J, ?>> attributes = getAttributes();
-
-		for ( Attribute attribute : attributes ) {
-			if ( attribute instanceof SingularAttributeImpl ) {
-				if ( attribute.isAssociation() ) {
-					EntityTypeImpl entityType = (EntityTypeImpl) ( (SingularAttributeImpl) attribute ).getValueGraphType();
-
-					BasicType basicType = jpaMetamodel().getTypeConfiguration()
-							.getBasicTypeForJavaType( entityType.findIdAttribute().getJavaType() );
-					action.accept( basicType.getJdbcMapping() );
-				}
-				else {
-					BasicType basicType = jpaMetamodel().getTypeConfiguration()
-							.getBasicTypeForJavaType( attribute.getJavaType() );
-					action.accept( basicType.getJdbcMapping() );
+	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+		final MappingMetamodel metamodel = jpaMetamodel().getTypeConfiguration().getSessionFactory().getMetamodel();
+		int i = 0;
+		for ( Attribute<? super J, ?> attribute : getAttributes() ) {
+			if ( attribute instanceof SingularAttribute<?, ?> ) {
+				Type<?> type = ( (SingularAttribute<? super J, ?>) attribute ).getType();
+				switch ( type.getPersistenceType() ) {
+					case BASIC:
+						BasicType<?> basicType = jpaMetamodel().getTypeConfiguration()
+								.getBasicTypeForJavaType( attribute.getJavaType() );
+						action.accept( i + offset, basicType.getJdbcMapping() );
+						i++;
+						break;
+					case ENTITY:
+						final EntityPersister entityDescriptor = metamodel.getEntityDescriptor(
+								( (EntityDomainType<?>) type ).getHibernateEntityName()
+						);
+						i += entityDescriptor.getEntityMappingType().getIdentifierMapping().forEachJdbcType(
+								i + offset,
+								action
+						);
+						break;
+					case EMBEDDABLE:
+						i += ( (Bindable) type ).forEachJdbcType( i + offset, action );
+						break;
+					default:
+						throw new IllegalArgumentException( "Unsupported type: " + type );
 				}
 			}
 		}
+		return i;
 	}
 
 	@Override

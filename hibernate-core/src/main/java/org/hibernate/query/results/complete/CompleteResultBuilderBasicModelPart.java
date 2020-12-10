@@ -63,7 +63,7 @@ public class CompleteResultBuilderBasicModelPart
 
 		final TableGroup tableGroup = creationStateImpl.getFromClauseAccess().getTableGroup( navigablePath.getParent() );
 		final TableReference tableReference = tableGroup.getTableReference( modelPart.getContainingTableExpression() );
-		final String mappedColumn = modelPart.getMappedColumnExpression();
+		final String mappedColumn = modelPart.getSelectionExpression();
 
 		final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( columnAlias );
 		final int valuesArrayPosition = jdbcPositionToValuesArrayPosition( jdbcPosition );

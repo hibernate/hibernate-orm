@@ -7,6 +7,7 @@
 package org.hibernate.metamodel.mapping;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -177,7 +178,7 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 	}
 
 	interface ConstraintOrderedTableConsumer {
-		void consume(String tableExpression, Supplier<Consumer<ColumnConsumer>> tableKeyColumnVisitationSupplier);
+		void consume(String tableExpression, Supplier<Consumer<SelectionConsumer>> tableKeyColumnVisitationSupplier);
 	}
 
 
@@ -195,16 +196,11 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 		final Object[] values = new Object[ getNumberOfAttributeMappings() ];
 
 		visitStateArrayContributors(
-				new Consumer<StateArrayContributorMapping>() {
-					private int index;
+				attribute -> {
+					final DomainResultAssembler assembler = assemblerMapping.get( attribute );
+					final Object value = assembler == null ? UNFETCHED_PROPERTY : assembler.assemble( rowProcessingState );
 
-					@Override
-					public void accept(StateArrayContributorMapping attribute) {
-						final DomainResultAssembler assembler = assemblerMapping.get( attribute );
-						final Object value = assembler == null ? UNFETCHED_PROPERTY : assembler.assemble( rowProcessingState );
-
-						values[index++] = value;
-					}
+					values[attribute.getStateArrayPosition()] = value;
 				}
 		);
 
@@ -288,7 +284,7 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 	}
 
 	@Override
-	default Collection<AttributeMapping> getAttributeMappings() {
+	default List<AttributeMapping> getAttributeMappings() {
 		return getEntityPersister().getAttributeMappings();
 	}
 

@@ -8,23 +8,21 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
-import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.internal.AbstractCompositeIdentifierMapping;
+import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.AssociationKey;
 import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.ColumnConsumer;
+import org.hibernate.metamodel.mapping.SelectionConsumer;
+import org.hibernate.metamodel.mapping.SelectionMappings;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.NavigablePath;
@@ -45,63 +43,42 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableForeignKeyResultImpl;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Andrea Boriero
  */
 public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, ModelPart {
 
-	private final AbstractCompositeIdentifierMapping mappingType;
+	private final EmbeddableValuedModelPart mappingType;
 	private final String keyColumnContainingTable;
-	private final List<String> keyColumnExpressions;
+	private final SelectionMappings keySelectionMappings;
 	private final String targetColumnContainingTable;
-	private final List<String> targetColumnExpressions;
-	private final List<JdbcMapping> jdbcMappings;
+	private final SelectionMappings targetSelectionMappings;
 	private AssociationKey associationKey;
 
 	public EmbeddedForeignKeyDescriptor(
-			AbstractCompositeIdentifierMapping mappingType,
+			EmbeddableValuedModelPart mappingType,
 			String keyColumnContainingTable,
-			List<String> keyColumnExpressions,
+			SelectionMappings keySelectionMappings,
 			String targetColumnContainingTable,
-			List<String> targetColumnExpressions,
+			SelectionMappings targetSelectionMappings,
 			MappingModelCreationProcess creationProcess) {
 		this.keyColumnContainingTable = keyColumnContainingTable;
-		this.keyColumnExpressions = keyColumnExpressions;
+		this.keySelectionMappings = keySelectionMappings;
 		this.targetColumnContainingTable = targetColumnContainingTable;
-		this.targetColumnExpressions = targetColumnExpressions;
+		this.targetSelectionMappings = targetSelectionMappings;
 		this.mappingType = mappingType;
-		jdbcMappings = new ArrayList<>();
 
 		creationProcess.registerInitializationCallback(
 				"Embedded (composite) FK descriptor " + mappingType.getNavigableRole(),
 				() -> {
 					// todo (6.0) : how to make sure things we need are ready to go?
 					// 		- e.g., here, we need access to the sub-attributes
-					final Collection<SingularAttributeMapping> subAttributes = mappingType.getAttributes();
+					final List<AttributeMapping> subAttributes = mappingType.getEmbeddableTypeDescriptor().getAttributeMappings();
 					if ( subAttributes.isEmpty() ) {
 						// todo (6.0) : ^^ for now, this is the only way we "know" that the embeddable has not been finalized yet
 						return false;
 					}
-
-					subAttributes.forEach(
-							attribute -> {
-								final TypeConfiguration typeConfiguration = creationProcess
-										.getCreationContext()
-										.getTypeConfiguration();
-								if ( attribute instanceof ToOneAttributeMapping ) {
-									final ToOneAttributeMapping associationAttributeMapping = (ToOneAttributeMapping) attribute;
-									associationAttributeMapping.getAssociatedEntityMappingType()
-											.getEntityPersister()
-											.getIdentifierMapping()
-											.visitJdbcTypes( jdbcMappings::add, null, typeConfiguration );
-								}
-								else {
-									attribute.visitJdbcTypes( jdbcMappings::add, null, typeConfiguration );
-								}
-							}
-					);
 
 					return true;
 				}
@@ -119,37 +96,35 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 			final TableReference tableReference = tableGroup.resolveTableReference( keyColumnContainingTable );
 			final String identificationVariable = tableReference.getIdentificationVariable();
 
-			List<SqlSelection> sqlSelections = new ArrayList<>();
-			for ( int i = 0; i < keyColumnExpressions.size(); i++ ) {
-				final JdbcMapping jdbcMapping = jdbcMappings.get( i );
-				final String columnExpression = targetColumnExpressions.get( i );
-				final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
-						sqlExpressionResolver.resolveSqlExpression(
-								SqlExpressionResolver.createColumnReferenceKey(
-										tableReference,
-										columnExpression
+			List<SqlSelection> sqlSelections = new ArrayList<>( targetSelectionMappings.getJdbcTypeCount() );
+			targetSelectionMappings.forEachSelection(
+					(columnIndex, selection) -> {
+						final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
+								sqlExpressionResolver.resolveSqlExpression(
+										SqlExpressionResolver.createColumnReferenceKey(
+												tableReference,
+												selection.getSelectionExpression()
+										),
+										s ->
+												new ColumnReference(
+														identificationVariable,
+														selection,
+														creationState.getSqlAstCreationState()
+																.getCreationContext()
+																.getSessionFactory()
+												)
+
 								),
-								s ->
-										new ColumnReference(
-												identificationVariable,
-												columnExpression,
-												false,
-												null,
-												null,
-												jdbcMapping,
-												creationState.getSqlAstCreationState()
-														.getCreationContext()
-														.getSessionFactory()
-										)
+								selection.getJdbcMapping().getJavaTypeDescriptor(),
+								sqlAstCreationState.getCreationContext()
+										.getDomainModel()
+										.getTypeConfiguration()
+						);
+						sqlSelections.add( sqlSelection );
+					}
+			);
 
-						),
-						jdbcMapping.getJavaTypeDescriptor(),
-						sqlAstCreationState.getCreationContext().getDomainModel().getTypeConfiguration()
-				);
-				sqlSelections.add( sqlSelection );
-			}
-
-			return new EmbeddableForeignKeyResultImpl(
+			return new EmbeddableForeignKeyResultImpl<>(
 					sqlSelections,
 					collectionPath,
 					mappingType,
@@ -172,37 +147,32 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 		final TableReference tableReference = tableGroup.resolveTableReference( keyColumnContainingTable );
 		final String identificationVariable = tableReference.getIdentificationVariable();
-		int size = keyColumnExpressions.size();
-		List<SqlSelection> sqlSelections = new ArrayList<>( size );
-		for ( int i = 0; i < size; i++ ) {
-			final String columnExpression = keyColumnExpressions.get( i );
-			final JdbcMapping jdbcMapping = jdbcMappings.get( i );
-			final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
-					sqlExpressionResolver.resolveSqlExpression(
-							SqlExpressionResolver.createColumnReferenceKey(
-									tableReference,
-									columnExpression
+		List<SqlSelection> sqlSelections = new ArrayList<>( keySelectionMappings.getJdbcTypeCount() );
+		keySelectionMappings.forEachSelection(
+				(columnIndex, selection) -> {
+					final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
+							sqlExpressionResolver.resolveSqlExpression(
+									SqlExpressionResolver.createColumnReferenceKey(
+											tableReference,
+											selection.getSelectionExpression()
+									),
+									s ->
+											new ColumnReference(
+													identificationVariable,
+													selection,
+													creationState.getSqlAstCreationState()
+															.getCreationContext()
+															.getSessionFactory()
+											)
 							),
-							s ->
-									new ColumnReference(
-											identificationVariable,
-											columnExpression,
-											false,
-											null,
-											null,
-											jdbcMapping,
-											creationState.getSqlAstCreationState()
-													.getCreationContext()
-													.getSessionFactory()
-									)
-					),
-					jdbcMapping.getJavaTypeDescriptor(),
-					sqlAstCreationState.getCreationContext().getDomainModel().getTypeConfiguration()
-			);
-			sqlSelections.add( sqlSelection );
-		}
+							selection.getJdbcMapping().getJavaTypeDescriptor(),
+							sqlAstCreationState.getCreationContext().getDomainModel().getTypeConfiguration()
+					);
+					sqlSelections.add( sqlSelection );
+				}
+		);
 
-		return new EmbeddableForeignKeyResultImpl(
+		return new EmbeddableForeignKeyResultImpl<>(
 				sqlSelections,
 				collectionPath,
 				mappingType,
@@ -259,11 +229,11 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 		final String lhsTableExpression = lhs.getTableExpression();
 		if ( lhsTableExpression.equals( keyColumnContainingTable ) ) {
 			assert rhsTableExpression.equals( targetColumnContainingTable );
-			return getPredicate( lhs, rhs, creationContext, keyColumnExpressions, targetColumnExpressions );
+			return getPredicate( lhs, rhs, creationContext, keySelectionMappings, targetSelectionMappings );
 		}
 		else {
 			assert rhsTableExpression.equals( keyColumnContainingTable );
-			return getPredicate( lhs, rhs, creationContext, targetColumnExpressions, keyColumnExpressions );
+			return getPredicate( lhs, rhs, creationContext, targetSelectionMappings, keySelectionMappings );
 		}
 	}
 
@@ -271,34 +241,27 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 			TableReference lhs,
 			TableReference rhs,
 			SqlAstCreationContext creationContext,
-			List<String> lhsExpressions,
-			List<String> rhsColumnExpressions) {
+			SelectionMappings lhsMappings,
+			SelectionMappings rhsMappings) {
 		final Junction predicate = new Junction( Junction.Nature.CONJUNCTION );
-		for ( int i = 0; i < lhsExpressions.size(); i++ ) {
-			final JdbcMapping jdbcMapping = jdbcMappings.get( i );
-			final ComparisonPredicate comparisonPredicate = new ComparisonPredicate(
-					new ColumnReference(
-							lhs,
-							lhsExpressions.get( i ),
-							false,
-							null,
-							null,
-							jdbcMapping,
-							creationContext.getSessionFactory()
-					),
-					ComparisonOperator.EQUAL,
-					new ColumnReference(
-							rhs,
-							rhsColumnExpressions.get( i ),
-							false,
-							null,
-							null,
-							jdbcMapping,
-							creationContext.getSessionFactory()
-					)
-			);
-			predicate.add( comparisonPredicate );
-		}
+		lhsMappings.forEachSelection(
+				(i, selection) -> {
+					final ComparisonPredicate comparisonPredicate = new ComparisonPredicate(
+							new ColumnReference(
+									lhs,
+									selection,
+									creationContext.getSessionFactory()
+							),
+							ComparisonOperator.EQUAL,
+							new ColumnReference(
+									rhs,
+									rhsMappings.getSelectionMapping( i ),
+									creationContext.getSessionFactory()
+							)
+					);
+					predicate.add( comparisonPredicate );
+				}
+		);
 		return predicate;
 	}
 
@@ -336,37 +299,25 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 	}
 
 	@Override
-	public void visitReferringColumns(ColumnConsumer consumer) {
-		for ( int i = 0; i < keyColumnExpressions.size(); i++ ) {
-			consumer.accept(
-					keyColumnContainingTable,
-					keyColumnExpressions.get( i ),
-					false,
-					null,
-					null,
-					jdbcMappings.get( i )
-			);
-		}
+	public int visitReferringColumns(int offset, SelectionConsumer consumer) {
+		return keySelectionMappings.forEachSelection( offset, consumer );
 	}
 
 	@Override
-	public void visitTargetColumns(ColumnConsumer consumer) {
-		for ( int i = 0; i < keyColumnExpressions.size(); i++ ) {
-			consumer.accept(
-					targetColumnContainingTable,
-					targetColumnExpressions.get( i ),
-					false,
-					null,
-					null,
-					jdbcMappings.get( i )
-			);
-		}
+	public int visitTargetColumns(int offset, SelectionConsumer consumer) {
+		return targetSelectionMappings.forEachSelection( offset, consumer );
 	}
 
 	@Override
 	public AssociationKey getAssociationKey() {
 		if ( associationKey == null ) {
-			associationKey = new AssociationKey( keyColumnContainingTable, keyColumnExpressions );
+			final List<String> columns = new ArrayList<>();
+			keySelectionMappings.forEachSelection(
+					(columnIndex, selection) -> {
+						columns.add( selection.getSelectionExpression() );
+					}
+			);
+			associationKey = new AssociationKey( keyColumnContainingTable, columns );
 		}
 		return associationKey;
 	}
@@ -397,37 +348,33 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 		final TableReference tableReference = tableGroup.resolveTableReference( keyColumnContainingTable );
 		final String identificationVariable = tableReference.getIdentificationVariable();
-		int size = keyColumnExpressions.size();
-		List<SqlSelection> sqlSelections = new ArrayList<>( size );
-		for ( int i = 0; i < size; i++ ) {
-			final String columnExpression = keyColumnExpressions.get( i );
-			final JdbcMapping jdbcMapping = jdbcMappings.get( i );
-			final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
-					sqlExpressionResolver.resolveSqlExpression(
-							SqlExpressionResolver.createColumnReferenceKey(
-									tableReference,
-									columnExpression
+		final int size = keySelectionMappings.getJdbcTypeCount();
+		final List<SqlSelection> sqlSelections = new ArrayList<>( size );
+		keySelectionMappings.forEachSelection(
+				(columnIndex, selection) -> {
+					final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
+							sqlExpressionResolver.resolveSqlExpression(
+									SqlExpressionResolver.createColumnReferenceKey(
+											tableReference,
+											selection.getSelectionExpression()
+									),
+									s ->
+											new ColumnReference(
+													identificationVariable,
+													selection,
+													creationState.getSqlAstCreationState()
+															.getCreationContext()
+															.getSessionFactory()
+											)
 							),
-							s ->
-									new ColumnReference(
-											identificationVariable,
-											columnExpression,
-											false,
-											null,
-											null,
-											jdbcMapping,
-											creationState.getSqlAstCreationState()
-													.getCreationContext()
-													.getSessionFactory()
-									)
-					),
-					jdbcMapping.getJavaTypeDescriptor(),
-					sqlAstCreationState.getCreationContext().getDomainModel().getTypeConfiguration()
-			);
-			sqlSelections.add( sqlSelection );
-		}
+							selection.getJdbcMapping().getJavaTypeDescriptor(),
+							sqlAstCreationState.getCreationContext().getDomainModel().getTypeConfiguration()
+					);
+					sqlSelections.add( sqlSelection );
+				}
+		);
 
-		return new EmbeddableForeignKeyResultImpl(
+		return new EmbeddableForeignKeyResultImpl<>(
 				sqlSelections,
 				navigablePath,
 				mappingType,
@@ -442,18 +389,18 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 	}
 
 	@Override
-	public void visitJdbcTypes(
-			Consumer<JdbcMapping> action, Clause clause, TypeConfiguration typeConfiguration) {
-		mappingType.visitJdbcTypes( action, clause, typeConfiguration );
+	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+		return mappingType.forEachJdbcType( offset, action );
 	}
 
 	@Override
-	public void visitDisassembledJdbcValues(
+	public int forEachDisassembledJdbcValue(
 			Object value,
 			Clause clause,
+			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		mappingType.visitDisassembledJdbcValues( value, clause, valuesConsumer, session );
+		return mappingType.forEachDisassembledJdbcValue( value, clause, offset, valuesConsumer, session );
 	}
 
 	@Override

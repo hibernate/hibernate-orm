@@ -131,7 +131,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			final CompositeIdentifierMapping cidMapping = (CompositeIdentifierMapping) idMapping;
 
 			if ( cidMapping.getAttributeCount() == 1 ) {
-				final AttributeMapping singleIdAttribute = cidMapping.getAttributes().iterator().next();
+				final AttributeMapping singleIdAttribute = cidMapping.getAttributes().get( 0 );
 				if ( singleIdAttribute.getMappedType() instanceof EntityMappingType ) {
 					final EntityMappingType dependentIdTargetMapping = (EntityMappingType) singleIdAttribute.getMappedType();
 					final EntityIdentifierMapping dependentIdTargetIdMapping = dependentIdTargetMapping.getIdentifierMapping();

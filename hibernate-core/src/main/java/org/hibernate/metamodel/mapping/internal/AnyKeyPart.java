@@ -8,15 +8,15 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
-import org.hibernate.metamodel.mapping.ColumnConsumer;
+import org.hibernate.metamodel.mapping.SelectionConsumer;
 import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -37,7 +37,6 @@ import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Acts as a ModelPart for the key portion of an any-valued mapping
@@ -74,8 +73,13 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 	}
 
 	@Override
-	public String getMappedColumnExpression() {
+	public String getSelectionExpression() {
 		return column;
+	}
+
+	@Override
+	public boolean isFormula() {
+		return false;
 	}
 
 	@Override
@@ -193,34 +197,30 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 	}
 
 	@Override
-	public void visitColumns(ColumnConsumer consumer) {
-		consumer.accept( table, column, false, null, null, jdbcMapping );
+	public int forEachSelection(int offset, SelectionConsumer consumer) {
+		consumer.accept( offset, this );
+		return getJdbcTypeCount();
 	}
 
 	@Override
-	public void visitJdbcTypes(
-			Consumer<JdbcMapping> consumer,
-			Clause clause,
-			TypeConfiguration typeConfiguration) {
-		consumer.accept( jdbcMapping );
+	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+		action.accept( offset, jdbcMapping );
+		return getJdbcTypeCount();
 	}
 
 	@Override
-	public void visitJdbcValues(
+	public int forEachJdbcValue(
 			Object value,
 			Clause clause,
+			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		valuesConsumer.consume( value, jdbcMapping );
+		valuesConsumer.consume( offset, value, jdbcMapping );
+		return getJdbcTypeCount();
 	}
 
 	@Override
-	public int getJdbcTypeCount(TypeConfiguration typeConfiguration) {
-		return 1;
-	}
-
-	@Override
-	public List<JdbcMapping> getJdbcMappings(TypeConfiguration typeConfiguration) {
+	public List<JdbcMapping> getJdbcMappings() {
 		return Collections.singletonList( jdbcMapping );
 	}
 }

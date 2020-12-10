@@ -55,13 +55,21 @@ public interface ForeignKeyDescriptor extends VirtualModelPart {
 	 * Visits the FK "referring" columns
 	 */
 	@Override
-	default void visitColumns(ColumnConsumer consumer) {
-		visitReferringColumns( consumer );
+	default int forEachSelection(int offset, SelectionConsumer consumer) {
+		return visitReferringColumns( offset, consumer );
 	}
 
-	void visitReferringColumns(ColumnConsumer consumer);
+	int visitReferringColumns(int offset, SelectionConsumer consumer);
 
-	void visitTargetColumns(ColumnConsumer consumer);
+	int visitTargetColumns(int offset, SelectionConsumer consumer);
+
+	default int visitReferringColumns(SelectionConsumer consumer)  {
+		return visitReferringColumns( 0, consumer );
+	}
+
+	default int visitTargetColumns(SelectionConsumer consumer) {
+		return visitTargetColumns( 0, consumer );
+	}
 
 	AssociationKey getAssociationKey();
 }

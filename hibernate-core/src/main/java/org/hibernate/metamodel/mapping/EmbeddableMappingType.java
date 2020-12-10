@@ -8,30 +8,36 @@ package org.hibernate.metamodel.mapping;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.BasicValue;
+import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
+import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
+import org.hibernate.mapping.Table;
+import org.hibernate.metamodel.mapping.internal.BasicValuedSingularAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.SelectionMappingsImpl;
 import org.hibernate.metamodel.mapping.internal.DiscriminatedAssociationAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
@@ -61,42 +67,21 @@ import org.hibernate.type.spi.TypeConfiguration;
 /**
  * @author Steve Ebersole
  */
-public class EmbeddableMappingType implements ManagedMappingType {
+public class EmbeddableMappingType implements ManagedMappingType, SelectionMappings {
 
 	public static EmbeddableMappingType from(
 			Component bootDescriptor,
 			CompositeType compositeType,
 			Function<EmbeddableMappingType,EmbeddableValuedModelPart> embeddedPartBuilder,
 			MappingModelCreationProcess creationProcess) {
-		final RuntimeModelCreationContext creationContext = creationProcess.getCreationContext();
-
-		final EmbeddableRepresentationStrategy representationStrategy = creationContext.getBootstrapContext()
-				.getRepresentationStrategySelector()
-				.resolveStrategy( bootDescriptor, creationContext );
-
-		final EmbeddableMappingType mappingType = new EmbeddableMappingType(
-				bootDescriptor,
-				representationStrategy,
-				embeddedPartBuilder,
-				creationContext.getSessionFactory()
-		);
-
-		creationProcess.registerInitializationCallback(
-				"EmbeddableMappingType#finishInitialization",
-				() -> mappingType.finishInitialization(
-						bootDescriptor,
-						compositeType,
-						creationProcess
-				)
-		);
-
-		return mappingType;
+		return from( bootDescriptor, compositeType, null, null, embeddedPartBuilder, creationProcess );
 	}
 
 	public static EmbeddableMappingType from(
 			Component bootDescriptor,
 			CompositeType compositeType,
-			NavigableRole embeddedRole,
+			String rootTableExpression,
+			String[] rootTableKeyColumnNames,
 			Function<EmbeddableMappingType,EmbeddableValuedModelPart> embeddedPartBuilder,
 			MappingModelCreationProcess creationProcess) {
 		final RuntimeModelCreationContext creationContext = creationProcess.getCreationContext();
@@ -113,10 +98,12 @@ public class EmbeddableMappingType implements ManagedMappingType {
 		);
 
 		creationProcess.registerInitializationCallback(
-				"EmbeddableMappingType(" + embeddedRole + ")#finishInitialization",
+				"EmbeddableMappingType(" + bootDescriptor.getRoleName() + ")#finishInitialization",
 				() -> mappingType.finishInitialization(
 						bootDescriptor,
 						compositeType,
+						rootTableExpression,
+						rootTableKeyColumnNames,
 						creationProcess
 				)
 		);
@@ -130,7 +117,9 @@ public class EmbeddableMappingType implements ManagedMappingType {
 	private final SessionFactoryImplementor sessionFactory;
 
 //	private final Map<String,AttributeMapping> attributeMappings = new TreeMap<>();
-	private final Map<String,AttributeMapping> attributeMappings = new LinkedHashMap<>();
+	private final List<AttributeMapping> attributes = new ArrayList<>();
+	private final Map<String, AttributeMapping> attributeMap = new HashMap<>();
+	private SelectionMappings selectionMappings;
 
 	private final EmbeddableValuedModelPart valueMapping;
 	private NavigableRole embeddedRole;
@@ -162,13 +151,14 @@ public class EmbeddableMappingType implements ManagedMappingType {
 	private boolean finishInitialization(
 			Component bootDescriptor,
 			CompositeType compositeType,
+			String rootTableExpression,
+			String[] rootTableKeyColumnNames,
 			MappingModelCreationProcess creationProcess) {
 		final SessionFactoryImplementor sessionFactory = creationProcess.getCreationContext().getSessionFactory();
 		final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
 
-		final String containingTableExpression = valueMapping.getContainingTableExpression();
-		final List<String> mappedColumnExpressions = valueMapping.getMappedColumnExpressions();
-
+		final String baseTableExpression = valueMapping.getContainingTableExpression();
+		final Dialect dialect = creationProcess.getCreationContext().getSessionFactory().getJdbcServices().getDialect();
 		final Type[] subtypes = compositeType.getSubtypes();
 
 		int attributeIndex = 0;
@@ -183,28 +173,48 @@ public class EmbeddableMappingType implements ManagedMappingType {
 			if ( subtype instanceof BasicType ) {
 				final BasicValue basicValue = (BasicValue) bootPropertyDescriptor.getValue();
 				final Selectable selectable = basicValue.getColumn();
-
-				final String mappedColumnExpression = mappedColumnExpressions.get( columnPosition++ );
-
-				attributeMappings.put(
-						bootPropertyDescriptor.getName(),
-						MappingModelCreationHelper.buildBasicAttributeMapping(
-								bootPropertyDescriptor.getName(),
-								valueMapping.getNavigableRole().append( bootPropertyDescriptor.getName() ),
-								attributeIndex,
-								bootPropertyDescriptor,
-								this,
-								(BasicType<?>) subtype,
-								containingTableExpression,
-								mappedColumnExpression,
-								false,
-								selectable.getCustomReadExpression(),
-								selectable.getCustomWriteExpression(),
-								representationStrategy.resolvePropertyAccess( bootPropertyDescriptor ),
-								compositeType.getCascadeStyle( attributeIndex ),
+				final String containingTableExpression;
+				final String columnExpression;
+				if ( rootTableKeyColumnNames == null ) {
+					if ( selectable.isFormula() ) {
+						columnExpression = selectable.getTemplate( dialect, creationProcess.getSqmFunctionRegistry() );
+					}
+					else {
+						columnExpression = selectable.getText( dialect );
+					}
+					if ( selectable instanceof Column ) {
+						containingTableExpression = getTableIdentifierExpression(
+								( (Column) selectable ).getValue().getTable(),
 								creationProcess
-						)
+						);
+					}
+					else {
+						containingTableExpression = baseTableExpression;
+					}
+				}
+				else {
+					containingTableExpression = rootTableExpression;
+					columnExpression = rootTableKeyColumnNames[columnPosition];
+				}
+
+				BasicValuedSingularAttributeMapping attributeMapping = MappingModelCreationHelper.buildBasicAttributeMapping(
+						bootPropertyDescriptor.getName(),
+						valueMapping.getNavigableRole().append( bootPropertyDescriptor.getName() ),
+						attributeIndex,
+						bootPropertyDescriptor,
+						this,
+						(BasicType<?>) subtype,
+						containingTableExpression,
+						columnExpression,
+						selectable.isFormula(),
+						selectable.getCustomReadExpression(),
+						selectable.getCustomWriteExpression(),
+						representationStrategy.resolvePropertyAccess( bootPropertyDescriptor ),
+						compositeType.getCascadeStyle( attributeIndex ),
+						creationProcess
 				);
+				addAttribute( attributeMapping );
+				columnPosition++;
 			}
 			else if ( subtype instanceof AnyType ) {
 				final Any bootValueMapping = (Any) bootPropertyDescriptor.getValue();
@@ -292,79 +302,70 @@ public class EmbeddableMappingType implements ManagedMappingType {
 					}
 				};
 
-				attributeMappings.put(
-						bootPropertyDescriptor.getName(),
-						new DiscriminatedAssociationAttributeMapping(
-								valueMapping.getNavigableRole().append( bootPropertyDescriptor.getName() ),
-								typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Object.class ),
-								this,
-								attributeIndex,
-								attributeMetadataAccess,
-								bootPropertyDescriptor.isLazy() ? FetchTiming.DELAYED : FetchTiming.IMMEDIATE,
-								propertyAccess,
-								bootPropertyDescriptor,
-								anyType,
-								bootValueMapping,
-								creationProcess
-						)
+				DiscriminatedAssociationAttributeMapping attributeMapping = new DiscriminatedAssociationAttributeMapping(
+						valueMapping.getNavigableRole().append( bootPropertyDescriptor.getName() ),
+						typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Object.class ),
+						this,
+						attributeIndex,
+						attributeMetadataAccess,
+						bootPropertyDescriptor.isLazy() ? FetchTiming.DELAYED : FetchTiming.IMMEDIATE,
+						propertyAccess,
+						bootPropertyDescriptor,
+						anyType,
+						bootValueMapping,
+						creationProcess
 				);
+				addAttribute( attributeMapping );
 			}
 			else if ( subtype instanceof CompositeType ) {
 				final CompositeType subCompositeType = (CompositeType) subtype;
 				final int columnSpan = subCompositeType.getColumnSpan( sessionFactory );
-
-				final List<String> customReadExpressions = new ArrayList<>( columnSpan );
-				final List<String> customWriteExpressions = new ArrayList<>( columnSpan );
-
-				final Iterator<Selectable> columnIterator = bootDescriptor.getColumnIterator();
-				while ( columnIterator.hasNext() ) {
-					final Selectable selectable = columnIterator.next();
-					customReadExpressions.add( selectable.getCustomReadExpression() );
-					customWriteExpressions.add( selectable.getCustomWriteExpression() );
+				final String subTableExpression;
+				final String[] subRootTableKeyColumnNames;
+				if ( rootTableKeyColumnNames == null ) {
+					subTableExpression = baseTableExpression;
+					subRootTableKeyColumnNames = null;
+				}
+				else {
+					subTableExpression = rootTableExpression;
+					subRootTableKeyColumnNames = new String[columnSpan];
+					System.arraycopy( rootTableKeyColumnNames, columnPosition, subRootTableKeyColumnNames, 0, columnSpan );
 				}
 
-				attributeMappings.put(
+				EmbeddedAttributeMapping attributeMapping = MappingModelCreationHelper.buildEmbeddedAttributeMapping(
 						bootPropertyDescriptor.getName(),
-						MappingModelCreationHelper.buildEmbeddedAttributeMapping(
-								bootPropertyDescriptor.getName(),
-								attributeIndex,
-								bootPropertyDescriptor,
-								this,
-								subCompositeType,
-								containingTableExpression,
-								ArrayHelper.toStringArray( mappedColumnExpressions.subList( columnPosition, columnPosition + columnSpan ) ),
-//								ArrayHelper.toStringArray( customReadExpressions.subList( columnPosition, columnPosition + columnSpan ) ),
-//								ArrayHelper.toStringArray( customWriteExpressions.subList( columnPosition, columnPosition + columnSpan ) ),
-								ArrayHelper.toStringArray( customReadExpressions ),
-								ArrayHelper.toStringArray( customWriteExpressions ),
-								representationStrategy.resolvePropertyAccess( bootPropertyDescriptor ),
-								compositeType.getCascadeStyle( attributeIndex ),
-								creationProcess
-						)
+						attributeIndex,
+						bootPropertyDescriptor,
+						this,
+						subCompositeType,
+						subTableExpression,
+						subRootTableKeyColumnNames,
+						representationStrategy.resolvePropertyAccess( bootPropertyDescriptor ),
+						compositeType.getCascadeStyle( attributeIndex ),
+						creationProcess
 				);
-
+				addAttribute( attributeMapping );
 				columnPosition += columnSpan;
 			}
 			else {
 				final EntityPersister entityPersister = creationProcess
 						.getEntityPersister( bootDescriptor.getOwner().getEntityName() );
 				if ( subtype instanceof CollectionType ) {
-					attributeMappings.put(
+					PluralAttributeMapping attributeMapping = MappingModelCreationHelper.buildPluralAttributeMapping(
 							bootPropertyDescriptor.getName(),
-							MappingModelCreationHelper.buildPluralAttributeMapping(
-									bootPropertyDescriptor.getName(),
-									attributeIndex,
-									bootPropertyDescriptor,
-									entityPersister,
-									representationStrategy.resolvePropertyAccess( bootPropertyDescriptor ),
-									compositeType.getCascadeStyle( attributeIndex),
-									compositeType.getFetchMode( attributeIndex ),
-									creationProcess
-							)
+							attributeIndex,
+							bootPropertyDescriptor,
+							entityPersister,
+							representationStrategy.resolvePropertyAccess( bootPropertyDescriptor ),
+							compositeType.getCascadeStyle( attributeIndex ),
+							compositeType.getFetchMode( attributeIndex ),
+							creationProcess
 					);
+					addAttribute( attributeMapping );
 				}
 				else if ( subtype instanceof EntityType ) {
-					final ToOneAttributeMapping toOneAttributeMapping = MappingModelCreationHelper.buildSingularAssociationAttributeMapping(
+					final int columnSpan = subtype.getColumnSpan( sessionFactory );
+					final ToOneAttributeMapping attributeMapping = MappingModelCreationHelper.buildSingularAssociationAttributeMapping(
 							bootPropertyDescriptor.getName(),
 							valueMapping.getNavigableRole().append( bootPropertyDescriptor.getName() ),
 							attributeIndex,
@@ -375,18 +376,53 @@ public class EmbeddableMappingType implements ManagedMappingType {
 							compositeType.getCascadeStyle( attributeIndex ),
 							creationProcess
 					);
-					attributeMappings.put( bootPropertyDescriptor.getName(), toOneAttributeMapping );
-					// todo (6.0) : not sure it is always correct
-					columnPosition++;
+					addAttribute( attributeMapping );
+					columnPosition += columnSpan;
 				}
 			}
 
 			attributeIndex++;
 		}
 
+		// We need the attribute mapping types to finish initialization first before we can build the column mappings
+		creationProcess.registerInitializationCallback(
+				"EmbeddableMappingType(" + embeddedRole + ")#initColumnMappings",
+				this::initColumnMappings
+		);
 		return true;
 	}
 
+	private static String getTableIdentifierExpression(Table table, MappingModelCreationProcess creationProcess) {
+		final JdbcEnvironment jdbcEnvironment = creationProcess.getCreationContext()
+				.getMetadata()
+				.getDatabase()
+				.getJdbcEnvironment();
+		return jdbcEnvironment
+				.getQualifiedObjectNameFormatter().format(
+						table.getQualifiedTableName(),
+						jdbcEnvironment.getDialect()
+				);
+	}
+
+	private boolean initColumnMappings() {
+		this.selectionMappings = SelectionMappingsImpl.from( this );
+		return true;
+	}
+
+	private void addAttribute(AttributeMapping attributeMapping) {
+		if ( attributeMap.put( attributeMapping.getAttributeName(), attributeMapping ) == null ) {
+			attributes.add( attributeMapping );
+		}
+		else {
+			for ( ListIterator<AttributeMapping> iterator = attributes.listIterator(); iterator.hasNext(); ) {
+				final AttributeMapping existingMapping = iterator.next();
+				if ( existingMapping.getAttributeName().equals( attributeMapping.getAttributeName() ) ) {
+					iterator.set( attributeMapping );
+					break;
+				}
+			}
+		}
+	}
 
 	public EmbeddableValuedModelPart getEmbeddedValueMapping() {
 		return valueMapping;
@@ -435,7 +471,7 @@ public class EmbeddableMappingType implements ManagedMappingType {
 
 	@Override
 	public int getNumberOfFetchables() {
-		return attributeMappings.size();
+		return attributeMap.size();
 	}
 
 	@Override
@@ -445,115 +481,82 @@ public class EmbeddableMappingType implements ManagedMappingType {
 		visitAttributeMappings( attributeMapping -> fetchableConsumer.accept( (Fetchable) attributeMapping ) );
 	}
 
-	private int cachedJdbcTypeCount = -1;
-
 	@Override
-	public int getJdbcTypeCount(TypeConfiguration typeConfiguration) {
-		if ( cachedJdbcTypeCount == -1 ) {
-			int count = 0;
-
-			for ( AttributeMapping attributeMapping : getAttributeMappings() ) {
-				count += attributeMapping.getJdbcTypeCount( typeConfiguration );
-			}
-
-			this.cachedJdbcTypeCount = count;
-		}
-
-		return cachedJdbcTypeCount;
-	}
-
-	private List<JdbcMapping> cachedJdbcMappings;
-
-	@Override
-	public List<JdbcMapping> getJdbcMappings(TypeConfiguration typeConfiguration) {
-		if ( cachedJdbcMappings == null ) {
-			final List<JdbcMapping> result = new ArrayList<>();
-			visitJdbcTypes(
-					result::add,
-					Clause.IRRELEVANT,
-					typeConfiguration
-			);
-			this.cachedJdbcMappings = Collections.unmodifiableList( result );
-		}
-
-		return cachedJdbcMappings;
+	public SelectionMapping getSelectionMapping(int columnIndex) {
+		return selectionMappings.getSelectionMapping( columnIndex );
 	}
 
 	@Override
-	public void visitJdbcTypes(
-			Consumer<JdbcMapping> action,
-			Clause clause,
-			TypeConfiguration typeConfiguration) {
-		attributeMappings.forEach(
-				(s, attributeMapping) -> {
-					if ( attributeMapping instanceof PluralAttributeMapping ) {
-						return;
-					}
-					if ( attributeMapping instanceof ToOneAttributeMapping ) {
-						( (ToOneAttributeMapping) attributeMapping ).getKeyTargetMatchPart().visitJdbcTypes(
-								action,
-								clause,
-								typeConfiguration
-						);
-					}
-					else {
-						attributeMapping.visitJdbcTypes( action, clause, typeConfiguration );
-					}
+	public int getJdbcTypeCount() {
+		return selectionMappings.getJdbcTypeCount();
+	}
+
+	@Override
+	public List<JdbcMapping> getJdbcMappings() {
+		return selectionMappings.getJdbcMappings();
+	}
+
+	@Override
+	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+		return selectionMappings.forEachSelection(
+				offset,
+				(selectionIndex, selectionMapping) -> {
+					action.accept( selectionIndex, selectionMapping.getJdbcMapping() );
 				}
 		);
 	}
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		final Collection<AttributeMapping> attributeMappings = getAttributeMappings();
-
-		Object[] result = new Object[attributeMappings.size()];
-		int i = 0;
-		final Iterator<AttributeMapping> iterator = attributeMappings.iterator();
-		while ( iterator.hasNext() ) {
-			AttributeMapping mapping = iterator.next();
+		Object[] result = new Object[attributes.size()];
+		for ( int i = 0; i < attributes.size(); i++ ) {
+			AttributeMapping mapping = attributes.get( i );
 			Object o = mapping.getPropertyAccess().getGetter().get( value );
 			result[i] = mapping.disassemble( o, session );
-			i++;
 		}
 		return result;
 	}
 
 	@Override
-	public void visitJdbcValues(
+	public int forEachJdbcValue(
 			Object value,
 			Clause clause,
+			int offset,
 			JdbcValuesConsumer consumer,
 			SharedSessionContractImplementor session) {
-		attributeMappings.forEach(
-				(s, attributeMapping) -> {
-					Object o = attributeMapping.getPropertyAccess().getGetter().get( value );
-					attributeMapping.visitJdbcValues( o, clause, consumer, session );
-				}
-		);
+		int span = 0;
+		for ( int i = 0; i < attributes.size(); i++ ) {
+			final AttributeMapping attributeMapping = attributes.get( i );
+			final Object o = attributeMapping.getPropertyAccess().getGetter().get( value );
+			span += attributeMapping.forEachJdbcValue( o, clause, span + offset, consumer, session );
+		}
+		return span;
 	}
 
 	@Override
-	public void visitDisassembledJdbcValues(
+	public int forEachDisassembledJdbcValue(
 			Object value,
 			Clause clause,
+			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		final Collection<AttributeMapping> attributeMappings = getAttributeMappings();
-		final Iterator<AttributeMapping> iterator = attributeMappings.iterator();
 		final Object[] values = (Object[]) value;
-		int i = 0;
-		while ( iterator.hasNext() ) {
-			AttributeMapping mapping = iterator.next();
-			mapping.visitDisassembledJdbcValues( values[i], clause, valuesConsumer, session );
-			i++;
+		int span = 0;
+		for ( int i = 0; i < attributes.size(); i++ ) {
+			final AttributeMapping mapping = attributes.get( i );
+			span += mapping.forEachDisassembledJdbcValue( values[i], clause, span + offset, valuesConsumer, session );
 		}
+		return span;
 	}
 
-	public void visitColumns(ColumnConsumer consumer) {
-		attributeMappings.values().forEach(
-				attributeMapping -> attributeMapping.visitColumns( consumer )
-		);
+	@Override
+	public int forEachSelection(SelectionConsumer consumer) {
+		return selectionMappings.forEachSelection( 0, consumer );
+	}
+
+	@Override
+	public int forEachSelection(int offset, SelectionConsumer consumer) {
+		return selectionMappings.forEachSelection( offset, consumer );
 	}
 
 	@Override
@@ -563,27 +566,34 @@ public class EmbeddableMappingType implements ManagedMappingType {
 
 	@Override
 	public int getNumberOfAttributeMappings() {
-		return attributeMappings.size();
+		return attributeMap.size();
 	}
 
 	@Override
 	public AttributeMapping findAttributeMapping(String name) {
-		return attributeMappings.get( name );
+		return attributeMap.get( name );
 	}
 
 	@Override
-	public Collection<AttributeMapping> getAttributeMappings() {
-		return attributeMappings.values();
+	public List<AttributeMapping> getAttributeMappings() {
+		return attributes;
+	}
+
+	@Override
+	public void forEachAttributeMapping(IndexedConsumer<AttributeMapping> consumer) {
+		for ( int i = 0; i < attributes.size(); i++ ) {
+			consumer.accept( i, attributes.get( i ) );
+		}
 	}
 
 	@Override
 	public void visitAttributeMappings(Consumer<AttributeMapping> action) {
-		attributeMappings.values().forEach( action );
+		attributes.forEach( action );
 	}
 
 	@Override
 	public ModelPart findSubPart(String name, EntityMappingType treatTargetType) {
-		return attributeMappings.get( name );
+		return attributeMap.get( name );
 	}
 
 	@Override
@@ -595,21 +605,14 @@ public class EmbeddableMappingType implements ManagedMappingType {
 
 	public void setPropertyValues(Object compositeInstance, Object[] resolvedValues) {
 		// todo (6.0) : reflection optimizer...
-
-		visitAttributeMappings(
-				new Consumer<AttributeMapping>() {
-					private int i = 0;
-
-					@Override
-					public void accept(AttributeMapping attributeMapping) {
-						attributeMapping.getAttributeMetadataAccess()
-								.resolveAttributeMetadata( null )
-								.getPropertyAccess()
-								.getSetter()
-								.set( compositeInstance, resolvedValues[i++], sessionFactory );
-					}
-				}
-		);
+		for ( int i = 0; i < attributes.size(); i++ ) {
+			attributes.get( i )
+					.getAttributeMetadataAccess()
+					.resolveAttributeMetadata( null )
+					.getPropertyAccess()
+					.getSetter()
+					.set( compositeInstance, resolvedValues[i], sessionFactory );
+		}
 	}
 
 	public boolean isCreateEmptyCompositesEnabled() {

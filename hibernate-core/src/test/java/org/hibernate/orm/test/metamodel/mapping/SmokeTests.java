@@ -31,7 +31,6 @@ import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
 import org.hibernate.persister.entity.EntityPersister;
 
-import org.hibernate.testing.hamcrest.CollectionMatchers;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -74,7 +73,7 @@ public class SmokeTests {
 			final ModelPart namePart = entityDescriptor.findSubPart( "name" );
 			assert namePart instanceof BasicValuedSingularAttributeMapping;
 			assert "mapping_simple_entity".equals( ( (BasicValuedSingularAttributeMapping) namePart ).getContainingTableExpression() );
-			assert "name".equals( ( (BasicValuedSingularAttributeMapping) namePart ).getMappedColumnExpression() );
+			assert "name".equals( ( (BasicValuedSingularAttributeMapping) namePart ).getSelectionExpression() );
 		}
 
 		{
@@ -82,7 +81,7 @@ public class SmokeTests {
 			assert genderPart instanceof BasicValuedSingularAttributeMapping;
 			final BasicValuedSingularAttributeMapping genderAttrMapping = (BasicValuedSingularAttributeMapping) genderPart;
 			assert "mapping_simple_entity".equals( genderAttrMapping.getContainingTableExpression() );
-			assert "gender".equals( genderAttrMapping.getMappedColumnExpression() );
+			assert "gender".equals( genderAttrMapping.getSelectionExpression() );
 
 			assertThat( genderAttrMapping.getJavaTypeDescriptor().getJavaType(), equalTo( Gender.class ) );
 
@@ -99,7 +98,7 @@ public class SmokeTests {
 			assert part instanceof BasicValuedSingularAttributeMapping;
 			final BasicValuedSingularAttributeMapping attrMapping = (BasicValuedSingularAttributeMapping) part;
 			assert "mapping_simple_entity".equals( attrMapping.getContainingTableExpression() );
-			assert "gender2".equals( attrMapping.getMappedColumnExpression() );
+			assert "gender2".equals( attrMapping.getSelectionExpression() );
 
 			assertThat( attrMapping.getJavaTypeDescriptor().getJavaType(), equalTo( Gender.class ) );
 
@@ -116,7 +115,7 @@ public class SmokeTests {
 			assert part instanceof BasicValuedSingularAttributeMapping;
 			final BasicValuedSingularAttributeMapping attrMapping = (BasicValuedSingularAttributeMapping) part;
 			assert "mapping_simple_entity".equals( attrMapping.getContainingTableExpression() );
-			assert "gender3".equals( attrMapping.getMappedColumnExpression() );
+			assert "gender3".equals( attrMapping.getSelectionExpression() );
 
 			assertThat( attrMapping.getJavaTypeDescriptor().getJavaType(), equalTo( Gender.class ) );
 
@@ -133,9 +132,15 @@ public class SmokeTests {
 			assert part instanceof EmbeddedAttributeMapping;
 			final EmbeddedAttributeMapping attrMapping = (EmbeddedAttributeMapping) part;
 			assertThat( attrMapping.getContainingTableExpression(), is( "mapping_simple_entity" ) );
-			assertThat( attrMapping.getMappedColumnExpressions(), CollectionMatchers.hasSize( 4 ) );
-			assertThat( attrMapping.getMappedColumnExpressions().get( 0 ), is( "attribute1" ) );
-			assertThat( attrMapping.getMappedColumnExpressions().get( 1 ), is( "attribute2" ) );
+			assertThat( attrMapping.getEmbeddableTypeDescriptor().getJdbcTypeCount(), is( 4 ) );
+			assertThat(
+					attrMapping.getEmbeddableTypeDescriptor().getSelectionMapping( 0 ).getSelectionExpression(),
+					is( "attribute1" )
+			);
+			assertThat(
+					attrMapping.getEmbeddableTypeDescriptor().getSelectionMapping( 1 ).getSelectionExpression(),
+					is( "attribute2" )
+			);
 		}
 	}
 

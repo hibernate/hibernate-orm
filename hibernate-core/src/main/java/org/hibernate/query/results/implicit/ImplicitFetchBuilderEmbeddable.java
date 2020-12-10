@@ -15,7 +15,6 @@ import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.SqlSelectionImpl;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
@@ -71,24 +70,24 @@ public class ImplicitFetchBuilderEmbeddable implements ImplicitFetchBuilder {
 				}
 		);
 
-		fetchable.visitColumns(
-				(table, column, isColumnFormula, readFragment, writeFragment, jdbcMapping) -> {
-					final TableReference tableReference = tableGroup.getTableReference( table );
+		fetchable.forEachSelection(
+				(columnIndex, selection) -> {
+					final TableReference tableReference = tableGroup.getTableReference( selection.getContainingTableExpression() );
 
-					final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( column );
+					final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( selection.getSelectionExpression() );
 					final int valuesArrayPosition = jdbcPositionToValuesArrayPosition( jdbcPosition );
 
 					final Expression expression = creationStateImpl.resolveSqlExpression(
-							createColumnReferenceKey( tableReference, column ),
+							createColumnReferenceKey( tableReference, selection.getSelectionExpression() ),
 							processingState -> new SqlSelectionImpl(
 									valuesArrayPosition,
-									jdbcMapping
+									selection.getJdbcMapping()
 							)
 					);
 
 					creationStateImpl.resolveSqlSelection(
 							expression,
-							jdbcMapping.getJavaTypeDescriptor(),
+							selection.getJdbcMapping().getJavaTypeDescriptor(),
 							creationStateImpl.getSessionFactory().getTypeConfiguration()
 					);
 				}

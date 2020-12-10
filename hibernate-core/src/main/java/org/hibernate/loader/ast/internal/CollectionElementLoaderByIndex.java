@@ -67,13 +67,13 @@ public class CollectionElementLoaderByIndex implements Loader {
 			EntityIdentifierMapping identifierMapping = ( (EntityCollectionPart) indexDescriptor ).getEntityMappingType()
 					.getIdentifierMapping();
 			restrictedParts.add( identifierMapping );
-			this.keyJdbcCount = keyDescriptor.getJdbcTypeCount( sessionFactory.getTypeConfiguration() ) +
-					identifierMapping.getJdbcTypeCount( sessionFactory.getTypeConfiguration() );
+			this.keyJdbcCount = keyDescriptor.getJdbcTypeCount() +
+					identifierMapping.getJdbcTypeCount();
 		}
 		else {
 			restrictedParts.add( indexDescriptor );
-			this.keyJdbcCount = keyDescriptor.getJdbcTypeCount( sessionFactory.getTypeConfiguration() ) +
-					indexDescriptor.getJdbcTypeCount( sessionFactory.getTypeConfiguration() );
+			this.keyJdbcCount = keyDescriptor.getJdbcTypeCount() +
+					indexDescriptor.getJdbcTypeCount();
 		}
 
 		List<ModelPart> partsToSelect = new ArrayList<>();
@@ -122,35 +122,22 @@ public class CollectionElementLoaderByIndex implements Loader {
 		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( keyJdbcCount );
 		jdbcSelect.bindFilterJdbcParameters( jdbcParameterBindings );
 
-		final Iterator<JdbcParameter> paramItr = jdbcParameters.iterator();
-
-		attributeMapping.getKeyDescriptor().visitJdbcValues(
+		int offset = jdbcParameterBindings.registerParametersForEachJdbcValue(
 				key,
 				Clause.WHERE,
-				(value, type) -> {
-					assert paramItr.hasNext();
-					final JdbcParameter parameter = paramItr.next();
-					jdbcParameterBindings.addBinding(
-							parameter,
-							new JdbcParameterBindingImpl( type, value )
-					);
-				},
+				attributeMapping.getKeyDescriptor(),
+				jdbcParameters,
 				session
 		);
-		attributeMapping.getIndexDescriptor().visitJdbcValues(
+		offset += jdbcParameterBindings.registerParametersForEachJdbcValue(
 				incrementIndexByBase( index ),
 				Clause.WHERE,
-				(value, type) -> {
-					assert paramItr.hasNext();
-					final JdbcParameter parameter = paramItr.next();
-					jdbcParameterBindings.addBinding(
-							parameter,
-							new JdbcParameterBindingImpl( type, value )
-					);
-				},
+				offset,
+				attributeMapping.getIndexDescriptor(),
+				jdbcParameters,
 				session
 		);
-		assert !paramItr.hasNext();
+		assert offset == jdbcParameters.size();
 
 		List<Object> list = jdbcServices.getJdbcSelectExecutor().list(
 				jdbcSelect,

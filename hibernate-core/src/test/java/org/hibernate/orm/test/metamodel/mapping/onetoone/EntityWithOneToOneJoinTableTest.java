@@ -48,16 +48,16 @@ public class EntityWithOneToOneJoinTableTest {
 
 		final ForeignKeyDescriptor foreignKeyDescriptor = otherAttributeMapping.getForeignKeyDescriptor();
 		foreignKeyDescriptor.visitReferringColumns(
-				(keyTable, keyColumn, isKeyColumnFormula, readFragment, writeFragment, jdbcMapping) -> {
-					assertThat( keyTable, is( "Entity_SimpleEntity" ) );
-					assertThat( keyColumn, is( "other_id" ) );
+				(columnIndex, selection) -> {
+					assertThat( selection.getContainingTableExpression(), is( "Entity_SimpleEntity" ) );
+					assertThat( selection.getSelectionExpression(), is( "other_id" ) );
 				}
 		);
 
 		foreignKeyDescriptor.visitTargetColumns(
-				(targetTable, targetColumn, isTargetColumnFormula, readFragment, writeFragment, jdbcMapping) -> {
-					assertThat( targetTable, is( "SIMPLE_ENTITY" ) );
-					assertThat( targetColumn, is( "id" ) );
+				(columnIndex, selection) -> {
+					assertThat( selection.getContainingTableExpression(), is( "SIMPLE_ENTITY" ) );
+					assertThat( selection.getSelectionExpression(), is( "id" ) );
 				}
 		);
 	}

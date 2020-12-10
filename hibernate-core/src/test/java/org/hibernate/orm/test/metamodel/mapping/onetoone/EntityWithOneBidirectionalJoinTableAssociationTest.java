@@ -54,16 +54,16 @@ public class EntityWithOneBidirectionalJoinTableAssociationTest {
 
 		ForeignKeyDescriptor foreignKeyDescriptor = childAttributeMapping.getForeignKeyDescriptor();
 		foreignKeyDescriptor.visitReferringColumns(
-				(keyTable, keyColumn, isKeyColumnFormula, readFragment, writeFragment, jdbcMapping) -> {
-					assertThat( keyTable, is( "PARENT_CHILD" ) );
-					assertThat( keyColumn, is( "child_id" ) );
+				(columnIndex, selection) -> {
+					assertThat( selection.getContainingTableExpression(), is( "PARENT_CHILD" ) );
+					assertThat( selection.getSelectionExpression(), is( "child_id" ) );
 				}
 		);
 
 		foreignKeyDescriptor.visitTargetColumns(
-				(targetTable, targetColumn, isTargetColumnFormula, readFragment, writeFragment, jdbcMapping) -> {
-					assertThat( targetTable, is( "CHILD" ) );
-					assertThat( targetColumn, is( "id" ) );
+				(columnIndex, selection) -> {
+					assertThat( selection.getContainingTableExpression(), is( "CHILD" ) );
+					assertThat( selection.getSelectionExpression(), is( "id" ) );
 				}
 			);
 
@@ -79,16 +79,16 @@ public class EntityWithOneBidirectionalJoinTableAssociationTest {
 
 		foreignKeyDescriptor = parentAttributeMapping.getForeignKeyDescriptor();
 		foreignKeyDescriptor.visitReferringColumns(
-				(keyTable, keyColumn, isKeyColumnFormula, readFragment, writeFragment, jdbcMapping) -> {
-					assertThat( keyTable, is( "PARENT_CHILD" ) );
-					assertThat( keyColumn, is( "parent_id" ) );
+				(columnIndex, selection) -> {
+					assertThat( selection.getContainingTableExpression(), is( "PARENT_CHILD" ) );
+					assertThat( selection.getSelectionExpression(), is( "parent_id" ) );
 				}
 		);
 
 		foreignKeyDescriptor.visitTargetColumns(
-				(targetTable, targetColumn, isTargetColumnFormula, readFragment, writeFragment, jdbcMapping) -> {
-					assertThat( targetTable, is( "PARENT" ) );
-					assertThat( targetColumn, is( "id" ) );
+				(columnIndex, selection) -> {
+					assertThat( selection.getContainingTableExpression(), is( "PARENT" ) );
+					assertThat( selection.getSelectionExpression(), is( "id" ) );
 				}
 		);
 	}

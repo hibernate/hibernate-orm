@@ -44,6 +44,7 @@ import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.CompositeSqmPathSource;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.BinaryArithmeticOperator;
+import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.QueryLogging;
 import org.hibernate.query.SemanticException;
@@ -123,6 +124,7 @@ import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
 import org.hibernate.query.sqm.tree.predicate.SqmAndPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmBetweenPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmBooleanExpressionPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmEmptinessPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmExistsPredicate;
@@ -176,6 +178,7 @@ import org.hibernate.sql.ast.tree.expression.Format;
 import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
+import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
 import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Star;
@@ -196,6 +199,7 @@ import org.hibernate.sql.ast.tree.predicate.LikePredicate;
 import org.hibernate.sql.ast.tree.predicate.NegatedPredicate;
 import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.ast.tree.predicate.SelfRenderingPredicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
@@ -1212,17 +1216,13 @@ public abstract class BaseSqmToSqlAstConverter
 			MappingModelExpressable valueMapping,
 			Consumer<JdbcParameter> jdbcParameterConsumer) {
 		if ( valueMapping instanceof Association ) {
-			( (Association) valueMapping ).getForeignKeyDescriptor().visitJdbcTypes(
-					jdbcMapping -> jdbcParameterConsumer.accept( new JdbcParameterImpl( jdbcMapping ) ),
-					getCurrentClauseStack().getCurrent(),
-					getCreationContext().getDomainModel().getTypeConfiguration()
+			( (Association) valueMapping ).getForeignKeyDescriptor().forEachJdbcType(
+					(index, jdbcMapping) -> jdbcParameterConsumer.accept( new JdbcParameterImpl( jdbcMapping ) )
 			);
 		}
 		else {
-			valueMapping.visitJdbcTypes(
-					jdbcMapping -> jdbcParameterConsumer.accept( new JdbcParameterImpl( jdbcMapping ) ),
-					getCurrentClauseStack().getCurrent(),
-					getCreationContext().getDomainModel().getTypeConfiguration()
+			valueMapping.forEachJdbcType(
+					(index, jdbcMapping) -> jdbcParameterConsumer.accept( new JdbcParameterImpl( jdbcMapping ) )
 			);
 		}
 	}
@@ -2467,7 +2467,7 @@ public abstract class BaseSqmToSqlAstConverter
 		subQuerySpec.applyPredicate( tableGroupJoin.getPredicate() );
 
 		final ForeignKeyDescriptor collectionKeyDescriptor = pluralAttributeMapping.getKeyDescriptor();
-		final int jdbcTypeCount = collectionKeyDescriptor.getJdbcTypeCount( sessionFactory.getTypeConfiguration() );
+		final int jdbcTypeCount = collectionKeyDescriptor.getJdbcTypeCount();
 		assert jdbcTypeCount > 0;
 
 		final JdbcLiteral<Integer> jdbcLiteral = new JdbcLiteral<>( 1, StandardBasicTypes.INTEGER );
@@ -2694,6 +2694,21 @@ public abstract class BaseSqmToSqlAstConverter
 				(QuerySpec) predicate.getSubQueryExpression().accept( this ),
 				predicate.isNegated()
 		);
+	}
+
+	@Override
+	public Object visitBooleanExpressionPredicate(SqmBooleanExpressionPredicate predicate) {
+		Object booleanExpression = predicate.getBooleanExpression().accept( this );
+		if ( booleanExpression instanceof SelfRenderingExpression ) {
+			return new SelfRenderingPredicate( (SelfRenderingExpression) booleanExpression );
+		}
+		else {
+			return new ComparisonPredicate(
+					(Expression) booleanExpression,
+					ComparisonOperator.EQUAL,
+					new QueryLiteral<>( true, basicType( Boolean.class ) )
+			);
+		}
 	}
 
 	@Override

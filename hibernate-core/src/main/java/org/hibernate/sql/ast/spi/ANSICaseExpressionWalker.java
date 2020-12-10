@@ -21,7 +21,7 @@ public class ANSICaseExpressionWalker implements CaseExpressionWalker {
 			CaseSearchedExpression caseSearchedExpression,
 			StringBuilder sqlBuffer,
 			SqlAstWalker sqlAstWalker){
-		sqlBuffer.append( "case " );
+		sqlBuffer.append( "case" );
 
 		for ( CaseSearchedExpression.WhenFragment whenFragment : caseSearchedExpression.getWhenFragments() ) {
 			sqlBuffer.append( " when " );

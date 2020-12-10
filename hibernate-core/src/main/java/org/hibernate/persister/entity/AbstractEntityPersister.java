@@ -131,6 +131,7 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.DependantValue;
+import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
@@ -143,22 +144,21 @@ import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.AttributeMetadataAccess;
-import org.hibernate.metamodel.mapping.ColumnConsumer;
+import org.hibernate.metamodel.mapping.SelectionConsumer;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityRowIdMapping;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.Queryable;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadata;
+import org.hibernate.metamodel.mapping.internal.DiscriminatedAssociationAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.BasicEntityIdentifierMappingImpl;
 import org.hibernate.metamodel.mapping.internal.CompoundNaturalIdMapping;
-import org.hibernate.metamodel.mapping.internal.DiscriminatedAssociationAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EntityDiscriminatorMappingImpl;
 import org.hibernate.metamodel.mapping.internal.EntityRowIdMappingImpl;
@@ -1386,55 +1386,42 @@ public abstract class AbstractEntityPersister
 		final String[] fkColumnNames = getSubclassTableKeyColumns( subClassTablePosition );
 
 		assert rootPkColumnNames.length == fkColumnNames.length;
-		assert rootPkColumnNames.length == identifierMapping.getJdbcTypeCount( factory.getTypeConfiguration() );
+		assert rootPkColumnNames.length == identifierMapping.getJdbcTypeCount();
 
-		identifierMapping.visitJdbcTypes(
-				new Consumer<JdbcMapping>() {
-					private int columnIndex;
+		identifierMapping.forEachSelection(
+				(columnIndex, selection) -> {
+					final String rootPkColumnName = rootPkColumnNames[ columnIndex ];
+					final Expression pkColumnExpression = sqlExpressionResolver.resolveSqlExpression(
+							SqlExpressionResolver.createColumnReferenceKey(
+									rootTableReference,
+									rootPkColumnName
+							),
+							sqlAstProcessingState -> new ColumnReference(
+									rootTableReference.getIdentificationVariable(),
+									selection,
+									getFactory()
+							)
+					);
 
-					@Override
-					public void accept(JdbcMapping jdbcMapping) {
-						final String rootPkColumnName = rootPkColumnNames[ columnIndex ];
-						final Expression pkColumnExpression = sqlExpressionResolver.resolveSqlExpression(
-								SqlExpressionResolver.createColumnReferenceKey(
-										rootTableReference,
-										rootPkColumnName
-								),
-								sqlAstProcessingState -> new ColumnReference(
-										rootTableReference.getIdentificationVariable(),
-										rootPkColumnName,
-										false,
-										null,
-										null,
-										jdbcMapping,
-										getFactory()
-								)
-						);
+					final String fkColumnName = fkColumnNames[ columnIndex ];
+					final Expression fkColumnExpression = sqlExpressionResolver.resolveSqlExpression(
+							SqlExpressionResolver.createColumnReferenceKey(
+									joinedTableReference,
+									fkColumnName
+							),
+							sqlAstProcessingState -> new ColumnReference(
+									joinedTableReference.getIdentificationVariable(),
+									fkColumnName,
+									false,
+									null,
+									null,
+									selection.getJdbcMapping(),
+									getFactory()
+							)
+					);
 
-						final String fkColumnName = fkColumnNames[ columnIndex ];
-						final Expression fkColumnExpression = sqlExpressionResolver.resolveSqlExpression(
-								SqlExpressionResolver.createColumnReferenceKey(
-										joinedTableReference,
-										fkColumnName
-								),
-								sqlAstProcessingState -> new ColumnReference(
-										joinedTableReference.getIdentificationVariable(),
-										fkColumnName,
-										false,
-										null,
-										null,
-										jdbcMapping,
-										getFactory()
-								)
-						);
-
-						conjunction.add( new ComparisonPredicate( pkColumnExpression, ComparisonOperator.EQUAL, fkColumnExpression ) );
-
-						columnIndex++;
-					}
-				},
-				Clause.IRRELEVANT,
-				getFactory().getTypeConfiguration()
+					conjunction.add( new ComparisonPredicate( pkColumnExpression, ComparisonOperator.EQUAL, fkColumnExpression ) );
+				}
 		);
 
 		return conjunction;
@@ -5859,6 +5846,13 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
+	public void forEachAttributeMapping(IndexedConsumer<AttributeMapping> consumer) {
+		for ( int i = 0; i < attributeMappings.size(); i++ ) {
+			consumer.accept( i, attributeMappings.get( i ) );
+		}
+	}
+
+	@Override
 	public void prepareMappingModel(MappingModelCreationProcess creationProcess) {
 		if ( identifierMapping != null ) {
 			return;
@@ -6083,10 +6077,18 @@ public abstract class AbstractEntityPersister
 			return null;
 		}
 		else {
+			final String discriminatorColumnExpression;
+			if ( getDiscriminatorFormulaTemplate() == null ) {
+				discriminatorColumnExpression = getDiscriminatorColumnReaders();
+			}
+			else {
+				discriminatorColumnExpression = getDiscriminatorFormulaTemplate();
+			}
 			return new EntityDiscriminatorMappingImpl(
 					this,
 					getTableName(),
-					getDiscriminatorColumnReaders(),
+					discriminatorColumnExpression,
+					getDiscriminatorFormulaTemplate() != null,
 					(BasicType) getDiscriminatorType()
 			);
 		}
@@ -6252,17 +6254,18 @@ public abstract class AbstractEntityPersister
 		final BasicValue bootModelVersionValue = (BasicValue) bootModelRootEntityDescriptor.getVersion().getValue();
 		final BasicValue.Resolution<?> basicTypeResolution = bootModelVersionValue.resolve();
 
-		final Iterator versionColumnIterator = bootModelRootEntityDescriptor.getVersion().getColumnIterator();
+		final Iterator<Selectable> versionColumnIterator = bootModelRootEntityDescriptor.getVersion().getColumnIterator();
 		assert versionColumnIterator.hasNext();
 
 		final Dialect dialect = creationProcess.getCreationContext().getSessionFactory().getJdbcServices().getDialect();
-		final String versionColumnName = ( (Column) versionColumnIterator.next() ).getQuotedName( dialect );
+		final Selectable column = versionColumnIterator.next();
 		assert !versionColumnIterator.hasNext();
+		assert !column.isFormula();
 
 		return new EntityVersionMappingImpl(
 				bootModelRootEntityDescriptor.getVersion().getName(),
 				entityPersister.getTableName(),
-				versionColumnName,
+				column.getText( dialect ),
 				basicTypeResolution.getLegacyResolvedBasicType(),
 				entityPersister
 		);
@@ -6283,8 +6286,6 @@ public abstract class AbstractEntityPersister
 
 		final String tableExpression = getPropertyTableName( attrName );
 		final String[] attrColumnNames = getPropertyColumnNames( propertyIndex );
-		final String[] customReadExprs = getSubclassPropertyColumnReaderClosure()[ propertyIndex ];
-		final String[] customWriteExprs = getPropertyColumnWriters( propertyIndex );
 
 		final PropertyAccess propertyAccess = getRepresentationStrategy().resolvePropertyAccess( bootProperty );
 
@@ -6435,9 +6436,7 @@ public abstract class AbstractEntityPersister
 					this,
 					(CompositeType) attrType,
 					tableExpression,
-					attrColumnNames,
-					customReadExprs,
-					customWriteExprs,
+					null,
 					propertyAccess,
 					tupleAttrDefinition.getCascadeStyle(),
 					creationProcess
@@ -6510,7 +6509,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public Collection<AttributeMapping> getAttributeMappings() {
+	public List<AttributeMapping> getAttributeMappings() {
 		if ( attributeMappings == null ) {
 			attributeMappings = new ArrayList<>();
 
@@ -6695,10 +6694,13 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public void visitColumns(ColumnConsumer consumer) {
-		getAttributeMappings().forEach(
-				attributeMapping -> attributeMapping.visitColumns( consumer )
-		);
+	public int forEachSelection(int offset, SelectionConsumer selectionConsumer) {
+		int span = 0;
+		final List<AttributeMapping> mappings = getAttributeMappings();
+		for ( int i = 0; i < mappings.size(); i++ ) {
+			span += mappings.get( i ).forEachSelection( span + offset, selectionConsumer );
+		}
+		return span;
 	}
 
 	@Override
@@ -6729,15 +6731,19 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public void visitJdbcValues(
+	public int forEachJdbcValue(
 			Object value,
 			Clause clause,
+			int offset,
 			JdbcValuesConsumer consumer,
 			SharedSessionContractImplementor session) {
-		getAttributeMappings().forEach(
-				attributeMapping ->
-						attributeMapping.visitJdbcValues( value, clause, consumer, session )
-		);
+		int span = 0;
+		final List<AttributeMapping> mappings = getAttributeMappings();
+		for ( int i = 0; i < mappings.size(); i++ ) {
+			final AttributeMapping attributeMapping = mappings.get( i );
+			span += attributeMapping.forEachJdbcValue( value, clause, span + offset, consumer, session );
+		}
+		return span;
 	}
 
 	@Override

@@ -10,6 +10,7 @@ import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
@@ -82,8 +83,13 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions 
 	}
 
 	@Override
-	public String getMappedColumnExpression() {
+	public String getSelectionExpression() {
 		return column;
+	}
+
+	@Override
+	public boolean isFormula() {
+		return false;
 	}
 
 	@Override
@@ -134,6 +140,12 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions 
 	@Override
 	public FetchOptions getMappedFetchOptions() {
 		return this;
+	}
+
+	@Override
+	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+		action.accept( offset, jdbcMapping() );
+		return getJdbcTypeCount();
 	}
 
 	@Override

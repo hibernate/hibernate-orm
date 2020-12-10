@@ -8,10 +8,8 @@ package org.hibernate.sql.ast.tree.expression;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.function.Consumer;
 
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -23,7 +21,6 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * We classify literals different based on their source so that we can handle then differently
@@ -81,20 +78,13 @@ public abstract class AbstractLiteral<T>
 	}
 
 	@Override
-	public void visitJdbcTypes(
-			Consumer<JdbcMapping> action,
-			TypeConfiguration typeConfiguration) {
-		action.accept( type.getJdbcMapping() );
-	}
-
-	@Override
 	public void bindParameterValue(
 			PreparedStatement statement,
 			int startPosition,
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext) throws SQLException {
 		//noinspection unchecked
-		( ( BasicType ) getExpressionType() ).getJdbcValueBinder().bind(
+		( ( BasicType<?> ) getExpressionType() ).getJdbcValueBinder().bind(
 				statement,
 				getValue(),
 				startPosition,

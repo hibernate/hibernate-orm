@@ -7,18 +7,18 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import java.util.Locale;
-import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
-import org.hibernate.metamodel.mapping.ColumnConsumer;
+import org.hibernate.metamodel.mapping.SelectionConsumer;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -44,7 +44,6 @@ import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Andrea Boriero
@@ -130,21 +129,9 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 	}
 
 	@Override
-	public int getJdbcTypeCount(TypeConfiguration typeConfiguration) {
-		return 1;
-	}
-
-	@Override
-	public void visitColumns(ColumnConsumer consumer) {
-		consumer.accept(
-				getContainingTableExpression(),
-				getMappedColumnExpression(),
-				// identifiers cannot be formula nor can they define custom read/write expressions
-				false,
-				null,
-				null,
-				getJdbcMapping()
-		);
+	public int forEachSelection(int offset, SelectionConsumer consumer) {
+		consumer.accept( offset, this );
+		return getJdbcTypeCount();
 	}
 
 	@Override
@@ -153,20 +140,20 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 	}
 
 	@Override
-	public void visitJdbcTypes(
-			Consumer<JdbcMapping> action,
-			Clause clause,
-			TypeConfiguration typeConfiguration) {
-		action.accept( idType );
+	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+		action.accept( offset, idType );
+		return getJdbcTypeCount();
 	}
 
 	@Override
-	public void visitJdbcValues(
+	public int forEachJdbcValue(
 			Object value,
 			Clause clause,
+			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		valuesConsumer.consume( value, idType );
+		valuesConsumer.consume( offset, value, idType );
+		return getJdbcTypeCount();
 	}
 
 	@Override
@@ -268,8 +255,13 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 	}
 
 	@Override
-	public String getMappedColumnExpression() {
+	public String getSelectionExpression() {
 		return pkColumnName;
+	}
+
+	@Override
+	public boolean isFormula() {
+		return false;
 	}
 
 	@Override

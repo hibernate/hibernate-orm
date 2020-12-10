@@ -82,16 +82,14 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 			columnByReferencedName.put( referencedColumnName.toLowerCase(Locale.ROOT), joinColumn );
 		}
 		//try default column orientation
-		MutableInteger index = new MutableInteger();
 		if ( columnByReferencedName.isEmpty() ) {
 			isExplicitReference = false;
-			for ( Ejb3JoinColumn joinColumn : joinColumns ) {
-				columnByReferencedName.put( String.valueOf( index.get() ), joinColumn );
-				index.getAndIncrement();
+			for ( int i = 0; i < joinColumns.length; i++ ) {
+				columnByReferencedName.put( String.valueOf( i ), joinColumns[i] );
 			}
-			index.set( 0 );
 		}
 
+		MutableInteger index = new MutableInteger();
 		while ( properties.hasNext() ) {
 			Property referencedProperty = properties.next();
 			if ( referencedProperty.isComposite() ) {

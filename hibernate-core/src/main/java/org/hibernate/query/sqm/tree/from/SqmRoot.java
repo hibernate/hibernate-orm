@@ -6,9 +6,6 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
-import java.util.function.Consumer;
-
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.PathException;
@@ -22,11 +19,9 @@ import org.hibernate.query.sqm.tree.domain.AbstractSqmFrom;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedRoot;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
@@ -112,22 +107,6 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E>, Doma
 	@Override
 	public <S extends E> SqmTreatedPath<E, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
 		return new SqmTreatedRoot<>( this, treatTarget, nodeBuilder() );
-	}
-
-	@Override
-	public void visitJdbcTypes(Consumer<JdbcMapping> action, TypeConfiguration typeConfiguration) {
-		final String entityName = getReferencedPathSource().getHibernateEntityName();
-		final EntityPersister entityDescriptor = typeConfiguration.getSessionFactory()
-				.getMetamodel()
-				.getEntityDescriptor( entityName );
-		entityDescriptor.visitSubParts(
-				valueMapping -> valueMapping.visitJdbcTypes(
-						action,
-						Clause.IRRELEVANT,
-						typeConfiguration
-				),
-				entityDescriptor
-		);
 	}
 
 

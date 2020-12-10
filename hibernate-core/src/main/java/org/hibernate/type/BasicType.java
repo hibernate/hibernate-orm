@@ -6,9 +6,8 @@
  */
 package org.hibernate.type;
 
-import java.util.function.Consumer;
-
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
@@ -17,7 +16,6 @@ import org.hibernate.sql.ast.Clause;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Marker interface for basic types.
@@ -65,11 +63,9 @@ public interface BasicType<T> extends Type, BasicDomainType<T>, MappingType, Bas
 	}
 
 	@Override
-	default void visitJdbcTypes(
-			Consumer<JdbcMapping> action,
-			Clause clause,
-			TypeConfiguration typeConfiguration) {
-		action.accept( getJdbcMapping() );
+	default int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+		action.accept( offset, getJdbcMapping() );
+		return getJdbcTypeCount();
 	}
 
 	@Override
@@ -78,20 +74,24 @@ public interface BasicType<T> extends Type, BasicDomainType<T>, MappingType, Bas
 	}
 
 	@Override
-	default void visitDisassembledJdbcValues(
+	default int forEachDisassembledJdbcValue(
 			Object value,
 			Clause clause,
+			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		valuesConsumer.consume( value, getJdbcMapping() );
+		valuesConsumer.consume( offset, value, getJdbcMapping() );
+		return getJdbcTypeCount();
 	}
 
 	@Override
-	default void visitJdbcValues(
+	default int forEachJdbcValue(
 			Object value,
 			Clause clause,
+			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		valuesConsumer.consume( value, getJdbcMapping() );
+		valuesConsumer.consume( offset, value, getJdbcMapping() );
+		return getJdbcTypeCount();
 	}
 }

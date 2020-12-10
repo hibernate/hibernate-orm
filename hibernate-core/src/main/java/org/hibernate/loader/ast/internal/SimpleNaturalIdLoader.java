@@ -66,16 +66,11 @@ public class SimpleNaturalIdLoader<T> extends AbstractNaturalIdLoader<T> {
 		final Object bindableValue = naturalIdMapping().normalizeValue( naturalIdToLoad, session );
 
 		final SingularAttributeMapping attributeMapping = naturalIdMapping().getNaturalIdAttributes().get( 0 );
-		attributeMapping.visitJdbcValues(
+		jdbcParamBindings.registerParametersForEachJdbcValue(
 				bindableValue,
 				Clause.WHERE,
-				(jdbcValue, jdbcMapping) -> {
-					final JdbcParameter jdbcParam = jdbcParameters.get( 0 );
-					jdbcParamBindings.addBinding(
-							jdbcParam,
-							new JdbcParameterBindingImpl( jdbcMapping, jdbcValue )
-					);
-				},
+				attributeMapping,
+				jdbcParameters,
 				session
 		);
 	}
@@ -109,19 +104,12 @@ public class SimpleNaturalIdLoader<T> extends AbstractNaturalIdLoader<T> {
 		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory ).translate( sqlSelect );
 
 		final JdbcParameterBindings jdbcParamBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
-		final Iterator<JdbcParameter> jdbcParamItr = jdbcParameters.iterator();
 
-		entityDescriptor().getIdentifierMapping().visitJdbcValues(
+		jdbcParamBindings.registerParametersForEachJdbcValue(
 				id,
 				Clause.WHERE,
-				(value, type) -> {
-					assert jdbcParamItr.hasNext();
-					final JdbcParameter jdbcParam = jdbcParamItr.next();
-					jdbcParamBindings.addBinding(
-							jdbcParam,
-							new JdbcParameterBindingImpl( type, value )
-					);
-				},
+				entityDescriptor().getIdentifierMapping(),
+				jdbcParameters,
 				session
 		);
 
@@ -201,19 +189,13 @@ public class SimpleNaturalIdLoader<T> extends AbstractNaturalIdLoader<T> {
 		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory ).translate( sqlSelect );
 
 		final JdbcParameterBindings jdbcParamBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
-		final Iterator<JdbcParameter> jdbcParamItr = jdbcParameters.iterator();
 
 		final SingularAttributeMapping attributeMapping = naturalIdMapping().getAttribute();
-		attributeMapping.visitJdbcValues(
+		jdbcParamBindings.registerParametersForEachJdbcValue(
 				bindValue,
 				Clause.WHERE,
-				(jdbcValue, jdbcMapping) -> {
-					assert jdbcParamItr.hasNext();
-					jdbcParamBindings.addBinding(
-							jdbcParamItr.next(),
-							new JdbcParameterBindingImpl( jdbcMapping, jdbcValue )
-					);
-				},
+				attributeMapping,
+				jdbcParameters,
 				session
 		);
 

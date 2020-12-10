@@ -10,9 +10,9 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
@@ -26,7 +26,6 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Represents a literal in the SQL AST.  This form accepts a {@link JdbcMapping} and acts
@@ -85,18 +84,19 @@ public class JdbcLiteral<T> implements Literal, MappingModelExpressable<T>, Doma
 	}
 
 	@Override
-	public int getJdbcTypeCount(TypeConfiguration typeConfiguration) {
+	public int getJdbcTypeCount() {
 		return 1;
 	}
 
 	@Override
-	public List<JdbcMapping> getJdbcMappings(TypeConfiguration typeConfiguration) {
+	public List<JdbcMapping> getJdbcMappings() {
 		return Collections.singletonList( jdbcMapping );
 	}
 
 	@Override
-	public void visitJdbcTypes(Consumer<JdbcMapping> action, Clause clause, TypeConfiguration typeConfiguration) {
-		action.accept( jdbcMapping );
+	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+		action.accept( offset, jdbcMapping );
+		return getJdbcTypeCount();
 	}
 
 	@Override
@@ -105,31 +105,30 @@ public class JdbcLiteral<T> implements Literal, MappingModelExpressable<T>, Doma
 	}
 
 	@Override
-	public void visitDisassembledJdbcValues(
+	public int forEachDisassembledJdbcValue(
 			Object value,
 			Clause clause,
+			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		valuesConsumer.consume( value, jdbcMapping );
+		valuesConsumer.consume( offset, value, jdbcMapping );
+		return getJdbcTypeCount();
 	}
 
 	@Override
-	public void visitJdbcValues(
+	public int forEachJdbcValue(
 			Object value,
 			Clause clause,
+			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		valuesConsumer.consume( value, jdbcMapping );
+		valuesConsumer.consume( offset, value, jdbcMapping );
+		return getJdbcTypeCount();
 	}
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// DomainResultProducer
-
-	@Override
-	public void visitJdbcTypes(Consumer<JdbcMapping> action, TypeConfiguration typeConfiguration) {
-		action.accept( jdbcMapping );
-	}
 
 	@Override
 	public DomainResult<T> createDomainResult(String resultVariable, DomainResultCreationState creationState) {

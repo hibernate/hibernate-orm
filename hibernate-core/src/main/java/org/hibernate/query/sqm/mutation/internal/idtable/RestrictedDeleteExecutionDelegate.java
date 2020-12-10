@@ -23,7 +23,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.internal.FilterHelper;
-import org.hibernate.metamodel.mapping.ColumnConsumer;
+import org.hibernate.metamodel.mapping.SelectionConsumer;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.MappingModelHelper;
@@ -263,7 +263,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 
 	private void deleteFromNonRootTableWithoutIdTable(
 			TableReference targetTableReference,
-			Supplier<Consumer<ColumnConsumer>> tableKeyColumnVisitationSupplier,
+			Supplier<Consumer<SelectionConsumer>> tableKeyColumnVisitationSupplier,
 			SqlExpressionResolver sqlExpressionResolver,
 			TableGroup rootTableGroup,
 			QuerySpec matchingIdSubQuerySpec,
@@ -285,18 +285,14 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 		 */
 		final List<ColumnReference> deletingTableColumnRefs = new ArrayList<>();
 		tableKeyColumnVisitationSupplier.get().accept(
-				(containingTableExpression, columnExpression, isFormula, readFragment, writeFragment, jdbcMapping) -> {
-					assert targetTableReference.getTableExpression().equals( containingTableExpression );
+				(columnIndex, selection) -> {
+					assert targetTableReference.getTableExpression().equals( selection.getContainingTableExpression() );
 
 					final Expression expression = sqlExpressionResolver.resolveSqlExpression(
-							SqlExpressionResolver.createColumnReferenceKey( targetTableReference, columnExpression ),
+							SqlExpressionResolver.createColumnReferenceKey( targetTableReference, selection.getSelectionExpression() ),
 							sqlAstProcessingState -> new ColumnReference(
 									rootTableGroup.getPrimaryTableReference(),
-									columnExpression,
-									false,
-									null,
-									null,
-									jdbcMapping,
+									selection,
 									sessionFactory
 							)
 					);
@@ -449,7 +445,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 
 	private void deleteFromTableUsingIdTable(
 			String tableExpression,
-			Supplier<Consumer<ColumnConsumer>> tableKeyColumnVisitationSupplier,
+			Supplier<Consumer<SelectionConsumer>> tableKeyColumnVisitationSupplier,
 			QuerySpec idTableSubQuery,
 			ExecutionContext executionContext) {
 		log.tracef( "deleteFromTableUsingIdTable - %s", tableExpression );
@@ -459,20 +455,16 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 		final TableKeyExpressionCollector keyColumnCollector = new TableKeyExpressionCollector( entityDescriptor );
 
 		tableKeyColumnVisitationSupplier.get().accept(
-				(containingTableExpression, columnExpression, isFormula, readFragment, writeFragment, jdbcMapping) -> {
-					assert containingTableExpression.equals( tableExpression );
-					assert ! isFormula;
-					assert readFragment == null;
-					assert writeFragment == null;
+				(columnIndex, selection) -> {
+					assert selection.getContainingTableExpression().equals( tableExpression );
+					assert ! selection.isFormula();
+					assert selection.getCustomReadExpression() == null;
+					assert selection.getCustomWriteExpression() == null;
 
 					keyColumnCollector.apply(
 							new ColumnReference(
 									(String) null,
-									columnExpression,
-									false,
-									null,
-									null,
-									jdbcMapping,
+									selection,
 									factory
 							)
 					);

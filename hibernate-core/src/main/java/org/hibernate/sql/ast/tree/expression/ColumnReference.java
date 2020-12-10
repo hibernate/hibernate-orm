@@ -13,6 +13,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.mapping.SelectionMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.sql.Template;
@@ -35,6 +36,21 @@ public class ColumnReference implements Expression, Assignable {
 	private final String readExpression;
 	private final String writeExpression;
 	private final JdbcMapping jdbcMapping;
+
+	public ColumnReference(
+			String qualifier,
+			SelectionMapping selectionMapping,
+			SessionFactoryImplementor sessionFactory) {
+		this(
+				qualifier,
+				selectionMapping.getSelectionExpression(),
+				selectionMapping.isFormula(),
+				selectionMapping.getCustomReadExpression(),
+				selectionMapping.getCustomWriteExpression(),
+				selectionMapping.getJdbcMapping(),
+				sessionFactory
+		);
+	}
 
 	public ColumnReference(
 			String qualifier,
@@ -79,6 +95,17 @@ public class ColumnReference implements Expression, Assignable {
 		}
 
 		this.jdbcMapping = jdbcMapping;
+	}
+
+	public ColumnReference(
+			TableReference tableReference,
+			SelectionMapping selectionMapping,
+			SessionFactoryImplementor sessionFactory) {
+		this(
+				tableReference.getIdentificationVariable(),
+				selectionMapping,
+				sessionFactory
+		);
 	}
 
 	public ColumnReference(

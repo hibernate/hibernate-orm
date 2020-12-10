@@ -6,8 +6,6 @@
  */
 package org.hibernate.metamodel.internal;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -17,13 +15,15 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.metamodel.mapping.ColumnConsumer;
+import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.SelectionConsumer;
+import org.hibernate.metamodel.mapping.SelectionMappings;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
@@ -51,7 +51,6 @@ import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
 import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableFetchImpl;
 import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableResultImpl;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Base implementation for composite identifier mappings
@@ -64,9 +63,6 @@ public abstract class AbstractCompositeIdentifierMapping
 	private final String tableExpression;
 
 	private final StateArrayContributorMetadataAccess attributeMetadataAccess;
-	private final List<String> columnNames;
-	private final List<String> customReadExpressions;
-	private final List<String> customWriteExpressions;
 
 	private final EntityMappingType entityMapping;
 	private final EmbeddableMappingType embeddableDescriptor;
@@ -78,17 +74,12 @@ public abstract class AbstractCompositeIdentifierMapping
 			EmbeddableMappingType embeddableDescriptor,
 			EntityMappingType entityMapping,
 			String tableExpression,
-			String[] columnNames,
 			SessionFactoryImplementor sessionFactory) {
 		this.attributeMetadataAccess = attributeMetadataAccess;
 		this.embeddableDescriptor = embeddableDescriptor;
 		this.entityMapping = entityMapping;
 		this.tableExpression = tableExpression;
 		this.sessionFactory = sessionFactory;
-
-		this.columnNames = Arrays.asList( columnNames );
-		this.customReadExpressions = new ArrayList<>( columnNames.length );
-		this.customWriteExpressions = new ArrayList<>( columnNames.length );
 
 		this.navigableRole = entityMapping.getNavigableRole()
 				.appendContainer( EntityIdentifierMapping.ROLE_LOCAL_NAME );
@@ -125,33 +116,23 @@ public abstract class AbstractCompositeIdentifierMapping
 	}
 
 	@Override
-	public List<String> getMappedColumnExpressions() {
-		return columnNames;
-	}
-
-	@Override
-	public List<String> getCustomReadExpressions() {
-		return customReadExpressions;
-	}
-
-	@Override
-	public List<String> getCustomWriteExpressions() {
-		return customWriteExpressions;
-	}
-
-	@Override
-	public void visitColumns(ColumnConsumer consumer) {
-		getAttributes().forEach(
-				attribute -> {
-					if ( attribute instanceof ToOneAttributeMapping ) {
-						final ToOneAttributeMapping associationAttributeMapping = (ToOneAttributeMapping) attribute;
-						associationAttributeMapping.getForeignKeyDescriptor().visitReferringColumns( consumer );
-					}
-					else {
-						attribute.visitColumns( consumer );
-					}
-				}
-		);
+	public int forEachSelection(int offset, SelectionConsumer consumer) {
+		int span = 0;
+		final List<SingularAttributeMapping> attributes = getAttributes();
+		for ( int i = 0; i < attributes.size(); i++ ) {
+			final SingularAttributeMapping attribute = attributes.get( i );
+			if ( attribute instanceof ToOneAttributeMapping ) {
+				final ToOneAttributeMapping associationAttributeMapping = (ToOneAttributeMapping) attribute;
+				span += associationAttributeMapping.getForeignKeyDescriptor().visitReferringColumns(
+						span + offset,
+						consumer
+				);
+			}
+			else {
+				span += attribute.forEachSelection( span + offset, consumer );
+			}
+		}
+		return span;
 	}
 
 	@Override
@@ -209,35 +190,36 @@ public abstract class AbstractCompositeIdentifierMapping
 	}
 
 	@Override
-	public void visitJdbcTypes(
-			Consumer<JdbcMapping> action,
-			Clause clause,
-			TypeConfiguration typeConfiguration) {
-		embeddableDescriptor.visitJdbcTypes( action, clause, typeConfiguration );
-	}
-
-	@Override
-	public void visitJdbcValues(
+	public int forEachJdbcValue(
 			Object value,
 			Clause clause,
+			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		getEmbeddableTypeDescriptor().getAttributeMappings().forEach(
-				attributeMapping -> {
-					final Object o = attributeMapping.getPropertyAccess().getGetter().get( value );
-					if ( attributeMapping instanceof ToOneAttributeMapping ) {
-						final EntityMappingType associatedEntityMappingType =
-								( (ToOneAttributeMapping) attributeMapping ).getAssociatedEntityMappingType();
-						final EntityIdentifierMapping identifierMapping =
-								associatedEntityMappingType.getIdentifierMapping();
-						final Object identifier = identifierMapping.getIdentifier( o, session );
-						identifierMapping.visitJdbcValues( identifier, clause, valuesConsumer, session );
-					}
-					else {
-						attributeMapping.visitJdbcValues( o, clause, valuesConsumer, session );
-					}
-				}
-		);
+		int span = 0;
+		final List<AttributeMapping> attributeMappings = getEmbeddableTypeDescriptor().getAttributeMappings();
+		for ( int i = 0; i < attributeMappings.size(); i++ ) {
+			final AttributeMapping attributeMapping = attributeMappings.get( i );
+			final Object o = attributeMapping.getPropertyAccess().getGetter().get( value );
+			if ( attributeMapping instanceof ToOneAttributeMapping ) {
+				final EntityMappingType associatedEntityMappingType =
+						( (ToOneAttributeMapping) attributeMapping ).getAssociatedEntityMappingType();
+				final EntityIdentifierMapping identifierMapping =
+						associatedEntityMappingType.getIdentifierMapping();
+				final Object identifier = identifierMapping.getIdentifier( o, session );
+				span += identifierMapping.forEachJdbcValue(
+						identifier,
+						clause,
+						span + offset,
+						valuesConsumer,
+						session
+				);
+			}
+			else {
+				span += attributeMapping.forEachJdbcValue( o, clause, span + offset, valuesConsumer, session );
+			}
+		}
+		return span;
 	}
 
 	@Override
@@ -246,39 +228,29 @@ public abstract class AbstractCompositeIdentifierMapping
 			Clause clause,
 			SqmToSqlAstConverter walker,
 			SqlAstCreationState sqlAstCreationState) {
-		final List<String> attrColumnNames = getMappedColumnExpressions();
-		final List<ColumnReference> columnReferences = CollectionHelper.arrayList( attrColumnNames.size() );
-		final TableReference tableReference = tableGroup.resolveTableReference( getContainingTableExpression() );
-		getEmbeddableTypeDescriptor().visitJdbcTypes(
-				new Consumer<JdbcMapping>() {
-					private int index = 0;
+		final SelectionMappings selectionMappings = getEmbeddableTypeDescriptor();
+		final List<ColumnReference> columnReferences = CollectionHelper.arrayList( selectionMappings.getJdbcTypeCount() );
+		final TableReference defaultTableReference = tableGroup.resolveTableReference( getContainingTableExpression() );
+		getEmbeddableTypeDescriptor().forEachSelection(
+				(columnIndex, selection) -> {
+					final TableReference tableReference = selection.getContainingTableExpression().equals( defaultTableReference.getTableExpression() )
+							? defaultTableReference
+							: tableGroup.resolveTableReference( selection.getContainingTableExpression() );
+					final Expression columnReference = sqlAstCreationState.getSqlExpressionResolver()
+							.resolveSqlExpression(
+									SqlExpressionResolver.createColumnReferenceKey(
+											tableReference,
+											selection.getSelectionExpression()
+									),
+									sqlAstProcessingState -> new ColumnReference(
+											tableReference.getIdentificationVariable(),
+											selection,
+											sqlAstCreationState.getCreationContext().getSessionFactory()
+									)
+							);
 
-					@Override
-					public void accept(JdbcMapping jdbcMapping) {
-						final String attrColumnExpr = attrColumnNames.get( index++ );
-
-						final Expression columnReference = sqlAstCreationState.getSqlExpressionResolver()
-								.resolveSqlExpression(
-										SqlExpressionResolver.createColumnReferenceKey(
-												tableReference,
-												attrColumnExpr
-										),
-										sqlAstProcessingState -> new ColumnReference(
-												tableReference.getIdentificationVariable(),
-												attrColumnExpr,
-												false,
-												null,
-												null,
-												jdbcMapping,
-												sqlAstCreationState.getCreationContext().getSessionFactory()
-										)
-								);
-
-						columnReferences.add( (ColumnReference) columnReference );
-					}
-				},
-				clause,
-				sqlAstCreationState.getCreationContext().getSessionFactory().getTypeConfiguration()
+					columnReferences.add( (ColumnReference) columnReference );
+				}
 		);
 
 		return new SqlTuple( columnReferences, this );
@@ -326,4 +298,5 @@ public abstract class AbstractCompositeIdentifierMapping
 	protected EntityMappingType getEntityMapping() {
 		return entityMapping;
 	}
+
 }

@@ -10,7 +10,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.NaturalIdPostLoadListener;
@@ -19,7 +18,8 @@ import org.hibernate.loader.ast.internal.MultiNaturalIdLoaderStandard;
 import org.hibernate.loader.ast.internal.SimpleNaturalIdLoader;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
-import org.hibernate.metamodel.mapping.ColumnConsumer;
+import org.hibernate.mapping.IndexedConsumer;
+import org.hibernate.metamodel.mapping.SelectionConsumer;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
@@ -31,7 +31,6 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Single-attribute NaturalIdMapping implementation
@@ -136,23 +135,23 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping {
 	}
 
 	@Override
-	public void visitColumns(ColumnConsumer consumer) {
-		attribute.visitColumns( consumer );
+	public int forEachSelection(int offset, SelectionConsumer consumer) {
+		return attribute.forEachSelection( offset, consumer );
 	}
 
 	@Override
-	public int getJdbcTypeCount(TypeConfiguration typeConfiguration) {
-		return attribute.getJdbcTypeCount( typeConfiguration );
+	public int getJdbcTypeCount() {
+		return attribute.getJdbcTypeCount();
 	}
 
 	@Override
-	public List<JdbcMapping> getJdbcMappings(TypeConfiguration typeConfiguration) {
-		return attribute.getJdbcMappings( typeConfiguration );
+	public List<JdbcMapping> getJdbcMappings() {
+		return attribute.getJdbcMappings();
 	}
 
 	@Override
-	public void visitJdbcTypes(Consumer<JdbcMapping> action, Clause clause, TypeConfiguration typeConfiguration) {
-		attribute.visitJdbcTypes( action, clause, typeConfiguration );
+	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+		return attribute.forEachJdbcType( offset, action );
 	}
 
 	@Override
@@ -161,12 +160,22 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping {
 	}
 
 	@Override
-	public void visitDisassembledJdbcValues(Object value, Clause clause, JdbcValuesConsumer valuesConsumer, SharedSessionContractImplementor session) {
-		attribute.visitDisassembledJdbcValues( value, clause, valuesConsumer, session );
+	public int forEachDisassembledJdbcValue(
+			Object value,
+			Clause clause,
+			int offset,
+			JdbcValuesConsumer valuesConsumer,
+			SharedSessionContractImplementor session) {
+		return attribute.forEachDisassembledJdbcValue( value, clause, offset, valuesConsumer, session );
 	}
 
 	@Override
-	public void visitJdbcValues(Object value, Clause clause, JdbcValuesConsumer valuesConsumer, SharedSessionContractImplementor session) {
-		attribute.visitJdbcValues( value, clause, valuesConsumer, session );
+	public int forEachJdbcValue(
+			Object value,
+			Clause clause,
+			int offset,
+			JdbcValuesConsumer valuesConsumer,
+			SharedSessionContractImplementor session) {
+		return attribute.forEachJdbcValue( value, clause, offset, valuesConsumer, session );
 	}
 }

@@ -105,26 +105,18 @@ public class SingleIdEntityLoaderDynamicBatch<T> extends SingleIdEntityLoaderSup
 		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory ).translate( sqlAst );
 
 		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl(
-				getLoadable().getIdentifierMapping().getJdbcTypeCount( sessionFactory.getTypeConfiguration() )
+				getLoadable().getIdentifierMapping().getJdbcTypeCount()
 		);
 
 		for ( int i = 0; i < numberOfIds; i++ ) {
-			final Iterator<JdbcParameter> paramItr = jdbcParameters.iterator();
-
-			getLoadable().getIdentifierMapping().visitJdbcValues(
+			int offset = jdbcParameterBindings.registerParametersForEachJdbcValue(
 					idsToLoad[i],
 					Clause.WHERE,
-					(value, type) -> {
-						assert paramItr.hasNext();
-						final JdbcParameter parameter = paramItr.next();
-						jdbcParameterBindings.addBinding(
-								parameter,
-								new JdbcParameterBindingImpl( type, value )
-						);
-					},
+					getLoadable().getIdentifierMapping(),
+					jdbcParameters,
 					session
 			);
-			assert !paramItr.hasNext();
+			assert offset == jdbcParameters.size();
 		}
 
 		JdbcSelectExecutorStandardImpl.INSTANCE.list(

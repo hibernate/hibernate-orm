@@ -6,8 +6,10 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -28,8 +30,9 @@ public class EntityDiscriminatorMappingImpl extends AbstractEntityDiscriminatorM
 			EntityPersister entityDescriptor,
 			String tableExpression,
 			String mappedColumnExpression,
+			boolean isFormula,
 			BasicType mappingType) {
-		super( entityDescriptor, tableExpression, mappedColumnExpression, mappingType );
+		super( entityDescriptor, tableExpression, mappedColumnExpression, isFormula, mappingType );
 		this.navigableRole = entityDescriptor.getNavigableRole().append( EntityDiscriminatorMapping.ROLE_NAME );
 	}
 
@@ -44,21 +47,23 @@ public class EntityDiscriminatorMappingImpl extends AbstractEntityDiscriminatorM
 				expressionResolver.resolveSqlExpression(
 						SqlExpressionResolver.createColumnReferenceKey(
 								tableReference,
-								getMappedColumnExpression()
+								getSelectionExpression()
 						),
 						sqlAstProcessingState -> new ColumnReference(
 								tableReference.getIdentificationVariable(),
-								getMappedColumnExpression(),
-								false,
-								null,
-								null,
-								getJdbcMapping(),
+								this,
 								creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
 						)
 				),
 				getMappedType().getMappedJavaTypeDescriptor(),
 				creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
 		);
+	}
+
+	@Override
+	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+		action.accept( offset, getJdbcMapping() );
+		return getJdbcTypeCount();
 	}
 
 	@Override

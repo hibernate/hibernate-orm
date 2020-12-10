@@ -6,7 +6,10 @@
  */
 package org.hibernate.metamodel.mapping;
 
-import java.util.Collection;
+
+import java.util.List;
+
+import org.hibernate.mapping.IndexedConsumer;
 
 /**
  * Support for composite identifier mappings
@@ -22,5 +25,12 @@ public interface CompositeIdentifierMapping extends EntityIdentifierMapping {
 	/**
 	 * The attributes associated with this composite
 	 */
-	Collection<SingularAttributeMapping> getAttributes();
+	List<SingularAttributeMapping> getAttributes();
+
+	default void forEachAttribute(IndexedConsumer<SingularAttributeMapping> consumer) {
+		final List<SingularAttributeMapping> attributes = getAttributes();
+		for ( int i = 0; i < attributes.size(); i++ ) {
+			consumer.accept( i, attributes.get( i ) );
+		}
+	}
 }

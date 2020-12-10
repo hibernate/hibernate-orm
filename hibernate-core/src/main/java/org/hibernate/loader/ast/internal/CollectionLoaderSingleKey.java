@@ -53,7 +53,7 @@ public class CollectionLoaderSingleKey implements CollectionLoader {
 			SessionFactoryImplementor sessionFactory) {
 		this.attributeMapping = attributeMapping;
 
-		this.keyJdbcCount = attributeMapping.getKeyDescriptor().getJdbcTypeCount( sessionFactory.getTypeConfiguration() );
+		this.keyJdbcCount = attributeMapping.getKeyDescriptor().getJdbcTypeCount();
 
 		this.jdbcParameters = new ArrayList<>();
 		this.sqlAst = LoaderSelectBuilder.createSelect(
@@ -100,22 +100,14 @@ public class CollectionLoaderSingleKey implements CollectionLoader {
 		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( keyJdbcCount );
 		jdbcSelect.bindFilterJdbcParameters( jdbcParameterBindings );
 
-		final Iterator<JdbcParameter> paramItr = jdbcParameters.iterator();
-
-		attributeMapping.getKeyDescriptor().visitJdbcValues(
+		int offset = jdbcParameterBindings.registerParametersForEachJdbcValue(
 				key,
 				Clause.WHERE,
-				(value, type) -> {
-					assert paramItr.hasNext();
-					final JdbcParameter parameter = paramItr.next();
-					jdbcParameterBindings.addBinding(
-							parameter,
-							new JdbcParameterBindingImpl( type, value )
-					);
-				},
+				attributeMapping.getKeyDescriptor(),
+				jdbcParameters,
 				session
 		);
-		assert !paramItr.hasNext();
+		assert offset == jdbcParameters.size();
 
 		jdbcServices.getJdbcSelectExecutor().list(
 				jdbcSelect,

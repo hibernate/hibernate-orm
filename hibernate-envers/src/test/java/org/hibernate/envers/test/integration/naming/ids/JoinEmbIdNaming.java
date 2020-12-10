@@ -13,6 +13,7 @@ import javax.persistence.EntityManager;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Selectable;
 
 import org.junit.Test;
 
@@ -124,12 +125,12 @@ public class JoinEmbIdNaming extends BaseEnversJPAFunctionalTestCase {
 	@SuppressWarnings({"unchecked"})
 	@Test
 	public void testJoinColumnNames() {
-		Iterator<Column> columns = metadata().getEntityBinding(
+		Iterator<Selectable> columns = metadata().getEntityBinding(
 				"org.hibernate.envers.test.integration.naming.ids.JoinEmbIdNamingRefIngEntity_AUD"
 		).getProperty( "reference_x" ).getColumnIterator();
 
 		assertTrue( columns.hasNext() );
-		assertEquals( "XX_reference", columns.next().getName() );
+		assertEquals( "XX_reference", columns.next().getText() );
 		assertFalse( columns.hasNext() );
 
 		columns = metadata().getEntityBinding(
@@ -137,7 +138,7 @@ public class JoinEmbIdNaming extends BaseEnversJPAFunctionalTestCase {
 		).getProperty( "reference_y" ).getColumnIterator();
 
 		assertTrue( columns.hasNext() );
-		assertEquals( "YY_reference", columns.next().getName() );
+		assertEquals( "YY_reference", columns.next().getText() );
 		assertFalse( columns.hasNext() );
 	}
 }

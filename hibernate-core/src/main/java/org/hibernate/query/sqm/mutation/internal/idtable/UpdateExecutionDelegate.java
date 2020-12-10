@@ -7,7 +7,6 @@
 package org.hibernate.query.sqm.mutation.internal.idtable;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -19,7 +18,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.metamodel.mapping.ColumnConsumer;
+import org.hibernate.metamodel.mapping.SelectionConsumer;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
@@ -217,7 +216,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 
 	private void updateTable(
 			String tableExpression,
-			Supplier<Consumer<ColumnConsumer>> tableKeyColumnVisitationSupplier,
+			Supplier<Consumer<SelectionConsumer>> tableKeyColumnVisitationSupplier,
 			QuerySpec idTableSubQuery,
 			ExecutionContext executionContext) {
 		final TableReference updatingTableReference = updatingTableGroup.resolveTableReference( tableExpression );
@@ -236,16 +235,12 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 		final TableKeyExpressionCollector keyColumnCollector = new TableKeyExpressionCollector( entityDescriptor );
 
 		tableKeyColumnVisitationSupplier.get().accept(
-				(containingTableExpression, columnExpression, isFormula, readFragment, writeFragment, jdbcMapping) -> {
-					assert containingTableExpression.equals( tableExpression );
+				(columnIndex, selection) -> {
+					assert selection.getContainingTableExpression().equals( tableExpression );
 					keyColumnCollector.apply(
 							new ColumnReference(
 									(String) null,
-									columnExpression,
-									false,
-									null,
-									null,
-									jdbcMapping,
+									selection,
 									sessionFactory
 							)
 					);

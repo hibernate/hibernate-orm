@@ -13,6 +13,7 @@ import javax.persistence.EntityManager;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Selectable;
 
 import org.junit.Test;
 
@@ -111,11 +112,11 @@ public class JoinNaming extends BaseEnversJPAFunctionalTestCase {
 	@SuppressWarnings({"unchecked"})
 	@Test
 	public void testJoinColumnName() {
-		Iterator<Column> columns = metadata().getEntityBinding(
+		Iterator<Selectable> columns = metadata().getEntityBinding(
 				"org.hibernate.envers.test.integration.naming.JoinNamingRefIngEntity_AUD"
 		).getProperty( "reference_id" ).getColumnIterator();
 		assertTrue( columns.hasNext() );
-		assertEquals( "jnree_column_reference", columns.next().getName() );
+		assertEquals( "jnree_column_reference", columns.next().getText() );
 		assertFalse( columns.hasNext() );
 	}
 }

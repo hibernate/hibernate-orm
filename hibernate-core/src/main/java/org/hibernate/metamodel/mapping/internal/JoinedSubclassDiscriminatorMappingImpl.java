@@ -8,8 +8,10 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.util.List;
 
+import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -32,10 +34,11 @@ public class JoinedSubclassDiscriminatorMappingImpl extends AbstractEntityDiscri
 			EntityPersister entityDescriptor,
 			String tableExpression,
 			String mappedColumnExpression,
+			boolean isFormula,
 			CaseSearchedExpression caseSearchedExpression,
 			List<ColumnReference> columnReferences,
 			BasicType mappingType) {
-		super( entityDescriptor, tableExpression, mappedColumnExpression, mappingType );
+		super( entityDescriptor, tableExpression, mappedColumnExpression, isFormula, mappingType );
 
 		this.navigableRole = entityDescriptor.getNavigableRole().append( EntityDiscriminatorMapping.ROLE_NAME );
 		this.caseSearchedExpression = caseSearchedExpression;
@@ -61,7 +64,7 @@ public class JoinedSubclassDiscriminatorMappingImpl extends AbstractEntityDiscri
 
 		return expressionResolver.resolveSqlSelection(
 				expressionResolver.resolveSqlExpression(
-						getMappedColumnExpression(),
+						getSelectionExpression(),
 						sqlAstProcessingState -> caseSearchedExpression
 				),
 				getMappedType().getMappedJavaTypeDescriptor(),
@@ -87,5 +90,11 @@ public class JoinedSubclassDiscriminatorMappingImpl extends AbstractEntityDiscri
 	@Override
 	public String getCustomWriteExpression() {
 		return null;
+	}
+
+	@Override
+	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+		action.accept( offset, getJdbcMapping() );
+		return getJdbcTypeCount();
 	}
 }

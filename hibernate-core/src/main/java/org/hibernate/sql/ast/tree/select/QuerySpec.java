@@ -141,39 +141,56 @@ public class QuerySpec implements SqlAstNode, PredicateContainer, Expression, Ct
 
 	@Override
 	public MappingModelExpressable getExpressionType() {
-		SqlSelection first = selectClause.getSqlSelections().get(0);
-		return first.getExpressionType();
+		if ( selectClause.getSqlSelections().size() == 1 ) {
+			SqlSelection first = selectClause.getSqlSelections().get( 0 );
+			return first.getExpressionType();
+		}
+		else {
+			return null;
+		}
 	}
 
 	@Override
 	public void applySqlSelections(DomainResultCreationState creationState) {
-		SqlSelection first = selectClause.getSqlSelections().get(0);
 		TypeConfiguration typeConfiguration = creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration();
-		JavaTypeDescriptor descriptor = first.getExpressionType().getJdbcMappings( typeConfiguration ).get(0).getJavaTypeDescriptor();
-		creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
-				this,
-				descriptor,
-				typeConfiguration
-		);
+		for ( SqlSelection sqlSelection : selectClause.getSqlSelections() ) {
+			sqlSelection.getExpressionType().forEachJdbcType(
+					(index, jdbcMapping) -> {
+						creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
+								this,
+								jdbcMapping.getJavaTypeDescriptor(),
+								typeConfiguration
+						);
+					}
+			);
+		}
 	}
 
 	@Override
 	public DomainResult createDomainResult(String resultVariable, DomainResultCreationState creationState) {
-		SqlSelection first = selectClause.getSqlSelections().get(0);
 		TypeConfiguration typeConfiguration = creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration();
-		JavaTypeDescriptor descriptor = first.getExpressionType().getJdbcMappings( typeConfiguration ).get(0).getJavaTypeDescriptor();
-
 		final SqlExpressionResolver sqlExpressionResolver = creationState.getSqlAstCreationState().getSqlExpressionResolver();
-		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
-				this,
-				descriptor,
-				typeConfiguration
-		);
+		if ( selectClause.getSqlSelections().size() == 1 ) {
+			SqlSelection first = selectClause.getSqlSelections().get( 0 );
+			JavaTypeDescriptor descriptor = first.getExpressionType()
+					.getJdbcMappings()
+					.get( 0 )
+					.getJavaTypeDescriptor();
 
-		return new BasicResult<>(
-				sqlSelection.getValuesArrayPosition(),
-				resultVariable,
-				descriptor
-		);
+			final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
+					this,
+					descriptor,
+					typeConfiguration
+			);
+
+			return new BasicResult<>(
+					sqlSelection.getValuesArrayPosition(),
+					resultVariable,
+					descriptor
+			);
+		}
+		else {
+			throw new UnsupportedOperationException("Domain result for non-scalar subquery shouldn't be created!");
+		}
 	}
 }

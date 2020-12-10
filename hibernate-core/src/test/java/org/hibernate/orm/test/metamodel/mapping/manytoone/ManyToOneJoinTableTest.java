@@ -57,16 +57,16 @@ public class ManyToOneJoinTableTest {
 
 		ForeignKeyDescriptor foreignKeyDescriptor = simpleAttributeMapping.getForeignKeyDescriptor();
 		foreignKeyDescriptor.visitReferringColumns(
-				(keyTable, keyColumn, isKeyColumnFormula, readFragment, writeFragment, jdbcMapping) -> {
-					assertThat( keyTable, is( "other_simple" ) );
-					assertThat( keyColumn, is( "RHS_ID" ) );
+				(columnIndex, selection) -> {
+					assertThat( selection.getContainingTableExpression(), is( "other_simple" ) );
+					assertThat( selection.getSelectionExpression(), is( "RHS_ID" ) );
 				}
 		);
 
 		foreignKeyDescriptor.visitTargetColumns(
-				(targetTable, targetColumn, isTargetColumnFormula, readFragment, writeFragment, jdbcMapping) -> {
-					assertThat( targetTable, is( "simple_entity" ) );
-					assertThat( targetColumn, is( "id" ) );
+				(columnIndex, selection) -> {
+					assertThat( selection.getContainingTableExpression(), is( "simple_entity" ) );
+					assertThat( selection.getSelectionExpression(), is( "id" ) );
 				}
 		);
 
@@ -78,16 +78,16 @@ public class ManyToOneJoinTableTest {
 
 		foreignKeyDescriptor = anotherAttributeMapping.getForeignKeyDescriptor();
 		foreignKeyDescriptor.visitReferringColumns(
-				(keyTable, keyColumn, isKeyColumnFormula, readFragment, writeFragment, jdbcMapping) -> {
-					assertThat( keyTable, is( "other_another" ) );
-					assertThat( keyColumn, is( "RHS_ID" ) );
+				(columnIndex, selection) -> {
+					assertThat( selection.getContainingTableExpression(), is( "other_another" ) );
+					assertThat( selection.getSelectionExpression(), is( "RHS_ID" ) );
 				}
 		);
 
 		foreignKeyDescriptor.visitTargetColumns(
-				(targetTable, targetColumn, isTargetColumnFormula, readFragment, writeFragment, jdbcMapping) -> {
-					assertThat( targetTable, is( "another_entity" ) );
-					assertThat( targetColumn, is( "id" ) );
+				(columnIndex, selection) -> {
+					assertThat( selection.getContainingTableExpression(), is( "another_entity" ) );
+					assertThat( selection.getSelectionExpression(), is( "id" ) );
 				}
 		);
 
@@ -104,16 +104,16 @@ public class ManyToOneJoinTableTest {
 
 		foreignKeyDescriptor = otherAttributeMapping.getForeignKeyDescriptor();
 		foreignKeyDescriptor.visitReferringColumns(
-				(keyTable, keyColumn, isKeyColumnFormula, readFragment, writeFragment, jdbcMapping) -> {
-					assertThat( keyTable, is( "other_simple" ) );
-					assertThat( keyColumn, is( "LHS_ID" ) );
+				(columnIndex, selection) -> {
+					assertThat( selection.getContainingTableExpression(), is( "other_simple" ) );
+					assertThat( selection.getSelectionExpression(), is( "LHS_ID" ) );
 				}
 		);
 
 		foreignKeyDescriptor.visitTargetColumns(
-				(targetTable, targetColumn, isTargetColumnFormula, readFragment, writeFragment, jdbcMapping) -> {
-					assertThat( targetTable, is( "other_entity" ) );
-					assertThat( targetColumn, is( "id" ) );
+				(columnIndex, selection) -> {
+					assertThat( selection.getContainingTableExpression(), is( "other_entity" ) );
+					assertThat( selection.getSelectionExpression(), is( "id" ) );
 				}
 		);
 
@@ -130,16 +130,16 @@ public class ManyToOneJoinTableTest {
 
 		foreignKeyDescriptor = otherAttributeMapping.getForeignKeyDescriptor();
 		foreignKeyDescriptor.visitReferringColumns(
-				(keyTable, keyColumn, isKeyColumnFormula, readFragment, writeFragment, jdbcMapping) -> {
-					assertThat( keyTable, is( "another_entity" ) );
-					assertThat( keyColumn, is( "other_id" ) );
+				(columnIndex, selection) -> {
+					assertThat( selection.getContainingTableExpression(), is( "another_entity" ) );
+					assertThat( selection.getSelectionExpression(), is( "other_id" ) );
 				}
 		);
 
 		foreignKeyDescriptor.visitTargetColumns(
-				(targetTable, targetColumn, isTargetColumnFormula, readFragment, writeFragment, jdbcMapping) -> {
-					assertThat( targetTable, is( "other_entity" ) );
-					assertThat( targetColumn, is( "id" ) );
+				(columnIndex, selection) -> {
+					assertThat( selection.getContainingTableExpression(), is( "other_entity" ) );
+					assertThat( selection.getSelectionExpression(), is( "id" ) );
 				}
 		);
 

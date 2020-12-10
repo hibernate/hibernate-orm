@@ -235,20 +235,16 @@ public class StandardSqmUpdateTranslator
 					final List<JdbcParameter> jdbcParametersForSqm = new ArrayList<>();
 
 					// create one JdbcParameter for each column in the assigned path
-					assignedPathInterpretation.getExpressionType().visitColumns(
-							(containingTableExpression, columnExpression, isFormula, customReadExpr, customWriteExpr, jdbcMapping) -> {
-								final JdbcParameter jdbcParameter = new JdbcParameterImpl( jdbcMapping );
+					assignedPathInterpretation.getExpressionType().forEachSelection(
+							(columnIndex, selection) -> {
+								final JdbcParameter jdbcParameter = new JdbcParameterImpl( selection.getJdbcMapping() );
 								jdbcParametersForSqm.add( jdbcParameter );
 								assignments.add(
 										new Assignment(
 												new ColumnReference(
 														// we do not want a qualifier (table alias) here
 														(String) null,
-														columnExpression,
-														isFormula,
-														customReadExpr,
-														customWriteExpr,
-														jdbcMapping,
+														selection,
 														getCreationContext().getSessionFactory()
 												),
 												jdbcParameter
@@ -265,8 +261,8 @@ public class StandardSqmUpdateTranslator
 
 					final Expression valueExpression = (Expression) sqmAssignment.getValue().accept( this );
 
-					final int valueExprJdbcCount = valueExpression.getExpressionType().getJdbcTypeCount( typeConfiguration );
-					final int assignedPathJdbcCount = assignedPathInterpretation.getExpressionType().getJdbcTypeCount( typeConfiguration );
+					final int valueExprJdbcCount = valueExpression.getExpressionType().getJdbcTypeCount();
+					final int assignedPathJdbcCount = assignedPathInterpretation.getExpressionType().getJdbcTypeCount();
 
 					if ( valueExprJdbcCount != assignedPathJdbcCount ) {
 						SqlTreeCreationLogger.LOGGER.debugf(

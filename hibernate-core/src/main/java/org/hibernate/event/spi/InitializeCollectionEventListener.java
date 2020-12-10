@@ -17,5 +17,5 @@ import org.hibernate.HibernateException;
  * @author Gavin King
  */
 public interface InitializeCollectionEventListener extends Serializable {
-	public void onInitializeCollection(InitializeCollectionEvent event) throws HibernateException;
+	void onInitializeCollection(InitializeCollectionEvent event) throws HibernateException;
 }

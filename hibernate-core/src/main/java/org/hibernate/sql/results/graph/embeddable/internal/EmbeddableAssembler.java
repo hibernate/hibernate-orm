@@ -32,6 +32,7 @@ public class EmbeddableAssembler implements DomainResultAssembler {
 	public Object assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
 		initializer.resolveKey( rowProcessingState );
 		initializer.resolveInstance( rowProcessingState );
+		initializer.initializeInstance( rowProcessingState );
 		return initializer.getCompositeInstance();
 	}
 

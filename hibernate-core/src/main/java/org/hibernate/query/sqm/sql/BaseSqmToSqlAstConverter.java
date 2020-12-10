@@ -19,7 +19,6 @@ import java.util.function.Supplier;
 import javax.persistence.TemporalType;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.NotYetImplementedFor6Exception;
@@ -43,7 +42,6 @@ import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.CompositeSqmPathSource;
-import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.BinaryArithmeticOperator;
 import org.hibernate.query.NavigablePath;
@@ -250,7 +248,7 @@ public abstract class BaseSqmToSqlAstConverter
 	private final QueryParameterBindings domainParameterBindings;
 	private final Map<JpaCriteriaParameter<?>,Supplier<SqmJpaCriteriaParameterWrapper<?>>> jpaCriteriaParamResolutions;
 
-	private Map<String,NavigablePath> pluralPersisterElementNavigablePathByFullPath = new HashMap<>();
+	private Map<String,NavigablePath> joinPathBySqmJoinFullPath = new HashMap<>();
 
 	private final SqlAliasBaseManager sqlAliasBaseManager = new SqlAliasBaseManager();
 
@@ -485,6 +483,7 @@ public abstract class BaseSqmToSqlAstConverter
 
 			postProcessQuerySpec( sqlQuerySpec );
 
+			joinPathBySqmJoinFullPath.clear();
 			return sqlQuerySpec;
 		}
 		finally {
@@ -676,11 +675,8 @@ public abstract class BaseSqmToSqlAstConverter
 			log.tracef( "Visiting explicit joins for `%s`", sqmFrom.getNavigablePath() );
 		}
 		sqmFrom.visitSqmJoins(
-				sqmJoin -> {
-					consumeExplicitJoin( sqmJoin, lhsTableGroup );
-				}
+				sqmJoin -> consumeExplicitJoin( sqmJoin, lhsTableGroup )
 		);
-		pluralPersisterElementNavigablePathByFullPath.clear();
 	}
 
 	@SuppressWarnings("WeakerAccess")
@@ -708,135 +704,57 @@ public abstract class BaseSqmToSqlAstConverter
 
 		final NavigablePath sqmJoinNavigablePath = sqmJoin.getNavigablePath();
 		final NavigablePath parentNavigablePath = sqmJoinNavigablePath.getParent();
+
+		final ModelPart modelPart = lhsTableGroup.getModelPart().findSubPart(
+				pathSource.getPathName(),
+				SqmMappingModelHelper.resolveExplicitTreatTarget( sqmJoin, this )
+		);
+
+		final NavigablePath joinPath;
 		if ( pathSource instanceof PluralPersistentAttribute ) {
-			final ModelPart pluralPart = lhsTableGroup.getModelPart().findSubPart(
-					pathSource.getPathName(),
-					SqmMappingModelHelper.resolveExplicitTreatTarget( sqmJoin, this )
+			assert modelPart instanceof PluralAttributeMapping;
+
+			final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) modelPart;
+
+			joinPath = getJoinNavigablePath(
+					sqmJoinNavigablePath,
+					parentNavigablePath,
+					pluralAttributeMapping.getPartName()
 			);
 
-			assert pluralPart instanceof PluralAttributeMapping;
-
-			final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) pluralPart;
-
-			NavigablePath elementPath;
-			if ( parentNavigablePath == null ) {
-				elementPath = sqmJoinNavigablePath;
-				pluralPersisterElementNavigablePathByFullPath.put(
-						sqmJoin.getNavigablePath().getFullPath(),
-						elementPath
-				);
-			}
-			else {
-				final NavigablePath elementNavigablePath = pluralPersisterElementNavigablePathByFullPath.get(
-						parentNavigablePath.getFullPath() );
-				if ( elementNavigablePath == null ) {
-					elementPath = sqmJoinNavigablePath;
-				}
-				else {
-					elementPath = elementNavigablePath.append( pluralAttributeMapping.getPartName() );
-				}
-			}
-			pluralPersisterElementNavigablePathByFullPath.put( sqmJoin.getNavigablePath().getFullPath(), elementPath.append( CollectionPart.Nature.ELEMENT.getName()  ) );
+			joinPathBySqmJoinFullPath.put(
+					sqmJoin.getNavigablePath().getFullPath(),
+					joinPath.append( CollectionPart.Nature.ELEMENT.getName() )
+			);
 
 			joinedTableGroupJoin = pluralAttributeMapping.createTableGroupJoin(
-					elementPath,
+					joinPath,
 					lhsTableGroup,
 					sqmJoin.getExplicitAlias(),
 					sqmJoin.getSqmJoinType().getCorrespondingSqlJoinType(),
 					determineLockMode( sqmJoin.getExplicitAlias() ),
 					this
 			);
-			joinedTableGroup = joinedTableGroupJoin.getJoinedGroup();
-
-			lhsTableGroup.addTableGroupJoin( joinedTableGroupJoin );
-
-			fromClauseIndex.register( sqmJoin, joinedTableGroup, elementPath );
-//			fromClauseIndex.registerTableGroup( elementPath, joinedTableGroup );
-		}
-		else if ( pathSource instanceof EmbeddedSqmPathSource ) {
-			final ModelPart joinedPart = lhsTableGroup.getModelPart().findSubPart(
-					pathSource.getPathName(),
-					SqmMappingModelHelper.resolveExplicitTreatTarget( sqmJoin, this )
-			);
-
-			assert joinedPart instanceof TableGroupJoinProducer;
-
-			final NavigablePath joinedPath;
-			final String explicitAlias = sqmJoin.getExplicitAlias();
-			if ( explicitAlias == null ) {
-				joinedPath = sqmJoinNavigablePath;
-			}
-			else {
-				joinedPath = parentNavigablePath.append( sqmJoin.getAttribute().getName() );
-			}
-			joinedTableGroupJoin = ( (TableGroupJoinProducer) joinedPart ).createTableGroupJoin(
-					joinedPath,
-					lhsTableGroup,
-					sqmJoin.getExplicitAlias(),
-					sqmJoin.getSqmJoinType().getCorrespondingSqlJoinType(),
-					determineLockMode( sqmJoin.getExplicitAlias() ),
-					this
-			);
-
-			joinedTableGroup = joinedTableGroupJoin.getJoinedGroup();
-
-			lhsTableGroup.addTableGroupJoin( joinedTableGroupJoin );
-
-			fromClauseIndex.register( sqmJoin, joinedTableGroup );
 		}
 		else {
-			final ModelPart joinedPart = lhsTableGroup.getModelPart().findSubPart(
-					pathSource.getPathName(),
-					SqmMappingModelHelper.resolveExplicitTreatTarget( sqmJoin, this )
-			);
+			assert modelPart instanceof TableGroupJoinProducer;
 
-			if ( !TableGroupJoinProducer.class.isInstance( joinedPart ) ) {
-				throw new HibernateException( "Expecting joined model part to implement TableGroupJoinProducer - " + joinedPart );
-			}
+			joinPath = getJoinNavigablePath( sqmJoinNavigablePath, parentNavigablePath, modelPart.getPartName() );
 
-			final NavigablePath joinedPath;
-			final String explicitAlias = sqmJoin.getExplicitAlias();
-			if ( explicitAlias == null ) {
-				joinedPath = sqmJoinNavigablePath;
-			}
-			else {
-				joinedPath = parentNavigablePath.append( sqmJoin.getAttribute().getName() );
-			}
-
-			NavigablePath elementPath;
-			if ( parentNavigablePath == null ) {
-				elementPath = sqmJoinNavigablePath;
-				pluralPersisterElementNavigablePathByFullPath.put(
-						sqmJoin.getNavigablePath().getFullPath(),
-						elementPath
-				);
-			}
-			else {
-				final NavigablePath elementNavigablePath = pluralPersisterElementNavigablePathByFullPath.get(
-						parentNavigablePath.getFullPath() );
-				if ( elementNavigablePath == null ) {
-					elementPath = sqmJoinNavigablePath;
-				}
-				else {
-					elementPath = elementNavigablePath.append( joinedPart.getPartName() );
-				}
-			}
-
-			joinedTableGroupJoin = ( (TableGroupJoinProducer) joinedPart ).createTableGroupJoin(
-					elementPath,
+			joinedTableGroupJoin = ( (TableGroupJoinProducer) modelPart ).createTableGroupJoin(
+					joinPath,
 					lhsTableGroup,
 					sqmJoin.getExplicitAlias(),
 					sqmJoin.getSqmJoinType().getCorrespondingSqlJoinType(),
 					determineLockMode( sqmJoin.getExplicitAlias() ),
 					this
 			);
-
-			joinedTableGroup = joinedTableGroupJoin.getJoinedGroup();
-
-			lhsTableGroup.addTableGroupJoin( joinedTableGroupJoin );
-
-			fromClauseIndex.register( sqmJoin, joinedTableGroup,elementPath );
 		}
+
+		joinedTableGroup = joinedTableGroupJoin.getJoinedGroup();
+		lhsTableGroup.addTableGroupJoin( joinedTableGroupJoin );
+
+		fromClauseIndex.register( sqmJoin, joinedTableGroup, joinPath );
 
 		// add any additional join restrictions
 		if ( sqmJoin.getJoinPredicate() != null ) {
@@ -855,6 +773,23 @@ public abstract class BaseSqmToSqlAstConverter
 
 		consumeExplicitJoins( sqmJoin, joinedTableGroup );
 		consumeImplicitJoins( sqmJoin, joinedTableGroup );
+	}
+
+	private NavigablePath getJoinNavigablePath(
+			NavigablePath sqmJoinNavigablePath,
+			NavigablePath parentNavigablePath, String partName) {
+		if ( parentNavigablePath == null ) {
+			return sqmJoinNavigablePath;
+		}
+		else {
+			final NavigablePath elementNavigablePath = joinPathBySqmJoinFullPath.get( parentNavigablePath.getFullPath() );
+			if ( elementNavigablePath == null ) {
+				return sqmJoinNavigablePath;
+			}
+			else {
+				return elementNavigablePath.append( partName );
+			}
+		}
 	}
 
 	private void consumeCrossJoin(SqmCrossJoin sqmJoin, TableGroup lhsTableGroup) {

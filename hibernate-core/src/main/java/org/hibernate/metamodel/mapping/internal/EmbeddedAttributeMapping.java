@@ -6,7 +6,6 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -16,7 +15,8 @@ import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.metamodel.mapping.ColumnConsumer;
+import org.hibernate.mapping.IndexedConsumer;
+import org.hibernate.metamodel.mapping.SelectionConsumer;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -49,7 +49,6 @@ import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
 import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableFetchImpl;
 import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableResultImpl;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
@@ -60,9 +59,6 @@ public class EmbeddedAttributeMapping
 	private final NavigableRole navigableRole;
 
 	private final String tableExpression;
-	private final String[] attrColumnNames;
-	private final String[] customReadExpressions;
-	private final String[] customWriteExpressions;
 	private final EmbeddableMappingType embeddableMappingType;
 	private final PropertyAccess parentInjectionAttributePropertyAccess;
 
@@ -72,9 +68,6 @@ public class EmbeddedAttributeMapping
 			NavigableRole navigableRole,
 			int stateArrayPosition,
 			String tableExpression,
-			String[] attrColumnNames,
-			String[] customReadExpressions,
-			String[] customWriteExpressions,
 			StateArrayContributorMetadataAccess attributeMetadataAccess,
 			String parentInjectionAttributeName,
 			FetchStrategy mappedFetchStrategy,
@@ -102,9 +95,6 @@ public class EmbeddedAttributeMapping
 		}
 
 		this.tableExpression = tableExpression;
-		this.attrColumnNames = attrColumnNames;
-		this.customReadExpressions = customReadExpressions;
-		this.customWriteExpressions = customWriteExpressions;
 
 		this.embeddableMappingType = embeddableMappingType;
 	}
@@ -125,45 +115,13 @@ public class EmbeddedAttributeMapping
 	}
 
 	@Override
-	public List<String> getMappedColumnExpressions() {
-		return Arrays.asList( attrColumnNames );
-	}
-
-	@Override
-	public List<String> getCustomReadExpressions() {
-		return Arrays.asList( customReadExpressions );
-	}
-
-	@Override
-	public List<String> getCustomWriteExpressions() {
-		return Arrays.asList( customWriteExpressions );
-	}
-
-	@Override
 	public PropertyAccess getParentInjectionAttributePropertyAccess() {
 		return parentInjectionAttributePropertyAccess;
 	}
 
 	@Override
-	public void visitJdbcTypes(
-			Consumer<JdbcMapping> action,
-			Clause clause,
-			TypeConfiguration typeConfiguration) {
-		getEmbeddableTypeDescriptor().visitJdbcTypes( action, clause, typeConfiguration );
-	}
-
-	@Override
-	public void visitJdbcValues(
-			Object value,
-			Clause clause,
-			JdbcValuesConsumer valuesConsumer,
-			SharedSessionContractImplementor session) {
-		getEmbeddableTypeDescriptor().visitJdbcValues( value, clause, valuesConsumer, session );
-	}
-
-	@Override
-	public void visitColumns(ColumnConsumer consumer) {
-		getEmbeddableTypeDescriptor().visitColumns( consumer );
+	public int forEachSelection(int offset, SelectionConsumer consumer) {
+		return getEmbeddableTypeDescriptor().forEachSelection( offset, consumer );
 	}
 
 	@Override
@@ -228,41 +186,27 @@ public class EmbeddedAttributeMapping
 			Clause clause,
 			SqmToSqlAstConverter walker,
 			SqlAstCreationState sqlAstCreationState) {
-		final List<ColumnReference> columnReferences = CollectionHelper.arrayList( attrColumnNames.length );
-		final TableReference tableReference = tableGroup.resolveTableReference( getContainingTableExpression() );
-		getEmbeddableTypeDescriptor().visitJdbcTypes(
-				new Consumer<JdbcMapping>() {
-					private int position = -1;
+		final List<ColumnReference> columnReferences = CollectionHelper.arrayList( embeddableMappingType.getJdbcTypeCount() );
+		final TableReference defaultTableReference = tableGroup.resolveTableReference( getContainingTableExpression() );
+		getEmbeddableTypeDescriptor().forEachSelection(
+				(columnIndex, selection) -> {
+					final TableReference tableReference = selection.getContainingTableExpression().equals( defaultTableReference.getTableExpression() )
+							? defaultTableReference
+							: tableGroup.resolveTableReference( selection.getContainingTableExpression() );
+					final Expression columnReference = sqlAstCreationState.getSqlExpressionResolver().resolveSqlExpression(
+							SqlExpressionResolver.createColumnReferenceKey(
+									tableReference,
+									selection.getSelectionExpression()
+							),
+							sqlAstProcessingState -> new ColumnReference(
+									tableReference.getIdentificationVariable(),
+									selection,
+									sqlAstCreationState.getCreationContext().getSessionFactory()
+							)
+					);
 
-					@Override
-					public void accept(JdbcMapping jdbcMapping) {
-						position++;
-
-						final String attrColumnExpr = attrColumnNames[ position ];
-						final String attrColumnCustomReadExpr = customReadExpressions[ position ];
-						final String attrColumnCustomWriteExpr = customWriteExpressions[ position ];
-
-						final Expression columnReference = sqlAstCreationState.getSqlExpressionResolver().resolveSqlExpression(
-								SqlExpressionResolver.createColumnReferenceKey(
-										tableReference,
-										attrColumnExpr
-								),
-								sqlAstProcessingState -> new ColumnReference(
-										tableReference.getIdentificationVariable(),
-										attrColumnExpr,
-										false,
-										attrColumnCustomReadExpr,
-										attrColumnCustomWriteExpr,
-										jdbcMapping,
-										sqlAstCreationState.getCreationContext().getSessionFactory()
-								)
-						);
-
-						columnReferences.add( (ColumnReference) columnReference );
-					}
-				},
-				clause,
-				sqlAstCreationState.getCreationContext().getSessionFactory().getTypeConfiguration()
+					columnReferences.add( (ColumnReference) columnReference );
+				}
 		);
 
 		return new SqlTuple( columnReferences, this );

@@ -86,30 +86,25 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 				toOneAttributeMapping
 		);
 
-		modelPart.visitColumns(
-				(containingTableExpression, columnExpression, isFormula, customReadExpression, customWriteExpression, jdbcMapping) -> {
-					final TableReference tf;
+		modelPart.forEachSelection(
+				(columnIndex, selection) -> {
 					final TableReference tableReference = getTableReference(
 							sqmPath,
 							sqlAstCreationState,
 							tableGroup,
 							toOneAttributeMapping,
-							containingTableExpression
+							selection.getContainingTableExpression()
 					);
 
 					final Expression columnReference = sqlAstCreationState.getSqlExpressionResolver()
 							.resolveSqlExpression(
 									SqlExpressionResolver.createColumnReferenceKey(
 											tableReference,
-											columnExpression
+											selection.getSelectionExpression()
 									),
 									sqlAstProcessingState -> new ColumnReference(
 											tableReference.getIdentificationVariable(),
-											columnExpression,
-											isFormula,
-											customReadExpression,
-											customWriteExpression,
-											jdbcMapping,
+											selection,
 											sqlAstCreationState.getCreationContext().getSessionFactory()
 									)
 							);

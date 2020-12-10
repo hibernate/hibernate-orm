@@ -68,27 +68,22 @@ public class CompoundNaturalIdLoader<T> extends AbstractNaturalIdLoader<T> {
 		assert naturalIdToLoad instanceof Object[];
 		final Object[] naturalIdValueArray = (Object[]) naturalIdToLoad;
 
-		final Iterator<JdbcParameter> jdbcParamItr = jdbcParameters.iterator();
+		int offset = 0;
 
 		for ( int i = 0; i < naturalIdMapping().getNaturalIdAttributes().size(); i++ ) {
 			final SingularAttributeMapping attrMapping = naturalIdMapping().getNaturalIdAttributes().get( i );
-			attrMapping.visitJdbcValues(
+			offset += jdbcParamBindings.registerParametersForEachJdbcValue(
 					naturalIdValueArray[i],
 					Clause.WHERE,
-					(jdbcValue, jdbcMapping) -> {
-						assert jdbcParamItr.hasNext();
-						final JdbcParameter jdbcParam = jdbcParamItr.next();
-						jdbcParamBindings.addBinding(
-								jdbcParam,
-								new JdbcParameterBindingImpl( jdbcMapping, jdbcValue )
-						);
-					},
+					offset,
+					attrMapping,
+					jdbcParameters,
 					session
 			);
 		}
 
 		// make sure we've exhausted all JDBC parameters
-		assert ! jdbcParamItr.hasNext();
+		assert offset == jdbcParameters.size();
 	}
 
 	@Override

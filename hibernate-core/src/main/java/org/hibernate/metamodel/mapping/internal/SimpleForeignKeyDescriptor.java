@@ -8,15 +8,16 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.AssociationKey;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
-import org.hibernate.metamodel.mapping.ColumnConsumer;
+import org.hibernate.metamodel.mapping.SelectionConsumer;
+import org.hibernate.metamodel.mapping.SelectionMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -43,30 +44,20 @@ import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
  */
 public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicValuedModelPart, FetchOptions {
-	private final String keyColumnContainingTable;
-	private final String keyColumnExpression;
-	private final String targetColumnContainingTable;
-	private final String targetColumnExpression;
-	private final JdbcMapping jdbcMapping;
+	private final SelectionMapping keySelectionMapping;
+	private final SelectionMapping targetSelectionMapping;
 	private AssociationKey associationKey;
 
 	public SimpleForeignKeyDescriptor(
-			String keyColumnContainingTable,
-			String keyColumnExpression,
-			String targetColumnContainingTable,
-			String targetColumnExpression,
-			JdbcMapping jdbcMapping) {
-		this.keyColumnContainingTable = keyColumnContainingTable;
-		this.keyColumnExpression = keyColumnExpression;
-		this.targetColumnContainingTable = targetColumnContainingTable;
-		this.targetColumnExpression = targetColumnExpression;
-		this.jdbcMapping = jdbcMapping;
+			SelectionMapping keySelectionMapping,
+			SelectionMapping targetSelectionMapping) {
+		this.keySelectionMapping = keySelectionMapping;
+		this.targetSelectionMapping = targetSelectionMapping;
 	}
 
 	@Override
@@ -74,31 +65,27 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			NavigablePath collectionPath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
-		if ( targetColumnContainingTable.equals( keyColumnContainingTable ) ) {
+		if ( targetSelectionMapping.getContainingTableExpression().equals( keySelectionMapping.getContainingTableExpression() ) ) {
 			final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
 			final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
-			final TableReference tableReference = tableGroup.resolveTableReference( keyColumnContainingTable );
+			final TableReference tableReference = tableGroup.resolveTableReference( keySelectionMapping.getContainingTableExpression() );
 			final String identificationVariable = tableReference.getIdentificationVariable();
 			final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 					sqlExpressionResolver.resolveSqlExpression(
 							SqlExpressionResolver.createColumnReferenceKey(
 									tableReference,
-									targetColumnExpression
+									targetSelectionMapping.getSelectionExpression()
 							),
 							s ->
 									new ColumnReference(
 											identificationVariable,
-											targetColumnExpression,
-											false,
-											null,
-											null,
-											jdbcMapping,
+											targetSelectionMapping,
 											creationState.getSqlAstCreationState()
 													.getCreationContext()
 													.getSessionFactory()
 									)
 					),
-					jdbcMapping.getJavaTypeDescriptor(),
+					targetSelectionMapping.getJdbcMapping().getJavaTypeDescriptor(),
 					sqlAstCreationState.getCreationContext().getDomainModel().getTypeConfiguration()
 			);
 
@@ -106,7 +93,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			return new BasicResult<Object>(
 					sqlSelection.getValuesArrayPosition(),
 					null,
-					jdbcMapping.getJavaTypeDescriptor()
+					targetSelectionMapping.getJdbcMapping().getJavaTypeDescriptor()
 			);
 		}
 		else {
@@ -130,26 +117,22 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			DomainResultCreationState creationState) {
 		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
 		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
-		final TableReference tableReference = tableGroup.resolveTableReference( keyColumnContainingTable );
+		final TableReference tableReference = tableGroup.resolveTableReference( keySelectionMapping.getContainingTableExpression() );
 		final String identificationVariable = tableReference.getIdentificationVariable();
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				sqlExpressionResolver.resolveSqlExpression(
 						SqlExpressionResolver.createColumnReferenceKey(
 								tableReference,
-								keyColumnExpression
+								keySelectionMapping.getSelectionExpression()
 						),
 						s ->
 								new ColumnReference(
 										identificationVariable,
-										keyColumnExpression,
-										false,
-										null,
-										null,
-										jdbcMapping,
+										keySelectionMapping,
 										creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
 								)
 				),
-				jdbcMapping.getJavaTypeDescriptor(),
+				keySelectionMapping.getJdbcMapping().getJavaTypeDescriptor(),
 				sqlAstCreationState.getCreationContext().getDomainModel().getTypeConfiguration()
 		);
 
@@ -157,7 +140,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 		return new BasicResult(
 				sqlSelection.getValuesArrayPosition(),
 				null,
-				jdbcMapping.getJavaTypeDescriptor()
+				keySelectionMapping.getJdbcMapping().getJavaTypeDescriptor()
 		);
 	}
 
@@ -168,25 +151,17 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			SqlAstJoinType sqlAstJoinType,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
-		if ( lhs.getTableReference( keyColumnContainingTable ) != null ) {
+		if ( lhs.getTableReference( keySelectionMapping.getContainingTableExpression() ) != null ) {
 			return new ComparisonPredicate(
 					new ColumnReference(
 							lhs,
-							keyColumnExpression,
-							false,
-							null,
-							null,
-							jdbcMapping,
+							keySelectionMapping,
 							creationContext.getSessionFactory()
 					),
 					ComparisonOperator.EQUAL,
 					new ColumnReference(
 							rhs,
-							targetColumnExpression,
-							false,
-							null,
-							null,
-							jdbcMapping,
+							targetSelectionMapping,
 							creationContext.getSessionFactory()
 					)
 			);
@@ -195,21 +170,13 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			return new ComparisonPredicate(
 					new ColumnReference(
 							lhs,
-							targetColumnExpression,
-							false,
-							null,
-							null,
-							jdbcMapping,
+							targetSelectionMapping,
 							creationContext.getSessionFactory()
 					),
 					ComparisonOperator.EQUAL,
 					new ColumnReference(
 							rhs,
-							keyColumnExpression,
-							false,
-							null,
-							null,
-							jdbcMapping,
+							keySelectionMapping,
 							creationContext.getSessionFactory()
 					)
 			);
@@ -225,22 +192,22 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			SqlAstCreationContext creationContext) {
 		TableReference lhsTableReference;
 		TableReference rhsTableKeyReference;
-		if ( targetColumnContainingTable.equals( keyColumnContainingTable )  ) {
-			lhsTableReference = getTableReferenceWhenTargetEqualsKey( lhs, tableGroup, keyColumnContainingTable );
+		if ( targetSelectionMapping.getContainingTableExpression().equals( keySelectionMapping.getContainingTableExpression() )  ) {
+			lhsTableReference = getTableReferenceWhenTargetEqualsKey( lhs, tableGroup, keySelectionMapping.getContainingTableExpression() );
 
 			rhsTableKeyReference = getTableReference(
 					lhs,
 					tableGroup,
-					targetColumnContainingTable
+					targetSelectionMapping.getContainingTableExpression()
 			);
 		}
 		else {
-			lhsTableReference = getTableReference( lhs, tableGroup, keyColumnContainingTable );
+			lhsTableReference = getTableReference( lhs, tableGroup, keySelectionMapping.getContainingTableExpression() );
 
 			rhsTableKeyReference = getTableReference(
 					lhs,
 					tableGroup,
-					targetColumnContainingTable
+					targetSelectionMapping.getContainingTableExpression()
 			);
 		}
 
@@ -288,7 +255,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 
 	@Override
 	public JavaTypeDescriptor<?> getJavaTypeDescriptor() {
-		return jdbcMapping.getJavaTypeDescriptor();
+		return targetSelectionMapping.getJdbcMapping().getJavaTypeDescriptor();
 	}
 
 	@Override
@@ -302,84 +269,72 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	}
 
 	@Override
-	public void visitReferringColumns(ColumnConsumer consumer) {
-		consumer.accept(
-				keyColumnContainingTable,
-				keyColumnExpression,
-				false,
-				null,
-				null,
-				jdbcMapping
-		);
+	public int visitReferringColumns(int offset, SelectionConsumer consumer) {
+		consumer.accept( offset, keySelectionMapping );
+		return getJdbcTypeCount();
 	}
 
 	@Override
-	public void visitTargetColumns(ColumnConsumer consumer) {
-		consumer.accept(
-				targetColumnContainingTable,
-				targetColumnExpression,
-				false,
-				null,
-				null,
-				jdbcMapping
-		);
+	public int visitTargetColumns(int offset, SelectionConsumer consumer) {
+		consumer.accept( offset, targetSelectionMapping );
+		return getJdbcTypeCount();
 	}
 
 	@Override
 	public AssociationKey getAssociationKey() {
 		if ( associationKey == null ) {
-			final List<String> associationKeyColumns = Collections.singletonList( keyColumnExpression );
-			associationKey = new AssociationKey( keyColumnContainingTable, associationKeyColumns );
+			final List<String> associationKeyColumns = Collections.singletonList( keySelectionMapping.getSelectionExpression() );
+			associationKey = new AssociationKey( keySelectionMapping.getContainingTableExpression(), associationKeyColumns );
 		}
 		return associationKey;
 	}
 
 	@Override
-	public int getJdbcTypeCount(TypeConfiguration typeConfiguration) {
-		return 1;
+	public List<JdbcMapping> getJdbcMappings() {
+		return Collections.singletonList( targetSelectionMapping.getJdbcMapping() );
 	}
 
 	@Override
-	public List<JdbcMapping> getJdbcMappings(TypeConfiguration typeConfiguration) {
-		return Collections.singletonList( jdbcMapping );
+	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+		action.accept( offset, targetSelectionMapping.getJdbcMapping() );
+		return getJdbcTypeCount();
 	}
 
 	@Override
-	public void visitJdbcTypes(
-			Consumer<JdbcMapping> action,
-			Clause clause,
-			TypeConfiguration typeConfiguration) {
-		action.accept( jdbcMapping );
-	}
-
-	@Override
-	public void visitJdbcValues(
+	public int forEachJdbcValue(
 			Object value,
 			Clause clause,
+			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		valuesConsumer.consume( value, jdbcMapping );
+		valuesConsumer.consume( offset, value, targetSelectionMapping.getJdbcMapping() );
+		return getJdbcTypeCount();
 	}
 
 
 	@Override
 	public String getContainingTableExpression() {
-		return keyColumnContainingTable;
+		return keySelectionMapping.getContainingTableExpression();
 	}
 
 	@Override
-	public String getMappedColumnExpression() {
-		return keyColumnExpression;
+	public String getSelectionExpression() {
+		return keySelectionMapping.getSelectionExpression();
+	}
+
+	@Override
+	public boolean isFormula() {
+		return keySelectionMapping.isFormula();
 	}
 
 	@Override
 	public String getCustomReadExpression() {
-		return null;
+		return keySelectionMapping.getCustomReadExpression();
 	}
 
 	@Override
 	public String getCustomWriteExpression() {
-		return null;
+		return keySelectionMapping.getCustomWriteExpression();
 	}
 
 	@Override
@@ -421,12 +376,13 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 
 	@Override
 	public JdbcMapping getJdbcMapping() {
-		return jdbcMapping;
+		return keySelectionMapping.getJdbcMapping();
 	}
 
 	@Override
 	public String toString() {
-		return "SimpleForeignKeyDescriptor : " + keyColumnContainingTable + "." + keyColumnExpression
-				+ " --> " + targetColumnContainingTable + "." + targetColumnExpression;
+		return "SimpleForeignKeyDescriptor : " + keySelectionMapping.getContainingTableExpression() + "." + keySelectionMapping
+				.getSelectionExpression()
+				+ " --> " + targetSelectionMapping.getContainingTableExpression() + "." + targetSelectionMapping.getSelectionExpression();
 	}
 }

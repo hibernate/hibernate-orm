@@ -25,34 +25,26 @@ public class MappingModelHelper {
 			ModelPart modelPart,
 			SqlExpressionResolver sqlExpressionResolver,
 			SessionFactoryImplementor sessionFactory) {
-		final int jdbcTypeCount = modelPart.getJdbcTypeCount( sessionFactory.getTypeConfiguration() );
+		final int jdbcTypeCount = modelPart.getJdbcTypeCount();
 
 		if ( modelPart instanceof EmbeddableValuedModelPart ) {
 			final List<ColumnReference> columnReferences = new ArrayList<>( jdbcTypeCount );
-			modelPart.visitColumns(
-					(table, column, isFormula, readFragment, writeFragment, jdbcMapping) -> {
+			modelPart.forEachSelection(
+					(columnIndex, selection) -> {
 						final ColumnReference colRef;
 						if ( sqlExpressionResolver == null ) {
 							colRef = new ColumnReference(
-									table,
-									column,
-									isFormula,
-									readFragment,
-									writeFragment,
-									jdbcMapping,
+									selection.getContainingTableExpression(),
+									selection,
 									sessionFactory
 							);
 						}
 						else {
 							colRef = (ColumnReference) sqlExpressionResolver.resolveSqlExpression(
-									createColumnReferenceKey( table, column ),
+									createColumnReferenceKey( selection.getContainingTableExpression(), selection.getSelectionExpression() ),
 									sqlAstProcessingState -> new ColumnReference(
-											table,
-											column,
-											isFormula,
-											readFragment,
-											writeFragment,
-											jdbcMapping,
+											selection.getContainingTableExpression(),
+											selection,
 											sessionFactory
 									)
 							);
@@ -68,24 +60,16 @@ public class MappingModelHelper {
 			if ( sqlExpressionResolver == null ) {
 				return new ColumnReference(
 						basicPart.getContainingTableExpression(),
-						basicPart.getMappedColumnExpression(),
-						basicPart.isMappedColumnExpressionFormula(),
-						basicPart.getCustomReadExpression(),
-						basicPart.getCustomWriteExpression(),
-						basicPart.getJdbcMapping(),
+						basicPart,
 						sessionFactory
 				);
 			}
 			else {
 				return sqlExpressionResolver.resolveSqlExpression(
-						createColumnReferenceKey( basicPart.getContainingTableExpression(), basicPart.getMappedColumnExpression() ),
+						createColumnReferenceKey( basicPart.getContainingTableExpression(), basicPart.getSelectionExpression() ),
 						sqlAstProcessingState -> new ColumnReference(
 								basicPart.getContainingTableExpression(),
-								basicPart.getMappedColumnExpression(),
-								basicPart.isMappedColumnExpressionFormula(),
-								basicPart.getCustomReadExpression(),
-								basicPart.getCustomWriteExpression(),
-								basicPart.getJdbcMapping(),
+								basicPart,
 								sessionFactory
 						)
 				);

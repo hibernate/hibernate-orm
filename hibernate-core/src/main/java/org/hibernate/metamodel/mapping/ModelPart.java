@@ -94,8 +94,12 @@ public interface ModelPart extends MappingModelExpressable {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
-	default void visitColumns(ColumnConsumer consumer) {
+	default int forEachSelection(SelectionConsumer consumer) {
+		return forEachSelection( 0, consumer );
+	}
 
+	default int forEachSelection(int offset, SelectionConsumer consumer) {
+		return 0;
 	}
 
 	EntityMappingType findContainingEntityMapping();

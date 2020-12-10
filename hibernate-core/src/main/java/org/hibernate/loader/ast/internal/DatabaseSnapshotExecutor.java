@@ -93,29 +93,25 @@ class DatabaseSnapshotExecutor {
 		rootQuerySpec.getFromClause().addRoot( rootTableGroup );
 
 		jdbcParameters = new ArrayList<>(
-				entityDescriptor.getIdentifierMapping().getJdbcTypeCount( sessionFactory.getTypeConfiguration() )
+				entityDescriptor.getIdentifierMapping().getJdbcTypeCount()
 		);
 
 		//noinspection rawtypes
 		final List<DomainResult> domainResults = new ArrayList<>();
 
-		entityDescriptor.getIdentifierMapping().visitColumns(
-				(tab, col, isColFormula, readFragment, writeFragment, jdbcMapping) -> {
-					final TableReference tableReference = rootTableGroup.resolveTableReference( tab );
+		entityDescriptor.getIdentifierMapping().forEachSelection(
+				(columnIndex, selection) -> {
+					final TableReference tableReference = rootTableGroup.resolveTableReference( selection.getContainingTableExpression() );
 
-					final JdbcParameter jdbcParameter = new JdbcParameterImpl( jdbcMapping );
+					final JdbcParameter jdbcParameter = new JdbcParameterImpl( selection.getJdbcMapping() );
 					jdbcParameters.add( jdbcParameter );
 
 					final ColumnReference columnReference = (ColumnReference) state.getSqlExpressionResolver()
 							.resolveSqlExpression(
-									createColumnReferenceKey( tableReference, col ),
+									createColumnReferenceKey( tableReference, selection.getSelectionExpression() ),
 									s -> new ColumnReference(
 											tableReference,
-											col,
-											isColFormula,
-											readFragment,
-											writeFragment,
-											jdbcMapping,
+											selection,
 											sessionFactory
 									)
 							);
@@ -130,7 +126,7 @@ class DatabaseSnapshotExecutor {
 
 					final SqlSelection sqlSelection = state.getSqlExpressionResolver().resolveSqlSelection(
 							columnReference,
-							jdbcMapping.getJavaTypeDescriptor(),
+							selection.getJdbcMapping().getJavaTypeDescriptor(),
 							sessionFactory.getTypeConfiguration()
 					);
 
@@ -139,7 +135,7 @@ class DatabaseSnapshotExecutor {
 							new BasicResult<Object>(
 									sqlSelection.getValuesArrayPosition(),
 									null,
-									jdbcMapping.getJavaTypeDescriptor()
+									selection.getJdbcMapping().getJavaTypeDescriptor()
 							)
 					);
 				}
@@ -148,21 +144,17 @@ class DatabaseSnapshotExecutor {
 		entityDescriptor.visitStateArrayContributors(
 				contributorMapping -> {
 					rootPath.append( contributorMapping.getAttributeName() );
-					contributorMapping.visitColumns(
-							(table, column, isFormula, customReadExpr, customWriteExpr, jdbcMapping) -> {
+					contributorMapping.forEachSelection(
+							(columnIndex, selection) -> {
 								final TableReference tableReference = rootTableGroup.resolveTableReference(
-										table );
+										selection.getContainingTableExpression() );
 
 								final ColumnReference columnReference = (ColumnReference) state.getSqlExpressionResolver()
 										.resolveSqlExpression(
-												createColumnReferenceKey( tableReference, column ),
+												createColumnReferenceKey( tableReference, selection.getSelectionExpression() ),
 												s -> new ColumnReference(
 														tableReference,
-														column,
-														isFormula,
-														customReadExpr,
-														customWriteExpr,
-														jdbcMapping,
+														selection,
 														sessionFactory
 												)
 										);
@@ -170,7 +162,7 @@ class DatabaseSnapshotExecutor {
 								final SqlSelection sqlSelection = state.getSqlExpressionResolver()
 										.resolveSqlSelection(
 												columnReference,
-												jdbcMapping.getJavaTypeDescriptor(),
+												selection.getJdbcMapping().getJavaTypeDescriptor(),
 												sessionFactory.getTypeConfiguration()
 										);
 
@@ -179,7 +171,7 @@ class DatabaseSnapshotExecutor {
 										new BasicResult<Object>(
 												sqlSelection.getValuesArrayPosition(),
 												null,
-												jdbcMapping.getJavaTypeDescriptor()
+												selection.getJdbcMapping().getJavaTypeDescriptor()
 										)
 								);
 							}
@@ -202,25 +194,17 @@ class DatabaseSnapshotExecutor {
 		}
 
 		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl(
-				entityDescriptor.getIdentifierMapping().getJdbcTypeCount( sessionFactory.getTypeConfiguration() )
+				entityDescriptor.getIdentifierMapping().getJdbcTypeCount()
 		);
 
-		final Iterator<JdbcParameter> paramItr = jdbcParameters.iterator();
-
-		entityDescriptor.getIdentifierMapping().visitJdbcValues(
+		int offset = jdbcParameterBindings.registerParametersForEachJdbcValue(
 				id,
 				Clause.WHERE,
-				(value, type) -> {
-					assert paramItr.hasNext();
-					final JdbcParameter parameter = paramItr.next();
-					jdbcParameterBindings.addBinding(
-							parameter,
-							new JdbcParameterBindingImpl( type, value )
-					);
-				},
+				entityDescriptor.getIdentifierMapping(),
+				jdbcParameters,
 				session
 		);
-		assert !paramItr.hasNext();
+		assert offset == jdbcParameters.size();
 
 		final List<?> list = JdbcSelectExecutorStandardImpl.INSTANCE.list(
 				jdbcSelect,

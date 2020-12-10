@@ -25,6 +25,7 @@ import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.util.collections.JoinedIterator;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.tuple.component.ComponentMetamodel;
 import org.hibernate.type.ComponentType;
@@ -79,7 +80,7 @@ public class Component extends SimpleValue implements MetaAttributable {
 		return properties.size();
 	}
 
-	public Iterator getPropertyIterator() {
+	public Iterator<Property> getPropertyIterator() {
 		return properties.iterator();
 	}
 
@@ -106,13 +107,13 @@ public class Component extends SimpleValue implements MetaAttributable {
 	@Override
 	@SuppressWarnings("unchecked")
 	public Iterator<Selectable> getColumnIterator() {
-		Iterator[] iters = new Iterator[ getPropertySpan() ];
-		Iterator iter = getPropertyIterator();
-		int i=0;
+		Iterator<Selectable>[] iters = new Iterator[ getPropertySpan() ];
+		Iterator<Property> iter = getPropertyIterator();
+		int i = 0;
 		while ( iter.hasNext() ) {
-			iters[i++] = ( (Property) iter.next() ).getColumnIterator();
+			iters[i++] = iter.next().getColumnIterator();
 		}
-		return new JoinedIterator( iters );
+		return new JoinedIterator<>( iters );
 	}
 
 	public boolean isEmbedded() {

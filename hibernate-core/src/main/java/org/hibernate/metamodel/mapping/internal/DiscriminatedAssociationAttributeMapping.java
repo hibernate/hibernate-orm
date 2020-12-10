@@ -13,10 +13,12 @@ import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.mapping.Any;
+import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -126,6 +128,17 @@ public class DiscriminatedAssociationAttributeMapping
 	@Override
 	public int getNumberOfFetchables() {
 		return 2;
+	}
+
+	@Override
+	public int getJdbcTypeCount() {
+		return getDiscriminatorPart().getJdbcTypeCount() + getKeyPart().getJdbcTypeCount();
+	}
+
+	@Override
+	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+		int span = getDiscriminatorPart().forEachJdbcType( offset, action );
+		return span + getKeyPart().forEachJdbcType( offset + span, action );
 	}
 
 	@Override

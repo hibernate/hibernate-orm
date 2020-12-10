@@ -8,7 +8,6 @@ package org.hibernate.sql.ast.tree.expression;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.function.Consumer;
 
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.ConvertibleModelPart;
@@ -22,7 +21,6 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Represents a literal in the SQL AST.  This form accepts a {@link BasicValuedMapping} is its MappingModelExpressable.
@@ -80,13 +78,6 @@ public class QueryLiteral<T> implements Literal, DomainResultProducer<T> {
 				resultVariable,
 				type.getMappedType().getMappedJavaTypeDescriptor()
 		);
-	}
-
-	@Override
-	public void visitJdbcTypes(
-			Consumer<JdbcMapping> action,
-			TypeConfiguration typeConfiguration) {
-		action.accept( type.getJdbcMapping() );
 	}
 
 	@Override

@@ -934,13 +934,29 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			TableGroup tableGroup,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
+		final String columnReferenceKey;
+		final String discriminatorExpression;
+		if ( isDiscriminatorFormula() ) {
+			discriminatorExpression = getDiscriminatorFormulaTemplate();
+			columnReferenceKey = SqlExpressionResolver.createColumnReferenceKey(
+					tableGroup.getPrimaryTableReference(),
+					getDiscriminatorFormulaTemplate()
+			);
+		}
+		else {
+			discriminatorExpression = getDiscriminatorColumnName();
+			columnReferenceKey = SqlExpressionResolver.createColumnReferenceKey(
+					tableGroup.getPrimaryTableReference(),
+					getDiscriminatorColumnName()
+			);
+		}
 		return new ComparisonPredicate(
 				sqlExpressionResolver.resolveSqlExpression(
-						SqlExpressionResolver.createColumnReferenceKey( tableGroup.getPrimaryTableReference(), getDiscriminatorColumnName() ),
+						columnReferenceKey,
 						sqlAstProcessingState -> new ColumnReference(
 								tableGroup.getPrimaryTableReference().getIdentificationVariable(),
-								getDiscriminatorColumnName(),
-								false,
+								discriminatorExpression,
+								isDiscriminatorFormula(),
 								null,
 								null,
 								( (BasicType<?>) getDiscriminatorType() ).getJdbcMapping(),
@@ -957,25 +973,14 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 	@Override
 	public void visitConstraintOrderedTables(ConstraintOrderedTableConsumer consumer) {
-		final MutableInteger tablePositionWrapper = new MutableInteger();
-
-		for ( String tableName : constraintOrderedTableNames ) {
-			final int tablePosition = tablePositionWrapper.getAndIncrement();
+		for ( int i = 0; i < constraintOrderedTableNames.length; i++ ) {
+			final String tableName = constraintOrderedTableNames[i];
+			final int tablePosition = i;
 
 			consumer.consume(
 					tableName,
 					() -> columnConsumer -> {
-						final String[] keyColumnNames = constraintOrderedKeyColumnNames[tablePosition];
-						for ( String column : keyColumnNames ) {
-							columnConsumer.accept(
-									tableName,
-									column,
-									false,
-									null,
-									null,
-									null
-							);
-						}
+						columnConsumer.accept(tableName, constraintOrderedKeyColumnNames[tablePosition]);
 					}
 			);
 		}

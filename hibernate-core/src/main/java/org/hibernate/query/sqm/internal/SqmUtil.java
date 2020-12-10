@@ -13,7 +13,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -21,12 +20,10 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.Bindable;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
-import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.QueryParameterBinding;
@@ -44,7 +41,6 @@ import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -191,21 +187,13 @@ public class SqmUtil {
 							domainModel,
 							tableGroupLocator
 					);
-					mappingExpressable.visitJdbcTypes(
-							new Consumer<JdbcMapping>() {
-								int position = 0;
-
-								@Override
-								public void accept(JdbcMapping jdbcType) {
-									final JdbcParameter jdbcParameter = jdbcParams.get( position++ );
-									jdbcParameterBindings.addBinding(
-											jdbcParameter,
-											new JdbcParameterBindingImpl( jdbcType, null )
-									);
-								}
-							},
-							Clause.IRRELEVANT,
-							session.getFactory().getTypeConfiguration()
+					mappingExpressable.forEachJdbcType(
+							(position, jdbcType) -> {
+								jdbcParameterBindings.addBinding(
+										jdbcParams.get( position ),
+										new JdbcParameterBindingImpl( jdbcType, null )
+								);
+							}
 					);
 				}
 				else if ( domainParamBinding.isMultiValued() ) {
@@ -293,24 +281,14 @@ public class SqmUtil {
 			mappingExpressable = domainModel.resolveMappingExpressable( parameterType );
 		}
 
-		mappingExpressable.visitJdbcValues(
+		int offset = jdbcParameterBindings.registerParametersForEachJdbcValue(
 				bindValue,
 				Clause.IRRELEVANT,
-				new Bindable.JdbcValuesConsumer() {
-					private int position = 0;
-
-					@Override
-					public void consume(Object jdbcValue, JdbcMapping jdbcMapping) {
-						final JdbcParameter jdbcParameter = jdbcParams.get( position );
-						jdbcParameterBindings.addBinding(
-								jdbcParameter,
-								new JdbcParameterBindingImpl( jdbcMapping, jdbcValue )
-						);
-						position++;
-					}
-				},
+				mappingExpressable,
+				jdbcParams,
 				session
 		);
+		assert offset == jdbcParams.size();
 	}
 
 	public static AllowableParameterType determineParameterType(

@@ -33,7 +33,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.DynamicFilterAliasGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.util.MarkerObject;
-import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -1386,11 +1385,19 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	public EntityDiscriminatorMapping getDiscriminatorMapping(TableGroup tableGroup) {
 		if ( hasSubclasses() ) {
 			if ( explicitDiscriminatorColumnName == null ) {
+				final String discriminatorColumnExpression;
+				if ( getDiscriminatorFormulaTemplate() == null ) {
+					discriminatorColumnExpression = getDiscriminatorColumnName();
+				}
+				else {
+					discriminatorColumnExpression = getDiscriminatorFormulaTemplate();
+				}
 				CaseSearchedExpressionInfo info = getCaseSearchedExpression( tableGroup );
 				return new JoinedSubclassDiscriminatorMappingImpl(
 						this,
 						getTableName(),
-						getDiscriminatorColumnName(),
+						discriminatorColumnExpression,
+						getDiscriminatorFormulaTemplate() != null,
 						info.caseSearchedExpression,
 						info.columnReferences,
 						(BasicType) getDiscriminatorType()
@@ -1405,25 +1412,14 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 	@Override
 	public void visitConstraintOrderedTables(ConstraintOrderedTableConsumer consumer) {
-		final MutableInteger tablePositionWrapper = new MutableInteger();
-
-		for ( String tableName : constraintOrderedTableNames ) {
-			final int tablePosition = tablePositionWrapper.getAndIncrement();
+		for ( int i = 0; i < constraintOrderedTableNames.length; i++ ) {
+			final String tableName = constraintOrderedTableNames[i];
+			final int tablePosition = i;
 
 			consumer.consume(
 					tableName,
 					() -> columnConsumer -> {
-						final String[] keyColumnNames = constraintOrderedKeyColumnNames[tablePosition];
-						for ( String column : keyColumnNames ) {
-							columnConsumer.accept(
-									tableName,
-									column,
-									false,
-									null,
-									null,
-									null
-							);
-						}
+						columnConsumer.accept(tableName, constraintOrderedKeyColumnNames[tablePosition]);
 					}
 			);
 		}
@@ -1493,7 +1489,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	private ColumnReference getIdentifierColumnReference(TableReference tableReference) {
-		final List<JdbcMapping> jdbcMappings = getIdentifierMapping().getJdbcMappings( getFactory().getTypeConfiguration() );
+		final List<JdbcMapping> jdbcMappings = getIdentifierMapping().getJdbcMappings();
 		return new ColumnReference(
 				tableReference.getIdentificationVariable(),
 				discriminatorColumnNameByTableName.get( tableReference.getTableExpression() ),

@@ -255,22 +255,15 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory ).translate( sqlSelect );
 
 		final JdbcParameterBindings jdbcParamBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
-		final Iterator<JdbcParameter> jdbcParamItr = jdbcParameters.iterator();
 
-		entityDescriptor().getIdentifierMapping().visitJdbcValues(
+		int offset = jdbcParamBindings.registerParametersForEachJdbcValue(
 				id,
 				Clause.WHERE,
-				(value, type) -> {
-					assert jdbcParamItr.hasNext();
-					final JdbcParameter jdbcParam = jdbcParamItr.next();
-					jdbcParamBindings.addBinding(
-							jdbcParam,
-							new JdbcParameterBindingImpl( type, value )
-					);
-				},
+				entityDescriptor().getIdentifierMapping(),
+				jdbcParameters,
 				session
 		);
-
+		assert offset == jdbcParameters.size();
 
 		final List<Object[]> results = session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
 				jdbcSelect,

@@ -8,15 +8,16 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.CollectionPart;
-import org.hibernate.metamodel.mapping.ColumnConsumer;
+import org.hibernate.metamodel.mapping.SelectionConsumer;
+import org.hibernate.metamodel.mapping.SelectionMapping;
 import org.hibernate.metamodel.mapping.ConvertibleModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -40,9 +41,6 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.spi.TypeConfiguration;
-
-import static org.hibernate.metamodel.relational.RuntimeRelationModelHelper.DEFAULT_COLUMN_WRITE_EXPRESSION;
 
 /**
  * Models a basic collection element/value or index/key
@@ -54,32 +52,20 @@ public class BasicValuedCollectionPart
 	private final NavigableRole navigableRole;
 	private final CollectionPersister collectionDescriptor;
 	private final Nature nature;
-	private final JdbcMapping mapper;
 	private final BasicValueConverter valueConverter;
 
-	private final String tableExpression;
-	private final String columnExpression;
-	private final String customColumnReadExpr;
-	private final String customColumnWriteExpr;
+	private final SelectionMapping selectionMapping;
 
 	public BasicValuedCollectionPart(
 			CollectionPersister collectionDescriptor,
 			Nature nature,
-			JdbcMapping mapper,
 			BasicValueConverter valueConverter,
-			String tableExpression,
-			String columnExpression,
-			String customColumnReadExpr,
-			String customColumnWriteExpr) {
+			SelectionMapping selectionMapping) {
 		this.navigableRole = collectionDescriptor.getNavigableRole().append( nature.getName() );
 		this.collectionDescriptor = collectionDescriptor;
 		this.nature = nature;
-		this.mapper = mapper;
 		this.valueConverter = valueConverter;
-		this.tableExpression = tableExpression;
-		this.columnExpression = columnExpression;
-		this.customColumnReadExpr = customColumnReadExpr;
-		this.customColumnWriteExpr = customColumnWriteExpr;
+		this.selectionMapping = selectionMapping;
 	}
 
 	@Override
@@ -89,27 +75,32 @@ public class BasicValuedCollectionPart
 
 	@Override
 	public MappingType getPartMappingType() {
-		return mapper::getJavaTypeDescriptor;
+		return selectionMapping.getJdbcMapping()::getJavaTypeDescriptor;
 	}
 
 	@Override
 	public String getContainingTableExpression() {
-		return tableExpression;
+		return selectionMapping.getContainingTableExpression();
 	}
 
 	@Override
-	public String getMappedColumnExpression() {
-		return columnExpression;
+	public String getSelectionExpression() {
+		return selectionMapping.getSelectionExpression();
+	}
+
+	@Override
+	public boolean isFormula() {
+		return selectionMapping.isFormula();
 	}
 
 	@Override
 	public String getCustomReadExpression() {
-		return null;
+		return selectionMapping.getCustomReadExpression();
 	}
 
 	@Override
 	public String getCustomWriteExpression() {
-		return null;
+		return selectionMapping.getCustomWriteExpression();
 	}
 
 	@Override
@@ -119,7 +110,7 @@ public class BasicValuedCollectionPart
 
 	@Override
 	public JavaTypeDescriptor getJavaTypeDescriptor() {
-		return mapper.getJavaTypeDescriptor();
+		return selectionMapping.getJdbcMapping().getJavaTypeDescriptor();
 	}
 
 	@Override
@@ -150,14 +141,13 @@ public class BasicValuedCollectionPart
 
 		return exprResolver.resolveSqlSelection(
 				exprResolver.resolveSqlExpression(
-						SqlExpressionResolver.createColumnReferenceKey( tableGroup.getPrimaryTableReference(), columnExpression ),
+						SqlExpressionResolver.createColumnReferenceKey(
+								tableGroup.getPrimaryTableReference(),
+								selectionMapping.getSelectionExpression()
+						),
 						sqlAstProcessingState -> new ColumnReference(
 								tableGroup.getPrimaryTableReference().getIdentificationVariable(),
-								columnExpression,
-								false,
-								customColumnReadExpr,
-								customColumnWriteExpr,
-								mapper,
+								selectionMapping,
 								creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
 						)
 				),
@@ -179,7 +169,7 @@ public class BasicValuedCollectionPart
 
 	@Override
 	public JdbcMapping getJdbcMapping() {
-		return mapper;
+		return selectionMapping.getJdbcMapping();
 	}
 
 	@Override
@@ -235,12 +225,7 @@ public class BasicValuedCollectionPart
 	}
 
 	@Override
-	public int getJdbcTypeCount(TypeConfiguration typeConfiguration) {
-		return 1;
-	}
-
-	@Override
-	public List<JdbcMapping> getJdbcMappings(TypeConfiguration typeConfiguration) {
+	public List<JdbcMapping> getJdbcMappings() {
 		return Collections.singletonList( getJdbcMapping() );
 	}
 
@@ -255,27 +240,26 @@ public class BasicValuedCollectionPart
 	}
 
 	@Override
-	public void visitJdbcTypes(
-			Consumer<JdbcMapping> action, Clause clause, TypeConfiguration typeConfiguration) {
-		action.accept( getJdbcMapping() );
+	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+		action.accept( offset, selectionMapping.getJdbcMapping() );
+		return getJdbcTypeCount();
 	}
 
 	@Override
-	public void visitColumns(ColumnConsumer consumer) {
-		consumer.accept(
-				tableExpression,
-				columnExpression,
-				false,
-				customColumnReadExpr,
-				customColumnWriteExpr,
-				getJdbcMapping()
-		);
+	public int forEachSelection(int offset, SelectionConsumer consumer) {
+		consumer.accept( offset, selectionMapping );
+		return getJdbcTypeCount();
 	}
 
 	@Override
-	public void visitDisassembledJdbcValues(
-			Object value, Clause clause, JdbcValuesConsumer valuesConsumer, SharedSessionContractImplementor session) {
-		valuesConsumer.consume( value, getJdbcMapping() );
+	public int forEachDisassembledJdbcValue(
+			Object value,
+			Clause clause,
+			int offset,
+			JdbcValuesConsumer valuesConsumer,
+			SharedSessionContractImplementor session) {
+		valuesConsumer.consume( offset, value, getJdbcMapping() );
+		return getJdbcTypeCount();
 	}
 
 	@Override

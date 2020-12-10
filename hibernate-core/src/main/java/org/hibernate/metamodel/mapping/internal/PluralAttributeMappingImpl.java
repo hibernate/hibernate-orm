@@ -22,6 +22,7 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IndexedCollection;
+import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.mapping.List;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
@@ -29,6 +30,7 @@ import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.CollectionIdentifierDescriptor;
 import org.hibernate.metamodel.mapping.CollectionMappingType;
 import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.mapping.SelectionMapping;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
@@ -46,7 +48,6 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
@@ -71,7 +72,6 @@ import org.hibernate.sql.results.graph.collection.internal.DelayedCollectionFetc
 import org.hibernate.sql.results.graph.collection.internal.EagerCollectionFetch;
 import org.hibernate.sql.results.graph.collection.internal.SelectEagerCollectionFetch;
 import org.hibernate.type.EntityType;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
 
@@ -326,12 +326,16 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping
 		if ( fkTargetPart instanceof BasicValuedModelPart ) {
 			final BasicValuedModelPart basicFkTargetPart = (BasicValuedModelPart) fkTargetPart;
 			final Joinable collectionDescriptorAsJoinable = (Joinable) collectionDescriptor;
-			return new SimpleForeignKeyDescriptor(
+			final SelectionMapping keySelectionMapping = SelectionMappingImpl.from(
 					collectionDescriptorAsJoinable.getTableName(),
-					fkBootDescriptorSource.getColumnIterator().next().getText( dialect ),
-					basicFkTargetPart.getContainingTableExpression(),
-					basicFkTargetPart.getMappedColumnExpression(),
-					basicFkTargetPart.getJdbcMapping()
+					fkBootDescriptorSource.getColumnIterator().next(),
+					basicFkTargetPart.getJdbcMapping(),
+					dialect,
+					creationProcess.getSqmFunctionRegistry()
+			);
+			return new SimpleForeignKeyDescriptor(
+					keySelectionMapping,
+					basicFkTargetPart
 			);
 		}
 		else if ( fkTargetPart instanceof EmbeddableValuedModelPart ) {
@@ -993,12 +997,21 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping
 	}
 
 	@Override
-	public void visitJdbcTypes(
-			Consumer<JdbcMapping> action, Clause clause, TypeConfiguration typeConfiguration) {
-		elementDescriptor.visitJdbcTypes( action, clause, typeConfiguration );
+	public int getJdbcTypeCount() {
+		int span = elementDescriptor.getJdbcTypeCount();
 		if ( indexDescriptor != null ) {
-			indexDescriptor.visitJdbcTypes( action, clause, typeConfiguration );
+			span += indexDescriptor.getJdbcTypeCount();
 		}
+		return span;
+	}
+
+	@Override
+	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+		int span = elementDescriptor.forEachJdbcType( offset, action );
+		if ( indexDescriptor != null ) {
+			span += indexDescriptor.forEachJdbcType( offset + span, action );
+		}
+		return span;
 	}
 
 	@Override

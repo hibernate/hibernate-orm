@@ -6,8 +6,6 @@
  */
 package org.hibernate.query.sqm.mutation.internal.idtable;
 
-import java.util.Collections;
-
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.EntityPersister;
@@ -51,17 +49,13 @@ public final class ExecuteWithoutIdTableHelper {
 
 		matchingIdSelect.getFromClause().addRoot( matchingIdSelectTableGroup );
 
-		rootEntityPersister.getIdentifierMapping().visitColumns(
-				(containingTableExpression, columnExpression, isFormula, readFragment, writeFragment, jdbcMapping) -> {
+		rootEntityPersister.getIdentifierMapping().forEachSelection(
+				(columnIndex, selection) -> {
 					final ColumnReference columnReference = (ColumnReference) sqlExpressionResolver.resolveSqlExpression(
-							SqlExpressionResolver.createColumnReferenceKey( rootTableReference, columnExpression ),
+							SqlExpressionResolver.createColumnReferenceKey( rootTableReference, selection.getSelectionExpression() ),
 							sqlAstProcessingState -> new ColumnReference(
 									rootTableReference,
-									columnExpression,
-									false,
-									null,
-									null,
-									jdbcMapping,
+									selection,
 									sessionFactory
 							)
 					);

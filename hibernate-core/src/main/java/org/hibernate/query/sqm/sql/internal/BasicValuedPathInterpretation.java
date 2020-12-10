@@ -51,15 +51,11 @@ public class BasicValuedPathInterpretation<T> extends AbstractSqmPathInterpretat
 		final Expression expression = sqlAstCreationState.getSqlExpressionResolver().resolveSqlExpression(
 				SqlExpressionResolver.createColumnReferenceKey(
 						tableReference,
-						mapping.getMappedColumnExpression()
+						mapping.getSelectionExpression()
 				),
 				sacs -> new ColumnReference(
 						tableReference.getIdentificationVariable(),
-						mapping.getMappedColumnExpression(),
-						mapping.isMappedColumnExpressionFormula(),
-						mapping.getCustomReadExpression(),
-						mapping.getCustomWriteExpression(),
-						mapping.getJdbcMapping(),
+						mapping,
 						sqlAstCreationState.getCreationContext().getSessionFactory()
 				)
 		);

@@ -65,7 +65,7 @@ public class CompleteFetchBuilderBasicPart implements CompleteFetchBuilder, Mode
 		final DomainResultCreationStateImpl creationState = impl( domainResultCreationState );
 
 		final String mappedTable = referencedModelPart.getContainingTableExpression();
-		final String mappedColumn = referencedModelPart.getMappedColumnExpression();
+		final String mappedColumn = referencedModelPart.getSelectionExpression();
 
 		final TableGroup tableGroup = creationState.getFromClauseAccess().getTableGroup( parent.getNavigablePath() );
 		final TableReference tableReference = tableGroup.getTableReference( mappedTable );

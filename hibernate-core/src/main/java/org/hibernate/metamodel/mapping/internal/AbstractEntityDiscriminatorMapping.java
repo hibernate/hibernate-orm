@@ -34,6 +34,7 @@ public abstract class AbstractEntityDiscriminatorMapping implements EntityDiscri
 	private final EntityPersister entityDescriptor;
 	private final String tableExpression;
 	private final String mappedColumnExpression;
+	private final boolean isFormula;
 
 	private final BasicType mappingType;
 
@@ -41,10 +42,12 @@ public abstract class AbstractEntityDiscriminatorMapping implements EntityDiscri
 			EntityPersister entityDescriptor,
 			String tableExpression,
 			String mappedColumnExpression,
+			boolean isFormula,
 			BasicType mappingType) {
 		this.entityDescriptor = entityDescriptor;
 		this.tableExpression = tableExpression;
 		this.mappedColumnExpression = mappedColumnExpression;
+		this.isFormula = isFormula;
 		this.mappingType = mappingType;
 	}
 
@@ -58,8 +61,13 @@ public abstract class AbstractEntityDiscriminatorMapping implements EntityDiscri
 	}
 
 	@Override
-	public String getMappedColumnExpression() {
+	public String getSelectionExpression() {
 		return mappedColumnExpression;
+	}
+
+	@Override
+	public boolean isFormula() {
+		return isFormula;
 	}
 
 	@Override

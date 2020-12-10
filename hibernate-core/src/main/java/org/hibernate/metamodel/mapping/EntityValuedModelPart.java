@@ -6,16 +6,17 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchableContainer;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
@@ -59,19 +60,23 @@ public interface EntityValuedModelPart extends FetchableContainer {
 	}
 
 	@Override
-	default int getJdbcTypeCount(TypeConfiguration typeConfiguration) {
-		return getEntityMappingType().getJdbcTypeCount( typeConfiguration );
+	default int getJdbcTypeCount() {
+		int span = 0;
+		final List<AttributeMapping> attributeMappings = getEntityMappingType().getAttributeMappings();
+		for ( int i = 0; i < attributeMappings.size(); i++ ) {
+			span += attributeMappings.get( i ).getJdbcTypeCount();
+		}
+		return span;
 	}
 
 	@Override
-	default void visitJdbcTypes(
-			Consumer<JdbcMapping> action,
-			Clause clause,
-			TypeConfiguration typeConfiguration) {
-		getEntityMappingType().getAttributeMappings().forEach(
-				attributeMapping ->
-						attributeMapping.visitJdbcTypes( action, clause, typeConfiguration )
-		);
+	default int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+		int span = 0;
+		final List<AttributeMapping> attributeMappings = getEntityMappingType().getAttributeMappings();
+		for ( int i = 0; i < attributeMappings.size(); i++ ) {
+			span += attributeMappings.get( i ).forEachJdbcType( span + offset, action );
+		}
+		return span;
 	}
 
 	@Override
@@ -80,22 +85,28 @@ public interface EntityValuedModelPart extends FetchableContainer {
 	}
 
 	@Override
-	default void visitDisassembledJdbcValues(
+	default int forEachDisassembledJdbcValue(
 			Object value,
 			Clause clause,
+			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		getEntityMappingType().visitDisassembledJdbcValues( value, clause, valuesConsumer, session );
+		return getEntityMappingType().forEachDisassembledJdbcValue( value, clause, offset, valuesConsumer, session );
 	}
 
 	@Override
-	default void visitJdbcValues(
+	default int forEachJdbcValue(
 			Object value,
 			Clause clause,
+			int offset,
 			JdbcValuesConsumer consumer,
 			SharedSessionContractImplementor session) {
-		getEntityMappingType().getAttributeMappings().forEach(
-				attributeMapping ->
-						attributeMapping.visitJdbcValues( value, clause, consumer, session )
-		);	}
+		int span = 0;
+		final List<AttributeMapping> attributeMappings = getEntityMappingType().getAttributeMappings();
+		for ( int i = 0; i < attributeMappings.size(); i++ ) {
+			final AttributeMapping attributeMapping = attributeMappings.get( i );
+			span += attributeMapping.forEachJdbcValue( value, clause, span + offset, consumer, session );
+		}
+		return span;
+	}
 }

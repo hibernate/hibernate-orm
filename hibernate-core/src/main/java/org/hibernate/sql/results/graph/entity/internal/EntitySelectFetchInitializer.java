@@ -7,6 +7,7 @@
 package org.hibernate.sql.results.graph.entity.internal;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.NotYetImplementedFor6Exception;
@@ -86,7 +87,7 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 
 	@Override
 	public void initializeInstance(RowProcessingState rowProcessingState) {
-		Collection<AttributeMapping> attributeMappings;
+		List<AttributeMapping> attributeMappings;
 		if ( parentAccess instanceof EmbeddableInitializer ) {
 			attributeMappings = ( (EmbeddableInitializer) parentAccess ).getInitializedPart()
 					.getEmbeddableTypeDescriptor()

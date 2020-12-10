@@ -98,29 +98,24 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 
 		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory ).translate( sqlAst );
 
-		final int jdbcTypeCount = restrictivePart.getJdbcTypeCount( sessionFactory.getTypeConfiguration() );
+		final int jdbcTypeCount = restrictivePart.getJdbcTypeCount();
 		assert jdbcParameters.size() % jdbcTypeCount == 0;
 
 		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( jdbcTypeCount );
 		jdbcSelect.bindFilterJdbcParameters( jdbcParameterBindings );
 
-		final Iterator<JdbcParameter> paramItr = jdbcParameters.iterator();
-
-		while ( paramItr.hasNext() ) {
-			restrictivePart.visitJdbcValues(
+		int offset = 0;
+		while ( offset < jdbcParameters.size() ) {
+			offset += jdbcParameterBindings.registerParametersForEachJdbcValue(
 					restrictedValue,
 					Clause.WHERE,
-					(value, type) -> {
-						assert paramItr.hasNext();
-						final JdbcParameter parameter = paramItr.next();
-						jdbcParameterBindings.addBinding(
-								parameter,
-								new JdbcParameterBindingImpl( type, value )
-						);
-					},
+					offset,
+					restrictivePart,
+					jdbcParameters,
 					session
 			);
 		}
+		assert offset == jdbcParameters.size();
 
 		final List list = JdbcSelectExecutorStandardImpl.INSTANCE.list(
 				jdbcSelect,

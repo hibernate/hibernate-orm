@@ -8,13 +8,11 @@ package org.hibernate.metamodel.mapping;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.MutableInteger;
+import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.sql.ast.Clause;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Contract for things at the domain/mapping level that can be bound into a JDBC
@@ -43,24 +41,13 @@ public interface Bindable {
 	 * }
 	 */
 
-	default int getJdbcTypeCount(TypeConfiguration typeConfiguration) {
-		final MutableInteger value = new MutableInteger();
-		visitJdbcTypes(
-				sqlExpressableType -> value.incrementAndGet(),
-				Clause.IRRELEVANT,
-				typeConfiguration
-		);
-
-		return value.get();
+	default int getJdbcTypeCount() {
+		return forEachJdbcType( (index, jdbcMapping) -> {} );
 	}
 
-	default List<JdbcMapping> getJdbcMappings(TypeConfiguration typeConfiguration) {
+	default List<JdbcMapping> getJdbcMappings() {
 		final List<JdbcMapping> results = new ArrayList<>();
-		visitJdbcTypes(
-				results::add,
-				Clause.IRRELEVANT,
-				typeConfiguration
-		);
+		forEachJdbcType( (index, jdbcMapping) -> results.add( jdbcMapping ) );
 		return results;
 	}
 
@@ -71,10 +58,12 @@ public interface Bindable {
 	 * <p>
 	 * Used during cacheable SQL AST creation.
 	 */
-	default void visitJdbcTypes(
-			Consumer<JdbcMapping> action,
-			Clause clause,
-			TypeConfiguration typeConfiguration) {
+
+	default int forEachJdbcType(IndexedConsumer<JdbcMapping> action) {
+		return forEachJdbcType( 0, action );
+	}
+
+	default int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
@@ -143,9 +132,18 @@ public interface Bindable {
 	 *
 	 * Think of it as breaking the multi-dimensional array into a visitable flat array
 	 */
-	default void visitDisassembledJdbcValues(
+	default int forEachDisassembledJdbcValue(
 			Object value,
 			Clause clause,
+			JdbcValuesConsumer valuesConsumer,
+			SharedSessionContractImplementor session) {
+		return forEachDisassembledJdbcValue( value, clause, 0, valuesConsumer, session );
+	}
+
+	default int forEachDisassembledJdbcValue(
+			Object value,
+			Clause clause,
+			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
 		throw new NotYetImplementedFor6Exception( getClass() );
@@ -155,16 +153,25 @@ public interface Bindable {
 	 * Visit each constituent JDBC value extracted from the entity instance itself.
 	 *
 	 * Short-hand form of calling {@link #disassemble} and piping its result to
-	 * {@link #visitDisassembledJdbcValues}
+	 * {@link #forEachDisassembledJdbcValue}
 	 *
 	 * todo (6.0) : Would this would ever be used?
 	 */
-	default void visitJdbcValues(
+	default int forEachJdbcValue(
 			Object value,
 			Clause clause,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		visitDisassembledJdbcValues( disassemble( value, session ), clause, valuesConsumer, session );
+		return forEachJdbcValue( value, clause, 0, valuesConsumer, session );
+	}
+
+	default int forEachJdbcValue(
+			Object value,
+			Clause clause,
+			int offset,
+			JdbcValuesConsumer valuesConsumer,
+			SharedSessionContractImplementor session) {
+		return forEachDisassembledJdbcValue( disassemble( value, session ), clause, offset, valuesConsumer, session );
 	}
 
 
@@ -176,6 +183,6 @@ public interface Bindable {
 		/**
 		 * Consume a JDBC-level jdbcValue.  The JDBC jdbcMapping descriptor is also passed in
 		 */
-		void consume(Object jdbcValue, JdbcMapping jdbcMapping);
+		void consume(int selectionIndex, Object jdbcValue, JdbcMapping jdbcMapping);
 	}
 }

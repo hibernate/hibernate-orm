@@ -16,17 +16,12 @@ import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.query.results.SqlSelectionImpl;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.results.graph.AssemblerCreationState;
-import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 import static org.hibernate.query.results.ResultsHelper.jdbcPositionToValuesArrayPosition;
 import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
@@ -56,7 +51,7 @@ public class ImplicitFetchBuilderBasic implements ImplicitFetchBuilder {
 				.getFromClauseAccess()
 				.getTableGroup( parent.getNavigablePath() );
 
-		final String column = fetchable.getMappedColumnExpression();
+		final String column = fetchable.getSelectionExpression();
 		final String table = fetchable.getContainingTableExpression();
 
 		final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( column );

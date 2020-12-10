@@ -29,7 +29,6 @@ import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.FilterHelper;
-import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.loader.MultipleBagFetchException;
 import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.loader.ast.spi.Loader;
@@ -389,9 +388,7 @@ public class LoaderSelectBuilder {
 		}
 
 		for ( ModelPart restrictedPart : restrictedParts ) {
-			final int numberOfRestrictionColumns = restrictedPart.getJdbcTypeCount(
-					creationContext.getDomainModel().getTypeConfiguration()
-			);
+			final int numberOfRestrictionColumns = restrictedPart.getJdbcTypeCount();
 
 			applyRestriction(
 					rootQuerySpec,
@@ -430,26 +427,22 @@ public class LoaderSelectBuilder {
 		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 
 		if ( numberColumns == 1 ) {
-			modelPart.visitColumns(
-					(table, column, isFormula, customReadExpr, customWriteExpr, jdbcMapping) -> {
+			modelPart.forEachSelection(
+					(columnIndex, selection) -> {
 						final TableReference tableReference = rootTableGroup.resolveTableReference(
-								table );
+								selection.getContainingTableExpression() );
 						final ColumnReference columnRef =
 								(ColumnReference) sqlExpressionResolver.resolveSqlExpression(
-										createColumnReferenceKey( tableReference, column ),
+										createColumnReferenceKey( tableReference, selection.getSelectionExpression() ),
 										p -> new ColumnReference(
 												tableReference,
-												column,
-												isFormula,
-												customReadExpr,
-												customWriteExpr,
-												jdbcMapping,
+												selection,
 												creationContext.getSessionFactory()
 										)
 
 								);
 						if ( numberOfKeysToLoad == 1 ) {
-							final JdbcParameter jdbcParameter = new JdbcParameterImpl( jdbcMapping );
+							final JdbcParameter jdbcParameter = new JdbcParameterImpl( selection.getJdbcMapping() );
 							jdbcParameterConsumer.accept( jdbcParameter );
 
 							rootQuerySpec.applyPredicate(
@@ -474,19 +467,15 @@ public class LoaderSelectBuilder {
 		else {
 			final List<ColumnReference> columnReferences = new ArrayList<>( numberColumns );
 
-			modelPart.visitColumns(
-					(table, column, isFormula, customReadExpr, customWriteExpr, jdbcMapping) -> {
-						final TableReference tableReference = rootTableGroup.resolveTableReference( table );
+			modelPart.forEachSelection(
+					(columnIndex, selection) -> {
+						final TableReference tableReference = rootTableGroup.resolveTableReference( selection.getContainingTableExpression() );
 						columnReferences.add(
 								(ColumnReference) sqlExpressionResolver.resolveSqlExpression(
-										createColumnReferenceKey( tableReference, column ),
+										createColumnReferenceKey( tableReference, selection.getSelectionExpression() ),
 										p -> new ColumnReference(
 												tableReference,
-												column,
-												isFormula,
-												customReadExpr,
-												customWriteExpr,
-												jdbcMapping,
+												selection,
 												creationContext.getSessionFactory()
 										)
 								)
@@ -838,18 +827,18 @@ public class LoaderSelectBuilder {
 
 		final Expression fkExpression;
 
-		final int jdbcTypeCount = fkDescriptor.getJdbcTypeCount( sessionFactory.getTypeConfiguration() );
+		final int jdbcTypeCount = fkDescriptor.getJdbcTypeCount();
 		if ( jdbcTypeCount == 1 ) {
 			assert fkDescriptor instanceof SimpleForeignKeyDescriptor;
 			final SimpleForeignKeyDescriptor simpleFkDescriptor = (SimpleForeignKeyDescriptor) fkDescriptor;
 			fkExpression = sqlAstCreationState.getSqlExpressionResolver().resolveSqlExpression(
 					createColumnReferenceKey(
 							simpleFkDescriptor.getContainingTableExpression(),
-							simpleFkDescriptor.getMappedColumnExpression()
+							simpleFkDescriptor.getSelectionExpression()
 					),
 					sqlAstProcessingState -> new ColumnReference(
 							rootTableGroup.resolveTableReference( simpleFkDescriptor.getContainingTableExpression() ),
-							simpleFkDescriptor.getMappedColumnExpression(),
+							simpleFkDescriptor.getSelectionExpression(),
 							false,
 							null,
 							null,
@@ -860,18 +849,14 @@ public class LoaderSelectBuilder {
 		}
 		else {
 			final List<ColumnReference> columnReferences = new ArrayList<>( jdbcTypeCount );
-			fkDescriptor.visitColumns(
-					(table, column, isFormula, customReadExpr, customWriteExpr, jdbcMapping) ->
+			fkDescriptor.forEachSelection(
+					(columnIndex, selection) ->
 						columnReferences.add(
 								(ColumnReference) sqlAstCreationState.getSqlExpressionResolver().resolveSqlExpression(
-										createColumnReferenceKey( table, column ),
+										createColumnReferenceKey( selection.getContainingTableExpression(), selection.getSelectionExpression() ),
 										sqlAstProcessingState -> new ColumnReference(
-												rootTableGroup.resolveTableReference( table ),
-												column,
-												isFormula,
-												customReadExpr,
-												customWriteExpr,
-												jdbcMapping,
+												rootTableGroup.resolveTableReference( selection.getContainingTableExpression() ),
+												selection,
 												this.creationContext.getSessionFactory()
 										)
 								)
@@ -918,24 +903,18 @@ public class LoaderSelectBuilder {
 
 		final SqlExpressionResolver sqlExpressionResolver = creationState.getSqlExpressionResolver();
 
-		final MutableInteger count = new MutableInteger();
 		fkDescriptor.visitTargetColumns(
-				(table, column, isFormula, customReadExpr, customWriteExpr, jdbcMapping) -> {
+				(valuesPosition, selection) -> {
 					// for each column, resolve a SqlSelection and add it to the sub-query select-clause
-					final TableReference tableReference = ownerTableGroup.resolveTableReference( table );
+					final TableReference tableReference = ownerTableGroup.resolveTableReference( selection.getContainingTableExpression() );
 					final Expression expression = sqlExpressionResolver.resolveSqlExpression(
-							createColumnReferenceKey( tableReference, column ),
+							createColumnReferenceKey( tableReference, selection.getSelectionExpression() ),
 							sqlAstProcessingState -> new ColumnReference(
 									tableReference,
-									column,
-									isFormula,
-									customReadExpr,
-									customWriteExpr,
-									jdbcMapping,
+									selection,
 									sessionFactory
 							)
 					);
-					final int valuesPosition = count.getAndIncrement();
 					subQuery.getSelectClause().addSqlSelection(
 							new SqlSelectionImpl(
 									valuesPosition + 1,

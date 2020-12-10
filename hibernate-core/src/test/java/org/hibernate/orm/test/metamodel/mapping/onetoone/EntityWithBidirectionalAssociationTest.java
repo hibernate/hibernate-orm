@@ -52,16 +52,16 @@ public class EntityWithBidirectionalAssociationTest {
 
 		ForeignKeyDescriptor foreignKeyDescriptor = childAttributeMapping.getForeignKeyDescriptor();
 		foreignKeyDescriptor.visitReferringColumns(
-				(keyTable, keyColumn, isKeyColumnFormula, readFragment, writeFragment, jdbcMapping) -> {
-					assertThat( keyTable, is( "PARENT" ) );
-					assertThat( keyColumn, is( "child_id" ) );
+				(columnIndex, selection) -> {
+					assertThat( selection.getContainingTableExpression(), is( "PARENT" ) );
+					assertThat( selection.getSelectionExpression(), is( "child_id" ) );
 				}
 		);
 
 		foreignKeyDescriptor.visitTargetColumns(
-				(targetTable, targetColumn, isTargetColumnFormula, readFragment, writeFragment, jdbcMapping) -> {
-					assertThat( targetTable, is( "CHILD" ) );
-					assertThat( targetColumn, is( "id" ) );
+				(columnIndex, selection) -> {
+					assertThat( selection.getContainingTableExpression(), is( "CHILD" ) );
+					assertThat( selection.getSelectionExpression(), is( "id" ) );
 				}
 		);
 
@@ -77,16 +77,16 @@ public class EntityWithBidirectionalAssociationTest {
 
 		foreignKeyDescriptor = parentAttributeMapping.getForeignKeyDescriptor();
 		foreignKeyDescriptor.visitReferringColumns(
-				(keyTable, keyColumn, isKeyColumnFormula, readFragment, writeFragment, jdbcMapping) -> {
-					assertThat( keyTable, is( "PARENT" ) );
-					assertThat( keyColumn, is( "child_id" ) );
+				(columnIndex, selection) -> {
+					assertThat( selection.getContainingTableExpression(), is( "PARENT" ) );
+					assertThat( selection.getSelectionExpression(), is( "child_id" ) );
 				}
 		);
 
 		foreignKeyDescriptor.visitTargetColumns(
-				(targetTable, targetColumn, isTargetColumnFormula, readFragment, writeFragment, jdbcMapping) -> {
-					assertThat( targetTable, is( "CHILD" ) );
-					assertThat( targetColumn, is( "id" ) );
+				(columnIndex, selection) -> {
+					assertThat( selection.getContainingTableExpression(), is( "CHILD" ) );
+					assertThat( selection.getSelectionExpression(), is( "id" ) );
 				}
 		);
 	}

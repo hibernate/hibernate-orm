@@ -13,7 +13,7 @@ import java.util.function.Supplier;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.FilterHelper;
-import org.hibernate.metamodel.mapping.ColumnConsumer;
+import org.hibernate.metamodel.mapping.SelectionConsumer;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.entity.Joinable;
@@ -141,7 +141,7 @@ public class InlineDeleteHandler implements DeleteHandler {
 	private void executeDelete(
 			String targetTableExpression,
 			EntityMappingType entityDescriptor,
-			Supplier<Consumer<ColumnConsumer>> tableKeyColumnsVisitationSupplier,
+			Supplier<Consumer<SelectionConsumer>> tableKeyColumnsVisitationSupplier,
 			List<Object> ids,
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext) {

@@ -11,7 +11,8 @@ import java.util.function.BiConsumer;
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.metamodel.mapping.ColumnConsumer;
+import org.hibernate.mapping.IndexedConsumer;
+import org.hibernate.metamodel.mapping.SelectionConsumer;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -72,8 +73,13 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 	}
 
 	@Override
-	public String getMappedColumnExpression() {
+	public String getSelectionExpression() {
 		return columnExpression;
+	}
+
+	@Override
+	public boolean isFormula() {
+		return false;
 	}
 
 	@Override
@@ -224,11 +230,6 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 			TableGroup tableGroup,
 			DomainResultCreationState creationState,
 			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
-
-	}
-
-	@Override
-	public void visitColumns(ColumnConsumer consumer) {
 
 	}
 

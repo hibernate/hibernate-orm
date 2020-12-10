@@ -89,20 +89,14 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory ).translate( sqlAst );
 
 		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
-		final Iterator<JdbcParameter> jdbcParamItr = jdbcParameters.iterator();
-		uniqueKeyAttribute.visitJdbcValues(
+		int offset = jdbcParameterBindings.registerParametersForEachJdbcValue(
 				ukValue,
 				Clause.WHERE,
-				(jdbcValue, jdbcMapping) -> {
-					assert jdbcParamItr.hasNext();
-					final JdbcParameter jdbcParameter = jdbcParamItr.next();
-					jdbcParameterBindings.addBinding(
-							jdbcParameter,
-							new JdbcParameterBindingImpl( jdbcMapping, jdbcValue )
-					);
-				},
+				uniqueKeyAttribute,
+				jdbcParameters,
 				session
 		);
+		assert offset == jdbcParameters.size();
 
 		final List<Object> list = sessionFactory.getJdbcServices().getJdbcSelectExecutor().list(
 				jdbcSelect,
@@ -173,20 +167,14 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory ).translate( sqlAst );
 
 		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
-		final Iterator<JdbcParameter> jdbcParamItr = jdbcParameters.iterator();
-		uniqueKeyAttribute.visitJdbcValues(
+		int offset = jdbcParameterBindings.registerParametersForEachJdbcValue(
 				ukValue,
 				Clause.WHERE,
-				(jdbcValue, jdbcMapping) -> {
-					assert jdbcParamItr.hasNext();
-					final JdbcParameter jdbcParameter = jdbcParamItr.next();
-					jdbcParameterBindings.addBinding(
-							jdbcParameter,
-							new JdbcParameterBindingImpl( jdbcMapping, jdbcValue )
-					);
-				},
+				uniqueKeyAttribute,
+				jdbcParameters,
 				session
 		);
+		assert offset == jdbcParameters.size();
 
 		final List<Object> list = sessionFactory.getJdbcServices().getJdbcSelectExecutor().list(
 				jdbcSelect,

@@ -14,7 +14,7 @@ import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.metamodel.mapping.AssociationKey;
-import org.hibernate.metamodel.mapping.ColumnConsumer;
+import org.hibernate.metamodel.mapping.SelectionConsumer;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
@@ -618,9 +618,12 @@ public class ToOneAttributeMapping extends AbstractSingularAttributeMapping
 	}
 
 	@Override
-	public void visitColumns(ColumnConsumer consumer) {
+	public int forEachSelection(int offset, SelectionConsumer consumer) {
 		if ( isKeyReferringSide ) {
-			foreignKeyDescriptor.visitReferringColumns( consumer );
+			return foreignKeyDescriptor.visitReferringColumns( offset, consumer );
+		}
+		else {
+			return 0;
 		}
 	}
 }

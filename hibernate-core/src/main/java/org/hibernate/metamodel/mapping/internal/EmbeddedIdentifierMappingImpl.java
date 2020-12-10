@@ -7,12 +7,11 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import java.util.Collection;
-import java.util.Iterator;
+import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.internal.AbstractCompositeIdentifierMapping;
-import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
@@ -39,14 +38,12 @@ public class EmbeddedIdentifierMappingImpl extends AbstractCompositeIdentifierMa
 			StateArrayContributorMetadataAccess attributeMetadataAccess,
 			PropertyAccess propertyAccess,
 			String tableExpression,
-			String[] attrColumnNames,
 			SessionFactoryImplementor sessionFactory) {
 		super(
 				attributeMetadataAccess,
 				embeddableDescriptor,
 				entityMapping,
 				tableExpression,
-				attrColumnNames,
 				sessionFactory
 		);
 
@@ -97,8 +94,8 @@ public class EmbeddedIdentifierMappingImpl extends AbstractCompositeIdentifierMa
 
 	@Override
 	@SuppressWarnings( { "unchecked", "rawtypes" } )
-	public Collection<SingularAttributeMapping> getAttributes() {
-		return (Collection) getEmbeddableTypeDescriptor().getAttributeMappings();
+	public List<SingularAttributeMapping> getAttributes() {
+		return (List) getEmbeddableTypeDescriptor().getAttributeMappings();
 	}
 
 	@Override
@@ -112,27 +109,30 @@ public class EmbeddedIdentifierMappingImpl extends AbstractCompositeIdentifierMa
 	}
 
 	@Override
-	public void visitDisassembledJdbcValues(
+	public int forEachDisassembledJdbcValue(
 			Object value,
 			Clause clause,
+			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		getEmbeddableTypeDescriptor().visitDisassembledJdbcValues( value, clause, valuesConsumer, session );
+		return getEmbeddableTypeDescriptor().forEachDisassembledJdbcValue(
+				value,
+				clause,
+				offset,
+				valuesConsumer,
+				session
+		);
 	}
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		final Collection<SingularAttributeMapping> attributeMappings = getAttributes();
-
-		Object[] result = new Object[attributeMappings.size()];
-		int i = 0;
-		final Iterator<SingularAttributeMapping> iterator = attributeMappings.iterator();
-		while ( iterator.hasNext() ) {
-			AttributeMapping mapping = iterator.next();
-			Object o = mapping.getPropertyAccess().getGetter().get( value );
-			result[i] = mapping.disassemble( o, session );
-			i++;
-		}
+		final Object[] result = new Object[getAttributeCount()];
+		forEachAttribute(
+				(i, mapping) -> {
+					Object o = mapping.getPropertyAccess().getGetter().get( value );
+					result[i] = mapping.disassemble( o, session );
+				}
+		);
 		return result;
 	}
 }

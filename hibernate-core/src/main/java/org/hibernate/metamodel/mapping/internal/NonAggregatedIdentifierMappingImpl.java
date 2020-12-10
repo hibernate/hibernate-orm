@@ -14,7 +14,6 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.Property;
@@ -24,7 +23,6 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.ComponentType;
 
 /**
@@ -47,7 +45,6 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 			List<SingularAttributeMapping> idAttributeMappings,
 			StateArrayContributorMetadataAccess attributeMetadataAccess,
 			String rootTableName,
-			String[] rootTableKeyColumnNames,
 			Component bootIdClassDescriptor,
 			Component bootCidDescriptor,
 			MappingModelCreationProcess creationProcess) {
@@ -57,7 +54,6 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 				embeddableDescriptor,
 				entityMapping,
 				rootTableName,
-				rootTableKeyColumnNames,
 				creationProcess.getCreationContext().getSessionFactory()
 		);
 
@@ -72,7 +68,7 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 	}
 
 	@Override
-	public Collection<SingularAttributeMapping> getAttributes() {
+	public List<SingularAttributeMapping> getAttributes() {
 		return idAttributeMappings;
 	}
 
@@ -87,10 +83,8 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 		final SessionFactoryImplementor factory = session.getFactory();
 		final Object[] propertyValues = ( (ComponentType) bootIdClassDescriptor.getType() )
 				.getPropertyValues( id, session );
-		final MutableInteger index = new MutableInteger();
-		getAttributes().forEach(
-				attribute -> {
-					final int position = index.getAndIncrement();
+		forEachAttribute(
+				(position, attribute) -> {
 					Object propertyValue = propertyValues[position];
 					final Property property = bootIdClassDescriptor.getProperty( position );
 					if ( attribute instanceof ToOneAttributeMapping && !( property.getValue() instanceof ManyToOne ) ) {

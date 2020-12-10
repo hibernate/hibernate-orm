@@ -24,7 +24,7 @@ public class DerbyCaseExpressionWalker implements CaseExpressionWalker {
 			StringBuilder sqlBuffer,
 			SqlAstWalker sqlAstWalker) {
 
-		sqlBuffer.append( "case " );
+		sqlBuffer.append( "case" );
 
 		for ( CaseSearchedExpression.WhenFragment whenFragment : caseSearchedExpression.getWhenFragments() ) {
 			sqlBuffer.append( " when " );

@@ -61,7 +61,7 @@ public class CollectionLoaderBatchKey implements CollectionLoader {
 		this.attributeMapping = attributeMapping;
 		this.batchSize = batchSize;
 
-		this.keyJdbcCount = attributeMapping.getKeyDescriptor().getJdbcTypeCount( sessionFactory.getTypeConfiguration() );
+		this.keyJdbcCount = attributeMapping.getKeyDescriptor().getJdbcTypeCount();
 
 		this.batchSizeJdbcParameters = new ArrayList<>();
 		this.batchSizeSqlAst = LoaderSelectBuilder.createSelect(
@@ -164,20 +164,15 @@ public class CollectionLoaderBatchKey implements CollectionLoader {
 			final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( keyJdbcCount * smallBatchLength );
 			jdbcSelect.bindFilterJdbcParameters( jdbcParameterBindings );
 
-			final Iterator<JdbcParameter> paramItr = jdbcParameters.iterator();
+			int offset = 0;
 
 			for ( int i = smallBatchStart; i < smallBatchStart + smallBatchLength; i++ ) {
-				getLoadable().getKeyDescriptor().visitJdbcValues(
+				offset += jdbcParameterBindings.registerParametersForEachJdbcValue(
 						batchIds[i],
 						Clause.WHERE,
-						(value, type) -> {
-							assert paramItr.hasNext();
-							final JdbcParameter parameter = paramItr.next();
-							jdbcParameterBindings.addBinding(
-									parameter,
-									new JdbcParameterBindingImpl( type, value )
-							);
-						},
+						offset,
+						getLoadable().getKeyDescriptor(),
+						jdbcParameters,
 						session
 				);
 
@@ -210,7 +205,7 @@ public class CollectionLoaderBatchKey implements CollectionLoader {
 				);
 			}
 
-			assert !paramItr.hasNext();
+			assert offset == jdbcParameters.size();
 
 			// prepare for the next round...
 			smallBatchStart += smallBatchLength;

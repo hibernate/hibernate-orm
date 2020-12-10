@@ -810,7 +810,7 @@ public class CustomPersister implements EntityPersister {
 	}
 
 	@Override
-	public Collection<AttributeMapping> getAttributeMappings() {
+	public List<AttributeMapping> getAttributeMappings() {
 		return null;
 	}
 

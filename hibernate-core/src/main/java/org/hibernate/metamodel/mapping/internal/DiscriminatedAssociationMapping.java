@@ -74,7 +74,9 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		final Selectable metaColumn = columnIterator.next();
 		assert columnIterator.hasNext();
 		final Selectable keyColumn = columnIterator.next();
-		assert ! columnIterator.hasNext();
+		assert !columnIterator.hasNext();
+		assert !metaColumn.isFormula();
+		assert !keyColumn.isFormula();
 
 		final AnyDiscriminatorPart discriminatorPart = new AnyDiscriminatorPart(
 				containerRole.append( AnyDiscriminatorPart.ROLE_NAME),

@@ -13,7 +13,7 @@ import java.util.function.Supplier;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
-import org.hibernate.metamodel.mapping.ColumnConsumer;
+import org.hibernate.metamodel.mapping.SelectionConsumer;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -47,7 +47,7 @@ public class DisjunctionRestrictionProducer implements MatchingIdRestrictionProd
 			List<?> matchingIdValues,
 			EntityMappingType entityDescriptor,
 			TableReference mutatingTableReference,
-			Supplier<Consumer<ColumnConsumer>> columnsToMatchVisitationSupplier,
+			Supplier<Consumer<SelectionConsumer>> columnsToMatchVisitationSupplier,
 			ExecutionContext executionContext) {
 		assert matchingIdValues != null;
 		assert ! matchingIdValues.isEmpty();
@@ -55,14 +55,14 @@ public class DisjunctionRestrictionProducer implements MatchingIdRestrictionProd
 		final SessionFactoryImplementor sessionFactory = executionContext.getSession().getFactory();
 
 		final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
-		final int idColumnCount = identifierMapping.getJdbcTypeCount( sessionFactory.getTypeConfiguration() );
+		final int idColumnCount = identifierMapping.getJdbcTypeCount();
 		assert idColumnCount > 0;
 
 		final Junction predicate = new Junction( Junction.Nature.DISJUNCTION );
 
 		if ( idColumnCount == 1 ) {
 			final BasicValuedModelPart basicIdMapping = (BasicValuedModelPart) identifierMapping;
-			final String idColumn = basicIdMapping.getMappedColumnExpression();
+			final String idColumn = basicIdMapping.getSelectionExpression();
 			final ColumnReference idColumnReference = new ColumnReference(
 					mutatingTableReference,
 					idColumn,
@@ -87,20 +87,16 @@ public class DisjunctionRestrictionProducer implements MatchingIdRestrictionProd
 		else {
 			final List<ColumnReference> columnReferences = new ArrayList<>( idColumnCount );
 			final List<JdbcMapping> jdbcMappings = new ArrayList<>( idColumnCount );
-			identifierMapping.visitColumns(
-					(containingTableExpression, columnExpression, isFormula, readFragment, writeFragment, jdbcMapping) -> {
+			identifierMapping.forEachSelection(
+					(columnIndex, selection) -> {
 						columnReferences.add(
 								new ColumnReference(
 										mutatingTableReference,
-										columnExpression,
-										false,
-										null,
-										null,
-										jdbcMapping,
+										selection,
 										sessionFactory
 								)
 						);
-						jdbcMappings.add( jdbcMapping );
+						jdbcMappings.add( selection.getJdbcMapping() );
 					}
 			);
 

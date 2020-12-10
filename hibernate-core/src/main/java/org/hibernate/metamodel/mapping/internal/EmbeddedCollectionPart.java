@@ -14,8 +14,9 @@ import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.CollectionPart;
-import org.hibernate.metamodel.mapping.ColumnConsumer;
+import org.hibernate.metamodel.mapping.SelectionConsumer;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -49,7 +50,6 @@ import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
 import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableFetchImpl;
 import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableResultImpl;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
@@ -61,9 +61,6 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 	private final EmbeddableMappingType embeddableMappingType;
 
 	private final String containingTableExpression;
-	private final List<String> columnExpressions;
-	private final List<String> customReadExpressions;
-	private final List<String> customWriteExpressions;
 
 	private final PropertyAccess parentInjectionAttributePropertyAccess;
 	private final String sqlAliasStem;
@@ -75,12 +72,7 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 			EmbeddableMappingType embeddableMappingType,
 			String parentInjectionAttributeName,
 			String containingTableExpression,
-			List<String> columnExpressions,
-			List<String> customReadExpressions,
-			List<String> customWriteExpressions,
 			String sqlAliasStem) {
-		this.customReadExpressions = customReadExpressions;
-		this.customWriteExpressions = customWriteExpressions;
 		this.navigableRole = collectionDescriptor.getNavigableRole().appendContainer( nature.getName() );
 		this.collectionDescriptor = collectionDescriptor;
 		this.nature = nature;
@@ -96,7 +88,6 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 		this.embeddableMappingType = embeddableMappingType;
 
 		this.containingTableExpression = containingTableExpression;
-		this.columnExpressions = columnExpressions;
 		this.sqlAliasStem = sqlAliasStem;
 	}
 
@@ -135,21 +126,6 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 	}
 
 	@Override
-	public List<String> getMappedColumnExpressions() {
-		return columnExpressions;
-	}
-
-	@Override
-	public List<String> getCustomReadExpressions() {
-		return customReadExpressions;
-	}
-
-	@Override
-	public List<String> getCustomWriteExpressions() {
-		return customWriteExpressions;
-	}
-
-	@Override
 	public PropertyAccess getParentInjectionAttributePropertyAccess() {
 		return parentInjectionAttributePropertyAccess;
 	}
@@ -162,31 +138,6 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 	@Override
 	public FetchOptions getMappedFetchOptions() {
 		return this;
-	}
-
-
-	@Override
-	public int getJdbcTypeCount(TypeConfiguration typeConfiguration) {
-		return getEmbeddableTypeDescriptor().getJdbcTypeCount( typeConfiguration );
-	}
-
-	@Override
-	public List<JdbcMapping> getJdbcMappings(TypeConfiguration typeConfiguration) {
-		return getEmbeddableTypeDescriptor().getJdbcMappings( typeConfiguration );
-	}
-
-	@Override
-	public void visitJdbcTypes(Consumer<JdbcMapping> action, Clause clause, TypeConfiguration typeConfiguration) {
-		getEmbeddableTypeDescriptor().visitJdbcTypes( action, clause, typeConfiguration );
-	}
-
-	@Override
-	public void visitJdbcValues(
-			Object value,
-			Clause clause,
-			JdbcValuesConsumer valuesConsumer,
-			SharedSessionContractImplementor session) {
-		getEmbeddableTypeDescriptor().visitJdbcValues( value, clause, valuesConsumer, session );
 	}
 
 	@Override
@@ -218,20 +169,15 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 
 		final List<Expression> expressions = new ArrayList<>();
-		getEmbeddableTypeDescriptor().visitColumns(
-				(tableExpression, columnExpression, isFormula, readFragment, writeFragment, jdbcMapping) ->{
-					assert containingTableExpression.equals( tableExpression );
-					assert columnExpressions.contains( columnExpression );
+		getEmbeddableTypeDescriptor().forEachSelection(
+				(columnIndex, selection) -> {
+					assert containingTableExpression.equals( selection.getContainingTableExpression() );
 					expressions.add(
 							sqlExpressionResolver.resolveSqlExpression(
-									SqlExpressionResolver.createColumnReferenceKey( tableExpression, columnExpression ),
+									SqlExpressionResolver.createColumnReferenceKey( selection.getContainingTableExpression(), selection.getSelectionExpression() ),
 									sqlAstProcessingState -> new ColumnReference(
-											tableGroup.resolveTableReference( tableExpression ),
-											columnExpression,
-											isFormula,
-											readFragment,
-											writeFragment,
-											jdbcMapping,
+											tableGroup.resolveTableReference( selection.getContainingTableExpression() ),
+											selection,
 											sqlAstCreationState.getCreationContext().getSessionFactory()
 									)
 							)
@@ -310,8 +256,4 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 		return FetchTiming.IMMEDIATE;
 	}
 
-	@Override
-	public void visitColumns(ColumnConsumer consumer) {
-		getEmbeddableTypeDescriptor().visitColumns( consumer );
-	}
 }

@@ -20,7 +20,7 @@ public class MckoiCaseExpressionWalker implements CaseExpressionWalker {
 	@Override
 	public void visitCaseSearchedExpression(
 			CaseSearchedExpression caseSearchedExpression, StringBuilder sqlBuffer, SqlAstWalker sqlAstWalker) {
-		sqlBuffer.append( "case " );
+		sqlBuffer.append( "case" );
 		StringBuilder buf2= new StringBuilder( );
 
 		for ( CaseSearchedExpression.WhenFragment whenFragment : caseSearchedExpression.getWhenFragments() ) {

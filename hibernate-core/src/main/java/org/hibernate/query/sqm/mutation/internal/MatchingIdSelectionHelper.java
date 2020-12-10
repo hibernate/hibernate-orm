@@ -14,7 +14,6 @@ import java.util.Map;
 
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
@@ -80,20 +79,14 @@ public class MatchingIdSelectionHelper {
 		//noinspection rawtypes
 		final List<DomainResult> domainResults = new ArrayList<>();
 
-		final MutableInteger i = new MutableInteger();
-		targetEntityDescriptor.getIdentifierMapping().visitColumns(
-				(containingTableExpression, columnExpression, isFormula, readFragment, writeFragment, jdbcMapping) -> {
-					final int position = i.getAndIncrement();
-					final TableReference tableReference = mutatingTableGroup.resolveTableReference( containingTableExpression );
+		targetEntityDescriptor.getIdentifierMapping().forEachSelection(
+				(position, selection) -> {
+					final TableReference tableReference = mutatingTableGroup.resolveTableReference( selection.getContainingTableExpression() );
 					final Expression expression = sqmConverter.getSqlExpressionResolver().resolveSqlExpression(
-							SqlExpressionResolver.createColumnReferenceKey( tableReference, columnExpression ),
+							SqlExpressionResolver.createColumnReferenceKey( tableReference, selection.getSelectionExpression() ),
 							sqlAstProcessingState -> new ColumnReference(
 									tableReference,
-									columnExpression,
-									isFormula,
-									null,
-									null,
-									jdbcMapping,
+									selection,
 									sessionFactory
 							)
 					);
@@ -106,7 +99,7 @@ public class MatchingIdSelectionHelper {
 					);
 
 					//noinspection unchecked
-					domainResults.add( new BasicResult( position, null, jdbcMapping.getJavaTypeDescriptor() ) );
+					domainResults.add( new BasicResult( position, null, selection.getJdbcMapping().getJavaTypeDescriptor() ) );
 
 				}
 		);
@@ -144,21 +137,14 @@ public class MatchingIdSelectionHelper {
 		final TableGroup mutatingTableGroup = sqmConverter.getMutatingTableGroup();
 		idSelectionQuery.getFromClause().addRoot( mutatingTableGroup );
 
-		final MutableInteger i = new MutableInteger();
-		targetEntityDescriptor.getIdentifierMapping().visitColumns(
-				(containingTableExpression, columnExpression, isFormula, readFragment, writeFragment, jdbcMapping) -> {
-					final int position = i.getAndIncrement();
-					final TableReference tableReference = mutatingTableGroup.resolveTableReference( containingTableExpression );
+		targetEntityDescriptor.getIdentifierMapping().forEachSelection(
+				(position, selection) -> {
+					final TableReference tableReference = mutatingTableGroup.resolveTableReference( selection.getContainingTableExpression() );
 					final Expression expression = sqmConverter.getSqlExpressionResolver().resolveSqlExpression(
-							SqlExpressionResolver.createColumnReferenceKey( tableReference, columnExpression ),
+							SqlExpressionResolver.createColumnReferenceKey( tableReference, selection.getSelectionExpression() ),
 							sqlAstProcessingState -> new ColumnReference(
 									tableReference,
-									columnExpression,
-									// id columns cannot be formulas and cannot have custom read and write expressions
-									false,
-									null,
-									null,
-									jdbcMapping,
+									selection,
 									sessionFactory
 							)
 					);

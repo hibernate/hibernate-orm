@@ -919,7 +919,7 @@ public abstract class AbstractSqlAstWalker
 		else if ( modelPart instanceof PluralAttributeMapping ) {
 			CollectionPart elementDescriptor = ( (PluralAttributeMapping) modelPart ).getElementDescriptor();
 			if ( elementDescriptor instanceof BasicValuedCollectionPart ) {
-				String mappedColumnExpression = ( (BasicValuedCollectionPart) elementDescriptor ).getMappedColumnExpression();
+				String mappedColumnExpression = ( (BasicValuedCollectionPart) elementDescriptor ).getSelectionExpression();
 				appendSql( mappedColumnExpression );
 			}
 		}
@@ -1384,7 +1384,7 @@ public abstract class AbstractSqlAstWalker
 
 	@Override
 	public void visitCaseSimpleExpression(CaseSimpleExpression caseSimpleExpression) {
-		appendSql( "case " );
+		appendSql( "case" );
 		caseSimpleExpression.getFixture().accept( this );
 		for ( CaseSimpleExpression.WhenFragment whenFragment : caseSimpleExpression.getWhenFragments() ) {
 			appendSql( " when " );
@@ -1431,7 +1431,7 @@ public abstract class AbstractSqlAstWalker
 			appendSql( SqlAppender.NULL_KEYWORD );
 		}
 		else {
-			assert literal.getExpressionType().getJdbcTypeCount( getTypeConfiguration() ) == 1;
+			assert literal.getExpressionType().getJdbcTypeCount() == 1;
 			final JdbcMapping jdbcMapping = literal.getJdbcMapping();
 			final JdbcLiteralFormatter literalFormatter = jdbcMapping.getSqlTypeDescriptor().getJdbcLiteralFormatter( jdbcMapping.getJavaTypeDescriptor() );
 			if ( literalFormatter == null ) {
@@ -1470,7 +1470,8 @@ public abstract class AbstractSqlAstWalker
 
 	@Override
 	public void visitSelfRenderingPredicate(SelfRenderingPredicate selfRenderingPredicate) {
-		selfRenderingPredicate.getSelfRenderingExpression().accept( this );
+		// todo (6.0) render boolean expression as comparison predicate if necessary
+		selfRenderingPredicate.getSelfRenderingExpression().renderToSql( this, this, getSessionFactory() );
 	}
 
 	@Override

@@ -380,25 +380,14 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 	@Override
 	public void visitConstraintOrderedTables(ConstraintOrderedTableConsumer consumer) {
-		final MutableInteger tablePositionWrapper = new MutableInteger();
-
-		for ( String tableName : constraintOrderedTableNames ) {
-			final int tablePosition = tablePositionWrapper.getAndIncrement();
+		for ( int i = 0; i < constraintOrderedTableNames.length; i++ ) {
+			final String tableName = constraintOrderedTableNames[i];
+			final int tablePosition = i;
 
 			consumer.consume(
 					tableName,
 					() -> columnConsumer -> {
-						final String[] keyColumnNames = constraintOrderedKeyColumnNames[tablePosition];
-						for ( String column : keyColumnNames ) {
-							columnConsumer.accept(
-									tableName,
-									column,
-									false,
-									null,
-									null,
-									null
-							);
-						}
+						columnConsumer.accept(tableName, constraintOrderedKeyColumnNames[tablePosition]);
 					}
 			);
 		}

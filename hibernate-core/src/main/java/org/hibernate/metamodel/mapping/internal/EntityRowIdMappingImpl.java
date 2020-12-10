@@ -8,6 +8,7 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.util.function.BiConsumer;
 
+import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityRowIdMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -108,6 +109,17 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping {
 				getJavaTypeDescriptor(),
 				navigablePath
 		);
+	}
+
+	@Override
+	public int getJdbcTypeCount() {
+		return 1;
+	}
+
+	@Override
+	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+		action.accept( offset, JavaObjectType.INSTANCE );
+		return getJdbcTypeCount();
 	}
 
 	@Override

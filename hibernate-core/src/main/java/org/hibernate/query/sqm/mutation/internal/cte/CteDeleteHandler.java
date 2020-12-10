@@ -15,7 +15,7 @@ import java.util.function.Supplier;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.mapping.ColumnConsumer;
+import org.hibernate.metamodel.mapping.SelectionConsumer;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
@@ -137,7 +137,7 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 	protected void executeDelete(
 			QuerySpec cteDefinition,
 			String targetTable,
-			Supplier<Consumer<ColumnConsumer>> columnsToMatchVisitationSupplier,
+			Supplier<Consumer<SelectionConsumer>> columnsToMatchVisitationSupplier,
 			MappingModelExpressable<?> cteType,
 			QuerySpec cteSubQuery,
 			JdbcParameterBindings jdbcParameterBindings,
@@ -184,7 +184,7 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 	protected CteStatement generateCteStatement(
 			QuerySpec cteDefinition,
 			String targetTable,
-			Supplier<Consumer<ColumnConsumer>> columnsToMatchVisitationSupplier,
+			Supplier<Consumer<SelectionConsumer>> columnsToMatchVisitationSupplier,
 			MappingModelExpressable<?> cteType,
 			QuerySpec cteSubQuery,
 			ExecutionContext executionContext) {
@@ -206,7 +206,7 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 
 	private DeleteStatement generateCteConsumer(
 			String targetTable,
-			Supplier<Consumer<ColumnConsumer>> columnsToMatchVisitationSupplier,
+			Supplier<Consumer<SelectionConsumer>> columnsToMatchVisitationSupplier,
 			MappingModelExpressable<?> cteType,
 			QuerySpec cteSubQuery,
 			ExecutionContext executionContext) {
@@ -221,15 +221,11 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 		final List<ColumnReference> columnsToMatchReferences = new ArrayList<>();
 
 		columnsToMatchVisitationSupplier.get().accept(
-				(containingTableExpression, columnExpression, isFormula, customReadExpr, customWriteExpr, jdbcMapping) ->
+				(columnIndex, selection) ->
 						columnsToMatchReferences.add(
 								new ColumnReference(
 										targetTableReference,
-										columnExpression,
-										isFormula,
-										customReadExpr,
-										customWriteExpr,
-										jdbcMapping,
+										selection,
 										sessionFactory
 								)
 						)

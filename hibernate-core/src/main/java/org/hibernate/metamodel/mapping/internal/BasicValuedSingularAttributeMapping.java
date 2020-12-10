@@ -6,14 +6,13 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import java.util.function.Consumer;
-
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
-import org.hibernate.metamodel.mapping.ColumnConsumer;
+import org.hibernate.metamodel.mapping.SelectionConsumer;
 import org.hibernate.metamodel.mapping.ConvertibleModelPart;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
@@ -38,7 +37,6 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
@@ -117,12 +115,12 @@ public class BasicValuedSingularAttributeMapping
 	}
 
 	@Override
-	public String getMappedColumnExpression() {
+	public String getSelectionExpression() {
 		return mappedColumnExpression;
 	}
 
 	@Override
-	public boolean isMappedColumnExpressionFormula() {
+	public boolean isFormula() {
 		return isFormula;
 	}
 
@@ -175,20 +173,15 @@ public class BasicValuedSingularAttributeMapping
 		final TableReference tableReference = tableGroup.resolveTableReference( getContainingTableExpression() );
 
 		final String tableAlias = tableReference.getIdentificationVariable();
-		final String columnExpression = getMappedColumnExpression();
 		return expressionResolver.resolveSqlSelection(
 				expressionResolver.resolveSqlExpression(
 						SqlExpressionResolver.createColumnReferenceKey(
 								tableReference,
-								columnExpression
+								mappedColumnExpression
 						),
 						sqlAstProcessingState -> new ColumnReference(
 								tableAlias,
-								columnExpression,
-								isMappedColumnExpressionFormula(),
-								customReadExpression,
-								customWriteExpression,
-								jdbcMapping,
+								this,
 								creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
 						)
 				),
@@ -211,15 +204,11 @@ public class BasicValuedSingularAttributeMapping
 				expressionResolver.resolveSqlExpression(
 						SqlExpressionResolver.createColumnReferenceKey(
 								tableReference,
-								getMappedColumnExpression()
+								mappedColumnExpression
 						),
 						sqlAstProcessingState -> new ColumnReference(
 								tableReference.getIdentificationVariable(),
-								getMappedColumnExpression(),
-								isMappedColumnExpressionFormula(),
-								customReadExpression,
-								customWriteExpression,
-								jdbcMapping,
+								this,
 								creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
 						)
 				),
@@ -268,31 +257,25 @@ public class BasicValuedSingularAttributeMapping
 	}
 
 	@Override
-	public void visitDisassembledJdbcValues(
+	public int forEachDisassembledJdbcValue(
 			Object value,
 			Clause clause,
+			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		valuesConsumer.consume( value, getJdbcMapping() );
+		valuesConsumer.consume( offset, value, getJdbcMapping() );
+		return getJdbcTypeCount();
 	}
 
 	@Override
-	public void visitJdbcTypes(
-			Consumer<JdbcMapping> action,
-			Clause clause,
-			TypeConfiguration typeConfiguration) {
-		action.accept( getJdbcMapping() );
+	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+		action.accept( offset, jdbcMapping );
+		return getJdbcTypeCount();
 	}
 
 	@Override
-	public void visitColumns(ColumnConsumer consumer) {
-		consumer.accept(
-				tableExpression,
-				mappedColumnExpression,
-				isFormula,
-				customReadExpression,
-				customWriteExpression,
-				jdbcMapping
-		);
+	public int forEachSelection(int offset, SelectionConsumer consumer) {
+		consumer.accept( offset, this );
+		return getJdbcTypeCount();
 	}
 }

@@ -57,7 +57,7 @@ public class MultiNaturalIdLoaderStandard<E> implements MultiNaturalIdLoader<E> 
 		}
 		else {
 			maxBatchSize = session.getJdbcServices().getJdbcEnvironment().getDialect().getDefaultBatchLoadSizingStrategy().determineOptimalBatchLoadSize(
-					entityDescriptor.getNaturalIdMapping().getJdbcTypeCount( sessionFactory.getTypeConfiguration() ),
+					entityDescriptor.getNaturalIdMapping().getJdbcTypeCount(),
 					naturalIds.length
 			);
 		}

@@ -13,7 +13,7 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.CollectionPart;
-import org.hibernate.metamodel.mapping.ColumnConsumer;
+import org.hibernate.metamodel.mapping.SelectionConsumer;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
@@ -170,8 +170,8 @@ public class EntityCollectionPart
 	}
 
 	@Override
-	public void visitColumns(ColumnConsumer consumer) {
-		entityMappingType.visitColumns( consumer );
+	public int forEachSelection(int offset, SelectionConsumer consumer) {
+		return entityMappingType.forEachSelection( offset, consumer );
 	}
 
 	@Override

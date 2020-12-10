@@ -13,6 +13,7 @@ import javax.persistence.EntityManager;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Selectable;
 
 import org.junit.Test;
 
@@ -124,12 +125,12 @@ public class JoinMulIdNaming extends BaseEnversJPAFunctionalTestCase {
 	@SuppressWarnings({"unchecked"})
 	@Test
 	public void testJoinColumnNames() {
-		Iterator<Column> columns = metadata().getEntityBinding(
+		Iterator<Selectable> columns = metadata().getEntityBinding(
 				"org.hibernate.envers.test.integration.naming.ids.JoinMulIdNamingRefIngEntity_AUD"
 		).getProperty( "reference_id1" ).getColumnIterator();
 
 		assertTrue( columns.hasNext() );
-		assertEquals( "ID1_reference", columns.next().getName() );
+		assertEquals( "ID1_reference", columns.next().getText() );
 		assertFalse( columns.hasNext() );
 
 		columns = metadata().getEntityBinding(
@@ -137,7 +138,7 @@ public class JoinMulIdNaming extends BaseEnversJPAFunctionalTestCase {
 		).getProperty( "reference_id2" ).getColumnIterator();
 
 		assertTrue( columns.hasNext() );
-		assertEquals( "ID2_reference", columns.next().getName() );
+		assertEquals( "ID2_reference", columns.next().getText() );
 		assertFalse( columns.hasNext() );
 	}
 }

@@ -163,10 +163,8 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		final JdbcSelect jdbcSelect = sqmInterpretation.getJdbcSelect();
 		jdbcSelect.bindFilterJdbcParameters( jdbcParameterBindings );
 
-		session.autoFlushIfRequired( jdbcSelect.getAffectedTableNames() );
-
 		try {
-			session.autoFlushIfRequired( sqmInterpretation.getJdbcSelect().getAffectedTableNames() );
+			session.autoFlushIfRequired( jdbcSelect.getAffectedTableNames() );
 			return session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
 					jdbcSelect,
 					jdbcParameterBindings,

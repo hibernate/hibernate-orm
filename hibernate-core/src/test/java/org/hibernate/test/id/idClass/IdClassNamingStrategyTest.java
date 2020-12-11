@@ -11,6 +11,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 import static org.hibernate.cfg.AvailableSettings.IMPLICIT_NAMING_STRATEGY;
@@ -31,7 +32,7 @@ import static org.hibernate.cfg.AvailableSettings.IMPLICIT_NAMING_STRATEGY;
  *   primary key (id_idA, id_idB)
  * )
  */
-@ServiceRegistry(settings = @ServiceRegistry.Setting(name = IMPLICIT_NAMING_STRATEGY, value = "component-path"))
+@ServiceRegistry(settings = @Setting(name = IMPLICIT_NAMING_STRATEGY, value = "component-path"))
 public class IdClassNamingStrategyTest {
 
 	@Test

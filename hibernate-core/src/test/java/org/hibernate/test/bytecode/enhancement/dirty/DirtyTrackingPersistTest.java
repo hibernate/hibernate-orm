@@ -7,11 +7,9 @@
 package org.hibernate.test.bytecode.enhancement.dirty;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.ElementCollection;
@@ -21,26 +19,20 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderBy;
 import javax.persistence.OrderColumn;
-import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
 import org.hibernate.boot.internal.SessionFactoryBuilderImpl;
 import org.hibernate.boot.internal.SessionFactoryOptionsBuilder;
 import org.hibernate.boot.spi.SessionFactoryBuilderService;
-import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.testing.transaction.TransactionUtil;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -94,7 +86,7 @@ public class DirtyTrackingPersistTest extends BaseCoreFunctionalTestCase {
 
 	// --- //
 
-	@Entity
+	@Entity(name = "HotherEntity")
 	public static class HotherEntity {
 		@Id
 		@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -119,7 +111,7 @@ public class DirtyTrackingPersistTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-	@Entity
+	@Entity(name = "Hentity")
 	public static class Hentity {
 		@Id
 		@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -135,7 +127,7 @@ public class DirtyTrackingPersistTest extends BaseCoreFunctionalTestCase {
 		protected List<HotherEntity> lineItems;
 
 		@Basic
-		private Long number;
+		private Long aNumber;
 
 		@Temporal(value = TemporalType.TIMESTAMP)
 		private Date createDate;
@@ -184,7 +176,7 @@ public class DirtyTrackingPersistTest extends BaseCoreFunctionalTestCase {
 		}
 
 		public void bumpNumber() {
-			number = number == null ? 0 : number++;
+			aNumber = aNumber == null ? 0 : aNumber++;
 		}
 	}
 }

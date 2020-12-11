@@ -25,7 +25,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 
-@TestForIssue( jiraKey = "HHH-ToDo" )
+@TestForIssue( jiraKey = "HHH-14365" )
 public class PreparedStatementCountTest extends BaseEntityManagerFunctionalTestCase {
     @Override
     protected Class<?>[] getAnnotatedClasses() {

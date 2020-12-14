@@ -36,3 +36,10 @@ else {
 	logger.warn( "[WARN] Toolchains are not yet supported for Groovy compilation." +
 			" Using the JDK that runs Gradle for Groovy compilation." )
 }
+
+tasks.test {
+	if ( gradle.ext.javaVersions.test.launcher.asInt() >= 9 ) {
+		// Needs add-opens because Gradle uses illegal accesses to inject... mocks? Something like that.
+		jvmArgs( ['--add-opens', 'java.base/java.lang=ALL-UNNAMED'] )
+	}
+}

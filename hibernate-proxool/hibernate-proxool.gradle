@@ -15,3 +15,15 @@ dependencies {
     compile( libraries.proxool )
     testCompile project( ':hibernate-testing' )
 }
+
+test {
+    if ( gradle.ext.javaVersions.test.launcher.asInt() >= 9 ) {
+        // Proxool needs this to define classes for some reason. Stack trace:
+        // 	at org.logicalcobwebs.cglib.core.ReflectUtils.defineClass(ReflectUtils.java:372)
+        //	at org.logicalcobwebs.cglib.core.AbstractClassGenerator.create(AbstractClassGenerator.java:193)
+        //	at org.logicalcobwebs.cglib.core.KeyFactory$Generator.create(KeyFactory.java:177)
+        //	at org.logicalcobwebs.cglib.core.KeyFactory.create(KeyFactory.java:149)
+        //	at org.logicalcobwebs.cglib.proxy.Enhancer.<clinit>(Enhancer.java:96)
+        jvmArgs( ['--add-opens', 'java.base/java.lang=ALL-UNNAMED'] )
+    }
+}

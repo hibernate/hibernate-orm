@@ -9,11 +9,14 @@ package org.hibernate.envers.boot.internal;
 import java.util.Map;
 import java.util.Properties;
 
+import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
 import org.hibernate.envers.configuration.internal.EntitiesConfigurator;
 import org.hibernate.envers.configuration.internal.GlobalConfiguration;
@@ -35,6 +38,8 @@ import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.Stoppable;
 
 import org.jboss.logging.Logger;
+
+import static org.hibernate.cfg.AvailableSettings.XML_MAPPING_ENABLED;
 
 /**
  * Provides central access to Envers' configuration.
@@ -84,6 +89,11 @@ public class EnversServiceImpl implements EnversService, Configurable, Stoppable
 			);
 		}
 		this.integrationEnabled = ConfigurationHelper.getBoolean( INTEGRATION_ENABLED, configurationValues, true );
+		boolean xmlMappingEnabled = ConfigurationHelper.getBoolean( XML_MAPPING_ENABLED, configurationValues, true );
+		if ( this.integrationEnabled && !xmlMappingEnabled ) {
+			throw new HibernateException( "Hibernate Envers currently requires XML mapping to be enabled. Please don't disable setting `" + XML_MAPPING_ENABLED + "`; alternatively disable Hibernate Envers." );
+		}
+
 		log.infof( "Envers integration enabled? : %s", integrationEnabled );
 	}
 

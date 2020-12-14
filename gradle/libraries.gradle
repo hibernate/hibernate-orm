@@ -20,7 +20,7 @@ ext {
     elVersion = '3.0.1-b08'
 
     cdiVersion = '2.0'
-    weldVersion = '3.0.0.Final'
+    weldVersion = '3.1.5.Final'
 
     javassistVersion = '3.23.2-GA'
     byteBuddyVersion = '1.10.7'

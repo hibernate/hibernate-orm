@@ -3,6 +3,21 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.4.26.Final (December 14, 2020)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31904
+
+** Bug
+    * [HHH-14363] - MutableTypeEnhancementTestCase failing when run on Oracle DB
+    * [HHH-14360] - NullPointerException on AbstractEntityPersister.resolveDirtyAttributeIndexes
+    * [HHH-14355] - NPE in Envers AdditionalJaxbMappingProducerImpl when XML mapping is disabled
+    * [HHH-13945] - Envers cannot process deletion of child entity for ManyToOne relation
+
+** New Feature
+    * [HHH-14337] - Micrometer Statistics implementation
+
+
 Changes in 5.4.25.Final (December 01, 2020)
 ------------------------------------------------------------------------------------------------------------------------
 

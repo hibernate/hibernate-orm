@@ -297,6 +297,11 @@ task testJavassist(type: Test) {
             logger.lifecycle "Testing javassist with '${javaLauncher.get().metadata.installationPath}'"
         }
     }
+
+    if ( gradle.ext.javaVersions.test.launcher.asInt() >= 9 ) {
+        // Javassist needs this to generate proxies
+        jvmArgs( ['--add-opens', 'java.base/java.lang=ALL-UNNAMED'] )
+    }
 }
 
 check.dependsOn testJavassist

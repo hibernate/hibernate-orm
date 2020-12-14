@@ -264,6 +264,9 @@ test {
     if ( gradle.ext.javaVersions.test.launcher.asInt() >= 9 ) {
         // See org.hibernate.boot.model.naming.NamingHelperTest.DefaultCharset.set
         jvmArgs( ['--add-opens', 'java.base/java.nio.charset=ALL-UNNAMED'] )
+        // Weld needs this to generate proxies
+        jvmArgs( ['--add-opens', 'java.base/java.security=ALL-UNNAMED'] )
+        jvmArgs( ['--add-opens', 'java.base/java.lang=ALL-UNNAMED'] )
     }
 
     beforeTest { descriptor ->

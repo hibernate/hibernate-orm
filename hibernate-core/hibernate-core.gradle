@@ -281,7 +281,7 @@ task testJavassist(type: Test) {
         }
 
         //  Configure JVM Options
-        jvmArgs.addAll( getProperty( 'toolchain.launcher.jvmargs' ).toString().split( ' ' ) )
+        jvmArgs( getProperty( 'toolchain.launcher.jvmargs' ).toString().split( ' ' ) )
 
         // Display version of Java tools
         doFirst {

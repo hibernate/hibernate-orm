@@ -260,6 +260,12 @@ test.dependsOn ':hibernate-orm-modules:prepareWildFlyForTests'
 
 test {
     systemProperty 'file.encoding', 'utf-8'
+
+    if ( gradle.ext.javaVersions.test.launcher.asInt() >= 9 ) {
+        // See org.hibernate.boot.model.naming.NamingHelperTest.DefaultCharset.set
+        jvmArgs( ['--add-opens', 'java.base/java.nio.charset=ALL-UNNAMED'] )
+    }
+
     beforeTest { descriptor ->
         //println "Starting test: " + descriptor
     }

@@ -52,7 +52,17 @@ public interface StatisticsImplementor extends Statistics, Service {
 	 *
 	 * @param success Was the transaction successful?
 	 */
-	void endTransaction(boolean success);
+	default void endTransaction(boolean success) {
+		endTransaction(success, false);
+	}
+
+	/**
+	 * Callback about a transaction completing.
+	 *
+	 * @param success Was the transaction successful?
+	 * @param readonly Was the transaction readonly?
+	 */
+	void endTransaction(boolean success, boolean readonly);
 
 	/**
 	 * Callback about an entity being loaded.  This might indicate a proxy or a fully initialized entity, but in either

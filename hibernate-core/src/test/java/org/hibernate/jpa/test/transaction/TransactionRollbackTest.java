@@ -144,7 +144,7 @@ public class TransactionRollbackTest extends BaseEntityManagerFunctionalTestCase
 		}
 
 		@Override
-		public void afterCompletion(boolean successful, boolean delayed) {
+		public void afterCompletion(boolean successful, boolean delayed, boolean readonly) {
 			if ( !successful ) {
 				unSuccessfulAfterCompletion++;
 			}

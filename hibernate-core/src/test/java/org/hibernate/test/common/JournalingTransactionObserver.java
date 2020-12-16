@@ -27,7 +27,7 @@ public class JournalingTransactionObserver implements TransactionObserver {
 	}
 
 	@Override
-	public void afterCompletion(boolean successful, boolean delayed) {
+	public void afterCompletion(boolean successful, boolean delayed, boolean readonly) {
 		afterCompletions++;
 	}
 

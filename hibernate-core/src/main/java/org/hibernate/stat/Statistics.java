@@ -324,6 +324,11 @@ public interface Statistics {
 	long getSuccessfulTransactionCount();
 
 	/**
+	 * The number of readonly transactions we know
+	 */
+	long getReadonlyTransactionCount();
+
+	/**
 	 * The number of transactions we know to have completed
 	 */
 	long getTransactionCount();

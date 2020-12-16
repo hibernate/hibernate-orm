@@ -121,6 +121,12 @@ public class HibernateMetrics implements MeterBinder {
 		counter(registry, "hibernate.transactions", "The number of transactions we know to have failed",
 				s -> s.getTransactionCount() - s.getSuccessfulTransactionCount(), "result", "failure"
 		);
+		counter(registry, "hibernate.transactions.successful", "The number of successful readonly transactions we know",
+				Statistics::getReadonlyTransactionCount, "readonly", "true"
+		);
+		counter(registry, "hibernate.transactions.successful", "The number of successful non-readonly transactions we know",
+				s -> s.getSuccessfulTransactionCount() - s.getReadonlyTransactionCount(), "readonly", "false"
+		);
 		counter(registry,
 				"hibernate.optimistic.failures",
 				"The number of StaleObjectStateExceptions that have occurred",

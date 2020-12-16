@@ -381,10 +381,11 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 
 //		afterCompletionAction.doAction( this, statusToSend );
 
-		transactionCoordinatorOwner.afterTransactionCompletion( successful, delayed );
+		boolean readonly = false; //TODO
+		transactionCoordinatorOwner.afterTransactionCompletion( successful, delayed, readonly );
 
 		for ( TransactionObserver observer : observers() ) {
-			observer.afterCompletion( successful, delayed );
+			observer.afterCompletion( successful, delayed, readonly );
 		}
 
 		synchronizationRegistered = false;

@@ -449,9 +449,9 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	}
 
 	@Override
-	public void afterTransactionCompletion(boolean successful, boolean delayed) {
+	public void afterTransactionCompletion(boolean successful, boolean delayed, boolean readonly) {
 		afterTransaction();
-		owner.afterTransactionCompletion( successful, delayed );
+		owner.afterTransactionCompletion( successful, delayed, readonly );
 	}
 
 	@Override

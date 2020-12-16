@@ -93,6 +93,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 	private final LongAdder updateTimestampsCachePutCount = new LongAdder();
 
 	private final LongAdder committedTransactionCount = new LongAdder();
+	private final LongAdder readonlyTransactionCount = new LongAdder();
 	private final LongAdder transactionCount = new LongAdder();
 
 	private final LongAdder optimisticFailureCount = new LongAdder();
@@ -849,6 +850,11 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 	}
 
 	@Override
+	public long getReadonlyTransactionCount() {
+		return readonlyTransactionCount.sum();
+	}
+
+	@Override
 	public long getTransactionCount() {
 		return transactionCount.sum();
 	}
@@ -894,10 +900,13 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 	}
 
 	@Override
-	public void endTransaction(boolean success) {
+	public void endTransaction(boolean success, boolean readonly) {
 		transactionCount.increment();
 		if ( success ) {
 			committedTransactionCount.increment();
+		}
+		if ( readonly ) {
+			readonlyTransactionCount.increment();
 		}
 	}
 
@@ -908,6 +917,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 		LOG.sessionsOpened( sessionOpenCount.sum() );
 		LOG.sessionsClosed( sessionCloseCount.sum() );
 		LOG.transactions( transactionCount.sum() );
+		LOG.successfulTransactions( readonlyTransactionCount.sum() );
 		LOG.successfulTransactions( committedTransactionCount.sum() );
 		LOG.optimisticLockFailures( optimisticFailureCount.sum() );
 		LOG.flushes( flushCount.sum() );
@@ -952,6 +962,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 				.append( ",sessions opened=" ).append( sessionOpenCount )
 				.append( ",sessions closed=" ).append( sessionCloseCount )
 				.append( ",transactions=" ).append( transactionCount )
+				.append( ",readonly transactions=" ).append( readonlyTransactionCount )
 				.append( ",successful transactions=" ).append( committedTransactionCount )
 				.append( ",optimistic lock failures=" ).append( optimisticFailureCount )
 				.append( ",flushes=" ).append( flushCount )

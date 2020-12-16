@@ -29,6 +29,18 @@ public interface TransactionObserver {
 	 * Callback for processing the last phase of transaction completion.
 	 *
 	 * @param successful Was the transaction successful?
+	 * @param deplayed Is this a delayed after transaction completion call (aka after a timeout)?
 	 */
-	public void afterCompletion(boolean successful, boolean delayed);
+
+	public default void afterCompletion(boolean successful, boolean delayed) {
+		afterCompletion(successful, delayed, false);
+	}
+	/**
+	 * Callback for processing the last phase of transaction completion.
+	 *
+	 * @param successful Was the transaction successful?
+	 * @param deplayed Is this a delayed after transaction completion call (aka after a timeout)?
+	 * @param readonly Was the transaction readonly?
+	 */
+	public void afterCompletion(boolean successful, boolean delayed, boolean readonly);
 }

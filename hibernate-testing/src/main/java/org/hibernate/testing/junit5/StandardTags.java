@@ -11,6 +11,7 @@ package org.hibernate.testing.junit5;
  */
 @SuppressWarnings("unused")
 public final class StandardTags {
+	public static final String NOT_IMPLEMENTED_YET = "not-implemented-yet";
 	public static final String FAILURE_EXPECTED = "failure-expected";
 	public static final String PERF = "perf";
 	public static final String QUERY = "query";

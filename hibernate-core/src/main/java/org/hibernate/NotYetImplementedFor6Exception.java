@@ -13,7 +13,8 @@ import org.hibernate.metamodel.mapping.NonTransientException;
  *
  * todo (6.0) : prior going final, we need to find all usages of this and implement all methods (or throw a different exception)
  */
-public class NotYetImplementedFor6Exception extends RuntimeException implements NonTransientException {
+public class NotYetImplementedFor6Exception extends RuntimeException implements NonTransientException,
+		NotImplementedYetException {
 	public NotYetImplementedFor6Exception(String message) {
 		super( message );
 	}

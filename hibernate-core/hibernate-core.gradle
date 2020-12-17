@@ -239,6 +239,15 @@ artifacts {
 
 test {
     systemProperty 'file.encoding', 'utf-8'
+
+    if ( gradle.ext.javaVersions.test.launcher.asInt() >= 9 ) {
+        // See org.hibernate.boot.model.naming.NamingHelperTest.DefaultCharset.set
+        jvmArgs( ['--add-opens', 'java.base/java.nio.charset=ALL-UNNAMED'] )
+        // Weld needs this to generate proxies
+        jvmArgs( ['--add-opens', 'java.base/java.security=ALL-UNNAMED'] )
+        jvmArgs( ['--add-opens', 'java.base/java.lang=ALL-UNNAMED'] )
+    }
+
     beforeTest { descriptor ->
         //println "Starting test: " + descriptor
     }
@@ -260,12 +269,17 @@ task testJavassist(type: Test) {
         }
 
         //  Configure JVM Options
-        jvmArgs.addAll( getProperty( 'toolchain.launcher.jvmargs' ).toString().split( ' ' ) )
+        jvmArgs( getProperty( 'toolchain.launcher.jvmargs' ).toString().split( ' ' ) )
 
         // Display version of Java tools
         doFirst {
             logger.lifecycle "Testing javassist with '${javaLauncher.get().metadata.installationPath}'"
         }
+    }
+
+    if ( gradle.ext.javaVersions.test.launcher.asInt() >= 9 ) {
+        // Javassist needs this to generate proxies
+        jvmArgs( ['--add-opens', 'java.base/java.lang=ALL-UNNAMED'] )
     }
 }
 

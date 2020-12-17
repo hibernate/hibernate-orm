@@ -105,7 +105,7 @@ include 'hibernate-agroal'
 include 'hibernate-jcache'
 include 'hibernate-ehcache'
 include 'hibernate-infinispan'
-
+include 'hibernate-micrometer'
 include 'hibernate-graalvm'
 
 // The plugin used to generate Java modules was compiled using JDK11.

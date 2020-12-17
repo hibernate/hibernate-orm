@@ -20,14 +20,16 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryParameterImplementor;
+import org.hibernate.query.spi.SqlOmittingQueryOptions;
 import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
-import org.hibernate.query.sqm.sql.SimpleSqmDeleteTranslation;
-import org.hibernate.query.sqm.sql.SimpleSqmDeleteTranslator;
+import org.hibernate.query.sqm.sql.SqmTranslation;
+import org.hibernate.query.sqm.sql.SqmTranslator;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
-import org.hibernate.sql.ast.SqlAstDeleteTranslator;
+import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.MutatingTableReferenceGroupWrapper;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
@@ -47,7 +49,7 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 	private final DomainParameterXref domainParameterXref;
 
 	private JdbcDelete jdbcDelete;
-	private SimpleSqmDeleteTranslation sqmInterpretation;
+	private SqmTranslation<DeleteStatement> sqmInterpretation;
 	private Map<QueryParameterImplementor<?>, Map<SqmParameter, List<JdbcParameter>>> jdbcParamsXref;
 
 	public SimpleDeleteQueryPlan(
@@ -61,37 +63,39 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 		this.domainParameterXref = domainParameterXref;
 	}
 
+	private SqlAstTranslator<JdbcDelete> createDeleteTranslator(ExecutionContext executionContext) {
+		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
+		final QueryEngine queryEngine = factory.getQueryEngine();
+
+		final SqmTranslatorFactory translatorFactory = queryEngine.getSqmTranslatorFactory();
+		final SqmTranslator<DeleteStatement> translator = translatorFactory.createSimpleDeleteTranslator(
+				sqmDelete,
+				executionContext.getQueryOptions(),
+				domainParameterXref,
+				executionContext.getQueryParameterBindings(),
+				executionContext.getLoadQueryInfluencers(),
+				factory
+		);
+
+		sqmInterpretation = translator.translate();
+
+		this.jdbcParamsXref = SqmUtil.generateJdbcParamsXref(
+				domainParameterXref,
+				sqmInterpretation::getJdbcParamsBySqmParam
+		);
+
+		return factory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
+				.buildDeleteTranslator( factory, sqmInterpretation.getSqlAst() );
+	}
+
 	@Override
 	public int executeUpdate(ExecutionContext executionContext) {
 		final SharedSessionContractImplementor session = executionContext.getSession();
 		final SessionFactoryImplementor factory = session.getFactory();
 		final JdbcServices jdbcServices = factory.getJdbcServices();
-
+		SqlAstTranslator<JdbcDelete> deleteTranslator = null;
 		if ( jdbcDelete == null ) {
-			final QueryEngine queryEngine = factory.getQueryEngine();
-
-			final SqmTranslatorFactory translatorFactory = queryEngine.getSqmTranslatorFactory();
-			final SimpleSqmDeleteTranslator translator = translatorFactory.createSimpleDeleteTranslator(
-					executionContext.getQueryOptions(),
-					domainParameterXref,
-					executionContext.getQueryParameterBindings(),
-					executionContext.getLoadQueryInfluencers(),
-					factory
-			);
-
-			sqmInterpretation = translator.translate( sqmDelete );
-
-			final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
-			final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
-
-			final SqlAstDeleteTranslator sqlAstTranslator = sqlAstTranslatorFactory.buildDeleteTranslator( factory );
-
-			jdbcDelete = sqlAstTranslator.translate( sqmInterpretation.getSqlAst() );
-
-			this.jdbcParamsXref = SqmUtil.generateJdbcParamsXref(
-					domainParameterXref,
-					sqmInterpretation::getJdbcParamsBySqmParam
-			);
+			deleteTranslator = createDeleteTranslator( executionContext );
 		}
 
 		final JdbcParameterBindings jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
@@ -102,7 +106,20 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 				sqmInterpretation.getFromClauseAccess()::findTableGroup,
 				session
 		);
-		jdbcDelete.bindFilterJdbcParameters( jdbcParameterBindings );
+
+		if ( jdbcDelete != null && !jdbcDelete.isCompatibleWith(
+				jdbcParameterBindings,
+				executionContext.getQueryOptions()
+		) ) {
+			deleteTranslator = createDeleteTranslator( executionContext );
+		}
+
+		if ( deleteTranslator != null ) {
+			jdbcDelete = deleteTranslator.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
+		}
+		else {
+			jdbcDelete.bindFilterJdbcParameters( jdbcParameterBindings );
+		}
 
 		final boolean missingRestriction = sqmDelete.getWhereClause() == null
 				|| sqmDelete.getWhereClause().getPredicate() == null;
@@ -158,7 +175,7 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 						.getStatementPreparer()
 						.prepareStatement( sql ),
 				(integer, preparedStatement) -> {},
-				executionContext
+				SqlOmittingQueryOptions.omitSqlQueryOptions( executionContext )
 		);
 	}
 }

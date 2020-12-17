@@ -12,6 +12,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.hibernate.engine.spi.RowSelection;
+import org.hibernate.query.Limit;
 
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
 import static java.util.regex.Pattern.compile;
@@ -268,6 +269,143 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 			return 0;
 		}
 		return convertToFirstRowValue( selection.getFirstRow() );
+	}
+
+	@Override
+	public String processSql(String sql, Limit limit) {
+		throw new UnsupportedOperationException( "Paged queries not supported by " + getClass().getName() );
+	}
+
+	@Override
+	public int bindLimitParametersAtStartOfQuery(Limit limit, PreparedStatement statement, int index)
+			throws SQLException {
+		return bindLimitParametersFirst()
+				? bindLimitParameters( limit, statement, index )
+				: 0;
+	}
+
+	@Override
+	public int bindLimitParametersAtEndOfQuery(Limit limit, PreparedStatement statement, int index)
+			throws SQLException {
+		return !bindLimitParametersFirst()
+				? bindLimitParameters( limit, statement, index )
+				: 0;
+	}
+
+	@Override
+	public void setMaxRows(Limit limit, PreparedStatement statement) throws SQLException {
+	}
+
+	/**
+	 * Default implementation of binding parameter values needed by the LIMIT clause.
+	 *
+	 * @param limit the limit.
+	 * @param statement Statement to which to bind limit parameter values.
+	 * @param index Index from which to start binding.
+	 * @return The number of parameter values bound.
+	 * @throws SQLException Indicates problems binding parameter values.
+	 */
+	protected final int bindLimitParameters(Limit limit, PreparedStatement statement, int index)
+			throws SQLException {
+
+		if ( !supportsVariableLimit() ) {
+			//never any parameters to bind
+			return 0;
+		}
+
+		final boolean hasMaxRows = hasMaxRows( limit );
+		final boolean hasFirstRow = hasFirstRow( limit );
+
+		final boolean bindLimit
+				= hasMaxRows && supportsLimit()
+				|| forceLimitUsage();
+		final boolean bindOffset
+				= hasFirstRow && supportsOffset()
+				|| hasFirstRow && hasMaxRows && supportsLimitOffset();
+
+		if ( !bindLimit && !bindOffset ) {
+			//no parameters to bind this time
+			return 0;
+		}
+
+		final boolean reverse = bindLimitParametersInReverseOrder();
+
+		if ( bindOffset ) {
+			statement.setInt(
+					index + ( reverse || !bindLimit ? 1 : 0 ),
+					getFirstRow( limit )
+			);
+		}
+		if ( bindLimit ) {
+			statement.setInt(
+					index + ( reverse || !bindOffset ? 0 : 1 ),
+					getMaxOrLimit( limit )
+			);
+		}
+
+		return bindOffset && bindLimit ? 2 : 1;
+	}
+
+	/**
+	 * Is a max row limit indicated?
+	 *
+	 * @param limit The limit
+	 *
+	 * @return Whether a max row limit was indicated
+	 */
+	public static boolean hasMaxRows(Limit limit) {
+		return limit != null
+				&& limit.getMaxRows() != null
+				&& limit.getMaxRows() > 0;
+	}
+
+	/**
+	 * Is a first row limit indicated?
+	 *
+	 * @param limit The limit
+	 *
+	 * @return Whether a first row limit was indicated
+	 */
+	public static boolean hasFirstRow(Limit limit) {
+		return limit != null
+				&& limit.getFirstRow() != null
+				&& limit.getFirstRow() > 0;
+	}
+
+	/**
+	 * Some dialect-specific LIMIT clauses require the maximum last row number
+	 * (aka, first_row_number + total_row_count), while others require the maximum
+	 * returned row count (the total maximum number of rows to return).
+	 *
+	 * @param limit The limit
+	 *
+	 * @return The appropriate value to bind into the limit clause.
+	 */
+	protected final int getMaxOrLimit(Limit limit) {
+		if ( limit == null || limit.getMaxRows() == null ) {
+			return Integer.MAX_VALUE;
+		}
+		final int firstRow = getFirstRow( limit );
+		final int maxRows = limit.getMaxRows();
+		final int maxOrLimit = useMaxForLimit()
+				? maxRows + firstRow //TODO: maxRows + firstRow - 1, surely?
+				: maxRows;
+		// Use Integer.MAX_VALUE on overflow
+		return maxOrLimit < 0 ? Integer.MAX_VALUE : maxOrLimit;
+	}
+
+	/**
+	 * Retrieve the indicated first row for pagination
+	 *
+	 * @param limit The limit
+	 *
+	 * @return The first row
+	 */
+	protected final int getFirstRow(Limit limit) {
+		if ( limit == null || limit.getFirstRow() == null ) {
+			return 0;
+		}
+		return convertToFirstRowValue( limit.getFirstRow() );
 	}
 
 	/**

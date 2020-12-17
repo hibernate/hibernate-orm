@@ -31,13 +31,13 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
+import org.hibernate.query.spi.SqlOmittingQueryOptions;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
 import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
-import org.hibernate.sql.ast.SqlAstDeleteTranslator;
 import org.hibernate.sql.ast.spi.SqlAstTreeHelper;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
@@ -151,7 +151,8 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 
 		final FilterPredicate filterPredicate = FilterHelper.createFilterPredicate(
 				executionContext.getLoadQueryInfluencers(),
-				(Joinable) entityDescriptor
+				(Joinable) entityDescriptor,
+				deletingTableGroup
 		);
 		if ( filterPredicate != null ) {
 			needsIdTableWrapper.set( true );
@@ -333,11 +334,10 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 
 		final JdbcServices jdbcServices = factory.getJdbcServices();
 
-		final SqlAstDeleteTranslator sqlAstTranslator = jdbcServices.getJdbcEnvironment()
+		final JdbcDelete jdbcDelete = jdbcServices.getJdbcEnvironment()
 				.getSqlAstTranslatorFactory()
-				.buildDeleteTranslator( factory );
-		final JdbcDelete jdbcDelete = sqlAstTranslator.translate( sqlAst );
-		jdbcDelete.bindFilterJdbcParameters( jdbcParameterBindings );
+				.buildDeleteTranslator( factory, sqlAst )
+				.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
 
 		return jdbcServices.getJdbcMutationExecutor().execute(
 				jdbcDelete,
@@ -347,7 +347,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 						.getStatementPreparer()
 						.prepareStatement( sql ),
 				(integer, preparedStatement) -> {},
-				executionContext
+				SqlOmittingQueryOptions.omitSqlQueryOptions( executionContext )
 		);
 	}
 

@@ -9,6 +9,7 @@ package org.hibernate.sql.ast;
 import org.hibernate.Incubating;
 import org.hibernate.query.sqm.tree.expression.Conversion;
 import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.Any;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
@@ -38,6 +39,7 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
+import org.hibernate.sql.ast.tree.insert.InsertStatement;
 import org.hibernate.sql.ast.tree.predicate.BetweenPredicate;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.ExistsPredicate;
@@ -50,10 +52,14 @@ import org.hibernate.sql.ast.tree.predicate.LikePredicate;
 import org.hibernate.sql.ast.tree.predicate.NegatedPredicate;
 import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.predicate.SelfRenderingPredicate;
+import org.hibernate.sql.ast.tree.select.QueryGroup;
+import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
+import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.ast.tree.update.Assignment;
+import org.hibernate.sql.ast.tree.update.UpdateStatement;
 
 /**
  * @author Steve Ebersole
@@ -61,13 +67,24 @@ import org.hibernate.sql.ast.tree.update.Assignment;
  */
 @Incubating
 public interface SqlAstWalker {
+
+	void visitSelectStatement(SelectStatement statement);
+
+	void visitDeleteStatement(DeleteStatement statement);
+
+	void visitUpdateStatement(UpdateStatement statement);
+
+	void visitInsertStatement(InsertStatement statement);
+
 	void visitAssignment(Assignment assignment);
+
+	void visitQueryGroup(QueryGroup queryGroup);
 
 	void visitQuerySpec(QuerySpec querySpec);
 
 	void visitSortSpecification(SortSpecification sortSpecification);
 
-	void visitLimitOffsetClause(QuerySpec querySpec);
+	void visitOffsetFetchClause(QueryPart querySpec);
 
 	void visitSelectClause(SelectClause selectClause);
 

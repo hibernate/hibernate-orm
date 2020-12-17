@@ -9,7 +9,7 @@ package org.hibernate.query.sqm;
 import java.util.List;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.query.sqm.tree.cte.SqmCteConsumer;
+import org.hibernate.query.sqm.tree.cte.SqmCteContainer;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.NonAggregatedCompositeSimplePath;
@@ -84,6 +84,8 @@ import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 import org.hibernate.query.sqm.tree.select.SqmJpaCompoundSelection;
 import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
+import org.hibernate.query.sqm.tree.select.SqmQueryGroup;
+import org.hibernate.query.sqm.tree.select.SqmQueryPart;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
@@ -114,9 +116,9 @@ public interface SemanticQueryWalker<T> {
 
 	T visitSelectStatement(SqmSelectStatement<?> statement);
 
-	T visitCteStatement(SqmCteStatement sqmCteStatement);
+	T visitCteStatement(SqmCteStatement<?> sqmCteStatement);
 
-	T visitCteConsumer(SqmCteConsumer consumer);
+	T visitCteContainer(SqmCteContainer consumer);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -159,6 +161,8 @@ public interface SemanticQueryWalker<T> {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Query spec
+
+	T visitQueryGroup(SqmQueryGroup<?> queryGroup);
 
 	T visitQuerySpec(SqmQuerySpec<?> querySpec);
 
@@ -290,7 +294,7 @@ public interface SemanticQueryWalker<T> {
 	// paging
 
 	T visitOffsetExpression(SqmExpression<?> expression);
-	T visitLimitExpression(SqmExpression<?> expression);
+	T visitFetchExpression(SqmExpression<?> expression);
 
 
 

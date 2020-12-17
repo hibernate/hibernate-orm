@@ -13,6 +13,7 @@ import org.hibernate.dialect.pagination.FetchLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.RDMSSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.query.TemporalUnit;
@@ -20,6 +21,12 @@ import org.hibernate.query.TrimSpec;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DecodeCaseFragment;
+import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.exec.spi.JdbcOperation;
+
 import org.jboss.logging.Logger;
 
 import java.sql.Types;
@@ -149,6 +156,17 @@ public class RDMSOS2200Dialect extends Dialect {
 		CommonFunctionFactory.insert( queryEngine );
 		CommonFunctionFactory.addMonths( queryEngine );
 		CommonFunctionFactory.monthsBetween( queryEngine );
+	}
+
+	@Override
+	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
+		return new StandardSqlAstTranslatorFactory() {
+			@Override
+			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
+					SessionFactoryImplementor sessionFactory, Statement statement) {
+				return new RDBMSOS2200SqlAstTranslator<>( sessionFactory, statement );
+			}
+		};
 	}
 
 	@Override
@@ -288,12 +306,6 @@ public class RDMSOS2200Dialect extends Dialect {
 	@Override
 	public LimitHandler getLimitHandler() {
 		return FetchLimitHandler.INSTANCE;
-	}
-
-	@Override
-	public boolean supportsUnionAll() {
-		// RDMS supports the UNION ALL clause.
-		return true;
 	}
 
 	@Override

@@ -7,6 +7,14 @@
 package org.hibernate.sql.ast;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.sql.ast.tree.delete.DeleteStatement;
+import org.hibernate.sql.ast.tree.insert.InsertStatement;
+import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.ast.tree.update.UpdateStatement;
+import org.hibernate.sql.exec.spi.JdbcDelete;
+import org.hibernate.sql.exec.spi.JdbcInsert;
+import org.hibernate.sql.exec.spi.JdbcSelect;
+import org.hibernate.sql.exec.spi.JdbcUpdate;
 
 /**
  * Factory for obtaining single-use SQL AST translators
@@ -17,19 +25,20 @@ public interface SqlAstTranslatorFactory {
 	/**
 	 * Builds a single-use select translator
 	 */
-	SqlAstSelectTranslator buildSelectTranslator(SessionFactoryImplementor sessionFactory);
+	SqlAstTranslator<JdbcSelect> buildSelectTranslator(SessionFactoryImplementor sessionFactory, SelectStatement statement);
 
 	/**
 	 * Builds a single-use delete translator
 	 */
-	SqlAstDeleteTranslator buildDeleteTranslator(SessionFactoryImplementor sessionFactory);
+	SqlAstTranslator<JdbcDelete> buildDeleteTranslator(SessionFactoryImplementor sessionFactory, DeleteStatement statement);
 
 	/**
 	 * Builds a single-use insert-select translator
 	 */
-	SqlAstInsertTranslator buildInsertTranslator(SessionFactoryImplementor sessionFactory);
+	SqlAstTranslator<JdbcInsert> buildInsertTranslator(SessionFactoryImplementor sessionFactory, InsertStatement statement);
 
-	SqlAstUpdateTranslator buildUpdateTranslator(SessionFactoryImplementor sessionFactory);
-
-	// todo (6.0) : CTE
+	/**
+	 * Builds a single-use update translator
+	 */
+	SqlAstTranslator<JdbcUpdate> buildUpdateTranslator(SessionFactoryImplementor sessionFactory, UpdateStatement statement);
 }

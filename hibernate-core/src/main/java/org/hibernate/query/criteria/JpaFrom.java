@@ -16,6 +16,4 @@ import javax.persistence.criteria.From;
 public interface JpaFrom<O,T> extends JpaPath<T>, JpaFetchParent<O,T>, From<O,T> {
 	@Override
 	JpaFrom<O,T> getCorrelationParent();
-
-	JpaFrom<O, T> correlateTo(JpaSubQuery<T> subquery);
 }

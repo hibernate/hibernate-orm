@@ -13,7 +13,7 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.QueryLogging;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmStatement;
-import org.hibernate.query.sqm.tree.cte.SqmCteConsumer;
+import org.hibernate.query.sqm.tree.cte.SqmCteContainer;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.NonAggregatedCompositeSimplePath;
@@ -88,6 +88,8 @@ import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
+import org.hibernate.query.sqm.tree.select.SqmQueryGroup;
+import org.hibernate.query.sqm.tree.select.SqmQueryPart;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
@@ -294,7 +296,7 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 								"into",
 								() -> statement.getInsertionTargetPaths().forEach( sqmPath -> sqmPath.accept( this ) )
 						);
-						visitQuerySpec( statement.getSelectQuerySpec() );
+						statement.getSelectQueryPart().accept( this );
 					}
 			);
 		}
@@ -325,7 +327,7 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 		if ( DEBUG_ENABLED ) {
 			processStanza(
 					"select",
-					() -> visitQuerySpec( statement.getQuerySpec() )
+					() -> statement.getQueryPart().accept( this )
 			);
 		}
 
@@ -342,7 +344,7 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	}
 
 	@Override
-	public Object visitCteConsumer(SqmCteConsumer consumer) {
+	public Object visitCteContainer(SqmCteContainer consumer) {
 		return null;
 	}
 
@@ -396,6 +398,24 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	// query-spec
 
 	@Override
+	public Object visitQueryGroup(SqmQueryGroup<?> queryGroup) {
+		processStanza(
+				"query-group",
+				() -> {
+					for ( SqmQueryPart<?> queryPart : queryGroup.getQueryParts() ) {
+						if ( queryPart instanceof SqmQuerySpec<?> ) {
+							visitQuerySpec( (SqmQuerySpec<?>) queryPart );
+						}
+						else {
+							visitQueryGroup( (SqmQueryGroup<?>) queryPart );
+						}
+					}
+				}
+		);
+		return null;
+	}
+
+	@Override
 	public Object visitQuerySpec(SqmQuerySpec<?> querySpec) {
 		processStanza(
 				"query-spec",
@@ -408,8 +428,8 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 					visitHavingClause( querySpec.getHavingClausePredicate() );
 
 					visitOrderByClause( querySpec.getOrderByClause() );
-					visitLimitExpression( querySpec.getLimitExpression() );
 					visitOffsetExpression( querySpec.getOffsetExpression() );
+					visitFetchExpression( querySpec.getFetchExpression() );
 				}
 		);
 
@@ -857,7 +877,7 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	}
 
 	@Override
-	public Object visitLimitExpression(SqmExpression expression) {
+	public Object visitFetchExpression(SqmExpression expression) {
 		return null;
 	}
 

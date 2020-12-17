@@ -12,18 +12,15 @@ import java.util.List;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.mapping.Bindable;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.query.sqm.mutation.internal.cte.CteStrategy;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.from.StandardTableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -36,28 +33,30 @@ import org.hibernate.sql.results.internal.SqlSelectionImpl;
  */
 public class CteTable {
 	private final SessionFactoryImplementor sessionFactory;
-
+	private final String cteName;
 	private final List<CteColumn> cteColumns;
 
-	public CteTable(EntityMappingType entityDescriptor) {
-		this.sessionFactory = entityDescriptor.getEntityPersister().getFactory();
-
+	public CteTable(String cteName, EntityMappingType entityDescriptor) {
 		final int numberOfColumns = entityDescriptor.getIdentifierMapping().getJdbcTypeCount();
-		cteColumns = new ArrayList<>( numberOfColumns );
+		final List<CteColumn> columns = new ArrayList<>( numberOfColumns );
 		entityDescriptor.getIdentifierMapping().forEachSelection(
-				(columnIndex, selection) -> cteColumns.add(
+				(columnIndex, selection) -> columns.add(
 						new CteColumn("cte_" + selection.getSelectionExpression(), selection.getJdbcMapping() )
 				)
 		);
+		this.cteName = cteName;
+		this.cteColumns = columns;
+		this.sessionFactory = entityDescriptor.getEntityPersister().getFactory();
 	}
 
-	public CteTable(List<CteColumn> cteColumns, SessionFactoryImplementor sessionFactory) {
+	public CteTable(String cteName, List<CteColumn> cteColumns, SessionFactoryImplementor sessionFactory) {
+		this.cteName = cteName;
 		this.cteColumns = cteColumns;
 		this.sessionFactory = sessionFactory;
 	}
 
 	public String getTableExpression() {
-		return CteStrategy.TABLE_NAME;
+		return cteName;
 	}
 
 	public List<CteColumn> getCteColumns() {
@@ -134,7 +133,7 @@ public class CteTable {
 
 		return new TableReference(
 				tableValueCtorExpressionBuffer.toString(),
-				CteStrategy.TABLE_NAME,
+				cteName,
 				false,
 				sessionFactory
 		);

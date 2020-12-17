@@ -6,23 +6,18 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import org.hibernate.query.criteria.JpaSubQuery;
-import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
-import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 
 /**
  * @author Steve Ebersole
  */
 public class SqmCorrelatedRoot<T> extends SqmRoot<T> implements SqmPathWrapper<T,T>, SqmCorrelation<T,T> {
-	private SqmRoot<T> correlationParent;
 
-	public SqmCorrelatedRoot(
-			SqmRoot<T> correlationParent,
-			NodeBuilder nodeBuilder) {
-		super( correlationParent.getReferencedPathSource(), correlationParent.getAlias(), nodeBuilder );
+	private final SqmRoot<T> correlationParent;
+
+	public SqmCorrelatedRoot(SqmRoot<T> correlationParent) {
+		super( correlationParent.getReferencedPathSource(), null, correlationParent.nodeBuilder() );
 		this.correlationParent = correlationParent;
 	}
 
@@ -42,11 +37,8 @@ public class SqmCorrelatedRoot<T> extends SqmRoot<T> implements SqmPathWrapper<T
 	}
 
 	@Override
-	public SqmFrom<T, T> correlateTo(JpaSubQuery<T> subquery) {
-		final SqmSubQuery sqmSubQuery = (SqmSubQuery) subquery;
-		final SqmCorrelatedRoot<T> correlation = new SqmCorrelatedRoot<>( this, nodeBuilder() );
-		sqmSubQuery.getQuerySpec().getFromClause().addRoot( correlation );
-		return correlation;
+	public SqmRoot<T> getCorrelatedRoot() {
+		return this;
 	}
 
 	@Override

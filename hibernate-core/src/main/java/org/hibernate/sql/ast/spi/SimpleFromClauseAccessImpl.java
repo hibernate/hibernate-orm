@@ -19,14 +19,25 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
  * @author Steve Ebersole
  */
 public class SimpleFromClauseAccessImpl implements FromClauseAccess {
+
+	protected final FromClauseAccess parent;
 	protected final Map<String, TableGroup> tableGroupMap = new HashMap<>();
 
 	public SimpleFromClauseAccessImpl() {
+		this( null );
+	}
+
+	public SimpleFromClauseAccessImpl(FromClauseAccess parent) {
+		this.parent = parent;
 	}
 
 	@Override
 	public TableGroup findTableGroup(NavigablePath navigablePath) {
-		return tableGroupMap.get( navigablePath.getIdentifierForTableGroup() );
+		final TableGroup tableGroup = tableGroupMap.get( navigablePath.getIdentifierForTableGroup() );
+		if ( tableGroup == null && parent != null ) {
+			return parent.findTableGroup( navigablePath );
+		}
+		return tableGroup;
 	}
 
 	@Override

@@ -8,7 +8,6 @@ package org.hibernate.loader.ast.internal;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.HibernateException;
@@ -29,7 +28,6 @@ import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
@@ -101,10 +99,7 @@ public class SimpleNaturalIdLoader<T> extends AbstractNaturalIdLoader<T> {
 		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
 
-		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory ).translate( sqlSelect );
-
 		final JdbcParameterBindings jdbcParamBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
-
 		jdbcParamBindings.registerParametersForEachJdbcValue(
 				id,
 				Clause.WHERE,
@@ -112,7 +107,8 @@ public class SimpleNaturalIdLoader<T> extends AbstractNaturalIdLoader<T> {
 				jdbcParameters,
 				session
 		);
-
+		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory, sqlSelect )
+				.translate( jdbcParamBindings, QueryOptions.NONE );
 
 		final List<Object[]> results = session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
 				jdbcSelect,
@@ -186,8 +182,6 @@ public class SimpleNaturalIdLoader<T> extends AbstractNaturalIdLoader<T> {
 		);
 		assert jdbcParameters.size() == 1;
 
-		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory ).translate( sqlSelect );
-
 		final JdbcParameterBindings jdbcParamBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
 
 		final SingularAttributeMapping attributeMapping = naturalIdMapping().getAttribute();
@@ -198,7 +192,8 @@ public class SimpleNaturalIdLoader<T> extends AbstractNaturalIdLoader<T> {
 				jdbcParameters,
 				session
 		);
-
+		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory, sqlSelect )
+				.translate( jdbcParamBindings, QueryOptions.NONE );
 
 		final List<?> results = session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
 				jdbcSelect,

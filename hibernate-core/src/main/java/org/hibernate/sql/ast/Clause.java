@@ -48,8 +48,10 @@ public enum Clause {
 	GROUP,
 	HAVING,
 	ORDER,
-	LIMIT,
 	OFFSET,
+	FETCH,
+	OVER,
+	PARTITION,
 	CALL,
 
 	/**

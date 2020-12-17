@@ -25,7 +25,7 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.query.sqm.sql.internal.SqlAstQuerySpecProcessingStateImpl;
+import org.hibernate.query.sqm.sql.internal.SqlAstQueryPartProcessingStateImpl;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
@@ -35,6 +35,7 @@ import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlAstProcessingState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
@@ -49,11 +50,10 @@ public class LoaderSqlAstCreationState
 		List<Fetch> visitFetches(FetchParent fetchParent, QuerySpec querySpec, LoaderSqlAstCreationState creationState);
 	}
 
-	private final QuerySpec querySpec;
 	private final SqlAliasBaseManager sqlAliasBaseManager;
 	private final boolean forceIdentifierSelection;
 	private final SqlAstCreationContext sf;
-	private final SqlAstQuerySpecProcessingStateImpl processingState;
+	private final SqlAstQueryPartProcessingStateImpl processingState;
 	private final FromClauseAccess fromClauseAccess;
 	private final LockOptions lockOptions;
 	private final FetchProcessor fetchProcessor;
@@ -61,22 +61,21 @@ public class LoaderSqlAstCreationState
 	private Set<AssociationKey> visitedAssociationKeys = new HashSet<>();
 
 	public LoaderSqlAstCreationState(
-			QuerySpec querySpec,
+			QueryPart queryPart,
 			SqlAliasBaseManager sqlAliasBaseManager,
 			FromClauseAccess fromClauseAccess,
 			LockOptions lockOptions,
 			FetchProcessor fetchProcessor,
 			boolean forceIdentifierSelection,
 			SqlAstCreationContext sf) {
-		this.querySpec = querySpec;
 		this.sqlAliasBaseManager = sqlAliasBaseManager;
 		this.fromClauseAccess = fromClauseAccess;
 		this.lockOptions = lockOptions;
 		this.fetchProcessor = fetchProcessor;
 		this.forceIdentifierSelection = forceIdentifierSelection;
 		this.sf = sf;
-		processingState = new SqlAstQuerySpecProcessingStateImpl(
-				querySpec,
+		this.processingState = new SqlAstQueryPartProcessingStateImpl(
+				queryPart,
 				this,
 				this,
 				() -> Clause.IRRELEVANT
@@ -97,10 +96,6 @@ public class LoaderSqlAstCreationState
 				true,
 				sf
 		);
-	}
-
-	public QuerySpec getQuerySpec() {
-		return querySpec;
 	}
 
 	@Override
@@ -135,7 +130,7 @@ public class LoaderSqlAstCreationState
 
 	@Override
 	public List<Fetch> visitFetches(FetchParent fetchParent) {
-		return fetchProcessor.visitFetches( fetchParent, getQuerySpec(), this );
+		return fetchProcessor.visitFetches( fetchParent, processingState.getInflightQueryPart().getFirstQuerySpec(), this );
 	}
 
 	@Override

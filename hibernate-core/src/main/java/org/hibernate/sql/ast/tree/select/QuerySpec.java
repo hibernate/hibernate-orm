@@ -6,10 +6,8 @@
  */
 package org.hibernate.sql.ast.tree.select;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Consumer;
 
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
@@ -18,7 +16,6 @@ import org.hibernate.sql.ast.spi.SqlAstTreeHelper;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.cte.CteConsumer;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
@@ -32,8 +29,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 /**
  * @author Steve Ebersole
  */
-public class QuerySpec implements SqlAstNode, PredicateContainer, Expression, CteConsumer, DomainResultProducer {
-	private final boolean isRoot;
+public class QuerySpec extends QueryPart implements SqlAstNode, PredicateContainer, Expression, DomainResultProducer {
 
 	private final FromClause fromClause;
 	private final SelectClause selectClause = new SelectClause();
@@ -43,26 +39,24 @@ public class QuerySpec implements SqlAstNode, PredicateContainer, Expression, Ct
 	private List<Expression> groupByClauseExpressions = Collections.emptyList();
 	private Predicate havingClauseRestrictions;
 
-	private List<SortSpecification> sortSpecifications;
-	private Expression limitClauseExpression;
-	private Expression offsetClauseExpression;
-
 	public QuerySpec(boolean isRoot) {
-		this.isRoot = isRoot;
+		super( isRoot );
 		this.fromClause = new FromClause();
 	}
 
 	public QuerySpec(boolean isRoot, int expectedNumberOfRoots) {
-		this.isRoot = isRoot;
+		super( isRoot );
 		this.fromClause = new FromClause( expectedNumberOfRoots );
 	}
 
-	/**
-	 * Does this QuerySpec map to the statement's root query (as
-	 * opposed to one of its sub-queries)?
-	 */
-	public boolean isRoot() {
-		return isRoot;
+	@Override
+	public QuerySpec getFirstQuerySpec() {
+		return this;
+	}
+
+	@Override
+	public QuerySpec getLastQuerySpec() {
+		return this;
 	}
 
 	public FromClause getFromClause() {
@@ -96,39 +90,6 @@ public class QuerySpec implements SqlAstNode, PredicateContainer, Expression, Ct
 
 	public void setHavingClauseRestrictions(Predicate havingClauseRestrictions) {
 		this.havingClauseRestrictions = havingClauseRestrictions;
-	}
-
-	public List<SortSpecification> getSortSpecifications() {
-		return sortSpecifications;
-	}
-
-	void visitSortSpecifications(Consumer<SortSpecification> consumer) {
-		if ( sortSpecifications != null ) {
-			sortSpecifications.forEach( consumer );
-		}
-	}
-
-	public void addSortSpecification(SortSpecification specification) {
-		if ( sortSpecifications == null ) {
-			sortSpecifications = new ArrayList<>();
-		}
-		sortSpecifications.add( specification );
-	}
-
-	public Expression getLimitClauseExpression() {
-		return limitClauseExpression;
-	}
-
-	public void setLimitClauseExpression(Expression limitClauseExpression) {
-		this.limitClauseExpression = limitClauseExpression;
-	}
-
-	public Expression getOffsetClauseExpression() {
-		return offsetClauseExpression;
-	}
-
-	public void setOffsetClauseExpression(Expression offsetClauseExpression) {
-		this.offsetClauseExpression = offsetClauseExpression;
 	}
 
 	@Override

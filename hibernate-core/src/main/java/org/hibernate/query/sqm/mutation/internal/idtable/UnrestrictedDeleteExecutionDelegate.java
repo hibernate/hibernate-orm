@@ -15,8 +15,8 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
+import org.hibernate.query.spi.SqlOmittingQueryOptions;
 import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
-import org.hibernate.sql.ast.SqlAstDeleteTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -82,18 +82,10 @@ public class UnrestrictedDeleteExecutionDelegate implements TableBasedDeleteHand
 		final JdbcServices jdbcServices = factory.getJdbcServices();
 		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 
+		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( 1 );
 		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
-		final SqlAstDeleteTranslator sqlAstTranslator = sqlAstTranslatorFactory.buildDeleteTranslator( factory );
-		final JdbcDelete jdbcDelete = sqlAstTranslator.translate( deleteStatement );
-
-		final JdbcParameterBindings jdbcParameterBindings;
-		if ( CollectionHelper.isNotEmpty( jdbcDelete.getFilterJdbcParameters() ) ) {
-			jdbcParameterBindings = new JdbcParameterBindingsImpl( 1 );
-			jdbcDelete.bindFilterJdbcParameters( jdbcParameterBindings );
-		}
-		else {
-			jdbcParameterBindings = JdbcParameterBindings.NO_BINDINGS;
-		}
+		final JdbcDelete jdbcDelete = sqlAstTranslatorFactory.buildDeleteTranslator( factory, deleteStatement )
+				.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
 
 		return jdbcServices.getJdbcMutationExecutor().execute(
 				jdbcDelete,
@@ -103,7 +95,7 @@ public class UnrestrictedDeleteExecutionDelegate implements TableBasedDeleteHand
 						.getStatementPreparer()
 						.prepareStatement( sql ),
 				(integer, preparedStatement) -> {},
-				executionContext
+				SqlOmittingQueryOptions.omitSqlQueryOptions( executionContext )
 		);
 
 	}

@@ -12,7 +12,7 @@ mysql_8_0() {
 
 mariadb() {
     docker rm -f mariadb || true
-    docker run --name mariadb -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ALLOW_EMPTY_PASSWORD=true -p3306:3306 -d mariadb:10.5.8 --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    docker run --name mariadb -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d mariadb:10.5.8 --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
 }
 
 postgresql_9_5() {
@@ -20,12 +20,17 @@ postgresql_9_5() {
     docker run --name postgres -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 -d postgres:9.5
 }
 
+postgresql_13() {
+    docker rm -f postgres || true
+    docker run --name postgres -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 -d postgres:13.0
+}
+
 db2() {
     docker rm -f db2 || true
-    docker run --name db2 --privileged -e DB2INSTANCE=orm_test -e DB2INST1_PASSWORD=orm_test -e DBNAME=orm_test -e LICENSE=accept -p 50000:50000 -d ibmcom/db2:11.5.0.0a
+    docker run --name db2 --privileged -e DB2INSTANCE=orm_test -e DB2INST1_PASSWORD=orm_test -e DBNAME=orm_test -e LICENSE=accept -e AUTOCONFIG=false -e ARCHIVE_LOGS=false -e TO_CREATE_SAMPLEDB=false -e REPODB=false -p 50000:50000 -d ibmcom/db2:11.5.5.0
     # Give the container some time to start
     OUTPUT=
-    while [[ $OUTPUT != *"Setup has completed"* ]]; do
+    while [[ $OUTPUT != *"INSTANCE"* ]]; do
         echo "Waiting for DB2 to start..."
         sleep 10
         OUTPUT=$(docker logs db2)
@@ -36,6 +41,22 @@ db2() {
 mssql() {
     docker rm -f mssql || true
     docker run --name mssql -d -p 1433:1433 -e "SA_PASSWORD=Hibernate_orm_test" -e ACCEPT_EULA=Y microsoft/mssql-server-linux:2017-CU13
+    sleep 5
+    n=0
+    until [ "$n" -ge 5 ]
+    do
+        # We need a database that uses a non-lock based MVCC approach
+        # https://github.com/microsoft/homebrew-mssql-release/issues/2#issuecomment-682285561
+        docker exec mssql bash -c 'echo "create database hibernate_orm_test collate SQL_Latin1_General_CP1_CI_AS; alter database hibernate_orm_test set READ_COMMITTED_SNAPSHOT ON" | /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Hibernate_orm_test -i /dev/stdin' && break
+        echo "Waiting for SQL Server to start..."
+        n=$((n+1))
+        sleep 5
+    done
+    if [ "$n" -ge 5 ]; then
+      echo "SQL Server failed to start and configure after 25 seconds"
+    else
+      echo "SQL Server successfully started"
+    fi
 }
 
 oracle() {
@@ -52,6 +73,7 @@ if [ -z ${1} ]; then
     echo -e "\tmysql_8_0"
     echo -e "\tmariadb"
     echo -e "\tpostgresql_9_5"
+    echo -e "\tpostgresql_13"
     echo -e "\tdb2"
     echo -e "\tmssql"
     echo -e "\toracle"

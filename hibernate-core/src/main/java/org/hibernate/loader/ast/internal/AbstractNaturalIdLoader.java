@@ -99,11 +99,10 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 				sessionFactory
 		);
 
-		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory ).translate( sqlSelect );
-
 		final JdbcParameterBindings jdbcParamBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
-
 		applyNaturalIdAsJdbcParameters( bindValue, jdbcParameters, jdbcParamBindings, session );
+		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory, sqlSelect )
+				.translate( jdbcParamBindings, QueryOptions.NONE );
 
 		//noinspection unchecked
 		final List<T> results = session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
@@ -179,8 +178,6 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 				sessionFactory
 		);
 
-		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory ).translate( sqlSelect );
-
 		final JdbcParameterBindings jdbcParamBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
 		applyNaturalIdAsJdbcParameters(
 				bindValue,
@@ -188,6 +185,8 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 				jdbcParamBindings,
 				session
 		);
+		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory, sqlSelect )
+				.translate( jdbcParamBindings, QueryOptions.NONE );
 
 		final List<?> results = session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
 				jdbcSelect,
@@ -252,10 +251,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
 
-		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory ).translate( sqlSelect );
-
 		final JdbcParameterBindings jdbcParamBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
-
 		int offset = jdbcParamBindings.registerParametersForEachJdbcValue(
 				id,
 				Clause.WHERE,
@@ -264,6 +260,8 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 				session
 		);
 		assert offset == jdbcParameters.size();
+		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory, sqlSelect )
+				.translate( jdbcParamBindings, QueryOptions.NONE );
 
 		final List<Object[]> results = session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
 				jdbcSelect,

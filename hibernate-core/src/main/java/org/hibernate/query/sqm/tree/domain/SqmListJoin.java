@@ -21,7 +21,6 @@ import org.hibernate.query.PathException;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaListJoin;
 import org.hibernate.query.criteria.JpaPredicate;
-import org.hibernate.query.criteria.JpaSubQuery;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.sqm.tree.SqmJoinType;
@@ -46,11 +45,6 @@ public class SqmListJoin<O,E>
 	}
 
 	@Override
-	public ListPersistentAttribute<O, E> getModel() {
-		return (ListPersistentAttribute<O, E>) super.getModel();
-	}
-
-	@Override
 	public ListPersistentAttribute<O,E> getReferencedPathSource() {
 		//noinspection unchecked
 		return (ListPersistentAttribute) super.getReferencedPathSource();
@@ -59,6 +53,17 @@ public class SqmListJoin<O,E>
 	@Override
 	public JavaTypeDescriptor<E> getJavaTypeDescriptor() {
 		return getNodeJavaTypeDescriptor();
+	}
+
+	@Override
+	public ListPersistentAttribute<O, E> getModel() {
+		return getReferencedPathSource();
+	}
+
+	@Override
+	public ListPersistentAttribute<O,E> getAttribute() {
+		//noinspection unchecked
+		return (ListPersistentAttribute<O, E>) super.getAttribute();
 	}
 
 	@Override
@@ -96,8 +101,8 @@ public class SqmListJoin<O,E>
 	}
 
 	@Override
-	public SqmListJoin<O, E> correlateTo(JpaSubQuery<E> subquery) {
-		return (SqmListJoin<O, E>) super.correlateTo( subquery );
+	public SqmCorrelatedListJoin<O, E> createCorrelation() {
+		return new SqmCorrelatedListJoin<>( this );
 	}
 
 	@Override

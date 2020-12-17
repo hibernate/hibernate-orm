@@ -22,6 +22,7 @@ import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.LockTimeoutException;
@@ -38,6 +39,11 @@ import org.hibernate.query.sqm.mutation.internal.idtable.GlobalTemporaryTableStr
 import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
 import org.hibernate.query.sqm.mutation.internal.idtable.TempIdTableExporter;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorFirebirdDatabaseImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceNameExtractorImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
@@ -196,6 +202,17 @@ public class FirebirdDialect extends Dialect {
 		).setArgumentListSignature("(pattern, string[, start])");
 	}
 
+	@Override
+	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
+		return new StandardSqlAstTranslatorFactory() {
+			@Override
+			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
+					SessionFactoryImplementor sessionFactory, Statement statement) {
+				return new FirebirdSqlAstTranslator<>( sessionFactory, statement );
+			}
+		};
+	}
+
 	/**
 	 * Firebird 2.5 doesn't have a real {@link java.sql.Types#BOOLEAN}
 	 * type, so...
@@ -287,11 +304,6 @@ public class FirebirdDialect extends Dialect {
 	@Override
 	public String getAddColumnString() {
 		return "add";
-	}
-
-	@Override
-	public boolean supportsUnionAll() {
-		return true;
 	}
 
 	@Override

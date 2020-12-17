@@ -68,7 +68,8 @@ public class CollectionLoaderSubSelectFetch implements CollectionLoader {
 		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
 
-		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory ).translate( sqlAst );
+		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory, sqlAst )
+				.translate( subselect.getLoadingJdbcParameterBindings(), QueryOptions.NONE );
 
 		jdbcServices.getJdbcSelectExecutor().list(
 				jdbcSelect,

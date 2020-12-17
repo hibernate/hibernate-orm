@@ -19,6 +19,7 @@ import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.env.spi.SchemaNameResolver;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Column;
@@ -31,6 +32,11 @@ import org.hibernate.persister.entity.Lockable;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.StandardBasicTypes;
 
@@ -378,6 +384,17 @@ public class SpannerDialect extends Dialect {
 	}
 
 	@Override
+	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
+		return new StandardSqlAstTranslatorFactory() {
+			@Override
+			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
+					SessionFactoryImplementor sessionFactory, Statement statement) {
+				return new SpannerSqlAstTranslator<>( sessionFactory, statement );
+			}
+		};
+	}
+
+	@Override
 	public Exporter<Table> getTableExporter() {
 		return this.spannerTableExporter;
 	}
@@ -402,11 +419,6 @@ public class SpannerDialect extends Dialect {
 	@Override
 	public String toBooleanValueString(boolean bool) {
 		return String.valueOf( bool );
-	}
-
-	@Override
-	public boolean supportsUnionAll() {
-		return true;
 	}
 
 	@Override
@@ -769,7 +781,7 @@ public class SpannerDialect extends Dialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		return new LimitOffsetLimitHandler();
+		return LimitOffsetLimitHandler.INSTANCE;
 	}
 
 	/* Type conversion and casting */

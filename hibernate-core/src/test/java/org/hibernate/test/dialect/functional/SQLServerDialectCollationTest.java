@@ -22,6 +22,7 @@ import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.SQLServer2005Dialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 
 import org.hibernate.testing.RequiresDialect;
@@ -40,7 +41,7 @@ import static org.junit.Assert.fail;
  *
  * @author Guenther Demetz
  */
-@RequiresDialect(value = { SQLServer2005Dialect.class })
+@RequiresDialect(SQLServerDialect.class)
 public class SQLServerDialectCollationTest extends BaseCoreFunctionalTestCase {
 
 	@Override

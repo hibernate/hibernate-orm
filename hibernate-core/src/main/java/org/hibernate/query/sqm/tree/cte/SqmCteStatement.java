@@ -6,67 +6,97 @@
  */
 package org.hibernate.query.sqm.tree.cte;
 
-import org.hibernate.query.criteria.JpaPredicate;
-import org.hibernate.query.criteria.JpaSubQuery;
+import java.util.List;
+
+import org.hibernate.CteSearchClauseKind;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmQuerySource;
-import org.hibernate.query.sqm.tree.AbstractSqmStatement;
+import org.hibernate.query.sqm.tree.AbstractSqmNode;
 import org.hibernate.query.sqm.tree.SqmStatement;
-import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
-import org.hibernate.query.sqm.tree.select.SqmSubQuery;
+import org.hibernate.query.sqm.tree.SqmVisitableNode;
+import org.hibernate.query.sqm.tree.select.SqmQueryPart;
 
 /**
  * @author Steve Ebersole
+ * @author Christian Beikov
  */
-public class SqmCteStatement extends AbstractSqmStatement implements SqmStatement {
+public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableNode {
+	private final SqmCteContainer cteContainer;
 	private final SqmCteTable cteTable;
-	private final String cteLabel;
-	private final SqmQuerySpec cteDefinition;
-	private final SqmCteConsumer cteConsumer;
+	private final SqmStatement<?> cteDefinition;
+	private final CteSearchClauseKind searchClauseKind;
+	private final List<SqmSearchClauseSpecification> searchBySpecifications;
+	private final List<SqmCteTableColumn> cycleColumns;
+	private final SqmCteTableColumn cycleMarkColumn;
+	private final char cycleValue;
+	private final char noCycleValue;
 
 	public SqmCteStatement(
 			SqmCteTable cteTable,
-			String cteLabel,
-			SqmQuerySpec cteDefinition,
-			SqmCteConsumer cteConsumer,
-			SqmQuerySource querySource,
+			SqmStatement<?> cteDefinition,
 			NodeBuilder nodeBuilder) {
-		super( querySource, nodeBuilder );
+		super( nodeBuilder );
 		this.cteTable = cteTable;
-		this.cteLabel = cteLabel;
 		this.cteDefinition = cteDefinition;
-		this.cteConsumer = cteConsumer;
+		this.cteContainer = null;
+		this.searchClauseKind = null;
+		this.searchBySpecifications = null;
+		this.cycleColumns = null;
+		this.cycleMarkColumn = null;
+		this.cycleValue = '\0';
+		this.noCycleValue = '\0';
+	}
+
+	public SqmCteStatement(
+			SqmCteTable cteTable,
+			SqmStatement<?> cteDefinition,
+			SqmCteContainer cteContainer) {
+		super( cteContainer.nodeBuilder() );
+		this.cteTable = cteTable;
+		this.cteDefinition = cteDefinition;
+		this.cteContainer = cteContainer;
+		this.searchClauseKind = null;
+		this.searchBySpecifications = null;
+		this.cycleColumns = null;
+		this.cycleMarkColumn = null;
+		this.cycleValue = '\0';
+		this.noCycleValue = '\0';
 	}
 
 	public SqmCteTable getCteTable() {
 		return cteTable;
 	}
 
-	public String getCteLabel() {
-		return cteLabel;
-	}
-
-	public SqmQuerySpec getCteDefinition() {
+	public SqmStatement<?> getCteDefinition() {
 		return cteDefinition;
 	}
 
-	public SqmCteConsumer getCteConsumer() {
-		return cteConsumer;
+	public SqmCteContainer getCteContainer() {
+		return cteContainer;
 	}
 
-	@Override
-	public <U> JpaSubQuery<U> subquery(Class<U> type) {
-		return new SqmSubQuery<>(
-				this,
-				new SqmQuerySpec<>( nodeBuilder() ),
-				nodeBuilder()
-		);
+	public CteSearchClauseKind getSearchClauseKind() {
+		return searchClauseKind;
 	}
 
-	@Override
-	public JpaPredicate getRestriction() {
-		return null;
+	public List<SqmSearchClauseSpecification> getSearchBySpecifications() {
+		return searchBySpecifications;
+	}
+
+	public List<SqmCteTableColumn> getCycleColumns() {
+		return cycleColumns;
+	}
+
+	public SqmCteTableColumn getCycleMarkColumn() {
+		return cycleMarkColumn;
+	}
+
+	public char getCycleValue() {
+		return cycleValue;
+	}
+
+	public char getNoCycleValue() {
+		return noCycleValue;
 	}
 
 	@Override

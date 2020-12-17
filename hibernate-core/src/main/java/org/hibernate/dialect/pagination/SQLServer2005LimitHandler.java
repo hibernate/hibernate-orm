@@ -15,6 +15,7 @@ import java.util.regex.Pattern;
 
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.query.Limit;
 
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
 import static java.util.regex.Pattern.compile;
@@ -129,6 +130,84 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	public int bindLimitParametersAtEndOfQuery(RowSelection selection, PreparedStatement statement, int index) throws SQLException {
 		return hasFirstRow( selection )
 				? super.bindLimitParametersAtEndOfQuery( selection, statement, index )
+				: 0;
+	}
+
+	/**
+	 * When the offset of the given {@link RowSelection} is {@literal 0},
+	 * add a {@code top(?)} clause to the given SQL query. When the offset
+	 * is non-zero, wrap the given query in an outer query that limits the
+	 * results using the {@code row_number()} window function.
+	 *
+	 * <pre>
+	 * with query_ as (
+	 *     select row_.*, row_number()
+	 *         over (order by current_timestamp) AS rownumber_
+	 *     from ( [original-query] ) row_
+	 * )
+	 * select [alias-list] from query_
+	 * where rownumber_ >= ? and rownumber_ < ?
+	 * </pre>
+	 *
+	 * Where {@code [original-query]} is the original SQL query, with a
+	 * {@code top()} clause added iff the query has an {@code order by}
+	 * clause, and with generated aliases added to any elements of the
+	 * projection list that don't already have aliases, and
+	 * {@code [alias-list]} is a list of aliases in the projection list.
+	 *
+	 * @return A new SQL statement
+	 */
+	@Override
+	public String processSql(String sql, Limit limit) {
+		sql = sql.trim();
+		if ( sql.endsWith(";") ) {
+			sql = sql.substring( 0, sql.length()-1 );
+		}
+
+		final int selectOffset = Keyword.SELECT.rootOffset( sql );
+		final int afterSelectOffset = Keyword.SELECT.endOffset( sql, selectOffset );
+		final int fromOffset = Keyword.FROM.rootOffset( sql ); //TODO: what if there is no 'from' clause?!
+
+		boolean hasCommonTables = Keyword.WITH.occursAt( sql, 0 );
+		boolean hasOrderBy = Keyword.ORDER_BY.rootOffset( sql ) > 0;
+		boolean hasFirstRow = hasFirstRow( limit );
+
+		final StringBuilder result = new StringBuilder( sql );
+
+		if ( !hasFirstRow || hasOrderBy ) {
+			result.insert( afterSelectOffset, " top(?)" );
+			topAdded = true;
+		}
+
+		if ( hasFirstRow ) {
+
+			// enclose original SQL statement with outer query
+			// that provides the rownumber_ column
+
+			String aliases = selectAliases( sql, afterSelectOffset, fromOffset, result ); //warning: changes result by side-effect
+			result.insert( selectOffset, ( hasCommonTables ? "," : "with" )
+					+ " query_ as (select row_.*, row_number() over (order by current_timestamp) as rownumber_ from (" )
+					.append( ") row_) select " ).append( aliases )
+					.append( " from query_ where rownumber_ >= ? and rownumber_ < ?" );
+		}
+
+		return result.toString();
+	}
+
+	@Override
+	public int bindLimitParametersAtStartOfQuery(Limit limit, PreparedStatement statement, int index) throws SQLException {
+		if ( topAdded ) {
+			// bind parameter to top(?)
+			statement.setInt( index, getMaxOrLimit( limit ) - 1 );
+			return 1;
+		}
+		return 0;
+	}
+
+	@Override
+	public int bindLimitParametersAtEndOfQuery(Limit limit, PreparedStatement statement, int index) throws SQLException {
+		return hasFirstRow( limit )
+				? super.bindLimitParametersAtEndOfQuery( limit, statement, index )
 				: 0;
 	}
 

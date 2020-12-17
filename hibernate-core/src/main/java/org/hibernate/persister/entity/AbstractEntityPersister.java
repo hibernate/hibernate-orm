@@ -28,6 +28,7 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -144,6 +145,7 @@ import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.AttributeMetadataAccess;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectionConsumer;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -202,6 +204,7 @@ import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.StandardTableGroup;
@@ -1252,6 +1255,83 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
+	public void applySqlSelections(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			DomainResultCreationState creationState) {
+		identifierMapping.applySqlSelections(
+				navigablePath.append( identifierMapping.getPartName() ),
+				tableGroup,
+				creationState
+		);
+		if ( discriminatorMapping != null ) {
+			discriminatorMapping.applySqlSelections(
+					navigablePath.append( discriminatorMapping.getPartName() ),
+					tableGroup,
+					creationState
+			);
+		}
+		if ( versionMapping != null ) {
+			versionMapping.applySqlSelections(
+					navigablePath.append( versionMapping.getPartName() ),
+					tableGroup,
+					creationState
+			);
+		}
+		for ( int i = 0; i < attributeMappings.size(); i++ ) {
+			final AttributeMapping attributeMapping = attributeMappings.get( i );
+			if ( attributeMapping instanceof SingularAttributeMapping ) {
+				attributeMapping.applySqlSelections(
+						navigablePath.append( attributeMapping.getPartName() ),
+						tableGroup,
+						creationState
+				);
+			}
+		}
+	}
+
+	@Override
+	public void applySqlSelections(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			DomainResultCreationState creationState,
+			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+		identifierMapping.applySqlSelections(
+				navigablePath.append( identifierMapping.getPartName() ),
+				tableGroup,
+				creationState,
+				selectionConsumer
+		);
+		if ( discriminatorMapping != null ) {
+			discriminatorMapping.applySqlSelections(
+					navigablePath.append( discriminatorMapping.getPartName() ),
+					tableGroup,
+					creationState,
+					selectionConsumer
+			);
+		}
+		if ( versionMapping != null ) {
+			versionMapping.applySqlSelections(
+					navigablePath.append( versionMapping.getPartName() ),
+					tableGroup,
+					creationState,
+					selectionConsumer
+			);
+		}
+		for ( int i = 0; i < attributeMappings.size(); i++ ) {
+			final AttributeMapping attributeMapping = attributeMappings.get( i );
+			if ( attributeMapping instanceof SingularAttributeMapping ) {
+				attributeMapping.applySqlSelections(
+						navigablePath.append( attributeMapping.getPartName() ),
+						tableGroup,
+						creationState,
+						selectionConsumer
+				);
+			}
+		}
+	}
+
+	@Override
 	public NaturalIdMapping getNaturalIdMapping() {
 		return naturalIdMapping;
 	}
@@ -1287,9 +1367,9 @@ public abstract class AbstractEntityPersister
 				sqlAliasBase,
 				(tableExpression) -> ArrayHelper.contains( getSubclassTableNames(), tableExpression ),
 				(tableExpression, tableGroup) -> {
-					for ( int i = 0; i < getSubclassTableSpan(); i++ ) {
-						final String subclassTableName = getSubclassTableName( i );
-						if ( subclassTableName.equals( tableExpression ) ) {
+					final String[] subclassTableNames = getSubclassTableNames();
+					for ( int i = 0; i < subclassTableNames.length; i++ ) {
+						if ( tableExpression.equals( subclassTableNames[i] ) ) {
 							final boolean isNullableTable = isNullableSubclassTable( i );
 							final TableReference joinedTableReference = new TableReference(
 									tableExpression,

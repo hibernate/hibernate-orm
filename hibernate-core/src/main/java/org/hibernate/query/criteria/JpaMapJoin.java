@@ -28,8 +28,5 @@ public interface JpaMapJoin<O,K,V> extends JpaJoin<O,V>, MapJoin<O,K,V> {
 	@Override
 	JpaMapJoin<O, K, V> on(Predicate... restrictions);
 
-	@Override
-	JpaMapJoin<O, K, V> correlateTo(JpaSubQuery<V> subquery);
-
 	<S extends V> JpaMapJoin<O, K, S> treatAs(Class<S> treatAsType);
 }

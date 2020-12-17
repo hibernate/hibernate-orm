@@ -19,7 +19,6 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.tree.AbstractSqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
-import org.hibernate.query.sqm.tree.cte.SqmCteConsumer;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
@@ -29,7 +28,7 @@ import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
  */
 public class SqmDeleteStatement<T>
 		extends AbstractSqmDmlStatement<T>
-		implements SqmDeleteOrUpdateStatement<T>, SqmCteConsumer, JpaCriteriaDelete<T> {
+		implements SqmDeleteOrUpdateStatement<T>, JpaCriteriaDelete<T> {
 	private final SqmQuerySource querySource;
 
 	private SqmWhereClause whereClause;

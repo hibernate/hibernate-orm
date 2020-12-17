@@ -20,7 +20,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.FilterHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
@@ -28,11 +27,9 @@ import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
 import org.hibernate.query.sqm.mutation.internal.UpdateHandler;
 import org.hibernate.query.sqm.mutation.spi.AbstractMutationHandler;
-import org.hibernate.query.sqm.sql.internal.SqlAstProcessingStateImpl;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
-import org.hibernate.sql.ast.spi.SqlAstProcessingState;
 import org.hibernate.sql.ast.spi.SqlAstTreeHelper;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -132,32 +129,10 @@ public class TableBasedUpdateHandler
 				sessionFactory
 		);
 
-		final Stack<SqlAstProcessingState> converterProcessingStateStack = converterDelegate.getProcessingStateStack();
-
-		final SqlAstProcessingStateImpl rootProcessingState = new SqlAstProcessingStateImpl(
-				null,
-				converterDelegate,
-				converterDelegate.getCurrentClauseStack()::getCurrent
-		);
-
-		converterProcessingStateStack.push( rootProcessingState );
-
 		final TableGroup updatingTableGroup = converterDelegate.getMutatingTableGroup();
 
 		final TableReference hierarchyRootTableReference = updatingTableGroup.resolveTableReference( hierarchyRootTableName );
 		assert hierarchyRootTableReference != null;
-
-
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// cross-reference the TableReference by alias.  The TableGroup already
-		// cross-references it by name, bu the ColumnReference only has the alias
-
-		final Map<String, TableReference> tableReferenceByAlias = CollectionHelper.mapOfSize( updatingTableGroup.getTableReferenceJoins().size() + 1 );
-		collectTableReference( updatingTableGroup.getPrimaryTableReference(), tableReferenceByAlias::put );
-		for ( int i = 0; i < updatingTableGroup.getTableReferenceJoins().size(); i++ ) {
-			collectTableReference( updatingTableGroup.getTableReferenceJoins().get( i ), tableReferenceByAlias::put );
-		}
-
 
 		final Map<SqmParameter,List<JdbcParameter>> parameterResolutions;
 		if ( domainParameterXref.getSqmParameterCount() == 0 ) {
@@ -199,10 +174,21 @@ public class TableBasedUpdateHandler
 
 		final FilterPredicate filterPredicate = FilterHelper.createFilterPredicate(
 				executionContext.getLoadQueryInfluencers(),
-				(Joinable) rootEntityDescriptor
+				(Joinable) rootEntityDescriptor,
+				updatingTableGroup
 		);
 		if ( filterPredicate != null ) {
 			predicate = SqlAstTreeHelper.combinePredicates( predicate, filterPredicate );
+		}
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// cross-reference the TableReference by alias.  The TableGroup already
+		// cross-references it by name, bu the ColumnReference only has the alias
+
+		final Map<String, TableReference> tableReferenceByAlias = CollectionHelper.mapOfSize( updatingTableGroup.getTableReferenceJoins().size() + 1 );
+		collectTableReference( updatingTableGroup.getPrimaryTableReference(), tableReferenceByAlias::put );
+		for ( int i = 0; i < updatingTableGroup.getTableReferenceJoins().size(); i++ ) {
+			collectTableReference( updatingTableGroup.getTableReferenceJoins().get( i ), tableReferenceByAlias::put );
 		}
 
 		return new UpdateExecutionDelegate(

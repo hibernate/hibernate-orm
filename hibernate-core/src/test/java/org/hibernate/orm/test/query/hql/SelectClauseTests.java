@@ -105,7 +105,7 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 		final SqmSelection selection = querySpec.getSelectClause().getSelections().get( 0 );
 
 		assertThat( querySpec.getFromClause().getRoots().size(), is(1) );
-		final SqmRoot root = querySpec.getFromClause().getRoots().get( 0 );
+		final SqmRoot<?> root = querySpec.getFromClause().getRoots().get( 0 );
 		assertThat( root.getEntityName(), endsWith( "Person" ) );
 		assertThat( root.getJoins().size(), is(0) );
 
@@ -131,10 +131,10 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 
 		assertThat( querySpec.getFromClause().getRoots().size(), is(2) );
 
-		final SqmRoot entityRoot = querySpec.getFromClause().getRoots().get( 0 );
+		final SqmRoot<?> entityRoot = querySpec.getFromClause().getRoots().get( 0 );
 		assertThat( entityRoot.getEntityName(), endsWith( "Person" ) );
 
-		final SqmRoot entity2Root = querySpec.getFromClause().getRoots().get( 1 );
+		final SqmRoot<?> entity2Root = querySpec.getFromClause().getRoots().get( 1 );
 		assertThat( entity2Root.getEntityName(), endsWith( "Person" ) );
 
 		SqmBinaryArithmetic addExpression = (SqmBinaryArithmetic) selection.getSelectableNode();

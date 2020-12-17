@@ -6,15 +6,39 @@
  */
 package org.hibernate.query.sqm.tree.cte;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
+import org.hibernate.sql.ast.tree.cte.CteColumn;
+
 /**
  * @author Steve Ebersole
+ * @author Christian Beikov
  */
 public class SqmCteTable {
 	private final String cteName;
 	private final List<SqmCteTableColumn> columns;
+
+	public SqmCteTable(String cteName, EntityMappingType entityDescriptor) {
+		final int numberOfColumns = entityDescriptor.getIdentifierMapping().getJdbcTypeCount();
+		final List<SqmCteTableColumn> columns = new ArrayList<>( numberOfColumns );
+		final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
+		final String idName;
+		if ( identifierMapping instanceof SingleAttributeIdentifierMapping ) {
+			idName = ( (SingleAttributeIdentifierMapping) identifierMapping ).getAttributeName();
+		}
+		else {
+			idName = "id";
+		}
+		columns.add( new SqmCteTableColumn( this, idName, identifierMapping ) );
+		this.cteName = cteName;
+		this.columns = columns;
+	}
 
 	public SqmCteTable(String cteName, List<SqmCteTableColumn> columns) {
 		this.cteName = cteName;

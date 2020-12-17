@@ -7,7 +7,6 @@
 package org.hibernate.loader.ast.internal;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.LockMode;
@@ -32,7 +31,6 @@ import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl;
@@ -185,7 +183,8 @@ class DatabaseSnapshotExecutor {
 		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
 
-		jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory ).translate( selectStatement );
+		jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory, selectStatement )
+				.translate( null, QueryOptions.NONE );
 	}
 
 	Object[] loadDatabaseSnapshot(Object id, SharedSessionContractImplementor session) {

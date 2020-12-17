@@ -53,7 +53,7 @@ public class FromClauseTests extends BaseSqmUnitTest {
 		assertThat( fromClause, notNullValue() );
 		assertThat( fromClause.getRoots(), hasSize( 1 ) );
 
-		final SqmRoot firstRoot = fromClause.getRoots().get( 0 );
+		final SqmRoot<?> firstRoot = fromClause.getRoots().get( 0 );
 		assertThat( firstRoot, notNullValue() );
 		assertThat( firstRoot.getJoins(), isEmpty() );
 		assertThat( firstRoot.getExplicitAlias(), is( "p") );
@@ -72,12 +72,12 @@ public class FromClauseTests extends BaseSqmUnitTest {
 
 		assertThat( fromClause.getRoots(), hasSize( 2 ) );
 
-		final SqmRoot firstRoot = fromClause.getRoots().get( 0 );
+		final SqmRoot<?> firstRoot = fromClause.getRoots().get( 0 );
 		assertThat( firstRoot, notNullValue() );
 		assertThat( firstRoot.getJoins(), isEmpty() );
 		assertThat( firstRoot.getExplicitAlias(), is( "p") );
 
-		final SqmRoot secondRoot = fromClause.getRoots().get( 0 );
+		final SqmRoot<?> secondRoot = fromClause.getRoots().get( 0 );
 		assertThat( secondRoot, notNullValue() );
 		assertThat( secondRoot.getJoins(), isEmpty() );
 		assertThat( secondRoot.getExplicitAlias(), is( "p") );
@@ -91,7 +91,7 @@ public class FromClauseTests extends BaseSqmUnitTest {
 		assertThat( fromClause, notNullValue() );
 		assertThat( fromClause.getRoots(), hasSize( 1 ) );
 
-		final SqmRoot sqmRoot = fromClause.getRoots().get( 0 );
+		final SqmRoot<?> sqmRoot = fromClause.getRoots().get( 0 );
 		assertThat( sqmRoot, notNullValue() );
 		assertThat( sqmRoot.getJoins(), isEmpty() );
 		assertThat( sqmRoot.getExplicitAlias(), nullValue() );

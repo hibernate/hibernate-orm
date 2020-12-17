@@ -34,7 +34,8 @@ public class FromClauseIndex extends SimpleFromClauseAccessImpl {
 	 */
 	private Map<String, SqmAttributeJoin> fetchesByPath;
 
-	public FromClauseIndex() {
+	public FromClauseIndex(FromClauseIndex parent) {
+		super( parent );
 	}
 
 	public void register(SqmPath<?> sqmPath, TableGroup tableGroup) {
@@ -80,7 +81,8 @@ public class FromClauseIndex extends SimpleFromClauseAccessImpl {
 	}
 
 	public boolean isResolved(SqmFrom fromElement) {
-		return tableGroupMap.containsKey( fromElement.getNavigablePath() );
+		return tableGroupMap.containsKey( fromElement.getNavigablePath().getIdentifierForTableGroup() )
+				|| parent != null && ( (FromClauseIndex) parent ).isResolved( fromElement );
 	}
 
 	public SqmAttributeJoin findFetchedJoinByPath(NavigablePath path) {

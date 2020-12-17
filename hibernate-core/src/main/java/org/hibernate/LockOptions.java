@@ -75,6 +75,14 @@ public class LockOptions implements Serializable {
 		this.lockMode = lockMode;
 	}
 
+	/**
+	 * Returns whether the lock options are empty.
+	 *
+	 * @return If the lock options is equivalent to {@link LockOptions#NONE}.
+	 */
+	public boolean isEmpty() {
+		return lockMode == LockMode.NONE && timeout == WAIT_FOREVER && followOnLocking == null && !scope && !hasAliasSpecificLockModes();
+	}
 
 	/**
 	 * Retrieve the overall lock mode in effect for this set of options.
@@ -329,4 +337,30 @@ public class LockOptions implements Serializable {
 		destination.setFollowOnLocking( source.getFollowOnLocking() );
 		return destination;
 	}
+
+	public boolean isCompatible(LockOptions that) {
+		if ( that == null ) {
+			return isEmpty();
+		}
+		else if ( this == that ) {
+			return true;
+		}
+
+		if ( timeout != that.timeout ) {
+			return false;
+		}
+		if ( scope != that.scope ) {
+			return false;
+		}
+		if ( lockMode != that.lockMode ) {
+			return false;
+		}
+		if ( aliasSpecificLockModes != null ?
+				!aliasSpecificLockModes.equals( that.aliasSpecificLockModes ) :
+				that.aliasSpecificLockModes != null ) {
+			return false;
+		}
+		return followOnLocking != null ? followOnLocking.equals( that.followOnLocking ) : that.followOnLocking == null;
+	}
+
 }

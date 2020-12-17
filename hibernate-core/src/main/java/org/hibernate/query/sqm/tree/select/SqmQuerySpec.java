@@ -14,6 +14,7 @@ import java.util.Set;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 
+import org.hibernate.FetchClauseType;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaOrder;
 import org.hibernate.query.criteria.JpaPredicate;
@@ -21,25 +22,26 @@ import org.hibernate.query.criteria.JpaQueryStructure;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmNode;
-import org.hibernate.query.sqm.tree.cte.SqmCteConsumer;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.from.SqmFromClauseContainer;
+import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClauseContainer;
-import org.hibernate.type.StandardBasicTypes;
 
 /**
  * Defines the commonality between a root query and a subquery.
  *
  * @author Steve Ebersole
  */
-public class SqmQuerySpec<T> implements SqmCteConsumer, SqmNode, SqmFromClauseContainer, SqmWhereClauseContainer, JpaQueryStructure<T> {
-	private final NodeBuilder nodeBuilder;
-
+public class SqmQuerySpec<T> extends SqmQueryPart<T>
+		implements SqmNode, SqmFromClauseContainer, SqmWhereClauseContainer, JpaQueryStructure<T> {
 	private SqmFromClause fromClause;
 	private SqmSelectClause selectClause;
 	private SqmWhereClause whereClause;
@@ -47,18 +49,28 @@ public class SqmQuerySpec<T> implements SqmCteConsumer, SqmNode, SqmFromClauseCo
 	private List<SqmExpression<?>> groupByClauseExpressions = Collections.emptyList();
 	private SqmPredicate havingClausePredicate;
 
-	private SqmOrderByClause orderByClause;
-
-	private SqmExpression<?> limitExpression;
-	private SqmExpression<?> offsetExpression;
-
 	public SqmQuerySpec(NodeBuilder nodeBuilder) {
-		this.nodeBuilder = nodeBuilder;
+		super( nodeBuilder );
 	}
 
 	@Override
-	public NodeBuilder nodeBuilder() {
-		return nodeBuilder;
+	public <X> X accept(SemanticQueryWalker<X> walker) {
+		return walker.visitQuerySpec( this );
+	}
+
+	@Override
+	public SqmQuerySpec<T> getFirstQuerySpec() {
+		return this;
+	}
+
+	@Override
+	public SqmQuerySpec<T> getLastQuerySpec() {
+		return this;
+	}
+
+	@Override
+	public boolean isSimpleQueryPart() {
+		return true;
 	}
 
 	@Override
@@ -68,6 +80,23 @@ public class SqmQuerySpec<T> implements SqmCteConsumer, SqmNode, SqmFromClauseCo
 
 	public void setFromClause(SqmFromClause fromClause) {
 		this.fromClause = fromClause;
+	}
+
+	public boolean containsCollectionFetches() {
+		final List<SqmFrom<?, ?>> fromNodes = new ArrayList<>( fromClause.getRoots() );
+		while ( !fromNodes.isEmpty() ) {
+			final SqmFrom<?, ?> fromNode = fromNodes.remove( fromNodes.size() - 1 );
+			for ( SqmJoin<?, ?> sqmJoin : fromNode.getSqmJoins() ) {
+				if ( sqmJoin instanceof SqmAttributeJoin<?, ?> ) {
+					final SqmAttributeJoin<?, ?> join = (SqmAttributeJoin<?, ?>) sqmJoin;
+					if ( join.isFetched() && join.getAttribute().isCollection() ) {
+						return true;
+					}
+				}
+				fromNodes.add( sqmJoin );
+			}
+		}
+		return false;
 	}
 
 	public SqmSelectClause getSelectClause() {
@@ -118,36 +147,6 @@ public class SqmQuerySpec<T> implements SqmCteConsumer, SqmNode, SqmFromClauseCo
 		this.havingClausePredicate = havingClausePredicate;
 	}
 
-	public SqmOrderByClause getOrderByClause() {
-		return orderByClause;
-	}
-
-	public void setOrderByClause(SqmOrderByClause orderByClause) {
-		this.orderByClause = orderByClause;
-	}
-
-	public SqmExpression<?> getLimitExpression() {
-		return limitExpression;
-	}
-
-	public void setLimitExpression(SqmExpression<?> limitExpression) {
-		if ( limitExpression != null ) {
-			limitExpression.applyInferableType( StandardBasicTypes.INTEGER );
-		}
-		this.limitExpression = limitExpression;
-	}
-
-	public SqmExpression<?> getOffsetExpression() {
-		return offsetExpression;
-	}
-
-	public void setOffsetExpression(SqmExpression<?> offsetExpression) {
-		if ( offsetExpression != null ) {
-			offsetExpression.applyInferableType( StandardBasicTypes.INTEGER );
-		}
-		this.offsetExpression = offsetExpression;
-	}
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JPA
@@ -183,7 +182,7 @@ public class SqmQuerySpec<T> implements SqmCteConsumer, SqmNode, SqmFromClauseCo
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Set getRoots() {
+	public Set<SqmRoot<?>> getRoots() {
 		assert getFromClause() != null;
 		return new HashSet<>( getFromClause().getRoots() );
 	}
@@ -219,7 +218,7 @@ public class SqmQuerySpec<T> implements SqmCteConsumer, SqmNode, SqmFromClauseCo
 		if ( getWhereClause() == null ) {
 			setWhereClause( new SqmWhereClause( nodeBuilder() ) );
 		}
-		getWhereClause().setPredicate( nodeBuilder.wrap( restriction ) );
+		getWhereClause().setPredicate( nodeBuilder().wrap( restriction ) );
 		return this;
 	}
 
@@ -268,46 +267,19 @@ public class SqmQuerySpec<T> implements SqmCteConsumer, SqmNode, SqmFromClauseCo
 
 	@Override
 	public SqmQuerySpec<T> setGroupRestriction(Expression<Boolean> restriction) {
-		havingClausePredicate = nodeBuilder.wrap( restriction );
+		havingClausePredicate = nodeBuilder().wrap( restriction );
 		return this;
 	}
 
 	@Override
 	public SqmQuerySpec<T> setGroupRestriction(Predicate... restrictions) {
-		havingClausePredicate = nodeBuilder.wrap( restrictions );
+		havingClausePredicate = nodeBuilder().wrap( restrictions );
 		return this;
-	}
-
-	@Override
-	public List<SqmSortSpecification> getSortSpecifications() {
-		if ( getOrderByClause() == null ) {
-			return Collections.emptyList();
-		}
-
-		return getOrderByClause().getSortSpecifications();
 	}
 
 	@Override
 	public SqmQuerySpec<T> setSortSpecifications(List<? extends JpaOrder> sortSpecifications) {
-		if ( getOrderByClause() == null ) {
-			setOrderByClause( new SqmOrderByClause() );
-		}
-
-		//noinspection unchecked
-		getOrderByClause().setSortSpecifications( (List) sortSpecifications );
-
-		return this;
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public SqmExpression<?> getLimit() {
-		return getLimitExpression();
-	}
-
-	@Override
-	public SqmQuerySpec<T> setLimit(JpaExpression<?> limit) {
-		setLimitExpression( (SqmExpression<?>) limit );
+		super.setSortSpecifications( sortSpecifications );
 		return this;
 	}
 
@@ -320,6 +292,24 @@ public class SqmQuerySpec<T> implements SqmCteConsumer, SqmNode, SqmFromClauseCo
 	@Override
 	public SqmQuerySpec<T> setOffset(JpaExpression<?> offset) {
 		setOffsetExpression( (SqmExpression<?>) offset );
+		return this;
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public SqmExpression<?> getFetch() {
+		return getFetchExpression();
+	}
+
+	@Override
+	public SqmQuerySpec<T> setFetch(JpaExpression<?> fetch) {
+		setFetchExpression( (SqmExpression<?>) fetch );
+		return this;
+	}
+
+	@Override
+	public SqmQuerySpec<T> setFetch(JpaExpression<?> fetch, FetchClauseType fetchClauseType) {
+		setFetchExpression( (SqmExpression<?>) fetch, fetchClauseType );
 		return this;
 	}
 }

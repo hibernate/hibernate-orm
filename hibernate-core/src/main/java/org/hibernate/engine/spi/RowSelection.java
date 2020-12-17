@@ -10,7 +10,9 @@ package org.hibernate.engine.spi;
  * Represents a selection criteria for rows in a JDBC {@link java.sql.ResultSet}
  *
  * @author Gavin King
+ * @deprecated todo (6.0): remove in favor of Limit within QueryOptions?
  */
+@Deprecated
 public final class RowSelection {
 	private Integer firstRow;
 	private Integer maxRows;

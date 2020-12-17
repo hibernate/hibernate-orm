@@ -275,6 +275,18 @@ public final class CollectionHelper {
 		return objects == null || objects.length == 0;
 	}
 
+	public static <T> List<T> listOf(T value1) {
+		final List<T> list = new ArrayList<>( 1 );
+		list.add( value1 );
+		return list;
+	}
+
+	public static <T> List<T> listOf(T... values) {
+		final List<T> list = new ArrayList<>( values.length );
+		Collections.addAll( list, values );
+		return list;
+	}
+
 	public static <T> Set<T> setOf(T... values) {
 		final HashSet<T> set = new HashSet<>( determineProperSizing( values.length ) );
 		Collections.addAll( set, values );

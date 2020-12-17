@@ -53,6 +53,11 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 		this.querySource = querySource;
 	}
 
+	public SqmSelectStatement(Class<T> resultJavaType, SqmQuerySource querySource, NodeBuilder nodeBuilder) {
+		super( resultJavaType, nodeBuilder );
+		this.querySource = querySource;
+	}
+
 	/**
 	 * @implNote This form is used from Hibernate's JPA criteria handling.
 	 */
@@ -253,7 +258,7 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 	@SuppressWarnings("unchecked")
 	public SqmSelectStatement<T> select(Selection<? extends T> selection) {
 		getQuerySpec().setSelection( (JpaSelection<T>) selection );
-		setResultType( selection.getJavaType() );
+		setResultType( (Class<T>) selection.getJavaType() );
 		return this;
 	}
 
@@ -262,7 +267,7 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 		for ( Selection<?> selection : selections ) {
 			getQuerySpec().getSelectClause().add( (SqmExpression) selection, selection.getAlias() );
 		}
-		setResultType( Object[].class );
+		setResultType( (Class<T>) Object[].class );
 		return this;
 	}
 
@@ -271,7 +276,7 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 		for ( Selection<?> selection : selectionList ) {
 			getQuerySpec().getSelectClause().add( (SqmExpression) selection, selection.getAlias() );
 		}
-		setResultType( Object[].class );
+		setResultType( (Class<T>) Object[].class );
 		return this;
 	}
 

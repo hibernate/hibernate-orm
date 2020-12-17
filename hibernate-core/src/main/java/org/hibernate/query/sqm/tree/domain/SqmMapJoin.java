@@ -20,7 +20,6 @@ import org.hibernate.query.PathException;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaMapJoin;
 import org.hibernate.query.criteria.JpaPredicate;
-import org.hibernate.query.criteria.JpaSubQuery;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
@@ -32,12 +31,12 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 /**
  * @author Steve Ebersole
  */
-public class SqmMapJoin<O,K,V>
-		extends AbstractSqmPluralJoin<O,Map<K,V>,V>
-		implements JpaMapJoin<O,K,V> {
+public class SqmMapJoin<O, K, V>
+		extends AbstractSqmPluralJoin<O, Map<K, V>, V>
+		implements JpaMapJoin<O, K, V> {
 	public SqmMapJoin(
 			SqmFrom<?,O> lhs,
-			MapPersistentAttribute<O,K,V> pluralValuedNavigable,
+			MapPersistentAttribute<O, K, V> pluralValuedNavigable,
 			String alias,
 			SqmJoinType sqmJoinType,
 			boolean fetched,
@@ -46,7 +45,7 @@ public class SqmMapJoin<O,K,V>
 	}
 
 	@Override
-	public MapPersistentAttribute<O,K,V> getReferencedPathSource() {
+	public MapPersistentAttribute<O, K, V> getReferencedPathSource() {
 		//noinspection unchecked
 		return(MapPersistentAttribute) super.getReferencedPathSource();
 	}
@@ -57,8 +56,14 @@ public class SqmMapJoin<O,K,V>
 	}
 
 	@Override
-	public MapPersistentAttribute<O,K,V> getModel() {
+	public MapPersistentAttribute<O, K, V> getModel() {
 		return (MapPersistentAttribute<O, K, V>) super.getModel();
+	}
+
+	@Override
+	public MapPersistentAttribute<O, K, V> getAttribute() {
+		//noinspection unchecked
+		return (MapPersistentAttribute<O, K, V>) super.getAttribute();
 	}
 
 
@@ -144,37 +149,37 @@ public class SqmMapJoin<O,K,V>
 	}
 
 	@Override
-	public SqmMapJoin<O,K,V> on(JpaExpression<Boolean> restriction) {
+	public SqmMapJoin<O, K, V> on(JpaExpression<Boolean> restriction) {
 		return (SqmMapJoin<O, K, V>) super.on( restriction );
 	}
 
 	@Override
-	public SqmMapJoin<O,K,V> on(Expression<Boolean> restriction) {
+	public SqmMapJoin<O, K, V> on(Expression<Boolean> restriction) {
 		return (SqmMapJoin<O, K, V>) super.on( restriction );
 	}
 
 	@Override
-	public SqmMapJoin<O,K,V> on(JpaPredicate... restrictions) {
+	public SqmMapJoin<O, K, V> on(JpaPredicate... restrictions) {
 		return (SqmMapJoin<O, K, V>) super.on( restrictions );
 	}
 
 	@Override
-	public SqmMapJoin<O,K,V> on(Predicate... restrictions) {
+	public SqmMapJoin<O, K, V> on(Predicate... restrictions) {
 		return (SqmMapJoin<O, K, V>) super.on( restrictions );
 	}
 
 	@Override
-	public SqmMapJoin<O,K,V> correlateTo(JpaSubQuery<V> subquery) {
-		return (SqmMapJoin<O, K, V>) super.correlateTo( subquery );
+	public SqmCorrelatedMapJoin<O, K, V> createCorrelation() {
+		return new SqmCorrelatedMapJoin<>( this );
 	}
 
 	@Override
-	public <S extends V> SqmTreatedMapJoin<O,K,V,S> treatAs(Class<S> treatJavaType) throws PathException {
+	public <S extends V> SqmTreatedMapJoin<O, K, V, S> treatAs(Class<S> treatJavaType) throws PathException {
 		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
 	}
 
 	@Override
-	public <S extends V> SqmTreatedMapJoin<O,K,V,S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
+	public <S extends V> SqmTreatedMapJoin<O, K, V, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
 		//noinspection unchecked
 		return new SqmTreatedMapJoin( this, treatTarget, null );
 	}

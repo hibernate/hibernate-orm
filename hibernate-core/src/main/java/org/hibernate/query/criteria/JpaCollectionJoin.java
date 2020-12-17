@@ -16,8 +16,6 @@ import javax.persistence.criteria.Predicate;
  * @author Steve Ebersole
  */
 public interface JpaCollectionJoin<O, T> extends JpaJoin<O, T>, CollectionJoin<O, T> {
-	@Override
-	JpaCollectionJoin<O, T> correlateTo(JpaSubQuery<T> subquery);
 
 	@Override
 	JpaCollectionJoin<O, T> on(JpaExpression<Boolean> restriction);

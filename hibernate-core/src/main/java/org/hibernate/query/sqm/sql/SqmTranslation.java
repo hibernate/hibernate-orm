@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
+import org.hibernate.sql.ast.spi.FromClauseAccess;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 
@@ -18,7 +20,9 @@ import org.hibernate.sql.ast.tree.expression.JdbcParameter;
  *
  * @author Steve Ebersole
  */
-public interface SqmTranslation {
-	Statement getSqlAst();
+public interface SqmTranslation<T extends Statement> {
+	T getSqlAst();
 	Map<SqmParameter, List<JdbcParameter>> getJdbcParamsBySqmParam();
+	SqlExpressionResolver getSqlExpressionResolver();
+	FromClauseAccess getFromClauseAccess();
 }

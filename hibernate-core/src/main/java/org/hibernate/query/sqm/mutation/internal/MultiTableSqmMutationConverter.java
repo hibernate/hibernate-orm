@@ -22,7 +22,7 @@ import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.query.sqm.sql.internal.SqlAstProcessingStateImpl;
-import org.hibernate.query.sqm.sql.internal.SqlAstQuerySpecProcessingStateImpl;
+import org.hibernate.query.sqm.sql.internal.SqlAstQueryPartProcessingStateImpl;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmSelectClause;
@@ -31,6 +31,7 @@ import org.hibernate.query.sqm.tree.update.SqmSetClause;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstProcessingState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
@@ -51,7 +52,7 @@ import org.hibernate.sql.ast.tree.update.Assignment;
  *
  * @author Steve Ebersole
  */
-public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter {
+public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Statement> {
 	private final EntityMappingType mutatingEntityDescriptor;
 	private final TableGroup mutatingTableGroup;
 
@@ -65,7 +66,7 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter {
 			LoadQueryInfluencers loadQueryInfluencers,
 			QueryParameterBindings domainParameterBindings,
 			SqlAstCreationContext creationContext) {
-		super( creationContext, queryOptions, loadQueryInfluencers, domainParameterXref, domainParameterBindings );
+		super( creationContext, null, queryOptions, loadQueryInfluencers, domainParameterXref, domainParameterBindings );
 		this.mutatingEntityDescriptor = mutatingEntityDescriptor;
 
 		final SqlAstProcessingStateImpl rootProcessingState = new SqlAstProcessingStateImpl(
@@ -74,7 +75,7 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter {
 				getCurrentClauseStack()::getCurrent
 		);
 
-		getProcessingStateStack().push( rootProcessingState );
+		pushProcessingState( rootProcessingState );
 
 		final NavigablePath navigablePath = new NavigablePath( mutatingEntityDescriptor.getEntityName(), mutatingEntityExplicitAlias );
 		this.mutatingTableGroup = mutatingEntityDescriptor.createRootTableGroup(
@@ -153,7 +154,7 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter {
 			return null;
 		}
 
-		final SqlAstProcessingState rootProcessingState = getProcessingStateStack().getCurrent();
+		final SqlAstProcessingState rootProcessingState = getCurrentProcessingState();
 		final SqlAstProcessingStateImpl restrictionProcessingState = new SqlAstProcessingStateImpl(
 				rootProcessingState,
 				this,
@@ -178,12 +179,12 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter {
 			}
 		};
 
-		getProcessingStateStack().push( restrictionProcessingState );
+		pushProcessingState( restrictionProcessingState, getFromClauseIndex() );
 		try {
 			return (Predicate) sqmWhereClause.getPredicate().accept( this );
 		}
 		finally {
-			getProcessingStateStack().pop();
+			popProcessingStateStack();
 			this.parameterResolutionConsumer = null;
 		}
 	}
@@ -216,12 +217,12 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter {
 
 		this.parameterResolutionConsumer = parameterResolutionConsumer;
 
-		final SqlAstProcessingState rootProcessingState = getProcessingStateStack().getCurrent();
-		final SqlAstProcessingStateImpl processingState = new SqlAstQuerySpecProcessingStateImpl(
+		final SqlAstProcessingState rootProcessingState = getCurrentProcessingState();
+		final SqlAstProcessingStateImpl processingState = new SqlAstQueryPartProcessingStateImpl(
 				sqlQuerySpec,
 				rootProcessingState,
 				this,
-				r -> new SqlSelectionForSqmSelectionCollector(
+				r -> new SqlSelectionForSqmSelectionResolver(
 						r,
 						sqmSelectClause.getSelectionItems()
 								.size()
@@ -247,7 +248,7 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter {
 			}
 		};
 
-		getProcessingStateStack().push( processingState );
+		pushProcessingState( processingState, getFromClauseIndex() );
 		try {
 			for ( int i = 0; i < sqmSelectClause.getSelectionItems().size(); i++ ) {
 				final DomainResultProducer domainResultProducer = (DomainResultProducer) sqmSelectClause.getSelectionItems()
@@ -257,7 +258,7 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter {
 			}
 		}
 		finally {
-			getProcessingStateStack().pop();
+			popProcessingStateStack();
 			this.parameterResolutionConsumer = null;
 		}
 	}

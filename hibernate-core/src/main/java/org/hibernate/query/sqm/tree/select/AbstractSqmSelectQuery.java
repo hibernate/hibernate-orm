@@ -7,7 +7,10 @@
 package org.hibernate.query.sqm.tree.select;
 
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
@@ -18,6 +21,8 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
+import org.hibernate.query.sqm.tree.cte.SqmCteContainer;
+import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 
@@ -27,43 +32,78 @@ import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 @SuppressWarnings("unchecked")
 public abstract class AbstractSqmSelectQuery<T>
 		extends AbstractSqmNode
-		implements SqmSelectQuery<T> {
-	private SqmQuerySpec<T> sqmQuerySpec;
-	private Class resultType;
+		implements SqmSelectQuery<T>, SqmCteContainer {
+	private final Map<String, SqmCteStatement<?>> cteStatements = new LinkedHashMap<>();
+	private boolean withRecursive;
+	private SqmQueryPart<T> sqmQueryPart;
+	private Class<T> resultType;
 
 	public AbstractSqmSelectQuery(Class<T> resultType, NodeBuilder builder) {
 		super( builder );
-		this.sqmQuerySpec = new SqmQuerySpec<>( builder );
+		this.sqmQueryPart = new SqmQuerySpec<>( builder );
 		this.resultType = resultType;
 	}
 
-
-	public AbstractSqmSelectQuery(SqmQuerySpec<T> sqmQuerySpec, NodeBuilder builder) {
-		this( (Class) sqmQuerySpec.getSelectClause().getJavaType(), builder );
+	public AbstractSqmSelectQuery(SqmQueryPart<T> queryPart, Class<T> resultType, NodeBuilder builder) {
+		super( builder );
+		this.resultType = resultType;
+		setQueryPart( queryPart );
 	}
 
 	@Override
-	public Class getResultType() {
+	public boolean isWithRecursive() {
+		return withRecursive;
+	}
+
+	@Override
+	public void setWithRecursive(boolean withRecursive) {
+		this.withRecursive = withRecursive;
+	}
+
+	@Override
+	public Collection<SqmCteStatement<?>> getCteStatements() {
+		return cteStatements.values();
+	}
+
+	@Override
+	public SqmCteStatement<?> getCteStatement(String cteLabel) {
+		return cteStatements.get( cteLabel );
+	}
+
+	@Override
+	public void addCteStatement(SqmCteStatement<?> cteStatement) {
+		if ( cteStatements.putIfAbsent( cteStatement.getCteTable().getCteName(), cteStatement ) != null ) {
+			throw new IllegalArgumentException( "A CTE with the label " + cteStatement.getCteTable().getCteName() + " already exists!" );
+		}
+	}
+
+	@Override
+	public Class<T> getResultType() {
 		return resultType;
 	}
 
-	protected void setResultType(Class resultType) {
+	protected void setResultType(Class<T> resultType) {
 		this.resultType = resultType;
 	}
 
 	@Override
 	public SqmQuerySpec<T> getQuerySpec() {
-		return sqmQuerySpec;
+		return sqmQueryPart.getFirstQuerySpec();
 	}
 
-	public void setQuerySpec(SqmQuerySpec<T> sqmQuerySpec) {
-		this.sqmQuerySpec = sqmQuerySpec;
+	@Override
+	public SqmQueryPart<T> getQueryPart() {
+		return sqmQueryPart;
+	}
+
+	public void setQueryPart(SqmQueryPart<T> sqmQueryPart) {
+		this.sqmQueryPart = sqmQueryPart;
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public Set<Root<?>> getRoots() {
-		return (Set) sqmQuerySpec.getRoots();
+		return (Set) getQuerySpec().getRoots();
 	}
 
 	@Override
@@ -79,7 +119,7 @@ public abstract class AbstractSqmSelectQuery<T>
 	}
 
 	private <X> SqmRoot<X> addRoot(SqmRoot<X> root) {
-		sqmQuerySpec.addRoot( root );
+		getQuerySpec().addRoot( root );
 		return root;
 	}
 
@@ -94,18 +134,18 @@ public abstract class AbstractSqmSelectQuery<T>
 
 	@Override
 	public boolean isDistinct() {
-		return sqmQuerySpec.isDistinct();
+		return getQuerySpec().isDistinct();
 	}
 
 	@Override
 	public SqmSelectQuery<T> distinct(boolean distinct) {
-		sqmQuerySpec.setDistinct( distinct );
+		getQuerySpec().setDistinct( distinct );
 		return this;
 	}
 
 	@Override
 	public JpaSelection<T> getSelection() {
-		return sqmQuerySpec.getSelection();
+		return getQuerySpec().getSelection();
 	}
 
 
@@ -114,18 +154,18 @@ public abstract class AbstractSqmSelectQuery<T>
 
 	@Override
 	public SqmPredicate getRestriction() {
-		return sqmQuerySpec.getRestriction();
+		return getQuerySpec().getRestriction();
 	}
 
 	@Override
 	public SqmSelectQuery<T> where(Expression<Boolean> restriction) {
-		sqmQuerySpec.setRestriction( restriction );
+		getQuerySpec().setRestriction( restriction );
 		return this;
 	}
 
 	@Override
 	public SqmSelectQuery<T> where(Predicate... restrictions) {
-		sqmQuerySpec.setRestriction( restrictions );
+		getQuerySpec().setRestriction( restrictions );
 		return this;
 	}
 
@@ -136,7 +176,7 @@ public abstract class AbstractSqmSelectQuery<T>
 	@Override
 	@SuppressWarnings("unchecked")
 	public List<Expression<?>> getGroupList() {
-		return (List) sqmQuerySpec.getGroupingExpressions();
+		return (List) getQuerySpec().getGroupingExpressions();
 	}
 
 	@Override
@@ -153,18 +193,18 @@ public abstract class AbstractSqmSelectQuery<T>
 
 	@Override
 	public SqmPredicate getGroupRestriction() {
-		return sqmQuerySpec.getGroupRestriction();
+		return getQuerySpec().getGroupRestriction();
 	}
 
 	@Override
 	public SqmSelectQuery<T> having(Expression<Boolean> booleanExpression) {
-		sqmQuerySpec.setGroupRestriction( nodeBuilder().wrap( booleanExpression ) );
+		getQuerySpec().setGroupRestriction( nodeBuilder().wrap( booleanExpression ) );
 		return this;
 	}
 
 	@Override
 	public SqmSelectQuery<T> having(Predicate... predicates) {
-		sqmQuerySpec.setGroupRestriction( nodeBuilder().wrap( predicates ) );
+		getQuerySpec().setGroupRestriction( nodeBuilder().wrap( predicates ) );
 		return this;
 	}
 

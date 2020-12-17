@@ -16,8 +16,8 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.query.spi.SqlOmittingQueryOptions;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
-import org.hibernate.sql.ast.SqlAstDeleteTranslator;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
@@ -111,19 +111,18 @@ public class SqmMutationStrategyHelper {
 					restrictionProducer.apply( tableReference, attributeMapping )
 			);
 
-			final SqlAstDeleteTranslator sqlAstDeleteTranslator = jdbcServices.getJdbcEnvironment()
-					.getSqlAstTranslatorFactory()
-					.buildDeleteTranslator( sessionFactory );
-
 			jdbcServices.getJdbcMutationExecutor().execute(
-					sqlAstDeleteTranslator.translate( sqlAstDelete ),
+					jdbcServices.getJdbcEnvironment()
+							.getSqlAstTranslatorFactory()
+							.buildDeleteTranslator( sessionFactory, sqlAstDelete )
+							.translate( jdbcParameterBindings, executionContext.getQueryOptions() ),
 					jdbcParameterBindings,
 					sql -> executionContext.getSession()
 							.getJdbcCoordinator()
 							.getStatementPreparer()
 							.prepareStatement( sql ),
 					(integer, preparedStatement) -> {},
-					executionContext
+					SqlOmittingQueryOptions.omitSqlQueryOptions( executionContext )
 			);
 		}
 	}

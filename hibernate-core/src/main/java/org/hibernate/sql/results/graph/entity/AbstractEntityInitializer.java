@@ -786,7 +786,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		entityInstance = null;
 		missing = false;
 		resolvedEntityState = null;
-
+		identifierInitializers.forEach( initializer -> initializer.finishUpRow( rowProcessingState ) );
 		clearParentResolutionListeners();
 	}
 }

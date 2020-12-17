@@ -64,6 +64,7 @@ import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.InListPredicate;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
@@ -882,7 +883,7 @@ public class LoaderSelectBuilder {
 		);
 	}
 
-	private QuerySpec generateSubSelect(
+	private QueryPart generateSubSelect(
 			PluralAttributeMapping attributeMapping,
 			TableGroup rootTableGroup,
 			SubselectFetch subselect,

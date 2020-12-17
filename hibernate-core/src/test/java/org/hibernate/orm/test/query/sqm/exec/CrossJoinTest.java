@@ -27,7 +27,7 @@ public class CrossJoinTest extends SessionFactoryBasedFunctionalTest {
 		inTransaction(
 				session -> {
 					session.createQuery(
-							"from SimpleEntity e1, SimpleEntity e2 where e1.id = e2.id and e1.someDate = {d '2018-01-01'}" )
+							"from SimpleEntity e1, SimpleEntity e2 where e1.id = e2.id and e1.someDate = {ts '2018-01-01 00:00:00'}" )
 							.list();
 
 				}

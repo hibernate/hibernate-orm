@@ -9,11 +9,14 @@ package org.hibernate.query.sqm.tree.from;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.PathException;
 import org.hibernate.query.criteria.JpaEntityJoin;
+import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmCreationState;
+import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmJoin;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelatedEntityJoin;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedEntityJoin;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
@@ -22,7 +25,7 @@ import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 /**
  * @author Steve Ebersole
  */
-public class SqmEntityJoin<T> extends AbstractSqmJoin<T,T> implements SqmQualifiedJoin<T,T>, JpaEntityJoin<T> {
+public class SqmEntityJoin<T> extends AbstractSqmJoin<T, T> implements SqmQualifiedJoin<T,T>, JpaEntityJoin<T> {
 	private final SqmRoot sqmRoot;
 	private SqmPredicate joinPredicate;
 
@@ -104,5 +107,20 @@ public class SqmEntityJoin<T> extends AbstractSqmJoin<T,T> implements SqmQualifi
 	@Override
 	public <S extends T> SqmTreatedEntityJoin<T,S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
 		return new SqmTreatedEntityJoin<>( this, treatTarget, null, getSqmJoinType() );
+	}
+
+	@Override
+	public SqmCorrelatedEntityJoin<T> createCorrelation() {
+		return new SqmCorrelatedEntityJoin<>( this );
+	}
+
+	public SqmEntityJoin<T> makeCopy(SqmCreationProcessingState creationProcessingState) {
+		final SqmPathRegistry pathRegistry = creationProcessingState.getPathRegistry();
+		return new SqmEntityJoin<>(
+				getReferencedPathSource(),
+				getExplicitAlias(),
+				getSqmJoinType(),
+				(SqmRoot<?>) pathRegistry.findFromByPath( getRoot().getNavigablePath() )
+		);
 	}
 }

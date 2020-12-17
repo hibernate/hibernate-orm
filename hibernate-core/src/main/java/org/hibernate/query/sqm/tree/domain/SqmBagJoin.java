@@ -20,7 +20,6 @@ import org.hibernate.query.PathException;
 import org.hibernate.query.criteria.JpaCollectionJoin;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
-import org.hibernate.query.criteria.JpaSubQuery;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.sqm.tree.SqmJoinType;
@@ -117,8 +116,8 @@ public class SqmBagJoin<O, E> extends AbstractSqmPluralJoin<O,Collection<E>, E> 
 	}
 
 	@Override
-	public SqmBagJoin<O, E> correlateTo(JpaSubQuery<E> subquery) {
-		return (SqmBagJoin<O, E>) super.correlateTo( subquery );
+	public SqmCorrelatedBagJoin<O, E> createCorrelation() {
+		return new SqmCorrelatedBagJoin<>( this );
 	}
 
 	@Override

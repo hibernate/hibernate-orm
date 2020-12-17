@@ -21,12 +21,12 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.SelectionConsumer;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
+import org.hibernate.query.spi.SqlOmittingQueryOptions;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
-import org.hibernate.sql.ast.SqlAstUpdateTranslator;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -259,12 +259,10 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 		final UpdateStatement sqlAst = new UpdateStatement( updatingTableReference, assignments, idTableSubQueryPredicate );
 
 		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
-		final SqlAstUpdateTranslator sqlAstTranslator = jdbcServices.getJdbcEnvironment()
+		final JdbcUpdate jdbcUpdate = jdbcServices.getJdbcEnvironment()
 				.getSqlAstTranslatorFactory()
-				.buildUpdateTranslator( sessionFactory );
-
-		final JdbcUpdate jdbcUpdate = sqlAstTranslator.translate( sqlAst );
-		jdbcUpdate.bindFilterJdbcParameters( jdbcParameterBindings );
+				.buildUpdateTranslator( sessionFactory, sqlAst )
+				.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
 
 		jdbcServices.getJdbcMutationExecutor().execute(
 				jdbcUpdate,
@@ -274,7 +272,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 						.getStatementPreparer()
 						.prepareStatement( sql ),
 				(integer, preparedStatement) -> {},
-				executionContext
+				SqlOmittingQueryOptions.omitSqlQueryOptions( executionContext )
 		);
 	}
 }

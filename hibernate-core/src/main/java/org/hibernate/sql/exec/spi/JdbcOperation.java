@@ -11,6 +11,7 @@ import java.util.Set;
 
 import org.hibernate.internal.FilterJdbcParameter;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.query.spi.QueryOptions;
 
 /**
  * Unifying contract for any SQL statement we want to execute via JDBC.
@@ -32,6 +33,20 @@ public interface JdbcOperation {
 	Set<String> getAffectedTableNames();
 
 	Set<FilterJdbcParameter> getFilterJdbcParameters();
+
+	/**
+	 * Signals that the SQL depends on the parameter bindings e.g. due to the need for inlining
+	 * of parameter values or multiValued parameters.
+	 */
+	default boolean dependsOnParameterBindings() {
+		return false;
+	}
+
+	default boolean isCompatibleWith(
+			JdbcParameterBindings jdbcParameterBindings,
+			QueryOptions queryOptions) {
+		return true;
+	}
 
 	default void bindFilterJdbcParameters(JdbcParameterBindings jdbcParameterBindings) {
 		if ( CollectionHelper.isNotEmpty( getFilterJdbcParameters() ) ) {

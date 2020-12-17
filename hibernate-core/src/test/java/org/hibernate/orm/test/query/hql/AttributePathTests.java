@@ -50,7 +50,7 @@ public class AttributePathTests extends BaseSqmUnitTest {
 		final SqmSelectStatement statement = interpretSelect( "select s.mate.dob, s.mate.numberOfToes from Person s" );
 
 		assertThat( statement.getQuerySpec().getFromClause().getRoots().size(), is(1) );
-		final SqmRoot sqmRoot = statement.getQuerySpec().getFromClause().getRoots().get( 0 );
+		final SqmRoot<?> sqmRoot = statement.getQuerySpec().getFromClause().getRoots().get( 0 );
 
 		assertThat( sqmRoot.getJoins().size(), is(0) );
 		assertThat( sqmRoot.getImplicitJoinPaths().size(), is(1) );
@@ -78,7 +78,7 @@ public class AttributePathTests extends BaseSqmUnitTest {
 		final SqmSelectStatement statement = interpretSelect( "select s.mate from Person s where s.mate.dob = ?1" );
 
 		assertThat( statement.getQuerySpec().getFromClause().getRoots().size(), is(1) );
-		final SqmRoot sqmRoot = statement.getQuerySpec().getFromClause().getRoots().get( 0 );
+		final SqmRoot<?> sqmRoot = statement.getQuerySpec().getFromClause().getRoots().get( 0 );
 
 		assertThat( sqmRoot.getJoins().size(), is(0) );
 		assertThat( sqmRoot.getImplicitJoinPaths().size(), is(1) );

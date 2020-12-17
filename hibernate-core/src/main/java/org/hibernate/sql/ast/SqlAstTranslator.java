@@ -8,14 +8,15 @@ package org.hibernate.sql.ast;
 
 import java.util.Set;
 
-import org.hibernate.sql.ast.tree.cte.CteStatement;
+import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
 
 /**
  * @author Steve Ebersole
  */
-public interface SqlAstTranslator extends SqlAstWalker, SqlTypeDescriptorIndicators {
+public interface SqlAstTranslator<T extends JdbcOperation> extends SqlAstWalker, SqlTypeDescriptorIndicators {
 	/**
 	 * Not the best spot for this.  Its the table names collected while walking the SQL AST.
 	 * Its ok here because the translator is consider a one-time-use.  It just needs to be called
@@ -25,11 +26,6 @@ public interface SqlAstTranslator extends SqlAstWalker, SqlTypeDescriptorIndicat
 	 */
 	Set<String> getAffectedTableNames();
 
-	/**
-	 * Generalized support for translating a CTE statement.  The underlying
-	 * {@link CteStatement#getCteConsumer()} could be a SELECT, UPDATE, DELETE, etc.
-	 *
-	 * Implementors may throw an exception if the CTE-consumer is of the incorrect type
-	 */
-	JdbcOperation translate(CteStatement cteStatement);
+	T translate(JdbcParameterBindings jdbcParameterBindings, QueryOptions queryOptions);
+
 }

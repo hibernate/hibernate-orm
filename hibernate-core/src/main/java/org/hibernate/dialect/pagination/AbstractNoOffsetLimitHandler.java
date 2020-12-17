@@ -7,6 +7,7 @@
 package org.hibernate.dialect.pagination;
 
 import org.hibernate.engine.spi.RowSelection;
+import org.hibernate.query.Limit;
 
 import static java.lang.String.valueOf;
 
@@ -34,13 +35,26 @@ public abstract class AbstractNoOffsetLimitHandler extends AbstractLimitHandler 
 
 	@Override
 	public String processSql(String sql, RowSelection selection) {
-		if ( !hasMaxRows( selection) ) {
+		if ( !hasMaxRows( selection ) ) {
 			return sql;
 		}
 		String limitClause = limitClause();
 		if ( !supportsVariableLimit() ) {
-			String limit = valueOf( getMaxOrLimit(selection) );
-			limitClause = limitClause.replace( "?", limit );
+			String limitLiteral = valueOf( getMaxOrLimit(selection) );
+			limitClause = limitClause.replace( "?", limitLiteral );
+		}
+		return insert( limitClause, sql );
+	}
+
+	@Override
+	public String processSql(String sql, Limit limit) {
+		if ( !hasMaxRows( limit ) ) {
+			return sql;
+		}
+		String limitClause = limitClause();
+		if ( !supportsVariableLimit() ) {
+			String limitLiteral = valueOf( getMaxOrLimit( limit ) );
+			limitClause = limitClause.replace( "?", limitLiteral );
 		}
 		return insert( limitClause, sql );
 	}

@@ -55,6 +55,12 @@ public interface JpaMetamodel extends javax.persistence.metamodel.Metamodel {
 	 * Specialized handling for resolving entity-name references in
 	 * an HQL query
 	 */
+	<X> EntityDomainType<X> getHqlEntityReference(String entityName);
+
+	/**
+	 * Specialized handling for resolving entity-name references in
+	 * an HQL query
+	 */
 	<X> EntityDomainType<X> resolveHqlEntityReference(String entityName);
 
 	/**

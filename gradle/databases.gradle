@@ -10,6 +10,7 @@ import org.apache.tools.ant.filters.ReplaceTokens
 // build a map of the database settings to use.
 ext {
         db = project.hasProperty('db') ? project.getProperty('db') : 'h2'
+        def dbHost = System.getProperty( 'dbHost', 'localhost' )
         dbBundle = [
                 h2 : [
                         'db.dialect' : 'org.hibernate.dialect.H2Dialect',
@@ -26,46 +27,60 @@ ext {
                         'jdbc.url'   : 'jdbc:hsqldb:mem:test'
                 ],
                 derby : [
-                        'db.dialect' : 'org.hibernate.dialect.DerbyTenSevenDialect',
+                        'db.dialect' : 'org.hibernate.dialect.DerbyDialect',
                         'jdbc.driver': 'org.apache.derby.jdbc.EmbeddedDriver',
                         'jdbc.user'  : 'hibernate_orm_test',
                         'jdbc.pass'  : 'hibernate_orm_test',
                         'jdbc.url'   : 'jdbc:derby:target/tmp/derby/hibernate_orm_test;databaseName=hibernate_orm_test;create=true'
                 ],
                 pgsql : [
-                        'db.dialect' : 'org.hibernate.dialect.PostgreSQL95Dialect',
+                        'db.dialect' : 'org.hibernate.dialect.PostgreSQLDialect',
                         'jdbc.driver': 'org.postgresql.Driver',
                         'jdbc.user'  : 'hibernate_orm_test',
                         'jdbc.pass'  : 'hibernate_orm_test',
                         'jdbc.url'   : 'jdbc:postgresql:hibernate_orm_test'
                 ],
                 pgsql_docker : [
-                        'db.dialect' : 'org.hibernate.dialect.PostgreSQL95Dialect',
+                        'db.dialect' : 'org.hibernate.dialect.PostgreSQLDialect',
                         'jdbc.driver': 'org.postgresql.Driver',
                         'jdbc.user'  : 'hibernate_orm_test',
                         'jdbc.pass'  : 'hibernate_orm_test',
                         'jdbc.url'   : 'jdbc:postgresql://127.0.0.1/hibernate_orm_test'
                 ],
+                pgsql_ci : [
+                        'db.dialect' : 'org.hibernate.dialect.PostgreSQLDialect',
+                        'jdbc.driver': 'org.postgresql.Driver',
+                        'jdbc.user'  : 'hibernate_orm_test',
+                        'jdbc.pass'  : 'hibernate_orm_test',
+                        'jdbc.url'   : 'jdbc:postgresql://' + dbHost + '/hibernate_orm_test'
+                ],
                 mysql : [
-                        'db.dialect' : 'org.hibernate.dialect.MySQL57Dialect',
+                        'db.dialect' : 'org.hibernate.dialect.MySQLDialect',
                         'jdbc.driver': 'com.mysql.jdbc.Driver',
                         'jdbc.user'  : 'hibernateormtest',
                         'jdbc.pass'  : 'hibernateormtest',
                         'jdbc.url'   : 'jdbc:mysql://localhost/hibernate_orm_test'
                 ],
                 mysql_docker : [
-                        'db.dialect' : 'org.hibernate.dialect.MySQL57Dialect',
+                        'db.dialect' : 'org.hibernate.dialect.MySQLDialect',
                         'jdbc.driver': 'com.mysql.jdbc.Driver',
                         'jdbc.user'  : 'hibernate_orm_test',
                         'jdbc.pass'  : 'hibernate_orm_test',
                         'jdbc.url'   : 'jdbc:mysql://127.0.0.1/hibernate_orm_test?useSSL=false'
                 ],
                 mariadb : [
-                        'db.dialect' : 'org.hibernate.dialect.MariaDB103Dialect',
+                        'db.dialect' : 'org.hibernate.dialect.MariaDBDialect',
                         'jdbc.driver': 'org.mariadb.jdbc.Driver',
                         'jdbc.user'  : 'hibernate_orm_test',
                         'jdbc.pass'  : 'hibernate_orm_test',
                         'jdbc.url'   : 'jdbc:mariadb://127.0.0.1/hibernate_orm_test'
+                ],
+                mariadb_ci : [
+                        'db.dialect' : 'org.hibernate.dialect.MariaDBDialect',
+                        'jdbc.driver': 'org.mariadb.jdbc.Driver',
+                        'jdbc.user'  : 'root',
+                        'jdbc.pass'  : 'hibernate_orm_test',
+                        'jdbc.url'   : 'jdbc:mariadb://' + dbHost + '/hibernate_orm_test'
                 ],
                 postgis : [
                         'db.dialect' : 'org.hibernate.spatial.dialect.postgis.PostgisPG95Dialect',
@@ -75,7 +90,7 @@ ext {
                         'jdbc.url'   : 'jdbc:postgresql:hibernate_orm_test'
                 ],
                 oracle : [
-                        'db.dialect' : 'org.hibernate.dialect.Oracle10gDialect',
+                        'db.dialect' : 'org.hibernate.dialect.OracleDialect',
                         'jdbc.driver': 'oracle.jdbc.OracleDriver',
                         'jdbc.user'  : 'hibernate_orm_test',
                         'jdbc.pass'  : 'hibernate_orm_test',
@@ -85,18 +100,32 @@ ext {
                 // After registering to get access (see instructions at above link), start it for testing with:
                 // docker run --ulimit memlock=-1:-1 -it --rm=true --memory-swappiness=0 --name ORCLCDB -p 1521:1521 store/oracle/database-enterprise:12.2.0.1-slim
                 oracle_docker : [
-                        'db.dialect' : 'org.hibernate.dialect.Oracle12cDialect',
+                        'db.dialect' : 'org.hibernate.dialect.OracleDialect',
                         'jdbc.driver': 'oracle.jdbc.OracleDriver',
                         'jdbc.user'  : 'sys as sysdba',
                         'jdbc.pass'  : 'Oradoc_db1',
                         'jdbc.url'   : 'jdbc:oracle:thin:@localhost:1521:ORCLCDB'
                 ],
+                oracle_ci : [
+                        'db.dialect' : 'org.hibernate.dialect.OracleDialect',
+                        'jdbc.driver': 'oracle.jdbc.OracleDriver',
+                        'jdbc.user'  : 'SYSTEM',
+                        'jdbc.pass'  : 'Oracle18',
+                        'jdbc.url'   : 'jdbc:oracle:thin:@' + dbHost + ':1521:XE'
+                ],
                 mssql : [
-                        'db.dialect' : 'org.hibernate.dialect.SQLServer2012Dialect',
+                        'db.dialect' : 'org.hibernate.dialect.SQLServerDialect',
                         'jdbc.driver': 'com.microsoft.sqlserver.jdbc.SQLServerDriver',
                         'jdbc.user'  : 'hibernate_orm_test',
                         'jdbc.pass'  : 'hibernate_orm_test',
                         'jdbc.url'   : 'jdbc:sqlserver://localhost;instance=SQLEXPRESS;databaseName=hibernate_orm_test'
+                ],
+                mssql_ci : [
+                        'db.dialect' : 'org.hibernate.dialect.SQLServerDialect',
+                        'jdbc.driver': 'com.microsoft.sqlserver.jdbc.SQLServerDriver',
+                        'jdbc.user'  : 'sa',
+                        'jdbc.pass'  : 'Hibernate_orm_test',
+                        'jdbc.url'   : 'jdbc:sqlserver://' + dbHost + ';databaseName=hibernate_orm_test'
                 ],
                 informix : [
                         'db.dialect' : 'org.hibernate.dialect.InformixDialect',
@@ -111,6 +140,13 @@ ext {
                         'jdbc.user'  : 'db2inst1',
                         'jdbc.pass'  : 'db2inst1-pwd',
                         'jdbc.url'   : 'jdbc:db2://127.0.0.1:50000/hibern8'
+                ],
+                db2_ci : [
+                        'db.dialect' : 'org.hibernate.dialect.DB2Dialect',
+                        'jdbc.driver': 'com.ibm.db2.jcc.DB2Driver',
+                        'jdbc.user'  : 'orm_test',
+                        'jdbc.pass'  : 'orm_test',
+                        'jdbc.url'   : 'jdbc:db2://' + dbHost + ':50000/orm_test'
                 ],
                 hana : [
                         'db.dialect' : 'org.hibernate.dialect.HANAColumnStoreDialect',
@@ -134,7 +170,7 @@ ext {
                         'jdbc.url'   : 'jdbc:sap://localhost:39015/'
                 ],
                 cockroachdb : [
-                        'db.dialect' : 'org.hibernate.dialect.CockroachDB192Dialect',
+                        'db.dialect' : 'org.hibernate.dialect.CockroachDialect',
                         // CockroachDB uses the same pgwire protocol as PostgreSQL, so the driver is the same.
                         'jdbc.driver': 'org.postgresql.Driver',
                         'jdbc.user'  : 'root',

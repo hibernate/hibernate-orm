@@ -22,6 +22,7 @@ import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.unique.DB2UniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
@@ -30,11 +31,13 @@ import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.CastType;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.sqm.mutation.internal.idtable.AfterUseAction;
-import org.hibernate.query.sqm.mutation.internal.idtable.GlobalTemporaryTableStrategy;
-import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
-import org.hibernate.query.sqm.mutation.internal.idtable.TempIdTableExporter;
+import org.hibernate.query.sqm.mutation.internal.cte.CteStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorDB2DatabaseImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
@@ -92,7 +95,7 @@ public class DB2Dialect extends Dialect {
 //		registerColumnType( Types.DECIMAL, "decimal($p,$s)" );
 		registerColumnType( Types.NUMERIC, "decimal($p,$s)" );
 
-		if ( getVersion()<1100 ) {
+		if ( getVersion() < 1100 ) {
 			registerColumnType( Types.BINARY, "varchar($l) for bit data" ); //should use 'binary' since version 11
 			registerColumnType( Types.BINARY, 254, "char($l) for bit data" ); //should use 'binary' since version 11
 			registerColumnType( Types.VARBINARY, "varchar($l) for bit data" ); //should use 'varbinary' since version 11
@@ -408,11 +411,6 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsUnionAll() {
-		return true;
-	}
-
-	@Override
 	public int registerResultSetOutParameter(CallableStatement statement, int col) throws SQLException {
 		return col;
 	}
@@ -437,47 +435,7 @@ public class DB2Dialect extends Dialect {
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-
-		if ( getVersion() >= 970 ) {
-			// Starting in DB2 9.7, "real" global temporary tables that can be shared between sessions
-			// are supported; (obviously) data is not shared between sessions.
-			return new GlobalTemporaryTableStrategy(
-					new IdTable( rootEntityDescriptor, name -> "HT_" + name, this ),
-					() -> new TempIdTableExporter( false, this::getTypeName ) {
-						@Override
-						protected String getCreateOptions() {
-							return "not logged";
-						}
-					},
-					AfterUseAction.CLEAN,
-					runtimeModelCreationContext.getSessionFactory()
-			);
-		}
-
-		return super.getFallbackSqmMutationStrategy( rootEntityDescriptor, runtimeModelCreationContext );
-//		// Prior to DB2 9.7, "real" global temporary tables that can be shared between sessions
-//		// are *not* supported; even though the DB2 command says to declare a "global" temp table
-//		// Hibernate treats it as a "local" temp table.
-//		return new LocalTemporaryTableBulkIdStrategy(
-//				new IdTableSupportStandardImpl() {
-//					@Override
-//					public String generateIdTableName(String baseName) {
-//						return "session." + super.generateIdTableName( baseName );
-//					}
-//
-//					@Override
-//					public String getCreateIdTableCommand() {
-//						return "declare global temporary table";
-//					}
-//
-//					@Override
-//					public String getCreateIdTableStatementOptions() {
-//						return "not logged";
-//					}
-//				},
-//				AfterUseAction.DROP,
-//				null
-//		);
+		return new CteStrategy( rootEntityDescriptor, runtimeModelCreationContext );
 	}
 
 	@Override
@@ -637,6 +595,17 @@ public class DB2Dialect extends Dialect {
 	@Override
 	public boolean supportsNullPrecedence() {
 		return false;
+	}
+
+	@Override
+	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
+		return new StandardSqlAstTranslatorFactory() {
+			@Override
+			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
+					SessionFactoryImplementor sessionFactory, Statement statement) {
+				return new DB2SqlAstTranslator<>( sessionFactory, statement );
+			}
+		};
 	}
 
 	/**

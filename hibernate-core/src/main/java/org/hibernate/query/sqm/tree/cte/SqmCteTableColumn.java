@@ -6,26 +6,24 @@
  */
 package org.hibernate.query.sqm.tree.cte;
 
-import org.hibernate.type.BasicType;
+import org.hibernate.metamodel.mapping.ModelPart;
 
 /**
  * @author Steve Ebersole
+ * @author Christian Beikov
  */
 public class SqmCteTableColumn {
 	private final SqmCteTable cteTable;
 	private final String columnName;
-	private final BasicType typeExpressable;
-	private final boolean allowNulls;
+	private final ModelPart typeExpressable;
 
 	public SqmCteTableColumn(
 			SqmCteTable cteTable,
 			String columnName,
-			BasicType typeExpressable,
-			boolean allowNulls) {
+			ModelPart typeExpressable) {
 		this.cteTable = cteTable;
 		this.columnName = columnName;
 		this.typeExpressable = typeExpressable;
-		this.allowNulls = allowNulls;
 	}
 
 	public SqmCteTable getCteTable() {
@@ -36,11 +34,8 @@ public class SqmCteTableColumn {
 		return columnName;
 	}
 
-	public BasicType getType() {
+	public ModelPart getType() {
 		return typeExpressable;
 	}
 
-	public boolean isAllowNulls() {
-		return allowNulls;
-	}
 }

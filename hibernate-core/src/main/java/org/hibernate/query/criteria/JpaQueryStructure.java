@@ -11,6 +11,8 @@ import java.util.Set;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 
+import org.hibernate.FetchClauseType;
+
 /**
  * Models a {@code SELECT} query.  Used as a delegate in
  * implementing {@link javax.persistence.criteria.CriteriaQuery}
@@ -86,13 +88,17 @@ public interface JpaQueryStructure<T> extends JpaCriteriaNode {
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Limit clause
-
-	<X> JpaExpression<X> getLimit();
-
-	JpaQueryStructure<T> setLimit(JpaExpression<?> limit);
+	// Limit/Offset/Fetch clause
 
 	<X> JpaExpression<X> getOffset();
 
 	JpaQueryStructure<T> setOffset(JpaExpression<?> offset);
+
+	<X> JpaExpression<X> getFetch();
+
+	JpaQueryStructure<T> setFetch(JpaExpression<?> fetch);
+
+	JpaQueryStructure<T> setFetch(JpaExpression<?> fetch, FetchClauseType fetchClauseType);
+
+	FetchClauseType getFetchClauseType();
 }

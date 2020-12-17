@@ -10,6 +10,8 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import org.hibernate.engine.spi.RowSelection;
+import org.hibernate.query.Limit;
+import org.hibernate.query.spi.QueryOptions;
 
 /**
  * Contract defining dialect-specific limit and offset handling.
@@ -40,6 +42,58 @@ public interface LimitHandler {
 	 */
 	boolean supportsLimitOffset();
 
+	default String processSql(String sql, Limit limit) {
+		return processSql(
+				sql,
+				limit == null ? null : new RowSelection(
+						limit.getFirstRow(),
+						limit.getMaxRows(),
+						null,
+						null
+				)
+		);
+	}
+
+	default int bindLimitParametersAtStartOfQuery(Limit limit, PreparedStatement statement, int index)
+			throws SQLException {
+		return bindLimitParametersAtStartOfQuery(
+				limit == null ? null : new RowSelection(
+						limit.getFirstRow(),
+						limit.getMaxRows(),
+						null,
+						null
+				),
+				statement,
+				index
+		);
+	}
+
+	default int bindLimitParametersAtEndOfQuery(Limit limit, PreparedStatement statement, int index)
+			throws SQLException {
+		return bindLimitParametersAtEndOfQuery(
+				limit == null ? null : new RowSelection(
+						limit.getFirstRow(),
+						limit.getMaxRows(),
+						null,
+						null
+				),
+				statement,
+				index
+		);
+	}
+
+	default void setMaxRows(Limit limit, PreparedStatement statement) throws SQLException {
+		setMaxRows(
+				limit == null ? null : new RowSelection(
+						limit.getFirstRow(),
+						limit.getMaxRows(),
+						null,
+						null
+				),
+				statement
+		);
+	}
+
 	/**
 	 * Return processed SQL query.
 	 *
@@ -47,7 +101,9 @@ public interface LimitHandler {
      * @param selection the selection criteria for rows.
      *
 	 * @return Query statement with LIMIT clause applied.
+	 * @deprecated todo (6.0): remove in favor of Limit version?
 	 */
+	@Deprecated
 	String processSql(String sql, RowSelection selection);
 
 	/**
@@ -60,7 +116,9 @@ public interface LimitHandler {
 	 * @param index Index from which to start binding.
 	 * @return The number of parameter values bound.
 	 * @throws SQLException Indicates problems binding parameter values.
+	 * @deprecated todo (6.0): remove in favor of Limit version?
 	 */
+	@Deprecated
 	int bindLimitParametersAtStartOfQuery(RowSelection selection, PreparedStatement statement, int index)
 			throws SQLException;
 
@@ -74,7 +132,9 @@ public interface LimitHandler {
 	 * @param index Index from which to start binding.
 	 * @return The number of parameter values bound.
 	 * @throws SQLException Indicates problems binding parameter values.
+	 * @deprecated todo (6.0): remove in favor of Limit version?
 	 */
+	@Deprecated
 	int bindLimitParametersAtEndOfQuery(RowSelection selection, PreparedStatement statement, int index)
 			throws SQLException;
 
@@ -86,6 +146,8 @@ public interface LimitHandler {
      * @param selection the selection criteria for rows.
 	 * @param statement Statement which number of returned rows shall be limited.
 	 * @throws SQLException Indicates problems while limiting maximum rows returned.
+	 * @deprecated todo (6.0): remove in favor of Limit version?
 	 */
+	@Deprecated
 	void setMaxRows(RowSelection selection, PreparedStatement statement) throws SQLException;
 }

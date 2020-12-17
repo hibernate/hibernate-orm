@@ -11,11 +11,13 @@ import java.util.Locale;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
+import org.hibernate.query.sqm.tree.cte.SqmCteTable;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.ast.tree.cte.CteTable;
@@ -24,34 +26,30 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
 /**
  * @asciidoc
  *
- * {@link SqmMultiTableMutationStrategy} implementation using SQL's CTE (Common Table Expression)
+ * {@link SqmMultiTableMutationStrategy} implementation using SQL's modifiable CTE (Common Table Expression)
  * approach to perform the update/delete.  E.g. (using delete):
  *
  * ````
  * with cte_id (id) as (
  *     select
  *         id
- *     from (
- *         values
- *             (?),
- *             (?),
- *             (?)
- *             (?)
- *     )
+ *     from Person
+ *     where condition
+ * ), delete_1 as (
+ *   delete
+ *   from
+ *   	Person
+ *   where
+ *   	(id) in (
+ *   		select id
+ *   		from cte_id
+ *   	)
+ *   returning id
  * )
- * delete
- * from
- *     Person
- * where
- *     ( id ) in (
- *         select id
- *         from cte_id
- *     )
+ * select count(*) from cte_id
  * ````
  *
- * @author Evandro Pires da Silva
- * @author Vlad Mihalcea
- * @author Steve Ebersole
+ * @author Christian Beikov
  */
 public class CteStrategy implements SqmMultiTableMutationStrategy {
 	public static final String SHORT_NAME = "cte";
@@ -59,7 +57,13 @@ public class CteStrategy implements SqmMultiTableMutationStrategy {
 
 	private final EntityPersister rootDescriptor;
 	private final SessionFactoryImplementor sessionFactory;
-	private final CteTable cteTable;
+	private final SqmCteTable cteTable;
+
+	public CteStrategy(
+			EntityMappingType rootEntityType,
+			RuntimeModelCreationContext runtimeModelCreationContext) {
+		this( rootEntityType.getEntityPersister(), runtimeModelCreationContext );
+	}
 
 	public CteStrategy(
 			EntityPersister rootDescriptor,
@@ -93,7 +97,7 @@ public class CteStrategy implements SqmMultiTableMutationStrategy {
 			);
 		}
 
-		this.cteTable = new CteTable( rootDescriptor );
+		this.cteTable = new SqmCteTable( TABLE_NAME, rootDescriptor );
 	}
 
 	@Override

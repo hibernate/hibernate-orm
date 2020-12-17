@@ -7,6 +7,7 @@
 package org.hibernate.dialect.pagination;
 
 import org.hibernate.engine.spi.RowSelection;
+import org.hibernate.query.Limit;
 
 /**
  * A {@link LimitHandler} for databases which support the
@@ -64,6 +65,52 @@ public class OffsetFetchLimitHandler extends AbstractLimitHandler {
 			}
 			else {
 				offsetFetch.append( getMaxOrLimit( selection ) );
+			}
+			offsetFetch.append( " rows only" );
+		}
+
+		return insert( offsetFetch.toString(), sql );
+	}
+
+	@Override
+	public String processSql(String sql, Limit limit) {
+
+		boolean hasFirstRow = hasFirstRow(limit);
+		boolean hasMaxRows = hasMaxRows(limit);
+
+		if ( !hasFirstRow && !hasMaxRows ) {
+			return sql;
+		}
+
+		StringBuilder offsetFetch = new StringBuilder();
+
+		begin(sql, offsetFetch, hasFirstRow, hasMaxRows);
+
+		if ( hasFirstRow ) {
+			offsetFetch.append( " offset " );
+			if ( supportsVariableLimit() ) {
+				offsetFetch.append( "?" );
+			}
+			else {
+				offsetFetch.append( limit.getFirstRow() );
+			}
+			if ( !isIngres() ) {
+				offsetFetch.append( " rows" );
+			}
+
+		}
+		if ( hasMaxRows ) {
+			if ( hasFirstRow ) {
+				offsetFetch.append( " fetch next " );
+			}
+			else {
+				offsetFetch.append( " fetch first " );
+			}
+			if ( supportsVariableLimit() ) {
+				offsetFetch.append( "?" );
+			}
+			else {
+				offsetFetch.append( getMaxOrLimit( limit ) );
 			}
 			offsetFetch.append( " rows only" );
 		}

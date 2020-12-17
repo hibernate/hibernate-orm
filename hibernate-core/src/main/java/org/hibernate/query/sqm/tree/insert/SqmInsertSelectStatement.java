@@ -9,20 +9,21 @@ package org.hibernate.query.sqm.tree.insert;
 import org.hibernate.query.criteria.JpaCriteriaInsertSelect;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
+import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
+import org.hibernate.query.sqm.tree.select.SqmQueryPart;
+import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 
 /**
  * @author Steve Ebersole
  */
 public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> implements JpaCriteriaInsertSelect<T> {
-	private SqmQuerySpec<T> selectQuerySpec;
+	private SqmQueryPart<T> selectQueryPart;
 
 	public SqmInsertSelectStatement(SqmRoot<T> targetRoot, NodeBuilder nodeBuilder) {
 		super( targetRoot, SqmQuerySource.HQL, nodeBuilder );
-		this.selectQuerySpec = new SqmQuerySpec<>( nodeBuilder );
+		this.selectQueryPart = new SqmQuerySpec<T>( nodeBuilder );
 	}
 
 	public SqmInsertSelectStatement(Class<T> targetEntity, NodeBuilder nodeBuilder) {
@@ -35,15 +36,15 @@ public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> i
 				SqmQuerySource.CRITERIA,
 				nodeBuilder
 		);
-		this.selectQuerySpec = new SqmQuerySpec<>( nodeBuilder );
+		this.selectQueryPart = new SqmQuerySpec<>( nodeBuilder );
 	}
 
-	public SqmQuerySpec getSelectQuerySpec() {
-		return selectQuerySpec;
+	public SqmQueryPart<T> getSelectQueryPart() {
+		return selectQueryPart;
 	}
 
-	public void setSelectQuerySpec(SqmQuerySpec selectQuerySpec) {
-		this.selectQuerySpec = selectQuerySpec;
+	public void setSelectQueryPart(SqmQueryPart<T> selectQueryPart) {
+		this.selectQueryPart = selectQueryPart;
 	}
 
 	@Override

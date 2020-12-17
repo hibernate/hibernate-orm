@@ -6,9 +6,24 @@
  */
 package org.hibernate.testing.orm.junit;
 
+import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.CUBRIDDialect;
+import org.hibernate.dialect.CockroachDialect;
+import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.FirebirdDialect;
 import org.hibernate.dialect.GroupBySummarizationRenderingStrategy;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.MaxDBDialect;
+import org.hibernate.dialect.MimerSQLDialect;
+import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SpannerDialect;
+import org.hibernate.dialect.TimesTenDialect;
 
 /**
  * Container class for different implementation of the {@link DialectFeatureCheck} interface.
@@ -233,4 +248,47 @@ abstract public class DialectFeatureChecks {
 			return dialect.supportsTimezoneTypes();
 		}
 	}
+
+	public static class SupportsOffsetInSubquery implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect instanceof AbstractHANADialect
+					|| dialect instanceof CockroachDialect
+					|| dialect instanceof CUBRIDDialect
+					|| dialect instanceof DB2Dialect
+					|| dialect instanceof FirebirdDialect
+					|| dialect instanceof H2Dialect
+					|| dialect instanceof HSQLDialect
+					|| dialect instanceof MaxDBDialect
+					|| dialect instanceof MimerSQLDialect
+					|| dialect instanceof MySQLDialect
+					|| dialect instanceof OracleDialect
+					|| dialect instanceof PostgreSQLDialect
+					|| dialect instanceof SpannerDialect
+					|| dialect instanceof SQLServerDialect
+					|| dialect instanceof TimesTenDialect
+					;
+		}
+	}
+
+	public static class SupportsWithTies implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect instanceof AbstractHANADialect
+					|| dialect instanceof CockroachDialect
+					|| dialect instanceof DB2Dialect
+					|| dialect instanceof FirebirdDialect && dialect.getVersion() >= 300
+					|| dialect instanceof H2Dialect && dialect.getVersion() >= 104198
+					|| dialect instanceof MySQLDialect && dialect.getVersion() >= 802
+					|| dialect instanceof OracleDialect
+					|| dialect instanceof PostgreSQLDialect
+					|| dialect instanceof SQLServerDialect
+					;
+		}
+	}
+
+	public static class SupportsUnion implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.supportsUnionAll();
+		}
+	}
+
 }

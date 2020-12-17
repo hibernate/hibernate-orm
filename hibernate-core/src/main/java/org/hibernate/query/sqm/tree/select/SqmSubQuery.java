@@ -9,6 +9,7 @@ package org.hibernate.query.sqm.tree.select;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import javax.persistence.criteria.CollectionJoin;
@@ -16,12 +17,12 @@ import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.ListJoin;
 import javax.persistence.criteria.MapJoin;
+import javax.persistence.criteria.PluralJoin;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Selection;
 import javax.persistence.criteria.SetJoin;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.criteria.JpaSubQuery;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -29,11 +30,24 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.tree.SqmQuery;
 import org.hibernate.query.sqm.tree.domain.SqmBagJoin;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelatedBagJoin;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelatedCrossJoin;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelatedEntityJoin;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelatedListJoin;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelatedMapJoin;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelatedRoot;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelatedSetJoin;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelatedSingularJoin;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelation;
 import org.hibernate.query.sqm.tree.domain.SqmListJoin;
 import org.hibernate.query.sqm.tree.domain.SqmMapJoin;
 import org.hibernate.query.sqm.tree.domain.SqmSetJoin;
 import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
+import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
+import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
+import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmInPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
@@ -51,9 +65,10 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 
 	public SqmSubQuery(
 			SqmQuery<?> parent,
-			SqmQuerySpec<T> querySpec,
+			SqmQueryPart<T> queryPart,
+			Class<T> resultType,
 			NodeBuilder builder) {
-		super( querySpec, builder );
+		super( queryPart, resultType, builder );
 		this.parent = parent;
 	}
 
@@ -130,11 +145,6 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 	}
 
 	@Override
-	public <Y> SqmRoot<Y> correlate(Root<Y> parentRoot) {
-		throw new NotYetImplementedFor6Exception();
-	}
-
-	@Override
 	public SqmSubQuery<T> where(Expression<Boolean> restriction) {
 		return (SqmSubQuery<T>) super.where( restriction );
 	}
@@ -165,33 +175,118 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 	}
 
 	@Override
-	public <X, Y> SqmSingularJoin<X, Y> correlate(Join<X, Y> parentJoin) {
-		throw new NotYetImplementedFor6Exception();
+	public <Y> SqmRoot<Y> correlate(Root<Y> parentRoot) {
+		final SqmCorrelatedRoot<Y> correlated = ( (SqmRoot<Y>) parentRoot ).createCorrelation();
+		if ( getQuerySpec().getFromClause() != null ) {
+			getQuerySpec().getFromClause().addRoot( correlated );
+		}
+		return correlated;
+	}
+
+	@Override
+	public <X, Y> SqmAttributeJoin<X, Y> correlate(Join<X, Y> join) {
+		if ( join instanceof PluralJoin<?, ?, ?> ) {
+			final PluralJoin<?, ?, ?> pluralJoin = (PluralJoin<?, ?, ?>) join;
+			switch ( pluralJoin.getModel().getCollectionType() ) {
+				case COLLECTION:
+					return correlate( (CollectionJoin<X, Y>) join );
+				case LIST:
+					return correlate( (ListJoin<X, Y>) join );
+				case SET:
+					return correlate( (SetJoin<X, Y>) join );
+				case MAP:
+					return correlate( (MapJoin<X, ?, Y>) join );
+			}
+		}
+		final SqmCorrelatedSingularJoin<X, Y> correlated = ( (SqmSingularJoin<X, Y>) join ).createCorrelation();
+		if ( getQuerySpec().getFromClause() != null ) {
+			getQuerySpec().getFromClause().addRoot( correlated.getCorrelatedRoot() );
+		}
+		return correlated;
 	}
 
 	@Override
 	public <X, Y> SqmBagJoin<X, Y> correlate(CollectionJoin<X, Y> parentCollection) {
-		throw new NotYetImplementedFor6Exception();
+		final SqmCorrelatedBagJoin<X, Y> correlated = ( (SqmBagJoin<X, Y>) parentCollection ).createCorrelation();
+		if ( getQuerySpec().getFromClause() != null ) {
+			getQuerySpec().getFromClause().addRoot( correlated.getCorrelatedRoot() );
+		}
+		return correlated;
 	}
 
 	@Override
 	public <X, Y> SqmSetJoin<X, Y> correlate(SetJoin<X, Y> parentSet) {
-		throw new NotYetImplementedFor6Exception();
+		final SqmCorrelatedSetJoin<X, Y> correlated = ( (SqmSetJoin<X, Y>) parentSet ).createCorrelation();
+		if ( getQuerySpec().getFromClause() != null ) {
+			getQuerySpec().getFromClause().addRoot( correlated.getCorrelatedRoot() );
+		}
+		return correlated;
 	}
 
 	@Override
 	public <X, Y> SqmListJoin<X, Y> correlate(ListJoin<X, Y> parentList) {
-		throw new NotYetImplementedFor6Exception();
+		final SqmCorrelatedListJoin<X, Y> correlated = ( (SqmListJoin<X, Y>) parentList ).createCorrelation();
+		if ( getQuerySpec().getFromClause() != null ) {
+			getQuerySpec().getFromClause().addRoot( correlated.getCorrelatedRoot() );
+		}
+		return correlated;
 	}
 
 	@Override
 	public <X, K, V> SqmMapJoin<X, K, V> correlate(MapJoin<X, K, V> parentMap) {
-		throw new NotYetImplementedFor6Exception();
+		final SqmCorrelatedMapJoin<X, K, V> correlated = ( (SqmMapJoin<X, K, V>) parentMap ).createCorrelation();
+		if ( getQuerySpec().getFromClause() != null ) {
+			getQuerySpec().getFromClause().addRoot( correlated.getCorrelatedRoot() );
+		}
+		return correlated;
+	}
+
+	@Override
+	public <X> SqmCrossJoin<X> correlate(SqmCrossJoin<X> parentCrossJoin) {
+		final SqmCorrelatedCrossJoin<X> correlated = parentCrossJoin.createCorrelation();
+		if ( getQuerySpec().getFromClause() != null ) {
+			getQuerySpec().getFromClause().addRoot( correlated.getCorrelatedRoot() );
+		}
+		return correlated;
+	}
+
+	@Override
+	public <X> SqmEntityJoin<X> correlate(SqmEntityJoin<X> parentEntityJoin) {
+		final SqmCorrelatedEntityJoin<X> correlated = parentEntityJoin.createCorrelation();
+		if ( getQuerySpec().getFromClause() != null ) {
+			getQuerySpec().getFromClause().addRoot( correlated.getCorrelatedRoot() );
+		}
+		return correlated;
 	}
 
 	@Override
 	public Set<Join<?, ?>> getCorrelatedJoins() {
-		throw new NotYetImplementedFor6Exception();
+		final Set<Join<?, ?>> correlatedJoins = new HashSet<>();
+		for ( SqmRoot<?> root : getQuerySpec().getFromClause().getRoots() ) {
+			if ( root instanceof SqmCorrelation<?, ?> ) {
+				for ( SqmJoin<?, ?> sqmJoin : root.getSqmJoins() ) {
+					if ( sqmJoin instanceof SqmCorrelation<?, ?> && sqmJoin instanceof Join<?, ?> ) {
+						correlatedJoins.add( (Join<?, ?>) sqmJoin );
+					}
+				}
+			}
+		}
+		return correlatedJoins;
+	}
+
+	@Override
+	public Set<SqmJoin<?, ?>> getCorrelatedSqmJoins() {
+		final Set<SqmJoin<?, ?>> correlatedJoins = new HashSet<>();
+		for ( SqmRoot<?> root : getQuerySpec().getFromClause().getRoots() ) {
+			if ( root instanceof SqmCorrelation<?, ?> ) {
+				for ( SqmJoin<?, ?> sqmJoin : root.getSqmJoins() ) {
+					if ( sqmJoin instanceof SqmCorrelation<?, ?> ) {
+						correlatedJoins.add( sqmJoin );
+					}
+				}
+			}
+		}
+		return correlatedJoins;
 	}
 
 	@Override

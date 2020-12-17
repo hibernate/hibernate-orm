@@ -20,9 +20,8 @@ import org.hibernate.query.PathException;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.criteria.JpaSetJoin;
-import org.hibernate.query.criteria.JpaSubQuery;
-import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -86,8 +85,8 @@ public class SqmSetJoin<O, E>
 	}
 
 	@Override
-	public SqmSetJoin<O, E> correlateTo(JpaSubQuery<E> subquery) {
-		return (SqmSetJoin<O, E>) super.correlateTo( subquery );
+	public SqmCorrelatedSetJoin<O, E> createCorrelation() {
+		return new SqmCorrelatedSetJoin<>( this );
 	}
 
 	@Override
@@ -108,27 +107,27 @@ public class SqmSetJoin<O, E>
 	}
 
 	@Override
-	public <A> SqmSingularJoin<E,A> fetch(SingularAttribute<? super E, A> attribute, JoinType jt) {
+	public <A> SqmSingularJoin<E, A> fetch(SingularAttribute<? super E, A> attribute, JoinType jt) {
 		throw new NotYetImplementedFor6Exception();
 	}
 
 	@Override
-	public <F> SqmAttributeJoin<E,F> fetch(PluralAttribute<? super E, ?, F> attribute) {
+	public <F> SqmAttributeJoin<E, F> fetch(PluralAttribute<? super E, ?, F> attribute) {
 		throw new NotYetImplementedFor6Exception();
 	}
 
 	@Override
-	public <F> SqmAttributeJoin<E,F> fetch(PluralAttribute<? super E, ?, F> attribute, JoinType jt) {
+	public <F> SqmAttributeJoin<E, F> fetch(PluralAttribute<? super E, ?, F> attribute, JoinType jt) {
 		throw new NotYetImplementedFor6Exception();
 	}
 
 	@Override
-	public <X,Y> SqmAttributeJoin<X,Y> fetch(String attributeName) {
+	public <X, Y> SqmAttributeJoin<X, Y> fetch(String attributeName) {
 		throw new NotYetImplementedFor6Exception();
 	}
 
 	@Override
-	public <X,Y> SqmAttributeJoin<X,Y> fetch(String attributeName, JoinType jt) {
+	public <X, Y> SqmAttributeJoin<X, Y> fetch(String attributeName, JoinType jt) {
 		throw new NotYetImplementedFor6Exception();
 	}
 

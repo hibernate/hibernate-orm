@@ -6,8 +6,13 @@
  */
 package org.hibernate.query.sqm.tree;
 
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmQuerySource;
+import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 
@@ -17,6 +22,8 @@ import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 public abstract class AbstractSqmDmlStatement<E>
 		extends AbstractSqmStatement<E>
 		implements SqmDmlStatement<E> {
+	private final Map<String, SqmCteStatement<?>> cteStatements = new LinkedHashMap<>();
+	private boolean withRecursiveCte;
 	private SqmRoot<E> target;
 
 	public AbstractSqmDmlStatement(SqmQuerySource querySource, NodeBuilder nodeBuilder) {
@@ -26,6 +33,33 @@ public abstract class AbstractSqmDmlStatement<E>
 	public AbstractSqmDmlStatement(SqmRoot<E> target, SqmQuerySource querySource, NodeBuilder nodeBuilder) {
 		this( querySource, nodeBuilder );
 		this.target = target;
+	}
+
+	@Override
+	public boolean isWithRecursive() {
+		return withRecursiveCte;
+	}
+
+	@Override
+	public void setWithRecursive(boolean withRecursiveCte) {
+		this.withRecursiveCte = withRecursiveCte;
+	}
+
+	@Override
+	public Collection<SqmCteStatement<?>> getCteStatements() {
+		return cteStatements.values();
+	}
+
+	@Override
+	public SqmCteStatement<?> getCteStatement(String cteLabel) {
+		return cteStatements.get( cteLabel );
+	}
+
+	@Override
+	public void addCteStatement(SqmCteStatement<?> cteStatement) {
+		if ( cteStatements.putIfAbsent( cteStatement.getCteTable().getCteName(), cteStatement ) != null ) {
+			throw new IllegalArgumentException( "A CTE with the label " + cteStatement.getCteTable().getCteName() + " already exists!" );
+		}
 	}
 
 	@Override

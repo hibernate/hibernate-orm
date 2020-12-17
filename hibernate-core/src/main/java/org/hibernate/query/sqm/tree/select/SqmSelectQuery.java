@@ -20,6 +20,8 @@ public interface SqmSelectQuery<T> extends SqmQuery<T>, JpaSelectCriteria<T>, Sq
 	@Override
 	SqmQuerySpec<T> getQuerySpec();
 
+	SqmQueryPart<T> getQueryPart();
+
 	@Override
 	SqmSelectQuery<T> distinct(boolean distinct);
 }

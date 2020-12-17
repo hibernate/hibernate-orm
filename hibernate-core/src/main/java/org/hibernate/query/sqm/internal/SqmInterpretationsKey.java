@@ -68,11 +68,8 @@ public class SqmInterpretationsKey implements QueryInterpretationCache.Key {
 			// cannot cache query plans if there are multi-valued param bindings
 			// todo (6.0) : this one may be ok because of how I implemented multi-valued param handling
 			//		- the expansion is done per-execution based on the "static" SQM
-			return false;
-		}
-
-		if ( hasLimit( query.getQueryOptions().getLimit() ) ) {
-			// cannot cache query plans if there is a limit defined
+			//  - Note from Christian: The call to domainParameterXref.clearExpansions() in ConcreteSqmSelectQueryPlan is a concurrency issue when cached
+			//  - This could be solved by using a method-local clone of domainParameterXref when multi-valued params exist
 			return false;
 		}
 

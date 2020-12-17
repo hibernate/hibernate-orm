@@ -8,6 +8,8 @@ package org.hibernate.sql.ast.tree.expression;
 
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.sql.ast.SqlAstWalker;
+import org.hibernate.sql.ast.tree.select.QueryGroup;
+import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 
 /**
@@ -15,15 +17,15 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
  */
 public class Any implements Expression {
 
-	private QuerySpec subquery;
+	private QueryPart subquery;
 	private MappingModelExpressable<?> type;
 
-	public Any(QuerySpec subquery, MappingModelExpressable<?> type) {
+	public Any(QueryPart subquery, MappingModelExpressable<?> type) {
 		this.subquery = subquery;
 		this.type = type;
 	}
 
-	public QuerySpec getSubquery() {
+	public QueryPart getSubquery() {
 		return subquery;
 	}
 

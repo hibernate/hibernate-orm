@@ -6,7 +6,10 @@
  */
 package org.hibernate.sql.ast.spi;
 
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -14,6 +17,8 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.TimeZone;
 
+import org.hibernate.CteSearchClauseKind;
+import org.hibernate.FetchClauseType;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.NullPrecedence;
 import org.hibernate.SortOrder;
@@ -43,6 +48,12 @@ import org.hibernate.query.sqm.tree.expression.Conversion;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.SqlAstWalker;
+import org.hibernate.sql.ast.tree.MutationStatement;
+import org.hibernate.sql.ast.tree.cte.CteColumn;
+import org.hibernate.sql.ast.tree.cte.CteContainer;
+import org.hibernate.sql.ast.tree.cte.CteStatement;
+import org.hibernate.sql.ast.tree.cte.SearchClauseSpecification;
+import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.Any;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
@@ -76,6 +87,8 @@ import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.from.VirtualTableGroup;
+import org.hibernate.sql.ast.tree.insert.InsertStatement;
+import org.hibernate.sql.ast.tree.insert.Values;
 import org.hibernate.sql.ast.tree.predicate.BetweenPredicate;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.ExistsPredicate;
@@ -89,11 +102,20 @@ import org.hibernate.sql.ast.tree.predicate.NegatedPredicate;
 import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.predicate.SelfRenderingPredicate;
+import org.hibernate.sql.ast.tree.select.QueryGroup;
+import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
+import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
+import org.hibernate.sql.ast.tree.update.Assignment;
+import org.hibernate.sql.ast.tree.update.UpdateStatement;
+import org.hibernate.sql.exec.ExecutionException;
 import org.hibernate.sql.exec.internal.JdbcParametersImpl;
+import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
+import org.hibernate.sql.exec.spi.JdbcParameterBinding;
+import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.type.IntegerType;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.sql.JdbcLiteralFormatter;
@@ -123,9 +145,13 @@ public abstract class AbstractSqlAstWalker
 	private final Set<FilterJdbcParameter> filterJdbcParameters = new HashSet<>();
 
 	private final Stack<Clause> clauseStack = new StandardStack<>();
-	protected final Stack<QuerySpec> querySpecStack = new StandardStack<>();
+	private final Stack<QueryPart> queryPartStack = new StandardStack<>();
 
 	private final Dialect dialect;
+	private String dmlTargetTableAlias;
+	private QueryPart queryPartForRowNumbering;
+	private int queryPartForRowNumberingAliasCounter;
+	private int queryGroupAliasCounter;
 	private transient AbstractSqmSelfRenderingFunctionDescriptor castFunction;
 	private transient LazySessionWrapperOptions lazySessionWrapperOptions;
 
@@ -257,8 +283,336 @@ public abstract class AbstractSqlAstWalker
 				|| clauseStack.getCurrent() == Clause.HAVING;
 	}
 
+	protected boolean inOverClause() {
+		return clauseStack.findCurrentFirst(
+				clause -> {
+					if ( clause == Clause.OVER ) {
+						return true;
+					}
+					return null;
+				}
+		) != null;
+	}
+
 	protected Stack<Clause> getClauseStack() {
 		return clauseStack;
+	}
+
+	protected Stack<QueryPart> getQueryPartStack() {
+		return queryPartStack;
+	}
+
+	@Override
+	public void visitSelectStatement(SelectStatement statement) {
+		String oldDmlTargetTableAlias = dmlTargetTableAlias;
+		dmlTargetTableAlias = null;
+		try {
+			visitCteContainer( statement );
+			statement.getQueryPart().accept( this );
+		}
+		finally {
+			dmlTargetTableAlias = oldDmlTargetTableAlias;
+		}
+	}
+
+	@Override
+	public void visitDeleteStatement(DeleteStatement statement) {
+		String oldDmlTargetTableAlias = dmlTargetTableAlias;
+		dmlTargetTableAlias = null;
+		try {
+			visitCteContainer( statement );
+			dmlTargetTableAlias = statement.getTargetTable().getIdentificationVariable();
+			visitDeleteStatementOnly( statement );
+		}
+		finally {
+			dmlTargetTableAlias = oldDmlTargetTableAlias;
+		}
+	}
+
+	@Override
+	public void visitUpdateStatement(UpdateStatement statement) {
+		String oldDmlTargetTableAlias = dmlTargetTableAlias;
+		dmlTargetTableAlias = null;
+		try {
+			visitCteContainer( statement );
+			dmlTargetTableAlias = statement.getTargetTable().getIdentificationVariable();
+			visitUpdateStatementOnly( statement );
+		}
+		finally {
+			dmlTargetTableAlias = oldDmlTargetTableAlias;
+		}
+	}
+
+	@Override
+	public void visitInsertStatement(InsertStatement statement) {
+		String oldDmlTargetTableAlias = dmlTargetTableAlias;
+		dmlTargetTableAlias = null;
+		try {
+			visitCteContainer( statement );
+			visitInsertStatementOnly( statement );
+		}
+		finally {
+			dmlTargetTableAlias = oldDmlTargetTableAlias;
+		}
+	}
+
+	protected void visitDeleteStatementOnly(DeleteStatement statement) {
+		// todo (6.0) : to support joins we need dialect support
+		appendSql( "delete from " );
+		final Stack<Clause> clauseStack = getClauseStack();
+		try {
+			clauseStack.push( Clause.DELETE );
+			renderTableReference( statement.getTargetTable() );
+		}
+		finally {
+			clauseStack.pop();
+		}
+
+		if ( statement.getRestriction() != null ) {
+			try {
+				clauseStack.push( Clause.WHERE );
+				appendSql( " where " );
+				statement.getRestriction().accept( this );
+			}
+			finally {
+				clauseStack.pop();
+			}
+		}
+		visitReturningColumns( statement );
+	}
+
+	protected void visitUpdateStatementOnly(UpdateStatement statement) {
+		// todo (6.0) : to support joins we need dialect support
+		appendSql( "update " );
+		final Stack<Clause> clauseStack = getClauseStack();
+		try {
+			clauseStack.push( Clause.UPDATE );
+			renderTableReference( statement.getTargetTable() );
+		}
+		finally {
+			clauseStack.pop();
+		}
+
+		appendSql( " set " );
+		boolean firstPass = true;
+		try {
+			clauseStack.push( Clause.SET );
+			for ( Assignment assignment : statement.getAssignments() ) {
+				if ( firstPass ) {
+					firstPass = false;
+				}
+				else {
+					appendSql( ", " );
+				}
+
+				final List<ColumnReference> columnReferences = assignment.getAssignable().getColumnReferences();
+				if ( columnReferences.size() == 1 ) {
+					columnReferences.get( 0 ).accept( this );
+				}
+				else {
+					appendSql( " (" );
+					for ( ColumnReference columnReference : columnReferences ) {
+						columnReference.accept( this );
+					}
+					appendSql( ") " );
+				}
+				appendSql( " = " );
+				assignment.getAssignedValue().accept( this );
+			}
+		}
+		finally {
+			clauseStack.pop();
+		}
+
+		if ( statement.getRestriction() != null ) {
+			appendSql( " where " );
+			try {
+				clauseStack.push( Clause.WHERE );
+				statement.getRestriction().accept( this );
+			}
+			finally {
+				clauseStack.pop();
+			}
+		}
+		visitReturningColumns( statement );
+	}
+
+	protected void visitInsertStatementOnly(InsertStatement statement) {
+		appendSql( "insert into " );
+		appendSql( statement.getTargetTable().getTableExpression() );
+
+		appendSql( " (" );
+		boolean firstPass = true;
+
+		final List<ColumnReference> targetColumnReferences = statement.getTargetColumnReferences();
+		if ( targetColumnReferences == null ) {
+			renderImplicitTargetColumnSpec();
+		}
+		else {
+			for (ColumnReference targetColumnReference : targetColumnReferences) {
+				if (firstPass) {
+					firstPass = false;
+				}
+				else {
+					appendSql( ", " );
+				}
+
+				appendSql( targetColumnReference.getColumnExpression() );
+			}
+		}
+
+		appendSql( ") " );
+
+		if ( statement.getSourceSelectStatement() != null ) {
+			statement.getSourceSelectStatement().accept( this );
+		}
+		else {
+			appendSql("values");
+			boolean firstTuple = true;
+			final Stack<Clause> clauseStack = getClauseStack();
+			try {
+				clauseStack.push( Clause.VALUES );
+				for ( Values values : statement.getValuesList() ) {
+					if ( firstTuple ) {
+						firstTuple = false;
+					}
+					else {
+						appendSql( ", " );
+					}
+					appendSql( " (" );
+					boolean firstExpr = true;
+					for ( Expression expression : values.getExpressions() ) {
+						if ( firstExpr ) {
+							firstExpr = false;
+						}
+						else {
+							appendSql( ", " );
+						}
+						expression.accept( this );
+					}
+					appendSql( ")" );
+				}
+			}
+			finally {
+				clauseStack.pop();
+			}
+		}
+		visitReturningColumns( statement );
+	}
+
+	private void renderImplicitTargetColumnSpec() {
+	}
+
+	protected void visitReturningColumns(MutationStatement mutationStatement) {
+		final List<ColumnReference> returningColumns = mutationStatement.getReturningColumns();
+		final int size = returningColumns.size();
+		if ( size == 0 ) {
+			return;
+		}
+
+		appendSql( " returning " );
+		String separator = "";
+		for ( int i = 0; i < size; i++ ) {
+			appendSql( separator );
+			appendSql( returningColumns.get( i ).getColumnExpression() );
+			separator = ", ";
+		}
+	}
+
+	public void visitCteContainer(CteContainer cteContainer) {
+		final Collection<CteStatement> cteStatements = cteContainer.getCteStatements();
+		if ( cteStatements.isEmpty() ) {
+			return;
+		}
+		appendSql( "with " );
+
+		if ( cteContainer.isWithRecursive() ) {
+			appendSql( "recursive " );
+		}
+
+		String mainSeparator = "";
+		for ( CteStatement cte : cteStatements ) {
+			appendSql( mainSeparator );
+			appendSql( cte.getCteTable().getTableExpression() );
+
+			appendSql( " (" );
+
+			String separator = "";
+
+			for ( CteColumn cteColumn : cte.getCteTable().getCteColumns() ) {
+				appendSql( separator );
+				appendSql( cteColumn.getColumnExpression() );
+				separator = ", ";
+			}
+
+			appendSql( ") as (" );
+
+			cte.getCteDefinition().accept( this );
+
+			appendSql( ')' );
+
+			renderSearchClause( cte );
+			renderCycleClause( cte );
+
+			mainSeparator = ", ";
+		}
+		appendSql( ' ' );
+	}
+
+	protected void renderSearchClause(CteStatement cte) {
+		String separator;
+		if ( cte.getSearchClauseKind() != null ) {
+			appendSql( " search " );
+			if ( cte.getSearchClauseKind() == CteSearchClauseKind.DEPTH_FIRST ) {
+				appendSql( " depth " );
+			}
+			else {
+				appendSql( " breadth " );
+			}
+			appendSql( " first by " );
+			separator = "";
+			for ( SearchClauseSpecification searchBySpecification : cte.getSearchBySpecifications() ) {
+				appendSql( separator );
+				appendSql( searchBySpecification.getCteColumn().getColumnExpression() );
+				if ( searchBySpecification.getSortOrder() != null ) {
+					if ( searchBySpecification.getSortOrder() == SortOrder.ASCENDING ) {
+						appendSql( " asc" );
+					}
+					else {
+						appendSql( " desc" );
+					}
+					if ( searchBySpecification.getNullPrecedence() != null ) {
+						if ( searchBySpecification.getNullPrecedence() == NullPrecedence.FIRST ) {
+							appendSql( " nulls first" );
+						}
+						else {
+							appendSql( " nulls last" );
+						}
+					}
+				}
+				separator = ", ";
+			}
+		}
+	}
+
+	protected void renderCycleClause(CteStatement cte) {
+		String separator;
+		if ( cte.getCycleMarkColumn() != null ) {
+			appendSql( " cycle " );
+			separator = "";
+			for ( CteColumn cycleColumn : cte.getCycleColumns() ) {
+				appendSql( separator );
+				appendSql( cycleColumn.getColumnExpression() );
+				separator = ", ";
+			}
+			appendSql( " set " );
+			appendSql( cte.getCycleMarkColumn().getColumnExpression() );
+			appendSql( " to '" );
+			appendSql( cte.getCycleValue() );
+			appendSql( "' default '" );
+			appendSql( cte.getNoCycleValue() );
+			appendSql( "'" );
+		}
 	}
 
 
@@ -266,26 +620,71 @@ public abstract class AbstractSqlAstWalker
 	// QuerySpec
 
 	@Override
-	public void visitQuerySpec(QuerySpec querySpec) {
+	public void visitQueryGroup(QueryGroup queryGroup) {
+		final QueryPart queryPartForRowNumbering = this.queryPartForRowNumbering;
 		try {
-			querySpecStack.push( querySpec );
-			if ( !querySpec.isRoot() ) {
-				appendSql( " (" );
+			String queryGroupAlias = null;
+			if ( queryPartForRowNumbering != queryPartStack.getCurrent() ) {
+				this.queryPartForRowNumbering = null;
+			}
+			// If we do row counting for this query group, the wrapper select is added by the caller
+			if ( queryPartForRowNumbering != queryGroup && !queryGroup.isRoot() ) {
+				queryGroupAlias = "grp_" + queryGroupAliasCounter + "_";
+				queryGroupAliasCounter++;
+				appendSql( "select " );
+				appendSql( queryGroupAlias );
+				appendSql( ".* from (" );
+			}
+			queryPartStack.push( queryGroup );
+			final List<QueryPart> queryParts = queryGroup.getQueryParts();
+			final String setOperatorString = " " + queryGroup.getSetOperator().sqlString() + " ";
+			String separator = "";
+			for ( int i = 0; i < queryParts.size(); i++ ) {
+				appendSql( separator );
+				queryParts.get( i ).accept( this );
+				separator = setOperatorString;
+			}
+
+			visitOrderBy( queryGroup.getSortSpecifications() );
+			visitOffsetFetchClause( queryGroup );
+			if ( queryGroupAlias != null ) {
+				appendSql( ") " );
+				appendSql( queryGroupAlias );
+			}
+		}
+		finally {
+			queryPartStack.pop();
+			this.queryPartForRowNumbering = queryPartForRowNumbering;
+		}
+	}
+
+	@Override
+	public void visitQuerySpec(QuerySpec querySpec) {
+		final QueryPart queryPartForRowNumbering = this.queryPartForRowNumbering;
+		try {
+			if ( queryPartForRowNumbering != queryPartStack.getCurrent() ) {
+				this.queryPartForRowNumbering = null;
+			}
+			final boolean needsParenthesis = !querySpec.isRoot() && !( queryPartStack.getCurrent() instanceof QueryGroup );
+			queryPartStack.push( querySpec );
+			if ( needsParenthesis ) {
+				appendSql( "(" );
 			}
 			visitSelectClause( querySpec.getSelectClause() );
 			visitFromClause( querySpec.getFromClause() );
 			visitWhereClause( querySpec );
 			visitGroupByClause( querySpec, dialect.supportsSelectAliasInGroupByClause() );
 			visitHavingClause( querySpec );
-			visitOrderBy( querySpec );
-			visitLimitOffsetClause( querySpec );
+			visitOrderBy( querySpec.getSortSpecifications() );
+			visitOffsetFetchClause( querySpec );
 
-			if ( !querySpec.isRoot() ) {
+			if ( needsParenthesis ) {
 				appendSql( ")" );
 			}
 		}
 		finally {
-			querySpecStack.push( querySpec );
+			queryPartStack.pop();
+			this.queryPartForRowNumbering = queryPartForRowNumbering;
 		}
 	}
 
@@ -305,14 +704,17 @@ public abstract class AbstractSqlAstWalker
 	}
 
 	protected Expression resolveAliasedExpression(Expression expression) {
+		return resolveAliasedExpression(
+				queryPartStack.getCurrent().getFirstQuerySpec().getSelectClause().getSqlSelections(),
+				expression
+		);
+	}
+
+	protected Expression resolveAliasedExpression(List<SqlSelection> sqlSelections, Expression expression) {
 		if ( expression instanceof Literal ) {
 			Object literalValue = ( (Literal) expression ).getLiteralValue();
 			if ( literalValue instanceof Integer ) {
-				return querySpecStack.getCurrent()
-						.getSelectClause()
-						.getSqlSelections()
-						.get( (Integer) literalValue )
-						.getExpression();
+				return sqlSelections.get( (Integer) literalValue ).getExpression();
 			}
 		}
 		else if ( expression instanceof SqlSelectionExpression ) {
@@ -322,43 +724,12 @@ public abstract class AbstractSqlAstWalker
 	}
 
 	protected final void visitGroupByClause(QuerySpec querySpec, boolean supportsSelectAliases) {
-		List<Expression> groupByClauseExpressions = querySpec.getGroupByClauseExpressions();
-		if ( !groupByClauseExpressions.isEmpty() ) {
-			clauseStack.push( Clause.GROUP );
-			String separator = " group by ";
+		final List<Expression> partitionExpressions = querySpec.getGroupByClauseExpressions();
+		if ( !partitionExpressions.isEmpty() ) {
 			try {
-				if ( supportsSelectAliases ) {
-					for ( Expression groupByClauseExpression : groupByClauseExpressions ) {
-						if ( groupByClauseExpression instanceof SqlTuple ) {
-							for ( Expression expression : ( (SqlTuple) groupByClauseExpression ).getExpressions() ) {
-								appendSql( separator );
-								renderGroupByItem( expression );
-								separator = COMA_SEPARATOR;
-							}
-						}
-						else {
-							appendSql( separator );
-							renderGroupByItem( groupByClauseExpression );
-						}
-						separator = COMA_SEPARATOR;
-					}
-				}
-				else {
-					for ( Expression groupByClauseExpression : groupByClauseExpressions ) {
-						if ( groupByClauseExpression instanceof SqlTuple ) {
-							for ( Expression expression : ( (SqlTuple) groupByClauseExpression ).getExpressions() ) {
-								appendSql( separator );
-								renderGroupByItem( resolveAliasedExpression( expression ) );
-								separator = COMA_SEPARATOR;
-							}
-						}
-						else {
-							appendSql( separator );
-							renderGroupByItem( resolveAliasedExpression( groupByClauseExpression ) );
-						}
-						separator = COMA_SEPARATOR;
-					}
-				}
+				clauseStack.push( Clause.GROUP );
+				appendSql( " group by " );
+				visitPartitionExpressions( partitionExpressions, supportsSelectAliases );
 			}
 			finally {
 				clauseStack.pop();
@@ -366,7 +737,56 @@ public abstract class AbstractSqlAstWalker
 		}
 	}
 
-	protected void renderGroupByItem(Expression expression) {
+	protected final void visitPartitionByClause(List<Expression> partitionExpressions) {
+		if ( !partitionExpressions.isEmpty() ) {
+			try {
+				clauseStack.push( Clause.PARTITION );
+				appendSql( "partition by " );
+				visitPartitionExpressions( partitionExpressions, false );
+			}
+			finally {
+				clauseStack.pop();
+			}
+		}
+	}
+
+	protected final void visitPartitionExpressions(List<Expression> partitionExpressions, boolean supportsSelectAliases) {
+		String separator = "";
+		if ( supportsSelectAliases ) {
+			for ( Expression partitionExpression : partitionExpressions ) {
+				if ( partitionExpression instanceof SqlTuple ) {
+					for ( Expression expression : ( (SqlTuple) partitionExpression ).getExpressions() ) {
+						appendSql( separator );
+						renderPartitionItem( expression );
+						separator = COMA_SEPARATOR;
+					}
+				}
+				else {
+					appendSql( separator );
+					renderPartitionItem( partitionExpression );
+				}
+				separator = COMA_SEPARATOR;
+			}
+		}
+		else {
+			for ( Expression partitionExpression : partitionExpressions ) {
+				if ( partitionExpression instanceof SqlTuple ) {
+					for ( Expression expression : ( (SqlTuple) partitionExpression ).getExpressions() ) {
+						appendSql( separator );
+						renderPartitionItem( resolveAliasedExpression( expression ) );
+						separator = COMA_SEPARATOR;
+					}
+				}
+				else {
+					appendSql( separator );
+					renderPartitionItem( resolveAliasedExpression( partitionExpression ) );
+				}
+				separator = COMA_SEPARATOR;
+			}
+		}
+	}
+
+	protected void renderPartitionItem(Expression expression) {
 		// We render an empty group instead of literals as some DBs don't support grouping by literals
 		// Note that integer literals, which refer to select item positions, are handled in #visitGroupByClause
 		if ( expression instanceof Literal ) {
@@ -434,10 +854,20 @@ public abstract class AbstractSqlAstWalker
 		}
 	}
 
-	protected final void visitOrderBy(QuerySpec querySpec) {
-		final List<SortSpecification> sortSpecifications = querySpec.getSortSpecifications();
+	protected void visitOrderBy(List<SortSpecification> sortSpecifications) {
+		// If we have a query part for row numbering, there is no need to render the order by clause
+		// as that is part of the row numbering window function already, by which we then order by in the outer query
+		if ( queryPartForRowNumbering == null ) {
+			renderOrderBy( true, sortSpecifications );
+		}
+	}
+
+	protected void renderOrderBy(boolean addWhitespace, List<SortSpecification> sortSpecifications) {
 		if ( sortSpecifications != null && !sortSpecifications.isEmpty() ) {
-			appendSql( " order by " );
+			if ( addWhitespace ) {
+				appendSql( ' ' );
+			}
+			appendSql( "order by " );
 
 			clauseStack.push( Clause.ORDER );
 			try {
@@ -659,23 +1089,18 @@ public abstract class AbstractSqlAstWalker
 	}
 
 	public void visitSortSpecification(Expression sortExpression, SortOrder sortOrder, NullPrecedence nullPrecedence) {
-		final boolean hasNullPrecedence = nullPrecedence != null && nullPrecedence != NullPrecedence.NONE;
-		if ( hasNullPrecedence && !dialect.supportsNullPrecedence() ) {
-			// TODO: generate "virtual" select items and use them here positionally
-			appendSql( "case when (" );
-			resolveAliasedExpression( sortExpression ).accept( this );
-			appendSql( ") is null then " );
-			if ( nullPrecedence == NullPrecedence.FIRST ) {
-				appendSql( "0 else 1" );
-			}
-			else {
-				appendSql( "1 else 0" );
-			}
-			appendSql( " end" );
-			appendSql( COMA_SEPARATOR );
+		final boolean renderNullPrecedence = nullPrecedence != null &&
+				!nullPrecedence.isDefaultOrdering( sortOrder, dialect.getNullOrdering() );
+		if ( renderNullPrecedence && !dialect.supportsNullPrecedence() ) {
+			emulateSortSpecificationNullPrecedence( sortExpression, nullPrecedence );
 		}
 
-		sortExpression.accept( this );
+		if ( inOverClause() ) {
+			resolveAliasedExpression( sortExpression ).accept( this );
+		}
+		else {
+			sortExpression.accept( this );
+		}
 
 		if ( sortOrder == SortOrder.ASCENDING ) {
 			appendSql( " asc" );
@@ -684,52 +1109,634 @@ public abstract class AbstractSqlAstWalker
 			appendSql( " desc" );
 		}
 
-		if ( hasNullPrecedence && dialect.supportsNullPrecedence() ) {
+		if ( renderNullPrecedence && dialect.supportsNullPrecedence() ) {
 			appendSql( " nulls " );
 			appendSql( nullPrecedence.name().toLowerCase( Locale.ROOT ) );
 		}
 	}
 
+	protected void emulateSortSpecificationNullPrecedence(Expression sortExpression, NullPrecedence nullPrecedence) {
+		// TODO: generate "virtual" select items and use them here positionally
+		appendSql( "case when (" );
+		resolveAliasedExpression( sortExpression ).accept( this );
+		appendSql( ") is null then " );
+		if ( nullPrecedence == NullPrecedence.FIRST ) {
+			appendSql( "0 else 1" );
+		}
+		else {
+			appendSql( "1 else 0" );
+		}
+		appendSql( " end" );
+		appendSql( COMA_SEPARATOR );
+	}
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// LIMIT/OFFSET clause
+	// LIMIT/OFFSET/FETCH clause
 
 	@Override
-	public void visitLimitOffsetClause(QuerySpec querySpec) {
-		if ( querySpec.getOffsetClauseExpression() != null ) {
-			renderOffset( querySpec.getOffsetClauseExpression() );
+	public void visitOffsetFetchClause(QueryPart queryPart) {
+		if ( !isRowNumberingCurrentQueryPart() ) {
+			renderOffsetFetchClause( queryPart, true );
+		}
+	}
+
+	protected void renderOffsetFetchClause(QueryPart queryPart, boolean renderOffsetRowsKeyword) {
+		renderOffsetFetchClause(
+				queryPart.getOffsetClauseExpression(),
+				queryPart.getFetchClauseExpression(),
+				queryPart.getFetchClauseType(),
+				renderOffsetRowsKeyword
+		);
+	}
+
+	protected void renderOffsetFetchClause(
+			Expression offsetExpression,
+			Expression fetchExpression,
+			FetchClauseType fetchClauseType,
+			boolean renderOffsetRowsKeyword) {
+		if ( offsetExpression != null ) {
+			renderOffset( offsetExpression, renderOffsetRowsKeyword );
 		}
 
-		if ( querySpec.getLimitClauseExpression() != null ) {
-			renderLimit( querySpec.getLimitClauseExpression() );
+		if ( fetchExpression != null ) {
+			renderFetch( fetchExpression, null, fetchClauseType );
 		}
 	}
 
 	@SuppressWarnings("WeakerAccess")
-	protected void renderOffset(Expression offsetExpression) {
+	protected void renderOffset(Expression offsetExpression, boolean renderOffsetRowsKeyword) {
 		appendSql( " offset " );
 		clauseStack.push( Clause.OFFSET );
 		try {
-			offsetExpression.accept( this );
+			renderOffsetExpression( offsetExpression );
 		}
 		finally {
 			clauseStack.pop();
 		}
-		appendSql( " rows" );
+		if ( renderOffsetRowsKeyword ) {
+			appendSql( " rows" );
+		}
 	}
 
 	@SuppressWarnings("WeakerAccess")
-	protected void renderLimit(Expression limitExpression) {
+	protected void renderFetch(
+			Expression fetchExpression,
+			Expression offsetExpressionToAdd,
+			FetchClauseType fetchClauseType) {
 		appendSql( " fetch first " );
-		clauseStack.push( Clause.LIMIT );
+		clauseStack.push( Clause.FETCH );
 		try {
-			limitExpression.accept( this );
+			if ( offsetExpressionToAdd == null ) {
+				renderFetchExpression( fetchExpression );
+			}
+			else {
+				renderFetchPlusOffsetExpression( fetchExpression, offsetExpressionToAdd, 0 );
+			}
 		}
 		finally {
 			clauseStack.pop();
 		}
-		appendSql( " rows only" );
+		switch ( fetchClauseType ) {
+			case ROWS_ONLY:
+				appendSql( " rows only" );
+				break;
+			case ROWS_WITH_TIES:
+				appendSql( " rows with ties" );
+				break;
+			case PERCENT_ONLY:
+				appendSql( " percent rows only" );
+				break;
+			case PERCENT_WITH_TIES:
+				appendSql( " percent rows with ties" );
+				break;
+		}
 	}
 
+	protected void renderOffsetExpression(Expression offsetExpression) {
+		offsetExpression.accept( this );
+	}
+
+	protected void renderFetchExpression(Expression fetchExpression) {
+		fetchExpression.accept( this );
+	}
+
+	protected void renderTopClause(QuerySpec querySpec, boolean addOffset) {
+		renderTopClause(
+				querySpec.getOffsetClauseExpression(),
+				querySpec.getFetchClauseExpression(),
+				querySpec.getFetchClauseType(),
+				addOffset
+		);
+	}
+
+	protected void renderTopClause(
+			Expression offsetExpression,
+			Expression fetchExpression,
+			FetchClauseType fetchClauseType,
+			boolean addOffset) {
+		if ( fetchExpression != null ) {
+			appendSql( "top (" );
+			final Stack<Clause> clauseStack = getClauseStack();
+			clauseStack.push( Clause.FETCH );
+			try {
+				if ( addOffset && offsetExpression != null ) {
+					renderFetchPlusOffsetExpression( fetchExpression, offsetExpression, 0 );
+				}
+				else {
+					renderFetchExpression( fetchExpression );
+				}
+			}
+			finally {
+				clauseStack.pop();
+			}
+			appendSql( ") " );
+			switch ( fetchClauseType ) {
+				case ROWS_WITH_TIES:
+					appendSql( "with ties " );
+					break;
+				case PERCENT_ONLY:
+					appendSql( "percent " );
+					break;
+				case PERCENT_WITH_TIES:
+					appendSql( "percent with ties " );
+					break;
+			}
+		}
+	}
+
+	protected void renderTopStartAtClause(QuerySpec querySpec) {
+		renderTopStartAtClause(
+				querySpec.getOffsetClauseExpression(),
+				querySpec.getFetchClauseExpression(),
+				querySpec.getFetchClauseType()
+		);
+	}
+
+	protected void renderTopStartAtClause(
+			Expression offsetExpression,
+			Expression fetchExpression,
+			FetchClauseType fetchClauseType) {
+		if ( fetchExpression != null ) {
+			appendSql( "top " );
+			final Stack<Clause> clauseStack = getClauseStack();
+			clauseStack.push( Clause.FETCH );
+			try {
+				renderFetchExpression( fetchExpression );
+			}
+			finally {
+				clauseStack.pop();
+			}
+			if ( offsetExpression != null ) {
+				clauseStack.push( Clause.OFFSET );
+				try {
+					appendSql( " start at " );
+					renderOffsetExpression( offsetExpression );
+				}
+				finally {
+					clauseStack.pop();
+				}
+			}
+			appendSql( ' ' );
+			switch ( fetchClauseType ) {
+				case ROWS_WITH_TIES:
+					appendSql( "with ties " );
+					break;
+				case PERCENT_ONLY:
+					appendSql( "percent " );
+					break;
+				case PERCENT_WITH_TIES:
+					appendSql( "percent with ties " );
+					break;
+			}
+		}
+	}
+
+	protected void renderRowsToClause(QuerySpec querySpec) {
+		assertRowsOnlyFetchClauseType( querySpec );
+		renderRowsToClause( querySpec.getOffsetClauseExpression(), querySpec.getFetchClauseExpression() );
+	}
+
+	protected void renderRowsToClause(Expression offsetClauseExpression, Expression fetchClauseExpression) {
+		if ( fetchClauseExpression != null ) {
+			appendSql( "rows " );
+			final Stack<Clause> clauseStack = getClauseStack();
+			clauseStack.push( Clause.FETCH );
+			try {
+				renderFetchExpression( fetchClauseExpression );
+			}
+			finally {
+				clauseStack.pop();
+			}
+			if ( offsetClauseExpression != null ) {
+				clauseStack.push( Clause.OFFSET );
+				try {
+					appendSql( " to " );
+					// According to RowsLimitHandler this is 1 based so we need to add 1 to the offset
+					renderFetchPlusOffsetExpression( fetchClauseExpression, offsetClauseExpression, 1 );
+				}
+				finally {
+					clauseStack.pop();
+				}
+			}
+			appendSql( ' ' );
+		}
+	}
+
+	protected void renderFetchPlusOffsetExpression(
+			Expression fetchClauseExpression,
+			Expression offsetClauseExpression,
+			int offset) {
+		renderFetchExpression( fetchClauseExpression );
+		appendSql( '+' );
+		renderOffsetExpression( offsetClauseExpression );
+		if ( offset != 0 ) {
+			appendSql( '+' );
+			appendSql( Integer.toString( offset ) );
+		}
+	}
+
+	protected void renderFetchPlusOffsetExpressionAsSingleParameter(
+			Expression fetchClauseExpression,
+			Expression offsetClauseExpression,
+			int offset) {
+		if ( fetchClauseExpression instanceof Literal ) {
+			final Number fetchCount = (Number) ( (Literal) fetchClauseExpression ).getLiteralValue();
+			if ( offsetClauseExpression instanceof Literal ) {
+				final Number offsetCount = (Number) ( (Literal) offsetClauseExpression ).getLiteralValue();
+				appendSql( Integer.toString( fetchCount.intValue() + offsetCount.intValue() + offset ) );
+			}
+			else {
+				appendSql( PARAM_MARKER );
+				final JdbcParameter offsetParameter = (JdbcParameter) offsetClauseExpression;
+				final int offsetValue = offset + fetchCount.intValue();
+				jdbcParameters.addParameter( offsetParameter );
+				parameterBinders.add(
+						(statement, startPosition, jdbcParameterBindings, executionContext) -> {
+							final JdbcParameterBinding binding = jdbcParameterBindings.getBinding( offsetParameter );
+							if ( binding == null ) {
+								throw new ExecutionException( "JDBC parameter value not bound - " + offsetParameter );
+							}
+							final Number bindValue = (Number) binding.getBindValue();
+							offsetParameter.getExpressionType().getJdbcMappings().get( 0 ).getJdbcValueBinder().bind(
+									statement,
+									bindValue.intValue() + offsetValue,
+									startPosition,
+									executionContext.getSession()
+							);
+						}
+				);
+			}
+		}
+		else {
+			appendSql( PARAM_MARKER );
+			final JdbcParameter offsetParameter = (JdbcParameter) offsetClauseExpression;
+			final JdbcParameter fetchParameter = (JdbcParameter) fetchClauseExpression;
+			final OffsetReceivingParameterBinder fetchBinder = new OffsetReceivingParameterBinder(
+					fetchParameter,
+					offset
+			);
+			jdbcParameters.addParameter( fetchParameter );
+			parameterBinders.add( fetchBinder );
+			jdbcParameters.addParameter( offsetParameter );
+			parameterBinders.add(
+					(statement, startPosition, jdbcParameterBindings, executionContext) -> {
+						final JdbcParameterBinding binding = jdbcParameterBindings.getBinding( offsetParameter );
+						if ( binding == null ) {
+							throw new ExecutionException( "JDBC parameter value not bound - " + offsetParameter );
+						}
+						fetchBinder.dynamicOffset = (Number) binding.getBindValue();
+					}
+			);
+		}
+	}
+
+	private static class OffsetReceivingParameterBinder implements JdbcParameterBinder {
+
+		private final JdbcParameter fetchParameter;
+		private final int staticOffset;
+		private Number dynamicOffset;
+
+		public OffsetReceivingParameterBinder(JdbcParameter fetchParameter, int staticOffset) {
+			this.fetchParameter = fetchParameter;
+			this.staticOffset = staticOffset;
+		}
+
+		@Override
+		public void bindParameterValue(
+				PreparedStatement statement,
+				int startPosition,
+				JdbcParameterBindings jdbcParameterBindings,
+				ExecutionContext executionContext) throws SQLException {
+			final JdbcParameterBinding binding = jdbcParameterBindings.getBinding( fetchParameter );
+			if ( binding == null ) {
+				throw new ExecutionException( "JDBC parameter value not bound - " + fetchParameter );
+			}
+			final Number bindValue = (Number) binding.getBindValue();
+			final int offsetValue = dynamicOffset.intValue() + staticOffset;
+			dynamicOffset = null;
+			fetchParameter.getExpressionType().getJdbcMappings().get( 0 ).getJdbcValueBinder().bind(
+					statement,
+					bindValue.intValue() + offsetValue,
+					startPosition,
+					executionContext.getSession()
+			);
+		}
+	}
+
+	protected void renderFirstSkipClause(QuerySpec querySpec) {
+		assertRowsOnlyFetchClauseType( querySpec );
+		renderFirstSkipClause( querySpec.getOffsetClauseExpression(), querySpec.getFetchClauseExpression() );
+	}
+
+	protected void renderFirstSkipClause(Expression offsetExpression, Expression fetchExpression) {
+		final Stack<Clause> clauseStack = getClauseStack();
+		if ( fetchExpression != null ) {
+			appendSql( "first " );
+			clauseStack.push( Clause.FETCH );
+			try {
+				renderFetchExpression( fetchExpression );
+			}
+			finally {
+				clauseStack.pop();
+			}
+			appendSql( ' ' );
+		}
+		if ( offsetExpression != null ) {
+			appendSql( "skip " );
+			clauseStack.push( Clause.OFFSET );
+			try {
+				renderOffsetExpression( offsetExpression );
+			}
+			finally {
+				clauseStack.pop();
+			}
+			appendSql( ' ' );
+		}
+	}
+
+	protected void renderSkipFirstClause(QuerySpec querySpec) {
+		assertRowsOnlyFetchClauseType( querySpec );
+		renderSkipFirstClause( querySpec.getOffsetClauseExpression(), querySpec.getFetchClauseExpression() );
+	}
+
+	protected void renderSkipFirstClause(Expression offsetExpression, Expression fetchExpression) {
+		final Stack<Clause> clauseStack = getClauseStack();
+		if ( offsetExpression != null ) {
+			appendSql( "skip " );
+			clauseStack.push( Clause.OFFSET );
+			try {
+				renderOffsetExpression( offsetExpression );
+			}
+			finally {
+				clauseStack.pop();
+			}
+			appendSql( ' ' );
+		}
+		if ( fetchExpression != null ) {
+			appendSql( "first " );
+			clauseStack.push( Clause.FETCH );
+			try {
+				renderFetchExpression( fetchExpression );
+			}
+			finally {
+				clauseStack.pop();
+			}
+			appendSql( ' ' );
+		}
+	}
+
+	protected void renderFirstClause(QuerySpec querySpec) {
+		assertRowsOnlyFetchClauseType( querySpec );
+		renderFirstClause( querySpec.getOffsetClauseExpression(), querySpec.getFetchClauseExpression() );
+	}
+
+	protected void renderFirstClause(Expression offsetExpression, Expression fetchExpression) {
+		final Stack<Clause> clauseStack = getClauseStack();
+		if ( fetchExpression != null ) {
+			appendSql( "first " );
+			clauseStack.push( Clause.FETCH );
+			try {
+				renderFetchPlusOffsetExpression( fetchExpression, offsetExpression, 0 );
+			}
+			finally {
+				clauseStack.pop();
+			}
+			appendSql( ' ' );
+		}
+	}
+
+	protected void renderCombinedLimitClause(QueryPart queryPart) {
+		assertRowsOnlyFetchClauseType( queryPart );
+		renderCombinedLimitClause( queryPart.getOffsetClauseExpression(), queryPart.getFetchClauseExpression() );
+	}
+
+	protected void renderCombinedLimitClause(Expression offsetExpression, Expression fetchExpression) {
+		if ( offsetExpression != null ) {
+			final Stack<Clause> clauseStack = getClauseStack();
+			appendSql( " limit " );
+			clauseStack.push( Clause.OFFSET );
+			try {
+				renderOffsetExpression( offsetExpression );
+			}
+			finally {
+				clauseStack.pop();
+			}
+			appendSql( COMA_SEPARATOR );
+			if ( fetchExpression != null ) {
+				clauseStack.push( Clause.FETCH );
+				try {
+					renderFetchExpression( fetchExpression );
+				}
+				finally {
+					clauseStack.pop();
+				}
+			}
+			else {
+				appendSql( Integer.toString( Integer.MAX_VALUE ) );
+			}
+		}
+		else if ( fetchExpression != null ) {
+			final Stack<Clause> clauseStack = getClauseStack();
+			appendSql( " limit " );
+			clauseStack.push( Clause.FETCH );
+			try {
+				renderFetchExpression( fetchExpression );
+			}
+			finally {
+				clauseStack.pop();
+			}
+		}
+	}
+
+	protected void renderLimitOffsetClause(QueryPart queryPart) {
+		assertRowsOnlyFetchClauseType( queryPart );
+		renderLimitOffsetClause( queryPart.getOffsetClauseExpression(), queryPart.getFetchClauseExpression() );
+	}
+
+	protected void renderLimitOffsetClause(Expression offsetExpression, Expression fetchExpression) {
+		if ( fetchExpression != null ) {
+			appendSql( " limit " );
+			clauseStack.push( Clause.FETCH );
+			try {
+				renderFetchExpression( fetchExpression );
+			}
+			finally {
+				clauseStack.pop();
+			}
+		}
+		else if ( offsetExpression != null ) {
+			appendSql( " limit " );
+			appendSql( Integer.toString( Integer.MAX_VALUE ) );
+		}
+		if ( offsetExpression != null ) {
+			final Stack<Clause> clauseStack = getClauseStack();
+			appendSql( " offset " );
+			clauseStack.push( Clause.OFFSET );
+			try {
+				renderOffsetExpression( offsetExpression );
+			}
+			finally {
+				clauseStack.pop();
+			}
+		}
+	}
+
+	protected void assertRowsOnlyFetchClauseType(QueryPart queryPart) {
+		final FetchClauseType fetchClauseType = queryPart.getFetchClauseType();
+		if ( fetchClauseType != null && fetchClauseType != FetchClauseType.ROWS_ONLY ) {
+			throw new IllegalArgumentException( "Can't emulate fetch clause type: " + fetchClauseType );
+		}
+	}
+
+	protected QueryPart getQueryPartForRowNumbering() {
+		return queryPartForRowNumbering;
+	}
+
+	protected boolean isRowNumberingCurrentQueryPart() {
+		return queryPartForRowNumbering != null;
+	}
+
+	protected void emulateFetchOffsetWithWindowFunctions(QueryPart queryPart, boolean emulateFetchClause) {
+		emulateFetchOffsetWithWindowFunctions(
+				queryPart,
+				queryPart.getOffsetClauseExpression(),
+				queryPart.getFetchClauseExpression(),
+				queryPart.getFetchClauseType(),
+				emulateFetchClause
+		);
+	}
+
+	protected void emulateFetchOffsetWithWindowFunctions(
+			QueryPart queryPart,
+			Expression offsetExpression,
+			Expression fetchExpression,
+			FetchClauseType fetchClauseType,
+			boolean emulateFetchClause) {
+		final QueryPart queryPartForRowNumbering = this.queryPartForRowNumbering;
+		try {
+			this.queryPartForRowNumbering = queryPart;
+			final String alias = "r_" + queryPartForRowNumberingAliasCounter + "_";
+			queryPartForRowNumberingAliasCounter++;
+			appendSql( "select " );
+			if ( getClauseStack().isEmpty() ) {
+				appendSql( "*" );
+			}
+			else {
+				final int size = queryPart.getFirstQuerySpec().getSelectClause().getSqlSelections().size();
+				String separator = "";
+				for ( int i = 0; i < size; i++ ) {
+					appendSql( separator );
+					appendSql( alias );
+					appendSql( ".c" );
+					appendSql( Integer.toString( i ) );
+					separator = COMA_SEPARATOR;
+				}
+			}
+			appendSql( " from (" );
+			queryPart.accept( this );
+			appendSql( " ) ");
+			appendSql( alias );
+			appendSql( " where " );
+			final Stack<Clause> clauseStack = getClauseStack();
+			clauseStack.push( Clause.WHERE );
+			try {
+				if ( emulateFetchClause ) {
+					switch ( fetchClauseType ) {
+						case PERCENT_ONLY:
+							appendSql( alias );
+							appendSql( ".rn <= " );
+							if ( offsetExpression != null ) {
+								offsetExpression.accept( this );
+								appendSql( " + " );
+							}
+							appendSql( "ceil(");
+							appendSql( alias );
+							appendSql( ".cnt * " );
+							fetchExpression.accept( this );
+							appendSql( " / 100 )" );
+							break;
+						case ROWS_ONLY:
+							appendSql( alias );
+							appendSql( ".rn <= " );
+							fetchExpression.accept( this );
+							break;
+						case PERCENT_WITH_TIES:
+							appendSql( alias );
+							appendSql( ".rnk <= " );
+							if ( offsetExpression != null ) {
+								offsetExpression.accept( this );
+								appendSql( " + " );
+							}
+							appendSql( "ceil(");
+							appendSql( alias );
+							appendSql( ".cnt * " );
+							fetchExpression.accept( this );
+							appendSql( " / 100 )" );
+							break;
+						case ROWS_WITH_TIES:
+							appendSql( alias );
+							appendSql( ".rnk <= " );
+							fetchExpression.accept( this );
+							break;
+					}
+				}
+				// todo: not sure if databases handle order by row number or the original ordering better..
+				if ( offsetExpression == null ) {
+					switch ( fetchClauseType ) {
+						case PERCENT_ONLY:
+						case ROWS_ONLY:
+							appendSql( " order by " );
+							appendSql( alias );
+							appendSql( ".rn" );
+							break;
+						case PERCENT_WITH_TIES:
+						case ROWS_WITH_TIES:
+							appendSql( " order by " );
+							appendSql( alias );
+							appendSql( ".rnk" );
+							break;
+					}
+				}
+				else {
+					if ( emulateFetchClause ) {
+						appendSql( " and " );
+					}
+					appendSql( alias );
+					appendSql( ".rn > " );
+					offsetExpression.accept( this );
+					appendSql( " order by " );
+					appendSql( alias );
+					appendSql( ".rn" );
+				}
+			}
+			finally {
+				clauseStack.pop();
+			}
+		}
+		finally {
+			this.queryPartForRowNumbering = queryPartForRowNumbering;
+		}
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SELECT clause
@@ -743,16 +1750,136 @@ public abstract class AbstractSqlAstWalker
 			if ( selectClause.isDistinct() ) {
 				appendSql( "distinct " );
 			}
+			visitSqlSelections( selectClause );
+		}
+		finally {
+			clauseStack.pop();
+		}
+	}
 
+	protected void visitSqlSelections(SelectClause selectClause) {
+		final List<SqlSelection> sqlSelections = selectClause.getSqlSelections();
+		final int size = sqlSelections.size();
+		if ( queryPartForRowNumbering == null ) {
 			String separator = NO_SEPARATOR;
-			for ( SqlSelection sqlSelection : selectClause.getSqlSelections() ) {
+			for ( int i = 0; i < size; i++ ) {
+				final SqlSelection sqlSelection = sqlSelections.get( i );
 				appendSql( separator );
 				sqlSelection.accept( this );
 				separator = COMA_SEPARATOR;
 			}
 		}
+		else {
+			for ( int i = 0; i < size; i++ ) {
+				final SqlSelection sqlSelection = sqlSelections.get( i );
+				sqlSelection.accept( this );
+				appendSql( " c" );
+				appendSql( Integer.toString( i ) );
+				appendSql( COMA_SEPARATOR );
+			}
+
+			switch ( getFetchClauseTypeForRowNumbering( queryPartForRowNumbering ) ) {
+				case PERCENT_ONLY:
+					appendSql( "count(*) over () cnt," );
+				case ROWS_ONLY:
+					renderRowNumber( selectClause, queryPartForRowNumbering );
+					appendSql( " rn " );
+					break;
+				case PERCENT_WITH_TIES:
+					appendSql( "count(*) over () cnt," );
+				case ROWS_WITH_TIES:
+					if ( queryPartForRowNumbering.getOffsetClauseExpression() != null ) {
+						renderRowNumber( selectClause, queryPartForRowNumbering );
+						appendSql( " rn, " );
+					}
+					if ( selectClause.isDistinct() ) {
+						appendSql( "dense_rank()" );
+					}
+					else {
+						appendSql( "rank()" );
+					}
+					visitOverClause(
+							Collections.emptyList(),
+							getSortSpecificationsRowNumbering( selectClause, queryPartForRowNumbering )
+					);
+					appendSql( " rnk" );
+					break;
+			}
+		}
+	}
+
+	protected FetchClauseType getFetchClauseTypeForRowNumbering(QueryPart queryPartForRowNumbering) {
+		return queryPartForRowNumbering.getFetchClauseType();
+	}
+
+	protected void visitOverClause(
+			List<Expression> partitionExpressions,
+			List<SortSpecification> sortSpecifications) {
+		try {
+			clauseStack.push( Clause.OVER );
+			appendSql( " over (" );
+			visitPartitionByClause( partitionExpressions );
+			renderOrderBy( !partitionExpressions.isEmpty(), sortSpecifications );
+			appendSql( ')' );
+		}
 		finally {
 			clauseStack.pop();
+		}
+	}
+
+	protected void renderRowNumber(SelectClause selectClause, QueryPart queryPart) {
+		if ( selectClause.isDistinct() ) {
+			appendSql( "dense_rank()" );
+		}
+		else {
+			appendSql( "row_number()" );
+		}
+		visitOverClause( Collections.emptyList(), getSortSpecificationsRowNumbering( selectClause, queryPart ) );
+	}
+
+	protected List<SortSpecification> getSortSpecificationsRowNumbering(
+			SelectClause selectClause,
+			QueryPart queryPart) {
+		final List<SortSpecification> sortSpecifications = queryPart.getSortSpecifications();
+		if ( selectClause.isDistinct() ) {
+			// When select distinct is used, we need to add all select items to the order by clause
+			final List<SqlSelection> sqlSelections = new ArrayList<>( selectClause.getSqlSelections() );
+			final int specificationsSize = sortSpecifications.size();
+			for ( int i = sqlSelections.size() - 1; i != 0; i-- ) {
+				final Expression selectionExpression = sqlSelections.get( i ).getExpression();
+				for ( int j = 0; j < specificationsSize; j++ ) {
+					final Expression expression = resolveAliasedExpression(
+							sqlSelections,
+							sortSpecifications.get( j ).getSortExpression()
+					);
+					if ( expression.equals( selectionExpression ) ) {
+						sqlSelections.remove( i );
+						break;
+					}
+				}
+			}
+			final int sqlSelectionsSize = sqlSelections.size();
+			if ( sqlSelectionsSize == 0 ) {
+				return sortSpecifications;
+			}
+			else {
+				final List<SortSpecification> sortSpecificationsRowNumbering = new ArrayList<>( sqlSelectionsSize + specificationsSize );
+				sortSpecificationsRowNumbering.addAll( sortSpecifications );
+				for ( int i = 0; i < sqlSelectionsSize; i++ ) {
+					sortSpecifications.add(
+							new SortSpecification(
+									new SqlSelectionExpression( sqlSelections.get( i ) ),
+									null,
+									SortOrder.ASCENDING,
+									NullPrecedence.NONE
+							)
+					);
+				}
+				return sortSpecificationsRowNumbering;
+			}
+		}
+		else {
+			return sortSpecifications;
 		}
 	}
 
@@ -955,7 +2082,17 @@ public abstract class AbstractSqlAstWalker
 
 	@Override
 	public void visitColumnReference(ColumnReference columnReference) {
-		appendSql( columnReference.getExpressionText() );
+		if ( dmlTargetTableAlias != null && dmlTargetTableAlias.equals( columnReference.getQualifier() ) ) {
+			// todo (6.0) : use the Dialect to determine how to handle column references
+			//		- specifically should they use the table-alias, the table-expression
+			//			or neither for its qualifier
+
+			// for now, use the unqualified form
+			appendSql( columnReference.getColumnExpression() );
+		}
+		else {
+			appendSql( columnReference.getExpressionText() );
+		}
 	}
 
 	@Override
@@ -1042,7 +2179,8 @@ public abstract class AbstractSqlAstWalker
 	@Override
 	public void visitCollate(Collate collate) {
 		collate.getExpression().accept( this );
-		dialect.appendCollate( this, collate.getCollation() );
+		appendSql( " collate " );
+		appendSql( collate.getCollation() );
 	}
 
 	@Override
@@ -1437,17 +2575,41 @@ public abstract class AbstractSqlAstWalker
 			if ( literalFormatter == null ) {
 				parameterBinders.add( literal );
 
+				final LiteralAsParameter<Object> jdbcParameter = new LiteralAsParameter<>( literal );
 				if ( clauseStack.getCurrent() == Clause.SELECT && dialect.requiresCastingOfParametersInSelectClause() ) {
-					castFunction().render( this, Collections.singletonList( new LiteralAsParameter<>( literal ) ), this );
+					castFunction().render( this, Collections.singletonList( jdbcParameter ), this );
 				}
 				else {
-					parameterBinders.add( literal );
+					appendSql( PARAM_MARKER );
 				}
 			}
 			else {
 				appendSql(
 						literalFormatter.toJdbcLiteral(
 								literal.getLiteralValue(),
+								dialect,
+								getWrapperOptions()
+						)
+				);
+			}
+		}
+	}
+
+	protected void renderAsLiteral(JdbcParameter jdbcParameter, Object literalValue) {
+		if ( literalValue == null ) {
+			appendSql( SqlAppender.NULL_KEYWORD );
+		}
+		else {
+			assert jdbcParameter.getExpressionType().getJdbcTypeCount() == 1;
+			final JdbcMapping jdbcMapping = jdbcParameter.getExpressionType().getJdbcMappings().get( 0 );
+			final JdbcLiteralFormatter literalFormatter = jdbcMapping.getSqlTypeDescriptor().getJdbcLiteralFormatter( jdbcMapping.getJavaTypeDescriptor() );
+			if ( literalFormatter == null ) {
+				throw new IllegalArgumentException( "Can't render parameter as literal, no literal formatter found" );
+			}
+			else {
+				appendSql(
+						literalFormatter.toJdbcLiteral(
+								literalValue,
 								dialect,
 								getWrapperOptions()
 						)
@@ -1632,7 +2794,7 @@ public abstract class AbstractSqlAstWalker
 					appendSql( " not" );
 				}
 				appendSql( " in " );
-				visitQuerySpec( inSubQueryPredicate.getSubQuery() );
+				inSubQueryPredicate.getSubQuery().accept( this );
 			}
 			else if ( !dialect.supportsRowValueConstructorSyntaxInInSubquery() ) {
 				emulateTupleSubQueryPredicate(
@@ -1649,7 +2811,7 @@ public abstract class AbstractSqlAstWalker
 					appendSql( " not" );
 				}
 				appendSql( " in " );
-				visitQuerySpec( inSubQueryPredicate.getSubQuery() );
+				inSubQueryPredicate.getSubQuery().accept( this );
 			}
 		}
 		else {
@@ -1658,24 +2820,28 @@ public abstract class AbstractSqlAstWalker
 				appendSql( " not" );
 			}
 			appendSql( " in " );
-			visitQuerySpec( inSubQueryPredicate.getSubQuery() );
+			inSubQueryPredicate.getSubQuery().accept( this );
 		}
 	}
 
 	protected void emulateTupleSubQueryPredicate(
 			Predicate predicate,
 			boolean negated,
-			QuerySpec subQuery,
+			QueryPart queryPart,
 			SqlTuple lhsTuple,
 			ComparisonOperator tupleComparisonOperator) {
-		if ( subQuery.getLimitClauseExpression() == null && subQuery.getOffsetClauseExpression() == null ) {
+		final QuerySpec subQuery;
+		if ( queryPart instanceof QuerySpec && queryPart.getFetchClauseExpression() == null && queryPart.getOffsetClauseExpression() == null ) {
+			subQuery = (QuerySpec) queryPart;
 			// We can only emulate the tuple sub query predicate as exists predicate when there are no limit/offsets
 			if ( negated ) {
 				appendSql( "not " );
 			}
 
+			final QueryPart queryPartForRowNumbering = this.queryPartForRowNumbering;
 			try {
-				querySpecStack.push( subQuery );
+				this.queryPartForRowNumbering = null;
+				queryPartStack.push( subQuery );
 				appendSql( "exists (select 1" );
 				visitFromClause( subQuery.getFromClause() );
 
@@ -1729,12 +2895,13 @@ public abstract class AbstractSqlAstWalker
 				appendSql( ")" );
 			}
 			finally {
-				querySpecStack.pop();
+				queryPartStack.pop();
+				this.queryPartForRowNumbering = queryPartForRowNumbering;
 			}
 		}
 		else {
 			// TODO: We could use nested queries and use row numbers to emulate this
-			throw new IllegalArgumentException( "Can't emulate in predicate with tuples and limit/offset: " + predicate );
+			throw new IllegalArgumentException( "Can't emulate in predicate with tuples and limit/offset or set operations: " + predicate );
 		}
 	}
 
@@ -1744,18 +2911,22 @@ public abstract class AbstractSqlAstWalker
 	 */
 	protected void emulateQuantifiedTupleSubQueryPredicate(
 			Predicate predicate,
-			QuerySpec subQuery,
+			QueryPart queryPart,
 			SqlTuple lhsTuple,
 			ComparisonOperator tupleComparisonOperator) {
-		if ( subQuery.getLimitClauseExpression() == null && subQuery.getOffsetClauseExpression() == null ) {
+		final QuerySpec subQuery;
+		if ( queryPart instanceof QuerySpec && queryPart.getFetchClauseExpression() == null && queryPart.getOffsetClauseExpression() == null ) {
+			subQuery = (QuerySpec) queryPart;
 			// We can only emulate the tuple sub query predicate as exists predicate when there are no limit/offsets
 			lhsTuple.accept( this );
 			appendSql( " " );
 			appendSql( tupleComparisonOperator.sqlText() );
 			appendSql( " " );
 
+			final QueryPart queryPartForRowNumbering = this.queryPartForRowNumbering;
 			try {
-				querySpecStack.push( subQuery );
+				this.queryPartForRowNumbering = null;
+				queryPartStack.push( subQuery );
 				appendSql( "(" );
 				visitSelectClause( subQuery.getSelectClause() );
 				visitFromClause( subQuery.getFromClause() );
@@ -1780,16 +2951,17 @@ public abstract class AbstractSqlAstWalker
 					appendSql( Integer.toString( i + 1 ) );
 					appendSql( order );
 				}
-				renderLimit( ONE_LITERAL );
+				renderFetch( ONE_LITERAL, null, FetchClauseType.ROWS_ONLY );
 				appendSql( ")" );
 			}
 			finally {
-				querySpecStack.pop();
+				queryPartStack.pop();
+				this.queryPartForRowNumbering = queryPartForRowNumbering;
 			}
 		}
 		else {
 			// TODO: We could use nested queries and use row numbers to emulate this
-			throw new IllegalArgumentException( "Can't emulate in predicate with tuples and limit/offset: " + predicate );
+			throw new IllegalArgumentException( "Can't emulate in predicate with tuples and limit/offset or set operations: " + predicate );
 		}
 	}
 
@@ -1889,11 +3061,11 @@ public abstract class AbstractSqlAstWalker
 		if ( ( lhsTuple = getTuple( comparisonPredicate.getLeftHandExpression() ) ) != null ) {
 			final Expression rhsExpression = comparisonPredicate.getRightHandExpression();
 			final boolean all;
-			final QuerySpec subquery;
+			final QueryPart subquery;
 
 			// Handle emulation of quantified comparison
-			if ( rhsExpression instanceof QuerySpec ) {
-				subquery = (QuerySpec) rhsExpression;
+			if ( rhsExpression instanceof QueryPart ) {
+				subquery = (QueryPart) rhsExpression;
 				all = true;
 			}
 			else if ( rhsExpression instanceof Every ) {
@@ -1976,8 +3148,8 @@ public abstract class AbstractSqlAstWalker
 		else if ( ( rhsTuple = getTuple( comparisonPredicate.getRightHandExpression() ) ) != null ) {
 			final Expression lhsExpression = comparisonPredicate.getLeftHandExpression();
 
-			if ( lhsExpression instanceof QuerySpec ) {
-				final QuerySpec subquery = (QuerySpec) lhsExpression;
+			if ( lhsExpression instanceof QueryGroup ) {
+				final QueryGroup subquery = (QueryGroup) lhsExpression;
 
 				if ( rhsTuple.getExpressions().size() == 1 ) {
 					// Special case for tuples with arity 1 as any DBMS supports scalar IN predicates

@@ -38,7 +38,7 @@ public class InsertUpdateTests {
 		);
 	}
 
-	@Test @FailureExpected(reason = "update broken for secondary tables")
+	@Test
 	public void testUpdateSecondaryTable(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

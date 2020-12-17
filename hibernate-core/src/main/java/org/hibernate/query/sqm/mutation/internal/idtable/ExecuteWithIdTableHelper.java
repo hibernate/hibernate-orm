@@ -19,8 +19,8 @@ import org.hibernate.engine.transaction.spi.IsolationDelegate;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.SqlOmittingQueryOptions;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
-import org.hibernate.sql.ast.SqlAstInsertTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
@@ -61,10 +61,8 @@ public final class ExecuteWithIdTableHelper {
 		assert mutatingTableGroup.getModelPart() instanceof EntityMappingType;
 		final EntityMappingType mutatingEntityDescriptor = (EntityMappingType) mutatingTableGroup.getModelPart();
 
-		final InsertStatement idTableInsert = new InsertStatement();
-
 		final TableReference idTableReference = new TableReference( idTable.getTableExpression(), null, false, factory );
-		idTableInsert.setTargetTable( idTableReference );
+		final InsertStatement idTableInsert = new InsertStatement( idTableReference );
 
 		for ( int i = 0; i < idTable.getIdTableColumns().size(); i++ ) {
 			final IdTableColumn column = idTable.getIdTableColumns().get( i );
@@ -126,9 +124,8 @@ public final class ExecuteWithIdTableHelper {
 		final JdbcServices jdbcServices = factory.getJdbcServices();
 		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
-		final SqlAstInsertTranslator sqlAstTranslator = sqlAstTranslatorFactory.buildInsertTranslator( factory );
-		final JdbcInsert jdbcInsert = sqlAstTranslator.translate( idTableInsert );
-		jdbcInsert.bindFilterJdbcParameters( jdbcParameterBindings );
+		final JdbcInsert jdbcInsert = sqlAstTranslatorFactory.buildInsertTranslator( factory, idTableInsert )
+				.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
 
 		return jdbcServices.getJdbcMutationExecutor().execute(
 				jdbcInsert,
@@ -138,7 +135,7 @@ public final class ExecuteWithIdTableHelper {
 						.getStatementPreparer()
 						.prepareStatement( sql ),
 				(integer, preparedStatement) -> {},
-				executionContext
+				SqlOmittingQueryOptions.omitSqlQueryOptions( executionContext )
 		);
 	}
 

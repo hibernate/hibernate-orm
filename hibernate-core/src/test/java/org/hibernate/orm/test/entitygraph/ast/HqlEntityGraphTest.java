@@ -33,8 +33,8 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.hql.spi.HqlQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sqm.internal.QuerySqmImpl;
-import org.hibernate.query.sqm.sql.SqmSelectTranslation;
-import org.hibernate.query.sqm.sql.internal.StandardSqmSelectTranslator;
+import org.hibernate.query.sqm.sql.SqmTranslation;
+import org.hibernate.query.sqm.sql.internal.StandardSqmTranslator;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.sql.ast.tree.from.CompositeTableGroup;
 import org.hibernate.sql.ast.tree.from.FromClause;
@@ -367,7 +367,8 @@ public class HqlEntityGraphTest implements SessionFactoryScopeAware {
 
 		final SqmSelectStatement sqmStatement = (SqmSelectStatement) hqlQuery.getSqmStatement();
 
-		final StandardSqmSelectTranslator sqmConverter = new StandardSqmSelectTranslator(
+		final StandardSqmTranslator<SelectStatement> sqmConverter = new StandardSqmTranslator<>(
+				sqmStatement,
 				hqlQuery.getQueryOptions(),
 				( (QuerySqmImpl) hqlQuery ).getDomainParameterXref(),
 				query.getParameterBindings(),
@@ -375,7 +376,7 @@ public class HqlEntityGraphTest implements SessionFactoryScopeAware {
 				session.getSessionFactory()
 		);
 
-		final SqmSelectTranslation sqmInterpretation = sqmConverter.translate( sqmStatement );
+		final SqmTranslation<SelectStatement> sqmInterpretation = sqmConverter.translate();
 		return sqmInterpretation.getSqlAst();
 	}
 

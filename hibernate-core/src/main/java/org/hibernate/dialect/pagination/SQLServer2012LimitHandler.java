@@ -52,7 +52,8 @@ public class SQLServer2012LimitHandler extends OffsetFetchLimitHandler {
 				//if we can find the end of the select
 				//clause, we will add a dummy column to
 				//it below, so order by that column
-				offsetFetch.append("zero_");
+				// Always need an order by clause: https://blog.jooq.org/2014/05/13/sql-server-trick-circumvent-missing-order-by-clause/
+				offsetFetch.append("@@version");
 			}
 			else {
 				//otherwise order by the first column
@@ -65,23 +66,5 @@ public class SQLServer2012LimitHandler extends OffsetFetchLimitHandler {
 			//the superclass doesn't add it
 			offsetFetch.append(" offset 0 rows");
 		}
-	}
-
-	@Override
-	String insert(String offsetFetch, String sql) {
-		String result = super.insert( offsetFetch, sql );
-		if ( Keyword.ORDER_BY.rootOffset( sql ) <= 0 ) {
-			int from = Keyword.FROM.rootOffset( sql );
-			if ( from > 0 ) {
-				//insert the dummy column at the end of
-				//the select list (don't add it at the
-				//start, 'cos that would mess up reading
-				//results by index)
-				return new StringBuilder( result )
-						.insert( from, ", 0 as zero_ " )
-						.toString();
-			}
-		}
-		return result;
 	}
 }

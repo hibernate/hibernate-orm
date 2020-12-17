@@ -172,6 +172,29 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
+		final SqlSelection sqlSelection = resolveSqlSelection( navigablePath, tableGroup, creationState );
+
+		//noinspection unchecked
+		return new BasicResult(
+				sqlSelection.getValuesArrayPosition(),
+				resultVariable,
+				entityPersister.getIdentifierMapping().getMappedType().getMappedJavaTypeDescriptor(),
+				navigablePath
+		);
+	}
+
+	@Override
+	public void applySqlSelections(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			DomainResultCreationState creationState) {
+		resolveSqlSelection( navigablePath, tableGroup, creationState );
+	}
+
+	private SqlSelection resolveSqlSelection(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			DomainResultCreationState creationState) {
 		final SqlExpressionResolver expressionResolver = creationState.getSqlAstCreationState()
 				.getSqlExpressionResolver();
 		final TableReference rootTableReference;
@@ -194,7 +217,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 		final Expression expression = expressionResolver.resolveSqlExpression(
 				SqlExpressionResolver.createColumnReferenceKey( rootTableReference, pkColumnName ),
 				sqlAstProcessingState -> new ColumnReference(
-						rootTableReference.getIdentificationVariable(),
+						rootTableReference,
 						pkColumnName,
 						false,
 						null,
@@ -204,45 +227,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 				)
 		);
 
-		final SqlSelection sqlSelection = expressionResolver.resolveSqlSelection(
-				expression,
-				idType.getExpressableJavaTypeDescriptor(),
-				sessionFactory.getTypeConfiguration()
-		);
-
-		//noinspection unchecked
-		return new BasicResult(
-				sqlSelection.getValuesArrayPosition(),
-				resultVariable,
-				entityPersister.getIdentifierMapping().getMappedType().getMappedJavaTypeDescriptor(),
-				navigablePath
-		);
-	}
-
-	@Override
-	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState) {
-		final SqlExpressionResolver expressionResolver = creationState.getSqlAstCreationState()
-				.getSqlExpressionResolver();
-		final TableReference rootTableReference = tableGroup.resolveTableReference( rootTable );
-
-		final Expression expression = expressionResolver.resolveSqlExpression(
-				SqlExpressionResolver.createColumnReferenceKey( rootTableReference, pkColumnName ),
-				sqlAstProcessingState -> new ColumnReference(
-						rootTable,
-						pkColumnName,
-						false,
-						null,
-						null,
-						( (BasicValuedModelPart) entityPersister.getIdentifierType() ).getJdbcMapping(),
-						sessionFactory
-				)
-		);
-
-		// the act of resolving the expression -> selection applies it
-		expressionResolver.resolveSqlSelection(
+		return expressionResolver.resolveSqlSelection(
 				expression,
 				idType.getExpressableJavaTypeDescriptor(),
 				sessionFactory.getTypeConfiguration()

@@ -7,44 +7,55 @@
 package org.hibernate.query.sqm.sql;
 
 import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
+import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
+import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
+import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.tree.delete.DeleteStatement;
+import org.hibernate.sql.ast.tree.insert.InsertStatement;
+import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.ast.tree.update.UpdateStatement;
 
 /**
  * Factory for various
  * @author Steve Ebersole
  */
 public interface SqmTranslatorFactory {
-	SqmSelectTranslator createSelectTranslator(
-			QueryOptions queryOptions,
-			DomainParameterXref domainParameterXref,
-			QueryParameterBindings domainParameterBindings,
-			LoadQueryInfluencers influencers,
-			SqlAstCreationContext creationContext);
-
-	SimpleSqmDeleteTranslator createSimpleDeleteTranslator(
+	SqmTranslator<SelectStatement> createSelectTranslator(
+			SqmSelectStatement<?> sqmSelectStatement,
 			QueryOptions queryOptions,
 			DomainParameterXref domainParameterXref,
 			QueryParameterBindings domainParameterBindings,
 			LoadQueryInfluencers loadQueryInfluencers,
 			SqlAstCreationContext creationContext);
 
-	SqmInsertTranslator createInsertTranslator(
+	SqmTranslator<DeleteStatement> createSimpleDeleteTranslator(
+			SqmDeleteStatement<?> sqmDeleteStatement,
 			QueryOptions queryOptions,
 			DomainParameterXref domainParameterXref,
 			QueryParameterBindings domainParameterBindings,
-			LoadQueryInfluencers influencers,
+			LoadQueryInfluencers loadQueryInfluencers,
 			SqlAstCreationContext creationContext);
 
-	SimpleSqmUpdateTranslator createSimpleUpdateTranslator(
+	SqmTranslator<InsertStatement> createInsertTranslator(
+			SqmInsertStatement<?> sqmInsertStatement,
+			QueryOptions queryOptions,
+			DomainParameterXref domainParameterXref,
+			QueryParameterBindings domainParameterBindings,
+			LoadQueryInfluencers loadQueryInfluencers,
+			SqlAstCreationContext creationContext);
+
+	SqmTranslator<UpdateStatement> createSimpleUpdateTranslator(
+			SqmUpdateStatement<?> sqmUpdateStatement,
 			QueryOptions queryOptions,
 			DomainParameterXref domainParameterXref,
 			QueryParameterBindings queryParameterBindings,
 			LoadQueryInfluencers loadQueryInfluencers,
-			SessionFactoryImplementor factory);
+			SqlAstCreationContext creationContext);
 
 
 	// todo (6.0) : update, delete, etc converters...

@@ -32,7 +32,4 @@ public interface JpaJoin<O, T> extends JpaJoinedFrom<O, T>, Join<O, T> {
 
 	@Override
 	JpaJoin<O, T> on(Predicate... restrictions);
-
-	@Override
-	JpaFrom<O, T> correlateTo(JpaSubQuery<T> subquery);
 }

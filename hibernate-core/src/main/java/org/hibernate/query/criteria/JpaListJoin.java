@@ -29,8 +29,5 @@ public interface JpaListJoin<O, T> extends JpaJoin<O, T>, ListJoin<O, T> {
 	JpaListJoin<O, T> on(Predicate... restrictions);
 
 	@Override
-	JpaListJoin<O, T> correlateTo(JpaSubQuery<T> subquery);
-
-	@Override
 	<S extends T> JpaListJoin<O, S> treatAs(Class<S> treatAsType);
 }

@@ -16,14 +16,16 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryParameterImplementor;
-import org.hibernate.query.sqm.sql.SimpleSqmUpdateTranslation;
-import org.hibernate.query.sqm.sql.SimpleSqmUpdateTranslator;
+import org.hibernate.query.spi.SqlOmittingQueryOptions;
+import org.hibernate.query.sqm.sql.SqmTranslation;
+import org.hibernate.query.sqm.sql.SqmTranslator;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
+import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.SqlAstUpdateTranslator;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
+import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -52,36 +54,10 @@ public class SimpleUpdateQueryPlan implements NonSelectQueryPlan {
 		final SharedSessionContractImplementor session = executionContext.getSession();
 		final SessionFactoryImplementor factory = session.getFactory();
 		final JdbcServices jdbcServices = factory.getJdbcServices();
-
+		SqlAstTranslator<JdbcUpdate> updateTranslator = null;
 		if ( jdbcUpdate == null ) {
-			final QueryEngine queryEngine = factory.getQueryEngine();
-
-			final SqmTranslatorFactory translatorFactory = queryEngine.getSqmTranslatorFactory();
-			final SimpleSqmUpdateTranslator translator = translatorFactory.createSimpleUpdateTranslator(
-					executionContext.getQueryOptions(),
-					domainParameterXref,
-					executionContext.getQueryParameterBindings(),
-					executionContext.getLoadQueryInfluencers(),
-					factory
-			);
-
-			final SimpleSqmUpdateTranslation sqmInterpretation = translator.translate( sqmUpdate );
-
-			tableGroupAccess = translator.getFromClauseAccess();
-
-			this.jdbcParamsXref = SqmUtil.generateJdbcParamsXref(
-					domainParameterXref,
-					sqmInterpretation::getJdbcParamsBySqmParam
-			);
-
-			final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
-			final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
-
-			final SqlAstUpdateTranslator sqlAstTranslator = sqlAstTranslatorFactory.buildUpdateTranslator( factory );
-
-			jdbcUpdate = sqlAstTranslator.translate( sqmInterpretation.getSqlAst() );
+			updateTranslator = createUpdateTranslator( executionContext );
 		}
-
 
 		final JdbcParameterBindings jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
 				executionContext.getQueryParameterBindings(),
@@ -91,7 +67,20 @@ public class SimpleUpdateQueryPlan implements NonSelectQueryPlan {
 				tableGroupAccess::findTableGroup,
 				session
 		);
-		jdbcUpdate.bindFilterJdbcParameters( jdbcParameterBindings );
+
+		if ( jdbcUpdate != null && !jdbcUpdate.isCompatibleWith(
+				jdbcParameterBindings,
+				executionContext.getQueryOptions()
+		) ) {
+			updateTranslator = createUpdateTranslator( executionContext );
+		}
+
+		if ( updateTranslator != null ) {
+			jdbcUpdate = updateTranslator.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
+		}
+		else {
+			jdbcUpdate.bindFilterJdbcParameters( jdbcParameterBindings );
+		}
 
 		return jdbcServices.getJdbcMutationExecutor().execute(
 				jdbcUpdate,
@@ -101,7 +90,34 @@ public class SimpleUpdateQueryPlan implements NonSelectQueryPlan {
 						.getStatementPreparer()
 						.prepareStatement( sql ),
 				(integer, preparedStatement) -> {},
-				executionContext
+				SqlOmittingQueryOptions.omitSqlQueryOptions( executionContext )
 		);
+	}
+
+	private SqlAstTranslator<JdbcUpdate> createUpdateTranslator(ExecutionContext executionContext) {
+		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
+		final QueryEngine queryEngine = factory.getQueryEngine();
+
+		final SqmTranslatorFactory translatorFactory = queryEngine.getSqmTranslatorFactory();
+		final SqmTranslator<UpdateStatement> translator = translatorFactory.createSimpleUpdateTranslator(
+				sqmUpdate,
+				executionContext.getQueryOptions(),
+				domainParameterXref,
+				executionContext.getQueryParameterBindings(),
+				executionContext.getLoadQueryInfluencers(),
+				factory
+		);
+
+		final SqmTranslation<UpdateStatement> sqmInterpretation = translator.translate();
+
+		tableGroupAccess = sqmInterpretation.getFromClauseAccess();
+
+		this.jdbcParamsXref = SqmUtil.generateJdbcParamsXref(
+				domainParameterXref,
+				sqmInterpretation::getJdbcParamsBySqmParam
+		);
+
+		return factory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
+				.buildUpdateTranslator( factory, sqmInterpretation.getSqlAst() );
 	}
 }

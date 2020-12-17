@@ -22,7 +22,7 @@ import org.hibernate.internal.util.collections.CollectionHelper;
  * @author Steve Ebersole
  */
 public class SqmFromClause {
-	private List<SqmRoot> domainRoots;
+	private List<SqmRoot<?>> domainRoots;
 
 	public SqmFromClause() {
 	}
@@ -35,7 +35,7 @@ public class SqmFromClause {
 	 * Immutable view of the domain roots.  Use {@link #setRoots} or {@link #addRoot} to
 	 * mutate the roots
 	 */
-	public List<SqmRoot> getRoots() {
+	public List<SqmRoot<?>> getRoots() {
 		return domainRoots == null ? Collections.emptyList() : Collections.unmodifiableList( domainRoots );
 	}
 
@@ -43,14 +43,14 @@ public class SqmFromClause {
 	 * Inject the complete set of domain roots
 	 */
 	@SuppressWarnings({"WeakerAccess", "unused"})
-	public void setRoots(List<SqmRoot> domainRoots) {
+	public void setRoots(List<SqmRoot<?>> domainRoots) {
 		this.domainRoots = domainRoots;
 	}
 
 	/**
 	 * Add roots incrementally
 	 */
-	public void addRoot(SqmRoot root) {
+	public void addRoot(SqmRoot<?> root) {
 		if ( domainRoots == null ) {
 			domainRoots = new ArrayList<>();
 		}
@@ -61,7 +61,7 @@ public class SqmFromClause {
 	/**
 	 * Visit the domain roots
 	 */
-	public void visitRoots(Consumer<SqmRoot> consumer) {
+	public void visitRoots(Consumer<SqmRoot<?>> consumer) {
 		if ( domainRoots != null ) {
 			domainRoots.forEach( consumer );
 		}

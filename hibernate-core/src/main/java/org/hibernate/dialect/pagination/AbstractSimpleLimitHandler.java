@@ -7,6 +7,7 @@
 package org.hibernate.dialect.pagination;
 
 import org.hibernate.engine.spi.RowSelection;
+import org.hibernate.query.Limit;
 
 /**
  * Superclass for simple {@link LimitHandler}s that don't
@@ -20,10 +21,18 @@ public abstract class AbstractSimpleLimitHandler extends AbstractLimitHandler {
 
 	@Override
 	public String processSql(String sql, RowSelection selection) {
-		if ( !hasMaxRows( selection) ) {
+		if ( !hasMaxRows( selection ) ) {
 			return sql;
 		}
-		return insert( limitClause( hasFirstRow(selection) ), sql );
+		return insert( limitClause( hasFirstRow( selection ) ), sql );
+	}
+
+	@Override
+	public String processSql(String sql, Limit limit) {
+		if ( !hasMaxRows( limit ) ) {
+			return sql;
+		}
+		return insert( limitClause( hasFirstRow( limit ) ), sql );
 	}
 
 	protected String insert(String limitClause, String sql) {

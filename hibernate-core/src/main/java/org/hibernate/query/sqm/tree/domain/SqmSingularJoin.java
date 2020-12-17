@@ -44,6 +44,17 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implemen
 	}
 
 	@Override
+	public SingularPersistentAttribute<O, T> getModel() {
+		return getReferencedPathSource();
+	}
+
+	@Override
+	public SingularPersistentAttribute<O, T> getAttribute() {
+		//noinspection unchecked
+		return (SingularPersistentAttribute<O, T>) super.getAttribute();
+	}
+
+	@Override
 	public <S extends T> SqmTreatedSingularJoin<O,T,S> treatAs(Class<S> treatJavaType) throws PathException {
 		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
 	}
@@ -52,6 +63,11 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implemen
 	public <S extends T> SqmTreatedSingularJoin<O,T,S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
 		//noinspection unchecked
 		return new SqmTreatedSingularJoin( this, treatTarget, null );
+	}
+
+	@Override
+	public SqmCorrelatedSingularJoin<O, T> createCorrelation() {
+		return new SqmCorrelatedSingularJoin<>( this );
 	}
 
 	@Override

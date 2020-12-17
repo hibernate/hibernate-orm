@@ -6,6 +6,8 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import java.util.function.BiConsumer;
+
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
@@ -169,9 +171,7 @@ public class BasicValuedSingularAttributeMapping
 
 	private SqlSelection resolveSqlSelection(TableGroup tableGroup, DomainResultCreationState creationState) {
 		final SqlExpressionResolver expressionResolver = creationState.getSqlAstCreationState().getSqlExpressionResolver();
-
 		final TableReference tableReference = tableGroup.resolveTableReference( getContainingTableExpression() );
-
 		final String tableAlias = tableReference.getIdentificationVariable();
 		return expressionResolver.resolveSqlSelection(
 				expressionResolver.resolveSqlExpression(
@@ -195,26 +195,16 @@ public class BasicValuedSingularAttributeMapping
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
-		// the act of resolving the selection creates the selection if it not already part of the collected selections
+		resolveSqlSelection( tableGroup, creationState );
+	}
 
-		final SqlExpressionResolver expressionResolver = creationState.getSqlAstCreationState().getSqlExpressionResolver();
-		final TableReference tableReference = tableGroup.resolveTableReference( getContainingTableExpression() );
-
-		expressionResolver.resolveSqlSelection(
-				expressionResolver.resolveSqlExpression(
-						SqlExpressionResolver.createColumnReferenceKey(
-								tableReference,
-								mappedColumnExpression
-						),
-						sqlAstProcessingState -> new ColumnReference(
-								tableReference.getIdentificationVariable(),
-								this,
-								creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
-						)
-				),
-				valueConverter == null ? getMappedType().getMappedJavaTypeDescriptor() : valueConverter.getRelationalJavaDescriptor(),
-				creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
-		);
+	@Override
+	public void applySqlSelections(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			DomainResultCreationState creationState,
+			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+		selectionConsumer.accept( resolveSqlSelection( tableGroup, creationState ), getJdbcMapping() );
 	}
 
 	@Override

@@ -23,7 +23,6 @@ import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SetAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.BagPersistentAttribute;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
@@ -34,7 +33,6 @@ import org.hibernate.metamodel.model.domain.SetPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.criteria.JpaPath;
-import org.hibernate.query.criteria.JpaSubQuery;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -57,7 +55,6 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
 public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements SqmFrom<O,T> {
 	private String alias;
 
-	private SqmFrom<O,T> correlationParent;
 	private List<SqmJoin<T,?>> joins;
 
 	protected AbstractSqmFrom(
@@ -89,6 +86,16 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		);
 
 		this.alias = alias;
+	}
+
+	/**
+	 * Intended for use with {@link SqmCorrelatedRootJoin} through {@link SqmRoot}
+	 */
+	protected AbstractSqmFrom(
+			NavigablePath navigablePath,
+			SqmPathSource<T> referencedNavigable,
+			NodeBuilder nodeBuilder) {
+		super( navigablePath, referencedNavigable, null, nodeBuilder );
 	}
 
 	@Override
@@ -157,17 +164,14 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 
 	@Override
 	public SqmFrom<O,T> getCorrelationParent() {
-		return correlationParent;
+		throw new IllegalStateException( "Not correlated" );
 	}
+
+	public abstract SqmCorrelation<O, T> createCorrelation();
 
 	@Override
 	public boolean isCorrelated() {
 		return false;
-	}
-
-	@Override
-	public SqmFrom<O,T> correlateTo(JpaSubQuery<T> subquery) {
-		throw new NotYetImplementedFor6Exception();
 	}
 
 	@Override

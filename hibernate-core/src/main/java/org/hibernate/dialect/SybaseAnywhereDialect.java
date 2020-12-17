@@ -12,6 +12,12 @@ import org.hibernate.dialect.identity.SybaseAnywhereIdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.descriptor.sql.BitTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
@@ -54,6 +60,17 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 		registerColumnType( Types.BINARY, maxStringLength, "binary($l)" );
 		registerColumnType( Types.VARBINARY, maxStringLength, "varbinary($l)" );
 		registerColumnType( Types.VARBINARY, "long binary)" );
+	}
+
+	@Override
+	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
+		return new StandardSqlAstTranslatorFactory() {
+			@Override
+			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
+					SessionFactoryImplementor sessionFactory, Statement statement) {
+				return new SybaseAnywhereSqlAstTranslator<>( sessionFactory, statement );
+			}
+		};
 	}
 
 	@Override

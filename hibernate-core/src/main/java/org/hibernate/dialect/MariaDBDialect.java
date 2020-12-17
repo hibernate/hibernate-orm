@@ -6,11 +6,16 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.LockOptions;
-import org.hibernate.dialect.sequence.ANSISequenceSupport;
+import org.hibernate.dialect.sequence.MariaDBSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorMariaDBDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.StandardBasicTypes;
@@ -25,30 +30,42 @@ public class MariaDBDialect extends MySQLDialect {
 
 	private final int version;
 
-	int getMariaVersion() {
-		return version;
-	}
-
 	public MariaDBDialect() {
 		this(500);
-	}
-
-	public MariaDBDialect(int version) {
-		super(version < 530 ? 500 : 570);
-		this.version = version;
 	}
 
 	public MariaDBDialect(DialectResolutionInfo info) {
 		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
 	}
 
+	public MariaDBDialect(int version) {
+		super( version < 530 ? 500 : 570 );
+		this.version = version;
+	}
+
+	@Override
+	public int getVersion() {
+		return version;
+	}
+
 	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry(queryEngine);
 
-		if ( getMariaVersion() >= 1020 ) {
+		if ( getVersion() >= 1020 ) {
 			queryEngine.getSqmFunctionRegistry().registerNamed("json_valid", StandardBasicTypes.NUMERIC_BOOLEAN);
 		}
+	}
+
+	@Override
+	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
+		return new StandardSqlAstTranslatorFactory() {
+			@Override
+			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
+					SessionFactoryImplementor sessionFactory, Statement statement) {
+				return new MariaDBSqlAstTranslator<>( sessionFactory, statement );
+			}
+		};
 	}
 
 	public boolean supportsRowValueConstructorSyntaxInInList() {
@@ -57,7 +74,7 @@ public class MariaDBDialect extends MySQLDialect {
 
 	@Override
 	public boolean supportsColumnCheck() {
-		return getMariaVersion() >= 1020;
+		return getVersion() >= 1020;
 	}
 
 	@Override
@@ -67,14 +84,14 @@ public class MariaDBDialect extends MySQLDialect {
 
 	@Override
 	public boolean supportsIfExistsBeforeConstraintName() {
-		return getMariaVersion() >= 1000;
+		return getVersion() >= 1000;
 	}
 
 	@Override
 	public SequenceSupport getSequenceSupport() {
-		return getMariaVersion() < 1030
+		return getVersion() < 1030
 				? super.getSequenceSupport()
-				: ANSISequenceSupport.INSTANCE;
+				: MariaDBSequenceSupport.INSTANCE;
 	}
 
 	@Override

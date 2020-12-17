@@ -7,7 +7,6 @@
 package org.hibernate.loader.ast.internal;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.LockOptions;
@@ -26,7 +25,6 @@ import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
@@ -95,11 +93,7 @@ public class CollectionLoaderSingleKey implements CollectionLoader {
 		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
 
-		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory ).translate( sqlAst );
-
 		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( keyJdbcCount );
-		jdbcSelect.bindFilterJdbcParameters( jdbcParameterBindings );
-
 		int offset = jdbcParameterBindings.registerParametersForEachJdbcValue(
 				key,
 				Clause.WHERE,
@@ -108,6 +102,8 @@ public class CollectionLoaderSingleKey implements CollectionLoader {
 				session
 		);
 		assert offset == jdbcParameters.size();
+		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory, sqlAst )
+				.translate( jdbcParameterBindings, QueryOptions.NONE );
 
 		jdbcServices.getJdbcSelectExecutor().list(
 				jdbcSelect,

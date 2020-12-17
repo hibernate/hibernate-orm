@@ -10,7 +10,8 @@ import java.util.List;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.tree.cte.SqmCteConsumer;
+import org.hibernate.query.sqm.tree.SqmStatement;
+import org.hibernate.query.sqm.tree.cte.SqmCteContainer;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.NonAggregatedCompositeSimplePath;
@@ -85,6 +86,8 @@ import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
+import org.hibernate.query.sqm.tree.select.SqmQueryGroup;
+import org.hibernate.query.sqm.tree.select.SqmQueryPart;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
@@ -95,6 +98,7 @@ import org.hibernate.query.sqm.tree.update.SqmAssignment;
 import org.hibernate.query.sqm.tree.update.SqmSetClause;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.sql.ast.tree.Statement;
 
 /**
  * Base support for an SQM walker
@@ -112,9 +116,13 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 		return serviceRegistry;
 	}
 
+	public Object visitStatement(SqmStatement<?> sqmStatement) {
+		return sqmStatement.accept( this );
+	}
+
 	@Override
 	public Object visitSelectStatement(SqmSelectStatement<?> statement) {
-		visitQuerySpec( statement.getQuerySpec() );
+		visitQueryPart( statement.getQueryPart() );
 		return statement;
 	}
 
@@ -147,7 +155,7 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 		for ( SqmPath<?> stateField : statement.getInsertionTargetPaths() ) {
 			stateField.accept( this );
 		}
-		visitQuerySpec( statement.getSelectQuerySpec() );
+		statement.getSelectQueryPart().accept( this );
 		return statement;
 	}
 
@@ -171,30 +179,30 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 	}
 
 	@Override
-	public Object visitCteStatement(SqmCteStatement sqmCteStatement) {
-		visitCteConsumer( sqmCteStatement.getCteConsumer() );
+	public Object visitCteStatement(SqmCteStatement<?> sqmCteStatement) {
+		visitStatement( sqmCteStatement.getCteDefinition() );
 		return sqmCteStatement;
 	}
 
 	@Override
-	public Object visitCteConsumer(SqmCteConsumer consumer) {
-		if ( consumer instanceof SqmQuerySpec ) {
-			return visitQuerySpec( ( (SqmQuerySpec) consumer ) );
+	public Object visitCteContainer(SqmCteContainer consumer) {
+		for ( SqmCteStatement<?> cteStatement : consumer.getCteStatements() ) {
+			cteStatement.accept( this );
 		}
 
-		if ( consumer instanceof SqmDeleteStatement ) {
-			return visitDeleteStatement( ( (SqmDeleteStatement) consumer ) );
-		}
+		return consumer;
+	}
 
-		if ( consumer instanceof SqmUpdateStatement ) {
-			visitUpdateStatement( (SqmUpdateStatement) consumer );
-		}
+	public Object visitQueryPart(SqmQueryPart<?> queryPart) {
+		return queryPart.accept( this );
+	}
 
-		if ( consumer instanceof SqmInsertSelectStatement ) {
-			visitInsertSelectStatement( (SqmInsertSelectStatement) consumer );
+	@Override
+	public Object visitQueryGroup(SqmQueryGroup<?> queryGroup) {
+		for ( SqmQueryPart<?> queryPart : queryGroup.getQueryParts() ) {
+			visitQueryPart( queryPart );
 		}
-
-		throw new UnsupportedOperationException( "Unsupported SqmCteConsumer : " + consumer );
+		return queryGroup;
 	}
 
 	@Override
@@ -204,7 +212,7 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 		visitWhereClause( querySpec.getWhereClause() );
 		visitOrderByClause( querySpec.getOrderByClause() );
 		visitOffsetExpression( querySpec.getOffsetExpression() );
-		visitLimitExpression( querySpec.getLimitExpression() );
+		visitFetchExpression( querySpec.getFetchExpression() );
 		return querySpec;
 	}
 
@@ -469,7 +477,7 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 	}
 
 	@Override
-	public Object visitLimitExpression(SqmExpression<?> expression) {
+	public Object visitFetchExpression(SqmExpression<?> expression) {
 		if ( expression == null ) {
 			return null;
 		}

@@ -110,6 +110,22 @@ public class ColumnReference implements Expression, Assignable {
 
 	public ColumnReference(
 			TableReference tableReference,
+			String mapping,
+			JdbcMapping jdbcMapping,
+			SessionFactoryImplementor sessionFactory) {
+		this(
+				tableReference.getIdentificationVariable(),
+				mapping,
+				false,
+				null,
+				null,
+				jdbcMapping,
+				sessionFactory
+		);
+	}
+
+	public ColumnReference(
+			TableReference tableReference,
 			String columnExpression,
 			boolean isFormula,
 			String customReadExpression,

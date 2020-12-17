@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.internal;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -16,15 +17,22 @@ import javax.persistence.Parameter;
 import javax.persistence.PersistenceException;
 import javax.persistence.Tuple;
 
+import org.hibernate.AssertionFailure;
+import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.ScrollMode;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.query.spi.EntityGraphQueryHint;
+import org.hibernate.engine.spi.QueryParameters;
+import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryTypeMismatchException;
@@ -47,6 +55,7 @@ import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
+import org.hibernate.query.spi.SqlOmittingQueryOptions;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.tree.SqmDmlStatement;
@@ -78,6 +87,7 @@ public class QuerySqmImpl<R>
 	 * The value used for {@link #getQueryString} for Criteria-based queries
 	 */
 	public static final String CRITERIA_HQL_STRING = "<criteria>";
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( QuerySqmImpl.class );
 
 	private final String hqlString;
 	private final SqmStatement sqmStatement;
@@ -194,7 +204,7 @@ public class QuerySqmImpl<R>
 			final List<SqmSelection> sqmSelections = sqmQuerySpec.getSelectClause().getSelections();
 
 			// make sure there is at least one root
-			final List<SqmRoot> sqmRoots = sqmQuerySpec.getFromClause().getRoots();
+			final List<SqmRoot<?>> sqmRoots = sqmQuerySpec.getFromClause().getRoots();
 			if ( sqmRoots == null || sqmRoots.isEmpty() ) {
 				throw new IllegalArgumentException( "Criteria did not define any query roots" );
 			}
@@ -202,7 +212,7 @@ public class QuerySqmImpl<R>
 			if ( sqmSelections == null || sqmSelections.isEmpty() ) {
 				// if there is a single root, use that as the selection
 				if ( sqmRoots.size() == 1 ) {
-					final SqmRoot sqmRoot = sqmRoots.get( 0 );
+					final SqmRoot<?> sqmRoot = sqmRoots.get( 0 );
 					sqmQuerySpec.getSelectClause().add( sqmRoot, null );
 				}
 				else {
@@ -454,8 +464,63 @@ public class QuerySqmImpl<R>
 	protected List<R> doList() {
 		SqmUtil.verifyIsSelectStatement( getSqmStatement() );
 		getSession().prepareForQueryExecution( requiresTxn( getLockOptions().findGreatestLockMode() ) );
+		final SqmSelectStatement<?> selectStatement = (SqmSelectStatement<?>) getSqmStatement();
+		final boolean containsCollectionFetches = selectStatement.getQuerySpec().containsCollectionFetches();
+		final boolean hasLimit = queryOptions.hasLimit();
+		final boolean needsDistincting = (
+				selectStatement.getQuerySpec().getSelectClause().isDistinct() ||
+						queryOptions.getGraph() != null ||
+						hasLimit )
+				&& containsCollectionFetches;
+		ExecutionContext executionContextToUse;
+		if ( queryOptions.hasLimit() && containsCollectionFetches ) {
+			boolean fail = getSessionFactory().getSessionFactoryOptions().isFailOnPaginationOverCollectionFetchEnabled();
+			if (fail) {
+				throw new HibernateException(
+						"firstResult/maxResults specified with collection fetch. " +
+								"In memory pagination was about to be applied. " +
+								"Failing because 'Fail on pagination over collection fetch' is enabled."
+				);
+			}
+			else {
+				LOG.firstOrMaxResultsSpecifiedWithCollectionFetch();
+			}
+			executionContextToUse = SqlOmittingQueryOptions.omitSqlQueryOptions( this, true, false );
+		}
+		else {
+			executionContextToUse = this;
+		}
 
-		return resolveSelectQueryPlan().performList( this );
+		final List<R> list = resolveSelectQueryPlan().performList( executionContextToUse );
+
+		if ( needsDistincting ) {
+			int includedCount = -1;
+			// NOTE : firstRow is zero-based
+			final int first = !hasLimit || queryOptions.getLimit().getFirstRow() == null
+					? 0
+					: queryOptions.getLimit().getFirstRow();
+			final int max = !hasLimit || queryOptions.getLimit().getMaxRows() == null
+					? -1
+					: queryOptions.getLimit().getMaxRows();
+			final List<R> tmp = new ArrayList<>( list.size() );
+			final IdentitySet<R> distinction = new IdentitySet<>( list.size() );
+			for ( final R result : list ) {
+				if ( !distinction.add( result ) ) {
+					continue;
+				}
+				includedCount++;
+				if ( includedCount < first ) {
+					continue;
+				}
+				tmp.add( result );
+				// NOTE : ( max - 1 ) because first is zero-based while max is not...
+				if ( max >= 0 && ( includedCount - first ) >= ( max - 1 ) ) {
+					break;
+				}
+			}
+			return tmp;
+		}
+		return list;
 	}
 
 	private boolean requiresTxn(LockMode lockMode) {

@@ -7,6 +7,7 @@
 package org.hibernate.dialect;
 
 import org.hibernate.LockOptions;
+import org.hibernate.NullOrdering;
 import org.hibernate.NullPrecedence;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
@@ -22,6 +23,7 @@ import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.unique.MySQLUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
@@ -39,6 +41,11 @@ import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
 import org.hibernate.query.sqm.mutation.internal.idtable.LocalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.internal.idtable.TempIdTableExporter;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.StandardBasicTypes;
 
 import java.sql.CallableStatement;
@@ -59,15 +66,15 @@ import static org.hibernate.query.CastType.BOOLEAN;
 public class MySQLDialect extends Dialect {
 
 	private final UniqueDelegate uniqueDelegate;
-	private MySQLStorageEngine storageEngine;
-	private int version;
+	private final MySQLStorageEngine storageEngine;
+	private final int version;
 
 	public MySQLDialect(DialectResolutionInfo info) {
 		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
 	}
 
 	public MySQLDialect() {
-		this(400);
+		this( 400 );
 	}
 
 	public MySQLDialect(int version) {
@@ -95,7 +102,7 @@ public class MySQLDialect extends Dialect {
 
 		registerColumnType( Types.NUMERIC, "decimal($p,$s)" ); //it's just a synonym
 
-		if ( getVersion() < 570) {
+		if ( getMySQLVersion() < 570) {
 			registerColumnType( Types.TIMESTAMP, "datetime" );
 			registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp" );
 		}
@@ -107,7 +114,7 @@ public class MySQLDialect extends Dialect {
 		}
 
 		// max length for VARCHAR changed in 5.0.3
-		final int maxVarcharLen = getVersion() < 500 ? 255 : 65_535;
+		final int maxVarcharLen = getMySQLVersion() < 500 ? 255 : 65_535;
 
 		registerColumnType( Types.VARCHAR, maxVarcharLen, "varchar($l)" );
 		registerColumnType( Types.VARBINARY, maxVarcharLen, "varbinary($l)" );
@@ -144,7 +151,7 @@ public class MySQLDialect extends Dialect {
 		registerColumnType( Types.NCLOB, maxLobLen, "text" );
 		registerColumnType( Types.NCLOB, maxTinyLobLen, "tinytext" );
 
-		if ( getVersion() >= 570) {
+		if ( getMySQLVersion() >= 570) {
 			// MySQL 5.7 brings JSON native support with a dedicated datatype
 			// https://dev.mysql.com/doc/refman/5.7/en/json.html
 			registerColumnType(Types.JAVA_OBJECT, "json");
@@ -160,6 +167,10 @@ public class MySQLDialect extends Dialect {
 
 	@Override
 	public int getVersion() {
+		return version;
+	}
+
+	public int getMySQLVersion() {
 		return version;
 	}
 
@@ -237,7 +248,7 @@ public class MySQLDialect extends Dialect {
 		CommonFunctionFactory.format_dateFormat( queryEngine );
 		CommonFunctionFactory.makedateMaketime( queryEngine );
 
-		if ( getVersion() < 570 ) {
+		if ( getMySQLVersion() < 570 ) {
 			CommonFunctionFactory.sysdateParens( queryEngine );
 		}
 		else {
@@ -245,6 +256,17 @@ public class MySQLDialect extends Dialect {
 			// we want the standard default precision of 6 (microseconds)
 			CommonFunctionFactory.sysdateExplicitMicros( queryEngine );
 		}
+	}
+
+	@Override
+	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
+		return new StandardSqlAstTranslatorFactory() {
+			@Override
+			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
+					SessionFactoryImplementor sessionFactory, Statement statement) {
+				return new MySQLSqlAstTranslator<>( sessionFactory, statement );
+			}
+		};
 	}
 
 	private void time(QueryEngine queryEngine) {
@@ -266,7 +288,7 @@ public class MySQLDialect extends Dialect {
 	 */
 	@Override
 	public String currentTimestamp() {
-		return getVersion() < 570 ? super.currentTimestamp() : "current_timestamp(6)";
+		return getMySQLVersion() < 570 ? super.currentTimestamp() : "current_timestamp(6)";
 	}
 
 	/**
@@ -367,12 +389,12 @@ public class MySQLDialect extends Dialect {
 	 */
 	@Override
 	public boolean supportsRowValueConstructorSyntaxInInList() {
-		return getVersion() >= 570;
+		return getMySQLVersion() >= 570;
 	}
 
 	@Override
 	public boolean supportsUnionAll() {
-		return getVersion() >= 500;
+		return getMySQLVersion() >= 500;
 	}
 
 	@Override
@@ -382,7 +404,7 @@ public class MySQLDialect extends Dialect {
 
 	@Override
 	public String getQueryHintString(String query, String hints) {
-		return getVersion() < 500
+		return getMySQLVersion() < 500
 				? super.getQueryHintString( query, hints )
 				: IndexQueryHintHandler.INSTANCE.addQueryHints( query, hints );
 	}
@@ -396,7 +418,7 @@ public class MySQLDialect extends Dialect {
 	}
 
 	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
-		return getVersion() < 500 ? super.getViolatedConstraintNameExtractor() : EXTRACTOR;
+		return getMySQLVersion() < 500 ? super.getViolatedConstraintNameExtractor() : EXTRACTOR;
 	}
 
 	private static final ViolatedConstraintNameExtractor EXTRACTOR =
@@ -506,6 +528,11 @@ public class MySQLDialect extends Dialect {
 	@Override
 	public String getColumnComment(String comment) {
 		return " comment '" + comment + "'";
+	}
+
+	@Override
+	public NullOrdering getNullOrdering() {
+		return NullOrdering.SMALLEST;
 	}
 
 	@Override
@@ -723,7 +750,7 @@ public class MySQLDialect extends Dialect {
 
 	@Override
 	public String getTableTypeString() {
-		String engineKeyword = getVersion() < 500 ? "type" : "engine";
+		String engineKeyword = getMySQLVersion() < 500 ? "type" : "engine";
 		return storageEngine.getTableTypeString( engineKeyword );
 	}
 
@@ -738,7 +765,7 @@ public class MySQLDialect extends Dialect {
 	}
 
 	protected MySQLStorageEngine getDefaultMySQLStorageEngine() {
-		return getVersion() < 550 ? MyISAMStorageEngine.INSTANCE : InnoDBStorageEngine.INSTANCE;
+		return getMySQLVersion() < 550 ? MyISAMStorageEngine.INSTANCE : InnoDBStorageEngine.INSTANCE;
 	}
 
 	@Override
@@ -900,12 +927,12 @@ public class MySQLDialect extends Dialect {
 
 	@Override
 	public boolean supportsSkipLocked() {
-		return getVersion() >= 800;
+		return getMySQLVersion() >= 800;
 	}
 
 	@Override
 	public boolean supportsNoWait() {
-		return getVersion() >= 800;
+		return getMySQLVersion() >= 800;
 	}
 
 	public boolean supportsWait() {
@@ -914,11 +941,11 @@ public class MySQLDialect extends Dialect {
 	}
 
 	boolean supportsForShare() {
-		return getVersion() >= 800;
+		return getMySQLVersion() >= 800;
 	}
 
 	boolean supportsAliasLocks() {
-		return getVersion() >= 800;
+		return getMySQLVersion() >= 800;
 	}
 
 	@Override

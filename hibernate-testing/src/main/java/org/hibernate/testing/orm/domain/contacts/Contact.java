@@ -117,6 +117,7 @@ public class Contact {
 			this.last = last;
 		}
 
+		@Column(name = "firstname")
 		public String getFirst() {
 			return first;
 		}
@@ -125,6 +126,7 @@ public class Contact {
 			this.first = first;
 		}
 
+		@Column(name = "lastname")
 		public String getLast() {
 			return last;
 		}

@@ -28,11 +28,11 @@ statement
 	;
 
 selectStatement
-	: querySpec
+	: queryExpression
 	;
 
 subQuery
-	: querySpec
+	: queryExpression
 	;
 
 dmlTarget
@@ -56,7 +56,7 @@ assignment
 	;
 
 insertStatement
-	: INSERT INTO? dmlTarget targetFieldsSpec (querySpec | valuesList)
+	: INSERT INTO? dmlTarget targetFieldsSpec (queryExpression | valuesList)
 	;
 
 targetFieldsSpec
@@ -74,9 +74,30 @@ values
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // QUERY SPEC - general structure of root sqm or sub sqm
 
+queryExpression
+	: queryGroup queryOrder?
+	;
+
+queryGroup
+	: querySpec                                            										# QuerySpecQueryGroup
+	| LEFT_PAREN queryGroup RIGHT_PAREN															# NestedQueryGroup
+	| queryGroup queryOrder? (setOperator (querySpec | LEFT_PAREN queryGroup RIGHT_PAREN))+		# SetQueryGroup
+	;
+
+setOperator
+	: UNION ALL?
+	| INTERSECT ALL?
+	| EXCEPT ALL?
+	;
+
+queryOrder
+	:  orderByClause limitClause? offsetClause? fetchClause?
+	;
+
 querySpec
-	: selectClause fromClause? whereClause? ( groupByClause havingClause? )? orderByClause? limitClause? offsetClause?
-	| fromClause whereClause? ( groupByClause havingClause? )? selectClause? orderByClause? limitClause? offsetClause?
+// TODO: add with clause
+	: selectClause fromClause? whereClause? ( groupByClause havingClause? )?
+	| fromClause whereClause? ( groupByClause havingClause? )? selectClause?
 	;
 
 
@@ -340,16 +361,27 @@ orderingSpecification
 // LIMIT/OFFSET clause
 
 limitClause
-	: LIMIT parameterOrNumberLiteral
+	: LIMIT parameterOrIntegerLiteral
 	;
 
 offsetClause
-	: OFFSET parameterOrNumberLiteral
+	: OFFSET parameterOrIntegerLiteral (ROW | ROWS)?
+	;
+
+fetchClause
+	: FETCH (FIRST | NEXT) (parameterOrIntegerLiteral | parameterOrNumberLiteral PERCENT) (ROW | ROWS) (ONLY | WITH TIES)
+	;
+
+parameterOrIntegerLiteral
+	: parameter
+	| INTEGER_LITERAL
 	;
 
 parameterOrNumberLiteral
 	: parameter
 	| INTEGER_LITERAL
+	| FLOAT_LITERAL
+	| DOUBLE_LITERAL
 	;
 
 
@@ -427,7 +459,7 @@ primaryExpression
 
 multiplicativeOperator
 	: SLASH
-	| PERCENT
+	| PERCENT_OP
 	| ASTERISK
 	;
 

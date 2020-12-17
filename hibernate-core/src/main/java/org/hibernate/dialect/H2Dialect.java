@@ -10,6 +10,7 @@ import java.sql.Types;
 
 import javax.persistence.TemporalType;
 
+import org.hibernate.NullOrdering;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cfg.AvailableSettings;
@@ -23,6 +24,7 @@ import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.H2SequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
@@ -38,6 +40,11 @@ import org.hibernate.query.sqm.mutation.internal.idtable.AfterUseAction;
 import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
 import org.hibernate.query.sqm.mutation.internal.idtable.LocalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorH2DatabaseImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
@@ -72,31 +79,35 @@ public class H2Dialect extends Dialect {
 	}
 
 	public H2Dialect(int version, int buildId) {
+		this(version + buildId);
+	}
+
+	public H2Dialect(int version) {
 		super();
 		this.version = version;
-		//TODO: actually I think all builds of 1.4 support OFFSET FETCH
-		limitHandler = version > 140 || version == 140 && buildId >= 199
+		// https://github.com/h2database/h2database/commit/b2cdf84e0b84eb8a482fa7dccdccc1ab95241440
+		limitHandler = version >= 104195
 				? OffsetFetchLimitHandler.INSTANCE
 				: LimitOffsetLimitHandler.INSTANCE;
 
 		//Note: H2 'bit' is a synonym for 'boolean', not a proper bit type
 //		registerColumnType( Types.BIT, "bit" );
-		final int majorVersion = version / 100;
-		final int minorVersion = version % 100 / 10;
-		if ( version < 120 || version == 120 && buildId < 139 ) {
-
+		if ( version < 102139 ) {
+			final int majorVersion = version / 100000;
+			final int minorVersion = version % 100000 / 1000;
+			final int buildId = version % 1000;
 			LOG.unsupportedMultiTableBulkHqlJpaql( majorVersion, minorVersion, buildId );
 		}
-		supportsTuplesInSubqueries = majorVersion > 1 || minorVersion > 4 || buildId >= 198;
+		supportsTuplesInSubqueries = version >= 104198;
 		// Prior to 1.4.200 the 'cascade' in 'drop table' was implicit
-		cascadeConstraints = version > 140 || version == 140 && buildId >= 200;
+		cascadeConstraints = version >= 104200;
 
 		getDefaultProperties().setProperty( AvailableSettings.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 		// http://code.google.com/p/h2database/issues/detail?id=235
 		getDefaultProperties().setProperty( AvailableSettings.NON_CONTEXTUAL_LOB_CREATION, "true" );
 
-		if ( buildId >= 32 ) {
-			this.sequenceInformationExtractor = buildId >= 201
+		if ( version >= 104032 ) {
+			this.sequenceInformationExtractor = version >= 104201
 					? SequenceInformationExtractorLegacyImpl.INSTANCE
 					: SequenceInformationExtractorH2DatabaseImpl.INSTANCE;
 			this.querySequenceString = "select * from INFORMATION_SCHEMA.SEQUENCES";
@@ -115,8 +126,8 @@ public class H2Dialect extends Dialect {
 
 	public H2Dialect(DialectResolutionInfo info) {
 		this(
-				info.getDatabaseMajorVersion()*100
-						+ info.getDatabaseMinorVersion()*10,
+				info.getDatabaseMajorVersion() * 100000
+						+ info.getDatabaseMinorVersion() * 1000,
 				parseBuildId( info )
 		);
 	}
@@ -172,6 +183,17 @@ public class H2Dialect extends Dialect {
 		CommonFunctionFactory.varPopSamp( queryEngine );
 		CommonFunctionFactory.format_formatdatetime( queryEngine );
 		CommonFunctionFactory.rownum( queryEngine );
+	}
+
+	@Override
+	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
+		return new StandardSqlAstTranslatorFactory() {
+			@Override
+			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
+					SessionFactoryImplementor sessionFactory, Statement statement) {
+				return new H2SqlAstTranslator<>( sessionFactory, statement );
+			}
+		};
 	}
 
 	/**
@@ -270,6 +292,11 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
+	public NullOrdering getNullOrdering() {
+		return NullOrdering.FIRST;
+	}
+
+	@Override
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
 			EntityMappingType entityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
@@ -340,11 +367,6 @@ public class H2Dialect extends Dialect {
 	@Override
 	public String getCurrentTimestampSelectString() {
 		return "call current_timestamp()";
-	}
-
-	@Override
-	public boolean supportsUnionAll() {
-		return true;
 	}
 
 

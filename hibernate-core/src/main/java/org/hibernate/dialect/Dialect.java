@@ -11,6 +11,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.NullOrdering;
 import org.hibernate.NullPrecedence;
 import org.hibernate.ScrollMode;
 import org.hibernate.boot.model.TypeContributions;
@@ -1877,15 +1878,13 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Does this dialect support UNION ALL, which is generally a faster
-	 * variant of UNION?
+	 * Does this dialect support UNION ALL.
 	 *
 	 * @return True if UNION ALL is supported; false otherwise.
 	 */
 	public boolean supportsUnionAll() {
-		return false;
+		return true;
 	}
-
 
 	// miscellaneous support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -2690,6 +2689,15 @@ public abstract class Dialect implements ConversionContext {
 		return true;
 	}
 
+	/**
+	 * Returns the ordering of null.
+	 *
+	 * @since 6.0.0
+	 */
+	public NullOrdering getNullOrdering() {
+		return NullOrdering.GREATEST;
+	}
+
 	public boolean supportsNullPrecedence() {
 		return true;
 	}
@@ -2705,7 +2713,9 @@ public abstract class Dialect implements ConversionContext {
 	 * if expression has not been explicitly specified.
 	 * @param nulls Nulls precedence. Default value: {@link NullPrecedence#NONE}.
 	 * @return Renders single element of {@code ORDER BY} clause.
+	 * @deprecated todo (6.0): remove?
 	 */
+	@Deprecated
 	public String renderOrderByElement(String expression, String collation, String order, NullPrecedence nulls) {
 		final StringBuilder orderByElement = new StringBuilder( expression );
 		if ( collation != null ) {
@@ -2772,7 +2782,7 @@ public abstract class Dialect implements ConversionContext {
 	 * false otherwise.
 	 * @since 3.2
 	 */
-	public boolean  supportsSubselectAsInPredicateLHS() {
+	public boolean supportsSubselectAsInPredicateLHS() {
 		return true;
 	}
 
@@ -2980,7 +2990,9 @@ public abstract class Dialect implements ConversionContext {
 	 * @param expression The expression to negate
 	 *
 	 * @return The negated expression
+	 * @deprecated todo (6.0): Remove
 	 */
+	@Deprecated
 	public String getNotExpression(String expression) {
 		return "not " + expression;
 	}
@@ -3053,7 +3065,7 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public String getQueryHintString(String query, List<String> hintList) {
 		final String hints = String.join( ", ", hintList );
-		return StringHelper.isEmpty( hints) ? query : getQueryHintString( query, hints);
+		return StringHelper.isEmpty( hints ) ? query : getQueryHintString( query, hints);
 	}
 
 	/**
@@ -3216,14 +3228,6 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Appends the collate clause for the given collation name to the SQL appender.
-	 */
-	public void appendCollate(SqlAppender sqlAppender, String collationName) {
-		sqlAppender.appendSql( " collate " );
-		sqlAppender.appendSql( collationName );
-	}
-
-	/**
 	 * Check whether the JDBC {@link java.sql.Connection} supports creating LOBs via {@link Connection#createBlob()},
 	 * {@link Connection#createNClob()} or {@link Connection#createClob()}.
 	 *
@@ -3249,17 +3253,16 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public String addSqlHintOrComment(
 			String sql,
-//			QueryParameters parameters,
+			QueryOptions queryOptions,
 			boolean commentsEnabled) {
-
 		// Keep this here, rather than moving to Select.  Some Dialects may need the hint to be appended to the very
 		// end or beginning of the finalized SQL statement, so wait until everything is processed.
-//		if ( parameters.getQueryHints() != null && parameters.getQueryHints().size() > 0 ) {
-//			sql = getQueryHintString( sql, parameters.getQueryHints() );
-//		}
-//		if ( commentsEnabled && parameters.getComment() != null ){
-//			sql = prependComment( sql, parameters.getComment() );
-//		}
+		if ( queryOptions.getDatabaseHints() != null && queryOptions.getDatabaseHints().size() > 0 ) {
+			sql = getQueryHintString( sql, queryOptions.getDatabaseHints() );
+		}
+		if ( commentsEnabled && queryOptions.getComment() != null ) {
+			sql = prependComment( sql, queryOptions.getComment() );
+		}
 
 		return sql;
 	}
@@ -3296,7 +3299,7 @@ public abstract class Dialect implements ConversionContext {
 	 * Note that {@link SessionFactoryOptions#getCustomSqmTranslatorFactory()} has higher
 	 * precedence as it comes directly from the user config
 	 *
-	 * @see org.hibernate.query.sqm.sql.internal.StandardSqmSelectTranslator
+	 * @see org.hibernate.query.sqm.sql.internal.StandardSqmTranslator
 	 * @see QueryEngine#getSqmTranslatorFactory()
 	 */
 	public SqmTranslatorFactory getSqmTranslatorFactory() {

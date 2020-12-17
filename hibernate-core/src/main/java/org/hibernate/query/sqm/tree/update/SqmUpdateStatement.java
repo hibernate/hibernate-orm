@@ -23,7 +23,6 @@ import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
 import org.hibernate.query.sqm.tree.AbstractSqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
-import org.hibernate.query.sqm.tree.cte.SqmCteConsumer;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
@@ -35,7 +34,7 @@ import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
  */
 public class SqmUpdateStatement<T>
 		extends AbstractSqmDmlStatement<T>
-		implements SqmDeleteOrUpdateStatement<T>, SqmCteConsumer, JpaCriteriaUpdate<T> {
+		implements SqmDeleteOrUpdateStatement<T>, JpaCriteriaUpdate<T> {
 	private SqmSetClause setClause;
 	private SqmWhereClause whereClause;
 

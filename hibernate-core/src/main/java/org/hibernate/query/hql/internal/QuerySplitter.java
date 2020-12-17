@@ -11,7 +11,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
@@ -61,6 +60,8 @@ import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationArgument;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationTarget;
 import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
+import org.hibernate.query.sqm.tree.select.SqmQueryGroup;
+import org.hibernate.query.sqm.tree.select.SqmQueryPart;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
@@ -169,13 +170,29 @@ public class QuerySplitter {
 					)
 			);
 			try {
-				copy.setQuerySpec( visitQuerySpec( statement.getQuerySpec() ) );
+				copy.setQueryPart( visitQueryPart( statement.getQueryPart() ) );
 			}
 			finally {
 				processingStateStack.pop();
 			}
 
 			return copy;
+		}
+
+		@Override
+		public SqmQueryPart visitQueryPart(SqmQueryPart<?> queryPart) {
+			return (SqmQueryPart) super.visitQueryPart( queryPart );
+		}
+
+		@Override
+		public SqmQueryGroup visitQueryGroup(SqmQueryGroup<?> queryGroup) {
+			final List<? extends SqmQueryPart<?>> queryParts = queryGroup.getQueryParts();
+			final int size = queryParts.size();
+			final List<SqmQueryPart<?>> newQueryParts = new ArrayList<>( size );
+			for ( int i = 0; i < size; i++ ) {
+				newQueryParts.add( visitQueryPart( queryParts.get( i ) ) );
+			}
+			return new SqmQueryGroup( queryGroup.nodeBuilder(), queryGroup.getSetOperator(), newQueryParts );
 		}
 
 		@Override
@@ -191,8 +208,11 @@ public class QuerySplitter {
 			sqmQuerySpec.setGroupByClauseExpressions( visitGroupByClause( querySpec.getGroupByClauseExpressions() ) );
 			sqmQuerySpec.setHavingClausePredicate( visitHavingClause( querySpec.getHavingClausePredicate() ) );
 			sqmQuerySpec.setOrderByClause( visitOrderByClause( querySpec.getOrderByClause() ) );
-			if ( querySpec.getLimitExpression() != null ) {
-				sqmQuerySpec.setLimitExpression( (SqmExpression) querySpec.getLimitExpression().accept( this ) );
+			if ( querySpec.getFetchExpression() != null ) {
+				sqmQuerySpec.setFetchExpression(
+						(SqmExpression) querySpec.getFetchExpression().accept( this ),
+						querySpec.getFetchClauseType()
+				);
 			}
 			if ( querySpec.getOffsetExpression() != null ) {
 				sqmQuerySpec.setOffsetExpression( (SqmExpression) querySpec.getOffsetExpression().accept( this ) );
@@ -653,7 +673,8 @@ public class QuerySplitter {
 			return new SqmSubQuery(
 					// todo (6.0) : current?  or previous at this point?
 					getProcessingStateStack().getCurrent().getProcessingQuery(),
-					visitQuerySpec( expression.getQuerySpec() ),
+					visitQueryPart( expression.getQueryPart() ),
+					expression.getResultType(),
 					expression.nodeBuilder()
 			);
 		}

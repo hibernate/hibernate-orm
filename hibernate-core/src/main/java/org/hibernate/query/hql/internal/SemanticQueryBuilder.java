@@ -30,9 +30,11 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import org.hibernate.FetchClauseType;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.NullPrecedence;
 import org.hibernate.QueryException;
+import org.hibernate.SetOperator;
 import org.hibernate.SortOrder;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
@@ -64,6 +66,7 @@ import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationOptions;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmCreationState;
+import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.sqm.LiteralNumberFormatException;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.ParsingException;
@@ -87,6 +90,8 @@ import org.hibernate.query.sqm.tree.SqmQuery;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
+import org.hibernate.query.sqm.tree.domain.AbstractSqmFrom;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelation;
 import org.hibernate.query.sqm.tree.domain.SqmIndexedCollectionAccessPath;
 import org.hibernate.query.sqm.tree.domain.SqmMapEntryReference;
 import org.hibernate.query.sqm.tree.domain.SqmMaxElementPath;
@@ -153,9 +158,12 @@ import org.hibernate.query.sqm.tree.predicate.SqmNullnessPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmOrPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
+import org.hibernate.query.sqm.tree.select.AbstractSqmSelectQuery;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationArgument;
 import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
+import org.hibernate.query.sqm.tree.select.SqmQueryGroup;
+import org.hibernate.query.sqm.tree.select.SqmQueryPart;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.select.SqmSelectQuery;
@@ -180,7 +188,10 @@ import static java.time.format.DateTimeFormatter.ISO_LOCAL_TIME;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static org.hibernate.grammars.hql.HqlParser.EXCEPT;
 import static org.hibernate.grammars.hql.HqlParser.IDENTIFIER;
+import static org.hibernate.grammars.hql.HqlParser.INTERSECT;
+import static org.hibernate.grammars.hql.HqlParser.UNION;
 import static org.hibernate.query.TemporalUnit.DATE;
 import static org.hibernate.query.TemporalUnit.DAY_OF_MONTH;
 import static org.hibernate.query.TemporalUnit.DAY_OF_WEEK;
@@ -292,15 +303,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 	@Override
 	public SqmSelectStatement visitSelectStatement(HqlParser.SelectStatementContext ctx) {
-		if ( creationOptions.useStrictJpaCompliance() ) {
-			if ( ctx.querySpec().selectClause() == null ) {
-				throw new StrictJpaComplianceViolation(
-						"Encountered implicit select-clause, but strict JPQL compliance was requested",
-						StrictJpaComplianceViolation.Type.IMPLICIT_SELECT
-				);
-			}
-		}
-
+		final HqlParser.QueryExpressionContext queryExpressionContext = ctx.queryExpression();
 		final SqmSelectStatement selectStatement = new SqmSelectStatement( creationContext.getNodeBuilder() );
 
 		parameterCollector = selectStatement;
@@ -314,7 +317,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		);
 
 		try {
-			visitQuerySpec( ctx.querySpec() );
+			visitQueryExpression( queryExpressionContext );
 		}
 		finally {
 			processingStateStack.pop();
@@ -332,7 +335,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 				creationContext.getNodeBuilder()
 		);
 
-		if ( ctx.querySpec()!=null ) {
+		final HqlParser.QueryExpressionContext queryExpressionContext = ctx.queryExpression();
+		if ( queryExpressionContext != null ) {
 			final SqmInsertSelectStatement<?> insertStatement = new SqmInsertSelectStatement<>( root, creationContext.getNodeBuilder() );
 			parameterCollector = insertStatement;
 			final SqmDmlCreationProcessingState processingState = new SqmDmlCreationProcessingState(
@@ -343,7 +347,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 			processingStateStack.push( processingState );
 
 			try {
-				visitQuerySpec( ctx.querySpec() );
+				visitQueryExpression( queryExpressionContext );
 
 				final SqmCreationProcessingState stateFieldsProcessingState = new SqmCreationProcessingStateImpl(
 						insertStatement,
@@ -476,6 +480,177 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	// Query spec
 
 	@Override
+	public SqmQueryPart visitQueryExpression(HqlParser.QueryExpressionContext ctx) {
+		final SqmQueryPart queryPart = (SqmQueryPart) ctx.queryGroup().accept( this );
+		visitQueryOrder( queryPart, ctx.queryOrder() );
+		return queryPart;
+	}
+
+	@Override
+	public SqmQueryPart visitQuerySpecQueryGroup(HqlParser.QuerySpecQueryGroupContext ctx) {
+		return visitQuerySpec( ctx.querySpec() );
+	}
+
+	@Override
+	public SqmQueryPart visitNestedQueryGroup(HqlParser.NestedQueryGroupContext ctx) {
+		return (SqmQueryPart) ctx.queryGroup().accept( this );
+	}
+
+	@Override
+	public SqmQueryGroup<?> visitSetQueryGroup(HqlParser.SetQueryGroupContext ctx) {
+		if ( creationOptions.useStrictJpaCompliance() ) {
+			throw new StrictJpaComplianceViolation(
+					StrictJpaComplianceViolation.Type.SET_OPERATIONS
+			);
+		}
+		final List<ParseTree> children = ctx.children;
+		final SqmQueryPart<?> firstQueryPart = (SqmQueryPart<?>) children.get( 0 ).accept( this );
+		SqmQueryGroup queryGroup;
+		if ( firstQueryPart instanceof SqmQueryGroup<?>) {
+			queryGroup = (SqmQueryGroup<?>) firstQueryPart;
+		}
+		else {
+			queryGroup = new SqmQueryGroup<>( firstQueryPart );
+		}
+		setCurrentQueryPart( queryGroup );
+		final List<SqmSelection> firstSelections = firstQueryPart.getFirstQuerySpec().getSelectClause().getSelections();
+		final int firstSelectionSize = firstSelections.size();
+		final ParseTree maybeOrderContext = children.get( 1 );
+		int i;
+		if (maybeOrderContext instanceof HqlParser.QueryOrderContext ) {
+			visitQueryOrder( firstQueryPart, (HqlParser.QueryOrderContext) maybeOrderContext );
+			i = 2;
+		}
+		else {
+			i = 1;
+		}
+		final int size = children.size();
+		final SqmCreationProcessingState firstProcessingState = processingStateStack.pop();
+		for ( ; i < size; i += 2 ) {
+			final SetOperator operator = visitSetOperator( (HqlParser.SetOperatorContext) children.get( i ) );
+			final ParseTree parseTree = children.get( i + 1 );
+			final List<SqmQueryPart<?>> queryParts;
+			if ( queryGroup.getSetOperator() == null || queryGroup.getSetOperator() == operator ) {
+				queryGroup.setSetOperator( operator );
+				queryParts = queryGroup.getQueryParts();
+			}
+			else {
+				queryParts = new ArrayList<>( size - ( i >> 1 ) );
+				queryParts.add( queryGroup );
+				queryGroup = new SqmQueryGroup(
+						creationContext.getNodeBuilder(),
+						operator,
+						queryParts
+				);
+				setCurrentQueryPart( queryGroup );
+			}
+
+			final SqmQueryPart<?> queryPart;
+			try {
+				processingStateStack.push(
+						new SqmQuerySpecCreationProcessingStateStandardImpl(
+								processingStateStack.getCurrent(),
+								(SqmSelectQuery<?>) firstProcessingState.getProcessingQuery(),
+								this
+						)
+				);
+				if ( parseTree instanceof HqlParser.QuerySpecContext ) {
+					final SqmQuerySpec<?> querySpec = new SqmQuerySpec<>( creationContext.getNodeBuilder() );
+					queryParts.add( querySpec );
+					queryPart = visitQuerySpec( (HqlParser.QuerySpecContext) parseTree );
+				}
+				else {
+					queryPart = (SqmQueryPart<?>) children.get( i + 2 ).accept( this );
+					queryParts.add( queryPart );
+					i += 2;
+				}
+			}
+			finally {
+				processingStateStack.pop();
+			}
+			final List<SqmSelection> selections = queryPart.getFirstQuerySpec().getSelectClause().getSelections();
+			if ( firstSelectionSize != selections.size() ) {
+				throw new SemanticException( "All query parts must have the same arity!" );
+			}
+			for ( int j = 0; j < firstSelectionSize; j++ ) {
+				final JavaTypeDescriptor firstJavaTypeDescriptor = firstSelections.get( j ).getNodeJavaTypeDescriptor();
+				if ( firstJavaTypeDescriptor != selections.get( j ).getNodeJavaTypeDescriptor() ) {
+					throw new SemanticException(
+							"Select items of the same index must have the same java type across all query parts!"
+					);
+				}
+			}
+		}
+		processingStateStack.push( firstProcessingState );
+
+		return queryGroup;
+	}
+
+	@Override
+	public SetOperator visitSetOperator(HqlParser.SetOperatorContext ctx) {
+		final Token token = ( (TerminalNode) ctx.getChild( 0 ) ).getSymbol();
+		final boolean all = ctx.getChildCount() == 2;
+		switch ( token.getType() ) {
+			case UNION:
+				return all ? SetOperator.UNION_ALL : SetOperator.UNION;
+			case INTERSECT:
+				return all ? SetOperator.INTERSECT_ALL : SetOperator.INTERSECT;
+			case EXCEPT:
+				return all ? SetOperator.EXCEPT_ALL : SetOperator.EXCEPT;
+		}
+		throw new SemanticException( "Illegal set operator token: " + token.getText() );
+	}
+
+	protected void visitQueryOrder(SqmQueryPart<?> sqmQueryPart, HqlParser.QueryOrderContext ctx) {
+		if ( ctx == null ) {
+			return;
+		}
+		final SqmOrderByClause orderByClause;
+		final HqlParser.OrderByClauseContext orderByClauseContext = ctx.orderByClause();
+		if ( orderByClauseContext != null ) {
+			if ( creationOptions.useStrictJpaCompliance() && processingStateStack.depth() > 1 ) {
+				throw new StrictJpaComplianceViolation(
+						StrictJpaComplianceViolation.Type.SUBQUERY_ORDER_BY
+				);
+			}
+
+			orderByClause = visitOrderByClause( orderByClauseContext );
+			sqmQueryPart.setOrderByClause( orderByClause );
+		}
+		else {
+			orderByClause = null;
+		}
+
+		final HqlParser.LimitClauseContext limitClauseContext = ctx.limitClause();
+		final HqlParser.OffsetClauseContext offsetClauseContext = ctx.offsetClause();
+		final HqlParser.FetchClauseContext fetchClauseContext = ctx.fetchClause();
+		if ( limitClauseContext != null || offsetClauseContext != null || fetchClauseContext != null ) {
+			if ( getCreationOptions().useStrictJpaCompliance() ) {
+				throw new StrictJpaComplianceViolation(
+						StrictJpaComplianceViolation.Type.LIMIT_OFFSET_CLAUSE
+				);
+			}
+
+			if ( processingStateStack.depth() > 1 && orderByClause == null ) {
+				throw new SemanticException(
+						"limit, offset and fetch clause require an order-by clause when used in sub-query"
+				);
+			}
+
+			sqmQueryPart.setOffsetExpression( visitOffsetClause( offsetClauseContext ) );
+			if ( limitClauseContext == null ) {
+				sqmQueryPart.setFetchExpression( visitFetchClause( fetchClauseContext ), visitFetchClauseType( fetchClauseContext ) );
+			}
+			else if ( fetchClauseContext == null ) {
+				sqmQueryPart.setFetchExpression( visitLimitClause( limitClauseContext ) );
+			}
+			else {
+				throw new SemanticException("Can't use both, limit and fetch clause!" );
+			}
+		}
+	}
+
+	@Override
 	public SqmQuerySpec<?> visitQuerySpec(HqlParser.QuerySpecContext ctx) {
 		final SqmQuerySpec<?> sqmQuerySpec = currentQuerySpec();
 
@@ -488,11 +663,18 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 			treatHandlerStack.pop();
 		}
 
+		final HqlParser.SelectClauseContext selectClauseContext = ctx.selectClause();
 		final SqmSelectClause selectClause;
-		if ( ctx.selectClause() != null ) {
-			selectClause = visitSelectClause( ctx.selectClause() );
+		if ( selectClauseContext != null ) {
+			selectClause = visitSelectClause( selectClauseContext );
 		}
 		else {
+			if ( creationOptions.useStrictJpaCompliance() ) {
+				throw new StrictJpaComplianceViolation(
+						"Encountered implicit select-clause, but strict JPQL compliance was requested",
+						StrictJpaComplianceViolation.Type.IMPLICIT_SELECT
+				);
+			}
 			log.debugf( "Encountered implicit select clause : %s", ctx.getText() );
 			selectClause = buildInferredSelectClause( sqmQuerySpec.getFromClause() );
 		}
@@ -517,41 +699,6 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		final HqlParser.HavingClauseContext havingClauseContext = ctx.havingClause();
 		if ( havingClauseContext != null ) {
 			sqmQuerySpec.setHavingClausePredicate( visitHavingClause( havingClauseContext ) );
-		}
-
-		final SqmOrderByClause orderByClause;
-		final HqlParser.OrderByClauseContext orderByClauseContext = ctx.orderByClause();
-		if ( orderByClauseContext != null ) {
-			if ( creationOptions.useStrictJpaCompliance() && processingStateStack.depth() > 1 ) {
-				throw new StrictJpaComplianceViolation(
-						StrictJpaComplianceViolation.Type.SUBQUERY_ORDER_BY
-				);
-			}
-
-			orderByClause = visitOrderByClause( orderByClauseContext );
-		}
-		else {
-			orderByClause = new SqmOrderByClause();
-		}
-		sqmQuerySpec.setOrderByClause( orderByClause );
-
-
-		if ( ctx.limitClause() != null || ctx.offsetClause() != null ) {
-			if ( getCreationOptions().useStrictJpaCompliance() ) {
-				throw new StrictJpaComplianceViolation(
-						StrictJpaComplianceViolation.Type.LIMIT_OFFSET_CLAUSE
-				);
-			}
-
-			if ( processingStateStack.depth() > 1 && orderByClause == null ) {
-				throw new SemanticException(
-						"limit and offset clause require an order-by clause when used in sub-query" );
-			}
-
-			//noinspection unchecked
-			sqmQuerySpec.setOffsetExpression( visitOffsetClause( ctx.offsetClause() ) );
-			//noinspection unchecked
-			sqmQuerySpec.setLimitExpression( visitLimitClause( ctx.limitClause() ) );
 		}
 
 		return sqmQuerySpec;
@@ -866,13 +1013,6 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		return new SqmSortSpecification( sortExpression, sortOrder, nullPrecedence );
 	}
 
-	private SqmExpression<?> wrapCollate(SqmExpression<?> expression, HqlParser.CollationSpecificationContext collationSpecificationContext) {
-		if ( collationSpecificationContext == null ) {
-			return expression;
-		}
-		return new SqmCollate<>( expression, collationSpecificationContext.collateName().getText() );
-	}
-
 	@Override
 	public SqmExpression<?> visitSortExpression(HqlParser.SortExpressionContext ctx) {
 		if ( ctx.INTEGER_LITERAL() != null ) {
@@ -881,7 +1021,10 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 				throw new ParsingException( "COLLATE is not allowed for position based order by items!" );
 			}
 			final int position = Integer.parseInt( ctx.INTEGER_LITERAL().getText() );
-			final SqmSelection<?> selection = getCurrentProcessingState().getPathRegistry().findSelectionByPosition( position );
+			SqmSelection<?> selection = getCurrentProcessingState().getPathRegistry().findSelectionByPosition( position );
+			if ( selection == null ) {
+				selection = currentQuerySpec().getSelectClause().getSelections().get( position - 1 );
+			}
 			if ( selection == null ) {
 				throw new ParsingException( "Invalid select item position " + position + " used for order by item!" );
 			}
@@ -895,7 +1038,16 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 		if ( ctx.identifier() != null ) {
 			final HqlParser.CollationSpecificationContext collationSpecificationContext = ctx.collationSpecification();
-			final SqmSelection<?> selection = getCurrentProcessingState().getPathRegistry().findSelectionByAlias( ctx.identifier().getText() );
+			final String alias = ctx.identifier().getText();
+			SqmSelection<?> selection = getCurrentProcessingState().getPathRegistry().findSelectionByAlias( alias );
+			if ( selection == null ) {
+				for ( SqmSelection sqmSelection : currentQuerySpec().getSelectClause().getSelections() ) {
+					if ( alias.equals( sqmSelection.getAlias() ) ) {
+						selection = sqmSelection;
+						break;
+					}
+				}
+			}
 			if ( selection != null ) {
 				// This is syntactically disallowed
 				if ( collationSpecificationContext != null ) {
@@ -928,10 +1080,20 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	private SqmQuerySpec<?> currentQuerySpec() {
 		SqmQuery<?> processingQuery = processingStateStack.getCurrent().getProcessingQuery();
 		if ( processingQuery instanceof SqmInsertSelectStatement<?> ) {
-			return ( (SqmInsertSelectStatement<?>) processingQuery ).getSelectQuerySpec();
+			return ( (SqmInsertSelectStatement<?>) processingQuery ).getSelectQueryPart().getLastQuerySpec();
 		}
 		else {
-			return ( (SqmSelectQuery<?>) processingQuery ).getQuerySpec();
+			return ( (SqmSelectQuery<?>) processingQuery ).getQueryPart().getLastQuerySpec();
+		}
+	}
+
+	private void setCurrentQueryPart(SqmQueryPart<?> queryPart) {
+		SqmQuery<?> processingQuery = processingStateStack.getCurrent().getProcessingQuery();
+		if ( processingQuery instanceof SqmInsertSelectStatement<?> ) {
+			( (SqmInsertSelectStatement) processingQuery ).setSelectQueryPart( queryPart );
+		}
+		else {
+			( (AbstractSqmSelectQuery) processingQuery ).setQueryPart( queryPart );
 		}
 	}
 
@@ -945,7 +1107,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 			return null;
 		}
 
-		return (SqmExpression<?>) ctx.parameterOrNumberLiteral().accept( this );
+		return (SqmExpression<?>) ctx.getChild( 1 ).accept( this );
 	}
 
 	@Override
@@ -954,7 +1116,28 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 			return null;
 		}
 
-		return (SqmExpression<?>) ctx.parameterOrNumberLiteral().accept( this );
+		return (SqmExpression<?>) ctx.getChild( 1 ).accept( this );
+	}
+
+	@Override
+	public SqmExpression<?> visitFetchClause(HqlParser.FetchClauseContext ctx) {
+		if ( ctx == null ) {
+			return null;
+		}
+
+		return (SqmExpression<?>) ctx.getChild( 2 ).accept( this );
+	}
+
+	private FetchClauseType visitFetchClauseType(HqlParser.FetchClauseContext ctx) {
+		if ( ctx == null ) {
+			return FetchClauseType.ROWS_ONLY;
+		}
+		if ( ctx.TIES() == null ) {
+			return ctx.PERCENT() == null ? FetchClauseType.ROWS_ONLY : FetchClauseType.PERCENT_ONLY;
+		}
+		else {
+			return ctx.PERCENT() == null ? FetchClauseType.ROWS_WITH_TIES : FetchClauseType.PERCENT_WITH_TIES;
+		}
 	}
 
 	@Override
@@ -968,9 +1151,27 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	}
 
 	@Override
+	public SqmExpression<?> visitParameterOrIntegerLiteral(HqlParser.ParameterOrIntegerLiteralContext ctx) {
+		if ( ctx.INTEGER_LITERAL() != null ) {
+			return integerLiteral( ctx.INTEGER_LITERAL().getText() );
+		}
+		if ( ctx.parameter() != null ) {
+			return (SqmExpression<?>) ctx.parameter().accept( this );
+		}
+
+		return null;
+	}
+
+	@Override
 	public SqmExpression<?> visitParameterOrNumberLiteral(HqlParser.ParameterOrNumberLiteralContext ctx) {
 		if ( ctx.INTEGER_LITERAL() != null ) {
 			return integerLiteral( ctx.INTEGER_LITERAL().getText() );
+		}
+		if ( ctx.FLOAT_LITERAL() != null ) {
+			return floatLiteral( ctx.FLOAT_LITERAL().getText() );
+		}
+		if ( ctx.DOUBLE_LITERAL() != null ) {
+			return doubleLiteral( ctx.DOUBLE_LITERAL().getText() );
 		}
 		if ( ctx.parameter() != null ) {
 			return (SqmExpression<?>) ctx.parameter().accept( this );
@@ -1025,10 +1226,15 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		treatHandlerStack.push( new TreatHandlerFromClause() );
 
 		try {
-			final SqmFromClause fromClause = new SqmFromClause( parserFromClause==null ? 0 : parserFromClause.fromClauseSpace().size() );
-			if ( parserFromClause!=null ) {
-				for ( HqlParser.FromClauseSpaceContext parserSpace : parserFromClause.fromClauseSpace() ) {
-					final SqmRoot sqmPathRoot = visitFromClauseSpace( parserSpace );
+			final SqmFromClause fromClause;
+			if ( parserFromClause == null ) {
+				fromClause = new SqmFromClause();
+			}
+			else {
+				final List<HqlParser.FromClauseSpaceContext> fromClauseSpaceContexts = parserFromClause.fromClauseSpace();
+				fromClause = new SqmFromClause( fromClauseSpaceContexts.size() );
+				for ( int i = 0; i < fromClauseSpaceContexts.size(); i++ ) {
+					final SqmRoot sqmPathRoot = visitFromClauseSpace( fromClauseSpaceContexts.get( i ) );
 					fromClause.addRoot( sqmPathRoot );
 				}
 			}
@@ -1062,14 +1268,59 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	@Override
 	@SuppressWarnings( { "rawtypes", "unchecked" } )
 	public SqmRoot visitPathRoot(HqlParser.PathRootContext ctx) {
-		final String name = ctx.entityName().fullNameText;
+		final HqlParser.EntityNameContext entityNameContext = ctx.entityName();
+		final List<ParseTree> entityNameParseTreeChildren = entityNameContext.children;
+		final String name = entityNameContext.fullNameText;
 
 		log.debugf( "Handling root path - %s", name );
-
 		final EntityDomainType entityDescriptor = getCreationContext()
 				.getJpaMetamodel()
-				.resolveHqlEntityReference( name );
+				.getHqlEntityReference( name );
 
+		final String alias = applyJpaCompliance(
+				visitIdentificationVariableDef( ctx.identificationVariableDef() )
+		);
+
+		final SqmCreationProcessingState processingState = processingStateStack.getCurrent();
+		final SqmPathRegistry pathRegistry = processingState.getPathRegistry();
+		if ( entityDescriptor == null ) {
+			final int size = entityNameParseTreeChildren.size();
+			// Handle the use of a correlation path in subqueries
+			if ( processingStateStack.depth() > 1 && size > 2 ) {
+				final String parentAlias = entityNameParseTreeChildren.get( 0 ).getText();
+				final AbstractSqmFrom<?, ?> correlationBasis = (AbstractSqmFrom<?, ?>) processingState.getParentProcessingState()
+						.getPathRegistry()
+						.findFromByAlias( parentAlias );
+				if ( correlationBasis != null ) {
+					final SqmCorrelation<?, ?> correlation = correlationBasis.createCorrelation(
+					);
+					pathRegistry.register( correlation );
+					final DotIdentifierConsumer dotIdentifierConsumer = new QualifiedJoinPathConsumer(
+							correlation,
+							SqmJoinType.INNER,
+							false,
+							alias,
+							this
+					);
+					final int lastIdx = size - 1;
+					for ( int i = 2; i != lastIdx; i += 2 ) {
+						dotIdentifierConsumer.consumeIdentifier(
+								entityNameParseTreeChildren.get( i ).getText(),
+								false,
+								false
+						);
+					}
+					dotIdentifierConsumer.consumeIdentifier(
+							entityNameParseTreeChildren.get( lastIdx ).getText(),
+							false,
+							true
+					);
+					return correlation.getCorrelatedRoot();
+				}
+				throw new IllegalArgumentException( "Could not resolve entity reference or correlation path: " + name );
+			}
+			throw new IllegalArgumentException( "Could not resolve entity reference: " + name );
+		}
 		checkFQNEntityNameJpaComplianceViolationIfNeeded( name, entityDescriptor );
 
 		if ( entityDescriptor instanceof SqmPolymorphicRootDescriptor ) {
@@ -1088,13 +1339,9 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 			}
 		}
 
-		final String alias = applyJpaCompliance(
-				visitIdentificationVariableDef( ctx.identificationVariableDef() )
-		);
-
 		final SqmRoot sqmRoot = new SqmRoot( entityDescriptor, alias, creationContext.getNodeBuilder() );
 
-		processingStateStack.getCurrent().getPathRegistry().register( sqmRoot );
+		pathRegistry.register( sqmRoot );
 
 		return sqmRoot;
 	}
@@ -1384,7 +1631,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	}
 
 	@Override
-	public SqmComparisonPredicate visitComparisonPredicate(HqlParser.ComparisonPredicateContext ctx) {
+	public SqmPredicate visitComparisonPredicate(HqlParser.ComparisonPredicateContext ctx) {
 		final ComparisonOperator comparisonOperator = (ComparisonOperator) ctx.comparisonOperator().accept( this );
 		final List<HqlParser.ExpressionContext> expressionContexts = ctx.expression();
 		final SqmExpression left;
@@ -1413,6 +1660,24 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 					);
 					break;
 				}
+				left = (SqmExpression) leftExpressionContext.accept( this );
+				right = (SqmExpression) rightExpressionContext.accept( this );
+				// This is something that we used to support before 6 which is also used in our testsuite
+				if ( left instanceof SqmLiteralNull<?> ) {
+					return new SqmNullnessPredicate(
+							right,
+							comparisonOperator == ComparisonOperator.NOT_EQUAL,
+							creationContext.getNodeBuilder()
+					);
+				}
+				else if ( right instanceof SqmLiteralNull<?> ) {
+					return new SqmNullnessPredicate(
+							left,
+							comparisonOperator == ComparisonOperator.NOT_EQUAL,
+							creationContext.getNodeBuilder()
+					);
+				}
+				break;
 			}
 			default: {
 				left = (SqmExpression) leftExpressionContext.accept( this );
@@ -1727,7 +1992,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		else if (ctx.SLASH() != null) {
 			return BinaryArithmeticOperator.DIVIDE;
 		}
-		else if (ctx.PERCENT() != null) {
+		else if (ctx.PERCENT_OP() != null) {
 			return BinaryArithmeticOperator.MODULO;
 		}
 		else {
@@ -1822,11 +2087,26 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 	@Override
 	public Object visitCollateExpression(HqlParser.CollateExpressionContext ctx) {
-		return wrapCollate( (SqmExpression<?>) ctx.primaryExpression().accept( this ), ctx.collationSpecification() );
+		SqmExpression<?> expression = (SqmExpression<?>) ctx.primaryExpression().accept( this );
+		HqlParser.CollationSpecificationContext collationSpecificationContext = ctx.collationSpecification();
+		if ( collationSpecificationContext == null ) {
+			return expression;
+		}
+		if ( creationOptions.useStrictJpaCompliance() ) {
+			throw new StrictJpaComplianceViolation(
+					StrictJpaComplianceViolation.Type.COLLATIONS
+			);
+		}
+		return new SqmCollate<>( expression, collationSpecificationContext.collateName().getText() );
 	}
 
 	@Override
 	public Object visitTupleExpression(HqlParser.TupleExpressionContext ctx) {
+		if ( creationOptions.useStrictJpaCompliance() ) {
+			throw new StrictJpaComplianceViolation(
+					StrictJpaComplianceViolation.Type.TUPLES
+			);
+		}
 		final List<SqmExpression<?>> expressions = visitExpressions( ctx.expression() );
 		return new SqmTuple<>( expressions, creationContext.getNodeBuilder() );
 	}
@@ -3572,10 +3852,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 	@Override
 	public SqmSubQuery<?> visitSubQuery(HqlParser.SubQueryContext ctx) {
-		if ( ctx.querySpec().selectClause() == null ) {
-			throw new SemanticException( "Sub-query cannot use implicit select-clause : " + ctx.getText() );
-		}
-
+		final HqlParser.QueryExpressionContext queryExpressionContext = ctx.queryExpression();
 		final SqmSubQuery<?> subQuery = new SqmSubQuery<>(
 				processingStateStack.getCurrent().getProcessingQuery(),
 				creationContext.getNodeBuilder()
@@ -3590,7 +3867,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		);
 
 		try {
-			visitQuerySpec( ctx.querySpec() );
+			visitQueryExpression( queryExpressionContext );
 			return subQuery;
 		}
 		finally {

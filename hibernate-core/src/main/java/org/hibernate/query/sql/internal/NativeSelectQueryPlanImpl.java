@@ -14,6 +14,7 @@ import java.util.Set;
 
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.EmptyScrollableResults;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
@@ -71,6 +72,9 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 
 	@Override
 	public List<R> performList(ExecutionContext executionContext) {
+		if ( executionContext.getQueryOptions().getEffectiveLimit().getMaxRowsJpa() == 0 ) {
+			return Collections.emptyList();
+		}
 		final List<JdbcParameterBinder> jdbcParameterBinders;
 		final JdbcParameterBindings jdbcParameterBindings;
 
@@ -129,6 +133,9 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 
 	@Override
 	public ScrollableResultsImplementor<R> performScroll(ScrollMode scrollMode, ExecutionContext executionContext) {
+		if ( executionContext.getQueryOptions().getEffectiveLimit().getMaxRowsJpa() == 0 ) {
+			return EmptyScrollableResults.INSTANCE;
+		}
 		final List<JdbcParameterBinder> jdbcParameterBinders;
 		final JdbcParameterBindings jdbcParameterBindings;
 

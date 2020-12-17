@@ -7,9 +7,11 @@
 package org.hibernate.query.sqm.internal;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.ScrollMode;
+import org.hibernate.internal.EmptyScrollableResults;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.NotYetImplementedFor6Exception;
@@ -27,6 +29,9 @@ public class AggregatedSelectQueryPlanImpl<R> implements SelectQueryPlan<R> {
 
 	@Override
 	public List<R> performList(ExecutionContext executionContext) {
+		if ( executionContext.getQueryOptions().getEffectiveLimit().getMaxRowsJpa() == 0 ) {
+			return Collections.emptyList();
+		}
 		final List<R> overallResults = new ArrayList<>();
 
 		for ( SelectQueryPlan<R> aggregatedQueryPlan : aggregatedQueryPlans ) {
@@ -38,6 +43,9 @@ public class AggregatedSelectQueryPlanImpl<R> implements SelectQueryPlan<R> {
 
 	@Override
 	public ScrollableResultsImplementor<R> performScroll(ScrollMode scrollMode, ExecutionContext executionContext) {
+		if ( executionContext.getQueryOptions().getEffectiveLimit().getMaxRowsJpa() == 0 ) {
+			return EmptyScrollableResults.INSTANCE;
+		}
 		throw new NotYetImplementedFor6Exception();
 	}
 }

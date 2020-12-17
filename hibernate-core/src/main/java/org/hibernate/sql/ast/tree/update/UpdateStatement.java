@@ -7,19 +7,22 @@
 package org.hibernate.sql.ast.tree.update;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlAstTreeHelper;
-import org.hibernate.sql.ast.tree.MutationStatement;
-import org.hibernate.sql.ast.tree.cte.CteConsumer;
+import org.hibernate.sql.ast.tree.AbstractMutationStatement;
+import org.hibernate.sql.ast.tree.cte.CteStatement;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 
 /**
  * @author Steve Ebersole
  */
-public class UpdateStatement implements MutationStatement, CteConsumer {
-	private final TableReference targetTable;
+public class UpdateStatement extends AbstractMutationStatement {
 	private final List<Assignment> assignments;
 	private final Predicate restriction;
 
@@ -27,13 +30,32 @@ public class UpdateStatement implements MutationStatement, CteConsumer {
 			TableReference targetTable,
 			List<Assignment> assignments,
 			Predicate restriction) {
-		this.targetTable = targetTable;
+		super( targetTable );
 		this.assignments = assignments;
 		this.restriction = restriction;
 	}
 
-	public TableReference getTargetTable() {
-		return targetTable;
+	public UpdateStatement(
+			TableReference targetTable,
+			List<Assignment> assignments,
+			Predicate restriction,
+			List<ColumnReference> returningColumns) {
+		super( new LinkedHashMap<>(), targetTable, returningColumns );
+		this.assignments = assignments;
+		this.restriction = restriction;
+	}
+
+	public UpdateStatement(
+			boolean withRecursive,
+			Map<String, CteStatement> cteStatements,
+			TableReference targetTable,
+			List<Assignment> assignments,
+			Predicate restriction,
+			List<ColumnReference> returningColumns) {
+		super( cteStatements, targetTable, returningColumns );
+		this.assignments = assignments;
+		this.restriction = restriction;
+		setWithRecursive( withRecursive );
 	}
 
 	public List<Assignment> getAssignments() {
@@ -43,7 +65,6 @@ public class UpdateStatement implements MutationStatement, CteConsumer {
 	public Predicate getRestriction() {
 		return restriction;
 	}
-
 
 	public static class UpdateStatementBuilder {
 		private final TableReference targetTableRef;
@@ -87,5 +108,10 @@ public class UpdateStatement implements MutationStatement, CteConsumer {
 
 			return new UpdateStatement( targetTableRef, assignments, restriction );
 		}
+	}
+
+	@Override
+	public void accept(SqlAstWalker walker) {
+		walker.visitUpdateStatement( this );
 	}
 }

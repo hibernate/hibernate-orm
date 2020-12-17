@@ -6,91 +6,56 @@
  */
 package org.hibernate.query.sqm.mutation.internal.cte;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
+import java.util.Map;
 
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.mapping.SelectionConsumer;
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.mutation.internal.DeleteHandler;
-import org.hibernate.query.sqm.mutation.internal.MatchingIdSelectionHelper;
+import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
+import org.hibernate.query.sqm.tree.cte.SqmCteTable;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
-import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.query.sqm.tree.expression.SqmParameter;
+import org.hibernate.sql.ast.spi.SqlAliasBase;
+import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
+import org.hibernate.sql.ast.tree.MutationStatement;
+import org.hibernate.sql.ast.tree.cte.CteContainer;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.cte.CteTable;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.SqlTuple;
+import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
-import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.exec.spi.JdbcDelete;
-import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 
 /**
  * Bulk-id delete handler that uses CTE and VALUES lists.
  *
- * @author Evandro Pires da Silva
- * @author Vlad Mihalcea
- * @author Steve Ebersole
+ * @author Christian Beikov
  */
 @SuppressWarnings("WeakerAccess")
 public class CteDeleteHandler extends AbstractCteMutationHandler implements DeleteHandler {
-	private final SqlAstTranslatorFactory sqlAstTranslatorFactory;
 
 	protected CteDeleteHandler(
-			CteTable cteTable,
+			SqmCteTable cteTable,
 			SqmDeleteStatement<?> sqmDeleteStatement,
 			DomainParameterXref domainParameterXref,
 			CteStrategy strategy,
 			SessionFactoryImplementor sessionFactory) {
 		super( cteTable, sqmDeleteStatement, domainParameterXref, strategy, sessionFactory );
-
-		final JdbcServices jdbcServices = getSessionFactory().getJdbcServices();
-		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
-		sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
 	}
 
 	@Override
-	public SqmDeleteStatement<?> getSqmDeleteOrUpdateStatement() {
-		return (SqmDeleteStatement<?>) super.getSqmDeleteOrUpdateStatement();
-	}
-
-	@Override
-	public int execute(ExecutionContext executionContext) {
-		final List<Object> ids = MatchingIdSelectionHelper.selectMatchingIds(
-				getSqmDeleteOrUpdateStatement(),
-				getDomainParameterXref(),
-				executionContext
-		);
-
-		if ( ids == null || ids.isEmpty() ) {
-			return 0;
-		}
-
-		final QuerySpec cteQuerySpec = getCteTable().createCteSubQuery( executionContext );
-
-		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( getDomainParameterXref().getQueryParameterCount() );
-		final QuerySpec cteDefinitionQuerySpec = getCteTable().createCteDefinition(
-				ids,
-				getEntityDescriptor().getIdentifierMapping(),
-				jdbcParameterBindings,
-				executionContext
-		);
-
-		// for every table to be deleted, create the CteStatement and execute it
-
+	protected void addDmlCtes(
+			CteContainer statement,
+			CteStatement idSelectCte,
+			MultiTableSqmMutationConverter sqmConverter,
+			Map<SqmParameter, List<JdbcParameter>> parameterResolutions,
+			SessionFactoryImplementor factory) {
+		final TableGroup updatingTableGroup = sqmConverter.getMutatingTableGroup();
 		getEntityDescriptor().visitAttributeMappings(
 				attribute -> {
 					if ( attribute instanceof PluralAttributeMapping ) {
@@ -104,149 +69,63 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 							//
 							// in all of these cases, we should clean up the matching rows in the
 							// collection table
-
-							executeDelete(
-									cteDefinitionQuerySpec,
-									pluralAttribute.getSeparateCollectionTable(),
-									() -> columnConsumer -> pluralAttribute.getKeyDescriptor().visitReferringColumns( columnConsumer ),
-									pluralAttribute.getKeyDescriptor(),
-									cteQuerySpec,
-									jdbcParameterBindings,
-									executionContext
+							final String tableExpression = pluralAttribute.getSeparateCollectionTable();
+							final CteTable dmlResultCte = new CteTable(
+									DML_RESULT_TABLE_NAME_PREFIX + tableExpression,
+									idSelectCte.getCteTable().getCteColumns(),
+									factory
 							);
+							final TableReference dmlTableReference = new TableReference( tableExpression, null, true, factory );
+							final List<ColumnReference> columnReferences = new ArrayList<>( idSelectCte.getCteTable().getCteColumns().size() );
+							pluralAttribute.getKeyDescriptor().visitReferringColumns(
+									(selectionIndex, selectionMapping) -> {
+										columnReferences.add(
+												new ColumnReference(
+														dmlTableReference,
+														selectionMapping,
+														factory
+												)
+										);
+									}
+							);
+							final MutationStatement dmlStatement = new DeleteStatement(
+									dmlTableReference,
+									createIdSubQueryPredicate( columnReferences, idSelectCte, factory ),
+									columnReferences
+							);
+							statement.addCteStatement( new CteStatement( dmlResultCte, dmlStatement ) );
 						}
 					}
 				}
 		);
 
 		getEntityDescriptor().visitConstraintOrderedTables(
-				(tableExpression, tableColumnsVisitationSupplier) -> executeDelete(
-						cteDefinitionQuerySpec,
-						tableExpression,
-						tableColumnsVisitationSupplier,
-						getEntityDescriptor().getIdentifierMapping(),
-						cteQuerySpec,
-						jdbcParameterBindings,
-						executionContext
-				)
-		);
-
-		return ids.size();
-	}
-
-	protected void executeDelete(
-			QuerySpec cteDefinition,
-			String targetTable,
-			Supplier<Consumer<SelectionConsumer>> columnsToMatchVisitationSupplier,
-			MappingModelExpressable<?> cteType,
-			QuerySpec cteSubQuery,
-			JdbcParameterBindings jdbcParameterBindings,
-			ExecutionContext executionContext) {
-		final CteStatement cteStatement = generateCteStatement(
-				cteDefinition,
-				targetTable,
-				columnsToMatchVisitationSupplier,
-				cteType,
-				cteSubQuery,
-				executionContext
-		);
-
-		final SessionFactoryImplementor sessionFactory = getSessionFactory();
-
-		final JdbcDelete jdbcDelete = sqlAstTranslatorFactory.buildDeleteTranslator( sessionFactory )
-				.translate( cteStatement );
-
-
-		final LogicalConnectionImplementor logicalConnection = executionContext.getSession()
-				.getJdbcCoordinator()
-				.getLogicalConnection();
-
-		sessionFactory.getJdbcServices().getJdbcMutationExecutor().execute(
-				jdbcDelete,
-				jdbcParameterBindings,
-				sql -> {
-					try {
-						return logicalConnection.getPhysicalConnection().prepareStatement( sql );
-					}
-					catch (SQLException e) {
-						throw sessionFactory.getJdbcServices().getSqlExceptionHelper().convert(
-								e,
-								"Error performing DELETE",
-								sql
-						);
-					}
-				},
-				(integer, preparedStatement) -> {},
-				executionContext
-		);
-	}
-
-	protected CteStatement generateCteStatement(
-			QuerySpec cteDefinition,
-			String targetTable,
-			Supplier<Consumer<SelectionConsumer>> columnsToMatchVisitationSupplier,
-			MappingModelExpressable<?> cteType,
-			QuerySpec cteSubQuery,
-			ExecutionContext executionContext) {
-		final DeleteStatement deleteStatement = generateCteConsumer(
-				targetTable,
-				columnsToMatchVisitationSupplier,
-				cteType,
-				cteSubQuery,
-				executionContext
-		);
-		return new CteStatement(
-				cteDefinition,
-				CteStrategy.TABLE_NAME,
-				getCteTable(),
-				deleteStatement
-		);
-	}
-
-
-	private DeleteStatement generateCteConsumer(
-			String targetTable,
-			Supplier<Consumer<SelectionConsumer>> columnsToMatchVisitationSupplier,
-			MappingModelExpressable<?> cteType,
-			QuerySpec cteSubQuery,
-			ExecutionContext executionContext) {
-		final SessionFactoryImplementor sessionFactory = executionContext.getSession().getFactory();
-		final TableReference targetTableReference = new TableReference(
-				targetTable,
-				null,
-				false,
-				sessionFactory
-		);
-
-		final List<ColumnReference> columnsToMatchReferences = new ArrayList<>();
-
-		columnsToMatchVisitationSupplier.get().accept(
-				(columnIndex, selection) ->
-						columnsToMatchReferences.add(
-								new ColumnReference(
-										targetTableReference,
-										selection,
-										sessionFactory
-								)
-						)
-		);
-
-		final Expression columnsToMatchExpression;
-
-		if ( columnsToMatchReferences.size() == 1 ) {
-			columnsToMatchExpression = columnsToMatchReferences.get( 0 );
-		}
-		else {
-			columnsToMatchExpression = new SqlTuple( columnsToMatchReferences, cteType );
-		}
-
-		return new DeleteStatement(
-				targetTableReference,
-				new InSubQueryPredicate(
-						columnsToMatchExpression,
-						cteSubQuery,
-						false
-				)
+				(tableExpression, tableColumnsVisitationSupplier) -> {
+					final CteTable dmlResultCte = new CteTable(
+							DML_RESULT_TABLE_NAME_PREFIX + tableExpression,
+							idSelectCte.getCteTable().getCteColumns(),
+							factory
+					);
+					final TableReference dmlTableReference = updatingTableGroup.resolveTableReference( tableExpression );
+					final List<ColumnReference> columnReferences = new ArrayList<>( idSelectCte.getCteTable().getCteColumns().size() );
+					tableColumnsVisitationSupplier.get().accept(
+							(selectionIndex, selectionMapping) -> {
+								columnReferences.add(
+										new ColumnReference(
+												dmlTableReference,
+												selectionMapping,
+												factory
+										)
+								);
+							}
+					);
+					final MutationStatement dmlStatement = new DeleteStatement(
+							dmlTableReference,
+							createIdSubQueryPredicate( columnReferences, idSelectCte, factory ),
+							columnReferences
+					);
+					statement.addCteStatement( new CteStatement( dmlResultCte, dmlStatement ) );
+				}
 		);
 	}
 }

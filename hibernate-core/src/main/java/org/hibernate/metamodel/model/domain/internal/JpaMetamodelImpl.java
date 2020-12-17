@@ -110,7 +110,7 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 	}
 
 	@Override
-	public <X> EntityDomainType<X> resolveHqlEntityReference(String entityName) {
+	public <X> EntityDomainType<X> getHqlEntityReference(String entityName) {
 		Class<X> loadedClass = null;
 		final ImportInfo<X> importInfo = resolveImport( entityName );
 		if ( importInfo != null ) {
@@ -133,8 +133,16 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 		if ( loadedClass != null ) {
 			return resolveEntityReference( loadedClass );
 		}
+		return null;
+	}
 
-		throw new IllegalArgumentException( "Could not resolve entity reference: " + entityName );
+	@Override
+	public <X> EntityDomainType<X> resolveHqlEntityReference(String entityName) {
+		final EntityDomainType<X> hqlEntityReference = getHqlEntityReference( entityName );
+		if ( hqlEntityReference == null ) {
+			throw new IllegalArgumentException( "Could not resolve entity reference: " + entityName );
+		}
+		return hqlEntityReference;
 	}
 
 	@Override

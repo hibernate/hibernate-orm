@@ -111,10 +111,10 @@ dependencies {
 	testRuntime( libraries.hana )
 	testRuntime( libraries.cockroachdb )
 
-	if ( db.equalsIgnoreCase( 'oracle' ) || db.equalsIgnoreCase( 'oracle_docker' ) ) {
+	if ( db.startsWith( 'oracle' ) ) {
 		testRuntime( libraries.oracle )
 	}
-	else if ( db.equalsIgnoreCase( 'db2' ) ) {
+	else if ( db.startsWith( 'db2' ) ) {
 		testRuntime( libraries.db2 )
 	}
 	else if ( db.equalsIgnoreCase( 'hana' ) ) {

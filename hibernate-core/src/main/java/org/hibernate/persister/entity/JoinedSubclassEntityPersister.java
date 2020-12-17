@@ -1318,69 +1318,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		}
 	}
 
-
-	@Override
-	public TableGroup createRootTableGroup(
-			NavigablePath navigablePath,
-			String explicitSourceAlias,
-			boolean canUseInnerJoins,
-			LockMode lockMode,
-			SqlAliasBaseGenerator aliasBaseGenerator,
-			SqlExpressionResolver sqlExpressionResolver,
-			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
-			SqlAstCreationContext creationContext) {
-		final SqlAliasBase sqlAliasBase = aliasBaseGenerator.createSqlAliasBase( getSqlAliasStem() );
-
-		final TableReference primaryTableReference = createPrimaryTableReference(
-				sqlAliasBase,
-				sqlExpressionResolver,
-				creationContext
-		);
-
-		StandardTableGroup standardTableGroup = new StandardTableGroup(
-				navigablePath,
-				this,
-				lockMode,
-				primaryTableReference,
-				sqlAliasBase,
-				(tableExpression) -> ArrayHelper.contains( getSubclassTableNames(), tableExpression ),
-				(tableExpression, tableGroup) -> null,
-				getFactory()
-		);
-
-		final String primaryTableName = primaryTableReference.getTableExpression();
-		for ( int i = 1; i < getSubclassTableSpan(); i++ ) {
-			final String subclassTableName = getSubclassTableName( i );
-			if ( !subclassTableName.equals( primaryTableName ) ) {
-				final boolean isNullableTable = isNullableSubclassTable( i );
-				final TableReference joinedTableReference = new TableReference(
-						subclassTableName,
-						sqlAliasBase.generateNewAlias(),
-						isNullableTable,
-						getFactory()
-				);
-
-				TableReferenceJoin tableReferenceJoin = new TableReferenceJoin(
-						determineSubclassTableJoinType(
-								i,
-								canUseInnerJoins,
-								true,
-								Collections.emptySet()
-						),
-						joinedTableReference,
-						generateJoinPredicate(
-								primaryTableReference,
-								joinedTableReference,
-								i,
-								sqlExpressionResolver
-						)
-				);
-				standardTableGroup.addTableReferenceJoin( tableReferenceJoin );
-			}
-		}
-		return standardTableGroup;
-	}
-
 	@Override
 	public EntityDiscriminatorMapping getDiscriminatorMapping(TableGroup tableGroup) {
 		if ( hasSubclasses() ) {

@@ -8,19 +8,20 @@ package org.hibernate.sql.ast.tree.predicate;
 
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.select.QueryPart;
 
 /**
  * @author Gavin King
  */
 public class ExistsPredicate implements Predicate {
 
-	private Expression expression;
+	private QueryPart expression;
 
-	public ExistsPredicate(Expression expression) {
+	public ExistsPredicate(QueryPart expression) {
 		this.expression = expression;
 	}
 
-	public Expression getExpression() {
+	public QueryPart getExpression() {
 		return expression;
 	}
 

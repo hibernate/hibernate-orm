@@ -8,6 +8,7 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.function.BiConsumer;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStyle;
@@ -159,7 +160,16 @@ public class BasicValuedCollectionPart
 	@Override
 	public void applySqlSelections(
 			NavigablePath navigablePath, TableGroup tableGroup, DomainResultCreationState creationState) {
+		resolveSqlSelection( tableGroup, creationState );
+	}
 
+	@Override
+	public void applySqlSelections(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			DomainResultCreationState creationState,
+			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+		selectionConsumer.accept( resolveSqlSelection( tableGroup, creationState ), getJdbcMapping() );
 	}
 
 	@Override

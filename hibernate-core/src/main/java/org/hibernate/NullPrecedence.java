@@ -15,17 +15,53 @@ public enum NullPrecedence {
 	/**
 	 * Null precedence not specified. Relies on the RDBMS implementation.
 	 */
-	NONE,
+	NONE {
+		@Override
+		public boolean isDefaultOrdering(SortOrder sortOrder, NullOrdering nullOrdering) {
+			return true;
+		}
+	},
 
 	/**
 	 * Null values appear at the beginning of the sorted collection.
 	 */
-	FIRST,
+	FIRST {
+		@Override
+		public boolean isDefaultOrdering(SortOrder sortOrder, NullOrdering nullOrdering) {
+			switch ( nullOrdering ) {
+				case FIRST:
+					return true;
+				case SMALLEST:
+					return sortOrder == SortOrder.ASCENDING;
+				case GREATEST:
+					return sortOrder == SortOrder.DESCENDING;
+			}
+			return false;
+		}
+	},
 
 	/**
 	 * Null values appear at the end of the sorted collection.
 	 */
-	LAST;
+	LAST {
+		@Override
+		public boolean isDefaultOrdering(SortOrder sortOrder, NullOrdering nullOrdering) {
+			switch ( nullOrdering ) {
+				case LAST:
+					return true;
+				case SMALLEST:
+					return sortOrder == SortOrder.DESCENDING;
+				case GREATEST:
+					return sortOrder == SortOrder.ASCENDING;
+			}
+			return false;
+		}
+	};
+
+	/**
+	 * Is this null precedence the default for the given sort order and null ordering.
+	 */
+	public abstract boolean isDefaultOrdering(SortOrder sortOrder, NullOrdering nullOrdering);
 
 	/**
 	 * Interprets a string representation of a NullPrecedence, returning {@code null} by default.  For

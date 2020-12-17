@@ -6,10 +6,13 @@
  */
 package org.hibernate.sql.ast.tree;
 
+import org.hibernate.sql.ast.SqlAstWalker;
+
 /**
  * Base contract for any statement
  *
  * @author Steve Ebersole
  */
 public interface Statement {
+	void accept(SqlAstWalker walker);
 }

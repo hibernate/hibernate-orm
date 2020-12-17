@@ -15,10 +15,15 @@ import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.DB2iSequenceSupport;
 import org.hibernate.dialect.sequence.NoSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.dialect.unique.DB2UniqueDelegate;
 import org.hibernate.dialect.unique.DefaultUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.exec.spi.JdbcOperation;
 
 /**
  * An SQL dialect for DB2 for iSeries previously known as DB2/400.
@@ -90,10 +95,10 @@ public class DB2iDialect extends DB2Dialect {
 	@Override
 	public LimitHandler getLimitHandler() {
 		if ( getIVersion() >= 730) {
-			return LegacyDB2LimitHandler.INSTANCE;
+			return FetchLimitHandler.INSTANCE;
 		}
 		else {
-			return FetchLimitHandler.INSTANCE;
+			return LegacyDB2LimitHandler.INSTANCE;
 		}
 	}
 
@@ -105,5 +110,16 @@ public class DB2iDialect extends DB2Dialect {
 		else {
 			return new DB2390IdentityColumnSupport();
 		}
+	}
+
+	@Override
+	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
+		return new StandardSqlAstTranslatorFactory() {
+			@Override
+			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
+					SessionFactoryImplementor sessionFactory, Statement statement) {
+				return new DB2iSqlAstTranslator<>( sessionFactory, statement, version );
+			}
+		};
 	}
 }

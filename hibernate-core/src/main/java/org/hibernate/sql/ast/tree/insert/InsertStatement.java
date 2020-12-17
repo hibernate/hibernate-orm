@@ -9,36 +9,32 @@ package org.hibernate.sql.ast.tree.insert;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
+import org.hibernate.sql.ast.SqlAstWalker;
+import org.hibernate.sql.ast.tree.AbstractMutationStatement;
 import org.hibernate.sql.ast.tree.MutationStatement;
-import org.hibernate.sql.ast.tree.cte.CteConsumer;
+import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
-
-import org.jboss.logging.Logger;
+import org.hibernate.sql.ast.tree.select.QueryPart;
 
 /**
  * @author Steve Ebersole
  */
-public class InsertStatement implements MutationStatement, CteConsumer {
-	private static final Logger log = Logger.getLogger( InsertStatement.class );
+public class InsertStatement extends AbstractMutationStatement {
 
-	private TableReference targetTable;
 	private List<ColumnReference> targetColumnReferences;
-	private QuerySpec sourceSelectStatement;
+	private QueryPart sourceSelectStatement;
 	private List<Values> valuesList = new ArrayList<>();
 
-	public TableReference getTargetTable() {
-		return targetTable;
+	public InsertStatement(TableReference targetTable) {
+		super( targetTable );
 	}
 
-	public void setTargetTable(TableReference targetTable) {
-		log.tracef( "Setting INSERT target table [%s]", targetTable );
-		if ( this.targetTable != null ) {
-			log.debugf( "INSERT target table has been set multiple times" );
-		}
-		this.targetTable = targetTable;
+	public InsertStatement(boolean withRecursive, Map<String, CteStatement> cteStatements, TableReference targetTable, List<ColumnReference> returningColumns) {
+		super( cteStatements, targetTable, returningColumns );
+		setWithRecursive( withRecursive );
 	}
 
 	public List<ColumnReference> getTargetColumnReferences() {
@@ -61,11 +57,11 @@ public class InsertStatement implements MutationStatement, CteConsumer {
 		this.targetColumnReferences.addAll( references );
 	}
 
-	public QuerySpec getSourceSelectStatement() {
+	public QueryPart getSourceSelectStatement() {
 		return sourceSelectStatement;
 	}
 
-	public void setSourceSelectStatement(QuerySpec sourceSelectStatement) {
+	public void setSourceSelectStatement(QueryPart sourceSelectStatement) {
 		this.sourceSelectStatement = sourceSelectStatement;
 	}
 
@@ -75,5 +71,10 @@ public class InsertStatement implements MutationStatement, CteConsumer {
 
 	public void setValuesList(List<Values> valuesList) {
 		this.valuesList = valuesList;
+	}
+
+	@Override
+	public void accept(SqlAstWalker walker) {
+		walker.visitInsertStatement( this );
 	}
 }

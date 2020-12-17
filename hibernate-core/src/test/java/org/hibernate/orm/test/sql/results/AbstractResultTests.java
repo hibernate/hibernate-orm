@@ -12,8 +12,7 @@ import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
-import org.hibernate.query.sqm.sql.SqmSelectTranslation;
-import org.hibernate.query.sqm.sql.SqmSelectTranslator;
+import org.hibernate.query.sqm.sql.SqmTranslator;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
@@ -32,7 +31,8 @@ public class AbstractResultTests {
 		final SqmSelectStatement sqm = (SqmSelectStatement) queryEngine.getHqlTranslator().translate( hql );
 
 		final SqmTranslatorFactory sqmTranslatorFactory = queryEngine.getSqmTranslatorFactory();
-		final SqmSelectTranslator sqmConverter = sqmTranslatorFactory.createSelectTranslator(
+		final SqmTranslator<SelectStatement> sqmConverter = sqmTranslatorFactory.createSelectTranslator(
+				sqm,
 				QueryOptions.NONE,
 				DomainParameterXref.from( sqm ),
 				parameterBindings,
@@ -40,6 +40,6 @@ public class AbstractResultTests {
 				sessionFactory
 		);
 
-		return sqmConverter.translate( sqm ).getSqlAst();
+		return sqmConverter.translate().getSqlAst();
 	}
 }

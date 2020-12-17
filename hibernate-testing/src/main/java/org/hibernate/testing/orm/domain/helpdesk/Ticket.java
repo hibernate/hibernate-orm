@@ -6,6 +6,7 @@
  */
 package org.hibernate.testing.orm.domain.helpdesk;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
@@ -17,6 +18,7 @@ public class Ticket {
 	@Id
 	private Integer id;
 
+	@Column(name = "ticket_key")
 	private String key;
 
 	private String subject;

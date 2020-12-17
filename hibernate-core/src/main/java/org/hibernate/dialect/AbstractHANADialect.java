@@ -25,6 +25,7 @@ import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.*;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.env.spi.*;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.LockTimeoutException;
@@ -39,6 +40,10 @@ import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorHANADatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.tool.schema.internal.StandardTableExporter;
@@ -821,6 +826,17 @@ public abstract class AbstractHANADialect extends Dialect {
 		CommonFunctionFactory.currentUtcdatetimetimestamp( queryEngine );
 	}
 
+	@Override
+	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
+		return new StandardSqlAstTranslatorFactory() {
+			@Override
+			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
+					SessionFactoryImplementor sessionFactory, org.hibernate.sql.ast.tree.Statement statement) {
+				return new HANASqlAstTranslator<>( sessionFactory, statement );
+			}
+		};
+	}
+
 	/**
 	 * HANA has no extract() function, but we can emulate
 	 * it using the appropriate named functions instead of
@@ -1155,11 +1171,6 @@ public abstract class AbstractHANADialect extends Dialect {
 
 	@Override
 	public boolean supportsTupleDistinctCounts() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsUnionAll() {
 		return true;
 	}
 

@@ -8,9 +8,12 @@ package org.hibernate.query.sqm.tree.from;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.PathException;
+import org.hibernate.query.hql.spi.SqmCreationProcessingState;
+import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmFrom;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelatedCrossJoin;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedCrossJoin;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -20,7 +23,7 @@ import static org.hibernate.query.sqm.spi.SqmCreationHelper.buildRootNavigablePa
 /**
  * @author Steve Ebersole
  */
-public class SqmCrossJoin<T> extends AbstractSqmFrom<T,T> implements SqmJoin<T,T> {
+public class SqmCrossJoin<T> extends AbstractSqmFrom<T, T> implements SqmJoin<T, T> {
 	private final SqmRoot sqmRoot;
 
 	public SqmCrossJoin(
@@ -76,8 +79,12 @@ public class SqmCrossJoin<T> extends AbstractSqmFrom<T,T> implements SqmJoin<T,T
 		return getRoot();
 	}
 
+	@Override
+	public SqmCorrelatedCrossJoin<T> createCorrelation() {
+		return new SqmCorrelatedCrossJoin<>( this );
+	}
 
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JPA
 
 	@Override
@@ -88,5 +95,14 @@ public class SqmCrossJoin<T> extends AbstractSqmFrom<T,T> implements SqmJoin<T,T
 	@Override
 	public <S extends T> SqmTreatedCrossJoin<T, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
 		return new SqmTreatedCrossJoin<>( this, null, treatTarget );
+	}
+
+	public SqmCrossJoin<T> makeCopy(SqmCreationProcessingState creationProcessingState) {
+		final SqmPathRegistry pathRegistry = creationProcessingState.getPathRegistry();
+		return new SqmCrossJoin<>(
+				getReferencedPathSource(),
+				getExplicitAlias(),
+				(SqmRoot<?>) pathRegistry.findFromByPath( getRoot().getNavigablePath() )
+		);
 	}
 }

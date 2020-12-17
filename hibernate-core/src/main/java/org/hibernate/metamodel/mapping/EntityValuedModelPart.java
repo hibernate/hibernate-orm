@@ -7,12 +7,14 @@
 package org.hibernate.metamodel.mapping;
 
 import java.util.List;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -57,6 +59,17 @@ public interface EntityValuedModelPart extends FetchableContainer {
 		// this is really only valid for root entity returns, not really many-to-ones, etc..  but this should
 		// really only ever be called as part of creating a root-return.
 		getEntityMappingType().applySqlSelections( navigablePath, tableGroup, creationState );
+	}
+
+	@Override
+	default void applySqlSelections(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			DomainResultCreationState creationState,
+			BiConsumer<SqlSelection,JdbcMapping> selectionConsumer) {
+		// this is really only valid for root entity returns, not really many-to-ones, etc..  but this should
+		// really only ever be called as part of creating a root-return.
+		getEntityMappingType().applySqlSelections( navigablePath, tableGroup, creationState, selectionConsumer );
 	}
 
 	@Override

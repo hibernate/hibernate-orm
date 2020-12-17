@@ -8,6 +8,7 @@ package org.hibernate.dialect;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.NullOrdering;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -224,6 +225,11 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 	}
 
 	@Override
+	public NullOrdering getNullOrdering() {
+		return NullOrdering.SMALLEST;
+	}
+
+	@Override
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
 			EntityMappingType entityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
@@ -252,11 +258,6 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 	@Override
 	public boolean supportsEmptyInList() {
 		return false;
-	}
-
-	@Override
-	public boolean supportsUnionAll() {
-		return true;
 	}
 
 	@Override

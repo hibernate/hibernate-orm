@@ -187,12 +187,39 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
+		final SqlSelection sqlSelection = resolveSqlSelection( tableGroup, creationState );
+
+		//noinspection unchecked
+		return new BasicResult<>(
+				sqlSelection.getValuesArrayPosition(),
+				resultVariable,
+				getJavaTypeDescriptor(),
+				navigablePath
+		);
+	}
+
+	@Override
+	public void applySqlSelections(
+			NavigablePath navigablePath, TableGroup tableGroup, DomainResultCreationState creationState) {
+		resolveSqlSelection( tableGroup, creationState );
+	}
+
+	@Override
+	public void applySqlSelections(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			DomainResultCreationState creationState,
+			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+		selectionConsumer.accept( resolveSqlSelection( tableGroup, creationState ), getJdbcMapping() );
+	}
+
+	private SqlSelection resolveSqlSelection(TableGroup tableGroup, DomainResultCreationState creationState) {
 		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
 
 		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 		final TableReference columnTableReference = tableGroup.resolveTableReference( columnTableExpression );
 
-		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
+		return sqlExpressionResolver.resolveSqlSelection(
 				sqlExpressionResolver.resolveSqlExpression(
 						SqlExpressionResolver.createColumnReferenceKey( columnTableReference, columnExpression ),
 						sqlAstProcessingState -> new ColumnReference(
@@ -208,29 +235,6 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 				versionBasicType.getJdbcMapping().getJavaTypeDescriptor(),
 				sqlAstCreationState.getCreationContext().getDomainModel().getTypeConfiguration()
 		);
-
-		//noinspection unchecked
-		return new BasicResult<>(
-				sqlSelection.getValuesArrayPosition(),
-				resultVariable,
-				getJavaTypeDescriptor(),
-				navigablePath
-		);
-	}
-
-	@Override
-	public void applySqlSelections(
-			NavigablePath navigablePath, TableGroup tableGroup, DomainResultCreationState creationState) {
-
-	}
-
-	@Override
-	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState,
-			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
-
 	}
 
 	@Override

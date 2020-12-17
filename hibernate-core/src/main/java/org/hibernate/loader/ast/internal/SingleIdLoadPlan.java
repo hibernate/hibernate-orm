@@ -6,7 +6,6 @@
  */
 package org.hibernate.loader.ast.internal;
 
-import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.LockOptions;
@@ -23,7 +22,6 @@ import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl;
 import org.hibernate.sql.exec.spi.Callback;
@@ -96,13 +94,10 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
 
-		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory ).translate( sqlAst );
-
 		final int jdbcTypeCount = restrictivePart.getJdbcTypeCount();
 		assert jdbcParameters.size() % jdbcTypeCount == 0;
 
 		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( jdbcTypeCount );
-		jdbcSelect.bindFilterJdbcParameters( jdbcParameterBindings );
 
 		int offset = 0;
 		while ( offset < jdbcParameters.size() ) {
@@ -116,6 +111,8 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 			);
 		}
 		assert offset == jdbcParameters.size();
+		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory, sqlAst )
+				.translate( jdbcParameterBindings, QueryOptions.NONE );
 
 		final List list = JdbcSelectExecutorStandardImpl.INSTANCE.list(
 				jdbcSelect,

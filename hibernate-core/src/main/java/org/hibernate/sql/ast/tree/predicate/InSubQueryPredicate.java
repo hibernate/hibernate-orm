@@ -8,17 +8,17 @@ package org.hibernate.sql.ast.tree.predicate;
 
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
+import org.hibernate.sql.ast.tree.select.QueryPart;
 
 /**
  * @author Steve Ebersole
  */
 public class InSubQueryPredicate implements Predicate {
 	private final Expression testExpression;
-	private final QuerySpec subQuery;
+	private final QueryPart subQuery;
 	private final boolean negated;
 
-	public InSubQueryPredicate(Expression testExpression, QuerySpec subQuery, boolean negated) {
+	public InSubQueryPredicate(Expression testExpression, QueryPart subQuery, boolean negated) {
 		this.testExpression = testExpression;
 		this.subQuery = subQuery;
 		this.negated = negated;
@@ -28,7 +28,7 @@ public class InSubQueryPredicate implements Predicate {
 		return testExpression;
 	}
 
-	public QuerySpec getSubQuery() {
+	public QueryPart getSubQuery() {
 		return subQuery;
 	}
 

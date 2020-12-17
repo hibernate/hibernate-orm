@@ -14,19 +14,24 @@ import java.util.Map;
 
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.FilterHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.persister.entity.Joinable;
+import org.hibernate.query.spi.SqlOmittingQueryOptions;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
-import org.hibernate.sql.ast.SqlAstSelectTranslator;
+import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.spi.SqlAstTreeHelper;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
@@ -62,6 +67,7 @@ public class MatchingIdSelectionHelper {
 			SqmDeleteOrUpdateStatement sqmStatement,
 			Predicate restriction,
 			MultiTableSqmMutationConverter sqmConverter,
+			ExecutionContext executionContext,
 			SessionFactoryImplementor sessionFactory) {
 		final EntityDomainType entityDomainType = sqmStatement.getTarget().getModel();
 		if ( log.isTraceEnabled() ) {
@@ -104,6 +110,14 @@ public class MatchingIdSelectionHelper {
 				}
 		);
 
+		final FilterPredicate filterPredicate = FilterHelper.createFilterPredicate(
+				executionContext.getLoadQueryInfluencers(),
+				(Joinable) targetEntityDescriptor.getEntityPersister(),
+				mutatingTableGroup
+		);
+		if ( filterPredicate != null ) {
+			restriction = SqlAstTreeHelper.combinePredicates( restriction, filterPredicate );
+		}
 		idSelectionQuery.applyPredicate( restriction );
 
 		return new SelectStatement( idSelectionQuery, domainResults );
@@ -206,16 +220,14 @@ public class MatchingIdSelectionHelper {
 				sqmMutationStatement,
 				restriction,
 				sqmConverter,
+				executionContext,
 				factory
 		);
 
-
 		final JdbcServices jdbcServices = factory.getJdbcServices();
-		final SqlAstSelectTranslator sqlAstSelectTranslator = jdbcServices.getJdbcEnvironment()
+		final SqlAstTranslator<JdbcSelect> sqlAstSelectTranslator = jdbcServices.getJdbcEnvironment()
 				.getSqlAstTranslatorFactory()
-				.buildSelectTranslator( factory );
-
-		final JdbcSelect idSelectJdbcOperation = sqlAstSelectTranslator.translate( matchingIdSelection );
+				.buildSelectTranslator( factory, matchingIdSelection );
 
 		final JdbcParameterBindings jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
 				executionContext.getQueryParameterBindings(),
@@ -225,11 +237,15 @@ public class MatchingIdSelectionHelper {
 				navigablePath -> sqmConverter.getMutatingTableGroup(),
 				executionContext.getSession()
 		);
+		final JdbcSelect idSelectJdbcOperation = sqlAstSelectTranslator.translate(
+				jdbcParameterBindings,
+				executionContext.getQueryOptions()
+		);
 
 		return jdbcServices.getJdbcSelectExecutor().list(
 				idSelectJdbcOperation,
 				jdbcParameterBindings,
-				executionContext,
+				SqlOmittingQueryOptions.omitSqlQueryOptions( executionContext, idSelectJdbcOperation ),
 				row -> row,
 				true
 		);

@@ -9,7 +9,6 @@ package org.hibernate.dialect;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
-import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -21,6 +20,7 @@ import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.PostgreSQLSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
@@ -33,12 +33,14 @@ import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.sqm.mutation.internal.idtable.AfterUseAction;
-import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
-import org.hibernate.query.sqm.mutation.internal.idtable.LocalTemporaryTableStrategy;
-import org.hibernate.query.sqm.mutation.internal.idtable.TempIdTableExporter;
+import org.hibernate.query.sqm.mutation.internal.cte.CteStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -460,11 +462,6 @@ public class PostgreSQLDialect extends Dialect {
 		return false;
 	}
 
-	@Override
-	public boolean supportsUnionAll() {
-		return true;
-	}
-
 	/**
 	 * Workaround for postgres bug #1453
 	 * <p/>
@@ -505,26 +502,22 @@ public class PostgreSQLDialect extends Dialect {
 		return String.valueOf( bool );
 	}
 
+	@Override
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new LocalTemporaryTableStrategy(
-				new IdTable( rootEntityDescriptor, base -> "HT_" + base, this ),
-				() -> new TempIdTableExporter( true, this::getTypeName ) {
-					@Override
-					protected String getCreateCommand() {
-						return "create temporary table";
-					}
+		return new CteStrategy( rootEntityDescriptor, runtimeModelCreationContext );
+	}
 
-					@Override
-					protected String getCreateOptions() {
-						return "on commit drop";
-					}
-				},
-				AfterUseAction.CLEAN,
-				TempTableDdlTransactionHandling.NONE,
-				runtimeModelCreationContext.getSessionFactory()
-		);
+	@Override
+	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
+		return new StandardSqlAstTranslatorFactory() {
+			@Override
+			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
+					SessionFactoryImplementor sessionFactory, Statement statement) {
+				return new PostgreSQLSqlAstTranslator<>( sessionFactory, statement );
+			}
+		};
 	}
 
 	@Override

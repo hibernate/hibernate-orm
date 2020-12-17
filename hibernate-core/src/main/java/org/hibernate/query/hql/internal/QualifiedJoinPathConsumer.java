@@ -58,6 +58,26 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 		this.creationState = creationState;
 	}
 
+	public QualifiedJoinPathConsumer(
+			SqmFrom<?, ?> sqmFrom,
+			SqmJoinType joinType,
+			boolean fetch,
+			String alias,
+			SqmCreationState creationState) {
+		this.sqmRoot = null;
+		this.joinType = joinType;
+		this.fetch = fetch;
+		this.alias = alias;
+		this.creationState = creationState;
+		this.delegate = new AttributeJoinDelegate(
+				sqmFrom,
+				joinType,
+				fetch,
+				alias,
+				creationState
+		);
+	}
+
 	@Override
 	public SemanticPathPart getConsumedPart() {
 		return delegate.getConsumedPart();

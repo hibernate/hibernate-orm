@@ -12,8 +12,14 @@ import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.PostgreSQLSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.StandardBasicTypes;
 
 import java.sql.Types;
@@ -170,11 +176,6 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsUnionAll() {
-		return true;
-	}
-
-	@Override
 	public String getNoColumnsInsertString() {
 		return "default values";
 	}
@@ -207,6 +208,17 @@ public class CockroachDialect extends Dialect {
 	@Override
 	public String getQuerySequencesString() {
 		return "select sequence_name, sequence_schema, sequence_catalog, start_value, minimum_value, maximum_value, increment from information_schema.sequences";
+	}
+
+	@Override
+	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
+		return new StandardSqlAstTranslatorFactory() {
+			@Override
+			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
+					SessionFactoryImplementor sessionFactory, Statement statement) {
+				return new CockroachSqlAstTranslator<>( sessionFactory, statement );
+			}
+		};
 	}
 
 	@Override

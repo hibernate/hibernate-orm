@@ -7,6 +7,7 @@
 package org.hibernate.dialect.pagination;
 
 import org.hibernate.engine.spi.RowSelection;
+import org.hibernate.query.Limit;
 
 /**
  * A {@link LimitHandler} for Informix which supports the syntax
@@ -50,6 +51,40 @@ public class SkipFirstLimitHandler extends AbstractLimitHandler {
 			if ( hasMaxRows ) {
 				skipFirst.append( " first " )
 						.append( getMaxOrLimit( selection ) );
+			}
+		}
+
+		return insertAfterSelect( sql, skipFirst.toString() );
+	}
+
+	@Override
+	public String processSql(String sql, Limit limit) {
+
+		boolean hasFirstRow = hasFirstRow( limit );
+		boolean hasMaxRows = hasMaxRows( limit );
+
+		if ( !hasFirstRow && !hasMaxRows ) {
+			return sql;
+		}
+
+		StringBuilder skipFirst = new StringBuilder();
+
+		if ( supportsVariableLimit() ) {
+			if ( hasFirstRow ) {
+				skipFirst.append( " skip ?" );
+			}
+			if ( hasMaxRows ) {
+				skipFirst.append( " first ?" );
+			}
+		}
+		else {
+			if ( hasFirstRow ) {
+				skipFirst.append( " skip " )
+						.append( limit.getFirstRow() );
+			}
+			if ( hasMaxRows ) {
+				skipFirst.append( " first " )
+						.append( getMaxOrLimit( limit ) );
 			}
 		}
 

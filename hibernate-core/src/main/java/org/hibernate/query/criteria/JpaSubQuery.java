@@ -7,14 +7,29 @@
 package org.hibernate.query.criteria;
 
 import java.util.List;
+import java.util.Set;
 import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.SetJoin;
 import javax.persistence.criteria.Subquery;
+
+import org.hibernate.query.sqm.tree.domain.SqmSetJoin;
+import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
+import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
+import org.hibernate.query.sqm.tree.from.SqmJoin;
 
 /**
  * @author Steve Ebersole
  */
 public interface JpaSubQuery<T> extends Subquery<T>, JpaSelectCriteria<T>, JpaExpression<T> {
+
+	<X> SqmCrossJoin<X> correlate(SqmCrossJoin<X> parentCrossJoin);
+
+	<X> SqmEntityJoin<X> correlate(SqmEntityJoin<X> parentEntityJoin);
+
+	Set<SqmJoin<?, ?>> getCorrelatedSqmJoins();
+
 	@Override
 	JpaSubQuery<T> distinct(boolean distinct);
 

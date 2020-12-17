@@ -16,8 +16,6 @@ import javax.persistence.criteria.SetJoin;
  * @author Steve Ebersole
  */
 public interface JpaSetJoin<O, T> extends JpaJoin<O, T>, SetJoin<O, T> {
-	@Override
-	JpaSetJoin<O, T> correlateTo(JpaSubQuery<T> subquery);
 
 	JpaSetJoin<O, T> on(JpaExpression<Boolean> restriction);
 

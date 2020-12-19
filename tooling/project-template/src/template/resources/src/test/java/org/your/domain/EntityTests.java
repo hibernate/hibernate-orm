@@ -4,6 +4,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -19,9 +20,9 @@ import static org.hibernate.cfg.AvailableSettings.USER;
 @ServiceRegistry(
 		settings = {
 				// can define settings here, or in `hibernate.properties` file
-				@ServiceRegistry.Setting( name = URL, value = "jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=10000" ),
-				@ServiceRegistry.Setting( name = USER, value = "sa" ),
-				@ServiceRegistry.Setting( name = PASSWORD, value = "" )
+				@Setting( name = URL, value = "jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=10000" ),
+				@Setting( name = USER, value = "sa" ),
+				@Setting( name = PASSWORD, value = "" )
 		}
 )
 @DomainModel( annotatedClasses = SimpleEntity.class )

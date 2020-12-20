@@ -77,7 +77,7 @@ public class InsertOrderingWithJoinedTableInheritance extends BaseInsertOrdering
 			clearBatches();
 		} );
 
-		verifyPreparedStatementCount( 26 );
+		verifyPreparedStatementCount( 4 );
 	}
 
 	@Override

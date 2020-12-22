@@ -3,6 +3,19 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.4.27.Final (December 22, 2020)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31910
+
+** Bug
+    * [HHH-14380] - Join ordering logic wrongly pushes cross joins from subqueries to parent
+    * [HHH-13954] - PostgreSQL - partitioned table: Schema-validation: missing table (when table exists)
+
+** New Feature
+    * [HHH-14385] - Allow specifying a target JVM version for compatibility of generated proxies via ByteBuddy
+
+
 Changes in 5.4.26.Final (December 14, 2020)
 ------------------------------------------------------------------------------------------------------------------------
 

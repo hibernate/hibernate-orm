@@ -92,6 +92,17 @@ public class SizeTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
+	public void testSizeAddFetch() {
+		inTransaction( session -> {
+			List<Teacher> teachers = session.createQuery(
+					"select distinct teacher from Teacher teacher left join fetch teacher.skills join teacher.skills skills where size(skills) > 0",
+					Teacher.class
+			).getResultList();
+			assertEquals( 2, teachers.size() );
+		} );
+	}
+
+	@Test
 	public void testSizeWithoutNestedPath() {
 		inTransaction( session -> {
 			List<Teacher> teachers = session.createQuery(
@@ -103,6 +114,31 @@ public class SizeTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
+	public void testSizeWithoutNestedPathAddFetch() {
+		inTransaction( session -> {
+			List<Teacher> teachers = session.createQuery(
+					"select teacher from Teacher teacher left join fetch teacher.skills where size(teacher.skills) > 0",
+					Teacher.class
+			).getResultList();
+			assertEquals( countNumberOfJoins( sqlStatementInterceptor.getSqlQueries().get( 0 ) ), 2 );
+			assertEquals( 2, teachers.size() );
+		} );
+	}
+
+	@Test
+	public void testSizeWithoutNestedPathAddFetchDistinct() {
+		inTransaction( session -> {
+			List<Teacher> teachers = session.createQuery(
+					"select distinct teacher from Teacher teacher left join fetch teacher.skills where size(teacher.skills) > 0",
+					Teacher.class
+			).getResultList();
+			assertEquals( countNumberOfJoins( sqlStatementInterceptor.getSqlQueries().get( 0 ) ), 2 );
+			assertEquals( 2, teachers.size() );
+		} );
+	}
+
+
+	@Test
 	public void testSizeWithNestedPathAndImplicitJoin() {
 		doInJPA( this::sessionFactory, em -> {
 			List<Student> students = em.createQuery(
@@ -111,6 +147,30 @@ public class SizeTest extends BaseNonConfigCoreFunctionalTestCase {
 			).getResultList();
 			assertEquals( 1L, students.size() );
 			assertEquals( countNumberOfJoins( sqlStatementInterceptor.getSqlQueries().get( 0 ) ), 1 );
+		} );
+	}
+
+	@Test
+	public void testSizeWithNestedPathAndImplicitJoinAddFetch() {
+		doInJPA( this::sessionFactory, em -> {
+			List<Student> students = em.createQuery(
+					"select student from Student student left join fetch student.teacher t left join fetch t.skills where size(student.teacher.skills) > 0",
+					Student.class
+			).getResultList();
+			assertEquals( countNumberOfJoins( sqlStatementInterceptor.getSqlQueries().get( 0 ) ), 3 );
+			assertEquals( 1L, students.size() );
+		} );
+	}
+
+	@Test
+	public void testSizeWithNestedPathAndImplicitJoinAddFetchDistinct() {
+		doInJPA( this::sessionFactory, em -> {
+			List<Student> students = em.createQuery(
+					"select distinct student from Student student left join fetch student.teacher t left join fetch t.skills where size(student.teacher.skills) > 0",
+					Student.class
+			).getResultList();
+			assertEquals( countNumberOfJoins( sqlStatementInterceptor.getSqlQueries().get( 0 ) ), 3 );
+			assertEquals( 1L, students.size() );
 		} );
 	}
 
@@ -127,6 +187,30 @@ public class SizeTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
+	public void testSizeWithNestedPathAddFetch() {
+		doInJPA( this::sessionFactory, em -> {
+			List<Student> students = em.createQuery(
+					"select student from Student student join student.teacher t left join fetch student.teacher where size(student.teacher.skills) > 0",
+					Student.class
+			).getResultList();
+			assertEquals( countNumberOfJoins( sqlStatementInterceptor.getSqlQueries().get( 0 ) ), 2 );
+			assertEquals( 1L, students.size() );
+		} );
+	}
+
+	@Test
+	public void testSizeWithNestedPathAddFetchDistinct() {
+		doInJPA( this::sessionFactory, em -> {
+			List<Student> students = em.createQuery(
+					"select distinct student from Student student join student.teacher t left join fetch student.teacher where size(student.teacher.skills) > 0",
+					Student.class
+			).getResultList();
+			assertEquals( countNumberOfJoins( sqlStatementInterceptor.getSqlQueries().get( 0 ) ), 2 );
+			assertEquals( 1L, students.size() );
+		} );
+	}
+
+	@Test
 	public void testSizeWithNestedPath2() {
 		doInJPA( this::sessionFactory, em -> {
 			List<Student> students = em.createQuery(
@@ -135,6 +219,30 @@ public class SizeTest extends BaseNonConfigCoreFunctionalTestCase {
 			).getResultList();
 			assertEquals( 1L, students.size() );
 			assertEquals( countNumberOfJoins( sqlStatementInterceptor.getSqlQueries().get( 0 ) ), 1 );
+		} );
+	}
+
+	@Test
+	public void testSizeWithNestedPath2AddFetch() {
+		doInJPA( this::sessionFactory, em -> {
+			List<Student> students = em.createQuery(
+					"select student from Student student join student.teacher t join fetch student.teacher where size(t.skills) > 0",
+					Student.class
+			).getResultList();
+			assertEquals( countNumberOfJoins( sqlStatementInterceptor.getSqlQueries().get( 0 ) ), 2 );
+			assertEquals( 1L, students.size() );
+		} );
+	}
+
+	@Test
+	public void testSizeWithNestedPath2AddFetchDistinct() {
+		doInJPA( this::sessionFactory, em -> {
+			List<Student> students = em.createQuery(
+					"select distinct student from Student student join student.teacher t join fetch student.teacher where size(t.skills) > 0",
+					Student.class
+			).getResultList();
+			assertEquals( countNumberOfJoins( sqlStatementInterceptor.getSqlQueries().get( 0 ) ), 2 );
+			assertEquals( 1L, students.size() );
 		} );
 	}
 

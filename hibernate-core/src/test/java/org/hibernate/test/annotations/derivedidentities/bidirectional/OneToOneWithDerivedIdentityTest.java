@@ -52,6 +52,85 @@ public class OneToOneWithDerivedIdentityTest extends BaseCoreFunctionalTestCase 
 	}
 
 	@Test
+	@TestForIssue(jiraKey = "HHH-14389")
+	public void testQueryById() {
+		Session s = openSession();
+		s.beginTransaction();
+		Bar bar = new Bar();
+		bar.setDetails( "Some details" );
+		Foo foo = new Foo();
+		foo.setBar( bar );
+		bar.setFoo( foo );
+		s.persist( foo );
+		s.flush();
+		assertNotNull( foo.getId() );
+		assertEquals( foo.getId(), bar.getFoo().getId() );
+
+		s.clear();
+		Bar newBar = ( Bar ) s.createQuery( "SELECT b FROM Bar b WHERE b.foo = :foo" )
+				.setParameter( "foo", foo )
+				.uniqueResult();
+		assertNotNull( newBar );
+		assertNotNull( newBar.getFoo() );
+		assertEquals( foo.getId(), newBar.getFoo().getId() );
+		assertEquals( "Some details", newBar.getDetails() );
+		s.getTransaction().rollback();
+		s.close();
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-14389")
+	@FailureExpected( jiraKey = "HHH-14389")
+	public void testFindById() {
+		Session s = openSession();
+		s.beginTransaction();
+		Bar bar = new Bar();
+		bar.setDetails( "Some details" );
+		Foo foo = new Foo();
+		foo.setBar( bar );
+		bar.setFoo( foo );
+		s.persist( foo );
+		s.flush();
+		assertNotNull( foo.getId() );
+		assertEquals( foo.getId(), bar.getFoo().getId() );
+
+		s.clear();
+		Bar newBar = s.find( Bar.class, foo );
+		assertNotNull( newBar );
+		assertNotNull( newBar.getFoo() );
+		assertSame( foo, newBar.getFoo() );
+		assertEquals( foo.getId(), newBar.getFoo().getId() );
+		assertEquals( "Some details", newBar.getDetails() );
+		s.getTransaction().rollback();
+		s.close();
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-14389")
+	public void testFindByPrimaryKey() {
+		Session s = openSession();
+		s.beginTransaction();
+		Bar bar = new Bar();
+		bar.setDetails( "Some details" );
+		Foo foo = new Foo();
+		foo.setBar( bar );
+		bar.setFoo( foo );
+		s.persist( foo );
+		s.flush();
+		assertNotNull( foo.getId() );
+		assertEquals( foo.getId(), bar.getFoo().getId() );
+
+		s.clear();
+		Bar newBar = s.find( Bar.class, foo.getId() );
+		assertNotNull( newBar );
+		assertNotNull( newBar.getFoo() );
+		assertEquals( foo.getId(), newBar.getFoo().getId() );
+		assertEquals( "Some details", newBar.getDetails() );
+		s.getTransaction().rollback();
+		s.close();
+	}
+
+	@Test
 	@TestForIssue( jiraKey = "HHH-10476")
 	public void testInsertFooAndBarWithDerivedIdPC() {
 		Session s = openSession();

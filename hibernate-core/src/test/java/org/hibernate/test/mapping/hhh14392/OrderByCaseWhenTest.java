@@ -21,7 +21,7 @@ import java.util.Map;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 
-@TestForIssue(jiraKey = "HHH-13812")
+@TestForIssue(jiraKey = "HHH-14392")
 public class OrderByCaseWhenTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

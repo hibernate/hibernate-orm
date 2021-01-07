@@ -22,10 +22,10 @@ postgresql_9_5() {
 
 db2() {
     docker rm -f db2 || true
-    docker run --name db2 --privileged -e DB2INSTANCE=orm_test -e DB2INST1_PASSWORD=orm_test -e DBNAME=orm_test -e LICENSE=accept -p 50000:50000 -d ibmcom/db2:11.5.0.0a
+    docker run --name db2 -e DB2INSTANCE=orm_test -e DB2INST1_PASSWORD=orm_test -e DBNAME=orm_test -e LICENSE=accept -e AUTOCONFIG=false -e ARCHIVE_LOGS=false -e TO_CREATE_SAMPLEDB=false -e REPODB=false -p 50000:50000 -d ibmcom/db2:11.5.5.0
     # Give the container some time to start
     OUTPUT=
-    while [[ $OUTPUT != *"Setup has completed"* ]]; do
+    while [[ $OUTPUT != *"INSTANCE"* ]]; do
         echo "Waiting for DB2 to start..."
         sleep 10
         OUTPUT=$(docker logs db2)

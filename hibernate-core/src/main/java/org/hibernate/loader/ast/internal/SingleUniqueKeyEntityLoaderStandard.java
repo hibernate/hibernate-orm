@@ -68,7 +68,7 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 
 		// todo (6.0) : cache the SQL AST and JdbcParameters
 		final List<JdbcParameter> jdbcParameters = new ArrayList<>();
-		final SelectStatement sqlAst = LoaderSelectBuilder.createSelect(
+		final SelectStatement sqlAst = LoaderSelectBuilder.createSelectByUniqueKey(
 				entityDescriptor,
 				Collections.emptyList(),
 				uniqueKeyAttribute,
@@ -146,7 +146,7 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 
 		// todo (6.0) : cache the SQL AST and JdbcParameters
 		final List<JdbcParameter> jdbcParameters = new ArrayList<>();
-		final SelectStatement sqlAst = LoaderSelectBuilder.createSelect(
+		final SelectStatement sqlAst = LoaderSelectBuilder.createSelectByUniqueKey(
 				entityDescriptor,
 				Collections.singletonList( entityDescriptor.getIdentifierMapping() ),
 				uniqueKeyAttribute,

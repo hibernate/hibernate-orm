@@ -6,7 +6,6 @@
  */
 package org.hibernate.sql.results.graph.entity.internal;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -17,8 +16,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.query.NavigablePath;
@@ -47,23 +46,23 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 
 	protected final EntityPersister concreteDescriptor;
 	protected final DomainResultAssembler identifierAssembler;
-	private final EntityValuedModelPart referencedModelPart;
+	private final ToOneAttributeMapping referencedModelPart;
 
 	protected Object entityInstance;
 
 	public EntitySelectFetchInitializer(
 			FetchParentAccess parentAccess,
-			EntityValuedModelPart referencedModelPart,
+			ToOneAttributeMapping referencedModelPart,
 			NavigablePath fetchedNavigable,
 			EntityPersister concreteDescriptor,
 			DomainResultAssembler identifierAssembler,
 			boolean nullable) {
 		this.parentAccess = parentAccess;
+		this.referencedModelPart = referencedModelPart;
 		this.navigablePath = fetchedNavigable;
 		this.concreteDescriptor = concreteDescriptor;
 		this.identifierAssembler = identifierAssembler;
 		this.nullable = nullable;
-		this.referencedModelPart = referencedModelPart;
 		this.isEnhancedForLazyLoading = concreteDescriptor.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading();
 	}
 
@@ -205,8 +204,9 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 			);
 		}
 
-		if ( entityInstance instanceof HibernateProxy && isEnhancedForLazyLoading ) {
-			( (HibernateProxy) entityInstance ).getHibernateLazyInitializer().setUnwrap( true );
+		final boolean unwrapProxy = referencedModelPart.isUnwrapProxy() && isEnhancedForLazyLoading;
+		if ( entityInstance instanceof HibernateProxy ) {
+			( (HibernateProxy) entityInstance ).getHibernateLazyInitializer().setUnwrap( unwrapProxy );
 		}
 	}
 

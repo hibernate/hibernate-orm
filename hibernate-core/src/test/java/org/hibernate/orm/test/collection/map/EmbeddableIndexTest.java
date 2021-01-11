@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.collection.map;
+package org.hibernate.orm.test.collection.map;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -17,9 +17,11 @@ import javax.persistence.ManyToOne;
 import javax.persistence.MapKey;
 import javax.persistence.OneToMany;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -29,16 +31,18 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * @author Andrea Boriero
  */
-public class EmbeddableIndexTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				EmbeddableIndexTest.TheOne.class,
+				EmbeddableIndexTest.TheMany.class
+		}
+)
+@SessionFactory
+public class EmbeddableIndexTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { TheOne.class, TheMany.class };
-	}
-
-	@Before
-	public void setUp() {
-		inTransaction(
+	@BeforeEach
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					TheOne one = new TheOne( "1" );
 					session.save( one );
@@ -55,8 +59,8 @@ public class EmbeddableIndexTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testIt() {
-		inSession(
+	public void testIt(SessionFactoryScope scope) {
+		scope.inSession(
 				session -> {
 					TheOne one = session.get( TheOne.class, "1" );
 					TheMapKey theMapKey = one.getTheManys().keySet().iterator().next();
@@ -64,8 +68,6 @@ public class EmbeddableIndexTest extends BaseCoreFunctionalTestCase {
 					assertThat( theMapKey.getTheOne(), sameInstance( one ) );
 				}
 		);
-
-
 	}
 
 	@Entity(name = "TheOne")

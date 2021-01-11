@@ -70,6 +70,26 @@ public class IdClassGeneratedValueTest {
 
 	@Test
 	@SuppressWarnings({ "unchecked" })
+	public void testBaseLine2(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					Simple s1 = new Simple( 1L, 2L, 10 );
+					session.persist( s1 );
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					List<Simple> simpleList = session.createQuery( "select s from Simple s" ).list();
+					assertEquals( 1, simpleList.size() );
+					Simple s1 = session.load( Simple.class, new SimplePK( 1L, 2L ) );
+					assertEquals( s1.getQuantity(), 10 );
+				}
+		);
+	}
+
+	@Test
+	@SuppressWarnings({ "unchecked" })
 	public void testSingleGeneratedValue(SessionFactoryScope scope) {
 		Long s1Id1 = scope.fromTransaction(
 				session -> {
@@ -116,7 +136,7 @@ public class IdClassGeneratedValueTest {
 							Multiple.class,
 							new MultiplePK( m1Ids.get( 0 ), m1Ids.get( 1 ), 1000L )
 					);
-					assertEquals( m1.getQuantity(), 10 );
+					assertEquals( 10, m1.getQuantity() );
 					session.clear();
 				}
 		);

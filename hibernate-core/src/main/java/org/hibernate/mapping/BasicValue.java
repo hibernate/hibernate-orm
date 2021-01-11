@@ -397,8 +397,8 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 		if ( jtd instanceof TemporalJavaTypeDescriptor ) {
 			return InferredBasicValueResolver.fromTemporal(
 					(TemporalJavaTypeDescriptor) jtd,
-					explicitJavaTypeAccess.apply( typeConfiguration ),
-					explicitSqlTypeAccess.apply( typeConfiguration ),
+					explicitJavaTypeAccess,
+					explicitSqlTypeAccess,
 					this,
 					typeConfiguration
 			);

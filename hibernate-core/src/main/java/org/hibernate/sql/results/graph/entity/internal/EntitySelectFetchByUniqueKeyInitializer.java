@@ -26,13 +26,12 @@ public class EntitySelectFetchByUniqueKeyInitializer extends EntitySelectFetchIn
 
 	public EntitySelectFetchByUniqueKeyInitializer(
 			FetchParentAccess parentAccess,
-			EntityValuedModelPart referencedModelPart,
 			ToOneAttributeMapping fetchedAttribute,
 			NavigablePath fetchedNavigable,
 			EntityPersister concreteDescriptor,
 			DomainResultAssembler identifierAssembler,
 			boolean nullable) {
-		super( parentAccess, referencedModelPart, fetchedNavigable, concreteDescriptor, identifierAssembler, nullable );
+		super( parentAccess, fetchedAttribute, fetchedNavigable, concreteDescriptor, identifierAssembler, nullable );
 		this.fetchedAttribute = fetchedAttribute;
 	}
 

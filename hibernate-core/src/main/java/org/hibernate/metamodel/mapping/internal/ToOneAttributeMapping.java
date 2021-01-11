@@ -53,7 +53,6 @@ import org.hibernate.sql.results.graph.entity.internal.EntityFetchSelectImpl;
 import org.hibernate.sql.results.graph.entity.internal.EntityResultJoinedSubclassImpl;
 import org.hibernate.sql.results.internal.domain.CircularBiDirectionalFetchImpl;
 import org.hibernate.sql.results.internal.domain.CircularFetchImpl;
-import org.hibernate.type.ForeignKeyDirection;
 
 /**
  * @author Steve Ebersole
@@ -75,13 +74,11 @@ public class ToOneAttributeMapping extends AbstractSingularAttributeMapping
 	private final EntityMappingType entityMappingType;
 
 	private final String referencedPropertyName;
-	private final boolean referringPrimaryKey;
 
 	private final Cardinality cardinality;
 	private String bidirectionalAttributeName;
 
 	private ForeignKeyDescriptor foreignKeyDescriptor;
-	private ForeignKeyDirection foreignKeyDirection;
 	private String identifyingColumnsTableExpression;
 	private boolean isKeyReferringSide;
 
@@ -106,16 +103,8 @@ public class ToOneAttributeMapping extends AbstractSingularAttributeMapping
 		this.sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromAttributeName( name );
 		this.isNullable = bootValue.isNullable();
 		this.referencedPropertyName = bootValue.getReferencedPropertyName();
-		this.referringPrimaryKey = bootValue.isReferenceToPrimaryKey();
 		this.unwrapProxy = bootValue.isUnwrapProxy();
 		this.entityMappingType = entityMappingType;
-
-		if ( referringPrimaryKey ) {
-			assert referencedPropertyName == null;
-		}
-		else {
-			assert referencedPropertyName != null;
-		}
 
 		if ( bootValue instanceof ManyToOne ) {
 			final ManyToOne manyToOne = (ManyToOne) bootValue;
@@ -178,23 +167,26 @@ public class ToOneAttributeMapping extends AbstractSingularAttributeMapping
 					( (OneToOne) bootValue ).getMappedByProperty(),
 					'.'
 			);
+
+			if ( bidirectionalAttributeName == null ) {
+				bidirectionalAttributeName = StringHelper.subStringNullIfEmpty(
+						bootValue.getReferencedPropertyName(),
+						'.'
+				);
+			}
 		}
 
 		this.navigableRole = navigableRole;
 	}
 
 	public void setForeignKeyDescriptor(ForeignKeyDescriptor foreignKeyDescriptor) {
-		this.foreignKeyDescriptor = foreignKeyDescriptor;
-		assert identifyingColumnsTableExpression != null;
 		isKeyReferringSide = foreignKeyDescriptor.getAssociationKey().getTable().equals( identifyingColumnsTableExpression );
+		assert identifyingColumnsTableExpression != null;
+		this.foreignKeyDescriptor = foreignKeyDescriptor;
 	}
 
 	public void setIdentifyingColumnsTableExpression(String tableExpression) {
 		identifyingColumnsTableExpression = tableExpression;
-	}
-
-	public void setForeignKeyDirection(ForeignKeyDirection direction) {
-		foreignKeyDirection = direction;
 	}
 
 	public ForeignKeyDescriptor getForeignKeyDescriptor() {
@@ -218,6 +210,10 @@ public class ToOneAttributeMapping extends AbstractSingularAttributeMapping
 	@Override
 	public NavigableRole getNavigableRole() {
 		return navigableRole;
+	}
+
+	public boolean isForeignKeyOwner() {
+		return referencedPropertyName == null;
 	}
 
 	@Override
@@ -471,9 +467,8 @@ public class ToOneAttributeMapping extends AbstractSingularAttributeMapping
 			selectByUniqueKey = false;
 		}
 		else {
-			keyResult = ( (EntityPersister) getDeclaringType() ).getIdentifierMapping()
-					.createDomainResult( fetchablePath, parentTableGroup, null, creationState );
-			// case 1.1
+			keyResult = foreignKeyDescriptor.createDomainResult( fetchablePath, parentTableGroup, isKeyReferringSide, creationState );
+// case 1.1
 			selectByUniqueKey = true;
 		}
 

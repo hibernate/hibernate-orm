@@ -28,8 +28,14 @@ public interface ForeignKeyDescriptor extends VirtualModelPart {
 			DomainResultCreationState creationState);
 
 	DomainResult createDomainResult(
-			NavigablePath collectionPath,
+			NavigablePath navigablePath,
 			TableGroup tableGroup,
+			DomainResultCreationState creationState);
+
+	DomainResult createDomainResult(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			boolean isKeyReferringSide,
 			DomainResultCreationState creationState);
 
 	Predicate generateJoinPredicate(

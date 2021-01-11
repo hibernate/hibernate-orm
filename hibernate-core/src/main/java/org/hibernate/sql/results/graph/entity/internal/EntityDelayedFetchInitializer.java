@@ -72,41 +72,38 @@ public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess imp
 		}
 		else {
 			final EntityPersister concreteDescriptor = referencedModelPart.getEntityMappingType().getEntityPersister();
-
 			final EntityKey entityKey = new EntityKey( identifier, concreteDescriptor );
-			PersistenceContext persistenceContext = rowProcessingState.getSession().getPersistenceContext();
-			final Object entity = persistenceContext.getEntity( entityKey );
-			if ( entity != null ) {
-				entityInstance = entity;
+			final PersistenceContext persistenceContext = rowProcessingState.getSession().getPersistenceContext();
+
+			final Object proxy = persistenceContext.getProxy( entityKey );
+			if ( proxy != null ) {
+				entityInstance = proxy;
 			}
 			else {
-				LoadingEntityEntry loadingEntityLocally = rowProcessingState.getJdbcValuesSourceProcessingState()
-						.findLoadingEntityLocally( entityKey );
-				if ( loadingEntityLocally != null ) {
-					entityInstance = loadingEntityLocally.getEntityInstance();
+				final Object entity = persistenceContext.getEntity( entityKey );
+				if ( entity != null ) {
+					entityInstance = entity;
 				}
-				else if ( concreteDescriptor.hasProxy() ) {
-					final Object proxy = persistenceContext.getProxy( entityKey );
-					if ( proxy != null ) {
-						entityInstance = proxy;
+				else {
+					LoadingEntityEntry loadingEntityLocally = rowProcessingState.getJdbcValuesSourceProcessingState()
+							.findLoadingEntityLocally( entityKey );
+					if ( loadingEntityLocally != null ) {
+						entityInstance = loadingEntityLocally.getEntityInstance();
 					}
-					else {
+					else if ( concreteDescriptor.hasProxy() ) {
 						entityInstance = concreteDescriptor.createProxy(
 								identifier,
 								rowProcessingState.getSession()
 						);
-						persistenceContext
-								.getBatchFetchQueue().addBatchLoadableEntityKey( entityKey );
+						persistenceContext.getBatchFetchQueue().addBatchLoadableEntityKey( entityKey );
 						persistenceContext.addProxy( entityKey, entityInstance );
 					}
-				}
-				else if ( concreteDescriptor
-						.getBytecodeEnhancementMetadata()
-						.isEnhancedForLazyLoading() ) {
-					entityInstance = concreteDescriptor.instantiate(
-							identifier,
-							rowProcessingState.getSession()
-					);
+					else if ( concreteDescriptor.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() ) {
+						entityInstance = concreteDescriptor.instantiate(
+								identifier,
+								rowProcessingState.getSession()
+						);
+					}
 				}
 			}
 

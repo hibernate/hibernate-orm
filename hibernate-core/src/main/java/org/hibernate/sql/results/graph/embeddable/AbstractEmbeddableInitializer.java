@@ -14,6 +14,7 @@ import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.StateArrayContributorMapping;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.AbstractFetchParentAccess;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
@@ -123,14 +124,24 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		if ( compositeInstance != null ) {
 			return;
 		}
-		compositeInstance = embeddedModelPartDescriptor.getEmbeddableTypeDescriptor()
-				.getRepresentationStrategy()
-				.getInstantiator()
-				.instantiate( rowProcessingState.getSession().getFactory() );
+
+		final EmbeddableMappingType embeddableTypeDescriptor = embeddedModelPartDescriptor.getEmbeddableTypeDescriptor();
+		if ( fetchParentAccess != null && embeddableTypeDescriptor.getMappedJavaTypeDescriptor()
+				.getJavaType() == fetchParentAccess.getInitializedPart().getJavaTypeDescriptor().getJavaType() ) {
+			fetchParentAccess.resolveInstance( rowProcessingState );
+			compositeInstance = fetchParentAccess.getInitializedInstance();
+		}
+
+		if ( compositeInstance == null ) {
+			compositeInstance = embeddableTypeDescriptor
+					.getRepresentationStrategy()
+					.getInstantiator()
+					.instantiate( rowProcessingState.getSession().getFactory() );
+		}
+
 		EmbeddableLoadingLogger.INSTANCE.debugf(
-				"Created composite instance [%s] : %s",
-				navigablePath,
-				compositeInstance
+				"Created composite instance [%s]",
+				navigablePath
 		);
 	}
 
@@ -165,9 +176,8 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		}
 
 		EmbeddableLoadingLogger.INSTANCE.debugf(
-				"Initializing composite instance [%s] : %s",
-				navigablePath,
-				compositeInstance
+				"Initializing composite instance [%s]",
+				navigablePath
 		);
 
 		boolean areAllValuesNull = true;
@@ -183,15 +193,27 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 			}
 		}
 
-
 		if ( !createEmptyCompositesEnabled && areAllValuesNull ) {
 			compositeInstance = null;
 		}
 		else {
-			embeddedModelPartDescriptor.getEmbeddableTypeDescriptor().setPropertyValues(
-					compositeInstance,
-					resolvedValues
-			);
+			if ( compositeInstance instanceof HibernateProxy ) {
+				Object target = embeddedModelPartDescriptor.getEmbeddableTypeDescriptor()
+						.getRepresentationStrategy()
+						.getInstantiator()
+						.instantiate( rowProcessingState.getSession().getFactory() );
+				embeddedModelPartDescriptor.getEmbeddableTypeDescriptor().setPropertyValues(
+						target,
+						resolvedValues
+				);
+				( (HibernateProxy) compositeInstance ).getHibernateLazyInitializer().setImplementation( target );
+			}
+			else {
+				embeddedModelPartDescriptor.getEmbeddableTypeDescriptor().setPropertyValues(
+						compositeInstance,
+						resolvedValues
+				);
+			}
 		}
 	}
 

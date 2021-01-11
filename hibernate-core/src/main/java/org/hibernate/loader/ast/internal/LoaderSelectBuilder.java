@@ -133,6 +133,45 @@ public class LoaderSelectBuilder {
 		return process.generateSelect();
 	}
 
+	/**
+	 * Create an SQL AST select-statement for a select by unique key based on matching one-or-more keys
+	 *
+	 * @param loadable The root Loadable
+	 * @param partsToSelect Parts of the Loadable to select.  Null/empty indicates to select the Loadable itself
+	 * @param restrictedPart Part to base the where-clause restriction on
+	 * @param cachedDomainResult DomainResult to be used.  Null indicates to generate the DomainResult
+	 * @param numberOfKeysToLoad How many keys should be accounted for in the where-clause restriction?
+	 * @param loadQueryInfluencers Any influencers (entity graph, fetch profile) to account for
+	 * @param lockOptions Pessimistic lock options to apply
+	 * @param jdbcParameterConsumer Consumer for all JdbcParameter references created
+	 * @param sessionFactory The SessionFactory
+	 */
+	public static SelectStatement createSelectByUniqueKey(
+			Loadable loadable,
+			List<? extends ModelPart> partsToSelect,
+			ModelPart restrictedPart,
+			DomainResult<?> cachedDomainResult,
+			int numberOfKeysToLoad,
+			LoadQueryInfluencers loadQueryInfluencers,
+			LockOptions lockOptions,
+			Consumer<JdbcParameter> jdbcParameterConsumer,
+			SessionFactoryImplementor sessionFactory) {
+		final LoaderSelectBuilder process = new LoaderSelectBuilder(
+				sessionFactory,
+				loadable,
+				partsToSelect,
+				Arrays.asList( restrictedPart ),
+				cachedDomainResult,
+				numberOfKeysToLoad,
+				loadQueryInfluencers,
+				lockOptions,
+				determineGraphTraversalState( loadQueryInfluencers ),
+				true,
+				jdbcParameterConsumer
+		);
+
+		return process.generateSelect();
+	}
 
 	public static SelectStatement createSelect(
 			Loadable loadable,
@@ -162,8 +201,6 @@ public class LoaderSelectBuilder {
 	/**
 	 * Create an SQL AST select-statement used for subselect-based CollectionLoader
 	 *
-	 * @see CollectionLoaderSubSelectFetch
-	 *
 	 * @param attributeMapping The plural-attribute being loaded
 	 * @param subselect The subselect details to apply
 	 * @param cachedDomainResult DomainResult to be used.  Null indicates to generate the DomainResult?
@@ -171,6 +208,8 @@ public class LoaderSelectBuilder {
 	 * @param lockOptions Pessimistic lock options to apply
 	 * @param jdbcParameterConsumer Consumer for all JdbcParameter references created
 	 * @param sessionFactory The SessionFactory
+	 *
+	 * @see CollectionLoaderSubSelectFetch
 	 */
 	public static SelectStatement createSubSelectFetchSelect(
 			PluralAttributeMapping attributeMapping,
@@ -245,19 +284,42 @@ public class LoaderSelectBuilder {
 			LoadQueryInfluencers loadQueryInfluencers,
 			LockOptions lockOptions,
 			Consumer<JdbcParameter> jdbcParameterConsumer) {
-		this.creationContext = creationContext;
-		this.loadable = loadable;
-		this.partsToSelect = partsToSelect;
-		this.restrictedParts = restrictedParts;
-		this.cachedDomainResult = cachedDomainResult;
-		this.numberOfKeysToLoad = numberOfKeysToLoad;
-		this.loadQueryInfluencers = loadQueryInfluencers;
+		this(
+				creationContext,
+				loadable,
+				partsToSelect,
+				restrictedParts,
+				cachedDomainResult,
+				numberOfKeysToLoad,
+				loadQueryInfluencers,
+				lockOptions != null ? lockOptions : LockOptions.NONE,
+				determineGraphTraversalState( loadQueryInfluencers ),
+				determineWhetherToForceIdSelection( numberOfKeysToLoad, restrictedParts ),
+				jdbcParameterConsumer
+		);
+	}
 
-		this.forceIdentifierSelection = determineWhetherToForceIdSelection( numberOfKeysToLoad, restrictedParts );
-		this.entityGraphTraversalState = determineGraphTraversalState( loadQueryInfluencers );
-
-		this.lockOptions = lockOptions != null ? lockOptions : LockOptions.NONE;
-		this.jdbcParameterConsumer = jdbcParameterConsumer;
+	private LoaderSelectBuilder(
+			SqlAstCreationContext creationContext,
+			Loadable loadable,
+			List<? extends ModelPart> partsToSelect,
+			ModelPart restrictedPart,
+			DomainResult cachedDomainResult,
+			int numberOfKeysToLoad,
+			LoadQueryInfluencers loadQueryInfluencers,
+			LockOptions lockOptions,
+			Consumer<JdbcParameter> jdbcParameterConsumer) {
+		this(
+				creationContext,
+				loadable,
+				partsToSelect,
+				Arrays.asList( restrictedPart ),
+				cachedDomainResult,
+				numberOfKeysToLoad,
+				loadQueryInfluencers,
+				lockOptions,
+				jdbcParameterConsumer
+		);
 	}
 
 	private static boolean determineWhetherToForceIdSelection(int numberOfKeysToLoad, List<ModelPart> restrictedParts) {
@@ -293,29 +355,6 @@ public class LoaderSelectBuilder {
 			}
 		}
 		return null;
-	}
-
-	private LoaderSelectBuilder(
-			SqlAstCreationContext creationContext,
-			Loadable loadable,
-			List<? extends ModelPart> partsToSelect,
-			ModelPart restrictedPart,
-			DomainResult cachedDomainResult,
-			int numberOfKeysToLoad,
-			LoadQueryInfluencers loadQueryInfluencers,
-			LockOptions lockOptions,
-			Consumer<JdbcParameter> jdbcParameterConsumer) {
-		this(
-				creationContext,
-				loadable,
-				partsToSelect,
-				Arrays.asList( restrictedPart ),
-				cachedDomainResult,
-				numberOfKeysToLoad,
-				loadQueryInfluencers,
-				lockOptions,
-				jdbcParameterConsumer
-		);
 	}
 
 	private SelectStatement generateSelect() {
@@ -410,7 +449,11 @@ public class LoaderSelectBuilder {
 
 		if ( orderByFragments != null ) {
 			orderByFragments.forEach(
-					(orderByFragment, tableGroup) -> orderByFragment.apply( rootQuerySpec, tableGroup, sqlAstCreationState )
+					(orderByFragment, tableGroup) -> orderByFragment.apply(
+							rootQuerySpec,
+							tableGroup,
+							sqlAstCreationState
+					)
 			);
 		}
 
@@ -503,7 +546,10 @@ public class LoaderSelectBuilder {
 		}
 	}
 
-	private void applyFiltering(QuerySpec querySpec, TableGroup tableGroup, PluralAttributeMapping pluralAttributeMapping) {
+	private void applyFiltering(
+			QuerySpec querySpec,
+			TableGroup tableGroup,
+			PluralAttributeMapping pluralAttributeMapping) {
 		final Joinable joinable = pluralAttributeMapping
 				.getCollectionDescriptor()
 				.getCollectionType()
@@ -547,14 +593,23 @@ public class LoaderSelectBuilder {
 		orderByFragments.put( orderByFragment, tableGroup );
 	}
 
-	private List<Fetch> visitFetches(FetchParent fetchParent, QuerySpec querySpec, LoaderSqlAstCreationState creationState) {
+	private List<Fetch> visitFetches(
+			FetchParent fetchParent,
+			QuerySpec querySpec,
+			LoaderSqlAstCreationState creationState) {
 		if ( log.isTraceEnabled() ) {
 			log.tracef( "Starting visitation of FetchParent's Fetchables : %s", fetchParent.getNavigablePath() );
 		}
 
 		final List<Fetch> fetches = new ArrayList<>();
 		final List<String> bagRoles = new ArrayList<>();
-		final BiConsumer<Fetchable, Boolean> processor = createFetchableBiConsumer( fetchParent, querySpec, creationState, fetches, bagRoles );
+		final BiConsumer<Fetchable, Boolean> processor = createFetchableBiConsumer(
+				fetchParent,
+				querySpec,
+				creationState,
+				fetches,
+				bagRoles
+		);
 
 		final FetchableContainer referencedMappingContainer = fetchParent.getReferencedMappingContainer();
 		if ( fetchParent.getNavigablePath().getParent() != null ) {
@@ -605,7 +660,10 @@ public class LoaderSelectBuilder {
 				}
 
 				if ( identifierMapping != null ) {
-					fetchablePath = new EntityIdentifierNavigablePath( parentNavigablePath, attributeName( identifierMapping ) );
+					fetchablePath = new EntityIdentifierNavigablePath(
+							parentNavigablePath,
+							attributeName( identifierMapping )
+					);
 				}
 				else {
 					fetchablePath = parentNavigablePath.append( fetchable.getFetchableName() );
@@ -632,7 +690,7 @@ public class LoaderSelectBuilder {
 
 			EntityGraphTraversalState.TraversalResult traversalResult = null;
 
-			if ( ! (fetchable instanceof CollectionPart ) ) {
+			if ( !( fetchable instanceof CollectionPart ) ) {
 				// 'entity graph' takes precedence over 'fetch profile'
 				if ( entityGraphTraversalState != null ) {
 					traversalResult = entityGraphTraversalState.traverse( fetchParent, fetchable, isKeyFetchable );
@@ -852,16 +910,20 @@ public class LoaderSelectBuilder {
 			final List<ColumnReference> columnReferences = new ArrayList<>( jdbcTypeCount );
 			fkDescriptor.forEachSelection(
 					(columnIndex, selection) ->
-						columnReferences.add(
-								(ColumnReference) sqlAstCreationState.getSqlExpressionResolver().resolveSqlExpression(
-										createColumnReferenceKey( selection.getContainingTableExpression(), selection.getSelectionExpression() ),
-										sqlAstProcessingState -> new ColumnReference(
-												rootTableGroup.resolveTableReference( selection.getContainingTableExpression() ),
-												selection,
-												this.creationContext.getSessionFactory()
-										)
-								)
-						)
+							columnReferences.add(
+									(ColumnReference) sqlAstCreationState.getSqlExpressionResolver()
+											.resolveSqlExpression(
+													createColumnReferenceKey(
+															selection.getContainingTableExpression(),
+															selection.getSelectionExpression()
+													),
+													sqlAstProcessingState -> new ColumnReference(
+															rootTableGroup.resolveTableReference( selection.getContainingTableExpression() ),
+															selection,
+															this.creationContext.getSessionFactory()
+													)
+											)
+							)
 			);
 
 			fkExpression = new SqlTuple( columnReferences, fkDescriptor );

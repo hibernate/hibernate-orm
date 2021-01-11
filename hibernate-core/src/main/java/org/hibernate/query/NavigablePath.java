@@ -6,8 +6,6 @@
  */
 package org.hibernate.query;
 
-import java.util.Objects;
-
 import org.hibernate.DotIdentifierSequence;
 import org.hibernate.internal.util.StringHelper;
 

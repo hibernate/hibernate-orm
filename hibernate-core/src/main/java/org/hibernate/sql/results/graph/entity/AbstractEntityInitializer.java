@@ -39,6 +39,7 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.results.graph.AbstractFetchParentAccess;
@@ -145,7 +146,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 //								return otherExisting;
 //							}
 
-							final Initializer initializer = producer.get();
+							final Initializer initializer = creationState.resolveInitializer( navigablePath, fetchedModelPart, producer );
 							identifierInitializers.add( initializer );
 							return initializer;
 						}
@@ -198,7 +199,9 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 					final DomainResultAssembler stateAssembler;
 					if ( fetch == null ) {
-						stateAssembler = new NullValueAssembler( attributeMapping.getMappedType().getMappedJavaTypeDescriptor() );
+						stateAssembler = new NullValueAssembler(
+								attributeMapping.getMappedType() .getMappedJavaTypeDescriptor()
+						);
 					}
 					else {
 						stateAssembler = fetch.createAssembler( this, creationState );
@@ -257,7 +260,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			throw new IllegalStateException( "Unexpected state condition - entity instance not yet resolved" );
 		}
 
-		return entityInstance;
+		return getEntityInstance();
 	}
 
 	// todo (6.0) : how to best handle possibility of null association?
@@ -415,6 +418,10 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			return;
 		}
 
+		if ( entityInstance != null ) {
+			return;
+		}
+
 		final Object entityIdentifier = entityKey.getIdentifier();
 
 		if ( EntityLoadingLogger.TRACE_ENABLED ) {
@@ -431,21 +438,51 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				.getSession();
 
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
+		final Object proxy = getProxy( persistenceContext );
 
-		final Object existingEntity = persistenceContext.getEntity( entityKey );
-
-		if ( existingEntity != null ) {
-			entityInstance = existingEntity;
-			return;
+		if ( proxy != null ) {
+			entityInstance = proxy;
 		}
+		else {
+			final Object existingEntity = persistenceContext.getEntity( entityKey );
 
-		// look to see if another initializer from a parent load context or an earlier
-		// initializer is already loading the entity
+			if ( existingEntity != null ) {
+				entityInstance = existingEntity;
+			}
+			else {
 
+				// look to see if another initializer from a parent load context or an earlier
+				// initializer is already loading the entity
+				if ( entityInstance == null ) {
+					entityInstance = resolveInstance(
+							entityIdentifier,
+							rowProcessingState,
+							session,
+							persistenceContext
+					);
+
+				}
+			}
+		}
+		notifyParentResolutionListeners( entityInstance );
+
+		preLoad( rowProcessingState );
+	}
+
+	protected Object getProxy(PersistenceContext persistenceContext) {
+		return persistenceContext.getProxy( entityKey );
+	}
+
+	private Object resolveInstance(
+			Object entityIdentifier,
+			RowProcessingState rowProcessingState,
+			SharedSessionContractImplementor session,
+			PersistenceContext persistenceContext) {
 		final LoadingEntityEntry existingLoadingEntry = persistenceContext
 				.getLoadContexts()
 				.findLoadingEntityEntry( entityKey );
 
+		Object instance = null;
 		if ( existingLoadingEntry != null ) {
 			if ( EntityLoadingLogger.DEBUG_ENABLED ) {
 				EntityLoadingLogger.LOGGER.debugf(
@@ -455,7 +492,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				);
 			}
 
-			this.entityInstance = existingLoadingEntry.getEntityInstance();
+			instance = existingLoadingEntry.getEntityInstance();
 
 			if ( existingLoadingEntry.getEntityInitializer() != this ) {
 				// the entity is already being loaded elsewhere
@@ -469,38 +506,38 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				}
 
 				// EARLY EXIT!!!
-				return;
+				return instance;
 			}
 		}
 
-		if ( entityInstance == null ) {
+		if ( instance == null ) {
 			// this isEntityReturn bit is just for entity loaders, not hql/criteria
 			if ( isEntityReturn() ) {
-				final Object requestedEntityId = rowProcessingState.getJdbcValuesSourceProcessingState().getProcessingOptions().getEffectiveOptionalId();
-				final Object optionalEntityInstance = rowProcessingState.getJdbcValuesSourceProcessingState().getProcessingOptions().getEffectiveOptionalObject();
-				if ( requestedEntityId != null && optionalEntityInstance != null && requestedEntityId.equals( entityKey.getIdentifier() ) ) {
-					entityInstance = optionalEntityInstance;
+				final Object requestedEntityId = rowProcessingState.getJdbcValuesSourceProcessingState()
+						.getProcessingOptions()
+						.getEffectiveOptionalId();
+				final Object optionalEntityInstance = rowProcessingState.getJdbcValuesSourceProcessingState()
+						.getProcessingOptions()
+						.getEffectiveOptionalObject();
+				if ( requestedEntityId != null && optionalEntityInstance != null && requestedEntityId.equals(
+						entityKey.getIdentifier() ) ) {
+					instance = optionalEntityInstance;
 				}
 			}
 		}
 
-		if ( entityInstance == null ) {
-			// see if it is managed in the Session already
-			final Object entity = persistenceContext.getEntity( entityKey );
-			if ( entity != null ) {
-				this.entityInstance = entity;
-			}
-		}
-
-		if ( entityInstance == null ) {
-			entityInstance = session.instantiate( concreteDescriptor.getEntityName(), entityKey.getIdentifier() );
+		if ( instance == null ) {
+			instance = session.instantiate(
+					concreteDescriptor.getEntityName(),
+					entityKey.getIdentifier()
+			);
 
 			if ( EntityLoadingLogger.DEBUG_ENABLED ) {
 				EntityLoadingLogger.LOGGER.debugf(
 						"(%s) Created new entity instance [%s] : %s",
 						getSimpleConcreteImplName(),
 						toLoggableString( getNavigablePath(), entityIdentifier ),
-						entityInstance
+						instance
 				);
 			}
 
@@ -508,19 +545,15 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 					this,
 					entityKey,
 					concreteDescriptor,
-					entityInstance
+					instance
 			);
 
 			rowProcessingState.getJdbcValuesSourceProcessingState().registerLoadingEntity(
 					entityKey,
 					loadingEntry
 			);
-
 		}
-
-		notifyParentResolutionListeners( entityInstance );
-
-		preLoad( rowProcessingState );
+		return instance;
 	}
 
 	@Override
@@ -528,11 +561,39 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		if ( missing ) {
 			return;
 		}
-
-		final SharedSessionContractImplementor session = rowProcessingState.getJdbcValuesSourceProcessingState().getSession();
+		final SharedSessionContractImplementor session = rowProcessingState.getJdbcValuesSourceProcessingState()
+				.getSession();
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
 
-		if ( persistenceContext.getEntity( entityKey ) != null ) {
+		if ( entityInstance instanceof HibernateProxy ) {
+			LazyInitializer hibernateLazyInitializer = ( (HibernateProxy) entityInstance ).getHibernateLazyInitializer();
+			if ( !hibernateLazyInitializer.isUninitialized() ) {
+				return;
+			}
+			Object instance = resolveInstance(
+					entityKey.getIdentifier(),
+					rowProcessingState,
+					session,
+					persistenceContext
+			);
+			intializeEntity( instance, rowProcessingState, session, persistenceContext );
+			hibernateLazyInitializer.setImplementation( instance );
+			postLoad( instance, rowProcessingState );
+		}
+		else {
+			intializeEntity( entityInstance, rowProcessingState, session, persistenceContext );
+			postLoad( entityInstance, rowProcessingState );
+		}
+	}
+
+	private void intializeEntity(
+			Object toInitialize,
+			RowProcessingState rowProcessingState,
+			SharedSessionContractImplementor session,
+			PersistenceContext persistenceContext) {
+		final Object entity = persistenceContext.getEntity( entityKey );
+
+		if ( entity != null ) {
 			return;
 		}
 
@@ -548,25 +609,25 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 		// todo (6.0): do we really need this check ?
 		if ( persistenceContext.containsEntity( entityKey ) ) {
-			Status status = persistenceContext.getEntry( persistenceContext.getEntity( entityKey ) )
+			Status status = persistenceContext.getEntry( entity )
 					.getStatus();
 			if ( status == Status.DELETED || status == Status.GONE ) {
 				return;
 			}
 		}
 
-		entityDescriptor.setIdentifier( entityInstance, entityIdentifier, session );
+		entityDescriptor.setIdentifier( toInitialize, entityIdentifier, session );
 
 		resolvedEntityState = concreteDescriptor.extractConcreteTypeStateValues(
 				assemblerMap,
 				rowProcessingState
 		);
 
-		concreteDescriptor.setPropertyValues( entityInstance, resolvedEntityState );
+		concreteDescriptor.setPropertyValues( toInitialize, resolvedEntityState );
 
 		persistenceContext.addEntity(
 				entityKey,
-				entityInstance
+				toInitialize
 		);
 
 		final Object version;
@@ -588,7 +649,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 
 		final EntityEntry entityEntry = persistenceContext.addEntry(
-				entityInstance,
+				toInitialize,
 				Status.LOADING,
 				resolvedEntityState,
 				rowId,
@@ -612,7 +673,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				);
 			}
 
-			final CacheEntry entry = concreteDescriptor.buildCacheEntry( entityInstance, resolvedEntityState, version, session );
+			final CacheEntry entry = concreteDescriptor.buildCacheEntry( toInitialize, resolvedEntityState, version, session );
 			final Object cacheKey = cacheAccess.generateCacheKey(
 					entityIdentifier,
 					rootEntityDescriptor,
@@ -672,11 +733,10 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			isReallyReadOnly = true;
 		}
 		else {
-			final Object proxy = persistenceContext.getProxy( entityKey );
-			if ( proxy != null ) {
+			if ( entityInstance instanceof HibernateProxy) {
 				// there is already a proxy for this impl
 				// only set the status to read-only if the proxy is read-only
-				isReallyReadOnly = ( (HibernateProxy) proxy ).getHibernateLazyInitializer().isReadOnly();
+				isReallyReadOnly = 	( (HibernateProxy) entityInstance ).getHibernateLazyInitializer().isReadOnly();
 			}
 		}
 		if ( isReallyReadOnly ) {
@@ -697,7 +757,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			persistenceContext.setEntryStatus( entityEntry, Status.MANAGED );
 		}
 
-		concreteDescriptor.afterInitialize( entityInstance, session );
+		concreteDescriptor.afterInitialize( toInitialize, session );
 
 		if ( EntityLoadingLogger.DEBUG_ENABLED ) {
 			EntityLoadingLogger.LOGGER.debugf(
@@ -710,8 +770,6 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		if ( factory.getStatistics().isStatisticsEnabled() ) {
 			factory.getStatistics().loadEntity( concreteDescriptor.getEntityName() );
 		}
-
-		postLoad( rowProcessingState );
 	}
 
 	private boolean isReadOnly(
@@ -750,7 +808,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 	}
 
-	private void postLoad(RowProcessingState rowProcessingState) {
+	private void postLoad(Object instance,RowProcessingState rowProcessingState) {
 		final SharedSessionContractImplementor session = rowProcessingState.getJdbcValuesSourceProcessingState().getSession();
 
 		if ( session instanceof EventSource ) {
@@ -759,7 +817,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 			postLoadEvent.reset();
 
-			postLoadEvent.setEntity( entityInstance )
+			postLoadEvent.setEntity( instance )
 					.setId( entityKey.getIdentifier() )
 					.setPersister( concreteDescriptor );
 

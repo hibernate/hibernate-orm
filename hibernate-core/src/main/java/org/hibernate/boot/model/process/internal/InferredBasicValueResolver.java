@@ -287,17 +287,33 @@ public class InferredBasicValueResolver {
 	@SuppressWarnings({"rawtypes", "unchecked"})
 	public static InferredBasicValueResolution fromTemporal(
 			TemporalJavaTypeDescriptor reflectedJtd,
-			JavaTypeDescriptor explicitJavaType,
-			SqlTypeDescriptor explicitSqlType,
+			Function<TypeConfiguration, BasicJavaDescriptor> explicitJavaTypeAccess,
+			Function<TypeConfiguration, SqlTypeDescriptor> explicitSqlTypeAccess,
 			SqlTypeDescriptorIndicators stdIndicators,
 			TypeConfiguration typeConfiguration) {
 		final TemporalType requestedTemporalPrecision = stdIndicators.getTemporalPrecision();
+
+		final JavaTypeDescriptor explicitJavaType;
+		if ( explicitJavaTypeAccess != null ) {
+			explicitJavaType = explicitJavaTypeAccess.apply( typeConfiguration );
+		}
+		else {
+			explicitJavaType = null;
+		}
+
+		final SqlTypeDescriptor explicitSqlType;
+		if ( explicitSqlTypeAccess != null ) {
+			explicitSqlType = explicitSqlTypeAccess.apply( typeConfiguration );
+		}
+		else {
+			explicitSqlType = null;
+		}
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Case #1 - @JavaType
 
 		if ( explicitJavaType != null ) {
-			if ( ! TemporalJavaTypeDescriptor.class.isInstance( explicitJavaType ) ) {
+			if ( !TemporalJavaTypeDescriptor.class.isInstance( explicitJavaType ) ) {
 				throw new MappingException(
 						"Explicit JavaTypeDescriptor [" + explicitJavaType +
 								"] defined for temporal value must implement TemporalJavaTypeDescriptor"

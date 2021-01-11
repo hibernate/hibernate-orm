@@ -42,8 +42,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DomainModel(
 		annotatedClasses = {
 				Mother.class,
+				AdoptedChild.class,
+
 				Child.class,
-				AdoptedChild.class
 		}
 )
 @ServiceRegistry
@@ -457,17 +458,20 @@ public class EntityWithBidirectionalOneToOneTest {
 
 	@Entity(name = "Mother")
 	public static class Mother {
-		@Id
-		private Integer id;
-		private String name;
-
-		@OneToOne
-		private Child biologicalChild;
 
 		@OneToOne(mappedBy = "stepMother")
 		private AdoptedChild adopted;
 
-		Mother() {
+		@OneToOne
+		private Child biologicalChild;
+
+		@Id
+		private Integer id;
+
+		private String name;
+
+		public Mother(){
+
 		}
 
 		public Mother(Integer id, String name) {
@@ -477,6 +481,22 @@ public class EntityWithBidirectionalOneToOneTest {
 
 		Mother(Integer id) {
 			this.id = id;
+		}
+
+		public AdoptedChild getAdopted() {
+			return adopted;
+		}
+
+		public void setAdopted(AdoptedChild adopted) {
+			this.adopted = adopted;
+		}
+
+		public Child getBiologicalChild() {
+			return biologicalChild;
+		}
+
+		public void setBiologicalChild(Child biologicalChild) {
+			this.biologicalChild = biologicalChild;
 		}
 
 		public Integer getId() {
@@ -494,32 +514,18 @@ public class EntityWithBidirectionalOneToOneTest {
 		public void setName(String name) {
 			this.name = name;
 		}
-
-		public Child getBiologicalChild() {
-			return biologicalChild;
-		}
-
-		public void setBiologicalChild(Child biologicalChild) {
-			this.biologicalChild = biologicalChild;
-		}
-
-		public AdoptedChild getAdopted() {
-			return adopted;
-		}
-
-		public void setAdopted(AdoptedChild adopted) {
-			this.adopted = adopted;
-		}
 	}
 
 	@Entity(name = "Child")
 	public static class Child {
 		@Id
 		private Integer id;
-		private String name;
 
 		@OneToOne(mappedBy = "biologicalChild")
 		private Mother mother;
+
+		private String name;
+
 
 		Child() {
 
@@ -563,10 +569,11 @@ public class EntityWithBidirectionalOneToOneTest {
 		@Id
 		private Integer id;
 
-		private String name;
-
 		@OneToOne
 		private Mother biologicalMother;
+
+		private String name;
+
 
 		@OneToOne
 		private Mother stepMother;

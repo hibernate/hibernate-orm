@@ -86,7 +86,6 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
-import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -928,9 +927,8 @@ public class MappingModelCreationHelper {
 		}
 		else if ( fkTarget instanceof EmbeddableValuedModelPart ) {
 			final EmbeddedForeignKeyDescriptor embeddedForeignKeyDescriptor =
-					buildEmbeddedForeignKeyDescriptor(
+					buildTargetingEmbeddableForeignKeyDescriptor(
 							(EmbeddableValuedModelPart) fkTarget,
-							attributeMapping,
 							bootValueMapping,
 							dialect,
 							creationProcess
@@ -956,8 +954,6 @@ public class MappingModelCreationHelper {
 			return;
 		}
 
-		final ForeignKeyDirection foreignKeyDirection = ( (AssociationType) bootValueMapping.getType() ).getForeignKeyDirection();
-		attributeMapping.setForeignKeyDirection( foreignKeyDirection );
 		final String tableName = getTableIdentifierExpression( bootValueMapping.getTable(), creationProcess );
 		attributeMapping.setIdentifyingColumnsTableExpression( tableName );
 
@@ -982,9 +978,8 @@ public class MappingModelCreationHelper {
 				);
 			}
 			else if ( modelPart instanceof EmbeddableValuedModelPart ) {
-				final EmbeddedForeignKeyDescriptor embeddedForeignKeyDescriptor = buildEmbeddedForeignKeyDescriptor(
+				final EmbeddedForeignKeyDescriptor embeddedForeignKeyDescriptor = buildForeignKeyReferringEmbeddableDescriptor(
 						(EmbeddableValuedModelPart) modelPart,
-						attributeMapping,
 						bootValueMapping,
 						dialect,
 						creationProcess
@@ -1041,9 +1036,8 @@ public class MappingModelCreationHelper {
 			attributeMapping.setForeignKeyDescriptor( foreignKeyDescriptor );
 		}
 		else if ( fkTarget instanceof EmbeddableValuedModelPart ) {
-			final EmbeddedForeignKeyDescriptor embeddedForeignKeyDescriptor = buildEmbeddedForeignKeyDescriptor(
+			final EmbeddedForeignKeyDescriptor embeddedForeignKeyDescriptor = buildTargetingEmbeddableForeignKeyDescriptor(
 					(EmbeddableValuedModelPart) fkTarget,
-					attributeMapping,
 					bootValueMapping,
 					dialect,
 					creationProcess
@@ -1058,9 +1052,53 @@ public class MappingModelCreationHelper {
 		}
 	}
 
-	public static EmbeddedForeignKeyDescriptor buildEmbeddedForeignKeyDescriptor(
-			EmbeddableValuedModelPart fkTarget,
-			AbstractAttributeMapping attributeMapping,
+	public static EmbeddedForeignKeyDescriptor buildForeignKeyReferringEmbeddableDescriptor(
+			EmbeddableValuedModelPart embeddableValuedModelPart,
+			Value bootValueMapping,
+			Dialect dialect,
+			MappingModelCreationProcess creationProcess) {
+		final SelectionMappings targetSelectionMappings;
+		final String targetTableExpression;
+		if ( bootValueMapping instanceof Collection ) {
+			final Collection collectionBootValueMapping = (Collection) bootValueMapping;
+			targetTableExpression = getTableIdentifierExpression(
+					collectionBootValueMapping.getCollectionTable(),
+					creationProcess
+			);
+			targetSelectionMappings = SelectionMappingsImpl.from(
+					targetTableExpression,
+					collectionBootValueMapping.getKey(),
+					creationProcess.getCreationContext().getSessionFactory(),
+					dialect,
+					creationProcess.getSqmFunctionRegistry()
+			);
+		}
+		else {
+			targetTableExpression = getTableIdentifierExpression(
+					bootValueMapping.getTable(),
+					creationProcess
+			);
+			targetSelectionMappings = SelectionMappingsImpl.from(
+					targetTableExpression,
+					bootValueMapping,
+					creationProcess.getCreationContext().getSessionFactory(),
+					dialect,
+					creationProcess.getSqmFunctionRegistry()
+			);
+		}
+		return new EmbeddedForeignKeyDescriptor(
+				embeddableValuedModelPart,
+				embeddableValuedModelPart.getContainingTableExpression(),
+				embeddableValuedModelPart.getEmbeddableTypeDescriptor(),
+				targetTableExpression,
+				targetSelectionMappings,
+				creationProcess
+		);
+	}
+
+
+	public static EmbeddedForeignKeyDescriptor buildTargetingEmbeddableForeignKeyDescriptor(
+			EmbeddableValuedModelPart embeddableValuedModelPart,
 			Value bootValueMapping,
 			Dialect dialect,
 			MappingModelCreationProcess creationProcess) {
@@ -1094,11 +1132,11 @@ public class MappingModelCreationHelper {
 			);
 		}
 		return new EmbeddedForeignKeyDescriptor(
-				fkTarget,
+				embeddableValuedModelPart,
 				keyTableExpression,
 				keySelectionMappings,
-				fkTarget.getContainingTableExpression(),
-				fkTarget.getEmbeddableTypeDescriptor(),
+				embeddableValuedModelPart.getContainingTableExpression(),
+				embeddableValuedModelPart.getEmbeddableTypeDescriptor(),
 				creationProcess
 		);
 	}

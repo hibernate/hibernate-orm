@@ -79,12 +79,12 @@ public interface JdbcParameterBindings {
 				value,
 				clause,
 				offset,
-				(selectionIndex, jdbcValue, type) -> {
-					addBinding(
-							jdbcParameters.get( selectionIndex ),
-							new JdbcParameterBindingImpl( type, jdbcValue )
-					);
-				},
+				(selectionIndex, jdbcValue, type) ->
+						addBinding(
+								jdbcParameters.get( selectionIndex ),
+								new JdbcParameterBindingImpl( type, jdbcValue )
+						)
+				,
 				session
 		);
 	}

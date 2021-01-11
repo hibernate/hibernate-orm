@@ -7,7 +7,6 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.HibernateException;
@@ -91,49 +90,22 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
 		if ( targetColumnContainingTable.equals( keyColumnContainingTable ) ) {
-			final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
-			final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
-			final TableReference tableReference = tableGroup.resolveTableReference( keyColumnContainingTable );
-			final String identificationVariable = tableReference.getIdentificationVariable();
-
-			List<SqlSelection> sqlSelections = new ArrayList<>( targetSelectionMappings.getJdbcTypeCount() );
-			targetSelectionMappings.forEachSelection(
-					(columnIndex, selection) -> {
-						final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
-								sqlExpressionResolver.resolveSqlExpression(
-										SqlExpressionResolver.createColumnReferenceKey(
-												tableReference,
-												selection.getSelectionExpression()
-										),
-										s ->
-												new ColumnReference(
-														identificationVariable,
-														selection,
-														creationState.getSqlAstCreationState()
-																.getCreationContext()
-																.getSessionFactory()
-												)
-
-								),
-								selection.getJdbcMapping().getJavaTypeDescriptor(),
-								sqlAstCreationState.getCreationContext()
-										.getDomainModel()
-										.getTypeConfiguration()
-						);
-						sqlSelections.add( sqlSelection );
-					}
-			);
-
-			return new EmbeddableForeignKeyResultImpl<>(
-					sqlSelections,
+			return createDomainResult(
 					collectionPath,
-					mappingType,
-					null,
+					tableGroup,
+					targetColumnContainingTable,
+					targetSelectionMappings,
 					creationState
 			);
 		}
 		else {
-			return createDomainResult( collectionPath, tableGroup, creationState );
+			return createDomainResult(
+					collectionPath,
+					tableGroup,
+					keyColumnContainingTable,
+					keySelectionMappings,
+					creationState
+			);
 		}
 	}
 
@@ -142,13 +114,54 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 			NavigablePath collectionPath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
-		//noinspection unchecked
+		return createDomainResult(
+				collectionPath,
+				tableGroup,
+				keyColumnContainingTable,
+				keySelectionMappings,
+				creationState
+		);
+	}
+
+	@Override
+	public DomainResult createDomainResult(
+			NavigablePath collectionPath,
+			TableGroup tableGroup,
+			boolean isKeyReferringSide,
+			DomainResultCreationState creationState) {
+		if ( isKeyReferringSide ) {
+			return createDomainResult(
+					collectionPath,
+					tableGroup,
+					keyColumnContainingTable,
+					keySelectionMappings,
+					creationState
+			);
+		}
+		else {
+			return createDomainResult(
+					collectionPath,
+					tableGroup,
+					targetColumnContainingTable,
+					targetSelectionMappings,
+					creationState
+			);
+		}
+	}
+
+	private DomainResult createDomainResult(
+			NavigablePath collectionPath,
+			TableGroup tableGroup,
+			String columnContainingTable,
+			SelectionMappings selectionMappings,
+			DomainResultCreationState creationState) {
 		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
 		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
-		final TableReference tableReference = tableGroup.resolveTableReference( keyColumnContainingTable );
+		final TableReference tableReference = tableGroup.resolveTableReference( columnContainingTable );
 		final String identificationVariable = tableReference.getIdentificationVariable();
-		List<SqlSelection> sqlSelections = new ArrayList<>( keySelectionMappings.getJdbcTypeCount() );
-		keySelectionMappings.forEachSelection(
+
+		final List<SqlSelection> sqlSelections = new ArrayList<>( selectionMappings.getJdbcTypeCount() );
+		selectionMappings.forEachSelection(
 				(columnIndex, selection) -> {
 					final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 							sqlExpressionResolver.resolveSqlExpression(

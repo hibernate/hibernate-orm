@@ -7,7 +7,10 @@
 package org.hibernate.sql.results.graph.entity.internal;
 
 import org.hibernate.LockMode;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.internal.log.LoggingHelper;
+import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -20,8 +23,12 @@ import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
 public class EntityJoinedFetchInitializer extends AbstractEntityInitializer {
 	private static final String CONCRETE_NAME = EntityJoinedFetchInitializer.class.getSimpleName();
 
+	private final ModelPart referencedModelPart;
+	private final boolean isEnhancedForLazyLoading;
+
 	protected EntityJoinedFetchInitializer(
 			EntityResultGraphNode resultDescriptor,
+			ModelPart referencedModelPart,
 			NavigablePath navigablePath,
 			LockMode lockMode,
 			DomainResult<?> identifierResult,
@@ -38,6 +45,25 @@ public class EntityJoinedFetchInitializer extends AbstractEntityInitializer {
 				null,
 				creationState
 		);
+		this.referencedModelPart = referencedModelPart;
+		if ( getConcreteDescriptor() != null ) {
+			this.isEnhancedForLazyLoading = getConcreteDescriptor().getBytecodeEnhancementMetadata()
+					.isEnhancedForLazyLoading();
+		}
+		else {
+			this.isEnhancedForLazyLoading = false;
+		}
+	}
+
+	@Override
+	protected Object getProxy(PersistenceContext persistenceContext) {
+		if ( referencedModelPart instanceof ToOneAttributeMapping ) {
+			final boolean unwrapProxy = ( (ToOneAttributeMapping) referencedModelPart ).isUnwrapProxy() && isEnhancedForLazyLoading;
+			if ( unwrapProxy ) {
+				return null;
+			}
+		}
+		return super.getProxy( persistenceContext );
 	}
 
 	@Override

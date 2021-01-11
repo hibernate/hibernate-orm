@@ -987,6 +987,9 @@ public class SessionImpl
 			event.setResult( null );
 			loadEvent = event;
 		}
+		if ( result instanceof HibernateProxy ) {
+			return ( (HibernateProxy) result ).getHibernateLazyInitializer().getImplementation();
+		}
 		return result;
 	}
 

@@ -20,6 +20,7 @@ import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IndexedCollection;
@@ -341,9 +342,8 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping
 			);
 		}
 		else if ( fkTargetPart instanceof EmbeddableValuedModelPart ) {
-			return MappingModelCreationHelper.buildEmbeddedForeignKeyDescriptor(
+			return MappingModelCreationHelper.buildTargetingEmbeddableForeignKeyDescriptor(
 					(EmbeddableValuedModelPart) fkTargetPart,
-					this,
 					fkBootDescriptorSource,
 					dialect,
 					creationProcess
@@ -1029,6 +1029,11 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping
 			span += indexDescriptor.forEachJdbcType( offset + span, action );
 		}
 		return span;
+	}
+
+	@Override
+	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+		return elementDescriptor.disassemble( value,session );
 	}
 
 	@Override

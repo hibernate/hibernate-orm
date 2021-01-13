@@ -26,6 +26,7 @@ import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
+import org.hibernate.mapping.Component;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
@@ -228,9 +229,14 @@ public abstract class AbstractDelegatingMetadata implements MetadataImplementor 
 		delegate.initSessionFactory( sessionFactory );
 	}
 
+	@Override
+	public void visitRegisteredComponents(Consumer<Component> consumer) {
+		delegate().visitRegisteredComponents( consumer );
+	}
+
 
 	@Override
 	public NamedObjectRepository buildNamedQueryRepository(SessionFactoryImplementor sessionFactory) {
-		return delegate.buildNamedQueryRepository( sessionFactory );
+		return delegate().buildNamedQueryRepository( sessionFactory );
 	}
 }

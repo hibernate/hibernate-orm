@@ -6,6 +6,7 @@
  */
 package org.hibernate.mapping;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
@@ -209,5 +210,10 @@ public class MappedSuperclass {
 		}
 
 		return false;
+	}
+
+	@SuppressWarnings( "unchecked" )
+	public void prepareForMappingModel() {
+		( (List<Property>) declaredProperties ).sort( Comparator.comparing( Property::getName ) );
 	}
 }

@@ -7,11 +7,13 @@
 package org.hibernate.boot.spi;
 
 import java.util.Set;
+import java.util.function.Consumer;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.mapping.Component;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -45,4 +47,6 @@ public interface MetadataImplementor extends Metadata, Mapping {
 	Set<MappedSuperclass> getMappedSuperclassMappingsCopy();
 
 	void initSessionFactory(SessionFactoryImplementor sessionFactoryImplementor);
+
+	void visitRegisteredComponents(Consumer<Component> consumer);
 }

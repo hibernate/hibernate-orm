@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.orm.test.mapping.attrorder" default-access="field">
+    <class name="TheEntity" entity-name="TheEntityHbm" table="the_table_hbm" >
+        <id name="id" type="integer" column="id"/>
+        <natural-id mutable="true">
+            <property name="userCode" column="short_code" not-null="true"/>
+            <property name="assignment" column="assignment" not-null="true"/>
+        </natural-id>
+        <property name="name" column="name" not-null="true"/>
+        <component name="theComponent" class="TheComponent">
+            <property name="nestedName" type="string" />
+            <property name="nestedAnything" type="string" />
+        </component>
+        <set name="theComponents">
+            <key column="e_id" />
+            <composite-element class="TheComponent">
+                <property name="nestedName" type="string" />
+                <property name="nestedAnything" type="string" />
+            </composite-element>
+        </set>
+    </class>
+</hibernate-mapping>

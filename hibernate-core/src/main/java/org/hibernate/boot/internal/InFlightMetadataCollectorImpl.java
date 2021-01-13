@@ -89,6 +89,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Component;
 import org.hibernate.mapping.DenormalizedTable;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.ForeignKey;
@@ -130,6 +131,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	private final MutableIdentifierGeneratorFactory identifierGeneratorFactory;
 
 	private final Map<String,PersistentClass> entityBindingMap = new HashMap<>();
+	private final List<Component> composites = new ArrayList<>();
 	private final Map<String,Collection> collectionBindingMap = new HashMap<>();
 
 	private final Map<String, FilterDefinition> filterDefinitionMap = new HashMap<>();
@@ -245,6 +247,19 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 				"You should not be building a SessionFactory from an in-flight metadata collector; and of course " +
 						"we should better segment this in the API :)"
 		);
+	}
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Composite handling
+
+	@Override
+	public void registerComponent(Component component) {
+		composites.add( component );
+	}
+
+	@Override
+	public void visitRegisteredComponents(Consumer<Component> consumer) {
+		composites.forEach( consumer );
 	}
 
 	@Override
@@ -2240,6 +2255,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 					options,
 					identifierGeneratorFactory,
 					entityBindingMap,
+					composites,
 					mappedSuperClasses,
 					collectionBindingMap,
 					typeDefRegistry.copyRegistrationMap(),

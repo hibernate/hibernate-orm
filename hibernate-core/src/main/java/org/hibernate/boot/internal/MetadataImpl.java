@@ -47,6 +47,7 @@ import org.hibernate.event.spi.EventType;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.Component;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
@@ -78,6 +79,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private final MutableIdentifierGeneratorFactory identifierGeneratorFactory;
 
 	private final Map<String,PersistentClass> entityBindingMap;
+	private final List<Component> composites;
 	private final Map<Class, MappedSuperclass> mappedSuperclassMap;
 	private final Map<String,Collection> collectionBindingMap;
 	private final Map<String, TypeDefinition> typeDefinitionMap;
@@ -99,6 +101,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			MetadataBuildingOptions metadataBuildingOptions,
 			MutableIdentifierGeneratorFactory identifierGeneratorFactory,
 			Map<String, PersistentClass> entityBindingMap,
+			List<Component> composites,
 			Map<Class, MappedSuperclass> mappedSuperclassMap,
 			Map<String, Collection> collectionBindingMap,
 			Map<String, TypeDefinition> typeDefinitionMap,
@@ -118,6 +121,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		this.metadataBuildingOptions = metadataBuildingOptions;
 		this.identifierGeneratorFactory = identifierGeneratorFactory;
 		this.entityBindingMap = entityBindingMap;
+		this.composites = composites;
 		this.mappedSuperclassMap = mappedSuperclassMap;
 		this.collectionBindingMap = collectionBindingMap;
 		this.typeDefinitionMap = typeDefinitionMap;
@@ -403,6 +407,11 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		catch (Exception e) {
 			throw new HibernateException( "Could not instantiate requested listener [" + listenerImpl + "]", e );
 		}
+	}
+
+	@Override
+	public void visitRegisteredComponents(Consumer<Component> consumer) {
+		composites.forEach( consumer );
 	}
 
 	@Override

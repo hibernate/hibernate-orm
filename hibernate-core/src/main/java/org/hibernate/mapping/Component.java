@@ -7,6 +7,7 @@
 package org.hibernate.mapping;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -74,6 +75,8 @@ public class Component extends SimpleValue implements MetaAttributable {
 	public Component(MetadataBuildingContext metadata, Table table, PersistentClass owner) throws MappingException {
 		super( metadata, table );
 		this.owner = owner;
+
+		metadata.getMetadataCollector().registerComponent( this );
 	}
 
 	public int getPropertySpan() {
@@ -180,6 +183,8 @@ public class Component extends SimpleValue implements MetaAttributable {
 		if ( localType == null ) {
 			synchronized ( this ) {
 				if ( type == null ) {
+					properties.sort( Comparator.comparing( Property::getName ) );
+
 					// TODO : temporary initial step towards HHH-1907
 					final ComponentMetamodel metamodel = new ComponentMetamodel(
 							this,
@@ -501,6 +506,12 @@ public class Component extends SimpleValue implements MetaAttributable {
 			if ( ExportableProducer.class.isInstance( subGenerator ) ) {
 				( (ExportableProducer) subGenerator ).registerExportables( database );
 			}
+		}
+	}
+
+	public void prepareForMappingModel() {
+		if ( type == null ) {
+			properties.sort( Comparator.comparing( Property::getName ) );
 		}
 	}
 

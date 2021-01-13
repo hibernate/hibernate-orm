@@ -9,6 +9,7 @@ package org.hibernate.mapping;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -1009,5 +1010,9 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	}
 
 	// End of @MappedSuperclass support
+
+	public void prepareForMappingModel() {
+		properties.sort( Comparator.comparing( Property::getName ) );
+	}
 
 }

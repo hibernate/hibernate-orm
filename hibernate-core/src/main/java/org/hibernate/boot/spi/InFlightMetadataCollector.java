@@ -45,6 +45,7 @@ import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Component;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.MappedSuperclass;
@@ -77,6 +78,8 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	 * Needed for SecondPass handling
 	 */
 	Map<String, PersistentClass> getEntityBindingMap();
+
+	void registerComponent(Component component);
 
 	/**
 	 * Adds an import (HQL entity rename).

@@ -41,6 +41,8 @@ import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.HEMLogging;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.Component;
+import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting;
@@ -185,6 +187,10 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 		final PersisterFactory persisterFactory = sessionFactory.getServiceRegistry().getService( PersisterFactory.class );
 
 		final JpaStaticMetaModelPopulationSetting jpaStaticMetaModelPopulationSetting = determineJpaMetaModelPopulationSetting( sessionFactory.getProperties() );
+
+		bootModel.visitRegisteredComponents( Component::prepareForMappingModel );
+		bootModel.getMappedSuperclassMappingsCopy().forEach( MappedSuperclass::prepareForMappingModel );
+		bootModel.getEntityBindings().forEach( PersistentClass::prepareForMappingModel );
 
 		processBootEntities(
 				bootModel.getEntityBindings(),

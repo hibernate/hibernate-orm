@@ -48,6 +48,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.MultiIdentifierLoadAccess;
 import org.hibernate.NaturalIdLoadAccess;
+import org.hibernate.NaturalIdMultiLoadAccess;
 import org.hibernate.ObjectDeletedException;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.ReplicationMode;
@@ -56,7 +57,6 @@ import org.hibernate.SessionEventListener;
 import org.hibernate.SessionException;
 import org.hibernate.SharedSessionBuilder;
 import org.hibernate.SimpleNaturalIdLoadAccess;
-import org.hibernate.NaturalIdMultiLoadAccess;
 import org.hibernate.Transaction;
 import org.hibernate.TransientObjectException;
 import org.hibernate.TypeMismatchException;
@@ -1097,7 +1097,7 @@ public class SessionImpl
 	}
 
 	@Override
-	public Object get(String entityName, Serializable id, LockMode lockMode) throws HibernateException {
+	public Object get(String entityName, Object id, LockMode lockMode) throws HibernateException {
 		return this.byId( entityName ).with( new LockOptions( lockMode ) ).load( id );
 	}
 
@@ -1377,7 +1377,7 @@ public class SessionImpl
 	}
 
 	@Override
-	public Object instantiate(String entityName, Serializable id) throws HibernateException {
+	public Object instantiate(String entityName, Object id) throws HibernateException {
 		return instantiate( getFactory().getMetamodel().entityPersister( entityName ), id );
 	}
 

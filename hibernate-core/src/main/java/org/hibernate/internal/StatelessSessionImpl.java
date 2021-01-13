@@ -257,9 +257,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	@Override
-	public Object instantiate(
-			String entityName,
-			Serializable id) throws HibernateException {
+	public Object instantiate(String entityName, Object id) throws HibernateException {
 		checkOpen();
 		return getFactory().getMetamodel().entityPersister( entityName ).instantiate( id, this );
 	}

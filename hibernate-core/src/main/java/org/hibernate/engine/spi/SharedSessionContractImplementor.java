@@ -310,7 +310,7 @@ public interface SharedSessionContractImplementor
 	/**
 	 * Instantiate the entity class, initializing with the given identifier
 	 */
-	Object instantiate(String entityName, Serializable id) throws HibernateException;
+	Object instantiate(String entityName, Object id) throws HibernateException;
 
 	/**
 	 * Execute a native SQL query, and return the results as a fully built list.

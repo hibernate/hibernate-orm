@@ -7,7 +7,6 @@
 package org.hibernate;
 
 import java.io.Closeable;
-import java.io.Serializable;
 import java.sql.Connection;
 import java.util.List;
 import javax.persistence.EntityGraph;
@@ -749,7 +748,7 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	 *
 	 * @see #get(String, Object, LockOptions)
 	 */
-	Object get(String entityName, Serializable id, LockMode lockMode);
+	Object get(String entityName, Object id, LockMode lockMode);
 
 	/**
 	 * Return the persistent instance of the given entity class with the given identifier,

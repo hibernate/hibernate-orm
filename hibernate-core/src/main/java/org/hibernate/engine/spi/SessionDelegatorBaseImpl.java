@@ -6,7 +6,6 @@
  */
 package org.hibernate.engine.spi;
 
-import java.io.Serializable;
 import java.sql.Connection;
 import java.util.List;
 import java.util.Map;
@@ -34,12 +33,12 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MultiIdentifierLoadAccess;
 import org.hibernate.NaturalIdLoadAccess;
+import org.hibernate.NaturalIdMultiLoadAccess;
 import org.hibernate.ReplicationMode;
 import org.hibernate.Session;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SharedSessionBuilder;
 import org.hibernate.SimpleNaturalIdLoadAccess;
-import org.hibernate.NaturalIdMultiLoadAccess;
 import org.hibernate.Transaction;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.cache.spi.CacheTransactionSynchronization;
@@ -188,7 +187,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public Object instantiate(String entityName, Serializable id) throws HibernateException {
+	public Object instantiate(String entityName, Object id) throws HibernateException {
 		return delegate.instantiate( entityName, id );
 	}
 
@@ -897,7 +896,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public Object get(String entityName, Serializable id, LockMode lockMode) {
+	public Object get(String entityName, Object id, LockMode lockMode) {
 		return delegate.get( entityName, id, lockMode );
 	}
 

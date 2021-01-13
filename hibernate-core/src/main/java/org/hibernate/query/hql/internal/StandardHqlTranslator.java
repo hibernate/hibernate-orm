@@ -6,21 +6,29 @@
  */
 package org.hibernate.query.hql.internal;
 
+import java.util.BitSet;
+
 import org.hibernate.QueryException;
 import org.hibernate.grammars.hql.HqlLexer;
 import org.hibernate.grammars.hql.HqlParser;
 import org.hibernate.query.hql.HqlLogging;
 import org.hibernate.query.sqm.InterpretationException;
 import org.hibernate.query.hql.HqlTranslator;
+import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.internal.SqmTreePrinter;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.query.hql.spi.SqmCreationOptions;
 import org.hibernate.query.sqm.tree.SqmStatement;
 
+import org.antlr.v4.runtime.ANTLRErrorListener;
 import org.antlr.v4.runtime.BailErrorStrategy;
-import org.antlr.v4.runtime.ConsoleErrorListener;
 import org.antlr.v4.runtime.DefaultErrorStrategy;
+import org.antlr.v4.runtime.Parser;
+import org.antlr.v4.runtime.RecognitionException;
+import org.antlr.v4.runtime.Recognizer;
+import org.antlr.v4.runtime.atn.ATNConfigSet;
 import org.antlr.v4.runtime.atn.PredictionMode;
+import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 
 /**
@@ -29,6 +37,27 @@ import org.antlr.v4.runtime.misc.ParseCancellationException;
  * @author Steve Ebersole
  */
 public class StandardHqlTranslator implements HqlTranslator {
+
+	protected static final ANTLRErrorListener ERR_LISTENER = new ANTLRErrorListener() {
+
+		@Override
+		public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String msg, RecognitionException e) {
+			throw new ParsingException( "line " + line + ":" + charPositionInLine + " " + msg);
+		}
+
+		@Override
+		public void reportAmbiguity(Parser recognizer, DFA dfa, int startIndex, int stopIndex, boolean exact, BitSet ambigAlts, ATNConfigSet configs) {
+		}
+
+		@Override
+		public void reportAttemptingFullContext(Parser recognizer, DFA dfa, int startIndex, int stopIndex, BitSet conflictingAlts, ATNConfigSet configs) {
+		}
+
+		@Override
+		public void reportContextSensitivity(Parser recognizer, DFA dfa, int startIndex, int stopIndex, int prediction, ATNConfigSet configs) {
+		}
+	};
+
 	private final SqmCreationContext sqmCreationContext;
 	private final SqmCreationOptions sqmCreationOptions;
 
@@ -75,8 +104,10 @@ public class StandardHqlTranslator implements HqlTranslator {
 		final HqlParser hqlParser = HqlParseTreeBuilder.INSTANCE.buildHqlParser( hql, hqlLexer );
 
 		// try to use SLL(k)-based parsing first - its faster
+		hqlLexer.addErrorListener( ERR_LISTENER );
 		hqlParser.getInterpreter().setPredictionMode( PredictionMode.SLL );
 		hqlParser.removeErrorListeners();
+		hqlParser.addErrorListener( ERR_LISTENER );
 		hqlParser.setErrorHandler( new BailErrorStrategy() );
 
 		try {
@@ -89,7 +120,6 @@ public class StandardHqlTranslator implements HqlTranslator {
 
 			// fall back to LL(k)-based parsing
 			hqlParser.getInterpreter().setPredictionMode( PredictionMode.LL );
-			hqlParser.addErrorListener( ConsoleErrorListener.INSTANCE );
 			hqlParser.setErrorHandler( new DefaultErrorStrategy() );
 
 			return hqlParser.statement();

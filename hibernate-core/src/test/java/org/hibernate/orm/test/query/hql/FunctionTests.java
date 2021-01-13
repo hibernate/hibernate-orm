@@ -316,10 +316,10 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 							.list();
 					session.createQuery("select trim(both ' ' from e.theString) from EntityOfBasics e")
 							.list();
-					assertThat( session.createQuery("select trim(leading from '   hello'").getSingleResult(), is("hello") );
-					assertThat( session.createQuery("select trim(trailing from 'hello   '").getSingleResult(), is("hello") );
-					assertThat( session.createQuery("select trim(both from '   hello   '").getSingleResult(), is("hello") );
-					assertThat( session.createQuery("select trim(both '-' from '---hello---'").getSingleResult(), is("hello") );
+					assertThat( session.createQuery("select trim(leading from '   hello')").getSingleResult(), is("hello") );
+					assertThat( session.createQuery("select trim(trailing from 'hello   ')").getSingleResult(), is("hello") );
+					assertThat( session.createQuery("select trim(both from '   hello   ')").getSingleResult(), is("hello") );
+					assertThat( session.createQuery("select trim(both '-' from '---hello---')").getSingleResult(), is("hello") );
 				}
 		);
 	}

@@ -90,10 +90,10 @@ public class StandardFunctionTests {
 					session.createQuery( "select local_datetime() from EntityOfBasics" ).list();
 
 					session.createQuery( "select e from EntityOfBasics e where e.theTimestamp = local_datetime" ).list();
-					session.createQuery( "select e from EntityOfBasics e where e.theTimestamp = local_datetime()()" ).list();
+					session.createQuery( "select e from EntityOfBasics e where e.theTimestamp = local_datetime()" ).list();
 
+					session.createQuery( "select e from EntityOfBasics e where local_datetime between e.theTimestamp and e.theTimestamp" ).list();
 					session.createQuery( "select e from EntityOfBasics e where local_datetime() between e.theTimestamp and e.theTimestamp" ).list();
-					session.createQuery( "select e from EntityOfBasics e where local_datetime()() between e.theTimestamp and e.theTimestamp" ).list();
 				}
 		);
 	}
@@ -106,10 +106,10 @@ public class StandardFunctionTests {
 					session.createQuery( "select local_date() from EntityOfBasics" ).list();
 
 					session.createQuery( "select e from EntityOfBasics e where e.theTimestamp = local_date" ).list();
-					session.createQuery( "select e from EntityOfBasics e where e.theTimestamp = local_date()()" ).list();
+					session.createQuery( "select e from EntityOfBasics e where e.theTimestamp = local_date()" ).list();
 
+					session.createQuery( "select e from EntityOfBasics e where local_date between e.theTimestamp and e.theTimestamp" ).list();
 					session.createQuery( "select e from EntityOfBasics e where local_date() between e.theTimestamp and e.theTimestamp" ).list();
-					session.createQuery( "select e from EntityOfBasics e where local_date()() between e.theTimestamp and e.theTimestamp" ).list();
 
 					assertThat(
 							session.createQuery( "select local_date" ).getSingleResult(),
@@ -127,10 +127,10 @@ public class StandardFunctionTests {
 					session.createQuery( "select local_time() from EntityOfBasics" ).list();
 
 					session.createQuery( "select e from EntityOfBasics e where e.theLocalTime = local_time" ).list();
-					session.createQuery( "select e from EntityOfBasics e where e.theLocalTime = local_time()()" ).list();
+					session.createQuery( "select e from EntityOfBasics e where e.theLocalTime = local_time()" ).list();
 
+					session.createQuery( "select e from EntityOfBasics e where local_time between e.theLocalTime and e.theLocalTime" ).list();
 					session.createQuery( "select e from EntityOfBasics e where local_time() between e.theLocalTime and e.theLocalTime" ).list();
-					session.createQuery( "select e from EntityOfBasics e where local_time()() between e.theLocalTime and e.theLocalTime" ).list();
 
 					assertThat(
 							session.createQuery( "select local_time" ).getSingleResult(),

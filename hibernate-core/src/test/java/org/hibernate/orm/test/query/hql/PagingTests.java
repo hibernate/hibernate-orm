@@ -36,16 +36,16 @@ public class PagingTests {
 
 	@Test
 	public void testPagingByParameter(SessionFactoryScope scope) {
-		interpretSelect( "select o from SimpleEntity o offset :param", scope.getSessionFactory() );
-		interpretSelect( "select o from SimpleEntity o limit :param", scope.getSessionFactory() );
-		interpretSelect( "select o from SimpleEntity o limit :param offset :param", scope.getSessionFactory() );
+		interpretSelect( "select o from SimpleEntity o order by o.id offset :param", scope.getSessionFactory() );
+		interpretSelect( "select o from SimpleEntity o order by o.id limit :param", scope.getSessionFactory() );
+		interpretSelect( "select o from SimpleEntity o order by o.id limit :param offset :param", scope.getSessionFactory() );
 	}
 
 	@Test
 	public void testPagingByConstant(SessionFactoryScope scope) {
-		interpretSelect( "select o from SimpleEntity o offset 1", scope.getSessionFactory() );
-		interpretSelect( "select o from SimpleEntity o limit 1", scope.getSessionFactory() );
-		interpretSelect( "select o from SimpleEntity o limit 1 offset 1", scope.getSessionFactory() );
+		interpretSelect( "select o from SimpleEntity o order by o.id offset 1", scope.getSessionFactory() );
+		interpretSelect( "select o from SimpleEntity o order by o.id limit 1", scope.getSessionFactory() );
+		interpretSelect( "select o from SimpleEntity o order by o.id limit 1 offset 1", scope.getSessionFactory() );
 	}
 
 	@Test

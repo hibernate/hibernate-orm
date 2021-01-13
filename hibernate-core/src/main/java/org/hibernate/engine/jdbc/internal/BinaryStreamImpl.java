@@ -18,7 +18,7 @@ import org.hibernate.engine.jdbc.BinaryStream;
  * @author Steve Ebersole
  */
 public final class BinaryStreamImpl extends ByteArrayInputStream implements BinaryStream {
-	private final int length;
+	private final long length;
 
 	/**
 	 * Constructs a BinaryStreamImpl

@@ -58,7 +58,7 @@ public class SimpleDynamicHbmTests {
 					session -> {
 						session.createQuery( "from SimpleDynamicEntity" ).list();
 						session.createQuery( "select e from SimpleDynamicEntity e" ).list();
-						session.createQuery( "select e from SimpleDynamicEntity e.name = 'abc'" ).list();
+						session.createQuery( "select e from SimpleDynamicEntity e where e.name = 'abc'" ).list();
 					}
 			);
 		}

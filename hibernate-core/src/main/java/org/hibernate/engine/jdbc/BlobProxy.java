@@ -105,7 +105,7 @@ public final class BlobProxy implements Blob, BlobImplementer {
 	}
 
 	@Override
-	public byte[] getBytes(final long start, final long length) throws SQLException {
+	public byte[] getBytes(final long start, final int length) throws SQLException {
 		if ( start < 1 ) {
 			throw new SQLException( "Start position 1-based; must be 1 or more." );
 		}

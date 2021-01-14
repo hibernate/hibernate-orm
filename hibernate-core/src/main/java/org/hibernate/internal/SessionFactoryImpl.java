@@ -1464,7 +1464,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		@Override
 		public PhysicalConnectionHandlingMode getPhysicalConnectionHandlingMode() {
-			return null;
+			return sessionFactory.getSessionFactoryOptions().getPhysicalConnectionHandlingMode();
 		}
 
 		@Override

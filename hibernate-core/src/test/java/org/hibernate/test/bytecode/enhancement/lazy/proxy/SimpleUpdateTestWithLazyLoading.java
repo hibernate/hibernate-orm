@@ -283,7 +283,6 @@ public class SimpleUpdateTestWithLazyLoading extends BaseNonConfigCoreFunctional
 		Long id;
 
 		@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-		@LazyToOne(LazyToOneOption.NO_PROXY)
 		Parent parent;
 
 		@OneToMany

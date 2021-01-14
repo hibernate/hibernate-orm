@@ -788,6 +788,13 @@ public class PostgreSQLDialect extends Dialect {
 		super.augmentRecognizedTableTypes( tableTypesList );
 		if ( getVersion() >= 930 ) {
 			tableTypesList.add( "MATERIALIZED VIEW" );
+
+			/*
+			 	PostgreSQL 10 and later adds support for Partition table.
+			 */
+			if ( getVersion() >= 1000 ) {
+				tableTypesList.add( "PARTITIONED TABLE" );
+			}
 		}
 	}
 

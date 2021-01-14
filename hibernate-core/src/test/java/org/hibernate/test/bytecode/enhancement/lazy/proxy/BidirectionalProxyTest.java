@@ -211,7 +211,6 @@ public class BidirectionalProxyTest  extends BaseNonConfigCoreFunctionalTestCase
 		}
 
 		@ManyToOne(fetch= FetchType.LAZY)
-		@LazyToOne(LazyToOneOption.NO_PROXY)
 		@LazyGroup("aEntity")
 		@JoinColumn(name="aEntity")
 		protected AEntity aChildEntity = null;
@@ -249,7 +248,6 @@ public class BidirectionalProxyTest  extends BaseNonConfigCoreFunctionalTestCase
 		}
 
 		@ManyToOne(fetch= FetchType.LAZY)
-		@LazyToOne(LazyToOneOption.NO_PROXY)
 		@LazyGroup("aEntity")
 		@JoinColumn(name="aEntity")
 		protected AChildEntity aChildEntity = null;

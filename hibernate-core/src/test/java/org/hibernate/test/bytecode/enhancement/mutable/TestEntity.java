@@ -23,6 +23,7 @@ public class TestEntity {
 	private Long id;
 
 	@Temporal(TemporalType.TIMESTAMP)
+	@Column(name = "t_date")
 	private Date date;
 
 	@Basic

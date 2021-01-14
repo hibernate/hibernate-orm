@@ -105,17 +105,6 @@ public final class BlobProxy implements Blob, BlobImplementer {
 	}
 
 	@Override
-	@Deprecated
-	public byte[] getBytes(final long start, final int length) throws SQLException {
-		if ( start < 1 ) {
-			throw new SQLException( "Start position 1-based; must be 1 or more." );
-		}
-		if ( length < 0 ) {
-			throw new SQLException( "Length must be great-than-or-equal to zero." );
-		}
-		return DataHelper.extractBytes( getBinaryStream() );
-	}
-
 	public byte[] getBytes(final long start, final long length) throws SQLException {
 		if ( start < 1 ) {
 			throw new SQLException( "Start position 1-based; must be 1 or more." );

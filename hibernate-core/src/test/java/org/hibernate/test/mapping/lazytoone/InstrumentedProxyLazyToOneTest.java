@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.orm.test.mapping.lazytoone;
+package org.hibernate.test.mapping.lazytoone;
 
 import org.hibernate.Hibernate;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -15,8 +15,6 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.testing.orm.junit.FailureExpected;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -72,7 +70,6 @@ public class InstrumentedProxyLazyToOneTest extends BaseNonConfigCoreFunctionalT
 	}
 
 	@Test
-	@FailureExpected(reason = "in 6.0 Bytecode enhancement is not yet fully supported ")
 	public void testEnhancedWithProxy() {
 		final StatisticsImplementor statistics = sessionFactory().getStatistics();
 		statistics.clear();

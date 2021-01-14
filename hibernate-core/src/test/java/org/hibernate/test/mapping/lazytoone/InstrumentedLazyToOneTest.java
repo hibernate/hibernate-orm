@@ -4,25 +4,28 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.orm.test.mapping.lazytoone;
+package org.hibernate.test.mapping.lazytoone;
 
 import org.hibernate.Hibernate;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
+import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
-import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
- * @author Steve Ebersole
+ * Same as {@link LazyToOneTest} except here we have bytecode-enhanced entities
+ * via {@link BytecodeEnhancerRunner}
  */
-public class LazyToOneTest extends BaseNonConfigCoreFunctionalTestCase {
+@RunWith( BytecodeEnhancerRunner.class )
+public class InstrumentedLazyToOneTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -64,7 +67,8 @@ public class LazyToOneTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testNonEnhanced() {
+	@FailureExpected( jiraKey = "HHH-13658", message = "Flight#origination is not treated as lazy.  Not sure why exactly" )
+	public void testEnhancedButProxyNotAllowed() {
 		final StatisticsImplementor statistics = sessionFactory().getStatistics();
 		statistics.clear();
 
@@ -72,19 +76,19 @@ public class LazyToOneTest extends BaseNonConfigCoreFunctionalTestCase {
 				(session) -> {
 					final Flight flight1 = session.byId( Flight.class ).load( 1 );
 
-					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
+					// unlike the other 2 tests we should get 2 db queries here
+					assertThat( statistics.getPrepareStatementCount(), is( 2L ) );
 
 					assertThat( Hibernate.isInitialized( flight1 ), is( true ) );
 
 					assertThat( Hibernate.isPropertyInitialized( flight1, "origination" ), is( true ) );
+					// this should be a non-enhanced proxy
 					assertThat( Hibernate.isInitialized( flight1.getOrigination() ), is( false ) );
-					assertThat( flight1.getOrigination(), instanceOf( HibernateProxy.class ) );
 
-					assertThat( Hibernate.isPropertyInitialized( flight1, "destination" ), is( true ) );
+					assertThat( Hibernate.isPropertyInitialized( flight1, "destination" ), is( false ) );
+					// the NO_PROXY here should trigger an EAGER load
 					assertThat( Hibernate.isInitialized( flight1.getDestination() ), is( false ) );
-					assertThat( flight1.getDestination(), instanceOf( HibernateProxy.class ) );
 				}
 		);
 	}
-
 }

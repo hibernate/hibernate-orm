@@ -112,7 +112,10 @@ public final class BlobProxy implements Blob, BlobImplementer {
 		if ( length < 0 ) {
 			throw new SQLException( "Length must be great-than-or-equal to zero." );
 		}
-		return DataHelper.extractBytes( getBinaryStream() );
+		if ( length == length()) {
+			return DataHelper.extractBytes( getBinaryStream() );
+		}
+		return DataHelper.extractBytes( getStream(), start-1, length );
 	}
 
 	@Override
@@ -163,7 +166,19 @@ public final class BlobProxy implements Blob, BlobImplementer {
 		if ( start > length() ) {
 			throw new SQLException( "Start position [" + start + "] cannot exceed overall CLOB length [" + length() + "]" );
 		}
-		return DataHelper.subStream( getBinaryStream() );
+		if ( length == length()) {
+			return DataHelper.subStream( getBinaryStream() );
+		}
+		if ( length > Integer.MAX_VALUE ) {
+			throw new SQLException( "Can't deal with Blobs larger than Integer.MAX_VALUE" );
+		}
+		final int intLength = (int)length;
+		if ( intLength < 0 ) {
+			// java docs specifically say for getBinaryStream(long,int) that the start+length must not exceed the
+			// total length, however that is at odds with the getBytes(long,int) behavior.
+			throw new SQLException( "Length must be great-than-or-equal to zero." );
+		}
+		return DataHelper.subStream( getStream(), start-1, intLength );
 	}
 
 	private static class StreamBackedBinaryStream implements BinaryStream {

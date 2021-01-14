@@ -27,6 +27,7 @@ import org.hibernate.event.spi.PostUpdateEvent;
 import org.hibernate.event.spi.PostUpdateEventListener;
 import org.hibernate.event.spi.PreUpdateEvent;
 import org.hibernate.event.spi.PreUpdateEventListener;
+import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.stat.internal.StatsHelper;
 import org.hibernate.stat.spi.StatisticsImplementor;
@@ -42,10 +43,12 @@ public class EntityUpdateAction extends EntityAction {
 	private final int[] dirtyFields;
 	private final boolean hasDirtyCollection;
 	private final Object rowId;
-	private final Object[] previousNaturalIdValues;
 	private Object nextVersion;
 	private Object cacheEntry;
 	private SoftLock lock;
+
+	private final NaturalIdMapping naturalIdMapping;
+	private final Object previousNaturalIdValues;
 
 	/**
 	 * Constructs an EntityUpdateAction
@@ -82,24 +85,23 @@ public class EntityUpdateAction extends EntityAction {
 		this.hasDirtyCollection = hasDirtyCollection;
 		this.rowId = rowId;
 
-		this.previousNaturalIdValues = determinePreviousNaturalIdValues( persister, id, previousState, session );
-		session.getPersistenceContextInternal().getNaturalIdHelper().manageLocalNaturalIdCrossReference(
-				persister,
-				id,
-				state,
-				previousNaturalIdValues,
-				CachedNaturalIdValueSource.UPDATE
-		);
+		this.naturalIdMapping = persister.getNaturalIdMapping();
+		if ( naturalIdMapping == null ) {
+			previousNaturalIdValues = null;
+		}
+		else {
+			this.previousNaturalIdValues = determinePreviousNaturalIdValues( persister, id, previousState, session );
+			session.getPersistenceContextInternal().getNaturalIdHelper().manageLocalResolution(
+					id, state, persister,
+					CachedNaturalIdValueSource.UPDATE
+			);
+		}
 	}
 
-	private Object[] determinePreviousNaturalIdValues(
+	private static Object determinePreviousNaturalIdValues(
 			EntityPersister persister,
 			Object id, Object[] previousState,
 			SharedSessionContractImplementor session) {
-		if ( ! persister.hasNaturalIdentifier() ) {
-			return null;
-		}
-
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		if ( previousState != null ) {
 			return persistenceContext.getNaturalIdHelper().extractNaturalIdValues( previousState, persister );
@@ -116,48 +118,8 @@ public class EntityUpdateAction extends EntityAction {
 		return previousState;
 	}
 
-	public Object getPreviousVersion() {
-		return previousVersion;
-	}
-
-	public Object getNextVersion() {
-		return nextVersion;
-	}
-
-	public void setNextVersion(Object nextVersion) {
-		this.nextVersion = nextVersion;
-	}
-
-	public int[] getDirtyFields() {
-		return dirtyFields;
-	}
-
-	public boolean hasDirtyCollection() {
-		return hasDirtyCollection;
-	}
-
 	public Object getRowId() {
 		return rowId;
-	}
-
-	public Object[] getPreviousNaturalIdValues() {
-		return previousNaturalIdValues;
-	}
-
-	protected Object getCacheEntry() {
-		return cacheEntry;
-	}
-
-	protected void setCacheEntry(Object cacheEntry) {
-		this.cacheEntry = cacheEntry;
-	}
-
-	protected SoftLock getLock() {
-		return lock;
-	}
-
-	protected void setLock(SoftLock lock) {
-		this.lock = lock;
 	}
 
 	@Override
@@ -256,13 +218,15 @@ public class EntityUpdateAction extends EntityAction {
 			}
 		}
 
-		session.getPersistenceContextInternal().getNaturalIdHelper().manageSharedNaturalIdCrossReference(
-				persister,
-				id,
-				state,
-				previousNaturalIdValues,
-				CachedNaturalIdValueSource.UPDATE
-		);
+		if ( naturalIdMapping != null ) {
+			session.getPersistenceContextInternal().getNaturalIdHelper().manageSharedResolution(
+					id,
+					naturalIdMapping.extractNaturalIdValues( state, session ),
+					naturalIdMapping.extractNaturalIdValues( previousState, session ),
+					persister,
+					CachedNaturalIdValueSource.UPDATE
+			);
+		}
 
 		postUpdate();
 

@@ -19,11 +19,11 @@ public interface CacheKeysFactory {
 
 	Object createEntityKey(Object id, EntityPersister persister, SessionFactoryImplementor factory, String tenantIdentifier);
 
-	Object createNaturalIdKey(Object[] naturalIdValues, EntityPersister persister, SharedSessionContractImplementor session);
+	Object createNaturalIdKey(Object naturalIdValues, EntityPersister persister, SharedSessionContractImplementor session);
 
 	Object getEntityId(Object cacheKey);
 
 	Object getCollectionId(Object cacheKey);
 
-	Object[] getNaturalIdValues(Object cacheKey);
+	Object getNaturalIdValues(Object cacheKey);
 }

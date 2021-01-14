@@ -74,7 +74,7 @@ public class NaturalIdCacheKeyTest {
         assertEquals(key.hashCode(), keyClone.hashCode());
         assertEquals(key.toString(), keyClone.toString());
         assertEquals(key.getEntityName(), keyClone.getEntityName());
-        assertArrayEquals(key.getNaturalIdValues(), keyClone.getNaturalIdValues());
+        assertEquals(key.getNaturalIdValues(), keyClone.getNaturalIdValues());
         assertEquals(key.getTenantId(), keyClone.getTenantId());
         
     }

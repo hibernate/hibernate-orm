@@ -50,7 +50,7 @@ public class DefaultCacheKeysFactory implements CacheKeysFactory {
 		return new CacheKeyImplementation( id, persister.getIdentifierType(), persister.getRootEntityName(), tenantIdentifier, factory );
 	}
 
-	public static Object staticCreateNaturalIdKey(Object[] naturalIdValues, EntityPersister persister, SharedSessionContractImplementor session) {
+	public static Object staticCreateNaturalIdKey(Object naturalIdValues, EntityPersister persister, SharedSessionContractImplementor session) {
 		return new NaturalIdCacheKey( naturalIdValues,  persister.getPropertyTypes(), persister.getNaturalIdentifierProperties(), persister.getRootEntityName(), session );
 	}
 
@@ -62,7 +62,7 @@ public class DefaultCacheKeysFactory implements CacheKeysFactory {
 		return ((CacheKeyImplementation) cacheKey).getId();
 	}
 
-	public static Object[] staticGetNaturalIdValues(Object cacheKey) {
+	public static Object staticGetNaturalIdValues(Object cacheKey) {
 		return ((NaturalIdCacheKey) cacheKey).getNaturalIdValues();
 	}
 
@@ -77,7 +77,7 @@ public class DefaultCacheKeysFactory implements CacheKeysFactory {
 	}
 
 	@Override
-	public Object createNaturalIdKey(Object[] naturalIdValues, EntityPersister persister, SharedSessionContractImplementor session) {
+	public Object createNaturalIdKey(Object naturalIdValues, EntityPersister persister, SharedSessionContractImplementor session) {
 		return staticCreateNaturalIdKey(naturalIdValues, persister, session);
 	}
 
@@ -92,7 +92,7 @@ public class DefaultCacheKeysFactory implements CacheKeysFactory {
 	}
 
 	@Override
-	public Object[] getNaturalIdValues(Object cacheKey) {
+	public Object getNaturalIdValues(Object cacheKey) {
 		return staticGetNaturalIdValues(cacheKey);
 	}
 }

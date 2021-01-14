@@ -659,7 +659,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 
 		if ( entityDescriptor.getNaturalIdMapping() != null ) {
-			persistenceContext.getNaturalIdHelper().cacheNaturalIdCrossReferenceFromLoad(
+			persistenceContext.getNaturalIdHelper().cacheResolutionFromLoad(
 					entityDescriptor,
 					entityIdentifier,
 					persistenceContext.getNaturalIdHelper()

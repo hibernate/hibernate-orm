@@ -31,14 +31,14 @@ public abstract class AbstractNaturalIdDataAccess extends AbstractCachedDomainDa
 
 	@Override
 	public Object generateCacheKey(
-			Object[] naturalIdValues,
+			Object naturalIdValues,
 			EntityPersister persister,
 			SharedSessionContractImplementor session) {
 		return keysFactory.createNaturalIdKey( naturalIdValues, persister, session );
 	}
 
 	@Override
-	public Object[] getNaturalIdValues(Object cacheKey) {
+	public Object getNaturalIdValues(Object cacheKey) {
 		return keysFactory.getNaturalIdValues( cacheKey );
 	}
 

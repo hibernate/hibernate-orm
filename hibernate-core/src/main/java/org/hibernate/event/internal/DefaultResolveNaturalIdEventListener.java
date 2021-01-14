@@ -136,7 +136,7 @@ public class DefaultResolveNaturalIdEventListener
 		//PK can be null if the entity doesn't exist
 		if (pk != null) {
 			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-			persistenceContext.getNaturalIdHelper().cacheNaturalIdCrossReferenceFromLoad(
+			persistenceContext.getNaturalIdHelper().cacheResolutionFromLoad(
 					event.getEntityPersister(),
 					pk,
 					event.getOrderedNaturalIdValues()

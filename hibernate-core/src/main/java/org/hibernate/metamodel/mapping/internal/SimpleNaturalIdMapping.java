@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
+import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.NaturalIdPostLoadListener;
 import org.hibernate.loader.NaturalIdPreLoadListener;
@@ -24,6 +26,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -38,6 +41,8 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping {
 	private final SingularAttributeMapping attribute;
 
+	private final boolean immutable;
+
 	private final SimpleNaturalIdLoader<?> loader;
 	private final MultiNaturalIdLoader<?> multiLoader;
 
@@ -48,6 +53,10 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping {
 			MappingModelCreationProcess creationProcess) {
 		super( declaringType, cacheRegionName );
 		this.attribute = attribute;
+
+		this.immutable = ! attribute.getAttributeMetadataAccess()
+				.resolveAttributeMetadata( null )
+				.isUpdatable();
 
 		this.loader = new SimpleNaturalIdLoader<>(
 				this,
@@ -60,12 +69,77 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping {
 	}
 
 	@Override
-	public Object normalizeValue(Object incoming, SharedSessionContractImplementor session) {
-		return normalizeValue( incoming );
+	public void verifyFlushState(Object id, Object[] currentState, Object[] loadedState, SharedSessionContractImplementor session) {
+		if ( ! immutable ) {
+			// EARLY EXIT!!!
+			// the natural id is mutable (!immutable), no need to do the checks
+			return;
+		}
+
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+		final EntityPersister persister = getDeclaringType().getEntityPersister();
+
+		final Object naturalId = extractNaturalIdValues( currentState, session );
+		final Object snapshot = loadedState == null
+				? persistenceContext.getNaturalIdSnapshot( id, persister )
+				: persistenceContext.getNaturalIdHelper().extractNaturalIdValues( loadedState, persister );
+
+		if ( ! areEqual( naturalId, snapshot, session ) ) {
+			throw new HibernateException(
+					String.format(
+							"An immutable natural identifier of entity %s was altered from `%s` to `%s`",
+							persister.getEntityName(),
+							snapshot,
+							naturalId
+					)
+			);
+		}
+	}
+
+	@Override
+	public Object extractNaturalIdValues(Object[] state, SharedSessionContractImplementor session) {
+		return state[ attribute.getStateArrayPosition() ];
+	}
+
+	@Override
+	public Object extractNaturalIdValues(Object entity, SharedSessionContractImplementor session) {
+		return attribute.getPropertyAccess().getGetter().get( entity );
+	}
+
+	@Override
+	public void validateInternalForm(Object naturalIdValue, SharedSessionContractImplementor session) {
+		if ( naturalIdValue == null ) {
+			return;
+		}
+
+		if ( naturalIdValue.getClass().isArray() ) {
+			// be flexible
+			final Object[] values = (Object[]) naturalIdValue;
+			if ( values.length == 1 ) {
+				naturalIdValue = values[0];
+			}
+		}
+
+		if ( ! getJavaTypeDescriptor().getJavaType().isInstance( naturalIdValue ) ) {
+			throw new IllegalArgumentException(
+					"Incoming natural-id value [" + naturalIdValue + "] is not of expected type ["
+							+ getJavaTypeDescriptor().getJavaType().getName() + "]"
+			);
+		}
+	}
+
+	@Override
+	public int calculateHashCode(Object value, SharedSessionContractImplementor session) {
+		return 0;
+	}
+
+	@Override
+	public Object normalizeIncomingValue(Object incoming, SharedSessionContractImplementor session) {
+		return normalizeIncomingValue( incoming );
 	}
 
 	@SuppressWarnings( "rawtypes" )
-	public Object normalizeValue(Object naturalIdToLoad) {
+	public Object normalizeIncomingValue(Object naturalIdToLoad) {
 		if ( naturalIdToLoad instanceof Map ) {
 			final Map valueMap = (Map) naturalIdToLoad;
 			assert valueMap.size() == 1;
@@ -99,6 +173,11 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping {
 	@Override
 	public List<SingularAttributeMapping> getNaturalIdAttributes() {
 		return Collections.singletonList( attribute );
+	}
+
+	@Override
+	public boolean isImmutable() {
+		return immutable;
 	}
 
 	@Override

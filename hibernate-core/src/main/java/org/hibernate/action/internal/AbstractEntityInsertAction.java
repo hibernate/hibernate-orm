@@ -17,6 +17,7 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
+import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -163,13 +164,15 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	 */
 	protected void handleNaturalIdPreSaveNotifications() {
 		// before save, we need to add a local (transactional) natural id cross-reference
-		getSession().getPersistenceContextInternal().getNaturalIdHelper().manageLocalNaturalIdCrossReference(
-				getPersister(),
-				getId(),
-				state,
-				null,
-				CachedNaturalIdValueSource.INSERT
-		);
+		final NaturalIdMapping naturalIdMapping = getPersister().getNaturalIdMapping();
+		if ( naturalIdMapping != null ) {
+			getSession().getPersistenceContextInternal().getNaturalIdHelper().manageLocalResolution(
+					getId(),
+					naturalIdMapping.extractNaturalIdValues( state, getSession() ),
+					getPersister(),
+					CachedNaturalIdValueSource.INSERT
+			);
+		}
 	}
 
 	/**
@@ -178,23 +181,29 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	 * @param generatedId The generated entity identifier
 	 */
 	public void handleNaturalIdPostSaveNotifications(Object generatedId) {
+		final NaturalIdMapping naturalIdMapping = getPersister().getNaturalIdMapping();
+		if ( naturalIdMapping == null ) {
+			return;
+		}
+
+		final Object naturalIdValues = naturalIdMapping.extractNaturalIdValues( state, getSession() );
+
 		final PersistenceContext.NaturalIdHelper naturalIdHelper = getSession().getPersistenceContextInternal().getNaturalIdHelper();
 		if ( isEarlyInsert() ) {
 			// with early insert, we still need to add a local (transactional) natural id cross-reference
-			naturalIdHelper.manageLocalNaturalIdCrossReference(
-					getPersister(),
+			naturalIdHelper.manageLocalResolution(
 					generatedId,
-					state,
-					null,
+					naturalIdValues,
+					getPersister(),
 					CachedNaturalIdValueSource.INSERT
 			);
 		}
 		// after save, we need to manage the shared cache entries
-		naturalIdHelper.manageSharedNaturalIdCrossReference(
-				getPersister(),
+		naturalIdHelper.manageSharedResolution(
 				generatedId,
-				state,
+				naturalIdValues,
 				null,
+				getPersister(),
 				CachedNaturalIdValueSource.INSERT
 		);
 	}

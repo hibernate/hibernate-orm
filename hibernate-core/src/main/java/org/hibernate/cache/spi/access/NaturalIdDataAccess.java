@@ -47,7 +47,7 @@ public interface NaturalIdDataAccess extends CachedDomainDataAccess {
 	 * @return a key which can be used to identify an element unequivocally on this same region
 	 */
 	Object generateCacheKey(
-			Object[] naturalIdValues,
+			Object naturalIdValues,
 			EntityPersister rootEntityDescriptor,
 			SharedSessionContractImplementor session);
 
@@ -58,7 +58,7 @@ public interface NaturalIdDataAccess extends CachedDomainDataAccess {
 	 *
 	 * @return the sequence of values which unequivocally identifies a cached element on this region
 	 */
-	Object[] getNaturalIdValues(Object cacheKey);
+	Object getNaturalIdValues(Object cacheKey);
 
 	/**
 	 * Called afterQuery an item has been inserted (beforeQuery the transaction completes),

@@ -147,7 +147,7 @@ public interface PersistenceContext {
 	 *
 	 * @return The current (non-cached) snapshot of the entity's natural id state.
 	 */
-	Object[] getNaturalIdSnapshot(Object id, EntityPersister persister);
+	Object getNaturalIdSnapshot(Object id, EntityPersister persister);
 
 	/**
 	 * Add a canonical mapping from entity key to entity instance
@@ -814,7 +814,7 @@ public interface PersistenceContext {
 		 *
 		 * @return The extracted natural id values
 		 */
-		Object[] extractNaturalIdValues(Object[] state, EntityPersister persister);
+		Object extractNaturalIdValues(Object[] state, EntityPersister persister);
 
 		/**
 		 * Given an entity instance, extract the values that represent the natural id
@@ -824,35 +824,27 @@ public interface PersistenceContext {
 		 *
 		 * @return The extracted natural id values
 		 */
-		Object[] extractNaturalIdValues(Object entity, EntityPersister persister);
+		Object extractNaturalIdValues(Object entity, EntityPersister persister);
 
 		/**
 		 * Performs processing related to creating natural-id cross-reference entries on load.
 		 * Handles both the local (transactional) and shared (second-level) caches.
-		 *  @param persister The persister representing the entity type.
+		 * @param persister The persister representing the entity type.
 		 * @param id The primary key value
 		 * @param naturalIdValues The natural id values
 		 */
-		void cacheNaturalIdCrossReferenceFromLoad(
+		void cacheResolutionFromLoad(
 				EntityPersister persister,
 				Object id,
-				Object[] naturalIdValues);
+				Object naturalIdValues);
 
 		/**
 		 * Creates necessary local cross-reference entries.
-		 *
-		 * @param persister The persister representing the entity type.
-		 * @param id The primary key value
-		 * @param state Generally the "full entity state array", though could also be the natural id values array
-		 * @param previousState Generally the "full entity state array", though could also be the natural id values array.
-		 * 		Specifically represents the previous values on update, and so is only used with {@link CachedNaturalIdValueSource#UPDATE}
-		 * @param source Enumeration representing how these values are coming into cache.
 		 */
-		void manageLocalNaturalIdCrossReference(
-				EntityPersister persister,
+		void manageLocalResolution(
 				Object id,
-				Object[] state,
-				Object[] previousState,
+				Object naturalId,
+				EntityPersister persister,
 				CachedNaturalIdValueSource source);
 
 		/**
@@ -860,37 +852,29 @@ public interface PersistenceContext {
 		 *
 		 * @param persister The persister representing the entity type.
 		 * @param id The primary key value
-		 * @param state Generally the "full entity state array", though could also be the natural id values array
+		 * @param naturalId Generally the "full entity state array", though could also be the natural id values array
 		 *
 		 * @return The local cached natural id values (could be different from given values).
 		 */
-		Object[] removeLocalNaturalIdCrossReference(EntityPersister persister, Object id, Object[] state);
+		Object removeLocalResolution(EntityPersister persister, Object id, Object naturalId);
 
 		/**
 		 * Creates necessary shared (second level cache) cross-reference entries.
-		 *
-		 * @param persister The persister representing the entity type.
-		 * @param id The primary key value
-		 * @param state Generally the "full entity state array", though could also be the natural id values array
-		 * @param previousState Generally the "full entity state array", though could also be the natural id values array.
-		 * 		Specifically represents the previous values on update, and so is only used with {@link CachedNaturalIdValueSource#UPDATE}
-		 * @param source Enumeration representing how these values are coming into cache.
 		 */
-		void manageSharedNaturalIdCrossReference(
-				EntityPersister persister,
+		void manageSharedResolution(
 				Object id,
-				Object[] state,
-				Object[] previousState,
+				Object naturalId,
+				Object previousNaturalId,
+				EntityPersister persister,
 				CachedNaturalIdValueSource source);
 
 		/**
 		 * Cleans up local cross-reference entries.
-		 *
-		 * @param persister The persister representing the entity type.
+		 *  @param persister The persister representing the entity type.
 		 * @param id The primary key value
 		 * @param naturalIdValues The natural id values array
 		 */
-		void removeSharedNaturalIdCrossReference(EntityPersister persister, Object id, Object[] naturalIdValues);
+		void removeSharedResolution(EntityPersister persister, Object id, Object naturalIdValues);
 
 		/**
 		 * Given a persister and primary key, find the corresponding cross-referenced natural id values.
@@ -900,7 +884,7 @@ public interface PersistenceContext {
 		 *
 		 * @return The cross-referenced natural-id values, or {@code null}
 		 */
-		Object[] findCachedNaturalId(EntityPersister persister, Object pk);
+		Object findCachedNaturalId(EntityPersister persister, Object pk);
 
 		/**
 		 * Given a persister and natural-id values, find the corresponding cross-referenced primary key. Will return

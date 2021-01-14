@@ -22,7 +22,6 @@ import org.hibernate.engine.internal.Nullability;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
@@ -38,9 +37,9 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.Type;
 
@@ -103,48 +102,17 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			}
 		}
 
-		if ( persister.hasNaturalIdentifier() && entry.getStatus() != Status.READ_ONLY ) {
-			if ( !persister.getEntityMetamodel().hasImmutableNaturalId() ) {
-				// EARLY EXIT!!!
-				// the natural id is mutable (!immutable), no need to do the below checks
-				return;
-			}
-
-			final int[] naturalIdentifierPropertiesIndexes = persister.getNaturalIdentifierProperties();
-			final Type[] propertyTypes = persister.getPropertyTypes();
-			final boolean[] propertyUpdateability = persister.getPropertyUpdateability();
-
-			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-			final Object[] snapshot = loaded == null
-					? persistenceContext.getNaturalIdSnapshot( entry.getId(), persister )
-					: persistenceContext.getNaturalIdHelper().extractNaturalIdValues( loaded, persister );
-
-			for ( int i = 0; i < naturalIdentifierPropertiesIndexes.length; i++ ) {
-				final int naturalIdentifierPropertyIndex = naturalIdentifierPropertiesIndexes[i];
-				if ( propertyUpdateability[naturalIdentifierPropertyIndex] ) {
-					// if the given natural id property is updatable (mutable), there is nothing to check
-					continue;
-				}
-
-				final Type propertyType = propertyTypes[naturalIdentifierPropertyIndex];
-				if ( !propertyType.isEqual( current[naturalIdentifierPropertyIndex], snapshot[i] ) ) {
-					throw new HibernateException(
-							String.format(
-									"An immutable natural identifier of entity %s was altered from `%s` to `%s`",
-									persister.getEntityName(),
-									propertyTypes[naturalIdentifierPropertyIndex].toLoggableString(
-											snapshot[i],
-											session.getFactory()
-									),
-									propertyTypes[naturalIdentifierPropertyIndex].toLoggableString(
-											current[naturalIdentifierPropertyIndex],
-											session.getFactory()
-									)
-							)
-					);
-				}
-			}
+		final NaturalIdMapping naturalIdMapping = persister.getNaturalIdMapping();
+		if ( naturalIdMapping == null ) {
+			return;
 		}
+
+		if ( entry.getStatus() == Status.READ_ONLY ) {
+			// nothing to check
+			return;
+		}
+
+		naturalIdMapping.verifyFlushState( entry.getId(), current, loaded, session );
 	}
 
 	/**

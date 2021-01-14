@@ -31,6 +31,10 @@ public abstract class AbstractNaturalIdMapping implements NaturalIdMapping {
 		return role;
 	}
 
+	public EntityMappingType getDeclaringType() {
+		return declaringType;
+	}
+
 	@Override
 	public EntityMappingType findContainingEntityMapping() {
 		return declaringType;

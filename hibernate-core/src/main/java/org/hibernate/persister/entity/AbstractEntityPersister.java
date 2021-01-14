@@ -5010,7 +5010,7 @@ public abstract class AbstractEntityPersister
 
 		// for reattachment of mutable natural-ids, we absolutely positively have to grab the snapshot from the
 		// database, because we have no other way to know if the state changed while detached.
-		final Object[] naturalIdSnapshot;
+		final Object naturalIdSnapshot;
 		final Object[] entitySnapshot = persistenceContext.getDatabaseSnapshot( id, this );
 		if ( entitySnapshot == StatefulPersistenceContext.NO_ROW ) {
 			naturalIdSnapshot = null;
@@ -5019,12 +5019,9 @@ public abstract class AbstractEntityPersister
 			naturalIdSnapshot = naturalIdHelper.extractNaturalIdValues( entitySnapshot, this );
 		}
 
-		naturalIdHelper.removeSharedNaturalIdCrossReference( this, id, naturalIdSnapshot );
-		naturalIdHelper.manageLocalNaturalIdCrossReference(
-				this,
-				id,
-				naturalIdHelper.extractNaturalIdValues( entity, this ),
-				naturalIdSnapshot,
+		naturalIdHelper.removeSharedResolution( this, id, naturalIdSnapshot );
+		naturalIdHelper.manageLocalResolution(
+				id, naturalIdHelper.extractNaturalIdValues( entity, this ), this,
 				CachedNaturalIdValueSource.UPDATE
 		);
 	}

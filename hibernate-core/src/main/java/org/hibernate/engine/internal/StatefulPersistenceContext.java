@@ -61,6 +61,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.ConcurrentReferenceHashMap;
 import org.hibernate.internal.util.collections.IdentityMap;
+import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -328,7 +329,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public Object[] getNaturalIdSnapshot(Object id, EntityPersister persister) throws HibernateException {
+	public Object getNaturalIdSnapshot(Object id, EntityPersister persister) throws HibernateException {
 		if ( !persister.hasNaturalIdentifier() ) {
 			return null;
 		}
@@ -336,7 +337,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		persister = locateProperPersister( persister );
 
 		// let's first see if it is part of the natural id cache...
-		final Object[] cachedValue = naturalIdHelper.findCachedNaturalId( persister, id );
+		final Object cachedValue = naturalIdHelper.findCachedNaturalId( persister, id );
 		if ( cachedValue != null ) {
 			return cachedValue;
 		}
@@ -345,7 +346,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		if ( persister.getEntityMetamodel().hasImmutableNaturalId() ) {
 			// an immutable natural-id is not retrieved during a normal database-snapshot operation...
 			final Object[] dbValue = persister.getNaturalIdentifierSnapshot( id, session );
-			naturalIdHelper.cacheNaturalIdCrossReferenceFromLoad(
+			naturalIdHelper.cacheResolutionFromLoad(
 					persister,
 					id,
 					dbValue
@@ -365,7 +366,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			for ( int i = 0; i < props.length; i++ ) {
 				naturalIdSnapshotSubSet[i] = entitySnapshot[ props[i] ];
 			}
-			naturalIdHelper.cacheNaturalIdCrossReferenceFromLoad(
+			naturalIdHelper.cacheResolutionFromLoad(
 					persister,
 					id,
 					naturalIdSnapshotSubSet
@@ -1947,10 +1948,10 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	private final NaturalIdHelper naturalIdHelper = new NaturalIdHelper() {
 		@Override
-		public void cacheNaturalIdCrossReferenceFromLoad(
+		public void cacheResolutionFromLoad(
 				EntityPersister persister,
 				Object id,
-				Object[] naturalIdValues) {
+				Object naturalIdValues) {
 			if ( !persister.hasNaturalIdentifier() ) {
 				// nothing to do
 				return;
@@ -1962,19 +1963,18 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			//	from a single load event.  The first put journal would come from the natural id resolution;
 			// the second comes from the entity loading.  In this condition, we want to avoid the multiple
 			// 'put' stats incrementing.
-			final boolean justAddedLocally = getNaturalIdXrefDelegate().cacheNaturalIdCrossReference( persister, id, naturalIdValues );
+			final boolean justAddedLocally = getNaturalIdXrefDelegate().cacheResolution( persister, id, naturalIdValues );
 
 			if ( justAddedLocally && persister.hasNaturalIdCache() ) {
-				managedSharedCacheEntries( persister, id, naturalIdValues, null, CachedNaturalIdValueSource.LOAD );
+				managedSharedResolutions( persister, id, naturalIdValues, null, CachedNaturalIdValueSource.LOAD );
 			}
 		}
 
 		@Override
-		public void manageLocalNaturalIdCrossReference(
-				EntityPersister persister,
+		public void manageLocalResolution(
 				Object id,
-				Object[] state,
-				Object[] previousState,
+				Object naturalId,
+				EntityPersister persister,
 				CachedNaturalIdValueSource source) {
 			if ( !persister.hasNaturalIdentifier() ) {
 				// nothing to do
@@ -1982,18 +1982,17 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			}
 
 			persister = locateProperPersister( persister );
-			final Object[] naturalIdValues = extractNaturalIdValues( state, persister );
 
 			// cache
-			getNaturalIdXrefDelegate().cacheNaturalIdCrossReference( persister, id, naturalIdValues );
+			getNaturalIdXrefDelegate().cacheResolution( persister, id, naturalId );
 		}
 
 		@Override
-		public void manageSharedNaturalIdCrossReference(
-				EntityPersister persister,
+		public void manageSharedResolution(
 				final Object id,
-				Object[] state,
-				Object[] previousState,
+				Object naturalId,
+				Object previousNaturalId,
+				EntityPersister persister,
 				CachedNaturalIdValueSource source) {
 			if ( !persister.hasNaturalIdentifier() ) {
 				// nothing to do
@@ -2006,17 +2005,17 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			}
 
 			persister = locateProperPersister( persister );
-			final Object[] naturalIdValues = extractNaturalIdValues( state, persister );
-			final Object[] previousNaturalIdValues = previousState == null ? null : extractNaturalIdValues( previousState, persister );
+			final Object naturalIdValues = extractNaturalIdValues( naturalId, persister );
+			final Object previousNaturalIdValues = previousNaturalId == null ? null : extractNaturalIdValues( previousNaturalId, persister );
 
-			managedSharedCacheEntries( persister, id, naturalIdValues, previousNaturalIdValues, source );
+			managedSharedResolutions( persister, id, naturalIdValues, previousNaturalIdValues, source );
 		}
 
-		private void managedSharedCacheEntries(
+		private void managedSharedResolutions(
 				EntityPersister persister,
 				final Object id,
-				Object[] naturalIdValues,
-				Object[] previousNaturalIdValues,
+				Object naturalIdValues,
+				Object previousNaturalIdValues,
 				CachedNaturalIdValueSource source) {
 			final NaturalIdDataAccess naturalIdCacheAccessStrategy = persister.getNaturalIdCacheAccessStrategy();
 			final Object naturalIdCacheKey = naturalIdCacheAccessStrategy.generateCacheKey( naturalIdValues, persister, session );
@@ -2133,26 +2132,25 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		@Override
-		public Object[] removeLocalNaturalIdCrossReference(EntityPersister persister, Object id, Object[] state) {
+		public Object removeLocalResolution(EntityPersister persister, Object id, Object naturalId) {
 			if ( !persister.hasNaturalIdentifier() ) {
 				// nothing to do
 				return null;
 			}
 
 			persister = locateProperPersister( persister );
-			final Object[] naturalIdValues = getNaturalIdValues( state, persister );
 
-			final Object[] localNaturalIdValues = getNaturalIdXrefDelegate().removeNaturalIdCrossReference(
+			final Object localNaturalIdValues = getNaturalIdXrefDelegate().removeResolutions(
 					persister, 
-					id, 
-					naturalIdValues 
+					id,
+					naturalId
 			);
 
-			return localNaturalIdValues != null ? localNaturalIdValues : naturalIdValues;
+			return localNaturalIdValues != null ? localNaturalIdValues : naturalId;
 		}
 
 		@Override
-		public void removeSharedNaturalIdCrossReference(EntityPersister persister, Object id, Object[] naturalIdValues) {
+		public void removeSharedResolution(EntityPersister persister, Object id, Object naturalIdValues) {
 			if ( !persister.hasNaturalIdentifier() ) {
 				// nothing to do
 				return;
@@ -2180,46 +2178,37 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		@Override
-		public Object[] findCachedNaturalId(EntityPersister persister, Object pk) {
+		public Object findCachedNaturalId(EntityPersister persister, Object pk) {
 			return getNaturalIdXrefDelegate().findCachedNaturalId( locateProperPersister( persister ), pk );
 		}
 
 		@Override
 		public Object findCachedNaturalIdResolution(EntityPersister persister, Object[] naturalIdValues) {
-			return getNaturalIdXrefDelegate().findCachedNaturalIdResolution( locateProperPersister( persister ), naturalIdValues );
+			return getNaturalIdXrefDelegate().findResolution( locateProperPersister( persister ), naturalIdValues );
 		}
 
 		@Override
-		public Object[] extractNaturalIdValues(Object[] state, EntityPersister persister) {
-			final int[] naturalIdPropertyIndexes = persister.getNaturalIdentifierProperties();
-			if ( state.length == naturalIdPropertyIndexes.length ) {
-				return state;
-			}
+		public Object extractNaturalIdValues(Object[] state, EntityPersister persister) {
+			final NaturalIdMapping naturalIdMapping = persister.getNaturalIdMapping();
+			assert naturalIdMapping != null;
 
-			final Object[] naturalIdValues = new Object[naturalIdPropertyIndexes.length];
-			for ( int i = 0; i < naturalIdPropertyIndexes.length; i++ ) {
-				naturalIdValues[i] = state[naturalIdPropertyIndexes[i]];
-			}
-			return naturalIdValues;
+			return naturalIdMapping.extractNaturalIdValues( state, getSession() );
 		}
 
 		@Override
-		public Object[] extractNaturalIdValues(Object entity, EntityPersister persister) {
+		public Object extractNaturalIdValues(Object entity, EntityPersister persister) {
 			if ( entity == null ) {
 				throw new AssertionFailure( "Entity from which to extract natural id value(s) cannot be null" );
 			}
+
 			if ( persister == null ) {
 				throw new AssertionFailure( "Persister to use in extracting natural id value(s) cannot be null" );
 			}
 
-			final int[] naturalIdentifierProperties = persister.getNaturalIdentifierProperties();
-			final Object[] naturalIdValues = new Object[naturalIdentifierProperties.length];
+			final NaturalIdMapping naturalIdMapping = persister.getNaturalIdMapping();
+			assert naturalIdMapping != null;
 
-			for ( int i = 0; i < naturalIdentifierProperties.length; i++ ) {
-				naturalIdValues[i] = persister.getPropertyValue( entity, naturalIdentifierProperties[i] );
-			}
-
-			return naturalIdValues;
+			return naturalIdMapping.extractNaturalIdValues( entity, session );
 		}
 
 		@Override
@@ -2236,7 +2225,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 			persister = locateProperPersister( persister );
 
-			final Object[] naturalIdValuesFromCurrentObjectState = extractNaturalIdValues( entity, persister );
+			final Object naturalIdValuesFromCurrentObjectState = extractNaturalIdValues( entity, persister );
 			final NaturalIdXrefDelegate naturalIdXrefDelegate = getNaturalIdXrefDelegate();
 			final boolean changed = ! naturalIdXrefDelegate.sameAsCached(
 					persister,
@@ -2245,11 +2234,11 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			);
 
 			if ( changed ) {
-				final Object[] cachedNaturalIdValues = naturalIdXrefDelegate.findCachedNaturalId( persister, pk );
-				naturalIdXrefDelegate.cacheNaturalIdCrossReference( persister, pk, naturalIdValuesFromCurrentObjectState );
+				final Object cachedNaturalIdValues = naturalIdXrefDelegate.findCachedNaturalId( persister, pk );
+				naturalIdXrefDelegate.cacheResolution( persister, pk, naturalIdValuesFromCurrentObjectState );
 				naturalIdXrefDelegate.stashInvalidNaturalIdReference( persister, cachedNaturalIdValues );
 
-				removeSharedNaturalIdCrossReference(
+				removeSharedResolution(
 						persister,
 						pk,
 						cachedNaturalIdValues
@@ -2264,7 +2253,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 		@Override
 		public void handleEviction(Object object, EntityPersister persister, Serializable identifier) {
-			getNaturalIdXrefDelegate().removeNaturalIdCrossReference(
+			getNaturalIdXrefDelegate().removeResolutions(
 					persister,
 					identifier,
 					findCachedNaturalId( persister, identifier )
@@ -2275,16 +2264,5 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public NaturalIdHelper getNaturalIdHelper() {
 		return naturalIdHelper;
-	}
-
-	private Object[] getNaturalIdValues(Object[] state, EntityPersister persister) {
-		final int[] naturalIdPropertyIndexes = persister.getNaturalIdentifierProperties();
-		final Object[] naturalIdValues = new Object[naturalIdPropertyIndexes.length];
-
-		for ( int i = 0; i < naturalIdPropertyIndexes.length; i++ ) {
-			naturalIdValues[i] = state[naturalIdPropertyIndexes[i]];
-		}
-
-		return naturalIdValues;
 	}
 }

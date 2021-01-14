@@ -7,11 +7,14 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
+import org.hibernate.HibernateException;
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.NaturalIdPostLoadListener;
 import org.hibernate.loader.NaturalIdPreLoadListener;
@@ -25,6 +28,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -42,6 +46,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 
 	private final List<SingularAttributeMapping> attributes;
 	private final List<JdbcMapping> jdbcMappings;
+	private final boolean immutable;
 
 	private final NaturalIdLoader<?> loader;
 	private final MultiNaturalIdLoader<?> multiLoader;
@@ -54,11 +59,15 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		super( declaringType, cacheRegionName );
 		this.attributes = attributes;
 
+		boolean anyMutable = false;
 		final List<JdbcMapping> jdbcMappings = new ArrayList<>();
 		for ( int i = 0; i < attributes.size(); i++ ) {
-			attributes.get( i ).forEachJdbcType( (index, jdbcMapping) -> jdbcMappings.add( jdbcMapping ) );
+			final SingularAttributeMapping attributeMapping = attributes.get( i );
+			attributeMapping.forEachJdbcType( (index, jdbcMapping) -> jdbcMappings.add( jdbcMapping ) );
+			anyMutable = anyMutable || attributeMapping.getAttributeMetadataAccess().resolveAttributeMetadata( null ).isUpdatable();
 		}
 		this.jdbcMappings = jdbcMappings;
+		this.immutable = ! anyMutable;
 
 		loader = new CompoundNaturalIdLoader<>(
 				this,
@@ -71,10 +80,42 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 	}
 
 	@Override
+	public Object[] extractNaturalIdValues(Object[] state, SharedSessionContractImplementor session) {
+		if ( state == null ) {
+			return null;
+		}
+
+		if ( state.length == attributes.size() ) {
+			return state;
+		}
+
+		final Object[] values = new Object[ attributes.size() ];
+
+		for ( int i = 0; i <= attributes.size() - 1; i++ ) {
+			final SingularAttributeMapping attributeMapping = attributes.get( i );
+			final Object domainValue = state[ attributeMapping.getStateArrayPosition() ];
+			values[ i ] = attributeMapping.disassemble( domainValue, session );
+		}
+
+		return values;
+	}
+
+	@Override
+	public Object[] extractNaturalIdValues(Object entity, SharedSessionContractImplementor session) {
+		final Object[] values = new Object[ attributes.size() ];
+
+		for ( int i = 0; i < attributes.size(); i++ ) {
+			values[i] = attributes.get( i ).getPropertyAccess().getGetter().get( entity );
+		}
+
+		return values;
+	}
+
+	@Override
 	@SuppressWarnings( "rawtypes" )
-	public Object normalizeValue(Object incoming, SharedSessionContractImplementor session) {
+	public Object[] normalizeIncomingValue(Object incoming, SharedSessionContractImplementor session) {
 		if ( incoming instanceof Object[] ) {
-			return incoming;
+			return (Object[]) incoming;
 		}
 
 		if ( incoming instanceof Map ) {
@@ -91,8 +132,92 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 	}
 
 	@Override
+	public void validateInternalForm(Object naturalIdValue, SharedSessionContractImplementor session) {
+		if ( naturalIdValue == null ) {
+			return;
+		}
+
+		// should be an array, with a size equal to the number of attributes making up this compound natural-id
+		if ( naturalIdValue instanceof Object[] ) {
+			final Object[] values = (Object[]) naturalIdValue;
+			if ( values.length != attributes.size() ) {
+				throw new IllegalArgumentException(
+						"Natural-id value [" + naturalIdValue + "] did not contain the expected number of elements ["
+								+ attributes.size() + "]"
+				);
+			}
+
+			return;
+		}
+
+		throw new IllegalArgumentException( "Natural-id value [" + naturalIdValue + "] was not an array as expected" );
+	}
+
+	@Override
+	public int calculateHashCode(Object value, SharedSessionContractImplementor session) {
+		return 0;
+	}
+
+	@Override
+	public void verifyFlushState(Object id, Object[] currentState, Object[] loadedState, SharedSessionContractImplementor session) {
+		if ( ! immutable ) {
+			// EARLY EXIT!!!
+			// the natural id is mutable (!immutable), no need to do the checks
+			return;
+		}
+
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+		final EntityPersister persister = getDeclaringType().getEntityPersister();
+
+		final Object[] naturalId = extractNaturalIdValues( currentState, session );
+
+		final Object snapshot = loadedState == null
+				? persistenceContext.getNaturalIdSnapshot( id, persister )
+				: persistenceContext.getNaturalIdHelper().extractNaturalIdValues( loadedState, persister );
+		final Object[] previousNaturalId = (Object[]) snapshot;
+
+		assert naturalId.length == getNaturalIdAttributes().size();
+		assert previousNaturalId.length == naturalId.length;
+
+		for ( int i = 0; i < getNaturalIdAttributes().size(); i++ ) {
+			final SingularAttributeMapping attributeMapping = getNaturalIdAttributes().get( i );
+
+			final boolean updatable = attributeMapping.getAttributeMetadataAccess().resolveAttributeMetadata( persister ).isUpdatable();
+			if ( updatable ) {
+				// property is updatable (mutable), there is nothing to check
+				continue;
+			}
+
+			final Object currentValue = naturalId[ i ];
+			final Object previousValue = previousNaturalId[ i ];
+
+			if ( ! attributeMapping.areEqual( currentValue, previousValue, session ) ) {
+				throw new HibernateException(
+						String.format(
+								"An immutable attribute [%s] within compound natural identifier of entity %s was altered from `%s` to `%s`",
+								attributeMapping.getAttributeName(),
+								persister.getEntityName(),
+								previousValue,
+								currentValue
+						)
+				);
+			}
+		}
+	}
+
+	@Override
+	public boolean areEqual(Object one, Object other, SharedSessionContractImplementor session) {
+		return Arrays.equals( (Object[]) one, (Object[]) other );
+	}
+
+	@Override
 	public List<SingularAttributeMapping> getNaturalIdAttributes() {
 		return attributes;
+	}
+
+	@Override
+	public boolean isImmutable() {
+		return immutable;
 	}
 
 	@Override

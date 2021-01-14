@@ -61,7 +61,7 @@ public class SimpleNaturalIdLoader<T> extends AbstractNaturalIdLoader<T> {
 			SharedSessionContractImplementor session) {
 		assert jdbcParameters.size() == 1;
 
-		final Object bindableValue = naturalIdMapping().normalizeValue( naturalIdToLoad, session );
+		final Object bindableValue = naturalIdMapping().normalizeIncomingValue( naturalIdToLoad, session );
 
 		final SingularAttributeMapping attributeMapping = naturalIdMapping().getNaturalIdAttributes().get( 0 );
 		jdbcParamBindings.registerParametersForEachJdbcValue(
@@ -75,7 +75,7 @@ public class SimpleNaturalIdLoader<T> extends AbstractNaturalIdLoader<T> {
 
 	@Override
 	protected Object resolveNaturalIdBindValue(Object naturalIdToLoad, SharedSessionContractImplementor session) {
-		return naturalIdMapping().normalizeValue( naturalIdToLoad, session );
+		return naturalIdMapping().normalizeIncomingValue( naturalIdToLoad, session );
 	}
 
 	@Override
@@ -161,7 +161,7 @@ public class SimpleNaturalIdLoader<T> extends AbstractNaturalIdLoader<T> {
 	public Object resolveNaturalIdToId(
 			Object naturalIdValue,
 			SharedSessionContractImplementor session) {
-		final Object bindValue = naturalIdMapping().normalizeValue( naturalIdValue, session );
+		final Object bindValue = naturalIdMapping().normalizeIncomingValue( naturalIdValue, session );
 
 		final SessionFactoryImplementor sessionFactory = session.getFactory();
 		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();

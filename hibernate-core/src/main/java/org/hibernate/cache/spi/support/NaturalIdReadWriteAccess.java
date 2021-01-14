@@ -53,14 +53,14 @@ public class NaturalIdReadWriteAccess extends AbstractReadWriteAccess implements
 
 	@Override
 	public Object generateCacheKey(
-			Object[] naturalIdValues,
+			Object naturalIdValues,
 			EntityPersister rootEntityDescriptor,
 			SharedSessionContractImplementor session) {
 		return keysFactory.createNaturalIdKey( naturalIdValues, rootEntityDescriptor, session );
 	}
 
 	@Override
-	public Object[] getNaturalIdValues(Object cacheKey) {
+	public Object getNaturalIdValues(Object cacheKey) {
 		return keysFactory.getNaturalIdValues( cacheKey );
 	}
 

@@ -6,9 +6,11 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import java.util.Objects;
 import java.util.function.BiConsumer;
 
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
@@ -103,4 +105,9 @@ public interface ModelPart extends MappingModelExpressable {
 	}
 
 	EntityMappingType findContainingEntityMapping();
+
+	default boolean areEqual(Object one, Object other, SharedSessionContractImplementor session) {
+		// NOTE : deepEquals to account for arrays (compound natural-id)
+		return Objects.deepEquals( one, other );
+	}
 }

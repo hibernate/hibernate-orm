@@ -335,7 +335,7 @@ public final class TwoPhaseLoad {
 		}
 
 		if ( persister.hasNaturalIdentifier() ) {
-			persistenceContext.getNaturalIdHelper().cacheNaturalIdCrossReferenceFromLoad(
+			persistenceContext.getNaturalIdHelper().cacheResolutionFromLoad(
 					persister,
 					id,
 					persistenceContext.getNaturalIdHelper().extractNaturalIdValues( hydratedState, persister )

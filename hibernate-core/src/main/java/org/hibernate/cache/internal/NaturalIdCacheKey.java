@@ -9,13 +9,12 @@ package org.hibernate.cache.internal;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.Objects;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.ValueHolder;
-import org.hibernate.type.EntityType;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.type.Type;
 
 /**
@@ -28,7 +27,7 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public class NaturalIdCacheKey implements Serializable {
-	private final Object[] naturalIdValues;
+	private final Object naturalIdValues;
 	private final String entityName;
 	private final String tenantId;
 	private final int hashCode;
@@ -43,40 +42,20 @@ public class NaturalIdCacheKey implements Serializable {
 	 * @param session The originating session
 	 */
 	public NaturalIdCacheKey(
-			final Object[] naturalIdValues,
-			Type[] propertyTypes, int[] naturalIdPropertyIndexes, final String entityName,
+			final Object naturalIdValues,
+			Type[] propertyTypes,
+			int[] naturalIdPropertyIndexes,
+			final String entityName,
 			final SharedSessionContractImplementor session) {
-
 		this.entityName = entityName;
 		this.tenantId = session.getTenantIdentifier();
 
-		this.naturalIdValues = new Serializable[naturalIdValues.length];
+		final EntityMappingType entityMappingType = session.getFactory().getRuntimeMetamodels().getEntityMappingType( entityName );
+		final NaturalIdMapping naturalIdMapping = entityMappingType.getNaturalIdMapping();
 
-		final SessionFactoryImplementor factory = session.getFactory();
+		this.naturalIdValues = naturalIdMapping.disassemble( naturalIdValues, session );
+		this.hashCode = naturalIdMapping.calculateHashCode( naturalIdValues, session );
 
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ( ( this.entityName == null ) ? 0 : this.entityName.hashCode() );
-		result = prime * result + ( ( this.tenantId == null ) ? 0 : this.tenantId.hashCode() );
-		for ( int i = 0; i < naturalIdValues.length; i++ ) {
-			final int naturalIdPropertyIndex = naturalIdPropertyIndexes[i];
-			final Type type = propertyTypes[naturalIdPropertyIndex];
-			final Object value = naturalIdValues[i];
-
-			result = prime * result + (value != null ? type.getHashCode( value, factory ) : 0);
-
-			// The natural id may not be fully resolved in some situations.  See HHH-7513 for one of them
-			// (re-attaching a mutable natural id uses a database snapshot and hydration does not resolve associations).
-			// TODO: The snapshot should probably be revisited at some point.  Consider semi-resolving, hydrating, etc.
-			if (type instanceof EntityType && type.getSemiResolvedType( factory ).getReturnedClass().isInstance( value )) {
-				this.naturalIdValues[i] = value;
-			}
-			else {
-				this.naturalIdValues[i] = type.disassemble( value, session, null );
-			}
-		}
-
-		this.hashCode = result;
 		initTransients();
 	}
 
@@ -87,15 +66,20 @@ public class NaturalIdCacheKey implements Serializable {
 					public String initialize() {
 						//Complex toString is needed as naturalIds for entities are not simply based on a single value like primary keys
 						//the only same way to differentiate the keys is to include the disassembled values in the string.
-						final StringBuilder toStringBuilder = new StringBuilder().append( entityName ).append(
-								"##NaturalId[" );
-						for ( int i = 0; i < naturalIdValues.length; i++ ) {
-							toStringBuilder.append( naturalIdValues[i] );
-							if ( i + 1 < naturalIdValues.length ) {
-								toStringBuilder.append( ", " );
+						final StringBuilder toStringBuilder = new StringBuilder()
+								.append( entityName ).append( "##NaturalId[" );
+						if ( naturalIdValues instanceof Object[] ) {
+							final Object[] values = (Object[]) naturalIdValues;
+							for ( int i = 0; i < values.length; i++ ) {
+								toStringBuilder.append( values[ i ] );
+								if ( i + 1 < values.length ) {
+									toStringBuilder.append( ", " );
+								}
 							}
 						}
-						toStringBuilder.append( "]" );
+						else {
+							toStringBuilder.append( naturalIdValues );
+						}
 
 						return toStringBuilder.toString();
 					}
@@ -114,7 +98,7 @@ public class NaturalIdCacheKey implements Serializable {
 	}
 
 	@SuppressWarnings( {"UnusedDeclaration"})
-	public Object[] getNaturalIdValues() {
+	public Object getNaturalIdValues() {
 		return naturalIdValues;
 	}
 
@@ -145,7 +129,7 @@ public class NaturalIdCacheKey implements Serializable {
 		final NaturalIdCacheKey other = (NaturalIdCacheKey) o;
 		return Objects.equals( entityName, other.entityName )
 				&& Objects.equals( tenantId, other.tenantId )
-				&& Arrays.deepEquals( this.naturalIdValues, other.naturalIdValues );
+				&& Objects.deepEquals( this.naturalIdValues, other.naturalIdValues );
 	}
 
 	private void readObject(ObjectInputStream ois)

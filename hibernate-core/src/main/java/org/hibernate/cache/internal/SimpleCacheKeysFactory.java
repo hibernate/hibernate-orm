@@ -32,7 +32,7 @@ public class SimpleCacheKeysFactory implements CacheKeysFactory {
 	}
 
 	@Override
-	public Object createNaturalIdKey(Object[] naturalIdValues, EntityPersister persister, SharedSessionContractImplementor session) {
+	public Object createNaturalIdKey(Object naturalIdValues, EntityPersister persister, SharedSessionContractImplementor session) {
 		// natural ids always need to be wrapped
 		return new NaturalIdCacheKey(naturalIdValues, persister.getPropertyTypes(), persister.getNaturalIdentifierProperties(), null, session);
 	}
@@ -48,7 +48,7 @@ public class SimpleCacheKeysFactory implements CacheKeysFactory {
 	}
 
 	@Override
-	public Object[] getNaturalIdValues(Object cacheKey) {
+	public Object getNaturalIdValues(Object cacheKey) {
 		return ((NaturalIdCacheKey) cacheKey).getNaturalIdValues();
 	}
 }

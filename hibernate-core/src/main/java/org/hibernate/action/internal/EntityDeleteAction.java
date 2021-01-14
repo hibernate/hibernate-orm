@@ -21,6 +21,7 @@ import org.hibernate.event.spi.PostDeleteEvent;
 import org.hibernate.event.spi.PostDeleteEventListener;
 import org.hibernate.event.spi.PreDeleteEvent;
 import org.hibernate.event.spi.PreDeleteEventListener;
+import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
@@ -33,7 +34,9 @@ public class EntityDeleteAction extends EntityAction {
 	private final Object[] state;
 
 	private SoftLock lock;
-	private Object[] naturalIdValues;
+
+	private final NaturalIdMapping naturalIdMapping;
+	private Object naturalIdValues;
 
 	/**
 	 * Constructs an EntityDeleteAction.
@@ -58,12 +61,15 @@ public class EntityDeleteAction extends EntityAction {
 		this.isCascadeDeleteEnabled = isCascadeDeleteEnabled;
 		this.state = state;
 
-		// before remove we need to remove the local (transactional) natural id cross-reference
-		naturalIdValues = session.getPersistenceContextInternal().getNaturalIdHelper().removeLocalNaturalIdCrossReference(
-				getPersister(),
-				getId(),
-				state
-		);
+		this.naturalIdMapping = persister.getNaturalIdMapping();
+
+		if ( naturalIdMapping != null ) {
+			naturalIdValues = session.getPersistenceContextInternal().getNaturalIdHelper().removeLocalResolution(
+					getPersister(),
+					getId(),
+					naturalIdMapping.extractNaturalIdValues( state, session )
+			);
+		}
 	}
 
 	public Object getVersion() {
@@ -78,7 +84,7 @@ public class EntityDeleteAction extends EntityAction {
 		return state;
 	}
 
-	protected Object[] getNaturalIdValues() {
+	protected Object getNaturalIdValues() {
 		return naturalIdValues;
 	}
 
@@ -139,7 +145,7 @@ public class EntityDeleteAction extends EntityAction {
 			persister.getCacheAccessStrategy().remove( session, ck);
 		}
 
-		persistenceContext.getNaturalIdHelper().removeSharedNaturalIdCrossReference( persister, id, naturalIdValues );
+		persistenceContext.getNaturalIdHelper().removeSharedResolution( persister, id, naturalIdValues );
 
 		postDelete();
 

@@ -298,15 +298,12 @@ public class LazyToOnesProxyWithSubclassesStatelessTest extends BaseNonConfigCor
 		private String id;
 
 		@ManyToOne(fetch = FetchType.LAZY)
-		@LazyToOne(LazyToOneOption.NO_PROXY)
 		private Animal animal = null;
 
 		@ManyToOne(fetch = FetchType.LAZY)
-		@LazyToOne(LazyToOneOption.NO_PROXY)
 		private Primate primate = null;
 
 		@ManyToOne(fetch = FetchType.LAZY)
-		@LazyToOne(LazyToOneOption.NO_PROXY)
 		private Human human = null;
 
 		protected OtherEntity() {

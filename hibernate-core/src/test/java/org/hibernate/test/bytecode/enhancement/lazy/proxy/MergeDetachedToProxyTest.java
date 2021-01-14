@@ -177,7 +177,6 @@ public class MergeDetachedToProxyTest extends BaseNonConfigCoreFunctionalTestCas
 		private int id;
 
 		@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-		@LazyToOne(LazyToOneOption.NO_PROXY)
 		private BEntity bEntity;
 	}
 

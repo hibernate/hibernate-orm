@@ -831,15 +831,12 @@ public class LazyToOnesProxyMergeWithSubclassesTest extends BaseNonConfigCoreFun
 		private String id;
 
 		@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-		@LazyToOne(LazyToOneOption.NO_PROXY)
 		private Animal animal = null;
 
 		@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-		@LazyToOne(LazyToOneOption.NO_PROXY)
 		private Primate primate = null;
 
 		@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-		@LazyToOne(LazyToOneOption.NO_PROXY)
 		private Human human = null;
 
 		protected OtherEntity() {

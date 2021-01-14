@@ -105,14 +105,14 @@ public final class BlobProxy implements Blob, BlobImplementer {
 	}
 
 	@Override
-	public byte[] getBytes(final long start, final int length) throws SQLException {
+	public byte[] getBytes(final long start, final long length) throws SQLException {
 		if ( start < 1 ) {
 			throw new SQLException( "Start position 1-based; must be 1 or more." );
 		}
 		if ( length < 0 ) {
 			throw new SQLException( "Length must be great-than-or-equal to zero." );
 		}
-		return DataHelper.extractBytes( getStream(), start-1, length );
+		return DataHelper.extractBytes( getBinaryStream() );
 	}
 
 	@Override
@@ -163,7 +163,7 @@ public final class BlobProxy implements Blob, BlobImplementer {
 		if ( start > length() ) {
 			throw new SQLException( "Start position [" + start + "] cannot exceed overall CLOB length [" + length() + "]" );
 		}
-		return DataHelper.subStream( getStream() );
+		return DataHelper.subStream( getBinaryStream() );
 	}
 
 	private static class StreamBackedBinaryStream implements BinaryStream {

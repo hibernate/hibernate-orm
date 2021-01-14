@@ -194,16 +194,28 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 	}
 
 	private void releaseConnection() {
-		//Some managed containers might trigger this release concurrently:
-		//this is not how they should do things, still we make a local
-		//copy of the variable to prevent confusing errors due to a race conditions
-		//(to trigger a more clear error, if any).
 		final Connection localVariableConnection = this.physicalConnection;
 		if ( localVariableConnection == null ) {
 			return;
 		}
 
+		// We need to set the connection to null before we release resources,
+		// in order to prevent recursion into this method.
+		// Recursion can happen when we release resources and when batch statements are in progress:
+		// when releasing resources, we'll abort the batch statement,
+		// which will trigger "logicalConnection.afterStatement()",
+		// which in some configurations will release the connection.
+
+		//Some managed containers might trigger this release concurrently:
+		//this is not how they should do things, still we try to detect it to trigger a more clear error.
+		boolean concurrentUsageDetected = ( this.physicalConnection == null );
+		this.physicalConnection = null;
+		if ( concurrentUsageDetected ) {
+			throw new HibernateException( "Detected concurrent management of connection resources." +
+					" This might indicate a multi-threaded use of Hibernate in combination with managed resources, which is not supported." );
+		}
 		try {
+			getResourceRegistry().releaseResources();
 			if ( ! localVariableConnection.isClosed() ) {
 				sqlExceptionHelper.logAndClearWarnings( localVariableConnection );
 			}
@@ -214,13 +226,6 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 		}
 		finally {
 			observer.jdbcConnectionReleaseEnd();
-			boolean concurrentUsageDetected = ( this.physicalConnection == null );
-			this.physicalConnection = null;
-			getResourceRegistry().releaseResources();
-			if ( concurrentUsageDetected ) {
-				throw new HibernateException( "Detected concurrent management of connection resources." +
-						" This might indicate a multi-threaded use of Hibernate in combination with managed resources, which is not supported." );
-			}
 		}
 	}
 

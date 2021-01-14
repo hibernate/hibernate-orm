@@ -183,7 +183,6 @@ public class LoadANonExistingNotFoundEntityTest extends BaseNonConfigCoreFunctio
 
 		@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 		@JoinColumn(foreignKey = @ForeignKey(value= ConstraintMode.NO_CONSTRAINT))
-		@LazyToOne(LazyToOneOption.NO_PROXY)
 		@NotFound(action=NotFoundAction.IGNORE)
 		private Employer employer;
 	}

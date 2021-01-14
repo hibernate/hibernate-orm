@@ -246,7 +246,6 @@ public class BatchFetchProxyTest extends BaseNonConfigCoreFunctionalTestCase {
 		private String name;
 
 		@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-		@LazyToOne(LazyToOneOption.NO_PROXY)
 		private Employer employer;
 	}
 

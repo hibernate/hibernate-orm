@@ -52,7 +52,6 @@ public class Activity extends BaseEntity {
 	}
 
 	@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
-	@LazyToOne(LazyToOneOption.NO_PROXY)
 	@LazyGroup("Instruction")
 	@JoinColumn(name = "Instruction_Id")
 	public Instruction getInstruction() {
@@ -66,7 +65,6 @@ public class Activity extends BaseEntity {
 
 	@SuppressWarnings("unused")
 	@ManyToOne(fetch=FetchType.LAZY)
-	@LazyToOne(LazyToOneOption.NO_PROXY)
 	@LazyGroup("webApplication")
 	@JoinColumn(name="web_app_oid")
 	public WebApplication getWebApplication() {

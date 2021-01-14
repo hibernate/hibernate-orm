@@ -23,7 +23,7 @@ ext {
     elVersion = '3.0.1-b09'
 
     cdiVersion = '2.0'
-    weldVersion = '3.0.0.Final'
+    weldVersion = '3.1.5.Final'
 
     javassistVersion = '3.27.0-GA'
     byteBuddyVersion = '1.10.17'
@@ -48,6 +48,8 @@ ext {
     graalvmVersion = '19.3.1'
 
     antlrVersion = '4.8-1'
+
+    micrometerVersion = '1.6.1'
 
     libraries = [
             // Ant
@@ -155,6 +157,7 @@ ext {
             vibur:           "org.vibur:vibur-dbcp:25.0",
             agroal_api:      "io.agroal:agroal-api:${agroalVersion}",
             agroal_pool:     "io.agroal:agroal-pool:${agroalVersion}",
+            micrometer:      "io.micrometer:micrometer-core:1.6.1",
 
             atomikos:         "com.atomikos:transactions:4.0.6",
             atomikos_jta:     "com.atomikos:transactions-jta:4.0.6",

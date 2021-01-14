@@ -142,9 +142,8 @@ public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhanc
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
 
 		// first, instantiate the entity instance to use as the proxy
-		final EntityTuplizer entityTuplizer = persister.getEntityTuplizer();
-		final PersistentAttributeInterceptable entity = (PersistentAttributeInterceptable) entityTuplizer
-				.instantiate( identifier, session );
+		final PersistentAttributeInterceptable entity = (PersistentAttributeInterceptable) persister.getRepresentationStrategy().getInstantiator().instantiate(
+				session.getFactory() );
 
 		// clear the fields that are marked as dirty in the dirtiness tracker
 		if ( entity instanceof SelfDirtinessTracker ) {

@@ -2540,7 +2540,8 @@ public abstract class AbstractEntityPersister
 			mutablePropertiesIndexes.stream().forEach( i -> {
 				// This is kindly borrowed from org.hibernate.type.TypeHelper.findDirty
 				final boolean dirty = currentState[i] != LazyPropertyInitializer.UNFETCHED_PROPERTY &&
-						( previousState[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY ||
+						// Consider mutable properties as dirty if we don't have a previous state
+						( previousState == null || previousState[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY ||
 								( propertyCheckability[i]
 										&& propertyTypes[i].isDirty(
 										previousState[i],

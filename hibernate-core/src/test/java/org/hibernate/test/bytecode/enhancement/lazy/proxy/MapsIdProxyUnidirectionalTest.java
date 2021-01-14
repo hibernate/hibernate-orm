@@ -122,7 +122,6 @@ public class MapsIdProxyUnidirectionalTest extends BaseNonConfigCoreFunctionalTe
 
 		@MapsId
 		@OneToOne(optional = false, fetch = FetchType.LAZY)
-		@LazyToOne(LazyToOneOption.NO_PROXY)
 		private Employer employer;
 
 	}

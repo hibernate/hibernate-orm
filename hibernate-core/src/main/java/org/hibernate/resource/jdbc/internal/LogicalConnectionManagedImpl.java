@@ -215,11 +215,15 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 					" This might indicate a multi-threaded use of Hibernate in combination with managed resources, which is not supported." );
 		}
 		try {
-			getResourceRegistry().releaseResources();
-			if ( ! localVariableConnection.isClosed() ) {
-				sqlExceptionHelper.logAndClearWarnings( localVariableConnection );
+			try {
+				getResourceRegistry().releaseResources();
+				if ( !localVariableConnection.isClosed() ) {
+					sqlExceptionHelper.logAndClearWarnings( localVariableConnection );
+				}
 			}
-			jdbcConnectionAccess.releaseConnection( localVariableConnection );
+			finally {
+				jdbcConnectionAccess.releaseConnection( localVariableConnection );
+			}
 		}
 		catch (SQLException e) {
 			throw sqlExceptionHelper.convert( e, "Unable to release JDBC Connection" );

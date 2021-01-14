@@ -302,7 +302,6 @@ public class QueryScrollingWithInheritanceProxyEagerManyToOneTest extends BaseNo
 		private String id;
 
 		@ManyToOne(fetch = FetchType.LAZY)
-		@LazyToOne(LazyToOneOption.NO_PROXY)
 		@JoinColumn(name = "Employee_Id")
 		protected Employee employee = null;
 

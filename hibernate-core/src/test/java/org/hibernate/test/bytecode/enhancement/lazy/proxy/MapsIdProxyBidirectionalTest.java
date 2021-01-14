@@ -153,7 +153,6 @@ public class MapsIdProxyBidirectionalTest extends BaseNonConfigCoreFunctionalTes
 
 		@MapsId
 		@OneToOne(optional = false, fetch = FetchType.LAZY)
-		@LazyToOne(LazyToOneOption.NO_PROXY)
 		private Employer employer;
 
 		private String info;
@@ -165,7 +164,6 @@ public class MapsIdProxyBidirectionalTest extends BaseNonConfigCoreFunctionalTes
 		private int id;
 
 		@OneToOne(optional = false, fetch = FetchType.LAZY, mappedBy = "employer", cascade = CascadeType.ALL)
-		@LazyToOne(LazyToOneOption.NO_PROXY)
 		private EmployerInfo employerInfo;
 
 		private String name;

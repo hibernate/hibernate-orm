@@ -212,7 +212,6 @@ public class EntitySharedInCollectionAndToOneTest extends BaseNonConfigCoreFunct
 		private CodeTable codeTable;
 
 		@OneToOne( mappedBy = "defaultItem", fetch=FetchType.LAZY )
-		@LazyToOne( LazyToOneOption.NO_PROXY )
 		@LazyGroup( "defaultItemInverse" )
 		protected CodeTable defaultItemInverse;
 

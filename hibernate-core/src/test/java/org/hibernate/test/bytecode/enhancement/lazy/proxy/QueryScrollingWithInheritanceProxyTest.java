@@ -302,12 +302,10 @@ public class QueryScrollingWithInheritanceProxyTest extends BaseNonConfigCoreFun
 		private String id;
 
 		@ManyToOne(fetch = FetchType.LAZY)
-		@LazyToOne(LazyToOneOption.NO_PROXY)
 		@JoinColumn(name = "Employee_Id")
 		protected Employee employee = null;
 
 		@ManyToOne(fetch = FetchType.LAZY)
-		@LazyToOne(LazyToOneOption.NO_PROXY)
 		@JoinColumn(name = "EmployeeParent_Id")
 		protected EmployeeParent employeeParent = null;
 

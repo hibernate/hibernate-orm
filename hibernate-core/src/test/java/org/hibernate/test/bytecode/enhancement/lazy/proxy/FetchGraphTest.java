@@ -38,6 +38,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
@@ -199,6 +200,7 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpected( jiraKey = "HHH-13658")
 	public void testRandomAccess() {
 		final StatisticsImplementor stats = sessionFactory().getStatistics();
 		stats.clear();
@@ -787,14 +789,10 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		// ****** Relations *****************
 		@OneToOne(fetch = FetchType.LAZY)
-//		@LazyToOne(LazyToOneOption.PROXY)
-		@LazyToOne(LazyToOneOption.NO_PROXY)
 		@LazyGroup("a")
 		public AEntity a;
 
 		@OneToOne(fetch = FetchType.LAZY)
-		@LazyToOne(LazyToOneOption.NO_PROXY)
-//		@LazyToOne(LazyToOneOption.PROXY)
 		@LazyGroup("c")
 		public CEntity c;
 
@@ -802,7 +800,6 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 		public Set<BEntity> bs;
 
 		@OneToOne(mappedBy = "d", fetch = FetchType.LAZY)
-		@LazyToOne(LazyToOneOption.NO_PROXY)
 		@LazyGroup("e")
 		private EEntity e;
 

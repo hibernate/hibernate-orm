@@ -72,7 +72,10 @@ public class ForeignKeyProcessor {
         log.debug("Calling getExportedKeys on " + referencedTable);
         try {
         	Map<String, Object> exportedKeyRs = null;
-        	exportedKeyIterator = metaDataDialect.getExportedKeys(getCatalogForDBLookup(referencedTable.getCatalog(), defaultCatalog), getSchemaForDBLookup(referencedTable.getSchema(), defaultSchema), referencedTable.getName() );
+        	exportedKeyIterator = metaDataDialect.getExportedKeys(
+        			getCatalogForDBLookup(referencedTable.getCatalog(), defaultCatalog), 
+        			getSchemaForDBLookup(referencedTable.getSchema(), defaultSchema), 
+        			referencedTable.getName() );
         try {
 			while (exportedKeyIterator.hasNext() ) {
 				exportedKeyRs = exportedKeyIterator.next();
@@ -169,66 +172,80 @@ public class ForeignKeyProcessor {
         if(userForeignKeys!=null) {
         	Iterator<ForeignKey> iterator = userForeignKeys.iterator();
         	while ( iterator.hasNext() ) {
-        		ForeignKey element = iterator.next();
         		
-        		if(!equalTable(referencedTable, element.getReferencedTable(), defaultSchema, defaultCatalog)) {
-        			log.debug("Referenced table " + element.getReferencedTable().getName() + " is not " +  referencedTable + ". Ignoring userdefined foreign key " + element );
-        			continue; // skip non related foreign keys
+        		processUserForeignKey(
+        				iterator.next(), 
+        				referencedTable, 
+        				referencedColumns,
+        				dependentColumns, 
+        				dependentTables);
         		}
-        		
-        		String userfkName = element.getName();        
-        		Table userfkTable = element.getTable();
-        		
-        		List<?> userColumns = element.getColumns();
-        		List<?> userrefColumns = element.getReferencedColumns();
-        		
-        		Table deptable = dependentTables.get(userfkName);
-        		if(deptable!=null) { // foreign key already defined!?
-        			throw new MappingException("Foreign key " + userfkName + " already defined in the database!");
-        		}
-        		
-        		deptable = getTable(
-        				getCatalogForDBLookup(userfkTable.getCatalog(), defaultCatalog),
-        				getSchemaForDBLookup(userfkTable.getSchema(), defaultSchema), 
-         				userfkTable.getName());
-        		if(deptable==null) {
-					//	filter out stuff we don't have tables for!
-					log.debug("User defined foreign key " + userfkName + " references unknown or filtered table " + TableIdentifier.create(userfkTable) );
-					continue;        			
-        		}
-        		
-        		dependentTables.put(userfkName, deptable);
-        		
-        		List<Column> depColumns = new ArrayList<Column>(userColumns.size() );
-        		Iterator<?> colIterator = userColumns.iterator();
-        		while(colIterator.hasNext() ) {
-        			Column jdbcColumn = (Column) colIterator.next();
-        			Column column = new Column(jdbcColumn.getName() );
-    				Column existingColumn = deptable.getColumn(column);
-    				column = existingColumn==null ? column : existingColumn;
-    				depColumns.add(column);
-        		}
-        		
-        		List<Column> refColumns = new ArrayList<Column>(userrefColumns.size() );
-        		colIterator = userrefColumns.iterator();
-        		while(colIterator.hasNext() ) {
-        			Column jdbcColumn = (Column) colIterator.next();
-        			Column column = new Column(jdbcColumn.getName() );
-    				Column existingColumn = referencedTable.getColumn(column);
-    				column = existingColumn==null ? column : existingColumn;
-    				refColumns.add(column);
-        		}
-        		
-        		referencedColumns.put(userfkName, refColumns );
-        		dependentColumns.put(userfkName, depColumns );
-        	}
         }
         
         
         return new ForeignKeysInfo(referencedTable, dependentTables, dependentColumns, referencedColumns);
         
        }
-
+	
+	private void processUserForeignKey(
+			ForeignKey element,
+			Table referencedTable,
+			Map<String, List<Column>> referencedColumns,
+			Map<String, List<Column>> dependentColumns,
+			Map<String, Table> dependentTables) {
+		
+		if(!equalTable(referencedTable, element.getReferencedTable(), defaultSchema, defaultCatalog)) {
+			log.debug("Referenced table " + element.getReferencedTable().getName() + " is not " +  referencedTable + ". Ignoring userdefined foreign key " + element );
+			return; // skip non related foreign keys
+		}
+		
+		String userfkName = element.getName();        
+		Table userfkTable = element.getTable();
+		
+		List<?> userColumns = element.getColumns();
+		List<?> userrefColumns = element.getReferencedColumns();
+		
+		Table deptable = dependentTables.get(userfkName);
+		if(deptable!=null) { // foreign key already defined!?
+			throw new MappingException("Foreign key " + userfkName + " already defined in the database!");
+		}
+		
+		deptable = getTable(
+				getCatalogForDBLookup(userfkTable.getCatalog(), defaultCatalog),
+				getSchemaForDBLookup(userfkTable.getSchema(), defaultSchema), 
+ 				userfkTable.getName());
+		if(deptable==null) {
+			//	filter out stuff we don't have tables for!
+			log.debug("User defined foreign key " + userfkName + " references unknown or filtered table " + TableIdentifier.create(userfkTable) );
+			return;        			
+		}
+		
+		dependentTables.put(userfkName, deptable);
+		
+		List<Column> depColumns = new ArrayList<Column>(userColumns.size() );
+		Iterator<?> colIterator = userColumns.iterator();
+		while(colIterator.hasNext() ) {
+			Column jdbcColumn = (Column) colIterator.next();
+			Column column = new Column(jdbcColumn.getName() );
+			Column existingColumn = deptable.getColumn(column);
+			column = existingColumn==null ? column : existingColumn;
+			depColumns.add(column);
+		}
+		
+		List<Column> refColumns = new ArrayList<Column>(userrefColumns.size() );
+		colIterator = userrefColumns.iterator();
+		while(colIterator.hasNext() ) {
+			Column jdbcColumn = (Column) colIterator.next();
+			Column column = new Column(jdbcColumn.getName() );
+			Column existingColumn = referencedTable.getColumn(column);
+			column = existingColumn==null ? column : existingColumn;
+			refColumns.add(column);
+		}
+		
+		referencedColumns.put(userfkName, refColumns );
+		dependentColumns.put(userfkName, depColumns );
+	}
+	
 	private static String getCatalogForDBLookup(String catalog, String defaultCatalog) {
 		return catalog==null?defaultCatalog:catalog;			
 	}

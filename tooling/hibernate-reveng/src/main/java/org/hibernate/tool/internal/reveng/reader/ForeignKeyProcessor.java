@@ -222,17 +222,8 @@ public class ForeignKeyProcessor {
 		
 		dependentTables.put(userfkName, deptable);
 		
-		List<Column> depColumns = new ArrayList<Column>(userColumns.size() );
-		Iterator<?> colIterator = userColumns.iterator();
-		while(colIterator.hasNext() ) {
-			Column jdbcColumn = (Column) colIterator.next();
-			Column column = new Column(jdbcColumn.getName() );
-			Column existingColumn = deptable.getColumn(column);
-			column = existingColumn==null ? column : existingColumn;
-			depColumns.add(column);
-		}
-		
 		List<Column> refColumns = new ArrayList<Column>(userrefColumns.size() );
+		Iterator<?> colIterator = userColumns.iterator();
 		colIterator = userrefColumns.iterator();
 		while(colIterator.hasNext() ) {
 			Column jdbcColumn = (Column) colIterator.next();
@@ -243,7 +234,20 @@ public class ForeignKeyProcessor {
 		}
 		
 		referencedColumns.put(userfkName, refColumns );
-		dependentColumns.put(userfkName, depColumns );
+		dependentColumns.put(userfkName, getDependendColumns(refColumns, deptable) );
+	}
+	
+	private List<Column> getDependendColumns(List<Column> userColumns, Table deptable) {
+		List<Column> depColumns = new ArrayList<Column>(userColumns.size() );
+		Iterator<?> colIterator = userColumns.iterator();
+		while(colIterator.hasNext() ) {
+			Column jdbcColumn = (Column) colIterator.next();
+			Column column = new Column(jdbcColumn.getName() );
+			Column existingColumn = deptable.getColumn(column);
+			column = existingColumn==null ? column : existingColumn;
+			depColumns.add(column);
+		}
+		return depColumns;
 	}
 	
 	private static String getCatalogForDBLookup(String catalog, String defaultCatalog) {

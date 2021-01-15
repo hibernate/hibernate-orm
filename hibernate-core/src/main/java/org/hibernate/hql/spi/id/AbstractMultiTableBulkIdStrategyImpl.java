@@ -137,13 +137,13 @@ public abstract class AbstractMultiTableBulkIdStrategyImpl<TT extends IdTableInf
 				.append( jdbcEnvironment.getQualifiedObjectNameFormatter().format( idTable.getQualifiedTableName(), dialect ) )
 				.append( " (" );
 
-		Iterator itr = idTable.getColumnIterator();
+		Iterator<Column> itr = idTable.getColumnIterator();
 		while ( itr.hasNext() ) {
-			final Column column = (Column) itr.next();
+			final Column column = itr.next();
 			buffer.append( column.getQuotedName( dialect ) ).append( ' ' );
 			buffer.append( column.getSqlType( dialect, metadata ) );
 
-			final int sqlTypeCode = column.getSqlTypeCode( metadata );
+			final int sqlTypeCode = column.getSqlTypeCode() != null ? column.getSqlTypeCode() : column.getSqlTypeCode( metadata );
 			final String columnAnnotation = dialect.getCreateTemporaryTableColumnAnnotation( sqlTypeCode );
 			if ( !columnAnnotation.isEmpty() ) {
 				buffer.append(" ").append( columnAnnotation );

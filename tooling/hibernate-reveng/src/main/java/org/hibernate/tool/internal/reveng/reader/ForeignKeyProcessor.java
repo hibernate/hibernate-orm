@@ -197,30 +197,34 @@ public class ForeignKeyProcessor {
 		if(!equalTable(referencedTable, element.getReferencedTable(), defaultSchema, defaultCatalog)) {
 			log.debug("Referenced table " + element.getReferencedTable().getName() + " is not " +  referencedTable + ". Ignoring userdefined foreign key " + element );
 			return; // skip non related foreign keys
+		}		
+		Table deptable = determineDependentTable(dependentTables, element);
+		if(deptable==null) {
+			//	filter out stuff we don't have tables for!
+			log.debug(
+					"User defined foreign key " + 
+					element.getName() + 
+					" references unknown or filtered table " + 
+					TableIdentifier.create(element.getTable()) );
+		} else {		
+			dependentTables.put(element.getName(), deptable);		
+			List<Column> refColumns = getReferencedColums(referencedTable, element);		
+			referencedColumns.put(element.getName(), refColumns );
+			dependentColumns.put(element.getName(), getDependendColumns(refColumns, deptable) );
 		}
-		
-		String userfkName = element.getName();        
+	}
+	
+	private Table determineDependentTable(Map<String, Table> dependentTables, ForeignKey element) {
 		Table userfkTable = element.getTable();
-		
+		String userfkName = element.getName();        		
 		Table deptable = dependentTables.get(userfkName);
 		if(deptable!=null) { // foreign key already defined!?
 			throw new MappingException("Foreign key " + userfkName + " already defined in the database!");
-		}
-		
-		deptable = getTable(
+		}		
+		return getTable(
 				getCatalogForDBLookup(userfkTable.getCatalog(), defaultCatalog),
 				getSchemaForDBLookup(userfkTable.getSchema(), defaultSchema), 
  				userfkTable.getName());
-		if(deptable==null) {
-			//	filter out stuff we don't have tables for!
-			log.debug("User defined foreign key " + userfkName + " references unknown or filtered table " + TableIdentifier.create(userfkTable) );
-			return;        			
-		}
-		
-		dependentTables.put(userfkName, deptable);		
-		List<Column> refColumns = getReferencedColums(referencedTable, element);		
-		referencedColumns.put(userfkName, refColumns );
-		dependentColumns.put(userfkName, getDependendColumns(refColumns, deptable) );
 	}
 	
 	private List<Column> getDependendColumns(List<Column> userColumns, Table deptable) {

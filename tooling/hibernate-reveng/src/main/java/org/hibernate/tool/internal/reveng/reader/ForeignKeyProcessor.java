@@ -202,9 +202,6 @@ public class ForeignKeyProcessor {
 		String userfkName = element.getName();        
 		Table userfkTable = element.getTable();
 		
-		List<?> userColumns = element.getColumns();
-		List<?> userrefColumns = element.getReferencedColumns();
-		
 		Table deptable = dependentTables.get(userfkName);
 		if(deptable!=null) { // foreign key already defined!?
 			throw new MappingException("Foreign key " + userfkName + " already defined in the database!");
@@ -220,19 +217,8 @@ public class ForeignKeyProcessor {
 			return;        			
 		}
 		
-		dependentTables.put(userfkName, deptable);
-		
-		List<Column> refColumns = new ArrayList<Column>(userrefColumns.size() );
-		Iterator<?> colIterator = userColumns.iterator();
-		colIterator = userrefColumns.iterator();
-		while(colIterator.hasNext() ) {
-			Column jdbcColumn = (Column) colIterator.next();
-			Column column = new Column(jdbcColumn.getName() );
-			Column existingColumn = referencedTable.getColumn(column);
-			column = existingColumn==null ? column : existingColumn;
-			refColumns.add(column);
-		}
-		
+		dependentTables.put(userfkName, deptable);		
+		List<Column> refColumns = getReferencedColums(referencedTable, element);		
 		referencedColumns.put(userfkName, refColumns );
 		dependentColumns.put(userfkName, getDependendColumns(refColumns, deptable) );
 	}
@@ -248,6 +234,21 @@ public class ForeignKeyProcessor {
 			depColumns.add(column);
 		}
 		return depColumns;
+	}
+	
+	private List<Column> getReferencedColums(Table referencedTable, ForeignKey element) {
+		List<?> userrefColumns = element.getReferencedColumns();
+		List<Column> result = new ArrayList<Column>(userrefColumns.size() );
+		Iterator<?> colIterator = userrefColumns.iterator();
+		while(colIterator.hasNext() ) {
+			Column jdbcColumn = (Column) colIterator.next();
+			Column column = new Column(jdbcColumn.getName() );
+			Column existingColumn = referencedTable.getColumn(column);
+			column = existingColumn==null ? column : existingColumn;
+			result.add(column);
+		}
+		return result;
+		
 	}
 	
 	private static String getCatalogForDBLookup(String catalog, String defaultCatalog) {

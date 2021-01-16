@@ -61,118 +61,47 @@ public class ForeignKeyProcessor {
 		Map<String, List<Column>> dependentColumns = new HashMap<String, List<Column>>();
 		// foreign key name to Table
 		Map<String, Table> dependentTables = new HashMap<String, Table>();
-		Map<String, List<Column>> referencedColumns = new HashMap<String, List<Column>>();
-		
+		Map<String, List<Column>> referencedColumns = new HashMap<String, List<Column>>();		
 		short bogusFkName = 0;
-		
-		// first get all the relationships dictated by the database schema
-		
-		Iterator<Map<String, Object>> exportedKeyIterator = null;
-		
+		Iterator<Map<String, Object>> exportedKeyIterator = null;		
         log.debug("Calling getExportedKeys on " + referencedTable);
         try {
-        	Map<String, Object> exportedKeyRs = null;
-        	exportedKeyIterator = metaDataDialect.getExportedKeys(
+         	exportedKeyIterator = metaDataDialect.getExportedKeys(
         			getCatalogForDBLookup(referencedTable.getCatalog(), defaultCatalog), 
         			getSchemaForDBLookup(referencedTable.getSchema(), defaultSchema), 
         			referencedTable.getName() );
-        try {
-			while (exportedKeyIterator.hasNext() ) {
-				exportedKeyRs = exportedKeyIterator.next();
-				String fkCatalog = getCatalogForModel((String) exportedKeyRs.get("FKTABLE_CAT"), defaultCatalog);
-				String fkSchema = getSchemaForModel((String) exportedKeyRs.get("FKTABLE_SCHEM"), defaultSchema);
-				String fkTableName = (String) exportedKeyRs.get("FKTABLE_NAME");
-				String fkColumnName = (String) exportedKeyRs.get("FKCOLUMN_NAME");
-				String pkColumnName = (String) exportedKeyRs.get("PKCOLUMN_NAME");
-				String fkName = (String) exportedKeyRs.get("FK_NAME");
-				short keySeq = ((Short)exportedKeyRs.get("KEY_SEQ")).shortValue();
-								
-				Table fkTable = getTable((String) exportedKeyRs.get("FKTABLE_CAT"), (String) exportedKeyRs.get("FKTABLE_SCHEM"), fkTableName);
-				
-				if (fkTable == null) {
-					fkTable = getTable(
-							getCatalogForModel(fkCatalog, defaultCatalog), 
-							getSchemaForModel(fkSchema, defaultSchema), 
-							fkTableName);
+	        try {
+				while (exportedKeyIterator.hasNext() ) {
+					processExportedKey(
+							exportedKeyIterator.next(), 
+							bogusFkName, 
+							dependentColumns, 
+							dependentTables, 
+							referencedColumns, 
+							referencedTable);
+					
 				}
-				
-				if(fkTable==null) {
-					//	filter out stuff we don't have tables for!
-					log.debug("Foreign key " + fkName + " references unknown or filtered table " + TableNameQualifier.qualify(fkCatalog, fkSchema, fkTableName) );
-					continue;
-				} else {
-					log.debug("Foreign key " + fkName);
-				}
-				
-				// TODO: if there is a relation to a column which is not a pk
-				//       then handle it as a property-ref
-				
-				if (keySeq == 0) {
-					bogusFkName++;
-				}
-				
-				if (fkName == null) {
-					// somehow reuse hibernates name generator ?
-					fkName = Short.toString(bogusFkName);
-				}
-				//Table fkTable = mappings.addTable(fkSchema, fkCatalog, fkTableName, null, false);
-				
-				
-				List<Column> depColumns =  dependentColumns.get(fkName);
-				if (depColumns == null) {
-					depColumns = new ArrayList<Column>();
-					dependentColumns.put(fkName,depColumns);
-					dependentTables.put(fkName, fkTable);
-				} 
-				else {
-					Object previousTable = dependentTables.get(fkName);
-					if(fkTable != previousTable) {
-						throw new RuntimeException("Foreign key name (" + fkName + ") mapped to different tables! previous: " + previousTable + " current:" + fkTable);
-					}
-				}
-				
-				Column column = new Column(fkColumnName);
-				Column existingColumn = fkTable.getColumn(column);
-				column = existingColumn==null ? column : existingColumn;
-				
-				depColumns.add(column);
-				
-				List<Column> primColumns = referencedColumns.get(fkName);
-				if (primColumns == null) {
-					primColumns = new ArrayList<Column>();
-					referencedColumns.put(fkName,primColumns);					
-				} 
-				
-				Column refColumn = new Column(pkColumnName);
-				existingColumn = referencedTable.getColumn(refColumn);
-				refColumn = existingColumn==null?refColumn:existingColumn;
-				
-				primColumns.add(refColumn);
-				
-			}
-		} 
-        finally {
-        	try {
-        		if(exportedKeyIterator!=null) {
-        			metaDataDialect.close(exportedKeyIterator);
-        		}
-        	} catch(JDBCException se) {
-        		log.warn("Exception while closing result set for foreign key meta data",se);
-        	}
-        }
+			} 
+	        finally {
+	        	try {
+	        		if(exportedKeyIterator!=null) {
+	        			metaDataDialect.close(exportedKeyIterator);
+	        		}
+	        	} catch(JDBCException se) {
+	        		log.warn("Exception while closing result set for foreign key meta data",se);
+	        	}
+	        }
         } catch(JDBCException se) {
         	//throw sec.convert(se, "Exception while reading foreign keys for " + referencedTable, null);
         	log.warn("Exception while reading foreign keys for " + referencedTable + " [" + se.toString() + "]", se);
         	// sybase (and possibly others has issues with exportedkeys) see HBX-411
         	// we continue after this to allow user provided keys to be added.
-        }
-        
+        }        
         List<ForeignKey> userForeignKeys = revengStrategy.getForeignKeys(
         		RevengUtils.createTableIdentifier(referencedTable, defaultCatalog, defaultSchema));
         if(userForeignKeys!=null) {
         	Iterator<ForeignKey> iterator = userForeignKeys.iterator();
         	while ( iterator.hasNext() ) {
-        		
         		processUserForeignKey(
         				iterator.next(), 
         				referencedTable, 
@@ -181,11 +110,87 @@ public class ForeignKeyProcessor {
         				dependentTables);
         		}
         }
-        
-        
-        return new ForeignKeysInfo(referencedTable, dependentTables, dependentColumns, referencedColumns);
-        
-       }
+        return new ForeignKeysInfo(referencedTable, dependentTables, dependentColumns, referencedColumns);       
+    }
+	
+	private void processExportedKey(
+			Map<String, Object> exportedKeyRs, 
+			short bogusFkName, Map<String, 
+			List<Column>> dependentColumns, 
+			Map<String, Table> dependentTables, 
+			Map<String, List<Column>> referencedColumns, 
+			Table referencedTable) {
+		String fkCatalog = getCatalogForModel((String) exportedKeyRs.get("FKTABLE_CAT"), defaultCatalog);
+		String fkSchema = getSchemaForModel((String) exportedKeyRs.get("FKTABLE_SCHEM"), defaultSchema);
+		String fkTableName = (String) exportedKeyRs.get("FKTABLE_NAME");
+		String fkColumnName = (String) exportedKeyRs.get("FKCOLUMN_NAME");
+		String pkColumnName = (String) exportedKeyRs.get("PKCOLUMN_NAME");
+		String fkName = (String) exportedKeyRs.get("FK_NAME");
+		short keySeq = ((Short)exportedKeyRs.get("KEY_SEQ")).shortValue();
+						
+		Table fkTable = getTable((String) exportedKeyRs.get("FKTABLE_CAT"), (String) exportedKeyRs.get("FKTABLE_SCHEM"), fkTableName);
+		
+		if (fkTable == null) {
+			fkTable = getTable(
+					getCatalogForModel(fkCatalog, defaultCatalog), 
+					getSchemaForModel(fkSchema, defaultSchema), 
+					fkTableName);
+		}
+		
+		if(fkTable==null) {
+			//	filter out stuff we don't have tables for!
+			log.debug("Foreign key " + fkName + " references unknown or filtered table " + TableNameQualifier.qualify(fkCatalog, fkSchema, fkTableName) );
+			return;
+		} else {
+			log.debug("Foreign key " + fkName);
+		}
+		
+		// TODO: if there is a relation to a column which is not a pk
+		//       then handle it as a property-ref
+		
+		if (keySeq == 0) {
+			bogusFkName++;
+		}
+		
+		if (fkName == null) {
+			// somehow reuse hibernates name generator ?
+			fkName = Short.toString(bogusFkName);
+		}
+		//Table fkTable = mappings.addTable(fkSchema, fkCatalog, fkTableName, null, false);
+		
+		
+		List<Column> depColumns =  dependentColumns.get(fkName);
+		if (depColumns == null) {
+			depColumns = new ArrayList<Column>();
+			dependentColumns.put(fkName,depColumns);
+			dependentTables.put(fkName, fkTable);
+		} 
+		else {
+			Object previousTable = dependentTables.get(fkName);
+			if(fkTable != previousTable) {
+				throw new RuntimeException("Foreign key name (" + fkName + ") mapped to different tables! previous: " + previousTable + " current:" + fkTable);
+			}
+		}
+		
+		Column column = new Column(fkColumnName);
+		Column existingColumn = fkTable.getColumn(column);
+		column = existingColumn==null ? column : existingColumn;
+		
+		depColumns.add(column);
+		
+		List<Column> primColumns = referencedColumns.get(fkName);
+		if (primColumns == null) {
+			primColumns = new ArrayList<Column>();
+			referencedColumns.put(fkName,primColumns);					
+		} 
+		
+		Column refColumn = new Column(pkColumnName);
+		existingColumn = referencedTable.getColumn(refColumn);
+		refColumn = existingColumn==null?refColumn:existingColumn;
+		
+		primColumns.add(refColumn);
+		
+	}
 	
 	private void processUserForeignKey(
 			ForeignKey element,

@@ -40,9 +40,18 @@ mssql() {
 
 oracle() {
     docker rm -f oracle || true
-    # We need to use the defaults
-    # SYSTEM/Oracle18
-    docker run --shm-size=1536m --name oracle -d -p 1521:1521 quillbuilduser/oracle-18-xe
+    docker login container-registry.oracle.com -u nathan.qingyang.xu@gmail.com -p Rsdyxjh1265515888
+    # "sys as sysdba"/Oradoc_db1
+    docker run --name oracle -d -it -e ORACLE_PWD='Oradoc_db1' -p 1521:1521 -p 5500:5500 container-registry.oracle.com/database/enterprise:12.2.0.1-slim
+    docker logout
+
+    then=$(date +"%T")
+    echo "$then: waiting for oracle container to be ready..."
+
+    until [ "`docker inspect -f {{.State.Health.Status}} oracle`" = "healthy" ]; do sleep 3; done
+
+    now=$(date +"%T")
+    echo "$now: oracle container is ready.";
 }
 
 if [ -z ${1} ]; then

@@ -65,6 +65,15 @@ public class ForeignKeyProcessor {
 		Map<String, Table> dependentTables = new HashMap<String, Table>();
 		Map<String, List<Column>> referencedColumns = new HashMap<String, List<Column>>();		
         processExportedForeignKeys(referencedTable, dependentColumns, dependentTables, referencedColumns);       
+        processUserForeignKeys(referencedTable, dependentColumns, dependentTables, referencedColumns);
+        return new ForeignKeysInfo(referencedTable, dependentTables, dependentColumns, referencedColumns);       
+    }
+	
+	private void processUserForeignKeys(
+			Table referencedTable,
+			Map<String, List<Column>> dependentColumns,
+			Map<String, Table> dependentTables,
+			Map<String, List<Column>> referencedColumns) {
         List<ForeignKey> userForeignKeys = revengStrategy.getForeignKeys(
         		RevengUtils.createTableIdentifier(
         				referencedTable, 
@@ -81,8 +90,7 @@ public class ForeignKeyProcessor {
         				dependentTables);
         		}
         }
-        return new ForeignKeysInfo(referencedTable, dependentTables, dependentColumns, referencedColumns);       
-    }
+	}
 	
 	private void processExportedForeignKeys(
 			Table referencedTable,

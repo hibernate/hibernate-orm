@@ -120,35 +120,35 @@ public class ForeignKeyProcessor {
 			Map<String, Table> dependentTables, 
 			Map<String, List<Column>> referencedColumns, 
 			Table referencedTable) {
-		String fkCatalog = getCatalogForModel((String) exportedKeyRs.get("FKTABLE_CAT"), defaultCatalog);
-		String fkSchema = getSchemaForModel((String) exportedKeyRs.get("FKTABLE_SCHEM"), defaultSchema);
-		String fkTableName = (String) exportedKeyRs.get("FKTABLE_NAME");
-		String fkName = (String) exportedKeyRs.get("FK_NAME");
-		
-		determineForeignKeyName(exportedKeyRs, bogusFkName);
-		
-		Table fkTable = getTable((String) exportedKeyRs.get("FKTABLE_CAT"), (String) exportedKeyRs.get("FKTABLE_SCHEM"), fkTableName);
-		
-		if (fkTable == null) {
-			fkTable = getTable(
-					getCatalogForModel(fkCatalog, defaultCatalog), 
-					getSchemaForModel(fkSchema, defaultSchema), 
-					fkTableName);
-		}
-		
-		if(fkTable==null) {
-			//	filter out stuff we don't have tables for!
-			log.debug("Foreign key " + fkName + " references unknown or filtered table " + TableNameQualifier.qualify(fkCatalog, fkSchema, fkTableName) );
-			return;
-		} else {
+		String fkName = determineForeignKeyName(exportedKeyRs, bogusFkName);		
+		Table fkTable = determineForeignKeyTable(exportedKeyRs, fkName);		
+		if (fkTable != null) {
 			log.debug("Foreign key " + fkName);
+			handleDependencies(exportedKeyRs, dependentColumns, dependentTables, fkTable, fkName);		
+			handleReferences(exportedKeyRs, referencedColumns, referencedTable, fkName);
 		}
+	}
+	
+	private Table determineForeignKeyTable(Map<String, Object> exportedKeyRs, String fkName) {
+		Table fkTable = getTable(
+				(String) exportedKeyRs.get("FKTABLE_CAT"), 
+				(String) exportedKeyRs.get("FKTABLE_SCHEM"), 
+				(String) exportedKeyRs.get("FKTABLE_NAME"));		
+		if (fkTable == null) {
+			String fkCatalog = getCatalogForModel((String) exportedKeyRs.get("FKTABLE_CAT"), defaultCatalog);
+			String fkSchema = getSchemaForModel((String) exportedKeyRs.get("FKTABLE_SCHEM"), defaultSchema);
+			String fkTableName = (String) exportedKeyRs.get("FKTABLE_NAME");
+			fkTable = getTable(fkCatalog, fkSchema, fkTableName);
+			if (fkTable == null) {
+				log.debug(
+						"Foreign key " + 
+						fkName + 
+						" references unknown or filtered table " + 
+						TableNameQualifier.qualify(fkCatalog, fkSchema, fkTableName) );	
+			}
+		}
+		return fkTable;
 		
-		// TODO: if there is a relation to a column which is not a pk
-		//       then handle it as a property-ref
-		
-		handleDependencies(exportedKeyRs, dependentColumns, dependentTables, fkTable, fkName);		
-		handleReferences(exportedKeyRs, referencedColumns, referencedTable, fkName);		
 	}
 	
 	private String determineForeignKeyName(
@@ -170,12 +170,10 @@ public class ForeignKeyProcessor {
 		if (primColumns == null) {
 			primColumns = new ArrayList<Column>();
 			referencedColumns.put(fkName,primColumns);					
-		} 
-		
+		} 		
 		Column refColumn = new Column((String) exportedKeyRs.get("PKCOLUMN_NAME"));
 		Column existingColumn = referencedTable.getColumn(refColumn);
-		refColumn = existingColumn==null?refColumn:existingColumn;
-		
+		refColumn = existingColumn==null?refColumn:existingColumn;		
 		primColumns.add(refColumn);
 		
 	}

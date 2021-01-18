@@ -115,15 +115,14 @@ public class ForeignKeyProcessor {
 	
 	private void processExportedKey(
 			Map<String, Object> exportedKeyRs, 
-			short bogusFkName, Map<String, 
-			List<Column>> dependentColumns, 
+			short bogusFkName, 
+			Map<String, List<Column>> dependentColumns, 
 			Map<String, Table> dependentTables, 
 			Map<String, List<Column>> referencedColumns, 
 			Table referencedTable) {
 		String fkCatalog = getCatalogForModel((String) exportedKeyRs.get("FKTABLE_CAT"), defaultCatalog);
 		String fkSchema = getSchemaForModel((String) exportedKeyRs.get("FKTABLE_SCHEM"), defaultSchema);
 		String fkTableName = (String) exportedKeyRs.get("FKTABLE_NAME");
-		String fkColumnName = (String) exportedKeyRs.get("FKCOLUMN_NAME");
 		String pkColumnName = (String) exportedKeyRs.get("PKCOLUMN_NAME");
 		String fkName = (String) exportedKeyRs.get("FK_NAME");
 		short keySeq = ((Short)exportedKeyRs.get("KEY_SEQ")).shortValue();
@@ -159,6 +158,29 @@ public class ForeignKeyProcessor {
 		//Table fkTable = mappings.addTable(fkSchema, fkCatalog, fkTableName, null, false);
 		
 		
+		handleDependencies(exportedKeyRs, dependentColumns, dependentTables, fkTable);
+		
+		List<Column> primColumns = referencedColumns.get(fkName);
+		if (primColumns == null) {
+			primColumns = new ArrayList<Column>();
+			referencedColumns.put(fkName,primColumns);					
+		} 
+		
+		Column refColumn = new Column(pkColumnName);
+		Column existingColumn = referencedTable.getColumn(refColumn);
+		refColumn = existingColumn==null?refColumn:existingColumn;
+		
+		primColumns.add(refColumn);
+		
+	}
+	
+	private void handleDependencies(	
+			Map<String, Object> exportedKeyRs, 
+			Map<String, List<Column>> dependentColumns, 
+			Map<String, Table> dependentTables,
+			Table fkTable) {
+		String fkName = (String) exportedKeyRs.get("FK_NAME");
+		String fkColumnName = (String) exportedKeyRs.get("FKCOLUMN_NAME");
 		List<Column> depColumns =  dependentColumns.get(fkName);
 		if (depColumns == null) {
 			depColumns = new ArrayList<Column>();
@@ -170,26 +192,11 @@ public class ForeignKeyProcessor {
 			if(fkTable != previousTable) {
 				throw new RuntimeException("Foreign key name (" + fkName + ") mapped to different tables! previous: " + previousTable + " current:" + fkTable);
 			}
-		}
-		
+		}		
 		Column column = new Column(fkColumnName);
 		Column existingColumn = fkTable.getColumn(column);
-		column = existingColumn==null ? column : existingColumn;
-		
-		depColumns.add(column);
-		
-		List<Column> primColumns = referencedColumns.get(fkName);
-		if (primColumns == null) {
-			primColumns = new ArrayList<Column>();
-			referencedColumns.put(fkName,primColumns);					
-		} 
-		
-		Column refColumn = new Column(pkColumnName);
-		existingColumn = referencedTable.getColumn(refColumn);
-		refColumn = existingColumn==null?refColumn:existingColumn;
-		
-		primColumns.add(refColumn);
-		
+		column = existingColumn==null ? column : existingColumn;		
+		depColumns.add(column);		
 	}
 	
 	private void processUserForeignKey(

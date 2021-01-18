@@ -16,6 +16,7 @@ import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.reveng.RevengMetadataCollector;
 import org.hibernate.tool.internal.reveng.util.RevengUtils;
+import org.hibernate.tool.internal.util.StringUtil;
 import org.hibernate.tool.internal.util.TableNameQualifier;
 import org.jboss.logging.Logger;
 
@@ -59,10 +60,11 @@ public class ForeignKeyProcessor {
 	}
 
 	public ForeignKeysInfo processForeignKeys(Table referencedTable) {
-		// foreign key name to list of columns
+		// foreign key name to list of columns in dependent table
 		Map<String, List<Column>> dependentColumns = new HashMap<String, List<Column>>();
-		// foreign key name to Table
+		// foreign key name to dependent table
 		Map<String, Table> dependentTables = new HashMap<String, Table>();
+		// foreign key name to list of columns in referenced table
 		Map<String, List<Column>> referencedColumns = new HashMap<String, List<Column>>();		
         processExportedForeignKeys(referencedTable, dependentColumns, dependentTables, referencedColumns);       
         processUserForeignKeys(referencedTable, dependentColumns, dependentTables, referencedColumns);
@@ -318,20 +320,14 @@ public class ForeignKeyProcessor {
     		String defaultSchema, 
     		String defaultCatalog) {
 		return  table1.getName().equals(table2.getName()) 
-				&& ( equal(
+				&& ( StringUtil.isEqual(
 						getSchemaForModel(table1.getSchema(), defaultSchema),
 						getSchemaForModel(table2.getSchema(), defaultSchema))
-				&& ( equal(
+				&& ( StringUtil.isEqual(
 						getCatalogForModel(table1.getCatalog(), defaultCatalog), 
 						getCatalogForModel(table2.getCatalog(), defaultCatalog))));
 	}
 
-	private static boolean equal(String str, String str2) {
-		if(str==str2) return true;
-		if(str!=null && str.equals(str2) ) return true;
-		return false;
-	}
-	
 	private Table getTable(String catalog, String schema, String name) {
 		return revengMetadataCollector.getTable(
 				TableIdentifier.create(
@@ -339,7 +335,7 @@ public class ForeignKeyProcessor {
 						quote(schema), 
 						quote(name)));
 	}
-
+	
 	private String quote(String name) {
 		if (name == null)
 			return name;

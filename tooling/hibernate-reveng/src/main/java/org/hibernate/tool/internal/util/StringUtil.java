@@ -58,4 +58,10 @@ public final class StringUtil {
         return str;
     }
 
+	public static boolean isEqual(String str1, String str2) {
+		if(str1==str2) return true;
+		if(str1!=null && str1.equals(str2) ) return true;
+		return false;
+	}
+	
 }

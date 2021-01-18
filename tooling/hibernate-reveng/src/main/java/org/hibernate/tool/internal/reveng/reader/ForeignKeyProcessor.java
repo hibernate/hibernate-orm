@@ -124,8 +124,9 @@ public class ForeignKeyProcessor {
 		String fkSchema = getSchemaForModel((String) exportedKeyRs.get("FKTABLE_SCHEM"), defaultSchema);
 		String fkTableName = (String) exportedKeyRs.get("FKTABLE_NAME");
 		String fkName = (String) exportedKeyRs.get("FK_NAME");
-		short keySeq = ((Short)exportedKeyRs.get("KEY_SEQ")).shortValue();
-						
+		
+		determineForeignKeyName(exportedKeyRs, bogusFkName);
+		
 		Table fkTable = getTable((String) exportedKeyRs.get("FKTABLE_CAT"), (String) exportedKeyRs.get("FKTABLE_SCHEM"), fkTableName);
 		
 		if (fkTable == null) {
@@ -146,19 +147,18 @@ public class ForeignKeyProcessor {
 		// TODO: if there is a relation to a column which is not a pk
 		//       then handle it as a property-ref
 		
-		if (keySeq == 0) {
-			bogusFkName++;
-		}
-		
-		if (fkName == null) {
-			// somehow reuse hibernates name generator ?
-			fkName = Short.toString(bogusFkName);
-		}
-		//Table fkTable = mappings.addTable(fkSchema, fkCatalog, fkTableName, null, false);
-		
-		
 		handleDependencies(exportedKeyRs, dependentColumns, dependentTables, fkTable, fkName);		
 		handleReferences(exportedKeyRs, referencedColumns, referencedTable, fkName);		
+	}
+	
+	private String determineForeignKeyName(
+			Map<String, Object> exportedKeyRs,
+			short bogusFkName) {
+		String fkName = (String) exportedKeyRs.get("FK_NAME");
+		if (fkName == null) {
+			fkName = Short.toString(bogusFkName++);
+		}
+		return fkName;
 	}
 	
 	private void handleReferences(

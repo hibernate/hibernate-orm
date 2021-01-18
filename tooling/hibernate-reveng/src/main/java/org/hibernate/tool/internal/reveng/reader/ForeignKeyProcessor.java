@@ -64,36 +64,7 @@ public class ForeignKeyProcessor {
 		// foreign key name to Table
 		Map<String, Table> dependentTables = new HashMap<String, Table>();
 		Map<String, List<Column>> referencedColumns = new HashMap<String, List<Column>>();		
-        try {
-            log.debug("Calling getExportedKeys on " + referencedTable);
-            Iterator<Map<String, Object>> exportedKeyIterator = metaDataDialect.getExportedKeys(
-        			getCatalogForDBLookup(referencedTable.getCatalog(), defaultCatalog), 
-        			getSchemaForDBLookup(referencedTable.getSchema(), defaultSchema), 
-        			referencedTable.getName() );
-	        try {
-				while (exportedKeyIterator.hasNext() ) {
-					processExportedKey(
-							exportedKeyIterator.next(), 
-							bogusFkName, 
-							dependentColumns, 
-							dependentTables, 
-							referencedColumns, 
-							referencedTable);
-					
-				}
-			} 
-	        finally {
-	        	try {
-	        		if(exportedKeyIterator!=null) {
-	        			metaDataDialect.close(exportedKeyIterator);
-	        		}
-	        	} catch(JDBCException se) {
-	        		log.warn("Exception while closing result set for foreign key meta data",se);
-	        	}
-	        }
-        } catch(JDBCException se) {
-        	log.warn("Exception while reading foreign keys for " + referencedTable + " [" + se.toString() + "]", se);
-        }        
+        processExportedForeignKeys(referencedTable, dependentColumns, dependentTables, referencedColumns);       
         List<ForeignKey> userForeignKeys = revengStrategy.getForeignKeys(
         		RevengUtils.createTableIdentifier(
         				referencedTable, 
@@ -112,6 +83,42 @@ public class ForeignKeyProcessor {
         }
         return new ForeignKeysInfo(referencedTable, dependentTables, dependentColumns, referencedColumns);       
     }
+	
+	private void processExportedForeignKeys(
+			Table referencedTable,
+			Map<String, List<Column>> dependentColumns,
+			Map<String, Table> dependentTables,
+			Map<String, List<Column>> referencedColumns) {
+        try {
+            log.debug("Calling getExportedKeys on " + referencedTable);
+            Iterator<Map<String, Object>> exportedKeyIterator = metaDataDialect.getExportedKeys(
+        			getCatalogForDBLookup(referencedTable.getCatalog(), defaultCatalog), 
+        			getSchemaForDBLookup(referencedTable.getSchema(), defaultSchema), 
+        			referencedTable.getName() );
+	        try {
+				while (exportedKeyIterator.hasNext() ) {
+					processExportedKey(
+							exportedKeyIterator.next(), 
+							bogusFkName, 
+							dependentColumns, 
+							dependentTables, 
+							referencedColumns, 
+							referencedTable);	
+				}
+			} 
+	        finally {
+	        	try {
+	        		if(exportedKeyIterator!=null) {
+	        			metaDataDialect.close(exportedKeyIterator);
+	        		}
+	        	} catch(JDBCException se) {
+	        		log.warn("Exception while closing result set for foreign key meta data",se);
+	        	}
+	        }
+        } catch(JDBCException se) {
+        	log.warn("Exception while reading foreign keys for " + referencedTable + " [" + se.toString() + "]", se);
+        }        
+	}
 	
 	private void processExportedKey(
 			Map<String, Object> exportedKeyRs, 
@@ -147,8 +154,7 @@ public class ForeignKeyProcessor {
 						TableNameQualifier.qualify(fkCatalog, fkSchema, fkTableName) );	
 			}
 		}
-		return fkTable;
-		
+		return fkTable;		
 	}
 	
 	private String determineForeignKeyName(
@@ -173,9 +179,11 @@ public class ForeignKeyProcessor {
 		} 		
 		Column refColumn = new Column((String) exportedKeyRs.get("PKCOLUMN_NAME"));
 		Column existingColumn = referencedTable.getColumn(refColumn);
-		refColumn = existingColumn==null?refColumn:existingColumn;		
-		primColumns.add(refColumn);
-		
+		if (existingColumn != null) {
+			primColumns.add(existingColumn);
+		} else {
+			primColumns.add(refColumn);
+		}		
 	}
 	
 	private void handleDependencies(	

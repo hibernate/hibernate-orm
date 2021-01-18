@@ -43,6 +43,8 @@ public class ForeignKeyProcessor {
 	private final String defaultCatalog;
 	private final RevengMetadataCollector revengMetadataCollector;
 	
+	private short bogusFkName = 0;
+	
 	private ForeignKeyProcessor(
 			RevengDialect metaDataDialect,
 			RevengStrategy revengStrategy,
@@ -62,11 +64,9 @@ public class ForeignKeyProcessor {
 		// foreign key name to Table
 		Map<String, Table> dependentTables = new HashMap<String, Table>();
 		Map<String, List<Column>> referencedColumns = new HashMap<String, List<Column>>();		
-		short bogusFkName = 0;
-		Iterator<Map<String, Object>> exportedKeyIterator = null;		
-        log.debug("Calling getExportedKeys on " + referencedTable);
         try {
-         	exportedKeyIterator = metaDataDialect.getExportedKeys(
+            log.debug("Calling getExportedKeys on " + referencedTable);
+            Iterator<Map<String, Object>> exportedKeyIterator = metaDataDialect.getExportedKeys(
         			getCatalogForDBLookup(referencedTable.getCatalog(), defaultCatalog), 
         			getSchemaForDBLookup(referencedTable.getSchema(), defaultSchema), 
         			referencedTable.getName() );
@@ -92,13 +92,13 @@ public class ForeignKeyProcessor {
 	        	}
 	        }
         } catch(JDBCException se) {
-        	//throw sec.convert(se, "Exception while reading foreign keys for " + referencedTable, null);
         	log.warn("Exception while reading foreign keys for " + referencedTable + " [" + se.toString() + "]", se);
-        	// sybase (and possibly others has issues with exportedkeys) see HBX-411
-        	// we continue after this to allow user provided keys to be added.
         }        
         List<ForeignKey> userForeignKeys = revengStrategy.getForeignKeys(
-        		RevengUtils.createTableIdentifier(referencedTable, defaultCatalog, defaultSchema));
+        		RevengUtils.createTableIdentifier(
+        				referencedTable, 
+        				defaultCatalog, 
+        				defaultSchema));
         if(userForeignKeys!=null) {
         	Iterator<ForeignKey> iterator = userForeignKeys.iterator();
         	while ( iterator.hasNext() ) {

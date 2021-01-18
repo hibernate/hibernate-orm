@@ -123,7 +123,6 @@ public class ForeignKeyProcessor {
 		String fkCatalog = getCatalogForModel((String) exportedKeyRs.get("FKTABLE_CAT"), defaultCatalog);
 		String fkSchema = getSchemaForModel((String) exportedKeyRs.get("FKTABLE_SCHEM"), defaultSchema);
 		String fkTableName = (String) exportedKeyRs.get("FKTABLE_NAME");
-		String pkColumnName = (String) exportedKeyRs.get("PKCOLUMN_NAME");
 		String fkName = (String) exportedKeyRs.get("FK_NAME");
 		short keySeq = ((Short)exportedKeyRs.get("KEY_SEQ")).shortValue();
 						
@@ -158,15 +157,22 @@ public class ForeignKeyProcessor {
 		//Table fkTable = mappings.addTable(fkSchema, fkCatalog, fkTableName, null, false);
 		
 		
-		handleDependencies(exportedKeyRs, dependentColumns, dependentTables, fkTable);
-		
+		handleDependencies(exportedKeyRs, dependentColumns, dependentTables, fkTable, fkName);		
+		handleReferences(exportedKeyRs, referencedColumns, referencedTable, fkName);		
+	}
+	
+	private void handleReferences(
+			Map<String, Object> exportedKeyRs,
+			Map<String, List<Column>> referencedColumns,
+			Table referencedTable,
+			String fkName) {
 		List<Column> primColumns = referencedColumns.get(fkName);
 		if (primColumns == null) {
 			primColumns = new ArrayList<Column>();
 			referencedColumns.put(fkName,primColumns);					
 		} 
 		
-		Column refColumn = new Column(pkColumnName);
+		Column refColumn = new Column((String) exportedKeyRs.get("PKCOLUMN_NAME"));
 		Column existingColumn = referencedTable.getColumn(refColumn);
 		refColumn = existingColumn==null?refColumn:existingColumn;
 		
@@ -178,8 +184,8 @@ public class ForeignKeyProcessor {
 			Map<String, Object> exportedKeyRs, 
 			Map<String, List<Column>> dependentColumns, 
 			Map<String, Table> dependentTables,
-			Table fkTable) {
-		String fkName = (String) exportedKeyRs.get("FK_NAME");
+			Table fkTable,
+			String fkName) {
 		String fkColumnName = (String) exportedKeyRs.get("FKCOLUMN_NAME");
 		List<Column> depColumns =  dependentColumns.get(fkName);
 		if (depColumns == null) {
@@ -195,8 +201,11 @@ public class ForeignKeyProcessor {
 		}		
 		Column column = new Column(fkColumnName);
 		Column existingColumn = fkTable.getColumn(column);
-		column = existingColumn==null ? column : existingColumn;		
-		depColumns.add(column);		
+		if (existingColumn != null) {
+			depColumns.add(existingColumn);
+		} else {
+			depColumns.add(column);
+		}
 	}
 	
 	private void processUserForeignKey(

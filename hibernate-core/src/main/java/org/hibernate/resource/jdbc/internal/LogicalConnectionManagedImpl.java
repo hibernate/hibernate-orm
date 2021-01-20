@@ -205,15 +205,7 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 		// when releasing resources, we'll abort the batch statement,
 		// which will trigger "logicalConnection.afterStatement()",
 		// which in some configurations will release the connection.
-
-		//Some managed containers might trigger this release concurrently:
-		//this is not how they should do things, still we try to detect it to trigger a more clear error.
-		boolean concurrentUsageDetected = ( this.physicalConnection == null );
 		this.physicalConnection = null;
-		if ( concurrentUsageDetected ) {
-			throw new HibernateException( "Detected concurrent management of connection resources." +
-					" This might indicate a multi-threaded use of Hibernate in combination with managed resources, which is not supported." );
-		}
 		try {
 			try {
 				getResourceRegistry().releaseResources();

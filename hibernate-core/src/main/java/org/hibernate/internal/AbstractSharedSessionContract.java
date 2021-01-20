@@ -76,6 +76,7 @@ import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
+import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
@@ -124,6 +125,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	private FlushMode flushMode;
 	private boolean autoJoinTransactions;
+	private final PhysicalConnectionHandlingMode connectionHandlingMode;
 
 	private CacheMode cacheMode;
 
@@ -169,11 +171,9 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			sessionEventsManager = new SessionEventListenerManagerImpl( customSessionEventListener.toArray( new SessionEventListener[0] ) );
 		}
 
-		final StatementInspector statementInspector = interpret( options.getStatementInspector() );
-		this.jdbcSessionContext = new JdbcSessionContextImpl( this, statementInspector, fastSessionServices );
-
 		this.entityNameResolver = new CoordinatingEntityNameResolver( factory, interceptor );
 
+		final StatementInspector statementInspector = interpret( options.getStatementInspector() );
 		if ( options instanceof SharedSessionCreationOptions && ( (SharedSessionCreationOptions) options ).isTransactionCoordinatorShared() ) {
 			if ( options.getConnection() != null ) {
 				throw new SessionException( "Cannot simultaneously share transaction context and specify connection" );
@@ -195,18 +195,27 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				);
 				autoJoinTransactions = false;
 			}
-			if ( sharedOptions.getPhysicalConnectionHandlingMode() != this.jdbcCoordinator.getLogicalConnection().getConnectionHandlingMode() ) {
+			this.connectionHandlingMode = this.jdbcCoordinator.getLogicalConnection().getConnectionHandlingMode();
+			if ( sharedOptions.getPhysicalConnectionHandlingMode() != this.connectionHandlingMode ) {
 				log.debug(
 						"Session creation specified 'PhysicalConnectionHandlingMode' which is invalid in conjunction " +
 								"with sharing JDBC connection between sessions; ignoring"
 				);
 			}
 
+			this.jdbcSessionContext = new JdbcSessionContextImpl( this, statementInspector,
+					connectionHandlingMode, fastSessionServices );
+
 			addSharedSessionTransactionObserver( transactionCoordinator );
 		}
 		else {
 			this.isTransactionCoordinatorShared = false;
 			this.autoJoinTransactions = options.shouldAutoJoinTransactions();
+			this.connectionHandlingMode = options.getPhysicalConnectionHandlingMode();
+			this.jdbcSessionContext = new JdbcSessionContextImpl( this, statementInspector,
+					connectionHandlingMode, fastSessionServices );
+			// This must happen *after* the JdbcSessionContext was initialized,
+			// because some of the calls below retrieve this context indirectly through Session getters.
 			this.jdbcCoordinator = new JdbcCoordinatorImpl( options.getConnection(), this, fastSessionServices.jdbcServices );
 			this.transactionCoordinator = fastSessionServices.transactionCoordinatorBuilder.buildTransactionCoordinator( jdbcCoordinator, this );
 		}
@@ -1014,7 +1023,8 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		factory = SessionFactoryImpl.deserialize( ois );
 		fastSessionServices = factory.getFastSessionServices();
 		sessionEventsManager = new SessionEventListenerManagerImpl( fastSessionServices.defaultSessionEventListeners.buildBaseline() );
-		jdbcSessionContext = new JdbcSessionContextImpl( this, (StatementInspector) ois.readObject(), fastSessionServices );
+		jdbcSessionContext = new JdbcSessionContextImpl( this, (StatementInspector) ois.readObject(),
+				connectionHandlingMode, fastSessionServices );
 		jdbcCoordinator = JdbcCoordinatorImpl.deserialize( ois, this );
 
 		cacheTransactionSync = factory.getCache().getRegionFactory().createTransactionContext( this );

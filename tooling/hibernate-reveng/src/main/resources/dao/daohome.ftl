@@ -168,20 +168,22 @@ public class ${declarationName}Home {
     public ${declarationName} findByNaturalId(${c2j.asNaturalIdParameterList(clazz)}) {
         logger.log(${pojo.importType("java.util.logging.Level")}.INFO, "getting ${declarationName} instance by natural id");
         try {
-            ${declarationName} instance = (${declarationName}) sessionFactory.getCurrentSession()
-                    .createCriteria("${clazz.entityName}")
-<#if jdk5>
-                    .add( ${pojo.staticImport("org.hibernate.criterion.Restrictions", "naturalId")}()
-<#else>
-                   .add( ${pojo.importType("org.hibernate.criterion.Restrictions")}.naturalId()
-</#if>                    
+            ${pojo.importType("javax.persistence.criteria.CriteriaBuilder")} criteriaBuilder = sessionFactory.getCriteriaBuilder();
+            ${pojo.importType("javax.persistence.criteria.CriteriaQuery")}<${declarationName}> criteriaQuery = criteriaBuilder.createQuery(${declarationName}.class);
+            ${pojo.importType("javax.persistence.criteria.Root")}<${declarationName}> root = criteriaQuery.from(${declarationName}.class);
+            criteriaQuery.where(
+<#assign notFirst = false/>
 <#foreach property in pojo.getAllPropertiesIterator()>
 <#if property.isNaturalIdentifier()>
-                            .set("${property.name}", ${property.name})
+                    <#if notFirst>,</#if>criteriaBuilder.equal(root.get("${property.name}"), ${property.name})
+<#assign notFirst = true/>
 </#if>
 </#foreach>
-                        )
-                    .uniqueResult();
+            );
+            ${declarationName} instance = sessionFactory
+                    .getCurrentSession()
+                    .createQuery(criteriaQuery)
+                    .getSingleResult();                    
             if (instance==null) {
                 logger.log(${pojo.importType("java.util.logging.Level")}.INFO, "get successful, no instance found");
             }
@@ -195,7 +197,11 @@ public class ${declarationName}Home {
             throw re;
         }
     }
-</#if>    
+</#if>  
+
+<#if false>
+/**  
+TODO: 
 <#if jdk5>
     public ${pojo.importType("java.util.List")}<${declarationName}> findByExample(${declarationName} instance) {
 <#else>
@@ -223,6 +229,9 @@ public class ${declarationName}Home {
             throw re;
         }
     } 
+**/ 
+</#if>   
+    
 <#foreach query in daoHelper.getNamedHqlQueryDefinitions(md)>
 <#assign queryName = query.registrationName>
 <#if queryName.startsWith(clazz.entityName + ".")>
@@ -236,7 +245,7 @@ public class ${declarationName}Home {
 <#else>
     public ${pojo.importType("java.util.List")} ${methname}(${argList}) {
 </#if>
-        ${pojo.importType("org.hibernate.Query")} query = sessionFactory.getCurrentSession()
+        ${pojo.importType("org.hibernate.query.Query")} query = sessionFactory.getCurrentSession()
                 .getNamedQuery("${queryName}");
 <#if jdk5 && methname.startsWith("find")>
         return (List<${declarationName}>) query.list();

@@ -17,12 +17,14 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
+
+import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.test.jpa.xml.versions.JpaXsdVersionsTest;
 
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertSame;
 
@@ -31,15 +33,17 @@ import static org.junit.jupiter.api.Assertions.assertSame;
  *
  * @author Steve Ebersole
  */
-public class ValidatorFactory2PhaseInjectionTest extends BaseUnitTestCase {
+
+@BaseUnitTest
+public class ValidatorFactory2PhaseInjectionTest {
 	private ValidatorFactory vf;
 
-	@Before
+	@BeforeEach
 	public void before() {
 		vf = Validation.byDefaultProvider().configure().buildValidatorFactory();
 	}
 
-	@After
+	@AfterEach
 	public void after() {
 		if ( vf != null ) {
 			vf.close();
@@ -58,9 +62,9 @@ public class ValidatorFactory2PhaseInjectionTest extends BaseUnitTestCase {
 				},
 				Collections.emptyMap()
 		);
-			emfb.withValidatorFactory( vf );
+		emfb.withValidatorFactory( vf );
 
-			EntityManagerFactory emf = emfb.build();
+		EntityManagerFactory emf = emfb.build();
 		try {
 			assertSame( vf, emf.getProperties().get( AvailableSettings.JPA_VALIDATION_FACTORY ) );
 		}

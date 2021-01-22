@@ -12,6 +12,7 @@ import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import javax.persistence.RollbackException;
@@ -31,14 +32,21 @@ import static org.junit.jupiter.api.Assertions.fail;
 )
 public class BeanValidationTest {
 
+	@AfterEach
+	public void tearDown(EntityManagerFactoryScope scope){
+		scope.inTransaction(
+				entityManager ->
+					entityManager.createQuery( "delete from CupHolder" )
+		);
+	}
+
 	@Test
 	public void testBeanValidationIntegrationOnFlush(EntityManagerFactoryScope scope) {
-		scope.inEntityManager(
+		scope.inTransaction(
 				entityManager -> {
 					CupHolder ch = new CupHolder();
 					ch.setRadius( new BigDecimal( "12" ) );
 					ch.setTitle( "foo" );
-					entityManager.getTransaction().begin();
 					try {
 						entityManager.persist(ch);
 						entityManager.flush();
@@ -51,41 +59,37 @@ public class BeanValidationTest {
 							entityManager.getTransaction().getRollbackOnly(),
 							"A constraint violation exception should mark the transaction for rollback"
 					);
-					entityManager.getTransaction().rollback();
-					entityManager.clear();
 				}
 		);
 	}
 
 	@Test
 	public void testBeanValidationIntegrationOnCommit(EntityManagerFactoryScope scope) {
-		scope.inEntityManager(
-				entityManager -> {
-					CupHolder ch = new CupHolder();
-					ch.setRadius(new BigDecimal("9"));
-					ch.setTitle("foo");
-					entityManager.getTransaction().begin();
-					entityManager.persist(ch);
-					entityManager.flush();
-					try {
-						ch.setRadius(new BigDecimal("12"));
-						entityManager.getTransaction().commit();
-						fail("invalid object should not be persisted");
+		try {
+			scope.inTransaction(
+					entityManager -> {
+						CupHolder ch = new CupHolder();
+						ch.setRadius( new BigDecimal( "9" ) );
+						ch.setTitle( "foo" );
+						entityManager.persist( ch );
+						entityManager.flush();
+
+						ch.setRadius( new BigDecimal( "12" ) );
 					}
-					catch (RollbackException e) {
-						final Throwable cve = e.getCause();
-						assertTrue(cve instanceof ConstraintViolationException);
-						assertEquals(1, ((ConstraintViolationException) cve).getConstraintViolations().size());
-					}
-					entityManager.close();
-				}
-		);
+			);
+			fail( "invalid object should not be persisted" );
+		}
+		catch (RollbackException e) {
+			final Throwable cve = e.getCause();
+			assertTrue( cve instanceof ConstraintViolationException );
+			assertEquals( 1, ( (ConstraintViolationException) cve ).getConstraintViolations().size() );
+		}
 	}
 
 	@Test
 	@RequiresDialect(H2Dialect.class)
 	public void testTitleColumnHasExpectedLength(EntityManagerFactoryScope scope) {
-		scope.inEntityManager(
+		scope.inTransaction(
 				entityManager -> {
 					int len = (Integer) entityManager.createNativeQuery(
 							"select CHARACTER_MAXIMUM_LENGTH from INFORMATION_SCHEMA.COLUMNS c where c.TABLE_NAME = 'CUPHOLDER' and c.COLUMN_NAME = 'TITLE'"

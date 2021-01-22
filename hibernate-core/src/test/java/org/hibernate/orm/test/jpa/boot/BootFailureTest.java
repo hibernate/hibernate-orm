@@ -20,7 +20,8 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.service.spi.ServiceException;
 
 import org.hibernate.testing.boot.ClassLoaderServiceTestingImpl;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Test to verify that a dump configuration error results in an exception being
@@ -31,14 +32,16 @@ import org.junit.Test;
  */
 public class BootFailureTest {
 
-	@Test(expected = ServiceException.class)
+	@Test
 	public void exceptionOnIllegalPUTest() {
-		bootstrapPersistenceUnit( "IntentionallyBroken" );
+		Assertions.assertThrows( ServiceException.class, () ->
+				bootstrapPersistenceUnit( "IntentionallyBroken" ) );
 	}
 
-	@Test(expected = ServiceException.class)
+	@Test
 	public void exceptionOnIllegalPUWithoutProviderTest() {
-		bootstrapPersistenceUnit( "IntentionallyBrokenWihoutExplicitProvider" );
+		Assertions.assertThrows( ServiceException.class, () ->
+				bootstrapPersistenceUnit( "IntentionallyBrokenWihoutExplicitProvider" ) );
 	}
 
 	private void bootstrapPersistenceUnit(final String puName) {

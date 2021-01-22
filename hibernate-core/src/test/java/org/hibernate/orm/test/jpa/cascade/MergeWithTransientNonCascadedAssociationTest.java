@@ -15,9 +15,9 @@ import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.annotations.GenericGenerator;
 
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.fail;
@@ -25,43 +25,42 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * @author Steve Ebersole
  */
-@DomainModel(annotatedClasses = {
+@Jpa(annotatedClasses = {
 		MergeWithTransientNonCascadedAssociationTest.Person.class,
 		MergeWithTransientNonCascadedAssociationTest.Address.class
 })
-@SessionFactory
 public class MergeWithTransientNonCascadedAssociationTest {
 	@Test
-	public void testMergeWithTransientNonCascadedAssociation(SessionFactoryScope scope) {
+	public void testMergeWithTransientNonCascadedAssociation(EntityManagerFactoryScope scope) {
 		Person person = new Person();
 		scope.inTransaction(
-				session -> {
-					session.persist( person );
+				entityManager -> {
+					entityManager.persist( person );
 				}
 		);
 
 		person.address = new Address();
 
-		scope.inSession(
-				session -> {
-					session.getTransaction().begin();
-					session.merge( person );
+		scope.inEntityManager(
+				entityManager -> {
+					entityManager.getTransaction().begin();
+					entityManager.merge( person );
 					try {
-						session.flush();
+						entityManager.flush();
 						fail( "Expecting IllegalStateException" );
 					}
 					catch (IllegalStateException ise) {
 						// expected...
-						session.getTransaction().rollback();
+						entityManager.getTransaction().rollback();
 					}
 				}
 		);
 
 		scope.inTransaction(
-				session -> {
+				entityManager -> {
 					person.address = null;
-					session.unwrap( Session.class ).lock( person, LockMode.NONE );
-					session.unwrap( Session.class ).delete( person );
+					entityManager.unwrap( Session.class ).lock( person, LockMode.NONE );
+					entityManager.unwrap( Session.class ).delete( person );
 				}
 		);
 	}

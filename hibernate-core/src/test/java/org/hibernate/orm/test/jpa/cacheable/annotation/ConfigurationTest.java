@@ -14,34 +14,36 @@ import javax.persistence.SharedCacheMode;
 
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Environment;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.test.PersistenceUnitInfoAdapter;
 import org.hibernate.mapping.PersistentClass;
-
 import org.hibernate.testing.cache.CachingRegionFactory;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.After;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Steve Ebersole
  */
-public class ConfigurationTest extends BaseUnitTestCase {
+@BaseUnitTest
+public class ConfigurationTest {
 
 	private EntityManagerFactory emf;
 
-	@After
-	public void tearDown(){
-		if(emf != null){
+	@AfterEach
+	public void tearDown() {
+		if ( emf != null ) {
 			emf.close();
 		}
 	}
+
 	@Test
 	public void testSharedCacheModeNone() {
 		MetadataImplementor metadata = buildMetadata( SharedCacheMode.NONE );

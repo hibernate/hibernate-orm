@@ -11,9 +11,9 @@ import java.util.Date;
 
 import org.hibernate.Hibernate;
 
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Emmanuel Bernard
  */
-@DomainModel(annotatedClasses = {
+@Jpa(annotatedClasses = {
 		Troop.class,
 		Soldier.class,
 		Conference.class,
@@ -32,10 +32,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		Son.class,
 		Grandson.class
 })
-@SessionFactory
 public class FetchTest {
 	@Test
-	public void testCascadeAndFetchCollection(SessionFactoryScope scope) {
+	public void testCascadeAndFetchCollection(EntityManagerFactoryScope scope) {
 		Troop disney = new Troop();
 		Soldier mickey = new Soldier();
 		disney.setName( "Disney" );
@@ -43,12 +42,12 @@ public class FetchTest {
 		disney.addSoldier( mickey );
 
 		scope.inTransaction(
-				session -> session.persist( disney )
+				entityManager -> entityManager.persist( disney )
 		);
 
 		Troop troop2 = scope.fromTransaction(
-				session -> {
-					Troop troop = session.find( Troop.class, disney.getId() );
+				entityManager -> {
+					Troop troop = entityManager.find( Troop.class, disney.getId() );
 					assertFalse( Hibernate.isInitialized( troop.getSoldiers() ) );
 					return troop;
 				}
@@ -56,15 +55,15 @@ public class FetchTest {
 		assertFalse( Hibernate.isInitialized( troop2.getSoldiers() ) );
 
 		scope.inTransaction(
-				session -> {
-					Troop troop = session.find( Troop.class, disney.getId() );
-					session.remove( troop );
+				entityManager -> {
+					Troop troop = entityManager.find( Troop.class, disney.getId() );
+					entityManager.remove( troop );
 				}
 		);
 	}
 
 	@Test
-	public void testCascadeAndFetchEntity(SessionFactoryScope scope) {
+	public void testCascadeAndFetchEntity(EntityManagerFactoryScope scope) {
 		Troop disney = new Troop();
 		Soldier mickey = new Soldier();
 		disney.setName( "Disney" );
@@ -72,12 +71,12 @@ public class FetchTest {
 		disney.addSoldier( mickey );
 
 		scope.inTransaction(
-				session -> session.persist( disney )
+				entityManager -> entityManager.persist( disney )
 		);
 
 		Soldier soldier2 = scope.fromTransaction(
-				session -> {
-					Soldier soldier = session.find( Soldier.class, mickey.getId() );
+				entityManager -> {
+					Soldier soldier = entityManager.find( Soldier.class, mickey.getId() );
 					assertFalse( Hibernate.isInitialized( soldier.getTroop() ) );
 					return soldier;
 				}
@@ -85,15 +84,15 @@ public class FetchTest {
 		assertFalse( Hibernate.isInitialized( soldier2.getTroop() ) );
 
 		scope.inTransaction(
-				session -> {
-					Troop troop = session.find( Troop.class, disney.getId() );
-					session.remove( troop );
+				entityManager -> {
+					Troop troop = entityManager.find( Troop.class, disney.getId() );
+					entityManager.remove( troop );
 				}
 		);
 	}
 
 	@Test
-	public void testTwoLevelDeepPersist(SessionFactoryScope scope) {
+	public void testTwoLevelDeepPersist(EntityManagerFactoryScope scope) {
 		Conference jbwBarcelona = new Conference();
 		jbwBarcelona.setDate( new Date() );
 		ExtractionDocumentInfo info = new ExtractionDocumentInfo();
@@ -107,45 +106,41 @@ public class FetchTest {
 		doc.setBody( new byte[]{'c', 'f'} );
 
 		scope.inTransaction(
-				session -> session.persist( jbwBarcelona )
+				entityManager -> entityManager.persist( jbwBarcelona )
 		);
 
-		scope.inSession(
-				session -> {
-					session.getTransaction().begin();
-					Conference _jbwBarcelona = session.find( Conference.class, jbwBarcelona.getId() );
+		scope.inTransaction(
+				entityManager -> {
+					Conference _jbwBarcelona = entityManager.find( Conference.class, jbwBarcelona.getId() );
 					assertTrue( Hibernate.isInitialized( _jbwBarcelona ) );
 					assertTrue( Hibernate.isInitialized( _jbwBarcelona.getExtractionDocument() ) );
 					assertFalse( Hibernate.isInitialized( _jbwBarcelona.getExtractionDocument().getDocuments() ) );
-					session.flush();
+					entityManager.flush();
 					assertTrue( Hibernate.isInitialized( _jbwBarcelona ) );
 					assertTrue( Hibernate.isInitialized( _jbwBarcelona.getExtractionDocument() ) );
 					assertFalse( Hibernate.isInitialized( _jbwBarcelona.getExtractionDocument().getDocuments() ) );
-					session.remove( _jbwBarcelona );
-					session.getTransaction().commit();
+					entityManager.remove( _jbwBarcelona );
 				}
 		);
 	}
 
 	@Test
-	public void testTwoLevelDeepPersistOnManyToOne(SessionFactoryScope scope) {
+	public void testTwoLevelDeepPersistOnManyToOne(EntityManagerFactoryScope scope) {
 		Grandson gs = new Grandson();
 		gs.setParent( new Son() );
 		gs.getParent().setParent( new Parent() );
 
 		scope.inTransaction(
-				session -> session.persist( gs )
+				entityManager -> entityManager.persist( gs )
 		);
 
-		scope.inSession(
-				session -> {
-					session.getTransaction().begin();
-					Grandson _gs = session.find( Grandson.class, gs.getId() );
-					session.flush();
+		scope.inTransaction(
+				entityManager -> {
+					Grandson _gs = entityManager.find( Grandson.class, gs.getId() );
+					entityManager.flush();
 					assertTrue( Hibernate.isInitialized( _gs.getParent() ) );
 					assertFalse( Hibernate.isInitialized( _gs.getParent().getParent() ) );
-					session.remove( _gs );
-					session.getTransaction().commit();
+					entityManager.remove( _gs );
 				}
 		);
 	}

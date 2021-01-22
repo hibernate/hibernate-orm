@@ -7,9 +7,9 @@
 package org.hibernate.orm.test.jpa.callbacks.xml;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -17,25 +17,24 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author Steve Ebersole
  */
-@DomainModel(
+@Jpa(
 		xmlMappings = "org/hibernate/orm/test/jpa/callbacks/xml/MyEntity.orm.xml"
 )
-@SessionFactory
 public class EntityListenerViaXmlTest {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-9771")
-	public void testUsage(SessionFactoryScope scope) {
+	public void testUsage(EntityManagerFactoryScope scope) {
 		JournalingListener.reset();
 
 		scope.inTransaction(
-				session -> session.persist( new MyEntity( 1, "steve" ) )
+				entityManager -> entityManager.persist( new MyEntity( 1, "steve" ) )
 		);
 
 		assertEquals( 1, JournalingListener.getPrePersistCount() );
 
 		scope.inTransaction(
-				session -> session.createQuery( "delete MyEntity" ).executeUpdate()
+				entityManager -> entityManager.createQuery( "delete MyEntity" ).executeUpdate()
 		);
 	}
 }

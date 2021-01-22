@@ -6,35 +6,33 @@
  */
 package org.hibernate.orm.test.jpa.cascade.multilevel;
 
-import org.junit.jupiter.api.Test;
-
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+
+import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
-@DomainModel(annotatedClasses = {
+@Jpa(annotatedClasses = {
 		Top.class,
 		Middle.class,
 		Bottom.class
 })
-@SessionFactory
 public class MultiLevelCascadeTest {
 
 	@TestForIssue(jiraKey = "HHH-5299")
 	@Test
-	public void test(SessionFactoryScope scope) {
+	public void test(EntityManagerFactoryScope scope) {
 		final Top top = new Top();
 
 		scope.inTransaction(
-				session -> {
-					session.persist( top );
+				entityManager -> {
+					entityManager.persist( top );
 					// Flush 1
-					session.flush();
+					entityManager.flush();
 
 					Middle middle = new Middle( 1l );
 					top.addMiddle( middle );
@@ -50,20 +48,20 @@ public class MultiLevelCascadeTest {
 					middle2.setBottom( bottom2 );
 					bottom2.setMiddle( middle2 );
 					// Flush 2
-					session.flush();
+					entityManager.flush();
 				}
 		);
 
 		scope.inTransaction(
-				session -> {
-					Top found = session.find( Top.class, top.getId() );
+				entityManager -> {
+					Top found = entityManager.find( Top.class, top.getId() );
 
 					assertEquals( 2, found.getMiddles().size() );
 					for ( Middle loadedMiddle : found.getMiddles() ) {
 						assertSame( found, loadedMiddle.getTop() );
 						assertNotNull( loadedMiddle.getBottom() );
 					}
-					session.remove( found );
+					entityManager.remove( found );
 				}
 		);
 	}

@@ -15,11 +15,10 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
-import org.junit.jupiter.api.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
 
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
 import static javax.persistence.CascadeType.DETACH;
 import static javax.persistence.CascadeType.REMOVE;
@@ -30,20 +29,19 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 /**
  * @author Emmanuel Bernard
  */
-@DomainModel(annotatedClasses = {
+@Jpa(annotatedClasses = {
 		DetachAndContainsTest.Mouth.class,
 		DetachAndContainsTest.Tooth.class
 })
-@SessionFactory
 public class DetachAndContainsTest {
 	@Test
-	public void testDetach(SessionFactoryScope scope) {
+	public void testDetach(EntityManagerFactoryScope scope) {
 		Tooth tooth = new Tooth();
 		Mouth mouth = new Mouth();
 		scope.inTransaction(
-				session -> {
-					session.persist( mouth );
-					session.persist( tooth );
+				entityManager -> {
+					entityManager.persist( mouth );
+					entityManager.persist( tooth );
 					tooth.mouth = mouth;
 					mouth.teeth = new ArrayList<>();
 					mouth.teeth.add( tooth );
@@ -51,18 +49,18 @@ public class DetachAndContainsTest {
 		);
 
 		scope.inTransaction(
-				session -> {
-					Mouth _mouth = session.find( Mouth.class, mouth.id );
+				entityManager -> {
+					Mouth _mouth = entityManager.find( Mouth.class, mouth.id );
 					assertNotNull( _mouth );
 					assertEquals( 1, _mouth.teeth.size() );
 					Tooth _tooth = _mouth.teeth.iterator().next();
-					session.detach( _mouth );
-					assertFalse( session.contains( _tooth ) );
+					entityManager.detach( _mouth );
+					assertFalse( entityManager.contains( _tooth ) );
 				}
 		);
 
 		scope.inTransaction(
-				session -> session.remove( session.find( Mouth.class, mouth.id ) )
+				entityManager -> entityManager.remove( entityManager.find( Mouth.class, mouth.id ) )
 		);
 	}
 

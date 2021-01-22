@@ -29,25 +29,24 @@ import javax.persistence.Table;
 
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.NotImplementedYet;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 
 import org.jboss.logging.Logger;
+
+import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@DomainModel(annotatedClasses = {
+@Jpa(annotatedClasses = {
 		MultiLevelCascadeCollectionEmbeddableTest.MainEntity.class,
 		MultiLevelCascadeCollectionEmbeddableTest.SubEntity.class,
 		MultiLevelCascadeCollectionEmbeddableTest.AnotherSubSubEntity.class,
 		MultiLevelCascadeCollectionEmbeddableTest.SubSubEntity.class
 })
-@SessionFactory
 @NotImplementedYet(reason = "NotImplementedYetException thrown in the initialization method, by NativeNonSelectQueryPlanImpl.executeUpdate()")
 public class MultiLevelCascadeCollectionEmbeddableTest {
 
@@ -57,13 +56,13 @@ public class MultiLevelCascadeCollectionEmbeddableTest {
 	//TODO this could be implemented with @BeforeAll, if we move to Junit 5.5 or higher. The way to intercept exceptions in this method, inside
 	// the @NotImplementedYet extension would be by harnessing LifecycleMethodExecutionExceptionHandler, or InvocationInterceptor,
 	// and both are Junit 5.5 (and experimental)
-	protected void initialize(SessionFactoryScope scope) {
+	protected void initialize(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
-				session -> {
-					session.createNativeQuery( "INSERT INTO MAIN_TABLE(ID_NUM) VALUES (99427)" ).executeUpdate();
-					session.createNativeQuery( "INSERT INTO SUB_TABLE(ID_NUM, SUB_ID, FAMILY_IDENTIFIER, IND_NUM) VALUES (99427, 1, 'A', '123A')" ).executeUpdate();
-					session.createNativeQuery( "INSERT INTO SUB_TABLE(ID_NUM, SUB_ID, FAMILY_IDENTIFIER, IND_NUM) VALUES (99427, 2, 'S', '321A')" ).executeUpdate();
-					session.createNativeQuery( "INSERT INTO SUB_SUB_TABLE(ID_NUM, CODE, IND_NUM) VALUES (99427, 'CODE1', '123A')" ).executeUpdate();
+				entityManager -> {
+					entityManager.createNativeQuery( "INSERT INTO MAIN_TABLE(ID_NUM) VALUES (99427)" ).executeUpdate();
+					entityManager.createNativeQuery( "INSERT INTO SUB_TABLE(ID_NUM, SUB_ID, FAMILY_IDENTIFIER, IND_NUM) VALUES (99427, 1, 'A', '123A')" ).executeUpdate();
+					entityManager.createNativeQuery( "INSERT INTO SUB_TABLE(ID_NUM, SUB_ID, FAMILY_IDENTIFIER, IND_NUM) VALUES (99427, 2, 'S', '321A')" ).executeUpdate();
+					entityManager.createNativeQuery( "INSERT INTO SUB_SUB_TABLE(ID_NUM, CODE, IND_NUM) VALUES (99427, 'CODE1', '123A')" ).executeUpdate();
 				}
 		);
 		initialized = true;
@@ -71,7 +70,7 @@ public class MultiLevelCascadeCollectionEmbeddableTest {
 
 	@Test
 	@FailureExpected( jiraKey = "HHH-12291" )
-	public void testHibernateDeleteEntityWithoutInitializingCollections(SessionFactoryScope scope) {
+	public void testHibernateDeleteEntityWithoutInitializingCollections(EntityManagerFactoryScope scope) {
 		if ( !initialized ) {
 			initialize(scope);
 		}
@@ -91,13 +90,13 @@ public class MultiLevelCascadeCollectionEmbeddableTest {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12294" )
-	public void testHibernateDeleteEntityInitializeCollections(SessionFactoryScope scope) {
+	public void testHibernateDeleteEntityInitializeCollections(EntityManagerFactoryScope scope) {
 		if ( !initialized ) {
 			initialize(scope);
 		}
 		scope.inTransaction(
-				session -> {
-					MainEntity mainEntity = session.find(MainEntity.class, 99427L);
+				entityManager -> {
+					MainEntity mainEntity = entityManager.find(MainEntity.class, 99427L);
 
 					assertNotNull(mainEntity);
 					assertFalse(mainEntity.getSubEntities().isEmpty());

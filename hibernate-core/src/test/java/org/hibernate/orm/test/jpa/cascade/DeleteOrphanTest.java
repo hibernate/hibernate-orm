@@ -13,42 +13,39 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 
-import org.junit.jupiter.api.Test;
-
 import org.hibernate.Hibernate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
 
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * @author Emmanuel Bernard
  */
-@DomainModel(annotatedClasses = {
+@Jpa(annotatedClasses = {
 		Troop.class,
 		Soldier.class
 })
-@SessionFactory
 public class DeleteOrphanTest {
 	@Test
-	public void testDeleteOrphan(SessionFactoryScope scope) throws Exception {
+	public void testDeleteOrphan(EntityManagerFactoryScope scope) throws Exception {
 		Troop disney = new Troop();
 		Soldier mickey = new Soldier();
 
 		scope.inTransaction(
-				session -> {
+				entityManager -> {
 					disney.setName( "Disney" );
 					mickey.setName( "Mickey" );
 					disney.addSoldier( mickey );
-					session.persist( disney );
+					entityManager.persist( disney );
 				}
 		);
 
 		Troop troop2 = scope.fromTransaction(
-				session -> {
-					Troop troop = session.find( Troop.class, disney.getId() );
+				entityManager -> {
+					Troop troop = entityManager.find( Troop.class, disney.getId() );
 					Hibernate.initialize( troop.getSoldiers() );
 					return troop;
 				}
@@ -58,15 +55,22 @@ public class DeleteOrphanTest {
 		Troop troop3 = (Troop) deserialize( serialize( troop2 ) );
 
 		scope.inTransaction(
-				session -> session.merge( troop3 )
+				entityManager -> entityManager.merge( troop3 )
 		);
 
 		scope.inTransaction(
-				session -> {
-					Soldier _soldier = session.find( Soldier.class, mickey.getId() );
+				entityManager -> {
+					Soldier _soldier = entityManager.find( Soldier.class, mickey.getId() );
 					assertNull( _soldier, "delete-orphan should work" );
-					Troop _troop = session.find( Troop.class, disney.getId() );
-					session.remove( _troop );
+					Troop _troop = entityManager.find( Troop.class, disney.getId() );
+					entityManager.remove( _troop );
+				}
+		);
+
+		scope.inTransaction(
+				entityManager -> {
+					entityManager.createQuery( "delete from Soldier" ).executeUpdate();
+					entityManager.createQuery( "delete from Troop" ).executeUpdate();
 				}
 		);
 	}

@@ -14,7 +14,7 @@ import java.util.Map;
 import org.hibernate.test.jpa.xml.versions.JpaXsdVersionsTest;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Steve Ebersole

@@ -35,8 +35,7 @@ public class BeanValidationTest {
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope){
 		scope.inTransaction(
-				entityManager ->
-					entityManager.createQuery( "delete from CupHolder" )
+				entityManager -> entityManager.createQuery( "delete from CupHolder" ).executeUpdate()
 		);
 	}
 

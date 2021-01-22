@@ -10,11 +10,12 @@ import javax.persistence.CacheRetrieveMode;
 import javax.persistence.CacheStoreMode;
 
 import org.hibernate.CacheMode;
+import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -22,16 +23,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author Steve Ebersole
  */
-@DomainModel(
+@Jpa(
 		annotatedClasses = { SimpleEntity.class }
 )
-@SessionFactory
 public class SharedCacheModesTest {
 
 	@Test
-	public void testEntityManagerCacheModes(SessionFactoryScope scope) {
-		scope.inSession(
-				session -> {
+	public void testEntityManagerCacheModes(EntityManagerFactoryScope scope) {
+		scope.inEntityManager(
+				entityManager -> {
+					Session session = entityManager.unwrap( Session.class );
+
 					// defaults...
 					assertEquals( CacheStoreMode.USE, session.getProperties().get( AvailableSettings.JPA_SHARED_CACHE_STORE_MODE ) );
 					assertEquals( CacheRetrieveMode.USE, session.getProperties().get( AvailableSettings.JPA_SHARED_CACHE_RETRIEVE_MODE ) );
@@ -62,9 +64,11 @@ public class SharedCacheModesTest {
 	}
 
 	@Test
-	public void testQueryCacheModes(SessionFactoryScope scope) {
-		scope.inSession(
-				session -> {
+	public void testQueryCacheModes(EntityManagerFactoryScope scope) {
+		scope.inEntityManager(
+				entityManager -> {
+					Session session = entityManager.unwrap( Session.class );
+
 					org.hibernate.query.Query query = session.createQuery( "from SimpleEntity" );
 
 					query.setHint( AvailableSettings.JPA_SHARED_CACHE_STORE_MODE, CacheStoreMode.USE );
@@ -96,5 +100,4 @@ public class SharedCacheModesTest {
 				}
 		);
 	}
-
 }

@@ -195,8 +195,10 @@ public class MultiCircleJpaCascadeTest {
 						assertEquals( G.class.getName(), pve.getTransientEntityName() );
 						assertEquals( F.class.getName(), pve.getPropertyOwnerEntityName() );
 						assertEquals( "g", pve.getPropertyName() );
+					} finally {
+						entityManager.getTransaction().rollback();
+						entityManager.close();
 					}
-					entityManager.getTransaction().rollback();
 				}
 		);
 	}
@@ -262,6 +264,9 @@ public class MultiCircleJpaCascadeTest {
 						assertEquals( E.class.getName(), tpve.getTransientEntityName() );
 						assertEquals( D.class.getName(), tpve.getPropertyOwnerEntityName() );
 						assertEquals( "e", tpve.getPropertyName() );
+					} finally {
+						entityManager.getTransaction().rollback();
+						entityManager.close();
 					}
 				}
 		);

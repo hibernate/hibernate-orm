@@ -21,34 +21,33 @@ import javax.persistence.OneToMany;
 import javax.persistence.PreUpdate;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @TestForIssue(jiraKey = "HHH-13466")
-@DomainModel(annotatedClasses = {
+@Jpa(annotatedClasses = {
 		PreUpdateNewBidirectionalBagTest.Person.class,
 		PreUpdateNewBidirectionalBagTest.Tag.class
 })
-@SessionFactory
 public class PreUpdateNewBidirectionalBagTest {
 
 	@Test
-	public void testPreUpdateModifications(SessionFactoryScope scope) {
+	public void testPreUpdateModifications(EntityManagerFactoryScope scope) {
 		Person person = new Person();
 		person.id = 1;
 
 		scope.inTransaction(
-				session -> session.persist( person )
+				entityManager -> entityManager.persist( person )
 		);
 
 		scope.inTransaction(
-				session -> {
-					Person p = session.find( Person.class, person.id );
+				entityManager -> {
+					Person p = entityManager.find( Person.class, person.id );
 					assertNotNull( p );
 					final Tag tag = new Tag();
 					tag.id = 2;
@@ -57,16 +56,23 @@ public class PreUpdateNewBidirectionalBagTest {
 					final Set<Tag> tags = new HashSet<Tag>();
 					tags.add( tag );
 					p.tags = tags;
-					session.merge( p );
+					entityManager.merge( p );
 				}
 		);
 
 		scope.inTransaction(
-				session -> {
-					Person p = session.find( Person.class, person.id );
+				entityManager -> {
+					Person p = entityManager.find( Person.class, person.id );
 					assertEquals( 1, p.tags.size() );
 					assertEquals( "description", p.tags.iterator().next().description );
 					assertNotNull( p.getLastUpdatedAt() );
+				}
+		);
+
+		scope.inTransaction(
+				entityManager -> {
+					entityManager.createQuery( "delete from Tag" ).executeUpdate();
+					entityManager.createQuery( "delete from Person" ).executeUpdate();
 				}
 		);
 	}

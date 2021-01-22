@@ -6,21 +6,20 @@
  */
 package org.hibernate.orm.test.jpa.cascade;
 
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
-@DomainModel(annotatedClasses = {
+@Jpa(annotatedClasses = {
 		Troop2.class,
 		Soldier2.class
 })
-@SessionFactory
 public class FetchTest2 {
 	@Test
-	public void testProxyTransientStuff(SessionFactoryScope scope) {
+	public void testProxyTransientStuff(EntityManagerFactoryScope scope) {
 		Troop2 disney = new Troop2();
 		disney.setName( "Disney" );
 
@@ -29,18 +28,18 @@ public class FetchTest2 {
 		mickey.setTroop( disney );
 
 		scope.inTransaction(
-				session -> {
-					session.persist( disney );
-					session.persist( mickey );
+				entityManager -> {
+					entityManager.persist( disney );
+					entityManager.persist( mickey );
 				}
 		);
 
 		scope.inTransaction(
-				session -> {
-					Soldier2 _soldier = session.find( Soldier2.class, mickey.getId() );
+				entityManager -> {
+					Soldier2 _soldier = entityManager.find( Soldier2.class, mickey.getId() );
 					_soldier.getTroop().getId();
 					try {
-						session.flush();
+						entityManager.flush();
 					}
 					catch (IllegalStateException e) {
 						fail( "Should not raise an exception" );
@@ -49,19 +48,19 @@ public class FetchTest2 {
 		);
 
 		scope.inTransaction(
-				session -> {
+				entityManager -> {
 					//load troop wo a proxy
-					Troop2 _troop = session.find( Troop2.class, disney.getId() );
-					Soldier2 _soldier = session.find( Soldier2.class, mickey.getId() );
+					Troop2 _troop = entityManager.find( Troop2.class, disney.getId() );
+					Soldier2 _soldier = entityManager.find( Soldier2.class, mickey.getId() );
 
 					try {
-						session.flush();
+						entityManager.flush();
 					}
 					catch (IllegalStateException e) {
 						fail( "Should not raise an exception" );
 					}
-					session.remove( _troop );
-					session.remove( _soldier );
+					entityManager.remove( _troop );
+					entityManager.remove( _soldier );
 				}
 		);
 	}

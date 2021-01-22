@@ -15,27 +15,25 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@DomainModel(annotatedClasses = {
+@Jpa(annotatedClasses = {
 		MergeTest.Order.class,
 		MergeTest.Item.class
 })
-@SessionFactory
 public class MergeTest {
 
 	@Test
-	public void testMergeDetachedEntityWithNewOneToManyElements(SessionFactoryScope scope) {
+	public void testMergeDetachedEntityWithNewOneToManyElements(EntityManagerFactoryScope scope) {
 		Order order = new Order();
 
 		scope.inTransaction(
-				session -> {
-					session.persist( order );
+				entityManager -> {
+					entityManager.persist( order );
 				}
 		);
 
@@ -49,50 +47,50 @@ public class MergeTest {
 		order.addItem( item2 );
 
 		scope.inTransaction(
-				session -> {
-					session.merge( order );
-					session.flush();
+				entityManager -> {
+					entityManager.merge( order );
+					entityManager.flush();
 				}
 		);
 
 		scope.inTransaction(
-				session -> {
-					Order _order = session.find( Order.class, order.id );
+				entityManager -> {
+					Order _order = entityManager.find( Order.class, order.id );
 					assertEquals( 2, _order.items.size() );
-					session.remove( _order );
+					entityManager.remove( _order );
 				}
 		);
 	}
 
 	@Test
-	public void testMergeLoadedEntityWithNewOneToManyElements(SessionFactoryScope scope) {
+	public void testMergeLoadedEntityWithNewOneToManyElements(EntityManagerFactoryScope scope) {
 		Order order = new Order();
 
 		scope.inTransaction(
-				session -> {
-					session.persist( order );
+				entityManager -> {
+					entityManager.persist( order );
 				}
 		);
 
 		scope.inTransaction(
-				session -> {
-					Order _order = session.find( Order.class, order.id );
+				entityManager -> {
+					Order _order = entityManager.find( Order.class, order.id );
 					Item item1 = new Item();
 					item1.name = "i1";
 					Item item2 = new Item();
 					item2.name = "i2";
 					_order.addItem( item1 );
 					_order.addItem( item2 );
-					session.merge( _order );
-					session.flush();
+					entityManager.merge( _order );
+					entityManager.flush();
 				}
 		);
 
 		scope.inTransaction(
-				session -> {
-					Order _order = session.find( Order.class, order.id );
+				entityManager -> {
+					Order _order = entityManager.find( Order.class, order.id );
 					assertEquals( 2, _order.items.size() );
-					session.remove( _order );
+					entityManager.remove( _order );
 				}
 		);
 	}

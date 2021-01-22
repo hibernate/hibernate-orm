@@ -17,32 +17,32 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
 
 import org.jboss.logging.Logger;
+
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@DomainModel(annotatedClasses = {
+@Jpa(annotatedClasses = {
 		MultiLevelCascadeRegularIdBasedParentChildAssociationTest.Parent.class,
 		MultiLevelCascadeRegularIdBasedParentChildAssociationTest.Child.class,
 		MultiLevelCascadeRegularIdBasedParentChildAssociationTest.Skill.class,
 		MultiLevelCascadeRegularIdBasedParentChildAssociationTest.Hobby.class
 })
-@SessionFactory
 public class MultiLevelCascadeRegularIdBasedParentChildAssociationTest {
 
 	private static final Logger log = Logger.getLogger( MultiLevelCascadeRegularIdBasedParentChildAssociationTest.class );
 
 	@BeforeAll
-	protected void initialize(SessionFactoryScope scope) {
+	protected void initialize(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
-				session -> {
+				entityManager -> {
 					Parent parent = new Parent();
 					parent.id = 1L;
 
@@ -58,17 +58,27 @@ public class MultiLevelCascadeRegularIdBasedParentChildAssociationTest {
 					skill.id = 1L;
 					child1.addSkill( skill );
 
-					session.persist( parent );
+					entityManager.persist( parent );
+				}
+		);
+	}
+
+	@AfterAll
+	protected void tearDown(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					entityManager.createQuery( "delete from Child" ).executeUpdate();
+					entityManager.createQuery( "delete from Parent" ).executeUpdate();
 				}
 		);
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12291" )
-	public void testHibernateDeleteEntityWithoutInitializingCollections(SessionFactoryScope scope) {
+	public void testHibernateDeleteEntityWithoutInitializingCollections(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
-				session -> {
-					Parent mainEntity = session.find( Parent.class, 1L);
+				entityManager -> {
+					Parent mainEntity = entityManager.find( Parent.class, 1L);
 
 					assertNotNull(mainEntity);
 					assertFalse(mainEntity.getChildren().isEmpty());

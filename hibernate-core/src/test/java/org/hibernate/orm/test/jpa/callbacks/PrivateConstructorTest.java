@@ -20,14 +20,13 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.proxy.pojo.bytebuddy.ByteBuddyProxyFactory;
-
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.util.ExceptionUtil;
+
 import org.junit.Rule;
 import org.junit.jupiter.api.Test;
 
@@ -37,11 +36,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @TestForIssue(jiraKey = "HHH-13020")
-@DomainModel(annotatedClasses = {
+@Jpa(annotatedClasses = {
 		PrivateConstructorTest.Parent.class,
 		PrivateConstructorTest.Child.class
 })
-@SessionFactory
 public class PrivateConstructorTest {
 
 	@Rule
@@ -52,17 +50,17 @@ public class PrivateConstructorTest {
 	) );
 
 	@Test
-	public void test(SessionFactoryScope scope) {
+	public void test(EntityManagerFactoryScope scope) {
 		Child child = new Child();
 
 		scope.inTransaction(
-				session -> session.persist( child )
+				entityManager -> entityManager.persist( child )
 		);
 
 		scope.inTransaction(
-				session -> {
+				entityManager -> {
 					Triggerable triggerable = logInspection.watchForLogMessages( "HHH000143:" );
-					Child childReference = session.getReference( Child.class, child.getId() );
+					Child childReference = entityManager.getReference( Child.class, child.getId() );
 					try {
 						assertEquals( child.getParent().getName(), childReference.getParent().getName() );
 					}
@@ -73,6 +71,13 @@ public class PrivateConstructorTest {
 						) );
 					}
 					assertTrue( triggerable.wasTriggered() );
+				}
+		);
+
+		scope.inTransaction(
+				entityManager -> {
+					entityManager.createQuery( "delete from Child" ).executeUpdate();
+					entityManager.createQuery( "delete from Parent" ).executeUpdate();
 				}
 		);
 	}

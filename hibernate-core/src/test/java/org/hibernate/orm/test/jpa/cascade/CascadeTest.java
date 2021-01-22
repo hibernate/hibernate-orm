@@ -6,26 +6,25 @@
  */
 package org.hibernate.orm.test.jpa.cascade;
 
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+
 import org.junit.jupiter.api.Test;
 
 /**
  * @author Max Rydahl Andersen
  */
-@DomainModel(annotatedClasses = {
+@Jpa(annotatedClasses = {
 		Teacher.class,
 		Student.class,
 		Song.class,
 		Author.class
 })
-@SessionFactory
 public class CascadeTest {
 	@Test
-	public void testCascade(SessionFactoryScope scope) {
+	public void testCascade(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
-				session -> {
+				entityManager -> {
 					Teacher teacher = new Teacher();
 					Student student = new Student();
 
@@ -35,13 +34,13 @@ public class CascadeTest {
 					teacher.getStudents().add( student );
 					student.setPrimaryTeacher( teacher );
 
-					session.persist( teacher );
+					entityManager.persist( teacher );
 				}
 		);
 
 		scope.inTransaction(
-				session -> {
-					Teacher foundTeacher = (Teacher) session.createQuery( "select t from Teacher as t" )
+				entityManager -> {
+					Teacher foundTeacher = (Teacher) entityManager.createQuery( "select t from Teacher as t" )
 							.getSingleResult();
 
 					System.out.println( foundTeacher );
@@ -54,27 +53,41 @@ public class CascadeTest {
 					}
 				}
 		);
+
+		scope.inTransaction(
+				entityManager -> {
+					entityManager.createQuery( "delete from Student" ).executeUpdate();
+					entityManager.createQuery( "delete from Teacher" ).executeUpdate();
+				}
+		);
 	}
 
 	@Test
-	public void testNoCascadeAndMerge(SessionFactoryScope scope) {
+	public void testNoCascadeAndMerge(EntityManagerFactoryScope scope) {
 		Song s1 = new Song();
 		Author a1 = new Author();
 		s1.setAuthor( a1 );
 
 		scope.inTransaction(
-				session -> {
-					session.persist( a1 );
-					session.persist( s1 );
+				entityManager -> {
+					entityManager.persist( a1 );
+					entityManager.persist( s1 );
 				}
 		);
 
-		Song s2 = scope.fromSession(
-				session -> session.find( Song.class, s1.getId() )
+		Song s2 = scope.fromTransaction(
+				entityManager -> entityManager.find( Song.class, s1.getId() )
 		);
 
 		scope.inTransaction(
-				session -> session.merge( s2 )
+				entityManager -> entityManager.merge( s2 )
+		);
+
+		scope.inTransaction(
+				entityManager -> {
+					entityManager.createQuery( "delete from Song" ).executeUpdate();
+					entityManager.createQuery( "delete from Author" ).executeUpdate();
+				}
 		);
 	}
 }

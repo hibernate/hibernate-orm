@@ -17,32 +17,41 @@ import javax.persistence.ManyToOne;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestForIssue( jiraKey = "HHH-13020" )
-@DomainModel(annotatedClasses = {
+@Jpa(annotatedClasses = {
 		ProtectedConstructorTest.Parent.class,
 		ProtectedConstructorTest.Child.class
 })
-@SessionFactory
 public class ProtectedConstructorTest {
 
 	@Test
-	public void test(SessionFactoryScope scope) {
+	public void test(EntityManagerFactoryScope scope) {
 		Child child = new Child();
 
 		scope.inTransaction(
-				session -> session.persist( child )
+				entityManager -> entityManager.persist( child )
 		);
 
 		scope.inTransaction(
-				session -> {
-					Child childReference = session.getReference( Child.class, child.getId() );
+				entityManager -> {
+					Child childReference = entityManager.getReference( Child.class, child.getId() );
 					assertEquals( child.getParent().getName(), childReference.getParent().getName() );
+				}
+		);
+
+		scope.inTransaction(
+				entityManager -> {
+					entityManager.createQuery( "delete from Child" ).executeUpdate();
+					entityManager.createQuery( "delete from Parent" ).executeUpdate();
 				}
 		);
 	}

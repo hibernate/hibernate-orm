@@ -6,37 +6,36 @@
  */
 package org.hibernate.orm.test.jpa.callbacks.hbmxml;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import javax.persistence.EntityManagerFactory;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+
 import org.junit.jupiter.api.Test;
 
 /**
  * @author Felix Feisst (feisst dot felix at gmail dot com)
  */
-@DomainModel(
+@Jpa(
 		xmlMappings = "org/hibernate/orm/test/jpa/callbacks/hbmxml/ClassMappedMoreThanOnce.hbm.xml"
 )
-@SessionFactory
 public class MappingClassMoreThanOnceTest {
 	/**
 	 * Tests that an entity manager can be created when a class is mapped more than once.
 	 */
 	@Test
 	@TestForIssue(jiraKey = "HHH-8775")
-	public void testBootstrapWithClassMappedMOreThanOnce(SessionFactoryScope scope) {
+	public void testBootstrapWithClassMappedMOreThanOnce(EntityManagerFactoryScope scope) {
 
-		SessionFactoryImplementor sfi = null;
+		EntityManagerFactory emf = null;
 		try {
-			sfi = scope.getSessionFactory();
+			emf = scope.getEntityManagerFactory();
 		}
 		finally {
-			if ( sfi != null ) {
+			if ( emf != null ) {
 				try {
-					sfi.close();
+					emf.close();
 				}
 				catch (Exception ignore) {
 				}

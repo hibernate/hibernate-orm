@@ -7,18 +7,15 @@
 package org.hibernate.orm.test.jpa.callbacks;
 
 import java.util.Date;
-import java.util.function.Function;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jpa.test.Cat;
 import org.hibernate.jpa.test.Kitten;
 
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
+
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -27,12 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Sanne Grinovero
  */
 @SuppressWarnings("unchecked")
-@ServiceRegistry(
-		settings = {
-				@Setting(name = AvailableSettings.JPA_CALLBACKS_ENABLED, value = "false"),
-		}
-)
-@DomainModel(
+@Jpa(
 		annotatedClasses = {
 				Cat.class,
 				Kitten.class,
@@ -41,27 +33,33 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 				RemoteControl.class,
 				Translation.class,
 				Rythm.class
-		}
+		},
+		properties = { @Setting(name = AvailableSettings.JPA_CALLBACKS_ENABLED, value = "false") }
 )
-@SessionFactory
 public class CallbacksDisabledTest {
 
 	@Test
-	public void testCallbacksAreDisabled(SessionFactoryScope scope) throws Exception {
+	public void testCallbacksAreDisabled(EntityManagerFactoryScope scope) throws Exception {
 		int id = scope.fromTransaction(
-				session -> {
+				entityManager -> {
 					Cat c = new Cat();
 					c.setName( "Kitty" );
 					c.setDateOfBirth( new Date( 90, 11, 15 ) );
-					session.persist( c );
+					entityManager.persist( c );
 					return c.getId();
 				}
 		);
 
 		scope.inTransaction(
-				session -> {
-					Cat _c = session.find( Cat.class, id );
+				entityManager -> {
+					Cat _c = entityManager.find( Cat.class, id );
 					assertTrue( _c.getAge() == 0 ); // With listeners enabled this would be false. Proven by org.hibernate.orm.test.jpa.callbacks.CallbacksTest.testCallbackMethod
+				}
+		);
+
+		scope.inTransaction(
+				entityManager -> {
+					entityManager.createQuery( "delete from Cat" ).executeUpdate();
 				}
 		);
 	}

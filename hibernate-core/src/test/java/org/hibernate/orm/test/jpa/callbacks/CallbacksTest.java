@@ -10,15 +10,14 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import org.junit.jupiter.api.Test;
-
 import org.hibernate.jpa.test.Cat;
 import org.hibernate.jpa.test.Kitten;
 
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.FailureExpected;
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+
+import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -30,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Emmanuel Bernard
  */
 @SuppressWarnings("unchecked")
-@DomainModel(annotatedClasses = {
+@Jpa(annotatedClasses = {
 		Cat.class,
 		Kitten.class,
 		Plant.class,
@@ -38,36 +37,41 @@ import static org.junit.jupiter.api.Assertions.fail;
 		RemoteControl.class,
 		Rythm.class
 })
-@SessionFactory
 public class CallbacksTest {
 	@Test
-	public void testCallbackMethod(SessionFactoryScope scope) {
+	public void testCallbackMethod(EntityManagerFactoryScope scope) {
 		int id = scope.fromTransaction(
-				session -> {
+				entityManager -> {
 					Cat c = new Cat();
 					c.setName( "Kitty" );
 					c.setDateOfBirth( new Date( 90, 11, 15 ) );
-					session.persist( c );
+					entityManager.persist( c );
 					return c.getId();
 				}
 		);
 		scope.inTransaction(
-				session -> {
-					Cat _c = session.find( Cat.class, id );
+				entityManager -> {
+					Cat _c = entityManager.find( Cat.class, id );
 					assertFalse( _c.getAge() == 0 );
 					_c.setName( "Tomcat" ); //update this entity
 				}
 		);
 		scope.inTransaction(
-				session -> {
-					Cat _c = session.find( Cat.class, id );
+				entityManager -> {
+					Cat _c = entityManager.find( Cat.class, id );
 					assertEquals( "Tomcat", _c.getName() );
+				}
+		);
+
+		scope.inTransaction(
+				entityManager -> {
+					entityManager.createQuery( "delete from Cat" ).executeUpdate();
 				}
 		);
 	}
 
 	@Test
-	public void testEntityListener(SessionFactoryScope scope) {
+	public void testEntityListener(EntityManagerFactoryScope scope) {
 		final class PV {
 			PV(int version) {
 				this.version = version;
@@ -88,11 +92,11 @@ public class CallbacksTest {
 		PV previousVersion = new PV( c.getManualVersion() );
 
 		scope.inTransaction(
-				session -> session.persist( c )
+				entityManager -> entityManager.persist( c )
 		);
 		scope.inTransaction(
-				session -> {
-					Cat _c = session.find( Cat.class, c.getId() );
+				entityManager -> {
+					Cat _c = entityManager.find( Cat.class, c.getId() );
 					assertNotNull( _c.getLastUpdate() );
 					assertTrue( previousVersion.get() < _c.getManualVersion() );
 					assertEquals( 12, _c.getLength() );
@@ -101,103 +105,123 @@ public class CallbacksTest {
 				}
 		);
 		scope.inTransaction(
-				session -> {
-					Cat _c = session.find( Cat.class, c.getId() );
+				entityManager -> {
+					Cat _c = entityManager.find( Cat.class, c.getId() );
 					assertTrue( previousVersion.get() < _c.getManualVersion() );
+				}
+		);
+
+		scope.inTransaction(
+				entityManager -> {
+					entityManager.createQuery( "delete from Cat" ).executeUpdate();
 				}
 		);
 	}
 
 	@Test
-	public void testPostPersist(SessionFactoryScope scope) {
+	public void testPostPersist(EntityManagerFactoryScope scope) {
+		Cat c = new Cat();
+		c.setLength( 23 );
+		c.setAge( 2 );
+		c.setName( "Beetle" );
+		c.setDateOfBirth( new Date() );
+
 		scope.inTransaction(
-				session -> {
-					Cat c = new Cat();
-					c.setLength( 23 );
-					c.setAge( 2 );
-					c.setName( "Beetle" );
-					c.setDateOfBirth( new Date() );
-					session.persist( c );
+				entityManager -> {
+					entityManager.persist( c );
 				}
 		);
+
 		List ids = Cat.getIdList();
 		Object id = Cat.getIdList().get( ids.size() - 1 );
 		assertNotNull( id );
+
+		scope.inTransaction(
+				entityManager -> {
+					entityManager.createQuery( "delete from Cat" ).executeUpdate();
+				}
+		);
 	}
 
 	//Not a test since the spec did not make the proper change on listeners
-	public void listenerAnnotation(SessionFactoryScope scope) {
-		scope.inSession(
-				session -> {
+	public void listenerAnnotation(EntityManagerFactoryScope scope) {
+		scope.inEntityManager(
+				entityManager -> {
 					Translation tl = new Translation();
-					session.getTransaction().begin();
+					entityManager.getTransaction().begin();
 					tl.setInto( "France" );
-					session.persist( tl );
+					entityManager.persist( tl );
 					tl = new Translation();
 					tl.setInto( "Bimboland" );
 					try {
-						session.persist( tl );
-						session.flush();
+						entityManager.persist( tl );
+						entityManager.flush();
 						fail( "Annotations annotated by a listener not used" );
 					}
 					catch (IllegalArgumentException e) {
 						//success
 					}
 					finally {
-						session.getTransaction().rollback();
-						session.close();
+						entityManager.getTransaction().rollback();
+						entityManager.close();
 					}
 				}
 		);
 	}
 
 	@Test
-	public void testPrePersistOnCascade(SessionFactoryScope scope) {
-		scope.inSession(
-				session -> {
-					session.getTransaction().begin();
-					Television tv = new Television();
-					RemoteControl rc = new RemoteControl();
-					session.persist( tv );
-					session.flush();
-					tv.setControl( rc );
-					tv.init();
-					session.flush();
-					assertNotNull( rc.getCreationDate() );
-					session.getTransaction().rollback();
-					session.close();
+	public void testPrePersistOnCascade(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+						Television tv = new Television();
+						RemoteControl rc = new RemoteControl();
+						entityManager.persist( tv );
+						entityManager.flush();
+						tv.setControl( rc );
+						tv.init();
+						entityManager.flush();
+						assertNotNull( rc.getCreationDate() );
+				}
+		);
+
+		scope.inTransaction(
+				entityManager -> {
+					entityManager.createQuery( "delete from Television" ).executeUpdate();
 				}
 		);
 	}
 
 	@Test
-	public void testCallBackListenersHierarchy(SessionFactoryScope scope) {
-		scope.inSession(
-				session -> {
-					session.getTransaction().begin();
+	public void testCallBackListenersHierarchy(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
 					Television tv = new Television();
-					session.persist( tv );
+					entityManager.persist( tv );
 					tv.setName( "Myaio" );
 					tv.init();
-					session.flush();
+					entityManager.flush();
 					assertEquals( 1, tv.counter );
-					session.getTransaction().rollback();
-					session.close();
 					assertEquals( 5, tv.communication );
 					assertTrue( tv.isLast );
 				}
 		);
+
+		scope.inTransaction(
+				entityManager -> {
+					entityManager.createQuery( "delete from Television" ).executeUpdate();
+				}
+		);
 	}
 
 	@Test
-	public void testException(SessionFactoryScope scope) {
-		scope.inSession(
-				session -> {
-					session.getTransaction().begin();
+	public void testException(EntityManagerFactoryScope scope) {
+		scope.inEntityManager(
+				entityManager -> {
+					entityManager.getTransaction().begin();
 					Rythm r = new Rythm();
 					try {
-						session.persist( r );
-						session.flush();
+						entityManager.persist( r );
+						entityManager.flush();
 						fail( "should have raised an ArythmeticException:" );
 					}
 					catch (ArithmeticException e) {
@@ -205,86 +229,100 @@ public class CallbacksTest {
 					}
 					catch (Exception e) {
 						fail( "should have raised an ArythmeticException:" + e.getClass() );
+					} finally {
+						entityManager.getTransaction().rollback();
+						entityManager.close();
 					}
-
-					session.getTransaction().rollback();
-					session.close();
 				}
 		);
 	}
 
 	@Test
-	public void testIdNullSetByPrePersist(SessionFactoryScope scope) {
-		scope.inSession(
-				session -> {
+	public void testIdNullSetByPrePersist(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
 					Plant plant = new Plant();
 					plant.setName( "Origuna plantula gigantic" );
-					session.getTransaction().begin();
-					session.persist( plant );
-					session.flush();
-					session.getTransaction().rollback();
-					session.close();
+					entityManager.persist( plant );
+					entityManager.flush();
+				}
+		);
+
+		scope.inTransaction(
+				entityManager -> {
+					entityManager.createQuery( "delete from Plant" ).executeUpdate();
 				}
 		);
 	}
 
 	@Test
 	@FailureExpected(reason = "collection change does not trigger an event", jiraKey = "EJB-288")
-	public void testPostUpdateCollection(SessionFactoryScope scope) {
-		scope.inSession(
-				session -> {
-					// create a cat
-					Cat cat = new Cat();
-					session.getTransaction().begin();
-					cat.setLength( 23 );
-					cat.setAge( 2 );
-					cat.setName( "Beetle" );
-					cat.setDateOfBirth( new Date() );
-					session.persist( cat );
-					session.getTransaction().commit();
+	public void testPostUpdateCollection(EntityManagerFactoryScope scope) {
+		// create a cat
+		Cat cat = new Cat();
+		cat.setLength( 23 );
+		cat.setAge( 2 );
+		cat.setName( "Beetle" );
+		cat.setDateOfBirth( new Date() );
 
-					// assert it is persisted
-					List ids = Cat.getIdList();
-					Object id = Cat.getIdList().get( ids.size() - 1 );
-					assertNotNull( id );
+		scope.inTransaction(
+				entityManager -> {
+					entityManager.persist( cat );
+				}
+		);
 
-					// add a kitten to the cat - triggers PostCollectionRecreateEvent
+		// assert it is persisted
+		List ids = Cat.getIdList();
+		Object id = Cat.getIdList().get( ids.size() - 1 );
+		assertNotNull( id );
+
+		// add a kitten to the cat - triggers PostCollectionRecreateEvent
+		scope.inTransaction(
+				entityManager -> {
 					int postVersion = Cat.postVersion;
-					session.getTransaction().begin();
 					Kitten kitty = new Kitten();
 					kitty.setName( "kitty" );
 					List kittens = new ArrayList<Kitten>();
 					kittens.add( kitty );
 					cat.setKittens( kittens );
-					session.getTransaction().commit();
 					assertEquals( postVersion + 1, Cat.postVersion, "Post version should have been incremented." );
+				}
+		);
 
+		Kitten tom = new Kitten();
+		tom.setName( "Tom" );
+		scope.inTransaction(
+				entityManager -> {
 					// add another kitten - triggers PostCollectionUpdateEvent.
-					postVersion = Cat.postVersion;
-					session.getTransaction().begin();
-					Kitten tom = new Kitten();
-					tom.setName( "Tom" );
+					int postVersion = Cat.postVersion;
 					cat.getKittens().add( tom );
-					session.getTransaction().commit();
 					assertEquals( postVersion + 1, Cat.postVersion, "Post version should have been incremented." );
+				}
+		);
 
+		scope.inTransaction(
+				entityManager -> {
 					// delete a kitty - triggers PostCollectionUpdateEvent
-					postVersion = Cat.postVersion;
-					session.getTransaction().begin();
+					int postVersion = Cat.postVersion;
 					cat.getKittens().remove( tom );
-					session.getTransaction().commit();
 					assertEquals( postVersion + 1, Cat.postVersion, "Post version should have been incremented." );
+				}
+		);
 
+		scope.inTransaction(
+				entityManager -> {
 					// delete and recreate kittens - triggers PostCollectionRemoveEvent and PostCollectionRecreateEvent)
-					postVersion = Cat.postVersion;
-					session.getTransaction().begin();
+					int postVersion = Cat.postVersion;
 					cat.setKittens( new ArrayList<Kitten>() );
-					session.getTransaction().commit();
 					assertEquals( postVersion + 2, Cat.postVersion, "Post version should have been incremented." );
+				}
+		);
 
-					session.close();
+		scope.inTransaction(
+				entityManager -> {
+					entityManager.createQuery( "delete from Cat" ).executeUpdate();
+					entityManager.createQuery( "delete from Kitten" ).executeUpdate();
 				}
 		);
 	}
-
 }

@@ -1014,8 +1014,6 @@ public abstract class AbstractHANADialect extends Dialect {
 			case Types.TINYINT:
 				// tinyint is unsigned on HANA
 				return SmallIntTypeDescriptor.INSTANCE;
-			case Types.BOOLEAN:
-				return this.useLegacyBooleanType ? BitTypeDescriptor.INSTANCE : BooleanTypeDescriptor.INSTANCE;
 			case Types.VARCHAR:
 				return this.isUseUnicodeStringTypes() ? NVarcharTypeDescriptor.INSTANCE : VarcharTypeDescriptor.INSTANCE;
 			case Types.CHAR:

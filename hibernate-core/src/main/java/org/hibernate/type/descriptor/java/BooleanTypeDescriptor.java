@@ -9,7 +9,6 @@ package org.hibernate.type.descriptor.java;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.spi.Primitive;
-import org.hibernate.type.descriptor.sql.BitTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
@@ -159,7 +158,7 @@ public class BooleanTypeDescriptor extends AbstractClassTypeDescriptor<Boolean> 
 
 	@Override
 	public String getCheckCondition(String columnName, SqlTypeDescriptor sqlTypeDescriptor, Dialect dialect) {
-		return sqlTypeDescriptor instanceof BitTypeDescriptor && !dialect.supportsBitType()
+		return dialect.toBooleanValueString(true).equals("1") && !dialect.supportsBitType()
 				? columnName + " in (0,1)"
 				: null;
 	}

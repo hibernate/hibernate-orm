@@ -8,15 +8,19 @@ package org.hibernate.jpa.test.query;
 
 import java.math.BigDecimal;
 import java.sql.Blob;
+import java.sql.CallableStatement;
 import java.sql.Clob;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.time.Month;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import javax.persistence.Column;
@@ -40,14 +44,21 @@ import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.test.PersistenceUnitDescriptorAdapter;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
+import org.hibernate.type.descriptor.ValueBinder;
+import org.hibernate.type.descriptor.ValueExtractor;
+import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.BigDecimalTypeDescriptor;
 import org.hibernate.type.descriptor.java.BooleanTypeDescriptor;
 import org.hibernate.type.descriptor.java.FloatTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayTypeDescriptor;
 import org.hibernate.type.descriptor.java.StringTypeDescriptor;
+import org.hibernate.type.descriptor.sql.BasicBinder;
+import org.hibernate.type.descriptor.sql.BasicExtractor;
 import org.hibernate.type.descriptor.sql.BinaryTypeDescriptor;
-import org.hibernate.type.descriptor.sql.BitTypeDescriptor;
 import org.hibernate.type.descriptor.sql.CharTypeDescriptor;
+import org.hibernate.type.descriptor.sql.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.sql.NumericTypeDescriptor;
 
 import org.hibernate.testing.RequiresDialect;
@@ -55,6 +66,9 @@ import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.CustomRunner;
 import org.hibernate.testing.transaction.TransactionUtil;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.BasicJdbcLiteralFormatter;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
@@ -594,3 +608,88 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	}
 
 }
+
+class BitTypeDescriptor implements SqlTypeDescriptor {
+	public static final BitTypeDescriptor INSTANCE = new BitTypeDescriptor();
+
+	public BitTypeDescriptor() {
+	}
+
+	public int getSqlType() {
+		return Types.BIT;
+	}
+
+	@Override
+	public String getFriendlyName() {
+		return "BIT";
+	}
+
+	@Override
+	public String toString() {
+		return "BitTypeDescriptor";
+	}
+
+	@Override
+	public boolean canBeRemapped() {
+		return true;
+	}
+
+	@Override
+	public <T> BasicJavaDescriptor<T> getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
+		return (BasicJavaDescriptor<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Boolean.class );
+	}
+
+	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaTypeDescriptor<T> javaTypeDescriptor) {
+		if ( javaTypeDescriptor.getJavaType().equals(Boolean.class) ) {
+			//this is to allow literals to be formatted correctly when
+			//we are in the legacy Boolean-to-BIT JDBC type mapping mode
+			return new BasicJdbcLiteralFormatter( javaTypeDescriptor ) {
+				@Override
+				public String toJdbcLiteral(Object value, Dialect dialect, WrapperOptions wrapperOptions) {
+					Boolean bool = unwrap( value, Boolean.class, wrapperOptions );
+					return bool ? "1" : "0";
+				}
+			};
+		}
+		else {
+			return (value, dialect, wrapperOptions) -> value.toString();
+		}
+	}
+
+	@Override
+	public <X> ValueBinder<X> getBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+		return new BasicBinder<X>( javaTypeDescriptor, this ) {
+			@Override
+			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
+				st.setBoolean( index, javaTypeDescriptor.unwrap( value, Boolean.class, options ) );
+			}
+
+			@Override
+			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
+					throws SQLException {
+				st.setBoolean( name, javaTypeDescriptor.unwrap( value, Boolean.class, options ) );
+			}
+		};
+	}
+
+	@Override
+	public <X> ValueExtractor<X> getExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
+			@Override
+			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
+				return javaTypeDescriptor.wrap( rs.getBoolean( paramIndex ), options );
+			}
+
+			@Override
+			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
+				return javaTypeDescriptor.wrap( statement.getBoolean( index ), options );
+			}
+
+			@Override
+			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
+				return javaTypeDescriptor.wrap( statement.getBoolean( name ), options );
+			}
+		};
+	}
+}
+

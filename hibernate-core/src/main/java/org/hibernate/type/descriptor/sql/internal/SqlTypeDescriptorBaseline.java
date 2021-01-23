@@ -8,7 +8,6 @@ package org.hibernate.type.descriptor.sql.internal;
 
 import org.hibernate.type.descriptor.sql.BigIntTypeDescriptor;
 import org.hibernate.type.descriptor.sql.BinaryTypeDescriptor;
-import org.hibernate.type.descriptor.sql.BitTypeDescriptor;
 import org.hibernate.type.descriptor.sql.BlobTypeDescriptor;
 import org.hibernate.type.descriptor.sql.BooleanTypeDescriptor;
 import org.hibernate.type.descriptor.sql.CharTypeDescriptor;
@@ -46,8 +45,6 @@ public class SqlTypeDescriptorBaseline {
 
 	public static void prime(BaselineTarget target) {
 		target.addDescriptor( BooleanTypeDescriptor .INSTANCE );
-
-		target.addDescriptor( BitTypeDescriptor.INSTANCE );
 		target.addDescriptor( BigIntTypeDescriptor.INSTANCE );
 		target.addDescriptor( DecimalTypeDescriptor.INSTANCE );
 		target.addDescriptor( DoubleTypeDescriptor.INSTANCE );

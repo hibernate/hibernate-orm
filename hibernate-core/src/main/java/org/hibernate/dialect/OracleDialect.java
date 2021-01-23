@@ -55,9 +55,7 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorOracleDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.sql.BitTypeDescriptor;
 import org.hibernate.type.descriptor.sql.BlobTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
@@ -595,13 +593,6 @@ public class OracleDialect extends Dialect {
 	@Override
 	public boolean supportsBitType() {
 		return false;
-	}
-
-	@Override
-	protected SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
-		return sqlCode == Types.BOOLEAN
-				? BitTypeDescriptor.INSTANCE
-				: super.getSqlTypeDescriptorOverride( sqlCode );
 	}
 
 	@Override

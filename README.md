@@ -23,8 +23,8 @@ Gradle.
 
 Contributors should read the [Contributing Guide](CONTRIBUTING.md).
 
-See the guides for setting up [IntelliJ](https://developer.jboss.org/wiki/ContributingToHibernateUsingIntelliJ) or
-[Eclipse](https://developer.jboss.org/wiki/ContributingToHibernateUsingEclipse) as your development environment.
+See the guides for setting up [IntelliJ](http://hibernate.org/community/contribute/intellij-idea/) or
+[Eclipse](https://hibernate.org/community/contribute/eclipse-ide/) as your development environment.
 
 Check out the _Getting Started_ section in CONTRIBUTING.md for getting started working on Hibernate source.
 

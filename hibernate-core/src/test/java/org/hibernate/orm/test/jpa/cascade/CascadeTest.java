@@ -35,11 +35,9 @@ public class CascadeTest {
 					student.setPrimaryTeacher( teacher );
 
 					entityManager.persist( teacher );
-				}
-		);
+					entityManager.getTransaction().commit();
 
-		scope.inTransaction(
-				entityManager -> {
+					entityManager.getTransaction().begin();
 					Teacher foundTeacher = (Teacher) entityManager.createQuery( "select t from Teacher as t" )
 							.getSingleResult();
 

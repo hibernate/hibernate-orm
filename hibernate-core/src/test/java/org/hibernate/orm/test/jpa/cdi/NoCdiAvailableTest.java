@@ -11,8 +11,9 @@ import java.lang.reflect.Method;
 import javax.persistence.EntityManagerFactory;
 
 import org.hibernate.testing.junit4.ClassLoadingIsolater;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.junit.Rule;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -21,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  *
  * @author Steve Ebersole
  */
+@BaseUnitTest
 public class NoCdiAvailableTest {
 	public static final String[] EXCLUDED_PACKAGES = new String[] {
 			"javax.enterprise.inject.",

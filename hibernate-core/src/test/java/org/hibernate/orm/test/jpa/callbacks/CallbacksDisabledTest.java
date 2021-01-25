@@ -15,7 +15,6 @@ import org.hibernate.jpa.test.Kitten;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
-
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -39,27 +38,18 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class CallbacksDisabledTest {
 
 	@Test
-	public void testCallbacksAreDisabled(EntityManagerFactoryScope scope) throws Exception {
-		int id = scope.fromTransaction(
+	public void testCallbacksAreDisabled(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
 				entityManager -> {
 					Cat c = new Cat();
 					c.setName( "Kitty" );
 					c.setDateOfBirth( new Date( 90, 11, 15 ) );
 					entityManager.persist( c );
-					return c.getId();
-				}
-		);
-
-		scope.inTransaction(
-				entityManager -> {
-					Cat _c = entityManager.find( Cat.class, id );
+					entityManager.getTransaction().commit();
+					entityManager.clear();
+					entityManager.getTransaction().begin();
+					Cat _c = entityManager.find( Cat.class, c.getId() );
 					assertTrue( _c.getAge() == 0 ); // With listeners enabled this would be false. Proven by org.hibernate.orm.test.jpa.callbacks.CallbacksTest.testCallbackMethod
-				}
-		);
-
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createQuery( "delete from Cat" ).executeUpdate();
 				}
 		);
 	}

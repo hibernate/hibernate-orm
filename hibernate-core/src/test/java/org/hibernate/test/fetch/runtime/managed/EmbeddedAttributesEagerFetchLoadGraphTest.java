@@ -96,6 +96,42 @@ public class EmbeddedAttributesEagerFetchLoadGraphTest extends BaseNonConfigCore
 	}
 
 	@Test
+	public void testFetchingFromManagedEntityTwoEmbeddedFieldsLoadGraph() {
+		inTransaction(
+				session -> {
+					{
+						// let's load the root - because the link to child is lazy, this should
+						// not load it
+						final RootEntity rootEntity = session.get( RootEntity.class, 2 );
+						assertThat( Hibernate.isInitialized( rootEntity ), is( true ) );
+						assertThat( Hibernate.isInitialized( rootEntity.getEmbedded().getEmbeddedChildren() ), is( false ) );
+						assertThat( Hibernate.isInitialized( rootEntity.getOtherEmbedded().getNestedEmbeddedChild() ), is( false ) );
+					}
+
+					{
+						// now try to query the root entity again using an EntityGraph that specifies to fetch child
+						final RootGraphImplementor<RootEntity> entityGraph = session.createEntityGraph( RootEntity.class );
+						SubGraphImplementor<Object> subGraph = entityGraph.addSubGraph( "embedded" );
+						subGraph.addAttributeNode( "embeddedChildren" );
+
+						SubGraphImplementor<Object> otherSubGraph = entityGraph.addSubGraph( "otherEmbedded" );
+						otherSubGraph.addAttributeNode( "nestedEmbeddedChild" );
+
+						final QueryImplementor<RootEntity> query = session.createQuery(
+								"select r from RootEntity r",
+								RootEntity.class
+						);
+
+						final RootEntity rootEntity = query.setHint( "javax.persistence.loadgraph", entityGraph ).uniqueResult();
+						assertThat( Hibernate.isInitialized( rootEntity ), is( true ) );
+						assertThat( Hibernate.isInitialized( rootEntity.getEmbedded().getEmbeddedChildren() ), is( true ) );
+						assertThat( Hibernate.isInitialized( rootEntity.getOtherEmbedded().getNestedEmbeddedChild() ), is( true ) );
+					}
+				}
+		);
+	}
+
+	@Test
 	public void testFetchingFromManagedEntityNestedEmbeddedBasicFieldLoadGraph() {
 		inTransaction(
 				session -> {
@@ -144,9 +180,15 @@ public class EmbeddedAttributesEagerFetchLoadGraphTest extends BaseNonConfigCore
 					final ChildEntity child3 = new ChildEntity( 3, "child 3");
 					session.save( child3 );
 
+
 					NestedEmbeddedObject nestedEmbeddedObject = new NestedEmbeddedObject( child3 );
 
 					root.embedded = new EmbeddedObject( nestedEmbeddedObject, child1, Collections.singletonList( child2 ) );
+
+					final ChildEntity child4 = new ChildEntity( 4, "child 4");
+					session.save( child4 );
+
+					root.otherEmbedded = new NestedEmbeddedObject( child4 );
 					session.save( root );
 				}
 		);
@@ -180,6 +222,7 @@ public class EmbeddedAttributesEagerFetchLoadGraphTest extends BaseNonConfigCore
 		private Integer id;
 		private String text;
 		private EmbeddedObject embedded;
+		private NestedEmbeddedObject otherEmbedded;
 
 		public RootEntity() {
 		}
@@ -189,10 +232,11 @@ public class EmbeddedAttributesEagerFetchLoadGraphTest extends BaseNonConfigCore
 			this.text = text;
 		}
 
-		public RootEntity(Integer id, String text, EmbeddedObject embedded) {
+		public RootEntity(Integer id, String text, EmbeddedObject embedded, NestedEmbeddedObject otherEmbedded) {
 			this.id = id;
 			this.text = text;
 			this.embedded = embedded;
+			this.otherEmbedded = otherEmbedded;
 		}
 
 		@Id
@@ -219,6 +263,18 @@ public class EmbeddedAttributesEagerFetchLoadGraphTest extends BaseNonConfigCore
 
 		public void setEmbedded(EmbeddedObject embedded) {
 			this.embedded = embedded;
+		}
+
+		@Embedded
+		@AssociationOverrides(
+				@AssociationOverride( name = "nestedEmbeddedChild", joinColumns = @JoinColumn(name = "em2_child_id"))
+		)
+		public NestedEmbeddedObject getOtherEmbedded() {
+			return otherEmbedded;
+		}
+
+		public void setOtherEmbedded(NestedEmbeddedObject otherEmbedded) {
+			this.otherEmbedded = otherEmbedded;
 		}
 	}
 

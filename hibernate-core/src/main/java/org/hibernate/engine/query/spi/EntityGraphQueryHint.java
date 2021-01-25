@@ -177,6 +177,7 @@ public class EntityGraphQueryHint implements AppliedGraph {
 					fromElement.setFetch( true );
 				}
 
+				List<PersistentAttributeDescriptor<?, ?>> currentEmbeddedNodeAttributeDescriptors = null;
 				if ( fromElement != null ) {
 					if( !explicitFromElement ){
 						fromElements.add( fromElement );
@@ -190,10 +191,10 @@ public class EntityGraphQueryHint implements AppliedGraph {
 							fromElement = origin;
 
 							if (parentEmbeddedNodeAttributeDescriptors.isEmpty()) {
-								parentEmbeddedNodeAttributeDescriptors = Collections.singletonList( embeddedNodeAttributeDescriptor );
+								currentEmbeddedNodeAttributeDescriptors = Collections.singletonList( embeddedNodeAttributeDescriptor );
 							} else {
-								parentEmbeddedNodeAttributeDescriptors = new ArrayList<>( parentEmbeddedNodeAttributeDescriptors );
-								parentEmbeddedNodeAttributeDescriptors.add( embeddedNodeAttributeDescriptor );
+								currentEmbeddedNodeAttributeDescriptors = new ArrayList<>( parentEmbeddedNodeAttributeDescriptors );
+								currentEmbeddedNodeAttributeDescriptors.add( embeddedNodeAttributeDescriptor );
 							}
 						}
 					}
@@ -205,7 +206,7 @@ public class EntityGraphQueryHint implements AppliedGraph {
 						fromElements.addAll(
 								getFromElements(
 										subgraph.getAttributeNodes(), fromElement,
-										parentEmbeddedNodeAttributeDescriptors,
+										currentEmbeddedNodeAttributeDescriptors,
 										fromClause, walker, explicitFetches
 								)
 						);

@@ -28,6 +28,7 @@ import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
+import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.service.spi.JpaBootstrapSensitive;
 import org.hibernate.event.spi.EventSource;
@@ -205,10 +206,8 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		LOG.trace( "Flushing entities and processing referenced collections" );
 
 		final EventSource source = event.getSession();
-		final Iterable<FlushEntityEventListener> flushListeners = source.getFactory().getServiceRegistry()
-				.getService( EventListenerRegistry.class )
-				.getEventListenerGroup( EventType.FLUSH_ENTITY )
-				.listeners();
+		final EventListenerGroup<FlushEntityEventListener> flushListeners = source.getFactory()
+				.getFastSessionServices().eventListenerGroup_FLUSH_ENTITY;
 
 		// Among other things, updateReachables() will recursively load all
 		// collections that are moving roles. This might cause entities to
@@ -228,9 +227,7 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 
 			if ( status != Status.LOADING && status != Status.GONE ) {
 				final FlushEntityEvent entityEvent = new FlushEntityEvent( source, me.getKey(), entry );
-				for ( FlushEntityEventListener listener : flushListeners ) {
-					listener.onFlushEntity( entityEvent );
-				}
+				flushListeners.fireEventOnEachListener( entityEvent, FlushEntityEventListener::onFlushEntity );
 			}
 		}
 

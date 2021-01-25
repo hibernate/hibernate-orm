@@ -288,7 +288,7 @@ public class EntityUpdateAction extends EntityAction {
 
 	protected boolean preUpdate() {
 		boolean veto = false;
-		final EventListenerGroup<PreUpdateEventListener> listenerGroup = listenerGroup( EventType.PRE_UPDATE );
+		final EventListenerGroup<PreUpdateEventListener> listenerGroup = getFastSessionServices().eventListenerGroup_PRE_UPDATE;
 		if ( listenerGroup.isEmpty() ) {
 			return veto;
 		}
@@ -307,11 +307,13 @@ public class EntityUpdateAction extends EntityAction {
 	}
 
 	protected void postUpdate() {
-		final EventListenerGroup<PostUpdateEventListener> listenerGroup = listenerGroup( EventType.POST_UPDATE );
-		if ( listenerGroup.isEmpty() ) {
-			return;
-		}
-		final PostUpdateEvent event = new PostUpdateEvent(
+		getFastSessionServices()
+				.eventListenerGroup_POST_UPDATE
+				.fireLazyEventOnEachListener( this::newPostUpdateEvent, PostUpdateEventListener::onPostUpdate );
+	}
+
+	private PostUpdateEvent newPostUpdateEvent() {
+		return new PostUpdateEvent(
 				getInstance(),
 				getId(),
 				state,
@@ -320,44 +322,27 @@ public class EntityUpdateAction extends EntityAction {
 				getPersister(),
 				eventSource()
 		);
-		for ( PostUpdateEventListener listener : listenerGroup.listeners() ) {
-			listener.onPostUpdate( event );
-		}
 	}
 
 	protected void postCommitUpdate(boolean success) {
-		final EventListenerGroup<PostUpdateEventListener> listenerGroup = listenerGroup( EventType.POST_COMMIT_UPDATE );
-		if ( listenerGroup.isEmpty() ) {
-			return;
+		getFastSessionServices()
+				.eventListenerGroup_POST_COMMIT_UPDATE
+				.fireLazyEventOnEachListener( this::newPostUpdateEvent, success ? PostUpdateEventListener::onPostUpdate : this::onPostCommitFailure );
+	}
+
+	private void onPostCommitFailure(PostUpdateEventListener listener, PostUpdateEvent event) {
+		if ( listener instanceof PostCommitUpdateEventListener ) {
+			((PostCommitUpdateEventListener) listener).onPostUpdateCommitFailed( event );
 		}
-		final PostUpdateEvent event = new PostUpdateEvent(
-				getInstance(),
-				getId(),
-				state,
-				previousState,
-				dirtyFields,
-				getPersister(),
-				eventSource()
-		);
-		for ( PostUpdateEventListener listener : listenerGroup.listeners() ) {
-			if ( PostCommitUpdateEventListener.class.isInstance( listener ) ) {
-				if ( success ) {
-					listener.onPostUpdate( event );
-				}
-				else {
-					((PostCommitUpdateEventListener) listener).onPostUpdateCommitFailed( event );
-				}
-			}
-			else {
-				//default to the legacy implementation that always fires the event
-				listener.onPostUpdate( event );
-			}
+		else {
+			//default to the legacy implementation that always fires the event
+			listener.onPostUpdate( event );
 		}
 	}
 
 	@Override
 	protected boolean hasPostCommitEventListeners() {
-		final EventListenerGroup<PostUpdateEventListener> group = listenerGroup( EventType.POST_COMMIT_UPDATE );
+		final EventListenerGroup<PostUpdateEventListener> group = getFastSessionServices().eventListenerGroup_POST_COMMIT_UPDATE;
 		for ( PostUpdateEventListener listener : group.listeners() ) {
 			if ( listener.requiresPostCommitHandling( getPersister() ) ) {
 				return true;

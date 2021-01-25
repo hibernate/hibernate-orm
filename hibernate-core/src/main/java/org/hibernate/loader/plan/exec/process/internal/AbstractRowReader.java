@@ -239,9 +239,8 @@ public abstract class AbstractRowReader implements RowReader {
 		final SharedSessionContractImplementor session = context.getSession();
 		final Iterable<PreLoadEventListener> listeners = session
 			.getFactory()
-			.getServiceRegistry()
-			.getService( EventListenerRegistry.class )
-			.getEventListenerGroup( EventType.PRE_LOAD )
+			.getFastSessionServices()
+			.eventListenerGroup_PRE_LOAD
 			.listeners();
 
 		for ( HydratedEntityRegistration registration : hydratedEntityRegistrations ) {

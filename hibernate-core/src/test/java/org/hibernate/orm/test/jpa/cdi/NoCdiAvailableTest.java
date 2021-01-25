@@ -10,10 +10,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import javax.persistence.EntityManagerFactory;
 
-import org.hibernate.testing.junit4.ClassLoadingIsolater;
-import org.hibernate.testing.orm.junit.BaseUnitTest;
-import org.junit.Rule;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.ClassLoadingIsolaterExtension;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -22,43 +21,39 @@ import static org.junit.jupiter.api.Assertions.fail;
  *
  * @author Steve Ebersole
  */
-@BaseUnitTest
-public class NoCdiAvailableTest {
+@ExtendWith(ClassLoadingIsolaterExtension.class)
+public class NoCdiAvailableTest implements ClassLoadingIsolaterExtension.IsolatedClassLoaderProvider {
 	public static final String[] EXCLUDED_PACKAGES = new String[] {
 			"javax.enterprise.inject.",
 			"javax.enterprise.context."
 	};
+
+	@Override
+	public ClassLoader buildIsolatedClassLoader() {
+		return new ClassLoader( NoCdiAvailableTest.class.getClassLoader() ) {
+			@Override
+			public Class<?> loadClass(String name) throws ClassNotFoundException {
+				for ( String excludedPackage : EXCLUDED_PACKAGES ) {
+					if ( name.startsWith( excludedPackage ) ) {
+						throw new CdiClassLoadException( "CDI classes [" + name + "] excluded from load" );
+					}
+				}
+				return super.loadClass( name );
+			}
+		};
+	}
+
+	@Override
+	public void releaseIsolatedClassLoader(ClassLoader isolatedClassLoader) {
+		// nothing to do
+
+	}
 
 	private static class CdiClassLoadException extends RuntimeException {
 		private CdiClassLoadException(String message) {
 			super( message );
 		}
 	}
-
-	@Rule public ClassLoadingIsolater isolater = new ClassLoadingIsolater(
-			new ClassLoadingIsolater.IsolatedClassLoaderProvider() {
-
-				@Override
-				public ClassLoader buildIsolatedClassLoader() {
-					return new ClassLoader( NoCdiAvailableTest.class.getClassLoader() ) {
-						@Override
-						public Class<?> loadClass(String name) throws ClassNotFoundException {
-							for ( String excludedPackage : EXCLUDED_PACKAGES ) {
-								if ( name.startsWith( excludedPackage ) ) {
-									throw new CdiClassLoadException( "CDI classes [" + name + "] excluded from load" );
-								}
-							}
-							return super.loadClass( name );
-						}
-					};
-				}
-
-				@Override
-				public void releaseIsolatedClassLoader(ClassLoader isolatedClassLoader) {
-					// nothing to do
-				}
-			}
-	);
 
 	@Test
 	public void testJpaBootstrapWithoutCdiAvailable() throws Exception {
@@ -71,7 +66,7 @@ public class NoCdiAvailableTest {
 			entityManagerFactory = (EntityManagerFactory) mainMethod.invoke( null );
 		}
 		finally {
-			if (entityManagerFactory != null ) {
+			if ( entityManagerFactory != null ) {
 				entityManagerFactory.close();
 			}
 		}

@@ -1191,9 +1191,8 @@ public abstract class Loader {
 			if ( hydratedObjectsSize != 0 ) {
 				final Iterable<PreLoadEventListener> listeners = session
 					.getFactory()
-					.getServiceRegistry()
-					.getService( EventListenerRegistry.class )
-					.getEventListenerGroup( EventType.PRE_LOAD )
+					.getFastSessionServices()
+					.eventListenerGroup_PRE_LOAD
 					.listeners();
 
 				for ( Object hydratedObject : hydratedObjects ) {

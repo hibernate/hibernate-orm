@@ -28,6 +28,7 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -39,6 +40,15 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 		PreUpdateNewUnidirectionalIdBagTest.Tag.class
 })
 public class PreUpdateNewUnidirectionalIdBagTest {
+
+	@AfterEach
+	public void tearDown(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					entityManager.createQuery( "delete from Person" ).executeUpdate();
+				}
+		);
+	}
 
 	@Test
 	public void testPreUpdateModifications(EntityManagerFactoryScope scope) {
@@ -69,12 +79,6 @@ public class PreUpdateNewUnidirectionalIdBagTest {
 					assertEquals( 1, p.tags.size() );
 					assertEquals( "description", p.tags.iterator().next().description );
 					assertNotNull( p.getLastUpdatedAt() );
-				}
-		);
-
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createQuery( "delete from Person" ).executeUpdate();
 				}
 		);
 	}

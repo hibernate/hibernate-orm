@@ -9,6 +9,7 @@ package org.hibernate.orm.test.jpa.cascade;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.fail;
@@ -18,6 +19,17 @@ import static org.junit.jupiter.api.Assertions.fail;
 		Soldier2.class
 })
 public class FetchTest2 {
+
+	@AfterEach
+	public void tearDown(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					entityManager.createQuery( "delete from Soldier2" ).executeUpdate();
+					entityManager.createQuery( "delete from Troop2" ).executeUpdate();
+				}
+		);
+	}
+
 	@Test
 	public void testProxyTransientStuff(EntityManagerFactoryScope scope) {
 		Troop2 disney = new Troop2();

@@ -28,6 +28,7 @@ import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.util.ExceptionUtil;
 
 import org.junit.Rule;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import org.jboss.logging.Logger;
@@ -48,6 +49,16 @@ public class PrivateConstructorTest {
 			proxyFactoryClass()
 					.getName()
 	) );
+
+	@AfterEach
+	public void tearDown(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					entityManager.createQuery( "delete from Child" ).executeUpdate();
+					entityManager.createQuery( "delete from Parent" ).executeUpdate();
+				}
+		);
+	}
 
 	@Test
 	public void test(EntityManagerFactoryScope scope) {
@@ -71,13 +82,6 @@ public class PrivateConstructorTest {
 						) );
 					}
 					assertTrue( triggerable.wasTriggered() );
-				}
-		);
-
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createQuery( "delete from Child" ).executeUpdate();
-					entityManager.createQuery( "delete from Parent" ).executeUpdate();
 				}
 		);
 	}

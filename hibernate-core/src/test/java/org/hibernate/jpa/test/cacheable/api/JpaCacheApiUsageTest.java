@@ -21,7 +21,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Steve Ebersole
  */
-// TODO Convert to annotation based testing? Setting the CachingRegionFactory as below leads to a CNFE
 @Jpa(
 		annotatedClasses = Order.class,
 		integrationSettings = {

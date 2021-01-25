@@ -16,12 +16,10 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -32,6 +30,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 		ProtectedConstructorTest.Child.class
 })
 public class ProtectedConstructorTest {
+
+	@AfterEach
+	public void tearDown(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					entityManager.createQuery( "delete from Child" ).executeUpdate();
+					entityManager.createQuery( "delete from Parent" ).executeUpdate();
+				}
+		);
+	}
 
 	@Test
 	public void test(EntityManagerFactoryScope scope) {
@@ -45,13 +53,6 @@ public class ProtectedConstructorTest {
 				entityManager -> {
 					Child childReference = entityManager.getReference( Child.class, child.getId() );
 					assertEquals( child.getParent().getName(), childReference.getParent().getName() );
-				}
-		);
-
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createQuery( "delete from Child" ).executeUpdate();
-					entityManager.createQuery( "delete from Parent" ).executeUpdate();
 				}
 		);
 	}

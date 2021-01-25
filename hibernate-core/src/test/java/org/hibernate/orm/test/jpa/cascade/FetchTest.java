@@ -14,6 +14,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -33,6 +34,23 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		Grandson.class
 })
 public class FetchTest {
+
+	@AfterEach
+	public void tearDown(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					entityManager.createQuery( "delete from Soldier" ).executeUpdate();
+					entityManager.createQuery( "delete from Troop" ).executeUpdate();
+					entityManager.createQuery( "delete from Grandson" ).executeUpdate();
+					entityManager.createQuery( "delete from Son" ).executeUpdate();
+					entityManager.createQuery( "delete from Parent" ).executeUpdate();
+					entityManager.createQuery( "delete from ExtractionDocument" ).executeUpdate();
+					entityManager.createQuery( "delete from ExtractionDocumentInfo" ).executeUpdate();
+					entityManager.createQuery( "delete from Conference" ).executeUpdate();
+				}
+		);
+	}
+
 	@Test
 	public void testCascadeAndFetchCollection(EntityManagerFactoryScope scope) {
 		Troop disney = new Troop();
@@ -53,13 +71,6 @@ public class FetchTest {
 				}
 		);
 		assertFalse( Hibernate.isInitialized( troop2.getSoldiers() ) );
-
-		scope.inTransaction(
-				entityManager -> {
-					Troop troop = entityManager.find( Troop.class, disney.getId() );
-					entityManager.remove( troop );
-				}
-		);
 	}
 
 	@Test
@@ -82,13 +93,6 @@ public class FetchTest {
 				}
 		);
 		assertFalse( Hibernate.isInitialized( soldier2.getTroop() ) );
-
-		scope.inTransaction(
-				entityManager -> {
-					Troop troop = entityManager.find( Troop.class, disney.getId() );
-					entityManager.remove( troop );
-				}
-		);
 	}
 
 	@Test
@@ -119,7 +123,6 @@ public class FetchTest {
 					assertTrue( Hibernate.isInitialized( _jbwBarcelona ) );
 					assertTrue( Hibernate.isInitialized( _jbwBarcelona.getExtractionDocument() ) );
 					assertFalse( Hibernate.isInitialized( _jbwBarcelona.getExtractionDocument().getDocuments() ) );
-					entityManager.remove( _jbwBarcelona );
 				}
 		);
 	}
@@ -140,7 +143,6 @@ public class FetchTest {
 					entityManager.flush();
 					assertTrue( Hibernate.isInitialized( _gs.getParent() ) );
 					assertFalse( Hibernate.isInitialized( _gs.getParent().getParent() ) );
-					entityManager.remove( _gs );
 				}
 		);
 	}

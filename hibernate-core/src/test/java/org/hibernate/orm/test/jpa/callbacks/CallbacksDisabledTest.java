@@ -15,6 +15,7 @@ import org.hibernate.jpa.test.Kitten;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -26,16 +27,21 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Jpa(
 		annotatedClasses = {
 				Cat.class,
-				Kitten.class,
-				Plant.class,
-				Television.class,
-				RemoteControl.class,
-				Translation.class,
-				Rythm.class
+				Kitten.class
 		},
 		properties = { @Setting(name = AvailableSettings.JPA_CALLBACKS_ENABLED, value = "false") }
 )
 public class CallbacksDisabledTest {
+
+	@AfterEach
+	public void tearDown(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					entityManager.createQuery( "delete from Kitten" ).executeUpdate();
+					entityManager.createQuery( "delete from Cat" ).executeUpdate();
+				}
+		);
+	}
 
 	@Test
 	public void testCallbacksAreDisabled(EntityManagerFactoryScope scope) {

@@ -17,6 +17,7 @@ import javax.persistence.OneToMany;
 
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -26,6 +27,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 		MergeTest.Item.class
 })
 public class MergeTest {
+
+	@AfterEach
+	public void tearDown(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					entityManager.createQuery( "delete from MergeTest$Item" ).executeUpdate();
+					entityManager.createQuery( "delete from MergeTest$Order" ).executeUpdate();
+				}
+		);
+	}
 
 	@Test
 	public void testMergeDetachedEntityWithNewOneToManyElements(EntityManagerFactoryScope scope) {
@@ -57,7 +68,6 @@ public class MergeTest {
 				entityManager -> {
 					Order _order = entityManager.find( Order.class, order.id );
 					assertEquals( 2, _order.items.size() );
-					entityManager.remove( _order );
 				}
 		);
 	}
@@ -90,7 +100,6 @@ public class MergeTest {
 				entityManager -> {
 					Order _order = entityManager.find( Order.class, order.id );
 					assertEquals( 2, _order.items.size() );
-					entityManager.remove( _order );
 				}
 		);
 	}

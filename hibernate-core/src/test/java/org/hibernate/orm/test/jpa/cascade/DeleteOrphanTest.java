@@ -17,6 +17,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -29,6 +30,17 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 		Soldier.class
 })
 public class DeleteOrphanTest {
+
+	@AfterEach
+	public void tearDown(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					entityManager.createQuery( "delete from Soldier" ).executeUpdate();
+					entityManager.createQuery( "delete from Troop" ).executeUpdate();
+				}
+		);
+	}
+
 	@Test
 	public void testDeleteOrphan(EntityManagerFactoryScope scope) throws Exception {
 		Troop disney = new Troop();
@@ -64,13 +76,6 @@ public class DeleteOrphanTest {
 					assertNull( _soldier, "delete-orphan should work" );
 					Troop _troop = entityManager.find( Troop.class, disney.getId() );
 					entityManager.remove( _troop );
-				}
-		);
-
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createQuery( "delete from Soldier" ).executeUpdate();
-					entityManager.createQuery( "delete from Troop" ).executeUpdate();
 				}
 		);
 	}

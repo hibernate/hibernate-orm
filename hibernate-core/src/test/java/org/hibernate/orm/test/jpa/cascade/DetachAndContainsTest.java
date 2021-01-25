@@ -18,6 +18,7 @@ import javax.persistence.Table;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static javax.persistence.CascadeType.DETACH;
@@ -34,6 +35,17 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 		DetachAndContainsTest.Tooth.class
 })
 public class DetachAndContainsTest {
+
+	@AfterEach
+	public void tearDown(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					entityManager.createQuery( "delete from DetachAndContainsTest$Tooth" ).executeUpdate();
+					entityManager.createQuery( "delete from DetachAndContainsTest$Mouth" ).executeUpdate();
+				}
+		);
+	}
+
 	@Test
 	public void testDetach(EntityManagerFactoryScope scope) {
 		Tooth tooth = new Tooth();
@@ -57,10 +69,6 @@ public class DetachAndContainsTest {
 					entityManager.detach( _mouth );
 					assertFalse( entityManager.contains( _tooth ) );
 				}
-		);
-
-		scope.inTransaction(
-				entityManager -> entityManager.remove( entityManager.find( Mouth.class, mouth.id ) )
 		);
 	}
 

@@ -10,6 +10,7 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -22,6 +23,17 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 		Bottom.class
 })
 public class MultiLevelCascadeTest {
+
+	@AfterEach
+	public void tearDown(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					entityManager.createQuery( "delete from Middle" ).executeUpdate();
+					entityManager.createQuery( "delete from Bottom" ).executeUpdate();
+					entityManager.createQuery( "delete from Top" ).executeUpdate();
+				}
+		);
+	}
 
 	@TestForIssue(jiraKey = "HHH-5299")
 	@Test
@@ -61,7 +73,6 @@ public class MultiLevelCascadeTest {
 						assertSame( found, loadedMiddle.getTop() );
 						assertNotNull( loadedMiddle.getBottom() );
 					}
-					entityManager.remove( found );
 				}
 		);
 	}

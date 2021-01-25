@@ -10,6 +10,7 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -22,6 +23,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 )
 public class EntityListenerViaXmlTest {
 
+	@AfterEach
+	public void tearDown(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					entityManager.createQuery( "delete from MyEntity" ).executeUpdate();
+				}
+		);
+	}
+
 	@Test
 	@TestForIssue(jiraKey = "HHH-9771")
 	public void testUsage(EntityManagerFactoryScope scope) {
@@ -32,9 +42,5 @@ public class EntityListenerViaXmlTest {
 		);
 
 		assertEquals( 1, JournalingListener.getPrePersistCount() );
-
-		scope.inTransaction(
-				entityManager -> entityManager.createQuery( "delete MyEntity" ).executeUpdate()
-		);
 	}
 }

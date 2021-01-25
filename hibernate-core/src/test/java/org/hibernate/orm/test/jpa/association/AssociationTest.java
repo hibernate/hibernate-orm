@@ -8,12 +8,25 @@ package org.hibernate.orm.test.jpa.association;
 
 
 import org.hibernate.testing.junit5.EntityManagerFactoryBasedFunctionalTest;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 /**
  * @author Emmanuel Bernard
  */
 public class AssociationTest extends EntityManagerFactoryBasedFunctionalTest {
+
+	@AfterEach
+	public void tearDown() {
+		inTransaction(
+			entityManager -> {
+				entityManager.createQuery( "delete from Incident" ).executeUpdate();
+				entityManager.createQuery( "delete from IncidentStatus" ).executeUpdate();
+				entityManager.createQuery( "delete from Oven" ).executeUpdate();
+				entityManager.createQuery( "delete from Kitchen" ).executeUpdate();
+			}
+		);
+	}
 
 	@Test
 	public void testBidirOneToOne() {
@@ -28,12 +41,6 @@ public class AssociationTest extends EntityManagerFactoryBasedFunctionalTest {
 						ist.setIncident( i );
 						entityManager.persist( i );
 					}
-				} );
-
-		inTransaction(
-				entityManager -> {
-					entityManager.remove( entityManager.find( Incident.class, id ) );
-
 				} );
 	}
 
@@ -55,12 +62,6 @@ public class AssociationTest extends EntityManagerFactoryBasedFunctionalTest {
 					return entityManager.merge( persistedOven );
 				}
 		);
-
-		inTransaction(
-				entityManager -> {
-					entityManager.remove( entityManager.find( Oven.class, mergedOven.getId() ) );
-
-				} );
 	}
 
 	@Override

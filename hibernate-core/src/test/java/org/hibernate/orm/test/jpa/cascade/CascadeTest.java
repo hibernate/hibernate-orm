@@ -9,6 +9,7 @@ package org.hibernate.orm.test.jpa.cascade;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -21,6 +22,19 @@ import org.junit.jupiter.api.Test;
 		Author.class
 })
 public class CascadeTest {
+
+	@AfterEach
+	public void tearDown(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					entityManager.createQuery( "delete from Student" ).executeUpdate();
+					entityManager.createQuery( "delete from Teacher" ).executeUpdate();
+					entityManager.createQuery( "delete from Song" ).executeUpdate();
+					entityManager.createQuery( "delete from Author" ).executeUpdate();
+				}
+		);
+	}
+
 	@Test
 	public void testCascade(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
@@ -51,13 +65,6 @@ public class CascadeTest {
 					}
 				}
 		);
-
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createQuery( "delete from Student" ).executeUpdate();
-					entityManager.createQuery( "delete from Teacher" ).executeUpdate();
-				}
-		);
 	}
 
 	@Test
@@ -79,13 +86,6 @@ public class CascadeTest {
 
 		scope.inTransaction(
 				entityManager -> entityManager.merge( s2 )
-		);
-
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createQuery( "delete from Song" ).executeUpdate();
-					entityManager.createQuery( "delete from Author" ).executeUpdate();
-				}
 		);
 	}
 }

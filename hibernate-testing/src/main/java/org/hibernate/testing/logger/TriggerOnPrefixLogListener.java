@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.jboss.logging.Logger.Level;
 
-final class TriggerOnPrefixLogListener implements LogListener, Triggerable {
+public final class TriggerOnPrefixLogListener implements LogListener, Triggerable {
 
 	private Set<String> expectedPrefixes = new HashSet<>();
 

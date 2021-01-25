@@ -31,32 +31,17 @@ import org.jboss.logging.Logger;
  */
 class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	private static final Logger log = Logger.getLogger( EventListenerGroupImpl.class );
+	private static final Set<DuplicationStrategy> DEFAULT_DUPLICATION_STRATEGIES = Collections.unmodifiableSet( makeDefaultDuplicationStrategy() );
 
 	private final EventType<T> eventType;
 	private final EventListenerRegistryImpl listenerRegistry;
 
-	private final Set<DuplicationStrategy> duplicationStrategies = new LinkedHashSet<>();
-
+	private Set<DuplicationStrategy> duplicationStrategies = DEFAULT_DUPLICATION_STRATEGIES;
 	private T[] listeners = null;
 
 	public EventListenerGroupImpl(EventType<T> eventType, EventListenerRegistryImpl listenerRegistry) {
 		this.eventType = eventType;
 		this.listenerRegistry = listenerRegistry;
-
-		duplicationStrategies.add(
-				// At minimum make sure we do not register the same exact listener class multiple times.
-				new DuplicationStrategy() {
-					@Override
-					public boolean areMatch(Object listener, Object original) {
-						return listener.getClass().equals( original.getClass() );
-					}
-
-					@Override
-					public Action getAction() {
-						return Action.ERROR;
-					}
-				}
-		);
 	}
 
 	@Override
@@ -77,7 +62,7 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 
 	@Override
 	public void clear() {
-		duplicationStrategies.clear();
+		duplicationStrategies = DEFAULT_DUPLICATION_STRATEGIES;
 		listeners = null;
 	}
 
@@ -117,6 +102,9 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 
 	@Override
 	public void addDuplicationStrategy(DuplicationStrategy strategy) {
+		if ( duplicationStrategies == DEFAULT_DUPLICATION_STRATEGIES ) {
+			duplicationStrategies = makeDefaultDuplicationStrategy();
+		}
 		duplicationStrategies.add( strategy );
 	}
 
@@ -302,4 +290,24 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 
 		return Arrays.asList( listeners );
 	}
+
+	private static Set<DuplicationStrategy> makeDefaultDuplicationStrategy() {
+		final Set<DuplicationStrategy> duplicationStrategies = new LinkedHashSet<>();
+		duplicationStrategies.add(
+				// At minimum make sure we do not register the same exact listener class multiple times.
+				new DuplicationStrategy() {
+					@Override
+					public boolean areMatch(Object listener, Object original) {
+						return listener.getClass().equals( original.getClass() );
+					}
+
+					@Override
+					public Action getAction() {
+						return Action.ERROR;
+					}
+				}
+		);
+		return duplicationStrategies;
+	}
+
 }

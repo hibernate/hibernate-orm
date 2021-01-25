@@ -154,7 +154,7 @@ public class ExtractFunction
 								intType,
 								builder
 						),
-						intType,
+						intType, // Implicit cast to int
 						queryEngine,
 						typeConfiguration
 				);
@@ -177,7 +177,7 @@ public class ExtractFunction
 				.findFunctionDescriptor("floor")
 				.generateSqmExpression(
 						arg,
-						longType,
+						longType, // Implicit cast to long
 						queryEngine,
 						typeConfiguration
 				);

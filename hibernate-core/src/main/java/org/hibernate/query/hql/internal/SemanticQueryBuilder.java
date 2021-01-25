@@ -2960,7 +2960,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 		return getFunctionDescriptor("ceiling").generateSqmExpression(
 				arg,
-				resolveExpressableTypeBasic( Long.class ),
+				(AllowableFunctionReturnType<?>) arg.getNodeType(),
 				creationContext.getQueryEngine(),
 				creationContext.getJpaMetamodel().getTypeConfiguration()
 		);
@@ -2972,7 +2972,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 		return getFunctionDescriptor("floor").generateSqmExpression(
 				arg,
-				resolveExpressableTypeBasic( Long.class ),
+				(AllowableFunctionReturnType<?>) arg.getNodeType(),
 				creationContext.getQueryEngine(),
 				creationContext.getJpaMetamodel().getTypeConfiguration()
 		);

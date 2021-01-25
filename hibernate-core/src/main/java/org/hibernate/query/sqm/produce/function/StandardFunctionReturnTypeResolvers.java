@@ -140,8 +140,7 @@ public class StandardFunctionReturnTypeResolvers {
 		int impliedTypeCode = ((BasicType<?>) implied).getJdbcMapping().getSqlTypeDescriptor().getJdbcTypeCode();
 		int definedTypeCode = ((BasicType<?>) defined).getJdbcMapping().getSqlTypeDescriptor().getJdbcTypeCode();
 		return impliedTypeCode == definedTypeCode
-				|| isInteger(impliedTypeCode) && isInteger(definedTypeCode)
-				|| isFloat(impliedTypeCode) && isFloat(definedTypeCode);
+				|| isNumeric( impliedTypeCode ) && isNumeric( definedTypeCode );
 	}
 
 	private static BasicValuedMapping useImpliedTypeIfPossible(
@@ -181,20 +180,24 @@ public class StandardFunctionReturnTypeResolvers {
 		int impliedTypeCode = implied.getJdbcMapping().getSqlTypeDescriptor().getJdbcTypeCode();
 		int definedTypeCode = defined.getJdbcMapping().getSqlTypeDescriptor().getJdbcTypeCode();
 		return impliedTypeCode == definedTypeCode
-				|| isInteger(impliedTypeCode) && isInteger(definedTypeCode)
-				|| isFloat(impliedTypeCode) && isFloat(definedTypeCode);
+				|| isNumeric( impliedTypeCode ) && isNumeric( definedTypeCode );
 
 	}
 
-	private static boolean isInteger(int type) {
-		return type == Types.INTEGER
-				|| type == Types.BIGINT
-				|| type == Types.SMALLINT
-				|| type == Types.TINYINT;
-	}
-
-	private static boolean isFloat(int type) {
-		return type == Types.FLOAT || type == Types.DOUBLE;
+	private static boolean isNumeric(int type) {
+		switch ( type ) {
+			case Types.SMALLINT:
+			case Types.TINYINT:
+			case Types.INTEGER:
+			case Types.BIGINT:
+			case Types.FLOAT:
+			case Types.REAL:
+			case Types.DOUBLE:
+			case Types.NUMERIC:
+			case Types.DECIMAL:
+				return true;
+		}
+		return false;
 	}
 
 	private static AllowableFunctionReturnType<?> extractArgumentType(List<SqmTypedNode<?>> arguments, int position) {

@@ -809,7 +809,8 @@ public class CommonFunctionFactory {
 	public static void ceiling_ceil(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "ceil" )
 				.setExactArgumentCount( 1 )
-				.setInvariantType( StandardBasicTypes.DOUBLE )
+				// To avoid truncating to a specific data type, we default to using the argument type
+				.setReturnTypeResolver( useArgType(1) )
 				.register();
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "ceiling", "ceil" );
 	}
@@ -1463,12 +1464,14 @@ public class CommonFunctionFactory {
 				.register();
 
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder("floor")
-				.setInvariantType( StandardBasicTypes.LONG )
+				// To avoid truncating to a specific data type, we default to using the argument type
+				.setReturnTypeResolver( useArgType(1) )
 				.setExactArgumentCount(1)
 				.register();
 
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder("ceiling")
-				.setInvariantType( StandardBasicTypes.LONG )
+				// To avoid truncating to a specific data type, we default to using the argument type
+				.setReturnTypeResolver( useArgType(1) )
 				.setExactArgumentCount(1)
 				.register();
 

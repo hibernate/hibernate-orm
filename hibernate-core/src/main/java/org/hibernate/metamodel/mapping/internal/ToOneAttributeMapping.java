@@ -9,6 +9,7 @@ package org.hibernate.metamodel.mapping.internal;
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.OneToOne;
@@ -27,6 +28,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.EntityIdentifierNavigablePath;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
@@ -212,8 +214,22 @@ public class ToOneAttributeMapping extends AbstractSingularAttributeMapping
 		return navigableRole;
 	}
 
-	public boolean isForeignKeyOwner() {
-		return referencedPropertyName == null;
+	@Override
+	public int forEachJdbcValue(
+			Object value,
+			Clause clause,
+			int offset,
+			JdbcValuesConsumer consumer,
+			SharedSessionContractImplementor session) {
+		return getForeignKeyDescriptor().forEachJdbcValue(
+				getAssociatedEntityMappingType()
+						.getIdentifierMapping()
+						.getIdentifier( value, session ),
+				clause,
+				offset,
+				consumer,
+				session
+		);
 	}
 
 	@Override

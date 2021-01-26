@@ -160,7 +160,7 @@ public class LoaderSelectBuilder {
 				sessionFactory,
 				loadable,
 				partsToSelect,
-				Arrays.asList( restrictedPart ),
+				Collections.singletonList( restrictedPart ),
 				cachedDomainResult,
 				numberOfKeysToLoad,
 				loadQueryInfluencers,

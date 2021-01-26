@@ -740,12 +740,9 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			return narrowedProxy;
 		}
 		else {
-
 			if ( object != null ) {
 				final LazyInitializer li = ( (HibernateProxy) proxy ).getHibernateLazyInitializer();
-				if ( li.isUninitialized() ) {
-					li.setImplementation( object );
-				}
+				assert !li.isUninitialized();
 			}
 			return proxy;
 		}

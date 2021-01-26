@@ -33,8 +33,6 @@ import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 
-import org.jboss.logging.Logger;
-
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -50,7 +48,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @NotImplementedYet(reason = "NotImplementedYetException thrown in the initialization method, by NativeNonSelectQueryPlanImpl.executeUpdate()")
 public class MultiLevelCascadeCollectionEmbeddableTest {
 
-	private static final Logger log = Logger.getLogger( MultiLevelCascadeCollectionEmbeddableTest.class );
 	private boolean initialized = false;
 
 	//TODO this could be implemented with @BeforeAll, if we move to Junit 5.5 or higher. The way to intercept exceptions in this method, inside

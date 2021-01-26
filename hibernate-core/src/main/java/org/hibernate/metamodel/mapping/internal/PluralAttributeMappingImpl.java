@@ -342,7 +342,7 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping
 			);
 		}
 		else if ( fkTargetPart instanceof EmbeddableValuedModelPart ) {
-			return MappingModelCreationHelper.buildTargetingEmbeddableForeignKeyDescriptor(
+			return MappingModelCreationHelper.buildEmbeddableForeignKeyDescriptor(
 					(EmbeddableValuedModelPart) fkTargetPart,
 					fkBootDescriptorSource,
 					dialect,

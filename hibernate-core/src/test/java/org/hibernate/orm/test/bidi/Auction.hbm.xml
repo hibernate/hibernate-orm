@@ -23,7 +23,7 @@
 			<key column="auctionId"/>
 			<one-to-many class="Bid"/>
 		</bag>
-		<one-to-one name="successfulBid" 
+		<one-to-one name="successfulBid"
 				property-ref="abc">
 			<formula>id</formula>
 			<formula>true</formula>

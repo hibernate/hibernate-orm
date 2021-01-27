@@ -18,8 +18,6 @@ import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.test.naturalid.inheritance.cache.ExtendedEntity;
-import org.hibernate.test.naturalid.inheritance.cache.MyEntity;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;

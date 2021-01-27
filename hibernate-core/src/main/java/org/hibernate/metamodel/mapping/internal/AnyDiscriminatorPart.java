@@ -10,6 +10,7 @@ import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
@@ -120,6 +121,11 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions 
 	@Override
 	public NavigableRole getNavigableRole() {
 		return navigableRole;
+	}
+
+	@Override
+	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
+		valueConsumer.consume( domainValue, this );
 	}
 
 	@Override

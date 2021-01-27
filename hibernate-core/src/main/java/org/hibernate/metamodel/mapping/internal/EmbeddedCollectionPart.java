@@ -15,9 +15,7 @@ import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.CollectionPart;
-import org.hibernate.metamodel.mapping.SelectionConsumer;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -263,6 +261,11 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 	@Override
 	public int getNumberOfFetchables() {
 		return getEmbeddableTypeDescriptor().getNumberOfAttributeMappings();
+	}
+
+	@Override
+	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
+		getEmbeddableTypeDescriptor().breakDownJdbcValues( domainValue, valueConsumer, session );
 	}
 
 	@Override

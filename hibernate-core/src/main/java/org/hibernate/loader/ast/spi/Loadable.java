@@ -14,8 +14,7 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
-import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.tree.from.RootTableGroupProducer;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -43,10 +42,8 @@ public interface Loadable extends ModelPart, RootTableGroupProducer {
 			String explicitSourceAlias,
 			boolean canUseInnerJoins,
 			LockMode lockMode,
-			SqlAliasBaseGenerator aliasBaseGenerator,
-			SqlExpressionResolver sqlExpressionResolver,
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
-			SqlAstCreationContext creationContext) {
+			SqlAstCreationState creationState, SqlAstCreationContext creationContext) {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 }

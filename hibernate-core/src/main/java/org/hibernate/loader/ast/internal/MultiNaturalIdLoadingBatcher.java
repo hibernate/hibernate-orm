@@ -47,7 +47,7 @@ public class MultiNaturalIdLoadingBatcher {
 		 * the "true" form - single value for simple natural-ids and an array for
 		 * compound natural-ids.
 		 *
-		 * Generally delegates to {@link org.hibernate.metamodel.mapping.NaturalIdMapping#normalizeIncomingValue}
+		 * Generally delegates to {@link org.hibernate.metamodel.mapping.NaturalIdMapping#normalizeInput}
 		 */
 		Object resolveKeyToLoad(Object incoming, SharedSessionContractImplementor session);
 	}

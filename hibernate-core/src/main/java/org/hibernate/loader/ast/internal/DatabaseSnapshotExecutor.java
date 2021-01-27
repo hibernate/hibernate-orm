@@ -82,9 +82,8 @@ class DatabaseSnapshotExecutor {
 				null,
 				true,
 				LockMode.NONE,
-				sqlAliasBaseManager,
-				state.getSqlExpressionResolver(),
 				() -> rootQuerySpec::applyPredicate,
+				state,
 				sessionFactory
 		);
 

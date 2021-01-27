@@ -8,23 +8,25 @@ package org.hibernate.metamodel.mapping;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
+import java.util.Locale;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.BasicValue;
@@ -34,13 +36,10 @@ import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
-import org.hibernate.metamodel.mapping.internal.BasicValuedSingularAttributeMapping;
-import org.hibernate.metamodel.mapping.internal.SelectionMappingsImpl;
 import org.hibernate.metamodel.mapping.internal.DiscriminatedAssociationAttributeMapping;
-import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
-import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.SelectionMappingsImpl;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -98,14 +97,35 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectionMappi
 		);
 
 		creationProcess.registerInitializationCallback(
-				"EmbeddableMappingType(" + bootDescriptor.getRoleName() + ")#finishInitialization",
-				() -> mappingType.finishInitialization(
-						bootDescriptor,
-						compositeType,
-						rootTableExpression,
-						rootTableKeyColumnNames,
-						creationProcess
-				)
+				"EmbeddableMappingType(" + mappingType.getNavigableRole().getFullPath() + ")#finishInitialization",
+				() -> {
+					try {
+						final boolean finished = mappingType.finishInitialization(
+								bootDescriptor,
+								compositeType,
+								rootTableExpression,
+								rootTableKeyColumnNames,
+								creationProcess
+						);
+
+						if ( finished ) {
+							return finished;
+						}
+					}
+					catch (Exception e) {
+						MappingModelCreationLogger.LOGGER.debugf(
+								e,
+								"(DEBUG) Error finalizing EmbeddableMappingType(%s)",
+								mappingType.embeddedRole
+						);
+					}
+
+					MappingModelCreationLogger.LOGGER.debugf(
+							"EmbeddableMappingType(%s) finalization was not able to complete successfully",
+							mappingType.embeddedRole
+					);
+					return false;
+				}
 		);
 
 		return mappingType;
@@ -116,9 +136,7 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectionMappi
 
 	private final SessionFactoryImplementor sessionFactory;
 
-//	private final Map<String,AttributeMapping> attributeMappings = new TreeMap<>();
-	private final List<AttributeMapping> attributes = new ArrayList<>();
-	private final Map<String, AttributeMapping> attributeMap = new HashMap<>();
+	private final List<AttributeMapping> attributeMappings = new ArrayList<>();
 	private SelectionMappings selectionMappings;
 
 	private final EmbeddableValuedModelPart valueMapping;
@@ -156,18 +174,20 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectionMappi
 			MappingModelCreationProcess creationProcess) {
 		final SessionFactoryImplementor sessionFactory = creationProcess.getCreationContext().getSessionFactory();
 		final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
+		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
+		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
+		final Dialect dialect = jdbcEnvironment.getDialect();
 
 		final String baseTableExpression = valueMapping.getContainingTableExpression();
-		final Dialect dialect = creationProcess.getCreationContext().getSessionFactory().getJdbcServices().getDialect();
 		final Type[] subtypes = compositeType.getSubtypes();
 
 		int attributeIndex = 0;
 		int columnPosition = 0;
 
-		//noinspection unchecked
 		final Iterator<Property> propertyIterator = bootDescriptor.getPropertyIterator();
 		while ( propertyIterator.hasNext() ) {
 			final Property bootPropertyDescriptor = propertyIterator.next();
+			final AttributeMapping attributeMapping;
 
 			final Type subtype = subtypes[attributeIndex];
 			if ( subtype instanceof BasicType ) {
@@ -185,7 +205,7 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectionMappi
 					if ( selectable instanceof Column ) {
 						containingTableExpression = getTableIdentifierExpression(
 								( (Column) selectable ).getValue().getTable(),
-								creationProcess
+								jdbcEnvironment
 						);
 					}
 					else {
@@ -197,7 +217,7 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectionMappi
 					columnExpression = rootTableKeyColumnNames[columnPosition];
 				}
 
-				BasicValuedSingularAttributeMapping attributeMapping = MappingModelCreationHelper.buildBasicAttributeMapping(
+				attributeMapping = MappingModelCreationHelper.buildBasicAttributeMapping(
 						bootPropertyDescriptor.getName(),
 						valueMapping.getNavigableRole().append( bootPropertyDescriptor.getName() ),
 						attributeIndex,
@@ -206,14 +226,14 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectionMappi
 						(BasicType<?>) subtype,
 						containingTableExpression,
 						columnExpression,
-						selectable.isFormula(),
+						false,
 						selectable.getCustomReadExpression(),
 						selectable.getCustomWriteExpression(),
 						representationStrategy.resolvePropertyAccess( bootPropertyDescriptor ),
 						compositeType.getCascadeStyle( attributeIndex ),
 						creationProcess
 				);
-				addAttribute( attributeMapping );
+
 				columnPosition++;
 			}
 			else if ( subtype instanceof AnyType ) {
@@ -302,7 +322,7 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectionMappi
 					}
 				};
 
-				DiscriminatedAssociationAttributeMapping attributeMapping = new DiscriminatedAssociationAttributeMapping(
+				attributeMapping = new DiscriminatedAssociationAttributeMapping(
 						valueMapping.getNavigableRole().append( bootPropertyDescriptor.getName() ),
 						typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Object.class ),
 						this,
@@ -315,7 +335,6 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectionMappi
 						bootValueMapping,
 						creationProcess
 				);
-				addAttribute( attributeMapping );
 			}
 			else if ( subtype instanceof CompositeType ) {
 				final CompositeType subCompositeType = (CompositeType) subtype;
@@ -332,7 +351,7 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectionMappi
 					System.arraycopy( rootTableKeyColumnNames, columnPosition, subRootTableKeyColumnNames, 0, columnSpan );
 				}
 
-				EmbeddedAttributeMapping attributeMapping = MappingModelCreationHelper.buildEmbeddedAttributeMapping(
+				attributeMapping = MappingModelCreationHelper.buildEmbeddedAttributeMapping(
 						bootPropertyDescriptor.getName(),
 						attributeIndex,
 						bootPropertyDescriptor,
@@ -344,42 +363,51 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectionMappi
 						compositeType.getCascadeStyle( attributeIndex ),
 						creationProcess
 				);
-				addAttribute( attributeMapping );
+
 				columnPosition += columnSpan;
 			}
-			else {
-				final EntityPersister entityPersister = creationProcess
-						.getEntityPersister( bootDescriptor.getOwner().getEntityName() );
-				if ( subtype instanceof CollectionType ) {
-					PluralAttributeMapping attributeMapping = MappingModelCreationHelper.buildPluralAttributeMapping(
-							bootPropertyDescriptor.getName(),
-							attributeIndex,
-							bootPropertyDescriptor,
-							entityPersister,
-							representationStrategy.resolvePropertyAccess( bootPropertyDescriptor ),
-							compositeType.getCascadeStyle( attributeIndex ),
-							compositeType.getFetchMode( attributeIndex ),
-							creationProcess
-					);
-					addAttribute( attributeMapping );
-				}
-				else if ( subtype instanceof EntityType ) {
-					final int columnSpan = subtype.getColumnSpan( sessionFactory );
-					final ToOneAttributeMapping attributeMapping = MappingModelCreationHelper.buildSingularAssociationAttributeMapping(
-							bootPropertyDescriptor.getName(),
-							valueMapping.getNavigableRole().append( bootPropertyDescriptor.getName() ),
-							attributeIndex,
-							bootPropertyDescriptor,
-							entityPersister,
-							(EntityType) subtype,
-							getRepresentationStrategy().resolvePropertyAccess( bootPropertyDescriptor ),
-							compositeType.getCascadeStyle( attributeIndex ),
-							creationProcess
-					);
-					addAttribute( attributeMapping );
-					columnPosition += columnSpan;
-				}
+			else if ( subtype instanceof CollectionType ) {
+				final EntityPersister entityPersister = creationProcess.getEntityPersister( bootDescriptor.getOwner().getEntityName() );
+
+				attributeMapping = MappingModelCreationHelper.buildPluralAttributeMapping(
+						bootPropertyDescriptor.getName(),
+						attributeIndex,
+						bootPropertyDescriptor,
+						entityPersister,
+						representationStrategy.resolvePropertyAccess( bootPropertyDescriptor ),
+						compositeType.getCascadeStyle( attributeIndex),
+						compositeType.getFetchMode( attributeIndex ),
+						creationProcess
+				);
 			}
+			else if ( subtype instanceof EntityType ) {
+				final EntityPersister entityPersister = creationProcess.getEntityPersister( bootDescriptor.getOwner().getEntityName() );
+
+				attributeMapping = MappingModelCreationHelper.buildSingularAssociationAttributeMapping(
+						bootPropertyDescriptor.getName(),
+						valueMapping.getNavigableRole().append( bootPropertyDescriptor.getName() ),
+						attributeIndex,
+						bootPropertyDescriptor,
+						entityPersister,
+						(EntityType) subtype,
+						getRepresentationStrategy().resolvePropertyAccess( bootPropertyDescriptor ),
+						compositeType.getCascadeStyle( attributeIndex ),
+						creationProcess
+				);
+				columnPosition += bootPropertyDescriptor.getColumnSpan();
+			}
+			else {
+				throw new MappingException(
+						String.format(
+								Locale.ROOT,
+								"Unable to determine attribute nature : %s#%s",
+								bootDescriptor.getOwner().getEntityName(),
+								bootPropertyDescriptor.getName()
+						)
+				);
+			}
+
+			addAttribute( attributeMapping );
 
 			attributeIndex++;
 		}
@@ -392,11 +420,7 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectionMappi
 		return true;
 	}
 
-	private static String getTableIdentifierExpression(Table table, MappingModelCreationProcess creationProcess) {
-		final JdbcEnvironment jdbcEnvironment = creationProcess.getCreationContext()
-				.getMetadata()
-				.getDatabase()
-				.getJdbcEnvironment();
+	private static String getTableIdentifierExpression(Table table, JdbcEnvironment jdbcEnvironment) {
 		return jdbcEnvironment
 				.getQualifiedObjectNameFormatter().format(
 						table.getQualifiedTableName(),
@@ -410,18 +434,16 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectionMappi
 	}
 
 	private void addAttribute(AttributeMapping attributeMapping) {
-		if ( attributeMap.put( attributeMapping.getAttributeName(), attributeMapping ) == null ) {
-			attributes.add( attributeMapping );
-		}
-		else {
-			for ( ListIterator<AttributeMapping> iterator = attributes.listIterator(); iterator.hasNext(); ) {
-				final AttributeMapping existingMapping = iterator.next();
-				if ( existingMapping.getAttributeName().equals( attributeMapping.getAttributeName() ) ) {
-					iterator.set( attributeMapping );
-					break;
-				}
+		// check if we've already seen this attribute...
+		for ( int i = 0; i < attributeMappings.size(); i++ ) {
+			final AttributeMapping previous = attributeMappings.get( i );
+			if ( attributeMapping.getAttributeName().equals( previous.getAttributeName() ) ) {
+				attributeMappings.set( i, attributeMapping );
+				return;
 			}
 		}
+
+		attributeMappings.add( attributeMapping );
 	}
 
 	public EmbeddableValuedModelPart getEmbeddedValueMapping() {
@@ -471,7 +493,7 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectionMappi
 
 	@Override
 	public int getNumberOfFetchables() {
-		return attributeMap.size();
+		return attributeMappings.size();
 	}
 
 	@Override
@@ -507,13 +529,44 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectionMappi
 	}
 
 	@Override
+	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
+		if ( domainValue instanceof Object[] ) {
+			final Object[] values = (Object[]) domainValue;
+			assert values.length == attributeMappings.size();
+
+			final MutableInteger positionRef = new MutableInteger();
+			attributeMappings.forEach(
+					(attributeMapping) -> {
+						final int position = positionRef.getAndIncrement();
+						final Object attributeValue = values[ position ];
+						attributeMapping.breakDownJdbcValues( attributeValue, valueConsumer, session );
+					}
+			);
+		}
+		else {
+			attributeMappings.forEach(
+					(attributeMapping) -> {
+						final Object attributeValue = attributeMapping.getPropertyAccess().getGetter().get( domainValue );
+						attributeMapping.breakDownJdbcValues( attributeValue, valueConsumer, session );
+					}
+			);
+		}
+	}
+
+	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		Object[] result = new Object[attributes.size()];
-		for ( int i = 0; i < attributes.size(); i++ ) {
-			AttributeMapping mapping = attributes.get( i );
+		final Collection<AttributeMapping> attributeMappings = getAttributeMappings();
+
+		Object[] result = new Object[attributeMappings.size()];
+		int i = 0;
+		final Iterator<AttributeMapping> iterator = attributeMappings.iterator();
+		while ( iterator.hasNext() ) {
+			AttributeMapping mapping = iterator.next();
 			Object o = mapping.getPropertyAccess().getGetter().get( value );
 			result[i] = mapping.disassemble( o, session );
+			i++;
 		}
+
 		return result;
 	}
 
@@ -525,8 +578,9 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectionMappi
 			JdbcValuesConsumer consumer,
 			SharedSessionContractImplementor session) {
 		int span = 0;
-		for ( int i = 0; i < attributes.size(); i++ ) {
-			final AttributeMapping attributeMapping = attributes.get( i );
+
+		for ( int i = 0; i < attributeMappings.size(); i++ ) {
+			final AttributeMapping attributeMapping = attributeMappings.get( i );
 			final Object o = attributeMapping.getPropertyAccess().getGetter().get( value );
 			span += attributeMapping.forEachJdbcValue( o, clause, span + offset, consumer, session );
 		}
@@ -542,8 +596,8 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectionMappi
 			SharedSessionContractImplementor session) {
 		final Object[] values = (Object[]) value;
 		int span = 0;
-		for ( int i = 0; i < attributes.size(); i++ ) {
-			final AttributeMapping mapping = attributes.get( i );
+		for ( int i = 0; i < attributeMappings.size(); i++ ) {
+			final AttributeMapping mapping = attributeMappings.get( i );
 			span += mapping.forEachDisassembledJdbcValue( values[i], clause, span + offset, valuesConsumer, session );
 		}
 		return span;
@@ -566,34 +620,40 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectionMappi
 
 	@Override
 	public int getNumberOfAttributeMappings() {
-		return attributeMap.size();
+		return attributeMappings.size();
 	}
 
 	@Override
 	public AttributeMapping findAttributeMapping(String name) {
-		return attributeMap.get( name );
+		for ( int i = 0; i < attributeMappings.size(); i++ ) {
+			final AttributeMapping attr = attributeMappings.get( i );
+			if ( name.equals( attr.getAttributeName() ) ) {
+				return attr;
+			}
+		}
+		return null;
 	}
 
 	@Override
 	public List<AttributeMapping> getAttributeMappings() {
-		return attributes;
+		return attributeMappings;
 	}
 
 	@Override
 	public void forEachAttributeMapping(IndexedConsumer<AttributeMapping> consumer) {
-		for ( int i = 0; i < attributes.size(); i++ ) {
-			consumer.accept( i, attributes.get( i ) );
+		for ( int i = 0; i < attributeMappings.size(); i++ ) {
+			consumer.accept( i, attributeMappings.get( i ) );
 		}
 	}
 
 	@Override
 	public void visitAttributeMappings(Consumer<AttributeMapping> action) {
-		attributes.forEach( action );
+		attributeMappings.forEach( action );
 	}
 
 	@Override
 	public ModelPart findSubPart(String name, EntityMappingType treatTargetType) {
-		return attributeMap.get( name );
+		return findAttributeMapping( name );
 	}
 
 	@Override
@@ -605,8 +665,8 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectionMappi
 
 	public void setPropertyValues(Object compositeInstance, Object[] resolvedValues) {
 		// todo (6.0) : reflection optimizer...
-		for ( int i = 0; i < attributes.size(); i++ ) {
-			attributes.get( i )
+		for ( int i = 0; i < attributeMappings.size(); i++ ) {
+			attributeMappings.get( i )
 					.getAttributeMetadataAccess()
 					.resolveAttributeMetadata( null )
 					.getPropertyAccess()

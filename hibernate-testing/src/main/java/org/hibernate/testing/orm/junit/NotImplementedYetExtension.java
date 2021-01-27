@@ -7,10 +7,12 @@
 package org.hibernate.testing.orm.junit;
 
 import java.util.Locale;
+import java.util.Optional;
 
 import org.hibernate.NotImplementedYetException;
 
 import org.junit.jupiter.api.extension.AfterEachCallback;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;
 import org.junit.jupiter.api.extension.ExecutionCondition;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -18,59 +20,21 @@ import org.junit.jupiter.api.extension.TestExecutionExceptionHandler;
 
 import org.jboss.logging.Logger;
 
+import static org.hibernate.testing.orm.junit.FailureExpectedExtension.failureExpectedValidation;
+
 /**
  * JUnit 5 extension used to support {@link NotImplementedYet} handling
  *
  * @author Jan Schatteman
  */
 public class NotImplementedYetExtension
-		implements ExecutionCondition, AfterEachCallback, TestExecutionExceptionHandler {
+		implements ExecutionCondition, BeforeEachCallback, AfterEachCallback, TestExecutionExceptionHandler {
 
 	private static final Logger log = Logger.getLogger( NotImplementedYetExtension.class );
 
-	private static final String NOTIMPLEMENTED_STORE_KEY = "NOT_IMPLEMENTED";
-
-	@Override
-	public void afterEach(ExtensionContext context) throws Exception {
-		log.debugf( "#afterEach(%s)", context.getDisplayName() );
-
-		class NotImplementedYetExceptionExpected extends RuntimeException {
-			private NotImplementedYetExceptionExpected() {
-				super(
-						String.format(
-								Locale.ROOT,
-								"`%s#%s` is marked as '@NotImplementedYet' but did not throw a NotImplementedYetException.\n" +
-										" Either it should or, the tested functionality has been implemented, the Test passes," +
-										" and @NotImplementedYet should be removed",
-								context.getRequiredTestClass().getName(),
-								context.getRequiredTestMethod().getName()
-						)
-				);
-			}
-		}
-
-		Throwable throwable = context.getStore( getNamespace( context ) ).remove(
-				NOTIMPLEMENTED_STORE_KEY,
-				Throwable.class
-		);
-		if ( throwable == null ) {
-			throw new NotImplementedYetExceptionExpected();
-		}
-	}
-
-	@Override
-	public void handleTestExecutionException(ExtensionContext context, Throwable throwable) throws Throwable {
-		log.debugf( "#handleTestExecutionException(%s)", context.getDisplayName() );
-
-		// If an exception is thrown, then it needs to be of type NotImplementedYetException
-		context.getStore( getNamespace( context ) ).put( NOTIMPLEMENTED_STORE_KEY, throwable );
-		if ( throwable instanceof NotImplementedYetException ) {
-			log.debugf( "#Captured exception %s - ignoring it", throwable );
-			return;
-		}
-		// If not, rethrow
-		throw throwable;
-	}
+	private static final String IS_MARKED_STORE_KEY = "IS_MARKED";
+	private static final String IS_STRICT_STORE_KEY = "IS_STRICT";
+	private static final String EXCEPTION_STORE_KEY = "NOT_IMPLEMENTED";
 
 	@Override
 	public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext context) {
@@ -80,18 +44,128 @@ public class NotImplementedYetExtension
 			throw new RuntimeException( "Unable to determine how to handle given ExtensionContext : " + context.getDisplayName() );
 		}
 
+		log.debugf( "Evaluating context - %s [failureExpectedValidation = %s]", context.getDisplayName(), failureExpectedValidation );
+
 		// Test this in case some other annotation were extended with NotImplementedYetExtension
-		if ( !TestingUtil.hasEffectiveAnnotation( context, NotImplementedYet.class ) ) {
-			return ConditionEvaluationResult.disabled( context.getDisplayName() + " is not marked as `@NotImplementedYet`" );
+		if ( TestingUtil.hasEffectiveAnnotation( context, NotImplementedYet.class ) ) {
+			// The test is marked as `NotImplementedYet`...
+			if ( failureExpectedValidation ) {
+				log.debugf( "Executing test marked with `@NotImplementedYet` for validation" );
+				return ConditionEvaluationResult.enabled( "@NotImplementedYet validation" );
+			}
+			else {
+				return ConditionEvaluationResult.disabled( "Disabled : @NotImplementedYet" );
+			}
 		}
-		return ConditionEvaluationResult.enabled( "Always enabled" );
+		return ConditionEvaluationResult.enabled( "No @NotImplementedYet" );
 	}
 
-	private ExtensionContext.Namespace getNamespace(ExtensionContext context) {
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// BeforeEachCallback
+	//		- used to determine whether a test is considered as an expected
+	//			failure.  If so,
+
+	@Override
+	public void beforeEach(ExtensionContext context) {
+		log.tracef( "#beforeEach(%s)", context.getDisplayName() );
+
+		final Optional<NotImplementedYet> annRef = TestingUtil.findEffectiveAnnotation( context, NotImplementedYet.class );
+
+		final boolean isMarked = annRef.isPresent();
+		final boolean isStrict;
+		if ( isMarked ) {
+			final NotImplementedYet ann = annRef.get();
+			isStrict = ann.strict();
+		}
+		else {
+			isStrict = false;
+		}
+
+		log.debugf(
+				"Checking `%s` for @NotImplementedYet - isMarked = %s, isStrict = %s",
+				context.getDisplayName(),
+				isMarked,
+				isStrict
+		);
+
+		final ExtensionContext.Namespace namespace = generateNamespace( context );
+		context.getStore( namespace ).put( IS_MARKED_STORE_KEY, isMarked );
+		context.getStore( namespace ).put( IS_STRICT_STORE_KEY, isStrict );
+
+	}
+
+	@Override
+	public void afterEach(ExtensionContext context) {
+		log.debugf( "#afterEach(%s)", context.getDisplayName() );
+
+		final ExtensionContext.Namespace namespace = generateNamespace( context );
+		final ExtensionContext.Store store = context.getStore( namespace );
+
+		final Boolean isMarked = (Boolean) store.remove( IS_MARKED_STORE_KEY );
+		log.debugf( "Post-handling for @FailureExpected [%s] - %s", context.getDisplayName(), isMarked );
+
+		if ( isMarked == Boolean.TRUE ) {
+			final Throwable expectedFailure = (Throwable) store.remove( EXCEPTION_STORE_KEY );
+			final Boolean isStrict = (Boolean) store.remove( IS_STRICT_STORE_KEY );
+			log.debugf( "  >> Captured exception - %s", expectedFailure );
+
+			if ( expectedFailure == null ) {
+				// even though we expected a failure, the test did not fail
+				throw new NotImplementedYetExceptionExpected(
+						context.getRequiredTestClass().getName(),
+						context.getRequiredTestMethod().getName(),
+						isStrict
+				);
+			}
+		}
+	}
+
+	@Override
+	public void handleTestExecutionException(ExtensionContext context, Throwable throwable) throws Throwable {
+		log.debugf( "#handleTestExecutionException(%s)", context.getDisplayName() );
+
+		final ExtensionContext.Namespace namespace = generateNamespace( context );
+		final ExtensionContext.Store store = context.getStore( namespace );
+
+		final Boolean isMarked = (Boolean) store.get( IS_MARKED_STORE_KEY );
+		final Boolean isStrict = (Boolean) store.get( IS_STRICT_STORE_KEY );
+
+		if ( isMarked ) {
+			if ( throwable instanceof NotImplementedYetException || ! isStrict ) {
+				store.put( EXCEPTION_STORE_KEY, throwable );
+
+				log.debugf( "#Captured exception %s - ignoring it as expected", throwable );
+				return;
+			}
+		}
+
+		// Otherwise, rethrow
+		throw throwable;
+	}
+
+	private ExtensionContext.Namespace generateNamespace(ExtensionContext context) {
 		return ExtensionContext.Namespace.create(
 				getClass().getName(),
 				context.getRequiredTestMethod().getClass(),
 				context.getRequiredTestMethod().getName()
 		);
+	}
+
+	public static class NotImplementedYetExceptionExpected extends RuntimeException {
+
+		private NotImplementedYetExceptionExpected(String testClassName, String testMethodName, boolean strict) {
+			super(
+					String.format(
+							Locale.ROOT,
+							"`%s#%s` is marked with `@NotImplementedYet`, however the test did not " +
+									"fail (%s).  If the functionality has been implemented the `@NotImplementedYet` " +
+									"annotation should be removed",
+							testClassName,
+							testMethodName,
+							strict
+					)
+			);
+		}
 	}
 }

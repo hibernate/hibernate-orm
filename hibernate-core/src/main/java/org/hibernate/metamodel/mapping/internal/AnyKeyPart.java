@@ -203,6 +203,11 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 	}
 
 	@Override
+	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
+		valueConsumer.consume( domainValue, this );
+	}
+
+	@Override
 	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
 		action.accept( offset, jdbcMapping );
 		return getJdbcTypeCount();

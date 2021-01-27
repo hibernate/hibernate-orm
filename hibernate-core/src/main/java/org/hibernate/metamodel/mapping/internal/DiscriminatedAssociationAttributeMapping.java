@@ -12,6 +12,7 @@ import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.mapping.Property;
@@ -133,6 +134,11 @@ public class DiscriminatedAssociationAttributeMapping
 	@Override
 	public int getJdbcTypeCount() {
 		return getDiscriminatorPart().getJdbcTypeCount() + getKeyPart().getJdbcTypeCount();
+	}
+
+	@Override
+	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
+		discriminatorMapping.getDiscriminatorPart().breakDownJdbcValues( domainValue, valueConsumer, session );
 	}
 
 	@Override

@@ -6,9 +6,7 @@
  */
 package org.hibernate.query.results.complete;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.function.BiFunction;
 
 import org.hibernate.LockMode;
@@ -16,13 +14,10 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.FetchBuilder;
-import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.ResultBuilderBasicValued;
 import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
-import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
@@ -76,10 +71,9 @@ public class CompleteResultBuilderEntityStandard implements CompleteResultBuilde
 						null,
 						false,
 						lockMode,
-						impl.getSqlAliasBaseManager(),
-						impl.getSqlAstCreationState().getSqlExpressionResolver(),
 						() -> predicate -> {},
-						impl.getSqlAstCreationState().getCreationContext()
+						impl,
+						impl.getCreationContext()
 				)
 		);
 

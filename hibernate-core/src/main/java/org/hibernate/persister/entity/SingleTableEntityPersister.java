@@ -30,7 +30,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.DynamicFilterAliasGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.util.MarkerObject;
-import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Column;
@@ -48,8 +47,8 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.InFragment;
 import org.hibernate.sql.Insert;
 import org.hibernate.sql.SelectFragment;
-import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
@@ -903,25 +902,22 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			String explicitSourceAlias,
 			boolean canUseInnerJoins,
 			LockMode lockMode,
-			SqlAliasBaseGenerator aliasBaseGenerator,
-			SqlExpressionResolver sqlExpressionResolver,
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
+			SqlAstCreationState creationState,
 			SqlAstCreationContext creationContext) {
 		final TableGroup tableGroup = super.createRootTableGroup(
 				navigablePath,
 				explicitSourceAlias,
 				canUseInnerJoins,
 				lockMode,
-				aliasBaseGenerator,
-				sqlExpressionResolver,
 				additionalPredicateCollectorAccess,
-				creationContext
+				creationState, creationContext
 		);
 
 		if ( needsDiscriminator() ) {
 			final Predicate discriminatorPredicate = createDiscriminatorPredicate(
 					tableGroup,
-					sqlExpressionResolver,
+					creationState.getSqlExpressionResolver(),
 					creationContext
 			);
 			additionalPredicateCollectorAccess.get().accept( discriminatorPredicate );

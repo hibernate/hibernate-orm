@@ -19,12 +19,9 @@ import java.sql.NClob;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
-import java.util.function.Supplier;
 import javax.persistence.CacheRetrieveMode;
 import javax.persistence.CacheStoreMode;
 import javax.persistence.EntityGraph;
@@ -112,10 +109,8 @@ import org.hibernate.event.spi.ResolveNaturalIdEventListener;
 import org.hibernate.event.spi.SaveOrUpdateEvent;
 import org.hibernate.event.spi.SaveOrUpdateEventListener;
 import org.hibernate.graph.GraphSemantic;
-import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.internal.RootGraphImpl;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.internal.util.CacheModeHelper;
@@ -123,7 +118,10 @@ import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.jpa.internal.util.LockOptionsHelper;
-import org.hibernate.loader.ast.spi.NaturalIdLoader;
+import org.hibernate.loader.access.IdentifierLoadAccessImpl;
+import org.hibernate.loader.access.LoadAccessContext;
+import org.hibernate.loader.access.NaturalIdLoadAccessImpl;
+import org.hibernate.loader.access.SimpleNaturalIdLoadAccessImpl;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
@@ -164,7 +162,7 @@ import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_STORE_MODE;
  */
 public class SessionImpl
 		extends AbstractSessionImpl
-		implements SessionImplementor, EventSource {
+		implements SessionImplementor, LoadAccessContext, EventSource {
 	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( SessionImpl.class );
 
 	// Defaults to null which means the properties are the default - as defined in FastSessionServices#defaultSessionProperties
@@ -566,11 +564,21 @@ public class SessionImpl
 	}
 
 	@Override
-	protected void delayedAfterCompletion() {
+	public void delayedAfterCompletion() {
 		if ( getTransactionCoordinator() instanceof JtaTransactionCoordinatorImpl ) {
 			( (JtaTransactionCoordinatorImpl) getTransactionCoordinator() ).getSynchronizationCallbackCoordinator()
 					.processAnyDelayedAfterCompletion();
 		}
+	}
+
+	@Override
+	public void pulseTransactionCoordinator() {
+		super.pulseTransactionCoordinator();
+	}
+
+	@Override
+	public void checkOpenOrWaitingForAutoClose() {
+		super.checkOpenOrWaitingForAutoClose();
 	}
 
 	// saveOrUpdate() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1111,12 +1119,12 @@ public class SessionImpl
 
 	@Override
 	public <T> IdentifierLoadAccessImpl<T> byId(String entityName) {
-		return new IdentifierLoadAccessImpl<>( entityName );
+		return new IdentifierLoadAccessImpl<>( this, requireEntityPersister( entityName ) );
 	}
 
 	@Override
 	public <T> IdentifierLoadAccessImpl<T> byId(Class<T> entityClass) {
-		return new IdentifierLoadAccessImpl<>( entityClass );
+		return new IdentifierLoadAccessImpl<>( this, requireEntityPersister( entityClass ) );
 	}
 
 	@Override
@@ -1131,22 +1139,22 @@ public class SessionImpl
 
 	@Override
 	public <T> NaturalIdLoadAccess<T> byNaturalId(String entityName) {
-		return new NaturalIdLoadAccessImpl<>( entityName );
+		return new NaturalIdLoadAccessImpl<>( this, requireEntityPersister( entityName ) );
 	}
 
 	@Override
 	public <T> NaturalIdLoadAccess<T> byNaturalId(Class<T> entityClass) {
-		return new NaturalIdLoadAccessImpl<>( entityClass );
+		return new NaturalIdLoadAccessImpl<>( this, requireEntityPersister( entityClass ) );
 	}
 
 	@Override
 	public <T> SimpleNaturalIdLoadAccess<T> bySimpleNaturalId(String entityName) {
-		return new SimpleNaturalIdLoadAccessImpl<>( entityName );
+		return new SimpleNaturalIdLoadAccessImpl<>( this, requireEntityPersister( entityName ) );
 	}
 
 	@Override
 	public <T> SimpleNaturalIdLoadAccess<T> bySimpleNaturalId(Class<T> entityClass) {
-		return new SimpleNaturalIdLoadAccessImpl<>( entityClass );
+		return new SimpleNaturalIdLoadAccessImpl<>( this, requireEntityPersister( entityClass ) );
 	}
 
 	@Override
@@ -1159,7 +1167,8 @@ public class SessionImpl
 		return new NaturalIdMultiLoadAccessStandard<>( requireEntityPersister( entityName ), this );
 	}
 
-	private void fireLoad(LoadEvent event, LoadType loadType) {
+	@Override
+	public void fireLoad(LoadEvent event, LoadType loadType) {
 		checkOpenOrWaitingForAutoClose();
 		fireLoadNoChecks( event, loadType );
 		delayedAfterCompletion();
@@ -2111,408 +2120,12 @@ public class SessionImpl
 		transactionCoordinator.removeObserver( transactionObserver );
 	}
 
-	private class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T> {
-		private final EntityPersister entityPersister;
-
-		private LockOptions lockOptions;
-		private CacheMode cacheMode;
-		private RootGraphImplementor<T> rootGraph;
-		private GraphSemantic graphSemantic;
-
-		private IdentifierLoadAccessImpl(EntityPersister entityPersister) {
-			this.entityPersister = entityPersister;
-		}
-
-		private IdentifierLoadAccessImpl(String entityName) {
-			this( requireEntityPersister( entityName ) );
-		}
-
-		private IdentifierLoadAccessImpl(Class<T> entityClass) {
-			this( requireEntityPersister( entityClass ) );
-		}
-
-		@Override
-		public final IdentifierLoadAccessImpl<T> with(LockOptions lockOptions) {
-			this.lockOptions = lockOptions;
-			return this;
-		}
-
-		@Override
-		public IdentifierLoadAccess<T> with(CacheMode cacheMode) {
-			this.cacheMode = cacheMode;
-			return this;
-		}
-
-		@Override
-		public IdentifierLoadAccess<T> with(RootGraph<T> graph, GraphSemantic semantic) {
-			this.rootGraph = (RootGraphImplementor<T>) graph;
-			this.graphSemantic = semantic;
-			return this;
-		}
-
-		@Override
-		public final T getReference(Object id) {
-			return perform( () -> doGetReference( id ) );
-		}
-
-		protected T perform(Supplier<T> executor) {
-			CacheMode sessionCacheMode = getCacheMode();
-			boolean cacheModeChanged = false;
-			if ( cacheMode != null ) {
-				// naive check for now...
-				// todo : account for "conceptually equal"
-				if ( cacheMode != sessionCacheMode ) {
-					setCacheMode( cacheMode );
-					cacheModeChanged = true;
-				}
-			}
-
-			try {
-				if ( graphSemantic != null ) {
-					if ( rootGraph == null ) {
-						throw new IllegalArgumentException( "Graph semantic specified, but no RootGraph was supplied" );
-					}
-					loadQueryInfluencers.getEffectiveEntityGraph().applyGraph( rootGraph, graphSemantic );
-				}
-
-				try {
-					return executor.get();
-				}
-				finally {
-					if ( graphSemantic != null ) {
-						loadQueryInfluencers.getEffectiveEntityGraph().clear();
-					}
-				}
-			}
-			finally {
-				if ( cacheModeChanged ) {
-					// change it back
-					setCacheMode( sessionCacheMode );
-				}
-			}
-		}
-
-		@SuppressWarnings("unchecked")
-		protected T doGetReference(Object id) {
-			if ( this.lockOptions != null ) {
-				LoadEvent event = new LoadEvent( id, entityPersister.getEntityName(), lockOptions, SessionImpl.this, getReadOnlyFromLoadQueryInfluencers() );
-				fireLoad( event, LoadEventListener.LOAD );
-				return (T) event.getResult();
-			}
-
-			LoadEvent event = new LoadEvent( id, entityPersister.getEntityName(), false, SessionImpl.this, getReadOnlyFromLoadQueryInfluencers() );
-			boolean success = false;
-			try {
-				fireLoad( event, LoadEventListener.LOAD );
-				if ( event.getResult() == null ) {
-					getFactory().getEntityNotFoundDelegate().handleEntityNotFound(
-							entityPersister.getEntityName(),
-							id
-					);
-				}
-				success = true;
-				return (T) event.getResult();
-			}
-			finally {
-				afterOperation( success );
-			}
-		}
-
-		@Override
-		public final T load(Object id) {
-			return perform( () -> doLoad( id ) );
-		}
-
-		@Override
-		public Optional<T> loadOptional(Object id) {
-			return Optional.ofNullable( perform( () -> doLoad( id ) ) );
-		}
-
-		@SuppressWarnings("unchecked")
-		protected final T doLoad(Object id) {
-			if ( this.lockOptions != null ) {
-				LoadEvent event = new LoadEvent( id, entityPersister.getEntityName(), lockOptions, SessionImpl.this, getReadOnlyFromLoadQueryInfluencers() );
-				fireLoad( event, LoadEventListener.GET );
-				return (T) event.getResult();
-			}
-
-			LoadEvent event = new LoadEvent( id, entityPersister.getEntityName(), false, SessionImpl.this, getReadOnlyFromLoadQueryInfluencers() );
-			boolean success = false;
-			try {
-				fireLoad( event, LoadEventListener.GET );
-				success = true;
-			}
-			catch (ObjectNotFoundException e) {
-				// if session cache contains proxy for non-existing object
-			}
-			finally {
-				afterOperation( success );
-			}
-			return (T) event.getResult();
-		}
-	}
-
 	private EntityPersister requireEntityPersister(Class entityClass) {
 		return getFactory().getMetamodel().locateEntityPersister( entityClass );
 	}
 
 	private EntityPersister requireEntityPersister(String entityName) {
 		return getFactory().getMetamodel().locateEntityPersister( entityName );
-	}
-
-	private abstract class BaseNaturalIdLoadAccessImpl<T> {
-		private final EntityPersister entityPersister;
-		private LockOptions lockOptions;
-		private boolean synchronizationEnabled = true;
-
-		private BaseNaturalIdLoadAccessImpl(EntityPersister entityPersister) {
-			this.entityPersister = entityPersister;
-
-			if ( !entityPersister.hasNaturalIdentifier() ) {
-				throw new HibernateException(
-						String.format( "Entity [%s] did not define a natural id", entityPersister.getEntityName() )
-				);
-			}
-		}
-
-		public LockOptions getLockOptions() {
-			return lockOptions;
-		}
-
-		public boolean isSynchronizationEnabled() {
-			return synchronizationEnabled;
-		}
-
-		public BaseNaturalIdLoadAccessImpl<T> with(LockOptions lockOptions) {
-			this.lockOptions = lockOptions;
-			return this;
-		}
-
-		protected void synchronizationEnabled(boolean synchronizationEnabled) {
-			this.synchronizationEnabled = synchronizationEnabled;
-		}
-
-		protected final Object resolveNaturalId(Map<String, Object> naturalIdParameters) {
-			performAnyNeededCrossReferenceSynchronizations();
-
-			final Object resolvedId = entityPersister()
-					.getNaturalIdMapping()
-					.getNaturalIdLoader()
-					.resolveNaturalIdToId( naturalIdParameters, SessionImpl.this );
-
-			return resolvedId == PersistenceContext.NaturalIdHelper.INVALID_NATURAL_ID_REFERENCE
-					? null
-					: resolvedId;
-		}
-
-		protected void performAnyNeededCrossReferenceSynchronizations() {
-			if ( !synchronizationEnabled ) {
-				// synchronization (this process) was disabled
-				return;
-			}
-			if ( entityPersister.getEntityMetamodel().hasImmutableNaturalId() ) {
-				// only mutable natural-ids need this processing
-				return;
-			}
-			if ( !isTransactionInProgress() ) {
-				// not in a transaction so skip synchronization
-				return;
-			}
-
-			final PersistenceContext persistenceContext = getPersistenceContextInternal();
-			final boolean debugEnabled = log.isDebugEnabled();
-			for ( Object pk : persistenceContext.getNaturalIdHelper()
-					.getCachedPkResolutions( entityPersister ) ) {
-				final EntityKey entityKey = generateEntityKey( pk, entityPersister );
-				final Object entity = persistenceContext.getEntity( entityKey );
-				final EntityEntry entry = persistenceContext.getEntry( entity );
-
-				if ( entry == null ) {
-					if ( debugEnabled ) {
-						log.debug(
-								"Cached natural-id/pk resolution linked to null EntityEntry in persistence context : "
-										+ MessageHelper.infoString( entityPersister, pk, getFactory() )
-						);
-					}
-					continue;
-				}
-
-				if ( !entry.requiresDirtyCheck( entity ) ) {
-					continue;
-				}
-
-				// MANAGED is the only status we care about here...
-				if ( entry.getStatus() != Status.MANAGED ) {
-					continue;
-				}
-
-				persistenceContext.getNaturalIdHelper().handleSynchronization(
-						entityPersister,
-						pk,
-						entity
-				);
-			}
-		}
-
-		protected final IdentifierLoadAccess getIdentifierLoadAccess() {
-			final IdentifierLoadAccessImpl identifierLoadAccess = new IdentifierLoadAccessImpl( entityPersister );
-			if ( this.lockOptions != null ) {
-				identifierLoadAccess.with( lockOptions );
-			}
-			return identifierLoadAccess;
-		}
-
-		protected EntityPersister entityPersister() {
-			return entityPersister;
-		}
-	}
-
-	private class NaturalIdLoadAccessImpl<T> extends BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadAccess<T> {
-		private final Map<String, Object> naturalIdParameters = new LinkedHashMap<>();
-
-		private NaturalIdLoadAccessImpl(EntityPersister entityPersister) {
-			super( entityPersister );
-		}
-
-		private NaturalIdLoadAccessImpl(String entityName) {
-			this( requireEntityPersister( entityName ) );
-		}
-
-		private NaturalIdLoadAccessImpl(Class entityClass) {
-			this( requireEntityPersister( entityClass ) );
-		}
-
-		@Override
-		public NaturalIdLoadAccessImpl<T> with(LockOptions lockOptions) {
-			return (NaturalIdLoadAccessImpl<T>) super.with( lockOptions );
-		}
-
-		@Override
-		public NaturalIdLoadAccess<T> using(String attributeName, Object value) {
-			naturalIdParameters.put( attributeName, value );
-			return this;
-		}
-
-		@Override
-		public NaturalIdLoadAccess<T> using(Object... mappings) {
-			CollectionHelper.collectMapEntries( naturalIdParameters::put, mappings );
-			return this;
-		}
-
-		@Override
-		public NaturalIdLoadAccessImpl<T> setSynchronizationEnabled(boolean synchronizationEnabled) {
-			super.synchronizationEnabled( synchronizationEnabled );
-			return this;
-		}
-
-		@Override
-		@SuppressWarnings("unchecked")
-		public final T getReference() {
-			final Object entityId = resolveNaturalId( this.naturalIdParameters );
-			if ( entityId == null ) {
-				return null;
-			}
-			return (T) this.getIdentifierLoadAccess().getReference( entityId );
-		}
-
-		@Override
-		@SuppressWarnings("unchecked")
-		public final T load() {
-			autoFlushIfRequired( (Set) CollectionHelper.setOf( entityPersister().getQuerySpaces() ) );
-			final Object entityId = resolveNaturalId( this.naturalIdParameters );
-			if ( entityId == null ) {
-				return null;
-			}
-			try {
-				return (T) this.getIdentifierLoadAccess().load( entityId );
-			}
-			catch (EntityNotFoundException | ObjectNotFoundException enf) {
-				// OK
-			}
-			return null;
-		}
-
-		@Override
-		public Optional<T> loadOptional() {
-			return Optional.ofNullable( load() );
-		}
-	}
-
-	private class SimpleNaturalIdLoadAccessImpl<T>
-			extends BaseNaturalIdLoadAccessImpl<T>
-			implements SimpleNaturalIdLoadAccess<T>, NaturalIdLoader.LoadOptions {
-		private final String naturalIdAttributeName;
-
-		private SimpleNaturalIdLoadAccessImpl(EntityPersister entityPersister) {
-			super( entityPersister );
-
-			if ( entityPersister.getNaturalIdentifierProperties().length != 1 ) {
-				throw new HibernateException(
-						String.format(
-								"Entity [%s] did not define a simple natural id",
-								entityPersister.getEntityName()
-						)
-				);
-			}
-
-			final int naturalIdAttributePosition = entityPersister.getNaturalIdentifierProperties()[0];
-			this.naturalIdAttributeName = entityPersister.getPropertyNames()[naturalIdAttributePosition];
-		}
-
-		private SimpleNaturalIdLoadAccessImpl(String entityName) {
-			this( requireEntityPersister( entityName ) );
-		}
-
-		@Override
-		public LockOptions getLockOptions() {
-			return super.getLockOptions();
-		}
-
-		@Override
-		public boolean isSynchronizationEnabled() {
-			return super.isSynchronizationEnabled();
-		}
-
-		private SimpleNaturalIdLoadAccessImpl(Class entityClass) {
-			this( requireEntityPersister( entityClass ) );
-		}
-
-		@Override
-		public final SimpleNaturalIdLoadAccessImpl<T> with(LockOptions lockOptions) {
-			return (SimpleNaturalIdLoadAccessImpl<T>) super.with( lockOptions );
-		}
-
-		private Map<String, Object> getNaturalIdParameters(Object naturalIdValue) {
-			return Collections.singletonMap( naturalIdAttributeName, naturalIdValue );
-		}
-
-		@Override
-		public SimpleNaturalIdLoadAccessImpl<T> setSynchronizationEnabled(boolean synchronizationEnabled) {
-			super.synchronizationEnabled( synchronizationEnabled );
-			return this;
-		}
-
-		@Override
-		@SuppressWarnings("unchecked")
-		public T getReference(Object naturalIdValue) {
-			final Object entityId = entityPersister().getNaturalIdLoader().resolveNaturalIdToId( naturalIdValue, SessionImpl.this );
-			if ( entityId == null ) {
-				return null;
-			}
-			return (T) this.getIdentifierLoadAccess().getReference( entityId );
-		}
-
-		@Override
-		public T load(Object naturalIdValue) {
-			//noinspection unchecked
-			autoFlushIfRequired( (Set) CollectionHelper.setOf( entityPersister().getQuerySpaces() ) );
-			return (T) entityPersister().getNaturalIdLoader().load( naturalIdValue, this, SessionImpl.this );
-		}
-
-		@Override
-		public Optional<T> loadOptional(Serializable naturalIdValue) {
-			return Optional.ofNullable( load( naturalIdValue ) );
-		}
 	}
 
 	@Override

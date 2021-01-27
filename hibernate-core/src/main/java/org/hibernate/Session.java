@@ -853,8 +853,8 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	 *
 	 * @return load delegate for loading the specified entity type by natural id
 	 *
-	 * @throws HibernateException If the specified entityClass cannot be resolved as a mapped entity, or if the
-	 * entity does not define a natural-id or if its natural-id is made up of multiple attributes.
+	 * @throws HibernateException If the specified entityClass cannot be resolved as a mapped entity or if the
+	 * entity does not define a natural-id
 	 */
 	<T> SimpleNaturalIdLoadAccess<T> bySimpleNaturalId(String entityName);
 
@@ -866,8 +866,8 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	 *
 	 * @return load delegate for loading the specified entity type by natural id
 	 *
-	 * @throws HibernateException If the specified entityClass cannot be resolved as a mapped entity, or if the
-	 * entity does not define a natural-id or if its natural-id is made up of multiple attributes.
+	 * @throws HibernateException If the specified entityClass cannot be resolved as a mapped entity or if the
+	 * entity does not define a natural-id
 	 */
 	<T> SimpleNaturalIdLoadAccess<T> bySimpleNaturalId(Class<T> entityClass);
 

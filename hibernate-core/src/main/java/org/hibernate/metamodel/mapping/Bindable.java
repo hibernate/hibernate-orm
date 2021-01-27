@@ -8,11 +8,13 @@ package org.hibernate.metamodel.mapping;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.sql.ast.Clause;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Contract for things at the domain/mapping level that can be bound into a JDBC

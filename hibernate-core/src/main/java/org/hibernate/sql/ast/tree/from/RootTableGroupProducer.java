@@ -12,9 +12,8 @@ import java.util.function.Supplier;
 import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 
 /**
@@ -32,8 +31,6 @@ public interface RootTableGroupProducer extends TableGroupProducer, ModelPartCon
 			String explicitSourceAlias,
 			boolean canUseInnerJoins,
 			LockMode lockMode,
-			SqlAliasBaseGenerator aliasBaseGenerator,
-			SqlExpressionResolver sqlExpressionResolver,
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
-			SqlAstCreationContext creationContext);
+			SqlAstCreationState creationState, SqlAstCreationContext creationContext);
 }

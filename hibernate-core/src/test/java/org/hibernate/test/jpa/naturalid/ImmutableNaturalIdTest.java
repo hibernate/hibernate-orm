@@ -10,7 +10,6 @@ import javax.persistence.PersistenceException;
 
 import org.junit.Test;
 
-import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
@@ -24,7 +23,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
- * copied from {@link org.hibernate.test.naturalid.immutable.ImmutableNaturalIdTest}
+ * copied from {@link org.hibernate.orm.test.mapping.naturalid.immutable.ImmutableNaturalIdTest}
  *
  * @author Steve Ebersole
  */

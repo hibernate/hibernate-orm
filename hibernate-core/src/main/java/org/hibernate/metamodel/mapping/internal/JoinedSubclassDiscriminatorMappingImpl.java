@@ -8,6 +8,7 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.util.List;
 
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -75,6 +76,11 @@ public class JoinedSubclassDiscriminatorMappingImpl extends AbstractEntityDiscri
 	@Override
 	public NavigableRole getNavigableRole() {
 		return navigableRole;
+	}
+
+	@Override
+	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
+		valueConsumer.consume( domainValue, this );
 	}
 
 	@Override

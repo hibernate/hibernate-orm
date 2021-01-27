@@ -9,6 +9,8 @@ package org.hibernate.loader.ast.internal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
@@ -16,21 +18,27 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.loader.NaturalIdPostLoadListener;
-import org.hibernate.loader.NaturalIdPreLoadListener;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
-import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.mapping.internal.SimpleNaturalIdMapping;
+import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
+import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
+import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 
@@ -41,11 +49,8 @@ public class SimpleNaturalIdLoader<T> extends AbstractNaturalIdLoader<T> {
 
 	public SimpleNaturalIdLoader(
 			SimpleNaturalIdMapping naturalIdMapping,
-			NaturalIdPreLoadListener preLoadListener,
-			NaturalIdPostLoadListener postLoadListener,
-			EntityMappingType entityDescriptor,
-			MappingModelCreationProcess creationProcess) {
-		super( naturalIdMapping, preLoadListener, postLoadListener, entityDescriptor, creationProcess );
+			EntityMappingType entityDescriptor) {
+		super( naturalIdMapping, entityDescriptor );
 	}
 
 	@Override
@@ -54,114 +59,71 @@ public class SimpleNaturalIdLoader<T> extends AbstractNaturalIdLoader<T> {
 	}
 
 	@Override
-	protected void applyNaturalIdAsJdbcParameters(
-			Object naturalIdToLoad,
-			List<JdbcParameter> jdbcParameters,
-			JdbcParameterBindings jdbcParamBindings,
+	protected void applyNaturalIdRestriction(
+			Object bindValue,
+			TableGroup rootTableGroup,
+			Consumer<Predicate> predicateConsumer,
+			BiConsumer<JdbcParameter, JdbcParameterBinding> jdbcParameterConsumer,
+			LoaderSqlAstCreationState sqlAstCreationState,
 			SharedSessionContractImplementor session) {
-		assert jdbcParameters.size() == 1;
-
-		final Object bindableValue = naturalIdMapping().normalizeIncomingValue( naturalIdToLoad, session );
-
-		final SingularAttributeMapping attributeMapping = naturalIdMapping().getNaturalIdAttributes().get( 0 );
-		jdbcParamBindings.registerParametersForEachJdbcValue(
-				bindableValue,
-				Clause.WHERE,
-				attributeMapping,
-				jdbcParameters,
-				session
-		);
-	}
-
-	@Override
-	protected Object resolveNaturalIdBindValue(Object naturalIdToLoad, SharedSessionContractImplementor session) {
-		return naturalIdMapping().normalizeIncomingValue( naturalIdToLoad, session );
+		if ( bindValue == null ) {
+			naturalIdMapping().getAttribute().forEachSelection(
+					(selectionIndex, selectionMapping) -> {
+						final Expression columnReference = resolveColumnReference(
+								rootTableGroup,
+								selectionMapping,
+								sqlAstCreationState.getSqlExpressionResolver(),
+								session.getFactory()
+						);
+						predicateConsumer.accept( new NullnessPredicate( columnReference ) );
+					}
+			);
+		}
+		else {
+			naturalIdMapping().getAttribute().breakDownJdbcValues(
+					bindValue,
+					(jdbcValue, jdbcValueMapping) -> {
+						final Expression columnReference = resolveColumnReference(
+								rootTableGroup,
+								jdbcValueMapping,
+								sqlAstCreationState.getSqlExpressionResolver(),
+								session.getFactory()
+						);
+						if ( jdbcValue == null ) {
+							predicateConsumer.accept( new NullnessPredicate( columnReference ) );
+						}
+						else {
+							final JdbcParameter jdbcParameter = new JdbcParameterImpl( jdbcValueMapping.getJdbcMapping() );
+							final ComparisonPredicate predicate = new ComparisonPredicate(
+									columnReference,
+									ComparisonOperator.EQUAL,
+									jdbcParameter
+							);
+							predicateConsumer.accept( predicate );
+							jdbcParameterConsumer.accept(
+									jdbcParameter,
+									new JdbcParameterBindingImpl( jdbcValueMapping.getJdbcMapping(), jdbcValue )
+							);
+						}
+					},
+					session
+			);
+		}
 	}
 
 	@Override
 	public Object resolveIdToNaturalId(Object id, SharedSessionContractImplementor session) {
-		final SessionFactoryImplementor sessionFactory = session.getFactory();
+		final Object rawValue = super.resolveIdToNaturalId( id, session );
+		assert rawValue instanceof Object[];
 
-		final List<JdbcParameter> jdbcParameters = new ArrayList<>();
-		final SelectStatement sqlSelect = LoaderSelectBuilder.createSelect(
-				entityDescriptor(),
-				naturalIdMapping().getNaturalIdAttributes(),
-				entityDescriptor().getIdentifierMapping(),
-				null,
-				1,
-				session.getLoadQueryInfluencers(),
-				LockOptions.READ,
-				jdbcParameters::add,
-				sessionFactory
-		);
-
-		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
-		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
-		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
-
-		final JdbcParameterBindings jdbcParamBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
-		jdbcParamBindings.registerParametersForEachJdbcValue(
-				id,
-				Clause.WHERE,
-				entityDescriptor().getIdentifierMapping(),
-				jdbcParameters,
-				session
-		);
-		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory, sqlSelect )
-				.translate( jdbcParamBindings, QueryOptions.NONE );
-
-		final List<Object[]> results = session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
-				jdbcSelect,
-				jdbcParamBindings,
-				new ExecutionContext() {
-					@Override
-					public SharedSessionContractImplementor getSession() {
-						return session;
-					}
-
-					@Override
-					public QueryOptions getQueryOptions() {
-						return QueryOptions.NONE;
-					}
-
-					@Override
-					public QueryParameterBindings getQueryParameterBindings() {
-						return QueryParameterBindings.NO_PARAM_BINDINGS;
-					}
-
-					@Override
-					public Callback getCallback() {
-						return afterLoadAction -> {
-						};
-					}
-				},
-				row -> row,
-				true
-		);
-
-		if ( results.size() > 1 ) {
-			throw new HibernateException(
-					String.format(
-							"Resolving id to natural-id returned more that one row : %s #%s",
-							entityDescriptor().getEntityName(),
-							id
-					)
-			);
-		}
-
-		return results.get( 0 );
-	}
-
-	@Override
-	protected boolean isSimple() {
-		return true;
+		return ( (Object[]) rawValue )[0];
 	}
 
 	@Override
 	public Object resolveNaturalIdToId(
 			Object naturalIdValue,
 			SharedSessionContractImplementor session) {
-		final Object bindValue = naturalIdMapping().normalizeIncomingValue( naturalIdValue, session );
+		final Object bindValue = naturalIdMapping().normalizeInput( naturalIdValue, session );
 
 		final SessionFactoryImplementor sessionFactory = session.getFactory();
 		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
@@ -180,7 +142,6 @@ public class SimpleNaturalIdLoader<T> extends AbstractNaturalIdLoader<T> {
 				jdbcParameters::add,
 				sessionFactory
 		);
-		assert jdbcParameters.size() == 1;
 
 		final JdbcParameterBindings jdbcParamBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
 

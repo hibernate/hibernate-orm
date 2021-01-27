@@ -17,7 +17,7 @@ import javax.persistence.Table;
 import org.hibernate.NaturalIdLoadAccess;
 import org.hibernate.NaturalIdMultiLoadAccess;
 import org.hibernate.annotations.NaturalId;
-import org.hibernate.loader.ast.spi.NaturalIdLoader;
+import org.hibernate.loader.ast.spi.NaturalIdLoadOptions;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.MappingMetamodel;
@@ -123,11 +123,11 @@ public class CompoundNaturalIdTests {
 					final NaturalIdMapping naturalIdMapping = accountMapping.getNaturalIdMapping();
 
 					// test load by array
-					Object id = naturalIdMapping.getNaturalIdLoader().resolveNaturalIdToId( VALUE_ARRAY, session );
+					Object id = accountMapping.getNaturalIdLoader().resolveNaturalIdToId( VALUE_ARRAY, session );
 					assertThat( id, is( 1 ) );
 
 					// and by Map
-					id = naturalIdMapping.getNaturalIdLoader().resolveNaturalIdToId( VALUE_NAP, session );
+					id = accountMapping.getNaturalIdLoader().resolveNaturalIdToId( VALUE_NAP, session );
 					assertThat( id, is( 1 ) );
 				}
 		);
@@ -159,10 +159,10 @@ public class CompoundNaturalIdTests {
 					final NaturalIdMapping naturalIdMapping = accountMapping.getNaturalIdMapping();
 
 					// test load by array
-					naturalIdMapping.getNaturalIdLoader().load( VALUE_ARRAY, NaturalIdLoader.LoadOptions.NONE, session );
+					accountMapping.getNaturalIdLoader().load( VALUE_ARRAY, NaturalIdLoadOptions.NONE, session );
 
 					// and by Map
-					naturalIdMapping.getNaturalIdLoader().load( VALUE_NAP, NaturalIdLoader.LoadOptions.NONE, session );
+					accountMapping.getNaturalIdLoader().load( VALUE_NAP, NaturalIdLoadOptions.NONE, session );
 				}
 		);
 	}

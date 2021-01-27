@@ -8,6 +8,7 @@ package org.hibernate.sql.results.internal.domain;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.Association;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -178,6 +179,11 @@ public class CircularFetchImpl implements BiDirectionalFetch, Association {
 	@Override
 	public ForeignKeyDescriptor getForeignKeyDescriptor() {
 		return ( (Association) fetchParent ).getForeignKeyDescriptor();
+	}
+
+	@Override
+	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
+		fetchable.breakDownJdbcValues( domainValue, valueConsumer, session );
 	}
 
 	@Override

@@ -31,7 +31,7 @@ public class FailureExpectedExtension
 	private static final String EXPECTED_FAILURE_STORE_KEY = "EXPECTED_FAILURE";
 
 
-	private static final boolean failureExpectedValidation;
+	public static final boolean failureExpectedValidation;
 
 	static {
 		failureExpectedValidation = Boolean.getBoolean( FailureExpected.VALIDATE_FAILURE_EXPECTED );

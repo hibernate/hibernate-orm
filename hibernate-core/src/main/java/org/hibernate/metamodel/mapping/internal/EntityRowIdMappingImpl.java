@@ -8,11 +8,13 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.util.function.BiConsumer;
 
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityRowIdMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
+import org.hibernate.metamodel.mapping.SelectionMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
@@ -25,12 +27,13 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.JavaObjectType;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Nathan Xu
  */
-public class EntityRowIdMappingImpl implements EntityRowIdMapping {
+public class EntityRowIdMappingImpl implements EntityRowIdMapping, SelectionMapping {
 	private final String rowIdName;
 	private final EntityMappingType declaringType;
 	private final String tableExpression;
@@ -135,4 +138,38 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping {
 			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
 	}
 
+	@Override
+	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
+		valueConsumer.consume( domainValue, this );
+	}
+
+	@Override
+	public String getContainingTableExpression() {
+		return tableExpression;
+	}
+
+	@Override
+	public String getSelectionExpression() {
+		return rowIdName;
+	}
+
+	@Override
+	public String getCustomReadExpression() {
+		return rowIdName;
+	}
+
+	@Override
+	public String getCustomWriteExpression() {
+		return null;
+	}
+
+	@Override
+	public boolean isFormula() {
+		return true;
+	}
+
+	@Override
+	public JdbcMapping getJdbcMapping() {
+		return StandardBasicTypes.INTEGER;
+	}
 }

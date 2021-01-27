@@ -11,6 +11,7 @@ import java.util.function.BiConsumer;
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.SelectionConsumer;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -211,6 +212,11 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 			DomainResultCreationState creationState,
 			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
 		selectionConsumer.accept( resolveSqlSelection( tableGroup, creationState ), getJdbcMapping() );
+	}
+
+	@Override
+	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
+		valueConsumer.consume( domainValue, this );
 	}
 
 	private SqlSelection resolveSqlSelection(TableGroup tableGroup, DomainResultCreationState creationState) {

@@ -81,7 +81,8 @@ import org.jboss.logging.Logger;
 /**
  * @author Steve Ebersole
  */
-public class PluralAttributeMappingImpl extends AbstractAttributeMapping
+public class PluralAttributeMappingImpl
+		extends AbstractAttributeMapping
 		implements PluralAttributeMapping, FetchOptions {
 	private static final Logger log = Logger.getLogger( PluralAttributeMappingImpl.class );
 
@@ -922,17 +923,16 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping
 			String explicitSourceAlias,
 			boolean canUseInnerJoins,
 			LockMode lockMode,
-			SqlAliasBaseGenerator aliasBaseGenerator,
-			SqlExpressionResolver sqlExpressionResolver,
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
+			SqlAstCreationState creationState,
 			SqlAstCreationContext creationContext) {
 		if ( getCollectionDescriptor().isOneToMany() ) {
 			return createOneToManyTableGroup(
 					navigablePath,
 					canUseInnerJoins,
 					lockMode,
-					aliasBaseGenerator,
-					sqlExpressionResolver,
+					creationState.getSqlAliasBaseGenerator(),
+					creationState.getSqlExpressionResolver(),
 					creationContext
 			);
 		}
@@ -941,8 +941,8 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping
 					navigablePath,
 					canUseInnerJoins,
 					lockMode,
-					aliasBaseGenerator,
-					sqlExpressionResolver,
+					creationState.getSqlAliasBaseGenerator(),
+					creationState.getSqlExpressionResolver(),
 					creationContext
 			);
 		}
@@ -1003,6 +1003,11 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping
 			DomainResultCreationState creationState,
 			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
 		elementDescriptor.applySqlSelections( navigablePath, tableGroup, creationState, selectionConsumer );
+	}
+
+	@Override
+	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override

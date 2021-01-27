@@ -215,6 +215,7 @@ import org.hibernate.sql.ast.tree.expression.ExtractUnit;
 import org.hibernate.sql.ast.tree.expression.Format;
 import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.ast.tree.expression.NullnessLiteral;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
 import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
@@ -529,9 +530,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					sqmStatement.getRoot().getAlias(),
 					false,
 					LockMode.WRITE,
-					getSqlAliasBaseGenerator(),
-					getSqlExpressionResolver(),
 					() -> predicate -> additionalRestrictions = predicate,
+					this,
 					getCreationContext()
 			);
 
@@ -725,9 +725,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					statement.getRoot().getAlias(),
 					false,
 					LockMode.WRITE,
-					stem -> getSqlAliasBaseGenerator().createSqlAliasBase( stem ),
-					getSqlExpressionResolver(),
 					() -> predicate -> additionalRestrictions = predicate,
+					this,
 					getCreationContext()
 			);
 			getFromClauseAccess().registerTableGroup( rootPath, rootTableGroup );
@@ -804,9 +803,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					sqmStatement.getTarget().getExplicitAlias(),
 					false,
 					LockMode.WRITE,
-					stem -> getSqlAliasBaseGenerator().createSqlAliasBase( stem ),
-					getSqlExpressionResolver(),
 					() -> predicate -> additionalRestrictions = predicate,
+					this,
 					getCreationContext()
 			);
 
@@ -867,9 +865,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					sqmStatement.getTarget().getExplicitAlias(),
 					false,
 					LockMode.WRITE,
-					stem -> getSqlAliasBaseGenerator().createSqlAliasBase( stem ),
-					getSqlExpressionResolver(),
 					() -> predicate -> additionalRestrictions = predicate,
+					this,
 					getCreationContext()
 			);
 
@@ -1543,9 +1540,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						sqmRoot.getExplicitAlias(),
 						true,
 						LockMode.NONE,
-						sqlAliasBaseManager,
-						sqlExpressionResolver,
 						() -> predicate -> {},
+						this,
 						creationContext
 				);
 				final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
@@ -1611,12 +1607,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					sqmRoot.getExplicitAlias(),
 					true,
 					LockMode.NONE,
-					sqlAliasBaseManager,
-					sqlExpressionResolver,
 					() -> predicate -> additionalRestrictions = SqlAstTreeHelper.combinePredicates(
 							additionalRestrictions,
 							predicate
 					),
+					this,
 					creationContext
 			);
 		}
@@ -1764,12 +1759,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				sqmJoin.getExplicitAlias(),
 				true,
 				determineLockMode( sqmJoin.getExplicitAlias() ),
-				sqlAliasBaseManager,
-				getSqlExpressionResolver(),
 				() -> predicate -> additionalRestrictions = SqlAstTreeHelper.combinePredicates(
 						additionalRestrictions,
 						predicate
 				),
+				this,
 				getCreationContext()
 		);
 
@@ -1795,12 +1789,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				sqmJoin.getExplicitAlias(),
 				true,
 				determineLockMode( sqmJoin.getExplicitAlias() ),
-				sqlAliasBaseManager,
-				getSqlExpressionResolver(),
 				() -> predicate -> additionalRestrictions = SqlAstTreeHelper.combinePredicates(
 						additionalRestrictions,
 						predicate
 				),
+				this,
 				getCreationContext()
 		);
 		getFromClauseIndex().register( sqmJoin, tableGroup );
@@ -2028,7 +2021,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public Expression visitLiteral(SqmLiteral<?> literal) {
 		if ( literal instanceof SqmLiteralNull ) {
-			return new QueryLiteral<>( null, (BasicValuedMapping) inferableTypeAccessStack.getCurrent().get() );
+			return new NullnessLiteral( inferableTypeAccessStack.getCurrent().get() );
 		}
 
 		return new QueryLiteral<>(
@@ -3349,9 +3342,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					null,
 					true,
 					LockOptions.NONE.getLockMode(),
-					sqlAliasBaseManager,
-					getSqlExpressionResolver(),
 					() -> querySpec::applyPredicate,
+					this,
 					creationContext
 			);
 

@@ -14,11 +14,13 @@ import java.util.Set;
 
 import org.hibernate.EntityMode;
 import org.hibernate.boot.MappingException;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmCompositeIdType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmEntityDiscriminatorType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmGeneratorSpecificationType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmMultiTenancyType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmPolymorphismEnum;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmRootEntityType;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSimpleIdType;
 import org.hibernate.boot.model.Caching;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.naming.EntityNaming;
@@ -73,11 +75,13 @@ public class EntityHierarchySourceImpl implements EntityHierarchySource {
 	}
 
 	private static IdentifierSource interpretIdentifierSource(RootEntitySourceImpl rootEntitySource) {
-		if ( rootEntitySource.jaxbEntityMapping().getId() == null
-				&& rootEntitySource.jaxbEntityMapping().getCompositeId() == null ) {
+		final JaxbHbmSimpleIdType simpleId = rootEntitySource.jaxbEntityMapping().getId();
+		final JaxbHbmCompositeIdType compositeId = rootEntitySource.jaxbEntityMapping().getCompositeId();
+
+		if ( simpleId == null && compositeId == null ) {
 			throw new MappingException(
 					String.format(
-							Locale.ENGLISH,
+							Locale.ROOT,
 							"Entity [%s] did not define an identifier",
 							rootEntitySource.getEntityNamingSource().getEntityName()
 					),
@@ -85,15 +89,15 @@ public class EntityHierarchySourceImpl implements EntityHierarchySource {
 			);
 		}
 
-		if ( rootEntitySource.jaxbEntityMapping().getId() != null ) {
+		if ( simpleId != null ) {
 			return new IdentifierSourceSimpleImpl( rootEntitySource );
 		}
 		else {
 			// if we get here, we should have a composite identifier.  Just need
 			// to determine if it is aggregated, or non-aggregated...
 
-			if ( rootEntitySource.jaxbEntityMapping().getCompositeId().isMapped() ) {
-				if ( StringHelper.isEmpty( rootEntitySource.jaxbEntityMapping().getCompositeId().getClazz() ) ) {
+			if ( compositeId.isMapped() ) {
+				if ( StringHelper.isEmpty( compositeId.getClazz() ) ) {
 					throw new MappingException(
 							"mapped composite identifier must name component class to use.",
 							rootEntitySource.origin()
@@ -101,23 +105,17 @@ public class EntityHierarchySourceImpl implements EntityHierarchySource {
 				}
 			}
 
-			if ( StringHelper.isEmpty( rootEntitySource.jaxbEntityMapping().getCompositeId().getClazz() ) ) {
-				if ( StringHelper.isEmpty( rootEntitySource.jaxbEntityMapping().getCompositeId().getName() ) ) {
+			if ( StringHelper.isEmpty( compositeId.getName() ) ) {
+				if ( compositeId.isMapped() && StringHelper.isEmpty( compositeId.getClazz() ) ) {
 					throw new MappingException(
-							"dynamic composite-id must specify name",
+							"mapped composite identifier must name component class to use.",
 							rootEntitySource.origin()
 					);
 				}
-
-				// we have a non-aggregated id without an IdClass
-				return new IdentifierSourceNonAggregatedCompositeImpl( rootEntitySource );
-			}
-			else if ( rootEntitySource.jaxbEntityMapping().getCompositeId().isMapped() ) {
-				// we have a non-aggregated id with an IdClass
 				return new IdentifierSourceNonAggregatedCompositeImpl( rootEntitySource );
 			}
 			else {
-				if ( rootEntitySource.jaxbEntityMapping().getCompositeId().isMapped() ) {
+				if ( compositeId.isMapped() ) {
 					throw new MappingException(
 							"cannot combine mapped=\"true\" with specified name",
 							rootEntitySource.origin()

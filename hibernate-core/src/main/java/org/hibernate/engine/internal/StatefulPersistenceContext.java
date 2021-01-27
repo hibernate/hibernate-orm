@@ -2004,8 +2004,11 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			}
 
 			persister = locateProperPersister( persister );
-			final Object naturalIdValues = extractNaturalIdValues( naturalId, persister );
-			final Object previousNaturalIdValues = previousNaturalId == null ? null : extractNaturalIdValues( previousNaturalId, persister );
+//			final Object naturalIdValues = extractNaturalIdValues( naturalId, persister );
+			final Object naturalIdValues = naturalId;
+
+//			final Object previousNaturalIdValues = previousNaturalId == null ? null : extractNaturalIdValues( previousNaturalId, persister );
+			final Object previousNaturalIdValues = previousNaturalId;
 
 			managedSharedResolutions( persister, id, naturalIdValues, previousNaturalIdValues, source );
 		}
@@ -2182,7 +2185,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		@Override
-		public Object findCachedNaturalIdResolution(EntityPersister persister, Object[] naturalIdValues) {
+		public Object findCachedNaturalIdResolution(EntityPersister persister, Object naturalIdValues) {
 			return getNaturalIdXrefDelegate().findResolution( locateProperPersister( persister ), naturalIdValues );
 		}
 

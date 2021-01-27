@@ -11,17 +11,19 @@ import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.metamodel.mapping.AssociationKey;
-import org.hibernate.metamodel.mapping.SelectionConsumer;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.SelectionConsumer;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
@@ -59,7 +61,8 @@ import org.hibernate.sql.results.internal.domain.CircularFetchImpl;
 /**
  * @author Steve Ebersole
  */
-public class ToOneAttributeMapping extends AbstractSingularAttributeMapping
+public class ToOneAttributeMapping
+		extends AbstractSingularAttributeMapping
 		implements EntityValuedFetchable, EntityAssociationMapping, TableGroupJoinProducer {
 
 	public enum Cardinality {
@@ -212,24 +215,6 @@ public class ToOneAttributeMapping extends AbstractSingularAttributeMapping
 	@Override
 	public NavigableRole getNavigableRole() {
 		return navigableRole;
-	}
-
-	@Override
-	public int forEachJdbcValue(
-			Object value,
-			Clause clause,
-			int offset,
-			JdbcValuesConsumer consumer,
-			SharedSessionContractImplementor session) {
-		return getForeignKeyDescriptor().forEachJdbcValue(
-				getAssociatedEntityMappingType()
-						.getIdentifierMapping()
-						.getIdentifier( value, session ),
-				clause,
-				offset,
-				consumer,
-				session
-		);
 	}
 
 	@Override
@@ -629,6 +614,14 @@ public class ToOneAttributeMapping extends AbstractSingularAttributeMapping
 	}
 
 	@Override
+	public void breakDownJdbcValues(
+			Object domainValue,
+			JdbcValueConsumer valueConsumer,
+			SharedSessionContractImplementor session) {
+		foreignKeyDescriptor.breakDownJdbcValues( domainValue, valueConsumer, session );
+	}
+
+	@Override
 	public int forEachSelection(int offset, SelectionConsumer consumer) {
 		if ( isKeyReferringSide ) {
 			return foreignKeyDescriptor.visitReferringColumns( offset, consumer );
@@ -636,5 +629,30 @@ public class ToOneAttributeMapping extends AbstractSingularAttributeMapping
 		else {
 			return 0;
 		}
+	}
+
+	@Override
+	public int getJdbcTypeCount() {
+		return foreignKeyDescriptor.getJdbcTypeCount();
+	}
+
+	@Override
+	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+		return foreignKeyDescriptor.forEachJdbcType( offset, action );
+	}
+
+	@Override
+	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+		return foreignKeyDescriptor.disassemble( value, session );
+	}
+
+	@Override
+	public int forEachDisassembledJdbcValue(Object value, Clause clause, int offset, JdbcValuesConsumer valuesConsumer, SharedSessionContractImplementor session) {
+		return foreignKeyDescriptor.forEachDisassembledJdbcValue( value, clause, offset, valuesConsumer, session );
+	}
+
+	@Override
+	public int forEachJdbcValue(Object value, Clause clause, int offset, JdbcValuesConsumer consumer, SharedSessionContractImplementor session) {
+		return foreignKeyDescriptor.forEachJdbcValue( value, clause, offset, consumer, session );
 	}
 }

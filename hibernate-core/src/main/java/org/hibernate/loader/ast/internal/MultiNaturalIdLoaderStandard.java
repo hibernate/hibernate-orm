@@ -17,7 +17,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoadOptions;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.sql.results.LoadingLogger;
 
 /**
@@ -31,7 +30,7 @@ public class MultiNaturalIdLoaderStandard<E> implements MultiNaturalIdLoader<E> 
 
 	private final EntityMappingType entityDescriptor;
 
-	public MultiNaturalIdLoaderStandard(EntityMappingType entityDescriptor, MappingModelCreationProcess creationProcess) {
+	public MultiNaturalIdLoaderStandard(EntityMappingType entityDescriptor) {
 		this.entityDescriptor = entityDescriptor;
 	}
 
@@ -75,7 +74,7 @@ public class MultiNaturalIdLoaderStandard<E> implements MultiNaturalIdLoader<E> 
 				(naturalId, session1) -> {
 					// `naturalId` here is the one passed in by the API as part of the values array
 					// todo (6.0) : use this to help create the ordered results
-					return entityDescriptor.getNaturalIdMapping().normalizeIncomingValue( naturalId, session );
+					return entityDescriptor.getNaturalIdMapping().normalizeInput( naturalId, session );
 				},
 				session.getLoadQueryInfluencers(),
 				lockOptions,

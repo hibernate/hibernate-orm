@@ -11,18 +11,16 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.mapping.IndexedConsumer;
-import org.hibernate.metamodel.mapping.SelectionConsumer;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.SelectionConsumer;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBasicImpl;
@@ -124,6 +122,11 @@ public class EmbeddedAttributeMapping
 	@Override
 	public int forEachSelection(int offset, SelectionConsumer consumer) {
 		return getEmbeddableTypeDescriptor().forEachSelection( offset, consumer );
+	}
+
+	@Override
+	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
+		getEmbeddableTypeDescriptor().breakDownJdbcValues( domainValue, valueConsumer, session );
 	}
 
 	@Override

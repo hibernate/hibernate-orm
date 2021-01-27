@@ -6,21 +6,26 @@
  */
 package org.hibernate.loader.ast.internal;
 
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.loader.NaturalIdPostLoadListener;
-import org.hibernate.loader.NaturalIdPreLoadListener;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.CompoundNaturalIdMapping;
-import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
-import org.hibernate.sql.ast.Clause;
+import org.hibernate.query.ComparisonOperator;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
-import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.exec.internal.JdbcParameterImpl;
+import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 
 /**
  * NaturalIdLoader implementation for compound natural-ids
@@ -29,65 +34,70 @@ public class CompoundNaturalIdLoader<T> extends AbstractNaturalIdLoader<T> {
 
 	public CompoundNaturalIdLoader(
 			CompoundNaturalIdMapping naturalIdMapping,
-			NaturalIdPreLoadListener preLoadListener,
-			NaturalIdPostLoadListener postLoadListener,
-			EntityMappingType entityDescriptor,
-			MappingModelCreationProcess creationProcess) {
-		super( naturalIdMapping, preLoadListener, postLoadListener, entityDescriptor, creationProcess );
+			EntityMappingType entityDescriptor) {
+		super( naturalIdMapping, entityDescriptor );
 	}
 
 	@Override
-	protected Object resolveNaturalIdBindValue(Object naturalIdValue, SharedSessionContractImplementor session) {
-		// the "real" form as an array, although we also accept here a Map and reduce it to
-		// the appropriately ordered array
-		if ( naturalIdValue instanceof Object[] ) {
-			return naturalIdValue;
-		}
-
-		final List<SingularAttributeMapping> attributes = naturalIdMapping().getNaturalIdAttributes();
-		final Object[] naturalId = new Object[ attributes.size() ];
-
-		if ( naturalIdValue instanceof Map ) {
-			final Map<String,?> valueMap = (Map<String,?>) naturalIdValue;
-			for ( int i = 0; i < attributes.size(); i++ ) {
-				final SingularAttributeMapping attributeMapping = attributes.get( i );
-				naturalId[ i ] = valueMap.get( attributeMapping.getAttributeName() );
-			}
-			return naturalId;
-		}
-
-		throw new IllegalArgumentException( "Unexpected natural-id reference [" + naturalIdValue + "; expecting array or Map" );
-	}
-
-	@Override
-	protected void applyNaturalIdAsJdbcParameters(
-			Object naturalIdToLoad,
-			List<JdbcParameter> jdbcParameters,
-			JdbcParameterBindings jdbcParamBindings,
+	protected void applyNaturalIdRestriction(
+			Object bindValue,
+			TableGroup rootTableGroup,
+			Consumer<Predicate> predicateConsumer,
+			BiConsumer<JdbcParameter, JdbcParameterBinding> jdbcParameterConsumer,
+			LoaderSqlAstCreationState sqlAstCreationState,
 			SharedSessionContractImplementor session) {
-		assert naturalIdToLoad instanceof Object[];
-		final Object[] naturalIdValueArray = (Object[]) naturalIdToLoad;
+		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
+		final SessionFactoryImplementor factory = session.getFactory();
 
-		int offset = 0;
+		if ( bindValue == null ) {
+			final List<SingularAttributeMapping> naturalIdAttributes = naturalIdMapping().getNaturalIdAttributes();
+			for ( int i = 0; i < naturalIdAttributes.size(); i++ ) {
+				naturalIdAttributes.get( i ).forEachSelection(
+						(selectionIndex, selectionMapping) -> {
+							final Expression columnRef = resolveColumnReference(
+									rootTableGroup,
+									selectionMapping,
+									sqlExpressionResolver,
+									factory
+							);
+							predicateConsumer.accept( new NullnessPredicate( columnRef ) );
+						}
+				);
+			}
 
-		for ( int i = 0; i < naturalIdMapping().getNaturalIdAttributes().size(); i++ ) {
-			final SingularAttributeMapping attrMapping = naturalIdMapping().getNaturalIdAttributes().get( i );
-			offset += jdbcParamBindings.registerParametersForEachJdbcValue(
-					naturalIdValueArray[i],
-					Clause.WHERE,
-					offset,
-					attrMapping,
-					jdbcParameters,
-					session
-			);
+			// EARLY EXIT!!
+			return;
 		}
 
-		// make sure we've exhausted all JDBC parameters
-		assert offset == jdbcParameters.size();
+		naturalIdMapping().breakDownJdbcValues(
+				bindValue,
+				(jdbcValue, jdbcValueMapping) -> {
+					final Expression columnReference = resolveColumnReference(
+							rootTableGroup,
+							jdbcValueMapping,
+							sqlExpressionResolver,
+							factory
+					);
+
+					if ( jdbcValue == null ) {
+						predicateConsumer.accept( new NullnessPredicate( columnReference ) );
+					}
+					else {
+						final JdbcParameter jdbcParameter = new JdbcParameterImpl( jdbcValueMapping.getJdbcMapping() );
+						final ComparisonPredicate predicate = new ComparisonPredicate(
+								columnReference,
+								ComparisonOperator.EQUAL,
+								jdbcParameter
+						);
+						predicateConsumer.accept( predicate );
+						jdbcParameterConsumer.accept(
+								jdbcParameter,
+								new JdbcParameterBindingImpl( jdbcValueMapping.getJdbcMapping(), jdbcValue )
+						);
+					}
+				},
+				session
+		);
 	}
 
-	@Override
-	protected boolean isSimple() {
-		return false;
-	}
 }

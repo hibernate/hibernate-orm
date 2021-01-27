@@ -7,7 +7,6 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import java.io.Serializable;
-import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.engine.spi.EntityKey;
@@ -114,6 +113,19 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 							.set( entity, propertyValue, factory );
 				}
 		);
+	}
+
+	@Override
+	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
+		assert domainValue instanceof Object[];
+
+		final Object[] values = (Object[]) domainValue;
+		assert values.length == idAttributeMappings.size();
+
+		for ( int i = 0; i < idAttributeMappings.size(); i++ ) {
+			final SingularAttributeMapping attribute = idAttributeMappings.get( i );
+			attribute.breakDownJdbcValues( values[ i ], valueConsumer, session );
+		}
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

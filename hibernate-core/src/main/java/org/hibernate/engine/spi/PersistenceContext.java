@@ -898,7 +898,7 @@ public interface PersistenceContext {
 		 * 		{@link PersistenceContext.NaturalIdHelper#INVALID_NATURAL_ID_REFERENCE},
 		 * 		or {@code null}.
 		 */
-		Object findCachedNaturalIdResolution(EntityPersister persister, Object[] naturalIdValues);
+		Object findCachedNaturalIdResolution(EntityPersister persister, Object naturalIdValues);
 
 		/**
 		 * Find all the locally cached primary key cross-reference entries for the given persister.

@@ -16,7 +16,6 @@ import javax.persistence.OneToOne;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.Type;
 
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.AssertionFailure;
 import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.HEMLogging;
@@ -233,51 +232,46 @@ public class AttributeFactory {
 				final Component component = (Component) typeContext.getHibernateValue();
 				final EmbeddableTypeImpl<Y> embeddableType;
 
-				if ( component.getComponentClass() != null
-						|| component.getComponentClassName() != null ) {
+				final EmbeddableRepresentationStrategy representationStrategy = context.getTypeConfiguration()
+						.getMetadataBuildingContext()
+						.getBuildingOptions()
+						.getManagedTypeRepresentationResolver()
+						.resolveStrategy( component, context.getRuntimeModelCreationContext() );
+
+				if ( component.isDynamic() ) {
+					final JavaTypeDescriptor javaTypeDescriptor = context.getJavaTypeDescriptorRegistry().getDescriptor( Map.class );
+
+					embeddableType = new EmbeddableTypeImpl<>(
+							javaTypeDescriptor,
+							representationStrategy,
+							true,
+							context.getJpaMetamodel()
+					);
+				}
+				else {
 					// we should have a non-dynamic embeddable
+					assert component.getComponentClassName() != null;
+					final Class<Y> embeddableClass = component.getComponentClass();
 
-					final Class embeddableClass;
-					if ( component.getComponentClass() != null ) {
-						embeddableClass = component.getComponentClass();
-					}
-					else {
-						embeddableClass = context.getTypeConfiguration()
-								.getServiceRegistry()
-								.getService( ClassLoaderService.class )
-								.classForName( component.getComponentClassName() );
-					}
-
-					final EmbeddableDomainType cached = context.locateEmbeddable( embeddableClass );
+					final EmbeddableDomainType<Y> cached = context.locateEmbeddable( embeddableClass );
 					if ( cached != null ) {
 						return cached;
 					}
 
 					final JavaTypeDescriptorRegistry registry = context.getTypeConfiguration()
 							.getJavaTypeDescriptorRegistry();
-					final JavaTypeDescriptor javaTypeDescriptor = registry.resolveDescriptor( embeddableClass );
-
-					final EmbeddableRepresentationStrategy representationStrategy = context.getTypeConfiguration()
-							.getMetadataBuildingContext()
-							.getBuildingOptions()
-							.getManagedTypeRepresentationResolver()
-							.resolveStrategy( component, context.getRuntimeModelCreationContext() );
+					final JavaTypeDescriptor<Y> javaTypeDescriptor = registry.resolveDescriptor( embeddableClass );
 
 					embeddableType = new EmbeddableTypeImpl<>(
 							javaTypeDescriptor,
 							representationStrategy,
+							false,
 							context.getJpaMetamodel()
 					);
 
 					context.registerEmbeddableType( embeddableType, component );
 
 					return embeddableType;
-				}
-				else {
-					embeddableType = new EmbeddableTypeImpl(
-							component.getRoleName(),
-							context.getJpaMetamodel()
-					);
 				}
 
 				final EmbeddableTypeImpl.InFlightAccess<Y> inFlightAccess = embeddableType.getInFlightAccess();

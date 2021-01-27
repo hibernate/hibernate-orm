@@ -104,6 +104,13 @@ public interface ModelPart extends MappingModelExpressable {
 		return 0;
 	}
 
+	@FunctionalInterface
+	interface JdbcValueConsumer {
+		void consume(Object value, SelectionMapping jdbcValueMapping);
+	}
+
+	void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session);
+
 	EntityMappingType findContainingEntityMapping();
 
 	default boolean areEqual(Object one, Object other, SharedSessionContractImplementor session) {

@@ -268,4 +268,9 @@ public class BasicValuedSingularAttributeMapping
 		consumer.accept( offset, this );
 		return getJdbcTypeCount();
 	}
+
+	@Override
+	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
+		valueConsumer.consume( disassemble( domainValue, session ), this );
+	}
 }

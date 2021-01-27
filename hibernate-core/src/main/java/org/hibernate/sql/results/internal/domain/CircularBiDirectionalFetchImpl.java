@@ -150,6 +150,11 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Assoc
 	}
 
 	@Override
+	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
+		fetchable.breakDownJdbcValues( domainValue, valueConsumer, session );
+	}
+
+	@Override
 	public Fetch generateFetch(
 			FetchParent fetchParent,
 			NavigablePath fetchablePath,

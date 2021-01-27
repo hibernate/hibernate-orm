@@ -33,7 +33,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.IdentityGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.StaticFilterAliasGenerator;
-import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.internal.util.collections.SingletonIterator;
@@ -46,9 +45,8 @@ import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.SelectFragment;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
-import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.UnionTableGroup;
@@ -229,11 +227,10 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			String explicitSourceAlias,
 			boolean canUseInnerJoins,
 			LockMode lockMode,
-			SqlAliasBaseGenerator aliasBaseGenerator,
-			SqlExpressionResolver sqlExpressionResolver,
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
+			SqlAstCreationState creationState,
 			SqlAstCreationContext creationContext) {
-		final SqlAliasBase sqlAliasBase = aliasBaseGenerator.createSqlAliasBase( getSqlAliasStem() );
+		final SqlAliasBase sqlAliasBase = creationState.getSqlAliasBaseGenerator().createSqlAliasBase( getSqlAliasStem() );
 
 		final TableReference tableReference = resolvePrimaryTableReference(sqlAliasBase);
 

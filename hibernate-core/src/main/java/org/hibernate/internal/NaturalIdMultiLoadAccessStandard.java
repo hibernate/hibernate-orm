@@ -112,7 +112,7 @@ public class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAc
 			}
 
 			try {
-				return entityDescriptor.getNaturalIdMapping().getMultiNaturalIdLoader().multiLoad( ids, this, session );
+				return (List<T>) entityDescriptor.getMultiNaturalIdLoader().multiLoad( ids, this, session );
 			}
 			finally {
 				if ( graphSemantic != null ) {

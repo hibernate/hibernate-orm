@@ -262,6 +262,11 @@ public class BasicValuedCollectionPart
 	}
 
 	@Override
+	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
+		valueConsumer.consume( domainValue, this );
+	}
+
+	@Override
 	public int forEachDisassembledJdbcValue(
 			Object value,
 			Clause clause,

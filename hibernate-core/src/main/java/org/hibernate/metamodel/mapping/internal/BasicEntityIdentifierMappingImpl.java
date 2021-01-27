@@ -135,6 +135,11 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 	}
 
 	@Override
+	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
+		valueConsumer.consume( domainValue, this );
+	}
+
+	@Override
 	public EntityMappingType findContainingEntityMapping() {
 		return entityPersister;
 	}

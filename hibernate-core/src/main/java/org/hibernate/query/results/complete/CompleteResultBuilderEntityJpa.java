@@ -83,9 +83,8 @@ public class CompleteResultBuilderEntityJpa implements CompleteResultBuilderEnti
 							null,
 							false,
 							lockMode,
-							impl.getSqlAliasBaseManager(),
-							impl.getSqlAstCreationState().getSqlExpressionResolver(),
 							() -> predicate -> {},
+							impl.getSqlAstCreationState(),
 							impl.getSqlAstCreationState().getCreationContext()
 					)
 			);

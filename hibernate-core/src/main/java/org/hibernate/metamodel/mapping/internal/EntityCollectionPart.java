@@ -12,6 +12,7 @@ import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.CollectionPart;
@@ -176,6 +177,11 @@ public class EntityCollectionPart
 	@Override
 	public int forEachSelection(int offset, SelectionConsumer consumer) {
 		return entityMappingType.forEachSelection( offset, consumer );
+	}
+
+	@Override
+	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
+		fkTargetModelPart.breakDownJdbcValues( domainValue, valueConsumer, session );
 	}
 
 	@Override

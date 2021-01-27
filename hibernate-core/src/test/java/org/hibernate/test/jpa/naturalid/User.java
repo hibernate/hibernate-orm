@@ -11,7 +11,7 @@ package org.hibernate.test.jpa.naturalid;
  * {@inheritDoc}
  *
  * @author Steve Ebersole
- * (copied from org.hibernate.test.naturalid.immutable.User)
+ * (copied from org.hibernate.orm.test.mapping.naturalid.immutable.User)
  */
 public class User implements java.io.Serializable {
 

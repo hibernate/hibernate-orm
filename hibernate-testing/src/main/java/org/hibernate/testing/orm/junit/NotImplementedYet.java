@@ -13,6 +13,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.hibernate.NotImplementedYetException;
+
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -43,4 +45,10 @@ public @interface NotImplementedYet {
 	 * A version expectation by when this feature is supposed to become implemented
 	 */
 	String expectedVersion() default "";
+
+	/**
+	 * Generally this handles tests failing due to {@link NotImplementedYetException} exceptions
+	 * being thrown (strict).  Setting this to false allows it to handle failure for any reason.
+	 */
+	boolean strict() default true;
 }

@@ -29,7 +29,7 @@ import org.jboss.logging.Logger;
 public class CachingRegionFactory extends RegionFactoryTemplate {
 	private static final Logger LOG = Logger.getLogger( CachingRegionFactory.class.getName() );
 
-	public static String DEFAULT_ACCESSTYPE = "DefaultAccessType";
+	public static final String DEFAULT_ACCESSTYPE = "DefaultAccessType";
 	private final CacheKeysFactory cacheKeysFactory;
 
 	public CachingRegionFactory() {

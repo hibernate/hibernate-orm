@@ -43,12 +43,13 @@ public class EntityUpdateAction extends EntityAction {
 	private final int[] dirtyFields;
 	private final boolean hasDirtyCollection;
 	private final Object rowId;
-	private Object nextVersion;
-	private Object cacheEntry;
-	private SoftLock lock;
 
 	private final NaturalIdMapping naturalIdMapping;
 	private final Object previousNaturalIdValues;
+
+	private Object nextVersion;
+	private Object cacheEntry;
+	private SoftLock lock;
 
 	/**
 	 * Constructs an EntityUpdateAction
@@ -90,9 +91,11 @@ public class EntityUpdateAction extends EntityAction {
 			previousNaturalIdValues = null;
 		}
 		else {
-			this.previousNaturalIdValues = determinePreviousNaturalIdValues( persister, id, previousState, session );
+			this.previousNaturalIdValues = determinePreviousNaturalIdValues( persister, naturalIdMapping, id, previousState, session );
 			session.getPersistenceContextInternal().getNaturalIdHelper().manageLocalResolution(
-					id, state, persister,
+					id,
+					naturalIdMapping.extractNaturalIdValues( state, session ),
+					persister,
 					CachedNaturalIdValueSource.UPDATE
 			);
 		}
@@ -100,11 +103,13 @@ public class EntityUpdateAction extends EntityAction {
 
 	private static Object determinePreviousNaturalIdValues(
 			EntityPersister persister,
-			Object id, Object[] previousState,
+			NaturalIdMapping naturalIdMapping,
+			Object id,
+			Object[] previousState,
 			SharedSessionContractImplementor session) {
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		if ( previousState != null ) {
-			return persistenceContext.getNaturalIdHelper().extractNaturalIdValues( previousState, persister );
+			return naturalIdMapping.extractNaturalIdValues( previousState, session );
 		}
 
 		return persistenceContext.getNaturalIdSnapshot( id, persister );
@@ -222,7 +227,7 @@ public class EntityUpdateAction extends EntityAction {
 			session.getPersistenceContextInternal().getNaturalIdHelper().manageSharedResolution(
 					id,
 					naturalIdMapping.extractNaturalIdValues( state, session ),
-					naturalIdMapping.extractNaturalIdValues( previousState, session ),
+					previousNaturalIdValues,
 					persister,
 					CachedNaturalIdValueSource.UPDATE
 			);

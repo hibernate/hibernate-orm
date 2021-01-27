@@ -34,8 +34,10 @@ import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.TableGroupFilterAliasGenerator;
 import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
+import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
 import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.internal.InFlightEntityMappingType;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
@@ -404,6 +406,25 @@ public interface EntityPersister
 	 */
 	IdentifierGenerator getIdentifierGenerator();
 
+	@Override
+	default void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
+		final List<AttributeMapping> attributeMappings = getAttributeMappings();
+		if ( domainValue instanceof Object[] ) {
+			final Object[] values = (Object[]) domainValue;
+			for ( int i = 0; i < attributeMappings.size(); i++ ) {
+				final AttributeMapping attributeMapping = attributeMappings.get( i );
+				attributeMapping.breakDownJdbcValues( values[ i ], valueConsumer, session );
+			}
+		}
+		else {
+			for ( int i = 0; i < attributeMappings.size(); i++ ) {
+				final AttributeMapping attributeMapping = attributeMappings.get( i );
+				final Object attributeValue = attributeMapping.getPropertyAccess().getGetter().get( domainValue );
+				attributeMapping.breakDownJdbcValues( attributeValue, valueConsumer, session );
+			}
+		}
+	}
+
 	/**
 	 * Determine whether this entity defines any lazy properties (ala
 	 * bytecode instrumentation).
@@ -414,7 +435,13 @@ public interface EntityPersister
 
 	default NaturalIdLoader getNaturalIdLoader() {
 		throw new UnsupportedOperationException(
-				"EntityPersister implementation `" + getClass().getName() + "` does not support `#getNaturalIdLoader`"
+				"EntityPersister implementation `" + getClass().getName() + "` does not support `NaturalIdLoader`"
+		);
+	}
+
+	default MultiNaturalIdLoader<?> getMultiNaturalIdLoader() {
+		throw new UnsupportedOperationException(
+				"EntityPersister implementation `" + getClass().getName() + "` does not support `MultiNaturalIdLoader`"
 		);
 	}
 

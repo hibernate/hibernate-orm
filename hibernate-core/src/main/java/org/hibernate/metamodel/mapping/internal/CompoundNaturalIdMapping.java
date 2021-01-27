@@ -11,72 +11,100 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.loader.NaturalIdPostLoadListener;
-import org.hibernate.loader.NaturalIdPreLoadListener;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.loader.ast.internal.CompoundNaturalIdLoader;
 import org.hibernate.loader.ast.internal.MultiNaturalIdLoaderStandard;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
 import org.hibernate.mapping.IndexedConsumer;
-import org.hibernate.metamodel.mapping.SelectionConsumer;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
+import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.NaturalIdMapping;
+import org.hibernate.metamodel.mapping.SelectionConsumer;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
+import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.Fetchable;
+import org.hibernate.sql.results.graph.FetchableContainer;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
+import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * Multi-attribute NaturalIdMapping implementation
  */
-public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implements MappingType {
+public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implements MappingType, FetchableContainer {
 
 	// todo (6.0) : create a composite MappingType for this descriptor's Object[]?
 
 	private final List<SingularAttributeMapping> attributes;
-	private final List<JdbcMapping> jdbcMappings;
-	private final boolean immutable;
+	private final JavaTypeDescriptor<?> jtd;
 
-	private final NaturalIdLoader<?> loader;
-	private final MultiNaturalIdLoader<?> multiLoader;
+	private List<JdbcMapping> jdbcMappings;
 
 	public CompoundNaturalIdMapping(
 			EntityMappingType declaringType,
 			List<SingularAttributeMapping> attributes,
-			String cacheRegionName,
 			MappingModelCreationProcess creationProcess) {
-		super( declaringType, cacheRegionName );
+		super( declaringType, isMutable( declaringType, attributes, creationProcess ) );
 		this.attributes = attributes;
 
-		boolean anyMutable = false;
-		final List<JdbcMapping> jdbcMappings = new ArrayList<>();
+		jtd = creationProcess.getCreationContext().getTypeConfiguration().getJavaTypeDescriptorRegistry().getDescriptor(
+				Object[].class
+		);
+
+		creationProcess.registerInitializationCallback(
+				"Determine compound natural-id JDBC mappings ( " + declaringType.getEntityName() + ")",
+				() -> {
+					final List<JdbcMapping> jdbcMappings = new ArrayList<>();
+					attributes.forEach(
+							(attribute) -> attribute.forEachJdbcType(
+									(index, jdbcMapping) -> jdbcMappings.add( jdbcMapping )
+							)
+					);
+					this.jdbcMappings = jdbcMappings;
+
+					return true;
+				}
+		);
+	}
+
+	private static boolean isMutable(
+			EntityMappingType entityDescriptor,
+			List<SingularAttributeMapping> attributes,
+			MappingModelCreationProcess creationProcess) {
 		for ( int i = 0; i < attributes.size(); i++ ) {
 			final SingularAttributeMapping attributeMapping = attributes.get( i );
-			attributeMapping.forEachJdbcType( (index, jdbcMapping) -> jdbcMappings.add( jdbcMapping ) );
-			anyMutable = anyMutable || attributeMapping.getAttributeMetadataAccess().resolveAttributeMetadata( null ).isUpdatable();
-		}
-		this.jdbcMappings = jdbcMappings;
-		this.immutable = ! anyMutable;
+			final StateArrayContributorMetadataAccess metadataAccess = attributeMapping.getAttributeMetadataAccess();
 
-		loader = new CompoundNaturalIdLoader<>(
-				this,
-				NaturalIdPreLoadListener.NO_OP,
-				NaturalIdPostLoadListener.NO_OP,
-				declaringType,
-				creationProcess
-		);
-		multiLoader = new MultiNaturalIdLoaderStandard<>( declaringType, creationProcess );
+			if ( ! metadataAccess.resolveAttributeMetadata( entityDescriptor ).isUpdatable() ) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	@Override
@@ -113,7 +141,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 
 	@Override
 	@SuppressWarnings( "rawtypes" )
-	public Object[] normalizeIncomingValue(Object incoming, SharedSessionContractImplementor session) {
+	public Object[] normalizeInput(Object incoming, SharedSessionContractImplementor session) {
 		if ( incoming instanceof Object[] ) {
 			return (Object[]) incoming;
 		}
@@ -160,7 +188,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 
 	@Override
 	public void verifyFlushState(Object id, Object[] currentState, Object[] loadedState, SharedSessionContractImplementor session) {
-		if ( ! immutable ) {
+		if ( isMutable() ) {
 			// EARLY EXIT!!!
 			// the natural id is mutable (!immutable), no need to do the checks
 			return;
@@ -216,18 +244,13 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 	}
 
 	@Override
-	public boolean isImmutable() {
-		return immutable;
+	public NaturalIdLoader<?> makeLoader(EntityMappingType entityDescriptor) {
+		return new CompoundNaturalIdLoader<>( this, entityDescriptor );
 	}
 
 	@Override
-	public NaturalIdLoader<?> getNaturalIdLoader() {
-		return loader;
-	}
-
-	@Override
-	public MultiNaturalIdLoader<?> getMultiNaturalIdLoader() {
-		return multiLoader;
+	public MultiNaturalIdLoader<?> makeMultiLoader(EntityMappingType entityDescriptor) {
+		return new MultiNaturalIdLoaderStandard<>( entityDescriptor );
 	}
 
 	@Override
@@ -251,7 +274,28 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 
 	@Override
 	public <T> DomainResult<T> createDomainResult(NavigablePath navigablePath, TableGroup tableGroup, String resultVariable, DomainResultCreationState creationState) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		assert navigablePath.getLocalName().equals( NaturalIdMapping.PART_NAME );
+
+		final SessionFactoryImplementor sessionFactory = creationState.getSqlAstCreationState().getCreationContext().getSessionFactory();
+
+		final JavaTypeDescriptor<Object[]> jtd = sessionFactory
+				.getTypeConfiguration()
+				.getJavaTypeDescriptorRegistry()
+				.getDescriptor( Object[].class );
+
+		// register the table group under `...{natural-id}` as well
+		creationState.getSqlAstCreationState().getFromClauseAccess().resolveTableGroup(
+				navigablePath,
+				(np) -> tableGroup
+		);
+
+		return (DomainResult<T>) new DomainResultImpl(
+				navigablePath,
+				this,
+				jtd,
+				resultVariable,
+				creationState
+		);
 	}
 
 	@Override
@@ -265,6 +309,39 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 	public void applySqlSelections(NavigablePath navigablePath, TableGroup tableGroup, DomainResultCreationState creationState, BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
 		for ( int i = 0; i < attributes.size(); i++ ) {
 			attributes.get( i ).applySqlSelections( navigablePath, tableGroup, creationState, selectionConsumer );
+		}
+	}
+
+	@Override
+	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
+		if ( domainValue == null ) {
+			attributes.forEach(
+					attributeMapping -> attributeMapping.breakDownJdbcValues( null, valueConsumer, session )
+			);
+			return;
+		}
+
+		assert domainValue instanceof Object[];
+
+		final Object[] values = (Object[]) domainValue;
+		assert values.length == attributes.size();
+
+		for ( int i = 0; i < attributes.size(); i++ ) {
+			final SingularAttributeMapping attributeMapping = attributes.get( i );
+			final Object value = values[ i ];
+			if ( attributeMapping instanceof ToOneAttributeMapping ) {
+				final ToOneAttributeMapping toOne = (ToOneAttributeMapping) attributeMapping;
+				final ForeignKeyDescriptor fKDescriptor = toOne.getForeignKeyDescriptor();
+
+				final EntityMappingType associatedEntityMapping = toOne.getEntityMappingType();
+				final EntityIdentifierMapping associatedEntityMappingIdentifierMapping = associatedEntityMapping.getIdentifierMapping();
+
+				final Object keyValue = value == null ? null : associatedEntityMappingIdentifierMapping.getIdentifier( value, session );
+				fKDescriptor.breakDownJdbcValues( keyValue, valueConsumer, session );
+			}
+			else {
+				attributeMapping.breakDownJdbcValues( value, valueConsumer, session );
+			}
 		}
 	}
 
@@ -354,5 +431,223 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 			span += attribute.forEachJdbcValue( incoming[ i ], clause, span + offset, valuesConsumer, session );
 		}
 		return span;
+	}
+
+	@Override
+	public int getNumberOfFetchables() {
+		return attributes.size();
+	}
+
+	@Override
+	public ModelPart findSubPart(String name, EntityMappingType treatTargetType) {
+		for ( int i = 0; i < attributes.size(); i++ ) {
+			if ( name.equals( attributes.get( i ).getAttributeName() ) ) {
+				return attributes.get( i );
+			}
+		}
+		return null;
+	}
+
+	@Override
+	public void visitSubParts(Consumer<ModelPart> consumer, EntityMappingType treatTargetType) {
+		attributes.forEach( consumer );
+	}
+
+
+	public static class DomainResultImpl implements DomainResult<Object[]>, FetchParent {
+		private final NavigablePath navigablePath;
+		private final CompoundNaturalIdMapping naturalIdMapping;
+		private final JavaTypeDescriptor<Object[]> arrayJtd;
+
+		private final List<Fetch> fetches;
+
+		private final String resultVariable;
+
+		public DomainResultImpl(
+				NavigablePath navigablePath,
+				CompoundNaturalIdMapping naturalIdMapping,
+				JavaTypeDescriptor<Object[]> arrayJtd,
+				String resultVariable,
+				DomainResultCreationState creationState) {
+			this.navigablePath = navigablePath;
+			this.naturalIdMapping = naturalIdMapping;
+			this.arrayJtd = arrayJtd;
+			this.resultVariable = resultVariable;
+
+			this.fetches = creationState.visitFetches( this );
+		}
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// DomainResult
+
+		@Override
+		public String getResultVariable() {
+			return resultVariable;
+		}
+
+		@Override
+		public DomainResultAssembler<Object[]> createResultAssembler(AssemblerCreationState creationState) {
+			return new AssemblerImpl(
+					fetches,
+					navigablePath,
+					naturalIdMapping,
+					arrayJtd,
+					creationState
+			);
+		}
+
+		@Override
+		public JavaTypeDescriptor<Object[]> getResultJavaTypeDescriptor() {
+			return arrayJtd;
+		}
+
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// FetchParent
+
+		@Override
+		public FetchableContainer getReferencedMappingContainer() {
+			return getReferencedMappingType();
+		}
+
+		@Override
+		public FetchableContainer getReferencedMappingType() {
+			return naturalIdMapping;
+		}
+
+		@Override
+		public NavigablePath getNavigablePath() {
+			return navigablePath;
+		}
+
+		@Override
+		public List<Fetch> getFetches() {
+			return fetches;
+		}
+
+		@Override
+		public Fetch findFetch(Fetchable fetchable) {
+			assert fetchable != null;
+
+			for ( int i = 0; i < fetches.size(); i++ ) {
+				final Fetch fetch = fetches.get( i );
+				if ( fetchable.equals( fetch.getFetchedMapping() ) ) {
+					return fetch;
+				}
+			}
+
+			return null;
+		}
+	}
+
+	private static class AssemblerImpl implements DomainResultAssembler<Object[]> {
+		private final NavigablePath navigablePath;
+		private final CompoundNaturalIdMapping naturalIdMapping;
+		private final JavaTypeDescriptor<Object[]> jtd;
+
+		private final List<DomainResultAssembler<?>> subAssemblers;
+
+		private AssemblerImpl(
+				List<Fetch> fetches,
+				NavigablePath navigablePath,
+				CompoundNaturalIdMapping naturalIdMapping,
+				JavaTypeDescriptor<Object[]> jtd,
+				AssemblerCreationState creationState) {
+			this.navigablePath = navigablePath;
+			this.naturalIdMapping = naturalIdMapping;
+			this.jtd = jtd;
+
+			// we don't even register the Initializer here... its really no-op.
+			// we just "need it" as an impl detail for handling Fetches
+			final InitializerImpl initializer = new InitializerImpl( navigablePath, naturalIdMapping );
+
+			this.subAssemblers = CollectionHelper.arrayList( fetches.size() );
+			for ( int i = 0; i < fetches.size(); i++ ) {
+				final Fetch fetch = fetches.get( i );
+				final DomainResultAssembler<?> fetchAssembler = fetch.createAssembler( initializer, creationState );
+				subAssemblers.add( fetchAssembler );
+			}
+		}
+
+		@Override
+		public Object[] assemble(
+				RowProcessingState rowProcessingState,
+				JdbcValuesSourceProcessingOptions options) {
+			final Object[] result = new Object[ subAssemblers.size() ];
+			for ( int i = 0; i < subAssemblers.size(); i++ ) {
+				result[ i ] = subAssemblers.get( i ).assemble( rowProcessingState, options );
+			}
+			return result;
+		}
+
+		@Override
+		public JavaTypeDescriptor<Object[]> getAssembledJavaTypeDescriptor() {
+			return jtd;
+		}
+	}
+
+	private static class InitializerImpl implements FetchParentAccess {
+		private final NavigablePath navigablePath;
+		private final CompoundNaturalIdMapping naturalIdMapping;
+
+		public InitializerImpl(NavigablePath navigablePath, CompoundNaturalIdMapping naturalIdMapping) {
+			this.navigablePath = navigablePath;
+			this.naturalIdMapping = naturalIdMapping;
+		}
+
+		@Override
+		public FetchParentAccess findFirstEntityDescriptorAccess() {
+			return null;
+		}
+
+		@Override
+		public Object getParentKey() {
+			return null;
+		}
+
+		@Override
+		public Object getFetchParentInstance() {
+			return null;
+		}
+
+		@Override
+		public NavigablePath getNavigablePath() {
+			return navigablePath;
+		}
+
+		@Override
+		public ModelPart getInitializedPart() {
+			return naturalIdMapping;
+		}
+
+		@Override
+		public Object getInitializedInstance() {
+			return null;
+		}
+
+		@Override
+		public void resolveKey(RowProcessingState rowProcessingState) {
+
+		}
+
+		@Override
+		public void resolveInstance(RowProcessingState rowProcessingState) {
+
+		}
+
+		@Override
+		public void initializeInstance(RowProcessingState rowProcessingState) {
+
+		}
+
+		@Override
+		public void finishUpRow(RowProcessingState rowProcessingState) {
+
+		}
+
+		@Override
+		public void registerResolutionListener(Consumer<Object> resolvedParentConsumer) {
+
+		}
 	}
 }

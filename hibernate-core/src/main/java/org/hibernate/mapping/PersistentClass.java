@@ -975,10 +975,20 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		return java.util.Collections.unmodifiableMap( tuplizerImpls );
 	}
 
+	private Boolean hasNaturalId;
+
 	public boolean hasNaturalId() {
-		Iterator props = getRootClass().getPropertyIterator();
+		if ( hasNaturalId == null ) {
+			hasNaturalId = determineIfNaturalIdDefined();
+		}
+		return hasNaturalId;
+	}
+
+	private boolean determineIfNaturalIdDefined() {
+		//noinspection unchecked
+		final Iterator<Property> props = getRootClass().getPropertyIterator();
 		while ( props.hasNext() ) {
-			if ( ( (Property) props.next() ).isNaturalIdentifier() ) {
+			if ( props.next().isNaturalIdentifier() ) {
 				return true;
 			}
 		}

@@ -14,17 +14,15 @@ import java.util.function.BiConsumer;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.loader.NaturalIdPostLoadListener;
-import org.hibernate.loader.NaturalIdPreLoadListener;
 import org.hibernate.loader.ast.internal.MultiNaturalIdLoaderStandard;
 import org.hibernate.loader.ast.internal.SimpleNaturalIdLoader;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
 import org.hibernate.mapping.IndexedConsumer;
-import org.hibernate.metamodel.mapping.SelectionConsumer;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
+import org.hibernate.metamodel.mapping.SelectionConsumer;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NavigablePath;
@@ -41,36 +39,20 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping {
 	private final SingularAttributeMapping attribute;
 
-	private final boolean immutable;
-
-	private final SimpleNaturalIdLoader<?> loader;
-	private final MultiNaturalIdLoader<?> multiLoader;
-
 	public SimpleNaturalIdMapping(
 			SingularAttributeMapping attribute,
 			EntityMappingType declaringType,
-			String cacheRegionName,
 			MappingModelCreationProcess creationProcess) {
-		super( declaringType, cacheRegionName );
-		this.attribute = attribute;
-
-		this.immutable = ! attribute.getAttributeMetadataAccess()
-				.resolveAttributeMetadata( null )
-				.isUpdatable();
-
-		this.loader = new SimpleNaturalIdLoader<>(
-				this,
-				NaturalIdPreLoadListener.NO_OP,
-				NaturalIdPostLoadListener.NO_OP,
+		super(
 				declaringType,
-				creationProcess
+				attribute.getAttributeMetadataAccess().resolveAttributeMetadata( declaringType ).isUpdatable()
 		);
-		this.multiLoader = new MultiNaturalIdLoaderStandard<>( declaringType, creationProcess );
+		this.attribute = attribute;
 	}
 
 	@Override
 	public void verifyFlushState(Object id, Object[] currentState, Object[] loadedState, SharedSessionContractImplementor session) {
-		if ( ! immutable ) {
+		if ( isMutable() ) {
 			// EARLY EXIT!!!
 			// the natural id is mutable (!immutable), no need to do the checks
 			return;
@@ -134,7 +116,7 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping {
 	}
 
 	@Override
-	public Object normalizeIncomingValue(Object incoming, SharedSessionContractImplementor session) {
+	public Object normalizeInput(Object incoming, SharedSessionContractImplementor session) {
 		return normalizeIncomingValue( incoming );
 	}
 
@@ -161,23 +143,8 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping {
 	}
 
 	@Override
-	public NaturalIdLoader<?> getNaturalIdLoader() {
-		return loader;
-	}
-
-	@Override
-	public MultiNaturalIdLoader<?> getMultiNaturalIdLoader() {
-		return multiLoader;
-	}
-
-	@Override
 	public List<SingularAttributeMapping> getNaturalIdAttributes() {
 		return Collections.singletonList( attribute );
-	}
-
-	@Override
-	public boolean isImmutable() {
-		return immutable;
 	}
 
 	@Override
@@ -239,6 +206,11 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping {
 	}
 
 	@Override
+	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
+		attribute.breakDownJdbcValues( domainValue, valueConsumer, session );
+	}
+
+	@Override
 	public int forEachDisassembledJdbcValue(
 			Object value,
 			Clause clause,
@@ -256,5 +228,15 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping {
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
 		return attribute.forEachJdbcValue( value, clause, offset, valuesConsumer, session );
+	}
+
+	@Override
+	public NaturalIdLoader<?> makeLoader(EntityMappingType entityDescriptor) {
+		return new SimpleNaturalIdLoader<>( this, entityDescriptor );
+	}
+
+	@Override
+	public MultiNaturalIdLoader<?> makeMultiLoader(EntityMappingType entityDescriptor) {
+		return new MultiNaturalIdLoaderStandard<>( entityDescriptor );
 	}
 }

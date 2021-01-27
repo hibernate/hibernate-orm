@@ -123,6 +123,7 @@ import org.hibernate.loader.ast.internal.SingleUniqueKeyEntityLoaderStandard;
 import org.hibernate.loader.ast.spi.Loader;
 import org.hibernate.loader.ast.spi.MultiIdEntityLoader;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
+import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
 import org.hibernate.loader.ast.spi.SingleIdEntityLoader;
 import org.hibernate.loader.ast.spi.SingleUniqueKeyEntityLoader;
@@ -145,22 +146,22 @@ import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.AttributeMetadataAccess;
-import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.SelectionConsumer;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityRowIdMapping;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.Queryable;
+import org.hibernate.metamodel.mapping.SelectionConsumer;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadata;
-import org.hibernate.metamodel.mapping.internal.DiscriminatedAssociationAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.BasicEntityIdentifierMappingImpl;
 import org.hibernate.metamodel.mapping.internal.CompoundNaturalIdMapping;
+import org.hibernate.metamodel.mapping.internal.DiscriminatedAssociationAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EntityDiscriminatorMappingImpl;
 import org.hibernate.metamodel.mapping.internal.EntityRowIdMappingImpl;
@@ -168,8 +169,8 @@ import org.hibernate.metamodel.mapping.internal.EntityVersionMappingImpl;
 import org.hibernate.metamodel.mapping.internal.InFlightEntityMappingType;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
-import org.hibernate.metamodel.mapping.internal.SimpleNaturalIdMapping;
 import org.hibernate.metamodel.mapping.internal.NonAggregatedIdentifierMappingImpl;
+import org.hibernate.metamodel.mapping.internal.SimpleNaturalIdMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -203,6 +204,7 @@ import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
@@ -256,9 +258,12 @@ public abstract class AbstractEntityPersister
 	public static final String ENTITY_CLASS = "class";
 
 	private final String sqlAliasStem;
+	private EntityMappingType rootEntityDescriptor;
 
 	private final SingleIdEntityLoader singleIdEntityLoader;
 	private final MultiIdEntityLoader multiIdEntityLoader;
+	private NaturalIdLoader naturalIdLoader;
+	private MultiNaturalIdLoader multiNaturalIdLoader;
 
 	private SqmMultiTableMutationStrategy sqmMultiTableMutationStrategy;
 
@@ -1347,10 +1352,11 @@ public abstract class AbstractEntityPersister
 			String explicitSourceAlias,
 			boolean canUseInnerJoins,
 			LockMode lockMode,
-			SqlAliasBaseGenerator aliasBaseGenerator,
-			SqlExpressionResolver sqlExpressionResolver,
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
+			SqlAstCreationState creationState,
 			SqlAstCreationContext creationContext) {
+		final SqlExpressionResolver sqlExpressionResolver = creationState.getSqlExpressionResolver();
+		final SqlAliasBaseGenerator aliasBaseGenerator = creationState.getSqlAliasBaseGenerator();
 		final SqlAliasBase sqlAliasBase = aliasBaseGenerator.createSqlAliasBase( getSqlAliasStem() );
 
 		final TableReference primaryTableReference = createPrimaryTableReference(
@@ -5688,6 +5694,12 @@ public abstract class AbstractEntityPersister
 		return entityMetamodel.getNaturalIdentifierProperties();
 	}
 
+	private void verifyHasNaturalId() {
+		if ( ! hasNaturalIdentifier() ) {
+			throw new HibernateException( "Entity does not define a natural id : " + getEntityName() );
+		}
+	}
+
 	public Object[] getNaturalIdentifierSnapshot(Object id, SharedSessionContractImplementor session) {
 		verifyHasNaturalId();
 
@@ -5699,7 +5711,7 @@ public abstract class AbstractEntityPersister
 			);
 		}
 
-		final Object result = naturalIdMapping.getNaturalIdLoader().resolveIdToNaturalId( id, session );
+		final Object result = getNaturalIdLoader().resolveIdToNaturalId( id, session );
 		if ( result instanceof Object[] ) {
 			return (Object[]) result;
 		}
@@ -5708,16 +5720,27 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	private void verifyHasNaturalId() {
-		if ( ! hasNaturalIdentifier() ) {
-			throw new HibernateException( "Entity does not define a natural id : " + getEntityName() );
-		}
-	}
 
 	@Override
 	public NaturalIdLoader<?> getNaturalIdLoader() {
 		verifyHasNaturalId();
-		return naturalIdMapping.getNaturalIdLoader();
+
+		if ( naturalIdLoader == null ) {
+			naturalIdLoader = naturalIdMapping.makeLoader( this );
+		}
+
+		return naturalIdLoader;
+	}
+
+	@Override
+	public MultiNaturalIdLoader<?> getMultiNaturalIdLoader() {
+		verifyHasNaturalId();
+
+		if ( multiNaturalIdLoader == null ) {
+			multiNaturalIdLoader = naturalIdMapping.makeMultiLoader( this );
+		}
+
+		return multiNaturalIdLoader;
 	}
 
 	@Override
@@ -5735,7 +5758,7 @@ public abstract class AbstractEntityPersister
 			);
 		}
 
-		return naturalIdMapping.getNaturalIdLoader().resolveNaturalIdToId( naturalIdValues, session );
+		return getNaturalIdLoader().resolveNaturalIdToId( naturalIdValues, session );
 	}
 
 	public boolean hasNaturalIdentifier() {
@@ -5954,9 +5977,11 @@ public abstract class AbstractEntityPersister
 			else {
 				prepareMappingModel( creationProcess, bootEntityDescriptor );
 			}
+			rootEntityDescriptor = superMappingType.getRootEntityDescriptor();
 		}
 		else {
 			prepareMappingModel( creationProcess, bootEntityDescriptor );
+			rootEntityDescriptor = this;
 		}
 
 		final EntityMetamodel currentEntityMetamodel = this.getEntityMetamodel();
@@ -6047,7 +6072,7 @@ public abstract class AbstractEntityPersister
 		else {
 			rowIdMapping = creationProcess.processSubPart(
 					rowIdName,
-					(role, process) -> new EntityRowIdMappingImpl( rowIdName, this.getTableName(), this)
+					(role, process) -> new EntityRowIdMappingImpl( rowIdName, this.getTableName(), this )
 			);
 		}
 
@@ -6055,7 +6080,10 @@ public abstract class AbstractEntityPersister
 	}
 
 	private void postProcessAttributeMappings(MappingModelCreationProcess creationProcess, PersistentClass bootEntityDescriptor) {
-		if ( bootEntityDescriptor.hasNaturalId() ) {
+		if ( superMappingType != null ) {
+			naturalIdMapping = superMappingType.getNaturalIdMapping();
+		}
+		else if ( bootEntityDescriptor.hasNaturalId() ) {
 			naturalIdMapping = generateNaturalIdMapping( creationProcess, bootEntityDescriptor );
 		}
 		else {
@@ -6066,43 +6094,47 @@ public abstract class AbstractEntityPersister
 	private NaturalIdMapping generateNaturalIdMapping(MappingModelCreationProcess creationProcess, PersistentClass bootEntityDescriptor) {
 		assert bootEntityDescriptor.hasNaturalId();
 
-		final List<SingularAttributeMapping> naturalIdAttributes = new ArrayList<>();
-		final Iterator<Property> iterator = bootEntityDescriptor.getPropertyIterator();
-		iterator.forEachRemaining(
-				property -> {
-					if ( property.isNaturalIdentifier() ) {
-						final AttributeMapping attributeMapping = findAttributeMapping( property.getName() );
-						if ( attributeMapping instanceof SingularAttributeMapping ) {
-							naturalIdAttributes.add( (SingularAttributeMapping) attributeMapping );
-						}
-						else {
-							throw new MappingException( "Natural-id only valid for singular attributes : " + property.getName() );
-						}
+		final int[] naturalIdAttributeIndexes = entityMetamodel.getNaturalIdentifierProperties();
+		assert naturalIdAttributeIndexes.length > 0;
+
+		if ( naturalIdAttributeIndexes.length == 1 ) {
+			final String propertyName = entityMetamodel.getPropertyNames()[ naturalIdAttributeIndexes[ 0 ] ];
+			final AttributeMapping attributeMapping = findAttributeMapping( propertyName );
+
+			return new SimpleNaturalIdMapping(
+					(SingularAttributeMapping) attributeMapping,
+					this,
+					creationProcess
+			);
+		}
+
+		// collect the names of the attributes making up the natural-id.
+		final Set<String> attributeNames = CollectionHelper.setOfSize( naturalIdAttributeIndexes.length );
+		for ( int naturalIdAttributeIndex : naturalIdAttributeIndexes ) {
+			attributeNames.add( this.getPropertyNames()[ naturalIdAttributeIndex ] );
+		}
+
+		// then iterate over the attribute mappings finding the ones having names
+		// in the collected names.  iterate here because it is already alphabetical
+
+		final List<SingularAttributeMapping> collectedAttrMappings = new ArrayList<>();
+		this.attributeMappings.forEach(
+				(attributeMapping) -> {
+					if ( attributeNames.contains( attributeMapping.getAttributeName() ) ) {
+						collectedAttrMappings.add( (SingularAttributeMapping) attributeMapping );
 					}
 				}
 		);
 
-		if ( naturalIdAttributes.isEmpty() ) {
-			throw new MappingException( "Could not locate natural-id attribute(s)" );
+		if ( collectedAttrMappings.size() <= 1 ) {
+			throw new MappingException( "Expected multiple natural-id attributes, but found only one: " + getEntityName() );
 		}
 
-		if ( naturalIdAttributes.size() == 1 ) {
-			return new SimpleNaturalIdMapping(
-					naturalIdAttributes.get( 0 ),
-					this,
-					bootEntityDescriptor.getNaturalIdCacheRegionName(),
-					creationProcess
-			);
-		}
-		else {
-			return new CompoundNaturalIdMapping(
-					this,
-					naturalIdAttributes,
-					bootEntityDescriptor.getNaturalIdCacheRegionName(),
-					creationProcess
-			);
-		}
-
+		return new CompoundNaturalIdMapping(
+				this,
+				collectedAttrMappings,
+				creationProcess
+		);
 	}
 
 	protected static SqmMultiTableMutationStrategy interpretSqmMultiTableStrategy(

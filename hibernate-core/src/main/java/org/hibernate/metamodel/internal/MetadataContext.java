@@ -20,11 +20,9 @@ import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
-import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.AssertionFailure;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.HEMLogging;
 import org.hibernate.internal.util.ReflectHelper;
@@ -52,7 +50,6 @@ import org.hibernate.metamodel.model.domain.internal.MappedSuperclassTypeImpl;
 import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -414,8 +411,8 @@ public class MetadataContext {
 	private void applyIdClassMetadata(Component identifier, Component idClass) {
 		final JavaTypeDescriptorRegistry registry = getTypeConfiguration()
 				.getJavaTypeDescriptorRegistry();
-		final Class componentClass = identifier.getComponentClass();
-		final JavaTypeDescriptor javaTypeDescriptor = registry.resolveDescriptor( componentClass );
+		final Class<?> componentClass = identifier.getComponentClass();
+		final JavaTypeDescriptor<?> javaTypeDescriptor = registry.resolveDescriptor( componentClass );
 
 		final EmbeddableRepresentationStrategy representationStrategy = getTypeConfiguration()
 				.getMetadataBuildingContext()
@@ -423,22 +420,23 @@ public class MetadataContext {
 				.getManagedTypeRepresentationResolver()
 				.resolveStrategy( idClass, getRuntimeModelCreationContext() );
 
-		final EmbeddableTypeImpl embeddableType = new EmbeddableTypeImpl<>(
+		final EmbeddableTypeImpl<?> embeddableType = new EmbeddableTypeImpl<>(
 				javaTypeDescriptor,
 				representationStrategy,
+				false,
 				getJpaMetamodel()
 		);
 		registerEmbeddableType( embeddableType, idClass );
 	}
 
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	private <X> void applyIdMetadata(MappedSuperclass mappingType, MappedSuperclassDomainType<X> jpaMappingType) {
 		if ( mappingType.hasIdentifierProperty() ) {
 			final Property declaredIdentifierProperty = mappingType.getDeclaredIdentifierProperty();
 			if ( declaredIdentifierProperty != null ) {
+				final SingularPersistentAttribute<X, Object> attribute = attributeFactory.buildIdAttribute( jpaMappingType, declaredIdentifierProperty );
 				//noinspection unchecked
-				( ( AttributeContainer) jpaMappingType ).getInFlightAccess().applyIdAttribute(
-						attributeFactory.buildIdAttribute( jpaMappingType, declaredIdentifierProperty )
-				);
+				( ( AttributeContainer) jpaMappingType ).getInFlightAccess().applyIdAttribute( attribute );
 			}
 		}
 		//a MappedSuperclass can have no identifier if the id is set below in the hierarchy

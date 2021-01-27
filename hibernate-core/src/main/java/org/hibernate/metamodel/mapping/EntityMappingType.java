@@ -8,6 +8,7 @@ package org.hibernate.metamodel.mapping;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -16,13 +17,15 @@ import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.loader.ast.spi.Loadable;
+import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
+import org.hibernate.loader.ast.spi.NaturalIdLoader;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
-import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -177,6 +180,14 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
+	default EntityMappingType getRootEntityDescriptor() {
+		final EntityMappingType superMappingType = getSuperMappingType();
+		if ( superMappingType == null ) {
+			return this;
+		}
+		return superMappingType.getRootEntityDescriptor();
+	}
+
 	interface ConstraintOrderedTableConsumer {
 		void consume(String tableExpression, Supplier<Consumer<SelectionConsumer>> tableKeyColumnVisitationSupplier);
 	}
@@ -215,6 +226,23 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 	}
 
 
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Loading
+
+
+	/**
+	 * Access to performing natural-id database selection.  This is per-entity in the hierarchy
+	 */
+	NaturalIdLoader<?> getNaturalIdLoader();
+
+	/**
+	 * Access to performing multi-value natural-id database selection.  This is per-entity in the hierarchy
+	 */
+	MultiNaturalIdLoader<?> getMultiNaturalIdLoader();
+
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Loadable
 
@@ -239,18 +267,16 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 			String explicitSourceAlias,
 			boolean canUseInnerJoins,
 			LockMode lockMode,
-			SqlAliasBaseGenerator aliasBaseGenerator,
-			SqlExpressionResolver sqlExpressionResolver,
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
+			SqlAstCreationState creationState,
 			SqlAstCreationContext creationContext) {
 		return getEntityPersister().createRootTableGroup(
 				navigablePath,
 				explicitSourceAlias,
 				canUseInnerJoins,
 				lockMode,
-				aliasBaseGenerator,
-				sqlExpressionResolver,
 				additionalPredicateCollectorAccess,
+				creationState,
 				creationContext
 		);
 	}

@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
@@ -15,15 +16,22 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
  */
 public abstract class AbstractNaturalIdMapping implements NaturalIdMapping {
 	private final EntityMappingType declaringType;
-	private final String cacheRegionName;
+	private final boolean mutable;
+	private final NaturalIdDataAccess cachesAccess;
 
 	private final NavigableRole role;
 
-	public AbstractNaturalIdMapping(EntityMappingType declaringType, String cacheRegionName) {
+	public AbstractNaturalIdMapping(EntityMappingType declaringType, boolean mutable) {
 		this.declaringType = declaringType;
-		this.cacheRegionName = cacheRegionName;
+		this.mutable = mutable;
+
+		this.cachesAccess = declaringType.getEntityPersister().getNaturalIdCacheAccessStrategy();
 
 		this.role = declaringType.getNavigableRole().append( PART_NAME );
+	}
+
+	public EntityMappingType getDeclaringType() {
+		return declaringType;
 	}
 
 	@Override
@@ -31,8 +39,14 @@ public abstract class AbstractNaturalIdMapping implements NaturalIdMapping {
 		return role;
 	}
 
-	public EntityMappingType getDeclaringType() {
-		return declaringType;
+	@Override
+	public boolean isMutable() {
+		return mutable;
+	}
+
+	@Override
+	public NaturalIdDataAccess getCacheAccess() {
+		return cachesAccess;
 	}
 
 	@Override

@@ -14,14 +14,14 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.AssociationKey;
 import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.SelectionConsumer;
-import org.hibernate.metamodel.mapping.SelectionMappings;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.SelectionConsumer;
+import org.hibernate.metamodel.mapping.SelectionMappings;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.NavigablePath;
@@ -393,6 +393,19 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 				mappingType,
 				resultVariable,
 				creationState
+		);
+	}
+
+	@Override
+	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
+		assert domainValue instanceof Object[];
+
+		final Object[] values = (Object[]) domainValue;
+
+		keySelectionMappings.forEachSelection(
+				(selectionIndex, selectionMapping) -> {
+					valueConsumer.consume( values[ selectionIndex ], selectionMapping );
+				}
 		);
 	}
 

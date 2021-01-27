@@ -259,6 +259,27 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	}
 
 	@Override
+	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+		return value;
+	}
+
+	@Override
+	public int forEachDisassembledJdbcValue(
+			Object value,
+			Clause clause,
+			int offset,
+			JdbcValuesConsumer valuesConsumer,
+			SharedSessionContractImplementor session) {
+		valuesConsumer.consume( offset, value, getJdbcMapping() );
+		return 1;
+	}
+
+	@Override
+	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
+		valueConsumer.consume( domainValue, keySelectionMapping );
+	}
+
+	@Override
 	public int visitReferringColumns(int offset, SelectionConsumer consumer) {
 		consumer.accept( offset, keySelectionMapping );
 		return getJdbcTypeCount();

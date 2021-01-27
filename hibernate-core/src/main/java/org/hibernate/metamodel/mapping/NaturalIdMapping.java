@@ -8,7 +8,7 @@ package org.hibernate.metamodel.mapping;
 
 import java.util.List;
 
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
@@ -28,7 +28,18 @@ public interface NaturalIdMapping extends VirtualModelPart {
 	 * Whether the natural-id is immutable.  This is the same as saying that none of
 	 * the attributes are mutable
 	 */
-	boolean isImmutable();
+	boolean isMutable();
+
+	@Override
+	default String getPartName() {
+		return PART_NAME;
+	}
+
+	/**
+	 * Access to the natural-id's L2 cache access.  Returns null if the natural-id is not
+	 * configured for caching
+	 */
+	NaturalIdDataAccess getCacheAccess();
 
 	/**
 	 * Verify the natural-id value(s) we are about to flush to the database
@@ -38,14 +49,6 @@ public interface NaturalIdMapping extends VirtualModelPart {
 			Object[] currentState,
 			Object[] loadedState,
 			SharedSessionContractImplementor session);
-
-	@Override
-	default String getPartName() {
-		return PART_NAME;
-	}
-
-	NaturalIdLoader getNaturalIdLoader();
-	MultiNaturalIdLoader getMultiNaturalIdLoader();
 
 	/**
 	 * Given an array of "full entity state", extract the normalized natural id representation
@@ -65,10 +68,15 @@ public interface NaturalIdMapping extends VirtualModelPart {
 	 */
 	Object extractNaturalIdValues(Object entity, SharedSessionContractImplementor session);
 
+
 	/**
-	 * Normalize an incoming (user supplied) natural-id value.
+	 * Normalize a user-provided natural-id value into the representation Hibernate uses internally
+	 *
+	 * @param incoming The user-supplied value
+	 *
+	 * @return The normalized, internal representation
 	 */
-	Object normalizeIncomingValue(Object incoming, SharedSessionContractImplementor session);
+	Object normalizeInput(Object incoming, SharedSessionContractImplementor session);
 
 	/**
 	 * Validates a natural id value(s) for the described natural-id based on the expected internal representation
@@ -83,4 +91,14 @@ public interface NaturalIdMapping extends VirtualModelPart {
 	 * @return The hash-code
 	 */
 	int calculateHashCode(Object value, SharedSessionContractImplementor session);
+
+	/**
+	 * Make a loader capable of loading a single entity by natural-id
+	 */
+	NaturalIdLoader<?> makeLoader(EntityMappingType entityDescriptor);
+
+	/**
+	 * Make a loader capable of loading multiple entities by natural-id
+	 */
+	MultiNaturalIdLoader<?> makeMultiLoader(EntityMappingType entityDescriptor);
 }

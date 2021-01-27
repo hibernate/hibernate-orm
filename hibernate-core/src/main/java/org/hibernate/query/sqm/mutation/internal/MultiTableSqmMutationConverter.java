@@ -83,12 +83,10 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 				mutatingEntityExplicitAlias,
 				true,
 				LockMode.PESSIMISTIC_WRITE,
-				getSqlAliasBaseGenerator(),
-				getSqlExpressionResolver(),
 				() -> predicate -> {
 				},
-				creationContext.getSessionFactory()
-		);
+				this,
+				creationContext.getSessionFactory() );
 
 		getFromClauseAccess().registerTableGroup( navigablePath, mutatingTableGroup );
 	}

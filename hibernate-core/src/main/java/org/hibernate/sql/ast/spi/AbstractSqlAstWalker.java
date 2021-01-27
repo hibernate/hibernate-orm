@@ -73,6 +73,7 @@ import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.LiteralAsParameter;
+import org.hibernate.sql.ast.tree.expression.NullnessLiteral;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
 import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
@@ -2560,6 +2561,12 @@ public abstract class AbstractSqlAstWalker
 	@Override
 	public void visitQueryLiteral(QueryLiteral queryLiteral) {
 		visitLiteral( queryLiteral );
+	}
+
+	@Override
+	public void visitNullnessLiteral(NullnessLiteral nullnessLiteral) {
+		// todo (6.0) : account for composite nulls?
+		appendSql( "null" );
 	}
 
 	@SuppressWarnings("unchecked")

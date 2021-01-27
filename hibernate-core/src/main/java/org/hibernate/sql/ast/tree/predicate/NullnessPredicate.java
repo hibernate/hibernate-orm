@@ -16,6 +16,10 @@ public class NullnessPredicate implements Predicate {
 	private final Expression expression;
 	private final boolean negated;
 
+	public NullnessPredicate(Expression expression) {
+		this( expression, false );
+	}
+
 	public NullnessPredicate(Expression expression, boolean negated) {
 		this.expression = expression;
 		this.negated = negated;

@@ -6,7 +6,6 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -25,7 +24,8 @@ import org.hibernate.sql.ast.Clause;
  *
  * @author Andrea Boriero
  */
-public class EmbeddedIdentifierMappingImpl extends AbstractCompositeIdentifierMapping
+public class EmbeddedIdentifierMappingImpl
+		extends AbstractCompositeIdentifierMapping
 		implements SingleAttributeIdentifierMapping {
 	private final String name;
 	private final PropertyAccess propertyAccess;
@@ -106,6 +106,11 @@ public class EmbeddedIdentifierMappingImpl extends AbstractCompositeIdentifierMa
 	@Override
 	public String getAttributeName() {
 		return name;
+	}
+
+	@Override
+	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
+		getEmbeddableTypeDescriptor().breakDownJdbcValues( domainValue, valueConsumer, session );
 	}
 
 	@Override

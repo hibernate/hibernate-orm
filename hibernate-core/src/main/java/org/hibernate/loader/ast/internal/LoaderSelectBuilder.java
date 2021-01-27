@@ -240,11 +240,11 @@ public class LoaderSelectBuilder {
 	private final List<ModelPart> restrictedParts;
 	private final DomainResult cachedDomainResult;
 	private final int numberOfKeysToLoad;
+	private final boolean forceIdentifierSelection;
 	private final LoadQueryInfluencers loadQueryInfluencers;
 	private final LockOptions lockOptions;
 	private final Consumer<JdbcParameter> jdbcParameterConsumer;
 	private final EntityGraphTraversalState entityGraphTraversalState;
-	private boolean forceIdentifierSelection;
 
 	private int fetchDepth;
 	private Map<OrderByFragment, TableGroup> orderByFragments;
@@ -378,9 +378,8 @@ public class LoaderSelectBuilder {
 				null,
 				true,
 				lockOptions.getLockMode(),
-				sqlAstCreationState.getSqlAliasBaseManager(),
-				sqlAstCreationState.getSqlExpressionResolver(),
 				() -> rootQuerySpec::applyPredicate,
+				sqlAstCreationState,
 				creationContext
 		);
 
@@ -831,9 +830,8 @@ public class LoaderSelectBuilder {
 				null,
 				true,
 				lockOptions.getLockMode(),
-				sqlAstCreationState.getSqlAliasBaseManager(),
-				sqlAstCreationState.getSqlExpressionResolver(),
 				() -> rootQuerySpec::applyPredicate,
+				sqlAstCreationState,
 				creationContext
 		);
 

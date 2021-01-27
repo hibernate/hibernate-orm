@@ -62,11 +62,10 @@ public class ImplicitModelPartResultBuilderEntity
 							null,
 							false,
 							LockMode.READ,
-							creationStateImpl.getSqlAliasBaseGenerator(),
-							creationStateImpl,
 							() -> predicate -> {
 							},
-							creationStateImpl.getSqlAstCreationState().getCreationContext()
+							creationStateImpl,
+							creationStateImpl.getCreationContext()
 					);
 				}
 		);

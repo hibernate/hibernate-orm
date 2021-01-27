@@ -48,14 +48,17 @@ public class EmbeddableTypeImpl<J>
 		extends AbstractManagedType<J>
 		implements EmbeddableDomainType<J>, Serializable, MappingModelExpressable<J> {
 
+	private final boolean isDynamic;
 	private final EmbeddableRepresentationStrategy representationStrategy;
 
 	public EmbeddableTypeImpl(
 			JavaTypeDescriptor<J> javaTypeDescriptor,
 			EmbeddableRepresentationStrategy representationStrategy,
+			boolean isDynamic,
 			JpaMetamodel domainMetamodel) {
 		super( javaTypeDescriptor.getJavaType().getName(), javaTypeDescriptor, null, domainMetamodel );
 		this.representationStrategy = representationStrategy;
+		this.isDynamic = isDynamic;
 	}
 
 	public EmbeddableTypeImpl(

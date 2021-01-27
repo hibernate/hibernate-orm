@@ -79,11 +79,11 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 				rowProcessingState.finishRowProcessing();
 			}
 			persistenceContext.initializeNonLazyCollections();
+			jdbcValuesSourceProcessingState.finishUp( );
 			return results;
 		}
 		finally {
 			rowReader.finishUp( jdbcValuesSourceProcessingState );
-			jdbcValuesSourceProcessingState.finishUp();
 			jdbcValues.finishUp( session );
 		}
 	}

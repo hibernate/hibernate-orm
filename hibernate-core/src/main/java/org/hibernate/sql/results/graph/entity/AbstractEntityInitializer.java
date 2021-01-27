@@ -28,8 +28,6 @@ import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.EventType;
-import org.hibernate.event.spi.PostLoadEvent;
-import org.hibernate.event.spi.PostLoadEventListener;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.internal.util.StringHelper;
@@ -540,19 +538,18 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 						instance
 				);
 			}
-
-			final LoadingEntityEntry loadingEntry = new LoadingEntityEntry(
-					this,
-					entityKey,
-					concreteDescriptor,
-					instance
-			);
-
-			rowProcessingState.getJdbcValuesSourceProcessingState().registerLoadingEntity(
-					entityKey,
-					loadingEntry
-			);
 		}
+
+		final LoadingEntityEntry loadingEntry = new LoadingEntityEntry(
+				this,
+				entityKey,
+				concreteDescriptor,
+				instance
+		);
+		rowProcessingState.getJdbcValuesSourceProcessingState().registerLoadingEntity(
+				entityKey,
+				loadingEntry
+		);
 		return instance;
 	}
 
@@ -578,11 +575,9 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			);
 			intializeEntity( instance, rowProcessingState, session, persistenceContext );
 			hibernateLazyInitializer.setImplementation( instance );
-			postLoad( instance, rowProcessingState );
 		}
 		else {
 			intializeEntity( entityInstance, rowProcessingState, session, persistenceContext );
-			postLoad( entityInstance, rowProcessingState );
 		}
 	}
 
@@ -804,29 +799,6 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 					.getEventListenerGroup( EventType.PRE_LOAD );
 			for ( PreLoadEventListener listener : listenerGroup.listeners() ) {
 				listener.onPreLoad( preLoadEvent );
-			}
-		}
-	}
-
-	private void postLoad(Object instance,RowProcessingState rowProcessingState) {
-		final SharedSessionContractImplementor session = rowProcessingState.getJdbcValuesSourceProcessingState().getSession();
-
-		if ( session instanceof EventSource ) {
-			final PostLoadEvent postLoadEvent = rowProcessingState.getJdbcValuesSourceProcessingState().getPostLoadEvent();
-			assert postLoadEvent != null;
-
-			postLoadEvent.reset();
-
-			postLoadEvent.setEntity( instance )
-					.setId( entityKey.getIdentifier() )
-					.setPersister( concreteDescriptor );
-
-			final EventListenerGroup<PostLoadEventListener> listenerGroup = entityDescriptor.getFactory()
-					.getServiceRegistry()
-					.getService( EventListenerRegistry.class )
-					.getEventListenerGroup( EventType.POST_LOAD );
-			for ( PostLoadEventListener listener : listenerGroup.listeners() ) {
-				listener.onPostLoad( postLoadEvent );
 			}
 		}
 	}

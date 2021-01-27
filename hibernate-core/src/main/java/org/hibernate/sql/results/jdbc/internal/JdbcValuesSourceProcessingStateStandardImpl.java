@@ -15,8 +15,12 @@ import java.util.function.BiConsumer;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.service.spi.EventListenerGroup;
+import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostLoadEvent;
+import org.hibernate.event.spi.PostLoadEventListener;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.collection.internal.ArrayInitializer;
@@ -169,10 +173,35 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 
 			// now we can finalize loading collections
 			finishLoadingCollections();
+
+			postLoad();
 		}
 		finally {
 			executionContext.getSession().getPersistenceContext().getLoadContexts().deregister( this );
 		}
+	}
+
+	private void postLoad() {
+		if ( loadingEntityMap == null ) {
+			return;
+		}
+		final EventListenerGroup<PostLoadEventListener> listenerGroup = executionContext.getSession().getFactory()
+				.getServiceRegistry()
+				.getService( EventListenerRegistry.class )
+				.getEventListenerGroup( EventType.POST_LOAD );
+
+		loadingEntityMap.forEach(
+				(entityKey, loadingEntityEntry) -> {
+					postLoadEvent.reset();
+					postLoadEvent.setEntity( loadingEntityEntry.getEntityInstance() )
+							.setId( entityKey.getIdentifier() )
+							.setPersister( loadingEntityEntry.getDescriptor() );
+
+					for ( PostLoadEventListener listener : listenerGroup.listeners() ) {
+						listener.onPostLoad( postLoadEvent );
+					}
+				}
+		);
 	}
 
 	private void finishLoadingArrays() {
@@ -188,7 +217,6 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 		if ( loadingEntityMap == null ) {
 			return;
 		}
-
 		log.tracev( "Total objects hydrated: {0}", loadingEntityMap.size() );
 	}
 

@@ -181,9 +181,6 @@ public class StandardRowReader<T> implements RowReader<T> {
 		for ( int i = 0; i < initializers.size(); i++ ) {
 			initializers.get( i ).endLoading( processingState.getExecutionContext() );
 		}
-
-		// todo : use Callback to execute AfterLoadActions
-		// todo : another option is to use Callback to execute the AfterLoadActions after each row
 	}
 
 	@Override

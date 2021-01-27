@@ -4,14 +4,14 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.jpa.test.ejb3configuration;
+package org.hibernate.orm.test.jpa.ejb3configuration;
 
 import javax.persistence.EntityManagerFactory;
 
 import java.util.Collections;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
@@ -38,7 +38,7 @@ public class SessionFactoryObserverTest {
 		try {
 			final EntityManagerFactory entityManagerFactory = builder.build();
 			entityManagerFactory.close();
-			Assert.fail( "GoofyException should have been thrown" );
+			Assertions.fail( "GoofyException should have been thrown" );
 		}
 		catch ( GoofyException e ) {
 			//success

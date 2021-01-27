@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.jpa.test.ejb3configuration;
+package org.hibernate.orm.test.jpa.ejb3configuration;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -17,28 +17,38 @@ import javax.persistence.EntityManagerFactory;
 
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.jpa.HibernateEntityManager;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.jpa.test.Cat;
 import org.hibernate.jpa.test.Distributor;
 import org.hibernate.jpa.test.Item;
 import org.hibernate.jpa.test.Kitten;
 import org.hibernate.jpa.test.Wallet;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Emmanuel Bernard
  */
-public class EntityManagerFactorySerializationTest extends BaseEntityManagerFunctionalTestCase {
+
+@Jpa(annotatedClasses = {
+		Item.class,
+		Distributor.class,
+		Wallet.class,
+		Cat.class,
+		Kitten.class
+})
+public class EntityManagerFactorySerializationTest {
+
 	@Test
-	public void testSerialization() throws Exception {
+	public void testSerialization(EntityManagerFactoryScope scope) throws Exception {
+		EntityManagerFactory emf = scope.getEntityManagerFactory();
 		ByteArrayOutputStream stream = new ByteArrayOutputStream();
 		ObjectOutput out = new ObjectOutputStream( stream );
-		out.writeObject( entityManagerFactory() );
+		out.writeObject( emf );
 		out.close();
 		byte[] serialized = stream.toByteArray();
 		stream.close();
@@ -94,8 +104,8 @@ public class EntityManagerFactorySerializationTest extends BaseEntityManagerFunc
 	}
 
 	@Test
-	public void testEntityManagerFactorySerialization() throws Exception {
-		EntityManagerFactory entityManagerFactory = entityManagerFactory();
+	public void testEntityManagerFactorySerialization(EntityManagerFactoryScope scope) throws Exception {
+		EntityManagerFactory entityManagerFactory = scope.getEntityManagerFactory();
 
 		ByteArrayOutputStream stream = new ByteArrayOutputStream();
 		ObjectOutput out = new ObjectOutputStream( stream );
@@ -109,27 +119,18 @@ public class EntityManagerFactorySerializationTest extends BaseEntityManagerFunc
 		in.close();
 		byteIn.close();
 
-		assertTrue("deserialized EntityManagerFactory should be the same original EntityManagerFactory instance",
-				entityManagerFactory2 == entityManagerFactory);
+		assertTrue(
+				entityManagerFactory2 == entityManagerFactory,
+				"deserialized EntityManagerFactory should be the same original EntityManagerFactory instance"
+		);
 	}
 
 	@Test
-	public void testEntityManagerFactoryProperties() {
-		EntityManagerFactory entityManagerFactory = entityManagerFactory();
+	public void testEntityManagerFactoryProperties(EntityManagerFactoryScope scope) {
+		EntityManagerFactory entityManagerFactory = scope.getEntityManagerFactory();
 		assertTrue( entityManagerFactory.getProperties().containsKey( AvailableSettings.USER ) );
 		if ( entityManagerFactory.getProperties().containsKey( AvailableSettings.PASS ) ) {
 			assertEquals( "****",  entityManagerFactory.getProperties().get( AvailableSettings.PASS ) );
 		}
-	}
-
-	@Override
-	public Class[] getAnnotatedClasses() {
-		return new Class[]{
-				Item.class,
-				Distributor.class,
-				Wallet.class,
-				Cat.class,
-				Kitten.class
-		};
 	}
 }

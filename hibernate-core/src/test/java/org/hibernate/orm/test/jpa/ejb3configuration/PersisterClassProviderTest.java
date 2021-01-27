@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.jpa.test.ejb3configuration;
+package org.hibernate.orm.test.jpa.ejb3configuration;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -39,6 +39,7 @@ import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.test.PersistenceUnitDescriptorAdapter;
 import org.hibernate.jpa.test.SettingsGenerator;
+import org.hibernate.jpa.test.ejb3configuration.Bell;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
@@ -67,8 +68,8 @@ import org.hibernate.type.Type;
 import org.hibernate.type.VersionType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author <a href="mailto:emmanuel@hibernate.org">Emmanuel Bernard</a>
@@ -89,9 +90,9 @@ public class PersisterClassProviderTest {
 			entityManagerFactory.close();
 		}
 		catch ( PersistenceException e ) {
-            Assert.assertNotNull( e.getCause() );
-			Assert.assertNotNull( e.getCause().getCause() );
-			Assert.assertEquals( GoofyException.class, e.getCause().getCause().getClass() );
+            Assertions.assertNotNull( e.getCause() );
+			Assertions.assertNotNull( e.getCause().getCause() );
+			Assertions.assertEquals( GoofyException.class, e.getCause().getCause().getClass() );
 
 		}
 	}

@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.jpa.test.ejb3configuration;
+package org.hibernate.orm.test.jpa.ejb3configuration;
 
 import javax.persistence.EntityManagerFactory;
 import java.util.Collections;
@@ -15,17 +15,18 @@ import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.test.MyNamingStrategy;
 import org.hibernate.jpa.test.PersistenceUnitInfoAdapter;
 
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.junit.Assert.assertEquals;
+import static org.hibernate.testing.junit5.ExtraAssertions.assertTyping;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
 /**
  * @author Gail Badner
  */
-public class NamingStrategyConfigurationTest extends BaseUnitTestCase {
+@BaseUnitTest
+public class NamingStrategyConfigurationTest {
 
 	@Test
 	public void testNamingStrategyFromProperty() {
@@ -35,7 +36,10 @@ public class NamingStrategyConfigurationTest extends BaseUnitTestCase {
 			PersistenceUnitInfoAdapter adapter = new PersistenceUnitInfoAdapter();
 			EntityManagerFactoryBuilderImpl builder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
 					adapter,
-					Collections.singletonMap( AvailableSettings.PHYSICAL_NAMING_STRATEGY, MyNamingStrategy.class.getName() )
+					Collections.singletonMap(
+							AvailableSettings.PHYSICAL_NAMING_STRATEGY,
+							MyNamingStrategy.class.getName()
+					)
 			);
 			final EntityManagerFactory emf = builder.build();
 			try {
@@ -48,8 +52,9 @@ public class NamingStrategyConfigurationTest extends BaseUnitTestCase {
 						MyNamingStrategy.class,
 						builder.getMetadata().getMetadataBuildingOptions().getPhysicalNamingStrategy()
 				);
-			}finally {
-				if(emf != null){
+			}
+			finally {
+				if ( emf != null ) {
 					emf.close();
 				}
 			}

@@ -177,7 +177,8 @@ public class EntityGraphQueryHint implements AppliedGraph {
 					fromElement.setFetch( true );
 				}
 
-				List<PersistentAttributeDescriptor<?, ?>> currentEmbeddedNodeAttributeDescriptors = null;
+				List<PersistentAttributeDescriptor<?, ?>> currentEmbeddedNodeAttributeDescriptors
+						= Collections.emptyList();
 				if ( fromElement != null ) {
 					if( !explicitFromElement ){
 						fromElements.add( fromElement );
@@ -185,7 +186,8 @@ public class EntityGraphQueryHint implements AppliedGraph {
 				} else {
 					if ( attributeNode instanceof AttributeNodeImplementor ) {
 						AttributeNodeImplementor<?> attributeNodeImplementor = (AttributeNodeImplementor<?>) attributeNode;
-						PersistentAttributeDescriptor<?, ?> embeddedNodeAttributeDescriptor = attributeNodeImplementor.getAttributeDescriptor();
+						PersistentAttributeDescriptor<?, ?> embeddedNodeAttributeDescriptor
+								= attributeNodeImplementor.getAttributeDescriptor();
 						if ( embeddedNodeAttributeDescriptor.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED ) {
 							// embedded type, descend into it keeping the origin as from
 							fromElement = origin;

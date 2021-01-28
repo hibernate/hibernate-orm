@@ -70,7 +70,13 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 
 	@Override
 	public void clear() {
-		duplicationStrategies = DEFAULT_DUPLICATION_STRATEGIES;
+		//Odd semantics: we're expected (for backwards compatibility) to also clear the default DuplicationStrategy.
+		duplicationStrategies = new LinkedHashSet<>();;
+		listeners = null;
+	}
+
+	@Override
+	public void clearListeners() {
 		listeners = null;
 	}
 

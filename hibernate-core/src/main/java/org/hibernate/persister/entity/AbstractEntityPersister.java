@@ -87,8 +87,8 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.Mapping;
+import org.hibernate.engine.spi.NaturalIdResolutions;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.PersistenceContext.NaturalIdHelper;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
@@ -5012,7 +5012,7 @@ public abstract class AbstractEntityPersister
 		}
 
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-		final NaturalIdHelper naturalIdHelper = persistenceContext.getNaturalIdHelper();
+		final NaturalIdResolutions naturalIdResolutions = persistenceContext.getNaturalIdResolutions();
 		final Object id = getIdentifier( entity, session );
 
 		// for reattachment of mutable natural-ids, we absolutely positively have to grab the snapshot from the
@@ -5023,12 +5023,14 @@ public abstract class AbstractEntityPersister
 			naturalIdSnapshot = null;
 		}
 		else {
-			naturalIdSnapshot = naturalIdHelper.extractNaturalIdValues( entitySnapshot, this );
+			naturalIdSnapshot = naturalIdMapping.extractNaturalIdValues( entitySnapshot, session );
 		}
 
-		naturalIdHelper.removeSharedResolution( this, id, naturalIdSnapshot );
-		naturalIdHelper.manageLocalResolution(
-				id, naturalIdHelper.extractNaturalIdValues( entity, this ), this,
+		naturalIdResolutions.removeSharedResolution( id, naturalIdSnapshot, this );
+		naturalIdResolutions.manageLocalResolution(
+				id,
+				naturalIdMapping.extractNaturalIdValues( entity, session ),
+				this,
 				CachedNaturalIdValueSource.UPDATE
 		);
 	}
@@ -5700,7 +5702,7 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	public Object[] getNaturalIdentifierSnapshot(Object id, SharedSessionContractImplementor session) {
+	public Object getNaturalIdentifierSnapshot(Object id, SharedSessionContractImplementor session) {
 		verifyHasNaturalId();
 
 		if ( LOG.isTraceEnabled() ) {
@@ -5712,12 +5714,7 @@ public abstract class AbstractEntityPersister
 		}
 
 		final Object result = getNaturalIdLoader().resolveIdToNaturalId( id, session );
-		if ( result instanceof Object[] ) {
-			return (Object[]) result;
-		}
-		else {
-			return new Object[] { result };
-		}
+		return result;
 	}
 
 

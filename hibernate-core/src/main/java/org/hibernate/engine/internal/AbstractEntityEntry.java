@@ -408,7 +408,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 			}
 			setStatus( Status.MANAGED );
 			loadedState = getPersister().getPropertyValues( entity );
-			getPersistenceContext().getNaturalIdHelper().manageLocalResolution(
+			getPersistenceContext().getNaturalIdResolutions().manageLocalResolution(
 					id, loadedState, persister,
 					CachedNaturalIdValueSource.LOAD
 			);

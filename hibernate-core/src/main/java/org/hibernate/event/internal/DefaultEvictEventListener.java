@@ -108,10 +108,10 @@ public class DefaultEvictEventListener implements EvictEventListener {
 
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		if ( persister.hasNaturalIdentifier() ) {
-			persistenceContext.getNaturalIdHelper().handleEviction(
+			persistenceContext.getNaturalIdResolutions().handleEviction(
 					object,
-					persister,
-					key.getIdentifier()
+					key.getIdentifier(),
+					persister
 			);
 		}
 

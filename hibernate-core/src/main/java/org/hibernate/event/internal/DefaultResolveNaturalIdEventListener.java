@@ -94,9 +94,9 @@ public class DefaultResolveNaturalIdEventListener
 	 * @return The entity from the cache, or null.
 	 */
 	protected Object resolveFromCache(final ResolveNaturalIdEvent event) {
-		return event.getSession().getPersistenceContextInternal().getNaturalIdHelper().findCachedNaturalIdResolution(
-				event.getEntityPersister(),
-				event.getOrderedNaturalIdValues()
+		return event.getSession().getPersistenceContextInternal().getNaturalIdResolutions().findCachedNaturalIdResolution(
+				event.getOrderedNaturalIdValues(),
+				event.getEntityPersister()
 		);
 	}
 
@@ -136,7 +136,7 @@ public class DefaultResolveNaturalIdEventListener
 		//PK can be null if the entity doesn't exist
 		if (pk != null) {
 			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-			persistenceContext.getNaturalIdHelper().cacheResolutionFromLoad(
+			persistenceContext.getNaturalIdResolutions().cacheResolutionFromLoad(
 					event.getEntityPersister(),
 					pk,
 					event.getOrderedNaturalIdValues()

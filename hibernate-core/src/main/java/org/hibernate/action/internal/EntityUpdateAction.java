@@ -92,7 +92,7 @@ public class EntityUpdateAction extends EntityAction {
 		}
 		else {
 			this.previousNaturalIdValues = determinePreviousNaturalIdValues( persister, naturalIdMapping, id, previousState, session );
-			session.getPersistenceContextInternal().getNaturalIdHelper().manageLocalResolution(
+			session.getPersistenceContextInternal().getNaturalIdResolutions().manageLocalResolution(
 					id,
 					naturalIdMapping.extractNaturalIdValues( state, session ),
 					persister,
@@ -224,7 +224,7 @@ public class EntityUpdateAction extends EntityAction {
 		}
 
 		if ( naturalIdMapping != null ) {
-			session.getPersistenceContextInternal().getNaturalIdHelper().manageSharedResolution(
+			session.getPersistenceContextInternal().getNaturalIdResolutions().manageSharedResolution(
 					id,
 					naturalIdMapping.extractNaturalIdValues( state, session ),
 					previousNaturalIdValues,

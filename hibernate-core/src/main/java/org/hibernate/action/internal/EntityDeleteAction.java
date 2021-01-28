@@ -64,10 +64,10 @@ public class EntityDeleteAction extends EntityAction {
 		this.naturalIdMapping = persister.getNaturalIdMapping();
 
 		if ( naturalIdMapping != null ) {
-			naturalIdValues = session.getPersistenceContextInternal().getNaturalIdHelper().removeLocalResolution(
-					getPersister(),
+			naturalIdValues = session.getPersistenceContextInternal().getNaturalIdResolutions().removeLocalResolution(
 					getId(),
-					naturalIdMapping.extractNaturalIdValues( state, session )
+					naturalIdMapping.extractNaturalIdValues( state, session ),
+					getPersister()
 			);
 		}
 	}
@@ -145,7 +145,7 @@ public class EntityDeleteAction extends EntityAction {
 			persister.getCacheAccessStrategy().remove( session, ck);
 		}
 
-		persistenceContext.getNaturalIdHelper().removeSharedResolution( persister, id, naturalIdValues );
+		persistenceContext.getNaturalIdResolutions().removeSharedResolution( persister, id, naturalIdValues );
 
 		postDelete();
 

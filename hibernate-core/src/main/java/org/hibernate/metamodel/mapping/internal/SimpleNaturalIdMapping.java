@@ -64,7 +64,7 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping {
 		final Object naturalId = extractNaturalIdValues( currentState, session );
 		final Object snapshot = loadedState == null
 				? persistenceContext.getNaturalIdSnapshot( id, persister )
-				: persistenceContext.getNaturalIdHelper().extractNaturalIdValues( loadedState, persister );
+				: persister.getNaturalIdMapping().extractNaturalIdValues( loadedState, session );
 
 		if ( ! areEqual( naturalId, snapshot, session ) ) {
 			throw new HibernateException(

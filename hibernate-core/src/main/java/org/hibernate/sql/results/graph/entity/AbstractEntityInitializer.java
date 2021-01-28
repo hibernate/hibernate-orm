@@ -573,24 +573,32 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 					session,
 					persistenceContext
 			);
-			intializeEntity( instance, rowProcessingState, session, persistenceContext );
+			initializeEntity( instance, rowProcessingState, session, persistenceContext );
 			hibernateLazyInitializer.setImplementation( instance );
 		}
 		else {
-			intializeEntity( entityInstance, rowProcessingState, session, persistenceContext );
+			initializeEntity( entityInstance, rowProcessingState, session, persistenceContext );
 		}
 	}
 
-	private void intializeEntity(
+	private void initializeEntity(
 			Object toInitialize,
 			RowProcessingState rowProcessingState,
 			SharedSessionContractImplementor session,
 			PersistenceContext persistenceContext) {
-		final Object entity = persistenceContext.getEntity( entityKey );
-
-		if ( entity != null ) {
-			return;
+		final EntityEntry entry = persistenceContext.getEntry( toInitialize );
+		if ( entry != null ) {
+			if ( entry.getStatus() != Status.LOADING ) {
+				return;
+			}
 		}
+
+		final Object entity = persistenceContext.getEntity( entityKey );
+		assert entity == null || entity == toInitialize;
+//
+//		if ( entity != null ) {
+//			return;
+//		}
 
 		final Serializable entityIdentifier = entityKey.getIdentifier();
 
@@ -620,10 +628,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 		concreteDescriptor.setPropertyValues( toInitialize, resolvedEntityState );
 
-		persistenceContext.addEntity(
-				entityKey,
-				toInitialize
-		);
+		persistenceContext.addEntity( entityKey, toInitialize );
 
 		final Object version;
 
@@ -668,7 +673,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				);
 			}
 
-			final CacheEntry entry = concreteDescriptor.buildCacheEntry( toInitialize, resolvedEntityState, version, session );
+			final CacheEntry cacheEntry = concreteDescriptor.buildCacheEntry( toInitialize, resolvedEntityState, version, session );
 			final Object cacheKey = cacheAccess.generateCacheKey(
 					entityIdentifier,
 					rootEntityDescriptor,
@@ -686,7 +691,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				cacheAccess.update(
 						session,
 						cacheKey,
-						rootEntityDescriptor.getCacheEntryStructure().structure( entry ),
+						rootEntityDescriptor.getCacheEntryStructure().structure( cacheEntry ),
 						version,
 						version
 				);
@@ -698,7 +703,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 					final boolean put = cacheAccess.putFromLoad(
 							session,
 							cacheKey,
-							rootEntityDescriptor.getCacheEntryStructure().structure( entry ),
+							rootEntityDescriptor.getCacheEntryStructure().structure( cacheEntry ),
 							version,
 							//useMinimalPuts( session, entityEntry )
 							false
@@ -715,11 +720,10 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 
 		if ( entityDescriptor.getNaturalIdMapping() != null ) {
-			persistenceContext.getNaturalIdHelper().cacheResolutionFromLoad(
+			persistenceContext.getNaturalIdResolutions().cacheResolutionFromLoad(
 					entityDescriptor,
 					entityIdentifier,
-					persistenceContext.getNaturalIdHelper()
-							.extractNaturalIdValues( resolvedEntityState, entityDescriptor )
+					entityDescriptor.getNaturalIdMapping().extractNaturalIdValues( resolvedEntityState, session )
 			);
 		}
 

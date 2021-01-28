@@ -537,14 +537,10 @@ public class DefaultLoadEventListener implements LoadEventListener {
 
 		if ( entity != null && persister.hasNaturalIdentifier() ) {
 			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-			final PersistenceContext.NaturalIdHelper naturalIdHelper = persistenceContext.getNaturalIdHelper();
-			naturalIdHelper.cacheResolutionFromLoad(
+			persistenceContext.getNaturalIdResolutions().cacheResolutionFromLoad(
 					persister,
 					event.getEntityId(),
-					naturalIdHelper.extractNaturalIdValues(
-							entity,
-							persister
-					)
+					persister.getNaturalIdMapping().extractNaturalIdValues( entity, session )
 			);
 		}
 
@@ -571,6 +567,16 @@ public class DefaultLoadEventListener implements LoadEventListener {
 				event.getSession(),
 				event.getReadOnly()
 		);
+
+		// todo (6.0) : this is a change from previous versions
+		//		specifically the load call previously always returned a non-proxy
+		//		so we emulate that here.  Longer term we should make the
+		//		persister/loader/initializer sensitive to this fact - possibly
+		//		passing LoadType along
+
+		if ( entity instanceof HibernateProxy ) {
+			entity = ( (HibernateProxy) entity ).getHibernateLazyInitializer().getImplementation();
+		}
 
 		final StatisticsImplementor statistics = event.getSession().getFactory().getStatistics();
 		if ( event.isAssociationFetch() && statistics.isStatisticsEnabled() ) {

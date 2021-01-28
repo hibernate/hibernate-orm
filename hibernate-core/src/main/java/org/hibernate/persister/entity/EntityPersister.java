@@ -397,7 +397,7 @@ public interface EntityPersister
 	 * @param session The session from which the request originated.
 	 * @return The natural-id snapshot.
 	 */
-	Object[] getNaturalIdentifierSnapshot(Object id, SharedSessionContractImplementor session);
+	Object getNaturalIdentifierSnapshot(Object id, SharedSessionContractImplementor session);
 
 	/**
 	 * Determine which identifier generation strategy is used for this entity.

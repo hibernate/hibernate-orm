@@ -201,7 +201,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 
 		final Object snapshot = loadedState == null
 				? persistenceContext.getNaturalIdSnapshot( id, persister )
-				: persistenceContext.getNaturalIdHelper().extractNaturalIdValues( loadedState, persister );
+				: persister.getNaturalIdMapping().extractNaturalIdValues( loadedState, session );
 		final Object[] previousNaturalId = (Object[]) snapshot;
 
 		assert naturalId.length == getNaturalIdAttributes().size();

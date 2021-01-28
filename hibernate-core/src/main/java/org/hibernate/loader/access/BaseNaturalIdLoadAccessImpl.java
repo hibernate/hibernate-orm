@@ -6,6 +6,7 @@
  */
 package org.hibernate.loader.access;
 
+import java.util.Collection;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
@@ -24,7 +25,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 
-import static org.hibernate.engine.spi.PersistenceContext.NaturalIdHelper.INVALID_NATURAL_ID_REFERENCE;
+import static org.hibernate.engine.spi.NaturalIdResolutions.INVALID_NATURAL_ID_REFERENCE;
 
 /**
  * @author Steve Ebersole
@@ -97,7 +98,8 @@ public abstract class BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadOpt
 		}
 
 		final PersistenceContext persistenceContext = context.getSession().getPersistenceContextInternal();
-		for ( Object pk : persistenceContext.getNaturalIdHelper().getCachedPkResolutions( entityPersister() ) ) {
+		final Collection<?> cachedPkResolutions = persistenceContext.getNaturalIdResolutions().getCachedPkResolutions( entityPersister() );
+		for ( Object pk : cachedPkResolutions ) {
 			final EntityKey entityKey = context.getSession().generateEntityKey( pk, entityPersister() );
 			final Object entity = persistenceContext.getEntity( entityKey );
 			final EntityEntry entry = persistenceContext.getEntry( entity );
@@ -122,10 +124,10 @@ public abstract class BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadOpt
 				continue;
 			}
 
-			persistenceContext.getNaturalIdHelper().handleSynchronization(
-					entityPersister(),
+			persistenceContext.getNaturalIdResolutions().handleSynchronization(
 					pk,
-					entity
+					entity,
+					entityPersister()
 			);
 		}
 	}
@@ -140,9 +142,9 @@ public abstract class BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadOpt
 		final SessionImplementor session = context.getSession();
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 
-		final Object cachedResolution = persistenceContext.getNaturalIdHelper().findCachedNaturalIdResolution(
-				entityPersister(),
-				normalizedNaturalIdValue
+		final Object cachedResolution = persistenceContext.getNaturalIdResolutions().findCachedNaturalIdResolution(
+				normalizedNaturalIdValue,
+				entityPersister()
 		);
 
 		if ( cachedResolution == INVALID_NATURAL_ID_REFERENCE ) {
@@ -177,9 +179,9 @@ public abstract class BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadOpt
 		final SessionImplementor session = context.getSession();
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 
-		final Object cachedResolution = persistenceContext.getNaturalIdHelper().findCachedNaturalIdResolution(
-				entityPersister(),
-				normalizedNaturalIdValue
+		final Object cachedResolution = persistenceContext.getNaturalIdResolutions().findCachedNaturalIdResolution(
+				normalizedNaturalIdValue,
+				entityPersister()
 		);
 
 		if ( cachedResolution == INVALID_NATURAL_ID_REFERENCE ) {

@@ -8,7 +8,6 @@ package org.hibernate.metamodel.mapping;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -26,7 +25,6 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.BasicValue;
@@ -226,7 +224,7 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectionMappi
 						(BasicType<?>) subtype,
 						containingTableExpression,
 						columnExpression,
-						false,
+						selectable.isFormula(),
 						selectable.getCustomReadExpression(),
 						selectable.getCustomWriteExpression(),
 						representationStrategy.resolvePropertyAccess( bootPropertyDescriptor ),
@@ -534,14 +532,11 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectionMappi
 			final Object[] values = (Object[]) domainValue;
 			assert values.length == attributeMappings.size();
 
-			final MutableInteger positionRef = new MutableInteger();
-			attributeMappings.forEach(
-					(attributeMapping) -> {
-						final int position = positionRef.getAndIncrement();
-						final Object attributeValue = values[ position ];
-						attributeMapping.breakDownJdbcValues( attributeValue, valueConsumer, session );
-					}
-			);
+			for ( int i = 0; i < attributeMappings.size(); i++ ) {
+				final AttributeMapping attributeMapping = attributeMappings.get( i );
+				final Object attributeValue = values[ i ];
+				attributeMapping.breakDownJdbcValues( attributeValue, valueConsumer, session );
+			}
 		}
 		else {
 			attributeMappings.forEach(
@@ -555,16 +550,13 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectionMappi
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		final Collection<AttributeMapping> attributeMappings = getAttributeMappings();
+		final List<AttributeMapping> attributeMappings = getAttributeMappings();
 
-		Object[] result = new Object[attributeMappings.size()];
-		int i = 0;
-		final Iterator<AttributeMapping> iterator = attributeMappings.iterator();
-		while ( iterator.hasNext() ) {
-			AttributeMapping mapping = iterator.next();
-			Object o = mapping.getPropertyAccess().getGetter().get( value );
-			result[i] = mapping.disassemble( o, session );
-			i++;
+		final Object[] result = new Object[ attributeMappings.size() ];
+		for ( int i = 0; i < attributeMappings.size(); i++ ) {
+			final AttributeMapping attributeMapping = attributeMappings.get( i );
+			Object o = attributeMapping.getPropertyAccess().getGetter().get( value );
+			result[i] = attributeMapping.disassemble( o, session );
 		}
 
 		return result;

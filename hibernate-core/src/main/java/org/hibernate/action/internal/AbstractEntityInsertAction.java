@@ -14,7 +14,6 @@ import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
@@ -166,7 +165,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 		// before save, we need to add a local (transactional) natural id cross-reference
 		final NaturalIdMapping naturalIdMapping = getPersister().getNaturalIdMapping();
 		if ( naturalIdMapping != null ) {
-			getSession().getPersistenceContextInternal().getNaturalIdHelper().manageLocalResolution(
+			getSession().getPersistenceContextInternal().getNaturalIdResolutions().manageLocalResolution(
 					getId(),
 					naturalIdMapping.extractNaturalIdValues( state, getSession() ),
 					getPersister(),
@@ -188,10 +187,9 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 
 		final Object naturalIdValues = naturalIdMapping.extractNaturalIdValues( state, getSession() );
 
-		final PersistenceContext.NaturalIdHelper naturalIdHelper = getSession().getPersistenceContextInternal().getNaturalIdHelper();
 		if ( isEarlyInsert() ) {
 			// with early insert, we still need to add a local (transactional) natural id cross-reference
-			naturalIdHelper.manageLocalResolution(
+			getSession().getPersistenceContextInternal().getNaturalIdResolutions().manageLocalResolution(
 					generatedId,
 					naturalIdValues,
 					getPersister(),
@@ -199,7 +197,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 			);
 		}
 		// after save, we need to manage the shared cache entries
-		naturalIdHelper.manageSharedResolution(
+		getSession().getPersistenceContextInternal().getNaturalIdResolutions().manageSharedResolution(
 				generatedId,
 				naturalIdValues,
 				null,

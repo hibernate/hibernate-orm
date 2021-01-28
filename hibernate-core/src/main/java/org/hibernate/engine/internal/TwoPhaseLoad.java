@@ -335,10 +335,10 @@ public final class TwoPhaseLoad {
 		}
 
 		if ( persister.hasNaturalIdentifier() ) {
-			persistenceContext.getNaturalIdHelper().cacheResolutionFromLoad(
+			persistenceContext.getNaturalIdResolutions().cacheResolutionFromLoad(
 					persister,
 					id,
-					persistenceContext.getNaturalIdHelper().extractNaturalIdValues( hydratedState, persister )
+					persister.getNaturalIdMapping().extractNaturalIdValues( hydratedState, session )
 			);
 		}
 

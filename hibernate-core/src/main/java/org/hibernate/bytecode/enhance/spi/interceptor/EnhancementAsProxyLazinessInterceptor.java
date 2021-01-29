@@ -35,6 +35,7 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 
 	private final boolean inLineDirtyChecking;
 	private Set<String> writtenFieldNames;
+	private Set<String> collectionAttributeNames;
 
 	private Status status;
 
@@ -57,11 +58,22 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 		this.entityKey = entityKey;
 
 		final EntityPersister entityPersister = session.getFactory().getMetamodel().entityPersister( entityName );
+		if ( entityPersister.hasCollections() ) {
+			Type[] propertyTypes = entityPersister.getPropertyTypes();
+			collectionAttributeNames = new HashSet<>();
+			for ( int i = 0; i < propertyTypes.length; i++ ) {
+				Type propertyType = propertyTypes[i];
+				if ( propertyType.isCollectionType() ) {
+					collectionAttributeNames.add( entityPersister.getPropertyNames()[i] );
+				}
+			}
+		}
+
 		this.inLineDirtyChecking = entityPersister.getEntityMode() == EntityMode.POJO
 				&& SelfDirtinessTracker.class.isAssignableFrom( entityPersister.getMappedClass() );
 		// if self-dirty tracking is enabled but DynamicUpdate is not enabled then we need to initialise the entity
 		// 	because the pre-computed update statement contains even not dirty properties and so we need all the values
-		initializeBeforeWrite = !inLineDirtyChecking || !entityPersister.getEntityMetamodel().isDynamicUpdate();
+		initializeBeforeWrite = !( inLineDirtyChecking && entityPersister.getEntityMetamodel().isDynamicUpdate() );
 		status = Status.UNINITIALIZED;
 	}
 
@@ -245,7 +257,8 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 			return newValue;
 		}
 
-		if ( initializeBeforeWrite ) {
+		if ( initializeBeforeWrite
+				|| ( collectionAttributeNames != null && collectionAttributeNames.contains( attributeName ) ) ) {
 			// we need to force-initialize the proxy - the fetch group to which the `attributeName` belongs
 			try {
 				forceInitialize( target, attributeName );
@@ -267,6 +280,8 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 				writtenFieldNames = new HashSet<>();
 			}
 			writtenFieldNames.add( attributeName );
+
+			( (SelfDirtinessTracker) target ).$$_hibernate_trackChange( attributeName );
 		}
 
 		return newValue;
@@ -321,6 +336,10 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 
 	private void setInitialized() {
 		status = Status.INITIALIZED;
+	}
+
+	public boolean hasWrittenFieldNames() {
+		return writtenFieldNames != null && writtenFieldNames.size() != 0;
 	}
 
 	private enum Status {

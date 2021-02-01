@@ -375,8 +375,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 				fetchProfiles.put( fetchProfile.getName(), fetchProfile );
 			}
 
-			this.defaultSessionOpenOptions = withOptions();
-			this.temporarySessionOpenOptions = buildTemporarySessionOpenOptions();
+			this.defaultSessionOpenOptions = createDefaultSessionOpenOptionsIfPossible();
+			this.temporarySessionOpenOptions = this.defaultSessionOpenOptions == null ? null : buildTemporarySessionOpenOptions();
 			this.fastSessionServices = new FastSessionServices( this );
 
 			this.observer.sessionFactoryCreated( this );
@@ -400,6 +400,17 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			}
 			close();
 			throw e;
+		}
+	}
+
+	private SessionBuilder createDefaultSessionOpenOptionsIfPossible() {
+		final CurrentTenantIdentifierResolver currentTenantIdentifierResolver = getCurrentTenantIdentifierResolver();
+		if ( currentTenantIdentifierResolver == null ) {
+			return withOptions();
+		}
+		else {
+			//Don't store a default SessionBuilder when a CurrentTenantIdentifierResolver is provided
+			return null;
 		}
 	}
 
@@ -450,25 +461,23 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	public Session openSession() throws HibernateException {
-		final CurrentTenantIdentifierResolver currentTenantIdentifierResolver = getCurrentTenantIdentifierResolver();
-		//We can only reuse the defaultSessionOpenOptions as a constant when there is no TenantIdentifierResolver
-		if ( currentTenantIdentifierResolver != null ) {
-			return this.withOptions().openSession();
+		//The defaultSessionOpenOptions can't be used in some cases; for example when using a TenantIdentifierResolver.
+		if ( this.defaultSessionOpenOptions != null ) {
+			return this.defaultSessionOpenOptions.openSession();
 		}
 		else {
-			return this.defaultSessionOpenOptions.openSession();
+			return this.withOptions().openSession();
 		}
 	}
 
 	public Session openTemporarySession() throws HibernateException {
-		final CurrentTenantIdentifierResolver currentTenantIdentifierResolver = getCurrentTenantIdentifierResolver();
-		//We can only reuse the defaultSessionOpenOptions as a constant when there is no TenantIdentifierResolver
-		if ( currentTenantIdentifierResolver != null ) {
-			return buildTemporarySessionOpenOptions()
-					.openSession();
+		//The temporarySessionOpenOptions can't be used in some cases; for example when using a TenantIdentifierResolver.
+		if ( this.temporarySessionOpenOptions != null ) {
+			return this.temporarySessionOpenOptions.openSession();
 		}
 		else {
-			return this.temporarySessionOpenOptions.openSession();
+			return buildTemporarySessionOpenOptions()
+					.openSession();
 		}
 	}
 

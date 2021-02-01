@@ -197,6 +197,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	private final transient FastSessionServices fastSessionServices;
 	private final transient SessionBuilder defaultSessionOpenOptions;
 	private final transient SessionBuilder temporarySessionOpenOptions;
+	private final transient StatelessSessionBuilder defaultStatelessOptions;
 
 	public SessionFactoryImpl(
 			final MetadataImplementor metadata,
@@ -381,6 +382,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 			this.defaultSessionOpenOptions = createDefaultSessionOpenOptionsIfPossible();
 			this.temporarySessionOpenOptions = this.defaultSessionOpenOptions == null ? null : buildTemporarySessionOpenOptions();
+			this.defaultStatelessOptions = this.defaultSessionOpenOptions == null ? null : withStatelessOptions();
 			this.fastSessionServices = new FastSessionServices( this );
 
 			this.observer.sessionFactoryCreated( this );
@@ -503,7 +505,12 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	public StatelessSession openStatelessSession() {
-		return withStatelessOptions().openStatelessSession();
+		if ( this.defaultStatelessOptions != null ) {
+			return this.defaultStatelessOptions.openStatelessSession();
+		}
+		else {
+			return withStatelessOptions().openStatelessSession();
+		}
 	}
 
 	public StatelessSession openStatelessSession(Connection connection) {

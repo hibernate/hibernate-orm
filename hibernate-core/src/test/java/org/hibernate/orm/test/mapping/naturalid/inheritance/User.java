@@ -15,10 +15,20 @@ import javax.persistence.Table;
 @Entity
 @Table( name = "GK_USER" )
 public class User extends Principal {
+	private String level;
+
 	public User() {
 	}
 
 	public User(String uid) {
 		super( uid );
+	}
+
+	public String getLevel() {
+		return level;
+	}
+
+	public void setLevel(String level) {
+		this.level = level;
 	}
 }

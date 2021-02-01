@@ -6,8 +6,6 @@
  */
 package org.hibernate.orm.test.mapping.naturalid.inheritance;
 
-import javax.persistence.PersistenceException;
-
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
@@ -18,7 +16,6 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -27,20 +24,18 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hibernate.cfg.AvailableSettings.GENERATE_STATISTICS;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
 
 /**
  * @author Steve Ebersole
  */
 @ServiceRegistry( settings = @Setting( name= GENERATE_STATISTICS, value = "true" ) )
-@DomainModel( annotatedClasses = { Principal.class, User.class } )
+@DomainModel( annotatedClasses = { Principal.class, User.class, System.class } )
 @SessionFactory
 public class InheritedNaturalIdTest {
 	@Test
@@ -75,7 +70,6 @@ public class InheritedNaturalIdTest {
 	}
 
 	public static final String ORIGINAL = "steve";
-	public static final String UPDATED = "sebersole";
 
 	@Test
 	public void testNaturalIdApi(SessionFactoryScope scope) {
@@ -102,37 +96,6 @@ public class InheritedNaturalIdTest {
 
 
 	@Test
-	@FailureExpected(
-			reason = "Do not believe this is a valid test.  The natural-id is explicitly defined as mutable " +
-					"and then the test checks that it is not mutable"
-	)
-	public void testSubclassModifiableNaturalId(SessionFactoryScope scope) {
-		// todo (6.0) : I'm not understanding this test.. the `User` natural-id is defined as mutable
-		//		- why would changing the value make the process "blow up"?
-		scope.inTransaction(
-				(session) -> {
-					final User user = session.bySimpleNaturalId( User.class ).load( ORIGINAL );
-					assertNotNull( user );
-
-					// change the natural id - the flush should blow up
-					user.setUid( UPDATED );
-					try {
-						session.flush();
-						fail();
-					}
-					catch (PersistenceException e) {
-						assertThat( e.getMessage(), containsString( "An immutable natural identifier" ) );
-						assertThat( e.getMessage(), containsString( "was altered" ) );
-					}
-					finally {
-						// force the Session to close
-						session.close();
-					}
-				}
-		);
-	}
-
-	@Test
 	public void testSubclassDeleteNaturalId(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
@@ -153,6 +116,35 @@ public class InheritedNaturalIdTest {
 					assertThat( p, nullValue() );
 
 					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
+				}
+		);
+	}
+
+	@Test
+	public void testWrongClassLoadingById(SessionFactoryScope scope) {
+		// without caching enabled (even without the row being cached if it is enabled),
+		// this simply returns null rather than throwing WrongClassException
+		// todo (6.0) : do we want to make this more consistent?
+
+		scope.inTransaction(
+				(session) -> {
+					final System loaded = session.byId( System.class ).load( 1L );
+					assertThat( loaded, nullValue() );
+				}
+
+		);
+	}
+
+	@Test
+	public void testWrongClassLoadingByNaturalId(SessionFactoryScope scope) {
+		// without caching enabled (and even without the row being cached if it is enabled),
+		// this simply returns null rather than throwing WrongClassException
+		// todo (6.0) : do we want to make this more consistent?
+
+		scope.inTransaction(
+				(session) -> {
+					final System loaded = session.bySimpleNaturalId( System.class ).load( ORIGINAL );
+					assertThat( loaded, nullValue() );
 				}
 		);
 	}

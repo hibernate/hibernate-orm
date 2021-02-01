@@ -25,7 +25,6 @@ import static org.junit.Assert.fail;
 @ServiceRegistry( settings = @Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "true" ) )
 @DomainModel( annotatedClasses = { MyEntity.class, ExtendedEntity.class } )
 @SessionFactory
-@NotImplementedYet( reason = "natural-id caching not yet implemented", strict = false )
 public class InheritedNaturalIdCacheTest {
 	@BeforeEach
 	public void createTestData(SessionFactoryScope scope) {
@@ -48,6 +47,7 @@ public class InheritedNaturalIdCacheTest {
 	}
 
 	@Test
+	@NotImplementedYet( reason = "natural-id caching not yet implemented", strict = false )
 	public void testLoadingInheritedEntitiesByNaturalId(SessionFactoryScope scope) {
 		// load the entities "properly" by natural-id
 

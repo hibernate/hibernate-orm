@@ -142,7 +142,7 @@ public abstract class BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadOpt
 		final SessionImplementor session = context.getSession();
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 
-		final Object cachedResolution = persistenceContext.getNaturalIdResolutions().findCachedNaturalIdResolution(
+		final Object cachedResolution = persistenceContext.getNaturalIdResolutions().findCachedIdByNaturalId(
 				normalizedNaturalIdValue,
 				entityPersister()
 		);
@@ -179,7 +179,7 @@ public abstract class BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadOpt
 		final SessionImplementor session = context.getSession();
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 
-		final Object cachedResolution = persistenceContext.getNaturalIdResolutions().findCachedNaturalIdResolution(
+		final Object cachedResolution = persistenceContext.getNaturalIdResolutions().findCachedIdByNaturalId(
 				normalizedNaturalIdValue,
 				entityPersister()
 		);

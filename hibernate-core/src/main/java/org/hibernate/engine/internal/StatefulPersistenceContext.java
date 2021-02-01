@@ -329,7 +329,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		persister = locateProperPersister( persister );
 
 		// let's first see if it is part of the natural id cache...
-		final Object cachedValue = getNaturalIdResolutions().findCachedNaturalId( id, persister );
+		final Object cachedValue = getNaturalIdResolutions().findCachedNaturalIdById( id, persister );
 		if ( cachedValue != null ) {
 			return cachedValue;
 		}
@@ -340,9 +340,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			final Object dbValue = persister.getNaturalIdentifierSnapshot( id, session );
 
 			naturalIdResolutions.cacheResolutionFromLoad(
-					persister,
-					id,
-					dbValue
+					id, dbValue, persister
 			);
 			return dbValue;
 		}
@@ -360,9 +358,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 				naturalIdSnapshotSubSet[i] = entitySnapshot[ props[i] ];
 			}
 			naturalIdResolutions.cacheResolutionFromLoad(
-					persister,
-					id,
-					naturalIdSnapshotSubSet
+					id, naturalIdSnapshotSubSet, persister
 			);
 			return naturalIdSnapshotSubSet;
 		}

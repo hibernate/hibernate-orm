@@ -37,9 +37,7 @@ public interface NaturalIdResolutions {
 	Object removeResolution(Object id, Object naturalId, EntityMappingType entityDescriptor);
 
 	void cacheResolutionFromLoad(
-			EntityMappingType entityDescriptor,
-			Object id,
-			Object naturalIdValue);
+			Object id, Object naturalId, EntityMappingType entityDescriptor);
 
 	/**
 	 * Ensures that the necessary local cross-reference exists.  Specifically, this
@@ -67,8 +65,6 @@ public interface NaturalIdResolutions {
 			EntityMappingType entityDescriptor,
 			CachedNaturalIdValueSource source);
 
-	void removeSharedResolution(EntityMappingType entityDescriptor, Object id, Object naturalIdValues);
-
 	/**
 	 * Removes any cross-reference from the L2 cache
 	 */
@@ -79,14 +75,14 @@ public interface NaturalIdResolutions {
 	 *
 	 * @return The cross-referenced natural-id values or {@code null}
 	 */
-	Object findCachedNaturalId(Object id, EntityMappingType entityDescriptor);
+	Object findCachedNaturalIdById(Object id, EntityMappingType entityDescriptor);
 
 	/**
 	 * Find the cached identifier for the given natural-id
 	 *
 	 * @return The cross-referenced primary key, {@link #INVALID_NATURAL_ID_REFERENCE} or {@code null}.
 	 */
-	Object findCachedNaturalIdResolution(Object naturalId, EntityMappingType entityDescriptor);
+	Object findCachedIdByNaturalId(Object naturalId, EntityMappingType entityDescriptor);
 
 	/**
 	 * Find all the locally cached primary key cross-reference entries for the given entity.

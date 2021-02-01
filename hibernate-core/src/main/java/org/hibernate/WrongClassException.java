@@ -6,6 +6,8 @@
  */
 package org.hibernate;
 
+import java.util.Locale;
+
 /**
  * Thrown when loading an entity (by identifier) results in a value that cannot be treated as the subclass
  * type requested by the caller.
@@ -31,8 +33,24 @@ public class WrongClassException extends HibernateException {
 						message
 				)
 		);
+
 		this.identifier = identifier;
 		this.entityName = entityName;
+	}
+
+	public WrongClassException(String resolvedEntityName, Object identifier, String expectedEntityName, Object discriminatorValue) {
+		super(
+				String.format(
+						Locale.ROOT,
+						"Expected object of type `%s`, but found `%s`; discriminator = %s",
+						resolvedEntityName,
+						expectedEntityName,
+						discriminatorValue
+				)
+		);
+
+		this.identifier = identifier;
+		this.entityName = expectedEntityName;
 	}
 
 	public String getEntityName() {

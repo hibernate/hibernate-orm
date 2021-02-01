@@ -20,6 +20,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
@@ -77,7 +78,6 @@ public class InheritedNaturalIdNoCacheTest {
 	}
 
 	@Test
-	@NotImplementedYet( reason = "natural-id / wrong-class support", strict = false )
 	public void testLoadSubclass(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
@@ -97,18 +97,18 @@ public class InheritedNaturalIdNoCacheTest {
 				}
 		);
 
-		// finally try to access the root (base) entity as subclass (extended) - WrongClassException
+	}
+
+	@Test
+	public void testLoadWrongClass(SessionFactoryScope scope) {
+		// try to access the root (base) entity as subclass (extended)
+		//		- the outcome is different here depending on whether:
+		//			1) caching is enabled && the natural-id resolution is cached -> WrongClassException
+		//			2) otherwise -> return null
 		scope.inTransaction(
 				(session) -> {
-					try {
-						session
-								.bySimpleNaturalId( ExtendedEntity.class )
-								.load( "base" );
-						fail();
-					}
-					catch (WrongClassException expected) {
-						// expected result
-					}
+					final ExtendedEntity loaded = session.bySimpleNaturalId( ExtendedEntity.class ).load( "base" );
+					assertThat( loaded, nullValue() );
 				}
 		);
 	}

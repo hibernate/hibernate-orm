@@ -145,7 +145,7 @@ public class EntityDeleteAction extends EntityAction {
 			persister.getCacheAccessStrategy().remove( session, ck);
 		}
 
-		persistenceContext.getNaturalIdResolutions().removeSharedResolution( persister, id, naturalIdValues );
+		persistenceContext.getNaturalIdResolutions().removeSharedResolution( id, naturalIdValues, persister );
 
 		postDelete();
 

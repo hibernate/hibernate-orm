@@ -66,9 +66,9 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	//		the EntityDescriptor here to avoid chicken/egg issues in the creation of
 	// 		these
 
+	private final EntityValuedModelPart referencedModelPart;
 	private final EntityPersister entityDescriptor;
 	private final EntityPersister rootEntityDescriptor;
-	private EntityPersister concreteDescriptor;
 	private final NavigablePath navigablePath;
 	private final LockMode lockMode;
 
@@ -82,7 +82,8 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	private final Map<AttributeMapping, DomainResultAssembler> assemblerMap;
 
 	// per-row state
-	private final EntityValuedModelPart referencedModelPart;
+	private EntityPersister concreteDescriptor;
+	private Object entityIdentifier;
 	private EntityKey entityKey;
 	private Object entityInstance;
 	private boolean missing;
@@ -110,7 +111,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			this.rootEntityDescriptor = entityDescriptor;
 		}
 		else {
-			this.rootEntityDescriptor = creationState.getSqlAstCreationContext().getDomainModel().findEntityDescriptor( rootEntityName );
+			this.rootEntityDescriptor = entityDescriptor.getRootEntityDescriptor().getEntityPersister();
 		}
 
 		this.navigablePath = navigablePath;
@@ -216,6 +217,9 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		return referencedModelPart;
 	}
 
+	/**
+	 * Simple class name of this initializer for logging
+	 */
 	protected abstract String getSimpleConcreteImplName();
 
 	public NavigablePath getNavigablePath() {
@@ -325,19 +329,21 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				rowProcessingState.getJdbcValuesSourceProcessingState().getProcessingOptions()
 		);
 
-		final String concreteEntityName = ( (Loadable) entityDescriptor ).getSubclassForDiscriminatorValue( discriminatorValue );
-
+		final String concreteEntityName = ( (Loadable) entityDescriptor.getRootEntityDescriptor() ).getSubclassForDiscriminatorValue( discriminatorValue );
 		if ( concreteEntityName == null ) {
-			// oops - we got an instance of another class hierarchy branch
-//			throw new WrongClassException(
-//					"Discriminator: " + discriminatorValue,
-//					entityKey.getIdentifier(),
-//					entityDescriptor.getEntityName()
-//			);
 			return entityDescriptor;
 		}
 
 		final EntityPersister concreteType = session.getFactory().getMetamodel().findEntityDescriptor( concreteEntityName );
+
+		if ( concreteType == null || ! concreteType.isTypeOrSuperType( entityDescriptor ) ) {
+			throw new WrongClassException(
+					concreteEntityName,
+					entityIdentifier,
+					entityDescriptor.getEntityName(),
+					discriminatorValue
+			);
+		}
 
 		// verify that the `entityDescriptor` is either == concreteType or its super-type
 		assert concreteType.isTypeOrSuperType( entityDescriptor );
@@ -558,8 +564,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		if ( missing ) {
 			return;
 		}
-		final SharedSessionContractImplementor session = rowProcessingState.getJdbcValuesSourceProcessingState()
-				.getSession();
+		final SharedSessionContractImplementor session = rowProcessingState.getJdbcValuesSourceProcessingState().getSession();
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
 
 		if ( entityInstance instanceof HibernateProxy ) {
@@ -721,9 +726,9 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 		if ( entityDescriptor.getNaturalIdMapping() != null ) {
 			persistenceContext.getNaturalIdResolutions().cacheResolutionFromLoad(
-					entityDescriptor,
 					entityIdentifier,
-					entityDescriptor.getNaturalIdMapping().extractNaturalIdValues( resolvedEntityState, session )
+					entityDescriptor.getNaturalIdMapping().extractNaturalIdValues( resolvedEntityState, session ),
+					entityDescriptor
 			);
 		}
 

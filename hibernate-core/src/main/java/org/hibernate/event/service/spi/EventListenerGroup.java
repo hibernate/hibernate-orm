@@ -61,7 +61,19 @@ public interface EventListenerGroup<T> extends Serializable {
 	public void prependListener(T listener);
 	public void prependListeners(T... listeners);
 
+	/**
+	 * Clears both the list of event listeners and all DuplicationStrategy,
+	 * including the default duplication strategy.
+	 * @deprecated likely want to use {@link #clearListeners()} instead, which doesn't
+	 * also reset the registered DuplicationStrategy(ies).
+	 */
+	@Deprecated
 	public void clear();
+
+	/**
+	 * Removes all registered listeners
+	 */
+	public void clearListeners();
 
 	/**
 	 * Fires an event on each registered event listener of this group.

@@ -18,6 +18,7 @@ import javax.persistence.spi.PersistenceUnitTransactionType;
 
 import org.hibernate.testing.orm.domain.DomainModelDescriptor;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
+import org.hibernate.testing.orm.jpa.NonStringValueSettingProvider;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -42,6 +43,8 @@ public @interface Jpa {
 	 * Used to mimic container integration
 	 */
 	Setting[] integrationSettings() default {};
+
+	Class<? extends NonStringValueSettingProvider>[] nonStringValueSettingProvider() default {};
 
 	String persistenceUnitName() default "test-pu";
 

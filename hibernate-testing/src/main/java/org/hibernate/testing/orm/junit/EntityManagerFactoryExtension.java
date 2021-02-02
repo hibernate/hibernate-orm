@@ -39,6 +39,7 @@ import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.hibernate.testing.orm.domain.DomainModelDescriptor;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.jpa.PersistenceUnitInfoImpl;
+import org.hibernate.testing.orm.jpa.NonStringValueSettingProvider;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.TestExecutionExceptionHandler;
@@ -154,6 +155,19 @@ public class EntityManagerFactoryExtension
 		for ( int i = 0; i < emfAnn.integrationSettings().length; i++ ) {
 			final Setting setting = emfAnn.integrationSettings()[ i ];
 			integrationSettings.put( setting.name(), setting.value() );
+		}
+
+		if ( emfAnn.nonStringValueSettingProvider().length > 0 ) {
+			for ( int i = 0; i < emfAnn.nonStringValueSettingProvider().length; i++ ) {
+				final Class<? extends NonStringValueSettingProvider> _class = emfAnn.nonStringValueSettingProvider()[ i ];
+				try {
+					NonStringValueSettingProvider valueProvider = _class.newInstance();
+					integrationSettings.put( valueProvider.getKey(), valueProvider.getValue() );
+				}
+				catch (Exception e) {
+					log.error( "Error obtaining special value for " + _class.getName(), e );
+				}
+			}
 		}
 
 		final EntityManagerFactoryScopeImpl scope = new EntityManagerFactoryScopeImpl( pui, integrationSettings );

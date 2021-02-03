@@ -10,6 +10,7 @@ import java.util.Map;
 import javax.persistence.EntityManager;
 
 import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.jpa.test.Wallet;
@@ -35,6 +36,7 @@ public class EnableDiscardPersistenceContextOnCloseTest extends BaseEntityManage
 	@Override
 	protected Map getConfig() {
 		Map config = super.getConfig();
+		connectionProvider.setConnectionProvider( (ConnectionProvider) config.get( org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER ) );
 		config.put( AvailableSettings.DISCARD_PC_ON_CLOSE, "true");
 		config.put(
 				org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER,

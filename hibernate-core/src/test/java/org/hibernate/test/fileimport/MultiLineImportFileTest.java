@@ -62,7 +62,20 @@ public class MultiLineImportFileTest extends BaseCoreFunctionalTestCase {
 		final String multiLineText = (String) s.createSQLQuery( "SELECT text FROM test_data WHERE id = 2" )
 				.uniqueResult();
 		//  "Multi-line comment line 1\n-- line 2'\n/* line 3 */"
-		final String expected = String.format( "Multi-line comment line 1%n-- line 2'%n/* line 3 */" );
+		final String line1 = "Multi-line comment line 1";
+		final String line2 = "-- line 2'";
+		final String line3 = "/* line 3 */";
+		final String lineSeparator;
+		if ( multiLineText.length() < line1.length() + 2 || multiLineText.charAt( line1.length() ) == '\n' ) {
+			lineSeparator = "\n";
+		}
+		else if ( multiLineText.charAt( line1.length() + 1 ) == '\n' ) {
+			lineSeparator = "\r\n";
+		}
+		else {
+			lineSeparator = "\r";
+		}
+		final String expected = String.join( lineSeparator, line1, line2, line3 );
 		assertEquals( "Multi-line string inserted incorrectly", expected, multiLineText );
 
 		String empty = (String) s.createSQLQuery( "SELECT text FROM test_data WHERE id = 3" ).uniqueResult();

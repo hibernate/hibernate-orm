@@ -35,6 +35,7 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
 import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
@@ -45,6 +46,7 @@ import org.junit.Test;
 
 @TestForIssue( jiraKey = "HHH-9731" )
 @SkipForDialect(value = DB2Dialect.class, comment = "We would need casts in the case clauses. See HHH-12822.")
+@SkipForDialect(value = DerbyDialect.class, comment = "Derby requires either casted parameters or literals in the result arms of CASE expressions")
 public class SelectCaseTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override

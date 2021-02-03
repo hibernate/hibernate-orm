@@ -75,8 +75,10 @@ public class JtaWithFailingBatchTest extends AbstractJtaBatchTest {
 			}
 			catch (Exception expected) {
 				//expected
-				if ( transactionManager.getStatus() == Status.STATUS_ACTIVE ) {
-					transactionManager.rollback();
+				switch ( transactionManager.getStatus() ) {
+					case Status.STATUS_ACTIVE:
+					case Status.STATUS_MARKED_ROLLBACK:
+						transactionManager.rollback();
 				}
 			}
 
@@ -89,7 +91,6 @@ public class JtaWithFailingBatchTest extends AbstractJtaBatchTest {
 			assertStatementsListIsCleared();
 		}
 		finally {
-
 			em.close();
 		}
 

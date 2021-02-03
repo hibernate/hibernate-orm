@@ -12,6 +12,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
 
 /**
  * Container class for different implementation of the {@link DialectCheck} interface.
@@ -289,6 +290,12 @@ abstract public class DialectChecks {
 				dialect instanceof MySQLDialect ||
 				dialect instanceof CockroachDB192Dialect
 			);
+		}
+	}
+
+	public static class SupportsGlobalTemporaryTables implements DialectCheck {
+		public boolean isMatch(Dialect dialect) {
+			return dialect.getDefaultMultiTableBulkIdStrategy() instanceof GlobalTemporaryTableBulkIdStrategy;
 		}
 	}
 }

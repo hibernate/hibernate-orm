@@ -14,6 +14,7 @@ import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import org.hibernate.dialect.CockroachDB192Dialect;
+import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.Oracle12cDialect;
 import org.hibernate.jpa.test.metamodel.AbstractMetamodelSpecificTest;
 import org.hibernate.jpa.test.metamodel.CreditCard;
@@ -300,6 +301,7 @@ public class PredicateTest extends AbstractMetamodelSpecificTest {
 	@Test
 	@TestForIssue( jiraKey = "HHH-8901" )
 	@RequiresDialectFeature( DialectChecks.NotSupportsEmptyInListCheck.class )
+	@SkipForDialect(value = DerbyDialect.class, comment = "Derby doesn't like `x in (null)`")
 	public void testEmptyInPredicate() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();

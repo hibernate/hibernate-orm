@@ -135,6 +135,7 @@ public class BeforeCompletionReleaseTest extends BaseEntityManagerFunctionalTest
         inOrder.verify( statementMock ).close();
         inOrder.verify( connectionSpy ).close();
         inOrder.verify( transactionSpy ).commit( any(), anyBoolean() );
+        Mockito.reset( connectionSpy );
     }
 
     private void spyOnTransaction(XAResource xaResource) {

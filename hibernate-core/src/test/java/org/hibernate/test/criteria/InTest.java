@@ -14,8 +14,11 @@ import java.util.List;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.dialect.DerbyDialect;
+
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -50,6 +53,7 @@ public class InTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HHH-8901" )
 	@RequiresDialectFeature(DialectChecks.NotSupportsEmptyInListCheck.class)
+	@SkipForDialect(value = DerbyDialect.class, comment = "Derby doesn't like `x in (null)`")
 	public void testEmptyInListForDialectNotSupportsEmptyInList() {
 		Session session = openSession();
 		Transaction tx = session.beginTransaction();

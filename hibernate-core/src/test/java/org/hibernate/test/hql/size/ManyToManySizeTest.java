@@ -16,7 +16,9 @@ import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 
 import org.hibernate.Hibernate;
+import org.hibernate.dialect.DerbyDialect;
 
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.After;
@@ -45,6 +47,7 @@ public class ManyToManySizeTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = DerbyDialect.class, comment = "Derby doesn't see that the subquery is functionally dependent")
 	public void testSizeAsCompoundSelectExpression() {
 		doInHibernate(
 				this::sessionFactory,
@@ -73,6 +76,7 @@ public class ManyToManySizeTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = DerbyDialect.class, comment = "Derby doesn't see that the subquery is functionally dependent")
 	public void testSizeAsCtorSelectExpression() {
 		doInHibernate(
 				this::sessionFactory,
@@ -102,6 +106,7 @@ public class ManyToManySizeTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = DerbyDialect.class, comment = "Derby doesn't see that the subquery is functionally dependent")
 	public void testSizeAsSelectExpressionWithLeftJoin() {
 		doInHibernate(
 				this::sessionFactory,
@@ -131,6 +136,7 @@ public class ManyToManySizeTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = DerbyDialect.class, comment = "Derby doesn't see that the subquery is functionally dependent")
 	public void testSizeAsSelectExpressionWithInnerJoin() {
 		doInHibernate(
 				this::sessionFactory,
@@ -156,6 +162,7 @@ public class ManyToManySizeTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = DerbyDialect.class, comment = "Derby doesn't see that the subquery is functionally dependent")
 	public void testSizeAsSelectExpressionOfAliasWithInnerJoin() {
 		doInHibernate(
 				this::sessionFactory,
@@ -181,6 +188,7 @@ public class ManyToManySizeTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = DerbyDialect.class, comment = "Derby doesn't see that the subquery is functionally dependent")
 	public void testSizeAsSelectExpressionExcludeEmptyCollection() {
 		doInHibernate(
 				this::sessionFactory,

@@ -34,6 +34,8 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
+import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
 import org.hibernate.internal.build.AllowSysOut;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
@@ -48,6 +50,7 @@ import org.hibernate.testing.OnExpectedFailure;
 import org.hibernate.testing.OnFailure;
 import org.hibernate.testing.SkipLog;
 import org.hibernate.testing.cache.CachingRegionFactory;
+import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.hibernate.testing.transaction.TransactionUtil2;
 import org.junit.After;
 import org.junit.Before;
@@ -176,6 +179,14 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		}
 		configuration.setImplicitNamingStrategy( ImplicitNamingStrategyLegacyJpaImpl.INSTANCE );
 		configuration.setProperty( Environment.DIALECT, getDialect().getClass().getName() );
+		if ( !Environment.getProperties().containsKey( Environment.CONNECTION_PROVIDER ) ) {
+			configuration.getProperties().put( GlobalTemporaryTableBulkIdStrategy.DROP_ID_TABLES, "true" );
+			configuration.getProperties().put( LocalTemporaryTableBulkIdStrategy.DROP_ID_TABLES, "true" );
+			configuration.getProperties().put(
+					AvailableSettings.CONNECTION_PROVIDER,
+					SharedDriverManagerConnectionProviderImpl.getInstance()
+			);
+		}
 		return configuration;
 	}
 

@@ -66,7 +66,7 @@ public class EventEngine {
 			for ( Iterator<Property> propertyIterator = persistentClass.getDeclaredPropertyIterator(); propertyIterator.hasNext(); ) {
 				final Property property = propertyIterator.next();
 
-				if ( property.getType().isComponentType() ) {
+				if ( property.isComposite() ) {
 					this.callbackBuilder.buildCallbacksForEmbeddable(
 							property,
 							persistentClass.getMappedClass(),

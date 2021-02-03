@@ -240,6 +240,15 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		transactionCoordinator.invalidate();
 	}
 
+	protected void prepareForAutoClose() {
+		waitingForAutoClose = true;
+		closed = true;
+		// For non-shared transaction coordinators, we have to add the observer
+		if ( !isTransactionCoordinatorShared ) {
+			addSharedSessionTransactionObserver( transactionCoordinator );
+		}
+	}
+
 	@Override
 	public boolean shouldAutoJoinTransaction() {
 		return autoJoinTransactions;

@@ -295,6 +295,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 				);
 				identifierGenerators.put( model.getEntityName(), generator );
 			} );
+			metadata.validate();
 
 			LOG.debug( "Instantiated session factory" );
 

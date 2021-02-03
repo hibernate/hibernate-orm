@@ -150,7 +150,7 @@ public class EventListenerRegistryImpl implements EventListenerRegistry, Stoppab
 					propertyIterator.hasNext(); ) {
 				Property property = (Property) propertyIterator.next();
 
-				if ( property.getType().isComponentType() ) {
+				if ( property.isComposite() ) {
 					callbackBuilder.buildCallbacksForEmbeddable(
 							property,
 							mappedClass,

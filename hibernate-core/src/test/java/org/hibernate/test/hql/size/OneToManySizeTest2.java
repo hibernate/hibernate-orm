@@ -554,6 +554,7 @@ public class OneToManySizeTest2 extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	private static int countNumberOfJoins(String query) {
-		return query.toLowerCase( Locale.ROOT ).split( " join ", -1 ).length - 1;
+		String fromPart = query.toLowerCase( Locale.ROOT ).split( " from " )[1].split( " where " )[0];
+		return fromPart.split( "(\\sjoin\\s|,\\s)", -1 ).length - 1;
 	}
 }

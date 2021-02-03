@@ -1,7 +1,7 @@
 package org.hibernate.spatial.testing;
 
 import org.geolatte.geom.Geometry;
-import org.geolatte.geom.GeometryPointEquality;
+import org.geolatte.geom.GeometryPositionEquality;
 import org.geolatte.geom.Position;
 
 /**
@@ -12,7 +12,7 @@ public class GeolatteGeometryEquality<P extends Position> implements GeometryEqu
 	private final org.geolatte.geom.GeometryEquality delegate;
 
 	public GeolatteGeometryEquality() {
-		this( new GeometryPointEquality() );
+		this( new GeometryPositionEquality() );
 	}
 
 	public GeolatteGeometryEquality(org.geolatte.geom.GeometryEquality delegate) {

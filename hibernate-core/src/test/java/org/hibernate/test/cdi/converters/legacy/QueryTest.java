@@ -178,17 +178,17 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Embeddable
 	public static class Name {
-		public String first;
-		public String middle;
-		public String last;
+		public String firstName;
+		public String middleName;
+		public String lastName;
 
 		public Name() {
 		}
 
-		public Name(String first, String middle, String last) {
-			this.first = first;
-			this.middle = middle;
-			this.last = last;
+		public Name(String firstName, String middleName, String lastName) {
+			this.firstName = firstName;
+			this.middleName = middleName;
+			this.lastName = lastName;
 		}
 	}
 

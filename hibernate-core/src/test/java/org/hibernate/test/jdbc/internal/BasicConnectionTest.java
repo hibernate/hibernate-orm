@@ -16,10 +16,12 @@ import java.sql.Statement;
 
 import org.hibernate.JDBCException;
 import org.hibernate.Session;
+import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.resource.jdbc.ResourceRegistry;
 
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -50,6 +52,7 @@ public class BasicConnectionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = DerbyDialect.class,comment = "Derby can't drop tables that are still referred to from open ResultSets")
 	public void testBasicJdbcUsage() throws JDBCException {
 		Session session = openSession();
 		SessionImplementor sessionImpl = (SessionImplementor) session;

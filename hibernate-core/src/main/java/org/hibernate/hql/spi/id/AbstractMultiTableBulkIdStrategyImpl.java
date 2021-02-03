@@ -55,7 +55,7 @@ public abstract class AbstractMultiTableBulkIdStrategyImpl<TT extends IdTableInf
 		// 		build insert-select
 		//		build id-subselect
 
-		final CT context =  buildPreparationContext();
+		final CT context = buildPreparationContext();
 
 		initialize( metadata.getMetadataBuildingOptions(), sessionFactoryOptions );
 

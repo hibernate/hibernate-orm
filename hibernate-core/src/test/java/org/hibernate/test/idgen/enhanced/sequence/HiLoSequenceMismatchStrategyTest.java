@@ -78,6 +78,7 @@ public class HiLoSequenceMismatchStrategyTest extends BaseCoreFunctionalTestCase
 			for ( String createSequenceStatement : createSequenceStatements ) {
 				statement.execute( createSequenceStatement );
 			}
+			connection.commit();
 		}
 		catch (SQLException e) {
 			fail( e.getMessage() );

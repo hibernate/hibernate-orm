@@ -10,6 +10,9 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Root;
 
+import org.hibernate.dialect.DerbyDialect;
+
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
@@ -111,6 +114,7 @@ public class BasicCriteriaExecutionTests {
 	// Doing ... where ? = ? ... is only allowed in a few DBs. Since this is useless, we don't bother to emulate this
 	@Test
 	@RequiresDialect(H2Dialect.class)
+	@SkipForDialect(value = DerbyDialect.class, comment = "Derby doesn't support comparing parameters against each other")
 	public void testExecutingBasicCriteriaQueryParameterPredicate(SessionFactoryScope scope) {
 		scope.inStatelessTransaction(
 				session -> {
@@ -130,6 +134,7 @@ public class BasicCriteriaExecutionTests {
 	// Doing ... where ? = ? ... is only allowed in a few DBs. Since this is useless, we don't bother to emulate this
 	@Test
 	@RequiresDialect(H2Dialect.class)
+	@SkipForDialect(value = DerbyDialect.class, comment = "Derby doesn't support comparing parameters against each other")
 	public void testExecutingBasicCriteriaQueryParameterPredicateInStatelessSession(SessionFactoryScope scope) {
 		scope.inStatelessTransaction(
 				session -> {

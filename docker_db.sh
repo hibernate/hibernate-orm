@@ -64,6 +64,32 @@ oracle() {
     # We need to use the defaults
     # SYSTEM/Oracle18
     docker run --shm-size=1536m --name oracle -d -p 1521:1521 quillbuilduser/oracle-18-xe
+    until [ "`docker inspect -f {{.State.Health.Status}} oracle`" == "healthy" ];
+    do
+        echo "Waiting for Oracle to start..."
+      sleep 10;
+    done
+    echo "Oracle successfully started"
+    # We increase file sizes to avoid online resizes as that requires lots of CPU which is restricted in XE
+    docker exec oracle bash -c "source /home/oracle/.bashrc; bash -c \"
+cat <<EOF | \$ORACLE_HOME/bin/sqlplus sys/Oracle18@localhost/XE as sysdba
+alter database tempfile '/opt/oracle/oradata/XE/temp01.dbf' resize 400M;
+alter database datafile '/opt/oracle/oradata/XE/system01.dbf' resize 1000M;
+alter database datafile '/opt/oracle/oradata/XE/sysaux01.dbf' resize 600M;
+alter database datafile '/opt/oracle/oradata/XE/undotbs01.dbf' resize 300M;
+alter database add logfile group 4 '/opt/oracle/oradata/XE/redo04.log' size 500M reuse;
+alter database add logfile group 5 '/opt/oracle/oradata/XE/redo05.log' size 500M reuse;
+alter database add logfile group 6 '/opt/oracle/oradata/XE/redo06.log' size 500M reuse;
+
+alter system switch logfile;
+alter system switch logfile;
+alter system switch logfile;
+alter system checkpoint;
+
+alter database drop logfile group 1;
+alter database drop logfile group 2;
+alter database drop logfile group 3;
+EOF\""
 }
 
 if [ -z ${1} ]; then

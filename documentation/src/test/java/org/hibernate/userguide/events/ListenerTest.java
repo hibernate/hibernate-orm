@@ -136,7 +136,7 @@ public class ListenerTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	//tag::events-jpa-callbacks-example[]
-	@Entity
+	@Entity(name = "Person")
 	@EntityListeners( LastUpdateListener.class )
 	public static class Person {
 

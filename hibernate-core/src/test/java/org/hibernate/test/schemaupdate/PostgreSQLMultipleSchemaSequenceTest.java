@@ -98,8 +98,15 @@ public class PostgreSQLMultipleSchemaSequenceTest extends BaseUnitTestCase {
 					fail(e.getMessage());
 				}
 
+				String existingUrl = (String) Environment.getProperties().get( AvailableSettings.URL );
+				if ( existingUrl.indexOf( '?' ) == -1 ) {
+					existingUrl += "?";
+				}
+				else {
+					existingUrl += "&";
+				}
 				StandardServiceRegistry ssr2 = new StandardServiceRegistryBuilder()
-						.applySetting( AvailableSettings.URL, Environment.getProperties().get(AvailableSettings.URL) + "?currentSchema=" + extraSchemaName )
+						.applySetting( AvailableSettings.URL, existingUrl + "currentSchema=" + extraSchemaName )
 						.build();
 
 				try {

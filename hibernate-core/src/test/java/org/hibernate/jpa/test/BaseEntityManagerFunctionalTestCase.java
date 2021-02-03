@@ -25,10 +25,15 @@ import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
+import org.hibernate.query.sqm.mutation.internal.idtable.GlobalTemporaryTableStrategy;
+import org.hibernate.query.sqm.mutation.internal.idtable.LocalTemporaryTableStrategy;
+
+import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
 import org.junit.Before;
@@ -223,6 +228,14 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 			config.put( AvailableSettings.XML_FILE_NAMES, dds );
 		}
 
+		if ( !config.containsKey( Environment.CONNECTION_PROVIDER ) ) {
+			config.put( GlobalTemporaryTableStrategy.DROP_ID_TABLES, "true" );
+			config.put( LocalTemporaryTableStrategy.DROP_ID_TABLES, "true" );
+			config.put(
+					AvailableSettings.CONNECTION_PROVIDER,
+					SharedDriverManagerConnectionProviderImpl.getInstance()
+			);
+		}
 		addConfigOptions( config );
 		return config;
 	}

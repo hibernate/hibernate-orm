@@ -16,6 +16,7 @@ import javax.transaction.SystemException;
 
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -31,8 +32,12 @@ import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.test.PersistenceUnitDescriptorAdapter;
+import org.hibernate.query.sqm.mutation.internal.idtable.GlobalTemporaryTableStrategy;
+import org.hibernate.query.sqm.mutation.internal.idtable.LocalTemporaryTableStrategy;
+
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
+import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.hibernate.testing.junit4.Helper;
 import org.jboss.logging.Logger;
@@ -139,6 +144,14 @@ public abstract class BaseEnversJPAFunctionalTestCase extends AbstractEnversTest
 			config.put( AvailableSettings.XML_FILE_NAMES, dds );
 		}
 
+		if ( !Environment.getProperties().containsKey( Environment.CONNECTION_PROVIDER ) ) {
+			config.put( GlobalTemporaryTableStrategy.DROP_ID_TABLES, "true" );
+			config.put( LocalTemporaryTableStrategy.DROP_ID_TABLES, "true" );
+			config.put(
+					org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER,
+					SharedDriverManagerConnectionProviderImpl.getInstance()
+			);
+		}
 		addConfigOptions( config );
 
 		return config;

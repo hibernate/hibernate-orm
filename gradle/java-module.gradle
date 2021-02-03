@@ -102,6 +102,7 @@ dependencies {
 
 	//Databases
 	testRuntime( libraries.h2 )
+	testRuntime( libraries.derby )
 	testRuntime( libraries.hsqldb )
 	testRuntime( libraries.postgresql )
 	testRuntime( libraries.mysql )
@@ -111,13 +112,15 @@ dependencies {
 	testRuntime( libraries.hana )
 	testRuntime( libraries.cockroachdb )
 
-	if ( db.startsWith( 'oracle' ) ) {
-		testRuntime( libraries.oracle )
-	}
-	else if ( db.startsWith( 'db2' ) ) {
+	testRuntime( libraries.oracle )
+
+	// Since both the DB2 driver and HANA have a package "net.jpountz" we have to add dependencies conditionally
+	// This is due to the "no split-packages" requirement of Java 9+
+
+	if ( db.startsWith( 'db2' ) ) {
 		testRuntime( libraries.db2 )
 	}
-	else if ( db.equalsIgnoreCase( 'hana' ) ) {
+	else if ( db.startsWith( 'hana' ) ) {
 		testRuntime( libraries.hana )
 	}
 

@@ -21,17 +21,21 @@ import org.hibernate.Transaction;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
+import org.hibernate.query.sqm.mutation.internal.idtable.GlobalTemporaryTableStrategy;
+import org.hibernate.query.sqm.mutation.internal.idtable.LocalTemporaryTableStrategy;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.tool.schema.Action;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator.ActionGrouping;
 
+import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.hibernate.testing.orm.domain.DomainModelDescriptor;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.jpa.PersistenceUnitInfoImpl;
@@ -138,7 +142,15 @@ public class EntityManagerFactoryExtension
 			}
 		}
 
-		final Map<String,String> integrationSettings = new HashMap<>();
+		final Map<String, Object> integrationSettings = new HashMap<>();
+		integrationSettings.put( GlobalTemporaryTableStrategy.DROP_ID_TABLES, "true" );
+		integrationSettings.put( LocalTemporaryTableStrategy.DROP_ID_TABLES, "true" );
+		if ( !integrationSettings.containsKey( Environment.CONNECTION_PROVIDER ) ) {
+			integrationSettings.put(
+					AvailableSettings.CONNECTION_PROVIDER,
+					SharedDriverManagerConnectionProviderImpl.getInstance()
+			);
+		}
 		for ( int i = 0; i < emfAnn.integrationSettings().length; i++ ) {
 			final Setting setting = emfAnn.integrationSettings()[ i ];
 			integrationSettings.put( setting.name(), setting.value() );
@@ -254,14 +266,14 @@ public class EntityManagerFactoryExtension
 
 	private static class EntityManagerFactoryScopeImpl implements EntityManagerFactoryScope, ExtensionContext.Store.CloseableResource {
 		private final PersistenceUnitInfo persistenceUnitInfo;
-		private final Map<String,String> integrationSettings;
+		private final Map<String, Object> integrationSettings;
 
 		private javax.persistence.EntityManagerFactory emf;
 		private boolean active = true;
 
 		private EntityManagerFactoryScopeImpl(
 				PersistenceUnitInfo persistenceUnitInfo,
-				Map<String,String> integrationSettings) {
+				Map<String, Object> integrationSettings) {
 			this.persistenceUnitInfo = persistenceUnitInfo;
 			this.integrationSettings = integrationSettings;
 

@@ -6044,6 +6044,12 @@ public abstract class AbstractEntityPersister
 						if ( sqmMultiTableMutationStrategy == null ) {
 							return false;
 						}
+						sqmMultiTableMutationStrategy.prepare(
+								creationProcess,
+								creationContext.getSessionFactory()
+										.getJdbcServices()
+										.getBootstrapJdbcConnectionAccess()
+						);
 						return true;
 					}
 			);

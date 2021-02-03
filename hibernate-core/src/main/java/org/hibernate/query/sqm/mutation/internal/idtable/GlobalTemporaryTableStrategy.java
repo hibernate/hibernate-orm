@@ -11,6 +11,9 @@ import java.sql.SQLException;
 import java.util.function.Supplier;
 
 import org.hibernate.boot.TempTableDdlTransactionHandling;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
@@ -40,8 +43,7 @@ public class GlobalTemporaryTableStrategy implements SqmMultiTableMutationStrate
 	private final SessionFactoryImplementor sessionFactory;
 
 	private boolean prepared;
-	private boolean created;
-	private boolean released;
+	private boolean dropIdTables;
 
 	public GlobalTemporaryTableStrategy(
 			IdTable idTable,
@@ -131,7 +133,14 @@ public class GlobalTemporaryTableStrategy implements SqmMultiTableMutationStrate
 
 		try {
 			idTableCreationWork.execute( connection );
-			created = true;
+			final ConfigurationService configService = mappingModelCreationProcess.getCreationContext()
+					.getBootstrapContext()
+					.getServiceRegistry().getService( ConfigurationService.class );
+			this.dropIdTables = configService.getSetting(
+					DROP_ID_TABLES,
+					StandardConverters.BOOLEAN,
+					false
+			);
 		}
 		finally {
 			try {
@@ -140,25 +149,17 @@ public class GlobalTemporaryTableStrategy implements SqmMultiTableMutationStrate
 			catch (SQLException ignore) {
 			}
 		}
-
-		if ( created ) {
-			// todo (6.0) : register strategy for dropping of the table if requested - DROP_ID_TABLES
-		}
 	}
 
 	@Override
 	public void release(
 			SessionFactoryImplementor sessionFactory,
 			JdbcConnectionAccess connectionAccess) {
-		if ( released ) {
+		if ( !dropIdTables ) {
 			return;
 		}
 
-		released = true;
-
-		if ( ! created ) {
-			return;
-		}
+		dropIdTables = false;
 
 		log.debugf( "Dropping global-temp ID table : %s", idTable.getTableExpression() );
 

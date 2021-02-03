@@ -73,7 +73,7 @@ jobs:
         with:
           name: test-reports-java8-${{ matrix.rdbms }}
           path: |
-            ./**/target/reports/tests/test/
+            ./**/target/reports/tests/
             ./**/target/reports/checkstyle/
       - name: Omit produced artifacts from build cache
         run: ./ci/before-cache.sh
@@ -112,7 +112,7 @@ jobs:
         with:
           name: test-reports-java11
           path: |
-            ./**/target/reports/tests/test/
+            ./**/target/reports/tests/
             ./**/target/reports/checkstyle/
       - name: Omit produced artifacts from build cache
         run: ./ci/before-cache.sh

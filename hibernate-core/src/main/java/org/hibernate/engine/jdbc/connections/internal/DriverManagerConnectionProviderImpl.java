@@ -50,7 +50,7 @@ import static org.hibernate.internal.log.ConnectionPoolingLogger.CONNECTIONS_MES
  * @author Steve Ebersole
  */
 public class DriverManagerConnectionProviderImpl
-		implements ConnectionProvider, Configurable, Stoppable, ServiceRegistryAwareService {
+		implements ConnectionProvider, Configurable, Stoppable, ServiceRegistryAwareService, ConnectionValidator {
 
 	public static final String MIN_SIZE = "hibernate.connection.min_pool_size";
 	public static final String INITIAL_SIZE = "hibernate.connection.initial_pool_size";
@@ -95,7 +95,7 @@ public class DriverManagerConnectionProviderImpl
 		pooledConnectionBuilder.initialSize( initialSize );
 		pooledConnectionBuilder.minSize( minSize );
 		pooledConnectionBuilder.maxSize( maxSize );
-
+		pooledConnectionBuilder.validator( this );
 		return pooledConnectionBuilder.build();
 	}
 
@@ -247,6 +247,12 @@ public class DriverManagerConnectionProviderImpl
 		}
 	}
 
+	protected void validateConnectionsReturned() {
+		int allocationCount = state.pool.allConnections.size() - state.pool.availableConnections.size();
+		if ( allocationCount != 0 ) {
+			CONNECTIONS_MESSAGE_LOGGER.error( "Connection leak detected: there are " + allocationCount + " unclosed connections!");
+		}
+	}
 
 	// destroy the pool ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -254,6 +260,7 @@ public class DriverManagerConnectionProviderImpl
 	public void stop() {
 		if ( state != null ) {
 			state.stop();
+			validateConnectionsReturned();
 		}
 	}
 
@@ -275,6 +282,10 @@ public class DriverManagerConnectionProviderImpl
 		return connectionCreator.getConnectionProperties();
 	}
 
+	@Override
+	public boolean isValid(Connection connection) throws SQLException {
+		return true;
+	}
 
 	public static class PooledConnections {
 
@@ -282,6 +293,7 @@ public class DriverManagerConnectionProviderImpl
 		private final ConcurrentLinkedQueue<Connection> availableConnections = new ConcurrentLinkedQueue<>();
 
 		private final ConnectionCreator connectionCreator;
+		private final ConnectionValidator connectionValidator;
 		private final boolean autoCommit;
 		private final int minSize;
 		private final int maxSize;
@@ -292,6 +304,9 @@ public class DriverManagerConnectionProviderImpl
 				Builder builder) {
 			CONNECTIONS_LOGGER.debugf( "Initializing Connection pool with %s Connections", builder.initialSize );
 			connectionCreator = builder.connectionCreator;
+			connectionValidator = builder.connectionValidator == null
+					? ConnectionValidator.ALWAYS_VALID
+					: builder.connectionValidator;
 			autoCommit = builder.autoCommit;
 			maxSize = builder.maxSize;
 			minSize = builder.minSize;
@@ -322,24 +337,77 @@ public class DriverManagerConnectionProviderImpl
 		}
 
 		public void add(Connection conn) throws SQLException {
-			conn.setAutoCommit( true );
-			conn.clearWarnings();
-			availableConnections.offer( conn );
+			final Connection connection = releaseConnection( conn );
+			if ( connection != null ) {
+				availableConnections.offer( connection );
+			}
+		}
+
+		protected Connection releaseConnection(Connection conn) {
+			Exception t = null;
+			try {
+				conn.setAutoCommit( true );
+				conn.clearWarnings();
+				if ( connectionValidator.isValid( conn ) ) {
+					return conn;
+				}
+			}
+			catch (SQLException ex) {
+				t = ex;
+			}
+			closeConnection( conn, t );
+			CONNECTIONS_MESSAGE_LOGGER.debug( "Connection release failed. Closing pooled connection", t );
+			return null;
 		}
 
 		public Connection poll() throws SQLException {
-			Connection conn = availableConnections.poll();
-			if ( conn == null ) {
-				synchronized (allConnections) {
-					if(allConnections.size() < maxSize) {
-						addConnections( 1 );
-						return poll();
+			Connection conn;
+			do {
+				conn = availableConnections.poll();
+				if ( conn == null ) {
+					synchronized (allConnections) {
+						if ( allConnections.size() < maxSize ) {
+							addConnections( 1 );
+							return poll();
+						}
 					}
+					throw new HibernateException(
+							"The internal connection pool has reached its maximum size and no connection is currently available!" );
 				}
-				throw new HibernateException( "The internal connection pool has reached its maximum size and no connection is currently available!" );
-			}
-			conn.setAutoCommit( autoCommit );
+				conn = prepareConnection( conn );
+			} while ( conn == null );
 			return conn;
+		}
+
+		protected Connection prepareConnection(Connection conn) {
+			Exception t = null;
+			try {
+				conn.setAutoCommit( autoCommit );
+				if ( connectionValidator.isValid( conn ) ) {
+					return conn;
+				}
+			}
+			catch (SQLException ex) {
+				t = ex;
+			}
+			closeConnection( conn, t );
+			CONNECTIONS_MESSAGE_LOGGER.debug( "Connection preparation failed. Closing pooled connection", t );
+			return null;
+		}
+
+		protected void closeConnection(Connection conn, Throwable t) {
+			try {
+				conn.close();
+			}
+			catch (SQLException ex) {
+				CONNECTIONS_MESSAGE_LOGGER.unableToCloseConnection( ex );
+				if ( t != null ) {
+					t.addSuppressed( ex );
+				}
+			}
+			finally {
+				allConnections.remove( conn );
+			}
 		}
 
 		public void close() throws SQLException {
@@ -389,6 +457,7 @@ public class DriverManagerConnectionProviderImpl
 
 		public static class Builder {
 			private final ConnectionCreator connectionCreator;
+			private ConnectionValidator connectionValidator;
 			private boolean autoCommit;
 			private int initialSize = 1;
 			private int minSize = 1;
@@ -411,6 +480,11 @@ public class DriverManagerConnectionProviderImpl
 
 			public Builder maxSize(int maxSize) {
 				this.maxSize = maxSize;
+				return this;
+			}
+
+			public Builder validator(ConnectionValidator connectionValidator) {
+				this.connectionValidator = connectionValidator;
 				return this;
 			}
 

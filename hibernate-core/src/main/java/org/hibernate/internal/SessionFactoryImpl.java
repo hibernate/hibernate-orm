@@ -293,6 +293,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 				);
 				identifierGenerators.put( model.getEntityName(), generator );
 			} );
+			bootMetamodel.validate();
 
 			LOG.debug( "Instantiated session factory" );
 
@@ -313,15 +314,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			if ( options.isNamedQueryStartupCheckingEnabled() ) {
 				queryEngine.getNamedObjectRepository().checkNamedQueries( queryEngine );
 			}
-
-			// todo (6.0) : manage old getMultiTableBulkIdStrategy
-
-//			settings.getMultiTableBulkIdStrategy().prepare(
-//					jdbcServices,
-//					buildLocalConnectionAccess(),
-//					metadata,
-//					sessionFactoryOptions
-//			);
 
 			SchemaManagementToolCoordinator.process(
 					bootMetamodel,
@@ -815,9 +807,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		LOG.closing();
 		observer.sessionFactoryClosing( this );
 
-		// todo (6.0) : manage old getMultiTableBulkIdStrategy
-//		settings.getMultiTableBulkIdStrategy().release( serviceRegistry.getService( JdbcServices.class ), buildLocalConnectionAccess() );
-
 		// NOTE : the null checks below handle cases where close is called from
 		//		a failed attempt to create the SessionFactory
 
@@ -826,6 +815,14 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		if ( runtimeMetamodels != null ) {
+			final JdbcConnectionAccess jdbcConnectionAccess = jdbcServices.getBootstrapJdbcConnectionAccess();
+			runtimeMetamodels.getMappingMetamodel().visitEntityDescriptors(
+					entityPersister -> {
+						if ( entityPersister.getSqmMultiTableMutationStrategy() != null ) {
+							entityPersister.getSqmMultiTableMutationStrategy().release( this, jdbcConnectionAccess );
+						}
+					}
+			);
 			( (MappingMetamodelImpl) runtimeMetamodels.getMappingMetamodel() ).close();
 		}
 

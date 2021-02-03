@@ -161,7 +161,7 @@ public class JaccIntegratorTest extends BaseEntityManagerFunctionalTestCase {
 		}
 	}
 
-	@Entity
+	@Entity(name = "Person")
 	public static class Person {
 
 		@Id

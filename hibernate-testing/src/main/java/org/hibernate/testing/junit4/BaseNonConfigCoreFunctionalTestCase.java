@@ -33,6 +33,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -48,6 +49,8 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
+import org.hibernate.query.sqm.mutation.internal.idtable.GlobalTemporaryTableStrategy;
+import org.hibernate.query.sqm.mutation.internal.idtable.LocalTemporaryTableStrategy;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.type.BlobType;
 import org.hibernate.type.ClobType;
@@ -58,6 +61,7 @@ import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.OnExpectedFailure;
 import org.hibernate.testing.OnFailure;
 import org.hibernate.testing.cache.CachingRegionFactory;
+import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.hibernate.testing.transaction.TransactionUtil2;
 import org.junit.After;
 import org.junit.Before;
@@ -175,6 +179,14 @@ public class BaseNonConfigCoreFunctionalTestCase extends BaseUnitTestCase {
 		afterBootstrapServiceRegistryBuilt( bsr );
 
 		final Map settings = new HashMap();
+		if ( !Environment.getProperties().containsKey( Environment.CONNECTION_PROVIDER ) ) {
+			settings.put( GlobalTemporaryTableStrategy.DROP_ID_TABLES, "true" );
+			settings.put( LocalTemporaryTableStrategy.DROP_ID_TABLES, "true" );
+			settings.put(
+					AvailableSettings.CONNECTION_PROVIDER,
+					SharedDriverManagerConnectionProviderImpl.getInstance()
+			);
+		}
 		addSettings( settings );
 
 		final StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder( bsr );

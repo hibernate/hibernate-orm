@@ -347,8 +347,7 @@ public class SessionImpl
 			}
 			else {
 				//Otherwise, session auto-close will be enabled by shouldAutoCloseSession().
-				waitingForAutoClose = true;
-				closed = true;
+				prepareForAutoClose();
 			}
 		}
 		else {

@@ -17,6 +17,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.Query;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
@@ -47,6 +48,7 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		if ( SQLServerDialect.class.isAssignableFrom( DIALECT.getClass() ) ) {
+			connectionProvider.setConnectionProvider( (ConnectionProvider) cfg.getProperties().get( AvailableSettings.CONNECTION_PROVIDER ) );
 			cfg.getProperties().put( AvailableSettings.CONNECTION_PROVIDER, connectionProvider );
 		}
 	}

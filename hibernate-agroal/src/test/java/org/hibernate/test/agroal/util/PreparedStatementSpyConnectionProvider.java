@@ -53,7 +53,7 @@ public class PreparedStatementSpyConnectionProvider extends AgroalConnectionProv
 	public void closeConnection(Connection conn) throws SQLException {
 		acquiredConnections.remove( conn );
 		releasedConnections.add( conn );
-		super.closeConnection( conn );
+		super.closeConnection( (Connection) MockUtil.getMockSettings( conn ).getSpiedInstance() );
 	}
 
 	@Override

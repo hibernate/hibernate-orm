@@ -9,9 +9,17 @@ package org.hibernate.testing;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.FirebirdDialect;
+import org.hibernate.dialect.HANAColumnStoreDialect;
+import org.hibernate.dialect.HANARowStoreDialect;
+import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.IngresDialect;
 import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.dialect.TeradataDialect;
+import org.hibernate.dialect.TimesTenDialect;
 
 /**
  * Container class for different implementation of the {@link DialectCheck} interface.
@@ -289,6 +297,19 @@ abstract public class DialectChecks {
 				dialect instanceof MySQLDialect ||
 				dialect instanceof CockroachDialect
 			);
+		}
+	}
+
+	public static class SupportsGlobalTemporaryTables implements DialectCheck {
+		public boolean isMatch(Dialect dialect) {
+			return dialect instanceof FirebirdDialect ||
+					dialect instanceof HANAColumnStoreDialect ||
+					dialect instanceof HANARowStoreDialect ||
+					dialect instanceof HSQLDialect ||
+					dialect instanceof IngresDialect ||
+					dialect instanceof OracleDialect ||
+					dialect instanceof TeradataDialect ||
+					dialect instanceof TimesTenDialect;
 		}
 	}
 }

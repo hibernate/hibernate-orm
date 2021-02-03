@@ -51,53 +51,77 @@ public class TestExtraPhysicalTableTypes {
 	@Test
 	public void testAddOneExtraPhysicalTableType() throws Exception {
 		buildMetadata( "BASE TABLE" );
-		InformationExtractorJdbcDatabaseMetaDataImplTest informationExtractor = buildInformationExtractorJdbcDatabaseMetaDataImplTest();
-
-		assertThat( informationExtractor.isPhysicalTableType( "BASE TABLE" ), is( true ) );
-		assertThat( informationExtractor.isPhysicalTableType( "TABLE" ), is( true ) );
+		DdlTransactionIsolator ddlTransactionIsolator = buildDdlTransactionIsolator();
+		try {
+			InformationExtractorJdbcDatabaseMetaDataImplTest informationExtractor = buildInformationExtractorJdbcDatabaseMetaDataImplTest(
+					ddlTransactionIsolator
+			);
+			assertThat( informationExtractor.isPhysicalTableType( "BASE TABLE" ), is( true ) );
+			assertThat( informationExtractor.isPhysicalTableType( "TABLE" ), is( true ) );
+		}
+		finally {
+			ddlTransactionIsolator.release();
+		}
 	}
 
 	@Test
 	public void testAddingMultipleExtraPhysicalTableTypes() throws Exception {
 		buildMetadata( "BASE, BASE TABLE" );
-		InformationExtractorJdbcDatabaseMetaDataImplTest informationExtractor = buildInformationExtractorJdbcDatabaseMetaDataImplTest();
-
-		assertThat( informationExtractor.isPhysicalTableType( "BASE TABLE" ), is( true ) );
-		assertThat( informationExtractor.isPhysicalTableType( "BASE" ), is( true ) );
-		assertThat( informationExtractor.isPhysicalTableType( "TABLE" ), is( true ) );
-		assertThat( informationExtractor.isPhysicalTableType( "TABLE 1" ), is( false ) );
+		DdlTransactionIsolator ddlTransactionIsolator = buildDdlTransactionIsolator();
+		try {
+			InformationExtractorJdbcDatabaseMetaDataImplTest informationExtractor = buildInformationExtractorJdbcDatabaseMetaDataImplTest(
+					ddlTransactionIsolator
+			);
+			assertThat( informationExtractor.isPhysicalTableType( "BASE TABLE" ), is( true ) );
+			assertThat( informationExtractor.isPhysicalTableType( "BASE" ), is( true ) );
+			assertThat( informationExtractor.isPhysicalTableType( "TABLE" ), is( true ) );
+			assertThat( informationExtractor.isPhysicalTableType( "TABLE 1" ), is( false ) );
+		}
+		finally {
+			ddlTransactionIsolator.release();
+		}
 	}
 
 	@Test
 	public void testExtraPhysicalTableTypesPropertyEmptyStringValue() throws Exception {
 		buildMetadata( "  " );
-		InformationExtractorJdbcDatabaseMetaDataImplTest informationExtractor = buildInformationExtractorJdbcDatabaseMetaDataImplTest();
-
-		assertThat( informationExtractor.isPhysicalTableType( "BASE TABLE" ), is( false ) );
-		assertThat( informationExtractor.isPhysicalTableType( "TABLE" ), is( true ) );
+		DdlTransactionIsolator ddlTransactionIsolator = buildDdlTransactionIsolator();
+		try {
+			InformationExtractorJdbcDatabaseMetaDataImplTest informationExtractor = buildInformationExtractorJdbcDatabaseMetaDataImplTest(
+					ddlTransactionIsolator
+			);
+			assertThat( informationExtractor.isPhysicalTableType( "BASE TABLE" ), is( false ) );
+			assertThat( informationExtractor.isPhysicalTableType( "TABLE" ), is( true ) );
+		}
+		finally {
+			ddlTransactionIsolator.release();
+		}
 	}
 
 	@Test
 	public void testNoExtraPhysicalTabeTypesProperty() throws Exception {
 		buildMetadata( null );
-		InformationExtractorJdbcDatabaseMetaDataImplTest informationExtractor = buildInformationExtractorJdbcDatabaseMetaDataImplTest();
-
-		assertThat( informationExtractor.isPhysicalTableType( "BASE TABLE" ), is( false ) );
-		assertThat( informationExtractor.isPhysicalTableType( "TABLE" ), is( true ) );
+		DdlTransactionIsolator ddlTransactionIsolator = buildDdlTransactionIsolator();
+		try {
+			InformationExtractorJdbcDatabaseMetaDataImplTest informationExtractor = buildInformationExtractorJdbcDatabaseMetaDataImplTest(
+					ddlTransactionIsolator
+			);
+			assertThat( informationExtractor.isPhysicalTableType( "BASE TABLE" ), is( false ) );
+			assertThat( informationExtractor.isPhysicalTableType( "TABLE" ), is( true ) );
+		}
+		finally {
+			ddlTransactionIsolator.release();
+		}
 	}
 
-	private InformationExtractorJdbcDatabaseMetaDataImplTest buildInformationExtractorJdbcDatabaseMetaDataImplTest()
+	private InformationExtractorJdbcDatabaseMetaDataImplTest buildInformationExtractorJdbcDatabaseMetaDataImplTest(DdlTransactionIsolator ddlTransactionIsolator)
 			throws SQLException {
 		Database database = metadata.getDatabase();
 
-		final ConnectionProvider connectionProvider = ssr.getService( ConnectionProvider.class );
 		DatabaseInformation dbInfo = new DatabaseInformationImpl(
 				ssr,
 				database.getJdbcEnvironment(),
-				new DdlTransactionIsolatorTestingImpl( ssr,
-													   new JdbcEnvironmentInitiator.ConnectionProviderJdbcConnectionAccess(
-															   connectionProvider )
-				),
+				ddlTransactionIsolator,
 				database.getDefaultNamespace().getName()
 		);
 		ExtractionContextImpl extractionContext = new ExtractionContextImpl(
@@ -111,6 +135,14 @@ public class TestExtraPhysicalTableTypes {
 		);
 		return new InformationExtractorJdbcDatabaseMetaDataImplTest(
 				extractionContext );
+	}
+
+	private DdlTransactionIsolator buildDdlTransactionIsolator() {
+		final ConnectionProvider connectionProvider = ssr.getService( ConnectionProvider.class );
+		return new DdlTransactionIsolatorTestingImpl(
+				ssr,
+				new JdbcEnvironmentInitiator.ConnectionProviderJdbcConnectionAccess( connectionProvider )
+		);
 	}
 
 	private void buildMetadata(String extraPhysicalTableTypes) {
@@ -128,8 +160,16 @@ public class TestExtraPhysicalTableTypes {
 	}
 
 	public class InformationExtractorJdbcDatabaseMetaDataImplTest extends InformationExtractorJdbcDatabaseMetaDataImpl {
+
+		private final ExtractionContext extractionContext;
+
 		public InformationExtractorJdbcDatabaseMetaDataImplTest(ExtractionContext extractionContext) {
 			super( extractionContext );
+			this.extractionContext = extractionContext;
+		}
+
+		public ExtractionContext getExtractionContext() {
+			return extractionContext;
 		}
 
 		public boolean isPhysicalTableType(String tableType) {

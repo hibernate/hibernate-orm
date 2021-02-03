@@ -800,4 +800,9 @@ public class DerbyDialect extends Dialect {
 	public GroupBySummarizationRenderingStrategy getGroupBySummarizationRenderingStrategy() {
 		return GroupBySummarizationRenderingStrategy.FUNCTION;
 	}
+
+	@Override
+	public boolean supportsPartitionBy() {
+		return false;
+	}
 }

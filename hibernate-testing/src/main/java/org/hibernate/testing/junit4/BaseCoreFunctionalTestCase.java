@@ -41,6 +41,8 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.jdbc.Work;
+import org.hibernate.query.sqm.mutation.internal.idtable.GlobalTemporaryTableStrategy;
+import org.hibernate.query.sqm.mutation.internal.idtable.LocalTemporaryTableStrategy;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 
 import org.hibernate.testing.AfterClassOnce;
@@ -49,6 +51,7 @@ import org.hibernate.testing.OnExpectedFailure;
 import org.hibernate.testing.OnFailure;
 import org.hibernate.testing.SkipLog;
 import org.hibernate.testing.cache.CachingRegionFactory;
+import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.hibernate.testing.transaction.TransactionUtil2;
 import org.junit.After;
 import org.junit.Before;
@@ -177,6 +180,14 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		}
 		configuration.setImplicitNamingStrategy( ImplicitNamingStrategyLegacyJpaImpl.INSTANCE );
 		configuration.setProperty( Environment.DIALECT, getDialect().getClass().getName() );
+		if ( !Environment.getProperties().containsKey( Environment.CONNECTION_PROVIDER ) ) {
+			configuration.getProperties().put( GlobalTemporaryTableStrategy.DROP_ID_TABLES, "true" );
+			configuration.getProperties().put( LocalTemporaryTableStrategy.DROP_ID_TABLES, "true" );
+			configuration.getProperties().put(
+					AvailableSettings.CONNECTION_PROVIDER,
+					SharedDriverManagerConnectionProviderImpl.getInstance()
+			);
+		}
 		return configuration;
 	}
 

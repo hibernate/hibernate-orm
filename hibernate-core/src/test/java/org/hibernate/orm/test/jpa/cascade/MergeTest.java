@@ -14,6 +14,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.Table;
 
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -32,8 +33,8 @@ public class MergeTest {
 	public void tearDown(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
-					entityManager.createQuery( "delete from MergeTest$Item" ).executeUpdate();
-					entityManager.createQuery( "delete from MergeTest$Order" ).executeUpdate();
+					entityManager.createQuery( "delete from Item" ).executeUpdate();
+					entityManager.createQuery( "delete from Order" ).executeUpdate();
 				}
 		);
 	}
@@ -104,7 +105,8 @@ public class MergeTest {
 		);
 	}
 
-	@Entity
+	@Entity(name = "Order")
+	@Table(name = "orders")
 	public static class Order {
 		@Id
 		@GeneratedValue
@@ -122,7 +124,7 @@ public class MergeTest {
 		}
 	}
 
-	@Entity
+	@Entity(name = "Item")
 	public static class Item {
 		@Id
 		@GeneratedValue

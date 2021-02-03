@@ -27,7 +27,10 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
+import org.hibernate.query.sqm.mutation.internal.idtable.GlobalTemporaryTableStrategy;
+import org.hibernate.query.sqm.mutation.internal.idtable.LocalTemporaryTableStrategy;
 
+import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.junit.jupiter.api.AfterEach;
 
 import org.jboss.logging.Logger;
@@ -138,6 +141,14 @@ public class EntityManagerFactoryBasedFunctionalTest
 			config.put( org.hibernate.jpa.AvailableSettings.XML_FILE_NAMES, dds );
 		}
 
+		config.put( GlobalTemporaryTableStrategy.DROP_ID_TABLES, "true" );
+		config.put( LocalTemporaryTableStrategy.DROP_ID_TABLES, "true" );
+		if ( !config.containsKey( Environment.CONNECTION_PROVIDER ) ) {
+			config.put(
+					AvailableSettings.CONNECTION_PROVIDER,
+					SharedDriverManagerConnectionProviderImpl.getInstance()
+			);
+		}
 		addConfigOptions( config );
 		return config;
 	}

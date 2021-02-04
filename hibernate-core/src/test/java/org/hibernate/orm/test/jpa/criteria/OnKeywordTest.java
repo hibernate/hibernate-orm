@@ -27,24 +27,19 @@ public class OnKeywordTest extends AbstractCriteriaTest {
 	@Test
 	public void basicTest(EntityManagerFactoryScope scope) {
 
-		scope.inTransaction(
+		scope.inEntityManager(
 				entityManager -> {
-					try {
-						CriteriaQuery<Order> criteria = entityManager.getCriteriaBuilder().createQuery( Order.class );
-						Root<Order> root = criteria.from( Order.class );
-						criteria.select( root );
-						CollectionJoin<Order,LineItem> lineItemsJoin = root.join( Order_.lineItems );
-						lineItemsJoin.on(
-								entityManager.getCriteriaBuilder().gt(
-										lineItemsJoin.get( LineItem_.quantity ),
-										entityManager.getCriteriaBuilder().literal( 20 )
-								)
-						);
-						entityManager.createQuery( criteria ).getResultList();
-					}
-					catch (Exception e) {
-						throw e;
-					}
+					CriteriaQuery<Order> criteria = entityManager.getCriteriaBuilder().createQuery( Order.class );
+					Root<Order> root = criteria.from( Order.class );
+					criteria.select( root );
+					CollectionJoin<Order, LineItem> lineItemsJoin = root.join( Order_.lineItems );
+					lineItemsJoin.on(
+							entityManager.getCriteriaBuilder().gt(
+									lineItemsJoin.get( LineItem_.quantity ),
+									entityManager.getCriteriaBuilder().literal( 20 )
+							)
+					);
+					entityManager.createQuery( criteria ).getResultList();
 				}
 		);
 	}

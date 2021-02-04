@@ -58,49 +58,58 @@ public class EntityManagerFactorySerializationTest {
 		in.close();
 		byteIn.close();
 		EntityManager em = serializedFactory.createEntityManager();
-		//em.getTransaction().begin();
-		//em.setFlushMode( FlushModeType.NEVER );
-		Cat cat = new Cat();
-		cat.setAge( 3 );
-		cat.setDateOfBirth( new Date() );
-		cat.setLength( 22 );
-		cat.setName( "Kitty" );
-		em.persist( cat );
-		Item item = new Item();
-		item.setName( "Train Ticket" );
-		item.setDescr( "Paris-London" );
-		em.persist( item );
-		//em.getTransaction().commit();
-		//em.getTransaction().begin();
-		item.setDescr( "Paris-Bruxelles" );
-		//em.getTransaction().commit();
+		try {
+			//em.getTransaction().begin();
+			//em.setFlushMode( FlushModeType.NEVER );
+			Cat cat = new Cat();
+			cat.setAge( 3 );
+			cat.setDateOfBirth( new Date() );
+			cat.setLength( 22 );
+			cat.setName( "Kitty" );
+			em.persist( cat );
+			Item item = new Item();
+			item.setName( "Train Ticket" );
+			item.setDescr( "Paris-London" );
+			em.persist( item );
+			//em.getTransaction().commit();
+			//em.getTransaction().begin();
+			item.setDescr( "Paris-Bruxelles" );
+			//em.getTransaction().commit();
 
-		//fake the in container work
-		em.unwrap( Session.class ).disconnect();
-		stream = new ByteArrayOutputStream();
-		out = new ObjectOutputStream( stream );
-		out.writeObject( em );
-		out.close();
-		serialized = stream.toByteArray();
-		stream.close();
-		byteIn = new ByteArrayInputStream( serialized );
-		in = new ObjectInputStream( byteIn );
-		em = (EntityManager) in.readObject();
-		in.close();
-		byteIn.close();
-		//fake the in container work
-		em.getTransaction().begin();
-		item = em.find( Item.class, item.getName() );
-		item.setDescr( item.getDescr() + "-Amsterdam" );
-		cat = (Cat) em.createQuery( "select c from " + Cat.class.getName() + " c" ).getSingleResult();
-		cat.setLength( 34 );
-		em.flush();
-		em.remove( item );
-		em.remove( cat );
-		em.flush();
-		em.getTransaction().commit();
-
-		em.close();
+			//fake the in container work
+			em.unwrap( Session.class ).disconnect();
+			stream = new ByteArrayOutputStream();
+			out = new ObjectOutputStream( stream );
+			out.writeObject( em );
+			out.close();
+			serialized = stream.toByteArray();
+			stream.close();
+			byteIn = new ByteArrayInputStream( serialized );
+			in = new ObjectInputStream( byteIn );
+			em = (EntityManager) in.readObject();
+			in.close();
+			byteIn.close();
+			//fake the in container work
+			em.getTransaction().begin();
+			item = em.find( Item.class, item.getName() );
+			item.setDescr( item.getDescr() + "-Amsterdam" );
+			cat = (Cat) em.createQuery( "select c from " + Cat.class.getName() + " c" ).getSingleResult();
+			cat.setLength( 34 );
+			em.flush();
+			em.remove( item );
+			em.remove( cat );
+			em.flush();
+			em.getTransaction().commit();
+		}
+		catch (Exception e) {
+			if ( em.getTransaction().isActive() ) {
+				em.getTransaction().rollback();
+			}
+			throw e;
+		}
+		finally {
+			em.close();
+		}
 	}
 
 	@Test

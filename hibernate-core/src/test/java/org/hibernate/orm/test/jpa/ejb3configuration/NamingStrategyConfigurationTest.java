@@ -18,7 +18,7 @@ import org.hibernate.jpa.test.PersistenceUnitInfoAdapter;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.junit5.ExtraAssertions.assertTyping;
+import static org.hibernate.testing.orm.junit.ExtraAssertions.assertTyping;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 

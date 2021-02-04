@@ -315,7 +315,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			// The entity will get loaded below.
 		}
 		else {
-			if ( persister.hasProxy() ) {
+			if ( entityHasHibernateProxyFactory ) {
 				// look for a proxy
 				Object proxy = persistenceContext.getProxy( keyToLoad );
 				if ( proxy != null ) {

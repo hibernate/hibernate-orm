@@ -9,4 +9,4 @@
  * Tests related to {@link org.hibernate.annotations.LazyToOne}, especially
  * regarding handling of {@link org.hibernate.annotations.LazyToOneOption#NO_PROXY}
  */
-package org.hibernate.test.bytecode.enhancement.lazy.noproxy;
+package org.hibernate.test.bytecode.enhancement.lazy.enhanced;

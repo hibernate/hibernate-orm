@@ -83,7 +83,13 @@ public class EnhancementHelper {
 					return true;
 				}
 
-				return allowEnhancementAsProxy;
+				if ( toOne.isUnwrapProxy() && ! toOne.isUnwrapProxyImplicit() ) {
+					return allowEnhancementAsProxy;
+				}
+
+//				if ( toOne.isUnwrapProxy() || toOne.isUnwrapProxyImplicit() ) {
+//					return allowEnhancementAsProxy;
+//				}
 			}
 
 			return true;

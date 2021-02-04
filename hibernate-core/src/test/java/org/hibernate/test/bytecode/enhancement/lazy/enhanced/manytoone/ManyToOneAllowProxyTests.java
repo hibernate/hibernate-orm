@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.bytecode.enhancement.lazy.noproxy.manytoone;
+package org.hibernate.test.bytecode.enhancement.lazy.enhanced.manytoone;
 
 import java.math.BigDecimal;
 import javax.persistence.Entity;
@@ -12,7 +12,6 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
-import org.hibernate.annotations.LazyToOne;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
@@ -20,10 +19,6 @@ import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLaziness
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
-import org.hibernate.mapping.ToOne;
-import org.hibernate.mapping.Value;
 import org.hibernate.persister.entity.EntityPersister;
 
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
@@ -31,6 +26,7 @@ import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
 import org.hibernate.testing.jdbc.SQLStatementInterceptor;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -40,14 +36,13 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hibernate.annotations.LazyToOneOption.NO_PROXY;
 
 /**
- * @author Steve Ebersole
+ * Test for lazy uni-directional to-one (with SELECT fetching) when enhanced proxies are allowed
  */
 @RunWith( BytecodeEnhancerRunner.class)
 @EnhancementOptions( lazyLoading = true )
-public class ManyToOneExplicitOptionTests extends BaseNonConfigCoreFunctionalTestCase {
+public class ManyToOneAllowProxyTests extends BaseNonConfigCoreFunctionalTestCase {
 	private SQLStatementInterceptor sqlStatementInterceptor;
 
 	@Override
@@ -66,15 +61,6 @@ public class ManyToOneExplicitOptionTests extends BaseNonConfigCoreFunctionalTes
 
 	@Test
 	public void testOwnerIsProxy() {
-		inTransaction(
-				(session) -> {
-					final Customer customer = new Customer( 1, "Acme Brick" );
-					session.persist( customer );
-					final Order order = new Order( 1, customer, BigDecimal.ONE );
-					session.persist( order );
-				}
-		);
-
 		sqlStatementInterceptor.clear();
 
 		final EntityPersister orderDescriptor = sessionFactory().getMetamodel().entityPersister( Order.class );
@@ -129,6 +115,18 @@ public class ManyToOneExplicitOptionTests extends BaseNonConfigCoreFunctionalTes
 		);
 	}
 
+	@Before
+	public void createTestData() {
+		inTransaction(
+				(session) -> {
+					final Customer customer = new Customer( 1, "Acme Brick" );
+					session.persist( customer );
+					final Order order = new Order( 1, customer, BigDecimal.ONE );
+					session.persist( order );
+				}
+		);
+	}
+
 	@After
 	public void dropTestData() {
 		inTransaction(
@@ -177,7 +175,8 @@ public class ManyToOneExplicitOptionTests extends BaseNonConfigCoreFunctionalTes
 		@Id
 		private Integer id;
 		@ManyToOne( fetch = LAZY )
-		@LazyToOne( NO_PROXY )
+		//we want it to behave as if...
+		//@LazyToOne( NO_PROXY )
 		private Customer customer;
 		private BigDecimal amount;
 

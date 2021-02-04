@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.bytecode.enhancement.lazy.noproxy.inheritance;
+package org.hibernate.test.bytecode.enhancement.lazy.enhanced.polymorphic;
 
 import java.math.BigDecimal;
 import javax.persistence.Entity;
@@ -41,7 +41,7 @@ import static org.junit.Assert.assertFalse;
  */
 @RunWith( BytecodeEnhancerRunner.class)
 @EnhancementOptions( lazyLoading = true )
-public class InheritedToOneImplicitOptionTests extends BaseNonConfigCoreFunctionalTestCase {
+public class PolymorphicToOneImplicitOptionTests extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
 	public void testInheritedToOneLaziness() {
 		inTransaction(
@@ -55,10 +55,12 @@ public class InheritedToOneImplicitOptionTests extends BaseNonConfigCoreFunction
 					assertThat( sqlStatementInterceptor.getQueryCount(), is( 0 ) );
 
 					System.out.println( "  - amount : " + order.getAmount() );
+					// triggers load of base fetch state
 					assertThat( sqlStatementInterceptor.getQueryCount(), is( 1 ) );
 
 					final Customer customer = order.getCustomer();
 					assertThat( sqlStatementInterceptor.getQueryCount(), is( 1 ) );
+					// customer is part of base fetch state
 					assertFalse( Hibernate.isInitialized( customer ) );
 					assertThat( customer, instanceOf( HibernateProxy.class ) );
 

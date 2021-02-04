@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.bytecode.enhancement.lazy.noproxy.inheritance;
+package org.hibernate.test.bytecode.enhancement.lazy.enhanced.polymorphic;
 
 import java.math.BigDecimal;
 import javax.persistence.Entity;
@@ -15,12 +15,10 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 import org.hibernate.Hibernate;
-import org.hibernate.annotations.LazyToOne;
-import org.hibernate.annotations.LazyToOneOption;
+import org.hibernate.annotations.Fetch;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.proxy.HibernateProxy;
 
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
@@ -32,36 +30,23 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import static javax.persistence.FetchType.LAZY;
-import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hibernate.annotations.FetchMode.JOIN;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Steve Ebersole
  */
 @RunWith( BytecodeEnhancerRunner.class)
 @EnhancementOptions( lazyLoading = true )
-public class InheritedToOneExplicitOptionTests extends BaseNonConfigCoreFunctionalTestCase {
+public class JoinFetchedPolymorphicToOneTests extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
 	public void testInheritedToOneLaziness() {
 		inTransaction(
 				(session) -> {
 					sqlStatementInterceptor.clear();
-
-					// NOTE : this test shows an edge case that does not work the way it
-					// should.  Because we have a polymorphic to-one, we will have to
-					// generate a HibernateProxy for the laziness.  However, the explicit
-					// NO_PROXY should force the proxy to be immediately initialized
-					// and the target returned.
-					//
-					// this is the old behavior as well - these HHH-13658 changes did not cause this
-					//
-					// its an odd edge case however and maybe not that critical.  it essentially
-					// asks for the association to be lazy and to also be eager
-					//
-					// The assertions here are based on what *does* happen.  Whether that is right/wrong
-					// is a different discussion
 
 					final Order order = session.byId( Order.class ).getReference( 1 );
 					assertThat( sqlStatementInterceptor.getQueryCount(), is( 0 ) );
@@ -70,31 +55,20 @@ public class InheritedToOneExplicitOptionTests extends BaseNonConfigCoreFunction
 					assertThat( sqlStatementInterceptor.getQueryCount(), is( 0 ) );
 
 					System.out.println( "  - amount : " + order.getAmount() );
+					// triggers load of base fetch state
 					assertThat( sqlStatementInterceptor.getQueryCount(), is( 1 ) );
 
 					final Customer customer = order.getCustomer();
-					// this *should* be 2 - the customer should get loaded
-					//int expectedCount = 2;
-					// but it is 1 because we get back a HibernateProxy
-					int expectedCount = 1;
-					assertThat( sqlStatementInterceptor.getQueryCount(), is( expectedCount ) );
-					// should be true...
-					//assertTrue( Hibernate.isInitialized( customer ) );
-					// but is false
-					assertFalse( Hibernate.isInitialized( customer ) );
-					// should not be a HibernateProxy
-					//assertThat( customer, not( instanceOf( HibernateProxy.class ) ) );
-					// but is
-					assertThat( customer, instanceOf( HibernateProxy.class ) );
+					// customer is part of base fetch state
+					assertThat( sqlStatementInterceptor.getQueryCount(), is( 1 ) );
+					assertTrue( Hibernate.isInitialized( customer ) );
 
 					System.out.println( "  - customer : " + customer.getId() );
-					assertThat( sqlStatementInterceptor.getQueryCount(), is( expectedCount ) );
+					assertThat( sqlStatementInterceptor.getQueryCount(), is( 1 ) );
 
 					customer.getName();
-					// this should not trigger SQL because the customer ought to already be initialized
-					// but again that is not the case
-					expectedCount++;
-					assertThat( sqlStatementInterceptor.getQueryCount(), is( expectedCount ) );
+					// customer base fetch state should also have been loaded above
+					assertThat( sqlStatementInterceptor.getQueryCount(), is( 1 ) );
 				}
 		);
 	}
@@ -146,7 +120,7 @@ public class InheritedToOneExplicitOptionTests extends BaseNonConfigCoreFunction
 		private Integer id;
 		private BigDecimal amount;
 		@ManyToOne( fetch = LAZY, optional = false )
-		@LazyToOne( LazyToOneOption.NO_PROXY )
+		@Fetch( JOIN )
 		private Customer customer;
 
 		public Order() {

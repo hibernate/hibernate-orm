@@ -6,10 +6,13 @@
  */
 package org.hibernate.orm.test.mapping.lazytoone;
 
+import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.ToOne;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
@@ -17,9 +20,7 @@ import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
@@ -27,11 +28,19 @@ import static org.hamcrest.MatcherAssert.assertThat;
  * via {@link BytecodeEnhancerRunner}
  */
 @RunWith( BytecodeEnhancerRunner.class )
-public class InstrumentedLazyToOneTest extends BaseNonConfigCoreFunctionalTestCase {
+public class InstrumentedJoinedLazyToOneTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] { Airport.class, Flight.class };
+	}
+
+	@Override
+	protected void afterMetadataBuilt(Metadata metadata) {
+		super.afterMetadataBuilt( metadata );
+		final PersistentClass entityBinding = metadata.getEntityBinding( Flight.class.getName() );
+		( (ToOne) entityBinding.getProperty( "origination" ).getValue() ).setFetchMode( FetchMode.JOIN );
+		( (ToOne) entityBinding.getProperty( "destination" ).getValue() ).setFetchMode( FetchMode.JOIN );
 	}
 
 	@Override
@@ -76,8 +85,7 @@ public class InstrumentedLazyToOneTest extends BaseNonConfigCoreFunctionalTestCa
 		inTransaction(
 				(session) -> {
 					// The principal here is that both Flight#origination and Flight#destination
-					// should be treated as lazy via non-base "laziness group".  Accessing either
-					// will trigger initializing both
+					// should be treated as lazy via non-base "laziness group"
 
 					final Flight flight1 = session.byId( Flight.class ).load( 1 );
 
@@ -93,7 +101,7 @@ public class InstrumentedLazyToOneTest extends BaseNonConfigCoreFunctionalTestCa
 
 					final Airport origination = flight1.getOrigination();
 					assertThat( Hibernate.isInitialized( origination ), is( true ) );
-					assertThat( statistics.getPrepareStatementCount(), is( 4L ) );
+					assertThat( statistics.getPrepareStatementCount(), is( 2L ) );
 
 					final Airport destination = flight1.getDestination();
 					assertThat( Hibernate.isInitialized( destination ), is( true ) );

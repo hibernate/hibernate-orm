@@ -78,15 +78,13 @@ public class LazyGroupWithInheritanceAllowProxyTest extends BaseNonConfigCoreFun
 		final Statistics stats = sessionFactory().getStatistics();
 		stats.clear();
 
-		final AtomicInteger expectedQueryCount = new AtomicInteger( 0 );
-
 		inTransaction(
 				session -> {
 					final List<Order> orders = session.createQuery( "select o from Order o", Order.class ).list();
 
-					expectedQueryCount.set( 1 );
+					int expectedQueryCount = 1;
 
-					assertEquals( expectedQueryCount.get(), stats.getPrepareStatementCount() );
+					assertEquals( expectedQueryCount, stats.getPrepareStatementCount() );
 
 					for ( Order order : orders ) {
 						System.out.println( "############################################" );
@@ -96,29 +94,29 @@ public class LazyGroupWithInheritanceAllowProxyTest extends BaseNonConfigCoreFun
 						if ( order.getCustomer().getOid() == null ) {
 							System.out.println( "Got Order#customer: " + order.getCustomer().getOid() );
 						}
-						assertEquals( expectedQueryCount.get(), stats.getPrepareStatementCount() );
+						assertEquals( expectedQueryCount, stats.getPrepareStatementCount() );
 
 						// accessing the one-to-many should trigger a load
 						final Set<Payment> orderPayments = order.getPayments();
 						System.out.println( "Number of payments = " + orderPayments.size() );
-						expectedQueryCount.getAndIncrement();
-						assertEquals( expectedQueryCount.get(), stats.getPrepareStatementCount() );
+						expectedQueryCount++;
+						assertEquals( expectedQueryCount, stats.getPrepareStatementCount() );
 
 						// access the non-inverse, logical 1-1
 						order.getSupplemental();
-						assertEquals( expectedQueryCount.get(), stats.getPrepareStatementCount() );
+						assertEquals( expectedQueryCount, stats.getPrepareStatementCount() );
 						if ( order.getSupplemental() != null ) {
 							System.out.println( "Got Order#supplemental = " + order.getSupplemental().getOid() );
-							assertEquals( expectedQueryCount.get(), stats.getPrepareStatementCount() );
+							assertEquals( expectedQueryCount, stats.getPrepareStatementCount() );
 						}
 
 						// access the inverse, logical 1-1
 						order.getSupplemental2();
-						expectedQueryCount.getAndIncrement();
-						assertEquals( expectedQueryCount.get(), stats.getPrepareStatementCount() );
+						expectedQueryCount++;
+						assertEquals( expectedQueryCount, stats.getPrepareStatementCount() );
 						if ( order.getSupplemental2() != null ) {
 							System.out.println( "Got Order#supplemental2 = " + order.getSupplemental2().getOid() );
-							assertEquals( expectedQueryCount.get(), stats.getPrepareStatementCount() );
+							assertEquals( expectedQueryCount, stats.getPrepareStatementCount() );
 						}
 					}
 				}
@@ -134,7 +132,6 @@ public class LazyGroupWithInheritanceAllowProxyTest extends BaseNonConfigCoreFun
 		final Statistics stats = sessionFactory().getStatistics();
 		stats.clear();
 
-		final AtomicInteger expectedQueryCount = new AtomicInteger( 0 );
 
 		inTransaction(
 				session -> {
@@ -143,8 +140,7 @@ public class LazyGroupWithInheritanceAllowProxyTest extends BaseNonConfigCoreFun
 					final List<Order> orders = session.createQuery( qry, Order.class ).list();
 
 					// oh look - just a single query for all the data we will need.  hmm, crazy
-					expectedQueryCount.set( 1 );
-					assertEquals( expectedQueryCount.get(), stats.getPrepareStatementCount() );
+					assertEquals( 1, stats.getPrepareStatementCount() );
 
 					for ( Order order : orders ) {
 						System.out.println( "############################################" );
@@ -154,22 +150,21 @@ public class LazyGroupWithInheritanceAllowProxyTest extends BaseNonConfigCoreFun
 						if ( order.getCustomer().getOid() == null ) {
 							System.out.println( "Got Order#customer: " + order.getCustomer().getOid() );
 						}
-						assertEquals( expectedQueryCount.get(), stats.getPrepareStatementCount() );
+						assertEquals( 1, stats.getPrepareStatementCount() );
 
 						// accessing the one-to-many should trigger a load
 						final Set<Payment> orderPayments = order.getPayments();
 						System.out.println( "Number of payments = " + orderPayments.size() );
 
 						// loaded already
-						// expectedQueryCount.getAndIncrement();
-						assertEquals( expectedQueryCount.get(), stats.getPrepareStatementCount() );
+						assertEquals( 1, stats.getPrepareStatementCount() );
 
 						// access the non-inverse, logical 1-1
 						order.getSupplemental();
-						assertEquals( expectedQueryCount.get(), stats.getPrepareStatementCount() );
+						assertEquals( 1, stats.getPrepareStatementCount() );
 						if ( order.getSupplemental() != null ) {
 							System.out.println( "Got Order#supplemental = " + order.getSupplemental().getOid() );
-							assertEquals( expectedQueryCount.get(), stats.getPrepareStatementCount() );
+							assertEquals( 1, stats.getPrepareStatementCount() );
 						}
 
 						// access the inverse, logical 1-1
@@ -177,10 +172,10 @@ public class LazyGroupWithInheritanceAllowProxyTest extends BaseNonConfigCoreFun
 
 						// loaded already
 						// expectedQueryCount.getAndIncrement();
-						assertEquals( expectedQueryCount.get(), stats.getPrepareStatementCount() );
+						assertEquals( 1, stats.getPrepareStatementCount() );
 						if ( order.getSupplemental2() != null ) {
 							System.out.println( "Got Order#supplemental2 = " + order.getSupplemental2().getOid() );
-							assertEquals( expectedQueryCount.get(), stats.getPrepareStatementCount() );
+							assertEquals( 1, stats.getPrepareStatementCount() );
 						}
 					}
 				}

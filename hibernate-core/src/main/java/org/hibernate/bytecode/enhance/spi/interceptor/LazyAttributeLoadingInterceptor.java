@@ -128,7 +128,7 @@ public class LazyAttributeLoadingInterceptor extends AbstractLazyLoadInterceptor
 	}
 
 	public boolean hasAnyUninitializedAttributes() {
-		if ( lazyFields == null ) {
+		if ( lazyFields == null || lazyFields.isEmpty() ) {
 			return false;
 		}
 

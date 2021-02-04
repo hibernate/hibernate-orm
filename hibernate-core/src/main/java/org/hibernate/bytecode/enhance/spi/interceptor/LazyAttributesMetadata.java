@@ -17,8 +17,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.persister.spi.PersisterCreationContext;
 
 /**
  * Information about all of the bytecode lazy attributes for an entity
@@ -35,7 +37,8 @@ public class LazyAttributesMetadata implements Serializable {
 			PersistentClass mappedEntity,
 			boolean isEnhanced,
 			boolean allowEnhancementAsProxy,
-			boolean collectionsInDefaultFetchGroupEnabled) {
+			boolean collectionsInDefaultFetchGroupEnabled,
+			PersisterCreationContext creationContext) {
 		final Map<String, LazyAttributeDescriptor> lazyAttributeDescriptorMap = new LinkedHashMap<>();
 		final Map<String, Set<String>> fetchGroupToAttributesMap = new HashMap<>();
 
@@ -47,6 +50,12 @@ public class LazyAttributesMetadata implements Serializable {
 			final Property property = (Property) itr.next();
 			final boolean lazy = ! EnhancementHelper.includeInBaseFetchGroup(
 					property,
+					(entityName) -> {
+						final MetadataImplementor metadata = creationContext.getMetadata();
+						final PersistentClass entityBinding = metadata.getEntityBinding( entityName );
+						assert entityBinding != null;
+						return entityBinding.hasSubclasses();
+					},
 					isEnhanced,
 					allowEnhancementAsProxy,
 					collectionsInDefaultFetchGroupEnabled

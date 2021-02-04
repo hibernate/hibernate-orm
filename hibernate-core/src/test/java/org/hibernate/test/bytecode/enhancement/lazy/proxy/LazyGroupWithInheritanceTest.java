@@ -10,9 +10,14 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.hibernate.Hibernate;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.engine.spi.ManagedEntity;
+import org.hibernate.engine.spi.PersistentAttributeInterceptable;
+import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.stat.Statistics;
 
 import org.hibernate.testing.TestForIssue;
@@ -27,7 +32,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 /**
  * @author Steve Ebersole
@@ -37,6 +45,25 @@ import static org.junit.Assert.assertEquals;
 @RunWith(BytecodeEnhancerRunner.class)
 @EnhancementOptions( lazyLoading = true )
 public class LazyGroupWithInheritanceTest extends BaseNonConfigCoreFunctionalTestCase {
+	@Test
+	public void loadEntityWithAssociationToAbstract() {
+		final Statistics stats = sessionFactory().getStatistics();
+		stats.clear();
+
+		inTransaction(
+				(session) -> {
+					final Order loaded = session.byId( Order.class ).load( 1 );
+					assert Hibernate.isPropertyInitialized( loaded, "customer" );
+					assertThat( stats.getPrepareStatementCount(), is( 1 ) );
+					assertThat( loaded, instanceOf( PersistentAttributeInterceptable.class ) );
+					final PersistentAttributeInterceptor interceptor = ((PersistentAttributeInterceptable) loaded).$$_hibernate_getInterceptor();
+					assertThat( interceptor, instanceOf( BytecodeLazyAttributeInterceptor.class ) );
+					final BytecodeLazyAttributeInterceptor interceptor1 = (BytecodeLazyAttributeInterceptor) interceptor;
+
+				}
+		);
+	}
+
 	@Test
 	public void queryEntityWithAssociationToAbstract() {
 		final Statistics stats = sessionFactory().getStatistics();
@@ -123,9 +150,7 @@ public class LazyGroupWithInheritanceTest extends BaseNonConfigCoreFunctionalTes
 						System.out.println( "Starting Order #" + order.getOid() );
 
 						// accessing the many-to-one's id should not trigger a load
-						if ( order.getCustomer().getOid() == null ) {
-							System.out.println( "Got Order#customer: " + order.getCustomer().getOid() );
-						}
+						System.out.println( "  - customer: " + order.getCustomer().getOid() );
 						assertEquals( expectedQueryCount.get(), stats.getPrepareStatementCount() );
 
 						// accessing the one-to-many should trigger a load

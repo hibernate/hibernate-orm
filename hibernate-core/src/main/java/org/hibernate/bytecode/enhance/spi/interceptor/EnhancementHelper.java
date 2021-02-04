@@ -25,11 +25,18 @@ import org.hibernate.mapping.Value;
  * @author Steve Ebersole
  */
 public class EnhancementHelper {
+
+	@FunctionalInterface
+	public interface InheritanceChecker {
+		boolean hasSubclasses(String entityName);
+	}
+
 	/**
 	 * Should the given property be included in the owner's base fetch group?
 	 */
 	public static boolean includeInBaseFetchGroup(
 			Property bootMapping,
+			InheritanceChecker inheritanceChecker,
 			boolean isEnhanced,
 			boolean allowEnhancementAsProxy,
 			boolean collectionsInDefaultFetchGroupEnabled) {
@@ -39,7 +46,7 @@ public class EnhancementHelper {
 			if ( value instanceof ToOne ) {
 				if ( ( (ToOne) value ).isUnwrapProxy() ) {
 					BytecodeLogger.LOGGER.debugf(
-							"To-one property `%s#%s` was mapped with LAZY + NO_PROXY but the class was not enhanced",
+							"`%s#%s` was mapped with LAZY + NO_PROXY but the class was not enhanced",
 							bootMapping.getPersistentClass().getEntityName(),
 							bootMapping.getName()
 					);
@@ -51,15 +58,32 @@ public class EnhancementHelper {
 		if ( value instanceof ToOne ) {
 			final ToOne toOne = (ToOne) value;
 			if ( toOne.isLazy() ) {
-				if ( toOne.isUnwrapProxy() ) {
-					if ( toOne instanceof OneToOne ) {
-						return false;
-					}
-					// include it in the base fetch group so long as the config allows
-					// using the FK to create an "enhancement proxy"
-					return allowEnhancementAsProxy;
+				// include it in the base fetch group so long as the config allows
+				// using the FK to create an "enhancement proxy"
+
+				// however a few special cases to handle...
+
+				if ( ! toOne.isReferenceToPrimaryKey() ) {
+					// we do not have a reference to the associated primary-key
+					return false;
 				}
 
+				if ( inheritanceChecker.hasSubclasses( toOne.getReferencedEntityName() ) ) {
+					// the associated type has subclasses - we cannot use the enhanced proxy and will generate a HibernateProxy
+					if ( ! toOne.isUnwrapProxyImplicit() ) {
+						// NO_PROXY was explicitly requested
+						BytecodeLogger.LOGGER.debugf(
+								"`%s#%s` was mapped with LAZY with explicit NO_PROXY but the associated entity (`%s`) has subclasses",
+								bootMapping.getPersistentClass().getEntityName(),
+								bootMapping.getName(),
+								toOne.getReferencedEntityName()
+						);
+					}
+					// however, select the fk to create the proxy
+					return true;
+				}
+
+				return allowEnhancementAsProxy;
 			}
 
 			return true;

@@ -6,12 +6,8 @@
  */
 package org.hibernate.id.enhanced;
 
-import org.junit.Ignore;
-import org.junit.Test;
-
-import org.hibernate.id.IdentifierGeneratorHelper;
-import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
@@ -319,66 +315,6 @@ public class OptimizerUnitTest extends BaseUnitTestCase {
 			long initial,
 			int increment) {
 		return OptimizerFactory.buildOptimizer( descriptor.getExternalName(), Long.class, increment, initial );
-	}
-
-	private static class SourceMock implements AccessCallback {
-		private IdentifierGeneratorHelper.BasicHolder value = new IdentifierGeneratorHelper.BasicHolder( Long.class );
-		private long initialValue;
-		private int increment;
-		private int timesCalled = 0;
-
-		public SourceMock(long initialValue) {
-			this( initialValue, 1 );
-		}
-
-		public SourceMock(long initialValue, int increment) {
-			this( initialValue, increment, 0 );
-		}
-
-		public SourceMock(long initialValue, int increment, int timesCalled) {
-			this.increment = increment;
-			this.timesCalled = timesCalled;
-			if ( timesCalled != 0 ) {
-				this.value.initialize( initialValue );
-				this.initialValue = 1;
-			}
-			else {
-				this.value.initialize( -1 );
-				this.initialValue = initialValue;
-			}
-		}
-
-		public IntegralDataTypeHolder getNextValue() {
-			try {
-				if ( timesCalled == 0 ) {
-					initValue();
-					return value.copy();
-				}
-				else {
-					return value.add( increment ).copy();
-				}
-			}
-			finally {
-				timesCalled++;
-			}
-		}
-
-		@Override
-		public String getTenantIdentifier() {
-			return null;
-		}
-
-		private void initValue() {
-			this.value.initialize( initialValue );
-		}
-
-		public int getTimesCalled() {
-			return timesCalled;
-		}
-
-		public long getCurrentValue() {
-			return value == null ? -1 : value.getActualLongValue();
-		}
 	}
 
 }

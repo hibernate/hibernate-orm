@@ -1,22 +1,8 @@
 /*
- * This file is part of Hibernate Spatial, an extension to the
- *  hibernate ORM solution for spatial (geographic) data.
+ * Hibernate, Relational Persistence for Idiomatic Java
  *
- *  Copyright © 2014 Adtech Geospatial
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
 package org.hibernate.spatial.testing.dialects.db2;
@@ -35,8 +21,8 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 public class DB2TestSupport extends TestSupport {
 
 	public TestData createTestData(BaseCoreFunctionalTestCase testcase) {
-		if ( "org.hibernate.spatial.integration.TestSpatialFunctions".equals( testcase.getClass()
-																					  .getCanonicalName() ) ) {
+		if ( "org.hibernate.spatial.integration.TestSpatialFunctions".equals(
+				testcase.getClass().getCanonicalName() ) ) {
 			return TestData.fromFile( "db2/test-db2nozm-only-polygon.xml" );
 		}
 		return TestData.fromFile( "db2/test-db2nozm-data-set.xml" );

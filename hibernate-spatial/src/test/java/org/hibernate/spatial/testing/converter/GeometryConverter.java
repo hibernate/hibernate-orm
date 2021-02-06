@@ -16,8 +16,8 @@ import org.geolatte.geom.Geometry;
 /**
  * @author Steve Ebersole
  */
-@Converter( autoApply = true )
-public class GeometryConverter implements AttributeConverter<Geometry,byte[]> {
+@Converter(autoApply = true)
+public class GeometryConverter implements AttributeConverter<Geometry, byte[]> {
 	@Override
 	public byte[] convertToDatabaseColumn(Geometry attribute) {
 		if ( attribute == null ) {

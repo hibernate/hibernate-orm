@@ -93,7 +93,6 @@ public class MySQL8ExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 
-
 	@Override
 	protected NativeSQLStatement createNativeRelateStatement(Geometry geom, String matrix) {
 		throw new UnsupportedOperationException();

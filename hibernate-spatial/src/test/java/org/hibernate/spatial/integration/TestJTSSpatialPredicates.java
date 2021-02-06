@@ -41,7 +41,7 @@ import static org.junit.Assert.fail;
 @SkipForDialect(value = HANASpatialDialect.class, comment = "The HANA dialect is tested via org.hibernate.spatial.dialect.hana.TestHANASpatialFunctions", jiraKey = "HHH-12426")
 public class TestJTSSpatialPredicates extends SpatialFunctionalTestCase {
 
-	private static HSMessageLogger LOG = Logger.getMessageLogger(
+	private static final HSMessageLogger LOG = Logger.getMessageLogger(
 			HSMessageLogger.class,
 			TestJTSSpatialPredicates.class.getName()
 	);

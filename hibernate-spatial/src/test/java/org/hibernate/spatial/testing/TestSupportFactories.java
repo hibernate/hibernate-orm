@@ -27,7 +27,7 @@ import org.hibernate.spatial.testing.dialects.sqlserver.SQLServerTestSupport;
  */
 public class TestSupportFactories {
 
-	private static TestSupportFactories instance = new TestSupportFactories();
+	private static final TestSupportFactories instance = new TestSupportFactories();
 
 	private TestSupportFactories() {
 	}

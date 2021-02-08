@@ -63,6 +63,9 @@ public class SimpleDynamicUpdateTest extends BaseNonConfigCoreFunctionalTestCase
 
 	@Before
 	public void setUp() {
+		if ( skipTest ) {
+			return;
+		}
 		inTransaction(
 				session -> {
 					User user = new User();
@@ -88,6 +91,9 @@ public class SimpleDynamicUpdateTest extends BaseNonConfigCoreFunctionalTestCase
 
 	@Test
 	public void testIt() {
+		if ( skipTest ) {
+			return;
+		}
 		inTransaction(
 				session -> {
 					User user = session.getReference( User.class, 1 );

@@ -3,6 +3,15 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.4.27.SP1 (February 08, 2021)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31920
+
+** Bug
+    * [HHH-14424] - When enhanced as a proxy with dirty checking is enabled, on flush uninitialized entities containing collections are updated setting all fields to null 
+
+
 Changes in 5.4.27.Final (December 22, 2020)
 ------------------------------------------------------------------------------------------------------------------------
 

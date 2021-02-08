@@ -50,7 +50,7 @@ public interface QueryProducer {
 	 * Create a typed {@link Query} instance for the given HQL/JPQL query string.
 	 *
 	 * @param queryString The HQL/JPQL query
-	 *
+	 * @param resultClass The type of the query result
 	 * @return The Query instance for manipulation and execution
 	 *
 	 * @see javax.persistence.EntityManager#createQuery(String,Class)
@@ -123,7 +123,7 @@ public interface QueryProducer {
 	 * implicit mapping to the specified Java type.
 	 *
 	 * @param sqlString Native (SQL) query string
-	 * @param resultClass The Java type to map results to
+	 * @param resultClass The Java entity type to map results to
 	 *
 	 * @return The NativeQuery instance for manipulation and execution
 	 *

@@ -54,6 +54,7 @@ import org.hibernate.bytecode.enhance.spi.UnloadedField;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.beanvalidation.BeanValidationIntegrator;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.integrator.spi.Integrator;
@@ -77,7 +78,9 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.secure.spi.GrantedPermission;
 import org.hibernate.secure.spi.JaccPermissionDeclarations;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.service.spi.ServiceBinding;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.service.spi.Stoppable;
 import org.hibernate.tool.schema.spi.DelayedDropRegistryNotAvailableImpl;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 
@@ -1213,7 +1216,22 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 	@Override
 	public void cancel() {
+		cleanup();
 		// todo : close the bootstrap registry (not critical, but nice to do)
+	}
+
+	private void cleanup() {
+		// Stop and de-register the ConnectionProvider to prevent connections lying around
+		if ( standardServiceRegistry instanceof ServiceRegistryImplementor &&
+				standardServiceRegistry instanceof ServiceBinding.ServiceLifecycleOwner ) {
+			final ServiceRegistryImplementor serviceRegistry = (ServiceRegistryImplementor) standardServiceRegistry;
+			final ServiceBinding.ServiceLifecycleOwner lifecycleOwner = (ServiceBinding.ServiceLifecycleOwner) serviceRegistry;
+			final ServiceBinding<ConnectionProvider> binding = serviceRegistry.locateServiceBinding( ConnectionProvider.class );
+			if ( binding != null && binding.getService() instanceof Stoppable ) {
+				lifecycleOwner.stopService( binding );
+				binding.setService( null );
+			}
+		}
 	}
 
 	/**
@@ -1245,21 +1263,32 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		catch (Exception e) {
 			throw persistenceException( "Error performing schema management", e );
 		}
-
-		// release this builder
-		cancel();
+		finally {
+			// release this builder
+			cancel();
+		}
 	}
 
 	@Override
 	public EntityManagerFactory build() {
-		final SessionFactoryBuilder sfBuilder = metadata().getSessionFactoryBuilder();
-		populateSfBuilder( sfBuilder, standardServiceRegistry );
-
+		boolean success = false;
 		try {
-			return sfBuilder.build();
+			final SessionFactoryBuilder sfBuilder = metadata().getSessionFactoryBuilder();
+			populateSfBuilder( sfBuilder, standardServiceRegistry );
+
+			try {
+				final EntityManagerFactory emf = sfBuilder.build();
+				success = true;
+				return emf;
+			}
+			catch (Exception e) {
+				throw persistenceException( "Unable to build Hibernate SessionFactory", e );
+			}
 		}
-		catch (Exception e) {
-			throw persistenceException( "Unable to build Hibernate SessionFactory", e );
+		finally {
+			if ( !success ) {
+				cleanup();
+			}
 		}
 	}
 

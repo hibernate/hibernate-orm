@@ -6,6 +6,11 @@
  */
 package org.hibernate.test.annotations.selectbeforeupdate;
 
+import java.util.HashSet;
+import java.util.Set;
+import javax.persistence.Column;
+import javax.persistence.ElementCollection;
+import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -136,6 +141,37 @@ public class UpdateDetachedTest extends BaseCoreFunctionalTestCase{
 		assertEquals( Integer.valueOf( 1 ), foo.getVersion() );
 	}
 
+	@Test
+	@TestForIssue(jiraKey = "HHH-14319")
+	public void testUpdateDetachedWithAttachedPersistentSet() {
+		final Bar bar = new Bar( 5, "Bar" );
+		final Set<Comment> comments = new HashSet<>();
+		comments.add( new Comment( "abc", "me" ) );
+		bar.comments = comments;
+
+		// this should generate versions
+		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+			session.save( bar );
+		} );
+		final Bar loadedBar = TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+			// We set the comments to the hash set and leave it "dirty"
+			Bar b = session.find( Bar.class, bar.getId() );
+			b.comments = comments;
+
+			// During flushing, the comments HashSet becomes the backing collection of new PersistentSet which replaces the old entry
+			session.flush();
+
+			// Replace the persistent collection with the backing collection in the field
+			b.comments = comments;
+
+			// It's vital that we try merging a detached instance
+			session.detach( b );
+			return (Bar) session.merge( b );
+		} );
+
+		assertEquals( 1, loadedBar.comments.size() );
+	}
+
 	@Entity(name = "Foo")
 	@SelectBeforeUpdate
 	public static class Foo {
@@ -198,6 +234,8 @@ public class UpdateDetachedTest extends BaseCoreFunctionalTestCase{
 		private String name;
 		@Version
 		private Integer version;
+		@ElementCollection
+		private Set<Comment> comments;
 
 		Bar() {
 
@@ -230,6 +268,45 @@ public class UpdateDetachedTest extends BaseCoreFunctionalTestCase{
 
 		public void setVersion(Integer version) {
 			this.version = version;
+		}
+
+		public Set<Comment> getComments() {
+			return comments;
+		}
+
+		public void setComments(Set<Comment> comments) {
+			this.comments = comments;
+		}
+	}
+
+	@Embeddable
+	public static class Comment {
+		@Column(name = "bar_comment")
+		private String comment;
+		private String author;
+
+		public Comment() {
+		}
+
+		public Comment(String comment, String author) {
+			this.comment = comment;
+			this.author = author;
+		}
+
+		public String getComment() {
+			return comment;
+		}
+
+		public void setComment(String comment) {
+			this.comment = comment;
+		}
+
+		public String getAuthor() {
+			return author;
+		}
+
+		public void setAuthor(String author) {
+			this.author = author;
 		}
 	}
 }

@@ -9,6 +9,7 @@ package org.hibernate.hql.internal.ast.tree;
 import org.hibernate.QueryException;
 import org.hibernate.engine.internal.JoinSequence;
 import org.hibernate.hql.internal.CollectionProperties;
+import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.internal.antlr.SqlTokenTypes;
 import org.hibernate.hql.internal.ast.util.ASTUtil;
 import org.hibernate.hql.internal.ast.util.ColumnHelper;
@@ -256,7 +257,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 		boolean countDistinct = getWalker().isInCountDistinct()
 				&& getWalker().getSessionFactoryHelper().getFactory().getDialect().requiresParensForTupleDistinctCounts();
 		if ( cols.length > 1 &&
-				( getWalker().isComparativeExpressionClause() || countDistinct ) ) {
+				( getWalker().isComparativeExpressionClause() || countDistinct || getWalker().getCurrentClauseType() == HqlSqlTokenTypes.SET ) ) {
 			text = "(" + text + ")";
 		}
 		setText( text );
@@ -416,7 +417,8 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 			joinIsNeeded = generateJoin;
 		}
 		else {
-			joinIsNeeded = generateJoin || ( getWalker().isInSelect() || getWalker().isInFrom() );
+			joinIsNeeded = generateJoin
+					|| ( getWalker().isInSelect() || getWalker().isInFrom() || ( implicitJoin && getWalker().isInSize() ) );
 		}
 
 		if ( joinIsNeeded ) {

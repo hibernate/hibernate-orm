@@ -138,19 +138,21 @@ abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase
 			} );
 			inTransaction( session -> {
 				session.doWork( connection -> {
-					final PreparedStatement statement = connection.prepareStatement(
+					try (PreparedStatement statement = connection.prepareStatement(
 							"SELECT " + PROPERTY_COLUMN_NAME + " FROM " + ENTITY_NAME + " WHERE " + ID_COLUMN_NAME + " = ?"
-					);
-					statement.setInt( 1, 1 );
-					statement.execute();
-					final ResultSet resultSet = statement.getResultSet();
-					resultSet.next();
-					Object nativeRead = getActualJdbcValue( resultSet, 1 );
-					assertEquals(
-							"Values written by Hibernate ORM should match the original value (same day, hour, ...)",
-							getExpectedJdbcValueAfterHibernateWrite(),
-							nativeRead
-					);
+					)) {
+						statement.setInt( 1, 1 );
+						statement.execute();
+						try (ResultSet resultSet = statement.getResultSet()) {
+							resultSet.next();
+							Object nativeRead = getActualJdbcValue( resultSet, 1 );
+							assertEquals(
+									"Values written by Hibernate ORM should match the original value (same day, hour, ...)",
+									getExpectedJdbcValueAfterHibernateWrite(),
+									nativeRead
+							);
+						}
+					}
 				} );
 			} );
 		} );
@@ -164,13 +166,14 @@ abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase
 		withDefaultTimeZone( () -> {
 			inTransaction( session -> {
 				session.doWork( connection -> {
-					final PreparedStatement statement = connection.prepareStatement(
+					try (PreparedStatement statement = connection.prepareStatement(
 							"INSERT INTO " + ENTITY_NAME + " (" + ID_COLUMN_NAME + ", " + PROPERTY_COLUMN_NAME + ") "
 							+ " VALUES ( ? , ? )"
-					);
-					statement.setInt( 1, 1 );
-					setJdbcValueForNonHibernateWrite( statement, 2 );
-					statement.execute();
+					)) {
+						statement.setInt( 1, 1 );
+						setJdbcValueForNonHibernateWrite( statement, 2 );
+						statement.execute();
+					}
 				} );
 			} );
 			inTransaction( session -> {

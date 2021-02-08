@@ -6,6 +6,8 @@
  */
 package org.hibernate.hql.spi.id.persistent;
 
+import java.sql.Types;
+
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -111,6 +113,7 @@ public class PersistentTableBulkIdStrategy
 	protected void augmentIdTableDefinition(Table idTable) {
 		Column sessionIdColumn = new Column( Helper.SESSION_ID_COLUMN_NAME );
 		sessionIdColumn.setSqlType( "CHAR(36)" );
+		sessionIdColumn.setSqlTypeCode( Types.VARCHAR );
 		sessionIdColumn.setComment( "Used to hold the Hibernate Session identifier" );
 		idTable.addColumn( sessionIdColumn );
 	}

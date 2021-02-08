@@ -197,6 +197,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	private final transient FastSessionServices fastSessionServices;
 	private final transient SessionBuilder defaultSessionOpenOptions;
 	private final transient SessionBuilder temporarySessionOpenOptions;
+	private final transient StatelessSessionBuilder defaultStatelessOptions;
 
 	public SessionFactoryImpl(
 			final MetadataImplementor metadata,
@@ -298,6 +299,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 				);
 				identifierGenerators.put( model.getEntityName(), generator );
 			} );
+			metadata.validate();
 
 			LOG.debug( "Instantiated session factory" );
 
@@ -379,8 +381,9 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 				fetchProfiles.put( fetchProfile.getName(), fetchProfile );
 			}
 
-			this.defaultSessionOpenOptions = withOptions();
-			this.temporarySessionOpenOptions = buildTemporarySessionOpenOptions();
+			this.defaultSessionOpenOptions = createDefaultSessionOpenOptionsIfPossible();
+			this.temporarySessionOpenOptions = this.defaultSessionOpenOptions == null ? null : buildTemporarySessionOpenOptions();
+			this.defaultStatelessOptions = this.defaultSessionOpenOptions == null ? null : withStatelessOptions();
 			this.fastSessionServices = new FastSessionServices( this );
 
 			this.observer.sessionFactoryCreated( this );
@@ -404,6 +407,17 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			}
 			close();
 			throw e;
+		}
+	}
+
+	private SessionBuilder createDefaultSessionOpenOptionsIfPossible() {
+		final CurrentTenantIdentifierResolver currentTenantIdentifierResolver = getCurrentTenantIdentifierResolver();
+		if ( currentTenantIdentifierResolver == null ) {
+			return withOptions();
+		}
+		else {
+			//Don't store a default SessionBuilder when a CurrentTenantIdentifierResolver is provided
+			return null;
 		}
 	}
 
@@ -454,25 +468,23 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	public Session openSession() throws HibernateException {
-		final CurrentTenantIdentifierResolver currentTenantIdentifierResolver = getCurrentTenantIdentifierResolver();
-		//We can only reuse the defaultSessionOpenOptions as a constant when there is no TenantIdentifierResolver
-		if ( currentTenantIdentifierResolver != null ) {
-			return this.withOptions().openSession();
+		//The defaultSessionOpenOptions can't be used in some cases; for example when using a TenantIdentifierResolver.
+		if ( this.defaultSessionOpenOptions != null ) {
+			return this.defaultSessionOpenOptions.openSession();
 		}
 		else {
-			return this.defaultSessionOpenOptions.openSession();
+			return this.withOptions().openSession();
 		}
 	}
 
 	public Session openTemporarySession() throws HibernateException {
-		final CurrentTenantIdentifierResolver currentTenantIdentifierResolver = getCurrentTenantIdentifierResolver();
-		//We can only reuse the defaultSessionOpenOptions as a constant when there is no TenantIdentifierResolver
-		if ( currentTenantIdentifierResolver != null ) {
-			return buildTemporarySessionOpenOptions()
-					.openSession();
+		//The temporarySessionOpenOptions can't be used in some cases; for example when using a TenantIdentifierResolver.
+		if ( this.temporarySessionOpenOptions != null ) {
+			return this.temporarySessionOpenOptions.openSession();
 		}
 		else {
-			return this.temporarySessionOpenOptions.openSession();
+			return buildTemporarySessionOpenOptions()
+					.openSession();
 		}
 	}
 
@@ -494,7 +506,12 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	public StatelessSession openStatelessSession() {
-		return withStatelessOptions().openStatelessSession();
+		if ( this.defaultStatelessOptions != null ) {
+			return this.defaultStatelessOptions.openStatelessSession();
+		}
+		else {
+			return withStatelessOptions().openStatelessSession();
+		}
 	}
 
 	public StatelessSession openStatelessSession(Connection connection) {
@@ -1473,7 +1490,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		@Override
 		public PhysicalConnectionHandlingMode getPhysicalConnectionHandlingMode() {
-			return null;
+			return sessionFactory.getSessionFactoryOptions().getPhysicalConnectionHandlingMode();
 		}
 
 		@Override

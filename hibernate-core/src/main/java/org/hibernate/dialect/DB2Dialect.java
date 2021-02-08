@@ -583,7 +583,7 @@ public class DB2Dialect extends Dialect {
 				nullPrecedence == NullPrecedence.FIRST ? "0" : "1",
 				nullPrecedence == NullPrecedence.FIRST ? "1" : "0",
 				expression,
-				order
+				order == null ? "asc" : order
 		);
 	}
 

@@ -33,7 +33,9 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
+import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.service.ServiceRegistry;
 
 import org.junit.Assert;
 
@@ -153,6 +155,24 @@ public class TransactionUtil {
 		default void afterTransactionCompletion() {
 
 		}
+	}
+
+	/**
+	 * JDBC transaction function
+	 *
+	 * @param <T> function result
+	 */
+	@FunctionalInterface
+	public interface JDBCTransactionFunction<T> {
+		T accept(Connection connection) throws SQLException;
+	}
+
+	/**
+	 * JDBC transaction function without return value
+	 */
+	@FunctionalInterface
+	public interface JDBCTransactionVoidFunction {
+		void accept(Connection connection) throws SQLException;
 	}
 
 	/**
@@ -691,5 +711,41 @@ public class TransactionUtil {
 	 */
 	public static void doInAutoCommit(String... statements) {
 		doInAutoCommit( null, statements );
+	}
+
+	public static void doWithJDBC(ServiceRegistry serviceRegistry, JDBCTransactionVoidFunction function) throws SQLException {
+		final JdbcConnectionAccess connectionAccess = serviceRegistry.getService( JdbcServices.class )
+				.getBootstrapJdbcConnectionAccess();
+		Connection connection = connectionAccess.obtainConnection();
+		try {
+			function.accept( connection );
+		}
+		finally {
+			if ( connection != null ) {
+				try {
+					connectionAccess.releaseConnection( connection );
+				}
+				catch (SQLException ignore) {
+				}
+			}
+		}
+	}
+
+	public static <T> T doWithJDBC(ServiceRegistry serviceRegistry, JDBCTransactionFunction<T> function) throws SQLException {
+		final JdbcConnectionAccess connectionAccess = serviceRegistry.getService( JdbcServices.class )
+				.getBootstrapJdbcConnectionAccess();
+		Connection connection = connectionAccess.obtainConnection();
+		try {
+			return function.accept( connection );
+		}
+		finally {
+			if ( connection != null ) {
+				try {
+					connectionAccess.releaseConnection( connection );
+				}
+				catch (SQLException ignore) {
+				}
+			}
+		}
 	}
 }

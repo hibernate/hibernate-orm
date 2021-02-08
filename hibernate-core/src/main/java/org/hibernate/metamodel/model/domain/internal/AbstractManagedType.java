@@ -259,7 +259,7 @@ public abstract class AbstractManagedType<J>
 	@Override
 	@SuppressWarnings({ "unchecked" })
 	public Set<PluralAttribute<? super J, ?, ?>> getPluralAttributes() {
-		HashSet attributes = declaredAttributes == null ? new HashSet<PluralAttribute<? super J, ?, ?>>() : new HashSet<PluralAttribute<? super J, ?, ?>>( declaredPluralAttributes.values() );
+		HashSet attributes = declaredPluralAttributes == null ? new HashSet<PluralAttribute<? super J, ?, ?>>() : new HashSet<PluralAttribute<? super J, ?, ?>>( declaredPluralAttributes.values() );
 		if ( getSuperType() != null ) {
 			attributes.addAll( getSuperType().getPluralAttributes() );
 		}

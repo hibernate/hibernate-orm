@@ -20,6 +20,7 @@ import org.hibernate.bytecode.spi.ProxyFactoryFactory;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.proxy.pojo.bytebuddy.ByteBuddyProxyHelper;
 
+import net.bytebuddy.ClassFileVersion;
 import net.bytebuddy.NamingStrategy;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
@@ -49,8 +50,21 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 
 	private final ByteBuddyProxyHelper byteBuddyProxyHelper;
 
+	/**
+	 * Constructs a ByteBuddy BytecodeProvider instance which attempts to auto-detect the target JVM version
+	 * from the currently running one, with a fallback on Java 8.
+	 */
 	public BytecodeProviderImpl() {
-		this.byteBuddyState = new ByteBuddyState();
+		this( ClassFileVersion.ofThisVm( ClassFileVersion.JAVA_V8 ) );
+	}
+
+	/**
+	 * Constructs a ByteBuddy BytecodeProvider instance which aims to produce code compatible
+	 * with the specified target JVM version.
+	 * @param targetCompatibleJVM
+	 */
+	public BytecodeProviderImpl(ClassFileVersion targetCompatibleJVM) {
+		this.byteBuddyState = new ByteBuddyState( targetCompatibleJVM );
 		this.byteBuddyProxyHelper = new ByteBuddyProxyHelper( byteBuddyState );
 	}
 

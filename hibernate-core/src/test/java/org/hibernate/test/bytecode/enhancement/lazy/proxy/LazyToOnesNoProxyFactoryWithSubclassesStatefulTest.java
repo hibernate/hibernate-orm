@@ -264,19 +264,15 @@ public class LazyToOnesNoProxyFactoryWithSubclassesStatefulTest extends BaseNonC
 		private String id;
 
 		@ManyToOne(fetch = FetchType.LAZY)
-		@LazyToOne(LazyToOneOption.NO_PROXY)
 		private Animal animal = null;
 
 		@ManyToOne(fetch = FetchType.LAZY)
-		@LazyToOne(LazyToOneOption.NO_PROXY)
 		private Primate primate = null;
 
 		@ManyToOne(fetch = FetchType.LAZY)
-		@LazyToOne(LazyToOneOption.NO_PROXY)
 		private Human human = null;
 
 		@ManyToOne(fetch = FetchType.LAZY)
-		@LazyToOne(LazyToOneOption.NO_PROXY)
 		private Human otherHuman = null;
 
 		protected OtherEntity() {

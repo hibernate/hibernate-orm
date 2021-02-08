@@ -6,7 +6,10 @@
  */
 package org.hibernate.dialect;
 
+import java.time.Duration;
+
 import org.hibernate.LockOptions;
+import org.hibernate.MappingException;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorMariaDBDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
@@ -41,6 +44,22 @@ public class MariaDB103Dialect extends MariaDB102Dialect {
 	}
 
 	@Override
+	protected String getCreateSequenceString(String sequenceName, int initialValue, int incrementSize)
+			throws MappingException {
+		final String sequenceString = getCreateSequenceString( sequenceName ) + " start with " + initialValue + " increment by " + incrementSize;
+		// MariaDB has defaults for min and max value that don't play well with settings then sign( increment ) != sign( initialValue )
+		if ( incrementSize > 0 && initialValue < 0 ) {
+			return sequenceString + " minvalue " + initialValue;
+		}
+		else if ( incrementSize < 0 && initialValue > 0 ) {
+			return sequenceString + " maxvalue " + initialValue;
+		}
+		else {
+			return sequenceString;
+		}
+	}
+
+	@Override
 	public String getDropSequenceString(String sequenceName) {
 		return "drop sequence " + sequenceName;
 	}
@@ -72,7 +91,7 @@ public class MariaDB103Dialect extends MariaDB102Dialect {
 		}
 
 		if ( timeout > 0 ) {
-			return getForUpdateString() + " wait " + timeout;
+			return getForUpdateString() + " wait " + getLockWaitTimeoutInSeconds( timeout );
 		}
 
 		return getForUpdateString();
@@ -86,6 +105,11 @@ public class MariaDB103Dialect extends MariaDB102Dialect {
 	@Override
 	public String getForUpdateNowaitString(String aliases) {
 		return getForUpdateString( aliases ) + " nowait";
+	}
+
+	private static long getLockWaitTimeoutInSeconds(int timeoutInMilliseconds) {
+		Duration duration = Duration.ofMillis( timeoutInMilliseconds );
+		return duration.getSeconds();
 	}
 
 }

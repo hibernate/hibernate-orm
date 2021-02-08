@@ -36,17 +36,17 @@ public class GeometryConverterTest extends BaseUnitTestCase {
 
 	@Test
 	public void testConverterUsage() {
-		try ( final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+		try (final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, GeoDBDialect.class )
 				.applySetting( AvailableSettings.HBM2DDL_AUTO, Action.CREATE_DROP )
-				.build() ) {
+				.build()) {
 			final MetadataSources metadataSources = new MetadataSources( ssr )
 					.addAnnotatedClass( GeometryConverter.class )
 					.addAnnotatedClass( MyEntity.class );
 			final MetadataBuilderImplementor metadataBuilder = (MetadataBuilderImplementor) metadataSources.getMetadataBuilder();
 
-			try ( final SessionFactoryImplementor sessionFactory =
-						  (SessionFactoryImplementor) metadataBuilder.build().buildSessionFactory() ) {
+			try (final SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) metadataBuilder.build()
+					.buildSessionFactory()) {
 
 				final TypeConfiguration typeConfiguration = sessionFactory.getMetamodel().getTypeConfiguration();
 

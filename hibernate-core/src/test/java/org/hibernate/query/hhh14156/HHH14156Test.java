@@ -7,6 +7,10 @@ import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 
+import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.dialect.SQLServerDialect;
+
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -24,6 +28,8 @@ public class HHH14156Test extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = SQLServerDialect.class, comment = "SQLServer doesn't support tuple comparisons")
+	@SkipForDialect(value = DerbyDialect.class, comment = "Derby doesn't support tuple comparisons")
 	public void testNoExceptionThrown() {
 		inTransaction( session ->
 			session.createQuery(

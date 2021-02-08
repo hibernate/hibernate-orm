@@ -210,6 +210,7 @@ public abstract class Dialect implements ConversionContext {
 		registerColumnType( Types.FLOAT, "float($p)" );
 		registerColumnType( Types.DOUBLE, "double precision" );
 		registerColumnType( Types.NUMERIC, "numeric($p,$s)" );
+		registerColumnType( Types.DECIMAL, "decimal($p,$s)" );
 		registerColumnType( Types.REAL, "real" );
 
 		registerColumnType( Types.DATE, "date" );
@@ -2448,6 +2449,19 @@ public abstract class Dialect implements ConversionContext {
 	public boolean supportsRowValueConstructorSyntax() {
 		// return false here, as most databases do not properly support this construct...
 		return false;
+	}
+
+	/**
+	 * Is this dialect known to support  what ANSI-SQL terms "row value constructor" syntax, 
+	 * sometimes called tuple syntax, in the SET clause;
+	 * <p/>
+	 * Basically, does it support syntax like
+	 * "... SET (FIRST_NAME, LAST_NAME) = ('Steve', 'Ebersole') ...".
+	 *
+	 * @return True if this SQL dialect is known to support "row value constructor" syntax in the SET clause; false otherwise.
+	 */
+	public boolean supportsRowValueConstructorSyntaxInSet() {
+		return supportsRowValueConstructorSyntax();
 	}
 
 	/**

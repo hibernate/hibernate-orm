@@ -15,8 +15,10 @@ import javax.persistence.Table;
 
 import org.hibernate.annotations.Subselect;
 import org.hibernate.annotations.Synchronize;
+import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.testing.SkipForDialect;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -25,6 +27,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Vlad Mihalcea
  */
+@SkipForDialect(value = DerbyDialect.class, comment = "Derby doesn't support a CONCAT function")
 public class SubselectTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override

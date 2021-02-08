@@ -184,6 +184,22 @@ public class EventListenerDuplicationStrategyTest {
 		listenerGroup.appendListener( new ExpectedListener( tracker ) );
 	}
 
+	@Test
+	public void testDuplicationStrategyRemovedOnClear() {
+		listenerGroup.clear();
+		//As side-effect, it's now allowed to register the same event twice:
+		listenerGroup.appendListener( new OriginalListener( tracker ) );
+		listenerGroup.appendListener( new OriginalListener( tracker ) );
+	}
+
+	@Test
+	public void testDefaultDuplicationStrategy() {
+		thrown.expect( EventListenerRegistrationException.class );
+		//By default, it's not allowed to register the same type of listener twice:
+		listenerGroup.appendListener( new OriginalListener( tracker ) );
+		listenerGroup.appendListener( new OriginalListener( tracker ) );
+	}
+
 	/**
 	 * Keep track of which listener is called and how many listeners are called.
 	 */

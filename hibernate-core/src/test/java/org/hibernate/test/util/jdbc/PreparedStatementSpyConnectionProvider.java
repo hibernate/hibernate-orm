@@ -14,6 +14,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.Collectors;
 
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
@@ -39,6 +41,9 @@ public class PreparedStatementSpyConnectionProvider extends ConnectionProviderDe
 			.defaultAnswer( org.mockito.Answers.CALLS_REAL_METHODS );
 	private static final MockSettings VERIFIEABLE_MOCK_SETTINGS = Mockito.withSettings()
 			.defaultAnswer( org.mockito.Answers.CALLS_REAL_METHODS );
+	// We must keep around the mocked connections, otherwise they are garbage collected and trigger finalizers
+	// Since we use CALLS_REAL_METHODS this might close underlying IO resources which makes other objects unusable
+	private static final Queue<Object> MOCKS = new LinkedBlockingQueue<>();
 
 	private final Map<PreparedStatement, String> preparedStatementMap = new LinkedHashMap<>();
 
@@ -75,6 +80,7 @@ public class PreparedStatementSpyConnectionProvider extends ConnectionProviderDe
 	@Override
 	public Connection getConnection() throws SQLException {
 		Connection connection = instrumentConnection( actualConnection() );
+		MOCKS.add( connection );
 		acquiredConnections.add( connection );
 		return connection;
 	}
@@ -83,7 +89,7 @@ public class PreparedStatementSpyConnectionProvider extends ConnectionProviderDe
 	public void closeConnection(Connection conn) throws SQLException {
 		acquiredConnections.remove( conn );
 		releasedConnections.add( conn );
-		super.closeConnection( conn );
+		super.closeConnection( (Connection) MockUtil.getMockSettings( conn ).getSpiedInstance() );
 	}
 
 	@Override

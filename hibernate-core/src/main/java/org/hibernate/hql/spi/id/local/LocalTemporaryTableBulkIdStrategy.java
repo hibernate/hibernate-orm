@@ -7,9 +7,12 @@
 package org.hibernate.hql.spi.id.local;
 
 import org.hibernate.boot.TempTableDdlTransactionHandling;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -19,7 +22,7 @@ import org.hibernate.hql.internal.ast.tree.DeleteStatement;
 import org.hibernate.hql.internal.ast.tree.FromElement;
 import org.hibernate.hql.internal.ast.tree.UpdateStatement;
 import org.hibernate.hql.spi.id.AbstractMultiTableBulkIdStrategyImpl;
-import org.hibernate.hql.spi.id.AbstractMultiTableBulkIdStrategyImpl.PreparationContext;
+import org.hibernate.hql.spi.id.IdTableHelper;
 import org.hibernate.hql.spi.id.IdTableSupport;
 import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
@@ -28,6 +31,7 @@ import org.hibernate.hql.spi.id.TableBasedUpdateHandlerImpl;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.persister.entity.Queryable;
+import org.hibernate.service.ServiceRegistry;
 
 /**
  * Strategy based on ANSI SQL's definition of a "local temporary table" (local to each db session).
@@ -35,13 +39,18 @@ import org.hibernate.persister.entity.Queryable;
  * @author Steve Ebersole
  */
 public class LocalTemporaryTableBulkIdStrategy
-		extends AbstractMultiTableBulkIdStrategyImpl<IdTableInfoImpl, PreparationContext>
+		extends AbstractMultiTableBulkIdStrategyImpl<IdTableInfoImpl, PreparationContextImpl>
 		implements MultiTableBulkIdStrategy {
 
+	public static final String DROP_ID_TABLES = "hibernate.hql.bulk_id_strategy.local_temporary.drop_tables";
 	public static final String SHORT_NAME = "local_temporary";
 
 	private final AfterUseAction afterUseAction;
 	private TempTableDdlTransactionHandling ddlTransactionHandling;
+
+	private ServiceRegistry serviceRegistry;
+	private boolean dropIdTables;
+	private String[] dropTableStatements;
 
 	public LocalTemporaryTableBulkIdStrategy() {
 		this(
@@ -66,10 +75,34 @@ public class LocalTemporaryTableBulkIdStrategy
 	}
 
 	@Override
+	protected PreparationContextImpl buildPreparationContext() {
+		return new PreparationContextImpl();
+	}
+
+	@Override
 	protected void initialize(MetadataBuildingOptions buildingOptions, SessionFactoryOptions sessionFactoryOptions) {
 		if ( ddlTransactionHandling == null ) {
 			ddlTransactionHandling = sessionFactoryOptions.getTempTableDdlTransactionHandling();
 		}
+		final StandardServiceRegistry serviceRegistry = buildingOptions.getServiceRegistry();
+		final ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
+		this.dropIdTables = configService.getSetting(
+				DROP_ID_TABLES,
+				StandardConverters.BOOLEAN,
+				false
+		);
+	}
+
+	@Override
+	protected void finishPreparation(
+			JdbcServices jdbcServices,
+			JdbcConnectionAccess connectionAccess,
+			MetadataImplementor metadata,
+			PreparationContextImpl context) {
+		this.serviceRegistry = metadata.getDatabase().getServiceRegistry();
+		this.dropTableStatements = dropIdTables
+				? context.dropStatements.toArray( new String[ context.dropStatements.size() ] )
+				: null;
 	}
 
 	@Override
@@ -78,20 +111,33 @@ public class LocalTemporaryTableBulkIdStrategy
 			Table idTable,
 			JdbcServices jdbcServices,
 			MetadataImplementor metadata,
-			PreparationContext context) {
+			PreparationContextImpl context) {
+		String dropStatement = buildIdTableDropStatement( idTable, jdbcServices );
+		if ( dropIdTables ) {
+			context.dropStatements.add( dropStatement );
+		}
 		return new IdTableInfoImpl(
 				jdbcServices.getJdbcEnvironment().getQualifiedObjectNameFormatter().format(
 						idTable.getQualifiedTableName(),
 						jdbcServices.getJdbcEnvironment().getDialect()
 				),
 				buildIdTableCreateStatement( idTable, jdbcServices, metadata ),
-				buildIdTableDropStatement( idTable, jdbcServices )
+				dropStatement
 		);
 	}
 
 	@Override
 	public void release(JdbcServices jdbcServices, JdbcConnectionAccess connectionAccess) {
-		// nothing to do
+		if ( ! dropIdTables ) {
+			return;
+		}
+
+		IdTableHelper.INSTANCE.executeIdTableDropStatements(
+				dropTableStatements,
+				jdbcServices,
+				connectionAccess,
+				serviceRegistry
+		);
 	}
 
 	@Override

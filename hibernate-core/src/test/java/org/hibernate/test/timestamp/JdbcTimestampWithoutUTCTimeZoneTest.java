@@ -18,6 +18,7 @@ import javax.persistence.Id;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.CockroachDB192Dialect;
 import org.hibernate.dialect.PostgreSQL82Dialect;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.SkipForDialect;
@@ -47,6 +48,7 @@ public class JdbcTimestampWithoutUTCTimeZoneTest
 
 	@Override
 	protected void addSettings(Map settings) {
+		connectionProvider.setConnectionProvider( (ConnectionProvider) settings.get( AvailableSettings.CONNECTION_PROVIDER ) );
 		settings.put(
 				AvailableSettings.CONNECTION_PROVIDER,
 				connectionProvider

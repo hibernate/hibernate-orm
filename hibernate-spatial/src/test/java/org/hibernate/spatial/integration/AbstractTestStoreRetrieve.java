@@ -1,3 +1,10 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
+
 package org.hibernate.spatial.integration;
 
 import java.util.HashMap;
@@ -66,7 +73,7 @@ public abstract class AbstractTestStoreRetrieve<G, E extends GeomEntityLike<G>> 
 			tx = session.beginTransaction();
 			for ( E storedEntity : stored.values() ) {
 				id = storedEntity.getId();
-				E retrievedEntity = (E) session.get( getGeomEntityClass(), id );
+				E retrievedEntity = session.get( getGeomEntityClass(), id );
 				G retrievedGeometry = retrievedEntity.getGeom();
 				G storedGeometry = storedEntity.getGeom();
 				String msg = createFailureMessage( storedEntity.getId(), storedGeometry, retrievedGeometry );
@@ -110,7 +117,6 @@ public abstract class AbstractTestStoreRetrieve<G, E extends GeomEntityLike<G>> 
 			for ( TestDataElement element : testData ) {
 				id = element.id;
 				tx = session.beginTransaction();
-				;
 				E entity = createFrom( element, dialect );
 				stored.put( entity.getId(), entity );
 				session.save( entity );

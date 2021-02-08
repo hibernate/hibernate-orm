@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.inheritance;
 
+import java.util.Comparator;
 import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.ConstraintMode;
@@ -84,6 +85,7 @@ public class TransientOverrideAsPersistentTablePerClass extends BaseNonConfigCor
 			final List<Employee> employees = session.createQuery( "from Employee", Employee.class )
 					.getResultList();
 			assertEquals( 2, employees.size() );
+			employees.sort( Comparator.comparing( Employee::getName ) );
 			assertTrue( Editor.class.isInstance( employees.get( 0 ) ) );
 			assertTrue( Writer.class.isInstance( employees.get( 1 ) ) );
 			final Editor editor = (Editor) employees.get( 0 );

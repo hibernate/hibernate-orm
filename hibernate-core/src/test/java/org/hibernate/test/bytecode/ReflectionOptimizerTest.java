@@ -9,7 +9,6 @@ package org.hibernate.test.bytecode;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import org.hibernate.bytecode.internal.javassist.BulkAccessor;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.cfg.Environment;
@@ -21,15 +20,6 @@ import org.junit.Test;
  * @author Steve Ebersole
  */
 public class ReflectionOptimizerTest extends BaseUnitTestCase {
-	@Test
-	public void testBulkAccessorDirectly() {
-		BulkAccessor bulkAccessor = BulkAccessor.create(
-				Bean.class,
-				BeanReflectionHelper.getGetterNames(),
-				BeanReflectionHelper.getSetterNames(),
-				BeanReflectionHelper.getTypes()
-		);
-	}
 
 	@Test
 	public void testReflectionOptimization() {

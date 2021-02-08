@@ -7,46 +7,98 @@
 
 package org.hibernate.test.connections;
 
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.H2Dialect;
-import org.hibernate.engine.jdbc.connections.internal.UserSuppliedConnectionProviderImpl;
-import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.env.ConnectionProviderBuilder;
-import org.hibernate.testing.jta.TestingJtaBootstrap;
-import org.hibernate.testing.jta.TestingJtaPlatformImpl;
-import org.hibernate.testing.transaction.TransactionUtil;
-import org.junit.Test;
-
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.transaction.RollbackException;
 import javax.transaction.SystemException;
-import javax.transaction.Transaction;
+import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
-import javax.transaction.xa.Xid;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.Map;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.hibernate.Session;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.engine.jdbc.connections.internal.UserSuppliedConnectionProviderImpl;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
+import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
+
+import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.env.ConnectionProviderBuilder;
+import org.hibernate.testing.jta.TestingJtaBootstrap;
+import org.hibernate.testing.jta.TestingJtaPlatformImpl;
+import org.hibernate.testing.junit4.CustomParameterized;
+import org.hibernate.testing.transaction.TransactionUtil2;
+import org.junit.Rule;
+import org.junit.Test;
+
+import org.mockito.InOrder;
+import org.mockito.Mockito;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
+import org.mockito.quality.Strictness;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 
 /**
  * @author Luis Barreiro
  */
 @RequiresDialect( H2Dialect.class )
+@RunWith(CustomParameterized.class)
 public class BeforeCompletionReleaseTest extends BaseEntityManagerFunctionalTestCase {
+
+    @Parameterized.Parameters(name = "{0}")
+    public static List<Object[]> params() {
+        return Arrays.asList( new Object[][] {
+                {
+                        "Setting connection handling mode from properties",
+                        PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_BEFORE_TRANSACTION_COMPLETION,
+                        null
+                },
+                {
+                        "Setting connection handling mode through SessionBuilder",
+                        PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT,
+                        PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_BEFORE_TRANSACTION_COMPLETION
+                }
+        } );
+    }
+
+    @Rule
+    public MockitoRule mockito = MockitoJUnit.rule().strictness( Strictness.STRICT_STUBS );
+
+    private final PhysicalConnectionHandlingMode connectionHandlingModeInProperties;
+    private final PhysicalConnectionHandlingMode connectionHandlingModeInSessionBuilder;
+
+    public BeforeCompletionReleaseTest(
+            String ignoredTestLabel, PhysicalConnectionHandlingMode connectionHandlingModeInProperties,
+            PhysicalConnectionHandlingMode connectionHandlingModeInSessionBuilder) {
+        this.connectionHandlingModeInProperties = connectionHandlingModeInProperties;
+        this.connectionHandlingModeInSessionBuilder = connectionHandlingModeInSessionBuilder;
+    }
 
     @Override
     protected Map getConfig() {
         Map config = super.getConfig();
         TestingJtaBootstrap.prepare( config );
         config.put( AvailableSettings.CONNECTION_PROVIDER, new ConnectionProviderDecorator() );
-        config.put( AvailableSettings.CONNECTION_HANDLING, PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_BEFORE_TRANSACTION_COMPLETION );
+        if ( connectionHandlingModeInProperties != null ) {
+            config.put( AvailableSettings.CONNECTION_HANDLING, connectionHandlingModeInProperties );
+        }
         return config;
     }
 
@@ -56,12 +108,50 @@ public class BeforeCompletionReleaseTest extends BaseEntityManagerFunctionalTest
     }
 
     @Test
-    public void testConnectionAcquisitionCount() {
-        TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
-            Thing thing = new Thing();
-            thing.setId( 1 );
-            entityManager.persist( thing );
-        });
+    @TestForIssue(jiraKey = {"HHH-13976", "HHH-14326"})
+    public void testResourcesReleasedThenConnectionClosedThenCommit() throws SQLException, XAException {
+        XAResource transactionSpy = mock( XAResource.class );
+        Connection[] connectionSpies = new Connection[1];
+        Statement statementMock = Mockito.mock( Statement.class );
+
+        try (SessionImplementor s = (SessionImplementor) openSession()) {
+            TransactionUtil2.inTransaction( s, session -> {
+                spyOnTransaction( transactionSpy );
+
+                Thing thing = new Thing();
+                thing.setId( 1 );
+                session.persist( thing );
+
+                LogicalConnectionImplementor logicalConnection = session.getJdbcCoordinator().getLogicalConnection();
+                logicalConnection.getResourceRegistry().register( statementMock, true );
+                connectionSpies[0] = logicalConnection.getPhysicalConnection();
+            } );
+        }
+
+        Connection connectionSpy = connectionSpies[0];
+
+        // Must close the resources, then the connection, then commit
+        InOrder inOrder = inOrder( statementMock, connectionSpy, transactionSpy );
+        inOrder.verify( statementMock ).close();
+        inOrder.verify( connectionSpy ).close();
+        inOrder.verify( transactionSpy ).commit( any(), anyBoolean() );
+        Mockito.reset( connectionSpy );
+    }
+
+    private void spyOnTransaction(XAResource xaResource) {
+        try {
+            TestingJtaPlatformImpl.transactionManager().getTransaction().enlistResource( xaResource );
+        }
+        catch (RollbackException | SystemException e) {
+            throw new IllegalStateException( e );
+        }
+    }
+
+    private Session openSession() {
+        return connectionHandlingModeInSessionBuilder == null
+                ? entityManagerFactory().openSession()
+                : entityManagerFactory().withOptions().connectionHandlingMode( connectionHandlingModeInSessionBuilder )
+                .openSession();
     }
 
     // --- //
@@ -94,63 +184,7 @@ public class BeforeCompletionReleaseTest extends BaseEntityManagerFunctionalTest
 
         @Override
         public Connection getConnection() throws SQLException {
-            Connection connection = dataSource.getConnection();
-
-            try {
-                Transaction tx = TestingJtaPlatformImpl.transactionManager().getTransaction();
-                if ( tx != null) {
-                    tx.enlistResource( new XAResource() {
-
-                        @Override public void commit(Xid xid, boolean onePhase) {
-                            try {
-                                assertTrue( "Connection should be closed prior to commit", connection.isClosed() );
-                            } catch ( SQLException e ) {
-                                fail( "Unexpected SQLException: " + e.getMessage() );
-                            }
-                        }
-
-                        @Override public void end(Xid xid, int flags) {
-                        }
-
-                        @Override public void forget(Xid xid)  {
-                        }
-
-                        @Override public int getTransactionTimeout() {
-                            return 0;
-                        }
-
-                        @Override public boolean isSameRM(XAResource xares) {
-                            return false;
-                        }
-
-                        @Override public int prepare(Xid xid) {
-                            return 0;
-                        }
-
-                        @Override public Xid[] recover(int flag) {
-                            return new Xid[0];
-                        }
-
-                        @Override public void rollback(Xid xid) {
-                            try {
-                                assertTrue( "Connection should be closed prior to rollback", connection.isClosed() );
-                            } catch ( SQLException e ) {
-                                fail( "Unexpected SQLException: " + e.getMessage() );
-                            }
-                        }
-
-                        @Override public boolean setTransactionTimeout(int seconds) {
-                            return false;
-                        }
-
-                        @Override public void start(Xid xid, int flags) {
-                        }
-                    });
-                }
-            } catch ( SystemException | RollbackException e ) {
-                fail( e.getMessage() );
-            }
-            return connection;
+            return spy( dataSource.getConnection() );
         }
 
         @Override
@@ -159,3 +193,4 @@ public class BeforeCompletionReleaseTest extends BaseEntityManagerFunctionalTest
         }
     }
 }
+

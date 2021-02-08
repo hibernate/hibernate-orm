@@ -20,7 +20,7 @@ ext {
     elVersion = '3.0.1-b09'
 
     cdiVersion = '2.0'
-    weldVersion = '3.0.0.Final'
+    weldVersion = '3.1.5.Final'
 
     javassistVersion = '3.27.0-GA'
     byteBuddyVersion = '1.10.17'
@@ -29,7 +29,7 @@ ext {
 
     assertjVersion = '3.14.0'
 
-    geolatteVersion = '1.4.0'
+    geolatteVersion = '1.6.1'
 
     shrinkwrapVersion = '1.2.6'
     shrinkwrapDescriptorsVersion = '2.0.0'
@@ -44,6 +44,8 @@ ext {
     //GraalVM
     graalvmVersion = '19.3.1'
 
+    micrometerVersion = '1.6.1'
+
     libraries = [
             // Ant
             ant:            'org.apache.ant:ant:1.8.2',
@@ -53,7 +55,7 @@ ext {
 
             // Annotations
             commons_annotations: "org.hibernate.common:hibernate-commons-annotations:${hibernateCommonsVersion}",
-            jandex:         'org.jboss:jandex:2.1.3.Final',
+            jandex:         'org.jboss:jandex:2.2.3.Final',
             classmate:      'com.fasterxml:classmate:1.5.1',
 
             // Dom4J
@@ -118,7 +120,7 @@ ext {
 
             oracle:          'com.oracle.database.jdbc:ojdbc8:19.8.0.0',
             mssql:           'com.microsoft.sqlserver:mssql-jdbc:7.2.1.jre8',
-            db2:             'com.ibm.db2:db2jcc:10.5',
+            db2:             'com.ibm.db2:jcc:11.5.4.0',
             hana:            'com.sap.cloud.db.jdbc:ngdbc:2.4.59',
 
             jodaTime:        "joda-time:joda-time:${jodaTimeVersion}",
@@ -142,6 +144,7 @@ ext {
             vibur:           "org.vibur:vibur-dbcp:25.0",
             agroal_api:      "io.agroal:agroal-api:${agroalVersion}",
             agroal_pool:     "io.agroal:agroal-pool:${agroalVersion}",
+            micrometer:      "io.micrometer:micrometer-core:1.6.1",
 
             atomikos:         "com.atomikos:transactions:4.0.6",
             atomikos_jta:     "com.atomikos:transactions-jta:4.0.6",

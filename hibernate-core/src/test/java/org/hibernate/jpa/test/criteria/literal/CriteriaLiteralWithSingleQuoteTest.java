@@ -16,6 +16,7 @@ import javax.persistence.criteria.CriteriaQuery;
 
 import org.hibernate.dialect.CockroachDB192Dialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.SkipForDialect;
@@ -64,11 +65,11 @@ public class CriteriaLiteralWithSingleQuoteTest extends BaseEntityManagerFunctio
 	@Test
 	@SkipForDialects(
 			value = {
+					@SkipForDialect(value = SQLServerDialect.class, comment = "SQLServer does not support literals in group by statement"),
 					@SkipForDialect(value = PostgreSQL81Dialect.class, comment = "PostgreSQL does not support literals in group by statement"),
 					@SkipForDialect( value = CockroachDB192Dialect.class, comment = "CockroachDB does not support literals in group by statement")
 			}
 	)
-	@SkipForDialect(value = PostgreSQL81Dialect.class, comment = "PostgreSQL does not support literals in group by statement")
 	public void testLiteralProjectionAndGroupBy() throws Exception {
 		doInJPA(
 				this::entityManagerFactory,

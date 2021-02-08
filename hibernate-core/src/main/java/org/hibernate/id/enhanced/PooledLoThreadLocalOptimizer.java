@@ -40,6 +40,9 @@ public class PooledLoThreadLocalOptimizer extends AbstractOptimizer {
 		private IntegralDataTypeHolder upperLimitValue;
 	}
 
+	private final ThreadLocal<GenerationState> singleTenantState = ThreadLocal.withInitial( GenerationState::new );
+	private final ThreadLocal<Map<String, GenerationState>> multiTenantStates = ThreadLocal.withInitial( HashMap::new );
+
 	/**
 	 * Constructs a PooledLoThreadLocalOptimizer.
 	 *
@@ -56,16 +59,8 @@ public class PooledLoThreadLocalOptimizer extends AbstractOptimizer {
 
 	@Override
 	public Serializable generate(AccessCallback callback) {
-		if ( callback.getTenantIdentifier() == null ) {
-			final GenerationState local = localAssignedIds.get();
-			return generate( local, callback );
-		}
-
-		synchronized (this) {
-			final GenerationState generationState = locateGenerationState( callback.getTenantIdentifier() );
-
-			return generate(generationState, callback);
-		}
+		final GenerationState generationState = locateGenerationState( callback.getTenantIdentifier() );
+		return generate( generationState, callback );
 	}
 
 	private Serializable generate(GenerationState generationState, AccessCallback callback) {
@@ -82,26 +77,16 @@ public class PooledLoThreadLocalOptimizer extends AbstractOptimizer {
 		return generationState.value.makeValueThenIncrement();
 	}
 
-	private Map<String, GenerationState> tenantSpecificState;
-	private final ThreadLocal<GenerationState> localAssignedIds = ThreadLocal.withInitial( GenerationState::new );
-
 	private GenerationState locateGenerationState(String tenantIdentifier) {
 		if ( tenantIdentifier == null ) {
-			return localAssignedIds.get();
+			return singleTenantState.get();
 		}
 		else {
-			GenerationState state;
-			if ( tenantSpecificState == null ) {
-				tenantSpecificState = new HashMap<String, GenerationState>();
+			Map<String, GenerationState> states = multiTenantStates.get();
+			GenerationState state = states.get( tenantIdentifier );
+			if ( state == null ) {
 				state = new GenerationState();
-				tenantSpecificState.put( tenantIdentifier, state );
-			}
-			else {
-				state = tenantSpecificState.get( tenantIdentifier );
-				if ( state == null ) {
-					state = new GenerationState();
-					tenantSpecificState.put( tenantIdentifier, state );
-				}
+				states.put( tenantIdentifier, state );
 			}
 			return state;
 		}

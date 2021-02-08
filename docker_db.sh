@@ -7,7 +7,7 @@ mysql_5_7() {
 
 mysql_8_0() {
     docker rm -f mysql || true
-    docker run --name mysql -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -p3306:3306 -d mysql:8.0.21 --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    docker run --name mysql -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -p3306:3306 -d mysql:8.0.21 --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
 }
 
 mariadb() {
@@ -18,6 +18,11 @@ mariadb() {
 postgresql_9_5() {
     docker rm -f postgres || true
     docker run --name postgres -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 -d postgres:9.5
+}
+
+postgis_9_6(){
+  docker rm -f postgis || true
+  docker run --name postgis -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 -d mdillon/postgis:9.6
 }
 
 db2() {

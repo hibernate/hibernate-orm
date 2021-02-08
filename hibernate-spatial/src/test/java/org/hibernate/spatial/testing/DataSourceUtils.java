@@ -29,7 +29,8 @@ import org.hibernate.spatial.HSMessageLogger;
 
 import org.jboss.logging.Logger;
 
-import org.apache.commons.dbcp.BasicDataSource;
+
+import org.apache.commons.dbcp2.BasicDataSource;
 import org.geolatte.geom.Geometry;
 import org.geolatte.geom.codec.Wkt;
 import org.geolatte.geom.codec.WktDecodeException;

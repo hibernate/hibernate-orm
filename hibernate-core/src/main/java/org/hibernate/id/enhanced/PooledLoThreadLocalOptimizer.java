@@ -58,26 +58,28 @@ public class PooledLoThreadLocalOptimizer extends AbstractOptimizer {
 	public Serializable generate(AccessCallback callback) {
 		if ( callback.getTenantIdentifier() == null ) {
 			final GenerationState local = localAssignedIds.get();
-			if ( local.value != null && local.value.lt( local.upperLimitValue ) ) {
-				return local.value.makeValueThenIncrement();
-			}
+			return generate( local, callback );
 		}
 
 		synchronized (this) {
 			final GenerationState generationState = locateGenerationState( callback.getTenantIdentifier() );
 
-			if ( generationState.lastSourceValue == null
-					|| !generationState.value.lt( generationState.upperLimitValue )) {
-				generationState.lastSourceValue = callback.getNextValue();
-				generationState.upperLimitValue = generationState.lastSourceValue.copy().add( incrementSize );
-				generationState.value = generationState.lastSourceValue.copy();
-				// handle cases where initial-value is less that one (hsqldb for instance).
-				while (generationState.value.lt( 1 )) {
-					generationState.value.increment();
-				}
-			}
-			return generationState.value.makeValueThenIncrement();
+			return generate(generationState, callback);
 		}
+	}
+
+	private Serializable generate(GenerationState generationState, AccessCallback callback) {
+		if ( generationState.value == null
+				|| !generationState.value.lt( generationState.upperLimitValue ) ) {
+			generationState.lastSourceValue = callback.getNextValue();
+			generationState.upperLimitValue = generationState.lastSourceValue.copy().add( incrementSize );
+			generationState.value = generationState.lastSourceValue.copy();
+			// handle cases where initial-value is less that one (hsqldb for instance).
+			while ( generationState.value.lt( 1 ) ) {
+				generationState.value.increment();
+			}
+		}
+		return generationState.value.makeValueThenIncrement();
 	}
 
 	private Map<String, GenerationState> tenantSpecificState;

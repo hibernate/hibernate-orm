@@ -287,6 +287,8 @@ test {
 	systemProperty 'user.country', 'US'
 	systemProperty 'user.timezone', 'UTC'
 	systemProperty 'file.encoding', 'UTF-8'
+	// Needed for AdoptOpenJDK on alpine? The problem is similar to this: https://github.com/mockito/mockito/issues/978
+	jvmArgs '-XX:+StartAttachListener'
 }
 
 // Enable the experimental features of ByteBuddy with JDK 15+

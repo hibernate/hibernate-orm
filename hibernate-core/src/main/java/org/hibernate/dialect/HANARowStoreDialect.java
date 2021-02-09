@@ -44,6 +44,11 @@ public class HANARowStoreDialect extends AbstractHANADialect {
 			public String getCreateIdTableCommand() {
 				return "create global temporary row table";
 			}
+
+			@Override
+			public String getCreateIdTableStatementOptions() {
+				return "on commit delete rows";
+			}
 		}, AfterUseAction.CLEAN );
 	}
 

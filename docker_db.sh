@@ -87,6 +87,70 @@ alter database drop logfile group 3;
 EOF\""
 }
 
+oracle_ee() {
+    docker rm -f oracle || true
+    # We need to use the defaults
+    # sys as sysdba/Oradoc_db1
+    docker run --name oracle -d -p 1521:1521 store/oracle/database-enterprise:12.2.0.1-slim
+    # Give the container some time to start
+    OUTPUT=
+    while [[ $OUTPUT != *"NLS_CALENDAR"* ]]; do
+        echo "Waiting for Oracle to start..."
+        sleep 10
+        OUTPUT=$(docker logs oracle)
+    done
+    echo "Oracle successfully started"
+    # We increase file sizes to avoid online resizes as that requires lots of CPU which is restricted in XE
+    docker exec oracle bash -c "source /home/oracle/.bashrc; \$ORACLE_HOME/bin/sqlplus sys/Oradoc_db1@ORCLCDB as sysdba <<EOF
+create user c##hibernate_orm_test identified by hibernate_orm_test container=all;
+grant connect, resource, dba to c##hibernate_orm_test container=all;
+alter database tempfile '/u02/app/oracle/oradata/ORCL/temp01.dbf' resize 400M;
+alter database datafile '/u02/app/oracle/oradata/ORCL/system01.dbf' resize 1000M;
+alter database datafile '/u02/app/oracle/oradata/ORCL/sysaux01.dbf' resize 900M;
+alter database datafile '/u02/app/oracle/oradata/ORCL/undotbs01.dbf' resize 300M;
+alter database add logfile group 4 '/u02/app/oracle/oradata/ORCL/redo04.log' size 500M reuse;
+alter database add logfile group 5 '/u02/app/oracle/oradata/ORCL/redo05.log' size 500M reuse;
+alter database add logfile group 6 '/u02/app/oracle/oradata/ORCL/redo06.log' size 500M reuse;
+
+alter system switch logfile;
+alter system switch logfile;
+alter system switch logfile;
+alter system checkpoint;
+
+alter database drop logfile group 1;
+alter database drop logfile group 2;
+alter database drop logfile group 3;
+alter session set container=ORCLPDB1;
+alter database datafile '/u02/app/oracle/oradata/ORCLCDB/orclpdb1/system01.dbf' resize 500M;
+alter database datafile '/u02/app/oracle/oradata/ORCLCDB/orclpdb1/sysaux01.dbf' resize 500M;
+EOF"
+}
+
+hana() {
+    temp_dir=$(mktemp -d)
+    echo '{"master_password" : "H1bernate_test"}' >$temp_dir/password.json
+    chmod 777 -R $temp_dir
+    docker rm -f hana || true
+    docker run -d --name hana -p 39013:39013 -p 39017:39017 -p 39041-39045:39041-39045 -p 1128-1129:1128-1129 -p 59013-59014:59013-59014 \
+      --ulimit nofile=1048576:1048576 \
+      --sysctl kernel.shmmax=1073741824 \
+      --sysctl net.ipv4.ip_local_port_range='40000 60999' \
+      --sysctl kernel.shmmni=524288 \
+      --sysctl kernel.shmall=8388608 \
+      -v $temp_dir:/config \
+      store/saplabs/hanaexpress:2.00.045.00.20200121.1 \
+      --passwords-url file:///config/password.json \
+      --agree-to-sap-license
+    # Give the container some time to start
+    OUTPUT=
+    while [[ $OUTPUT != *"Startup finished"* ]]; do
+        echo "Waiting for HANA to start..."
+        sleep 10
+        OUTPUT=$(docker logs hana)
+    done
+    echo "HANA successfully started"
+}
+
 if [ -z ${1} ]; then
     echo "No db name provided"
     echo "Provide one of:"

@@ -179,9 +179,9 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		}
 		configuration.setImplicitNamingStrategy( ImplicitNamingStrategyLegacyJpaImpl.INSTANCE );
 		configuration.setProperty( Environment.DIALECT, getDialect().getClass().getName() );
+		configuration.getProperties().put( GlobalTemporaryTableBulkIdStrategy.DROP_ID_TABLES, "true" );
+		configuration.getProperties().put( LocalTemporaryTableBulkIdStrategy.DROP_ID_TABLES, "true" );
 		if ( !Environment.getProperties().containsKey( Environment.CONNECTION_PROVIDER ) ) {
-			configuration.getProperties().put( GlobalTemporaryTableBulkIdStrategy.DROP_ID_TABLES, "true" );
-			configuration.getProperties().put( LocalTemporaryTableBulkIdStrategy.DROP_ID_TABLES, "true" );
 			configuration.getProperties().put(
 					AvailableSettings.CONNECTION_PROVIDER,
 					SharedDriverManagerConnectionProviderImpl.getInstance()

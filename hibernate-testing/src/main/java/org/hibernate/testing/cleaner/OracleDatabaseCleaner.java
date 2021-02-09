@@ -67,8 +67,8 @@ public class OracleDatabaseCleaner implements DatabaseCleaner {
 						return statement.executeQuery(
 								"SELECT 'DROP TABLE ' || owner || '.\"' || table_name || '\" CASCADE CONSTRAINTS' " +
 										"FROM all_tables " +
-										// Exclude the tables owner by sys
-										"WHERE owner NOT IN ('SYS')" +
+										// Only look at tables owned by the current user
+										"WHERE owner = sys_context('USERENV', 'SESSION_USER')" +
 										// Normally, user tables aren't in sysaux
 										"      AND tablespace_name NOT IN ('SYSAUX')" +
 										// Apparently, user tables have global stats off
@@ -76,7 +76,7 @@ public class OracleDatabaseCleaner implements DatabaseCleaner {
 										// Exclude the tables with names starting like 'DEF$_'
 										"      AND table_name NOT LIKE 'DEF$\\_%' ESCAPE '\\'" +
 										" UNION ALL " +
-										"SELECT 'DROP SEQUENCE ' || sequence_owner || '.' || sequence_name FROM all_sequences WHERE sequence_owner NOT IN (" + SYSTEM_SEQUENCE_OWNERS + ")"
+										"SELECT 'DROP SEQUENCE ' || sequence_owner || '.' || sequence_name FROM all_sequences WHERE sequence_owner = sys_context('USERENV', 'SESSION_USER') and sequence_name not like 'ISEQ$$%'"
 						);
 					}
 					catch (SQLException sqlException) {

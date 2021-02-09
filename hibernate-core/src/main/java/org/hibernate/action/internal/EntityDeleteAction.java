@@ -184,20 +184,10 @@ public class EntityDeleteAction extends EntityAction {
 		final EventListenerGroup<PostDeleteEventListener> eventListeners = getFastSessionServices()
 				.eventListenerGroup_POST_COMMIT_DELETE;
 		if (success) {
-			eventListeners.fireLazyEventOnEachListener( this::newPostDeleteEvent, EntityDeleteAction::postCommitDeleteOnSuccess );
+			eventListeners.fireLazyEventOnEachListener( this::newPostDeleteEvent, PostDeleteEventListener::onPostDelete );
 		}
 		else {
 			eventListeners.fireLazyEventOnEachListener( this::newPostDeleteEvent, EntityDeleteAction::postCommitDeleteOnUnsuccessful );
-		}
-	}
-
-	private static void postCommitDeleteOnSuccess(PostDeleteEventListener listener, PostDeleteEvent event) {
-		if ( listener instanceof PostCommitDeleteEventListener ) {
-			listener.onPostDelete( event );
-		}
-		else {
-			//default to the legacy implementation that always fires the event
-			listener.onPostDelete( event );
 		}
 	}
 

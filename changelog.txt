@@ -3,6 +3,43 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.4.28.Final (February 09, 2021)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31917
+
+** Bug
+    * [HHH-14445] - Javassist skip EntityWithMutableAttributesTest, LoadAndUpdateEntitiesWithCollectionsTest, SimpleDynamicUpdateTest, SimpleDynamicUpdateTest
+    * [HHH-14424] - When enhanced as a proxy with dirty checking is enabled, on flush uninitialized entities containing collections are updated setting all fields to null 
+    * [HHH-14408] - SPI provided user types are not applied
+    * [HHH-14407] - NPE in Column.getSqlTypeCode(Mapping mapping) for column 'hib_sess_id' when using PersistentTableBulkIdStrategy  
+    * [HHH-14404] - SessionBuilder.connectionHandlingMode is ignored
+    * [HHH-14386] - Persistence.createEntityManagerFactory("testPU") fails, if persistence unit has config & CurrentTenantIdentifierResolver is not null.
+    * [HHH-14229] - Foreign key is created even ConstraintMode.NO_CONSTRAINT specified
+    * [HHH-13944] - HQL/JPQL size() does not work (anymore) with nested expression
+
+** Improvement
+    * [HHH-14447] - Add missing EventGroupListeners into FastSessionService and take advantage of them
+    * [HHH-14444] - Remove synchronization from PooledLoThreadLocalOptimizer
+    * [HHH-14442] - Upgrade Geolatte-geom dependency to latest
+    * [HHH-14428] - Could avoid allocating an org.hibernate.internal.SessionFactoryImpl$StatelessSessionBuilderImpl when no options are set
+    * [HHH-14418] - Reduce memory retention of each EventListenerGroup
+    * [HHH-14323] - Backport HHH-13682 to 5.4: Generate Java 13/14 bytecode for tests when building with JDK13/14
+
+** New Feature
+    * [HHH-14415] - Upgrade to Jandex 2.2.3.Final
+    * [HHH-14253] - Provide an option to skip foreign key creation for ConstraintMode.PROVIDER_DEFAULT
+    * [HHH-13975] - geolatte-geom support for SpatialPredicates
+
+** Task
+    * [HHH-14421] - Fix javadoc for Query.stream() method
+    * [HHH-14372] - Upgrade to Weld 3.1.5.Final in tests
+    * [HHH-14371] - Add --add-opens options required for tests
+    * [HHH-14370] - Add --add-opens options required for Gradle
+    * [HHH-14326] - StoredProcedureQuery instances should be closed by Hibernate ORM
+    * [HHH-14315] - Upgrade to Gradle 6.7 and use toolchains for per-JDK builds
+
+
 Changes in 5.4.27.Final (December 22, 2020)
 ------------------------------------------------------------------------------------------------------------------------
 

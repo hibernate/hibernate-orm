@@ -61,8 +61,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	protected void addConfigOptions(Map options) {
 		super.addConfigOptions( options );
-		// Looks like Oracle Connections that experience a timeout produce different errors when they timeout again?!
-		SharedDriverManagerConnectionProviderImpl.getInstance().reset();
+		// We can't use a shared connection provider if we use TransactionUtil.setJdbcTimeout because that is set on the connection level
 		options.remove( org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER );
 	}
 

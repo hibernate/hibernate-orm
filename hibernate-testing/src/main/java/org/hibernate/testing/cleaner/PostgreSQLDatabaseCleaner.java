@@ -85,12 +85,26 @@ public class PostgreSQLDatabaseCleaner implements DatabaseCleaner {
 			// Collect schema objects
 			String user = c.getMetaData().getUserName();
 			LOG.log( Level.FINEST, "Collect schema objects: START" );
+			Map<String, List<String>> schemaExtensions = new HashMap<>();
+			try (Statement s2 = c.createStatement()) {
+				rs = s2.executeQuery(
+						"SELECT ns.nspname, 'CREATE EXTENSION ' || e.extname || ' SCHEMA \"' || ns.nspname || '\" VERSION ' || e.extversion FROM pg_extension e JOIN pg_catalog.pg_namespace ns ON e.extnamespace = ns.oid WHERE e.extname <> 'plpgsql'"
+				);
+				while ( rs.next() ) {
+					schemaExtensions.computeIfAbsent( rs.getString( 1 ), k -> new ArrayList<>() )
+							.add( rs.getString( 2 ) );
+				}
+			}
 			rs = schemasProvider.apply( s );
 			while ( rs.next() ) {
 				String schema = rs.getString( 1 );
 				sqls.add( "DROP SCHEMA \"" + schema + "\" CASCADE" );
 				sqls.add( "CREATE SCHEMA \"" + schema + "\"" );
 				sqls.add( "GRANT ALL ON SCHEMA \"" + schema + "\" TO \"" + user + "\"" );
+				List<String> extensions = schemaExtensions.get( schema );
+				if ( extensions != null ) {
+					sqls.addAll( extensions );
+				}
 			}
 			LOG.log( Level.FINEST, "Collect schema objects: END" );
 

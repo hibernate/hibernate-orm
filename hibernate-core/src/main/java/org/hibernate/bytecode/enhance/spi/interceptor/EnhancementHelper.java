@@ -49,6 +49,17 @@ public class EnhancementHelper {
 
 		if ( value instanceof ToOne ) {
 			final ToOne toOne = (ToOne) value;
+
+			if ( ! toOne.isLazy() ) {
+				// its not lazy... select it
+				return true;
+			}
+
+			if ( ! toOne.isReferenceToPrimaryKey() ) {
+				// we do not have a reference to the associated primary-key
+				return false;
+			}
+
 			if ( toOne.isLazy() ) {
 				if ( toOne.isUnwrapProxy() ) {
 					if ( toOne instanceof OneToOne ) {

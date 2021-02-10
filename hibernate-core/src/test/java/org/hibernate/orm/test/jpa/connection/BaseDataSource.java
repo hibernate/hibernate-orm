@@ -6,7 +6,7 @@
  */
 
 //$Id$
-package org.hibernate.jpa.test.connection;
+package org.hibernate.orm.test.jpa.connection;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -15,35 +15,26 @@ import java.util.logging.Logger;
 import javax.sql.DataSource;
 
 /**
- * @author Emmanuel Bernard
+ * @author Vlad Mihalcea
  */
-public class FakeDataSource implements DataSource {
-	public Connection getConnection() throws SQLException {
-		throw new FakeDataSourceException( "connection" );
-	}
-
-	public Connection getConnection(String username, String password) throws SQLException {
-		throw new FakeDataSourceException( "connection with password" );
-	}
+public abstract class BaseDataSource implements DataSource {
 
 	public PrintWriter getLogWriter() throws SQLException {
-		throw new FakeDataSourceException( "getLogWriter" );
+		return new PrintWriter( System.out );
 	}
 
 	public void setLogWriter(PrintWriter out) throws SQLException {
-		throw new FakeDataSourceException( "setLogWriter" );
 	}
 
 	public void setLoginTimeout(int seconds) throws SQLException {
-		throw new FakeDataSourceException( "setLoginTimeout" );
 	}
 
 	public int getLoginTimeout() throws SQLException {
-		throw new FakeDataSourceException( "getLoginTimeout" );
+		return 0;
 	}
 
 	public <T> T unwrap(Class<T> tClass) throws SQLException {
-		throw new UnsupportedOperationException("not yet supported");
+		return (T) this;
 	}
 
 	public boolean isWrapperFor(Class<?> aClass) throws SQLException {

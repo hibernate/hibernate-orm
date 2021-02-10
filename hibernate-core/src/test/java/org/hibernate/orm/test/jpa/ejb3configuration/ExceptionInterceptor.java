@@ -6,7 +6,7 @@
  */
 
 //$Id$
-package org.hibernate.jpa.test.ejb3configuration;
+package org.hibernate.orm.test.jpa.ejb3configuration;
 
 import java.io.Serializable;
 

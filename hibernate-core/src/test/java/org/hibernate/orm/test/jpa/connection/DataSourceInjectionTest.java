@@ -7,7 +7,7 @@
 
 //$Id$
 
-package org.hibernate.jpa.test.connection;
+package org.hibernate.orm.test.jpa.connection;
 
 import java.net.URL;
 import java.nio.file.Files;
@@ -31,8 +31,8 @@ import org.hibernate.jpa.test.xml.Light;
 import org.hibernate.jpa.test.xml.Lighter;
 
 import org.hibernate.testing.util.jpa.PersistenceUnitInfoAdapter;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Emmanuel Bernard
@@ -58,7 +58,7 @@ public class DataSourceInjectionTest {
 
 						try ( final SessionImplementor session = sf.openSession().unwrap( SessionImplementor.class ) ) {
 							session.createQuery( "select i from Item i" ).list();
-							Assert.fail( "Expecting FakeDataSourceException" );
+							Assertions.fail( "Expecting FakeDataSourceException" );
 						}
 						catch (PersistenceException pe) {
 							try {

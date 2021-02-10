@@ -4,30 +4,31 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.jpa.test.ejb3configuration;
+package org.hibernate.orm.test.jpa.ejb3configuration;
 
 import java.util.Collections;
 import javax.persistence.SharedCacheMode;
 import javax.persistence.ValidationMode;
 
 import org.hibernate.HibernateException;
-import org.hibernate.jpa.AvailableSettings;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.test.PersistenceUnitInfoAdapter;
 
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Test passing along various config settings that take objects other than strings as values.
  *
  * @author Steve Ebersole
  */
-public class ConfigurationObjectSettingTest extends BaseUnitTestCase {
+@BaseUnitTest
+public class ConfigurationObjectSettingTest {
 	@Test
 	public void testContainerBootstrapSharedCacheMode() {
 		// first, via the integration vars
@@ -36,17 +37,17 @@ public class ConfigurationObjectSettingTest extends BaseUnitTestCase {
 			// as object
 			EntityManagerFactoryBuilderImpl builder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
 					empty,
-					Collections.singletonMap( AvailableSettings.SHARED_CACHE_MODE, SharedCacheMode.DISABLE_SELECTIVE )
+					Collections.singletonMap( AvailableSettings.JPA_SHARED_CACHE_MODE, SharedCacheMode.DISABLE_SELECTIVE )
 			);
-			assertEquals( SharedCacheMode.DISABLE_SELECTIVE, builder.getConfigurationValues().get( AvailableSettings.SHARED_CACHE_MODE ) );
+			assertEquals( SharedCacheMode.DISABLE_SELECTIVE, builder.getConfigurationValues().get( AvailableSettings.JPA_SHARED_CACHE_MODE ) );
 		}
 		{
 			// as string
 			EntityManagerFactoryBuilderImpl builder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
 					empty,
-					Collections.singletonMap( AvailableSettings.SHARED_CACHE_MODE, SharedCacheMode.DISABLE_SELECTIVE.name() )
+					Collections.singletonMap( AvailableSettings.JPA_SHARED_CACHE_MODE, SharedCacheMode.DISABLE_SELECTIVE.name() )
 			);
-			assertEquals( SharedCacheMode.DISABLE_SELECTIVE.name(), builder.getConfigurationValues().get( AvailableSettings.SHARED_CACHE_MODE ) );
+			assertEquals( SharedCacheMode.DISABLE_SELECTIVE.name(), builder.getConfigurationValues().get( AvailableSettings.JPA_SHARED_CACHE_MODE ) );
 		}
 
 		// next, via the PUI
@@ -61,16 +62,16 @@ public class ConfigurationObjectSettingTest extends BaseUnitTestCase {
 					adapter,
 					null
 			);
-			assertEquals( SharedCacheMode.ENABLE_SELECTIVE, builder.getConfigurationValues().get( AvailableSettings.SHARED_CACHE_MODE ) );
+			assertEquals( SharedCacheMode.ENABLE_SELECTIVE, builder.getConfigurationValues().get( AvailableSettings.JPA_SHARED_CACHE_MODE ) );
 		}
 
 		// via both, integration vars should take precedence
 		{
 			EntityManagerFactoryBuilderImpl builder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
 					adapter,
-					Collections.singletonMap( AvailableSettings.SHARED_CACHE_MODE, SharedCacheMode.DISABLE_SELECTIVE )
+					Collections.singletonMap( AvailableSettings.JPA_SHARED_CACHE_MODE, SharedCacheMode.DISABLE_SELECTIVE )
 			);
-			assertEquals( SharedCacheMode.DISABLE_SELECTIVE, builder.getConfigurationValues().get( AvailableSettings.SHARED_CACHE_MODE ) );
+			assertEquals( SharedCacheMode.DISABLE_SELECTIVE, builder.getConfigurationValues().get( AvailableSettings.JPA_SHARED_CACHE_MODE ) );
 		}
 	}
 
@@ -82,17 +83,17 @@ public class ConfigurationObjectSettingTest extends BaseUnitTestCase {
 			// as object
 			EntityManagerFactoryBuilderImpl builder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
 					empty,
-					Collections.singletonMap( AvailableSettings.VALIDATION_MODE, ValidationMode.CALLBACK )
+					Collections.singletonMap( AvailableSettings.JPA_VALIDATION_MODE, ValidationMode.CALLBACK )
 			);
-			assertEquals( ValidationMode.CALLBACK, builder.getConfigurationValues().get( AvailableSettings.VALIDATION_MODE ) );
+			assertEquals( ValidationMode.CALLBACK, builder.getConfigurationValues().get( AvailableSettings.JPA_VALIDATION_MODE ) );
 		}
 		{
 			// as string
 			EntityManagerFactoryBuilderImpl builder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
 					empty,
-					Collections.singletonMap( AvailableSettings.VALIDATION_MODE, ValidationMode.CALLBACK.name() )
+					Collections.singletonMap( AvailableSettings.JPA_VALIDATION_MODE, ValidationMode.CALLBACK.name() )
 			);
-			assertEquals( ValidationMode.CALLBACK.name(), builder.getConfigurationValues().get( AvailableSettings.VALIDATION_MODE ) );
+			assertEquals( ValidationMode.CALLBACK.name(), builder.getConfigurationValues().get( AvailableSettings.JPA_VALIDATION_MODE ) );
 		}
 
 		// next, via the PUI
@@ -107,16 +108,16 @@ public class ConfigurationObjectSettingTest extends BaseUnitTestCase {
 					adapter,
 					null
 			);
-			assertEquals( ValidationMode.CALLBACK, builder.getConfigurationValues().get( AvailableSettings.VALIDATION_MODE ) );
+			assertEquals( ValidationMode.CALLBACK, builder.getConfigurationValues().get( AvailableSettings.JPA_VALIDATION_MODE ) );
 		}
 
 		// via both, integration vars should take precedence
 		{
 			EntityManagerFactoryBuilderImpl builder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
 					adapter,
-					Collections.singletonMap( AvailableSettings.VALIDATION_MODE, ValidationMode.NONE )
+					Collections.singletonMap( AvailableSettings.JPA_VALIDATION_MODE, ValidationMode.NONE )
 			);
-			assertEquals( ValidationMode.NONE, builder.getConfigurationValues().get( AvailableSettings.VALIDATION_MODE ) );
+			assertEquals( ValidationMode.NONE, builder.getConfigurationValues().get( AvailableSettings.JPA_VALIDATION_MODE ) );
 		}
 	}
 
@@ -127,7 +128,7 @@ public class ConfigurationObjectSettingTest extends BaseUnitTestCase {
 		try {
 			Bootstrap.getEntityManagerFactoryBuilder(
 					adapter,
-					Collections.singletonMap( AvailableSettings.VALIDATION_FACTORY, token )
+					Collections.singletonMap( AvailableSettings.JPA_VALIDATION_FACTORY, token )
 			);
 			fail( "Was expecting error as token did not implement ValidatorFactory" );
 		}

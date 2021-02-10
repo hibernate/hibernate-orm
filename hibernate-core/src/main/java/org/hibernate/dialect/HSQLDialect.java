@@ -213,6 +213,21 @@ public class HSQLDialect extends Dialect {
 	}
 
 	@Override
+	public String currentTime() {
+		return "localtime";
+	}
+
+	@Override
+	public String currentTimestamp() {
+		return "localtimestamp";
+	}
+
+	@Override
+	public String currentTimestampWithTimeZone() {
+		return "current_timestamp";
+	}
+
+	@Override
 	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
 		return new StandardSqlAstTranslatorFactory() {
 			@Override

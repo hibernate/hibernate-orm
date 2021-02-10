@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.jpa.test.ejb3configuration;
+package org.hibernate.orm.test.jpa.ejb3configuration;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -16,8 +16,6 @@ import org.hibernate.SessionFactory;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
-import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.Environment;
@@ -29,13 +27,13 @@ import org.hibernate.jpa.test.Item;
 import org.hibernate.jpa.test.PersistenceUnitDescriptorAdapter;
 import org.hibernate.jpa.test.SettingsGenerator;
 
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterEach;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Emmanuel Bernard
@@ -51,7 +49,7 @@ public class InterceptorTest {
 	
 	private EntityManagerFactory entityManagerFactory;
 
-	@After
+	@AfterEach
 	public void releaseResources() {
 		if ( entityManagerFactory != null ) {
 			entityManagerFactory.close();

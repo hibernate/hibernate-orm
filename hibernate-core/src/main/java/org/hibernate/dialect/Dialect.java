@@ -270,89 +270,117 @@ public abstract class Dialect implements ConversionContext {
 	 * These required functions include the functions defined by the JPA
 	 * query language specification:
 	 *
-	 *   * avg(arg)							- aggregate function
-	 *   * count([distinct ]arg)			- aggregate function
-	 *   * max(arg)							- aggregate function
-	 *   * min(arg)							- aggregate function
-	 *   * sum(arg)							- aggregate function
+	 * <ul>
+	 * <li> avg(arg)							- aggregate function
+	 * <li> count([distinct ]arg)				- aggregate function
+	 * <li> max(arg)							- aggregate function
+	 * <li> min(arg)							- aggregate function
+	 * <li> sum(arg)							- aggregate function
+	 * </ul>
 	 *
-	 *   * coalesce(arg0, arg1, ...)
-	 *   * nullif(arg0, arg1)
+	 * <ul>
+	 * <li> coalesce(arg0, arg1, ...)
+	 * <li> nullif(arg0, arg1)
+	 * </ul>
 	 *
-	 *   * lower(arg)
-	 *   * upper(arg)
-	 *   * length(arg)
-	 *   * concat(arg0, arg1, ...)
-	 *   * locate(pattern, string[, start])
-	 *   * substring(string, start[, length])
-	 *   * trim([[spec ][character ]from] string)
+	 * <ul>
+	 * <li> lower(arg)
+	 * <li> upper(arg)
+	 * <li> length(arg)
+	 * <li> concat(arg0, arg1, ...)
+	 * <li> locate(pattern, string[, start])
+	 * <li> substring(string, start[, length])
+	 * <li> trim([[spec ][character ]from] string)
+	 * </ul>
 	 *
-	 *   * abs(arg)
-	 *   * mod(arg0, arg1)
-	 *   * sqrt(arg)
+	 * <ul>
+	 * <li> abs(arg)
+	 * <li> mod(arg0, arg1)
+	 * <li> sqrt(arg)
+	 * </ul>
 	 *
-	 *   * current date
-	 *   * current time
-	 *   * current timestamp
+	 * <ul>
+	 * <li> current date
+	 * <li> current time
+	 * <li> current timestamp
+	 * </ul>
 	 *
 	 * Along with an additional set of functions defined by ANSI SQL:
 	 *
-	 *   * any(arg)							- aggregate function
-	 *   * every(arg)						- aggregate function
+	 * <ul>
+	 * <li> any(arg)							- aggregate function
+	 * <li> every(arg)							- aggregate function
+	 * </ul>
 	 *
-	 *   * cast(arg as Type)
-	 *   * extract(field from arg)
+	 * <ul>
+	 * <li> cast(arg as Type)
+	 * <li> extract(field from arg)
+	 * </ul>
 	 *
-	 *   * ln(arg)
-	 *   * exp(arg)
-	 *   * power(arg0, arg1)
-	 *   * floor(arg)
-	 *   * ceiling(arg)
+	 * <ul>
+	 * <li> ln(arg)
+	 * <li> exp(arg)
+	 * <li> power(arg0, arg1)
+	 * <li> floor(arg)
+	 * <li> ceiling(arg)
+	 * </ul>
 	 *
-	 *   * position(pattern in string)
-	 *   * substring(string from start[ for length])
-	 *   * overlay(string placing replacement from start[ for length])
+	 * <ul>
+	 * <li> position(pattern in string)
+	 * <li> substring(string from start[ for length])
+	 * <li> overlay(string placing replacement from start[ for length])
+	 * </ul>
 	 *
 	 * And the following functions for working with java.time types:
 	 *
-	 *   * local date
-	 *   * local time
-	 *   * local datetime
-	 *   * offset datetime
-	 *   * instant
+	 * <ul>
+	 * <li> local date
+	 * <li> local time
+	 * <li> local datetime
+	 * <li> offset datetime
+	 * <li> instant
+	 * </ul>
 	 *
 	 * And a number of additional "standard" functions:
 	 *
-	 *   * left(string, length)
-	 *   * right(string, length)
-	 *   * replace(string, pattern, replacement)
-	 *   * pad(string with length spec[ character])
+	 * <ul>
+	 * <li> left(string, length)
+	 * <li> right(string, length)
+	 * <li> replace(string, pattern, replacement)
+	 * <li> pad(string with length spec[ character])
+	 * </ul>
 	 *
-	 *   * sign(arg)
-	 *   * sin(arg)
-	 *   * cos(arg)
-	 *   * tan(arg)
-	 *   * asin(arg)
-	 *   * acos(arg)
-	 *   * atan(arg)
-	 *   * atan2(arg0, arg1)
-	 *   * round(arg0, arg1)
-	 *   * least(arg0, arg1, ...)
-	 *   * greatest(arg0, arg1, ...)
+	 * <ul>
+	 * <li> sign(arg)
+	 * <li> sin(arg)
+	 * <li> cos(arg)
+	 * <li> tan(arg)
+	 * <li> asin(arg)
+	 * <li> acos(arg)
+	 * <li> atan(arg)
+	 * <li> atan2(arg0, arg1)
+	 * <li> round(arg0, arg1)
+	 * <li> least(arg0, arg1, ...)
+	 * <li> greatest(arg0, arg1, ...)
+	 * </ul>
 	 *
-	 *   * format(datetime as pattern)
-	 *   * str(arg)					- synonym of cast(a as String)
-	 *   * ifnull(arg0, arg1)		- synonym of coalesce(a, b)
+	 * <ul>
+	 * <li> format(datetime as pattern)
+	 * <li> str(arg)					- synonym of cast(a as String)
+	 * <li> ifnull(arg0, arg1)			- synonym of coalesce(a, b)
+	 * </ul>
 	 *
 	 * Finally, the following functions are defined as abbreviations
 	 * for extract(), and desugared by the parser:
 	 *
-	 *   * second(arg)				- synonym of extract(second from a)
-	 *   * minute(arg)				- synonym of extract(minute from a)
-	 *   * hour(arg)				- synonym of extract(hour from a)
-	 *   * day(arg)					- synonym of extract(day from a)
-	 *   * month(arg)				- synonym of extract(month from a)
-	 *   * year(arg)				- synonym of extract(year from a)
+	 * <ul>
+	 * <li> second(arg)					- synonym of extract(second from a)
+	 * <li> minute(arg)					- synonym of extract(minute from a)
+	 * <li> hour(arg)					- synonym of extract(hour from a)
+	 * <li> day(arg)					- synonym of extract(day from a)
+	 * <li> month(arg)					- synonym of extract(month from a)
+	 * <li> year(arg)					- synonym of extract(year from a)
+	 * </ul>
 	 *
 	 */
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
@@ -497,26 +525,76 @@ public abstract class Dialect implements ConversionContext {
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "current_instant", "instant" ); //deprecated legacy!
 	}
 
+	/**
+	 * Translation of the HQL/JPQL {@code current_date} function, which
+	 * maps to the Java type {@code java.sql.Date}, and of the HQL
+	 * {@code local_date} function which maps to the Java type
+	 * {@code java.sql.LocalDate}.
+	 */
 	public String currentDate() {
 		return "current_date";
 	}
 
+	/**
+	 * Translation of the HQL/JPQL {@code current_time} function, which
+	 * maps to the Java type {@code java.sql.Time} which is a time with
+	 * no time zone. This contradicts ANSI SQL where {@code current_time}
+	 * has the type {@code TIME WITH TIME ZONE}.
+	 * <p>
+	 * It is recommended to override this in dialects for databases which
+	 * support {@code localtime} or {@code time at local}.
+	 */
 	public String currentTime() {
 		return "current_time";
 	}
 
+	/**
+	 * Translation of the HQL/JPQL {@code current_timestamp} function,
+	 * which maps to the Java type {@code java.sql.Timestamp} which is
+	 * a datetime with no time zone. This contradicts ANSI SQL where
+	 * {@code current_timestamp} has the type
+	 * {@code TIMESTAMP WITH TIME ZONE}.
+	 * <p>
+	 * It is recommended to override this in dialects for databases which
+	 * support {@code localtimestamp} or {@code timestamp at local}.
+	 */
 	public String currentTimestamp() {
 		return "current_timestamp";
 	}
 
+	/**
+	 * Translation of the HQL {@code local_time} function, which maps to
+	 * the Java type {@code java.time.LocalTime} which is a time with no
+	 * time zone. It should usually be the same SQL function as for
+	 * {@link #currentTime()}.
+	 * <p>
+	 * It is recommended to override this in dialects for databases which
+	 * support {@code localtime} or {@code current_time at local}.
+	 */
 	public String currentLocalTime() {
 		return currentTime();
 	}
 
+	/**
+	 * Translation of the HQL {@code local_datetime} function, which maps
+	 * to the Java type {@code java.time.LocalDateTime} which is a datetime
+	 * with no time zone. It should usually be the same SQL function as for
+	 * {@link #currentTimestamp()}.
+	 * <p>
+	 * It is recommended to override this in dialects for databases which
+	 * support {@code localtimestamp} or {@code current_timestamp at local}.
+	 */
 	public String currentLocalTimestamp() {
 		return currentTimestamp();
 	}
 
+	/**
+	 * Translation of the HQL {@code offset_datetime} function, which maps
+	 * to the Java type {@code java.time.OffsetDateTime} which is a datetime
+	 * with a time zone. This in principle correctly maps to the ANSI SQL
+	 * {@code current_timestamp} which has the type
+	 * {@code TIMESTAMP WITH TIME ZONE}.
+	 */
 	public String currentTimestampWithTimeZone() {
 		return currentTimestamp();
 	}

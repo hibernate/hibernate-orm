@@ -42,11 +42,6 @@ import static org.junit.Assert.assertEquals;
 @RunWith(BytecodeEnhancerRunner.class)
 @EnhancementOptions( lazyLoading = true )
 public class LazyGroupWithInheritanceTest extends BaseNonConfigCoreFunctionalTestCase {
-	@Test
-	@FailureExpected(
-			jiraKey = "HHH-13658",
-			message = "Assertions specific to enhanced lazy loading but disallowing enhanced proxies, which is no longer valid"
-	)
 	public void loadEntityWithAssociationToAbstract() {
 		final Statistics stats = sessionFactory().getStatistics();
 		stats.clear();
@@ -84,8 +79,8 @@ public class LazyGroupWithInheritanceTest extends BaseNonConfigCoreFunctionalTes
 					//			The only viable solution I see would be to join to the "other side" and read the
 					//			version/discriminator[1].  But of course that means doing the join which is generally
 					//			what the application is trying to avoid in the first place
-					//expectedQueryCount.set( 1 );
-					expectedQueryCount.set( 4 );
+					expectedQueryCount.set( 1 );
+					//expectedQueryCount.set( 4 );
 					assertEquals( expectedQueryCount.get(), stats.getPrepareStatementCount() );
 
 					for ( Order order : orders ) {

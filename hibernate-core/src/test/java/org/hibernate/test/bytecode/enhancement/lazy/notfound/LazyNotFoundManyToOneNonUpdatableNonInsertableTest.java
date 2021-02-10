@@ -6,10 +6,6 @@
  */
 package org.hibernate.test.bytecode.enhancement.lazy.notfound;
 
-/**
- * @author Gail Badner
- */
-
 import javax.persistence.CascadeType;
 import javax.persistence.ConstraintMode;
 import javax.persistence.Entity;
@@ -26,7 +22,6 @@ import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -37,6 +32,9 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 
+/**
+ * @author Gail Badner
+ */
 @TestForIssue( jiraKey = "HHH-12226")
 @RunWith( BytecodeEnhancerRunner.class )
 public class LazyNotFoundManyToOneNonUpdatableNonInsertableTest extends BaseCoreFunctionalTestCase {
@@ -51,10 +49,6 @@ public class LazyNotFoundManyToOneNonUpdatableNonInsertableTest extends BaseCore
 	}
 
 	@Test
-	@FailureExpected(
-			jiraKey = "HHH-13658",
-			message = "Assertions specific to enhanced lazy loading but disallowing enhanced proxies, which is no longer valid"
-	)
 	public void test() {
 		doInHibernate(
 				this::sessionFactory, session -> {

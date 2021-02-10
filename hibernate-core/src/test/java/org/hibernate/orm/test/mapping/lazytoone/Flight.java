@@ -25,7 +25,7 @@ import static org.hibernate.annotations.LazyToOneOption.NO_PROXY;
 public class Flight {
 	@Id
 	private Integer id;
-	@Column(name = "flight_number")
+	@Column( name = "flight_number" )
 	private String number;
 
 	@ManyToOne( fetch = LAZY )

@@ -6,16 +6,19 @@
  */
 package org.hibernate.bytecode;
 
-import org.jboss.logging.BasicLogger;
 import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole
  */
-public interface BytecodeLogger extends BasicLogger {
+public interface BytecodeLogging {
 	String NAME = "org.hibernate.orm.bytecode";
 
 	Logger LOGGER = Logger.getLogger( NAME );
+
+	static String subLoggerName(String subName) {
+		return NAME + "." + subName;
+	}
 
 	boolean TRACE_ENABLED = LOGGER.isTraceEnabled();
 	boolean DEBUG_ENABLED = LOGGER.isDebugEnabled();

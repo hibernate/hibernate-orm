@@ -200,7 +200,6 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-13658")
 	public void testRandomAccess() {
 		final StatisticsImplementor stats = sessionFactory().getStatistics();
 		stats.clear();

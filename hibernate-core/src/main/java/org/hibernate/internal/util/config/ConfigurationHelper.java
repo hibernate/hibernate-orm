@@ -176,6 +176,9 @@ public final class ConfigurationHelper {
 		if ( Integer.class.isInstance( value ) ) {
 			return (Integer) value;
 		}
+		if ( Long.class.isInstance( value ) && (Long) value >= Integer.MIN_VALUE && (Long) value <= Integer.MAX_VALUE) {
+			return ( (Long) value ).intValue();
+		}
 		if ( String.class.isInstance( value ) ) {
 			return Integer.parseInt( (String) value );
 		}
@@ -201,6 +204,9 @@ public final class ConfigurationHelper {
 		if ( Integer.class.isInstance( value ) ) {
 			return (Integer) value;
 		}
+		if ( Long.class.isInstance( value ) && (Long) value >= Integer.MIN_VALUE && (Long) value <= Integer.MAX_VALUE) {
+			return ( (Long) value ).intValue();
+		}
 		if ( String.class.isInstance( value ) ) {
 			//empty values are ignored
 			final String trimmed = value.toString().trim();
@@ -222,6 +228,9 @@ public final class ConfigurationHelper {
 		}
 		if ( Long.class.isInstance( value ) ) {
 			return (Long) value;
+		}
+		if ( Integer.class.isInstance( value ) ) {
+			return ( (Integer) value ).longValue();
 		}
 		if ( String.class.isInstance( value ) ) {
 			return Long.parseLong( (String) value );

@@ -17,7 +17,7 @@ import org.geolatte.geom.Geometry;
  * @author Steve Ebersole
  */
 @Entity
-@Table( name = "SP_CUST_TYPE_CONV_ENTITY")
+@Table(name = "SP_CUST_TYPE_CONV_ENTITY")
 public class MyEntity {
 	private Integer id;
 	private Geometry geometry;

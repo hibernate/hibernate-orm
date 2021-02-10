@@ -16,6 +16,8 @@ import javax.persistence.criteria.CriteriaQuery;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
@@ -53,6 +55,12 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return  new Class[] { A.class };
+	}
+
+	@Override
+	protected void configure(Configuration configuration) {
+		// We can't use a shared connection provider if we use TransactionUtil.setJdbcTimeout because that is set on the connection level
+		configuration.getProperties().remove( AvailableSettings.CONNECTION_PROVIDER );
 	}
 
 	@Override

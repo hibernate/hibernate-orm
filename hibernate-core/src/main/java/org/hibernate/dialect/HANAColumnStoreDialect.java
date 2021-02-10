@@ -132,6 +132,11 @@ public class HANAColumnStoreDialect extends AbstractHANADialect {
 					protected String getTruncateIdTableCommand() {
 						return "truncate table";
 					}
+
+					@Override
+					public String getCreateOptions() {
+						return "on commit delete rows";
+					}
 				},
 				AfterUseAction.CLEAN,
 				runtimeModelCreationContext.getSessionFactory()

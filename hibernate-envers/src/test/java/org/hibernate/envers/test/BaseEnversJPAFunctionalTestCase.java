@@ -144,9 +144,9 @@ public abstract class BaseEnversJPAFunctionalTestCase extends AbstractEnversTest
 			config.put( AvailableSettings.XML_FILE_NAMES, dds );
 		}
 
+		config.put( GlobalTemporaryTableStrategy.DROP_ID_TABLES, "true" );
+		config.put( LocalTemporaryTableStrategy.DROP_ID_TABLES, "true" );
 		if ( !Environment.getProperties().containsKey( Environment.CONNECTION_PROVIDER ) ) {
-			config.put( GlobalTemporaryTableStrategy.DROP_ID_TABLES, "true" );
-			config.put( LocalTemporaryTableStrategy.DROP_ID_TABLES, "true" );
 			config.put(
 					org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER,
 					SharedDriverManagerConnectionProviderImpl.getInstance()

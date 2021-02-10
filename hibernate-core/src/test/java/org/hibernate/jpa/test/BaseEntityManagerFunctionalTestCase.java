@@ -228,9 +228,9 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 			config.put( AvailableSettings.XML_FILE_NAMES, dds );
 		}
 
+		config.put( GlobalTemporaryTableStrategy.DROP_ID_TABLES, "true" );
+		config.put( LocalTemporaryTableStrategy.DROP_ID_TABLES, "true" );
 		if ( !config.containsKey( Environment.CONNECTION_PROVIDER ) ) {
-			config.put( GlobalTemporaryTableStrategy.DROP_ID_TABLES, "true" );
-			config.put( LocalTemporaryTableStrategy.DROP_ID_TABLES, "true" );
 			config.put(
 					AvailableSettings.CONNECTION_PROVIDER,
 					SharedDriverManagerConnectionProviderImpl.getInstance()

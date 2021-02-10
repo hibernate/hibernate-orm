@@ -186,9 +186,8 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 			return;
 		}
 		final EventListenerGroup<PostLoadEventListener> listenerGroup = executionContext.getSession().getFactory()
-				.getServiceRegistry()
-				.getService( EventListenerRegistry.class )
-				.getEventListenerGroup( EventType.POST_LOAD );
+				.getFastSessionServices()
+				.eventListenerGroup_POST_LOAD;
 
 		loadingEntityMap.forEach(
 				(entityKey, loadingEntityEntry) -> {

@@ -119,9 +119,8 @@ public final class TwoPhaseLoad {
 			final PreLoadEvent preLoadEvent) {
 		final EventListenerGroup<PreLoadEventListener> listenerGroup = session
 			.getFactory()
-			.getServiceRegistry()
-			.getService( EventListenerRegistry.class )
-			.getEventListenerGroup( EventType.PRE_LOAD );
+			.getFastSessionServices()
+			.eventListenerGroup_PRE_LOAD;
 		final Iterable<PreLoadEventListener> listeners = listenerGroup.listeners();
 		initializeEntity( entity, readOnly, session, preLoadEvent, listeners, EntityResolver.DEFAULT );
 	}

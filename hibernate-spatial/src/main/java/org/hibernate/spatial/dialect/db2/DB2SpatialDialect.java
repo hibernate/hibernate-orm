@@ -29,8 +29,6 @@ import org.hibernate.spatial.SpatialRelation;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 
-import static java.lang.String.format;
-
 /**
  * @author David Adler, Adtech Geospatial
  * creation-date: 5/22/2014
@@ -228,24 +226,11 @@ public class DB2SpatialDialect extends DB2Dialect implements SpatialDialect {
 		) );
 
 		// Register non-SFS functions listed in Hibernate Spatial
-		registerFunction( "dwithin", new DWithinFunction());
-
-//		// The srid parameter needs to be explicitly cast to INTEGER to avoid a -245 SQLCODE,
-//		// ambiguous parameter.
-//		registerFunction( "transform", new SQLFunctionTemplate(
-//				geolatteGemetryType,
-//				"DB2GSE.ST_Transform(?1, CAST (?2 AS INTEGER))"
-//		) );
+		registerFunction( "dwithin", new DWithinFunction() );
 
 		registerFunction( "geomFromText", new StandardSQLFunction(
 				"DB2GSE.ST_GeomFromText"
 		) );
-
-//		// Register spatial aggregate function
-//		registerFunction( "extent", new SQLFunctionTemplate(
-//				geolatteGemetryType,
-//				"db2gse.ST_GetAggrResult(MAX(db2gse.st_BuildMBRAggr(?1)))"
-//		) );
 	}
 
 	@Override
@@ -271,7 +256,7 @@ public class DB2SpatialDialect extends DB2Dialect implements SpatialDialect {
 	@Override
 	public String getSpatialAggregateSQL(String columnName, int type) {
 		switch ( type ) {
-			case SpatialAggregate.EXTENT:  // same as extent function above???
+			case SpatialAggregate.EXTENT:
 				return "db2gse.ST_GetAggrResult(MAX(db2gse.st_BuildMBRAggr(" + columnName + ")))";
 			case SpatialAggregate.UNION:
 				return "db2gse.ST_GetAggrResult(MAX(db2gse.st_BuildUnionAggr(" + columnName + ")))";
@@ -304,7 +289,8 @@ public class DB2SpatialDialect extends DB2Dialect implements SpatialDialect {
 			if ( spatialRelation != SpatialRelation.DISJOINT ) {
 				return " db2gse." + relationName + "(" + columnName + ", ?) = 1 SELECTIVITY .0001";
 			}
-			else { // SELECTIVITY not supported for ST_Disjoint UDF
+			else {
+				// SELECTIVITY not supported for ST_Disjoint UDF
 				return " db2gse." + relationName + "(" + columnName + ", ?) = 1";
 			}
 		}
@@ -328,17 +314,17 @@ public class DB2SpatialDialect extends DB2Dialect implements SpatialDialect {
 	private static class DWithinFunction extends StandardSQLFunction {
 
 		public DWithinFunction() {
-			super( "db2gse.ST_Dwithin" , StandardBasicTypes.NUMERIC_BOOLEAN);
+			super( "db2gse.ST_Dwithin", StandardBasicTypes.NUMERIC_BOOLEAN );
 		}
 
 		public String render(Type firstArgumentType, final List args, final SessionFactoryImplementor factory) {
 			StringBuilder sb = new StringBuilder( "db2gse.ST_Intersects( " );
-			sb.append( (String)args.get(0) ) //
-					.append(", db2gse.ST_Buffer(")
-					.append((String)args.get(1) )
-					.append(", ")
-					.append((String)args.get(2) )
-					.append(", 'METER'))");
+			sb.append( (String) args.get( 0 ) )
+					.append( ", db2gse.ST_Buffer(" )
+					.append( (String) args.get( 1 ) )
+					.append( ", " )
+					.append( (String) args.get( 2 ) )
+					.append( ", 'METER'))" );
 			return sb.toString();
 		}
 

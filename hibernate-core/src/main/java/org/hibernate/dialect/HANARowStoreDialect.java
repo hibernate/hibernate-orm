@@ -50,6 +50,11 @@ public class HANARowStoreDialect extends AbstractHANADialect {
 					protected String getCreateCommand() {
 						return "create global temporary row table";
 					}
+
+					@Override
+					public String getCreateOptions() {
+						return "on commit delete rows";
+					}
 				},
 				AfterUseAction.CLEAN,
 				runtimeModelCreationContext.getSessionFactory()

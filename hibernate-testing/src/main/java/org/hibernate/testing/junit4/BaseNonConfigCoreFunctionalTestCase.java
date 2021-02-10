@@ -179,9 +179,9 @@ public class BaseNonConfigCoreFunctionalTestCase extends BaseUnitTestCase {
 		afterBootstrapServiceRegistryBuilt( bsr );
 
 		final Map settings = new HashMap();
+		settings.put( GlobalTemporaryTableStrategy.DROP_ID_TABLES, "true" );
+		settings.put( LocalTemporaryTableStrategy.DROP_ID_TABLES, "true" );
 		if ( !Environment.getProperties().containsKey( Environment.CONNECTION_PROVIDER ) ) {
-			settings.put( GlobalTemporaryTableStrategy.DROP_ID_TABLES, "true" );
-			settings.put( LocalTemporaryTableStrategy.DROP_ID_TABLES, "true" );
 			settings.put(
 					AvailableSettings.CONNECTION_PROVIDER,
 					SharedDriverManagerConnectionProviderImpl.getInstance()

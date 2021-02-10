@@ -328,8 +328,12 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 				final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
 				if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
 					EnhancementAsProxyLazinessInterceptor enhancementAsProxyLazinessInterceptor = (EnhancementAsProxyLazinessInterceptor) interceptor;
+					if ( enhancementAsProxyLazinessInterceptor.hasWrittenFieldNames() ) {
+						return false;
+					}
 					// When a proxy has dirty attributes, we have to treat it like a normal entity to flush changes
-					uninitializedProxy = !enhancementAsProxyLazinessInterceptor.isInitialized() && !( (SelfDirtinessTracker) entity ).$$_hibernate_hasDirtyAttributes();
+					return !enhancementAsProxyLazinessInterceptor.isInitialized()
+							|| !persister.hasCollections() && !( (SelfDirtinessTracker) entity ).$$_hibernate_hasDirtyAttributes();
 				}
 			}
 			else if ( entity instanceof HibernateProxy ) {

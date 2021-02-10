@@ -803,9 +803,8 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 					.setPersister( concreteDescriptor );
 
 			final EventListenerGroup<PreLoadEventListener> listenerGroup = session.getFactory()
-					.getServiceRegistry()
-					.getService( EventListenerRegistry.class )
-					.getEventListenerGroup( EventType.PRE_LOAD );
+					.getFastSessionServices()
+					.eventListenerGroup_PRE_LOAD;
 			for ( PreLoadEventListener listener : listenerGroup.listeners() ) {
 				listener.onPreLoad( preLoadEvent );
 			}

@@ -79,7 +79,7 @@ public interface EventListenerGroup<T> extends Serializable {
 	 * Fires an event on each registered event listener of this group.
 	 *
 	 * Implementation note (performance):
-	 * the first argument is a supplier so that events can avoid allocation when no listener is registered.
+	 * the first argument is a supplier so that events can avoid being created when no listener is registered.
 	 * the second argument is specifically designed to avoid needing a capturing lambda.
 	 *
 	 * @param eventSupplier
@@ -87,7 +87,7 @@ public interface EventListenerGroup<T> extends Serializable {
 	 * @param <U> the kind of event
 	 */
 	@Incubating
-	<U> void  fireLazyEventOnEachListener(final Supplier<U> eventSupplier, final BiConsumer<T,U> actionOnEvent);
+	<U> void fireLazyEventOnEachListener(final Supplier<U> eventSupplier, final BiConsumer<T,U> actionOnEvent);
 
 	/**
 	 * Similar as {@link #fireLazyEventOnEachListener(Supplier, BiConsumer)} except it doesn't use a {{@link Supplier}}:
@@ -97,9 +97,19 @@ public interface EventListenerGroup<T> extends Serializable {
 	 * @param <U> the kind of event
 	 */
 	@Incubating
-	<U> void  fireEventOnEachListener(final U event, final BiConsumer<T,U> actionOnEvent);
+	<U> void fireEventOnEachListener(final U event, final BiConsumer<T,U> actionOnEvent);
 
+	/**
+	 * Similar to {@link #fireEventOnEachListener(Object, BiConsumer)}, but allows passing a third parameter
+	 * to the consumer; our code based occasionally needs a third parameter: having this additional variant
+	 * allows using the optimal iteration more extensively and reduce allocations.
+	 * @param event
+	 * @param param
+	 * @param actionOnEvent
+	 * @param <U>
+	 * @param <X>
+	 */
 	@Incubating
-	<U,X> void  fireEventOnEachListener(final U event, X param, final EventActionWithParameter<T,U,X> actionOnEvent);
+	<U,X> void fireEventOnEachListener(final U event, X param, final EventActionWithParameter<T,U,X> actionOnEvent);
 
 }

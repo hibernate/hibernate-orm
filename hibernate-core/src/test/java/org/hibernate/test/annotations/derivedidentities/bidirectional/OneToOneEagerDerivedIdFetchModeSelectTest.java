@@ -36,7 +36,6 @@ public class OneToOneEagerDerivedIdFetchModeSelectTest extends BaseCoreFunctiona
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-14390")
-	@FailureExpected(jiraKey = "HHH-14390")
 	public void testQuery() {
 
 		doInHibernate( this::sessionFactory, session -> {
@@ -52,7 +51,6 @@ public class OneToOneEagerDerivedIdFetchModeSelectTest extends BaseCoreFunctiona
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-14390")
-	@FailureExpected(jiraKey = "HHH-14390")
 	public void testQueryById() {
 
 		doInHibernate( this::sessionFactory, session -> {
@@ -82,7 +80,6 @@ public class OneToOneEagerDerivedIdFetchModeSelectTest extends BaseCoreFunctiona
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-14390")
-	@FailureExpected(jiraKey = "HHH-14390")
 	public void testFindByPrimaryKey() {
 
 		doInHibernate( this::sessionFactory, session -> {

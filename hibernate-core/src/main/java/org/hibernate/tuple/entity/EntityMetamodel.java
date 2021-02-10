@@ -169,7 +169,6 @@ public class EntityMetamodel implements Serializable {
 					persistentClass,
 					idAttributeNames,
 					nonAggregatedCidMapper,
-					sessionFactoryOptions.isEnhancementAsProxyEnabled(),
 					sessionFactoryOptions.isCollectionsInDefaultFetchGroupEnabled()
 			);
 		}
@@ -252,7 +251,6 @@ public class EntityMetamodel implements Serializable {
 			boolean lazy = ! EnhancementHelper.includeInBaseFetchGroup(
 					prop,
 					bytecodeEnhancementMetadata.isEnhancedForLazyLoading(),
-					sessionFactoryOptions.isEnhancementAsProxyEnabled(),
 					sessionFactoryOptions.isCollectionsInDefaultFetchGroupEnabled()
 			);
 

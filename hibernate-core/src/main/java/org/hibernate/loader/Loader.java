@@ -62,9 +62,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.engine.spi.TypedValue;
-import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
@@ -115,13 +113,10 @@ public abstract class Loader {
 	private final SessionFactoryImplementor factory;
 	private volatile ColumnNameCache columnNameCache;
 
-	private final boolean enhancementAsProxyEnabled;
-
 	private boolean isJdbc4 = true;
 
 	public Loader(SessionFactoryImplementor factory) {
 		this.factory = factory;
-		this.enhancementAsProxyEnabled = factory.getSessionFactoryOptions().isEnhancementAsProxyEnabled();
 	}
 
 	/**
@@ -1662,7 +1657,7 @@ public abstract class Loader {
 			);
 		}
 
-		if ( enhancementAsProxyEnabled && persister.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() ) {
+		if ( persister.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() ) {
 			// we have found an existing "managed copy" in the session
 			// we need to check if this copy is an enhanced-proxy and, if so,
 			// perform the hydration just as if it were "not yet loaded"

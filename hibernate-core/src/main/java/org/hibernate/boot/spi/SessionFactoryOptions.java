@@ -310,9 +310,12 @@ public interface SessionFactoryOptions {
 
 	/**
 	 * Can bytecode-enhanced entity classes be used as a "proxy"?
+	 *
+	 * @deprecated (since 5.5) use of enhanced proxies is always enabled
 	 */
+	@Deprecated
 	default boolean isEnhancementAsProxyEnabled() {
-		return false;
+		return true;
 	}
 
 	default boolean isCollectionsInDefaultFetchGroupEnabled() {

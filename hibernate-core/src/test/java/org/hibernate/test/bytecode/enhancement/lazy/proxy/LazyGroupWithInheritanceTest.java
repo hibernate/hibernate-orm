@@ -15,6 +15,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.stat.Statistics;
 
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
@@ -38,6 +39,10 @@ import static org.junit.Assert.assertEquals;
 @EnhancementOptions( lazyLoading = true )
 public class LazyGroupWithInheritanceTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
+	@FailureExpected(
+			jiraKey = "HHH-13658",
+			message = "Assertions specific to enhanced lazy loading but disallowing enhanced proxies, which is no longer valid"
+	)
 	public void queryEntityWithAssociationToAbstract() {
 		final Statistics stats = sessionFactory().getStatistics();
 		stats.clear();

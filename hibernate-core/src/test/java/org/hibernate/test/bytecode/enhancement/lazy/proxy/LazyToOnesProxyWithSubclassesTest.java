@@ -43,11 +43,6 @@ import static org.junit.Assert.assertTrue;
 @TestForIssue( jiraKey = "HHH-13640" )
 @RunWith(BytecodeEnhancerRunner.class)
 public class LazyToOnesProxyWithSubclassesTest extends BaseNonConfigCoreFunctionalTestCase {
-	@Override
-	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
-		super.configureStandardServiceRegistryBuilder( ssrb );
-		ssrb.applySetting( AvailableSettings.ALLOW_ENHANCEMENT_AS_PROXY, "true" );
-	}
 
 	@Override
 	protected void configureSessionFactoryBuilder(SessionFactoryBuilder sfb) {

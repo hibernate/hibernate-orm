@@ -37,7 +37,6 @@ public class InstrumentedProxyLazyToOneTest extends BaseNonConfigCoreFunctionalT
 	@Override
 	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
 		ssrb.applySetting( AvailableSettings.GENERATE_STATISTICS, "true" );
-		ssrb.applySetting( AvailableSettings.ALLOW_ENHANCEMENT_AS_PROXY, "true" );
 	}
 
 	@Override

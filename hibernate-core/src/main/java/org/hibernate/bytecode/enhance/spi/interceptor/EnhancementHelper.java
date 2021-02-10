@@ -31,7 +31,6 @@ public class EnhancementHelper {
 	public static boolean includeInBaseFetchGroup(
 			Property bootMapping,
 			boolean isEnhanced,
-			boolean allowEnhancementAsProxy,
 			boolean collectionsInDefaultFetchGroupEnabled) {
 		final Value value = bootMapping.getValue();
 
@@ -57,7 +56,16 @@ public class EnhancementHelper {
 					}
 					// include it in the base fetch group so long as the config allows
 					// using the FK to create an "enhancement proxy"
-					return allowEnhancementAsProxy;
+					//return allowEnhancementAsProxy;
+					// ^^ previously we had to explicitly enable use of enhanced proxies.
+					//		for the moment just return `true` assuming we can.
+					//
+					//		there are cases where this block overall misses quite a few cases
+					//		where it returns the least optimal value.  This is true even outside
+					//		this enhanced-proxy point
+					//
+					//		those will all be addressed in the commits for HHH-13658
+					return true;
 				}
 
 			}

@@ -890,7 +890,11 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 * the results of those methods
 	 *
 	 * @implSpec See {@link org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor}
+	 *
+	 * @deprecated (as of 5.5) with no replacement.  When using enhancement based lazy loading
+	 * using the enhanced class as proxy is always used when appropriate.
 	 */
+	@Deprecated
 	String ALLOW_ENHANCEMENT_AS_PROXY = "hibernate.bytecode.allow_enhancement_as_proxy";
 
 	/**

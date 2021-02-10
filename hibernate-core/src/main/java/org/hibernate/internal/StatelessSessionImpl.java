@@ -70,12 +70,10 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	private final PersistenceContext temporaryPersistenceContext = new StatefulPersistenceContext( this );
 
 	private final boolean connectionProvided;
-	private final boolean allowBytecodeProxy;
 
 	public StatelessSessionImpl(SessionFactoryImpl factory, SessionCreationOptions options) {
 		super( factory, options );
 		connectionProvided = options.getConnection() != null;
-		allowBytecodeProxy = getFactory().getSessionFactoryOptions().isEnhancementAsProxyEnabled();
 	}
 
 	@Override
@@ -306,7 +304,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 			final EntityMetamodel entityMetamodel = persister.getEntityMetamodel();
 			final BytecodeEnhancementMetadata bytecodeEnhancementMetadata = entityMetamodel.getBytecodeEnhancementMetadata();
-			if ( allowBytecodeProxy && bytecodeEnhancementMetadata.isEnhancedForLazyLoading() ) {
+			if ( bytecodeEnhancementMetadata.isEnhancedForLazyLoading() ) {
 
 				// if the entity defines a HibernateProxy factory, see if there is an
 				// existing proxy associated with the PC - and if so, use it

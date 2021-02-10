@@ -23,6 +23,7 @@ import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
 
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
@@ -48,6 +49,10 @@ import static org.junit.Assert.assertTrue;
 		EnhancerTestContext.class,
 		BidirectionalLazyGroupsTest.NoDirtyCheckEnhancementContext.class
 })
+@FailureExpected(
+		jiraKey = "HHH-13658",
+		message = "Assertions specific to enhanced lazy loading but disallowing enhanced proxies, which is no longer valid"
+)
 public class BidirectionalLazyGroupsTest extends BaseCoreFunctionalTestCase {
 
 	public Class<?>[] getAnnotatedClasses() {

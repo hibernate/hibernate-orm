@@ -174,7 +174,6 @@ public final class PropertyFactory {
 		final boolean lazy = ! EnhancementHelper.includeInBaseFetchGroup(
 				property,
 				lazyAvailable,
-				sessionFactoryOptions.isEnhancementAsProxyEnabled(),
 				sessionFactoryOptions.isCollectionsInDefaultFetchGroupEnabled()
 		);
 

@@ -15,8 +15,6 @@ import javax.persistence.ConstraintMode;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.ForeignKey;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
@@ -27,7 +25,10 @@ import org.hibernate.annotations.LazyToOne;
 import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Configuration;
 
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -37,6 +38,7 @@ import org.junit.runner.RunWith;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 @TestForIssue( jiraKey = "HHH-12226")
 @RunWith( BytecodeEnhancerRunner.class )
@@ -51,7 +53,17 @@ public class LazyNotFoundOneToOneTest extends BaseCoreFunctionalTestCase {
 		};
 	}
 
+	@Override
+	protected void configure(Configuration configuration) {
+		super.configure(configuration);
+		configuration.setProperty( AvailableSettings.ALLOW_ENHANCEMENT_AS_PROXY, "true" );
+	}
+
 	@Test
+	@FailureExpected(
+			jiraKey = "HHH-13658",
+			message = "Assertions specific to enhanced lazy loading but disallowing enhanced proxies, which is no longer valid"
+	)
 	public void test() {
 		doInHibernate(
 				this::sessionFactory, session -> {

@@ -10,24 +10,28 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.hibernate.Hibernate;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.engine.spi.PersistentAttributeInterceptable;
+import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.stat.Statistics;
 
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.hibernate.testing.bytecode.enhancement.EnhancerTestContext;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.test.bytecode.enhancement.lazy.group.BidirectionalLazyGroupsInEmbeddableTest;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -43,6 +47,25 @@ public class LazyGroupWithInheritanceTest extends BaseNonConfigCoreFunctionalTes
 			jiraKey = "HHH-13658",
 			message = "Assertions specific to enhanced lazy loading but disallowing enhanced proxies, which is no longer valid"
 	)
+	public void loadEntityWithAssociationToAbstract() {
+		final Statistics stats = sessionFactory().getStatistics();
+		stats.clear();
+
+		inTransaction(
+				(session) -> {
+					final Order loaded = session.byId( Order.class ).load( 1 );
+					assert Hibernate.isPropertyInitialized( loaded, "customer" );
+					assertThat( stats.getPrepareStatementCount(), is( 1L ) );
+					assertThat( loaded, instanceOf( PersistentAttributeInterceptable.class ) );
+					final PersistentAttributeInterceptor interceptor = ((PersistentAttributeInterceptable) loaded).$$_hibernate_getInterceptor();
+					assertThat( interceptor, instanceOf( BytecodeLazyAttributeInterceptor.class ) );
+					final BytecodeLazyAttributeInterceptor interceptor1 = (BytecodeLazyAttributeInterceptor) interceptor;
+
+				}
+		);
+	}
+
+	@Test
 	public void queryEntityWithAssociationToAbstract() {
 		final Statistics stats = sessionFactory().getStatistics();
 		stats.clear();

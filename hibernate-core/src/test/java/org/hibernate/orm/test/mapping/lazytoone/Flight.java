@@ -6,7 +6,6 @@
  */
 package org.hibernate.orm.test.mapping.lazytoone;
 
-import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
@@ -25,7 +24,6 @@ import static org.hibernate.annotations.LazyToOneOption.NO_PROXY;
 public class Flight {
 	@Id
 	private Integer id;
-	@Column(name = "flight_number")
 	private String number;
 
 	@ManyToOne( fetch = LAZY )

@@ -9,7 +9,6 @@ package org.hibernate.testing.junit5;
 import javax.persistence.EntityManagerFactory;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
  * Contract for things that expose an EntityManagerFactory
@@ -21,6 +20,6 @@ public interface EntityManagerFactoryAccess extends DialectAccess {
 
 	@Override
 	default Dialect getDialect() {
-		return Dialect.getDialect();
+		return DialectContext.getDialect();
 	}
 }

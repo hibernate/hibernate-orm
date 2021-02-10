@@ -37,16 +37,6 @@ public class DialectFilterExtension implements ExecutionCondition {
 
 	@Override
 	public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext context) {
-		if ( !context.getTestInstance().isPresent() ) {
-			assert !context.getTestMethod().isPresent();
-
-			return ConditionEvaluationResult.enabled(
-					"No test-instance was present - " +
-							"likely that test was not defined with a per-class test lifecycle; " +
-							"skipping Dialect checks for this context [" + context.getDisplayName() + "]"
-			);
-		}
-
 		final Dialect dialect = getDialect( context );
 		if ( dialect == null ) {
 			throw new RuntimeException( "#getDialect returned null" );
@@ -135,7 +125,7 @@ public class DialectFilterExtension implements ExecutionCondition {
 			try {
 				final DialectFeatureCheck dialectFeatureCheck = effectiveRequiresDialectFeature.feature()
 						.newInstance();
-				final boolean applicable = dialectFeatureCheck.apply( getDialect( context ) );
+				final boolean applicable = dialectFeatureCheck.apply( dialect );
 				final boolean reverse = effectiveRequiresDialectFeature.reverse();
 				if ( !( applicable ^ reverse ) ) {
 					return ConditionEvaluationResult.disabled(
@@ -156,22 +146,6 @@ public class DialectFilterExtension implements ExecutionCondition {
 	}
 
 	private Dialect getDialect(ExtensionContext context) {
-		final Optional<SessionFactoryScope> sfScope = SessionFactoryScopeExtension.findSessionFactoryScope( context );
-		if ( !sfScope.isPresent() ) {
-			final Optional<EntityManagerFactoryScope> emScope = EntityManagerFactoryScopeExtension.findEntityManagerFactoryScope( context );
-			if ( !emScope.isPresent() ) {
-				final Optional<DialectAccess> dialectAccess = Optional.ofNullable(
-						(DialectAccess) context.getStore( DialectAccess.NAMESPACE )
-								.get( context.getRequiredTestInstance() ) );
-				if ( !dialectAccess.isPresent() ) {
-					throw new RuntimeException(
-							"Could not locate any DialectAccess implementation in JUnit ExtensionContext" );
-				}
-				return dialectAccess.get().getDialect();
-			}
-			return emScope.get().getDialect();
-		}
-
-		return sfScope.get().getDialect();
+		return DialectContext.getDialect();
 	}
 }

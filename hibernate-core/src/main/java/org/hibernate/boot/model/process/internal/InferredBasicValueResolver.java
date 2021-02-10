@@ -156,7 +156,7 @@ public class InferredBasicValueResolver {
 	}
 
 	@SuppressWarnings("rawtypes")
-	private static BasicType<?> resolveSqlTypeIndicators(
+	public static BasicType<?> resolveSqlTypeIndicators(
 			SqlTypeDescriptorIndicators stdIndicators,
 			BasicType<?> resolved) {
 		if ( resolved instanceof SqlTypeDescriptorIndicatorCapable ) {

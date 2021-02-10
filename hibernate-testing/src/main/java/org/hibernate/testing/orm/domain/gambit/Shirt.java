@@ -7,6 +7,7 @@
 package org.hibernate.testing.orm.domain.gambit;
 
 import javax.persistence.AttributeConverter;
+import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -25,6 +26,7 @@ public class Shirt {
 	private String data;
 
 	@Enumerated
+	@Column(name = "shirt_size")
 	private Size size;
 
 	@Enumerated(EnumType.STRING)

@@ -70,7 +70,6 @@ import java.util.regex.Pattern;
 import javax.persistence.TemporalType;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
-import static org.hibernate.query.CastType.STRING;
 import static org.hibernate.query.TemporalUnit.*;
 
 /**
@@ -234,19 +233,40 @@ public class OracleDialect extends Dialect {
 	 */
 	@Override
 	public String castPattern(CastType from, CastType to) {
-		switch (to) {
-			case BOOLEAN:
-				switch (from) {
-					case STRING:
-						return "decode(lower(?1),'t',1,'f',0,'true',1,'false',0)";
-					case LONG:
-					case INTEGER:
-						return "abs(sign(?1))";
+		String result;
+		switch ( to ) {
+			case INTEGER:
+			case LONG:
+				result = BooleanDecoder.toInteger( from );
+				if ( result != null ) {
+					return result;
 				}
+				break;
+			case INTEGER_BOOLEAN:
+				result = BooleanDecoder.toIntegerBoolean( from );
+				if ( result != null ) {
+					return result;
+				}
+				break;
+			case YN_BOOLEAN:
+				result = BooleanDecoder.toYesNoBoolean( from );
+				if ( result != null ) {
+					return result;
+				}
+				break;
+			case BOOLEAN:
+			case TF_BOOLEAN:
+				result = BooleanDecoder.toTrueFalseBoolean( from );
+				if ( result != null ) {
+					return result;
+				}
+				break;
 			case STRING:
-				switch (from) {
-					case BOOLEAN:
-						return "decode(?1,0,'false','true')";
+				switch ( from ) {
+					case INTEGER_BOOLEAN:
+					case TF_BOOLEAN:
+					case YN_BOOLEAN:
+						return BooleanDecoder.toString( from );
 					case DATE:
 						return "to_char(?1,'YYYY-MM-DD')";
 					case TIME:
@@ -258,29 +278,34 @@ public class OracleDialect extends Dialect {
 					case ZONE_TIMESTAMP:
 						return "to_char(?1,'YYYY-MM-DD HH24:MI:SS.FF9 TZR')";
 				}
+				break;
 			case DATE:
-				if (from == STRING) {
+				if ( from == CastType.STRING ) {
 					return "to_date(?1,'YYYY-MM-DD')";
 				}
+				break;
 			case TIME:
-				if (from == STRING) {
+				if ( from == CastType.STRING ) {
 					return "to_date(?1,'HH24:MI:SS')";
 				}
+				break;
 			case TIMESTAMP:
-				if (from == STRING) {
+				if ( from == CastType.STRING ) {
 					return "to_timestamp(?1,'YYYY-MM-DD HH24:MI:SS.FF9')";
 				}
+				break;
 			case OFFSET_TIMESTAMP:
-				if (from == STRING) {
+				if ( from == CastType.STRING ) {
 					return "to_timestamp_tz(?1,'YYYY-MM-DD HH24:MI:SS.FF9TZH:TZM')";
 				}
+				break;
 			case ZONE_TIMESTAMP:
-				if (from == STRING) {
+				if ( from == CastType.STRING ) {
 					return "to_timestamp_tz(?1,'YYYY-MM-DD HH24:MI:SS.FF9 TZR')";
 				}
-			default:
-				return super.castPattern(from, to);
+				break;
 		}
+		return super.castPattern(from, to);
 	}
 
 	/**
@@ -315,6 +340,20 @@ public class OracleDialect extends Dialect {
 				return "to_number(to_char(?2,'DDD'))";
 			case WEEK:
 				return "to_number(to_char(?2,'IW'))"; //the ISO week number
+			case WEEK_OF_YEAR:
+				return "to_number(to_char(?2,'WW'))";
+			// Oracle doesn't support extracting the quarter
+			case QUARTER:
+				return "to_number(to_char(?2,'Q'))";
+			// Oracle can't extract time parts from a date column, so we need to cast to timestamp
+			// This is because Oracle treats date as ANSI SQL date which has no time part
+			// Also see https://docs.oracle.com/cd/B28359_01/server.111/b28286/functions052.htm#SQLRF00639
+			case HOUR:
+				return "to_number(to_char(?2,'HH24'))";
+			case MINUTE:
+				return "to_number(to_char(?2,'MI'))";
+			case SECOND:
+				return "to_number(to_char(?2,'SS'))";
 			default:
 				return super.extractPattern(unit);
 		}
@@ -855,7 +894,11 @@ public class OracleDialect extends Dialect {
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
 		return new GlobalTemporaryTableStrategy(
-				new IdTable( rootEntityDescriptor, name -> name.length() > 30 ? name.substring( 0, 30 ) : name, this ),
+				new IdTable(
+						rootEntityDescriptor,
+						name -> "HT_" + ( name.length() > 27 ? name.substring( 0, 27 ) : name ),
+						this
+				),
 				() -> new TempIdTableExporter( false, this::getTypeName ) {
 					@Override
 					protected String getCreateOptions() {
@@ -1050,8 +1093,16 @@ public class OracleDialect extends Dialect {
 		return getWriteLockString( aliases, timeout );
 	}
 
-	public static Replacer datetimeFormat(String format, boolean useFm) {
+	@Override
+	public String translateDatetimeFormat(String format) {
+		// Unlike other databases, Oracle requires an explicit reset for the fm modifier,
+		// otherwise all following pattern variables trim zeros
+		return datetimeFormat( format, true, true ).result();
+	}
+
+	public static Replacer datetimeFormat(String format, boolean useFm, boolean resetFm) {
 		String fm = useFm ? "fm" : "";
+		String fmReset = resetFm ? fm : "";
 		return new Replacer( format, "'", "\"" )
 				//era
 				.replace("GG", "AD")
@@ -1059,42 +1110,42 @@ public class OracleDialect extends Dialect {
 
 				//year
 				.replace("yyyy", "YYYY")
-				.replace("yyy", fm + "YYYY")
+				.replace("yyy", fm + "YYYY" + fmReset)
 				.replace("yy", "YY")
-				.replace("y", fm + "YYYY")
+				.replace("y", fm + "YYYY" + fmReset)
 
 				//month of year
-				.replace("MMMM", fm + "Month")
+				.replace("MMMM", fm + "Month" + fmReset)
 				.replace("MMM", "Mon")
 				.replace("MM", "MM")
-				.replace("M", fm + "MM")
+				.replace("M", fm + "MM" + fmReset)
 
 				//week of year
 				.replace("ww", "IW")
-				.replace("w", fm + "IW")
+				.replace("w", fm + "IW" + fmReset)
 				//year for week
 				.replace("YYYY", "IYYY")
-				.replace("YYY", fm + "IYYY")
+				.replace("YYY", fm + "IYYY" + fmReset)
 				.replace("YY", "IY")
-				.replace("Y", fm + "IYYY")
+				.replace("Y", fm + "IYYY" + fmReset)
 
 				//week of month
 				.replace("W", "W")
 
 				//day of week
-				.replace("EEEE", fm + "Day")
+				.replace("EEEE", fm + "Day" + fmReset)
 				.replace("EEE", "Dy")
 				.replace("ee", "D")
-				.replace("e", fm + "D")
+				.replace("e", fm + "D" + fmReset)
 
 				//day of month
 				.replace("dd", "DD")
-				.replace("d", fm + "DD")
+				.replace("d", fm + "DD" + fmReset)
 
 				//day of year
 				.replace("DDD", "DDD")
-				.replace("DD", fm + "DDD")
-				.replace("D", fm + "DDD")
+				.replace("DD", fm + "DDD" + fmReset)
+				.replace("D", fm + "DDD" + fmReset)
 
 				//am pm
 				.replace("aa", "AM")
@@ -1103,16 +1154,16 @@ public class OracleDialect extends Dialect {
 				//hour
 				.replace("hh", "HH12")
 				.replace("HH", "HH24")
-				.replace("h", fm + "HH12")
-				.replace("H", fm + "HH24")
+				.replace("h", fm + "HH12" + fmReset)
+				.replace("H", fm + "HH24" + fmReset)
 
 				//minute
 				.replace("mm", "MI")
-				.replace("m", fm + "MI")
+				.replace("m", fm + "MI" + fmReset)
 
 				//second
 				.replace("ss", "SS")
-				.replace("s", fm + "SS")
+				.replace("s", fm + "SS" + fmReset)
 
 				//fractional seconds
 				.replace("SSSSSS", "FF6")

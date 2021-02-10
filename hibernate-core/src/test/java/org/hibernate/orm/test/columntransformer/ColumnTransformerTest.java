@@ -6,15 +6,10 @@
  */
 package org.hibernate.orm.test.columntransformer;
 
-import java.util.Collections;
 import java.util.List;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
-
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.graph.GraphParser;
-import org.hibernate.graph.GraphSemantic;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -122,7 +117,7 @@ public class ColumnTransformerTest {
 					final String sqlString =
 							// represents how each is mapped in the mappings - see their @ColumnTransformer#read
 							"select size_in_cm / 2.54E0"
-							+ ", radiusS / 2.54d"
+							+ ", radiusS / 2.54E0"
 							+ ", diamet / 2.54E0"
 							+ " from t_staff"
 							+ " where t_staff.id = 4";

@@ -35,7 +35,7 @@ public class NativeQueryParameterTests {
 	public void testBasicParameterBinding(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createNativeQuery( "select t.id, t.ticket_key, t.subject from ticket t where t.ticket_key = ?" )
+					session.createNativeQuery( "select t.id, t.ticket_key, t.subject from Ticket t where t.ticket_key = ?" )
 							.setParameter( 1, "ABC-123" )
 							.list();
 				}
@@ -45,7 +45,7 @@ public class NativeQueryParameterTests {
 	@Test
 	public void testJpaStylePositionalParametersInNativeSql(SessionFactoryScope scope) {
 		scope.inTransaction(
-				s -> s.createNativeQuery( "select t.subject from ticket t where t.ticket_key = ?1" ).setParameter( 1, "ABC-123" ).list()
+				s -> s.createNativeQuery( "select t.subject from Ticket t where t.ticket_key = ?1" ).setParameter( 1, "ABC-123" ).list()
 		);
 	}
 
@@ -53,7 +53,7 @@ public class NativeQueryParameterTests {
 	public void testTypedParameterBinding(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createNativeQuery( "select t.id, t.ticket_key, t.subject from ticket t where t.ticket_key = ?" )
+					session.createNativeQuery( "select t.id, t.ticket_key, t.subject from Ticket t where t.ticket_key = ?" )
 							.setParameter( 1, "ABC-123", StandardBasicTypes.STRING )
 							.list();
 				}
@@ -63,7 +63,7 @@ public class NativeQueryParameterTests {
 	@Test
 	public void testTemporalParameterBinding(SessionFactoryScope scope) {
 		final String qryString = "select i.id, i.effectiveStart, i.effectiveEnd " +
-				"  from incident i" +
+				"  from Incident i" +
 				"  where i.reported BETWEEN ? AND ?";
 
 		scope.inTransaction(

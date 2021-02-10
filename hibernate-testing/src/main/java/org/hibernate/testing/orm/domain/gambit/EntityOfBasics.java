@@ -29,6 +29,7 @@ import javax.persistence.SqlResultSetMapping;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
+import org.hibernate.annotations.SqlType;
 import org.hibernate.annotations.SqlTypeCode;
 
 /**
@@ -49,7 +50,9 @@ public class EntityOfBasics {
 	}
 
 	private Integer id;
-	private Boolean theBoolean;
+	private Boolean theBoolean = false;
+	private Boolean theNumericBoolean = false;
+	private Boolean theStringBoolean = false;
 	private String theString;
 	private Integer theInteger;
 	private int theInt;
@@ -256,6 +259,24 @@ public class EntityOfBasics {
 
 	public void setTheBoolean(Boolean theBoolean) {
 		this.theBoolean = theBoolean;
+	}
+
+	@SqlTypeCode( Types.INTEGER )
+	public Boolean isTheNumericBoolean() {
+		return theNumericBoolean;
+	}
+
+	public void setTheNumericBoolean(Boolean theNumericBoolean) {
+		this.theNumericBoolean = theNumericBoolean;
+	}
+
+	@SqlTypeCode( Types.CHAR )
+	public Boolean isTheStringBoolean() {
+		return theStringBoolean;
+	}
+
+	public void setTheStringBoolean(Boolean theStringBoolean) {
+		this.theStringBoolean = theStringBoolean;
 	}
 
 	@Convert( converter = MutableValueConverter.class )

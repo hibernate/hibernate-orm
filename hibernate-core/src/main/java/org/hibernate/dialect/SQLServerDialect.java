@@ -8,6 +8,7 @@ package org.hibernate.dialect;
 
 import org.hibernate.*;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.SQLServerFormatFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.SQLServerIdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
@@ -22,6 +23,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.query.CastType;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -146,7 +148,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		}
 
 		if ( getVersion() >= 11 ) {
-			CommonFunctionFactory.format_format( queryEngine );
+			queryEngine.getSqmFunctionRegistry().register( "format", new SQLServerFormatFunction( this ) );
 
 			//actually translate() was added in 2017 but
 			//it's not worth adding a new dialect for that!
@@ -193,13 +195,29 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	public String castPattern(CastType from, CastType to) {
+		if ( to == CastType.STRING ) {
+			switch ( from ) {
+				case TIMESTAMP:
+					// SQL Server uses yyyy-MM-dd HH:mm:ss.nnnnnnn by default when doing a cast, but only need second precision
+					return "format(?1,'yyyy-MM-dd HH:mm:ss')";
+				case TIME:
+					// SQL Server uses HH:mm:ss.nnnnnnn by default when doing a cast, but only need second precision
+					// SQL Server requires quoting of ':' in time formats and the use of 'hh' instead of 'HH'
+					return "format(?1,'hh\\:mm\\:ss')";
+			}
+		}
+		return super.castPattern( from, to );
+	}
+
+	@Override
 	public String currentTimestamp() {
 		return "sysdatetime()";
 	}
 
 	@Override
 	public String currentTime() {
-		return currentTimestamp();
+		return "convert(time, getdate())";
 	}
 
 	@Override
@@ -502,16 +520,25 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	@Override
 	public String extractPattern(TemporalUnit unit) {
 		switch (unit) {
+			case TIMEZONE_HOUR:
+				return "(datepart(tz,?2)/60)";
+			case TIMEZONE_MINUTE:
+				return "(datepart(tz,?2)%60)";
 			//currently Dialect.extract() doesn't need
 			//to handle NANOSECOND (might change that?)
 //			case NANOSECOND:
 //				//this should evaluate to a bigint type
-//				return "(datepart(second,?2,?3)*1000000000+datepart(nanosecond,?2,?3))";
+//				return "(datepart(second,?2)*1000000000+datepart(nanosecond,?2))";
 			case SECOND:
 				//this should evaluate to a floating point type
-				return "(datepart(second,?2,?3)+datepart(nanosecond,?2,?3)/1e9)";
+				return "(datepart(second,?2)+datepart(nanosecond,?2)/1e9)";
+			case WEEK:
+				// Thanks https://www.sqlservercentral.com/articles/a-simple-formula-to-calculate-the-iso-week-number
+				if ( getVersion() < 10 ) {
+					return "(DATEPART(dy,DATEADD(dd,DATEDIFF(dd,'17530101',?2)/7*7,'17530104'))+6)/7)";
+				}
 			default:
-				return "datepart(?1,?2,?3)";
+				return "datepart(?1,?2)";
 		}
 	}
 
@@ -565,6 +592,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		switch ( unit ) {
 			//the ISO week number (behavior of "week" depends on a system property)
 			case WEEK: return "isowk";
+			case OFFSET: return "tz";
 			default: return super.translateExtractField(unit);
 		}
 	}

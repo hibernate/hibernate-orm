@@ -134,7 +134,7 @@ public class TableBasedUpdateHandler
 		final TableReference hierarchyRootTableReference = updatingTableGroup.resolveTableReference( hierarchyRootTableName );
 		assert hierarchyRootTableReference != null;
 
-		final Map<SqmParameter,List<JdbcParameter>> parameterResolutions;
+		final Map<SqmParameter, List<List<JdbcParameter>>> parameterResolutions;
 		if ( domainParameterXref.getSqmParameterCount() == 0 ) {
 			parameterResolutions = Collections.emptyMap();
 		}
@@ -151,7 +151,10 @@ public class TableBasedUpdateHandler
 		converterDelegate.visitSetClause(
 				getSqmDeleteOrUpdateStatement().getSetClause(),
 				assignments::add,
-				parameterResolutions::put
+				(sqmParameter, jdbcParameters) -> parameterResolutions.computeIfAbsent(
+						sqmParameter,
+						k -> new ArrayList<>( 1 )
+				).add( jdbcParameters )
 		);
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -167,7 +170,10 @@ public class TableBasedUpdateHandler
 			predicate = converterDelegate.visitWhereClause(
 					whereClause,
 					columnReference -> {},
-					parameterResolutions::put
+					(sqmParameter, jdbcParameters) -> parameterResolutions.computeIfAbsent(
+							sqmParameter,
+							k -> new ArrayList<>( 1 )
+					).add( jdbcParameters )
 			);
 			assert predicate != null;
 		}

@@ -75,8 +75,12 @@ public class SequenceMismatchStrategyFixWithSequenceGeneratorTest extends Entity
 
 	@AfterAll
 	public void releaseResources() {
-		new SchemaExport().drop( EnumSet.of( TargetType.DATABASE ), metadata );
-		StandardServiceRegistryBuilder.destroy( serviceRegistry );
+		if ( metadata != null ) {
+			new SchemaExport().drop( EnumSet.of( TargetType.DATABASE ), metadata );
+		}
+		if ( serviceRegistry != null ) {
+			StandardServiceRegistryBuilder.destroy( serviceRegistry );
+		}
 	}
 
 	@Override

@@ -293,7 +293,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				interpretation.getSqlAst()
 		);
 
-		final Map<QueryParameterImplementor<?>, Map<SqmParameter, List<JdbcParameter>>> jdbcParamsXref = SqmUtil.generateJdbcParamsXref(
+		final Map<QueryParameterImplementor<?>, Map<SqmParameter, List<List<JdbcParameter>>>> jdbcParamsXref = SqmUtil.generateJdbcParamsXref(
 				domainParameterXref,
 				interpretation::getJdbcParamsBySqmParam
 		);
@@ -326,13 +326,13 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 	private static class CacheableSqmInterpretation {
 		private final JdbcSelect jdbcSelect;
 		private final FromClauseAccess tableGroupAccess;
-		private final Map<QueryParameterImplementor<?>, Map<SqmParameter, List<JdbcParameter>>> jdbcParamsXref;
+		private final Map<QueryParameterImplementor<?>, Map<SqmParameter, List<List<JdbcParameter>>>> jdbcParamsXref;
 		private transient JdbcParameterBindings firstParameterBindings;
 
 		CacheableSqmInterpretation(
 				JdbcSelect jdbcSelect,
 				FromClauseAccess tableGroupAccess,
-				Map<QueryParameterImplementor<?>, Map<SqmParameter, List<JdbcParameter>>> jdbcParamsXref,
+				Map<QueryParameterImplementor<?>, Map<SqmParameter, List<List<JdbcParameter>>>> jdbcParamsXref,
 				JdbcParameterBindings firstParameterBindings) {
 			this.jdbcSelect = jdbcSelect;
 			this.tableGroupAccess = tableGroupAccess;
@@ -348,7 +348,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 			return tableGroupAccess;
 		}
 
-		Map<QueryParameterImplementor<?>, Map<SqmParameter, List<JdbcParameter>>> getJdbcParamsXref() {
+		Map<QueryParameterImplementor<?>, Map<SqmParameter, List<List<JdbcParameter>>>> getJdbcParamsXref() {
 			return jdbcParamsXref;
 		}
 

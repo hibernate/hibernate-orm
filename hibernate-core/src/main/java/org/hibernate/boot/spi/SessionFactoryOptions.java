@@ -358,4 +358,6 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	}
 
 	boolean isOmitJoinOfSuperclassTablesEnabled();
+
+	int getPreferredSqlTypeCodeForBoolean();
 }

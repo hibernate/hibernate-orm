@@ -12,6 +12,8 @@ import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.DerbyConcatEmulation;
+import org.hibernate.dialect.function.IndividualLeastGreatestEmulation;
+import org.hibernate.dialect.function.InsertSubstringOverlayEmulation;
 import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
@@ -30,7 +32,6 @@ import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.CastType;
-import org.hibernate.query.CastTypeKind;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.internal.idtable.AfterUseAction;
@@ -59,8 +60,6 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import javax.persistence.TemporalType;
-
-import static org.hibernate.query.CastType.BOOLEAN;
 
 /**
  * Hibernate Dialect for Apache Derby / Cloudscape 10
@@ -150,6 +149,13 @@ public class DerbyDialect extends Dialect {
 	}
 
 	@Override
+	public int getPreferredSqlTypeCodeForBoolean() {
+		return getVersion() < 1070
+				? Types.SMALLINT
+				: Types.BOOLEAN;
+	}
+
+	@Override
 	public int getVersion() {
 		return version;
 	}
@@ -196,6 +202,7 @@ public class DerbyDialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().register( "concat", new DerbyConcatEmulation() );
 
 		//no way I can see to pad with anything other than spaces
+		// TODO: To support parameters, we have to inline the values
 		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "lpad", "case when length(?1)<?2 then substr(char('',?2)||?1,length(?1)+1) else ?1 end" )
 				.setInvariantType( StandardBasicTypes.STRING )
 				.setExactArgumentCount( 2 )
@@ -206,6 +213,10 @@ public class DerbyDialect extends Dialect {
 				.setExactArgumentCount( 2 )
 				.setArgumentListSignature("(string, length)")
 				.register();
+
+		queryEngine.getSqmFunctionRegistry().register( "least", new IndividualLeastGreatestEmulation( true ) );
+		queryEngine.getSqmFunctionRegistry().register( "greatest", new IndividualLeastGreatestEmulation( false ) );
+		queryEngine.getSqmFunctionRegistry().register( "overlay", new InsertSubstringOverlayEmulation( true ) );
 	}
 
 	@Override
@@ -245,7 +256,14 @@ public class DerbyDialect extends Dialect {
 			case DAY_OF_YEAR:
 				return "({fn timestampdiff(sql_tsi_day, date(char(year(?2),4)||'-01-01'),?2)}+1)";
 			case DAY_OF_WEEK:
-				return "(mod({fn timestampdiff(sql_tsi_day, {d '2000-01-01'}, ?2)},7)+1)";
+				// Use the approach as outlined here: https://stackoverflow.com/questions/36357013/day-of-week-from-seconds-since-epoch
+				return "(mod(mod({fn timestampdiff(sql_tsi_day, {d '1970-01-01'}, ?2)}+4,7)+7,7)+1)";
+			case WEEK:
+				// Use the approach as outlined here: https://www.sqlservercentral.com/articles/a-simple-formula-to-calculate-the-iso-week-number
+				// In SQL Server terms this is (DATEPART(dy,DATEADD(dd,DATEDIFF(dd,'17530101',@SomeDate)/7*7,'17530104'))+6)/7
+				return "(({fn timestampdiff(sql_tsi_day, date(char(year(?2),4)||'-01-01'),{fn timestampadd(sql_tsi_day, {fn timestampdiff(sql_tsi_day, {d '1753-01-01'}, ?2)}/7*7, {d '1753-01-04'})})}+7)/7)";
+			case QUARTER:
+				return "((month(?2)+2)/3)";
 			default:
 				return "?1(?2)";
 		}
@@ -273,36 +291,30 @@ public class DerbyDialect extends Dialect {
 	 */
 	@Override
 	public String castPattern(CastType from, CastType to) {
-		switch (to) {
+		switch ( to ) {
 			case FLOAT:
 				return "cast(double(?1) as real)";
 			case DOUBLE:
 				return "double(?1)";
-			case BOOLEAN:
-				switch (from) {
-					case STRING:
-//						return "case when lower(?1)in('t','true') then true when lower(?1)in('f','false') then false end";
-						return "case when ?1 in('t','true','T','TRUE') then true when ?1 in('f','false','F','FALSE') then false end";
-					case LONG:
-					case INTEGER:
-						return "(?1<>0)";
-				}
-				break;
-			case INTEGER:
-			case LONG:
-				if ( from == BOOLEAN && getVersion() >= 1070 ) {
-					return "case ?1 when false then 0 when true then 1 end";
-				}
-				break;
 			case STRING:
+				// Derby madness http://db.apache.org/derby/docs/10.8/ref/rrefsqlj33562.html
+				// With a nice rant: https://blog.jooq.org/2011/10/29/derby-casting-madness-the-sequel/
 				// See https://issues.apache.org/jira/browse/DERBY-2072
-				if ( from.getKind() == CastTypeKind.NUMERIC ) {
-					// Use the maximum char capacity here as an intermediate type because Derby doesn't support direct conversion to varchar
-					return "cast(cast(?1 as char(254)) as ?2)";
+
+				// Since numerics can't be cast to varchar directly, use char(254) i.e. with the maximum char capacity
+				// as an intermediate type before converting to varchar
+				switch ( from ) {
+					case FLOAT:
+					case DOUBLE:
+						// Derby can't cast to char directly, but needs to be cast to decimal first...
+						return "cast(trim(cast(cast(?1 as decimal) as char(254))) as ?2)";
+					case INTEGER:
+					case FIXED:
+						return "cast(trim(cast(?1 as char(254))) as ?2)";
 				}
 				break;
 		}
-		return super.castPattern(from, to);
+		return super.castPattern( from, to );
 	}
 
 	@Override
@@ -357,8 +369,8 @@ public class DerbyDialect extends Dialect {
 	@Override
 	public String getQuerySequencesString() {
 		return getVersion() < 1060
-				? "select sys.sysschemas.schemaname as sequence_schema, sys.syssequences.* from sys.syssequences left join sys.sysschemas on sys.syssequences.schemaid = sys.sysschemas.schemaid"
-				: null;
+				? null
+				: "select sys.sysschemas.schemaname as sequence_schema, sys.syssequences.* from sys.syssequences left join sys.sysschemas on sys.syssequences.schemaid = sys.sysschemas.schemaid";
 	}
 
 	@Override

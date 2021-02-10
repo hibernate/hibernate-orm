@@ -394,7 +394,7 @@ public class CacheDialect extends Dialect {
 	@Override
 	public String translateDatetimeFormat(String format) {
 		//I don't think Cache needs FM
-		return OracleDialect.datetimeFormat( format, false ).result();
+		return OracleDialect.datetimeFormat( format, false, false ).result();
 	}
 
 }

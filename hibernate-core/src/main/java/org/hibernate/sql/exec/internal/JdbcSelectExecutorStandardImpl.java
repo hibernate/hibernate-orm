@@ -100,7 +100,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 				rowTransformer,
 				(sql) -> executionContext.getSession().getJdbcCoordinator().getStatementPreparer().prepareQueryStatement(
 						sql,
-						true,
+						false,
 						scrollMode
 				),
 				ScrollableResultsConsumer.instance()

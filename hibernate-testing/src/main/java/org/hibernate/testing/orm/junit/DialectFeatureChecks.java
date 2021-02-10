@@ -16,6 +16,7 @@ import org.hibernate.dialect.FirebirdDialect;
 import org.hibernate.dialect.GroupBySummarizationRenderingStrategy;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MaxDBDialect;
 import org.hibernate.dialect.MimerSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -104,7 +105,7 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
-	public static class SupportSubqueryAsLeftHandSideInPredicate implements DialectFeatureCheck {
+	public static class SupportsSubqueryAsLeftHandSideInPredicate implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsSubselectAsInPredicateLHS();
 		}
@@ -233,13 +234,24 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsPadWithChar implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			return !(dialect instanceof DerbyDialect );
+			return !( dialect instanceof DerbyDialect );
 		}
 	}
 
 	public static class SupportsGroupByRollup implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect.getGroupBySummarizationRenderingStrategy() != GroupBySummarizationRenderingStrategy.NONE;
+		}
+	}
+
+	public static class SupportsGroupByGroupingSets implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.getGroupBySummarizationRenderingStrategy() != GroupBySummarizationRenderingStrategy.NONE
+					&& !( dialect instanceof DerbyDialect )
+					// MariaDB only supports ROLLUP
+					&& !( dialect instanceof MariaDBDialect )
+					// MySQL only supports ROLLUP
+					&& !( dialect instanceof MySQLDialect );
 		}
 	}
 
@@ -277,6 +289,7 @@ abstract public class DialectFeatureChecks {
 					|| dialect instanceof DB2Dialect
 					|| dialect instanceof FirebirdDialect && dialect.getVersion() >= 300
 					|| dialect instanceof H2Dialect && dialect.getVersion() >= 104198
+					|| dialect instanceof MariaDBDialect && dialect.getVersion() >= 1020
 					|| dialect instanceof MySQLDialect && dialect.getVersion() >= 802
 					|| dialect instanceof OracleDialect
 					|| dialect instanceof PostgreSQLDialect
@@ -288,6 +301,20 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsUnion implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsUnionAll();
+		}
+	}
+
+	public static class SupportsCharCodeConversion implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			// Derby doesn't support the `ASCII` or `CHR` functions
+			return !( dialect instanceof DerbyDialect );
+		}
+	}
+
+	public static class SupportsReplace implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			// Derby doesn't support the `REPLACE` function
+			return !( dialect instanceof DerbyDialect );
 		}
 	}
 

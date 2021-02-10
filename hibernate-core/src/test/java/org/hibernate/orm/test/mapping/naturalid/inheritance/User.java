@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.test.mapping.naturalid.inheritance;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 
@@ -24,6 +25,7 @@ public class User extends Principal {
 		super( uid );
 	}
 
+	@Column(name = "user_level")
 	public String getLevel() {
 		return level;
 	}

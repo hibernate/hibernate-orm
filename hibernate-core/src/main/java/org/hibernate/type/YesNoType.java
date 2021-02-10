@@ -9,10 +9,9 @@ package org.hibernate.type;
 import java.io.Serializable;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.query.CastType;
 import org.hibernate.type.descriptor.java.BooleanTypeDescriptor;
 import org.hibernate.type.descriptor.sql.CharTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
 
 /**
  * A type that maps between {@link java.sql.Types#CHAR CHAR(1)} and {@link Boolean} (using 'Y' and 'N')
@@ -22,7 +21,7 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
  */
 public class YesNoType
 		extends AbstractSingleColumnStandardBasicType<Boolean>
-		implements PrimitiveType<Boolean>, DiscriminatorType<Boolean>, SqlTypeDescriptorIndicatorCapable<Boolean> {
+		implements PrimitiveType<Boolean>, DiscriminatorType<Boolean> {
 
 	public static final YesNoType INSTANCE = new YesNoType();
 
@@ -51,18 +50,7 @@ public class YesNoType
 	}
 
 	@Override
-	public <X> BasicType<X> resolveIndicatedType(SqlTypeDescriptorIndicators indicators) {
-		if ( indicators.getPreferredSqlTypeCodeForBoolean() != getSqlTypeDescriptor().getJdbcTypeCode() ) {
-			final SqlTypeDescriptor sqlTypeDescriptor = indicators.getTypeConfiguration()
-					.getSqlTypeDescriptorRegistry()
-					.getDescriptor( indicators.getPreferredSqlTypeCodeForBoolean() );
-			//noinspection unchecked
-			return (BasicType<X>) indicators.getTypeConfiguration()
-					.getBasicTypeRegistry()
-					.resolve( getJavaTypeDescriptor(), sqlTypeDescriptor );
-		}
-
-		//noinspection unchecked
-		return (BasicType<X>) this;
+	public CastType getCastType() {
+		return CastType.YN_BOOLEAN;
 	}
 }

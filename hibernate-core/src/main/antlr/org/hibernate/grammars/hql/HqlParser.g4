@@ -75,13 +75,13 @@ values
 // QUERY SPEC - general structure of root sqm or sub sqm
 
 queryExpression
-	: queryGroup queryOrder?
+	: simpleQueryExpression										# SimpleQueryGroup
+	| queryExpression (setOperator simpleQueryExpression)+		# SetQueryGroup
 	;
 
-queryGroup
-	: querySpec                                            										# QuerySpecQueryGroup
-	| LEFT_PAREN queryGroup RIGHT_PAREN															# NestedQueryGroup
-	| queryGroup queryOrder? (setOperator (querySpec | LEFT_PAREN queryGroup RIGHT_PAREN))+		# SetQueryGroup
+simpleQueryExpression
+	: querySpec queryOrder?									# QuerySpecExpression
+	| LEFT_PAREN queryExpression RIGHT_PAREN queryOrder?	# NestedQueryExpression
 	;
 
 setOperator

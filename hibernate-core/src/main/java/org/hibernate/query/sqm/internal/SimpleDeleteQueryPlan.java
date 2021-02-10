@@ -50,7 +50,7 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 
 	private JdbcDelete jdbcDelete;
 	private SqmTranslation<DeleteStatement> sqmInterpretation;
-	private Map<QueryParameterImplementor<?>, Map<SqmParameter, List<JdbcParameter>>> jdbcParamsXref;
+	private Map<QueryParameterImplementor<?>, Map<SqmParameter, List<List<JdbcParameter>>>> jdbcParamsXref;
 
 	public SimpleDeleteQueryPlan(
 			EntityMappingType entityDescriptor,

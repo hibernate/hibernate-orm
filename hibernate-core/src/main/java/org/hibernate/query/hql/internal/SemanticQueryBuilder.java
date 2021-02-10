@@ -317,7 +317,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		);
 
 		try {
-			visitQueryExpression( queryExpressionContext );
+			queryExpressionContext.accept( this );
 		}
 		finally {
 			processingStateStack.pop();
@@ -347,7 +347,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 			processingStateStack.push( processingState );
 
 			try {
-				visitQueryExpression( queryExpressionContext );
+				queryExpressionContext.accept( this );
 
 				final SqmCreationProcessingState stateFieldsProcessingState = new SqmCreationProcessingStateImpl(
 						insertStatement,
@@ -480,20 +480,28 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	// Query spec
 
 	@Override
-	public SqmQueryPart visitQueryExpression(HqlParser.QueryExpressionContext ctx) {
-		final SqmQueryPart queryPart = (SqmQueryPart) ctx.queryGroup().accept( this );
-		visitQueryOrder( queryPart, ctx.queryOrder() );
+	public SqmQueryPart visitSimpleQueryGroup(HqlParser.SimpleQueryGroupContext ctx) {
+		return (SqmQueryPart) ctx.simpleQueryExpression().accept( this );
+	}
+
+	@Override
+	public SqmQueryPart visitQuerySpecExpression(HqlParser.QuerySpecExpressionContext ctx) {
+		final List<ParseTree> children = ctx.children;
+		final SqmQueryPart queryPart = visitQuerySpec( (HqlParser.QuerySpecContext) children.get( 0 ) );
+		if ( children.size() > 1 ) {
+			visitQueryOrder( queryPart, (HqlParser.QueryOrderContext) children.get( 1 ) );
+		}
 		return queryPart;
 	}
 
 	@Override
-	public SqmQueryPart visitQuerySpecQueryGroup(HqlParser.QuerySpecQueryGroupContext ctx) {
-		return visitQuerySpec( ctx.querySpec() );
-	}
-
-	@Override
-	public SqmQueryPart visitNestedQueryGroup(HqlParser.NestedQueryGroupContext ctx) {
-		return (SqmQueryPart) ctx.queryGroup().accept( this );
+	public SqmQueryPart visitNestedQueryExpression(HqlParser.NestedQueryExpressionContext ctx) {
+		final List<ParseTree> children = ctx.children;
+		final SqmQueryPart queryPart = (SqmQueryPart) children.get( 1 ).accept( this );
+		if ( children.size() > 3 ) {
+			visitQueryOrder( queryPart, (HqlParser.QueryOrderContext) children.get( 3 ) );
+		}
+		return queryPart;
 	}
 
 	@Override
@@ -515,20 +523,12 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		setCurrentQueryPart( queryGroup );
 		final List<SqmSelection> firstSelections = firstQueryPart.getFirstQuerySpec().getSelectClause().getSelections();
 		final int firstSelectionSize = firstSelections.size();
-		final ParseTree maybeOrderContext = children.get( 1 );
-		int i;
-		if (maybeOrderContext instanceof HqlParser.QueryOrderContext ) {
-			visitQueryOrder( firstQueryPart, (HqlParser.QueryOrderContext) maybeOrderContext );
-			i = 2;
-		}
-		else {
-			i = 1;
-		}
 		final int size = children.size();
 		final SqmCreationProcessingState firstProcessingState = processingStateStack.pop();
-		for ( ; i < size; i += 2 ) {
+		for ( int i = 1; i < size; i += 2 ) {
 			final SetOperator operator = visitSetOperator( (HqlParser.SetOperatorContext) children.get( i ) );
-			final ParseTree parseTree = children.get( i + 1 );
+			final HqlParser.SimpleQueryExpressionContext simpleQueryCtx =
+					(HqlParser.SimpleQueryExpressionContext) children.get( i + 1 );
 			final List<SqmQueryPart<?>> queryParts;
 			if ( queryGroup.getSetOperator() == null || queryGroup.getSetOperator() == operator ) {
 				queryGroup.setSetOperator( operator );
@@ -554,15 +554,28 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 								this
 						)
 				);
-				if ( parseTree instanceof HqlParser.QuerySpecContext ) {
+				final List<ParseTree> subChildren = simpleQueryCtx.children;
+				if ( subChildren.get( 0 ) instanceof HqlParser.QuerySpecContext ) {
 					final SqmQuerySpec<?> querySpec = new SqmQuerySpec<>( creationContext.getNodeBuilder() );
 					queryParts.add( querySpec );
-					queryPart = visitQuerySpec( (HqlParser.QuerySpecContext) parseTree );
+					queryPart = visitQuerySpecExpression( (HqlParser.QuerySpecExpressionContext) simpleQueryCtx );
 				}
 				else {
-					queryPart = (SqmQueryPart<?>) children.get( i + 2 ).accept( this );
-					queryParts.add( queryPart );
-					i += 2;
+					try {
+						final SqmSelectStatement selectStatement = new SqmSelectStatement( creationContext.getNodeBuilder() );
+						processingStateStack.push(
+								new SqmQuerySpecCreationProcessingStateStandardImpl(
+										processingStateStack.getCurrent(),
+										selectStatement,
+										this
+								)
+						);
+						queryPart = visitNestedQueryExpression( (HqlParser.NestedQueryExpressionContext) simpleQueryCtx );
+						queryParts.add( queryPart );
+					}
+					finally {
+						processingStateStack.pop();
+					}
 				}
 			}
 			finally {
@@ -3867,7 +3880,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		);
 
 		try {
-			visitQueryExpression( queryExpressionContext );
+			queryExpressionContext.accept( this );
 			return subQuery;
 		}
 		finally {

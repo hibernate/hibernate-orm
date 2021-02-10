@@ -22,7 +22,7 @@ import org.hibernate.sql.ast.tree.expression.JdbcParameter;
  */
 public interface SqmTranslation<T extends Statement> {
 	T getSqlAst();
-	Map<SqmParameter, List<JdbcParameter>> getJdbcParamsBySqmParam();
+	Map<SqmParameter, List<List<JdbcParameter>>> getJdbcParamsBySqmParam();
 	SqlExpressionResolver getSqlExpressionResolver();
 	FromClauseAccess getFromClauseAccess();
 }

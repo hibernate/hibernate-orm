@@ -65,9 +65,6 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.jboss.logging.Logger;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
-import static org.hibernate.query.CastType.BOOLEAN;
-import static org.hibernate.query.CastType.INTEGER;
-import static org.hibernate.query.CastType.LONG;
 
 /**
  * An SQL dialect compatible with HyperSQL (HSQLDB) version 1.8 and above.
@@ -237,12 +234,47 @@ public class HSQLDialect extends Dialect {
 			}
 		};
 	}
-
 	@Override
 	public String castPattern(CastType from, CastType to) {
-		if ( from== BOOLEAN
-				&& (to== INTEGER || to== LONG)) {
-			return "casewhen(?1,1,0)";
+		String result;
+		switch ( to ) {
+			case INTEGER:
+			case LONG:
+				result = BooleanDecoder.toInteger( from );
+				if ( result != null ) {
+					return result;
+				}
+				break;
+			case BOOLEAN:
+				result = BooleanDecoder.toBoolean( from );
+				if ( result != null ) {
+					return result;
+				}
+				break;
+			case INTEGER_BOOLEAN:
+				result = BooleanDecoder.toIntegerBoolean( from );
+				if ( result != null ) {
+					return result;
+				}
+				break;
+			case YN_BOOLEAN:
+				result = BooleanDecoder.toYesNoBoolean( from );
+				if ( result != null ) {
+					return result;
+				}
+				break;
+			case TF_BOOLEAN:
+				result = BooleanDecoder.toTrueFalseBoolean( from );
+				if ( result != null ) {
+					return result;
+				}
+				break;
+			case STRING:
+				result = BooleanDecoder.toString( from );
+				if ( result != null ) {
+					return result;
+				}
+				break;
 		}
 		return super.castPattern( from, to );
 	}
@@ -647,7 +679,7 @@ public class HSQLDialect extends Dialect {
 
 	@Override
 	public String translateDatetimeFormat(String format) {
-		return OracleDialect.datetimeFormat(format, false)
+		return OracleDialect.datetimeFormat( format, false, false )
 				.replace("SSSSSS", "FF")
 				.replace("SSSSS", "FF")
 				.replace("SSSS", "FF")

@@ -78,7 +78,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 			Map<String, TableReference> tableReferenceByAlias,
 			List<Assignment> assignments,
 			Predicate suppliedPredicate,
-			Map<SqmParameter, List<JdbcParameter>> parameterResolutions,
+			Map<SqmParameter, List<List<JdbcParameter>>> parameterResolutions,
 			ExecutionContext executionContext) {
 		this.sqmUpdate = sqmUpdate;
 		this.sqmConverter = sqmConverter;

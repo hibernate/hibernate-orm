@@ -1254,7 +1254,7 @@ public class CommonFunctionFactory {
 				.registerBinaryTernaryPattern(
 						"substring",
 						StandardBasicTypes.STRING,
-						"substring(?1,?2,len(?1)-?2)",
+						"substring(?1,?2,len(?1)-?2+1)",
 						"substring(?1,?2,?3)"
 				)
 				.setArgumentListSignature("(string{ from|,} start[{ for|,} length])");

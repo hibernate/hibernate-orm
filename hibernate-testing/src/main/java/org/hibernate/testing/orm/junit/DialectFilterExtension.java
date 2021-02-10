@@ -9,10 +9,9 @@ package org.hibernate.testing.orm.junit;
 import java.util.List;
 import java.util.Locale;
 
-import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 
+import org.hibernate.testing.junit5.DialectContext;
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;
 import org.junit.jupiter.api.extension.ExecutionCondition;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -30,16 +29,6 @@ public class DialectFilterExtension implements ExecutionCondition {
 
 	@Override
 	public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext context) {
-		if ( !context.getTestInstance().isPresent() ) {
-			assert !context.getTestMethod().isPresent();
-
-			return ConditionEvaluationResult.enabled(
-					"No test-instance was present - " +
-							"likely that test was not defined with a per-class test lifecycle; " +
-							"skipping Dialect checks for this context [" + context.getDisplayName() + "]"
-			);
-		}
-
 		final Dialect dialect = getDialect( context );
 		if ( dialect == null ) {
 			throw new RuntimeException( "#getDialect returned null" );
@@ -109,7 +98,7 @@ public class DialectFilterExtension implements ExecutionCondition {
 			try {
 				final DialectFeatureCheck dialectFeatureCheck = effectiveRequiresDialectFeature.feature()
 						.newInstance();
-				if ( !dialectFeatureCheck.apply( getDialect( context ) ) ) {
+				if ( !dialectFeatureCheck.apply( dialect ) ) {
 					return ConditionEvaluationResult.disabled(
 							String.format(
 									Locale.ROOT,
@@ -127,11 +116,6 @@ public class DialectFilterExtension implements ExecutionCondition {
 	}
 
 	private Dialect getDialect(ExtensionContext context) {
-		final StandardServiceRegistry serviceRegistry = ServiceRegistryExtension.findServiceRegistry(
-				context.getRequiredTestInstance(),
-				context
-		);
-
-		return serviceRegistry.getService( JdbcServices.class ).getJdbcEnvironment().getDialect();
+		return DialectContext.getDialect();
 	}
 }

@@ -90,13 +90,6 @@ public class CteStrategy implements SqmMultiTableMutationStrategy {
 			);
 		}
 
-		if ( !dialect.supportsRowValueConstructorSyntaxInInList() ) {
-			throw new UnsupportedOperationException(
-					getClass().getSimpleName() +
-							" can only be used with Dialects that support IN clause row-value expressions (for composite identifiers)"
-			);
-		}
-
 		this.cteTable = new SqmCteTable( TABLE_NAME, rootDescriptor );
 	}
 

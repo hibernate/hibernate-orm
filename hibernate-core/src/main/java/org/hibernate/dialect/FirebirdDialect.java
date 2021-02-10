@@ -61,7 +61,6 @@ import java.util.regex.Pattern;
 
 import javax.persistence.TemporalType;
 
-import static org.hibernate.query.CastType.*;
 import static org.hibernate.type.descriptor.DateTimeUtils.formatAsTimestampWithMillis;
 
 /**
@@ -219,24 +218,49 @@ public class FirebirdDialect extends Dialect {
 	 */
 	@Override
 	public String castPattern(CastType from, CastType to) {
-		if ( to==BOOLEAN
-				&& (from==LONG || from==INTEGER)) {
-			return "(0<>?1)";
-		}
-		if ( getVersion() < 300 ) {
-			if ( to==BOOLEAN && from==STRING ) {
-//				return "iif(lower(?1) similar to 't|f|true|false', lower(?1) like 't%', null)";
-				return "decode(lower(?1),'t',1,'f',0,'true',1,'false',0)";
-			}
-			if ( to==STRING && from==BOOLEAN ) {
-				return "trim(decode(?1,0,'false','true'))";
-			}
-		}
-		else {
-			if ( from==BOOLEAN
-					&& (to==LONG || to==INTEGER)) {
-				return "decode(?1,false,0,true,1)";
-			}
+		String result;
+		switch ( to ) {
+			case FLOAT:
+				return "cast(double(?1) as real)";
+			case DOUBLE:
+				return "double(?1)";
+			case INTEGER:
+			case LONG:
+				result = BooleanDecoder.toInteger( from );
+				if ( result != null ) {
+					return result;
+				}
+				break;
+			case BOOLEAN:
+				result = BooleanDecoder.toBoolean( from );
+				if ( result != null ) {
+					return result;
+				}
+				break;
+			case INTEGER_BOOLEAN:
+				result = BooleanDecoder.toIntegerBoolean( from );
+				if ( result != null ) {
+					return result;
+				}
+				break;
+			case YN_BOOLEAN:
+				result = BooleanDecoder.toYesNoBoolean( from );
+				if ( result != null ) {
+					return result;
+				}
+				break;
+			case TF_BOOLEAN:
+				result = BooleanDecoder.toTrueFalseBoolean( from );
+				if ( result != null ) {
+					return result;
+				}
+				break;
+			case STRING:
+				result = BooleanDecoder.toString( from );
+				if ( result != null ) {
+					return result;
+				}
+				break;
 		}
 		return super.castPattern( from, to );
 	}

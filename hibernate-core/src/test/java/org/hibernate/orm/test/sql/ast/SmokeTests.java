@@ -120,9 +120,13 @@ public class SmokeTests {
 							sqlAst
 					).translate( null, QueryOptions.NONE );
 
+					final String separator = session.getSessionFactory()
+							.getJdbcServices()
+							.getDialect()
+							.getTableAliasSeparator();
 					assertThat(
 							jdbcSelectOperation.getSql(),
-							is( "select s1_0.name from mapping_simple_entity as s1_0" )
+							is( "select s1_0.name from mapping_simple_entity" + separator + "s1_0" )
 					);
 				}
 		);
@@ -216,9 +220,13 @@ public class SmokeTests {
 							sqlAst
 					).translate( null, QueryOptions.NONE );
 
+					final String separator = session.getSessionFactory()
+							.getJdbcServices()
+							.getDialect()
+							.getTableAliasSeparator();
 					assertThat(
 							jdbcSelectOperation.getSql(),
-							is( "select s1_0.gender from mapping_simple_entity as s1_0" )
+							is( "select s1_0.gender from mapping_simple_entity" + separator + "s1_0" )
 					);
 				}
 		);

@@ -74,7 +74,6 @@ import org.hibernate.sql.*;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.ANSICaseExpressionWalker;
 import org.hibernate.sql.ast.spi.CaseExpressionWalker;
-import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
@@ -152,7 +151,7 @@ public abstract class Dialect implements ConversionContext {
 
 	private final UniqueDelegate uniqueDelegate;
 
-	private DefaultSizeStrategy defaultSizeStrategy;
+	private final SizeStrategy sizeStrategy;
 
 	// constructors and factory methods ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -242,7 +241,7 @@ public abstract class Dialect implements ConversionContext {
 		}
 
 		uniqueDelegate = new DefaultUniqueDelegate( this );
-		defaultSizeStrategy = new DefaultSizeStrategyImpl();
+		sizeStrategy = new SizeStrategyImpl();
 	}
 
 	/**
@@ -442,7 +441,7 @@ public abstract class Dialect implements ConversionContext {
 		//very few databases support ANSI-style overlay() function, so emulate
 		//it here in terms of either insert() or concat()/substring()
 
-		queryEngine.getSqmFunctionRegistry().register("overlay", new InsertSubstringOverlayEmulation());
+		queryEngine.getSqmFunctionRegistry().register("overlay", new InsertSubstringOverlayEmulation( false ));
 
 		//ANSI SQL trim() function is supported on almost all of the databases
 		//we care about, but on some it must be emulated using ltrim(), rtrim(),
@@ -634,6 +633,88 @@ public abstract class Dialect implements ConversionContext {
 	 *           type the value argument is cast to
 	 */
 	public String castPattern(CastType from, CastType to) {
+		switch ( to ) {
+			case STRING:
+				switch ( from ) {
+					case INTEGER_BOOLEAN:
+						return "case ?1 when 1 then 'true' when 0 then 'false' else null end";
+					case YN_BOOLEAN:
+						return "case ?1 when 'Y' then 'true' when 'N' then 'false' else null end";
+					case TF_BOOLEAN:
+						return "case ?1 when 'T' then 'true' when 'F' then 'false' else null end";
+				}
+				break;
+			case INTEGER:
+			case LONG:
+				switch ( from ) {
+					case YN_BOOLEAN:
+						return "case ?1 when 'Y' then 1 when 'N' then 0 else null end";
+					case TF_BOOLEAN:
+						return "case ?1 when 'T' then 1 when 'F' then 0 else null end";
+					case BOOLEAN:
+						return "case ?1 when true then 1 when false then 0 else null end";
+				}
+				break;
+			case INTEGER_BOOLEAN:
+				switch ( from ) {
+					case STRING:
+						return "case ?1 when 'T' then 1 when 'Y' then 1 when 'F' then 0 when 'N' then 0 else null end";
+					case INTEGER:
+					case LONG:
+						return "abs(sign(?1))";
+					case YN_BOOLEAN:
+						return "case ?1 when 'Y' then 1 when 'N' then 0 else null end";
+					case TF_BOOLEAN:
+						return "case ?1 when 'T' then 1 when 'F' then 0 else null end";
+					case BOOLEAN:
+						return "case ?1 when true then 1 when false then 0 else null end";
+				}
+				break;
+			case YN_BOOLEAN:
+				switch ( from ) {
+					case STRING:
+						return "case ?1 when 'T' then 'Y' when 'Y' then 'Y' when 'F' then 'N' when 'N' then 'N' else null end";
+					case INTEGER_BOOLEAN:
+						return "case ?1 when 1 then 'Y' when 0 then 'N' else null end";
+					case INTEGER:
+					case LONG:
+						return "case abs(sign(?1)) when 1 then 'Y' when 0 then 'N' else null end";
+					case TF_BOOLEAN:
+						return "case ?1 when 'T' then 'Y' when 'F' then 'N' else null end";
+					case BOOLEAN:
+						return "case ?1 when true then 'Y' when false then 'N' else null end";
+				}
+				break;
+			case TF_BOOLEAN:
+				switch ( from ) {
+					case STRING:
+						return "case ?1 when 'T' then 'T' when 'Y' then 'T' when 'F' then 'F' when 'N' then 'F' else null end";
+					case INTEGER_BOOLEAN:
+						return "case ?1 when 1 then 'T' when 0 then 'F' else null end";
+					case INTEGER:
+					case LONG:
+						return "case abs(sign(?1)) when 1 then 'T' when 0 then 'F' else null end";
+					case YN_BOOLEAN:
+						return "case ?1 when 'Y' then 'T' when 'N' then 'F' else null end";
+					case BOOLEAN:
+						return "case ?1 when true then 'T' when false then 'F' else null end";
+				}
+				break;
+			case BOOLEAN:
+				switch ( from ) {
+					case STRING:
+						return "case ?1 when 'T' then true when 'Y' then true when 'F' then false when 'N' then false else null end";
+					case INTEGER_BOOLEAN:
+					case INTEGER:
+					case LONG:
+						return "(?1<>0)";
+					case YN_BOOLEAN:
+						return "(?1<>'N')";
+					case TF_BOOLEAN:
+						return "(?1<>'F')";
+				}
+				break;
+		}
 		return "cast(?1 as ?2)";
 	}
 
@@ -913,9 +994,12 @@ public abstract class Dialect implements ConversionContext {
 		Size size;
 		if ( length == null && precision == null ) {
 			//use defaults
-			size = getDefaultSizeStrategy().resolveDefaultSize(
+			size = getSizeStrategy().resolveSize(
 					type.getJdbcMapping().getSqlTypeDescriptor(),
-					type.getJdbcMapping().getJavaTypeDescriptor()
+					type.getJdbcMapping().getJavaTypeDescriptor(),
+					precision,
+					scale,
+					length
 			);
 		}
 		else {
@@ -3399,12 +3483,8 @@ public abstract class Dialect implements ConversionContext {
 		return false;
 	}
 
-	public DefaultSizeStrategy getDefaultSizeStrategy(){
-		return defaultSizeStrategy;
-	}
-
-	public void setDefaultSizeStrategy(DefaultSizeStrategy defaultSizeStrategy){
-		this.defaultSizeStrategy = defaultSizeStrategy;
+	public SizeStrategy getSizeStrategy() {
+		return sizeStrategy;
 	}
 
 	public long getDefaultLobLength() {
@@ -3519,38 +3599,63 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * Pluggable strategy for determining the Size to use for columns of
-	 * a given SQL type when no explicit Size has been given.
+	 * a given SQL type.
 	 *
-	 * Allows Dialects, integrators and users a chance to apply default
-	 * column size limits in certain situations based on the mapped
+	 * Allows Dialects, integrators and users a chance to apply
+	 * column size defaults and limits in certain situations based on the mapped
 	 * SQL and Java types.  E.g. when mapping a UUID to a VARCHAR column
 	 * we know the default Size should be `Size#length == 36`.
 	 */
-	public interface DefaultSizeStrategy {
+	public interface SizeStrategy {
 		/**
-		 * Resolve the default {@link Size} to use for columns of the given
+		 * Resolve the {@link Size} to use for columns of the given
 		 * {@link SqlTypeDescriptor SQL type} and {@link JavaTypeDescriptor Java type}.
 		 *
 		 * @return a non-null {@link Size}
 		 */
-		Size resolveDefaultSize(SqlTypeDescriptor sqlType, JavaTypeDescriptor javaType);
+		Size resolveSize(
+				SqlTypeDescriptor sqlType,
+				JavaTypeDescriptor javaType,
+				Integer precision,
+				Integer scale, Long length);
 	}
 
-	public class DefaultSizeStrategyImpl implements DefaultSizeStrategy {
+	public class SizeStrategyImpl implements SizeStrategy {
 		@Override
-		public Size resolveDefaultSize(SqlTypeDescriptor sqlType, JavaTypeDescriptor javaType) {
+		public Size resolveSize(
+				SqlTypeDescriptor sqlType,
+				JavaTypeDescriptor javaType,
+				Integer precision,
+				Integer scale,
+				Long length) {
 			final Size size = new Size();
 			int jdbcTypeCode = sqlType.getJdbcTypeCode();
 
 			switch (jdbcTypeCode) {
 				case Types.BIT:
+					// Use the default length for Boolean if we encounter the JPA default 255 instead
+					if ( javaType.getJavaType() == Boolean.class && length != null && length == 255 ) {
+						length = null;
+					}
+					size.setLength( javaType.getDefaultSqlLength( Dialect.this ) );
+					break;
 				case Types.CHAR:
+					// Use the default length for char if we encounter the JPA default 255 instead
+					if ( javaType.getJavaType() == Character.class && length != null && length == 255 ) {
+						length = null;
+					}
+					size.setLength( javaType.getDefaultSqlLength( Dialect.this ) );
+					break;
 				case Types.NCHAR:
 				case Types.BINARY:
 				case Types.VARCHAR:
 				case Types.NVARCHAR:
 				case Types.VARBINARY:
-					size.setLength( javaType.getDefaultSqlLength(Dialect.this) );
+					// Use the default length for UUID if we encounter the JPA default 255 instead
+					if ( javaType.getJavaType() == UUID.class && length != null && length == 255 ) {
+						length = null;
+					}
+					size.setLength( javaType.getDefaultSqlLength( Dialect.this ) );
 					break;
 				case Types.LONGVARCHAR:
 				case Types.LONGNVARCHAR:
@@ -3562,11 +3667,11 @@ public abstract class Dialect implements ConversionContext {
 				case Types.REAL:
 				case Types.TIMESTAMP:
 				case Types.TIMESTAMP_WITH_TIMEZONE:
-					size.setPrecision( javaType.getDefaultSqlPrecision(Dialect.this) );
+					size.setPrecision( javaType.getDefaultSqlPrecision( Dialect.this ) );
 					break;
 				case Types.NUMERIC:
 				case Types.DECIMAL:
-					size.setPrecision( javaType.getDefaultSqlPrecision(Dialect.this) );
+					size.setPrecision( javaType.getDefaultSqlPrecision( Dialect.this ) );
 					size.setScale( javaType.getDefaultSqlScale() );
 					break;
 				case Types.CLOB:
@@ -3574,6 +3679,16 @@ public abstract class Dialect implements ConversionContext {
 					size.setLength( javaType.getDefaultSqlLength(Dialect.this) );
 					break;
 
+			}
+
+			if ( precision != null ) {
+				size.setPrecision( precision );
+			}
+			if ( scale != null ) {
+				size.setScale( scale );
+			}
+			if ( length != null ) {
+				size.setLength( length );
 			}
 			return size;
 		}
@@ -3620,7 +3735,7 @@ public abstract class Dialect implements ConversionContext {
 		//most databases support a datetime format
 		//copied from Oracle's to_char() function,
 		//with some minor variation
-		return OracleDialect.datetimeFormat( format, true ).result();
+		return OracleDialect.datetimeFormat( format, true, false ).result();
 	}
 
 	/**

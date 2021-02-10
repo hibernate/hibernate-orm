@@ -669,7 +669,7 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	public Replacer datetimeFormat(String format) {
-		return OracleDialect.datetimeFormat(format, true)
+		return OracleDialect.datetimeFormat( format, true, false )
 				.replace("SSSSSS", "US")
 				.replace("SSSSS", "US")
 				.replace("SSSS", "US")

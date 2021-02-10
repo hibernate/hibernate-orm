@@ -78,9 +78,43 @@ public class SetOperationTest {
         scope.inSession(
                 session -> {
                     List<Tuple> list = session.createQuery(
+                            "(select e.id, e from EntityOfLists e where e.id = 1 " +
+                                    "union all " +
+                                    "select e.id, e from EntityOfLists e where e.id = 2) " +
+                                    "order by 1 fetch first 1 row only",
+                            Tuple.class
+                    ).list();
+                    assertThat( list.size(), is( 1 ) );
+                }
+        );
+    }
+
+    @Test
+    @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUnion.class)
+    public void testUnionAllLimitSubquery(SessionFactoryScope scope) {
+        scope.inSession(
+                session -> {
+                    List<Tuple> list = session.createQuery(
                             "select e.id, e from EntityOfLists e where e.id = 1 " +
                                     "union all " +
                                     "select e.id, e from EntityOfLists e where e.id = 2 " +
+                                    "order by 1 fetch first 1 row only",
+                            Tuple.class
+                    ).list();
+                    assertThat( list.size(), is( 2 ) );
+                }
+        );
+    }
+
+    @Test
+    @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUnion.class)
+    public void testUnionAllLimitNested(SessionFactoryScope scope) {
+        scope.inSession(
+                session -> {
+                    List<Tuple> list = session.createQuery(
+                            "(select e.id, e from EntityOfLists e where e.id = 1 " +
+                                    "union all " +
+                                    "(select e.id, e from EntityOfLists e where e.id = 2 order by 1 fetch first 1 row only)) " +
                                     "order by 1 fetch first 1 row only",
                             Tuple.class
                     ).list();

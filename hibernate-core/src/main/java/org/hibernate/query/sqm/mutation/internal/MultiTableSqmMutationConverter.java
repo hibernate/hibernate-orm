@@ -198,8 +198,8 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 
 		final Expression expression = super.consumeSqmParameter( sqmParameter );
 
-		final List<JdbcParameter> jdbcParameters = getJdbcParamsBySqmParam().get( sqmParameter );
-		parameterResolutionConsumer.accept( sqmParameter, jdbcParameters );
+		final List<List<JdbcParameter>> jdbcParameters = getJdbcParamsBySqmParam().get( sqmParameter );
+		parameterResolutionConsumer.accept( sqmParameter, jdbcParameters.get( jdbcParameters.size() - 1 ) );
 
 		return expression;
 	}

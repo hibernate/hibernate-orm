@@ -143,13 +143,11 @@ public class RelationalObjectBinder {
 			if ( columnSource.getSizeSource().getLength() != null ) {
 				column.setLength( columnSource.getSizeSource().getLength() );
 			}
+			final Integer precision = columnSource.getSizeSource().getPrecision();
 
-			if ( columnSource.getSizeSource().getScale() != null ) {
+			if ( precision != null && precision > 0 ) {
+				column.setPrecision( precision );
 				column.setScale( columnSource.getSizeSource().getScale() );
-			}
-
-			if ( columnSource.getSizeSource().getPrecision() != null ) {
-				column.setPrecision( columnSource.getSizeSource().getPrecision() );
 			}
 		}
 

@@ -22,6 +22,7 @@ import org.hibernate.dialect.sequence.NoSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.unique.MySQLUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.LockAcquisitionException;
@@ -33,7 +34,6 @@ import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.SqlExpressable;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.query.CastType;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.internal.idtable.AfterUseAction;
@@ -47,6 +47,8 @@ import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
@@ -56,7 +58,6 @@ import java.sql.Types;
 import javax.persistence.TemporalType;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
-import static org.hibernate.query.CastType.BOOLEAN;
 
 /**
  * An SQL dialect for MySQL (prior to 5.x).
@@ -68,6 +69,7 @@ public class MySQLDialect extends Dialect {
 	private final UniqueDelegate uniqueDelegate;
 	private final MySQLStorageEngine storageEngine;
 	private final int version;
+	private final SizeStrategy sizeStrategy;
 
 	public MySQLDialect(DialectResolutionInfo info) {
 		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
@@ -88,10 +90,10 @@ public class MySQLDialect extends Dialect {
 		if (storageEngine == null) {
 			this.storageEngine = getDefaultMySQLStorageEngine();
 		}
-		else if( "innodb".equals( storageEngine.toLowerCase() ) ) {
+		else if( "innodb".equalsIgnoreCase( storageEngine ) ) {
 			this.storageEngine = InnoDBStorageEngine.INSTANCE;
 		}
-		else if( "myisam".equals( storageEngine.toLowerCase() ) ) {
+		else if( "myisam".equalsIgnoreCase( storageEngine ) ) {
 			this.storageEngine = MyISAMStorageEngine.INSTANCE;
 		}
 		else {
@@ -163,6 +165,25 @@ public class MySQLDialect extends Dialect {
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 
 		uniqueDelegate = new MySQLUniqueDelegate( this );
+		sizeStrategy = new SizeStrategyImpl() {
+			@Override
+			public Size resolveSize(
+					SqlTypeDescriptor sqlType,
+					JavaTypeDescriptor javaType,
+					Integer precision,
+					Integer scale,
+					Long length) {
+				final int jdbcTypeCode = sqlType.getSqlType();
+				switch ( jdbcTypeCode ) {
+					case Types.BIT:
+						// MySQL allows BIT with a length up to 64
+						if ( length != null ) {
+							return Size.length( Math.min( Math.max( length, 1 ), 64 ) );
+						}
+				}
+				return super.resolveSize( sqlType, javaType, precision, scale, length );
+			}
+		};
 	}
 
 	@Override
@@ -172,6 +193,11 @@ public class MySQLDialect extends Dialect {
 
 	public int getMySQLVersion() {
 		return version;
+	}
+
+	@Override
+	public SizeStrategy getSizeStrategy() {
+		return sizeStrategy;
 	}
 
 	@Override
@@ -331,31 +357,6 @@ public class MySQLDialect extends Dialect {
 			//TODO: case WEEK_YEAR: yearweek(?2, 3)/100
 			default:
 				return "?1(?2)";
-		}
-	}
-
-	/**
-	 * MySQL doesn't have a real {@link java.sql.Types#BOOLEAN}
-	 * type, so...
-	 */
-	@Override
-	public String castPattern(CastType from, CastType to) {
-		switch (to) {
-			case BOOLEAN:
-				switch (from) {
-					case STRING:
-//						return "if(?1 rlike '^(t|f|true|false)$', ?1 like 't%', null)";
-						return "if(lower(?1) in('t','f','true','false'), ?1 like 't%', null)";
-					case LONG:
-					case INTEGER:
-						return "(?1<>0)";
-				}
-			case STRING:
-				if (from == BOOLEAN) {
-					return "if(?1,'true','false')";
-				}
-			default:
-				return super.castPattern(from, to);
 		}
 	}
 
@@ -717,11 +718,14 @@ public class MySQLDialect extends Dialect {
 					return new LockAcquisitionException( message, sqlException, sql );
 			}
 
-			switch ( JdbcExceptionHelper.extractSqlState( sqlException ) ) {
-				case "41000":
-					return new LockTimeoutException(message, sqlException, sql);
-				case "40001":
-					return new LockAcquisitionException(message, sqlException, sql);
+			final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
+			if ( sqlState != null ) {
+				switch ( sqlState ) {
+					case "41000":
+						return new LockTimeoutException( message, sqlException, sql );
+					case "40001":
+						return new LockAcquisitionException( message, sqlException, sql );
+				}
 			}
 
 			return null;

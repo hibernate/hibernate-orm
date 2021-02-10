@@ -5,12 +5,16 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.test.util;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.internal.util.config.ConfigurationHelper;
+
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -110,5 +114,24 @@ public class PropertiesHelperTest extends BaseUnitTestCase {
 		}
 		catch( NumberFormatException expected ) {
 		}
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-13893")
+	public void testIntLongConversion() {
+		Map<String, Object> map = new HashMap<>();
+		map.put( "int.to.long.prop", Integer.valueOf( 42 ) );
+		map.put( "long.to.int.prop", Long.valueOf( 22 ) );
+		assertTrue( map.get( "int.to.long.prop" ) instanceof Integer );
+		assertTrue( map.get( "long.to.int.prop" ) instanceof Long );
+
+		final long l = ConfigurationHelper.getLong( "int.to.long.prop", map, -1 );
+		assertEquals( 42L, l );
+
+		final int i = ConfigurationHelper.getInt( "long.to.int.prop", map, -1 );
+		assertEquals( 22, i );
+
+		final Integer integer = ConfigurationHelper.getInteger( "long.to.int.prop", map );
+		assertEquals( Integer.valueOf( 22 ), integer );
 	}
 }

@@ -9,6 +9,7 @@ package org.hibernate.type;
 import java.io.Serializable;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.query.CastType;
 import org.hibernate.type.descriptor.java.BooleanTypeDescriptor;
 import org.hibernate.type.descriptor.sql.IntegerTypeDescriptor;
 
@@ -45,5 +46,9 @@ public class NumericBooleanType
 	@Override
 	public String objectToSQLString(Boolean value, Dialect dialect) {
 		return value ? "1" : "0";
+	}
+	@Override
+	public CastType getCastType() {
+		return CastType.INTEGER_BOOLEAN;
 	}
 }

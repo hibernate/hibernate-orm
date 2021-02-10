@@ -15,6 +15,7 @@ import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
@@ -70,27 +71,31 @@ public class ColumnReference implements OrderingExpression, SequencePart {
 		tableReference = getTableReference( tableGroup );
 
 		final SqlExpressionResolver sqlExpressionResolver = creationState.getSqlExpressionResolver();
-
-		ast.addSortSpecification(
-				new SortSpecification(
-						sqlExpressionResolver.resolveSqlExpression(
-								SqlExpressionResolver.createColumnReferenceKey( tableReference, columnExpression ),
-								sqlAstProcessingState -> new org.hibernate.sql.ast.tree.expression.ColumnReference(
-										tableReference,
-										columnExpression,
-										isColumnExpressionFormula,
-										// because these ordering fragments are only ever part of the order-by clause, there
-										//		is no need for the JdbcMapping
-										null,
-										null,
-										null,
-										creationState.getCreationContext().getSessionFactory()
-								)
-						),
-						collation,
-						sortOrder
+		final Expression expression = sqlExpressionResolver.resolveSqlExpression(
+				SqlExpressionResolver.createColumnReferenceKey( tableReference, columnExpression ),
+				sqlAstProcessingState -> new org.hibernate.sql.ast.tree.expression.ColumnReference(
+						tableReference,
+						columnExpression,
+						isColumnExpressionFormula,
+						// because these ordering fragments are only ever part of the order-by clause, there
+						//		is no need for the JdbcMapping
+						null,
+						null,
+						null,
+						creationState.getCreationContext().getSessionFactory()
 				)
 		);
+		// It makes no sense to order by an expression multiple times
+		// SQL Server even reports a query error in this case
+		if ( ast.hasSortSpecifications() ) {
+			for ( SortSpecification sortSpecification : ast.getSortSpecifications() ) {
+				if ( sortSpecification.getSortExpression() == expression ) {
+					return;
+				}
+			}
+		}
+
+		ast.addSortSpecification( new SortSpecification( expression, collation, sortOrder ) );
 	}
 
 	TableReference getTableReference(TableGroup tableGroup) {

@@ -240,11 +240,8 @@ public class Column implements Selectable, Serializable, Cloneable {
 
 	public String getSqlType(Dialect dialect, Mapping mapping) throws HibernateException {
 		if ( sqlType == null ) {
-			final Size defaultSize = getColumnDefaultSize( dialect, mapping );
-
-			final Size size = getColumnSize( defaultSize );
 			try {
-				sqlType = dialect.getTypeName( getSqlTypeCode( mapping ), size );
+				sqlType = dialect.getTypeName( getSqlTypeCode( mapping ), getColumnSize( dialect, mapping ) );
 			}
 			catch (HibernateException cause) {
 				throw new HibernateException(
@@ -261,15 +258,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 		return sqlType;
 	}
 
-	private Size getColumnSize(Size defaultSize) {
-		final Integer columnPrecision = precision != null ? precision : defaultSize.getPrecision();
-		final Integer columnScale = scale != null ? scale : defaultSize.getScale();
-		final Long columnLength = length != null ? length : defaultSize.getLength();
-
-		return new Size( columnPrecision, columnScale, columnLength, null );
-	}
-
-	private Size getColumnDefaultSize(Dialect dialect, Mapping mapping) {
+	private Size getColumnSize(Dialect dialect, Mapping mapping) {
 		Type type = getValue().getType();
 
 		if ( type instanceof EntityType ) {
@@ -278,9 +267,12 @@ public class Column implements Selectable, Serializable, Cloneable {
 		if ( type instanceof ComponentType ) {
 			type = getTypeForComponentValue( mapping, type, getTypeIndex() );
 		}
-		return dialect.getDefaultSizeStrategy().resolveDefaultSize(
+		return dialect.getSizeStrategy().resolveSize(
 				( (JdbcMapping) type ).getSqlTypeDescriptor(),
-				( (JdbcMapping) type ).getJavaTypeDescriptor()
+				( (JdbcMapping) type ).getJavaTypeDescriptor(),
+				precision,
+				scale,
+				length
 		);
 	}
 

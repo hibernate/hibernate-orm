@@ -7,7 +7,9 @@
 package org.hibernate.type.descriptor.sql;
 
 import java.io.Serializable;
+import java.sql.Types;
 
+import org.hibernate.query.CastType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
@@ -92,4 +94,44 @@ public interface SqlTypeDescriptor extends Serializable {
 	 * @return The appropriate extractor
 	 */
 	<X> ValueExtractor<X> getExtractor(JavaTypeDescriptor<X> javaTypeDescriptor);
+
+	default CastType getCastType() {
+		switch ( getSqlType() ) {
+			case Types.INTEGER:
+			case Types.TINYINT:
+			case Types.SMALLINT:
+				return CastType.INTEGER;
+			case Types.BIGINT:
+				return CastType.LONG;
+			case Types.FLOAT:
+			case Types.REAL:
+				return CastType.FLOAT;
+			case Types.DOUBLE:
+				return CastType.DOUBLE;
+			case Types.CHAR:
+			case Types.NCHAR:
+			case Types.VARCHAR:
+			case Types.NVARCHAR:
+			case Types.LONGVARCHAR:
+			case Types.LONGNVARCHAR:
+				return CastType.STRING;
+			case Types.BOOLEAN:
+				return CastType.BOOLEAN;
+			case Types.DECIMAL:
+			case Types.NUMERIC:
+				return CastType.FIXED;
+			case Types.DATE:
+				return CastType.DATE;
+			case Types.TIME:
+				return CastType.TIME;
+			case Types.TIMESTAMP:
+				return CastType.TIMESTAMP;
+			case Types.TIMESTAMP_WITH_TIMEZONE:
+				return CastType.OFFSET_TIMESTAMP;
+			case Types.NULL:
+				return CastType.NULL;
+			default:
+				return CastType.OTHER;
+		}
+	}
 }

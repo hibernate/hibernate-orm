@@ -6,24 +6,20 @@
  */
 package org.hibernate.orm.test.query.hql;
 
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.dialect.DerbyDialect;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
-import org.hibernate.testing.orm.junit.DialectFeatureCheck;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import javax.persistence.EntityManager;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -43,25 +39,24 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @ServiceRegistry
 @DomainModel( standardModels = StandardDomainModel.GAMBIT )
 @SessionFactory
-public class FunctionTests extends SessionFactoryBasedFunctionalTest {
+public class FunctionTests {
 
-	@Override
-	protected void applyMetadataSources(MetadataSources metadataSources) {
-		StandardDomainModel.GAMBIT.getDescriptor().applyDomainModel(metadataSources);
-	}
-
-	@Override
-	protected void sessionFactoryBuilt(SessionFactoryImplementor factory) {
-		EntityManager em = factory.createEntityManager();
-		em.getTransaction().begin();
-		EntityOfBasics entity = new EntityOfBasics();
-		entity.setId(12);
-		em.persist(entity);
-		em.getTransaction().commit();
-		em.close();
+	@BeforeAll
+	public void prepareData(SessionFactoryScope scope) {
+		scope.inTransaction(
+				em -> {
+					EntityOfBasics entity = new EntityOfBasics();
+					entity.setId(123);
+					entity.setTheDate( new Date( 74, 2, 25 ) );
+					entity.setTheTime( new Time( 23, 10, 8 ) );
+					entity.setTheTimestamp( new Timestamp( System.currentTimeMillis() ) );
+					em.persist(entity);
+				}
+		);
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsCharCodeConversion.class)
 	public void testAsciiChrFunctions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -111,7 +106,7 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 	public void testCoalesceFunction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery("select coalesce(null, e.gender, e.convertedGender) from EntityOfBasics e")
+					session.createQuery("select coalesce(nullif('',''), e.gender, e.convertedGender) from EntityOfBasics e")
 							.list();
 					session.createQuery("select ifnull(e.gender, e.convertedGender) from EntityOfBasics e")
 							.list();
@@ -159,7 +154,7 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 							.list();
 					session.createQuery("select exp(e.theDouble), ln(e.theDouble + 1) from EntityOfBasics e")
 							.list();
-					session.createQuery("select power(e.theDouble, 2.5) from EntityOfBasics e")
+					session.createQuery("select power(e.theDouble + 1, 2.5) from EntityOfBasics e")
 							.list();
 					session.createQuery("select ceiling(e.theDouble), floor(e.theDouble) from EntityOfBasics e")
 							.list();
@@ -269,7 +264,7 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 	}
 
 	@Test
-	@FailureExpected(reason = "needs indirection in positional parameter bindings")
+	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby doesn't support a parameter in the 'length' function or the 'char' function which we render as emulation")
 	public void testOverlayFunctionParameters(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -295,6 +290,7 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsReplace.class)
 	public void testReplaceFunction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -342,6 +338,7 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby doesn't support a parameter in the 'length' function or the 'char' function which we render as emulation")
 	public void testPadFunctionParameters(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -361,6 +358,10 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 	public void testCastFunction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
+					assertThat( ((String) session.createQuery("select cast(e.theBoolean as String) from EntityOfBasics e").getSingleResult()).toLowerCase(), is("false") );
+					assertThat( ((String) session.createQuery("select cast(e.theNumericBoolean as String) from EntityOfBasics e").getSingleResult()).toLowerCase(), is("false") );
+					assertThat( ((String) session.createQuery("select cast(e.theStringBoolean as String) from EntityOfBasics e").getSingleResult()).toLowerCase(), is("false") );
+
 					session.createQuery("select cast(e.theDate as String), cast(e.theTime as String), cast(e.theTimestamp as String) from EntityOfBasics e")
 							.list();
 					session.createQuery("select cast(e.id as String), cast(e.theInt as String), cast(e.theDouble as String) from EntityOfBasics e")
@@ -370,10 +371,6 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 					session.createQuery("select cast(e.id as BigInteger(10)), cast(e.theDouble as BigDecimal(10,5)) from EntityOfBasics e")
 							.list();
 					session.createQuery("select cast(e.theString as String(15)), cast(e.theDouble as String(8)) from EntityOfBasics e")
-							.list();
-					session.createQuery("select cast(e.theString as Binary) from EntityOfBasics e")
-							.list();
-					session.createQuery("select cast(e.theString as Binary(10)) from EntityOfBasics e")
 							.list();
 
 					session.createQuery("select cast('1002342345234523.452435245245243' as BigDecimal) from EntityOfBasics")
@@ -427,6 +424,34 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 					assertThat( session.createQuery("select cast(date 1911-10-09 as String)").getSingleResult(), is("1911-10-09") );
 					assertThat( session.createQuery("select cast(time 12:13:14 as String)").getSingleResult(), is("12:13:14") );
 					assertThat( (String) session.createQuery("select cast(datetime 1911-10-09 12:13:14 as String)").getSingleResult(), startsWith("1911-10-09 12:13:14") );
+
+					assertThat( session.createQuery("select cast(1 as NumericBoolean)").getSingleResult(), is(true) );
+					assertThat( session.createQuery("select cast(0 as NumericBoolean)").getSingleResult(), is(false) );
+					assertThat( session.createQuery("select cast(true as YesNo)").getSingleResult(), is(true) );
+					assertThat( session.createQuery("select cast(false as YesNo)").getSingleResult(), is(false) );
+					assertThat( session.createQuery("select cast(1 as YesNo)").getSingleResult(), is(true) );
+					assertThat( session.createQuery("select cast(0 as YesNo)").getSingleResult(), is(false) );
+					assertThat( session.createQuery("select cast(true as TrueFalse)").getSingleResult(), is(true) );
+					assertThat( session.createQuery("select cast(false as TrueFalse)").getSingleResult(), is(false) );
+					assertThat( session.createQuery("select cast(1 as TrueFalse)").getSingleResult(), is(true) );
+					assertThat( session.createQuery("select cast(0 as TrueFalse)").getSingleResult(), is(false) );
+					assertThat( session.createQuery("select cast('Y' as YesNo)").getSingleResult(), is(true) );
+					assertThat( session.createQuery("select cast('N' as YesNo)").getSingleResult(), is(false) );
+					assertThat( session.createQuery("select cast('T' as TrueFalse)").getSingleResult(), is(true) );
+					assertThat( session.createQuery("select cast('F' as TrueFalse)").getSingleResult(), is(false) );
+				}
+		);
+	}
+
+	@Test
+	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby doesn't support casting to the binary types")
+	public void testCastFunctionBinary(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery("select cast(e.theString as Binary) from EntityOfBasics e")
+							.list();
+					session.createQuery("select cast(e.theString as Binary(10)) from EntityOfBasics e")
+							.list();
 				}
 		);
 	}
@@ -515,7 +540,9 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 				session -> {
 					session.createQuery("select avg(e.theDouble), avg(abs(e.theDouble)), min(e.theDouble), max(e.theDouble), sum(e.theDouble), sum(e.theInt) from EntityOfBasics e")
 							.list();
-					session.createQuery("select avg(distinct e.theInt), sum(distinct e.theInt) from EntityOfBasics e")
+					session.createQuery("select avg(distinct e.theInt) from EntityOfBasics e")
+							.list();
+					session.createQuery("select sum(distinct e.theInt) from EntityOfBasics e")
 							.list();
 					session.createQuery("select any(e.theInt > 0), every(e.theInt > 0) from EntityOfBasics e")
 							.list();
@@ -763,11 +790,7 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 							.list();
 					session.createQuery("select extract(day of month from e.theDate) from EntityOfBasics e")
 							.list();
-					session.createQuery("select extract(day of week from e.theDate) from EntityOfBasics e")
-							.list();
 
-					session.createQuery("select extract(week from e.theDate) from EntityOfBasics e")
-							.list();
 					session.createQuery("select extract(quarter from e.theDate) from EntityOfBasics e")
 							.list();
 
@@ -814,6 +837,20 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 	}
 
 	@Test
+	public void testExtractFunctionWeek(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery("select extract(day of week from e.theDate) from EntityOfBasics e")
+							.list();
+
+					session.createQuery("select extract(week from e.theDate) from EntityOfBasics e")
+							.list();
+
+				}
+		);
+	}
+
+	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTimezoneTypes.class)
 	public void testExtractFunctionTimeZone(SessionFactoryScope scope) {
 		scope.inTransaction(
@@ -833,10 +870,6 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 	public void testExtractFunctionWithAssertions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					EntityOfBasics entity = new EntityOfBasics();
-					entity.setId(1);
-					session.save(entity);
-					session.flush();
 					assertThat(
 							session.createQuery("select extract(week of year from date 2019-01-01) from EntityOfBasics").getResultList().get(0),
 							is(1)
@@ -932,23 +965,15 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 							session.createQuery("select extract(time from local datetime) from EntityOfBasics").getResultList().get(0),
 							instanceOf(LocalTime.class)
 					);
-					session.delete(entity);
 				}
 		);
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby doesn't support formatting temporal types to strings")
 	public void testFormat(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					EntityOfBasics entity = new EntityOfBasics();
-					entity.setId(123);
-					entity.setTheDate( new Date( 74, 2, 25 ) );
-					entity.setTheTime( new Time( 23, 10, 8 ) );
-					entity.setTheTimestamp( new Timestamp( System.currentTimeMillis() ) );
-					session.persist(entity);
-					session.flush();
-
 					session.createQuery("select format(e.theTime as 'hh:mm:ss aa') from EntityOfBasics e")
 							.list();
 					session.createQuery("select format(e.theDate as 'dd/MM/yy'), format(e.theDate as 'EEEE, MMMM dd, yyyy') from EntityOfBasics e")
@@ -969,8 +994,8 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 	}
 
 	@Test
-	public void testGrouping() {
-		inTransaction(
+	public void testGrouping(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					session.createQuery("select max(e.theDouble), e.gender, e.theInt from EntityOfBasics e group by e.gender, e.theInt")
 							.list();
@@ -980,12 +1005,21 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsGroupByRollup.class)
-	public void testGroupingFunctions() {
-		inTransaction(
+	public void testGroupByRollup(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					session.createQuery("select avg(e.theDouble), e.gender, e.theInt from EntityOfBasics e group by rollup(e.gender, e.theInt)")
 							.list();
-					session.createQuery("select sum(e.theDouble), e.gender, e.theInt from EntityOfBasics e group by cube(e.gender, e.theInt)")
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsGroupByGroupingSets.class)
+	public void testGroupByGroupingSets(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery("select avg(e.theDouble), e.gender, e.theInt from EntityOfBasics e group by cube(e.gender, e.theInt)")
 							.list();
 				}
 		);

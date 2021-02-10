@@ -6,10 +6,14 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.FetchClauseType;
+import java.util.List;
+
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.collections.Stack;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.tree.insert.Values;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -32,6 +36,30 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 		return getQueryPartForRowNumbering() != queryPart && !supportsOffsetFetchClause() && (
 				queryPart.isRoot() && hasLimit() || queryPart.getFetchClauseExpression() != null || queryPart.getOffsetClauseExpression() != null
 		);
+	}
+
+	@Override
+	protected void visitValuesList(List<Values> valuesList) {
+		if ( valuesList.size() < 2 ) {
+			super.visitValuesList( valuesList );
+		}
+		else {
+			// Oracle doesn't support a multi-values insert
+			// So we render a select union emulation instead
+			String separator = "";
+			final Stack<Clause> clauseStack = getClauseStack();
+			try {
+				clauseStack.push( Clause.VALUES );
+				for ( Values values : valuesList ) {
+					appendSql( separator );
+					renderExpressionsAsSubquery( values.getExpressions() );
+					separator = " union all ";
+				}
+			}
+			finally {
+				clauseStack.pop();
+			}
+		}
 	}
 
 	@Override

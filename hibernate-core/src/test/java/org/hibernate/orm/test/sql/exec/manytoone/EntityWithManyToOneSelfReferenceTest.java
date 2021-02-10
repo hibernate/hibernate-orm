@@ -66,6 +66,7 @@ public class EntityWithManyToOneSelfReferenceTest {
 	public void tearDown(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
+					session.createQuery( "update EntityWithManyToOneSelfReference e set e.other = null" ).executeUpdate();
 					session.createQuery( "delete from EntityWithManyToOneSelfReference" ).executeUpdate();
 				}
 		);

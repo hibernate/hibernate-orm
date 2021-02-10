@@ -14,6 +14,7 @@ import org.hibernate.QueryException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.ZonedDateTimeComparator;
 import org.hibernate.metamodel.model.domain.AllowableTemporalParameterType;
+import org.hibernate.query.CastType;
 import org.hibernate.type.descriptor.java.ZonedDateTimeJavaDescriptor;
 import org.hibernate.type.descriptor.sql.TimestampWithTimeZoneDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -72,5 +73,10 @@ public class ZonedDateTimeType
 				throw new QueryException( "ZonedDateTime type cannot be treated using `" + temporalPrecision.name() + "` precision" );
 			}
 		}
+	}
+
+	@Override
+	public CastType getCastType() {
+		return CastType.ZONE_TIMESTAMP;
 	}
 }

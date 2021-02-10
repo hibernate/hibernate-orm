@@ -62,6 +62,9 @@ public final class Template {
 		KEYWORDS.add("all");
 		KEYWORDS.add("union");
 		KEYWORDS.add("minus");
+		KEYWORDS.add("except");
+		KEYWORDS.add("intersect");
+		KEYWORDS.add("partition");
 
 		BEFORE_TABLE_KEYWORDS.add("from");
 		BEFORE_TABLE_KEYWORDS.add("join");

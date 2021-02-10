@@ -26,6 +26,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.boot.model.process.internal.InferredBasicValueResolver;
 import org.hibernate.dialect.function.TimestampaddFunction;
 import org.hibernate.dialect.function.TimestampdiffFunction;
 import org.hibernate.engine.FetchTiming;
@@ -41,9 +42,11 @@ import org.hibernate.loader.MultipleBagFetchException;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.Association;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
+import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
@@ -265,8 +268,10 @@ import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
 import org.hibernate.sql.results.graph.instantiation.internal.DynamicInstantiation;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.internal.StandardEntityGraphTraversalStateImpl;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
@@ -284,7 +289,7 @@ import static org.hibernate.type.spi.TypeConfiguration.isDuration;
  * @author Steve Ebersole
  */
 public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends BaseSemanticQueryWalker
-		implements SqmTranslator<T>, DomainResultCreationState {
+		implements SqmTranslator<T>, DomainResultCreationState, SqlTypeDescriptorIndicators {
 
 	private static final Logger log = Logger.getLogger( BaseSqmToSqlAstConverter.class );
 
@@ -402,7 +407,20 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	protected SqmStatement<?> getStatement() {
 		return statement;
 	}
-	
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// SqlTypeDescriptorIndicators
+
+	@Override
+	public TypeConfiguration getTypeConfiguration() {
+		return creationContext.getSessionFactory().getTypeConfiguration();
+	}
+
+	@Override
+	public int getPreferredSqlTypeCodeForBoolean() {
+		return creationContext.getSessionFactory().getSessionFactoryOptions().getPreferredSqlTypeCodeForBoolean();
+	}
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// FromClauseAccess
 
@@ -578,7 +596,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public List<Assignment> visitSetClause(SqmSetClause setClause) {
-		final List<Assignment> assignments = new ArrayList<>();
+		final List<Assignment> assignments = new ArrayList<>( setClause.getAssignments().size() );
 
 		for ( SqmAssignment sqmAssignment : setClause.getAssignments() ) {
 			final List<ColumnReference> targetColumnReferences = new ArrayList<>();
@@ -663,14 +681,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							}
 					);
 
-					getJdbcParamsBySqmParam().put( sqmParameter, jdbcParametersForSqm );
+					getJdbcParamsBySqmParam().computeIfAbsent( sqmParameter, k -> new ArrayList<>( 1 ) )
+						.add( jdbcParametersForSqm );
 				}
 				else {
-					final MappingMetamodel domainModel = getCreationContext().getDomainModel();
 					final Expression valueExpression = (Expression) sqmAssignment.getValue().accept( this );
 
-					final int valueExprJdbcCount = valueExpression.getExpressionType().getJdbcTypeCount();
-					final int assignedPathJdbcCount = assignedPathInterpretation.getExpressionType().getJdbcTypeCount();
+					final int valueExprJdbcCount = getKeyExpressable( valueExpression.getExpressionType() ).getJdbcTypeCount();
+					final int assignedPathJdbcCount = getKeyExpressable( assignedPathInterpretation.getExpressionType() )
+							.getJdbcTypeCount();
 
 					if ( valueExprJdbcCount != assignedPathJdbcCount ) {
 						SqlTreeCreationLogger.LOGGER.debugf(
@@ -2021,24 +2040,50 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public Expression visitLiteral(SqmLiteral<?> literal) {
 		if ( literal instanceof SqmLiteralNull ) {
-			return new NullnessLiteral( inferableTypeAccessStack.getCurrent().get() );
+			final MappingModelExpressable mappingModelExpressable = inferableTypeAccessStack.getCurrent().get();
+			if ( mappingModelExpressable instanceof BasicValuedMapping ) {
+				return new NullnessLiteral( mappingModelExpressable );
+			}
+			final MappingModelExpressable keyExpressable = getKeyExpressable( mappingModelExpressable );
+			final List<Expression> expressions = new ArrayList<>( keyExpressable.getJdbcTypeCount() );
+			keyExpressable.forEachJdbcType(
+					(index, jdbcMapping) -> expressions.add(
+							new QueryLiteral<>(
+									null,
+									(BasicValuedMapping) jdbcMapping
+							)
+					)
+			);
+			return new SqlTuple( expressions, mappingModelExpressable );
 		}
-
+		MappingModelExpressable expressable = SqmMappingModelHelper.resolveMappingModelExpressable(
+				literal,
+				getCreationContext().getDomainModel(),
+				getFromClauseAccess()::findTableGroup
+		);
+		if ( expressable instanceof BasicType<?> ) {
+			expressable = InferredBasicValueResolver.resolveSqlTypeIndicators( this, (BasicType<?>) expressable );
+		}
 		return new QueryLiteral<>(
 				literal.getLiteralValue(),
-				(BasicValuedMapping) SqmMappingModelHelper.resolveMappingModelExpressable(
-						literal,
-						getCreationContext().getDomainModel(),
-						getFromClauseAccess()::findTableGroup
-				)
+				(BasicValuedMapping) expressable
 		);
 	}
 
-	private final Map<SqmParameter, List<JdbcParameter>> jdbcParamsBySqmParam = new IdentityHashMap<>();
+	private MappingModelExpressable<?> getKeyExpressable(MappingModelExpressable<?> mappingModelExpressable) {
+		if ( mappingModelExpressable instanceof EntityAssociationMapping ) {
+			return ( (EntityAssociationMapping) mappingModelExpressable ).getKeyTargetMatchPart();
+		}
+		else {
+			return mappingModelExpressable;
+		}
+	}
+
+	private final Map<SqmParameter, List<List<JdbcParameter>>> jdbcParamsBySqmParam = new IdentityHashMap<>();
 	private final JdbcParameters jdbcParameters = new JdbcParametersImpl();
 
 	@Override
-	public Map<SqmParameter, List<JdbcParameter>> getJdbcParamsBySqmParam() {
+	public Map<SqmParameter, List<List<JdbcParameter>>> getJdbcParamsBySqmParam() {
 		return jdbcParamsBySqmParam;
 	}
 
@@ -2059,7 +2104,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		);
 
 		this.jdbcParameters.addParameters( jdbcParametersForSqm );
-		this.jdbcParamsBySqmParam.put( sqmParameter, jdbcParametersForSqm );
+		this.jdbcParamsBySqmParam.computeIfAbsent( sqmParameter, k -> new ArrayList<>( 1 ) )
+				.add( jdbcParametersForSqm );
 
 		final QueryParameterImplementor<?> queryParameter = domainParameterXref.getQueryParameter( sqmParameter );
 		final QueryParameterBinding<?> binding = domainParameterBindings.getBinding( queryParameter );
@@ -2268,8 +2314,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	public Object visitCastTarget(SqmCastTarget target) {
 		shallownessStack.push( Shallowness.FUNCTION );
 		try {
+			BasicValuedMapping targetType = (BasicValuedMapping) target.getType();
+			if ( targetType instanceof BasicType<?> ) {
+				targetType = InferredBasicValueResolver.resolveSqlTypeIndicators( this, (BasicType<?>) targetType );
+			}
 			return new CastTarget(
-					(BasicValuedMapping) target.getType(),
+					targetType,
 					target.getLength(),
 					target.getPrecision(),
 					target.getScale()
@@ -2818,9 +2868,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				if ( type instanceof SqmExpressable ) {
 					adjustedTimestampType = (SqmExpressable) type;
 				}
-//				else if (type instanceof BasicValuedMapping) {
-//					adjustedTimestampType = ((BasicValuedMapping) type).getBasicType();
-//				}
+				else if (type instanceof AttributeMapping ) {
+					adjustedTimestampType = (SqmExpressable) ( (AttributeMapping) type ).getMappedType();
+				}
 				else {
 					// else we know it has not been transformed
 					adjustedTimestampType = expression.getLeftHandOperand().getNodeType();

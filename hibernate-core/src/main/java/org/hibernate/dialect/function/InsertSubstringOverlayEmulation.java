@@ -8,7 +8,9 @@ package org.hibernate.dialect.function;
 
 import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.query.BinaryArithmeticOperator;
+import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.function.AbstractSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
@@ -16,13 +18,17 @@ import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
+import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
+import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.List;
+
+import javax.persistence.criteria.Expression;
 
 import static java.util.Arrays.asList;
 
@@ -32,12 +38,15 @@ import static java.util.Arrays.asList;
 public class InsertSubstringOverlayEmulation
 		extends AbstractSqmFunctionDescriptor {
 
-	public InsertSubstringOverlayEmulation() {
+	private final boolean strictSubstring;
+
+	public InsertSubstringOverlayEmulation(boolean strictSubstring) {
 		super(
 				"overlay",
 				StandardArgumentsValidators.between( 3, 4 ),
 				StandardFunctionReturnTypeResolvers.invariant( StandardBasicTypes.STRING )
 		);
+		this.strictSubstring = strictSubstring;
 	}
 
 	@Override
@@ -66,6 +75,7 @@ public class InsertSubstringOverlayEmulation
 			);
 		}
 		else {
+			SqmFunctionDescriptor lengthFunction = queryEngine.getSqmFunctionRegistry().findFunctionDescriptor("length");
 			SqmFunctionDescriptor substring = queryEngine.getSqmFunctionRegistry().findFunctionDescriptor("substring");
 			SqmFunctionDescriptor concat = queryEngine.getSqmFunctionRegistry().findFunctionDescriptor("concat");
 			SqmLiteral<Integer> one = new SqmLiteral<>( 1, intType, queryEngine.getCriteriaBuilder() );
@@ -83,6 +93,30 @@ public class InsertSubstringOverlayEmulation
 					intType,
 					queryEngine.getCriteriaBuilder()
 			);
+			SqmExpressable<Object> stringType = (SqmExpressable<Object>) impliedResultType;
+			SqmTypedNode<?> restString = substring.generateSqmExpression(
+					asList( string, startPlusLength ),
+					impliedResultType,
+					queryEngine,
+					typeConfiguration
+			);
+			if ( strictSubstring ) {
+				restString = (SqmTypedNode<?>) new SqmCaseSearched<>( stringType, start.nodeBuilder() )
+						.when(
+								new SqmComparisonPredicate(
+										startPlusLength,
+										ComparisonOperator.GREATER_THAN,
+										lengthFunction.generateSqmExpression(
+												asList( string ),
+												intType,
+												queryEngine,
+												typeConfiguration
+										),
+										string.nodeBuilder()
+								),
+								(Expression<?>) new SqmLiteral<>( "", stringType, string.nodeBuilder() )
+						).otherwise( (Expression<?>) restString );
+			}
 			return concat.generateSqmExpression(
 					asList(
 							substring.generateSqmExpression(
@@ -92,12 +126,7 @@ public class InsertSubstringOverlayEmulation
 									typeConfiguration
 							),
 							replacement,
-							substring.generateSqmExpression(
-									asList( string, startPlusLength ),
-									impliedResultType,
-									queryEngine,
-									typeConfiguration
-							)
+							restString
 					),
 					impliedResultType,
 					queryEngine,

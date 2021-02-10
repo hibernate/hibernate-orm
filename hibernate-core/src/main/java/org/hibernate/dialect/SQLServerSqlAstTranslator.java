@@ -45,15 +45,38 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends Abstract
 			hasLimit = queryPart.getFetchClauseExpression() != null;
 			hasOffset = queryPart.getOffsetClauseExpression() != null;
 		}
-		if ( version < 9 || !hasOffset ) {
-			return hasLimit ? OffsetFetchClauseMode.TOP_ONLY : null;
-		}
-		else if ( version < 11 || !isRowsOnlyFetchClauseType( queryPart ) ) {
-			return OffsetFetchClauseMode.EMULATED;
+		if ( queryPart instanceof QueryGroup ) {
+			// We can't use TOP for set operations
+			if ( hasOffset || hasLimit ) {
+				if ( version < 11 || !isRowsOnlyFetchClauseType( queryPart ) ) {
+					return OffsetFetchClauseMode.EMULATED;
+				}
+				else {
+					return OffsetFetchClauseMode.STANDARD;
+				}
+			}
+
+			return null;
 		}
 		else {
-			return OffsetFetchClauseMode.STANDARD;
+			if ( version < 9 || !hasOffset ) {
+				return hasLimit ? OffsetFetchClauseMode.TOP_ONLY : null;
+			}
+			else if ( version < 11 || !isRowsOnlyFetchClauseType( queryPart ) ) {
+				return OffsetFetchClauseMode.EMULATED;
+			}
+			else {
+				return OffsetFetchClauseMode.STANDARD;
+			}
 		}
+	}
+
+	@Override
+	protected boolean supportsSimpleQueryGrouping() {
+		// SQL Server is quite strict i.e. it requires `select .. union all select * from (select ...)`
+		// rather than `select .. union all (select ...)` because parenthesis followed by select
+		// is always treated as a subquery, which is not supported in a set operation
+		return false;
 	}
 
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {

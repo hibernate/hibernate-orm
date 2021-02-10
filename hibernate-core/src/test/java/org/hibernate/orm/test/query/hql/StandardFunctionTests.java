@@ -12,6 +12,8 @@ import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
+import org.hibernate.dialect.DerbyDialect;
+
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -20,6 +22,8 @@ import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -34,6 +38,21 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @DomainModel( standardModels = StandardDomainModel.GAMBIT )
 @SessionFactory
 public class StandardFunctionTests {
+
+	@BeforeAll
+	public void prepareData(SessionFactoryScope scope) {
+		scope.inTransaction(
+				em -> {
+					EntityOfBasics entity = new EntityOfBasics();
+					entity.setId(123);
+					entity.setTheDate( new Date( 74, 2, 25 ) );
+					entity.setTheTime( new Time( 23, 10, 8 ) );
+					entity.setTheTimestamp( new Timestamp( System.currentTimeMillis() ) );
+					em.persist(entity);
+				}
+		);
+	}
+
 	@Test
 	public void currentTimestampTests(SessionFactoryScope scope) {
 		scope.inTransaction(
@@ -105,11 +124,11 @@ public class StandardFunctionTests {
 					session.createQuery( "select local_date from EntityOfBasics" ).list();
 					session.createQuery( "select local_date() from EntityOfBasics" ).list();
 
-					session.createQuery( "select e from EntityOfBasics e where e.theTimestamp = local_date" ).list();
-					session.createQuery( "select e from EntityOfBasics e where e.theTimestamp = local_date()" ).list();
+					session.createQuery( "select e from EntityOfBasics e where e.theDate = local_date" ).list();
+					session.createQuery( "select e from EntityOfBasics e where e.theDate = local_date()" ).list();
 
-					session.createQuery( "select e from EntityOfBasics e where local_date between e.theTimestamp and e.theTimestamp" ).list();
-					session.createQuery( "select e from EntityOfBasics e where local_date() between e.theTimestamp and e.theTimestamp" ).list();
+					session.createQuery( "select e from EntityOfBasics e where local_date between e.theDate and e.theDate" ).list();
+					session.createQuery( "select e from EntityOfBasics e where local_date() between e.theDate and e.theDate" ).list();
 
 					assertThat(
 							session.createQuery( "select local_date" ).getSingleResult(),
@@ -154,7 +173,7 @@ public class StandardFunctionTests {
 	public void testCoalesceFunction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery("select coalesce(null, e.gender, e.convertedGender) from EntityOfBasics e")
+					session.createQuery("select coalesce(nullif('',''), e.gender, e.convertedGender) from EntityOfBasics e")
 							.list();
 					session.createQuery("select ifnull(e.gender, e.convertedGender) from EntityOfBasics e")
 							.list();
@@ -191,9 +210,9 @@ public class StandardFunctionTests {
 							.list();
 					session.createQuery("select abs(e.theDouble), sign(e.theDouble), sqrt(e.theDouble) from EntityOfBasics e")
 							.list();
-					session.createQuery("select exp(e.theDouble), ln(e.theDouble) from EntityOfBasics e")
+					session.createQuery("select exp(e.theDouble), ln(e.theDouble + 1) from EntityOfBasics e")
 							.list();
-					session.createQuery("select power(e.theDouble, 2.5) from EntityOfBasics e")
+					session.createQuery("select power(e.theDouble + 1, 2.5) from EntityOfBasics e")
 							.list();
 					session.createQuery("select ceiling(e.theDouble), floor(e.theDouble) from EntityOfBasics e")
 							.list();
@@ -232,6 +251,7 @@ public class StandardFunctionTests {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsCharCodeConversion.class)
 	public void testAsciiChrFunctions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -311,6 +331,7 @@ public class StandardFunctionTests {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsReplace.class)
 	public void testReplaceFunction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -612,14 +633,14 @@ public class StandardFunctionTests {
 	public void testExtractFunctionTimeZone(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery("select extract(offset hour from e.theTime) from EntityOfBasics e")
+					session.createQuery("select extract(offset hour from e.theZonedDateTime) from EntityOfBasics e")
 							.list();
 
 // the grammar rule is defined as `HOUR | MINUTE` so no idea how both ever worked.
-//					session.createQuery("select extract(offset hour minute from e.theTime) from EntityOfBasics e")
+//					session.createQuery("select extract(offset hour minute from e.theZonedDateTime) from EntityOfBasics e")
 //							.list();
 
-					session.createQuery("select extract(offset from e.theTimestamp) from EntityOfBasics e")
+					session.createQuery("select extract(offset from e.theZonedDateTime) from EntityOfBasics e")
 							.list();
 				}
 		);
@@ -640,164 +661,147 @@ public class StandardFunctionTests {
 	public void testExtractFunctionWithAssertions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					EntityOfBasics entity = new EntityOfBasics();
-					entity.setId(1);
-					session.save(entity);
+					assertThat(
+							session.createQuery(
+									"select extract(week of year from {2019-01-01}) from EntityOfBasics b where b.id = 123" )
+									.getResultList()
+									.get( 0 ),
+							is( 1 )
+					);
+					assertThat(
+							session.createQuery(
+									"select extract(week of year from {2019-01-01}) from EntityOfBasics" )
+									.getResultList()
+									.get( 0 ),
+							is( 1 )
+					);
+					assertThat(
+							session.createQuery(
+									"select extract(week of year from {2019-01-01}) from EntityOfBasics" )
+									.getResultList()
+									.get( 0 ),
+							is( 1 )
+					);
+					assertThat(
+							session.createQuery(
+									"select extract(week of year from {2019-01-01}) from EntityOfBasics" )
+									.getResultList()
+									.get( 0 ),
+							is( 1 )
+					);
+
+					assertThat(
+							session.createQuery(
+									"select extract(week of year from {2019-01-05}) from EntityOfBasics" )
+									.getResultList()
+									.get( 0 ),
+							is( 1 )
+					);
+
+					assertThat(
+							session.createQuery(
+									"select extract(week of month from {2019-05-01}) from EntityOfBasics" )
+									.getResultList()
+									.get( 0 ),
+							is( 1 )
+					);
+
+					assertThat(
+							session.createQuery( "select extract(week from {2019-05-27}) from EntityOfBasics" )
+									.getResultList()
+									.get( 0 ),
+							is( 22 )
+					);
+
+					assertThat(
+							session.createQuery(
+									"select extract(day of year from {2019-05-30}) from EntityOfBasics" )
+									.getResultList()
+									.get( 0 ),
+							is( 150 )
+					);
+					assertThat(
+							session.createQuery(
+									"select extract(day of month from {2019-05-27}) from EntityOfBasics" )
+									.getResultList()
+									.get( 0 ),
+							is( 27 )
+					);
+
+					assertThat(
+							session.createQuery( "select extract(day from {2019-05-31}) from EntityOfBasics" )
+									.getResultList()
+									.get( 0 ),
+							is( 31 )
+					);
+					assertThat(
+							session.createQuery( "select extract(month from {2019-05-31}) from EntityOfBasics" )
+									.getResultList()
+									.get( 0 ),
+							is( 5 )
+					);
+					assertThat(
+							session.createQuery( "select extract(year from {2019-05-31}) from EntityOfBasics" )
+									.getResultList()
+									.get( 0 ),
+							is( 2019 )
+					);
+					assertThat(
+							session.createQuery(
+									"select extract(quarter from {2019-05-31}) from EntityOfBasics" )
+									.getResultList()
+									.get( 0 ),
+							is( 2 )
+					);
+
+					assertThat(
+							session.createQuery(
+									"select extract(day of week from {2019-05-27}) from EntityOfBasics" )
+									.getResultList()
+									.get( 0 ),
+							is( 2 )
+					);
+					assertThat(
+							session.createQuery(
+									"select extract(day of week from {2019-05-31}) from EntityOfBasics" )
+									.getResultList()
+									.get( 0 ),
+							is( 6 )
+					);
+
+					assertThat(
+							session.createQuery( "select extract(second from {14:12:10}) from EntityOfBasics" )
+									.getResultList()
+									.get( 0 ),
+							is( 10f )
+					);
+					assertThat(
+							session.createQuery( "select extract(minute from {14:12:10}) from EntityOfBasics" )
+									.getResultList()
+									.get( 0 ),
+							is( 12 )
+					);
+					assertThat(
+							session.createQuery( "select extract(hour from {14:12:10}) from EntityOfBasics" )
+									.getResultList()
+									.get( 0 ),
+							is( 14 )
+					);
+
+					assertThat(
+							session.createQuery( "select extract(date from local_datetime) from EntityOfBasics" )
+									.getResultList()
+									.get( 0 ),
+							instanceOf( LocalDate.class )
+					);
+					assertThat(
+							session.createQuery( "select extract(time from local_datetime) from EntityOfBasics" )
+									.getResultList()
+									.get( 0 ),
+							instanceOf( LocalTime.class )
+					);
 				}
 		);
-
-		try {
-			scope.inTransaction(
-					session -> {
-						assertThat(
-								session.createQuery(
-										"select extract(week of year from {2019-01-01}) from EntityOfBasics b where b.id = 1" )
-										.getResultList()
-										.get( 0 ),
-								is( 1 )
-						);
-						assertThat(
-								session.createQuery(
-										"select extract(week of year from {2019-01-01}) from EntityOfBasics" )
-										.getResultList()
-										.get( 0 ),
-								is( 1 )
-						);
-						assertThat(
-								session.createQuery(
-										"select extract(week of year from {2019-01-01}) from EntityOfBasics" )
-										.getResultList()
-										.get( 0 ),
-								is( 1 )
-						);
-						assertThat(
-								session.createQuery(
-										"select extract(week of year from {2019-01-01}) from EntityOfBasics" )
-										.getResultList()
-										.get( 0 ),
-								is( 1 )
-						);
-
-						assertThat(
-								session.createQuery(
-										"select extract(week of year from {2019-01-05}) from EntityOfBasics" )
-										.getResultList()
-										.get( 0 ),
-								is( 1 )
-						);
-
-						assertThat(
-								session.createQuery(
-										"select extract(week of month from {2019-05-01}) from EntityOfBasics" )
-										.getResultList()
-										.get( 0 ),
-								is( 1 )
-						);
-
-						assertThat(
-								session.createQuery( "select extract(week from {2019-05-27}) from EntityOfBasics" )
-										.getResultList()
-										.get( 0 ),
-								is( 22 )
-						);
-
-						assertThat(
-								session.createQuery(
-										"select extract(day of year from {2019-05-30}) from EntityOfBasics" )
-										.getResultList()
-										.get( 0 ),
-								is( 150 )
-						);
-						assertThat(
-								session.createQuery(
-										"select extract(day of month from {2019-05-27}) from EntityOfBasics" )
-										.getResultList()
-										.get( 0 ),
-								is( 27 )
-						);
-
-						assertThat(
-								session.createQuery( "select extract(day from {2019-05-31}) from EntityOfBasics" )
-										.getResultList()
-										.get( 0 ),
-								is( 31 )
-						);
-						assertThat(
-								session.createQuery( "select extract(month from {2019-05-31}) from EntityOfBasics" )
-										.getResultList()
-										.get( 0 ),
-								is( 5 )
-						);
-						assertThat(
-								session.createQuery( "select extract(year from {2019-05-31}) from EntityOfBasics" )
-										.getResultList()
-										.get( 0 ),
-								is( 2019 )
-						);
-						assertThat(
-								session.createQuery(
-										"select extract(quarter from {2019-05-31}) from EntityOfBasics" )
-										.getResultList()
-										.get( 0 ),
-								is( 2 )
-						);
-
-						assertThat(
-								session.createQuery(
-										"select extract(day of week from {2019-05-27}) from EntityOfBasics" )
-										.getResultList()
-										.get( 0 ),
-								is( 2 )
-						);
-						assertThat(
-								session.createQuery(
-										"select extract(day of week from {2019-05-31}) from EntityOfBasics" )
-										.getResultList()
-										.get( 0 ),
-								is( 6 )
-						);
-
-						assertThat(
-								session.createQuery( "select extract(second from {14:12:10}) from EntityOfBasics" )
-										.getResultList()
-										.get( 0 ),
-								is( 10f )
-						);
-						assertThat(
-								session.createQuery( "select extract(minute from {14:12:10}) from EntityOfBasics" )
-										.getResultList()
-										.get( 0 ),
-								is( 12 )
-						);
-						assertThat(
-								session.createQuery( "select extract(hour from {14:12:10}) from EntityOfBasics" )
-										.getResultList()
-										.get( 0 ),
-								is( 14 )
-						);
-
-						assertThat(
-								session.createQuery( "select extract(date from local_datetime) from EntityOfBasics" )
-										.getResultList()
-										.get( 0 ),
-								instanceOf( LocalDate.class )
-						);
-						assertThat(
-								session.createQuery( "select extract(time from local_datetime) from EntityOfBasics" )
-										.getResultList()
-										.get( 0 ),
-								instanceOf( LocalTime.class )
-						);
-					}
-			);
-		}
-		finally {
-			scope.inTransaction(
-					session -> {
-						session.createQuery( "delete from EntityOfBasics" ).executeUpdate();
-					}
-			);
-		}
 	}
 
 	@Test
@@ -874,60 +878,43 @@ public class StandardFunctionTests {
 				session -> {
 					session.createQuery("select avg(e.theDouble), avg(abs(e.theDouble)), min(e.theDouble), max(e.theDouble), sum(e.theDouble), sum(e.theInt) from EntityOfBasics e")
 							.list();
-					session.createQuery("select avg(distinct e.theInt), sum(distinct e.theInt) from EntityOfBasics e")
+					session.createQuery("select sum(distinct e.theInt) from EntityOfBasics e")
+							.list();
+					session.createQuery("select sum(distinct e.theInt) from EntityOfBasics e")
 							.list();
 				}
 		);
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby doesn't support formatting temporal types to strings")
 	public void testFormat(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					EntityOfBasics entity = new EntityOfBasics();
-					entity.setId(123);
-					entity.setTheDate( new Date( 74, 2, 25 ) );
-					entity.setTheTime( new Time( 23, 10, 8 ) );
-					entity.setTheTimestamp( new Timestamp( System.currentTimeMillis() ) );
-					session.persist( entity );
+					session.createQuery( "select format(e.theTime as 'hh:mm:ss aa') from EntityOfBasics e" )
+							.list();
+					session.createQuery(
+							"select format(e.theDate as 'dd/MM/yy'), format(e.theDate as 'EEEE, MMMM dd, yyyy') from EntityOfBasics e" )
+							.list();
+					session.createQuery(
+							"select format(e.theTimestamp as 'dd/MM/yyyy ''at'' HH:mm:ss') from EntityOfBasics e" )
+							.list();
+
+					assertThat(
+							session.createQuery(
+									"select format(e.theDate as 'EEEE, dd/MM/yyyy') from EntityOfBasics e" )
+									.getResultList()
+									.get( 0 ),
+							is( "Monday, 25/03/1974" )
+					);
+					assertThat(
+							session.createQuery(
+									"select format(e.theTime as '''Hello'', hh:mm:ss aa') from EntityOfBasics e" )
+									.getResultList()
+									.get( 0 ),
+							is( "Hello, 11:10:08 PM" )
+					);
 				}
 		);
-
-		try {
-			scope.inTransaction(
-					session -> {
-						session.createQuery( "select format(e.theTime as 'hh:mm:ss aa') from EntityOfBasics e" )
-								.list();
-						session.createQuery(
-								"select format(e.theDate as 'dd/MM/yy'), format(e.theDate as 'EEEE, MMMM dd, yyyy') from EntityOfBasics e" )
-								.list();
-						session.createQuery(
-								"select format(e.theTimestamp as 'dd/MM/yyyy ''at'' HH:mm:ss') from EntityOfBasics e" )
-								.list();
-
-						assertThat(
-								session.createQuery(
-										"select format(e.theDate as 'EEEE, dd/MM/yyyy') from EntityOfBasics e" )
-										.getResultList()
-										.get( 0 ),
-								is( "Monday, 25/03/1974" )
-						);
-						assertThat(
-								session.createQuery(
-										"select format(e.theTime as '''Hello'', hh:mm:ss aa') from EntityOfBasics e" )
-										.getResultList()
-										.get( 0 ),
-								is( "Hello, 11:10:08 PM" )
-						);
-					}
-			);
-		}
-		finally {
-			scope.inTransaction(
-					session -> {
-						session.createQuery( "delete EntityOfBasics" ).executeUpdate();
-					}
-			);
-		}
 	}
 }

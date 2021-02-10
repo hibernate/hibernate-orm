@@ -125,7 +125,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 		final TableReference hierarchyRootTableReference = deletingTableGroup.resolveTableReference( hierarchyRootTableName );
 		assert hierarchyRootTableReference != null;
 
-		final Map<SqmParameter, List<JdbcParameter>> parameterResolutions;
+		final Map<SqmParameter, List<List<JdbcParameter>>> parameterResolutions;
 		if ( domainParameterXref.getSqmParameterCount() == 0 ) {
 			parameterResolutions = Collections.emptyMap();
 		}
@@ -146,7 +146,10 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 						needsIdTableWrapper.set( true );
 					}
 				},
-				parameterResolutions::put
+				(sqmParameter, jdbcParameters) -> parameterResolutions.computeIfAbsent(
+						sqmParameter,
+						k -> new ArrayList<>( 1 )
+				).add( jdbcParameters )
 		);
 
 		final FilterPredicate filterPredicate = FilterHelper.createFilterPredicate(
@@ -183,7 +186,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 	private int executeWithoutIdTable(
 			Predicate suppliedPredicate,
 			TableGroup tableGroup,
-			Map<SqmParameter, List<JdbcParameter>> restrictionSqmParameterResolutions,
+			Map<SqmParameter, List<List<JdbcParameter>>> restrictionSqmParameterResolutions,
 			SqlExpressionResolver sqlExpressionResolver,
 			ExecutionContext executionContext) {
 		final EntityPersister rootEntityPersister;
@@ -354,7 +357,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 	private int executeWithIdTable(
 			Predicate predicate,
 			TableGroup deletingTableGroup,
-			Map<SqmParameter, List<JdbcParameter>> restrictionSqmParameterResolutions,
+			Map<SqmParameter, List<List<JdbcParameter>>> restrictionSqmParameterResolutions,
 			ExecutionContext executionContext) {
 		final JdbcParameterBindings jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
 				executionContext.getQueryParameterBindings(),

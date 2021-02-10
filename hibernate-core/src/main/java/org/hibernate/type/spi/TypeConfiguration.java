@@ -285,6 +285,9 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			//this one is very fragile ... works well for BIT or BOOLEAN columns only
 			//works OK, I suppose, for integer columns, but not at all for char columns
 			case "boolean": return getBasicTypeForJavaType( Boolean.class );
+			case "truefalse": return StandardBasicTypes.TRUE_FALSE;
+			case "yesno": return StandardBasicTypes.YES_NO;
+			case "numericboolean": return StandardBasicTypes.NUMERIC_BOOLEAN;
 			default: throw new HibernateException( "unrecognized cast target type: " + name );
 		}
 	}

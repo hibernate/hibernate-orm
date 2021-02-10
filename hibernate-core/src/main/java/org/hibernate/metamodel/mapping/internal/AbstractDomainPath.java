@@ -8,16 +8,16 @@ package org.hibernate.metamodel.mapping.internal;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.SortOrder;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.SelectionMapping;
 import org.hibernate.metamodel.mapping.ordering.ast.DomainPath;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -37,7 +37,6 @@ public abstract class AbstractDomainPath implements DomainPath {
 			String modelPartName,
 			SortOrder sortOrder,
 			SqlAstCreationState creationState) {
-		final SqlAstCreationContext creationContext = creationState.getCreationContext();
 		apply(
 				getReferenceModelPart(),
 				ast,
@@ -45,9 +44,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 				collation,
 				modelPartName,
 				sortOrder,
-				creationState,
-				creationContext.getSessionFactory(),
-				creationState.getSqlExpressionResolver()
+				creationState
 		);
 	}
 
@@ -58,9 +55,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 			String collation,
 			String modelPartName,
 			SortOrder sortOrder,
-			SqlAstCreationState creationState,
-			SessionFactoryImplementor sessionFactory,
-			SqlExpressionResolver sqlExprResolver) {
+			SqlAstCreationState creationState) {
 		if ( referenceModelPart instanceof BasicValuedModelPart ) {
 			addSortSpecification(
 					(BasicValuedModelPart) referenceModelPart,
@@ -86,9 +81,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 					collation,
 					modelPartName,
 					sortOrder,
-					creationState,
-					sessionFactory,
-					sqlExprResolver
+					creationState
 			);
 		}
 		else if ( referenceModelPart instanceof EmbeddableValuedModelPart ) {
@@ -99,9 +92,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 					collation,
 					modelPartName,
 					sortOrder,
-					creationState,
-					sessionFactory,
-					sqlExprResolver
+					creationState
 			);
 		}
 		else {
@@ -117,30 +108,18 @@ public abstract class AbstractDomainPath implements DomainPath {
 			String collation,
 			String modelPartName,
 			SortOrder sortOrder,
-			SqlAstCreationState creationState,
-			SessionFactoryImplementor sessionFactory,
-			SqlExpressionResolver sqlExprResolver) {
+			SqlAstCreationState creationState) {
 		if ( embeddableValuedModelPart.getFetchableName()
 				.equals( modelPartName ) || ELEMENT_TOKEN.equals( modelPartName ) ) {
 			embeddableValuedModelPart.forEachSelection(
 					(columnIndex, selection) -> {
-						final TableReference tableReference = tableGroup.resolveTableReference( selection.getContainingTableExpression() );
-						ast.addSortSpecification(
-								new SortSpecification(
-										sqlExprResolver.resolveSqlExpression(
-												SqlExpressionResolver.createColumnReferenceKey(
-														selection.getContainingTableExpression(),
-														selection.getSelectionExpression()
-												),
-												sqlAstProcessingState -> new ColumnReference(
-														tableReference,
-														selection,
-														sessionFactory
-												)
-										),
-										collation,
-										sortOrder
-								)
+						addSortSpecification(
+								selection,
+								ast,
+								tableGroup,
+								collation,
+								sortOrder,
+								creationState
 						);
 					}
 			);
@@ -160,24 +139,33 @@ public abstract class AbstractDomainPath implements DomainPath {
 	}
 
 	private void addSortSpecification(
-			BasicValuedModelPart basicValuedPart,
+			SelectionMapping selection,
 			QuerySpec ast,
 			TableGroup tableGroup,
 			String collation,
 			SortOrder sortOrder,
 			SqlAstCreationState creationState) {
-		final TableReference tableReference = tableGroup.resolveTableReference( basicValuedPart.getContainingTableExpression() );
-
-		ast.addSortSpecification(
-				new SortSpecification(
-						new ColumnReference(
-								tableReference,
-								basicValuedPart,
-								creationState.getCreationContext().getSessionFactory()
-						),
-						collation,
-						sortOrder
+		final TableReference tableReference = tableGroup.resolveTableReference( selection.getContainingTableExpression() );
+		final Expression expression = creationState.getSqlExpressionResolver().resolveSqlExpression(
+				SqlExpressionResolver.createColumnReferenceKey(
+						selection.getContainingTableExpression(),
+						selection.getSelectionExpression()
+				),
+				sqlAstProcessingState -> new ColumnReference(
+						tableReference,
+						selection,
+						creationState.getCreationContext().getSessionFactory()
 				)
 		);
+		// It makes no sense to order by an expression multiple times
+		// SQL Server even reports a query error in this case
+		if ( ast.hasSortSpecifications() ) {
+			for ( SortSpecification sortSpecification : ast.getSortSpecifications() ) {
+				if ( sortSpecification.getSortExpression() == expression ) {
+					return;
+				}
+			}
+		}
+		ast.addSortSpecification( new SortSpecification( expression, collation, sortOrder ) );
 	}
 }

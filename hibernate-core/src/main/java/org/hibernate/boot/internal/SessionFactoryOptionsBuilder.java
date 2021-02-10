@@ -225,6 +225,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private final boolean procedureParameterNullPassingEnabled;
 	private final boolean collectionJoinSubqueryRewriteEnabled;
 	private final boolean omitJoinOfSuperclassTablesEnabled;
+	private final int preferredSqlTypeCodeForBoolean;
 
 	// Caching
 	private boolean secondLevelCacheEnabled;
@@ -415,6 +416,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.procedureParameterNullPassingEnabled = cfgService.getSetting( PROCEDURE_NULL_PARAM_PASSING, BOOLEAN, false );
 		this.collectionJoinSubqueryRewriteEnabled = cfgService.getSetting( COLLECTION_JOIN_SUBQUERY, BOOLEAN, true );
 		this.omitJoinOfSuperclassTablesEnabled = cfgService.getSetting( OMIT_JOIN_OF_SUPERCLASS_TABLES, BOOLEAN, true );
+		this.preferredSqlTypeCodeForBoolean = ConfigurationHelper.getPreferredSqlTypeCodeForBoolean( serviceRegistry );
 
 		final RegionFactory regionFactory = serviceRegistry.getService( RegionFactory.class );
 		if ( !NoCachingRegionFactory.class.isInstance( regionFactory ) ) {
@@ -1204,8 +1206,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		return omitJoinOfSuperclassTablesEnabled;
 	}
 
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	@Override
+	public int getPreferredSqlTypeCodeForBoolean() {
+		return preferredSqlTypeCodeForBoolean;
+	}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// In-flight mutation access
 
 	public void applyBeanManager(Object beanManager) {

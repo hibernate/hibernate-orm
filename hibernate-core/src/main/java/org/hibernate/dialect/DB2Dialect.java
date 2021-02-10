@@ -28,7 +28,6 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.query.CastType;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.internal.cte.CteStrategy;
@@ -662,7 +661,22 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsValuesList() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInInList() {
+		return false;
+	}
+
+	@Override
 	public boolean supportsPartitionBy() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsNonQueryWithCTE() {
 		return true;
 	}
 
@@ -679,7 +693,7 @@ public class DB2Dialect extends Dialect {
 	@Override
 	public String translateDatetimeFormat(String format) {
 		//DB2 does not need nor support FM
-		return OracleDialect.datetimeFormat( format, false ).result();
+		return OracleDialect.datetimeFormat( format, false, false ).result();
 	}
 
 	@Override
@@ -700,16 +714,6 @@ public class DB2Dialect extends Dialect {
 		}
 		else {
 			return bool ? "true" : "false";
-		}
-	}
-
-	@Override
-	public String castPattern(CastType from, CastType to) {
-		if ( getVersion() < 1100 && from == CastType.BOOLEAN && to == CastType.STRING ) {
-			return "case when ?1 = 1 then 'true' else 'false' end";
-		}
-		else {
-			return super.castPattern( from, to );
 		}
 	}
 

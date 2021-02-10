@@ -2,6 +2,7 @@ package org.hibernate.orm.test.annotations.collectionelement;
 
 import java.util.HashSet;
 import java.util.Set;
+import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
@@ -100,6 +101,7 @@ public class EmbeddableElementCollectionMemberOfTest {
 			this.street = street;
 		}
 
+		@Column(name = "house_number")
 		public int getNumber() {
 			return number;
 		}

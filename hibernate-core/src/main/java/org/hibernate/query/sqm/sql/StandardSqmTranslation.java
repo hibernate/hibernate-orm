@@ -21,13 +21,13 @@ import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 public class StandardSqmTranslation<T extends Statement> implements SqmTranslation<T> {
 
 	private final T sqlAst;
-	private final Map<SqmParameter, List<JdbcParameter>> jdbcParamMap;
+	private final Map<SqmParameter, List<List<JdbcParameter>>> jdbcParamMap;
 	private final SqlExpressionResolver sqlExpressionResolver;
 	private final FromClauseAccess fromClauseAccess;
 
 	public StandardSqmTranslation(
 			T sqlAst,
-			Map<SqmParameter, List<JdbcParameter>> jdbcParamMap,
+			Map<SqmParameter, List<List<JdbcParameter>>> jdbcParamMap,
 			SqlExpressionResolver sqlExpressionResolver,
 			FromClauseAccess fromClauseAccess) {
 		this.sqlAst = sqlAst;
@@ -42,7 +42,7 @@ public class StandardSqmTranslation<T extends Statement> implements SqmTranslati
 	}
 
 	@Override
-	public Map<SqmParameter, List<JdbcParameter>> getJdbcParamsBySqmParam() {
+	public Map<SqmParameter, List<List<JdbcParameter>>> getJdbcParamsBySqmParam() {
 		return jdbcParamMap;
 	}
 

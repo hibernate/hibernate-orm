@@ -16,7 +16,6 @@ import org.hibernate.dialect.sequence.MimerSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.CastType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
@@ -31,8 +30,6 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import java.sql.Types;
 
 import javax.persistence.TemporalType;
-
-import static org.hibernate.query.CastType.BOOLEAN;
 
 /**
  * A dialect for Mimer SQL 11.
@@ -122,34 +119,6 @@ public class MimerSQLDialect extends Dialect {
 				return new MimerSQLSqlAstTranslator<>( sessionFactory, statement );
 			}
 		};
-	}
-
-	/**
-	 * Mimer does have a real {@link java.sql.Types#BOOLEAN}
-	 * type, but it doesn't know how to cast to it.
-	 */
-	@Override
-	public String castPattern(CastType from, CastType to) {
-		switch (to) {
-			case BOOLEAN:
-				switch (from) {
-					case STRING:
-//						return "case when regexp_match(lower(?1), '^(t|f|true|false)$') then lower(?1) like 't%' end";
-//						return "case when lower(?1)in('t','true') then true when lower(?1)in('f','false') then false end";
-						return "case when ?1 in('t','true','T','TRUE') then true when ?1 in('f','false','F','FALSE') then false end";
-					case LONG:
-					case INTEGER:
-						return "(?1<>0)";
-				}
-				break;
-			case INTEGER:
-			case LONG:
-				if (from == BOOLEAN) {
-					return "case ?1 when false then 0 when true then 1 end";
-				}
-				break;
-		}
-		return super.castPattern(from, to);
 	}
 
 	@Override

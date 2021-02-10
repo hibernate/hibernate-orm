@@ -5,6 +5,7 @@ import java.util.Objects;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -135,6 +136,7 @@ public class SortNaturalByDefaultTests {
 		@GeneratedValue
 		private Long id;
 
+		@Column(name = "phone_number")
 		private String number;
 
 		public Phone() {

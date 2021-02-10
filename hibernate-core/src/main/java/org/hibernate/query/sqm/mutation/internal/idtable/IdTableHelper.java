@@ -99,7 +99,7 @@ public class IdTableHelper {
 			final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
 
 			try {
-				final String dropCommand = exporter.getSqlCreateCommand( idTable );
+				final String dropCommand = exporter.getSqlDropCommand( idTable );
 				logStatement( dropCommand, jdbcServices );
 
 				try (Statement statement = connection.createStatement()) {

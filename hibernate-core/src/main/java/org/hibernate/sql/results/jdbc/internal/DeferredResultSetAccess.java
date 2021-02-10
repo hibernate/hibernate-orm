@@ -155,7 +155,7 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 
 			// For dialects that don't support an offset clause
 			final int rowsToSkip;
-			if ( !jdbcSelect.usesLimitParameters() && limit != null && limit.getFirstRow() != null && !limitHandler.supportsOffset() ) {
+			if ( !jdbcSelect.usesLimitParameters() && limit != null && limit.getFirstRow() != null && !limitHandler.supportsLimitOffset() ) {
 				rowsToSkip = limit.getFirstRow();
 			}
 			else {

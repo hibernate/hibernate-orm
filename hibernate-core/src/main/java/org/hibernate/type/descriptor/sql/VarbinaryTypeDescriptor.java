@@ -46,7 +46,7 @@ public class VarbinaryTypeDescriptor implements SqlTypeDescriptor {
 
 	@Override
 	public String toString() {
-		return "VarbinaryTypeDescriptor)";
+		return "VarbinaryTypeDescriptor";
 	}
 
 	public int getSqlType() {

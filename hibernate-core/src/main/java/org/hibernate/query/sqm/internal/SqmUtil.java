@@ -79,7 +79,7 @@ public class SqmUtil {
 		}
 	}
 
-	public static Map<QueryParameterImplementor<?>, Map<SqmParameter, List<JdbcParameter>>> generateJdbcParamsXref(
+	public static Map<QueryParameterImplementor<?>, Map<SqmParameter, List<List<JdbcParameter>>>> generateJdbcParamsXref(
 			DomainParameterXref domainParameterXref,
 			JdbcParameterBySqmParameterAccess jdbcParameterBySqmParameterAccess) {
 		if ( domainParameterXref == null || !domainParameterXref.hasParameters() ) {
@@ -87,13 +87,13 @@ public class SqmUtil {
 		}
 
 		final int queryParameterCount = domainParameterXref.getQueryParameterCount();
-		final Map<QueryParameterImplementor<?>, Map<SqmParameter, List<JdbcParameter>>> result = new IdentityHashMap<>( queryParameterCount );
+		final Map<QueryParameterImplementor<?>, Map<SqmParameter, List<List<JdbcParameter>>>> result = new IdentityHashMap<>( queryParameterCount );
 
 		for ( Map.Entry<QueryParameterImplementor<?>, List<SqmParameter>> entry : domainParameterXref.getSqmParamByQueryParam().entrySet() ) {
 			final QueryParameterImplementor<?> queryParam = entry.getKey();
 			final List<SqmParameter> sqmParams = entry.getValue();
 
-			final Map<SqmParameter, List<JdbcParameter>> sqmParamMap = result.computeIfAbsent(
+			final Map<SqmParameter, List<List<JdbcParameter>>> sqmParamMap = result.computeIfAbsent(
 					queryParam,
 					qp -> new IdentityHashMap<>( sqmParams.size() )
 			);
@@ -157,7 +157,7 @@ public class SqmUtil {
 	public static JdbcParameterBindings createJdbcParameterBindings(
 			QueryParameterBindings domainParamBindings,
 			DomainParameterXref domainParameterXref,
-			Map<QueryParameterImplementor<?>, Map<SqmParameter, List<JdbcParameter>>> jdbcParamXref,
+			Map<QueryParameterImplementor<?>, Map<SqmParameter, List<List<JdbcParameter>>>> jdbcParamXref,
 			MappingMetamodel domainModel,
 			Function<NavigablePath, TableGroup> tableGroupLocator,
 			SharedSessionContractImplementor session) {
@@ -177,31 +177,43 @@ public class SqmUtil {
 					session.getFactory()
 			);
 
-			final Map<SqmParameter, List<JdbcParameter>> jdbcParamMap = jdbcParamXref.get( queryParam );
+			final Map<SqmParameter, List<List<JdbcParameter>>> jdbcParamMap = jdbcParamXref.get( queryParam );
 			for ( SqmParameter sqmParameter : sqmParameters ) {
-				final List<JdbcParameter> jdbcParams = jdbcParamMap.get( sqmParameter );
-
-				if ( ! domainParamBinding.isBound() ) {
+				final List<List<JdbcParameter>> jdbcParamsBinds = jdbcParamMap.get( sqmParameter );
+				if ( !domainParamBinding.isBound() ) {
 					final MappingModelExpressable mappingExpressable = SqmMappingModelHelper.resolveMappingModelExpressable(
 							sqmParameter,
 							domainModel,
 							tableGroupLocator
 					);
-					mappingExpressable.forEachJdbcType(
-							(position, jdbcType) -> {
-								jdbcParameterBindings.addBinding(
-										jdbcParams.get( position ),
-										new JdbcParameterBindingImpl( jdbcType, null )
-								);
-							}
-					);
+					for ( int i = 0; i < jdbcParamsBinds.size(); i++ ) {
+						final List<JdbcParameter> jdbcParams = jdbcParamsBinds.get( i );
+						mappingExpressable.forEachJdbcType(
+								(position, jdbcType) -> {
+									jdbcParameterBindings.addBinding(
+											jdbcParams.get( position ),
+											new JdbcParameterBindingImpl( jdbcType, null )
+									);
+								}
+						);
+					}
 				}
 				else if ( domainParamBinding.isMultiValued() ) {
 					final Collection<?> bindValues = domainParamBinding.getBindValues();
 					final Iterator<?> valueItr = bindValues.iterator();
 
 					// the original SqmParameter is the one we are processing.. create a binding for it..
-					createValueBindings( jdbcParameterBindings, domainParamBinding, parameterType, jdbcParams, valueItr.next(), session );
+					for ( int i = 0; i < jdbcParamsBinds.size(); i++ ) {
+						final List<JdbcParameter> jdbcParams = jdbcParamsBinds.get( i );
+						createValueBindings(
+								jdbcParameterBindings,
+								domainParamBinding,
+								parameterType,
+								jdbcParams,
+								valueItr.next(),
+								session
+						);
+					}
 
 					// an then one for each of the expansions
 					final List<SqmParameter> expansions = domainParameterXref.getExpansions( sqmParameter );
@@ -209,23 +221,45 @@ public class SqmUtil {
 					int expansionPosition = 0;
 					while ( valueItr.hasNext() ) {
 						final SqmParameter expansionSqmParam = expansions.get( expansionPosition++ );
-						final List<JdbcParameter> expansionJdbcParams = jdbcParamMap.get( expansionSqmParam );
-						createValueBindings( jdbcParameterBindings, domainParamBinding, parameterType, expansionJdbcParams, valueItr.next(), session );
+						final List<List<JdbcParameter>> jdbcParamBinds = jdbcParamMap.get( expansionSqmParam );
+						for ( int i = 0; i < jdbcParamBinds.size(); i++ ) {
+							List<JdbcParameter> expansionJdbcParams = jdbcParamBinds.get( i );
+							createValueBindings(
+									jdbcParameterBindings,
+									domainParamBinding,
+									parameterType,
+									expansionJdbcParams,
+									valueItr.next(),
+									session
+							);
+						}
 					}
 				}
 				else if ( domainParamBinding.getBindValue() == null ) {
-					assert jdbcParams != null;
-					for ( int i = 0; i < jdbcParams.size(); i++ ) {
-						final JdbcParameter jdbcParameter = jdbcParams.get( i );
-						jdbcParameterBindings.addBinding(
-								jdbcParameter,
-								new JdbcParameterBindingImpl( null, null )
-						);
+					for ( int i = 0; i < jdbcParamsBinds.size(); i++ ) {
+						final List<JdbcParameter> jdbcParams = jdbcParamsBinds.get( i );
+						for ( int j = 0; j < jdbcParams.size(); j++ ) {
+							final JdbcParameter jdbcParameter = jdbcParams.get( j );
+							jdbcParameterBindings.addBinding(
+									jdbcParameter,
+									new JdbcParameterBindingImpl( null, null )
+							);
+						}
 					}
 				}
 				else {
 					final Object bindValue = domainParamBinding.getBindValue();
-					createValueBindings( jdbcParameterBindings, domainParamBinding, parameterType, jdbcParams, bindValue, session );
+					for ( int i = 0; i < jdbcParamsBinds.size(); i++ ) {
+						final List<JdbcParameter> jdbcParams = jdbcParamsBinds.get( i );
+						createValueBindings(
+								jdbcParameterBindings,
+								domainParamBinding,
+								parameterType,
+								jdbcParams,
+								bindValue,
+								session
+						);
+					}
 				}
 			}
 		}

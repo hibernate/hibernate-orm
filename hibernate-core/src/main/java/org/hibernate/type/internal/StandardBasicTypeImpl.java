@@ -6,10 +6,14 @@
  */
 package org.hibernate.type.internal;
 
+import java.sql.Types;
+
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.query.CastType;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypeDescriptorIndicatorCapable;
+import org.hibernate.type.descriptor.java.BooleanTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
@@ -50,5 +54,21 @@ public class StandardBasicTypeImpl<J>
 		return indicators.getTypeConfiguration()
 				.getBasicTypeRegistry()
 				.resolve( getJavaTypeDescriptor(), recommendedSqlType );
+	}
+
+	@Override
+	public CastType getCastType() {
+		if ( getJavaTypeDescriptor() == BooleanTypeDescriptor.INSTANCE ) {
+			switch ( sqlType() ) {
+				case Types.BIT:
+				case Types.SMALLINT:
+				case Types.TINYINT:
+				case Types.INTEGER:
+					return CastType.INTEGER_BOOLEAN;
+				case Types.CHAR:
+					return CastType.YN_BOOLEAN;
+			}
+		}
+		return super.getCastType();
 	}
 }

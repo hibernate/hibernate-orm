@@ -19,6 +19,6 @@ public interface SessionFactoryAccess extends DialectAccess {
 
 	@Override
 	default Dialect getDialect() {
-		return getSessionFactory().getJdbcServices().getDialect();
+		return DialectContext.getDialect();
 	}
 }

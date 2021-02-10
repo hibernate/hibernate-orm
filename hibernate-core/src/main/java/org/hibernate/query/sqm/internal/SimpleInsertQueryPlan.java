@@ -40,7 +40,7 @@ public class SimpleInsertQueryPlan implements NonSelectQueryPlan {
 
 	private JdbcInsert jdbcInsert;
 	private FromClauseAccess tableGroupAccess;
-	private Map<QueryParameterImplementor<?>, Map<SqmParameter, List<JdbcParameter>>> jdbcParamsXref;
+	private Map<QueryParameterImplementor<?>, Map<SqmParameter, List<List<JdbcParameter>>>> jdbcParamsXref;
 
 	public SimpleInsertQueryPlan(
 			SqmInsertStatement sqmInsert,

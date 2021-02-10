@@ -50,7 +50,7 @@ public class DB2FormatEmulation
 		final Format format = (Format) arguments.get(1);
 
 		sqlAppender.appendSql("(");
-		String[] bits = OracleDialect.datetimeFormat( format.getFormat(), false ).result().split("\"");
+		String[] bits = OracleDialect.datetimeFormat( format.getFormat(), false, false ).result().split("\"");
 		boolean first = true;
 		for ( int i=0; i<bits.length; i++ ) {
 			String bit = bits[i];

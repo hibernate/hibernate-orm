@@ -88,7 +88,7 @@ public class PostgreSQLDatabaseCleaner implements DatabaseCleaner {
 			Map<String, List<String>> schemaExtensions = new HashMap<>();
 			try (Statement s2 = c.createStatement()) {
 				rs = s2.executeQuery(
-						"SELECT ns.nspname, 'CREATE EXTENSION ' || e.extname || ' SCHEMA \"' || ns.nspname || '\" VERSION ' || e.extversion FROM pg_extension e JOIN pg_catalog.pg_namespace ns ON e.extnamespace = ns.oid WHERE e.extname <> 'plpgsql'"
+						"SELECT ns.nspname, 'CREATE EXTENSION ' || e.extname || ' SCHEMA \"' || ns.nspname || '\"' FROM pg_extension e JOIN pg_catalog.pg_namespace ns ON e.extnamespace = ns.oid WHERE e.extname <> 'plpgsql'"
 				);
 				while ( rs.next() ) {
 					schemaExtensions.computeIfAbsent( rs.getString( 1 ), k -> new ArrayList<>() )

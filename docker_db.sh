@@ -38,6 +38,65 @@ db2() {
     docker exec -t db2 su - orm_test bash -c ". /database/config/orm_test/sqllib/db2profile && /database/config/orm_test/sqllib/bin/db2 'connect to orm_test' && /database/config/orm_test/sqllib/bin/db2 'CREATE USER TEMPORARY TABLESPACE usr_tbsp MANAGED BY AUTOMATIC STORAGE'"
 }
 
+db2_spatial() {
+    docker rm -f db2spatial || true
+    temp_dir=$(mktemp -d)
+    cat <<EOF >${temp_dir}/ewkt.sql
+create or replace function db2gse.asewkt(geometry db2gse.st_geometry)
+returns clob(2G)
+specific db2gse.asewkt1
+language sql
+deterministic
+no external action
+reads sql data
+return 'srid=' || varchar(db2gse.st_srsid(geometry)) || ';' || db2gse.st_astext(geometry)
+;
+
+-- Create SQL function to create a geometry from EWKT format
+create or replace function db2gse.geomfromewkt(instring varchar(32000))
+returns db2gse.st_geometry
+specific db2gse.fromewkt1
+language sql
+deterministic
+no external action
+reads sql data
+return db2gse.st_geometry(
+substr(instring,posstr(instring,';')+1, length(instring) - posstr(instring,';')),
+integer(substr(instring,posstr(instring,'=')+1,posstr(instring,';')-(posstr(instring,'=')+1)))
+)
+;
+-- Create a DB2 transform group to return and accept EWKT
+CREATE TRANSFORM FOR db2gse.ST_Geometry EWKT (
+       FROM SQL WITH FUNCTION db2gse.asewkt(db2gse.ST_Geometry),
+       TO   SQL WITH FUNCTION db2gse.geomfromewkt(varchar(32000)) )
+	;
+
+-- Redefine the default DB2_PROGRAM to return and accept EWKT instead of WKT
+DROP TRANSFORM DB2_PROGRAM FOR db2gse.ST_Geometry;
+CREATE TRANSFORM FOR db2gse.ST_Geometry DB2_PROGRAM (
+       FROM SQL WITH FUNCTION db2gse.asewkt(db2gse.ST_Geometry),
+       TO   SQL WITH FUNCTION db2gse.geomfromewkt(varchar(32000)) )
+;
+EOF
+    docker run --name db2spatial --privileged -e DB2INSTANCE=orm_test -e DB2INST1_PASSWORD=orm_test -e DBNAME=orm_test -e LICENSE=accept -e AUTOCONFIG=false -e ARCHIVE_LOGS=false -e TO_CREATE_SAMPLEDB=false -e REPODB=false \
+        -v ${temp_dir}:/conf  \
+        -p 50000:50000 -d ibmcom/db2:11.5.5.0
+
+    # Give the container some time to start
+    OUTPUT=
+    while [[ $OUTPUT != *"Setup has completed."* ]]; do
+        echo "Waiting for DB2 to start..."
+        sleep 10
+        OUTPUT=$(docker logs db2spatial)
+    done
+    sleep 10
+    echo "Enabling spatial extender"
+    docker exec -t db2spatial su - orm_test bash -c "/database/config/orm_test/sqllib/db2profile && /database/config/orm_test/sqllib/bin/db2se enable_db orm_test"
+    echo "Installing required transform group"
+    docker exec -t db2spatial su - orm_test bash -c "/database/config/orm_test/sqllib/db2profile && /database/config/orm_test/sqllib/bin/db2 'connect to orm_test' && /database/config/orm_test/sqllib/bin/db2 -tvf /conf/ewkt.sql"
+
+}
+
 mssql() {
     docker rm -f mssql || true
     docker run --name mssql -d -p 1433:1433 -e "SA_PASSWORD=Hibernate_orm_test" -e ACCEPT_EULA=Y microsoft/mssql-server-linux:2017-CU13
@@ -166,6 +225,8 @@ if [ -z ${1} ]; then
     echo -e "\tdb2"
     echo -e "\tmssql"
     echo -e "\toracle"
+    echo -e "\tpostgis_9_6"
+    echo -e "\tdb2_spatial"
 else
     ${1}
 fi

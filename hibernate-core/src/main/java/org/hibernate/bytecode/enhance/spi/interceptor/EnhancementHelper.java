@@ -11,7 +11,7 @@ import java.util.function.BiFunction;
 
 import org.hibernate.FlushMode;
 import org.hibernate.LazyInitializationException;
-import org.hibernate.bytecode.BytecodeLogger;
+import org.hibernate.bytecode.BytecodeLogging;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.SessionFactoryRegistry;
@@ -37,7 +37,7 @@ public class EnhancementHelper {
 		if ( ! isEnhanced ) {
 			if ( value instanceof ToOne ) {
 				if ( ( (ToOne) value ).isUnwrapProxy() ) {
-					BytecodeLogger.LOGGER.debugf(
+					BytecodeLogging.MESSAGE_LOGGER.debugf(
 							"To-one property `%s#%s` was mapped with LAZY + NO_PROXY but the class was not enhanced",
 							bootMapping.getPersistentClass().getEntityName(),
 							bootMapping.getName()
@@ -47,6 +47,8 @@ public class EnhancementHelper {
 			return true;
 		}
 
+		// we know the property owner is enhanced for laziness...
+
 		if ( value instanceof ToOne ) {
 			final ToOne toOne = (ToOne) value;
 
@@ -55,10 +57,43 @@ public class EnhancementHelper {
 				return true;
 			}
 
+			// it is lazy.  see if we should select the FK
+
+			if ( bootMapping.getLazyGroup() != null ) {
+				// a non-base fetch group was explicitly specified
+				//
+				// really this should indicate to not select it as part of the base group.
+				// however, at the time being that leads to inefficient SQL - so for now
+				// we simply log a message that we are ignoring the `@LazyGroup` for to-ones
+
+				BytecodeLogging.MESSAGE_LOGGER.lazyGroupIgnoredForToOne(
+						bootMapping.getPersistentClass().getEntityName(),
+						bootMapping.getName(),
+						bootMapping.getLazyGroup()
+				);
+
+				// at a later time - for example 6.0 when we can implement the join solution
+				// return false;
+
+				// for now, fall through
+			}
+
 			if ( ! toOne.isReferenceToPrimaryKey() ) {
 				// we do not have a reference to the associated primary-key
 				return false;
 			}
+
+			final boolean unwrapExplicitlyRequested = toOne.isUnwrapProxy() && !toOne.isUnwrapProxyImplicit();
+
+			if ( unwrapExplicitlyRequested ) {
+				// NO_PROXY was explicitly requested
+				return false;
+			}
+
+
+
+			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			// original
 
 			if ( toOne.isLazy() ) {
 				if ( toOne.isUnwrapProxy() ) {
@@ -129,7 +164,7 @@ public class EnhancementHelper {
 
 		// If we are using a temporary Session, begin a transaction if necessary
 		if ( isTempSession ) {
-			BytecodeLogger.LOGGER.debug( "Enhancement interception Helper#performWork started temporary Session" );
+			BytecodeLogging.LOGGER.debug( "Enhancement interception Helper#performWork started temporary Session" );
 
 			isJta = session.getTransactionCoordinator().getTransactionCoordinatorBuilder().isJta();
 
@@ -139,7 +174,7 @@ public class EnhancementHelper {
 				// be created even if a current session and transaction are
 				// open (ex: session.clear() was used).  We must prevent
 				// multiple transactions.
-				BytecodeLogger.LOGGER.debug( "Enhancement interception Helper#performWork starting transaction on temporary Session" );
+				BytecodeLogging.LOGGER.debug( "Enhancement interception Helper#performWork starting transaction on temporary Session" );
 				session.beginTransaction();
 			}
 		}
@@ -153,12 +188,12 @@ public class EnhancementHelper {
 				try {
 					// Commit the JDBC transaction if we started one.
 					if ( !isJta ) {
-						BytecodeLogger.LOGGER.debug( "Enhancement interception Helper#performWork committing transaction on temporary Session" );
+						BytecodeLogging.LOGGER.debug( "Enhancement interception Helper#performWork committing transaction on temporary Session" );
 						session.getTransaction().commit();
 					}
 				}
 				catch (Exception e) {
-					BytecodeLogger.LOGGER.warn(
+					BytecodeLogging.LOGGER.warn(
 							"Unable to commit JDBC transaction on temporary session used to load lazy " +
 									"collection associated to no session"
 					);
@@ -166,11 +201,11 @@ public class EnhancementHelper {
 
 				// Close the just opened temp Session
 				try {
-					BytecodeLogger.LOGGER.debug( "Enhancement interception Helper#performWork closing temporary Session" );
+					BytecodeLogging.LOGGER.debug( "Enhancement interception Helper#performWork closing temporary Session" );
 					session.close();
 				}
 				catch (Exception e) {
-					BytecodeLogger.LOGGER.warn( "Unable to close temporary session used to load lazy collection associated to no session" );
+					BytecodeLogging.LOGGER.warn( "Unable to close temporary session used to load lazy collection associated to no session" );
 				}
 			}
 		}

@@ -6,22 +6,8 @@
  */
 package org.hibernate.test.bytecode.enhancement.lazy.group;
 
-import org.hibernate.annotations.LazyGroup;
-import org.hibernate.annotations.LazyToOne;
-import org.hibernate.annotations.LazyToOneOption;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.proxy.HibernateProxy;
-
-import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
+import java.util.ArrayList;
+import java.util.List;
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -32,8 +18,21 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
-import java.util.ArrayList;
-import java.util.List;
+
+import org.hibernate.annotations.LazyGroup;
+import org.hibernate.annotations.LazyToOne;
+import org.hibernate.annotations.LazyToOneOption;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.proxy.HibernateProxy;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import static org.hibernate.testing.bytecode.enhancement.EnhancerTestUtils.getFieldByReflection;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
@@ -47,10 +46,6 @@ import static org.junit.Assert.assertNull;
  */
 @TestForIssue( jiraKey = "HHH-11155" )
 @RunWith( BytecodeEnhancerRunner.class )
-@FailureExpected(
-        jiraKey = "HHH-13658",
-        message = "Assertions specific to enhanced lazy loading but disallowing enhanced proxies, which is no longer valid"
-)
 public class LazyGroupTest extends BaseCoreFunctionalTestCase {
 
     @Override

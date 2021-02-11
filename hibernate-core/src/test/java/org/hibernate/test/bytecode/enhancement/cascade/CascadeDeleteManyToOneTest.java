@@ -22,7 +22,6 @@ import org.hibernate.annotations.LazyToOne;
 import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -65,10 +64,6 @@ public class CascadeDeleteManyToOneTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected(
-			jiraKey = "HHH-13658",
-			message = "Assertions specific to enhanced lazy loading but disallowing enhanced proxies, which is no longer valid"
-	)
 	public void testManagedWithUninitializedAssociation() {
 		// Delete the Child
 		doInHibernate(
@@ -114,10 +109,6 @@ public class CascadeDeleteManyToOneTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected(
-			jiraKey = "HHH-13658",
-			message = "Assertions specific to enhanced lazy loading but disallowing enhanced proxies, which is no longer valid"
-	)
 	public void testDetachedWithUninitializedAssociation() {
 		final Child detachedChild = doInHibernate(
 				this::sessionFactory, s -> {
@@ -145,10 +136,6 @@ public class CascadeDeleteManyToOneTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected(
-			jiraKey = "HHH-13658",
-			message = "Assertions specific to enhanced lazy loading but disallowing enhanced proxies, which is no longer valid"
-	)
 	public void testDetachedWithInitializedAssociation() {
 		final Child detachedChild = doInHibernate(
 				this::sessionFactory, s -> {

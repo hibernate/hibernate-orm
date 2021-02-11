@@ -1,5 +1,8 @@
 package org.hibernate.test.bytecode.enhancement.lazy.cache;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 import javax.persistence.Basic;
 import javax.persistence.Cacheable;
 import javax.persistence.Entity;
@@ -11,10 +14,6 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
-import javax.validation.constraints.AssertTrue;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Cache;
@@ -25,7 +24,6 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.stat.CacheRegionStatistics;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -53,10 +51,6 @@ public class UninitializedAssociationsInCacheTest extends BaseCoreFunctionalTest
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-11766")
-	@FailureExpected(
-			jiraKey = "HHH-13658",
-			message = "Assertions specific to enhanced lazy loading but disallowing enhanced proxies, which is no longer valid"
-	)
 	public void attributeLoadingFromCache() {
 		final AtomicLong bossId = new AtomicLong();
 		final AtomicLong teamleaderId = new AtomicLong();

@@ -21,7 +21,6 @@ import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
@@ -44,10 +43,6 @@ import static org.junit.Assert.assertFalse;
 public class NaturalIdInUninitializedAssociationTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test
-	@FailureExpected(
-			jiraKey = "HHH-13658",
-			message = "Assertions specific to enhanced lazy loading but disallowing enhanced proxies, which is no longer valid"
-	)
 	public void testImmutableNaturalId() {
 		inTransaction(
 				session -> {
@@ -65,10 +60,6 @@ public class NaturalIdInUninitializedAssociationTest extends BaseNonConfigCoreFu
 	}
 
 	@Test
-	@FailureExpected(
-			jiraKey = "HHH-13658",
-			message = "Assertions specific to enhanced lazy loading but disallowing enhanced proxies, which is no longer valid"
-	)
 	public void testMutableNaturalId() {
 		inTransaction(
 				session -> {

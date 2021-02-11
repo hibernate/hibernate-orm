@@ -121,6 +121,13 @@ ext {
                         'jdbc.pass'  : 'Oracle18',
                         'jdbc.url'   : 'jdbc:oracle:thin:@' + dbHost + ':1521:XE'
                 ],
+                oracle_spatial_ci : [
+                        'db.dialect' : 'org.hibernate.spatial.dialect.oracle.OracleSpatial10gDialect',
+                        'jdbc.driver': 'oracle.jdbc.OracleDriver',
+                        'jdbc.user'  : 'SYSTEM',
+                        'jdbc.pass'  : 'Oracle18',
+                        'jdbc.url'   : 'jdbc:oracle:thin:@' + dbHost + ':1521:XE'
+                ],
                 mssql : [
                         'db.dialect' : 'org.hibernate.dialect.SQLServer2012Dialect',
                         'jdbc.driver': 'com.microsoft.sqlserver.jdbc.SQLServerDriver',
@@ -130,6 +137,13 @@ ext {
                 ],
                 mssql_ci : [
                         'db.dialect' : 'org.hibernate.dialect.SQLServer2012Dialect',
+                        'jdbc.driver': 'com.microsoft.sqlserver.jdbc.SQLServerDriver',
+                        'jdbc.user'  : 'sa',
+                        'jdbc.pass'  : 'Hibernate_orm_test',
+                        'jdbc.url'   : 'jdbc:sqlserver://' + dbHost + ';databaseName=hibernate_orm_test'
+                ],
+                mssql_spatial_ci : [
+                        'db.dialect' : 'org.hibernate.spatial.dialect.sqlserver.SqlServer2012SpatialDialect',
                         'jdbc.driver': 'com.microsoft.sqlserver.jdbc.SQLServerDriver',
                         'jdbc.user'  : 'sa',
                         'jdbc.pass'  : 'Hibernate_orm_test',

@@ -25,6 +25,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.stat.CacheRegionStatistics;
 
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -52,6 +53,10 @@ public class UninitializedAssociationsInCacheTest extends BaseCoreFunctionalTest
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-11766")
+	@FailureExpected(
+			jiraKey = "HHH-13658",
+			message = "Assertions specific to enhanced lazy loading but disallowing enhanced proxies, which is no longer valid"
+	)
 	public void attributeLoadingFromCache() {
 		final AtomicLong bossId = new AtomicLong();
 		final AtomicLong teamleaderId = new AtomicLong();

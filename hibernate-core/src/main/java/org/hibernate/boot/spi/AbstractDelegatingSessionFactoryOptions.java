@@ -461,11 +461,6 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
-	public boolean isEnhancementAsProxyEnabled() {
-		return delegate.isEnhancementAsProxyEnabled();
-	}
-
-	@Override
 	public boolean isCollectionsInDefaultFetchGroupEnabled() {
 		return delegate.isCollectionsInDefaultFetchGroupEnabled();
 	}

@@ -78,6 +78,14 @@ ext {
                         'jdbc.pass'  : 'hibernate_orm_test',
                         'jdbc.url'   : 'jdbc:mysql://127.0.0.1/hibernate_orm_test?useSSL=false'
                 ],
+                // uses docker mysql_8_0
+                mysql8_spatial_ci: [
+                        'db.dialect' : 'org.hibernate.spatial.dialect.mysql.MySQL8SpatialDialect',
+                        'jdbc.driver': 'com.mysql.cj.jdbc.Driver',
+                        'jdbc.user'  : 'hibernate_orm_test',
+                        'jdbc.pass'  : 'hibernate_orm_test',
+                        'jdbc.url'   : 'jdbc:mysql://' + dbHost + '/hibernate_orm_test?allowPublicKeyRetrieval=true&useSSL=false'
+                ],
                 mariadb : [
                         'db.dialect' : 'org.hibernate.dialect.MariaDBDialect',
                         'jdbc.driver': 'org.mariadb.jdbc.Driver',
@@ -122,6 +130,13 @@ ext {
                         'jdbc.pass'  : 'Oracle18',
                         'jdbc.url'   : 'jdbc:oracle:thin:@' + dbHost + ':1521:XE'
                 ],
+                oracle_spatial_ci : [
+                        'db.dialect' : 'org.hibernate.spatial.dialect.oracle.OracleSpatial10gDialect',
+                        'jdbc.driver': 'oracle.jdbc.OracleDriver',
+                        'jdbc.user'  : 'SYSTEM',
+                        'jdbc.pass'  : 'Oracle18',
+                        'jdbc.url'   : 'jdbc:oracle:thin:@' + dbHost + ':1521:XE'
+                ],
                 mssql : [
                         'db.dialect' : 'org.hibernate.dialect.SQLServerDialect',
                         'jdbc.driver': 'com.microsoft.sqlserver.jdbc.SQLServerDriver',
@@ -131,6 +146,13 @@ ext {
                 ],
                 mssql_ci : [
                         'db.dialect' : 'org.hibernate.dialect.SQLServerDialect',
+                        'jdbc.driver': 'com.microsoft.sqlserver.jdbc.SQLServerDriver',
+                        'jdbc.user'  : 'sa',
+                        'jdbc.pass'  : 'Hibernate_orm_test',
+                        'jdbc.url'   : 'jdbc:sqlserver://' + dbHost + ';databaseName=hibernate_orm_test'
+                ],
+                mssql_spatial_ci : [
+                        'db.dialect' : 'org.hibernate.spatial.dialect.sqlserver.SqlServer2012SpatialDialect',
                         'jdbc.driver': 'com.microsoft.sqlserver.jdbc.SQLServerDriver',
                         'jdbc.user'  : 'sa',
                         'jdbc.pass'  : 'Hibernate_orm_test',
@@ -152,6 +174,13 @@ ext {
                 ],
                 db2_ci : [
                         'db.dialect' : 'org.hibernate.dialect.DB2Dialect',
+                        'jdbc.driver': 'com.ibm.db2.jcc.DB2Driver',
+                        'jdbc.user'  : 'orm_test',
+                        'jdbc.pass'  : 'orm_test',
+                        'jdbc.url'   : 'jdbc:db2://' + dbHost + ':50000/orm_test'
+                ],
+                db2_spatial_ci : [
+                        'db.dialect' : 'org.hibernate.spatial.dialect.db2.DB2SpatialDialect',
                         'jdbc.driver': 'com.ibm.db2.jcc.DB2Driver',
                         'jdbc.user'  : 'orm_test',
                         'jdbc.pass'  : 'orm_test',
@@ -183,6 +212,14 @@ ext {
                 ],
                 hana_docker : [
                         'db.dialect' : 'org.hibernate.dialect.HANAColumnStoreDialect',
+                        'jdbc.driver': 'com.sap.db.jdbc.Driver',
+                        'jdbc.user'  : 'SYSTEM',
+                        'jdbc.pass'  : 'H1bernate_test',
+                        // Disable prepared statement caching due to https://help.sap.com/viewer/0eec0d68141541d1b07893a39944924e/2.0.04/en-US/78f2163887814223858e4369d18e2847.html
+                        'jdbc.url'   : 'jdbc:sap://' + dbHost + ':39017/?statementCacheSize=0'
+                ],
+                hana_spatial_ci : [
+                        'db.dialect' : 'org.hibernate.spatial.dialect.hana.HANASpatialDialect',
                         'jdbc.driver': 'com.sap.db.jdbc.Driver',
                         'jdbc.user'  : 'SYSTEM',
                         'jdbc.pass'  : 'H1bernate_test',

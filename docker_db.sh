@@ -7,7 +7,7 @@ mysql_5_7() {
 
 mysql_8_0() {
     docker rm -f mysql || true
-    docker run --name mysql -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d mysql:8.0.21 --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    docker run --name mysql -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d mysql:8.0.21 --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
 }
 
 mariadb() {
@@ -25,6 +25,11 @@ postgresql_13() {
     docker run --name postgres -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 -d postgres:13.0
 }
 
+postgis(){
+  docker rm -f postgis || true
+  docker run --name postgis -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 -d postgis/postgis:11-2.5
+}
+
 db2() {
     docker rm -f db2 || true
     docker run --name db2 --privileged -e DB2INSTANCE=orm_test -e DB2INST1_PASSWORD=orm_test -e DBNAME=orm_test -e LICENSE=accept -e AUTOCONFIG=false -e ARCHIVE_LOGS=false -e TO_CREATE_SAMPLEDB=false -e REPODB=false -p 50000:50000 -d ibmcom/db2:11.5.5.0
@@ -36,6 +41,65 @@ db2() {
         OUTPUT=$(docker logs db2)
     done
     docker exec -t db2 su - orm_test bash -c ". /database/config/orm_test/sqllib/db2profile && /database/config/orm_test/sqllib/bin/db2 'connect to orm_test' && /database/config/orm_test/sqllib/bin/db2 'CREATE USER TEMPORARY TABLESPACE usr_tbsp MANAGED BY AUTOMATIC STORAGE'"
+}
+
+db2_spatial() {
+    docker rm -f db2spatial || true
+    temp_dir=$(mktemp -d)
+    cat <<EOF >${temp_dir}/ewkt.sql
+create or replace function db2gse.asewkt(geometry db2gse.st_geometry)
+returns clob(2G)
+specific db2gse.asewkt1
+language sql
+deterministic
+no external action
+reads sql data
+return 'srid=' || varchar(db2gse.st_srsid(geometry)) || ';' || db2gse.st_astext(geometry)
+;
+
+-- Create SQL function to create a geometry from EWKT format
+create or replace function db2gse.geomfromewkt(instring varchar(32000))
+returns db2gse.st_geometry
+specific db2gse.fromewkt1
+language sql
+deterministic
+no external action
+reads sql data
+return db2gse.st_geometry(
+substr(instring,posstr(instring,';')+1, length(instring) - posstr(instring,';')),
+integer(substr(instring,posstr(instring,'=')+1,posstr(instring,';')-(posstr(instring,'=')+1)))
+)
+;
+-- Create a DB2 transform group to return and accept EWKT
+CREATE TRANSFORM FOR db2gse.ST_Geometry EWKT (
+       FROM SQL WITH FUNCTION db2gse.asewkt(db2gse.ST_Geometry),
+       TO   SQL WITH FUNCTION db2gse.geomfromewkt(varchar(32000)) )
+	;
+
+-- Redefine the default DB2_PROGRAM to return and accept EWKT instead of WKT
+DROP TRANSFORM DB2_PROGRAM FOR db2gse.ST_Geometry;
+CREATE TRANSFORM FOR db2gse.ST_Geometry DB2_PROGRAM (
+       FROM SQL WITH FUNCTION db2gse.asewkt(db2gse.ST_Geometry),
+       TO   SQL WITH FUNCTION db2gse.geomfromewkt(varchar(32000)) )
+;
+EOF
+    docker run --name db2spatial --privileged -e DB2INSTANCE=orm_test -e DB2INST1_PASSWORD=orm_test -e DBNAME=orm_test -e LICENSE=accept -e AUTOCONFIG=false -e ARCHIVE_LOGS=false -e TO_CREATE_SAMPLEDB=false -e REPODB=false \
+        -v ${temp_dir}:/conf  \
+        -p 50000:50000 -d ibmcom/db2:11.5.5.0
+
+    # Give the container some time to start
+    OUTPUT=
+    while [[ $OUTPUT != *"Setup has completed."* ]]; do
+        echo "Waiting for DB2 to start..."
+        sleep 10
+        OUTPUT=$(docker logs db2spatial)
+    done
+    sleep 10
+    echo "Enabling spatial extender"
+    docker exec -t db2spatial su - orm_test bash -c "/database/config/orm_test/sqllib/db2profile && /database/config/orm_test/sqllib/bin/db2se enable_db orm_test"
+    echo "Installing required transform group"
+    docker exec -t db2spatial su - orm_test bash -c "/database/config/orm_test/sqllib/db2profile && /database/config/orm_test/sqllib/bin/db2 'connect to orm_test' && /database/config/orm_test/sqllib/bin/db2 -tvf /conf/ewkt.sql"
+
 }
 
 mssql() {
@@ -156,6 +220,19 @@ hana() {
     echo "HANA successfully started"
 }
 
+cockroachdb() {
+  docker rm -f cockroach || true
+  docker run -d --name=cockroach -p 26257:26257 -p 8080:8080 cockroachdb/cockroach:v20.2.4 start-single-node --insecure
+  OUTPUT=
+  while [[ $OUTPUT != *"CockroachDB node starting"* ]]; do
+        echo "Waiting for CockroachDB to start..."
+        sleep 10
+        OUTPUT=$(docker logs cockroach)
+  done
+  echo "Cockroachdb successfully started"
+
+}
+
 if [ -z ${1} ]; then
     echo "No db name provided"
     echo "Provide one of:"
@@ -167,6 +244,10 @@ if [ -z ${1} ]; then
     echo -e "\tdb2"
     echo -e "\tmssql"
     echo -e "\toracle"
+    echo -e "\tpostgis"
+    echo -e "\tdb2_spatial"
+    echo -e "\thana"
+    echo -e "\tcockroachdb"
 else
     ${1}
 fi

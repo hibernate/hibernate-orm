@@ -19,6 +19,7 @@ import org.hibernate.annotations.LazyToOne;
 import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.cfg.AvailableSettings;
 
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
@@ -54,6 +55,10 @@ public class CascadeOnUninitializedTest extends BaseNonConfigCoreFunctionalTestC
 	}
 
 	@Test
+	@FailureExpected(
+			jiraKey = "HHH-13658",
+			message = "Assertions specific to enhanced lazy loading but disallowing enhanced proxies, which is no longer valid"
+	)
 	public void testMergeDetachedEnhancedEntityWithUninitializedManyToOne() {
 
 		Person person = persistPersonWithManyToOne();
@@ -81,6 +86,10 @@ public class CascadeOnUninitializedTest extends BaseNonConfigCoreFunctionalTestC
 	}
 
 	@Test
+	@FailureExpected(
+			jiraKey = "HHH-13658",
+			message = "Assertions specific to enhanced lazy loading but disallowing enhanced proxies, which is no longer valid"
+	)
 	public void testDeleteEnhancedEntityWithUninitializedManyToOne() {
 		Person person = persistPersonWithManyToOne();
 

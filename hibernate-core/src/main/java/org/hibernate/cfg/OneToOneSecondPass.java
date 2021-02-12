@@ -238,14 +238,15 @@ public class OneToOneSecondPass implements SecondPass {
 				boolean referenceToPrimaryKey  = referencesDerivedId || mappedBy == null;
 				value.setReferenceToPrimaryKey( referenceToPrimaryKey );
 
-				// If the other side is a derived ID, and both sides are eager using FetchMode.JOIN,
-				// prevent an infinite loop of attempts to resolve identifiers by making
-				// this side use FetchMode.SELECT.
+				// If the other side is an entity with an ID that is derived from
+				// this side's owner entity, and both sides of the association are eager,
+				// then this side must be set to FetchMode.SELECT; otherwise,
+				// there will be an infinite loop attempting to load the derived ID on
+				// the opposite side.
 				if ( referencesDerivedId &&
 						!value.isLazy() &&
 						value.getFetchMode() == FetchMode.JOIN &&
-						!otherSideProperty.isLazy() &&
-						otherSideProperty.getValue().getFetchMode() == FetchMode.JOIN ) {
+						!otherSideProperty.isLazy() ) {
 					value.setFetchMode( FetchMode.SELECT );
 				}
 

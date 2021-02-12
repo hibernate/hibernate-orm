@@ -28,6 +28,7 @@ public class DB2DatabaseCleaner implements DatabaseCleaner {
 			+ "'SYSIBMADM',"
 			+ "'SYSPUBLIC',"
 			+ "'SYSSTAT',"
+			+ "'DB2GSE',"
 			+ "'SYSTOOLS'";
 
 	private final List<String> ignoredTables = new ArrayList<>();

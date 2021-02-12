@@ -31,7 +31,8 @@ public class PostgreSQLDatabaseCleaner implements DatabaseCleaner {
 	@Override
 	public boolean isApplicable(Connection connection) {
 		try {
-			return connection.getMetaData().getDatabaseProductName().startsWith( "PostgreSQL" );
+			return connection.getMetaData().getDatabaseProductName().startsWith( "PostgreSQL" )
+					&& isPostgresql( connection );
 		}
 		catch (SQLException e) {
 			throw new RuntimeException( "Could not resolve the database metadata!", e );
@@ -88,7 +89,7 @@ public class PostgreSQLDatabaseCleaner implements DatabaseCleaner {
 			Map<String, List<String>> schemaExtensions = new HashMap<>();
 			try (Statement s2 = c.createStatement()) {
 				rs = s2.executeQuery(
-						"SELECT ns.nspname, 'CREATE EXTENSION ' || e.extname || ' SCHEMA \"' || ns.nspname || '\" VERSION ' || e.extversion FROM pg_extension e JOIN pg_catalog.pg_namespace ns ON e.extnamespace = ns.oid WHERE e.extname <> 'plpgsql'"
+						"SELECT ns.nspname, 'CREATE EXTENSION ' || e.extname || ' SCHEMA \"' || ns.nspname || '\"' FROM pg_extension e JOIN pg_catalog.pg_namespace ns ON e.extnamespace = ns.oid WHERE e.extname <> 'plpgsql'"
 				);
 				while ( rs.next() ) {
 					schemaExtensions.computeIfAbsent( rs.getString( 1 ), k -> new ArrayList<>() )
@@ -209,6 +210,21 @@ public class PostgreSQLDatabaseCleaner implements DatabaseCleaner {
 
 			throw new RuntimeException( e );
 		}
+	}
+
+	// We need this check to differentiate between Postgresql and Cockroachdb
+	private boolean isPostgresql(Connection connection) {
+		try (Statement stmt = connection.createStatement()) {
+			ResultSet rs = stmt.executeQuery( "select version() " );
+			while ( rs.next() ) {
+				String version = rs.getString( 1 );
+				return version.contains( "PostgreSQL" );
+			}
+		}
+		catch (SQLException e) {
+			throw new RuntimeException( e );
+		}
+		return false;
 	}
 
 }

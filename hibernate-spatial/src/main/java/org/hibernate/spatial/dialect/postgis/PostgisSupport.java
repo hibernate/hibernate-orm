@@ -9,6 +9,7 @@ package org.hibernate.spatial.dialect.postgis;
 import java.io.Serializable;
 
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.GeolatteGeometryJavaTypeDescriptor;
 import org.hibernate.spatial.GeolatteGeometryType;
@@ -18,16 +19,24 @@ import org.hibernate.spatial.SpatialAggregate;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.SpatialRelation;
+import org.hibernate.spatial.dialect.SpatialFunctionsRegistry;
 
 /**
  * Created by Karel Maesen, Geovise BVBA on 29/10/16.
  */
 public class PostgisSupport implements SpatialDialect, Serializable {
 
+	private final SpatialFunctionsRegistry postgisFunctions;
 
-	private PostgisFunctions postgisFunctions = new PostgisFunctions();
+	public PostgisSupport(SpatialFunctionsRegistry functions) {
+		postgisFunctions = functions;
+	}
 
-	void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+	public PostgisSupport() {
+		postgisFunctions = new PostgisFunctions();
+	}
+
+	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		typeContributions.contributeType( new GeolatteGeometryType( PGGeometryTypeDescriptor.INSTANCE ) );
 		typeContributions.contributeType( new JTSGeometryType( PGGeometryTypeDescriptor.INSTANCE ) );
 
@@ -35,7 +44,7 @@ public class PostgisSupport implements SpatialDialect, Serializable {
 		typeContributions.contributeJavaTypeDescriptor( JTSGeometryJavaTypeDescriptor.INSTANCE );
 	}
 
-	public PostgisFunctions functionsToRegister() {
+	public SpatialFunctionsRegistry functionsToRegister() {
 		return postgisFunctions;
 	}
 

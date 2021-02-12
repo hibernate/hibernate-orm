@@ -225,6 +225,12 @@ cockroachdb() {
         sleep 10
         OUTPUT=$(docker logs cockroach)
   done
+  echo "Enabling experimental box2d operators"
+  docker exec -it cockroach bash -c "cat <<EOF | ./cockroach sql --insecure
+SET CLUSTER SETTING sql.spatial.experimental_box2d_comparison_operators.enabled = on;
+quit
+EOF
+"
   echo "Cockroachdb successfully started"
 
 }

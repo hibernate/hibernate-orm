@@ -82,7 +82,7 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	public PostgreSQLDialect() {
-		this(800);
+		this( 800 );
 	}
 
 	public PostgreSQLDialect(int version) {

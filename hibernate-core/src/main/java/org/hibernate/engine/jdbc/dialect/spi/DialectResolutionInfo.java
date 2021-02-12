@@ -91,5 +91,15 @@ public interface DialectResolutionInfo {
 	 */
 	public int getDriverMinorVersion();
 
+	/**
+	 * Obtain access to the underlying object of the given type.
+	 *
+	 * Return <code>null</code> if the underlying object is not of the given type.
+	 *
+	 * @return The unwrapped object or <code>null</code>
+	 */
+	default <T> T unwrap(Class<T> clazz) {
+		return null;
+	}
 
 }

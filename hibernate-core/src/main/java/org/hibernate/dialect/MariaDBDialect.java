@@ -88,6 +88,11 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	@Override
+	public boolean supportsIfExistsAfterAlterTable() {
+		return getVersion() >= 1050;
+	}
+
+	@Override
 	public SequenceSupport getSequenceSupport() {
 		return getVersion() < 1030
 				? super.getSequenceSupport()

@@ -215,6 +215,19 @@ hana() {
     echo "HANA successfully started"
 }
 
+cockroachdb() {
+  docker rm -f cockroach || true
+  docker run -d --name=cockroach -p 26257:26257 -p 8080:8080 cockroachdb/cockroach:v20.2.4 start-single-node --insecure
+  OUTPUT=
+  while [[ $OUTPUT != *"CockroachDB node starting"* ]]; do
+        echo "Waiting for CockroachDB to start..."
+        sleep 10
+        OUTPUT=$(docker logs cockroach)
+  done
+  echo "Cockroachdb successfully started"
+
+}
+
 if [ -z ${1} ]; then
     echo "No db name provided"
     echo "Provide one of:"
@@ -227,6 +240,8 @@ if [ -z ${1} ]; then
     echo -e "\toracle"
     echo -e "\tpostgis_9_6"
     echo -e "\tdb2_spatial"
+    echo -e "\thana"
+    echo -e "\tcockroachdb"
 else
     ${1}
 fi

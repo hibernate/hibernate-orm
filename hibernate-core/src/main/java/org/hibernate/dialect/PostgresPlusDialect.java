@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.query.spi.QueryEngine;
 
 /**
@@ -19,11 +20,20 @@ import org.hibernate.query.spi.QueryEngine;
  * @author Jim Mlodgenski
  */
 public class PostgresPlusDialect extends PostgreSQLDialect {
+
 	/**
 	 * Constructs a PostgresPlusDialect
 	 */
 	public PostgresPlusDialect() {
 		super();
+	}
+
+	public PostgresPlusDialect(DialectResolutionInfo info) {
+		super( info );
+	}
+
+	public PostgresPlusDialect(int version) {
+		super( version );
 	}
 
 	@Override

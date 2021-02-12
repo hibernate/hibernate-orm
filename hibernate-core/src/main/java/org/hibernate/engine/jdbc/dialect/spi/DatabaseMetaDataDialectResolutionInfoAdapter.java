@@ -87,4 +87,12 @@ public class DatabaseMetaDataDialectResolutionInfoAdapter implements DialectReso
 	public int getDriverMinorVersion() {
 		return interpretVersion( databaseMetaData.getDriverMinorVersion() );
 	}
+
+	@Override
+	public <T> T unwrap(Class<T> clazz) {
+		if ( clazz.isInstance( databaseMetaData ) ) {
+			return clazz.cast( databaseMetaData );
+		}
+		return null;
+	}
 }

@@ -55,9 +55,9 @@ public class DialectFactoryImpl implements DialectFactory, ServiceRegistryAwareS
 	@Override
 	public Dialect buildDialect(Map configValues, DialectResolutionInfoSource resolutionInfoSource) throws HibernateException {
 		final Object dialectReference = configValues.get( AvailableSettings.DIALECT );
-		Dialect dialect = !isEmpty(dialectReference) ?
-				constructDialect(dialectReference, resolutionInfoSource) :
-				determineDialect(resolutionInfoSource);
+		Dialect dialect = !isEmpty( dialectReference ) ?
+				constructDialect( dialectReference, resolutionInfoSource ) :
+				determineDialect( resolutionInfoSource );
 		logSelectedDialect( dialect );
 		return dialect;
 	}
@@ -66,10 +66,10 @@ public class DialectFactoryImpl implements DialectFactory, ServiceRegistryAwareS
 		LOG.usingDialect( dialect );
 
 		Class<? extends Dialect> dialectClass = dialect.getClass();
-		if ( dialectClass.isAnnotationPresent(Deprecated.class) ) {
+		if ( dialectClass.isAnnotationPresent( Deprecated.class ) ) {
 			Class<?> superDialectClass = dialectClass.getSuperclass();
-			if ( !superDialectClass.isAnnotationPresent(Deprecated.class)
-					&& !superDialectClass.equals(Dialect.class) ) {
+			if ( !superDialectClass.isAnnotationPresent( Deprecated.class )
+					&& !superDialectClass.equals( Dialect.class ) ) {
 				DEPRECATION_LOGGER.deprecatedDialect( dialectClass.getSimpleName(), superDialectClass.getName() );
 			}
 			else {
@@ -101,7 +101,7 @@ public class DialectFactoryImpl implements DialectFactory, ServiceRegistryAwareS
 						try {
 							try {
 								if (resolutionInfoSource != null) {
-									return dialectClass.getConstructor(DialectResolutionInfo.class).newInstance(
+									return dialectClass.getConstructor( DialectResolutionInfo.class ).newInstance(
 											resolutionInfoSource.getDialectResolutionInfo()
 									);
 								}

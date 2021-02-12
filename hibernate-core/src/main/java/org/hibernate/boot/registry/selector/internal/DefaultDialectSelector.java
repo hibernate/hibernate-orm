@@ -10,11 +10,17 @@ import java.util.Objects;
 
 import org.hibernate.dialect.CUBRIDDialect;
 import org.hibernate.dialect.Cache71Dialect;
+import org.hibernate.dialect.CacheDialect;
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2390Dialect;
 import org.hibernate.dialect.DB2390V8Dialect;
 import org.hibernate.dialect.DB2400Dialect;
 import org.hibernate.dialect.DB2400V7R3Dialect;
+import org.hibernate.dialect.DB297Dialect;
 import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.DB2iDialect;
+import org.hibernate.dialect.DB2zDialect;
+import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.DerbyTenFiveDialect;
 import org.hibernate.dialect.DerbyTenSevenDialect;
 import org.hibernate.dialect.DerbyTenSixDialect;
@@ -25,29 +31,52 @@ import org.hibernate.dialect.HANACloudColumnStoreDialect;
 import org.hibernate.dialect.HANAColumnStoreDialect;
 import org.hibernate.dialect.HANARowStoreDialect;
 import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.Informix10Dialect;
 import org.hibernate.dialect.InformixDialect;
 import org.hibernate.dialect.Ingres10Dialect;
 import org.hibernate.dialect.Ingres9Dialect;
 import org.hibernate.dialect.IngresDialect;
+import org.hibernate.dialect.MariaDB102Dialect;
+import org.hibernate.dialect.MariaDB103Dialect;
+import org.hibernate.dialect.MariaDB10Dialect;
+import org.hibernate.dialect.MariaDB53Dialect;
+import org.hibernate.dialect.MariaDBDialect;
+import org.hibernate.dialect.MaxDBDialect;
 import org.hibernate.dialect.MimerSQLDialect;
+import org.hibernate.dialect.MySQL55Dialect;
 import org.hibernate.dialect.MySQL57Dialect;
 import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.dialect.MySQL8Dialect;
+import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.Oracle10gDialect;
+import org.hibernate.dialect.Oracle12cDialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.Oracle9iDialect;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQL82Dialect;
+import org.hibernate.dialect.PostgreSQL91Dialect;
+import org.hibernate.dialect.PostgreSQL92Dialect;
+import org.hibernate.dialect.PostgreSQL93Dialect;
+import org.hibernate.dialect.PostgreSQL94Dialect;
+import org.hibernate.dialect.PostgreSQL95Dialect;
 import org.hibernate.dialect.PostgreSQL9Dialect;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
+import org.hibernate.dialect.RDMSOS2200Dialect;
 import org.hibernate.dialect.SAPDBDialect;
 import org.hibernate.dialect.SQLServer2005Dialect;
 import org.hibernate.dialect.SQLServer2008Dialect;
+import org.hibernate.dialect.SQLServer2012Dialect;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.Sybase11Dialect;
 import org.hibernate.dialect.SybaseASE157Dialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
+import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.dialect.SybaseAnywhereDialect;
+import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.dialect.Teradata14Dialect;
 import org.hibernate.dialect.TeradataDialect;
 import org.hibernate.dialect.TimesTenDialect;
 
@@ -59,195 +88,147 @@ public class DefaultDialectSelector implements LazyServiceResolver<Dialect> {
 		if ( name.isEmpty() ) {
 			return null;
 		}
-		//Let's organize all string matches in groups by first letter:
-		final char n = name.charAt( 0 );
-		switch ( n ) {
-			case 'C': return caseC( name );
-			case 'D': return caseD( name );
-			case 'F': return caseF( name );
-			case 'H': return caseH( name );
-			case 'I': return caseI( name );
-			case 'M': return caseM( name );
-			case 'O': return caseO( name );
-			case 'P': return caseP( name );
-			case 'S': return caseS( name );
-			case 'T': return caseT( name );
-		}
-		return null;
-	}
-
-	private static Class<? extends Dialect> caseC(final String name) {
-		if ( name.equals( "Cache71" ) ) {
-			return Cache71Dialect.class;
-		}
-		// todo (6.0): add CockroachDB
-//		if ( name.equals( "CockroachDB192" ) ) {
-//			return CockroachDB192Dialect.class;
-//		}
-//		if ( name.equals( "CockroachDB201" ) ) {
-//			return CockroachDB201Dialect.class;
-//		}
-		if ( name.equals( "CUBRID" ) ) {
-			return CUBRIDDialect.class;
-		}
-		return null;
-	}
-
-	private static Class<? extends Dialect> caseD(final String name) {
-		if ( name.equals( "DB2" ) ) {
-			return DB2Dialect.class;
-		}
-		if ( name.equals( "DB2390" ) ) {
-			return DB2390Dialect.class;
-		}
-		if ( name.equals( "DB2390V8" ) ) {
-			return DB2390V8Dialect.class;
-		}
-		if ( name.equals( "DB2400" ) ) {
-			return DB2400Dialect.class;
-		}
-		if ( name.equals( "DB2400V7R3" ) ) {
-			return DB2400V7R3Dialect.class;
-		}
-		if ( name.equals( "DerbyTenFive" ) ) {
-			return DerbyTenFiveDialect.class;
-		}
-		if ( name.equals( "DerbyTenSix" ) ) {
-			return DerbyTenSixDialect.class;
-		}
-		if ( name.equals( "DerbyTenSeven" ) ) {
-			return DerbyTenSevenDialect.class;
-		}
-		return null;
-	}
-
-	private static Class<? extends Dialect> caseF(final String name) {
-		if ( name.equals( "Firebird" ) ) {
-			return FirebirdDialect.class;
-		}
-		return null;
-	}
-
-	private static Class<? extends Dialect> caseH(final String name) {
-		if ( name.equals( "H2" ) ) {
-			return H2Dialect.class;
-		}
-		if ( name.equals( "HANACloudColumnStore" ) ) {
-			return HANACloudColumnStoreDialect.class;
-		}
-		if ( name.equals( "HANAColumnStore" ) ) {
-			return HANAColumnStoreDialect.class;
-		}
-		if ( name.equals( "HANARowStore" ) ) {
-			return HANARowStoreDialect.class;
-		}
-		if ( name.equals( "HSQL" ) ) {
-			return HSQLDialect.class;
-		}
-		return null;
-	}
-
-	private static Class<? extends Dialect> caseI(final String name) {
-		if ( name.equals( "Informix" ) ) {
-			return InformixDialect.class;
-		}
-		if ( name.equals( "Ingres" ) ) {
-			return IngresDialect.class;
-		}
-		if ( name.equals( "Ingres9" ) ) {
-			return Ingres9Dialect.class;
-		}
-		if ( name.equals( "Ingres10" ) ) {
-			return Ingres10Dialect.class;
-		}
-		return null;
-	}
-
-	private static Class<? extends Dialect> caseM(final String name) {
-		if ( name.equals( "MimerSQL" ) ) {
-			return MimerSQLDialect.class;
-		}
-		if ( name.equals( "MySQL5" ) ) {
-			return MySQL5Dialect.class;
-		}
-		if ( name.equals( "MySQL57" ) ) {
-			return MySQL57Dialect.class;
-		}
-		if ( name.equals( "MySQL8" ) ) {
-			return MySQL8Dialect.class;
-		}
-		return null;
-	}
-
-	private static Class<? extends Dialect> caseO(final String name) {
-		if ( name.equals( "Oracle8i" ) ) {
-			return Oracle8iDialect.class;
-		}
-		if ( name.equals( "Oracle9i" ) ) {
-			return Oracle9iDialect.class;
-		}
-		if ( name.equals( "Oracle10g" ) ) {
-			return Oracle10gDialect.class;
-		}
-		return null;
-	}
-
-	private static Class<? extends Dialect> caseP(final String name) {
-		if ( name.equals( "PostgresPlus" ) ) {
-			return PostgresPlusDialect.class;
-		}
-		if ( name.equals( "PostgreSQL81" ) ) {
-			return PostgreSQL81Dialect.class;
-		}
-		if ( name.equals( "PostgreSQL82" ) ) {
-			return PostgreSQL82Dialect.class;
-		}
-		if ( name.equals( "PostgreSQL9" ) ) {
-			return PostgreSQL9Dialect.class;
-		}
-		return null;
-	}
-
-	private static Class<? extends Dialect> caseS(final String name) {
-		if ( name.equals( "SAPDB" ) ) {
-			return SAPDBDialect.class;
-		}
-		if ( name.equals( "SQLServer" ) ) {
-			return SQLServerDialect.class;
-		}
-		if ( name.equals( "SQLServer2005" ) ) {
-			return SQLServer2005Dialect.class;
-		}
-		if ( name.equals( "SQLServer2008" ) ) {
-			return SQLServer2008Dialect.class;
-		}
-		if ( name.equals( "Sybase11" ) ) {
-			return Sybase11Dialect.class;
-		}
-		if ( name.equals( "SybaseAnywhere" ) ) {
-			return SybaseAnywhereDialect.class;
-		}
-		if ( name.equals( "Sybase11" ) ) {
-			return Sybase11Dialect.class;
-		}
-		if ( name.equals( "SybaseAnywhere" ) ) {
-			return SybaseAnywhereDialect.class;
-		}
-		if ( name.equals( "SybaseASE15" ) ) {
-			return SybaseASE15Dialect.class;
-		}
-		if ( name.equals( "SybaseASE157" ) ) {
-			return SybaseASE157Dialect.class;
-		}
-		return null;
-	}
-
-	private static Class<? extends Dialect> caseT(final String name) {
-		if ( name.equals( "Teradata" ) ) {
-			return TeradataDialect.class;
-		}
-		if ( name.equals( "TimesTen" ) ) {
-			return TimesTenDialect.class;
+		switch ( name ) {
+			case "Cache":
+				return CacheDialect.class;
+			case "Cache71":
+				return Cache71Dialect.class;
+			case "Cockroach":
+				return CockroachDialect.class;
+			case "CUBRID":
+				return CUBRIDDialect.class;
+			case "DB2":
+				return DB2Dialect.class;
+			case "DB2i":
+				return DB2iDialect.class;
+			case "DB2z":
+				return DB2zDialect.class;
+			case "DB297":
+				return DB297Dialect.class;
+			case "DB2390":
+				return DB2390Dialect.class;
+			case "DB2390V8":
+				return DB2390V8Dialect.class;
+			case "DB2400":
+				return DB2400Dialect.class;
+			case "DB2400V7R3":
+				return DB2400V7R3Dialect.class;
+			case "Derby":
+				return DerbyDialect.class;
+			case "DerbyTenFive":
+				return DerbyTenFiveDialect.class;
+			case "DerbyTenSix":
+				return DerbyTenSixDialect.class;
+			case "DerbyTenSeven":
+				return DerbyTenSevenDialect.class;
+			case "Firebird":
+				return FirebirdDialect.class;
+			case "H2":
+				return H2Dialect.class;
+			case "HANACloudColumnStore":
+				return HANACloudColumnStoreDialect.class;
+			case "HANAColumnStore":
+				return HANAColumnStoreDialect.class;
+			case "HANARowStore":
+				return HANARowStoreDialect.class;
+			case "HSQL":
+				return HSQLDialect.class;
+			case "Informix":
+				return InformixDialect.class;
+			case "Informix10":
+				return Informix10Dialect.class;
+			case "Ingres":
+				return IngresDialect.class;
+			case "Ingres9":
+				return Ingres9Dialect.class;
+			case "Ingres10":
+				return Ingres10Dialect.class;
+			case "MariaDB":
+				return MariaDBDialect.class;
+			case "MariaDB53":
+				return MariaDB53Dialect.class;
+			case "MariaDB10":
+				return MariaDB10Dialect.class;
+			case "MariaDB102":
+				return MariaDB102Dialect.class;
+			case "MariaDB103":
+				return MariaDB103Dialect.class;
+			case "MaxDB":
+				return MaxDBDialect.class;
+			case "MimerSQL":
+				return MimerSQLDialect.class;
+			case "MySQL":
+				return MySQLDialect.class;
+			case "MySQL5":
+				return MySQL5Dialect.class;
+			case "MySQL55":
+				return MySQL55Dialect.class;
+			case "MySQL57":
+				return MySQL57Dialect.class;
+			case "MySQL8":
+				return MySQL8Dialect.class;
+			case "Oracle":
+				return OracleDialect.class;
+			case "Oracle8i":
+				return Oracle8iDialect.class;
+			case "Oracle9i":
+				return Oracle9iDialect.class;
+			case "Oracle10g":
+				return Oracle10gDialect.class;
+			case "Oracle12c":
+				return Oracle12cDialect.class;
+			case "PostgresPlus":
+				return PostgresPlusDialect.class;
+			case "PostgreSQL":
+				return PostgreSQLDialect.class;
+			case "PostgreSQL81":
+				return PostgreSQL81Dialect.class;
+			case "PostgreSQL82":
+				return PostgreSQL82Dialect.class;
+			case "PostgreSQL9":
+				return PostgreSQL9Dialect.class;
+			case "PostgreSQL91":
+				return PostgreSQL91Dialect.class;
+			case "PostgreSQL92":
+				return PostgreSQL92Dialect.class;
+			case "PostgreSQL93":
+				return PostgreSQL93Dialect.class;
+			case "PostgreSQL94":
+				return PostgreSQL94Dialect.class;
+			case "PostgreSQL95":
+				return PostgreSQL95Dialect.class;
+			case "RDMSOS2200":
+				return RDMSOS2200Dialect.class;
+			case "SAPDB":
+				return SAPDBDialect.class;
+			case "Spanner":
+				return SpannerDialect.class;
+			case "SQLServer":
+				return SQLServerDialect.class;
+			case "SQLServer2005":
+				return SQLServer2005Dialect.class;
+			case "SQLServer2008":
+				return SQLServer2008Dialect.class;
+			case "SQLServer2012":
+				return SQLServer2012Dialect.class;
+			case "Sybase":
+				return SybaseDialect.class;
+			case "Sybase11":
+				return Sybase11Dialect.class;
+			case "SybaseAnywhere":
+				return SybaseAnywhereDialect.class;
+			case "SybaseASE":
+				return SybaseASEDialect.class;
+			case "SybaseASE15":
+				return SybaseASE15Dialect.class;
+			case "SybaseASE157":
+				return SybaseASE157Dialect.class;
+			case "Teradata":
+				return TeradataDialect.class;
+			case "Teradata14":
+				return Teradata14Dialect.class;
+			case "TimesTen":
+				return TimesTenDialect.class;
 		}
 		return null;
 	}

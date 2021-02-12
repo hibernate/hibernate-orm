@@ -6,6 +6,12 @@
  */
 package org.hibernate.dialect;
 
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+import org.hibernate.engine.jdbc.dialect.spi.BasicSQLExceptionConverter;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 
 /**
@@ -77,7 +83,7 @@ public enum Database {
 	DERBY {
 		@Override
 		public Dialect createDialect(DialectResolutionInfo info) {
-			return new DerbyDialect(info);
+			return new DerbyDialect( info );
 		}
 		@Override
 		public boolean productNameMatches(String databaseName) {
@@ -85,7 +91,7 @@ public enum Database {
 		}
 		@Override
 		public String getDriverClassName(String jdbcUrl) {
-			return jdbcUrl.startsWith("jdbc:derby://")
+			return jdbcUrl.startsWith( "jdbc:derby://" )
 					? "org.apache.derby.jdbc.ClientDriver"
 					: "org.apache.derby.jdbc.EmbeddedDriver";
 		}
@@ -94,7 +100,7 @@ public enum Database {
 	ENTERPRISEDB {
 		@Override
 		public Dialect createDialect(DialectResolutionInfo info) {
-			return new PostgresPlusDialect();
+			return new PostgresPlusDialect( info );
 		}
 		@Override
 		public boolean productNameMatches(String databaseName) {
@@ -113,7 +119,7 @@ public enum Database {
 	FIREBIRD {
 		@Override
 		public Dialect createDialect(DialectResolutionInfo info) {
-			return new FirebirdDialect(info);
+			return new FirebirdDialect( info );
 		}
 		@Override
 		public boolean productNameMatches(String databaseName) {
@@ -132,7 +138,7 @@ public enum Database {
 	H2 {
 		@Override
 		public Dialect createDialect(DialectResolutionInfo info) {
-			return new H2Dialect(info);
+			return new H2Dialect( info );
 		}
 		@Override
 		public boolean productNameMatches(String databaseName) {
@@ -147,7 +153,7 @@ public enum Database {
 	HANA {
 		@Override
 		public Dialect createDialect(DialectResolutionInfo info) {
-			return new HANAColumnStoreDialect(info);
+			return new HANAColumnStoreDialect( info );
 		}
 		@Override
 		public boolean productNameMatches(String databaseName) {
@@ -166,7 +172,7 @@ public enum Database {
 	HSQL {
 		@Override
 		public Dialect createDialect(DialectResolutionInfo info) {
-			return new HSQLDialect(info);
+			return new HSQLDialect( info );
 		}
 		@Override
 		public boolean productNameMatches(String databaseName) {
@@ -185,12 +191,12 @@ public enum Database {
 	INFORMIX {
 		@Override
 		public Dialect createDialect(DialectResolutionInfo info) {
-			return new InformixDialect(info);
+			return new InformixDialect( info );
 		}
 		@Override
 		public boolean productNameMatches(String databaseName) {
 			//usually "Informix Dynamic Server"
-			return databaseName.toLowerCase().startsWith("informix");
+			return databaseName.toLowerCase().startsWith( "informix" );
 		}
 		@Override
 		public String getDriverClassName(String jdbcUrl) {
@@ -205,11 +211,11 @@ public enum Database {
 	INGRES {
 		@Override
 		public Dialect createDialect(DialectResolutionInfo info) {
-			return new IngresDialect(info);
+			return new IngresDialect( info );
 		}
 		@Override
 		public boolean productNameMatches(String databaseName) {
-			return databaseName.toLowerCase().startsWith("ingres");
+			return databaseName.toLowerCase().startsWith( "ingres" );
 		}
 		@Override
 		public String getDriverClassName(String jdbcUrl) {
@@ -226,12 +232,12 @@ public enum Database {
 			else {
 				//in case the product name has been set to MySQL
 				String driverName = info.getDriverName();
-				return driverName != null && driverName.startsWith("MariaDB");
+				return driverName != null && driverName.startsWith( "MariaDB" );
 			}
 		}
 		@Override
 		public Dialect createDialect(DialectResolutionInfo info) {
-			return new MariaDBDialect(info);
+			return new MariaDBDialect( info );
 		}
 		@Override
 		public boolean productNameMatches(String productName) {
@@ -250,8 +256,8 @@ public enum Database {
 		}
 		@Override
 		public boolean productNameMatches(String databaseName) {
-			return databaseName.toLowerCase().startsWith("sap db")
-				|| databaseName.toLowerCase().startsWith("maxdb");
+			return databaseName.toLowerCase().startsWith( "sap db" )
+					|| databaseName.toLowerCase().startsWith( "maxdb" );
 		}
 		@Override
 		public String getDriverClassName(String jdbcUrl) {
@@ -270,7 +276,7 @@ public enum Database {
 		}
 		@Override
 		public boolean productNameMatches(String databaseName) {
-			return databaseName.startsWith("Mimer SQL");
+			return databaseName.startsWith( "Mimer SQL" );
 		}
 		@Override
 		public String getDriverClassName(String jdbcUrl) {
@@ -281,7 +287,7 @@ public enum Database {
 	MYSQL {
 		@Override
 		public Dialect createDialect(DialectResolutionInfo info) {
-			return new MySQLDialect(info);
+			return new MySQLDialect( info );
 		}
 		@Override
 		public boolean productNameMatches(String databaseName) {
@@ -296,7 +302,7 @@ public enum Database {
 	ORACLE {
 		@Override
 		public Dialect createDialect(DialectResolutionInfo info) {
-			return new OracleDialect(info);
+			return new OracleDialect( info );
 		}
 		@Override
 		public boolean productNameMatches(String databaseName) {
@@ -311,7 +317,11 @@ public enum Database {
 	POSTGRESQL {
 		@Override
 		public Dialect createDialect(DialectResolutionInfo info) {
-			return new PostgreSQLDialect(info);
+			final String version = getVersion( info.unwrap( DatabaseMetaData.class ) );
+			if ( version.startsWith( "Cockroach" ) ) {
+				return new CockroachDialect( info );
+			}
+			return new PostgreSQLDialect( info );
 		}
 		@Override
 		public boolean productNameMatches(String databaseName) {
@@ -321,12 +331,39 @@ public enum Database {
 		public String getDriverClassName(String jdbcUrl) {
 			return "org.postgresql.Driver";
 		}
+		private String getVersion(DatabaseMetaData databaseMetaData) {
+			try (Statement statement = databaseMetaData.getConnection().createStatement() ) {
+				final ResultSet rs = statement.executeQuery( "select version()" );
+				if ( rs.next() ) {
+					return rs.getString( 1 );
+				}
+			}
+			catch (SQLException e) {
+				throw BasicSQLExceptionConverter.INSTANCE.convert( e );
+			}
+			return "";
+		}
+	},
+
+	SPANNER {
+		@Override
+		public Dialect createDialect(DialectResolutionInfo info) {
+			return new SpannerDialect();
+		}
+		@Override
+		public boolean productNameMatches(String databaseName) {
+			return databaseName.startsWith( "Google Cloud Spanner" );
+		}
+		@Override
+		public String getDriverClassName(String jdbcUrl) {
+			return "com.google.cloud.spanner.jdbc.JdbcDriver";
+		}
 	},
 
 	SQLSERVER {
 		@Override
 		public Dialect createDialect(DialectResolutionInfo info) {
-			return new SQLServerDialect(info);
+			return new SQLServerDialect( info );
 		}
 		@Override
 		public boolean productNameMatches(String databaseName) {
@@ -343,7 +380,7 @@ public enum Database {
 		public Dialect createDialect(DialectResolutionInfo info) {
 			final String databaseName = info.getDatabaseName();
 			if ( isASE( databaseName ) ) {
-				return new SybaseASEDialect(info);
+				return new SybaseASEDialect( info );
 			}
 			if ( isASA( databaseName ) ) {
 				return new SybaseAnywhereDialect();
@@ -364,15 +401,15 @@ public enum Database {
 		}
 		@Override
 		public boolean matchesUrl(String jdbcUrl) {
-			return jdbcUrl.startsWith("jdbc:sybase:")
-				|| jdbcUrl.startsWith("jdbc:sqlanywhere:");
+			return jdbcUrl.startsWith( "jdbc:sybase:" )
+					|| jdbcUrl.startsWith( "jdbc:sqlanywhere:" );
 		}
 	},
 
 	TERADATA {
 		@Override
 		public Dialect createDialect(DialectResolutionInfo info) {
-			return new TeradataDialect(info);
+			return new TeradataDialect( info );
 		}
 		@Override
 		public boolean productNameMatches(String databaseName) {
@@ -391,7 +428,7 @@ public enum Database {
 		}
 		@Override
 		public boolean productNameMatches(String databaseName) {
-			return databaseName.toLowerCase().startsWith("timesten");
+			return databaseName.toLowerCase().startsWith( "timesten" );
 		}
 	};
 

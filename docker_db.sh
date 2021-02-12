@@ -20,9 +20,9 @@ postgresql_9_5() {
     docker run --name postgres -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 -d postgres:9.5
 }
 
-postgis_9_6(){
+postgis(){
   docker rm -f postgis || true
-  docker run --name postgis -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 -d mdillon/postgis:9.6
+  docker run --name postgis -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 -d postgis/postgis
 }
 
 db2() {
@@ -238,7 +238,7 @@ if [ -z ${1} ]; then
     echo -e "\tdb2"
     echo -e "\tmssql"
     echo -e "\toracle"
-    echo -e "\tpostgis_9_6"
+    echo -e "\tpostgis"
     echo -e "\tdb2_spatial"
     echo -e "\thana"
     echo -e "\tcockroachdb"

@@ -140,10 +140,18 @@ public class EntityLoader extends AbstractEntityLoader {
 		}
 	}
 
+	/**
+	 * @deprecated will be removed. Use one of the load methods on {@link AbstractEntityLoader} instead.
+	 */
+	@Deprecated
 	public Object loadByUniqueKey(SharedSessionContractImplementor session, Object key) {
 		return loadByUniqueKey( session, key, null );
 	}
 
+	/**
+	 * @deprecated will be removed. Use one of the load methods on {@link AbstractEntityLoader} instead.
+	 */
+	@Deprecated
 	public Object loadByUniqueKey(SharedSessionContractImplementor session, Object key, Boolean readOnly) {
 		return load( session, key, null, null, LockOptions.NONE, readOnly );
 	}

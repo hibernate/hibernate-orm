@@ -60,4 +60,11 @@ public interface UniqueEntityLoader {
 			Boolean readOnly) {
 		return load( id, optionalObject, session, lockOptions );
 	}
+
+	default Object load(
+			Object id,
+			SharedSessionContractImplementor session,
+			LockOptions lockOptions) {
+		throw new UnsupportedOperationException();
+	}
 }

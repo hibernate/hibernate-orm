@@ -256,7 +256,7 @@ public abstract class AbstractEntityPersister
 
 	private final EntityLoaderLazyCollection loaders = new EntityLoaderLazyCollection();
 
-	private volatile Map<String,EntityLoader> uniqueKeyLoaders;
+	private volatile Map<String,UniqueEntityLoader> uniqueKeyLoaders;
 	private volatile Map<LockMode,EntityLoader> naturalIdLoaders;
 
 	// SQL strings
@@ -2480,7 +2480,7 @@ public abstract class AbstractEntityPersister
 			Object uniqueKey,
 			SharedSessionContractImplementor session) throws HibernateException {
 		return getAppropriateUniqueKeyLoader( propertyName, session )
-				.loadByUniqueKey( session, uniqueKey );
+				.load( uniqueKey, session, LockOptions.NONE );
 	}
 
 	public Object loadByNaturalId(
@@ -2488,7 +2488,7 @@ public abstract class AbstractEntityPersister
 			LockOptions lockOptions,
 			SharedSessionContractImplementor session) throws HibernateException {
 		return getAppropriateNaturalIdLoader( determineValueNullness( naturalIdValues ), lockOptions, session )
-				.loadByUniqueKey( session, naturalIdValues );
+				.load( naturalIdValues, session, LockOptions.NONE );
 	}
 
 	private EntityLoader getAppropriateNaturalIdLoader(
@@ -2511,7 +2511,7 @@ public abstract class AbstractEntityPersister
 			&& !loadQueryInfluencers.hasEnabledFetchProfiles();
 	}
 
-	private EntityLoader getAppropriateUniqueKeyLoader(
+	private UniqueEntityLoader getAppropriateUniqueKeyLoader(
 			String propertyName,
 			SharedSessionContractImplementor session) {
 		LoadQueryInfluencers loadQueryInfluencers = session.getLoadQueryInfluencers();
@@ -2560,7 +2560,7 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	private EntityLoader createUniqueKeyLoader(
+	protected UniqueEntityLoader createUniqueKeyLoader(
 			Type uniqueKeyType,
 			String[] columns,
 			LoadQueryInfluencers loadQueryInfluencers) {

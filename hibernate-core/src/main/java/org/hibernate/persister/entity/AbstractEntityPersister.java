@@ -255,7 +255,7 @@ public abstract class AbstractEntityPersister
 
 	private final EntityLoaderLazyCollection loaders = new EntityLoaderLazyCollection();
 
-	private volatile Map<String,EntityLoader> uniqueKeyLoaders;
+	private volatile Map<String,UniqueEntityLoader> uniqueKeyLoaders;
 
 	// SQL strings
 	private String sqlVersionSelectString;
@@ -2469,17 +2469,17 @@ public abstract class AbstractEntityPersister
 	public Object loadByUniqueKey(
 			String propertyName,
 			Object uniqueKey,
-			SharedSessionContractImplementor session) throws HibernateException {
-		return getAppropriateUniqueKeyLoader( propertyName, session ).loadByUniqueKey( session, uniqueKey );
+			SharedSessionContractImplementor session) {
+		return getAppropriateUniqueKeyLoader( propertyName, session ).load( uniqueKey, session, LockOptions.NONE );
 	}
 
-	private EntityLoader getAppropriateUniqueKeyLoader(String propertyName, SharedSessionContractImplementor session) {
+	protected UniqueEntityLoader getAppropriateUniqueKeyLoader(String propertyName, SharedSessionContractImplementor session) {
 		final boolean useStaticLoader = !session.getLoadQueryInfluencers().hasEnabledFilters()
 				&& !session.getLoadQueryInfluencers().hasEnabledFetchProfiles()
 				&& propertyName.indexOf( '.' ) < 0; //ugly little workaround for fact that createUniqueKeyLoaders() does not handle component properties
 
 		if ( useStaticLoader ) {
-			final Map<String, EntityLoader> uniqueKeyLoaders = this.uniqueKeyLoaders;
+			final Map<String, UniqueEntityLoader> uniqueKeyLoaders = this.uniqueKeyLoaders;
 			return uniqueKeyLoaders == null ? null : uniqueKeyLoaders.get( propertyName );
 		}
 		else {
@@ -2517,7 +2517,7 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	private EntityLoader createUniqueKeyLoader(
+	protected UniqueEntityLoader createUniqueKeyLoader(
 			Type uniqueKeyType,
 			String[] columns,
 			LoadQueryInfluencers loadQueryInfluencers) {

@@ -11,7 +11,6 @@ import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.type.Type;
 
@@ -138,14 +137,6 @@ public class EntityLoader extends AbstractEntityLoader {
 					lockOptions.getTimeOut(),
 					getSQLString() );
 		}
-	}
-
-	public Object loadByUniqueKey(SharedSessionContractImplementor session, Object key) {
-		return loadByUniqueKey( session, key, null );
-	}
-
-	public Object loadByUniqueKey(SharedSessionContractImplementor session, Object key, Boolean readOnly) {
-		return load( session, key, null, null, LockOptions.NONE, readOnly );
 	}
 
 	@Override

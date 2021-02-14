@@ -23,15 +23,16 @@ public interface UniqueEntityLoader {
 	 * Load an entity instance. If <tt>optionalObject</tt> is supplied,
 	 * load the entity state into the given (uninitialized) object.
 	 *
+	 * @throws HibernateException indicates problem performing the load.
+	 *
 	 * @deprecated use {@link #load(java.io.Serializable, Object, SharedSessionContractImplementor, LockOptions)} instead.
 	 */
 	@SuppressWarnings( {"JavaDoc"})
 	@Deprecated
-	Object load(Serializable id, Object optionalObject, SharedSessionContractImplementor session) throws HibernateException;
-
-	default Object load(Serializable id, Object optionalObject, SharedSessionContractImplementor session, Boolean readOnly) throws HibernateException {
-		return load( id, optionalObject, session );
-	}
+	Object load(
+			Serializable id,
+			Object optionalObject,
+			SharedSessionContractImplementor session);
 
 	/**
 	 * Load an entity instance by id.  If <tt>optionalObject</tt> is supplied (non-<tt>null</tt>,
@@ -56,8 +57,23 @@ public interface UniqueEntityLoader {
 			Serializable id,
 			Object optionalObject,
 			SharedSessionContractImplementor session,
+			Boolean readOnly) {
+		return load( id, optionalObject, session );
+	}
+
+	default Object load(
+			Serializable id,
+			Object optionalObject,
+			SharedSessionContractImplementor session,
 			LockOptions lockOptions,
 			Boolean readOnly) {
 		return load( id, optionalObject, session, lockOptions );
+	}
+
+	default Object load(
+			Object id,
+			SharedSessionContractImplementor session,
+			LockOptions lockOptions) {
+		throw new UnsupportedOperationException();
 	}
 }

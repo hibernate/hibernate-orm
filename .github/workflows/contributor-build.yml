@@ -18,7 +18,7 @@ on:
 jobs:
   build:
     name: Java 8
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     # We want to know the test results of all matrix entries
     continue-on-error: true
     strategy:
@@ -81,7 +81,7 @@ jobs:
         run: ./ci/before-cache.sh
   build11:
     name: Java 11
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     # We want to know the test results of all matrix entries
     continue-on-error: true
     steps:

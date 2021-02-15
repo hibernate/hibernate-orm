@@ -521,7 +521,6 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 			this.id = id;
 		}
 
-		// hashcode so lookup in cache for any types also works
 		public int hashCode() {
 			return Objects.hash(entityName, id);
 		}

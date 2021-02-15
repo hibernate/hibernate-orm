@@ -122,7 +122,7 @@ oracle() {
     docker rm -f oracle || true
     # We need to use the defaults
     # SYSTEM/Oracle18
-    docker run --shm-size=1536m --name oracle -d -p 1521:1521 quillbuilduser/oracle-18-xe
+    docker run --shm-size=1536m --name oracle -d -p 1521:1521 --ulimit nofile=1048576:1048576 quillbuilduser/oracle-18-xe
     until [ "`docker inspect -f {{.State.Health.Status}} oracle`" == "healthy" ];
     do
         echo "Waiting for Oracle to start..."

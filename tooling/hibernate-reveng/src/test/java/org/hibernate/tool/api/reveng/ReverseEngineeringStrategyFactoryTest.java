@@ -19,9 +19,11 @@
  */
 package org.hibernate.tool.api.reveng;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 import org.hibernate.tool.internal.reveng.strategy.DefaultStrategy;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 
 public class ReverseEngineeringStrategyFactoryTest {
@@ -30,20 +32,20 @@ public class ReverseEngineeringStrategyFactoryTest {
 	public void testCreateReverseEngineeringStrategy() {
 		RevengStrategy reverseEngineeringStrategy = 
 				RevengStrategyFactory.createReverseEngineeringStrategy();
-		Assert.assertNotNull(reverseEngineeringStrategy);
-		Assert.assertEquals(
+		assertNotNull(reverseEngineeringStrategy);
+		assertEquals(
 				DefaultStrategy.class.getName(), 
 				reverseEngineeringStrategy.getClass().getName());
 		reverseEngineeringStrategy = 
 				RevengStrategyFactory.createReverseEngineeringStrategy(
 						TestReverseEngineeringStrategyFactory.class.getName());
-		Assert.assertNotNull(reverseEngineeringStrategy);
-		Assert.assertEquals(
+		assertNotNull(reverseEngineeringStrategy);
+		assertEquals(
 				TestReverseEngineeringStrategyFactory.class.getName(), 
 				reverseEngineeringStrategy.getClass().getName());
 		reverseEngineeringStrategy = 
 				RevengStrategyFactory.createReverseEngineeringStrategy(null);
-		Assert.assertEquals(
+		assertEquals(
 				DefaultStrategy.class.getName(), 
 				reverseEngineeringStrategy.getClass().getName());		
 	}

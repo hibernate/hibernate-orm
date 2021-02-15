@@ -19,9 +19,13 @@
  */
 package org.hibernate.tool.api.export;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+
 import org.hibernate.tool.internal.export.common.AbstractExporter;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class ExporterFactoryTest {
 	
@@ -29,17 +33,17 @@ public class ExporterFactoryTest {
 	public void testCreateExporter() {
 		try {
 			ExporterFactory.createExporter("foobar");
-			Assert.fail();
+			fail();
 		} catch(Throwable t) {
-			Assert.assertTrue(t.getMessage().contains("foobar"));
+			assertTrue(t.getMessage().contains("foobar"));
 		}
 		Exporter exporter = ExporterFactory.createExporter(
 				"org.hibernate.tool.api.export.ExporterFactoryTest$TestExporter");
-		Assert.assertNotNull(exporter);
-		Assert.assertTrue(exporter instanceof TestExporter);
+		assertNotNull(exporter);
+		assertTrue(exporter instanceof TestExporter);
 		exporter = ExporterFactory.createExporter(ExporterType.JAVA);
-		Assert.assertNotNull(exporter);
-		Assert.assertEquals(
+		assertNotNull(exporter);
+		assertEquals(
 				ExporterType.JAVA.className(), 
 				exporter.getClass().getName());
 	}

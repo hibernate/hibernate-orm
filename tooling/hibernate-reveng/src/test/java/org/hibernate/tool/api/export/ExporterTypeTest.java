@@ -19,18 +19,18 @@
  */
 package org.hibernate.tool.api.export;
 
-import org.junit.Assert;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import org.junit.jupiter.api.Test;
 
 public class ExporterTypeTest {
 	
 	@Test
 	public void testExporterType() {
-		Assert.assertEquals(
+		assertEquals(
 				"org.hibernate.tool.internal.export.java.JavaExporter",
 				ExporterType.JAVA.className());
-		Assert.assertEquals(
+		assertEquals(
 				"org.hibernate.tool.internal.export.cfg.CfgExporter", 
 				ExporterType.CFG.className());
 	}

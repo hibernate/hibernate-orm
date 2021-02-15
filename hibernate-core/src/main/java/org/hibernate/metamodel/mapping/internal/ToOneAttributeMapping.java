@@ -653,6 +653,19 @@ public class ToOneAttributeMapping
 
 	@Override
 	public int forEachJdbcValue(Object value, Clause clause, int offset, JdbcValuesConsumer consumer, SharedSessionContractImplementor session) {
-		return foreignKeyDescriptor.forEachJdbcValue( value, clause, offset, consumer, session );
+		Object fkValue;
+		if ( referencedPropertyName == null ) {
+			fkValue = entityMappingType.getEntityPersister().getIdentifier( value, session );
+		}
+		else {
+			fkValue = entityMappingType.getEntityPersister().getPropertyValue( value, referencedPropertyName );
+		}
+		return foreignKeyDescriptor.forEachJdbcValue(
+				fkValue,
+				clause,
+				offset,
+				consumer,
+				session
+		);
 	}
 }

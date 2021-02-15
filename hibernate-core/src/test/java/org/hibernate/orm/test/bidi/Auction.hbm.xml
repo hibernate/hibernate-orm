@@ -40,7 +40,7 @@
 		<property name="datetime" 
 				column="createdDatetime"/>
 		<properties name="abc">
-			<many-to-one name="item" 
+			<many-to-one name="item"
 					column="auctionId" 
 					cascade="persist"/>
 			<property name="successful" 

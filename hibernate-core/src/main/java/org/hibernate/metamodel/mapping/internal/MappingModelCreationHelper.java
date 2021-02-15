@@ -59,7 +59,6 @@ import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
@@ -884,7 +883,7 @@ public class MappingModelCreationHelper {
 		if ( attributeMappingSubPart instanceof ToOneAttributeMapping ) {
 			final ToOneAttributeMapping referencedAttributeMapping = (ToOneAttributeMapping) attributeMappingSubPart;
 
-			setRefererencedAttributeForeignKeyDescriptor(
+			setReferencedAttributeForeignKeyDescriptor(
 					attributeMapping,
 					referencedAttributeMapping,
 					(EntityPersister) referencedAttributeMapping.getDeclaringType(),
@@ -959,18 +958,22 @@ public class MappingModelCreationHelper {
 		final EntityPersister referencedEntityDescriptor = creationProcess
 				.getEntityPersister( bootValueMapping.getReferencedEntityName() );
 
-		final String referencedPropertyName;
+		String referencedPropertyName;
 		if ( bootValueMapping instanceof OneToOne ) {
-			referencedPropertyName = ( (OneToOne) bootValueMapping ).getMappedByProperty();
+			OneToOne oneToOne = (OneToOne) bootValueMapping;
+			referencedPropertyName = oneToOne.getMappedByProperty();
+			if ( referencedPropertyName == null ) {
+				referencedPropertyName = oneToOne.getReferencedPropertyName();
+			}
 		}
 		else {
-			referencedPropertyName = bootValueMapping.getReferencedPropertyName();
+			referencedPropertyName = null;
 		}
 
 		if ( referencedPropertyName != null  ) {
 			final ModelPart modelPart = referencedEntityDescriptor.findSubPart( referencedPropertyName );
 			if ( modelPart instanceof ToOneAttributeMapping ) {
-				setRefererencedAttributeForeignKeyDescriptor(
+				setReferencedAttributeForeignKeyDescriptor(
 						attributeMapping,
 						(ToOneAttributeMapping) modelPart,
 						referencedEntityDescriptor,
@@ -980,13 +983,14 @@ public class MappingModelCreationHelper {
 				);
 			}
 			else if ( modelPart instanceof EmbeddableValuedModelPart ) {
-				final EmbeddedForeignKeyDescriptor embeddedForeignKeyDescriptor = buildEmbeddableForeignKeyDescriptor(
+				setReferencedEmbeddableForeignKeyDescriptor(
+						attributeMapping,
 						(EmbeddableValuedModelPart) modelPart,
 						bootValueMapping,
+						tableName,
 						dialect,
 						creationProcess
 				);
-				attributeMapping.setForeignKeyDescriptor( embeddedForeignKeyDescriptor );
 			}
 			else {
 				throw new NotYetImplementedFor6Exception(
@@ -1048,6 +1052,30 @@ public class MappingModelCreationHelper {
 		}
 	}
 
+	private static void setReferencedEmbeddableForeignKeyDescriptor(
+			ToOneAttributeMapping attributeMapping,
+			EmbeddableValuedModelPart embeddableValuedModelPart,
+			ToOne bootValueMapping,
+			String tableName,
+			Dialect dialect,
+			MappingModelCreationProcess creationProcess) {
+		EmbeddedForeignKeyDescriptor embeddedForeignKeyDescriptor = new EmbeddedForeignKeyDescriptor(
+				embeddableValuedModelPart,
+				embeddableValuedModelPart.getContainingTableExpression(),
+				embeddableValuedModelPart.getEmbeddableTypeDescriptor(),
+				tableName,
+				SelectionMappingsImpl.from(
+						tableName,
+						bootValueMapping,
+						creationProcess.getCreationContext().getSessionFactory(),
+						dialect,
+						creationProcess.getSqmFunctionRegistry()
+				),
+				creationProcess
+		);
+		attributeMapping.setForeignKeyDescriptor( embeddedForeignKeyDescriptor );
+	}
+
 	public static EmbeddedForeignKeyDescriptor buildEmbeddableForeignKeyDescriptor(
 			EmbeddableValuedModelPart embeddableValuedModelPart,
 			Value bootValueMapping,
@@ -1092,7 +1120,7 @@ public class MappingModelCreationHelper {
 		);
 	}
 
-	private static void setRefererencedAttributeForeignKeyDescriptor(
+	private static void setReferencedAttributeForeignKeyDescriptor(
 			AbstractAttributeMapping attributeMapping,
 			ToOneAttributeMapping referencedAttributeMapping,
 			EntityPersister referencedEntityDescriptor,
@@ -1103,8 +1131,7 @@ public class MappingModelCreationHelper {
 		if ( foreignKeyDescriptor == null ) {
 			PersistentClass entityBinding = creationProcess.getCreationContext()
 					.getBootModel()
-					.getEntityBinding(
-							referencedEntityDescriptor.getEntityName() );
+					.getEntityBinding( referencedEntityDescriptor.getEntityName() );
 			Property property = entityBinding.getProperty( referencedPropertyName );
 			interpretSingularAssociationAttributeMappingKeyDescriptor(
 					referencedAttributeMapping,

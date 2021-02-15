@@ -69,7 +69,7 @@ public class PostgisUnmarshalTest {
 	public void testCase(String pgValue, Geometry<?> expected) throws SQLException {
 		PGobject pgo = new PGobject();
 		pgo.setValue( pgValue );
-		Geometry<?> received = PGGeometryTypeDescriptor.toGeometry( pgo );
+		Geometry<?> received = PGGeometryTypeDescriptor.INSTANCE_WKB_1.toGeometry( pgo );
 		assertEquals( String.format( "Failure on %s", pgValue ), expected, received );
 	}
 

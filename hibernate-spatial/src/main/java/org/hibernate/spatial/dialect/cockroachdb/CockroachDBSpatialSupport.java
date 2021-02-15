@@ -7,7 +7,14 @@
 
 package org.hibernate.spatial.dialect.cockroachdb;
 
+import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.spatial.GeolatteGeometryJavaTypeDescriptor;
+import org.hibernate.spatial.GeolatteGeometryType;
+import org.hibernate.spatial.JTSGeometryJavaTypeDescriptor;
+import org.hibernate.spatial.JTSGeometryType;
 import org.hibernate.spatial.dialect.SpatialFunctionsRegistry;
+import org.hibernate.spatial.dialect.postgis.PGGeometryTypeDescriptor;
 import org.hibernate.spatial.dialect.postgis.PostgisFunctions;
 import org.hibernate.spatial.dialect.postgis.PostgisSupport;
 
@@ -17,6 +24,14 @@ public class CockroachDBSpatialSupport extends PostgisSupport {
 		super(new CockroachDBSpatialFunctions() );
 	}
 
+	@Override
+	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		typeContributions.contributeType( new GeolatteGeometryType( PGGeometryTypeDescriptor.INSTANCE_WKB_2 ) );
+		typeContributions.contributeType( new JTSGeometryType( PGGeometryTypeDescriptor.INSTANCE_WKB_2 ) );
+
+		typeContributions.contributeJavaTypeDescriptor( GeolatteGeometryJavaTypeDescriptor.INSTANCE );
+		typeContributions.contributeJavaTypeDescriptor( JTSGeometryJavaTypeDescriptor.INSTANCE );
+	}
 
 }
 

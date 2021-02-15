@@ -36,7 +36,7 @@ public class CockRoachDBTestSupport extends TestSupport {
 
 	@Override
 	public AbstractExpectationsFactory createExpectationsFactory(DataSourceUtils dataSourceUtils) {
-		return new PostgisExpectationsFactory( dataSourceUtils );
+		return new CockRoachDBExpectationsFactory( dataSourceUtils );
 	}
 
 	@Override

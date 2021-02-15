@@ -16,7 +16,6 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.dialect.postgis.PGGeometryTypeDescriptor;
-import org.hibernate.spatial.dialect.postgis.PostgisSupport;
 
 public class CockroachDB192SpatialDialect extends CockroachDB192Dialect implements SpatialDialect {
 
@@ -25,7 +24,7 @@ public class CockroachDB192SpatialDialect extends CockroachDB192Dialect implemen
 	public CockroachDB192SpatialDialect(){
 		super();
 		registerColumnType(
-				PGGeometryTypeDescriptor.INSTANCE.getSqlType(),
+				PGGeometryTypeDescriptor.INSTANCE_WKB_2.getSqlType(),
 				"GEOMETRY"
 		);
 		for ( Map.Entry<String, SQLFunction> entry : support.functionsToRegister() ) {

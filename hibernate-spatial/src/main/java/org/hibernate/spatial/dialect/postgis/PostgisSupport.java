@@ -9,7 +9,6 @@ package org.hibernate.spatial.dialect.postgis;
 import java.io.Serializable;
 
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.GeolatteGeometryJavaTypeDescriptor;
 import org.hibernate.spatial.GeolatteGeometryType;
@@ -37,8 +36,8 @@ public class PostgisSupport implements SpatialDialect, Serializable {
 	}
 
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
-		typeContributions.contributeType( new GeolatteGeometryType( PGGeometryTypeDescriptor.INSTANCE ) );
-		typeContributions.contributeType( new JTSGeometryType( PGGeometryTypeDescriptor.INSTANCE ) );
+		typeContributions.contributeType( new GeolatteGeometryType( PGGeometryTypeDescriptor.INSTANCE_WKB_1 ) );
+		typeContributions.contributeType( new JTSGeometryType( PGGeometryTypeDescriptor.INSTANCE_WKB_1 ) );
 
 		typeContributions.contributeJavaTypeDescriptor( GeolatteGeometryJavaTypeDescriptor.INSTANCE );
 		typeContributions.contributeJavaTypeDescriptor( JTSGeometryJavaTypeDescriptor.INSTANCE );

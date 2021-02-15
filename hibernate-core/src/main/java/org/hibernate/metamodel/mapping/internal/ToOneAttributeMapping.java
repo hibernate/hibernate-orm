@@ -17,6 +17,7 @@ import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.metamodel.mapping.AssociationKey;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -52,8 +53,10 @@ import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
 import org.hibernate.sql.results.graph.entity.EntityFetch;
 import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 import org.hibernate.sql.results.graph.entity.internal.EntityDelayedFetchImpl;
+import org.hibernate.sql.results.graph.entity.internal.EntityDelayedResultImpl;
 import org.hibernate.sql.results.graph.entity.internal.EntityFetchJoinedImpl;
 import org.hibernate.sql.results.graph.entity.internal.EntityFetchSelectImpl;
+import org.hibernate.sql.results.graph.entity.internal.EntityResultImpl;
 import org.hibernate.sql.results.graph.entity.internal.EntityResultJoinedSubclassImpl;
 import org.hibernate.sql.results.internal.domain.CircularBiDirectionalFetchImpl;
 import org.hibernate.sql.results.internal.domain.CircularFetchImpl;
@@ -494,6 +497,48 @@ public class ToOneAttributeMapping
 		);
 	}
 
+	@Override
+	public <T> DomainResult<T> createDelayedDomainResult(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			String resultVariable,
+			DomainResultCreationState creationState) {
+		// We only need a join if the key is on the referring side i.e. this is an inverse to-one
+		// and if the FK refers to a non-PK, in which case we must load the whole entity
+		if ( !isKeyReferringSide || referencedPropertyName != null ) {
+			final TableGroupJoin tableGroupJoin = createTableGroupJoin(
+					navigablePath,
+					tableGroup,
+					null,
+					tableGroup.isInnerJoinPossible() ? SqlAstJoinType.INNER : SqlAstJoinType.LEFT,
+					null,
+					creationState.getSqlAstCreationState()
+			);
+
+			creationState.getSqlAstCreationState().getFromClauseAccess().registerTableGroup(
+					navigablePath,
+					tableGroupJoin.getJoinedGroup()
+			);
+		}
+		if ( referencedPropertyName == null ) {
+			return new EntityDelayedResultImpl(
+					navigablePath.append( EntityIdentifierMapping.ROLE_LOCAL_NAME ),
+					this,
+					tableGroup,
+					creationState
+			);
+		}
+		else {
+			// We don't support proxies based on a non-PK yet, so we must fetch the whole entity
+			return new EntityResultImpl(
+					navigablePath,
+					this,
+					null,
+					creationState
+			);
+		}
+	}
+
 	private TableGroup createTableGroupJoin(
 			NavigablePath fetchablePath,
 			LockMode lockMode,
@@ -653,6 +698,12 @@ public class ToOneAttributeMapping
 
 	@Override
 	public int forEachJdbcValue(Object value, Clause clause, int offset, JdbcValuesConsumer consumer, SharedSessionContractImplementor session) {
-		return foreignKeyDescriptor.forEachJdbcValue( value, clause, offset, consumer, session );
+		return foreignKeyDescriptor.forEachJdbcValue(
+				foreignKeyDescriptor.disassemble( value, session ),
+				clause,
+				offset,
+				consumer,
+				session
+		);
 	}
 }

@@ -28,10 +28,12 @@ import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.mapping.List;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.CollectionIdentifierDescriptor;
 import org.hibernate.metamodel.mapping.CollectionMappingType;
 import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.mapping.PropertyBasedMapping;
 import org.hibernate.metamodel.mapping.SelectionMapping;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -339,7 +341,8 @@ public class PluralAttributeMappingImpl
 			);
 			return new SimpleForeignKeyDescriptor(
 					keySelectionMapping,
-					basicFkTargetPart
+					basicFkTargetPart,
+					( (PropertyBasedMapping) basicFkTargetPart ).getPropertyAccess()
 			);
 		}
 		else if ( fkTargetPart instanceof EmbeddableValuedModelPart ) {

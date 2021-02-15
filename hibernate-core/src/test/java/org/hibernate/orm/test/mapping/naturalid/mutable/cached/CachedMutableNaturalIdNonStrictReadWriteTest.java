@@ -7,10 +7,10 @@
 package org.hibernate.orm.test.mapping.naturalid.mutable.cached;
 
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.Setting;
+
 
 import static org.hibernate.cfg.AvailableSettings.GENERATE_STATISTICS;
 import static org.hibernate.cfg.AvailableSettings.USE_SECOND_LEVEL_CACHE;
@@ -26,4 +26,5 @@ import static org.hibernate.testing.cache.CachingRegionFactory.DEFAULT_ACCESSTYP
 @DomainModel( annotatedClasses = {A.class, Another.class, AllCached.class, B.class, SubClass.class} )
 @SessionFactory
 public class CachedMutableNaturalIdNonStrictReadWriteTest extends CachedMutableNaturalIdTest {
+
 }

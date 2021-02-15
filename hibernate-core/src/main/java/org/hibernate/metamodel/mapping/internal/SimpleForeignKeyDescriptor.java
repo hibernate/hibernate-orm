@@ -23,6 +23,7 @@ import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.Clause;
@@ -51,13 +52,16 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicValuedModelPart, FetchOptions {
 	private final SelectionMapping keySelectionMapping;
 	private final SelectionMapping targetSelectionMapping;
+	private final PropertyAccess propertyAccess;
 	private AssociationKey associationKey;
 
 	public SimpleForeignKeyDescriptor(
 			SelectionMapping keySelectionMapping,
-			SelectionMapping targetSelectionMapping) {
+			SelectionMapping targetSelectionMapping,
+			PropertyAccess propertyAccess) {
 		this.keySelectionMapping = keySelectionMapping;
 		this.targetSelectionMapping = targetSelectionMapping;
+		this.propertyAccess = propertyAccess;
 	}
 
 	@Override
@@ -260,7 +264,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		return value;
+		return value == null ? null : propertyAccess.getGetter().get( value );
 	}
 
 	@Override

@@ -6,7 +6,6 @@
  */
 package org.hibernate.loader.ast.internal;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -16,7 +15,6 @@ import javax.persistence.CacheStoreMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.metamodel.mapping.AssociationKey;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -34,7 +32,6 @@ import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlAstProcessingState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
-import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -79,22 +76,6 @@ public class LoaderSqlAstCreationState
 				this,
 				this,
 				() -> Clause.IRRELEVANT
-		);
-	}
-
-	public LoaderSqlAstCreationState(
-			QuerySpec querySpec,
-			SqlAliasBaseManager sqlAliasBaseManager,
-			LockOptions lockOptions,
-			SessionFactoryImplementor sf) {
-		this(
-				querySpec,
-				sqlAliasBaseManager,
-				new FromClauseIndex(),
-				lockOptions,
-				(fetchParent, ast, state) -> Collections.emptyList(),
-				true,
-				sf
 		);
 	}
 
@@ -162,48 +143,6 @@ public class LoaderSqlAstCreationState
 	@Override
 	public SqlAstProcessingState getParentState() {
 		return null;
-	}
-
-	private static class FromClauseIndex implements FromClauseAccess {
-		private TableGroup tableGroup;
-
-		@Override
-		public TableGroup findTableGroup(NavigablePath navigablePath) {
-			if ( tableGroup != null ) {
-				if ( tableGroup.getNavigablePath().equals( navigablePath ) ) {
-					return tableGroup;
-				}
-				if ( tableGroup.getNavigablePath()
-						.getIdentifierForTableGroup()
-						.equals( navigablePath.getIdentifierForTableGroup() ) ) {
-					return tableGroup;
-				}
-
-				throw new IllegalArgumentException(
-						"NavigablePath [" + navigablePath + "] did not match base TableGroup ["
-								+ tableGroup.getNavigablePath() + "]"
-				);
-			}
-
-			return null;
-		}
-
-		@Override
-		public void registerTableGroup(NavigablePath navigablePath, TableGroup tableGroup) {
-			assert tableGroup.getNavigablePath().equals( navigablePath );
-
-			if ( this.tableGroup != null ) {
-				if ( this.tableGroup != tableGroup ) {
-					throw new IllegalArgumentException(
-							"Base TableGroup [" + tableGroup.getNavigablePath() + "] already set - " + navigablePath
-					);
-				}
-				assert this.tableGroup.getNavigablePath().equals( navigablePath );
-			}
-			else {
-				this.tableGroup = tableGroup;
-			}
-		}
 	}
 
 	@Override

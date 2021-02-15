@@ -55,28 +55,25 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends CachedMutableNatu
 	
 	@Test
 	@TestForIssue( jiraKey = "HHH-7278" )
-	@NotImplementedYet( reason = "Caching is not yet implemented", strict = false )
 	public void testInsertedNaturalIdCachedAfterTransactionSuccess(SessionFactoryScope scope) {
 		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
 		statistics.clear();
 
 		scope.inTransaction(
-				(session) -> session.save( new AllCached( "it" ) )
+				(session) -> session.save( new Another( "it" ) )
 		);
 
 		scope.inTransaction(
 				(session) -> {
 					final Another it = session.bySimpleNaturalId( Another.class ).load( "it" );
 					assertNotNull( it );
-
-					assertEquals( 1, statistics.getNaturalIdCacheHitCount() );
 				}
 		);
+		assertEquals( 1, statistics.getNaturalIdCacheHitCount() );
 	}
 	
 	@Test
 	@TestForIssue( jiraKey = "HHH-7278" )
-	@NotImplementedYet( reason = "Caching is not yet implemented", strict = false )
 	public void testInsertedNaturalIdNotCachedAfterTransactionFailure(SessionFactoryScope scope) {
 		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
 		statistics.clear();
@@ -86,7 +83,7 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends CachedMutableNatu
 					final Transaction transaction = session.getTransaction();
 					transaction.begin();
 
-					session.save( new AllCached( "it" ) );
+					session.save( new Another( "it" ) );
 					session.flush();
 
 					transaction.rollback();
@@ -104,13 +101,12 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends CachedMutableNatu
 	
 	@Test
 	@TestForIssue( jiraKey = "HHH-7278" )
-	@NotImplementedYet( reason = "Caching is not yet implemented", strict = false )
 	public void testChangedNaturalIdCachedAfterTransactionSuccess(SessionFactoryScope scope) {
 		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
 		statistics.clear();
 
 		scope.inTransaction(
-				(session) -> session.save( new AllCached( "it" ) )
+				(session) -> session.save( new Another( "it" ) )
 		);
 
 		scope.inTransaction(
@@ -136,13 +132,12 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends CachedMutableNatu
 	
 	@Test
 	@TestForIssue( jiraKey = "HHH-7278" )
-	@NotImplementedYet( reason = "Caching is not yet implemented", strict = false )
 	public void testChangedNaturalIdNotCachedAfterTransactionFailure(SessionFactoryScope scope) {
 		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
 		statistics.clear();
 
 		scope.inTransaction(
-				(session) -> session.save( new AllCached( "it" ) )
+				(session) -> session.save( new Another( "it" ) )
 		);
 
 		scope.inTransaction(
@@ -167,13 +162,12 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends CachedMutableNatu
 					assertNotNull( original );
 				}
 		);
-		
-		assertEquals( 0, statistics );
+
+		assertEquals(0, statistics.getNaturalIdCacheHitCount());
 	}
 	
 	@Test
 	@TestForIssue( jiraKey = "HHH-7309" )
-	@NotImplementedYet( reason = "Caching is not yet implemented", strict = false )
 	public void testInsertUpdateEntity_NaturalIdCachedAfterTransactionSuccess(SessionFactoryScope scope) {
 		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
 		statistics.clear();
@@ -202,9 +196,8 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends CachedMutableNatu
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-9200" )
-	@NotImplementedYet( reason = "Caching is not yet implemented", strict = false )
 	public void testNaturalIdCacheStatisticsReset(SessionFactoryScope scope) {
-		final String naturalIdCacheRegion = Another.class.getName() + "##NaturalId";
+		final String naturalIdCacheRegion = "hibernate.test." + Another.class.getName() + "##NaturalId";
 
 		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
 		statistics.clear();

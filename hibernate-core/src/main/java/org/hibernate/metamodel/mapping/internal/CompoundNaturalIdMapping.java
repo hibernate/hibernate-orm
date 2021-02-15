@@ -121,8 +121,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 
 		for ( int i = 0; i <= attributes.size() - 1; i++ ) {
 			final SingularAttributeMapping attributeMapping = attributes.get( i );
-			final Object domainValue = state[ attributeMapping.getStateArrayPosition() ];
-			values[ i ] = attributeMapping.disassemble( domainValue, session );
+			values[ i ] = state[ attributeMapping.getStateArrayPosition() ];
 		}
 
 		return values;

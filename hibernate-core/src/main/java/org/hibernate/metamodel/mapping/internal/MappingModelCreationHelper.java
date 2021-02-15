@@ -53,13 +53,13 @@ import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.CollectionIdentifierDescriptor;
 import org.hibernate.metamodel.mapping.CollectionMappingType;
 import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.mapping.PropertyBasedMapping;
 import org.hibernate.metamodel.mapping.SelectionMapping;
 import org.hibernate.metamodel.mapping.SelectionMappings;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
@@ -884,7 +884,7 @@ public class MappingModelCreationHelper {
 		if ( attributeMappingSubPart instanceof ToOneAttributeMapping ) {
 			final ToOneAttributeMapping referencedAttributeMapping = (ToOneAttributeMapping) attributeMappingSubPart;
 
-			setRefererencedAttributeForeignKeyDescriptor(
+			setReferencedAttributeForeignKeyDescriptor(
 					attributeMapping,
 					referencedAttributeMapping,
 					(EntityPersister) referencedAttributeMapping.getDeclaringType(),
@@ -921,7 +921,8 @@ public class MappingModelCreationHelper {
 			attributeMapping.setForeignKeyDescriptor(
 					new SimpleForeignKeyDescriptor(
 							keySelectionMapping,
-							simpleFkTarget
+							simpleFkTarget,
+							( (PropertyBasedMapping) simpleFkTarget ).getPropertyAccess()
 					)
 			);
 		}
@@ -959,18 +960,22 @@ public class MappingModelCreationHelper {
 		final EntityPersister referencedEntityDescriptor = creationProcess
 				.getEntityPersister( bootValueMapping.getReferencedEntityName() );
 
-		final String referencedPropertyName;
+		String referencedPropertyName;
 		if ( bootValueMapping instanceof OneToOne ) {
-			referencedPropertyName = ( (OneToOne) bootValueMapping ).getMappedByProperty();
+			OneToOne oneToOne = (OneToOne) bootValueMapping;
+			referencedPropertyName = oneToOne.getMappedByProperty();
+			if ( referencedPropertyName == null ) {
+				referencedPropertyName = oneToOne.getReferencedPropertyName();
+			}
 		}
 		else {
-			referencedPropertyName = bootValueMapping.getReferencedPropertyName();
+			referencedPropertyName = null;
 		}
 
 		if ( referencedPropertyName != null  ) {
 			final ModelPart modelPart = referencedEntityDescriptor.findSubPart( referencedPropertyName );
 			if ( modelPart instanceof ToOneAttributeMapping ) {
-				setRefererencedAttributeForeignKeyDescriptor(
+				setReferencedAttributeForeignKeyDescriptor(
 						attributeMapping,
 						(ToOneAttributeMapping) modelPart,
 						referencedEntityDescriptor,
@@ -983,6 +988,7 @@ public class MappingModelCreationHelper {
 				final EmbeddedForeignKeyDescriptor embeddedForeignKeyDescriptor = buildEmbeddableForeignKeyDescriptor(
 						(EmbeddableValuedModelPart) modelPart,
 						bootValueMapping,
+						true,
 						dialect,
 						creationProcess
 				);
@@ -1027,7 +1033,8 @@ public class MappingModelCreationHelper {
 
 			final ForeignKeyDescriptor foreignKeyDescriptor = new SimpleForeignKeyDescriptor(
 					keySelectionMapping,
-					simpleFkTarget
+					simpleFkTarget,
+					( (PropertyBasedMapping) simpleFkTarget ).getPropertyAccess()
 			);
 			attributeMapping.setForeignKeyDescriptor( foreignKeyDescriptor );
 		}
@@ -1051,6 +1058,21 @@ public class MappingModelCreationHelper {
 	public static EmbeddedForeignKeyDescriptor buildEmbeddableForeignKeyDescriptor(
 			EmbeddableValuedModelPart embeddableValuedModelPart,
 			Value bootValueMapping,
+			Dialect dialect,
+			MappingModelCreationProcess creationProcess) {
+		return buildEmbeddableForeignKeyDescriptor(
+				embeddableValuedModelPart,
+				bootValueMapping,
+				false,
+				dialect,
+				creationProcess
+		);
+	}
+
+	private static EmbeddedForeignKeyDescriptor buildEmbeddableForeignKeyDescriptor(
+			EmbeddableValuedModelPart embeddableValuedModelPart,
+			Value bootValueMapping,
+			boolean inverse,
 			Dialect dialect,
 			MappingModelCreationProcess creationProcess) {
 		final SelectionMappings keySelectionMappings;
@@ -1082,17 +1104,29 @@ public class MappingModelCreationHelper {
 					creationProcess.getSqmFunctionRegistry()
 			);
 		}
-		return new EmbeddedForeignKeyDescriptor(
-				embeddableValuedModelPart,
-				keyTableExpression,
-				keySelectionMappings,
-				embeddableValuedModelPart.getContainingTableExpression(),
-				embeddableValuedModelPart.getEmbeddableTypeDescriptor(),
-				creationProcess
-		);
+		if ( inverse ) {
+			return new EmbeddedForeignKeyDescriptor(
+					embeddableValuedModelPart,
+					embeddableValuedModelPart.getContainingTableExpression(),
+					embeddableValuedModelPart.getEmbeddableTypeDescriptor(),
+					keyTableExpression,
+					keySelectionMappings,
+					creationProcess
+			);
+		}
+		else {
+			return new EmbeddedForeignKeyDescriptor(
+					embeddableValuedModelPart,
+					keyTableExpression,
+					keySelectionMappings,
+					embeddableValuedModelPart.getContainingTableExpression(),
+					embeddableValuedModelPart.getEmbeddableTypeDescriptor(),
+					creationProcess
+			);
+		}
 	}
 
-	private static void setRefererencedAttributeForeignKeyDescriptor(
+	private static void setReferencedAttributeForeignKeyDescriptor(
 			AbstractAttributeMapping attributeMapping,
 			ToOneAttributeMapping referencedAttributeMapping,
 			EntityPersister referencedEntityDescriptor,

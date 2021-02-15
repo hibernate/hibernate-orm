@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.internal;
 
+import org.hibernate.action.internal.BulkOperationCleanupAction;
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
@@ -30,6 +31,7 @@ public class MultiTableUpdateQueryPlan implements NonSelectQueryPlan {
 
 	@Override
 	public int executeUpdate(ExecutionContext executionContext) {
+		BulkOperationCleanupAction.schedule( executionContext, sqmUpdate );
 		return mutationStrategy.executeUpdate( sqmUpdate, domainParameterXref, executionContext );
 	}
 }

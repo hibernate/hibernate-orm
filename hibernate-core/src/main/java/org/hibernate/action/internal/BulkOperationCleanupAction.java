@@ -7,9 +7,11 @@
 package org.hibernate.action.internal;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
@@ -22,10 +24,15 @@ import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.Queryable;
+import org.hibernate.query.sqm.tree.SqmDmlStatement;
+import org.hibernate.query.sqm.tree.SqmStatement;
+import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
+import org.hibernate.sql.ast.tree.insert.InsertStatement;
+import org.hibernate.sql.exec.spi.ExecutionContext;
 
 /**
  * An {@link org.hibernate.engine.spi.ActionQueue} {@link org.hibernate.action.spi.Executable} for ensuring
@@ -56,10 +63,10 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 	 * @param session The session to which this request is tied.
 	 * @param affectedQueryables The affected entity persisters.
 	 */
-	public BulkOperationCleanupAction(SharedSessionContractImplementor session, Queryable... affectedQueryables) {
+	public BulkOperationCleanupAction(SharedSessionContractImplementor session, EntityPersister... affectedQueryables) {
 		final SessionFactoryImplementor factory = session.getFactory();
 		final LinkedHashSet<String> spacesList = new LinkedHashSet<>();
-		for ( Queryable persister : affectedQueryables ) {
+		for ( EntityPersister persister : affectedQueryables ) {
 			Collections.addAll( spacesList, (String[]) persister.getQuerySpaces() );
 
 			if ( persister.canWriteToCache() ) {
@@ -96,7 +103,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 
 	/**
 	 * Constructs an action to cleanup "affected cache regions" based on a
-	 * set of affected table spaces.  This differs from {@link #BulkOperationCleanupAction(SharedSessionContractImplementor, Queryable[])}
+	 * set of affected table spaces.  This differs from {@link #BulkOperationCleanupAction(SharedSessionContractImplementor, EntityPersister[])}
 	 * in that here we have the affected <strong>table names</strong>.  From those
 	 * we deduce the entity persisters which are affected based on the defined
 	 * {@link EntityPersister#getQuerySpaces() table spaces}; and from there, we
@@ -139,6 +146,37 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 		}
 
 		this.affectedTableSpaces = spacesList.toArray( new String[ 0 ] );
+	}
+
+	public static void schedule(ExecutionContext executionContext, SqmDmlStatement<?> statement) {
+		final List<EntityPersister> entityPersisters = new ArrayList<>( 1 );
+		final MetamodelImplementor metamodel = executionContext.getSession()
+				.getFactory()
+				.getMetamodel();
+		if ( !( statement instanceof InsertStatement ) ) {
+			entityPersisters.add( metamodel.entityPersister( statement.getTarget().getEntityName() ) );
+		}
+		for ( SqmCteStatement<?> cteStatement : statement.getCteStatements() ) {
+			final SqmStatement<?> cteDefinition = cteStatement.getCteDefinition();
+			if ( cteDefinition instanceof SqmDmlStatement<?> && !( cteDefinition instanceof InsertStatement ) ) {
+				entityPersisters.add(
+						metamodel.entityPersister( ( (SqmDmlStatement<?>) cteDefinition ).getTarget().getEntityName() )
+				);
+			}
+		}
+
+		schedule( executionContext, entityPersisters.toArray( new EntityPersister[0] ) );
+	}
+
+	public static void schedule(ExecutionContext executionContext, EntityPersister... affectedQueryables) {
+		final SharedSessionContractImplementor session = executionContext.getSession();
+		final BulkOperationCleanupAction action = new BulkOperationCleanupAction( session, affectedQueryables );
+		if ( session.isEventSource() ) {
+			( (EventSource) session ).getActionQueue().addAction( action );
+		}
+		else {
+			action.getAfterTransactionCompletionProcess().doAfterTransactionCompletion( true, session );
+		}
 	}
 
 

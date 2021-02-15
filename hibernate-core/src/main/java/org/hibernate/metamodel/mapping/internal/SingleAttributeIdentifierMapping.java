@@ -7,12 +7,13 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.PropertyBasedMapping;
 import org.hibernate.property.access.spi.PropertyAccess;
 
 /**
  * @author Steve Ebersole
  */
-public interface SingleAttributeIdentifierMapping extends EntityIdentifierMapping {
+public interface SingleAttributeIdentifierMapping extends EntityIdentifierMapping, PropertyBasedMapping {
 	/**
 	 * Access to the identifier attribute's PropertyAccess
 	 */

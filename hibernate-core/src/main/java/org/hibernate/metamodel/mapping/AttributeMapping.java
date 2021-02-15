@@ -14,7 +14,7 @@ import org.hibernate.sql.results.graph.Fetchable;
  *
  * @author Steve Ebersole
  */
-public interface AttributeMapping extends ModelPart, ValueMapping, Fetchable {
+public interface AttributeMapping extends ModelPart, ValueMapping, Fetchable, PropertyBasedMapping {
 	String getAttributeName();
 
 	@Override

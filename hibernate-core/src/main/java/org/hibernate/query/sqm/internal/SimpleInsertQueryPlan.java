@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.internal;
 
+import org.hibernate.action.internal.BulkOperationCleanupAction;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -78,6 +79,7 @@ public class SimpleInsertQueryPlan implements NonSelectQueryPlan {
 
 	@Override
 	public int executeUpdate(ExecutionContext executionContext) {
+		BulkOperationCleanupAction.schedule( executionContext, sqmInsert );
 		final SharedSessionContractImplementor session = executionContext.getSession();
 		final SessionFactoryImplementor factory = session.getFactory();
 		final JdbcServices jdbcServices = factory.getJdbcServices();

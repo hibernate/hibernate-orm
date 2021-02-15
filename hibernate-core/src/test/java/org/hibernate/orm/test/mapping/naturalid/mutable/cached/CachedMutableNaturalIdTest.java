@@ -64,7 +64,6 @@ public abstract class CachedMutableNaturalIdTest {
 	}
 
 	@Test
-	@NotImplementedYet( reason = "Caching is not yet implemented", strict = false )
 	public void testNaturalIdChangedWhileDetached(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> session.save( new Another( "it" ) )

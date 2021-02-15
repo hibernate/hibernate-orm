@@ -10,17 +10,15 @@ package org.hibernate.spatial.dialect.cockroachdb;
 import java.util.Map;
 
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.dialect.CockroachDB192Dialect;
+import org.hibernate.dialect.CockroachDB201Dialect;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.dialect.postgis.PGGeometryTypeDescriptor;
 
-public class CockroachDB192SpatialDialect extends CockroachDB192Dialect implements CockroachSpatialDialectTrait {
+public class CockroachDB201SpatialDialect extends CockroachDB201Dialect implements CockroachSpatialDialectTrait{
 
-	/**
-	 * Constructor for dialect
-	 */
-	public CockroachDB192SpatialDialect() {
+
+	public CockroachDB201SpatialDialect(){
 		super();
 		registerColumnType(
 				PGGeometryTypeDescriptor.INSTANCE_WKB_2.getSqlType(),

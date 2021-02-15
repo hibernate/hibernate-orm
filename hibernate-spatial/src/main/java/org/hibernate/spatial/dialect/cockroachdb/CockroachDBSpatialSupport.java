@@ -13,15 +13,15 @@ import org.hibernate.spatial.GeolatteGeometryJavaTypeDescriptor;
 import org.hibernate.spatial.GeolatteGeometryType;
 import org.hibernate.spatial.JTSGeometryJavaTypeDescriptor;
 import org.hibernate.spatial.JTSGeometryType;
-import org.hibernate.spatial.dialect.SpatialFunctionsRegistry;
+import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.dialect.postgis.PGGeometryTypeDescriptor;
 import org.hibernate.spatial.dialect.postgis.PostgisFunctions;
 import org.hibernate.spatial.dialect.postgis.PostgisSupport;
 
-public class CockroachDBSpatialSupport extends PostgisSupport {
+public class CockroachDBSpatialSupport extends PostgisSupport implements SpatialDialect {
 
-	CockroachDBSpatialSupport(){
-		super(new CockroachDBSpatialFunctions() );
+	 CockroachDBSpatialSupport() {
+		super( new CockroachDBSpatialFunctions() );
 	}
 
 	@Override
@@ -37,7 +37,7 @@ public class CockroachDBSpatialSupport extends PostgisSupport {
 
 class CockroachDBSpatialFunctions extends PostgisFunctions {
 
-	CockroachDBSpatialFunctions(){
+	CockroachDBSpatialFunctions() {
 		super();
 		this.functionMap.remove( "geomunion" );
 	}

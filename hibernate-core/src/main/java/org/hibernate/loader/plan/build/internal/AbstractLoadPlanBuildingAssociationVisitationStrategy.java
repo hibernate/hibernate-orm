@@ -44,6 +44,7 @@ import org.hibernate.persister.walking.internal.FetchStrategyHelper;
 import org.hibernate.persister.walking.spi.AnyMappingDefinition;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
 import org.hibernate.persister.walking.spi.AssociationKey;
+import org.hibernate.persister.walking.spi.AssociationVisitationStrategy;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.CollectionDefinition;
 import org.hibernate.persister.walking.spi.CollectionElementDefinition;
@@ -647,8 +648,11 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 			return false;  // EARLY EXIT
 		}
 
-		final Joinable currentEntityPersister = (Joinable) currentSource().resolveEntityReference()
-				.getEntityPersister();
+		final EntityReference currentEntityReference = currentSource().resolveEntityReference();
+		if ( currentEntityReference == null ) {
+			return LoadPlanBuildingAssociationVisitationStrategy.super.isDuplicateAssociatedEntity( attributeDefinition );
+		}
+		final Joinable currentEntityPersister = (Joinable) currentEntityReference.getEntityPersister();
 		final AssociationKey currentEntityReferenceAssociationKey =
 				new AssociationKey( currentEntityPersister.getTableName(), currentEntityPersister.getKeyColumnNames() );
 		final AssociationKey associationKey = attributeDefinition.getAssociationKey();

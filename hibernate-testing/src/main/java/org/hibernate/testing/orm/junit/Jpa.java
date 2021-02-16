@@ -44,7 +44,7 @@ public @interface Jpa {
 	 */
 	Setting[] integrationSettings() default {};
 
-	Class<? extends NonStringValueSettingProvider>[] nonStringValueSettingProvider() default {};
+	Class<? extends NonStringValueSettingProvider>[] nonStringValueSettingProviders() default {};
 
 	String persistenceUnitName() default "test-pu";
 

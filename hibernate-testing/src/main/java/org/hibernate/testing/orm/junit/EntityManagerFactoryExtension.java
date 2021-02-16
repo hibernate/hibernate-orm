@@ -157,9 +157,9 @@ public class EntityManagerFactoryExtension
 			integrationSettings.put( setting.name(), setting.value() );
 		}
 
-		if ( emfAnn.nonStringValueSettingProvider().length > 0 ) {
-			for ( int i = 0; i < emfAnn.nonStringValueSettingProvider().length; i++ ) {
-				final Class<? extends NonStringValueSettingProvider> _class = emfAnn.nonStringValueSettingProvider()[ i ];
+		if ( emfAnn.nonStringValueSettingProviders().length > 0 ) {
+			for ( int i = 0; i < emfAnn.nonStringValueSettingProviders().length; i++ ) {
+				final Class<? extends NonStringValueSettingProvider> _class = emfAnn.nonStringValueSettingProviders()[ i ];
 				try {
 					NonStringValueSettingProvider valueProvider = _class.newInstance();
 					integrationSettings.put( valueProvider.getKey(), valueProvider.getValue() );

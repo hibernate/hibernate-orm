@@ -82,6 +82,7 @@ public class EnhancementHelper {
 				);
 
 				// at a later time - for example 6.0 when we can implement the join solution
+				// todo (6.0) : implement this
 				// return false;
 
 				// for now, fall through

@@ -20,24 +20,24 @@ import static org.jboss.logging.Logger.Level.WARN;
 /**
  * Logging related to bytecode enhancement interceptors
  */
-@MessageLogger( projectCode = "HHH" )
-@ValidIdRange( min = 90005901, max = 90006000 )
+@MessageLogger(projectCode = "HHH")
+@ValidIdRange(min = 90005901, max = 90006000)
 public interface BytecodeInterceptorLogging extends BasicLogger {
-    String SUB_NAME = "interceptor";
-    String NAME = BytecodeLogging.subLoggerName( SUB_NAME );
+	String SUB_NAME = "interceptor";
+	String NAME = BytecodeLogging.subLoggerName(SUB_NAME);
 
-    Logger LOGGER = Logger.getLogger( NAME );
-    BytecodeInterceptorLogging MESSAGE_LOGGER = Logger.getMessageLogger( BytecodeInterceptorLogging.class, NAME );
+	Logger LOGGER = Logger.getLogger(NAME);
+	BytecodeInterceptorLogging MESSAGE_LOGGER = Logger.getMessageLogger(BytecodeInterceptorLogging.class, NAME);
 
-    boolean TRACE_ENABLED = LOGGER.isTraceEnabled();
-    boolean DEBUG_ENABLED = LOGGER.isDebugEnabled();
+	boolean TRACE_ENABLED = LOGGER.isTraceEnabled();
+	boolean DEBUG_ENABLED = LOGGER.isDebugEnabled();
 
-    @LogMessage( level = WARN )
-    @Message(
-            id = 90005901,
-            value = "`%s#%s` was mapped with explicit lazy-group (`%s`).  Hibernate will ignore the lazy-group - this is generally " +
-                    "not a good idea for to-one associations as it would lead to 2 separate SQL selects to initialize the association.  " +
-                    "This is expected to be improved in future versions of Hibernate"
-    )
-    void lazyGroupIgnoredForToOne(String ownerName, String attributeName, String requestedLazyGroup);
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90005901,
+			value = "`%s#%s` was mapped with explicit lazy-group (`%s`).  Hibernate will ignore the lazy-group - this is generally " +
+					"not a good idea for to-one associations as it would lead to 2 separate SQL selects to initialize the association.  " +
+					"This is expected to be improved in future versions of Hibernate"
+	)
+	void lazyGroupIgnoredForToOne(String ownerName, String attributeName, String requestedLazyGroup);
 }

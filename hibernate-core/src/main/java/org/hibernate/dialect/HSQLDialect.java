@@ -257,6 +257,9 @@ public class HSQLDialect extends Dialect {
 		// function templates
 		registerFunction( "concat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "(", "||", ")" ) );
 
+		// bitwise functions
+		registerFunction( "bitand", new StandardSQLFunction( "bitand" ) );
+
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 
 		limitHandler = new HSQLLimitHandler();

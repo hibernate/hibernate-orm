@@ -9,10 +9,12 @@ package org.hibernate.dialect;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.dialect.hint.IndexQueryHintHandler;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.type.StandardBasicTypes;
 
 /**
  * An SQL dialect for MySQL 5.x specific features.
@@ -20,6 +22,12 @@ import org.hibernate.internal.util.JdbcExceptionHelper;
  * @author Steve Ebersole
  */
 public class MySQL5Dialect extends MySQLDialect {
+
+	public MySQL5Dialect() {
+		super();
+		// bitwise functions
+		registerFunction( "bitand", new VarArgsSQLFunction( StandardBasicTypes.LONG, "(", "&", ")" ) );
+	}
 	@Override
 	protected void registerVarcharTypes() {
 		registerColumnType( Types.VARCHAR, "longtext" );

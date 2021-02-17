@@ -18,17 +18,23 @@ import org.hibernate.Hibernate;
 import org.hibernate.annotations.LazyToOne;
 import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.proxy.HibernateProxy;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
+import org.hibernate.testing.jdbc.SQLStatementInterceptor;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import static junit.framework.TestCase.assertEquals;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -38,45 +44,57 @@ import static org.junit.Assert.assertTrue;
 @RunWith(BytecodeEnhancerRunner.class)
 @TestForIssue(jiraKey = "HHH-13129")
 public class CascadeOnUninitializedTest extends BaseNonConfigCoreFunctionalTestCase {
+	private SQLStatementInterceptor sqlInterceptor;
+
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Person.class,
-				Address.class,
-		};
+		return new Class<?>[] { Person.class, Address.class };
 	}
 
 	@Override
 	protected void addSettings(Map settings) {
 		super.addSettings( settings );
-		settings.put( AvailableSettings.SHOW_SQL, "true" );
 		settings.put( AvailableSettings.FORMAT_SQL, "true" );
+		sqlInterceptor = new SQLStatementInterceptor( settings );
 	}
 
 	@Test
 	public void testMergeDetachedEnhancedEntityWithUninitializedManyToOne() {
+		final Person person = persistPersonWithManyToOne();
 
-		Person person = persistPersonWithManyToOne();
+		sqlInterceptor.clear();
 
 		// get a detached Person
-		Person detachedPerson = TransactionUtil.doInHibernate(
-				this::sessionFactory, session -> {
-					return session.get( Person.class, person.getId() );
-				}
+		final Person detachedPerson = fromTransaction(
+				session -> session.get( Person.class, person.getId() )
 		);
 
-		// address should not be initialized
-		assertFalse( Hibernate.isPropertyInitialized( detachedPerson, "primaryAddress" ) );
+		// loading Person should lead to one SQL
+		assertThat( sqlInterceptor.getQueryCount(), is( 1 ) );
+
+		// primaryAddress should be "initialized" as an enhanced-proxy
+		assertTrue( Hibernate.isPropertyInitialized( detachedPerson, "primaryAddress" ) );
+		assertThat( detachedPerson.getPrimaryAddress(), not( instanceOf( HibernateProxy.class ) ) );
+		assertFalse( Hibernate.isInitialized( detachedPerson.getPrimaryAddress() ) );
+
+		// alter the detached reference
 		detachedPerson.setName( "newName" );
 
-		Person mergedPerson = TransactionUtil.doInHibernate(
-				this::sessionFactory, session -> {
-					return (Person) session.merge( detachedPerson );
-				}
+		final Person mergedPerson = fromTransaction(
+				session -> (Person) session.merge( detachedPerson )
 		);
 
-		// address should not be initialized
-		assertFalse( Hibernate.isPropertyInitialized( mergedPerson, "primaryAddress" ) );
+		// 1) select Person#addresses
+		// 2) select Person#primaryAddress
+		// 3) update Person
+
+		assertThat( sqlInterceptor.getQueryCount(), is( 3 ) );
+
+		// primaryAddress should not be initialized
+		assertTrue( Hibernate.isPropertyInitialized( detachedPerson, "primaryAddress" ) );
+		assertThat( detachedPerson.getPrimaryAddress(), not( instanceOf( HibernateProxy.class ) ) );
+		assertFalse( Hibernate.isInitialized( detachedPerson.getPrimaryAddress() ) );
+
 		assertEquals( "newName", mergedPerson.getName() );
 	}
 
@@ -84,27 +102,39 @@ public class CascadeOnUninitializedTest extends BaseNonConfigCoreFunctionalTestC
 	public void testDeleteEnhancedEntityWithUninitializedManyToOne() {
 		Person person = persistPersonWithManyToOne();
 
+		sqlInterceptor.clear();
+
 		// get a detached Person
-		Person detachedPerson = TransactionUtil.doInHibernate(
-				this::sessionFactory, session -> {
-					return session.get( Person.class, person.getId() );
-				}
+		Person detachedPerson = fromTransaction(
+				session -> session.get( Person.class, person.getId() )
 		);
 
-		// address should not be initialized
-		assertFalse( Hibernate.isPropertyInitialized( detachedPerson, "primaryAddress" ) );
+		// loading Person should lead to one SQL
+		assertThat( sqlInterceptor.getQueryCount(), is( 1 ) );
 
-		// deleting detachedPerson should result in detachedPerson.address being initialized,
+		// primaryAddress should be initialized as an enhance-proxy
+		assertTrue( Hibernate.isPropertyInitialized( detachedPerson, "primaryAddress" ) );
+		assertThat( detachedPerson, not( instanceOf( HibernateProxy.class ) ) );
+		assertFalse( Hibernate.isInitialized( detachedPerson.getPrimaryAddress() ) );
+
+		sqlInterceptor.clear();
+
+		// deleting detachedPerson should result in detachedPerson.primaryAddress being initialized,
 		// so that the DELETE operation can be cascaded to it.
-		TransactionUtil.doInHibernate(
-				this::sessionFactory, session -> {
-					session.delete( detachedPerson );
-				}
+		inTransaction(
+				session -> session.delete( detachedPerson )
 		);
+
+		// 1) select Person#addresses
+		// 2) select Person#primaryAddress
+		// 3) delete Person
+		// 4) select primary Address
+
+		assertThat( sqlInterceptor.getQueryCount(), is( 4 ) );
 
 		// both the Person and its Address should be deleted
-		TransactionUtil.doInHibernate(
-				this::sessionFactory, session -> {
+		inTransaction(
+				session -> {
 					assertNull( session.get( Person.class, person.getId() ) );
 					assertNull( session.get( Person.class, person.getPrimaryAddress().getId() ) );
 				}
@@ -214,12 +244,12 @@ public class CascadeOnUninitializedTest extends BaseNonConfigCoreFunctionalTestC
 		private String name;
 
 		@ManyToOne(cascade = { CascadeType.ALL }, fetch = FetchType.LAZY)
-		@JoinColumn(name = "ADDRESS_ID")
+		@JoinColumn(name = "primary_address_id")
 		@LazyToOne(LazyToOneOption.NO_PROXY)
 		private Address primaryAddress;
 
 		@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-		@JoinColumn
+		@JoinColumn( name = "person_id" )
 		private Set<Address> addresses = new HashSet<>();
 
 		public Long getId() {

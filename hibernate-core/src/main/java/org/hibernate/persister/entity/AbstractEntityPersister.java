@@ -36,6 +36,7 @@ import org.hibernate.QueryException;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
@@ -606,7 +607,7 @@ public abstract class AbstractEntityPersister
 			this.naturalIdRegionAccessStrategy = null;
 		}
 
-		this.entityMetamodel = new EntityMetamodel( persistentClass, this, factory );
+		this.entityMetamodel = new EntityMetamodel( persistentClass, this, creationContext );
 		this.entityTuplizer = this.entityMetamodel.getTuplizer();
 
 		if ( entityMetamodel.isMutable() ) {
@@ -743,6 +744,12 @@ public abstract class AbstractEntityPersister
 			final boolean lazy = ! EnhancementHelper.includeInBaseFetchGroup(
 					prop,
 					entityMetamodel.isInstrumented(),
+					(entityName) -> {
+						final MetadataImplementor metadata = creationContext.getMetadata();
+						final PersistentClass entityBinding = metadata.getEntityBinding( entityName );
+						assert entityBinding != null;
+						return entityBinding.hasSubclasses();
+					},
 					sessionFactoryOptions.isCollectionsInDefaultFetchGroupEnabled()
 			);
 
@@ -820,6 +827,12 @@ public abstract class AbstractEntityPersister
 			final boolean lazy = ! EnhancementHelper.includeInBaseFetchGroup(
 					prop,
 					entityMetamodel.isInstrumented(),
+					(entityName) -> {
+						final MetadataImplementor metadata = creationContext.getMetadata();
+						final PersistentClass entityBinding = metadata.getEntityBinding( entityName );
+						assert entityBinding != null;
+						return entityBinding.hasSubclasses();
+					},
 					sessionFactoryOptions.isCollectionsInDefaultFetchGroupEnabled()
 			);
 			while ( colIter.hasNext() ) {

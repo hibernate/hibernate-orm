@@ -31,9 +31,10 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertFalse;
+import org.hamcrest.CoreMatchers;
+
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -56,11 +57,9 @@ public class BidirectionalLazyGroupsTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testRemoveCollectionOwnerNoCascade() {
-
-		doInHibernate(
-				this::sessionFactory, session -> {
-
-					Employer employer = new Employer( "RedHat" );
+		inTransaction(
+				(session) -> {
+					final Employer employer = new Employer( "RedHat" );
 					session.persist( employer );
 					employer.addEmployee( new Employee( "Jack" ) );
 					employer.addEmployee( new Employee( "Jill" ) );
@@ -71,20 +70,21 @@ public class BidirectionalLazyGroupsTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		doInHibernate(
-				this::sessionFactory, session -> {
-					Employer employer = session.createQuery( "from Employer e", Employer.class ).getSingleResult();
+		inTransaction(
+				(session) -> {
+					final Employer employer = session.createQuery( "from Employer e", Employer.class ).getSingleResult();
 					session.remove( employer );
 					for ( Employee employee : employer.getEmployees() ) {
-						assertFalse( Hibernate.isPropertyInitialized( employee, "employer") );
+						assertTrue( Hibernate.isPropertyInitialized( employee, "employer") );
+						assertThat( employee.getEmployer(), CoreMatchers.sameInstance( employer ) );
+
 						session.remove( employee );
-						assertTrue( Hibernate.isPropertyInitialized( employee, "employer" ) );
 					}
 				}
 		);
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		inTransaction(
+				(session) -> {
 					assertNull( session.find( Employer.class, "RedHat" ) );
 					assertNull( session.createQuery( "from Employee e", Employee.class ).uniqueResult() );
 				}
@@ -195,7 +195,7 @@ public class BidirectionalLazyGroupsTest extends BaseCoreFunctionalTestCase {
 				return true;
 			}
 			else if ( o instanceof Employee ) {
-				Employee other = Employee.class.cast( o );
+				Employee other = (Employee) o;
 				if ( name != null ) {
 					return getName().equals( other.getName() );
 				}

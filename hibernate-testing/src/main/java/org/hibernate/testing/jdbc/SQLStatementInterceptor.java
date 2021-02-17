@@ -12,6 +12,7 @@ import java.util.Map;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
 import static org.junit.Assert.assertEquals;
@@ -46,6 +47,10 @@ public class SQLStatementInterceptor {
 					return sql;
 				}
 		);
+	}
+
+	public SQLStatementInterceptor(Configuration configuration) {
+		this( configuration.getProperties() );
 	}
 
 	public LinkedList<String> getSqlQueries() {

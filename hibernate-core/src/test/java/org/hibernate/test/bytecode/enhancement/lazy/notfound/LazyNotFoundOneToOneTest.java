@@ -26,13 +26,16 @@ import org.hibernate.cfg.Configuration;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
+import org.hibernate.testing.jdbc.SQLStatementInterceptor;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import static org.hamcrest.CoreMatchers.is;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 
 /**
  * @author Gail Badner
@@ -41,6 +44,8 @@ import static org.junit.Assert.assertNull;
 @RunWith( BytecodeEnhancerRunner.class )
 public class LazyNotFoundOneToOneTest extends BaseCoreFunctionalTestCase {
 	private static int ID = 1;
+
+	private SQLStatementInterceptor sqlInterceptor;
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -53,7 +58,7 @@ public class LazyNotFoundOneToOneTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected void configure(Configuration configuration) {
 		super.configure(configuration);
-		configuration.setProperty( AvailableSettings.ALLOW_ENHANCEMENT_AS_PROXY, "true" );
+		sqlInterceptor = new SQLStatementInterceptor( configuration );
 	}
 
 	@Test
@@ -75,10 +80,15 @@ public class LazyNotFoundOneToOneTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
+		sqlInterceptor.clear();
+
 		doInHibernate(
 				this::sessionFactory, session -> {
 					User user = session.find( User.class, ID );
+
+					assertThat( sqlInterceptor.getQueryCount(), is( 1 ) );
 					assertFalse( Hibernate.isPropertyInitialized( user, "lazy" ) );
+
 					assertNull( user.getLazy() );
 				}
 		);

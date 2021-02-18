@@ -47,7 +47,7 @@ public class AttributePathTests extends BaseSqmUnitTest {
 
 	@Test
 	public void testImplicitJoinReuse() {
-		final SqmSelectStatement statement = interpretSelect( "select s.mate.dob, s.mate.numberOfToes from Person s" );
+		final SqmSelectStatement<?> statement = interpretSelect( "select s.mate.dob, s.mate.numberOfToes from Person s" );
 
 		assertThat( statement.getQuerySpec().getFromClause().getRoots().size(), is(1) );
 		final SqmRoot<?> sqmRoot = statement.getQuerySpec().getFromClause().getRoots().get( 0 );
@@ -75,7 +75,7 @@ public class AttributePathTests extends BaseSqmUnitTest {
 
 	@Test
 	public void testImplicitJoinReuse2() {
-		final SqmSelectStatement statement = interpretSelect( "select s.mate from Person s where s.mate.dob = ?1" );
+		final SqmSelectStatement<?> statement = interpretSelect( "select s.mate from Person s where s.mate.dob = ?1" );
 
 		assertThat( statement.getQuerySpec().getFromClause().getRoots().size(), is(1) );
 		final SqmRoot<?> sqmRoot = statement.getQuerySpec().getFromClause().getRoots().get( 0 );
@@ -114,20 +114,20 @@ public class AttributePathTests extends BaseSqmUnitTest {
 				.entity( OddOne.class );
 		final SingularPersistentAttribute<OddOne, ?> idAttribute = entity.findIdAttribute();
 
-		final SqmSelectStatement sqmSelectStatement = interpretSelect( "select s.id from OddOne s where s.pk = ?1" );
+		final SqmSelectStatement<?> sqmSelectStatement = interpretSelect( "select s.id from OddOne s where s.pk = ?1" );
 
-		final SqmQuerySpec querySpec = sqmSelectStatement.getQuerySpec();
+		final SqmQuerySpec<?> querySpec = sqmSelectStatement.getQuerySpec();
 		assertThat( querySpec.getSelectClause().getSelections().size(), is(1) );
-		final SqmSelection sqmSelection = querySpec.getSelectClause().getSelections().get( 0 );
+		final SqmSelection<?> sqmSelection = querySpec.getSelectClause().getSelections().get( 0 );
 		assertThat( sqmSelection.getSelectableNode(), not( sameInstance( idAttribute ) ) );
 
 		final SqmExpression<?> pkRef = ( (SqmComparisonPredicate) querySpec.getRestriction() ).getLeftHandExpression();
-		assertThat( ( (SqmPath) pkRef ).getJavaType(), sameInstance( String.class ) );
+		assertThat( ( (SqmPath<?>) pkRef ).getJavaType(), sameInstance( String.class ) );
 	}
 
 	@Test
 	public void testCanonicalReferences() {
-		final SqmSelectStatement sqm = interpretSelect( "select s.mate from Person s where id(s) = ?1" );
+		final SqmSelectStatement<?> sqm = interpretSelect( "select s.mate from Person s where id(s) = ?1" );
 		assertThat( sqm.getQuerySpec().getRestriction(), notNullValue() );
 		final SqmComparisonPredicate restriction = (SqmComparisonPredicate) sqm.getQuerySpec().getRestriction();
 		assertThat( restriction, notNullValue() );
@@ -135,11 +135,11 @@ public class AttributePathTests extends BaseSqmUnitTest {
 
 	@Test
 	public void testManyToOneReference() {
-		final SqmSelectStatement sqm = interpretSelect( "select s.mate from Person s" );
+		final SqmSelectStatement<?> sqm = interpretSelect( "select s.mate from Person s" );
 		final List<SqmSelection> selections = sqm.getQuerySpec().getSelectClause().getSelections();
 		assertThat( selections.size(), is( 1 ) );
-		final SqmSelection selection = selections.get( 0 );
-		final SqmSelectableNode selectableNode = selection.getSelectableNode();
+		final SqmSelection<?> selection = selections.get( 0 );
+		final SqmSelectableNode<?> selectableNode = selection.getSelectableNode();
 		assert Person.class.equals( selectableNode.getJavaTypeDescriptor().getJavaType() );
 	}
 

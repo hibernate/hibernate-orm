@@ -70,14 +70,14 @@ public class StandardHqlTranslator implements HqlTranslator {
 	}
 
 	@Override
-	public SqmStatement translate(String query) {
+	public <R> SqmStatement<R> translate(String query) {
 		HqlLogging.QUERY_LOGGER.debugf( "HQL : " + query );
 
 		final HqlParser.StatementContext hqlParseTree = parseHql( query );
 
 		// then we perform semantic analysis and build the semantic representation...
 		try {
-			final SqmStatement sqmStatement = SemanticQueryBuilder.buildSemanticModel(
+			final SqmStatement<R> sqmStatement = SemanticQueryBuilder.buildSemanticModel(
 					hqlParseTree,
 					sqmCreationOptions,
 					sqmCreationContext

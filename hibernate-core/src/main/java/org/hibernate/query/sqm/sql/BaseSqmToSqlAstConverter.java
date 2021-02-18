@@ -348,7 +348,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		if ( statement instanceof SqmSelectStatement<?> ) {
 			this.domainResults = new ArrayList<>(
-					( (SqmSelectStatement<?>) statement ).getQuerySpec()
+					( (SqmSelectStatement<?>) statement ).getQueryPart()
+							.getFirstQuerySpec()
 							.getSelectClause()
 							.getSelectionItems()
 							.size()
@@ -507,6 +508,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public SqmTranslation<T> translate() {
 		final SqmStatement<?> sqmStatement = getStatement();
+		//noinspection unchecked
 		final T statement = (T) sqmStatement.accept( this );
 		return new StandardSqmTranslation<>(
 				statement,
@@ -924,8 +926,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public Values visitValues(SqmValues sqmValues) {
 		Values values = new Values();
-		//noinspection rawtypes
-		for ( SqmExpression expression : sqmValues.getExpressions() ) {
+		for ( SqmExpression<?> expression : sqmValues.getExpressions() ) {
 			values.getExpressions().add( (Expression) expression.accept( this ) );
 		}
 		return values;

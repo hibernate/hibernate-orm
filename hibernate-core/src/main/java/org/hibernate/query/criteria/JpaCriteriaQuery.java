@@ -16,6 +16,8 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Selection;
 import javax.persistence.metamodel.EntityType;
 
+import org.hibernate.FetchClauseType;
+
 /**
  * Extension of the JPA {@link CriteriaQuery}
  *
@@ -24,12 +26,33 @@ import javax.persistence.metamodel.EntityType;
 public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, JpaQueryableCriteria<T>, JpaSelectCriteria<T> {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Limit/Offset/Fetch clause
+
+	JpaExpression<Number> getOffset();
+
+	JpaCriteriaQuery<T> offset(JpaExpression<? extends Number> offset);
+
+	JpaCriteriaQuery<T> offset(Number offset);
+
+	JpaExpression<Number> getFetch();
+
+	JpaCriteriaQuery<T> fetch(JpaExpression<? extends Number> fetch);
+
+	JpaCriteriaQuery<T> fetch(JpaExpression<? extends Number> fetch, FetchClauseType fetchClauseType);
+
+	JpaCriteriaQuery<T> fetch(Number fetch);
+
+	JpaCriteriaQuery<T> fetch(Number fetch, FetchClauseType fetchClauseType);
+
+	FetchClauseType getFetchClauseType();
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Accessors
 
 	@Override
 	@SuppressWarnings("unchecked")
 	default List<Order> getOrderList() {
-		return (List) getQuerySpec().getSortSpecifications();
+		return (List) getQueryPart().getSortSpecifications();
 	}
 
 	/**

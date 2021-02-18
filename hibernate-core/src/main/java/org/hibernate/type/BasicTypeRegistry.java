@@ -32,10 +32,10 @@ public class BasicTypeRegistry implements Serializable {
 
 	private final TypeConfiguration typeConfiguration;
 
-	private final Map<SqlTypeDescriptor,Map<JavaTypeDescriptor<?>,BasicType<?>>> registryValues = new ConcurrentHashMap<>();
+	private final Map<SqlTypeDescriptor, Map<JavaTypeDescriptor<?>, BasicType<?>>> registryValues = new ConcurrentHashMap<>();
 	private boolean primed;
 
-	private Map<String, BasicType> typesByName = new ConcurrentHashMap<>();
+	private final Map<String, BasicType<?>> typesByName = new ConcurrentHashMap<>();
 
 	public BasicTypeRegistry(TypeConfiguration typeConfiguration){
 		this.typeConfiguration = typeConfiguration;
@@ -44,11 +44,12 @@ public class BasicTypeRegistry implements Serializable {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Access
 
-	public BasicType getRegisteredType(String key) {
-		return typesByName.get( key );
+	public <J> BasicType<J> getRegisteredType(String key) {
+		//noinspection unchecked
+		return (BasicType<J>) typesByName.get( key );
 	}
 
-	public BasicType getRegisteredType(Class javaType) {
+	public <J> BasicType<J> getRegisteredType(Class<J> javaType) {
 		return getRegisteredType( javaType.getName() );
 	}
 
@@ -56,12 +57,12 @@ public class BasicTypeRegistry implements Serializable {
 	 * Find an existing BasicType registration for the given JavaTypeDescriptor and
 	 * SqlTypeDescriptor combo or create (and register) one.
 	 */
-	public BasicType<?> resolve(JavaTypeDescriptor<?> jtdToUse, SqlTypeDescriptor stdToUse) {
+	public <J> BasicType<J> resolve(JavaTypeDescriptor<J> jtdToUse, SqlTypeDescriptor stdToUse) {
 		//noinspection unchecked
 		return resolve(
 				jtdToUse,
 				stdToUse,
-				() -> new StandardBasicTypeImpl( jtdToUse, stdToUse )
+				() -> new StandardBasicTypeImpl<>( jtdToUse, stdToUse )
 		);
 	}
 
@@ -69,28 +70,29 @@ public class BasicTypeRegistry implements Serializable {
 	 * Find an existing BasicType registration for the given JavaTypeDescriptor and
 	 * SqlTypeDescriptor combo or create (and register) one.
 	 */
-	public BasicType<?> resolve(JavaTypeDescriptor<?> jtdToUse, SqlTypeDescriptor stdToUse, Supplier<BasicType<?>> creator) {
+	public <J> BasicType<J> resolve(JavaTypeDescriptor<J> jtdToUse, SqlTypeDescriptor stdToUse, Supplier<BasicType<J>> creator) {
 		final Map<JavaTypeDescriptor<?>, BasicType<?>> typeByJtdForStd = registryValues.computeIfAbsent(
 				stdToUse,
 				sqlTypeDescriptor -> new ConcurrentHashMap<>()
 		);
 
-		return typeByJtdForStd.computeIfAbsent( jtdToUse, javaDescriptor -> creator.get() );
+		//noinspection unchecked
+		return (BasicType<J>) typeByJtdForStd.computeIfAbsent( jtdToUse, javaDescriptor -> creator.get() );
 	}
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Mutations
 
-	public void register(BasicType type) {
+	public void register(BasicType<?> type) {
 		register( type, type.getRegistrationKeys() );
 	}
 
-	public void register(BasicType type, String key) {
+	public void register(BasicType<?> type, String key) {
 		typesByName.put( key, type );
 	}
 
-	public void register(BasicType type, String... keys) {
+	public void register(BasicType<?> type, String... keys) {
 		if ( ! isPrimed() ) {
 			throw new IllegalStateException( "BasicTypeRegistry not yet primed.  Calls to `#register` not valid until after primed" );
 		}
@@ -110,7 +112,7 @@ public class BasicTypeRegistry implements Serializable {
 		}
 	}
 
-	private void applyOrOverwriteEntry(BasicType type) {
+	private void applyOrOverwriteEntry(BasicType<?> type) {
 		final Map<JavaTypeDescriptor<?>, BasicType<?>> mappingsForStdToUse = registryValues.computeIfAbsent(
 				type.getSqlTypeDescriptor(),
 				sqlTypeDescriptor -> new ConcurrentHashMap<>()
@@ -133,7 +135,7 @@ public class BasicTypeRegistry implements Serializable {
 
 	public void unregister(String... keys) {
 		for ( String key : keys ) {
-			final BasicType removed = typesByName.remove( key );
+			final BasicType<?> removed = typesByName.remove( key );
 
 
 		}
@@ -151,7 +153,7 @@ public class BasicTypeRegistry implements Serializable {
 		this.primed = true;
 	}
 
-	public void addPrimeEntry(BasicType type, String legacyTypeClassName, String[] registrationKeys) {
+	public void addPrimeEntry(BasicType<?> type, String legacyTypeClassName, String[] registrationKeys) {
 		if ( primed ) {
 			throw new IllegalStateException( "BasicTypeRegistry already primed" );
 		}
@@ -176,7 +178,7 @@ public class BasicTypeRegistry implements Serializable {
 		}
 	}
 
-	private void primeRegistryEntry(BasicType type) {
+	private void primeRegistryEntry(BasicType<?> type) {
 		final Map<JavaTypeDescriptor<?>, BasicType<?>> mappingsForStdToUse = registryValues.computeIfAbsent(
 				type.getSqlTypeDescriptor(),
 				sqlTypeDescriptor -> new ConcurrentHashMap<>()
@@ -197,7 +199,7 @@ public class BasicTypeRegistry implements Serializable {
 		}
 	}
 
-	private void applyRegistrationKeys(BasicType type, String[] keys) {
+	private void applyRegistrationKeys(BasicType<?> type, String[] keys) {
 		for ( String key : keys ) {
 			// be safe...
 			if ( key == null ) {

@@ -27,7 +27,7 @@ import org.hibernate.FetchClauseType;
  *
  * @author Steve Ebersole
  */
-public interface JpaQueryStructure<T> extends JpaCriteriaNode {
+public interface JpaQueryStructure<T> extends JpaQueryPart<T> {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Select clause
@@ -78,27 +78,14 @@ public interface JpaQueryStructure<T> extends JpaCriteriaNode {
 
 	JpaQueryStructure<T> setGroupRestriction(Predicate... restrictions);
 
-
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Ordering clause
-
-	List<? extends JpaOrder> getSortSpecifications();
+	// Covariant overrides
 
 	JpaQueryStructure<T> setSortSpecifications(List<? extends JpaOrder> sortSpecifications);
 
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Limit/Offset/Fetch clause
-
-	<X> JpaExpression<X> getOffset();
-
 	JpaQueryStructure<T> setOffset(JpaExpression<?> offset);
-
-	<X> JpaExpression<X> getFetch();
 
 	JpaQueryStructure<T> setFetch(JpaExpression<?> fetch);
 
 	JpaQueryStructure<T> setFetch(JpaExpression<?> fetch, FetchClauseType fetchClauseType);
-
-	FetchClauseType getFetchClauseType();
 }

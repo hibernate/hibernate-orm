@@ -77,13 +77,12 @@ public class SmokeTests {
 							String.class
 					);
 					final HqlQueryImplementor<String> hqlQuery = (HqlQueryImplementor<String>) query;
-					//noinspection unchecked
 					final SqmSelectStatement<String> sqmStatement = (SqmSelectStatement<String>) hqlQuery.getSqmStatement();
 
 					final StandardSqmTranslator<SelectStatement> sqmConverter = new StandardSqmTranslator<>(
 							sqmStatement,
 							hqlQuery.getQueryOptions(),
-							( (QuerySqmImpl) hqlQuery ).getDomainParameterXref(),
+							( (QuerySqmImpl<?>) hqlQuery ).getDomainParameterXref(),
 							query.getParameterBindings(),
 							session.getLoadQueryInfluencers(),
 							scope.getSessionFactory()
@@ -138,13 +137,12 @@ public class SmokeTests {
 				session -> {
 					final QueryImplementor<Gender> query = session.createQuery( "select e.gender from SimpleEntity e", Gender.class );
 					final HqlQueryImplementor<Gender> hqlQuery = (HqlQueryImplementor<Gender>) query;
-					//noinspection unchecked
 					final SqmSelectStatement<Gender> sqmStatement = (SqmSelectStatement<Gender>) hqlQuery.getSqmStatement();
 
 					final StandardSqmTranslator<SelectStatement> sqmConverter = new StandardSqmTranslator<>(
 							sqmStatement,
 							hqlQuery.getQueryOptions(),
-							( (QuerySqmImpl) hqlQuery ).getDomainParameterXref(),
+							( (QuerySqmImpl<?>) hqlQuery ).getDomainParameterXref(),
 							query.getParameterBindings(),
 							session.getLoadQueryInfluencers(),
 							scope.getSessionFactory()

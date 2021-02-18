@@ -49,7 +49,7 @@ public class WhereClauseTests extends BaseSqmUnitTest {
 
 	@Test
 	public void testIsNotNullPredicate() {
-		SqmSelectStatement statement = interpretSelect( "select l from Person l where l.nickName is not null" );
+		SqmSelectStatement<?> statement = interpretSelect( "select l from Person l where l.nickName is not null" );
 		assertThat( statement.getQuerySpec().getWhereClause().getPredicate(), instanceOf( SqmNullnessPredicate.class ) );
 		SqmNullnessPredicate predicate = (SqmNullnessPredicate) statement.getQuerySpec().getWhereClause().getPredicate();
 		assertThat( predicate.isNegated(), is(true) );
@@ -57,7 +57,7 @@ public class WhereClauseTests extends BaseSqmUnitTest {
 
 	@Test
 	public void testNotIsNullPredicate() {
-		SqmSelectStatement statement = interpretSelect( "select l from Person l where not l.nickName is null" );
+		SqmSelectStatement<?> statement = interpretSelect( "select l from Person l where not l.nickName is null" );
 		assertThat( statement.getQuerySpec().getWhereClause().getPredicate(), instanceOf( SqmNullnessPredicate.class ) );
 		SqmNullnessPredicate predicate = (SqmNullnessPredicate) statement.getQuerySpec().getWhereClause().getPredicate();
 		assertThat( predicate.isNegated(), is(true) );
@@ -65,7 +65,7 @@ public class WhereClauseTests extends BaseSqmUnitTest {
 
 	@Test
 	public void testNotIsNotNullPredicate() {
-		SqmSelectStatement statement = interpretSelect( "select l from Person l where not l.nickName is not null" );
+		SqmSelectStatement<?> statement = interpretSelect( "select l from Person l where not l.nickName is not null" );
 		assertThat( statement.getQuerySpec().getWhereClause().getPredicate(), instanceOf( SqmNullnessPredicate.class ) );
 		SqmNullnessPredicate predicate = (SqmNullnessPredicate) statement.getQuerySpec().getWhereClause().getPredicate();
 		assertThat( predicate.isNegated(), is(false) );
@@ -73,7 +73,7 @@ public class WhereClauseTests extends BaseSqmUnitTest {
 
 	@Test
 	public void testCollectionSizeFunction() {
-		SqmSelectStatement statement = interpretSelect( "SELECT t FROM EntityOfSets t WHERE SIZE( t.setOfBasics ) = 311" );
+		SqmSelectStatement<?> statement = interpretSelect( "SELECT t FROM EntityOfSets t WHERE SIZE( t.setOfBasics ) = 311" );
 
 		SqmPredicate predicate = statement.getQuerySpec().getWhereClause().getPredicate();
 		assertThat( predicate, instanceOf( SqmComparisonPredicate.class ) );
@@ -82,7 +82,7 @@ public class WhereClauseTests extends BaseSqmUnitTest {
 		assertThat( relationalPredicate.getSqmOperator(), is( ComparisonOperator.EQUAL ) );
 
 		assertThat( relationalPredicate.getRightHandExpression(), instanceOf( SqmLiteral.class ) );
-		assertThat( ( (SqmLiteral) relationalPredicate.getRightHandExpression() ).getLiteralValue(), is( 311 ) );
+		assertThat( ( (SqmLiteral<?>) relationalPredicate.getRightHandExpression() ).getLiteralValue(), is( 311 ) );
 
 		assertThat( relationalPredicate.getLeftHandExpression(), instanceOf( SqmCollectionSize.class ) );
 
@@ -93,7 +93,7 @@ public class WhereClauseTests extends BaseSqmUnitTest {
 
 	@Test
 	public void testListIndexFunction() {
-		SqmSelectStatement statement = interpretSelect( "select l from EntityOfLists t join t.listOfBasics l where index(l) > 2" );
+		SqmSelectStatement<?> statement = interpretSelect( "select l from EntityOfLists t join t.listOfBasics l where index(l) > 2" );
 
 		SqmPredicate predicate = statement.getQuerySpec().getWhereClause().getPredicate();
 		assertThat( predicate, instanceOf( SqmComparisonPredicate.class ) );
@@ -102,10 +102,10 @@ public class WhereClauseTests extends BaseSqmUnitTest {
 		assertThat( relationalPredicate.getSqmOperator(), is( ComparisonOperator.GREATER_THAN ) );
 
 		assertThat( relationalPredicate.getRightHandExpression(), instanceOf( SqmLiteral.class ) );
-		assertThat( ( (SqmLiteral) relationalPredicate.getRightHandExpression() ).getLiteralValue(), is( 2 ) );
+		assertThat( ( (SqmLiteral<?>) relationalPredicate.getRightHandExpression() ).getLiteralValue(), is( 2 ) );
 
 		assertThat( relationalPredicate.getLeftHandExpression(), instanceOf( SqmPath.class ) );
-		final SqmPath indexPath = (SqmPath) relationalPredicate.getLeftHandExpression();
+		final SqmPath<?> indexPath = (SqmPath<?>) relationalPredicate.getLeftHandExpression();
 
 		assertThat( indexPath.getLhs(), notNullValue() );
 		assertThat( indexPath.getLhs().getExplicitAlias(), is( "l" ) );

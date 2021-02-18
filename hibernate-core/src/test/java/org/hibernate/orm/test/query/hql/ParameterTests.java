@@ -82,7 +82,7 @@ public class ParameterTests extends BaseSqmUnitTest {
 	@Test
 	public void testAllowMultiValuedBinding() {
 		final SqmSelectStatement<?> sqm = interpretSelect( "select a.nickName from Person a where a.numberOfToes in (?1)" );
-		final SqmParameter parameter = sqm.getSqmParameters().iterator().next();
+		final SqmParameter<?> parameter = sqm.getSqmParameters().iterator().next();
 
 		assertThat( parameter.allowMultiValuedBinding(), is(true) );
 	}

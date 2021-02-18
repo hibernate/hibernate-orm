@@ -132,7 +132,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 
 		// NOTE : if we get here, a result-type of some kind (other than Object[].class) was specified
 
-		final List<SqmSelection> selections = sqm.getQuerySpec().getSelectClause().getSelections();
+		final List<SqmSelection> selections = sqm.getQueryPart().getFirstQuerySpec().getSelectClause().getSelections();
 		if ( Tuple.class.isAssignableFrom( resultType ) ) {
 			// resultType is Tuple..
 			if ( queryOptions.getTupleTransformer() == null ) {

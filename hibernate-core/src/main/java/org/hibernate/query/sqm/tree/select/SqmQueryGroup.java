@@ -6,10 +6,16 @@
  */
 package org.hibernate.query.sqm.tree.select;
 
+import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.FetchClauseType;
 import org.hibernate.SetOperator;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.query.criteria.JpaExpression;
+import org.hibernate.query.criteria.JpaOrder;
+import org.hibernate.query.criteria.JpaQueryGroup;
+import org.hibernate.query.criteria.JpaQueryPart;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 
@@ -18,7 +24,7 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
  *
  * @author Christian Beikov
  */
-public class SqmQueryGroup<T> extends SqmQueryPart<T> {
+public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T> {
 
 	private final List<SqmQueryPart<T>> queryParts;
 	private SetOperator setOperator;
@@ -34,6 +40,10 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> {
 		super( nodeBuilder );
 		this.setOperator = setOperator;
 		this.queryParts = queryParts;
+	}
+
+	public List<SqmQueryPart<T>> queryParts() {
+		return queryParts;
 	}
 
 	@Override
@@ -56,15 +66,41 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> {
 		return walker.visitQueryGroup( this );
 	}
 
+	@Override
 	public List<SqmQueryPart<T>> getQueryParts() {
-		return queryParts;
+		return Collections.unmodifiableList( queryParts );
 	}
 
+	@Override
 	public SetOperator getSetOperator() {
 		return setOperator;
 	}
 
+	@Override
 	public void setSetOperator(SetOperator setOperator) {
+		if ( setOperator == null ) {
+			throw new IllegalArgumentException();
+		}
 		this.setOperator = setOperator;
+	}
+
+	@Override
+	public SqmQueryGroup<T> setSortSpecifications(List<? extends JpaOrder> sortSpecifications) {
+		return (SqmQueryGroup<T>) super.setSortSpecifications( sortSpecifications );
+	}
+
+	@Override
+	public SqmQueryGroup<T> setOffset(JpaExpression<?> offset) {
+		return (SqmQueryGroup<T>) super.setOffset( offset );
+	}
+
+	@Override
+	public SqmQueryGroup<T> setFetch(JpaExpression<?> fetch) {
+		return (SqmQueryGroup<T>) super.setFetch( fetch );
+	}
+
+	@Override
+	public SqmQueryGroup<T> setFetch(JpaExpression<?> fetch, FetchClauseType fetchClauseType) {
+		return (SqmQueryGroup<T>) super.setFetch( fetch, fetchClauseType );
 	}
 }

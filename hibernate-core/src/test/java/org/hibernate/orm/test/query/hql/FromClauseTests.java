@@ -47,7 +47,7 @@ public class FromClauseTests extends BaseSqmUnitTest {
 
 	@Test
 	public void testSimpleFrom() {
-		final SqmSelectStatement selectStatement = interpretSelect( "select p.nickName from Person p" );
+		final SqmSelectStatement<?> selectStatement = interpretSelect( "select p.nickName from Person p" );
 
 		final SqmFromClause fromClause = selectStatement.getQuerySpec().getFromClause();
 		assertThat( fromClause, notNullValue() );
@@ -61,7 +61,7 @@ public class FromClauseTests extends BaseSqmUnitTest {
 
 	@Test
 	public void testMultipleSpaces() {
-		final SqmSelectStatement selectStatement = interpretSelect(
+		final SqmSelectStatement<?> selectStatement = interpretSelect(
 				"select p.nickName from Person p, Person p2"
 		);
 
@@ -85,7 +85,7 @@ public class FromClauseTests extends BaseSqmUnitTest {
 
 	@Test
 	public void testImplicitAlias() {
-		final SqmSelectStatement selectStatement = interpretSelect( "select nickName from Person" );
+		final SqmSelectStatement<?> selectStatement = interpretSelect( "select nickName from Person" );
 
 		final SqmFromClause fromClause = selectStatement.getQuerySpec().getFromClause();
 		assertThat( fromClause, notNullValue() );
@@ -99,7 +99,7 @@ public class FromClauseTests extends BaseSqmUnitTest {
 
 	@Test
 	public void testCrossJoin() {
-		final SqmSelectStatement selectStatement = interpretSelect(
+		final SqmSelectStatement<?> selectStatement = interpretSelect(
 				"select p.nickName from Person p cross join Person p2"
 		);
 
@@ -125,7 +125,7 @@ public class FromClauseTests extends BaseSqmUnitTest {
 	}
 
 	private void simpleJoinAssertions(
-			SqmSelectStatement selectStatement,
+			SqmSelectStatement<?> selectStatement,
 			SqmJoinType joinType,
 			String rootAlias,
 			String joinAlias) {
@@ -174,7 +174,7 @@ public class FromClauseTests extends BaseSqmUnitTest {
 
 	@Test
 	public void testAttributeJoinWithOnClause() {
-		final SqmSelectStatement selectStatement = interpretSelect(
+		final SqmSelectStatement<?> selectStatement = interpretSelect(
 				"select a from Person a left outer join a.mate c on c.numberOfToes > 5 and c.numberOfToes < 20 "
 		);
 
@@ -199,7 +199,7 @@ public class FromClauseTests extends BaseSqmUnitTest {
 	@Test
 	public void testPathExpression() {
 		final String query = "select p.mate from Person p";
-		SqmSelectStatement selectStatement = interpretSelect( query );
+		SqmSelectStatement<?> selectStatement = interpretSelect( query );
 
 
 		final SqmFromClause fromClause = selectStatement.getQuerySpec().getFromClause();
@@ -215,7 +215,7 @@ public class FromClauseTests extends BaseSqmUnitTest {
 	@Test
 	public void testFromElementReferenceInSelect() {
 		final String query = "select p from Person p";
-		SqmSelectStatement selectStatement = interpretSelect( query );
+		SqmSelectStatement<?> selectStatement = interpretSelect( query );
 
 		final SqmFromClause fromClause = selectStatement.getQuerySpec().getFromClause();
 		assertThat( fromClause, notNullValue() );
@@ -225,7 +225,7 @@ public class FromClauseTests extends BaseSqmUnitTest {
 		assertThat( sqmRoot, notNullValue() );
 
 		assertThat( selectStatement.getQuerySpec().getSelectClause().getSelections(), hasSize( 1 ) );
-		final SqmSelection sqmSelection = selectStatement.getQuerySpec().getSelectClause().getSelections().get( 0 );
+		final SqmSelection<?> sqmSelection = selectStatement.getQuerySpec().getSelectClause().getSelections().get( 0 );
 
 		assertThat( sqmSelection.getSelectableNode(), instanceOf( SqmRoot.class ) );
 	}
@@ -233,7 +233,7 @@ public class FromClauseTests extends BaseSqmUnitTest {
 	@Test
 	public void testFromElementReferenceInOrderBy() {
 		final String query = "select p from Person p order by p";
-		SqmSelectStatement selectStatement = interpretSelect( query );
+		SqmSelectStatement<?> selectStatement = interpretSelect( query );
 
 		final SqmFromClause fromClause = selectStatement.getQuerySpec().getFromClause();
 		assertThat( fromClause, notNullValue() );

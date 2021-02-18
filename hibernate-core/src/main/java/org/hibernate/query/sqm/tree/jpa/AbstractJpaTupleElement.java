@@ -62,13 +62,13 @@ public abstract class AbstractJpaTupleElement<T>
 
 	protected final void setExpressableType(SqmExpressable<?> expressableType) {
 		//noinspection unchecked
-		this.expressableType = (SqmExpressable) expressableType;
+		this.expressableType = (SqmExpressable<T>) expressableType;
 	}
 
 	/**
 	 * Protected access to set the JavaTypeDescriptor via Java Class
 	 */
-	protected void setJavaType(Class targetType) {
+	protected void setJavaType(Class<T> targetType) {
 		if ( targetType != null ) {
 			setExpressableType(
 					nodeBuilder().getDomainModel()

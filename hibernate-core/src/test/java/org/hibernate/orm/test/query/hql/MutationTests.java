@@ -33,7 +33,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class MutationTests {
 	@Test
 	public void testSimpleDeleteTranslation(SessionFactoryScope scope) {
-		final SqmDeleteStatement sqmDelete = (SqmDeleteStatement) scope.getSessionFactory()
+		final SqmDeleteStatement<?> sqmDelete = (SqmDeleteStatement<?>) scope.getSessionFactory()
 				.getQueryEngine()
 				.getHqlTranslator()
 				.translate( "delete BasicEntity" );
@@ -45,7 +45,7 @@ public class MutationTests {
 
 	@Test
 	public void testSimpleRestrictedDeleteTranslation(SessionFactoryScope scope) {
-		final SqmDeleteStatement sqmDelete = (SqmDeleteStatement) scope.getSessionFactory()
+		final SqmDeleteStatement<?> sqmDelete = (SqmDeleteStatement<?>) scope.getSessionFactory()
 				.getQueryEngine()
 				.getHqlTranslator()
 				.translate( "delete BasicEntity where data = 'abc'" );

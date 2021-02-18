@@ -40,7 +40,7 @@ public class CaseExpressionsTest extends BaseSqmUnitTest {
 
 	@Test
 	public void testBasicSimpleCaseExpression() {
-		SqmSelectStatement select = interpretSelect(
+		SqmSelectStatement<?> select = interpretSelect(
 				"select p from Person p where p.numberOfToes = case p.dob when ?1 then 6 else 8 end"
 		);
 
@@ -65,7 +65,7 @@ public class CaseExpressionsTest extends BaseSqmUnitTest {
 
 	@Test
 	public void testBasicSearchedCaseExpression() {
-		SqmSelectStatement select = interpretSelect(
+		SqmSelectStatement<?> select = interpretSelect(
 				"select p from Person p where p.numberOfToes = case when p.dob = ?1 then 6 else 8 end"
 		);
 
@@ -87,7 +87,7 @@ public class CaseExpressionsTest extends BaseSqmUnitTest {
 
 	@Test
 	public void testBasicCoalesceExpression() {
-		SqmSelectStatement select = interpretSelect(
+		SqmSelectStatement<?> select = interpretSelect(
 				"select coalesce(p.nickName, p.mate.nickName) from Person p"
 		);
 
@@ -104,7 +104,7 @@ public class CaseExpressionsTest extends BaseSqmUnitTest {
 
 	@Test
 	public void testBasicNullifExpression() {
-		SqmSelectStatement select = interpretSelect(
+		SqmSelectStatement<?> select = interpretSelect(
 				"select nullif(p.nickName, p.mate.nickName) from Person p"
 		);
 

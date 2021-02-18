@@ -21,8 +21,10 @@ import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Selection;
 
+import org.hibernate.FetchClauseType;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
+import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -58,6 +60,15 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 		this.querySource = querySource;
 	}
 
+	public SqmSelectStatement(
+			SqmQueryPart<T> queryPart,
+			Class<T> resultType,
+			SqmQuerySource querySource,
+			NodeBuilder builder) {
+		super( queryPart, resultType, builder );
+		this.querySource = querySource;
+	}
+
 	/**
 	 * @implNote This form is used from Hibernate's JPA criteria handling.
 	 */
@@ -73,6 +84,52 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 	@Override
 	public SqmQuerySource getQuerySource() {
 		return querySource;
+	}
+
+	@Override
+	public SqmQuerySpec<T> getQuerySpec() {
+		if ( querySource == SqmQuerySource.CRITERIA ) {
+			final SqmQueryPart<T> queryPart = getQueryPart();
+			if ( queryPart instanceof SqmQuerySpec<?> ) {
+				return (SqmQuerySpec<T>) queryPart;
+			}
+			throw new IllegalStateException(
+					"Query group can't be treated as query spec. Use JpaSelectCriteria#getQueryPart to access query group details"
+			);
+		}
+		else {
+			return super.getQuerySpec();
+		}
+	}
+
+	public boolean containsCollectionFetches() {
+		return containsCollectionFetches( getQueryPart() );
+	}
+
+	private boolean containsCollectionFetches(SqmQueryPart<?> queryPart) {
+		if ( queryPart instanceof SqmQuerySpec<?> ) {
+			return ( (SqmQuerySpec<?>) queryPart ).containsCollectionFetches();
+		}
+		else {
+			// We only have to check the first one
+			final SqmQueryGroup<?> queryGroup = (SqmQueryGroup<?>) queryPart;
+			return containsCollectionFetches( queryGroup.getQueryParts().get( 0 ) );
+		}
+	}
+
+	public boolean usesDistinct() {
+		return usesDistinct( getQueryPart() );
+	}
+
+	private boolean usesDistinct(SqmQueryPart<?> queryPart) {
+		if ( queryPart instanceof SqmQuerySpec<?> ) {
+			return ( (SqmQuerySpec<?>) queryPart ).getSelectClause().isDistinct();
+		}
+		else {
+			// We only have to check the first one
+			final SqmQueryGroup<?> queryGroup = (SqmQueryGroup<?>) queryPart;
+			return usesDistinct( queryGroup.getQueryParts().get( 0 ) );
+		}
 	}
 
 	@Override
@@ -265,7 +322,7 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 	@Override
 	public SqmSelectStatement<T> multiselect(Selection<?>... selections) {
 		for ( Selection<?> selection : selections ) {
-			getQuerySpec().getSelectClause().add( (SqmExpression) selection, selection.getAlias() );
+			getQuerySpec().getSelectClause().add( (SqmExpression<?>) selection, selection.getAlias() );
 		}
 		setResultType( (Class<T>) Object[].class );
 		return this;
@@ -274,7 +331,7 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 	@Override
 	public SqmSelectStatement<T> multiselect(List<Selection<?>> selectionList) {
 		for ( Selection<?> selection : selectionList ) {
-			getQuerySpec().getSelectClause().add( (SqmExpression) selection, selection.getAlias() );
+			getQuerySpec().getSelectClause().add( (SqmExpression<?>) selection, selection.getAlias() );
 		}
 		setResultType( (Class<T>) Object[].class );
 		return this;
@@ -282,22 +339,22 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 
 	@Override
 	public SqmSelectStatement<T> orderBy(Order... orders) {
-		if ( getQuerySpec().getOrderByClause() == null ) {
-			getQuerySpec().setOrderByClause( new SqmOrderByClause() );
+		if ( getQueryPart().getOrderByClause() == null ) {
+			getQueryPart().setOrderByClause( new SqmOrderByClause() );
 		}
 		for ( Order order : orders ) {
-			getQuerySpec().getOrderByClause().addSortSpecification( (SqmSortSpecification) order );
+			getQueryPart().getOrderByClause().addSortSpecification( (SqmSortSpecification) order );
 		}
 		return this;
 	}
 
 	@Override
 	public SqmSelectStatement<T> orderBy(List<Order> orders) {
-		if ( getQuerySpec().getOrderByClause() == null ) {
-			getQuerySpec().setOrderByClause( new SqmOrderByClause() );
+		if ( getQueryPart().getOrderByClause() == null ) {
+			getQueryPart().setOrderByClause( new SqmOrderByClause() );
 		}
 		for ( Order order : orders ) {
-			getQuerySpec().getOrderByClause().addSortSpecification( (SqmSortSpecification) order );
+			getQueryPart().getOrderByClause().addSortSpecification( (SqmSortSpecification) order );
 		}
 		return this;
 	}
@@ -335,5 +392,56 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 	@Override
 	public SqmSelectStatement<T> having(Predicate... predicates) {
 		return (SqmSelectStatement<T>) super.having( predicates );
+	}
+
+	@Override
+	public JpaExpression<Number> getOffset() {
+		return (JpaExpression<Number>) getQueryPart().getOffset();
+	}
+
+	@Override
+	public JpaCriteriaQuery<T> offset(JpaExpression<? extends Number> offset) {
+		getQueryPart().setOffset( offset );
+		return this;
+	}
+
+	@Override
+	public JpaCriteriaQuery<T> offset(Number offset) {
+		getQueryPart().setOffset( nodeBuilder().value( offset ) );
+		return this;
+	}
+
+	@Override
+	public JpaExpression<Number> getFetch() {
+		return (JpaExpression<Number>) getQueryPart().getFetch();
+	}
+
+	@Override
+	public JpaCriteriaQuery<T> fetch(JpaExpression<? extends Number> fetch) {
+		getQueryPart().setFetch( fetch );
+		return this;
+	}
+
+	@Override
+	public JpaCriteriaQuery<T> fetch(JpaExpression<? extends Number> fetch, FetchClauseType fetchClauseType) {
+		getQueryPart().setFetch( fetch, fetchClauseType );
+		return this;
+	}
+
+	@Override
+	public JpaCriteriaQuery<T> fetch(Number fetch) {
+		getQueryPart().setFetch( nodeBuilder().value( fetch ) );
+		return this;
+	}
+
+	@Override
+	public JpaCriteriaQuery<T> fetch(Number fetch, FetchClauseType fetchClauseType) {
+		getQueryPart().setFetch( nodeBuilder().value( fetch ), fetchClauseType );
+		return this;
+	}
+
+	@Override
+	public FetchClauseType getFetchClauseType() {
+		return getQueryPart().getFetchClauseType();
 	}
 }

@@ -541,22 +541,22 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
-	private static boolean matchesJavaType(SqmExpressable type, Class javaType) {
+	private static boolean matchesJavaType(SqmExpressable<?> type, Class<?> javaType) {
 		assert javaType != null;
 		return type != null && javaType.isAssignableFrom( type.getExpressableJavaTypeDescriptor().getJavaType() );
 	}
 
 
-	private final ConcurrentHashMap<Class,BasicType> basicTypeByJavaType = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<Class<?>, BasicType<?>> basicTypeByJavaType = new ConcurrentHashMap<>();
 
-	public BasicType getBasicTypeForJavaType(Class<?> javaType) {
-		final BasicType existing = basicTypeByJavaType.get( javaType );
+	public <J> BasicType<J> getBasicTypeForJavaType(Class<J> javaType) {
+		final BasicType<?> existing = basicTypeByJavaType.get( javaType );
 		if ( existing != null ) {
-			return existing;
+			//noinspection unchecked
+			return (BasicType<J>) existing;
 		}
 
-		final BasicType registeredType = getBasicTypeRegistry().getRegisteredType( javaType );
+		final BasicType<J> registeredType = getBasicTypeRegistry().getRegisteredType( javaType );
 		if ( registeredType != null ) {
 			basicTypeByJavaType.put( javaType, registeredType );
 			return registeredType;
@@ -565,7 +565,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		return null;
 	}
 
-	public BasicType standardBasicTypeForJavaType(Class<?> javaType) {
+	public <J> BasicType<J> standardBasicTypeForJavaType(Class<J> javaType) {
 		if ( javaType == null ) {
 			return null;
 		}
@@ -573,48 +573,49 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		//noinspection unchecked
 		return standardBasicTypeForJavaType(
 				javaType,
-				javaTypeDescriptor -> new StandardBasicTypeImpl(
+				javaTypeDescriptor -> new StandardBasicTypeImpl<>(
 						javaTypeDescriptor,
 						javaTypeDescriptor.getJdbcRecommendedSqlType( getCurrentBaseSqlTypeIndicators() )
 				)
 		);
 	}
 
-	public BasicType standardBasicTypeForJavaType(
-			Class<?> javaType,
-			Function<JavaTypeDescriptor<?>,BasicType> creator) {
+	public <J> BasicType<J> standardBasicTypeForJavaType(
+			Class<J> javaType,
+			Function<JavaTypeDescriptor<J>, BasicType<J>> creator) {
 		if ( javaType == null ) {
 			return null;
 		}
-		return basicTypeByJavaType.computeIfAbsent(
+		//noinspection unchecked
+		return (BasicType<J>) basicTypeByJavaType.computeIfAbsent(
 				javaType,
 				jt -> {
 					// See if one exists in the BasicTypeRegistry and use that one if so
-					final BasicType registeredType = basicTypeRegistry.getRegisteredType( javaType );
+					final BasicType<J> registeredType = basicTypeRegistry.getRegisteredType( javaType );
 					if ( registeredType != null ) {
 						return registeredType;
 					}
 
 					// otherwise, apply the creator
-					final JavaTypeDescriptor javaTypeDescriptor = javaTypeDescriptorRegistry.resolveDescriptor( javaType );
+					final JavaTypeDescriptor<J> javaTypeDescriptor = javaTypeDescriptorRegistry.resolveDescriptor( javaType );
 					return creator.apply( javaTypeDescriptor );
 				}
 		);
 	}
 
-	public TemporalType getSqlTemporalType(SqmExpressable type) {
+	public TemporalType getSqlTemporalType(SqmExpressable<?> type) {
 		if ( type == null ) {
 			return null;
 		}
 		return getSqlTemporalType( type.getExpressableJavaTypeDescriptor().getJdbcRecommendedSqlType( getCurrentBaseSqlTypeIndicators() ) );
 	}
 
-	public static TemporalType getSqlTemporalType(MappingModelExpressable type) {
+	public static TemporalType getSqlTemporalType(MappingModelExpressable<?> type) {
 		if ( type instanceof BasicValuedMapping ) {
 			return getSqlTemporalType( ( (BasicValuedMapping) type ).getJdbcMapping().getSqlTypeDescriptor() );
 		}
 		else if (type instanceof SingleColumnType) {
-			return getSqlTemporalType( ((SingleColumnType) type).sqlType() );
+			return getSqlTemporalType( ((SingleColumnType<?>) type).sqlType() );
 		}
 		return null;
 	}

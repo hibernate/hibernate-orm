@@ -122,12 +122,14 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 
 	@Override
 	public Object visitSelectStatement(SqmSelectStatement<?> statement) {
+		visitCteContainer( statement );
 		visitQueryPart( statement.getQueryPart() );
 		return statement;
 	}
 
 	@Override
 	public Object visitUpdateStatement(SqmUpdateStatement<?> statement) {
+		visitCteContainer( statement );
 		visitRootPath( statement.getTarget() );
 		visitSetClause( statement.getSetClause() );
 		visitWhereClause( statement.getWhereClause() );
@@ -151,6 +153,7 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 
 	@Override
 	public Object visitInsertSelectStatement(SqmInsertSelectStatement<?> statement) {
+		visitCteContainer( statement );
 		visitRootPath( statement.getTarget() );
 		for ( SqmPath<?> stateField : statement.getInsertionTargetPaths() ) {
 			stateField.accept( this );
@@ -161,6 +164,7 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 
 	@Override
 	public Object visitInsertValuesStatement(SqmInsertValuesStatement<?> statement) {
+		visitCteContainer( statement );
 		visitRootPath( statement.getTarget() );
 		for ( SqmPath<?> stateField : statement.getInsertionTargetPaths() ) {
 			stateField.accept( this );
@@ -173,6 +177,7 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 
 	@Override
 	public Object visitDeleteStatement(SqmDeleteStatement<?> statement) {
+		visitCteContainer( statement );
 		visitRootPath( statement.getTarget() );
 		visitWhereClause( statement.getWhereClause() );
 		return statement;
@@ -200,8 +205,11 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 	@Override
 	public Object visitQueryGroup(SqmQueryGroup<?> queryGroup) {
 		for ( SqmQueryPart<?> queryPart : queryGroup.getQueryParts() ) {
-			visitQueryPart( queryPart );
+			queryPart.accept( this );
 		}
+		visitOrderByClause( queryGroup.getOrderByClause() );
+		visitOffsetExpression( queryGroup.getOffsetExpression() );
+		visitFetchExpression( queryGroup.getFetchExpression() );
 		return queryGroup;
 	}
 
@@ -210,6 +218,8 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 		visitFromClause( querySpec.getFromClause() );
 		visitSelectClause( querySpec.getSelectClause() );
 		visitWhereClause( querySpec.getWhereClause() );
+		visitGroupByClause( querySpec.getGroupByClauseExpressions() );
+		visitHavingClause( querySpec.getHavingClausePredicate() );
 		visitOrderByClause( querySpec.getOrderByClause() );
 		visitOffsetExpression( querySpec.getOffsetExpression() );
 		visitFetchExpression( querySpec.getFetchExpression() );
@@ -227,7 +237,6 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 		sqmRoot.visitSqmJoins( sqmJoin -> sqmJoin.accept( this ) );
 		return sqmRoot;
 	}
-
 
 	@Override
 	public Object visitCrossJoin(SqmCrossJoin<?> joinedFromElement) {
@@ -323,7 +332,7 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 
 	@Override
 	public Object visitValues(SqmValues values) {
-		for ( SqmExpression expression : values.getExpressions() ) {
+		for ( SqmExpression<?> expression : values.getExpressions() ) {
 			expression.accept( this );
 		}
 		return values;
@@ -409,7 +418,7 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 	@Override
 	public Object visitInListPredicate(SqmInListPredicate<?> predicate) {
 		predicate.getTestExpression().accept( this );
-		for ( SqmExpression expression : predicate.getListExpressions() ) {
+		for ( SqmExpression<?> expression : predicate.getListExpressions() ) {
 			expression.accept( this );
 		}
 		return predicate;
@@ -473,6 +482,9 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 
 	@Override
 	public Object visitHavingClause(SqmPredicate sqmPredicate) {
+		if ( sqmPredicate == null ) {
+			return null;
+		}
 		return sqmPredicate.accept( this );
 	}
 

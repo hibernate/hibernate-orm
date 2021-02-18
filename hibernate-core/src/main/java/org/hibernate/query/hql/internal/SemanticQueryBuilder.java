@@ -212,7 +212,7 @@ import static org.hibernate.type.spi.TypeConfiguration.isJdbcTemporalType;
  *
  * @author Steve Ebersole
  */
-public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCreationState {
+public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implements SqmCreationState {
 
 	private static final Logger log = Logger.getLogger( SemanticQueryBuilder.class );
 
@@ -221,11 +221,11 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	 * query.
 	 */
 	@SuppressWarnings("WeakerAccess")
-	public static SqmStatement buildSemanticModel(
+	public static <R> SqmStatement<R> buildSemanticModel(
 			HqlParser.StatementContext hqlParseTree,
 			SqmCreationOptions creationOptions,
 			SqmCreationContext creationContext) {
-		return new SemanticQueryBuilder( creationOptions, creationContext ).visitStatement( hqlParseTree );
+		return new SemanticQueryBuilder<R>( creationOptions, creationContext ).visitStatement( hqlParseTree );
 	}
 
 	private final SqmCreationOptions creationOptions;
@@ -271,7 +271,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	// Grammar rules
 
 	@Override
-	public SqmStatement visitStatement(HqlParser.StatementContext ctx) {
+	public SqmStatement<R> visitStatement(HqlParser.StatementContext ctx) {
 		// parameters allow multi-valued bindings only in very limited cases, so for
 		// the base case here we say false
 		parameterDeclarationContextStack.push( () -> false );
@@ -302,9 +302,9 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	// Top-level statements
 
 	@Override
-	public SqmSelectStatement visitSelectStatement(HqlParser.SelectStatementContext ctx) {
+	public SqmSelectStatement<R> visitSelectStatement(HqlParser.SelectStatementContext ctx) {
 		final HqlParser.QueryExpressionContext queryExpressionContext = ctx.queryExpression();
-		final SqmSelectStatement selectStatement = new SqmSelectStatement( creationContext.getNodeBuilder() );
+		final SqmSelectStatement<R> selectStatement = new SqmSelectStatement<>( creationContext.getNodeBuilder() );
 
 		parameterCollector = selectStatement;
 
@@ -327,17 +327,16 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	}
 
 	@Override
-	public SqmInsertStatement visitInsertStatement(HqlParser.InsertStatementContext ctx) {
-
-		final SqmRoot<?> root = new SqmRoot<>(
-				visitEntityName( ctx.dmlTarget().entityName() ),
+	public SqmInsertStatement<R> visitInsertStatement(HqlParser.InsertStatementContext ctx) {
+		final SqmRoot<R> root = new SqmRoot<>(
+				(EntityDomainType<R>) visitEntityName( ctx.dmlTarget().entityName() ),
 				applyJpaCompliance( visitIdentificationVariableDef( ctx.dmlTarget().identificationVariableDef() ) ),
 				creationContext.getNodeBuilder()
 		);
 
 		final HqlParser.QueryExpressionContext queryExpressionContext = ctx.queryExpression();
 		if ( queryExpressionContext != null ) {
-			final SqmInsertSelectStatement<?> insertStatement = new SqmInsertSelectStatement<>( root, creationContext.getNodeBuilder() );
+			final SqmInsertSelectStatement<R> insertStatement = new SqmInsertSelectStatement<>( root, creationContext.getNodeBuilder() );
 			parameterCollector = insertStatement;
 			final SqmDmlCreationProcessingState processingState = new SqmDmlCreationProcessingState(
 					insertStatement,
@@ -358,7 +357,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 				processingStateStack.push( stateFieldsProcessingState );
 				try {
 					for ( HqlParser.DotIdentifierSequenceContext stateFieldCtx : ctx.targetFieldsSpec().dotIdentifierSequence() ) {
-						final SqmPath stateField = (SqmPath) visitDotIdentifierSequence( stateFieldCtx );
+						final SqmPath<?> stateField = (SqmPath<?>) visitDotIdentifierSequence( stateFieldCtx );
 						// todo : validate each resolved stateField...
 						insertStatement.addInsertTargetStateField( stateField );
 					}
@@ -375,7 +374,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 		}
 		else {
-			final SqmInsertValuesStatement<?> insertStatement = new SqmInsertValuesStatement<>( root, creationContext.getNodeBuilder() );
+			final SqmInsertValuesStatement<R> insertStatement = new SqmInsertValuesStatement<>( root, creationContext.getNodeBuilder() );
 			parameterCollector = insertStatement;
 			final SqmDmlCreationProcessingState processingState = new SqmDmlCreationProcessingState(
 					insertStatement,
@@ -389,7 +388,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 				for ( HqlParser.ValuesContext values : ctx.valuesList().values() ) {
 					SqmValues sqmValues = new SqmValues();
 					for ( HqlParser.ExpressionContext expressionContext : values.expression() ) {
-						sqmValues.getExpressions().add( (SqmExpression) expressionContext.accept( this ) );
+						sqmValues.getExpressions().add( (SqmExpression<?>) expressionContext.accept( this ) );
 					}
 					insertStatement.getValuesList().add( sqmValues );
 				}
@@ -410,14 +409,14 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	}
 
 	@Override
-	public SqmUpdateStatement visitUpdateStatement(HqlParser.UpdateStatementContext ctx) {
-		final SqmRoot<?> root = new SqmRoot<>(
-				visitEntityName( ctx.dmlTarget().entityName() ),
+	public SqmUpdateStatement<R> visitUpdateStatement(HqlParser.UpdateStatementContext ctx) {
+		final SqmRoot<R> root = new SqmRoot<>(
+				(EntityDomainType<R>) visitEntityName( ctx.dmlTarget().entityName() ),
 				visitIdentificationVariableDef( ctx.dmlTarget().identificationVariableDef() ),
 				creationContext.getNodeBuilder()
 		);
 
-		final SqmUpdateStatement<?> updateStatement = new SqmUpdateStatement<>( root, creationContext.getNodeBuilder() );
+		final SqmUpdateStatement<R> updateStatement = new SqmUpdateStatement<>( root, creationContext.getNodeBuilder() );
 		parameterCollector = updateStatement;
 		final SqmDmlCreationProcessingState processingState = new SqmDmlCreationProcessingState(
 				updateStatement,
@@ -430,7 +429,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 			for ( HqlParser.AssignmentContext assignmentContext : ctx.setClause().assignment() ) {
 				updateStatement.applyAssignment(
 						consumeDomainPath( assignmentContext.dotIdentifierSequence() ),
-						(SqmExpression) assignmentContext.expression().accept( this )
+						(SqmExpression<?>) assignmentContext.expression().accept( this )
 				);
 			}
 
@@ -444,14 +443,14 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	}
 
 	@Override
-	public SqmDeleteStatement visitDeleteStatement(HqlParser.DeleteStatementContext ctx) {
-		final SqmRoot<?> root = new SqmRoot<>(
-				visitEntityName( ctx.dmlTarget().entityName() ),
+	public SqmDeleteStatement<R> visitDeleteStatement(HqlParser.DeleteStatementContext ctx) {
+		final SqmRoot<R> root = new SqmRoot<>(
+				(EntityDomainType<R>) visitEntityName( ctx.dmlTarget().entityName() ),
 				visitIdentificationVariableDef( ctx.dmlTarget().identificationVariableDef() ),
 				creationContext.getNodeBuilder()
 		);
 
-		final SqmDeleteStatement<?> deleteStatement = new SqmDeleteStatement<>( root, SqmQuerySource.HQL, creationContext.getNodeBuilder() );
+		final SqmDeleteStatement<R> deleteStatement = new SqmDeleteStatement<>( root, SqmQuerySource.HQL, creationContext.getNodeBuilder() );
 
 		parameterCollector = deleteStatement;
 
@@ -480,14 +479,15 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	// Query spec
 
 	@Override
-	public SqmQueryPart visitSimpleQueryGroup(HqlParser.SimpleQueryGroupContext ctx) {
-		return (SqmQueryPart) ctx.simpleQueryExpression().accept( this );
+	public SqmQueryPart<Object> visitSimpleQueryGroup(HqlParser.SimpleQueryGroupContext ctx) {
+		//noinspection unchecked
+		return (SqmQueryPart<Object>) ctx.simpleQueryExpression().accept( this );
 	}
 
 	@Override
-	public SqmQueryPart visitQuerySpecExpression(HqlParser.QuerySpecExpressionContext ctx) {
+	public SqmQueryPart<Object> visitQuerySpecExpression(HqlParser.QuerySpecExpressionContext ctx) {
 		final List<ParseTree> children = ctx.children;
-		final SqmQueryPart queryPart = visitQuerySpec( (HqlParser.QuerySpecContext) children.get( 0 ) );
+		final SqmQueryPart<Object> queryPart = visitQuerySpec( (HqlParser.QuerySpecContext) children.get( 0 ) );
 		if ( children.size() > 1 ) {
 			visitQueryOrder( queryPart, (HqlParser.QueryOrderContext) children.get( 1 ) );
 		}
@@ -495,9 +495,10 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	}
 
 	@Override
-	public SqmQueryPart visitNestedQueryExpression(HqlParser.NestedQueryExpressionContext ctx) {
+	public SqmQueryPart<Object> visitNestedQueryExpression(HqlParser.NestedQueryExpressionContext ctx) {
 		final List<ParseTree> children = ctx.children;
-		final SqmQueryPart queryPart = (SqmQueryPart) children.get( 1 ).accept( this );
+		//noinspection unchecked
+		final SqmQueryPart<Object> queryPart = (SqmQueryPart<Object>) children.get( 1 ).accept( this );
 		if ( children.size() > 3 ) {
 			visitQueryOrder( queryPart, (HqlParser.QueryOrderContext) children.get( 3 ) );
 		}
@@ -505,17 +506,18 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	}
 
 	@Override
-	public SqmQueryGroup<?> visitSetQueryGroup(HqlParser.SetQueryGroupContext ctx) {
+	public SqmQueryGroup<Object> visitSetQueryGroup(HqlParser.SetQueryGroupContext ctx) {
 		if ( creationOptions.useStrictJpaCompliance() ) {
 			throw new StrictJpaComplianceViolation(
 					StrictJpaComplianceViolation.Type.SET_OPERATIONS
 			);
 		}
 		final List<ParseTree> children = ctx.children;
-		final SqmQueryPart<?> firstQueryPart = (SqmQueryPart<?>) children.get( 0 ).accept( this );
-		SqmQueryGroup queryGroup;
+		//noinspection unchecked
+		final SqmQueryPart<Object> firstQueryPart = (SqmQueryPart<Object>) children.get( 0 ).accept( this );
+		SqmQueryGroup<Object> queryGroup;
 		if ( firstQueryPart instanceof SqmQueryGroup<?>) {
-			queryGroup = (SqmQueryGroup<?>) firstQueryPart;
+			queryGroup = (SqmQueryGroup<Object>) firstQueryPart;
 		}
 		else {
 			queryGroup = new SqmQueryGroup<>( firstQueryPart );
@@ -529,15 +531,15 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 			final SetOperator operator = visitSetOperator( (HqlParser.SetOperatorContext) children.get( i ) );
 			final HqlParser.SimpleQueryExpressionContext simpleQueryCtx =
 					(HqlParser.SimpleQueryExpressionContext) children.get( i + 1 );
-			final List<SqmQueryPart<?>> queryParts;
+			final List<SqmQueryPart<Object>> queryParts;
 			if ( queryGroup.getSetOperator() == null || queryGroup.getSetOperator() == operator ) {
 				queryGroup.setSetOperator( operator );
-				queryParts = queryGroup.getQueryParts();
+				queryParts = queryGroup.queryParts();
 			}
 			else {
 				queryParts = new ArrayList<>( size - ( i >> 1 ) );
 				queryParts.add( queryGroup );
-				queryGroup = new SqmQueryGroup(
+				queryGroup = new SqmQueryGroup<>(
 						creationContext.getNodeBuilder(),
 						operator,
 						queryParts
@@ -545,7 +547,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 				setCurrentQueryPart( queryGroup );
 			}
 
-			final SqmQueryPart<?> queryPart;
+			final SqmQueryPart<Object> queryPart;
 			try {
 				processingStateStack.push(
 						new SqmQuerySpecCreationProcessingStateStandardImpl(
@@ -556,13 +558,13 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 				);
 				final List<ParseTree> subChildren = simpleQueryCtx.children;
 				if ( subChildren.get( 0 ) instanceof HqlParser.QuerySpecContext ) {
-					final SqmQuerySpec<?> querySpec = new SqmQuerySpec<>( creationContext.getNodeBuilder() );
+					final SqmQuerySpec<Object> querySpec = new SqmQuerySpec<>( creationContext.getNodeBuilder() );
 					queryParts.add( querySpec );
 					queryPart = visitQuerySpecExpression( (HqlParser.QuerySpecExpressionContext) simpleQueryCtx );
 				}
 				else {
 					try {
-						final SqmSelectStatement selectStatement = new SqmSelectStatement( creationContext.getNodeBuilder() );
+						final SqmSelectStatement<Object> selectStatement = new SqmSelectStatement<>( creationContext.getNodeBuilder() );
 						processingStateStack.push(
 								new SqmQuerySpecCreationProcessingStateStandardImpl(
 										processingStateStack.getCurrent(),
@@ -586,7 +588,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 				throw new SemanticException( "All query parts must have the same arity!" );
 			}
 			for ( int j = 0; j < firstSelectionSize; j++ ) {
-				final JavaTypeDescriptor firstJavaTypeDescriptor = firstSelections.get( j ).getNodeJavaTypeDescriptor();
+				final JavaTypeDescriptor<?> firstJavaTypeDescriptor = firstSelections.get( j ).getNodeJavaTypeDescriptor();
 				if ( firstJavaTypeDescriptor != selections.get( j ).getNodeJavaTypeDescriptor() ) {
 					throw new SemanticException(
 							"Select items of the same index must have the same java type across all query parts!"
@@ -664,8 +666,9 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	}
 
 	@Override
-	public SqmQuerySpec<?> visitQuerySpec(HqlParser.QuerySpecContext ctx) {
-		final SqmQuerySpec<?> sqmQuerySpec = currentQuerySpec();
+	public SqmQuerySpec<Object> visitQuerySpec(HqlParser.QuerySpecContext ctx) {
+		//noinspection unchecked
+		final SqmQuerySpec<Object> sqmQuerySpec = (SqmQuerySpec<Object>) currentQuerySpec();
 
 		// visit from-clause first!!!
 		treatHandlerStack.push( new TreatHandlerFromClause() );
@@ -2848,7 +2851,6 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	}
 
 	private <J> BasicDomainType<J> resolveExpressableTypeBasic(Class<J> javaType) {
-		//noinspection unchecked
 		return creationContext.getJpaMetamodel().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
 	}
 

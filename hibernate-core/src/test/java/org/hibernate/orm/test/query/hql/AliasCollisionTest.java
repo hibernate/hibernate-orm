@@ -89,9 +89,9 @@ public class AliasCollisionTest extends BaseSqmUnitTest {
 	@Test
 	public void testSameIdentificationVariablesInSubquery() {
 		final String query = "select a from SimpleEntity a where a.someString in (select a.someString from SimpleEntity a where a.someInteger = 5)";
-		final SqmSelectStatement sqm = interpretSelect( query );
+		final SqmSelectStatement<?> sqm = interpretSelect( query );
 
-		final SqmQuerySpec querySpec = sqm.getQuerySpec();
+		final SqmQuerySpec<?> querySpec = sqm.getQuerySpec();
 
 		final List<SqmSelection> selections = querySpec.getSelectClause().getSelections();
 		assertThat( selections, hasSize( 1 ) );
@@ -118,9 +118,9 @@ public class AliasCollisionTest extends BaseSqmUnitTest {
 	public void testSubqueryUsingIdentificationVariableDefinedInRootQuery() {
 		final String query = "select a from SimpleEntity a where a.someString in " +
 				"( select b.someString from SimpleEntity b where a.someLong = b.someLong )";
-		final SqmSelectStatement sqm = interpretSelect( query );
+		final SqmSelectStatement<?> sqm = interpretSelect( query );
 
-		final SqmQuerySpec querySpec = sqm.getQuerySpec();
+		final SqmQuerySpec<?> querySpec = sqm.getQuerySpec();
 
 		final List<SqmSelection> selections = querySpec.getSelectClause().getSelections();
 		assertThat( selections, hasSize( 1 ) );

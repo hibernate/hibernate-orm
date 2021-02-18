@@ -56,7 +56,7 @@ public class HqlTranslationNoFactoryTests {
 		final String hql = "select a from SalesAssociate a";
 
 		final HqlTranslator hqlTranslator = buildHqlTranslator( modelScope, registryScope );
-		final SqmStatement sqmStatement = hqlTranslator.translate( hql );
+		final SqmStatement<?> sqmStatement = hqlTranslator.translate( hql );
 		assert sqmStatement != null;
 	}
 

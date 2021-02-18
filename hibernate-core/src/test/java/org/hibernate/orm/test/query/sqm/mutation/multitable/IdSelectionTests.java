@@ -52,7 +52,7 @@ public class IdSelectionTests {
 
 	@Test
 	public void testSecondaryTableRestrictedOnRootTable(SessionFactoryScope scope) {
-		final SqmDeleteStatement sqm = (SqmDeleteStatement) scope.getSessionFactory()
+		final SqmDeleteStatement<?> sqm = (SqmDeleteStatement<?>) scope.getSessionFactory()
 				.getQueryEngine()
 				.getHqlTranslator()
 				.translate( "delete SimpleEntityWithSecondaryTables where name = :n" );
@@ -77,7 +77,7 @@ public class IdSelectionTests {
 
 	@Test
 	public void testSecondaryTableRestrictedOnNonRootTable(SessionFactoryScope scope) {
-		final SqmDeleteStatement sqm = (SqmDeleteStatement) scope.getSessionFactory()
+		final SqmDeleteStatement<?> sqm = (SqmDeleteStatement<?>) scope.getSessionFactory()
 				.getQueryEngine()
 				.getHqlTranslator()
 				.translate( "delete SimpleEntityWithSecondaryTables where data = :d" );
@@ -102,7 +102,7 @@ public class IdSelectionTests {
 
 	@Test
 	public void testJoinedSubclassRestrictedOnRootTable(SessionFactoryScope scope) {
-		final SqmDeleteStatement sqm = (SqmDeleteStatement) scope.getSessionFactory()
+		final SqmDeleteStatement<?> sqm = (SqmDeleteStatement<?>) scope.getSessionFactory()
 				.getQueryEngine()
 				.getHqlTranslator()
 				.translate( "delete Customer where name = :n" );
@@ -127,7 +127,7 @@ public class IdSelectionTests {
 
 	@Test
 	public void testJoinedSubclassRestrictedOnNonPrimaryRootTable(SessionFactoryScope scope) {
-		final SqmDeleteStatement sqm = (SqmDeleteStatement) scope.getSessionFactory()
+		final SqmDeleteStatement<?> sqm = (SqmDeleteStatement<?>) scope.getSessionFactory()
 				.getQueryEngine()
 				.getHqlTranslator()
 				.translate( "delete ForeignCustomer where name = :n" );
@@ -152,7 +152,7 @@ public class IdSelectionTests {
 
 	@Test
 	public void testJoinedSubclassRestrictedOnPrimaryNonRootTable(SessionFactoryScope scope) {
-		final SqmDeleteStatement sqm = (SqmDeleteStatement) scope.getSessionFactory()
+		final SqmDeleteStatement<?> sqm = (SqmDeleteStatement<?>) scope.getSessionFactory()
 				.getQueryEngine()
 				.getHqlTranslator()
 				.translate( "delete ForeignCustomer where vat = :v" );

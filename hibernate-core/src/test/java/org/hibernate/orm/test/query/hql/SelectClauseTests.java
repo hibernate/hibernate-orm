@@ -54,23 +54,23 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 
 	@Test
 	public void testSimpleAliasSelection() {
-		SqmSelectStatement statement = interpretSelect( "select p from Person p" );
+		SqmSelectStatement<?> statement = interpretSelect( "select p from Person p" );
 		assertEquals( 1, statement.getQuerySpec().getSelectClause().getSelections().size() );
-		SqmSelection selection = statement.getQuerySpec().getSelectClause().getSelections().get( 0 );
+		SqmSelection<?> selection = statement.getQuerySpec().getSelectClause().getSelections().get( 0 );
 		assertThat( selection.getSelectableNode(), instanceOf( SqmRoot.class ) );
 	}
 
 	@Test
 	public void testSimpleAttributeSelection() {
-		SqmSelectStatement statement = interpretSelect( "select p.nickName from Person p" );
+		SqmSelectStatement<?> statement = interpretSelect( "select p.nickName from Person p" );
 		assertEquals( 1, statement.getQuerySpec().getSelectClause().getSelections().size() );
-		SqmSelection selection = statement.getQuerySpec().getSelectClause().getSelections().get( 0 );
+		SqmSelection<?> selection = statement.getQuerySpec().getSelectClause().getSelections().get( 0 );
 		assertThat( selection.getSelectableNode(), instanceOf( SqmSimplePath.class ) );
 	}
 
 	@Test
 	public void testCompoundAttributeSelection() {
-		SqmSelectStatement statement = interpretSelect( "select p.nickName, p.name.firstName from Person p" );
+		SqmSelectStatement<?> statement = interpretSelect( "select p.nickName, p.name.firstName from Person p" );
 		assertEquals( 2, statement.getQuerySpec().getSelectClause().getSelections().size() );
 		assertThat(
 				statement.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode(),
@@ -84,7 +84,7 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 
 	@Test
 	public void testMixedAliasAndAttributeSelection() {
-		SqmSelectStatement statement = interpretSelect( "select p, p.nickName from Person p" );
+		SqmSelectStatement<?> statement = interpretSelect( "select p, p.nickName from Person p" );
 		assertEquals( 2, statement.getQuerySpec().getSelectClause().getSelections().size() );
 		assertThat(
 				statement.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode(),
@@ -99,10 +99,10 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 	@Test
 	public void testBinaryArithmeticExpression() {
 		final String query = "select p.numberOfToes + p.numberOfToes as b from Person p";
-		final SqmSelectStatement selectStatement = interpretSelect( query );
+		final SqmSelectStatement<?> selectStatement = interpretSelect( query );
 
-		final SqmQuerySpec querySpec = selectStatement.getQuerySpec();
-		final SqmSelection selection = querySpec.getSelectClause().getSelections().get( 0 );
+		final SqmQuerySpec<?> querySpec = selectStatement.getQuerySpec();
+		final SqmSelection<?> selection = querySpec.getSelectClause().getSelections().get( 0 );
 
 		assertThat( querySpec.getFromClause().getRoots().size(), is(1) );
 		final SqmRoot<?> root = querySpec.getFromClause().getRoots().get( 0 );
@@ -110,12 +110,12 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 		assertThat( root.getJoins().size(), is(0) );
 
 		SqmBinaryArithmetic expression = (SqmBinaryArithmetic) selection.getSelectableNode();
-		SqmPath leftHandOperand = (SqmPath) expression.getLeftHandOperand();
+		SqmPath<?> leftHandOperand = (SqmPath<?>) expression.getLeftHandOperand();
 		assertThat( leftHandOperand.getLhs(), sameInstance( root ) );
 		assertThat( leftHandOperand.getReferencedPathSource().getPathName(), is( "numberOfToes" ) );
 //		assertThat( leftHandOperand.getFromElement(), nullValue() );
 
-		SqmPath rightHandOperand = (SqmPath) expression.getRightHandOperand();
+		SqmPath<?> rightHandOperand = (SqmPath<?>) expression.getRightHandOperand();
 		assertThat( rightHandOperand.getLhs(), sameInstance( root ) );
 		assertThat( rightHandOperand.getReferencedPathSource().getPathName(), is( "numberOfToes" ) );
 //		assertThat( leftHandOperand.getFromElement(), nullValue() );
@@ -124,10 +124,10 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 	@Test
 	public void testBinaryArithmeticExpressionWithMultipleFromSpaces() {
 		final String query = "select p.numberOfToes + p2.numberOfToes as b from Person p, Person p2";
-		final SqmSelectStatement selectStatement = interpretSelect( query );
+		final SqmSelectStatement<?> selectStatement = interpretSelect( query );
 
-		final SqmQuerySpec querySpec = selectStatement.getQuerySpec();
-		final SqmSelection selection = querySpec.getSelectClause().getSelections().get( 0 );
+		final SqmQuerySpec<?> querySpec = selectStatement.getQuerySpec();
+		final SqmSelection<?> selection = querySpec.getSelectClause().getSelections().get( 0 );
 
 		assertThat( querySpec.getFromClause().getRoots().size(), is(2) );
 
@@ -139,11 +139,11 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 
 		SqmBinaryArithmetic addExpression = (SqmBinaryArithmetic) selection.getSelectableNode();
 
-		SqmPath leftHandOperand = (SqmPath) addExpression.getLeftHandOperand();
+		SqmPath<?> leftHandOperand = (SqmPath<?>) addExpression.getLeftHandOperand();
 		assertThat( leftHandOperand.getLhs(), sameInstance( entityRoot ) );
 		assertThat( leftHandOperand.getReferencedPathSource().getPathName(), is( "numberOfToes" ) );
 
-		SqmPath rightHandOperand = (SqmPath) addExpression.getRightHandOperand();
+		SqmPath<?> rightHandOperand = (SqmPath<?>) addExpression.getRightHandOperand();
 		assertThat( rightHandOperand.getLhs(), sameInstance( entity2Root ) );
 		assertThat( rightHandOperand.getReferencedPathSource().getPathName(), is( "numberOfToes" ) );
 	}
@@ -165,20 +165,20 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 	}
 
 	private void collectionIndexFunctionAssertions(
-			SqmSelectStatement statement,
+			SqmSelectStatement<?> statement,
 			CollectionClassification expectedCollectionClassification,
 			Class<? extends SimpleDomainType> expectedIndexDomainTypeType,
 			String expectedAlias) {
 		assertEquals( 1, statement.getQuerySpec().getSelectClause().getSelections().size() );
 
-		final SqmSelectableNode selectedExpr = statement.getQuerySpec()
+		final SqmSelectableNode<?> selectedExpr = statement.getQuerySpec()
 				.getSelectClause()
 				.getSelections()
 				.get( 0 )
 				.getSelectableNode();
 
 		assertThat( selectedExpr, instanceOf( SqmSimplePath.class ) );
-		final SqmSimplePath selectedPath = (SqmSimplePath) selectedExpr;
+		final SqmSimplePath<?> selectedPath = (SqmSimplePath<?>) selectedExpr;
 
 		assertThat( selectedPath.getLhs().getExplicitAlias(), is( expectedAlias ) );
 
@@ -257,20 +257,20 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 	}
 
 	private void collectionValueFunctionAssertions(
-			SqmSelectStatement statement,
+			SqmSelectStatement<?> statement,
 			String collectionRole,
 			String collectionIdentificationVariable) {
 		assertEquals( 1, statement.getQuerySpec().getSelectClause().getSelections().size() );
 
-		final SqmSelectableNode selectedExpression = statement.getQuerySpec()
+		final SqmSelectableNode<?> selectedExpression = statement.getQuerySpec()
 				.getSelectClause()
 				.getSelections()
 				.get( 0 )
 				.getSelectableNode();
 
 		assertThat( selectedExpression, instanceOf( SqmPath.class ) );
-		final SqmPath selectedPath = (SqmPath) selectedExpression;
-		final SqmPathSource referencedPathSource = selectedPath.getReferencedPathSource();
+		final SqmPath<?> selectedPath = (SqmPath<?>) selectedExpression;
+		final SqmPathSource<?> referencedPathSource = selectedPath.getReferencedPathSource();
 
 		final String ownerName = StringHelper.qualifier( collectionRole );
 		final String attributeName = StringHelper.unqualify( collectionRole );
@@ -289,7 +289,7 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 		testMapEntryFunctionAssertions( interpretSelect( "select entry(m) from EntityOfMaps e join e.sortedManyToManyByBasic m" ) );
 	}
 
-	private void testMapEntryFunctionAssertions(SqmSelectStatement statement) {
+	private void testMapEntryFunctionAssertions(SqmSelectStatement<?> statement) {
 		assertEquals( 1, statement.getQuerySpec().getSelectClause().getSelections().size() );
 
 		final SqmMapEntryReference mapEntryPath = (SqmMapEntryReference) statement.getQuerySpec()
@@ -300,16 +300,16 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 
 		assertThat( mapEntryPath.getJavaTypeDescriptor().getJavaType(), is( equalTo( Map.Entry.class ) ) );
 
-		final SqmPath selectedPathLhs = mapEntryPath.getMapPath();
+		final SqmPath<?> selectedPathLhs = mapEntryPath.getMapPath();
 		assertThat( selectedPathLhs.getExplicitAlias(), is( "m" ) );
 	}
 
 	@Test
 	public void testSimpleRootEntitySelection() {
-		SqmSelectStatement statement = interpretSelect( "select e from EntityOfBasics e" );
+		SqmSelectStatement<?> statement = interpretSelect( "select e from EntityOfBasics e" );
 
 		assertEquals( 1, statement.getQuerySpec().getSelectClause().getSelections().size() );
-		final SqmPath sqmEntityReference = TestingUtil.cast(
+		final SqmPath<?> sqmEntityReference = TestingUtil.cast(
 				statement.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode(),
 				SqmPath.class
 		);

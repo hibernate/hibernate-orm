@@ -451,8 +451,9 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 
 		// otherwise, try to handle it as a polymorphic reference
 		{
-			if ( polymorphicEntityReferenceMap.containsKey( javaType ) ) {
-				return (EntityDomainType<T>) polymorphicEntityReferenceMap.get( javaType );
+			EntityDomainType<T> polymorphicDomainType = (EntityDomainType<T>) polymorphicEntityReferenceMap.get( javaType );
+			if ( polymorphicDomainType != null ) {
+				return polymorphicDomainType;
 			}
 
 			final Set<EntityDomainType<?>> matchingDescriptors = new HashSet<>();
@@ -464,11 +465,11 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 					}
 			);
 			if ( !matchingDescriptors.isEmpty() ) {
-				final SqmPolymorphicRootDescriptor descriptor = new SqmPolymorphicRootDescriptor(
+				final SqmPolymorphicRootDescriptor<T> descriptor = new SqmPolymorphicRootDescriptor<>(
 						typeConfiguration.getJavaTypeDescriptorRegistry().resolveDescriptor( javaType ),
 						matchingDescriptors
 				);
-				polymorphicEntityReferenceMap.put( javaType, descriptor );
+				polymorphicEntityReferenceMap.putIfAbsent( javaType, descriptor );
 				return descriptor;
 			}
 		}

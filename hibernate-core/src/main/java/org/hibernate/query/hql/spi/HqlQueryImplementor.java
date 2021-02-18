@@ -21,5 +21,5 @@ public interface HqlQueryImplementor<R> extends QueryImplementor<R>, NameableQue
 	@Override
 	ParameterMetadataImplementor getParameterMetadata();
 
-	SqmStatement getSqmStatement();
+	SqmStatement<R> getSqmStatement();
 }

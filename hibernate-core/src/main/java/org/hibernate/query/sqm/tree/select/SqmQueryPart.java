@@ -12,6 +12,7 @@ import java.util.List;
 import org.hibernate.FetchClauseType;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaOrder;
+import org.hibernate.query.criteria.JpaQueryPart;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
@@ -22,7 +23,7 @@ import org.hibernate.type.StandardBasicTypes;
  *
  * @author Christian Beikov
  */
-public abstract class SqmQueryPart<T> implements SqmVisitableNode {
+public abstract class SqmQueryPart<T> implements SqmVisitableNode, JpaQueryPart<T> {
 	private final NodeBuilder nodeBuilder;
 
 	private SqmOrderByClause orderByClause;
@@ -88,6 +89,7 @@ public abstract class SqmQueryPart<T> implements SqmVisitableNode {
 		}
 	}
 
+	@Override
 	public FetchClauseType getFetchClauseType() {
 		return fetchClauseType;
 	}
@@ -95,6 +97,7 @@ public abstract class SqmQueryPart<T> implements SqmVisitableNode {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JPA
 
+	@Override
 	public List<SqmSortSpecification> getSortSpecifications() {
 		if ( getOrderByClause() == null ) {
 			return Collections.emptyList();
@@ -103,6 +106,7 @@ public abstract class SqmQueryPart<T> implements SqmVisitableNode {
 		return getOrderByClause().getSortSpecifications();
 	}
 
+	@Override
 	public SqmQueryPart<T> setSortSpecifications(List<? extends JpaOrder> sortSpecifications) {
 		if ( getOrderByClause() == null ) {
 			setOrderByClause( new SqmOrderByClause() );
@@ -115,22 +119,32 @@ public abstract class SqmQueryPart<T> implements SqmVisitableNode {
 	}
 
 	@SuppressWarnings("unchecked")
+	@Override
 	public SqmExpression<?> getOffset() {
 		return getOffsetExpression();
 	}
 
+	@Override
 	public SqmQueryPart<T> setOffset(JpaExpression<?> offset) {
 		setOffsetExpression( (SqmExpression<?>) offset );
 		return this;
 	}
 
 	@SuppressWarnings("unchecked")
+	@Override
 	public SqmExpression<?> getFetch() {
 		return getFetchExpression();
 	}
 
+	@Override
 	public SqmQueryPart<T> setFetch(JpaExpression<?> fetch) {
 		setFetchExpression( (SqmExpression<?>) fetch );
+		return this;
+	}
+
+	@Override
+	public JpaQueryPart<T> setFetch(JpaExpression<?> fetch, FetchClauseType fetchClauseType) {
+		setFetchExpression( (SqmExpression<?>) fetch, fetchClauseType );
 		return this;
 	}
 }

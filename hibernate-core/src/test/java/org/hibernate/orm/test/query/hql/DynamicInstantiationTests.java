@@ -45,7 +45,7 @@ public class DynamicInstantiationTests extends BaseSqmUnitTest {
 
 	@Test
 	public void testSimpleDynamicInstantiationSelection() {
-		SqmSelectStatement statement = interpretSelect(
+		SqmSelectStatement<?> statement = interpretSelect(
 				"select new org.hibernate.orm.test.query.sqm.domain.ConstructedLookupListItem( e.id, e.theString ) from EntityOfBasics e"
 		);
 		assertEquals( 1, statement.getQuerySpec().getSelectClause().getSelections().size() );
@@ -62,7 +62,7 @@ public class DynamicInstantiationTests extends BaseSqmUnitTest {
 
 	@Test
 	public void testMultipleDynamicInstantiationSelection() {
-		SqmSelectStatement statement = interpretSelect(
+		SqmSelectStatement<?> statement = interpretSelect(
 				"select new org.hibernate.orm.test.query.sqm.domain.ConstructedLookupListItem( e.id, e.theString ), " +
 						"new org.hibernate.orm.test.query.sqm.domain.ConstructedLookupListItem( e.id, e.theString ) " +
 						"from EntityOfBasics e"
@@ -99,7 +99,7 @@ public class DynamicInstantiationTests extends BaseSqmUnitTest {
 
 	@Test
 	public void testMixedAttributeAndDynamicInstantiationSelection() {
-		SqmSelectStatement statement = interpretSelect(
+		SqmSelectStatement<?> statement = interpretSelect(
 				"select new org.hibernate.orm.test.query.sqm.domain.ConstructedLookupListItem( e.id, e.theString ), e.theInteger from EntityOfBasics e"
 		);
 		assertEquals( 2, statement.getQuerySpec().getSelectClause().getSelections().size() );
@@ -117,7 +117,7 @@ public class DynamicInstantiationTests extends BaseSqmUnitTest {
 		assertThat( instantiation.getArguments(), hasSize( 2 ) );
 
 
-		final SqmPath theIntegerPath = TestingUtil.cast(
+		final SqmPath<?> theIntegerPath = TestingUtil.cast(
 				statement.getQuerySpec().getSelectClause().getSelections().get( 1 ).getSelectableNode(),
 				SqmPath.class
 		);
@@ -127,7 +127,7 @@ public class DynamicInstantiationTests extends BaseSqmUnitTest {
 
 	@Test
 	public void testNestedDynamicInstantiationSelection() {
-		SqmSelectStatement statement = interpretSelect(
+		SqmSelectStatement<?> statement = interpretSelect(
 				"select new org.hibernate.orm.test.query.sqm.domain.NestedCtorLookupListItem(" +
 						" e.id, " +
 						" e.theString, " +
@@ -154,7 +154,7 @@ public class DynamicInstantiationTests extends BaseSqmUnitTest {
 		);
 		assertThat( firstArg.getReferencedPathSource().getPathName(), is( "id" ) );
 
-		final SqmPath secondArg = TestingUtil.cast(
+		final SqmPath<?> secondArg = TestingUtil.cast(
 				instantiation.getArguments().get( 1 ).getSelectableNode(),
 				SqmPath.class
 		);
@@ -175,7 +175,7 @@ public class DynamicInstantiationTests extends BaseSqmUnitTest {
 
 	@Test
 	public void testSimpleDynamicListInstantiation() {
-		SqmSelectStatement statement = interpretSelect( "select new list( e.id, e.theString ) from EntityOfBasics e" );
+		SqmSelectStatement<?> statement = interpretSelect( "select new list( e.id, e.theString ) from EntityOfBasics e" );
 		assertEquals( 1, statement.getQuerySpec().getSelectClause().getSelections().size() );
 
 		final SqmDynamicInstantiation<?> instantiation = TestingUtil.cast(
@@ -208,7 +208,7 @@ public class DynamicInstantiationTests extends BaseSqmUnitTest {
 
 	@Test
 	public void testSimpleDynamicMapInstantiation() {
-		SqmSelectStatement statement = interpretSelect( "select new map( e.id as id, e.theString as ts ) from EntityOfBasics e" );
+		SqmSelectStatement<?> statement = interpretSelect( "select new map( e.id as id, e.theString as ts ) from EntityOfBasics e" );
 		assertEquals( 1, statement.getQuerySpec().getSelectClause().getSelections().size() );
 
 		final SqmDynamicInstantiation<?> instantiation = TestingUtil.cast(
@@ -245,7 +245,7 @@ public class DynamicInstantiationTests extends BaseSqmUnitTest {
 		// todo (6.0) : this should blow up as early as possible - no aliases for bean-injection-based dynamic-instantiation
 		//		atm this does not fail until later when building the SQL AST
 
-		SqmSelectStatement statement = interpretSelect(
+		SqmSelectStatement<?> statement = interpretSelect(
 				"select new org.hibernate.orm.test.query.sqm.domain.InjectedLookupListItem( e.id, e.theString ) from EntityOfBasics e"
 		);
 		assertEquals( 1, statement.getQuerySpec().getSelectClause().getSelections().size() );

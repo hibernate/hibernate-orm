@@ -48,12 +48,12 @@ public abstract class BaseSqmUnitTest
 	public void registerAfterLoadAction(AfterLoadAction afterLoadAction) {
 	}
 
-	protected SqmSelectStatement interpretSelect(String hql) {
+	protected SqmSelectStatement<?> interpretSelect(String hql) {
 		return interpretSelect( hql, sessionFactory() );
 	}
 
-	public static SqmSelectStatement interpretSelect(String hql, SessionFactoryImplementor sessionFactory) {
-		return (SqmSelectStatement) sessionFactory.getQueryEngine().getHqlTranslator().translate( hql );
+	public static SqmSelectStatement<?> interpretSelect(String hql, SessionFactoryImplementor sessionFactory) {
+		return (SqmSelectStatement<?>) sessionFactory.getQueryEngine().getHqlTranslator().translate( hql );
 	}
 
 	@Override

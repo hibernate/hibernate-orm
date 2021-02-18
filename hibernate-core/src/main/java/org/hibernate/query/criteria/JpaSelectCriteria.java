@@ -23,6 +23,10 @@ public interface JpaSelectCriteria<T> extends AbstractQuery<T>, JpaCriteriaBase 
 	 * The query structure.  See {@link JpaQueryStructure} for details
 	 */
 	JpaQueryStructure<T> getQuerySpec();
+	/**
+	 * The query structure.  See {@link JpaQueryStructure} for details
+	 */
+	JpaQueryPart<T> getQueryPart();
 
 	@Override
 	JpaSelectCriteria<T> distinct(boolean distinct);

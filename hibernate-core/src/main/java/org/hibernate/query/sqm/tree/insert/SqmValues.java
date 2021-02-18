@@ -15,9 +15,9 @@ import java.util.List;
  * @author Gavin King
  */
 public class SqmValues {
-	private List<SqmExpression> expressions = new ArrayList<>();
+	private final List<SqmExpression<?>> expressions = new ArrayList<>();
 
-	public List<SqmExpression> getExpressions() {
+	public List<SqmExpression<?>> getExpressions() {
 		return expressions;
 	}
 }

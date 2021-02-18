@@ -269,19 +269,19 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 					// select clause
 
 					// control
-					Query query = session.createQuery( "select a.class from Animal a where a.class = Dog" );
+					Query<?> query = session.createQuery( "select a.class from Animal a where a.class = Dog" );
 					query.list();
-					SqmSelectStatement sqmStatement = (SqmSelectStatement) query.unwrap( QuerySqmImpl.class ).getSqmStatement();
+					SqmSelectStatement<?> sqmStatement = (SqmSelectStatement<?>) query.unwrap( QuerySqmImpl.class ).getSqmStatement();
 					List<SqmSelection> selections = sqmStatement.getQuerySpec().getSelectClause().getSelections();
 					assertEquals( 1, selections.size() );
-					SqmSelection typeSelection = selections.get( 0 );
+					SqmSelection<?> typeSelection = selections.get( 0 );
 					// always integer for joined
 					assertEquals( Integer.class, typeSelection.getNodeJavaTypeDescriptor().getJavaType() );
 
 					// test
 					query = session.createQuery( "select type(a) from Animal a where type(a) = Dog" );
 					query.list();
-					sqmStatement = (SqmSelectStatement) query.unwrap( QuerySqmImpl.class ).getSqmStatement();
+					sqmStatement = (SqmSelectStatement<?>) query.unwrap( QuerySqmImpl.class ).getSqmStatement();
 					selections = sqmStatement.getQuerySpec().getSelectClause().getSelections();
 					assertEquals( 1, selections.size() );
 					typeSelection = selections.get( 0 );
@@ -1540,11 +1540,11 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	public void testComponentQueries() {
 		inTransaction(
 				session -> {
-					final QueryImplementor query = session.createQuery( "select h.name from Human h" );
-					final SqmSelectStatement sqmStatement = (SqmSelectStatement) query.unwrap( QuerySqmImpl.class ).getSqmStatement();
+					final QueryImplementor<?> query = session.createQuery( "select h.name from Human h" );
+					final SqmSelectStatement<?> sqmStatement = (SqmSelectStatement<?>) query.unwrap( QuerySqmImpl.class ).getSqmStatement();
 					assertEquals( 1, sqmStatement.getQuerySpec().getSelectClause().getSelections().size() );
-					final SqmSelection selection = sqmStatement.getQuerySpec().getSelectClause().getSelections().get( 0 );
-					final SqmExpressable selectionType = selection.getSelectableNode().getNodeType();
+					final SqmSelection<?> selection = sqmStatement.getQuerySpec().getSelectClause().getSelections().get( 0 );
+					final SqmExpressable<?> selectionType = selection.getSelectableNode().getNodeType();
 					assertThat( selectionType, CoreMatchers.instanceOf( EmbeddableDomainType.class ) );
 					assertEquals( Name.class, selection.getNodeJavaTypeDescriptor().getJavaType() );
 
@@ -1824,10 +1824,10 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		inSession(
 				session -> {
 					final Query query = session.createQuery( "from Animal a inner join fetch a.mother" );
-					final SqmSelectStatement sqmStatement = (SqmSelectStatement) query.unwrap( QuerySqmImpl.class ).getSqmStatement();
+					final SqmSelectStatement<?> sqmStatement = (SqmSelectStatement<?>) query.unwrap( QuerySqmImpl.class ).getSqmStatement();
 					assertEquals( 1, sqmStatement.getQuerySpec().getSelectClause().getSelections().size() );
-					final SqmSelection selection = sqmStatement.getQuerySpec().getSelectClause().getSelections().get( 0 );
-					final SqmExpressable selectionType = selection.getSelectableNode().getNodeType();
+					final SqmSelection<?> selection = sqmStatement.getQuerySpec().getSelectClause().getSelections().get( 0 );
+					final SqmExpressable<?> selectionType = selection.getSelectableNode().getNodeType();
 					assertThat( selectionType, instanceOf( EntityDomainType.class ) );
 					assertThat( selectionType.getExpressableJavaTypeDescriptor().getJavaType(), equalTo( Animal.class ) );
 					assertThat( selection.getAlias(), is( "a" ) );
@@ -2148,15 +2148,15 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	private static void verifyAnimalZooSelection(Query q) {
-		final SqmSelectStatement sqmStatement = (SqmSelectStatement) q.unwrap( QuerySqmImpl.class ).getSqmStatement();
-		final SqmSelection sqmSelection = sqmStatement.getQuerySpec().getSelectClause().getSelections().get( 0 );
+		final SqmSelectStatement<?> sqmStatement = (SqmSelectStatement<?>) q.unwrap( QuerySqmImpl.class ).getSqmStatement();
+		final SqmSelection<?> sqmSelection = sqmStatement.getQuerySpec().getSelectClause().getSelections().get( 0 );
 		assertThat( sqmSelection.getSelectableNode(), instanceOf( SqmPath.class ) );
-		final SqmPath selectedPath = (SqmPath) sqmSelection.getSelectableNode();
+		final SqmPath<?> selectedPath = (SqmPath<?>) sqmSelection.getSelectableNode();
 		assertThat( selectedPath.getReferencedPathSource(), instanceOf( SingularPersistentAttribute.class ) );
 		final SingularPersistentAttribute selectedAttr = (SingularPersistentAttribute) selectedPath.getReferencedPathSource();
 		assertThat( selectedAttr.getName(), is( "zoo" ) );
 		assertThat( selectedAttr.getType(), instanceOf( EntityDomainType.class ) );
-		final EntityDomainType zooType = (EntityDomainType) selectedAttr.getType();
+		final EntityDomainType<?> zooType = (EntityDomainType<?>) selectedAttr.getType();
 		assertThat( zooType.getHibernateEntityName(), is( Zoo.class.getName() ) );
 	}
 
@@ -2596,15 +2596,15 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		a.setDescription("an animal");
 		s.persist(a);
 
-		Query q = s.createQuery( "select a.bodyWeight as abw, a.description from Animal a" );
-		SqmSelectStatement sqmStatement = (SqmSelectStatement) q.unwrap( QuerySqmImpl.class ).getSqmStatement();
+		Query<?> q = s.createQuery( "select a.bodyWeight as abw, a.description from Animal a" );
+		SqmSelectStatement<?> sqmStatement = (SqmSelectStatement<?>) q.unwrap( QuerySqmImpl.class ).getSqmStatement();
 		List<SqmSelection> selections = sqmStatement.getQuerySpec().getSelectClause().getSelections();
 		assertThat( selections.size(), is( 2 ) );
 		assertThat( selections.get( 0 ).getAlias(), is( "abw" ) );
 		assertThat( selections.get( 1 ).getAlias(), nullValue() );
 
 		q = s.createQuery("select count(*), avg(a.bodyWeight) as avg from Animal a");
-		sqmStatement = (SqmSelectStatement) q.unwrap( QuerySqmImpl.class ).getSqmStatement();
+		sqmStatement = (SqmSelectStatement<?>) q.unwrap( QuerySqmImpl.class ).getSqmStatement();
 		selections = sqmStatement.getQuerySpec().getSelectClause().getSelections();
 		assertThat( selections.size(), is( 2 ) );
 		assertThat( selections.get( 0 ), nullValue() );

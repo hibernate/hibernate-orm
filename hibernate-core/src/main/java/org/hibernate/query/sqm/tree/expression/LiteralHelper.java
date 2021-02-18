@@ -29,7 +29,6 @@ public class LiteralHelper {
 				LocalDateTime.from( JdbcTimestampTypeDescriptor.LITERAL_FORMATTER.parse( literalText ) )
 		);
 
-		//noinspection unchecked
 		return new SqmLiteral<>(
 				literal,
 				creationState.getCreationContext().getJpaMetamodel().getTypeConfiguration().standardBasicTypeForJavaType( Timestamp.class ),
@@ -58,7 +57,6 @@ public class LiteralHelper {
 		final LocalDate localDate = LocalDate.from( JdbcDateTypeDescriptor.LITERAL_FORMATTER.parse( literalText ) );
 		final Date literal = new Date( localDate.toEpochDay() );
 
-		//noinspection unchecked
 		return new SqmLiteral<>(
 				literal,
 				creationState.getCreationContext().getJpaMetamodel().getTypeConfiguration().standardBasicTypeForJavaType( Date.class ),
@@ -70,7 +68,6 @@ public class LiteralHelper {
 		final LocalTime localTime = LocalTime.from( JdbcTimeTypeDescriptor.LITERAL_FORMATTER.parse( literalText ) );
 		final Time literal = Time.valueOf( localTime );
 
-		//noinspection unchecked
 		return new SqmLiteral<>(
 				literal,
 				creationState.getCreationContext().getJpaMetamodel().getTypeConfiguration().standardBasicTypeForJavaType( Time.class ),

@@ -35,67 +35,65 @@ import static org.hibernate.query.DynamicInstantiationNature.MAP;
 public class SqmDynamicInstantiation<T>
 		extends AbstractJpaSelection<T>
 		implements SqmSelectableNode<T>,
-		SqmAliasedExpressionContainer<SqmDynamicInstantiationArgument>,
+		SqmAliasedExpressionContainer<SqmDynamicInstantiationArgument<?>>,
 		JpaCompoundSelection<T>,
 		DomainResultProducer<T> {
 
 	private static final Logger log = Logger.getLogger( SqmDynamicInstantiation.class );
 
-	public static SqmDynamicInstantiation forClassInstantiation(
-			JavaTypeDescriptor targetJavaType,
+	public static <R> SqmDynamicInstantiation<R> forClassInstantiation(
+			JavaTypeDescriptor<R> targetJavaType,
 			NodeBuilder nodeBuilder) {
-		//noinspection unchecked
-		return new SqmDynamicInstantiation(
-				new DynamicInstantiationTargetImpl( CLASS, targetJavaType ),
+		return new SqmDynamicInstantiation<>(
+				new DynamicInstantiationTargetImpl<>( CLASS, targetJavaType ),
 				nodeBuilder
 		);
 	}
 
-	public static SqmDynamicInstantiation forClassInstantiation(
-			Class targetJavaType,
+	public static <R> SqmDynamicInstantiation<R> forClassInstantiation(
+			Class<R> targetJavaType,
 			NodeBuilder nodeBuilder) {
-		//noinspection unchecked
 		return forClassInstantiation(
 				nodeBuilder.getTypeConfiguration().getJavaTypeDescriptorRegistry().getDescriptor( targetJavaType ),
 				nodeBuilder
 		);
 	}
 
-	public static SqmDynamicInstantiation forMapInstantiation(
-			JavaTypeDescriptor<Map> mapJavaTypeDescriptor,
+	public static <M extends Map<?, ?>> SqmDynamicInstantiation<M> forMapInstantiation(
+			JavaTypeDescriptor<M> mapJavaTypeDescriptor,
 			NodeBuilder nodeBuilder) {
-		//noinspection unchecked
-		return new SqmDynamicInstantiation(
-				new DynamicInstantiationTargetImpl( MAP, mapJavaTypeDescriptor ),
+		return new SqmDynamicInstantiation<>(
+				new DynamicInstantiationTargetImpl<>( MAP, mapJavaTypeDescriptor ),
 				nodeBuilder
 		);
 	}
 
-	public static SqmDynamicInstantiation forMapInstantiation(NodeBuilder nodeBuilder) {
-		return forMapInstantiation(
+	public static <M extends Map<?, ?>> SqmDynamicInstantiation<M> forMapInstantiation(NodeBuilder nodeBuilder) {
+		//noinspection unchecked
+		return (SqmDynamicInstantiation<M>) (SqmDynamicInstantiation<?>) forMapInstantiation(
 				nodeBuilder.getTypeConfiguration().getJavaTypeDescriptorRegistry().getDescriptor( Map.class ),
 				nodeBuilder
 		);
 	}
 
-	public static SqmDynamicInstantiation forListInstantiation(
-			JavaTypeDescriptor<List> listJavaTypeDescriptor,
+	public static <L extends List<?>> SqmDynamicInstantiation<L> forListInstantiation(
+			JavaTypeDescriptor<L> listJavaTypeDescriptor,
 			NodeBuilder nodeBuilder) {
-		//noinspection unchecked
-		return new SqmDynamicInstantiation(
-				new DynamicInstantiationTargetImpl( LIST, listJavaTypeDescriptor ),
+		return new SqmDynamicInstantiation<>(
+				new DynamicInstantiationTargetImpl<>( LIST, listJavaTypeDescriptor ),
 				nodeBuilder
 		);
 	}
 
-	public static SqmDynamicInstantiation forListInstantiation(NodeBuilder nodeBuilder) {
-		return forListInstantiation(
+	public static <L extends List<?>> SqmDynamicInstantiation<L> forListInstantiation(NodeBuilder nodeBuilder) {
+		//noinspection unchecked
+		return (SqmDynamicInstantiation<L>) (SqmDynamicInstantiation<?>) forListInstantiation(
 				nodeBuilder.getTypeConfiguration().getJavaTypeDescriptorRegistry().getDescriptor( List.class ),
 				nodeBuilder
 		);
 	}
 
-	private final SqmDynamicInstantiationTarget <T>instantiationTarget;
+	private final SqmDynamicInstantiationTarget <T> instantiationTarget;
 	private List<SqmDynamicInstantiationArgument<?>> arguments;
 
 	private SqmDynamicInstantiation(
@@ -123,7 +121,7 @@ public class SqmDynamicInstantiation<T>
 		return "<new " + instantiationTarget.getJavaType().getName() + ">";
 	}
 
-	public void addArgument(SqmDynamicInstantiationArgument argument) {
+	public void addArgument(SqmDynamicInstantiationArgument<?> argument) {
 		if ( instantiationTarget.getNature() == LIST ) {
 			// really should not have an alias...
 			if ( argument.getAlias() != null && log.isDebugEnabled() ) {
@@ -153,8 +151,8 @@ public class SqmDynamicInstantiation<T>
 	}
 
 	@Override
-	public SqmDynamicInstantiationArgument add(SqmExpression<?> expression, String alias) {
-		final SqmDynamicInstantiationArgument argument = new SqmDynamicInstantiationArgument<>(
+	public SqmDynamicInstantiationArgument<?> add(SqmExpression<?> expression, String alias) {
+		final SqmDynamicInstantiationArgument<?> argument = new SqmDynamicInstantiationArgument<>(
 				expression,
 				alias,
 				nodeBuilder()
@@ -164,7 +162,7 @@ public class SqmDynamicInstantiation<T>
 	}
 
 	@Override
-	public void add(SqmDynamicInstantiationArgument aliasExpression) {
+	public void add(SqmDynamicInstantiationArgument<?> aliasExpression) {
 		addArgument( aliasExpression );
 	}
 
@@ -210,7 +208,7 @@ public class SqmDynamicInstantiation<T>
 
 	@Override
 	public void visitSubSelectableNodes(Consumer<SqmSelectableNode<?>> consumer) {
-		for ( SqmDynamicInstantiationArgument argument : arguments ) {
+		for ( SqmDynamicInstantiationArgument<?> argument : arguments ) {
 			consumer.accept( argument.getSelectableNode() );
 		}
 	}

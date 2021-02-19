@@ -13,6 +13,31 @@ public class ReSaveReferencedDeletedEntityJPA extends BaseEntityManagerFunctiona
     }
 
     @Test
+    public void testRefreshUnDeletedEntityWithReferencesJPA() {
+        EntityManager em = getOrCreateEntityManager();
+        em.getTransaction().begin();
+
+        Parent parent = new Parent();
+        parent.setId(1);
+
+        Child child = new Child();
+        child.setId(2);
+        parent.setChild( child );
+
+        em.unwrap(Session.class).save( parent );
+
+        em.flush();
+
+        em.remove( parent );
+
+        em.detach( parent );
+
+        em.persist( parent );
+
+        em.refresh( child );
+    }
+
+    @Test
     public void testReSaveDeletedEntityWithReferencesJPA() {
         EntityManager em = getOrCreateEntityManager();
         em.getTransaction().begin();

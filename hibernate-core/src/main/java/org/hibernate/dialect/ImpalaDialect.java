@@ -363,11 +363,6 @@ public class ImpalaDialect extends Dialect {
     }
 
     @Override
-    public String getQuerySequencesString() {
-        return "select * from information_schema.sequences";
-    }
-
-    @Override
     public SequenceInformationExtractor getSequenceInformationExtractor() {
         return SequenceInformationExtractorHSQLDBDatabaseImpl.INSTANCE;
     }

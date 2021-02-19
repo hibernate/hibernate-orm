@@ -559,6 +559,20 @@ public enum Database {
 		public Dialect resolveDialect(DialectResolutionInfo info) {
 			return null;
 		}
+	}, IMPALA {
+		@Override
+		public Class<? extends Dialect> latestDialect() {
+			return ImpalaDialect.class;
+		}
+
+		@Override
+		public Dialect resolveDialect(DialectResolutionInfo info) {
+			final String databaseName = info.getDatabaseName();
+			if("Impala".equals(databaseName)) {
+				return latestDialectInstance(this);
+			}
+			return null;
+		}
 	};
 
 	public abstract Class<? extends Dialect> latestDialect();

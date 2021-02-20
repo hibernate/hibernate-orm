@@ -31,9 +31,9 @@ import org.hibernate.type.Type;
  * @see java.util.HashMap
  * @author Gavin King
  */
-public class PersistentMap extends AbstractPersistentCollection implements Map {
+public class PersistentMap<K,E> extends AbstractPersistentCollection<E> implements Map<K,E> {
 
-	protected Map map;
+	protected Map<K,E> map;
 
 	/**
 	 * Empty constructor.
@@ -72,7 +72,7 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 	 * @param session The session to which this map will belong.
 	 * @param map The underlying map data.
 	 */
-	public PersistentMap(SharedSessionContractImplementor session, Map map) {
+	public PersistentMap(SharedSessionContractImplementor session, Map<K,E> map) {
 		super( session );
 		this.map = map;
 		setInitialized();
@@ -88,45 +88,42 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 	 * @deprecated {@link #PersistentMap(SharedSessionContractImplementor, Map)} should be used instead.
 	 */
 	@Deprecated
-	public PersistentMap(SessionImplementor session, Map map) {
+	public PersistentMap(SessionImplementor session, Map<K,E> map) {
 		this( (SharedSessionContractImplementor) session, map );
 	}
 
 	@Override
-	@SuppressWarnings( {"unchecked"})
 	public Serializable getSnapshot(CollectionPersister persister) throws HibernateException {
-		final HashMap clonedMap = CollectionHelper.mapOfSize( map.size() );
-		for ( Object o : map.entrySet() ) {
-			final Entry e = (Entry) o;
-			final Object copy = persister.getElementType().deepCopy( e.getValue(), persister.getFactory() );
+		final HashMap<K,E> clonedMap = CollectionHelper.mapOfSize( map.size() );
+		for ( Entry<K,E> e : map.entrySet() ) {
+			final E copy = (E) persister.getElementType().deepCopy( e.getValue(), persister.getFactory() );
 			clonedMap.put( e.getKey(), copy );
 		}
 		return clonedMap;
 	}
 
 	@Override
-	public Collection getOrphans(Serializable snapshot, String entityName) throws HibernateException {
-		final Map sn = (Map) snapshot;
+	public Collection<E> getOrphans(Serializable snapshot, String entityName) throws HibernateException {
+		final Map<K,E> sn = (Map<K,E>) snapshot;
 		return getOrphans( sn.values(), map.values(), entityName, getSession() );
 	}
 
 	@Override
 	public void initializeEmptyCollection(CollectionPersister persister) {
 		assert map == null;
-		map = (Map) persister.getCollectionType().instantiate( 0 );
+		map = (Map<K,E>) persister.getCollectionType().instantiate( 0 );
 		endRead();
 	}
 
 	@Override
 	public boolean equalsSnapshot(CollectionPersister persister) throws HibernateException {
 		final Type elementType = persister.getElementType();
-		final Map snapshotMap = (Map) getSnapshot();
+		final Map<?,?> snapshotMap = (Map<?,?>) getSnapshot();
 		if ( snapshotMap.size() != this.map.size() ) {
 			return false;
 		}
 
-		for ( Object o : map.entrySet() ) {
-			final Entry entry = (Entry) o;
+		for ( Entry<?,?> entry : map.entrySet() ) {
 			if ( elementType.isDirty( entry.getValue(), snapshotMap.get( entry.getKey() ), getSession() ) ) {
 				return false;
 			}
@@ -136,7 +133,7 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 
 	@Override
 	public boolean isSnapshotEmpty(Serializable snapshot) {
-		return ( (Map) snapshot ).isEmpty();
+		return ( (Map<?,?>) snapshot ).isEmpty();
 	}
 
 	@Override
@@ -169,25 +166,24 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 	}
 
 	@Override
-	public Object get(Object key) {
+	public E get(Object key) {
 		final Object result = readElementByIndex( key );
 		return result == UNKNOWN
 				? map.get( key )
-				: result;
+				: (E) result;
 	}
 
 	@Override
-	public Object put(Object key, Object value) {
+	public E put(K key, E value) {
 		if ( isPutQueueEnabled() ) {
 			final Object old = readElementByIndex( key );
 			if ( old != UNKNOWN ) {
-				queueOperation( new Put( key, value, old ) );
-				return old;
+				queueOperation( new Put( key, value, (E) old ) );
+				return (E) old;
 			}
 		}
 		initialize( true );
-		//noinspection unchecked
-		final Object old = map.put( key, value );
+		final E old = map.put( key, value );
 		// would be better to use the element-type to determine
 		// whether the old and the new are equal here; the problem being
 		// we do not necessarily have access to the element type in all
@@ -199,13 +195,13 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 	}
 
 	@Override
-	public Object remove(Object key) {
+	public E remove(Object key) {
 		if ( isPutQueueEnabled() ) {
 			final Object old = readElementByIndex( key );
 			if ( old != UNKNOWN ) {
 				elementRemoved = true;
-				queueOperation( new Remove( key, old ) );
-				return old;
+				queueOperation( new Remove( (K) key, (E) old ) );
+				return (E) old;
 			}
 		}
 		// TODO : safe to interpret "map.remove(key) == null" as non-dirty?
@@ -218,11 +214,10 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 	}
 
 	@Override
-	public void putAll(Map puts) {
+	public void putAll(Map<? extends K,? extends E> puts) {
 		if ( puts.size() > 0 ) {
 			initialize( true );
-			for ( Object o : puts.entrySet() ) {
-				final Entry entry = (Entry) o;
+			for ( Entry<? extends K,? extends E> entry : puts.entrySet() ) {
 				put( entry.getKey(), entry.getValue() );
 			}
 		}
@@ -243,19 +238,19 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 	}
 
 	@Override
-	public Set keySet() {
+	public Set<K> keySet() {
 		read();
-		return new SetProxy( map.keySet() );
+		return new SetProxy<>( map.keySet() );
 	}
 
 	@Override
-	public Collection values() {
+	public Collection<E> values() {
 		read();
-		return new SetProxy( map.values() );
+		return new SetProxy<>( map.values() );
 	}
 
 	@Override
-	public Set entrySet() {
+	public Set<Entry<K,E>> entrySet() {
 		read();
 		return new EntrySetProxy( map.entrySet() );
 	}
@@ -272,37 +267,35 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 	}
 
 	@Override
-	public Iterator entries(CollectionPersister persister) {
+	public Iterator<Entry<K,E>> entries(CollectionPersister persister) {
 		return map.entrySet().iterator();
 	}
 
-	public void injectLoadedState(PluralAttributeMapping attributeMapping, List loadingState) {
+	public void injectLoadedState(PluralAttributeMapping attributeMapping, List<?> loadingState) {
 		assert isInitializing();
 		assert map == null;
 
 		final CollectionPersister collectionDescriptor = attributeMapping.getCollectionDescriptor();
-		this.map = (Map) collectionDescriptor.getCollectionSemantics().instantiateRaw( loadingState.size(), collectionDescriptor );
+		this.map = (Map<K,E>) collectionDescriptor.getCollectionSemantics().instantiateRaw( loadingState.size(), collectionDescriptor );
 
 		for ( int i = 0; i < loadingState.size(); i++ ) {
 			final Object[] keyVal = (Object[]) loadingState.get( i );
-			//noinspection unchecked
-			map.put( keyVal[0], keyVal[1] );
+			map.put( (K) keyVal[0], (E) keyVal[1] );
 		}
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public void initializeFromCache(CollectionPersister persister, Object disassembled, Object owner)
 			throws HibernateException {
 		final Serializable[] array = (Serializable[]) disassembled;
 		final int size = array.length;
 
-		this.map = (Map) persister.getCollectionSemantics().instantiateRaw( size, persister );
+		this.map = (Map<K,E>) persister.getCollectionSemantics().instantiateRaw( size, persister );
 
 		for ( int i = 0; i < size; i+=2 ) {
 			map.put(
-					persister.getIndexType().assemble( array[i], getSession(), owner ),
-					persister.getElementType().assemble( array[i+1], getSession(), owner )
+					(K) persister.getIndexType().assemble( array[i], getSession(), owner ),
+					(E) persister.getElementType().assemble( array[i+1], getSession(), owner )
 			);
 		}
 	}
@@ -310,10 +303,10 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 	@Override
 	public Object disassemble(CollectionPersister persister) throws HibernateException {
 		final Object[] result = new Object[ map.size() * 2 ];
-		final Iterator itr = map.entrySet().iterator();
+		final Iterator<Entry<K,E>> itr = map.entrySet().iterator();
 		int i=0;
 		while ( itr.hasNext() ) {
-			final Map.Entry e = (Map.Entry) itr.next();
+			final Map.Entry<K,E> e = itr.next();
 			result[i++] = persister.getIndexType().disassemble( e.getKey(), getSession(), null );
 			result[i++] = persister.getElementType().disassemble( e.getValue(), getSession(), null );
 		}
@@ -324,80 +317,69 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 	/**
 	 * a wrapper for Map.Entry sets
 	 */
-	class EntrySetProxy implements Set {
-		private final Set set;
-		EntrySetProxy(Set set) {
+	class EntrySetProxy implements Set<Entry<K,E>> {
+		private final Set<Entry<K,E>> set;
+		EntrySetProxy(Set<Entry<K,E>> set) {
 			this.set=set;
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
-		public boolean add(Object entry) {
+		public boolean add(Entry<K,E> entry) {
 			//write(); -- doesn't
 			return set.add( entry );
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
-		public boolean addAll(Collection entries) {
+		public boolean addAll(Collection<? extends Entry<K,E>> entries) {
 			//write(); -- doesn't
 			return set.addAll( entries );
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public void clear() {
 			write();
 			set.clear();
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public boolean contains(Object entry) {
 			return set.contains( entry );
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
-		public boolean containsAll(Collection entries) {
+		public boolean containsAll(Collection<?> entries) {
 			return set.containsAll( entries );
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public boolean isEmpty() {
 			return set.isEmpty();
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
-		public Iterator iterator() {
+		public Iterator<Entry<K,E>> iterator() {
 			return new EntryIteratorProxy( set.iterator() );
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public boolean remove(Object entry) {
 			write();
 			return set.remove( entry );
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
-		public boolean removeAll(Collection entries) {
+		public boolean removeAll(Collection<?> entries) {
 			write();
 			return set.removeAll( entries );
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
-		public boolean retainAll(Collection entries) {
+		public boolean retainAll(Collection<?> entries) {
 			write();
 			return set.retainAll( entries );
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public int size() {
 			return set.size();
 		}
@@ -406,89 +388,78 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 		// uses iterator() to fill the array
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public Object[] toArray() {
 			return set.toArray();
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
-		public Object[] toArray(Object[] array) {
+		public <A> A[] toArray(A[] array) {
 			return set.toArray( array );
 		}
 	}
 
-	final class EntryIteratorProxy implements Iterator {
-		private final Iterator iter;
-		EntryIteratorProxy(Iterator iter) {
+	final class EntryIteratorProxy implements Iterator<Entry<K,E>> {
+		private final Iterator<Entry<K,E>> iter;
+		EntryIteratorProxy(Iterator<Entry<K,E>> iter) {
 			this.iter=iter;
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public boolean hasNext() {
 			return iter.hasNext();
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
-		public Object next() {
-			return new MapEntryProxy( (Map.Entry) iter.next() );
+		public Entry<K,E> next() {
+			return new MapEntryProxy( iter.next() );
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public void remove() {
 			write();
 			iter.remove();
 		}
 	}
 
-	final class MapEntryProxy implements Map.Entry {
-		private final Map.Entry me;
-		MapEntryProxy( Map.Entry me ) {
+	final class MapEntryProxy implements Map.Entry<K,E> {
+		private final Map.Entry<K,E> me;
+		MapEntryProxy(Map.Entry<K,E> me) {
 			this.me = me;
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
-		public Object getKey() {
+		public K getKey() {
 			return me.getKey();
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
-		public Object getValue() {
+		public E getValue() {
 			return me.getValue();
 		}
 
 		@Override
-		@SuppressWarnings({"unchecked", "EqualsWhichDoesntCheckParameterClass"})
+		@SuppressWarnings("EqualsWhichDoesntCheckParameterClass")
 		public boolean equals(Object o) {
 			return me.equals( o );
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public int hashCode() {
 			return me.hashCode();
 		}
 
 		// finally, what it's all about...
 		@Override
-		@SuppressWarnings("unchecked")
-		public Object setValue(Object value) {
+		public E setValue(E value) {
 			write();
 			return me.setValue( value );
 		}
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public Iterator getDeletes(CollectionPersister persister, boolean indexIsFormula) throws HibernateException {
-		final List deletes = new ArrayList();
-		for ( Object o : ((Map) getSnapshot()).entrySet() ) {
-			final Entry e = (Entry) o;
+	public Iterator<?> getDeletes(CollectionPersister persister, boolean indexIsFormula) throws HibernateException {
+		final List<Object> deletes = new ArrayList<>();
+		for ( Entry<?,?> e : ((Map<?,?>) getSnapshot()).entrySet() ) {
 			final Object key = e.getKey();
 			if ( e.getValue() != null && map.get( key ) == null ) {
 				deletes.add( indexIsFormula ? e.getValue() : key );
@@ -498,18 +469,16 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public boolean needsInserting(Object entry, int i, Type elemType) throws HibernateException {
-		final Map sn = (Map) getSnapshot();
-		final Map.Entry e = (Map.Entry) entry;
+		final Map<?,?> sn = (Map<?,?>) getSnapshot();
+		final Map.Entry<?,?> e = (Map.Entry<?,?>) entry;
 		return e.getValue() != null && sn.get( e.getKey() ) == null;
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public boolean needsUpdating(Object entry, int i, Type elemType) throws HibernateException {
-		final Map sn = (Map) getSnapshot();
-		final Map.Entry e = (Map.Entry) entry;
+		final Map<?,?> sn = (Map<?,?>) getSnapshot();
+		final Map.Entry<?,?> e = (Map.Entry<?,?>) entry;
 		final Object snValue = sn.get( e.getKey() );
 		return e.getValue() != null
 				&& snValue != null
@@ -517,82 +486,76 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Object getIndex(Object entry, int i, CollectionPersister persister) {
-		return ( (Map.Entry) entry ).getKey();
+		return ( (Map.Entry<?,?>) entry ).getKey();
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Object getElement(Object entry) {
-		return ( (Map.Entry) entry ).getValue();
+		return ( (Map.Entry<?,?>) entry ).getValue();
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Object getSnapshotElement(Object entry, int i) {
-		final Map sn = (Map) getSnapshot();
-		return sn.get( ( (Map.Entry) entry ).getKey() );
+		final Map<?,?> sn = (Map<?,?>) getSnapshot();
+		return sn.get( ( (Map.Entry<?,?>) entry ).getKey() );
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked", "EqualsWhichDoesntCheckParameterClass"})
+	@SuppressWarnings("EqualsWhichDoesntCheckParameterClass")
 	public boolean equals(Object other) {
 		read();
 		return map.equals( other );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public int hashCode() {
 		read();
 		return map.hashCode();
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public boolean entryExists(Object entry, int i) {
-		return ( (Map.Entry) entry ).getValue() != null;
+		return ( (Map.Entry<?,?>) entry ).getValue() != null;
 	}
 
-	final class Clear implements DelayedOperation {
+	final class Clear implements DelayedOperation<E> {
 		@Override
 		public void operate() {
 			map.clear();
 		}
 
 		@Override
-		public Object getAddedInstance() {
+		public E getAddedInstance() {
 			return null;
 		}
 
 		@Override
-		public Object getOrphan() {
+		public E getOrphan() {
 			throw new UnsupportedOperationException( "queued clear cannot be used with orphan delete" );
 		}
 	}
 
 	abstract class AbstractMapValueDelayedOperation extends AbstractValueDelayedOperation {
-		private Object index;
+		private final K index;
 
-		protected AbstractMapValueDelayedOperation(Object index, Object addedValue, Object orphan) {
+		protected AbstractMapValueDelayedOperation(K index, E addedValue, E orphan) {
 			super( addedValue, orphan );
 			this.index = index;
 		}
 
-		protected final Object getIndex() {
+		protected final K getIndex() {
 			return index;
 		}
 	}
 
 	final class Put extends AbstractMapValueDelayedOperation {
 
-		public Put(Object index, Object addedValue, Object orphan) {
+		public Put(K index, E addedValue, E orphan) {
 			super( index, addedValue, orphan );
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public void operate() {
 			map.put( getIndex(), getAddedInstance() );
 		}
@@ -600,12 +563,11 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 
 	final class Remove extends AbstractMapValueDelayedOperation {
 
-		public Remove(Object index, Object orphan) {
+		public Remove(K index, E orphan) {
 			super( index, null, orphan );
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public void operate() {
 			map.remove( getIndex() );
 		}

@@ -20,7 +20,6 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LazyInitializationException;
-import org.hibernate.Session;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.CollectionEntry;
@@ -54,7 +53,7 @@ import org.hibernate.type.UUIDCharType;
  *
  * @author Gavin King
  */
-public abstract class AbstractPersistentCollection implements Serializable, PersistentCollection {
+public abstract class AbstractPersistentCollection<E> implements Serializable, PersistentCollection<E> {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractPersistentCollection.class );
 
 	private transient SharedSessionContractImplementor session;
@@ -63,7 +62,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	private boolean initialized;
 	private transient boolean initializing;
 
-	private transient List<DelayedOperation> operationQueue;
+	private transient List<DelayedOperation<E>> operationQueue;
 	private transient boolean directlyAccessible;
 	private Object owner;
 	private int cachedSize = -1;
@@ -154,7 +153,6 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	/**
 	 * Called by the {@link Collection#size} method
 	 */
-	@SuppressWarnings({"JavaDoc"})
 	protected boolean readSize() {
 		if ( !initialized ) {
 			if ( cachedSize != -1 && !hasQueuedOperations() ) {
@@ -162,34 +160,29 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 			}
 			else {
 				final boolean isExtraLazy = withTemporarySessionIfNeeded(
-						new LazyInitializationWork<Boolean>() {
-							@Override
-							public Boolean doWork() {
-								final CollectionEntry entry = session.getPersistenceContextInternal().getCollectionEntry( AbstractPersistentCollection.this );
+						() -> {
+							final CollectionEntry entry = session.getPersistenceContextInternal().getCollectionEntry( AbstractPersistentCollection.this );
 
-								if ( entry != null ) {
-									final CollectionPersister persister = entry.getLoadedPersister();
-									if ( persister.isExtraLazy() ) {
-										if ( hasQueuedOperations() ) {
-											session.flush();
-										}
-										cachedSize = persister.getSize( entry.getLoadedKey(), session );
-										return true;
+							if ( entry != null ) {
+								final CollectionPersister persister = entry.getLoadedPersister();
+								if ( persister.isExtraLazy() ) {
+									if ( hasQueuedOperations() ) {
+										session.flush();
 									}
-									else {
-										read();
-									}
+									cachedSize = persister.getSize( entry.getLoadedKey(), session );
+									return true;
 								}
-								else{
-									throwLazyInitializationExceptionIfNotConnected();
+								else {
+									read();
 								}
-								return false;
 							}
+							else{
+								throwLazyInitializationExceptionIfNotConnected();
+							}
+							return false;
 						}
 				);
-				if ( isExtraLazy ) {
-					return true;
-				}
+				return isExtraLazy;
 			}
 		}
 		return false;
@@ -200,13 +193,13 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	 *
 	 * @param <T> The java type of the return for this LazyInitializationWork
 	 */
-	public static interface LazyInitializationWork<T> {
+	public interface LazyInitializationWork<T> {
 		/**
 		 * Do the represented work and return the result.
 		 *
 		 * @return The result
 		 */
-		public T doWork();
+		T doWork();
 	}
 
 	private <T> T withTemporarySessionIfNeeded(LazyInitializationWork<T> lazyInitializationWork) {
@@ -299,22 +292,19 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	protected Boolean readIndexExistence(final Object index) {
 		if ( !initialized ) {
 			final Boolean extraLazyExistenceCheck = withTemporarySessionIfNeeded(
-					new LazyInitializationWork<Boolean>() {
-						@Override
-						public Boolean doWork() {
-							final CollectionEntry entry = session.getPersistenceContextInternal().getCollectionEntry( AbstractPersistentCollection.this );
-							final CollectionPersister persister = entry.getLoadedPersister();
-							if ( persister.isExtraLazy() ) {
-								if ( hasQueuedOperations() ) {
-									session.flush();
-								}
-								return persister.indexExists( entry.getLoadedKey(), index, session );
+					() -> {
+						final CollectionEntry entry = session.getPersistenceContextInternal().getCollectionEntry( AbstractPersistentCollection.this );
+						final CollectionPersister persister = entry.getLoadedPersister();
+						if ( persister.isExtraLazy() ) {
+							if ( hasQueuedOperations() ) {
+								session.flush();
 							}
-							else {
-								read();
-							}
-							return null;
+							return persister.indexExists( entry.getLoadedKey(), index, session );
 						}
+						else {
+							read();
+						}
+						return null;
 					}
 			);
 			if ( extraLazyExistenceCheck != null ) {
@@ -327,22 +317,19 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	protected Boolean readElementExistence(final Object element) {
 		if ( !initialized ) {
 			final Boolean extraLazyExistenceCheck = withTemporarySessionIfNeeded(
-					new LazyInitializationWork<Boolean>() {
-						@Override
-						public Boolean doWork() {
-							final CollectionEntry entry = session.getPersistenceContextInternal().getCollectionEntry( AbstractPersistentCollection.this );
-							final CollectionPersister persister = entry.getLoadedPersister();
-							if ( persister.isExtraLazy() ) {
-								if ( hasQueuedOperations() ) {
-									session.flush();
-								}
-								return persister.elementExists( entry.getLoadedKey(), element, session );
+					() -> {
+						final CollectionEntry entry = session.getPersistenceContextInternal().getCollectionEntry( AbstractPersistentCollection.this );
+						final CollectionPersister persister = entry.getLoadedPersister();
+						if ( persister.isExtraLazy() ) {
+							if ( hasQueuedOperations() ) {
+								session.flush();
 							}
-							else {
-								read();
-							}
-							return null;
+							return persister.elementExists( entry.getLoadedKey(), element, session );
 						}
+						else {
+							read();
+						}
+						return null;
 					}
 			);
 			if ( extraLazyExistenceCheck != null ) {
@@ -356,7 +343,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 
 	protected Object readElementByIndex(final Object index) {
 		if ( !initialized ) {
-			class ExtraLazyElementByIndexReader implements LazyInitializationWork {
+			class ExtraLazyElementByIndexReader implements LazyInitializationWork<Object> {
 				private boolean isExtraLazy;
 				private Object element;
 
@@ -379,7 +366,6 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 			}
 
 			final ExtraLazyElementByIndexReader reader = new ExtraLazyElementByIndexReader();
-			//noinspection unchecked
 			withTemporarySessionIfNeeded( reader );
 			if ( reader.isExtraLazy ) {
 				return reader.element;
@@ -415,7 +401,6 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	 * Is this collection in a state that would allow us to
 	 * "queue" operations?
 	 */
-	@SuppressWarnings({"JavaDoc"})
 	protected boolean isOperationQueueEnabled() {
 		return !initialized
 				&& isConnectedToSession()
@@ -427,7 +412,6 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	 * "queue" puts? This is a special case, because of orphan
 	 * delete.
 	 */
-	@SuppressWarnings({"JavaDoc"})
 	protected boolean isPutQueueEnabled() {
 		return !initialized
 				&& isConnectedToSession()
@@ -439,7 +423,6 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	 * "queue" clear? This is a special case, because of orphan
 	 * delete.
 	 */
-	@SuppressWarnings({"JavaDoc"})
 	protected boolean isClearQueueEnabled() {
 		return !initialized
 				&& isConnectedToSession()
@@ -449,7 +432,6 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	/**
 	 * Is this the "inverse" end of a bidirectional association?
 	 */
-	@SuppressWarnings({"JavaDoc"})
 	protected boolean isInverseCollection() {
 		final CollectionEntry ce = session.getPersistenceContextInternal().getCollectionEntry( this );
 		return ce != null && ce.getLoadedPersister().isInverse();
@@ -459,7 +441,6 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	 * Is this the "inverse" end of a bidirectional association with
 	 * no orphan delete enabled?
 	 */
-	@SuppressWarnings({"JavaDoc"})
 	protected boolean isInverseCollectionNoOrphanDelete() {
 		final CollectionEntry ce = session.getPersistenceContextInternal().getCollectionEntry( this );
 		if ( ce == null ) {
@@ -473,7 +454,6 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	 * Is this the "inverse" end of a bidirectional one-to-many, or
 	 * of a collection with no orphan delete?
 	 */
-	@SuppressWarnings({"JavaDoc"})
 	protected boolean isInverseOneToManyOrNoOrphanDelete() {
 		final CollectionEntry ce = session.getPersistenceContextInternal().getCollectionEntry( this );
 		if ( ce == null ) {
@@ -486,8 +466,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	/**
 	 * Queue an addition
 	 */
-	@SuppressWarnings({"JavaDoc"})
-	protected final void queueOperation(DelayedOperation operation) {
+	protected final void queueOperation(DelayedOperation<E> operation) {
 		if ( operationQueue == null ) {
 			operationQueue = new ArrayList<>( 10 );
 		}
@@ -503,9 +482,9 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	 *                    merged to managed copy.
 	 */
 	public final void replaceQueuedOperationValues(CollectionPersister persister, Map copyCache) {
-		for ( DelayedOperation operation : operationQueue ) {
+		for ( DelayedOperation<?> operation : operationQueue ) {
 			if ( ValueDelayedOperation.class.isInstance( operation ) ) {
-				( (ValueDelayedOperation) operation ).replace( persister, copyCache );
+				( (ValueDelayedOperation<?>) operation ).replace( persister, copyCache );
 			}
 		}
 	}
@@ -515,7 +494,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	 * add the queued elements to the underlying collection.
 	 */
 	protected final void performQueuedOperations() {
-		for ( DelayedOperation operation : operationQueue ) {
+		for ( DelayedOperation<?> operation : operationQueue ) {
 			operation.operate();
 		}
 		clearOperationQueue();
@@ -588,12 +567,9 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		}
 
 		withTemporarySessionIfNeeded(
-				new LazyInitializationWork<Object>() {
-					@Override
-					public Object doWork() {
-						session.initializeCollection( AbstractPersistentCollection.this, writing );
-						return null;
-					}
+				() -> {
+					session.initializeCollection( AbstractPersistentCollection.this, writing );
+					return null;
 				}
 		);
 	}
@@ -792,7 +768,6 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	/**
 	 * Get the current snapshot from the session
 	 */
-	@SuppressWarnings({"JavaDoc"})
 	protected final Serializable getSnapshot() {
 		return session.getPersistenceContext().getSnapshot( this );
 	}
@@ -813,13 +788,13 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	}
 
 	@Override
-	public final Iterator queuedAdditionIterator() {
+	public final Iterator<E> queuedAdditionIterator() {
 		if ( hasQueuedOperations() ) {
-			return new Iterator() {
+			return new Iterator<E>() {
 				private int index;
 
 				@Override
-				public Object next() {
+				public E next() {
 					return operationQueue.get( index++ ).getAddedInstance();
 				}
 
@@ -840,19 +815,18 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked"})
-	public final Collection getQueuedOrphans(String entityName) {
+	public final Collection<E> getQueuedOrphans(String entityName) {
 		if ( hasQueuedOperations() ) {
-			final Collection additions = new ArrayList( operationQueue.size() );
-			final Collection removals = new ArrayList( operationQueue.size() );
-			for ( DelayedOperation operation : operationQueue ) {
+			final Collection<E> additions = new ArrayList<>( operationQueue.size() );
+			final Collection<E> removals = new ArrayList<>( operationQueue.size() );
+			for ( DelayedOperation<E> operation : operationQueue ) {
 				additions.add( operation.getAddedInstance() );
 				removals.add( operation.getOrphan() );
 			}
 			return getOrphans( removals, additions, entityName, session );
 		}
 		else {
-			return Collections.EMPTY_LIST;
+			return Collections.emptyList();
 		}
 	}
 
@@ -865,7 +839,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	}
 
 	@Override
-	public abstract Collection getOrphans(Serializable snapshot, String entityName) throws HibernateException;
+	public abstract Collection<E> getOrphans(Serializable snapshot, String entityName) throws HibernateException;
 
 	/**
 	 * Get the session currently associated with this collection.
@@ -876,10 +850,10 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		return session;
 	}
 
-	protected final class IteratorProxy implements Iterator {
-		protected final Iterator itr;
+	protected final class IteratorProxy<E> implements Iterator<E> {
+		protected final Iterator<E> itr;
 
-		public IteratorProxy(Iterator itr) {
+		public IteratorProxy(Iterator<E> itr) {
 			this.itr = itr;
 		}
 
@@ -889,7 +863,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		}
 
 		@Override
-		public Object next() {
+		public E next() {
 			return itr.next();
 		}
 
@@ -900,16 +874,15 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		}
 	}
 
-	protected final class ListIteratorProxy implements ListIterator {
-		protected final ListIterator itr;
+	protected final class ListIteratorProxy implements ListIterator<E> {
+		protected final ListIterator<E> itr;
 
-		public ListIteratorProxy(ListIterator itr) {
+		public ListIteratorProxy(ListIterator<E> itr) {
 			this.itr = itr;
 		}
 
 		@Override
-		@SuppressWarnings({"unchecked"})
-		public void add(Object o) {
+		public void add(E o) {
 			write();
 			itr.add( o );
 		}
@@ -925,7 +898,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		}
 
 		@Override
-		public Object next() {
+		public E next() {
 			return itr.next();
 		}
 
@@ -935,7 +908,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		}
 
 		@Override
-		public Object previous() {
+		public E previous() {
 			return itr.previous();
 		}
 
@@ -951,30 +924,27 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		}
 
 		@Override
-		@SuppressWarnings({"unchecked"})
-		public void set(Object o) {
+		public void set(E o) {
 			write();
 			itr.set( o );
 		}
 	}
 
-	protected class SetProxy implements java.util.Set {
-		protected final Collection set;
+	protected class SetProxy<E> implements java.util.Set<E> {
+		protected final Collection<E> set;
 
-		public SetProxy(Collection set) {
+		public SetProxy(Collection<E> set) {
 			this.set = set;
 		}
 
 		@Override
-		@SuppressWarnings({"unchecked"})
-		public boolean add(Object o) {
+		public boolean add(E o) {
 			write();
 			return set.add( o );
 		}
 
 		@Override
-		@SuppressWarnings({"unchecked"})
-		public boolean addAll(Collection c) {
+		public boolean addAll(Collection<? extends E> c) {
 			write();
 			return set.addAll( c );
 		}
@@ -991,8 +961,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
-		public boolean containsAll(Collection c) {
+		public boolean containsAll(Collection<?> c) {
 			return set.containsAll( c );
 		}
 
@@ -1002,8 +971,8 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		}
 
 		@Override
-		public Iterator iterator() {
-			return new IteratorProxy( set.iterator() );
+		public Iterator<E> iterator() {
+			return new IteratorProxy<>( set.iterator() );
 		}
 
 		@Override
@@ -1013,15 +982,13 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
-		public boolean removeAll(Collection c) {
+		public boolean removeAll(Collection<?> c) {
 			write();
 			return set.removeAll( c );
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
-		public boolean retainAll(Collection c) {
+		public boolean retainAll(Collection<?> c) {
 			write();
 			return set.retainAll( c );
 		}
@@ -1037,43 +1004,38 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		}
 
 		@Override
-		@SuppressWarnings({"unchecked"})
-		public Object[] toArray(Object[] array) {
+		public <A> A[] toArray(A[] array) {
 			return set.toArray( array );
 		}
 	}
 
-	protected final class ListProxy implements java.util.List {
-		protected final List list;
+	protected final class ListProxy implements java.util.List<E> {
+		protected final List<E> list;
 
-		public ListProxy(List list) {
+		public ListProxy(List<E> list) {
 			this.list = list;
 		}
 
 		@Override
-		@SuppressWarnings({"unchecked"})
-		public void add(int index, Object value) {
+		public void add(int index, E value) {
 			write();
 			list.add( index, value );
 		}
 
 		@Override
-		@SuppressWarnings({"unchecked"})
-		public boolean add(Object o) {
+		public boolean add(E o) {
 			write();
 			return list.add( o );
 		}
 
 		@Override
-		@SuppressWarnings({"unchecked"})
-		public boolean addAll(Collection c) {
+		public boolean addAll(Collection<? extends E> c) {
 			write();
 			return list.addAll( c );
 		}
 
 		@Override
-		@SuppressWarnings({"unchecked"})
-		public boolean addAll(int i, Collection c) {
+		public boolean addAll(int i, Collection<? extends E> c) {
 			write();
 			return list.addAll( i, c );
 		}
@@ -1090,13 +1052,12 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
-		public boolean containsAll(Collection c) {
+		public boolean containsAll(Collection<?> c) {
 			return list.containsAll( c );
 		}
 
 		@Override
-		public Object get(int i) {
+		public E get(int i) {
 			return list.get( i );
 		}
 
@@ -1111,8 +1072,8 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		}
 
 		@Override
-		public Iterator iterator() {
-			return new IteratorProxy( list.iterator() );
+		public Iterator<E> iterator() {
+			return new IteratorProxy<>( list.iterator() );
 		}
 
 		@Override
@@ -1121,17 +1082,17 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		}
 
 		@Override
-		public ListIterator listIterator() {
+		public ListIterator<E> listIterator() {
 			return new ListIteratorProxy( list.listIterator() );
 		}
 
 		@Override
-		public ListIterator listIterator(int i) {
+		public ListIterator<E> listIterator(int i) {
 			return new ListIteratorProxy( list.listIterator( i ) );
 		}
 
 		@Override
-		public Object remove(int i) {
+		public E remove(int i) {
 			write();
 			return list.remove( i );
 		}
@@ -1143,22 +1104,19 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
-		public boolean removeAll(Collection c) {
+		public boolean removeAll(Collection<?> c) {
 			write();
 			return list.removeAll( c );
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
-		public boolean retainAll(Collection c) {
+		public boolean retainAll(Collection<?> c) {
 			write();
 			return list.retainAll( c );
 		}
 
 		@Override
-		@SuppressWarnings({"unchecked"})
-		public Object set(int i, Object o) {
+		public E set(int i, E o) {
 			write();
 			return list.set( i, o );
 		}
@@ -1169,7 +1127,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		}
 
 		@Override
-		public List subList(int i, int j) {
+		public List<E> subList(int i, int j) {
 			return list.subList( i, j );
 		}
 
@@ -1179,8 +1137,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		}
 
 		@Override
-		@SuppressWarnings({"unchecked"})
-		public Object[] toArray(Object[] array) {
+		public <A> A[] toArray(A[] array) {
 			return list.toArray( array );
 		}
 
@@ -1189,23 +1146,23 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	/**
 	 * Contract for operations which are part of a collection's operation queue.
 	 */
-	protected interface DelayedOperation {
-		public void operate();
+	protected interface DelayedOperation<E> {
+		void operate();
 
-		public Object getAddedInstance();
+		E getAddedInstance();
 
-		public Object getOrphan();
+		E getOrphan();
 	}
 
-	protected interface ValueDelayedOperation extends DelayedOperation {
+	protected interface ValueDelayedOperation<E> extends DelayedOperation<E> {
 		void replace(CollectionPersister collectionPersister, Map copyCache);
 	}
 
-	protected abstract class AbstractValueDelayedOperation implements ValueDelayedOperation {
-		private Object addedValue;
-		private Object orphan;
+	protected abstract class AbstractValueDelayedOperation implements ValueDelayedOperation<E> {
+		private E addedValue;
+		private E orphan;
 
-		protected AbstractValueDelayedOperation(Object addedValue, Object orphan) {
+		protected AbstractValueDelayedOperation(E addedValue, E orphan) {
 			this.addedValue = addedValue;
 			this.orphan = orphan;
 		}
@@ -1216,17 +1173,17 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 			}
 		}
 
-		protected final Object getReplacement(Type type, Object current, Map copyCache) {
-			return type.replace( current, null, session, owner, copyCache );
+		protected final E getReplacement(Type type, Object current, Map copyCache) {
+			return (E) type.replace( current, null, session, owner, copyCache );
 		}
 
 		@Override
-		public final Object getAddedInstance() {
+		public final E getAddedInstance() {
 			return addedValue;
 		}
 
 		@Override
-		public final Object getOrphan() {
+		public final E getOrphan() {
 			return orphan;
 		}
 	}
@@ -1236,10 +1193,9 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	 * belong to the collection, and a collection of instances
 	 * that currently belong, return a collection of orphans
 	 */
-	@SuppressWarnings({"JavaDoc", "unchecked"})
-	protected static Collection getOrphans(
-			Collection oldElements,
-			Collection currentElements,
+	protected static <E> Collection<E> getOrphans(
+			Collection<E> oldElements,
+			Collection<E> currentElements,
 			String entityName,
 			SharedSessionContractImplementor session) throws HibernateException {
 
@@ -1258,11 +1214,11 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		final boolean useIdDirect = mayUseIdDirect( idType );
 
 		// create the collection holding the Orphans
-		final Collection res = new ArrayList();
+		final Collection<E> res = new ArrayList<>();
 
 		// collect EntityIdentifier(s) of the *current* elements - add them into a HashSet for fast access
-		final java.util.Set currentIds = new HashSet();
-		final java.util.Set currentSaving = new IdentitySet();
+		final java.util.Set<Object> currentIds = new HashSet<>();
+		final java.util.Set<Object> currentSaving = new IdentitySet<>();
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		for ( Object current : currentElements ) {
 			if ( current != null && ForeignKeys.isNotTransient( entityName, current, null, session ) ) {
@@ -1282,7 +1238,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		}
 
 		// iterate over the *old* list
-		for ( Object old : oldElements ) {
+		for ( E old : oldElements ) {
 			if ( !currentSaving.contains( old ) ) {
 				final Object oldId = ForeignKeys.getEntityIdentifierIfNotUnsaved( entityName, old, session );
 				if ( !currentIds.contains( useIdDirect ? oldId : new TypedValue( idType, oldId ) ) ) {
@@ -1312,7 +1268,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	 * @param session The session
 	 */
 	public static void identityRemove(
-			Collection list,
+			Collection<?> list,
 			Object entityInstance,
 			String entityName,
 			SharedSessionContractImplementor session) {
@@ -1322,7 +1278,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 			final Type idType = entityPersister.getIdentifierType();
 
 			final Object idOfCurrent = ForeignKeys.getEntityIdentifierIfNotUnsaved( entityName, entityInstance, session );
-			final Iterator itr = list.iterator();
+			final Iterator<?> itr = list.iterator();
 			while ( itr.hasNext() ) {
 				final Object idOfOld = ForeignKeys.getEntityIdentifierIfNotUnsaved( entityName, itr.next(), session );
 				if ( idType.isEqual( idOfCurrent, idOfOld, session.getFactory() ) ) {
@@ -1347,7 +1303,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	 */
 	@Deprecated
 	public static void identityRemove(
-			Collection list,
+			Collection<?> list,
 			Object entityInstance,
 			String entityName,
 			SessionImplementor session) {

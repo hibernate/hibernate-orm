@@ -1541,7 +1541,7 @@ public abstract class AbstractCollectionPersister
 		final Expectation expectation = Expectations.appropriateExpectation( getDeleteCheckStyle() );
 		try {
 			// delete all the deleted entries
-			Iterator deletes = collection.getDeletes( this, !deleteByIndex );
+			Iterator<?> deletes = collection.getDeletes( this, !deleteByIndex );
 			if ( deletes.hasNext() ) {
 				int offset = 1;
 				int count = 0;

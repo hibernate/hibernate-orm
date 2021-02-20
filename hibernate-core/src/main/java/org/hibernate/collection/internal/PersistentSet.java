@@ -30,8 +30,8 @@ import org.hibernate.type.Type;
  * @see java.util.HashSet
  * @author Gavin King
  */
-public class PersistentSet extends AbstractPersistentCollection implements java.util.Set {
-	protected Set set;
+public class PersistentSet<E> extends AbstractPersistentCollection<E> implements java.util.Set<E> {
+	protected Set<E> set;
 
 	/**
 	 * Empty constructor.
@@ -71,7 +71,7 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 	 * @param session The session to which this set will belong.
 	 * @param set The underlying set data.
 	 */
-	public PersistentSet(SharedSessionContractImplementor session, java.util.Set set) {
+	public PersistentSet(SharedSessionContractImplementor session, java.util.Set<E> set) {
 		super( session );
 		// Sets can be just a view of a part of another collection.
 		// do we need to copy it to be sure it won't be changing
@@ -91,38 +91,37 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 	 * @deprecated {@link #PersistentSet(SharedSessionContractImplementor, java.util.Set)} should be used instead.
 	 */
 	@Deprecated
-	public PersistentSet(SessionImplementor session, java.util.Set set) {
+	public PersistentSet(SessionImplementor session, java.util.Set<E> set) {
 		this( (SharedSessionContractImplementor) session, set );
 	}
 
 	@Override
-	@SuppressWarnings( {"unchecked"})
 	public Serializable getSnapshot(CollectionPersister persister) throws HibernateException {
-		final HashMap clonedSet = CollectionHelper.mapOfSize( set.size() );
-		for ( Object aSet : set ) {
-			final Object copied = persister.getElementType().deepCopy( aSet, persister.getFactory() );
+		final HashMap<E,E> clonedSet = CollectionHelper.mapOfSize( set.size() );
+		for ( E aSet : set ) {
+			final E copied = (E) persister.getElementType().deepCopy( aSet, persister.getFactory() );
 			clonedSet.put( copied, copied );
 		}
 		return clonedSet;
 	}
 
 	@Override
-	public Collection getOrphans(Serializable snapshot, String entityName) throws HibernateException {
-		final java.util.Map sn = (java.util.Map) snapshot;
+	public Collection<E> getOrphans(Serializable snapshot, String entityName) throws HibernateException {
+		final java.util.Map<E,E> sn = (java.util.Map<E,E>) snapshot;
 		return getOrphans( sn.keySet(), set, entityName, getSession() );
 	}
 
 	@Override
 	public void initializeEmptyCollection(CollectionPersister persister) {
 		assert set == null;
-		set = (Set) persister.getCollectionType().instantiate( 0 );
+		set = (Set<E>) persister.getCollectionType().instantiate( 0 );
 		endRead();
 	}
 
 	@Override
 	public boolean equalsSnapshot(CollectionPersister persister) throws HibernateException {
 		final Type elementType = persister.getElementType();
-		final java.util.Map sn = (java.util.Map) getSnapshot();
+		final java.util.Map<?,?> sn = (java.util.Map<?,?>) getSnapshot();
 		if ( sn.size()!=set.size() ) {
 			return false;
 		}
@@ -139,22 +138,21 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 
 	@Override
 	public boolean isSnapshotEmpty(Serializable snapshot) {
-		return ( (java.util.Map) snapshot ).isEmpty();
+		return ( (java.util.Map<?,?>) snapshot ).isEmpty();
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public void initializeFromCache(CollectionPersister persister, Object disassembled, Object owner)
 			throws HibernateException {
 		final Serializable[] array = (Serializable[]) disassembled;
 		final int size = array.length;
 
-		this.set = (Set) persister.getCollectionSemantics().instantiateRaw( size, persister );
+		this.set = (Set<E>) persister.getCollectionSemantics().instantiateRaw( size, persister );
 
 		for ( Serializable arrayElement : array ) {
 			final Object assembledArrayElement = persister.getElementType().assemble( arrayElement, getSession(), owner );
 			if ( assembledArrayElement != null ) {
-				set.add( assembledArrayElement );
+				set.add( (E) assembledArrayElement );
 			}
 		}
 	}
@@ -165,13 +163,11 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public int size() {
 		return readSize() ? getCachedSize() : set.size();
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public boolean isEmpty() {
 		return readSize() ? getCachedSize()==0 : set.isEmpty();
 	}
@@ -185,28 +181,25 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public Iterator iterator() {
+	public Iterator<E> iterator() {
 		read();
-		return new IteratorProxy( set.iterator() );
+		return new IteratorProxy<>( set.iterator() );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Object[] toArray() {
 		read();
 		return set.toArray();
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public Object[] toArray(Object[] array) {
+	public <A> A[] toArray(A[] array) {
 		read();
 		return set.toArray( array );
 	}
 
 	@Override
-	public boolean add(Object value) {
+	public boolean add(E value) {
 		final Boolean exists = isOperationQueueEnabled() ? readElementExistence( value ) : null;
 		if ( exists == null ) {
 			initialize( true );
@@ -243,7 +236,7 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 		}
 		else if ( exists ) {
 			elementRemoved = true;
-			queueOperation( new SimpleRemove( value ) );
+			queueOperation( new SimpleRemove( (E) value ) );
 			return true;
 		}
 		else {
@@ -252,15 +245,13 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public boolean containsAll(Collection coll) {
+	public boolean containsAll(Collection<?> coll) {
 		read();
 		return set.containsAll( coll );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public boolean addAll(Collection coll) {
+	public boolean addAll(Collection<? extends E> coll) {
 		if ( coll.size() > 0 ) {
 			initialize( true );
 			if ( set.addAll( coll ) ) {
@@ -277,8 +268,7 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public boolean retainAll(Collection coll) {
+	public boolean retainAll(Collection<?> coll) {
 		initialize( true );
 		if ( set.retainAll( coll ) ) {
 			dirty();
@@ -290,8 +280,7 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public boolean removeAll(Collection coll) {
+	public boolean removeAll(Collection<?> coll) {
 		if ( coll.size() > 0 ) {
 			initialize( true );
 			if ( set.removeAll( coll ) ) {
@@ -330,19 +319,18 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 
 	public void injectLoadedState(
 			PluralAttributeMapping attributeMapping,
-			List loadingStateList) {
+			List<?> loadingStateList) {
 		final CollectionPersister collectionDescriptor = attributeMapping.getCollectionDescriptor();
 		if ( loadingStateList != null ) {
-			this.set = (Set) attributeMapping.getCollectionDescriptor().getCollectionSemantics().instantiateRaw(
+			this.set = (Set<E>) attributeMapping.getCollectionDescriptor().getCollectionSemantics().instantiateRaw(
 					loadingStateList.size(),
 					collectionDescriptor
 			);
 
-			//noinspection unchecked
-			this.set.addAll( loadingStateList );
+			this.set.addAll( (List<E>) loadingStateList );
 		}
 		else {
-			this.set = (Set) attributeMapping.getCollectionDescriptor().getCollectionSemantics().instantiateRaw(
+			this.set = (Set<E>) attributeMapping.getCollectionDescriptor().getCollectionSemantics().instantiateRaw(
 					0,
 					collectionDescriptor
 			);
@@ -350,14 +338,14 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 	}
 
 	@Override
-	public Iterator entries(CollectionPersister persister) {
+	public Iterator<E> entries(CollectionPersister persister) {
 		return set.iterator();
 	}
 
 	@Override
 	public Object disassemble(CollectionPersister persister) throws HibernateException {
 		final Object[] result = new Object[ set.size() ];
-		final Iterator itr = set.iterator();
+		final Iterator<E> itr = set.iterator();
 		int i=0;
 		while ( itr.hasNext() ) {
 			result[i++] = persister.getElementType().disassemble( itr.next(), getSession(), null );
@@ -366,13 +354,12 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public Iterator getDeletes(CollectionPersister persister, boolean indexIsFormula) throws HibernateException {
+	public Iterator<?> getDeletes(CollectionPersister persister, boolean indexIsFormula) throws HibernateException {
 		final Type elementType = persister.getElementType();
-		final java.util.Map sn = (java.util.Map) getSnapshot();
-		final ArrayList deletes = new ArrayList( sn.size() );
+		final java.util.Map<?,?> sn = (java.util.Map<?,?>) getSnapshot();
+		final ArrayList<Object> deletes = new ArrayList<>( sn.size() );
 
-		Iterator itr = sn.keySet().iterator();
+		Iterator<?> itr = sn.keySet().iterator();
 		while ( itr.hasNext() ) {
 			final Object test = itr.next();
 			if ( !set.contains( test ) ) {
@@ -395,96 +382,87 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public boolean needsInserting(Object entry, int i, Type elemType) throws HibernateException {
-		final Object oldValue = ( (java.util.Map) getSnapshot() ).get( entry );
+		final Object oldValue = ( (java.util.Map<?,?>) getSnapshot() ).get( entry );
 		// note that it might be better to iterate the snapshot but this is safe,
 		// assuming the user implements equals() properly, as required by the Set
 		// contract!
-		return ( oldValue == null && entry != null ) || elemType.isDirty( oldValue, entry, getSession() );
+		return oldValue == null && entry != null
+			|| elemType.isDirty( oldValue, entry, getSession() );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public boolean needsUpdating(Object entry, int i, Type elemType) {
 		return false;
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public boolean isRowUpdatePossible() {
 		return false;
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Object getIndex(Object entry, int i, CollectionPersister persister) {
 		throw new UnsupportedOperationException("Sets don't have indexes");
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Object getElement(Object entry) {
 		return entry;
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Object getSnapshotElement(Object entry, int i) {
 		throw new UnsupportedOperationException("Sets don't support updating by element");
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked", "EqualsWhichDoesntCheckParameterClass"})
+	@SuppressWarnings("EqualsWhichDoesntCheckParameterClass")
 	public boolean equals(Object other) {
 		read();
 		return set.equals( other );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public int hashCode() {
 		read();
 		return set.hashCode();
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public boolean entryExists(Object key, int i) {
 		return key != null;
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public boolean isWrapper(Object collection) {
 		return set==collection;
 	}
 
-	final class Clear implements DelayedOperation {
+	final class Clear implements DelayedOperation<E> {
 		@Override
 		public void operate() {
 			set.clear();
 		}
 
 		@Override
-		public Object getAddedInstance() {
+		public E getAddedInstance() {
 			return null;
 		}
 
 		@Override
-		public Object getOrphan() {
+		public E getOrphan() {
 			throw new UnsupportedOperationException("queued clear cannot be used with orphan delete");
 		}
 	}
 
 	final class SimpleAdd extends AbstractValueDelayedOperation {
 
-		public SimpleAdd(Object addedValue) {
+		public SimpleAdd(E addedValue) {
 			super( addedValue, null );
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public void operate() {
 			set.add( getAddedInstance() );
 		}
@@ -492,12 +470,11 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 
 	final class SimpleRemove extends AbstractValueDelayedOperation {
 
-		public SimpleRemove(Object orphan) {
+		public SimpleRemove(E orphan) {
 			super( null, orphan );
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public void operate() {
 			set.remove( getOrphan() );
 		}

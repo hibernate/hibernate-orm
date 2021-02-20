@@ -35,14 +35,14 @@ import org.hibernate.type.Type;
  *
  * @author Gavin King
  */
-public class PersistentIdentifierBag extends AbstractPersistentCollection implements List {
-	protected List<Object> values;
+public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> implements List<E> {
+	protected List<E> values;
 	protected Map<Integer, Object> identifiers;
 
 	/**
 	 * The Collection provided to a PersistentIdentifierBag constructor
 	 */
-	private Collection providedValues;
+	private Collection<E> providedValues;
 
 	/**
 	 * Constructs a PersistentIdentifierBag.  This form needed for SOAP libraries, etc
@@ -77,12 +77,11 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 	 * @param session The session
 	 * @param coll The base elements
 	 */
-	@SuppressWarnings("unchecked")
-	public PersistentIdentifierBag(SharedSessionContractImplementor session, Collection coll) {
+	public PersistentIdentifierBag(SharedSessionContractImplementor session, Collection<E> coll) {
 		super( session );
 		providedValues = coll;
 		if (coll instanceof List) {
-			values = (List<Object>) coll;
+			values = (List<E>) coll;
 		}
 		else {
 			values = new ArrayList<>( coll );
@@ -100,7 +99,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 	 * @deprecated {@link #PersistentIdentifierBag(SharedSessionContractImplementor, Collection)} should be used instead.
 	 */
 	@Deprecated
-	public PersistentIdentifierBag(SessionImplementor session, Collection coll) {
+	public PersistentIdentifierBag(SessionImplementor session, Collection<E> coll) {
 		this( (SharedSessionContractImplementor) session, coll );
 	}
 
@@ -123,7 +122,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 				(i/2),
 				persister.getIdentifierType().assemble( array[i], getSession(), owner )
 			);
-			values.add( persister.getElementType().assemble( array[i+1], getSession(), owner ) );
+			values.add( (E) persister.getElementType().assemble( array[i+1], getSession(), owner ) );
 		}
 	}
 
@@ -143,7 +142,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 	}
 
 	@Override
-	public boolean add(Object o) {
+	public boolean add(E o) {
 		write();
 		values.add( o );
 		return true;
@@ -166,7 +165,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 	}
 
 	@Override
-	public boolean containsAll(Collection c) {
+	public boolean containsAll(Collection<?> c) {
 		read();
 		return values.containsAll( c );
 	}
@@ -177,9 +176,9 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 	}
 
 	@Override
-	public Iterator iterator() {
+	public Iterator<E> iterator() {
 		read();
-		return new IteratorProxy( values.iterator() );
+		return new IteratorProxy<>( values.iterator() );
 	}
 
 	@Override
@@ -215,7 +214,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 	}
 
 	@Override
-	public boolean retainAll(Collection c) {
+	public boolean retainAll(Collection<?> c) {
 		initialize( true );
 		if ( values.retainAll( c ) ) {
 			dirty();
@@ -238,7 +237,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 	}
 
 	@Override
-	public Object[] toArray(Object[] a) {
+	public <A> A[] toArray(A[] a) {
 		read();
 		return values.toArray( a );
 	}
@@ -261,7 +260,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 	}
 
 	@Override
-	public Iterator entries(CollectionPersister persister) {
+	public Iterator<E> entries(CollectionPersister persister) {
 		return values.iterator();
 	}
 
@@ -273,7 +272,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 	@Override
 	public boolean equalsSnapshot(CollectionPersister persister) throws HibernateException {
 		final Type elementType = persister.getElementType();
-		final Map snap = (Map) getSnapshot();
+		final Map<?,?> snap = (Map<?,?>) getSnapshot();
 		if ( snap.size()!= values.size() ) {
 			return false;
 		}
@@ -293,14 +292,13 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 
 	@Override
 	public boolean isSnapshotEmpty(Serializable snapshot) {
-		return ( (Map) snapshot ).isEmpty();
+		return ( (Map<?,?>) snapshot ).isEmpty();
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public Iterator getDeletes(CollectionPersister persister, boolean indexIsFormula) throws HibernateException {
-		final Map snap = (Map) getSnapshot();
-		final List deletes = new ArrayList( snap.keySet() );
+	public Iterator<?> getDeletes(CollectionPersister persister, boolean indexIsFormula) throws HibernateException {
+		final Map<?,?> snap = (Map<?,?>) getSnapshot();
+		final List<Object> deletes = new ArrayList<>( snap.keySet() );
 		for ( int i=0; i<values.size(); i++ ) {
 			if ( values.get( i ) != null ) {
 				deletes.remove( identifiers.get( i ) );
@@ -321,7 +319,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 
 	@Override
 	public Object getSnapshotElement(Object entry, int i) {
-		final Map snap = (Map) getSnapshot();
+		final Map<?,?> snap = (Map<?,?>) getSnapshot();
 		final Object id = identifiers.get( i );
 		return snap.get( id );
 	}
@@ -329,7 +327,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 	@Override
 	public boolean needsInserting(Object entry, int i, Type elemType)
 			throws HibernateException {
-		final Map snap = (Map) getSnapshot();
+		final Map<?,?> snap = (Map<?,?>) getSnapshot();
 		final Object id = identifiers.get( i );
 		return entry != null
 				&& ( id==null || snap.get( id )==null );
@@ -341,7 +339,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 			return false;
 		}
 
-		final Map snap = (Map) getSnapshot();
+		final Map<?,?> snap = (Map<?,?>) getSnapshot();
 		final Object id = identifiers.get( i );
 		if ( id == null ) {
 			return false;
@@ -352,24 +350,23 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Serializable getSnapshot(CollectionPersister persister) throws HibernateException {
-		final HashMap map = CollectionHelper.mapOfSize( values.size() );
-		final Iterator iter = values.iterator();
+		final HashMap<Object,E> map = CollectionHelper.mapOfSize( values.size() );
+		final Iterator<E> iter = values.iterator();
 		int i=0;
 		while ( iter.hasNext() ) {
 			final Object value = iter.next();
 			map.put(
 					identifiers.get( i++ ),
-					persister.getElementType().deepCopy( value, persister.getFactory() )
+					(E) persister.getElementType().deepCopy( value, persister.getFactory() )
 			);
 		}
 		return map;
 	}
 
 	@Override
-	public Collection getOrphans(Serializable snapshot, String entityName) throws HibernateException {
-		final Map sn = (Map) snapshot;
+	public Collection<E> getOrphans(Serializable snapshot, String entityName) throws HibernateException {
+		final Map<Object,E> sn = (Map<Object,E>) snapshot;
 		return getOrphans( sn.values(), values, entityName, getSession() );
 	}
 
@@ -383,10 +380,10 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 
 	@Override
 	public void preInsert(CollectionPersister persister) throws HibernateException {
-		final Iterator itr = values.iterator();
+		final Iterator<E> itr = values.iterator();
 		int i = 0;
 		while ( itr.hasNext() ) {
-			final Object entry = itr.next();
+			final E entry = itr.next();
 			final Integer loc = i++;
 			if ( !identifiers.containsKey( loc ) ) {
 				//TODO: native ids
@@ -397,16 +394,16 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 	}
 
 	@Override
-	public void add(int index, Object element) {
+	public void add(int index, E element) {
 		write();
 		beforeAdd( index );
 		values.add( index, element );
 	}
 
 	@Override
-	public boolean addAll(int index, Collection c) {
+	public boolean addAll(int index, Collection<? extends E> c) {
 		if ( c.size() > 0 ) {
-			for ( Object element : c ) {
+			for ( E element : c ) {
 				add( index++, element );
 			}
 			return true;
@@ -417,7 +414,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 	}
 
 	@Override
-	public Object get(int index) {
+	public E get(int index) {
 		read();
 		return values.get( index );
 	}
@@ -435,13 +432,13 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 	}
 
 	@Override
-	public ListIterator listIterator() {
+	public ListIterator<E> listIterator() {
 		read();
 		return new ListIteratorProxy( values.listIterator() );
 	}
 
 	@Override
-	public ListIterator listIterator(int index) {
+	public ListIterator<E> listIterator(int index) {
 		read();
 		return new ListIteratorProxy( values.listIterator( index ) );
 	}
@@ -469,26 +466,26 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 	}
 
 	@Override
-	public Object remove(int index) {
+	public E remove(int index) {
 		write();
 		beforeRemove( index );
 		return values.remove( index );
 	}
 
 	@Override
-	public Object set(int index, Object element) {
+	public E set(int index, E element) {
 		write();
 		return values.set( index, element );
 	}
 
 	@Override
-	public List subList(int fromIndex, int toIndex) {
+	public List<E> subList(int fromIndex, int toIndex) {
 		read();
 		return new ListProxy( values.subList( fromIndex, toIndex ) );
 	}
 
 	@Override
-	public boolean addAll(Collection c) {
+	public boolean addAll(Collection<? extends E> c) {
 		if ( c.size()> 0 ) {
 			write();
 			return values.addAll( c );
@@ -506,7 +503,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 		//TODO: if we are using identity columns, fetch the identifier
 	}
 
-	public void injectLoadedState(PluralAttributeMapping attributeMapping, List loadingState) {
+	public void injectLoadedState(PluralAttributeMapping attributeMapping, List<?> loadingState) {
 		assert identifiers == null;
 		assert values == null;
 
@@ -516,7 +513,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 		for ( int i = 0; i < loadingState.size(); i++ ) {
 			final Object[] row = (Object[]) loadingState.get( i );
 			final Object identifier = row[0];
-			final Object element = row[1];
+			final E element = (E) row[1];
 
 			Object old = identifiers.put( values.size(), identifier );
 			if ( old == null ) {

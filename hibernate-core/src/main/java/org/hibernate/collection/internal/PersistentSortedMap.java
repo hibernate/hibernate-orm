@@ -27,8 +27,8 @@ import org.hibernate.persister.collection.BasicCollectionPersister;
  * @see java.util.TreeMap
  * @author <a href="mailto:doug.currie@alum.mit.edu">e</a>
  */
-public class PersistentSortedMap extends PersistentMap implements SortedMap {
-	protected Comparator comparator;
+public class PersistentSortedMap<K,E> extends PersistentMap<K,E> implements SortedMap<K,E> {
+	protected Comparator<? super K> comparator;
 
 	/**
 	 * Constructs a PersistentSortedMap.  This form needed for SOAP libraries, etc
@@ -63,7 +63,7 @@ public class PersistentSortedMap extends PersistentMap implements SortedMap {
 	 * @param session The session
 	 * @param map The underlying map data
 	 */
-	public PersistentSortedMap(SharedSessionContractImplementor session, SortedMap map) {
+	public PersistentSortedMap(SharedSessionContractImplementor session, SortedMap<K,E> map) {
 		super( session, map );
 		comparator = map.comparator();
 	}
@@ -76,186 +76,162 @@ public class PersistentSortedMap extends PersistentMap implements SortedMap {
 	 * @deprecated {@link #PersistentSortedMap(SharedSessionContractImplementor, SortedMap)} should be used instead.
 	 */
 	@Deprecated
-	public PersistentSortedMap(SessionImplementor session, SortedMap map) {
+	public PersistentSortedMap(SessionImplementor session, SortedMap<K,E> map) {
 		this( (SharedSessionContractImplementor) session, map );
 	}
 
-	@SuppressWarnings({"unchecked", "UnusedParameters"})
+	@SuppressWarnings("UnusedParameters")
 	protected Serializable snapshot(BasicCollectionPersister persister, EntityMode entityMode) throws HibernateException {
-		final TreeMap clonedMap = new TreeMap( comparator );
-		for ( Object o : map.entrySet() ) {
-			final Entry e = (Entry) o;
-			clonedMap.put( e.getKey(), persister.getElementType().deepCopy( e.getValue(), persister.getFactory() ) );
+		final TreeMap<K,E> clonedMap = new TreeMap<>( comparator );
+		for ( Entry<K,E> e : map.entrySet() ) {
+			clonedMap.put( e.getKey(), (E) persister.getElementType().deepCopy( e.getValue(), persister.getFactory() ) );
 		}
 		return clonedMap;
 	}
 
-	public void setComparator(Comparator comparator) {
+	public void setComparator(Comparator<? super K> comparator) {
 		this.comparator = comparator;
 	}
 
 	@Override
-	public Comparator comparator() {
+	public Comparator<? super K> comparator() {
 		return comparator;
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public SortedMap subMap(Object fromKey, Object toKey) {
+	public SortedMap<K,E> subMap(K fromKey, K toKey) {
 		read();
-		final SortedMap subMap = ( (SortedMap) map ).subMap( fromKey, toKey );
+		final SortedMap<K,E> subMap = ( (SortedMap<K,E>) map ).subMap( fromKey, toKey );
 		return new SortedSubMap( subMap );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public SortedMap headMap(Object toKey) {
+	public SortedMap<K,E> headMap(K toKey) {
 		read();
-		final SortedMap headMap = ( (SortedMap) map ).headMap( toKey );
+		final SortedMap<K,E> headMap = ( (SortedMap<K,E>) map ).headMap( toKey );
 		return new SortedSubMap( headMap );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public SortedMap tailMap(Object fromKey) {
+	public SortedMap<K,E> tailMap(K fromKey) {
 		read();
-		final SortedMap tailMap = ( (SortedMap) map ).tailMap( fromKey );
+		final SortedMap<K,E> tailMap = ( (SortedMap<K,E>) map ).tailMap( fromKey );
 		return new SortedSubMap( tailMap );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public Object firstKey() {
+	public K firstKey() {
 		read();
-		return ( (SortedMap) map ).firstKey();
+		return ( (SortedMap<K,E>) map ).firstKey();
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public Object lastKey() {
+	public K lastKey() {
 		read();
-		return ( (SortedMap) map ).lastKey();
+		return ( (SortedMap<K,E>) map ).lastKey();
 	}
 
-	class SortedSubMap implements SortedMap {
-		SortedMap subMap;
+	class SortedSubMap implements SortedMap<K,E> {
+		SortedMap<K,E> subMap;
 
-		SortedSubMap(SortedMap subMap) {
+		SortedSubMap(SortedMap<K,E> subMap) {
 			this.subMap = subMap;
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public int size() {
 			return subMap.size();
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public boolean isEmpty() {
 			return subMap.isEmpty();
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public boolean containsKey(Object key) {
 			return subMap.containsKey( key );
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public boolean containsValue(Object key) {
 			return subMap.containsValue( key ) ;
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
-		public Object get(Object key) {
+		public E get(Object key) {
 			return subMap.get( key );
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
-		public Object put(Object key, Object value) {
+		public E put(K key, E value) {
 			write();
 			return subMap.put( key,  value );
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
-		public Object remove(Object key) {
+		public E remove(Object key) {
 			write();
 			return subMap.remove( key );
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
-		public void putAll(Map other) {
+		public void putAll(Map<? extends K,? extends E> other) {
 			write();
 			subMap.putAll( other );
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public void clear() {
 			write();
 			subMap.clear();
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
-		public Set keySet() {
-			return new SetProxy( subMap.keySet() );
+		public Set<K> keySet() {
+			return new SetProxy<>( subMap.keySet() );
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
-		public Collection values() {
-			return new SetProxy( subMap.values() );
+		public Collection<E> values() {
+			return new SetProxy<>( subMap.values() );
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
-		public Set entrySet() {
+		public Set<Entry<K,E>> entrySet() {
 			return new EntrySetProxy( subMap.entrySet() );
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
-		public Comparator comparator() {
+		public Comparator<? super K> comparator() {
 			return subMap.comparator();
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
-		public SortedMap subMap(Object fromKey, Object toKey) {
-			final SortedMap subMap = this.subMap.subMap( fromKey, toKey );
+		public SortedMap<K,E> subMap(K fromKey, K toKey) {
+			final SortedMap<K,E> subMap = this.subMap.subMap( fromKey, toKey );
 			return new SortedSubMap( subMap );
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
-		public SortedMap headMap(Object toKey) {
-			final SortedMap headMap = subMap.headMap( toKey );
+		public SortedMap<K,E> headMap(K toKey) {
+			final SortedMap<K,E> headMap = subMap.headMap( toKey );
 			return new SortedSubMap( headMap );
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
-		public SortedMap tailMap(Object fromKey) {
-			final SortedMap tailMap = subMap.tailMap( fromKey );
+		public SortedMap<K,E> tailMap(K fromKey) {
+			final SortedMap<K,E> tailMap = subMap.tailMap( fromKey );
 			return new SortedSubMap( tailMap );
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
-		public Object firstKey() {
+		public K firstKey() {
 			return subMap.firstKey();
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
-		public Object lastKey() {
+		public K lastKey() {
 			return subMap.lastKey();
 		}
 	}

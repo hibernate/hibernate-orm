@@ -24,8 +24,8 @@ import org.hibernate.persister.collection.BasicCollectionPersister;
  * @see java.util.TreeSet
  * @author <a href="mailto:doug.currie@alum.mit.edu">e</a>
  */
-public class PersistentSortedSet extends PersistentSet implements SortedSet {
-	protected Comparator comparator;
+public class PersistentSortedSet<E> extends PersistentSet<E> implements SortedSet<E> {
+	protected Comparator<? super E> comparator;
 
 	/**
 	 * Constructs a PersistentSortedSet.  This form needed for SOAP libraries, etc
@@ -60,7 +60,7 @@ public class PersistentSortedSet extends PersistentSet implements SortedSet {
 	 * @param session The session
 	 * @param set The underlying set data
 	 */
-	public PersistentSortedSet(SharedSessionContractImplementor session, SortedSet set) {
+	public PersistentSortedSet(SharedSessionContractImplementor session, SortedSet<E> set) {
 		super( session, set );
 		comparator = set.comparator();
 	}
@@ -73,110 +73,99 @@ public class PersistentSortedSet extends PersistentSet implements SortedSet {
 	 * @deprecated {@link #PersistentSortedSet(SharedSessionContractImplementor, SortedSet)} should be used instead.
 	 */
 	@Deprecated
-	public PersistentSortedSet(SessionImplementor session, SortedSet set) {
+	public PersistentSortedSet(SessionImplementor session, SortedSet<E> set) {
 		this( (SharedSessionContractImplementor) session, set );
 	}
 
-	@SuppressWarnings({"unchecked", "UnusedParameters"})
+	@SuppressWarnings("UnusedParameters")
 	protected Serializable snapshot(BasicCollectionPersister persister, EntityMode entityMode)
 			throws HibernateException {
-		final TreeMap clonedSet = new TreeMap( comparator );
-		for ( Object setElement : set ) {
-			final Object copy = persister.getElementType().deepCopy( setElement, persister.getFactory() );
+		final TreeMap<E,E> clonedSet = new TreeMap<>( comparator );
+		for ( E setElement : set ) {
+			final E copy = (E) persister.getElementType().deepCopy( setElement, persister.getFactory() );
 			clonedSet.put( copy, copy );
 		}
 		return clonedSet;
 	}
 
-	public void setComparator(Comparator comparator) {
+	public void setComparator(Comparator<? super E> comparator) {
 		this.comparator = comparator;
 	}
 
 	@Override
-	public Comparator comparator() {
+	public Comparator<? super E> comparator() {
 		return comparator;
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public SortedSet subSet(Object fromElement, Object toElement) {
+	public SortedSet<E> subSet(E fromElement, E toElement) {
 		read();
-		final SortedSet subSet = ( (SortedSet) set ).subSet( fromElement, toElement );
+		final SortedSet<E> subSet = ( (SortedSet<E>) set ).subSet( fromElement, toElement );
 		return new SubSetProxy( subSet );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public SortedSet headSet(Object toElement) {
+	public SortedSet<E> headSet(E toElement) {
 		read();
-		final SortedSet headSet = ( (SortedSet) set ).headSet( toElement );
+		final SortedSet<E> headSet = ( (SortedSet<E>) set ).headSet( toElement );
 		return new SubSetProxy( headSet );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public SortedSet tailSet(Object fromElement) {
+	public SortedSet<E> tailSet(E fromElement) {
 		read();
-		final SortedSet tailSet = ( (SortedSet) set ).tailSet( fromElement );
+		final SortedSet<E> tailSet = ( (SortedSet<E>) set ).tailSet( fromElement );
 		return new SubSetProxy( tailSet );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public Object first() {
+	public E first() {
 		read();
-		return ( (SortedSet) set ).first();
+		return ( (SortedSet<E>) set ).first();
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public Object last() {
+	public E last() {
 		read();
-		return ( (SortedSet) set ).last();
+		return ( (SortedSet<E>) set ).last();
 	}
 
 	/**
 	 * wrapper for subSets to propagate write to its backing set
 	 */
-	class SubSetProxy extends SetProxy implements SortedSet {
-		SubSetProxy(SortedSet s) {
+	class SubSetProxy extends SetProxy<E> implements SortedSet<E> {
+		SubSetProxy(SortedSet<E> s) {
 			super( s );
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
-		public Comparator comparator() {
-			return ( (SortedSet) this.set ).comparator();
+		public Comparator<? super E> comparator() {
+			return ( (SortedSet<E>) this.set ).comparator();
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
-		public Object first() {
-			return ( (SortedSet) this.set ).first();
+		public E first() {
+			return ( (SortedSet<E>) this.set ).first();
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
-		public SortedSet headSet(Object toValue) {
-			return new SubSetProxy( ( (SortedSet) this.set ).headSet( toValue ) );
+		public SortedSet<E> headSet(E toValue) {
+			return new SubSetProxy( ( (SortedSet<E>) this.set ).headSet( toValue ) );
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
-		public Object last() {
-			return ( (SortedSet) this.set ).last();
+		public E last() {
+			return ( (SortedSet<E>) this.set ).last();
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
-		public SortedSet subSet(Object fromValue, Object toValue) {
-			return new SubSetProxy( ( (SortedSet) this.set ).subSet( fromValue, toValue ) );
+		public SortedSet<E> subSet(E fromValue, E toValue) {
+			return new SubSetProxy( ( (SortedSet<E>) this.set ).subSet( fromValue, toValue ) );
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
-		public SortedSet tailSet(Object fromValue) {
-			return new SubSetProxy( ( (SortedSet) this.set ).tailSet( fromValue ) );
+		public SortedSet<E> tailSet(E fromValue) {
+			return new SubSetProxy( ( (SortedSet<E>) this.set ).tailSet( fromValue ) );
 		}
 	}
 }

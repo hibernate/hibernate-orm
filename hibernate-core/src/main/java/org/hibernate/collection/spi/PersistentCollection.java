@@ -44,7 +44,7 @@ import org.hibernate.type.Type;
  *
  * @author Gavin King
  */
-public interface PersistentCollection {
+public interface PersistentCollection<E> {
 	/**
 	 * Get the owning entity. Note that the owner is only
 	 * set during the flush cycle, and when a new collection
@@ -125,7 +125,7 @@ public interface PersistentCollection {
 	 *
 	 * @return The iterator
 	 */
-	Iterator entries(CollectionPersister persister);
+	Iterator<?> entries(CollectionPersister persister);
 
 	/**
 	 * Get the identifier of the given collection entry.  This refers to the collection identifier, not the
@@ -260,7 +260,7 @@ public interface PersistentCollection {
 	 *
 	 * @return An iterator over the elements to delete
 	 */
-	Iterator getDeletes(CollectionPersister persister, boolean indexIsFormula);
+	Iterator<?> getDeletes(CollectionPersister persister, boolean indexIsFormula);
 
 	/**
 	 * Is this the wrapper for the given collection instance?
@@ -306,7 +306,7 @@ public interface PersistentCollection {
 	/**
 	 * Inject the state loaded for a collection instance.
 	 */
-	void injectLoadedState(PluralAttributeMapping attributeMapping, List loadingState);
+	void injectLoadedState(PluralAttributeMapping attributeMapping, List<?> loadingState);
 
 	/**
 	 * Called after reading all rows from the JDBC result set.  Pairs with {@link #beginRead}
@@ -342,7 +342,7 @@ public interface PersistentCollection {
 	 *
 	 * @return The iterator
 	 */
-	Iterator queuedAdditionIterator();
+	Iterator<E> queuedAdditionIterator();
 
 	/**
 	 * Get the "queued" orphans
@@ -351,7 +351,7 @@ public interface PersistentCollection {
 	 *
 	 * @return The orphaned elements
 	 */
-	Collection getQueuedOrphans(String entityName);
+	Collection<E> getQueuedOrphans(String entityName);
 
 	/**
 	 * Get the current collection key value
@@ -446,7 +446,7 @@ public interface PersistentCollection {
 	 *
 	 * @return The orphans
 	 */
-	Collection getOrphans(Serializable snapshot, String entityName);
+	Collection<E> getOrphans(Serializable snapshot, String entityName);
 
 	void initializeEmptyCollection(CollectionPersister persister);
 

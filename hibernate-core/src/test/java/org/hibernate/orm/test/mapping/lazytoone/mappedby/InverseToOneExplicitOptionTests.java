@@ -118,7 +118,10 @@ public class InverseToOneExplicitOptionTests extends BaseNonConfigCoreFunctional
 							instanceOf( LazyAttributeLoadingInterceptor.class )
 					);
 
-					// should not trigger a load and the `customer` reference should be an uninitialized enhanced proxy
+					// because we do not know the customer FK from the SupplementalInfo side
+					// it is considered part of SupplementalInfo's non-base state.
+					//
+					// here we access customer which triggers a load from customer table
 					final Customer customer = supplementalInfo.getCustomer();
 					assertThat( sqlStatementInterceptor.getSqlQueries().size(), is( 2 ) );
 

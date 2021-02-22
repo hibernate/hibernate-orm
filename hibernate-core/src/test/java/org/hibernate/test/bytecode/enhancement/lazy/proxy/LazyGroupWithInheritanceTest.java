@@ -42,6 +42,7 @@ import static org.junit.Assert.assertEquals;
 @RunWith(BytecodeEnhancerRunner.class)
 @EnhancementOptions( lazyLoading = true )
 public class LazyGroupWithInheritanceTest extends BaseNonConfigCoreFunctionalTestCase {
+	@Test
 	public void loadEntityWithAssociationToAbstract() {
 		final Statistics stats = sessionFactory().getStatistics();
 		stats.clear();

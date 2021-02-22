@@ -3886,7 +3886,7 @@ public abstract class AbstractEntityPersister
 				|| entityMetamodel.getOptimisticLockStyle() == OptimisticLockStyle.ALL;
 	}
 
-	private String[] generateSQLDeleteStrings(Object[] loadedState) {
+	protected String[] generateSQLDeleteStrings(Object[] loadedState) {
 		int span = getTableSpan();
 		String[] deleteStrings = new String[span];
 		for ( int j = span - 1; j >= 0; j-- ) {
@@ -5587,7 +5587,7 @@ public abstract class AbstractEntityPersister
 	private Boolean naturalIdIsNonNullable;
 	private String cachedPkByNonNullableNaturalIdQuery;
 
-	private String determinePkByNaturalIdQuery(boolean[] valueNullness) {
+	protected String determinePkByNaturalIdQuery(boolean[] valueNullness) {
 		if ( !hasNaturalIdentifier() ) {
 			throw new HibernateException(
 					"Attempt to build natural-id -> PK resolution query for entity that does not define natural id"

@@ -11,8 +11,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.HibernateException;
-import org.hibernate.MappingException;
-import org.hibernate.dialect.Dialect;
+import org.hibernate.QueryException;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -120,7 +119,7 @@ public class DeleteExecutor extends BasicExecutor {
 								}
 								columnNames = columns.toArray( new String[0] );
 							}
-							catch (MappingException e) {
+							catch (QueryException e) {
 								// Property not found, due to IdClasses are not properly handled in metamodel HHH-12996
 								columnNames = persister.getIdentifierColumnNames();
 							}

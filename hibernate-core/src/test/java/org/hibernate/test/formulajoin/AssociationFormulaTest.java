@@ -10,6 +10,7 @@ import org.hibernate.Hibernate;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -25,11 +26,6 @@ public class AssociationFormulaTest extends BaseCoreFunctionalTestCase {
 
 	public AssociationFormulaTest() {
 		super();
-	}
-
-	@Override
-	protected boolean isCleanupTestDataRequired() {
-		return true;
 	}
 
 	@Override
@@ -57,6 +53,16 @@ public class AssociationFormulaTest extends BaseCoreFunctionalTestCase {
 				session -> {
 					session.merge( entity );
 					session.merge( otherNull );
+				}
+		);
+	}
+
+	@After
+	public void tearDown() {
+		inTransaction(
+				session -> {
+					session.createQuery( "delete from Entity" ).executeUpdate();
+					session.createQuery( "delete from OtherEntity" ).executeUpdate();
 				}
 		);
 	}
@@ -214,21 +220,6 @@ public class AssociationFormulaTest extends BaseCoreFunctionalTestCase {
 									.executeUpdate()
 					);
 					Entity loaded = (Entity) session.createQuery( "from Entity e where e.id.id = 1" ).uniqueResult();
-					assertNull( "loaded", loaded );
-				}
-		);
-	}
-
-	@Test
-	public void testDeleteHqlNull() {
-		inTransaction(
-				session -> {
-					assertEquals(
-							"execute",
-							1,
-							session.createQuery( "delete Entity e where e.other is null" ).executeUpdate()
-					);
-					Entity loaded = (Entity) session.createQuery( "from Entity e where e.id.id = 3" ).uniqueResult();
 					assertNull( "loaded", loaded );
 				}
 		);

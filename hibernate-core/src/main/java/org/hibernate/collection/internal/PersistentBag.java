@@ -126,7 +126,7 @@ public class PersistentBag<E> extends AbstractPersistentCollection<E> implements
 		assert bag == null;
 
 		final CollectionPersister collectionDescriptor = attributeMapping.getCollectionDescriptor();
-		final CollectionSemantics<?> collectionSemantics = collectionDescriptor.getCollectionSemantics();
+		final CollectionSemantics<?,?> collectionSemantics = collectionDescriptor.getCollectionSemantics();
 
 		final int elementCount = loadingState == null ? 0 : loadingState.size();
 

@@ -27,15 +27,14 @@ import org.hibernate.sql.results.graph.FetchParent;
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractMapSemantics<M extends Map<?,?>> implements MapSemantics<M> {
+public abstract class AbstractMapSemantics<MKV extends Map<K,V>, K, V> implements MapSemantics<MKV,K,V> {
 	@Override
-	public Class<M> getCollectionJavaType() {
-		//noinspection unchecked
-		return (Class) Map.class;
+	public Class<? extends Map> getCollectionJavaType() {
+		return Map.class;
 	}
 
 	@Override
-	public Iterator getKeyIterator(M rawMap) {
+	public Iterator<K> getKeyIterator(MKV rawMap) {
 		if ( rawMap == null ) {
 			return null;
 		}
@@ -44,16 +43,14 @@ public abstract class AbstractMapSemantics<M extends Map<?,?>> implements MapSem
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public void visitKeys(M rawMap, Consumer action) {
+	public void visitKeys(MKV rawMap, Consumer<? super K> action) {
 		if ( rawMap != null ) {
 			rawMap.keySet().forEach( action );
 		}
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public void visitEntries(M rawMap, BiConsumer action) {
+	public void visitEntries(MKV rawMap, BiConsumer<? super K, ? super V> action) {
 		if ( rawMap != null ) {
 			rawMap.forEach( action );
 		}
@@ -61,7 +58,7 @@ public abstract class AbstractMapSemantics<M extends Map<?,?>> implements MapSem
 
 
 	@Override
-	public Iterator getElementIterator(Map rawMap) {
+	public Iterator<V> getElementIterator(MKV rawMap) {
 		if ( rawMap == null ) {
 			return Collections.emptyIterator();
 		}
@@ -70,8 +67,7 @@ public abstract class AbstractMapSemantics<M extends Map<?,?>> implements MapSem
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public void visitElements(M rawMap, Consumer action) {
+	public void visitElements(MKV rawMap, Consumer<? super V> action) {
 		if ( rawMap != null ) {
 			rawMap.values().forEach( action );
 		}

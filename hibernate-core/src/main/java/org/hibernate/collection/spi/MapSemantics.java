@@ -7,6 +7,7 @@
 package org.hibernate.collection.spi;
 
 import java.util.Iterator;
+import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -15,10 +16,10 @@ import java.util.function.Consumer;
  *
  * @author Steve Ebersole
  */
-public interface MapSemantics<M> extends CollectionSemantics<M> {
-	Iterator getKeyIterator(M rawMap);
+public interface MapSemantics<MKV extends Map<K,V>,K,V> extends CollectionSemantics<MKV,V> {
+	Iterator<K> getKeyIterator(MKV rawMap);
 
-	void visitKeys(M rawMap, Consumer action);
+	void visitKeys(MKV rawMap, Consumer<? super K> action);
 
-	void visitEntries(M rawMap, BiConsumer action);
+	void visitEntries(MKV rawMap, BiConsumer<? super K,? super V> action);
 }

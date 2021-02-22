@@ -30,31 +30,31 @@ import org.hibernate.sql.results.graph.FetchParent;
  * @author Gavin King
  */
 @Incubating
-public interface CollectionSemantics<C> {
+public interface CollectionSemantics<CE, E> {
 	/**
 	 * Get the classification of collections described by this semantic
 	 */
 	CollectionClassification getCollectionClassification();
 
-	Class<C> getCollectionJavaType();
+	Class<?> getCollectionJavaType();
 
-	C instantiateRaw(
+	CE instantiateRaw(
 			int anticipatedSize,
 			CollectionPersister collectionDescriptor);
 
-	PersistentCollection instantiateWrapper(
+	PersistentCollection<E> instantiateWrapper(
 			Object key,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session);
 
-	PersistentCollection wrap(
-			Object rawCollection,
+	PersistentCollection<E> wrap(
+			CE rawCollection,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session);
 
-	Iterator getElementIterator(C rawCollection);
+	Iterator<E> getElementIterator(CE rawCollection);
 
-	void visitElements(C rawCollection, Consumer action);
+	void visitElements(CE rawCollection, Consumer<? super E> action);
 
 	/**
 	 * todo (6.0) : clean this contract up!

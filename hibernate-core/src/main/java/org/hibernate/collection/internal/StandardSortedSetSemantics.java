@@ -6,6 +6,7 @@
  */
 package org.hibernate.collection.internal;
 
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -18,11 +19,11 @@ import org.hibernate.persister.collection.CollectionPersister;
 /**
  * @author Steve Ebersole
  */
-public class StandardSortedSetSemantics extends AbstractSetSemantics<SortedSet<?>> {
+public class StandardSortedSetSemantics<E> extends AbstractSetSemantics<SortedSet<E>,E> {
 	/**
 	 * Singleton access
 	 */
-	public static final StandardSortedSetSemantics INSTANCE = new StandardSortedSetSemantics();
+	public static final StandardSortedSetSemantics<?> INSTANCE = new StandardSortedSetSemantics<>();
 
 	private StandardSortedSetSemantics() {
 	}
@@ -33,36 +34,35 @@ public class StandardSortedSetSemantics extends AbstractSetSemantics<SortedSet<?
 	}
 
 	@Override
-	public Class<SortedSet<?>> getCollectionJavaType() {
-		//noinspection unchecked
-		return (Class) SortedSet.class;
+	public Class<SortedSet> getCollectionJavaType() {
+		return SortedSet.class;
 	}
 
 	@Override
-	public SortedSet instantiateRaw(
+	public SortedSet<E> instantiateRaw(
 			int anticipatedSize,
 			CollectionPersister collectionDescriptor) {
-		return new TreeSet( collectionDescriptor.getSortingComparator() );
+		return new TreeSet<E>( (Comparator) collectionDescriptor.getSortingComparator() );
 	}
 
 	@Override
-	public PersistentCollection instantiateWrapper(
+	public PersistentCollection<E> instantiateWrapper(
 			Object key,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentSortedSet( session );
+		return new PersistentSortedSet<>( session );
 	}
 
 	@Override
-	public PersistentCollection wrap(
-			Object rawCollection,
+	public PersistentCollection<E> wrap(
+			SortedSet<E> rawCollection,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentSortedSet( session, (SortedSet) rawCollection );
+		return new PersistentSortedSet<>( session, rawCollection );
 	}
 
 	@Override
-	public Iterator getElementIterator(SortedSet<?> rawCollection) {
+	public Iterator<E> getElementIterator(SortedSet<E> rawCollection) {
 		return rawCollection.iterator();
 	}
 }

@@ -7,7 +7,6 @@
 package org.hibernate.collection.internal;
 
 import org.hibernate.MappingException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.CollectionSemanticsResolver;
 import org.hibernate.mapping.Array;

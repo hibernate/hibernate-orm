@@ -6,6 +6,7 @@
  */
 package org.hibernate.collection.internal;
 
+import java.util.Comparator;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -17,11 +18,11 @@ import org.hibernate.persister.collection.CollectionPersister;
 /**
  * @author Steve Ebersole
  */
-public class StandardSortedMapSemantics extends AbstractMapSemantics<SortedMap<?,?>> {
+public class StandardSortedMapSemantics<K,V> extends AbstractMapSemantics<SortedMap<K,V>,K,V> {
 	/**
 	 * Singleton access
 	 */
-	public static final StandardSortedMapSemantics INSTANCE = new StandardSortedMapSemantics();
+	public static final StandardSortedMapSemantics<?,?> INSTANCE = new StandardSortedMapSemantics<>();
 
 	private StandardSortedMapSemantics() {
 	}
@@ -32,31 +33,30 @@ public class StandardSortedMapSemantics extends AbstractMapSemantics<SortedMap<?
 	}
 
 	@Override
-	public Class<SortedMap<?, ?>> getCollectionJavaType() {
-		//noinspection unchecked
-		return (Class) SortedMap.class;
+	public Class<SortedMap> getCollectionJavaType() {
+		return SortedMap.class;
 	}
 
 	@Override
-	public TreeMap<?, ?> instantiateRaw(
+	public TreeMap<K,V> instantiateRaw(
 			int anticipatedSize,
 			CollectionPersister collectionDescriptor) {
-		return new TreeMap( collectionDescriptor.getSortingComparator() );
+		return new TreeMap<K,V>( (Comparator) collectionDescriptor.getSortingComparator() );
 	}
 
 	@Override
-	public PersistentCollection instantiateWrapper(
+	public PersistentCollection<V> instantiateWrapper(
 			Object key,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentSortedMap( session );
+		return new PersistentSortedMap<>( session );
 	}
 
 	@Override
-	public PersistentCollection wrap(
-			Object rawCollection,
+	public PersistentCollection<V> wrap(
+			SortedMap<K,V> rawCollection,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentSortedMap( session, (SortedMap) rawCollection );
+		return new PersistentSortedMap<>( session, rawCollection );
 	}
 }

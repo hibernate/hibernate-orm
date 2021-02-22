@@ -19,11 +19,11 @@ import org.hibernate.persister.collection.CollectionPersister;
 /**
  * @author Steve Ebersole
  */
-public class StandardOrderedMapSemantics extends AbstractMapSemantics<LinkedHashMap<?,?>> {
+public class StandardOrderedMapSemantics<K,V> extends AbstractMapSemantics<LinkedHashMap<K,V>,K,V> {
 	/**
 	 * Singleton access
 	 */
-	public static final StandardOrderedMapSemantics INSTANCE = new StandardOrderedMapSemantics();
+	public static final StandardOrderedMapSemantics<?,?> INSTANCE = new StandardOrderedMapSemantics<>();
 
 	private StandardOrderedMapSemantics() {
 	}
@@ -34,30 +34,30 @@ public class StandardOrderedMapSemantics extends AbstractMapSemantics<LinkedHash
 	}
 
 	@Override
-	public LinkedHashMap<?, ?> instantiateRaw(
+	public LinkedHashMap<K,V> instantiateRaw(
 			int anticipatedSize,
 			CollectionPersister collectionDescriptor) {
 		return anticipatedSize < 1 ? CollectionHelper.linkedMap() : CollectionHelper.linkedMapOfSize( anticipatedSize );
 	}
 
 	@Override
-	public PersistentCollection instantiateWrapper(
+	public PersistentCollection<V> instantiateWrapper(
 			Object key,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentMap( session );
+		return new PersistentMap<>( session );
 	}
 
 	@Override
-	public PersistentCollection wrap(
-			Object rawCollection,
+	public PersistentCollection<V> wrap(
+			LinkedHashMap<K,V> rawCollection,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentMap( session, (Map) rawCollection );
+		return new PersistentMap<>( session, rawCollection );
 	}
 
 	@Override
-	public Iterator getElementIterator(LinkedHashMap rawCollection) {
+	public Iterator<V> getElementIterator(LinkedHashMap<K,V> rawCollection) {
 		return rawCollection.values().iterator();
 	}
 }

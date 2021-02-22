@@ -31,11 +31,11 @@ import org.hibernate.sql.results.graph.FetchParent;
  *
  * @author Steve Ebersole
  */
-public class StandardArraySemantics implements CollectionSemantics<Object[]> {
+public class StandardArraySemantics<E> implements CollectionSemantics<E[], E> {
 	/**
 	 * Singleton access
 	 */
-	public static final StandardArraySemantics INSTANCE = new StandardArraySemantics();
+	public static final StandardArraySemantics<?> INSTANCE = new StandardArraySemantics<>();
 
 	private StandardArraySemantics() {
 	}
@@ -51,7 +51,7 @@ public class StandardArraySemantics implements CollectionSemantics<Object[]> {
 	}
 
 	@Override
-	public Object[] instantiateRaw(
+	public E[] instantiateRaw(
 			int anticipatedSize,
 			CollectionPersister collectionDescriptor) {
 //		return (Object[]) Array.newInstance(
@@ -63,34 +63,33 @@ public class StandardArraySemantics implements CollectionSemantics<Object[]> {
 
 
 	@Override
-	public PersistentCollection instantiateWrapper(
+	public PersistentCollection<E> instantiateWrapper(
 			Object key,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentArrayHolder( session, collectionDescriptor );
+		return new PersistentArrayHolder<>( session, collectionDescriptor );
 	}
 
 	@Override
-	public PersistentCollection wrap(
-			Object rawCollection,
+	public PersistentCollection<E> wrap(
+			E[] rawCollection,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentArrayHolder( session, rawCollection );
+		return new PersistentArrayHolder<>( session, rawCollection );
 	}
 
 	@Override
-	public Iterator getElementIterator(Object[] rawCollection) {
+	public Iterator<E> getElementIterator(E[] rawCollection) {
 		return Arrays.stream( rawCollection ).iterator();
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public void visitElements(Object[] array, Consumer action) {
+	public void visitElements(E[] array, Consumer<? super E> action) {
 		if ( array == null ) {
 			return;
 		}
 
-		for ( Object element : array ) {
+		for ( E element : array ) {
 			action.accept( element );
 		}
 	}

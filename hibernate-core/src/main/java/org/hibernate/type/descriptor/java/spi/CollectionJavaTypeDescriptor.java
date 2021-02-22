@@ -24,15 +24,15 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
  * @author Steve Ebersole
  */
 public class CollectionJavaTypeDescriptor<C> extends AbstractTypeDescriptor<C> {
-	private final CollectionSemantics<C> semantics;
+	private final CollectionSemantics<C,?> semantics;
 
 	@SuppressWarnings("unchecked")
-	public CollectionJavaTypeDescriptor(Class<? extends C> type, CollectionSemantics<C> semantics) {
+	public CollectionJavaTypeDescriptor(Class<? extends C> type, CollectionSemantics<C,?> semantics) {
 		super( (Class) type );
 		this.semantics = semantics;
 	}
 
-	public CollectionSemantics<C> getSemantics() {
+	public CollectionSemantics<C,?> getSemantics() {
 		return semantics;
 	}
 

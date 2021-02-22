@@ -15,5 +15,5 @@ import org.hibernate.collection.spi.CollectionSemantics;
  * @author Steve Ebersole
  */
 public interface CollectionMappingType<C> extends MappingType {
-	CollectionSemantics<C> getCollectionSemantics();
+	CollectionSemantics<C,?> getCollectionSemantics();
 }

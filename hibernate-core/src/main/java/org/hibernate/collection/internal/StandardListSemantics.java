@@ -32,11 +32,11 @@ import org.hibernate.sql.results.graph.FetchParent;
  *
  * @author Steve Ebersole
  */
-public class StandardListSemantics implements CollectionSemantics<List> {
+public class StandardListSemantics<E> implements CollectionSemantics<List<E>, E> {
 	/**
 	 * Singleton access
 	 */
-	public static final StandardListSemantics INSTANCE = new StandardListSemantics();
+	public static final StandardListSemantics<?> INSTANCE = new StandardListSemantics<>();
 
 	private StandardListSemantics() {
 	}
@@ -52,20 +52,19 @@ public class StandardListSemantics implements CollectionSemantics<List> {
 	}
 
 	@Override
-	public List instantiateRaw(
+	public List<E> instantiateRaw(
 			int anticipatedSize,
 			CollectionPersister collectionDescriptor) {
 		return CollectionHelper.arrayList( anticipatedSize );
 	}
 
 	@Override
-	public Iterator getElementIterator(List rawCollection) {
+	public Iterator<E> getElementIterator(List<E> rawCollection) {
 		return rawCollection.iterator();
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public void visitElements(List rawCollection, Consumer action) {
+	public void visitElements(List<E> rawCollection, Consumer<? super E> action) {
 		rawCollection.forEach( action );
 	}
 
@@ -142,18 +141,18 @@ public class StandardListSemantics implements CollectionSemantics<List> {
 	}
 
 	@Override
-	public PersistentCollection instantiateWrapper(
+	public PersistentCollection<E> instantiateWrapper(
 			Object key,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentList( session );
+		return new PersistentList<>( session );
 	}
 
 	@Override
-	public PersistentCollection wrap(
-			Object rawCollection,
+	public PersistentCollection<E> wrap(
+			List<E> rawCollection,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentList( session, (List) rawCollection );
+		return new PersistentList<>( session, rawCollection );
 	}
 }

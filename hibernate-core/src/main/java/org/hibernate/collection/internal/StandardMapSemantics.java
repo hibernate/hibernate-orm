@@ -19,11 +19,11 @@ import org.hibernate.persister.collection.CollectionPersister;
  *
  * @author Steve Ebersole
  */
-public class StandardMapSemantics extends AbstractMapSemantics<Map<?,?>> {
+public class StandardMapSemantics<K,V> extends AbstractMapSemantics<Map<K,V>,K,V> {
 	/**
 	 * Singleton access
 	 */
-	public static final StandardMapSemantics INSTANCE = new StandardMapSemantics();
+	public static final StandardMapSemantics<?,?> INSTANCE = new StandardMapSemantics<>();
 
 	private StandardMapSemantics() {
 	}
@@ -34,25 +34,25 @@ public class StandardMapSemantics extends AbstractMapSemantics<Map<?,?>> {
 	}
 
 	@Override
-	public Map<?, ?> instantiateRaw(
+	public Map<K,V> instantiateRaw(
 			int anticipatedSize,
 			CollectionPersister collectionDescriptor) {
 		return CollectionHelper.mapOfSize( anticipatedSize );
 	}
 
 	@Override
-	public PersistentCollection instantiateWrapper(
+	public PersistentCollection<V> instantiateWrapper(
 			Object key,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentMap( session );
+		return new PersistentMap<>( session );
 	}
 
 	@Override
-	public PersistentCollection wrap(
-			Object rawCollection,
+	public PersistentCollection<V> wrap(
+			Map<K,V> rawCollection,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentMap( session, (Map) rawCollection );
+		return new PersistentMap<>( session, rawCollection );
 	}
 }

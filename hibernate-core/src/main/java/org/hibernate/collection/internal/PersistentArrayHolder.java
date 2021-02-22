@@ -31,7 +31,7 @@ import org.jboss.logging.Logger;
  *
  * @author Gavin King
  */
-public class PersistentArrayHolder extends AbstractPersistentCollection {
+public class PersistentArrayHolder<E> extends AbstractPersistentCollection<E> {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class,
 			PersistentArrayHolder.class.getName()

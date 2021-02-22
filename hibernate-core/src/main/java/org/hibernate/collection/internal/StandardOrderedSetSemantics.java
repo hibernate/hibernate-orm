@@ -6,24 +6,23 @@
  */
 package org.hibernate.collection.internal;
 
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.Set;
-
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
 
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+
 /**
  * @author Steve Ebersole
  */
-public class StandardOrderedSetSemantics extends AbstractSetSemantics<LinkedHashSet<?>> {
+public class StandardOrderedSetSemantics<E> extends AbstractSetSemantics<LinkedHashSet<E>,E> {
 	/**
 	 * Singleton access
 	 */
-	public static final StandardOrderedSetSemantics INSTANCE = new StandardOrderedSetSemantics();
+	public static final StandardOrderedSetSemantics<?> INSTANCE = new StandardOrderedSetSemantics<>();
 
 	private StandardOrderedSetSemantics() {
 	}
@@ -34,30 +33,30 @@ public class StandardOrderedSetSemantics extends AbstractSetSemantics<LinkedHash
 	}
 
 	@Override
-	public LinkedHashSet<?> instantiateRaw(
+	public LinkedHashSet<E> instantiateRaw(
 			int anticipatedSize,
 			CollectionPersister collectionDescriptor) {
 		return anticipatedSize < 1 ? CollectionHelper.linkedSet() : CollectionHelper.linkedSetOfSize( anticipatedSize );
 	}
 
 	@Override
-	public PersistentCollection instantiateWrapper(
+	public PersistentCollection<E> instantiateWrapper(
 			Object key,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentSet( session );
+		return new PersistentSet<>( session );
 	}
 
 	@Override
-	public PersistentCollection wrap(
-			Object rawCollection,
+	public PersistentCollection<E> wrap(
+			LinkedHashSet<E> rawCollection,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentSet( session, (Set) rawCollection );
+		return new PersistentSet<>( session, rawCollection );
 	}
 
 	@Override
-	public Iterator getElementIterator(LinkedHashSet rawCollection) {
+	public Iterator<E> getElementIterator(LinkedHashSet<E> rawCollection) {
 		return rawCollection.iterator();
 	}
 }

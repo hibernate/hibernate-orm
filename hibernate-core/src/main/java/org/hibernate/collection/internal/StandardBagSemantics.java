@@ -18,11 +18,11 @@ import org.hibernate.persister.collection.CollectionPersister;
  *
  * @author Steve Ebersole
  */
-public class StandardBagSemantics extends AbstractBagSemantics<Collection<?>> {
+public class StandardBagSemantics<E> extends AbstractBagSemantics<E> {
 	/**
 	 * Singleton access
 	 */
-	public static final StandardBagSemantics INSTANCE = new StandardBagSemantics();
+	public static final StandardBagSemantics<?> INSTANCE = new StandardBagSemantics<>();
 
 	private StandardBagSemantics() {
 	}
@@ -33,19 +33,19 @@ public class StandardBagSemantics extends AbstractBagSemantics<Collection<?>> {
 	}
 
 	@Override
-	public PersistentCollection instantiateWrapper(
+	public PersistentCollection<E> instantiateWrapper(
 			Object key,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentBag( session );
+		return new PersistentBag<>( session );
 	}
 
 	@Override
-	public PersistentCollection wrap(
-			Object rawCollection,
+	public PersistentCollection<E> wrap(
+			Collection<E> rawCollection,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentBag( session, (Collection) rawCollection );
+		return new PersistentBag<>( session, rawCollection );
 	}
 
 }

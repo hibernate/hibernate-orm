@@ -17,7 +17,7 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class BooleanTypeDescriptor extends AbstractTypeDescriptor<Boolean> implements Primitive<Boolean> {
+public class BooleanTypeDescriptor extends AbstractClassTypeDescriptor<Boolean> implements Primitive<Boolean> {
 	public static final BooleanTypeDescriptor INSTANCE = new BooleanTypeDescriptor();
 
 	private final char characterValueTrue;

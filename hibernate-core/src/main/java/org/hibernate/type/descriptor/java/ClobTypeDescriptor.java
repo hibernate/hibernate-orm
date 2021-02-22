@@ -33,7 +33,7 @@ import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry;
  *
  * @author Steve Ebersole
  */
-public class ClobTypeDescriptor extends AbstractTypeDescriptor<Clob> {
+public class ClobTypeDescriptor extends AbstractClassTypeDescriptor<Clob> {
 	public static final ClobTypeDescriptor INSTANCE = new ClobTypeDescriptor();
 
 	public ClobTypeDescriptor() {

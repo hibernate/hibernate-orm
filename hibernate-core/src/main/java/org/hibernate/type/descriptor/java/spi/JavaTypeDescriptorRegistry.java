@@ -47,7 +47,7 @@ public class JavaTypeDescriptorRegistry implements JavaTypeDescriptorBaseline.Ba
 		if ( descriptor.getJavaType() == null ) {
 			throw new IllegalStateException( "Illegal to add BasicJavaTypeDescriptor with null Java type" );
 		}
-		addBaselineDescriptor( descriptor.getJavaType(), descriptor );
+		addBaselineDescriptor( descriptor.getJavaTypeClass(), descriptor );
 	}
 
 	@Override
@@ -99,7 +99,7 @@ public class JavaTypeDescriptorRegistry implements JavaTypeDescriptorBaseline.Ba
 	}
 
 	public void addDescriptor(JavaTypeDescriptor descriptor) {
-		JavaTypeDescriptor old = descriptorsByClass.put( descriptor.getJavaType(), descriptor );
+		JavaTypeDescriptor old = descriptorsByClass.put( descriptor.getJavaTypeClass(), descriptor );
 		if ( old != null ) {
 			log.debugf(
 					"JavaTypeDescriptorRegistry entry replaced : %s -> %s (was %s)",

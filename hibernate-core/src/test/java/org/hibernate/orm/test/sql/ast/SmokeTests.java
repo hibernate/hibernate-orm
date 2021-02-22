@@ -184,7 +184,7 @@ public class SmokeTests {
 					final MappingModelExpressable selectedExpressable = selectedExpression.getExpressionType();
 					assertThat( selectedExpressable, instanceOf( StandardBasicTypeImpl.class ) );
 					final StandardBasicTypeImpl basicType = (StandardBasicTypeImpl) selectedExpressable;
-					assertThat( basicType.getJavaTypeDescriptor().getJavaType(), AssignableMatcher.assignableTo( Integer.class ) );
+					assertThat( basicType.getJavaTypeDescriptor().getJavaTypeClass(), AssignableMatcher.assignableTo( Integer.class ) );
 					assertThat( basicType.getSqlTypeDescriptor().getSqlType(), is( Types.TINYINT ) );
 
 

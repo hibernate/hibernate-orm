@@ -3,13 +3,13 @@ package org.hibernate.userguide.mapping.basic;
 import java.util.BitSet;
 
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.AbstractTypeDescriptor;
+import org.hibernate.type.descriptor.java.AbstractClassTypeDescriptor;
 
 /**
  * @author Vlad Mihalcea
  */
 //tag::basic-custom-type-BitSetTypeDescriptor-example[]
-public class BitSetTypeDescriptor extends AbstractTypeDescriptor<BitSet> {
+public class BitSetTypeDescriptor extends AbstractClassTypeDescriptor<BitSet> {
 
     private static final String DELIMITER = ",";
 

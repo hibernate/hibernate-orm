@@ -97,7 +97,7 @@ public class ParameterizedAttributeConverterParameterTypeTest extends BaseUnitTe
 					prop.getType()
 			);
 
-			assertTrue( StringListConverter.class.isAssignableFrom( type.getAttributeConverter().getConverterJavaTypeDescriptor().getJavaType() ) );
+			assertTrue( StringListConverter.class.isAssignableFrom( type.getAttributeConverter().getConverterJavaTypeDescriptor().getJavaTypeClass() ) );
 		}
 
 		{
@@ -107,7 +107,7 @@ public class ParameterizedAttributeConverterParameterTypeTest extends BaseUnitTe
 					prop.getType()
 			);
 
-			assertTrue( IntegerListConverter.class.isAssignableFrom( type.getAttributeConverter().getConverterJavaTypeDescriptor().getJavaType() ) );
+			assertTrue( IntegerListConverter.class.isAssignableFrom( type.getAttributeConverter().getConverterJavaTypeDescriptor().getJavaTypeClass() ) );
 		}
 	}
 

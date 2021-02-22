@@ -86,7 +86,7 @@ public class StandardEntityGraphTraversalStateImpl implements EntityGraphTravers
 			else {
 				assert !exploreKeySubgraph;
 				subgraphMap = attributeNode.getSubGraphMap();
-				subgraphMapKey = fetchable.getJavaTypeDescriptor().getJavaType();
+				subgraphMapKey = fetchable.getJavaTypeDescriptor().getJavaTypeClass();
 			}
 			if ( subgraphMap != null && subgraphMapKey != null ) {
 				currentGraphContext = subgraphMap.get( subgraphMapKey );
@@ -108,7 +108,7 @@ public class StandardEntityGraphTraversalStateImpl implements EntityGraphTravers
 	private Class<?> getEntityCollectionPartJavaClass(CollectionPart collectionPart) {
 		if ( collectionPart instanceof EntityCollectionPart ) {
 			EntityCollectionPart entityCollectionPart = (EntityCollectionPart) collectionPart;
-			return entityCollectionPart.getEntityMappingType().getJavaTypeDescriptor().getJavaType();
+			return entityCollectionPart.getEntityMappingType().getJavaTypeDescriptor().getJavaTypeClass();
 		}
 		else {
 			return null;

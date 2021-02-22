@@ -83,7 +83,7 @@ public class Java8DateTimeTests extends BaseNonConfigCoreFunctionalTestCase {
 					String.format(
 							"%s (%s) -> %s",
 							propertyBinding.getName(),
-							javaTypeDescriptor.getJavaType().getSimpleName(),
+							javaTypeDescriptor.getJavaTypeClass().getSimpleName(),
 							javaTypeDescriptor.toString( propertyBinding.getGetter( TheEntity.class ).get( theEntity ) )
 					)
 			);

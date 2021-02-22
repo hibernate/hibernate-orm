@@ -32,7 +32,7 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
  * @author Steve Ebersole
  * @author Gavin King
  */
-public class DurationJavaDescriptor extends AbstractTypeDescriptor<Duration> {
+public class DurationJavaDescriptor extends AbstractClassTypeDescriptor<Duration> {
 	/**
 	 * Singleton access
 	 */

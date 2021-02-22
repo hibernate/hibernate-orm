@@ -23,7 +23,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
  *
  * @author Steve Ebersole
  */
-public class ByteArrayTypeDescriptor extends AbstractTypeDescriptor<Byte[]> {
+public class ByteArrayTypeDescriptor extends AbstractClassTypeDescriptor<Byte[]> {
 	public static final ByteArrayTypeDescriptor INSTANCE = new ByteArrayTypeDescriptor();
 
 	@SuppressWarnings({ "unchecked" })

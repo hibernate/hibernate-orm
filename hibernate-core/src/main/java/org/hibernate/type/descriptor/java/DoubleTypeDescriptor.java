@@ -21,7 +21,7 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
  *
  * @author Steve Ebersole
  */
-public class DoubleTypeDescriptor extends AbstractTypeDescriptor<Double> implements Primitive<Double> {
+public class DoubleTypeDescriptor extends AbstractClassTypeDescriptor<Double> implements Primitive<Double> {
 	public static final DoubleTypeDescriptor INSTANCE = new DoubleTypeDescriptor();
 
 	public DoubleTypeDescriptor() {

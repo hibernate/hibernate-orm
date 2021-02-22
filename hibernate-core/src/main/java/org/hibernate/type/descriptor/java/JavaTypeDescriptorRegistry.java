@@ -88,7 +88,7 @@ public class JavaTypeDescriptorRegistry implements Serializable {
 	}
 
 	private JavaTypeDescriptor addDescriptorInternal(JavaTypeDescriptor descriptor) {
-		return descriptorsByClass.put( descriptor.getJavaType(), descriptor );
+		return descriptorsByClass.put( descriptor.getJavaTypeClass(), descriptor );
 	}
 
 	/**
@@ -147,7 +147,7 @@ public class JavaTypeDescriptorRegistry implements Serializable {
 	}
 
 
-	public static class FallbackJavaTypeDescriptor<T> extends AbstractTypeDescriptor<T> {
+	public static class FallbackJavaTypeDescriptor<T> extends AbstractClassTypeDescriptor<T> {
 		protected FallbackJavaTypeDescriptor(final Class<T> type) {
 			super( type, createMutabilityPlan( type ) );
 		}
@@ -177,7 +177,7 @@ public class JavaTypeDescriptorRegistry implements Serializable {
 		@Override
 		public T fromString(String string) {
 			throw new HibernateException(
-					"Not known how to convert String to given type [" + getJavaType().getName() + "]"
+					"Not known how to convert String to given type [" + getJavaType().getTypeName() + "]"
 			);
 		}
 

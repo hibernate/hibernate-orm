@@ -846,7 +846,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 
 		@Override
 		public Class<T> getJavaType() {
-			return javaTypeDescriptor.getJavaType();
+			return javaTypeDescriptor.getJavaTypeClass();
 		}
 	}
 

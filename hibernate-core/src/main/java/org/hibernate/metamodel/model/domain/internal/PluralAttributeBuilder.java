@@ -84,42 +84,42 @@ public class PluralAttributeBuilder<D, C, E, K> {
 				attributeMetadata.getMember()
 		);
 
-		if ( Map.class.equals( attributeJtd.getJavaType() ) ) {
+		if ( Map.class.equals( attributeJtd.getJavaTypeClass() ) ) {
 			//noinspection unchecked
 			return new MapAttributeImpl<>( builder, metadataContext );
 		}
-		else if ( Set.class.equals( attributeJtd.getJavaType() ) ) {
+		else if ( Set.class.equals( attributeJtd.getJavaTypeClass() ) ) {
 			//noinspection unchecked
 			return new SetAttributeImpl<>( builder, metadataContext );
 		}
-		else if ( List.class.equals( attributeJtd.getJavaType() ) ) {
+		else if ( List.class.equals( attributeJtd.getJavaTypeClass() ) ) {
 			//noinspection unchecked
 			return new ListAttributeImpl<>( builder, metadataContext );
 		}
-		else if ( Collection.class.equals( attributeJtd.getJavaType() ) ) {
+		else if ( Collection.class.equals( attributeJtd.getJavaTypeClass() ) ) {
 			//noinspection unchecked
 			return new BagAttributeImpl<>( builder, metadataContext );
 		}
 
 		//apply loose rules
-		if ( attributeJtd.getJavaType().isArray() ) {
+		if ( attributeJtd.getJavaTypeClass().isArray() ) {
 			//noinspection unchecked
 			return new ListAttributeImpl<>( builder, metadataContext );
 		}
 
-		if ( Map.class.isAssignableFrom( attributeJtd.getJavaType() ) ) {
+		if ( Map.class.isAssignableFrom( attributeJtd.getJavaTypeClass() ) ) {
 			//noinspection unchecked
 			return new MapAttributeImpl<>( builder, metadataContext );
 		}
-		else if ( Set.class.isAssignableFrom( attributeJtd.getJavaType() ) ) {
+		else if ( Set.class.isAssignableFrom( attributeJtd.getJavaTypeClass() ) ) {
 			//noinspection unchecked
 			return new SetAttributeImpl<>( builder, metadataContext );
 		}
-		else if ( List.class.isAssignableFrom( attributeJtd.getJavaType() ) ) {
+		else if ( List.class.isAssignableFrom( attributeJtd.getJavaTypeClass() ) ) {
 			//noinspection unchecked
 			return new ListAttributeImpl<>( builder, metadataContext );
 		}
-		else if ( Collection.class.isAssignableFrom( attributeJtd.getJavaType() ) ) {
+		else if ( Collection.class.isAssignableFrom( attributeJtd.getJavaTypeClass() ) ) {
 			//noinspection unchecked
 			return new BagAttributeImpl<>( builder, metadataContext );
 		}

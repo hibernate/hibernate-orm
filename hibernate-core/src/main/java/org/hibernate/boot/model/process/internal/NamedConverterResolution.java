@@ -187,11 +187,11 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 //		this.jdbcMapping = new StandardBasicTypeImpl( relationalJtd, relationalStd );
 
 		this.legacyResolvedType = new AttributeConverterTypeAdapter(
-				ConverterDescriptor.TYPE_NAME_PREFIX + valueConverter.getConverterJavaTypeDescriptor().getJavaType().getName(),
+				ConverterDescriptor.TYPE_NAME_PREFIX + valueConverter.getConverterJavaTypeDescriptor().getJavaType().getTypeName(),
 				String.format(
 						"BasicType adapter for AttributeConverter<%s,%s>",
-						domainJtd.getJavaType().getSimpleName(),
-						relationalJtd.getJavaType().getSimpleName()
+						domainJtd.getJavaType().getTypeName(),
+						relationalJtd.getJavaType().getTypeName()
 				),
 				valueConverter,
 				relationalStd,

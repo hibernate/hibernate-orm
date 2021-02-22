@@ -7,7 +7,7 @@
 package org.hibernate.type.descriptor.java.spi;
 
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.AbstractTypeDescriptor;
+import org.hibernate.type.descriptor.java.AbstractClassTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
 
@@ -17,7 +17,7 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
  *
  * @author Steve Ebersole
  */
-public class JavaTypeDescriptorBasicAdaptor<T> extends AbstractTypeDescriptor<T> {
+public class JavaTypeDescriptorBasicAdaptor<T> extends AbstractClassTypeDescriptor<T> {
 	public JavaTypeDescriptorBasicAdaptor(Class<T> type) {
 		super( type );
 	}
@@ -25,7 +25,7 @@ public class JavaTypeDescriptorBasicAdaptor<T> extends AbstractTypeDescriptor<T>
 	@Override
 	public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context) {
 		throw new UnsupportedOperationException(
-				"Recommended SqlTypeDescriptor not known for this Java type : " + getJavaType().getName()
+				"Recommended SqlTypeDescriptor not known for this Java type : " + getJavaType().getTypeName()
 		);
 	}
 
@@ -37,26 +37,26 @@ public class JavaTypeDescriptorBasicAdaptor<T> extends AbstractTypeDescriptor<T>
 	@Override
 	public T fromString(String string) {
 		throw new UnsupportedOperationException(
-				"Conversion from String strategy not known for this Java type : " + getJavaType().getName()
+				"Conversion from String strategy not known for this Java type : " + getJavaType().getTypeName()
 		);
 	}
 
 	@Override
 	public <X> X unwrap(T value, Class<X> type, WrapperOptions options) {
 		throw new UnsupportedOperationException(
-				"Unwrap strategy not known for this Java type : " + getJavaType().getName()
+				"Unwrap strategy not known for this Java type : " + getJavaType().getTypeName()
 		);
 	}
 
 	@Override
 	public <X> T wrap(X value, WrapperOptions options) {
 		throw new UnsupportedOperationException(
-				"Wrap strategy not known for this Java type : " + getJavaType().getName()
+				"Wrap strategy not known for this Java type : " + getJavaType().getTypeName()
 		);
 	}
 
 	@Override
 	public String toString() {
-		return "JavaTypeDescriptorBasicAdaptor(" + getJavaType().getName() + ")";
+		return "JavaTypeDescriptorBasicAdaptor(" + getJavaType().getTypeName() + ")";
 	}
 }

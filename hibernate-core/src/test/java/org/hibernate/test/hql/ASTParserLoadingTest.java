@@ -276,7 +276,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 					assertEquals( 1, selections.size() );
 					SqmSelection<?> typeSelection = selections.get( 0 );
 					// always integer for joined
-					assertEquals( Integer.class, typeSelection.getNodeJavaTypeDescriptor().getJavaType() );
+					assertEquals( Integer.class, typeSelection.getNodeJavaTypeDescriptor().getJavaTypeClass() );
 
 					// test
 					query = session.createQuery( "select type(a) from Animal a where type(a) = Dog" );
@@ -285,7 +285,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 					selections = sqmStatement.getQuerySpec().getSelectClause().getSelections();
 					assertEquals( 1, selections.size() );
 					typeSelection = selections.get( 0 );
-					assertEquals( Class.class, typeSelection.getNodeJavaTypeDescriptor().getJavaType() );
+					assertEquals( Class.class, typeSelection.getNodeJavaTypeDescriptor().getJavaTypeClass() );
 				}
 		);
 	}
@@ -1546,7 +1546,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 					final SqmSelection<?> selection = sqmStatement.getQuerySpec().getSelectClause().getSelections().get( 0 );
 					final SqmExpressable<?> selectionType = selection.getSelectableNode().getNodeType();
 					assertThat( selectionType, CoreMatchers.instanceOf( EmbeddableDomainType.class ) );
-					assertEquals( Name.class, selection.getNodeJavaTypeDescriptor().getJavaType() );
+					assertEquals( Name.class, selection.getNodeJavaTypeDescriptor().getJavaTypeClass() );
 
 
 					// Test the ability to perform comparisons between component values
@@ -1829,7 +1829,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 					final SqmSelection<?> selection = sqmStatement.getQuerySpec().getSelectClause().getSelections().get( 0 );
 					final SqmExpressable<?> selectionType = selection.getSelectableNode().getNodeType();
 					assertThat( selectionType, instanceOf( EntityDomainType.class ) );
-					assertThat( selectionType.getExpressableJavaTypeDescriptor().getJavaType(), equalTo( Animal.class ) );
+					assertThat( selectionType.getExpressableJavaTypeDescriptor().getJavaTypeClass(), equalTo( Animal.class ) );
 					assertThat( selection.getAlias(), is( "a" ) );
 				}
 		);

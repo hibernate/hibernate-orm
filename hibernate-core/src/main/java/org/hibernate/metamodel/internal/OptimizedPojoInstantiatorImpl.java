@@ -17,7 +17,7 @@ public class OptimizedPojoInstantiatorImpl<J> extends AbstractPojoInstantiator {
 	private final ReflectionOptimizer.InstantiationOptimizer instantiationOptimizer;
 
 	public OptimizedPojoInstantiatorImpl(JavaTypeDescriptor javaTypeDescriptor, ReflectionOptimizer.InstantiationOptimizer instantiationOptimizer) {
-		super( javaTypeDescriptor.getJavaType() );
+		super( javaTypeDescriptor.getJavaTypeClass() );
 		this.instantiationOptimizer = instantiationOptimizer;
 	}
 

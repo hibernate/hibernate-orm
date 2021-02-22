@@ -102,10 +102,10 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping {
 			}
 		}
 
-		if ( ! getJavaTypeDescriptor().getJavaType().isInstance( naturalIdValue ) ) {
+		if ( ! getJavaTypeDescriptor().getJavaTypeClass().isInstance( naturalIdValue ) ) {
 			throw new IllegalArgumentException(
 					"Incoming natural-id value [" + naturalIdValue + "] is not of expected type ["
-							+ getJavaTypeDescriptor().getJavaType().getName() + "]"
+							+ getJavaTypeDescriptor().getJavaType().getTypeName() + "]"
 			);
 		}
 	}

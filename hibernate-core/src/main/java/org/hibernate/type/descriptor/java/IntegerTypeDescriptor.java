@@ -18,7 +18,7 @@ import org.hibernate.type.descriptor.java.spi.Primitive;
  *
  * @author Steve Ebersole
  */
-public class IntegerTypeDescriptor extends AbstractTypeDescriptor<Integer> implements Primitive<Integer> {
+public class IntegerTypeDescriptor extends AbstractClassTypeDescriptor<Integer> implements Primitive<Integer> {
 	public static final IntegerTypeDescriptor INSTANCE = new IntegerTypeDescriptor();
 
 	public IntegerTypeDescriptor() {

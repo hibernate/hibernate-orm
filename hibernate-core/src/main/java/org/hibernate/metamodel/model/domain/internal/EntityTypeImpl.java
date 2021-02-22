@@ -102,7 +102,7 @@ public class EntityTypeImpl<J>
 
 				@Override
 				public Class<?> getBindableJavaType() {
-					return getExpressableJavaTypeDescriptor().getJavaType();
+					return getExpressableJavaTypeDescriptor().getJavaTypeClass();
 				}
 
 				@Override

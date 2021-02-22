@@ -49,6 +49,6 @@ public abstract class AbstractSqmPathSource<J> implements SqmPathSource<J> {
 
 	@Override
 	public Class<J> getBindableJavaType() {
-		return getExpressableJavaTypeDescriptor().getJavaType();
+		return getExpressableJavaTypeDescriptor().getJavaTypeClass();
 	}
 }

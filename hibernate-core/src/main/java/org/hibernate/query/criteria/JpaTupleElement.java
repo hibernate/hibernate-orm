@@ -21,6 +21,6 @@ public interface JpaTupleElement<T> extends TupleElement<T>, JpaCriteriaNode {
 	@Override
 	default Class<? extends T> getJavaType() {
 		// todo (6.0) : can this signature just return `Class<T>`?
-		return getJavaTypeDescriptor() == null ? null : getJavaTypeDescriptor().getJavaType();
+		return getJavaTypeDescriptor() == null ? null : getJavaTypeDescriptor().getJavaTypeClass();
 	}
 }

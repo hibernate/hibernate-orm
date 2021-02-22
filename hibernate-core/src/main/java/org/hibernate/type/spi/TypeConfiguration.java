@@ -543,7 +543,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 	private static boolean matchesJavaType(SqmExpressable<?> type, Class<?> javaType) {
 		assert javaType != null;
-		return type != null && javaType.isAssignableFrom( type.getExpressableJavaTypeDescriptor().getJavaType() );
+		return type != null && javaType.isAssignableFrom( type.getExpressableJavaTypeDescriptor().getJavaTypeClass() );
 	}
 
 

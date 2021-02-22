@@ -7,6 +7,8 @@
 package org.hibernate.type.descriptor.java;
 
 import java.io.Serializable;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.Comparator;
 import java.util.Objects;
 
@@ -26,7 +28,7 @@ public interface JavaTypeDescriptor<T> extends Serializable {
 	/**
 	 * Get the Java type described
 	 */
-	default Class<T> getJavaType() {
+	default Type getJavaType() {
 		// default on this side since #getJavaTypeClass is the currently implemented method
 		return getJavaTypeClass();
 	}
@@ -98,7 +100,7 @@ public interface JavaTypeDescriptor<T> extends Serializable {
 	 */
 	default Comparator<T> getComparator() {
 		//noinspection unchecked
-		return Comparable.class.isAssignableFrom( getJavaType() )
+		return Comparable.class.isAssignableFrom( getJavaTypeClass() )
 				? ComparableComparator.INSTANCE
 				: null;
 	}
@@ -181,11 +183,20 @@ public interface JavaTypeDescriptor<T> extends Serializable {
 	 * Retrieve the Java type handled here.
 	 *
 	 * @return The Java type.
-	 *
-	 * @deprecated Use {@link #getJavaType()} instead
 	 */
-	@Deprecated
-	Class<T> getJavaTypeClass();
+	default Class<T> getJavaTypeClass() {
+		final Type type = getJavaType();
+		if ( type == null ) {
+			return null;
+		}
+		else if ( type instanceof Class<?> ) {
+			return (Class<T>) type;
+		}
+		else if ( type instanceof ParameterizedType ) {
+			return (Class<T>) ( (ParameterizedType) type ).getRawType();
+		}
+		throw new UnsupportedOperationException( "Can't get java type class from type: " + type );
+	}
 
 	/**
 	 * The check constraint that should be added to the column

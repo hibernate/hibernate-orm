@@ -81,7 +81,7 @@ public class SqmJpaCompoundSelection<T>
 
 	@Override
 	public Class<T> getJavaType() {
-		return getJavaTypeDescriptor().getJavaType();
+		return getJavaTypeDescriptor().getJavaTypeClass();
 	}
 
 	@Override

@@ -60,7 +60,7 @@ public class SimpleEntityTypeResolutionsTests {
 			switch ( property.getName() ) {
 				case "someDate": {
 					assertThat(
-							propertyResolution.getDomainJavaDescriptor().getJavaType(),
+							propertyResolution.getDomainJavaDescriptor().getJavaTypeClass(),
 							sameInstance( Date.class )
 					);
 					assertThat( propertyValue.getTemporalPrecision(), is( TemporalType.TIMESTAMP ) );
@@ -68,7 +68,7 @@ public class SimpleEntityTypeResolutionsTests {
 				}
 				case "someInstant": {
 					assertThat(
-							propertyResolution.getDomainJavaDescriptor().getJavaType(),
+							propertyResolution.getDomainJavaDescriptor().getJavaTypeClass(),
 							sameInstance( Instant.class )
 					);
 					assertThat( propertyValue.getTemporalPrecision(), nullValue() );
@@ -76,21 +76,21 @@ public class SimpleEntityTypeResolutionsTests {
 				}
 				case "someInteger": {
 					assertThat(
-							propertyResolution.getDomainJavaDescriptor().getJavaType(),
+							propertyResolution.getDomainJavaDescriptor().getJavaTypeClass(),
 							sameInstance( Integer.class )
 					);
 					break;
 				}
 				case "someLong": {
 					assertThat(
-							propertyResolution.getDomainJavaDescriptor().getJavaType(),
+							propertyResolution.getDomainJavaDescriptor().getJavaTypeClass(),
 							sameInstance( Long.class )
 					);
 					break;
 				}
 				case "someString": {
 					assertThat(
-							propertyResolution.getDomainJavaDescriptor().getJavaType(),
+							propertyResolution.getDomainJavaDescriptor().getJavaTypeClass(),
 							sameInstance( String.class )
 					);
 					break;

@@ -22,7 +22,7 @@ import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class EnumJavaTypeDescriptor<T extends Enum<T>> extends AbstractTypeDescriptor<T> {
+public class EnumJavaTypeDescriptor<T extends Enum<T>> extends AbstractClassTypeDescriptor<T> {
 	@SuppressWarnings("unchecked")
 	public EnumJavaTypeDescriptor(Class<T> type) {
 		super( type, ImmutableMutabilityPlan.INSTANCE );
@@ -53,7 +53,7 @@ public class EnumJavaTypeDescriptor<T extends Enum<T>> extends AbstractTypeDescr
 
 	@Override
 	public T fromString(String string) {
-		return string == null ? null : Enum.valueOf( getJavaType(), string );
+		return string == null ? null : Enum.valueOf( getJavaTypeClass(), string );
 	}
 
 	@Override
@@ -156,7 +156,7 @@ public class EnumJavaTypeDescriptor<T extends Enum<T>> extends AbstractTypeDescr
 		if ( relationalForm == null ) {
 			return null;
 		}
-		return getJavaType().getEnumConstants()[ relationalForm ];
+		return getJavaTypeClass().getEnumConstants()[ relationalForm ];
 	}
 
 	/**
@@ -166,7 +166,7 @@ public class EnumJavaTypeDescriptor<T extends Enum<T>> extends AbstractTypeDescr
 		if ( relationalForm == null ) {
 			return null;
 		}
-		return getJavaType().getEnumConstants()[ relationalForm ];
+		return getJavaTypeClass().getEnumConstants()[ relationalForm ];
 	}
 
 	/**
@@ -176,7 +176,7 @@ public class EnumJavaTypeDescriptor<T extends Enum<T>> extends AbstractTypeDescr
 		if ( relationalForm == null ) {
 			return null;
 		}
-		return getJavaType().getEnumConstants()[ relationalForm ];
+		return getJavaTypeClass().getEnumConstants()[ relationalForm ];
 	}
 
 	/**
@@ -186,7 +186,7 @@ public class EnumJavaTypeDescriptor<T extends Enum<T>> extends AbstractTypeDescr
 		if ( relationalForm == null ) {
 			return null;
 		}
-		return getJavaType().getEnumConstants()[ relationalForm.intValue() ];
+		return getJavaTypeClass().getEnumConstants()[ relationalForm.intValue() ];
 	}
 
 	/**
@@ -213,19 +213,19 @@ public class EnumJavaTypeDescriptor<T extends Enum<T>> extends AbstractTypeDescr
 		if ( relationalForm == null ) {
 			return null;
 		}
-		return Enum.valueOf( getJavaType(), relationalForm.trim() );
+		return Enum.valueOf( getJavaTypeClass(), relationalForm.trim() );
 	}
 
 	@Override
 	public String getCheckCondition(String columnName, SqlTypeDescriptor sqlTypeDescriptor, Dialect dialect) {
 		if (sqlTypeDescriptor instanceof TinyIntTypeDescriptor
 				|| sqlTypeDescriptor instanceof IntegerTypeDescriptor) {
-			int last = getJavaType().getEnumConstants().length - 1;
+			int last = getJavaTypeClass().getEnumConstants().length - 1;
 			return columnName + " between 0 and " + last;
 		}
 		else if (sqlTypeDescriptor instanceof VarcharTypeDescriptor) {
 			StringBuilder types = new StringBuilder();
-			for ( Enum<T> value : getJavaType().getEnumConstants() ) {
+			for ( Enum<T> value : getJavaTypeClass().getEnumConstants() ) {
 				if (types.length() != 0) {
 					types.append(", ");
 				}

@@ -11,7 +11,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
 /**
  * @author Steve Ebersole
  */
-public class JavaObjectTypeDescriptor extends AbstractTypeDescriptor<Object> {
+public class JavaObjectTypeDescriptor extends AbstractClassTypeDescriptor<Object> {
 	/**
 	 * Singleton access
 	 */

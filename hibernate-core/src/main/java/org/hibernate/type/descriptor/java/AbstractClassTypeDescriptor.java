@@ -7,7 +7,6 @@
 package org.hibernate.type.descriptor.java;
 
 import java.io.Serializable;
-import java.lang.reflect.Type;
 import java.util.Comparator;
 import java.util.Objects;
 
@@ -24,8 +23,8 @@ import org.hibernate.internal.util.compare.ComparableComparator;
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractTypeDescriptor<T> implements BasicJavaDescriptor<T>, Serializable {
-	private final Type type;
+public abstract class AbstractClassTypeDescriptor<T> implements BasicJavaDescriptor<T>, Serializable {
+	private final Class<T> type;
 	private final MutabilityPlan<T> mutabilityPlan;
 	private final Comparator<T> comparator;
 
@@ -34,10 +33,10 @@ public abstract class AbstractTypeDescriptor<T> implements BasicJavaDescriptor<T
 	 *
 	 * @param type The Java type.
 	 *
-	 * @see #AbstractTypeDescriptor(Type, MutabilityPlan)
+	 * @see #AbstractClassTypeDescriptor(Class, MutabilityPlan)
 	 */
 	@SuppressWarnings({ "unchecked" })
-	protected AbstractTypeDescriptor(Type type) {
+	protected AbstractClassTypeDescriptor(Class<T> type) {
 		this( type, (MutabilityPlan<T>) ImmutableMutabilityPlan.INSTANCE );
 	}
 
@@ -48,10 +47,10 @@ public abstract class AbstractTypeDescriptor<T> implements BasicJavaDescriptor<T
 	 * @param mutabilityPlan The plan for handling mutability aspects of the java type.
 	 */
 	@SuppressWarnings({ "unchecked" })
-	protected AbstractTypeDescriptor(Type type, MutabilityPlan<T> mutabilityPlan) {
+	protected AbstractClassTypeDescriptor(Class<T> type, MutabilityPlan<T> mutabilityPlan) {
 		this.type = type;
 		this.mutabilityPlan = mutabilityPlan;
-		this.comparator = Comparable.class.isAssignableFrom( getJavaTypeClass() )
+		this.comparator = Comparable.class.isAssignableFrom( type )
 				? (Comparator<T>) ComparableComparator.INSTANCE
 				: null;
 	}
@@ -61,9 +60,13 @@ public abstract class AbstractTypeDescriptor<T> implements BasicJavaDescriptor<T
 		return mutabilityPlan;
 	}
 
-	@Override
-	public Type getJavaType() {
+	public Class<T> getJavaType() {
 		return type;
+	}
+
+	@Override
+	public Class<T> getJavaTypeClass() {
+		return getJavaType();
 	}
 
 	@Override
@@ -88,13 +91,13 @@ public abstract class AbstractTypeDescriptor<T> implements BasicJavaDescriptor<T
 
 	protected HibernateException unknownUnwrap(Class conversionType) {
 		throw new HibernateException(
-				"Unknown unwrap conversion requested: " + type.getTypeName() + " to " + conversionType.getName()
+				"Unknown unwrap conversion requested: " + type.getName() + " to " + conversionType.getName()
 		);
 	}
 
 	protected HibernateException unknownWrap(Class conversionType) {
 		throw new HibernateException(
-				"Unknown wrap conversion requested: " + conversionType.getName() + " to " + type.getTypeName()
+				"Unknown wrap conversion requested: " + conversionType.getName() + " to " + type.getName()
 		);
 	}
 }

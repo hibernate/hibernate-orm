@@ -17,7 +17,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
  *
  * @author Steve Ebersole
  */
-public class BigDecimalTypeDescriptor extends AbstractTypeDescriptor<BigDecimal> {
+public class BigDecimalTypeDescriptor extends AbstractClassTypeDescriptor<BigDecimal> {
 	public static final BigDecimalTypeDescriptor INSTANCE = new BigDecimalTypeDescriptor();
 
 	public BigDecimalTypeDescriptor() {

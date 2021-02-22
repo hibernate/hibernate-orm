@@ -99,7 +99,7 @@ public class CaseExpressionsTest extends BaseSqmUnitTest {
 		);
 
 		assertThat( coalesce.getArguments(), hasSize( 2 ) );
-		assertEquals( coalesce.getJavaTypeDescriptor().getJavaType(), String.class );
+		assertEquals( coalesce.getJavaTypeDescriptor().getJavaTypeClass(), String.class );
 	}
 
 	@Test
@@ -115,7 +115,7 @@ public class CaseExpressionsTest extends BaseSqmUnitTest {
 				.get( 0 )
 				.getSelectableNode();
 
-		assertEquals( selectableNode.getJavaTypeDescriptor().getJavaType(), String.class );
+		assertEquals( selectableNode.getJavaTypeDescriptor().getJavaTypeClass(), String.class );
 
 //		final  nullif = TestingUtil.cast(
 //				selectableNode,

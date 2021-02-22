@@ -19,7 +19,7 @@ import java.util.Comparator;
  *
  * @author Gavin King
  */
-public class ZoneOffsetJavaDescriptor extends AbstractTypeDescriptor<ZoneOffset> {
+public class ZoneOffsetJavaDescriptor extends AbstractClassTypeDescriptor<ZoneOffset> {
 	public static final ZoneOffsetJavaDescriptor INSTANCE = new ZoneOffsetJavaDescriptor();
 
 	public static class ZoneOffsetComparator implements Comparator<ZoneOffset> {

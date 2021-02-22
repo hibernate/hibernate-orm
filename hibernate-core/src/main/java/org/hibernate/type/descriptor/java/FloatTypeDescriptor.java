@@ -18,7 +18,7 @@ import org.hibernate.type.descriptor.java.spi.Primitive;
  *
  * @author Steve Ebersole
  */
-public class FloatTypeDescriptor extends AbstractTypeDescriptor<Float> implements Primitive<Float> {
+public class FloatTypeDescriptor extends AbstractClassTypeDescriptor<Float> implements Primitive<Float> {
 	public static final FloatTypeDescriptor INSTANCE = new FloatTypeDescriptor();
 
 	public FloatTypeDescriptor() {

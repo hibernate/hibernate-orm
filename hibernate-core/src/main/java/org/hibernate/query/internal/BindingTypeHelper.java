@@ -74,7 +74,7 @@ public class BindingTypeHelper {
 			javaType = bindValue.getClass();
 		}
 		else if ( baseType != null ) {
-			javaType = baseType.getExpressableJavaTypeDescriptor().getJavaType();
+			javaType = baseType.getExpressableJavaTypeDescriptor().getJavaTypeClass();
 		}
 		else {
 			javaType = java.sql.Timestamp.class;
@@ -98,7 +98,7 @@ public class BindingTypeHelper {
 
 	public AllowableParameterType resolveTimestampTemporalTypeVariant(Class javaType, AllowableParameterType baseType) {
 		//noinspection unchecked
-		if ( baseType.getExpressableJavaTypeDescriptor().getJavaType().isAssignableFrom( javaType ) ) {
+		if ( baseType.getExpressableJavaTypeDescriptor().getJavaTypeClass().isAssignableFrom( javaType ) ) {
 			return baseType;
 		}
 
@@ -130,7 +130,7 @@ public class BindingTypeHelper {
 	}
 
 	public AllowableParameterType<?> resolveDateTemporalTypeVariant(Class<?> javaType, AllowableParameterType<?> baseType) {
-		if ( baseType.getExpressableJavaTypeDescriptor().getJavaType().isAssignableFrom( javaType ) ) {
+		if ( baseType.getExpressableJavaTypeDescriptor().getJavaTypeClass().isAssignableFrom( javaType ) ) {
 			return baseType;
 		}
 

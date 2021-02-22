@@ -282,7 +282,7 @@ public class SqmUtil {
 				if ( type instanceof EntityIdentifierMapping ) {
 					mappingExpressable = type;
 					EntityIdentifierMapping identifierMapping = (EntityIdentifierMapping) type;
-					if ( !identifierMapping.getJavaTypeDescriptor().getJavaType().isInstance( bindValue ) ) {
+					if ( !identifierMapping.getJavaTypeDescriptor().getJavaTypeClass().isInstance( bindValue ) ) {
 						bindValue = identifierMapping.getIdentifier( bindValue, session );
 					}
 				}

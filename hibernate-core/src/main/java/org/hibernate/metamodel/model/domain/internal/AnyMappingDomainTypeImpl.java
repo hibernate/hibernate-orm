@@ -26,7 +26,7 @@ public class AnyMappingDomainTypeImpl<T> implements AnyMappingDomainType<T> {
 
 	@Override
 	public Class<T> getJavaType() {
-		return baseJtd.getJavaType();
+		return baseJtd.getJavaTypeClass();
 	}
 
 	@Override

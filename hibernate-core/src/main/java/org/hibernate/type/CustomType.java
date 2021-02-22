@@ -371,7 +371,7 @@ public class CustomType
 
 	@Override
 	public Class getJavaType() {
-		return mappedJavaTypeDescriptor.getJavaType();
+		return mappedJavaTypeDescriptor.getJavaTypeClass();
 	}
 
 	@Override

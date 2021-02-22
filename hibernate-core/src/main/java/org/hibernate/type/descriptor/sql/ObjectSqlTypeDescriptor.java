@@ -51,7 +51,7 @@ public class ObjectSqlTypeDescriptor implements SqlTypeDescriptor {
 
 	@Override
 	public <X> ValueBinder<X> getBinder(JavaTypeDescriptor<X> javaTypeDescriptor) {
-		if ( Serializable.class.isAssignableFrom( javaTypeDescriptor.getJavaType() ) ) {
+		if ( Serializable.class.isAssignableFrom( javaTypeDescriptor.getJavaTypeClass() ) ) {
 			return VarbinaryTypeDescriptor.INSTANCE.getBinder( javaTypeDescriptor );
 		}
 
@@ -73,7 +73,7 @@ public class ObjectSqlTypeDescriptor implements SqlTypeDescriptor {
 	@Override
 	@SuppressWarnings("unchecked")
 	public ValueExtractor getExtractor(JavaTypeDescriptor javaTypeDescriptor) {
-		if ( Serializable.class.isAssignableFrom( javaTypeDescriptor.getJavaType() ) ) {
+		if ( Serializable.class.isAssignableFrom( javaTypeDescriptor.getJavaTypeClass() ) ) {
 			return VarbinaryTypeDescriptor.INSTANCE.getExtractor( javaTypeDescriptor );
 		}
 

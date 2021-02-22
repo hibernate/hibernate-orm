@@ -20,7 +20,7 @@ import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class UrlTypeDescriptor extends AbstractTypeDescriptor<URL> {
+public class UrlTypeDescriptor extends AbstractClassTypeDescriptor<URL> {
 	public static final UrlTypeDescriptor INSTANCE = new UrlTypeDescriptor();
 
 	public UrlTypeDescriptor() {

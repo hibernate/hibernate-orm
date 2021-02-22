@@ -142,8 +142,8 @@ public class EnumResolutionTests {
 
 		// verify the interpretations used for reading
 		assertThat( resolution.getRelationalSqlTypeDescriptor().getJdbcTypeCode(), is( jdbcCode ) );
-		assertThat( resolution.getRelationalJavaDescriptor().getJavaType(), equalTo( jdbcJavaType ) );
-		assertThat( resolution.getDomainJavaDescriptor().getJavaType(), equalTo( Values.class ) );
+		assertThat( resolution.getRelationalJavaDescriptor().getJavaTypeClass(), equalTo( jdbcJavaType ) );
+		assertThat( resolution.getDomainJavaDescriptor().getJavaTypeClass(), equalTo( Values.class ) );
 
 		final JdbcMapping jdbcMapping = resolution.getJdbcMapping();
 		assertThat( jdbcMapping.getSqlTypeDescriptor(), equalTo( resolution.getRelationalSqlTypeDescriptor() ) );

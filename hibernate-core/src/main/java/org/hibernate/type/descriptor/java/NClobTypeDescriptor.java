@@ -28,7 +28,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
  *
  * @author Steve Ebersole
  */
-public class NClobTypeDescriptor extends AbstractTypeDescriptor<NClob> {
+public class NClobTypeDescriptor extends AbstractClassTypeDescriptor<NClob> {
 	public static final NClobTypeDescriptor INSTANCE = new NClobTypeDescriptor();
 
 	public static class NClobMutabilityPlan implements MutabilityPlan<NClob> {

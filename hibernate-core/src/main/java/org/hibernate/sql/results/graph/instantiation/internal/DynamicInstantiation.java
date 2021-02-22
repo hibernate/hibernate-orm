@@ -55,7 +55,7 @@ public class DynamicInstantiation<T> implements DomainResultProducer {
 	 * todo (6.0) : remove this.  find usages and replace with #getTargetJavaTypeDescriptor
 	 */
 	public Class<T> getTargetJavaType() {
-		return getTargetJavaTypeDescriptor().getJavaType();
+		return getTargetJavaTypeDescriptor().getJavaTypeClass();
 	}
 
 	public void addArgument(String alias, DomainResultProducer argumentResultProducer) {
@@ -63,7 +63,7 @@ public class DynamicInstantiation<T> implements DomainResultProducer {
 			throw new ConversionException( "Unexpected call to DynamicInstantiation#addAgument after previously complete" );
 		}
 
-		if ( List.class.equals( getTargetJavaTypeDescriptor().getJavaType() ) ) {
+		if ( List.class.equals( getTargetJavaTypeDescriptor().getJavaTypeClass() ) ) {
 			// really should not have an alias...
 			if ( alias != null && log.isDebugEnabled() ) {
 				log.debugf(
@@ -74,7 +74,7 @@ public class DynamicInstantiation<T> implements DomainResultProducer {
 				);
 			}
 		}
-		else if ( Map.class.equals( getTargetJavaTypeDescriptor().getJavaType() ) ) {
+		else if ( Map.class.equals( getTargetJavaTypeDescriptor().getJavaTypeClass() ) ) {
 			// must have an alias...
 			if ( alias == null ) {
 				log.warnf(
@@ -104,7 +104,7 @@ public class DynamicInstantiation<T> implements DomainResultProducer {
 
 	@Override
 	public String toString() {
-		return "DynamicInstantiation(" + getTargetJavaTypeDescriptor().getJavaType().getName() + ")";
+		return "DynamicInstantiation(" + getTargetJavaTypeDescriptor().getJavaType().getTypeName() + ")";
 	}
 
 	@Override

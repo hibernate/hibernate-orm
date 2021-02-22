@@ -86,7 +86,7 @@ public class EmbeddedAttributeMapping
 
 		if ( parentInjectionAttributeName != null ) {
 			parentInjectionAttributePropertyAccess = PropertyAccessStrategyBasicImpl.INSTANCE.buildPropertyAccess(
-					embeddableMappingType.getMappedJavaTypeDescriptor().getJavaType(),
+					embeddableMappingType.getMappedJavaTypeDescriptor().getJavaTypeClass(),
 					parentInjectionAttributeName
 			);
 		}

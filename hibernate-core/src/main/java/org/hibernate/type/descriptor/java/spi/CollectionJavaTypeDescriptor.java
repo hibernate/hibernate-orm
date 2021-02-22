@@ -9,7 +9,7 @@ package org.hibernate.type.descriptor.java.spi;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.AbstractTypeDescriptor;
+import org.hibernate.type.descriptor.java.AbstractClassTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
 
@@ -23,7 +23,7 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
  *
  * @author Steve Ebersole
  */
-public class CollectionJavaTypeDescriptor<C> extends AbstractTypeDescriptor<C> {
+public class CollectionJavaTypeDescriptor<C> extends AbstractClassTypeDescriptor<C> {
 	private final CollectionSemantics<C,?> semantics;
 
 	@SuppressWarnings("unchecked")

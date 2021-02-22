@@ -52,6 +52,6 @@ public abstract class AbstractSqmParameter<T> extends AbstractSqmExpression<T> i
 
 	@Override
 	public Class<T> getParameterType() {
-		return this.getNodeType().getExpressableJavaTypeDescriptor().getJavaType();
+		return this.getNodeType().getExpressableJavaTypeDescriptor().getJavaTypeClass();
 	}
 }

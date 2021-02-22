@@ -160,7 +160,7 @@ public class StandardPojoEntityRepresentationStrategy implements EntityRepresent
 
 		if ( identifierProperty == null ) {
 			return PropertyAccessStrategyEmbeddedImpl.INSTANCE.buildPropertyAccess(
-					proxyJtd != null ? proxyJtd.getJavaType() : mappedJtd.getJavaType(),
+					proxyJtd != null ? proxyJtd.getJavaTypeClass() : mappedJtd.getJavaTypeClass(),
 					"id"
 			);
 		}
@@ -175,10 +175,10 @@ public class StandardPojoEntityRepresentationStrategy implements EntityRepresent
 
 		final Set<Class> proxyInterfaces = new java.util.HashSet<>();
 
-		final Class mappedClass = mappedJtd.getJavaType();
+		final Class mappedClass = mappedJtd.getJavaTypeClass();
 		Class proxyInterface;
 		if ( proxyJtd != null ) {
-			proxyInterface = proxyJtd.getJavaType();
+			proxyInterface = proxyJtd.getJavaTypeClass();
 		}
 		else {
 			proxyInterface = null;
@@ -261,10 +261,10 @@ public class StandardPojoEntityRepresentationStrategy implements EntityRepresent
 		final Class javaTypeToReflect;
 		if ( proxyFactory != null ) {
 			assert proxyJtd != null;
-			javaTypeToReflect = proxyJtd.getJavaType();
+			javaTypeToReflect = proxyJtd.getJavaTypeClass();
 		}
 		else {
-			javaTypeToReflect = mappedJtd.getJavaType();
+			javaTypeToReflect = mappedJtd.getJavaTypeClass();
 		}
 
 		final List<String> getterNames = new ArrayList<>();
@@ -348,13 +348,13 @@ public class StandardPojoEntityRepresentationStrategy implements EntityRepresent
 					String.format(
 							Locale.ROOT,
 							"Could not resolve PropertyAccess for attribute `%s#%s`",
-							mappedJtd.getJavaType().getName(),
+							mappedJtd.getJavaType().getTypeName(),
 							bootAttributeDescriptor.getName()
 					)
 			);
 		}
 
-		return strategy.buildPropertyAccess( mappedJtd.getJavaType(), bootAttributeDescriptor.getName() );
+		return strategy.buildPropertyAccess( mappedJtd.getJavaTypeClass(), bootAttributeDescriptor.getName() );
 	}
 
 	@Override

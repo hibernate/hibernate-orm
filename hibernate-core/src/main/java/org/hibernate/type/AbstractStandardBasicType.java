@@ -83,7 +83,7 @@ public abstract class AbstractStandardBasicType<T>
 
 	@Override
 	public Class<T> getJavaType() {
-		return getExpressableJavaTypeDescriptor().getJavaType();
+		return getExpressableJavaTypeDescriptor().getJavaTypeClass();
 	}
 
 	public T fromString(String string) {
@@ -121,7 +121,7 @@ public abstract class AbstractStandardBasicType<T>
 	@Override
 	public String[] getRegistrationKeys() {
 		return registerUnderJavaType()
-				? new String[] { getName(), javaTypeDescriptor.getJavaType().getName() }
+				? new String[] { getName(), javaTypeDescriptor.getJavaType().getTypeName() }
 				: new String[] { getName() };
 	}
 
@@ -164,7 +164,7 @@ public abstract class AbstractStandardBasicType<T>
 
 	@Override
 	public final Class getReturnedClass() {
-		return javaTypeDescriptor.getJavaType();
+		return javaTypeDescriptor.getJavaTypeClass();
 	}
 
 	@Override

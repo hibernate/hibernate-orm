@@ -36,6 +36,6 @@ public interface SqmDynamicInstantiationTarget<T> extends SqmExpressable<T> {
 	 * @return The type to be instantiated.
 	 */
 	default Class getJavaType() {
-		return getTargetTypeDescriptor().getJavaType();
+		return getTargetTypeDescriptor().getJavaTypeClass();
 	}
 }

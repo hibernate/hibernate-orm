@@ -31,7 +31,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
  * @author Steve Ebersole
  * @author Brett Meyer
  */
-public class BlobTypeDescriptor extends AbstractTypeDescriptor<Blob> {
+public class BlobTypeDescriptor extends AbstractClassTypeDescriptor<Blob> {
 	public static final BlobTypeDescriptor INSTANCE = new BlobTypeDescriptor();
 
 	public static class BlobMutabilityPlan implements MutabilityPlan<Blob> {

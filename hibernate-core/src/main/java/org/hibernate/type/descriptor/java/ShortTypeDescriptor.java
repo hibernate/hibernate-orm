@@ -14,7 +14,7 @@ import org.hibernate.type.descriptor.java.spi.Primitive;
  *
  * @author Steve Ebersole
  */
-public class ShortTypeDescriptor extends AbstractTypeDescriptor<Short> implements Primitive<Short> {
+public class ShortTypeDescriptor extends AbstractClassTypeDescriptor<Short> implements Primitive<Short> {
 	public static final ShortTypeDescriptor INSTANCE = new ShortTypeDescriptor();
 
 	public ShortTypeDescriptor() {

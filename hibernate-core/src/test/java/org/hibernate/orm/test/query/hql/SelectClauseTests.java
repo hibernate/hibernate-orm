@@ -298,7 +298,7 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 				.get( 0 )
 				.getSelectableNode();
 
-		assertThat( mapEntryPath.getJavaTypeDescriptor().getJavaType(), is( equalTo( Map.Entry.class ) ) );
+		assertThat( mapEntryPath.getJavaTypeDescriptor().getJavaTypeClass(), is( equalTo( Map.Entry.class ) ) );
 
 		final SqmPath<?> selectedPathLhs = mapEntryPath.getMapPath();
 		assertThat( selectedPathLhs.getExplicitAlias(), is( "m" ) );
@@ -314,7 +314,7 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 				SqmPath.class
 		);
 
-		assertThat( sqmEntityReference.getJavaTypeDescriptor().getJavaType(), equalTo( EntityOfBasics.class ));
+		assertThat( sqmEntityReference.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( EntityOfBasics.class ));
 	}
 
 	@Override

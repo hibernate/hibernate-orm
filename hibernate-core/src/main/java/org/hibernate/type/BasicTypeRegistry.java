@@ -49,6 +49,10 @@ public class BasicTypeRegistry implements Serializable {
 		return (BasicType<J>) typesByName.get( key );
 	}
 
+	public <J> BasicType<J> getRegisteredType(java.lang.reflect.Type javaType) {
+		return getRegisteredType( javaType.getTypeName() );
+	}
+
 	public <J> BasicType<J> getRegisteredType(Class<J> javaType) {
 		return getRegisteredType( javaType.getName() );
 	}

@@ -142,7 +142,7 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 		else {
 			// find a constructor matching argument types
 			constructor_loop:
-			for ( Constructor<?> constructor : javaTypeDescriptor.getJavaType().getDeclaredConstructors() ) {
+			for ( Constructor<?> constructor : javaTypeDescriptor.getJavaTypeClass().getDeclaredConstructors() ) {
 				if ( constructor.getParameterTypes().length != argumentReaders.size() ) {
 					continue;
 				}
@@ -165,7 +165,7 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 									"Skipping constructor for dynamic-instantiation match due to argument mismatch [%s] : %s -> %s",
 									i,
 									constructor.getParameterTypes()[i].getName(),
-									argumentTypeDescriptor.getJavaType().getName()
+									argumentTypeDescriptor.getJavaType().getTypeName()
 							);
 						}
 						continue constructor_loop;
@@ -184,7 +184,7 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 			if ( log.isDebugEnabled() ) {
 				log.debugf(
 						"Could not locate appropriate constructor for dynamic instantiation of [%s]; attempting bean-injection instantiation",
-						javaTypeDescriptor.getJavaType().getName()
+						javaTypeDescriptor.getJavaType().getTypeName()
 				);
 			}
 

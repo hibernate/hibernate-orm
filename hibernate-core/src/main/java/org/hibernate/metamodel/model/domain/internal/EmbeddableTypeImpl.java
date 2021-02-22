@@ -56,7 +56,7 @@ public class EmbeddableTypeImpl<J>
 			EmbeddableRepresentationStrategy representationStrategy,
 			boolean isDynamic,
 			JpaMetamodel domainMetamodel) {
-		super( javaTypeDescriptor.getJavaType().getName(), javaTypeDescriptor, null, domainMetamodel );
+		super( javaTypeDescriptor.getJavaType().getTypeName(), javaTypeDescriptor, null, domainMetamodel );
 		this.representationStrategy = representationStrategy;
 		this.isDynamic = isDynamic;
 	}

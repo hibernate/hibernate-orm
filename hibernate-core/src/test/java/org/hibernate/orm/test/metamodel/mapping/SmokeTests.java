@@ -65,7 +65,7 @@ public class SmokeTests {
 
 		final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
 		assertThat(
-				identifierMapping.getMappedType().getMappedJavaTypeDescriptor().getJavaType(),
+				identifierMapping.getMappedType().getMappedJavaTypeDescriptor().getJavaTypeClass(),
 				sameInstance( Integer.class )
 		);
 
@@ -83,12 +83,12 @@ public class SmokeTests {
 			assert "mapping_simple_entity".equals( genderAttrMapping.getContainingTableExpression() );
 			assert "gender".equals( genderAttrMapping.getSelectionExpression() );
 
-			assertThat( genderAttrMapping.getJavaTypeDescriptor().getJavaType(), equalTo( Gender.class ) );
+			assertThat( genderAttrMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( Gender.class ) );
 
 			final BasicValueConverter valueConverter = genderAttrMapping.getValueConverter();
 			assertThat( valueConverter, instanceOf( OrdinalEnumValueConverter.class ) );
 			assertThat( valueConverter.getDomainJavaDescriptor(), is( genderAttrMapping.getJavaTypeDescriptor() ) );
-			assertThat( valueConverter.getRelationalJavaDescriptor().getJavaType(), equalTo( Integer.class ) );
+			assertThat( valueConverter.getRelationalJavaDescriptor().getJavaTypeClass(), equalTo( Integer.class ) );
 
 			assertThat( genderAttrMapping.getJdbcMapping().getSqlTypeDescriptor().getJdbcTypeCode(), is( Types.TINYINT ) );
 		}
@@ -100,12 +100,12 @@ public class SmokeTests {
 			assert "mapping_simple_entity".equals( attrMapping.getContainingTableExpression() );
 			assert "gender2".equals( attrMapping.getSelectionExpression() );
 
-			assertThat( attrMapping.getJavaTypeDescriptor().getJavaType(), equalTo( Gender.class ) );
+			assertThat( attrMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( Gender.class ) );
 
 			final BasicValueConverter valueConverter = attrMapping.getValueConverter();
 			assertThat( valueConverter, instanceOf( NamedEnumValueConverter.class ) );
 			assertThat( valueConverter.getDomainJavaDescriptor(), is( attrMapping.getJavaTypeDescriptor() ) );
-			assertThat( valueConverter.getRelationalJavaDescriptor().getJavaType(), equalTo( String.class ) );
+			assertThat( valueConverter.getRelationalJavaDescriptor().getJavaTypeClass(), equalTo( String.class ) );
 
 			assertThat( attrMapping.getJdbcMapping().getSqlTypeDescriptor().getJdbcTypeCode(), is( Types.VARCHAR ) );
 		}
@@ -117,12 +117,12 @@ public class SmokeTests {
 			assert "mapping_simple_entity".equals( attrMapping.getContainingTableExpression() );
 			assert "gender3".equals( attrMapping.getSelectionExpression() );
 
-			assertThat( attrMapping.getJavaTypeDescriptor().getJavaType(), equalTo( Gender.class ) );
+			assertThat( attrMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( Gender.class ) );
 
 			final BasicValueConverter valueConverter = attrMapping.getValueConverter();
 			assertThat( valueConverter, instanceOf( JpaAttributeConverter.class ) );
 			assertThat( valueConverter.getDomainJavaDescriptor(), is( attrMapping.getJavaTypeDescriptor() ) );
-			assertThat( valueConverter.getRelationalJavaDescriptor().getJavaType(), equalTo( Character.class ) );
+			assertThat( valueConverter.getRelationalJavaDescriptor().getJavaTypeClass(), equalTo( Character.class ) );
 
 			assertThat( attrMapping.getJdbcMapping().getSqlTypeDescriptor().getJdbcTypeCode(), is( Types.CHAR ) );
 		}

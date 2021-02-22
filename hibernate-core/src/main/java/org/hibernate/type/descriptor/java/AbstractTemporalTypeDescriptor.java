@@ -13,7 +13,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractTemporalTypeDescriptor<T> extends AbstractTypeDescriptor<T> implements TemporalJavaTypeDescriptor<T> {
+public abstract class AbstractTemporalTypeDescriptor<T> extends AbstractClassTypeDescriptor<T> implements TemporalJavaTypeDescriptor<T> {
 	protected AbstractTemporalTypeDescriptor(Class<T> type) {
 		super( type );
 	}
@@ -70,6 +70,6 @@ public abstract class AbstractTemporalTypeDescriptor<T> extends AbstractTypeDesc
 
 	@Override
 	public String toString() {
-		return "TemporalJavaTypeDescriptor(javaType=" + getJavaType().getName() + ")";
+		return "TemporalJavaTypeDescriptor(javaType=" + getJavaType().getTypeName() + ")";
 	}
 }

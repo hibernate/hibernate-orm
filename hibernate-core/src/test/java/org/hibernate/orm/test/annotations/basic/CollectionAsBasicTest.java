@@ -22,7 +22,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.AbstractTypeDescriptor;
+import org.hibernate.type.descriptor.java.AbstractClassTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutableMutabilityPlan;
 import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
 
@@ -72,7 +72,7 @@ public class CollectionAsBasicTest {
 		}
 	}
 
-	public static class DelimitedStringsJavaTypeDescriptor extends AbstractTypeDescriptor<Set> {
+	public static class DelimitedStringsJavaTypeDescriptor extends AbstractClassTypeDescriptor<Set> {
 		public DelimitedStringsJavaTypeDescriptor() {
 			super(
 					Set.class,

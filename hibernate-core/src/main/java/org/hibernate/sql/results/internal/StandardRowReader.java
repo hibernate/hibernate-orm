@@ -68,7 +68,7 @@ public class StandardRowReader<T> implements RowReader<T> {
 	@SuppressWarnings("unchecked")
 	public Class<T> getResultJavaType() {
 		if ( resultAssemblers.size() == 1 ) {
-			return (Class<T>) resultAssemblers.get( 0 ).getAssembledJavaTypeDescriptor().getJavaType();
+			return (Class<T>) resultAssemblers.get( 0 ).getAssembledJavaTypeDescriptor().getJavaTypeClass();
 		}
 
 		return (Class<T>) Object[].class;

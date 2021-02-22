@@ -14,7 +14,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
  *
  * @author Steve Ebersole
  */
-public class ClassTypeDescriptor extends AbstractTypeDescriptor<Class> {
+public class ClassTypeDescriptor extends AbstractClassTypeDescriptor<Class> {
 	public static final ClassTypeDescriptor INSTANCE = new ClassTypeDescriptor();
 
 	public ClassTypeDescriptor() {

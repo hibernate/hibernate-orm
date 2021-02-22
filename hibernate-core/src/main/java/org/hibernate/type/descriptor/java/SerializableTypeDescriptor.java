@@ -26,7 +26,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
  * @author Steve Ebersole
  * @author Brett meyer
  */
-public class SerializableTypeDescriptor<T extends Serializable> extends AbstractTypeDescriptor<T> {
+public class SerializableTypeDescriptor<T extends Serializable> extends AbstractClassTypeDescriptor<T> {
 
 	// unfortunately the param types cannot be the same so use something other than 'T' here to make that obvious
 	public static class SerializableMutabilityPlan<S extends Serializable> extends MutableMutabilityPlan<S> {
@@ -123,7 +123,7 @@ public class SerializableTypeDescriptor<T extends Serializable> extends Abstract
 				throw new HibernateException( e );
 			}
 		}
-		else if ( getJavaType().isInstance( value ) ) {
+		else if ( getJavaTypeClass().isInstance( value ) ) {
 			return (T) value;
 		}
 		throw unknownWrap( value.getClass() );
@@ -135,6 +135,6 @@ public class SerializableTypeDescriptor<T extends Serializable> extends Abstract
 
 	@SuppressWarnings({ "unchecked" })
 	protected T fromBytes(byte[] bytes) {
-		return (T) SerializationHelper.deserialize( bytes, getJavaType().getClassLoader() );
+		return (T) SerializationHelper.deserialize( bytes, getJavaTypeClass().getClassLoader() );
 	}
 }

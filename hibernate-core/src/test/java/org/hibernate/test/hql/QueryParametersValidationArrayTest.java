@@ -26,7 +26,7 @@ import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.AbstractTypeDescriptor;
+import org.hibernate.type.descriptor.java.AbstractClassTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.BasicBinder;
 import org.hibernate.type.descriptor.sql.BasicExtractor;
@@ -152,7 +152,7 @@ public class QueryParametersValidationArrayTest extends BaseEntityManagerFunctio
 	}
 
 	public static class StringArrayTypeDescriptor
-			extends AbstractTypeDescriptor<String[]> {
+			extends AbstractClassTypeDescriptor<String[]> {
 
 		public static final StringArrayTypeDescriptor INSTANCE = new StringArrayTypeDescriptor();
 

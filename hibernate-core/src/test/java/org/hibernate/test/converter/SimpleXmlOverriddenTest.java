@@ -59,7 +59,7 @@ public class SimpleXmlOverriddenTest extends BaseUnitTestCase {
 		PersistentClass pc = metadata.getEntityBinding( TheEntity.class.getName() );
 		Type type = pc.getProperty( "it" ).getType();
 		AttributeConverterTypeAdapter adapter = assertTyping( AttributeConverterTypeAdapter.class, type );
-		assertTrue( SillyStringConverter.class.isAssignableFrom( adapter.getAttributeConverter().getConverterJavaTypeDescriptor().getJavaType() ) );
+		assertTrue( SillyStringConverter.class.isAssignableFrom( adapter.getAttributeConverter().getConverterJavaTypeDescriptor().getJavaTypeClass() ) );
 	}
 
 	/**

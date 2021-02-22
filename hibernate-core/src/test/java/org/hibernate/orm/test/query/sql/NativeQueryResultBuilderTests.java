@@ -284,12 +284,12 @@ public class NativeQueryResultBuilderTests {
 		assertThat( part, instanceOf( BasicValuedSingularAttributeMapping.class ) );
 		final BasicValuedSingularAttributeMapping attrMapping = (BasicValuedSingularAttributeMapping) part;
 
-		assertThat( attrMapping.getJavaTypeDescriptor().getJavaType(), equalTo( EntityOfBasics.Gender.class ) );
+		assertThat( attrMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( EntityOfBasics.Gender.class ) );
 
 		final BasicValueConverter valueConverter = attrMapping.getValueConverter();
 		assertThat( valueConverter, instanceOf( JpaAttributeConverter.class ) );
 		assertThat( valueConverter.getDomainJavaDescriptor(), is( attrMapping.getJavaTypeDescriptor() ) );
-		assertThat( valueConverter.getRelationalJavaDescriptor().getJavaType(), equalTo( Character.class ) );
+		assertThat( valueConverter.getRelationalJavaDescriptor().getJavaTypeClass(), equalTo( Character.class ) );
 
 		assertThat( attrMapping.getJdbcMapping().getSqlTypeDescriptor().getJdbcTypeCode(), is( Types.CHAR ) );
 	}

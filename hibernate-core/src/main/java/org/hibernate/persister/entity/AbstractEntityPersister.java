@@ -5320,7 +5320,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	public final Class getMappedClass() {
-		return getMappedJavaTypeDescriptor().getJavaType();
+		return getMappedJavaTypeDescriptor().getJavaTypeClass();
 	}
 
 	public boolean implementsLifecycle() {
@@ -5329,7 +5329,7 @@ public abstract class AbstractEntityPersister
 
 	public Class getConcreteProxyClass() {
 		final JavaTypeDescriptor<?> proxyJavaTypeDescriptor = getRepresentationStrategy().getProxyJavaTypeDescriptor();
-		return proxyJavaTypeDescriptor != null ? proxyJavaTypeDescriptor.getJavaType() : javaTypeDescriptor.getJavaType();
+		return proxyJavaTypeDescriptor != null ? proxyJavaTypeDescriptor.getJavaTypeClass() : javaTypeDescriptor.getJavaTypeClass();
 	}
 
 	public void setPropertyValues(Object object, Object[] values) {

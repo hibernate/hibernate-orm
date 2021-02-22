@@ -14,8 +14,6 @@ import java.sql.Types;
 import org.hibernate.engine.jdbc.CharacterStream;
 import org.hibernate.engine.jdbc.internal.CharacterStreamImpl;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
-import org.hibernate.type.descriptor.sql.NClobTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry;
@@ -26,7 +24,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Steve Ebersole
  */
-public class StringTypeDescriptor extends AbstractTypeDescriptor<String> {
+public class StringTypeDescriptor extends AbstractClassTypeDescriptor<String> {
 	public static final StringTypeDescriptor INSTANCE = new StringTypeDescriptor();
 
 	public StringTypeDescriptor() {

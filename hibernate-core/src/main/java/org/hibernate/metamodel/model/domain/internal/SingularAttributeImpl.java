@@ -107,7 +107,7 @@ public class SingularAttributeImpl<D,J>
 
 	@Override
 	public Class<J> getBindableJavaType() {
-		return getExpressableJavaTypeDescriptor().getJavaType();
+		return getExpressableJavaTypeDescriptor().getJavaTypeClass();
 	}
 
 	@Override

@@ -31,7 +31,7 @@ public class DynamicInstantiationAssemblerInjectionImpl<T> implements DomainResu
 			JavaTypeDescriptor<T> target,
 			List<ArgumentReader<?>> argumentReaders) {
 		this.target = target;
-		final Class targetJavaType = target.getJavaType();
+		final Class targetJavaType = target.getJavaTypeClass();
 
 		BeanInfoHelper.visitBeanInfo(
 				targetJavaType,
@@ -67,7 +67,7 @@ public class DynamicInstantiationAssemblerInjectionImpl<T> implements DomainResu
 						final Field field = findField(
 								targetJavaType,
 								argumentReader.getAlias(),
-								argumentReader.getAssembledJavaTypeDescriptor().getJavaType()
+								argumentReader.getAssembledJavaTypeDescriptor().getJavaTypeClass()
 						);
 						if ( field != null ) {
 							beanInjections.add(
@@ -116,7 +116,7 @@ public class DynamicInstantiationAssemblerInjectionImpl<T> implements DomainResu
 	@SuppressWarnings("unchecked")
 	public T assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
 		try {
-			final T result = target.getJavaType().newInstance();
+			final T result = target.getJavaTypeClass().newInstance();
 			for ( BeanInjection beanInjection : beanInjections ) {
 				beanInjection.getBeanInjector().inject(
 						result,
@@ -126,7 +126,7 @@ public class DynamicInstantiationAssemblerInjectionImpl<T> implements DomainResu
 			return result;
 		}
 		catch (IllegalAccessException | InstantiationException | java.lang.InstantiationException e) {
-			throw new InstantiationException( "Could not call default constructor [" + target.getJavaType().getSimpleName() + "]", e );
+			throw new InstantiationException( "Could not call default constructor [" + target.getJavaType().getTypeName() + "]", e );
 		}
 	}
 }

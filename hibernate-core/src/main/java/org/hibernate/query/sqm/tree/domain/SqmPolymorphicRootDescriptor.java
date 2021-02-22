@@ -102,7 +102,7 @@ public class SqmPolymorphicRootDescriptor<T> implements EntityDomainType<T> {
 
 	@Override
 	public String getName() {
-		return polymorphicJavaDescriptor.getJavaType().getName();
+		return polymorphicJavaDescriptor.getJavaType().getTypeName();
 	}
 
 	@Override
@@ -132,7 +132,7 @@ public class SqmPolymorphicRootDescriptor<T> implements EntityDomainType<T> {
 
 	@Override
 	public Class<T> getBindableJavaType() {
-		return polymorphicJavaDescriptor.getJavaType();
+		return polymorphicJavaDescriptor.getJavaTypeClass();
 	}
 
 	@Override

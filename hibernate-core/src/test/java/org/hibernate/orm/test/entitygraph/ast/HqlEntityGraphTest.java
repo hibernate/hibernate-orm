@@ -295,7 +295,7 @@ public class HqlEntityGraphTest implements SessionFactoryScopeAware {
 
 		final TableGroup joinedGroup = rootTableGroup.getTableGroupJoins().iterator().next().getJoinedGroup();
 		assertThat( joinedGroup.getModelPart().getPartName(), is( expectedAttributeName ) );
-		assertThat( joinedGroup.getModelPart().getJavaTypeDescriptor().getJavaType(), assignableTo( expectedEntityJpaClass ) );
+		assertThat( joinedGroup.getModelPart().getJavaTypeDescriptor().getJavaTypeClass(), assignableTo( expectedEntityJpaClass ) );
 		assertThat( joinedGroup.getModelPart(), instanceOf( EntityValuedModelPart.class ) );
 
 		tableGroupConsumer.accept( joinedGroup );
@@ -336,7 +336,7 @@ public class HqlEntityGraphTest implements SessionFactoryScopeAware {
 		assertThat( domainResult, instanceOf( EntityResult.class ) );
 
 		final EntityResult entityResult = (EntityResult) domainResult;
-		assertThat( entityResult.getReferencedModePart().getJavaTypeDescriptor().getJavaType(), assignableTo( expectedEntityJpaClass ) );
+		assertThat( entityResult.getReferencedModePart().getJavaTypeDescriptor().getJavaTypeClass(), assignableTo( expectedEntityJpaClass ) );
 		assertThat( entityResult.getFetches(), hasSize( 1 ) );
 
 		final Fetch fetch = entityResult.getFetches().get( 0 );
@@ -344,7 +344,7 @@ public class HqlEntityGraphTest implements SessionFactoryScopeAware {
 
 		final EntityFetch entityFetch = (EntityFetch) fetch;
 		assertThat( entityFetch.getFetchedMapping().getFetchableName(), is( expectedAttributeName ) );
-		assertThat( entityFetch.getReferencedModePart().getJavaTypeDescriptor().getJavaType(), assignableTo( expectedAttributeEntityJpaClass ) );
+		assertThat( entityFetch.getReferencedModePart().getJavaTypeDescriptor().getJavaTypeClass(), assignableTo( expectedAttributeEntityJpaClass ) );
 
 		entityFetchConsumer.accept( entityFetch );
 	}

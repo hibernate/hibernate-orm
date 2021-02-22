@@ -16,7 +16,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
  *
  * @author Steve Ebersole
  */
-public class TimeZoneTypeDescriptor extends AbstractTypeDescriptor<TimeZone> {
+public class TimeZoneTypeDescriptor extends AbstractClassTypeDescriptor<TimeZone> {
 	public static final TimeZoneTypeDescriptor INSTANCE = new TimeZoneTypeDescriptor();
 
 	public static class TimeZoneComparator implements Comparator<TimeZone> {

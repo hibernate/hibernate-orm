@@ -15,7 +15,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
  *
  * @author Steve Ebersole
  */
-public class CurrencyTypeDescriptor extends AbstractTypeDescriptor<Currency> {
+public class CurrencyTypeDescriptor extends AbstractClassTypeDescriptor<Currency> {
 	public static final CurrencyTypeDescriptor INSTANCE = new CurrencyTypeDescriptor();
 
 	public CurrencyTypeDescriptor() {

@@ -323,11 +323,11 @@ public class QuerySqmImpl<R>
 		assert sqmExpressable != null;
 		assert sqmExpressable.getExpressableJavaTypeDescriptor() != null;
 
-		if ( ! resultClass.isAssignableFrom( sqmExpressable.getExpressableJavaTypeDescriptor().getJavaType() ) ) {
+		if ( ! resultClass.isAssignableFrom( sqmExpressable.getExpressableJavaTypeDescriptor().getJavaTypeClass() ) ) {
 			final String errorMessage = String.format(
 					"Specified result type [%s] did not match Query selection type [%s] - multiple selections: use Tuple or array",
 					resultClass.getName(),
-					sqmExpressable.getExpressableJavaTypeDescriptor().getJavaType().getName()
+					sqmExpressable.getExpressableJavaTypeDescriptor().getJavaType().getTypeName()
 			);
 
 			if ( sessionFactory.getSessionFactoryOptions().getJpaCompliance().isJpaQueryComplianceEnabled() ) {

@@ -170,7 +170,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 
 		//noinspection unchecked
 		this.bindType = (AllowableParameterType) BindingTypeHelper.INSTANCE.resolveDateTemporalTypeVariant(
-				getBindType().getExpressableJavaTypeDescriptor().getJavaType(),
+				getBindType().getExpressableJavaTypeDescriptor().getJavaTypeClass(),
 				getBindType()
 		);
 

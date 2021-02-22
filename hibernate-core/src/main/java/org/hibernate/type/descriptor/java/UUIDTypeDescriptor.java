@@ -20,7 +20,7 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
  *
  * @author Steve Ebersole
  */
-public class UUIDTypeDescriptor extends AbstractTypeDescriptor<UUID> {
+public class UUIDTypeDescriptor extends AbstractClassTypeDescriptor<UUID> {
 	public static final UUIDTypeDescriptor INSTANCE = new UUIDTypeDescriptor();
 
 	public UUIDTypeDescriptor() {

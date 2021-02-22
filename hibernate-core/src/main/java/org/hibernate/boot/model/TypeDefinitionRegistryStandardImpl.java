@@ -55,7 +55,7 @@ public class TypeDefinitionRegistryStandardImpl implements TypeDefinitionRegistr
 			return null;
 		}
 
-		return typeDefinitionMap.get( jtd.getJavaType().getName() );
+		return typeDefinitionMap.get( jtd.getJavaType().getTypeName() );
 	}
 
 	@Override

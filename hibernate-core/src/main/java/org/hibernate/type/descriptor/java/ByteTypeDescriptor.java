@@ -15,7 +15,7 @@ import org.hibernate.type.descriptor.java.spi.Primitive;
  * @author Steve Ebersole
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-public class ByteTypeDescriptor extends AbstractTypeDescriptor<Byte> implements Primitive<Byte> {
+public class ByteTypeDescriptor extends AbstractClassTypeDescriptor<Byte> implements Primitive<Byte> {
 	public static final ByteTypeDescriptor INSTANCE = new ByteTypeDescriptor();
 
 	public ByteTypeDescriptor() {

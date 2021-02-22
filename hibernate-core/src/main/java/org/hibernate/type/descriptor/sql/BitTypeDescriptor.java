@@ -60,7 +60,7 @@ public class BitTypeDescriptor implements SqlTypeDescriptor {
 	}
 
 	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaTypeDescriptor<T> javaTypeDescriptor) {
-		if ( javaTypeDescriptor.getJavaType().equals(Boolean.class) ) {
+		if ( javaTypeDescriptor.getJavaTypeClass().equals(Boolean.class) ) {
 			//this is to allow literals to be formatted correctly when
 			//we are in the legacy Boolean-to-BIT JDBC type mapping mode
 			return new BasicJdbcLiteralFormatter( javaTypeDescriptor ) {

@@ -21,7 +21,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
  *
  * @author Steve Ebersole
  */
-public class PrimitiveCharacterArrayTypeDescriptor extends AbstractTypeDescriptor<char[]> {
+public class PrimitiveCharacterArrayTypeDescriptor extends AbstractClassTypeDescriptor<char[]> {
 	public static final PrimitiveCharacterArrayTypeDescriptor INSTANCE = new PrimitiveCharacterArrayTypeDescriptor();
 
 	@SuppressWarnings({ "unchecked" })

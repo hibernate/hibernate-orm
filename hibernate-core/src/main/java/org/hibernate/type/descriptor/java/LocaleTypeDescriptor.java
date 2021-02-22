@@ -16,7 +16,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
  *
  * @author Steve Ebersole
  */
-public class LocaleTypeDescriptor extends AbstractTypeDescriptor<Locale> {
+public class LocaleTypeDescriptor extends AbstractClassTypeDescriptor<Locale> {
 	public static final LocaleTypeDescriptor INSTANCE = new LocaleTypeDescriptor();
 
 	public static class LocaleComparator implements Comparator<Locale> {

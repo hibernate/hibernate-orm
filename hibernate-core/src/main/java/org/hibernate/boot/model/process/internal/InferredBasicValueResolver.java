@@ -184,7 +184,7 @@ public class InferredBasicValueResolver {
 			case STRING: {
 				final JavaTypeDescriptor<?> relationalJtd;
 				if ( explicitJavaType != null ) {
-					if ( ! String.class.isAssignableFrom( explicitJavaType.getJavaType() ) ) {
+					if ( ! String.class.isAssignableFrom( explicitJavaType.getJavaTypeClass() ) ) {
 						throw new MappingException(
 								"Explicit JavaTypeDescriptor [" + explicitJavaType +
 										"] applied to enumerated value with EnumType#STRING" +
@@ -210,7 +210,7 @@ public class InferredBasicValueResolver {
 
 				//noinspection unchecked
 				final org.hibernate.type.EnumType legacyEnumType = new org.hibernate.type.EnumType(
-						enumJavaDescriptor.getJavaType(),
+						enumJavaDescriptor.getJavaTypeClass(),
 						valueConverter,
 						typeConfiguration
 				);
@@ -233,7 +233,7 @@ public class InferredBasicValueResolver {
 			case ORDINAL: {
 				final JavaTypeDescriptor<Integer> relationalJtd;
 				if ( explicitJavaType != null ) {
-					if ( ! Integer.class.isAssignableFrom( explicitJavaType.getJavaType() ) ) {
+					if ( ! Integer.class.isAssignableFrom( explicitJavaType.getJavaTypeClass() ) ) {
 						throw new MappingException(
 								"Explicit JavaTypeDescriptor [" + explicitJavaType +
 										"] applied to enumerated value with EnumType#ORDINAL" +
@@ -258,7 +258,7 @@ public class InferredBasicValueResolver {
 
 				//noinspection unchecked
 				final org.hibernate.type.EnumType legacyEnumType = new org.hibernate.type.EnumType(
-						enumJavaDescriptor.getJavaType(),
+						enumJavaDescriptor.getJavaTypeClass(),
 						valueConverter,
 						typeConfiguration
 				);

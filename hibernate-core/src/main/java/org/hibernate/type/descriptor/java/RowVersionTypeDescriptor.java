@@ -25,7 +25,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
  * @author Steve Ebersole
  * @author Gail Badner
  */
-public class RowVersionTypeDescriptor extends AbstractTypeDescriptor<byte[]> {
+public class RowVersionTypeDescriptor extends AbstractClassTypeDescriptor<byte[]> {
 	public static final RowVersionTypeDescriptor INSTANCE = new RowVersionTypeDescriptor();
 
 	@SuppressWarnings({ "unchecked" })

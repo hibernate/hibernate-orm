@@ -17,7 +17,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
  *
  * @author Steve Ebersole
  */
-public class BigIntegerTypeDescriptor extends AbstractTypeDescriptor<BigInteger> {
+public class BigIntegerTypeDescriptor extends AbstractClassTypeDescriptor<BigInteger> {
 	public static final BigIntegerTypeDescriptor INSTANCE = new BigIntegerTypeDescriptor();
 
 	public BigIntegerTypeDescriptor() {

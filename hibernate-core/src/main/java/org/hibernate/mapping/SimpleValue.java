@@ -607,7 +607,7 @@ public abstract class SimpleValue implements KeyValue {
 				jdbcTypeCode = LobTypeMappings.getLobCodeTypeMapping( jdbcTypeCode );
 			}
 			else {
-				if ( Serializable.class.isAssignableFrom( domainJtd.getJavaType() ) ) {
+				if ( Serializable.class.isAssignableFrom( domainJtd.getJavaTypeClass() ) ) {
 					jdbcTypeCode = Types.BLOB;
 				}
 				else {
@@ -648,11 +648,11 @@ public abstract class SimpleValue implements KeyValue {
 
 		// todo : cache the AttributeConverterTypeAdapter in case that AttributeConverter is applied multiple times.
 
-		final String name = ConverterDescriptor.TYPE_NAME_PREFIX + jpaAttributeConverter.getConverterJavaTypeDescriptor().getJavaType().getName();
+		final String name = ConverterDescriptor.TYPE_NAME_PREFIX + jpaAttributeConverter.getConverterJavaTypeDescriptor().getJavaType().getTypeName();
 		final String description = String.format(
 				"BasicType adapter for AttributeConverter<%s,%s>",
-				jpaAttributeConverter.getDomainJavaTypeDescriptor().getJavaType().getSimpleName(),
-				jpaAttributeConverter.getRelationalJavaTypeDescriptor().getJavaType().getSimpleName()
+				jpaAttributeConverter.getDomainJavaTypeDescriptor().getJavaType().getTypeName(),
+				jpaAttributeConverter.getRelationalJavaTypeDescriptor().getJavaType().getTypeName()
 		);
 		return new AttributeConverterTypeAdapter<>(
 				name,

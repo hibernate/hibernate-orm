@@ -3634,14 +3634,14 @@ public abstract class Dialect implements ConversionContext {
 			switch (jdbcTypeCode) {
 				case Types.BIT:
 					// Use the default length for Boolean if we encounter the JPA default 255 instead
-					if ( javaType.getJavaType() == Boolean.class && length != null && length == 255 ) {
+					if ( javaType.getJavaTypeClass() == Boolean.class && length != null && length == 255 ) {
 						length = null;
 					}
 					size.setLength( javaType.getDefaultSqlLength( Dialect.this ) );
 					break;
 				case Types.CHAR:
 					// Use the default length for char if we encounter the JPA default 255 instead
-					if ( javaType.getJavaType() == Character.class && length != null && length == 255 ) {
+					if ( javaType.getJavaTypeClass() == Character.class && length != null && length == 255 ) {
 						length = null;
 					}
 					size.setLength( javaType.getDefaultSqlLength( Dialect.this ) );
@@ -3652,7 +3652,7 @@ public abstract class Dialect implements ConversionContext {
 				case Types.NVARCHAR:
 				case Types.VARBINARY:
 					// Use the default length for UUID if we encounter the JPA default 255 instead
-					if ( javaType.getJavaType() == UUID.class && length != null && length == 255 ) {
+					if ( javaType.getJavaTypeClass() == UUID.class && length != null && length == 255 ) {
 						length = null;
 					}
 					size.setLength( javaType.getDefaultSqlLength( Dialect.this ) );

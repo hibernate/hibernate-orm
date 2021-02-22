@@ -140,7 +140,7 @@ public class AttributePathTests extends BaseSqmUnitTest {
 		assertThat( selections.size(), is( 1 ) );
 		final SqmSelection<?> selection = selections.get( 0 );
 		final SqmSelectableNode<?> selectableNode = selection.getSelectableNode();
-		assert Person.class.equals( selectableNode.getJavaTypeDescriptor().getJavaType() );
+		assert Person.class.equals( selectableNode.getJavaTypeDescriptor().getJavaTypeClass() );
 	}
 
 	@Entity( name = "OddOne")

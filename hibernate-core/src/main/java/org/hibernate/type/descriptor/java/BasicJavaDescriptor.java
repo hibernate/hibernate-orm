@@ -30,7 +30,7 @@ public interface BasicJavaDescriptor<T> extends JavaTypeDescriptor<T> {
 	default SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators indicators) {
 		// match legacy behavior
 		return indicators.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor(
-				JdbcTypeJavaClassMappings.INSTANCE.determineJdbcTypeCodeForJavaClass( getJavaType() )
+				JdbcTypeJavaClassMappings.INSTANCE.determineJdbcTypeCodeForJavaClass( getJavaTypeClass() )
 		);
 	}
 

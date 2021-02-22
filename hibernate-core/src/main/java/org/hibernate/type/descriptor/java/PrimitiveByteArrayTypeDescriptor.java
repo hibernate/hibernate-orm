@@ -23,7 +23,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
  *
  * @author Steve Ebersole
  */
-public class PrimitiveByteArrayTypeDescriptor extends AbstractTypeDescriptor<byte[]> {
+public class PrimitiveByteArrayTypeDescriptor extends AbstractClassTypeDescriptor<byte[]> {
 	public static final PrimitiveByteArrayTypeDescriptor INSTANCE = new PrimitiveByteArrayTypeDescriptor();
 
 	@SuppressWarnings({ "unchecked" })

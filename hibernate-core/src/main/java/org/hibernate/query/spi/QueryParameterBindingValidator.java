@@ -32,7 +32,7 @@ public class QueryParameterBindingValidator {
 			// nothing we can check
 			return;
 		}
-		final Class parameterType = paramType.getExpressableJavaTypeDescriptor().getJavaType();
+		final Class parameterType = paramType.getExpressableJavaTypeDescriptor().getJavaTypeClass();
 		if ( parameterType == null ) {
 			// nothing we can check
 			return;

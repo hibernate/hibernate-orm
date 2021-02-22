@@ -18,7 +18,7 @@ import org.hibernate.type.descriptor.java.spi.Primitive;
  *
  * @author Steve Ebersole
  */
-public class LongTypeDescriptor extends AbstractTypeDescriptor<Long>implements Primitive<Long> {
+public class LongTypeDescriptor extends AbstractClassTypeDescriptor<Long> implements Primitive<Long> {
 	public static final LongTypeDescriptor INSTANCE = new LongTypeDescriptor();
 
 	public LongTypeDescriptor() {

@@ -2481,6 +2481,23 @@ public abstract class AbstractEntityPersister
 		return getAppropriateUniqueKeyLoader( propertyName, session ).loadByUniqueKey( session, uniqueKey );
 	}
 
+	public Object loadByUniqueKey(
+			String propertyName,
+			Object uniqueKey,
+			LockOptions lockOptions,
+			SharedSessionContractImplementor session) throws HibernateException {
+		//TODO: cache this
+		return new EntityLoader(
+				this,
+				propertyMapping.toColumns( propertyName ),
+				propertyMapping.toType( propertyName ),
+				1,
+				lockOptions,
+				getFactory(),
+				session.getLoadQueryInfluencers()
+		).loadByUniqueKey( session, uniqueKey );
+	}
+
 	private EntityLoader getAppropriateUniqueKeyLoader(String propertyName, SharedSessionContractImplementor session) {
 		final boolean useStaticLoader = !session.getLoadQueryInfluencers().hasEnabledFilters()
 				&& !session.getLoadQueryInfluencers().hasEnabledFetchProfiles()

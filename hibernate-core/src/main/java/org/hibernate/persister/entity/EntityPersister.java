@@ -365,7 +365,10 @@ public interface EntityPersister extends EntityDefinition {
 
 	/**
 	 * Load the id for the entity based on the natural id.
+	 * 
+	 * @deprecated use {@link UniqueKeyLoadable#loadByNaturalId(Object[], LockOptions, SharedSessionContractImplementor)}
 	 */
+	@Deprecated
 	Serializable loadEntityIdByNaturalId(
 			Object[] naturalIdValues, LockOptions lockOptions,
 			SharedSessionContractImplementor session);

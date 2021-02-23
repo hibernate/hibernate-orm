@@ -5578,7 +5578,7 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	@Override
+	@Override @Deprecated
 	public Serializable loadEntityIdByNaturalId(
 			Object[] naturalIdValues,
 			LockOptions lockOptions,
@@ -5653,6 +5653,7 @@ public abstract class AbstractEntityPersister
 	private Boolean naturalIdIsNonNullable;
 	private String cachedPkByNonNullableNaturalIdQuery;
 
+	@Deprecated
 	protected String determinePkByNaturalIdQuery(boolean[] valueNullness) {
 		if ( !hasNaturalIdentifier() ) {
 			throw new HibernateException(
@@ -5694,6 +5695,7 @@ public abstract class AbstractEntityPersister
 		return true;
 	}
 
+	@Deprecated
 	private String generateEntityIdByNaturalIdSql(boolean[] valueNullness) {
 		EntityPersister rootPersister = getFactory().getEntityPersister( getRootEntityName() );
 		if ( rootPersister != this ) {

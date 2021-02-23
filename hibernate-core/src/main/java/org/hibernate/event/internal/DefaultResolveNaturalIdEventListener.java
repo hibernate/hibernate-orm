@@ -7,7 +7,6 @@
 package org.hibernate.event.internal;
 
 import java.io.Serializable;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.hibernate.HibernateException;
@@ -128,12 +127,10 @@ public class DefaultResolveNaturalIdEventListener
 		final Serializable pk;
 		EntityPersister persister = event.getEntityPersister();
 		LockOptions lockOptions = event.getLockOptions();
-		if ( persister instanceof UniqueKeyLoadable
-				&& naturalIdValues.length==1 ) {
+		if ( persister instanceof UniqueKeyLoadable) {
 			UniqueKeyLoadable rootPersister = (UniqueKeyLoadable)
 					persister.getFactory().getMetamodel().entityPersister( persister.getRootEntityName() );
-			Map.Entry<String, Object> e = event.getNaturalIdValues().entrySet().iterator().next();
-			Object entity = rootPersister.loadByUniqueKey( e.getKey(), e.getValue(), lockOptions, session );
+			Object entity = rootPersister.loadByNaturalId( naturalIdValues, lockOptions, session );
 			if ( entity == null ) {
 				pk = null;
 			}
@@ -141,7 +138,7 @@ public class DefaultResolveNaturalIdEventListener
 				if ( !persister.isInstance(entity) ) {
 					throw new WrongClassException(
 							"loaded object was of wrong class " + entity.getClass(),
-							e.getKey(),
+							naturalIdValues,
 							persister.getEntityName()
 					);
 				}

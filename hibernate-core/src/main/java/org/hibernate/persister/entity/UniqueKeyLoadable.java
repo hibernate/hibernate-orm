@@ -25,9 +25,8 @@ public interface UniqueKeyLoadable extends Loadable {
 	/**
 	 * Load an instance of the persistent class, by a natural id.
 	 */
-	Object loadByUniqueKey(
-			String propertyName,
-			Object uniqueKey,
+	Object loadByNaturalId(
+			Object[] naturalIds,
 			LockOptions lockOptions,
 			SharedSessionContractImplementor session);
 

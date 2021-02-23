@@ -56,6 +56,8 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorOr
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.sql.BlobTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry;
 
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
@@ -581,6 +583,34 @@ public class OracleDialect extends Dialect {
 			getDefaultProperties().setProperty( Environment.USE_GET_GENERATED_KEYS, "true" );
 			getDefaultProperties().setProperty( Environment.BATCH_VERSIONED_DATA, "true" );
 		}
+	}
+
+	@Override
+	public SqlTypeDescriptor resolveSqlTypeDescriptor(
+			int jdbcTypeCode,
+			int precision,
+			int scale,
+			SqlTypeDescriptorRegistry sqlTypeDescriptorRegistry) {
+		// This is the reverse of what registerNumericTypeMappings registers
+		switch ( jdbcTypeCode ) {
+			case Types.NUMERIC:
+			case Types.DECIMAL:
+				if ( scale == 0 ) {
+					switch ( precision ) {
+						case 1:
+							return sqlTypeDescriptorRegistry.getDescriptor( Types.BOOLEAN );
+						case 3:
+							return sqlTypeDescriptorRegistry.getDescriptor( Types.TINYINT );
+						case 5:
+							return sqlTypeDescriptorRegistry.getDescriptor( Types.SMALLINT );
+						case 10:
+							return sqlTypeDescriptorRegistry.getDescriptor( Types.INTEGER );
+						case 19:
+							return sqlTypeDescriptorRegistry.getDescriptor( Types.BIGINT );
+					}
+				}
+		}
+		return super.resolveSqlTypeDescriptor( jdbcTypeCode, precision, scale, sqlTypeDescriptorRegistry );
 	}
 
 	/**

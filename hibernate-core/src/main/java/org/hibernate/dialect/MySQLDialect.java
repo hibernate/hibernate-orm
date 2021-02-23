@@ -49,6 +49,7 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry;
 
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
@@ -204,6 +205,18 @@ public class MySQLDialect extends Dialect {
 	public long getDefaultLobLength() {
 		//max length for mediumblob or mediumtext
 		return 16_777_215;
+	}
+
+	@Override
+	public SqlTypeDescriptor resolveSqlTypeDescriptor(
+			int jdbcTypeCode,
+			int precision,
+			int scale,
+			SqlTypeDescriptorRegistry sqlTypeDescriptorRegistry) {
+		if ( jdbcTypeCode == Types.BIT ) {
+			return sqlTypeDescriptorRegistry.getDescriptor( Types.BOOLEAN );
+		}
+		return super.resolveSqlTypeDescriptor( jdbcTypeCode, precision, scale, sqlTypeDescriptorRegistry );
 	}
 
 	@Override

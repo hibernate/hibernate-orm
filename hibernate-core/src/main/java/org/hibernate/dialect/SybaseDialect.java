@@ -19,6 +19,7 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.descriptor.sql.BlobTypeDescriptor;
 import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry;
 
 import java.sql.Types;
 import javax.persistence.TemporalType;
@@ -49,6 +50,22 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 		this.version = version;
 		//Sybase ASE didn't introduce bigint until version 15.0
 		registerColumnType( Types.BIGINT, "numeric(19,0)" );
+	}
+
+	@Override
+	public SqlTypeDescriptor resolveSqlTypeDescriptor(
+			int jdbcTypeCode,
+			int precision,
+			int scale,
+			SqlTypeDescriptorRegistry sqlTypeDescriptorRegistry) {
+		switch ( jdbcTypeCode ) {
+			case Types.NUMERIC:
+			case Types.DECIMAL:
+				if ( precision == 19 && scale == 0 ) {
+					return sqlTypeDescriptorRegistry.getDescriptor( Types.BIGINT );
+				}
+		}
+		return super.resolveSqlTypeDescriptor( jdbcTypeCode, precision, scale, sqlTypeDescriptorRegistry );
 	}
 
 	@Override

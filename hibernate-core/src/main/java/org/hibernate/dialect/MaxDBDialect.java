@@ -29,6 +29,8 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorSAPDBDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry;
 
 import java.sql.DatabaseMetaData;
 import java.sql.Types;
@@ -59,7 +61,22 @@ public class MaxDBDialect extends Dialect {
 		registerColumnType( Types.BLOB, "long byte" );
 
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
+	}
 
+	@Override
+	public SqlTypeDescriptor resolveSqlTypeDescriptor(
+			int jdbcTypeCode,
+			int precision,
+			int scale,
+			SqlTypeDescriptorRegistry sqlTypeDescriptorRegistry) {
+		switch ( jdbcTypeCode ) {
+			case Types.NUMERIC:
+			case Types.DECIMAL:
+				if ( precision == 19 && scale == 0 ) {
+					return sqlTypeDescriptorRegistry.getDescriptor( Types.BIGINT );
+				}
+		}
+		return super.resolveSqlTypeDescriptor( jdbcTypeCode, precision, scale, sqlTypeDescriptorRegistry );
 	}
 
 	@Override

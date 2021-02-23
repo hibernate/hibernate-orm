@@ -48,6 +48,8 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorFi
 import org.hibernate.tool.schema.extract.internal.SequenceNameExtractorImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
@@ -141,6 +143,18 @@ public class FirebirdDialect extends Dialect {
 	@Override
 	public boolean supportsTimezoneTypes() {
 		return getVersion() >= 400;
+	}
+
+	@Override
+	public SqlTypeDescriptor resolveSqlTypeDescriptor(
+			int jdbcTypeCode,
+			int precision,
+			int scale,
+			SqlTypeDescriptorRegistry sqlTypeDescriptorRegistry) {
+		if ( jdbcTypeCode == Types.BIT ) {
+			return sqlTypeDescriptorRegistry.getDescriptor( Types.BOOLEAN );
+		}
+		return super.resolveSqlTypeDescriptor( jdbcTypeCode, precision, scale, sqlTypeDescriptorRegistry );
 	}
 
 	@Override

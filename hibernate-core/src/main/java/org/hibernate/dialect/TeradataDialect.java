@@ -43,6 +43,8 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.internal.StandardIndexExporter;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry;
 
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
@@ -118,6 +120,24 @@ public class TeradataDialect extends Dialect {
 			getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 		}
 
+	}
+
+	@Override
+	public SqlTypeDescriptor resolveSqlTypeDescriptor(
+			int jdbcTypeCode,
+			int precision,
+			int scale,
+			SqlTypeDescriptorRegistry sqlTypeDescriptorRegistry) {
+		switch ( jdbcTypeCode ) {
+			case Types.BIT:
+				return sqlTypeDescriptorRegistry.getDescriptor( Types.BOOLEAN );
+			case Types.NUMERIC:
+			case Types.DECIMAL:
+				if ( precision == 19 && scale == 0 ) {
+					return sqlTypeDescriptorRegistry.getDescriptor( Types.BIGINT );
+				}
+		}
+		return super.resolveSqlTypeDescriptor( jdbcTypeCode, precision, scale, sqlTypeDescriptorRegistry );
 	}
 
 	@Override

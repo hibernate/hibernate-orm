@@ -85,6 +85,7 @@ import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry;
 
 import javax.persistence.TemporalType;
 import java.io.InputStream;
@@ -240,6 +241,14 @@ public abstract class Dialect implements ConversionContext {
 
 		uniqueDelegate = new DefaultUniqueDelegate( this );
 		sizeStrategy = new SizeStrategyImpl();
+	}
+
+	public SqlTypeDescriptor resolveSqlTypeDescriptor(
+			int jdbcTypeCode,
+			int precision,
+			int scale,
+			SqlTypeDescriptorRegistry sqlTypeDescriptorRegistry) {
+		return sqlTypeDescriptorRegistry.getDescriptor( jdbcTypeCode );
 	}
 
 	/**

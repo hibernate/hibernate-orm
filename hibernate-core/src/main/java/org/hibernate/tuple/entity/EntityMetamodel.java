@@ -387,9 +387,7 @@ public class EntityMetamodel implements Serializable {
 		hasSubclasses = persistentClass.hasSubclasses();
 
 		optimisticLockStyle = persistentClass.getOptimisticLockStyle();
-		final boolean isAllOrDirty =
-				optimisticLockStyle == OptimisticLockStyle.ALL
-						|| optimisticLockStyle == OptimisticLockStyle.DIRTY;
+		final boolean isAllOrDirty = optimisticLockStyle.isAllOrDirty();
 		if ( isAllOrDirty && !dynamicUpdate ) {
 			throw new MappingException( "optimistic-lock=all|dirty requires dynamic-update=\"true\": " + name );
 		}

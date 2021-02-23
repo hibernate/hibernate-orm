@@ -257,6 +257,7 @@ public abstract class AbstractEntityPersister
 	private final EntityLoaderLazyCollection loaders = new EntityLoaderLazyCollection();
 
 	private volatile Map<String,EntityLoader> uniqueKeyLoaders;
+	private volatile Map<LockMode,EntityLoader> naturalIdLoaders;
 
 	// SQL strings
 	private String sqlVersionSelectString;
@@ -2478,40 +2479,56 @@ public abstract class AbstractEntityPersister
 			String propertyName,
 			Object uniqueKey,
 			SharedSessionContractImplementor session) throws HibernateException {
-		return getAppropriateUniqueKeyLoader( propertyName, session ).loadByUniqueKey( session, uniqueKey );
+		return getAppropriateUniqueKeyLoader( propertyName, session )
+				.loadByUniqueKey( session, uniqueKey );
 	}
 
 	public Object loadByNaturalId(
 			Object[] naturalIdValues,
 			LockOptions lockOptions,
 			SharedSessionContractImplementor session) throws HibernateException {
-		//TODO: cache this
-		return new EntityLoader(
-				this,
-				determineValueNullness( naturalIdValues ),
-				1,
-				lockOptions,
-				getFactory(),
-				session.getLoadQueryInfluencers()
-		).loadByUniqueKey( session, naturalIdValues );
+		return getAppropriateNaturalIdLoader( determineValueNullness( naturalIdValues ), lockOptions, session )
+				.loadByUniqueKey( session, naturalIdValues );
 	}
 
-	private EntityLoader getAppropriateUniqueKeyLoader(String propertyName, SharedSessionContractImplementor session) {
-		final boolean useStaticLoader = !session.getLoadQueryInfluencers().hasEnabledFilters()
-				&& !session.getLoadQueryInfluencers().hasEnabledFetchProfiles()
-				&& propertyName.indexOf( '.' ) < 0; //ugly little workaround for fact that createUniqueKeyLoaders() does not handle component properties
+	private EntityLoader getAppropriateNaturalIdLoader(
+			boolean[] valueNullness,
+			LockOptions lockOptions,
+			SharedSessionContractImplementor session) {
+		LoadQueryInfluencers loadQueryInfluencers = session.getLoadQueryInfluencers();
+		return useStaticNaturalIdLoader( valueNullness, lockOptions, loadQueryInfluencers )
+				? naturalIdLoaders.get( lockOptions.getLockMode() ) :
+				createNaturalIdLoader( valueNullness, lockOptions, loadQueryInfluencers );
+	}
 
-		if ( useStaticLoader ) {
-			final Map<String, EntityLoader> uniqueKeyLoaders = this.uniqueKeyLoaders;
-			return uniqueKeyLoaders == null ? null : uniqueKeyLoaders.get( propertyName );
-		}
-		else {
-			return createUniqueKeyLoader(
-					propertyMapping.toType( propertyName ),
-					propertyMapping.toColumns( propertyName ),
-					session.getLoadQueryInfluencers()
-			);
-		}
+	private boolean useStaticNaturalIdLoader(
+			boolean[] valueNullness,
+			LockOptions lockOptions,
+			LoadQueryInfluencers loadQueryInfluencers) {
+		return lockOptions.getTimeOut() == LockOptions.WAIT_FOREVER
+			&& ArrayHelper.isAllFalse( valueNullness )
+			&& !loadQueryInfluencers.hasEnabledFilters()
+			&& !loadQueryInfluencers.hasEnabledFetchProfiles();
+	}
+
+	private EntityLoader getAppropriateUniqueKeyLoader(
+			String propertyName,
+			SharedSessionContractImplementor session) {
+		LoadQueryInfluencers loadQueryInfluencers = session.getLoadQueryInfluencers();
+		return useStaticUniqueKeyLoader( propertyName, loadQueryInfluencers )
+				? uniqueKeyLoaders.get( propertyName )
+				: createUniqueKeyLoader(
+						propertyMapping.toType( propertyName ),
+						propertyMapping.toColumns( propertyName ),
+						loadQueryInfluencers
+				);
+	}
+
+	private boolean useStaticUniqueKeyLoader(String propertyName, LoadQueryInfluencers loadQueryInfluencers) {
+		return !loadQueryInfluencers.hasEnabledFilters()
+			&& !loadQueryInfluencers.hasEnabledFetchProfiles()
+			//ugly little workaround for fact that createUniqueKeyLoaders() does not handle component properties
+			&& propertyName.indexOf( '.' ) < 0;
 	}
 
 	public int getPropertyIndex(String propertyName) {
@@ -2521,10 +2538,10 @@ public abstract class AbstractEntityPersister
 	protected void createUniqueKeyLoaders() throws MappingException {
 		Type[] propertyTypes = getPropertyTypes();
 		String[] propertyNames = getPropertyNames();
-		for ( int i = 0; i < entityMetamodel.getPropertySpan(); i++ ) {
+		for ( int i = 0; i < propertyUniqueness.length; i++ ) {
 			if ( propertyUniqueness[i] ) {
 				if ( uniqueKeyLoaders == null ) {
-					this.uniqueKeyLoaders = new HashMap<>();
+					uniqueKeyLoaders = new HashMap<>();
 				}
 				//don't need filters for the static loaders
 				uniqueKeyLoaders.put(
@@ -2537,6 +2554,9 @@ public abstract class AbstractEntityPersister
 				);
 				//TODO: create uk loaders for component properties
 			}
+		}
+		if ( uniqueKeyLoaders == null ) {
+			uniqueKeyLoaders = Collections.emptyMap();
 		}
 	}
 
@@ -2554,6 +2574,40 @@ public abstract class AbstractEntityPersister
 				uniqueKeyType,
 				1,
 				LockMode.NONE,
+				getFactory(),
+				loadQueryInfluencers
+		);
+	}
+
+	protected void createNaturalIdLoaders() throws MappingException {
+		if ( hasNaturalIdentifier() ) {
+			naturalIdLoaders = new HashMap<>();
+			boolean[] valueNullness = new boolean[ getNaturalIdentifierProperties().length ];
+			for ( LockMode lockMode : LockMode.values() ) {
+				naturalIdLoaders.put(
+						lockMode,
+						createNaturalIdLoader(
+								valueNullness,
+								new LockOptions(lockMode),
+								LoadQueryInfluencers.NONE
+						)
+				);
+			}
+		}
+		else {
+			naturalIdLoaders = Collections.emptyMap();
+		}
+	}
+
+	private EntityLoader createNaturalIdLoader(
+			boolean[] valueNullness,
+			LockOptions lockOptions,
+			LoadQueryInfluencers loadQueryInfluencers) {
+		return new EntityLoader(
+				this,
+				valueNullness,
+				1,
+				lockOptions,
 				getFactory(),
 				loadQueryInfluencers
 		);
@@ -4356,6 +4410,7 @@ public abstract class AbstractEntityPersister
 
 		createLoaders();
 		createUniqueKeyLoaders();
+		createNaturalIdLoaders();
 		createQueryLoader();
 
 		doPostInstantiate();
@@ -4570,33 +4625,32 @@ public abstract class AbstractEntityPersister
 			// regardless of any other consideration
 			return queryLoader;
 		}
-		else if ( isAffectedByEnabledFilters( session ) ) {
-			// because filters affect the rows returned (because they add
-			// restrictions) these need to be next in precedence
-			return createEntityLoader( lockOptions, session.getLoadQueryInfluencers() );
-		}
-		else if ( session.getLoadQueryInfluencers().getInternalFetchProfile() != null && LockMode.UPGRADE.greaterThan(
-				lockOptions.getLockMode()
-		) ) {
-			// Next, we consider whether an 'internal' fetch profile has been set.
-			// This indicates a special fetch profile Hibernate needs applied
-			// (for its merge loading process e.g.).
-			final String internalFetchProfile = session.getLoadQueryInfluencers().getInternalFetchProfile();
-			return getLoaderByString( internalFetchProfile );
-		}
-		else if ( isAffectedByEnabledFetchProfiles( session ) ) {
-			// If the session has associated influencers we need to adjust the
-			// SQL query used for loading based on those influencers
-			return createEntityLoader( lockOptions, session.getLoadQueryInfluencers() );
-		}
-		else if ( isAffectedByEntityGraph( session ) ) {
-			return createEntityLoader( lockOptions, session.getLoadQueryInfluencers() );
-		}
-		else if ( lockOptions.getTimeOut() != LockOptions.WAIT_FOREVER ) {
-			return createEntityLoader( lockOptions, session.getLoadQueryInfluencers() );
-		}
 		else {
-			return getLoaderByLockMode( lockOptions.getLockMode() );
+			LoadQueryInfluencers loadQueryInfluencers = session.getLoadQueryInfluencers();
+			if ( isAffectedByEnabledFilters( session ) ) {
+				// because filters affect the rows returned (because they add
+				// restrictions) these need to be next in precedence
+				return createEntityLoader( lockOptions, loadQueryInfluencers );
+			}
+			else if ( loadQueryInfluencers.getInternalFetchProfile() != null
+					&& LockMode.UPGRADE.greaterThan( lockOptions.getLockMode() ) ) {
+				// Next, we consider whether an 'internal' fetch profile has been set.
+				// This indicates a special fetch profile Hibernate needs applied
+				// (for its merge loading process e.g.).
+				return getLoaderByString( loadQueryInfluencers.getInternalFetchProfile() );
+			}
+			else if ( isAffectedByEnabledFetchProfiles( session )
+					|| isAffectedByEntityGraph( session ) ) {
+				// If the session has associated influencers we need to adjust the
+				// SQL query used for loading based on those influencers
+				return createEntityLoader( lockOptions, loadQueryInfluencers );
+			}
+			else if ( lockOptions.getTimeOut() != LockOptions.WAIT_FOREVER ) {
+				return createEntityLoader( lockOptions, loadQueryInfluencers );
+			}
+			else {
+				return getLoaderByLockMode( lockOptions.getLockMode() );
+			}
 		}
 	}
 

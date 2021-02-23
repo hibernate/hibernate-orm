@@ -6,6 +6,7 @@
  */
 package org.hibernate.dialect.function;
 
+import java.sql.Types;
 import java.util.List;
 
 import org.hibernate.dialect.Dialect;
@@ -27,30 +28,50 @@ import org.hibernate.sql.ast.tree.expression.Expression;
  */
 public class CastFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
-	private Dialect dialect;
+	private final Dialect dialect;
+	private final CastType booleanCastType;
 
-	public CastFunction(Dialect dialect) {
+	public CastFunction(Dialect dialect, int preferredSqlTypeCodeForBoolean) {
 		super(
 				"cast",
 				StandardArgumentsValidators.exactly( 2 ),
 				StandardFunctionReturnTypeResolvers.useArgType( 2 )
 		);
 		this.dialect = dialect;
+		this.booleanCastType = getBooleanCastType( preferredSqlTypeCodeForBoolean );
+	}
+
+	private CastType getBooleanCastType(int preferredSqlTypeCodeForBoolean) {
+		switch ( preferredSqlTypeCodeForBoolean ) {
+			case Types.BIT:
+			case Types.SMALLINT:
+			case Types.TINYINT:
+				return CastType.INTEGER_BOOLEAN;
+		}
+		return CastType.BOOLEAN;
 	}
 
 	@Override
 	public void render(SqlAppender sqlAppender, List<SqlAstNode> arguments, SqlAstWalker walker) {
 		final Expression source = (Expression) arguments.get( 0 );
 		final JdbcMapping sourceMapping = ( (SqlExpressable) source.getExpressionType() ).getJdbcMapping();
-		final CastType sourceType = sourceMapping.getCastType();
+		final CastType sourceType = getCastType( sourceMapping );
 
 		final CastTarget castTarget = (CastTarget) arguments.get( 1 );
 		final JdbcMapping targetJdbcMapping = castTarget.getExpressionType().getJdbcMapping();
-		final CastType targetType = targetJdbcMapping.getCastType();
+		final CastType targetType = getCastType( targetJdbcMapping );
 
 		String cast = dialect.castPattern( sourceType, targetType );
 
 		new PatternRenderer( cast ).render( sqlAppender, arguments, walker );
+	}
+
+	private CastType getCastType(JdbcMapping sourceMapping) {
+		final CastType castType = sourceMapping.getCastType();
+		if ( castType == CastType.BOOLEAN ) {
+			return booleanCastType;
+		}
+		return castType;
 	}
 
 //	@Override

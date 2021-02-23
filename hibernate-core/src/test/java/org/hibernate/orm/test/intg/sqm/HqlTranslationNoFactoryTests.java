@@ -13,6 +13,7 @@ import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jpa.JpaComplianceStub;
 import org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
@@ -118,6 +119,7 @@ public class HqlTranslationNoFactoryTests {
 		final QueryEngine queryEngine = new QueryEngine(
 				jpaMetamodel,
 				ValueHandlingMode.BIND,
+				ConfigurationHelper.getPreferredSqlTypeCodeForBoolean( registryScope.getRegistry() ),
 				// we don't want strict JPA query compliance
 				false,
 				new NamedObjectRepositoryImpl( Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap() ),

@@ -70,6 +70,7 @@ public class QueryEngine {
 		return new QueryEngine(
 				() -> sessionFactory.getRuntimeMetamodels().getJpaMetamodel(),
 				sessionFactory.getSessionFactoryOptions().getCriteriaValueHandlingMode(),
+				sessionFactory.getSessionFactoryOptions().getPreferredSqlTypeCodeForBoolean(),
 				metadata.buildNamedQueryRepository( sessionFactory ),
 				hqlTranslator,
 				sqmTranslatorFactory,
@@ -88,10 +89,12 @@ public class QueryEngine {
 	private final NativeQueryInterpreter nativeQueryInterpreter;
 	private final QueryInterpretationCache interpretationCache;
 	private final SqmFunctionRegistry sqmFunctionRegistry;
+	private final int preferredSqlTypeCodeForBoolean;
 
 	public QueryEngine(
 			Supplier<JpaMetamodel> jpaMetamodelAccess,
 			ValueHandlingMode criteriaValueHandlingMode,
+			int preferredSqlTypeCodeForBoolean,
 			NamedObjectRepository namedObjectRepository,
 			HqlTranslator hqlTranslator,
 			SqmTranslatorFactory sqmTranslatorFactory,
@@ -114,6 +117,7 @@ public class QueryEngine {
 		);
 
 		this.sqmFunctionRegistry = new SqmFunctionRegistry();
+		this.preferredSqlTypeCodeForBoolean = preferredSqlTypeCodeForBoolean;
 		dialect.initializeFunctionRegistry( this );
 		if ( userDefinedRegistry != null ) {
 			userDefinedRegistry.overlay( sqmFunctionRegistry );
@@ -137,6 +141,7 @@ public class QueryEngine {
 	public QueryEngine(
 			JpaMetamodel jpaMetamodel,
 			ValueHandlingMode criteriaValueHandlingMode,
+			int preferredSqlTypeCodeForBoolean,
 			boolean useStrictJpaCompliance,
 			NamedObjectRepository namedObjectRepository,
 			NativeQueryInterpreter nativeQueryInterpreter,
@@ -147,6 +152,7 @@ public class QueryEngine {
 		this.nativeQueryInterpreter = nativeQueryInterpreter;
 
 		this.sqmFunctionRegistry = new SqmFunctionRegistry();
+		this.preferredSqlTypeCodeForBoolean = preferredSqlTypeCodeForBoolean;
 		dialect.initializeFunctionRegistry( this );
 
 		this.criteriaBuilder = new SqmCriteriaNodeBuilder(
@@ -366,5 +372,9 @@ public class QueryEngine {
 		if ( sqmFunctionRegistry != null ) {
 			sqmFunctionRegistry.close();
 		}
+	}
+
+	public int getPreferredSqlTypeCodeForBoolean() {
+		return preferredSqlTypeCodeForBoolean;
 	}
 }

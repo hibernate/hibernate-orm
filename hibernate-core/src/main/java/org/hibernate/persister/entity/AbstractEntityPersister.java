@@ -1386,8 +1386,8 @@ public abstract class AbstractEntityPersister
 	}
 
 	public boolean isBatchable() {
-		return optimisticLockStyle() == OptimisticLockStyle.NONE
-				|| ( !isVersioned() && optimisticLockStyle() == OptimisticLockStyle.VERSION )
+		return optimisticLockStyle().isNone()
+				|| !isVersioned() && optimisticLockStyle().isVersion()
 				|| getFactory().getSessionFactoryOptions().isJdbcBatchVersionedData();
 	}
 
@@ -1757,14 +1757,13 @@ public abstract class AbstractEntityPersister
 		// rather than trying to handle the individual generated portions.
 		String selectClause = concretePropertySelectFragment(
 				getRootAlias(),
-				new InclusionChecker() {
-					@Override
-					public boolean includeProperty(int propertyNumber) {
-						final InDatabaseValueGenerationStrategy generationStrategy
-								= entityMetamodel.getInDatabaseValueGenerationStrategies()[propertyNumber];
-						return generationStrategy != null
-								&& timingsMatch( generationStrategy.getGenerationTiming(), generationTimingToMatch );
-					}
+				propertyNumber -> {
+					final InDatabaseValueGenerationStrategy generationStrategy
+							= entityMetamodel.getInDatabaseValueGenerationStrategies()[propertyNumber];
+					GenerationTiming timing = generationStrategy.getGenerationTiming();
+					return generationStrategy != null
+							&& (generationTimingToMatch == GenerationTiming.INSERT && timing.includesInsert()
+							|| generationTimingToMatch == GenerationTiming.ALWAYS && timing.includesUpdate());
 				}
 		);
 		selectClause = selectClause.substring( 2 );
@@ -1792,11 +1791,7 @@ public abstract class AbstractEntityPersister
 	protected String concretePropertySelectFragment(String alias, final boolean[] includeProperty) {
 		return concretePropertySelectFragment(
 				alias,
-				new InclusionChecker() {
-					public boolean includeProperty(int propertyNumber) {
-						return includeProperty[propertyNumber];
-					}
-				}
+				propertyNumber -> includeProperty[propertyNumber]
 		);
 	}
 
@@ -2726,7 +2721,7 @@ public abstract class AbstractEntityPersister
 			update.addPrimaryKeyColumns( getKeyColumns( j ) );
 		}
 
-		if ( j == 0 && isVersioned() && entityMetamodel.getOptimisticLockStyle() == OptimisticLockStyle.VERSION ) {
+		if ( j == 0 && isVersioned() && entityMetamodel.getOptimisticLockStyle().isVersion() ) {
 			// this is the root (versioned) table, and we are using version-based
 			// optimistic locking;  if we are not updating the version, also don't
 			// check it (unless this is a "generated" version column)!
@@ -2738,12 +2733,11 @@ public abstract class AbstractEntityPersister
 		else if ( isAllOrDirtyOptLocking() && oldFields != null ) {
 			// we are using "all" or "dirty" property-based optimistic locking
 
-			boolean[] includeInWhere = entityMetamodel.getOptimisticLockStyle() == OptimisticLockStyle.ALL
-					?
-					getPropertyUpdateability()
+			boolean[] includeInWhere = entityMetamodel.getOptimisticLockStyle().isAll()
 					//optimistic-lock="all", include all updatable properties
-					:
-					includeProperty;             //optimistic-lock="dirty", include all properties we are updating this time
+					? getPropertyUpdateability()
+					//optimistic-lock="dirty", include all properties we are updating this time
+					: includeProperty;
 
 			boolean[] versionability = getPropertyVersionability();
 			Type[] types = getPropertyTypes();
@@ -3470,14 +3464,14 @@ public abstract class AbstractEntityPersister
 				);
 
 				// Write any appropriate versioning conditional parameters
-				if ( useVersion && entityMetamodel.getOptimisticLockStyle() == OptimisticLockStyle.VERSION ) {
+				if ( useVersion && entityMetamodel.getOptimisticLockStyle().isVersion()) {
 					if ( checkVersion( includeProperty ) ) {
 						getVersionType().nullSafeSet( update, oldVersion, index, session );
 					}
 				}
 				else if ( isAllOrDirtyOptLocking() && oldFields != null ) {
 					boolean[] versionability = getPropertyVersionability(); //TODO: is this really necessary????
-					boolean[] includeOldField = entityMetamodel.getOptimisticLockStyle() == OptimisticLockStyle.ALL
+					boolean[] includeOldField = entityMetamodel.getOptimisticLockStyle().isAll()
 							? getPropertyUpdateability()
 							: includeProperty;
 					Type[] types = getPropertyTypes();
@@ -3893,8 +3887,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	protected boolean isAllOrDirtyOptLocking() {
-		return entityMetamodel.getOptimisticLockStyle() == OptimisticLockStyle.DIRTY
-				|| entityMetamodel.getOptimisticLockStyle() == OptimisticLockStyle.ALL;
+		return entityMetamodel.getOptimisticLockStyle().isAllOrDirty();
 	}
 
 	protected String[] generateSQLDeleteStrings(Object[] loadedState) {
@@ -5378,12 +5371,11 @@ public abstract class AbstractEntityPersister
 
 	}
 
-	private boolean isValueGenerationRequired(NonIdentifierAttribute attribute, GenerationTiming matchTiming) {
-		if ( attribute.getType() instanceof ComponentType ) {
+	public static boolean isValueGenerationRequired(NonIdentifierAttribute attribute, GenerationTiming matchTiming) {
+		if ( attribute.getType() instanceof ComponentType) {
 			final ComponentType type = (ComponentType) attribute.getType();
-			final ValueGeneration[] propertyValueGenerationStrategies = type.getPropertyValueGenerationStrategies();
-			for ( ValueGeneration propertyValueGenerationStrategie : propertyValueGenerationStrategies ) {
-				if ( isReadRequired( propertyValueGenerationStrategie, matchTiming ) ) {
+			for ( ValueGeneration valueGenerationStrategy : type.getPropertyValueGenerationStrategies() ) {
+				if ( isReadRequired( valueGenerationStrategy, matchTiming ) ) {
 					return true;
 				}
 			}
@@ -5397,16 +5389,10 @@ public abstract class AbstractEntityPersister
 	/**
 	 * Whether the given value generation strategy requires to read the value from the database or not.
 	 */
-	private boolean isReadRequired(ValueGeneration valueGeneration, GenerationTiming matchTiming) {
-		return valueGeneration != null &&
-				valueGeneration.getValueGenerator() == null &&
-				timingsMatch( valueGeneration.getGenerationTiming(), matchTiming );
-	}
-
-	private boolean timingsMatch(GenerationTiming timing, GenerationTiming matchTiming) {
-		return
-				( matchTiming == GenerationTiming.INSERT && timing.includesInsert() ) ||
-						( matchTiming == GenerationTiming.ALWAYS && timing.includesUpdate() );
+	private static boolean isReadRequired(ValueGeneration valueGeneration, GenerationTiming matchTiming) {
+		return valueGeneration != null
+				&& valueGeneration.getValueGenerator() == null
+				&& valueGeneration.timingMatches( matchTiming );
 	}
 
 	public String getIdentifierPropertyName() {
@@ -5587,7 +5573,7 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	private boolean[] determineValueNullness(Object[] naturalIdValues) {
+	public static boolean[] determineValueNullness(Object[] naturalIdValues) {
 		boolean[] nullness = new boolean[naturalIdValues.length];
 		for ( int i = 0; i < naturalIdValues.length; i++ ) {
 			nullness[i] = naturalIdValues[i] == null;

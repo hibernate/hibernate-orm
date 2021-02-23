@@ -2481,21 +2481,19 @@ public abstract class AbstractEntityPersister
 		return getAppropriateUniqueKeyLoader( propertyName, session ).loadByUniqueKey( session, uniqueKey );
 	}
 
-	public Object loadByUniqueKey(
-			String propertyName,
-			Object uniqueKey,
+	public Object loadByNaturalId(
+			Object[] naturalIdValues,
 			LockOptions lockOptions,
 			SharedSessionContractImplementor session) throws HibernateException {
 		//TODO: cache this
 		return new EntityLoader(
 				this,
-				propertyMapping.toColumns( propertyName ),
-				propertyMapping.toType( propertyName ),
+				determineValueNullness( naturalIdValues ),
 				1,
 				lockOptions,
 				getFactory(),
 				session.getLoadQueryInfluencers()
-		).loadByUniqueKey( session, uniqueKey );
+		).loadByUniqueKey( session, naturalIdValues );
 	}
 
 	private EntityLoader getAppropriateUniqueKeyLoader(String propertyName, SharedSessionContractImplementor session) {

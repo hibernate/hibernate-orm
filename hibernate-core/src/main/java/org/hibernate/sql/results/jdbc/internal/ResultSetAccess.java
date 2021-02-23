@@ -7,6 +7,7 @@
 package org.hibernate.sql.results.jdbc.internal;
 
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -64,9 +65,15 @@ public interface ResultSetAccess extends JdbcValuesMetadata {
 
 	default SqlTypeDescriptor resolveSqlTypeDescriptor(int position) {
 		try {
-			return getFactory().getTypeConfiguration()
-					.getSqlTypeDescriptorRegistry()
-					.getDescriptor( getResultSet().getMetaData().getColumnType( position ) );
+			final ResultSetMetaData metaData = getResultSet().getMetaData();
+			return getFactory().getJdbcServices()
+					.getDialect()
+					.resolveSqlTypeDescriptor(
+							metaData.getColumnType( position ),
+							metaData.getPrecision( position ),
+							metaData.getScale( position ),
+							getFactory().getTypeConfiguration().getSqlTypeDescriptorRegistry()
+					);
 		}
 		catch (SQLException e) {
 			throw getFactory().getJdbcServices().getSqlExceptionHelper().convert(

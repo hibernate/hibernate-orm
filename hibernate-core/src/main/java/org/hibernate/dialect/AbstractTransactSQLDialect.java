@@ -24,6 +24,8 @@ import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
 import org.hibernate.query.sqm.mutation.internal.idtable.LocalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.internal.idtable.TempIdTableExporter;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry;
 
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
@@ -63,6 +65,18 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 		registerColumnType( Types.CLOB, "text" );
 
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, NO_BATCH );
+	}
+
+	@Override
+	public SqlTypeDescriptor resolveSqlTypeDescriptor(
+			int jdbcTypeCode,
+			int precision,
+			int scale,
+			SqlTypeDescriptorRegistry sqlTypeDescriptorRegistry) {
+		if ( jdbcTypeCode == Types.BIT ) {
+			return sqlTypeDescriptorRegistry.getDescriptor( Types.BOOLEAN );
+		}
+		return super.resolveSqlTypeDescriptor( jdbcTypeCode, precision, scale, sqlTypeDescriptorRegistry );
 	}
 
 	@Override

@@ -26,6 +26,8 @@ import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry;
 
 import org.jboss.logging.Logger;
 
@@ -105,6 +107,18 @@ public class RDMSOS2200Dialect extends Dialect {
 	@Override
 	public int getVersion() {
 		return 0;
+	}
+
+	@Override
+	public SqlTypeDescriptor resolveSqlTypeDescriptor(
+			int jdbcTypeCode,
+			int precision,
+			int scale,
+			SqlTypeDescriptorRegistry sqlTypeDescriptorRegistry) {
+		if ( jdbcTypeCode == Types.BIT ) {
+			return sqlTypeDescriptorRegistry.getDescriptor( Types.BOOLEAN );
+		}
+		return super.resolveSqlTypeDescriptor( jdbcTypeCode, precision, scale, sqlTypeDescriptorRegistry );
 	}
 
 	@Override

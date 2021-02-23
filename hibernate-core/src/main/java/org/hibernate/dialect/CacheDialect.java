@@ -34,6 +34,8 @@ import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry;
 
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
@@ -59,8 +61,8 @@ public class CacheDialect extends Dialect {
 		registerColumnType( Types.BOOLEAN, "bit" );
 
 		//no explicit precision
-		registerColumnType(Types.TIMESTAMP, "timestamp");
-		registerColumnType(Types.TIMESTAMP_WITH_TIMEZONE, "timestamp");
+		registerColumnType( Types.TIMESTAMP, "timestamp" );
+		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp" );
 
 		registerColumnType( Types.BLOB, "image" );
 		registerColumnType( Types.CLOB, "text" );
@@ -82,6 +84,18 @@ public class CacheDialect extends Dialect {
 	@Override
 	public int getVersion() {
 		return 0;
+	}
+
+	@Override
+	public SqlTypeDescriptor resolveSqlTypeDescriptor(
+			int jdbcTypeCode,
+			int precision,
+			int scale,
+			SqlTypeDescriptorRegistry sqlTypeDescriptorRegistry) {
+		if ( jdbcTypeCode == Types.BIT ) {
+			return sqlTypeDescriptorRegistry.getDescriptor( Types.BOOLEAN );
+		}
+		return super.resolveSqlTypeDescriptor( jdbcTypeCode, precision, scale, sqlTypeDescriptorRegistry );
 	}
 
 	@Override

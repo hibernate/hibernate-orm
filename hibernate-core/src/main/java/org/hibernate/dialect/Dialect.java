@@ -453,7 +453,13 @@ public abstract class Dialect implements ConversionContext {
 		//about but in certain cases it doesn't allow some useful typecasts,
 		//which must be emulated in a dialect-specific way
 
-		queryEngine.getSqmFunctionRegistry().register("cast", new CastFunction(this));
+		queryEngine.getSqmFunctionRegistry().register(
+				"cast",
+				new CastFunction(
+						this,
+						queryEngine.getPreferredSqlTypeCodeForBoolean()
+				)
+		);
 
 		//ANSI SQL extract() function is supported on the databases we care most
 		//about (though it is called datepart() in some of them) but HQL defines

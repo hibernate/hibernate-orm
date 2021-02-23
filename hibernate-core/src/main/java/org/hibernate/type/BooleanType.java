@@ -7,6 +7,7 @@
 package org.hibernate.type;
 
 import java.io.Serializable;
+import java.sql.Types;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.java.BooleanTypeDescriptor;
@@ -60,10 +61,12 @@ public class BooleanType
 
 	@Override
 	public <X> BasicType<X> resolveIndicatedType(SqlTypeDescriptorIndicators indicators) {
-		if ( indicators.getPreferredSqlTypeCodeForBoolean() != getSqlTypeDescriptor().getJdbcTypeCode() ) {
+		final int preferredSqlTypeCodeForBoolean = indicators.getPreferredSqlTypeCodeForBoolean();
+		// We treat BIT like BOOLEAN because it uses the same JDBC access methods
+		if ( preferredSqlTypeCodeForBoolean != Types.BIT && preferredSqlTypeCodeForBoolean != getSqlTypeDescriptor().getJdbcTypeCode() ) {
 			final SqlTypeDescriptor sqlTypeDescriptor = indicators.getTypeConfiguration()
 					.getSqlTypeDescriptorRegistry()
-					.getDescriptor( indicators.getPreferredSqlTypeCodeForBoolean() );
+					.getDescriptor( preferredSqlTypeCodeForBoolean );
 			//noinspection unchecked
 			return (BasicType<X>) indicators.getTypeConfiguration()
 					.getBasicTypeRegistry()

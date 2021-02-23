@@ -5367,7 +5367,7 @@ public abstract class AbstractEntityPersister
 
 	}
 
-	private boolean isValueGenerationRequired(NonIdentifierAttribute attribute, GenerationTiming matchTiming) {
+	public boolean isValueGenerationRequired(NonIdentifierAttribute attribute, GenerationTiming matchTiming) {
 		if ( attribute.getType() instanceof ComponentType ) {
 			final ComponentType type = (ComponentType) attribute.getType();
 			final ValueGeneration[] propertyValueGenerationStrategies = type.getPropertyValueGenerationStrategies();

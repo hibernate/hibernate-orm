@@ -7,6 +7,7 @@
 package org.hibernate.sql.ast.tree.expression;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.SqlAstWalker;
 
@@ -19,5 +20,5 @@ public interface SelfRenderingExpression extends Expression {
 		sqlTreeWalker.visitSelfRenderingExpression( this );
 	}
 
-	void renderToSql(SqlAppender sqlAppender, SqlAstWalker walker, SessionFactoryImplementor sessionFactory);
+	void renderToSql(SqlAppender sqlAppender, SqlAstTranslator<?> walker, SessionFactoryImplementor sessionFactory);
 }

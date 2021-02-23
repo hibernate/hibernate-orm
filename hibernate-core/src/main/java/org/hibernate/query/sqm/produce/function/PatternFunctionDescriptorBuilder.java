@@ -10,6 +10,7 @@ import org.hibernate.query.sqm.function.PatternBasedSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.type.BasicType;
 
 /**
@@ -23,6 +24,7 @@ public class PatternFunctionDescriptorBuilder {
 
 	private ArgumentsValidator argumentsValidator;
 	private FunctionReturnTypeResolver returnTypeResolver;
+	private SqlAstNodeRenderingMode argumentRenderingMode = SqlAstNodeRenderingMode.DEFAULT;
 
 	public PatternFunctionDescriptorBuilder(SqmFunctionRegistry registry, String registrationKey, String pattern) {
 		this.registry = registry;
@@ -54,13 +56,18 @@ public class PatternFunctionDescriptorBuilder {
 		return this;
 	}
 
+	public PatternFunctionDescriptorBuilder setArgumentRenderingMode(SqlAstNodeRenderingMode argumentRenderingMode) {
+		this.argumentRenderingMode = argumentRenderingMode;
+		return this;
+	}
+
 	public SqmFunctionDescriptor register() {
 		return registry.register( registrationKey, descriptor() );
 	}
 
 	public SqmFunctionDescriptor descriptor() {
 		return new PatternBasedSqmFunctionDescriptor(
-				new PatternRenderer( pattern ),
+				new PatternRenderer( pattern, argumentRenderingMode ),
 				argumentsValidator,
 				returnTypeResolver,
 				registrationKey,

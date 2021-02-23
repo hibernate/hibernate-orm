@@ -104,6 +104,11 @@ public class PreparedStatementSpyConnectionProvider extends ConnectionProviderDe
 		}
 		Connection connectionSpy = spy( connection, settingsForConnections );
 		try {
+			// Apache Derby is object identity sensitive and calling setAutoCommit on the spy causes issues
+			Mockito.doAnswer( invocation -> {
+				connection.setAutoCommit( invocation.getArgument( 0 ) );
+				return null;
+			}).when( connectionSpy ).setAutoCommit( Mockito.anyBoolean() );
 			Mockito.doAnswer( invocation -> {
 				PreparedStatement statement = (PreparedStatement) invocation.callRealMethod();
 				PreparedStatement statementSpy = spy( statement, settingsForStatements );

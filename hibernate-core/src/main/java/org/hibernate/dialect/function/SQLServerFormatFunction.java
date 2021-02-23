@@ -13,7 +13,7 @@ import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
-import org.hibernate.sql.ast.SqlAstWalker;
+import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -43,7 +43,7 @@ public class SQLServerFormatFunction extends AbstractSqmSelfRenderingFunctionDes
 	public void render(
 			SqlAppender sqlAppender,
 			List<SqlAstNode> arguments,
-			SqlAstWalker walker) {
+			SqlAstTranslator<?> walker) {
 		final Expression datetime = (Expression) arguments.get(0);
 		final boolean isTime = TypeConfiguration.getSqlTemporalType( datetime.getExpressionType() ) == TemporalType.TIME;
 		final Format format = (Format) arguments.get(1);

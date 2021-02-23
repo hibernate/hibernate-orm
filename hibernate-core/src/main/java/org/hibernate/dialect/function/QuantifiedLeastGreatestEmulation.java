@@ -11,11 +11,9 @@ import java.util.List;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
-import org.hibernate.sql.ast.SqlAstWalker;
+import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
-import org.hibernate.type.StandardBasicTypes;
 
 /**
  *
@@ -39,7 +37,7 @@ public class QuantifiedLeastGreatestEmulation
 	public void render(
 			SqlAppender sqlAppender,
 			List<SqlAstNode> arguments,
-			SqlAstWalker walker) {
+			SqlAstTranslator<?> walker) {
 		final int numberOfArguments = arguments.size();
 		if ( numberOfArguments > 1 ) {
 			final int lastArgument = numberOfArguments - 1;

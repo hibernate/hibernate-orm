@@ -9,7 +9,7 @@ package org.hibernate.dialect.function;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
-import org.hibernate.sql.ast.SqlAstWalker;
+import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.type.BasicType;
@@ -37,7 +37,7 @@ public class CurrentFunction
 	public void render(
 			SqlAppender sqlAppender,
 			List<SqlAstNode> arguments,
-			SqlAstWalker walker) {
+			SqlAstTranslator<?> walker) {
 		sqlAppender.appendSql(sql);
 	}
 

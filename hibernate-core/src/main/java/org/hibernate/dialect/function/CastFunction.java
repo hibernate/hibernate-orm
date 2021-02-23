@@ -17,7 +17,8 @@ import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescript
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
-import org.hibernate.sql.ast.SqlAstWalker;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
+import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.CastTarget;
@@ -52,7 +53,7 @@ public class CastFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 	}
 
 	@Override
-	public void render(SqlAppender sqlAppender, List<SqlAstNode> arguments, SqlAstWalker walker) {
+	public void render(SqlAppender sqlAppender, List<SqlAstNode> arguments, SqlAstTranslator<?> walker) {
 		final Expression source = (Expression) arguments.get( 0 );
 		final JdbcMapping sourceMapping = ( (SqlExpressable) source.getExpressionType() ).getJdbcMapping();
 		final CastType sourceType = getCastType( sourceMapping );
@@ -63,7 +64,7 @@ public class CastFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
 		String cast = dialect.castPattern( sourceType, targetType );
 
-		new PatternRenderer( cast ).render( sqlAppender, arguments, walker );
+		new PatternRenderer( cast, SqlAstNodeRenderingMode.DEFAULT ).render( sqlAppender, arguments, walker );
 	}
 
 	private CastType getCastType(JdbcMapping sourceMapping) {

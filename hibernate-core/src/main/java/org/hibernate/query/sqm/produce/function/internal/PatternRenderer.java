@@ -8,7 +8,8 @@ package org.hibernate.query.sqm.produce.function.internal;
 
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.sql.ast.SqlAstWalker;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
+import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 
@@ -29,13 +30,15 @@ public class PatternRenderer {
 	private final int[] paramIndexes;
 	private final int varargParam;
 	private final int maxParamIndex;
+	private final SqlAstNodeRenderingMode argumentRenderingMode;
 
 	/**
 	 * Constructs a template renderer
 	 *
 	 * @param pattern The template
+	 * @param argumentRenderingMode The rendering mode for arguments
 	 */
-	public PatternRenderer(String pattern) {
+	public PatternRenderer(String pattern, SqlAstNodeRenderingMode argumentRenderingMode) {
 		final Set<Integer> paramNumbers = new HashSet<>();
 		final List<String> chunkList = new ArrayList<>();
 		final List<Integer> paramList = new ArrayList<>();
@@ -94,14 +97,16 @@ public class PatternRenderer {
 			chunkList.add( chunk.toString() );
 		}
 
-		varargParam = vararg;
-		maxParamIndex = max;
+		this.varargParam = vararg;
+		this.maxParamIndex = max;
 
-		chunks = chunkList.toArray( new String[chunkList.size()] );
-		paramIndexes = new int[paramList.size()];
+		this.chunks = chunkList.toArray( new String[chunkList.size()] );
+		int[] paramIndexes = new int[paramList.size()];
 		for ( i = 0; i < paramIndexes.length; ++i ) {
 			paramIndexes[i] = paramList.get( i );
 		}
+		this.paramIndexes = paramIndexes;
+		this.argumentRenderingMode = argumentRenderingMode;
 	}
 
 	public boolean hasVarargs() {
@@ -115,15 +120,15 @@ public class PatternRenderer {
 	/**
 	 * The rendering code.
 	 *
-	 * @param args The arguments to inject into the template
 	 * @param sqlAppender
+	 * @param args The arguments to inject into the template
 	 * @return The rendered template with replacements
 	 */
 	@SuppressWarnings({ "UnusedDeclaration" })
 	public void render(
 			SqlAppender sqlAppender,
 			List<SqlAstNode> args,
-			SqlAstWalker walker) {
+			SqlAstTranslator<?> walker) {
 		final int numberOfArguments = args.size();
 		if ( numberOfArguments < maxParamIndex ) {
 			LOG.missingArguments( maxParamIndex, numberOfArguments );
@@ -135,7 +140,7 @@ public class PatternRenderer {
 					final SqlAstNode arg = args.get( j );
 					if ( arg != null ) {
 						sqlAppender.appendSql( chunks[i] );
-						arg.accept( walker );
+						walker.render( arg, argumentRenderingMode );
 					}
 				}
 			}
@@ -146,7 +151,7 @@ public class PatternRenderer {
 					sqlAppender.appendSql( chunks[i] );
 				}
 				if ( arg != null ) {
-					arg.accept( walker );
+					walker.render( arg, argumentRenderingMode );
 				}
 			}
 			else {

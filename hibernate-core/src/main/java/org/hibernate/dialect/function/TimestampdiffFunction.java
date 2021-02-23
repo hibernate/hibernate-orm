@@ -13,7 +13,8 @@ import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
-import org.hibernate.sql.ast.SqlAstWalker;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
+import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.DurationUnit;
@@ -46,7 +47,7 @@ public class TimestampdiffFunction
 	public void render(
 			SqlAppender sqlAppender,
 			List<SqlAstNode> arguments,
-			SqlAstWalker walker) {
+			SqlAstTranslator<?> walker) {
 
 		DurationUnit field = (DurationUnit) arguments.get(0);
 		Expression from = (Expression) arguments.get(1);
@@ -58,7 +59,7 @@ public class TimestampdiffFunction
 				TypeConfiguration.getSqlTemporalType( to.getExpressionType() )
 		);
 
-		new PatternRenderer( pattern ).render( sqlAppender, arguments, walker );
+		new PatternRenderer( pattern, SqlAstNodeRenderingMode.DEFAULT ).render( sqlAppender, arguments, walker );
 	}
 
 //	@Override

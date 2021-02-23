@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.function;
 
+import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -27,5 +28,5 @@ public interface FunctionRenderingSupport {
 	void render(
 			SqlAppender sqlAppender,
 			List<SqlAstNode> sqlAstArguments,
-			SqlAstWalker walker);
+			SqlAstTranslator<?> walker);
 }

@@ -11,7 +11,8 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.function.DerbyConcatEmulation;
+import org.hibernate.dialect.function.DerbyLpadFunction;
+import org.hibernate.dialect.function.DerbyRpadFunction;
 import org.hibernate.dialect.function.IndividualLeastGreatestEmulation;
 import org.hibernate.dialect.function.InsertSubstringOverlayEmulation;
 import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
@@ -41,6 +42,7 @@ import org.hibernate.query.sqm.mutation.internal.idtable.TempIdTableExporter;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DerbyCaseFragment;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
@@ -170,6 +172,7 @@ public class DerbyDialect extends Dialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 
+		CommonFunctionFactory.concat_pipeOperator( queryEngine );
 		CommonFunctionFactory.cot( queryEngine );
 		CommonFunctionFactory.chr_char( queryEngine );
 		CommonFunctionFactory.degrees( queryEngine );
@@ -187,7 +190,7 @@ public class DerbyDialect extends Dialect {
 		CommonFunctionFactory.stddevPopSamp( queryEngine );
 		CommonFunctionFactory.substring_substr( queryEngine );
 		CommonFunctionFactory.leftRight_substrLength( queryEngine );
-		CommonFunctionFactory.characterLength_length( queryEngine );
+		CommonFunctionFactory.characterLength_length( queryEngine, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
 		CommonFunctionFactory.power_expLn( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "round", "floor(?1*1e?2+0.5)/1e?2")
@@ -195,21 +198,9 @@ public class DerbyDialect extends Dialect {
 				.setInvariantType( StandardBasicTypes.DOUBLE )
 				.register();
 
-		queryEngine.getSqmFunctionRegistry().register( "concat", new DerbyConcatEmulation() );
-
 		//no way I can see to pad with anything other than spaces
-		// TODO: To support parameters, we have to inline the values
-		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "lpad", "case when length(?1)<?2 then substr(char('',?2)||?1,length(?1)+1) else ?1 end" )
-				.setInvariantType( StandardBasicTypes.STRING )
-				.setExactArgumentCount( 2 )
-				.setArgumentListSignature("(string, length)")
-				.register();
-		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "rpad", "case when length(?1)<?2 then substr(?1||char('',?2),1,?2) else ?1 end" )
-				.setInvariantType( StandardBasicTypes.STRING )
-				.setExactArgumentCount( 2 )
-				.setArgumentListSignature("(string, length)")
-				.register();
-
+		queryEngine.getSqmFunctionRegistry().register( "lpad", new DerbyLpadFunction() );
+		queryEngine.getSqmFunctionRegistry().register( "rpad", new DerbyRpadFunction() );
 		queryEngine.getSqmFunctionRegistry().register( "least", new IndividualLeastGreatestEmulation( true ) );
 		queryEngine.getSqmFunctionRegistry().register( "greatest", new IndividualLeastGreatestEmulation( false ) );
 		queryEngine.getSqmFunctionRegistry().register( "overlay", new InsertSubstringOverlayEmulation( true ) );

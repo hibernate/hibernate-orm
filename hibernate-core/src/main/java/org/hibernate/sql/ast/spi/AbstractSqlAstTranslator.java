@@ -8,6 +8,8 @@ package org.hibernate.sql.ast.spi;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Types;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
@@ -25,13 +27,19 @@ import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.query.Limit;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
+import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.query.sqm.sql.internal.SqmParameterInterpretation;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlTreeCreationException;
+import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.Literal;
+import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.insert.InsertStatement;
@@ -54,6 +62,7 @@ import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.exec.spi.JdbcUpdate;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesMappingProducerStandard;
 import org.hibernate.type.IntegerType;
+import org.hibernate.type.StringType;
 
 import static org.hibernate.sql.ast.SqlTreePrinter.logSqlAst;
 import static org.hibernate.sql.results.graph.DomainResultGraphPrinter.logDomainResultGraph;
@@ -67,6 +76,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation>
 
 	private final Statement statement;
 	private final Set<String> affectedTableNames = new HashSet<>();
+
+	private boolean inlineParameters;
 
 	private Map<JdbcParameter, JdbcParameterBinding> appliedParameterBindings = Collections.emptyMap();
 	private JdbcParameterBindings jdbcParameterBindings;
@@ -88,6 +99,84 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation>
 	@Override
 	public Set<String> getAffectedTableNames() {
 		return affectedTableNames;
+	}
+
+	@Override
+	public void render(SqlAstNode sqlAstNode, SqlAstNodeRenderingMode renderingMode) {
+		switch ( renderingMode ) {
+			case NO_PLAIN_PARAMETER:
+				if ( sqlAstNode instanceof SqmParameterInterpretation ) {
+					sqlAstNode = ( (SqmParameterInterpretation) sqlAstNode ).getResolvedExpression();
+				}
+				if ( sqlAstNode instanceof JdbcParameter ) {
+					final JdbcMapping jdbcMapping = ( (JdbcParameter) sqlAstNode ).getExpressionType().getJdbcMappings()
+							.get( 0 );
+					// We try to avoid inlining parameters if possible which can be done by wrapping the parameter
+					// in an expression that is semantically unnecessary e.g. numeric + 0 or concat with an empty string
+					switch ( jdbcMapping.getSqlTypeDescriptor().getJdbcTypeCode() ) {
+						case Types.BIT:
+						case Types.SMALLINT:
+						case Types.TINYINT:
+						case Types.INTEGER:
+						case Types.BIGINT:
+						case Types.DOUBLE:
+						case Types.REAL:
+						case Types.FLOAT:
+						case Types.NUMERIC:
+						case Types.DECIMAL:
+							sqlAstNode.accept( this );
+							appendSql( "+0" );
+							break;
+						case Types.CHAR:
+						case Types.VARCHAR:
+						case Types.LONGVARCHAR:
+						case Types.NCHAR:
+						case Types.NVARCHAR:
+						case Types.LONGNVARCHAR:
+							final SqmFunctionDescriptor sqmFunctionDescriptor = getSessionFactory().getQueryEngine()
+									.getSqmFunctionRegistry()
+									.findFunctionDescriptor( "concat" );
+							if ( sqmFunctionDescriptor instanceof AbstractSqmSelfRenderingFunctionDescriptor ) {
+								final List<SqlAstNode> list = new ArrayList<>( 2 );
+								list.add( sqlAstNode );
+								list.add( new QueryLiteral<>( "", StringType.INSTANCE ) );
+								( (AbstractSqmSelfRenderingFunctionDescriptor) sqmFunctionDescriptor )
+										.render( this, list, this );
+								break;
+							}
+						default:
+							renderExpressionAsLiteral( (Expression) sqlAstNode, jdbcParameterBindings );
+							break;
+					}
+				}
+				else {
+					sqlAstNode.accept( this );
+				}
+				break;
+			case INLINE_PARAMETERS:
+				boolean inlineParameters = this.inlineParameters;
+				this.inlineParameters = true;
+				try {
+					sqlAstNode.accept( this );
+				}
+				finally {
+					this.inlineParameters = inlineParameters;
+				}
+				break;
+			case DEFAULT:
+			default:
+				sqlAstNode.accept( this );
+		}
+	}
+
+	@Override
+	public void visitParameter(JdbcParameter jdbcParameter) {
+		if ( inlineParameters ) {
+			renderExpressionAsLiteral( jdbcParameter, jdbcParameterBindings );
+		}
+		else {
+			super.visitParameter( jdbcParameter );
+		}
 	}
 
 	protected void addAppliedParameterBinding(JdbcParameter parameter, JdbcParameterBinding binding) {
@@ -197,6 +286,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation>
 	protected void renderExpressionAsLiteral(Expression expression, JdbcParameterBindings jdbcParameterBindings) {
 		if ( expression instanceof Literal ) {
 			expression.accept( this );
+			return;
 		}
 		else if ( expression instanceof JdbcParameter ) {
 			if ( jdbcParameterBindings == null ) {
@@ -204,6 +294,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation>
 			}
 			final JdbcParameter parameter = (JdbcParameter) expression;
 			renderAsLiteral( parameter, getParameterBindValue( parameter ) );
+			return;
 		}
 		throw new UnsupportedOperationException( "Can't render expression as literal: " + expression );
 	}

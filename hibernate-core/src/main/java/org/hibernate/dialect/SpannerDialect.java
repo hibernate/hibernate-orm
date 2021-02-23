@@ -178,6 +178,7 @@ public class SpannerDialect extends Dialect {
 				.register();
 
 		// String Functions
+		CommonFunctionFactory.concat_pipeOperator( queryEngine );
 		CommonFunctionFactory.trim2( queryEngine );
 		CommonFunctionFactory.reverse( queryEngine );
 		CommonFunctionFactory.repeat( queryEngine );

@@ -2280,13 +2280,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public Expression visitFunction(SqmFunction sqmFunction) {
+		inferableTypeAccessStack.push( () -> null );
 		shallownessStack.push( Shallowness.FUNCTION );
 		try {
-			//noinspection unchecked
 			return sqmFunction.convertToSqlAst( this );
 		}
 		finally {
 			shallownessStack.pop();
+			inferableTypeAccessStack.pop();
 		}
 	}
 

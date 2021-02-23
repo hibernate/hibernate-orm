@@ -7,6 +7,7 @@
 package org.hibernate.dialect.function;
 
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.type.StandardBasicTypes;
 
 import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.useArgType;
@@ -1163,10 +1164,11 @@ public class CommonFunctionFactory {
 	/**
 	 * Oracle-style
 	 */
-	public static void characterLength_length(QueryEngine queryEngine) {
+	public static void characterLength_length(QueryEngine queryEngine, SqlAstNodeRenderingMode argumentRenderingMode) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "length" )
 				.setInvariantType( StandardBasicTypes.INTEGER )
 				.setExactArgumentCount( 1 )
+				.setArgumentRenderingMode( argumentRenderingMode )
 				.register();
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "character_length", "length" );
 	}

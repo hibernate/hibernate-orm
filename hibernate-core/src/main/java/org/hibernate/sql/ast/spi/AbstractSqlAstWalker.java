@@ -48,6 +48,7 @@ import org.hibernate.query.sqm.sql.internal.SqmParameterInterpretation;
 import org.hibernate.query.sqm.tree.expression.Conversion;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
+import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.MutationStatement;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -2721,12 +2722,20 @@ public abstract class AbstractSqlAstWalker implements SqlAstWalker, SqlAppender 
 	@Override
 	public void visitSelfRenderingPredicate(SelfRenderingPredicate selfRenderingPredicate) {
 		// todo (6.0) render boolean expression as comparison predicate if necessary
-		selfRenderingPredicate.getSelfRenderingExpression().renderToSql( this, this, getSessionFactory() );
+		selfRenderingPredicate.getSelfRenderingExpression().renderToSql(
+				this,
+				(SqlAstTranslator<?>) this,
+				getSessionFactory()
+		);
 	}
 
 	@Override
 	public void visitSelfRenderingExpression(SelfRenderingExpression expression) {
-		expression.renderToSql( this, this, getSessionFactory() );
+		expression.renderToSql(
+				this,
+				(SqlAstTranslator<?>) this,
+				getSessionFactory()
+		);
 	}
 
 //	@Override

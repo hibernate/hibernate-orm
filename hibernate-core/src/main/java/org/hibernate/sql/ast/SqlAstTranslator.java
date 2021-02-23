@@ -9,6 +9,7 @@ package org.hibernate.sql.ast;
 import java.util.Set;
 
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 
@@ -16,6 +17,12 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
  * @author Steve Ebersole
  */
 public interface SqlAstTranslator<T extends JdbcOperation> extends SqlAstWalker {
+
+	/**
+	 * Renders the given SQL AST node with the given rendering mode.
+	 */
+	void render(SqlAstNode sqlAstNode, SqlAstNodeRenderingMode renderingMode);
+
 	/**
 	 * Not the best spot for this.  Its the table names collected while walking the SQL AST.
 	 * Its ok here because the translator is consider a one-time-use.  It just needs to be called

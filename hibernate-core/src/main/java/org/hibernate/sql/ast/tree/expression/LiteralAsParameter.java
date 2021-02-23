@@ -8,7 +8,7 @@ package org.hibernate.sql.ast.tree.expression;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
-import org.hibernate.sql.ast.SqlAstWalker;
+import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 
 /**
@@ -27,7 +27,7 @@ public class LiteralAsParameter<T> implements SelfRenderingExpression {
 	}
 
 	@Override
-	public void renderToSql(SqlAppender sqlAppender, SqlAstWalker walker, SessionFactoryImplementor sessionFactory) {
+	public void renderToSql(SqlAppender sqlAppender, SqlAstTranslator<?> walker, SessionFactoryImplementor sessionFactory) {
 		sqlAppender.appendSql( "?" );
 	}
 

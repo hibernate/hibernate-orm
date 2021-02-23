@@ -47,6 +47,7 @@ import org.hibernate.query.sqm.mutation.internal.idtable.TempIdTableExporter;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.*;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
@@ -157,7 +158,7 @@ public class OracleDialect extends Dialect {
 		CommonFunctionFactory.rownumRowid( queryEngine );
 		CommonFunctionFactory.sysdate( queryEngine );
 		CommonFunctionFactory.systimestamp( queryEngine );
-		CommonFunctionFactory.characterLength_length( queryEngine );
+		CommonFunctionFactory.characterLength_length( queryEngine, SqlAstNodeRenderingMode.DEFAULT );
 		CommonFunctionFactory.addMonths( queryEngine );
 		CommonFunctionFactory.monthsBetween( queryEngine );
 		CommonFunctionFactory.everyAny_sumCaseCase( queryEngine );

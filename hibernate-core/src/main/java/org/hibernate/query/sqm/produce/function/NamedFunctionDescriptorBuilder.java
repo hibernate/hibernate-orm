@@ -9,6 +9,7 @@ package org.hibernate.query.sqm.produce.function;
 import org.hibernate.query.sqm.function.NamedSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.type.BasicType;
 
 /**
@@ -26,6 +27,7 @@ public class NamedFunctionDescriptorBuilder {
 
 	private boolean useParenthesesWhenNoArgs = true;
 	private String argumentListSignature;
+	private SqlAstNodeRenderingMode argumentRenderingMode = SqlAstNodeRenderingMode.DEFAULT;
 
 	public NamedFunctionDescriptorBuilder(SqmFunctionRegistry registry, String registrationKey, String functionName) {
 		this.registry = registry;
@@ -70,6 +72,11 @@ public class NamedFunctionDescriptorBuilder {
 		return this;
 	}
 
+	public NamedFunctionDescriptorBuilder setArgumentRenderingMode(SqlAstNodeRenderingMode argumentRenderingMode) {
+		this.argumentRenderingMode = argumentRenderingMode;
+		return this;
+	}
+
 	public SqmFunctionDescriptor register() {
 		return registry.register( registrationKey, descriptor() );
 	}
@@ -81,7 +88,8 @@ public class NamedFunctionDescriptorBuilder {
 				argumentsValidator,
 				returnTypeResolver,
 				registrationKey,
-				argumentListSignature
+				argumentListSignature,
+				argumentRenderingMode
 		);
 	}
 }

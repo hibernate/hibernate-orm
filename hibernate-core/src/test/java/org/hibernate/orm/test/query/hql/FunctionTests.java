@@ -264,7 +264,6 @@ public class FunctionTests {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby doesn't support a parameter in the 'length' function or the 'char' function which we render as emulation")
 	public void testOverlayFunctionParameters(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -338,7 +337,6 @@ public class FunctionTests {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby doesn't support a parameter in the 'length' function or the 'char' function which we render as emulation")
 	public void testPadFunctionParameters(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

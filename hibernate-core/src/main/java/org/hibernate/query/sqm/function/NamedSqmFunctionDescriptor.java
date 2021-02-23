@@ -8,7 +8,8 @@ package org.hibernate.query.sqm.function;
 
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
-import org.hibernate.sql.ast.SqlAstWalker;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
+import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 
@@ -29,13 +30,22 @@ public class NamedSqmFunctionDescriptor
 	private final String functionName;
 	private final boolean useParenthesesWhenNoArgs;
 	private final String argumentListSignature;
+	private final SqlAstNodeRenderingMode argumentRenderingMode;
 
 	public NamedSqmFunctionDescriptor(
 			String functionName,
 			boolean useParenthesesWhenNoArgs,
 			ArgumentsValidator argumentsValidator,
 			FunctionReturnTypeResolver returnTypeResolver) {
-		this( functionName, useParenthesesWhenNoArgs, argumentsValidator, returnTypeResolver, functionName, null );
+		this(
+				functionName,
+				useParenthesesWhenNoArgs,
+				argumentsValidator,
+				returnTypeResolver,
+				functionName,
+				null,
+				SqlAstNodeRenderingMode.DEFAULT
+		);
 	}
 
 	public NamedSqmFunctionDescriptor(
@@ -44,12 +54,14 @@ public class NamedSqmFunctionDescriptor
 			ArgumentsValidator argumentsValidator,
 			FunctionReturnTypeResolver returnTypeResolver,
 			String name,
-			String argumentListSignature) {
+			String argumentListSignature,
+			SqlAstNodeRenderingMode argumentRenderingMode) {
 		super( name, argumentsValidator, returnTypeResolver );
 
 		this.functionName = functionName;
 		this.useParenthesesWhenNoArgs = useParenthesesWhenNoArgs;
 		this.argumentListSignature = argumentListSignature;
+		this.argumentRenderingMode = argumentRenderingMode;
 	}
 
 	/**
@@ -75,7 +87,7 @@ public class NamedSqmFunctionDescriptor
 	public void render(
 			SqlAppender sqlAppender,
 			List<SqlAstNode> sqlAstArguments,
-			SqlAstWalker walker) {
+			SqlAstTranslator<?> walker) {
 		final boolean useParens = useParenthesesWhenNoArgs || !sqlAstArguments.isEmpty();
 
 		sqlAppender.appendSql( functionName );
@@ -88,7 +100,7 @@ public class NamedSqmFunctionDescriptor
 			if ( !firstPass ) {
 				sqlAppender.appendSql( ", " );
 			}
-			sqlAstArgument.accept(walker);
+			walker.render( sqlAstArgument, argumentRenderingMode );
 			firstPass = false;
 		}
 

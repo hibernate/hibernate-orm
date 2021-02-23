@@ -11,7 +11,7 @@ import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
-import org.hibernate.sql.ast.SqlAstWalker;
+import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -51,6 +51,6 @@ public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 	public abstract void render(
 			SqlAppender sqlAppender,
 			List<SqlAstNode> sqlAstArguments,
-			SqlAstWalker walker);
+			SqlAstTranslator<?> walker);
 
 }

@@ -218,20 +218,34 @@ public class EnumJavaTypeDescriptor<T extends Enum<T>> extends AbstractClassType
 
 	@Override
 	public String getCheckCondition(String columnName, SqlTypeDescriptor sqlTypeDescriptor, Dialect dialect) {
-		if (sqlTypeDescriptor instanceof TinyIntTypeDescriptor
-				|| sqlTypeDescriptor instanceof IntegerTypeDescriptor) {
-			int last = getJavaTypeClass().getEnumConstants().length - 1;
-			return columnName + " between 0 and " + last;
-		}
-		else if (sqlTypeDescriptor instanceof VarcharTypeDescriptor) {
-			StringBuilder types = new StringBuilder();
-			for ( Enum<T> value : getJavaTypeClass().getEnumConstants() ) {
-				if (types.length() != 0) {
-					types.append(", ");
+		switch ( sqlTypeDescriptor.getSqlType() ) {
+			case Types.CHAR:
+			case Types.VARCHAR:
+			case Types.LONGVARCHAR:
+			case Types.NCHAR:
+			case Types.NVARCHAR:
+			case Types.LONGNVARCHAR:
+				final StringBuilder sb = new StringBuilder();
+				sb.append( columnName ).append( " in (" );
+				String separator = "";
+				for ( Enum<T> value : getJavaTypeClass().getEnumConstants() ) {
+					sb.append( separator );
+					sb.append('\'').append( value.name() ).append('\'');
+					separator = ",";
 				}
-				types.append("'").append( value.name() ).append("'");
-			}
-			return columnName + " in (" + types + ")";
+				return sb.append( ')' ).toString();
+			case Types.BIT:
+			case Types.SMALLINT:
+			case Types.TINYINT:
+			case Types.INTEGER:
+			case Types.BIGINT:
+			case Types.DOUBLE:
+			case Types.REAL:
+			case Types.FLOAT:
+			case Types.NUMERIC:
+			case Types.DECIMAL:
+				int last = getJavaTypeClass().getEnumConstants().length - 1;
+				return columnName + " between 0 and " + last;
 		}
 		return null;
 	}

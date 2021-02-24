@@ -6,6 +6,8 @@
  */
 package org.hibernate.type.descriptor.java;
 
+import java.sql.Types;
+
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.spi.Primitive;
@@ -69,7 +71,7 @@ public class BooleanTypeDescriptor extends AbstractClassTypeDescriptor<Boolean> 
 			return (X) toInteger( value );
 		}
 		if ( Long.class.isAssignableFrom( type ) ) {
-			return (X) toInteger( value );
+			return (X) toLong( value );
 		}
 		if ( Character.class.isAssignableFrom( type ) ) {
 			return (X) Character.valueOf( value ? characterValueTrue : characterValueFalse );
@@ -158,8 +160,28 @@ public class BooleanTypeDescriptor extends AbstractClassTypeDescriptor<Boolean> 
 
 	@Override
 	public String getCheckCondition(String columnName, SqlTypeDescriptor sqlTypeDescriptor, Dialect dialect) {
-		return dialect.toBooleanValueString(true).equals("1") && !dialect.supportsBitType()
-				? columnName + " in (0,1)"
-				: null;
+		switch ( sqlTypeDescriptor.getSqlType() ) {
+			case Types.CHAR:
+			case Types.VARCHAR:
+			case Types.LONGVARCHAR:
+			case Types.NCHAR:
+			case Types.NVARCHAR:
+			case Types.LONGNVARCHAR:
+				return columnName + " in ('" + characterValueFalse + "','" + characterValueTrue + "')";
+			case Types.BIT:
+			case Types.SMALLINT:
+			case Types.TINYINT:
+			case Types.INTEGER:
+			case Types.BIGINT:
+			case Types.DOUBLE:
+			case Types.REAL:
+			case Types.FLOAT:
+			case Types.NUMERIC:
+			case Types.DECIMAL:
+				if ( !dialect.supportsBitType() ) {
+					return columnName + " in (0,1)";
+				}
+		}
+		return null;
 	}
 }

@@ -218,35 +218,6 @@ public class EnumJavaTypeDescriptor<T extends Enum<T>> extends AbstractClassType
 
 	@Override
 	public String getCheckCondition(String columnName, SqlTypeDescriptor sqlTypeDescriptor, Dialect dialect) {
-		switch ( sqlTypeDescriptor.getSqlType() ) {
-			case Types.CHAR:
-			case Types.VARCHAR:
-			case Types.LONGVARCHAR:
-			case Types.NCHAR:
-			case Types.NVARCHAR:
-			case Types.LONGNVARCHAR:
-				final StringBuilder sb = new StringBuilder();
-				sb.append( columnName ).append( " in (" );
-				String separator = "";
-				for ( Enum<T> value : getJavaTypeClass().getEnumConstants() ) {
-					sb.append( separator );
-					sb.append('\'').append( value.name() ).append('\'');
-					separator = ",";
-				}
-				return sb.append( ')' ).toString();
-			case Types.BIT:
-			case Types.SMALLINT:
-			case Types.TINYINT:
-			case Types.INTEGER:
-			case Types.BIGINT:
-			case Types.DOUBLE:
-			case Types.REAL:
-			case Types.FLOAT:
-			case Types.NUMERIC:
-			case Types.DECIMAL:
-				int last = getJavaTypeClass().getEnumConstants().length - 1;
-				return columnName + " between 0 and " + last;
-		}
-		return null;
+		return dialect.getEnumCheckCondition( columnName, sqlTypeDescriptor.getSqlType(), getJavaTypeClass() );
 	}
 }

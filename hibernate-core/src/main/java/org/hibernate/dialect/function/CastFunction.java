@@ -17,7 +17,6 @@ import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescript
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
-import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -64,7 +63,7 @@ public class CastFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
 		String cast = dialect.castPattern( sourceType, targetType );
 
-		new PatternRenderer( cast, SqlAstNodeRenderingMode.DEFAULT ).render( sqlAppender, arguments, walker );
+		new PatternRenderer( cast ).render( sqlAppender, arguments, walker );
 	}
 
 	private CastType getCastType(JdbcMapping sourceMapping) {

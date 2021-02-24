@@ -6,7 +6,9 @@
  */
 package org.hibernate.test.util;
 
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.mapping.Column;
@@ -18,6 +20,20 @@ import org.hibernate.mapping.Table;
  * @author Emmanuel Bernard
  */
 public abstract class SchemaUtil {
+	public static Set<String> getColumnNames(String tableName, Metadata metadata) {
+		Set<String> result = new HashSet<>();
+		for ( Table table : metadata.collectTableMappings() ) {
+			if (tableName.equals( table.getName() ) ) {
+				Iterator<Column> columns = table.getColumnIterator();
+				while ( columns.hasNext() ) {
+					Column column = columns.next();
+					result.add( column.getName() );
+				}
+			}
+		}
+		return result;
+	}
+
 	@SuppressWarnings("unchecked")
 	public static boolean isColumnPresent(String tableName, String columnName, Metadata metadata) {
 		for ( Table table : metadata.collectTableMappings() ) {

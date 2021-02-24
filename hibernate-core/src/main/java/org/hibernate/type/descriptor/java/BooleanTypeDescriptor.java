@@ -6,8 +6,6 @@
  */
 package org.hibernate.type.descriptor.java;
 
-import java.sql.Types;
-
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.spi.Primitive;
@@ -160,28 +158,12 @@ public class BooleanTypeDescriptor extends AbstractClassTypeDescriptor<Boolean> 
 
 	@Override
 	public String getCheckCondition(String columnName, SqlTypeDescriptor sqlTypeDescriptor, Dialect dialect) {
-		switch ( sqlTypeDescriptor.getSqlType() ) {
-			case Types.CHAR:
-			case Types.VARCHAR:
-			case Types.LONGVARCHAR:
-			case Types.NCHAR:
-			case Types.NVARCHAR:
-			case Types.LONGNVARCHAR:
-				return columnName + " in ('" + characterValueFalse + "','" + characterValueTrue + "')";
-			case Types.BIT:
-			case Types.SMALLINT:
-			case Types.TINYINT:
-			case Types.INTEGER:
-			case Types.BIGINT:
-			case Types.DOUBLE:
-			case Types.REAL:
-			case Types.FLOAT:
-			case Types.NUMERIC:
-			case Types.DECIMAL:
-				if ( !dialect.supportsBitType() ) {
-					return columnName + " in (0,1)";
-				}
-		}
-		return null;
+		return dialect.getBooleanCheckCondition(
+				columnName,
+				sqlTypeDescriptor.getSqlType(),
+				characterValueFalse,
+				characterValueTrue
+		);
 	}
+
 }

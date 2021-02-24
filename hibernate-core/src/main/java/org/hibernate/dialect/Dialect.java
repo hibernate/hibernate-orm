@@ -264,6 +264,86 @@ public abstract class Dialect implements ConversionContext {
 				: size;
 	}
 
+	/**
+	 * Does the given JDBC type code represent some sort of
+	 * numeric type?
+	 * @param sqlType a JDBC type code from {@link Types}
+	 */
+	private static boolean isNumericType(int sqlType) {
+		switch (sqlType) {
+			case Types.BIT:
+			case Types.SMALLINT:
+			case Types.TINYINT:
+			case Types.INTEGER:
+			case Types.BIGINT:
+			case Types.DOUBLE:
+			case Types.REAL:
+			case Types.FLOAT:
+			case Types.NUMERIC:
+			case Types.DECIMAL:
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	/**
+	 * Does the given JDBC type code represent some sort of
+	 * string type?
+	 * @param sqlType a JDBC type code from {@link Types}
+	 */
+	private static boolean isCharacterType(int sqlType) {
+		switch (sqlType) {
+			case Types.CHAR:
+			case Types.VARCHAR:
+			case Types.LONGVARCHAR:
+			case Types.NCHAR:
+			case Types.NVARCHAR:
+			case Types.LONGNVARCHAR:
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	/**
+	 * Render a SQL check condition for a column that represents a boolean value.
+	 */
+	public String getBooleanCheckCondition(String columnName, int sqlType, char falseChar, char trueChar) {
+		if ( isCharacterType(sqlType) ) {
+			return columnName + " in ('" + falseChar + "','" + trueChar + "')";
+		}
+		else if ( isNumericType(sqlType) && !supportsBitType() ) {
+			return columnName + " in (0,1)";
+		}
+		else {
+			return null;
+		}
+	}
+
+	/**
+	 * Render a SQL check condition for a column that represents an enumerated value.
+	 */
+	public String getEnumCheckCondition(String columnName, int sqlType, Class<? extends Enum<?>> enumClass) {
+		if ( isCharacterType(sqlType) ) {
+			StringBuilder check = new StringBuilder();
+			check.append( columnName ).append( " in (" );
+			String separator = "";
+			for ( Enum<?> value : enumClass.getEnumConstants() ) {
+				check.append( separator ).append('\'').append( value.name() ).append('\'');
+				separator = ",";
+			}
+			return check.append( ')' ).toString();
+		}
+		else if ( isNumericType(sqlType) ) {
+			int last = enumClass.getEnumConstants().length - 1;
+			return columnName + " between 0 and " + last;
+		}
+		else {
+			return null;
+		}
+	}
+
 	public abstract int getVersion();
 
 	/**

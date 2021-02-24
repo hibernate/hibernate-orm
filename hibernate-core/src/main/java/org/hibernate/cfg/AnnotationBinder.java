@@ -3248,7 +3248,8 @@ public final class AnnotationBinder {
 		}
 		else {
 			toOne.setLazy( fetchType == FetchType.LAZY );
-			toOne.setUnwrapProxy( false );
+			toOne.setUnwrapProxy( fetchType != FetchType.LAZY );
+			toOne.setUnwrapProxyImplicit( true );
 		}
 		if ( fetch != null ) {
 			if ( fetch.value() == org.hibernate.annotations.FetchMode.JOIN ) {

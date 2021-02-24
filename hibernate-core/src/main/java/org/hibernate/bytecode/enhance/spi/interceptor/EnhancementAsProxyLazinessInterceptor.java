@@ -13,7 +13,7 @@ import java.util.Set;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
-import org.hibernate.bytecode.BytecodeLogger;
+import org.hibernate.bytecode.BytecodeLogging;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
@@ -170,7 +170,7 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 	}
 
 	public Object forceInitialize(Object target, String attributeName) {
-		BytecodeLogger.LOGGER.tracef(
+		BytecodeLogging.LOGGER.tracef(
 				"EnhancementAsProxyLazinessInterceptor#forceInitialize : %s#%s -> %s )",
 				entityKey.getEntityName(),
 				entityKey.getIdentifier(),
@@ -186,7 +186,7 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 	}
 
 	public Object forceInitialize(Object target, String attributeName, SharedSessionContractImplementor session, boolean isTemporarySession) {
-		BytecodeLogger.LOGGER.tracef(
+		BytecodeLogging.LOGGER.tracef(
 				"EnhancementAsProxyLazinessInterceptor#forceInitialize : %s#%s -> %s )",
 				entityKey.getEntityName(),
 				entityKey.getIdentifier(),

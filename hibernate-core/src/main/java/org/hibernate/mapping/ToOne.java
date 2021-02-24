@@ -28,6 +28,7 @@ public abstract class ToOne extends SimpleValue implements Fetchable {
 	private String propertyName;
 	private boolean lazy = true;
 	protected boolean unwrapProxy;
+	protected boolean isUnwrapProxyImplicit;
 	protected boolean referenceToPrimaryKey = true;
 
 	protected ToOne(MetadataBuildingContext buildingContext, Table table) {
@@ -121,6 +122,18 @@ public abstract class ToOne extends SimpleValue implements Fetchable {
 
 	public void setUnwrapProxy(boolean unwrapProxy) {
 		this.unwrapProxy = unwrapProxy;
+	}
+
+	public boolean isUnwrapProxyImplicit() {
+		return isUnwrapProxyImplicit;
+	}
+
+	/**
+	 * Related to HHH-13658 - keep track of whether `unwrapProxy` is an implicit value
+	 * for reference later
+	 */
+	public void setUnwrapProxyImplicit(boolean unwrapProxyImplicit) {
+		isUnwrapProxyImplicit = unwrapProxyImplicit;
 	}
 
 	public boolean isReferenceToPrimaryKey() {

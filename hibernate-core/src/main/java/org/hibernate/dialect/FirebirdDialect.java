@@ -94,9 +94,6 @@ public class FirebirdDialect extends Dialect {
 		super();
 		this.version = version;
 
-		registerColumnType( Types.BIT, 1, "smallint" );
-		registerColumnType( Types.BIT, "smallint" );
-
 		if ( getVersion() < 300 ) {
 			//'boolean' type introduced in 3.0
 			registerColumnType( Types.BOOLEAN, "smallint" );

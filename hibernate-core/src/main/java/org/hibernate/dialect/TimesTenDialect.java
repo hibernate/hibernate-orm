@@ -61,8 +61,6 @@ public class TimesTenDialect extends Dialect {
 		//Note: these are the correct type mappings
 		//      for the default Oracle type mode
 		//      TypeMode=0
-		registerColumnType( Types.BIT, 1, "tt_tinyint" );
-		registerColumnType( Types.BIT, "tt_tinyint" );
 		registerColumnType( Types.BOOLEAN, "tt_tinyint" );
 
 		registerColumnType(Types.TINYINT, "tt_tinyint");

@@ -98,10 +98,6 @@ public class DerbyDialect extends Dialect {
 
 		if ( getVersion() < 1070) {
 			registerColumnType( Types.BOOLEAN, "smallint" ); //no boolean before 10.7
-			registerColumnType( Types.BIT, 1, "smallint" ); //no bit
-		}
-		else {
-			registerColumnType( Types.BIT, 1, "boolean" ); //no bit
 		}
 		registerColumnType( Types.TINYINT, "smallint" ); //no tinyint
 		registerColumnType( Types.CHAR, 254, "char($l)" );

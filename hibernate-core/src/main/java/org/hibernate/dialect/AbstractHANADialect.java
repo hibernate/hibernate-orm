@@ -767,9 +767,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		registerColumnType( Types.VARCHAR, "clob" );
 		registerColumnType( Types.NVARCHAR, "nclob" );
 
-		registerColumnType( Types.BIT, 1, "boolean" );
-		// map bit/tinyint to smallint since tinyint is unsigned on HANA
-		registerColumnType( Types.BIT, "smallint" );
+		// map tinyint to smallint since tinyint is unsigned on HANA
 		registerColumnType( Types.TINYINT, "smallint" );
 
 		registerHibernateType( Types.NCLOB, StandardBasicTypes.MATERIALIZED_NCLOB.getName() );

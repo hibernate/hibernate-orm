@@ -521,8 +521,6 @@ public class OracleDialect extends Dialect {
 	}
 
 	protected void registerNumericTypeMappings() {
-		registerColumnType( Types.BIT, 1, "number(1,0)" );
-		registerColumnType( Types.BIT, "number(3,0)" );
 		registerColumnType( Types.BOOLEAN, "number(1,0)" );
 
 		registerColumnType( Types.BIGINT, "number(19,0)" );

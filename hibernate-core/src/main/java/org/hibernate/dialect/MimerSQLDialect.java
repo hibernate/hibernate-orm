@@ -50,10 +50,7 @@ public class MimerSQLDialect extends Dialect {
 
 	public MimerSQLDialect() {
 		super();
-		//no 'bit' type
-		registerColumnType( Types.BIT, 1, "boolean" );
 		//no 'tinyint', so use integer with 3 decimal digits
-		registerColumnType( Types.BIT, "integer(3)" );
 		registerColumnType( Types.TINYINT, "integer(3)" );
 
 		//Mimer CHARs are ASCII!!

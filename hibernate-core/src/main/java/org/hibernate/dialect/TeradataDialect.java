@@ -80,8 +80,6 @@ public class TeradataDialect extends Dialect {
 		this.version = version;
 
 		registerColumnType( Types.BOOLEAN, "byteint" );
-		registerColumnType( Types.BIT, 1, "byteint" );
-		registerColumnType( Types.BIT, "byteint" );
 
 		registerColumnType( Types.TINYINT, "byteint" );
 

@@ -14,7 +14,7 @@ import org.hibernate.sql.ast.spi.SqlAppender;
 /**
  * A wrapper for a literal to render as parameter through a cast function.
  *
- * @see org.hibernate.sql.ast.spi.AbstractSqlAstWalker
+ * @see org.hibernate.sql.ast.spi.AbstractSqlAstTranslator
  *
  * @author Christian beikov
  */

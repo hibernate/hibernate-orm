@@ -95,6 +95,48 @@ public interface SqlTypeDescriptor extends Serializable {
 	 */
 	<X> ValueExtractor<X> getExtractor(JavaTypeDescriptor<X> javaTypeDescriptor);
 
+	default boolean isInteger() {
+		switch ( getSqlType() ) {
+			case Types.BIT:
+			case Types.TINYINT:
+			case Types.SMALLINT:
+			case Types.INTEGER:
+			case Types.BIGINT:
+				return true;
+		}
+		return false;
+	}
+
+	default boolean isNumber() {
+		switch ( getSqlType() ) {
+			case Types.BIT:
+			case Types.TINYINT:
+			case Types.SMALLINT:
+			case Types.INTEGER:
+			case Types.BIGINT:
+			case Types.FLOAT:
+			case Types.REAL:
+			case Types.DOUBLE:
+			case Types.DECIMAL:
+			case Types.NUMERIC:
+				return true;
+		}
+		return false;
+	}
+
+	default boolean isString() {
+		switch ( getSqlType() ) {
+			case Types.CHAR:
+			case Types.NCHAR:
+			case Types.VARCHAR:
+			case Types.NVARCHAR:
+			case Types.LONGVARCHAR:
+			case Types.LONGNVARCHAR:
+				return true;
+		}
+		return false;
+	}
+
 	default CastType getCastType() {
 		switch ( getSqlType() ) {
 			case Types.INTEGER:

@@ -162,12 +162,12 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	 * Handle sending notifications needed for natural-id before saving
 	 */
 	protected void handleNaturalIdPreSaveNotifications() {
-		// before save, we need to add a local (transactional) natural id cross-reference
+		// before save, we need to add a natural id cross-reference to the persistence-context
 		final NaturalIdMapping naturalIdMapping = getPersister().getNaturalIdMapping();
 		if ( naturalIdMapping != null ) {
 			getSession().getPersistenceContextInternal().getNaturalIdResolutions().manageLocalResolution(
 					getId(),
-					naturalIdMapping.extractNaturalIdValues( state, getSession() ),
+					naturalIdMapping.extractNaturalIdFromEntityState( state, getSession() ),
 					getPersister(),
 					CachedNaturalIdValueSource.INSERT
 			);
@@ -185,7 +185,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 			return;
 		}
 
-		final Object naturalIdValues = naturalIdMapping.extractNaturalIdValues( state, getSession() );
+		final Object naturalIdValues = naturalIdMapping.extractNaturalIdFromEntityState( state, getSession() );
 
 		if ( isEarlyInsert() ) {
 			// with early insert, we still need to add a local (transactional) natural id cross-reference

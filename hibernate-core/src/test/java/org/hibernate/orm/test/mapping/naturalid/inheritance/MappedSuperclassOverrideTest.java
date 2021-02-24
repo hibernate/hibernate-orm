@@ -20,11 +20,11 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 @DomainModel( annotatedClasses = { MappedSuperclassOverrideTest.MyMappedSuperclass.class, MappedSuperclassOverrideTest.MyEntity.class } )
 @SessionFactory( exportSchema = false )
-@FailureExpected( jiraKey = "HHH-12085" )
 public class MappedSuperclassOverrideTest {
 	@Test
 	public void testModel(SessionFactoryScope scope) {
@@ -32,7 +32,11 @@ public class MappedSuperclassOverrideTest {
 				.getRuntimeMetamodels()
 				.getEntityMappingType( MyEntity.class )
 				.getEntityPersister();
-		assertTrue( entityPersister.hasNaturalIdentifier() );
+
+		// defining a natural-id on a sub-entity is not allowed, only on the root.
+		// 		- here, because the root does not declare `#getName` as a natural-id
+		//		the hierarchy does not define a natural-id
+		assertFalse( entityPersister.hasNaturalIdentifier() );
 	}
 
 	@MappedSuperclass
@@ -77,7 +81,6 @@ public class MappedSuperclassOverrideTest {
 			super( id, name );
 		}
 
-		// this should not be allowed, and supposedly fails anyway...
 		@Override
 		@NaturalId
 		public String getName() {

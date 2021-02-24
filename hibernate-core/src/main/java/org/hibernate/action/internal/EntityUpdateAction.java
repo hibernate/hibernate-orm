@@ -21,7 +21,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.service.spi.EventListenerGroup;
-import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostCommitUpdateEventListener;
 import org.hibernate.event.spi.PostUpdateEvent;
 import org.hibernate.event.spi.PostUpdateEventListener;
@@ -94,7 +93,7 @@ public class EntityUpdateAction extends EntityAction {
 			this.previousNaturalIdValues = determinePreviousNaturalIdValues( persister, naturalIdMapping, id, previousState, session );
 			session.getPersistenceContextInternal().getNaturalIdResolutions().manageLocalResolution(
 					id,
-					naturalIdMapping.extractNaturalIdValues( state, session ),
+					naturalIdMapping.extractNaturalIdFromEntityState( state, session ),
 					persister,
 					CachedNaturalIdValueSource.UPDATE
 			);
@@ -109,7 +108,7 @@ public class EntityUpdateAction extends EntityAction {
 			SharedSessionContractImplementor session) {
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		if ( previousState != null ) {
-			return naturalIdMapping.extractNaturalIdValues( previousState, session );
+			return naturalIdMapping.extractNaturalIdFromEntityState( previousState, session );
 		}
 
 		return persistenceContext.getNaturalIdSnapshot( id, persister );
@@ -226,7 +225,7 @@ public class EntityUpdateAction extends EntityAction {
 		if ( naturalIdMapping != null ) {
 			session.getPersistenceContextInternal().getNaturalIdResolutions().manageSharedResolution(
 					id,
-					naturalIdMapping.extractNaturalIdValues( state, session ),
+					naturalIdMapping.extractNaturalIdFromEntityState( state, session ),
 					previousNaturalIdValues,
 					persister,
 					CachedNaturalIdValueSource.UPDATE

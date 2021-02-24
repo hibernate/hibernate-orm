@@ -7,6 +7,8 @@
 package org.hibernate.orm.test.mapping.naturalid.mutable.cached;
 
 import org.hibernate.LockOptions;
+import org.hibernate.cache.spi.CacheImplementor;
+import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.NotImplementedYet;
@@ -36,6 +38,9 @@ public abstract class CachedMutableNaturalIdTest {
 					session.createQuery( "delete from A" ).executeUpdate();
 				}
 		);
+
+		final CacheImplementor cache = scope.getSessionFactory().getCache();
+		cache.evictAllRegions();
 	}
 
 	@Test
@@ -94,8 +99,9 @@ public abstract class CachedMutableNaturalIdTest {
 	}
 
 	@Test
-	@NotImplementedYet( reason = "Caching is not yet implemented", strict = false )
 	public void testNaturalIdReCachingWhenNeeded(SessionFactoryScope scope) {
+		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
+		statistics.clear();
 
 		final Integer id = scope.fromTransaction(
 				(session) -> {
@@ -119,12 +125,12 @@ public abstract class CachedMutableNaturalIdTest {
 				(session) -> {
 					final Another shouldBeGone = session.bySimpleNaturalId(Another.class).load("it");
 					assertNull( shouldBeGone );
-					assertEquals( 0, session.getSessionFactory().getStatistics().getNaturalIdCacheHitCount() );
+					assertEquals( 0, statistics.getNaturalIdCacheHitCount() );
 				}
 		);
 		
-		// finally there should be only 2 NaturalIdCache puts : 1. insertion, 2. when updating natural-id from 'it' to 'name9'
-		assertEquals( 2, scope.getSessionFactory().getStatistics().getNaturalIdCachePutCount() );
+		// finally there should be only 2 NaturalIdCache puts : 1. insertion, 2. when updating natural-id from 'it' to 'it2'
+		assertEquals( 2, statistics.getNaturalIdCachePutCount() );
 	}
 	
 	@Test

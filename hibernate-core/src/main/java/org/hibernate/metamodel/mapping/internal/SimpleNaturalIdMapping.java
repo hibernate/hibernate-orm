@@ -61,10 +61,10 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping {
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		final EntityPersister persister = getDeclaringType().getEntityPersister();
 
-		final Object naturalId = extractNaturalIdValues( currentState, session );
+		final Object naturalId = extractNaturalIdFromEntityState( currentState, session );
 		final Object snapshot = loadedState == null
 				? persistenceContext.getNaturalIdSnapshot( id, persister )
-				: persister.getNaturalIdMapping().extractNaturalIdValues( loadedState, session );
+				: persister.getNaturalIdMapping().extractNaturalIdFromEntityState( loadedState, session );
 
 		if ( ! areEqual( naturalId, snapshot, session ) ) {
 			throw new HibernateException(
@@ -79,12 +79,20 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping {
 	}
 
 	@Override
-	public Object extractNaturalIdValues(Object[] state, SharedSessionContractImplementor session) {
+	public Object extractNaturalIdFromEntityState(Object[] state, SharedSessionContractImplementor session) {
+		if ( state == null ) {
+			return null;
+		}
+
+		if ( state.length == 1 ) {
+			return state[0];
+		}
+
 		return state[ attribute.getStateArrayPosition() ];
 	}
 
 	@Override
-	public Object extractNaturalIdValues(Object entity, SharedSessionContractImplementor session) {
+	public Object extractNaturalIdFromEntity(Object entity, SharedSessionContractImplementor session) {
 		return attribute.getPropertyAccess().getGetter().get( entity );
 	}
 

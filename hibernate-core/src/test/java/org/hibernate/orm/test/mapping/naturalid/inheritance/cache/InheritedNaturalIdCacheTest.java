@@ -47,10 +47,12 @@ public class InheritedNaturalIdCacheTest {
 	}
 
 	@Test
-	@NotImplementedYet( reason = "natural-id caching not yet implemented", strict = false )
+	@NotImplementedYet(
+			reason = "We do not throw `WrongClassException` atm, we just return null",
+			strict = false
+	)
 	public void testLoadingInheritedEntitiesByNaturalId(SessionFactoryScope scope) {
 		// load the entities "properly" by natural-id
-
 		scope.inTransaction(
 				(session) -> {
 					final MyEntity entity = session.bySimpleNaturalId( MyEntity.class ).load( "base" );
@@ -61,13 +63,12 @@ public class InheritedNaturalIdCacheTest {
 				}
 		);
 
-		// finally, attempt to load MyEntity#1 as an ExtendedEntity, which should
-		// throw a WrongClassException
+		// baseline: loading the wrong class by id...
 
 		scope.inTransaction(
 				(session) -> {
 					try {
-						session.bySimpleNaturalId( ExtendedEntity.class ).load( "base" );
+						session.byId( ExtendedEntity.class ).load( 1L );
 						fail( "Expecting WrongClassException" );
 					}
 					catch (WrongClassException expected) {
@@ -82,12 +83,14 @@ public class InheritedNaturalIdCacheTest {
 				}
 		);
 
-		// this is functionally equivalent to loading the wrong class by id...
-
+		// finally, attempt to load MyEntity#1 as an ExtendedEntity, which should
+		// throw a `WrongClassException` same as above with loading by id
+		//
+		// NOTE : this is what fails currently
 		scope.inTransaction(
 				(session) -> {
 					try {
-						session.byId( ExtendedEntity.class ).load( 1L );
+						session.bySimpleNaturalId( ExtendedEntity.class ).load( "base" );
 						fail( "Expecting WrongClassException" );
 					}
 					catch (WrongClassException expected) {

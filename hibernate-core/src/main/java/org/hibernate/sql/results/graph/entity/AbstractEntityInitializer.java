@@ -25,9 +25,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.service.spi.EventListenerGroup;
-import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.internal.util.StringHelper;
@@ -727,7 +725,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		if ( entityDescriptor.getNaturalIdMapping() != null ) {
 			persistenceContext.getNaturalIdResolutions().cacheResolutionFromLoad(
 					entityIdentifier,
-					entityDescriptor.getNaturalIdMapping().extractNaturalIdValues( resolvedEntityState, session ),
+					entityDescriptor.getNaturalIdMapping().extractNaturalIdFromEntityState( resolvedEntityState, session ),
 					entityDescriptor
 			);
 		}

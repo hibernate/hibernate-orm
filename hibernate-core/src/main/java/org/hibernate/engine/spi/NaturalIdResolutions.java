@@ -51,6 +51,7 @@ public interface NaturalIdResolutions {
 
 	/**
 	 * Removes any local cross-reference, returning the previously cached value if one.
+	 *
 	 * Again, this only effects the persistence-context cache, not the L2 cache
 	 */
 	Object removeLocalResolution(Object id, Object naturalId, EntityMappingType entityDescriptor);

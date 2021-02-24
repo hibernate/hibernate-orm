@@ -65,7 +65,7 @@ public class EntityDeleteAction extends EntityAction {
 		if ( naturalIdMapping != null ) {
 			naturalIdValues = session.getPersistenceContextInternal().getNaturalIdResolutions().removeLocalResolution(
 					getId(),
-					naturalIdMapping.extractNaturalIdValues( state, session ),
+					naturalIdMapping.extractNaturalIdFromEntityState( state, session ),
 					getPersister()
 			);
 		}

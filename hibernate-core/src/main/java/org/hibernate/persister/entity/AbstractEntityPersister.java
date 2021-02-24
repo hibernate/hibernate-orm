@@ -5005,11 +5005,11 @@ public abstract class AbstractEntityPersister
 	}
 
 	private void handleNaturalIdReattachment(Object entity, SharedSessionContractImplementor session) {
-		if ( !hasNaturalIdentifier() ) {
+		if ( naturalIdMapping == null ) {
 			return;
 		}
 
-		if ( getEntityMetamodel().hasImmutableNaturalId() ) {
+		if ( ! naturalIdMapping.isMutable() ) {
 			// we assume there were no changes to natural id during detachment for now, that is validated later
 			// during flush.
 			return;
@@ -5027,13 +5027,13 @@ public abstract class AbstractEntityPersister
 			naturalIdSnapshot = null;
 		}
 		else {
-			naturalIdSnapshot = naturalIdMapping.extractNaturalIdValues( entitySnapshot, session );
+			naturalIdSnapshot = naturalIdMapping.extractNaturalIdFromEntityState( entitySnapshot, session );
 		}
 
 		naturalIdResolutions.removeSharedResolution( id, naturalIdSnapshot, this );
 		naturalIdResolutions.manageLocalResolution(
 				id,
-				naturalIdMapping.extractNaturalIdValues( entity, session ),
+				naturalIdMapping.extractNaturalIdFromEntity( entity, session ),
 				this,
 				CachedNaturalIdValueSource.UPDATE
 		);

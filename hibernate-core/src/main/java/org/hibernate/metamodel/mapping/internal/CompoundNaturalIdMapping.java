@@ -108,7 +108,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 	}
 
 	@Override
-	public Object[] extractNaturalIdValues(Object[] state, SharedSessionContractImplementor session) {
+	public Object[] extractNaturalIdFromEntityState(Object[] state, SharedSessionContractImplementor session) {
 		if ( state == null ) {
 			return null;
 		}
@@ -128,7 +128,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 	}
 
 	@Override
-	public Object[] extractNaturalIdValues(Object entity, SharedSessionContractImplementor session) {
+	public Object[] extractNaturalIdFromEntity(Object entity, SharedSessionContractImplementor session) {
 		final Object[] values = new Object[ attributes.size() ];
 
 		for ( int i = 0; i < attributes.size(); i++ ) {
@@ -196,11 +196,11 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		final EntityPersister persister = getDeclaringType().getEntityPersister();
 
-		final Object[] naturalId = extractNaturalIdValues( currentState, session );
+		final Object[] naturalId = extractNaturalIdFromEntityState( currentState, session );
 
 		final Object snapshot = loadedState == null
 				? persistenceContext.getNaturalIdSnapshot( id, persister )
-				: persister.getNaturalIdMapping().extractNaturalIdValues( loadedState, session );
+				: persister.getNaturalIdMapping().extractNaturalIdFromEntityState( loadedState, session );
 		final Object[] previousNaturalId = (Object[]) snapshot;
 
 		assert naturalId.length == getNaturalIdAttributes().size();

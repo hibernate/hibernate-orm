@@ -8,11 +8,13 @@ package org.hibernate.boot;
 
 import org.jboss.logging.Logger;
 
+import static org.hibernate.internal.CoreLogging.subsystemLoggerName;
+
 /**
- * @author Steve Ebersole
+ * Logging related to Hibernate bootstrapping
  */
 public class BootLogging {
-	public static final String NAME = "org.hibernate.orm.boot";
+	public static String NAME = subsystemLoggerName( "boot" );
 
 	public static final Logger LOGGER = Logger.getLogger( NAME );
 

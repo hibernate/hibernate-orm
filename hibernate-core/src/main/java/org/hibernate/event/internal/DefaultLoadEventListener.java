@@ -533,7 +533,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 		if ( entity != null && persister.hasNaturalIdentifier() ) {
 			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 			persistenceContext.getNaturalIdResolutions().cacheResolutionFromLoad(
-					event.getEntityId(), persister.getNaturalIdMapping().extractNaturalIdValues( entity, session ), persister
+					event.getEntityId(), persister.getNaturalIdMapping().extractNaturalIdFromEntity( entity, session ), persister
 			);
 		}
 

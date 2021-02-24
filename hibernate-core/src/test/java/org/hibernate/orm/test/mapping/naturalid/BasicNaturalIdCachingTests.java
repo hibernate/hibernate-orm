@@ -22,6 +22,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 
@@ -74,6 +75,7 @@ public class BasicNaturalIdCachingTests {
 					final Object cacheKey = cacheAccess.generateCacheKey( "abc", entityPersister, session );
 					final Object cached = cacheAccess.get( session, cacheKey );
 					assertThat( cached, notNullValue() );
+					assertThat( cached, equalTo( 1 ) );
 				}
 		);
 

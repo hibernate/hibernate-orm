@@ -57,7 +57,7 @@ public interface NaturalIdMapping extends VirtualModelPart {
 	 *
 	 * @return The extracted natural id values.  This is a normalized
 	 */
-	Object extractNaturalIdValues(Object[] state, SharedSessionContractImplementor session);
+	Object extractNaturalIdFromEntityState(Object[] state, SharedSessionContractImplementor session);
 
 	/**
 	 * Given an entity instance, extract the normalized natural id representation
@@ -66,7 +66,7 @@ public interface NaturalIdMapping extends VirtualModelPart {
 	 *
 	 * @return The extracted natural id values
 	 */
-	Object extractNaturalIdValues(Object entity, SharedSessionContractImplementor session);
+	Object extractNaturalIdFromEntity(Object entity, SharedSessionContractImplementor session);
 
 
 	/**

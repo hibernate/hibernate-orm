@@ -28,6 +28,8 @@ import org.hibernate.query.sqm.sql.FromClauseIndex;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
@@ -105,10 +107,13 @@ class DatabaseSnapshotExecutor {
 		// We produce the same state array as if we were creating an entity snapshot
 		final List<DomainResult> domainResults = new ArrayList<>();
 
+		final SqlExpressionResolver sqlExpressionResolver = state.getSqlExpressionResolver();
+
 		// We just need a literal to have a result set
 		domainResults.add(
 				new QueryLiteral<>( null, IntegerType.INSTANCE ).createDomainResult( null, state )
 		);
+
 		entityDescriptor.getIdentifierMapping().forEachSelection(
 				(columnIndex, selection) -> {
 					final TableReference tableReference = rootTableGroup.resolveTableReference( selection.getContainingTableExpression() );
@@ -116,7 +121,7 @@ class DatabaseSnapshotExecutor {
 					final JdbcParameter jdbcParameter = new JdbcParameterImpl( selection.getJdbcMapping() );
 					jdbcParameters.add( jdbcParameter );
 
-					final ColumnReference columnReference = (ColumnReference) state.getSqlExpressionResolver()
+					final ColumnReference columnReference = (ColumnReference) sqlExpressionResolver
 							.resolveSqlExpression(
 									createColumnReferenceKey( tableReference, selection.getSelectionExpression() ),
 									s -> new ColumnReference(

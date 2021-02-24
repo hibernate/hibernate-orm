@@ -24,8 +24,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.service.spi.EventListenerGroup;
-import org.hibernate.event.service.spi.EventListenerRegistry;
-import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PostLoadEventListener;
 import org.hibernate.event.spi.PreLoadEvent;
@@ -279,8 +277,8 @@ public final class TwoPhaseLoad {
 
 		final SessionFactoryImplementor factory = session.getFactory();
 		final StatisticsImplementor statistics = factory.getStatistics();
-		if ( persister.canWriteToCache() && session.getCacheMode().isPutEnabled() ) {
 
+		if ( persister.canWriteToCache() && session.getCacheMode().isPutEnabled() ) {
 			if ( debugEnabled ) {
 				LOG.debugf(
 						"Adding entity to second-level cache: %s",
@@ -335,7 +333,9 @@ public final class TwoPhaseLoad {
 
 		if ( persister.hasNaturalIdentifier() ) {
 			persistenceContext.getNaturalIdResolutions().cacheResolutionFromLoad(
-					id, persister.getNaturalIdMapping().extractNaturalIdValues( hydratedState, session ), persister
+					id,
+					persister.getNaturalIdMapping().extractNaturalIdFromEntityState( hydratedState, session ),
+					persister
 			);
 		}
 

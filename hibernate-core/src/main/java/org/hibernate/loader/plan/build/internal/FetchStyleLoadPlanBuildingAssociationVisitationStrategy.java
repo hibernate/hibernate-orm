@@ -16,13 +16,20 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.loader.plan.spi.CollectionReturn;
 import org.hibernate.loader.plan.spi.EntityReturn;
+import org.hibernate.loader.plan.spi.FetchSource;
 import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.loader.plan.spi.Return;
+import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
 import org.hibernate.persister.walking.spi.EncapsulatedEntityIdentifierDefinition;
 import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
 import org.hibernate.persister.walking.spi.NonEncapsulatedEntityIdentifierDefinition;
 import org.hibernate.persister.walking.spi.WalkingException;
+import org.hibernate.type.CompositeType;
+import org.hibernate.type.EmbeddedComponentType;
+import org.hibernate.type.EntityType;
+import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
 
@@ -190,9 +197,59 @@ public class FetchStyleLoadPlanBuildingAssociationVisitationStrategy
 			return new FetchStrategy( fetchStrategy.getTiming(), FetchStyle.SELECT );
 		}
 
-		if ( attributeDefinition.getType().isCollectionType() && isTooManyCollections() ) {
-			// todo : have this revert to batch or subselect fetching once "sql gen redesign" is in place
-			return new FetchStrategy( fetchStrategy.getTiming(), FetchStyle.SELECT );
+		final FetchSource currentSource = currentSource();
+		final Type attributeType = attributeDefinition.getType();
+
+
+		if ( attributeType.isCollectionType() ) {
+			if ( isTooManyCollections() ) {
+				// todo : have this revert to batch or subselect fetching once "sql gen redesign" is in place
+				return new FetchStrategy( fetchStrategy.getTiming(), FetchStyle.SELECT );
+			}
+			if ( currentSource.resolveEntityReference() != null ) {
+				CollectionPersister collectionPersister =
+						(CollectionPersister) attributeDefinition.getType().getAssociatedJoinable( sessionFactory() );
+				// Check if this is an eager "mappedBy" (inverse) side of a bidirectional
+				// one-to-many/many-to-one association, with the many-to-one side
+				// being the associated entity's ID as in:
+				//
+				//  @Entity
+				//  public class Foo {
+				//      ...
+				//      @OneToMany(mappedBy = "foo", fetch = FetchType.EAGER)
+				//      private Set<Bar> bars = new HashSet<>();
+				//  }
+				//  @Entity
+				//  public class Bar implements Serializable {
+				//      @Id
+				//      @ManyToOne(fetch = FetchType.EAGER)
+				//      private Foo foo;
+				//      ...
+				//  }
+				//
+				if ( fetchStrategy.getTiming() == FetchTiming.IMMEDIATE &&
+						fetchStrategy.getStyle() == FetchStyle.JOIN &&
+						collectionPersister.isOneToMany() &&
+						collectionPersister.isInverse() ) {
+					// This is an eager "mappedBy" (inverse) side of a bidirectional
+					// one-to-many/many-to-one association
+					final EntityType elementType = (EntityType) collectionPersister.getElementType();
+					final Type elementIdType = ( (EntityPersister) elementType.getAssociatedJoinable( sessionFactory() ) ).getIdentifierType();
+					if ( elementIdType.isComponentType() && ( (CompositeType) elementIdType ).isEmbedded() ) {
+						final EmbeddedComponentType elementIdTypeEmbedded = (EmbeddedComponentType) elementIdType;
+						if ( elementIdTypeEmbedded.getSubtypes().length == 1 &&
+								elementIdTypeEmbedded.getPropertyNames()[ 0 ].equals( collectionPersister.getMappedByProperty() ) ) {
+							// The associated entity's ID is the other (many-to-one) side of the association.
+							// The one-to-many side must be set to FetchMode.SELECT; otherwise,
+							// there will be an infinite loop because the current entity
+							// would need to be loaded before the associated entity can be loaded,
+							// but the associated entity cannot be loaded until after the current
+							// entity is loaded (since the current entity is the associated entity's ID).
+							return new FetchStrategy( fetchStrategy.getTiming(), FetchStyle.SELECT );
+						}
+					}
+				}
+			}
 		}
 
 		return fetchStrategy;

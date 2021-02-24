@@ -64,8 +64,6 @@ public class SpannerDialect extends Dialect {
 
 	public SpannerDialect() {
 		registerColumnType( Types.BOOLEAN, "bool" );
-		registerColumnType( Types.BIT, 1, "bool" );
-		registerColumnType( Types.BIT, "int64" );
 
 		registerColumnType( Types.TINYINT, "int64" );
 		registerColumnType( Types.SMALLINT, "int64" );

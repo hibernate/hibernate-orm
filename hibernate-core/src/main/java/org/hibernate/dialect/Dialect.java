@@ -157,8 +157,6 @@ public abstract class Dialect implements ConversionContext {
 
 	protected Dialect() {
 
-		registerColumnType( Types.BIT, 1, "bit" );
-		registerColumnType( Types.BIT, "bit($l)" );
 		registerColumnType( Types.BOOLEAN, "boolean" );
 
 		registerColumnType( Types.TINYINT, "tinyint" );

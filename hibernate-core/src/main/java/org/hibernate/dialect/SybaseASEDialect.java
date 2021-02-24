@@ -54,7 +54,6 @@ public class SybaseASEDialect extends SybaseDialect {
 		//tinyint to store signed bytes, we can use it
 		//to store boolean values)
 		registerColumnType( Types.BOOLEAN, "tinyint" );
-		registerColumnType( Types.BIT, 1, "tinyint" );
 
 
 		if ( getVersion() >= 1500 ) {

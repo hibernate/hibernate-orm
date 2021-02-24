@@ -42,7 +42,6 @@ public class MaxDBDialect extends Dialect {
 
 	public MaxDBDialect() {
 		super();
-		registerColumnType( Types.BIT, 1, "boolean" ); //no BIT type
 		registerColumnType( Types.TINYINT, "smallint" );
 
 		registerColumnType( Types.BIGINT, "fixed(19,0)" );

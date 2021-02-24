@@ -83,8 +83,6 @@ public class RDMSOS2200Dialect extends Dialect {
 		 * Note that $l (dollar-L) will use the length value if provided.
 		 * Also new for Hibernate3 is the $p percision and $s (scale) parameters
 		 */
-		registerColumnType( Types.BIT, 1, "smallint" );
-		registerColumnType( Types.BIT, "smallint" );
 		registerColumnType( Types.BOOLEAN, "smallint" );
 		registerColumnType( Types.TINYINT, "smallint" );
 		registerColumnType( Types.BIGINT, "numeric(19,0)" );

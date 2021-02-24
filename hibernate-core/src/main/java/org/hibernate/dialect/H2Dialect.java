@@ -91,8 +91,6 @@ public class H2Dialect extends Dialect {
 				? OffsetFetchLimitHandler.INSTANCE
 				: LimitOffsetLimitHandler.INSTANCE;
 
-		//Note: H2 'bit' is a synonym for 'boolean', not a proper bit type
-//		registerColumnType( Types.BIT, "bit" );
 		if ( version < 102139 ) {
 			final int majorVersion = version / 100000;
 			final int minorVersion = version % 100000 / 1000;

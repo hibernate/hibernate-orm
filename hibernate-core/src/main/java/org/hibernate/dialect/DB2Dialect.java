@@ -102,7 +102,6 @@ public class DB2Dialect extends Dialect {
 			//prior to DB2 11, the 'boolean' type existed,
 			//but was not allowed as a column type
 			registerColumnType( Types.BOOLEAN, "smallint" );
-			registerColumnType( Types.BIT, 1, "smallint" );
 		}
 
 		registerColumnType( Types.BLOB, "blob($l)" );

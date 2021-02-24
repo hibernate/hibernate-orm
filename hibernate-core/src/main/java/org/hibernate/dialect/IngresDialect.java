@@ -87,14 +87,11 @@ public class IngresDialect extends Dialect {
 		this.version = version;
 
 		if ( getVersion() < 1000 ) {
-			registerColumnType( Types.BIT, 1, "tinyint" );
 			registerColumnType( Types.BOOLEAN, "tinyint" );
 		}
 		else {
-			registerColumnType( Types.BIT, 1, "boolean" );
 			registerColumnType( Types.BOOLEAN, "boolean" );
 		}
-		registerColumnType( Types.BIT, "tinyint" );
 
 		registerColumnType( Types.NUMERIC, "decimal($p, $s)" ); //Ingres has no 'numeric' type
 

@@ -43,9 +43,6 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 
 		registerColumnType( Types.BOOLEAN, "bit" );
 
-		//SQL Server/Sybase 'bit' type is always exactly one bit
-		registerColumnType( Types.BIT, "smallint" );
-
 		//'tinyint' is an unsigned type in Sybase and
 		//SQL Server, holding values in the range 0-255
 		//see HHH-6779

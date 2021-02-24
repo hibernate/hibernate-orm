@@ -13,7 +13,6 @@ import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
-import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -56,7 +55,7 @@ public class TimestampaddFunction
 				TypeConfiguration.getSqlTemporalType( to.getExpressionType() )
 		);
 
-		new PatternRenderer( pattern, SqlAstNodeRenderingMode.DEFAULT ).render( sqlAppender, arguments, walker );
+		new PatternRenderer( pattern ).render( sqlAppender, arguments, walker );
 	}
 
 //	@Override

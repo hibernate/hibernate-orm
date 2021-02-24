@@ -32,6 +32,10 @@ public class PatternRenderer {
 	private final int maxParamIndex;
 	private final SqlAstNodeRenderingMode argumentRenderingMode;
 
+	public PatternRenderer(String pattern) {
+		this( pattern, SqlAstNodeRenderingMode.DEFAULT );
+	}
+
 	/**
 	 * Constructs a template renderer
 	 *

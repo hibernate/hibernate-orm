@@ -124,8 +124,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation>
 						case Types.FLOAT:
 						case Types.NUMERIC:
 						case Types.DECIMAL:
+							appendSql( '(' );
 							sqlAstNode.accept( this );
-							appendSql( "+0" );
+							appendSql( "+0)" );
 							break;
 						case Types.CHAR:
 						case Types.VARCHAR:

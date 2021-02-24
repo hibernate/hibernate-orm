@@ -12,7 +12,6 @@ import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescript
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
-import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -48,8 +47,7 @@ public class TrimFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
 		String trim = dialect.trimPattern( specification, trimCharacter );
 
-		new PatternRenderer( trim, SqlAstNodeRenderingMode.DEFAULT )
-				.render( sqlAppender, Collections.singletonList( sourceExpr ), walker );
+		new PatternRenderer( trim ).render( sqlAppender, Collections.singletonList( sourceExpr ), walker );
 	}
 
 //	@Override

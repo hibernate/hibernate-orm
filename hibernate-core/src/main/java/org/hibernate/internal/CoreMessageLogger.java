@@ -234,10 +234,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	void entitiesUpdated(long entityUpdateCount);
 
 	@LogMessage(level = WARN)
-	@Message(value = "@org.hibernate.annotations.Entity used on a non root entity: ignored for %s", id = 81)
-	void entityAnnotationOnNonRoot(String className);
-
-	@LogMessage(level = WARN)
 	@Message(value = "Entity Manager closed by someone else (%s must not be used)", id = 82)
 	void entityManagerClosedBySomeoneElse(String autoCloseSession);
 
@@ -510,12 +506,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	void missingArguments(
 			int anticipatedNumberOfArguments,
 			int numberOfArguments);
-
-	@LogMessage(level = WARN)
-	@Message(value = "Class annotated @org.hibernate.annotations.Entity but not javax.persistence.Entity (most likely a user error): %s",
-			id = 175)
-	void missingEntityAnnotation(String className);
-
 
 	@LogMessage(level = ERROR)
 	@Message(value = "Error in named query: %s", id = 177)

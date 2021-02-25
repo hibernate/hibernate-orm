@@ -773,11 +773,6 @@ See the <<chapters/pc/PersistenceContext.adoc#pc-managed-state-dynamic-update,`@
 For reattachment of detached entities, the dynamic update is not possible without having the <<annotations-hibernate-selectbeforeupdate>> annotation as well.
 ====
 
-[[annotations-hibernate-entity]]
-==== [line-through]#`@Entity`#
-
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Entity.html[[line-through]#`@Entity`#] annotation is deprecated. Use the JPA <<annotations-jpa-entity>> annotation instead.
-
 [[annotations-hibernate-fetch]]
 ==== `@Fetch`
 

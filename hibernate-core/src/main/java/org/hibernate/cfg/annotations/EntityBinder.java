@@ -27,7 +27,6 @@ import javax.persistence.SharedCacheMode;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
-import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
@@ -54,8 +53,6 @@ import org.hibernate.annotations.SelectBeforeUpdate;
 import org.hibernate.annotations.Subselect;
 import org.hibernate.annotations.Synchronize;
 import org.hibernate.annotations.Tables;
-import org.hibernate.annotations.Tuplizer;
-import org.hibernate.annotations.Tuplizers;
 import org.hibernate.annotations.Where;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
@@ -91,6 +88,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.TableOwner;
 import org.hibernate.mapping.Value;
 
+import org.hibernate.tuple.Tuplizer;
 import org.jboss.logging.Logger;
 
 import static org.hibernate.cfg.BinderHelper.toAliasEntityMap;
@@ -363,17 +361,6 @@ public class EntityBinder {
 		if ( annotatedClass.isAnnotationPresent(Subselect.class )) {
 			Subselect subselect = annotatedClass.getAnnotation(Subselect.class);
 			this.subselect = subselect.value();
-		}
-
-		//tuplizers
-		if ( annotatedClass.isAnnotationPresent( Tuplizers.class ) ) {
-			for (Tuplizer tuplizer : annotatedClass.getAnnotation( Tuplizers.class ).value()) {
-				persistentClass.addTuplizer( EntityMode.POJO, tuplizer.impl().getName() );
-			}
-		}
-		if ( annotatedClass.isAnnotationPresent( Tuplizer.class ) ) {
-			Tuplizer tuplizer = annotatedClass.getAnnotation( Tuplizer.class );
-			persistentClass.addTuplizer( EntityMode.POJO, tuplizer.impl().getName() );
 		}
 
 		for ( Filter filter : filters ) {

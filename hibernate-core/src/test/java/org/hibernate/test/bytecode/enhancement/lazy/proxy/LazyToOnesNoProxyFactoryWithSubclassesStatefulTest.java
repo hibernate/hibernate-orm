@@ -19,13 +19,8 @@ import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
-import org.hibernate.annotations.LazyToOne;
-import org.hibernate.annotations.LazyToOneOption;
-import org.hibernate.annotations.Tuplizer;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.PersistentClass;
@@ -186,8 +181,7 @@ public class LazyToOnesNoProxyFactoryWithSubclassesStatefulTest extends BaseNonC
 	@Entity(name = "Animal")
 	@Table(name = "Animal")
 	@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
-	@Tuplizer(impl=NoProxyFactoryPojoEntityTuplizer.class)
-	public static abstract class Animal {
+    public static abstract class Animal {
 
 		@Id
 		private String name;

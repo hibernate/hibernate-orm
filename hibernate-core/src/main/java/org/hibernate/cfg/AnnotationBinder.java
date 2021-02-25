@@ -121,8 +121,6 @@ import org.hibernate.annotations.SortNatural;
 import org.hibernate.annotations.Source;
 import org.hibernate.annotations.SqlTypeRegistration;
 import org.hibernate.annotations.SqlTypeRegistrations;
-import org.hibernate.annotations.Tuplizer;
-import org.hibernate.annotations.Tuplizers;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
 import org.hibernate.annotations.Where;
@@ -2713,7 +2711,6 @@ public final class AnnotationBinder {
 			}
 		}
 		XProperty property = inferredData.getProperty();
-		setupComponentTuplizer( property, comp );
 		PropertyBinder binder = new PropertyBinder();
 		binder.setDeclaringClass(inferredData.getDeclaringClass());
 		binder.setName( inferredData.getPropertyName() );
@@ -2987,7 +2984,6 @@ public final class AnnotationBinder {
 			}
 			//tuplizers
 			XProperty property = inferredData.getProperty();
-			setupComponentTuplizer( property, componentId );
 		}
 		else {
 			//TODO I think this branch is never used. Remove.
@@ -3068,21 +3064,6 @@ public final class AnnotationBinder {
 		addElementsOfClass( baseClassElements, propContainer, context );
 		//Id properties are on top and there is only one
 		return baseClassElements.get( 0 );
-	}
-
-	private static void setupComponentTuplizer(XProperty property, Component component) {
-		if ( property == null ) {
-			return;
-		}
-		if ( property.isAnnotationPresent( Tuplizers.class ) ) {
-			for ( Tuplizer tuplizer : property.getAnnotation( Tuplizers.class ).value() ) {
-				component.addTuplizer( EntityMode.POJO, tuplizer.impl().getName() );
-			}
-		}
-		if ( property.isAnnotationPresent( Tuplizer.class ) ) {
-			Tuplizer tuplizer = property.getAnnotation( Tuplizer.class );
-			component.addTuplizer( EntityMode.POJO, tuplizer.impl().getName() );
-		}
 	}
 
 	private static void bindManyToOne(

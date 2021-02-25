@@ -9,8 +9,6 @@ package org.hibernate.annotations;
 import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 
-import org.hibernate.EntityMode;
-
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.TYPE;
@@ -20,13 +18,16 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * Define a tuplizer for an entity or a component.
  *
  * @author Emmanuel Bernard
+ *
+ * @deprecated since {@link org.hibernate.tuple.Tuplizer} is deprecated
  */
 @java.lang.annotation.Target( {TYPE, FIELD, METHOD} )
 @Retention( RUNTIME )
 @Repeatable(Tuplizers.class)
+@Deprecated
 public @interface Tuplizer {
 	/**
 	 * Tuplizer implementation.
 	 */
-	Class impl();
+	Class<? extends org.hibernate.tuple.Tuplizer> impl();
 }

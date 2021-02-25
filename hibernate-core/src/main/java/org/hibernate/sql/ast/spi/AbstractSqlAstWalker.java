@@ -32,6 +32,7 @@ import org.hibernate.internal.FilterJdbcParameter;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
+import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
@@ -49,6 +50,7 @@ import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.MutationStatement;
+import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.cte.CteColumn;
 import org.hibernate.sql.ast.tree.cte.CteContainer;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
@@ -1807,7 +1809,7 @@ public abstract class AbstractSqlAstWalker implements SqlAstWalker, SqlAppender 
 			for ( int i = 0; i < size; i++ ) {
 				final SqlSelection sqlSelection = sqlSelections.get( i );
 				appendSql( separator );
-				sqlSelection.accept( this );
+				visitSqlSelection( sqlSelection );
 				appendSql( " c" );
 				appendSql( Integer.toString( i ) );
 				separator = COMA_SEPARATOR;
@@ -1851,7 +1853,7 @@ public abstract class AbstractSqlAstWalker implements SqlAstWalker, SqlAppender 
 			for ( int i = 0; i < size; i++ ) {
 				final SqlSelection sqlSelection = sqlSelections.get( i );
 				appendSql( separator );
-				sqlSelection.accept( this );
+				visitSqlSelection( sqlSelection );
 				separator = COMA_SEPARATOR;
 			}
 		}
@@ -1934,9 +1936,63 @@ public abstract class AbstractSqlAstWalker implements SqlAstWalker, SqlAppender 
 
 	@Override
 	public void visitSqlSelection(SqlSelection sqlSelection) {
-		// do nothing... this is handled #visitSelectClause
+		final Expression expression = sqlSelection.getExpression();
+		// Null literals have to be casted in the select clause
+		if ( expression instanceof Literal ) {
+			final Literal literal = (Literal) expression;
+			if ( literal.getLiteralValue() == null ) {
+				renderNullCast( literal );
+			}
+			else {
+				renderLiteral( literal, dialect.requiresCastingOfParametersInSelectClause() );
+			}
+		}
+		else if ( expression instanceof NullnessLiteral ) {
+			renderNullCast( expression );
+		}
+		else {
+			expression.accept( this );
+		}
 	}
 
+	protected void renderNullCast(Expression expression) {
+		final List<SqlAstNode> arguments = new ArrayList<>( 2 );
+		arguments.add( expression );
+		arguments.add( new CastTarget( (BasicValuedMapping) expression.getExpressionType() ) );
+		castFunction().render( this, arguments, this );
+	}
+
+	@SuppressWarnings("unchecked")
+	protected void renderLiteral(Literal literal, boolean castParameter) {
+		assert literal.getExpressionType().getJdbcTypeCount() == 1;
+		final JdbcMapping jdbcMapping = literal.getJdbcMapping();
+		final JdbcLiteralFormatter literalFormatter = jdbcMapping.getSqlTypeDescriptor()
+				.getJdbcLiteralFormatter( jdbcMapping.getJavaTypeDescriptor() );
+		// If we encounter a plain literal in the select clause which has no literal formatter, we must render it as parameter
+		if ( literalFormatter == null ) {
+			parameterBinders.add( literal );
+
+			final LiteralAsParameter<Object> jdbcParameter = new LiteralAsParameter<>( literal );
+			if ( castParameter ) {
+				final List<SqlAstNode> arguments = new ArrayList<>( 2 );
+				arguments.add( jdbcParameter );
+				arguments.add( new CastTarget( (BasicValuedMapping) jdbcMapping ) );
+				castFunction().render( this, arguments, this );
+			}
+			else {
+				appendSql( PARAM_MARKER );
+			}
+		}
+		else {
+			appendSql(
+					literalFormatter.toJdbcLiteral(
+							literal.getLiteralValue(),
+							dialect,
+							getWrapperOptions()
+					)
+			);
+		}
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// FROM clause
@@ -2617,36 +2673,13 @@ public abstract class AbstractSqlAstWalker implements SqlAstWalker, SqlAppender 
 		appendSql( "null" );
 	}
 
-	@SuppressWarnings("unchecked")
 	private void visitLiteral(Literal literal) {
 		if ( literal.getLiteralValue() == null ) {
 			// todo : not sure we allow this "higher up"
 			appendSql( SqlAppender.NULL_KEYWORD );
 		}
 		else {
-			assert literal.getExpressionType().getJdbcTypeCount() == 1;
-			final JdbcMapping jdbcMapping = literal.getJdbcMapping();
-			final JdbcLiteralFormatter literalFormatter = jdbcMapping.getSqlTypeDescriptor().getJdbcLiteralFormatter( jdbcMapping.getJavaTypeDescriptor() );
-			if ( literalFormatter == null ) {
-				parameterBinders.add( literal );
-
-				final LiteralAsParameter<Object> jdbcParameter = new LiteralAsParameter<>( literal );
-				if ( clauseStack.getCurrent() == Clause.SELECT && dialect.requiresCastingOfParametersInSelectClause() ) {
-					castFunction().render( this, Collections.singletonList( jdbcParameter ), this );
-				}
-				else {
-					appendSql( PARAM_MARKER );
-				}
-			}
-			else {
-				appendSql(
-						literalFormatter.toJdbcLiteral(
-								literal.getLiteralValue(),
-								dialect,
-								getWrapperOptions()
-						)
-				);
-			}
+			renderLiteral( literal, false );
 		}
 	}
 

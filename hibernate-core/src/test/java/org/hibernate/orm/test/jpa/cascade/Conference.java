@@ -7,6 +7,9 @@
 
 //$Id$
 package org.hibernate.orm.test.jpa.cascade;
+import org.hibernate.annotations.DynamicInsert;
+import org.hibernate.annotations.DynamicUpdate;
+
 import java.io.Serializable;
 import java.util.Date;
 import javax.persistence.CascadeType;
@@ -30,7 +33,7 @@ import javax.persistence.Table;
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "type", discriminatorType = DiscriminatorType.CHAR)
 @DiscriminatorValue("X")
-@org.hibernate.annotations.Entity(dynamicInsert = true, dynamicUpdate = true)
+@DynamicUpdate @DynamicInsert
 public class Conference implements Serializable {
 	private Long id;
 	private Date date;

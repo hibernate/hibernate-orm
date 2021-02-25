@@ -8,7 +8,7 @@ package org.hibernate.orm.test.annotations.embedded.one2many;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
-import org.hibernate.annotations.Entity;
+import javax.persistence.Entity;
 
 /**
  * TODO : javadoc

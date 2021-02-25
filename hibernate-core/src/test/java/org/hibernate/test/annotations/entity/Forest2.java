@@ -22,7 +22,7 @@ import org.hibernate.annotations.Type;
 
 /**
  * Mapping following lines of {@link Forest}, but using the replacements for the now deprecated
- * {@link org.hibernate.annotations.Entity} annotation.
+ * {@link javax.persistence.Entity} annotation.
  *
  * @author Steve Ebersole
  */

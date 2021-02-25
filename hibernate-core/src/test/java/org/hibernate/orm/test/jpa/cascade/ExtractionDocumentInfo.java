@@ -7,6 +7,9 @@
 
 //$Id$
 package org.hibernate.orm.test.jpa.cascade;
+import org.hibernate.annotations.DynamicInsert;
+import org.hibernate.annotations.DynamicUpdate;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
@@ -29,8 +32,7 @@ import javax.persistence.Transient;
  */
 @Entity
 @Table(name = "portal_pk_docs_extraction_info")
-//@Cache(usage = READ_WRITE)
-@org.hibernate.annotations.Entity(dynamicInsert = true, dynamicUpdate = true)
+@DynamicUpdate @DynamicInsert
 public class ExtractionDocumentInfo implements Serializable {
 	private Long id;
 	private Date lastModified;

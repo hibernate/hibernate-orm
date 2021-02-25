@@ -17,6 +17,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
+import org.hibernate.annotations.DynamicInsert;
+import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.Proxy;
 
 /**
@@ -24,8 +26,7 @@ import org.hibernate.annotations.Proxy;
  */
 @Entity
 @Table(name = "portal_pk_docs_extraction")
-//@Cache(usage = READ_WRITE)
-@org.hibernate.annotations.Entity(dynamicInsert = true, dynamicUpdate = true)
+@DynamicUpdate @DynamicInsert
 @Proxy
 public class ExtractionDocument implements Serializable {
 	private Long id;

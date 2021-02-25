@@ -605,12 +605,8 @@ public final class AnnotationBinder {
 
 		PersistentClass persistentClass = makePersistentClass( inheritanceState, superEntity, context );
 		Entity entityAnn = clazzToProcess.getAnnotation( Entity.class );
-		org.hibernate.annotations.Entity hibEntityAnn = clazzToProcess.getAnnotation(
-				org.hibernate.annotations.Entity.class
-		);
 		EntityBinder entityBinder = new EntityBinder(
 				entityAnn,
-				hibEntityAnn,
 				clazzToProcess,
 				persistentClass,
 				context
@@ -1346,10 +1342,6 @@ public final class AnnotationBinder {
 				|| AnnotatedClassType.NONE.equals( classType ) //to be ignored
 				|| AnnotatedClassType.EMBEDDABLE.equals( classType ) //allow embeddable element declaration
 				) {
-			if ( AnnotatedClassType.NONE.equals( classType )
-					&& clazzToProcess.isAnnotationPresent( org.hibernate.annotations.Entity.class ) ) {
-				LOG.missingEntityAnnotation( clazzToProcess.getName() );
-			}
 			return false;
 		}
 

@@ -117,7 +117,6 @@ public class EntityBinder {
 	private Boolean insertableDiscriminator;
 	private boolean dynamicInsert;
 	private boolean dynamicUpdate;
-	private boolean explicitHibernateEntityAnnotation;
 	private OptimisticLockType optimisticLockType;
 	private PolymorphismType polymorphismType;
 	private boolean selectBeforeUpdate;
@@ -154,7 +153,6 @@ public class EntityBinder {
 
 	public EntityBinder(
 			Entity ejb3Ann,
-			org.hibernate.annotations.Entity hibAnn,
 			XClass annotatedClass,
 			PersistentClass persistentClass,
 			MetadataBuildingContext context) {
@@ -162,7 +160,7 @@ public class EntityBinder {
 		this.persistentClass = persistentClass;
 		this.annotatedClass = annotatedClass;
 		bindEjb3Annotation( ejb3Ann );
-		bindHibernateAnnotation( hibAnn );
+		bindHibernateAnnotation();
 	}
 
 	/**
@@ -184,46 +182,40 @@ public class EntityBinder {
 	}
 
 	@SuppressWarnings("SimplifiableConditionalExpression")
-	private void bindHibernateAnnotation(org.hibernate.annotations.Entity hibAnn) {
+	private void bindHibernateAnnotation() {
 		{
 			final DynamicInsert dynamicInsertAnn = annotatedClass.getAnnotation( DynamicInsert.class );
 			this.dynamicInsert = dynamicInsertAnn == null
-					? ( hibAnn == null ? false : hibAnn.dynamicInsert() )
+					? false
 					: dynamicInsertAnn.value();
 		}
 
 		{
 			final DynamicUpdate dynamicUpdateAnn = annotatedClass.getAnnotation( DynamicUpdate.class );
 			this.dynamicUpdate = dynamicUpdateAnn == null
-					? ( hibAnn == null ? false : hibAnn.dynamicUpdate() )
+					? false
 					: dynamicUpdateAnn.value();
 		}
 
 		{
 			final SelectBeforeUpdate selectBeforeUpdateAnn = annotatedClass.getAnnotation( SelectBeforeUpdate.class );
 			this.selectBeforeUpdate = selectBeforeUpdateAnn == null
-					? ( hibAnn == null ? false : hibAnn.selectBeforeUpdate() )
+					? false
 					: selectBeforeUpdateAnn.value();
 		}
 
 		{
 			final OptimisticLocking optimisticLockingAnn = annotatedClass.getAnnotation( OptimisticLocking.class );
 			this.optimisticLockType = optimisticLockingAnn == null
-					? ( hibAnn == null ? OptimisticLockType.VERSION : hibAnn.optimisticLock() )
+					? OptimisticLockType.VERSION
 					: optimisticLockingAnn.type();
 		}
 
 		{
 			final Polymorphism polymorphismAnn = annotatedClass.getAnnotation( Polymorphism.class );
 			this.polymorphismType = polymorphismAnn == null
-					? ( hibAnn == null ? PolymorphismType.IMPLICIT : hibAnn.polymorphism() )
+					? PolymorphismType.IMPLICIT
 					: polymorphismAnn.type();
-		}
-
-		if ( hibAnn != null ) {
-			// used later in bind for logging
-			explicitHibernateEntityAnnotation = true;
-			//persister handled in bind
 		}
 	}
 
@@ -276,13 +268,7 @@ public class EntityBinder {
 			if ( annotatedClass.isAnnotationPresent( Immutable.class ) ) {
 				mutable = false;
 			}
-			else {
-				org.hibernate.annotations.Entity entityAnn =
-						annotatedClass.getAnnotation( org.hibernate.annotations.Entity.class );
-				if ( entityAnn != null ) {
-					mutable = entityAnn.mutable();
-				}
-			}
+
 			rootClass.setMutable( mutable );
 			rootClass.setExplicitPolymorphism( isExplicitPolymorphism( polymorphismType ) );
 
@@ -309,9 +295,6 @@ public class EntityBinder {
 			}
 		}
 		else {
-			if (explicitHibernateEntityAnnotation) {
-				LOG.entityAnnotationOnNonRoot(annotatedClass.getName());
-			}
 			if (annotatedClass.isAnnotationPresent(Immutable.class)) {
 				LOG.immutableAnnotationOnNonRoot(annotatedClass.getName());
 			}
@@ -324,22 +307,8 @@ public class EntityBinder {
 
 		//set persister if needed
 		Persister persisterAnn = annotatedClass.getAnnotation( Persister.class );
-		Class persister = null;
 		if ( persisterAnn != null ) {
-			persister = persisterAnn.impl();
-		}
-		else {
-			org.hibernate.annotations.Entity entityAnn = annotatedClass.getAnnotation( org.hibernate.annotations.Entity.class );
-			if ( entityAnn != null && !BinderHelper.isEmptyAnnotationValue( entityAnn.persister() ) ) {
-				try {
-					persister = context.getBootstrapContext().getClassLoaderAccess().classForName( entityAnn.persister() );
-				}
-				catch (ClassLoadingException e) {
-					throw new AnnotationException( "Could not find persister class: " + entityAnn.persister(), e );
-				}
-			}
-		}
-		if ( persister != null ) {
+			Class persister = persisterAnn.impl();
 			persistentClass.setEntityPersisterClass( persister );
 		}
 

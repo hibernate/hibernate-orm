@@ -11,7 +11,6 @@ import java.util.Map;
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.OrderBy;
-import org.hibernate.annotations.Sort;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -38,7 +37,7 @@ import org.jboss.logging.Logger;
  * @author Matthew Inger
  * @author Emmanuel Bernard
  */
-@SuppressWarnings({"unchecked", "serial"})
+@SuppressWarnings("unchecked")
 public class ListBinder extends CollectionBinder {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, ListBinder.class.getName() );
 
@@ -55,13 +54,6 @@ public class ListBinder extends CollectionBinder {
 	public void setSqlOrderBy(OrderBy orderByAnn) {
 		if ( orderByAnn != null ) {
 			LOG.orderByAnnotationIndexedCollection();
-		}
-	}
-
-	@Override
-	public void setSort(Sort sortAnn) {
-		if ( sortAnn != null ) {
-			LOG.sortAnnotationIndexedCollection();
 		}
 	}
 

@@ -60,10 +60,8 @@ import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLDeleteAll;
 import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.SQLUpdate;
-import org.hibernate.annotations.Sort;
 import org.hibernate.annotations.SortComparator;
 import org.hibernate.annotations.SortNatural;
-import org.hibernate.annotations.SortType;
 import org.hibernate.annotations.Where;
 import org.hibernate.annotations.WhereJoinTable;
 import org.hibernate.annotations.common.reflection.XClass;
@@ -170,7 +168,6 @@ public abstract class CollectionBinder {
 	private boolean isSortedCollection;
 	private javax.persistence.OrderBy jpaOrderBy;
 	private OrderBy sqlOrderBy;
-	private Sort deprecatedSort;
 	private SortNatural naturalSort;
 	private SortComparator comparatorSort;
 
@@ -245,10 +242,6 @@ public abstract class CollectionBinder {
 
 	public void setSqlOrderBy(OrderBy sqlOrderBy) {
 		this.sqlOrderBy = sqlOrderBy;
-	}
-
-	public void setSort(Sort deprecatedSort) {
-		this.deprecatedSort = deprecatedSort;
 	}
 
 	public void setNaturalSort(SortNatural naturalSort) {
@@ -623,21 +616,7 @@ public abstract class CollectionBinder {
 		Class<? extends Comparator<?>> comparatorClass = null;
 
 		if ( jpaOrderBy == null && sqlOrderBy == null ) {
-			if ( deprecatedSort != null ) {
-				LOG.debug( "Encountered deprecated @Sort annotation; use @SortNatural or @SortComparator instead." );
-				if ( naturalSort != null || comparatorSort != null ) {
-					throw buildIllegalSortCombination();
-				}
-				hadExplicitSort = deprecatedSort.type() != SortType.UNSORTED;
-				if ( deprecatedSort.type() == SortType.NATURAL ) {
-					isSortedCollection = true;
-				}
-				else if ( deprecatedSort.type() == SortType.COMPARATOR ) {
-					isSortedCollection = true;
-					comparatorClass = deprecatedSort.comparator();
-				}
-			}
-			else if ( naturalSort != null ) {
+			if ( naturalSort != null ) {
 				if ( comparatorSort != null ) {
 					throw buildIllegalSortCombination();
 				}
@@ -692,7 +671,6 @@ public abstract class CollectionBinder {
 				String.format(
 						"Illegal combination of annotations on %s.  Only one of @%s, @%s and @%s can be used",
 						safeCollectionRole(),
-						Sort.class.getName(),
 						SortNatural.class.getName(),
 						SortComparator.class.getName()
 				)

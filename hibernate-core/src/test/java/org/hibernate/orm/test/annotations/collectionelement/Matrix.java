@@ -18,8 +18,7 @@ import javax.persistence.Id;
 import javax.persistence.MapKeyColumn;
 
 import org.hibernate.annotations.MapKeyType;
-import org.hibernate.annotations.Sort;
-import org.hibernate.annotations.SortType;
+import org.hibernate.annotations.SortNatural;
 import org.hibernate.annotations.Type;
 
 /**
@@ -34,7 +33,7 @@ public class Matrix {
 
 	@MapKeyType( @Type(type="integer") )
 	@ElementCollection
-	@Sort(type = SortType.NATURAL) 
+	@SortNatural
 	@Type(type = "float")
 	@MapKeyColumn(nullable = false)
 	private SortedMap<Integer, Float> mvalues = new TreeMap<Integer, Float>();

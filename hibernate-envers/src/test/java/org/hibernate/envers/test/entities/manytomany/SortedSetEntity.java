@@ -16,8 +16,7 @@ import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.MapKeyJoinColumn;
 
-import org.hibernate.annotations.Sort;
-import org.hibernate.annotations.SortType;
+import org.hibernate.annotations.SortComparator;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.entities.StrTestEntityComparator;
@@ -37,12 +36,12 @@ public class SortedSetEntity {
 
 	@Audited
 	@ManyToMany
-	@Sort(type = SortType.COMPARATOR, comparator = StrTestEntityComparator.class)
+	@SortComparator(StrTestEntityComparator.class)
 	private SortedSet<StrTestEntity> sortedSet = new TreeSet<StrTestEntity>( StrTestEntityComparator.INSTANCE );
 	@Audited
 	@ElementCollection
 	@MapKeyJoinColumn
-	@Sort(type = SortType.COMPARATOR, comparator = StrTestEntityComparator.class)
+	@SortComparator(StrTestEntityComparator.class)
 	private SortedMap<StrTestEntity, String> sortedMap = new TreeMap<StrTestEntity, String>( StrTestEntityComparator.INSTANCE );
 
 	public SortedSetEntity() {

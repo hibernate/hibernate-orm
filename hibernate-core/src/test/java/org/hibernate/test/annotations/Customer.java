@@ -20,8 +20,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 
 import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.Sort;
-import org.hibernate.annotations.SortType;
+import org.hibernate.annotations.SortComparator;
 
 import static org.hibernate.annotations.CascadeType.ALL;
 
@@ -62,7 +61,7 @@ public class Customer implements Serializable {
 
 	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	@JoinColumn(name = "CUST_ID")
-	@Sort(type = SortType.COMPARATOR, comparator = TicketComparator.class)
+	@SortComparator(TicketComparator.class)
 	public SortedSet<Ticket> getTickets() {
 		return tickets;
 	}

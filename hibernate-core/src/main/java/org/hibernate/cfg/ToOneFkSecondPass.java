@@ -79,7 +79,7 @@ public class ToOneFkSecondPass extends FkSecondPass {
 				Iterator it = ( (Component) valueIdentifier ).getPropertyIterator();
 				while ( it.hasNext() ) {
 					Property idProperty = (Property) it.next();
-					if ( localPath.startsWith( idProperty.getName() ) ) {
+					if ( localPath.equals( idProperty.getName() ) || localPath.startsWith( idProperty.getName() + "." ) ) {
 						return true;
 					}
 				}

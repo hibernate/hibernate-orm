@@ -65,7 +65,6 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitEntityNameSource;
 import org.hibernate.boot.model.naming.NamingStrategyHelper;
 import org.hibernate.boot.model.relational.QualifiedTableName;
-import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AccessType;
@@ -369,16 +368,12 @@ public class EntityBinder {
 		//tuplizers
 		if ( annotatedClass.isAnnotationPresent( Tuplizers.class ) ) {
 			for (Tuplizer tuplizer : annotatedClass.getAnnotation( Tuplizers.class ).value()) {
-				EntityMode mode = EntityMode.parse( tuplizer.entityMode() );
-				//todo tuplizer.entityModeType
-				persistentClass.addTuplizer( mode, tuplizer.impl().getName() );
+				persistentClass.addTuplizer( EntityMode.POJO, tuplizer.impl().getName() );
 			}
 		}
 		if ( annotatedClass.isAnnotationPresent( Tuplizer.class ) ) {
 			Tuplizer tuplizer = annotatedClass.getAnnotation( Tuplizer.class );
-			EntityMode mode = EntityMode.parse( tuplizer.entityMode() );
-			//todo tuplizer.entityModeType
-			persistentClass.addTuplizer( mode, tuplizer.impl().getName() );
+			persistentClass.addTuplizer( EntityMode.POJO, tuplizer.impl().getName() );
 		}
 
 		for ( Filter filter : filters ) {

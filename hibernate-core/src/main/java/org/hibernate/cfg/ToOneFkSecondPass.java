@@ -67,29 +67,19 @@ public class ToOneFkSecondPass extends FkSecondPass {
 			return path.startsWith( property.getName() + "." );
 		}
 		//try the embedded property
-		//embedded property starts their path with 'id.' See PropertyPreloadedData( ) use when idClass != null in AnnotationSourceProcessor
-		else if ( path.startsWith( "id." ) ) {
-			KeyValue valueIdentifier = persistentClass.getIdentifier();
-			String localPath = path.substring( 3 );
+		else {
+			final KeyValue valueIdentifier = persistentClass.getIdentifier();
 			if ( valueIdentifier instanceof Component ) {
+				// Embedded property starts their path with 'id.'
+				// See PropertyPreloadedData( ) use when idClass != null in AnnotationSourceProcessor
+				String localPath = path;
+				if ( path.startsWith( "id." ) ) {
+					localPath = path.substring( 3 );
+				}
 				Iterator it = ( (Component) valueIdentifier ).getPropertyIterator();
 				while ( it.hasNext() ) {
 					Property idProperty = (Property) it.next();
 					if ( localPath.startsWith( idProperty.getName() ) ) {
-						return true;
-					}
-				}
-			}
-		}
-		// Try the case where a @ManyToOne is also an ID property
-		// E.g. @ManyToOne @Id SomeEntity other;
-		else if ( !path.contains( "." ) ) {
-			KeyValue valueIdentifier = persistentClass.getIdentifier();
-			if ( valueIdentifier instanceof Component ) {
-				Iterator it = ( (Component) valueIdentifier ).getPropertyIterator();
-				while ( it.hasNext() ) {
-					Property idProperty = (Property) it.next();
-					if ( path.equals( idProperty.getName() ) ) {
 						return true;
 					}
 				}

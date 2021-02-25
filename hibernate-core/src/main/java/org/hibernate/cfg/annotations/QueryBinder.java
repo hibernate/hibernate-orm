@@ -260,9 +260,6 @@ public abstract class QueryBinder {
 			case COMMIT:
 				flushMode = FlushMode.COMMIT;
 				break;
-			case NEVER:
-				flushMode = FlushMode.MANUAL;
-				break;
 			case MANUAL:
 				flushMode = FlushMode.MANUAL;
 				break;

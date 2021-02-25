@@ -21,7 +21,12 @@ public interface SchemaMigrator {
 	 *
 	 * @param metadata Represents the schema to be altered.
 	 * @param options Options for executing the alteration
+	 * @param contributableInclusionFilter Filter for Contributable instances to use
 	 * @param targetDescriptor description of the target(s) for the alteration commands
 	 */
-	void doMigration(Metadata metadata, ExecutionOptions options, TargetDescriptor targetDescriptor);
+	void doMigration(
+			Metadata metadata,
+			ExecutionOptions options,
+			ContributableMatcher contributableInclusionFilter,
+			TargetDescriptor targetDescriptor);
 }

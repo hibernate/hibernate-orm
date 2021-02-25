@@ -501,7 +501,14 @@ public class SequenceStyleGenerator
 			QualifiedName sequenceName,
 			int initialValue,
 			int incrementSize) {
-		return new SequenceStructure( jdbcEnvironment, sequenceName, initialValue, incrementSize, type.getReturnedClass() );
+		return new SequenceStructure(
+				jdbcEnvironment,
+				determineContributor( params ),
+				sequenceName,
+				initialValue,
+				incrementSize,
+				type.getReturnedClass()
+		);
 	}
 
 	@SuppressWarnings("WeakerAccess")
@@ -513,7 +520,23 @@ public class SequenceStyleGenerator
 			int initialValue,
 			int incrementSize) {
 		final Identifier valueColumnName = determineValueColumnName( params, jdbcEnvironment );
-		return new TableStructure( jdbcEnvironment, sequenceName, valueColumnName, initialValue, incrementSize, type.getReturnedClass() );
+		final String contributor = determineContributor( params );
+
+		return new TableStructure(
+				jdbcEnvironment,
+				contributor,
+				sequenceName,
+				valueColumnName,
+				initialValue,
+				incrementSize,
+				type.getReturnedClass()
+		);
+	}
+
+	private String determineContributor(Properties params) {
+		final String contributor = params.getProperty( IdentifierGenerator.CONTRIBUTOR_NAME );
+
+		return contributor == null ? "orm" : contributor;
 	}
 
 

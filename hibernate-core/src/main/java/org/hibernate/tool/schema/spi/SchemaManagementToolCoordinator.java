@@ -7,8 +7,13 @@
 package org.hibernate.tool.schema.spi;
 
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
+import org.hibernate.Internal;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.AvailableSettings;
@@ -18,6 +23,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.Action;
 import org.hibernate.tool.schema.SourceType;
 import org.hibernate.tool.schema.TargetType;
+import org.hibernate.tool.schema.internal.DefaultSchemaFilter;
 import org.hibernate.tool.schema.internal.ExceptionHandlerHaltImpl;
 import org.hibernate.tool.schema.internal.ExceptionHandlerLoggedImpl;
 import org.hibernate.tool.schema.internal.Helper;
@@ -48,48 +54,124 @@ public class SchemaManagementToolCoordinator {
 	public static void process(
 			final Metadata metadata,
 			final ServiceRegistry serviceRegistry,
-			final Map configurationValues,
+			final Map<?,?> configurationValues,
 			DelayedDropRegistry delayedDropRegistry) {
-		final ActionGrouping actions = ActionGrouping.interpret( configurationValues );
+		final Set<ActionGrouping> groupings = ActionGrouping.interpret( metadata, configurationValues );
 
-		if ( actions.getDatabaseAction() == Action.NONE && actions.getScriptAction() == Action.NONE ) {
+		if ( groupings.isEmpty() ) {
 			// no actions specified
-			log.debug( "No actions specified; doing nothing" );
+			log.debug( "No actions found; doing nothing" );
 			return;
 		}
+
+		Map<Action,Set<String>> databaseActionMap = null;
+		Map<Action,Set<String>> scriptActionMap = null;
+
+		for ( ActionGrouping grouping : groupings ) {
+			// for database action
+			if ( grouping.databaseAction != Action.NONE ) {
+				final Set<String> contributors;
+				if ( databaseActionMap == null ) {
+					databaseActionMap = new HashMap<>();
+					contributors = new HashSet<>();
+					databaseActionMap.put( grouping.databaseAction, contributors );
+				}
+				else {
+					contributors = databaseActionMap.computeIfAbsent(
+							grouping.databaseAction,
+							action -> new HashSet<>()
+					);
+				}
+				contributors.add( grouping.contributor );
+			}
+
+			// for script action
+			if ( grouping.scriptAction != Action.NONE ) {
+				final Set<String> contributors;
+				if ( scriptActionMap == null ) {
+					scriptActionMap = new HashMap<>();
+					contributors = new HashSet<>();
+					scriptActionMap.put( grouping.scriptAction, contributors );
+				}
+				else {
+					contributors = scriptActionMap.computeIfAbsent(
+							grouping.scriptAction,
+							action -> new HashSet<>()
+					);
+				}
+				contributors.add( grouping.contributor );
+			}
+		}
+
 
 		final SchemaManagementTool tool = serviceRegistry.getService( SchemaManagementTool.class );
 		final ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
 
-		boolean haltOnError = configService.getSetting( AvailableSettings.HBM2DDL_HALT_ON_ERROR, StandardConverters.BOOLEAN, false);
+		final boolean haltOnError = configService.getSetting(
+				AvailableSettings.HBM2DDL_HALT_ON_ERROR,
+				StandardConverters.BOOLEAN,
+				false
+		);
+		final ExceptionHandler exceptionHandler = haltOnError ? ExceptionHandlerHaltImpl.INSTANCE : ExceptionHandlerLoggedImpl.INSTANCE;
 
 		final ExecutionOptions executionOptions = buildExecutionOptions(
 				configurationValues,
-				haltOnError ? ExceptionHandlerHaltImpl.INSTANCE :
-						ExceptionHandlerLoggedImpl.INSTANCE
+				exceptionHandler
 		);
 
-		performScriptAction( actions.getScriptAction(), metadata, tool, serviceRegistry, executionOptions );
-		performDatabaseAction( actions.getDatabaseAction(), metadata, tool, serviceRegistry, executionOptions );
+		if ( databaseActionMap != null ) {
+			databaseActionMap.forEach(
+					(action, contributors) -> {
 
-		if ( actions.getDatabaseAction() == Action.CREATE_DROP ) {
-			//noinspection unchecked
-			delayedDropRegistry.registerOnCloseAction(
-					tool.getSchemaDropper( configurationValues ).buildDelayedAction(
-							metadata,
-							executionOptions,
-							buildDatabaseTargetDescriptor(
-									configurationValues,
-									DropSettingSelector.INSTANCE,
-									serviceRegistry
-							)
-					)
+						performDatabaseAction(
+								action,
+								metadata,
+								tool,
+								serviceRegistry,
+								executionOptions,
+								(exportable) -> contributors.contains( exportable.getContributor() )
+						);
+
+						if ( action == Action.CREATE_DROP ) {
+							delayedDropRegistry.registerOnCloseAction(
+									tool.getSchemaDropper( configurationValues ).buildDelayedAction(
+											metadata,
+											executionOptions,
+											(exportable) -> contributors.contains( exportable.getContributor() ),
+											buildDatabaseTargetDescriptor(
+													configurationValues,
+													DropSettingSelector.INSTANCE,
+													serviceRegistry
+											)
+									)
+							);
+						}
+					}
+			);
+		}
+
+		if ( scriptActionMap != null ) {
+			scriptActionMap.forEach(
+					(action, contributors) -> {
+						performScriptAction( action, metadata, tool, serviceRegistry, executionOptions );
+					}
 			);
 		}
 	}
 
 	public static ExecutionOptions buildExecutionOptions(
-			final Map configurationValues,
+			final Map<?,?> configurationValues,
+			final ExceptionHandler exceptionHandler) {
+		return buildExecutionOptions(
+				configurationValues,
+				DefaultSchemaFilter.INSTANCE,
+				exceptionHandler
+		);
+	}
+
+	public static ExecutionOptions buildExecutionOptions(
+			final Map<?,?> configurationValues,
+			final SchemaFilter schemaFilter,
 			final ExceptionHandler exceptionHandler) {
 		return new ExecutionOptions() {
 			@Override
@@ -98,7 +180,7 @@ public class SchemaManagementToolCoordinator {
 			}
 
 			@Override
-			public Map getConfigurationValues() {
+			public Map<?,?> getConfigurationValues() {
 				return configurationValues;
 			}
 
@@ -106,16 +188,21 @@ public class SchemaManagementToolCoordinator {
 			public ExceptionHandler getExceptionHandler() {
 				return exceptionHandler;
 			}
+
+			@Override
+			public SchemaFilter getSchemaFilter() {
+				return schemaFilter;
+			}
 		};
 	}
 
-	@SuppressWarnings("unchecked")
 	private static void performDatabaseAction(
 			final Action action,
 			Metadata metadata,
 			SchemaManagementTool tool,
 			ServiceRegistry serviceRegistry,
-			final ExecutionOptions executionOptions) {
+			final ExecutionOptions executionOptions,
+			ContributableMatcher contributableInclusionFilter) {
 
 		// IMPL NOTE : JPA binds source and target info..
 
@@ -130,6 +217,7 @@ public class SchemaManagementToolCoordinator {
 				tool.getSchemaCreator( executionOptions.getConfigurationValues() ).doCreation(
 						metadata,
 						executionOptions,
+						contributableInclusionFilter,
 						createDescriptor,
 						createDescriptor
 				);
@@ -145,6 +233,7 @@ public class SchemaManagementToolCoordinator {
 				tool.getSchemaDropper( executionOptions.getConfigurationValues() ).doDrop(
 						metadata,
 						executionOptions,
+						contributableInclusionFilter,
 						dropDescriptor,
 						dropDescriptor
 				);
@@ -156,6 +245,7 @@ public class SchemaManagementToolCoordinator {
 				tool.getSchemaCreator( executionOptions.getConfigurationValues() ).doCreation(
 						metadata,
 						executionOptions,
+						contributableInclusionFilter,
 						createDescriptor,
 						createDescriptor
 				);
@@ -170,6 +260,7 @@ public class SchemaManagementToolCoordinator {
 				tool.getSchemaDropper( executionOptions.getConfigurationValues() ).doDrop(
 						metadata,
 						executionOptions,
+						contributableInclusionFilter,
 						dropDescriptor,
 						dropDescriptor
 				);
@@ -184,6 +275,7 @@ public class SchemaManagementToolCoordinator {
 				tool.getSchemaMigrator( executionOptions.getConfigurationValues() ).doMigration(
 						metadata,
 						executionOptions,
+						contributableInclusionFilter,
 						migrateDescriptor
 				);
 				break;
@@ -191,7 +283,8 @@ public class SchemaManagementToolCoordinator {
 			case VALIDATE: {
 				tool.getSchemaValidator( executionOptions.getConfigurationValues() ).doValidation(
 						metadata,
-						executionOptions
+						executionOptions,
+						contributableInclusionFilter
 				);
 				break;
 			}
@@ -199,7 +292,7 @@ public class SchemaManagementToolCoordinator {
 	}
 
 	private static JpaTargetAndSourceDescriptor buildDatabaseTargetDescriptor(
-			Map configurationValues,
+			Map<?,?> configurationValues,
 			SettingSelector settingSelector,
 			ServiceRegistry serviceRegistry) {
 		final Object scriptSourceSetting = settingSelector.getScriptSourceSetting( configurationValues );
@@ -215,8 +308,8 @@ public class SchemaManagementToolCoordinator {
 			);
 		}
 
-		final ScriptSourceInput scriptSourceInput = includesScripts ?
-				Helper.interpretScriptSourceSetting(
+		final ScriptSourceInput scriptSourceInput = includesScripts
+				? Helper.interpretScriptSourceSetting(
 						scriptSourceSetting,
 						serviceRegistry.getService( ClassLoaderService.class ),
 						(String) configurationValues.get( AvailableSettings.HBM2DDL_CHARSET_NAME )
@@ -246,7 +339,6 @@ public class SchemaManagementToolCoordinator {
 		};
 	}
 
-	@SuppressWarnings("unchecked")
 	private static void performScriptAction(
 			Action scriptAction,
 			Metadata metadata,
@@ -263,6 +355,7 @@ public class SchemaManagementToolCoordinator {
 				tool.getSchemaCreator( executionOptions.getConfigurationValues() ).doCreation(
 						metadata,
 						executionOptions,
+						(contributed) -> true,
 						createDescriptor,
 						createDescriptor
 				);
@@ -278,6 +371,7 @@ public class SchemaManagementToolCoordinator {
 				tool.getSchemaDropper( executionOptions.getConfigurationValues() ).doDrop(
 						metadata,
 						executionOptions,
+						(contributed) -> true,
 						dropDescriptor,
 						dropDescriptor
 				);
@@ -289,6 +383,7 @@ public class SchemaManagementToolCoordinator {
 				tool.getSchemaCreator( executionOptions.getConfigurationValues() ).doCreation(
 						metadata,
 						executionOptions,
+						(contributed) -> true,
 						createDescriptor,
 						createDescriptor
 				);
@@ -303,6 +398,7 @@ public class SchemaManagementToolCoordinator {
 				tool.getSchemaDropper( executionOptions.getConfigurationValues() ).doDrop(
 						metadata,
 						executionOptions,
+						(contributed) -> true,
 						dropDescriptor,
 						dropDescriptor
 				);
@@ -317,6 +413,7 @@ public class SchemaManagementToolCoordinator {
 				tool.getSchemaMigrator( executionOptions.getConfigurationValues() ).doMigration(
 						metadata,
 						executionOptions,
+						(contributed) -> true,
 						migrateDescriptor
 				);
 				break;
@@ -328,7 +425,7 @@ public class SchemaManagementToolCoordinator {
 	}
 
 	private static JpaTargetAndSourceDescriptor buildScriptTargetDescriptor(
-			Map configurationValues,
+			Map<?,?> configurationValues,
 			SettingSelector settingSelector,
 			ServiceRegistry serviceRegistry) {
 		final Object scriptSourceSetting = settingSelector.getScriptSourceSetting( configurationValues );
@@ -381,9 +478,9 @@ public class SchemaManagementToolCoordinator {
 
 
 	private interface SettingSelector {
-		Object getSourceTypeSetting(Map configurationValues);
-		Object getScriptSourceSetting(Map configurationValues);
-		Object getScriptTargetSetting(Map configurationValues);
+		Object getSourceTypeSetting(Map<?,?> configurationValues);
+		Object getScriptSourceSetting(Map<?,?> configurationValues);
+		Object getScriptTargetSetting(Map<?,?> configurationValues);
 	}
 
 	private static class CreateSettingSelector implements SettingSelector {
@@ -393,17 +490,17 @@ public class SchemaManagementToolCoordinator {
 		public static final CreateSettingSelector INSTANCE = new CreateSettingSelector();
 
 		@Override
-		public Object getSourceTypeSetting(Map configurationValues) {
+		public Object getSourceTypeSetting(Map<?,?> configurationValues) {
 			return configurationValues.get( HBM2DDL_CREATE_SOURCE );
 		}
 
 		@Override
-		public Object getScriptSourceSetting(Map configurationValues) {
+		public Object getScriptSourceSetting(Map<?,?> configurationValues) {
 			return configurationValues.get( HBM2DDL_CREATE_SCRIPT_SOURCE );
 		}
 
 		@Override
-		public Object getScriptTargetSetting(Map configurationValues) {
+		public Object getScriptTargetSetting(Map<?,?> configurationValues) {
 			return configurationValues.get( HBM2DDL_SCRIPTS_CREATE_TARGET );
 		}
 	}
@@ -415,17 +512,17 @@ public class SchemaManagementToolCoordinator {
 		public static final DropSettingSelector INSTANCE = new DropSettingSelector();
 
 		@Override
-		public Object getSourceTypeSetting(Map configurationValues) {
+		public Object getSourceTypeSetting(Map<?,?> configurationValues) {
 			return configurationValues.get( HBM2DDL_DROP_SOURCE );
 		}
 
 		@Override
-		public Object getScriptSourceSetting(Map configurationValues) {
+		public Object getScriptSourceSetting(Map<?,?> configurationValues) {
 			return configurationValues.get( HBM2DDL_DROP_SCRIPT_SOURCE );
 		}
 
 		@Override
-		public Object getScriptTargetSetting(Map configurationValues) {
+		public Object getScriptTargetSetting(Map<?,?> configurationValues) {
 			return configurationValues.get( HBM2DDL_SCRIPTS_DROP_TARGET );
 		}
 	}
@@ -440,19 +537,19 @@ public class SchemaManagementToolCoordinator {
 		// for now we reuse the CREATE settings where applicable
 
 		@Override
-		public Object getSourceTypeSetting(Map configurationValues) {
+		public Object getSourceTypeSetting(Map<?,?> configurationValues) {
 			// for now, don't allow script source
 			return SourceType.METADATA;
 		}
 
 		@Override
-		public Object getScriptSourceSetting(Map configurationValues) {
+		public Object getScriptSourceSetting(Map<?,?> configurationValues) {
 			// for now, don't allow script source
 			return null;
 		}
 
 		@Override
-		public Object getScriptTargetSetting(Map configurationValues) {
+		public Object getScriptTargetSetting(Map<?,?> configurationValues) {
 			// for now, reuse the CREATE script target setting
 			return configurationValues.get( HBM2DDL_SCRIPTS_CREATE_TARGET );
 		}
@@ -464,12 +561,18 @@ public class SchemaManagementToolCoordinator {
 	 * simultaneously
 	 */
 	public static class ActionGrouping {
+		private final String contributor;
 		private final Action databaseAction;
 		private final Action scriptAction;
 
-		public ActionGrouping(Action databaseAction, Action scriptAction) {
+		public ActionGrouping(String contributor, Action databaseAction, Action scriptAction) {
+			this.contributor = contributor;
 			this.databaseAction = databaseAction;
 			this.scriptAction = scriptAction;
+		}
+
+		public String getContributor() {
+			return contributor;
 		}
 
 		public Action getDatabaseAction() {
@@ -480,6 +583,10 @@ public class SchemaManagementToolCoordinator {
 			return scriptAction;
 		}
 
+		/**
+		 * For test use
+		 */
+		@Internal
 		public static ActionGrouping interpret(Map configurationValues) {
 			// interpret the JPA settings first
 			Action databaseAction = Action.interpretJpaSetting( configurationValues.get( HBM2DDL_DATABASE_ACTION ) );
@@ -493,7 +600,69 @@ public class SchemaManagementToolCoordinator {
 				}
 			}
 
-			return new ActionGrouping( databaseAction, scriptAction );
+			return new ActionGrouping( "orm", databaseAction, scriptAction );
+		}
+
+		public static Set<ActionGrouping> interpret(Metadata metadata, Map<?,?> configurationValues) {
+			// these represent the base (non-contributor-specific) values
+			final Action rootDatabaseAction = Action.interpretJpaSetting( configurationValues.get( HBM2DDL_DATABASE_ACTION ) );
+			final Action rootScriptAction = Action.interpretJpaSetting( configurationValues.get( HBM2DDL_SCRIPTS_ACTION ) );
+			final Action rootExportAction = Action.interpretHbm2ddlSetting( configurationValues.get( HBM2DDL_AUTO ) );
+
+			final Set<String> contributors = metadata.getContributors();
+			final Set<ActionGrouping> groupings = new HashSet<>( contributors.size() );
+
+			// for each contributor, look for specific tooling config values
+			for ( String contributor : contributors ) {
+				final Object contributorDatabaseActionSetting = configurationValues.get( HBM2DDL_DATABASE_ACTION + "." + contributor );
+				final Object contributorScriptActionSetting = configurationValues.get( HBM2DDL_SCRIPTS_ACTION + "." + contributor );
+				final Object contributorExportActionSetting = configurationValues.get( HBM2DDL_AUTO + "." + contributor );
+
+				final Action contributorDatabaseAction = contributorDatabaseActionSetting == null
+						? rootDatabaseAction
+						: Action.interpretJpaSetting( contributorDatabaseActionSetting );
+				final Action contributorScriptAction = contributorScriptActionSetting == null
+						? rootScriptAction
+						: Action.interpretJpaSetting( contributorScriptActionSetting );
+				final Action contributorExportAction = contributorExportActionSetting == null
+						? rootExportAction
+						: Action.interpretJpaSetting( contributorExportActionSetting );
+
+				Action databaseAction = contributorDatabaseAction;
+				if ( databaseAction == Action.NONE && contributorScriptAction == Action.NONE ) {
+					if ( contributorExportAction != Action.NONE ) {
+						databaseAction = contributorExportAction;
+					}
+
+					if ( databaseAction == Action.NONE ) {
+						log.debugf( "No schema actions specified for contributor `%s`; doing nothing", contributor );
+						continue;
+					}
+				}
+
+				groupings.add( new ActionGrouping( contributor, databaseAction, contributorScriptAction ) );
+			}
+
+			return groupings;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if ( this == o ) {
+				return true;
+			}
+			if ( o == null || getClass() != o.getClass() ) {
+				return false;
+			}
+			ActionGrouping that = (ActionGrouping) o;
+			return contributor.equals( that.contributor ) &&
+					databaseAction == that.databaseAction &&
+					scriptAction == that.scriptAction;
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash( contributor );
 		}
 	}
 }

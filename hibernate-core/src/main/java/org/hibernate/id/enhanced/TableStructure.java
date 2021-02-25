@@ -55,6 +55,8 @@ public class TableStructure implements DatabaseStructure {
 	private final int incrementSize;
 	private final Class numberType;
 
+	private String contributor;
+
 	private String tableNameText;
 	private String valueColumnNameText;
 
@@ -64,13 +66,16 @@ public class TableStructure implements DatabaseStructure {
 	private boolean applyIncrementSizeToSourceValues;
 	private int accessCounter;
 
+
 	public TableStructure(
 			JdbcEnvironment jdbcEnvironment,
+			String contributor,
 			QualifiedName qualifiedTableName,
 			Identifier valueColumnNameIdentifier,
 			int initialValue,
 			int incrementSize,
 			Class numberType) {
+		this.contributor = contributor;
 		this.logicalQualifiedTableName = qualifiedTableName;
 		this.logicalValueColumnNameIdentifier = valueColumnNameIdentifier;
 
@@ -251,7 +256,10 @@ public class TableStructure implements DatabaseStructure {
 		Table table = namespace.locateTable( logicalQualifiedTableName.getObjectName() );
 		boolean tableCreated = false;
 		if ( table == null ) {
-			table = namespace.createTable( logicalQualifiedTableName.getObjectName(), false );
+			table = namespace.createTable(
+					logicalQualifiedTableName.getObjectName(),
+					(identifier) -> new Table( contributor, namespace, identifier, false )
+			);
 			tableCreated = true;
 		}
 

@@ -7,6 +7,7 @@
 package org.hibernate.id.factory;
 import java.util.Properties;
 
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.type.Type;
@@ -22,7 +23,7 @@ public interface IdentifierGeneratorFactory {
 	 *
 	 * @return the dialect
 	 */
-	public Dialect getDialect();
+	Dialect getDialect();
 
 	/**
 	 * Allow injection of the dialect to use.
@@ -33,7 +34,7 @@ public interface IdentifierGeneratorFactory {
 	 * ctor injected.
 	 */
 	@Deprecated
-	public void setDialect(Dialect dialect);
+	void setDialect(Dialect dialect);
 
 	/**
 	 * Given a strategy, retrieve the appropriate identifier generator instance.
@@ -44,7 +45,7 @@ public interface IdentifierGeneratorFactory {
 	 *
 	 * @return The appropriate generator instance.
 	 */
-	public IdentifierGenerator createIdentifierGenerator(String strategy, Type type, Properties config);
+	IdentifierGenerator createIdentifierGenerator(String strategy, Type type, Properties config);
 
 	/**
 	 * Retrieve the class that will be used as the {@link IdentifierGenerator} for the given strategy.
@@ -52,5 +53,5 @@ public interface IdentifierGeneratorFactory {
 	 * @param strategy The strategy
 	 * @return The generator class.
 	 */
-	public Class getIdentifierGeneratorClass(String strategy);
+	Class getIdentifierGeneratorClass(String strategy);
 }

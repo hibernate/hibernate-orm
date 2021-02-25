@@ -60,7 +60,7 @@ public class ValueVisitorTest extends BaseUnitTestCase {
 		final MetadataImplementor metadata =
 				(MetadataImplementor) new MetadataSources( serviceRegistry )
 		.buildMetadata();
-		final Table tbl = new Table();
+		final Table tbl = new Table( "orm" );
 		final RootClass rootClass = new RootClass( metadataBuildingContext );
 
 		ValueVisitor vv = new ValueVisitorValidator();

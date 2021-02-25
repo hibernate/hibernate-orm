@@ -9,6 +9,7 @@ package org.hibernate.testing.orm.junit;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -20,17 +21,14 @@ import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
-import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.hibernate.tool.schema.Action;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator.ActionGrouping;
 
-import org.hibernate.testing.junit4.Helper;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.TestExecutionExceptionHandler;
@@ -146,10 +144,10 @@ public class SessionFactoryExtension
 			boolean createSecondarySchemas) {
 		final Map<String, Object> baseProperties = sessionFactory.getProperties();
 
-		final ActionGrouping actions = ActionGrouping.interpret( baseProperties );
+		final Set<ActionGrouping> groupings = ActionGrouping.interpret( model, baseProperties );
 
 		// if there are explicit setting for auto schema tooling then skip the annotation
-		if ( actions.getDatabaseAction() != Action.NONE || actions.getScriptAction() != Action.NONE ) {
+		if ( ! groupings.isEmpty() ) {
 			// the properties contained explicit settings for auto schema tooling - skip the annotation
 			return;
 		}

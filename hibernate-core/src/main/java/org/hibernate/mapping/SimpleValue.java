@@ -334,6 +334,11 @@ public abstract class SimpleValue implements KeyValue {
 				AvailableSettings.PREFER_POOLED_VALUES_LO,
 				cs.getSetting( AvailableSettings.PREFER_POOLED_VALUES_LO, StandardConverters.BOOLEAN, false )
 		);
+		params.put(
+				IdentifierGenerator.CONTRIBUTOR_NAME,
+				buildingContext.getCurrentContributorName()
+		);
+
 		if ( cs.getSettings().get( AvailableSettings.PREFERRED_POOLED_OPTIMIZER ) != null ) {
 			params.put(
 					AvailableSettings.PREFERRED_POOLED_OPTIMIZER,
@@ -342,7 +347,11 @@ public abstract class SimpleValue implements KeyValue {
 		}
 
 		identifierGeneratorFactory.setDialect( dialect );
-		identifierGenerator = identifierGeneratorFactory.createIdentifierGenerator( identifierGeneratorStrategy, getType(), params );
+		identifierGenerator = identifierGeneratorFactory.createIdentifierGenerator(
+				identifierGeneratorStrategy,
+				getType(),
+				params
+		);
 
 		return identifierGenerator;
 	}

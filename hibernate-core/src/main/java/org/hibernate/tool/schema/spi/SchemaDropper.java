@@ -11,8 +11,6 @@ import org.hibernate.boot.Metadata;
 
 /**
  * Service delegate for handling schema dropping.
- *
- * @author Steve Ebersole
  */
 @Incubating
 public interface SchemaDropper {
@@ -21,10 +19,16 @@ public interface SchemaDropper {
 	 *
 	 * @param metadata Represents the schema to be dropped.
 	 * @param options Options for executing the drop
+	 * @param contributableInclusionFilter Filter for Contributable instances to use
 	 * @param sourceDescriptor description of the source(s) of drop commands
 	 * @param targetDescriptor description of the target(s) for the drop commands
 	 */
-	void doDrop(Metadata metadata, ExecutionOptions options, SourceDescriptor sourceDescriptor, TargetDescriptor targetDescriptor);
+	void doDrop(
+			Metadata metadata,
+			ExecutionOptions options,
+			ContributableMatcher contributableInclusionFilter,
+			SourceDescriptor sourceDescriptor,
+			TargetDescriptor targetDescriptor);
 
 	/**
 	 * Build a delayed Runnable for performing schema dropping.  This implicitly
@@ -32,9 +36,14 @@ public interface SchemaDropper {
 	 *
 	 * @param metadata The metadata to drop
 	 * @param options The drop options
+	 * @param contributableInclusionFilter Filter for Contributable instances to use
 	 * @param sourceDescriptor For access to the {@link SourceDescriptor#getScriptSourceInput()}
 	 *
 	 * @return The Runnable
 	 */
-	DelayedDropAction buildDelayedAction(Metadata metadata, ExecutionOptions options, SourceDescriptor sourceDescriptor);
+	DelayedDropAction buildDelayedAction(
+			Metadata metadata,
+			ExecutionOptions options,
+			ContributableMatcher contributableInclusionFilter,
+			SourceDescriptor sourceDescriptor);
 }

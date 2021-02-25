@@ -30,6 +30,7 @@ import org.hibernate.tool.schema.extract.spi.NameSpaceTablesInformation;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
 import org.hibernate.tool.schema.internal.AbstractSchemaMigrator;
 import org.hibernate.tool.schema.internal.exec.GenerationTarget;
+import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.junit.Assert;
 import org.junit.Test;
@@ -53,10 +54,19 @@ public class CheckForExistingForeignKeyTest {
 		 * Needed implementation. Not used in test.
 		 */
 		@Override
-		protected NameSpaceTablesInformation performTablesMigration(Metadata metadata, DatabaseInformation existingDatabase, ExecutionOptions options,
+		protected NameSpaceTablesInformation performTablesMigration(
+				Metadata metadata,
+				DatabaseInformation existingDatabase,
+				ExecutionOptions options,
+				ContributableMatcher inclusionFilter,
 				Dialect dialect,
-				Formatter formatter, Set<String> exportIdentifiers, boolean tryToCreateCatalogs, boolean tryToCreateSchemas,
-				Set<Identifier> exportedCatalogs, Namespace namespace, GenerationTarget[] targets) {
+				Formatter formatter,
+				Set<String> exportIdentifiers,
+				boolean tryToCreateCatalogs,
+				boolean tryToCreateSchemas,
+				Set<Identifier> exportedCatalogs,
+				Namespace namespace,
+				GenerationTarget[] targets) {
 			return null;
 		}
 	}
@@ -193,7 +203,7 @@ public class CheckForExistingForeignKeyTest {
 		ForeignKey foreignKey = new ForeignKey();
 		foreignKey.setName( "objectId2id" );
 		foreignKey.addColumn( new Column( "id" ) );
-		foreignKey.setReferencedTable( new Table( "table2" ) );
+		foreignKey.setReferencedTable( new Table( "orm", "table2" ) );
 
 		InformationExtractor informationExtractor = Mockito.mock( InformationExtractor.class );
 		IdentifierHelper identifierHelper = new IdentifierHelperImpl();
@@ -230,7 +240,7 @@ public class CheckForExistingForeignKeyTest {
 		ForeignKey foreignKey = new ForeignKey();
 		foreignKey.setName( "objectId2id_1" );
 		foreignKey.addColumn( new Column( "id" ) );
-		foreignKey.setReferencedTable( new Table( "table2" ) );
+		foreignKey.setReferencedTable( new Table( "orm", "table2" ) );
 
 		InformationExtractor informationExtractor = Mockito.mock( InformationExtractor.class );
 		IdentifierHelper identifierHelper = new IdentifierHelperImpl();
@@ -267,7 +277,7 @@ public class CheckForExistingForeignKeyTest {
 		ForeignKey foreignKey = new ForeignKey();
 		foreignKey.setName( "objectId2id_1" ); // Make sure the match is not successful based on key name
 		foreignKey.addColumn( new Column( "id" ) );
-		foreignKey.setReferencedTable( new Table( "table2" ) );
+		foreignKey.setReferencedTable( new Table( "orm", "table2" ) );
 
 		Name schemaName = new Name( new Identifier( "-", false ), new Identifier( "-", false ) );
 		InformationExtractor informationExtractor = Mockito.mock( InformationExtractor.class );
@@ -305,7 +315,7 @@ public class CheckForExistingForeignKeyTest {
 		ForeignKey foreignKey = new ForeignKey();
 		foreignKey.setName( "objectId2id_1" ); // Make sure the match is not successful based on key name
 		foreignKey.addColumn( new Column( "id" ) );
-		foreignKey.setReferencedTable( new Table( "table2" ) );
+		foreignKey.setReferencedTable( new Table( "orm", "table2" ) );
 
 		Name schemaName = new Name( new Identifier( "-", false ), new Identifier( "-", false ) );
 		InformationExtractor informationExtractor = Mockito.mock( InformationExtractor.class );

@@ -21,6 +21,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.relational.ContributableDatabaseObject;
 import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.Namespace;
@@ -42,9 +43,11 @@ import org.jboss.logging.Logger;
  * @author Gavin King
  */
 @SuppressWarnings("deprecation")
-public class Table implements RelationalModel, Serializable, Exportable {
+public class Table implements RelationalModel, Serializable, ContributableDatabaseObject {
 	private static final Logger log = Logger.getLogger( Table.class );
 	private static final Column[] EMPTY_COLUMN_ARRAY = new Column[0];
+
+	private final String contributor;
 
 	private Identifier catalog;
 	private Identifier schema;
@@ -70,16 +73,24 @@ public class Table implements RelationalModel, Serializable, Exportable {
 	private List<InitCommand> initCommands;
 
 	public Table() {
+		this( "orm" );
 	}
 
-	public Table(String name) {
+	public Table(String contributor) {
+		this( contributor, null );
+	}
+
+	public Table(String contributor, String name) {
+		this.contributor = contributor;
 		setName( name );
 	}
 
 	public Table(
+			String contributor,
 			Namespace namespace,
 			Identifier physicalTableName,
 			boolean isAbstract) {
+		this.contributor = contributor;
 		this.catalog = namespace.getPhysicalName().getCatalog();
 		this.schema = namespace.getPhysicalName().getSchema();
 		this.name = physicalTableName;
@@ -87,17 +98,12 @@ public class Table implements RelationalModel, Serializable, Exportable {
 	}
 
 	public Table(
-			Identifier catalog,
-			Identifier schema,
+			String contributor,
+			Namespace namespace,
 			Identifier physicalTableName,
+			String subselect,
 			boolean isAbstract) {
-		this.catalog = catalog;
-		this.schema = schema;
-		this.name = physicalTableName;
-		this.isAbstract = isAbstract;
-	}
-
-	public Table(Namespace namespace, Identifier physicalTableName, String subselect, boolean isAbstract) {
+		this.contributor = contributor;
 		this.catalog = namespace.getPhysicalName().getCatalog();
 		this.schema = namespace.getPhysicalName().getSchema();
 		this.name = physicalTableName;
@@ -105,11 +111,17 @@ public class Table implements RelationalModel, Serializable, Exportable {
 		this.isAbstract = isAbstract;
 	}
 
-	public Table(Namespace namespace, String subselect, boolean isAbstract) {
+	public Table(String contributor, Namespace namespace, String subselect, boolean isAbstract) {
+		this.contributor = contributor;
 		this.catalog = namespace.getPhysicalName().getCatalog();
 		this.schema = namespace.getPhysicalName().getSchema();
 		this.subselect = subselect;
 		this.isAbstract = isAbstract;
+	}
+
+	@Override
+	public String getContributor() {
+		return contributor;
 	}
 
 	/**

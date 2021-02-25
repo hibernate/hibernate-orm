@@ -198,7 +198,7 @@ public class ModelBinder {
 	}
 
 	public void bindEntityHierarchy(EntityHierarchySourceImpl hierarchySource) {
-		final RootClass rootEntityDescriptor = new RootClass( metadataBuildingContext );
+		final RootClass rootEntityDescriptor = new RootClass( hierarchySource.getRootEntityMappingDocument() );
 		bindRootEntity( hierarchySource, rootEntityDescriptor );
 		hierarchySource.getRoot()
 				.getLocalMetadataBuildingContext()
@@ -1764,12 +1764,15 @@ public class ModelBinder {
 		Table secondaryTable;
 		final Identifier logicalTableName;
 
-		if ( TableSource.class.isInstance( secondaryTableSource.getTableSource() ) ) {
+		if ( secondaryTableSource.getTableSource() instanceof TableSource ) {
 			final TableSource tableSource = (TableSource) secondaryTableSource.getTableSource();
 			logicalTableName = database.toIdentifier( tableSource.getExplicitTableName() );
 			secondaryTable = namespace.locateTable( logicalTableName );
 			if ( secondaryTable == null ) {
-				secondaryTable = namespace.createTable( logicalTableName, false );
+				secondaryTable = namespace.createTable(
+						logicalTableName,
+						(identifier) -> new Table( mappingDocument.getCurrentContributorName(), namespace, identifier, false )
+				);
 			}
 			else {
 				secondaryTable.setAbstract( false );
@@ -1780,6 +1783,7 @@ public class ModelBinder {
 		else {
 			final InLineViewSource inLineViewSource = (InLineViewSource) secondaryTableSource.getTableSource();
 			secondaryTable = new Table(
+					metadataBuildingContext.getCurrentContributorName(),
 					namespace,
 					inLineViewSource.getSelectStatement(),
 					false
@@ -2951,13 +2955,26 @@ public class ModelBinder {
 			}
 
 			if ( denormalizedSuperTable == null ) {
-				table = namespace.createTable( logicalTableName, isAbstract );
+				table = namespace.createTable(
+						logicalTableName,
+						(identifier) -> new Table(
+								mappingDocument.getCurrentContributorName(),
+								namespace,
+								identifier,
+								isAbstract
+						)
+				);
 			}
 			else {
 				table = namespace.createDenormalizedTable(
 						logicalTableName,
-						isAbstract,
-						denormalizedSuperTable
+						(physicalTableName) -> new DenormalizedTable(
+								mappingDocument.getCurrentContributorName(),
+								namespace,
+								physicalTableName,
+								isAbstract,
+								denormalizedSuperTable
+						)
 				);
 			}
 		}
@@ -2966,10 +2983,16 @@ public class ModelBinder {
 			subselect = inLineViewSource.getSelectStatement();
 			logicalTableName = database.toIdentifier( inLineViewSource.getLogicalName() );
 			if ( denormalizedSuperTable == null ) {
-				table = new Table( namespace, subselect, isAbstract );
+				table = new Table( mappingDocument.getCurrentContributorName(), namespace, subselect, isAbstract );
 			}
 			else {
-				table = new DenormalizedTable( namespace, subselect, isAbstract, denormalizedSuperTable );
+				table = new DenormalizedTable(
+						mappingDocument.getCurrentContributorName(),
+						namespace,
+						subselect,
+						isAbstract,
+						denormalizedSuperTable
+				);
 			}
 			table.setName( logicalTableName.render() );
 		}
@@ -3312,10 +3335,19 @@ public class ModelBinder {
 								.determineCollectionTableName( implicitNamingSource );
 					}
 
-					collectionTable = namespace.createTable( logicalName, false );
+					collectionTable = namespace.createTable(
+							logicalName,
+							(identifier) -> new Table(
+									metadataBuildingContext.getCurrentContributorName(),
+									namespace,
+									identifier,
+									false
+							)
+					);
 				}
 				else {
 					collectionTable = new Table(
+							metadataBuildingContext.getCurrentContributorName(),
 							namespace,
 							( (InLineViewSource) tableSpecSource ).getSelectStatement(),
 							false

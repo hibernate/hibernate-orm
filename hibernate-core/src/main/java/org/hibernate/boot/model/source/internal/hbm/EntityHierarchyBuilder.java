@@ -96,7 +96,10 @@ public class EntityHierarchyBuilder {
 			final RootEntitySourceImpl rootEntitySource = new RootEntitySourceImpl( mappingDocument, jaxbRootEntity );
 			entitySourceByNameMap.put( rootEntitySource.getEntityNamingSource().getEntityName(), rootEntitySource );
 
-			final EntityHierarchySourceImpl hierarchy = new EntityHierarchySourceImpl( rootEntitySource );
+			final EntityHierarchySourceImpl hierarchy = new EntityHierarchySourceImpl(
+					rootEntitySource,
+					mappingDocument
+			);
 			entityHierarchyList.add( hierarchy );
 
 			linkAnyWaiting( mappingDocument, rootEntitySource );

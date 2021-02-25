@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
+import java.util.function.Function;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.naming.Identifier;
@@ -33,8 +34,8 @@ public class Namespace {
 	private final Name name;
 	private final Name physicalName;
 
-	private Map<Identifier, Table> tables = new TreeMap<>();
-	private Map<Identifier, Sequence> sequences = new TreeMap<>();
+	private final Map<Identifier, Table> tables = new TreeMap<>();
+	private final Map<Identifier, Sequence> sequences = new TreeMap<>();
 
 	public Namespace(PhysicalNamingStrategy physicalNamingStrategy, JdbcEnvironment jdbcEnvironment, Name name) {
 		this.physicalNamingStrategy = physicalNamingStrategy;
@@ -89,28 +90,29 @@ public class Namespace {
 	 *
 	 * @return the created table.
 	 */
-	public Table createTable(Identifier logicalTableName, boolean isAbstract) {
+	public Table createTable(Identifier logicalTableName, Function<Identifier,Table> creator) {
 		final Table existing = tables.get( logicalTableName );
 		if ( existing != null ) {
 			return existing;
 		}
 
 		final Identifier physicalTableName = physicalNamingStrategy.toPhysicalTableName( logicalTableName, jdbcEnvironment );
-		Table table = new Table( this, physicalTableName, isAbstract );
+		final Table table = creator.apply( physicalTableName );
 		tables.put( logicalTableName, table );
+
 		return table;
 	}
 
-	public DenormalizedTable createDenormalizedTable(Identifier logicalTableName, boolean isAbstract, Table includedTable) {
+	public DenormalizedTable createDenormalizedTable(Identifier logicalTableName, Function<Identifier,DenormalizedTable> creator) {
 		final Table existing = tables.get( logicalTableName );
 		if ( existing != null ) {
-			// for now assume it is
 			return (DenormalizedTable) existing;
 		}
 
 		final Identifier physicalTableName = physicalNamingStrategy.toPhysicalTableName( logicalTableName, jdbcEnvironment );
-		DenormalizedTable table = new DenormalizedTable( this, physicalTableName, isAbstract, includedTable );
+		final DenormalizedTable table = creator.apply( physicalTableName );
 		tables.put( logicalTableName, table );
+
 		return table;
 	}
 
@@ -118,21 +120,15 @@ public class Namespace {
 		return sequences.get( name );
 	}
 
-	public Sequence createSequence(Identifier logicalName, int initialValue, int increment) {
+	public Sequence createSequence(Identifier logicalName, Function<Identifier,Sequence> creator) {
 		if ( sequences.containsKey( logicalName ) ) {
 			throw new HibernateException( "Sequence was already registered with that name [" + logicalName.toString() + "]" );
 		}
 
 		final Identifier physicalName = physicalNamingStrategy.toPhysicalSequenceName( logicalName, jdbcEnvironment );
-
-		Sequence sequence = new Sequence(
-				this.physicalName.getCatalog(),
-				this.physicalName.getSchema(),
-				physicalName,
-				initialValue,
-				increment
-		);
+		final Sequence sequence = creator.apply( physicalName );
 		sequences.put( logicalName, sequence );
+
 		return sequence;
 	}
 

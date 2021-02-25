@@ -23,6 +23,7 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -41,7 +42,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 		"org/hibernate/orm/test/keymanytoone/bidir/component/EagerMapping.hbm.xml"
 })
 @SessionFactory(generateStatistics = true)
-@ServiceRegistry(integrators = EagerKeyManyToOneTest.CustomLoadIntegrator.class)
+@BootstrapServiceRegistry( integrators = EagerKeyManyToOneTest.CustomLoadIntegrator.class )
 public class EagerKeyManyToOneTest {
 
 	public static class CustomLoadIntegrator implements Integrator {

@@ -35,13 +35,14 @@ import org.hibernate.sql.Alias;
  *
  * @author Gavin King
  */
-public abstract class PersistentClass implements AttributeContainer, Serializable, Filterable, MetaAttributable {
+public abstract class PersistentClass implements AttributeContainer, Serializable, Filterable, MetaAttributable, Contributable {
 	private static final Alias PK_ALIAS = new Alias( 15, "PK" );
 
 	public static final String NULL_DISCRIMINATOR_MAPPING = "null";
 	public static final String NOT_NULL_DISCRIMINATOR_MAPPING = "not null";
 
 	private final MetadataBuildingContext metadataBuildingContext;
+	private final String contributor;
 
 	private String entityName;
 
@@ -95,6 +96,11 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 
 	public PersistentClass(MetadataBuildingContext metadataBuildingContext) {
 		this.metadataBuildingContext = metadataBuildingContext;
+		this.contributor = metadataBuildingContext.getCurrentContributorName();
+	}
+
+	public String getContributor() {
+		return contributor;
 	}
 
 	public ServiceRegistry getServiceRegistry() {

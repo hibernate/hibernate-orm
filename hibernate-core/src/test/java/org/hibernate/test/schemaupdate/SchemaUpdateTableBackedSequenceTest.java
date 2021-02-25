@@ -25,8 +25,10 @@ import org.hibernate.mapping.Table;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.internal.ExceptionHandlerLoggedImpl;
+import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExceptionHandler;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
+import org.hibernate.tool.schema.spi.SchemaFilter;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.ScriptTargetOutput;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
@@ -66,6 +68,7 @@ public class SchemaUpdateTableBackedSequenceTest extends BaseUnitTestCase {
 
 		TableStructure tableStructure = new TableStructure(
 				database.getJdbcEnvironment(),
+				"orm",
 				new QualifiedTableName( null, null, Identifier.toIdentifier( "test_seq" ) ),
 				Identifier.toIdentifier( "nextval" ),
 				20,
@@ -98,7 +101,13 @@ public class SchemaUpdateTableBackedSequenceTest extends BaseUnitTestCase {
 					public ExceptionHandler getExceptionHandler() {
 						return ExceptionHandlerLoggedImpl.INSTANCE;
 					}
+
+					@Override
+					public SchemaFilter getSchemaFilter() {
+						return SchemaFilter.ALL;
+					}
 				},
+				ContributableMatcher.ALL,
 				new TargetDescriptor() {
 					@Override
 					public EnumSet<TargetType> getTargetTypes() {

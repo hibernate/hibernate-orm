@@ -491,7 +491,8 @@ public class TableBinder {
 					logicalName.render(),
 					isAbstract,
 					subselect,
-					denormalizedSuperTableXref.getPrimaryTable()
+					denormalizedSuperTableXref.getPrimaryTable(),
+					buildingContext
 			);
 		}
 		else {
@@ -500,7 +501,8 @@ public class TableBinder {
 					catalog,
 					logicalName.render(),
 					subselect,
-					isAbstract
+					isAbstract,
+					buildingContext
 			);
 		}
 

@@ -22,9 +22,11 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.SourceType;
 import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.spi.CommandAcceptanceException;
+import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExceptionHandler;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.hibernate.tool.schema.spi.SchemaDropper;
+import org.hibernate.tool.schema.spi.SchemaFilter;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.ScriptSourceInput;
 import org.hibernate.tool.schema.spi.ScriptTargetOutput;
@@ -58,8 +60,13 @@ public class SchemaDropTest extends BaseUnitTestCase implements ExecutionOptions
 
 	@Test
 	public void testDropSequence() {
-		getSchemaDropper()
-				.doDrop( metadata, this, getSourceDescriptor(), getTargetDescriptor() );
+		getSchemaDropper().doDrop(
+				metadata,
+				this,
+				ContributableMatcher.ALL,
+				getSourceDescriptor(),
+				getTargetDescriptor()
+		);
 	}
 
 	private SchemaDropper getSchemaDropper() {
@@ -107,6 +114,11 @@ public class SchemaDropTest extends BaseUnitTestCase implements ExecutionOptions
 	@Override
 	public ExceptionHandler getExceptionHandler() {
 		return this;
+	}
+
+	@Override
+	public SchemaFilter getSchemaFilter() {
+		return SchemaFilter.ALL;
 	}
 
 	@Override

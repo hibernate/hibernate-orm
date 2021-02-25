@@ -85,7 +85,7 @@ public class ExportIdentifierTest extends BaseUnitTestCase {
 			Set<String> exportIdentifierSet) {
 		for ( Namespace namespace : namespaces ) {
 
-			final Table table = new Table( namespace, Identifier.toIdentifier( name ), false );
+			final Table table = new Table( "orm", namespace, Identifier.toIdentifier( name ), false );
 			addExportIdentifier( table, exportIdentifierList, exportIdentifierSet );
 
 			final ForeignKey foreignKey = new ForeignKey();
@@ -118,6 +118,7 @@ public class ExportIdentifierTest extends BaseUnitTestCase {
 		for ( Namespace namespace : namespaces ) {
 			addExportIdentifier(
 					new Sequence(
+							"orm",
 							namespace.getName().getCatalog(),
 							namespace.getName().getSchema(),
 							Identifier.toIdentifier( name )
@@ -138,7 +139,7 @@ public class ExportIdentifierTest extends BaseUnitTestCase {
 							namespace,
 							"create",
 							"drop",
-							Collections.<String>emptySet()
+							Collections.emptySet()
 					),
 					exportIdentifierList,
 					exportIdentifierSet
@@ -158,7 +159,7 @@ public class ExportIdentifierTest extends BaseUnitTestCase {
 							namespace,
 							"create",
 							"drop",
-							Collections.<String>emptySet()
+							Collections.emptySet()
 					),
 					exportIdentifierList,
 					exportIdentifierSet

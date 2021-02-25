@@ -14,7 +14,6 @@ import java.lang.annotation.Target;
 
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.service.spi.ServiceContributor;
 
 /**
@@ -67,17 +66,10 @@ import org.hibernate.service.spi.ServiceContributor;
 @Retention( RetentionPolicy.RUNTIME )
 
 @ServiceRegistryFunctionalTesting
-//@TestInstance( TestInstance.Lifecycle.PER_CLASS )
-//
-//@ExtendWith( FailureExpectedExtension.class )
-//@ExtendWith( ServiceRegistryExtension.class )
-//@ExtendWith( ServiceRegistryParameterResolver.class )
 public @interface ServiceRegistry {
 	Class<? extends ServiceContributor>[] serviceContributors() default {};
 
 	Class<? extends StandardServiceInitiator>[] initiators() default {};
-
-	Class<? extends Integrator>[] integrators() default {};
 
 	Service[] services() default {};
 

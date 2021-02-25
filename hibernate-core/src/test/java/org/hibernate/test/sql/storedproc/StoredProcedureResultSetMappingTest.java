@@ -75,6 +75,10 @@ public class StoredProcedureResultSetMappingTest extends BaseUnitTestCase {
 	}
 
 	public static class ProcedureDefinition implements AuxiliaryDatabaseObject {
+
+		public ProcedureDefinition() {
+		}
+
 		@Override
 		public boolean appliesToDialect(Dialect dialect) {
 			return true;

@@ -35,6 +35,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.internal.ExceptionHandlerCollectingImpl;
 import org.hibernate.tool.schema.internal.ExceptionHandlerHaltImpl;
+import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExceptionHandler;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
@@ -90,7 +91,7 @@ public class SchemaUpdate {
 		final TargetDescriptor targetDescriptor = SchemaExport.buildTargetDescriptor( targetTypes, outputFile, serviceRegistry );
 
 		try {
-			tool.getSchemaMigrator( config ).doMigration( metadata, executionOptions, targetDescriptor );
+			tool.getSchemaMigrator( config ).doMigration( metadata, executionOptions, ContributableMatcher.ALL, targetDescriptor );
 		}
 		finally {
 			if ( exceptionHandler instanceof ExceptionHandlerCollectingImpl ) {

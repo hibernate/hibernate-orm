@@ -55,6 +55,7 @@ public class HbmMetadataSourceProcessorImpl implements MetadataSourceProcessor {
 			}
 
 			final MappingDocument mappingDocument = new MappingDocument(
+					"orm",
 					(JaxbHbmHibernateMapping) xmlBinding.getRoot(),
 					xmlBinding.getOrigin(),
 					rootBuildingContext

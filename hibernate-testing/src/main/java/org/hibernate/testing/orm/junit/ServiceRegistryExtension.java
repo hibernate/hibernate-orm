@@ -6,6 +6,8 @@
  */
 package org.hibernate.testing.orm.junit;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -17,6 +19,8 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.service.spi.ServiceContributor;
 
+import org.hibernate.testing.boot.ExtraJavaServicesClassLoaderService;
+import org.hibernate.testing.boot.ExtraJavaServicesClassLoaderService.JavaServiceDescriptor;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.TestExecutionExceptionHandler;
@@ -61,35 +65,53 @@ public class ServiceRegistryExtension
 			final ServiceRegistryScopeImpl scope = new ServiceRegistryScopeImpl(  );
 			log.debugf( "Creating ServiceRegistryScope - %s", context.getDisplayName() );
 
-			final ServiceRegistryProducer producer;
+			final BootstrapServiceRegistryProducer bsrProducer;
 
-			if ( testInstance instanceof ServiceRegistryProducer ) {
-				producer = (ServiceRegistryProducer) testInstance;
+			final Optional<BootstrapServiceRegistry> bsrAnnWrapper = AnnotationSupport.findAnnotation(
+					context.getElement().get(),
+					BootstrapServiceRegistry.class
+			);
+
+			if ( bsrAnnWrapper.isPresent() ) {
+				bsrProducer = bsrBuilder -> {
+					final BootstrapServiceRegistry bsrAnn = bsrAnnWrapper.get();
+					configureJavaServices( bsrAnn, bsrBuilder );
+					configureIntegrators( bsrAnn, bsrBuilder );
+
+					return bsrBuilder.enableAutoClose().build();
+				};
 			}
 			else {
-				producer = ssrb -> {
+				bsrProducer = BootstrapServiceRegistryBuilder::build;
+			}
+
+			final ServiceRegistryProducer ssrProducer;
+
+			if ( testInstance instanceof ServiceRegistryProducer ) {
+				ssrProducer = (ServiceRegistryProducer) testInstance;
+			}
+			else {
+				ssrProducer = ssrb -> {
 					if ( !context.getElement().isPresent() ) {
 						throw new RuntimeException( "Unable to determine how to handle given ExtensionContext : " + context.getDisplayName() );
 					}
 
-					final Optional<ServiceRegistry> serviceRegistryAnnWrapper = AnnotationSupport.findAnnotation(
+
+					final Optional<ServiceRegistry> ssrAnnWrapper = AnnotationSupport.findAnnotation(
 							context.getElement().get(),
 							ServiceRegistry.class
 					);
 
-					if ( serviceRegistryAnnWrapper.isPresent() ) {
-						final ServiceRegistry serviceRegistryAnn = serviceRegistryAnnWrapper.get();
+					if ( ssrAnnWrapper.isPresent() ) {
+						final ServiceRegistry serviceRegistryAnn = ssrAnnWrapper.get();
 						configureServices( serviceRegistryAnn, ssrb );
-						configureIntegrators(serviceRegistryAnn, scope);
 					}
 
 					return ssrb.build();
 				};
 			}
 
-
-
-			scope.createRegistry(producer);
+			scope.createRegistry( bsrProducer, ssrProducer );
 
 			locateExtensionStore( testInstance, context ).put( REGISTRY_KEY, scope );
 
@@ -103,11 +125,52 @@ public class ServiceRegistryExtension
 	}
 
 	private static void configureIntegrators(
-			ServiceRegistry serviceRegistryAnn,
-			final ServiceRegistryScopeImpl serviceRegistryScope) {
-		for ( Class<? extends Integrator> integrator : serviceRegistryAnn.integrators() ) {
-			serviceRegistryScope.applyIntegrator( integrator );
+			BootstrapServiceRegistry bsrAnn,
+			final BootstrapServiceRegistryBuilder bsrBuilder) {
+		final Class<? extends Integrator>[] integrators = bsrAnn.integrators();
+		if ( integrators.length == 0 ) {
+			return;
 		}
+
+		for ( Class<? extends Integrator> integratorImpl : integrators ) {
+			assert integratorImpl != null;
+
+			try {
+				final Constructor<? extends Integrator> constructor = integratorImpl.getDeclaredConstructor();
+
+				final Integrator integrator = constructor.newInstance();
+				bsrBuilder.applyIntegrator( integrator );
+			}
+			catch (NoSuchMethodException e) {
+				throw new IllegalArgumentException( "Could not find no-arg constructor for Integrator : " + integratorImpl.getName(), e );
+			}
+			catch (IllegalAccessException e) {
+				throw new IllegalArgumentException( "Unable to access no-arg constructor for Integrator : " + integratorImpl.getName(), e );
+			}
+			catch (InstantiationException | InvocationTargetException e) {
+				throw new IllegalArgumentException( "Unable to instantiate Integrator : " + integratorImpl.getName(), e );
+			}
+		}
+	}
+
+	private static void configureJavaServices(BootstrapServiceRegistry bsrAnn, BootstrapServiceRegistryBuilder bsrBuilder) {
+		final BootstrapServiceRegistry.JavaService[] javaServiceAnns = bsrAnn.javaServices();
+		if ( javaServiceAnns.length == 0 ) {
+			return;
+		}
+
+		final List<JavaServiceDescriptor<?>> javaServiceDescriptors = new ArrayList<>( javaServiceAnns.length );
+		for ( int i = 0; i < javaServiceAnns.length; i++ ) {
+			final BootstrapServiceRegistry.JavaService javaServiceAnn = javaServiceAnns[ i ];
+			javaServiceDescriptors.add(
+					new JavaServiceDescriptor(
+							javaServiceAnn.role(),
+							javaServiceAnn.impl()
+					)
+			);
+		}
+		final ExtraJavaServicesClassLoaderService cls = new ExtraJavaServicesClassLoaderService( javaServiceDescriptors );
+		bsrBuilder.applyClassLoaderService( cls );
 	}
 
 	private static void configureServices(ServiceRegistry serviceRegistryAnn, StandardServiceRegistryBuilder ssrb) {
@@ -171,36 +234,30 @@ public class ServiceRegistryExtension
 	}
 
 	private static class ServiceRegistryScopeImpl implements ServiceRegistryScope, ExtensionContext.Store.CloseableResource {
-		private ServiceRegistryProducer producer;
+		private BootstrapServiceRegistryProducer bsrProducer;
+		private ServiceRegistryProducer ssrProducer;
 
 		private StandardServiceRegistry registry;
 		private boolean active = true;
-		private List<Class<? extends Integrator>> integrators = new ArrayList<>();
 
 		public ServiceRegistryScopeImpl() {
-
 		}
 
-		public StandardServiceRegistry createRegistry(ServiceRegistryProducer producer) {
-			this.producer = producer;
-			verifyActive();
-			BootstrapServiceRegistryBuilder bootstrapServiceRegistryBuilder = new BootstrapServiceRegistryBuilder().enableAutoClose();
-			integrators.forEach(
-					integrator -> {
-						try {
-							bootstrapServiceRegistryBuilder.applyIntegrator( integrator.newInstance() );
-						}
-						catch (Exception e) {
-							throw new RuntimeException( "Could not configure BootstrapServiceRegistryBuilder", e );
-						}
-					}
-			);
+		public StandardServiceRegistry createRegistry(BootstrapServiceRegistryProducer bsrProducer, ServiceRegistryProducer ssrProducer) {
+			this.bsrProducer = bsrProducer;
+			this.ssrProducer = ssrProducer;
 
-			final StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder(bootstrapServiceRegistryBuilder.build());
+			verifyActive();
+
+			BootstrapServiceRegistryBuilder bsrb = new BootstrapServiceRegistryBuilder().enableAutoClose();
+
+			final org.hibernate.boot.registry.BootstrapServiceRegistry bsr = bsrProducer.produceServiceRegistry( bsrb );
+
+			final StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder( bsr );
 			// we will close it ourselves explicitly.
 			ssrb.disableAutoClose();
 
-			return producer.produceServiceRegistry( ssrb );
+			return ssrProducer.produceServiceRegistry( ssrb );
 		}
 
 		private void verifyActive() {
@@ -209,16 +266,12 @@ public class ServiceRegistryExtension
 			}
 		}
 
-		public void applyIntegrator(Class<? extends Integrator> integrator) {
-			integrators.add( integrator );
-		}
-
 		@Override
 		public StandardServiceRegistry getRegistry() {
 			verifyActive();
 
 			if ( registry == null ) {
-				registry = createRegistry( producer );
+				registry = createRegistry( bsrProducer, ssrProducer );
 			}
 
 			return registry;

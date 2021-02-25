@@ -16,9 +16,10 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 
 /**
- * @author Steve Ebersole
+ * Root MetadataBuildingContext
  */
 public class MetadataBuildingContextRootImpl implements MetadataBuildingContext {
+	private final String contributor;
 	private final BootstrapContext bootstrapContext;
 	private final MetadataBuildingOptions options;
 	private final MappingDefaults mappingDefaults;
@@ -27,9 +28,11 @@ public class MetadataBuildingContextRootImpl implements MetadataBuildingContext 
 	private final TypeDefinitionRegistryStandardImpl typeDefinitionRegistry;
 
 	public MetadataBuildingContextRootImpl(
+			String contributor,
 			BootstrapContext bootstrapContext,
 			MetadataBuildingOptions options,
 			InFlightMetadataCollector metadataCollector) {
+		this.contributor = contributor;
 		this.bootstrapContext = bootstrapContext;
 		this.options = options;
 		this.mappingDefaults = options.getMappingDefaults();
@@ -76,5 +79,10 @@ public class MetadataBuildingContextRootImpl implements MetadataBuildingContext 
 	@Override
 	public TypeDefinitionRegistryStandardImpl getTypeDefinitionRegistry() {
 		return typeDefinitionRegistry;
+	}
+
+	@Override
+	public String getCurrentContributorName() {
+		return contributor;
 	}
 }

@@ -24,15 +24,15 @@ public class OrderedSequenceStructure extends SequenceStructure {
 
 	private static final String ORDER = " ORDER";
 
-	private AuxiliaryDatabaseObject sequenceObject;
+	private final AuxiliaryDatabaseObject sequenceObject;
 
 	public OrderedSequenceStructure(
 			JdbcEnvironment jdbcEnvironment,
 			QualifiedName qualifiedSequenceName,
 			int initialValue,
 			int incrementSize,
-			Class numberType) {
-		super( jdbcEnvironment, qualifiedSequenceName, initialValue, incrementSize, numberType );
+			Class<?> numberType) {
+		super( jdbcEnvironment, "envers", qualifiedSequenceName, initialValue, incrementSize, numberType );
 		this.sequenceObject = new OrderedSequence();
 	}
 
@@ -83,6 +83,7 @@ public class OrderedSequenceStructure extends SequenceStructure {
 					getSourceIncrementSize()
 			);
 
+			//noinspection deprecation
 			if ( dialect instanceof Oracle8iDialect ) {
 				for ( int i = 0; i < createStrings.length; ++i ) {
 					createStrings[ i ] = createStrings[ i ] + ORDER;
@@ -94,7 +95,7 @@ public class OrderedSequenceStructure extends SequenceStructure {
 
 		@Override
 		public String[] sqlDropStrings(Dialect dialect) {
-			return dialect.getDropSequenceStrings( getName() );
+			return dialect.getSequenceSupport().getDropSequenceStrings( getName() );
 		}
 	}
 }

@@ -52,6 +52,11 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 	 */
 	EntityPersister getEntityPersister();
 
+	default String getContributor() {
+		// todo (6.0) : needed for the HHH-14470 half related to HHH-14469
+		return "orm";
+	}
+
 	default EntityRepresentationStrategy getRepresentationStrategy() {
 		return getEntityPersister().getRepresentationStrategy();
 	}

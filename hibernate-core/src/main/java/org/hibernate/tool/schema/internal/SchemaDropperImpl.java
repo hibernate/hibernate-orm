@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.Internal;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
@@ -46,6 +47,7 @@ import org.hibernate.tool.schema.internal.exec.GenerationTarget;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase;
 import org.hibernate.tool.schema.internal.exec.JdbcContext;
 import org.hibernate.tool.schema.spi.CommandAcceptanceException;
+import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.DelayedDropAction;
 import org.hibernate.tool.schema.spi.ExceptionHandler;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
@@ -100,6 +102,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 	public void doDrop(
 			Metadata metadata,
 			ExecutionOptions options,
+			ContributableMatcher contributableInclusionFilter,
 			SourceDescriptor sourceDescriptor,
 			TargetDescriptor targetDescriptor) {
 
@@ -110,12 +113,30 @@ public class SchemaDropperImpl implements SchemaDropper {
 		final JdbcContext jdbcContext = tool.resolveJdbcContext( options.getConfigurationValues() );
 		final GenerationTarget[] targets = tool.buildGenerationTargets( targetDescriptor, jdbcContext, options.getConfigurationValues(), true );
 
-		doDrop( metadata, options, jdbcContext.getDialect(), sourceDescriptor, targets );
+		doDrop( metadata, options, contributableInclusionFilter, jdbcContext.getDialect(), sourceDescriptor, targets );
 	}
 
+	/**
+	 * For use from testing
+	 */
+	@Internal
 	public void doDrop(
 			Metadata metadata,
 			ExecutionOptions options,
+			Dialect dialect,
+			SourceDescriptor sourceDescriptor,
+			GenerationTarget... targets) {
+		doDrop( metadata, options, (contributed) -> true, dialect, sourceDescriptor, targets );
+	}
+
+	/**
+	 * For use from testing
+	 */
+	@Internal
+	public void doDrop(
+			Metadata metadata,
+			ExecutionOptions options,
+			ContributableMatcher contributableInclusionFilter,
 			Dialect dialect,
 			SourceDescriptor sourceDescriptor,
 			GenerationTarget... targets) {
@@ -124,7 +145,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 		}
 
 		try {
-			performDrop( metadata, options, dialect, sourceDescriptor, targets );
+			performDrop( metadata, options, contributableInclusionFilter, dialect, sourceDescriptor, targets );
 		}
 		finally {
 			for ( GenerationTarget target : targets ) {
@@ -141,6 +162,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 	private void performDrop(
 			Metadata metadata,
 			ExecutionOptions options,
+			ContributableMatcher contributableInclusionFilter,
 			Dialect dialect,
 			SourceDescriptor sourceDescriptor,
 			GenerationTarget... targets) {
@@ -152,15 +174,15 @@ public class SchemaDropperImpl implements SchemaDropper {
 			dropFromScript( sourceDescriptor.getScriptSourceInput(), commandExtractor, formatter, dialect, options, targets );
 		}
 		else if ( sourceDescriptor.getSourceType() == SourceType.METADATA ) {
-			dropFromMetadata( metadata, options, dialect, formatter, targets );
+			dropFromMetadata( metadata, options, contributableInclusionFilter, dialect, formatter, targets );
 		}
 		else if ( sourceDescriptor.getSourceType() == SourceType.METADATA_THEN_SCRIPT ) {
-			dropFromMetadata( metadata, options, dialect, formatter, targets );
+			dropFromMetadata( metadata, options, contributableInclusionFilter, dialect, formatter, targets );
 			dropFromScript( sourceDescriptor.getScriptSourceInput(), commandExtractor, formatter, dialect, options, targets );
 		}
 		else {
 			dropFromScript( sourceDescriptor.getScriptSourceInput(), commandExtractor, formatter, dialect, options, targets );
-			dropFromMetadata( metadata, options, dialect, formatter, targets );
+			dropFromMetadata( metadata, options, contributableInclusionFilter, dialect, formatter, targets );
 		}
 	}
 
@@ -182,6 +204,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 	private void dropFromMetadata(
 			Metadata metadata,
 			ExecutionOptions options,
+			ContributableMatcher contributableInclusionFilter,
 			Dialect dialect,
 			Formatter formatter,
 			GenerationTarget... targets) {
@@ -221,30 +244,38 @@ public class SchemaDropperImpl implements SchemaDropper {
 
 		for ( Namespace namespace : database.getNamespaces() ) {
 
-			if ( !schemaFilter.includeNamespace( namespace ) ) {
+			if ( ! options.getSchemaFilter().includeNamespace( namespace ) ) {
 				continue;
 			}
 
 			// we need to drop all constraints/indexes prior to dropping the tables
-			applyConstraintDropping( namespace, metadata, formatter, options, targets );
+			applyConstraintDropping( namespace, metadata, formatter, options, contributableInclusionFilter, targets );
 
 			// now it's safe to drop the tables
 			for ( Table table : namespace.getTables() ) {
-				if ( !table.isPhysicalTable() ) {
+				if ( ! table.isPhysicalTable() ) {
 					continue;
 				}
-				if ( !schemaFilter.includeTable( table ) ) {
+				if ( ! options.getSchemaFilter().includeTable( table ) ) {
+					continue;
+				}
+				if ( ! contributableInclusionFilter.matches( table ) ) {
 					continue;
 				}
 				checkExportIdentifier( table, exportIdentifiers );
+
 				applySqlStrings( dialect.getTableExporter().getSqlDropStrings( table, metadata ), formatter, options,targets );
 			}
 
 			for ( Sequence sequence : namespace.getSequences() ) {
-				if ( !schemaFilter.includeSequence( sequence ) ) {
+				if ( ! options.getSchemaFilter().includeSequence( sequence ) ) {
+					continue;
+				}
+				if ( ! contributableInclusionFilter.matches( sequence ) ) {
 					continue;
 				}
 				checkExportIdentifier( sequence, exportIdentifiers );
+
 				applySqlStrings( dialect.getSequenceExporter().getSqlDropStrings( sequence, metadata ), formatter, options, targets );
 			}
 		}
@@ -270,7 +301,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 
 			for ( Namespace namespace : database.getNamespaces() ) {
 
-				if ( !schemaFilter.includeNamespace( namespace ) ) {
+				if ( ! options.getSchemaFilter().includeNamespace( namespace ) ) {
 					continue;
 				}
 
@@ -309,6 +340,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 			Metadata metadata,
 			Formatter formatter,
 			ExecutionOptions options,
+			ContributableMatcher contributableInclusionFilter,
 			GenerationTarget... targets) {
 		final Dialect dialect = metadata.getDatabase().getJdbcEnvironment().getDialect();
 
@@ -320,7 +352,10 @@ public class SchemaDropperImpl implements SchemaDropper {
 			if ( !table.isPhysicalTable() ) {
 				continue;
 			}
-			if ( !schemaFilter.includeTable( table ) ) {
+			if ( ! options.getSchemaFilter().includeTable( table ) ) {
+				continue;
+			}
+			if ( ! contributableInclusionFilter.matches( table ) ) {
 				continue;
 			}
 
@@ -408,9 +443,14 @@ public class SchemaDropperImpl implements SchemaDropper {
 			public ExceptionHandler getExceptionHandler() {
 				return ExceptionHandlerHaltImpl.INSTANCE;
 			}
+
+			@Override
+			public SchemaFilter getSchemaFilter() {
+				return schemaFilter;
+			}
 		};
 
-		dropFromMetadata( metadata, options, dialect, FormatStyle.NONE.getFormatter(), target );
+		dropFromMetadata( metadata, options, (contributed) -> true, dialect, FormatStyle.NONE.getFormatter(), target );
 
 		return target.commands;
 	}
@@ -419,9 +459,13 @@ public class SchemaDropperImpl implements SchemaDropper {
 	public DelayedDropAction buildDelayedAction(
 			Metadata metadata,
 			ExecutionOptions options,
+			ContributableMatcher contributableInclusionFilter,
 			SourceDescriptor sourceDescriptor) {
 		final JournalingGenerationTarget target = new JournalingGenerationTarget();
-		doDrop( metadata, options, tool.getServiceRegistry().getService( JdbcEnvironment.class ).getDialect(), sourceDescriptor, target );
+
+		final Dialect dialect = tool.getServiceRegistry().getService( JdbcEnvironment.class ).getDialect();
+		doDrop( metadata, options, contributableInclusionFilter, dialect, sourceDescriptor, target );
+
 		return new DelayedDropActionImpl( target.commands, tool.getCustomDatabaseGenerationTarget() );
 	}
 
@@ -475,7 +519,13 @@ public class SchemaDropperImpl implements SchemaDropper {
 					public ExceptionHandler getExceptionHandler() {
 						return ExceptionHandlerLoggedImpl.INSTANCE;
 					}
+
+					@Override
+					public SchemaFilter getSchemaFilter() {
+						return schemaFilter;
+					}
 				},
+				(contributed) -> true,
 				serviceRegistry.getService( JdbcEnvironment.class ).getDialect(),
 				new SourceDescriptor() {
 					@Override

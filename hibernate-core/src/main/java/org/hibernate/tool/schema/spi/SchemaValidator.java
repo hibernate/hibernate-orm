@@ -11,8 +11,6 @@ import org.hibernate.boot.Metadata;
 
 /**
  * Service delegate for handling schema validations
- *
- * @author Steve Ebersole
  */
 @Incubating
 public interface SchemaValidator {
@@ -21,6 +19,7 @@ public interface SchemaValidator {
 	 *
 	 * @param metadata Represents the schema to be validated
 	 * @param options Options for executing the validation
+	 * @param contributableInclusionFilter Filter for Contributable instances to use
 	 */
-	void doValidation(Metadata metadata, ExecutionOptions options);
+	void doValidation(Metadata metadata, ExecutionOptions options, ContributableMatcher contributableInclusionFilter);
 }

@@ -26,6 +26,7 @@ import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Namespace;
+import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
@@ -308,6 +309,27 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	@Override
 	public Map<String, SqmFunctionDescriptor> getSqlFunctionMap() {
 		return sqlFunctionMap;
+	}
+
+	@Override
+	public Set<String> getContributors() {
+		final HashSet<String> contributors = new HashSet<>();
+
+		entityBindingMap.forEach(
+				(s, persistentClass) -> contributors.add( persistentClass.getContributor() )
+		);
+
+		for ( Namespace namespace : database.getNamespaces() ) {
+			for ( Table table : namespace.getTables() ) {
+				contributors.add( table.getContributor() );
+			}
+
+			for ( Sequence sequence : namespace.getSequences() ) {
+				contributors.add( sequence.getContributor() );
+			}
+		}
+
+		return contributors;
 	}
 
 	@Override

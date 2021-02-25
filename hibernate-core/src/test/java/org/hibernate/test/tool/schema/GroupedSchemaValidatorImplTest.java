@@ -10,6 +10,7 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.tool.schema.internal.DefaultSchemaFilter;
 import org.hibernate.tool.schema.internal.GroupedSchemaValidatorImpl;
+import org.hibernate.tool.schema.spi.ContributableMatcher;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
@@ -23,6 +24,6 @@ public class GroupedSchemaValidatorImplTest extends IndividuallySchemaValidatorI
 	@Override
 	protected void getSchemaValidator(MetadataImplementor metadata) {
 		new GroupedSchemaValidatorImpl( tool, DefaultSchemaFilter.INSTANCE )
-				.doValidation( metadata, executionOptions );
+				.doValidation( metadata, executionOptions, ContributableMatcher.ALL );
 	}
 }

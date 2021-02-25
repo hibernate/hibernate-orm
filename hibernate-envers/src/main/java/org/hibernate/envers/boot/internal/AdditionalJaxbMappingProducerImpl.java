@@ -65,29 +65,26 @@ public class AdditionalJaxbMappingProducerImpl implements AdditionalJaxbMappingP
 		// atm we do not have distinct origin info for envers
 		final Origin origin = new Origin( SourceType.OTHER, "envers" );
 
-		final MappingCollector mappingCollector = new MappingCollector() {
-			@Override
-			public void addDocument(Document document) throws DocumentException {
-				logXml( document );
+		final MappingCollector mappingCollector = (document) -> {
+			logXml( document );
 
-				final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				try {
-					final Writer w = new BufferedWriter( new OutputStreamWriter( baos, "UTF-8" ) );
-					final XMLWriter xw = new XMLWriter( w, new OutputFormat( " ", true ) );
-					xw.write( document );
-					w.flush();
-				}
-				catch (IOException e) {
-					throw new HibernateException( "Unable to bind Envers-generated XML", e );
-				}
-
-				ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream( baos.toByteArray() );
-				BufferedInputStream bufferedInputStream = new BufferedInputStream( byteArrayInputStream );
-				final Binding<JaxbHbmHibernateMapping> jaxbBinding = mappingBinder.bind( bufferedInputStream, origin );
-
-				final JaxbHbmHibernateMapping jaxbRoot = jaxbBinding.getRoot();
-				additionalMappingDocuments.add( new MappingDocument( jaxbRoot, origin, buildingContext ) );
+			final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			try {
+				final Writer w = new BufferedWriter( new OutputStreamWriter( baos, "UTF-8" ) );
+				final XMLWriter xw = new XMLWriter( w, new OutputFormat( " ", true ) );
+				xw.write( document );
+				w.flush();
 			}
+			catch (IOException e) {
+				throw new HibernateException( "Unable to bind Envers-generated XML", e );
+			}
+
+			ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream( baos.toByteArray() );
+			BufferedInputStream bufferedInputStream = new BufferedInputStream( byteArrayInputStream );
+			final Binding<JaxbHbmHibernateMapping> jaxbBinding = mappingBinder.bind( bufferedInputStream, origin );
+
+			final JaxbHbmHibernateMapping jaxbRoot = jaxbBinding.getRoot();
+			additionalMappingDocuments.add( new MappingDocument( "envers", jaxbRoot, origin, buildingContext ) );
 		};
 
 		enversService.initialize( metadata, mappingCollector );

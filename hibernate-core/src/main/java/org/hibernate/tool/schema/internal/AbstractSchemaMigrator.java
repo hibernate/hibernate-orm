@@ -47,6 +47,7 @@ import org.hibernate.tool.schema.extract.spi.TableInformation;
 import org.hibernate.tool.schema.internal.exec.GenerationTarget;
 import org.hibernate.tool.schema.internal.exec.JdbcContext;
 import org.hibernate.tool.schema.spi.CommandAcceptanceException;
+import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.tool.schema.spi.SchemaFilter;
@@ -89,7 +90,11 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 	}
 
 	@Override
-	public void doMigration(Metadata metadata, ExecutionOptions options, TargetDescriptor targetDescriptor) {
+	public void doMigration(
+			Metadata metadata,
+			ExecutionOptions options,
+			ContributableMatcher contributableInclusionFilter,
+			TargetDescriptor targetDescriptor) {
 		if ( !targetDescriptor.getTargetTypes().isEmpty() ) {
 			final JdbcContext jdbcContext = tool.resolveJdbcContext( options.getConfigurationValues() );
 			final DdlTransactionIsolator ddlTransactionIsolator = tool.getDdlTransactionIsolator( jdbcContext );
@@ -112,7 +117,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 					}
 
 					try {
-						performMigration( metadata, databaseInformation, options, jdbcContext.getDialect(), targets );
+						performMigration( metadata, databaseInformation, options, contributableInclusionFilter, jdbcContext.getDialect(), targets );
 					}
 					finally {
 						for ( GenerationTarget target : targets ) {
@@ -144,6 +149,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			Metadata metadata,
 			DatabaseInformation existingDatabase,
 			ExecutionOptions options,
+			ContributableMatcher contributableInclusionFilter,
 			Dialect dialect,
 			Formatter formatter,
 			Set<String> exportIdentifiers,
@@ -156,6 +162,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			Metadata metadata,
 			DatabaseInformation existingDatabase,
 			ExecutionOptions options,
+			ContributableMatcher contributableInclusionFilter,
 			Dialect dialect,
 			GenerationTarget... targets) {
 		final boolean format = Helper.interpretFormattingEnabled( options.getConfigurationValues() );
@@ -209,6 +216,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 					metadata,
 					existingDatabase,
 					options,
+					contributableInclusionFilter,
 					dialect,
 					formatter,
 					exportIdentifiers,
@@ -219,8 +227,11 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 					targets
 			);
 			tablesInformation.put( namespace, nameSpaceTablesInformation );
-			if ( schemaFilter.includeNamespace( namespace ) ) {
+			if ( options.getSchemaFilter().includeNamespace( namespace ) ) {
 				for ( Sequence sequence : namespace.getSequences() ) {
+					if ( ! contributableInclusionFilter.matches( sequence ) ) {
+						continue;
+					}
 					checkExportIdentifier( sequence, exportIdentifiers );
 					final SequenceInformation sequenceInformation = existingDatabase.getSequenceInformation( sequence.getName() );
 					if ( sequenceInformation == null ) {
@@ -241,14 +252,19 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 
 		//NOTE : Foreign keys must be created *after* all tables of all namespaces for cross namespace fks. see HHH-10420
 		for ( Namespace namespace : database.getNamespaces() ) {
-			if ( schemaFilter.includeNamespace( namespace ) ) {
+			if ( options.getSchemaFilter().includeNamespace( namespace ) ) {
 				final NameSpaceTablesInformation nameSpaceTablesInformation = tablesInformation.get( namespace );
 				for ( Table table : namespace.getTables() ) {
-					if ( schemaFilter.includeTable( table ) ) {
-						final TableInformation tableInformation = nameSpaceTablesInformation.getTableInformation( table );
-						if ( tableInformation == null || tableInformation.isPhysicalTable() ) {
-							applyForeignKeys( table, tableInformation, dialect, metadata, formatter, options, targets );
-						}
+					if ( ! options.getSchemaFilter().includeTable( table ) ) {
+						continue;
+					}
+					if ( ! contributableInclusionFilter.matches( table ) ) {
+						continue;
+					}
+
+					final TableInformation tableInformation = nameSpaceTablesInformation.getTableInformation( table );
+					if ( tableInformation == null || tableInformation.isPhysicalTable() ) {
+						applyForeignKeys( table, tableInformation, dialect, metadata, formatter, options, targets );
 					}
 				}
 			}

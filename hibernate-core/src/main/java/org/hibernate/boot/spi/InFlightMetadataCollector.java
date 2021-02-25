@@ -115,7 +115,13 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	 *
 	 * @return The created table metadata, or the existing reference.
 	 */
-	Table addTable(String schema, String catalog, String name, String subselect, boolean isAbstract);
+	Table addTable(
+			String schema,
+			String catalog,
+			String name,
+			String subselect,
+			boolean isAbstract,
+			MetadataBuildingContext buildingContext);
 
 	/**
 	 * Adds a 'denormalized table' to this repository.
@@ -126,7 +132,7 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	 * @param isAbstract Is the table abstract (i.e. not really existing in the DB)?
 	 * @param subselect A select statement which defines a logical table, much
 	 * like a DB view.
-	 * @param includedTable ???
+	 * @param includedTable The "common" table
 	 *
 	 * @return The created table metadata.
 	 *
@@ -138,7 +144,8 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 			String name,
 			boolean isAbstract,
 			String subselect,
-			Table includedTable) throws DuplicateMappingException;
+			Table includedTable,
+			MetadataBuildingContext buildingContext) throws DuplicateMappingException;
 
 	/**
 	 * Adds metadata for a named query to this repository.

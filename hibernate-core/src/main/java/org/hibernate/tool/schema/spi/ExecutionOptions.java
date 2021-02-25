@@ -9,6 +9,7 @@ package org.hibernate.tool.schema.spi;
 import java.util.Map;
 
 import org.hibernate.Incubating;
+import org.hibernate.boot.model.relational.Exportable;
 
 /**
  * Parameter object representing options for schema management tool execution
@@ -18,6 +19,10 @@ import org.hibernate.Incubating;
 @Incubating
 public interface ExecutionOptions {
 	Map getConfigurationValues();
+
 	boolean shouldManageNamespaces();
+
 	ExceptionHandler getExceptionHandler();
+
+	SchemaFilter getSchemaFilter();
 }

@@ -11,6 +11,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import javax.persistence.EntityManager;
@@ -209,10 +210,8 @@ public class EntityManagerFactoryExtension
 			MetadataImplementor model) {
 		final Map<String, Object> baseProperties = sessionFactory.getProperties();
 
-		final ActionGrouping actions = ActionGrouping.interpret( baseProperties );
-
-		// if there are explicit setting for auto schema tooling then skip the annotation
-		if ( actions.getDatabaseAction() != Action.NONE || actions.getScriptAction() != Action.NONE ) {
+		final Set<ActionGrouping> groupings = ActionGrouping.interpret( model, baseProperties );
+		if ( ! groupings.isEmpty() ) {
 			// the properties contained explicit settings for auto schema tooling - skip the annotation
 			return;
 		}

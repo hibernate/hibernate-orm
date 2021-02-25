@@ -175,6 +175,10 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 				.getDefaultNamespace()
 				.locateSequence( Identifier.toIdentifier( "my_db_sequence" ) );
 		assertThat( sequence, notNullValue() );
+		assertThat( sequence.getName().getSequenceName().getText(), is( "my_db_sequence" ) );
+		assertThat( sequence.getInitialValue(), is( 100 ) );
+		assertThat( sequence.getIncrementSize(), is( 500 ) );
+
 		final String[] sqlCreateStrings = new H2Dialect().getSequenceExporter().getSqlCreateStrings(
 				sequence,
 				bootModel
@@ -320,7 +324,7 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 	@Entity
 	public static class ExplicitSequenceGeneratorImplicitNameEntity {
 		/**
-		 * This entity does not have explicit {@link SequenceGenerator} defined
+		 * This entity does have explicit {@link SequenceGenerator} defined
 		 */
 		@Id
 		@GeneratedValue( strategy = GenerationType.SEQUENCE, generator = "my_db_sequence" )

@@ -6,7 +6,6 @@
  */
 package org.hibernate.test.tool.schema;
 
-import java.sql.SQLSyntaxErrorException;
 import java.util.Collections;
 import java.util.EnumSet;
 import javax.persistence.Entity;
@@ -24,6 +23,7 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.tool.schema.SourceType;
 import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.spi.CommandAcceptanceException;
+import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.SchemaCreator;
 import org.hibernate.tool.schema.spi.SchemaDropper;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
@@ -95,6 +95,7 @@ public class SchemaToolTransactionHandlingTest extends BaseUnitTestCase {
 					schemaDropper.doDrop(
 							mappings,
 							ExecutionOptionsTestImpl.INSTANCE,
+							ContributableMatcher.ALL,
 							SourceDescriptorImpl.INSTANCE,
 							TargetDescriptorImpl.INSTANCE
 					);
@@ -104,6 +105,7 @@ public class SchemaToolTransactionHandlingTest extends BaseUnitTestCase {
 				schemaCreator.doCreation(
 						mappings,
 						ExecutionOptionsTestImpl.INSTANCE,
+						ContributableMatcher.ALL,
 						SourceDescriptorImpl.INSTANCE,
 						TargetDescriptorImpl.INSTANCE
 				);
@@ -113,6 +115,7 @@ public class SchemaToolTransactionHandlingTest extends BaseUnitTestCase {
 					schemaDropper.doDrop(
 							mappings,
 							ExecutionOptionsTestImpl.INSTANCE,
+							ContributableMatcher.ALL,
 							SourceDescriptorImpl.INSTANCE,
 							TargetDescriptorImpl.INSTANCE
 					);
@@ -166,6 +169,7 @@ public class SchemaToolTransactionHandlingTest extends BaseUnitTestCase {
 				smt.getSchemaCreator( Collections.emptyMap() ).doCreation(
 						mappings,
 						ExecutionOptionsTestImpl.INSTANCE,
+						ContributableMatcher.ALL,
 						SourceDescriptorImpl.INSTANCE,
 						TargetDescriptorImpl.INSTANCE
 				);
@@ -177,7 +181,8 @@ public class SchemaToolTransactionHandlingTest extends BaseUnitTestCase {
 			try {
 				smt.getSchemaValidator( Collections.emptyMap() ).doValidation(
 						mappings,
-						ExecutionOptionsTestImpl.INSTANCE
+						ExecutionOptionsTestImpl.INSTANCE,
+						ContributableMatcher.ALL
 				);
 			}
 			finally {
@@ -185,6 +190,7 @@ public class SchemaToolTransactionHandlingTest extends BaseUnitTestCase {
 					smt.getSchemaDropper( Collections.emptyMap() ).doDrop(
 							mappings,
 							ExecutionOptionsTestImpl.INSTANCE,
+							ContributableMatcher.ALL,
 							SourceDescriptorImpl.INSTANCE,
 							TargetDescriptorImpl.INSTANCE
 					);

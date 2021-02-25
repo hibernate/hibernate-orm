@@ -65,6 +65,8 @@ public class SequenceGenerator
 	@Deprecated
 	public static final String PARAMETERS = "parameters";
 
+	private String contributor;
+
 	private QualifiedName logicalQualifiedSequenceName;
 	private String sequenceName;
 	private Type identifierType;
@@ -103,6 +105,13 @@ public class SequenceGenerator
 							"org.hibernate.id.enhanced.SequenceStyleGenerator generator instead."
 			);
 		}
+
+		contributor = determineContributor( params );
+	}
+
+	private String determineContributor(Properties params) {
+		final String contributor = params.getProperty( CONTRIBUTOR_NAME );
+		return contributor == null ? "orm" : contributor;
 	}
 
 	@Override
@@ -181,8 +190,14 @@ public class SequenceGenerator
 		else {
 			sequence = namespace.createSequence(
 					logicalQualifiedSequenceName.getObjectName(),
-					1,
-					1
+					(physicalName) -> new Sequence(
+							contributor,
+							namespace.getPhysicalName().getCatalog(),
+							namespace.getPhysicalName().getSchema(),
+							physicalName,
+							1,
+							1
+					)
 			);
 		}
 

@@ -12,13 +12,14 @@ import java.util.function.Function;
 
 import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.mapping.Contributable;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.persister.entity.Joinable;
 
 /**
  * @author Steve Ebersole
  */
-public class IdTable implements Exportable {
+public class IdTable implements Exportable, Contributable {
 	private final EntityMappingType entityDescriptor;
 	private final String qualifiedTableName;
 
@@ -77,9 +78,10 @@ public class IdTable implements Exportable {
 		}
 	}
 
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Exportable
+	@Override
+	public String getContributor() {
+		return entityDescriptor.getContributor();
+	}
 
 	@Override
 	public String getExportIdentifier() {

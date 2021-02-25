@@ -23,6 +23,7 @@ import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 import org.hibernate.tool.schema.extract.spi.SequenceInformation;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
 import org.hibernate.tool.schema.internal.exec.JdbcContext;
+import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.hibernate.tool.schema.spi.SchemaFilter;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
@@ -53,7 +54,10 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 	}
 
 	@Override
-	public void doValidation(Metadata metadata, ExecutionOptions options) {
+	public void doValidation(
+			Metadata metadata,
+			ExecutionOptions options,
+			ContributableMatcher contributableInclusionFilter) {
 		final JdbcContext jdbcContext = tool.resolveJdbcContext( options.getConfigurationValues() );
 
 		final DdlTransactionIsolator isolator = tool.getDdlTransactionIsolator( jdbcContext );
@@ -65,7 +69,7 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 		);
 
 		try {
-			performValidation( metadata, databaseInformation, options, jdbcContext.getDialect() );
+			performValidation( metadata, databaseInformation, options, contributableInclusionFilter, jdbcContext.getDialect() );
 		}
 		finally {
 			try {
@@ -83,22 +87,27 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 			Metadata metadata,
 			DatabaseInformation databaseInformation,
 			ExecutionOptions options,
+			ContributableMatcher contributableInclusionFilter,
 			Dialect dialect) {
 		for ( Namespace namespace : metadata.getDatabase().getNamespaces() ) {
-			if ( schemaFilter.includeNamespace( namespace ) ) {
-				validateTables( metadata, databaseInformation, options, dialect, namespace );
+			if ( options.getSchemaFilter().includeNamespace( namespace ) ) {
+				validateTables( metadata, databaseInformation, options, contributableInclusionFilter, dialect, namespace );
 			}
 		}
 
 		for ( Namespace namespace : metadata.getDatabase().getNamespaces() ) {
-			if ( schemaFilter.includeNamespace( namespace ) ) {
+			if ( options.getSchemaFilter().includeNamespace( namespace ) ) {
 				for ( Sequence sequence : namespace.getSequences() ) {
-					if ( schemaFilter.includeSequence( sequence ) ) {
-						final SequenceInformation sequenceInformation = databaseInformation.getSequenceInformation(
-								sequence.getName()
-						);
-						validateSequence( sequence, sequenceInformation );
+					if ( ! options.getSchemaFilter().includeSequence( sequence ) ) {
+						continue;
 					}
+
+					if ( ! contributableInclusionFilter.matches( sequence ) ) {
+						continue;
+					}
+
+					final SequenceInformation sequenceInformation = databaseInformation.getSequenceInformation( sequence.getName() );
+					validateSequence( sequence, sequenceInformation );
 				}
 			}
 		}
@@ -108,6 +117,7 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 			Metadata metadata,
 			DatabaseInformation databaseInformation,
 			ExecutionOptions options,
+			ContributableMatcher contributableInclusionFilter,
 			Dialect dialect, Namespace namespace);
 
 	protected void validateTable(

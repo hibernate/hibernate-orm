@@ -64,14 +64,6 @@ public enum CascadeType {
 	LOCK,
 
 	/**
-	 * JPA originally planned on calling DETACH EVICT.
-	 *
-	 * @deprecated use {@link javax.persistence.CascadeType#DETACH}
-	 */
-	@Deprecated
-	EVICT,
-
-	/**
 	 * Corresponds to {@link javax.persistence.CascadeType#DETACH}.
 	 */
 	DETACH

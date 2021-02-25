@@ -3488,7 +3488,6 @@ public final class AnnotationBinder {
 				case REPLICATE:
 					cascade.append( "," ).append( "replicate" );
 					break;
-				case EVICT:
 				case DETACH:
 					cascade.append( "," ).append( "evict" );
 					break;

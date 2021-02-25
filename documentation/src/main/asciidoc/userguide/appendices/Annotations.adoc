@@ -1173,11 +1173,6 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 
 See the <<chapters/domain/entity.adoc#locking-optimistic-lock-type-dirty-example, `OptimisticLockType.DIRTY` mapping>> section for more info on how `@SelectBeforeUpdate` works.
 
-[[annotations-hibernate-sort]]
-==== [line-through]#`@Sort`#
-
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Sort.html[[line-through]#`@Sort`#] annotation is deprecated. Use the Hibernate specific <<annotations-hibernate-sortcomparator>> or <<annotations-hibernate-sortnatural>> annotations instead.
-
 [[annotations-hibernate-sortcomparator]]
 ==== `@SortComparator`
 

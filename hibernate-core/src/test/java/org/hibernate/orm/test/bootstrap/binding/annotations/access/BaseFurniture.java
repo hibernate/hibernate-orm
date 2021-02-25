@@ -8,12 +8,13 @@
 //$Id$
 package org.hibernate.orm.test.bootstrap.binding.annotations.access;
 
+import javax.persistence.AccessType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
-import org.hibernate.annotations.AccessType;
+import javax.persistence.Access;
 
 /**
  * @author Vlad Mihalcea
@@ -43,7 +44,7 @@ public class BaseFurniture extends Woody {
 		this.id = id;
 	}
 
-	@AccessType("property")
+	@Access(AccessType.PROPERTY)
 	public long weight;
 
 	public long getWeight() {

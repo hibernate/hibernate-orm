@@ -621,12 +621,6 @@ See the <<chapters/locking/Locking.adoc#locking-optimistic, Optimistic locking m
 [[annotations-hibernate]]
 === Hibernate annotations
 
-[[annotations-hibernate-accesstype]]
-==== [line-through]#`@AccessType`#
-
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/AccessType.html[[line-through]#`@AccessType`#] annotation is deprecated.
-You should use either the JPA <<annotations-jpa-access>> or the Hibernate native <<annotations-hibernate-attributeaccessor>> annotation.
-
 [[annotations-hibernate-any]]
 ==== `@Any`
 

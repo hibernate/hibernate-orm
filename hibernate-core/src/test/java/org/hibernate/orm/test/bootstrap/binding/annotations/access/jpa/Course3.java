@@ -33,7 +33,7 @@ public class Course3 {
 
 	@Id
 	@GeneratedValue
-	@org.hibernate.annotations.AccessType("field")
+	@Access(AccessType.FIELD)
 	public long getId() {
 		return id;
 	}

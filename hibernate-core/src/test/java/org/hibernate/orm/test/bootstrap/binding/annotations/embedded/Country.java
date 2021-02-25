@@ -8,10 +8,11 @@
 //$Id$
 package org.hibernate.orm.test.bootstrap.binding.annotations.embedded;
 import java.io.Serializable;
+import javax.persistence.AccessType;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 
-import org.hibernate.annotations.AccessType;
+import javax.persistence.Access;
 
 /**
  * Non realistic embedded dependent object
@@ -19,7 +20,7 @@ import org.hibernate.annotations.AccessType;
  * @author Emmanuel Bernard
  */
 @Embeddable
-@AccessType("property")
+@Access(AccessType.PROPERTY)
 public class Country implements Serializable {
 	private String iso2;
 	private String name;

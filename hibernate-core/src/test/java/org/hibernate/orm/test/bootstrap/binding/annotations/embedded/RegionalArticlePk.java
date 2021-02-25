@@ -8,9 +8,10 @@
 //$Id$
 package org.hibernate.orm.test.bootstrap.binding.annotations.embedded;
 import java.io.Serializable;
+import javax.persistence.AccessType;
 import javax.persistence.Embeddable;
 
-import org.hibernate.annotations.AccessType;
+import javax.persistence.Access;
 
 /**
  * Regional article pk
@@ -18,7 +19,7 @@ import org.hibernate.annotations.AccessType;
  * @author Emmanuel Bernard
  */
 @Embeddable
-@AccessType("field")
+@Access(AccessType.FIELD)
 public class RegionalArticlePk implements Serializable {
 	/**
 	 * country iso2 code

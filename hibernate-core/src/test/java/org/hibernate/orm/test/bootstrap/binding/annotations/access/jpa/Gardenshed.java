@@ -15,8 +15,8 @@ import javax.persistence.Id;
 import javax.persistence.Transient;
 
 /**
- * This is the opposite of the Furniture test, as this tries to override the class AccessType("property") with
- * the property AccessType("field").
+ * This is the opposite of the Furniture test, as this tries to override the class Access(AccessType.PROPERTY) with
+ * the property Access(AccessType.FIELD).
  *
  * @author Dennis Fleurbaaij
  * @since 2007-05-31

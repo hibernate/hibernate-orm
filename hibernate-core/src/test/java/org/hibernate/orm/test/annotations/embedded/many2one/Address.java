@@ -5,10 +5,11 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.orm.test.annotations.embedded.many2one;
+import javax.persistence.AccessType;
 import javax.persistence.Embeddable;
 import javax.persistence.ManyToOne;
 
-import org.hibernate.annotations.AccessType;
+import javax.persistence.Access;
 
 /**
  * TODO : javadoc
@@ -16,7 +17,7 @@ import org.hibernate.annotations.AccessType;
  * @author Steve Ebersole
  */
 @Embeddable
-@AccessType("property")
+@Access(AccessType.PROPERTY)
 public class Address {
 	private String line1;
 	private String line2;

@@ -14,10 +14,14 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
  * @author Gavin King
  */
 public class CastTarget implements Expression, SqlAstNode {
-	private BasicValuedMapping type;
-	private Long length;
-	private Integer precision;
-	private Integer scale;
+	private final BasicValuedMapping type;
+	private final Long length;
+	private final Integer precision;
+	private final Integer scale;
+
+	public CastTarget(BasicValuedMapping type) {
+		this( type, null, null, null );
+	}
 
 	public CastTarget(BasicValuedMapping type, Long length, Integer precision, Integer scale) {
 		this.type = type;

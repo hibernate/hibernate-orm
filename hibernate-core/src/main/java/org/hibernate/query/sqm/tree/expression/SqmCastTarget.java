@@ -19,10 +19,10 @@ import org.hibernate.query.sqm.tree.SqmVisitableNode;
  * @author Gavin King
  */
 public class SqmCastTarget<T> extends AbstractSqmNode implements SqmTypedNode<T>, SqmVisitableNode {
-	private AllowableFunctionReturnType<T> type;
-	private Long length;
-	private Integer precision;
-	private Integer scale;
+	private final AllowableFunctionReturnType<T> type;
+	private final Long length;
+	private final Integer precision;
+	private final Integer scale;
 
 	public Long getLength() {
 		return length;

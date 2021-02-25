@@ -21,5 +21,5 @@ public @interface Target {
 	/**
 	 * The target entity type.
 	 */
-	Class value();
+	Class<?> value();
 }

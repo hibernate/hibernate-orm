@@ -34,5 +34,5 @@ public @interface SqlFragmentAlias {
 	/**
 	 * The entity class associated with the alias.
 	 */
-	Class entity() default void.class;
+	Class<?> entity() default void.class;
 }

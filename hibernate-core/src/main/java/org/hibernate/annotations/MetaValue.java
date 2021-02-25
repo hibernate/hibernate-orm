@@ -18,7 +18,7 @@ public @interface MetaValue {
 	/**
 	 * The entity type.
 	 */
-	Class targetEntity();
+	Class<?> targetEntity();
 
 	/**
 	 * The corresponding discriminator value stored in database.

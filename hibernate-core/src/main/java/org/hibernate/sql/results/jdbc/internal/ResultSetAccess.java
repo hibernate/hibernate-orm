@@ -10,9 +10,13 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Access to a JDBC ResultSet and information about it.
@@ -63,20 +67,33 @@ public interface ResultSetAccess extends JdbcValuesMetadata {
 		}
 	}
 
-	default SqlTypeDescriptor resolveSqlTypeDescriptor(int position) {
+	@Override
+	default <J> BasicType<J> resolveType(int position, JavaTypeDescriptor<J> explicitJavaTypeDescriptor) {
+		final JdbcServices jdbcServices = getFactory().getJdbcServices();
 		try {
+			final TypeConfiguration typeConfiguration = getFactory().getTypeConfiguration();
 			final ResultSetMetaData metaData = getResultSet().getMetaData();
-			return getFactory().getJdbcServices()
-					.getDialect()
+			final SqlTypeDescriptor sqlTypeDescriptor = jdbcServices.getDialect()
 					.resolveSqlTypeDescriptor(
 							metaData.getColumnType( position ),
 							metaData.getPrecision( position ),
 							metaData.getScale( position ),
-							getFactory().getTypeConfiguration().getSqlTypeDescriptorRegistry()
+							typeConfiguration.getSqlTypeDescriptorRegistry()
 					);
+			final JavaTypeDescriptor<J> javaTypeDescriptor;
+			if ( explicitJavaTypeDescriptor == null ) {
+				javaTypeDescriptor = sqlTypeDescriptor.getJdbcRecommendedJavaTypeMapping( typeConfiguration );
+			}
+			else {
+				javaTypeDescriptor = explicitJavaTypeDescriptor;
+			}
+			return typeConfiguration.getBasicTypeRegistry().resolve(
+					javaTypeDescriptor,
+					sqlTypeDescriptor
+			);
 		}
 		catch (SQLException e) {
-			throw getFactory().getJdbcServices().getSqlExceptionHelper().convert(
+			throw jdbcServices.getSqlExceptionHelper().convert(
 					e,
 					"Unable to determine JDBC type code for ResultSet position " + position
 			);

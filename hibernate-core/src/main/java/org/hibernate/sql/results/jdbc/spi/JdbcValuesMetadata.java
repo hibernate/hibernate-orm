@@ -6,7 +6,10 @@
  */
 package org.hibernate.sql.results.jdbc.spi;
 
+import org.hibernate.type.BasicType;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Access to information about the underlying JDBC values
@@ -29,9 +32,8 @@ public interface JdbcValuesMetadata {
 	String resolveColumnName(int position);
 
 	/**
-	 * Descriptor of the JDBC/SQL type of a particular result value by
-	 * position
+	 * The basic type of a particular result value by position
 	 */
-	SqlTypeDescriptor resolveSqlTypeDescriptor(int position);
+	<J> BasicType<J> resolveType(int position, JavaTypeDescriptor<J> explicitJavaTypeDescriptor);
 
 }

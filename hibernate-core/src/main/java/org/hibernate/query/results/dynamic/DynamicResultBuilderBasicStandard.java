@@ -18,8 +18,6 @@ import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Standard DynamicResultBuilder for basic values.
@@ -88,20 +86,8 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 		if ( explicitType != null ) {
 			basicType = explicitType;
 		}
-		else if ( explicitJavaTypeDescriptor != null ) {
-			final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
-
-			final SqlTypeDescriptor sqlTypeDescriptor = jdbcResultsMetadata.resolveSqlTypeDescriptor( jdbcPosition );
-
-			basicType = typeConfiguration.getBasicTypeRegistry().resolve( explicitJavaTypeDescriptor, sqlTypeDescriptor );
-		}
 		else {
-			final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
-
-			final SqlTypeDescriptor sqlTypeDescriptor = jdbcResultsMetadata.resolveSqlTypeDescriptor( jdbcPosition );
-			final JavaTypeDescriptor<?> javaTypeDescriptor = sqlTypeDescriptor.getJdbcRecommendedJavaTypeMapping( typeConfiguration );
-
-			basicType = typeConfiguration.getBasicTypeRegistry().resolve( javaTypeDescriptor, sqlTypeDescriptor );
+			basicType = jdbcResultsMetadata.resolveType( jdbcPosition, explicitJavaTypeDescriptor );
 		}
 
 		final SqlExpressionResolver sqlExpressionResolver = domainResultCreationState.getSqlAstCreationState().getSqlExpressionResolver();

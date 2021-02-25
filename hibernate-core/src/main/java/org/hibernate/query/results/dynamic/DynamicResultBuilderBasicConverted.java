@@ -112,10 +112,7 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 				.getSessionFactory()
 				.getTypeConfiguration();
 
-		final BasicType<?> basicType = typeConfiguration.getBasicTypeRegistry().resolve(
-				basicValueConverter.getRelationalJavaDescriptor(),
-				jdbcResultsMetadata.resolveSqlTypeDescriptor( jdbcPosition )
-		);
+		final BasicType<?> basicType = jdbcResultsMetadata.resolveType( jdbcPosition, basicValueConverter.getRelationalJavaDescriptor() );
 
 		final int valuesArrayPosition = ResultsHelper.jdbcPositionToValuesArrayPosition( jdbcPosition );
 

@@ -6,11 +6,9 @@
  */
 package org.hibernate.query.results;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -22,7 +20,6 @@ import org.hibernate.Internal;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
@@ -33,9 +30,6 @@ import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
@@ -184,16 +178,7 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 			JdbcValuesMetadata jdbcResultsMetadata,
 			SessionFactoryImplementor sessionFactory) {
 		final int jdbcPosition = valuesArrayPosition + 1;
-		final SqlTypeDescriptor sqlTypeDescriptor = jdbcResultsMetadata.resolveSqlTypeDescriptor( jdbcPosition );
-
-		final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
-
-		final JavaTypeDescriptor<?> javaTypeDescriptor = sqlTypeDescriptor.getJdbcRecommendedJavaTypeMapping( typeConfiguration );
-
-		final BasicType<?> jdbcMapping = typeConfiguration.getBasicTypeRegistry().resolve(
-				javaTypeDescriptor,
-				sqlTypeDescriptor
-		);
+		final BasicType<?> jdbcMapping = jdbcResultsMetadata.resolveType( jdbcPosition, null );
 
 		final String name = jdbcResultsMetadata.resolveColumnName( jdbcPosition );
 

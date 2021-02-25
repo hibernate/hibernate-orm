@@ -14,9 +14,12 @@ import java.lang.annotation.RetentionPolicy;
  * Grouping of tuplizers.
  *
  * @author Emmanuel Bernard
+ *
+ * @deprecated since {@link org.hibernate.tuple.Tuplizer} is deprecated
  */
 @java.lang.annotation.Target( {ElementType.TYPE, ElementType.FIELD, ElementType.METHOD} )
 @Retention( RetentionPolicy.RUNTIME )
+@Deprecated
 public @interface Tuplizers {
 	/**
 	 * The grouping of tuplizers.

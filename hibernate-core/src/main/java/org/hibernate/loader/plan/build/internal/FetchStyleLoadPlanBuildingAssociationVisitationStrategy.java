@@ -15,6 +15,7 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.loader.plan.spi.CollectionReturn;
+import org.hibernate.loader.plan.spi.EntityReference;
 import org.hibernate.loader.plan.spi.EntityReturn;
 import org.hibernate.loader.plan.spi.FetchSource;
 import org.hibernate.loader.plan.spi.LoadPlan;
@@ -29,6 +30,8 @@ import org.hibernate.persister.walking.spi.WalkingException;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.EntityType;
+import org.hibernate.type.ForeignKeyDirection;
+import org.hibernate.type.OneToOneType;
 import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
@@ -252,6 +255,52 @@ public class FetchStyleLoadPlanBuildingAssociationVisitationStrategy
 			}
 		}
 
+		if ( attributeType.isEntityType() &&
+				fetchStrategy.getTiming() == FetchTiming.IMMEDIATE &&
+				fetchStrategy.getStyle() == FetchStyle.JOIN ) {
+			final EntityType entityType = (EntityType) attributeType;
+			final EntityReference currentEntityReference = currentSource.resolveEntityReference();
+			if ( currentEntityReference != null ) {
+				final EntityPersister currentEntityPersister = currentEntityReference.getEntityPersister();
+				if ( entityType.isOneToOne() && entityType.getForeignKeyDirection() == ForeignKeyDirection.TO_PARENT ) {
+					// attributeDefinition is the "mappedBy" (inverse) side of a
+					// bidirectional one-to-one association.
+					final OneToOneType oneToOneType = (OneToOneType) attributeType;
+					final String associatedUniqueKeyPropertyName = oneToOneType.getIdentifierOrUniqueKeyPropertyName(
+							sessionFactory()
+					);
+					if ( associatedUniqueKeyPropertyName == null ) {
+						// The foreign key for the other side of the association is the ID.
+						// Now check if the ID itself is the other side of the association.
+						final EntityPersister associatedEntityPersister = (EntityPersister) oneToOneType.getAssociatedJoinable(
+								sessionFactory()
+						);
+						final Type associatedIdentifierType = associatedEntityPersister.getIdentifierType();
+						if ( associatedIdentifierType.isComponentType() &&
+								( (CompositeType) associatedIdentifierType ).isEmbedded() ) {
+							final EmbeddedComponentType associatedNonEncapsulatedIdentifierType =
+									(EmbeddedComponentType) associatedIdentifierType;
+							if ( associatedNonEncapsulatedIdentifierType.getSubtypes().length == 1 &&
+									EntityType.class.isInstance( associatedNonEncapsulatedIdentifierType.getSubtypes()[0] ) ) {
+								final EntityType otherSideEntityType =
+										( (EntityType) associatedNonEncapsulatedIdentifierType.getSubtypes()[0] );
+								if ( otherSideEntityType.isLogicalOneToOne() &&
+										otherSideEntityType.isReferenceToPrimaryKey() &&
+										otherSideEntityType.getAssociatedEntityName().equals( currentEntityPersister.getEntityName() ) ) {
+									// The associated entity's ID is the other side of the association.
+									// This side must be set to FetchMode.SELECT; otherwise,
+									// there will be an infinite loop because the current entity
+									// would need to be loaded before the associated entity can be loaded,
+									// but the associated entity cannot be loaded until after the current
+									// entity is loaded (since the current entity is the associated entity's ID).
+									return new FetchStrategy( fetchStrategy.getTiming(), FetchStyle.SELECT );
+								}
+							}
+						}
+					}
+				}
+			}
+		}
 		return fetchStrategy;
 	}
 

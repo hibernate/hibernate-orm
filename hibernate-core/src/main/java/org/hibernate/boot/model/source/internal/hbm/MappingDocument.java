@@ -54,11 +54,14 @@ public class MappingDocument implements HbmLocalMetadataBuildingContext, Metadat
 
 	private final TypeDefinitionRegistryStandardImpl typeDefinitionRegistry;
 
+	private final String contributor;
 
 	public MappingDocument(
+			String contributor,
 			JaxbHbmHibernateMapping documentRoot,
 			Origin origin,
 			MetadataBuildingContext rootBuildingContext) {
+		this.contributor = contributor;
 		this.documentRoot = documentRoot;
 		this.origin = origin;
 		this.rootBuildingContext = rootBuildingContext;
@@ -161,6 +164,11 @@ public class MappingDocument implements HbmLocalMetadataBuildingContext, Metadat
 	@Override
 	public TypeDefinitionRegistry getTypeDefinitionRegistry() {
 		return typeDefinitionRegistry;
+	}
+
+	@Override
+	public String getCurrentContributorName() {
+		return contributor;
 	}
 
 	@Override

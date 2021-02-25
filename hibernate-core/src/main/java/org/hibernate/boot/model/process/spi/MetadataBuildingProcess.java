@@ -29,6 +29,7 @@ import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.AdditionalJaxbMappingProducer;
 import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataContributor;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -133,6 +134,7 @@ public class MetadataBuildingProcess {
 		final ClassLoaderService classLoaderService = options.getServiceRegistry().getService( ClassLoaderService.class );
 
 		final MetadataBuildingContextRootImpl rootMetadataBuildingContext = new MetadataBuildingContextRootImpl(
+				"orm",
 				bootstrapContext,
 				options,
 				metadataCollector
@@ -290,7 +292,7 @@ public class MetadataBuildingProcess {
 		metadataCollector.processSecondPasses( rootMetadataBuildingContext );
 
 		if ( options.isXmlMappingEnabled() ) {
-			Iterable<AdditionalJaxbMappingProducer> producers = classLoaderService.loadJavaServices( AdditionalJaxbMappingProducer.class );
+			final Iterable<AdditionalJaxbMappingProducer> producers = classLoaderService.loadJavaServices( AdditionalJaxbMappingProducer.class );
 			if ( producers != null ) {
 				final EntityHierarchyBuilder hierarchyBuilder = new EntityHierarchyBuilder();
 				// final MappingBinder mappingBinder = new MappingBinder( true );

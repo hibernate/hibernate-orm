@@ -51,6 +51,7 @@ public class ExportIdentifierTest extends BaseUnitTestCase {
 			for ( Namespace namespace : database.getNamespaces() ) {
 				final SequenceStructure sequenceStructure = new SequenceStructure(
 						ssr.getService( JdbcEnvironment.class ),
+						"envers",
 						new QualifiedNameImpl(
 								namespace.getName(),
 								Identifier.toIdentifier( "aSequence" )

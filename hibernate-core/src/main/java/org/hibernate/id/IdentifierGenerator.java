@@ -48,6 +48,11 @@ public interface IdentifierGenerator {
 	String GENERATOR_NAME = "GENERATOR_NAME";
 
 	/**
+	 * The contributor that contributed this generator
+	 */
+	String CONTRIBUTOR_NAME = "CONTRIBUTOR";
+
+	/**
 	 * Generate a new identifier.
 	 *
 	 * @param session The session from which the request originates

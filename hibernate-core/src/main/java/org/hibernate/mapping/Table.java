@@ -46,6 +46,8 @@ public class Table implements RelationalModel, Serializable, Exportable {
 	private static final Logger log = Logger.getLogger( Table.class );
 	private static final Column[] EMPTY_COLUMN_ARRAY = new Column[0];
 
+	private final String contributor;
+
 	private Identifier catalog;
 	private Identifier schema;
 	private Identifier name;
@@ -69,17 +71,21 @@ public class Table implements RelationalModel, Serializable, Exportable {
 
 	private List<InitCommand> initCommands;
 
-	public Table() {
+	public Table(String contributor) {
+		this( contributor, null );
 	}
 
-	public Table(String name) {
+	public Table(String contributor, String name) {
+		this.contributor = contributor;
 		setName( name );
 	}
 
 	public Table(
+			String contributor,
 			Namespace namespace,
 			Identifier physicalTableName,
 			boolean isAbstract) {
+		this.contributor = contributor;
 		this.catalog = namespace.getPhysicalName().getCatalog();
 		this.schema = namespace.getPhysicalName().getSchema();
 		this.name = physicalTableName;
@@ -87,17 +93,12 @@ public class Table implements RelationalModel, Serializable, Exportable {
 	}
 
 	public Table(
-			Identifier catalog,
-			Identifier schema,
+			String contributor,
+			Namespace namespace,
 			Identifier physicalTableName,
+			String subselect,
 			boolean isAbstract) {
-		this.catalog = catalog;
-		this.schema = schema;
-		this.name = physicalTableName;
-		this.isAbstract = isAbstract;
-	}
-
-	public Table(Namespace namespace, Identifier physicalTableName, String subselect, boolean isAbstract) {
+		this.contributor = contributor;
 		this.catalog = namespace.getPhysicalName().getCatalog();
 		this.schema = namespace.getPhysicalName().getSchema();
 		this.name = physicalTableName;
@@ -105,11 +106,17 @@ public class Table implements RelationalModel, Serializable, Exportable {
 		this.isAbstract = isAbstract;
 	}
 
-	public Table(Namespace namespace, String subselect, boolean isAbstract) {
+	public Table(String contributor, Namespace namespace, String subselect, boolean isAbstract) {
+		this.contributor = contributor;
 		this.catalog = namespace.getPhysicalName().getCatalog();
 		this.schema = namespace.getPhysicalName().getSchema();
 		this.subselect = subselect;
 		this.isAbstract = isAbstract;
+	}
+
+	@Override
+	public String getContributor() {
+		return contributor;
 	}
 
 	/**

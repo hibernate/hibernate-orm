@@ -22,30 +22,36 @@ public class DenormalizedTable extends Table {
 
 	private final Table includedTable;
 
-	public DenormalizedTable(Table includedTable) {
-		this.includedTable = includedTable;
-		includedTable.setHasDenormalizedTables();
-	}
-
-	public DenormalizedTable(Namespace namespace, Identifier physicalTableName, boolean isAbstract, Table includedTable) {
-		super( namespace, physicalTableName, isAbstract );
+	public DenormalizedTable(
+			String contributor,
+			Namespace namespace,
+			Identifier physicalTableName,
+			boolean isAbstract,
+			Table includedTable) {
+		super( contributor, namespace, physicalTableName, isAbstract );
 		this.includedTable = includedTable;
 		includedTable.setHasDenormalizedTables();
 	}
 
 	public DenormalizedTable(
+			String contributor,
 			Namespace namespace,
 			Identifier physicalTableName,
 			String subselectFragment,
 			boolean isAbstract,
 			Table includedTable) {
-		super( namespace, physicalTableName, subselectFragment, isAbstract );
+		super( contributor, namespace, physicalTableName, subselectFragment, isAbstract );
 		this.includedTable = includedTable;
 		includedTable.setHasDenormalizedTables();
 	}
 
-	public DenormalizedTable(Namespace namespace, String subselect, boolean isAbstract, Table includedTable) {
-		super( namespace, subselect, isAbstract );
+	public DenormalizedTable(
+			String contributor,
+			Namespace namespace,
+			String subselect,
+			boolean isAbstract,
+			Table includedTable) {
+		super( contributor, namespace, subselect, isAbstract );
 		this.includedTable = includedTable;
 		includedTable.setHasDenormalizedTables();
 	}

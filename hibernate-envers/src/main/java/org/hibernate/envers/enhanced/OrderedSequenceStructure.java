@@ -32,7 +32,7 @@ public class OrderedSequenceStructure extends SequenceStructure {
 			int initialValue,
 			int incrementSize,
 			Class numberType) {
-		super( jdbcEnvironment, qualifiedSequenceName, initialValue, incrementSize, numberType );
+		super( jdbcEnvironment, "envers", qualifiedSequenceName, initialValue, incrementSize, numberType );
 		this.sequenceObject = new OrderedSequence();
 	}
 
@@ -58,6 +58,11 @@ public class OrderedSequenceStructure extends SequenceStructure {
 	}
 
 	private class OrderedSequence implements AuxiliaryDatabaseObject {
+		@Override
+		public String getContributor() {
+			return "envers";
+		}
+
 		@Override
 		public String getExportIdentifier() {
 			return getName();

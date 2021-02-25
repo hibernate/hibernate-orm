@@ -26,21 +26,33 @@ public class Sequence implements Exportable {
 
 	private final QualifiedSequenceName name;
 	private final String exportIdentifier;
+	private final String contributor;
+
 	private int initialValue = 1;
 	private int incrementSize = 1;
 
-	public Sequence(Identifier catalogName, Identifier schemaName, Identifier sequenceName) {
-		this.name = new QualifiedSequenceName( catalogName, schemaName, sequenceName );
+	public Sequence(
+			String contributor,
+			Identifier catalogName,
+			Identifier schemaName,
+			Identifier sequenceName) {
+		this.contributor = contributor;
+		this.name = new QualifiedSequenceName(
+				catalogName,
+				schemaName,
+				sequenceName
+		);
 		this.exportIdentifier = name.render();
 	}
 
 	public Sequence(
+			String contributor,
 			Identifier catalogName,
 			Identifier schemaName,
 			Identifier sequenceName,
 			int initialValue,
 			int incrementSize) {
-		this( catalogName, schemaName, sequenceName );
+		this( contributor, catalogName, schemaName, sequenceName );
 		this.initialValue = initialValue;
 		this.incrementSize = incrementSize;
 	}
@@ -52,6 +64,11 @@ public class Sequence implements Exportable {
 	@Override
 	public String getExportIdentifier() {
 		return exportIdentifier;
+	}
+
+	@Override
+	public String getContributor() {
+		return contributor;
 	}
 
 	public int getInitialValue() {

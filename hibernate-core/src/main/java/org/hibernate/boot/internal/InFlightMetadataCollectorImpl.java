@@ -54,14 +54,14 @@ import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.source.internal.ImplicitColumnNamingSecondPass;
 import org.hibernate.boot.model.source.spi.LocalMetadataBuildingContext;
-import org.hibernate.boot.spi.BootstrapContext;
-import org.hibernate.boot.spi.InFlightMetadataCollector;
-import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
+import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
+import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.NaturalIdUniqueKeyBinder;
 import org.hibernate.cfg.AnnotatedClassType;
 import org.hibernate.cfg.AvailableSettings;
@@ -744,7 +744,8 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			String catalogName,
 			String name,
 			String subselectFragment,
-			boolean isAbstract) {
+			boolean isAbstract,
+			MetadataBuildingContext buildingContext) {
 		final Namespace namespace = getDatabase().locateNamespace(
 				getDatabase().toIdentifier( catalogName ),
 				getDatabase().toIdentifier( schemaName )
@@ -761,17 +762,21 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		}
 
 		if ( subselectFragment != null ) {
-			return new Table( namespace, logicalName, subselectFragment, isAbstract );
+			return new Table( buildingContext.getCurrentContributorName(), namespace, logicalName, subselectFragment, isAbstract );
 		}
 		else {
-			Table table = namespace.locateTable( logicalName );
-			if ( table != null ) {
+			final Table existing = namespace.locateTable( logicalName );
+			if ( existing != null ) {
 				if ( !isAbstract ) {
-					table.setAbstract( false );
+					existing.setAbstract( false );
 				}
-				return table;
+				return existing;
 			}
-			return namespace.createTable( logicalName, isAbstract );
+
+			return namespace.createTable(
+					logicalName,
+					(physicalName) -> new Table( buildingContext.getCurrentContributorName(), namespace, physicalName, isAbstract )
+			);
 		}
 	}
 
@@ -782,7 +787,8 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			String name,
 			boolean isAbstract,
 			String subselectFragment,
-			Table includedTable) throws DuplicateMappingException {
+			Table includedTable,
+			MetadataBuildingContext buildingContext) throws DuplicateMappingException {
 		final Namespace namespace = getDatabase().locateNamespace(
 				getDatabase().toIdentifier( catalogName ),
 				getDatabase().toIdentifier( schemaName )
@@ -799,7 +805,17 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		}
 
 		if ( subselectFragment != null ) {
-			return new DenormalizedTable( namespace, logicalName, subselectFragment, isAbstract, includedTable );
+			return namespace.createDenormalizedTable(
+					logicalName,
+					(physicalName) -> new DenormalizedTable(
+							buildingContext.getCurrentContributorName(),
+							namespace,
+							logicalName,
+							subselectFragment,
+							isAbstract,
+							includedTable
+					)
+			);
 		}
 		else {
 			Table table = namespace.locateTable( logicalName );
@@ -807,7 +823,16 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 				throw new DuplicateMappingException( DuplicateMappingException.Type.TABLE, logicalName.toString() );
 			}
 			else {
-				table = namespace.createDenormalizedTable( logicalName, isAbstract, includedTable );
+				table = namespace.createDenormalizedTable(
+						logicalName,
+						(physicalTableName) -> new DenormalizedTable(
+								buildingContext.getCurrentContributorName(),
+								namespace,
+								physicalTableName,
+								isAbstract,
+								includedTable
+						)
+				);
 			}
 			return table;
 		}

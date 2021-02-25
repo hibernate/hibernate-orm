@@ -24,21 +24,23 @@ public class NamedAuxiliaryDatabaseObject
 
 	public NamedAuxiliaryDatabaseObject(
 			String name,
+			String contributor,
 			Namespace namespace,
 			String createString,
 			String dropString,
 			Set<String> dialectScopes) {
-		super( namespace, createString, dropString, dialectScopes );
+		super( contributor, namespace, createString, dropString, dialectScopes );
 		this.name = name;
 	}
 
 	public NamedAuxiliaryDatabaseObject(
 			String name,
+			String contributor,
 			Namespace namespace,
 			String[] createStrings,
 			String[] dropStrings,
 			Set<String> dialectScopes) {
-		super( namespace, createStrings, dropStrings, dialectScopes );
+		super( contributor, namespace, createStrings, dropStrings, dialectScopes );
 		this.name = name;
 	}
 

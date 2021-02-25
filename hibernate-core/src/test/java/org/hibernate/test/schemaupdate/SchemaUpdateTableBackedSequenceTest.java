@@ -66,6 +66,7 @@ public class SchemaUpdateTableBackedSequenceTest extends BaseUnitTestCase {
 
 		TableStructure tableStructure = new TableStructure(
 				database.getJdbcEnvironment(),
+				"orm",
 				new QualifiedTableName( null, null, Identifier.toIdentifier( "test_seq" ) ),
 				Identifier.toIdentifier( "nextval" ),
 				20,

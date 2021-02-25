@@ -75,6 +75,21 @@ public class StoredProcedureResultSetMappingTest extends BaseUnitTestCase {
 	}
 
 	public static class ProcedureDefinition implements AuxiliaryDatabaseObject {
+		private final String contributor;
+
+		public ProcedureDefinition() {
+			this( "orm" );
+		}
+
+		public ProcedureDefinition(String contributor) {
+			this.contributor = contributor;
+		}
+
+		@Override
+		public String getContributor() {
+			return contributor;
+		}
+
 		@Override
 		public boolean appliesToDialect(Dialect dialect) {
 			return true;

@@ -44,6 +44,7 @@ import org.hibernate.internal.util.StringHelper;
  */
 public class EntityHierarchySourceImpl implements EntityHierarchySource {
 	private final RootEntitySourceImpl rootEntitySource;
+	private final MappingDocument rootEntityMappingDocument;
 
 	private final IdentifierSource identifierSource;
 	private final VersionAttributeSource versionAttributeSource;
@@ -57,8 +58,11 @@ public class EntityHierarchySourceImpl implements EntityHierarchySource {
 
 	private Set<String> collectedEntityNames = new HashSet<>();
 
-	public EntityHierarchySourceImpl(RootEntitySourceImpl rootEntitySource) {
+	public EntityHierarchySourceImpl(
+			RootEntitySourceImpl rootEntitySource,
+			MappingDocument rootEntityMappingDocument) {
 		this.rootEntitySource = rootEntitySource;
+		this.rootEntityMappingDocument = rootEntityMappingDocument;
 		this.rootEntitySource.injectHierarchy( this );
 
 		this.identifierSource = interpretIdentifierSource( rootEntitySource );
@@ -72,6 +76,10 @@ public class EntityHierarchySourceImpl implements EntityHierarchySource {
 		);
 
 		collectedEntityNames.add( rootEntitySource.getEntityNamingSource().getEntityName() );
+	}
+
+	public MappingDocument getRootEntityMappingDocument() {
+		return rootEntityMappingDocument;
 	}
 
 	private static IdentifierSource interpretIdentifierSource(RootEntitySourceImpl rootEntitySource) {

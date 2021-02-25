@@ -92,6 +92,8 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 	private static final String DEFAULT_PK_COLUMN = "sequence_name";
 	private static final String DEFAULT_VALUE_COLUMN = "sequence_next_hi_value";
 
+	private String contributor;
+
 	private QualifiedName qualifiedTableName;
 	private String tableName;
 	private String segmentColumnName;
@@ -273,6 +275,11 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 		if ( maxLo >= 1 ) {
 			hiloOptimizer = new LegacyHiLoAlgorithmOptimizer( returnClass, maxLo );
 		}
+
+		contributor = params.getProperty( CONTRIBUTOR_NAME );
+		if ( contributor == null ) {
+			contributor = "orm";
+		}
 	}
 
 	protected QualifiedName determineGeneratorTableName(Properties params, JdbcEnvironment jdbcEnvironment) {
@@ -316,7 +323,10 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 
 		Table table = namespace.locateTable( qualifiedTableName.getObjectName() );
 		if ( table == null ) {
-			table = namespace.createTable( qualifiedTableName.getObjectName(), false );
+			table = namespace.createTable(
+					qualifiedTableName.getObjectName(),
+					(identifier) -> new Table( contributor, namespace, identifier, false )
+			);
 
 			// todo : not sure the best solution here.  do we add the columns if missing?  other?
 			table.setPrimaryKey( new PrimaryKey( table ) );

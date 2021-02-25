@@ -52,6 +52,7 @@ public class AuxiliaryDatabaseObjectBinder {
 		}
 		else {
 			auxDbObject = new SimpleAuxiliaryDatabaseObject(
+					context.getCurrentContributorName(),
 					context.getMetadataCollector().getDatabase().getDefaultNamespace(),
 					auxDbObjectMapping.getCreate(),
 					auxDbObjectMapping.getDrop(),

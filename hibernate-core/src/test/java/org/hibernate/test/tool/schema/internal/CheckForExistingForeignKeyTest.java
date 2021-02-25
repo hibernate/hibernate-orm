@@ -193,7 +193,7 @@ public class CheckForExistingForeignKeyTest {
 		ForeignKey foreignKey = new ForeignKey();
 		foreignKey.setName( "objectId2id" );
 		foreignKey.addColumn( new Column( "id" ) );
-		foreignKey.setReferencedTable( new Table( "table2" ) );
+		foreignKey.setReferencedTable( new Table( "orm", "table2" ) );
 
 		InformationExtractor informationExtractor = Mockito.mock( InformationExtractor.class );
 		IdentifierHelper identifierHelper = new IdentifierHelperImpl();
@@ -230,7 +230,7 @@ public class CheckForExistingForeignKeyTest {
 		ForeignKey foreignKey = new ForeignKey();
 		foreignKey.setName( "objectId2id_1" );
 		foreignKey.addColumn( new Column( "id" ) );
-		foreignKey.setReferencedTable( new Table( "table2" ) );
+		foreignKey.setReferencedTable( new Table( "orm", "table2" ) );
 
 		InformationExtractor informationExtractor = Mockito.mock( InformationExtractor.class );
 		IdentifierHelper identifierHelper = new IdentifierHelperImpl();
@@ -267,7 +267,7 @@ public class CheckForExistingForeignKeyTest {
 		ForeignKey foreignKey = new ForeignKey();
 		foreignKey.setName( "objectId2id_1" ); // Make sure the match is not successful based on key name
 		foreignKey.addColumn( new Column( "id" ) );
-		foreignKey.setReferencedTable( new Table( "table2" ) );
+		foreignKey.setReferencedTable( new Table( "orm", "table2" ) );
 
 		Name schemaName = new Name( new Identifier( "-", false ), new Identifier( "-", false ) );
 		InformationExtractor informationExtractor = Mockito.mock( InformationExtractor.class );
@@ -305,7 +305,7 @@ public class CheckForExistingForeignKeyTest {
 		ForeignKey foreignKey = new ForeignKey();
 		foreignKey.setName( "objectId2id_1" ); // Make sure the match is not successful based on key name
 		foreignKey.addColumn( new Column( "id" ) );
-		foreignKey.setReferencedTable( new Table( "table2" ) );
+		foreignKey.setReferencedTable( new Table( "orm", "table2" ) );
 
 		Name schemaName = new Name( new Identifier( "-", false ), new Identifier( "-", false ) );
 		InformationExtractor informationExtractor = Mockito.mock( InformationExtractor.class );

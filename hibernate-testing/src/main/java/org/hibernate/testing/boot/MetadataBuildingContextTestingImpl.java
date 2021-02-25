@@ -85,4 +85,9 @@ public class MetadataBuildingContextTestingImpl implements MetadataBuildingConte
 	public TypeDefinitionRegistryStandardImpl getTypeDefinitionRegistry() {
 		return typeDefinitionRegistry;
 	}
+
+	@Override
+	public String getCurrentContributorName() {
+		return "orm";
+	}
 }

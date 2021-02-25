@@ -250,6 +250,8 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	private Optimizer optimizer;
 	private long accessCount;
 
+	private String contributor;
+
 	@Override
 	public Object generatorKey() {
 		return qualifiedTableName.render();
@@ -386,6 +388,11 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 				incrementSize,
 				optimizerInitialValue
 		);
+
+		contributor = params.getProperty( CONTRIBUTOR_NAME );
+		if ( contributor == null ) {
+			contributor = "orm";
+		}
 	}
 
 	/**
@@ -735,7 +742,10 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 
 		Table table = namespace.locateTable( qualifiedTableName.getObjectName() );
 		if ( table == null ) {
-			table = namespace.createTable( qualifiedTableName.getObjectName(), false );
+			table = namespace.createTable(
+					qualifiedTableName.getObjectName(),
+					(identifier) -> new Table( contributor, namespace, identifier, false )
+			);
 
 			// todo : not sure the best solution here.  do we add the columns if missing?  other?
 			final Column segmentColumn = new ExportableColumn(

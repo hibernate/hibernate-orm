@@ -82,6 +82,11 @@ public class IdTable implements Exportable {
 	// Exportable
 
 	@Override
+	public String getContributor() {
+		return entityDescriptor.getContributor();
+	}
+
+	@Override
 	public String getExportIdentifier() {
 		return getQualifiedTableName();
 	}

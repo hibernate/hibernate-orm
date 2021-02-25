@@ -66,4 +66,9 @@ public interface MetadataBuildingContext {
 	}
 
 	TypeDefinitionRegistry getTypeDefinitionRegistry();
+
+	/**
+	 * The name of the contributor whose mappings we are currently processing
+	 */
+	String getCurrentContributorName();
 }

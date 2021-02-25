@@ -36,6 +36,7 @@ public class SequenceStructure implements DatabaseStructure {
 			SequenceStructure.class.getName()
 	);
 
+	private final String contributor;
 	private final QualifiedName logicalQualifiedSequenceName;
 	private final int initialValue;
 	private final int incrementSize;
@@ -48,10 +49,12 @@ public class SequenceStructure implements DatabaseStructure {
 
 	public SequenceStructure(
 			JdbcEnvironment jdbcEnvironment,
+			String contributor,
 			QualifiedName qualifiedSequenceName,
 			int initialValue,
 			int incrementSize,
 			Class numberType) {
+		this.contributor = contributor;
 		this.logicalQualifiedSequenceName = qualifiedSequenceName;
 
 		this.initialValue = initialValue;
@@ -179,7 +182,17 @@ public class SequenceStructure implements DatabaseStructure {
 			sequence.validate( initialValue, sourceIncrementSize );
 		}
 		else {
-			sequence = namespace.createSequence( logicalQualifiedSequenceName.getObjectName(), initialValue, sourceIncrementSize );
+			sequence = namespace.createSequence(
+					logicalQualifiedSequenceName.getObjectName(),
+					(physicalName) -> new Sequence(
+							contributor,
+							namespace.getPhysicalName().getCatalog(),
+							namespace.getPhysicalName().getSchema(),
+							physicalName,
+							1,
+							1
+					)
+			);
 		}
 
 		this.sequenceName = database.getJdbcEnvironment().getQualifiedObjectNameFormatter().format(

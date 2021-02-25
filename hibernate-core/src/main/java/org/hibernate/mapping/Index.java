@@ -32,6 +32,12 @@ public class Index implements RelationalModel, Exportable, Serializable {
 	private java.util.Map<Column, String> columnOrderMap = new HashMap<>(  );
 	private Identifier name;
 
+	@Override
+	public String getContributor() {
+		assert table != null : "Table is null";
+		return table.getContributor();
+	}
+
 	public String sqlCreateString(Dialect dialect, Mapping mapping, String defaultCatalog, String defaultSchema)
 			throws HibernateException {
 		return buildSqlCreateIndexString(

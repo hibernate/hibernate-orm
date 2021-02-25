@@ -29,16 +29,4 @@ public @interface Tuplizer {
 	 * Tuplizer implementation.
 	 */
 	Class impl();
-
-	/**
-	 * either pojo, dynamic-map or dom4j.
-	 * @deprecated should use #entityModeType instead
-	 */
-	@Deprecated
-	String entityMode() default "pojo";
-
-	/**
-	 * The entity mode.
-	 */
-	EntityMode entityModeType() default EntityMode.POJO;
 }

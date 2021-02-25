@@ -7,15 +7,16 @@
 
 //$Id$
 package org.hibernate.orm.test.bootstrap.binding.annotations.access;
+import javax.persistence.AccessType;
 import javax.persistence.MappedSuperclass;
 
-import org.hibernate.annotations.AccessType;
+import javax.persistence.Access;
 
 /**
  * @author Emmanuel Bernard
  */
 @MappedSuperclass
-@AccessType("property")
+@Access(AccessType.PROPERTY)
 public class Woody extends Thingy {
 	private String color;
 	private String name;

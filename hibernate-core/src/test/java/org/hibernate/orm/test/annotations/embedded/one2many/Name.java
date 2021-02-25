@@ -5,9 +5,10 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.orm.test.annotations.embedded.one2many;
+import javax.persistence.AccessType;
 import javax.persistence.Embeddable;
 
-import org.hibernate.annotations.AccessType;
+import javax.persistence.Access;
 
 /**
  * TODO : javadoc
@@ -15,7 +16,7 @@ import org.hibernate.annotations.AccessType;
  * @author Steve Ebersole
  */
 @Embeddable
-@AccessType("property")
+@Access(AccessType.PROPERTY)
 public class Name {
 	private String first;
 	private String last;

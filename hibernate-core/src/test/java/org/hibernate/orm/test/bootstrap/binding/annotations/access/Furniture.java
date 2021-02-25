@@ -7,15 +7,16 @@
 
 //$Id$
 package org.hibernate.orm.test.bootstrap.binding.annotations.access;
+import javax.persistence.AccessType;
 import javax.persistence.Entity;
 
-import org.hibernate.annotations.AccessType;
+import javax.persistence.Access;
 
 /**
  * @author Emmanuel Bernard
  */
 @Entity
-@AccessType("field")
+@Access(AccessType.FIELD)
 public class Furniture extends BaseFurniture {
 
 }

@@ -7,22 +7,24 @@
 
 //$Id$
 package org.hibernate.orm.test.bootstrap.binding.annotations.access;
+
+import javax.persistence.AccessType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Transient;
 
-import org.hibernate.annotations.AccessType;
+import javax.persistence.Access;
 
 /**
- * This is the opposite of the Furniture test, as this tries to override the class AccessType("property") with
- * the property AccessType("field").
+ * This is the opposite of the Furniture test, as this tries to override the class Access(AccessType.PROPERTY) with
+ * the property Access(AccessType.FIELD).
  *
  * @author Dennis Fleurbaaij
  * @since 2007-05-31
  */
 @Entity
-@AccessType( "property" )
+@Access(javax.persistence.AccessType.PROPERTY)
 public class Gardenshed
 		extends
 		Woody {
@@ -50,7 +52,7 @@ public class Gardenshed
 	}
 
 	// These 2 functions should not return in Hibernate, but the value should come from the field "floors"
-	@AccessType( "field" )
+	@Access(AccessType.FIELD)
 	public long getFloors() {
 		return this.floors + 2;
 	}

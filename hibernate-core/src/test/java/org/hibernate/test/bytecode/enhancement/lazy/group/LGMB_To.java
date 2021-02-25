@@ -1,5 +1,6 @@
 package org.hibernate.test.bytecode.enhancement.lazy.group;
 
+import javax.persistence.AccessType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -8,7 +9,7 @@ import javax.persistence.Id;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
-import org.hibernate.annotations.AccessType;
+import javax.persistence.Access;
 
 /**
  * Target of a LazyToOne - relationship (Foreignkey on this side)
@@ -22,7 +23,7 @@ public class LGMB_To {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Column(nullable = false)
-	@AccessType("property")
+	@Access(AccessType.PROPERTY)
 	private Long id;
 
 	@OneToOne

@@ -7,11 +7,12 @@
 package org.hibernate.orm.test.annotations.embedded.one2many;
 import java.util.HashSet;
 import java.util.Set;
+import javax.persistence.AccessType;
 import javax.persistence.CascadeType;
 import javax.persistence.Embeddable;
 import javax.persistence.OneToMany;
 
-import org.hibernate.annotations.AccessType;
+import javax.persistence.Access;
 
 /**
  * TODO : javadoc
@@ -19,7 +20,7 @@ import org.hibernate.annotations.AccessType;
  * @author Steve Ebersole
  */
 @Embeddable
-@AccessType("property")
+@Access(AccessType.PROPERTY)
 public class PersonName extends Name {
 	private Set<Alias> aliases = new HashSet<Alias>();
 

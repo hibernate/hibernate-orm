@@ -7,16 +7,17 @@
 
 //$Id$
 package org.hibernate.orm.test.bootstrap.binding.annotations.access;
+import javax.persistence.AccessType;
 import javax.persistence.Entity;
 import javax.persistence.Transient;
 
-import org.hibernate.annotations.AccessType;
+import javax.persistence.Access;
 
 /**
  * @author Emmanuel Bernard
  */
 @Entity
-@AccessType("property")
+@Access(AccessType.PROPERTY)
 public class Bed extends Furniture {
 	String quality;
 

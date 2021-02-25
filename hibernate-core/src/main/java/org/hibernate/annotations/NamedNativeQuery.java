@@ -38,7 +38,7 @@ public @interface NamedNativeQuery {
 	/**
 	 * The result Class.  Should not be used in conjunction with {@link #resultSetMapping()}
 	 */
-	Class resultClass() default void.class;
+	Class<?> resultClass() default void.class;
 
 	/**
 	 * The name of a SQLResultSetMapping to use.  Should not be used in conjunction with {@link #resultClass()}.

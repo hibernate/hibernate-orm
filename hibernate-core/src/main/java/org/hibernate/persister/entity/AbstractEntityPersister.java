@@ -1554,10 +1554,6 @@ public abstract class AbstractEntityPersister
 					persistenceContext.addUninitializedCollection( persister, collection, key );
 				}
 
-//				// HHH-11161 Initialize, if the collection is not extra lazy
-//				if ( !persister.isExtraLazy() ) {
-//					session.initializeCollection( collection, false );
-//				}
 				interceptor.attributeInitialized( fieldName );
 
 				if ( collectionType.isArrayType() ) {

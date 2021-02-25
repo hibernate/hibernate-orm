@@ -370,18 +370,20 @@ public class PersistentBag<E> extends AbstractPersistentCollection<E> implements
 
 	@Override
 	public int size() {
-		return readSize() ? getCachedSize() : bag.size();
+		read();
+		return bag.size();
 	}
 
 	@Override
 	public boolean isEmpty() {
-		return readSize() ? getCachedSize() == 0 : bag.isEmpty();
+		read();
+		return bag.isEmpty();
 	}
 
 	@Override
 	public boolean contains(Object object) {
-		final Boolean exists = readElementExistence( object );
-		return exists == null ? bag.contains( object ) : exists;
+		read();
+		return bag.contains( object );
 	}
 
 	@Override

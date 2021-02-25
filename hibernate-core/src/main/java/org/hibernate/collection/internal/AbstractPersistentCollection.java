@@ -151,44 +151,6 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 	}
 
 	/**
-	 * Called by the {@link Collection#size} method
-	 */
-	protected boolean readSize() {
-		if ( !initialized ) {
-			if ( cachedSize != -1 && !hasQueuedOperations() ) {
-				return true;
-			}
-			else {
-				final boolean isExtraLazy = withTemporarySessionIfNeeded(
-						() -> {
-							final CollectionEntry entry = session.getPersistenceContextInternal().getCollectionEntry( AbstractPersistentCollection.this );
-
-							if ( entry != null ) {
-								final CollectionPersister persister = entry.getLoadedPersister();
-								if ( persister.isExtraLazy() ) {
-									if ( hasQueuedOperations() ) {
-										session.flush();
-									}
-									cachedSize = persister.getSize( entry.getLoadedKey(), session );
-									return true;
-								}
-								else {
-									read();
-								}
-							}
-							else{
-								throwLazyInitializationExceptionIfNotConnected();
-							}
-							return false;
-						}
-				);
-				return isExtraLazy;
-			}
-		}
-		return false;
-	}
-
-	/**
 	 * TBH not sure why this is public
 	 *
 	 * @param <T> The java type of the return for this LazyInitializationWork
@@ -289,91 +251,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 		return session;
 	}
 
-	protected Boolean readIndexExistence(final Object index) {
-		if ( !initialized ) {
-			final Boolean extraLazyExistenceCheck = withTemporarySessionIfNeeded(
-					() -> {
-						final CollectionEntry entry = session.getPersistenceContextInternal().getCollectionEntry( AbstractPersistentCollection.this );
-						final CollectionPersister persister = entry.getLoadedPersister();
-						if ( persister.isExtraLazy() ) {
-							if ( hasQueuedOperations() ) {
-								session.flush();
-							}
-							return persister.indexExists( entry.getLoadedKey(), index, session );
-						}
-						else {
-							read();
-						}
-						return null;
-					}
-			);
-			if ( extraLazyExistenceCheck != null ) {
-				return extraLazyExistenceCheck;
-			}
-		}
-		return null;
-	}
-
-	protected Boolean readElementExistence(final Object element) {
-		if ( !initialized ) {
-			final Boolean extraLazyExistenceCheck = withTemporarySessionIfNeeded(
-					() -> {
-						final CollectionEntry entry = session.getPersistenceContextInternal().getCollectionEntry( AbstractPersistentCollection.this );
-						final CollectionPersister persister = entry.getLoadedPersister();
-						if ( persister.isExtraLazy() ) {
-							if ( hasQueuedOperations() ) {
-								session.flush();
-							}
-							return persister.elementExists( entry.getLoadedKey(), element, session );
-						}
-						else {
-							read();
-						}
-						return null;
-					}
-			);
-			if ( extraLazyExistenceCheck != null ) {
-				return extraLazyExistenceCheck;
-			}
-		}
-		return null;
-	}
-
 	protected static final Object UNKNOWN = new MarkerObject( "UNKNOWN" );
-
-	protected Object readElementByIndex(final Object index) {
-		if ( !initialized ) {
-			class ExtraLazyElementByIndexReader implements LazyInitializationWork<Object> {
-				private boolean isExtraLazy;
-				private Object element;
-
-				@Override
-				public Object doWork() {
-					final CollectionEntry entry = session.getPersistenceContextInternal().getCollectionEntry( AbstractPersistentCollection.this );
-					final CollectionPersister persister = entry.getLoadedPersister();
-					isExtraLazy = persister.isExtraLazy();
-					if ( isExtraLazy ) {
-						if ( hasQueuedOperations() ) {
-							session.flush();
-						}
-						element = persister.getElementByIndex( entry.getLoadedKey(), index, session, owner );
-					}
-					else {
-						read();
-					}
-					return null;
-				}
-			}
-
-			final ExtraLazyElementByIndexReader reader = new ExtraLazyElementByIndexReader();
-			withTemporarySessionIfNeeded( reader );
-			if ( reader.isExtraLazy ) {
-				return reader.element;
-			}
-		}
-		return UNKNOWN;
-
-	}
 
 	protected int getCachedSize() {
 		return cachedSize;
@@ -409,17 +287,6 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 
 	/**
 	 * Is this collection in a state that would allow us to
-	 * "queue" puts? This is a special case, because of orphan
-	 * delete.
-	 */
-	protected boolean isPutQueueEnabled() {
-		return !initialized
-				&& isConnectedToSession()
-				&& isInverseOneToManyOrNoOrphanDelete();
-	}
-
-	/**
-	 * Is this collection in a state that would allow us to
 	 * "queue" clear? This is a special case, because of orphan
 	 * delete.
 	 */
@@ -448,19 +315,6 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 		}
 		final CollectionPersister loadedPersister = ce.getLoadedPersister();
 		return loadedPersister.isInverse() && !loadedPersister.hasOrphanDelete();
-	}
-
-	/**
-	 * Is this the "inverse" end of a bidirectional one-to-many, or
-	 * of a collection with no orphan delete?
-	 */
-	protected boolean isInverseOneToManyOrNoOrphanDelete() {
-		final CollectionEntry ce = session.getPersistenceContextInternal().getCollectionEntry( this );
-		if ( ce == null ) {
-			return false;
-		}
-		final CollectionPersister loadedPersister = ce.getLoadedPersister();
-		return loadedPersister.isInverse() && ( loadedPersister.isOneToMany() || !loadedPersister.hasOrphanDelete() );
 	}
 
 	/**
@@ -572,15 +426,6 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 					return null;
 				}
 		);
-	}
-
-	private void throwLazyInitializationExceptionIfNotConnected() {
-		if ( !isConnectedToSession() ) {
-			throwLazyInitializationException( "no session or session was closed" );
-		}
-		if ( !session.isConnected() ) {
-			throwLazyInitializationException( "session is disconnected" );
-		}
 	}
 
 	private void throwLazyInitializationException(String message) {

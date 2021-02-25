@@ -351,7 +351,6 @@ public interface CollectionPersister extends CollectionDefinition {
 	 */
 	String getIdentifierColumnAlias(String suffix);
 
-	boolean isExtraLazy();
 	int getSize(Object key, SharedSessionContractImplementor session);
 	boolean indexExists(Object key, Object index, SharedSessionContractImplementor session);
 	boolean elementExists(Object key, Object element, SharedSessionContractImplementor session);

@@ -920,23 +920,6 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 
 See the <<chapters/domain/associations.adoc#associations-JoinFormula,`@JoinFormula` mapping>> section for more info.
 
-[[annotations-hibernate-lazycollection]]
-==== `@LazyCollection`
-
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/LazyCollection.html[`@LazyCollection`] annotation is used to specify the lazy fetching behavior of a given collection.
-The possible values are given by the `https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/LazyCollectionOption.html[LazyCollectionOption]` enumeration:
-
-`TRUE`:: Load it when the state is requested.
-`FALSE`:: Eagerly load it.
-`EXTRA`:: Prefer extra queries over full collection loading.
-
-The `TRUE` and `FALSE` values are deprecated since you should be using the JPA {jpaJavadocUrlPrefix}FetchType.html[`FetchType`] attribute of the <<annotations-jpa-elementcollection>>, <<annotations-jpa-onetomany>>, or <<annotations-jpa-manytomany>> collection.
-
-The `EXTRA` value has no equivalent in the JPA specification, and it's used to avoid loading the entire collection even when the collection is accessed for the first time.
-Each element is fetched individually using a secondary query.
-
-See the <<chapters/fetching/Fetching.adoc#fetching-LazyCollection, `@LazyCollection` mapping>> section for more info.
-
 [[annotations-hibernate-lazygroup]]
 ==== `@LazyGroup`
 

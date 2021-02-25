@@ -19,8 +19,6 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 
 import org.hibernate.Hibernate;
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -87,261 +85,261 @@ public class SetDelayedOperationTest {
 		parentId = null;
 	}
 
-	@Test
-	@TestForIssue(jiraKey = "HHH-5855")
-	public void testSimpleAddDetached(SessionFactoryScope scope) {
-		// Create 2 detached Child objects.
-		Child c1 = new Child( "Darwin" );
-		Child c2 = new Child( "Comet" );
-		scope.inTransaction(
-				session -> {
-					session.persist( c1 );
-					session.persist( c2 );
-				}
-		);
-
-		// Now Child c is detached.
-
-		scope.inTransaction(
-				session -> {
-					Parent p = session.get( Parent.class, parentId );
-					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-					// add detached Child c
-					p.addChild( c1 );
-					// collection should still be uninitialized
-					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-				}
-		);
-
-		// Add a detached Child and commit
-		scope.inTransaction(
-				session -> {
-					Parent p = session.get( Parent.class, parentId );
-					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-					assertEquals( 3, p.getChildren().size() );
-				}
-		);
-
-		// Add another detached Child, merge, and commit
-		scope.inTransaction(
-				session -> {
-					Parent p = session.get( Parent.class, parentId );
-					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-					p.addChild( c2 );
-					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-					session.merge( p );
-				}
-		);
-
-		scope.inTransaction(
-				session -> {
-					Parent p = session.get( Parent.class, parentId );
-					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-					assertEquals( 4, p.getChildren().size() );
-				}
-		);
-	}
-
-	@Test
-	@TestForIssue(jiraKey = "HHH-5855")
-	public void testSimpleAddTransient(SessionFactoryScope scope) {
-		// Add a transient Child and commit.
-		scope.inTransaction(
-				session -> {
-					Parent p = session.get( Parent.class, parentId );
-					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-					// add transient Child
-					p.addChild( new Child( "Darwin" ) );
-					// collection should still be uninitialized
-					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-				}
-		);
-
-		scope.inTransaction(
-				session -> {
-					Parent p = session.get( Parent.class, parentId );
-					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-					assertEquals( 3, p.getChildren().size() );
-
-				}
-		);
-
-		// Add another transient Child and commit again.
-		scope.inTransaction(
-				session -> {
-					Parent p = session.get( Parent.class, parentId );
-					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-					// add transient Child
-					p.addChild( new Child( "Comet" ) );
-					// collection should still be uninitialized
-					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-					session.merge( p );
-				}
-		);
-
-		scope.inTransaction(
-				session -> {
-					Parent p = session.get( Parent.class, parentId );
-					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-					assertEquals( 4, p.getChildren().size() );
-
-				}
-		);
-	}
-
-	@Test
-	@TestForIssue(jiraKey = "HHH-5855")
-	public void testSimpleAddManaged(SessionFactoryScope scope) {
-		// Add 2 Child entities
-		Child c1 = new Child( "Darwin" );
-		Child c2 = new Child( "Comet" );
-		scope.inTransaction(
-				session -> {
-					session.persist( c1 );
-					session.persist( c2 );
-				}
-		);
-
-		// Add a managed Child and commit
-		scope.inTransaction(
-				session -> {
-					Parent p = session.get( Parent.class, parentId );
-					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-					// get the first Child so it is managed; add to collection
-					p.addChild( session.get( Child.class, c1.getId() ) );
-					// collection should still be uninitialized
-					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-				}
-		);
-		scope.inTransaction(
-				session -> {
-					Parent p = session.get( Parent.class, parentId );
-					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-					assertEquals( 3, p.getChildren().size() );
-				}
-		);
-
-
-		// Add the other managed Child, merge and commit.
-		scope.inTransaction(
-				session -> {
-					Parent p = session.get( Parent.class, parentId );
-					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-					// get the second Child so it is managed; add to collection
-					p.addChild( session.get( Child.class, c2.getId() ) );
-					// collection should still be uninitialized
-					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-					session.merge( p );
-				}
-		);
-
-		scope.inTransaction(
-				session -> {
-					Parent p = session.get( Parent.class, parentId );
-					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-					assertEquals( 4, p.getChildren().size() );
-				}
-		);
-	}
-
-	@Test
-	@TestForIssue(jiraKey = "HHH-5855")
-	public void testSimpleRemoveDetached(SessionFactoryScope scope) {
-		// Get the 2 Child entities and detach.
-		Child c1 = scope.fromTransaction(
-				session -> session.get( Child.class, childId1 )
-		);
-
-		Child c2 = scope.fromTransaction(
-				session -> session.get( Child.class, childId2 )
-		);
-
-		// Remove a detached entity element and commit
-		scope.inTransaction(
-				session -> {
-					Parent p = session.get( Parent.class, parentId );
-					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-					// remove a detached element and commit
-					p.removeChild( c1 );
-					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-					session.merge( p );
-				}
-		);
-
-
-		// Remove a detached entity element, merge, and commit
-		scope.inTransaction(
-				session -> {
-					Parent p = session.get( Parent.class, parentId );
-					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-					assertEquals( 1, p.getChildren().size() );
-				}
-		);
-
-		// Remove a detached entity element, merge, and commit
-		scope.inTransaction(
-				session -> {
-					Parent p = session.get( Parent.class, parentId );
-					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-					// remove a detached element and commit
-					p.removeChild( c2 );
-					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-					p = (Parent) session.merge( p );
-					Hibernate.initialize( p );
-				}
-		);
-
-		// Remove a detached entity element, merge, and commit
-		scope.inTransaction(
-				session -> {
-					Parent p = session.get( Parent.class, parentId );
-					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-					assertEquals( 0, p.getChildren().size() );
-				}
-		);
-	}
-
-	@Test
-	@TestForIssue(jiraKey = "HHH-5855")
-	public void testSimpleRemoveManaged(SessionFactoryScope scope) {
-		// Remove a managed entity element and commit
-		scope.inTransaction(
-				session -> {
-					Parent p = session.get( Parent.class, parentId );
-					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-					// get c1 so it is managed, then remove and commit
-					p.removeChild( session.get( Child.class, childId1 ) );
-					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-				}
-		);
-
-		scope.inTransaction(
-				session -> {
-					Parent p = session.get( Parent.class, parentId );
-					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-					assertEquals( 1, p.getChildren().size() );
-				}
-		);
-
-		scope.inTransaction(
-				session -> {
-					Parent p = session.get( Parent.class, parentId );
-					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-					// get c1 so it is managed, then remove, merge and commit
-					p.removeChild( session.get( Child.class, childId2 ) );
-					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-					session.merge( p );
-				}
-		);
-
-		scope.inTransaction(
-				session -> {
-					Parent p = session.get( Parent.class, parentId );
-					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-					assertEquals( 0, p.getChildren().size() );
-				}
-		);
-	}
+//	@Test
+//	@TestForIssue(jiraKey = "HHH-5855")
+//	public void testSimpleAddDetached(SessionFactoryScope scope) {
+//		// Create 2 detached Child objects.
+//		Child c1 = new Child( "Darwin" );
+//		Child c2 = new Child( "Comet" );
+//		scope.inTransaction(
+//				session -> {
+//					session.persist( c1 );
+//					session.persist( c2 );
+//				}
+//		);
+//
+//		// Now Child c is detached.
+//
+//		scope.inTransaction(
+//				session -> {
+//					Parent p = session.get( Parent.class, parentId );
+//					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+//					// add detached Child c
+//					p.addChild( c1 );
+//					// collection should still be uninitialized
+//					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+//				}
+//		);
+//
+//		// Add a detached Child and commit
+//		scope.inTransaction(
+//				session -> {
+//					Parent p = session.get( Parent.class, parentId );
+//					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+//					assertEquals( 3, p.getChildren().size() );
+//				}
+//		);
+//
+//		// Add another detached Child, merge, and commit
+//		scope.inTransaction(
+//				session -> {
+//					Parent p = session.get( Parent.class, parentId );
+//					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+//					p.addChild( c2 );
+//					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+//					session.merge( p );
+//				}
+//		);
+//
+//		scope.inTransaction(
+//				session -> {
+//					Parent p = session.get( Parent.class, parentId );
+//					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+//					assertEquals( 4, p.getChildren().size() );
+//				}
+//		);
+//	}
+//
+//	@Test
+//	@TestForIssue(jiraKey = "HHH-5855")
+//	public void testSimpleAddTransient(SessionFactoryScope scope) {
+//		// Add a transient Child and commit.
+//		scope.inTransaction(
+//				session -> {
+//					Parent p = session.get( Parent.class, parentId );
+//					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+//					// add transient Child
+//					p.addChild( new Child( "Darwin" ) );
+//					// collection should still be uninitialized
+//					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+//				}
+//		);
+//
+//		scope.inTransaction(
+//				session -> {
+//					Parent p = session.get( Parent.class, parentId );
+//					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+//					assertEquals( 3, p.getChildren().size() );
+//
+//				}
+//		);
+//
+//		// Add another transient Child and commit again.
+//		scope.inTransaction(
+//				session -> {
+//					Parent p = session.get( Parent.class, parentId );
+//					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+//					// add transient Child
+//					p.addChild( new Child( "Comet" ) );
+//					// collection should still be uninitialized
+//					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+//					session.merge( p );
+//				}
+//		);
+//
+//		scope.inTransaction(
+//				session -> {
+//					Parent p = session.get( Parent.class, parentId );
+//					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+//					assertEquals( 4, p.getChildren().size() );
+//
+//				}
+//		);
+//	}
+//
+//	@Test
+//	@TestForIssue(jiraKey = "HHH-5855")
+//	public void testSimpleAddManaged(SessionFactoryScope scope) {
+//		// Add 2 Child entities
+//		Child c1 = new Child( "Darwin" );
+//		Child c2 = new Child( "Comet" );
+//		scope.inTransaction(
+//				session -> {
+//					session.persist( c1 );
+//					session.persist( c2 );
+//				}
+//		);
+//
+//		// Add a managed Child and commit
+//		scope.inTransaction(
+//				session -> {
+//					Parent p = session.get( Parent.class, parentId );
+//					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+//					// get the first Child so it is managed; add to collection
+//					p.addChild( session.get( Child.class, c1.getId() ) );
+//					// collection should still be uninitialized
+//					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+//				}
+//		);
+//		scope.inTransaction(
+//				session -> {
+//					Parent p = session.get( Parent.class, parentId );
+//					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+//					assertEquals( 3, p.getChildren().size() );
+//				}
+//		);
+//
+//
+//		// Add the other managed Child, merge and commit.
+//		scope.inTransaction(
+//				session -> {
+//					Parent p = session.get( Parent.class, parentId );
+//					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+//					// get the second Child so it is managed; add to collection
+//					p.addChild( session.get( Child.class, c2.getId() ) );
+//					// collection should still be uninitialized
+//					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+//					session.merge( p );
+//				}
+//		);
+//
+//		scope.inTransaction(
+//				session -> {
+//					Parent p = session.get( Parent.class, parentId );
+//					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+//					assertEquals( 4, p.getChildren().size() );
+//				}
+//		);
+//	}
+//
+//	@Test
+//	@TestForIssue(jiraKey = "HHH-5855")
+//	public void testSimpleRemoveDetached(SessionFactoryScope scope) {
+//		// Get the 2 Child entities and detach.
+//		Child c1 = scope.fromTransaction(
+//				session -> session.get( Child.class, childId1 )
+//		);
+//
+//		Child c2 = scope.fromTransaction(
+//				session -> session.get( Child.class, childId2 )
+//		);
+//
+//		// Remove a detached entity element and commit
+//		scope.inTransaction(
+//				session -> {
+//					Parent p = session.get( Parent.class, parentId );
+//					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+//					// remove a detached element and commit
+//					p.removeChild( c1 );
+//					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+//					session.merge( p );
+//				}
+//		);
+//
+//
+//		// Remove a detached entity element, merge, and commit
+//		scope.inTransaction(
+//				session -> {
+//					Parent p = session.get( Parent.class, parentId );
+//					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+//					assertEquals( 1, p.getChildren().size() );
+//				}
+//		);
+//
+//		// Remove a detached entity element, merge, and commit
+//		scope.inTransaction(
+//				session -> {
+//					Parent p = session.get( Parent.class, parentId );
+//					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+//					// remove a detached element and commit
+//					p.removeChild( c2 );
+//					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+//					p = (Parent) session.merge( p );
+//					Hibernate.initialize( p );
+//				}
+//		);
+//
+//		// Remove a detached entity element, merge, and commit
+//		scope.inTransaction(
+//				session -> {
+//					Parent p = session.get( Parent.class, parentId );
+//					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+//					assertEquals( 0, p.getChildren().size() );
+//				}
+//		);
+//	}
+//
+//	@Test
+//	@TestForIssue(jiraKey = "HHH-5855")
+//	public void testSimpleRemoveManaged(SessionFactoryScope scope) {
+//		// Remove a managed entity element and commit
+//		scope.inTransaction(
+//				session -> {
+//					Parent p = session.get( Parent.class, parentId );
+//					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+//					// get c1 so it is managed, then remove and commit
+//					p.removeChild( session.get( Child.class, childId1 ) );
+//					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+//				}
+//		);
+//
+//		scope.inTransaction(
+//				session -> {
+//					Parent p = session.get( Parent.class, parentId );
+//					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+//					assertEquals( 1, p.getChildren().size() );
+//				}
+//		);
+//
+//		scope.inTransaction(
+//				session -> {
+//					Parent p = session.get( Parent.class, parentId );
+//					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+//					// get c1 so it is managed, then remove, merge and commit
+//					p.removeChild( session.get( Child.class, childId2 ) );
+//					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+//					session.merge( p );
+//				}
+//		);
+//
+//		scope.inTransaction(
+//				session -> {
+//					Parent p = session.get( Parent.class, parentId );
+//					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+//					assertEquals( 0, p.getChildren().size() );
+//				}
+//		);
+//	}
 
 	@Entity(name = "Parent")
 	public static class Parent {
@@ -351,8 +349,7 @@ public class SetDelayedOperationTest {
 		private Long id;
 
 		@OneToMany(cascade = CascadeType.ALL, mappedBy = "parent", orphanRemoval = true)
-		@LazyCollection(value = LazyCollectionOption.EXTRA)
-		private Set<Child> children = new HashSet<>();
+        private Set<Child> children = new HashSet<>();
 
 		public Parent() {
 		}

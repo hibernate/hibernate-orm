@@ -1505,7 +1505,6 @@ public class ModelBinder {
 
 		if ( source.getFetchCharacteristics().getFetchTiming() == FetchTiming.DELAYED ) {
 			binding.setLazy( true );
-			binding.setExtraLazy( source.getFetchCharacteristics().isExtraLazy() );
 		}
 		else {
 			binding.setLazy( false );

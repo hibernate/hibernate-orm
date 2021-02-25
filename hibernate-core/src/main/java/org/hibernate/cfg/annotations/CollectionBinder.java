@@ -45,8 +45,6 @@ import org.hibernate.annotations.FilterJoinTables;
 import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.Immutable;
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
 import org.hibernate.annotations.LazyGroup;
 import org.hibernate.annotations.Loader;
 import org.hibernate.annotations.ManyToAny;
@@ -700,7 +698,6 @@ public abstract class CollectionBinder {
 	}
 
 	private void defineFetchingStrategy() {
-		LazyCollection lazy = property.getAnnotation( LazyCollection.class );
 		Fetch fetch = property.getAnnotation( Fetch.class );
 		OneToMany oneToMany = property.getAnnotation( OneToMany.class );
 		ManyToMany manyToMany = property.getAnnotation( ManyToMany.class );
@@ -724,14 +721,7 @@ public abstract class CollectionBinder {
 					"Define fetch strategy on a property not annotated with @ManyToOne nor @OneToMany nor @ElementCollection"
 			);
 		}
-		if ( lazy != null ) {
-			collection.setLazy( !( lazy.value() == LazyCollectionOption.FALSE ) );
-			collection.setExtraLazy( lazy.value() == LazyCollectionOption.EXTRA );
-		}
-		else {
-			collection.setLazy( fetchType == FetchType.LAZY );
-			collection.setExtraLazy( false );
-		}
+		collection.setLazy( fetchType == FetchType.LAZY );
 		if ( fetch != null ) {
 			if ( fetch.value() == org.hibernate.annotations.FetchMode.JOIN ) {
 				collection.setFetchMode( FetchMode.JOIN );

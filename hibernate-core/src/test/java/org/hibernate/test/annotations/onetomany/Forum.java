@@ -19,9 +19,6 @@ import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderColumn;
 
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
-
 @Entity(name="Forum")
 public class Forum{
 
@@ -42,8 +39,7 @@ public class Forum{
 	}
 	
 	@OneToMany(mappedBy = "forum", cascade = CascadeType.ALL , orphanRemoval = false, fetch = FetchType.LAZY)
-	@LazyCollection(LazyCollectionOption.EXTRA)
-	@OrderColumn(name = "idx2")
+    @OrderColumn(name = "idx2")
 	public List<Comment> getPosts() {
 		return posts;
 	}
@@ -53,8 +49,7 @@ public class Forum{
 	}
 	
 	@OneToMany(mappedBy = "forum", cascade = CascadeType.ALL , orphanRemoval = true, fetch = FetchType.LAZY)
-	@LazyCollection(LazyCollectionOption.EXTRA)
-	@OrderColumn(name = "idx3")
+    @OrderColumn(name = "idx3")
 	public List<User> getUsers() {
 		return users;
 	}

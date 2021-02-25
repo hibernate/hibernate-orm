@@ -22,17 +22,14 @@ public class FetchCharacteristicsPluralAttributeImpl implements FetchCharacteris
 	private final FetchStyle fetchStyle;
 
 	private final Integer batchSize;
-	private boolean extraLazy;
 
 	public FetchCharacteristicsPluralAttributeImpl(
 			FetchTiming fetchTiming,
 			FetchStyle fetchStyle,
-			Integer batchSize,
-			boolean extraLazy) {
+			Integer batchSize) {
 		this.fetchTiming = fetchTiming;
 		this.fetchStyle = fetchStyle;
 		this.batchSize = batchSize;
-		this.extraLazy = extraLazy;
 	}
 
 	@Override
@@ -50,12 +47,6 @@ public class FetchCharacteristicsPluralAttributeImpl implements FetchCharacteris
 		return batchSize;
 	}
 
-	@Override
-	public boolean isExtraLazy() {
-		return getFetchTiming() == FetchTiming.DELAYED && extraLazy;
-	}
-
-
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Builder
 
@@ -63,7 +54,6 @@ public class FetchCharacteristicsPluralAttributeImpl implements FetchCharacteris
 		private FetchTiming fetchTiming;
 		private FetchStyle fetchStyle;
 		private Integer batchSize;
-		private boolean extraLazy;
 
 		public Builder(MappingDefaults mappingDefaults) {
 			setFetchStyle( FetchStyle.SELECT );
@@ -90,12 +80,8 @@ public class FetchCharacteristicsPluralAttributeImpl implements FetchCharacteris
 			return this;
 		}
 
-		public void setExtraLazy(boolean extraLazy) {
-			this.extraLazy = extraLazy;
-		}
-
 		public FetchCharacteristicsPluralAttributeImpl createPluralAttributeFetchCharacteristics() {
-			return new FetchCharacteristicsPluralAttributeImpl( fetchTiming, fetchStyle, batchSize, extraLazy );
+			return new FetchCharacteristicsPluralAttributeImpl( fetchTiming, fetchStyle, batchSize );
 		}
 	}
 
@@ -143,7 +129,6 @@ public class FetchCharacteristicsPluralAttributeImpl implements FetchCharacteris
 			}
 			else if ( lazy == JaxbHbmLazyWithExtraEnum.EXTRA ) {
 				builder.setFetchTiming( FetchTiming.DELAYED );
-				builder.setExtraLazy( true );
 			}
 		}
 

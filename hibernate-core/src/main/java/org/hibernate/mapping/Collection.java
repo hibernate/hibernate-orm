@@ -47,7 +47,6 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	private Table collectionTable;
 	private String role;
 	private boolean lazy;
-	private boolean extraLazy;
 	private boolean inverse;
 	private boolean mutable = true;
 	private boolean subselectLoadable;
@@ -690,14 +689,6 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 
 	public void setMutable(boolean mutable) {
 		this.mutable = mutable;
-	}
-
-	public boolean isExtraLazy() {
-		return extraLazy;
-	}
-
-	public void setExtraLazy(boolean extraLazy) {
-		this.extraLazy = extraLazy;
 	}
 
 	public boolean hasOrder() {

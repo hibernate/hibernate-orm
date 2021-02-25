@@ -101,9 +101,6 @@ public class PluralAttributeMappingTests {
 		final AttributeMapping setOfComponents = containerEntityDescriptor.findAttributeMapping( "setOfComponents" );
 		assertThat( setOfComponents, notNullValue() );
 
-		final AttributeMapping extraLazySetOfComponents = containerEntityDescriptor.findAttributeMapping( "extraLazySetOfComponents" );
-		assertThat( extraLazySetOfComponents, notNullValue() );
-
 		final AttributeMapping setOfOneToMany = containerEntityDescriptor.findAttributeMapping( "setOfOneToMany" );
 		assertThat( setOfOneToMany, notNullValue() );
 

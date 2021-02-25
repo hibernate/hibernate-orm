@@ -163,20 +163,20 @@ public class PersistentList<E> extends AbstractPersistentCollection<E> implement
 
 	@Override
 	public int size() {
-		return readSize() ? getCachedSize() : list.size();
+		read();
+		return list.size();
 	}
 
 	@Override
 	public boolean isEmpty() {
-		return readSize() ? getCachedSize()==0 : list.isEmpty();
+		read();
+		return list.isEmpty();
 	}
 
 	@Override
 	public boolean contains(Object object) {
-		final Boolean exists = readElementExistence( object );
-		return exists == null
-				? list.contains( object )
-				: exists;
+		read();
+		return list.contains( object );
 	}
 
 	@Override
@@ -211,21 +211,10 @@ public class PersistentList<E> extends AbstractPersistentCollection<E> implement
 
 	@Override
 	public boolean remove(Object value) {
-		final Boolean exists = isPutQueueEnabled() ? readElementExistence( value ) : null;
-		if ( exists == null ) {
-			initialize( true );
-			if ( list.remove( value ) ) {
-				elementRemoved = true;
-				dirty();
-				return true;
-			}
-			else {
-				return false;
-			}
-		}
-		else if ( exists ) {
+		initialize( true );
+		if ( list.remove( value ) ) {
 			elementRemoved = true;
-			queueOperation( new SimpleRemove( (E) value ) );
+			dirty();
 			return true;
 		}
 		else {
@@ -316,8 +305,8 @@ public class PersistentList<E> extends AbstractPersistentCollection<E> implement
 		if ( index < 0 ) {
 			throw new ArrayIndexOutOfBoundsException( "negative index" );
 		}
-		final Object result = readElementByIndex( index );
-		return result == UNKNOWN ? list.get( index ) : (E) result;
+		read();
+		return list.get( index );
 	}
 
 	@Override
@@ -326,16 +315,8 @@ public class PersistentList<E> extends AbstractPersistentCollection<E> implement
 			throw new ArrayIndexOutOfBoundsException("negative index");
 		}
 
-		final Object old = isPutQueueEnabled() ? readElementByIndex( index ) : UNKNOWN;
-
-		if ( old==UNKNOWN ) {
-			write();
-			return list.set( index, value );
-		}
-		else {
-			queueOperation( new Set( index, value, (E) old ) );
-			return (E) old;
-		}
+		write();
+		return list.set( index, value );
 	}
 
 	@Override
@@ -343,17 +324,9 @@ public class PersistentList<E> extends AbstractPersistentCollection<E> implement
 		if ( index < 0 ) {
 			throw new ArrayIndexOutOfBoundsException( "negative index" );
 		}
-		final Object old = isPutQueueEnabled() ? readElementByIndex( index ) : UNKNOWN;
-		elementRemoved = true;
-		if ( old == UNKNOWN ) {
-			write();
-			dirty();
-			return list.remove( index );
-		}
-		else {
-			queueOperation( new Remove( index, (E) old ) );
-			return (E) old;
-		}
+		write();
+		dirty();
+		return list.remove( index );
 	}
 
 	@Override

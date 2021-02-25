@@ -11,5 +11,4 @@ package org.hibernate.boot.model.source.spi;
  */
 public interface FetchCharacteristicsPluralAttribute extends FetchCharacteristics {
 	public Integer getBatchSize();
-	public boolean isExtraLazy();
 }

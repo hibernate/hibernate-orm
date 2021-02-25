@@ -22,8 +22,6 @@ import javax.persistence.OneToMany;
 import javax.persistence.OrderBy;
 import javax.persistence.Table;
 
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
 import org.hibernate.annotations.SortComparator;
 import org.hibernate.annotations.SortNatural;
 
@@ -86,7 +84,6 @@ public class EntityOfSets {
 	private Set<SimpleComponent> setOfComponents;
 
 	@ElementCollection
-	@LazyCollection( LazyCollectionOption.EXTRA )
 	@CollectionTable( name = "EntityOfSet_extraLazyComponents")
 	private Set<SimpleComponent> extraLazySetOfComponents;
 

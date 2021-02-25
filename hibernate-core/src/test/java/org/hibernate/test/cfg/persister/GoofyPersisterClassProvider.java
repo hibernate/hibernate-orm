@@ -930,10 +930,6 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 			return null;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
-		public boolean isExtraLazy() {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
-		}
-
 		public int getSize(Object key, SharedSessionContractImplementor session) {
 			return 0;  //To change body of implemented methods use File | Settings | File Templates.
 		}

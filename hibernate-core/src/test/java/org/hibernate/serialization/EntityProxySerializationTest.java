@@ -8,7 +8,6 @@ package org.hibernate.serialization;
 
 import java.io.Serializable;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -22,8 +21,6 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
 import org.hibernate.annotations.LazyToOne;
 import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.cfg.AvailableSettings;
@@ -278,8 +275,7 @@ public class EntityProxySerializationTest extends BaseCoreFunctionalTestCase {
 		}
 
 		@OneToMany(targetEntity = ChildEntity.class, mappedBy = "parent")
-		@LazyCollection(LazyCollectionOption.EXTRA)
-		@Fetch(FetchMode.SELECT)
+        @Fetch(FetchMode.SELECT)
 		public Set<ChildEntity> getChildren() {
 			return children;
 		}

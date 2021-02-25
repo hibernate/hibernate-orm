@@ -23,8 +23,6 @@ import javax.persistence.Table;
 
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
 
 
 /**
@@ -101,8 +99,7 @@ public class Person implements Serializable {
 	}
 
 	@OneToMany(cascade=CascadeType.ALL, mappedBy = "oldPerson")
-	@LazyCollection(LazyCollectionOption.EXTRA)
-	@Fetch(FetchMode.SUBSELECT)
+    @Fetch(FetchMode.SUBSELECT)
 	public Collection<Stay> getOldStays() {
 		return oldStays;
 	}
@@ -122,8 +119,7 @@ public class Person implements Serializable {
 	}
 
 	@OneToMany(cascade=CascadeType.ALL)
-	@LazyCollection(LazyCollectionOption.EXTRA)
-	@Fetch(FetchMode.SUBSELECT)
+    @Fetch(FetchMode.SUBSELECT)
 	@OrderColumn(name="orderedStayIndex")
 	public List<Stay> getOrderedStay() {
 		return orderedStay;

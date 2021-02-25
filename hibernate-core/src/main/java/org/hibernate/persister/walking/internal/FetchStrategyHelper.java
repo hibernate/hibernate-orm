@@ -145,8 +145,7 @@ public final class FetchStrategyHelper {
 			return ( (EntityPersister) type.getAssociatedJoinable( sessionFactory ) ).hasProxy();
 		}
 		else {
-			final CollectionPersister cp = ( (CollectionPersister) type.getAssociatedJoinable( sessionFactory ) );
-			return cp.isLazy() || cp.isExtraLazy();
+			return ( (CollectionPersister) type.getAssociatedJoinable( sessionFactory ) ).isLazy();
 		}
 	}
 

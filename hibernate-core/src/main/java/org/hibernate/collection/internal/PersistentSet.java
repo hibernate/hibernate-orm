@@ -164,20 +164,20 @@ public class PersistentSet<E> extends AbstractPersistentCollection<E> implements
 
 	@Override
 	public int size() {
-		return readSize() ? getCachedSize() : set.size();
+		read();
+		return set.size();
 	}
 
 	@Override
 	public boolean isEmpty() {
-		return readSize() ? getCachedSize()==0 : set.isEmpty();
+		read();
+		return set.isEmpty();
 	}
 
 	@Override
 	public boolean contains(Object object) {
-		final Boolean exists = readElementExistence( object );
-		return exists == null
-				? set.contains( object )
-				: exists;
+		read();
+		return set.contains( object );
 	}
 
 	@Override
@@ -200,43 +200,22 @@ public class PersistentSet<E> extends AbstractPersistentCollection<E> implements
 
 	@Override
 	public boolean add(E value) {
-		final Boolean exists = isOperationQueueEnabled() ? readElementExistence( value ) : null;
-		if ( exists == null ) {
-			initialize( true );
-			if ( set.add( value ) ) {
-				dirty();
-				return true;
-			}
-			else {
-				return false;
-			}
-		}
-		else if ( exists ) {
-			return false;
+		initialize( true );
+		if ( set.add( value ) ) {
+			dirty();
+			return true;
 		}
 		else {
-			queueOperation( new SimpleAdd( value ) );
-			return true;
+			return false;
 		}
 	}
 
 	@Override
 	public boolean remove(Object value) {
-		final Boolean exists = isPutQueueEnabled() ? readElementExistence( value ) : null;
-		if ( exists == null ) {
-			initialize( true );
-			if ( set.remove( value ) ) {
-				elementRemoved = true;
-				dirty();
-				return true;
-			}
-			else {
-				return false;
-			}
-		}
-		else if ( exists ) {
+		initialize( true );
+		if ( set.remove( value ) ) {
 			elementRemoved = true;
-			queueOperation( new SimpleRemove( (E) value ) );
+			dirty();
 			return true;
 		}
 		else {

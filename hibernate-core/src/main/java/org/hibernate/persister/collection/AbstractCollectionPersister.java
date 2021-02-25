@@ -195,7 +195,6 @@ public abstract class AbstractCollectionPersister
 	protected final boolean hasIndex;
 	protected final boolean hasIdentifier;
 	private final boolean isLazy;
-	private final boolean isExtraLazy;
 	protected final boolean isInverse;
 	private final boolean isMutable;
 	private final boolean isVersioned;
@@ -563,7 +562,6 @@ public abstract class AbstractCollectionPersister
 		logStaticSQL();
 
 		isLazy = collectionBootDescriptor.isLazy();
-		isExtraLazy = collectionBootDescriptor.isExtraLazy();
 
 		isInverse = collectionBootDescriptor.isInverse();
 
@@ -2170,11 +2168,6 @@ public abstract class AbstractCollectionPersister
 		return collectionElementLoaderByIndex.load( key, index, session );
 	}
 
-	@Override
-	public boolean isExtraLazy() {
-		return isExtraLazy;
-	}
-
 	protected Dialect getDialect() {
 		return dialect;
 	}
@@ -2289,7 +2282,7 @@ public abstract class AbstractCollectionPersister
 				if ( ! type.isAnyType() ) {
 					throw new IllegalStateException( "Cannot treat collection index type as ManyToAny" );
 				}
-				return new StandardAnyTypeDefinition( (AnyType) type, isLazy() || isExtraLazy() );
+				return new StandardAnyTypeDefinition( (AnyType) type, isLazy() );
 			}
 		};
 	}
@@ -2313,7 +2306,7 @@ public abstract class AbstractCollectionPersister
 				if ( ! type.isAnyType() ) {
 					throw new IllegalStateException( "Cannot treat collection element type as ManyToAny" );
 				}
-				return new StandardAnyTypeDefinition( (AnyType) type, isLazy() || isExtraLazy() );
+				return new StandardAnyTypeDefinition( (AnyType) type, isLazy()  );
 			}
 
 			@Override

@@ -143,45 +143,36 @@ public class PersistentMap<K,E> extends AbstractPersistentCollection<E> implemen
 
 	@Override
 	public int size() {
-		return readSize() ? getCachedSize() : map.size();
+		read();
+		return map.size();
 	}
 
 	@Override
 	public boolean isEmpty() {
-		return readSize() ? getCachedSize()==0 : map.isEmpty();
+		read();
+		return map.isEmpty();
 	}
 
 	@Override
 	public boolean containsKey(Object key) {
-		final Boolean exists = readIndexExistence( key );
-		return exists == null ? map.containsKey( key ) : exists;
+		read();
+		return map.containsKey( key );
 	}
 
 	@Override
 	public boolean containsValue(Object value) {
-		final Boolean exists = readElementExistence( value );
-		return exists == null
-				? map.containsValue( value )
-				: exists;
+		read();
+		return map.containsValue( value );
 	}
 
 	@Override
 	public E get(Object key) {
-		final Object result = readElementByIndex( key );
-		return result == UNKNOWN
-				? map.get( key )
-				: (E) result;
+		read();
+		return map.get( key );
 	}
 
 	@Override
 	public E put(K key, E value) {
-		if ( isPutQueueEnabled() ) {
-			final Object old = readElementByIndex( key );
-			if ( old != UNKNOWN ) {
-				queueOperation( new Put( key, value, (E) old ) );
-				return (E) old;
-			}
-		}
 		initialize( true );
 		final E old = map.put( key, value );
 		// would be better to use the element-type to determine
@@ -196,14 +187,6 @@ public class PersistentMap<K,E> extends AbstractPersistentCollection<E> implemen
 
 	@Override
 	public E remove(Object key) {
-		if ( isPutQueueEnabled() ) {
-			final Object old = readElementByIndex( key );
-			if ( old != UNKNOWN ) {
-				elementRemoved = true;
-				queueOperation( new Remove( (K) key, (E) old ) );
-				return (E) old;
-			}
-		}
 		// TODO : safe to interpret "map.remove(key) == null" as non-dirty?
 		initialize( true );
 		if ( map.containsKey( key ) ) {

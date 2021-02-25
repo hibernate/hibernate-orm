@@ -172,7 +172,8 @@ public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> 
 
 	@Override
 	public boolean isEmpty() {
-		return readSize() ? getCachedSize()==0 : values.isEmpty();
+		read();
+		return values.isEmpty();
 	}
 
 	@Override
@@ -227,7 +228,8 @@ public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> 
 
 	@Override
 	public int size() {
-		return readSize() ? getCachedSize() : values.size();
+		read();
+		return values.size();
 	}
 
 	@Override

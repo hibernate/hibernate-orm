@@ -6,7 +6,6 @@
  */
 package org.hibernate.id;
 
-import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -82,7 +81,7 @@ public class IdentityGenerator extends AbstractPostInsertGenerator {
 		}
 
 		@Override
-		public Serializable executeAndExtract(PreparedStatement insert, SharedSessionContractImplementor session)
+		public Object executeAndExtract(PreparedStatement insert, SharedSessionContractImplementor session)
 				throws SQLException {
 			ResultSet rs = session.getJdbcCoordinator().getResultSetReturn().execute( insert );
 			try {
@@ -98,7 +97,7 @@ public class IdentityGenerator extends AbstractPostInsertGenerator {
 			}
 		}
 
-		public Serializable determineGeneratedIdentifier(SharedSessionContractImplementor session, Object entity) {
+		public Object determineGeneratedIdentifier(SharedSessionContractImplementor session, Object entity) {
 			throw new AssertionFailure( "insert statement returns generated value" );
 		}
 	}
@@ -132,7 +131,7 @@ public class IdentityGenerator extends AbstractPostInsertGenerator {
 		}
 
 		@Override
-		protected Serializable getResult(
+		protected Object getResult(
 				SharedSessionContractImplementor session,
 				ResultSet rs,
 				Object object) throws SQLException {

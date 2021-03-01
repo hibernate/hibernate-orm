@@ -8,7 +8,6 @@ package org.hibernate.engine.internal;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.Serializable;
 
 import org.hibernate.EntityMode;
 import org.hibernate.LockMode;
@@ -36,7 +35,7 @@ public final class MutableEntityEntry extends AbstractEntityEntry {
 			final Status status,
 			final Object[] loadedState,
 			final Object rowId,
-			final Serializable id,
+			final Object id,
 			final Object version,
 			final LockMode lockMode,
 			final boolean existsInDatabase,
@@ -73,7 +72,7 @@ public final class MutableEntityEntry extends AbstractEntityEntry {
 	private MutableEntityEntry(
 			final SessionFactoryImplementor factory,
 			final String entityName,
-			final Serializable id,
+			final Object id,
 			final Status status,
 			final Status previousStatus,
 			final Object[] loadedState,
@@ -108,7 +107,7 @@ public final class MutableEntityEntry extends AbstractEntityEntry {
 		return new MutableEntityEntry(
 				persistenceContext.getSession().getFactory(),
 				(String) ois.readObject(),
-				(Serializable) ois.readObject(),
+				ois.readObject(),
 				Status.valueOf( (String) ois.readObject() ),
 				( previousStatusString = (String) ois.readObject() ).length() == 0
 						? null

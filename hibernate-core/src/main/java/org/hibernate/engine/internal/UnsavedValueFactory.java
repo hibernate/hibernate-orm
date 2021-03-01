@@ -65,11 +65,11 @@ public class UnsavedValueFactory {
 		if ( unsavedValue == null ) {
 			if ( identifierGetter != null && constructor != null ) {
 				// use the id value of a newly instantiated instance as the unsaved-value
-				final Serializable defaultValue = (Serializable) identifierGetter.get( instantiate( constructor ) );
+				final Object defaultValue = identifierGetter.get( instantiate( constructor ) );
 				return new IdentifierValue( defaultValue );
 			}
 			else if ( identifierGetter != null && (identifierType instanceof PrimitiveType) ) {
-				final Serializable defaultValue = ( (PrimitiveType) identifierType ).getDefaultValue();
+				final Object defaultValue = ( (PrimitiveType) identifierType ).getDefaultValue();
 				return new IdentifierValue( defaultValue );
 			}
 			else {
@@ -90,7 +90,7 @@ public class UnsavedValueFactory {
 		}
 		else {
 			try {
-				return new IdentifierValue( (Serializable) ( (IdentifierType) identifierType ).stringToObject( unsavedValue ) );
+				return new IdentifierValue( ( (IdentifierType) identifierType ).stringToObject( unsavedValue ) );
 			}
 			catch ( ClassCastException cce ) {
 				throw new MappingException( "Bad identifier type: " + identifierType.getName() );

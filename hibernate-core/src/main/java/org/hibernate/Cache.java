@@ -44,7 +44,7 @@ public interface Cache extends javax.persistence.Cache {
 	 * @return True if the underlying cache contains corresponding data; false
 	 * otherwise.
 	 */
-	boolean containsEntity(Class entityClass, Serializable identifier);
+	boolean containsEntity(Class entityClass, Object identifier);
 
 	/**
 	 * Determine whether the cache contains data for the given entity "instance".
@@ -57,7 +57,7 @@ public interface Cache extends javax.persistence.Cache {
 	 *
 	 * @return True if the underlying cache contains corresponding data; false otherwise.
 	 */
-	boolean containsEntity(String entityName, Serializable identifier);
+	boolean containsEntity(String entityName, Object identifier);
 
 	/**
 	 * Evicts the entity data for a particular entity "instance".
@@ -67,7 +67,7 @@ public interface Cache extends javax.persistence.Cache {
 	 *
 	 * @since 5.3
 	 */
-	void evictEntityData(Class entityClass, Serializable identifier);
+	void evictEntityData(Class entityClass, Object identifier);
 
 	/**
 	 * Evicts the entity data for a particular entity "instance".
@@ -77,7 +77,7 @@ public interface Cache extends javax.persistence.Cache {
 	 *
 	 * @since 5.3
 	 */
-	void evictEntityData(String entityName, Serializable identifier);
+	void evictEntityData(String entityName, Object identifier);
 
 	/**
 	 * Evicts all entity data from the given region (i.e. for all entities of
@@ -156,7 +156,7 @@ public interface Cache extends javax.persistence.Cache {
 	 * @return True if the underlying cache contains corresponding data; false otherwise.
 	 */
 	@SuppressWarnings( {"UnusedDeclaration"})
-	boolean containsCollection(String role, Serializable ownerIdentifier);
+	boolean containsCollection(String role, Object ownerIdentifier);
 
 
 	/**
@@ -167,7 +167,7 @@ public interface Cache extends javax.persistence.Cache {
 	 *
 	 * @since 5.3
 	 */
-	void evictCollectionData(String role, Serializable ownerIdentifier);
+	void evictCollectionData(String role, Object ownerIdentifier);
 
 	/**
 	 * Evicts cached data for the given collection role
@@ -271,7 +271,7 @@ public interface Cache extends javax.persistence.Cache {
 	 * @deprecated Use {@link Cache#evictEntityData(Class, Serializable)} instead
 	 */
 	@Deprecated
-	default void evictEntity(Class entityClass, Serializable identifier) {
+	default void evictEntity(Class entityClass, Object identifier) {
 		evictEntityData( entityClass, identifier );
 	}
 
@@ -284,7 +284,7 @@ public interface Cache extends javax.persistence.Cache {
 	 * @deprecated Use {@link Cache#evictEntityData(String, Serializable)} instead
 	 */
 	@Deprecated
-	default void evictEntity(String entityName, Serializable identifier) {
+	default void evictEntity(String entityName, Object identifier) {
 		evictEntityData( entityName, identifier );
 	}
 

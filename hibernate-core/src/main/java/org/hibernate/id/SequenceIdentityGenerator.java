@@ -6,7 +6,6 @@
  */
 package org.hibernate.id;
 
-import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Properties;
@@ -90,7 +89,7 @@ public class SequenceIdentityGenerator
 		}
 
 		@Override
-		protected Serializable executeAndExtract(PreparedStatement insert, SharedSessionContractImplementor session)
+		protected Object executeAndExtract(PreparedStatement insert, SharedSessionContractImplementor session)
 				throws SQLException {
 			session.getJdbcCoordinator().getResultSetReturn().executeUpdate( insert );
 			return IdentifierGeneratorHelper.getGeneratedIdentity(

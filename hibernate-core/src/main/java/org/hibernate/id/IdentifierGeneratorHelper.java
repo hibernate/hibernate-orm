@@ -69,12 +69,12 @@ public final class IdentifierGeneratorHelper {
 	 * @throws SQLException Can be thrown while accessing the result set
 	 * @throws HibernateException Indicates a problem reading back a generated identity value.
 	 */
-	public static Serializable getGeneratedIdentity(ResultSet rs, String identifier, Type type, Dialect dialect)
+	public static Object getGeneratedIdentity(ResultSet rs, String identifier, Type type, Dialect dialect)
 			throws SQLException, HibernateException {
 		if ( !rs.next() ) {
 			throw new HibernateException( "The database returned no natively generated identity value" );
 		}
-		final Serializable id = get( rs, identifier, type, dialect );
+		final Object id = get( rs, identifier, type, dialect );
 		LOG.debugf( "Natively generated identity: %s", id );
 		return id;
 	}
@@ -93,7 +93,7 @@ public final class IdentifierGeneratorHelper {
 	 * @throws SQLException Indicates problems access the result set
 	 * @throws IdentifierGenerationException Indicates an unknown type.
 	 */
-	public static Serializable get(ResultSet rs, String identifier, Type type, Dialect dialect)
+	public static Object get(ResultSet rs, String identifier, Type type, Dialect dialect)
 			throws SQLException, IdentifierGenerationException {
 		if ( ResultSetIdentifierConsumer.class.isInstance( type ) ) {
 			return ( (ResultSetIdentifierConsumer) type ).consumeIdentifier( rs );
@@ -153,7 +153,7 @@ public final class IdentifierGeneratorHelper {
 		}
 	}
 
-	private static Serializable extractIdentifier(ResultSet rs, String identifier, Type type, Class clazz)
+	private static Object extractIdentifier(ResultSet rs, String identifier, Type type, Class clazz)
 			throws SQLException {
 		if ( clazz == Long.class ) {
 			return rs.getLong( identifier );

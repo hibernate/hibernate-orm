@@ -6,7 +6,6 @@
  */
 package org.hibernate;
 
-import java.io.Serializable;
 import java.util.Optional;
 
 /**
@@ -74,5 +73,5 @@ public interface SimpleNaturalIdLoadAccess<T> {
 	 *
 	 * @return The persistent instance, if one, wrapped in Optional
 	 */
-	Optional<T> loadOptional(Serializable naturalIdValue);
+	Optional<T> loadOptional(Object naturalIdValue);
 }

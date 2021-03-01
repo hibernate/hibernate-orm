@@ -6,8 +6,6 @@
  */
 package org.hibernate.event.spi;
 
-import java.io.Serializable;
-
 import org.hibernate.engine.spi.EntityEntry;
 
 /** 
@@ -29,7 +27,7 @@ public class SaveOrUpdateEvent extends AbstractEvent {
 		this.entityName = entityName;
 	}
 
-	public SaveOrUpdateEvent(String entityName, Object original, Serializable id, EventSource source) {
+	public SaveOrUpdateEvent(String entityName, Object original, Object id, EventSource source) {
 		this(entityName, original, source);
 		this.requestedId = id;
 		if ( requestedId == null ) {

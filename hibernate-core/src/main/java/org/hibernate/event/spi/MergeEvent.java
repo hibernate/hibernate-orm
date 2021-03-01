@@ -6,9 +6,7 @@
  */
 package org.hibernate.event.spi;
 
-import java.io.Serializable;
-
-/** 
+/**
  * An event class for merge() and saveOrUpdateCopy()
  *
  * @author Gavin King
@@ -16,7 +14,7 @@ import java.io.Serializable;
 public class MergeEvent extends AbstractEvent {
 
 	private Object original;
-	private Serializable requestedId;
+	private Object requestedId;
 	private String entityName;
 	private Object entity;
 	private Object result;
@@ -26,7 +24,7 @@ public class MergeEvent extends AbstractEvent {
 		this.entityName = entityName;
 	}
 
-	public MergeEvent(String entityName, Object original, Serializable id, EventSource source) {
+	public MergeEvent(String entityName, Object original, Object id, EventSource source) {
 		this(entityName, original, source);
 		this.requestedId = id;
 		if ( requestedId == null ) {
@@ -54,11 +52,11 @@ public class MergeEvent extends AbstractEvent {
 		this.original = object;
 	}
 
-	public Serializable getRequestedId() {
+	public Object getRequestedId() {
 		return requestedId;
 	}
 
-	public void setRequestedId(Serializable requestedId) {
+	public void setRequestedId(Object requestedId) {
 		this.requestedId = requestedId;
 	}
 

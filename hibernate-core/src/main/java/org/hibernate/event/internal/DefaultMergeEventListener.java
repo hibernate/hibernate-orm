@@ -6,7 +6,6 @@
  */
 package org.hibernate.event.internal;
 
-import java.io.Serializable;
 import java.util.Map;
 
 import org.hibernate.AssertionFailure;
@@ -262,7 +261,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 	private void saveTransientEntity(
 			Object entity,
 			String entityName,
-			Serializable requestedId,
+			Object requestedId,
 			EventSource source,
 			Map copyCache) {
 		//this bit is only *really* absolutely necessary for handling
@@ -299,7 +298,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 		}
 
 		// we must clone embedded composite identifiers or we will get back the same instance that we pass in
-		final Serializable clonedIdentifier = (Serializable) persister.getIdentifierType().deepCopy( id, source.getFactory() );
+		final Object clonedIdentifier = persister.getIdentifierType().deepCopy( id, source.getFactory() );
 
 		// apply the special MERGE fetch profile and perform the resolution (Session#get)
 		final Object result = source.getLoadQueryInfluencers().fromInternalFetchProfile(

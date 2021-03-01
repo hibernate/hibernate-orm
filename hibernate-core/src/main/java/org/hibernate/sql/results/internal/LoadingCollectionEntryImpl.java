@@ -6,7 +6,6 @@
  */
 package org.hibernate.sql.results.internal;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -57,9 +56,9 @@ public class LoadingCollectionEntryImpl implements LoadingCollectionEntry {
 		return initializer;
 	}
 
-	@Override public Serializable getKey() {
+	@Override public Object getKey() {
 		// todo (6.0) : change from Serializable to Object
-		return (Serializable) key;
+		return key;
 	}
 
 	@Override public PersistentCollection getCollectionInstance() {

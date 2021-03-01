@@ -23,7 +23,7 @@ import org.jboss.logging.Logger;
 public class IdentifierValue implements UnsavedValueStrategy {
 	private static final Logger LOG = CoreLogging.logger( IdentifierValue.class );
 
-	private final Serializable value;
+	private final Object value;
 
 	/**
 	 * Always assume the transient instance is newly instantiated
@@ -36,8 +36,8 @@ public class IdentifierValue implements UnsavedValueStrategy {
 		}
 
 		@Override
-		public Serializable getDefaultValue(Object currentValue) {
-			return (Serializable) currentValue;
+		public Object getDefaultValue(Object currentValue) {
+			return currentValue;
 		}
 
 		@Override
@@ -57,8 +57,8 @@ public class IdentifierValue implements UnsavedValueStrategy {
 		}
 
 		@Override
-		public Serializable getDefaultValue(Object currentValue) {
-			return (Serializable) currentValue;
+		public Object getDefaultValue(Object currentValue) {
+			return currentValue;
 		}
 
 		@Override
@@ -118,7 +118,7 @@ public class IdentifierValue implements UnsavedValueStrategy {
 	 * Assume the transient instance is newly instantiated if
 	 * its identifier is null or equal to <tt>value</tt>
 	 */
-	public IdentifierValue(Serializable value) {
+	public IdentifierValue(Object value) {
 		this.value = value;
 	}
 
@@ -132,7 +132,7 @@ public class IdentifierValue implements UnsavedValueStrategy {
 	}
 
 	@Override
-	public Serializable getDefaultValue(Object currentValue) {
+	public Object getDefaultValue(Object currentValue) {
 		return value;
 	}
 

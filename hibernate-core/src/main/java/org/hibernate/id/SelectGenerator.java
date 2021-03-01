@@ -6,7 +6,6 @@
  */
 package org.hibernate.id;
 
-import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -121,7 +120,7 @@ public class SelectGenerator extends AbstractPostInsertGenerator implements Conf
 			uniqueKeyType.nullSafeSet( ps, uniqueKeyValue, 1, session );
 		}
 
-		protected Serializable getResult(
+		protected Object getResult(
 				SharedSessionContractImplementor session,
 				ResultSet rs,
 				Object entity) throws SQLException {
@@ -131,7 +130,7 @@ public class SelectGenerator extends AbstractPostInsertGenerator implements Conf
 								uniqueKeyPropertyName
 				);
 			}
-			return (Serializable) idType.nullSafeGet(
+			return idType.nullSafeGet(
 					rs,
 					persister.getRootTableKeyColumnNames(),
 					session,

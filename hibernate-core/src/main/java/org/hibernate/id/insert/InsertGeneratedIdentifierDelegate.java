@@ -6,8 +6,6 @@
  */
 package org.hibernate.id.insert;
 
-import java.io.Serializable;
-
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
@@ -40,6 +38,6 @@ public interface InsertGeneratedIdentifierDelegate {
 	 * 
 	 * @return The generated identifier value.
 	 */
-	Serializable performInsert(String insertSQL, SharedSessionContractImplementor session, Binder binder);
+	Object performInsert(String insertSQL, SharedSessionContractImplementor session, Binder binder);
 
 }

@@ -292,7 +292,7 @@ public abstract class CollectionType extends AbstractType implements Association
 			return null;
 		}
 		else {
-			final Serializable key = (Serializable) getPersister(session)
+			final Object key = getPersister(session)
 					.getKeyType()
 					.assemble( cached, session, owner);
 			return resolveKey( key, session, owner, null );

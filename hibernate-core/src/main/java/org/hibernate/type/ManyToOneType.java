@@ -147,9 +147,9 @@ public class ManyToOneType extends EntityType {
 		// out the empty value.
 		final Object hydratedId = getIdentifierOrUniqueKeyType( session.getFactory() )
 				.hydrate( rs, names, session, null );
-		final Serializable id;
+		final Object id;
 		if ( hydratedId != null ) {
-			id = (Serializable) getIdentifierOrUniqueKeyType( session.getFactory() )
+			id = getIdentifierOrUniqueKeyType( session.getFactory() )
 					.resolve( hydratedId, session, null );
 		}
 		else {
@@ -163,7 +163,7 @@ public class ManyToOneType extends EntityType {
 	 * Register the entity as batch loadable, if enabled
 	 */
 	@SuppressWarnings({ "JavaDoc" })
-	private void scheduleBatchLoadIfNeeded(Serializable id, SharedSessionContractImplementor session) throws MappingException {
+	private void scheduleBatchLoadIfNeeded(Object id, SharedSessionContractImplementor session) throws MappingException {
 		//cannot batch fetch by unique key (property-ref associations)
 		if ( uniqueKeyPropertyName == null && id != null ) {
 			final EntityPersister persister = getAssociatedEntityPersister( session.getFactory() );
@@ -257,8 +257,8 @@ public class ManyToOneType extends EntityType {
 		
 		//TODO: currently broken for unique-key references (does not detect
 		//      change to unique key property of the associated object)
-		
-		Serializable id = assembleId( oid, session );
+
+		Object id = assembleId( oid, session );
 
 		if ( id == null ) {
 			return null;
@@ -268,9 +268,9 @@ public class ManyToOneType extends EntityType {
 		}
 	}
 
-	private Serializable assembleId(Serializable oid, SharedSessionContractImplementor session) {
+	private Object assembleId(Serializable oid, SharedSessionContractImplementor session) {
 		//the owner of the association is not the owner of the id
-		return ( Serializable ) getIdentifierType( session ).assemble( oid, session, null );
+		return getIdentifierType( session ).assemble( oid, session, null );
 	}
 
 	@Override

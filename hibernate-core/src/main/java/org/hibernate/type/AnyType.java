@@ -249,7 +249,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 	public Object hydrate(ResultSet rs,	String[] names,	SharedSessionContractImplementor session,	Object owner)
 			throws HibernateException, SQLException {
 		final String entityName = (String) discriminatorType.nullSafeGet( rs, names[0], session, owner );
-		final Serializable id = (Serializable) identifierType.nullSafeGet( rs, names[1], session, owner );
+		final Object id = identifierType.nullSafeGet( rs, names[1], session, owner );
 		return new ObjectTypeCacheEntry( entityName, id );
 	}
 

@@ -6,7 +6,6 @@
  */
 package org.hibernate.id.insert;
 
-import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -30,7 +29,7 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 	}
 
 	@Override
-	public final Serializable performInsert(
+	public final Object performInsert(
 			String insertSQL,
 			SharedSessionContractImplementor session,
 			Binder binder) {
@@ -123,7 +122,7 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 	 *
 	 * @throws SQLException
 	 */
-	protected abstract Serializable getResult(
+	protected abstract Object getResult(
 			SharedSessionContractImplementor session,
 			ResultSet rs,
 			Object entity) throws SQLException;

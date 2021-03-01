@@ -6,7 +6,6 @@
  */
 package org.hibernate.cache.internal;
 
-import java.io.Serializable;
 import java.util.Collections;
 import java.util.Set;
 
@@ -53,23 +52,23 @@ public class DisabledCaching implements CacheImplementor {
 	}
 
 	@Override
-	public boolean containsEntity(Class entityClass, Serializable identifier) {
+	public boolean containsEntity(Class entityClass, Object identifier) {
 		return false;
 	}
 
 	@Override
-	public boolean containsEntity(String entityName, Serializable identifier) {
+	public boolean containsEntity(String entityName, Object identifier) {
 		return false;
 	}
 
 	@Override
-	public void evictEntityData(Class entityClass, Serializable identifier) {
+	public void evictEntityData(Class entityClass, Object identifier) {
 		// nothing to do
 
 	}
 
 	@Override
-	public void evictEntityData(String entityName, Serializable identifier) {
+	public void evictEntityData(String entityName, Object identifier) {
 		// nothing to do
 
 	}
@@ -105,12 +104,12 @@ public class DisabledCaching implements CacheImplementor {
 	}
 
 	@Override
-	public boolean containsCollection(String role, Serializable ownerIdentifier) {
+	public boolean containsCollection(String role, Object ownerIdentifier) {
 		return false;
 	}
 
 	@Override
-	public void evictCollectionData(String role, Serializable ownerIdentifier) {
+	public void evictCollectionData(String role, Object ownerIdentifier) {
 		// nothing to do
 	}
 

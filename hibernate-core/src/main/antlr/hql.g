@@ -842,9 +842,9 @@ castedIdentPrimaryBase
     ;
 
 aggregate
-	: ( SUM^ | AVG^ | MAX^ | MIN^ ) OPEN! ( additiveExpression | selectStatement ) CLOSE! { #aggregate.setType(AGGREGATE); }
+	: ( SUM^ | AVG^ | MAX^ | MIN^ ) OPEN! ( concatenation | subQuery ) CLOSE! { #aggregate.setType(AGGREGATE); }
 	// Special case for count - It's 'parameters' can be keywords.
-	|  COUNT^ OPEN! ( STAR { #STAR.setType(ROW_STAR); } | ( ( DISTINCT | ALL )? ( path | collectionExpr | NUM_INT | caseExpression ) ) ) CLOSE!
+	|  COUNT^ OPEN! ( STAR { #STAR.setType(ROW_STAR); } | ( ( DISTINCT | ALL )? ( concatenation | subQuery ) ) ) CLOSE!
 	|  collectionExpr
 	;
 

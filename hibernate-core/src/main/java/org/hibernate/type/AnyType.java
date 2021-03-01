@@ -522,13 +522,13 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		}
 
 		public int hashCode() {
-			return Objects.hash(entityName, id);
+			return Objects.hash( entityName, id );
 		}
 
 		public boolean equals(Object object) {
-			if (object instanceof  ObjectTypeCacheEntry) {
+			if (object instanceof ObjectTypeCacheEntry) {
 				ObjectTypeCacheEntry objectTypeCacheEntry = (ObjectTypeCacheEntry)object;
-				return Objects.equals(objectTypeCacheEntry.entityName, entityName) && Objects.equals(objectTypeCacheEntry.id, id);
+				return Objects.equals( objectTypeCacheEntry.entityName, entityName ) && Objects.equals( objectTypeCacheEntry.id, id );
 			}
 			return false;
 		}

@@ -6,7 +6,6 @@
  */
 package org.hibernate.tuple.entity;
 
-import java.io.Serializable;
 import java.util.Set;
 
 import org.hibernate.LockMode;
@@ -139,7 +138,7 @@ public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhanc
 	@Override
 	public PersistentAttributeInterceptable createEnhancedProxy(EntityKey entityKey, boolean addEmptyEntry, SharedSessionContractImplementor session) {
 		final EntityPersister persister = entityKey.getPersister();
-		final Serializable identifier = entityKey.getIdentifier();
+		final Object identifier = entityKey.getIdentifier();
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
 
 		// first, instantiate the entity instance to use as the proxy

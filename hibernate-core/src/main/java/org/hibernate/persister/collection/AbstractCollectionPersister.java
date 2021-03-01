@@ -1899,7 +1899,7 @@ public abstract class AbstractCollectionPersister
 	 * @deprecated Use {@link #doProcessQueuedOps(PersistentCollection, Object, SharedSessionContractImplementor)}
 	 */
 	@Deprecated
-	protected void doProcessQueuedOps(PersistentCollection collection, Serializable key,
+	protected void doProcessQueuedOps(PersistentCollection collection, Object key,
 			int nextIndex, SharedSessionContractImplementor session)
 			throws HibernateException {
 		doProcessQueuedOps( collection, key, session );

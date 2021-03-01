@@ -41,7 +41,6 @@ import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.tuple.IdentifierProperty;
 import org.hibernate.tuple.Instantiator;
 import org.hibernate.type.AssociationType;
-import org.hibernate.type.BasicType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
@@ -522,10 +521,10 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		}
 		else {
 			//reset the id
-			Serializable result = identifierProperty
+			Object result = identifierProperty
 					.getUnsavedValue()
 					.getDefaultValue( currentId );
-			setIdentifier( entity, result, session );
+			setIdentifier( entity, (Serializable) result, session );
 			//reset the version
 			VersionProperty versionProperty = entityMetamodel.getVersionProperty();
 			if ( entityMetamodel.isVersioned() ) {

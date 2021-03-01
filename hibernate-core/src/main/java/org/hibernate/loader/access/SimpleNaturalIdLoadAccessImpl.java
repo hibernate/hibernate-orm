@@ -6,7 +6,6 @@
  */
 package org.hibernate.loader.access;
 
-import java.io.Serializable;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -115,7 +114,7 @@ public class SimpleNaturalIdLoadAccessImpl<T>
 	}
 
 	@Override
-	public Optional<T> loadOptional(Serializable naturalIdValue) {
+	public Optional<T> loadOptional(Object naturalIdValue) {
 		return Optional.ofNullable( load( naturalIdValue ) );
 	}
 }

@@ -112,7 +112,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 	protected AbstractEntityEntry(
 			final SessionFactoryImplementor factory,
 			final String entityName,
-			final Serializable id,
+			final Object id,
 			final Status status,
 			final Status previousStatus,
 			final Object[] loadedState,

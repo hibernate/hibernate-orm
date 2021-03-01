@@ -6,7 +6,6 @@
  */
 package org.hibernate.sql.results.graph.entity;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -603,7 +602,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 //			return;
 //		}
 
-		final Serializable entityIdentifier = entityKey.getIdentifier();
+		final Object entityIdentifier = entityKey.getIdentifier();
 
 		if ( EntityLoadingLogger.TRACE_ENABLED ) {
 			EntityLoadingLogger.LOGGER.tracef(

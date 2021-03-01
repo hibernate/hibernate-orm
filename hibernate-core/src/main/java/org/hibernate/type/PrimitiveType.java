@@ -36,5 +36,5 @@ public interface PrimitiveType<T> extends LiteralType<T> {
 	 *
 	 * @return The default value.
 	 */
-	public abstract Serializable getDefaultValue();
+	public abstract Object getDefaultValue();
 }

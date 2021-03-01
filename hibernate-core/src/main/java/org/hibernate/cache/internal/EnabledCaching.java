@@ -6,7 +6,6 @@
  */
 package org.hibernate.cache.internal;
 
-import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -220,12 +219,12 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	// Entity data
 
 	@Override
-	public boolean containsEntity(Class entityClass, Serializable identifier) {
+	public boolean containsEntity(Class entityClass, Object identifier) {
 		return containsEntity( entityClass.getName(), identifier );
 	}
 
 	@Override
-	public boolean containsEntity(String entityName, Serializable identifier) {
+	public boolean containsEntity(String entityName, Object identifier) {
 		final EntityPersister entityDescriptor = sessionFactory.getMetamodel().entityPersister( entityName );
 		final EntityDataAccess cacheAccess = entityDescriptor.getCacheAccessStrategy();
 		if ( cacheAccess == null ) {
@@ -237,12 +236,12 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	}
 
 	@Override
-	public void evictEntityData(Class entityClass, Serializable identifier) {
+	public void evictEntityData(Class entityClass, Object identifier) {
 		evictEntityData( entityClass.getName(), identifier );
 	}
 
 	@Override
-	public void evictEntityData(String entityName, Serializable identifier) {
+	public void evictEntityData(String entityName, Object identifier) {
 		final EntityPersister entityDescriptor = sessionFactory.getMetamodel().entityPersister( entityName );
 		final EntityDataAccess cacheAccess = entityDescriptor.getCacheAccessStrategy();
 		if ( cacheAccess == null ) {
@@ -344,7 +343,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	// Collection data
 
 	@Override
-	public boolean containsCollection(String role, Serializable ownerIdentifier) {
+	public boolean containsCollection(String role, Object ownerIdentifier) {
 		final CollectionPersister collectionDescriptor = sessionFactory.getMetamodel()
 				.collectionPersister( role );
 
@@ -358,7 +357,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	}
 
 	@Override
-	public void evictCollectionData(String role, Serializable ownerIdentifier) {
+	public void evictCollectionData(String role, Object ownerIdentifier) {
 		final CollectionPersister collectionDescriptor = sessionFactory.getMetamodel()
 				.collectionPersister( role );
 
@@ -569,13 +568,13 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	@Override
 	public boolean contains(Class cls, Object primaryKey) {
 		// JPA
-		return containsEntity( cls, (Serializable) primaryKey );
+		return containsEntity( cls, primaryKey );
 	}
 
 	@Override
 	public void evict(Class cls, Object primaryKey) {
 		// JPA call
-		evictEntityData( cls, (Serializable) primaryKey );
+		evictEntityData( cls, primaryKey );
 	}
 
 	@Override

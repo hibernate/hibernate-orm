@@ -112,7 +112,7 @@ public class SpecialOneToOneType extends OneToOneType {
 	throws HibernateException {
 		//TODO: currently broken for unique-key references (does not detect
 		//      change to unique key property of the associated object)
-		Serializable id = (Serializable) getIdentifierType(session).assemble(oid, session, null); //the owner of the association is not the owner of the id
+		Object id = getIdentifierType(session).assemble(oid, session, null); //the owner of the association is not the owner of the id
 
 		if (id==null) {
 			return null;

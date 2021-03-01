@@ -3173,7 +3173,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	public int dehydrate(
-			Serializable id,
+			Object id,
 			Object[] fields,
 			boolean[] includeProperty,
 			boolean[][] includeColumns,
@@ -3267,7 +3267,7 @@ public abstract class AbstractEntityPersister
 	 */
 	public Object[] hydrate(
 			final ResultSet rs,
-			final Serializable id,
+			final Object id,
 			final Object object,
 			final Loadable rootLoadable,
 			final String[][] suffixedPropertyColumns,
@@ -3386,7 +3386,7 @@ public abstract class AbstractEntityPersister
 	 * This form is used for PostInsertIdentifierGenerator-style ids (IDENTITY,
 	 * select, etc).
 	 */
-	public Serializable insert(
+	public Object insert(
 			final Object[] fields,
 			final boolean[] notNull,
 			String sql,
@@ -3999,13 +3999,13 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	public Serializable insert(Object[] fields, Object object, SharedSessionContractImplementor session)
+	public Object insert(Object[] fields, Object object, SharedSessionContractImplementor session)
 			throws HibernateException {
 		// apply any pre-insert in-memory value generation
 		preInsertInMemoryValueGeneration( fields, object, session );
 
 		final int span = getTableSpan();
-		final Serializable id;
+		final Object id;
 		if ( entityMetamodel.isDynamicInsert() ) {
 			// For the case of dynamic-insert="true", we need to generate the INSERT SQL
 			boolean[] notNull = getPropertiesToInsert( fields );
@@ -4631,7 +4631,7 @@ public abstract class AbstractEntityPersister
 			final EnhancementAsProxyLazinessInterceptor proxyInterceptor = (EnhancementAsProxyLazinessInterceptor) currentInterceptor;
 
 			final EntityKey entityKey = proxyInterceptor.getEntityKey();
-			final Serializable identifier = entityKey.getIdentifier();
+			final Object identifier = entityKey.getIdentifier();
 
 
 			LoadEvent loadEvent = new LoadEvent( identifier, entity, (EventSource)session, false );

@@ -6,7 +6,6 @@
  */
 package org.hibernate.dialect.identity;
 
-import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -52,7 +51,7 @@ public class GetGeneratedKeysDelegate
 	}
 
 	@Override
-	public Serializable executeAndExtract(PreparedStatement insert, SharedSessionContractImplementor session)
+	public Object executeAndExtract(PreparedStatement insert, SharedSessionContractImplementor session)
 			throws SQLException {
 		session.getJdbcCoordinator().getResultSetReturn().executeUpdate( insert );
 		ResultSet rs = null;

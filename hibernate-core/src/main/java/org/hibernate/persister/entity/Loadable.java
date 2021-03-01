@@ -6,7 +6,6 @@
  */
 package org.hibernate.persister.entity;
 
-import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -85,7 +84,7 @@ public interface Loadable extends EntityPersister {
 	 */
 	Object[] hydrate(
 			ResultSet rs,
-			Serializable id,
+			Object id,
 			Object object,
 			Loadable rootLoadable,
 			String[][] suffixedPropertyColumns,

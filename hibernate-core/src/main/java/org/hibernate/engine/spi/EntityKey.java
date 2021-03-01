@@ -70,8 +70,8 @@ public final class EntityKey implements Serializable {
 		return identifier;
 	}
 
-	public Serializable getIdentifier() {
-		return (Serializable) identifier;
+	public Object getIdentifier() {
+		return identifier;
 	}
 
 	public String getEntityName() {
@@ -147,7 +147,7 @@ public final class EntityKey implements Serializable {
 	 * @throws ClassNotFoundException Thrown by Java I/O
 	 */
 	public static EntityKey deserialize(ObjectInputStream ois, SessionFactoryImplementor sessionFactory) throws IOException, ClassNotFoundException {
-		final Serializable id = (Serializable) ois.readObject();
+		final Object id = ois.readObject();
 		final String entityName = (String) ois.readObject();
 		final EntityPersister entityPersister = sessionFactory.getEntityPersister( entityName );
 		return new EntityKey(id, entityPersister);

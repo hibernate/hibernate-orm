@@ -133,7 +133,7 @@ public final class CollectionEntry implements Serializable {
 	private CollectionEntry(
 			String role,
 			Serializable snapshot,
-			Serializable loadedKey,
+			Object loadedKey,
 			SessionFactoryImplementor factory) {
 		this.role = role;
 		this.snapshot = snapshot;
@@ -430,8 +430,8 @@ public final class CollectionEntry implements Serializable {
 		return new CollectionEntry(
 				(String) ois.readObject(),
 				(Serializable) ois.readObject(),
-				(Serializable) ois.readObject(),
-				(session == null ? null : session.getFactory())
+				ois.readObject(),
+				session == null ? null : session.getFactory()
 		);
 	}
 }

@@ -6,7 +6,6 @@
  */
 package org.hibernate.sql.results.graph.collection;
 
-import java.io.Serializable;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -33,7 +32,7 @@ public interface LoadingCollectionEntry {
 	/**
 	 * The collection key.
 	 */
-	Serializable getKey();
+	Object getKey();
 
 	/**
 	 * The collection instance being loaded

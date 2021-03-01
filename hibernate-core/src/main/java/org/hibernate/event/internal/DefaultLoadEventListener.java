@@ -6,8 +6,6 @@
  */
 package org.hibernate.event.internal;
 
-import java.io.Serializable;
-
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.NonUniqueObjectException;
@@ -166,7 +164,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 		final EntityKey parentEntityKey = session.generateEntityKey( event.getEntityId(), parentPersister );
 		final Object parent = doLoad( event, parentPersister, parentEntityKey, options );
 
-		final Serializable dependent = (Serializable) dependentPersister.instantiate( parent, session );
+		final Object dependent = dependentPersister.instantiate( parent, session );
 		dependentPersister.setPropertyValues( dependent, new Object[] {parent} );
 		final EntityKey dependentEntityKey = session.generateEntityKey( dependent, dependentPersister );
 		event.setEntityId( dependent );

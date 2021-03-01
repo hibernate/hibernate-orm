@@ -62,7 +62,7 @@ public class BatchFetchQueueHelper {
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debug( "Entities of type [" + persister.getEntityName() + "] not found; IDs: " + idSet );
 		}
-		for ( Serializable id : idSet ) {
+		for ( Object id : idSet ) {
 			removeBatchLoadableEntityKey( id, persister, session );
 		}
 	}

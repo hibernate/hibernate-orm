@@ -8,7 +8,6 @@ package org.hibernate.engine.internal;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.Serializable;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.LockMode;
@@ -65,7 +64,7 @@ public final class ImmutableEntityEntry extends AbstractEntityEntry {
 	private ImmutableEntityEntry(
 			final SessionFactoryImplementor factory,
 			final String entityName,
-			final Serializable id,
+			final Object id,
 			final Status status,
 			final Status previousStatus,
 			final Object[] loadedState,
@@ -115,7 +114,7 @@ public final class ImmutableEntityEntry extends AbstractEntityEntry {
 		return new ImmutableEntityEntry(
 				persistenceContext.getSession().getFactory(),
 				(String) ois.readObject(),
-				(Serializable) ois.readObject(),
+				ois.readObject(),
 				Status.valueOf( (String) ois.readObject() ),
 				( previousStatusString = (String) ois.readObject() ).length() == 0
 						? null

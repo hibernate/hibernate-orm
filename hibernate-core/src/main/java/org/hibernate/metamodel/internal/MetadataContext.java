@@ -385,17 +385,20 @@ public class MetadataContext {
 			// Handle the actual id-attributes
 			final Component cidValue = (Component) persistentClass.getIdentifier();
 			final Iterator<Property> cidPropertyItr = cidValue.getPropertyIterator();
-			final Set<SingularPersistentAttribute<?,?>> idAttributes = new HashSet<>( cidValue.getPropertySpan() );
 
-			while ( cidPropertyItr.hasNext() ) {
-				final Property cidSubProperty = cidPropertyItr.next();
+			AbstractIdentifiableType idType = (AbstractIdentifiableType) entityTypes.get( cidValue.getOwner().getMappedClass() );
+			Set idAttributes = idType.getIdClassAttributesSafely();
+			if ( idAttributes == null ) {
+				idAttributes = new HashSet<>( cidValue.getPropertySpan() );
+				while ( cidPropertyItr.hasNext() ) {
+					final Property cidSubProperty = cidPropertyItr.next();
+					final SingularPersistentAttribute<?, Object> cidSubAttr = attributeFactory.buildIdAttribute(
+							idType,
+							cidSubProperty
+					);
 
-				final SingularPersistentAttribute<?, Object> cidSubAttr = attributeFactory.buildIdAttribute(
-						identifiableType,
-						cidSubProperty
-				);
-
-				idAttributes.add( cidSubAttr );
+					idAttributes.add( cidSubAttr );
+				}
 			}
 
 			( ( AttributeContainer) identifiableType ).getInFlightAccess().applyNonAggregatedIdAttributes( idAttributes );

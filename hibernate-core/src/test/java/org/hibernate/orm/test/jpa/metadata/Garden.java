@@ -4,21 +4,22 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.jpa.test.metadata;
-import javax.persistence.Basic;
+package org.hibernate.orm.test.jpa.metadata;
+import java.util.ArrayList;
+import java.util.List;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
 
 /**
  * @author Emmanuel Bernard
  */
 @Entity
-public class Fridge {
+public class Garden {
 	private Long id;
-	private String brand;
-	private int temperature;
-	//dimensions
+	private String name;
+	private List<Flower> flowers = new ArrayList<Flower>();
 
 	@Id
 	@GeneratedValue
@@ -30,21 +31,20 @@ public class Fridge {
 		this.id = id;
 	}
 
-	@Basic(optional = false)
-	public String getBrand() {
-		return brand;
+	public String getName() {
+		return name;
 	}
 
-	public void setBrand(String brand) {
-		this.brand = brand;
+	public void setName(String name) {
+		this.name = name;
 	}
 
-	public int getTemperature() {
-		return temperature;
+	@OneToMany
+	public List<Flower> getFlowers() {
+		return flowers;
 	}
 
-	public void setTemperature(int temperature) {
-		this.temperature = temperature;
+	public void setFlowers(List<Flower> flowers) {
+		this.flowers = flowers;
 	}
 }
-

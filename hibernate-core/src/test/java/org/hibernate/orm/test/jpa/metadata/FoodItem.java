@@ -4,25 +4,22 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.jpa.test.metadata;
-import java.util.ArrayList;
-import java.util.List;
+package org.hibernate.orm.test.jpa.metadata;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.OneToMany;
+import javax.persistence.Version;
 
 /**
  * @author Emmanuel Bernard
  */
 @Entity
-public class Garden {
+public class FoodItem {
 	private Long id;
 	private String name;
-	private List<Flower> flowers = new ArrayList<Flower>();
+	private Long version;
 
-	@Id
-	@GeneratedValue
+	@Id @GeneratedValue
 	public Long getId() {
 		return id;
 	}
@@ -31,20 +28,20 @@ public class Garden {
 		this.id = id;
 	}
 
+	@Version
+	public Long getVersion() {
+		return version;
+	}
+
+	public void setVersion(Long version) {
+		this.version = version;
+	}
+
 	public String getName() {
 		return name;
 	}
 
 	public void setName(String name) {
 		this.name = name;
-	}
-
-	@OneToMany
-	public List<Flower> getFlowers() {
-		return flowers;
-	}
-
-	public void setFlowers(List<Flower> flowers) {
-		this.flowers = flowers;
 	}
 }

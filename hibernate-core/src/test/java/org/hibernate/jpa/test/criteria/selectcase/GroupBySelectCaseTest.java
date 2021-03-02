@@ -20,7 +20,7 @@ import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.PostgreSQL95Dialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.jpa.test.metadata.Person_;
+import org.hibernate.orm.test.jpa.metadata.Person_;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.SkipForDialect;

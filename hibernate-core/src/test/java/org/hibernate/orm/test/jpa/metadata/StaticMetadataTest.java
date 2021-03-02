@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.jpa.test.metadata;
+package org.hibernate.orm.test.jpa.metadata;
 
 import java.util.Set;
 import javax.persistence.metamodel.Attribute;
@@ -13,26 +13,41 @@ import javax.persistence.metamodel.EmbeddableType;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.Type;
 
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author Steve Ebersole
  */
-public class StaticMetadataTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(
+		annotatedClasses = {
+				Fridge.class,
+				FoodItem.class,
+				Person.class,
+				House.class,
+				Dog.class,
+				Cat.class,
+				Cattish.class,
+				Feline.class,
+				Garden.class,
+				Flower.class
+		}
+)
+public class StaticMetadataTest {
+
 	@Test
-	public void testInjections() throws Exception {
+	public void testInjections() {
 		// Address (embeddable)
 		assertNotNull( Address_.address1 );
 		assertNotNull( Address_.address2 );
 		assertNotNull( Address_.city );
-		final EmbeddableType<Address> addressType = ( EmbeddableType<Address> ) House_.address.getType();
+		final EmbeddableType addressType = (EmbeddableType) House_.address.getType();
 		assertEquals( addressType.getDeclaredSingularAttribute( "address1" ), Address_.address1 );
 		assertEquals( addressType.getDeclaredSingularAttribute( "address2" ), Address_.address2 );
 		assertTrue( Address_.address1.isOptional() );
@@ -43,8 +58,7 @@ public class StaticMetadataTest extends BaseEntityManagerFunctionalTestCase {
 		assertTrue( Animal_.id.isId() );
 		assertEquals( Long.class, Animal_.id.getJavaType() );
 		assertNotNull( Animal_.legNbr );
-//		assertEquals( Integer.class, Animal_.legNbr.getJavaType() );
-		assertEquals( int.class, Animal_.legNbr.getJavaType() );
+		assertEquals( Integer.class, Animal_.legNbr.getJavaType() );
 
 		// Cat (hierarchy)
 		assertNotNull( Cat_.id );
@@ -63,12 +77,9 @@ public class StaticMetadataTest extends BaseEntityManagerFunctionalTestCase {
 		assertNotNull( Fridge_.temperature );
 		assertEquals( "temperature", Fridge_.temperature.getName() );
 		assertEquals( Fridge.class, Fridge_.temperature.getDeclaringType().getJavaType() );
-//		assertEquals( Integer.class, Fridge_.temperature.getJavaType() );
-//		assertEquals( Integer.class, Fridge_.temperature.getBindableJavaType() );
-//		assertEquals( Integer.class, Fridge_.temperature.getType().getJavaType() );
-		assertEquals( int.class, Fridge_.temperature.getJavaType() );
-		assertEquals( int.class, Fridge_.temperature.getBindableJavaType() );
-		assertEquals( int.class, Fridge_.temperature.getType().getJavaType() );
+		assertEquals( Integer.class, Fridge_.temperature.getJavaType() );
+		assertEquals( Integer.class, Fridge_.temperature.getBindableJavaType() );
+		assertEquals( Integer.class, Fridge_.temperature.getType().getJavaType() );
 		assertEquals( Bindable.BindableType.SINGULAR_ATTRIBUTE, Fridge_.temperature.getBindableType() );
 		assertEquals( Type.PersistenceType.BASIC, Fridge_.temperature.getType().getPersistenceType() );
 		assertEquals( Attribute.PersistentAttributeType.BASIC, Fridge_.temperature.getPersistentAttributeType() );
@@ -112,21 +123,5 @@ public class StaticMetadataTest extends BaseEntityManagerFunctionalTestCase {
 
 		//Garden List as bag
 		assertNotNull( Garden_.flowers );
-	}
-
-	@Override
-	public Class[] getAnnotatedClasses() {
-		return new Class[] {
-				Fridge.class,
-				FoodItem.class,
-				Person.class,
-				House.class,
-				Dog.class,
-				Cat.class,
-				Cattish.class,
-				Feline.class,
-				Garden.class,
-				Flower.class
-		};
 	}
 }

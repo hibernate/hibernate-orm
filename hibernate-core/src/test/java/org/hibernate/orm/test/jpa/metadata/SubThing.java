@@ -4,21 +4,21 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.jpa.test.metadata;
-import javax.persistence.Entity;
+package org.hibernate.orm.test.jpa.metadata;
+
 
 /**
  * @author Emmanuel Bernard
  */
-@Entity
-public class Cat extends Cattish {
-	private String nickname;
+//not an entity but in between mapped superclass and entity
+public class SubThing extends Thing {
+	private String blah;
 
-	public String getNickname() {
-		return nickname;
+	public String getBlah() {
+		return blah;
 	}
 
-	public void setNickname(String nickname) {
-		this.nickname = nickname;
+	public void setBlah(String blah) {
+		this.blah = blah;
 	}
 }

@@ -4,20 +4,18 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.jpa.test.metadata;
+package org.hibernate.orm.test.jpa.metadata;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.Version;
 
 /**
  * @author Emmanuel Bernard
  */
 @Entity
-public class FoodItem {
+public class Flower {
 	private Long id;
 	private String name;
-	private Long version;
 
 	@Id @GeneratedValue
 	public Long getId() {
@@ -26,15 +24,6 @@ public class FoodItem {
 
 	public void setId(Long id) {
 		this.id = id;
-	}
-
-	@Version
-	public Long getVersion() {
-		return version;
-	}
-
-	public void setVersion(Long version) {
-		this.version = version;
 	}
 
 	public String getName() {

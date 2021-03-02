@@ -242,12 +242,11 @@ public class FetchStyleLoadPlanBuildingAssociationVisitationStrategy
 						final EmbeddedComponentType elementIdTypeEmbedded = (EmbeddedComponentType) elementIdType;
 						if ( elementIdTypeEmbedded.getSubtypes().length == 1 &&
 								elementIdTypeEmbedded.getPropertyNames()[ 0 ].equals( collectionPersister.getMappedByProperty() ) ) {
-							// The associated entity's ID is the other (many-to-one) side of the association.
-							// The one-to-many side must be set to FetchMode.SELECT; otherwise,
-							// there will be an infinite loop because the current entity
-							// would need to be loaded before the associated entity can be loaded,
-							// but the associated entity cannot be loaded until after the current
-							// entity is loaded (since the current entity is the associated entity's ID).
+							// The owning side of the inverse collection is defined by the associated entity's id.
+							//
+							// Because of how Loaders process ids when processing the ResultSet, this condition would
+							// lead to an infinite loop. Adjust the fetch to use a SELECT fetch instead of JOIN to
+							// avoid the infinite loop.
 							return new FetchStrategy( fetchStrategy.getTiming(), FetchStyle.SELECT );
 						}
 					}
@@ -287,12 +286,11 @@ public class FetchStyleLoadPlanBuildingAssociationVisitationStrategy
 								if ( otherSideEntityType.isLogicalOneToOne() &&
 										otherSideEntityType.isReferenceToPrimaryKey() &&
 										otherSideEntityType.getAssociatedEntityName().equals( currentEntityPersister.getEntityName() ) ) {
-									// The associated entity's ID is the other side of the association.
-									// This side must be set to FetchMode.SELECT; otherwise,
-									// there will be an infinite loop because the current entity
-									// would need to be loaded before the associated entity can be loaded,
-									// but the associated entity cannot be loaded until after the current
-									// entity is loaded (since the current entity is the associated entity's ID).
+									// The owning side of the inverse to-one is defined by the associated entity's id.
+									//
+									// Because of how Loaders process ids when processing the ResultSet, this condition
+									// would lead to an infinite loop. Adjust the fetch to use a SELECT fetch instead
+									// of JOIN to avoid the infinite loop.
 									return new FetchStrategy( fetchStrategy.getTiming(), FetchStyle.SELECT );
 								}
 							}

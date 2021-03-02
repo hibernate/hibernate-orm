@@ -6,6 +6,8 @@
  */
 package org.hibernate.annotations;
 
+import org.hibernate.property.access.spi.PropertyAccessStrategy;
+
 import java.lang.annotation.Retention;
 
 import static java.lang.annotation.ElementType.FIELD;
@@ -43,6 +45,13 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 public @interface AttributeAccessor {
 	/**
 	 * Names the {@link org.hibernate.property.access.spi.PropertyAccessStrategy} strategy.
+	 *
+	 * @deprecated use {@link #strategy()}
 	 */
-	String value();
+	@Deprecated
+	String value() default "";
+	/**
+	 * A class implementing {@link org.hibernate.property.access.spi.PropertyAccessStrategy}.
+	 */
+	Class<? extends PropertyAccessStrategy> strategy() default PropertyAccessStrategy.class;
 }

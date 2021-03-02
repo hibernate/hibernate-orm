@@ -78,7 +78,7 @@ public class AttributeAccessorTest extends BaseEnversJPAFunctionalTestCase {
 			this.id = id;
 		}
 
-		@AttributeAccessor( "org.hibernate.envers.test.integration.accesstype.AttributeAccessorTest$BasicAttributeAccessor" )
+		@AttributeAccessor( strategy =BasicAttributeAccessor.class )
 		public String getName() {
 			return name;
 		}

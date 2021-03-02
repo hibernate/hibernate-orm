@@ -2511,7 +2511,7 @@ public abstract class AbstractEntityPersister
 			&& !loadQueryInfluencers.hasEnabledFetchProfiles();
 	}
 
-	private UniqueEntityLoader getAppropriateUniqueKeyLoader(
+	protected UniqueEntityLoader getAppropriateUniqueKeyLoader(
 			String propertyName,
 			SharedSessionContractImplementor session) {
 		LoadQueryInfluencers loadQueryInfluencers = session.getLoadQueryInfluencers();

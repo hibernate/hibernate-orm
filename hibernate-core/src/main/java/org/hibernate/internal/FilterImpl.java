@@ -46,6 +46,12 @@ public class FilterImpl implements Filter, Serializable {
 		filterName = definition.getFilterName();
 	}
 
+	public FilterImpl(FilterImpl original) {
+		this.definition = original.definition;
+		this.filterName = original.filterName;
+		this.parameters = new HashMap<>( original.parameters );
+	}
+
 	public FilterDefinition getFilterDefinition() {
 		return definition;
 	}

@@ -43,12 +43,13 @@ public class LoadQueryInfluencers implements Serializable {
 	private final SessionFactoryImplementor sessionFactory;
 
 	private String internalFetchProfile;
+	private transient LoadQueryInfluencersSnapshot snapshot;
 
 	//Lazily initialized!
 	private HashSet<String> enabledFetchProfileNames;
 
 	//Lazily initialized!
-	private HashMap<String,Filter> enabledFilters;
+	private HashMap<String, FilterImpl> enabledFilters;
 
 	private final EffectiveEntityGraph effectiveEntityGraph = new EffectiveEntityGraph();
 
@@ -71,6 +72,35 @@ public class LoadQueryInfluencers implements Serializable {
 		return sessionFactory;
 	}
 
+	public LoadQueryInfluencersSnapshot getSnapshot() {
+		if ( snapshot == null ) {
+			final HashSet<String> enabledFetchProfileNames;
+			if ( this.enabledFetchProfileNames == null || this.enabledFetchProfileNames.isEmpty() ) {
+				enabledFetchProfileNames = null;
+			}
+			else {
+				enabledFetchProfileNames = new HashSet<>( this.enabledFetchProfileNames );
+			}
+			final HashMap<String, FilterImpl> enabledFilters;
+			if ( this.enabledFilters == null || this.enabledFilters.isEmpty() ) {
+				enabledFilters = null;
+			}
+			else {
+				enabledFilters = new HashMap<>( this.enabledFilters.size() );
+				for ( Map.Entry<String, FilterImpl> entry : this.enabledFilters.entrySet() ) {
+					enabledFilters.put( entry.getKey(), new FilterImpl( entry.getValue() ) );
+				}
+			}
+			snapshot = new LoadQueryInfluencersSnapshot( enabledFetchProfileNames, enabledFilters );
+		}
+		return snapshot;
+	}
+
+	public void setSnapshot(LoadQueryInfluencersSnapshot snapshot) {
+		this.enabledFetchProfileNames = snapshot.enabledFetchProfileNames;
+		this.enabledFilters = snapshot.enabledFilters;
+		this.snapshot = null;
+	}
 
 	// internal fetch profile support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -94,7 +124,7 @@ public class LoadQueryInfluencers implements Serializable {
 		return enabledFilters != null && !enabledFilters.isEmpty();
 	}
 
-	public Map<String,Filter> getEnabledFilters() {
+	public Map<String, Filter> getEnabledFilters() {
 		if ( enabledFilters == null ) {
 			return Collections.EMPTY_MAP;
 		}
@@ -104,7 +134,7 @@ public class LoadQueryInfluencers implements Serializable {
 				//TODO: this implementation has bad performance
 				filter.validate();
 			}
-			return enabledFilters;
+			return Collections.unmodifiableMap( enabledFilters );
 		}
 	}
 
@@ -136,12 +166,15 @@ public class LoadQueryInfluencers implements Serializable {
 			this.enabledFilters = new HashMap<>();
 		}
 		enabledFilters.put( filterName, filter );
+		snapshot = null;
 		return filter;
 	}
 
 	public void disableFilter(String filterName) {
 		if ( enabledFilters != null ) {
-			enabledFilters.remove( filterName );
+			if ( enabledFilters.remove( filterName ) != null ) {
+				snapshot = null;
+			}
 		}
 	}
 
@@ -215,13 +248,17 @@ public class LoadQueryInfluencers implements Serializable {
 		if ( enabledFetchProfileNames == null ) {
 			this.enabledFetchProfileNames = new HashSet<>();
 		}
-		enabledFetchProfileNames.add( name );
+		if ( enabledFetchProfileNames.add( name ) ) {
+			snapshot = null;
+		}
 	}
 
 	public void disableFetchProfile(String name) throws UnknownProfileException {
 		checkFetchProfileName( name );
 		if ( enabledFetchProfileNames != null ) {
-			enabledFetchProfileNames.remove( name );
+			if ( enabledFetchProfileNames.remove( name ) ) {
+				snapshot = null;
+			}
 		}
 	}
 

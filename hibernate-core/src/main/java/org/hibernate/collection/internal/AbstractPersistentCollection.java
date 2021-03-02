@@ -25,6 +25,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.LoadQueryInfluencersSnapshot;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -58,6 +59,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractPersistentCollection.class );
 
 	private transient SharedSessionContractImplementor session;
+	private LoadQueryInfluencersSnapshot loadQueryInfluencersSnapshot;
 	private boolean isTempSession = false;
 	private boolean initialized;
 	private transient List<DelayedOperation> operationQueue;
@@ -292,6 +294,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		final SharedSessionContractImplementor session = (SharedSessionContractImplementor) sf.openSession();
 		session.getPersistenceContextInternal().setDefaultReadOnly( true );
 		session.setFlushMode( FlushMode.MANUAL );
+		session.getLoadQueryInfluencers().setSnapshot( loadQueryInfluencersSnapshot );
 		return session;
 	}
 
@@ -655,6 +658,9 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 						// Just log the info.
 						LOG.queuedOperationWhenDetachFromSession( collectionInfoString );
 					}
+				}
+				if ( !initialized && allowLoadOutsideTransaction ) {
+					loadQueryInfluencersSnapshot = session.getLoadQueryInfluencers().getSnapshot();
 				}
 				this.session = null;
 			}

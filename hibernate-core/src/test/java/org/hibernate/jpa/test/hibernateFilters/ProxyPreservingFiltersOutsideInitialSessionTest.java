@@ -44,7 +44,6 @@ public class ProxyPreservingFiltersOutsideInitialSessionTest
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-11076", message = "Fix rejected, we need another approach to fix this issue!" )
 	public void testPreserveFilters() {
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
@@ -121,7 +120,6 @@ public class ProxyPreservingFiltersOutsideInitialSessionTest
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-11076", message = "Fix rejected, we need another approach to fix this issue!" )
 	public void testChangeFilterBeforeInitializeInTempSession() {
 
 		doInJPA(
@@ -159,10 +157,9 @@ public class ProxyPreservingFiltersOutsideInitialSessionTest
 		} );
 
 		log.info( "Initialize accounts collection" );
-		// What should group.getAccounts() contain? Should it be accounts with regionCode "Europe"
-		// because that was the most recent filter used in the session?
+		// The accounts collection captures a snapshot of the filters when detached
+		// so group.getAccounts() will only contain "Europe" accounts
 		Hibernate.initialize( group.getAccounts() );
-		// The following will fail because the collection will only contain accounts with regionCode "US"
 		assertEquals(2, group.getAccounts().size());
 	}
 

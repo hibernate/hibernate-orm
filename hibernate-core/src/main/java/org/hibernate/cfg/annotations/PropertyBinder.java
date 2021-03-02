@@ -41,6 +41,7 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
+import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.tuple.AnnotationValueGeneration;
 import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.tuple.ValueGeneration;
@@ -276,7 +277,17 @@ public class PropertyBinder {
 
 			if ( property.isAnnotationPresent( AttributeAccessor.class ) ) {
 				final AttributeAccessor accessor = property.getAnnotation( AttributeAccessor.class );
-				prop.setPropertyAccessorName( accessor.value() );
+				String value = accessor.value();
+				Class<?> type = accessor.strategy();
+				if ( !value.isEmpty() ) {
+					prop.setPropertyAccessorName( value );
+				}
+				else if ( !PropertyAccessStrategy.class.equals(type) ) {
+					prop.setPropertyAccessorName( type.getName() );
+				}
+				else {
+					throw new AnnotationException("@AttributeAccessor must specify a PropertyAccessStrategy type");
+				}
 			}
 		}
 

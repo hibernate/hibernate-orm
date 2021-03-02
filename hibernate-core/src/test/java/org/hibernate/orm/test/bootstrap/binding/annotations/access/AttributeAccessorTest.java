@@ -83,7 +83,7 @@ public class AttributeAccessorTest {
 			this.id = id;
 		}
 
-		@AttributeAccessor("org.hibernate.orm.test.bootstrap.binding.annotations.access.AttributeAccessorTest$BasicAttributeAccessor")
+		@AttributeAccessor(strategy =BasicAttributeAccessor.class)
 		public String getName() {
 			return name;
 		}

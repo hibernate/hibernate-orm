@@ -2471,7 +2471,7 @@ public abstract class AbstractEntityPersister
 				.load( uniqueKey, session, LockOptions.NONE );
 	}
 
-	private UniqueEntityLoader getAppropriateUniqueKeyLoader(String propertyName, SharedSessionContractImplementor session) {
+	protected UniqueEntityLoader getAppropriateUniqueKeyLoader(String propertyName, SharedSessionContractImplementor session) {
 		final boolean useStaticLoader = !session.getLoadQueryInfluencers().hasEnabledFilters()
 				&& !session.getLoadQueryInfluencers().hasEnabledFetchProfiles()
 				&& propertyName.indexOf( '.' ) < 0; //ugly little workaround for fact that createUniqueKeyLoaders() does not handle component properties

@@ -7,9 +7,12 @@
 package org.hibernate.type.descriptor.java;
 
 import java.sql.Timestamp;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoField;
+import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -41,17 +44,8 @@ public class JdbcTimestampTypeDescriptor extends AbstractTemporalTypeDescriptor<
 	 * @see #TIMESTAMP_FORMAT
 	 */
 	@SuppressWarnings("unused")
-	public static final DateTimeFormatter LITERAL_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
-
-	/**
-	 * Alias for {@link java.time.format.DateTimeFormatter#ISO_LOCAL_DATE_TIME}.
-	 *
-	 * Intended for use with logging
-	 *
-	 * @see #LITERAL_FORMATTER
-	 */
-	@SuppressWarnings({"unused", "WeakerAccess"})
-	public static final DateTimeFormatter LOGGABLE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+	public static final DateTimeFormatter LITERAL_FORMATTER = DateTimeFormatter.ofPattern( TIMESTAMP_FORMAT )
+			.withZone( ZoneId.from( ZoneOffset.UTC ) );
 
 	public static class TimestampMutabilityPlan extends MutableMutabilityPlan<Date> {
 		public static final TimestampMutabilityPlan INSTANCE = new TimestampMutabilityPlan();
@@ -92,15 +86,19 @@ public class JdbcTimestampTypeDescriptor extends AbstractTemporalTypeDescriptor<
 
 	@Override
 	public String toString(Date value) {
-		return LOGGABLE_FORMATTER.format( value.toInstant() );
+		return LITERAL_FORMATTER.format( value.toInstant() );
 	}
 
 	@Override
 	public Date fromString(String string) {
 		try {
-			return new Timestamp( new SimpleDateFormat( TIMESTAMP_FORMAT ).parse( string ).getTime() );
+			final TemporalAccessor accessor = LITERAL_FORMATTER.parse( string );
+			return new Timestamp(
+					accessor.getLong( ChronoField.INSTANT_SECONDS ) * 1000L
+							+ accessor.get( ChronoField.NANO_OF_SECOND ) / 1_000_000
+			);
 		}
-		catch ( ParseException pe) {
+		catch ( DateTimeParseException pe) {
 			throw new HibernateException( "could not parse timestamp string" + string, pe );
 		}
 	}

@@ -1856,4 +1856,8 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Ignoring ServiceConfigurationError caught while trying to instantiate service '%s'.", id = 505)
 	void ignoringServiceConfigurationError(Class<?> serviceContract, @Cause ServiceConfigurationError error);
 
+	@LogMessage(level = WARN)
+	@Message(value = "Detaching an uninitialized collection with enabled filters from a session: %s", id = 506)
+	void enabledFiltersWhenDetachFromSession(String collectionInfoString);
+
 }

@@ -656,6 +656,10 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 						LOG.queuedOperationWhenDetachFromSession( collectionInfoString );
 					}
 				}
+				if ( allowLoadOutsideTransaction && !initialized && session.getLoadQueryInfluencers().hasEnabledFilters() ) {
+					final String collectionInfoString = MessageHelper.collectionInfoString( getRole(), getKey() );
+					LOG.enabledFiltersWhenDetachFromSession( collectionInfoString );
+				}
 				this.session = null;
 			}
 			return true;

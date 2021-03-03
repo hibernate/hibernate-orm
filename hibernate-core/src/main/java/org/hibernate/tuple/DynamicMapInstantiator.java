@@ -6,7 +6,6 @@
  */
 package org.hibernate.tuple;
 
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -37,7 +36,7 @@ public class DynamicMapInstantiator implements Instantiator {
 		}
 	}
 
-	public final Object instantiate(Serializable id) {
+	public final Object instantiate(Object id) {
 		return instantiate();
 	}
 

@@ -5,7 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.test.dynamicentity;
-import java.io.Serializable;
+
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 
@@ -18,7 +18,7 @@ public class ProxyHelper {
 		return newPersonProxy( null );
 	}
 
-	public static Person newPersonProxy(Serializable id) {
+	public static Person newPersonProxy(Object id) {
 		return ( Person ) Proxy.newProxyInstance(
 				Person.class.getClassLoader(),
 		        new Class[] {Person.class},
@@ -30,7 +30,7 @@ public class ProxyHelper {
 		return newCustomerProxy( null );
 	}
 
-	public static Customer newCustomerProxy(Serializable id) {
+	public static Customer newCustomerProxy(Object id) {
 		return ( Customer ) Proxy.newProxyInstance(
 				Customer.class.getClassLoader(),
 		        new Class[] {Customer.class},
@@ -42,7 +42,7 @@ public class ProxyHelper {
 		return newCompanyProxy( null );
 	}
 
-	public static Company newCompanyProxy(Serializable id) {
+	public static Company newCompanyProxy(Object id) {
 		return ( Company ) Proxy.newProxyInstance(
 				Company.class.getClassLoader(),
 		        new Class[] {Company.class},
@@ -54,7 +54,7 @@ public class ProxyHelper {
 		return newAddressProxy( null );
 	}
 
-	public static Address newAddressProxy(Serializable id) {
+	public static Address newAddressProxy(Object id) {
 		return ( Address ) Proxy.newProxyInstance(
 				Address.class.getClassLoader(),
 		        new Class[] {Address.class},

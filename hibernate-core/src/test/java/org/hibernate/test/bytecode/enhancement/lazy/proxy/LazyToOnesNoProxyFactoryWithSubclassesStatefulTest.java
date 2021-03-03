@@ -6,7 +6,6 @@
  */
 package org.hibernate.test.bytecode.enhancement.lazy.proxy;
 
-import java.io.Serializable;
 import java.util.Map;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -304,38 +303,38 @@ public class LazyToOnesNoProxyFactoryWithSubclassesStatefulTest extends BaseNonC
 		}
 
 		@Override
-		public Object instantiate(Serializable id) throws HibernateException {
+		public Object instantiate(Object id) throws HibernateException {
 			return pojoEntityTuplizer.instantiate( id );
 		}
 
 		@Override
-		public Object instantiate(Serializable id, SharedSessionContractImplementor session) {
+		public Object instantiate(Object id, SharedSessionContractImplementor session) {
 			return pojoEntityTuplizer.instantiate( id, session );
 
 		}
 
 		@Override
-		public Serializable getIdentifier(Object entity) throws HibernateException {
+		public Object getIdentifier(Object entity) throws HibernateException {
 			return pojoEntityTuplizer.getIdentifier( entity );
 		}
 
 		@Override
-		public Serializable getIdentifier(Object entity, SharedSessionContractImplementor session) {
+		public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
 			return pojoEntityTuplizer.getIdentifier( entity, session );
 		}
 
 		@Override
-		public void setIdentifier(Object entity, Serializable id) throws HibernateException {
+		public void setIdentifier(Object entity, Object id) throws HibernateException {
 			pojoEntityTuplizer.setIdentifier( entity, id );
 		}
 
 		@Override
-		public void setIdentifier(Object entity, Serializable id, SharedSessionContractImplementor session) {
+		public void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session) {
 			pojoEntityTuplizer.setIdentifier( entity, id, session );
 		}
 
 		@Override
-		public void resetIdentifier(Object entity, Serializable currentId, Object currentVersion) {
+		public void resetIdentifier(Object entity, Object currentId, Object currentVersion) {
 			pojoEntityTuplizer.resetIdentifier( entity, currentId, currentVersion );
 		}
 
@@ -388,7 +387,7 @@ public class LazyToOnesNoProxyFactoryWithSubclassesStatefulTest extends BaseNonC
 		}
 
 		@Override
-		public Object createProxy(Serializable id, SharedSessionContractImplementor session) throws HibernateException {
+		public Object createProxy(Object id, SharedSessionContractImplementor session) throws HibernateException {
 			return pojoEntityTuplizer.createProxy( id, session );
 		}
 

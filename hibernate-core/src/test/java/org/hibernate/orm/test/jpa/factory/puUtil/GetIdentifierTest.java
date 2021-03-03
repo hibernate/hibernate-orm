@@ -40,7 +40,7 @@ public class GetIdentifierTest {
 					ModernEntity modernEntity = new ModernEntity();
 					modernEntity.setFoo( 2 );
 
-					Serializable simpleEntityId = (Serializable) entityManager.getEntityManagerFactory()
+					Object simpleEntityId = entityManager.getEntityManagerFactory()
 							.getPersistenceUnitUtil().getIdentifier( modernEntity );
 				}
 		);

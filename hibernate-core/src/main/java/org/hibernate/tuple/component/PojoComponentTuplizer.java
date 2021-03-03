@@ -166,7 +166,7 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 			}
 		}
 
-		public Object instantiate(Serializable id) {
+		public Object instantiate(Object id) {
 			throw new AssertionFailure( "ProxiedInstantiator can only be used to instantiate component" );
 		}
 

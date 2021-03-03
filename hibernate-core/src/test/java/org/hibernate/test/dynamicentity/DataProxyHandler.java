@@ -5,7 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.test.dynamicentity;
-import java.io.Serializable;
+
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -23,7 +23,7 @@ public final class DataProxyHandler implements InvocationHandler {
 	private String entityName;
 	private HashMap data = new HashMap();
 
-	public DataProxyHandler(String entityName, Serializable id) {
+	public DataProxyHandler(String entityName, Object id) {
 		this.entityName = entityName;
 		data.put( "Id", id );
 	}

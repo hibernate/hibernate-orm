@@ -8,7 +8,6 @@
 //$Id$
 package org.hibernate.test.annotations.tuplizer;
 
-import java.io.Serializable;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 
@@ -26,7 +25,7 @@ public class DynamicInstantiator implements Instantiator {
 		this.entityName = entityName;
 	}
 
-	public Object instantiate(Serializable id) {
+	public Object instantiate(Object id) {
 		if ( Cuisine.class.getName().equals( entityName ) ) {
 			return ProxyHelper.newCuisineProxy( id );
 		}

@@ -23,7 +23,7 @@ public interface Instantiator extends Serializable {
 	 * @param id The id of the entity to be instantiated.
 	 * @return An appropriately instantiated entity.
 	 */
-	Object instantiate(Serializable id);
+	Object instantiate(Object id);
 
 	/**
 	 * Perform the requested instantiation.

@@ -6,8 +6,6 @@
  */
 package org.hibernate.test.annotations.tuplizer.bytebuddysubclass;
 
-import java.io.Serializable;
-
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.tuple.Instantiator;
 
@@ -28,7 +26,7 @@ public class MyEntityInstantiator implements Instantiator {
 	}
 
 	@Override
-	public Object instantiate(Serializable id) {
+	public Object instantiate(Object id) {
 		return instantiate();
 	}
 

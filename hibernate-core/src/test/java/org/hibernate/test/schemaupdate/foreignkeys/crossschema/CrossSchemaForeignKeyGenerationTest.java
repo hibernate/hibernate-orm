@@ -35,8 +35,10 @@ import org.hibernate.tool.schema.internal.SchemaDropperImpl;
 import org.hibernate.tool.schema.internal.IndividuallySchemaMigratorImpl;
 import org.hibernate.tool.schema.internal.exec.GenerationTarget;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToStdout;
+import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExceptionHandler;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
+import org.hibernate.tool.schema.spi.SchemaFilter;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.ScriptSourceInput;
 import org.hibernate.tool.schema.spi.ScriptTargetOutput;
@@ -155,17 +157,24 @@ public class CrossSchemaForeignKeyGenerationTest extends BaseUnitTestCase {
 			public ExceptionHandler getExceptionHandler() {
 				return ExceptionHandlerLoggedImpl.INSTANCE;
 			}
+
+			@Override
+			public SchemaFilter getSchemaFilter() {
+				return SchemaFilter.ALL;
+			}
 		};
 
 		new IndividuallySchemaMigratorImpl( tool, DefaultSchemaFilter.INSTANCE ).doMigration(
 				metadata,
 				options,
+				ContributableMatcher.ALL,
 				TargetDescriptorImpl.INSTANCE
 		);
 
 		new IndividuallySchemaMigratorImpl( tool, DefaultSchemaFilter.INSTANCE ).doMigration(
 				metadata,
 				options,
+				ContributableMatcher.ALL,
 				TargetDescriptorImpl.INSTANCE
 		);
 
@@ -216,11 +225,17 @@ public class CrossSchemaForeignKeyGenerationTest extends BaseUnitTestCase {
 			public ExceptionHandler getExceptionHandler() {
 				return ExceptionHandlerLoggedImpl.INSTANCE;
 			}
+
+			@Override
+			public SchemaFilter getSchemaFilter() {
+				return SchemaFilter.ALL;
+			}
 		};
 
 		new GroupedSchemaMigratorImpl( tool, DefaultSchemaFilter.INSTANCE ).doMigration(
 				metadata,
 				options,
+				ContributableMatcher.ALL,
 				TargetDescriptorImpl.INSTANCE
 		);
 

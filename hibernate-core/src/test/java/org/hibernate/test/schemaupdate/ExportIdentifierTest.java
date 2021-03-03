@@ -136,11 +136,10 @@ public class ExportIdentifierTest extends BaseUnitTestCase {
 		for ( Namespace namespace : namespaces ) {
 			addExportIdentifier(
 					new SimpleAuxiliaryDatabaseObject(
-							"orm",
 							namespace,
 							"create",
 							"drop",
-							Collections.<String>emptySet()
+							Collections.emptySet()
 					),
 					exportIdentifierList,
 					exportIdentifierSet
@@ -156,12 +155,11 @@ public class ExportIdentifierTest extends BaseUnitTestCase {
 		for ( Namespace namespace : namespaces ) {
 			addExportIdentifier(
 					new NamedAuxiliaryDatabaseObject(
-							"orm",
 							name,
 							namespace,
 							"create",
 							"drop",
-							Collections.<String>emptySet()
+							Collections.emptySet()
 					),
 					exportIdentifierList,
 					exportIdentifierSet

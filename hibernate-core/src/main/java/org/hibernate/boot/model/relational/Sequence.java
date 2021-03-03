@@ -14,7 +14,7 @@ import org.hibernate.boot.model.naming.Identifier;
  *
  * @author Steve Ebersole
  */
-public class Sequence implements Exportable {
+public class Sequence implements ContributableDatabaseObject {
 	public static class Name extends QualifiedNameParser.NameParts {
 		public Name(
 				Identifier catalogIdentifier,

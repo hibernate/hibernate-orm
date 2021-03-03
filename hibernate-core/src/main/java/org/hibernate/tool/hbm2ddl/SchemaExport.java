@@ -39,6 +39,7 @@ import org.hibernate.tool.schema.internal.ExceptionHandlerCollectingImpl;
 import org.hibernate.tool.schema.internal.ExceptionHandlerHaltImpl;
 import org.hibernate.tool.schema.internal.Helper;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
+import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExceptionHandler;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
@@ -60,7 +61,7 @@ import org.hibernate.tool.schema.spi.TargetDescriptor;
 public class SchemaExport {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SchemaExport.class );
 
-	public static enum Type {
+	public enum Type {
 		CREATE( Action.CREATE ),
 		DROP( Action.DROP ),
 		NONE( Action.NONE ),
@@ -81,7 +82,7 @@ public class SchemaExport {
 		}
 	}
 
-	public static enum Action {
+	public enum Action {
 		/**
 		 * None - duh :P
 		 */
@@ -228,7 +229,6 @@ public class SchemaExport {
 		execute( targetTypes, action, metadata, ( (MetadataImplementor) metadata ).getMetadataBuildingOptions().getServiceRegistry() );
 	}
 
-	@SuppressWarnings("unchecked")
 	public void execute(EnumSet<TargetType> targetTypes, Action action, Metadata metadata, ServiceRegistry serviceRegistry) {
 		if ( action == Action.NONE ) {
 			LOG.debug( "Skipping SchemaExport as Action.NONE was passed" );
@@ -255,7 +255,7 @@ public class SchemaExport {
 			Metadata metadata,
 			ServiceRegistry serviceRegistry,
 			TargetDescriptor targetDescriptor) {
-		Map config = new HashMap( serviceRegistry.getService( ConfigurationService.class ).getSettings() );
+		Map<String,Object> config = new HashMap<>( serviceRegistry.getService( ConfigurationService.class ).getSettings() );
 		config.put( AvailableSettings.HBM2DDL_DELIMITER, delimiter );
 		config.put( AvailableSettings.FORMAT_SQL, format );
 		config.put( AvailableSettings.HBM2DDL_IMPORT_FILES, importFiles );
@@ -287,6 +287,7 @@ public class SchemaExport {
 				tool.getSchemaDropper( config ).doDrop(
 						metadata,
 						executionOptions,
+						ContributableMatcher.ALL,
 						sourceDescriptor,
 						targetDescriptor
 				);
@@ -296,6 +297,7 @@ public class SchemaExport {
 				tool.getSchemaCreator( config ).doCreation(
 						metadata,
 						executionOptions,
+						ContributableMatcher.ALL,
 						sourceDescriptor,
 						targetDescriptor
 				);
@@ -396,7 +398,7 @@ public class SchemaExport {
 
 	private static MetadataImplementor buildMetadata(
 			CommandLineArgs parsedArgs,
-			StandardServiceRegistry serviceRegistry) throws Exception {
+			StandardServiceRegistry serviceRegistry) {
 		final MetadataSources metadataSources = new MetadataSources( serviceRegistry );
 
 		for ( String filename : parsedArgs.hbmXmlFiles ) {

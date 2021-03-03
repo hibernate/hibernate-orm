@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.Internal;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
@@ -48,6 +49,7 @@ import org.hibernate.tool.schema.internal.exec.JdbcContext;
 import org.hibernate.tool.schema.internal.exec.ScriptSourceInputFromUrl;
 import org.hibernate.tool.schema.internal.exec.ScriptSourceInputNonExistentImpl;
 import org.hibernate.tool.schema.spi.CommandAcceptanceException;
+import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExceptionHandler;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.hibernate.tool.schema.spi.SchemaCreator;
@@ -105,6 +107,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 	public void doCreation(
 			Metadata metadata,
 			ExecutionOptions options,
+			ContributableMatcher contributableInclusionFilter,
 			SourceDescriptor sourceDescriptor,
 			TargetDescriptor targetDescriptor) {
 		if ( targetDescriptor.getTargetTypes().isEmpty() ) {
@@ -119,13 +122,15 @@ public class SchemaCreatorImpl implements SchemaCreator {
 				true
 		);
 
-		doCreation( metadata, jdbcContext.getDialect(), options, sourceDescriptor, targets );
+		doCreation( metadata, jdbcContext.getDialect(), options, contributableInclusionFilter, sourceDescriptor, targets );
 	}
 
+	@Internal
 	public void doCreation(
 			Metadata metadata,
 			Dialect dialect,
 			ExecutionOptions options,
+			ContributableMatcher contributableInclusionFilter,
 			SourceDescriptor sourceDescriptor,
 			GenerationTarget... targets) {
 		for ( GenerationTarget target : targets ) {
@@ -133,7 +138,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 		}
 
 		try {
-			performCreation( metadata, dialect, options, sourceDescriptor, targets );
+			performCreation( metadata, dialect, options, contributableInclusionFilter, sourceDescriptor, targets );
 		}
 		finally {
 			for ( GenerationTarget target : targets ) {
@@ -151,6 +156,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 			Metadata metadata,
 			Dialect dialect,
 			ExecutionOptions options,
+			ContributableMatcher contributableInclusionFilter,
 			SourceDescriptor sourceDescriptor,
 			GenerationTarget... targets) {
 		final SqlScriptCommandExtractor commandExtractor = tool.getServiceRegistry().getService( SqlScriptCommandExtractor.class );
@@ -164,17 +170,17 @@ public class SchemaCreatorImpl implements SchemaCreator {
 				break;
 			}
 			case METADATA: {
-				createFromMetadata( metadata, options, dialect, formatter, targets );
+				createFromMetadata( metadata, options, contributableInclusionFilter, dialect, formatter, targets );
 				break;
 			}
 			case METADATA_THEN_SCRIPT: {
-				createFromMetadata( metadata, options, dialect, formatter, targets );
+				createFromMetadata( metadata, options, contributableInclusionFilter, dialect, formatter, targets );
 				createFromScript( sourceDescriptor.getScriptSourceInput(), commandExtractor, formatter, dialect, options, targets );
 				break;
 			}
 			case SCRIPT_THEN_METADATA: {
 				createFromScript( sourceDescriptor.getScriptSourceInput(), commandExtractor, formatter, dialect, options, targets );
-				createFromMetadata( metadata, options, dialect, formatter, targets );
+				createFromMetadata( metadata, options, contributableInclusionFilter, dialect, formatter, targets );
 			}
 		}
 
@@ -197,9 +203,28 @@ public class SchemaCreatorImpl implements SchemaCreator {
 		}
 	}
 
+	@Internal
 	public void createFromMetadata(
 			Metadata metadata,
 			ExecutionOptions options,
+			Dialect dialect,
+			Formatter formatter,
+			GenerationTarget... targets) {
+		createFromMetadata(
+				metadata,
+				options,
+				(contributed) -> true,
+				dialect,
+				formatter,
+				targets
+		);
+	}
+
+	@Internal
+	public void createFromMetadata(
+			Metadata metadata,
+			ExecutionOptions options,
+			ContributableMatcher contributableInclusionMatcher,
 			Dialect dialect,
 			Formatter formatter,
 			GenerationTarget... targets) {
@@ -223,7 +248,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 			Set<Identifier> exportedCatalogs = new HashSet<>();
 			for ( Namespace namespace : database.getNamespaces() ) {
 
-				if ( !schemaFilter.includeNamespace( namespace ) ) {
+				if ( ! options.getSchemaFilter().includeNamespace( namespace ) ) {
 					continue;
 				}
 
@@ -276,16 +301,22 @@ public class SchemaCreatorImpl implements SchemaCreator {
 		// then, create all schema objects (tables, sequences, constraints, etc) in each schema
 		for ( Namespace namespace : database.getNamespaces() ) {
 
-			if ( !schemaFilter.includeNamespace( namespace ) ) {
+			if ( ! options.getSchemaFilter().includeNamespace( namespace ) ) {
 				continue;
 			}
 
 			// sequences
 			for ( Sequence sequence : namespace.getSequences() ) {
-				if ( !schemaFilter.includeSequence( sequence ) ) {
+				if ( ! options.getSchemaFilter().includeSequence( sequence ) ) {
 					continue;
 				}
+
+				if ( ! contributableInclusionMatcher.matches( sequence ) ) {
+					continue;
+				}
+
 				checkExportIdentifier( sequence, exportIdentifiers );
+
 				applySqlStrings(
 						dialect.getSequenceExporter().getSqlCreateStrings(
 								sequence,
@@ -307,10 +338,17 @@ public class SchemaCreatorImpl implements SchemaCreator {
 				if ( !table.isPhysicalTable() ){
 					continue;
 				}
-				if ( !schemaFilter.includeTable( table ) ) {
+
+				if ( ! options.getSchemaFilter().includeTable( table ) ) {
 					continue;
 				}
+
+				if ( ! contributableInclusionMatcher.matches( table ) ) {
+					continue;
+				}
+
 				checkExportIdentifier( table, exportIdentifiers );
+
 				applySqlStrings(
 						dialect.getTableExporter().getSqlCreateStrings( table, metadata ),
 						formatter,
@@ -324,9 +362,14 @@ public class SchemaCreatorImpl implements SchemaCreator {
 				if ( !table.isPhysicalTable() ){
 					continue;
 				}
-				if ( !schemaFilter.includeTable( table ) ) {
+				if ( ! options.getSchemaFilter().includeTable( table ) ) {
 					continue;
 				}
+
+				if ( ! contributableInclusionMatcher.matches( table ) ) {
+					continue;
+				}
+
 				// indexes
 				final Iterator indexItr = table.getIndexIterator();
 				while ( indexItr.hasNext() ) {
@@ -359,14 +402,19 @@ public class SchemaCreatorImpl implements SchemaCreator {
 		for ( Namespace namespace : database.getNamespaces() ) {
 			// NOTE : Foreign keys must be created *after* unique keys for numerous DBs.  See HHH-8390
 
-			if ( !schemaFilter.includeNamespace( namespace ) ) {
+			if ( ! options.getSchemaFilter().includeNamespace( namespace ) ) {
 				continue;
 			}
 
 			for ( Table table : namespace.getTables() ) {
-				if ( !schemaFilter.includeTable( table ) ) {
+				if ( ! options.getSchemaFilter().includeTable( table ) ) {
 					continue;
 				}
+
+				if ( ! contributableInclusionMatcher.matches( table ) ) {
+					continue;
+				}
+
 				// foreign keys
 				final Iterator fkItr = table.getForeignKeyIterator();
 				while ( fkItr.hasNext() ) {
@@ -540,6 +588,11 @@ public class SchemaCreatorImpl implements SchemaCreator {
 			public ExceptionHandler getExceptionHandler() {
 				return ExceptionHandlerHaltImpl.INSTANCE;
 			}
+
+			@Override
+			public SchemaFilter getSchemaFilter() {
+				return schemaFilter;
+			}
 		};
 
 		createFromMetadata( metadata, options, dialect, FormatStyle.NONE.getFormatter(), target );
@@ -547,7 +600,10 @@ public class SchemaCreatorImpl implements SchemaCreator {
 		return target.commands;
 	}
 
-
+	/**
+	 * Intended for use from tests
+	 */
+	@Internal
 	public void doCreation(
 			Metadata metadata,
 			final boolean manageNamespaces,
@@ -562,6 +618,10 @@ public class SchemaCreatorImpl implements SchemaCreator {
 		);
 	}
 
+	/**
+	 * Intended for use from tests
+	 */
+	@Internal
 	public void doCreation(
 			Metadata metadata,
 			final ServiceRegistry serviceRegistry,
@@ -586,7 +646,13 @@ public class SchemaCreatorImpl implements SchemaCreator {
 					public ExceptionHandler getExceptionHandler() {
 						return ExceptionHandlerLoggedImpl.INSTANCE;
 					}
+
+					@Override
+					public SchemaFilter getSchemaFilter() {
+						return schemaFilter;
+					}
 				},
+				(contributed) -> true,
 				new SourceDescriptor() {
 					@Override
 					public SourceType getSourceType() {

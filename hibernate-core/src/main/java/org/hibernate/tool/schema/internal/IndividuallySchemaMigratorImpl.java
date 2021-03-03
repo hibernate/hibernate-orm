@@ -18,6 +18,7 @@ import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 import org.hibernate.tool.schema.extract.spi.NameSpaceTablesInformation;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
 import org.hibernate.tool.schema.internal.exec.GenerationTarget;
+import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.hibernate.tool.schema.spi.SchemaFilter;
 
@@ -40,6 +41,7 @@ public class IndividuallySchemaMigratorImpl extends AbstractSchemaMigrator {
 			Metadata metadata,
 			DatabaseInformation existingDatabase,
 			ExecutionOptions options,
+			ContributableMatcher contributableInclusionFilter,
 			Dialect dialect,
 			Formatter formatter,
 			Set<String> exportIdentifiers,
@@ -51,7 +53,7 @@ public class IndividuallySchemaMigratorImpl extends AbstractSchemaMigrator {
 		final NameSpaceTablesInformation tablesInformation =
 				new NameSpaceTablesInformation( metadata.getDatabase().getJdbcEnvironment().getIdentifierHelper() );
 
-		if ( schemaFilter.includeNamespace( namespace ) ) {
+		if ( options.getSchemaFilter().includeNamespace( namespace ) ) {
 			createSchemaAndCatalog(
 					existingDatabase,
 					options,
@@ -64,7 +66,9 @@ public class IndividuallySchemaMigratorImpl extends AbstractSchemaMigrator {
 					targets
 			);
 			for ( Table table : namespace.getTables() ) {
-				if ( schemaFilter.includeTable( table ) && table.isPhysicalTable() ) {
+				if ( options.getSchemaFilter().includeTable( table )
+						&& table.isPhysicalTable()
+						&& contributableInclusionFilter.matches( table ) ) {
 					checkExportIdentifier( table, exportIdentifiers );
 					final TableInformation tableInformation = existingDatabase.getTableInformation( table.getQualifiedTableName() );
 					if ( tableInformation == null ) {
@@ -78,7 +82,9 @@ public class IndividuallySchemaMigratorImpl extends AbstractSchemaMigrator {
 			}
 
 			for ( Table table : namespace.getTables() ) {
-				if ( schemaFilter.includeTable( table ) && table.isPhysicalTable() ) {
+				if ( options.getSchemaFilter().includeTable( table )
+						&& table.isPhysicalTable()
+						&& contributableInclusionFilter.matches( table ) ) {
 					final TableInformation tableInformation = tablesInformation.getTableInformation( table );
 					if ( tableInformation == null || tableInformation.isPhysicalTable() ) {
 						applyIndexes( table, tableInformation, dialect, metadata, formatter, options, targets );

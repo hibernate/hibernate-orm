@@ -12,6 +12,7 @@ import java.util.Map;
 import org.hibernate.tool.schema.spi.CommandAcceptanceException;
 import org.hibernate.tool.schema.spi.ExceptionHandler;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
+import org.hibernate.tool.schema.spi.SchemaFilter;
 
 /**
  * @author Steve Ebersole
@@ -36,6 +37,11 @@ public class ExecutionOptionsTestImpl implements ExecutionOptions, ExceptionHand
 	@Override
 	public ExceptionHandler getExceptionHandler() {
 		return this;
+	}
+
+	@Override
+	public SchemaFilter getSchemaFilter() {
+		return SchemaFilter.ALL;
 	}
 
 	@Override

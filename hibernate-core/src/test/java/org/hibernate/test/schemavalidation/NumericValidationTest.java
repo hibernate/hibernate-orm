@@ -26,8 +26,10 @@ import org.hibernate.tool.schema.JdbcMetadaAccessStrategy;
 import org.hibernate.tool.schema.SourceType;
 import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.internal.ExceptionHandlerLoggedImpl;
+import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExceptionHandler;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
+import org.hibernate.tool.schema.spi.SchemaFilter;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.ScriptSourceInput;
 import org.hibernate.tool.schema.spi.ScriptTargetOutput;
@@ -35,6 +37,7 @@ import org.hibernate.tool.schema.spi.SourceDescriptor;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.test.legacy.S;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -102,13 +105,14 @@ public class NumericValidationTest implements ExecutionOptions {
 
 	private void doValidation() {
 		ssr.getService( SchemaManagementTool.class ).getSchemaValidator( null )
-				.doValidation( metadata, this );
+				.doValidation( metadata, this, ContributableMatcher.ALL );
 	}
 
 	private void createSchema() {
 		ssr.getService( SchemaManagementTool.class ).getSchemaCreator( null ).doCreation(
 				metadata,
 				this,
+				ContributableMatcher.ALL,
 				new SourceDescriptor() {
 					@Override
 					public SourceType getSourceType() {
@@ -161,5 +165,10 @@ public class NumericValidationTest implements ExecutionOptions {
 	@Override
 	public ExceptionHandler getExceptionHandler() {
 		return ExceptionHandlerLoggedImpl.INSTANCE;
+	}
+
+	@Override
+	public SchemaFilter getSchemaFilter() {
+		return SchemaFilter.ALL;
 	}
 }

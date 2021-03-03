@@ -6,6 +6,7 @@
  */
 package org.hibernate.testing.junit5;
 
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import javax.persistence.SharedCacheMode;
@@ -24,6 +25,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.tool.schema.Action;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
+import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator.ActionGrouping;
 
 import org.junit.jupiter.api.AfterEach;
 
@@ -72,10 +74,11 @@ public abstract class SessionFactoryBasedFunctionalTest
 		}
 		catch (Exception e) {
 			StandardServiceRegistryBuilder.destroy( ssr );
-			SchemaManagementToolCoordinator.ActionGrouping actions = SchemaManagementToolCoordinator.ActionGrouping.interpret(
-					ssrBuilder.getSettings() );
-			if ( ( exportSchema() || actions.getDatabaseAction() != Action.NONE ) && metadata != null ) {
-				dropDatabase( );
+			if ( exportSchema() && metadata != null ) {
+				final Set<ActionGrouping> groupings = ActionGrouping.interpret( metadata, ssrBuilder.getSettings() );
+				if ( ! groupings.isEmpty() ) {
+					dropDatabase();
+				}
 			}
 			throw e;
 		}

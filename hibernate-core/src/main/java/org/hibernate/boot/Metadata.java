@@ -7,6 +7,7 @@
 package org.hibernate.boot;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -192,4 +193,9 @@ public interface Metadata extends Mapping {
 	java.util.Collection<Table> collectTableMappings();
 
 	Map<String, SqmFunctionDescriptor> getSqlFunctionMap();
+
+	/**
+	 * All of the known model contributors
+	 */
+	Set<String> getContributors();
 }

@@ -51,4 +51,24 @@ public interface SchemaFilter {
 	 */
 	boolean includeSequence(Sequence sequence);
 
+	/**
+	 * Matches everything
+	 */
+	SchemaFilter ALL = new SchemaFilter() {
+		@Override
+		public boolean includeNamespace( Namespace namespace ) {
+			return true;
+		}
+
+		@Override
+		public boolean includeTable( Table table ) {
+			return true;
+		}
+
+		@Override
+		public boolean includeSequence( Sequence sequence ) {
+			return true;
+		}
+	};
+
 }

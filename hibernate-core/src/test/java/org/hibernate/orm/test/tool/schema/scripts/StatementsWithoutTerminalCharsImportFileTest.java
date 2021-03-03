@@ -24,9 +24,11 @@ import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.internal.ExceptionHandlerLoggedImpl;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 import org.hibernate.tool.schema.internal.script.MultiLineSqlScriptExtracter;
+import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExceptionHandler;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.hibernate.tool.schema.spi.SchemaCreator;
+import org.hibernate.tool.schema.spi.SchemaFilter;
 import org.hibernate.tool.schema.spi.ScriptSourceInput;
 import org.hibernate.tool.schema.spi.ScriptTargetOutput;
 import org.hibernate.tool.schema.spi.SourceDescriptor;
@@ -87,6 +89,7 @@ public class StatementsWithoutTerminalCharsImportFileTest extends BaseUnitTestCa
 			schemaCreator.doCreation(
 					buildMappings( ssr ),
 					this,
+					ContributableMatcher.ALL,
 					SourceDescriptorImpl.INSTANCE,
 					TargetDescriptorImpl.INSTANCE
 			);
@@ -117,6 +120,11 @@ public class StatementsWithoutTerminalCharsImportFileTest extends BaseUnitTestCa
 	@Override
 	public ExceptionHandler getExceptionHandler() {
 		return ExceptionHandlerLoggedImpl.INSTANCE;
+	}
+
+	@Override
+	public SchemaFilter getSchemaFilter() {
+		return SchemaFilter.ALL;
 	}
 
 	private static class SourceDescriptorImpl implements SourceDescriptor {

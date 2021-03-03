@@ -6,8 +6,6 @@
  */
 package org.hibernate.boot.model.relational;
 
-import org.hibernate.mapping.Contributable;
-
 /**
  * Contract for entities (in the ERD sense) which can be exported via {@code CREATE}, {@code ALTER}, etc
  *
@@ -15,20 +13,11 @@ import org.hibernate.mapping.Contributable;
  *
  * @see org.hibernate.tool.schema.spi.Exporter
  */
-public interface Exportable extends Contributable {
+public interface Exportable {
 	/**
 	 * Get a unique identifier to make sure we are not exporting the same database structure multiple times.
 	 *
 	 * @return The exporting identifier.
 	 */
 	String getExportIdentifier();
-
-	/**
-	 * The contributor of this exportable.  Usually these come from ORM mappings of the application model.
-	 * But other integrations might contribute relational objects to the database model - hibernate-search,
-	 * hibernate-envers, etc
-	 */
-	default String getContributor() {
-		return "orm";
-	}
 }

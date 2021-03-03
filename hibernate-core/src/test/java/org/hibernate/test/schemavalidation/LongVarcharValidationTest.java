@@ -25,8 +25,10 @@ import org.hibernate.tool.schema.JdbcMetadaAccessStrategy;
 import org.hibernate.tool.schema.SourceType;
 import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.internal.ExceptionHandlerLoggedImpl;
+import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExceptionHandler;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
+import org.hibernate.tool.schema.spi.SchemaFilter;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.ScriptSourceInput;
 import org.hibernate.tool.schema.spi.ScriptTargetOutput;
@@ -94,7 +96,8 @@ public class LongVarcharValidationTest implements ExecutionOptions {
 	private void doValidation(MetadataImplementor metadata) {
 		ssr.getService( SchemaManagementTool.class ).getSchemaValidator( null ).doValidation(
 				metadata,
-				this
+				this,
+				ContributableMatcher.ALL
 		);
 	}
 
@@ -102,6 +105,7 @@ public class LongVarcharValidationTest implements ExecutionOptions {
 		ssr.getService( SchemaManagementTool.class ).getSchemaCreator( null ).doCreation(
 				metadata,
 				this,
+				ContributableMatcher.ALL,
 				new SourceDescriptor() {
 					@Override
 					public SourceType getSourceType() {
@@ -131,6 +135,7 @@ public class LongVarcharValidationTest implements ExecutionOptions {
 		ssr.getService( SchemaManagementTool.class ).getSchemaDropper( null ).doDrop(
 				metadata,
 				this,
+				ContributableMatcher.ALL,
 				new SourceDescriptor() {
 					@Override
 					public SourceType getSourceType() {
@@ -178,5 +183,10 @@ public class LongVarcharValidationTest implements ExecutionOptions {
 	@Override
 	public ExceptionHandler getExceptionHandler() {
 		return ExceptionHandlerLoggedImpl.INSTANCE;
+	}
+
+	@Override
+	public SchemaFilter getSchemaFilter() {
+		return SchemaFilter.ALL;
 	}
 }

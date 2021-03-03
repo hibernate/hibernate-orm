@@ -103,7 +103,7 @@ public enum Action {
 			return NONE;
 		}
 
-		if ( Action.class.isInstance( value ) ) {
+		if ( value instanceof Action ) {
 			return (Action) value;
 		}
 
@@ -152,7 +152,7 @@ public enum Action {
 			return NONE;
 		}
 
-		if ( Action.class.isInstance( value ) ) {
+		if ( value instanceof Action ) {
 			return hbm2ddlSetting( (Action) value );
 		}
 

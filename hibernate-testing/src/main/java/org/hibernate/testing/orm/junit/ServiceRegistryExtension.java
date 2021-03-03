@@ -240,9 +240,6 @@ public class ServiceRegistryExtension
 		private StandardServiceRegistry registry;
 		private boolean active = true;
 
-		private final List<Class<? extends Integrator>> integrators = new ArrayList<>();
-		private final List<JavaServiceDescriptor<?>> javaServices = new ArrayList<>();
-
 		public ServiceRegistryScopeImpl() {
 		}
 
@@ -254,22 +251,9 @@ public class ServiceRegistryExtension
 
 			BootstrapServiceRegistryBuilder bsrb = new BootstrapServiceRegistryBuilder().enableAutoClose();
 
-			integrators.forEach(
-					integrator -> {
-						try {
-							bsrb.applyIntegrator( integrator.newInstance() );
-						}
-						catch (Exception e) {
-							throw new RuntimeException( "Could not configure BootstrapServiceRegistryBuilder", e );
-						}
-					}
-			);
+			final org.hibernate.boot.registry.BootstrapServiceRegistry bsr = bsrProducer.produceServiceRegistry( bsrb );
 
-			if ( ! javaServices.isEmpty() ) {
-				bsrb.applyClassLoaderService( new ExtraJavaServicesClassLoaderService( javaServices ) );
-			}
-
-			final StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder( bsrb.build() );
+			final StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder( bsr );
 			// we will close it ourselves explicitly.
 			ssrb.disableAutoClose();
 
@@ -280,19 +264,6 @@ public class ServiceRegistryExtension
 			if ( !active ) {
 				throw new IllegalStateException( "ServiceRegistryScope no longer active" );
 			}
-		}
-
-		public void applyIntegrator(Class<? extends Integrator> integrator) {
-			integrators.add( integrator );
-		}
-
-		public <ROLE> void applyJavaService(JavaServiceDescriptor<ROLE> javaService) {
-			javaServices.add( javaService );
-		}
-
-		public void applyJavaService(Class<?> roleType, Class<?> implType) {
-			//noinspection unchecked,rawtypes
-			javaServices.add( new JavaServiceDescriptor( roleType, implType ) );
 		}
 
 		@Override

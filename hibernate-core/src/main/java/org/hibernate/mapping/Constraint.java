@@ -34,13 +34,6 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 	private final ArrayList<Column> columns = new ArrayList<>();
 	private Table table;
 
-	@Override
-	public String getContributor() {
-		// assume the same contributor as the Table
-		assert table != null : "Table is null";
-		return table.getContributor();
-	}
-
 	public String getName() {
 		return name;
 	}

@@ -36,8 +36,10 @@ import org.hibernate.tool.schema.internal.IndividuallySchemaValidatorImpl;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 import org.hibernate.tool.schema.internal.SchemaDropperImpl;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase;
+import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExceptionHandler;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
+import org.hibernate.tool.schema.spi.SchemaFilter;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.SchemaValidator;
@@ -114,6 +116,11 @@ public class IndividuallySchemaValidatorImplConnectionTest extends BaseUnitTestC
 			public ExceptionHandler getExceptionHandler() {
 				return ExceptionHandlerLoggedImpl.INSTANCE;
 			}
+
+			@Override
+			public SchemaFilter getSchemaFilter() {
+				return SchemaFilter.ALL;
+			}
 		};
 	}
 
@@ -171,7 +178,7 @@ public class IndividuallySchemaValidatorImplConnectionTest extends BaseUnitTestC
 
 			SchemaValidator schemaValidator = new IndividuallySchemaValidatorImpl( tool, DefaultSchemaFilter.INSTANCE );
 			assertFalse( connection.getAutoCommit() );
-			schemaValidator.doValidation( metadata, executionOptions );
+			schemaValidator.doValidation( metadata, executionOptions, ContributableMatcher.ALL );
 			assertFalse( connection.getAutoCommit() );
 		}
 		finally {

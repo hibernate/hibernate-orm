@@ -31,16 +31,12 @@ public class SimpleAuxiliaryDatabaseObject extends AbstractAuxiliaryDatabaseObje
 	private final String[] createStrings;
 	private final String[] dropStrings;
 
-	private final String contributor;
-
 	public SimpleAuxiliaryDatabaseObject(
-			String contributor,
 			Namespace namespace,
 			String createString,
 			String dropString,
 			Set<String> dialectScopes) {
 		this(
-				contributor,
 				namespace,
 				new String[] { createString },
 				new String[] { dropString },
@@ -49,13 +45,11 @@ public class SimpleAuxiliaryDatabaseObject extends AbstractAuxiliaryDatabaseObje
 	}
 
 	public SimpleAuxiliaryDatabaseObject(
-			String contributor,
 			Namespace namespace,
 			String[] createStrings,
 			String[] dropStrings,
 			Set<String> dialectScopes) {
 		this(
-				contributor,
 				dialectScopes,
 				extractName( namespace.getPhysicalName().getCatalog() ),
 				extractName( namespace.getPhysicalName().getSchema() ),
@@ -69,23 +63,16 @@ public class SimpleAuxiliaryDatabaseObject extends AbstractAuxiliaryDatabaseObje
 	}
 
 	public SimpleAuxiliaryDatabaseObject(
-			String contributor,
 			Set<String> dialectScopes,
 			String catalogName,
 			String schemaName,
 			String[] createStrings,
 			String[] dropStrings) {
 		super( dialectScopes );
-		this.contributor = contributor;
 		this.catalogName = catalogName;
 		this.schemaName = schemaName;
 		this.createStrings = createStrings;
 		this.dropStrings = dropStrings;
-	}
-
-	@Override
-	public String getContributor() {
-		return contributor;
 	}
 
 	@Override

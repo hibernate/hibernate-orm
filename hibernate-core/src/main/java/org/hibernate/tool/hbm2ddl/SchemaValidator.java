@@ -31,6 +31,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.internal.ExceptionHandlerHaltImpl;
+import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
@@ -61,7 +62,7 @@ public class SchemaValidator {
 				ExceptionHandlerHaltImpl.INSTANCE
 		);
 
-		tool.getSchemaValidator( config ).doValidation( metadata, executionOptions );
+		tool.getSchemaValidator( config ).doValidation( metadata, executionOptions, ContributableMatcher.ALL );
 	}
 
 	public static void main(String[] args) {

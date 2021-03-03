@@ -232,6 +232,11 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	}
 
 	@Override
+	public Set<String> getContributors() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public void validate() throws MappingException {
 		// nothing to do
 	}

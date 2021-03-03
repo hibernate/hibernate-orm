@@ -11,6 +11,7 @@ import java.util.Properties;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.tool.schema.Action;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
+import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator.ActionGrouping;
 
 import org.junit.Test;
 
@@ -26,7 +27,7 @@ public class SchemaToolingAutoActionTests {
 		final Properties props = new Properties();
 		props.put( AvailableSettings.HBM2DDL_AUTO, Action.CREATE_DROP );
 
-		final SchemaManagementToolCoordinator.ActionGrouping actionGrouping = SchemaManagementToolCoordinator.ActionGrouping.interpret( props );
+		final ActionGrouping actionGrouping = ActionGrouping.interpret( props );
 
 		assertThat( actionGrouping.getDatabaseAction(), is( Action.CREATE_DROP ) );
 

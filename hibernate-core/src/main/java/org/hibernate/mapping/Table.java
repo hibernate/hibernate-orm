@@ -21,6 +21,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.relational.ContributableDatabaseObject;
 import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.Namespace;
@@ -42,7 +43,7 @@ import org.jboss.logging.Logger;
  * @author Gavin King
  */
 @SuppressWarnings("deprecation")
-public class Table implements RelationalModel, Serializable, Exportable {
+public class Table implements RelationalModel, Serializable, ContributableDatabaseObject {
 	private static final Logger log = Logger.getLogger( Table.class );
 	private static final Column[] EMPTY_COLUMN_ARRAY = new Column[0];
 
@@ -70,6 +71,10 @@ public class Table implements RelationalModel, Serializable, Exportable {
 	private String comment;
 
 	private List<InitCommand> initCommands;
+
+	public Table() {
+		this( "orm" );
+	}
 
 	public Table(String contributor) {
 		this( contributor, null );

@@ -31,8 +31,10 @@ import org.hibernate.tool.schema.internal.ExceptionHandlerLoggedImpl;
 import org.hibernate.tool.schema.internal.HibernateSchemaManagementTool;
 import org.hibernate.tool.schema.internal.IndividuallySchemaMigratorImpl;
 import org.hibernate.tool.schema.internal.exec.ScriptTargetOutputToFile;
+import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExceptionHandler;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
+import org.hibernate.tool.schema.spi.SchemaFilter;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.ScriptTargetOutput;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
@@ -86,6 +88,11 @@ public class UniqueConstraintDropTest {
 			public ExceptionHandler getExceptionHandler() {
 				return ExceptionHandlerLoggedImpl.INSTANCE;
 			}
+
+			@Override
+			public SchemaFilter getSchemaFilter() {
+				return SchemaFilter.ALL;
+			}
 		};
 	}
 
@@ -102,6 +109,7 @@ public class UniqueConstraintDropTest {
 				.doMigration(
 						metadata,
 						options,
+						ContributableMatcher.ALL,
 						new TargetDescriptorImpl()
 				);
 

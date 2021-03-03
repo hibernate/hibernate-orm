@@ -30,6 +30,7 @@ import org.hibernate.tool.schema.extract.spi.NameSpaceTablesInformation;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
 import org.hibernate.tool.schema.internal.AbstractSchemaMigrator;
 import org.hibernate.tool.schema.internal.exec.GenerationTarget;
+import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.junit.Assert;
 import org.junit.Test;
@@ -53,10 +54,19 @@ public class CheckForExistingForeignKeyTest {
 		 * Needed implementation. Not used in test.
 		 */
 		@Override
-		protected NameSpaceTablesInformation performTablesMigration(Metadata metadata, DatabaseInformation existingDatabase, ExecutionOptions options,
+		protected NameSpaceTablesInformation performTablesMigration(
+				Metadata metadata,
+				DatabaseInformation existingDatabase,
+				ExecutionOptions options,
+				ContributableMatcher inclusionFilter,
 				Dialect dialect,
-				Formatter formatter, Set<String> exportIdentifiers, boolean tryToCreateCatalogs, boolean tryToCreateSchemas,
-				Set<Identifier> exportedCatalogs, Namespace namespace, GenerationTarget[] targets) {
+				Formatter formatter,
+				Set<String> exportIdentifiers,
+				boolean tryToCreateCatalogs,
+				boolean tryToCreateSchemas,
+				Set<Identifier> exportedCatalogs,
+				Namespace namespace,
+				GenerationTarget[] targets) {
 			return null;
 		}
 	}

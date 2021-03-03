@@ -6,8 +6,6 @@
  */
 package org.hibernate.test.dynamicentity.tuplizer2;
 
-import java.io.Serializable;
-
 import org.hibernate.HibernateException;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.test.dynamicentity.Address;
@@ -27,7 +25,7 @@ public class MyEntityInstantiator implements Instantiator {
 		this.entityName = entityName;
 	}
 
-	public Object instantiate(Serializable id) {
+	public Object instantiate(Object id) {
 		if ( Person.class.getName().equals( entityName ) ) {
 			return ProxyHelper.newPersonProxy( id );
 		}

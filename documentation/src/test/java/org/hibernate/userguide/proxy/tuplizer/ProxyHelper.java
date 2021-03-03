@@ -7,7 +7,7 @@
 
 //$Id$
 package org.hibernate.userguide.proxy.tuplizer;
-import java.io.Serializable;
+
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 
@@ -18,7 +18,7 @@ import java.lang.reflect.Proxy;
 
 public class ProxyHelper {
 
-    public static <T> T newProxy(Class<T> targetClass, Serializable id) {
+    public static <T> T newProxy(Class<T> targetClass, Object id) {
         return ( T ) Proxy.newProxyInstance(
             targetClass.getClassLoader(),
             new Class[] {

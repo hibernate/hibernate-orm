@@ -32,7 +32,7 @@ public class DynamicInstantiator
         }
     }
 
-    public Object instantiate(Serializable id) {
+    public Object instantiate(Object id) {
         return ProxyHelper.newProxy( targetClass, id );
     }
 

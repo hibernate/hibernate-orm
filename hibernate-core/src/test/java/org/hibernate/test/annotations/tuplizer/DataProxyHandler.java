@@ -7,7 +7,7 @@
 
 //$Id$
 package org.hibernate.test.annotations.tuplizer;
-import java.io.Serializable;
+
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -25,7 +25,7 @@ public final class DataProxyHandler implements InvocationHandler {
 	private String entityName;
 	private HashMap data = new HashMap();
 
-	public DataProxyHandler(String entityName, Serializable id) {
+	public DataProxyHandler(String entityName, Object id) {
 		this.entityName = entityName;
 		data.put( "Id", id );
 	}

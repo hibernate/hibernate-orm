@@ -97,7 +97,7 @@ public class PojoInstantiator implements Instantiator, Serializable {
 		return entity;
 	}
 
-	public Object instantiate(Serializable id) {
+	public Object instantiate(Object id) {
 		final boolean useEmbeddedIdentifierInstanceAsEntity = embeddedIdentifier &&
 				id != null &&
 				id.getClass().equals(mappedClass);

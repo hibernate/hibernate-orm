@@ -6,7 +6,6 @@
  */
 package org.hibernate.tuple.entity;
 
-import java.io.Serializable;
 import java.util.Map;
 
 import org.hibernate.EntityMode;
@@ -47,11 +46,11 @@ public interface EntityTuplizer extends Tuplizer {
      * @return The instantiated entity.
      * @throws HibernateException
 	 *
-	 * @deprecated Use {@link #instantiate(Serializable, SharedSessionContractImplementor)} instead.
+	 * @deprecated Use {@link #instantiate(Object, SharedSessionContractImplementor)} instead.
      */
 	@Deprecated
 	@SuppressWarnings( {"JavaDoc"})
-	Object instantiate(Serializable id) throws HibernateException;
+	Object instantiate(Object id) throws HibernateException;
 
     /**
      * Create an entity instance initialized with the given identifier.
@@ -61,7 +60,7 @@ public interface EntityTuplizer extends Tuplizer {
 	 *
      * @return The instantiated entity.
      */
-	Object instantiate(Serializable id, SharedSessionContractImplementor session);
+	Object instantiate(Object id, SharedSessionContractImplementor session);
 
     /**
      * Extract the identifier value from the given entity.
@@ -76,7 +75,7 @@ public interface EntityTuplizer extends Tuplizer {
 	 * @deprecated Use {@link #getIdentifier(Object,SharedSessionContractImplementor)} instead.
      */
 	@Deprecated
-	Serializable getIdentifier(Object entity) throws HibernateException;
+	Object getIdentifier(Object entity) throws HibernateException;
 
     /**
      * Extract the identifier value from the given entity.
@@ -86,7 +85,7 @@ public interface EntityTuplizer extends Tuplizer {
 	 *
      * @return The identifier value.
      */
-	Serializable getIdentifier(Object entity, SharedSessionContractImplementor session);
+	Object getIdentifier(Object entity, SharedSessionContractImplementor session);
 
     /**
      * Inject the identifier value into the given entity.
@@ -96,11 +95,11 @@ public interface EntityTuplizer extends Tuplizer {
      * @param entity The entity to inject with the identifier value.
      * @param id The value to be injected as the identifier.
 	 *
-	 * @deprecated Use {@link #setIdentifier(Object, Serializable, SharedSessionContractImplementor)} instead.
+	 * @deprecated Use {@link #setIdentifier(Object, Object, SharedSessionContractImplementor)} instead.
      */
 	@Deprecated
 	@SuppressWarnings( {"JavaDoc"})
-	void setIdentifier(Object entity, Serializable id) throws HibernateException;
+	void setIdentifier(Object entity, Object id) throws HibernateException;
 
     /**
      * Inject the identifier value into the given entity.
@@ -111,7 +110,7 @@ public interface EntityTuplizer extends Tuplizer {
      * @param id The value to be injected as the identifier.
 	 * @param session The session from which is requests originates
      */
-	void setIdentifier(Object entity, Serializable id, SharedSessionContractImplementor session);
+	void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session);
 
 	/**
 	 * Inject the given identifier and version into the entity, in order to
@@ -125,7 +124,7 @@ public interface EntityTuplizer extends Tuplizer {
 	 */
 	@Deprecated
 	@SuppressWarnings( {"UnusedDeclaration"})
-	void resetIdentifier(Object entity, Serializable currentId, Object currentVersion);
+	void resetIdentifier(Object entity, Object currentId, Object currentVersion);
 
 	/**
 	 * Inject the given identifier and version into the entity, in order to
@@ -212,7 +211,7 @@ public interface EntityTuplizer extends Tuplizer {
 	 * @return The generate proxies.
 	 * @throws HibernateException Indicates an error generating the proxy.
 	 */
-	Object createProxy(Serializable id, SharedSessionContractImplementor session) throws HibernateException;
+	Object createProxy(Object id, SharedSessionContractImplementor session) throws HibernateException;
 
 	/**
 	 * Does the {@link #getMappedClass() class} managed by this tuplizer implement

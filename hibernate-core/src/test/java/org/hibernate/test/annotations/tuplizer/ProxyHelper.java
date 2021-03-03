@@ -7,7 +7,7 @@
 
 //$Id$
 package org.hibernate.test.annotations.tuplizer;
-import java.io.Serializable;
+
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 
@@ -20,7 +20,7 @@ public class ProxyHelper {
 		return newCountryProxy( null );
 	}
 
-	public static Country newCountryProxy(Serializable id) {
+	public static Country newCountryProxy(Object id) {
 		return ( Country ) Proxy.newProxyInstance(
 				Country.class.getClassLoader(),
 		        new Class[] {Country.class},
@@ -32,7 +32,7 @@ public class ProxyHelper {
 		return newCuisineProxy( null );
 	}
 
-	public static Cuisine newCuisineProxy(Serializable id) {
+	public static Cuisine newCuisineProxy(Object id) {
 		return ( Cuisine ) Proxy.newProxyInstance(
 				Cuisine.class.getClassLoader(),
 		        new Class[] {Cuisine.class},

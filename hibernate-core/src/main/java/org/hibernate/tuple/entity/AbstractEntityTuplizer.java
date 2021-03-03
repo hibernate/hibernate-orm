@@ -203,12 +203,12 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	}
 
 	@Override
-	public Serializable getIdentifier(Object entity) throws HibernateException {
+	public Object getIdentifier(Object entity) throws HibernateException {
 		return getIdentifier( entity, null );
 	}
 
 	@Override
-	public Serializable getIdentifier(Object entity, SharedSessionContractImplementor session) {
+	public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
 		final Object id;
 		if ( entityMetamodel.getIdentifierProperty().isEmbedded() ) {
 			id = entity;
@@ -231,7 +231,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		}
 
 		try {
-			return (Serializable) id;
+			return id;
 		}
 		catch (ClassCastException cce) {
 			StringBuilder msg = new StringBuilder( "Identifier classes must be serializable. " );
@@ -246,14 +246,14 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	}
 
 	@Override
-	public void setIdentifier(Object entity, Serializable id) throws HibernateException {
+	public void setIdentifier(Object entity, Object id) throws HibernateException {
 		// 99% of the time the session is not needed.  It's only needed for certain brain-dead
 		// interpretations of JPA 2 "derived identity" support
 		setIdentifier( entity, id, null );
 	}
 
 	@Override
-	public void setIdentifier(Object entity, Serializable id, SharedSessionContractImplementor session) {
+	public void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session) {
 		if ( entityMetamodel.getIdentifierProperty().isEmbedded() ) {
 			if ( entity != id ) {
 				CompositeType copier = (CompositeType) entityMetamodel.getIdentifierProperty().getType();
@@ -271,7 +271,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	private static interface MappedIdentifierValueMarshaller {
 		public Object getIdentifier(Object entity, EntityMode entityMode, SharedSessionContractImplementor session);
 
-		public void setIdentifier(Object entity, Serializable id, EntityMode entityMode, SharedSessionContractImplementor session);
+		public void setIdentifier(Object entity, Object id, EntityMode entityMode, SharedSessionContractImplementor session);
 	}
 
 	private final MappedIdentifierValueMarshaller mappedIdentifierValueMarshaller;
@@ -334,7 +334,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		}
 
 		@Override
-		public void setIdentifier(Object entity, Serializable id, EntityMode entityMode, SharedSessionContractImplementor session) {
+		public void setIdentifier(Object entity, Object id, EntityMode entityMode, SharedSessionContractImplementor session) {
 			virtualIdComponent.setPropertyValues(
 					entity,
 					mappedIdentifierType.getPropertyValues( id, session ),
@@ -398,7 +398,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		}
 
 		@Override
-		public void setIdentifier(Object entity, Serializable id, EntityMode entityMode, SharedSessionContractImplementor session) {
+		public void setIdentifier(Object entity, Object id, EntityMode entityMode, SharedSessionContractImplementor session) {
 			final Object[] extractedValues = mappedIdentifierType.getPropertyValues( id, entityMode );
 			final Object[] injectionValues = new Object[extractedValues.length];
 			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
@@ -503,7 +503,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	}
 
 	@Override
-	public void resetIdentifier(Object entity, Serializable currentId, Object currentVersion) {
+	public void resetIdentifier(Object entity, Object currentId, Object currentVersion) {
 		// 99% of the time the session is not needed.  It's only needed for certain brain-dead
 		// interpretations of JPA 2 "derived identity" support
 		resetIdentifier( entity, currentId, currentVersion, null );
@@ -524,7 +524,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 			Object result = identifierProperty
 					.getUnsavedValue()
 					.getDefaultValue( currentId );
-			setIdentifier( entity, (Serializable) result, session );
+			setIdentifier( entity, result, session );
 			//reset the version
 			VersionProperty versionProperty = entityMetamodel.getVersionProperty();
 			if ( entityMetamodel.isVersioned() ) {
@@ -693,14 +693,14 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	}
 
 	@Override
-	public final Object instantiate(Serializable id) throws HibernateException {
+	public final Object instantiate(Object id) throws HibernateException {
 		// 99% of the time the session is not needed.  It's only needed for certain brain-dead
 		// interpretations of JPA 2 "derived identity" support
 		return instantiate( id, null );
 	}
 
 	@Override
-	public final Object instantiate(Serializable id, SharedSessionContractImplementor session) {
+	public final Object instantiate(Object id, SharedSessionContractImplementor session) {
 		Object result = getInstantiator().instantiate( id );
 		linkToSession( result, session );
 		if ( id != null ) {
@@ -741,7 +741,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	}
 
 	@Override
-	public final Object createProxy(Serializable id, SharedSessionContractImplementor session) {
+	public final Object createProxy(Object id, SharedSessionContractImplementor session) {
 		return getProxyFactory().getProxy( id, session );
 	}
 

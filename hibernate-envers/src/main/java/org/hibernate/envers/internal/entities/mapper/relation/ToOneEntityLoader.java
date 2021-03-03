@@ -40,7 +40,7 @@ public final class ToOneEntityLoader {
 		}
 		else {
 			// Not audited relation, look up entity with Hibernate.
-			return versionsReader.getSessionImplementor().immediateLoad( entityName, (Serializable) entityId );
+			return versionsReader.getSessionImplementor().immediateLoad( entityName, entityId );
 		}
 	}
 
@@ -60,7 +60,7 @@ public final class ToOneEntityLoader {
 				.getMetamodel()
 				.entityPersister( entityName );
 		return persister.createProxy(
-				(Serializable) entityId,
+				entityId,
 				new ToOneDelegateSessionImplementor( versionsReader, entityClass, entityId, revision, removed, enversService )
 		);
 	}

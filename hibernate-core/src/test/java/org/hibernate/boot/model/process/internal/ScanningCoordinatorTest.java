@@ -24,10 +24,10 @@ import org.hibernate.boot.archive.scan.spi.Scanner;
 import org.hibernate.boot.archive.spi.InputStreamAccess;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.XmlMappingBinderAccess;
 import org.hibernate.internal.CoreMessageLogger;
-
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.logger.LoggerInspectionRule;
@@ -41,6 +41,11 @@ import org.jboss.logging.Logger;
 import org.mockito.Mockito;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.same;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -66,10 +71,12 @@ public class ScanningCoordinatorTest extends BaseUnitTestCase {
 			Logger.getMessageLogger( CoreMessageLogger.class, ScanningCoordinator.class.getName() ) );
 
 	@Before
-	public void init(){
+	public void init() {
+		Mockito.reset( managedResources );
 		Mockito.reset( scanResult );
 		Mockito.reset( bootstrapContext );
 		Mockito.reset( scanEnvironment );
+		Mockito.reset( classLoaderService );
 
 		when( bootstrapContext.getScanEnvironment() ).thenReturn( scanEnvironment );
 		when( bootstrapContext.getServiceRegistry() ).thenReturn( serviceRegistry );
@@ -78,7 +85,9 @@ public class ScanningCoordinatorTest extends BaseUnitTestCase {
 		when( scanEnvironment.getExplicitlyListedClassNames() ).thenReturn(
 				Arrays.asList( "a.b.C" ) );
 
-		when( classLoaderService.classForName( "a.b.C" ) ).thenReturn( Object.class );
+		when( classLoaderService.classForName( eq( "a.b.C" ) ) ).thenThrow( ClassLoadingException.class );
+		when( classLoaderService.locateResource( eq( "a/b/c.class" ) ) ).thenReturn( null );
+		when( classLoaderService.locateResource( eq( "a/b/c/package-info.class" ) ) ).thenReturn( null );
 
 		triggerable = logInspection.watchForLogMessages( "Unable" );
 		triggerable.reset();
@@ -111,22 +120,40 @@ public class ScanningCoordinatorTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12505" )
+	@TestForIssue(jiraKey = "HHH-14473")
+	public void testApplyScanResultsToManagedResultsWhileExplicitClassNameLoadable() {
+		Class<Object> expectedClass = Object.class;
+		when( classLoaderService.classForName( eq( "a.b.C" ) ) ).thenReturn( expectedClass );
+
+		ScanningCoordinator.INSTANCE.applyScanResultsToManagedResources(
+				managedResources,
+				scanResult,
+				bootstrapContext,
+				xmlMappingBinderAccess
+		);
+
+		verify( managedResources, times( 0 ) ).addAnnotatedClassName( any() );
+		verify( managedResources, times( 1 ) ).addAnnotatedClassReference( same( expectedClass ) );
+		verify( classLoaderService, times( 1 ) ).classForName( eq( "a.b.C" ) );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-12505")
 	public void testManagedResourcesAfterCoordinateScanWithDisabledScanner() {
 		assertManagedResourcesAfterCoordinateScanWithScanner( new DisabledScanner(), true );
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12505" )
+	@TestForIssue(jiraKey = "HHH-12505")
 	public void testManagedResourcesAfterCoordinateScanWithCustomEnabledScanner() {
 		final Scanner scanner = new Scanner() {
 			@Override
 			public ScanResult scan(final ScanEnvironment environment, final ScanOptions options, final ScanParameters parameters) {
 				final InputStreamAccess dummyInputStreamAccess = new ByteArrayInputStreamAccess( "dummy", new byte[0] );
 				return new ScanResultImpl(
-					Collections.<PackageDescriptor>singleton( new PackageDescriptorImpl( "dummy", dummyInputStreamAccess ) ),
-					Collections.<ClassDescriptor>singleton( new ClassDescriptorImpl( "dummy", ClassDescriptor.Categorization.MODEL, dummyInputStreamAccess ) ),
-					Collections.<MappingFileDescriptor>singleton( new MappingFileDescriptorImpl( "dummy", dummyInputStreamAccess ) )
+						Collections.<PackageDescriptor>singleton( new PackageDescriptorImpl( "dummy", dummyInputStreamAccess ) ),
+						Collections.<ClassDescriptor>singleton( new ClassDescriptorImpl( "dummy", ClassDescriptor.Categorization.MODEL, dummyInputStreamAccess ) ),
+						Collections.<MappingFileDescriptor>singleton( new MappingFileDescriptorImpl( "dummy", dummyInputStreamAccess ) )
 				);
 			}
 		};
@@ -184,7 +211,7 @@ public class ScanningCoordinatorTest extends BaseUnitTestCase {
 		ScanningCoordinator.INSTANCE.coordinateScan( managedResources, bootstrapContext, xmlMappingBinderAccess );
 
 		assertEquals( 1, scanEnvironment.getExplicitlyListedClassNames().size() );
-		assertEquals( "a.b.C", scanEnvironment.getExplicitlyListedClassNames().get(0) );
+		assertEquals( "a.b.C", scanEnvironment.getExplicitlyListedClassNames().get( 0 ) );
 
 		assertEquals( true, managedResources.getAttributeConverterDefinitions().isEmpty() );
 		assertEquals( true, managedResources.getAnnotatedClassReferences().isEmpty() );

@@ -219,8 +219,8 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			return ReflectHelper.classForName( entityName );
 		}
 		catch (ClassNotFoundException cnfe) {
-			return typeConfiguration.getSessionFactory().getMetamodel().entityPersister( entityName ).
-					getEntityTuplizer().getMappedClass();
+			return typeConfiguration.getSessionFactory().getMetamodel().entityPersister( entityName )
+					.getMappedClass();
 		}
 	}
 

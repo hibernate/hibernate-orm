@@ -189,8 +189,8 @@ public class SequenceStructure implements DatabaseStructure {
 							namespace.getPhysicalName().getCatalog(),
 							namespace.getPhysicalName().getSchema(),
 							physicalName,
-							1,
-							1
+							initialValue,
+							sourceIncrementSize
 					)
 			);
 		}

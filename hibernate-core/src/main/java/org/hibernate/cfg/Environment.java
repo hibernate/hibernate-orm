@@ -346,6 +346,7 @@ public final class Environment implements AvailableSettings {
 		}
 
 		if ( BYTECODE_PROVIDER_NAME_JAVASSIST.equals( providerName ) ) {
+			LOG.warnUsingJavassistBytecodeProviderIsDeprecated();
 			return new org.hibernate.bytecode.internal.javassist.BytecodeProviderImpl();
 		}
 

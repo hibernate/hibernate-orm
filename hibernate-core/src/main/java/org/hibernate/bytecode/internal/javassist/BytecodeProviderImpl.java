@@ -21,9 +21,13 @@ import org.jboss.logging.Logger;
 
 /**
  * Bytecode provider implementation for Javassist.
+ * @deprecated The Javassist based enhancer will be removed soon,
+ * please use the one based on ByteBuddy (which is the default since
+ * version 5.3 of Hibernate ORM)
  *
  * @author Steve Ebersole
  */
+@Deprecated
 public class BytecodeProviderImpl implements BytecodeProvider {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class,

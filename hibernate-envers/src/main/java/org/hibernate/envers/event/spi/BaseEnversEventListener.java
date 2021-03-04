@@ -107,7 +107,7 @@ public abstract class BaseEnversEventListener implements EnversListener {
 			toEntityName = session.guessEntityName( value );
 
 			final IdMapper idMapper = enversService.getEntitiesConfigurations().get( toEntityName ).getIdMapper();
-			id = (Serializable) idMapper.mapToIdFromEntity( value );
+			id = idMapper.mapToIdFromEntity( value );
 		}
 
 		final Set<String> toPropertyNames = enversService.getEntitiesConfigurations().getToPropertyNames(

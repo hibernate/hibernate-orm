@@ -76,7 +76,7 @@ public class DefaultPostLoadEventListener implements PostLoadEventListener, Call
 	protected void invokeLoadLifecycle(PostLoadEvent event, EventSource session) {
 		if ( event.getPersister().implementsLifecycle() ) {
 			//log.debug( "calling onLoad()" );
-			( (Lifecycle) event.getEntity() ).onLoad( session, (Serializable) event.getId() );
+			( (Lifecycle) event.getEntity() ).onLoad( session, event.getId() );
 		}
 	}
 }

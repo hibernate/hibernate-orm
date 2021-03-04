@@ -96,7 +96,7 @@ public class Fum implements Lifecycle, Serializable {
 	}
 
 
-	public void onLoad(Session s, Serializable id) {
+	public void onLoad(Session s, Object id) {
 	}
 
 

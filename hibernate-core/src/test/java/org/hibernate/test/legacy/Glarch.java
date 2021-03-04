@@ -105,7 +105,7 @@ public class Glarch extends Super implements GlarchProxy, Lifecycle, Named, Seri
 		return NO_VETO;
 	}
 
-	public void onLoad(Session s, Serializable id) {
+	public void onLoad(Session s, Object id) {
 		if ( ! ( ( (String) id ).length()==32 ) ) throw new RuntimeException("id problem");
 	}
 

@@ -5,10 +5,11 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.classic;
-import java.io.Serializable;
 
 import org.hibernate.CallbackException;
 import org.hibernate.Session;
+
+import java.io.Serializable;
 
 /**
  * Provides callbacks from the <tt>Session</tt> to the persistent object.
@@ -46,12 +47,12 @@ public interface Lifecycle {
 	/**
 	 * Return value to veto the action (true)
 	 */
-	public static final boolean VETO = true;
+	boolean VETO = true;
 
 	/**
 	 * Return value to accept the action (false)
 	 */
-	public static final boolean NO_VETO = false;
+	boolean NO_VETO = false;
 
 	/**
 	 * Called when an entity is saved.
@@ -59,7 +60,9 @@ public interface Lifecycle {
 	 * @return true to veto save
 	 * @throws CallbackException Indicates a problem happened during callback
 	 */
-	public boolean onSave(Session s) throws CallbackException;
+	default boolean onSave(Session s) throws CallbackException {
+		return NO_VETO;
+	}
 
 	/**
 	 * Called when an entity is passed to <tt>Session.update()</tt>.
@@ -69,7 +72,9 @@ public interface Lifecycle {
 	 * @return true to veto update
 	 * @throws CallbackException Indicates a problem happened during callback
 	 */
-	public boolean onUpdate(Session s) throws CallbackException;
+	default boolean onUpdate(Session s) throws CallbackException {
+		return NO_VETO;
+	}
 
 	/**
 	 * Called when an entity is deleted.
@@ -77,7 +82,9 @@ public interface Lifecycle {
 	 * @return true to veto delete
 	 * @throws CallbackException Indicates a problem happened during callback
 	 */
-	public boolean onDelete(Session s) throws CallbackException;
+	default boolean onDelete(Session s) throws CallbackException {
+		return NO_VETO;
+	}
 
 	/**
 	 * Called after an entity is loaded. <em>It is illegal to
@@ -88,5 +95,23 @@ public interface Lifecycle {
 	 * @param s the session
 	 * @param id the identifier
 	 */
-	public void onLoad(Session s, Serializable id);
+	default void onLoad(Session s, Object id) {
+		if (id instanceof Serializable) {
+			onLoad(s, (Serializable) id);
+		}
+	}
+
+	/**
+	 * Called after an entity is loaded. <em>It is illegal to
+	 * access the <tt>Session</tt> from inside this method.</em>
+	 * However, the object may keep a reference to the session
+	 * for later use.
+	 *
+	 * @param s the session
+	 * @param id the identifier
+	 *
+	 * @deprecated use {@link #onLoad(Session, Object)}
+	 */
+	@Deprecated
+	default void onLoad(Session s, Serializable id) {}
 }

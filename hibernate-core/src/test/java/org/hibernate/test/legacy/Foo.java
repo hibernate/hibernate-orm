@@ -128,7 +128,7 @@ public class Foo implements Lifecycle, FooProxy, Serializable {
 		return NO_VETO;
 	}
 
-	public void onLoad(Session db, Serializable id) {
+	public void onLoad(Session db, Object id) {
 	}
 
 	public String getKey() {

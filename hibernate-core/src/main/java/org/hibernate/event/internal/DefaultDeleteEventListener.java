@@ -267,7 +267,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 
 		session.getInterceptor().onDelete(
 				entity,
-				(Serializable) entityEntry.getId(),
+				entityEntry.getId(),
 				deletedState,
 				persister.getPropertyNames(),
 				propTypes

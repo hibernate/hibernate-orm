@@ -64,7 +64,7 @@ public class Vetoer implements Lifecycle {
 		return result;
 	}
 
-	public void onLoad(Session s, Serializable id) {}
+	public void onLoad(Session s, Object id) {}
 }
 
 

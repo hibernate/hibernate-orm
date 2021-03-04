@@ -65,7 +65,7 @@ public class Qux implements Lifecycle {
 		return NO_VETO;
 	}
 
-	public void onLoad(Session session, Serializable id) {
+	public void onLoad(Session session, Object id) {
 		loaded=true;
 		this.session=session;
 	}

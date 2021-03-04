@@ -340,7 +340,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
 		final boolean answerFromInterceptor =  session.getInterceptor().onFlushDirty(
 				entity,
-				(Serializable) entry.getId(),
+				entry.getId(),
 				values,
 				entry.getLoadedState(),
 				persister.getPropertyNames(),
@@ -486,7 +486,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
 		int[] dirtyProperties = session.getInterceptor().findDirty(
 				entity,
-				(Serializable) id,
+				id,
 				values,
 				loadedState,
 				persister.getPropertyNames(),

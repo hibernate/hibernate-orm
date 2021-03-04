@@ -8,6 +8,7 @@
 // build a map of the database settings to use.
 ext {
         db = project.hasProperty('db') ? project.getProperty('db') : 'h2'
+        def dbHost = System.getProperty( 'dbHost', 'localhost' )
         dbBundle = [
                 h2 : [
                         'db.dialect' : 'org.hibernate.dialect.H2Dialect',
@@ -42,7 +43,17 @@ ext {
                         'jdbc.driver': 'org.postgresql.Driver',
                         'jdbc.user'  : 'hibernate_orm_test',
                         'jdbc.pass'  : 'hibernate_orm_test',
-                        'jdbc.url'   : 'jdbc:postgresql://127.0.0.1/hibernate_orm_test'
+                        'jdbc.url'   : 'jdbc:postgresql://127.0.0.1/hibernate_orm_test',
+                        // Disable prepared statement caching due to https://www.postgresql.org/message-id/CAEcMXhmmRd4-%2BNQbnjDT26XNdUoXdmntV9zdr8%3DTu8PL9aVCYg%40mail.gmail.com
+                        'jdbc.url'   : 'jdbc:postgresql://127.0.0.1/hibernate_orm_test?preparedStatementCacheQueries=0'
+                ],
+                pgsql_ci : [
+                        'db.dialect' : 'org.hibernate.dialect.PostgreSQL95Dialect',
+                        'jdbc.driver': 'org.postgresql.Driver',
+                        'jdbc.user'  : 'hibernate_orm_test',
+                        'jdbc.pass'  : 'hibernate_orm_test',
+                        // Disable prepared statement caching due to https://www.postgresql.org/message-id/CAEcMXhmmRd4-%2BNQbnjDT26XNdUoXdmntV9zdr8%3DTu8PL9aVCYg%40mail.gmail.com
+                        'jdbc.url'   : 'jdbc:postgresql://' + dbHost + '/hibernate_orm_test?preparedStatementCacheQueries=0'
                 ],
                 mysql : [
                         'db.dialect' : 'org.hibernate.dialect.MySQL57Dialect',
@@ -65,12 +76,20 @@ ext {
                         'jdbc.pass'  : 'hibernate_orm_test',
                         'jdbc.url'   : 'jdbc:mariadb://127.0.0.1/hibernate_orm_test'
                 ],
+                mariadb_ci : [
+                        'db.dialect' : 'org.hibernate.dialect.MariaDB103Dialect',
+                        'jdbc.driver': 'org.mariadb.jdbc.Driver',
+                        'jdbc.user'  : 'root',
+                        'jdbc.pass'  : 'hibernate_orm_test',
+                        'jdbc.url'   : 'jdbc:mariadb://' + dbHost + '/hibernate_orm_test'
+                ],
                 postgis : [
                         'db.dialect' : 'org.hibernate.spatial.dialect.postgis.PostgisPG95Dialect',
                         'jdbc.driver': 'org.postgresql.Driver',
                         'jdbc.user'  : 'hibernate_orm_test',
                         'jdbc.pass'  : 'hibernate_orm_test',
-                        'jdbc.url'   : 'jdbc:postgresql:hibernate_orm_test'
+                        // Disable prepared statement caching due to https://www.postgresql.org/message-id/CAEcMXhmmRd4-%2BNQbnjDT26XNdUoXdmntV9zdr8%3DTu8PL9aVCYg%40mail.gmail.com
+                        'jdbc.url'   : 'jdbc:postgresql://' + dbHost + '/hibernate_orm_test?preparedStatementCacheQueries=0'
                 ],
                 oracle : [
                         'db.dialect' : 'org.hibernate.dialect.Oracle10gDialect',
@@ -79,15 +98,20 @@ ext {
                         'jdbc.pass'  : 'hibernate_orm_test',
                         'jdbc.url'   : 'jdbc:oracle:thin:@localhost:1521/xe'
                 ],
-                // Uses the default settings for using https://hub.docker.com/_/oracle-database-enterprise-edition
-                // After registering to get access (see instructions at above link), start it for testing with:
-                // docker run --ulimit memlock=-1:-1 -it --rm=true --memory-swappiness=0 --name ORCLCDB -p 1521:1521 store/oracle/database-enterprise:12.2.0.1-slim
+                // Use ./docker_db.sh oracle_ee to start the database
                 oracle_docker : [
                         'db.dialect' : 'org.hibernate.dialect.Oracle12cDialect',
                         'jdbc.driver': 'oracle.jdbc.OracleDriver',
-                        'jdbc.user'  : 'sys as sysdba',
-                        'jdbc.pass'  : 'Oradoc_db1',
-                        'jdbc.url'   : 'jdbc:oracle:thin:@localhost:1521:ORCLCDB'
+                        'jdbc.user'  : 'c##hibernate_orm_test',
+                        'jdbc.pass'  : 'hibernate_orm_test',
+                        'jdbc.url'   : 'jdbc:oracle:thin:@' + dbHost + ':1521/ORCLPDB1.localdomain'
+                ],
+                oracle_ci : [
+                        'db.dialect' : 'org.hibernate.dialect.Oracle12cDialect',
+                        'jdbc.driver': 'oracle.jdbc.OracleDriver',
+                        'jdbc.user'  : 'SYSTEM',
+                        'jdbc.pass'  : 'Oracle18',
+                        'jdbc.url'   : 'jdbc:oracle:thin:@' + dbHost + ':1521:XE'
                 ],
                 mssql : [
                         'db.dialect' : 'org.hibernate.dialect.SQLServer2012Dialect',
@@ -95,6 +119,13 @@ ext {
                         'jdbc.user'  : 'hibernate_orm_test',
                         'jdbc.pass'  : 'hibernate_orm_test',
                         'jdbc.url'   : 'jdbc:sqlserver://localhost;instance=SQLEXPRESS;databaseName=hibernate_orm_test'
+                ],
+                mssql_ci : [
+                        'db.dialect' : 'org.hibernate.dialect.SQLServer2012Dialect',
+                        'jdbc.driver': 'com.microsoft.sqlserver.jdbc.SQLServerDriver',
+                        'jdbc.user'  : 'sa',
+                        'jdbc.pass'  : 'Hibernate_orm_test',
+                        'jdbc.url'   : 'jdbc:sqlserver://' + dbHost + ';databaseName=hibernate_orm_test'
                 ],
                 informix : [
                         'db.dialect' : 'org.hibernate.dialect.InformixDialect',
@@ -110,26 +141,44 @@ ext {
                         'jdbc.pass'  : 'db2inst1-pwd',
                         'jdbc.url'   : 'jdbc:db2://127.0.0.1:50000/hibern8'
                 ],
+                db2_ci : [
+                        'db.dialect' : 'org.hibernate.dialect.DB2Dialect',
+                        'jdbc.driver': 'com.ibm.db2.jcc.DB2Driver',
+                        'jdbc.user'  : 'orm_test',
+                        'jdbc.pass'  : 'orm_test',
+                        'jdbc.url'   : 'jdbc:db2://' + dbHost + ':50000/orm_test'
+                ],
                 hana : [
                         'db.dialect' : 'org.hibernate.dialect.HANAColumnStoreDialect',
                         'jdbc.driver': 'com.sap.db.jdbc.Driver',
                         'jdbc.user'  : 'HIBERNATE_TEST',
                         'jdbc.pass'  : 'H1bernate_test',
-                        'jdbc.url'   : 'jdbc:sap://localhost:30015/'
+                        // Disable prepared statement caching due to https://help.sap.com/viewer/0eec0d68141541d1b07893a39944924e/2.0.04/en-US/78f2163887814223858e4369d18e2847.html
+                        'jdbc.url'   : 'jdbc:sap://localhost:30015/?statementCacheSize=0'
                 ],
                 hana_cloud : [
                         'db.dialect' : 'org.hibernate.dialect.HANACloudColumnStoreDialect',
                         'jdbc.driver': 'com.sap.db.jdbc.Driver',
                         'jdbc.user'  : 'HIBERNATE_TEST',
                         'jdbc.pass'  : 'H1bernate_test',
-                        'jdbc.url'   : 'jdbc:sap://localhost:443/?encrypt=true&validateCertificate=false'
+                        // Disable prepared statement caching due to https://help.sap.com/viewer/0eec0d68141541d1b07893a39944924e/2.0.04/en-US/78f2163887814223858e4369d18e2847.html
+                        'jdbc.url'   : 'jdbc:sap://localhost:443/?encrypt=true&validateCertificate=false&statementCacheSize=0'
                 ],
                 hana_vlad : [
                         'db.dialect' : 'org.hibernate.dialect.HANAColumnStoreDialect',
                         'jdbc.driver': 'com.sap.db.jdbc.Driver',
                         'jdbc.user'  : 'VLAD',
                         'jdbc.pass'  : 'V1ad_test',
-                        'jdbc.url'   : 'jdbc:sap://localhost:39015/'
+                        // Disable prepared statement caching due to https://help.sap.com/viewer/0eec0d68141541d1b07893a39944924e/2.0.04/en-US/78f2163887814223858e4369d18e2847.html
+                        'jdbc.url'   : 'jdbc:sap://localhost:39015/?statementCacheSize=0'
+                ],
+                hana_docker : [
+                        'db.dialect' : 'org.hibernate.dialect.HANAColumnStoreDialect',
+                        'jdbc.driver': 'com.sap.db.jdbc.Driver',
+                        'jdbc.user'  : 'SYSTEM',
+                        'jdbc.pass'  : 'H1bernate_test',
+                        // Disable prepared statement caching due to https://help.sap.com/viewer/0eec0d68141541d1b07893a39944924e/2.0.04/en-US/78f2163887814223858e4369d18e2847.html
+                        'jdbc.url'   : 'jdbc:sap://' + dbHost + ':39017/?statementCacheSize=0'
                 ],
                 cockroachdb : [
                         'db.dialect' : 'org.hibernate.dialect.CockroachDB192Dialect',
@@ -137,7 +186,8 @@ ext {
                         'jdbc.driver': 'org.postgresql.Driver',
                         'jdbc.user'  : 'root',
                         'jdbc.pass'  : '',
-                        'jdbc.url'   : 'jdbc:postgresql://localhost:26257/defaultdb?sslmode=disable'
+                        // Disable prepared statement caching due to https://www.postgresql.org/message-id/CAEcMXhmmRd4-%2BNQbnjDT26XNdUoXdmntV9zdr8%3DTu8PL9aVCYg%40mail.gmail.com
+                        'jdbc.url'   : 'jdbc:postgresql://localhost:26257/defaultdb?sslmode=disable&preparedStatementCacheQueries=0'
                 ],
         ]
 }

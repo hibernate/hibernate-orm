@@ -1,0 +1,118 @@
+# The main CI of Hibernate ORM is https://ci.hibernate.org/job/hibernate-orm-6.0-h2-main/.
+# However, Hibernate ORM builds run on GitHub actions regularly
+# to check that it still works and can be used in GitHub forks.
+# See https://docs.github.com/en/free-pro-team@latest/actions
+# for more information about GitHub actions.
+
+name: Hibernate ORM build
+
+on:
+  push:
+    branches:
+      - '5.4'
+  pull_request:
+    branches:
+      - '5.4'
+jobs:
+  build:
+    name: Java 8
+    runs-on: ubuntu-latest
+    # We want to know the test results of all matrix entries
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        # When GitHub Actions supports it: https://github.com/actions/toolkit/issues/399
+        # We will use the experimental flag as indicator whether a failure should cause a workflow failure
+        include:
+          - rdbms: h2
+            experimental: false
+#          - rdbms: derby
+#            experimental: true
+#          - rdbms: mariadb
+#            experimental: true
+          - rdbms: postgresql
+            experimental: true
+#          - rdbms: oracle
+#            experimental: true
+#          - rdbms: db2
+#            experimental: true
+#          - rdbms: mssql
+#            experimental: true
+    steps:
+      - uses: actions/checkout@v2
+      - name: Reclaim Disk Space
+        run: .github/ci-prerequisites.sh
+      - name: Set up Java 8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+      - name: Get year/month for cache key
+        id: get-date
+        run: |
+          echo "::set-output name=yearmonth::$(/bin/date -u "+%Y-%m")"
+        shell: bash
+      - name: Cache Maven local repository
+        uses: actions/cache@v2
+        id: cache-maven
+        with:
+          path: |
+            ~/.m2/repository
+            ~/.gradle/caches/
+            ~/.gradle/wrapper/
+          # refresh cache every month to avoid unlimited growth
+          key: maven-localrepo-${{ steps.get-date.outputs.yearmonth }}
+      - name: Run build script
+        env:
+          RDBMS: ${{ matrix.rdbms }}
+        run: ./ci/build-github.sh
+        shell: bash
+      - name: Upload test reports (if Gradle failed)
+        uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: test-reports-java8-${{ matrix.rdbms }}
+          path: |
+            ./**/target/reports/tests/
+            ./**/target/reports/checkstyle/
+      - name: Omit produced artifacts from build cache
+        run: ./ci/before-cache.sh
+  build11:
+    name: Java 11
+    runs-on: ubuntu-latest
+    # We want to know the test results of all matrix entries
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Java 11
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+      - name: Get year/month for cache key
+        id: get-date
+        run: |
+          echo "::set-output name=yearmonth::$(/bin/date -u "+%Y-%m")"
+        shell: bash
+      - name: Cache Maven local repository
+        uses: actions/cache@v2
+        id: cache-maven
+        with:
+          path: |
+            ~/.m2/repository
+            ~/.gradle/caches/
+            ~/.gradle/wrapper/
+          # refresh cache every month to avoid unlimited growth
+          key: maven-localrepo-${{ steps.get-date.outputs.yearmonth }}
+      - name: Run build script
+        run: ./ci/build-github.sh
+        shell: bash
+      - name: Upload test reports (if Gradle failed)
+        uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: test-reports-java11
+          path: |
+            ./**/target/reports/tests/
+            ./**/target/reports/checkstyle/
+      - name: Omit produced artifacts from build cache
+        run: ./ci/before-cache.sh

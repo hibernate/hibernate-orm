@@ -99,6 +99,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.ValueInclusion;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.LoadEvent;
+import org.hibernate.id.Assigned;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.PostInsertIdentifierGenerator;
 import org.hibernate.id.PostInsertIdentityPersister;
@@ -223,6 +224,7 @@ import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.entity.internal.EntityResultImpl;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tuple.GenerationTiming;
+import org.hibernate.tuple.IdentifierProperty;
 import org.hibernate.tuple.InDatabaseValueGenerationStrategy;
 import org.hibernate.tuple.InMemoryValueGenerationStrategy;
 import org.hibernate.tuple.NonIdentifierAttribute;
@@ -230,6 +232,7 @@ import org.hibernate.tuple.ValueGeneration;
 import org.hibernate.tuple.entity.EntityBasedAssociationAttribute;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
+import org.hibernate.tuple.entity.VersionProperty;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.BasicType;
@@ -5375,10 +5378,7 @@ public abstract class AbstractEntityPersister
 
 	public void setPropertyValue(Object object, int i, Object value) {
 		final String propertyName = getPropertyNames()[i];
-
-		final AttributeMapping attributeMapping = (AttributeMapping) findSubPart( propertyName, this );
-		final AttributeMetadata attributeMetadata = attributeMapping.getAttributeMetadataAccess().resolveAttributeMetadata( this );
-		attributeMetadata.getPropertyAccess().getSetter().set( object, value, getFactory() );
+		setPropertyValue( object, propertyName, value );
 	}
 
 	public Object[] getPropertyValues(Object object) {
@@ -5487,7 +5487,25 @@ public abstract class AbstractEntityPersister
 			Object currentId,
 			Object currentVersion,
 			SharedSessionContractImplementor session) {
-		getEntityTuplizer().resetIdentifier( entity, currentId, currentVersion, session );
+		final IdentifierProperty identifierProperty = entityMetamodel.getIdentifierProperty();
+		if ( identifierProperty.getIdentifierGenerator() instanceof Assigned ) {
+		}
+		else {
+			//reset the id
+			Object result = identifierProperty
+					.getUnsavedValue()
+					.getDefaultValue( currentId );
+			setIdentifier( entity, result, session );
+			//reset the version
+			VersionProperty versionProperty = entityMetamodel.getVersionProperty();
+			if ( entityMetamodel.isVersioned() ) {
+				setPropertyValue(
+						entity,
+						entityMetamodel.getVersionPropertyIndex(),
+						versionProperty.getUnsavedValue().getDefaultValue( currentVersion )
+				);
+			}
+		}
 	}
 
 	@Override
@@ -5760,7 +5778,9 @@ public abstract class AbstractEntityPersister
 	}
 
 	public void setPropertyValue(Object object, String propertyName, Object value) {
-		getEntityTuplizer().setPropertyValue( object, propertyName, value );
+		final AttributeMapping attributeMapping = (AttributeMapping) findSubPart( propertyName, this );
+		final AttributeMetadata attributeMetadata = attributeMapping.getAttributeMetadataAccess().resolveAttributeMetadata( this );
+		attributeMetadata.getPropertyAccess().getSetter().set( object, value, getFactory() );
 	}
 
 	public static int getTableId(String tableName, String[] tables) {

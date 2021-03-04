@@ -76,10 +76,11 @@ public class EntityInstantiator {
 
 		// If it is not in the cache, creating a new entity instance
 		Object ret = versionsReader.getSessionImplementor()
-					.getFactory()
-					.getEntityPersister( entityName )
-					.getEntityTuplizer()
-					.instantiate( null, versionsReader.getSessionImplementor() );
+				.getFactory()
+				.getMetamodel()
+				.entityPersister( entityName )
+				.getRepresentationStrategy().getInstantiator()
+				.instantiate( versionsReader.getSessionImplementor().getSessionFactory() );
 
 		// Putting the newly created entity instance into the first level cache, in case a one-to-one bidirectional
 		// relation is present (which is eagerly loaded).

@@ -2760,13 +2760,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	@Override
 	public void render(SqlAstNode sqlAstNode, SqlAstNodeRenderingMode renderingMode) {
 		switch ( renderingMode ) {
-			case NO_PLAIN_PARAMETER:
+			case NO_PLAIN_PARAMETER: {
 				if ( sqlAstNode instanceof SqmParameterInterpretation ) {
 					sqlAstNode = ( (SqmParameterInterpretation) sqlAstNode ).getResolvedExpression();
 				}
 				if ( sqlAstNode instanceof JdbcParameter ) {
-					final JdbcMapping jdbcMapping = ( (JdbcParameter) sqlAstNode ).getExpressionType().getJdbcMappings()
-							.get( 0 );
+					final JdbcParameter jdbcParameter = (JdbcParameter) sqlAstNode;
+					final JdbcMapping jdbcMapping = jdbcParameter.getExpressionType().getJdbcMappings().get( 0 );
 					// We try to avoid inlining parameters if possible which can be done by wrapping the parameter
 					// in an expression that is semantically unnecessary e.g. numeric + 0 or concat with an empty string
 					if ( jdbcMapping.getSqlTypeDescriptor().isNumber() ) {
@@ -2788,13 +2788,17 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 							break;
 						}
 					}
-					renderExpressionAsLiteral( (Expression) sqlAstNode, jdbcParameterBindings );
+					final List<SqlAstNode> arguments = new ArrayList<>( 2 );
+					arguments.add( jdbcParameter );
+					arguments.add( new CastTarget( (BasicValuedMapping) jdbcMapping ) );
+					castFunction().render( this, arguments, this );
 				}
 				else {
 					sqlAstNode.accept( this );
 				}
 				break;
-			case INLINE_PARAMETERS:
+			}
+			case INLINE_PARAMETERS: {
 				boolean inlineParameters = this.inlineParameters;
 				this.inlineParameters = true;
 				try {
@@ -2804,16 +2808,16 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					this.inlineParameters = inlineParameters;
 				}
 				break;
+			}
 			case DEFAULT:
-			default:
+			default: {
 				sqlAstNode.accept( this );
+			}
 		}
 	}
 
 	@Override
 	public void visitTuple(SqlTuple tuple) {
-		String separator = NO_SEPARATOR;
-
 		boolean isCurrentWhereClause = clauseStack.getCurrent() == Clause.WHERE;
 		if ( isCurrentWhereClause ) {
 			appendSql( OPEN_PARENTHESIS );

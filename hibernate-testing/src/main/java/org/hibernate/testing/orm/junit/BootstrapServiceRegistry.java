@@ -30,11 +30,11 @@ public @interface BootstrapServiceRegistry {
 
 	@interface JavaService {
 		/**
-		 * Logically `<T>`
+		 * Logically `?` is `T`
 		 */
 		Class<?> role();
 		/**
-		 * Logically `<S extends T>`
+		 * Logically `?` is `S extends T`
 		 */
 		Class<?> impl();
 	}

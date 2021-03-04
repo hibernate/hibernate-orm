@@ -4,14 +4,11 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.orm.test.tool.schema.scripts;
+package org.hibernate.orm.test.metamodel.contributed;
 
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -33,7 +30,6 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 import org.hibernate.tool.schema.internal.SchemaDropperImpl;
-import org.hibernate.tool.schema.internal.exec.GenerationTarget;
 import org.hibernate.tool.schema.spi.ExceptionHandler;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.hibernate.tool.schema.spi.SchemaFilter;
@@ -44,6 +40,7 @@ import org.hibernate.tool.schema.spi.SourceDescriptor;
 import org.hibernate.testing.hamcrest.CaseInsensitiveContainsMatcher;
 import org.hibernate.testing.hamcrest.CaseInsensitiveStartsWithMatcher;
 import org.hibernate.testing.hamcrest.CollectionElementMatcher;
+import org.hibernate.testing.orm.JournalingGenerationTarget;
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry.JavaService;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -52,13 +49,9 @@ import org.junit.jupiter.api.Test;
 
 import org.jboss.jandex.IndexView;
 
-import org.hamcrest.BaseMatcher;
-import org.hamcrest.Description;
-import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.not;
 
 /**
@@ -137,7 +130,7 @@ public class BasicContributorTests {
 		targetDescriptor.clear();
 		schemaCreator.doCreation( metadata, dialect, options, contributed -> true, sourceDescriptor, targetDescriptor );
 		assertThat(
-				targetDescriptor.commands,
+				targetDescriptor.getCommands(),
 				CollectionElementMatcher.hasAllOf(
 						CaseInsensitiveContainsMatcher.contains( "main_table" ),
 						CaseInsensitiveContainsMatcher.contains( "DynamicEntity" )
@@ -148,7 +141,7 @@ public class BasicContributorTests {
 		targetDescriptor.clear();
 		schemaCreator.doCreation( metadata, dialect, options, contributed -> "orm".equals( contributed.getContributor() ), sourceDescriptor, targetDescriptor );
 		assertThat(
-				targetDescriptor.commands,
+				targetDescriptor.getCommands(),
 				CollectionElementMatcher.hasAllOf( not( CaseInsensitiveContainsMatcher.contains( "DynamicEntity" ) ) )
 		);
 
@@ -156,7 +149,7 @@ public class BasicContributorTests {
 		targetDescriptor.clear();
 		schemaCreator.doCreation( metadata, dialect, options, contributed -> "test".equals( contributed.getContributor() ), sourceDescriptor, targetDescriptor );
 		assertThat(
-				targetDescriptor.commands,
+				targetDescriptor.getCommands(),
 				CollectionElementMatcher.hasAllOf( not( CaseInsensitiveContainsMatcher.contains( "main_table" ) ) )
 		);
 	}
@@ -176,7 +169,7 @@ public class BasicContributorTests {
 		targetDescriptor.clear();
 		schemaDropper.doDrop( metadata, options, contributed -> true, dialect, sourceDescriptor, targetDescriptor );
 		assertThat(
-				targetDescriptor.commands,
+				targetDescriptor.getCommands(),
 				CollectionElementMatcher.hasAllOf(
 						CaseInsensitiveStartsWithMatcher.startsWith( "drop table main_table" ),
 						CaseInsensitiveStartsWithMatcher.startsWith( "drop table DynamicEntity" )
@@ -187,7 +180,7 @@ public class BasicContributorTests {
 		targetDescriptor.clear();
 		schemaDropper.doDrop( metadata, options, contributed -> "orm".equals( contributed.getContributor() ), dialect, sourceDescriptor, targetDescriptor );
 		assertThat(
-				targetDescriptor.commands,
+				targetDescriptor.getCommands(),
 				CollectionElementMatcher.hasAllOf( not( CaseInsensitiveStartsWithMatcher.startsWith( "drop table DynamicEntity" ) ) )
 		);
 
@@ -195,34 +188,13 @@ public class BasicContributorTests {
 		targetDescriptor.clear();
 		schemaDropper.doDrop( metadata, options, contributed -> "test".equals( contributed.getContributor() ), dialect, sourceDescriptor, targetDescriptor );
 		assertThat(
-				targetDescriptor.commands,
+				targetDescriptor.getCommands(),
 				CollectionElementMatcher.hasAllOf( not( CaseInsensitiveStartsWithMatcher.startsWith( "drop table main_table" ) ) )
 		);
 
 	}
 
-	private static class JournalingGenerationTarget implements GenerationTarget {
-		private final ArrayList<String> commands = new ArrayList<>();
-
-		@Override
-		public void prepare() {
-		}
-
-		@Override
-		public void accept(String command) {
-			commands.add( command );
-		}
-
-		@Override
-		public void release() {
-		}
-
-		private void clear() {
-			commands.clear();
-		}
-	}
-
-	 @Entity( name = "MainEntity" )
+	@Entity( name = "MainEntity" )
 	 @Table( name = "main_table" )
 	static class MainEntity {
 		@Id
@@ -273,7 +245,7 @@ public class BasicContributorTests {
 			final ClassLoaderService classLoaderService = buildingContext.getBootstrapContext()
 					.getServiceRegistry()
 					.getService( ClassLoaderService.class );
-			final InputStream inputStream = classLoaderService.locateResourceStream( "org/hibernate/orm/test/tool/schema/scripts/BasicContributorTests.hbm.xml" );
+			final InputStream inputStream = classLoaderService.locateResourceStream( "org/hibernate/orm/test/metamodel/contributed/BasicContributorTests.hbm.xml" );
 			final Binding<JaxbHbmHibernateMapping> jaxbBinding = mappingBinder.bind( inputStream, origin );
 			final JaxbHbmHibernateMapping jaxbRoot = jaxbBinding.getRoot();
 

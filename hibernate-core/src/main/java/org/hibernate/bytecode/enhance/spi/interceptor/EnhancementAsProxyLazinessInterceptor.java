@@ -8,6 +8,7 @@ package org.hibernate.bytecode.enhance.spi.interceptor;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.hibernate.EntityMode;
@@ -19,8 +20,8 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 
@@ -103,7 +104,6 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 					final EntityPersister entityPersister = session.getFactory()
 							.getMetamodel()
 							.entityPersister( getEntityName() );
-					final EntityTuplizer entityTuplizer = entityPersister.getEntityTuplizer();
 
 					if ( writtenFieldNames != null && !writtenFieldNames.isEmpty() ) {
 
@@ -111,7 +111,7 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 
 						if ( writtenFieldNames.contains( attributeName ) ) {
 							// the requested attribute was one of the attributes explicitly set, we can just return the explicitly set value
-							return entityTuplizer.getPropertyValue( target, attributeName );
+							return entityPersister.getPropertyValue( target, attributeName );
 						}
 
 						// otherwise we want to save all of the explicitly set values in anticipation of
@@ -122,7 +122,7 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 
 						int index = 0;
 						for ( String writtenFieldName : writtenFieldNames ) {
-							writtenValues[index] = entityTuplizer.getPropertyValue( target, writtenFieldName );
+							writtenValues[index] = entityPersister.getPropertyValue( target, writtenFieldName );
 							index++;
 						}
 					}
@@ -141,9 +141,17 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 
 					if ( writtenValues != null ) {
 						// here is the replaying of the explicitly set values we prepared above
-						int index = 0;
 						for ( String writtenFieldName : writtenFieldNames ) {
-							entityTuplizer.setPropertyValue( target, writtenFieldName, writtenValues[index++] );
+							List<AttributeMapping> attributeMappings = entityPersister.getAttributeMappings();
+							for ( int index = 0; index < attributeMappings.size(); index++ ) {
+								if ( writtenFieldName.contains( attributeMappings.get( index ).getAttributeName() ) ) {
+									entityPersister.setPropertyValue(
+											target,
+											index,
+											writtenValues[index]
+									);
+								}
+							}
 						}
 						writtenFieldNames.clear();
 					}

@@ -60,7 +60,6 @@ public class ModelContributorSmokeTests {
 	private void checkModel(PersistentClass entityBinding, String expectedContributor) {
 		assertThat( entityBinding.getContributor(), is( expectedContributor ) );
 		assertThat( entityBinding.getRootTable().getContributor(), is( expectedContributor ) );
-		assertThat( entityBinding.getRootTable().getPrimaryKey().getContributor(), is( expectedContributor ) );
 	}
 
 	@Entity( name = "SimpleEntity" )

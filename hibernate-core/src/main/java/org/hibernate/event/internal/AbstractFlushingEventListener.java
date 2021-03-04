@@ -262,7 +262,7 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		persistenceContext.forEachCollectionEntry(
 				(coll, ce) -> {
 					if ( ce.isDorecreate() ) {
-						interceptor.onCollectionRecreate( coll, (Serializable) ce.getCurrentKey() );
+						interceptor.onCollectionRecreate( coll, ce.getCurrentKey() );
 						actionQueue.addAction(
 								new CollectionRecreateAction(
 										coll,
@@ -273,7 +273,7 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 						);
 					}
 					if ( ce.isDoremove() ) {
-						interceptor.onCollectionRemove( coll, (Serializable) ce.getLoadedKey() );
+						interceptor.onCollectionRemove( coll, ce.getLoadedKey() );
 						actionQueue.addAction(
 								new CollectionRemoveAction(
 										coll,
@@ -285,7 +285,7 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 						);
 					}
 					if ( ce.isDoupdate() ) {
-						interceptor.onCollectionUpdate( coll, (Serializable) ce.getLoadedKey() );
+						interceptor.onCollectionUpdate( coll, ce.getLoadedKey() );
 						actionQueue.addAction(
 								new CollectionUpdateAction(
 										coll,

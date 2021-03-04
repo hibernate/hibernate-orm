@@ -400,7 +400,7 @@ public abstract class AbstractSaveEventListener
 			SessionImplementor source) {
 		boolean substitute = source.getInterceptor().onSave(
 				entity,
-				(Serializable) id,
+				id,
 				values,
 				persister.getPropertyNames(),
 				persister.getPropertyTypes()

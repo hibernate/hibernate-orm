@@ -475,7 +475,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			return result;
 		}
 
-		final Object newObject = getInterceptor().getEntity( key.getEntityName(), (Serializable) key.getIdentifier() );
+		final Object newObject = getInterceptor().getEntity( key.getEntityName(), key.getIdentifier() );
 		if ( newObject != null ) {
 			persistenceContext.addEntity( key, newObject );
 			return newObject;

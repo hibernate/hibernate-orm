@@ -24,7 +24,7 @@ public class DefaultPreLoadEventListener implements PreLoadEventListener {
 		final EntityPersister persister = event.getPersister();
 		event.getSession().getInterceptor().onLoad(
 				event.getEntity(),
-				(Serializable) event.getId(),
+				event.getId(),
 				event.getState(),
 				persister.getPropertyNames(),
 				persister.getPropertyTypes()

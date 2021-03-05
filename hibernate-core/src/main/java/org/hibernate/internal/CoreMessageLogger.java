@@ -1828,4 +1828,13 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Ignoring ServiceConfigurationError caught while trying to instantiate service '%s'.", id = 505)
 	void ignoringServiceConfigurationError(Class<?> serviceContract, @Cause ServiceConfigurationError error);
 
+	@LogMessage(level = WARN)
+	@Message(value = "Detaching an uninitialized collection with enabled filters from a session: %s", id = 506)
+	void enabledFiltersWhenDetachFromSession(String collectionInfoString);
+
+	@LogMessage(level = WARN)
+	@Message(value = "The Javassist based BytecodeProvider is deprecated. Please switch to using the ByteBuddy based BytecodeProvider, " +
+			"which is the default since Hibernate ORM 5.3. The Javassist one will be removed soon.", id = 507)
+	void warnUsingJavassistBytecodeProviderIsDeprecated();
+
 }

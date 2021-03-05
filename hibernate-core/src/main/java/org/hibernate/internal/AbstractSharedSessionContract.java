@@ -185,7 +185,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			this.transactionCoordinator = sharedOptions.getTransactionCoordinator();
 			this.jdbcCoordinator = sharedOptions.getJdbcCoordinator();
 
-			// todo : "wrap" the transaction to no-op comit/rollback attempts?
+			// todo : "wrap" the transaction to no-op commit/rollback attempts?
 			this.currentHibernateTransaction = sharedOptions.getTransaction();
 
 			if ( sharedOptions.shouldAutoJoinTransactions() ) {
@@ -249,7 +249,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	private StatementInspector interpret(StatementInspector statementInspector) {
 		if ( statementInspector == null ) {
 			// If there is no StatementInspector specified, map to the call
-			//		to the (deprecated) Interceptor #onPrepareStatement method
+			//		to the (deprecated) Interceptor#onPrepareStatement method
 			return (StatementInspector) interceptor::onPrepareStatement;
 		}
 		return statementInspector;
@@ -292,7 +292,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override
 	public UUID getSessionIdentifier() {
 		if ( this.sessionIdentifier == null ) {
-			//Lazily initialized: otherwise all the UUID generations will cause of significant amount of contention.
+			//Lazily initialized: otherwise all the UUID generations will cause significant amount of contention.
 			this.sessionIdentifier = StandardRandomStrategy.INSTANCE.generateUUID( null );
 		}
 		return sessionIdentifier;
@@ -725,7 +725,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				if ( resultSetMappingMemento == null ) {
 					throw new HibernateException( "Could not resolve specified result-set mapping name : " + resultSetMappingName );
 				}
-				
+
 				query = new NativeQueryImpl( sqlString, resultSetMappingMemento, this );
 			}
 			else {

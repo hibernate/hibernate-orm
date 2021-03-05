@@ -30,6 +30,7 @@ import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.XmlMappingBinderAccess;
@@ -110,7 +111,7 @@ public class ScanningCoordinator {
 				return (Scanner) scannerSetting;
 			}
 
-			final Class<? extends  Scanner> scannerImplClass;
+			final Class<? extends Scanner> scannerImplClass;
 			if ( Class.class.isInstance( scannerSetting ) ) {
 				scannerImplClass = (Class<? extends Scanner>) scannerSetting;
 			}
@@ -267,6 +268,16 @@ public class ScanningCoordinator {
 			if ( packageInfoFileUrl != null ) {
 				managedResources.addAnnotatedPackageName( unresolvedListedClassName );
 				continue;
+			}
+
+			// Last, try it by loading the class
+			try {
+				Class<?> clazz = classLoaderService.classForName( unresolvedListedClassName );
+				managedResources.addAnnotatedClassReference( clazz );
+				continue;
+			}
+			catch (ClassLoadingException ignore) {
+				// ignore this error
 			}
 
 			if ( log.isDebugEnabled() ) {

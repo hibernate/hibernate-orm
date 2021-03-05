@@ -1332,30 +1332,48 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 //			entityGraphHintedQueryPlan = null;
 //		}
 //		else {
+//			final SharedSessionContractImplementor producer = getProducer();
 //			entityGraphHintedQueryPlan = new HQLQueryPlan(
 //					hql,
 //					false,
-//					getSession().getLoadQueryInfluencers().getEnabledFilters(),
-//					getSession().getFactory(),
+//					producer.getLoadQueryInfluencers().getEnabledFilters(),
+//					producer.getFactory(),
 //					entityGraphQueryHint
 //			);
 //		}
 //
-//		final QueryParameters queryParameters = new QueryParameters(
+//		QueryParameters queryParameters = new QueryParameters(
 //				getQueryParameterBindings(),
 //				getLockOptions(),
 //				queryOptions,
+//				true,
+//				isReadOnly(),
+//				cacheable,
+//				cacheRegion,
+//				comment,
+//				dbHints,
 //				null,
 //				optionalObject,
 //				optionalEntityName,
 //				optionalId,
 //				resultTransformer
 //		);
-//		queryParameters.setQueryPlan( entityGraphHintedQueryPlan );
+//
+//		appendQueryPlanToQueryParameters( hql, queryParameters, entityGraphHintedQueryPlan );
+//
 //		if ( passDistinctThrough != null ) {
 //			queryParameters.setPassDistinctThrough( passDistinctThrough );
 //		}
 //		return queryParameters;
+//	}
+
+//	protected void appendQueryPlanToQueryParameters(
+//			String hql,
+//			QueryParameters queryParameters,
+//			HQLQueryPlan queryPlan) {
+//		if ( queryPlan != null ) {
+//			queryParameters.setQueryPlan( queryPlan );
+//		}
 //	}
 
 	private FlushMode sessionFlushMode;
@@ -1551,7 +1569,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		this.optionalObject = optionalObject;
 	}
 
-	private boolean isSelect() {
+	protected boolean isSelect() {
 		throw new NotYetImplementedFor6Exception( getClass() );
 
 //		return getSession().getFactory().getQueryInterpretationCache()

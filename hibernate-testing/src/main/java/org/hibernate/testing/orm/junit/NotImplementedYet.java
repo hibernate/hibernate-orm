@@ -15,10 +15,7 @@ import java.lang.annotation.Target;
 
 import org.hibernate.NotImplementedYetException;
 
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
-
-import static org.hibernate.testing.junit5.StandardTags.NOT_IMPLEMENTED_YET;
 
 /**
  * Marks a test method or class's tested functionality as not being implemented yet.
@@ -30,9 +27,6 @@ import static org.hibernate.testing.junit5.StandardTags.NOT_IMPLEMENTED_YET;
 @Inherited
 @Target(value = { ElementType.TYPE, ElementType.METHOD })
 @Retention(RetentionPolicy.RUNTIME)
-
-@Tag(NOT_IMPLEMENTED_YET)
-
 @ExtendWith( NotImplementedYetExtension.class )
 public @interface NotImplementedYet {
 

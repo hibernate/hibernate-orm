@@ -11,8 +11,10 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;
 
-import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
-import org.junit.jupiter.api.Disabled;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.NotImplementedYet;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -20,22 +22,21 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author Andrea Boriero
  */
-@Disabled("non-aggregated composite-id not yet implemented")
-public class OneToOneWithDerivedIdentityTest extends SessionFactoryBasedFunctionalTest {
+@NotImplementedYet( reason = "non-aggregated composite-id not yet implemented" )
+@DomainModel(
+		annotatedClasses = {
+				OneToOneWithDerivedIdentityTest.Person.class,
+				OneToOneWithDerivedIdentityTest.PersonInfo.class
+		}
+)
+@SessionFactory
+public class OneToOneWithDerivedIdentityTest {
 
 	private static final Integer PERSON_ID = 1;
 
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				Person.class,
-				PersonInfo.class
-		};
-	}
-
 	@Test
-	public void testGet() {
-		inTransaction(
+	public void testGet(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 
 					Person p = new Person();
@@ -49,7 +50,7 @@ public class OneToOneWithDerivedIdentityTest extends SessionFactoryBasedFunction
 
 				} );
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Person person = session.get( Person.class, PERSON_ID );
 					assertEquals( "Alfio", person.getName() );

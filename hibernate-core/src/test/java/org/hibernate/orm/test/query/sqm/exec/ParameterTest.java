@@ -6,25 +6,21 @@
  */
 package org.hibernate.orm.test.query.sqm.exec;
 
-import org.hibernate.boot.MetadataSources;
-
-import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
 /**
  * @author Steve Ebersole
  */
-public class ParameterTest extends SessionFactoryBasedFunctionalTest {
-
-	@Override
-	protected void applyMetadataSources(MetadataSources metadataSources) {
-		StandardDomainModel.RETAIL.getDescriptor().applyDomainModel( metadataSources );
-	}
-
+@DomainModel( standardModels = StandardDomainModel.RETAIL )
+@SessionFactory
+public class ParameterTest {
 	@Test
-	public void testReusedNamedParam() {
-		inTransaction(
+	public void testReusedNamedParam(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					session.createQuery( "from SalesAssociate p where p.name.familiarName = :name or p.name.familyName = :name" )
 							.setParameter( "name", "a name" )
@@ -34,8 +30,8 @@ public class ParameterTest extends SessionFactoryBasedFunctionalTest {
 	}
 
 	@Test
-	public void testReusedOrdinalParam() {
-		inTransaction(
+	public void testReusedOrdinalParam(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					session.createQuery( "from SalesAssociate p where p.name.familiarName = ?1 or p.name.familyName = ?1" )
 							.setParameter( 1, "a name" )

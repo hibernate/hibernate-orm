@@ -6,14 +6,16 @@
  */
 package org.hibernate.orm.test.query.hql;
 
-import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
+import java.util.Calendar;
+import java.util.List;
+
 import org.hibernate.testing.orm.domain.gambit.SimpleEntity;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import java.util.Calendar;
-import java.util.List;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -21,40 +23,37 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * @author Gavin King
  */
-public class SubqueryOperatorsTest extends SessionFactoryBasedFunctionalTest {
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				SimpleEntity.class,
-		};
-	}
+@DomainModel( annotatedClasses = SimpleEntity.class )
+@SessionFactory
+public class SubqueryOperatorsTest {
 
 	@Test
-	public void testEvery() {
-		inTransaction(
+	public void testEvery(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					List results = session.createQuery(
 							"from SimpleEntity o where o.someString >= every (select someString from SimpleEntity)" )
 							.list();
 					assertThat( results.size(), is( 1 ) );
-				} );
+				}
+		);
 	}
 
 	@Test
-	public void testAny() {
-		inTransaction(
+	public void testAny(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					List results = session.createQuery(
 							"from SimpleEntity o where o.someString >= any (select someString from SimpleEntity)" )
 							.list();
 					assertThat( results.size(), is( 2 ) );
-				} );
+				}
+		);
 	}
 
 	@Test
-	public void testSubqueryInVariousClauses() {
-		inTransaction(
+	public void testSubqueryInVariousClauses(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					List res0 = session.createQuery(
 							"select (select cast(1 as Integer)) as one, (select cast('foo' as String)) as foo order by one, foo, (select 2)" )
@@ -76,12 +75,13 @@ public class SubqueryOperatorsTest extends SessionFactoryBasedFunctionalTest {
 							"from SimpleEntity o where o.id = (select y.id from SimpleEntity y where y.id = o.id)" )
 							.list();
 					assertThat( res4.size(), is( 2 ) );
-				} );
+				}
+		);
 	}
 
 	@Test
-	public void testExists() {
-		inTransaction(
+	public void testExists(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					List results = session.createQuery(
 							"from SimpleEntity o where exists (select someString from SimpleEntity where someString>o.someString)" )
@@ -91,12 +91,13 @@ public class SubqueryOperatorsTest extends SessionFactoryBasedFunctionalTest {
 							"from SimpleEntity o where not exists (select someString from SimpleEntity where someString>o.someString)" )
 							.list();
 					assertThat( results.size(), is( 1 ) );
-				} );
+				}
+		);
 	}
 
 	@BeforeEach
-	public void setUp() {
-		inTransaction(
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					SimpleEntity entity = new SimpleEntity(
 							1,
@@ -118,14 +119,16 @@ public class SubqueryOperatorsTest extends SessionFactoryBasedFunctionalTest {
 					);
 					session.save( second_entity );
 
-				} );
+				}
+		);
 	}
 
 	@AfterEach
-	public void tearDown() {
-		inTransaction(
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					session.createQuery( "delete SimpleEntity" ).executeUpdate();
-				} );
+				}
+		);
 	}
 }

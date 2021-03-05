@@ -6,46 +6,40 @@
  */
 package org.hibernate.orm.test.query.sqm.exec;
 
-import org.hibernate.boot.MetadataSources;
-
-import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
-/**
- * @author Steve Ebersole
- */
-public class LiteralTests extends SessionFactoryBasedFunctionalTest {
+@DomainModel( standardModels = StandardDomainModel.GAMBIT )
+@SessionFactory
+public class LiteralTests {
 
-	@Override
-	protected void applyMetadataSources(MetadataSources metadataSources) {
-		StandardDomainModel.GAMBIT.getDescriptor().applyDomainModel( metadataSources );
+	@Test
+	public void testTimestampLiteral(SessionFactoryScope scope) {
+		final String queryString = "from EntityOfBasics e1 where e1.theTimestamp = {ts '2018-01-01T12:30:00'}";
+		scope.inTransaction(
+				session -> session.createQuery( queryString ).list()
+		);
 	}
 
 	@Test
-	public void testTimestampLiteral() {
-		inTransaction(
+	public void testDateLiteral(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
-					session.createQuery( "from EntityOfBasics e1 where e1.theTimestamp = {ts '2018-01-01T12:30:00'}" )
-							.list();
+					final String queryString = "from EntityOfBasics e1 where e1.theDate = {d '2018-01-01'}";
+					session.createQuery( queryString ).list();
 				}
 		);
 	}
 
 	@Test
-	public void testDateLiteral() {
-		inTransaction(
+	public void testTimeLiteral(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
-					session.createQuery( "from EntityOfBasics e1 where e1.theDate = {d '2018-01-01'}" ).list();
-				}
-		);
-	}
-
-	@Test
-	public void testTimeLiteral() {
-		inTransaction(
-				session -> {
-					session.createQuery( "from EntityOfBasics e1 where e1.theTime = {t '12:30:00'}" ).list();
+					final String queryString = "from EntityOfBasics e1 where e1.theTime = {t '12:30:00'}";
+					session.createQuery( queryString ).list();
 				}
 		);
 	}

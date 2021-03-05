@@ -9,8 +9,10 @@ package org.hibernate.orm.test.query.hql;
 import java.util.Calendar;
 import java.util.List;
 
-import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
 import org.hibernate.testing.orm.domain.gambit.SimpleEntity;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,18 +23,12 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * @author Andrea Boriero
  */
-public class SubqueryLimitOffsetTest extends SessionFactoryBasedFunctionalTest {
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				SimpleEntity.class,
-		};
-	}
-
+@DomainModel( annotatedClasses = SimpleEntity.class )
+@SessionFactory
+public class SubqueryLimitOffsetTest {
 	@Test
-	public void testSubqueryLimitOffset() {
-		inTransaction(
+	public void testSubqueryLimitOffset(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					List results = session.createQuery(
 							"select o from SimpleEntity o where o.someString = ( select oSub.someString from SimpleEntity oSub order by oSub.someString limit 1 )" )
@@ -42,8 +38,8 @@ public class SubqueryLimitOffsetTest extends SessionFactoryBasedFunctionalTest {
 	}
 
 	@BeforeEach
-	public void setUp() {
-		inTransaction(
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					SimpleEntity entity = new SimpleEntity(
 							1,
@@ -69,12 +65,11 @@ public class SubqueryLimitOffsetTest extends SessionFactoryBasedFunctionalTest {
 	}
 
 	@AfterEach
-	public void tearDown() {
-		inTransaction(
-				session -> {
-					session.createQuery( "from SimpleEntity e" )
-							.list()
-							.forEach( simpleEntity -> session.delete( simpleEntity ) );
-				} );
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> session.createQuery( "from SimpleEntity e" )
+						.list()
+						.forEach( simpleEntity -> session.delete( simpleEntity ) )
+		);
 	}
 }

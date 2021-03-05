@@ -15,16 +15,12 @@ import java.lang.annotation.Target;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import static org.hibernate.testing.junit5.StandardTags.FAILURE_EXPECTED;
-
 /**
  * @author Steve Ebersole
  */
 @Inherited
 @Target({ElementType.TYPE, ElementType.METHOD, ElementType.ANNOTATION_TYPE})
 @Retention(RetentionPolicy.RUNTIME)
-
-@Tag( FAILURE_EXPECTED )
 
 @ExtendWith( FailureExpectedExtension.class )
 public @interface FailureExpectedGroup {

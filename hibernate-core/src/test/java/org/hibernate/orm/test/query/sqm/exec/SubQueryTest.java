@@ -8,8 +8,11 @@ package org.hibernate.orm.test.query.sqm.exec;
 
 import java.util.List;
 
-import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
 import org.hibernate.testing.orm.domain.gambit.BasicEntity;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -19,32 +22,12 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * @author Chris Cranford
  */
-public class SubQueryTest extends SessionFactoryBasedFunctionalTest {
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				BasicEntity.class
-		};
-	}
-
-	@BeforeAll
-	public void prepareData() {
-		inTransaction(
-				session -> {
-					BasicEntity entity1 = new BasicEntity( 1, "e1" );
-					BasicEntity entity2 = new BasicEntity( 2, "e2" );
-					BasicEntity entity3 = new BasicEntity( 3, "e1" );
-					session.save( entity1 );
-					session.save( entity2 );
-					session.save( entity3 );
-				}
-		);
-	}
-
+@DomainModel( annotatedClasses = BasicEntity.class )
+@SessionFactory
+public class SubQueryTest {
 	@Test
-	public void testSubQueryWithMaxFunction() {
-		inTransaction(
+	public void testSubQueryWithMaxFunction(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					final String hql = "SELECT e FROM BasicEntity e WHERE e.id = " +
 							"(SELECT max(e1.id) FROM BasicEntity e1 WHERE e1.data = :data)";
@@ -61,8 +44,8 @@ public class SubQueryTest extends SessionFactoryBasedFunctionalTest {
 	}
 
 	@Test
-	public void testSubQueryWithMinFunction() {
-		inTransaction(
+	public void testSubQueryWithMinFunction(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					final String hql = "SELECT e FROM BasicEntity e WHERE e.id = " +
 							"(SELECT min(e1.id) FROM BasicEntity e1 WHERE e1.data = :data)";
@@ -75,6 +58,27 @@ public class SubQueryTest extends SessionFactoryBasedFunctionalTest {
 					assertThat( results.get( 0 ).getId(), is( 1 ) );
 					assertThat( results.get( 0 ).getData(), is( "e1" ) );
 				}
+		);
+	}
+
+	@BeforeAll
+	public void prepareData(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					BasicEntity entity1 = new BasicEntity( 1, "e1" );
+					BasicEntity entity2 = new BasicEntity( 2, "e2" );
+					BasicEntity entity3 = new BasicEntity( 3, "e1" );
+					session.save( entity1 );
+					session.save( entity2 );
+					session.save( entity3 );
+				}
+		);
+	}
+
+	@AfterAll
+	public void dropData(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> session.createQuery( "delete BasicEntity" ).executeUpdate()
 		);
 	}
 }

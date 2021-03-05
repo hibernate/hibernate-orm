@@ -16,8 +16,6 @@ import java.lang.annotation.Target;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import static org.hibernate.testing.junit5.StandardTags.FAILURE_EXPECTED;
-
 /**
  * Marks a test method or class as being expected to fail.
  *
@@ -29,8 +27,6 @@ import static org.hibernate.testing.junit5.StandardTags.FAILURE_EXPECTED;
 @Target({ElementType.TYPE, ElementType.METHOD, ElementType.ANNOTATION_TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @Repeatable( FailureExpectedGroup.class )
-
-@Tag( FAILURE_EXPECTED )
 
 @ExtendWith( FailureExpectedExtension.class )
 public @interface FailureExpected {

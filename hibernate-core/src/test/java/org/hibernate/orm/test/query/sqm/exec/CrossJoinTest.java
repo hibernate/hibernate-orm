@@ -6,30 +6,24 @@
  */
 package org.hibernate.orm.test.query.sqm.exec;
 
-import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
 import org.hibernate.testing.orm.domain.gambit.SimpleEntity;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
 /**
  * @author Steve Ebersole
  */
-public class CrossJoinTest extends SessionFactoryBasedFunctionalTest {
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				SimpleEntity.class,
-		};
-	}
-
+@DomainModel( annotatedClasses = SimpleEntity.class )
+@SessionFactory
+public class CrossJoinTest {
 	@Test
-	public void testSimpleCrossJoin() {
-		inTransaction(
+	public void testSimpleCrossJoin(SessionFactoryScope scope) {
+		final String QRY_STRING = "from SimpleEntity e1, SimpleEntity e2 where e1.id = e2.id and e1.someDate = {ts '2018-01-01 00:00:00'}";
+		scope.inTransaction(
 				session -> {
-					session.createQuery(
-							"from SimpleEntity e1, SimpleEntity e2 where e1.id = e2.id and e1.someDate = {ts '2018-01-01 00:00:00'}" )
-							.list();
-
+					session.createQuery( QRY_STRING ).list();
 				}
 		);
 	}

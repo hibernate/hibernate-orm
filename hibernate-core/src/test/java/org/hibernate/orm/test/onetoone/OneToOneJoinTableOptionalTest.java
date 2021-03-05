@@ -18,34 +18,39 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
-
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 
 /**
  * @author Andrea Boriero
  */
 @TestForIssue(jiraKey = "HHH-11596")
-public class OneToOneJoinTableOptionalTest extends SessionFactoryBasedFunctionalTest {
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {Show.class, ShowDescription.class};
-	}
+@DomainModel(
+		annotatedClasses = {
+				OneToOneJoinTableOptionalTest.Show.class,
+				OneToOneJoinTableOptionalTest.ShowDescription.class
+		}
+)
+@SessionFactory
+public class OneToOneJoinTableOptionalTest {
 
 	@Test
-	public void testSavingEntitiesWithANullOneToOneAssociationValue() {
-		doInHibernate( this::sessionFactory, session -> {
-			Show show = new Show();
-			session.save( show );
-		} );
+	public void testSavingEntitiesWithANullOneToOneAssociationValue(SessionFactoryScope scope) {
+		scope.inTransaction(
+				(session) -> {
+					Show show = new Show();
+					session.save( show );
+				}
+		);
 
-		doInHibernate( this::sessionFactory, session -> {
-			ShowDescription showDescription = new ShowDescription();
-			session.save( showDescription );
-		} );
+		scope.inTransaction(
+				(session) -> {
+					ShowDescription showDescription = new ShowDescription();
+					session.save( showDescription );
+				}
+		);
 	}
 
 	@Entity(name = "Show")

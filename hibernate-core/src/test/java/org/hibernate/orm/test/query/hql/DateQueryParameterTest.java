@@ -12,7 +12,9 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
-import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -21,39 +23,12 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Chris Cranford
  */
-public class DateQueryParameterTest extends SessionFactoryBasedFunctionalTest {
-	@Entity(name = "DateEntity")
-	public static class DateEntity {
-		@Id
-		@GeneratedValue
-		private Integer id;
-		private Date timestamp;
-
-		public Integer getId() {
-			return id;
-		}
-
-		public void setId(Integer id) {
-			this.id = id;
-		}
-
-		public Date getTimestamp() {
-			return timestamp;
-		}
-
-		public void setTimestamp(Date timestamp) {
-			this.timestamp = timestamp;
-		}
-	}
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { DateEntity.class };
-	}
+@DomainModel( annotatedClasses = DateQueryParameterTest.DateEntity.class )
+@SessionFactory
+public class DateQueryParameterTest {
 
 	@Test
-	public void testDateEntityQuery() {
-
+	public void testDateEntityQuery(SessionFactoryScope scope) {
 		long current = System.currentTimeMillis();
 		long timestamp1 = current - 2222;
 		long timestamp2 = current - 1111;
@@ -61,7 +36,7 @@ public class DateQueryParameterTest extends SessionFactoryBasedFunctionalTest {
 		long timestamp4 = current + 1111;
 		long timestamp5 = current + 2222;
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					final DateEntity entity = new DateEntity();
 					entity.setTimestamp( new Date(timestamp2) );
@@ -69,7 +44,7 @@ public class DateQueryParameterTest extends SessionFactoryBasedFunctionalTest {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					final DateEntity entity = new DateEntity();
 					entity.setTimestamp( new Date(timestamp4) );
@@ -77,7 +52,7 @@ public class DateQueryParameterTest extends SessionFactoryBasedFunctionalTest {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					// Test nothing before timestamp1
 					List<DateEntity> results = session
@@ -104,11 +79,35 @@ public class DateQueryParameterTest extends SessionFactoryBasedFunctionalTest {
 	}
 
 	@AfterEach
-	public void cleanUpData() {
-		inTransaction(
+	public void cleanUpData(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					session.createQuery( "delete DateEntity" ).executeUpdate();
 				}
 		);
+	}
+
+	@Entity(name = "DateEntity")
+	public static class DateEntity {
+		@Id
+		@GeneratedValue
+		private Integer id;
+		private Date timestamp;
+
+		public Integer getId() {
+			return id;
+		}
+
+		public void setId(Integer id) {
+			this.id = id;
+		}
+
+		public Date getTimestamp() {
+			return timestamp;
+		}
+
+		public void setTimestamp(Date timestamp) {
+			this.timestamp = timestamp;
+		}
 	}
 }

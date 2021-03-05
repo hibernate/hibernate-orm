@@ -12,14 +12,12 @@ package org.hibernate.engine.jdbc.dialect.spi;
  * <p/>
  * The information here mimics part of the JDBC {@link java.sql.DatabaseMetaData} contract, specifically the portions
  * about database and driver names and versions.
- *
- * @author Steve Ebersole
  */
 public interface DialectResolutionInfo {
 	/**
 	 * Constant used to indicate that no version is defined
 	 */
-	public static final int NO_VERSION = -9999;
+	int NO_VERSION = -9999;
 
 	/**
 	 * Obtain access to the database name, as returned from {@link java.sql.DatabaseMetaData#getDatabaseProductName()}
@@ -29,7 +27,7 @@ public interface DialectResolutionInfo {
 	 *
 	 * @see java.sql.DatabaseMetaData#getDatabaseProductName()
 	 */
-	public String getDatabaseName();
+	String getDatabaseName();
 
 	/**
 	 * Obtain access to the database version, as returned from {@link java.sql.DatabaseMetaData#getDatabaseProductVersion()}
@@ -39,7 +37,7 @@ public interface DialectResolutionInfo {
 	 *
 	 * @see java.sql.DatabaseMetaData#getDatabaseProductVersion()
 	 */
-	public String getDatabaseVersion();
+	String getDatabaseVersion();
 
 	/**
 	 * Obtain access to the database major version, as returned from
@@ -49,7 +47,7 @@ public interface DialectResolutionInfo {
 	 *
 	 * @see java.sql.DatabaseMetaData#getDatabaseMajorVersion()
 	 */
-	public int getDatabaseMajorVersion();
+	int getDatabaseMajorVersion();
 
 	/**
 	 * Obtain access to the database minor version, as returned from
@@ -59,7 +57,7 @@ public interface DialectResolutionInfo {
 	 *
 	 * @see java.sql.DatabaseMetaData#getDatabaseMinorVersion()
 	 */
-	public int getDatabaseMinorVersion();
+	int getDatabaseMinorVersion();
 
 	/**
 	 * Obtain access to the name of the JDBC driver, as returned from {@link java.sql.DatabaseMetaData#getDriverName()}
@@ -69,7 +67,7 @@ public interface DialectResolutionInfo {
 	 *
 	 * @see java.sql.DatabaseMetaData#getDriverName()
 	 */
-	public String getDriverName();
+	String getDriverName();
 
 	/**
 	 * Obtain access to the major version of the JDBC driver, as returned from
@@ -79,7 +77,7 @@ public interface DialectResolutionInfo {
 	 *
 	 * @see java.sql.DatabaseMetaData#getDriverMajorVersion()
 	 */
-	public int getDriverMajorVersion();
+	int getDriverMajorVersion();
 
 	/**
 	 * Obtain access to the minor version of the JDBC driver, as returned from
@@ -89,7 +87,7 @@ public interface DialectResolutionInfo {
 	 *
 	 * @see java.sql.DatabaseMetaData#getDriverMinorVersion()
 	 */
-	public int getDriverMinorVersion();
+	int getDriverMinorVersion();
 
 	/**
 	 * Obtain access to the underlying object of the given type.

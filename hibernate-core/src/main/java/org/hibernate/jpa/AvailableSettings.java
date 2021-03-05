@@ -200,22 +200,22 @@ public interface AvailableSettings {
 	String SCHEMA_GEN_CONNECTION = org.hibernate.cfg.AvailableSettings.HBM2DDL_CONNECTION;
 
 	/**
-	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#HBM2DDL_DB_NAME} instead
+	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#DIALECT_DB_NAME} instead
 	 */
 	@Deprecated
-	String SCHEMA_GEN_DB_NAME = org.hibernate.cfg.AvailableSettings.HBM2DDL_DB_NAME;
+	String SCHEMA_GEN_DB_NAME = org.hibernate.cfg.AvailableSettings.DIALECT_DB_NAME;
 
 	/**
-	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#HBM2DDL_DB_MAJOR_VERSION} instead
+	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#DIALECT_DB_MAJOR_VERSION} instead
 	 */
 	@Deprecated
-	String SCHEMA_GEN_DB_MAJOR_VERSION = org.hibernate.cfg.AvailableSettings.HBM2DDL_DB_MAJOR_VERSION;
+	String SCHEMA_GEN_DB_MAJOR_VERSION = org.hibernate.cfg.AvailableSettings.DIALECT_DB_MAJOR_VERSION;
 
 	/**
-	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#HBM2DDL_DB_MINOR_VERSION} instead
+	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#DIALECT_DB_MINOR_VERSION} instead
 	 */
 	@Deprecated
-	String SCHEMA_GEN_DB_MINOR_VERSION = org.hibernate.cfg.AvailableSettings.HBM2DDL_DB_MINOR_VERSION;
+	String SCHEMA_GEN_DB_MINOR_VERSION = org.hibernate.cfg.AvailableSettings.DIALECT_DB_MINOR_VERSION;
 
 	/**
 	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#HBM2DDL_LOAD_SCRIPT_SOURCE} instead

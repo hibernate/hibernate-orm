@@ -4,12 +4,12 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.dialect.resolver;
+package org.hibernate.orm.test.dialect.resolver;
 
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 
 /**
-* @author Steve Ebersole
+ * DialectResolutionInfo implementation used in testing
 */
 public class TestingDialectResolutionInfo implements DialectResolutionInfo {
 	private final String databaseName;
@@ -58,17 +58,28 @@ public class TestingDialectResolutionInfo implements DialectResolutionInfo {
 
 	@Override
 	public String getDatabaseVersion() {
-		return databaseMajorVersion + "." + databaseMinorVersion;
+		if ( databaseMajorVersion == NO_VERSION ) {
+			if ( databaseMinorVersion == NO_VERSION ) {
+				return null;
+			}
+			return Integer.toString( databaseMinorVersion );
+		}
+		else {
+			if ( databaseMinorVersion == NO_VERSION ) {
+				return Integer.toString( databaseMajorVersion );
+			}
+			return databaseMajorVersion + "." + databaseMinorVersion;
+		}
 	}
 
 	@Override
 	public int getDatabaseMajorVersion() {
-		return databaseMajorVersion;
+		return databaseMajorVersion == NO_VERSION ? 0 : databaseMajorVersion;
 	}
 
 	@Override
 	public int getDatabaseMinorVersion() {
-		return databaseMinorVersion;
+		return databaseMinorVersion == NO_VERSION ? 0 : databaseMinorVersion;
 	}
 
 	@Override
@@ -78,11 +89,11 @@ public class TestingDialectResolutionInfo implements DialectResolutionInfo {
 
 	@Override
 	public int getDriverMajorVersion() {
-		return driverMajorVersion;
+		return driverMajorVersion == NO_VERSION ? 0 : driverMajorVersion;
 	}
 
 	@Override
 	public int getDriverMinorVersion() {
-		return driverMinorVersion;
+		return driverMinorVersion == NO_VERSION ? 0 : driverMinorVersion;
 	}
 }

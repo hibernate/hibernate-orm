@@ -76,16 +76,16 @@ public class DomainModelExtension
 					throw new RuntimeException( "Unable to determine how to handle given ExtensionContext : " + context.getDisplayName() );
 				}
 
-				final Optional<DomainModel> testDomainAnnotationWrapper = AnnotationSupport.findAnnotation(
+				final Optional<DomainModel> domainModelAnnotationWrapper = AnnotationSupport.findAnnotation(
 						context.getElement().get(),
 						DomainModel.class
 				);
 
-				if ( !testDomainAnnotationWrapper.isPresent() ) {
-					throw new RuntimeException( "Could not locate @TestDomain annotation : " + context.getDisplayName() );
+				if ( !domainModelAnnotationWrapper.isPresent() ) {
+					throw new RuntimeException( "Could not locate @DomainModel annotation : " + context.getDisplayName() );
 				}
 
-				final DomainModel domainModelAnnotation = testDomainAnnotationWrapper.get();
+				final DomainModel domainModelAnnotation = domainModelAnnotationWrapper.get();
 
 				final MetadataSources metadataSources = new MetadataSources( serviceRegistry );
 

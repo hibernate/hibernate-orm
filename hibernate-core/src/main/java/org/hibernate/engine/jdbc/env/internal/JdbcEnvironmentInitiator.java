@@ -62,28 +62,28 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 				true
 		);
 
-		if ( configurationValues.containsKey( AvailableSettings.HBM2DDL_DB_NAME ) ) {
+		if ( configurationValues.containsKey( AvailableSettings.DIALECT_DB_NAME ) ) {
 			return new JdbcEnvironmentImpl( registry, dialectFactory.buildDialect(
 					configurationValues,
 					() -> new DialectResolutionInfo() {
 						@Override
 						public String getDatabaseName() {
-							return (String) configurationValues.get( AvailableSettings.HBM2DDL_DB_NAME );
+							return (String) configurationValues.get( AvailableSettings.DIALECT_DB_NAME );
 						}
 
 						@Override
 						public String getDatabaseVersion() {
-							return (String) configurationValues.getOrDefault( AvailableSettings.HBM2DDL_DB_VERSION, "0" );
+							return (String) configurationValues.getOrDefault( AvailableSettings.DIALECT_DB_VERSION, "0" );
 						}
 
 						@Override
 						public int getDatabaseMajorVersion() {
-							return (Integer) configurationValues.getOrDefault( AvailableSettings.HBM2DDL_DB_MAJOR_VERSION, 0 );
+							return (Integer) configurationValues.getOrDefault( AvailableSettings.DIALECT_DB_MAJOR_VERSION, 0 );
 						}
 
 						@Override
 						public int getDatabaseMinorVersion() {
-							return (Integer) configurationValues.getOrDefault( AvailableSettings.HBM2DDL_DB_MINOR_VERSION, 0 );
+							return (Integer) configurationValues.getOrDefault( AvailableSettings.DIALECT_DB_MINOR_VERSION, 0 );
 						}
 
 						@Override

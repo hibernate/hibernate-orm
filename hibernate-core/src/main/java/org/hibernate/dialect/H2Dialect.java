@@ -127,7 +127,12 @@ public class H2Dialect extends Dialect {
 	}
 
 	private static int parseBuildId(DialectResolutionInfo info) {
-		String[] bits = info.getDatabaseVersion().split("[. ]");
+		final String databaseVersion = info.getDatabaseVersion();
+		if ( databaseVersion == null ) {
+			return 0;
+		}
+
+		final String[] bits = databaseVersion.split("[. ]");
 		return bits.length > 2 ? Integer.parseInt( bits[2] ) : 0;
 	}
 

@@ -14,6 +14,8 @@ import java.sql.Statement;
 import org.hibernate.engine.jdbc.dialect.spi.BasicSQLExceptionConverter;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 
+import static org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo.NO_VERSION;
+
 /**
  * A list of relational database systems for which Hibernate can resolve a {@link Dialect}.
  *
@@ -55,20 +57,25 @@ public enum Database {
 		@Override
 		public Dialect createDialect(DialectResolutionInfo info) {
 			String databaseVersion = info.getDatabaseVersion();
-			if ( databaseVersion == null ) {
-				return new DB2Dialect( info );
+			if ( databaseVersion != null ) {
+				//See https://www.ibm.com/support/knowledgecenter/SSEPEK_12.0.0/java/src/tpc/imjcc_c0053013.html
+				switch ( databaseVersion.substring( 0, 3 ) ) {
+					case "SQL": {
+						// Linux, UNIX, Windows
+						return new DB2Dialect( info );
+					}
+					case "DSN": {
+						// z/OS
+						return new DB2zDialect( info );
+					}
+					case "QSQ": {
+						// i
+						return new DB2iDialect( info );
+					}
+				}
 			}
-			//See https://www.ibm.com/support/knowledgecenter/SSEPEK_12.0.0/java/src/tpc/imjcc_c0053013.html
-			switch ( databaseVersion.substring( 0, 3 ) ) {
-				case "SQL": // Linux, UNIX, Windows
-					return new DB2Dialect( info );
-				case "DSN": // z/OS
-					return new DB2zDialect( info );
-				case "QSQ": // i
-					return new DB2iDialect( info );
-				default:
-					return null;
-			}
+
+			return new DB2Dialect( info );
 		}
 		@Override
 		public boolean productNameMatches(String databaseName) {
@@ -332,15 +339,18 @@ public enum Database {
 			return "org.postgresql.Driver";
 		}
 		private String getVersion(DatabaseMetaData databaseMetaData) {
-			try (Statement statement = databaseMetaData.getConnection().createStatement() ) {
-				final ResultSet rs = statement.executeQuery( "select version()" );
-				if ( rs.next() ) {
-					return rs.getString( 1 );
+			if ( databaseMetaData != null ) {
+				try ( Statement statement = databaseMetaData.getConnection().createStatement() ) {
+					final ResultSet rs = statement.executeQuery( "select version()" );
+					if ( rs.next() ) {
+						return rs.getString( 1 );
+					}
+				}
+				catch (SQLException e) {
+					throw BasicSQLExceptionConverter.INSTANCE.convert( e );
 				}
 			}
-			catch (SQLException e) {
-				throw BasicSQLExceptionConverter.INSTANCE.convert( e );
-			}
+
 			return "";
 		}
 	},

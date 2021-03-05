@@ -7,7 +7,7 @@
 package org.hibernate.engine.jdbc.dialect.internal;
 
 import org.hibernate.dialect.*;
-import org.hibernate.dialect.resolver.TestingDialectResolutionInfo;
+import org.hibernate.orm.test.dialect.resolver.TestingDialectResolutionInfo;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 

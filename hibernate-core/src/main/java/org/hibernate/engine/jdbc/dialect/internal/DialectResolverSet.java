@@ -8,6 +8,7 @@ package org.hibernate.engine.jdbc.dialect.internal;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.dialect.Dialect;
@@ -60,23 +61,19 @@ public class DialectResolverSet implements DialectResolver {
 		return null;
 	}
 
-	/**
-	 * Add a resolver at the end of the underlying resolver list.  The resolver added by this method is at lower
-	 * priority than any other existing resolvers.
-	 *
-	 * @param resolver The resolver to add.
-	 */
-	public void addResolver(DialectResolver resolver) {
-		resolvers.add( resolver );
+	public void addResolver(DialectResolver... resolvers) {
+		this.resolvers.addAll( Arrays.asList( resolvers ) );
 	}
 
-	/**
-	 * Add a resolver at the beginning of the underlying resolver list.  The resolver added by this method is at higher
-	 * priority than any other existing resolvers.
-	 *
-	 * @param resolver The resolver to add.
-	 */
-	public void addResolverAtFirst(DialectResolver resolver) {
-		resolvers.add( 0, resolver );
+	public void addResolverAtFirst(DialectResolver... resolvers) {
+		// in reverse so that the first item in the incoming list is added
+		// to the first position in `this.resolutions`
+		for ( int i = resolvers.length - 1; i >= 0; i-- ) {
+			this.resolvers.add( 0, resolvers[i] );
+		}
+	}
+
+	public void addDiscoveredResolvers(Collection<DialectResolver> resolvers) {
+		this.resolvers.addAll( 0, resolvers );
 	}
 }

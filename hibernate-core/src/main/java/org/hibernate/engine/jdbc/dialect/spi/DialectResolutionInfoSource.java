@@ -8,14 +8,11 @@ package org.hibernate.engine.jdbc.dialect.spi;
 
 /**
  * Contract for the source of DialectResolutionInfo.
- *
- * @author Steve Ebersole
  */
+@FunctionalInterface
 public interface DialectResolutionInfoSource {
 	/**
 	 * Get the DialectResolutionInfo
-	 *
-	 * @return The DialectResolutionInfo
 	 */
-	public DialectResolutionInfo getDialectResolutionInfo();
+	DialectResolutionInfo getDialectResolutionInfo();
 }

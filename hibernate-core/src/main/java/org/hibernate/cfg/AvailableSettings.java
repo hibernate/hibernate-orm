@@ -15,6 +15,7 @@ import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.registry.classloading.internal.TcclLookupPrecedence;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.hql.HqlTranslator;
@@ -426,6 +427,59 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 * register with the standard {@link org.hibernate.engine.jdbc.dialect.spi.DialectFactory}.
 	 */
 	String DIALECT_RESOLVERS = "hibernate.dialect_resolvers";
+
+	/**
+	 * Specifies the name of the database provider in cases where a Connection to the underlying database is
+	 * not available (aka, mainly in generating scripts).  In such cases, a value for this setting
+	 * *must* be specified.
+	 * <p/>
+	 * The value of this setting is expected to match the value returned by
+	 * {@link java.sql.DatabaseMetaData#getDatabaseProductName()} for the target database.
+	 * <p/>
+	 * Additionally specifying {@value #DIALECT_DB_MAJOR_VERSION} and/or {@value #DIALECT_DB_MINOR_VERSION}
+	 * may be required to understand exactly how to generate the required schema commands.
+	 *
+	 * @see #DIALECT_DB_VERSION
+	 * @see #DIALECT_DB_MAJOR_VERSION
+	 * @see #DIALECT_DB_MINOR_VERSION
+	 */
+	String DIALECT_DB_NAME = "javax.persistence.database-product-name";
+
+	/**
+	 * Specifies the name of the database provider in cases where a Connection to the underlying database is
+	 * not available (aka, mainly in generating scripts).  This value is used to help more precisely determine
+	 * how to perform schema generation tasks for the underlying database in cases where
+	 * {@value #DIALECT_DB_NAME} does not provide enough distinction.
+	 * <p/>
+	 * The value of this setting is expected to match the value returned by
+	 * {@link java.sql.DatabaseMetaData#getDatabaseProductVersion()} for the target database.
+	 *
+	 * @see #DIALECT_DB_NAME
+	 */
+	String DIALECT_DB_VERSION = "javax.persistence.database-product-version";
+
+	/**
+	 * Specifies the major version of the underlying database, as would be returned by
+	 * {@link java.sql.DatabaseMetaData#getDatabaseMajorVersion} for the target database.  This value is used to
+	 * help more precisely determine how to perform schema generation tasks for the underlying database in cases
+	 * where {@value #DIALECT_DB_NAME} does not provide enough distinction.
+
+	 * @see #DIALECT_DB_NAME
+	 * @see #DIALECT_DB_MINOR_VERSION
+	 */
+	String DIALECT_DB_MAJOR_VERSION = "javax.persistence.database-major-version";
+
+	/**
+	 * Specifies the minor version of the underlying database, as would be returned by
+	 * {@link java.sql.DatabaseMetaData#getDatabaseMinorVersion} for the target database.
+	 *
+	 * This setting is used in Dialect resolution
+	 *
+	 * @see #DIALECT_DB_NAME
+	 * @see #DIALECT_DB_MAJOR_VERSION
+	 * @see DialectResolver
+	 */
+	String DIALECT_DB_MINOR_VERSION = "javax.persistence.database-minor-version";
 
 	/**
 	 * Defines the default storage engine for the relational databases that support multiple storage engines.
@@ -1356,63 +1410,33 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	/**
 	 * Allows passing a specific {@link java.sql.Connection} instance to be used by SchemaManagementTool.
 	 * <p/>
-	 * May also be used to determine the values for {@value #HBM2DDL_DB_NAME},
-	 * {@value #HBM2DDL_DB_MAJOR_VERSION} and {@value #HBM2DDL_DB_MINOR_VERSION}.
+	 * May also be used to determine the values for {@value #DIALECT_DB_NAME},
+	 * {@value #DIALECT_DB_MAJOR_VERSION} and {@value #DIALECT_DB_MINOR_VERSION}.
 	 */
 	String HBM2DDL_CONNECTION = "javax.persistence.schema-generation-connection";
 
 	/**
-	 * Specifies the name of the database provider in cases where a Connection to the underlying database is
-	 * not available (aka, mainly in generating scripts).  In such cases, a value for this setting
-	 * *must* be specified.
-	 * <p/>
-	 * The value of this setting is expected to match the value returned by
-	 * {@link java.sql.DatabaseMetaData#getDatabaseProductName()} for the target database.
-	 * <p/>
-	 * Additionally specifying {@value #HBM2DDL_DB_MAJOR_VERSION} and/or {@value #HBM2DDL_DB_MINOR_VERSION}
-	 * may be required to understand exactly how to generate the required schema commands.
-	 *
-	 * @see #HBM2DDL_DB_MAJOR_VERSION
-	 * @see #HBM2DDL_DB_MINOR_VERSION
+	 * @deprecated Use {@link #DIALECT_DB_NAME} instead
 	 */
-	@SuppressWarnings("JavaDoc")
-	String HBM2DDL_DB_NAME = "javax.persistence.database-product-name";
+	@Deprecated
+	String HBM2DDL_DB_NAME = DIALECT_DB_NAME;
 
 	/**
-	 * Specifies the name of the database provider in cases where a Connection to the underlying database is
-	 * not available (aka, mainly in generating scripts).  This value is used to help more precisely determine
-	 * how to perform schema generation tasks for the underlying database in cases where
-	 * {@value #HBM2DDL_DB_NAME} does not provide enough distinction.
-	 * <p/>
-	 * The value of this setting is expected to match the value returned by
-	 * {@link java.sql.DatabaseMetaData#getDatabaseProductVersion()} for the target database.
-	 *
-	 * @see #HBM2DDL_DB_NAME
+	 * @deprecated Use {@link #DIALECT_DB_VERSION} instead
 	 */
-	@SuppressWarnings("JavaDoc")
+	@Deprecated
 	String HBM2DDL_DB_VERSION = "javax.persistence.database-product-version";
 
 	/**
-	 * Specifies the major version of the underlying database, as would be returned by
-	 * {@link java.sql.DatabaseMetaData#getDatabaseMajorVersion} for the target database.  This value is used to
-	 * help more precisely determine how to perform schema generation tasks for the underlying database in cases
-	 * where {@value #HBM2DDL_DB_NAME} does not provide enough distinction.
-
-	 * @see #HBM2DDL_DB_NAME
-	 * @see #HBM2DDL_DB_MINOR_VERSION
+	 * @deprecated Use {@link #DIALECT_DB_MAJOR_VERSION} instead
 	 */
+	@Deprecated
 	String HBM2DDL_DB_MAJOR_VERSION = "javax.persistence.database-major-version";
 
 	/**
-	 * Specifies the minor version of the underlying database, as would be returned by
-	 * {@link java.sql.DatabaseMetaData#getDatabaseMinorVersion} for the target database.  This value is used to
-	 * help more precisely determine how to perform schema generation tasks for the underlying database in cases
-	 * where the combination of {@value #HBM2DDL_DB_NAME} and {@value #HBM2DDL_DB_MAJOR_VERSION} does not provide
-	 * enough distinction.
-	 *
-	 * @see #HBM2DDL_DB_NAME
-	 * @see #HBM2DDL_DB_MAJOR_VERSION
+	 * @deprecated Use {@link #DIALECT_DB_MINOR_VERSION} instead
 	 */
+	@Deprecated
 	String HBM2DDL_DB_MINOR_VERSION = "javax.persistence.database-minor-version";
 
 	/**

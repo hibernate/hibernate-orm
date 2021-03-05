@@ -596,8 +596,8 @@ equalityExpression
 // token type.  When traversing the AST, use the token type, and not the
 // token text to interpret the semantics of these nodes.
 relationalExpression
-	: concatenation (
-		( ( ( LT^ | GT^ | LE^ | GE^ ) additiveExpression )* )
+	: ( concatenation | quantifiedExpression ) (
+		( ( ( LT^ | GT^ | LE^ | GE^ ) ( additiveExpression | quantifiedExpression ) )* )
 		// Disable node production for the optional 'not'.
 		| (n:NOT!)? (
 			// Represent the optional NOT prefix using the token type by
@@ -668,7 +668,6 @@ unaryExpression
 	: MINUS^ {#MINUS.setType(UNARY_MINUS);} unaryExpression
 	| PLUS^ {#PLUS.setType(UNARY_PLUS);} unaryExpression
 	| caseExpression
-	| quantifiedExpression
 	| atom
 	;
 
@@ -842,9 +841,9 @@ castedIdentPrimaryBase
     ;
 
 aggregate
-	: ( SUM^ | AVG^ | MAX^ | MIN^ ) OPEN! ( concatenation | subQuery ) CLOSE! { #aggregate.setType(AGGREGATE); }
+	: ( SUM^ | AVG^ | MAX^ | MIN^ ) OPEN! ( concatenation ) CLOSE! { #aggregate.setType(AGGREGATE); }
 	// Special case for count - It's 'parameters' can be keywords.
-	|  COUNT^ OPEN! ( STAR { #STAR.setType(ROW_STAR); } | ( ( DISTINCT | ALL )? ( concatenation | subQuery ) ) ) CLOSE!
+	|  COUNT^ OPEN! ( STAR { #STAR.setType(ROW_STAR); } | ( ( DISTINCT | ALL )? ( concatenation ) ) ) CLOSE!
 	|  collectionExpr
 	;
 

@@ -8,10 +8,5 @@
 /**
  * Extensions based on the extension mechanism of JUnit 5 to support things like
  * `@FailureExcepted`, `@RequiresDialect`, etc.  Used in writing tests
- *
- * todo (6.0) : add the proposed Docker support - DomainModel, multi-threading etc
- *
- * @deprecated Use {@link org.hibernate.testing.orm.junit} instead
  */
-@Deprecated
 package org.hibernate.testing.junit5;

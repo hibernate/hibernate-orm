@@ -30,6 +30,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.DynamicFilterAliasGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.util.MarkerObject;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Column;
@@ -608,7 +609,11 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	@Override
 	protected String filterFragment(String alias, Set<String> treatAsDeclarations) {
 		if ( hasWhere() ) {
-			return discriminatorFilterFragment( alias, treatAsDeclarations ) + " and " + getSQLWhereString( alias );
+			final String discriminatorFilterFragment = discriminatorFilterFragment( alias, treatAsDeclarations );
+			if ( StringHelper.isNotEmpty( discriminatorFilterFragment ) ) {
+				return discriminatorFilterFragment + " and " + getSQLWhereString( alias );
+			}
+			return getSQLWhereString( alias );
 		}
 		else {
 			return "";

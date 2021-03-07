@@ -90,6 +90,15 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 			basicType = jdbcResultsMetadata.resolveType( jdbcPosition, explicitJavaTypeDescriptor );
 		}
 
+		final JavaTypeDescriptor<?> javaTypeDescriptor;
+
+		if ( explicitJavaTypeDescriptor != null ) {
+			javaTypeDescriptor = explicitJavaTypeDescriptor;
+		}
+		else {
+			javaTypeDescriptor = basicType.getJavaTypeDescriptor();
+		}
+
 		final SqlExpressionResolver sqlExpressionResolver = domainResultCreationState.getSqlAstCreationState().getSqlExpressionResolver();
 		sqlExpressionResolver.resolveSqlSelection(
 				sqlExpressionResolver.resolveSqlExpression(
@@ -100,7 +109,10 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 				sessionFactory.getTypeConfiguration()
 		);
 
-		return new BasicResult<>( valuesArrayPosition, resultAlias, explicitJavaTypeDescriptor );
+		// StandardRowReader expects there to be a JavaTypeDescriptor as part of the ResultAssembler.
+		assert javaTypeDescriptor != null;
+
+		return new BasicResult<>( valuesArrayPosition, resultAlias, javaTypeDescriptor );
 	}
 
 }

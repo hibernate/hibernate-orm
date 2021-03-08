@@ -1406,8 +1406,20 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				final int sqmPosition = (Integer) literal;
 				final List<SqlSelection> selections = currentSqlSelectionCollector().getSelections( sqmPosition );
 				final List<Expression> expressions = new ArrayList<>( selections.size() );
-				for ( SqlSelection selection : selections ) {
+				OUTER: for ( int i = 0; i < selections.size(); i++ ) {
+					final SqlSelection selection = selections.get( i );
+					// We skip duplicate selections which can occur when grouping/ordering by an entity alias.
+					// Duplication happens because the primary key of an entity usually acts as FK target of collections
+					// which is, just like the identifier itself, also registered as selection
+					for ( int j = 0; j < i; j++ ) {
+						if ( selections.get( j ) == selection ) {
+							continue OUTER;
+						}
+					}
 					expressions.add( new SqlSelectionExpression( selection ) );
+				}
+				if ( expressions.size() == 1 ) {
+					return expressions.get( 0 );
 				}
 				return new SqlTuple( expressions, null );
 			}

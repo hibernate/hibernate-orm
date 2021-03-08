@@ -8,6 +8,7 @@ package org.hibernate.sql.results.graph.collection.internal;
 
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.log.LoggingHelper;
@@ -15,8 +16,10 @@ import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.collection.LoadingCollectionEntry;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 /**
@@ -24,11 +27,67 @@ import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
  */
 public class DelayedCollectionInitializer extends AbstractCollectionInitializer {
 
+	/**
+	 * refers to the collection's container value - which collection-key?
+	 */
+	private final DomainResultAssembler keyContainerAssembler;
+
 	public DelayedCollectionInitializer(
 			NavigablePath fetchedPath,
 			PluralAttributeMapping fetchedMapping,
-			FetchParentAccess parentAccess) {
+			FetchParentAccess parentAccess,
+			DomainResultAssembler keyContainerAssembler) {
 		super( fetchedPath, fetchedMapping, parentAccess );
+		this.keyContainerAssembler = keyContainerAssembler;
+	}
+
+	@Override
+	public void resolveKey(RowProcessingState rowProcessingState) {
+		if ( collectionKey != null ) {
+			// already resolved
+			return;
+		}
+
+		final CollectionKey loadingKey = rowProcessingState.getCollectionKey();
+		if ( loadingKey != null ) {
+			collectionKey = loadingKey;
+			return;
+		}
+
+		final JdbcValuesSourceProcessingOptions processingOptions = rowProcessingState.getJdbcValuesSourceProcessingState()
+				.getProcessingOptions();
+
+		final Object keyContainerValue = keyContainerAssembler.assemble(
+				rowProcessingState,
+				processingOptions
+		);
+		if ( keyContainerValue != null ) {
+			this.collectionKey = new CollectionKey(
+					collectionAttributeMapping.getCollectionDescriptor(),
+					keyContainerValue
+			);
+
+			// TODO: This fails e.g. EagerCollectionLazyKeyManyToOneTest because Order$Id#customer is null
+			//   which is required for the hash code. Is this being null at this point a bug?
+//			if ( CollectionLoadingLogger.DEBUG_ENABLED ) {
+//				CollectionLoadingLogger.INSTANCE.debugf(
+//						"(%s) Current row collection key : %s",
+//						DelayedCollectionInitializer.class.getSimpleName(),
+//						LoggingHelper.toLoggableString( getNavigablePath(), this.collectionKey.getKey() )
+//				);
+//			}
+			parentAccess.registerResolutionListener( owner -> collectionInstance.setOwner( owner ) );
+		}
+		else {
+			final Object parentKey = parentAccess.getParentKey();
+			if ( parentKey != null ) {
+				this.collectionKey = new CollectionKey(
+						collectionAttributeMapping.getCollectionDescriptor(),
+						parentKey
+				);
+				parentAccess.registerResolutionListener( owner -> collectionInstance.setOwner( owner ) );
+			}
+		}
 	}
 
 	@Override

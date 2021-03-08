@@ -518,10 +518,19 @@ public class PluralAttributeMappingImpl
 			return new SelectEagerCollectionFetch( fetchablePath, this, fetchParent );
 		}
 
+		final FromClauseAccess fromClauseAccess = sqlAstCreationState.getFromClauseAccess();
+		final TableGroup fetchParentTableGroup = fromClauseAccess.getTableGroup( fetchParent.getNavigablePath() );
+		final DomainResult fkResult = getKeyDescriptor().createDomainResult(
+				fetchablePath,
+				fetchParentTableGroup,
+				false,
+				creationState
+		);
 		return new DelayedCollectionFetch(
 				fetchablePath,
 				this,
-				fetchParent
+				fetchParent,
+				fkResult
 		);
 	}
 

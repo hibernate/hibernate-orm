@@ -8,7 +8,6 @@ package org.hibernate.sql.results.graph.collection.internal;
 
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.log.LoggingHelper;
@@ -96,19 +95,4 @@ public class DelayedCollectionInitializer extends AbstractCollectionInitializer 
 		collectionInstance = null;
 	}
 
-	@Override
-	public void resolveKey(RowProcessingState rowProcessingState) {
-		if ( collectionKey != null ) {
-			// already resolved
-			return;
-		}
-
-		final Object parentKey = parentAccess.getParentKey();
-		if ( parentKey != null ) {
-			collectionKey = new CollectionKey(
-					collectionAttributeMapping.getCollectionDescriptor(),
-					parentKey
-			);
-		}
-	}
 }

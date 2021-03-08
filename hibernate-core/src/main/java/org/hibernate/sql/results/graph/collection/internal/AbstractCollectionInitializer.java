@@ -51,8 +51,6 @@ public abstract class AbstractCollectionInitializer implements CollectionInitial
 					collectionAttributeMapping.getCollectionDescriptor(),
 					parentKey
 			);
-
-			parentAccess.registerResolutionListener( owner -> collectionInstance.setOwner( owner ) );
 		}
 	}
 

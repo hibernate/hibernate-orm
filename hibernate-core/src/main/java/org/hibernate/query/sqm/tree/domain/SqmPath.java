@@ -77,6 +77,8 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	 */
 	void registerImplicitJoinPath(SqmPath<?> path);
 
+	SqmPath<?> getImplicitJoinPath(String name);
+
 	/**
 	 * This node's type is its "referenced path source"
 	 */

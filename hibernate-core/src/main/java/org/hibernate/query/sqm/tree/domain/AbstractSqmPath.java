@@ -125,9 +125,19 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 		}
 
 		final String relativeName = path.getNavigablePath().getLocalName();
-		if ( !implicitJoinPaths.containsKey( relativeName ) ) {
-			implicitJoinPaths.put( relativeName, path );
+
+		final SqmPath<?> previous = implicitJoinPaths.put( relativeName, path );
+		if ( previous != null && previous != path ) {
+			throw new IllegalStateException( "Implicit-join path registration unexpectedly overrode previous registration - " + relativeName );
 		}
+	}
+
+	@Override
+	public SqmPath<?> getImplicitJoinPath(String name) {
+		if ( implicitJoinPaths == null ) {
+			return null;
+		}
+		return implicitJoinPaths.get( name );
 	}
 
 	@Override

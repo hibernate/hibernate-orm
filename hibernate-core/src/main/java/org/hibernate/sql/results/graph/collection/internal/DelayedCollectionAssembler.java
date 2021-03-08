@@ -11,6 +11,8 @@ import java.util.function.Consumer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
+import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
@@ -23,13 +25,22 @@ public class DelayedCollectionAssembler extends AbstractCollectionAssembler {
 			NavigablePath fetchPath,
 			PluralAttributeMapping fetchedMapping,
 			FetchParentAccess parentAccess,
+			DomainResult fkResult,
 			AssemblerCreationState creationState) {
 		super(
 				fetchedMapping,
 				() -> (CollectionInitializer) creationState.resolveInitializer(
 						fetchPath,
 						fetchedMapping,
-						() -> new DelayedCollectionInitializer( fetchPath, fetchedMapping, parentAccess )
+						() -> {
+							final DomainResultAssembler fkAssembler = fkResult.createResultAssembler( creationState );
+							return new DelayedCollectionInitializer(
+									fetchPath,
+									fetchedMapping,
+									parentAccess,
+									fkAssembler
+							);
+						}
 				)
 
 		);

@@ -1003,7 +1003,18 @@ public class MappingModelCreationHelper {
 			return;
 		}
 
-		final ModelPart fkTarget = referencedEntityDescriptor.getIdentifierMapping();
+		final ModelPart fkTarget;
+		if ( bootValueMapping.isReferenceToPrimaryKey() ) {
+			fkTarget = referencedEntityDescriptor.getIdentifierMapping();
+		}
+		else {
+			// TODO: need some kind of virtual model part for this
+//			fkTarget = attributeMapping;//bootValueMapping.;
+			throw new NotYetImplementedFor6Exception(
+					"Support for non-pk foreign-keys not yet implemented: " +
+							bootProperty.getPersistentClass().getEntityName() + " -> " + bootProperty.getName()
+			);
+		}
 
 		if ( fkTarget instanceof BasicValuedModelPart ) {
 			final BasicValuedModelPart simpleFkTarget = (BasicValuedModelPart) fkTarget;
@@ -1049,7 +1060,7 @@ public class MappingModelCreationHelper {
 		}
 		else {
 			throw new NotYetImplementedFor6Exception(
-					"Support for" + fkTarget.getClass() + " foreign-keys not yet implemented: " +
+					"Support for " + fkTarget.getClass() + " foreign-keys not yet implemented: " +
 							bootProperty.getPersistentClass().getEntityName() + " -> " + bootProperty.getName()
 			);
 		}

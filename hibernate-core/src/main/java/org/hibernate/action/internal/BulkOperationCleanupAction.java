@@ -179,6 +179,17 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 		}
 	}
 
+	public static void schedule(ExecutionContext executionContext, Set<String> affectedQueryables) {
+		final SharedSessionContractImplementor session = executionContext.getSession();
+		final BulkOperationCleanupAction action = new BulkOperationCleanupAction( session, affectedQueryables );
+		if ( session.isEventSource() ) {
+			( (EventSource) session ).getActionQueue().addAction( action );
+		}
+		else {
+			action.getAfterTransactionCompletionProcess().doAfterTransactionCompletion( true, session );
+		}
+	}
+
 
 	/**
 	 * Check whether we should consider an entity as affected by the query.  This

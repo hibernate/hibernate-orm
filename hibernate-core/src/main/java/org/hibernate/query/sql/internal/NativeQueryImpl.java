@@ -266,6 +266,7 @@ public class NativeQueryImpl<R>
 		this.parameterMetadata = parameterInterpretation.toParameterMetadata( session );
 		this.occurrenceOrderedParamList = parameterInterpretation.getOccurrenceOrderedParameters();
 		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, session.getFactory() );
+		this.querySpaces = new HashSet<>();
 
 		this.resultSetMapping = new ResultSetMappingImpl( resultSetMappingMemento.getName() );
 		resultSetMappingMemento.resolve(
@@ -301,7 +302,10 @@ public class NativeQueryImpl<R>
 	protected void applyOptions(NamedNativeQueryMemento memento) {
 		super.applyOptions( memento );
 
-		this.querySpaces = CollectionHelper.makeCopy( memento.getQuerySpaces() );
+		final Set<String> copy = CollectionHelper.makeCopy( memento.getQuerySpaces() );
+		if ( copy != null ) {
+			this.querySpaces = copy;
+		}
 
 		// todo (6.0) : query returns
 	}
@@ -579,7 +583,7 @@ public class NativeQueryImpl<R>
 		}
 
 		if ( queryPlan == null ) {
-			queryPlan = new NativeNonSelectQueryPlanImpl( this );
+			queryPlan = new NativeNonSelectQueryPlanImpl( sqlString, querySpaces, occurrenceOrderedParamList );
 			if ( cacheKey != null ) {
 				getSession().getFactory().getQueryEngine().getInterpretationCache().cacheNonSelectQueryPlan( cacheKey, queryPlan );
 			}

@@ -166,7 +166,7 @@ public class DomainResultCreationStateImpl
 
 	@Override
 	public boolean forceIdentifierSelection() {
-		return false;
+		return true;
 	}
 
 	@Override

@@ -50,6 +50,7 @@ import org.hibernate.cfg.SetBasicValueTypeSecondPass;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
@@ -98,7 +99,7 @@ public class BasicValueBinder<T> implements SqlTypeDescriptorIndicators {
 	private Function<TypeConfiguration,SqlTypeDescriptor> explicitSqlTypeAccess;
 	private Function<TypeConfiguration, BasicJavaDescriptor> explicitJtdAccess;
 	private Function<TypeConfiguration, MutabilityPlan> explicitMutabilityAccess;
-	private Function<TypeConfiguration, Class> implicitJavaTypeAccess;
+	private Function<TypeConfiguration, java.lang.reflect.Type> implicitJavaTypeAccess;
 
 	private AccessType accessType;
 
@@ -595,7 +596,7 @@ public class BasicValueBinder<T> implements SqlTypeDescriptorIndicators {
 			}
 
 			// see if the value's type Class is annotated `@Immutable`
-			final Class attributeType = implicitJavaTypeAccess.apply( typeConfiguration );
+			final Class attributeType = ReflectHelper.getClass( implicitJavaTypeAccess.apply( typeConfiguration ) );
 			if ( attributeType.isAnnotationPresent( Immutable.class ) ) {
 				return ImmutableMutabilityPlan.instance();
 			}

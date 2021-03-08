@@ -1287,7 +1287,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 						paramName
 				);
 				final Getter getter = propertyAccess.getGetter();
-				final Class<?> retType = getter.getReturnType();
+				final Class<?> retType = getter.getReturnTypeClass();
 				final Object object = getter.get( bean );
 				if ( Collection.class.isAssignableFrom( retType ) ) {
 					setParameterList( paramName, (Collection<?>) object );

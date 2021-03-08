@@ -764,7 +764,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 									parameterName
 							);
 							final Getter getter = propertyAccess.getGetter();
-							final Class retType = getter.getReturnType();
+							final Class<?> retType = getter.getReturnTypeClass();
 							final Object object = getter.get( bean );
 							if ( Collection.class.isAssignableFrom( retType ) ) {
 								setParameterList( parameterName, (Collection) object );

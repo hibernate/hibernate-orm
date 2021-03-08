@@ -62,15 +62,15 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 	private String explicitTypeName;
 	private Map explicitLocalTypeParams;
 
-	private Function<TypeConfiguration,BasicJavaDescriptor> explicitJavaTypeAccess;
-	private Function<TypeConfiguration,SqlTypeDescriptor> explicitSqlTypeAccess;
-	private Function<TypeConfiguration,MutabilityPlan> explicitMutabilityPlanAccess;
-	private Function<TypeConfiguration,Class> implicitJavaTypeAccess;
+	private Function<TypeConfiguration, BasicJavaDescriptor> explicitJavaTypeAccess;
+	private Function<TypeConfiguration, SqlTypeDescriptor> explicitSqlTypeAccess;
+	private Function<TypeConfiguration, MutabilityPlan> explicitMutabilityPlanAccess;
+	private Function<TypeConfiguration, java.lang.reflect.Type> implicitJavaTypeAccess;
 
 	private EnumType enumerationStyle;
 	private TemporalType temporalPrecision;
 
-	private Class resolvedJavaClass;
+	private java.lang.reflect.Type resolvedJavaType;
 
 	private String ownerName;
 	private String propertyName;
@@ -138,7 +138,7 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 		this.explicitMutabilityPlanAccess = explicitMutabilityPlanAccess;
 	}
 
-	public void setImplicitJavaTypeAccess(Function<TypeConfiguration, Class> implicitJavaTypeAccess) {
+	public void setImplicitJavaTypeAccess(Function<TypeConfiguration, java.lang.reflect.Type> implicitJavaTypeAccess) {
 		this.implicitJavaTypeAccess = implicitJavaTypeAccess;
 	}
 
@@ -149,8 +149,8 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 		return getColumn( 0 );
 	}
 
-	public Class getResolvedJavaClass() {
-		return resolvedJavaClass;
+	public java.lang.reflect.Type getResolvedJavaType() {
+		return resolvedJavaType;
 	}
 
 	@Override
@@ -344,7 +344,7 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 
 		if ( jtd == null ) {
 			if ( implicitJavaTypeAccess != null ) {
-				final Class implicitJtd = implicitJavaTypeAccess.apply( typeConfiguration );
+				final java.lang.reflect.Type implicitJtd = implicitJavaTypeAccess.apply( typeConfiguration );
 				if ( implicitJtd != null ) {
 					jtd = typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( implicitJtd );
 				}
@@ -403,10 +403,10 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 	}
 
 	private JavaTypeDescriptor determineReflectedJavaTypeDescriptor() {
-		final Class impliedJavaType;
+		final java.lang.reflect.Type impliedJavaType;
 
-		if ( resolvedJavaClass != null ) {
-			impliedJavaType = resolvedJavaClass;
+		if ( resolvedJavaType != null ) {
+			impliedJavaType = resolvedJavaType;
 		}
 		else if ( implicitJavaTypeAccess != null ) {
 			impliedJavaType = implicitJavaTypeAccess.apply( typeConfiguration );
@@ -415,7 +415,7 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 			final ServiceRegistry serviceRegistry = typeConfiguration.getServiceRegistry();
 			final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 
-			impliedJavaType = ReflectHelper.reflectedPropertyClass(
+			impliedJavaType = ReflectHelper.reflectedPropertyType(
 					ownerName,
 					propertyName,
 					classLoaderService
@@ -425,7 +425,7 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 			return null;
 		}
 
-		resolvedJavaClass = impliedJavaType;
+		resolvedJavaType = impliedJavaType;
 		return typeConfiguration.getJavaTypeDescriptorRegistry().resolveDescriptor( impliedJavaType );
 	}
 
@@ -434,7 +434,7 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 	private static Resolution interpretExplicitlyNamedType(
 			String name,
 			EnumType enumerationStyle,
-			Function<TypeConfiguration, Class> implicitJavaTypeAccess,
+			Function<TypeConfiguration, java.lang.reflect.Type> implicitJavaTypeAccess,
 			Function<TypeConfiguration, BasicJavaDescriptor> explicitJtdAccess,
 			Function<TypeConfiguration, SqlTypeDescriptor> explicitStdAccess,
 			Function<TypeConfiguration, MutabilityPlan> explicitMutabilityPlanAccess,

@@ -61,7 +61,7 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 		for ( int i = 0; i < propertySpan; i++ ) {
 			getterNames[i] = getters[i].getMethodName();
 			setterNames[i] = setters[i].getMethodName();
-			propTypes[i] = getters[i].getReturnType();
+			propTypes[i] = getters[i].getReturnTypeClass();
 		}
 
 		if ( hasCustomAccessors || !Environment.useReflectionOptimizer() ) {

@@ -9,6 +9,7 @@ package org.hibernate.property.access.spi;
 import java.io.Serializable;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.util.Map;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -45,11 +46,18 @@ public interface Getter extends Serializable {
 	Object getForInsert(Object owner, Map mergeMap, SharedSessionContractImplementor session);
 
 	/**
+	 * Retrieve the declared Java type class
+	 *
+	 * @return The declared java type class.
+	 */
+	Class<?> getReturnTypeClass();
+
+	/**
 	 * Retrieve the declared Java type
 	 *
 	 * @return The declared java type.
 	 */
-	Class getReturnType();
+	Type getReturnType();
 
 	/**
 	 * Retrieve the member to which this property maps.  This might be the

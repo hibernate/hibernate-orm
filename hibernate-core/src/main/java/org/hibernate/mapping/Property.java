@@ -90,7 +90,7 @@ public class Property implements Serializable, MetaAttributable {
 	}
 	
 	public boolean isPrimitive(Class clazz) {
-		return getGetter(clazz).getReturnType().isPrimitive();
+		return getGetter(clazz).getReturnTypeClass().isPrimitive();
 	}
 
 	public CascadeStyle getCascadeStyle() throws MappingException {

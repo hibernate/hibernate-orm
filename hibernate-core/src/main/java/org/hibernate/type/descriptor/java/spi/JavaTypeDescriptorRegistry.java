@@ -7,9 +7,12 @@
 package org.hibernate.type.descriptor.java.spi;
 
 import java.io.Serializable;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
+import org.hibernate.type.descriptor.java.AbstractClassTypeDescriptor;
 import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.SerializableTypeDescriptor;
@@ -30,7 +33,7 @@ public class JavaTypeDescriptorRegistry implements JavaTypeDescriptorBaseline.Ba
 	private static final Logger log = Logger.getLogger( JavaTypeDescriptorRegistry.class );
 
 	private final TypeConfiguration typeConfiguration;
-	private ConcurrentHashMap<Class, JavaTypeDescriptor> descriptorsByClass = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<Type, JavaTypeDescriptor<?>> descriptorsByType = new ConcurrentHashMap<>();
 
 	@SuppressWarnings("unused")
 	public JavaTypeDescriptorRegistry(TypeConfiguration typeConfiguration) {
@@ -43,20 +46,20 @@ public class JavaTypeDescriptorRegistry implements JavaTypeDescriptorBaseline.Ba
 	// baseline descriptors
 
 	@Override
-	public void addBaselineDescriptor(JavaTypeDescriptor descriptor) {
+	public void addBaselineDescriptor(JavaTypeDescriptor<?> descriptor) {
 		if ( descriptor.getJavaType() == null ) {
 			throw new IllegalStateException( "Illegal to add BasicJavaTypeDescriptor with null Java type" );
 		}
-		addBaselineDescriptor( descriptor.getJavaTypeClass(), descriptor );
+		addBaselineDescriptor( descriptor.getJavaType(), descriptor );
 	}
 
 	@Override
-	public void addBaselineDescriptor(Class describedJavaType, JavaTypeDescriptor descriptor) {
+	public void addBaselineDescriptor(Type describedJavaType, JavaTypeDescriptor<?> descriptor) {
 		performInjections( descriptor );
-		descriptorsByClass.put( describedJavaType, descriptor );
+		descriptorsByType.put( describedJavaType, descriptor );
 	}
 
-	private void performInjections(JavaTypeDescriptor descriptor) {
+	private void performInjections(JavaTypeDescriptor<?> descriptor) {
 		if ( descriptor instanceof TypeConfigurationAware ) {
 			// would be nice to make the JavaTypeDescriptor for an entity, e.g., aware of the the TypeConfiguration
 			( (TypeConfigurationAware) descriptor ).setTypeConfiguration( typeConfiguration );
@@ -67,7 +70,7 @@ public class JavaTypeDescriptorRegistry implements JavaTypeDescriptorBaseline.Ba
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// descriptor access
 
-	public <T> JavaTypeDescriptor<T> getDescriptor(Class<T> javaType) {
+	public <T> JavaTypeDescriptor<T> getDescriptor(Type javaType) {
 		return resolveDescriptor( javaType );
 //		return RegistryHelper.INSTANCE.resolveDescriptor(
 //				descriptorsByClass,
@@ -98,8 +101,8 @@ public class JavaTypeDescriptorRegistry implements JavaTypeDescriptorBaseline.Ba
 //		);
 	}
 
-	public void addDescriptor(JavaTypeDescriptor descriptor) {
-		JavaTypeDescriptor old = descriptorsByClass.put( descriptor.getJavaTypeClass(), descriptor );
+	public void addDescriptor(JavaTypeDescriptor<?> descriptor) {
+		JavaTypeDescriptor<?> old = descriptorsByType.put( descriptor.getJavaType(), descriptor );
 		if ( old != null ) {
 			log.debugf(
 					"JavaTypeDescriptorRegistry entry replaced : %s -> %s (was %s)",
@@ -111,34 +114,45 @@ public class JavaTypeDescriptorRegistry implements JavaTypeDescriptorBaseline.Ba
 		performInjections( descriptor );
 	}
 
-	public <J> JavaTypeDescriptor<J> resolveDescriptor(Class<J> javaType, Supplier<JavaTypeDescriptor<J>> creator) {
-		final JavaTypeDescriptor cached = descriptorsByClass.get( javaType );
+	public <J> JavaTypeDescriptor<J> resolveDescriptor(Type javaType, Supplier<JavaTypeDescriptor<J>> creator) {
+		final JavaTypeDescriptor<?> cached = descriptorsByType.get( javaType );
 		if ( cached != null ) {
 			//noinspection unchecked
-			return cached;
+			return (JavaTypeDescriptor<J>) cached;
 		}
 
 		final JavaTypeDescriptor<J> created = creator.get();
-		descriptorsByClass.put( javaType, created );
+		descriptorsByType.put( javaType, created );
 		return created;
 	}
 
 	@SuppressWarnings("unchecked")
-	public <J> JavaTypeDescriptor<J> resolveDescriptor(Class<J> javaType) {
+	public <J> JavaTypeDescriptor<J> resolveDescriptor(Type javaType) {
 		return resolveDescriptor(
 				javaType,
 				() -> {
 					// the fallback will always be a basic type
-					final JavaTypeDescriptor<J> fallbackDescriptor;
-
-					if ( javaType.isEnum() ) {
-						fallbackDescriptor = new EnumJavaTypeDescriptor( javaType );
-					}
-					else if ( Serializable.class.isAssignableFrom( javaType ) ) {
-						fallbackDescriptor = new SerializableTypeDescriptor( javaType );
+					final AbstractClassTypeDescriptor<J> fallbackDescriptor;
+					final Class<?> javaTypeClass;
+					if ( javaType instanceof Class<?> ) {
+						javaTypeClass = (Class<?>) javaType;
 					}
 					else {
-						fallbackDescriptor = new JavaTypeDescriptorBasicAdaptor( javaType );
+						final ParameterizedType parameterizedType = (ParameterizedType) javaType;
+						javaTypeClass = (Class<?>) parameterizedType.getRawType();
+					}
+
+					if ( javaTypeClass.isEnum() ) {
+						//noinspection rawtypes
+						fallbackDescriptor = new EnumJavaTypeDescriptor( javaTypeClass );
+					}
+					else if ( Serializable.class.isAssignableFrom( javaTypeClass ) ) {
+						//noinspection rawtypes
+						fallbackDescriptor = new SerializableTypeDescriptor( javaTypeClass );
+					}
+					else {
+						//noinspection rawtypes
+						fallbackDescriptor = new JavaTypeDescriptorBasicAdaptor( javaTypeClass );
 					}
 
 					// todo (6.0) : here we assume that all temporal type descriptors are registered

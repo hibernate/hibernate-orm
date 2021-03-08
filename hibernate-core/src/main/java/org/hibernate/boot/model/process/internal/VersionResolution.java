@@ -35,7 +35,7 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 
 	@SuppressWarnings({"rawtypes", "unchecked"})
 	public static <E> VersionResolution<E> from(
-			Function<TypeConfiguration, Class> implicitJavaTypeAccess,
+			Function<TypeConfiguration, java.lang.reflect.Type> implicitJavaTypeAccess,
 			Function<TypeConfiguration, BasicJavaDescriptor> explicitJtdAccess,
 			Function<TypeConfiguration, SqlTypeDescriptor> explicitStdAccess,
 			TypeConfiguration typeConfiguration,
@@ -43,7 +43,7 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 
 		// todo (6.0) : add support for Dialect-specific interpretation?
 
-		final Class implicitJavaType = implicitJavaTypeAccess.apply( typeConfiguration );
+		final java.lang.reflect.Type implicitJavaType = implicitJavaTypeAccess.apply( typeConfiguration );
 		final JavaTypeDescriptor registered = typeConfiguration.getJavaTypeDescriptorRegistry().resolveDescriptor( implicitJavaType );
 
 		if ( registered instanceof PrimitiveByteArrayTypeDescriptor ) {

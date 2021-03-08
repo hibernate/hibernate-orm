@@ -7,13 +7,13 @@
 package org.hibernate.type.descriptor.java;
 
 import java.io.Serializable;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Comparator;
 import java.util.Objects;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.compare.ComparableComparator;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
@@ -185,17 +185,7 @@ public interface JavaTypeDescriptor<T> extends Serializable {
 	 * @return The Java type.
 	 */
 	default Class<T> getJavaTypeClass() {
-		final Type type = getJavaType();
-		if ( type == null ) {
-			return null;
-		}
-		else if ( type instanceof Class<?> ) {
-			return (Class<T>) type;
-		}
-		else if ( type instanceof ParameterizedType ) {
-			return (Class<T>) ( (ParameterizedType) type ).getRawType();
-		}
-		throw new UnsupportedOperationException( "Can't get java type class from type: " + type );
+		return ReflectHelper.getClass( getJavaType() );
 	}
 
 	/**

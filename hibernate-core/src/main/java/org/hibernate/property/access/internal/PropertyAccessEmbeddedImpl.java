@@ -8,6 +8,7 @@ package org.hibernate.property.access.internal;
 
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.util.Map;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -21,7 +22,7 @@ import org.hibernate.property.access.spi.Setter;
  * PropertyAccess for handling non-aggregated composites.
  * <p/>
  * IMPL NOTE : We actually use a singleton for the Setter; we cannot for the getter mainly
- * because we need to differentiate {@link Getter#getReturnType()}.  Ultimately I'd prefer to
+ * because we need to differentiate {@link Getter#getReturnTypeClass()}.  Ultimately I'd prefer to
  * model that "common information" on PropertyAccess itself.
  *
  * @author Gavin King
@@ -73,7 +74,12 @@ public class PropertyAccessEmbeddedImpl implements PropertyAccess {
 		}
 
 		@Override
-		public Class getReturnType() {
+		public Class<?> getReturnTypeClass() {
+			return containerType;
+		}
+
+		@Override
+		public Type getReturnType() {
 			return containerType;
 		}
 

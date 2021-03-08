@@ -288,7 +288,7 @@ public class StandardPojoEntityRepresentationStrategy implements EntityRepresent
 			}
 
 			getterNames.add( propertyAccess.getGetter().getMethodName() );
-			getterTypes.add( propertyAccess.getGetter().getReturnType() );
+			getterTypes.add( propertyAccess.getGetter().getReturnTypeClass() );
 
 			setterNames.add( propertyAccess.getSetter().getMethodName() );
 

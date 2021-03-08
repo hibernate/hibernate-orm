@@ -6,7 +6,6 @@
  */
 package org.hibernate.mapping;
 
-import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -288,11 +287,6 @@ public class RootClass extends PersistentClass implements TableOwner {
 					}
 					if ( !ReflectHelper.overridesHashCode( idClass ) ) {
 						LOG.compositeIdClassDoesNotOverrideHashCode( idComponentClassName );
-					}
-					if ( !Serializable.class.isAssignableFrom( idClass ) ) {
-						throw new MappingException(
-								"Composite-id class must implement Serializable: " + idComponentClassName
-						);
 					}
 				}
 			}

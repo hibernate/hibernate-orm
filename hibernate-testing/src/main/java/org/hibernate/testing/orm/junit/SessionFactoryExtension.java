@@ -236,8 +236,6 @@ public class SessionFactoryExtension
 				SessionFactoryProducer producer) {
 			this.modelScope = modelScope;
 			this.producer = producer;
-
-			this.sessionFactory = createSessionFactory();
 		}
 
 		@Override

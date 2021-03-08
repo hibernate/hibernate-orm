@@ -132,12 +132,16 @@ public class NotImplementedYetExtension
 		final Boolean isStrict = (Boolean) store.get( IS_STRICT_STORE_KEY );
 
 		if ( isMarked ) {
-			if ( throwable instanceof NotImplementedYetException || ! isStrict ) {
-				store.put( EXCEPTION_STORE_KEY, throwable );
+			Throwable t = throwable;
+			do {
+				if ( t instanceof NotImplementedYetException || ! isStrict ) {
+					store.put( EXCEPTION_STORE_KEY, t );
 
-				log.debugf( "#Captured exception %s - ignoring it as expected", throwable );
-				return;
-			}
+					log.debugf( "#Captured exception %s - ignoring it as expected", t );
+					return;
+				}
+				t = t.getCause();
+			} while ( t != null );
 		}
 
 		// Otherwise, rethrow

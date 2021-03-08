@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.function.Consumer;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.RuntimeMetamodels;
 import org.hibernate.metamodel.mapping.AttributeMapping;
@@ -39,6 +40,10 @@ import static org.hamcrest.Matchers.notNullValue;
 public class AttributeOrderingTests {
 	@Test
 	public void testOrdering(DomainModelScope modelScope, SessionFactoryScope sfScope) {
+		// Force the creation of the session factory
+		// We need this because properties are only sorted when finishing the initialization of the domain model
+		SessionFactoryImplementor sessionFactory = sfScope.getSessionFactory();
+
 		// check the boot model.. it should have been sorted as part of calls to
 		// prepare for mapping model creation
 
@@ -47,7 +52,7 @@ public class AttributeOrderingTests {
 
 		// Also check the mapping model *and* the persister model - these need to be in-sync as far as ordering
 
-		final RuntimeMetamodels runtimeMetamodels = sfScope.getSessionFactory().getRuntimeMetamodels();
+		final RuntimeMetamodels runtimeMetamodels = sessionFactory.getRuntimeMetamodels();
 		verifyRuntimeEntityMapping( runtimeMetamodels.getEntityMappingType( TheEntity.class ) );
 		verifyRuntimeEntityMapping( runtimeMetamodels.getEntityMappingType( "TheEntityHbm" ) );
 

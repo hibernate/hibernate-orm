@@ -289,8 +289,6 @@ public class EntityManagerFactoryExtension
 				Map<String, Object> integrationSettings) {
 			this.persistenceUnitInfo = persistenceUnitInfo;
 			this.integrationSettings = integrationSettings;
-
-			this.emf = createEntityManagerFactory();
 		}
 
 		@Override

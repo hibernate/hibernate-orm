@@ -45,6 +45,12 @@ public class DomainPathPart implements SemanticPathPart {
 			throw new SemanticException( "Cannot resolve path (`" + name + "`) relative to `"  + lhs.getNavigablePath() + "`" );
 		}
 		//noinspection unchecked
+		final SqmPath<?> existingImplicitJoinPath = lhs.getImplicitJoinPath( name );
+		if ( existingImplicitJoinPath != null ) {
+			currentPath = existingImplicitJoinPath;
+			return this;
+		}
+
 		currentPath = subPathSource.createSqmPath( lhs, creationState );
 		if ( isTerminal ) {
 			return currentPath;

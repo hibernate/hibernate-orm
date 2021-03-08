@@ -54,14 +54,35 @@ public class SubQueryImplicitJoinReferenceTest {
     public void performHqlTest(SessionFactoryScope scope) {
         // Now simulate running an audit query
         scope.inSession( session -> {
-            session.createQuery( "select e__ FROM org.hibernate.orm.test.SubQueryImplicitJoinReferenceTest$TheEntity e__ "
+            session.createQuery( "select e__ FROM TheEntity e__ "
                                          + "WHERE e__.originalId.rev.id = (select max(e2__.originalId.rev.id) FROM "
-                                         + "org.hibernate.orm.test.SubQueryImplicitJoinReferenceTest$TheEntity e2__ WHERE " +
+                                         + "TheEntity e2__ WHERE " +
                                          "e2__.originalId.rev.id <= 2 and e__.originalId.id = e2__.originalId.id)" ).list();
         } );
     }
 
-    @Entity
+    @Test
+    public void performHqlTest2(SessionFactoryScope scope) {
+        // Now simulate running an audit query
+        scope.inSession( session -> {
+            session.createQuery( "select e__ FROM TheEntity e__ "
+                                         + "WHERE e__.originalId.id = (select max(e2__.originalId.id) FROM "
+                                         + "TheEntity e2__ WHERE " +
+                                         "e__.originalId.id = e2__.originalId.id and e2__.originalId.rev.id <= 2)" ).list();
+        } );
+    }
+
+    @Test
+    public void performHqlTest3(SessionFactoryScope scope) {
+        // Now simulate running an audit query
+        scope.inSession( session -> {
+            session.createQuery( "select e2__.originalId.id, e2__.originalId.rev.id  FROM "
+                                         + "TheEntity e2__ WHERE " +
+                                         " e2__.originalId.rev.id <= 2" ).list();
+        } );
+    }
+
+    @Entity(name = "TheEntity")
     public static class TheEntity {
         @EmbeddedId
         private OriginalId originalId;

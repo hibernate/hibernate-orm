@@ -816,6 +816,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						getCurrentClauseStack()::getCurrent
 				)
 		);
+		currentClauseStack.push( Clause.INSERT );
+		final InsertStatement insertStatement;
 
 		try {
 			final NavigablePath rootPath = sqmStatement.getTarget().getNavigablePath();
@@ -836,7 +838,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 			getFromClauseAccess().registerTableGroup( rootPath, rootTableGroup );
 
-			final InsertStatement insertStatement = new InsertStatement(
+			insertStatement = new InsertStatement(
 					sqmStatement.isWithRecursive(),
 					cteStatements,
 					rootTableGroup.getPrimaryTableReference(),
@@ -844,20 +846,21 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			);
 
 			List<SqmPath> targetPaths = sqmStatement.getInsertionTargetPaths();
-			for ( SqmPath target : targetPaths ) {
+			for ( SqmPath<?> target : targetPaths ) {
 				Assignable assignable = (Assignable) target.accept( this );
 				insertStatement.addTargetColumnReferences( assignable.getColumnReferences() );
 			}
-
-			insertStatement.setSourceSelectStatement(
-					visitQueryPart( selectQueryPart )
-			);
-
-			return insertStatement;
 		}
 		finally {
 			popProcessingStateStack();
+			currentClauseStack.pop();
 		}
+
+		insertStatement.setSourceSelectStatement(
+				visitQueryPart( selectQueryPart )
+		);
+
+		return insertStatement;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

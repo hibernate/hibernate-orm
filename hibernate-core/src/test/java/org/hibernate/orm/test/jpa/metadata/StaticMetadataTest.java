@@ -13,6 +13,7 @@ import javax.persistence.metamodel.EmbeddableType;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.Type;
 
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.Test;
 
@@ -42,7 +43,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class StaticMetadataTest {
 
 	@Test
-	public void testInjections() {
+	public void testInjections(EntityManagerFactoryScope scope) {
+		// Make sure the entity manager factory is properly initialized
+		scope.getEntityManagerFactory();
+
 		// Address (embeddable)
 		assertNotNull( Address_.address1 );
 		assertNotNull( Address_.address2 );

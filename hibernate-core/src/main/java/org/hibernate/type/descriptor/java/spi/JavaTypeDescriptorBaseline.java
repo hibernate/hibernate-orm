@@ -6,6 +6,7 @@
  */
 package org.hibernate.type.descriptor.java.spi;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -72,8 +73,8 @@ import org.hibernate.type.descriptor.java.ZonedDateTimeJavaDescriptor;
  */
 public class JavaTypeDescriptorBaseline {
 	public interface BaselineTarget {
-		void addBaselineDescriptor(JavaTypeDescriptor descriptor);
-		void addBaselineDescriptor(Class describedJavaType, JavaTypeDescriptor descriptor);
+		void addBaselineDescriptor(JavaTypeDescriptor<?> descriptor);
+		void addBaselineDescriptor(Type describedJavaType, JavaTypeDescriptor<?> descriptor);
 	}
 
 	@SuppressWarnings("unchecked")

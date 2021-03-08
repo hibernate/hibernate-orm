@@ -13,6 +13,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
 import java.util.Locale;
 import java.util.regex.Pattern;
 import javax.persistence.Transient;
@@ -216,6 +217,19 @@ public final class ReflectHelper {
 			ClassLoaderService classLoaderService) throws MappingException {
 		try {
 			Class clazz = classLoaderService.classForName( className );
+			return getter( clazz, name ).getReturnTypeClass();
+		}
+		catch ( ClassLoadingException e ) {
+			throw new MappingException( "class " + className + " not found while looking for property: " + name, e );
+		}
+	}
+
+	public static java.lang.reflect.Type reflectedPropertyType(
+			String className,
+			String name,
+			ClassLoaderService classLoaderService) throws MappingException {
+		try {
+			Class clazz = classLoaderService.classForName( className );
 			return getter( clazz, name ).getReturnType();
 		}
 		catch ( ClassLoadingException e ) {
@@ -232,7 +246,7 @@ public final class ReflectHelper {
 	 * @throws MappingException Indicates we were unable to locate the property.
 	 */
 	public static Class reflectedPropertyClass(Class clazz, String name) throws MappingException {
-		return getter( clazz, name ).getReturnType();
+		return getter( clazz, name ).getReturnTypeClass();
 	}
 
 	private static Getter getter(Class clazz, String name) throws MappingException {
@@ -722,5 +736,18 @@ public final class ReflectHelper {
 		}
 
 		return null;
+	}
+
+	public static <T> Class<T> getClass(java.lang.reflect.Type type) {
+		if ( type == null ) {
+			return null;
+		}
+		else if ( type instanceof Class<?> ) {
+			return (Class<T>) type;
+		}
+		else if ( type instanceof ParameterizedType ) {
+			return (Class<T>) ( (ParameterizedType) type ).getRawType();
+		}
+		throw new UnsupportedOperationException( "Can't get java type class from type: " + type );
 	}
 }

@@ -49,7 +49,7 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 		for ( int i = 0; i < propertySpan; i++ ) {
 			getterNames[i] = getters[i].getMethodName();
 			setterNames[i] = setters[i].getMethodName();
-			propTypes[i] = getters[i].getReturnType();
+			propTypes[i] = getters[i].getReturnTypeClass();
 		}
 
 		final String parentPropertyName = component.getParentProperty();

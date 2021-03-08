@@ -11,6 +11,7 @@ import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.util.Map;
 
 import org.hibernate.PropertyAccessException;
@@ -102,8 +103,13 @@ public class EnhancedGetterMethodImpl implements Getter {
 	}
 
 	@Override
-	public Class getReturnType() {
+	public Class<?> getReturnTypeClass() {
 		return getterMethod.getReturnType();
+	}
+
+	@Override
+	public Type getReturnType() {
+		return getterMethod.getGenericReturnType();
 	}
 
 	@Override

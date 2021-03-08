@@ -7,6 +7,7 @@
 package org.hibernate.sql.results.graph.instantiation.internal;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -143,7 +144,8 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 			// find a constructor matching argument types
 			constructor_loop:
 			for ( Constructor<?> constructor : javaTypeDescriptor.getJavaTypeClass().getDeclaredConstructors() ) {
-				if ( constructor.getParameterTypes().length != argumentReaders.size() ) {
+				final Type[] genericParameterTypes = constructor.getGenericParameterTypes();
+				if ( genericParameterTypes.length != argumentReaders.size() ) {
 					continue;
 				}
 
@@ -153,7 +155,7 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 							.getDomainModel()
 							.getTypeConfiguration()
 							.getJavaTypeDescriptorRegistry()
-							.resolveDescriptor( constructor.getParameterTypes()[i] );
+							.resolveDescriptor( genericParameterTypes[i] );
 
 					final boolean assignmentCompatible = Compatibility.areAssignmentCompatible(
 							argumentTypeDescriptor,

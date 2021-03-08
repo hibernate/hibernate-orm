@@ -159,7 +159,7 @@ public class StandardPojoEmbeddableRepresentationStrategy extends AbstractEmbedd
 
 			getterNames[i] = propertyAccess.getGetter().getMethodName();
 			setterNames[i] = propertyAccess.getSetter().getMethodName();
-			propTypes[i] = propertyAccess.getGetter().getReturnType();
+			propTypes[i] = propertyAccess.getGetter().getReturnTypeClass();
 		}
 
 		return Environment.getBytecodeProvider().getReflectionOptimizer(

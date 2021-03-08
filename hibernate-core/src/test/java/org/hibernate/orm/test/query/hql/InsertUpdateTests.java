@@ -14,9 +14,12 @@ import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
+
+import org.hibernate.dialect.FirebirdDialect;
 
 /**
  * @author Gavin King
@@ -86,6 +89,16 @@ public class InsertUpdateTests {
 				session -> {
 					session.createQuery("delete from Ticket").executeUpdate();
 					session.createQuery("insert into Ticket (id, key, subject, details) values (6, 'ABC123', 'Outage', 'Something is broken')").executeUpdate();
+				}
+		);
+	}
+
+	@Test
+	@SkipForDialect( dialectClass = FirebirdDialect.class, reason = "Firebird doesn't support values list in insert" )
+	public void testInsertMultipleValues(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery("delete from Ticket").executeUpdate();
 					session.createQuery("insert into Ticket (id, key, subject, details) values (2, 'XYZ123', 'Outage', 'Something is broken'), (13, 'HIJ456', 'x', 'x')").executeUpdate();
 				}
 		);

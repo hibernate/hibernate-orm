@@ -155,16 +155,17 @@ public class JoinedSubclassAndSecondaryTable {
 	private void assertNumberOfRows(Session s, String tableName, int expectedNumberOfRows, String message) {
 		s.doWork(
 				work -> {
-					PreparedStatement preparedStatement = work.prepareStatement( "select count(*) as row_count from " + tableName );
-					preparedStatement.execute();
-					ResultSet resultSet = preparedStatement.getResultSet();
-					resultSet.next();
-					long rowCount = resultSet.getLong( "row_count" );
-					assertEquals(
-							expectedNumberOfRows,
-							rowCount,
-							message
-					);
+					try (PreparedStatement preparedStatement = work.prepareStatement( "select count(*) as count_of_rows from " + tableName )) {
+						preparedStatement.execute();
+						ResultSet resultSet = preparedStatement.getResultSet();
+						resultSet.next();
+						long rowCount = resultSet.getLong( "count_of_rows" );
+						assertEquals(
+								expectedNumberOfRows,
+								rowCount,
+								message
+						);
+					}
 				}
 		);
 	}

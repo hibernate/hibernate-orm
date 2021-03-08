@@ -8,8 +8,6 @@ package org.hibernate.orm.test.set;
 
 import java.util.List;
 
-import javax.persistence.Tuple;
-
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaRoot;

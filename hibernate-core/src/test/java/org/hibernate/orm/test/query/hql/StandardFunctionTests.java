@@ -13,6 +13,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.dialect.FirebirdDialect;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
@@ -639,10 +640,17 @@ public class StandardFunctionTests {
 // the grammar rule is defined as `HOUR | MINUTE` so no idea how both ever worked.
 //					session.createQuery("select extract(offset hour minute from e.theZonedDateTime) from EntityOfBasics e")
 //							.list();
-
-					session.createQuery("select extract(offset from e.theZonedDateTime) from EntityOfBasics e")
-							.list();
 				}
+		);
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTimezoneTypes.class)
+	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "Firebird doesn't support formatting temporal types to strings")
+	public void testExtractFunctionTimeZoneOffset(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> session.createQuery( "select extract(offset from e.theZonedDateTime) from EntityOfBasics e")
+						.list()
 		);
 	}
 
@@ -888,6 +896,7 @@ public class StandardFunctionTests {
 
 	@Test
 	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby doesn't support formatting temporal types to strings")
+	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "Firebird doesn't support formatting temporal types to strings")
 	public void testFormat(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

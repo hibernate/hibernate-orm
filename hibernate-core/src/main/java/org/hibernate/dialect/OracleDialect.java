@@ -178,6 +178,9 @@ public class OracleDialect extends Dialect {
 		CommonFunctionFactory.stddevPopSamp( queryEngine );
 		CommonFunctionFactory.variance( queryEngine );
 		CommonFunctionFactory.varPopSamp( queryEngine );
+		CommonFunctionFactory.covarPopSamp( queryEngine );
+		CommonFunctionFactory.corr( queryEngine );
+		CommonFunctionFactory.regrLinearRegressionAggregates( queryEngine );
 
 		if ( getVersion() < 9 ) {
 			queryEngine.getSqmFunctionRegistry().register( "coalesce", new NvlCoalesceEmulation() );

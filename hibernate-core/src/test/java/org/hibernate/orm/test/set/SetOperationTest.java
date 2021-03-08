@@ -12,8 +12,6 @@ import javax.persistence.Tuple;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfLists;
-import org.hibernate.testing.orm.domain.gambit.EnumValue;
-import org.hibernate.testing.orm.domain.gambit.SimpleComponent;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;

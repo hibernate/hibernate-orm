@@ -111,6 +111,7 @@ dependencies {
 	testRuntime( libraries.informix )
 	testRuntime( libraries.hana )
 	testRuntime( libraries.cockroachdb )
+	testRuntime( libraries.firebird )
 
 	testRuntime( libraries.oracle )
 

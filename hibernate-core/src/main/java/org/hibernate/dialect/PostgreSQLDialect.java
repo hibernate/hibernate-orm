@@ -307,6 +307,9 @@ public class PostgreSQLDialect extends Dialect {
 		CommonFunctionFactory.stddevPopSamp( queryEngine );
 		CommonFunctionFactory.variance( queryEngine );
 		CommonFunctionFactory.varPopSamp( queryEngine );
+		CommonFunctionFactory.covarPopSamp( queryEngine );
+		CommonFunctionFactory.corr( queryEngine );
+		CommonFunctionFactory.regrLinearRegressionAggregates( queryEngine );
 		CommonFunctionFactory.insert_overlay( queryEngine );
 		CommonFunctionFactory.overlay( queryEngine );
 		CommonFunctionFactory.soundex( queryEngine ); //was introduced in Postgres 9 apparently

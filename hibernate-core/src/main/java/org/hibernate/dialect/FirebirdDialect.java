@@ -8,6 +8,7 @@ package org.hibernate.dialect;
 
 import org.hibernate.HibernateException;
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.NullOrdering;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.FirebirdIdentityColumnSupport;
@@ -34,6 +35,7 @@ import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.CastType;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.mutation.internal.idtable.AfterUseAction;
 import org.hibernate.query.sqm.mutation.internal.idtable.GlobalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
@@ -55,6 +57,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.time.temporal.TemporalAccessor;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
@@ -77,7 +80,7 @@ public class FirebirdDialect extends Dialect {
 	private final int version;
 
 	public FirebirdDialect() {
-		this(250);
+		this( 250 );
 	}
 
 	public FirebirdDialect(DialectResolutionInfo info) {
@@ -87,7 +90,7 @@ public class FirebirdDialect extends Dialect {
 	// KNOWN LIMITATIONS:
 
 	// * no support for format()
-	// * extremely low maximum decimal precision (18)
+	// * (Firebird 3 and earlier) extremely low maximum decimal precision (18)
 	//   making BigInteger/BigDecimal support useless
 	// * can't select a parameter unless wrapped in a
 	//   cast (not even when wrapped in a function call)
@@ -114,18 +117,31 @@ public class FirebirdDialect extends Dialect {
 		//no precision for 'timestamp' type
 		registerColumnType( Types.TIMESTAMP, "timestamp" );
 		if ( getVersion() < 400 ) {
+			// No time zone support, map to without time zone types
 			registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp" );
+			registerColumnType( Types.TIME_WITH_TIMEZONE, "time" );
 		}
 		else {
 			registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp with time zone" );
 		}
+		// Single byte character sets can be 32_765 characters, but assume use of UTF8
 		registerColumnType( Types.VARCHAR, 8_191, "varchar($l)" );
 		registerColumnType( Types.VARCHAR, "blob sub_type text" );
 
-		registerColumnType( Types.BINARY, 32_767, "char($l) character set octets" );
+		if ( getVersion() < 400 ) {
+			registerColumnType( Types.BINARY, 32_767, "char($l) character set octets" );
+		}
+		else {
+			registerColumnType( Types.BINARY, 32_767, "binary($l)" );
+		}
 		registerColumnType( Types.BINARY, "blob sub_type binary" );
 
-		registerColumnType( Types.VARBINARY, 32_765, "varchar($l) character set octets" );
+		if ( getVersion() < 400 ) {
+			registerColumnType( Types.VARBINARY, 32_765, "varchar($l) character set octets" );
+		}
+		else {
+			registerColumnType( Types.VARBINARY, 32_765, "varbinary($l)" );
+		}
 		registerColumnType( Types.VARBINARY, "blob sub_type binary" );
 
 		registerColumnType( Types.BLOB, "blob sub_type binary" );
@@ -166,14 +182,29 @@ public class FirebirdDialect extends Dialect {
 
 	@Override
 	public String getTypeName(int code, Size size) throws HibernateException {
-		//precision of a Firebird 'float(p)' represents
-		//decimal digits instead of binary digits
-		return super.getTypeName( code, binaryToDecimalPrecision( code, size ) );
+		if ( getVersion() < 400 ) {
+			//precision of a Firebird 3 and earlier 'float(p)' represents
+			//decimal digits instead of binary digits
+			return super.getTypeName( code, binaryToDecimalPrecision( code, size ) );
+		}
+		else {
+			// Firebird 4 and higher supports standard 'float(p)' (with precision in binary digits)
+			return super.getTypeName( code, size );
+		}
 	}
 
 	@Override
 	public int getFloatPrecision() {
-		return 21; // -> 7 decimal digits
+		return getVersion() < 400
+				? 21 // -> 7 decimal digits (actually 24, but needed for Dialect#binaryToDecimalPrecision(int,size))
+				: 24;
+	}
+
+	@Override
+	public int getDefaultTimestampPrecision() {
+		// Formally, Firebird has a (fixed) precision of 4 (100 microseconds),
+		// but things like CURRENT_TIMESTAMP produce values with a maximum of 3, so report that
+		return 3;
 	}
 
 	@Override
@@ -182,6 +213,17 @@ public class FirebirdDialect extends Dialect {
 
 		CommonFunctionFactory.concat_pipeOperator( queryEngine );
 		CommonFunctionFactory.cot( queryEngine );
+		CommonFunctionFactory.cosh( queryEngine );
+		CommonFunctionFactory.sinh( queryEngine );
+		CommonFunctionFactory.tanh( queryEngine );
+		if ( getVersion() >= 300 ) {
+			CommonFunctionFactory.moreHyperbolic( queryEngine );
+			CommonFunctionFactory.stddevPopSamp( queryEngine );
+			CommonFunctionFactory.varPopSamp( queryEngine );
+			CommonFunctionFactory.covarPopSamp( queryEngine );
+			CommonFunctionFactory.corr( queryEngine );
+			CommonFunctionFactory.regrLinearRegressionAggregates( queryEngine );
+		}
 		CommonFunctionFactory.log( queryEngine );
 		CommonFunctionFactory.log10( queryEngine );
 		CommonFunctionFactory.pi( queryEngine );
@@ -198,18 +240,70 @@ public class FirebirdDialect extends Dialect {
 		CommonFunctionFactory.reverse( queryEngine );
 		CommonFunctionFactory.bitandorxornot_binAndOrXorNot( queryEngine );
 		CommonFunctionFactory.leastGreatest_minMaxValue( queryEngine );
-		CommonFunctionFactory.stddevPopSamp( queryEngine );
-		CommonFunctionFactory.varPopSamp( queryEngine );
-		//TODO: lots more statistical functions
 
-		//TODO: gen_uid() and friends, gen_id()
-
-		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
+		SqmFunctionRegistry functionRegistry = queryEngine.getSqmFunctionRegistry();
+		functionRegistry.registerBinaryTernaryPattern(
 				"locate",
 				StandardBasicTypes.INTEGER,
 				"position(?1 in ?2)",
-				"(position(?1 in substring(?2 from ?3)) + (?3) - 1)"
-		).setArgumentListSignature("(pattern, string[, start])");
+				"position(?1, ?2, ?3)"
+		).setArgumentListSignature( "(pattern, string[, start])" );
+		functionRegistry.namedDescriptorBuilder( "ascii_val" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardBasicTypes.SHORT )
+				.register();
+		functionRegistry.registerAlternateKey( "ascii", "ascii_val" );
+		functionRegistry.namedDescriptorBuilder( "ascii_char" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardBasicTypes.CHARACTER )
+				.register();
+		functionRegistry.registerAlternateKey( "chr", "ascii_char" );
+		functionRegistry.registerAlternateKey( "char", "ascii_char" );
+		functionRegistry.registerPattern(
+				"radians",
+				"((?1)*pi()/180e0)",
+				StandardBasicTypes.DOUBLE
+		);
+		functionRegistry.registerPattern(
+				"degrees",
+				"((?1)*180e0/pi())",
+				StandardBasicTypes.DOUBLE
+		);
+
+		if ( getVersion() >= 400 ) {
+			Arrays.asList( "md5", "sha1", "sha256", "sha512" )
+					.forEach( hash -> functionRegistry.registerPattern(
+							hash,
+							"crypt_hash(?1 using " + hash + ")",
+							StandardBasicTypes.BINARY
+					) );
+			functionRegistry.registerAlternateKey( "sha", "sha1" );
+			functionRegistry.registerPattern(
+					"crc32",
+					"hash(?1 using crc32)",
+					StandardBasicTypes.INTEGER
+			);
+		}
+	}
+
+	@Override
+	public String currentLocalTime() {
+		if ( supportsTimezoneTypes() ) {
+			return "localtime";
+		}
+		else {
+			return super.currentLocalTime();
+		}
+	}
+
+	@Override
+	public String currentLocalTimestamp() {
+		if ( supportsTimezoneTypes() ) {
+			return "localtimestamp";
+		}
+		else {
+			return super.currentLocalTimestamp();
+		}
 	}
 
 	@Override
@@ -231,10 +325,6 @@ public class FirebirdDialect extends Dialect {
 	public String castPattern(CastType from, CastType to) {
 		String result;
 		switch ( to ) {
-			case FLOAT:
-				return "cast(double(?1) as real)";
-			case DOUBLE:
-				return "double(?1)";
 			case INTEGER:
 			case LONG:
 				result = BooleanDecoder.toInteger( from );
@@ -269,7 +359,8 @@ public class FirebirdDialect extends Dialect {
 			case STRING:
 				result = BooleanDecoder.toString( from );
 				if ( result != null ) {
-					return result;
+					// trim converts to varchar to prevent padding with spaces
+					return "trim(" + result + ")";
 				}
 				break;
 		}
@@ -278,6 +369,9 @@ public class FirebirdDialect extends Dialect {
 
 	@Override
 	public long getFractionalSecondPrecisionInNanos() {
+		// Formally, Firebird can store values with 100 microsecond precision (100_000 nanoseconds).
+		// However, some functions (e.g. CURRENT_TIMESTAMP) will only return values with millisecond precision
+		// So, we report millisecond precision
 		return 1_000_000; //milliseconds
 	}
 
@@ -292,15 +386,17 @@ public class FirebirdDialect extends Dialect {
 		switch ( unit ) {
 			case DAY_OF_WEEK:
 			case DAY_OF_YEAR:
-				return "(" + super.extractPattern(unit) + "+1)";
+				return "(" + super.extractPattern( unit ) + "+1)";
+			case QUARTER:
+				return "((extract(month from ?2)+2)/3)";
 			default:
-				return super.extractPattern(unit);
+				return super.extractPattern( unit );
 		}
 	}
 
 	@Override
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType) {
-		switch (unit) {
+		switch ( unit ) {
 			case NATIVE:
 				return "dateadd((?2) millisecond to ?3)";
 			case NANOSECOND:
@@ -308,7 +404,7 @@ public class FirebirdDialect extends Dialect {
 			case WEEK:
 				return "dateadd((?2)*7 day to ?3)";
 			case QUARTER:
-				return "dateadd((?2)*4 month to ?3)";
+				return "dateadd((?2)*3 month to ?3)";
 			default:
 				return "dateadd(?2 ?1 to ?3)";
 		}
@@ -316,7 +412,7 @@ public class FirebirdDialect extends Dialect {
 
 	@Override
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
-		switch (unit) {
+		switch ( unit ) {
 			case NATIVE:
 				return "datediff(millisecond from ?2 to ?3)";
 			case NANOSECOND:
@@ -324,16 +420,20 @@ public class FirebirdDialect extends Dialect {
 			case WEEK:
 				return "datediff(day from ?2 to ?3)/7";
 			case QUARTER:
-				return "datediff(month from ?2 to ?3)/4";
+				return "datediff(month from ?2 to ?3)/3";
 			default:
 				return "datediff(?1 from ?2 to ?3)";
 		}
 	}
 
 	@Override
+	public boolean supportsTemporalLiteralOffset() {
+		return getVersion() >= 400;
+	}
+
+	@Override
 	public int getDefaultDecimalPrecision() {
-		//the extremely low maximum
-		return 18;
+		return getVersion() < 400 ? 18 : 38;
 	}
 
 	@Override
@@ -348,7 +448,7 @@ public class FirebirdDialect extends Dialect {
 
 	@Override
 	public int getMaxAliasLength() {
-		return 20;
+		return getVersion() < 400 ? 20 : 52;
 	}
 
 	public IdentifierHelper buildIdentifierHelper(
@@ -356,6 +456,24 @@ public class FirebirdDialect extends Dialect {
 			DatabaseMetaData dbMetaData) throws SQLException {
 		// Any use of keywords as identifiers will result in token unknown error, so enable auto quote always
 		builder.setAutoQuoteKeywords( true );
+
+		// Additional reserved words
+		// The Hibernate list of SQL:2003 reserved words doesn't contain all SQL:2003 reserved words,
+		// and Firebird is finicky when it comes to reserved words
+		int version = getVersion();
+		if ( version >= 300 ) {
+			builder.applyReservedWords(
+					"AVG", "BOOLEAN", "CHARACTER_LENGTH", "CHAR_LENGTH", "CORR", "COUNT",
+					"COVAR_POP", "COVAR_SAMP", "EXTRACT", "LOWER", "MAX", "MIN", "OCTET_LENGTH", "POSITION",
+					"REGR_AVGX", "REGR_AVGY", "REGR_COUNT", "REGR_INTERCEPT", "REGR_R2", "REGR_SLOPE", "REGR_SXX",
+					"REGR_SXY", "REGR_SYY", "STDDEV_POP", "STDDEV_SAMP", "SUM", "TRIM", "UPPER", "VAR_POP",
+					"VAR_SAMP" );
+		}
+		else {
+			builder.applyReservedWords(
+					"AVG", "CHARACTER_LENGTH", "CHAR_LENGTH", "COUNT", "EXTRACT", "LOWER", "MAX", "MIN", "OCTET_LENGTH",
+					"POSITION", "SUM", "TRIM", "UPPER" );
+		}
 
 		return super.buildIdentifierHelper( builder, dbMetaData );
 	}
@@ -380,6 +498,7 @@ public class FirebirdDialect extends Dialect {
 		return false;
 
 	}
+
 	@Override
 	public boolean supportsCommentOn() {
 		return getVersion() >= 200;
@@ -414,7 +533,7 @@ public class FirebirdDialect extends Dialect {
 
 	@Override
 	public int getInExpressionCountLimit() {
-		// see http://www.firebirdsql.org/file/documentation/reference_manuals/fblangref25-en/html/fblangref25-commons-predicates.html#fblangref25-commons-in
+		// see https://www.firebirdsql.org/file/documentation/html/en/refdocs/fblangref25/firebird-25-language-reference.html#fblangref25-commons-in
 		return 1500;
 	}
 
@@ -465,12 +584,9 @@ public class FirebirdDialect extends Dialect {
 	public String getQuerySequencesString() {
 		return getVersion() < 300
 				? "select rdb$generator_name from rdb$generators"
-				// Note: currently has an 'off by increment' bug, see
+				// Note: Firebird 3 has an 'off by increment' bug (fixed in Firebird 4), see
 				// http://tracker.firebirdsql.org/browse/CORE-6084
-				// May need revision depending on the final solution
-				// The second column might need to be changed to
-				//   rdb$initial_value + rdb$generator_increment
-				: "select rdb$generator_name, rdb$initial_value, rdb$generator_increment from rdb$generators";
+				: "select rdb$generator_name, rdb$initial_value, rdb$generator_increment from rdb$generators where coalesce(rdb$system_flag, 0) = 0";
 	}
 
 	@Override
@@ -493,7 +609,6 @@ public class FirebirdDialect extends Dialect {
 				? SkipFirstLimitHandler.INSTANCE
 				: OffsetFetchLimitHandler.INSTANCE;
 	}
-
 
 	@Override
 	public String getSelectGUIDString() {
@@ -541,6 +656,16 @@ public class FirebirdDialect extends Dialect {
 	}
 
 	@Override
+	public NullOrdering getNullOrdering() {
+		return getVersion() >= 200 ? NullOrdering.SMALLEST : NullOrdering.LAST;
+	}
+
+	@Override
+	public boolean supportsNullPrecedence() {
+		return getVersion() >= 150;
+	}
+
+	@Override
 	public String translateExtractField(TemporalUnit unit) {
 		switch ( unit ) {
 			case DAY_OF_MONTH: return "day";
@@ -567,7 +692,7 @@ public class FirebirdDialect extends Dialect {
 
 	@Override
 	public String translateDatetimeFormat(String format) {
-		throw new NotYetImplementedFor6Exception("format() function not supported on Firebird");
+		throw new NotYetImplementedFor6Exception( "format() function not supported on Firebird" );
 	}
 
 	@Override
@@ -608,8 +733,8 @@ public class FirebirdDialect extends Dialect {
 			switch ( errorCode ) {
 				case 335544336:
 					// isc_deadlock (deadlock, note: not necessarily a deadlock, can also be an update conflict)
-					if (sqlExceptionMessage != null
-							&& sqlExceptionMessage.contains( "update conflicts with concurrent update" )) {
+					if ( sqlExceptionMessage != null
+							&& sqlExceptionMessage.contains( "update conflicts with concurrent update" ) ) {
 						return new LockTimeoutException( message, sqlException, sql );
 					}
 					return new LockAcquisitionException( message, sqlException, sql );

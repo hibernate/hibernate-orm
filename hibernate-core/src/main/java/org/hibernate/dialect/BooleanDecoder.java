@@ -38,7 +38,7 @@ public final class BooleanDecoder {
 			case INTEGER:
 			case LONG:
 			case INTEGER_BOOLEAN:
-				return "decode(?1,abs(sign(?1)),1,true,0,false,null)";
+				return "decode(abs(sign(?1)),1,true,0,false,null)";
 		}
 		return null;
 	}

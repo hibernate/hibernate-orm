@@ -7,6 +7,7 @@
 package org.hibernate.orm.test.jpa.identifier;
 
 import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.List;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -79,11 +80,13 @@ public class DefaultInitialValueTableGeneratorConfiguredTest {
 					Session session = entityManager.unwrap( Session.class );
 					session.doWork(
 							connection -> {
-								ResultSet resultSet = connection.createStatement().executeQuery(
-										"select product_id from table_identifier" );
-								resultSet.next();
-								int productIdValue = resultSet.getInt( 1 );
-								assertThat( productIdValue, is( 10 ) );
+								try (Statement statement = connection.createStatement()) {
+									ResultSet resultSet = statement.executeQuery(
+											"select product_id from table_identifier" );
+									resultSet.next();
+									int productIdValue = resultSet.getInt( 1 );
+									assertThat( productIdValue, is( 10 ) );
+								}
 							}
 					);
 				}

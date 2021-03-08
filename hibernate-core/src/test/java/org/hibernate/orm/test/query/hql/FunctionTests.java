@@ -7,6 +7,7 @@
 package org.hibernate.orm.test.query.hql;
 
 import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.dialect.FirebirdDialect;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
@@ -27,6 +28,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
+import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -368,7 +370,7 @@ public class FunctionTests {
 							.list();
 					session.createQuery("select cast(e.id as BigInteger(10)), cast(e.theDouble as BigDecimal(10,5)) from EntityOfBasics e")
 							.list();
-					session.createQuery("select cast(e.theString as String(15)), cast(e.theDouble as String(8)) from EntityOfBasics e")
+					session.createQuery("select cast(e.theString as String(15)), cast(e.theDouble as String(17)) from EntityOfBasics e")
 							.list();
 
 					session.createQuery("select cast('1002342345234523.452435245245243' as BigDecimal) from EntityOfBasics")
@@ -384,8 +386,6 @@ public class FunctionTests {
 					session.createQuery("select cast('1234234' as Integer) from EntityOfBasics")
 							.list();
 					session.createQuery("select cast(1 as Boolean), cast(0 as Boolean) from EntityOfBasics")
-							.list();
-					session.createQuery("select cast('ABCDEF' as Character) from EntityOfBasics")
 							.list();
 
 					session.createQuery("select cast('12:13:14' as Time) from EntityOfBasics")
@@ -420,7 +420,7 @@ public class FunctionTests {
 					assertThat( session.createQuery("select cast('1911-10-09 12:13:14' as LocalDateTime)").getSingleResult(), is(LocalDateTime.of(1911,10,9,12,13,14)) );
 
 					assertThat( session.createQuery("select cast(date 1911-10-09 as String)").getSingleResult(), is("1911-10-09") );
-					assertThat( session.createQuery("select cast(time 12:13:14 as String)").getSingleResult(), is("12:13:14") );
+					assertThat( session.createQuery("select cast(time 12:13:14 as String)").getSingleResult(), anyOf( is("12:13:14"), is("12:13:14.0000") ) );
 					assertThat( (String) session.createQuery("select cast(datetime 1911-10-09 12:13:14 as String)").getSingleResult(), startsWith("1911-10-09 12:13:14") );
 
 					assertThat( session.createQuery("select cast(1 as NumericBoolean)").getSingleResult(), is(true) );
@@ -437,6 +437,20 @@ public class FunctionTests {
 					assertThat( session.createQuery("select cast('N' as YesNo)").getSingleResult(), is(false) );
 					assertThat( session.createQuery("select cast('T' as TrueFalse)").getSingleResult(), is(true) );
 					assertThat( session.createQuery("select cast('F' as TrueFalse)").getSingleResult(), is(false) );
+				}
+		);
+	}
+
+	@Test
+	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "Firebird cast to string types doesn't truncate")
+	public void testCastFunction_withTruncation(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery("select cast(e.theString as String(15)), cast(e.theDouble as String(8)) from EntityOfBasics e")
+							.list();
+
+					session.createQuery("select cast('ABCDEF' as Character) from EntityOfBasics")
+							.list();
 				}
 		);
 	}
@@ -464,7 +478,7 @@ public class FunctionTests {
 							.list();
 					assertThat( session.createQuery("select str(69)").getSingleResult(), is("69") );
 					assertThat( session.createQuery("select str(date 1911-10-09)").getSingleResult(), is("1911-10-09") );
-					assertThat( session.createQuery("select str(time 12:13:14)").getSingleResult(), is("12:13:14") );
+					assertThat( session.createQuery("select str(time 12:13:14)").getSingleResult(), anyOf( is( "12:13:14"), is( "12:13:14.0000") ) );
 				}
 		);
 	}
@@ -857,10 +871,17 @@ public class FunctionTests {
 							.list();
 					session.createQuery("select extract(offset minute from e.theZonedDateTime) from EntityOfBasics e")
 							.list();
-
-					session.createQuery("select extract(offset from e.theZonedDateTime) from EntityOfBasics e")
-							.list();
 				}
+		);
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTimezoneTypes.class)
+	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "Firebird doesn't support formatting temporal types to strings")
+	public void testExtractFunctionTimeZoneOffset(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> session.createQuery( "select extract(offset from e.theZonedDateTime) from EntityOfBasics e")
+						.list()
 		);
 	}
 
@@ -969,6 +990,7 @@ public class FunctionTests {
 
 	@Test
 	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby doesn't support formatting temporal types to strings")
+	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "Firebird doesn't support formatting temporal types to strings")
 	public void testFormat(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

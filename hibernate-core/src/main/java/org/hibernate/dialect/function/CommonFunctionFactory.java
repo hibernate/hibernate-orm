@@ -6,6 +6,8 @@
  */
 package org.hibernate.dialect.function;
 
+import java.util.Arrays;
+
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.type.StandardBasicTypes;
@@ -212,6 +214,37 @@ public class CommonFunctionFactory {
 				.setInvariantType( StandardBasicTypes.DOUBLE )
 				.setExactArgumentCount( 1 )
 				.register();
+	}
+
+	public static void covarPopSamp(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "covar_pop" )
+				.setInvariantType( StandardBasicTypes.DOUBLE )
+				.setExactArgumentCount( 2 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "covar_samp" )
+				.setInvariantType( StandardBasicTypes.DOUBLE )
+				.setExactArgumentCount( 2 )
+				.register();
+	}
+
+	public static void corr(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "corr" )
+				.setInvariantType( StandardBasicTypes.DOUBLE )
+				.setExactArgumentCount( 2 )
+				.register();
+	}
+
+	public static void regrLinearRegressionAggregates(QueryEngine queryEngine) {
+		Arrays.asList(
+				"regr_avgx", "regr_avgy", "regr_count", "regr_intercept", "regr_r2",
+				"regr_slope", "regr_sxx", "regr_sxy", "regr_syy"
+		)
+				.forEach( fnName ->
+								queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( fnName )
+										.setInvariantType( StandardBasicTypes.DOUBLE )
+										.setExactArgumentCount( 2 )
+										.register()
+				);
 	}
 
 	/**

@@ -8,6 +8,8 @@ package org.hibernate.engine.jdbc.env.spi;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -175,8 +177,16 @@ public class IdentifierHelperBuilder {
 		this.reservedWords.clear();
 	}
 
-	public void applyReservedWords(Set<String> words) {
+	public void applyReservedWords(String... words) {
+		applyReservedWords( Arrays.asList( words ) );
+	}
+
+	public void applyReservedWords(Collection<String> words) {
 		this.reservedWords.addAll( words );
+	}
+
+	public void applyReservedWords(Set<String> words) {
+		applyReservedWords( (Collection<String>) words );
 	}
 
 	public void setReservedWords(Set<String> words) {

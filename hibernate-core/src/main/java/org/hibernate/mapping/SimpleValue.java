@@ -179,6 +179,10 @@ public abstract class SimpleValue implements KeyValue {
 		return columns.size();
 	}
 
+	protected Selectable getColumn(int position){
+		return columns.get( position );
+	}
+
 	@Override
 	public Iterator<Selectable> getColumnIterator() {
 		return columns.iterator();
@@ -223,6 +227,7 @@ public abstract class SimpleValue implements KeyValue {
 	public boolean isVersion() {
 		return isVersion;
 	}
+
 	public void makeNationalized() {
 		this.isNationalized = true;
 	}
@@ -465,7 +470,15 @@ public abstract class SimpleValue implements KeyValue {
 		return getColumnSpan() == getType().getColumnSpan( mapping );
 	}
 
-//	public Type getType() throws MappingException {
+	protected void setAttributeConverterDescriptor(ConverterDescriptor descriptor) {
+		this.attributeConverterDescriptor = descriptor;
+	}
+
+	protected ConverterDescriptor getAttributeConverterDescriptor() {
+		return attributeConverterDescriptor;
+	}
+
+	//	public Type getType() throws MappingException {
 //		if ( type != null ) {
 //			return type;
 //		}

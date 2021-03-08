@@ -53,7 +53,6 @@ import org.hibernate.type.spi.TypeConfiguration;
 public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicators, Resolvable {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( BasicValue.class );
 
-	private final MetadataBuildingContext buildingContext;
 	private final TypeConfiguration typeConfiguration;
 	private final int preferredJdbcTypeCodeForBoolean;
 
@@ -68,19 +67,13 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 	private Function<TypeConfiguration,MutabilityPlan> explicitMutabilityPlanAccess;
 	private Function<TypeConfiguration,Class> implicitJavaTypeAccess;
 
-	private boolean isNationalized;
-	private boolean isLob;
 	private EnumType enumerationStyle;
 	private TemporalType temporalPrecision;
-
-	private ConverterDescriptor attributeConverterDescriptor;
 
 	private Class resolvedJavaClass;
 
 	private String ownerName;
 	private String propertyName;
-
-	private Selectable column;
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Resolved state - available after `#resolve`
@@ -94,21 +87,10 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 	public BasicValue(MetadataBuildingContext buildingContext, Table table) {
 		super( buildingContext, table );
 
-		this.buildingContext = buildingContext;
-
 		this.typeConfiguration = buildingContext.getBootstrapContext().getTypeConfiguration();
 		this.preferredJdbcTypeCodeForBoolean = buildingContext.getPreferredSqlTypeCodeForBoolean();
 
 		buildingContext.getMetadataCollector().registerValueMappingResolver( this::resolve );
-	}
-
-	public MetadataBuildingContext getBuildingContext() {
-		return buildingContext;
-	}
-
-	@Override
-	public ServiceRegistry getServiceRegistry() {
-		return buildingContext.getBootstrapContext().getServiceRegistry();
 	}
 
 
@@ -136,12 +118,9 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 		return enumerationStyle;
 	}
 
-	public ConverterDescriptor getJpaAttributeConverterDescriptor() {
-		return attributeConverterDescriptor;
-	}
 
 	public void setJpaAttributeConverterDescriptor(ConverterDescriptor descriptor) {
-		this.attributeConverterDescriptor = descriptor;
+		setAttributeConverterDescriptor( descriptor );
 
 		super.setJpaAttributeConverterDescriptor( descriptor );
 	}
@@ -164,7 +143,10 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 	}
 
 	public Selectable getColumn() {
-		return column;
+		if ( getColumnSpan() == 0 ) {
+			return null;
+		}
+		return getColumn( 0 );
 	}
 
 	public Class getResolvedJavaClass() {
@@ -173,6 +155,7 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 
 	@Override
 	public long getColumnLength() {
+		final Selectable column = getColumn();
 		if ( column != null && column instanceof Column ) {
 			final Long length = ( (Column) column ).getLength();
 			return length == null ? NO_COLUMN_LENGTH : length;
@@ -186,7 +169,7 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 	public void addColumn(Column incomingColumn) {
 		super.addColumn( incomingColumn );
 
-		applySelectable( incomingColumn );
+		checkSelectable( incomingColumn );
 	}
 
 	@Override
@@ -199,39 +182,38 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 		}
 	}
 
-	private void applySelectable(Selectable incomingColumn) {
+	private void checkSelectable(Selectable incomingColumn) {
 		if ( incomingColumn == null ) {
 			throw new IllegalArgumentException( "Incoming column was null" );
 		}
 
-		if ( this.column == incomingColumn ) {
+		final Selectable column = getColumn();
+		if ( column == incomingColumn ) {
 			log.debugf( "Skipping column re-registration: %s.%s", getTable().getName(), column.getText() );
 			return;
 		}
 
-		if ( this.column != null ) {
+		if ( column != null ) {
 			throw new IllegalStateException(
 					"BasicValue [" + ownerName + "." + propertyName +
-							"] already had column associated: `" + this.column.getText() +
+							"] already had column associated: `" + column.getText() +
 							"` -> `" + incomingColumn.getText() + "`"
 			);
 		}
-
-		this.column = incomingColumn;
 	}
 
 	@Override
 	public void addColumn(Column incomingColumn, boolean isInsertable, boolean isUpdatable) {
 		super.addColumn( incomingColumn, isInsertable, isUpdatable );
 
-		applySelectable( incomingColumn );
+		checkSelectable( incomingColumn );
 	}
 
 	@Override
 	public void addFormula(Formula formula) {
 		super.addFormula( formula );
 
-		applySelectable( formula );
+		checkSelectable( formula );
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -267,6 +249,7 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 			throw new IllegalStateException( "Unable to resolve BasicValue : " + this );
 		}
 
+		final Selectable column = getColumn();
 		if ( column instanceof Column && resolution.getValueConverter() == null ) {
 			final Column physicalColumn = (Column) column;
 			if ( physicalColumn.getSqlTypeCode() == null ) {
@@ -299,7 +282,7 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 					explicitJavaTypeAccess,
 					explicitSqlTypeAccess,
 					explicitMutabilityPlanAccess,
-					attributeConverterDescriptor,
+					getAttributeConverterDescriptor(),
 					explicitLocalTypeParams,
 					this,
 					typeConfiguration,
@@ -319,6 +302,7 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 		}
 
 
+		final ConverterDescriptor attributeConverterDescriptor = getAttributeConverterDescriptor();
 		if ( attributeConverterDescriptor != null ) {
 			final ManagedBeanRegistry managedBeanRegistry = getBuildingContext().getBootstrapContext()
 					.getServiceRegistry()
@@ -410,7 +394,7 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 				this::determineReflectedJavaTypeDescriptor,
 				this,
 				getTable(),
-				column,
+				getColumn(),
 				ownerName,
 				propertyName,
 				typeConfiguration
@@ -582,13 +566,6 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 		return getEnumerationStyle();
 	}
 
-	public boolean isNationalized() {
-		return isNationalized;
-	}
-
-	public boolean isLob() {
-		return isLob;
-	}
 
 	@Override
 	public int getPreferredSqlTypeCodeForBoolean() {
@@ -620,11 +597,11 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 				try {
 					//noinspection rawtypes
 					final Class<AttributeConverter> converterClass = cls.classForName( converterClassName );
-					attributeConverterDescriptor = new ClassBasedConverterDescriptor(
+					setAttributeConverterDescriptor( new ClassBasedConverterDescriptor(
 							converterClass,
 							false,
 							getBuildingContext().getBootstrapContext().getClassmateContext()
-					);
+					) );
 					return;
 				}
 				catch (Exception e) {
@@ -646,14 +623,6 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 	@Override
 	public TemporalType getTemporalPrecision() {
 		return temporalPrecision;
-	}
-
-	public void makeLob() {
-		this.isLob = true;
-	}
-
-	public void makeNationalized() {
-		this.isNationalized = true;
 	}
 
 	/**

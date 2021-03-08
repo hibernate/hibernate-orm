@@ -18,6 +18,7 @@ import org.hibernate.internal.EmptyScrollableResults;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
+import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
@@ -87,27 +88,26 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 			jdbcParameterBinders = new ArrayList<>( parameterList.size() );
 			jdbcParameterBindings = new JdbcParameterBindingsImpl( parameterList.size() );
 
-			queryParameterBindings.visitBindings(
-					(param, binding) -> {
-						AllowableParameterType<?> type = binding.getBindType();
-						if ( type == null ) {
-							type = param.getHibernateType();
-						}
-						if ( type == null ) {
-							type = StandardBasicTypes.OBJECT_TYPE;
-						}
+			for ( QueryParameterImplementor<?> param : parameterList ) {
+				QueryParameterBinding<?> binding = queryParameterBindings.getBinding( param );
+				AllowableParameterType<?> type = binding.getBindType();
+				if ( type == null ) {
+					type = param.getHibernateType();
+				}
+				if ( type == null ) {
+					type = StandardBasicTypes.OBJECT_TYPE;
+				}
 
-						final JdbcMapping jdbcMapping = ( (BasicValuedMapping) type ).getJdbcMapping();
-						final JdbcParameterImpl jdbcParameter = new JdbcParameterImpl( jdbcMapping );
+				final JdbcMapping jdbcMapping = ( (BasicValuedMapping) type ).getJdbcMapping();
+				final JdbcParameterImpl jdbcParameter = new JdbcParameterImpl( jdbcMapping );
 
-						jdbcParameterBinders.add( jdbcParameter );
+				jdbcParameterBinders.add( jdbcParameter );
 
-						jdbcParameterBindings.addBinding(
-								jdbcParameter,
-								new JdbcParameterBindingImpl( jdbcMapping, binding.getBindValue() )
-						);
-					}
-			);
+				jdbcParameterBindings.addBinding(
+						jdbcParameter,
+						new JdbcParameterBindingImpl( jdbcMapping, binding.getBindValue() )
+				);
+			}
 		}
 
 		executionContext.getSession().autoFlushIfRequired( affectedTableNames );
@@ -122,6 +122,11 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 
 		final JdbcSelectExecutor executor = JdbcSelectExecutorStandardImpl.INSTANCE;
 
+		// TODO: use configurable executor instead?
+//		final SharedSessionContractImplementor session = executionContext.getSession();
+//		final SessionFactoryImplementor factory = session.getFactory();
+//		final JdbcServices jdbcServices = factory.getJdbcServices();
+//		return jdbcServices.getJdbcMutationExecutor().execute(
 		return executor.list(
 				jdbcSelect,
 				jdbcParameterBindings,

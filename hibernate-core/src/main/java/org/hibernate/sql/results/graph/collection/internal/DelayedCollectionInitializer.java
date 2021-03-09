@@ -76,7 +76,9 @@ public class DelayedCollectionInitializer extends AbstractCollectionInitializer 
 //						LoggingHelper.toLoggableString( getNavigablePath(), this.collectionKey.getKey() )
 //				);
 //			}
-			parentAccess.registerResolutionListener( owner -> collectionInstance.setOwner( owner ) );
+			if ( collectionInstance != null ) {
+				parentAccess.registerResolutionListener( owner -> collectionInstance.setOwner( owner ) );
+			}
 		}
 		else {
 			final Object parentKey = parentAccess.getParentKey();
@@ -85,7 +87,9 @@ public class DelayedCollectionInitializer extends AbstractCollectionInitializer 
 						collectionAttributeMapping.getCollectionDescriptor(),
 						parentKey
 				);
-				parentAccess.registerResolutionListener( owner -> collectionInstance.setOwner( owner ) );
+				if ( collectionInstance != null ) {
+					parentAccess.registerResolutionListener( owner -> collectionInstance.setOwner( owner ) );
+				}
 			}
 		}
 	}

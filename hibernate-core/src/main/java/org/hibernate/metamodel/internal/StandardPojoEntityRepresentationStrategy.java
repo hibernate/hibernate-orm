@@ -137,6 +137,9 @@ public class StandardPojoEntityRepresentationStrategy implements EntityRepresent
 		}
 		this.proxyFactory = proxyFactory;
 
+		// resolveReflectionOptimizer may lead to a makePropertyAccess call which requires strategySelector
+		this.strategySelector = sessionFactory.getServiceRegistry().getService( StrategySelector.class );
+
 		this.reflectionOptimizer = resolveReflectionOptimizer( bootDescriptor, bytecodeProvider, sessionFactory );
 
 		if ( reflectionOptimizer != null ) {
@@ -151,8 +154,6 @@ public class StandardPojoEntityRepresentationStrategy implements EntityRepresent
 		else {
 			this.instantiator = new PojoInstantiatorImpl<>( mappedJtd );
 		}
-
-		this.strategySelector = sessionFactory.getServiceRegistry().getService( StrategySelector.class );
 	}
 
 	private PropertyAccess resolveIdentifierPropertyAccess(PersistentClass bootDescriptor) {

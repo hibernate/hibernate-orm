@@ -14,6 +14,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
 import org.hibernate.envers.configuration.internal.GlobalConfiguration;
+import org.hibernate.envers.internal.entities.RevisionTypeType;
 import org.hibernate.envers.internal.entities.mapper.id.IdMapper;
 import org.hibernate.envers.internal.entities.mapper.id.QueryParameterData;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleIdData;
@@ -21,6 +22,7 @@ import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
 import org.hibernate.envers.strategy.AuditStrategy;
 import org.hibernate.query.Query;
+import org.hibernate.type.CustomType;
 
 import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.DEL_REVISION_TYPE_PARAMETER;
 import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.REVISION_PARAMETER;
@@ -65,7 +67,11 @@ public abstract class AbstractRelationQueryGenerator implements RelationQueryGen
 		final String queryString = getQueryString( session.getFactory(), removed );
 
 		final Query query = session.createQuery( queryString );
-		query.setParameter( DEL_REVISION_TYPE_PARAMETER, RevisionType.DEL );
+		query.setParameter(
+				DEL_REVISION_TYPE_PARAMETER,
+				RevisionType.DEL,
+				new CustomType( new RevisionTypeType(), session.getFactory().getTypeConfiguration() )
+		);
 		query.setParameter( REVISION_PARAMETER, revision );
 
 		final IdMapper prefixIdMapper = referencingIdData.getPrefixedMapper();

@@ -133,7 +133,7 @@ public final class OneAuditEntityQueryGenerator extends AbstractRelationQueryGen
 				true
 		);
 		// e.revision_type != DEL
-		rootParameters.addWhereWithNamedParam( getRevisionTypePath(), false, "!=", DEL_REVISION_TYPE_PARAMETER );
+		rootParameters.addWhereWithNamedParam( getRevisionTypePath(), true, "!=", DEL_REVISION_TYPE_PARAMETER );
 	}
 
 	@Override

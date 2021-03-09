@@ -947,7 +947,14 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	public String getTypeName(int code) throws HibernateException {
-		return getTypeName( code, Size.nil() );
+		switch ( code ) {
+			case Types.TIMESTAMP:
+			case Types.TIMESTAMP_WITH_TIMEZONE:
+				// explicitly enforce dialect's default timestamp precision
+				return getTypeName( code, Size.precision( getDefaultTimestampPrecision() ) );
+			default:
+				return getTypeName( code, Size.nil() );
+		}
 	}
 
 	/**

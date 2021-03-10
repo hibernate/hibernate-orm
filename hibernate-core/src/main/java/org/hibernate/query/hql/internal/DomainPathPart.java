@@ -29,6 +29,10 @@ public class DomainPathPart implements SemanticPathPart {
 		assert currentPath != null;
 	}
 
+	SqmExpression<?> getSqmExpression() {
+		return currentPath;
+	}
+
 	@Override
 	public SemanticPathPart resolvePathPart(
 			String name,

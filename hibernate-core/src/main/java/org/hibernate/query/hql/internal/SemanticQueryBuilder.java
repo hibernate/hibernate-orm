@@ -1158,7 +1158,12 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmExpression<?> visitPathExpression(HqlParser.PathExpressionContext ctx) {
-		return (SqmExpression<?>) ctx.path().accept( this );
+		final HqlParser.PathContext path = ctx.path();
+		final Object accept = path.accept( this );
+		if ( accept instanceof DomainPathPart ) {
+			return ( (DomainPathPart) accept ).getSqmExpression();
+		}
+		return (SqmExpression<?>) accept;
 	}
 
 	@Override

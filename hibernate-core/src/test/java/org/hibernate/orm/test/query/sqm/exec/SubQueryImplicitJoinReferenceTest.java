@@ -62,6 +62,17 @@ public class SubQueryImplicitJoinReferenceTest {
     }
 
     @Test
+    public void performHqlIsNullTest(SessionFactoryScope scope) {
+        // Now simulate running an audit query
+        scope.inSession( session -> {
+            session.createQuery( "select e__ FROM TheEntity e__ "
+                                         + "WHERE e__.originalId.rev.id = (select max(e2__.originalId.rev.id) FROM "
+                                         + "TheEntity e2__ WHERE " +
+                                         "e2__.originalId.rev is null)" ).list();
+        } );
+    }
+
+    @Test
     public void performHqlTest2(SessionFactoryScope scope) {
         // Now simulate running an audit query
         scope.inSession( session -> {

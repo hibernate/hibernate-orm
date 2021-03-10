@@ -116,7 +116,7 @@ public class SubQueryImplicitJoinReferenceTest {
         }
     }
 
-    @Entity
+    @Entity(name="RevisionInfoEntity")
     public static class RevisionInfoEntity {
         @Id
         private Integer id;

@@ -309,7 +309,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 	private Type getTypeForEntityValue(Mapping mapping, Type type, int typeIndex) {
 		while ( !( type instanceof JdbcMapping ) ) {
 			//ManyToOneType doesn't implement JdbcMapping
-			type = mapping.getIdentifierType( ( (EntityType) type ).getAssociatedEntityName() );
+			type = ( (EntityType) type ).getIdentifierOrUniqueKeyType( mapping );
 			if ( type instanceof ComponentType ) {
 				type = ( (ComponentType) type ).getSubtypes()[typeIndex];
 			}

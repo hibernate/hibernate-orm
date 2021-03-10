@@ -1841,6 +1841,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		);
 		lhsTableGroup.addTableGroupJoin( tableGroupJoin );
 
+		consumeExplicitJoins( sqmJoin, tableGroupJoin.getJoinedGroup() );
+		consumeImplicitJoins( sqmJoin, tableGroupJoin.getJoinedGroup() );
+
 		// add any additional join restrictions
 		if ( sqmJoin.getJoinPredicate() != null ) {
 			tableGroupJoin.applyPredicate(
@@ -1848,8 +1851,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			);
 		}
 
-		consumeExplicitJoins( sqmJoin, tableGroupJoin.getJoinedGroup() );
-		consumeImplicitJoins( sqmJoin, tableGroupJoin.getJoinedGroup() );
 	}
 
 	private void consumeImplicitJoins(SqmPath<?> sqmPath, TableGroup tableGroup) {

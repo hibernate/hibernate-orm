@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.jpa.test.ops;
+package org.hibernate.orm.test.jpa.ops;
 
 import java.util.Map;
 import javax.persistence.EntityManagerFactory;
@@ -12,37 +12,44 @@ import javax.persistence.EntityManagerFactory;
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.boot.spi.Bootstrap;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.TestForIssue;
-import org.junit.Test;
+import org.hibernate.testing.junit5.EntityManagerFactoryBasedFunctionalTest;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.Setting;
+
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue( jiraKey = "HHH-12273" )
-public class GetLoadJpaComplianceDifferentSessionsTest extends BaseEntityManagerFunctionalTestCase {
+@TestForIssue(jiraKey = "HHH-12273")
+@Jpa(
+		annotatedClasses = Workload.class,
+		integrationSettings = { @Setting(name = AvailableSettings.JPA_PROXY_COMPLIANCE, value = "false") }
+)
+public class GetLoadJpaComplianceDifferentSessionsTest extends EntityManagerFactoryBasedFunctionalTest {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] {
-			Workload.class,
+				Workload.class,
 		};
 	}
 
 	@Override
-	@SuppressWarnings( "unchecked" )
+	@SuppressWarnings("unchecked")
 	protected void addConfigOptions(Map options) {
 		options.put( AvailableSettings.JPA_PROXY_COMPLIANCE, Boolean.FALSE.toString() );
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9856" )
+	@TestForIssue(jiraKey = "HHH-9856")
 	public void testReattachEntityToSessionWithJpaComplianceProxy() {
-		final Integer _workloadId = doInJPA( this::entityManagerFactory, entityManager -> {
+		final Integer _workloadId = fromTransaction( entityManager -> {
 			Workload workload = new Workload();
 			workload.load = 123;
 			workload.name = "Package";
@@ -51,26 +58,28 @@ public class GetLoadJpaComplianceDifferentSessionsTest extends BaseEntityManager
 			return workload.getId();
 		} );
 
-		Workload _workload = doInJPA( this::entityManagerFactory, entityManager -> {
-			return entityManager.getReference( Workload.class, _workloadId );
-		} );
+		Workload _workload = fromTransaction(
+				entityManager ->
+						entityManager.getReference( Workload.class, _workloadId )
+		);
 
 		Map settings = buildSettings();
 		settings.put( AvailableSettings.JPA_PROXY_COMPLIANCE, Boolean.TRUE.toString() );
 		settings.put( AvailableSettings.HBM2DDL_AUTO, "none" );
 
-		EntityManagerFactory newEntityManagerFactory =  Bootstrap
-			.getEntityManagerFactoryBuilder(
-					new TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() ),
-					settings )
-			.build();
+		EntityManagerFactory newEntityManagerFactory = Bootstrap
+				.getEntityManagerFactoryBuilder(
+						new TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() ),
+						settings
+				)
+				.build();
 
 		try {
 			doInJPA( () -> newEntityManagerFactory, entityManager -> {
 				entityManager.unwrap( Session.class ).update( _workload );
 
 				_workload.getId();
-			});
+			} );
 		}
 		finally {
 			newEntityManagerFactory.close();
@@ -78,5 +87,6 @@ public class GetLoadJpaComplianceDifferentSessionsTest extends BaseEntityManager
 
 		assertEquals( "Package", _workload.getName() );
 	}
+
 }
 

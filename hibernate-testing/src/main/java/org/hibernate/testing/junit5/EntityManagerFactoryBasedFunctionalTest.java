@@ -292,7 +292,7 @@ public class EntityManagerFactoryBasedFunctionalTest
 		entityManagerFactoryScope().inTransaction( action );
 	}
 
-	protected <T> T inTransaction(Function<EntityManager, T> action) {
-		return entityManagerFactoryScope().inTransaction( action );
+	protected <T> T fromTransaction(Function<EntityManager, T> action) {
+		return entityManagerFactoryScope().fromTransaction( action );
 	}
 }

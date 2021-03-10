@@ -13,7 +13,7 @@
   
 -->
 
-<hibernate-mapping package="org.hibernate.jpa.test.ops">
+<hibernate-mapping package="org.hibernate.orm.test.jpa.ops">
 
     <class name="Employer" polymorphism="explicit">
         <id name="id">

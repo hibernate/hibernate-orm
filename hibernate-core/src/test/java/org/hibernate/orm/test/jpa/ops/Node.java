@@ -6,7 +6,7 @@
  */
 
 //$Id$
-package org.hibernate.jpa.test.ops;
+package org.hibernate.orm.test.jpa.ops;
 import java.util.HashSet;
 import java.util.Set;
 

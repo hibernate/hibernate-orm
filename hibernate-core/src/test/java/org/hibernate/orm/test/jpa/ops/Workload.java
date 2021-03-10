@@ -6,7 +6,7 @@
  */
 
 //$Id$
-package org.hibernate.jpa.test.ops;
+package org.hibernate.orm.test.jpa.ops;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;

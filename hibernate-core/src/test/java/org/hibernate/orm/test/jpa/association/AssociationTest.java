@@ -46,7 +46,7 @@ public class AssociationTest extends EntityManagerFactoryBasedFunctionalTest {
 
 	@Test
 	public void testMergeAndBidirOneToOne() {
-		final Oven persistedOven = inTransaction(
+		final Oven persistedOven = fromTransaction(
 				entityManager -> {
 					Oven oven = new Oven();
 					Kitchen kitchen = new Kitchen();
@@ -57,7 +57,7 @@ public class AssociationTest extends EntityManagerFactoryBasedFunctionalTest {
 					return oven;
 				} );
 
-		Oven mergedOven = inTransaction(
+		Oven mergedOven = fromTransaction(
 				entityManager -> {
 					return entityManager.merge( persistedOven );
 				}

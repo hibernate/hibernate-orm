@@ -64,8 +64,15 @@ public class EntityManagerFactoryScope implements EntityManagerFactoryAccess {
 		inTransaction( getEntityManagerFactory(), action );
 	}
 
-	public <T> T inTransaction(Function<EntityManager, T> action) {
-		return inTransaction( getEntityManagerFactory().createEntityManager(), action );
+	public <T> T fromTransaction(Function<EntityManager, T> action) {
+		EntityManager entityManager = getEntityManagerFactory().createEntityManager();
+		try {
+			T result = fromTransaction( entityManager, action );
+			return result;
+		}
+		finally {
+			entityManager.close();
+		}
 	}
 
 	public void inTransaction(EntityManagerFactory factory, Consumer<EntityManager> action) {
@@ -82,7 +89,7 @@ public class EntityManagerFactoryScope implements EntityManagerFactoryAccess {
 		}
 	}
 
-	public <T> T inTransaction(EntityManager entityManager, Function<EntityManager, T> action) {
+	public <T> T fromTransaction(EntityManager entityManager, Function<EntityManager, T> action) {
 		log.trace( "inTransaction(entityManager, action)" );
 		final EntityTransaction trx = entityManager.getTransaction();
 		final T result;

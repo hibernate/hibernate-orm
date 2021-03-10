@@ -90,6 +90,7 @@ public class TimestampaddFunction
 			SqlAstNode... sqlAstArguments) {
 		Expression to = (Expression) sqlAstArguments[2];
 		return new SelfRenderingFunctionSqlAstExpression(
+				getName(),
 				this::render,
 				asList( sqlAstArguments ),
 				impliedResultType,

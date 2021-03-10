@@ -22,6 +22,7 @@ import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.tree.expression.FunctionExpression;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -40,22 +41,35 @@ import java.util.List;
  * @author Steve Ebersole
  */
 public class SelfRenderingFunctionSqlAstExpression
-		implements SelfRenderingExpression, Selectable, SqlExpressable, DomainResultProducer {
+		implements SelfRenderingExpression, Selectable, SqlExpressable, DomainResultProducer, FunctionExpression {
+	private final String functionName;
 	private final FunctionRenderingSupport renderer;
 	private final List<SqlAstNode> sqlAstArguments;
 	private final AllowableFunctionReturnType<?> type;
 	private final MappingModelExpressable<?> expressable;
 
 	public SelfRenderingFunctionSqlAstExpression(
+			String functionName,
 			FunctionRenderingSupport renderer,
 			List<SqlAstNode> sqlAstArguments,
 			AllowableFunctionReturnType<?> type,
 			MappingModelExpressable<?> expressable) {
+		this.functionName = functionName;
 		this.renderer = renderer;
 		this.sqlAstArguments = sqlAstArguments;
 		this.type = type;
 		//might be null due to code in SelfRenderingFunctionSqlAstExpression
 		this.expressable = expressable;
+	}
+
+	@Override
+	public String getFunctionName() {
+		return functionName;
+	}
+
+	@Override
+	public List<SqlAstNode> getArguments() {
+		return sqlAstArguments;
 	}
 
 	@Override

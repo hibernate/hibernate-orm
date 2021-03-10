@@ -698,7 +698,7 @@ public class ToOneAttributeMapping
 
 	@Override
 	public int forEachJdbcValue(Object value, Clause clause, int offset, JdbcValuesConsumer consumer, SharedSessionContractImplementor session) {
-		return foreignKeyDescriptor.forEachJdbcValue(
+		return foreignKeyDescriptor.forEachDisassembledJdbcValue(
 				foreignKeyDescriptor.disassemble( value, session ),
 				clause,
 				offset,

@@ -342,7 +342,8 @@ public class PluralAttributeMappingImpl
 			return new SimpleForeignKeyDescriptor(
 					keySelectionMapping,
 					basicFkTargetPart,
-					( (PropertyBasedMapping) basicFkTargetPart ).getPropertyAccess()
+					( (PropertyBasedMapping) basicFkTargetPart ).getPropertyAccess(),
+					entityType.isReferenceToPrimaryKey()
 			);
 		}
 		else if ( fkTargetPart instanceof EmbeddableValuedModelPart ) {

@@ -16,6 +16,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.SelectionConsumer;
 import org.hibernate.metamodel.mapping.SelectionMappings;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
@@ -202,12 +203,9 @@ public abstract class AbstractCompositeIdentifierMapping
 			final AttributeMapping attributeMapping = attributeMappings.get( i );
 			final Object o = attributeMapping.getPropertyAccess().getGetter().get( value );
 			if ( attributeMapping instanceof ToOneAttributeMapping ) {
-				final EntityMappingType associatedEntityMappingType =
-						( (ToOneAttributeMapping) attributeMapping ).getAssociatedEntityMappingType();
-				final EntityIdentifierMapping identifierMapping =
-						associatedEntityMappingType.getIdentifierMapping();
-				final Object identifier = identifierMapping.getIdentifier( o, session );
-				span += identifierMapping.forEachJdbcValue(
+				final ForeignKeyDescriptor fkDescriptor = ( (ToOneAttributeMapping) attributeMapping ).getForeignKeyDescriptor();
+				final Object identifier = fkDescriptor.getAssociationKeyFromTarget( o, session );
+				span += fkDescriptor.forEachJdbcValue(
 						identifier,
 						clause,
 						span + offset,

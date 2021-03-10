@@ -899,7 +899,8 @@ public class MappingModelCreationHelper {
 		final Type keyType = bootValueMappingKey.getType();
 		final ModelPart fkTarget;
 		final String lhsPropertyName = collectionDescriptor.getCollectionType().getLHSPropertyName();
-		if ( lhsPropertyName == null ) {
+		final boolean isReferenceToPrimaryKey = lhsPropertyName == null;
+		if ( isReferenceToPrimaryKey ) {
 			fkTarget = collectionDescriptor.getOwnerEntityPersister().getIdentifierMapping();
 		}
 		else {
@@ -922,7 +923,8 @@ public class MappingModelCreationHelper {
 					new SimpleForeignKeyDescriptor(
 							keySelectionMapping,
 							simpleFkTarget,
-							( (PropertyBasedMapping) simpleFkTarget ).getPropertyAccess()
+							( (PropertyBasedMapping) simpleFkTarget ).getPropertyAccess(),
+							isReferenceToPrimaryKey
 					)
 			);
 		}
@@ -1045,7 +1047,8 @@ public class MappingModelCreationHelper {
 			final ForeignKeyDescriptor foreignKeyDescriptor = new SimpleForeignKeyDescriptor(
 					keySelectionMapping,
 					simpleFkTarget,
-					( (PropertyBasedMapping) simpleFkTarget ).getPropertyAccess()
+					( (PropertyBasedMapping) simpleFkTarget ).getPropertyAccess(),
+					bootValueMapping.isReferenceToPrimaryKey()
 			);
 			attributeMapping.setForeignKeyDescriptor( foreignKeyDescriptor );
 		}

@@ -410,6 +410,16 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 	}
 
 	@Override
+	public Object getAssociationKeyFromTarget(Object targetObject, SharedSessionContractImplementor session) {
+		// If the mapping type has an identifier type, that identifier is the key
+		if ( mappingType instanceof SingleAttributeIdentifierMapping ) {
+			return ( (SingleAttributeIdentifierMapping) mappingType ).getIdentifier( targetObject, session );
+		}
+		// Otherwise this is a key based on the target object i.e. without id-class
+		return targetObject;
+	}
+
+	@Override
 	public EntityMappingType findContainingEntityMapping() {
 		throw new UnsupportedOperationException();
 	}

@@ -18,9 +18,7 @@ import java.util.function.Function;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.MappingMetamodel;
-import org.hibernate.metamodel.mapping.Bindable;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
@@ -288,19 +286,7 @@ public class SqmUtil {
 				}
 				else if ( type instanceof ToOneAttributeMapping ) {
 					ToOneAttributeMapping association = (ToOneAttributeMapping) type;
-					if ( association.getReferencedPropertyName() == null ) {
-						bindValue = association.getEntityMappingType().getIdentifierMapping().getIdentifier(
-								bindValue,
-								session
-						);
-					}
-					else {
-						bindValue = association.getEntityMappingType()
-								.findAttributeMapping( association.getReferencedPropertyName() )
-								.getPropertyAccess()
-								.getGetter()
-								.get( bindValue );
-					}
+					bindValue = association.getForeignKeyDescriptor().getAssociationKeyFromTarget( bindValue, session );
 					mappingExpressable = association.getForeignKeyDescriptor();
 				}
 				else {

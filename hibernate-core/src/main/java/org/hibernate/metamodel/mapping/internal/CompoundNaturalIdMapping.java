@@ -331,11 +331,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 			if ( attributeMapping instanceof ToOneAttributeMapping ) {
 				final ToOneAttributeMapping toOne = (ToOneAttributeMapping) attributeMapping;
 				final ForeignKeyDescriptor fKDescriptor = toOne.getForeignKeyDescriptor();
-
-				final EntityMappingType associatedEntityMapping = toOne.getEntityMappingType();
-				final EntityIdentifierMapping associatedEntityMappingIdentifierMapping = associatedEntityMapping.getIdentifierMapping();
-
-				final Object keyValue = value == null ? null : associatedEntityMappingIdentifierMapping.getIdentifier( value, session );
+				final Object keyValue = value == null ? null : fKDescriptor.disassemble( value, session );
 				fKDescriptor.breakDownJdbcValues( keyValue, valueConsumer, session );
 			}
 			else {

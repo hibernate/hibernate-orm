@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
@@ -64,6 +65,8 @@ public interface ForeignKeyDescriptor extends VirtualModelPart {
 	default int forEachSelection(int offset, SelectionConsumer consumer) {
 		return visitReferringColumns( offset, consumer );
 	}
+
+	Object getAssociationKeyFromTarget(Object targetObject, SharedSessionContractImplementor session);
 
 	int visitReferringColumns(int offset, SelectionConsumer consumer);
 

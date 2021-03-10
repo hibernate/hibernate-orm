@@ -24,6 +24,7 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.Clause;
@@ -53,15 +54,18 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	private final SelectionMapping keySelectionMapping;
 	private final SelectionMapping targetSelectionMapping;
 	private final PropertyAccess propertyAccess;
+	private final boolean refersToPrimaryKey;
 	private AssociationKey associationKey;
 
 	public SimpleForeignKeyDescriptor(
 			SelectionMapping keySelectionMapping,
 			SelectionMapping targetSelectionMapping,
-			PropertyAccess propertyAccess) {
+			PropertyAccess propertyAccess,
+			boolean refersToPrimaryKey) {
 		this.keySelectionMapping = keySelectionMapping;
 		this.targetSelectionMapping = targetSelectionMapping;
 		this.propertyAccess = propertyAccess;
+		this.refersToPrimaryKey = refersToPrimaryKey;
 	}
 
 	@Override
@@ -264,7 +268,18 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		return value == null ? null : propertyAccess.getGetter().get( value );
+		if ( value == null ) {
+			return null;
+		}
+		if ( refersToPrimaryKey && value instanceof HibernateProxy ) {
+			return ( (HibernateProxy) value ).getHibernateLazyInitializer().getIdentifier();
+		}
+		return propertyAccess.getGetter().get( value );
+	}
+
+	@Override
+	public Object getAssociationKeyFromTarget(Object targetObject, SharedSessionContractImplementor session) {
+		return disassemble( targetObject, session );
 	}
 
 	@Override

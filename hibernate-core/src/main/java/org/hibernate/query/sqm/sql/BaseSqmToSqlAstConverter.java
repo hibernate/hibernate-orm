@@ -293,13 +293,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	private static final Logger log = Logger.getLogger( BaseSqmToSqlAstConverter.class );
 
-	protected enum Shallowness {
-		NONE,
-		CTOR,
-		FUNCTION,
-		SUBQUERY
-	}
-
 	private final SqlAstCreationContext creationContext;
 	private final SqmStatement<?> statement;
 
@@ -326,7 +319,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private FromClauseIndex lastPoppedFromClauseIndex;
 
 	private final Stack<Clause> currentClauseStack = new StandardStack<>();
-	private final Stack<Shallowness> shallownessStack = new StandardStack<>( Shallowness.NONE );
 
 	private SqmByUnit appliedByUnit;
 	private Expression adjustedTimestamp;
@@ -1331,7 +1323,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public SelectClause visitSelectClause(SqmSelectClause selectClause) {
 		currentClauseStack.push( Clause.SELECT );
-		shallownessStack.push( Shallowness.SUBQUERY );
 		try {
 			super.visitSelectClause( selectClause );
 
@@ -1340,7 +1331,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			return sqlSelectClause;
 		}
 		finally {
-			shallownessStack.pop();
 			currentClauseStack.pop();
 		}
 	}
@@ -2297,12 +2287,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public Expression visitFunction(SqmFunction sqmFunction) {
 		inferableTypeAccessStack.push( () -> null );
-		shallownessStack.push( Shallowness.FUNCTION );
 		try {
 			return sqmFunction.convertToSqlAst( this );
 		}
 		finally {
-			shallownessStack.pop();
 			inferableTypeAccessStack.pop();
 		}
 	}
@@ -2319,61 +2307,37 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public Object visitTrimSpecification(SqmTrimSpecification specification) {
-		shallownessStack.push( Shallowness.FUNCTION );
-		try {
-			return new TrimSpecification( specification.getSpecification() );
-		}
-		finally {
-			shallownessStack.pop();
-		}
+		return new TrimSpecification( specification.getSpecification() );
 	}
 
 	@Override
 	public Object visitCastTarget(SqmCastTarget target) {
-		shallownessStack.push( Shallowness.FUNCTION );
-		try {
-			BasicValuedMapping targetType = (BasicValuedMapping) target.getType();
-			if ( targetType instanceof BasicType<?> ) {
-				targetType = InferredBasicValueResolver.resolveSqlTypeIndicators( this, (BasicType<?>) targetType );
-			}
-			return new CastTarget(
-					targetType,
-					target.getLength(),
-					target.getPrecision(),
-					target.getScale()
-			);
+		BasicValuedMapping targetType = (BasicValuedMapping) target.getType();
+		if ( targetType instanceof BasicType<?> ) {
+			targetType = InferredBasicValueResolver.resolveSqlTypeIndicators( this, (BasicType<?>) targetType );
 		}
-		finally {
-			shallownessStack.pop();
-		}
+		return new CastTarget(
+				targetType,
+				target.getLength(),
+				target.getPrecision(),
+				target.getScale()
+		);
 	}
 
 	@Override
 	public Object visitExtractUnit(SqmExtractUnit unit) {
-		shallownessStack.push( Shallowness.FUNCTION );
-		try {
-			return new ExtractUnit(
-					unit.getUnit(),
-					(BasicValuedMapping) unit.getType()
-			);
-		}
-		finally {
-			shallownessStack.pop();
-		}
+		return new ExtractUnit(
+				unit.getUnit(),
+				(BasicValuedMapping) unit.getType()
+		);
 	}
 
 	@Override
 	public Object visitDurationUnit(SqmDurationUnit unit) {
-		shallownessStack.push( Shallowness.FUNCTION );
-		try {
-			return new DurationUnit(
-					unit.getUnit(),
-					(BasicValuedMapping) unit.getType()
-			);
-		}
-		finally {
-			shallownessStack.pop();
-		}
+		return new DurationUnit(
+				unit.getUnit(),
+				(BasicValuedMapping) unit.getType()
+		);
 	}
 
 	@Override
@@ -2764,18 +2728,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public Object visitUnaryOperationExpression(SqmUnaryOperation expression) {
-		shallownessStack.push( Shallowness.NONE );
-
-		try {
-			return new UnaryOperation(
-					interpret( expression.getOperation() ),
-					toSqlExpression( expression.getOperand().accept( this ) ),
-					(BasicValuedMapping) determineValueMapping( expression.getOperand() )
-			);
-		}
-		finally {
-			shallownessStack.pop();
-		}
+		return new UnaryOperation(
+				interpret( expression.getOperation() ),
+				toSqlExpression( expression.getOperand().accept( this ) ),
+				(BasicValuedMapping) determineValueMapping( expression.getOperand() )
+		);
 	}
 
 	private UnaryArithmeticOperator interpret(UnaryArithmeticOperator operator) {
@@ -2784,52 +2741,45 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public Object visitBinaryArithmeticExpression(SqmBinaryArithmetic expression) {
-		shallownessStack.push( Shallowness.NONE );
+		SqmExpression leftOperand = expression.getLeftHandOperand();
+		SqmExpression rightOperand = expression.getRightHandOperand();
 
-		try {
-			SqmExpression leftOperand = expression.getLeftHandOperand();
-			SqmExpression rightOperand = expression.getRightHandOperand();
+		boolean durationToRight = TypeConfiguration.isDuration( rightOperand.getNodeType() );
+		TypeConfiguration typeConfiguration = getCreationContext().getDomainModel().getTypeConfiguration();
+		TemporalType temporalTypeToLeft = typeConfiguration.getSqlTemporalType( leftOperand.getNodeType() );
+		TemporalType temporalTypeToRight = typeConfiguration.getSqlTemporalType( rightOperand.getNodeType() );
+		boolean temporalTypeSomewhereToLeft = adjustedTimestamp != null || temporalTypeToLeft != null;
 
-			boolean durationToRight = TypeConfiguration.isDuration( rightOperand.getNodeType() );
-			TypeConfiguration typeConfiguration = getCreationContext().getDomainModel().getTypeConfiguration();
-			TemporalType temporalTypeToLeft = typeConfiguration.getSqlTemporalType( leftOperand.getNodeType() );
-			TemporalType temporalTypeToRight = typeConfiguration.getSqlTemporalType( rightOperand.getNodeType() );
-			boolean temporalTypeSomewhereToLeft = adjustedTimestamp != null || temporalTypeToLeft != null;
-
-			if ( temporalTypeToLeft != null && durationToRight ) {
-				if ( adjustmentScale != null || negativeAdjustment ) {
-					//we can't distribute a scale over a date/timestamp
-					throw new SemanticException( "scalar multiplication of temporal value" );
-				}
-			}
-
-			if ( durationToRight && temporalTypeSomewhereToLeft ) {
-				return transformDurationArithmetic( expression );
-			}
-			else if ( temporalTypeToLeft != null && temporalTypeToRight != null ) {
-				return transformDatetimeArithmetic( expression );
-			}
-			else if ( durationToRight && appliedByUnit != null ) {
-				return new BinaryArithmeticExpression(
-						toSqlExpression( leftOperand.accept( this ) ),
-						expression.getOperator(),
-						toSqlExpression( rightOperand.accept( this ) ),
-						//after distributing the 'by unit' operator
-						//we always get a Long value back
-						(BasicValuedMapping) appliedByUnit.getNodeType()
-				);
-			}
-			else {
-				return new BinaryArithmeticExpression(
-						toSqlExpression( leftOperand.accept( this ) ),
-						expression.getOperator(),
-						toSqlExpression( rightOperand.accept( this ) ),
-						getExpressionType( expression )
-				);
+		if ( temporalTypeToLeft != null && durationToRight ) {
+			if ( adjustmentScale != null || negativeAdjustment ) {
+				//we can't distribute a scale over a date/timestamp
+				throw new SemanticException( "scalar multiplication of temporal value" );
 			}
 		}
-		finally {
-			shallownessStack.pop();
+
+		if ( durationToRight && temporalTypeSomewhereToLeft ) {
+			return transformDurationArithmetic( expression );
+		}
+		else if ( temporalTypeToLeft != null && temporalTypeToRight != null ) {
+			return transformDatetimeArithmetic( expression );
+		}
+		else if ( durationToRight && appliedByUnit != null ) {
+			return new BinaryArithmeticExpression(
+					toSqlExpression( leftOperand.accept( this ) ),
+					expression.getOperator(),
+					toSqlExpression( rightOperand.accept( this ) ),
+					//after distributing the 'by unit' operator
+					//we always get a Long value back
+					(BasicValuedMapping) appliedByUnit.getNodeType()
+			);
+		}
+		else {
+			return new BinaryArithmeticExpression(
+					toSqlExpression( leftOperand.accept( this ) ),
+					expression.getOperator(),
+					toSqlExpression( rightOperand.accept( this ) ),
+					getExpressionType( expression )
+			);
 		}
 	}
 

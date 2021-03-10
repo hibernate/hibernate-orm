@@ -31,9 +31,7 @@ import static java.util.Collections.emptyList;
 public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 	private final AllowableFunctionReturnType<T> impliedResultType;
 	private final FunctionReturnTypeResolver returnTypeResolver;
-	private final String name;
 	private final FunctionRenderingSupport renderingSupport;
-	private final List<SqmTypedNode<?>> arguments;
 	private AllowableFunctionReturnType<?> resultType;
 
 	public SelfRenderingSqmFunction(
@@ -44,41 +42,38 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 			FunctionReturnTypeResolver returnTypeResolver,
 			NodeBuilder nodeBuilder,
 			String name) {
-		super( name, descriptor, impliedResultType, nodeBuilder );
+		super( name, descriptor, impliedResultType, arguments, nodeBuilder );
 		this.renderingSupport = renderingSupport;
-		this.arguments = arguments;
 		this.impliedResultType = impliedResultType;
 		this.returnTypeResolver = returnTypeResolver;
-		this.name = name;
-	}
-
-	public List<SqmTypedNode<?>> getArguments() {
-		return arguments;
 	}
 
 	public FunctionRenderingSupport getRenderingSupport() {
 		return renderingSupport;
 	}
 
-	private static List<SqlAstNode> resolveSqlAstArguments(List<SqmTypedNode<?>> sqmArguments, SqmToSqlAstConverter walker) {
+	protected static List<SqlAstNode> resolveSqlAstArguments(List<SqmTypedNode<?>> sqmArguments, SqmToSqlAstConverter walker) {
 		if ( sqmArguments == null || sqmArguments.isEmpty() ) {
 			return emptyList();
 		}
 
-		final ArrayList<SqlAstNode> sqlAstArguments = new ArrayList<>();
+		final ArrayList<SqlAstNode> sqlAstArguments = new ArrayList<>( sqmArguments.size() );
 		for ( SqmTypedNode<?> sqmArgument : sqmArguments ) {
-			sqlAstArguments.add((SqlAstNode) ((SqmVisitableNode) sqmArgument).accept(walker));
+			sqlAstArguments.add( (SqlAstNode) ( (SqmVisitableNode) sqmArgument ).accept( walker ) );
 		}
 		return sqlAstArguments;
 	}
 
 	@Override
 	public SelfRenderingFunctionSqlAstExpression convertToSqlAst(SqmToSqlAstConverter walker) {
-		resolveResultType( walker.getCreationContext().getDomainModel().getTypeConfiguration() );
+		final AllowableFunctionReturnType<?> resultType = resolveResultType(
+				walker.getCreationContext().getDomainModel().getTypeConfiguration()
+		);
 
 		return new SelfRenderingFunctionSqlAstExpression(
+				getFunctionName(),
 				getRenderingSupport(),
-				resolveSqlAstArguments( getArguments(), walker),
+				resolveSqlAstArguments( getArguments(), walker ),
 				resultType,
 				getMappingModelExpressable( walker, resultType )
 		);
@@ -93,7 +88,7 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 		return nodeType;
 	}
 
-	private void resolveResultType(TypeConfiguration typeConfiguration) {
+	protected AllowableFunctionReturnType<?> resolveResultType(TypeConfiguration typeConfiguration) {
 		if ( resultType == null ) {
 			resultType = returnTypeResolver.resolveFunctionReturnType(
 				impliedResultType,
@@ -102,9 +97,10 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 			);
 			setExpressableType( resultType );
 		}
+		return resultType;
 	}
 
-	private MappingModelExpressable<?> getMappingModelExpressable(
+	protected MappingModelExpressable<?> getMappingModelExpressable(
 			SqmToSqlAstConverter walker,
 			AllowableFunctionReturnType<?> resultType) {
 		MappingModelExpressable<?> mapping;
@@ -131,15 +127,10 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 							return null; // this works at least approximately
 						}
 					},
-					resolveSqlAstArguments( arguments, walker )
+					resolveSqlAstArguments( getArguments(), walker )
 			);
 		}
 		return mapping;
-	}
-
-	@Override
-	public String getFunctionName() {
-		return name;
 	}
 
 	@Override

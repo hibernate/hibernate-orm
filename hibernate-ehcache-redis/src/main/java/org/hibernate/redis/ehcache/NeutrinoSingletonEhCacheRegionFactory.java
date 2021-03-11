@@ -86,6 +86,7 @@ public class NeutrinoSingletonEhCacheRegionFactory extends AbstractEhcacheRegion
 
 	private static final AtomicInteger REFERENCE_COUNT = new AtomicInteger();
 
+	private static final String REDIS_SERVER_PASSWORD_REQUIRED = "hib.redis.server.password.required";
 	/**
 	 * Constructs a NeutrinoSingletonEhCacheRegionFactory
 	 */
@@ -113,7 +114,7 @@ public class NeutrinoSingletonEhCacheRegionFactory extends AbstractEhcacheRegion
 				configurationResourceName = (String) properties.get(NET_SF_EHCACHE_CONFIGURATION_RESOURCE_NAME);
 				redisConfigurationResourceName = (String) properties
 						.get(HIBERNATE_CACHE_REDIS_CONFIGURATION_RESOURCE_NAME);
-				if (redisConfigurationResourceName == null || redisConfigurationResourceName.length() <= 0) {
+				if (redisConfigurationResourceName == null || redisConfigurationResourceName.length() > 0) {
 					redisConfigurationResourceName = HIBERNATE_CACHE_DEFAULT_REDIS_CONFIGURATION_FILE;
 				}
 			} else {
@@ -237,7 +238,10 @@ public class NeutrinoSingletonEhCacheRegionFactory extends AbstractEhcacheRegion
 				.setMasterConnectionPoolSize(getIntProperty(prop, REDIS_SENTINEL_MASTER_CONNECTION_POOL_SIZE))
 				.setMasterName(getProperty(prop, REDIS_SENTINEL_SERVER_MASTER_NAME)).setReadMode(ReadMode.SLAVE)
 				.setSubscriptionMode(SubscriptionMode.SLAVE).setDatabase(getIntProperty(prop, REDIS_SERVER_DATABASE_ID))
-				.setPassword(getProperty(prop, REDIS_SERVER_PASSWORD_KEY)).addSentinelAddress(getSentinelAddress(prop));
+				.addSentinelAddress(getSentinelAddress(prop));
+		
+				if(!"false".equalsIgnoreCase(getProperty(prop, REDIS_SERVER_PASSWORD_REQUIRED)))
+					redissonConfig.useSentinelServers().setPassword(getProperty(prop, REDIS_SERVER_PASSWORD_KEY));
 
 		redisson = Redisson.create(redissonConfig);
 		batchOptions = getDefaultBatchOptions(prop);
@@ -266,8 +270,11 @@ public class NeutrinoSingletonEhCacheRegionFactory extends AbstractEhcacheRegion
 				.setSubscriptionConnectionPoolSize(getIntProperty(prop, REDIS_SERVER_SUBS_CONN_POOL_SIZE))
 				.setConnectionMinimumIdleSize(getIntProperty(prop, REDIS_SINGLE_SERVER_CONNECTION_MIN_IDLE_SIZE))
 				.setConnectionPoolSize(getIntProperty(prop, REDIS_SINGLE_SERVER_CONNECTION_POOL_SIZE))
-				.setDatabase(getIntProperty(prop, REDIS_SERVER_DATABASE_ID))
-				.setPassword(getProperty(prop, REDIS_SERVER_PASSWORD_KEY));
+				.setDatabase(getIntProperty(prop, REDIS_SERVER_DATABASE_ID));
+//				.setPassword(getProperty(prop, REDIS_SERVER_PASSWORD_KEY));
+		
+		if(!"false".equalsIgnoreCase(getProperty(prop, REDIS_SERVER_PASSWORD_REQUIRED)))
+			redissonConfig.useSingleServer().setPassword(getProperty(prop, REDIS_SERVER_PASSWORD_KEY));
 
 		redisson = Redisson.create(redissonConfig);
 		batchOptions = getDefaultBatchOptions(prop);

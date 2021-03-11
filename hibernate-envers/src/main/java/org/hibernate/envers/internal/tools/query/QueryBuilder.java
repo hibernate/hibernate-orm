@@ -8,13 +8,11 @@ package org.hibernate.envers.internal.tools.query;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import javax.persistence.criteria.JoinType;
 
-import org.hibernate.HibernateException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -25,8 +23,7 @@ import org.hibernate.envers.internal.tools.StringTools;
 import org.hibernate.envers.internal.tools.Triple;
 import org.hibernate.envers.tools.Pair;
 import org.hibernate.query.Query;
-import org.hibernate.sql.Template;
-import org.hibernate.type.CustomType;
+import org.hibernate.type.BasicType;
 
 /**
  * A class for incrementally building a HQL query.
@@ -68,6 +65,8 @@ public class QueryBuilder {
 
 	private final SessionFactoryImplementor sessionFactory;
 
+	private final BasicType<?> revisionType;
+
 	/**
 	 * @param entityName Main entity which should be selected.
 	 * @param alias Alias of the entity
@@ -89,6 +88,10 @@ public class QueryBuilder {
 		this.paramCounter = paramCounter;
 		this.sessionFactory = sessionFactory;
 
+		this.revisionType = sessionFactory.getTypeConfiguration()
+				.getBasicTypeRegistry()
+				.getRegisteredType( RevisionTypeType.class );
+
 		final Parameters rootParameters = new Parameters( alias, "and", paramCounter );
 		parameters.add( rootParameters );
 
@@ -105,6 +108,7 @@ public class QueryBuilder {
 		this.entityName = other.entityName;
 		this.alias = other.alias;
 		this.sessionFactory = other.sessionFactory;
+		this.revisionType = other.revisionType;
 		this.aliasCounter = other.aliasCounter.deepCopy();
 		this.paramCounter = other.paramCounter.deepCopy();
 		for (final Parameters params : other.parameters) {
@@ -318,11 +322,7 @@ public class QueryBuilder {
 		for ( Map.Entry<String, Object> paramValue : queryParamValues.entrySet() ) {
 			if ( paramValue.getValue() instanceof RevisionType ) {
 				// this is needed when the ClassicQueryTranslatorFactory is used
-				query.setParameter(
-						paramValue.getKey(),
-						paramValue.getValue(),
-						new CustomType( new RevisionTypeType(), sessionFactory.getTypeConfiguration() )
-				);
+				query.setParameter( paramValue.getKey(), paramValue.getValue(), revisionType );
 			}
 			else {
 				query.setParameter( paramValue.getKey(), paramValue.getValue() );

@@ -22,7 +22,7 @@ import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
 import org.hibernate.envers.strategy.AuditStrategy;
 import org.hibernate.query.Query;
-import org.hibernate.type.CustomType;
+import org.hibernate.type.BasicType;
 
 import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.DEL_REVISION_TYPE_PARAMETER;
 import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.REVISION_PARAMETER;
@@ -66,12 +66,13 @@ public abstract class AbstractRelationQueryGenerator implements RelationQueryGen
 	public Query getQuery(SharedSessionContractImplementor session, Object primaryKey, Number revision, boolean removed) {
 		final String queryString = getQueryString( session.getFactory(), removed );
 
+		final BasicType<?> revisionType = session.getFactory()
+				.getTypeConfiguration()
+				.getBasicTypeRegistry()
+				.getRegisteredType( RevisionTypeType.class );
+
 		final Query query = session.createQuery( queryString );
-		query.setParameter(
-				DEL_REVISION_TYPE_PARAMETER,
-				RevisionType.DEL,
-				new CustomType( new RevisionTypeType(), session.getFactory().getTypeConfiguration() )
-		);
+		query.setParameter( DEL_REVISION_TYPE_PARAMETER, RevisionType.DEL, revisionType );
 		query.setParameter( REVISION_PARAMETER, revision );
 
 		final IdMapper prefixIdMapper = referencingIdData.getPrefixedMapper();

@@ -50,9 +50,8 @@ public class StandardSortedSetSemantics<E> extends AbstractSetSemantics<SortedSe
 			Object key,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		final PersistentSortedSet<E> result = new PersistentSortedSet<>( session );
-		result.setComparator( (Comparator<E>) collectionDescriptor.getSortingComparator() );
-		return result;
+		//noinspection unchecked
+		return new PersistentSortedSet<>( session, (Comparator<E>) collectionDescriptor.getSortingComparator() );
 	}
 
 	@Override

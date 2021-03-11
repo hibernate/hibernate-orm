@@ -38,20 +38,22 @@ public class PersistentSortedSet<E> extends PersistentSet<E> implements SortedSe
 	 * Constructs a PersistentSortedSet
 	 *
 	 * @param session The session
+	 * @param comparator The sort comparator
 	 */
-	public PersistentSortedSet(SharedSessionContractImplementor session) {
+	public PersistentSortedSet(SharedSessionContractImplementor session, Comparator<E> comparator) {
 		super( session );
+		this.comparator = comparator;
 	}
 
 	/**
 	 * Constructs a PersistentSortedSet
 	 *
 	 * @param session The session
-	 * @deprecated {@link #PersistentSortedSet(SharedSessionContractImplementor)} should be used instead.
+	 * @deprecated {@link #PersistentSortedSet(SharedSessionContractImplementor, Comparator)} should be used instead.
 	 */
 	@Deprecated
 	public PersistentSortedSet(SessionImplementor session) {
-		this( (SharedSessionContractImplementor) session );
+		this( (SharedSessionContractImplementor) session, (Comparator<E>) null );
 	}
 
 	/**

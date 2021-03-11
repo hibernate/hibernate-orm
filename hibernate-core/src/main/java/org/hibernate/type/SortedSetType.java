@@ -26,9 +26,7 @@ public class SortedSetType extends SetType {
 
 	@Override
 	public PersistentCollection instantiate(SharedSessionContractImplementor session, CollectionPersister persister, Object key) {
-		PersistentSortedSet set = new PersistentSortedSet(session);
-		set.setComparator(comparator);
-		return set;
+		return new PersistentSortedSet( session, comparator );
 	}
 
 	public Class getReturnedClass() {

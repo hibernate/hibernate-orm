@@ -41,20 +41,22 @@ public class PersistentSortedMap<K,E> extends PersistentMap<K,E> implements Sort
 	 * Constructs a PersistentSortedMap.
 	 *
 	 * @param session The session
+	 * @param comparator The sort comparator
 	 */
-	public PersistentSortedMap(SharedSessionContractImplementor session) {
+	public PersistentSortedMap(SharedSessionContractImplementor session, Comparator<K> comparator) {
 		super( session );
+		this.comparator = comparator;
 	}
 
 	/**
 	 * Constructs a PersistentSortedMap.
 	 *
 	 * @param session The session
-	 * @deprecated {@link #PersistentSortedMap(SharedSessionContractImplementor)} should be used instead.
+	 * @deprecated {@link #PersistentSortedMap(SharedSessionContractImplementor, Comparator)} should be used instead.
 	 */
 	@Deprecated
 	public PersistentSortedMap(SessionImplementor session) {
-		this( (SharedSessionContractImplementor) session );
+		this( (SharedSessionContractImplementor) session, (Comparator<K>) null );
 	}
 
 	/**

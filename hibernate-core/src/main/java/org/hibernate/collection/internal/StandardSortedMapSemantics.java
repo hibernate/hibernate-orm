@@ -49,9 +49,8 @@ public class StandardSortedMapSemantics<K,V> extends AbstractMapSemantics<Sorted
 			Object key,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		final PersistentSortedMap<K,V> result = new PersistentSortedMap<>( session );
-		result.setComparator( (Comparator<K>) collectionDescriptor.getSortingComparator() );
-		return result;
+		//noinspection unchecked
+		return new PersistentSortedMap<>( session, (Comparator<K>) collectionDescriptor.getSortingComparator() );
 	}
 
 	@Override

@@ -27,9 +27,7 @@ public class SortedMapType extends MapType {
 
 	@Override
 	public PersistentCollection instantiate(SharedSessionContractImplementor session, CollectionPersister persister, Object key) {
-		PersistentSortedMap map = new PersistentSortedMap(session);
-		map.setComparator(comparator);
-		return map;
+		return new PersistentSortedMap( session, comparator );
 	}
 
 	public Class getReturnedClass() {

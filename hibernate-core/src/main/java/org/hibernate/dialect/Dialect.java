@@ -947,10 +947,18 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	public String getTypeName(int code) throws HibernateException {
+		// explicitly enforce dialect's default precisions
 		switch ( code ) {
+			case Types.DECIMAL:
+			case Types.NUMERIC:
+				return getTypeName( code, Size.precision( getDefaultDecimalPrecision() ) );
+			case Types.FLOAT:
+			case Types.REAL:
+				return getTypeName( code, Size.precision( getFloatPrecision() ) );
+			case Types.DOUBLE:
+				return getTypeName( code, Size.precision( getDoublePrecision() ) );
 			case Types.TIMESTAMP:
 			case Types.TIMESTAMP_WITH_TIMEZONE:
-				// explicitly enforce dialect's default timestamp precision
 				return getTypeName( code, Size.precision( getDefaultTimestampPrecision() ) );
 			default:
 				return getTypeName( code, Size.nil() );

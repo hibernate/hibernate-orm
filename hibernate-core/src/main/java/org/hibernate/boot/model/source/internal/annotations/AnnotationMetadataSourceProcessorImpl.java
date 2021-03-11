@@ -252,7 +252,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 	}
 
 	private List<XClass> orderAndFillHierarchy(List<XClass> original) {
-		List<XClass> copy = new ArrayList<XClass>( original );
+		List<XClass> copy = new ArrayList<>( original.size() );
 		insertMappedSuperclasses( original, copy );
 
 		// order the hierarchy
@@ -266,16 +266,28 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 	}
 
 	private void insertMappedSuperclasses(List<XClass> original, List<XClass> copy) {
+		final boolean debug = log.isDebugEnabled();
 		for ( XClass clazz : original ) {
-			XClass superClass = clazz.getSuperclass();
-			while ( superClass != null
-					&& !reflectionManager.equals( superClass, Object.class )
-					&& !copy.contains( superClass ) ) {
-				if ( superClass.isAnnotationPresent( Entity.class )
-						|| superClass.isAnnotationPresent( javax.persistence.MappedSuperclass.class ) ) {
-					copy.add( superClass );
+			if ( clazz.isAnnotationPresent( javax.persistence.MappedSuperclass.class ) ) {
+				if ( debug ) {
+					log.debugf(
+							"Skipping explicit MappedSuperclass %s, the class will be discovered analyzing the implementing class",
+							clazz
+					);
 				}
-				superClass = superClass.getSuperclass();
+			}
+			else {
+				copy.add( clazz );
+				XClass superClass = clazz.getSuperclass();
+				while ( superClass != null
+						&& !reflectionManager.equals( superClass, Object.class )
+						&& !copy.contains( superClass ) ) {
+					if ( superClass.isAnnotationPresent( Entity.class )
+							|| superClass.isAnnotationPresent( javax.persistence.MappedSuperclass.class ) ) {
+						copy.add( superClass );
+					}
+					superClass = superClass.getSuperclass();
+				}
 			}
 		}
 	}

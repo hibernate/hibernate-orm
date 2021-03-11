@@ -744,11 +744,9 @@ public class QueryCacheTest extends BaseNonConfigCoreFunctionalTestCase {
 			try {
 				if (waitLatch != null) {
 					waitLatch.countDown();
-					waitLatch = null;
 				}
 				if (blockLatch != null) {
 					blockLatch.await();
-					blockLatch = null;
 				}
 			} catch (InterruptedException e) {
 				Thread.currentThread().interrupt();

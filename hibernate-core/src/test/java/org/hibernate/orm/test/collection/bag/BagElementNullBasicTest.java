@@ -171,7 +171,7 @@ public class BagElementNullBasicTest {
 		);
 	}
 
-	@Entity
+	@Entity( name = "AnEntity" )
 	@Table(name = "AnEntity")
 	public static class AnEntity {
 		@Id
@@ -184,7 +184,7 @@ public class BagElementNullBasicTest {
 		private List<String> aCollection = new ArrayList<>();
 	}
 
-	@Entity
+	@Entity( name = "NullableElementsEntity" )
 	@Table(name = "NullableElementsEntity")
 	public static class NullableElementsEntity {
 		@Id

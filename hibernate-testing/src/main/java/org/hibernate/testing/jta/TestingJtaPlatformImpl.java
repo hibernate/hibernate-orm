@@ -26,6 +26,7 @@ import com.arjuna.common.internal.util.propertyservice.BeanPopulator;
  * @author Steve Ebersole
  */
 public class TestingJtaPlatformImpl extends AbstractJtaPlatform {
+	public static final String NAME = TestingJtaPlatformImpl.class.getName();
 	public static final TestingJtaPlatformImpl INSTANCE = new TestingJtaPlatformImpl();
 
 	private final TransactionManager transactionManager;

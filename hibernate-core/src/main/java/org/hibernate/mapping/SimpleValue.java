@@ -36,6 +36,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IdentityGenerator;
+import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.CoreLogging;
@@ -284,33 +285,39 @@ public abstract class SimpleValue implements KeyValue {
 			return identifierGenerator;
 		}
 
-		Properties params = new Properties();
+		final Properties params = new Properties();
 		
 		//if the hibernate-mapping did not specify a schema/catalog, use the defaults
 		//specified by properties - but note that if the schema/catalog were specified
 		//in hibernate-mapping, or as params, they will already be initialized and
 		//will override the values set here (they are in identifierGeneratorProperties)
-		if ( defaultSchema!=null ) {
-			params.setProperty(PersistentIdentifierGenerator.SCHEMA, defaultSchema);
+		if ( defaultSchema != null ) {
+			params.setProperty( PersistentIdentifierGenerator.SCHEMA, defaultSchema);
 		}
-		if ( defaultCatalog!=null ) {
-			params.setProperty(PersistentIdentifierGenerator.CATALOG, defaultCatalog);
+
+		if ( defaultCatalog != null ) {
+			params.setProperty( PersistentIdentifierGenerator.CATALOG, defaultCatalog );
 		}
+
+		// default initial value and allocation size per-JPA defaults
+		params.setProperty( OptimizableGenerator.INITIAL_PARAM, String.valueOf( OptimizableGenerator.DEFAULT_INITIAL_VALUE ) );
+		params.setProperty( OptimizableGenerator.INCREMENT_PARAM, String.valueOf( OptimizableGenerator.DEFAULT_INCREMENT_SIZE ) );
 
 		//init the table here instead of earlier, so that we can get a quoted table name
 		//TODO: would it be better to simply pass the qualified table name, instead of
 		//      splitting it up into schema/catalog/table names
-		String tableName = getTable().getQuotedName(dialect);
+		final String tableName = getTable().getQuotedName( dialect );
 		params.setProperty( PersistentIdentifierGenerator.TABLE, tableName );
 
 		//pass the column name (a generated id almost always has a single column)
-		String columnName = ( (Column) getColumnIterator().next() ).getQuotedName(dialect);
+		final String columnName = ( (Column) getColumnIterator().next() ).getQuotedName( dialect );
 		params.setProperty( PersistentIdentifierGenerator.PK, columnName );
 
 		//pass the entity-name, if not a collection-id
-		if (rootClass!=null) {
+		if ( rootClass != null ) {
 			params.setProperty( IdentifierGenerator.ENTITY_NAME, rootClass.getEntityName() );
 			params.setProperty( IdentifierGenerator.JPA_ENTITY_NAME, rootClass.getJpaEntityName() );
+			params.setProperty( OptimizableGenerator.IMPLICIT_NAME_BASE, rootClass.getJpaEntityName() );
 
 			final StringBuilder tables = new StringBuilder();
 			final Iterator<Table> itr = rootClass.getIdentityTables().iterator();
@@ -325,10 +332,11 @@ public abstract class SimpleValue implements KeyValue {
 		}
 		else {
 			params.setProperty( PersistentIdentifierGenerator.TABLES, tableName );
+			params.setProperty( OptimizableGenerator.IMPLICIT_NAME_BASE, tableName );
 		}
 
 		if ( identifierGeneratorProperties != null ) {
-			params.putAll(identifierGeneratorProperties);
+			params.putAll( identifierGeneratorProperties );
 		}
 
 		// TODO : we should pass along all settings once "config lifecycle" is hashed out...

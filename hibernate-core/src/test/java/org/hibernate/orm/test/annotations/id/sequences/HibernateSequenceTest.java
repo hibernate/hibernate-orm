@@ -46,7 +46,7 @@ public class HibernateSequenceTest {
 		assertTrue( SequenceStyleGenerator.class.isInstance( generator ) );
 		SequenceStyleGenerator seqGenerator = (SequenceStyleGenerator) generator;
 		assertEquals(
-				Table.qualify( null, SCHEMA_NAME, SequenceStyleGenerator.DEF_SEQUENCE_NAME ),
+				Table.qualify( null, SCHEMA_NAME, "HibernateSequenceEntity_SEQ" ),
 				seqGenerator.getDatabaseStructure().getName()
 		);
 	}

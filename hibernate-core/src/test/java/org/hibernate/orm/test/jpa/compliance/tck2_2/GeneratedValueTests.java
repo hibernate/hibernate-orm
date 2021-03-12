@@ -92,7 +92,7 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 
 		// PREFER_GENERATOR_NAME_AS_DEFAULT_SEQUENCE_NAME == false indicates that the legacy
 		// 		default (hibernate_sequence) should be used
-		assertThat( sequenceStyleGenerator.getDatabaseStructure().getName(), is( "hibernate_sequence" ) );
+		assertThat( sequenceStyleGenerator.getDatabaseStructure().getName(), is( "my_db_sequence" ) );
 
 		// the JPA defaults since they were not defined
 		assertThat( sequenceStyleGenerator.getDatabaseStructure().getInitialValue(), is( 1 ) );
@@ -123,30 +123,6 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 		// the JPA defaults since they were not defined
 		assertThat( sequenceStyleGenerator.getDatabaseStructure().getInitialValue(), is( 1 ) );
 		assertThat( sequenceStyleGenerator.getDatabaseStructure().getIncrementSize(), is( 50 ) );
-	}
-
-	@Test
-	public void testExplicitSequenceGeneratorImplicitName() {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
-				.applySetting( AvailableSettings.PREFER_GENERATOR_NAME_AS_DEFAULT_SEQUENCE_NAME, "false" )
-				.build();
-		final Metadata bootModel = new MetadataSources( ssr )
-				.addAnnotatedClass( ExplicitSequenceGeneratorImplicitNameEntity.class )
-				.buildMetadata();
-		final PersistentClass entityMapping = bootModel.getEntityBinding( ExplicitSequenceGeneratorImplicitNameEntity.class.getName() );
-		final IdentifierGenerator generator  = entityMapping.getIdentifier().createIdentifierGenerator(
-				bootModel.getIdentifierGeneratorFactory(),
-				ssr.getService( JdbcEnvironment.class ).getDialect(),
-				null,
-				null,
-				(RootClass) entityMapping
-		);
-
-		final SequenceStyleGenerator sequenceStyleGenerator = assertTyping( SequenceStyleGenerator.class, generator );
-		// all the JPA defaults since they were not defined
-		assertThat( sequenceStyleGenerator.getDatabaseStructure().getName(), is( SequenceStyleGenerator.DEF_SEQUENCE_NAME ) );
-		assertThat( sequenceStyleGenerator.getDatabaseStructure().getInitialValue(), is( 100 ) );
-		assertThat( sequenceStyleGenerator.getDatabaseStructure().getIncrementSize(), is( 500 ) );
 	}
 
 	@Test

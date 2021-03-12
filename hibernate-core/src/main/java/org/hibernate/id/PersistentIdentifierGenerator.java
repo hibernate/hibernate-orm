@@ -22,7 +22,11 @@ import org.hibernate.dialect.Dialect;
  * @see IdentifierGenerator
  * @see Configurable
  */
-public interface PersistentIdentifierGenerator extends IdentifierGenerator, ExportableProducer {
+public interface PersistentIdentifierGenerator extends OptimizableGenerator {
+	/**
+	 * The configuration parameter holding the catalog name
+	 */
+	String CATALOG = "catalog";
 
 	/**
 	 * The configuration parameter holding the schema name
@@ -46,11 +50,6 @@ public interface PersistentIdentifierGenerator extends IdentifierGenerator, Expo
 	 * name of the generated id
 	 */
 	String PK = "target_column";
-
-	/**
-	 * The configuration parameter holding the catalog name
-	 */
-	String CATALOG = "catalog";
 
 	/**
 	 * The key under which to find the {@link org.hibernate.boot.model.naming.ObjectNameNormalizer} in the config param map.

@@ -199,34 +199,6 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	@SuppressWarnings("WeakerAccess")
 	public static final int DEF_SEGMENT_LENGTH = 255;
 
-	/**
-	 * Indicates the initial value to use.  The default value is {@link #DEFAULT_INITIAL_VALUE}
-	 */
-	public static final String INITIAL_PARAM = "initial_value";
-
-	/**
-	 * The default {@link #INITIAL_PARAM} value
-	 */
-	@SuppressWarnings("WeakerAccess")
-	public static final int DEFAULT_INITIAL_VALUE = 1;
-
-	/**
-	 * Indicates the increment size to use.  The default value is {@link #DEFAULT_INCREMENT_SIZE}
-	 */
-	public static final String INCREMENT_PARAM = "increment_size";
-
-	/**
-	 * The default {@link #INCREMENT_PARAM} value
-	 */
-	@SuppressWarnings("WeakerAccess")
-	public static final int DEFAULT_INCREMENT_SIZE = 1;
-
-	/**
-	 * Indicates the optimizer to use, either naming a {@link Optimizer} implementation class or by naming
-	 * a {@link StandardOptimizerDescriptor} by name
-	 */
-	public static final String OPT_PARAM = "optimizer";
-
 	private boolean storeLastUsedValue;
 
 

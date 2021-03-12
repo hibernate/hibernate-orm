@@ -1,0 +1,57 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ */
+package org.hibernate.orm.test.idgen.biginteger.sequence;
+
+
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+
+/**
+ * @author Steve Ebersole
+ */
+@DomainModel(
+		xmlMappings = "org/hibernate/orm/test/idgen/biginteger/sequence/Mapping.hbm.xml"
+)
+@SessionFactory
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsSequences.class )
+public class BigIntegerSequenceGeneratorTest {
+
+	@Test
+	public void testBasics(SessionFactoryScope scope) {
+		scope.inTransaction(
+				(session) -> {
+					Entity entity = new Entity( "BigInteger + sequence #1" );
+					session.save( entity );
+					Entity entity2 = new Entity( "BigInteger + sequence #2" );
+					session.save( entity2 );
+
+					// previously these checks were commented out due to the comment...
+
+// hsqldb defines different behavior for the initial select from a sequence
+// then say oracle
+//		assertEquals( BigInteger.valueOf( 1 ), entity.getId() );
+//		assertEquals( BigInteger.valueOf( 2 ), entity2.getId() );
+				}
+		);
+
+
+	}
+
+	@AfterEach
+	public void dropTestData(SessionFactoryScope scope) {
+		scope.inTransaction(
+				(session) -> {
+					session.createQuery( "delete from Entity" ).executeUpdate();
+				}
+		);
+	}
+}

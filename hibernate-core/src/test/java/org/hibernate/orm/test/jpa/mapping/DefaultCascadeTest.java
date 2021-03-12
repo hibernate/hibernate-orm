@@ -1,8 +1,8 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
 package org.hibernate.orm.test.jpa.mapping;
 
@@ -41,8 +41,8 @@ public class DefaultCascadeTest {
 	public void tearDown(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
-					entityManager.createQuery( "delete from DefaultCascadeTest$Child" ).executeUpdate();
-					entityManager.createQuery( "delete from DefaultCascadeTest$Parent" ).executeUpdate();
+					entityManager.createQuery( "delete from Child" ).executeUpdate();
+					entityManager.createQuery( "delete from Parent" ).executeUpdate();
 				}
 		);
 	}
@@ -60,7 +60,7 @@ public class DefaultCascadeTest {
 		);
 	}
 
-	@Entity
+	@Entity(name = "Parent")
 	@Table(name = "Parent")
 	public static class Parent {
 
@@ -69,7 +69,7 @@ public class DefaultCascadeTest {
 		private Integer id;
 	}
 
-	@Entity
+	@Entity(name = "Child")
 	@Table(name = "Child")
 	public static class Child {
 

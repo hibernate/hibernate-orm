@@ -40,8 +40,8 @@ public class DetachAndContainsTest {
 	public void tearDown(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
-					entityManager.createQuery( "delete from DetachAndContainsTest$Tooth" ).executeUpdate();
-					entityManager.createQuery( "delete from DetachAndContainsTest$Mouth" ).executeUpdate();
+					entityManager.createQuery( "delete from Tooth" ).executeUpdate();
+					entityManager.createQuery( "delete from Mouth" ).executeUpdate();
 				}
 		);
 	}
@@ -72,7 +72,7 @@ public class DetachAndContainsTest {
 		);
 	}
 
-	@Entity
+	@Entity(name = "Mouth")
 	@Table(name = "mouth")
 	public static class Mouth {
 		@Id
@@ -82,7 +82,7 @@ public class DetachAndContainsTest {
 		public Collection<Tooth> teeth;
 	}
 
-	@Entity
+	@Entity(name = "Tooth")
 	@Table(name = "tooth")
 	public static class Tooth {
 		@Id

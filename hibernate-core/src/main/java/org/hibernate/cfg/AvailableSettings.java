@@ -2031,7 +2031,11 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 * The default value is `true` meaning that {@link GeneratedValue#generator()} will be used as the
 	 * sequence/table name by default.  Users migrating from earlier versions using the legacy
 	 * `hibernate_sequence` name should disable this setting.
+	 *
+	 * @deprecated As of 6.0 with no replacement - `hibernate_sequence` as a real, implicit exportable name
+	 * is no longer supported.  No effect
 	 */
+	@Deprecated
 	String PREFER_GENERATOR_NAME_AS_DEFAULT_SEQUENCE_NAME = "hibernate.model.generator_name_as_sequence_name";
 
 	/**

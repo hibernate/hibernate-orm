@@ -91,7 +91,7 @@ public class EntityGraphUsingFetchGraphTest {
 					//productSubgraph.addAttributeNodes( "productName" );
 
 					TypedQuery<CustomerOrder> query = em.createQuery(
-							"SELECT o FROM EntityGraphUsingFetchGraphTest$CustomerOrder o", CustomerOrder.class
+							"SELECT o FROM CustomerOrder o", CustomerOrder.class
 					);
 					query.setHint( GraphSemantic.LOAD.getJpaHintName(), entityGraph );
 					final List<CustomerOrder> results = query.getResultList();
@@ -140,7 +140,7 @@ public class EntityGraphUsingFetchGraphTest {
 					productSubgraph.addAttributeNodes( "productName" );
 
 					TypedQuery<CustomerOrder> query = em.createQuery(
-							"SELECT o FROM EntityGraphUsingFetchGraphTest$CustomerOrder o", CustomerOrder.class
+							"SELECT o FROM CustomerOrder o", CustomerOrder.class
 					);
 					query.setHint( GraphSemantic.LOAD.getJpaHintName(), entityGraph );
 					final List<CustomerOrder> results = query.getResultList();
@@ -201,7 +201,7 @@ public class EntityGraphUsingFetchGraphTest {
 					productSubgraph.addAttributeNodes( (Attribute) productEntityType.getAttribute( "productName" ) );
 
 					TypedQuery<CustomerOrder> query = em.createQuery(
-							"SELECT o FROM EntityGraphUsingFetchGraphTest$CustomerOrder o", CustomerOrder.class
+							"SELECT o FROM CustomerOrder o", CustomerOrder.class
 					);
 					query.setHint( GraphSemantic.LOAD.getJpaHintName(), entityGraph );
 					final List<CustomerOrder> results = query.getResultList();
@@ -243,7 +243,7 @@ public class EntityGraphUsingFetchGraphTest {
 				session -> {
 					final EntityManager em = session.unwrap( EntityManager.class );
 					TypedQuery<CustomerOrder> query = em.createQuery(
-							"SELECT o FROM EntityGraphUsingFetchGraphTest$CustomerOrder o left join fetch o.orderPosition pos left join fetch pos.product left join fetch o.shippingAddress", CustomerOrder.class
+							"SELECT o FROM CustomerOrder o left join fetch o.orderPosition pos left join fetch pos.product left join fetch o.shippingAddress", CustomerOrder.class
 					);
 					final List<CustomerOrder> results = query.getResultList();
 
@@ -283,7 +283,7 @@ public class EntityGraphUsingFetchGraphTest {
 		}
 	}
 
-	@Entity
+	@Entity(name = "CustomerOrder")
 	@Table(name = "customerOrder")
 	public static class CustomerOrder {
 		@Id
@@ -300,7 +300,7 @@ public class EntityGraphUsingFetchGraphTest {
 		public Address shippingAddress;
 	}
 
-	@Entity
+	@Entity(name = "Address")
 	@Table(name = "address")
 	public static class Address {
 		@Id
@@ -310,7 +310,7 @@ public class EntityGraphUsingFetchGraphTest {
 		public String city;
 	}
 
-	@Entity
+	@Entity(name = "OrderPosition")
 	@Table(name = "orderPosition")
 	public static class OrderPosition {
 		@Id
@@ -324,7 +324,7 @@ public class EntityGraphUsingFetchGraphTest {
 		public Product product;
 	}
 
-	@Entity
+	@Entity(name = "Product")
 	@Table(name = "product")
 	public static class Product {
 		@Id

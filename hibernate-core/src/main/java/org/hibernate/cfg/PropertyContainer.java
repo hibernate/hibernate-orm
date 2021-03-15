@@ -9,6 +9,7 @@
 
 package org.hibernate.cfg;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -35,6 +36,7 @@ import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.cfg.annotations.HCANNHelper;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 
 import org.jboss.logging.Logger;
 
@@ -63,7 +65,7 @@ class PropertyContainer {
 	 */
 	private final AccessType classLevelAccessType;
 
-	private final TreeMap<String, XProperty> persistentAttributeMap;
+	private final List<XProperty> persistentAttributes;
 
 	PropertyContainer(XClass clazz, XClass entityAtStake, AccessType defaultClassLevelAccessType) {
 		this.xClass = clazz;
@@ -83,7 +85,6 @@ class PropertyContainer {
 				: defaultClassLevelAccessType;
 		assert classLevelAccessType == AccessType.FIELD || classLevelAccessType == AccessType.PROPERTY;
 
-		this.persistentAttributeMap = new TreeMap<String, XProperty>();
 
 		final List<XProperty> fields = xClass.getDeclaredProperties( AccessType.FIELD.getType() );
 		final List<XProperty> getters = xClass.getDeclaredProperties( AccessType.PROPERTY.getType() );
@@ -92,18 +93,23 @@ class PropertyContainer {
 
 		final Map<String,XProperty> persistentAttributesFromGetters = new HashMap<String, XProperty>();
 
+		final TreeMap<String, XProperty> localAttributeMap = new TreeMap<>();
 		collectPersistentAttributesUsingLocalAccessType(
-				persistentAttributeMap,
+				xClass,
+				localAttributeMap,
 				persistentAttributesFromGetters,
 				fields,
 				getters
 		);
 		collectPersistentAttributesUsingClassLevelAccessType(
-				persistentAttributeMap,
+				xClass,
+				classLevelAccessType,
+				localAttributeMap,
 				persistentAttributesFromGetters,
 				fields,
 				getters
 		);
+		this.persistentAttributes = verifyAndInitializePersistentAttributes( xClass, localAttributeMap );
 	}
 
 	private void preFilter(List<XProperty> fields, List<XProperty> getters) {
@@ -124,7 +130,8 @@ class PropertyContainer {
 		}
 	}
 
-	private void collectPersistentAttributesUsingLocalAccessType(
+	private static void collectPersistentAttributesUsingLocalAccessType(
+			XClass xClass,
 			TreeMap<String, XProperty> persistentAttributeMap,
 			Map<String,XProperty> persistentAttributesFromGetters,
 			List<XProperty> fields,
@@ -176,7 +183,9 @@ class PropertyContainer {
 		}
 	}
 
-	private void collectPersistentAttributesUsingClassLevelAccessType(
+	private static void collectPersistentAttributesUsingClassLevelAccessType(
+			XClass xClass,
+			AccessType classLevelAccessType,
 			TreeMap<String, XProperty> persistentAttributeMap,
 			Map<String,XProperty> persistentAttributesFromGetters,
 			List<XProperty> fields,
@@ -229,20 +238,30 @@ class PropertyContainer {
 		return classLevelAccessType;
 	}
 
+	/**
+	 * @deprecated Use the {@link #propertyIterator()} method instead.
+	 */
+	@Deprecated
 	public Collection<XProperty> getProperties() {
-		assertTypesAreResolvable();
-		return Collections.unmodifiableCollection( persistentAttributeMap.values() );
+		return Collections.unmodifiableCollection( this.persistentAttributes );
 	}
 
-	private void assertTypesAreResolvable() {
-		for ( XProperty xProperty : persistentAttributeMap.values() ) {
+	public Iterable<XProperty> propertyIterator() {
+		return persistentAttributes;
+	}
+
+	private static List<XProperty> verifyAndInitializePersistentAttributes(XClass xClass, Map<String, XProperty> localAttributeMap) {
+		ArrayList<XProperty> output = new ArrayList( localAttributeMap.size() );
+		for ( XProperty xProperty : localAttributeMap.values() ) {
 			if ( !xProperty.isTypeResolved() && !discoverTypeWithoutReflection( xProperty ) ) {
 				String msg = "Property " + StringHelper.qualify( xClass.getName(), xProperty.getName() ) +
 						" has an unbound type and no explicit target entity. Resolve this Generic usage issue" +
 						" or set an explicit target attribute (eg @OneToMany(target=) or use an explicit @Type";
 				throw new AnnotationException( msg );
 			}
+			output.add( xProperty );
 		}
+		return CollectionHelper.toSmallList( output );
 	}
 //
 //	private void considerExplicitFieldAndPropertyAccess() {

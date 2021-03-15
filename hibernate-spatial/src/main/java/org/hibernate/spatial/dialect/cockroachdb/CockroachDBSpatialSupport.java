@@ -20,7 +20,7 @@ import org.hibernate.spatial.dialect.postgis.PostgisSupport;
 
 public class CockroachDBSpatialSupport extends PostgisSupport implements SpatialDialect {
 
-	 CockroachDBSpatialSupport() {
+	CockroachDBSpatialSupport() {
 		super( new CockroachDBSpatialFunctions() );
 	}
 

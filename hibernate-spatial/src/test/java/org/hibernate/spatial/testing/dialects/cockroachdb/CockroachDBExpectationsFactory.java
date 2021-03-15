@@ -14,9 +14,9 @@ import org.hibernate.spatial.testing.dialects.postgis.PostgisExpectationsFactory
 import org.geolatte.geom.jts.JTS;
 import org.locationtech.jts.geom.Geometry;
 
-public class CockRoachDBExpectationsFactory extends PostgisExpectationsFactory {
+public class CockroachDBExpectationsFactory extends PostgisExpectationsFactory {
 
-	public CockRoachDBExpectationsFactory(DataSourceUtils utils) {
+	public CockroachDBExpectationsFactory(DataSourceUtils utils) {
 		super( utils );
 	}
 

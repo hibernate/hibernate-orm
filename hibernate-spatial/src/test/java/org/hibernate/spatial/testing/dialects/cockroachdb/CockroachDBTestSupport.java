@@ -16,12 +16,11 @@ import org.hibernate.spatial.testing.DataSourceUtils;
 import org.hibernate.spatial.testing.SQLExpressionTemplate;
 import org.hibernate.spatial.testing.TestData;
 import org.hibernate.spatial.testing.TestSupport;
-import org.hibernate.spatial.testing.dialects.postgis.PostgisExpectationsFactory;
 import org.hibernate.spatial.testing.dialects.postgis.PostgisExpressionTemplate;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
-public class CockRoachDBTestSupport extends TestSupport {
+public class CockroachDBTestSupport extends TestSupport {
 	@Override
 	public TestData createTestData(BaseCoreFunctionalTestCase testcase) {
 		Class<? extends BaseCoreFunctionalTestCase> testcaseClass = testcase.getClass();
@@ -36,7 +35,7 @@ public class CockRoachDBTestSupport extends TestSupport {
 
 	@Override
 	public AbstractExpectationsFactory createExpectationsFactory(DataSourceUtils dataSourceUtils) {
-		return new CockRoachDBExpectationsFactory( dataSourceUtils );
+		return new CockroachDBExpectationsFactory( dataSourceUtils );
 	}
 
 	@Override

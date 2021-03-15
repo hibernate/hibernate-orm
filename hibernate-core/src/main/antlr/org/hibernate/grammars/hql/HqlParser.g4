@@ -415,6 +415,8 @@ comparisonOperator
 	| GREATER_EQUAL
 	| LESS
 	| LESS_EQUAL
+	| IS DISTINCT FROM
+	| IS NOT DISTINCT FROM
 	;
 
 inList

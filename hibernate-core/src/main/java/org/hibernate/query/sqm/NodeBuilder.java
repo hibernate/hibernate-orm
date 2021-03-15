@@ -467,6 +467,18 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 	SqmPredicate notEqual(Expression<?> x, Object y);
 
 	@Override
+	SqmPredicate distinctFrom(Expression<?> x, Expression<?> y);
+
+	@Override
+	SqmPredicate distinctFrom(Expression<?> x, Object y);
+
+	@Override
+	SqmPredicate notDistinctFrom(Expression<?> x, Expression<?> y);
+
+	@Override
+	SqmPredicate notDistinctFrom(Expression<?> x, Object y);
+
+	@Override
 	<Y extends Comparable<? super Y>> SqmPredicate greaterThan(Expression<? extends Y> x, Expression<? extends Y> y);
 
 	@Override

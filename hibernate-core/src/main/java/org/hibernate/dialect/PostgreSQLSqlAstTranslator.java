@@ -11,6 +11,9 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
+import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.Literal;
+import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -83,6 +86,40 @@ public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends Abstrac
 	@Override
 	protected void renderCycleClause(CteStatement cte) {
 		// PostgreSQL does not support this, but it can be emulated
+	}
+
+	@Override
+	protected void renderPartitionItem(Expression expression) {
+		// We render an empty group instead of literals as some DBs don't support grouping by literals
+		// Note that integer literals, which refer to select item positions, are handled in #visitGroupByClause
+		if ( expression instanceof Literal ) {
+			if ( getDialect().getVersion() >= 950 ) {
+				appendSql( "()" );
+			}
+			else {
+				appendSql( "(select 1" );
+				appendSql( getFromDualForSelectOnly() );
+				appendSql( ')' );
+			}
+		}
+		else if ( expression instanceof Summarization ) {
+			Summarization summarization = (Summarization) expression;
+			if ( getDialect().getVersion() >= 950 ) {
+				appendSql( summarization.getKind().name().toLowerCase() );
+				appendSql( OPEN_PARENTHESIS );
+				renderCommaSeparated( summarization.getGroupings() );
+				appendSql( CLOSE_PARENTHESIS );
+			}
+			else {
+				// This could theoretically be emulated by rendering all grouping variations of the query and
+				// connect them via union all but that's probably pretty inefficient and would have to happen
+				// on the query spec level
+				throw new UnsupportedOperationException( "Summarization is not supported by DBMS!" );
+			}
+		}
+		else {
+			expression.accept( this );
+		}
 	}
 
 	private boolean supportsOffsetFetchClause() {

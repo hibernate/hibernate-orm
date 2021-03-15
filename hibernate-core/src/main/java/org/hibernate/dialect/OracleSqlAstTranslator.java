@@ -10,9 +10,15 @@ import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
+import org.hibernate.query.ComparisonOperator;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
+import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.Literal;
+import org.hibernate.sql.ast.tree.expression.SqlTuple;
+import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.insert.Values;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
@@ -104,8 +110,68 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 		}
 	}
 
+	@Override
+	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
+		renderComparisonEmulateDecode( lhs, operator, rhs );
+	}
+
+	@Override
+	protected void renderSelectTupleComparison(
+			List<SqlSelection> lhsExpressions,
+			SqlTuple tuple,
+			ComparisonOperator operator) {
+		emulateTupleComparison( lhsExpressions, tuple.getExpressions(), operator, true );
+	}
+
+	@Override
+	protected void renderPartitionItem(Expression expression) {
+		if ( expression instanceof Literal ) {
+			appendSql( "()" );
+		}
+		else if ( expression instanceof Summarization ) {
+			Summarization summarization = (Summarization) expression;
+			appendSql( summarization.getKind().name().toLowerCase() );
+			appendSql( OPEN_PARENTHESIS );
+			renderCommaSeparated( summarization.getGroupings() );
+			appendSql( CLOSE_PARENTHESIS );
+		}
+		else {
+			expression.accept( this );
+		}
+	}
+
+	@Override
+	protected boolean supportsRowValueConstructorSyntax() {
+		return false;
+	}
+
+	@Override
+	protected boolean supportsRowValueConstructorSyntaxInInList() {
+		return getDialect().getVersion() >= 820;
+	}
+
+	@Override
+	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
+		return false;
+	}
+
+	@Override
+	protected boolean supportsRowValueConstructorSyntaxInInSubQuery() {
+		return getDialect().getVersion() >= 900;
+	}
+
+	@Override
+	protected String getFromDual() {
+		return " from dual";
+	}
+
+	@Override
+	protected String getFromDualForSelectOnly() {
+		return getFromDual();
+	}
+
 	private boolean supportsOffsetFetchClause() {
-		return getDialect().getVersion() >= 12;
+		return getDialect().getVersion() >= 1200;
 	}
 
 }

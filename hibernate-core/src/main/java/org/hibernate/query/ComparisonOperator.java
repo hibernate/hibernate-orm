@@ -64,6 +64,59 @@ public enum ComparisonOperator {
 			return "!=";
 		}
 	},
+	NOT_DISTINCT_FROM {
+		@Override
+		public ComparisonOperator negated() {
+			return DISTINCT_FROM;
+		}
+
+		@Override
+		public ComparisonOperator invert() {
+			return NOT_DISTINCT_FROM;
+		}
+
+		@Override
+		public ComparisonOperator broader() {
+			return NOT_DISTINCT_FROM;
+		}
+
+		@Override
+		public ComparisonOperator sharper() {
+			return NOT_DISTINCT_FROM;
+		}
+
+		@Override
+		public String sqlText() {
+			return "is not distinct from";
+		}
+	},
+
+	DISTINCT_FROM {
+		@Override
+		public ComparisonOperator negated() {
+			return NOT_DISTINCT_FROM;
+		}
+
+		@Override
+		public ComparisonOperator invert() {
+			return DISTINCT_FROM;
+		}
+
+		@Override
+		public ComparisonOperator broader() {
+			return DISTINCT_FROM;
+		}
+
+		@Override
+		public ComparisonOperator sharper() {
+			return DISTINCT_FROM;
+		}
+
+		@Override
+		public String sqlText() {
+			return "is distinct from";
+		}
+	},
 
 	LESS_THAN {
 		@Override

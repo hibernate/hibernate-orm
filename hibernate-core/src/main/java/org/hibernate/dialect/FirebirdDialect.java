@@ -614,7 +614,7 @@ public class FirebirdDialect extends Dialect {
 	public String getSelectGUIDString() {
 		return getVersion() < 210
 				? super.getSelectGUIDString()
-				: "select uuid_to_char(gen_uuid()) " + getFromDual();
+				: "select uuid_to_char(gen_uuid()) from rdb$database";
 	}
 
 	@Override
@@ -637,7 +637,7 @@ public class FirebirdDialect extends Dialect {
 
 	@Override
 	public String getCurrentTimestampSelectString() {
-		return "select current_timestamp " + getFromDual();
+		return "select current_timestamp from rdb$database";
 	}
 
 	@Override

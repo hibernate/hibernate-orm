@@ -8,6 +8,7 @@ package org.hibernate.sql.ast.spi;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
@@ -28,7 +29,7 @@ import org.hibernate.type.descriptor.ValueExtractor;
  *
  * @author Steve Ebersole
  */
-public interface SqlSelection {
+public interface SqlSelection extends SqlAstNode {
 	/**
 	 * Get the extractor that can be used to extract JDBC values for this selection
 	 */

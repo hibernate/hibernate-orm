@@ -7,9 +7,13 @@
 package org.hibernate.dialect;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.ComparisonOperator;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
+import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.Literal;
+import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -67,6 +71,47 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 	@Override
 	protected void renderCycleClause(CteStatement cte) {
 		// MySQL does not support this, but it can be emulated
+	}
+
+	@Override
+	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
+		renderComparisonDistinctOperator( lhs, operator, rhs );
+	}
+
+	@Override
+	protected void renderPartitionItem(Expression expression) {
+		if ( expression instanceof Literal ) {
+			appendSql( "'0'" );
+		}
+		else if ( expression instanceof Summarization ) {
+			Summarization summarization = (Summarization) expression;
+			renderCommaSeparated( summarization.getGroupings() );
+			appendSql( " with " );
+			appendSql( summarization.getKind().name().toLowerCase() );
+		}
+		else {
+			expression.accept( this );
+		}
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInSet() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInInList() {
+		return getDialect().getVersion() >= 570;
+	}
+
+	@Override
+	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
+		return false;
+	}
+
+	@Override
+	protected String getFromDual() {
+		return " from dual";
 	}
 
 	private boolean supportsWindowFunctions() {

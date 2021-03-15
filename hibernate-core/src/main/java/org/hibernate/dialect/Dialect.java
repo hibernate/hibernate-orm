@@ -73,6 +73,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.*;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.ANSICaseExpressionWalker;
+import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.CaseExpressionWalker;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
@@ -1517,12 +1518,18 @@ public abstract class Dialect implements ConversionContext {
 	 * there are no tables in the from clause.
 	 *
 	 * @return the SQL equivalent to Oracle's {@code from dual}.
+	 * @deprecated Moved to {@link AbstractSqlAstTranslator}
 	 */
+	@Deprecated
 	public String getFromDual() {
 		// The standard SQL solution to get a dual table is to use the VALUES clause
 		return "from (values (0)) as dual";
 	}
 
+	/**
+	 * @deprecated Moved to {@link AbstractSqlAstTranslator}
+	 */
+	@Deprecated
 	public boolean supportsSelectQueryWithoutFromClause() {
 		return true;
 	}
@@ -1895,12 +1902,6 @@ public abstract class Dialect implements ConversionContext {
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
 			EntityMappingType entityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		if ( entityDescriptor.getIdentifierMapping() instanceof CompositeIdentifierMapping) {
-			if ( !supportsTuplesInSubqueries() ) {
-				return new InlineStrategy( this );
-			}
-		}
-
 		return new PersistentTableStrategy(
 				new IdTable( entityDescriptor, name -> name, this ),
 				AfterUseAction.CLEAN,
@@ -2836,7 +2837,9 @@ public abstract class Dialect implements ConversionContext {
 	 * @return True if this SQL dialect is known to support "row value
 	 * constructor" syntax; false otherwise.
 	 * @since 3.2
+	 * @deprecated Moved to {@link AbstractSqlAstTranslator}
 	 */
+	@Deprecated
 	public boolean supportsRowValueConstructorSyntax() {
 		// return false here, as most databases do not properly support this construct...
 		return false;
@@ -2850,7 +2853,9 @@ public abstract class Dialect implements ConversionContext {
 	 * "... SET (FIRST_NAME, LAST_NAME) = ('Steve', 'Ebersole') ...".
 	 *
 	 * @return True if this SQL dialect is known to support "row value constructor" syntax in the SET clause; false otherwise.
+	 * @deprecated Moved to {@link AbstractSqlAstTranslator}
 	 */
+	@Deprecated
 	public boolean supportsRowValueConstructorSyntaxInSet() {
 		return supportsRowValueConstructorSyntax();
 	}
@@ -2865,7 +2870,9 @@ public abstract class Dialect implements ConversionContext {
 	 * @return True if this SQL dialect is known to support "row value
 	 * constructor" syntax with quantified predicates; false otherwise.
 	 * @since 6.0
+	 * @deprecated Moved to {@link AbstractSqlAstTranslator}
 	 */
+	@Deprecated
 	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
 		// return false here, as most databases do not properly support this construct...
 		return false;
@@ -2880,11 +2887,17 @@ public abstract class Dialect implements ConversionContext {
 	 * @return True if this SQL dialect is known to support "row value
 	 * constructor" syntax in the IN list; false otherwise.
 	 * @since 3.2
+	 * @deprecated Moved to {@link AbstractSqlAstTranslator}
 	 */
+	@Deprecated
 	public boolean supportsRowValueConstructorSyntaxInInList() {
 		return false;
 	}
 
+	/**
+	 * @deprecated Moved to {@link AbstractSqlAstTranslator}
+	 */
+	@Deprecated
 	public boolean supportsRowValueConstructorSyntaxInInSubquery() {
 		return supportsRowValueConstructorSyntaxInInList();
 	}
@@ -2893,7 +2906,9 @@ public abstract class Dialect implements ConversionContext {
 	 * The strategy to use for rendering summarizations in the GROUP BY clause.
 	 *
 	 * @since 6.0
+	 * @deprecated Moved to {@link AbstractSqlAstTranslator}
 	 */
+	@Deprecated
 	public GroupBySummarizationRenderingStrategy getGroupBySummarizationRenderingStrategy() {
 		return GroupBySummarizationRenderingStrategy.NONE;
 	}
@@ -2902,7 +2917,9 @@ public abstract class Dialect implements ConversionContext {
 	 * The strategy to use for rendering constants in the GROUP BY clause.
 	 *
 	 * @since 6.0
+	 * @deprecated Moved to {@link AbstractSqlAstTranslator}
 	 */
+	@Deprecated
 	public GroupByConstantRenderingStrategy getGroupByConstantRenderingStrategy() {
 		return GroupByConstantRenderingStrategy.CONSTANT_EXPRESSION;
 	}
@@ -3006,7 +3023,9 @@ public abstract class Dialect implements ConversionContext {
 	 *
 	 * @return True if select clause parameter must be cast()ed
 	 * @since 3.2
+	 * @deprecated Moved to {@link AbstractSqlAstTranslator}
 	 */
+	@Deprecated
 	public boolean requiresCastingOfParametersInSelectClause() {
 		return false;
 	}
@@ -3364,7 +3383,9 @@ public abstract class Dialect implements ConversionContext {
 	 * delete from Table1 where (col1, col2) in (select col1, col2 from Table2)
 	 *
 	 * @return boolean
+	 * @deprecated See {@link #supportsRowValueConstructorSyntaxInInSubquery()}
 	 */
+	@Deprecated
 	public boolean supportsTuplesInSubqueries() {
 		return true;
 	}

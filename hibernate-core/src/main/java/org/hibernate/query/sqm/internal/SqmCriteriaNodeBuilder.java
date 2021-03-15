@@ -1711,6 +1711,46 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 	}
 
 	@Override
+	public SqmPredicate distinctFrom(Expression<?> x, Expression<?> y) {
+		return new SqmComparisonPredicate(
+				(SqmExpression<?>) x,
+				ComparisonOperator.DISTINCT_FROM,
+				(SqmExpression<?>) y,
+				this
+		);
+	}
+
+	@Override
+	public SqmPredicate distinctFrom(Expression<?> x, Object y) {
+		return new SqmComparisonPredicate(
+				(SqmExpression<?>) x,
+				ComparisonOperator.DISTINCT_FROM,
+				value( y ),
+				this
+		);
+	}
+
+	@Override
+	public SqmPredicate notDistinctFrom(Expression<?> x, Expression<?> y) {
+		return new SqmComparisonPredicate(
+				(SqmExpression<?>) x,
+				ComparisonOperator.NOT_DISTINCT_FROM,
+				(SqmExpression<?>) y,
+				this
+		);
+	}
+
+	@Override
+	public SqmPredicate notDistinctFrom(Expression<?> x, Object y) {
+		return new SqmComparisonPredicate(
+				(SqmExpression<?>) x,
+				ComparisonOperator.NOT_DISTINCT_FROM,
+				value( y ),
+				this
+		);
+	}
+
+	@Override
 	public <Y extends Comparable<? super Y>> SqmPredicate greaterThan(Expression<? extends Y> x, Expression<? extends Y> y) {
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,

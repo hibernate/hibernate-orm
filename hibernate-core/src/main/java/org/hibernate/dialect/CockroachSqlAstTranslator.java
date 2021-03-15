@@ -10,6 +10,9 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
+import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.Literal;
+import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -67,5 +70,26 @@ public class CockroachSqlAstTranslator<T extends JdbcOperation> extends Abstract
 	@Override
 	protected void renderCycleClause(CteStatement cte) {
 		// Cockroach does not support this, but it can be emulated
+	}
+
+	@Override
+	protected void renderPartitionItem(Expression expression) {
+		if ( expression instanceof Literal ) {
+			appendSql( "'0' || '0'" );
+		}
+		else if ( expression instanceof Summarization ) {
+			// This could theoretically be emulated by rendering all grouping variations of the query and
+			// connect them via union all but that's probably pretty inefficient and would have to happen
+			// on the query spec level
+			throw new UnsupportedOperationException( "Summarization is not supported by DBMS!" );
+		}
+		else {
+			expression.accept( this );
+		}
+	}
+
+	@Override
+	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
+		return false;
 	}
 }

@@ -16,7 +16,7 @@ import java.util.regex.Matcher;
  */
 public class LegacyOracleLimitHandler extends AbstractLimitHandler {
 
-	private int version;
+	private final int version;
 
 	public LegacyOracleLimitHandler(int version) {
 		this.version = version;
@@ -39,7 +39,7 @@ public class LegacyOracleLimitHandler extends AbstractLimitHandler {
 		final StringBuilder pagingSelect = new StringBuilder( sql.length() + 100 );
 		if ( hasOffset ) {
 			pagingSelect.append( "select * from (select row_.*, rownum rownum_ from (" ).append( sql );
-			if ( version < 9 ) {
+			if ( version < 900 ) {
 				pagingSelect.append( ") row_) where rownum_ <= ? and rownum_ > ?" );
 			}
 			else {
@@ -74,7 +74,7 @@ public class LegacyOracleLimitHandler extends AbstractLimitHandler {
 		final StringBuilder pagingSelect = new StringBuilder( sql.length() + 100 );
 		if ( hasOffset ) {
 			pagingSelect.append( "select * from (select row_.*, rownum rownum_ from (" ).append( sql );
-			if ( version < 9 ) {
+			if ( version < 900 ) {
 				pagingSelect.append( ") row_) where rownum_ <= ? and rownum_ > ?" );
 			}
 			else {

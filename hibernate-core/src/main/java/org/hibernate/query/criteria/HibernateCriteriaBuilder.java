@@ -512,6 +512,14 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	@Override
 	JpaPredicate notEqual(Expression<?> x, Object y);
 
+	JpaPredicate distinctFrom(Expression<?> x, Expression<?> y);
+
+	JpaPredicate distinctFrom(Expression<?> x, Object y);
+
+	JpaPredicate notDistinctFrom(Expression<?> x, Expression<?> y);
+
+	JpaPredicate notDistinctFrom(Expression<?> x, Object y);
+
 	@Override
 	<Y extends Comparable<? super Y>> JpaPredicate greaterThan(
 			Expression<? extends Y> x,

@@ -137,7 +137,10 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsRowValueConstructorSyntaxCheck implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			return dialect.supportsRowValueConstructorSyntax();
+			return dialect instanceof AbstractHANADialect
+					|| dialect instanceof CockroachDialect
+					|| dialect instanceof MySQLDialect
+					|| dialect instanceof PostgreSQLDialect;
 		}
 	}
 
@@ -240,18 +243,22 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsGroupByRollup implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			return dialect.getGroupBySummarizationRenderingStrategy() != GroupBySummarizationRenderingStrategy.NONE;
+			return dialect instanceof DB2Dialect
+					|| dialect instanceof OracleDialect
+					|| dialect instanceof PostgreSQLDialect && dialect.getVersion() >= 950
+					|| dialect instanceof SQLServerDialect
+					|| dialect instanceof DerbyDialect
+					|| dialect instanceof MySQLDialect
+					|| dialect instanceof MariaDBDialect;
 		}
 	}
 
 	public static class SupportsGroupByGroupingSets implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			return dialect.getGroupBySummarizationRenderingStrategy() != GroupBySummarizationRenderingStrategy.NONE
-					&& !( dialect instanceof DerbyDialect )
-					// MariaDB only supports ROLLUP
-					&& !( dialect instanceof MariaDBDialect )
-					// MySQL only supports ROLLUP
-					&& !( dialect instanceof MySQLDialect );
+			return dialect instanceof DB2Dialect
+					|| dialect instanceof OracleDialect
+					|| dialect instanceof PostgreSQLDialect && dialect.getVersion() >= 950
+					|| dialect instanceof SQLServerDialect;
 		}
 	}
 

@@ -6,6 +6,7 @@
  */
 package org.hibernate.testing;
 
+import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
@@ -17,6 +18,7 @@ import org.hibernate.dialect.IngresDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TeradataDialect;
 import org.hibernate.dialect.TimesTenDialect;
@@ -132,7 +134,10 @@ abstract public class DialectChecks {
 
 	public static class SupportsRowValueConstructorSyntaxCheck implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsRowValueConstructorSyntax();
+			return dialect instanceof AbstractHANADialect
+					|| dialect instanceof CockroachDialect
+					|| dialect instanceof MySQLDialect
+					|| dialect instanceof PostgreSQLDialect;
 		}
 	}
 
@@ -200,12 +205,6 @@ abstract public class DialectChecks {
 	public static class SupportCatalogCreation implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
 			return dialect.canCreateCatalog();
-		}
-	}
-
-	public static class DoesNotSupportRowValueConstructorSyntax implements DialectCheck {
-		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsRowValueConstructorSyntax() == false;
 		}
 	}
 

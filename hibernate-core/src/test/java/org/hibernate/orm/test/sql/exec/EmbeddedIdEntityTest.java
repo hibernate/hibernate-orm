@@ -53,8 +53,8 @@ public class EmbeddedIdEntityTest {
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
 		scope.inTransaction(
-				sesison ->
-						sesison.createQuery( "delete from EmbeddedIdEntity" ).executeUpdate()
+				session ->
+						session.createQuery( "delete from EmbeddedIdEntity" ).executeUpdate()
 		);
 	}
 

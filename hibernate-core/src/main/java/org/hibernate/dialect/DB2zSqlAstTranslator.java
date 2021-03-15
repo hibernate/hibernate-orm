@@ -7,7 +7,9 @@
 package org.hibernate.dialect;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.ComparisonOperator;
 import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.exec.spi.JdbcOperation;
@@ -40,6 +42,12 @@ public class DB2zSqlAstTranslator<T extends JdbcOperation> extends DB2SqlAstTran
 	@Override
 	protected boolean supportsOffsetClause() {
 		return version >= 1200;
+	}
+
+	@Override
+	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
+		// Supported at least since DB2 z/OS 9.0
+		renderComparisonStandard( lhs, operator, rhs );
 	}
 
 }

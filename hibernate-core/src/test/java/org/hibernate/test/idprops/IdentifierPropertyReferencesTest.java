@@ -13,6 +13,7 @@ import org.junit.Test;
 import org.hibernate.query.Query;
 import org.hibernate.Session;
 
+import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -54,7 +55,7 @@ public class IdentifierPropertyReferencesTest extends BaseCoreFunctionalTestCase
 					count = extractCount( s, "select count(*) from LineItem l where l.id = '456'" );
 					assertEquals( "LineItem by id prop (non-identifier", 1, count );
 
-					if ( getDialect().supportsRowValueConstructorSyntax() ) {
+					if ( new DialectChecks.SupportsRowValueConstructorSyntaxCheck().isMatch( getDialect() ) ) {
 						Query q = s.createQuery( "select count(*) from LineItem l where l.pk = (:order, :product)" )
 								.setParameter( "order", o )
 								.setParameter( "product", "my-product" );

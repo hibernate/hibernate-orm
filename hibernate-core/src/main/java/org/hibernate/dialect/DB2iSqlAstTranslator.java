@@ -7,7 +7,9 @@
 package org.hibernate.dialect;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.ComparisonOperator;
 import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.exec.spi.JdbcOperation;
@@ -41,5 +43,9 @@ public class DB2iSqlAstTranslator<T extends JdbcOperation> extends DB2SqlAstTran
 		return version >= 710;
 	}
 
+	@Override
+	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
+		renderComparisonStandard( lhs, operator, rhs );
+	}
 
 }

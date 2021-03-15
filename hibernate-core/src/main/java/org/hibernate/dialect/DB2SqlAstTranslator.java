@@ -10,12 +10,20 @@ import java.util.List;
 
 import org.hibernate.query.FetchClauseType;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.ComparisonOperator;
+import org.hibernate.query.sqm.sql.internal.SqmParameterInterpretation;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
+import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.MutationStatement;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.Literal;
+import org.hibernate.sql.ast.tree.expression.NullnessLiteral;
+import org.hibernate.sql.ast.tree.expression.SqlTuple;
+import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.insert.InsertStatement;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
@@ -132,6 +140,86 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 			appendSql( " from final table (" );
 		}
 		return true;
+	}
+
+	@Override
+	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
+		if ( getDialect().getVersion() >= 1110 ) {
+			renderComparisonStandard( lhs, operator, rhs );
+		}
+		else {
+			renderComparisonEmulateDecode( lhs, operator, rhs );
+		}
+	}
+
+	@Override
+	protected void renderSelectExpression(Expression expression) {
+		// Null literals have to be casted in the select clause
+		if ( expression instanceof Literal ) {
+			final Literal literal = (Literal) expression;
+			if ( literal.getLiteralValue() == null ) {
+				renderCasted( literal );
+			}
+			else {
+				renderLiteral( literal, true );
+			}
+		}
+		else if ( expression instanceof NullnessLiteral || expression instanceof JdbcParameter || expression instanceof SqmParameterInterpretation ) {
+			renderCasted( expression );
+		}
+		else {
+			expression.accept( this );
+		}
+	}
+
+	@Override
+	protected void renderSelectTupleComparison(
+			List<SqlSelection> lhsExpressions,
+			SqlTuple tuple,
+			ComparisonOperator operator) {
+		emulateTupleComparison( lhsExpressions, tuple.getExpressions(), operator, true );
+	}
+
+	@Override
+	protected void renderPartitionItem(Expression expression) {
+		if ( expression instanceof Literal ) {
+			appendSql( "()" );
+		}
+		else if ( expression instanceof Summarization ) {
+			Summarization summarization = (Summarization) expression;
+			appendSql( summarization.getKind().name().toLowerCase() );
+			appendSql( OPEN_PARENTHESIS );
+			renderCommaSeparated( summarization.getGroupings() );
+			appendSql( CLOSE_PARENTHESIS );
+		}
+		else {
+			expression.accept( this );
+		}
+	}
+
+	@Override
+	protected boolean supportsRowValueConstructorSyntax() {
+		return false;
+	}
+
+	@Override
+	protected boolean supportsRowValueConstructorSyntaxInInList() {
+		return false;
+	}
+
+	@Override
+	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
+		return false;
+	}
+
+	@Override
+	protected String getFromDual() {
+		return " from sysibm.dual";
+	}
+
+	@Override
+	protected String getFromDualForSelectOnly() {
+		return getFromDual();
 	}
 
 	@Override

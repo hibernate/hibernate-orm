@@ -24,6 +24,7 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.PersistentClass;
 
+import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
@@ -214,7 +215,7 @@ public class ComponentTest extends BaseNonConfigCoreFunctionalTestCase {
 //			.add( Property.forName("person.yob").between( new Integer(1999), new Integer(2002) ) )
 //			.list();
 
-		if ( getDialect().supportsRowValueConstructorSyntax() ) {
+		if ( new DialectChecks.SupportsRowValueConstructorSyntaxCheck().isMatch( getDialect() ) ) {
 			s.createQuery("from User u where u.person = ('gavin', :dob, 'Peachtree Rd', 'Karbarook Ave', 1974, 34, 'Peachtree Rd')")
 				.setParameter("dob", new Date("March 25, 1974")).list();
 			s.createQuery("from User where person = ('gavin', :dob, 'Peachtree Rd', 'Karbarook Ave', 1974, 34, 'Peachtree Rd')")

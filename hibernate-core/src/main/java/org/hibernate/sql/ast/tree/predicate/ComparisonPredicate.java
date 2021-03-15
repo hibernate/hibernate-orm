@@ -15,7 +15,7 @@ import org.hibernate.sql.ast.tree.expression.Expression;
  */
 public class ComparisonPredicate implements Predicate {
 	private final Expression leftHandExpression;
-	private ComparisonOperator operator;
+	private final ComparisonOperator operator;
 	private final Expression rightHandExpression;
 
 	public ComparisonPredicate(

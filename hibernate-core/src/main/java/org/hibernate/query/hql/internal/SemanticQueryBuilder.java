@@ -1628,27 +1628,28 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public Object visitComparisonOperator(HqlParser.ComparisonOperatorContext ctx) {
-		if ( ctx.EQUAL()!=null ) {
-			return ComparisonOperator.EQUAL;
+		final TerminalNode firstToken = (TerminalNode) ctx.getChild( 0 );
+		switch ( firstToken.getSymbol().getType() ) {
+			case HqlLexer.EQUAL:
+				return ComparisonOperator.EQUAL;
+			case HqlLexer.NOT_EQUAL:
+				return ComparisonOperator.NOT_EQUAL;
+			case HqlLexer.LESS:
+				return ComparisonOperator.LESS_THAN;
+			case HqlLexer.LESS_EQUAL:
+				return ComparisonOperator.LESS_THAN_OR_EQUAL;
+			case HqlLexer.GREATER:
+				return ComparisonOperator.GREATER_THAN;
+			case HqlLexer.GREATER_EQUAL:
+				return ComparisonOperator.GREATER_THAN_OR_EQUAL;
+			case HqlLexer.IS: {
+				final TerminalNode secondToken = (TerminalNode) ctx.getChild( 1 );
+				return secondToken.getSymbol().getType() == HqlLexer.NOT
+						? ComparisonOperator.NOT_DISTINCT_FROM
+						: ComparisonOperator.DISTINCT_FROM;
+			}
 		}
-		else if ( ctx.NOT_EQUAL()!=null ) {
-			return ComparisonOperator.NOT_EQUAL;
-		}
-		else if ( ctx.LESS()!=null ) {
-			return ComparisonOperator.LESS_THAN;
-		}
-		else if ( ctx.LESS_EQUAL()!=null ) {
-			return ComparisonOperator.LESS_THAN_OR_EQUAL;
-		}
-		else if ( ctx.GREATER()!=null ) {
-			return ComparisonOperator.GREATER_THAN;
-		}
-		else if ( ctx.GREATER_EQUAL()!=null ) {
-			return ComparisonOperator.GREATER_THAN_OR_EQUAL;
-		}
-		else {
-			throw new QueryException("missing operator");
-		}
+		throw new QueryException("missing operator");
 	}
 
 	@Override
@@ -1661,7 +1662,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final HqlParser.ExpressionContext rightExpressionContext = expressionContexts.get( 1 );
 		switch (comparisonOperator) {
 			case EQUAL:
-			case NOT_EQUAL: {
+			case NOT_EQUAL:
+			case DISTINCT_FROM:
+			case NOT_DISTINCT_FROM: {
 				Map<Class<?>, Enum<?>> possibleEnumValues;
 				if ( ( possibleEnumValues = getPossibleEnumValues( leftExpressionContext ) ) != null ) {
 					right = (SqmExpression) rightExpressionContext.accept( this );
@@ -1687,14 +1690,16 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				if ( left instanceof SqmLiteralNull<?> ) {
 					return new SqmNullnessPredicate(
 							right,
-							comparisonOperator == ComparisonOperator.NOT_EQUAL,
+							comparisonOperator == ComparisonOperator.NOT_EQUAL
+									|| comparisonOperator == ComparisonOperator.DISTINCT_FROM,
 							creationContext.getNodeBuilder()
 					);
 				}
 				else if ( right instanceof SqmLiteralNull<?> ) {
 					return new SqmNullnessPredicate(
 							left,
-							comparisonOperator == ComparisonOperator.NOT_EQUAL,
+							comparisonOperator == ComparisonOperator.NOT_EQUAL
+									|| comparisonOperator == ComparisonOperator.DISTINCT_FROM,
 							creationContext.getNodeBuilder()
 					);
 				}

@@ -1500,8 +1500,7 @@ public final class AnnotationBinder {
 			MetadataBuildingContext context) {
 		int idPropertyCounter = 0;
 
-		Collection<XProperty> properties = propertyContainer.getProperties();
-		for ( XProperty p : properties ) {
+		for ( XProperty p : propertyContainer.propertyIterator() ) {
 			final int currentIdPropertyCounter = addProperty(
 					propertyContainer,
 					p,

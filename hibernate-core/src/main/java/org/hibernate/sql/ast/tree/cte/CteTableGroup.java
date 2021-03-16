@@ -8,7 +8,6 @@ package org.hibernate.sql.ast.tree.cte;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -58,8 +57,8 @@ public class CteTableGroup implements TableGroup {
 	}
 
 	@Override
-	public Set<TableGroupJoin> getTableGroupJoins() {
-		return Collections.emptySet();
+	public List<TableGroupJoin> getTableGroupJoins() {
+		return Collections.emptyList();
 	}
 
 	@Override
@@ -80,10 +79,6 @@ public class CteTableGroup implements TableGroup {
 			String tableExpression,
 			Supplier<TableReference> creator) {
 		return cteTableReference;
-	}
-
-	@Override
-	public void setTableGroupJoins(Set<TableGroupJoin> joins) {
 	}
 
 	@Override

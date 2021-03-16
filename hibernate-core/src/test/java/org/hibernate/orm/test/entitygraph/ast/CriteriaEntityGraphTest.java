@@ -160,7 +160,7 @@ public class CriteriaEntityGraphTest implements SessionFactoryScopeAware {
 
 					// Check the from-clause
 					assertEntityValuedJoinedGroup( sqlAst, "owner", Person.class, tableGroup -> {
-						Set<TableGroupJoin> tableGroupJoins = tableGroup.getTableGroupJoins();
+						List<TableGroupJoin> tableGroupJoins = tableGroup.getTableGroupJoins();
 						Map<String, Class<? extends TableGroup>> tableGroupByName = tableGroupJoins.stream()
 								.map( TableGroupJoin::getJoinedGroup )
 								.collect( Collectors.toMap(

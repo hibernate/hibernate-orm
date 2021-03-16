@@ -7,7 +7,6 @@
 package org.hibernate.sql.ast;
 
 import java.util.List;
-import java.util.Set;
 
 import org.hibernate.sql.ast.tree.SqlAstTreeLogger;
 import org.hibernate.sql.ast.tree.Statement;
@@ -130,7 +129,7 @@ public class SqlTreePrinter {
 			);
 		}
 
-		final Set<TableGroupJoin> tableGroupJoins = tableGroup.getTableGroupJoins();
+		final List<TableGroupJoin> tableGroupJoins = tableGroup.getTableGroupJoins();
 		if ( ! tableGroupJoins.isEmpty() ) {
 			logNode(
 					"TableGroupJoins",

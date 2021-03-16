@@ -8,7 +8,6 @@ package org.hibernate.sql.ast.tree.from;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -90,18 +89,13 @@ public class MutatingTableReferenceGroupWrapper implements VirtualTableGroup {
 	}
 
 	@Override
-	public Set<TableGroupJoin> getTableGroupJoins() {
-		return Collections.emptySet();
+	public List<TableGroupJoin> getTableGroupJoins() {
+		return Collections.emptyList();
 	}
 
 	@Override
 	public boolean hasTableGroupJoins() {
 		return false;
-	}
-
-	@Override
-	public void setTableGroupJoins(Set<TableGroupJoin> joins) {
-		throw new UnsupportedOperationException();
 	}
 
 	@Override

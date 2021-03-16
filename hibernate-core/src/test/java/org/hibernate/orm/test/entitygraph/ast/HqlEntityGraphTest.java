@@ -8,6 +8,7 @@ package org.hibernate.orm.test.entitygraph.ast;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -157,7 +158,7 @@ public class HqlEntityGraphTest implements SessionFactoryScopeAware {
 
 					// Check the from-clause
 					assertEntityValuedJoinedGroup( sqlAst, "owner", Person.class, tableGroup -> {
-						Set<TableGroupJoin> tableGroupJoins = tableGroup.getTableGroupJoins();
+						List<TableGroupJoin> tableGroupJoins = tableGroup.getTableGroupJoins();
 						Map<String, Class<? extends TableGroup>> tableGroupByName = tableGroupJoins.stream()
 								.map( TableGroupJoin::getJoinedGroup )
 								.collect( Collectors.toMap(

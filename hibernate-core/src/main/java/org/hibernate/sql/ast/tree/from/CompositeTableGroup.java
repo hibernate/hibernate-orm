@@ -6,10 +6,9 @@
  */
 package org.hibernate.sql.ast.tree.from;
 
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -26,7 +25,7 @@ public class CompositeTableGroup implements VirtualTableGroup {
 
 	private final TableGroup underlyingTableGroup;
 
-	private Set<TableGroupJoin> tableGroupJoins;
+	private List<TableGroupJoin> tableGroupJoins;
 
 	public CompositeTableGroup(
 			NavigablePath navigablePath,
@@ -64,8 +63,8 @@ public class CompositeTableGroup implements VirtualTableGroup {
 	}
 
 	@Override
-	public Set<TableGroupJoin> getTableGroupJoins() {
-		return tableGroupJoins == null ? Collections.emptySet() : Collections.unmodifiableSet( tableGroupJoins );
+	public List<TableGroupJoin> getTableGroupJoins() {
+		return tableGroupJoins == null ? Collections.emptyList() : Collections.unmodifiableList( tableGroupJoins );
 	}
 
 	@Override
@@ -74,16 +73,13 @@ public class CompositeTableGroup implements VirtualTableGroup {
 	}
 
 	@Override
-	public void setTableGroupJoins(Set<TableGroupJoin> joins) {
-		tableGroupJoins = new HashSet<>( joins );
-	}
-
-	@Override
 	public void addTableGroupJoin(TableGroupJoin join) {
 		if ( tableGroupJoins == null ) {
-			tableGroupJoins = new HashSet<>();
+			tableGroupJoins = new ArrayList<>();
 		}
-		tableGroupJoins.add( join );
+		if ( !tableGroupJoins.contains( join ) ) {
+			tableGroupJoins.add( join );
+		}
 	}
 
 	@Override

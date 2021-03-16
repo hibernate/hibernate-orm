@@ -12,7 +12,6 @@ import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.query.sqm.sql.internal.SqmPathInterpretation;
@@ -41,11 +40,9 @@ public interface TableGroup extends SqlAstNode, ColumnReferenceQualifier, SqmPat
 
 	LockMode getLockMode();
 
-	Set<TableGroupJoin> getTableGroupJoins();
+	List<TableGroupJoin> getTableGroupJoins();
 
 	boolean hasTableGroupJoins();
-
-	void setTableGroupJoins(Set<TableGroupJoin> joins);
 
 	void addTableGroupJoin(TableGroupJoin join);
 

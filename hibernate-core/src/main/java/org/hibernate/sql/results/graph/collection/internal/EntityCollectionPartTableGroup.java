@@ -7,7 +7,6 @@
 package org.hibernate.sql.results.graph.collection.internal;
 
 import java.util.List;
-import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -64,18 +63,13 @@ public class EntityCollectionPartTableGroup implements TableGroup {
 	}
 
 	@Override
-	public Set<TableGroupJoin> getTableGroupJoins() {
+	public List<TableGroupJoin> getTableGroupJoins() {
 		return collectionTableGroup.getTableGroupJoins();
 	}
 
 	@Override
 	public boolean hasTableGroupJoins() {
 		return collectionTableGroup.hasTableGroupJoins();
-	}
-
-	@Override
-	public void setTableGroupJoins(Set<TableGroupJoin> joins) {
-		collectionTableGroup.setTableGroupJoins( joins );
 	}
 
 	@Override

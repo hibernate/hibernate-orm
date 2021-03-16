@@ -6,9 +6,9 @@
  */
 package org.hibernate.sql.ast.tree.from;
 
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
@@ -26,7 +26,7 @@ public abstract class AbstractTableGroup extends AbstractColumnReferenceQualifie
 	private final LockMode lockMode;
 	private final SqlAliasBase sqlAliasBase;
 
-	private Set<TableGroupJoin> tableGroupJoins;
+	private List<TableGroupJoin> tableGroupJoins;
 	private boolean isInnerJoinPossible;
 
 	private final SessionFactoryImplementor sessionFactory;
@@ -93,8 +93,8 @@ public abstract class AbstractTableGroup extends AbstractColumnReferenceQualifie
 	}
 
 	@Override
-	public Set<TableGroupJoin> getTableGroupJoins() {
-		return tableGroupJoins == null ? Collections.emptySet() : Collections.unmodifiableSet( tableGroupJoins );
+	public List<TableGroupJoin> getTableGroupJoins() {
+		return tableGroupJoins == null ? Collections.emptyList() : Collections.unmodifiableList( tableGroupJoins );
 	}
 
 	@Override
@@ -103,16 +103,13 @@ public abstract class AbstractTableGroup extends AbstractColumnReferenceQualifie
 	}
 
 	@Override
-	public void setTableGroupJoins(Set<TableGroupJoin> joins) {
-		tableGroupJoins = new HashSet<>( joins );
-	}
-
-	@Override
 	public void addTableGroupJoin(TableGroupJoin join) {
 		if ( tableGroupJoins == null ) {
-			tableGroupJoins = new HashSet<>();
+			tableGroupJoins = new ArrayList<>();
 		}
-		tableGroupJoins.add( join );
+		if ( !tableGroupJoins.contains( join ) ) {
+			tableGroupJoins.add( join );
+		}
 	}
 
 	@Override

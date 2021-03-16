@@ -8,7 +8,6 @@ package org.hibernate.query.results;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -35,7 +34,6 @@ public class TableGroupImpl implements TableGroup {
 	private final ModelPartContainer container;
 	private final LockMode lockMode;
 
-	private Set<TableGroupJoin> tableGroupJoins;
 
 	public TableGroupImpl(
 			NavigablePath navigablePath,
@@ -76,32 +74,22 @@ public class TableGroupImpl implements TableGroup {
 	}
 
 	@Override
-	public Set<TableGroupJoin> getTableGroupJoins() {
-		return tableGroupJoins == null ? Collections.emptySet() : tableGroupJoins;
+	public List<TableGroupJoin> getTableGroupJoins() {
+		return Collections.emptyList();
 	}
 
 	@Override
 	public boolean hasTableGroupJoins() {
-		return tableGroupJoins != null && ! tableGroupJoins.isEmpty();
-	}
-
-	@Override
-	public void setTableGroupJoins(Set<TableGroupJoin> joins) {
-		throw new UnsupportedOperationException();
+		return false;
 	}
 
 	@Override
 	public void addTableGroupJoin(TableGroupJoin join) {
-
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public void visitTableGroupJoins(Consumer<TableGroupJoin> consumer) {
-		if ( tableGroupJoins == null ) {
-			return;
-		}
-
-		tableGroupJoins.forEach( consumer );
 	}
 
 	@Override

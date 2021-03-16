@@ -82,7 +82,7 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 	public SqmExpressable<T> getNodeType() {
 		SqmExpressable<T> nodeType = super.getNodeType();
 		if ( nodeType == null ) {
-			resolveResultType( nodeBuilder().getTypeConfiguration() );
+			nodeType = (SqmExpressable<T>) resolveResultType( nodeBuilder().getTypeConfiguration() );
 		}
 
 		return nodeType;

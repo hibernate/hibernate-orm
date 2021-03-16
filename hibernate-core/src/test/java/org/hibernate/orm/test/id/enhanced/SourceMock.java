@@ -4,10 +4,11 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.id.enhanced;
+package org.hibernate.orm.test.id.enhanced;
 
 import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.id.IntegralDataTypeHolder;
+import org.hibernate.id.enhanced.AccessCallback;
 
 class SourceMock implements AccessCallback {
 	private final String tenantId;

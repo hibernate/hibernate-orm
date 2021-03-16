@@ -4,7 +4,10 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.dialect;
+package org.hibernate.orm.test.dialect;
+
+import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.query.Limit;
 
 import static org.junit.Assert.assertEquals;
 
@@ -19,12 +22,6 @@ import org.junit.Test;
  */
 public class DerbyDialectTestCase extends BaseUnitTestCase {
 
-	private static class LocalDerbyDialect extends DerbyDialect {
-		protected boolean isTenPointFiveReleaseOrNewer() {
-			return true; // for test sake :)
-		}
-	}
-
 	@Test
 	@TestForIssue( jiraKey = "HHH-3972" )
 	public void testInsertLimitClause() {
@@ -32,7 +29,7 @@ public class DerbyDialectTestCase extends BaseUnitTestCase {
 		final String input = "select * from tablename t where t.cat = 5";
 		final String expected = "select * from tablename t where t.cat = 5 fetch first " + limit + " rows only";
 
-		final String actual = new LocalDerbyDialect().getLimitString( input, 0, limit );
+		final String actual = new DerbyDialect( 1050 ).getLimitHandler().processSql( input, toRowSelection( 0, limit ) );
 		assertEquals( expected, actual );
 	}
 
@@ -44,7 +41,7 @@ public class DerbyDialectTestCase extends BaseUnitTestCase {
 		final String input = "select * from tablename t where t.cat = 5";
 		final String expected = "select * from tablename t where t.cat = 5 offset " + offset + " rows fetch next " + limit + " rows only";
 
-		final String actual = new LocalDerbyDialect().getLimitString( input, offset, limit );
+		final String actual = new DerbyDialect( 1050 ).getLimitHandler().processSql( input, toRowSelection( offset, limit ) );
 		assertEquals( expected, actual );
 	}
 
@@ -57,7 +54,7 @@ public class DerbyDialectTestCase extends BaseUnitTestCase {
 		final String expected = "select c11 as col1, c12 as col2, c13 as col13 from t1 offset " + offset
 				+ " rows fetch next " + limit + " rows only for update of c11, c13";
 
-		final String actual = new LocalDerbyDialect().getLimitString( input, offset, limit );
+		final String actual = new DerbyDialect( 1050 ).getLimitHandler().processSql( input, toRowSelection( offset, limit ) );
 		assertEquals( expected, actual );
 	}
 
@@ -70,7 +67,7 @@ public class DerbyDialectTestCase extends BaseUnitTestCase {
 		final String expected = "select c11 as col1, c12 as col2, c13 as col13 from t1 where flight_id between 'AA1111' and 'AA1112' offset " + offset
 				+ " rows fetch next " + limit + " rows only with rr";
 
-		final String actual = new LocalDerbyDialect().getLimitString( input, offset, limit );
+		final String actual = new DerbyDialect( 1050 ).getLimitHandler().processSql( input, toRowSelection( offset, limit ) );
 		assertEquals( expected, actual );
 	}
 
@@ -83,7 +80,14 @@ public class DerbyDialectTestCase extends BaseUnitTestCase {
 		final String expected = "select c11 as col1, c12 as col2, c13 as col13 from t1 where flight_id between 'AA1111' and 'AA1112' offset " + offset
 				+ " rows fetch next " + limit + " rows only for update of c11,c13 with rr";
 
-		final String actual = new LocalDerbyDialect().getLimitString( input, offset, limit );
+		final String actual = new DerbyDialect( 1050 ).getLimitHandler().processSql( input, toRowSelection( offset, limit ) );
 		assertEquals( expected, actual );
+	}
+
+	private Limit toRowSelection(int firstRow, int maxRows) {
+		Limit selection = new Limit();
+		selection.setFirstRow( firstRow );
+		selection.setMaxRows( maxRows );
+		return selection;
 	}
 }

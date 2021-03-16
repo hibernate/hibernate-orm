@@ -238,13 +238,25 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 			String alias;
 			if ( asIndex == 0 ) {
 				expression = selectElement.trim();
-				//no alias found, need to generate and insert it!
-				alias = StringHelper.generateAlias( "col", unique++ );
-				int diff = result.length() - sql.length();
-				if ( result.charAt( nextOffset + diff - 1 ) == ' ' ) {
-					diff--;
+				if (expression.equals( "*" ) || expression.endsWith( ".*" )) {
+					alias = "";
 				}
-				result.insert( nextOffset + diff, " as " + alias);
+				else {
+					int aliasIndex = getAliasIndex( expression );
+					if ( aliasIndex == -1 ) {
+						//no alias found, need to generate and insert it!
+						alias = StringHelper.generateAlias( "col", unique++ );
+						int diff = result.length() - sql.length();
+						if ( result.charAt( nextOffset + diff - 1 ) == ' ' ) {
+							diff--;
+						}
+						result.insert( nextOffset + diff, " as " + alias );
+					}
+					else {
+						alias = expression.substring( aliasIndex ).trim();
+						expression = expression.substring( 0, aliasIndex ).trim();
+					}
+				}
 			}
 			else {
 				expression = selectElement.substring( 0, asIndex ).trim();
@@ -261,6 +273,48 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 		while ( offset < fromOffset );
 
 		return String.join( ", ", aliases );
+	}
+
+	private int getAliasIndex(String sql) {
+		int endOffset = -1;
+		int depth = 0;
+		boolean quoted = false;
+		boolean doubleQuoted = false;
+		for ( int offset = sql.length() - 1; offset > endOffset; ) {
+			int nextQuote = sql.lastIndexOf('\'', offset);
+			if ( nextQuote < 0 || nextQuote < endOffset ) {
+				nextQuote = endOffset;
+			}
+			if ( !quoted ) {
+				for ( int index = offset; index > nextQuote; index-- ) {
+					final char c = sql.charAt( index );
+					switch ( c ) {
+						case '(':
+							depth--;
+							break;
+						case ')':
+							depth++;
+							break;
+						case '"':
+							doubleQuoted = !doubleQuoted;
+							break;
+						case '[':
+							doubleQuoted = false;
+							break;
+						case ']':
+							doubleQuoted = true;
+							break;
+						default:
+							if ( Character.isWhitespace( c ) && depth == 0 && !doubleQuoted ) {
+								return index + 1;
+							}
+					}
+				}
+			}
+			quoted = !quoted;
+			offset = nextQuote - 1;
+		}
+		return -1;
 	}
 
 	enum Keyword {

@@ -18,24 +18,32 @@ import org.hibernate.spatial.SpatialAggregate;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.SpatialRelation;
+import org.hibernate.spatial.dialect.SpatialFunctionsRegistry;
 
 /**
  * Created by Karel Maesen, Geovise BVBA on 29/10/16.
  */
 public class PostgisSupport implements SpatialDialect, Serializable {
 
+	private final SpatialFunctionsRegistry postgisFunctions;
 
-	private PostgisFunctions postgisFunctions = new PostgisFunctions();
+	public PostgisSupport(SpatialFunctionsRegistry functions) {
+		postgisFunctions = functions;
+	}
 
-	void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
-		typeContributions.contributeType( new GeolatteGeometryType( PGGeometryTypeDescriptor.INSTANCE ) );
-		typeContributions.contributeType( new JTSGeometryType( PGGeometryTypeDescriptor.INSTANCE ) );
+	public PostgisSupport() {
+		postgisFunctions = new PostgisFunctions();
+	}
+
+	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		typeContributions.contributeType( new GeolatteGeometryType( PGGeometryTypeDescriptor.INSTANCE_WKB_1 ) );
+		typeContributions.contributeType( new JTSGeometryType( PGGeometryTypeDescriptor.INSTANCE_WKB_1 ) );
 
 		typeContributions.contributeJavaTypeDescriptor( GeolatteGeometryJavaTypeDescriptor.INSTANCE );
 		typeContributions.contributeJavaTypeDescriptor( JTSGeometryJavaTypeDescriptor.INSTANCE );
 	}
 
-	public PostgisFunctions functionsToRegister() {
+	public SpatialFunctionsRegistry functionsToRegister() {
 		return postgisFunctions;
 	}
 

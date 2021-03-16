@@ -226,5 +226,14 @@ ext {
                         // Disable prepared statement caching due to https://www.postgresql.org/message-id/CAEcMXhmmRd4-%2BNQbnjDT26XNdUoXdmntV9zdr8%3DTu8PL9aVCYg%40mail.gmail.com
                         'jdbc.url'   : 'jdbc:postgresql://localhost:26257/defaultdb?sslmode=disable&preparedStatementCacheQueries=0'
                 ],
+                cockroachdb_spatial : [
+                        'db.dialect' : 'org.hibernate.spatial.dialect.cockroachdb.CockroachDB202SpatialDialect',
+                        // CockroachDB uses the same pgwire protocol as PostgreSQL, so the driver is the same.
+                        'jdbc.driver': 'org.postgresql.Driver',
+                        'jdbc.user'  : 'root',
+                        'jdbc.pass'  : '',
+                        // Disable prepared statement caching due to https://www.postgresql.org/message-id/CAEcMXhmmRd4-%2BNQbnjDT26XNdUoXdmntV9zdr8%3DTu8PL9aVCYg%40mail.gmail.com
+                        'jdbc.url'   : 'jdbc:postgresql://localhost:26257/defaultdb?sslmode=disable&preparedStatementCacheQueries=0'
+                ]
         ]
 }

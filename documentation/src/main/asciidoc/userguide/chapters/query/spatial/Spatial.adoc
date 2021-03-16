@@ -86,42 +86,42 @@ relevant section.
 :no: icon:times[role="red"]
 [[spatial-configuration-dialect-features]]
 .Hibernate Spatial dialect function support
-[cols=",,,,,,," |options="header",]
+[cols=",,,,,,,," |options="header",]
 |================================
-|Function | Description | PostgresSQL | Oracle 10g/11g | MySQL | SQLServer | GeoDB (H2) | DB2
-|Basic functions on Geometry | | | | | | |
-|`int dimension(Geometry)` | SFS §2.1.1.1 | {yes} | {yes} | {yes} | {yes} | {yes} | {yes}
-|`String geometrytype(Geometry)` | SFS §2.1.1.1 | {yes} | {yes} | {yes} | {yes} | {yes} | {yes}
-|`int srid(Geometry)` | SFS §2.1.1.1 | {yes} | {yes} | {yes} | {yes} | {yes} | {yes}
-|`Geometry envelope(Geometry)` | SFS §2.1.1.1 | {yes} | {yes} | {yes} | {yes} | {yes} | {yes}
-|`String astext(Geometry)` | SFS §2.1.1.1 | {yes} | {yes} | {yes} | {yes} | {yes} | {yes}
-|`byte[] asbinary(Geometry)` | SFS §2.1.1.1 | {yes} | {yes} | {yes} | {yes} | {yes} | {yes}
-|`boolean isempty(Geometry)` | SFS §2.1.1.1 | {yes} | {yes} | {yes} | {yes} | {yes} | {yes}
-|`boolean issimple(Geometry)` | SFS §2.1.1.1 | {yes} | {yes} | {yes} | {yes} | {yes} | {yes}
-|`Geometry boundary(Geometry)` | SFS §2.1.1.1 | {yes} | {yes} | {no} | {yes} | {yes} | {yes}
-|Functions for testing Spatial Relations between geometric objects | | | | | | |
-|`boolean equals(Geometry, Geometry)` | SFS §2.1.1.2 | {yes} | {yes} | {yes} | {yes} | {yes} | {yes}
-|`boolean disjoint(Geometry, Geometry)` | SFS §2.1.1.2 | {yes} | {yes} | {yes} | {yes} | {yes} | {yes}
-|`boolean intersects(Geometry, Geometry)` | SFS §2.1.1.2 | {yes} | {yes} | {yes} | {yes} | {yes} | {yes}
-|`boolean touches(Geometry, Geometry)` | SFS §2.1.1.2 | {yes} | {yes} | {yes} | {yes} | {yes} | {yes}
-|`boolean crosses(Geometry, Geometry)` | SFS §2.1.1.2 | {yes} | {yes} | {yes} | {yes} | {yes} | {yes}
-|`boolean within(Geometry, Geometry)` | SFS §2.1.1.2 | {yes} | {yes} | {yes} | {yes} | {yes} | {yes}
-|`boolean contains(Geometry, Geometry)` | SFS §2.1.1.2 | {yes} | {yes} | {yes} | {yes} | {yes} | {yes}
-|`boolean overlaps(Geometry, Geometry)` | SFS §2.1.1.2 | {yes} | {yes} | {yes} | {yes} | {yes} | {yes}
-|`boolean relate(Geometry, Geometry, String)` | SFS §2.1.1.2 | {yes} | {yes} | {no} | {yes} | {yes} | {yes}
-|Functions that support Spatial Analysis | | | | | | |
-|`double distance(Geometry, Geometry)` | SFS §2.1.1.3 | {yes} | {yes} | {no} | {yes} | {yes} | {yes}
-|`Geometry buffer(Geometry, double)` | SFS §2.1.1.3 | {yes} | {yes} | {no} | {yes} | {yes} | {yes}
-|`Geometry convexhull(Geometry)` | SFS §2.1.1.3 | {yes} | {yes} | {no} | {yes} | {yes} | {yes}^(1)^
-|`Geometry intersection(Geometry, Geometry)` | SFS §2.1.1.3 | {yes} | {yes} | {no} | {yes} | {yes} | {yes}^(1)^
-|`Geometry geomunion(Geometry, Geometry)` | SFS §2.1.1.3 (renamed from union) | {yes} | {yes} | {no} | {yes} | {yes} | {yes}^(1)^
-|`Geometry difference(Geometry, Geometry)` | SFS §2.1.1.3 | {yes} | {yes} | {no} | {yes} | {yes} | {yes}^(1)^
-|`Geometry symdifference(Geometry, Geometry)` | SFS §2.1.1.3 | {yes} | {yes} | {no} | {yes} | {yes} | {yes}^(1)^
-|Common non-SFS functions | | | | | | |
-|`boolean dwithin(Geometry, Geometry, double)` | Returns true if the geometries are within the specified distance of one another | {yes} | {yes} | {no} | {no} | {yes} | {yes}
-|`Geometry transform(Geometry, int)` | Returns a new geometry with its coordinates transformed to the SRID referenced by the integer parameter | {yes} | {yes} | {no} | {no} | {no} | {no}
-|Spatial aggregate Functions | | | | | | |
-|`Geometry extent(Geometry)` | Returns a bounding box that bounds the set of returned geometries | {yes} | {yes} | {no} | {no} | {no} | {no}
+|Function | Description | PostgresSQL | Oracle 10g/11g | MySQL | SQLServer | GeoDB (H2) | DB2 | CockroachDB
+|Basic functions on Geometry | | | | | | | |
+|`int dimension(Geometry)` | SFS §2.1.1.1 | {yes} | {yes} | {yes} | {yes} | {yes} | {yes} | {yes}
+|`String geometrytype(Geometry)` | SFS §2.1.1.1 | {yes} | {yes} | {yes} | {yes} | {yes} | {yes} | {yes}
+|`int srid(Geometry)` | SFS §2.1.1.1 | {yes} | {yes} | {yes} | {yes} | {yes} | {yes} | {yes}
+|`Geometry envelope(Geometry)` | SFS §2.1.1.1 | {yes} | {yes} | {yes} | {yes} | {yes} | {yes} | {yes}
+|`String astext(Geometry)` | SFS §2.1.1.1 | {yes} | {yes} | {yes} | {yes} | {yes} | {yes} | {yes}
+|`byte[] asbinary(Geometry)` | SFS §2.1.1.1 | {yes} | {yes} | {yes} | {yes} | {yes} | {yes} | {yes}
+|`boolean isempty(Geometry)` | SFS §2.1.1.1 | {yes} | {yes} | {yes} | {yes} | {yes} | {yes} | {yes}
+|`boolean issimple(Geometry)` | SFS §2.1.1.1 | {yes} | {yes} | {yes} | {yes} | {yes} | {yes} | {yes}
+|`Geometry boundary(Geometry)` | SFS §2.1.1.1 | {yes} | {yes} | {no} | {yes} | {yes} | {yes} | {yes}
+|Functions for testing Spatial Relations between geometric objects | | | | | | | |
+|`boolean equals(Geometry, Geometry)` | SFS §2.1.1.2 | {yes} | {yes} | {yes} | {yes} | {yes} | {yes} | {yes}
+|`boolean disjoint(Geometry, Geometry)` | SFS §2.1.1.2 | {yes} | {yes} | {yes} | {yes} | {yes} | {yes} | {yes}
+|`boolean intersects(Geometry, Geometry)` | SFS §2.1.1.2 | {yes} | {yes} | {yes} | {yes} | {yes} | {yes} | {yes}
+|`boolean touches(Geometry, Geometry)` | SFS §2.1.1.2 | {yes} | {yes} | {yes} | {yes} | {yes} | {yes} | {yes}
+|`boolean crosses(Geometry, Geometry)` | SFS §2.1.1.2 | {yes} | {yes} | {yes} | {yes} | {yes} | {yes} | {yes}
+|`boolean within(Geometry, Geometry)` | SFS §2.1.1.2 | {yes} | {yes} | {yes} | {yes} | {yes} | {yes} | {yes}
+|`boolean contains(Geometry, Geometry)` | SFS §2.1.1.2 | {yes} | {yes} | {yes} | {yes} | {yes} | {yes} | {yes}
+|`boolean overlaps(Geometry, Geometry)` | SFS §2.1.1.2 | {yes} | {yes} | {yes} | {yes} | {yes} | {yes} | {yes}
+|`boolean relate(Geometry, Geometry, String)` | SFS §2.1.1.2 | {yes} | {yes} | {no} | {yes} | {yes} | {yes} | {yes}
+|Functions that support Spatial Analysis | | | | | | | |
+|`double distance(Geometry, Geometry)` | SFS §2.1.1.3 | {yes} | {yes} | {no} | {yes} | {yes} | {yes} | {yes}
+|`Geometry buffer(Geometry, double)` | SFS §2.1.1.3 | {yes} | {yes} | {no} | {yes} | {yes} | {yes} | {yes}
+|`Geometry convexhull(Geometry)` | SFS §2.1.1.3 | {yes} | {yes} | {no} | {yes} | {yes} | {yes}^(1)^ | {no}
+|`Geometry intersection(Geometry, Geometry)` | SFS §2.1.1.3 | {yes} | {yes} | {no} | {yes} | {yes} | {yes}^(1)^ | {yes}
+|`Geometry geomunion(Geometry, Geometry)` | SFS §2.1.1.3 (renamed from union) | {yes} | {yes} | {no} | {yes} | {yes} | {yes}^(1)^ | {yes}
+|`Geometry difference(Geometry, Geometry)` | SFS §2.1.1.3 | {yes} | {yes} | {no} | {yes} | {yes} | {yes}^(1)^ | {yes}
+|`Geometry symdifference(Geometry, Geometry)` | SFS §2.1.1.3 | {yes} | {yes} | {no} | {yes} | {yes} | {yes}^(1)^ | {yes}
+|Common non-SFS functions | | | | | | | |
+|`boolean dwithin(Geometry, Geometry, double)` | Returns true if the geometries are within the specified distance of one another | {yes} | {yes} | {no} | {no} | {yes} | {yes}  | {yes}
+|`Geometry transform(Geometry, int)` | Returns a new geometry with its coordinates transformed to the SRID referenced by the integer parameter | {yes} | {yes} | {no} | {no} | {no} | {no}  | {yes}
+|Spatial aggregate Functions | | | | | | | |
+|`Geometry extent(Geometry)` | Returns a bounding box that bounds the set of returned geometries | {yes} | {yes} | {no} | {no} | {no} | {no} | {yes}
 |================================
 ^(1)^ Argument Geometries need to have the same dimensionality.
 
@@ -185,6 +185,14 @@ Note that implementations must be thread-safe and have a default no-args constru
 
 SQL Server::
 The dialect `SqlServer2008Dialect` supports the `GEOMETRY` type in SQL Server 2008 and later.
+
+[NOTE]
+====
+The `GEOGRAPHY` type is not currently supported.
+====
+
+CockroachDB::
+The dialect `CockroachDB202SpatialDialect` support the `GEOMETRY` type in CockroachDB v20.2 and later.
 
 [NOTE]
 ====

@@ -20,6 +20,7 @@ import org.hibernate.engine.jdbc.dialect.internal.StandardDialectResolver;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfoSource;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
+import org.hibernate.orm.test.dialect.TestingDialects;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Before;

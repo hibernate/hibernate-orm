@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.cfg.annotations;
+package org.hibernate.orm.test.cfg.annotations;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -12,12 +12,16 @@ import static org.mockito.Mockito.when;
 
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.cfg.Ejb3JoinColumn;
+import org.hibernate.cfg.InheritanceState;
 import org.hibernate.cfg.PropertyHolder;
+import org.hibernate.cfg.annotations.CollectionBinder;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
@@ -49,23 +53,44 @@ public class CollectionBinderTest extends BaseUnitTestCase {
 		when(persistentClass.getTable()).thenReturn(table);
 		when(table.getName()).thenReturn("Hibernate");
 
-		CollectionBinder collectionBinder = new CollectionBinder(false) {
-			@Override
-			protected Collection createCollection(PersistentClass persistentClass) {
-				return null;
-			}
-
-			{
-				final PropertyHolder propertyHolder = Mockito.mock(PropertyHolder.class);
-				when(propertyHolder.getClassName()).thenReturn( CollectionBinderTest.class.getSimpleName() );
-				this.propertyName = "abc";
-				this.propertyHolder = propertyHolder;
-			}
-		};
-
 		String expectMessage = "Association [abc] for entity [CollectionBinderTest] references unmapped class [List]";
 		try {
-			collectionBinder.bindOneToManySecondPass(collection, new HashMap(), null, collectionType, false, false, buildingContext, null);
+			new CollectionBinder( false) {
+
+				{
+					final PropertyHolder propertyHolder = Mockito.mock(PropertyHolder.class);
+					when(propertyHolder.getClassName()).thenReturn( CollectionBinderTest.class.getSimpleName() );
+					this.propertyName = "abc";
+					setPropertyHolder( propertyHolder );
+				}
+
+				@Override
+				protected Collection createCollection(PersistentClass persistentClass) {
+					return null;
+				}
+
+				@Override
+				public void bindOneToManySecondPass(
+						Collection collection,
+						Map<String, PersistentClass> persistentClasses,
+						Ejb3JoinColumn[] fkJoinColumns,
+						XClass collectionType,
+						boolean cascadeDeleteEnabled,
+						boolean ignoreNotFound,
+						MetadataBuildingContext buildingContext,
+						Map<XClass, InheritanceState> inheritanceStatePerClass) {
+					super.bindOneToManySecondPass(
+							collection,
+							persistentClasses,
+							fkJoinColumns,
+							collectionType,
+							cascadeDeleteEnabled,
+							ignoreNotFound,
+							buildingContext,
+							inheritanceStatePerClass
+					);
+				}
+			}.bindOneToManySecondPass( collection, new HashMap(), null, collectionType, false, false, buildingContext, null);
 		} catch (MappingException e) {
 			assertEquals(expectMessage, e.getMessage());
 		}

@@ -8,6 +8,7 @@ package org.hibernate.dialect;
 
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.CurrentFunction;
 import org.hibernate.dialect.function.IndividualLeastGreatestEmulation;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.InformixIdentityColumnSupport;
@@ -63,7 +64,7 @@ public class InformixDialect extends Dialect {
 	private final LimitHandler limitHandler;
 
 	public InformixDialect() {
-		this(7);
+		this( 7 );
 	}
 
 	/**
@@ -392,6 +393,16 @@ public class InformixDialect extends Dialect {
 	@Override
 	public String toBooleanValueString(boolean bool) {
 		return bool ? "'t'" : "'f'";
+	}
+
+	@Override
+	public String currentDate() {
+		return "today";
+	}
+
+	@Override
+	public String currentTimestamp() {
+		return "current";
 	}
 
 	@Override

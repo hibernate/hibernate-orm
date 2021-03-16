@@ -21,9 +21,14 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.dialect;
+package org.hibernate.orm.test.dialect;
 
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.Oracle10gDialect;
+import org.hibernate.dialect.Oracle12cDialect;
+import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.dialect.Oracle9iDialect;
+import org.hibernate.dialect.OracleDialect;
 
 import org.junit.Test;
 

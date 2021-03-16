@@ -4,16 +4,17 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.cfg;
+package org.hibernate.orm.test.cfg;
 
 import java.io.IOException;
 import java.net.URL;
 import java.util.Collections;
 import java.util.Enumeration;
-import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.persistence.Persistence;
+
+import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;

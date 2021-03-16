@@ -18,7 +18,6 @@ import org.hibernate.boot.model.relational.QualifiedNameParser;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
@@ -40,12 +39,6 @@ import org.jboss.logging.Logger;
  * Variations range from actually using a sequence to using a table to mimic
  * a sequence.  These variations are encapsulated by the {@link DatabaseStructure}
  * interface internally.
- * <p/>
- * <b>NOTE</b> that by default we utilize a single database sequence for all
- * generators.  The configuration parameter {@link #CONFIG_PREFER_SEQUENCE_PER_ENTITY}
- * can be used to create dedicated sequence for each entity based on its name.
- * Sequence suffix can be controlled with {@link #CONFIG_SEQUENCE_PER_ENTITY_SUFFIX}
- * option.
  * <p/>
  * General configuration parameters:
  * <table>
@@ -110,61 +103,27 @@ public class SequenceStyleGenerator
 	// general purpose parameters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
-	 * Indicates the name of the sequence (or table) to use.  The default value is {@link #DEF_SEQUENCE_NAME},
-	 * although {@link #CONFIG_PREFER_SEQUENCE_PER_ENTITY} effects the default as well.
+	 * Indicates the name of the sequence (or table) to use.  The implicit value is
+	 * based on the entity / collection-role name
 	 */
 	public static final String SEQUENCE_PARAM = "sequence_name";
 
 	/**
-	 * The default value for {@link #SEQUENCE_PARAM}, in the absence of any {@link #CONFIG_PREFER_SEQUENCE_PER_ENTITY}
-	 * setting.
+	 * @deprecated As of 6.0 with no replacement - `hibernate_sequence` as a real, implicit exportable name
+	 * is no longer supported.  No effect
 	 */
+	@Deprecated
 	public static final String DEF_SEQUENCE_NAME = "hibernate_sequence";
 
 	/**
-	 * Indicates the initial value to use.  The default value is {@link #DEFAULT_INITIAL_VALUE}
+	 * Specifies the suffix to use for an implicit sequence name - appended to the entity-name / collection-role
 	 */
-	public static final String INITIAL_PARAM = "initial_value";
-
-	/**
-	 * The default value for {@link #INITIAL_PARAM}
-	 */
-	public static final int DEFAULT_INITIAL_VALUE = 1;
-
-	/**
-	 * Indicates the increment size to use.  The default value is {@link #DEFAULT_INCREMENT_SIZE}
-	 */
-	public static final String INCREMENT_PARAM = "increment_size";
-
-	/**
-	 * The default value for {@link #INCREMENT_PARAM}
-	 */
-	public static final int DEFAULT_INCREMENT_SIZE = 1;
-
-	/**
-	 * Used to create dedicated sequence for each entity based on the entity name.  Sequence suffix can be
-	 * controlled with {@link #CONFIG_SEQUENCE_PER_ENTITY_SUFFIX} option.
-	 */
-	@SuppressWarnings("WeakerAccess")
-	public static final String CONFIG_PREFER_SEQUENCE_PER_ENTITY = "prefer_sequence_per_entity";
-
-	/**
-	 * Indicates the suffix to use in naming the identifier sequence/table name, by appending the suffix to
-	 * the name of the entity.  Used in conjunction with {@link #CONFIG_PREFER_SEQUENCE_PER_ENTITY}.
-	 */
-	@SuppressWarnings("WeakerAccess")
 	public static final String CONFIG_SEQUENCE_PER_ENTITY_SUFFIX = "sequence_per_entity_suffix";
 
 	/**
 	 * The default value for {@link #CONFIG_SEQUENCE_PER_ENTITY_SUFFIX}
 	 */
 	public static final String DEF_SEQUENCE_SUFFIX = "_SEQ";
-
-	/**
-	 * Indicates the optimizer to use, either naming a {@link Optimizer} implementation class or naming
-	 * a {@link StandardOptimizerDescriptor} by name
-	 */
-	public static final String OPT_PARAM = "optimizer";
 
 	/**
 	 * A flag to force using a table as the underlying structure rather than a sequence.
@@ -317,41 +276,51 @@ public class SequenceStyleGenerator
 			Dialect dialect,
 			JdbcEnvironment jdbcEnv,
 			ServiceRegistry serviceRegistry) {
-		final String sequencePerEntitySuffix = ConfigurationHelper.getString( CONFIG_SEQUENCE_PER_ENTITY_SUFFIX, params, DEF_SEQUENCE_SUFFIX );
+		final Identifier catalog = jdbcEnv.getIdentifierHelper().toIdentifier(
+				ConfigurationHelper.getString( CATALOG, params )
+		);
+		final Identifier schema =  jdbcEnv.getIdentifierHelper().toIdentifier(
+				ConfigurationHelper.getString( SCHEMA, params )
+		);
 
-		String fallbackSequenceName = DEF_SEQUENCE_NAME;
-		final Boolean preferGeneratorNameAsDefaultName = serviceRegistry.getService( ConfigurationService.class )
-				.getSetting( AvailableSettings.PREFER_GENERATOR_NAME_AS_DEFAULT_SEQUENCE_NAME, StandardConverters.BOOLEAN, true );
-		if ( preferGeneratorNameAsDefaultName ) {
-			final String generatorName = params.getProperty( IdentifierGenerator.GENERATOR_NAME );
-			if ( StringHelper.isNotEmpty( generatorName ) ) {
-				fallbackSequenceName = generatorName;
+		final String sequenceName = ConfigurationHelper.getString( SEQUENCE_PARAM, params );
+		if ( StringHelper.isNotEmpty( sequenceName ) ) {
+			// we have an explicit name, use it
+			if ( sequenceName.contains( "." ) ) {
+				//
+				return QualifiedNameParser.INSTANCE.parse( sequenceName );
+			}
+			else {
+				return new QualifiedNameParser.NameParts(
+						catalog,
+						schema,
+						jdbcEnv.getIdentifierHelper().toIdentifier( sequenceName )
+				);
 			}
 		}
 
-		// JPA_ENTITY_NAME value honors <class ... entity-name="..."> (HBM) and @Entity#name (JPA) overrides.
-		final String defaultSequenceName = ConfigurationHelper.getBoolean( CONFIG_PREFER_SEQUENCE_PER_ENTITY, params, false )
-				? params.getProperty( JPA_ENTITY_NAME ) + sequencePerEntitySuffix
-				: fallbackSequenceName;
+		// otherwise, determine an implicit name to use
+		final String implicitName = determineImplicitName( params, jdbcEnv, serviceRegistry );
+		return new QualifiedNameParser.NameParts(
+				catalog,
+				schema,
+				jdbcEnv.getIdentifierHelper().toIdentifier( implicitName )
+		);
+	}
 
-		final String sequenceName = ConfigurationHelper.getString( SEQUENCE_PARAM, params, defaultSequenceName );
-		if ( sequenceName.contains( "." ) ) {
-			return QualifiedNameParser.INSTANCE.parse( sequenceName );
+	private String determineImplicitName(Properties params, JdbcEnvironment jdbcEnv, ServiceRegistry serviceRegistry) {
+		final String annotationGeneratorName = params.getProperty( IdentifierGenerator.GENERATOR_NAME );
+		if ( StringHelper.isNotEmpty( annotationGeneratorName ) ) {
+			return annotationGeneratorName;
 		}
-		else {
-			// todo : need to incorporate implicit catalog and schema names
-			final Identifier catalog = jdbcEnv.getIdentifierHelper().toIdentifier(
-					ConfigurationHelper.getString( CATALOG, params )
-			);
-			final Identifier schema =  jdbcEnv.getIdentifierHelper().toIdentifier(
-					ConfigurationHelper.getString( SCHEMA, params )
-			);
-			return new QualifiedNameParser.NameParts(
-					catalog,
-					schema,
-					jdbcEnv.getIdentifierHelper().toIdentifier( sequenceName )
-			);
+
+		final String base = ConfigurationHelper.getString( IMPLICIT_NAME_BASE, params );
+		if ( StringHelper.isNotEmpty( base ) ) {
+			final String suffix = ConfigurationHelper.getString( CONFIG_SEQUENCE_PER_ENTITY_SUFFIX, params, DEF_SEQUENCE_SUFFIX );
+			return base + suffix;
 		}
+
+		throw new MappingException( "Unable to determine sequence name" );
 	}
 
 	/**

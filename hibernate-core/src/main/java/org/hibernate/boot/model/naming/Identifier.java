@@ -96,6 +96,12 @@ public class Identifier implements Comparable<Identifier> {
 				|| ( name.startsWith( "\"" ) && name.endsWith( "\"" ) );
 	}
 
+	public static String unQuote(String name) {
+		assert isQuoted( name );
+
+		return name.substring( 1, name.length() - 2 );
+	}
+
 	/**
 	 * Constructs an identifier instance.
 	 *

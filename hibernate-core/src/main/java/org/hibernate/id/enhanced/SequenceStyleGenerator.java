@@ -310,13 +310,27 @@ public class SequenceStyleGenerator
 
 	private String determineImplicitName(Properties params, JdbcEnvironment jdbcEnv, ServiceRegistry serviceRegistry) {
 		final String annotationGeneratorName = params.getProperty( IdentifierGenerator.GENERATOR_NAME );
+		final String base = ConfigurationHelper.getString( IMPLICIT_NAME_BASE, params );
+		final String suffix = ConfigurationHelper.getString( CONFIG_SEQUENCE_PER_ENTITY_SUFFIX, params, DEF_SEQUENCE_SUFFIX );
+
+		if ( ! Objects.equals( suffix, DEF_SEQUENCE_SUFFIX ) ) {
+			// an "implicit name suffix" was specified
+			if ( StringHelper.isNotEmpty( base ) ) {
+				if ( Identifier.isQuoted( base ) ) {
+					return "`" + Identifier.unQuote( base ) + suffix + "`";
+				}
+				return base + suffix;
+			}
+		}
+
 		if ( StringHelper.isNotEmpty( annotationGeneratorName ) ) {
 			return annotationGeneratorName;
 		}
 
-		final String base = ConfigurationHelper.getString( IMPLICIT_NAME_BASE, params );
 		if ( StringHelper.isNotEmpty( base ) ) {
-			final String suffix = ConfigurationHelper.getString( CONFIG_SEQUENCE_PER_ENTITY_SUFFIX, params, DEF_SEQUENCE_SUFFIX );
+			if ( Identifier.isQuoted( base ) ) {
+				return "`" + Identifier.unQuote( base ) + suffix + "`";
+			}
 			return base + suffix;
 		}
 

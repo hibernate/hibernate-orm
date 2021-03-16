@@ -37,7 +37,7 @@ public interface OptimizableGenerator extends IdentifierGenerator, ExportablePro
 	/**
 	 * The default value for {@link #INCREMENT_PARAM}
 	 */
-	int DEFAULT_INCREMENT_SIZE = 1;
+	int DEFAULT_INCREMENT_SIZE = 50;
 
 	/**
 	 * Indicates the optimizer to use, either naming a {@link Optimizer} implementation class or naming

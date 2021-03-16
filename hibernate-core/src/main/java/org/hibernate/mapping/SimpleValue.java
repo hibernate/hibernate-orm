@@ -300,8 +300,8 @@ public abstract class SimpleValue implements KeyValue {
 		}
 
 		// default initial value and allocation size per-JPA defaults
-		params.setProperty( OptimizableGenerator.INITIAL_PARAM, "1" );
-		params.setProperty( OptimizableGenerator.INCREMENT_PARAM, "50" );
+		params.setProperty( OptimizableGenerator.INITIAL_PARAM, String.valueOf( OptimizableGenerator.DEFAULT_INITIAL_VALUE ) );
+		params.setProperty( OptimizableGenerator.INCREMENT_PARAM, String.valueOf( OptimizableGenerator.DEFAULT_INCREMENT_SIZE ) );
 
 		//init the table here instead of earlier, so that we can get a quoted table name
 		//TODO: would it be better to simply pass the qualified table name, instead of

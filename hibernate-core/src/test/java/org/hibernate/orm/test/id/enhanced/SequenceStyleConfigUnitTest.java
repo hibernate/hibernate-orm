@@ -16,9 +16,12 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
+import org.hibernate.id.enhanced.DatabaseStructure;
 import org.hibernate.id.enhanced.HiLoOptimizer;
 import org.hibernate.id.enhanced.NoopOptimizer;
+import org.hibernate.id.enhanced.Optimizer;
 import org.hibernate.id.enhanced.PooledLoOptimizer;
 import org.hibernate.id.enhanced.PooledLoThreadLocalOptimizer;
 import org.hibernate.id.enhanced.PooledOptimizer;
@@ -32,7 +35,11 @@ import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
 import org.hibernate.testing.junit5.BaseUnitTest;
 import org.junit.jupiter.api.Test;
 
+import static org.hamcrest.Matchers.instanceOf;
 import static org.hibernate.testing.junit5.ExtraAssertions.assertClassAssignability;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -43,12 +50,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class SequenceStyleConfigUnitTest extends BaseUnitTest {
 
 	/**
-	 * Test all params defaulted with a dialect supporting sequences
+	 * Test all params defaulted with a dialect supporting pooled sequences
 	 */
 	@Test
 	public void testDefaultedSequenceBackedConfiguration() {
 		StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
-				.applySetting( AvailableSettings.DIALECT, SequenceDialect.class.getName() )
+				.applySetting( AvailableSettings.DIALECT, PooledSequenceDialect.class.getName() )
 				.build();
 
 		try {
@@ -60,9 +67,14 @@ public class SequenceStyleConfigUnitTest extends BaseUnitTest {
 					new Database( new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry ) )
 			);
 
-			assertClassAssignability( SequenceStructure.class, generator.getDatabaseStructure().getClass() );
-			assertClassAssignability( NoopOptimizer.class, generator.getOptimizer().getClass() );
-			assertEquals( SequenceStyleGenerator.DEF_SEQUENCE_NAME, generator.getDatabaseStructure().getName() );
+			final DatabaseStructure databaseStructure = generator.getDatabaseStructure();
+			assertTrue( databaseStructure.isPhysicalSequence() );
+
+			final Optimizer optimizer = generator.getOptimizer();
+			assertThat( optimizer, instanceOf( PooledOptimizer.class ) );
+			assertEquals( optimizer.getIncrementSize(), OptimizableGenerator.DEFAULT_INCREMENT_SIZE );
+
+			assertEquals( "ID_SEQ", databaseStructure.getName() );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( serviceRegistry );
@@ -74,6 +86,10 @@ public class SequenceStyleConfigUnitTest extends BaseUnitTest {
 		props.put(
 				PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER,
 				new MetadataBuildingContextTestingImpl( serviceRegistry ).getObjectNameNormalizer()
+		);
+		props.put(
+				PersistentIdentifierGenerator.IMPLICIT_NAME_BASE,
+				"ID"
 		);
 		return props;
 	}
@@ -96,9 +112,14 @@ public class SequenceStyleConfigUnitTest extends BaseUnitTest {
 					new Database( new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry ) )
 			);
 
-			assertClassAssignability( TableStructure.class, generator.getDatabaseStructure().getClass() );
-			assertClassAssignability( NoopOptimizer.class, generator.getOptimizer().getClass() );
-			assertEquals( SequenceStyleGenerator.DEF_SEQUENCE_NAME, generator.getDatabaseStructure().getName() );
+			final DatabaseStructure databaseStructure = generator.getDatabaseStructure();
+			final Optimizer optimizer = generator.getOptimizer();
+
+			assertFalse( databaseStructure.isPhysicalSequence() );
+			assertThat( optimizer, instanceOf( PooledOptimizer.class ) );
+			assertEquals( 50, databaseStructure.getIncrementSize());
+
+			assertEquals( "ID_SEQ", databaseStructure.getName() );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( serviceRegistry );
@@ -130,7 +151,7 @@ public class SequenceStyleConfigUnitTest extends BaseUnitTest {
 
 			assertClassAssignability( TableStructure.class, generator.getDatabaseStructure().getClass() );
 			assertClassAssignability( PooledOptimizer.class, generator.getOptimizer().getClass() );
-			assertEquals( SequenceStyleGenerator.DEF_SEQUENCE_NAME, generator.getDatabaseStructure().getName() );
+			assertEquals( "ID_SEQ", generator.getDatabaseStructure().getName() );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( serviceRegistry );
@@ -153,7 +174,7 @@ public class SequenceStyleConfigUnitTest extends BaseUnitTest {
 
 			assertClassAssignability( SequenceStructure.class, generator.getDatabaseStructure().getClass() );
 			assertClassAssignability( PooledOptimizer.class, generator.getOptimizer().getClass() );
-			assertEquals( SequenceStyleGenerator.DEF_SEQUENCE_NAME, generator.getDatabaseStructure().getName() );
+			assertEquals( "ID_SEQ", generator.getDatabaseStructure().getName() );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( serviceRegistry );
@@ -183,7 +204,7 @@ public class SequenceStyleConfigUnitTest extends BaseUnitTest {
 
 			assertClassAssignability( TableStructure.class, generator.getDatabaseStructure().getClass() );
 			assertClassAssignability( PooledOptimizer.class, generator.getOptimizer().getClass() );
-			assertEquals( SequenceStyleGenerator.DEF_SEQUENCE_NAME, generator.getDatabaseStructure().getName() );
+			assertEquals( "ID_SEQ", generator.getDatabaseStructure().getName() );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( serviceRegistry );
@@ -209,9 +230,14 @@ public class SequenceStyleConfigUnitTest extends BaseUnitTest {
 					new Database( new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry ) )
 			);
 
-			assertClassAssignability( TableStructure.class, generator.getDatabaseStructure().getClass() );
-			assertClassAssignability( NoopOptimizer.class, generator.getOptimizer().getClass() );
-			assertEquals( SequenceStyleGenerator.DEF_SEQUENCE_NAME, generator.getDatabaseStructure().getName() );
+			final DatabaseStructure databaseStructure = generator.getDatabaseStructure();
+			final Optimizer optimizer = generator.getOptimizer();
+
+			assertFalse( databaseStructure.isPhysicalSequence() );
+			assertThat( optimizer, instanceOf( PooledOptimizer.class ) );
+			assertEquals( 50, databaseStructure.getIncrementSize());
+
+			assertEquals( "ID_SEQ", databaseStructure.getName() );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( serviceRegistry );

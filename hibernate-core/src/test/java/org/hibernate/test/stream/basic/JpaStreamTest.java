@@ -22,9 +22,7 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -97,7 +95,7 @@ public class JpaStreamTest extends BaseNonConfigCoreFunctionalTestCase {
 		};
 
 		// run without onClose callbacks
-		this.runTerminalOperationTests(noOp, List.of(), noOp, false, false);
+		this.runTerminalOperationTests(noOp, Collections.emptyList(), noOp, false, false);
 
 		AtomicInteger onClose1Count = new AtomicInteger();
 		AtomicInteger onClose2Count = new AtomicInteger();
@@ -112,7 +110,7 @@ public class JpaStreamTest extends BaseNonConfigCoreFunctionalTestCase {
 					onClose2Count.set(0);
 					onClose3Count.set(0);
 				},
-				List.of(
+				Arrays.asList(
 						onClose1Count::incrementAndGet, // onClose1 logic
 						onClose2Count::incrementAndGet, // onClose2 logic
 						onClose3Count::incrementAndGet // onClose3 logic
@@ -134,7 +132,7 @@ public class JpaStreamTest extends BaseNonConfigCoreFunctionalTestCase {
 					onClose2Count.set(0);
 					onClose3Count.set(0);
 				},
-				List.of(
+				Arrays.asList(
 						onClose1Count::incrementAndGet, // onClose1 logic
 						onClose2Count::incrementAndGet, // onClose2 logic
 						onClose3Count::incrementAndGet // onClose3 logic
@@ -156,7 +154,7 @@ public class JpaStreamTest extends BaseNonConfigCoreFunctionalTestCase {
 					onClose2Count.set(0);
 					onClose3Count.set(0);
 				},
-				List.of(
+				Arrays.asList(
 						onClose1Count::incrementAndGet, // onClose1 logic
 						onClose2Count::incrementAndGet, // onClose2 logic
 						onClose3Count::incrementAndGet // onClose3 logic
@@ -178,7 +176,7 @@ public class JpaStreamTest extends BaseNonConfigCoreFunctionalTestCase {
 					onClose2Count.set(0);
 					onClose3Count.set(0);
 				},
-				List.of(
+				Arrays.asList(
 						onClose1Count::incrementAndGet, // onClose1 logic
 						onClose2Count::incrementAndGet, // onClose2 logic
 						onClose3Count::incrementAndGet // onClose3 logic

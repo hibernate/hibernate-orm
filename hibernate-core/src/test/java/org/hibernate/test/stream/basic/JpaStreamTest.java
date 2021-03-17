@@ -9,6 +9,7 @@ package org.hibernate.test.stream.basic;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -28,6 +29,7 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
@@ -78,7 +80,7 @@ public class JpaStreamTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-13872")
+	@TestForIssue( jiraKey = {"HHH-13872", "HHH-?????"}) // placeholder - will update after jira creation
 	@RequiresDialect(H2Dialect.class)
 	public void testStreamCloseOnTerminalOperation() {
 		doInHibernate( this::sessionFactory, session -> {
@@ -92,10 +94,53 @@ public class JpaStreamTest extends BaseNonConfigCoreFunctionalTestCase {
 			}
 		} );
 
+		Runnable noOp = () -> {
+			// do nothing
+		};
+
+		this.runTerminalOperationTests(noOp, noOp, noOp, false, false);
+
+		AtomicInteger onCloseCount = new AtomicInteger();
+
+		this.runTerminalOperationTests(
+				() -> onCloseCount.set(0), // prepare
+				onCloseCount::incrementAndGet, // onClose logic
+				() -> assertThat(onCloseCount).hasValue(1), // assertion
+				false, // no flatMap before onClose
+				false // no flatMap after onClose
+		);
+
+		this.runTerminalOperationTests(
+				() -> onCloseCount.set(0),
+				onCloseCount::incrementAndGet,
+				() -> assertThat(onCloseCount).hasValue(1),
+				true, // run a flatMap operation before onClose
+				false // no flatMap after onClose
+		);
+
+		this.runTerminalOperationTests(
+				() -> onCloseCount.set(0),
+				onCloseCount::incrementAndGet,
+				() -> assertThat(onCloseCount).hasValue(1),
+				false, // no flatMap before onClose
+				true // run a flatMap operation after onClose
+		);
+
+		this.runTerminalOperationTests(
+				() -> onCloseCount.set(0),
+				onCloseCount::incrementAndGet,
+				() -> assertThat(onCloseCount).hasValue(1),
+				true, // run a flatMap operation before onClose
+				true // run a flatMap operation after onClose
+		);
+	}
+
+	private void runTerminalOperationTests(
+			Runnable prepare, Runnable onClose, Runnable onCloseAssertion,
+			boolean flatMapBefore, boolean flatMapAfter) {
+
 		doInHibernate( this::sessionFactory, session -> {
-			Stream<MyEntity> stream = session
-					.createQuery( "SELECT me FROM MyEntity me" )
-					.getResultStream();
+			Stream<MyEntity> stream = getMyEntityStream(prepare, session, onClose, flatMapBefore, flatMapAfter);
 
 			ResourceRegistry resourceRegistry = resourceRegistry(session);
 			assertTrue( resourceRegistry.hasRegisteredResources() );
@@ -104,12 +149,12 @@ public class JpaStreamTest extends BaseNonConfigCoreFunctionalTestCase {
 			assertEquals(10, entities.size());
 
 			assertFalse( resourceRegistry.hasRegisteredResources() );
+
+			onCloseAssertion.run();
 		} );
 
 		doInHibernate( this::sessionFactory, session -> {
-			Stream<MyEntity> stream = session
-					.createQuery( "SELECT me FROM MyEntity me" )
-					.getResultStream();
+			Stream<MyEntity> stream = getMyEntityStream(prepare, session, onClose, flatMapBefore, flatMapAfter);
 
 			ResourceRegistry resourceRegistry = resourceRegistry(session);
 			assertTrue( resourceRegistry.hasRegisteredResources() );
@@ -118,12 +163,12 @@ public class JpaStreamTest extends BaseNonConfigCoreFunctionalTestCase {
 			assertEquals(55, sum);
 
 			assertFalse( resourceRegistry.hasRegisteredResources() );
+
+			onCloseAssertion.run();
 		} );
 
 		doInHibernate( this::sessionFactory, session -> {
-			Stream<MyEntity> stream = session
-					.createQuery( "SELECT me FROM MyEntity me" )
-					.getResultStream();
+			Stream<MyEntity> stream = getMyEntityStream(prepare, session, onClose, flatMapBefore, flatMapAfter);
 
 			ResourceRegistry resourceRegistry = resourceRegistry(session);
 			assertTrue( resourceRegistry.hasRegisteredResources() );
@@ -132,12 +177,12 @@ public class JpaStreamTest extends BaseNonConfigCoreFunctionalTestCase {
 			assertEquals(10, result);
 
 			assertFalse( resourceRegistry.hasRegisteredResources() );
+
+			onCloseAssertion.run();
 		} );
 
 		doInHibernate( this::sessionFactory, session -> {
-			Stream<MyEntity> stream = session
-					.createQuery( "SELECT me FROM MyEntity me" )
-					.getResultStream();
+			Stream<MyEntity> stream = getMyEntityStream(prepare, session, onClose, flatMapBefore, flatMapAfter);
 
 			ResourceRegistry resourceRegistry = resourceRegistry(session);
 			assertTrue( resourceRegistry.hasRegisteredResources() );
@@ -146,14 +191,14 @@ public class JpaStreamTest extends BaseNonConfigCoreFunctionalTestCase {
 			assertEquals(1, result, 0.1);
 
 			assertFalse( resourceRegistry.hasRegisteredResources() );
+
+			onCloseAssertion.run();
 		} );
 
 		//Test call close explicitly
 		doInHibernate( this::sessionFactory, session -> {
 
-			try (Stream<Long> stream = session
-					.createQuery( "SELECT me.id FROM MyEntity me" )
-					.getResultStream()) {
+			try (Stream<Long> stream = getLongStream(prepare, session, onClose, flatMapBefore, flatMapAfter)) {
 
 				ResourceRegistry resourceRegistry = resourceRegistry( session );
 				assertTrue( resourceRegistry.hasRegisteredResources() );
@@ -164,6 +209,8 @@ public class JpaStreamTest extends BaseNonConfigCoreFunctionalTestCase {
 				assertEquals( 10, result[4] );
 
 				assertFalse( resourceRegistry.hasRegisteredResources() );
+
+				onCloseAssertion.run();
 			}
 		} );
 
@@ -172,9 +219,7 @@ public class JpaStreamTest extends BaseNonConfigCoreFunctionalTestCase {
 			Method takeWhileMethod = ReflectHelper.getMethod( Stream.class, "takeWhile", Predicate.class );
 
 			if ( takeWhileMethod != null ) {
-				try (Stream<Long> stream = session
-						.createQuery( "SELECT me.id FROM MyEntity me" )
-						.getResultStream()) {
+				try (Stream<Long> stream = getLongStream(prepare, session, onClose, flatMapBefore, flatMapAfter)) {
 
 					ResourceRegistry resourceRegistry = resourceRegistry( session );
 					assertTrue( resourceRegistry.hasRegisteredResources() );
@@ -191,6 +236,8 @@ public class JpaStreamTest extends BaseNonConfigCoreFunctionalTestCase {
 					assertTrue( result.contains( 5 ) );
 
 					assertFalse( resourceRegistry.hasRegisteredResources() );
+
+					onCloseAssertion.run();
 				}
 				catch (IllegalAccessException | InvocationTargetException e) {
 					fail( "Could not execute takeWhile because of " + e.getMessage() );
@@ -202,9 +249,7 @@ public class JpaStreamTest extends BaseNonConfigCoreFunctionalTestCase {
 			Method dropWhileMethod = ReflectHelper.getMethod( Stream.class, "dropWhile", Predicate.class );
 
 			if ( dropWhileMethod != null ) {
-				try (Stream<Long> stream = session
-						.createQuery( "SELECT me.id FROM MyEntity me" )
-						.getResultStream()) {
+				try (Stream<Long> stream = getLongStream(prepare, session, onClose, flatMapBefore, flatMapAfter)) {
 
 					ResourceRegistry resourceRegistry = resourceRegistry( session );
 					assertTrue( resourceRegistry.hasRegisteredResources() );
@@ -221,12 +266,48 @@ public class JpaStreamTest extends BaseNonConfigCoreFunctionalTestCase {
 					assertTrue( result.contains( 10 ) );
 
 					assertFalse( resourceRegistry.hasRegisteredResources() );
+
+					onCloseAssertion.run();
 				}
 				catch (IllegalAccessException | InvocationTargetException e) {
 					fail( "Could not execute takeWhile because of " + e.getMessage() );
 				}
 			}
 		} );
+	}
+
+	private static Stream<MyEntity> getMyEntityStream(
+			Runnable prepare, Session session, Runnable onClose, boolean flatMapBefore, boolean flatMapAfter) {
+		return getStream(prepare, session, "SELECT me FROM MyEntity me", onClose, flatMapBefore, flatMapAfter);
+	}
+
+	private static Stream<Long> getLongStream(
+			Runnable prepare, Session session, Runnable onClose, boolean flatMapBefore, boolean flatMapAfter) {
+		return getStream(prepare, session, "SELECT me.id FROM MyEntity me", onClose, flatMapBefore, flatMapAfter);
+	}
+
+	@SuppressWarnings("unchecked")
+	private static <T> Stream<T> getStream(
+			Runnable prepare, Session session, String queryString,
+			Runnable onClose, boolean flatMapBefore, boolean flatMapAfter) {
+
+		prepare.run();
+
+		Stream<T> stream = session.createQuery(queryString).getResultStream();
+
+		if(flatMapBefore) {
+			stream = stream.flatMap(Stream::of);
+		}
+
+		if(onClose != null) {
+			stream = stream.onClose(onClose);
+		}
+
+		if(flatMapAfter) {
+			stream = stream.flatMap(Stream::of);
+		}
+
+		return stream;
 	}
 
 	private ResourceRegistry resourceRegistry(Session session) {

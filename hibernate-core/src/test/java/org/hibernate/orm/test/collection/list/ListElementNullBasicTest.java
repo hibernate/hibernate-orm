@@ -165,7 +165,7 @@ public class ListElementNullBasicTest {
 		);
 	}
 
-	@Entity
+	@Entity(name = "AnEntity")
 	@Table(name = "AnEntity")
 	public static class AnEntity {
 		@Id

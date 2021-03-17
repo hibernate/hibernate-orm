@@ -164,7 +164,7 @@ public class IdBagElementNullBasicTest {
 		);
 	}
 
-	@Entity
+	@Entity(name = "AnEntity")
 	@Table(name = "AnEntity")
 	@GenericGenerator(name = "increment", strategy = "increment")
 	public static class AnEntity {

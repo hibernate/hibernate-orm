@@ -72,7 +72,7 @@ public class DetachAndContainsTest {
 		);
 	}
 
-	@Entity
+	@Entity(name = "Mouth")
 	@Table(name = "mouth")
 	public static class Mouth {
 		@Id
@@ -82,7 +82,7 @@ public class DetachAndContainsTest {
 		public Collection<Tooth> teeth;
 	}
 
-	@Entity
+	@Entity(name = "Tooth")
 	@Table(name = "tooth")
 	public static class Tooth {
 		@Id

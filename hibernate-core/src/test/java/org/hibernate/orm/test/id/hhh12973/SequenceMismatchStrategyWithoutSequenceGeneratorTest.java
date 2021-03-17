@@ -120,7 +120,7 @@ public class SequenceMismatchStrategyWithoutSequenceGeneratorTest extends Entity
 		assertEquals( ITERATIONS, id.get() );
 	}
 
-	@Entity
+	@Entity( name = "ApplicationConfigurationHBM2DDL" )
 	@Table(name = "application_configurations")
 	public static class ApplicationConfigurationHBM2DDL {
 

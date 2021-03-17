@@ -391,7 +391,7 @@ select
 		);
 	}
 
-	@Entity
+	@Entity(name = "MyUser")
 	@Table(name = "MyUser")
 	static class User implements Serializable {
 		@Id
@@ -416,7 +416,7 @@ select
 		}
 	}
 
-	@Entity
+	@Entity(name = "UserData")
 	@Table(name = "UserData")
 	static class UserData {
 		@Id
@@ -428,7 +428,7 @@ select
 		private User user;
 	}
 
-	@Entity
+	@Entity(name = "Address")
 	@Table(name = "Address")
 	static class Address {
 		@Id
@@ -446,7 +446,7 @@ select
 		private String addressText;
 	}
 
-	@Entity
+	@Entity(name = "Detail")
 	@Table(name = "Detail")
 	static class Detail {
 		@Id

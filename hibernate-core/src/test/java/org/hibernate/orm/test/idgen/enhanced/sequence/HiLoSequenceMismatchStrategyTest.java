@@ -73,6 +73,8 @@ public class HiLoSequenceMismatchStrategyTest {
 					statement.execute( dropSequenceStatement );
 				}
 				catch (SQLException e) {
+					System.out.println( "TEST DEBUG : dropping sequence failed - " + e.getMessage() );
+					e.printStackTrace();
 					// ignore
 				}
 			}

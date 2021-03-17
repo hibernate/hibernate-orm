@@ -283,7 +283,7 @@ public class EntityGraphUsingFetchGraphTest {
 		}
 	}
 
-	@Entity
+	@Entity(name = "CustomerOrder")
 	@Table(name = "customerOrder")
 	public static class CustomerOrder {
 		@Id
@@ -300,7 +300,7 @@ public class EntityGraphUsingFetchGraphTest {
 		public Address shippingAddress;
 	}
 
-	@Entity
+	@Entity(name = "Address")
 	@Table(name = "address")
 	public static class Address {
 		@Id
@@ -310,7 +310,7 @@ public class EntityGraphUsingFetchGraphTest {
 		public String city;
 	}
 
-	@Entity
+	@Entity(name = "OrderPosition")
 	@Table(name = "orderPosition")
 	public static class OrderPosition {
 		@Id
@@ -324,7 +324,7 @@ public class EntityGraphUsingFetchGraphTest {
 		public Product product;
 	}
 
-	@Entity
+	@Entity(name = "Product")
 	@Table(name = "product")
 	public static class Product {
 		@Id

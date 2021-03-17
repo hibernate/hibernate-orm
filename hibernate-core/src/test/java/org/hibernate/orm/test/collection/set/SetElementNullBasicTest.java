@@ -128,7 +128,7 @@ public class SetElementNullBasicTest extends BaseCoreFunctionalTestCase {
 		);
 	}
 
-	@Entity
+	@Entity(name="AnEntity")
 	@Table(name="AnEntity")
 	public static class AnEntity {
 		@Id

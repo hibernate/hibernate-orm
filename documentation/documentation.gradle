@@ -15,7 +15,7 @@ ext {
 			'hibernate-infinispan',
 			'hibernate-ehcache',
 			'hibernate-java8',
-			'hibernate-orm-modules',
+			'hibernate-integrationtest-java-modules',
 			'release'
 	]
 }
@@ -40,7 +40,7 @@ dependencies {
 
 	compile( libraries.jpa )
 	compile( project( ':hibernate-core' ) )
-	compile( project( ':hibernate-jpamodelgen' ) )
+	annotationProcessor( project( ':hibernate-jpamodelgen' ) )
 
 	testCompile( 'org.apache.commons:commons-lang3:3.4' )
 
@@ -63,6 +63,7 @@ dependencies {
 	testRuntime( libraries.mariadb )
 	testRuntime( libraries.mssql )
 	testRuntime( libraries.hana )
+	testRuntime( libraries.cockroachdb )
 
 	testCompile( project( ':hibernate-jcache' ) )
 	testRuntime( libraries.ehcache3 )
@@ -128,9 +129,29 @@ task aggregateJavadocs(type: Javadoc) {
 				'http://docs.jboss.org/cdi/api/2.0/',
 				'https://javaee.github.io/javaee-spec/javadocs/'
 		]
+		
+		if ( gradle.ext.javaVersions.main.compiler.asInt() >= 11 ) {
+			//The need to set `--source 1.8` applies to all JVMs after 11, and also to 11
+			// but after excluding the first two builds; see also specific comments on
+			// https://bugs.openjdk.java.net/browse/JDK-8212233?focusedCommentId=14245762
+			// For now, let's be compatible with JDK 11.0.3+. We can improve on it if people
+			// complain they cannot build with JDK 11.0.0, 11.0.1 and 11.0.2.
+			logger.lifecycle "Forcing Javadoc in Java 8 compatible mode"
+			options.source = gradle.ext.baselineJavaVersion
+		}
 
-		if ( JavaVersion.current().isJava8Compatible() ) {
-			options.addStringOption( 'Xdoclint:none', '-quiet' )
+		options.addStringOption( 'Xdoclint:none', '-quiet' )
+
+		if ( gradle.ext.javaToolchainEnabled ) {
+			options.setJFlags( getProperty( 'toolchain.javadoc.jvmargs' ).toString().
+							split( ' ' ).toList().findAll( { !it.isEmpty() } ) )
+		}
+	}
+
+	if ( gradle.ext.javaToolchainEnabled ) {
+		// Display version of Java tools
+		doFirst {
+			logger.lifecycle "Aggregating javadoc with '${javadocTool.get().metadata.installationPath}'"
 		}
 	}
 
@@ -223,7 +244,8 @@ task renderUserGuide(type: AsciidoctorTask, group: 'Documentation') {
 			   stylesheet: "css/hibernate.css",
 			   majorMinorVersion: rootProject.ormVersion.family,
 			   fullVersion: rootProject.ormVersion.fullName,
-			   docinfo: 'private'
+			   docinfo: 'private',
+			   jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/"
 
 	resources {
         from('src/main/asciidoc/userguide/') {

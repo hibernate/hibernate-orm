@@ -17,6 +17,7 @@ import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.entities.StrTestEntity;
 
+import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
@@ -45,7 +46,7 @@ public class OrderSequenceGenerationTest extends BaseEnversJPAFunctionalTestCase
 		return new Class<?>[] { StrTestEntity.class };
 	}
 
-	@Before
+	@Override
 	public void buildEntityManagerFactory() throws Exception {
 		createSchema = File.createTempFile( "create_schema", ".sql" );
 		dropSchema = File.createTempFile( "drop_schema", ".sql" );
@@ -58,7 +59,7 @@ public class OrderSequenceGenerationTest extends BaseEnversJPAFunctionalTestCase
 		options.put( AvailableSettings.HBM2DDL_SCRIPTS_CREATE_TARGET, createSchema.toPath() );
 		options.put( AvailableSettings.HBM2DDL_SCRIPTS_DROP_TARGET, dropSchema.toPath() );
 		options.put( AvailableSettings.HBM2DDL_SCRIPTS_ACTION, "drop-and-create" );
-		options.put( AvailableSettings.HBM2DDL_DATABASE_ACTION, "drop-and-create" );
+		options.put( AvailableSettings.HBM2DDL_DATABASE_ACTION, "create-drop" );
 		options.put( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
 	}
 

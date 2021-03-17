@@ -17,7 +17,7 @@ import org.hibernate.query.QueryProducer;
  *
  * @author Gavin King
  *
- * @deprecated (snce 5.2) Use Session (or SessionImplementor), as it now extends EntityManager directly
+ * @deprecated (since 5.2) Use Session (or SessionImplementor), as it now extends EntityManager directly
  */
 @Deprecated
 public interface HibernateEntityManager extends EntityManager, QueryProducer {

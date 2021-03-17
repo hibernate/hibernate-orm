@@ -63,6 +63,7 @@ import static org.ops4j.pax.exam.CoreOptions.when;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.configureConsole;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.debugConfiguration;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.editConfigurationFileExtend;
+import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.editConfigurationFilePut;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.features;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.karafDistributionConfiguration;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.keepRuntimeFolder;
@@ -79,6 +80,8 @@ import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.logLevel;
 public class OsgiIntegrationTest {
 
 	private static final boolean DEBUG = false;
+	private static final String jbossPublicRepository = "https://repository.jboss.org/nexus/content/groups/public-jboss/";
+	private static final String mavenCentralRepository = "https://repo.maven.apache.org/maven2/";
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Prepare the Karaf container
@@ -107,14 +110,26 @@ public class OsgiIntegrationTest {
 								)
 						)
 						.useDeployFolder( false ),
-				editConfigurationFileExtend(
+				editConfigurationFilePut( // Erase the defaults: Maven Central uses HTTP by default, but HTTPS is required now.
 						"etc/org.ops4j.pax.url.mvn.cfg",
 						"org.ops4j.pax.url.mvn.repositories",
-						"https://repository.jboss.org/nexus/content/groups/public/"
+						mavenCentralRepository
+								+ "@id=central"
+								+ ", "
+							+ jbossPublicRepository
+								+ "@id=jboss-public-repository"
+						+ "https://repository.jboss.org/nexus/content/groups/public/"
 				),
 				configureConsole().ignoreLocalConsole().ignoreRemoteShell(),
 				when( debug ).useOptions( keepRuntimeFolder() ),
 				logLevel( LogLevelOption.LogLevel.INFO ),
+				// also log to the console, so that the logs are writtten to the test output file
+				editConfigurationFilePut(
+						"etc/org.ops4j.pax.logging.cfg",
+						"log4j2.rootLogger.appenderRef.Console.filter.threshold.level",
+						"TRACE" // Means "whatever the root logger level is"
+				),
+
 				features( featureXmlUrl( paxExamEnvironment ), "hibernate-orm" ),
 				features( featureXmlUrl( paxExamEnvironment ), "hibernate-envers" ),
 				features( testingFeatureXmlUrl(), "hibernate-osgi-testing" )

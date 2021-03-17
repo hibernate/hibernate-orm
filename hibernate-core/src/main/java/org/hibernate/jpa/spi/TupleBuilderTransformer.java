@@ -149,7 +149,7 @@ public class TupleBuilderTransformer extends BasicTransformerAdapter {
 			if ( i < 0 ) {
 				throw new IllegalArgumentException( "requested tuple index must be greater than zero" );
 			}
-			if ( i > tuple.length ) {
+			if ( i >= tuple.length ) {
 				throw new IllegalArgumentException( "requested tuple index exceeds actual tuple size" );
 			}
 			return tuple[i];

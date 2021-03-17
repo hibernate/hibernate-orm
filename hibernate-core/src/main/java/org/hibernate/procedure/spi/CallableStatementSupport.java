@@ -46,5 +46,5 @@ public interface CallableStatementSupport {
 			CallableStatement statement,
 			ParameterStrategy parameterStrategy,
 			List<ParameterRegistrationImplementor<?>> parameterRegistrations,
-			SharedSessionContractImplementor session);;
+			SharedSessionContractImplementor session);
 }

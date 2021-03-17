@@ -11,22 +11,26 @@ import org.hibernate.bytecode.spi.ProxyFactoryFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.proxy.pojo.bytebuddy.ByteBuddyProxyFactory;
+import org.hibernate.proxy.pojo.bytebuddy.ByteBuddyProxyHelper;
 
 public class ProxyFactoryFactoryImpl implements ProxyFactoryFactory {
 
-	private final ByteBuddyState bytebuddy;
+	private final ByteBuddyState byteBuddyState;
 
-	public ProxyFactoryFactoryImpl(ByteBuddyState bytebuddy) {
-		this.bytebuddy = bytebuddy;
+	private final ByteBuddyProxyHelper byteBuddyProxyHelper;
+
+	public ProxyFactoryFactoryImpl(ByteBuddyState byteBuddyState, ByteBuddyProxyHelper byteBuddyProxyHelper) {
+		this.byteBuddyState = byteBuddyState;
+		this.byteBuddyProxyHelper = byteBuddyProxyHelper;
 	}
 
 	@Override
 	public ProxyFactory buildProxyFactory(SessionFactoryImplementor sessionFactory) {
-		return new ByteBuddyProxyFactory();
+		return new ByteBuddyProxyFactory( byteBuddyProxyHelper );
 	}
 
 	@Override
 	public BasicProxyFactory buildBasicProxyFactory(Class superClass, Class[] interfaces) {
-		return new BasicProxyFactoryImpl( superClass, interfaces, bytebuddy );
+		return new BasicProxyFactoryImpl( superClass, interfaces, byteBuddyState );
 	}
 }

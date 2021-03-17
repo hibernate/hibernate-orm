@@ -66,6 +66,9 @@ public class BitSetTypeDefTest extends BaseCoreFunctionalTestCase {
 
 		private BitSet bitSet;
 
+		//Getters and setters are omitted for brevity
+	//end::basic-custom-type-BitSetTypeDef-mapping-example[]
+
 		public Integer getId() {
 			return id;
 		}
@@ -81,6 +84,7 @@ public class BitSetTypeDefTest extends BaseCoreFunctionalTestCase {
 		public void setBitSet(BitSet bitSet) {
 			this.bitSet = bitSet;
 		}
+	//tag::basic-custom-type-BitSetTypeDef-mapping-example[]
 	}
 	//end::basic-custom-type-BitSetTypeDef-mapping-example[]
 }

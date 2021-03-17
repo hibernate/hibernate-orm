@@ -9,8 +9,8 @@ package org.hibernate.persister.spi;
 import org.hibernate.HibernateException;
 
 /**
- * Indicates that the persister to use is not known and couyld not be determined.
- * 
+ * Indicates that the persister to use is not known and could not be determined.
+ *
  * @author Steve Ebersole
  */
 public class UnknownPersisterException extends HibernateException {

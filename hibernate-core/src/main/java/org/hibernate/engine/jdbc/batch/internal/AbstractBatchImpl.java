@@ -21,6 +21,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.resource.jdbc.ResourceRegistry;
 
 /**
  * Convenience base class for implementers of the Batch interface.
@@ -40,8 +41,8 @@ public abstract class AbstractBatchImpl implements Batch {
 	private final SqlStatementLogger sqlStatementLogger;
 	private final SqlExceptionHelper sqlExceptionHelper;
 
-	private LinkedHashMap<String,PreparedStatement> statements = new LinkedHashMap<String,PreparedStatement>();
-	private LinkedHashSet<BatchObserver> observers = new LinkedHashSet<BatchObserver>();
+	private LinkedHashMap<String, PreparedStatement> statements = new LinkedHashMap<>();
+	private LinkedHashSet<BatchObserver> observers = new LinkedHashSet<>();
 
 	protected AbstractBatchImpl(BatchKey key, JdbcCoordinator jdbcCoordinator) {
 		if ( key == null ) {
@@ -152,17 +153,31 @@ public abstract class AbstractBatchImpl implements Batch {
 	}
 
 	protected void releaseStatements() {
-		for ( PreparedStatement statement : getStatements().values() ) {
+		final LinkedHashMap<String, PreparedStatement> statements = getStatements();
+		final ResourceRegistry resourceRegistry = jdbcCoordinator.getResourceRegistry();
+		for ( PreparedStatement statement : statements.values() ) {
 			clearBatch( statement );
-			jdbcCoordinator.getResourceRegistry().release( statement );
-			jdbcCoordinator.afterStatementExecution();
+			resourceRegistry.release( statement );
 		}
-		getStatements().clear();
+		// IMPL NOTE: If the statements are not cleared and JTA is being used, then
+		//            jdbcCoordinator.afterStatementExecution() will abort the batch and a
+		//            warning will be logged. To avoid the warning, clear statements first,
+		//            before calling jdbcCoordinator.afterStatementExecution().
+		statements.clear();
+		jdbcCoordinator.afterStatementExecution();
 	}
 
 	protected void clearBatch(PreparedStatement statement) {
 		try {
-			statement.clearBatch();
+			// This code can be called after the connection is released
+			// and the statement is closed. If the statement is closed,
+			// then SQLException will be thrown when PreparedStatement#clearBatch
+			// is called.
+			// Ensure the statement is not closed before
+			// calling PreparedStatement#clearBatch.
+			if ( !statement.isClosed() ) {
+				statement.clearBatch();
+			}
 		}
 		catch ( SQLException e ) {
 			LOG.unableToReleaseBatchStatement();

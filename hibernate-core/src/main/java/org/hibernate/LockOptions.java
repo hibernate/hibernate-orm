@@ -245,7 +245,7 @@ public class LockOptions implements Serializable {
 	 * <p/>
 	 * See {@link #getTimeOut} for a discussion of meaning.
 	 *
-	 * @param timeout The new timeout setting.
+	 * @param timeout The new timeout setting, in milliseconds
 	 *
 	 * @return this (for method chaining).
 	 *
@@ -328,5 +328,21 @@ public class LockOptions implements Serializable {
 		}
 		destination.setFollowOnLocking( source.getFollowOnLocking() );
 		return destination;
+	}
+
+	public static LockOptions interpret(LockMode lockMode) {
+		if ( lockMode == null || lockMode == LockMode.NONE ) {
+			return NONE;
+		}
+
+		if ( lockMode == LockMode.READ ) {
+			return READ;
+		}
+
+		if ( lockMode.greaterThan( LockMode.UPGRADE_NOWAIT ) ) {
+			return UPGRADE;
+		}
+
+		return new LockOptions( lockMode );
 	}
 }

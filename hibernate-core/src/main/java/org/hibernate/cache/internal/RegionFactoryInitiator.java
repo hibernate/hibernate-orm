@@ -83,7 +83,7 @@ public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFa
 		final Collection<Class<? extends RegionFactory>> implementors = selector.getRegisteredStrategyImplementors( RegionFactory.class );
 
 		if ( setting == null && implementors.size() != 1 ) {
-			// if either are explicitly defined as TRUE we need a RegionFactory
+			// if either is explicitly defined as TRUE we need a RegionFactory
 			if ( ( useSecondLevelCache != null && useSecondLevelCache == TRUE )
 					|| ( useQueryCache != null && useQueryCache == TRUE ) ) {
 				throw new CacheException( "Caching was explicitly requested, but no RegionFactory was defined and there is not a single registered RegionFactory" );

@@ -65,6 +65,10 @@ public class MappedSuperclassTest extends BaseEntityManagerFunctionalTestCase {
 
 		private BigDecimal interestRate;
 
+		//Getters and setters are omitted for brevity
+
+	//end::entity-inheritance-mapped-superclass-example[]
+
 		public Long getId() {
 			return id;
 		}
@@ -96,12 +100,17 @@ public class MappedSuperclassTest extends BaseEntityManagerFunctionalTestCase {
 		public void setInterestRate(BigDecimal interestRate) {
 			this.interestRate = interestRate;
 		}
+	//tag::entity-inheritance-mapped-superclass-example[]
 	}
 
 	@Entity(name = "DebitAccount")
 	public static class DebitAccount extends Account {
 
 		private BigDecimal overdraftFee;
+
+		//Getters and setters are omitted for brevity
+
+	//end::entity-inheritance-mapped-superclass-example[]
 
 		public BigDecimal getOverdraftFee() {
 			return overdraftFee;
@@ -110,12 +119,17 @@ public class MappedSuperclassTest extends BaseEntityManagerFunctionalTestCase {
 		public void setOverdraftFee(BigDecimal overdraftFee) {
 			this.overdraftFee = overdraftFee;
 		}
+	//tag::entity-inheritance-mapped-superclass-example[]
 	}
 
 	@Entity(name = "CreditAccount")
 	public static class CreditAccount extends Account {
 
 		private BigDecimal creditLimit;
+
+		//Getters and setters are omitted for brevity
+
+	//end::entity-inheritance-mapped-superclass-example[]
 
 		public BigDecimal getCreditLimit() {
 			return creditLimit;
@@ -124,6 +138,7 @@ public class MappedSuperclassTest extends BaseEntityManagerFunctionalTestCase {
 		public void setCreditLimit(BigDecimal creditLimit) {
 			this.creditLimit = creditLimit;
 		}
+	//tag::entity-inheritance-mapped-superclass-example[]
 	}
 	//end::entity-inheritance-mapped-superclass-example[]
 }

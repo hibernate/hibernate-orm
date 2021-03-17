@@ -6,21 +6,21 @@
 Hibernate understands both the Java and JDBC representations of application data.
 The ability to read/write this data from/to the database is the function of a Hibernate _type_.
 A type, in this usage, is an implementation of the `org.hibernate.type.Type` interface.
-This Hibernate type also describes various aspects of behavior of the Java type such as how to check for equality, how to clone values, etc.
+This Hibernate type also describes various behavioral aspects of the Java type such as how to check for equality, how to clone values, etc.
 
 .Usage of the word _type_
 [NOTE]
 ====
 The Hibernate type is neither a Java type nor a SQL data type.
-It provides information about both of these as well as understanding marshalling between.
+It provides information about mapping a Java type to an SQL type as well as how to persist and fetch a given Java type to and from a relational database.
 
-When you encounter the term type in discussions of Hibernate, it may refer to the Java type, the JDBC type, or the Hibernate type, depending on context.
+When you encounter the term type in discussions of Hibernate, it may refer to the Java type, the JDBC type, or the Hibernate type, depending on the context.
 ====
 
 To help understand the type categorizations, let's look at a simple table and domain model that we wish to map.
 
 [[mapping-types-basic-example]]
-.Simple table and domain model
+.A simple table and domain model
 ====
 [source, SQL, indent=0]
 ----
@@ -50,9 +50,9 @@ The persistent attributes of the `Contact` class are value types.
 
 Value types are further classified into three sub-categories:
 
-Basic types:: in mapping the `Contact` table, all attributes except for name would be basic types. Basic types are discussed in detail in <<chapters/domain/basic_types.adoc#basic,_Basic Types_>>
-Embeddable types:: the name attribute is an example of an embeddable type, which is discussed in details in <<chapters/domain/embeddables.adoc#embeddables,_Embeddable Types_>>
-Collection types:: although not featured in the aforementioned example, collection types are also a distinct category among value types. Collection types are further discussed in <<chapters/domain/collections.adoc#collections,_Collections_>>
+Basic types:: in mapping the `Contact` table, all attributes except for name would be basic types. Basic types are discussed in detail in <<chapters/domain/basic_types.adoc#basic,_Basic types_>>
+Embeddable types:: the `name` attribute is an example of an embeddable type, which is discussed in details in <<chapters/domain/embeddables.adoc#embeddables,_Embeddable types_>>
+*Collection* types:: although not featured in the aforementioned example, collection types are also a distinct category among value types. Collection types are further discussed in <<chapters/domain/collections.adoc#collections,_Collections_>>
 
 [[categorization-entity]]
 ==== Entity types
@@ -62,4 +62,4 @@ Entities are domain model classes which correlate to rows in a database table, u
 Because of the requirement for a unique identifier, entities exist independently and define their own lifecycle.
 The `Contact` class itself would be an example of an entity.
 
-Mapping entities is discussed in detail in <<chapters/domain/entity.adoc#entity,_Entity_>>.
+Mapping entities is discussed in detail in <<chapters/domain/entity.adoc#entity,_Entity types_>>.

@@ -86,16 +86,26 @@ public class LocateFunction
 
 	@Override
 	public String render(RenderingContext renderingContext) {
-		StringBuilder buffer = new StringBuilder();
-		buffer.append( "locate(" )
-				.append( ( (Renderable) getPattern() ).render( renderingContext ) )
-				.append( ',' )
-				.append( ( (Renderable) getString() ).render( renderingContext ) );
-		if ( getStart() != null ) {
-			buffer.append( ',' )
-					.append( ( (Renderable) getStart() ).render( renderingContext ) );
+		renderingContext.getFunctionStack().push( this );
+
+		try {
+			final StringBuilder buffer = new StringBuilder();
+			buffer.append( "locate(" )
+					.append( ( (Renderable) getPattern() ).render( renderingContext ) )
+					.append( ',' )
+					.append( ( (Renderable) getString() ).render( renderingContext ) );
+
+			if ( getStart() != null ) {
+				buffer.append( ',' )
+						.append( ( (Renderable) getStart() ).render( renderingContext ) );
+			}
+
+			buffer.append( ')' );
+
+			return buffer.toString();
 		}
-		buffer.append( ')' );
-		return buffer.toString();
+		finally {
+			renderingContext.getFunctionStack().pop();
+		}
 	}
 }

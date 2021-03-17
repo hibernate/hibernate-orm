@@ -13,14 +13,17 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
+import org.hibernate.boot.model.source.internal.hbm.CommaSeparatedStringHelper;
 import org.hibernate.engine.jdbc.cursor.internal.StandardRefCursorSupport;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.env.spi.SQLStateType;
 import org.hibernate.engine.jdbc.spi.TypeInfo;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.tool.schema.extract.spi.SequenceInformation;
 
 /**
  * Standard implementation of ExtractedDatabaseMetaData
@@ -45,6 +48,7 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 
 	private final Set<String> extraKeywords;
 	private final LinkedHashSet<TypeInfo> typeInfoSet;
+	private final List<SequenceInformation> sequenceInformationList;
 
 	private ExtractedDatabaseMetaDataImpl(
 			JdbcEnvironment jdbcEnvironment,
@@ -60,7 +64,8 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 			boolean supportsDataDefinitionInTransaction,
 			boolean doesDataDefinitionCauseTransactionCommit,
 			SQLStateType sqlStateType,
-			boolean lobLocatorUpdateCopy) {
+			boolean lobLocatorUpdateCopy,
+			List<SequenceInformation> sequenceInformationList) {
 		this.jdbcEnvironment = jdbcEnvironment;
 
 		this.connectionCatalogName = connectionCatalogName;
@@ -82,6 +87,7 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 		this.doesDataDefinitionCauseTransactionCommit = doesDataDefinitionCauseTransactionCommit;
 		this.sqlStateType = sqlStateType;
 		this.lobLocatorUpdateCopy = lobLocatorUpdateCopy;
+		this.sequenceInformationList = sequenceInformationList;
 	}
 
 	@Override
@@ -154,6 +160,11 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 		return typeInfoSet;
 	}
 
+	@Override
+	public List<SequenceInformation> getSequenceInformationList() {
+		return sequenceInformationList;
+	}
+
 	public static class Builder {
 		private final JdbcEnvironment jdbcEnvironment;
 
@@ -172,6 +183,7 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 		private boolean doesDataDefinitionCauseTransactionCommit;
 		private SQLStateType sqlStateType;
 		private boolean lobLocatorUpdateCopy;
+		private List<SequenceInformation> sequenceInformationList = Collections.emptyList();
 
 		public Builder(JdbcEnvironment jdbcEnvironment) {
 			this.jdbcEnvironment = jdbcEnvironment;
@@ -196,13 +208,7 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 		}
 
 		private Set<String> parseKeywords(String extraKeywordsString) {
-			if ( StringHelper.isEmpty(  extraKeywordsString ) ) {
-				return Collections.emptySet();
-			}
-
-			final Set<String> keywordSet = new HashSet<String>();
-			keywordSet.addAll( Arrays.asList( extraKeywordsString.split( "\\s*,\\s*" ) ) );
-			return keywordSet;
+			return CommaSeparatedStringHelper.split( extraKeywordsString );
 		}
 
 		public Builder setConnectionSchemaName(String connectionSchemaName) {
@@ -296,6 +302,11 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 			return this;
 		}
 
+		public Builder setSequenceInformationList(List<SequenceInformation> sequenceInformationList) {
+			this.sequenceInformationList = sequenceInformationList;
+			return this;
+		}
+
 		public ExtractedDatabaseMetaDataImpl build() {
 			return new ExtractedDatabaseMetaDataImpl(
 					jdbcEnvironment,
@@ -311,7 +322,8 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 					supportsDataDefinitionInTransaction,
 					doesDataDefinitionCauseTransactionCommit,
 					sqlStateType,
-					lobLocatorUpdateCopy
+					lobLocatorUpdateCopy,
+					sequenceInformationList
 			);
 		}
 	}

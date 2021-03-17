@@ -6,6 +6,8 @@
  */
 package org.hibernate.jpa.test.criteria.paths;
 
+import java.util.Map;
+
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
@@ -18,6 +20,7 @@ import javax.persistence.metamodel.Bindable;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.PathSource;
@@ -39,6 +42,14 @@ public class SingularAttributeJoinTest extends BaseEntityManagerFunctionalTestCa
         return new String[] {
                 getClass().getPackage().getName().replace( '.', '/' ) + "/PolicyAndDistribution.hbm.xml"
         };
+    }
+
+    @Override
+    protected void addConfigOptions(Map options) {
+        super.addConfigOptions( options );
+
+        // make sure that dynamic-map mode entity types are returned in the metamodel.
+        options.put( AvailableSettings.JPA_METAMODEL_POPULATION, "enabled" );
     }
 
     /**

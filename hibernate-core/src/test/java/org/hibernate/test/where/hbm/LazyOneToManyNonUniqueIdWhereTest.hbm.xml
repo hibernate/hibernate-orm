@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.where.hbm" default-access="property">
+    <class name="LazyOneToManyNonUniqueIdWhereTest$Material" table="MAIN_TABLE" where="CODE = 'MATERIAL'">
+        <id name="id" column="ID">
+            <generator class="assigned" />
+        </id>
+
+        <property name="name" column="NAME"/>
+
+        <set name="sizesFromCombined" lazy="true" mutable="false">
+            <key column="MATERIAL_OWNER_ID"/>
+            <one-to-many class="LazyOneToManyNonUniqueIdWhereTest$Size"/>
+        </set>
+
+        <bag name="mediumOrHighRatingsFromCombined" lazy="true" mutable="false"
+             where="name = 'high' or name = 'medium'">
+            <key column="MATERIAL_OWNER_ID"/>
+            <one-to-many class="LazyOneToManyNonUniqueIdWhereTest$Rating"/>
+        </bag>
+
+    </class>
+
+    <class name="LazyOneToManyNonUniqueIdWhereTest$Building" table="MAIN_TABLE" where="CODE = 'BUILDING'">
+        <id name="id" column="ID">
+            <generator class="assigned" />
+        </id>
+
+        <property name="name" column="NAME"/>
+
+        <set name="sizesFromCombined" lazy="true" mutable="false">
+            <key column="BUILDING_OWNER_ID"/>
+            <one-to-many class="LazyOneToManyNonUniqueIdWhereTest$Size"/>
+        </set>
+
+        <set name="ratingsFromCombined" lazy="true" mutable="false">
+            <key column="BUILDING_OWNER_ID"/>
+            <one-to-many class="LazyOneToManyNonUniqueIdWhereTest$Rating"/>
+        </set>
+
+    </class>
+
+    <class name="LazyOneToManyNonUniqueIdWhereTest$Size" table="MAIN_TABLE" where="CODE = 'SIZE'">
+        <id name="id" column="ID">
+            <generator class="assigned" />
+        </id>
+        <property name="name" column="NAME"/>
+    </class>
+
+    <class name="LazyOneToManyNonUniqueIdWhereTest$Rating" table="MAIN_TABLE" where="CODE = 'RATING'">
+        <id name="id" column="ID">
+            <generator class="assigned" />
+        </id>
+        <property name="name" column="NAME"/>
+    </class>
+
+</hibernate-mapping>
+
+
+

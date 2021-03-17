@@ -120,6 +120,10 @@ public class DiscriminatorNotNullSingleTableTest extends BaseEntityManagerFuncti
 
 		private BigDecimal interestRate;
 
+		//Getters and setters are omitted for brevity
+
+	//end::entity-inheritance-single-table-discriminator-value-example[]
+
 		public Long getId() {
 			return id;
 		}
@@ -151,6 +155,7 @@ public class DiscriminatorNotNullSingleTableTest extends BaseEntityManagerFuncti
 		public void setInterestRate(BigDecimal interestRate) {
 			this.interestRate = interestRate;
 		}
+	//tag::entity-inheritance-single-table-discriminator-value-example[]
 	}
 
 	@Entity(name = "DebitAccount")
@@ -159,6 +164,10 @@ public class DiscriminatorNotNullSingleTableTest extends BaseEntityManagerFuncti
 
 		private BigDecimal overdraftFee;
 
+		//Getters and setters are omitted for brevity
+
+	//end::entity-inheritance-single-table-discriminator-value-example[]
+
 		public BigDecimal getOverdraftFee() {
 			return overdraftFee;
 		}
@@ -166,6 +175,7 @@ public class DiscriminatorNotNullSingleTableTest extends BaseEntityManagerFuncti
 		public void setOverdraftFee(BigDecimal overdraftFee) {
 			this.overdraftFee = overdraftFee;
 		}
+	//tag::entity-inheritance-single-table-discriminator-value-example[]
 	}
 
 	@Entity(name = "CreditAccount")
@@ -174,6 +184,10 @@ public class DiscriminatorNotNullSingleTableTest extends BaseEntityManagerFuncti
 
 		private BigDecimal creditLimit;
 
+		//Getters and setters are omitted for brevity
+
+	//end::entity-inheritance-single-table-discriminator-value-example[]
+
 		public BigDecimal getCreditLimit() {
 			return creditLimit;
 		}
@@ -181,6 +195,7 @@ public class DiscriminatorNotNullSingleTableTest extends BaseEntityManagerFuncti
 		public void setCreditLimit(BigDecimal creditLimit) {
 			this.creditLimit = creditLimit;
 		}
+	//tag::entity-inheritance-single-table-discriminator-value-example[]
 	}
 
 	@Entity(name = "OtherAccount")
@@ -189,6 +204,10 @@ public class DiscriminatorNotNullSingleTableTest extends BaseEntityManagerFuncti
 
 		private boolean active;
 
+		//Getters and setters are omitted for brevity
+
+	//end::entity-inheritance-single-table-discriminator-value-example[]
+
 		public boolean isActive() {
 			return active;
 		}
@@ -196,6 +215,7 @@ public class DiscriminatorNotNullSingleTableTest extends BaseEntityManagerFuncti
 		public void setActive(boolean active) {
 			this.active = active;
 		}
+	//tag::entity-inheritance-single-table-discriminator-value-example[]
 	}
 	//end::entity-inheritance-single-table-discriminator-value-example[]
 }

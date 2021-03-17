@@ -10,8 +10,6 @@ import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Target;
 import java.lang.reflect.Method;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.Entity;
@@ -22,7 +20,6 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.PersistenceException;
 
 import org.hibernate.MappingException;
-import org.hibernate.annotations.common.reflection.ClassLoadingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XMethod;
@@ -42,67 +39,50 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public class CallbackBuilderLegacyImpl implements CallbackBuilder {
+final class CallbackBuilderLegacyImpl implements CallbackBuilder {
 	private static final Logger log = Logger.getLogger( CallbackBuilderLegacyImpl.class );
 
 	private final ManagedBeanRegistry managedBeanRegistry;
 	private final ReflectionManager reflectionManager;
 
-	public CallbackBuilderLegacyImpl(ManagedBeanRegistry managedBeanRegistry, ReflectionManager reflectionManager) {
+	CallbackBuilderLegacyImpl(ManagedBeanRegistry managedBeanRegistry, ReflectionManager reflectionManager) {
 		this.managedBeanRegistry = managedBeanRegistry;
 		this.reflectionManager = reflectionManager;
 	}
 
 	@Override
-	public void buildCallbacksForEntity(String entityClassName, CallbackRegistrar callbackRegistrar) {
-		final boolean debugEnabled = log.isDebugEnabled();
-		try {
-			final XClass entityXClass = reflectionManager.classForName( entityClassName );
-			final Class entityClass = reflectionManager.toClass( entityXClass );
-			for ( CallbackType callbackType : CallbackType.values() ) {
-				if ( callbackRegistrar.hasRegisteredCallbacks( entityClass, callbackType ) ) {
-					// this most likely means we have a class mapped multiple times using the hbm.xml
-					// "entity name" feature
-					if ( debugEnabled ) {
-						log.debugf(
-								"CallbackRegistry reported that Class [%s] already had %s callbacks registered; " +
-										"assuming this means the class was mapped twice " +
-										"(using hbm.xml entity-name support) - skipping subsequent registrations",
-								entityClassName,
-								callbackType.getCallbackAnnotation().getSimpleName()
-						);
-					}
-					continue;
+	public void buildCallbacksForEntity(Class entityClass, CallbackRegistrar callbackRegistrar) {
+		for ( CallbackType callbackType : CallbackType.values() ) {
+			if ( callbackRegistrar.hasRegisteredCallbacks( entityClass, callbackType ) ) {
+				// this most likely means we have a class mapped multiple times using the hbm.xml
+				// "entity name" feature
+				if ( log.isDebugEnabled() ) {
+					log.debugf(
+							"CallbackRegistry reported that Class [%s] already had %s callbacks registered; " +
+									"assuming this means the class was mapped twice " +
+									"(using hbm.xml entity-name support) - skipping subsequent registrations",
+							entityClass.getName(),
+							callbackType.getCallbackAnnotation().getSimpleName()
+					);
 				}
-
-				final Callback[] callbacks = resolveEntityCallbacks( entityXClass, callbackType, reflectionManager );
-				callbackRegistrar.registerCallbacks( entityClass, callbacks );
+				continue;
 			}
-		}
-		catch (ClassLoadingException e) {
-			throw new MappingException( "entity class not found: " + entityClassName, e );
+			final Callback[] callbacks = resolveEntityCallbacks( entityClass, callbackType, reflectionManager );
+			callbackRegistrar.registerCallbacks( entityClass, callbacks );
 		}
 	}
 
 	@Override
 	public void buildCallbacksForEmbeddable(
-			Property embeddableProperty, String entityClassName, CallbackRegistrar callbackRegistrar) {
-		try {
-			final XClass entityXClass = reflectionManager.classForName( entityClassName );
-			final Class entityClass = reflectionManager.toClass( entityXClass );
-
-			for ( CallbackType callbackType : CallbackType.values() ) {
-				final Callback[] callbacks = resolveEmbeddableCallbacks(
-						entityClass,
-						embeddableProperty,
-						callbackType,
-						reflectionManager
-				);
-				callbackRegistrar.registerCallbacks( entityClass, callbacks );
-			}
-		}
-		catch (ClassLoadingException e) {
-			throw new MappingException( "Class not found: ", e );
+			Property embeddableProperty, Class entityClass, CallbackRegistrar callbackRegistrar) {
+		for ( CallbackType callbackType : CallbackType.values() ) {
+			final Callback[] callbacks = resolveEmbeddableCallbacks(
+					entityClass,
+					embeddableProperty,
+					callbackType,
+					reflectionManager
+			);
+			callbackRegistrar.registerCallbacks( entityClass, callbacks );
 		}
 	}
 
@@ -112,17 +92,16 @@ public class CallbackBuilderLegacyImpl implements CallbackBuilder {
 	}
 
 	@SuppressWarnings({"unchecked", "WeakerAccess"})
-	public Callback[] resolveEntityCallbacks(XClass beanClass, CallbackType callbackType, ReflectionManager reflectionManager) {
+	public Callback[] resolveEntityCallbacks(Class entityClass, CallbackType callbackType, ReflectionManager reflectionManager) {
 		List<Callback> callbacks = new ArrayList<>();
 		List<String> callbacksMethodNames = new ArrayList<>();
 		List<Class> orderedListeners = new ArrayList<>();
-		XClass currentClazz = beanClass;
+		XClass currentClazz = reflectionManager.toXClass( entityClass );
 		boolean stopListeners = false;
 		boolean stopDefaultListeners = false;
-		final boolean debugEnabled = log.isDebugEnabled();
 		do {
 			Callback callback = null;
-			List<XMethod> methods = getDeclaredMethods( currentClazz );
+			List<XMethod> methods = currentClazz.getDeclaredMethods();
 			for ( final XMethod xMethod : methods ) {
 				if ( xMethod.isAnnotationPresent( callbackType.getCallbackAnnotation() ) ) {
 					Method method = reflectionManager.toMethod( xMethod );
@@ -140,12 +119,12 @@ public class CallbackBuilderLegacyImpl implements CallbackBuilder {
 								);
 							}
 							ReflectHelper.ensureAccessibility( method );
-							if ( debugEnabled ) {
+							if ( log.isDebugEnabled() ) {
 								log.debugf(
 										"Adding %s as %s callback for entity %s",
 										methodName,
 										callbackType.getCallbackAnnotation().getSimpleName(),
-										beanClass.getName()
+										entityClass.getName()
 								);
 							}
 							callbacks.add( 0, callback ); //superclass first
@@ -154,7 +133,7 @@ public class CallbackBuilderLegacyImpl implements CallbackBuilder {
 						else {
 							throw new PersistenceException(
 									"You can only annotate one callback method with "
-											+ callbackType.getCallbackAnnotation().getName() + " in bean class: " + beanClass.getName()
+											+ callbackType.getCallbackAnnotation().getName() + " in bean class: " + entityClass.getName()
 							);
 						}
 					}
@@ -193,7 +172,7 @@ public class CallbackBuilderLegacyImpl implements CallbackBuilder {
 			if ( listener != null ) {
 				XClass xListener = reflectionManager.toXClass( listener );
 				callbacksMethodNames = new ArrayList<>();
-				List<XMethod> methods = getDeclaredMethods( xListener );
+				List<XMethod> methods = xListener.getDeclaredMethods();
 				for ( final XMethod xMethod : methods ) {
 					if ( xMethod.isAnnotationPresent( callbackType.getCallbackAnnotation() ) ) {
 						final Method method = reflectionManager.toMethod( xMethod );
@@ -216,12 +195,12 @@ public class CallbackBuilderLegacyImpl implements CallbackBuilder {
 									);
 								}
 								ReflectHelper.ensureAccessibility( method );
-								if ( debugEnabled ) {
+								if ( log.isDebugEnabled() ) {
 									log.debugf(
 											"Adding %s as %s callback for entity %s",
 											methodName,
 											callbackType.getCallbackAnnotation().getSimpleName(),
-											beanClass.getName()
+											entityClass.getName()
 										);
 								}
 								callbacks.add( 0, callback ); // listeners first
@@ -230,7 +209,7 @@ public class CallbackBuilderLegacyImpl implements CallbackBuilder {
 								throw new PersistenceException(
 										"You can only annotate one callback method with "
 												+ callbackType.getCallbackAnnotation().getName()
-												+ " in bean class: " + beanClass.getName()
+												+ " in bean class: " + entityClass.getName()
 												+ " and callback listener: " + listener.getName()
 								);
 							}
@@ -245,10 +224,9 @@ public class CallbackBuilderLegacyImpl implements CallbackBuilder {
 	@SuppressWarnings({"unchecked", "WeakerAccess"})
 	public Callback[] resolveEmbeddableCallbacks(Class entityClass, Property embeddableProperty, CallbackType callbackType, ReflectionManager reflectionManager) {
 
-		final String embeddableClassName = embeddableProperty.getType().getReturnedClass().getName();
-		final XClass embeddableXClass = reflectionManager.classForName( embeddableClassName );
+		final Class embeddableClass = embeddableProperty.getType().getReturnedClass();
+		final XClass embeddableXClass = reflectionManager.toXClass( embeddableClass );
 		final Getter embeddableGetter = embeddableProperty.getGetter( entityClass );
-		final boolean debugEnabled = log.isDebugEnabled();
 		final List<Callback> callbacks = new ArrayList<>();
 		final List<String> callbacksMethodNames = new ArrayList<>();
 		XClass currentClazz = embeddableXClass;
@@ -272,7 +250,7 @@ public class CallbackBuilderLegacyImpl implements CallbackBuilder {
 								);
 							}
 							ReflectHelper.ensureAccessibility( method );
-							if ( debugEnabled ) {
+							if ( log.isDebugEnabled() ) {
 								log.debugf(
 										"Adding %s as %s callback for entity %s",
 										methodName,
@@ -340,15 +318,5 @@ public class CallbackBuilderLegacyImpl implements CallbackBuilder {
 				}
 			}
 		}
-	}
-
-	private static List<XMethod> getDeclaredMethods(XClass clazz) {
-		final PrivilegedAction<List<XMethod>> action = new PrivilegedAction<List<XMethod>>() {
-			@Override
-			public List<XMethod> run() {
-				return clazz.getDeclaredMethods();
-			}
-		};
-		return System.getSecurityManager() != null ? AccessController.doPrivileged( action ) : action.run();
 	}
 }

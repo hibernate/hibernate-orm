@@ -7,6 +7,8 @@
 package org.hibernate.dialect;
 
 import org.hibernate.LockOptions;
+import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.type.StandardBasicTypes;
 
 /**
  * @author Vlad Mihalcea
@@ -33,6 +35,10 @@ public class MySQL8Dialect extends MySQL57Dialect {
 		registerKeyword("PERSIST_ONLY");
 		registerKeyword("RANK");
 		registerKeyword("ROW_NUMBER");
+
+		registerFunction( "regexp_replace", new StandardSQLFunction( "regexp_replace", StandardBasicTypes.STRING ) );
+		registerFunction( "regexp_instr", new StandardSQLFunction( "regexp_instr", StandardBasicTypes.INTEGER ) );
+		registerFunction( "regexp_substr", new StandardSQLFunction( "regexp_substr", StandardBasicTypes.STRING ) );
 	}
 
 	@Override

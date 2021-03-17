@@ -269,7 +269,7 @@ public interface Type extends Serializable {
 	 *
 	 * @param dbState the database state, in a "hydrated" form, with identifiers unresolved
 	 * @param currentState the current state of the object
-	 * @param checkable which columns are actually updatable
+	 * @param checkable which columns are actually checkable
 	 * @param session The session from which the request originated.
 	 *
 	 * @return true if the field has been modified

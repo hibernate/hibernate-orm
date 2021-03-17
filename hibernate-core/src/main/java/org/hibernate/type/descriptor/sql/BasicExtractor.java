@@ -45,9 +45,8 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J> {
 	@Override
 	public J extract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
 		final J value = doExtract( rs, name, options );
-		final boolean traceEnabled = log.isTraceEnabled();
 		if ( value == null || rs.wasNull() ) {
-			if ( traceEnabled ) {
+			if ( log.isTraceEnabled() ) {
 				log.tracef(
 						"extracted value ([%s] : [%s]) - [null]",
 						name,
@@ -57,7 +56,7 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J> {
 			return null;
 		}
 		else {
-			if ( traceEnabled ) {
+			if ( log.isTraceEnabled() ) {
 				log.tracef(
 						"extracted value ([%s] : [%s]) - [%s]",
 						name,
@@ -88,9 +87,8 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J> {
 	@Override
 	public J extract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
 		final J value = doExtract( statement, index, options );
-		final boolean traceEnabled = log.isTraceEnabled();
 		if ( value == null || statement.wasNull() ) {
-			if ( traceEnabled ) {
+			if ( log.isTraceEnabled() ) {
 				log.tracef(
 						"extracted procedure output  parameter ([%s] : [%s]) - [null]",
 						index,
@@ -100,7 +98,7 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J> {
 			return null;
 		}
 		else {
-			if ( traceEnabled ) {
+			if ( log.isTraceEnabled() ) {
 				log.tracef(
 						"extracted procedure output  parameter ([%s] : [%s]) - [%s]",
 						index,
@@ -135,9 +133,8 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J> {
 		}
 		final String paramName = paramNames[0];
 		final J value = doExtract( statement, paramName, options );
-		final boolean traceEnabled = log.isTraceEnabled();
 		if ( value == null || statement.wasNull() ) {
-			if ( traceEnabled ) {
+			if ( log.isTraceEnabled() ) {
 				log.tracef(
 						"extracted named procedure output  parameter ([%s] : [%s]) - [null]",
 						paramName,
@@ -147,7 +144,7 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J> {
 			return null;
 		}
 		else {
-			if ( traceEnabled ) {
+			if ( log.isTraceEnabled() ) {
 				log.tracef(
 						"extracted named procedure output  parameter ([%s] : [%s]) - [%s]",
 						paramName,

@@ -6,18 +6,27 @@
  */
 package org.hibernate.test.annotations.any;
 
-import org.junit.Test;
-
-import org.hibernate.Query;
+import org.hibernate.LazyInitializationException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.query.Query;
 
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
+
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class AnyTest extends BaseCoreFunctionalTestCase {
+
+	@Override
+	protected boolean isCleanupTestDataRequired() {
+		return true;
+	}
+
 	@Test
 	public void testDefaultAnyAssociation() {
 		Session s = openSession();
@@ -26,13 +35,13 @@ public class AnyTest extends BaseCoreFunctionalTestCase {
 		PropertySet set1 = new PropertySet( "string" );
 		Property property = new StringProperty( "name", "Alex" );
 		set1.setSomeProperty( property );
-		set1.addGeneratedProperty( property );
+		set1.addGeneralProperty( property );
 		s.save( set1 );
 
 		PropertySet set2 = new PropertySet( "integer" );
 		property = new IntegerProperty( "age", 33 );
 		set2.setSomeProperty( property );
-		set2.addGeneratedProperty( property );
+		set2.addGeneralProperty( property );
 		s.save( set2 );
 
 		s.flush();
@@ -116,10 +125,10 @@ public class AnyTest extends BaseCoreFunctionalTestCase {
 
 		list.setSomeProperty( longProperty );
 
-		list.addGeneratedProperty( stringProperty );
-		list.addGeneratedProperty( integerProperty );
-		list.addGeneratedProperty( longProperty );
-		list.addGeneratedProperty( charProp );
+		list.addGeneralProperty( stringProperty );
+		list.addGeneralProperty( integerProperty );
+		list.addGeneralProperty( longProperty );
+		list.addGeneralProperty( charProp );
 
 		s.save( list );
 
@@ -151,6 +160,57 @@ public class AnyTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
 
+	@Test
+	public void testFetchEager() {
+		doInHibernate( this::sessionFactory, s -> {
+			PropertySet set = new PropertySet( "string" );
+			Property property = new StringProperty( "name", "Alex" );
+			set.setSomeProperty( property );
+			s.save( set );
+		} );
+
+		PropertySet result = doInHibernate( this::sessionFactory, s -> {
+			return s.createQuery( "select s from PropertySet s where name = :name", PropertySet.class )
+					.setParameter( "name", "string" )
+					.getSingleResult();
+		} );
+
+		assertNotNull( result );
+		assertNotNull( result.getSomeProperty() );
+		assertTrue( result.getSomeProperty() instanceof StringProperty );
+		assertEquals( "Alex", result.getSomeProperty().asString() );
+	}
+
+	@Test
+	public void testFetchLazy() {
+		doInHibernate( this::sessionFactory, s -> {
+			LazyPropertySet set = new LazyPropertySet( "string" );
+			Property property = new StringProperty( "name", "Alex" );
+			set.setSomeProperty( property );
+			s.save( set );
+		} );
+
+		LazyPropertySet result = doInHibernate( this::sessionFactory, s -> {
+			return s.createQuery( "select s from LazyPropertySet s where name = :name", LazyPropertySet.class )
+					.setParameter( "name", "string" )
+					.getSingleResult();
+		} );
+
+		assertNotNull( result );
+		assertNotNull( result.getSomeProperty() );
+
+		try {
+			result.getSomeProperty().asString();
+			fail( "should not get the property string after session closed." );
+		}
+		catch (LazyInitializationException e) {
+			// expected
+		}
+		catch (Exception e) {
+			fail( "should not throw exception other than LazyInitializationException." );
+		}
+	}
+
 	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
@@ -158,6 +218,7 @@ public class AnyTest extends BaseCoreFunctionalTestCase {
 				IntegerProperty.class,
 				LongProperty.class,
 				PropertySet.class,
+				LazyPropertySet.class,
 				PropertyMap.class,
 				PropertyList.class,
 				CharProperty.class
@@ -172,8 +233,8 @@ public class AnyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	// Simply having this orm.xml file in the classpath reproduces HHH-4261.
-    @Override
-    protected String[] getXmlFiles() {
-        return new String[] { "org/hibernate/test/annotations/any/orm.xml" };
-    }
+	@Override
+	protected String[] getXmlFiles() {
+		return new String[] { "org/hibernate/test/annotations/any/orm.xml" };
+	}
 }

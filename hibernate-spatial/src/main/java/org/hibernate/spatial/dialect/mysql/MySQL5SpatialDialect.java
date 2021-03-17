@@ -37,7 +37,7 @@ public class MySQL5SpatialDialect extends MySQL5Dialect implements SpatialDialec
 				MySQLGeometryTypeDescriptor.INSTANCE.getSqlType(),
 				"GEOMETRY"
 		);
-		for ( Map.Entry<String, SQLFunction> entry : new MySQLSpatialFunctions() ) {
+		for ( Map.Entry<String, SQLFunction> entry : new MySQL5SpatialFunctions() ) {
 			registerFunction( entry.getKey(), entry.getValue() );
 		}
 	}

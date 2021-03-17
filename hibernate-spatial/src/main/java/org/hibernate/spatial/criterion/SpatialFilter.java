@@ -16,8 +16,8 @@ import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.jts.EnvelopeAdapter;
 
-import com.vividsolutions.jts.geom.Envelope;
-import com.vividsolutions.jts.geom.Geometry;
+import org.locationtech.jts.geom.Envelope;
+import org.locationtech.jts.geom.Geometry;
 
 /**
  * A <code>Criterion</code> constraining a geometry property to have a bounding box that overlaps with

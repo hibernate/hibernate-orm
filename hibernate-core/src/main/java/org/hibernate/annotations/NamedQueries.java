@@ -17,7 +17,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * definitions made available through {@link javax.persistence.NamedQueries}.
  *
  * @author Emmanuel Bernard
- * @author Carlos Gonz�lez-Cadenas
+ * @author Carlos Gonzalez-Cadenas
  */
 @Target({TYPE, PACKAGE})
 @Retention(RUNTIME)

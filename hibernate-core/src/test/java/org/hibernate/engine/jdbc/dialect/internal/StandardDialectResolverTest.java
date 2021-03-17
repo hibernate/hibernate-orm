@@ -13,8 +13,8 @@ import org.junit.Test;
 
 import java.sql.SQLException;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Unit test of the {@link StandardDialectResolver} class.
@@ -44,7 +44,7 @@ public class StandardDialectResolverTest extends BaseUnitTestCase {
 	@Test
 	public void testResolveDialectInternalForSQLServer2012() 
 			throws SQLException {
-		runSQLServerDialectTest( 11, SQLServer2008Dialect.class );
+		runSQLServerDialectTest( 11, SQLServer2012Dialect.class );
 	}
 
 	@Test
@@ -93,7 +93,7 @@ public class StandardDialectResolverTest extends BaseUnitTestCase {
 
 	@Test
 	public void testResolveDialectInternalForPostgres92() throws SQLException {
-		runPostgresDialectTest( 9, 2, PostgreSQL9Dialect.class );
+		runPostgresDialectTest( 9, 2, PostgreSQL92Dialect.class );
 	}
 
 	@Test
@@ -126,12 +126,38 @@ public class StandardDialectResolverTest extends BaseUnitTestCase {
 		runMariaDBDialectTest( 5, 2, MariaDBDialect.class );
 	}
 
+	@Test
+	public void testResolveDialectInternalForMySQL57() throws SQLException {
+		runMySQLDialectTest( 5, 7, MySQL57Dialect.class );
+	}
+
+	@Test
+	public void testResolveDialectInternalForMySQL6() throws SQLException {
+		runMySQLDialectTest( 6, 0, MySQL57Dialect.class );
+	}
+
+	@Test
+	public void testResolveDialectInternalForMySQL7() throws SQLException {
+		runMySQLDialectTest( 7, 0, MySQL57Dialect.class );
+	}
+
+
+	@Test
+	public void testResolveDialectInternalForMySQL8() throws SQLException {
+		runMySQLDialectTest( 8, 0, MySQL8Dialect.class );
+	}
+
 	private static void runMariaDBDialectTest(
 			int majorVersion, int minorVersion, Class<? extends MariaDBDialect> expectedDialect)
 			throws SQLException {
 		runDialectTest( "MariaDB", "MariaDB connector/J", majorVersion, minorVersion, expectedDialect );
 	}
 
+	private static void runMySQLDialectTest(
+			int majorVersion, int minorVersion, Class<? extends MySQLDialect> expectedDialect)
+			throws SQLException {
+		runDialectTest( "MySQL", "MySQL connector/J", majorVersion, minorVersion, expectedDialect );
+	}
 
 	private static void runSQLServerDialectTest(
 			int version, Class<? extends SQLServerDialect> expectedDialect)
@@ -163,7 +189,7 @@ public class StandardDialectResolverTest extends BaseUnitTestCase {
 			Class<? extends Dialect> expectedDialect) {
 		TestingDialectResolutionInfo info = TestingDialectResolutionInfo.forDatabaseInfo( productName, driverName, majorVersion, minorVersion );
 
-		Dialect dialect = StandardDialectResolver.INSTANCE.resolveDialect( info );
+		Dialect dialect = new StandardDialectResolver().resolveDialect( info );
 
 		StringBuilder builder = new StringBuilder( productName ).append( " " )
 				.append( majorVersion );
@@ -173,8 +199,11 @@ public class StandardDialectResolverTest extends BaseUnitTestCase {
 		String dbms = builder.toString();
 
 		assertNotNull( "Dialect for " + dbms + " should not be null", dialect );
-		assertTrue( "Dialect for " + dbms + " should be " 
-				+ expectedDialect.getSimpleName(),
-						expectedDialect.isInstance( dialect ) );
+		// Make sure to test that the actual dialect class is as expected
+		// (not just an instance of the expected dialect.
+		assertEquals( "Dialect for " + dbms + " should be " + expectedDialect.getSimpleName(),
+					  expectedDialect,
+					  dialect.getClass()
+		);
 	}
 }

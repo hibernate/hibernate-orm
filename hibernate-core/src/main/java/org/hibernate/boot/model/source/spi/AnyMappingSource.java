@@ -15,4 +15,8 @@ package org.hibernate.boot.model.source.spi;
 public interface AnyMappingSource {
 	AnyDiscriminatorSource getDiscriminatorSource();
 	AnyKeySource getKeySource();
+
+	default boolean isLazy() {
+		return true;
+	}
 }

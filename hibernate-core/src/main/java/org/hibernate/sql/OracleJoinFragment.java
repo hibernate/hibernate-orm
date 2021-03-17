@@ -153,7 +153,7 @@ public class OracleJoinFragment extends JoinFragment {
 	 * This method is a bit of a hack, and assumes
 	 * that the column on the "right" side of the
 	 * join appears on the "left" side of the
-	 * operator, which is extremely wierd if this
+	 * operator, which is extremely weird if this
 	 * was a normal join condition, but is natural
 	 * for a filter.
 	 */

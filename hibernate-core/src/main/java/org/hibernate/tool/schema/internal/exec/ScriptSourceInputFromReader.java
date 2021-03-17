@@ -33,6 +33,11 @@ public class ScriptSourceInputFromReader extends AbstractScriptSourceInput imple
 	}
 
 	@Override
+	protected String getScriptDescription() {
+		return "[injected ScriptSourceInputFromReader script]";
+	}
+
+	@Override
 	public String toString() {
 		return "ScriptSourceInputFromReader()";
 	}

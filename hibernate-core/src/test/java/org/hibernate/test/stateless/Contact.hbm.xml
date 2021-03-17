@@ -16,6 +16,8 @@
 			<generator class="native" />
 		</id>
 		<many-to-one name="org" lazy="false" fetch="join" />
+		<query name="contacts">from Contact</query>
+
 	</class>
 
 	<class name="Org">

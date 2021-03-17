@@ -6,18 +6,6 @@
  */
 package org.hibernate.test.hql;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.sql.Date;
-import java.sql.Time;
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
@@ -28,24 +16,7 @@ import org.hibernate.Transaction;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.AbstractHANADialect;
-import org.hibernate.dialect.CUBRIDDialect;
-import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.dialect.DerbyDialect;
-import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.HSQLDialect;
-import org.hibernate.dialect.IngresDialect;
-import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.Oracle8iDialect;
-import org.hibernate.dialect.PostgreSQL81Dialect;
-import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.dialect.SQLServer2008Dialect;
-import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.dialect.Sybase11Dialect;
-import org.hibernate.dialect.SybaseASE15Dialect;
-import org.hibernate.dialect.SybaseAnywhereDialect;
-import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.dialect.TeradataDialect;
+import org.hibernate.dialect.*;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.hql.internal.ast.ASTQueryTranslatorFactory;
 import org.hibernate.hql.internal.ast.QuerySyntaxException;
@@ -53,19 +24,6 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.MultipleBagFetchException;
 import org.hibernate.persister.entity.DiscriminatorType;
 import org.hibernate.stat.QueryStatistics;
-import org.hibernate.transform.DistinctRootEntityResultTransformer;
-import org.hibernate.transform.Transformers;
-import org.hibernate.type.ComponentType;
-import org.hibernate.type.ManyToOneType;
-import org.hibernate.type.Type;
-
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.any.IntegerPropertyValue;
 import org.hibernate.test.any.PropertySet;
 import org.hibernate.test.any.PropertyValue;
@@ -75,15 +33,37 @@ import org.hibernate.test.cid.LineItem;
 import org.hibernate.test.cid.LineItem.Id;
 import org.hibernate.test.cid.Order;
 import org.hibernate.test.cid.Product;
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.transform.DistinctRootEntityResultTransformer;
+import org.hibernate.transform.Transformers;
+import org.hibernate.type.ComponentType;
+import org.hibernate.type.ManyToOneType;
+import org.hibernate.type.Type;
 import org.junit.Test;
 
-import org.jboss.logging.Logger;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.sql.Date;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hibernate.testing.junit4.ExtraAssertions.assertClassAssignability;
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.hibernate.testing.transaction.TransactionUtil2.inTransaction;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -664,7 +644,38 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-8901" )
+	@RequiresDialectFeature(DialectChecks.NotSupportsEmptyInListCheck.class)
+	@SkipForDialect(value = DerbyDialect.class, comment = "Derby doesn't like `x in (null)`")
+	public void testEmptyInListForDialectsNotSupportsEmptyInList() {
+		Session session = openSession();
+		session.beginTransaction();
+		Human human = new Human();
+		human.setName( new Name( "Lukasz", null, "Antoniak" ) );
+		human.setNickName( "NONE" );
+		session.save( human );
+		session.getTransaction().commit();
+		session.close();
+
+		session = openSession();
+		session.beginTransaction();
+		List results = session.createQuery( "from Human h where h.nickName in (:nickNames)" )
+				.setParameter("nickNames", Collections.emptySet() )
+				.list();
+		assertEquals( 0, results.size() );
+		session.getTransaction().commit();
+		session.close();
+
+		session = openSession();
+		session.beginTransaction();
+		session.delete( human );
+		session.getTransaction().commit();
+		session.close();
+	}
+
+	@Test
 	@TestForIssue( jiraKey = "HHH-2851")
+	@SkipForDialect(value = DerbyDialect.class, comment = "Cannot convert untyped null (assumed to be VARBINARY type) to VARCHAR")
 	public void testMultipleRefsToSameParam() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -952,6 +963,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = CockroachDB192Dialect.class, comment = "https://github.com/cockroachdb/cockroach/issues/41943")
 	public void testExpressionWithParamInFunction() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -982,7 +994,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		else {
 			s.createQuery( "from Animal where lower(upper('foo') || upper(:bar)) like 'f%'" ).setString( "bar", "xyz" ).list();
 		}
-		
+
 		if ( getDialect() instanceof AbstractHANADialect ) {
 			s.createQuery( "from Animal where abs(cast(1 as double) - cast(:param as double)) = 1.0" )
 					.setLong( "param", 1 ).list();
@@ -1764,6 +1776,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-1830")
+	@SkipForDialect(value = DerbyDialect.class, comment = "Derby doesn't see that the subquery is functionally dependent")
 	public void testAggregatedJoinAlias() {
 		Session s = openSession();
 		s.getTransaction().begin();
@@ -2924,6 +2937,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = CockroachDB192Dialect.class, comment = "https://github.com/cockroachdb/cockroach/issues/41943")
 	@SuppressWarnings( {"UnusedAssignment", "UnusedDeclaration"})
 	public void testSelectExpressions() {
 		createTestBaseData();
@@ -3257,6 +3271,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = CockroachDB192Dialect.class, strictMatching = true)
 	public void testStandardFunctions() throws Exception {
 		Session session = openSession();
 		Transaction t = session.beginTransaction();
@@ -3817,7 +3832,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		 * <link>http://www.postgresql.org/docs/current/static/release-8-3.html</link>
 		 */
 		if ( getDialect() instanceof PostgreSQLDialect || getDialect() instanceof PostgreSQL81Dialect
-				|| getDialect() instanceof HSQLDialect ) {
+				|| getDialect() instanceof HSQLDialect
+				|| getDialect() instanceof CockroachDB192Dialect ) {
 			hql = "from Animal a where bit_length(str(a.bodyWeight)) = 24";
 		}
 		else {
@@ -3826,7 +3842,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 		session.createQuery(hql).list();
 		if ( getDialect() instanceof PostgreSQLDialect || getDialect() instanceof PostgreSQL81Dialect
-				|| getDialect() instanceof HSQLDialect ) {
+				|| getDialect() instanceof HSQLDialect
+				|| getDialect() instanceof CockroachDB192Dialect ) {
 			hql = "select bit_length(str(a.bodyWeight)) from Animal a";
 		}
 		else {

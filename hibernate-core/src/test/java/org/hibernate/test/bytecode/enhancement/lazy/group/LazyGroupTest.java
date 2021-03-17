@@ -6,20 +6,8 @@
  */
 package org.hibernate.test.bytecode.enhancement.lazy.group;
 
-import org.hibernate.annotations.LazyGroup;
-import org.hibernate.annotations.LazyToOne;
-import org.hibernate.annotations.LazyToOneOption;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
+import java.util.ArrayList;
+import java.util.List;
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -30,15 +18,31 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
-import java.util.ArrayList;
-import java.util.List;
 
-import static org.hibernate.testing.bytecode.enhancement.EnhancerTestUtils.getFieldByReflection;
+import org.hibernate.Hibernate;
+import org.hibernate.annotations.LazyGroup;
+import org.hibernate.annotations.LazyToOne;
+import org.hibernate.annotations.LazyToOneOption;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.proxy.HibernateProxy;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
+import org.hibernate.testing.jdbc.SQLStatementInterceptor;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Steve Ebersole
@@ -46,6 +50,7 @@ import static org.junit.Assert.assertNull;
 @TestForIssue( jiraKey = "HHH-11155" )
 @RunWith( BytecodeEnhancerRunner.class )
 public class LazyGroupTest extends BaseCoreFunctionalTestCase {
+    private SQLStatementInterceptor sqlInterceptor;
 
     @Override
     public Class<?>[] getAnnotatedClasses() {
@@ -56,6 +61,7 @@ public class LazyGroupTest extends BaseCoreFunctionalTestCase {
     protected void configure(Configuration configuration) {
         configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, "false" );
         configuration.setProperty( AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, "true" );
+        sqlInterceptor = new SQLStatementInterceptor( configuration );
     }
 
     @Before
@@ -87,39 +93,50 @@ public class LazyGroupTest extends BaseCoreFunctionalTestCase {
     @Test
     @TestForIssue( jiraKey = "HHH-10267" )
     public void testAccess() {
-        doInHibernate( this::sessionFactory, s -> {
-            Child c1 = (Child) s.createQuery( "from Child c where c.name = :name" ).setParameter( "name", "steve" ).uniqueResult();
+        sqlInterceptor.clear();
 
-            // verify the expected initial loaded state
-            assertLoaded( c1, "name" );
-            assertNotLoaded( c1, "nickName" );
-            assertNotLoaded( c1, "parent" );
-            assertNotLoaded( c1, "alternateParent" );
+        inTransaction(
+                (s) -> {
+                    final Child c1 = s.createQuery( "from Child c where c.name = :name", Child.class )
+                            .setParameter( "name", "steve" )
+                            .uniqueResult();
 
-            // Now lets access nickName which ought to initialize nickName and parent, but not alternateParent
-            c1.getNickName();
-            assertLoaded( c1, "nickName" );
-            assertLoaded( c1, "parent" );
-            assertNotLoaded( c1, "alternateParent" );
-            assertEquals( "Hibernate", c1.parent.nombre );
-            assertFalse( c1.parent instanceof HibernateProxy );
+                    assertThat( sqlInterceptor.getQueryCount(), is( 1 ) );
 
-            Child c2 = (Child) s.createQuery( "from Child c where c.name = :name" ).setParameter( "name", "sally" ).uniqueResult();
+                    assertTrue( Hibernate.isPropertyInitialized( c1, "name" ) );
 
-            // verify the expected initial loaded state
-            assertLoaded( c2, "name" );
-            assertNotLoaded( c2, "nickName" );
-            assertNotLoaded( c2, "parent" );
-            assertNotLoaded( c2, "alternateParent" );
+                    assertFalse( Hibernate.isPropertyInitialized( c1, "nickName" ) );
 
-            // Now lets access alternateParent which ought to initialize alternateParent and nothing else
-            c2.getAlternateParent();
-            assertNotLoaded( c2, "nickName" );
-            assertNotLoaded( c2, "parent" );
-            assertLoaded( c2, "alternateParent" );
-            assertEquals( "Hibernate", c2.alternateParent.nombre );
-            assertFalse( c2.alternateParent instanceof HibernateProxy );
-        } );
+                    // parent should be an uninitialized enhanced-proxy
+                    assertTrue( Hibernate.isPropertyInitialized( c1, "parent" ) );
+                    assertThat( c1.getParent(), not( instanceOf( HibernateProxy.class ) ) );
+                    assertFalse( Hibernate.isInitialized( c1.getParent() ) );
+
+                    // alternateParent should be an uninitialized enhanced-proxy
+                    assertTrue( Hibernate.isPropertyInitialized( c1, "alternateParent" ) );
+                    assertThat( c1.getAlternateParent(), not( instanceOf( HibernateProxy.class ) ) );
+                    assertFalse( Hibernate.isInitialized( c1.getAlternateParent() ) );
+
+                    // Now lets access nickName which ought to initialize nickName
+                    c1.getNickName();
+                    assertThat( sqlInterceptor.getQueryCount(), is( 2 ) );
+
+                    assertTrue( Hibernate.isPropertyInitialized( c1, "nickName" ) );
+
+                    // parent should be an uninitialized enhanced-proxy
+                    assertTrue( Hibernate.isPropertyInitialized( c1, "parent" ) );
+                    assertThat( c1.getParent(), not( instanceOf( HibernateProxy.class ) ) );
+                    assertFalse( Hibernate.isInitialized( c1.getParent() ) );
+
+                    // alternateParent should be an uninitialized enhanced-proxy
+                    assertTrue( Hibernate.isPropertyInitialized( c1, "alternateParent" ) );
+                    assertThat( c1.getAlternateParent(), not( instanceOf( HibernateProxy.class ) ) );
+                    assertFalse( Hibernate.isInitialized( c1.getAlternateParent() ) );
+
+
+                    sqlInterceptor.clear();
+                }
+        );
     }
 
     @Test
@@ -128,64 +145,66 @@ public class LazyGroupTest extends BaseCoreFunctionalTestCase {
         Parent p1New = new Parent();
         p1New.nombre = "p1New";
 
-        doInHibernate( this::sessionFactory, s -> {
-            Child c1 = (Child) s.createQuery( "from Child c where c.name = :name" ).setParameter( "name", "steve" ).uniqueResult();
+        inTransaction(
+                (s) -> {
+                    sqlInterceptor.clear();
 
-            // verify the expected initial loaded state
-            assertLoaded( c1, "name" );
-            assertNotLoaded( c1, "nickName" );
-            assertNotLoaded( c1, "parent" );
-            assertNotLoaded( c1, "alternateParent" );
+                    final Child c1 = s.createQuery( "from Child c where c.name = :name", Child.class )
+                            .setParameter( "name", "steve" )
+                            .uniqueResult();
+                    assertThat( sqlInterceptor.getQueryCount(), is( 1 ) );
 
-            // Now lets update nickName which ought to initialize nickName and parent, but not alternateParent
-            c1.nickName = "new nickName";
-            assertLoaded( c1, "nickName" );
-            assertNotLoaded( c1, "parent" );
-            assertNotLoaded( c1, "alternateParent" );
-            assertEquals( "Hibernate", c1.parent.nombre );
-            assertFalse( c1.parent instanceof HibernateProxy );
+                    assertTrue( Hibernate.isPropertyInitialized( c1, "name" ) );
 
-            // Now update c1.parent
-            c1.parent.children.remove( c1 );
-            c1.parent = p1New;
-            p1New.children.add( c1 );
-        } );
+                    assertFalse( Hibernate.isPropertyInitialized( c1, "nickName" ) );
+
+                    // parent should be an uninitialized enhanced-proxy
+                    assertTrue( Hibernate.isPropertyInitialized( c1, "parent" ) );
+                    assertThat( c1.getParent(), not( instanceOf( HibernateProxy.class ) ) );
+                    assertFalse( Hibernate.isInitialized( c1.getParent() ) );
+
+                    // alternateParent should be an uninitialized enhanced-proxy
+                    assertTrue( Hibernate.isPropertyInitialized( c1, "alternateParent" ) );
+                    assertThat( c1.getAlternateParent(), not( instanceOf( HibernateProxy.class ) ) );
+                    assertFalse( Hibernate.isInitialized( c1.getAlternateParent() ) );
+
+                    // Now lets update nickName
+                    c1.nickName = "new nickName";
+
+                    assertThat( sqlInterceptor.getQueryCount(), is( 1 ) );
+
+                    assertTrue( Hibernate.isPropertyInitialized( c1, "name" ) );
+
+                    assertTrue( Hibernate.isPropertyInitialized( c1, "nickName" ) );
+
+                    // parent should be an uninitialized enhanced-proxy
+                    assertTrue( Hibernate.isPropertyInitialized( c1, "parent" ) );
+                    assertThat( c1.getParent(), not( instanceOf( HibernateProxy.class ) ) );
+                    assertFalse( Hibernate.isInitialized( c1.getParent() ) );
+
+                    // alternateParent should be an uninitialized enhanced-proxy
+                    assertTrue( Hibernate.isPropertyInitialized( c1, "alternateParent" ) );
+                    assertThat( c1.getAlternateParent(), not( instanceOf( HibernateProxy.class ) ) );
+                    assertFalse( Hibernate.isInitialized( c1.getAlternateParent() ) );
+
+                    // Now update c1.parent
+                    c1.parent.children.remove( c1 );
+                    c1.parent = p1New;
+                    p1New.children.add( c1 );
+                }
+        );
 
         // verify updates
-        doInHibernate( this::sessionFactory, s -> {
-            Child c1 = (Child) s.createQuery( "from Child c where c.name = :name" ).setParameter( "name", "steve" ).uniqueResult();
-            assertEquals( "new nickName", c1.getNickName() );
-            assertEquals( "p1New", c1.parent.nombre );
-            assertFalse( c1.parent instanceof HibernateProxy );
-        } );
+        inTransaction(
+                (s) -> {
+                    final Child c1 = s.createQuery( "from Child c where c.name = :name", Child.class )
+                            .setParameter( "name", "steve" )
+                            .uniqueResult();
 
-        doInHibernate( this::sessionFactory, s -> {
-            Child c2 = (Child) s.createQuery( "from Child c where c.name = :name" ).setParameter( "name", "sally" ).uniqueResult();
-
-            // verify the expected initial loaded state
-            assertLoaded( c2, "name" );
-            assertNotLoaded( c2, "nickName" );
-            assertNotLoaded( c2, "parent" );
-            assertNotLoaded( c2, "alternateParent" );
-
-            // Now lets access and update alternateParent which ought to initialize alternateParent and nothing else
-            Parent p1 = c2.getAlternateParent();
-            c2.alternateParent = p1New;
-            assertNotLoaded( c2, "nickName" );
-            assertNotLoaded( c2, "parent" );
-            assertLoaded( c2, "alternateParent" );
-            assertEquals( "p1New", c2.getAlternateParent().nombre );
-            assertFalse( c2.getAlternateParent() instanceof HibernateProxy );
-
-            p1.alternateChildren.remove( c2 );
-            p1New.alternateChildren.add( c2 );
-        } );
-
-        // verify update
-        doInHibernate( this::sessionFactory, s -> {
-            Child c2 = (Child) s.createQuery( "from Child c where c.name = :name" ).setParameter( "name", "sally" ).uniqueResult();
-            assertEquals( "p1New", c2.getAlternateParent().nombre );
-        } );
+                    assertThat( c1.getNickName(), is( "new nickName" ) );
+                    assertThat( c1.parent.nombre, is( "p1New" ) );
+                }
+        );
     }
 
     @After
@@ -197,18 +216,6 @@ public class LazyGroupTest extends BaseCoreFunctionalTestCase {
     }
 
     // --- //
-
-    private void assertLoaded(Object owner, String name) {
-        // NOTE we assume null == not-loaded
-        Object fieldByReflection = getFieldByReflection( owner, name );
-        assertNotNull( "Expecting field '" + name + "' to be loaded, but it was not", fieldByReflection );
-    }
-
-    private void assertNotLoaded(Object owner, String name) {
-        // NOTE we assume null == not-loaded
-        Object fieldByReflection = getFieldByReflection( owner, name );
-        assertNull( "Expecting field '" + name + "' to be not loaded, but it was", fieldByReflection );
-    }
 
     // --- //
 
@@ -263,6 +270,10 @@ public class LazyGroupTest extends BaseCoreFunctionalTestCase {
         Child(String name, String nickName) {
             this.name = name;
             this.nickName = nickName;
+        }
+
+        public Parent getParent() {
+            return parent;
         }
 
         Parent getAlternateParent() {

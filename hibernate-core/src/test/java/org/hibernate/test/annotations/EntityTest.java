@@ -24,9 +24,7 @@ import org.hibernate.Transaction;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.MySQL57Dialect;
-import org.hibernate.dialect.MySQL8Dialect;
-import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.dialect.Oracle10gDialect;
 import org.hibernate.query.Query;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
@@ -373,7 +371,7 @@ public class EntityTest extends BaseNonConfigCoreFunctionalTestCase {
 	@SkipForDialect(value = Oracle10gDialect.class, comment = "oracle12c returns time in getDate.  For now, skip.")
 	public void testTemporalType() throws Exception {
 
-		final ZoneId zoneId = ( Dialect.getDialect() instanceof MySQL8Dialect ) ? ZoneId.of( "UTC")
+		final ZoneId zoneId = ( Dialect.getDialect() instanceof MySQL5Dialect ) ? ZoneId.of( "UTC")
 				: ZoneId.systemDefault();
 
 		Flight airFrance = doInHibernate( this::sessionFactory, session -> {

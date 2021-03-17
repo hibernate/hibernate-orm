@@ -44,9 +44,6 @@ public final class ConfigurationHelper {
 		if ( value == null ) {
 			return null;
 		}
-		if ( String.class.isInstance( value ) ) {
-			return (String) value;
-		}
 		return value.toString();
 	}
 
@@ -265,7 +262,7 @@ public final class ConfigurationHelper {
 	 * replace a property by a starred version
 	 *
 	 * @param props properties to check
-	 * @param key proeprty to mask
+	 * @param key property to mask
 	 *
 	 * @return cloned and masked properties
 	 */
@@ -296,7 +293,7 @@ public final class ConfigurationHelper {
 			return null;
 		}
 		value = value.trim();
-		if ( StringHelper.isEmpty( value ) ) {
+		if ( value.isEmpty() ) {
 			return null;
 		}
 		return value;
@@ -316,7 +313,7 @@ public final class ConfigurationHelper {
 			return null;
 		}
 		value = value.trim();
-		if ( StringHelper.isEmpty( value ) ) {
+		if ( value.isEmpty() ) {
 			return null;
 		}
 		return value;
@@ -469,7 +466,7 @@ public final class ConfigurationHelper {
 			buff.append( chars[pos] );
 		}
 		String rtn = buff.toString();
-		return StringHelper.isEmpty( rtn ) ? null : rtn;
+		return rtn.isEmpty() ? null : rtn;
 	}
 
 	private static String extractFromSystem(String systemPropertyName) {

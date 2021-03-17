@@ -38,8 +38,7 @@ public class OsgiServiceUtil implements Stoppable {
 	 * {@link ServiceTracker} (best practice, automatically handles a lot of boilerplate and error conditions).
 	 * 
 	 * @param contract The service contract for which to locate implementors
-	 * @param context The OSGi bundle context
-	 * @param T[] The Java type of the service to locate
+	 * @param <T> The Java type of the service to locate
 	 * @return All know implementors
 	 */
 	public <T> T[] getServiceImpls(Class<T> contract) {
@@ -63,8 +62,7 @@ public class OsgiServiceUtil implements Stoppable {
 	 * {@link ServiceTracker#waitForService(long)}
 	 * 
 	 * @param contract The service contract for which to locate implementors
-	 * @param context The OSGi bundle context
-	 * @param T[] The Java type of the service to locate
+	 * @param <T> The Java type of the service to locate
 	 * @return All know implementors
 	 */
 	public <T> T getServiceImpl(Class<T> contract) {
@@ -89,8 +87,8 @@ public class OsgiServiceUtil implements Stoppable {
 
 	@Override
 	public void stop() {
-		for (String key : serviceTrackers.keySet()) {
-			serviceTrackers.get( key ).close();
+		for ( java.util.Map.Entry<String, org.osgi.util.tracker.ServiceTracker> entry : serviceTrackers.entrySet() ) {
+			entry.getValue().close();
 		}
 		serviceTrackers.clear();
 	}

@@ -11,8 +11,10 @@ import java.io.OutputStream;
 import java.sql.Blob;
 import java.sql.CallableStatement;
 import java.sql.Clob;
+import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.NClob;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
@@ -24,12 +26,16 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
+import org.hibernate.Interceptor;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.NullPrecedence;
+import org.hibernate.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
@@ -72,6 +78,7 @@ import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.persistent.PersistentTableBulkIdStrategy;
+import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.internal.CoreLogging;
@@ -95,6 +102,7 @@ import org.hibernate.sql.ANSIJoinFragment;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.sql.JoinFragment;
+import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
@@ -106,6 +114,7 @@ import org.hibernate.tool.schema.internal.StandardTableExporter;
 import org.hibernate.tool.schema.internal.StandardUniqueKeyExporter;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
@@ -139,6 +148,15 @@ public abstract class Dialect implements ConversionContext {
 	 * Characters used as closing for quoting SQL identifiers
 	 */
 	public static final String CLOSED_QUOTE = "`\"]";
+	private static final Pattern SINGLE_QUOTE_PATTERN = Pattern.compile(
+			"'",
+			Pattern.LITERAL
+	);
+
+	private static final Pattern ESCAPE_CLOSING_COMMENT_PATTERN = Pattern.compile( "\\*/" );
+	private static final Pattern ESCAPE_OPENING_COMMENT_PATTERN = Pattern.compile( "/\\*" );
+
+	public static final String TWO_SINGLE_QUOTES_REPLACEMENT = Matcher.quoteReplacement( "''" );
 
 	private final TypeNames typeNames = new TypeNames();
 	private final TypeNames hibernateTypeNames = new TypeNames();
@@ -192,6 +210,7 @@ public abstract class Dialect implements ConversionContext {
 		registerColumnType( Types.FLOAT, "float($p)" );
 		registerColumnType( Types.DOUBLE, "double precision" );
 		registerColumnType( Types.NUMERIC, "numeric($p,$s)" );
+		registerColumnType( Types.DECIMAL, "decimal($p,$s)" );
 		registerColumnType( Types.REAL, "real" );
 
 		registerColumnType( Types.DATE, "date" );
@@ -247,11 +266,44 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
+	 * Do the given JDBC type codes, as defined in {@link Types} represent
+	 * essentially the same type in this dialect of SQL? The default
+	 * implementation treats {@link Types#NUMERIC NUMERIC} and
+	 * {@link Types#DECIMAL DECIMAL} as the same type, and
+	 * {@link Types#FLOAT FLOAT}, {@link Types#REAL REAL}, and
+	 * {@link Types#DOUBLE DOUBLE} as essentially the same type, since the
+	 * ANSI SQL specification fails to meaningfully distinguish them.
+	 *
+	 * @param typeCode1 the first JDBC type code
+	 * @param typeCode2 the second JDBC type code
+	 *
+	 * @return {@code true} if the two type codes are equivalent
+	 */
+	public boolean equivalentTypes(int typeCode1, int typeCode2) {
+		return typeCode1==typeCode2
+			|| isNumericOrDecimal(typeCode1) && isNumericOrDecimal(typeCode2)
+			|| isFloatOrRealOrDouble(typeCode1) && isFloatOrRealOrDouble(typeCode2);
+	}
+
+	private static boolean isNumericOrDecimal(int typeCode) {
+		return typeCode == Types.NUMERIC
+			|| typeCode == Types.DECIMAL;
+	}
+
+	private static boolean isFloatOrRealOrDouble(int typeCode) {
+		return typeCode == Types.FLOAT
+			|| typeCode == Types.REAL
+			|| typeCode == Types.DOUBLE;
+	}
+
+	/**
 	 * Get an instance of the dialect specified by the current <tt>System</tt> properties.
+	 * @deprecated this static method will be removed.
 	 *
 	 * @return The specified Dialect
 	 * @throws HibernateException If no dialect was specified, or if it could not be instantiated.
 	 */
+	@Deprecated
 	public static Dialect getDialect() throws HibernateException {
 		return instantiateDialect( Environment.getProperties().getProperty( Environment.DIALECT ) );
 	}
@@ -259,11 +311,13 @@ public abstract class Dialect implements ConversionContext {
 	/**
 	 * Get an instance of the dialect specified by the given properties or by
 	 * the current <tt>System</tt> properties.
+	 * @deprecated this static method will be removed.
 	 *
 	 * @param props The properties to use for finding the dialect class to use.
 	 * @return The specified Dialect
 	 * @throws HibernateException If no dialect was specified, or if it could not be instantiated.
 	 */
+	@Deprecated
 	public static Dialect getDialect(Properties props) throws HibernateException {
 		final String dialectName = props.getProperty( Environment.DIALECT );
 		if ( dialectName == null ) {
@@ -272,6 +326,10 @@ public abstract class Dialect implements ConversionContext {
 		return instantiateDialect( dialectName );
 	}
 
+	/**
+	 * @deprecated such static helpers will be removed
+	 */
+	@Deprecated
 	private static Dialect instantiateDialect(String dialectName) throws HibernateException {
 		if ( dialectName == null ) {
 			throw new HibernateException( "The dialect was not set. Set the property hibernate.dialect." );
@@ -316,9 +374,9 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * Get the name of the database type associated with the given
-	 * {@link java.sql.Types} typecode.
+	 * {@link Types} typecode.
 	 *
-	 * @param code The {@link java.sql.Types} typecode
+	 * @param code The {@link Types} typecode
 	 * @return the database type name
 	 * @throws HibernateException If no mapping was specified for that type.
 	 */
@@ -332,10 +390,10 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * Get the name of the database type associated with the given
-	 * {@link java.sql.Types} typecode with the given storage specification
+	 * {@link Types} typecode with the given storage specification
 	 * parameters.
 	 *
-	 * @param code The {@link java.sql.Types} typecode
+	 * @param code The {@link Types} typecode
 	 * @param length The datatype length
 	 * @param precision The datatype precision
 	 * @param scale The datatype scale
@@ -354,9 +412,9 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * Get the name of the database type appropriate for casting operations
-	 * (via the CAST() SQL function) for the given {@link java.sql.Types} typecode.
+	 * (via the CAST() SQL function) for the given {@link Types} typecode.
 	 *
-	 * @param code The {@link java.sql.Types} typecode
+	 * @param code The {@link Types} typecode
 	 * @return The database type name
 	 */
 	public String getCastTypeName(int code) {
@@ -418,7 +476,7 @@ public abstract class Dialect implements ConversionContext {
 	 * column length. <tt>$l</tt> in the type name with be replaced by the
 	 * column length (if appropriate).
 	 *
-	 * @param code The {@link java.sql.Types} typecode
+	 * @param code The {@link Types} typecode
 	 * @param capacity The maximum length of database type
 	 * @param name The database type name
 	 */
@@ -430,7 +488,7 @@ public abstract class Dialect implements ConversionContext {
 	 * Subclasses register a type name for the given type code. <tt>$l</tt> in
 	 * the type name with be replaced by the column length (if appropriate).
 	 *
-	 * @param code The {@link java.sql.Types} typecode
+	 * @param code The {@link Types} typecode
 	 * @param name The database type name
 	 */
 	protected void registerColumnType(int code, String name) {
@@ -441,7 +499,7 @@ public abstract class Dialect implements ConversionContext {
 	 * Allows the dialect to override a {@link SqlTypeDescriptor}.
 	 * <p/>
 	 * If the passed {@code sqlTypeDescriptor} allows itself to be remapped (per
-	 * {@link org.hibernate.type.descriptor.sql.SqlTypeDescriptor#canBeRemapped()}), then this method uses
+	 * {@link SqlTypeDescriptor#canBeRemapped()}), then this method uses
 	 * {@link #getSqlTypeDescriptorOverride}  to get an optional override based on the SQL code returned by
 	 * {@link SqlTypeDescriptor#getSqlType()}.
 	 * <p/>
@@ -639,11 +697,11 @@ public abstract class Dialect implements ConversionContext {
 	// hibernate type mapping support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
-	 * Get the name of the Hibernate {@link org.hibernate.type.Type} associated with the given
-	 * {@link java.sql.Types} type code.
+	 * Get the name of the Hibernate {@link Type} associated with the given
+	 * {@link Types} type code.
 	 *
-	 * @param code The {@link java.sql.Types} type code
-	 * @return The Hibernate {@link org.hibernate.type.Type} name.
+	 * @param code The {@link Types} type code
+	 * @return The Hibernate {@link Type} name.
 	 * @throws HibernateException If no mapping was specified for that type.
 	 */
 	@SuppressWarnings( {"UnusedDeclaration"})
@@ -668,15 +726,15 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Get the name of the Hibernate {@link org.hibernate.type.Type} associated
-	 * with the given {@link java.sql.Types} typecode with the given storage
+	 * Get the name of the Hibernate {@link Type} associated
+	 * with the given {@link Types} typecode with the given storage
 	 * specification parameters.
 	 *
-	 * @param code The {@link java.sql.Types} typecode
+	 * @param code The {@link Types} typecode
 	 * @param length The datatype length
 	 * @param precision The datatype precision
 	 * @param scale The datatype scale
-	 * @return The Hibernate {@link org.hibernate.type.Type} name.
+	 * @return The Hibernate {@link Type} name.
 	 * @throws HibernateException If no mapping was specified for that type.
 	 */
 	public String getHibernateTypeName(int code, int length, int precision, int scale) throws HibernateException {
@@ -694,23 +752,23 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Registers a Hibernate {@link org.hibernate.type.Type} name for the given
-	 * {@link java.sql.Types} type code and maximum column length.
+	 * Registers a Hibernate {@link Type} name for the given
+	 * {@link Types} type code and maximum column length.
 	 *
-	 * @param code The {@link java.sql.Types} typecode
+	 * @param code The {@link Types} typecode
 	 * @param capacity The maximum length of database type
-	 * @param name The Hibernate {@link org.hibernate.type.Type} name
+	 * @param name The Hibernate {@link Type} name
 	 */
 	protected void registerHibernateType(int code, long capacity, String name) {
 		hibernateTypeNames.put( code, capacity, name );
 	}
 
 	/**
-	 * Registers a Hibernate {@link org.hibernate.type.Type} name for the given
-	 * {@link java.sql.Types} type code.
+	 * Registers a Hibernate {@link Type} name for the given
+	 * {@link Types} type code.
 	 *
-	 * @param code The {@link java.sql.Types} typecode
-	 * @param name The Hibernate {@link org.hibernate.type.Type} name
+	 * @param code The {@link Types} typecode
+	 * @param name The Hibernate {@link Type} name
 	 */
 	protected void registerHibernateType(int code, String name) {
 		hibernateTypeNames.put( code, name );
@@ -727,7 +785,7 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * Retrieves a map of the dialect's registered functions
-	 * (functionName => {@link org.hibernate.dialect.function.SQLFunction}).
+	 * (functionName => {@link SQLFunction}).
 	 *
 	 * @return The map of registered functions.
 	 */
@@ -739,7 +797,7 @@ public abstract class Dialect implements ConversionContext {
 	// native identifier generation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
-	 * The class (which implements {@link org.hibernate.id.IdentifierGenerator})
+	 * The class (which implements {@link IdentifierGenerator})
 	 * which acts as this dialects native generation strategy.
 	 * <p/>
 	 * Comes into play whenever the user specifies the native generator.
@@ -938,7 +996,7 @@ public abstract class Dialect implements ConversionContext {
 	 * Get the select command used retrieve the names of all sequences.
 	 *
 	 * @return The select command; or null if sequences are not supported.
-	 * @see org.hibernate.tool.hbm2ddl.SchemaUpdate
+	 * @see SchemaUpdate
 	 */
 	public String getQuerySequencesString() {
 		return null;
@@ -1088,11 +1146,11 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Apply s limit clause to the query.
+	 * Apply a limit clause to the query.
 	 * <p/>
 	 * Typically dialects utilize {@link #supportsVariableLimit() variable}
 	 * limit clauses when they support limits.  Thus, when building the
-	 * select command we do not actually need to know the limit or the offest
+	 * select command we do not actually need to know the limit or the offset
 	 * since we will just be using placeholders.
 	 * <p/>
 	 * Here we do still pass along whether or not an offset was specified
@@ -1120,8 +1178,8 @@ public abstract class Dialect implements ConversionContext {
 	 *
 	 * @param zeroBasedFirstResult The user-supplied, zero-based first row offset.
 	 * @return The corresponding db/dialect specific offset.
-	 * @see org.hibernate.Query#setFirstResult
-	 * @see org.hibernate.Criteria#setFirstResult
+	 * @see Query#setFirstResult
+	 * @see Criteria#setFirstResult
 	 * @deprecated {@link #getLimitHandler()} should be overridden instead.
 	 */
 	@Deprecated
@@ -1147,7 +1205,7 @@ public abstract class Dialect implements ConversionContext {
 	 * If this dialect supports specifying lock timeouts, are those timeouts
 	 * rendered into the <tt>SQL</tt> string as parameters.  The implication
 	 * is that Hibernate will need to bind the timeout value as a parameter
-	 * in the {@link java.sql.PreparedStatement}.  If true, the param position
+	 * in the {@link PreparedStatement}.  If true, the param position
 	 * is always handled as the last parameter; if the dialect specifies the
 	 * lock timeout elsewhere in the <tt>SQL</tt> statement then the timeout
 	 * value should be directly rendered into the statement and this method
@@ -1239,7 +1297,7 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * Get the string to append to SELECT statements to acquire WRITE locks
-	 * for this dialect.  Location of the of the returned string is treated
+	 * for this dialect.  Location of the returned string is treated
 	 * the same as getForUpdateString.
 	 *
 	 * @param timeout in milliseconds, -1 for indefinite wait and 0 for no wait.
@@ -1267,7 +1325,7 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * Get the string to append to SELECT statements to acquire READ locks
-	 * for this dialect.  Location of the of the returned string is treated
+	 * for this dialect.  Location of the returned string is treated
 	 * the same as getForUpdateString.
 	 *
 	 * @param timeout in milliseconds, -1 for indefinite wait and 0 for no wait.
@@ -1280,7 +1338,7 @@ public abstract class Dialect implements ConversionContext {
 	/**
 	 * Get the string to append to SELECT statements to acquire READ locks
 	 * for this dialect given the aliases of the columns to be read locked.
-	 * Location of the of the returned string is treated
+	 * Location of the returned string is treated
 	 * the same as getForUpdateString.
 	 *
 	 * @param aliases The columns to be read locked.
@@ -1395,7 +1453,7 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * Some dialects support an alternative means to <tt>SELECT FOR UPDATE</tt>,
-	 * whereby a "lock hint" is appends to the table name in the from clause.
+	 * whereby a "lock hint" is appended to the table name in the from clause.
 	 * <p/>
 	 * contributed by <a href="http://sourceforge.net/users/heschulz">Helge Schulz</a>
 	 *
@@ -1410,7 +1468,7 @@ public abstract class Dialect implements ConversionContext {
 	}
 	/**
 	 * Some dialects support an alternative means to <tt>SELECT FOR UPDATE</tt>,
-	 * whereby a "lock hint" is appends to the table name in the from clause.
+	 * whereby a "lock hint" is appended to the table name in the from clause.
 	 * <p/>
 	 * contributed by <a href="http://sourceforge.net/users/heschulz">Helge Schulz</a>
 	 *
@@ -1489,7 +1547,7 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * Registers a parameter (either OUT, or the new REF_CURSOR param type available in Java 8) capable of
-	 * returning {@link java.sql.ResultSet} *by position*.  Pre-Java 8, registering such ResultSet-returning
+	 * returning {@link ResultSet} *by position*.  Pre-Java 8, registering such ResultSet-returning
 	 * parameters varied greatly across database and drivers; hence its inclusion as part of the Dialect contract.
 	 *
 	 * @param statement The callable statement.
@@ -1508,7 +1566,7 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * Registers a parameter (either OUT, or the new REF_CURSOR param type available in Java 8) capable of
-	 * returning {@link java.sql.ResultSet} *by name*.  Pre-Java 8, registering such ResultSet-returning
+	 * returning {@link ResultSet} *by name*.  Pre-Java 8, registering such ResultSet-returning
 	 * parameters varied greatly across database and drivers; hence its inclusion as part of the Dialect contract.
 	 *
 	 * @param statement The callable statement.
@@ -1528,7 +1586,7 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * Given a callable statement previously processed by {@link #registerResultSetOutParameter},
-	 * extract the {@link java.sql.ResultSet} from the OUT parameter.
+	 * extract the {@link ResultSet} from the OUT parameter.
 	 *
 	 * @param statement The callable statement.
 	 * @return The extracted result set.
@@ -1542,7 +1600,7 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * Given a callable statement previously processed by {@link #registerResultSetOutParameter},
-	 * extract the {@link java.sql.ResultSet}.
+	 * extract the {@link ResultSet}.
 	 *
 	 * @param statement The callable statement.
 	 * @param position The bind position at which to register the output param.
@@ -1560,7 +1618,7 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * Given a callable statement previously processed by {@link #registerResultSetOutParameter},
-	 * extract the {@link java.sql.ResultSet} from the OUT parameter.
+	 * extract the {@link ResultSet} from the OUT parameter.
 	 *
 	 * @param statement The callable statement.
 	 * @param name The parameter name (for drivers which support named parameters).
@@ -1651,7 +1709,7 @@ public abstract class Dialect implements ConversionContext {
 	 * @return The Dialect's preferred SQLExceptionConverter, or null to
 	 * indicate that the default {@link SQLExceptionConverter} should be used.
 	 *
-	 * @see {@link #buildSQLExceptionConversionDelegate()}
+	 * @see #buildSQLExceptionConversionDelegate()
 	 * @deprecated {@link #buildSQLExceptionConversionDelegate()} should be
 	 * overridden instead.
 	 */
@@ -1664,11 +1722,11 @@ public abstract class Dialect implements ConversionContext {
 	 * Build an instance of a {@link SQLExceptionConversionDelegate} for
 	 * interpreting dialect-specific error or SQLState codes.
 	 * <p/>
-	 * When {@link #buildSQLExceptionConverter} returns null, the default 
+	 * When {@link #buildSQLExceptionConverter} returns null, the default
 	 * {@link SQLExceptionConverter} is used to interpret SQLState and
 	 * error codes. If this method is overridden to return a non-null value,
 	 * the default {@link SQLExceptionConverter} will use the returned
-	 * {@link SQLExceptionConversionDelegate} in addition to the following 
+	 * {@link SQLExceptionConversionDelegate} in addition to the following
 	 * standard delegates:
 	 * <ol>
 	 *     <li>a "static" delegate based on the JDBC 4 defined SQLException hierarchy;</li>
@@ -1678,7 +1736,7 @@ public abstract class Dialect implements ConversionContext {
 	 * <p/>
 	 * It is strongly recommended that specific Dialect implementations override this
 	 * method, since interpretation of a SQL error is much more accurate when based on
-	 * the a vendor-specific ErrorCode rather than the SQLState.
+	 * the vendor-specific ErrorCode rather than the SQLState.
 	 * <p/>
 	 * Specific Dialects may override to return whatever is most appropriate for that vendor.
 	 *
@@ -1702,14 +1760,14 @@ public abstract class Dialect implements ConversionContext {
 	// union subclass support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
-	 * Given a {@link java.sql.Types} type code, determine an appropriate
+	 * Given a {@link Types} type code, determine an appropriate
 	 * null value to use in a select clause.
 	 * <p/>
 	 * One thing to consider here is that certain databases might
 	 * require proper casting for the nulls here since the select here
 	 * will be part of a UNION/UNION ALL.
 	 *
-	 * @param sqlType The {@link java.sql.Types} type code.
+	 * @param sqlType The {@link Types} type code.
 	 * @return The appropriate select clause value fragment.
 	 */
 	public String getSelectClauseNullString(int sqlType) {
@@ -1731,21 +1789,21 @@ public abstract class Dialect implements ConversionContext {
 
 
 	/**
-	 * Create a {@link org.hibernate.sql.JoinFragment} strategy responsible
+	 * Create a {@link JoinFragment} strategy responsible
 	 * for handling this dialect's variations in how joins are handled.
 	 *
-	 * @return This dialect's {@link org.hibernate.sql.JoinFragment} strategy.
+	 * @return This dialect's {@link JoinFragment} strategy.
 	 */
 	public JoinFragment createOuterJoinFragment() {
 		return new ANSIJoinFragment();
 	}
 
 	/**
-	 * Create a {@link org.hibernate.sql.CaseFragment} strategy responsible
+	 * Create a {@link CaseFragment} strategy responsible
 	 * for handling this dialect's variations in how CASE statements are
 	 * handled.
 	 *
-	 * @return This dialect's {@link org.hibernate.sql.CaseFragment} strategy.
+	 * @return This dialect's {@link CaseFragment} strategy.
 	 */
 	public CaseFragment createCaseFragment() {
 		return new ANSICaseFragment();
@@ -1759,6 +1817,15 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public String getNoColumnsInsertString() {
 		return "values ( )";
+	}
+
+	/**
+	 * Check if the INSERT statement is allowed to contain no column.
+	 *
+	 * @return if the Dialect supports no-column INSERT.
+	 */
+	public boolean supportsNoColumnsInsert() {
+		return true;
 	}
 
 	/**
@@ -1795,7 +1862,7 @@ public abstract class Dialect implements ConversionContext {
 	 * to the database and perhaps manipulate them in some fashion.
 	 * <p/>
 	 * The recommend approach is to instead use
-	 * {@link org.hibernate.Interceptor#onPrepareStatement(String)}.
+	 * {@link Interceptor#onPrepareStatement(String)}.
 	 *
 	 * @param select The select command
 	 * @return The mutated select command, or the same as was passed in.
@@ -2034,7 +2101,7 @@ public abstract class Dialect implements ConversionContext {
 	 * Get the SQL command used to retrieve the current schema name.  Works in conjunction
 	 * with {@link #getSchemaNameResolver()}, unless the return from there does not need this
 	 * information.  E.g., a custom impl might make use of the Java 1.7 addition of
-	 * the {@link java.sql.Connection#getSchema()} method
+	 * the {@link Connection#getSchema()} method
 	 *
 	 * @return The current schema retrieval SQL
 	 */
@@ -2385,6 +2452,19 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
+	 * Is this dialect known to support  what ANSI-SQL terms "row value constructor" syntax, 
+	 * sometimes called tuple syntax, in the SET clause;
+	 * <p/>
+	 * Basically, does it support syntax like
+	 * "... SET (FIRST_NAME, LAST_NAME) = ('Steve', 'Ebersole') ...".
+	 *
+	 * @return True if this SQL dialect is known to support "row value constructor" syntax in the SET clause; false otherwise.
+	 */
+	public boolean supportsRowValueConstructorSyntaxInSet() {
+		return supportsRowValueConstructorSyntax();
+	}
+
+	/**
 	 * If the dialect supports {@link #supportsRowValueConstructorSyntax() row values},
 	 * does it offer such support in IN lists as well?
 	 * <p/>
@@ -2400,7 +2480,7 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * Should LOBs (both BLOB and CLOB) be bound using stream operations (i.e.
-	 * {@link java.sql.PreparedStatement#setBinaryStream}).
+	 * {@link PreparedStatement#setBinaryStream}).
 	 *
 	 * @return True if BLOBs and CLOBs should be bound using stream operations.
 	 * @since 3.2
@@ -2422,7 +2502,7 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * Does this dialect require that references to result variables
-	 * (i.e, select expresssion aliases) in an ORDER BY clause be
+	 * (i.e, select expression aliases) in an ORDER BY clause be
 	 * replaced by column positions (1-origin) as defined
 	 * by the select clause?
 
@@ -2475,14 +2555,14 @@ public abstract class Dialect implements ConversionContext {
 	 * Does this dialect support asking the result set its positioning
 	 * information on forward only cursors.  Specifically, in the case of
 	 * scrolling fetches, Hibernate needs to use
-	 * {@link java.sql.ResultSet#isAfterLast} and
-	 * {@link java.sql.ResultSet#isBeforeFirst}.  Certain drivers do not
+	 * {@link ResultSet#isAfterLast} and
+	 * {@link ResultSet#isBeforeFirst}.  Certain drivers do not
 	 * allow access to these methods for forward only cursors.
 	 * <p/>
 	 * NOTE : this is highly driver dependent!
 	 *
-	 * @return True if methods like {@link java.sql.ResultSet#isAfterLast} and
-	 * {@link java.sql.ResultSet#isBeforeFirst} are supported for forward
+	 * @return True if methods like {@link ResultSet#isAfterLast} and
+	 * {@link ResultSet#isBeforeFirst} are supported for forward
 	 * only cursors; false otherwise.
 	 * @since 3.2
 	 */
@@ -2506,7 +2586,7 @@ public abstract class Dialect implements ConversionContext {
 	 * Are subselects supported as the left-hand-side (LHS) of
 	 * IN-predicates.
 	 * <p/>
-	 * In other words, is syntax like "... <subquery> IN (1, 2, 3) ..." supported?
+	 * In other words, is syntax like {@code ... <subquery> IN (1, 2, 3) ...} supported?
 	 *
 	 * @return True if subselects can appear as the LHS of an in-predicate;
 	 * false otherwise.
@@ -2541,17 +2621,17 @@ public abstract class Dialect implements ConversionContext {
 	 * locator instance...
 	 * <p/>
 	 * For BLOBs, the internal value might be changed by:
-	 * {@link java.sql.Blob#setBinaryStream},
-	 * {@link java.sql.Blob#setBytes(long, byte[])},
-	 * {@link java.sql.Blob#setBytes(long, byte[], int, int)},
-	 * or {@link java.sql.Blob#truncate(long)}.
+	 * {@link Blob#setBinaryStream},
+	 * {@link Blob#setBytes(long, byte[])},
+	 * {@link Blob#setBytes(long, byte[], int, int)},
+	 * or {@link Blob#truncate(long)}.
 	 * <p/>
 	 * For CLOBs, the internal value might be changed by:
-	 * {@link java.sql.Clob#setAsciiStream(long)},
-	 * {@link java.sql.Clob#setCharacterStream(long)},
-	 * {@link java.sql.Clob#setString(long, String)},
-	 * {@link java.sql.Clob#setString(long, String, int, int)},
-	 * or {@link java.sql.Clob#truncate(long)}.
+	 * {@link Clob#setAsciiStream(long)},
+	 * {@link Clob#setCharacterStream(long)},
+	 * {@link Clob#setString(long, String)},
+	 * {@link Clob#setString(long, String, int, int)},
+	 * or {@link Clob#truncate(long)}.
 	 * <p/>
 	 * NOTE : I do not know the correct answer currently for
 	 * databases which (1) are not part of the cruise control process
@@ -2799,7 +2879,7 @@ public abstract class Dialect implements ConversionContext {
 	public String getQueryHintString(String query, List<String> hintList) {
 		final String hints = String.join( ", ", hintList );
 
-		if ( StringHelper.isEmpty( hints ) ) {
+		if ( hints.isEmpty() ) {
 			return query;
 		}
 
@@ -2845,7 +2925,7 @@ public abstract class Dialect implements ConversionContext {
 	/**
 	 * By default interpret this based on DatabaseMetaData.
 	 *
-	 * @return
+	 * @return The NameQualifierSupport.
 	 */
 	public NameQualifierSupport getNameQualifierSupport() {
 		return null;
@@ -2958,12 +3038,24 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
+	 * Check whether the JDBC {@link Connection} supports creating LOBs via {@link Connection#createBlob()},
+	 * {@link Connection#createNClob()} or {@link Connection#createClob()}.
+	 *
+	 * @param databaseMetaData JDBC {@link DatabaseMetaData} which can be used if LOB creation is supported only starting from a given Driver version
+	 *
+	 * @return {@code true} if LOBs can be created via the JDBC Connection.
+	 */
+	public boolean supportsJdbcConnectionLobCreation(DatabaseMetaData databaseMetaData) {
+		return true;
+	}
+
+	/**
 	 * Escape String literal.
 	 *
 	 * @return escaped String
 	 */
 	protected String escapeLiteral(String literal) {
-		return literal.replace("'", "''");
+		return SINGLE_QUOTE_PATTERN.matcher( literal ).replaceAll( TWO_SINGLE_QUOTES_REPLACEMENT );
 	}
 
 	private void resolveLegacyLimitHandlerBehavior(ServiceRegistry serviceRegistry) {
@@ -3002,6 +3094,28 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	protected String prependComment(String sql, String comment) {
-		return  "/* " + comment + " */ " + sql;
+		return "/* " + escapeComment( comment ) + " */ " + sql;
+	}
+
+	public static String escapeComment(String comment) {
+		if ( StringHelper.isNotEmpty( comment ) ) {
+			final String escaped = ESCAPE_CLOSING_COMMENT_PATTERN.matcher( comment ).replaceAll( "*\\\\/" );
+			return ESCAPE_OPENING_COMMENT_PATTERN.matcher( escaped ).replaceAll( "/\\\\*" );
+		}
+		return comment;
+	}
+
+	public boolean supportsSelectAliasInGroupByClause() {
+		return false;
+	}
+
+	/**
+	 * Annotation to be appended to the end of each COLUMN clause for temporary tables.
+	 *
+	 * @param sqlTypeCode The SQL type code
+	 * @return The annotation to be appended (e.g. "COLLATE DATABASE_DEFAULT" in SQLServer SQL)
+	 */
+	public String getCreateTemporaryTableColumnAnnotation(int sqlTypeCode) {
+		return "";
 	}
 }

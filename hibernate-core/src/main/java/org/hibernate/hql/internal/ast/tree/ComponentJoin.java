@@ -121,7 +121,7 @@ public class ComponentJoin extends FromElement {
 		public String renderScalarIdentifierSelect(int i) {
 			String[] cols = getBasePropertyMapping().toColumns( getTableAlias(), getComponentProperty() );
 			StringBuilder buf = new StringBuilder();
-			// For property references generate <tablealias>.<columnname> as <projectionalias>
+			// For property references generate <tableAlias>.<columnName> as <projectionAlias>
 			for ( int j = 0; j < cols.length; j++ ) {
 				final String column = cols[j];
 				if ( j > 0 ) {
@@ -151,6 +151,9 @@ public class ComponentJoin extends FromElement {
 		protected String getPropertyPath(String propertyName) {
 			return getComponentPath() + '.' + propertyName;
 		}
+
+		// `size( c.component.customers )`
+		// PropertyMapping(c).toColumns( component.customers )
 
 		@Override
 		public String[] toColumns(String alias, String propertyName) throws QueryException {

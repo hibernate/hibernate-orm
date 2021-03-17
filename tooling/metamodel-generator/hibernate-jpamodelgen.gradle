@@ -5,11 +5,12 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
+description = 'Annotation Processor to generate JPA 2 static metamodel classes'
+
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 apply plugin: 'version-injection'
 apply plugin: 'org.hibernate.build.gradle.xjc'
 
-description = 'Annotation Processor to generate JPA 2 static metamodel classes'
 
 ext {
 	xjcTargetDir = file( "${buildDir}/generated-src/xjc/main" )
@@ -17,22 +18,19 @@ ext {
 }
 
 dependencies {
-	testCompile libraries.junit
+
+    // JAXB
+    compile( libraries.jaxb_api )
+    compile( libraries.jaxb_runtime )
+    xjc( libraries.jaxb_runtime )
+    xjc( libraries.jaxb_xjc )
+    xjc( libraries.jaxb2_basics )
+    xjc( libraries.jaxb2_basics_ant )
+    xjc( libraries.activation )
+
+    testCompile libraries.junit
     testCompile libraries.jpa
     testCompile project( ':hibernate-core' )
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Java 9 ftw!
-	if ( JavaVersion.current().isJava9Compatible() ) {
-		xjc( 'com.sun.xml.bind:jaxb-impl:2.2.11' )
-		xjc( 'org.glassfish.jaxb:jaxb-xjc:2.2.11' )
-		xjc( 'org.jvnet.jaxb2_commons:jaxb2-basics:0.11.0' )
-		xjc( 'org.jvnet.jaxb2_commons:jaxb2-basics-ant:0.11.0' )
-		xjc( 'javax.activation:javax.activation-api:1.2.0' )
-		xjc( 'javax.annotation:jsr250-api:1.0' )
-	}
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 }
 
 sourceSets.main {

@@ -21,7 +21,7 @@ public class NoopLimitHandler extends AbstractLimitHandler {
 	public static final NoopLimitHandler INSTANCE = new NoopLimitHandler();
 
 	private NoopLimitHandler() {
-		// NOP
+		// NOOP
 	}
 
 	@Override

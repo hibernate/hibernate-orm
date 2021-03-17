@@ -19,6 +19,7 @@ import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.tool.schema.Action;
 
+import org.hibernate.test.cdi.testsupport.TestingExtendedBeanManager;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -32,8 +33,19 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class ExtendedMixedAccessTest implements BeanContainer.LifecycleOptions {
 	@Test
 	public void testExtendedMixedAccess() {
-		final Helper.TestingExtendedBeanManager extendedBeanManager = Helper.createExtendedBeanManager();
+		doTest( TestingExtendedBeanManager.create() );
+	}
 
+	/**
+	 * NOTE : we use the deprecated one here to make sure this continues to work.
+	 * Scott still uses this in WildFly and we need it to continue to work there
+	 */
+	@Test
+	public void testLegacyExtendedMixedAccess() {
+		doTest( TestingExtendedBeanManager.createLegacy() );
+	}
+
+	private void doTest(TestingExtendedBeanManager extendedBeanManager) {
 		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
 				.applySetting( AvailableSettings.HBM2DDL_AUTO, Action.CREATE_DROP )
 				.applySetting( AvailableSettings.CDI_BEAN_MANAGER, extendedBeanManager )

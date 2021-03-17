@@ -135,9 +135,6 @@ public interface StatisticsImplementor extends Statistics, Service {
 	 */
 	void removeCollection(String role);
 
-
-
-
 	/**
 	 * Callback indicating a put into second level cache.
 	 *
@@ -158,9 +155,6 @@ public interface StatisticsImplementor extends Statistics, Service {
 	 * @apiNote `entityName` should be the root entity name
 	 */
 	void entityCacheMiss(NavigableRole entityName, String regionName);
-
-
-
 
 	/**
 	 * Callback indicating a put into second level cache.
@@ -186,11 +180,6 @@ public interface StatisticsImplementor extends Statistics, Service {
 	 */
 	void collectionCacheMiss(NavigableRole collectionRole, String regionName);
 
-
-
-
-
-
 	/**
 	 * Callback indicating a put into natural id cache.
 	 */
@@ -210,9 +199,6 @@ public interface StatisticsImplementor extends Statistics, Service {
 	 * Callback indicating execution of a natural id query
 	 */
 	void naturalIdQueryExecuted(String rootEntityName, long executionTime);
-
-
-
 
 	/**
 	 * Callback indicating a put into the query cache.
@@ -247,7 +233,6 @@ public interface StatisticsImplementor extends Statistics, Service {
 	 */
 	void queryExecuted(String hql, int rows, long time);
 
-
 	/**
 	 * Callback indicating a hit to the timestamp cache
 	 */
@@ -262,4 +247,23 @@ public interface StatisticsImplementor extends Statistics, Service {
 	 * Callback indicating a put to the timestamp cache
 	 */
 	void updateTimestampsCachePut();
+
+	/**
+	 * Callback indicating a get from the query plan cache resulted in a hit.
+	 *
+	 * @param hql The query
+	 */
+	default void queryPlanCacheHit(String hql) {
+		//For backward compatibility
+	}
+
+	/**
+	 * Callback indicating compilation of a sql/hql query
+	 *
+	 * @param hql The query
+	 * @param microseconds execution time
+	 */
+	default void queryCompiled(String hql, long microseconds) {
+		//For backward compatibility
+	}
 }

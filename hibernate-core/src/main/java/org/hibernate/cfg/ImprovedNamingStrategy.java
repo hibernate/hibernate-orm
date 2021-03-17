@@ -33,7 +33,7 @@ public class ImprovedNamingStrategy implements NamingStrategy, Serializable {
 		return addUnderscores( StringHelper.unqualify(className) );
 	}
 	/**
-	 * Return the full property path with underscore seperators, mixed
+	 * Return the full property path with underscore separators, mixed
 	 * case converted to underscores
 	 */
 	public String propertyToColumnName(String propertyName) {
@@ -110,8 +110,7 @@ public class ImprovedNamingStrategy implements NamingStrategy, Serializable {
 			return tableName;
 		}
 		else {
-			//use of a stringbuffer to workaround a JDK bug
-			return new StringBuffer(ownerEntityTable).append("_")
+			return new StringBuilder(ownerEntityTable).append("_")
 					.append(
 						associatedEntityTable != null ?
 						associatedEntityTable :

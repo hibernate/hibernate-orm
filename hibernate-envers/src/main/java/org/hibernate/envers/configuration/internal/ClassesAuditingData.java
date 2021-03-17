@@ -20,6 +20,7 @@ import org.hibernate.envers.configuration.internal.metadata.reader.ComponentAudi
 import org.hibernate.envers.configuration.internal.metadata.reader.PropertyAuditingData;
 import org.hibernate.envers.internal.EnversMessageLogger;
 import org.hibernate.envers.internal.tools.MappingTools;
+import org.hibernate.envers.internal.tools.StringTools;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.List;
 import org.hibernate.mapping.PersistentClass;
@@ -112,6 +113,16 @@ public class ClassesAuditingData {
 			}
 		}
 
+		if ( propertyAuditingData.getMapKeyEnumType() != null ) {
+			final String referencedEntityName = MappingTools.getReferencedEntityName( property.getValue() );
+			if ( referencedEntityName != null ) {
+				// If no entity could be determined, this means the enum type isn't an entity mapping and instead is one
+				// to a basic type.  In this use case, there is nothing special to do.
+				final ClassAuditingData referencedAuditingData = entityNameToAuditingData.get( referencedEntityName );
+				addMapEnumeratedKey( property.getValue(), property.getPropertyAccessorName(), referencedAuditingData );
+			}
+		}
+
 		// HHH-9108
 		// Added support to handle nested property calculations for components.
 		// This is useful for AuditMappedBy inside an Embeddable that holds a collection of entities.
@@ -162,6 +173,30 @@ public class ClassesAuditingData {
 						indexValue
 				);
 				classAuditingData.addPropertyAuditingData( indexColumnName, auditingData );
+			}
+		}
+	}
+
+	private void addMapEnumeratedKey(Value value, String propertyAccessorName, ClassAuditingData classAuditingData) {
+		if ( value instanceof org.hibernate.mapping.Map ) {
+			final Value indexValue = ( (org.hibernate.mapping.Map) value ).getIndex();
+			if ( indexValue != null && indexValue.getColumnIterator().hasNext() ) {
+				final String indexColumnName = indexValue.getColumnIterator().next().getText();
+				if ( !StringTools.isEmpty( indexColumnName ) ) {
+					final PropertyAuditingData propertyAuditingData = new PropertyAuditingData(
+							indexColumnName,
+							propertyAccessorName,
+							ModificationStore.FULL,
+							RelationTargetAuditMode.AUDITED,
+							null,
+							null,
+							true,
+							true,
+							indexValue
+					);
+
+					classAuditingData.addPropertyAuditingData( indexColumnName, propertyAuditingData );
+				}
 			}
 		}
 	}

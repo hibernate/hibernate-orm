@@ -19,6 +19,7 @@ import org.hibernate.loader.CollectionAliases;
 import org.hibernate.loader.DefaultEntityAliases;
 import org.hibernate.loader.EntityAliases;
 import org.hibernate.loader.GeneratedCollectionAliases;
+import org.hibernate.loader.internal.AliasConstantsHelper;
 import org.hibernate.loader.plan.build.spi.QuerySpaceTreePrinter;
 import org.hibernate.loader.plan.build.spi.TreePrinterHelper;
 import org.hibernate.loader.plan.exec.spi.AliasResolutionContext;
@@ -33,6 +34,8 @@ import org.hibernate.persister.entity.Loadable;
 import org.hibernate.type.EntityType;
 
 import org.jboss.logging.Logger;
+
+import static org.hibernate.internal.util.StringHelper.safeInterning;
 
 /**
  * Provides aliases that are used by load queries and ResultSet processors.
@@ -140,7 +143,7 @@ public class AliasResolutionContextImpl implements AliasResolutionContext {
 	}
 
 	private String createSuffix() {
-		return Integer.toString( currentAliasSuffix++ ) + '_';
+		return AliasConstantsHelper.get( currentAliasSuffix++ );
 	}
 
 	/**
@@ -151,7 +154,7 @@ public class AliasResolutionContextImpl implements AliasResolutionContext {
 	 * query space UID:
 	 * <ul>
 	 * <li>
-	 *     {@link ##resolveCollectionReferenceAliases(String)} can be used to
+	 *     {@link #resolveCollectionReferenceAliases(String)} can be used to
 	 *     look up the returned collection reference aliases;
 	 * </li>
 	 * <li>
@@ -237,7 +240,7 @@ public class AliasResolutionContextImpl implements AliasResolutionContext {
 		if ( querySpaceUidToSqlTableAliasMap == null ) {
 			querySpaceUidToSqlTableAliasMap = new HashMap<String, String>();
 		}
-		String old = querySpaceUidToSqlTableAliasMap.put( querySpaceUid, sqlTableAlias );
+		String old = querySpaceUidToSqlTableAliasMap.put( safeInterning( querySpaceUid ), safeInterning( sqlTableAlias ) );
 		if ( old != null ) {
 			if ( old.equals( sqlTableAlias ) ) {
 				// silently ignore...

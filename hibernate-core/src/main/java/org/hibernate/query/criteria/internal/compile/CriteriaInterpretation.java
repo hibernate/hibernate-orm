@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.criteria.internal.compile;
 
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 
 /**
@@ -25,5 +25,5 @@ public interface CriteriaInterpretation {
 	 *
 	 * @return The created Query instance.
 	 */
-	QueryImplementor buildCompiledQuery(SessionImplementor entityManager, InterpretedParameterMetadata interpretedParameterMetadata);
+	QueryImplementor buildCompiledQuery(SharedSessionContractImplementor entityManager, InterpretedParameterMetadata interpretedParameterMetadata);
 }

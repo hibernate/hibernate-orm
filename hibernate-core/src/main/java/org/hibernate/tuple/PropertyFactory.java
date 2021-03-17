@@ -10,6 +10,9 @@ import java.lang.reflect.Constructor;
 
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
+import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper;
 import org.hibernate.engine.internal.UnsavedValueFactory;
 import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -20,6 +23,7 @@ import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
@@ -153,7 +157,8 @@ public final class PropertyFactory {
 			SessionFactoryImplementor sessionFactory,
 			int attributeNumber,
 			Property property,
-			boolean lazyAvailable) {
+			boolean lazyAvailable,
+			PersisterCreationContext creationContext) {
 		final Type type = property.getValue().getType();
 
 		final NonIdentifierAttributeNature nature = decode( type );
@@ -168,6 +173,19 @@ public final class PropertyFactory {
 		boolean alwaysDirtyCheck = type.isAssociationType() &&
 				( (AssociationType) type ).isAlwaysDirtyChecked();
 
+		SessionFactoryOptions sessionFactoryOptions = sessionFactory.getSessionFactoryOptions();
+		final boolean lazy = ! EnhancementHelper.includeInBaseFetchGroup(
+				property,
+				lazyAvailable,
+				(entityName) -> {
+					final MetadataImplementor metadata = creationContext.getMetadata();
+					final PersistentClass entityBinding = metadata.getEntityBinding( entityName );
+					assert entityBinding != null;
+					return entityBinding.hasSubclasses();
+				},
+				sessionFactoryOptions.isCollectionsInDefaultFetchGroupEnabled()
+		);
+
 		switch ( nature ) {
 			case BASIC: {
 				return new EntityBasedBasicAttribute(
@@ -177,7 +195,7 @@ public final class PropertyFactory {
 						property.getName(),
 						type,
 						new BaselineAttributeInformation.Builder()
-								.setLazy( lazyAvailable && property.isLazy() )
+								.setLazy( lazy )
 								.setInsertable( property.isInsertable() )
 								.setUpdateable( property.isUpdateable() )
 								.setValueGenerationStrategy( property.getValueGenerationStrategy() )
@@ -197,7 +215,7 @@ public final class PropertyFactory {
 						property.getName(),
 						(CompositeType) type,
 						new BaselineAttributeInformation.Builder()
-								.setLazy( lazyAvailable && property.isLazy() )
+								.setLazy( lazy )
 								.setInsertable( property.isInsertable() )
 								.setUpdateable( property.isUpdateable() )
 								.setValueGenerationStrategy( property.getValueGenerationStrategy() )
@@ -219,7 +237,7 @@ public final class PropertyFactory {
 						property.getName(),
 						(AssociationType) type,
 						new BaselineAttributeInformation.Builder()
-								.setLazy( lazyAvailable && property.isLazy() )
+								.setLazy( lazy )
 								.setInsertable( property.isInsertable() )
 								.setUpdateable( property.isUpdateable() )
 								.setValueGenerationStrategy( property.getValueGenerationStrategy() )
@@ -239,7 +257,6 @@ public final class PropertyFactory {
 
 	private static NonIdentifierAttributeNature decode(Type type) {
 		if ( type.isAssociationType() ) {
-			AssociationType associationType = (AssociationType) type;
 
 			if ( type.isComponentType() ) {
 				// an any type is both an association and a composite...
@@ -279,7 +296,9 @@ public final class PropertyFactory {
 		return new StandardProperty(
 				property.getName(),
 				type,
-				lazyAvailable && property.isLazy(),
+				// only called for embeddable sub-attributes which are never (yet) lazy
+				//lazyAvailable && property.isLazy(),
+				false,
 				property.isInsertable(),
 				property.isUpdateable(),
 				property.getValueGenerationStrategy(),

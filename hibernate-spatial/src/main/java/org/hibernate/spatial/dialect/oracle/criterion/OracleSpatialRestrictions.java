@@ -12,7 +12,7 @@ import org.hibernate.criterion.CriteriaQuery;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.engine.spi.TypedValue;
 
-import com.vividsolutions.jts.geom.Geometry;
+import org.locationtech.jts.geom.Geometry;
 
 /**
  * A static factory class for spatial criteria using the Oracle Spatial native spatial operators

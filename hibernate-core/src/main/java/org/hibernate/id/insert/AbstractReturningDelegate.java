@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.PostInsertIdentityPersister;
 import org.hibernate.pretty.MessageHelper;
@@ -63,8 +64,9 @@ public abstract class AbstractReturningDelegate implements InsertGeneratedIdenti
 	protected abstract Serializable executeAndExtract(PreparedStatement insert, SharedSessionContractImplementor session)
 			throws SQLException;
 
-	protected void releaseStatement(PreparedStatement insert, SharedSessionContractImplementor session) throws SQLException {
-		session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( insert );
-		session.getJdbcCoordinator().afterStatementExecution();
+	protected void releaseStatement(PreparedStatement insert, SharedSessionContractImplementor session) {
+		final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
+		jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( insert );
+		jdbcCoordinator.afterStatementExecution();
 	}
 }

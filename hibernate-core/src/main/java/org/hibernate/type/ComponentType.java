@@ -40,7 +40,6 @@ import org.hibernate.tuple.component.ComponentTuplizer;
  */
 public class ComponentType extends AbstractType implements CompositeType, ProcedureParameterExtractionAware {
 
-	private final TypeFactory.TypeScope typeScope;
 	private final String[] propertyNames;
 	private final Type[] propertyTypes;
 	private final ValueGeneration[] propertyValueGenerationStrategies;
@@ -55,8 +54,16 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	protected final EntityMode entityMode;
 	protected final ComponentTuplizer componentTuplizer;
 
+
+	/**
+	 * @deprecated Use the other constructor
+	 */
+	@Deprecated
 	public ComponentType(TypeFactory.TypeScope typeScope, ComponentMetamodel metamodel) {
-		this.typeScope = typeScope;
+		this( metamodel );
+	}
+
+	public ComponentType(ComponentMetamodel metamodel) {
 		// for now, just "re-flatten" the metamodel since this is temporary stuff anyway (HHH-1907)
 		this.isKey = metamodel.isKey();
 		this.propertySpan = metamodel.getPropertySpan();
@@ -108,7 +115,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 
 	@Override
 	public int[] sqlTypes(Mapping mapping) throws MappingException {
-		//Not called at runtime so doesn't matter if its slow :)
+		//Not called at runtime so doesn't matter if it's slow :)
 		int[] sqlTypes = new int[getColumnSpan( mapping )];
 		int n = 0;
 		for ( int i = 0; i < propertySpan; i++ ) {
@@ -122,7 +129,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 
 	@Override
 	public Size[] dictatedSizes(Mapping mapping) throws MappingException {
-		//Not called at runtime so doesn't matter if its slow :)
+		//Not called at runtime so doesn't matter if it's slow :)
 		final Size[] sizes = new Size[getColumnSpan( mapping )];
 		int soFar = 0;
 		for ( Type propertyType : propertyTypes ) {
@@ -135,7 +142,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 
 	@Override
 	public Size[] defaultSizes(Mapping mapping) throws MappingException {
-		//Not called at runtime so doesn't matter if its slow :)
+		//Not called at runtime so doesn't matter if it's slow :)
 		final Size[] sizes = new Size[getColumnSpan( mapping )];
 		int soFar = 0;
 		for ( Type propertyType : propertyTypes ) {
@@ -426,7 +433,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 			component = new Object[propertySpan];
 		}
 		if ( component instanceof Object[] ) {
-			// A few calls to hashCode pass the property values already in an 
+			// A few calls to hashCode pass the property values already in an
 			// Object[] (ex: QueryKey hash codes for cached queries).
 			// It's easiest to just check for the condition here prior to
 			// trying reflection.
@@ -588,7 +595,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 		if ( componentTuplizer.hasParentProperty() && parent != null ) {
 			componentTuplizer.setParent(
 					result,
-					session.getPersistenceContext().proxyFor( parent ),
+					session.getPersistenceContextInternal().proxyFor( parent ),
 					session.getFactory()
 			);
 		}
@@ -683,7 +690,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 		if ( value != null ) {
 			Object result = instantiate( owner, session );
 			Object[] values = (Object[]) value;
-			Object[] resolvedValues = new Object[values.length]; //only really need new array during semiresolve!
+			Object[] resolvedValues = new Object[values.length]; //only really need new array during semi-resolve!
 			for ( int i = 0; i < values.length; i++ ) {
 				resolvedValues[i] = propertyTypes[i].resolve( values[i], session, owner );
 			}

@@ -30,7 +30,7 @@ public interface ParameterRegistration<T> extends ProcedureParameter<T> {
 
 	/**
 	 * The position at which this parameter was registered.  Can be {@code null} which should indicate that
-	 * named registration was used (and therefore {@link #getName()} should return non-null.
+	 * named registration was used (and therefore {@link #getName()} should return non-null).
 	 *
 	 * @return The name;
 	 */

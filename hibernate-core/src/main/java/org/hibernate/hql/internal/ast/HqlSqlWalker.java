@@ -34,6 +34,8 @@ import org.hibernate.hql.internal.ast.tree.AggregateNode;
 import org.hibernate.hql.internal.ast.tree.AssignmentSpecification;
 import org.hibernate.hql.internal.ast.tree.CastFunctionNode;
 import org.hibernate.hql.internal.ast.tree.CollectionFunction;
+import org.hibernate.hql.internal.ast.tree.CollectionPathNode;
+import org.hibernate.hql.internal.ast.tree.CollectionSizeNode;
 import org.hibernate.hql.internal.ast.tree.ConstructorNode;
 import org.hibernate.hql.internal.ast.tree.DeleteStatement;
 import org.hibernate.hql.internal.ast.tree.DotNode;
@@ -139,7 +141,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 	private ArrayList<ParameterSpecification> parameterSpecs = new ArrayList<>();
 	private int numberOfParametersInSetClause;
 
-	private ArrayList assignmentSpecifications = new ArrayList();
+	private ArrayList<AssignmentSpecification> assignmentSpecifications = new ArrayList<>();
 
 	private JoinType impliedJoinType = JoinType.INNER_JOIN;
 
@@ -509,7 +511,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 			SqlGenerator sql = new SqlGenerator( getSessionFactoryHelper().getFactory() );
 			sql.whereExpr( hqlSqlWithNode.getFirstChild() );
 
-			fromElement.setWithClauseFragment( "(" + sql.getSQL() + ")" );
+			fromElement.setWithClauseFragment( hqlSqlWithNode.getFirstChild(), "(" + sql.getSQL() + ")" );
 		}
 		catch (SemanticException e) {
 			throw e;
@@ -555,7 +557,9 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 				}
 				else {
 					referencedFromElement = fromElement;
-					joinAlias = extractAppliedAlias( dotNode );
+					if ( fromElement != null ) {
+						joinAlias = extractAppliedAlias( dotNode );
+					}
 					// TODO : temporary
 					//      needed because currently persister is the one that
 					// creates and renders the join fragments for inheritance
@@ -637,6 +641,12 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 
 	public JoinType getImpliedJoinType() {
 		return impliedJoinType;
+	}
+
+	@Override
+	protected AST createCollectionSizeFunction(AST collectionPath, boolean inSelect) throws SemanticException {
+		assert collectionPath instanceof CollectionPathNode;
+		return new CollectionSizeNode( (CollectionPathNode) collectionPath );
 	}
 
 	@Override
@@ -787,7 +797,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 			}
 
 			// After that, process the JOINs.
-			// Invoke a delegate to do the work, as this is farily complex.
+			// Invoke a delegate to do the work, as this is fairly complex.
 			JoinProcessor joinProcessor = new JoinProcessor( this );
 			joinProcessor.processJoins( qn );
 
@@ -944,7 +954,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 				parameterSpecs.add( 0, paramSpec );
 
 				if ( sessionFactoryHelper.getFactory().getDialect().requiresCastingOfParametersInSelectClause() ) {
-					// we need to wrtap the param in a cast()
+					// we need to wrap the param in a cast()
 					MethodNode versionMethodNode = (MethodNode) getASTFactory().create(
 							HqlSqlTokenTypes.METHOD_CALL,
 							"("
@@ -1222,6 +1232,11 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 	}
 
 	@Override
+	protected AST createCollectionPath(AST qualifier, AST reference) throws SemanticException {
+		return CollectionPathNode.from( qualifier, reference, this );
+	}
+
+	@Override
 	protected void processFunction(AST functionCall, boolean inSelect) throws SemanticException {
 		MethodNode methodNode = (MethodNode) functionCall;
 		methodNode.resolve( inSelect );
@@ -1262,6 +1277,18 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		if ( !isSubQuery() &&
 				orderExpressionNode.getType() == IDENT &&
 				selectExpressionsByResultVariable.containsKey( orderExpressionNode.getText() ) ) {
+			return true;
+		}
+		return false;
+	}
+
+	@Override
+	protected boolean isGroupExpressionResultVariableRef(AST groupExpressionNode) throws SemanticException {
+		// Aliases are not sensible in subqueries
+		if ( getDialect().supportsSelectAliasInGroupByClause() &&
+				!isSubQuery() &&
+				groupExpressionNode.getType() == IDENT &&
+				selectExpressionsByResultVariable.containsKey( groupExpressionNode.getText() ) ) {
 			return true;
 		}
 		return false;
@@ -1323,7 +1350,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 	}
 
 	public boolean isShallowQuery() {
-		// select clauses for insert statements should alwasy be treated as shallow
+		// select clauses for insert statements should always be treated as shallow
 		return getStatementType() == INSERT || queryTranslatorImpl.isShallowQuery();
 	}
 
@@ -1368,7 +1395,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		}
 	}
 
-	public ArrayList getAssignmentSpecifications() {
+	public ArrayList<AssignmentSpecification> getAssignmentSpecifications() {
 		return assignmentSpecifications;
 	}
 

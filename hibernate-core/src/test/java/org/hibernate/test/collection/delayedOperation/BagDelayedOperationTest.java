@@ -24,11 +24,13 @@ import org.junit.Test;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
+import org.hibernate.collection.internal.AbstractPersistentCollection;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests delayed operations that are queued for a PersistentBag. The Bag does not have
@@ -123,7 +125,7 @@ public class BagDelayedOperationTest extends BaseCoreFunctionalTestCase {
 		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
 		p.addChild( c2 );
 		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-		s.merge( p );
+		p = (Parent) s.merge( p );
 		s.getTransaction().commit();
 		s.close();
 
@@ -232,6 +234,51 @@ public class BagDelayedOperationTest extends BaseCoreFunctionalTestCase {
 		p = s.get( Parent.class, parentId );
 		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
 		assertEquals( 4, p.getChildren().size() );
+		s.getTransaction().commit();
+		s.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-11209")
+	public void testMergeInitializedBagAndRemerge() {
+		Session s = openSession();
+		s.getTransaction().begin();
+		Parent p = s.get( Parent.class, parentId );
+		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+		// initialize
+		Hibernate.initialize( p.getChildren() );
+		assertTrue( Hibernate.isInitialized( p.getChildren() ) );
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.getTransaction().begin();
+		p = (Parent) s.merge( p );
+		assertTrue( Hibernate.isInitialized( p.getChildren() ) );
+		Child c = new Child( "Zeke" );
+		c.setParent( p );
+		s.persist( c );
+		p.getChildren().size();
+		p.getChildren().add( c );
+		s.getTransaction().commit();
+		s.close();
+
+		// Merge detached Parent with initialized children
+		s = openSession();
+		s.getTransaction().begin();
+		p = (Parent) s.merge( p );
+		// after merging, p#children will be initialized
+		assertTrue( Hibernate.isInitialized( p.getChildren() ) );
+		assertFalse( ( (AbstractPersistentCollection) p.getChildren() ).hasQueuedOperations() );
+		s.getTransaction().commit();
+		s.close();
+
+		// Merge detached Parent
+		s = openSession();
+		s.getTransaction().begin();
+		p = (Parent) s.merge( p );
+		assertTrue( Hibernate.isInitialized( p.getChildren() ) );
+		assertFalse( ( (AbstractPersistentCollection) p.getChildren() ).hasQueuedOperations() );
 		s.getTransaction().commit();
 		s.close();
 	}

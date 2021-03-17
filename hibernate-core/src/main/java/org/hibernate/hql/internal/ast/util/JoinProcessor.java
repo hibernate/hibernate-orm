@@ -8,14 +8,18 @@ package org.hibernate.hql.internal.ast.util;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.internal.JoinSequence;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -24,19 +28,27 @@ import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.hql.internal.ast.tree.DotNode;
 import org.hibernate.hql.internal.ast.tree.FromClause;
 import org.hibernate.hql.internal.ast.tree.FromElement;
+import org.hibernate.hql.internal.ast.tree.FromReferenceNode;
 import org.hibernate.hql.internal.ast.tree.ImpliedFromElement;
 import org.hibernate.hql.internal.ast.tree.ParameterContainer;
 import org.hibernate.hql.internal.ast.tree.QueryNode;
+import org.hibernate.hql.internal.ast.tree.SqlFragment;
+import org.hibernate.hql.internal.ast.tree.TableReferenceNode;
 import org.hibernate.hql.internal.classic.ParserHelper;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.FilterImpl;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.param.DynamicFilterParameterSpecification;
+import org.hibernate.persister.entity.AbstractEntityPersister;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.JoinType;
 import org.hibernate.type.Type;
+
+import antlr.collections.AST;
 
 /**
  * Performs the post-processing of the join information gathered during semantic analysis.
@@ -94,8 +106,107 @@ public class JoinProcessor implements SqlTokenTypes {
 		}
 	}
 
+	private Set<String> findQueryReferencedTables(QueryNode query) {
+		if ( !walker.getSessionFactoryHelper()
+				.getFactory()
+				.getSessionFactoryOptions()
+				.isOmitJoinOfSuperclassTablesEnabled() ) {
+			if ( LOG.isDebugEnabled() ) {
+				LOG.debug( String.format(
+						"Finding of query referenced tables is skipped because the feature is disabled. See %s",
+						AvailableSettings.OMIT_JOIN_OF_SUPERCLASS_TABLES
+				) );
+			}
+			return null;
+		}
+
+		if ( CollectionHelper.isNotEmpty( walker.getEnabledFilters() ) ) {
+			LOG.debug( "Finding of query referenced tables is skipped because filters are enabled." );
+			return null;
+		}
+
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debug( TokenPrinters.REFERENCED_TABLES_PRINTER.showAsString(
+					query,
+					"Tables referenced from query nodes:"
+			) );
+		}
+
+		Set<String> result = new HashSet<>();
+
+		// Find tables referenced by FromReferenceNodes
+		collectReferencedTables( new ASTIterator( query ), result );
+		for (FromElement fromElement : (List<FromElement>) query.getFromClause().getFromElements()) {
+			// For joins, we want to add the table where the association key is mapped as well as that could be a supertype that we need to join
+			String role = fromElement.getRole();
+			if ( role != null ) {
+				result.add( fromElement.getOrigin().getPropertyTableName(role.substring(role.lastIndexOf('.') + 1)) );
+			}
+			final EntityPersister entityPersister = fromElement.getEntityPersister();
+			if ( entityPersister instanceof AbstractEntityPersister ) {
+				AbstractEntityPersister aep = (AbstractEntityPersister) entityPersister;
+				while ( !aep.filterFragment( "", Collections.emptyMap() ).isEmpty() && aep.getMappedSuperclass() != null ) {
+					Collections.addAll( result, aep.getTableNames() );
+					aep = (AbstractEntityPersister) walker.getSessionFactoryHelper().findEntityPersisterByName( aep.getMappedSuperclass() );
+				}
+			}
+			AST withClauseAst = fromElement.getWithClauseAst();
+			if ( withClauseAst != null ) {
+				collectReferencedTables( new ASTIterator( withClauseAst ), result );
+			}
+		}
+
+
+		// Find tables referenced by fromElementsForLoad
+		if ( query.getSelectClause() != null ) {
+			for ( Object element : query.getSelectClause().getFromElementsForLoad() ) {
+				FromElement fromElement = (FromElement) element;
+				EntityPersister entityPersister = fromElement.getEntityPersister();
+				if ( entityPersister != null && entityPersister instanceof AbstractEntityPersister ) {
+					AbstractEntityPersister aep = (AbstractEntityPersister) entityPersister;
+					String[] tables = aep.getTableNames();
+					Collections.addAll(result, tables);
+				}
+			}
+		}
+
+		return result;
+	}
+
+	private void collectReferencedTables(ASTIterator iterator, Set<String> result) {
+		while ( iterator.hasNext() ) {
+			AST node = iterator.nextNode();
+			if ( node instanceof TableReferenceNode) {
+				TableReferenceNode fromReferenceNode = (TableReferenceNode) node;
+				String[] tables = fromReferenceNode.getReferencedTables();
+				if ( tables != null ) {
+					Collections.addAll(result, tables);
+				}
+			}
+			if (node instanceof SqlFragment) {
+				SqlFragment sqlFragment = (SqlFragment) node;
+				FromElement fromElement = sqlFragment.getFromElement();
+
+				if (fromElement != null) {
+					// For joins, we want to add the table where the association key is mapped as well as that could be a supertype that we need to join
+					String role = fromElement.getRole();
+					if ( role != null ) {
+						result.add( fromElement.getOrigin().getPropertyTableName(role.substring(role.lastIndexOf('.') + 1)) );
+					}
+					AST withClauseAst = fromElement.getWithClauseAst();
+					if ( withClauseAst != null ) {
+						collectReferencedTables( new ASTIterator( withClauseAst ), result );
+					}
+				}
+
+			}
+		}
+	}
+
 	public void processJoins(QueryNode query) {
 		final FromClause fromClause = query.getFromClause();
+
+		Set<String> queryReferencedTables = findQueryReferencedTables( query );
 
 		final List fromElements;
 		if ( DotNode.useThetaStyleImplicitJoins ) {
@@ -117,7 +228,7 @@ public class JoinProcessor implements SqlTokenTypes {
 			while ( liter.hasNext() ) {
 				FromElement fromElement = liter.next();
 
-				// We found an implied from element that is used in the WITH clause of another from element, so it need to become part of it's join sequence
+				// We found an implied from element that is used in the WITH clause of another from element, so it need to become part of its join sequence
 				if ( fromElement instanceof ImpliedFromElement
 						&& fromElement.getOrigin().getWithClauseFragment() != null
 						&& fromElement.getOrigin().getWithClauseFragment().contains( fromElement.getTableAlias() ) ) {
@@ -136,6 +247,7 @@ public class JoinProcessor implements SqlTokenTypes {
 		while ( iter.hasNext() ) {
 			final FromElement fromElement = (FromElement) iter.next();
 			JoinSequence join = fromElement.getJoinSequence();
+			join.setQueryReferencedTables( queryReferencedTables );
 			join.setSelector(
 					new JoinSequence.Selector() {
 						public boolean includeSubclasses(String alias) {

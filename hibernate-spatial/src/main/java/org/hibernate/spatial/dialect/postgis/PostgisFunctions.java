@@ -7,9 +7,14 @@
 package org.hibernate.spatial.dialect.postgis;
 
 import java.util.List;
+import java.util.Locale;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import org.hibernate.QueryException;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.dialect.SpatialFunctionsRegistry;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
@@ -19,9 +24,9 @@ import org.hibernate.type.Type;
  * <p>
  * Created by Karel Maesen, Geovise BVBA on 29/10/16.
  */
-class PostgisFunctions extends SpatialFunctionsRegistry {
+public class PostgisFunctions extends SpatialFunctionsRegistry {
 
-	PostgisFunctions() {
+	public PostgisFunctions() {
 
 		put(
 				"dimension", new StandardSQLFunction(
@@ -43,6 +48,11 @@ class PostgisFunctions extends SpatialFunctionsRegistry {
 		put(
 				"envelope", new StandardSQLFunction(
 						"st_envelope"
+				)
+		);
+		put(
+				"makeenvelope", new StandardSQLFunction(
+						"st_makeenvelope"
 				)
 		);
 		put(
@@ -172,6 +182,11 @@ class PostgisFunctions extends SpatialFunctionsRegistry {
 				"extent", new ExtentFunction()
 		);
 
+		//register Spatial Filter function
+		put(
+				SpatialFunction.filter.name(), new FilterFunction()
+		);
+
 		//other common functions
 		put(
 				"dwithin", new StandardSQLFunction(
@@ -198,6 +213,32 @@ class PostgisFunctions extends SpatialFunctionsRegistry {
 			String rendered = super.render( firstArgumentType, arguments, sessionFactory );
 			//add cast
 			return rendered + "::geometry";
+		}
+	}
+
+	private static class FilterFunction extends StandardSQLFunction {
+
+		public FilterFunction() {
+			super( "&&" );
+		}
+
+		@Override
+		public String render(
+				Type firstArgumentType, List arguments, SessionFactoryImplementor sessionFactory) {
+			int argumentCount = arguments.size();
+			if ( argumentCount != 2 ) {
+				throw new QueryException( String.format(
+						Locale.ENGLISH,
+						"2 arguments expected, received %d",
+						argumentCount
+				) );
+			}
+
+			return Stream.of(
+					String.valueOf( arguments.get( 0 ) ),
+					getRenderedName( arguments ),
+					String.valueOf( arguments.get( 1 ) )
+			).collect( Collectors.joining( " ", "(", ")" ) );
 		}
 	}
 

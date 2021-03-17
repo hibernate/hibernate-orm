@@ -7,6 +7,7 @@
 package org.hibernate.engine.spi;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.persistence.EntityGraph;
@@ -31,8 +32,11 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.query.spi.QueryPlanCache;
+import org.hibernate.event.spi.EventEngine;
 import org.hibernate.exception.spi.SQLExceptionConverter;
+import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.internal.FastSessionServices;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -94,6 +98,11 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory, Quer
 	ServiceRegistryImplementor getServiceRegistry();
 
 	/**
+	 * Get the EventEngine associated with this SessionFactory
+	 */
+	EventEngine getEventEngine();
+
+	/**
 	 * Get the factory scoped interceptor for this factory.
 	 *
 	 * @return The factory scope interceptor, or null if none.
@@ -106,7 +115,7 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory, Quer
 	Interceptor getInterceptor();
 
 	/**
-	 * Access to the cachres of HQL/JPQL and native query plans.
+	 * Access to the caches of HQL/JPQL and native query plans.
 	 *
 	 * @return The query plan cache
 	 *
@@ -173,6 +182,11 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory, Quer
 	default Iterable<EntityNameResolver> iterateEntityNameResolvers() {
 		return getMetamodel().getEntityNameResolvers();
 	}
+
+	/**
+	 * @return the FastSessionServices instance associated with this SessionFactory
+	 */
+	FastSessionServices getFastSessionServices();
 
 	/**
 	 * Contract for resolving this SessionFactory on deserialization
@@ -277,16 +291,11 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory, Quer
 	 *
 	 * @return The dialect
 	 *
-	 * @deprecated (since 5.2) instead, use this factory's {{@link #getServiceRegistry()}} ->
-	 * {@link JdbcServices#getDialect()}
+	 * @deprecated (since 5.2) instead, use {@link JdbcServices#getDialect()}
 	 */
 	@Deprecated
 	default Dialect getDialect() {
-		if ( getServiceRegistry() == null ) {
-			throw new IllegalStateException( "Cannot determine dialect because serviceRegistry is null." );
-		}
-
-		return getServiceRegistry().getService( JdbcServices.class ).getDialect();
+		return getJdbcServices().getDialect();
 	}
 
 	/**
@@ -299,7 +308,7 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory, Quer
 	 */
 	@Deprecated
 	default SQLExceptionConverter getSQLExceptionConverter() {
-		return getServiceRegistry().getService( JdbcServices.class ).getSqlExceptionHelper().getSqlExceptionConverter();
+		return getJdbcServices().getSqlExceptionHelper().getSqlExceptionConverter();
 	}
 
 	/**
@@ -312,7 +321,7 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory, Quer
 	 */
 	@Deprecated
 	default SqlExceptionHelper getSQLExceptionHelper() {
-		return getServiceRegistry().getService( JdbcServices.class ).getSqlExceptionHelper();
+		return getJdbcServices().getSqlExceptionHelper();
 	}
 
 	/**
@@ -329,6 +338,16 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory, Quer
 
 	@Override
 	MetamodelImplementor getMetamodel();
+
+	@Override
+	@SuppressWarnings("unchecked")
+	default <T> List<EntityGraph<? super T>> findEntityGraphsByType(Class<T> entityClass) {
+		return (List) findEntityGraphsByJavaType( entityClass );
+	}
+
+	<T> List<RootGraphImplementor<? super T>> findEntityGraphsByJavaType(Class<T> entityClass);
+
+	RootGraphImplementor<?> findEntityGraphByName(String name);
 
 	/**
 	 * @deprecated (since 5.2) Use {@link MetamodelImplementor#entityPersister(Class)} instead.
@@ -410,8 +429,4 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory, Quer
 	default String getImportedClassName(String name) {
 		return getMetamodel().getImportedClassName( name );
 	}
-
-	EntityGraph findEntityGraphByName(String name);
-
-
 }

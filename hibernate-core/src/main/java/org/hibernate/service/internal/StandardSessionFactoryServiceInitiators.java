@@ -7,12 +7,10 @@
 package org.hibernate.service.internal;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.engine.query.spi.NativeQueryInterpreterInitiator;
 import org.hibernate.engine.spi.CacheInitiator;
-import org.hibernate.event.service.internal.EventListenerServiceInitiator;
 import org.hibernate.service.spi.SessionFactoryServiceInitiator;
 import org.hibernate.stat.internal.StatisticsInitiator;
 
@@ -22,19 +20,16 @@ import org.hibernate.stat.internal.StatisticsInitiator;
  *
  * @author Steve Ebersole
  */
-public class StandardSessionFactoryServiceInitiators {
-	public static List<SessionFactoryServiceInitiator> LIST = buildStandardServiceInitiatorList();
+public final class StandardSessionFactoryServiceInitiators {
 
-	private static List<SessionFactoryServiceInitiator> buildStandardServiceInitiatorList() {
-		final List<SessionFactoryServiceInitiator> serviceInitiators = new ArrayList<>();
+	public static List<SessionFactoryServiceInitiator> buildStandardServiceInitiatorList() {
+		final ArrayList<SessionFactoryServiceInitiator> serviceInitiators = new ArrayList<>();
 
-		serviceInitiators.add( EventListenerServiceInitiator.INSTANCE );
 		serviceInitiators.add( StatisticsInitiator.INSTANCE );
 		serviceInitiators.add( CacheInitiator.INSTANCE );
-
 		serviceInitiators.add( NativeQueryInterpreterInitiator.INSTANCE );
 
-		return Collections.unmodifiableList( serviceInitiators );
+		return serviceInitiators;
 	}
 
 	private StandardSessionFactoryServiceInitiators() {

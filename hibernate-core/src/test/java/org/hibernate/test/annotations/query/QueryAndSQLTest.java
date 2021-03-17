@@ -22,6 +22,9 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.CockroachDB192Dialect;
+import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQL9Dialect;
@@ -31,8 +34,6 @@ import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.stat.Statistics;
 import org.hibernate.type.StandardBasicTypes;
-
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -95,9 +96,18 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected(jiraKey = "HHH-2225")
+	@SkipForDialect(value = AbstractHANADialect.class, comment = "invalid name of function or procedure: SYSDATE")
 	public void testNativeQueryWithFormulaAttributeWithoutAlias() {
-		String sql = "select TABLE_NAME , sysdate() from all_tables  where TABLE_NAME = 'AUDIT_ACTIONS' ";
+		SQLFunction dateFunction = getDialect().getFunctions().get( "current_date" );
+		String dateFunctionRendered = dateFunction.render(
+				null,
+				java.util.Collections.EMPTY_LIST,
+				sessionFactory()
+		);
+		String sql = String.format(
+				"select TABLE_NAME , %s from ALL_TABLES  where TABLE_NAME = 'AUDIT_ACTIONS' ",
+				dateFunctionRendered
+		);
 		Session s = openSession();
 		s.beginTransaction();
 		s.createSQLQuery( sql ).addEntity( "t", AllTables.class ).list();
@@ -110,7 +120,9 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 	@SkipForDialect(value = Oracle8iDialect.class, jiraKey = "HHH-10161", comment = "Cannot convert untyped null (assumed to be BINARY type) to NUMBER")
 	@SkipForDialect(value = PostgreSQL9Dialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
 	@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
+	@SkipForDialect(value = CockroachDB192Dialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
 	@SkipForDialect(value = SybaseDialect.class, comment = "Null == null on Sybase")
+	@SkipForDialect(value = DerbyDialect.class, comment = "Cannot convert untyped null (assumed to be VARBINARY type) to BIGINT")
 	public void testQueryWithNullParameter(){
 		Chaos c0 = new Chaos();
 		c0.setId( 0L );
@@ -195,7 +207,9 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 	@SkipForDialect(value = Oracle8iDialect.class, jiraKey = "HHH-10161", comment = "Cannot convert untyped null (assumed to be BINARY type) to NUMBER")
 	@SkipForDialect(value = PostgreSQL9Dialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
 	@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
+	@SkipForDialect(value = CockroachDB192Dialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
 	@SkipForDialect(value = SybaseDialect.class, comment = "Null == null on Sybase")
+	@SkipForDialect(value = DerbyDialect.class, comment = "Cannot convert untyped null (assumed to be VARBINARY type) to BIGINT")
 	public void testNativeQueryWithNullParameter(){
 		Chaos c0 = new Chaos();
 		c0.setId( 0L );

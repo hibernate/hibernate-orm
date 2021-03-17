@@ -49,10 +49,10 @@ import static org.junit.Assert.assertTrue;
 public abstract class AbstractDereferencedCollectionTest extends BaseCoreFunctionalTestCase {
 
 	protected EntityEntry getEntityEntry(Session s, Object entity) {
-		return ( (SessionImplementor) s ).getPersistenceContext().getEntry( entity );
+		return ( (SessionImplementor) s ).getPersistenceContextInternal().getEntry( entity );
 	}
 
 	protected CollectionEntry getCollectionEntry(Session s, PersistentCollection collection) {
-		return ( (SessionImplementor) s ).getPersistenceContext().getCollectionEntry( collection );
+		return ( (SessionImplementor) s ).getPersistenceContextInternal().getCollectionEntry( collection );
 	}
 }

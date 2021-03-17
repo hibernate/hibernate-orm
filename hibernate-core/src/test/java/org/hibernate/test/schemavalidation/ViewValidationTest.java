@@ -16,8 +16,10 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.CockroachDB192Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
 import org.hibernate.tool.schema.JdbcMetadaAccessStrategy;
 
@@ -36,6 +38,7 @@ import org.junit.Test;
 		@RequiresDialect(PostgreSQL81Dialect.class),
 		@RequiresDialect(H2Dialect.class)
 })
+@SkipForDialect(value = CockroachDB192Dialect.class, comment = "https://github.com/cockroachdb/cockroach/issues/10028")
 public class ViewValidationTest extends BaseCoreFunctionalTestCase {
 	private StandardServiceRegistry ssr;
 

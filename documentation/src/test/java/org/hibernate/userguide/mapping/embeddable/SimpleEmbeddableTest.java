@@ -110,15 +110,17 @@ public class SimpleEmbeddableTest extends BaseEntityManagerFunctionalTestCase {
 		@Column(name = "publisher_country")
 		private String country;
 
+		//Getters and setters, equals and hashCode methods omitted for brevity
+
+	//end::embeddable-type-mapping-example[]
+
+
 		public Publisher(String name, String country) {
 			this.name = name;
 			this.country = country;
 		}
 
 		private Publisher() {}
-
-		//Getters and setters are omitted for brevity
-	//end::embeddable-type-mapping-example[]
 
 		public String getName() {
 			return name;

@@ -9,6 +9,7 @@ package org.hibernate.hql.internal.ast.tree;
 import org.hibernate.QueryException;
 import org.hibernate.engine.internal.JoinSequence;
 import org.hibernate.hql.internal.CollectionProperties;
+import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.internal.antlr.SqlTokenTypes;
 import org.hibernate.hql.internal.ast.util.ASTUtil;
 import org.hibernate.hql.internal.ast.util.ColumnHelper;
@@ -16,6 +17,8 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.loader.plan.spi.EntityQuerySpace;
+import org.hibernate.loader.plan.spi.QuerySpace;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -34,7 +37,7 @@ import antlr.collections.AST;
  *
  * @author Joshua Davis
  */
-public class DotNode extends FromReferenceNode implements DisplayableNode, SelectExpression {
+public class DotNode extends FromReferenceNode implements DisplayableNode, SelectExpression, TableReferenceNode {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DotNode.class );
 
 	///////////////////////////////////////////////////////////////////////////
@@ -74,10 +77,12 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 	 * The identifier that is the name of the property.
 	 */
 	private String propertyName;
+
 	/**
 	 * The full path, to the root alias of this dot node.
 	 */
 	private String path;
+
 	/**
 	 * The unresolved property path relative to this dot node.
 	 */
@@ -99,7 +104,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 	private boolean fetch;
 
 	/**
-	 * The type of dereference that hapened
+	 * The type of dereference that happened
 	 */
 	private DereferenceType dereferenceType = DereferenceType.UNKNOWN;
 
@@ -158,7 +163,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 		// Set the attributes of the property reference expression.
 		String propName = property.getText();
 		propertyName = propName;
-		// If the uresolved property path isn't set yet, just use the property name.
+		// If the unresolved property path isn't set yet, just use the property name.
 		if ( propertyPath == null ) {
 			propertyPath = propName;
 		}
@@ -252,7 +257,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 		boolean countDistinct = getWalker().isInCountDistinct()
 				&& getWalker().getSessionFactoryHelper().getFactory().getDialect().requiresParensForTupleDistinctCounts();
 		if ( cols.length > 1 &&
-				( getWalker().isComparativeExpressionClause() || countDistinct ) ) {
+				( getWalker().isComparativeExpressionClause() || countDistinct || getWalker().getCurrentClauseType() == HqlSqlTokenTypes.SET ) ) {
 			text = "(" + text + ")";
 		}
 		setText( text );
@@ -390,11 +395,14 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 
 		if ( isDotNode( parent ) ) {
 			// our parent is another dot node, meaning we are being further dereferenced.
-			// thus we need to generate a join unless the parent refers to the associated
-			// entity's PK (because 'our' table would know the FK).
+			// thus we need to generate a join unless the association is non-nullable and
+			// parent refers to the associated entity's PK (because 'our' table would know the FK).
 			parentAsDotNode = (DotNode) parent;
 			property = parentAsDotNode.propertyName;
-			joinIsNeeded = generateJoin && !isPropertyEmbeddedInJoinProperties( parentAsDotNode.propertyName );
+			joinIsNeeded = generateJoin && (
+					entityType.isNullable() ||
+					!isPropertyEmbeddedInJoinProperties( parentAsDotNode.propertyName )
+			);
 		}
 		else if ( !getWalker().isSelectStatement() ) {
 			// in non-select queries, the only time we should need to join is if we are in a subquery from clause
@@ -409,7 +417,8 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 			joinIsNeeded = generateJoin;
 		}
 		else {
-			joinIsNeeded = generateJoin || ( getWalker().isInSelect() || getWalker().isInFrom() );
+			joinIsNeeded = generateJoin
+					|| ( getWalker().isInSelect() || getWalker().isInFrom() || ( implicitJoin && getWalker().isInSize() ) );
 		}
 
 		if ( joinIsNeeded ) {
@@ -498,7 +507,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 
 			JoinSequence joinSequence;
 
-			if ( joinColumns.length == 0 ) {
+			if ( joinColumns.length == 0 && lhsFromElement instanceof EntityQuerySpace ) {
 				// When no columns are available, this is a special join that involves multiple subtypes
 				String lhsTableAlias = getLhs().getFromElement().getTableAlias();
 
@@ -552,7 +561,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 			return true;
 		}
 
-		// otherwise (subquery case) dont reuse the fromElement if we are processing the from-clause of the subquery
+		// otherwise (subquery case) don't reuse the fromElement if we are processing the from-clause of the subquery
 		return getWalker().getCurrentClauseType() != SqlTokenTypes.FROM;
 	}
 
@@ -683,11 +692,24 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 				return null;
 			}
 			// If the lhs is a collection, use CollectionPropertyMapping
-			Type propertyType = fromElement.getPropertyType( propertyName, propertyPath );
+			Type propertyType = fromElement.getPropertyType( propertyPath, propertyPath );
 			LOG.debugf( "getDataType() : %s -> %s", propertyPath, propertyType );
 			super.setDataType( propertyType );
 		}
 		return super.getDataType();
+	}
+
+	@Override
+	public String[] getReferencedTables() {
+		FromReferenceNode lhs = ( (FromReferenceNode) getFirstChild() );
+		if ( lhs != null) {
+			FromElement fromElement = lhs.getFromElement();
+			if ( fromElement != null ) {
+				String propertyTableName = fromElement.getPropertyTableName( propertyPath );
+				return new String[] { propertyTableName };
+			}
+		}
+		return null;
 	}
 
 	public void setPropertyPath(String propertyPath) {

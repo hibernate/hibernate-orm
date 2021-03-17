@@ -1,20 +1,16 @@
 package org.hibernate.test.bytecode.enhancement.lazy.cache;
 
+import java.util.ArrayList;
+import java.util.List;
 import javax.persistence.Basic;
 import javax.persistence.Cacheable;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
-import javax.validation.constraints.AssertTrue;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Cache;
@@ -23,17 +19,21 @@ import org.hibernate.annotations.LazyToOne;
 import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.stat.CacheRegionStatistics;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(BytecodeEnhancerRunner.class)
 public class UninitializedAssociationsInCacheTest extends BaseCoreFunctionalTestCase {
@@ -53,28 +53,20 @@ public class UninitializedAssociationsInCacheTest extends BaseCoreFunctionalTest
 	@Test
 	@TestForIssue( jiraKey = "HHH-11766")
 	public void attributeLoadingFromCache() {
-		final AtomicLong bossId = new AtomicLong();
-		final AtomicLong teamleaderId = new AtomicLong();
-		final AtomicLong teammemberId = new AtomicLong();
-
-		TransactionUtil.doInHibernate(
-				this::sessionFactory, (s) -> {
-					Employee boss = new Employee();
-					Employee teamleader = new Employee();
-					Employee teammember = new Employee();
-					boss.regularString = "boss";
-					teamleader.regularString = "leader";
-					teammember.regularString = "member";
+		inTransaction(
+				(s) -> {
+					Employee boss = new Employee( 1, "boss" );
+					Employee teamleader = new Employee( 2, "leader" );
+					Employee teammember = new Employee( 3, "member" );
 					s.persist( boss );
 					s.persist( teamleader );
 					s.persist( teammember );
+
 					boss.subordinates.add( teamleader );
 					teamleader.superior = boss;
+
 					teamleader.subordinates.add( teammember );
 					teammember.superior = teamleader;
-					bossId.set( boss.id );
-					teamleaderId.set( teamleader.id );
-					teammemberId.set( teammember.id );
 				}
 		);
 
@@ -82,19 +74,28 @@ public class UninitializedAssociationsInCacheTest extends BaseCoreFunctionalTest
 		sessionFactory().getStatistics().clear();
 		CacheRegionStatistics regionStatistics = sessionFactory().getStatistics().getCacheRegionStatistics( "Employee" );
 
-		TransactionUtil.doInHibernate(
-				this::sessionFactory, (s) -> {
-					final Employee boss = s.find( Employee.class, bossId.get() );
+		inTransaction(
+				(s) -> {
+					final Employee boss = s.find( Employee.class, 1 );
 					Assert.assertEquals( "boss", boss.regularString );
-					final Employee leader = s.find( Employee.class, teamleaderId.get() );
+					final Employee leader = s.find( Employee.class, 2 );
 					Assert.assertEquals( "leader", leader.regularString );
-					final Employee member = s.find( Employee.class, teammemberId.get() );
+					final Employee member = s.find( Employee.class, 3 );
 					Assert.assertEquals( "member", member.regularString );
-					Assert.assertFalse( Hibernate.isPropertyInitialized( boss, "superior" ) );
+
+					assertTrue( Hibernate.isPropertyInitialized( boss, "superior" ) );
+					assertTrue( Hibernate.isInitialized( boss.superior ) );
+					assertThat( boss.superior, not( instanceOf( HibernateProxy.class ) ) );
 					Assert.assertFalse( Hibernate.isPropertyInitialized( boss, "subordinates" ) );
-					Assert.assertFalse( Hibernate.isPropertyInitialized( leader, "superior" ) );
+
+					assertTrue( Hibernate.isPropertyInitialized( leader, "superior" ) );
+					assertTrue( Hibernate.isInitialized( leader.superior ) );
+					assertThat( leader.superior, not( instanceOf( HibernateProxy.class ) ) );
 					Assert.assertFalse( Hibernate.isPropertyInitialized( leader, "subordinates" ) );
-					Assert.assertFalse( Hibernate.isPropertyInitialized( member, "superior" ) );
+
+					assertTrue( Hibernate.isPropertyInitialized( member, "superior" ) );
+					assertTrue( Hibernate.isInitialized( member.superior ) );
+					assertThat( member.superior, not( instanceOf( HibernateProxy.class ) ) );
 					Assert.assertFalse( Hibernate.isPropertyInitialized( member, "subordinates" ) );
 				}
 		);
@@ -103,37 +104,34 @@ public class UninitializedAssociationsInCacheTest extends BaseCoreFunctionalTest
 		assertEquals( 3, regionStatistics.getMissCount() );
 		assertEquals( 3, regionStatistics.getPutCount() );
 
-		TransactionUtil.doInHibernate(
-				this::sessionFactory, (s) -> {
-					final Employee boss = s.find( Employee.class, bossId.get() );
-					final Employee leader = s.find( Employee.class, teamleaderId.get() );
-					final Employee member = s.find( Employee.class, teammemberId.get() );
-					Assert.assertFalse( Hibernate.isPropertyInitialized( boss, "superior" ) );
-					Assert.assertFalse( Hibernate.isPropertyInitialized( boss, "subordinates" ) );
-
-					Assert.assertFalse( Hibernate.isPropertyInitialized( member, "superior" ) );
-					Assert.assertFalse( Hibernate.isPropertyInitialized( member, "subordinates" ) );
-					Assert.assertNull( boss.superior );
+		inTransaction(
+				(s) -> {
+					final Employee boss = s.find( Employee.class, 1 );
+					final Employee leader = s.find( Employee.class, 2 );
+					final Employee member = s.find( Employee.class, 3 );
 					Assert.assertTrue( Hibernate.isPropertyInitialized( boss, "superior" ) );
 					Assert.assertFalse( Hibernate.isPropertyInitialized( boss, "subordinates" ) );
-					Assert.assertEquals( leader, boss.subordinates.iterator().next() );
-					Assert.assertTrue( Hibernate.isPropertyInitialized( boss, "subordinates" ) );
 
-					Assert.assertFalse( Hibernate.isPropertyInitialized( leader, "superior" ) );
-					Assert.assertFalse( Hibernate.isPropertyInitialized( leader, "subordinates" ) );
-					Assert.assertEquals( boss, leader.superior );
-					Assert.assertTrue( Hibernate.isPropertyInitialized( leader, "superior" ) );
-					Assert.assertFalse( Hibernate.isPropertyInitialized( leader, "subordinates" ) );
-					Assert.assertEquals( member, leader.subordinates.iterator().next() );
-					Assert.assertTrue( Hibernate.isPropertyInitialized( leader, "subordinates" ) );
-
-					Assert.assertFalse( Hibernate.isPropertyInitialized( member, "superior" ) );
-					Assert.assertFalse( Hibernate.isPropertyInitialized( member, "subordinates" ) );
-					Assert.assertEquals( leader, member.superior );
 					Assert.assertTrue( Hibernate.isPropertyInitialized( member, "superior" ) );
 					Assert.assertFalse( Hibernate.isPropertyInitialized( member, "subordinates" ) );
-					Assert.assertTrue( member.subordinates.isEmpty() );
-					Assert.assertTrue( Hibernate.isPropertyInitialized( member, "subordinates" ) );
+					Assert.assertNull( boss.superior );
+
+					assertTrue( Hibernate.isPropertyInitialized( boss, "superior" ) );
+					Assert.assertFalse( Hibernate.isPropertyInitialized( boss, "subordinates" ) );
+					Assert.assertEquals( leader, boss.subordinates.iterator().next() );
+					assertTrue( Hibernate.isPropertyInitialized( boss, "subordinates" ) );
+
+					Assert.assertTrue( Hibernate.isPropertyInitialized( leader, "superior" ) );
+					Assert.assertFalse( Hibernate.isPropertyInitialized( leader, "subordinates" ) );
+					Assert.assertEquals( boss, leader.superior );
+					Assert.assertEquals( member, leader.subordinates.iterator().next() );
+					assertTrue( Hibernate.isPropertyInitialized( leader, "subordinates" ) );
+
+					Assert.assertTrue( Hibernate.isPropertyInitialized( member, "superior" ) );
+					Assert.assertFalse( Hibernate.isPropertyInitialized( member, "subordinates" ) );
+					Assert.assertEquals( leader, member.superior );
+					assertTrue( member.subordinates.isEmpty() );
+					assertTrue( Hibernate.isPropertyInitialized( member, "subordinates" ) );
 				}
 		);
 
@@ -147,10 +145,8 @@ public class UninitializedAssociationsInCacheTest extends BaseCoreFunctionalTest
 	@Cacheable
 	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE, region = "Employee")
 	private static class Employee {
-
 		@Id
-		@GeneratedValue(strategy = GenerationType.AUTO)
-		Long id;
+		Integer id;
 
 		@ManyToOne(fetch = FetchType.LAZY)
 		@JoinColumn(name = "SUPERIOR")
@@ -162,5 +158,18 @@ public class UninitializedAssociationsInCacheTest extends BaseCoreFunctionalTest
 
 		@Basic
 		String regularString;
+
+		private Employee() {
+		}
+
+		public Employee(Integer id, String regularString) {
+			this.id = id;
+			this.regularString = regularString;
+		}
+
+		@Override
+		public String toString() {
+			return String.format( "Employee( %s, %s )", id, regularString ) + "@" + System.identityHashCode( this );
+		}
 	}
 }

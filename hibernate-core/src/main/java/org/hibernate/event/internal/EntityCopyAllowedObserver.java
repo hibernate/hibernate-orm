@@ -7,6 +7,7 @@
 package org.hibernate.event.internal;
 
 import org.hibernate.event.spi.EntityCopyObserver;
+import org.hibernate.event.spi.EntityCopyObserverFactory;
 import org.hibernate.event.spi.EventSource;
 
 /**
@@ -15,9 +16,17 @@ import org.hibernate.event.spi.EventSource;
  *
  * @author Gail Badner
  */
-public class EntityCopyAllowedObserver implements EntityCopyObserver {
+public final class EntityCopyAllowedObserver implements EntityCopyObserver {
 
 	public static final String SHORT_NAME = "allow";
+	private static final EntityCopyObserver INSTANCE = new EntityCopyAllowedObserver();
+
+	//This implementation of EntityCopyObserver is stateless, so no need to create multiple copies:
+	public static final EntityCopyObserverFactory FACTORY_OF_SELF = () -> INSTANCE;
+
+	private EntityCopyAllowedObserver() {
+		//Not to be constructed; use INSTANCE.
+	}
 
 	@Override
 	public void entityCopyDetected(
@@ -32,9 +41,9 @@ public class EntityCopyAllowedObserver implements EntityCopyObserver {
 		// do nothing.
 	}
 
-
 	@Override
 	public void topLevelMergeComplete(EventSource session) {
 		// do nothing.
 	}
+
 }

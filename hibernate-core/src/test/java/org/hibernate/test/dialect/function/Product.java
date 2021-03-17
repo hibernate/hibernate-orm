@@ -10,7 +10,7 @@ import java.util.Date;
 
 /**
  * 
- * @author Strong Liu <stliu@redhat.com>
+ * @author <a href="mailto:stliu@redhat.com">Strong Liu</a>
  *
  */
 public class Product {

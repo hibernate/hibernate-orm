@@ -13,6 +13,8 @@ import java.util.TreeMap;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.DenormalizedTable;
@@ -26,22 +28,24 @@ import org.hibernate.mapping.Table;
 public class Namespace {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( Namespace.class );
 
-	private final Database database;
+	private final PhysicalNamingStrategy physicalNamingStrategy;
+	private final JdbcEnvironment jdbcEnvironment;
 	private final Name name;
 	private final Name physicalName;
 
 	private Map<Identifier, Table> tables = new TreeMap<Identifier, Table>();
 	private Map<Identifier, Sequence> sequences = new TreeMap<Identifier, Sequence>();
 
-	public Namespace(Database database, Name name) {
-		this.database = database;
+	public Namespace(PhysicalNamingStrategy physicalNamingStrategy, JdbcEnvironment jdbcEnvironment, Name name) {
+		this.physicalNamingStrategy = physicalNamingStrategy;
+		this.jdbcEnvironment = jdbcEnvironment;
 		this.name = name;
 
 		this.physicalName = new Name(
-				database.getPhysicalNamingStrategy()
-						.toPhysicalCatalogName( name.getCatalog(), database.getJdbcEnvironment() ),
-				database.getPhysicalNamingStrategy()
-						.toPhysicalSchemaName( name.getSchema(), database.getJdbcEnvironment() )
+				physicalNamingStrategy
+						.toPhysicalCatalogName( name.getCatalog(), jdbcEnvironment ),
+				physicalNamingStrategy
+						.toPhysicalSchemaName( name.getSchema(), jdbcEnvironment )
 		);
 
 		log.debugf(
@@ -89,7 +93,7 @@ public class Namespace {
 			return existing;
 		}
 
-		final Identifier physicalTableName = database.getPhysicalNamingStrategy().toPhysicalTableName( logicalTableName, database.getJdbcEnvironment() );
+		final Identifier physicalTableName = physicalNamingStrategy.toPhysicalTableName( logicalTableName, jdbcEnvironment );
 		Table table = new Table( this, physicalTableName, isAbstract );
 		tables.put( logicalTableName, table );
 		return table;
@@ -102,7 +106,7 @@ public class Namespace {
 			return (DenormalizedTable) existing;
 		}
 
-		final Identifier physicalTableName = database.getPhysicalNamingStrategy().toPhysicalTableName( logicalTableName, database.getJdbcEnvironment() );
+		final Identifier physicalTableName = physicalNamingStrategy.toPhysicalTableName( logicalTableName, jdbcEnvironment );
 		DenormalizedTable table = new DenormalizedTable( this, physicalTableName, isAbstract, includedTable );
 		tables.put( logicalTableName, table );
 		return table;
@@ -117,7 +121,7 @@ public class Namespace {
 			throw new HibernateException( "Sequence was already registered with that name [" + logicalName.toString() + "]" );
 		}
 
-		final Identifier physicalName = database.getPhysicalNamingStrategy().toPhysicalSequenceName( logicalName, database.getJdbcEnvironment() );
+		final Identifier physicalName = physicalNamingStrategy.toPhysicalSequenceName( logicalName, jdbcEnvironment );
 
 		Sequence sequence = new Sequence(
 				this.physicalName.getCatalog(),

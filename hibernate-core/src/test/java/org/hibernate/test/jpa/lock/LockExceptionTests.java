@@ -16,6 +16,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
@@ -37,12 +38,22 @@ import static org.junit.Assert.fail;
  */
 @RequiresDialectFeature(DialectChecks.SupportNoWait.class)
 public class LockExceptionTests extends AbstractJPATest {
+
+	private SQLServerSnapshotIsolationConnectionProvider connectionProvider = new SQLServerSnapshotIsolationConnectionProvider();
+
 	@Override
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		if( SQLServerDialect.class.isAssignableFrom( DIALECT.getClass() )) {
-			cfg.getProperties().put( AvailableSettings.CONNECTION_PROVIDER, new SQLServerSnapshotIsolationConnectionProvider() );
+			connectionProvider.setConnectionProvider( (ConnectionProvider) cfg.getProperties().get( AvailableSettings.CONNECTION_PROVIDER ) );
+			cfg.getProperties().put( AvailableSettings.CONNECTION_PROVIDER, connectionProvider );
 		}
+	}
+
+	@Override
+	protected void releaseSessionFactory() {
+		super.releaseSessionFactory();
+		connectionProvider.stop();
 	}
 
 	@Test

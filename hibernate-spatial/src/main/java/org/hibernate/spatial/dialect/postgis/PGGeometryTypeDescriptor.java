@@ -39,12 +39,18 @@ import org.postgresql.util.PGobject;
 public class PGGeometryTypeDescriptor implements SqlTypeDescriptor {
 
 
-	/**
-	 * An instance of this class
-	 */
-	public static final PGGeometryTypeDescriptor INSTANCE = new PGGeometryTypeDescriptor();
+	final private Wkb.Dialect wkbDialect;
 
-	public static Geometry<?> toGeometry(Object object) {
+	// Type descriptor instance using EWKB v1 (postgis versions < 2.2.2)
+	public static final PGGeometryTypeDescriptor INSTANCE_WKB_1 = new PGGeometryTypeDescriptor( Wkb.Dialect.POSTGIS_EWKB_1);
+	// Type descriptor instance using EWKB v2 (postgis versions >= 2.2.2, see: https://trac.osgeo.org/postgis/ticket/3181)
+	public static final PGGeometryTypeDescriptor INSTANCE_WKB_2 = new PGGeometryTypeDescriptor(Wkb.Dialect.POSTGIS_EWKB_2);
+
+	private PGGeometryTypeDescriptor(Wkb.Dialect dialect) {
+		wkbDialect = dialect;
+	}
+
+	public Geometry<?> toGeometry(Object object) {
 		if ( object == null ) {
 			return null;
 		}
@@ -55,9 +61,8 @@ public class PGGeometryTypeDescriptor implements SqlTypeDescriptor {
 			if ( pgValue.startsWith( "00" ) || pgValue.startsWith( "01" ) ) {
 				//we have a WKB because this pgValue starts with the bit-order byte
 				buffer = ByteBuffer.from( pgValue );
-				final WkbDecoder decoder = Wkb.newDecoder( Wkb.Dialect.POSTGIS_EWKB_1 );
+				final WkbDecoder decoder = Wkb.newDecoder( wkbDialect );
 				return decoder.decode( buffer );
-
 			}
 			else {
 				return parseWkt( pgValue );

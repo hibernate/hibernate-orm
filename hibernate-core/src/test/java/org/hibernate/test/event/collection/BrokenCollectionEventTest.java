@@ -18,7 +18,9 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.event.spi.AbstractCollectionEvent;
 import org.hibernate.test.event.collection.association.bidirectional.manytomany.ChildWithBidirectionalManyToMany;
 import org.hibernate.test.event.collection.association.unidirectional.ParentWithCollectionOfEntities;
+import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -32,6 +34,7 @@ import static org.junit.Assert.assertSame;
  *
  * @author Gail Badner
  */
+@RequiresDialectFeature(DialectChecks.SupportsNoColumnInsert.class)
 public class BrokenCollectionEventTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

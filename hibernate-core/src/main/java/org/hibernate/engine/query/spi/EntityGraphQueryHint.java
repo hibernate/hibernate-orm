@@ -17,19 +17,23 @@ import javax.persistence.Subgraph;
 
 import org.hibernate.QueryException;
 import org.hibernate.engine.internal.JoinSequence;
+import org.hibernate.graph.GraphSemantic;
+import org.hibernate.graph.spi.AppliedGraph;
+import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.hql.internal.ast.tree.FromClause;
 import org.hibernate.hql.internal.ast.tree.FromElement;
 import org.hibernate.hql.internal.ast.tree.FromElementFactory;
 import org.hibernate.hql.internal.ast.tree.ImpliedFromElement;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.sql.JoinType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
-import static org.hibernate.jpa.QueryHints.HINT_FETCHGRAPH;
-import static org.hibernate.jpa.QueryHints.HINT_LOADGRAPH;
+import antlr.SemanticException;
 
 /**
  * Encapsulates a JPA EntityGraph provided through a JPQL query hint.  Converts the fetches into a list of AST
@@ -38,24 +42,32 @@ import static org.hibernate.jpa.QueryHints.HINT_LOADGRAPH;
  *
  * @author Brett Meyer
  */
-public class EntityGraphQueryHint {
-	private final String hintName;
-	private final EntityGraph<?> originEntityGraph;
+public class EntityGraphQueryHint implements AppliedGraph {
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EntityGraphQueryHint.class );
 
-	public EntityGraphQueryHint(String hintName, EntityGraph<?> originEntityGraph) {
+	private final RootGraphImplementor<?> graph;
+	private final GraphSemantic semantic;
+
+	public EntityGraphQueryHint(String hintName, EntityGraph<?> graph) {
 		assert hintName != null;
-		assert HINT_FETCHGRAPH.equals( hintName ) || HINT_LOADGRAPH.equals( hintName );
 
-		this.hintName = hintName;
-		this.originEntityGraph = originEntityGraph;
+		this.semantic = GraphSemantic.fromJpaHintName( hintName );
+		this.graph = (RootGraphImplementor<?>) graph;
 	}
 
-	public String getHintName() {
-		return hintName;
+	public EntityGraphQueryHint(RootGraphImplementor<?> graph, GraphSemantic semantic	) {
+		this.semantic = semantic;
+		this.graph = graph;
 	}
 
-	public EntityGraph<?> getOriginEntityGraph() {
-		return originEntityGraph;
+	@Override
+	public GraphSemantic getSemantic() {
+		return semantic;
+	}
+
+	@Override
+	public RootGraphImplementor<?> getGraph() {
+		return graph;
 	}
 
 	public List<FromElement> toFromElements(FromClause fromClause, HqlSqlWalker walker) {
@@ -68,9 +80,17 @@ public class EntityGraphQueryHint {
 			}
 		}
 
+		boolean applyEntityGraph = false;
+		if ( fromClause.getLevel() == FromClause.ROOT_LEVEL ) {
+			final String fromElementEntityName = fromClause.getFromElement().getEntityPersister().getEntityName();
+			applyEntityGraph = graph.appliesTo( fromElementEntityName );
+			if ( !applyEntityGraph ) {
+				LOG.warnf( "Entity graph is not applicable to the root entity [%s]; Ignored.", fromElementEntityName );
+			}
+		}
+
 		return getFromElements(
-				fromClause.getLevel() == FromClause.ROOT_LEVEL ? originEntityGraph.getAttributeNodes():
-					Collections.emptyList(),
+				applyEntityGraph ? graph.getAttributeNodes() : Collections.emptyList(),
 				fromClause.getFromElement(),
 				fromClause,
 				walker,
@@ -165,11 +185,35 @@ public class EntityGraphQueryHint {
 					}
 				}
 			}
-			catch (Exception e) {
+			catch (SemanticException e) {
 				throw new QueryException( "Could not apply the EntityGraph to the Query!", e );
 			}
 		}
 
 		return fromElements;
+	}
+
+	/**
+	 * @deprecated (5.4) Use {@link #getGraph}
+	 */
+	@Deprecated
+	public EntityGraph<?> getOriginEntityGraph() {
+		return getGraph();
+	}
+
+	/**
+	 * @deprecated (5.4) Use {@link #getSemantic}
+	 */
+	@Deprecated
+	public GraphSemantic getGraphSemantic() {
+		return getSemantic();
+	}
+
+	/**
+	 * @deprecated (5.4) Use {@link #getSemantic}
+	 */
+	@Deprecated
+	public String getHintName() {
+		return getGraphSemantic().getJpaHintName();
 	}
 }

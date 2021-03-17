@@ -9,14 +9,15 @@ package org.hibernate;
 import java.io.Closeable;
 import java.io.Serializable;
 import java.sql.Connection;
+import java.util.List;
+import javax.persistence.EntityGraph;
 import javax.persistence.EntityManager;
 import javax.persistence.FlushModeType;
 import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.CriteriaUpdate;
 
-import org.hibernate.jdbc.ReturningWork;
-import org.hibernate.jdbc.Work;
+import org.hibernate.graph.RootGraph;
 import org.hibernate.jpa.HibernateEntityManager;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.stat.SessionStatistics;
@@ -957,26 +958,20 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	 */
 	void setReadOnly(Object entityOrProxy, boolean readOnly);
 
-	/**
-	 * Controller for allowing users to perform JDBC related work using the Connection managed by this Session.
-	 *
-	 * @param work The work to be performed.
-	 * @throws HibernateException Generally indicates wrapped {@link java.sql.SQLException}
-	 */
-	void doWork(Work work) throws HibernateException;
+	@Override
+	<T> RootGraph<T> createEntityGraph(Class<T> rootType);
 
-	/**
-	 * Controller for allowing users to perform JDBC related work using the Connection managed by this Session.  After
-	 * execution returns the result of the {@link ReturningWork#execute} call.
-	 *
-	 * @param work The work to be performed.
-	 * @param <T> The type of the result returned from the work
-	 *
-	 * @return the result from calling {@link ReturningWork#execute}.
-	 *
-	 * @throws HibernateException Generally indicates wrapped {@link java.sql.SQLException}
-	 */
-	<T> T doReturningWork(ReturningWork<T> work) throws HibernateException;
+	@Override
+	RootGraph<?> createEntityGraph(String graphName);
+
+	@Override
+	RootGraph<?> getEntityGraph(String graphName);
+
+	@Override
+	@SuppressWarnings({"unchecked", "RedundantCast"})
+	default <T> List<EntityGraph<? super T>> getEntityGraphs(Class<T> entityClass) {
+		return (List) getSessionFactory().findEntityGraphsByType( entityClass );
+	}
 
 	/**
 	 * Disconnect the session from its underlying JDBC connection.  This is intended for use in cases where the
@@ -1144,22 +1139,20 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	void addEventListeners(SessionEventListener... listeners);
 
 	@Override
-	org.hibernate.query.Query createQuery(String queryString);
-
-	@Override
 	<T> org.hibernate.query.Query<T> createQuery(String queryString, Class<T> resultType);
 
+	// Override the JPA return type with the one exposed in QueryProducer
 	@Override
 	<T> org.hibernate.query.Query<T> createQuery(CriteriaQuery<T> criteriaQuery);
 
+	// Override the JPA return type with the one exposed in QueryProducer
 	@Override
 	org.hibernate.query.Query createQuery(CriteriaUpdate updateQuery);
 
+	// Override the JPA return type with the one exposed in QueryProducer
 	@Override
 	org.hibernate.query.Query createQuery(CriteriaDelete deleteQuery);
 
-	@Override
-	org.hibernate.query.Query getNamedQuery(String queryName);
 
 	<T> org.hibernate.query.Query<T> createNamedQuery(String name, Class<T> resultType);
 

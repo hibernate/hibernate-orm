@@ -66,8 +66,8 @@ public class IndexOrUniqueKeySecondPass implements SecondPass {
 	@Override
 	public void doSecondPass(Map persistentClasses) throws MappingException {
 		if ( columns != null ) {
-			for ( int i = 0; i < columns.length; i++ ) {
-				addConstraintToColumn( columns[i] );
+			for ( String column1 : columns ) {
+				addConstraintToColumn( column1 );
 			}
 		}
 		if ( column != null ) {

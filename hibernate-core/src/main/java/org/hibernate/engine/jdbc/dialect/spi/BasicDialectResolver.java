@@ -51,7 +51,11 @@ public class BasicDialectResolver implements DialectResolver {
 	 * @param majorVersionToMatch The version of the driver to match on
 	 * @param dialectClass The Dialect class to use on match
 	 */
-	public BasicDialectResolver(String nameToMatch, int majorVersionToMatch, int minorVersionToMatch, Class dialectClass) {
+	public BasicDialectResolver(
+			String nameToMatch,
+			int majorVersionToMatch,
+			int minorVersionToMatch,
+			Class dialectClass) {
 		this.nameToMatch = nameToMatch;
 		this.majorVersionToMatch = majorVersionToMatch;
 		this.minorVersionToMatch = minorVersionToMatch;
@@ -66,15 +70,15 @@ public class BasicDialectResolver implements DialectResolver {
 
 		if ( nameToMatch.equalsIgnoreCase( databaseName )
 				&& ( majorVersionToMatch == NO_VERSION || majorVersionToMatch == databaseMajorVersion )
-				&& ( minorVersionToMatch == NO_VERSION || majorVersionToMatch == databaseMinorVersion ) ) {
+				&& ( minorVersionToMatch == NO_VERSION || minorVersionToMatch == databaseMinorVersion ) ) {
 			try {
 				return (Dialect) dialectClass.newInstance();
 			}
-			catch ( HibernateException e ) {
+			catch (HibernateException e) {
 				// conceivable that the dialect ctor could throw HibernateExceptions, so don't re-wrap
 				throw e;
 			}
-			catch ( Throwable t ) {
+			catch (Throwable t) {
 				throw new HibernateException(
 						"Could not instantiate specified Dialect class [" + dialectClass.getName() + "]",
 						t

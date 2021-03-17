@@ -167,7 +167,7 @@ appropriate and all classes X, Y, Z, and K.
 == Usage
 
 The jar file for the annotation processor can be found in the 
-http://repository.jboss.com/[JBoss Maven repository] under:
+https://search.maven.org/[Maven Central repository] under:
 
 ====
 [source, XML]
@@ -182,12 +182,12 @@ http://repository.jboss.com/[JBoss Maven repository] under:
 ====
 
 Alternatively, it can be found in the ORM distribution bundle on 
-http://sourceforge.net/projects/hibernate/files/hibernate4[SourceForge].
+https://sourceforge.net/projects/hibernate/files/hibernate-orm/[SourceForge].
 
 In most cases the annotation processor will automatically run provided
-the processor jar is added to the build classpath and a JDK >6 is used.
+the processor jar is added to the build classpath.
 This happens due to Java's Service Provider contract and the fact
-the the Hibernate Static Metamodel Generator jar files contains the
+the Hibernate Static Metamodel Generator jar files contains the
 file _javax.annotation.processing.Processor_ in the _META-INF/services_ directory. 
 
 The fully qualified name of the processor itself is: 
@@ -246,8 +246,8 @@ pass the processor option to the compiler plugin:
 <plugin>
     <artifactId>maven-compiler-plugin</artifactId>
     <configuration>
-        <source>1.6</source>
-        <target>1.6</target>
+        <source>1.8</source>
+        <target>1.8</target>
         <compilerArguments>
             <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
         </compilerArguments>
@@ -273,14 +273,14 @@ plugin as seen in below.
 <plugin>
     <artifactId>maven-compiler-plugin</artifactId>
     <configuration>
-        <source>1.6</source>
-        <target>1.6</target>
+        <source>1.8</source>
+        <target>1.8</target>
         <compilerArgument>-proc:none</compilerArgument>
     </configuration>
 </plugin>
 ----
 ====
-Once disabled, the http://code.google.com/p/maven-annotation-plugin[maven-processor-plugin]
+Once disabled, the https://bsorrentino.github.io/maven-annotation-plugin/[maven-processor-plugin]
 for annotation processing can be used:
 
 [[maven-processor-plugin]]
@@ -374,6 +374,9 @@ There you can configure all kinds of aspects of annotation processing.
 Just check the "Enable annotation processing" option, configure the directory for the
 generated sources and finally add the Hibernate Static Metamodel Generator and JPA 2 jar
 files to the factory path.
+
+If you use JDK 11+, you also need to add the `javax.xml.bind:jaxb-api` and
+`org.glassfish.jaxb:jaxb-runtime` jars as JAXB is not included in the JDK anymore.
 
 image:eclipse-annotation-processor-config.png[]
 

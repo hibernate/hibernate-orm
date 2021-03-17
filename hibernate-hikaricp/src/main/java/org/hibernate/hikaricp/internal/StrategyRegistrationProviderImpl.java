@@ -20,22 +20,20 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
  * 
  * @author Brett Meyer
  */
-public class StrategyRegistrationProviderImpl implements StrategyRegistrationProvider {
-	private static final List<StrategyRegistration> REGISTRATIONS = Collections.singletonList(
-			(StrategyRegistration) new SimpleStrategyRegistrationImpl<ConnectionProvider>(
-					ConnectionProvider.class,
-					HikariCPConnectionProvider.class,
-					"hikari",
-					"hikaricp",
-					HikariCPConnectionProvider.class.getSimpleName(),
-					// for consistency's sake
-					"org.hibernate.connection.HikariCPConnectionProvider"
-			)
-	);
+public final class StrategyRegistrationProviderImpl implements StrategyRegistrationProvider {
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public Iterable<StrategyRegistration> getStrategyRegistrations() {
-		return REGISTRATIONS;
+		final SimpleStrategyRegistrationImpl<ConnectionProvider> strategyRegistration = new SimpleStrategyRegistrationImpl<>(
+				ConnectionProvider.class,
+				HikariCPConnectionProvider.class,
+				"hikari",
+				"hikaricp",
+				HikariCPConnectionProvider.class.getSimpleName(),
+				// for consistency's sake
+				"org.hibernate.connection.HikariCPConnectionProvider"
+		);
+		return Collections.singleton( strategyRegistration );
 	}
 }

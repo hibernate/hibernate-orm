@@ -48,15 +48,25 @@ public final class NamedQueryLoader implements UniqueEntityLoader {
 
 	@Override
 	public Object load(Serializable id, Object optionalObject, SharedSessionContractImplementor session, LockOptions lockOptions) {
+		return load( id, optionalObject, session, (Boolean) null );
+	}
+
+	@Override
+	public Object load(Serializable id, Object optionalObject, SharedSessionContractImplementor session, LockOptions lockOptions, Boolean readOnly) {
 		if ( lockOptions != null ) {
 			LOG.debug( "Ignoring lock-options passed to named query loader" );
 		}
-		return load( id, optionalObject, session );
+		return load( id, optionalObject, session, readOnly );
 	}
 
 	@Override
 	public Object load(Serializable id, Object optionalObject, SharedSessionContractImplementor session) {
-		LOG.debugf( "Loading entity: %s using named query: %s", persister.getEntityName(), queryName );
+		return load( id, optionalObject, session, (Boolean) null );
+	}
+
+	@Override
+	public Object load(Serializable id, Object optionalObject, SharedSessionContractImplementor session, Boolean readOnly) {
+		LOG.debugf("Loading entity: %s using named query: %s", persister.getEntityName(), queryName);
 
 		// IMPL NOTE: essentially we perform the named query (which loads the entity into the PC), and then
 		// do an internal lookup of the entity from the PC.
@@ -73,11 +83,14 @@ public final class NamedQueryLoader implements UniqueEntityLoader {
 		query.setOptionalEntityName( persister.getEntityName() );
 		query.setOptionalObject( optionalObject );
 		query.setFlushMode( FlushMode.MANUAL );
+		if ( readOnly != null ) {
+			query.setReadOnly( readOnly );
+		}
 		query.list();
 
 		// now look up the object we are really interested in!
 		// (this lets us correctly handle proxies and multi-row or multi-column queries)
-		return session.getPersistenceContext().getEntity( session.generateEntityKey( id, persister ) );
+		return session.getPersistenceContextInternal().getEntity( session.generateEntityKey( id, persister ) );
 
 	}
 }

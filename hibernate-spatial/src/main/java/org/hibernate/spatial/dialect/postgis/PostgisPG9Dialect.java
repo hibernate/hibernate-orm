@@ -31,7 +31,7 @@ public class PostgisPG9Dialect extends PostgreSQL9Dialect implements SpatialDial
 	public PostgisPG9Dialect() {
 		super();
 		registerColumnType(
-				PGGeometryTypeDescriptor.INSTANCE.getSqlType(),
+				PGGeometryTypeDescriptor.INSTANCE_WKB_1.getSqlType(),
 				"GEOMETRY"
 		);
 		for ( Map.Entry<String, SQLFunction> entry : support.functionsToRegister() ) {

@@ -15,8 +15,8 @@ import org.hibernate.spatial.testing.NativeSQLStatement;
 
 import org.jboss.logging.Logger;
 
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.Point;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.Point;
 import org.geolatte.geom.jts.JTS;
 
 /**
@@ -238,10 +238,9 @@ public class PostgisExpectationsFactory extends AbstractExpectationsFactory {
 		);
 	}
 
-	//remove redundancy with toGeometry function in PGGeometryTypeDescriptor
 	@Override
 	protected Geometry decode(Object object) {
-		org.geolatte.geom.Geometry geometry = PGGeometryTypeDescriptor.toGeometry( object );
+		org.geolatte.geom.Geometry geometry = PGGeometryTypeDescriptor.INSTANCE_WKB_1.toGeometry( object );
 		return JTS.to( geometry );
 	}
 

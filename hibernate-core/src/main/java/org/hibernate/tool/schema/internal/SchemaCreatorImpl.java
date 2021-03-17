@@ -215,7 +215,6 @@ public class SchemaCreatorImpl implements SchemaCreator {
 		}
 
 		final Database database = metadata.getDatabase();
-		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
 
 		final Set<String> exportIdentifiers = new HashSet<String>( 50 );
 
@@ -463,7 +462,6 @@ public class SchemaCreatorImpl implements SchemaCreator {
 
 		if ( importScriptSetting != null ) {
 			final ScriptSourceInput importScriptInput = interpretScriptSourceSetting( importScriptSetting, classLoaderService, charsetName );
-			log.executingImportScript( importScriptInput.toString() );
 			importScriptInput.prepare();
 			try {
 				for ( String command : importScriptInput.read( commandExtractor ) ) {
@@ -483,10 +481,13 @@ public class SchemaCreatorImpl implements SchemaCreator {
 
 		for ( String currentFile : importFiles.split( "," ) ) {
 			final String resourceName = currentFile.trim();
+			if ( resourceName != null && resourceName.isEmpty() ) {
+				//skip empty resource names
+				continue;
+			}
 			final ScriptSourceInput importScriptInput = interpretLegacyImportScriptSetting( resourceName, classLoaderService, charsetName );
 			importScriptInput.prepare();
 			try {
-				log.executingImportScript( importScriptInput.toString() );
 				for ( String command : importScriptInput.read( commandExtractor ) ) {
 					applySqlString( command, formatter, options, targets );
 				}

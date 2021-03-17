@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.naturalid.inheritance.cache;
 
+import org.hibernate.WrongClassException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 
@@ -14,7 +15,7 @@ import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 public class InheritedNaturalIdNoCacheTest extends BaseCoreFunctionalTestCase {
 
@@ -57,10 +58,21 @@ public class InheritedNaturalIdNoCacheTest extends BaseCoreFunctionalTestCase {
 		});
 
 		doInHibernate( this::sessionFactory, session -> {
-			ExtendedEntity user = session.byNaturalId( ExtendedEntity.class )
-				.using( "uid", "base" )
-				.load();
-			assertNull( user );
+			try {
+				session.byNaturalId( ExtendedEntity.class )
+						.using( "uid", "base" )
+						.load();
+				fail( "Expecting WrongClassException" );
+			}
+			catch (WrongClassException expected) {
+				// expected outcome
+			}
+			catch (Exception other) {
+				throw new AssertionError(
+						"Unexpected exception type : " + other.getClass().getName(),
+						other
+				);
+			}
 		});
 	}
 }

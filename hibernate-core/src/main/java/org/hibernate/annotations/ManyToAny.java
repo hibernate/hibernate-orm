@@ -34,7 +34,7 @@ public @interface ManyToAny {
 	String metaDef() default "";
 
 	/**
-	 * Metadata dicriminator column description, This column will hold the meta value corresponding to the
+	 * Metadata discriminator column description, This column will hold the meta value corresponding to the
 	 * targeted entity.
 	 */
 	Column metaColumn();

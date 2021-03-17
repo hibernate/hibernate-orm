@@ -7,14 +7,18 @@
 package org.hibernate.engine.spi;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
 import javax.persistence.EntityGraph;
 
 import org.hibernate.Filter;
 import org.hibernate.UnknownProfileException;
+import org.hibernate.graph.GraphSemantic;
+import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.FilterImpl;
 import org.hibernate.type.Type;
 
@@ -37,24 +41,30 @@ public class LoadQueryInfluencers implements Serializable {
 	public static final LoadQueryInfluencers NONE = new LoadQueryInfluencers();
 
 	private final SessionFactoryImplementor sessionFactory;
+
 	private String internalFetchProfile;
-	private final Map<String,Filter> enabledFilters;
-	private final Set<String> enabledFetchProfileNames;
-	private EntityGraph fetchGraph;
-	private EntityGraph loadGraph;
+
+	//Lazily initialized!
+	private HashSet<String> enabledFetchProfileNames;
+
+	//Lazily initialized!
+	private HashMap<String,Filter> enabledFilters;
+
+	private final EffectiveEntityGraph effectiveEntityGraph = new EffectiveEntityGraph();
+
+	private Boolean readOnly;
 
 	public LoadQueryInfluencers() {
-		this( null );
+		this( null, null );
 	}
 
 	public LoadQueryInfluencers(SessionFactoryImplementor sessionFactory) {
-		this( sessionFactory, new HashMap<String,Filter>(), new HashSet<String>() );
+		this(sessionFactory, null);
 	}
 
-	private LoadQueryInfluencers(SessionFactoryImplementor sessionFactory, Map<String,Filter> enabledFilters, Set<String> enabledFetchProfileNames) {
+	public LoadQueryInfluencers(SessionFactoryImplementor sessionFactory, Boolean readOnly) {
 		this.sessionFactory = sessionFactory;
-		this.enabledFilters = enabledFilters;
-		this.enabledFetchProfileNames = enabledFetchProfileNames;
+		this.readOnly = readOnly;
 	}
 
 	public SessionFactoryImplementor getSessionFactory() {
@@ -81,16 +91,21 @@ public class LoadQueryInfluencers implements Serializable {
 	// filter support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	public boolean hasEnabledFilters() {
-		return !enabledFilters.isEmpty();
+		return enabledFilters != null && !enabledFilters.isEmpty();
 	}
 
 	public Map<String,Filter> getEnabledFilters() {
-		// First, validate all the enabled filters...
-		//TODO: this implementation has bad performance
-		for ( Filter filter : enabledFilters.values() ) {
-			filter.validate();
+		if ( enabledFilters == null ) {
+			return Collections.EMPTY_MAP;
 		}
-		return enabledFilters;
+		else {
+			// First, validate all the enabled filters...
+			for ( Filter filter : enabledFilters.values() ) {
+				//TODO: this implementation has bad performance
+				filter.validate();
+			}
+			return enabledFilters;
+		}
 	}
 
 	/**
@@ -98,25 +113,43 @@ public class LoadQueryInfluencers implements Serializable {
 	 * @return an unmodifiable Set of enabled filter names.
 	 */
 	public Set<String> getEnabledFilterNames() {
-		return java.util.Collections.unmodifiableSet( enabledFilters.keySet() );
+		if ( enabledFilters == null ) {
+			return Collections.EMPTY_SET;
+		}
+		else {
+			return java.util.Collections.unmodifiableSet( enabledFilters.keySet() );
+		}
 	}
 
 	public Filter getEnabledFilter(String filterName) {
-		return enabledFilters.get( filterName );
+		if ( enabledFilters == null ) {
+			return null;
+		}
+		else {
+			return enabledFilters.get( filterName );
+		}
 	}
 
 	public Filter enableFilter(String filterName) {
 		FilterImpl filter = new FilterImpl( sessionFactory.getFilterDefinition( filterName ) );
+		if ( enabledFilters == null ) {
+			this.enabledFilters = new HashMap<>();
+		}
 		enabledFilters.put( filterName, filter );
 		return filter;
 	}
 
 	public void disableFilter(String filterName) {
-		enabledFilters.remove( filterName );
+		if ( enabledFilters != null ) {
+			enabledFilters.remove( filterName );
+		}
 	}
 
 	public Object getFilterParameterValue(String filterParameterName) {
 		final String[] parsed = parseFilterParameterName( filterParameterName );
+		if ( enabledFilters == null ) {
+			throw new IllegalArgumentException( "Filter [" + parsed[0] + "] currently not enabled" );
+		}
 		final FilterImpl filter = (FilterImpl) enabledFilters.get( parsed[0] );
 		if ( filter == null ) {
 			throw new IllegalArgumentException( "Filter [" + parsed[0] + "] currently not enabled" );
@@ -154,11 +187,16 @@ public class LoadQueryInfluencers implements Serializable {
 	// fetch profile support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	public boolean hasEnabledFetchProfiles() {
-		return !enabledFetchProfileNames.isEmpty();
+		return enabledFetchProfileNames != null && !enabledFetchProfileNames.isEmpty();
 	}
 
 	public Set<String> getEnabledFetchProfileNames() {
-		return enabledFetchProfileNames;
+		if ( enabledFetchProfileNames == null ) {
+			return Collections.EMPTY_SET;
+		}
+		else {
+			return enabledFetchProfileNames;
+		}
 	}
 
 	private void checkFetchProfileName(String name) {
@@ -169,32 +207,93 @@ public class LoadQueryInfluencers implements Serializable {
 
 	public boolean isFetchProfileEnabled(String name) throws UnknownProfileException {
 		checkFetchProfileName( name );
-		return enabledFetchProfileNames.contains( name );
+		return enabledFetchProfileNames != null && enabledFetchProfileNames.contains( name );
 	}
 
 	public void enableFetchProfile(String name) throws UnknownProfileException {
 		checkFetchProfileName( name );
+		if ( enabledFetchProfileNames == null ) {
+			this.enabledFetchProfileNames = new HashSet<>();
+		}
 		enabledFetchProfileNames.add( name );
 	}
 
 	public void disableFetchProfile(String name) throws UnknownProfileException {
 		checkFetchProfileName( name );
-		enabledFetchProfileNames.remove( name );
+		if ( enabledFetchProfileNames != null ) {
+			enabledFetchProfileNames.remove( name );
+		}
 	}
 
+	public EffectiveEntityGraph getEffectiveEntityGraph() {
+		return effectiveEntityGraph;
+	}
+
+	/**
+	 * @deprecated (since 5.4) {@link #getFetchGraph}, {@link #getLoadGraph}, {@link #setFetchGraph}
+	 * and {@link #setLoadGraph} (as well as JPA itself honestly) all make it very unclear that
+	 * there can be only one graph applied at any one time and that graph is *either* a load or
+	 * a fetch graph.  These have all been replaced with {@link #getEffectiveEntityGraph()}.
+	 *
+	 * @see EffectiveEntityGraph
+	 */
+	@Deprecated
 	public EntityGraph getFetchGraph() {
-		return fetchGraph;
+		if ( effectiveEntityGraph.getSemantic() != GraphSemantic.FETCH ) {
+			return null;
+		}
+
+		return effectiveEntityGraph.getGraph();
 	}
 
-	public void setFetchGraph(final EntityGraph fetchGraph) {
-		this.fetchGraph = fetchGraph;
+	/**
+	 * @deprecated (since 5.4) {@link #getFetchGraph}, {@link #getLoadGraph}, {@link #setFetchGraph}
+	 * and {@link #setLoadGraph} (as well as JPA itself honestly) all make it very unclear that
+	 * there can be only one graph applied at any one time and that graph is *either* a load or
+	 * a fetch graph.  These have all been replaced with {@link #getEffectiveEntityGraph()}.
+	 *
+	 * @see EffectiveEntityGraph
+	 */
+	@Deprecated
+	public void setFetchGraph(EntityGraph fetchGraph) {
+		effectiveEntityGraph.applyGraph( (RootGraphImplementor<?>) fetchGraph, GraphSemantic.FETCH );
 	}
 
+	/**
+	 * @deprecated (since 5.4) {@link #getFetchGraph}, {@link #getLoadGraph}, {@link #setFetchGraph}
+	 * and {@link #setLoadGraph} (as well as JPA itself honestly) all make it very unclear that
+	 * there can be only one graph applied at any one time and that graph is *either* a load or
+	 * a fetch graph.  These have all been replaced with {@link #getEffectiveEntityGraph()}.
+	 *
+	 * @see EffectiveEntityGraph
+	 */
+	@Deprecated
 	public EntityGraph getLoadGraph() {
-		return loadGraph;
+		if ( effectiveEntityGraph.getSemantic() != GraphSemantic.LOAD ) {
+			return null;
+		}
+
+		return effectiveEntityGraph.getGraph();
 	}
 
+	/**
+	 * @deprecated (since 5.4) {@link #getFetchGraph}, {@link #getLoadGraph}, {@link #setFetchGraph}
+	 * and {@link #setLoadGraph} (as well as JPA itself honestly) all make it very unclear that
+	 * there can be only one graph applied at any one time and that that graph is *either* a load or
+	 * a fetch graph.  These have all been replaced with {@link #getEffectiveEntityGraph()}.
+	 *
+	 * @see EffectiveEntityGraph
+	 */
+	@Deprecated
 	public void setLoadGraph(final EntityGraph loadGraph) {
-		this.loadGraph = loadGraph;
+		effectiveEntityGraph.applyGraph( (RootGraphImplementor<?>) loadGraph, GraphSemantic.LOAD );
+	}
+
+	public Boolean getReadOnly() {
+		return readOnly;
+	}
+
+	public void setReadOnly(Boolean readOnly) {
+		this.readOnly = readOnly;
 	}
 }

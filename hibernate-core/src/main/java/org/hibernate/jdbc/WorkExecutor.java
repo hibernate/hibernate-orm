@@ -28,8 +28,8 @@ public class WorkExecutor<T> {
 	 * @param work The @link ReturningWork} instance encapsulating the discrete work
 	 * @param connection The connection on which to perform the work.
 	 *
-	 * @return null>.
-	 * 
+	 * @return null.
+	 *
 	 * @throws SQLException Thrown during execution of the underlying JDBC interaction.
 	 * @throws org.hibernate.HibernateException Generally indicates a wrapped SQLException.
 	 */

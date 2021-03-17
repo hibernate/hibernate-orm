@@ -9,7 +9,6 @@ package org.hibernate.test.insertordering;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -19,10 +18,9 @@ import javax.persistence.ManyToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
-import org.hibernate.cfg.Environment;
-
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
@@ -31,16 +29,12 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
  * @author Andrea Boriero
  */
 @TestForIssue(jiraKey = "HHH-12380")
-public class InsertOrderingHasParentTest extends BaseNonConfigCoreFunctionalTestCase {
+@RequiresDialectFeature(DialectChecks.SupportsJdbcDriverProxying.class)
+public class InsertOrderingHasParentTest extends BaseInsertOrderingTest {
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] { Author.class, Book.class, Comment.class };
-	}
-
-	@Override
-	protected void addSettings(Map settings) {
-		settings.put( Environment.ORDER_INSERTS, "true" );
 	}
 
 	@Test
@@ -55,8 +49,16 @@ public class InsertOrderingHasParentTest extends BaseNonConfigCoreFunctionalTest
 			author.setBook( book );
 
 			session.persist( author );
+
+			clearBatches();
 		} );
 
+		verifyContainsBatches(
+				new Batch( "insert into book_comment (book_comment, id) values (?, ?)", 2 ),
+				new Batch( "insert into Book (comment_id, id) values (?, ?)" ),
+				new Batch( "insert into Author (book_id, id) values (?, ?)" ),
+				new Batch( "insert into Book_book_comment (Book_id, comments_id) values (?, ?)" )
+		);
 	}
 
 	@Entity(name = "Author")

@@ -66,6 +66,11 @@ public class ScriptSourceInputFromUrl extends AbstractScriptSourceInput implemen
 	}
 
 	@Override
+	protected String getScriptDescription() {
+		return url.toExternalForm();
+	}
+
+	@Override
 	public void release() {
 		try {
 			reader().close();

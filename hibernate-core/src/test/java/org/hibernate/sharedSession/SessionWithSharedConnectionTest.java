@@ -270,7 +270,9 @@ public class SessionWithSharedConnectionTest extends BaseCoreFunctionalTestCase 
 		}
 		assertNotNull("Observers field was not found", field);
 
-		assertEquals(0, ((Collection) field.get(((SessionImplementor) session).getTransactionCoordinator())).size());
+		//Some of these collections could be lazily initialize: check for null before invoking size()
+		final Collection collection = (Collection) field.get( ( (SessionImplementor) session ).getTransactionCoordinator() );
+		assertTrue(collection == null || collection.size() == 0 );
 
 		//open secondary sessions with managed options and immediately close
 		Session secondarySession;

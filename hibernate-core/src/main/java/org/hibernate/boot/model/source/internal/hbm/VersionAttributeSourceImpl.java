@@ -156,7 +156,7 @@ class VersionAttributeSourceImpl
 
 	@Override
 	public Boolean isInsertable() {
-		return versionElement.isInsert() == null ? true : versionElement.isInsert();
+		return versionElement.isInsert() == null ? Boolean.TRUE : versionElement.isInsert();
 	}
 
 	@Override

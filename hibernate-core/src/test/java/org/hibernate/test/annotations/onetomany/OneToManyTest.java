@@ -37,6 +37,8 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
 
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.test.annotations.Customer;
@@ -359,6 +361,7 @@ public class OneToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
+	@RequiresDialectFeature(DialectChecks.SupportsCascadeDeleteCheck.class)
 	public void testCascadeDeleteWithUnidirectionalAssociation() throws Exception {
 		OnDeleteUnidirectionalOneToManyChild child = new OnDeleteUnidirectionalOneToManyChild();
 

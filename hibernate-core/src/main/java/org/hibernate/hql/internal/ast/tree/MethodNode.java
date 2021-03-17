@@ -154,11 +154,13 @@ public class MethodNode extends AbstractSelectExpression implements FunctionNode
 				selectColumns = cpr.toColumns( fromElement.getTableAlias() );
 
 //				setDataType( fromElement.getPropertyType( propertyName, propertyName ) );
-				selectColumns = fromElement.toColumns( fromElement.getTableAlias(), propertyName, inSelect );
+//				selectColumns = fromElement.toColumns( fromElement.getTableAlias(), propertyName, inSelect );
 			}
+
 			if ( collectionNode instanceof DotNode ) {
 				prepareAnyImplicitJoins( (DotNode) collectionNode );
 			}
+
 			if ( !inSelect ) {
 				fromElement.setText( "" );
 				fromElement.setUseWhereFragment( false );
@@ -179,7 +181,7 @@ public class MethodNode extends AbstractSelectExpression implements FunctionNode
 		if ( dotNode.getLhs() instanceof DotNode ) {
 			DotNode lhs = (DotNode) dotNode.getLhs();
 			FromElement lhsOrigin = lhs.getFromElement();
-			if ( lhsOrigin != null && "".equals( lhsOrigin.getText() ) ) {
+			if ( lhsOrigin != null && lhsOrigin.getText() != null && lhsOrigin.getText().isEmpty() ) {
 				String lhsOriginText = lhsOrigin.getQueryable().getTableName() +
 						" " + lhsOrigin.getTableAlias();
 				lhsOrigin.setText( lhsOriginText );

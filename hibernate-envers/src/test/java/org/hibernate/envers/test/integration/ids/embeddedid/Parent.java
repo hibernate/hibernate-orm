@@ -28,7 +28,7 @@ public class Parent {
 	private List<CorrectChild> correctChildren = new ArrayList<CorrectChild>();
 
 	@OneToMany(mappedBy = "id.parent")
-	private List<IncorrectChild> incorrectChildren = new ArrayList<IncorrectChild>();;
+	private List<IncorrectChild> incorrectChildren = new ArrayList<IncorrectChild>();
 
 	Parent() {
 

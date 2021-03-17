@@ -81,6 +81,10 @@ public class SpaceShip {
 
     private Dimensions dimensions;
 
+    //Getters and setters are omitted for brevity
+
+//end::sql-composite-key-entity-associations_named-query-example[]
+
     public String getName() {
         return name;
     }
@@ -120,5 +124,6 @@ public class SpaceShip {
     public void setDimensions(Dimensions dimensions) {
         this.dimensions = dimensions;
     }
+//tag::sql-composite-key-entity-associations_named-query-example[]
 }
 //end::sql-composite-key-entity-associations_named-query-example[]

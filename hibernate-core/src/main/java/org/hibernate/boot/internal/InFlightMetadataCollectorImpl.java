@@ -31,7 +31,6 @@ import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.annotations.AnyMetaDef;
 import org.hibernate.annotations.common.reflection.XClass;
-import org.hibernate.annotations.common.util.StringHelper;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
@@ -56,8 +55,6 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.NaturalIdUniqueKeyBinder;
-import org.hibernate.cache.cfg.internal.DomainDataRegionConfigImpl.Builder;
-import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AnnotatedClassType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.CopyIdentifierComponentSecondPass;
@@ -81,12 +78,14 @@ import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryImpl;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
@@ -146,8 +145,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	private final Map<String, NamedEntityGraphDefinition> namedEntityGraphMap = new HashMap<>();
 	private final Map<String, FetchProfile> fetchProfileMap = new HashMap<>();
 	private final Map<String, IdentifierGeneratorDefinition> idGeneratorDefinitionMap = new HashMap<>();
-
-	private final Map<String, Builder> regionConfigBuilders = new ConcurrentHashMap<>();
 
 	private Map<String, SQLFunction> sqlFunctionMap;
 
@@ -252,6 +249,14 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	}
 
 	@Override
+	public void initSessionFactory(SessionFactoryImplementor sessionFactory) {
+		throw new UnsupportedOperationException(
+				"You should not be building a SessionFactory from an in-flight metadata collector; and of course " +
+						"we should better segment this in the API :)"
+		);
+	}
+
+	@Override
 	public IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
 		return identifierGeneratorFactory;
 	}
@@ -293,31 +298,31 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	@Override
 	public void addEntityBinding(PersistentClass persistentClass) throws DuplicateMappingException {
 		final String entityName = persistentClass.getEntityName();
+		final String jpaEntityName = persistentClass.getJpaEntityName();
 		if ( entityBindingMap.containsKey( entityName ) ) {
 			throw new DuplicateMappingException( DuplicateMappingException.Type.ENTITY, entityName );
 		}
-		entityBindingMap.put( entityName, persistentClass );
 
-		final AccessType accessType = AccessType.fromExternalName( persistentClass.getCacheConcurrencyStrategy() );
-		if ( accessType != null ) {
-			if ( persistentClass.isCached() ) {
-				locateCacheRegionConfigBuilder( persistentClass.getRootClass().getCacheRegionName() ).addEntityConfig(
-						persistentClass,
-						accessType
-				);
-			}
+		PersistentClass matchingPersistentClass = entityBindingMap.values()
+				.stream()
+				.filter( existingPersistentClass -> existingPersistentClass.getJpaEntityName().equals( jpaEntityName ) )
+				.findFirst()
+				.orElse( null );
 
-			if ( persistentClass.hasNaturalId() && persistentClass instanceof RootClass && persistentClass.getNaturalIdCacheRegionName() != null ) {
-				locateCacheRegionConfigBuilder( persistentClass.getNaturalIdCacheRegionName() ).addNaturalIdConfig(
-						(RootClass) persistentClass,
-						accessType
-				);
-			}
+		if ( matchingPersistentClass != null ) {
+			throw new DuplicateMappingException(
+					String.format(
+							"The [%s] and [%s] entities share the same JPA entity name: [%s] which is not allowed!",
+							matchingPersistentClass.getClassName(),
+							persistentClass.getClassName(),
+							jpaEntityName
+					),
+					DuplicateMappingException.Type.ENTITY,
+					jpaEntityName
+			);
 		}
-	}
 
-	private Builder locateCacheRegionConfigBuilder(String regionName) {
-		return regionConfigBuilders.computeIfAbsent( regionName, Builder::new );
+		entityBindingMap.put( entityName, persistentClass );
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -340,14 +345,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			throw new DuplicateMappingException( DuplicateMappingException.Type.COLLECTION, collectionRole );
 		}
 		collectionBindingMap.put( collectionRole, collection );
-
-		final AccessType accessType = AccessType.fromExternalName( collection.getCacheConcurrencyStrategy() );
-		if ( accessType != null ) {
-			locateCacheRegionConfigBuilder( collection.getCacheRegionName() ).addCollectionConfig(
-					collection,
-					accessType
-			);
-		}
 	}
 
 
@@ -942,7 +939,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 				throw new DuplicateMappingException(
 						String.format(
 								Locale.ENGLISH,
-								"Table [%s] contains physical column name [%s] referred to by multiple physical " +
+								"Table [%s] contains physical column name [%s] referred to by multiple logical " +
 										"column names: [%s], [%s]",
 								tableName,
 								physicalName,
@@ -1368,7 +1365,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		return xrefEntry == null ? null : xrefEntry.secondaryTableJoinMap;
 	}
 
-	private final class EntityTableXrefImpl implements EntityTableXref {
+	private static final class EntityTableXrefImpl implements EntityTableXref {
 		private final Identifier primaryTableLogicalName;
 		private final Table primaryTable;
 		private EntityTableXrefImpl superEntityTableXref;
@@ -1703,8 +1700,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 		ArrayList<CopyIdentifierComponentSecondPass> sorted =
 				new ArrayList<>( copyIdentifierComponentSecondPasList.size() );
-		Set<CopyIdentifierComponentSecondPass> toSort = new HashSet<>();
-		toSort.addAll( copyIdentifierComponentSecondPasList );
+		Set<CopyIdentifierComponentSecondPass> toSort = new HashSet<>( copyIdentifierComponentSecondPasList );
 		topologicalSort( sorted, toSort );
 		copyIdentifierComponentSecondPasList = sorted;
 	}
@@ -1780,7 +1776,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	 * <p/>
 	 * See <tt>ANN-722</tt> and <tt>ANN-730</tt>
 	 *
-	 * @param orderedFkSecondPasses The list containing the <code>FkSecondPass<code> instances ready
+	 * @param orderedFkSecondPasses The list containing the <code>FkSecondPass</code> instances ready
 	 * for processing.
 	 * @param isADependencyOf Our lookup data structure to determine dependencies between tables
 	 * @param startTable Table name to start recursive algorithm.
@@ -2143,8 +2139,9 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			return;
 		}
 
-		for ( Table table : jpaIndexHoldersByTable.keySet() ) {
-			final List<JPAIndexHolder> jpaIndexHolders = jpaIndexHoldersByTable.get( table );
+		for ( Map.Entry<Table, List<JPAIndexHolder>> entry : jpaIndexHoldersByTable.entrySet() ) {
+			final Table table = entry.getKey();
+			final List<JPAIndexHolder> jpaIndexHolders = entry.getValue();
 			for ( JPAIndexHolder holder : jpaIndexHolders ) {
 				buildUniqueKeyFromColumnNames(
 						table,
@@ -2260,7 +2257,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 					sqlResultSetMappingMap,
 					namedEntityGraphMap,
 					sqlFunctionMap,
-					regionConfigBuilders.values(),
 					getDatabase(),
 					bootstrapContext
 			);

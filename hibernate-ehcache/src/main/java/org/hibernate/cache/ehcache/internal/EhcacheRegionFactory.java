@@ -11,8 +11,8 @@ import java.net.URL;
 import java.util.List;
 import java.util.Map;
 
-import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Ehcache;
 import net.sf.ehcache.config.Configuration;
 import net.sf.ehcache.config.ConfigurationFactory;
 
@@ -27,11 +27,12 @@ import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.cache.spi.DomainDataRegion;
 import org.hibernate.cache.spi.SecondLevelCacheLogger;
+import org.hibernate.cache.spi.support.DomainDataRegionImpl;
 import org.hibernate.cache.spi.support.DomainDataStorageAccess;
 import org.hibernate.cache.spi.support.RegionFactoryTemplate;
 import org.hibernate.cache.spi.support.RegionNameQualifier;
+import org.hibernate.cache.spi.support.SimpleTimestamper;
 import org.hibernate.cache.spi.support.StorageAccess;
-import org.hibernate.cache.spi.support.DomainDataRegionImpl;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 import static org.hibernate.cache.ehcache.ConfigSettings.EHCACHE_CONFIGURATION_RESOURCE_NAME;
@@ -48,6 +49,7 @@ public class EhcacheRegionFactory extends RegionFactoryTemplate {
 
 	private volatile CacheManager cacheManager;
 	private volatile MissingCacheStrategy missingCacheStrategy;
+	private volatile long cacheLockTimeout;
 
 	public EhcacheRegionFactory() {
 		this( DefaultCacheKeysFactory.INSTANCE );
@@ -131,7 +133,7 @@ public class EhcacheRegionFactory extends RegionFactoryTemplate {
 		return regionName;
 	}
 
-	protected Cache getOrCreateCache(String unqualifiedRegionName, SessionFactoryImplementor sessionFactory) {
+	protected Ehcache getOrCreateCache(String unqualifiedRegionName, SessionFactoryImplementor sessionFactory) {
 		verifyStarted();
 		assert !RegionNameQualifier.INSTANCE.isQualified( unqualifiedRegionName, sessionFactory.getSessionFactoryOptions() );
 
@@ -140,14 +142,14 @@ public class EhcacheRegionFactory extends RegionFactoryTemplate {
 				sessionFactory.getSessionFactoryOptions()
 		);
 
-		final Cache cache = cacheManager.getCache( qualifiedRegionName );
+		final Ehcache cache = cacheManager.getEhcache( qualifiedRegionName );
 		if ( cache == null ) {
 			return createCache( qualifiedRegionName );
 		}
 		return cache;
 	}
 
-	protected Cache createCache(String regionName) {
+	protected Ehcache createCache(String regionName) {
 		switch ( missingCacheStrategy ) {
 			case CREATE_WARN:
 				SecondLevelCacheLogger.INSTANCE.missingCacheCreated(
@@ -155,10 +157,10 @@ public class EhcacheRegionFactory extends RegionFactoryTemplate {
 						ConfigSettings.MISSING_CACHE_STRATEGY, MissingCacheStrategy.CREATE.getExternalRepresentation()
 				);
 				cacheManager.addCache( regionName );
-				return cacheManager.getCache( regionName );
+				return cacheManager.getEhcache( regionName );
 			case CREATE:
 				cacheManager.addCache( regionName );
-				return cacheManager.getCache( regionName );
+				return cacheManager.getEhcache( regionName );
 			case FAIL:
 				throw new CacheException( "On-the-fly creation of Ehcache Cache objects is not supported [" + regionName + "]" );
 			default:
@@ -171,13 +173,14 @@ public class EhcacheRegionFactory extends RegionFactoryTemplate {
 				unqualifiedRegionName,
 				sessionFactory.getSessionFactoryOptions()
 		);
-		return cacheManager.getCache( qualifiedRegionName ) != null;
+		return cacheManager.getEhcache( qualifiedRegionName ) != null;
 	}
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Lifecycle
 
+	@Override
 	protected boolean isStarted() {
 		return super.isStarted() && cacheManager != null;
 	}
@@ -192,6 +195,25 @@ public class EhcacheRegionFactory extends RegionFactoryTemplate {
 			this.missingCacheStrategy = MissingCacheStrategy.interpretSetting(
 					configValues.get( ConfigSettings.MISSING_CACHE_STRATEGY )
 			);
+
+			Object cacheLockTimeoutConfigValue = configValues.get(
+				ConfigSettings.EHCACHE_CONFIGURATION_CACHE_LOCK_TIMEOUT
+			);
+			if ( cacheLockTimeoutConfigValue != null ) {
+				Integer lockTimeoutInMillis = null;
+				if ( cacheLockTimeoutConfigValue instanceof String ) {
+					lockTimeoutInMillis = Integer.decode( (String) cacheLockTimeoutConfigValue );
+				}
+				else if ( cacheLockTimeoutConfigValue instanceof Number ) {
+					lockTimeoutInMillis = ( (Number) cacheLockTimeoutConfigValue ).intValue();
+				}
+				if ( lockTimeoutInMillis != null ) {
+					this.cacheLockTimeout = SimpleTimestamper.ONE_MS * lockTimeoutInMillis;
+				}
+				else {
+					this.cacheLockTimeout = super.getTimeout();
+				}
+			}
 		}
 	}
 
@@ -325,5 +347,10 @@ public class EhcacheRegionFactory extends RegionFactoryTemplate {
 		finally {
 			cacheManager = null;
 		}
+	}
+
+	@Override
+	public long getTimeout() {
+		return cacheLockTimeout;
 	}
 }

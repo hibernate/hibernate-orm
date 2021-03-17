@@ -17,11 +17,10 @@ import javax.naming.event.NamingExceptionEvent;
 import javax.naming.spi.ObjectFactory;
 
 import org.hibernate.SessionFactory;
-import org.hibernate.annotations.common.util.StringHelper;
 import org.hibernate.engine.jndi.JndiException;
 import org.hibernate.engine.jndi.JndiNameException;
 import org.hibernate.engine.jndi.spi.JndiService;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * A registry of all {@link SessionFactory} instances for the same classloader as this class.
@@ -155,7 +154,7 @@ public class SessionFactoryRegistry {
 		final SessionFactory sessionFactory = sessionFactoryMap.get( uuid );
 		if ( sessionFactory == null && LOG.isDebugEnabled() ) {
 			LOG.debugf( "Not found: %s", uuid );
-			LOG.debugf( sessionFactoryMap.toString() );
+			LOG.debug( sessionFactoryMap.toString() );
 		}
 		return sessionFactory;
 	}
@@ -231,8 +230,7 @@ public class SessionFactoryRegistry {
 
 	public static class ObjectFactoryImpl implements ObjectFactory {
 		@Override
-		public Object getObjectInstance(Object reference, Name name, Context nameCtx, Hashtable<?, ?> environment)
-				throws Exception {
+		public Object getObjectInstance(Object reference, Name name, Context nameCtx, Hashtable<?, ?> environment) {
 			LOG.debugf( "JNDI lookup: %s", name );
 			final String uuid = (String) ( (Reference) reference ).get( 0 ).getContent();
 			LOG.tracef( "Resolved to UUID = %s", uuid );

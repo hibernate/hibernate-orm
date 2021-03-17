@@ -8,15 +8,23 @@ package org.hibernate.event.internal;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.event.spi.EntityCopyObserver;
+import org.hibernate.event.spi.EntityCopyObserverFactory;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.pretty.MessageHelper;
 
 /**
  * @author Gail Badner
  */
-public class EntityCopyNotAllowedObserver implements EntityCopyObserver {
+public final class EntityCopyNotAllowedObserver implements EntityCopyObserver {
 
 	public static final String SHORT_NAME = "disallow";
+	private static final EntityCopyNotAllowedObserver INSTANCE = new EntityCopyNotAllowedObserver();
+	//This implementation of EntityCopyObserver is stateless, so no need to create multiple copies:
+	public static final EntityCopyObserverFactory FACTORY_OF_SELF = () -> INSTANCE;
+
+	private EntityCopyNotAllowedObserver() {
+		//Not to be constructed; use INSTANCE.
+	}
 
 	@Override
 	public void entityCopyDetected(

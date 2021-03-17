@@ -8,11 +8,11 @@ package org.hibernate.resource.beans.container.internal;
 
 import javax.enterprise.inject.spi.BeanManager;
 
-import org.hibernate.jpa.event.spi.jpa.ExtendedBeanManager;
 import org.hibernate.resource.beans.container.spi.AbstractCdiBeanContainer;
 import org.hibernate.resource.beans.container.spi.BeanLifecycleStrategy;
 import org.hibernate.resource.beans.container.spi.ContainedBean;
 import org.hibernate.resource.beans.container.spi.ContainedBeanImplementor;
+import org.hibernate.resource.beans.container.spi.ExtendedBeanManager;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 
 import org.jboss.logging.Logger;

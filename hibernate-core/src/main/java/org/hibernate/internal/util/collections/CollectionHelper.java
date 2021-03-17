@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 
 /**
  * Various help for handling collections.
@@ -55,7 +56,7 @@ public final class CollectionHelper {
 	 * @return The sized map.
 	 */
 	public static <K, V> Map<K, V> mapOfSize(int size) {
-		return new HashMap<K, V>( determineProperSizing( size ), LOAD_FACTOR );
+		return new HashMap<>( determineProperSizing( size ), LOAD_FACTOR );
 	}
 
 	/**
@@ -68,6 +69,58 @@ public final class CollectionHelper {
 	 */
 	public static int determineProperSizing(Map original) {
 		return determineProperSizing( original.size() );
+	}
+
+	public static <X, Y> Map<X, Y> makeCopy(Map<X, Y> map) {
+		final Map<X, Y> copy = mapOfSize( map.size() + 1 );
+		copy.putAll( map );
+		return copy;
+	}
+
+	public static <K, V> HashMap<K, V> makeCopy(
+			Map<K, V> original,
+			Function<K, K> keyTransformer,
+			Function<V, V> valueTransformer) {
+		if ( original == null ) {
+			return null;
+		}
+
+		final HashMap<K, V> copy = new HashMap<>( determineProperSizing( original ) );
+
+		original.forEach(
+				(key, value) -> copy.put(
+						keyTransformer.apply( key ),
+						valueTransformer.apply( value )
+				)
+		);
+
+		return copy;
+	}
+
+	public static <K, V> Map<K, V> makeMap(
+			Collection<V> collection,
+			Function<V,K> keyProducer) {
+		return makeMap( collection, keyProducer, v -> v );
+	}
+
+	public static <K, V, E> Map<K, V> makeMap(
+			Collection<E> collection,
+			Function<E,K> keyProducer,
+			Function<E,V> valueProducer) {
+		if ( isEmpty( collection ) ) {
+			return Collections.emptyMap();
+		}
+
+		final Map<K, V> map = new HashMap<>( determineProperSizing( collection.size() ));
+
+		for ( E element : collection ) {
+			map.put(
+					keyProducer.apply( element ),
+					valueProducer.apply( element )
+			);
+		}
+
+		return map;
 	}
 
 	/**
@@ -159,9 +212,72 @@ public final class CollectionHelper {
 		return objects == null || objects.length == 0;
 	}
 
-	public static <X, Y> Map<X, Y> makeCopy(Map<X, Y> map) {
-		final Map<X, Y> copy = mapOfSize( map.size() + 1 );
-		copy.putAll( map );
-		return copy;
+	/**
+	 * Use to convert sets which will be retained for a long time,
+	 * such as for the lifetime of the Hibernate ORM instance.
+	 * The returned Set might be immutable, but there is no guarantee of this:
+	 * consider it immutable but don't rely on this.
+	 * The goal is to save memory.
+	 * @param set
+	 * @param <T>
+	 * @return
+	 */
+	public static <T> Set<T> toSmallSet(Set<T> set) {
+		switch ( set.size() ) {
+			case 0:
+				return Collections.EMPTY_SET;
+			case 1:
+				return Collections.singleton( set.iterator().next() );
+			default:
+				//TODO assert tests pass even if this is set to return an unmodifiable Set
+				return set;
+		}
 	}
+
+	/**
+	 * Use to convert Maps which will be retained for a long time,
+	 * such as for the lifetime of the Hibernate ORM instance.
+	 * The returned Map might be immutable, but there is no guarantee of this:
+	 * consider it immutable but don't rely on this.
+	 * The goal is to save memory.
+	 * @param map
+	 * @param <K>
+	 * @param <V>
+	 * @return
+	 */
+	public static <K, V> Map<K, V> toSmallMap(final Map<K, V> map) {
+		switch ( map.size() ) {
+			case 0:
+				return Collections.EMPTY_MAP;
+			case 1:
+				Map.Entry<K, V> entry = map.entrySet().iterator().next();
+				return Collections.singletonMap( entry.getKey(), entry.getValue() );
+			default:
+				//TODO assert tests pass even if this is set to return an unmodifiable Map
+				return map;
+		}
+	}
+
+	/**
+	 * Use to convert ArrayList instances which will be retained for a long time,
+	 * such as for the lifetime of the Hibernate ORM instance.
+	 * The returned List might be immutable, but there is no guarantee of this:
+	 * consider it immutable but don't rely on this.
+	 * The goal is to save memory.
+	 * @param arrayList
+	 * @param <V>
+	 * @return
+	 */
+	public static <V> List<V> toSmallList(ArrayList<V> arrayList) {
+		switch ( arrayList.size() ) {
+			case 0:
+				return Collections.EMPTY_LIST;
+			case 1:
+				return Collections.singletonList( arrayList.get( 0 ) );
+			default:
+				arrayList.trimToSize();
+				return arrayList;
+		}
+	}
+
 }

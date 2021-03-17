@@ -6,9 +6,9 @@
  */
 package org.hibernate.hql.internal.ast.tree;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +34,7 @@ public class FromClause extends HqlSqlWalkerNode implements HqlSqlTokenTypes, Di
 	public static final int ROOT_LEVEL = 1;
 
 	private int level = ROOT_LEVEL;
-	private Set<FromElement> fromElements = new HashSet<FromElement>();
+	private Set<FromElement> fromElements = new LinkedHashSet<FromElement>();
 	private Map<String,FromElement> fromElementByClassAlias = new HashMap<String,FromElement>();
 	private Map<String,FromElement> fromElementByTableAlias = new HashMap<String,FromElement>();
 	private Map<String,FromElement> fromElementsByPath = new HashMap<String,FromElement>();
@@ -60,8 +60,6 @@ public class FromClause extends HqlSqlWalkerNode implements HqlSqlTokenTypes, Di
 	 * Implied FROM elements to add onto the end of the FROM clause.
 	 */
 	private List impliedElements = new LinkedList();
-
-	private List<EntityJoinFromElement> entityJoinFromElements;
 
 	/**
 	 * Adds a new from element to the from node.
@@ -91,25 +89,35 @@ public class FromClause extends HqlSqlWalkerNode implements HqlSqlTokenTypes, Di
 		if ( tableAlias != null ) {
 			fromElementByTableAlias.put( tableAlias, element );
 		}
+	}
 
-		if ( element instanceof EntityJoinFromElement ) {
-			if ( entityJoinFromElements == null ) {
-				entityJoinFromElements = new ArrayList<EntityJoinFromElement>();
+	void moveFromElementToEnd(FromElement element) {
+		fromElements.remove( element );
+		fromElements.add( element );
+		// We must move destinations which must come after the from element as well
+		for ( FromElement fromElement : element.getDestinations() ) {
+			if ( this == fromElement.getFromClause() ) {
+				fromElements.remove( fromElement );
+				fromElements.add( fromElement );
 			}
-			entityJoinFromElements.add( (EntityJoinFromElement) element );
 		}
 	}
 
 	public void finishInit() {
-		if ( entityJoinFromElements == null ) {
-			return;
+		// Insert the from elements into the AST in the same order as they were added to the HQL AST
+		FromElement lastFromElement = null;
+		for ( FromElement fromElement : fromElements ) {
+			if ( fromElement instanceof ComponentJoin ) {
+				// Component joins are no "real" joins, so they can't be put into the AST
+				continue;
+			}
+			fromElement.setFirstChild( null );
+			fromElement.setNextSibling( null );
+			if ( lastFromElement != null ) {
+				ASTUtil.appendChild( lastFromElement, fromElement );
+			}
+			lastFromElement = fromElement;
 		}
-
-		for ( EntityJoinFromElement entityJoinFromElement : entityJoinFromElements ) {
-			ASTUtil.appendChild( this, entityJoinFromElement );
-		}
-
-		entityJoinFromElements.clear();
 	}
 
 	void addDuplicateAlias(String alias, FromElement element) {
@@ -412,4 +420,5 @@ public class FromClause extends HqlSqlWalkerNode implements HqlSqlTokenTypes, Di
 	public String toString() {
 		return "FromClause{level=" + level + "}";
 	}
+
 }

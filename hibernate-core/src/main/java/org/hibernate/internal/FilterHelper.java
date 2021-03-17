@@ -14,6 +14,8 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.sql.Template;
 
+import static org.hibernate.internal.util.StringHelper.safeInterning;
+
 /**
  * Implementation of FilterHelper.
  *
@@ -44,23 +46,27 @@ public class FilterHelper {
 		filterCount = 0;
 		for ( final FilterConfiguration filter : filters ) {
 			filterAutoAliasFlags[filterCount] = false;
-			filterNames[filterCount] = filter.getName();
-			filterConditions[filterCount] = filter.getCondition();
+			filterNames[filterCount] = safeInterning( filter.getName() );
+			filterConditions[filterCount] = safeInterning( filter.getCondition() );
 			filterAliasTableMaps[filterCount] = filter.getAliasTableMap( factory );
 			if ( ( filterAliasTableMaps[filterCount].isEmpty() || isTableFromPersistentClass( filterAliasTableMaps[filterCount] ) ) && filter
 					.useAutoAliasInjection() ) {
-				filterConditions[filterCount] = Template.renderWhereStringTemplate(
-						filter.getCondition(),
-						FilterImpl.MARKER,
-						factory.getDialect(),
-						factory.getSqlFunctionRegistry()
+				filterConditions[filterCount] = safeInterning(
+							Template.renderWhereStringTemplate(
+							filter.getCondition(),
+							FilterImpl.MARKER,
+							factory.getDialect(),
+							factory.getSqlFunctionRegistry()
+					)
 				);
 				filterAutoAliasFlags[filterCount] = true;
 			}
-			filterConditions[filterCount] = StringHelper.replace(
-					filterConditions[filterCount],
-					":",
-					":" + filterNames[filterCount] + "."
+			filterConditions[filterCount] = safeInterning(
+					StringHelper.replace(
+						filterConditions[filterCount],
+						":",
+						":" + filterNames[filterCount] + "."
+					)
 			);
 			filterCount++;
 		}

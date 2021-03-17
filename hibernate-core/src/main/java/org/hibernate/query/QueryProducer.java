@@ -8,6 +8,10 @@ package org.hibernate.query;
 
 import org.hibernate.SQLQuery;
 
+import javax.persistence.criteria.CriteriaDelete;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.CriteriaUpdate;
+
 /**
  * Contract for things that can produce Query instances.  Expected implementors include
  * Session and StatelessSession.
@@ -46,7 +50,7 @@ public interface QueryProducer {
 	 * Create a typed {@link Query} instance for the given HQL/JPQL query string.
 	 *
 	 * @param queryString The HQL/JPQL query
-	 *
+	 * @param resultClass The type of the query result
 	 * @return The Query instance for manipulation and execution
 	 *
 	 * @see javax.persistence.EntityManager#createQuery(String,Class)
@@ -119,7 +123,7 @@ public interface QueryProducer {
 	 * implicit mapping to the specified Java type.
 	 *
 	 * @param sqlString Native (SQL) query string
-	 * @param resultClass The Java type to map results to
+	 * @param resultClass The Java entity type to map results to
 	 *
 	 * @return The NativeQuery instance for manipulation and execution
 	 *
@@ -163,4 +167,10 @@ public interface QueryProducer {
 	 * @return The NativeQuery instance for manipulation and execution
 	 */
 	NativeQuery getNamedNativeQuery(String name);
+
+	<T> Query<T> createQuery(CriteriaQuery<T> criteriaQuery);
+
+	Query createQuery(CriteriaUpdate updateQuery);
+
+	Query createQuery(CriteriaDelete deleteQuery);
 }

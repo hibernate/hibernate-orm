@@ -13,6 +13,9 @@ import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.AbstractHANADialect;
+
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -27,6 +30,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gavin King
  */
+@RequiresDialectFeature(DialectChecks.SupportsNoColumnInsert.class)
 public class CollectionTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

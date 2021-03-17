@@ -6,6 +6,8 @@
  */
 package org.hibernate.hql.internal;
 
+import static org.hibernate.cfg.AvailableSettings.QUERY_TRANSLATOR;
+
 import java.util.Map;
 
 import org.hibernate.boot.registry.StandardServiceInitiator;
@@ -15,8 +17,6 @@ import org.hibernate.hql.spi.QueryTranslatorFactory;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
-
-import static org.hibernate.cfg.AvailableSettings.QUERY_TRANSLATOR;
 
 /**
  * Initiator for the QueryTranslatorFactory service
@@ -42,10 +42,7 @@ public class QueryTranslatorFactoryInitiator implements StandardServiceInitiator
 				ASTQueryTranslatorFactory.INSTANCE
 		);
 
-		log.debugf( "QueryTranslatorFactory : %s", factory );
-		if ( factory instanceof ASTQueryTranslatorFactory ) {
-			log.usingAstQueryTranslatorFactory();
-		}
+		log.debug( "QueryTranslatorFactory: " + factory );
 
 		return factory;
 	}

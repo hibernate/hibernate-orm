@@ -9,7 +9,9 @@ package org.hibernate.dialect;
 import java.sql.Types;
 
 import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.function.StaticPrecisionFspTimestampFunction;
+import org.hibernate.type.StandardBasicTypes;
 
 /**
  * @author Gail Badner
@@ -64,6 +66,11 @@ public class MySQL57Dialect extends MySQL55Dialect {
 
 		// from_unixtime(), timestamp() are functions that return TIMESTAMP that do not support a
 		// fractional seconds precision argument (so there's no need to override them here):
+
+		registerFunction( "weight_string", new StandardSQLFunction( "weight_string", StandardBasicTypes.STRING ) );
+
+		registerFunction( "to_base64", new StandardSQLFunction( "to_base64", StandardBasicTypes.STRING ) );
+		registerFunction( "from_base64", new StandardSQLFunction( "from_base64", StandardBasicTypes.STRING ) );
 	}
 
 	/**

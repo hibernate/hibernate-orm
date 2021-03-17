@@ -10,21 +10,13 @@ import org.hibernate.dialect.Database;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 
 /**
  * The standard DialectResolver implementation
  *
  * @author Steve Ebersole
  */
-public class StandardDialectResolver implements DialectResolver {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( StandardDialectResolver.class );
-
-	/**
-	 * Singleton access
-	 */
-	public static final StandardDialectResolver INSTANCE = new StandardDialectResolver();
+public final class StandardDialectResolver implements DialectResolver {
 
 	@Override
 	public Dialect resolveDialect(DialectResolutionInfo info) {

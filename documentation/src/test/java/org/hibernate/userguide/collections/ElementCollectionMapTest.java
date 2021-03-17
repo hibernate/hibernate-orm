@@ -78,6 +78,10 @@ public class ElementCollectionMapTest extends BaseEntityManagerFunctionalTestCas
 		@Column(name = "since")
 		private Map<Phone, Date> phoneRegister = new HashMap<>();
 
+		//Getters and setters are omitted for brevity
+
+	//end::collections-map-value-type-entity-key-example[]
+
 		public Person() {}
 
 		public Person(Long id) {
@@ -87,6 +91,7 @@ public class ElementCollectionMapTest extends BaseEntityManagerFunctionalTestCas
 		public Map<Phone, Date> getPhoneRegister() {
 			return phoneRegister;
 		}
+	//tag::collections-map-value-type-entity-key-example[]
 	}
 
 	@Embeddable
@@ -96,6 +101,10 @@ public class ElementCollectionMapTest extends BaseEntityManagerFunctionalTestCas
 
 		@Column(name = "`number`")
 		private String number;
+
+		//Getters and setters are omitted for brevity
+
+	//end::collections-map-value-type-entity-key-example[]
 
 		public Phone() {
 		}
@@ -112,6 +121,7 @@ public class ElementCollectionMapTest extends BaseEntityManagerFunctionalTestCas
 		public String getNumber() {
 			return number;
 		}
+	//tag::collections-map-value-type-entity-key-example[]
 	}
 	//end::collections-map-value-type-entity-key-example[]
 }

@@ -59,6 +59,10 @@ public class OneToOneUnidirectionalTest extends BaseEntityManagerFunctionalTestC
 		@JoinColumn(name = "details_id")
 		private PhoneDetails details;
 
+		//Getters and setters are omitted for brevity
+
+	//end::associations-one-to-one-unidirectional-example[]
+
 		public Phone() {
 		}
 
@@ -81,6 +85,7 @@ public class OneToOneUnidirectionalTest extends BaseEntityManagerFunctionalTestC
 		public void setDetails(PhoneDetails details) {
 			this.details = details;
 		}
+	//tag::associations-one-to-one-unidirectional-example[]
 	}
 
 	@Entity(name = "PhoneDetails")
@@ -93,6 +98,10 @@ public class OneToOneUnidirectionalTest extends BaseEntityManagerFunctionalTestC
 		private String provider;
 
 		private String technology;
+
+		//Getters and setters are omitted for brevity
+
+	//end::associations-one-to-one-unidirectional-example[]
 
 		public PhoneDetails() {
 		}
@@ -113,6 +122,7 @@ public class OneToOneUnidirectionalTest extends BaseEntityManagerFunctionalTestC
 		public void setTechnology(String technology) {
 			this.technology = technology;
 		}
+	//tag::associations-one-to-one-unidirectional-example[]
 	}
 	//end::associations-one-to-one-unidirectional-example[]
 }

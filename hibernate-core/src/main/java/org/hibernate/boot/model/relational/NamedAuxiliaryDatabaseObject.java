@@ -8,6 +8,8 @@ package org.hibernate.boot.model.relational;
 
 import java.util.Set;
 
+import org.hibernate.boot.model.naming.Identifier;
+
 /**
  * Mainly this is used to support legacy sequence exporting.
  *
@@ -42,6 +44,10 @@ public class NamedAuxiliaryDatabaseObject
 
 	@Override
 	public String getExportIdentifier() {
-		return name;
+		return new QualifiedNameImpl(
+				Identifier.toIdentifier( getCatalogName() ),
+				Identifier.toIdentifier( getSchemaName() ),
+				Identifier.toIdentifier( name )
+		).render();
 	}
 }

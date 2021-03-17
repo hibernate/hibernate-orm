@@ -57,7 +57,7 @@ import org.hibernate.type.Type;
 import org.hibernate.type.VersionType;
 
 /**
- * @author Emmanuel Bernard <emmanuel@hibernate.org>
+ * @author <a href="mailto:emmanuel@hibernate.org">Emmanuel Bernard</a>
  */
 public class GoofyPersisterClassProvider implements PersisterClassResolver {
 	@Override

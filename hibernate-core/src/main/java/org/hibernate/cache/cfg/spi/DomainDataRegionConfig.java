@@ -25,7 +25,7 @@ public interface DomainDataRegionConfig {
 	String getRegionName();
 
 	/**
-	 * Retrieve the list of all entity to be stored in this region
+	 * Retrieve the list of all entity data to be stored in this region
 	 */
 	List<EntityDataCachingConfig> getEntityCaching();
 

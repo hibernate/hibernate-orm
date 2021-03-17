@@ -12,8 +12,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.Properties;
 
 import org.hibernate.boot.cfgxml.spi.LoadedConfig;
@@ -50,34 +48,27 @@ public class ConfigLoader {
 	}
 
 	public LoadedConfig loadConfigXmlResource(String cfgXmlResourceName) {
-		final PrivilegedAction<JaxbCfgHibernateConfiguration> action = new PrivilegedAction<JaxbCfgHibernateConfiguration>() {
-			@Override
-			public JaxbCfgHibernateConfiguration run() {
-				final InputStream stream = bootstrapServiceRegistry.getService( ClassLoaderService.class ).locateResourceStream( cfgXmlResourceName );
-				if ( stream == null ) {
-					throw new ConfigurationException( "Could not locate cfg.xml resource [" + cfgXmlResourceName + "]" );
-				}
+		final InputStream stream = bootstrapServiceRegistry.getService( ClassLoaderService.class ).locateResourceStream( cfgXmlResourceName );
+		if ( stream == null ) {
+			throw new ConfigurationException( "Could not locate cfg.xml resource [" + cfgXmlResourceName + "]" );
+		}
 
-				try {
-					return jaxbProcessorHolder.getValue().unmarshal(
-							stream,
-							new Origin( SourceType.RESOURCE, cfgXmlResourceName )
-					);
-				}
-				finally {
-					try {
-						stream.close();
-					}
-					catch ( IOException e ) {
-						log.debug( "Unable to close cfg.xml resource stream", e );
-					}
-				}
+		try {
+			final JaxbCfgHibernateConfiguration jaxbCfg = jaxbProcessorHolder.getValue().unmarshal(
+					stream,
+					new Origin( SourceType.RESOURCE, cfgXmlResourceName )
+			);
+
+			return LoadedConfig.consume( jaxbCfg );
+		}
+		finally {
+			try {
+				stream.close();
 			}
-		};
-
-		return LoadedConfig.consume(
-				System.getSecurityManager() != null ? AccessController.doPrivileged( action ) : action.run()
-		);
+			catch (IOException e) {
+				log.debug( "Unable to close cfg.xml resource stream", e );
+			}
+		}
 	}
 
 	public LoadedConfig loadConfigXmlFile(File cfgXmlFile) {

@@ -16,11 +16,22 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformation;
  */
 public class SequenceInformationImpl implements SequenceInformation {
 	private final QualifiedSequenceName sequenceName;
-	private final int incrementSize;
 
-	public SequenceInformationImpl(QualifiedSequenceName sequenceName, int incrementSize) {
+	private final Long startValue;
+	private final Long minValue;
+	private final Long maxValue;
+	private final Long incrementValue;
+
+	public SequenceInformationImpl(
+			QualifiedSequenceName sequenceName,
+			Long startValue,
+			Long minValue,
+			Long maxValue, Long incrementValue) {
 		this.sequenceName = sequenceName;
-		this.incrementSize = incrementSize;
+		this.startValue = startValue;
+		this.minValue = minValue;
+		this.maxValue = maxValue;
+		this.incrementValue = incrementValue;
 	}
 
 	@Override
@@ -29,7 +40,21 @@ public class SequenceInformationImpl implements SequenceInformation {
 	}
 
 	@Override
-	public int getIncrementSize() {
-		return incrementSize;
+	public Long getStartValue() {
+		return startValue;
+	}
+
+	@Override
+	public Long getMinValue() {
+		return minValue;
+	}
+
+	public Long getMaxValue() {
+		return maxValue;
+	}
+
+	@Override
+	public Long getIncrementValue() {
+		return incrementValue;
 	}
 }

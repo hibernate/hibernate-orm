@@ -18,15 +18,15 @@ import org.hibernate.testing.Skip;
 
 import org.jboss.logging.Logger;
 
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.io.ParseException;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.io.ParseException;
 
 /**
  * This testsuite-suite class verifies whether the <code>Geometry</code>s retrieved
  * are equal to the <code>Geometry</code>s stored.
  */
 @Skip(condition = SpatialDialectMatcher.class, message = "No Spatial Dialect")
-public class TestStoreRetrieveUsingJTS extends AbstractTestStoreRetrieve<Geometry, GeomEntity> {
+public class TestStoreRetrieveUsingJTS extends AbstractTestStoreRetrieve<Geometry, JtsGeomEntity> {
 
 	private static final HSMessageLogger LOG = Logger.getMessageLogger(
 			HSMessageLogger.class,
@@ -45,15 +45,15 @@ public class TestStoreRetrieveUsingJTS extends AbstractTestStoreRetrieve<Geometr
 	}
 
 	@Override
-	protected Class<GeomEntity> getGeomEntityClass() {
-		return GeomEntity.class;
+	protected Class<JtsGeomEntity> getGeomEntityClass() {
+		return JtsGeomEntity.class;
 	}
 
 	@Override
-	protected GeomEntity createFrom(
+	protected JtsGeomEntity createFrom(
 			TestDataElement element, Dialect dialect) {
 		try {
-			return GeomEntity.createFrom( element, dialect );
+			return JtsGeomEntity.createFrom( element, dialect );
 		}
 		catch (ParseException e) {
 			throw new RuntimeException( e );

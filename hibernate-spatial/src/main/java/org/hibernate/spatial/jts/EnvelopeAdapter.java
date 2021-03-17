@@ -6,18 +6,18 @@
  */
 package org.hibernate.spatial.jts;
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Envelope;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.LinearRing;
-import com.vividsolutions.jts.geom.Polygon;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Envelope;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.LinearRing;
+import org.locationtech.jts.geom.Polygon;
 
 /**
  * Converts an {@code Envelope} to a {@code Polygon}
  */
 public class EnvelopeAdapter {
 
-	private static GeometryFactory geomFactory = new GeometryFactory();
+	private static volatile GeometryFactory geomFactory = new GeometryFactory();
 
 	private EnvelopeAdapter() {
 	}

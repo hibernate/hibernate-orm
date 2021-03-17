@@ -89,6 +89,6 @@ public class PrimaryKey extends Constraint {
 
 	@Override
 	public String getExportIdentifier() {
-		return StringHelper.qualify( getTable().getName(), "PK-" + getName() );
+		return StringHelper.qualify( getTable().getExportIdentifier(), "PK-" + getName() );
 	}
 }

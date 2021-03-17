@@ -38,9 +38,8 @@ public abstract class AbstractCachedDomainDataAccess implements CachedDomainData
 		return storageAccess;
 	}
 
-	@SuppressWarnings({"unchecked", "WeakerAccess"})
 	protected void clearCache() {
-		log.debugf( "Clearing cache data map [region=`%s`]" );
+		log.debugf( "Clearing cache data map [region=`%s`]", region.getName() );
 		getStorageAccess().evictData();
 	}
 

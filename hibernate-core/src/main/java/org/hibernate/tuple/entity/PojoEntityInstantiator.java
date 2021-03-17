@@ -46,6 +46,7 @@ public class PojoEntityInstantiator extends PojoInstantiator {
 
 		PersistentAttributeInterceptor interceptor = new LazyAttributeLoadingInterceptor(
 				entityMetamodel.getName(),
+				null,
 				entityMetamodel.getBytecodeEnhancementMetadata()
 						.getLazyAttributesMetadata()
 						.getLazyAttributeNames(),

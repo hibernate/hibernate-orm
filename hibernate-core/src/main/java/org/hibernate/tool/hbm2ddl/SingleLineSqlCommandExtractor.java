@@ -15,7 +15,7 @@ import java.util.List;
 import org.hibernate.internal.util.StringHelper;
 
 /**
- * Class responsible for extracting SQL statements from import script. Treads each line as a complete SQL statement.
+ * Class responsible for extracting SQL statements from import script. Treats each line as a complete SQL statement.
  * Comment lines shall start with {@code --}, {@code //} or {@code /*} character sequence.
  *
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
@@ -28,7 +28,7 @@ public class SingleLineSqlCommandExtractor implements ImportSqlCommandExtractor 
 		try {
 			for ( String sql = bufferedReader.readLine(); sql != null; sql = bufferedReader.readLine() ) {
 				String trimmedSql = sql.trim();
-				if ( StringHelper.isEmpty( trimmedSql ) || isComment( trimmedSql ) ) {
+				if ( trimmedSql.isEmpty() || isComment( trimmedSql ) ) {
 					continue;
 				}
 				if ( trimmedSql.endsWith( ";" ) ) {

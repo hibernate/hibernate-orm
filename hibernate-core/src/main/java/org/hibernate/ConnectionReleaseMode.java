@@ -26,6 +26,13 @@ public enum ConnectionReleaseMode{
 	AFTER_STATEMENT,
 
 	/**
+	 * Indicates that JDBC connections should be released before each transaction
+	 * commits/rollbacks (works with both JTA-registered synch and HibernateTransaction API).
+	 * This mode may be used with an application server JTA datasource.
+	 */
+	BEFORE_TRANSACTION_COMPLETION,
+
+	/**
 	 * Indicates that JDBC connections should be released after each transaction
 	 * ends (works with both JTA-registered synch and HibernateTransaction API).
 	 * This mode may not be used with an application server JTA datasource.

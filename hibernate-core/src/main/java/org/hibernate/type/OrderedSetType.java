@@ -12,8 +12,16 @@ import java.util.LinkedHashSet;
  */
 public class OrderedSetType extends SetType {
 
+	/**
+	 * @deprecated Use the other constructor
+	 */
+	@Deprecated
 	public OrderedSetType(TypeFactory.TypeScope typeScope, String role, String propertyRef) {
-		super( typeScope, role, propertyRef );
+		this( role, propertyRef );
+	}
+
+	public OrderedSetType(String role, String propertyRef) {
+		super( role, propertyRef );
 	}
 
 	@Override

@@ -12,13 +12,15 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.MimerSQLIdentityColumnSupport;
+import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorMimerSQLDatabaseImpl;
+import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
  * An Hibernate 3 SQL dialect for Mimer SQL. This dialect requires Mimer SQL 9.2.1 or later
  * because of the mappings to NCLOB, BINARY, and BINARY VARYING.
  *
- * @author Fredrik lund <fredrik.alund@mimer.se>
+ * @author <a href="mailto:fredrik.alund@mimer.se">Fredrik lund</a>
  */
 @SuppressWarnings("deprecation")
 public class MimerSQLDialect extends Dialect {
@@ -27,8 +29,8 @@ public class MimerSQLDialect extends Dialect {
 	private static final int BINARY_MAX_LENGTH = 2000;
 
 	/**
-	 * Even thoug Mimer SQL supports character and binary columns up to 15 000 in lenght,
-	 * this is also the maximum width of the table (exluding LOBs). To avoid breaking the limit all the
+	 * Even though Mimer SQL supports character and binary columns up to 15 000 in length,
+	 * this is also the maximum width of the table (excluding LOBs). To avoid breaking the limit all the
 	 * time we limit the length of the character columns to CHAR_MAX_LENTH, NATIONAL_CHAR_LENGTH for national
 	 * characters, and BINARY_MAX_LENGTH for binary types.
 	 */
@@ -166,7 +168,12 @@ public class MimerSQLDialect extends Dialect {
 
 	@Override
 	public String getQuerySequencesString() {
-		return "select sequence_schema || '.' || sequence_name from information_schema.ext_sequences";
+		return "select * from information_schema.ext_sequences";
+	}
+
+	@Override
+	public SequenceInformationExtractor getSequenceInformationExtractor() {
+		return SequenceInformationExtractorMimerSQLDatabaseImpl.INSTANCE;
 	}
 
 	@Override

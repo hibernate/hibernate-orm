@@ -15,7 +15,10 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.loader.internal.AliasConstantsHelper;
 import org.hibernate.sql.Template;
+
+import static org.hibernate.internal.util.StringHelper.safeInterning;
 
 /**
  * A column of a relational database table
@@ -90,23 +93,27 @@ public class Column implements Selectable, Serializable, Cloneable {
 	 * returns quoted name as it would be in the mapping file.
 	 */
 	public String getQuotedName() {
-		return quoted ?
+		return safeInterning(
+				quoted ?
 				"`" + name + "`" :
-				name;
+				name
+		);
 	}
 
 	public String getQuotedName(Dialect d) {
-		return quoted ?
+		return safeInterning(
+				quoted ?
 				d.openQuote() + name + d.closeQuote() :
-				name;
+				name
+		);
 	}
 
 	@Override
 	public String getAlias(Dialect dialect) {
 		final int lastLetter = StringHelper.lastIndexOfLetter( name );
-		final String suffix = Integer.toString( uniqueInteger ) + '_';
+		final String suffix = AliasConstantsHelper.get( uniqueInteger );
 
-		String alias = name;
+		String alias = name.toLowerCase( Locale.ROOT );
 		if ( lastLetter == -1 ) {
 			alias = "column";
 		}
@@ -137,7 +144,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 	 */
 	@Override
 	public String getAlias(Dialect dialect, Table table) {
-		return getAlias( dialect ) + table.getUniqueInteger() + '_';
+		return safeInterning( getAlias( dialect ) + AliasConstantsHelper.get( table.getUniqueInteger() ) );
 	}
 
 	public boolean isNullable() {
@@ -210,10 +217,10 @@ public class Column implements Selectable, Serializable, Cloneable {
 	}
 
 	/**
-	 * Returns the underlying columns sqltypecode.
-	 * If null, it is because the sqltype code is unknown.
+	 * Returns the underlying columns SqlTypeCode.
+	 * If null, it is because the SqlTypeCode is unknown.
 	 * <p/>
-	 * Use #getSqlTypeCode(Mapping) to retrieve the sqltypecode used
+	 * Use #getSqlTypeCode(Mapping) to retrieve the SqlTypeCode used
 	 * for the columns associated Value/Type.
 	 *
 	 * @return sqlTypeCode if it is set, otherwise null.
@@ -268,10 +275,12 @@ public class Column implements Selectable, Serializable, Cloneable {
 
 	@Override
 	public String getTemplate(Dialect dialect, SQLFunctionRegistry functionRegistry) {
-		return hasCustomRead()
+		return safeInterning(
+				hasCustomRead()
 				// see note in renderTransformerReadFragment wrt access to SessionFactory
 				? Template.renderTransformerReadFragment( customRead, getQuotedName( dialect ) )
-				: Template.TEMPLATE + '.' + getQuotedName( dialect );
+				: Template.TEMPLATE + '.' + getQuotedName( dialect )
+		);
 	}
 
 	public boolean hasCustomRead() {
@@ -338,7 +347,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 	}
 
 	public void setCustomWrite(String customWrite) {
-		this.customWrite = customWrite;
+		this.customWrite = safeInterning( customWrite );
 	}
 
 	public String getCustomRead() {
@@ -346,7 +355,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 	}
 
 	public void setCustomRead(String customRead) {
-		this.customRead = StringHelper.nullIfEmpty( customRead );
+		this.customRead = safeInterning( StringHelper.nullIfEmpty( customRead ) );
 	}
 
 	public String getCanonicalName() {

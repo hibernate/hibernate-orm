@@ -21,28 +21,25 @@ import org.hibernate.pretty.MessageHelper;
  */
 public class EntityVerifyVersionProcess implements BeforeTransactionCompletionProcess {
 	private final Object object;
-	private final EntityEntry entry;
 
 	/**
 	 * Constructs an EntityVerifyVersionProcess
 	 *
 	 * @param object The entity instance
-	 * @param entry The entity's referenced EntityEntry
 	 */
-	public EntityVerifyVersionProcess(Object object, EntityEntry entry) {
+	public EntityVerifyVersionProcess(Object object) {
 		this.object = object;
-		this.entry = entry;
 	}
 
 	@Override
 	public void doBeforeTransactionCompletion(SessionImplementor session) {
-		final EntityPersister persister = entry.getPersister();
-
-		if ( !entry.isExistsInDatabase() ) {
-			// HHH-9419: We cannot check for a version of an entry we ourselves deleted
+		final EntityEntry entry = session.getPersistenceContext().getEntry( object );
+		// Don't check version for an entity that is not in the PersistenceContext;
+		if ( entry == null ) {
 			return;
 		}
 
+		final EntityPersister persister = entry.getPersister();
 		final Object latestVersion = persister.getCurrentVersion( entry.getId(), session );
 		if ( !entry.getVersion().equals( latestVersion ) ) {
 			throw new OptimisticLockException(

@@ -6,7 +6,7 @@
  */
 package org.hibernate.cache.ehcache.internal;
 
-import net.sf.ehcache.Cache;
+import net.sf.ehcache.Ehcache;
 import net.sf.ehcache.Element;
 import net.sf.ehcache.constructs.nonstop.NonStopCacheException;
 import net.sf.ehcache.hibernate.nonstop.HibernateNonstopCacheExceptionHandler;
@@ -25,14 +25,14 @@ import org.jboss.logging.Logger;
 public class StorageAccessImpl implements DomainDataStorageAccess  {
 	private static final Logger LOG = Logger.getLogger( StorageAccessImpl.class );
 
-	private final Cache cache;
+	private final Ehcache cache;
 
 	@SuppressWarnings("WeakerAccess")
-	public StorageAccessImpl(Cache cache) {
+	public StorageAccessImpl(Ehcache cache) {
 		this.cache = cache;
 	}
 
-	public Cache getCache() {
+	public Ehcache getCache() {
 		return cache;
 	}
 

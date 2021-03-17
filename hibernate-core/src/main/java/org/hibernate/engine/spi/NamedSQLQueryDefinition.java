@@ -15,7 +15,7 @@ import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 
 /**
  * Definition of a named native SQL query, defined in the mapping metadata.
- * 
+ *
  * @author Max Andersen
  * @author Steve Ebersole
  */
@@ -27,7 +27,7 @@ public class NamedSQLQueryDefinition extends NamedQueryDefinition {
 	private String resultSetRef;
 
 	/**
-	 * This form was initially used to construct a NamedSQLQueryDefinition from the binder code when a the
+	 * This form was initially used to construct a NamedSQLQueryDefinition from the binder code when the
 	 * result-set mapping information is not explicitly  provided in the query definition
 	 * (i.e., no resultset-mapping used).
 	 *
@@ -81,7 +81,8 @@ public class NamedSQLQueryDefinition extends NamedQueryDefinition {
 				null, 		// resultSetRef
 				querySpaces,
 				callable,
-				queryReturns
+				queryReturns,
+				null		// passDistinctThrough
 		);
 	}
 
@@ -140,7 +141,8 @@ public class NamedSQLQueryDefinition extends NamedQueryDefinition {
 				resultSetRef,
 				querySpaces,
 				callable,
-				null		// queryReturns
+				null,		// queryReturns
+				null		// passDistinctThrough
 		);
 	}
 
@@ -161,7 +163,8 @@ public class NamedSQLQueryDefinition extends NamedQueryDefinition {
 			String resultSetRef,
 			List<String> querySpaces,
 			boolean callable,
-			NativeSQLQueryReturn[] queryReturns) {
+			NativeSQLQueryReturn[] queryReturns,
+			Boolean passDistinctThrough) {
 		super(
 				name,
 				query.trim(), /* trim done to workaround stupid oracle bug that cant handle whitespaces before a { in a sp */
@@ -176,7 +179,8 @@ public class NamedSQLQueryDefinition extends NamedQueryDefinition {
 				comment,
 				parameterTypes,
 				firstResult,
-				maxResults
+				maxResults,
+				passDistinctThrough
 		);
 		this.resultSetRef = resultSetRef;
 		this.querySpaces = querySpaces;
@@ -219,7 +223,8 @@ public class NamedSQLQueryDefinition extends NamedQueryDefinition {
 				getResultSetRef(),
 				getQuerySpaces(),
 				isCallable(),
-				getQueryReturns()
+				getQueryReturns(),
+				getPassDistinctThrough()
 		);
 	}
 
@@ -236,8 +241,8 @@ public class NamedSQLQueryDefinition extends NamedQueryDefinition {
 				allQueryReturns[i] = this.queryReturns[i];
 			}
 
-			for ( int j = 0; j < queryReturnsToAdd.length; j++ ) {
-				allQueryReturns[i] = queryReturnsToAdd[j];
+			for ( NativeSQLQueryReturn queryReturnsToAdd1 : queryReturnsToAdd ) {
+				allQueryReturns[i] = queryReturnsToAdd1;
 				i++;
 			}
 

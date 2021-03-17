@@ -14,12 +14,14 @@ import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.StaleObjectStateException;
+import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.sql.Update;
+import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.jboss.logging.Logger;
 
@@ -74,7 +76,8 @@ public class PessimisticWriteUpdateLockingStrategy implements LockingStrategy {
 		final SessionFactoryImplementor factory = session.getFactory();
 		try {
 			try {
-				final PreparedStatement st = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );
+				final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
+				final PreparedStatement st = jdbcCoordinator.getStatementPreparer().prepareStatement( sql );
 				try {
 					lockable.getVersionType().nullSafeSet( st, version, 1, session );
 					int offset = 2;
@@ -86,19 +89,20 @@ public class PessimisticWriteUpdateLockingStrategy implements LockingStrategy {
 						lockable.getVersionType().nullSafeSet( st, version, offset, session );
 					}
 
-					final int affected = session.getJdbcCoordinator().getResultSetReturn().executeUpdate( st );
+					final int affected = jdbcCoordinator.getResultSetReturn().executeUpdate( st );
 					// todo:  should this instead check for exactly one row modified?
 					if ( affected < 0 ) {
-						if (factory.getStatistics().isStatisticsEnabled()) {
-							factory.getStatistics().optimisticFailure( lockable.getEntityName() );
+						final StatisticsImplementor statistics = factory.getStatistics();
+						if ( statistics.isStatisticsEnabled() ) {
+							statistics.optimisticFailure( lockable.getEntityName() );
 						}
 						throw new StaleObjectStateException( lockable.getEntityName(), id );
 					}
 
 				}
 				finally {
-					session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
-					session.getJdbcCoordinator().afterStatementExecution();
+					jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( st );
+					jdbcCoordinator.afterStatementExecution();
 				}
 			}
 			catch ( SQLException e ) {

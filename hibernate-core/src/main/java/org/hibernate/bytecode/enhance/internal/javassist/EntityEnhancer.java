@@ -283,7 +283,7 @@ public class EntityEnhancer extends PersistentAttributesEnhancer {
 			if ( Modifier.isStatic( ctField.getModifiers() ) || ctField.getName().startsWith( "$$_hibernate_" ) ) {
 				continue;
 			}
-			if ( enhancementContext.isPersistentField( ctField ) && !enhancementContext.isMappedCollection( ctField ) ) {
+			if ( enhancementContext.isPersistentField( ctField ) && enhancementContext.isMappedCollection( ctField ) ) {
 				if ( PersistentAttributesHelper.isAssignable( ctField, Collection.class.getName() ) ||
 						PersistentAttributesHelper.isAssignable( ctField, Map.class.getName() ) ) {
 					collectionList.add( ctField );
@@ -314,7 +314,7 @@ public class EntityEnhancer extends PersistentAttributesEnhancer {
 
 			for ( CtField ctField : managedCtSuperclass.getDeclaredFields() ) {
 				if ( !Modifier.isStatic( ctField.getModifiers() ) ) {
-					if ( enhancementContext.isPersistentField( ctField ) && !enhancementContext.isMappedCollection( ctField ) ) {
+					if ( enhancementContext.isPersistentField( ctField ) && enhancementContext.isMappedCollection( ctField ) ) {
 						if ( PersistentAttributesHelper.isAssignable( ctField, Collection.class.getName() ) ||
 								PersistentAttributesHelper.isAssignable( ctField, Map.class.getName() ) ) {
 							collectionList.add( ctField );

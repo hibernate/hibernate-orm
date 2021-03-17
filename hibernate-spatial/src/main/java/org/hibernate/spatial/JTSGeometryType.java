@@ -9,7 +9,7 @@ package org.hibernate.spatial;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
-import com.vividsolutions.jts.geom.Geometry;
+import org.locationtech.jts.geom.Geometry;
 
 /**
  * A {@code Type} that maps between the database geometry type and JTS {@code Geometry}.
@@ -30,14 +30,14 @@ public class JTSGeometryType extends AbstractSingleColumnStandardBasicType<Geome
 	@Override
 	public String[] getRegistrationKeys() {
 		return new String[] {
-				com.vividsolutions.jts.geom.Geometry.class.getCanonicalName(),
-				com.vividsolutions.jts.geom.Point.class.getCanonicalName(),
-				com.vividsolutions.jts.geom.Polygon.class.getCanonicalName(),
-				com.vividsolutions.jts.geom.MultiPolygon.class.getCanonicalName(),
-				com.vividsolutions.jts.geom.LineString.class.getCanonicalName(),
-				com.vividsolutions.jts.geom.MultiLineString.class.getCanonicalName(),
-				com.vividsolutions.jts.geom.MultiPoint.class.getCanonicalName(),
-				com.vividsolutions.jts.geom.GeometryCollection.class.getCanonicalName(),
+				org.locationtech.jts.geom.Geometry.class.getCanonicalName(),
+				org.locationtech.jts.geom.Point.class.getCanonicalName(),
+				org.locationtech.jts.geom.Polygon.class.getCanonicalName(),
+				org.locationtech.jts.geom.MultiPolygon.class.getCanonicalName(),
+				org.locationtech.jts.geom.LineString.class.getCanonicalName(),
+				org.locationtech.jts.geom.MultiLineString.class.getCanonicalName(),
+				org.locationtech.jts.geom.MultiPoint.class.getCanonicalName(),
+				org.locationtech.jts.geom.GeometryCollection.class.getCanonicalName(),
 				"jts_geometry"
 		};
 	}

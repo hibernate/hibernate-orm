@@ -19,16 +19,19 @@ import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Root;
 
 import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Assert;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.junit.Assert.assertEquals;
 
 /**
  *
@@ -63,6 +66,7 @@ public class SearchedCaseExpressionTest extends BaseCoreFunctionalTestCase {
 
     @Test
     @SkipForDialect(value = DB2Dialect.class, comment = "We would need casts in the case clauses. See HHH-12822.")
+	@SkipForDialect(value = DerbyDialect.class, comment = "Derby requires either casted parameters or literals in the result arms of CASE expressions")
     public void testEqualClause() {
 		doInHibernate( this::sessionFactory, session -> {
 			CriteriaBuilder cb = session.getCriteriaBuilder();
@@ -83,14 +87,51 @@ public class SearchedCaseExpressionTest extends BaseCoreFunctionalTestCase {
 
 			Assert.assertNotNull(resultList);
 		} );
-    }
+	}
 
-    @Override
-    protected Class[] getAnnotatedClasses() {
-        return new Class[]{Event.class, EventType.class};
-    }
+	@Test
+	@TestForIssue(jiraKey = "HHH-13167")
+	@SkipForDialect(value = DB2Dialect.class, comment = "We would need casts in the case clauses. See HHH-12822.")
+	@SkipForDialect(value = DerbyDialect.class, comment = "Derby requires either casted parameters or literals in the result arms of CASE expressions")
+	public void testMissingElseClause() {
+		doInHibernate( this::sessionFactory, session -> {
+			Event event = new Event();
+			event.id = 1L;
+			event.type = EventType.TYPE1;
 
-    @Entity(name = "Event")
+			session.persist( event );
+		} );
+
+		doInHibernate( this::sessionFactory, session -> {
+			CriteriaBuilder cb = session.getCriteriaBuilder();
+
+			CriteriaQuery<Event> criteria = cb.createQuery( Event.class );
+
+			Root<Event> root = criteria.from( Event.class );
+			Path<EventType> type = root.get( "type" );
+
+			Expression<String> caseWhen = cb.<String> selectCase()
+					.when( cb.equal( type, EventType.TYPE1 ), "Matched" );
+
+			criteria.select( root );
+			criteria.where( cb.equal( caseWhen, "Matched" ) );
+
+			Event event = session.createQuery( criteria ).getSingleResult();
+			assertEquals( 1L, (long) event.id );
+		} );
+	}
+
+	@Override
+	protected boolean isCleanupTestDataRequired() {
+		return true;
+	}
+
+	@Override
+	protected Class[] getAnnotatedClasses() {
+		return new Class[]{ Event.class, EventType.class };
+	}
+
+	@Entity(name = "Event")
 	public static class Event {
 
 		@Id
@@ -113,7 +154,7 @@ public class SearchedCaseExpressionTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-    public enum EventType {
+	public enum EventType {
 
 		TYPE1, TYPE2, TYPE3
 

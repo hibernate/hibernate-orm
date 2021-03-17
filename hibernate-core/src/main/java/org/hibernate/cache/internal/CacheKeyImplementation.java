@@ -37,7 +37,7 @@ final class CacheKeyImplementation implements Serializable {
 	 * @param id The identifier associated with the cached data
 	 * @param type The Hibernate type mapping
 	 * @param entityOrRoleName The entity or collection-role name.
-	 * @param tenantId The tenant identifier associated this data.
+	 * @param tenantId The tenant identifier associated with this data.
 	 * @param factory The session factory for which we are caching
 	 */
 	CacheKeyImplementation(

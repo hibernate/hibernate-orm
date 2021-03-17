@@ -17,8 +17,16 @@ import org.hibernate.persister.collection.CollectionPersister;
 
 public class IdentifierBagType extends CollectionType {
 
+	/**
+	 * @deprecated Use the other constructor
+	 */
+	@Deprecated
 	public IdentifierBagType(TypeFactory.TypeScope typeScope, String role, String propertyRef) {
-		super( typeScope, role, propertyRef );
+		this( role, propertyRef );
+	}
+
+	public IdentifierBagType(String role, String propertyRef) {
+		super( role, propertyRef );
 	}
 
 	@Override

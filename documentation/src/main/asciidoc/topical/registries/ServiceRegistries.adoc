@@ -12,7 +12,7 @@ applications can leverage and customize Services and Registries.
 
 == What is a Service?
 
-Services provide various types of functionality, in a pluggable manner.  Specifically they are interfaces defining
+Services provide various types of functionality, in a pluggable manner. Specifically, they are interfaces defining
 certain functionality and then implementations of those service contract interfaces. The interface is known as the
 service role; the implementation class is known as the service implementation.  The pluggability comes from the fact
 that the service implementation adheres to contract defined by the interface of the service role and that consumers

@@ -50,20 +50,20 @@ public abstract class AbstractCollectionEvent extends AbstractEvent {
 	}
 
 	protected static CollectionPersister getLoadedCollectionPersister( PersistentCollection collection, EventSource source ) {
-		CollectionEntry ce = source.getPersistenceContext().getCollectionEntry( collection );
+		CollectionEntry ce = source.getPersistenceContextInternal().getCollectionEntry( collection );
 		return ( ce == null ? null : ce.getLoadedPersister() );		
 	}
 
 	protected static Object getLoadedOwnerOrNull( PersistentCollection collection, EventSource source ) {
-		return source.getPersistenceContext().getLoadedCollectionOwnerOrNull( collection );
+		return source.getPersistenceContextInternal().getLoadedCollectionOwnerOrNull( collection );
 	}
 
 	protected static Serializable getLoadedOwnerIdOrNull( PersistentCollection collection, EventSource source ) {
-		return source.getPersistenceContext().getLoadedCollectionOwnerIdOrNull( collection );
+		return source.getPersistenceContextInternal().getLoadedCollectionOwnerIdOrNull( collection );
 	}
 
 	protected static Serializable getOwnerIdOrNull( Object owner, EventSource source ) {
-		EntityEntry ownerEntry = source.getPersistenceContext().getEntry( owner );
+		EntityEntry ownerEntry = source.getPersistenceContextInternal().getEntry( owner );
 		return ( ownerEntry == null ? null : ownerEntry.getId() );
 	}
 
@@ -74,7 +74,7 @@ public abstract class AbstractCollectionEvent extends AbstractEvent {
 		String entityName =
 				( collectionPersister == null ? null : collectionPersister.getOwnerEntityPersister().getEntityName() );
 		if ( affectedOwner != null ) {
-			EntityEntry ee = source.getPersistenceContext().getEntry( affectedOwner );
+			EntityEntry ee = source.getPersistenceContextInternal().getEntry( affectedOwner );
 			if ( ee != null && ee.getEntityName() != null) {
 				entityName = ee.getEntityName();
 			}

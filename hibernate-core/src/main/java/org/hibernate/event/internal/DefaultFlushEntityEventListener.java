@@ -17,10 +17,15 @@ import org.hibernate.StaleObjectStateException;
 import org.hibernate.action.internal.DelayedPostInsertIdentifier;
 import org.hibernate.action.internal.EntityUpdateAction;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
+import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.engine.internal.Nullability;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.ManagedEntity;
+import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.PersistentAttributeInterceptable;
+import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
@@ -35,6 +40,8 @@ import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
+import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.Type;
 
 /**
@@ -82,14 +89,24 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
 	private void checkNaturalId(
 			EntityPersister persister,
+			Object entity,
 			EntityEntry entry,
 			Object[] current,
 			Object[] loaded,
 			SessionImplementor session) {
+		if ( entity instanceof PersistentAttributeInterceptable ) {
+			final PersistentAttributeInterceptor interceptor = ( (PersistentAttributeInterceptable) entity ).$$_hibernate_getInterceptor();
+			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
+				// EARLY EXIT!!!
+				// nothing to check - the entity is an un-initialized enhancement-as-proxy reference
+				return;
+			}
+		}
+
 		if ( persister.hasNaturalIdentifier() && entry.getStatus() != Status.READ_ONLY ) {
 			if ( !persister.getEntityMetamodel().hasImmutableNaturalId() ) {
-				// SHORT-CUT: if the natural id is mutable (!immutable), no need to do the below checks
 				// EARLY EXIT!!!
+				// the natural id is mutable (!immutable), no need to do the below checks
 				return;
 			}
 
@@ -97,9 +114,10 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			final Type[] propertyTypes = persister.getPropertyTypes();
 			final boolean[] propertyUpdateability = persister.getPropertyUpdateability();
 
+			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 			final Object[] snapshot = loaded == null
-					? session.getPersistenceContext().getNaturalIdSnapshot( entry.getId(), persister )
-					: session.getPersistenceContext().getNaturalIdHelper().extractNaturalIdValues( loaded, persister );
+					? persistenceContext.getNaturalIdSnapshot( entry.getId(), persister )
+					: persistenceContext.getNaturalIdHelper().extractNaturalIdValues( loaded, persister );
 
 			for ( int i = 0; i < naturalIdentifierPropertiesIndexes.length; i++ ) {
 				final int naturalIdentifierPropertyIndex = naturalIdentifierPropertiesIndexes[i];
@@ -112,7 +130,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 				if ( !propertyType.isEqual( current[naturalIdentifierPropertyIndex], snapshot[i] ) ) {
 					throw new HibernateException(
 							String.format(
-									"An immutable natural identifier of entity %s was altered from %s to %s",
+									"An immutable natural identifier of entity %s was altered from `%s` to `%s`",
 									persister.getEntityName(),
 									propertyTypes[naturalIdentifierPropertyIndex].toLoggableString(
 											snapshot[i],
@@ -188,7 +206,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			// grab its current state
 			values = persister.getPropertyValues( entity );
 
-			checkNaturalId( persister, entry, values, loadedState, session );
+			checkNaturalId( persister, entity, entry, values, loadedState, session );
 		}
 		return values;
 	}
@@ -509,18 +527,13 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
 		if ( dirtyProperties == null ) {
 			if ( entity instanceof SelfDirtinessTracker ) {
-				if ( ( (SelfDirtinessTracker) entity ).$$_hibernate_hasDirtyAttributes() ) {
-					int[] dirty = persister.resolveAttributeIndexes( ( (SelfDirtinessTracker) entity ).$$_hibernate_getDirtyAttributes() );
-
-					// HHH-12051 - filter non-updatable attributes
-					// TODO: add Updateability to EnhancementContext and skip dirty tracking of those attributes
-					int count = 0;
-					for ( int i : dirty ) {
-						if ( persister.getPropertyUpdateability()[i] ) {
-							dirty[count++] = i;
-						}
-					}
-					dirtyProperties = count == 0 ? ArrayHelper.EMPTY_INT_ARRAY : count == dirty.length ? dirty : Arrays.copyOf( dirty, count );
+				if ( ( (SelfDirtinessTracker) entity ).$$_hibernate_hasDirtyAttributes() || persister.hasMutableProperties() ) {
+					dirtyProperties = persister.resolveDirtyAttributeIndexes(
+							values,
+							loadedState,
+							( (SelfDirtinessTracker) entity ).$$_hibernate_getDirtyAttributes(),
+							session
+					);
 				}
 				else {
 					dirtyProperties = ArrayHelper.EMPTY_INT_ARRAY;
@@ -557,7 +570,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		boolean dirtyCheckPossible = true;
 
 		if ( dirtyProperties == null ) {
-			// Interceptor returned null, so do the dirtycheck ourself, if possible
+			// Interceptor returned null, so do the dirty check ourself, if possible
 			try {
 				session.getEventListenerManager().dirtyCalculationStart();
 
@@ -693,13 +706,15 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	}
 
 	private Object[] getDatabaseSnapshot(SessionImplementor session, EntityPersister persister, Serializable id) {
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		if ( persister.isSelectBeforeUpdateRequired() ) {
-			Object[] snapshot = session.getPersistenceContext()
+			Object[] snapshot = persistenceContext
 					.getDatabaseSnapshot( id, persister );
 			if ( snapshot == null ) {
 				//do we even really need this? the update will fail anyway....
-				if ( session.getFactory().getStatistics().isStatisticsEnabled() ) {
-					session.getFactory().getStatistics()
+				final StatisticsImplementor statistics = session.getFactory().getStatistics();
+				if ( statistics.isStatisticsEnabled() ) {
+					statistics
 							.optimisticFailure( persister.getEntityName() );
 				}
 				throw new StaleObjectStateException( persister.getEntityName(), id );
@@ -708,6 +723,6 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		}
 		// TODO: optimize away this lookup for entities w/o unsaved-value="undefined"
 		final EntityKey entityKey = session.generateEntityKey( id, persister );
-		return session.getPersistenceContext().getCachedDatabaseSnapshot( entityKey );
+		return persistenceContext.getCachedDatabaseSnapshot( entityKey );
 	}
 }

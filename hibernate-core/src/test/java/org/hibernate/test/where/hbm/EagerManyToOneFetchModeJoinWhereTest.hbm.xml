@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.where.hbm" default-access="property">
+    <class name="EagerManyToOneFetchModeJoinWhereTest$Product" table="PRODUCT">
+        <id name="id" column="ID">
+            <generator class="increment" />
+        </id>
+
+        <many-to-one name="category" lazy="false" fetch="join" cascade="all"
+                     not-found="ignore" column="categoryId"/>
+
+        <component name="containedCategory" class="EagerManyToOneFetchModeJoinWhereTest$ContainedCategory">
+            <many-to-one name="category" lazy="false" fetch="join" cascade="all"
+                         not-found="ignore" column="containedCategoryId"/>
+        </component>
+
+        <set name="containedCategories" lazy="false">
+            <key column="PRODUCT_ID"/>
+            <composite-element class="EagerManyToOneFetchModeJoinWhereTest$ContainedCategory">
+                <many-to-one name="category" lazy="false" fetch="join" cascade="all"
+                             not-found="ignore" column="containedCategoryId"/>
+            </composite-element>
+        </set>
+
+    </class>
+
+    <class name="EagerManyToOneFetchModeJoinWhereTest$Category" table="CATEGORY" where="inactive = 0">
+        <id name="id" column="ID">
+            <generator class="increment" />
+        </id>
+
+        <property name="name"/>
+
+        <property name="inactive"/>
+
+    </class>
+
+</hibernate-mapping>

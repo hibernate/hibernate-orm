@@ -40,9 +40,9 @@ public class BatchFetchQueue {
 
 	/**
 	 * A map of {@link SubselectFetch subselect-fetch descriptors} keyed by the
-	 * {@link EntityKey) against which the descriptor is registered.
+	 * {@link EntityKey} against which the descriptor is registered.
 	 */
-	private final Map<EntityKey, SubselectFetch> subselectsByEntityKey = new HashMap<>( 8 );
+	private Map<EntityKey, SubselectFetch> subselectsByEntityKey;
 
 	/**
 	 * Used to hold information about the entities that are currently eligible for batch-fetching.  Ultimately
@@ -51,13 +51,13 @@ public class BatchFetchQueue {
 	 * A Map structure is used to segment the keys by entity type since loading can only be done for a particular entity
 	 * type at a time.
 	 */
-	private final Map <String,LinkedHashSet<EntityKey>> batchLoadableEntityKeys = new HashMap<>( 8 );
-	
+	private Map <String,LinkedHashSet<EntityKey>> batchLoadableEntityKeys;
+
 	/**
 	 * Used to hold information about the collections that are currently eligible for batch-fetching.  Ultimately
 	 * used by {@link #getCollectionBatch} to build collection load batches.
 	 */
-	private final Map<String, LinkedHashMap<CollectionEntry, PersistentCollection>> batchLoadableCollections = new HashMap<>( 8 );
+	private Map<String, LinkedHashMap<CollectionEntry, PersistentCollection>> batchLoadableCollections;
 
 	/**
 	 * Constructs a queue for the given context.
@@ -74,9 +74,9 @@ public class BatchFetchQueue {
 	 * Called after flushing or clearing the session.
 	 */
 	public void clear() {
-		batchLoadableEntityKeys.clear();
-		batchLoadableCollections.clear();
-		subselectsByEntityKey.clear();
+		batchLoadableEntityKeys = null;
+		batchLoadableCollections = null;
+		subselectsByEntityKey = null;
 	}
 
 
@@ -90,16 +90,22 @@ public class BatchFetchQueue {
 	 * this entity key.
 	 */
 	public SubselectFetch getSubselect(EntityKey key) {
+		if ( subselectsByEntityKey == null ) {
+			return null;
+		}
 		return subselectsByEntityKey.get( key );
 	}
 
 	/**
-	 * Adds a subselect fetch decriptor for the given entity key.
+	 * Adds a subselect fetch descriptor for the given entity key.
 	 *
 	 * @param key The entity for which to register the subselect fetch.
 	 * @param subquery The fetch descriptor.
 	 */
 	public void addSubselect(EntityKey key, SubselectFetch subquery) {
+		if ( subselectsByEntityKey == null ) {
+			subselectsByEntityKey = new HashMap<>( 12 );
+		}
 		subselectsByEntityKey.put( key, subquery );
 	}
 
@@ -110,7 +116,9 @@ public class BatchFetchQueue {
 	 * need to load its collections)
 	 */
 	public void removeSubselect(EntityKey key) {
-		subselectsByEntityKey.remove( key );
+		if ( subselectsByEntityKey != null ) {
+			subselectsByEntityKey.remove( key );
+		}
 	}
 
 	// entity batch support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -127,15 +135,18 @@ public class BatchFetchQueue {
 	 */
 	public void addBatchLoadableEntityKey(EntityKey key) {
 		if ( key.isBatchLoadable() ) {
-			LinkedHashSet<EntityKey> set =  batchLoadableEntityKeys.get( key.getEntityName());
-			if (set == null) {
-				set = new LinkedHashSet<>( 8 );
-				batchLoadableEntityKeys.put( key.getEntityName(), set);
+			if ( batchLoadableEntityKeys == null ) {
+				batchLoadableEntityKeys = new HashMap<>( 12 );
 			}
-			set.add(key);
+			final LinkedHashSet<EntityKey> keysForEntity = batchLoadableEntityKeys.computeIfAbsent(
+					key.getEntityName(),
+					k -> new LinkedHashSet<>( 8 )
+			);
+
+			keysForEntity.add( key );
 		}
 	}
-	
+
 
 	/**
 	 * After evicting or deleting or loading an entity, we don't
@@ -143,9 +154,9 @@ public class BatchFetchQueue {
 	 * if necessary
 	 */
 	public void removeBatchLoadableEntityKey(EntityKey key) {
-		if ( key.isBatchLoadable() ) {
-			LinkedHashSet<EntityKey> set =  batchLoadableEntityKeys.get( key.getEntityName());
-			if (set != null) {
+		if ( batchLoadableEntityKeys != null && key.isBatchLoadable() ) {
+			LinkedHashSet<EntityKey> set =  batchLoadableEntityKeys.get( key.getEntityName() );
+			if ( set != null ) {
 				set.remove(key);
 			}
 		}
@@ -155,8 +166,8 @@ public class BatchFetchQueue {
 	 * Intended for test usage.  Really has no use-case in Hibernate proper.
 	 */
 	public boolean containsEntityKey(EntityKey key) {
-		if ( key.isBatchLoadable() ) {
-			LinkedHashSet<EntityKey> set =  batchLoadableEntityKeys.get( key.getEntityName());
+		if ( batchLoadableEntityKeys != null && key.isBatchLoadable() ) {
+			LinkedHashSet<EntityKey> set =  batchLoadableEntityKeys.get( key.getEntityName() );
 			if ( set != null ) {
 				return set.contains( key );
 			}
@@ -179,8 +190,14 @@ public class BatchFetchQueue {
 			final Serializable id,
 			final int batchSize,
 			final EntityMode entityMode) {
-		Serializable[] ids = new Serializable[batchSize];
+
+		final Serializable[] ids = new Serializable[batchSize];
 		ids[0] = id; //first element of array is reserved for the actual instance we are loading!
+
+		if ( batchLoadableEntityKeys == null ) {
+			return ids;
+		}
+
 		int i = 1;
 		int end = -1;
 		boolean checkForEnd = false;
@@ -227,7 +244,7 @@ public class BatchFetchQueue {
 		}
 		return false;
 	}
-	
+
 
 	// collection batch support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -238,20 +255,27 @@ public class BatchFetchQueue {
 	public void addBatchLoadableCollection(PersistentCollection collection, CollectionEntry ce) {
 		final CollectionPersister persister = ce.getLoadedPersister();
 
-		LinkedHashMap<CollectionEntry, PersistentCollection> map =  batchLoadableCollections.get( persister.getRole() );
-		if ( map == null ) {
-			map = new LinkedHashMap<>( 16 );
-			batchLoadableCollections.put( persister.getRole(), map );
+		if ( batchLoadableCollections == null ) {
+			batchLoadableCollections = new HashMap<>( 12 );
 		}
+
+		final LinkedHashMap<CollectionEntry, PersistentCollection> map =  batchLoadableCollections.computeIfAbsent(
+				persister.getRole(),
+				k -> new LinkedHashMap<>( 16 )
+		);
+
 		map.put( ce, collection );
 	}
-	
+
 	/**
 	 * After a collection was initialized or evicted, we don't
 	 * need to batch fetch it anymore, remove it from the queue
 	 * if necessary
 	 */
 	public void removeBatchLoadableCollection(CollectionEntry ce) {
+		if ( batchLoadableCollections == null ) {
+			return;
+		}
 		LinkedHashMap<CollectionEntry, PersistentCollection> map =  batchLoadableCollections.get( ce.getLoadedPersister().getRole() );
 		if ( map != null ) {
 			map.remove( ce );
@@ -271,8 +295,12 @@ public class BatchFetchQueue {
 			final Serializable id,
 			final int batchSize) {
 
-		Serializable[] keys = new Serializable[batchSize];
+		final Serializable[] keys = new Serializable[batchSize];
 		keys[0] = id;
+
+		if ( batchLoadableCollections == null ) {
+			return keys;
+		}
 
 		int i = 1;
 		int end = -1;
@@ -283,7 +311,7 @@ public class BatchFetchQueue {
 			for ( Entry<CollectionEntry, PersistentCollection> me : map.entrySet() ) {
 				final CollectionEntry ce = me.getKey();
 				final PersistentCollection collection = me.getValue();
-				
+
 				if ( ce.getLoadedKey() == null ) {
 					// the loadedKey of the collectionEntry might be null as it might have been reset to null
 					// (see for example Collections.processDereferencedCollection()

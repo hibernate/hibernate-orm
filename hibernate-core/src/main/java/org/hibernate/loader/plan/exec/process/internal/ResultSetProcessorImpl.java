@@ -14,6 +14,7 @@ import java.util.List;
 
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.dialect.pagination.LimitHelper;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -62,10 +63,6 @@ public class ResultSetProcessorImpl implements ResultSetProcessor {
 		this.hadSubselectFetches = hadSubselectFetches;
 	}
 
-	public RowReader getRowReader() {
-		return rowReader;
-	}
-
 	@Override
 	public ScrollableResultSetProcessor toOnDemandForm() {
 		// todo : implement
@@ -83,41 +80,79 @@ public class ResultSetProcessorImpl implements ResultSetProcessor {
 			ResultTransformer forcedResultTransformer,
 			List<AfterLoadAction> afterLoadActionList) throws SQLException {
 
-		handlePotentiallyEmptyCollectionRootReturns( loadPlan, queryParameters.getCollectionKeys(), resultSet, session );
+		handlePotentiallyEmptyCollectionRootReturns( queryParameters.getCollectionKeys(), resultSet, session );
 
-		final int maxRows;
-		final RowSelection selection = queryParameters.getRowSelection();
-		if ( LimitHelper.hasMaxRows( selection ) ) {
-			maxRows = selection.getMaxRows();
-			LOG.tracef( "Limiting ResultSet processing to just %s rows", maxRows );
-		}
-		else {
-			maxRows = Integer.MAX_VALUE;
-		}
+		final ResultSetProcessingContextImpl context = createResultSetProcessingContext(
+				resultSet,
+				session,
+				queryParameters,
+				namedParameterContext,
+				returnProxies,
+				readOnly
+		);
 
-		// Handles the "FETCH ALL PROPERTIES" directive in HQL
-		final boolean forceFetchLazyAttributes = false;
+		final List loadResults = extractRows( resultSet, queryParameters, context );
 
-		final ResultSetProcessingContextImpl context = new ResultSetProcessingContextImpl(
+		rowReader.finishUp( context, afterLoadActionList );
+		context.wrapUp();
+
+		session.getPersistenceContextInternal().initializeNonLazyCollections();
+
+		return loadResults;
+	}
+
+	protected ResultSetProcessingContextImpl createResultSetProcessingContext(
+			ResultSet resultSet,
+			final SharedSessionContractImplementor session,
+			QueryParameters queryParameters,
+			NamedParameterContext namedParameterContext,
+			boolean returnProxies,
+			boolean readOnly) {
+		return new ResultSetProcessingContextImpl(
 				resultSet,
 				session,
 				loadPlan,
 				aliasResolutionContext,
 				readOnly,
 				shouldUseOptionalEntityInstance,
-				forceFetchLazyAttributes,
 				returnProxies,
 				queryParameters,
 				namedParameterContext,
 				hadSubselectFetches
 		);
+	}
 
-		final List loadResults = new ArrayList();
+	protected List<Object> extractRows(
+			ResultSet resultSet,
+			QueryParameters queryParameters,
+			final ResultSetProcessingContextImpl context) throws SQLException {
 
-		LOG.trace( "Processing result set" );
+		final boolean traceEnabled = LOG.isTraceEnabled();
+		final int maxRows;
+		final List<Object> loadResults;
+
+		final RowSelection selection = queryParameters.getRowSelection();
+		if ( LimitHelper.hasMaxRows( selection ) ) {
+			maxRows = selection.getMaxRows();
+			if ( traceEnabled ) {
+				LOG.tracef( "Limiting ResultSet processing to just %s rows", maxRows );
+			}
+			int sizeHint = maxRows < 50 ? maxRows : 50;
+			loadResults = new ArrayList( sizeHint );
+		}
+		else {
+			loadResults = new ArrayList();
+			maxRows = Integer.MAX_VALUE;
+		}
+
+		if ( traceEnabled ) {
+			LOG.trace( "Processing result set" );
+		}
 		int count;
 		for ( count = 0; count < maxRows && resultSet.next(); count++ ) {
-			LOG.debugf( "Starting ResultSet row #%s", count );
+			if ( traceEnabled ) {
+				LOG.tracef( "Starting ResultSet row #%s", count );
+			}
 
 			Object logicalRow = rowReader.readRow( resultSet, context );
 
@@ -128,19 +163,14 @@ public class ResultSetProcessorImpl implements ResultSetProcessor {
 			context.finishUpRow();
 		}
 
-		LOG.tracev( "Done processing result set ({0} rows)", count );
-
-		rowReader.finishUp( context, afterLoadActionList );
-		context.wrapUp();
-
-		session.getPersistenceContext().initializeNonLazyCollections();
+		if ( traceEnabled ) {
+			LOG.tracev( "Done processing result set ({0} rows)", count );
+		}
 
 		return loadResults;
 	}
 
-
-	private void handlePotentiallyEmptyCollectionRootReturns(
-			LoadPlan loadPlan,
+	protected void handlePotentiallyEmptyCollectionRootReturns(
 			Serializable[] collectionKeys,
 			ResultSet resultSet,
 			SharedSessionContractImplementor session) {
@@ -155,15 +185,17 @@ public class ResultSetProcessorImpl implements ResultSetProcessor {
 		// that the collection is empty and has no rows in the result set
 		//
 		// todo : move this inside CollectionReturn ?
-		CollectionPersister persister = ( (CollectionReturn) loadPlan.getReturns().get( 0 ) ).getCollectionPersister();
+		final CollectionPersister persister = ( (CollectionReturn) loadPlan.getReturns().get( 0 ) ).getCollectionPersister();
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+		final boolean debugEnabled = LOG.isDebugEnabled();
 		for ( Serializable key : collectionKeys ) {
-			if ( LOG.isDebugEnabled() ) {
+			if ( debugEnabled ) {
 				LOG.debugf(
-						"Preparing collection intializer : %s",
+						"Preparing collection initializer : %s",
 							MessageHelper.collectionInfoString( persister, key, session.getFactory() )
 				);
 			}
-			session.getPersistenceContext()
+			persistenceContext
 					.getLoadContexts()
 					.getCollectionLoadContext( resultSet )
 					.getLoadingCollection( persister, key );

@@ -6,15 +6,32 @@
  */
 package org.hibernate.bytecode.enhance.internal.bytebuddy;
 
+import static net.bytebuddy.matcher.ElementMatchers.isGetter;
+
+import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import org.hibernate.MappingException;
+import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl.AnnotatedFieldDescription;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
-import org.hibernate.bytecode.enhance.spi.UnloadedField;
 
 import net.bytebuddy.description.field.FieldDescription;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.dynamic.scaffold.MethodGraph;
+import net.bytebuddy.matcher.ElementMatcher;
 
 class ByteBuddyEnhancementContext {
 
+	private static final ElementMatcher.Junction<MethodDescription> IS_GETTER = isGetter();
+
 	private final EnhancementContext enhancementContext;
+
+	private final ConcurrentHashMap<TypeDescription, Map<String, MethodDescription>> getterByTypeMap = new ConcurrentHashMap<>();
 
 	ByteBuddyEnhancementContext(EnhancementContext enhancementContext) {
 		this.enhancementContext = enhancementContext;
@@ -36,10 +53,6 @@ class ByteBuddyEnhancementContext {
 		return enhancementContext.isMappedSuperclassClass( new UnloadedTypeDescription( classDescriptor ) );
 	}
 
-	public boolean doBiDirectionalAssociationManagement(FieldDescription field) {
-		return enhancementContext.doBiDirectionalAssociationManagement( new UnloadedFieldDescription( field ) );
-	}
-
 	public boolean doDirtyCheckingInline(TypeDescription classDescriptor) {
 		return enhancementContext.doDirtyCheckingInline( new UnloadedTypeDescription( classDescriptor ) );
 	}
@@ -52,28 +65,54 @@ class ByteBuddyEnhancementContext {
 		return enhancementContext.hasLazyLoadableAttributes( new UnloadedTypeDescription( classDescriptor ) );
 	}
 
-	public boolean isPersistentField(FieldDescription ctField) {
-		return enhancementContext.isPersistentField( new UnloadedFieldDescription( ctField ) );
+	public boolean isPersistentField(AnnotatedFieldDescription field) {
+		return enhancementContext.isPersistentField( field );
 	}
 
-	public FieldDescription[] order(FieldDescription[] persistentFields) {
-		UnloadedField[] unloadedFields = new UnloadedField[persistentFields.length];
-		for ( int i = 0; i < unloadedFields.length; i++ ) {
-			unloadedFields[i] = new UnloadedFieldDescription( persistentFields[i] );
+	public AnnotatedFieldDescription[] order(AnnotatedFieldDescription[] persistentFields) {
+		return (AnnotatedFieldDescription[]) enhancementContext.order( persistentFields );
+	}
+
+	public boolean isLazyLoadable(AnnotatedFieldDescription field) {
+		return enhancementContext.isLazyLoadable( field );
+	}
+
+	public boolean isMappedCollection(AnnotatedFieldDescription field) {
+		return enhancementContext.isMappedCollection( field );
+	}
+
+	public boolean doBiDirectionalAssociationManagement(AnnotatedFieldDescription field) {
+		return enhancementContext.doBiDirectionalAssociationManagement( field );
+	}
+
+	Optional<MethodDescription> resolveGetter(FieldDescription fieldDescription) {
+		Map<String, MethodDescription> getters = getterByTypeMap
+				.computeIfAbsent( fieldDescription.getDeclaringType().asErasure(), declaringType -> {
+					return MethodGraph.Compiler.DEFAULT.compile( declaringType )
+							.listNodes()
+							.asMethodList()
+							.filter( IS_GETTER )
+							.stream()
+							.collect( Collectors.toMap( MethodDescription::getActualName, Function.identity() ) );
+				} );
+
+		String capitalizedFieldName = Character.toUpperCase( fieldDescription.getName().charAt( 0 ) )
+				+ fieldDescription.getName().substring( 1 );
+
+		MethodDescription getCandidate = getters.get( "get" + capitalizedFieldName );
+		MethodDescription isCandidate = getters.get( "is" + capitalizedFieldName );
+
+		if ( getCandidate != null ) {
+			if ( isCandidate != null ) {
+				// if there are two candidates, the existing code considered there was no getter.
+				// not sure it's such a good idea but throwing an exception apparently throws exception
+				// in cases where Hibernate does not usually throw a mapping error.
+				return Optional.empty();
+			}
+
+			return Optional.of( getCandidate );
 		}
-		UnloadedField[] ordered = enhancementContext.order( unloadedFields );
-		FieldDescription[] orderedFields = new FieldDescription[persistentFields.length];
-		for ( int i = 0; i < orderedFields.length; i++ ) {
-			orderedFields[i] = ( (UnloadedFieldDescription) ordered[i] ).fieldDescription;
-		}
-		return orderedFields;
-	}
 
-	public boolean isLazyLoadable(FieldDescription field) {
-		return enhancementContext.isLazyLoadable( new UnloadedFieldDescription( field ) );
-	}
-
-	public boolean isMappedCollection(FieldDescription field) {
-		return enhancementContext.isMappedCollection( new UnloadedFieldDescription( field ) );
+		return Optional.ofNullable( isCandidate );
 	}
 }

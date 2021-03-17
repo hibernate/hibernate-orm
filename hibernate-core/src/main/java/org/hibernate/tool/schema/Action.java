@@ -101,8 +101,8 @@ public enum Action {
 			return (Action) value;
 		}
 
-		final String name = value.toString();
-		if ( StringHelper.isEmpty( name ) || NONE.externalJpaName.equals( name ) ) {
+		final String name = value.toString().trim();
+		if ( name.isEmpty() || NONE.externalJpaName.equals( name ) ) {
 			// default is NONE
 			return NONE;
 		}
@@ -150,8 +150,8 @@ public enum Action {
 			return hbm2ddlSetting( (Action) value );
 		}
 
-		final String name = value.toString();
-		if ( StringHelper.isEmpty( name ) || NONE.externalJpaName.equals( name ) ) {
+		final String name = value.toString().trim();
+		if ( name.isEmpty() || NONE.externalJpaName.equals( name ) ) {
 			// default is NONE
 			return NONE;
 		}
@@ -178,7 +178,7 @@ public enum Action {
 			}
 		}
 
-		throw new IllegalArgumentException( "Unrecognized legacy `hibernate.hbm2ddl.auto` value : " + value );
+		throw new IllegalArgumentException( "Unrecognized legacy `hibernate.hbm2ddl.auto` value : `" + value + "`");
 	}
 
 	private static Action hbm2ddlSetting(Action action) {

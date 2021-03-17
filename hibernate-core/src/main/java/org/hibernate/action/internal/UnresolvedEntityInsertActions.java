@@ -181,7 +181,7 @@ public class UnresolvedEntityInsertActions {
 	 */
 	@SuppressWarnings({ "unchecked" })
 	public Set<AbstractEntityInsertAction> resolveDependentActions(Object managedEntity, SessionImplementor session) {
-		final EntityEntry entityEntry = session.getPersistenceContext().getEntry( managedEntity );
+		final EntityEntry entityEntry = session.getPersistenceContextInternal().getEntry( managedEntity );
 		if ( entityEntry.getStatus() != Status.MANAGED && entityEntry.getStatus() != Status.READ_ONLY ) {
 			throw new IllegalArgumentException( "EntityEntry did not have status MANAGED or READ_ONLY: " + entityEntry );
 		}
@@ -281,7 +281,7 @@ public class UnresolvedEntityInsertActions {
 	}
 
 	/**
-	 * Deerialize a {@link UnresolvedEntityInsertActions} object.
+	 * Deserialize an {@link UnresolvedEntityInsertActions} object.
 	 *
 	 * @param ois - the input stream.
 	 * @param session - the session.

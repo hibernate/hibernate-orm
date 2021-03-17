@@ -56,6 +56,8 @@ public class InMemoryValueGenerationTest extends BaseEntityManagerFunctionalTest
 		@FunctionCreationTimestamp
 		private Date timestamp;
 
+		//Constructors, getters, and setters are omitted for brevity
+	//end::mapping-in-memory-generated-value-example[]
 		public Event() {}
 
 		public Long getId() {
@@ -65,7 +67,11 @@ public class InMemoryValueGenerationTest extends BaseEntityManagerFunctionalTest
 		public Date getTimestamp() {
 			return timestamp;
 		}
+	//tag::mapping-in-memory-generated-value-example[]
 	}
+	//end::mapping-in-memory-generated-value-example[]
+
+	//tag::mapping-in-memory-generated-value-example[]
 
 	@ValueGenerationType(generatedBy = FunctionCreationValueGeneration.class)
 	@Retention(RetentionPolicy.RUNTIME)

@@ -24,6 +24,7 @@ import org.dom4j.Element;
  * @author Michal Skowronek (mskowr at o2 dot pl)
  */
 public final class MetadataTools {
+
 	private MetadataTools() {
 	}
 
@@ -93,6 +94,26 @@ public final class MetadataTools {
 				false,
 				false
 		);
+	}
+
+	public static Element addModifiedFlagPropertyWithColumn(
+			Element parent,
+			String propertyName,
+			String suffix,
+			String modifiedFlagName,
+			String columnName) {
+		final Element property = addProperty(
+				parent,
+				(modifiedFlagName != null) ? modifiedFlagName : getModifiedFlagPropertyName( propertyName, suffix ),
+				"boolean",
+				true,
+				false,
+				false
+		);
+
+		addColumn( property, columnName, null, null, null, null, null, null );
+
+		return property;
 	}
 
 	public static String getModifiedFlagPropertyName(String propertyName, String suffix) {
@@ -265,7 +286,7 @@ public final class MetadataTools {
 		return joinMapping;
 	}
 
-	public static void addColumns(Element anyMapping, Iterator selectables) {
+	public static void addColumns(Element anyMapping, Iterator<?> selectables) {
 		while ( selectables.hasNext() ) {
 			final Selectable selectable = (Selectable) selectables.next();
 			if ( selectable.isFormula() ) {
@@ -276,12 +297,20 @@ public final class MetadataTools {
 	}
 
 	/**
-	 * Adds <code>column</code> element with the following attributes (unless empty): <code>name</code>,
-	 * <code>length</code>, <code>scale</code>, <code>precision</code>, <code>sql-type</code>, <code>read</code>
-	 * and <code>write</code>.
+	 * Adds {@code column} element with the following attributes (unless empty):
+	 * <ul>
+	 *     <li>name</li>>
+	 *     <li>length</li>
+	 *     <li>scale</li>
+	 *     <li>precision</li>
+	 *     <li>sql-type</li>
+	 *     <li>read</li>
+	 *     <li>write</li>
 	 *
-	 * @param anyMapping Parent element.
-	 * @param column Column descriptor.
+	 * </ul>
+	 *
+	 * @param anyMapping parent element
+	 * @param column column descriptor
 	 */
 	public static void addColumn(Element anyMapping, Column column) {
 		addColumn(

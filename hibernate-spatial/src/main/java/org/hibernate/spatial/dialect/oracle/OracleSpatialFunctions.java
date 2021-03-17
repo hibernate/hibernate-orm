@@ -12,6 +12,7 @@ import org.hibernate.QueryException;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.spatial.SpatialAnalysis;
+import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.SpatialRelation;
 import org.hibernate.spatial.dialect.SpatialFunctionsRegistry;
 import org.hibernate.spatial.dialect.oracle.criterion.OracleSpatialAggregate;
@@ -138,6 +139,12 @@ class OracleSpatialFunctions extends SpatialFunctionsRegistry {
 				new SpatialAggregationFunction( "extent", OracleSpatialAggregate.EXTENT, sdoSupport )
 		);
 
+		// spatial filter function
+		put(
+				SpatialFunction.filter.name(),
+				new StandardSQLFunction( "SDO_FILTER" )
+		);
+
 		//other common functions
 
 		put( "transform", new StandardSQLFunction( "SDO_CS.TRANSFORM" ) );
@@ -168,7 +175,7 @@ class OracleSpatialFunctions extends SpatialFunctionsRegistry {
 
 	static String getOGCSpatialAnalysisSQL(List args, int spatialAnalysisFunction) {
 		boolean[] geomArgs;
-		final StringBuffer ogcFunction = new StringBuffer( "MDSYS." );
+		final StringBuilder ogcFunction = new StringBuilder( "MDSYS." );
 		boolean isGeomReturn = true;
 		switch ( spatialAnalysisFunction ) {
 			case SpatialAnalysis.BUFFER:
@@ -233,7 +240,7 @@ class OracleSpatialFunctions extends SpatialFunctionsRegistry {
 		return ogcFunction.toString();
 	}
 
-	private static StringBuffer wrapInSTGeometry(String geomColumn, StringBuffer toAdd) {
+	private static StringBuilder wrapInSTGeometry(String geomColumn, StringBuilder toAdd) {
 		return toAdd.append( "MDSYS.ST_GEOMETRY(" ).append( geomColumn )
 				.append( ")" );
 	}

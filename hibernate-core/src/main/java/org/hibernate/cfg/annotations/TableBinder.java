@@ -137,21 +137,12 @@ public class TableBinder {
 	// only bind association table currently
 	public Table bind() {
 		final Identifier ownerEntityTableNameIdentifier = toIdentifier( ownerEntityTable );
-		final Identifier associatedEntityTableNameIdentifier = toIdentifier( associatedEntityTable );
 
 		//logicalName only accurate for assoc table...
 		final String unquotedOwnerTable = StringHelper.unquote( ownerEntityTable );
 		final String unquotedAssocTable = StringHelper.unquote( associatedEntityTable );
 
-		//@ElementCollection use ownerEntity_property instead of the cleaner ownerTableName_property
-		// ownerEntity can be null when the table name is explicitly set; <== gb: doesn't seem to be true...
-		final String ownerObjectName = isJPA2ElementCollection && ownerEntity != null
-				? StringHelper.unqualify( ownerEntity )
-				: unquotedOwnerTable;
-		final ObjectNameSource nameSource = buildNameContext(
-				ownerObjectName,
-				unquotedAssocTable
-		);
+		final ObjectNameSource nameSource = buildNameContext();
 
 		final boolean ownerEntityTableQuoted = StringHelper.isQuoted( ownerEntityTable );
 		final boolean associatedEntityTableQuoted = StringHelper.isQuoted( associatedEntityTable );
@@ -318,9 +309,7 @@ public class TableBinder {
 				.toIdentifier( tableName );
 	}
 
-	private ObjectNameSource buildNameContext(
-			String unquotedOwnerTable,
-			String unquotedAssocTable) {
+	private ObjectNameSource buildNameContext() {
 		if ( name != null ) {
 			return new AssociationTableNameSource( name, null );
 		}
@@ -677,6 +666,7 @@ public class TableBinder {
 						boolean match = false;
 						//for each PK column, find the associated FK column.
 						col = (org.hibernate.mapping.Column) idColItr.next();
+						final String colName = col.getQuotedName( buildingContext.getMetadataCollector().getDatabase().getJdbcEnvironment().getDialect() );
 						for (Ejb3JoinColumn joinCol : columns) {
 							String referencedColumn = joinCol.getReferencedColumn();
 							referencedColumn = buildingContext.getMetadataCollector().getPhysicalColumnName(
@@ -684,7 +674,7 @@ public class TableBinder {
 									referencedColumn
 							);
 							//In JPA 2 referencedColumnName is case insensitive
-							if ( referencedColumn.equalsIgnoreCase( col.getQuotedName( buildingContext.getMetadataCollector().getDatabase().getJdbcEnvironment().getDialect() ) ) ) {
+							if ( referencedColumn.equalsIgnoreCase( colName ) ) {
 								//proper join column
 								if ( joinCol.isNameDeferred() ) {
 									joinCol.linkValueUsingDefaultColumnNaming(

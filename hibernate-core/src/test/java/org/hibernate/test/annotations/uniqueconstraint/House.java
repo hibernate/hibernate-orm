@@ -14,7 +14,7 @@ import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 
 /**
- * @author Manuel Bernhardt <bernhardt.manuel@gmail.com>
+ * @author <a href="mailto:bernhardt.manuel@gmail.com">Manuel Bernhardt</a>
  */
 @Entity
 @Table(uniqueConstraints = {@UniqueConstraint(name = "uniqueWithInherited", columnNames = {"room_id", "cost"} )})

@@ -19,6 +19,7 @@ public class WealthyPerson extends Person {
 	protected Set<Address> vacationHomes = new HashSet<Address>();
 
 	@ElementCollection
+	@CollectionTable(name = "WelPers_LegacyVacHomes")
 	protected Set<Address> legacyVacationHomes = new HashSet<Address>();
 
 	@ElementCollection

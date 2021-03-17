@@ -16,27 +16,25 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public class Version {
-	private static String version;
+public final class Version {
+
+	private static final String VERSION = initVersion();
+
+	private static String initVersion() {
+		final String version = Version.class.getPackage().getImplementationVersion();
+		return version != null ? version : "[WORKING]";
+	}
 
 	private Version() {
 	}
 
 	/**
-	 * Access to the Hibernate version.
-	 *
-	 * IMPL NOTE : Real value is injected by the build.
+	 * Access to the Hibernate ORM version.
 	 *
 	 * @return The Hibernate version
 	 */
 	public static String getVersionString() {
-		if ( version == null ) {
-			version = Version.class.getPackage().getImplementationVersion();
-			if ( version == null ) {
-				version = "[WORKING]";
-			}
-		}
-		return version;
+		return VERSION;
 	}
 
 	/**
@@ -54,6 +52,6 @@ public class Version {
 	 */
 	@AllowSysOut
 	public static void main(String[] args) {
-		System.out.println( "Hibernate Core {" + getVersionString() + "}" );
+		System.out.println( "Hibernate ORM core version " + getVersionString() );
 	}
 }

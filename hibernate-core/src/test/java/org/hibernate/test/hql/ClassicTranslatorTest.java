@@ -14,6 +14,9 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.hql.internal.classic.ClassicQueryTranslatorFactory;
 
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
+
 /**
  * Some simple test queries using the classic translator explicitly
  * to ensure that code is not broken in changes for the new translator.
@@ -22,6 +25,7 @@ import org.hibernate.hql.internal.classic.ClassicQueryTranslatorFactory;
  *
  * @author Steve Ebersole
  */
+@RequiresDialectFeature(DialectChecks.SupportsNoColumnInsert.class)
 public class ClassicTranslatorTest extends QueryTranslatorTestCase {
 	@Override
 	public void configure(Configuration cfg) {

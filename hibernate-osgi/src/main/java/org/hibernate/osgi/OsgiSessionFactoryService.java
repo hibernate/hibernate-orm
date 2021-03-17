@@ -14,6 +14,8 @@ import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.registry.classloading.internal.AggregatedClassLoader;
+import org.hibernate.boot.registry.classloading.internal.TcclLookupPrecedence;
 import org.hibernate.boot.registry.selector.StrategyRegistrationProvider;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.integrator.spi.Integrator;
@@ -26,6 +28,7 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.wiring.BundleWiring;
 
 import java.util.Collection;
+import java.util.LinkedHashSet;
 
 /**
  * Hibernate 4.2 and 4.3 still heavily rely on TCCL for ClassLoading.  Although
@@ -78,7 +81,13 @@ public class OsgiSessionFactoryService implements ServiceFactory {
 		// ClassLoaderService now.
 
 		final ClassLoader originalTccl = Thread.currentThread().getContextClassLoader();
-		Thread.currentThread().setContextClassLoader( osgiClassLoader );
+		LinkedHashSet<ClassLoader> newTcclDelegates = new LinkedHashSet<>();
+		newTcclDelegates.add( osgiClassLoader );
+		newTcclDelegates.add( originalTccl );
+		final ClassLoader newTccl = new AggregatedClassLoader(
+				newTcclDelegates, TcclLookupPrecedence.NEVER
+		);
+		Thread.currentThread().setContextClassLoader( newTccl );
 		try {
 			return buildSessionFactory( requestingBundle, osgiClassLoader );
 		}

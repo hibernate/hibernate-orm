@@ -9,7 +9,10 @@ package org.hibernate.query.criteria.internal.compile;
 import javax.persistence.criteria.ParameterExpression;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.query.criteria.LiteralHandlingMode;
+import org.hibernate.query.criteria.internal.expression.function.FunctionExpression;
+import org.hibernate.sql.ast.Clause;
 
 /**
  * Used to provide a context and services to the rendering.
@@ -67,4 +70,8 @@ public interface RenderingContext {
 	default LiteralHandlingMode getCriteriaLiteralHandlingMode() {
 		return LiteralHandlingMode.AUTO;
 	}
+
+	Stack<Clause> getClauseStack();
+
+	Stack<FunctionExpression> getFunctionStack();
 }

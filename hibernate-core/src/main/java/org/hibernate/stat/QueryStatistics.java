@@ -75,4 +75,28 @@ public interface QueryStatistics extends Serializable {
 	 * sum total across all of those regions
 	 */
 	long getCachePutCount();
+
+	/**
+	 * The number of query plans successfully fetched from the cache.
+	 */
+	default long getPlanCacheHitCount() {
+		//For backward compatibility
+		return 0;
+	}
+
+	/**
+	 * The number of query plans *not* fetched from the cache.
+	 */
+	default long getPlanCacheMissCount(){
+		//For backward compatibility
+		return 0;
+	}
+
+	/**
+	 * The overall time spent to compile the plan for this particular query.
+	 */
+	default long getPlanCompilationTotalMicroseconds() {
+		//For backward compatibility
+		return 0;
+	}
 }

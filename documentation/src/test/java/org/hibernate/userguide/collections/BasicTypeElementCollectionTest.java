@@ -90,9 +90,14 @@ public class BasicTypeElementCollectionTest extends BaseEntityManagerFunctionalT
 		@ElementCollection
 		private List<String> phones = new ArrayList<>();
 
+		//Getters and setters are omitted for brevity
+
+	//end::collections-collection-proxy-entity-example[]
+
 		public List<String> getPhones() {
 			return phones;
 		}
+	//tag::collections-collection-proxy-entity-example[]
 	}
 	//end::collections-collection-proxy-entity-example[]
 }

@@ -83,7 +83,7 @@ public interface BasicQueryContract<T extends BasicQueryContract> {
 	T setCacheMode(CacheMode cacheMode);
 
 	/**
-	 * Are the results of this query eligible for second level query caching?  This is different that second level
+	 * Are the results of this query eligible for second level query caching?  This is different than second level
 	 * caching of any returned entities and collections.
 	 *
 	 * NOTE: the query being "eligible" for caching does not necessarily mean its results will be cached.  Second level
@@ -156,7 +156,7 @@ public interface BasicQueryContract<T extends BasicQueryContract> {
 
 	/**
 	 * Obtain the JDBC fetch size hint in effect for this query.  This value is eventually passed along to the JDBC
-	 * query via {@link java.sql.Statement#setFetchSize(int)}.  As defined b y JDBC, this value is a hint to the
+	 * query via {@link java.sql.Statement#setFetchSize(int)}.  As defined by JDBC, this value is a hint to the
 	 * driver to indicate how many rows to fetch from the database when more rows are needed.
 	 *
 	 * NOTE : JDBC expressly defines this value as a hint.  It may or may not have any effect on the actual

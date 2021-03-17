@@ -53,7 +53,8 @@ public final class ClassWriter {
 			String body = generateBody( entity, context ).toString();
 
 			FileObject fo = context.getProcessingEnvironment().getFiler().createSourceFile(
-					getFullyQualifiedClassName( entity, metaModelPackage )
+					getFullyQualifiedClassName( entity, metaModelPackage ),
+					entity.getTypeElement()
 			);
 			OutputStream os = fo.openOutputStream();
 			PrintWriter pw = new PrintWriter( os );
@@ -198,7 +199,7 @@ public final class ClassWriter {
 	private static String writeGeneratedAnnotation(MetaEntity entity, Context context) {
 		StringBuilder generatedAnnotation = new StringBuilder();
 		generatedAnnotation.append( "@" )
-				.append( entity.importType( "javax.annotation.Generated" ) )
+				.append( entity.importType( context.getGeneratedAnnotation().getQualifiedName().toString() ) )
 				.append( "(value = \"" )
 				.append( JPAMetaModelEntityProcessor.class.getName() );
 		if ( context.addGeneratedDate() ) {

@@ -6,8 +6,7 @@
  */
 package org.hibernate.cache.jcache.internal;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collections;
 
 import org.hibernate.boot.registry.selector.SimpleStrategyRegistrationImpl;
 import org.hibernate.boot.registry.selector.StrategyRegistration;
@@ -22,24 +21,21 @@ import org.hibernate.cache.spi.RegionFactory;
  *
  * @author Steve Ebersole
  */
-public class StrategyRegistrationProviderImpl implements StrategyRegistrationProvider {
+public final class StrategyRegistrationProviderImpl implements StrategyRegistrationProvider {
+
 	@Override
 	@SuppressWarnings("unchecked")
 	public Iterable<StrategyRegistration> getStrategyRegistrations() {
-		final List<StrategyRegistration> strategyRegistrations = new ArrayList<StrategyRegistration>();
-
-		strategyRegistrations.add(
-				new SimpleStrategyRegistrationImpl(
-						RegionFactory.class,
-						JCacheRegionFactory.class,
-						ConfigSettings.SIMPLE_FACTORY_NAME,
-						JCacheRegionFactory.class.getName(),
-						JCacheRegionFactory.class.getSimpleName(),
-						// legacy impl class name
-						"org.hibernate.cache.jcache.JCacheRegionFactory"
-				)
+		final SimpleStrategyRegistrationImpl simpleStrategyRegistration = new SimpleStrategyRegistrationImpl(
+				RegionFactory.class,
+				JCacheRegionFactory.class,
+				ConfigSettings.SIMPLE_FACTORY_NAME,
+				JCacheRegionFactory.class.getName(),
+				JCacheRegionFactory.class.getSimpleName(),
+				// legacy impl class name
+				"org.hibernate.cache.jcache.JCacheRegionFactory"
 		);
 
-		return strategyRegistrations;
+		return Collections.singleton( simpleStrategyRegistration );
 	}
 }

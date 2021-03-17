@@ -14,7 +14,7 @@ package org.hibernate.hql.internal.ast.tree;
 public class ImpliedFromElement extends FromElement {
 	/**
 	 * True if this from element was implied from a path in the FROM clause, but not
-	 * explicitly declard in the from clause.
+	 * explicitly declared in the from clause.
 	 */
 	private boolean impliedInFromClause;
 
@@ -22,6 +22,14 @@ public class ImpliedFromElement extends FromElement {
 	 * True if this implied from element should be included in the projection list.
 	 */
 	private boolean inProjectionList;
+
+	/**
+	 * Here to add debug breakpoints
+	 */
+	@SuppressWarnings("unused")
+	public ImpliedFromElement() {
+		super();
+	}
 
 	public boolean isImplied() {
 		return true;

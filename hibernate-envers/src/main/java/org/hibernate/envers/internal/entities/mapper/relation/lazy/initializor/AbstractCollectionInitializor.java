@@ -8,6 +8,7 @@ package org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor;
 
 import java.util.List;
 
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.EntityInstantiator;
 import org.hibernate.envers.internal.entities.mapper.relation.query.RelationQueryGenerator;
@@ -46,7 +47,8 @@ public abstract class AbstractCollectionInitializor<T> implements Initializor<T>
 
 	@Override
 	public T initialize() {
-		final List<?> collectionContent = queryGenerator.getQuery( versionsReader, primaryKey, revision, removed ).list();
+		final SharedSessionContractImplementor session = versionsReader.getSessionImplementor();
+		final List<?> collectionContent = queryGenerator.getQuery( session, primaryKey, revision, removed ).list();
 
 		final T collection = initializeCollection( collectionContent.size() );
 

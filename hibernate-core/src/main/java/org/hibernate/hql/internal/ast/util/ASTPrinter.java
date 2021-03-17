@@ -10,6 +10,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.hibernate.hql.internal.ast.tree.DisplayableNode;
@@ -27,7 +29,9 @@ import antlr.collections.AST;
  */
 public class ASTPrinter {
 
-	private final Map<Integer,String> tokenTypeNameCache;
+	// This is a map: array index is the ANTLR Token ID, array value is the name of that token.
+	// There might be gaps in the array (null values) but it's generally quite compact.
+	private final String[] tokenTypeNameCache;
 
 	/**
 	 * Constructs a printer. Package protected: use the constants from {TokenPrinters}
@@ -88,10 +92,9 @@ public class ASTPrinter {
 	 *         or just the integer as a string if none exists.
 	 */
 	public String getTokenTypeName(int type) {
-		final Integer typeInteger = type;
-		String value = tokenTypeNameCache.get( typeInteger );
+		String value = tokenTypeNameCache[type];
 		if ( value == null ) {
-			value = typeInteger.toString();
+			value = Integer.toString( type );
 		}
 		return value;
 	}
@@ -102,15 +105,7 @@ public class ASTPrinter {
 			return;
 		}
 
-		for ( AST parent : parents ) {
-			if ( parent.getNextSibling() == null ) {
-
-				pw.print( "   " );
-			}
-			else {
-				pw.print( " | " );
-			}
-		}
+		indentLine( parents, pw );
 
 		if ( ast.getNextSibling() == null ) {
 			pw.print( " \\-" );
@@ -120,6 +115,7 @@ public class ASTPrinter {
 		}
 
 		showNode( pw, ast );
+		showNodeProperties( parents, pw, ast );
 
 		ArrayList<AST> newParents = new ArrayList<AST>( parents );
 		newParents.add( ast );
@@ -127,6 +123,17 @@ public class ASTPrinter {
 			showAst( newParents, pw, child );
 		}
 		newParents.clear();
+	}
+
+	private void indentLine(List<AST> parents, PrintWriter pw) {
+		for ( AST parent : parents ) {
+			if ( parent.getNextSibling() == null ) {
+				pw.print( "   " );
+			}
+			else {
+				pw.print( " | " );
+			}
+		}
 	}
 
 	private void showNode(PrintWriter pw, AST ast) {
@@ -155,6 +162,24 @@ public class ASTPrinter {
 			buf.append( " " ).append( displayableNode.getDisplayText() );
 		}
 		return buf.toString();
+	}
+
+	private void showNodeProperties(ArrayList<AST> parents, PrintWriter pw, AST ast) {
+		Map<String, Object> nodeProperties = createNodeProperties( ast );
+		ArrayList<AST> parentsAndNode = new ArrayList<>( parents );
+		parentsAndNode.add( ast );
+		for ( String propertyName : nodeProperties.keySet() ) {
+			indentLine( parentsAndNode, pw );
+			pw.println( propertyToString( propertyName, nodeProperties.get( propertyName ), ast ) );
+		}
+	}
+
+	public LinkedHashMap<String, Object> createNodeProperties(AST ast) {
+		return new LinkedHashMap<>();
+	}
+
+	public String propertyToString(String label, Object value, AST ast) {
+		return String.format( "%s: %s", label, value );
 	}
 
 	public static void appendEscapedMultibyteChars(String text, StringBuilder buf) {

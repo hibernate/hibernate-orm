@@ -56,6 +56,11 @@ public class ScriptSourceInputFromFile extends AbstractScriptSourceInput impleme
 		this.reader = toReader( file, charsetName );
 	}
 
+	@Override
+	protected String getScriptDescription() {
+		return file.getAbsolutePath();
+	}
+
 	@SuppressWarnings("ResultOfMethodCallIgnored")
 	private static Reader toReader(File file, String charsetName) {
 		if ( ! file.exists() ) {

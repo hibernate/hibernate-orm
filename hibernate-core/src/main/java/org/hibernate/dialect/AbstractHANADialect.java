@@ -29,6 +29,7 @@ import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Statement;
 import java.sql.Types;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -79,6 +80,8 @@ import org.hibernate.mapping.Table;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorHANADatabaseImpl;
+import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.tool.schema.internal.StandardTableExporter;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.StandardBasicTypes;
@@ -94,6 +97,8 @@ import org.hibernate.type.descriptor.sql.BlobTypeDescriptor;
 import org.hibernate.type.descriptor.sql.BooleanTypeDescriptor;
 import org.hibernate.type.descriptor.sql.CharTypeDescriptor;
 import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
+import org.hibernate.type.descriptor.sql.DecimalTypeDescriptor;
+import org.hibernate.type.descriptor.sql.DoubleTypeDescriptor;
 import org.hibernate.type.descriptor.sql.NCharTypeDescriptor;
 import org.hibernate.type.descriptor.sql.NClobTypeDescriptor;
 import org.hibernate.type.descriptor.sql.NVarcharTypeDescriptor;
@@ -102,11 +107,18 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
 
 /**
- * An abstract base class for HANA dialects. <br/>
- * <a href="http://help.sap.com/hana/html/sqlmain.html">SAP HANA Reference</a> <br/>
- * NOTE: This dialect is currently configured to create foreign keys with <code>on update cascade</code>.
+ * An abstract base class for SAP HANA dialects.
+ * <p>
+ * For more information on interacting with the SAP HANA database, refer to the
+ * <a href="https://help.sap.com/viewer/4fe29514fd584807ac9f2a04f6754767/">SAP HANA SQL and System Views Reference</a>
+ * and the <a href=
+ * "https://help.sap.com/viewer/0eec0d68141541d1b07893a39944924e/latest/en-US/434e2962074540e18c802fd478de86d6.html">SAP
+ * HANA Client Interface Programming Reference</a>.
+ * <p>
+ * Note: This dialect is configured to create foreign keys with {@code on update cascade}.
  *
- * @author Andrew Clemons <andrew.clemons@sap.com>
+ * @author <a href="mailto:andrew.clemons@sap.com">Andrew Clemons</a>
+ * @author <a href="mailto:jonathan.bregler@sap.com">Jonathan Bregler</a>
  */
 public abstract class AbstractHANADialect extends Dialect {
 
@@ -258,7 +270,7 @@ public abstract class AbstractHANADialect extends Dialect {
 
 		@Override
 		public void truncate(long len) throws SQLException {
-			this.data = new String();
+			this.data = "";
 		}
 
 		@Override
@@ -416,7 +428,7 @@ public abstract class AbstractHANADialect extends Dialect {
 	// stream passed in via
 	// PreparedStatement.setCharacterStream(int,Reader,long)
 	// after the stream has been processed. this causes problems later if we are
-	// using non-contexual lob creation and HANA then closes our StringReader.
+	// using non-contextual lob creation and HANA then closes our StringReader.
 	// see test case LobLocatorTest
 
 	private static class HANAClobTypeDescriptor extends ClobTypeDescriptor {
@@ -684,23 +696,31 @@ public abstract class AbstractHANADialect extends Dialect {
 		}
 	}
 
-	private static final String MAX_LOB_PREFETCH_SIZE_PARAMETER_NAME = new String( "hibernate.dialect.hana.max_lob_prefetch_size" );
-	private static final String USE_LEGACY_BOOLEAN_TYPE_PARAMETER_NAME = new String( "hibernate.dialect.hana.use_legacy_boolean_type" );
-	private static final String USE_UNICODE_STRING_TYPES_PARAMETER_NAME = new String( "hibernate.dialect.hana.use_unicode_string_types" );
+	// Set the LOB prefetch size. LOBs larger than this value will be read into memory as the HANA JDBC driver closes
+	// the LOB when the result set is closed.
+	private static final String MAX_LOB_PREFETCH_SIZE_PARAMETER_NAME = "hibernate.dialect.hana.max_lob_prefetch_size";
+	// Use TINYINT instead of the native BOOLEAN type
+	private static final String USE_LEGACY_BOOLEAN_TYPE_PARAMETER_NAME = "hibernate.dialect.hana.use_legacy_boolean_type";
+	// Use unicode (NVARCHAR, NCLOB, etc.) instead of non-unicode (VARCHAR, CLOB) string types
+	private static final String USE_UNICODE_STRING_TYPES_PARAMETER_NAME = "hibernate.dialect.hana.use_unicode_string_types";
+	// Read and write double-typed fields as BigDecimal instead of Double to get around precision issues of the HANA
+	// JDBC driver (https://service.sap.com/sap/support/notes/2590160)
+	private static final String TREAT_DOUBLE_TYPED_FIELDS_AS_DECIMAL_PARAMETER_NAME = "hibernate.dialect.hana.treat_double_typed_fields_as_decimal";
 
 	private static final int MAX_LOB_PREFETCH_SIZE_DEFAULT_VALUE = 1024;
 	private static final Boolean USE_LEGACY_BOOLEAN_TYPE_DEFAULT_VALUE = Boolean.FALSE;
-	private static final Boolean USE_UNICODE_STRING_TYPES_DEFAULT_VALUE = Boolean.FALSE;
+	private static final Boolean TREAT_DOUBLE_TYPED_FIELDS_AS_DECIMAL_DEFAULT_VALUE = Boolean.FALSE;
 
 	private HANANClobTypeDescriptor nClobTypeDescriptor = new HANANClobTypeDescriptor( MAX_LOB_PREFETCH_SIZE_DEFAULT_VALUE );
 
 	private HANABlobTypeDescriptor blobTypeDescriptor = new HANABlobTypeDescriptor( MAX_LOB_PREFETCH_SIZE_DEFAULT_VALUE );
 
-	private HANAClobTypeDescriptor clobTypeDescriptor = new HANAClobTypeDescriptor( MAX_LOB_PREFETCH_SIZE_DEFAULT_VALUE,
-			USE_UNICODE_STRING_TYPES_DEFAULT_VALUE );
+	private HANAClobTypeDescriptor clobTypeDescriptor;
 
 	private boolean useLegacyBooleanType = USE_LEGACY_BOOLEAN_TYPE_DEFAULT_VALUE.booleanValue();
-	private boolean useUnicodeStringTypes = USE_UNICODE_STRING_TYPES_DEFAULT_VALUE.booleanValue();
+	private boolean useUnicodeStringTypes;
+
+	private boolean treatDoubleTypedFieldsAsDecimal = TREAT_DOUBLE_TYPED_FIELDS_AS_DECIMAL_DEFAULT_VALUE.booleanValue();
 
 	/*
 	 * Tables named "TYPE" need to be quoted
@@ -745,6 +765,10 @@ public abstract class AbstractHANADialect extends Dialect {
 	public AbstractHANADialect() {
 		super();
 
+		this.useUnicodeStringTypes = useUnicodeStringTypesDefault().booleanValue();
+		this.clobTypeDescriptor = new HANAClobTypeDescriptor( MAX_LOB_PREFETCH_SIZE_DEFAULT_VALUE,
+				useUnicodeStringTypesDefault().booleanValue() );
+
 		registerColumnType( Types.DECIMAL, "decimal($p, $s)" );
 		registerColumnType( Types.NUMERIC, "decimal($p, $s)" );
 		registerColumnType( Types.DOUBLE, "double" );
@@ -783,7 +807,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		registerHibernateType( Types.NCLOB, StandardBasicTypes.MATERIALIZED_NCLOB.getName() );
 		registerHibernateType( Types.CLOB, StandardBasicTypes.MATERIALIZED_CLOB.getName() );
 		registerHibernateType( Types.BLOB, StandardBasicTypes.MATERIALIZED_BLOB.getName() );
-		registerHibernateType( Types.NVARCHAR, StandardBasicTypes.STRING.getName() );
+		registerHibernateType( Types.NVARCHAR, StandardBasicTypes.NSTRING.getName() );
 
 		registerFunction( "to_date", new StandardSQLFunction( "to_date", StandardBasicTypes.DATE ) );
 		registerFunction( "to_seconddate", new StandardSQLFunction( "to_seconddate", StandardBasicTypes.TIMESTAMP ) );
@@ -908,8 +932,7 @@ public abstract class AbstractHANADialect extends Dialect {
 
 		registerHanaKeywords();
 
-		// createBlob() and createClob() are not supported by the HANA JDBC
-		// driver
+		// createBlob() and createClob() are not supported by the HANA JDBC driver
 		getDefaultProperties().setProperty( AvailableSettings.NON_CONTEXTUAL_LOB_CREATION, "true" );
 
 		// getGeneratedKeys() is not supported by the HANA JDBC driver
@@ -1014,7 +1037,7 @@ public abstract class AbstractHANADialect extends Dialect {
 				createSequenceString += " minvalue " + initialValue;
 			}
 		}
-		else if ( incrementSize < 0 ) {
+		else {
 			if ( initialValue > -1 ) {
 				// default maxvalue for a descending sequence is -1
 				createSequenceString += " maxvalue " + initialValue;
@@ -1089,7 +1112,12 @@ public abstract class AbstractHANADialect extends Dialect {
 
 	@Override
 	public String getQuerySequencesString() {
-		return "select sequence_name from sys.sequences";
+		return "select * from sys.sequences";
+	}
+
+	@Override
+	public SequenceInformationExtractor getSequenceInformationExtractor() {
+		return SequenceInformationExtractorHANADatabaseImpl.INSTANCE;
 	}
 
 	@Override
@@ -1117,9 +1145,11 @@ public abstract class AbstractHANADialect extends Dialect {
 			case Types.BOOLEAN:
 				return this.useLegacyBooleanType ? BitTypeDescriptor.INSTANCE : BooleanTypeDescriptor.INSTANCE;
 			case Types.VARCHAR:
-				return this.useUnicodeStringTypes ? NVarcharTypeDescriptor.INSTANCE : VarcharTypeDescriptor.INSTANCE;
+				return this.isUseUnicodeStringTypes() ? NVarcharTypeDescriptor.INSTANCE : VarcharTypeDescriptor.INSTANCE;
 			case Types.CHAR:
-				return this.useUnicodeStringTypes ? NCharTypeDescriptor.INSTANCE : CharTypeDescriptor.INSTANCE;
+				return this.isUseUnicodeStringTypes() ? NCharTypeDescriptor.INSTANCE : CharTypeDescriptor.INSTANCE;
+			case Types.DOUBLE:
+				return this.treatDoubleTypedFieldsAsDecimal ? DecimalTypeDescriptor.INSTANCE : DoubleTypeDescriptor.INSTANCE;
 			default:
 				return super.getSqlTypeDescriptorOverride( sqlCode );
 		}
@@ -1424,10 +1454,11 @@ public abstract class AbstractHANADialect extends Dialect {
 
 	@Override
 	public String getWriteLockString(int timeout) {
-		if ( timeout > 0 ) {
-			return getForUpdateString() + " wait " + timeout;
+		long timeoutInSeconds = getLockWaitTimeoutInSeconds( timeout );
+		if ( timeoutInSeconds > 0 ) {
+			return getForUpdateString() + " wait " + timeoutInSeconds;
 		}
-		else if ( timeout == 0 ) {
+		else if ( timeoutInSeconds == 0 ) {
 			return getForUpdateNowaitString();
 		}
 		else {
@@ -1438,7 +1469,7 @@ public abstract class AbstractHANADialect extends Dialect {
 	@Override
 	public String getWriteLockString(String aliases, int timeout) {
 		if ( timeout > 0 ) {
-			return getForUpdateString( aliases ) + " wait " + timeout;
+			return getForUpdateString( aliases ) + " wait " + getLockWaitTimeoutInSeconds( timeout );
 		}
 		else if ( timeout == 0 ) {
 			return getForUpdateNowaitString( aliases );
@@ -1446,6 +1477,16 @@ public abstract class AbstractHANADialect extends Dialect {
 		else {
 			return getForUpdateString( aliases );
 		}
+	}
+
+	private long getLockWaitTimeoutInSeconds(int timeoutInMilliseconds) {
+		Duration duration = Duration.ofMillis( timeoutInMilliseconds );
+		long timeoutInSeconds = duration.getSeconds();
+		if ( duration.getNano() != 0 ) {
+			LOG.info( "Changing the query timeout from " + timeoutInMilliseconds + " ms to " + timeoutInSeconds
+					+ " s, because HANA requires the timeout in seconds" );
+		}
+		return timeoutInSeconds;
 	}
 
 	@Override
@@ -1533,23 +1574,25 @@ public abstract class AbstractHANADialect extends Dialect {
 			this.blobTypeDescriptor = new HANABlobTypeDescriptor( maxLobPrefetchSize );
 		}
 
-		boolean useUnicodeStringTypes = configurationService.getSetting( USE_UNICODE_STRING_TYPES_PARAMETER_NAME, StandardConverters.BOOLEAN,
-				USE_UNICODE_STRING_TYPES_DEFAULT_VALUE ).booleanValue();
+		if ( supportsAsciiStringTypes() ) {
+			this.useUnicodeStringTypes = configurationService.getSetting( USE_UNICODE_STRING_TYPES_PARAMETER_NAME, StandardConverters.BOOLEAN,
+					useUnicodeStringTypesDefault() ).booleanValue();
 
-		if ( useUnicodeStringTypes ) {
-			registerColumnType( Types.CHAR, "nvarchar(1)" );
-			registerColumnType( Types.VARCHAR, 5000, "nvarchar($l)" );
-			registerColumnType( Types.LONGVARCHAR, 5000, "nvarchar($l)" );
+			if ( this.isUseUnicodeStringTypes() ) {
+				registerColumnType( Types.CHAR, "nvarchar(1)" );
+				registerColumnType( Types.VARCHAR, 5000, "nvarchar($l)" );
+				registerColumnType( Types.LONGVARCHAR, 5000, "nvarchar($l)" );
 
-			// for longer values map to clob/nclob
-			registerColumnType( Types.LONGVARCHAR, "nclob" );
-			registerColumnType( Types.VARCHAR, "nclob" );
-			registerColumnType( Types.CLOB, "nclob" );
-		}
+				// for longer values map to clob/nclob
+				registerColumnType( Types.LONGVARCHAR, "nclob" );
+				registerColumnType( Types.VARCHAR, "nclob" );
+				registerColumnType( Types.CLOB, "nclob" );
+			}
 
-		if ( this.clobTypeDescriptor.getMaxLobPrefetchSize() != maxLobPrefetchSize
-				|| this.clobTypeDescriptor.isUseUnicodeStringTypes() != useUnicodeStringTypes ) {
-			this.clobTypeDescriptor = new HANAClobTypeDescriptor( maxLobPrefetchSize, useUnicodeStringTypes );
+			if ( this.clobTypeDescriptor.getMaxLobPrefetchSize() != maxLobPrefetchSize
+					|| this.clobTypeDescriptor.isUseUnicodeStringTypes() != this.isUseUnicodeStringTypes() ) {
+				this.clobTypeDescriptor = new HANAClobTypeDescriptor( maxLobPrefetchSize, this.isUseUnicodeStringTypes() );
+			}
 		}
 
 		this.useLegacyBooleanType = configurationService.getSetting( USE_LEGACY_BOOLEAN_TYPE_PARAMETER_NAME, StandardConverters.BOOLEAN,
@@ -1557,6 +1600,13 @@ public abstract class AbstractHANADialect extends Dialect {
 
 		if ( this.useLegacyBooleanType ) {
 			registerColumnType( Types.BOOLEAN, "tinyint" );
+		}
+
+		this.treatDoubleTypedFieldsAsDecimal = configurationService.getSetting( TREAT_DOUBLE_TYPED_FIELDS_AS_DECIMAL_PARAMETER_NAME, StandardConverters.BOOLEAN,
+				TREAT_DOUBLE_TYPED_FIELDS_AS_DECIMAL_DEFAULT_VALUE ).booleanValue();
+
+		if ( this.treatDoubleTypedFieldsAsDecimal ) {
+			registerHibernateType( Types.DOUBLE, StandardBasicTypes.BIG_DECIMAL.getName() );
 		}
 	}
 
@@ -1609,4 +1659,21 @@ public abstract class AbstractHANADialect extends Dialect {
 		return true;
 	}
 
+	@Override
+	public boolean supportsJdbcConnectionLobCreation(DatabaseMetaData databaseMetaData) {
+		return false;
+	}
+
+	@Override
+	public boolean supportsNoColumnsInsert() {
+		return false;
+	}
+
+	public boolean isUseUnicodeStringTypes() {
+		return this.useUnicodeStringTypes;
+	}
+
+	protected abstract boolean supportsAsciiStringTypes();
+
+	protected abstract Boolean useUnicodeStringTypesDefault();
 }

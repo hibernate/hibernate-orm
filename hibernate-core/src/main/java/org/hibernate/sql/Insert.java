@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.LiteralType;
 
@@ -18,10 +19,13 @@ import org.hibernate.type.LiteralType;
  * @author Gavin King
  */
 public class Insert {
+
+	protected String tableName;
+	protected String comment;
+
+	protected Map<String,String> columns = new LinkedHashMap<>();
+
 	private Dialect dialect;
-	private String tableName;
-	private String comment;
-	private Map columns = new LinkedHashMap();
 
 	public Insert(Dialect dialect) {
 		this.dialect = dialect;
@@ -37,12 +41,12 @@ public class Insert {
 	}
 
 	public Insert addColumn(String columnName) {
-		return addColumn(columnName, "?");
+		return addColumn( columnName, "?" );
 	}
 
 	public Insert addColumns(String[] columnNames) {
-		for ( int i=0; i<columnNames.length; i++ ) {
-			addColumn( columnNames[i] );
+		for ( String columnName : columnNames ) {
+			addColumn( columnName );
 		}
 		return this;
 	}
@@ -66,12 +70,12 @@ public class Insert {
 	}
 
 	public Insert addColumn(String columnName, String valueExpression) {
-		columns.put(columnName, valueExpression);
+		columns.put( columnName, valueExpression );
 		return this;
 	}
 
 	public Insert addColumn(String columnName, Object value, LiteralType type) throws Exception {
-		return addColumn( columnName, type.objectToSQLString(value, dialect) );
+		return addColumn( columnName, type.objectToSQLString( value, dialect ) );
 	}
 
 	public Insert addIdentityColumn(String columnName) {
@@ -90,16 +94,27 @@ public class Insert {
 	public String toStatementString() {
 		StringBuilder buf = new StringBuilder( columns.size()*15 + tableName.length() + 10 );
 		if ( comment != null ) {
-			buf.append( "/* " ).append( comment ).append( " */ " );
+			buf.append( "/* " ).append( Dialect.escapeComment( comment ) ).append( " */ " );
 		}
 		buf.append("insert into ")
 			.append(tableName);
 		if ( columns.size()==0 ) {
-			buf.append(' ').append( dialect.getNoColumnsInsertString() );
+			if ( dialect.supportsNoColumnsInsert() ) {
+				buf.append( ' ' ).append( dialect.getNoColumnsInsertString() );
+			}
+			else {
+				throw new MappingException(
+						String.format(
+								"The INSERT statement for table [%s] contains no column, and this is not supported by [%s]",
+								tableName,
+								dialect
+						)
+				);
+			}
 		}
 		else {
 			buf.append(" (");
-			Iterator iter = columns.keySet().iterator();
+			Iterator<String> iter = columns.keySet().iterator();
 			while ( iter.hasNext() ) {
 				buf.append( iter.next() );
 				if ( iter.hasNext() ) {

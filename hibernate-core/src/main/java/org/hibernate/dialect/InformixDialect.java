@@ -28,6 +28,8 @@ import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.local.AfterUseAction;
 import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorInformixDatabaseImpl;
+import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
@@ -148,7 +150,7 @@ public class InformixDialect extends Dialect {
 
 	@Override
 	public String getDropSequenceString(String sequenceName) {
-		return "drop sequence " + sequenceName + " restrict";
+		return "drop sequence " + sequenceName;
 	}
 
 	@Override
@@ -173,7 +175,12 @@ public class InformixDialect extends Dialect {
 
 	@Override
 	public String getQuerySequencesString() {
-		return "select tabname from informix.systables where tabtype='Q'";
+		return "select systables.tabname as sequence_name, syssequences.* from syssequences join systables on syssequences.tabid = systables.tabid where tabtype = 'Q'";
+	}
+
+	@Override
+	public SequenceInformationExtractor getSequenceInformationExtractor() {
+		return SequenceInformationExtractorInformixDatabaseImpl.INSTANCE;
 	}
 
 	@Override

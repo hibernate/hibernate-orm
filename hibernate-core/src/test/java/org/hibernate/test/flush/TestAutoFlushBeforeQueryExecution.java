@@ -60,7 +60,7 @@ public class TestAutoFlushBeforeQueryExecution extends BaseCoreFunctionalTestCas
 
 		final PersistenceContext persistenceContext = ( (SessionImplementor) s ).getPersistenceContext();
 		final ActionQueue actionQueue = ( (SessionImpl) s ).getActionQueue();
-		assertEquals( 1, persistenceContext.getCollectionEntries().size() );
+		assertEquals( 1, persistenceContext.getCollectionEntriesSize() );
 		assertEquals( 1, persistenceContext.getCollectionsByKey().size() );
 		assertTrue( persistenceContext.getCollectionEntries().containsKey( publisher.getAuthors() ) );
 		assertTrue( persistenceContext.getCollectionsByKey().values().contains( publisher.getAuthors() ) );
@@ -73,7 +73,7 @@ public class TestAutoFlushBeforeQueryExecution extends BaseCoreFunctionalTestCas
 				"autoflush collection update",
 				s.createQuery( "select a from Publisher p join p.authors a" ).list().size() == 1
 		);
-		assertEquals( 2, persistenceContext.getCollectionEntries().size() );
+		assertEquals( 2, persistenceContext.getCollectionEntriesSize() );
 		assertEquals( 2, persistenceContext.getCollectionsByKey().size() );
 		assertTrue( persistenceContext.getCollectionEntries().containsKey( publisher.getAuthors() ) );
 		assertTrue( persistenceContext.getCollectionEntries().containsKey( author1.getBooks() ) );
@@ -88,7 +88,7 @@ public class TestAutoFlushBeforeQueryExecution extends BaseCoreFunctionalTestCas
 		assertTrue( "autoflush collection update",
 				s.createQuery( "select a from Publisher p join p.authors a" ).list().size() == 0
 		);
-		assertEquals( 1, persistenceContext.getCollectionEntries().size() );
+		assertEquals( 1, persistenceContext.getCollectionEntriesSize() );
 		assertEquals( 1, persistenceContext.getCollectionsByKey().size() );
 		assertTrue( persistenceContext.getCollectionEntries().containsKey( publisher.getAuthors() ) );
 		assertTrue( persistenceContext.getCollectionsByKey().values().contains( publisher.getAuthors() ) );
@@ -102,7 +102,7 @@ public class TestAutoFlushBeforeQueryExecution extends BaseCoreFunctionalTestCas
 		publisher.getAuthors().add( author2 );
 		List results = s.createQuery( "select a from Publisher p join p.authors a" ).list();
 		assertEquals( 1, results.size() );
-		assertEquals( 2, persistenceContext.getCollectionEntries().size() );
+		assertEquals( 2, persistenceContext.getCollectionEntriesSize() );
 		assertEquals( 2, persistenceContext.getCollectionsByKey().size() );
 		assertTrue( persistenceContext.getCollectionEntries().containsKey( publisher.getAuthors() ) );
 		assertTrue( persistenceContext.getCollectionEntries().containsKey( author2.getBooks() ) );
@@ -139,7 +139,7 @@ public class TestAutoFlushBeforeQueryExecution extends BaseCoreFunctionalTestCas
 
 		final PersistenceContext persistenceContext = ( (SessionImplementor) s ).getPersistenceContext();
 		final ActionQueue actionQueue = ( (SessionImpl) s ).getActionQueue();
-		assertEquals( 1, persistenceContext.getCollectionEntries().size() );
+		assertEquals( 1, persistenceContext.getCollectionEntriesSize() );
 		assertEquals( 1, persistenceContext.getCollectionsByKey().size() );
 		assertTrue( persistenceContext.getCollectionEntries().containsKey( publisher.getAuthors() ) );
 		assertTrue( persistenceContext.getCollectionsByKey().values().contains( publisher.getAuthors() ) );
@@ -149,7 +149,7 @@ public class TestAutoFlushBeforeQueryExecution extends BaseCoreFunctionalTestCas
 		author1.setPublisher( publisher );
 		publisher.getAuthors().add( author1 );
 		assertTrue(	s.createQuery( "from UnrelatedEntity" ).list().size() == 1 );
-		assertEquals( 2, persistenceContext.getCollectionEntries().size() );
+		assertEquals( 2, persistenceContext.getCollectionEntriesSize() );
 		assertEquals( 1, persistenceContext.getCollectionsByKey().size() );
 		assertTrue( persistenceContext.getCollectionEntries().containsKey( publisher.getAuthors() ) );
 		assertTrue( persistenceContext.getCollectionEntries().containsKey( author1.getBooks() ) );
@@ -161,7 +161,7 @@ public class TestAutoFlushBeforeQueryExecution extends BaseCoreFunctionalTestCas
 		publisher.getAuthors().clear();
 		assertEquals( 0, actionQueue.numberOfCollectionRemovals() );
 		assertTrue( s.createQuery( "from UnrelatedEntity" ).list().size() == 1 );
-		assertEquals( 2, persistenceContext.getCollectionEntries().size() );
+		assertEquals( 2, persistenceContext.getCollectionEntriesSize() );
 		assertEquals( 1, persistenceContext.getCollectionsByKey().size() );
 		assertTrue( persistenceContext.getCollectionEntries().containsKey( publisher.getAuthors() ) );
 		assertTrue( persistenceContext.getCollectionEntries().containsKey( author1.getBooks() ) );
@@ -176,7 +176,7 @@ public class TestAutoFlushBeforeQueryExecution extends BaseCoreFunctionalTestCas
 		publisher.getAuthors().add( author2 );
 		List results = s.createQuery( "from UnrelatedEntity" ).list();
 		assertEquals( 1, results.size() );
-		assertEquals( 4, persistenceContext.getCollectionEntries().size() );
+		assertEquals( 4, persistenceContext.getCollectionEntriesSize() );
 		assertEquals( 1, persistenceContext.getCollectionsByKey().size() );
 		assertTrue( persistenceContext.getCollectionEntries().containsKey( publisher.getAuthors() ) );
 		assertTrue( persistenceContext.getCollectionEntries().containsKey( author2.getBooks() ) );
@@ -186,7 +186,7 @@ public class TestAutoFlushBeforeQueryExecution extends BaseCoreFunctionalTestCas
 		assertEquals( 0, actionQueue.numberOfCollectionRemovals() );
 
 		s.flush();
-		assertEquals( 2, persistenceContext.getCollectionEntries().size() );
+		assertEquals( 2, persistenceContext.getCollectionEntriesSize() );
 		assertEquals( 2, persistenceContext.getCollectionsByKey().size() );
 		assertTrue( persistenceContext.getCollectionEntries().containsKey( publisher.getAuthors() ) );
 		assertTrue( persistenceContext.getCollectionEntries().containsKey( author2.getBooks() ) );

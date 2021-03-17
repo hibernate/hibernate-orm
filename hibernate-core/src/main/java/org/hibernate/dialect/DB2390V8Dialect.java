@@ -32,6 +32,6 @@ public class DB2390V8Dialect extends DB2390Dialect {
 	}
 
 	public String getQuerySequencesString() {
-		return "select name from sysibm.syssequences";
+		return "select * from sysibm.syssequences";
 	}
 }

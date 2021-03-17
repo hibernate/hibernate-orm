@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * Extension to Manageable for things that are optionally Manageable depending
  * on some internal state.  E.g. services that wrap other services wanting to
- * delegate manageablity if the wrapped service is Manageable.
+ * delegate manageability if the wrapped service is Manageable.
  *
  * @author Steve Ebersole
  */
@@ -21,18 +21,6 @@ public interface OptionallyManageable extends Manageable {
 	 * List should be returned instead.
 	 */
 	List<Manageable> getRealManageables();
-
-	@Override
-	default String getManagementDomain() {
-		// Generally the wrapper is not Manageable itself
-		return null;
-	}
-
-	@Override
-	default String getManagementServiceType() {
-		// Generally the wrapper is not Manageable itself
-		return null;
-	}
 
 	@Override
 	default Object getManagementBean() {

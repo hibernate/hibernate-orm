@@ -49,7 +49,7 @@ public abstract class BatchingEntityLoader implements UniqueEntityLoader {
 
 	@Override
 	public Object load(Serializable id, Object optionalObject, SharedSessionContractImplementor session) {
-		return load( id, optionalObject, session, LockOptions.NONE );
+		return load( id, optionalObject, session, LockOptions.NONE, null );
 	}
 
 	protected QueryParameters buildQueryParameters(

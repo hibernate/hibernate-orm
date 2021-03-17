@@ -10,6 +10,7 @@ import java.util.ArrayList;
 
 import org.hibernate.Criteria;
 import org.hibernate.EntityMode;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.type.CompositeType;
@@ -41,14 +42,16 @@ public class InExpression implements Criterion {
 	@Override
 	public String toSqlString( Criteria criteria, CriteriaQuery criteriaQuery ) {
 		final String[] columns = criteriaQuery.findColumns( propertyName, criteria );
-		if ( criteriaQuery.getFactory().getDialect().supportsRowValueConstructorSyntaxInInList() || columns.length <= 1 ) {
+		Dialect dialect = criteriaQuery.getFactory().getDialect();
+		if ( dialect.supportsRowValueConstructorSyntaxInInList() || columns.length <= 1 ) {
 			String singleValueParam = StringHelper.repeat( "?, ", columns.length - 1 ) + "?";
 			if ( columns.length > 1 ) {
 				singleValueParam = '(' + singleValueParam + ')';
 			}
 			final String params = values.length > 0
 					? StringHelper.repeat( singleValueParam + ", ", values.length - 1 ) + singleValueParam
-					: "";
+					// Deal with HHH-8901 : not all databases like to have an empty list.
+					: dialect.supportsEmptyInList() ? "" : "null";
 			String cols = String.join( ", ", columns );
 			if ( columns.length > 1 ) {
 				cols = '(' + cols + ')';

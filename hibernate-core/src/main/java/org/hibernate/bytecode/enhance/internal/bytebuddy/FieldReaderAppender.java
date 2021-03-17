@@ -6,6 +6,9 @@
  */
 package org.hibernate.bytecode.enhance.internal.bytebuddy;
 
+import java.util.Objects;
+
+import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl.AnnotatedFieldDescription;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 
@@ -24,17 +27,17 @@ abstract class FieldReaderAppender implements ByteCodeAppender {
 
 	protected final TypeDescription managedCtClass;
 
-	protected final FieldDescription persistentField;
+	protected final AnnotatedFieldDescription persistentField;
 
 	protected final FieldDescription.InDefinedShape persistentFieldAsDefined;
 
-	private FieldReaderAppender(TypeDescription managedCtClass, FieldDescription persistentField) {
+	private FieldReaderAppender(TypeDescription managedCtClass, AnnotatedFieldDescription persistentField) {
 		this.managedCtClass = managedCtClass;
 		this.persistentField = persistentField;
 		this.persistentFieldAsDefined = persistentField.asDefined();
 	}
 
-	static ByteCodeAppender of(TypeDescription managedCtClass, FieldDescription persistentField) {
+	static ByteCodeAppender of(TypeDescription managedCtClass, AnnotatedFieldDescription persistentField) {
 		if ( !persistentField.isVisibleTo( managedCtClass ) ) {
 			return new MethodDispatching( managedCtClass, persistentField );
 		}
@@ -117,7 +120,7 @@ abstract class FieldReaderAppender implements ByteCodeAppender {
 
 	private static class FieldWriting extends FieldReaderAppender {
 
-		private FieldWriting(TypeDescription managedCtClass, FieldDescription persistentField) {
+		private FieldWriting(TypeDescription managedCtClass, AnnotatedFieldDescription persistentField) {
 			super( managedCtClass, persistentField );
 		}
 
@@ -144,7 +147,7 @@ abstract class FieldReaderAppender implements ByteCodeAppender {
 
 	private static class MethodDispatching extends FieldReaderAppender {
 
-		private MethodDispatching(TypeDescription managedCtClass, FieldDescription persistentField) {
+		private MethodDispatching(TypeDescription managedCtClass, AnnotatedFieldDescription persistentField) {
 			super( managedCtClass, persistentField );
 		}
 
@@ -170,4 +173,24 @@ abstract class FieldReaderAppender implements ByteCodeAppender {
 			);
 		}
 	}
+
+	@Override
+	public boolean equals(final Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+		final FieldReaderAppender that = (FieldReaderAppender) o;
+		return Objects.equals( managedCtClass, that.managedCtClass ) &&
+			Objects.equals( persistentField, that.persistentField ) &&
+			Objects.equals( persistentFieldAsDefined, that.persistentFieldAsDefined );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( managedCtClass, persistentField, persistentFieldAsDefined );
+	}
+
 }

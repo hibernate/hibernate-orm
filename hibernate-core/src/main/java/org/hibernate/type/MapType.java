@@ -20,8 +20,16 @@ import org.hibernate.persister.collection.CollectionPersister;
 
 public class MapType extends CollectionType {
 
+	/**
+	 * @deprecated Use the other constructor
+	 */
+	@Deprecated
 	public MapType(TypeFactory.TypeScope typeScope, String role, String propertyRef) {
-		super( typeScope, role, propertyRef );
+		this( role, propertyRef );
+	}
+
+	public MapType(String role, String propertyRef) {
+		super( role, propertyRef );
 	}
 
 	@Override

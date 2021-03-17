@@ -17,8 +17,6 @@ import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.MappedSuperclass;
 
-import org.hibernate.AnnotationException;
-import org.hibernate.annotations.common.reflection.ClassLoadingException;
 import org.hibernate.annotations.common.reflection.MetadataProviderInjector;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
@@ -59,6 +57,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 	private final LinkedHashSet<String> annotatedPackages = new LinkedHashSet<String>();
 
 	private final List<XClass> xClasses = new ArrayList<XClass>();
+	private final ClassLoaderService classLoaderService;
 
 	public AnnotationMetadataSourceProcessorImpl(
 			ManagedResources managedResources,
@@ -74,44 +73,48 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 		}
 
 		final AttributeConverterManager attributeConverterManager = new AttributeConverterManager( rootMetadataBuildingContext );
+		this.classLoaderService = rootMetadataBuildingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class );
 
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// Ewww.  This is temporary until we migrate to Jandex + StAX for annotation binding
+		if ( rootMetadataBuildingContext.getBuildingOptions().isXmlMappingEnabled() ) {
 
-		final JPAMetadataProvider jpaMetadataProvider = (JPAMetadataProvider) ( (MetadataProviderInjector) reflectionManager ).getMetadataProvider();
-		for ( Binding xmlBinding : managedResources.getXmlMappingBindings() ) {
-//			if ( !MappingBinder.DelayedOrmXmlData.class.isInstance( xmlBinding.getRoot() ) ) {
-//				continue;
-//			}
-//
-//			// convert the StAX representation in delayedOrmXmlData to DOM because that's what commons-annotations needs
-//			final MappingBinder.DelayedOrmXmlData delayedOrmXmlData = (MappingBinder.DelayedOrmXmlData) xmlBinding.getRoot();
-//			org.dom4j.Document dom4jDocument = toDom4jDocument( delayedOrmXmlData );
-			if ( !org.dom4j.Document.class.isInstance( xmlBinding.getRoot() ) ) {
-				continue;
-			}
-			org.dom4j.Document dom4jDocument = (Document) xmlBinding.getRoot();
+			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			// Ewww.  This is temporary until we migrate to Jandex + StAX for annotation binding
 
-			final List<String> classNames = jpaMetadataProvider.getXMLContext().addDocument( dom4jDocument );
-			for ( String className : classNames ) {
-				xClasses.add( toXClass( className, reflectionManager ) );
-			}
+				final JPAMetadataProvider jpaMetadataProvider = (JPAMetadataProvider) ( (MetadataProviderInjector) reflectionManager )
+						.getMetadataProvider();
+				for ( Binding xmlBinding : managedResources.getXmlMappingBindings() ) {
+	//			if ( !MappingBinder.DelayedOrmXmlData.class.isInstance( xmlBinding.getRoot() ) ) {
+	//				continue;
+	//			}
+	//
+	//			// convert the StAX representation in delayedOrmXmlData to DOM because that's what commons-annotations needs
+	//			final MappingBinder.DelayedOrmXmlData delayedOrmXmlData = (MappingBinder.DelayedOrmXmlData) xmlBinding.getRoot();
+	//			org.dom4j.Document dom4jDocument = toDom4jDocument( delayedOrmXmlData );
+					if ( !org.dom4j.Document.class.isInstance( xmlBinding.getRoot() ) ) {
+						continue;
+					}
+					org.dom4j.Document dom4jDocument = (Document) xmlBinding.getRoot();
+
+					final List<String> classNames = jpaMetadataProvider.getXMLContext().addDocument( dom4jDocument );
+					for ( String className : classNames ) {
+						xClasses.add( toXClass( className, reflectionManager, classLoaderService ) );
+					}
+				}
+				jpaMetadataProvider.getXMLContext().applyDiscoveredAttributeConverters( attributeConverterManager );
+			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		}
-		jpaMetadataProvider.getXMLContext().applyDiscoveredAttributeConverters( attributeConverterManager );
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-		final ClassLoaderService cls = rootMetadataBuildingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class );
 		for ( String className : managedResources.getAnnotatedClassNames() ) {
-			final Class annotatedClass = cls.classForName( className );
-			categorizeAnnotatedClass( annotatedClass, attributeConverterManager );
+			final Class annotatedClass = classLoaderService.classForName( className );
+			categorizeAnnotatedClass( annotatedClass, attributeConverterManager, classLoaderService );
 		}
 
 		for ( Class annotatedClass : managedResources.getAnnotatedClassReferences() ) {
-			categorizeAnnotatedClass( annotatedClass, attributeConverterManager );
+			categorizeAnnotatedClass( annotatedClass, attributeConverterManager, classLoaderService );
 		}
 	}
 
-	private void categorizeAnnotatedClass(Class annotatedClass, AttributeConverterManager attributeConverterManager) {
+	private void categorizeAnnotatedClass(Class annotatedClass, AttributeConverterManager attributeConverterManager, ClassLoaderService cls) {
 		final XClass xClass = reflectionManager.toXClass( annotatedClass );
 		// categorize it, based on assumption it does not fall into multiple categories
 		if ( xClass.isAnnotationPresent( Converter.class ) ) {
@@ -131,13 +134,8 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 	}
 
 	@SuppressWarnings("deprecation")
-	private XClass toXClass(String className, ReflectionManager reflectionManager) {
-		try {
-			return reflectionManager.classForName( className );
-		}
-		catch ( ClassLoadingException e ) {
-			throw new AnnotationException( "Unable to load class defined in XML: " + className, e );
-		}
+	private XClass toXClass(String className, ReflectionManager reflectionManager, ClassLoaderService cls) {
+		return reflectionManager.toXClass( cls.classForName( className ) );
 	}
 
 //	private Document toDom4jDocument(MappingBinder.DelayedOrmXmlData delayedOrmXmlData) {
@@ -188,7 +186,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 
 		AnnotationBinder.bindDefaults( rootMetadataBuildingContext );
 		for ( String annotatedPackage : annotatedPackages ) {
-			AnnotationBinder.bindPackage( annotatedPackage, rootMetadataBuildingContext );
+			AnnotationBinder.bindPackage( classLoaderService, annotatedPackage, rootMetadataBuildingContext );
 		}
 	}
 
@@ -248,12 +246,13 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 			}
 
 			AnnotationBinder.bindClass( clazz, inheritanceStatePerClass, rootMetadataBuildingContext );
+			AnnotationBinder.bindFetchProfilesForClass( clazz, rootMetadataBuildingContext );
 			processedEntityNames.add( clazz.getName() );
 		}
 	}
 
 	private List<XClass> orderAndFillHierarchy(List<XClass> original) {
-		List<XClass> copy = new ArrayList<XClass>( original );
+		List<XClass> copy = new ArrayList<>( original.size() );
 		insertMappedSuperclasses( original, copy );
 
 		// order the hierarchy
@@ -267,16 +266,28 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 	}
 
 	private void insertMappedSuperclasses(List<XClass> original, List<XClass> copy) {
+		final boolean debug = log.isDebugEnabled();
 		for ( XClass clazz : original ) {
-			XClass superClass = clazz.getSuperclass();
-			while ( superClass != null
-					&& !reflectionManager.equals( superClass, Object.class )
-					&& !copy.contains( superClass ) ) {
-				if ( superClass.isAnnotationPresent( Entity.class )
-						|| superClass.isAnnotationPresent( javax.persistence.MappedSuperclass.class ) ) {
-					copy.add( superClass );
+			if ( clazz.isAnnotationPresent( javax.persistence.MappedSuperclass.class ) ) {
+				if ( debug ) {
+					log.debugf(
+							"Skipping explicit MappedSuperclass %s, the class will be discovered analyzing the implementing class",
+							clazz
+					);
 				}
-				superClass = superClass.getSuperclass();
+			}
+			else {
+				copy.add( clazz );
+				XClass superClass = clazz.getSuperclass();
+				while ( superClass != null
+						&& !reflectionManager.equals( superClass, Object.class )
+						&& !copy.contains( superClass ) ) {
+					if ( superClass.isAnnotationPresent( Entity.class )
+							|| superClass.isAnnotationPresent( javax.persistence.MappedSuperclass.class ) ) {
+						copy.add( superClass );
+					}
+					superClass = superClass.getSuperclass();
+				}
 			}
 		}
 	}
@@ -297,7 +308,9 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 
 	@Override
 	public void postProcessEntityHierarchies() {
-
+		for ( String annotatedPackage : annotatedPackages ) {
+			AnnotationBinder.bindFetchProfilesForPackage( classLoaderService, annotatedPackage, rootMetadataBuildingContext );
+		}
 	}
 
 	@Override

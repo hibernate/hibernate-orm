@@ -24,4 +24,9 @@ public class UnloadedCtField implements UnloadedField {
 	public boolean hasAnnotation(Class<? extends Annotation> annotationType) {
 		return ctField.hasAnnotation( annotationType );
 	}
+
+	@Override
+	public String toString() {
+		return this.ctField.toString();
+	}
 }

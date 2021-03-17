@@ -7,6 +7,7 @@
 package org.hibernate.boot;
 
 import org.hibernate.HibernateException;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.util.StringHelper;
 
 /**
@@ -24,6 +25,14 @@ public enum SchemaAutoTooling {
 	 * schema on SessionFactory shutdown.
 	 */
 	CREATE_DROP( "create-drop" ),
+	/**
+	 * Create the schema on SessionFactory startup.
+	 */
+	CREATE_ONLY( "create-only" ),
+	/**
+	 * Drop the schema and don't recreate it.
+	 */
+	DROP( "drop" ),
 	/**
 	 * Update (alter) the schema on SessionFactory startup.
 	 */
@@ -44,7 +53,11 @@ public enum SchemaAutoTooling {
 	}
 
 	public static SchemaAutoTooling interpret(String configurationValue) {
-		if ( StringHelper.isEmpty( configurationValue ) || NONE.externalForm.equals( configurationValue ) ) {
+		if ( configurationValue == null ) {
+			return null;
+		}
+		configurationValue = configurationValue.trim();
+		if ( configurationValue.isEmpty() || NONE.externalForm.equals( configurationValue ) ) {
 			return null;
 		}
 		else if ( VALIDATE.externalForm.equals( configurationValue ) ) {
@@ -59,10 +72,16 @@ public enum SchemaAutoTooling {
 		else if ( CREATE_DROP.externalForm.equals( configurationValue ) ) {
 			return CREATE_DROP;
 		}
+		else if ( CREATE_ONLY.externalForm.equals( configurationValue ) ) {
+			return CREATE_ONLY;
+		}
+		else if ( DROP.externalForm.equals( configurationValue ) ) {
+			return DROP;
+		}
 		else {
 			throw new HibernateException(
-					"Unrecognized hbm2ddl_auto value : " + configurationValue
-							+ ".  Supported values include 'create', 'create-drop', 'update', 'none' and 'validate'."
+					"Unrecognized " + AvailableSettings.HBM2DDL_AUTO + " value: '" + configurationValue
+							+ "'.  Supported values include 'create', 'create-drop', 'create-only', 'drop', 'update', 'none' and 'validate'."
 			);
 		}
 	}

@@ -206,7 +206,7 @@ public class BootstrapServiceRegistryImpl
 	}
 
 	@Override
-	public void destroy() {
+	public synchronized void destroy() {
 		if ( !active ) {
 			return;
 		}
@@ -225,7 +225,7 @@ public class BootstrapServiceRegistryImpl
 		}
 	}
 	
-	private void destroy(ServiceBinding serviceBinding) {
+	private synchronized void destroy(ServiceBinding serviceBinding) {
 		serviceBinding.getLifecycleOwner().stopService( serviceBinding );
 	}
 
@@ -259,20 +259,20 @@ public class BootstrapServiceRegistryImpl
 	}
 
 	@Override
-	public <R extends Service> void stopService(ServiceBinding<R> binding) {
+	public synchronized <R extends Service> void stopService(ServiceBinding<R> binding) {
 		final Service service = binding.getService();
 		if ( Stoppable.class.isInstance( service ) ) {
 			try {
 				( (Stoppable) service ).stop();
 			}
 			catch ( Exception e ) {
-				LOG.unableToStopService( service.getClass(), e.toString() );
+				LOG.unableToStopService( service.getClass(), e );
 			}
 		}
 	}
 
 	@Override
-	public void registerChild(ServiceRegistryImplementor child) {
+	public synchronized void registerChild(ServiceRegistryImplementor child) {
 		if ( childRegistries == null ) {
 			childRegistries = new HashSet<ServiceRegistryImplementor>();
 		}
@@ -285,7 +285,7 @@ public class BootstrapServiceRegistryImpl
 	}
 
 	@Override
-	public void deRegisterChild(ServiceRegistryImplementor child) {
+	public synchronized void deRegisterChild(ServiceRegistryImplementor child) {
 		if ( childRegistries == null ) {
 			throw new IllegalStateException( "No child ServiceRegistry registrations found" );
 		}

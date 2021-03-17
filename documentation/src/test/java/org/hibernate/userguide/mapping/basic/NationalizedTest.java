@@ -10,6 +10,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 
 import org.hibernate.annotations.Nationalized;
+import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
@@ -24,9 +25,10 @@ import static org.junit.Assert.assertEquals;
  */
 @SkipForDialect(
         value = {
-                PostgreSQL81Dialect.class
+                PostgreSQL81Dialect.class,
+                DerbyDialect.class
         },
-        comment = "@see https://hibernate.atlassian.net/browse/HHH-10693"
+        comment = "@see https://hibernate.atlassian.net/browse/HHH-10693 and Derby doesn't support nationalized type"
 )
 public class NationalizedTest extends BaseEntityManagerFunctionalTestCase {
 

@@ -117,7 +117,7 @@ public class DomainDataRegionConfigImpl implements DomainDataRegionConfig {
 		}
 
 
-		// todo (6.0) : `EntityPersister` and `CollectionPersister` references here should be replaces with `EntityHierarchy` and `PersistentCollectionDescriptor`
+		// todo (6.0) : `EntityPersister` and `CollectionPersister` references here should be replaced with `EntityHierarchy` and `PersistentCollectionDescriptor`
 		//
 		// todo : although ^^, couldn't this just be the boot-time model?  Is there a specific need for it to be the run-time model?
 		//		that would alleviate the difference between 5.3 and 6.0 from the SPI POV

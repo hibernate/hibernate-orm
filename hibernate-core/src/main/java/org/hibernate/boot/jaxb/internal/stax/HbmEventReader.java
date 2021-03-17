@@ -8,6 +8,7 @@ package org.hibernate.boot.jaxb.internal.stax;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import javax.xml.namespace.QName;
@@ -20,6 +21,7 @@ import javax.xml.stream.events.XMLEvent;
 import javax.xml.stream.util.EventReaderDelegate;
 
 import org.hibernate.boot.xsd.MappingXsdSupport;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * A StAX EventReader for {@code hbm.xml} files to add namespaces in documents
@@ -28,7 +30,8 @@ import org.hibernate.boot.xsd.MappingXsdSupport;
  * @author Steve Ebersole
  */
 public class HbmEventReader extends EventReaderDelegate {
-	private static final List<String> NAMESPACE_URIS_TO_MAP = Arrays.asList(
+
+	private static final List<String> NAMESPACE_URIS_TO_MAP = Collections.singletonList(
 			// we need to recognize the initial, prematurely-chosen hbm.xml xsd namespace
 			"http://www.hibernate.org/xsd/hibernate-mapping"
 	);
@@ -65,7 +68,7 @@ public class HbmEventReader extends EventReaderDelegate {
 	private StartElement applyNamespace(StartElement startElement) {
 		final List<Namespace> targetNamespaces = new ArrayList<Namespace>();
 
-		if ( "".equals( startElement.getName().getNamespaceURI() ) ) {
+		if ( StringHelper.isEmpty( startElement.getName().getNamespaceURI() ) ) {
 			// add the default namespace mapping
 			targetNamespaces.add( xmlEventFactory.createNamespace( MappingXsdSupport.INSTANCE.hbmXsd().getNamespaceUri() ) );
 		}

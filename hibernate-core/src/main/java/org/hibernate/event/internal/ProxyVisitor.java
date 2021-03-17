@@ -21,7 +21,6 @@ import org.hibernate.type.EntityType;
  */
 public abstract class ProxyVisitor extends AbstractVisitor {
 
-
 	public ProxyVisitor(EventSource session) {
 		super(session);
 	}
@@ -64,19 +63,20 @@ public abstract class ProxyVisitor extends AbstractVisitor {
 	 */
 	protected void reattachCollection(PersistentCollection collection, CollectionType type)
 	throws HibernateException {
+		final EventSource session = getSession();
 		if ( collection.wasInitialized() ) {
-			CollectionPersister collectionPersister = getSession().getFactory()
+			CollectionPersister collectionPersister = session.getFactory()
 			.getCollectionPersister( type.getRole() );
-			getSession().getPersistenceContext()
+			session.getPersistenceContext()
 				.addInitializedDetachedCollection( collectionPersister, collection );
 		}
 		else {
-			if ( !isCollectionSnapshotValid(collection) ) {
-				throw new HibernateException( "could not reassociate uninitialized transient collection" );
+			if ( !isCollectionSnapshotValid( collection ) ) {
+				throw new HibernateException( "could not re-associate uninitialized transient collection" );
 			}
-			CollectionPersister collectionPersister = getSession().getFactory()
+			CollectionPersister collectionPersister = session.getFactory()
 					.getCollectionPersister( collection.getRole() );
-			getSession().getPersistenceContext()
+			session.getPersistenceContext()
 				.addUninitializedDetachedCollection( collectionPersister, collection );
 		}
 	}

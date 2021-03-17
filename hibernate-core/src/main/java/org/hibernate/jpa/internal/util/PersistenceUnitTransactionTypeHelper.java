@@ -27,8 +27,8 @@ public class PersistenceUnitTransactionTypeHelper {
 			return (PersistenceUnitTransactionType) value;
 		}
 
-		final String stringValue = value.toString();
-		if ( StringHelper.isEmpty( stringValue ) ) {
+		final String stringValue = value.toString().trim();
+		if ( stringValue.isEmpty() ) {
 			return null;
 		}
 		else if ( stringValue.equalsIgnoreCase( "JTA" ) ) {
@@ -38,7 +38,7 @@ public class PersistenceUnitTransactionTypeHelper {
 			return PersistenceUnitTransactionType.RESOURCE_LOCAL;
 		}
 		else {
-			throw new PersistenceException( "Unknown TransactionType: " + stringValue );
+			throw new PersistenceException( "Unknown TransactionType: '" + stringValue + '\'' );
 		}
 	}
 }

@@ -30,6 +30,7 @@ include::chapters/multitenancy/MultiTenancy.adoc[]
 include::chapters/osgi/OSGi.adoc[]
 include::chapters/envers/Envers.adoc[]
 include::chapters/portability/Portability.adoc[]
+include::chapters/statistics/Statistics.adoc[]
 
 include::appendices/Configurations.adoc[]
 include::appendices/Annotations.adoc[]

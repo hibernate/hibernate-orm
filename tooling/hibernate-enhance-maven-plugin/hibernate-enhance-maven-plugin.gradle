@@ -4,13 +4,14 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
+description = 'Enhance Plugin of the Hibernate project for use with Maven build system.'
+
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 apply plugin: 'maven'
 
-import org.apache.tools.ant.filters.ReplaceTokens
 
+import org.apache.tools.ant.filters.ReplaceTokens
 group = 'org.hibernate.orm.tooling'
-description = 'Enhance Plugin of the Hibernate project for use with Maven build system.'
 
 processResources {
     include "**/lifecycle-mapping-metadata.xml"
@@ -28,7 +29,7 @@ dependencies {
     compile( libraries.jpa ) { transitive = false }
     compile( libraries.javassist ) { transitive = false }
     compile( libraries.byteBuddy ) { transitive = false }
-    compile 'org.codehaus.plexus:plexus-utils:3.0.1'
+    compile 'org.codehaus.plexus:plexus-utils:3.0.24'
     compile 'org.sonatype.plexus:plexus-build-api:0.0.7'
     runtime( libraries.maven_core )
     runtime( libraries.maven_artifact )
@@ -39,7 +40,7 @@ dependencies {
     runtime( libraries.jta )
     runtime( libraries.javassist )
     runtime( libraries.byteBuddy )
-    runtime 'org.codehaus.plexus:plexus-utils:3.0.1'
+    runtime 'org.codehaus.plexus:plexus-utils:3.0.24'
 }
 
 // Inject dependencies into plugin.xml

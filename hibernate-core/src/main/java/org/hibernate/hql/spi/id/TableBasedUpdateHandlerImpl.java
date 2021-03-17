@@ -43,7 +43,6 @@ public class TableBasedUpdateHandlerImpl
 	private final String[] updates;
 	private final ParameterSpecification[][] assignmentParameterSpecifications;
 
-	@SuppressWarnings("unchecked")
 	public TableBasedUpdateHandlerImpl(
 			SessionFactoryImplementor factory,
 			HqlSqlWalker walker,
@@ -90,7 +89,7 @@ public class TableBasedUpdateHandlerImpl
 			}
 			if ( affected ) {
 				updates[tableIndex] = update.toStatementString();
-				assignmentParameterSpecifications[tableIndex] = parameterList.toArray( new ParameterSpecification[parameterList.size()] );
+				assignmentParameterSpecifications[tableIndex] = parameterList.toArray( new ParameterSpecification[0] );
 			}
 		}
 	}
@@ -143,8 +142,9 @@ public class TableBasedUpdateHandlerImpl
 						ps = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( updates[i], false );
 						if ( assignmentParameterSpecifications[i] != null ) {
 							int position = 1; // jdbc params are 1-based
-							for ( int x = 0; x < assignmentParameterSpecifications[i].length; x++ ) {
-								position += assignmentParameterSpecifications[i][x].bind( ps, queryParameters, session, position );
+							for ( ParameterSpecification assignmentParameterSpecification : assignmentParameterSpecifications[i] ) {
+								position += assignmentParameterSpecification
+										.bind( ps, queryParameters, session, position );
 							}
 							handleAddedParametersOnUpdate( ps, session, position );
 						}

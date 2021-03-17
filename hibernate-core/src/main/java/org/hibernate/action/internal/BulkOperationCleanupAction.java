@@ -22,6 +22,7 @@ import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Queryable;
@@ -90,7 +91,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 			}
 		}
 
-		this.affectedTableSpaces = spacesList.toArray( new String[ spacesList.size() ] );
+		this.affectedTableSpaces = spacesList.toArray( new String[ 0 ] );
 	}
 
 	/**
@@ -105,13 +106,13 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 	 * @param session The session to which this request is tied.
 	 * @param tableSpaces The table spaces.
 	 */
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings( { "unchecked", "rawtypes" } )
 	public BulkOperationCleanupAction(SharedSessionContractImplementor session, Set tableSpaces) {
-		final LinkedHashSet<String> spacesList = new LinkedHashSet<>();
-		spacesList.addAll( tableSpaces );
+		final LinkedHashSet<String> spacesList = new LinkedHashSet<>( tableSpaces );
 
 		final SessionFactoryImplementor factory = session.getFactory();
-		for ( EntityPersister persister : factory.getMetamodel().entityPersisters().values() ) {
+		final MetamodelImplementor metamodel = factory.getMetamodel();
+		for ( EntityPersister persister : metamodel.entityPersisters().values() ) {
 			final String[] entitySpaces = (String[]) persister.getQuerySpaces();
 			if ( affectedEntity( tableSpaces, entitySpaces ) ) {
 				spacesList.addAll( Arrays.asList( entitySpaces ) );
@@ -123,10 +124,10 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 					naturalIdCleanups.add( new NaturalIdCleanup( persister.getNaturalIdCacheAccessStrategy(), session ) );
 				}
 
-				final Set<String> roles = session.getFactory().getMetamodel().getCollectionRolesByEntityParticipant( persister.getEntityName() );
+				final Set<String> roles = metamodel.getCollectionRolesByEntityParticipant( persister.getEntityName() );
 				if ( roles != null ) {
 					for ( String role : roles ) {
-						final CollectionPersister collectionPersister = factory.getMetamodel().collectionPersister( role );
+						final CollectionPersister collectionPersister = metamodel.collectionPersister( role );
 						if ( collectionPersister.hasCache() ) {
 							collectionCleanups.add(
 									new CollectionCleanup( collectionPersister.getCacheAccessStrategy(), session )
@@ -137,23 +138,26 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 			}
 		}
 
-		this.affectedTableSpaces = spacesList.toArray( new String[ spacesList.size() ] );
+		this.affectedTableSpaces = spacesList.toArray( new String[ 0 ] );
 	}
 
 
 	/**
-	 * Check to determine whether the table spaces reported by an entity
-	 * persister match against the defined affected table spaces.
+	 * Check whether we should consider an entity as affected by the query.  This
+	 * defines inclusion of the entity in the clean-up.
 	 *
 	 * @param affectedTableSpaces The table spaces reported to be affected by
 	 * the query.
 	 * @param checkTableSpaces The table spaces (from the entity persister)
 	 * to check against the affected table spaces.
 	 *
-	 * @return True if there are affected table spaces and any of the incoming
-	 * check table spaces occur in that set.
+	 * @return Whether the entity should be considered affected
+	 *
+	 * @implNote An entity is considered to be affected if either (1) the affected table
+	 * spaces are not known or (2) any of the incoming check table spaces occur
+	 * in that set.
 	 */
-	private boolean affectedEntity(Set affectedTableSpaces, Serializable[] checkTableSpaces) {
+	private boolean affectedEntity(Set<?> affectedTableSpaces, Serializable[] checkTableSpaces) {
 		if ( affectedTableSpaces == null || affectedTableSpaces.isEmpty() ) {
 			return true;
 		}
@@ -178,25 +182,21 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 
 	@Override
 	public AfterTransactionCompletionProcess getAfterTransactionCompletionProcess() {
-		return new AfterTransactionCompletionProcess() {
-			@Override
-			public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) {
-				for ( EntityCleanup cleanup : entityCleanups ) {
-					cleanup.release();
-				}
-				entityCleanups.clear();
-
-				for ( NaturalIdCleanup cleanup : naturalIdCleanups ) {
-					cleanup.release();
-
-				}
-				entityCleanups.clear();
-
-				for ( CollectionCleanup cleanup : collectionCleanups ) {
-					cleanup.release();
-				}
-				collectionCleanups.clear();
+		return (success, session) -> {
+			for ( EntityCleanup cleanup : entityCleanups ) {
+				cleanup.release();
 			}
+			entityCleanups.clear();
+
+			for ( NaturalIdCleanup cleanup : naturalIdCleanups ) {
+				cleanup.release();
+			}
+			naturalIdCleanups.clear();
+
+			for ( CollectionCleanup cleanup : collectionCleanups ) {
+				cleanup.release();
+			}
+			collectionCleanups.clear();
 		};
 	}
 

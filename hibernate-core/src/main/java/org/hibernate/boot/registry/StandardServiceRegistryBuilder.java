@@ -37,13 +37,42 @@ import org.hibernate.service.spi.ServiceContributor;
  */
 public class StandardServiceRegistryBuilder {
 	/**
+	 * Intended only for use from {@link org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl}.
+	 *
+	 * Creates a StandardServiceRegistryBuilder specific to the needs of JPA bootstrapping.
+	 * Specifically we ignore properties found in `cfg.xml` files in terms of adding them to
+	 * the builder immediately.  EntityManagerFactoryBuilderImpl handles collecting these
+	 * properties itself.
+	 */
+	public static StandardServiceRegistryBuilder forJpa(BootstrapServiceRegistry bootstrapServiceRegistry) {
+		final LoadedConfig loadedConfig = new LoadedConfig( null ) {
+			@Override
+			protected void addConfigurationValues(Map configurationValues) {
+				// here, do nothing
+			}
+		};
+		return new StandardServiceRegistryBuilder(
+				bootstrapServiceRegistry,
+				new HashMap(),
+				loadedConfig
+		) {
+			@Override
+			public StandardServiceRegistryBuilder configure(LoadedConfig loadedConfig) {
+				getAggregatedCfgXml().merge( loadedConfig );
+				// super also collects the properties - here we skip that part
+				return this;
+			}
+		};
+	}
+
+	/**
 	 * The default resource name for a hibernate configuration xml file.
 	 */
 	public static final String DEFAULT_CFG_RESOURCE_NAME = "hibernate.cfg.xml";
 
 	private final Map settings;
-	private final List<StandardServiceInitiator> initiators = standardInitiatorList();
-	private final List<ProvidedService> providedServices = new ArrayList<ProvidedService>();
+	private final List<StandardServiceInitiator> initiators;
+	private final List<ProvidedService> providedServices = new ArrayList<>();
 
 	private boolean autoCloseRegistry = true;
 
@@ -68,6 +97,60 @@ public class StandardServiceRegistryBuilder {
 	}
 
 	/**
+	 * Intended for use exclusively from JPA boot-strapping, or extensions of
+	 * this class. Consider this an SPI.
+	 *
+	 * @see #forJpa
+	 */
+	protected StandardServiceRegistryBuilder(
+			BootstrapServiceRegistry bootstrapServiceRegistry,
+			Map settings,
+			LoadedConfig loadedConfig) {
+		this.bootstrapServiceRegistry = bootstrapServiceRegistry;
+		this.configLoader = new ConfigLoader( bootstrapServiceRegistry );
+		this.settings = settings;
+		this.aggregatedCfgXml = loadedConfig;
+		this.initiators = standardInitiatorList();
+	}
+
+	/**
+	 * Intended for use exclusively from Quarkus boot-strapping, or extensions of
+	 * this class which need to override the standard ServiceInitiator list.
+	 * Consider this an SPI.
+	 * @deprecated Quarkus will switch to use {@link #StandardServiceRegistryBuilder(BootstrapServiceRegistry, Map, ConfigLoader, LoadedConfig, List)}
+	 */
+	@Deprecated
+	protected StandardServiceRegistryBuilder(
+			BootstrapServiceRegistry bootstrapServiceRegistry,
+			Map settings,
+			LoadedConfig loadedConfig,
+			List<StandardServiceInitiator> initiators) {
+		this.bootstrapServiceRegistry = bootstrapServiceRegistry;
+		this.configLoader = new ConfigLoader( bootstrapServiceRegistry );
+		this.settings = settings;
+		this.aggregatedCfgXml = loadedConfig;
+		this.initiators = initiators;
+	}
+
+	/**
+	 * Intended for use exclusively from Quarkus boot-strapping, or extensions of
+	 * this class which need to override the standard ServiceInitiator list.
+	 * Consider this an SPI.
+	 */
+	protected StandardServiceRegistryBuilder(
+			BootstrapServiceRegistry bootstrapServiceRegistry,
+			Map settings,
+			ConfigLoader loader,
+			LoadedConfig loadedConfig,
+			List<StandardServiceInitiator> initiators) {
+		this.bootstrapServiceRegistry = bootstrapServiceRegistry;
+		this.configLoader = loader;
+		this.settings = settings;
+		this.aggregatedCfgXml = loadedConfig;
+		this.initiators = initiators;
+	}
+
+	/**
 	 * Create a builder with the specified bootstrap services.
 	 *
 	 * @param bootstrapServiceRegistry Provided bootstrap registry to use.
@@ -79,6 +162,11 @@ public class StandardServiceRegistryBuilder {
 		this.bootstrapServiceRegistry = bootstrapServiceRegistry;
 		this.configLoader = new ConfigLoader( bootstrapServiceRegistry );
 		this.aggregatedCfgXml = loadedConfigBaseline;
+		this.initiators = standardInitiatorList();
+	}
+
+	public ConfigLoader getConfigLoader() {
+		return configLoader;
 	}
 
 	/**
@@ -94,11 +182,12 @@ public class StandardServiceRegistryBuilder {
 	 * @return List of standard initiators
 	 */
 	private static List<StandardServiceInitiator> standardInitiatorList() {
-		final List<StandardServiceInitiator> initiators = new ArrayList<StandardServiceInitiator>();
+		final List<StandardServiceInitiator> initiators = new ArrayList<>( StandardServiceInitiators.LIST.size() );
 		initiators.addAll( StandardServiceInitiators.LIST );
 		return initiators;
 	}
 
+	@SuppressWarnings("unused")
 	public BootstrapServiceRegistry getBootstrapServiceRegistry() {
 		return bootstrapServiceRegistry;
 	}
@@ -278,10 +367,8 @@ public class StandardServiceRegistryBuilder {
 		applyServiceContributingIntegrators();
 		applyServiceContributors();
 
-		final Map settingsCopy = new HashMap();
-		settingsCopy.putAll( settings );
+		final Map settingsCopy = new HashMap( settings );
 		settingsCopy.put( org.hibernate.boot.cfgxml.spi.CfgXmlAccessService.LOADED_CONFIG_KEY, aggregatedCfgXml );
-		Environment.verifyProperties( settingsCopy );
 		ConfigurationHelper.resolvePlaceHolders( settingsCopy );
 
 		return new StandardServiceRegistryImpl(

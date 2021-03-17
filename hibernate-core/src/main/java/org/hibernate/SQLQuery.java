@@ -49,7 +49,7 @@ import org.hibernate.type.Type;
  *         {@link #addFetch} and {@link #addScalar} methods
  *     </li>
  * </ul>
- * 
+ *
  * @author Gavin King
  * @author Steve Ebersole
  *
@@ -105,7 +105,7 @@ public interface SQLQuery<T> extends Query<T>, SynchronizeableQuery<T> {
 	SQLQuery<T> addScalar(String columnAlias, Type type);
 
 	/**
-	 * Add a new root return mapping, returning a {@link NativeQuery.RootReturn} to allow further definition.
+	 * Add a new root return mapping, returning a {@link SQLQuery.RootReturn} to allow further definition.
 	 *
 	 * @param tableAlias The SQL table alias to map to this entity
 	 * @param entityName The name of the entity.
@@ -117,7 +117,7 @@ public interface SQLQuery<T> extends Query<T>, SynchronizeableQuery<T> {
 	RootReturn addRoot(String tableAlias, String entityName);
 
 	/**
-	 * Add a new root return mapping, returning a {@link NativeQuery.RootReturn} to allow further definition.
+	 * Add a new root return mapping, returning a {@link SQLQuery.RootReturn} to allow further definition.
 	 *
 	 * @param tableAlias The SQL table alias to map to this entity
 	 * @param entityType The java type of the entity.

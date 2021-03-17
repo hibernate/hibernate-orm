@@ -11,6 +11,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+import org.hibernate.event.spi.EntityCopyObserver;
+import org.hibernate.event.spi.EntityCopyObserverFactory;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -20,12 +22,15 @@ import org.hibernate.pretty.MessageHelper;
 /**
  * An {@link org.hibernate.event.spi.EntityCopyObserver} implementation that allows multiple representations of
  * the same persistent entity to be merged and provides logging of the entity copies that
- * that are detected.
+ * are detected.
  *
  * @author Gail Badner
  */
-public class EntityCopyAllowedLoggedObserver extends EntityCopyAllowedObserver {
+public final class EntityCopyAllowedLoggedObserver implements EntityCopyObserver {
+
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EntityCopyAllowedLoggedObserver.class );
+
+	public static final EntityCopyObserverFactory FACTORY_OF_SELF = () -> new EntityCopyAllowedLoggedObserver();
 
 	public static final String SHORT_NAME = "log";
 
@@ -39,13 +44,8 @@ public class EntityCopyAllowedLoggedObserver extends EntityCopyAllowedObserver {
 		// key is the managed entity;
 		// value is the set of representations being merged corresponding to the same managed result.
 
-	/**
-	 * Indicates if DEBUG logging is enabled.
-	 *
-	 * @return true, if DEBUG logging is enabled.
-	 */
-	public static boolean isDebugLoggingEnabled() {
-		return LOG.isDebugEnabled();
+	private EntityCopyAllowedLoggedObserver() {
+		//Not to be constructed directly; use FACTORY_OF_SELF.
 	}
 
 	@Override

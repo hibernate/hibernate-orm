@@ -51,6 +51,8 @@ import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DecodeCaseFragment;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.OracleJoinFragment;
+import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorOracleDatabaseImpl;
+import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.sql.BitTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
@@ -71,7 +73,7 @@ public class Oracle8iDialect extends Dialect {
 
 	private static final Pattern UNION_KEYWORD_PATTERN = Pattern.compile( "\\bunion\\b" );
 
-	private static final Pattern SQL_STATEMENT_TYPE_PATTERN = Pattern.compile("^(?:\\/\\*.*?\\*\\/)?\\s*(select|insert|update|delete)\\s+.*?");
+	private static final Pattern SQL_STATEMENT_TYPE_PATTERN = Pattern.compile("^(?:\\/\\*.*?\\*\\/)?\\s*(select|insert|update|delete)\\s+.*?", Pattern.CASE_INSENSITIVE);
 
 	private static final AbstractLimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
 		@Override
@@ -125,7 +127,7 @@ public class Oracle8iDialect extends Dialect {
 	private static final int PARAM_LIST_SIZE_LIMIT = 1000;
 
 	/**
-	 * Constructs a Oracle8iDialect
+	 * Constructs an Oracle8iDialect
 	 */
 	public Oracle8iDialect() {
 		super();
@@ -345,7 +347,7 @@ public class Oracle8iDialect extends Dialect {
 	 * implementation...
 	 *
 	 * @param sqlType The {@link java.sql.Types} mapping type code
-	 * @return The appropriate select cluse fragment
+	 * @return The appropriate select clause fragment
 	 */
 	public String getBasicSelectClauseNullString(int sqlType) {
 		return super.getSelectClauseNullString( sqlType );
@@ -623,12 +625,11 @@ public class Oracle8iDialect extends Dialect {
 
 	@Override
 	public String getQuerySequencesString() {
-		return    " select sequence_name from all_sequences"
-				+ "  union"
-				+ " select synonym_name"
-				+ "   from all_synonyms us, all_sequences asq"
-				+ "  where asq.sequence_name = us.table_name"
-				+ "    and asq.sequence_owner = us.table_owner";
+		return "select * from all_sequences";
+	}
+
+	public SequenceInformationExtractor getSequenceInformationExtractor() {
+		return SequenceInformationExtractorOracleDatabaseImpl.INSTANCE;
 	}
 
 	@Override
@@ -806,7 +807,8 @@ public class Oracle8iDialect extends Dialect {
 	/**
 	 * For Oracle, the FOR UPDATE clause cannot be applied when using ORDER BY, DISTINCT or views.
 	 * @param parameters
-	 * @return
+	 * @return {@code true} indicates that the dialect requests that locking be applied by subsequent select;
+	 * {@code false} (the default) indicates that locking should be applied to the main SQL statement..
 	 @see <a href="https://docs.oracle.com/database/121/SQLRF/statements_10002.htm#SQLRF01702">Oracle FOR UPDATE restrictions</a>
 	 */
 	@Override

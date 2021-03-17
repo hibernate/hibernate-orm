@@ -1,0 +1,66 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
+
+description = 'Integration tests for running Hibernate ORM in the Java module path'
+
+buildscript {
+	repositories {
+		maven {
+			url "https://plugins.gradle.org/m2/"
+		}
+	}
+	dependencies {
+		classpath "org.javamodularity:moduleplugin:1.5.0"
+	}
+}
+
+apply from: rootProject.file( 'gradle/java-module.gradle' )
+
+// No first-class, built-in support for Java modules in Gradle yet,
+// so we have to use https://github.com/java9-modularity/gradle-modules-plugin
+apply plugin: "org.javamodularity.moduleplugin"
+
+// In this module, the "main" code is actually just test code that happens
+// to be built independently so as to generate a Java module.
+// So, let's override settings for compilation of the main code, just for this particular case.
+def testJavaVersions = gradle.ext.javaVersions.test
+tasks.compileJava {
+	if ( !gradle.ext.javaToolchainEnabled ) {
+		sourceCompatibility = JavaVersion.toVersion( testJavaVersions.release )
+		targetCompatibility = JavaVersion.toVersion( testJavaVersions.release )
+	}
+	else {
+		javaCompiler = javaToolchains.compilerFor {
+			languageVersion = testJavaVersions.compiler
+		}
+
+		// Remove JDK8-only options (if any) that are incompatible with options.release
+		for ( it = options.compilerArgs.listIterator(); it.hasNext(); ) {
+			if ( it.next() in ['-source', '-target'] ) {
+				it.remove()
+				it.next()
+				it.remove()
+			}
+		}
+
+		options.release = testJavaVersions.release.asInt()
+	}
+}
+
+// Checkstyle fails for module-info
+checkstyleMain.exclude '**/module-info.java'
+
+dependencies {
+	compile( project( ':hibernate-core' ) )
+	compile( project( ':hibernate-envers' ) )
+	compile( libraries.jpa )
+}
+
+test {
+	useJUnit()
+}
+

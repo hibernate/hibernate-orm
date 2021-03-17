@@ -98,7 +98,7 @@ public interface MetadataBuilder {
 	 * Specify the second-level cache mode to be used.  This is the cache mode in terms of whether or
 	 * not to cache.
 	 * <p/>
-	 * Its default is defined by the {@coce javax.persistence.sharedCache.mode} setting if using
+	 * Its default is defined by the {@code javax.persistence.sharedCache.mode} setting if using
 	 * property-based configuration.
 	 *
 	 * @param cacheMode The cache mode.
@@ -201,7 +201,7 @@ public interface MetadataBuilder {
 	 * setting if using property-based configuration.
 	 *
 	 *
-	 * @param enable {@code true} to enable; {@code false} to disable;don't call for
+	 * @param enable {@code true} to enable; {@code false} to disable; don't call for
 	 * default.
 	 *
 	 * @return {@code this}, for method chaining
@@ -382,7 +382,7 @@ public interface MetadataBuilder {
 	MetadataBuilder applyAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject);
 
 	/**
-	 * Adds an AttributeConverter by a AttributeConverterDefinition
+	 * Adds an AttributeConverter by an AttributeConverterDefinition
 	 *
 	 * @param definition The definition
 	 *

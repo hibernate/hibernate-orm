@@ -14,14 +14,17 @@ import java.util.Map;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.ParameterExpression;
 
-import org.hibernate.SessionFactory;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.Stack;
+import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.query.criteria.LiteralHandlingMode;
+import org.hibernate.query.criteria.internal.expression.function.FunctionExpression;
 import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.type.Type;
 
 /**
@@ -34,9 +37,9 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public class CriteriaCompiler implements Serializable {
-	private final SessionImplementor entityManager;
+	private final SharedSessionContractImplementor entityManager;
 
-	public CriteriaCompiler(SessionImplementor entityManager) {
+	public CriteriaCompiler(SharedSessionContractImplementor entityManager) {
 		this.entityManager = entityManager;
 	}
 
@@ -51,7 +54,7 @@ public class CriteriaCompiler implements Serializable {
 		final Map<ParameterExpression<?>, ExplicitParameterInfo<?>> explicitParameterInfoMap = new HashMap<>();
 		final List<ImplicitParameterBinding> implicitParameterBindings = new ArrayList<>();
 
-		final SessionFactoryImplementor sessionFactory = entityManager.getSessionFactory();
+		final SessionFactoryImplementor sessionFactory = entityManager.getFactory();
 
 		final LiteralHandlingMode criteriaLiteralHandlingMode = sessionFactory
 				.getSessionFactoryOptions()
@@ -63,12 +66,25 @@ public class CriteriaCompiler implements Serializable {
 			private int aliasCount;
 			private int explicitParameterCount;
 
+			private final Stack<Clause> clauseStack = new StandardStack<>();
+			private final Stack<FunctionExpression> functionContextStack = new StandardStack<>();
+
 			public String generateAlias() {
 				return "generatedAlias" + aliasCount++;
 			}
 
 			public String generateParameterName() {
 				return "param" + explicitParameterCount++;
+			}
+
+			@Override
+			public Stack<Clause> getClauseStack() {
+				return clauseStack;
+			}
+
+			@Override
+			public Stack<FunctionExpression> getFunctionStack() {
+				return functionContextStack;
 			}
 
 			@Override

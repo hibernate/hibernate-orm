@@ -88,11 +88,11 @@ public class QueryJoinFragment extends JoinFragment {
 	}
 
 	public void addCondition(String alias, String[] columns, String condition) {
-		for ( int i = 0; i < columns.length; i++ ) {
+		for ( String column : columns ) {
 			afterWhere.append( " and " )
 					.append( alias )
 					.append( '.' )
-					.append( columns[i] )
+					.append( column )
 					.append( condition );
 		}
 	}

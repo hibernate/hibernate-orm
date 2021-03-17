@@ -105,7 +105,10 @@ public class PersistentAttributesEnhancer extends EnhancerImpl {
 		try {
 			CtClass managedCtSuperclass = managedCtClass.getSuperclass();
 
-			if ( !enhancementContext.isMappedSuperclassClass( managedCtSuperclass ) ) {
+			if ( enhancementContext.isEntityClass( managedCtSuperclass ) ) {
+				return Collections.emptyList();
+			}
+			else if ( !enhancementContext.isMappedSuperclassClass( managedCtSuperclass ) ) {
 				return collectInheritPersistentFields( managedCtSuperclass );
 			}
 			log.debugf( "Found @MappedSuperclass %s to collectPersistenceFields", managedCtSuperclass.getName() );
@@ -159,7 +162,7 @@ public class PersistentAttributesEnhancer extends EnhancerImpl {
 
 		try {
 			boolean declared = persistentField.getDeclaringClass().equals( managedCtClass );
-			String declaredReadFragment = "this." + fieldName + "";
+			String declaredReadFragment = "this." + fieldName;
 			String superReadFragment = "super." + readerName + "()";
 
 			if ( !declared ) {
@@ -322,7 +325,7 @@ public class PersistentAttributesEnhancer extends EnhancerImpl {
 		final CtClass targetEntity = PersistentAttributesHelper.getTargetEntityClass( managedCtClass, persistentField );
 		if ( targetEntity == null ) {
 			log.infof(
-					"Could not find type of bi-directional association for field [%s#%s]",
+					"Bi-directional association not managed for field [%s#%s]: Could not find target type",
 					managedCtClass.getName(),
 					persistentField.getName()
 			);
@@ -331,9 +334,10 @@ public class PersistentAttributesEnhancer extends EnhancerImpl {
 		final String mappedBy = PersistentAttributesHelper.getMappedBy( persistentField, targetEntity, enhancementContext );
 		if ( mappedBy == null || mappedBy.isEmpty() ) {
 			log.infof(
-					"Could not find bi-directional association for field [%s#%s]",
+					"Bi-directional association not managed for field [%s#%s]: Could not find target field in [%s]",
 					managedCtClass.getName(),
-					persistentField.getName()
+					persistentField.getName(),
+					targetEntity.getName()
 			);
 			return;
 		}
@@ -396,7 +400,7 @@ public class PersistentAttributesEnhancer extends EnhancerImpl {
 			String toArrayMethod = isMap ? "values().toArray()" : "toArray()";
 
 			// only remove elements not in the new collection or else we would loose those elements
-			// don't use iterator to avoid ConcurrentModException
+			// don't use iterator to avoid ConcurrentModificationException
 			fieldWriter.insertBefore(
 					String.format(
 							"  if (this.%3$s != null && %1$s) {%n" +
@@ -456,7 +460,7 @@ public class PersistentAttributesEnhancer extends EnhancerImpl {
 			if ( PersistentAttributesHelper.isAssignable( persistentField.getType(), Map.class.getName() ) ||
 					PersistentAttributesHelper.isAssignable( targetEntity.getField( mappedBy ).getType(), Map.class.getName() ) ) {
 				log.infof(
-						"Bi-directional association for field [%s#%s] not managed: @ManyToMany in java.util.Map attribute not supported ",
+						"Bi-directional association not managed for field [%s#%s]: @ManyToMany in java.util.Map attribute not supported ",
 						managedCtClass.getName(),
 						persistentField.getName()
 				);
@@ -516,26 +520,30 @@ public class PersistentAttributesEnhancer extends EnhancerImpl {
 		// make sure to add the CompositeOwner interface
 		addCompositeOwnerInterface( managedCtClass );
 
+		String readFragment = persistentField.visibleFrom( managedCtClass ) ? persistentField.getName() : "super." + EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX + persistentField.getName() + "()";
+
 		// cleanup previous owner
 		fieldWriter.insertBefore(
 				String.format(
-						"if (%1$s != null) { ((%2$s) %1$s).%3$s(\"%1$s\"); }%n",
-						persistentField.getName(),
+						"if (%1$s != null) { ((%2$s) %1$s).%3$s(\"%4$s\"); }%n",
+						readFragment,
 						CompositeTracker.class.getName(),
-						EnhancerConstants.TRACKER_COMPOSITE_CLEAR_OWNER
+						EnhancerConstants.TRACKER_COMPOSITE_CLEAR_OWNER,
+						persistentField.getName()
 				)
 		);
 
 		// trigger track changes
 		fieldWriter.insertAfter(
 				String.format(
-						"if (%1$s != null) { ((%2$s) %1$s).%4$s(\"%1$s\", (%3$s) this); }%n" +
-								"%5$s(\"%1$s\");",
-						persistentField.getName(),
+						"if (%1$s != null) { ((%2$s) %1$s).%4$s(\"%6$s\", (%3$s) this); }%n" +
+								"%5$s(\"%6$s\");",
+						readFragment,
 						CompositeTracker.class.getName(),
 						CompositeOwner.class.getName(),
 						EnhancerConstants.TRACKER_COMPOSITE_SET_OWNER,
-						EnhancerConstants.TRACKER_CHANGER_NAME
+						EnhancerConstants.TRACKER_CHANGER_NAME,
+						persistentField.getName()
 				)
 		);
 	}
@@ -553,7 +561,7 @@ public class PersistentAttributesEnhancer extends EnhancerImpl {
 		managedCtClass.addInterface( compositeOwnerCtClass );
 
 		if ( enhancementContext.isCompositeClass( managedCtClass ) ) {
-			// if a composite have a embedded field we need to implement the TRACKER_CHANGER_NAME method as well
+			// if a composite has an embedded field we need to implement the TRACKER_CHANGER_NAME method as well
 			MethodWriter.write(
 					managedCtClass,
 					"public void %1$s(String name) {%n" +

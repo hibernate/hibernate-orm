@@ -18,7 +18,7 @@ import org.hibernate.type.Type;
  */
 public interface ParameterSpecification extends ParameterBinder {
 	/**
-	 * Get the type which we are expeting for a bind into this parameter based
+	 * Get the type which we are expecting for a bind into this parameter based
 	 * on translated contextual information.
 	 *
 	 * @return The expected type.

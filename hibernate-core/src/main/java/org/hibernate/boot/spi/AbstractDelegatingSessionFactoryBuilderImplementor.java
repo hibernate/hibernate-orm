@@ -25,12 +25,6 @@ public abstract class AbstractDelegatingSessionFactoryBuilderImplementor<T exten
 		return (SessionFactoryBuilderImplementor) super.delegate();
 	}
 
-	@SuppressWarnings("deprecation")
-	@Override
-	public void markAsJpaBootstrap() {
-		delegate().markAsJpaBootstrap();
-	}
-
 	@Override
 	public void disableJtaTransactionAccess() {
 		delegate().disableJtaTransactionAccess();

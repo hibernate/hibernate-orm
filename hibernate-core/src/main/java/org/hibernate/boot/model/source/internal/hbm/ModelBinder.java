@@ -92,10 +92,12 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.InFlightMetadataCollector.EntityTableXref;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.NaturalIdUniqueKeyBinder;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.FkSecondPass;
 import org.hibernate.cfg.SecondPass;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.id.PersistentIdentifierGenerator;
@@ -104,6 +106,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Array;
@@ -156,7 +159,6 @@ import org.hibernate.type.TypeResolver;
  */
 public class ModelBinder {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( ModelBinder.class );
-	private static final boolean debugEnabled = log.isDebugEnabled();
 
 	private final MetadataBuildingContext metadataBuildingContext;
 
@@ -521,6 +523,7 @@ public class ModelBinder {
 			PersistentClass superEntityDescriptor) {
 		for ( IdentifiableTypeSource subType : entitySource.getSubTypes() ) {
 			final SingleTableSubclass subEntityDescriptor = new SingleTableSubclass( superEntityDescriptor, metadataBuildingContext );
+			subEntityDescriptor.setCached( superEntityDescriptor.isCached() );
 			bindDiscriminatorSubclassEntity( (SubclassEntitySourceImpl) subType, subEntityDescriptor );
 			superEntityDescriptor.addSubclass( subEntityDescriptor );
 			entitySource.getLocalMetadataBuildingContext().getMetadataCollector().addEntityBinding( subEntityDescriptor );
@@ -579,6 +582,7 @@ public class ModelBinder {
 			PersistentClass superEntityDescriptor) {
 		for ( IdentifiableTypeSource subType : entitySource.getSubTypes() ) {
 			final JoinedSubclass subEntityDescriptor = new JoinedSubclass( superEntityDescriptor, metadataBuildingContext );
+			subEntityDescriptor.setCached( superEntityDescriptor.isCached() );
 			bindJoinedSubclassEntity( (JoinedSubclassEntitySourceImpl) subType, subEntityDescriptor );
 			superEntityDescriptor.addSubclass( subEntityDescriptor );
 			entitySource.getLocalMetadataBuildingContext().getMetadataCollector().addEntityBinding( subEntityDescriptor );
@@ -655,6 +659,7 @@ public class ModelBinder {
 			PersistentClass superEntityDescriptor) {
 		for ( IdentifiableTypeSource subType : entitySource.getSubTypes() ) {
 			final UnionSubclass subEntityDescriptor = new UnionSubclass( superEntityDescriptor, metadataBuildingContext );
+			subEntityDescriptor.setCached( superEntityDescriptor.isCached() );
 			bindUnionSubclassEntity( (SubclassEntitySourceImpl) subType, subEntityDescriptor );
 			superEntityDescriptor.addSubclass( subEntityDescriptor );
 			entitySource.getLocalMetadataBuildingContext().getMetadataCollector().addEntityBinding( subEntityDescriptor );
@@ -1527,7 +1532,6 @@ public class ModelBinder {
 			binding.getSynchronizedTables().add( name );
 		}
 
-		binding.setWhere( source.getWhere() );
 		binding.setLoaderName( source.getCustomLoaderName() );
 		if ( source.getCustomSqlInsert() != null ) {
 			binding.setCustomSQLInsert(
@@ -2341,6 +2345,9 @@ public class ModelBinder {
 			Any anyBinding,
 			final AttributeRole attributeRole,
 			AttributePath attributePath) {
+
+		anyBinding.setLazy( anyMapping.isLazy() );
+
 		final TypeResolution keyTypeResolution = resolveType(
 				sourceDocument,
 				anyMapping.getKeySource().getTypeSource()
@@ -2826,7 +2833,7 @@ public class ModelBinder {
 		}
 
 		String typeName = typeSource.getName();
-		Properties typeParameters = new Properties();;
+		Properties typeParameters = new Properties();
 
 		final TypeDefinition typeDefinition = sourceDocument.getMetadataCollector().getTypeDefinition( typeName );
 		if ( typeDefinition != null ) {
@@ -3134,7 +3141,7 @@ public class ModelBinder {
 
 			collectionBinding.createAllKeys();
 
-			if ( debugEnabled ) {
+			if ( log.isDebugEnabled() ) {
 				log.debugf( "Mapped collection : " + getPluralAttributeSource().getAttributeRole().getFullPath() );
 				log.debugf( "   + table -> " + getCollectionBinding().getTable().getName() );
 				log.debugf( "   + key -> " + columns( getCollectionBinding().getKey() ) );
@@ -3259,7 +3266,7 @@ public class ModelBinder {
 			}
 
 
-			if ( debugEnabled ) {
+			if ( log.isDebugEnabled() ) {
 				log.debugf( "Mapping collection: %s -> %s", collectionBinding.getRole(), collectionBinding.getCollectionTable().getName() );
 			}
 
@@ -3387,6 +3394,11 @@ public class ModelBinder {
 		}
 
 		protected void bindCollectionElement() {
+			log.debugf(
+					"Binding [%s] element type for a [%s]",
+					getPluralAttributeSource().getElementSource().getNature(),
+					getPluralAttributeSource().getNature()
+			);
 			if ( getPluralAttributeSource().getElementSource() instanceof PluralAttributeElementSourceBasic ) {
 				final PluralAttributeElementSourceBasic elementSource =
 						(PluralAttributeElementSourceBasic) getPluralAttributeSource().getElementSource();
@@ -3415,6 +3427,10 @@ public class ModelBinder {
 				);
 
 				getCollectionBinding().setElement( elementBinding );
+				// Collection#setWhere is used to set the "where" clause that applies to the collection table
+				// (the table containing the basic elements)
+				// This "where" clause comes from the collection mapping; e.g., <set name="..." ... where="..." .../>
+				getCollectionBinding().setWhere( getPluralAttributeSource().getWhere() );
 			}
 			else if ( getPluralAttributeSource().getElementSource() instanceof PluralAttributeElementSourceEmbedded ) {
 				final PluralAttributeElementSourceEmbedded elementSource =
@@ -3436,6 +3452,10 @@ public class ModelBinder {
 				);
 
 				getCollectionBinding().setElement( elementBinding );
+				// Collection#setWhere is used to set the "where" clause that applies to the collection table
+				// (the table containing the embeddable elements)
+				// This "where" clause comes from the collection mapping; e.g., <set name="..." ... where="..." .../>
+				getCollectionBinding().setWhere( getPluralAttributeSource().getWhere() );
 			}
 			else if ( getPluralAttributeSource().getElementSource() instanceof PluralAttributeElementSourceOneToMany ) {
 				final PluralAttributeElementSourceOneToMany elementSource =
@@ -3448,9 +3468,28 @@ public class ModelBinder {
 
 				final PersistentClass referencedEntityBinding = mappingDocument.getMetadataCollector()
 						.getEntityBinding( elementSource.getReferencedEntityName() );
+
+				if ( useEntityWhereClauseForCollections() ) {
+					// For a one-to-many association, there are 2 possible sources of "where" clauses that apply
+					// to the associated entity table:
+					// 1) from the associated entity mapping; i.e., <class name="..." ... where="..." .../>
+					// 2) from the collection mapping; e.g., <set name="..." ... where="..." .../>
+					// Collection#setWhere is used to set the "where" clause that applies to the collection table
+					// (which is the associated entity table for a one-to-many association).
+					collectionBinding.setWhere(
+							StringHelper.getNonEmptyOrConjunctionIfBothNonEmpty(
+									referencedEntityBinding.getWhere(),
+									getPluralAttributeSource().getWhere()
+							)
+					);
+				}
+				else {
+					// ignore entity's where clause
+					collectionBinding.setWhere( getPluralAttributeSource().getWhere() );
+				}
+
 				elementBinding.setReferencedEntityName( referencedEntityBinding.getEntityName() );
 				elementBinding.setAssociatedClass( referencedEntityBinding );
-
 				elementBinding.setIgnoreNotFound( elementSource.isIgnoreNotFound() );
 			}
 			else if ( getPluralAttributeSource().getElementSource() instanceof PluralAttributeElementSourceManyToMany ) {
@@ -3469,12 +3508,17 @@ public class ModelBinder {
 						new RelationalObjectBinder.ColumnNamingDelegate() {
 							@Override
 							public Identifier determineImplicitName(final LocalMetadataBuildingContext context) {
-								return context.getMetadataCollector().getDatabase().toIdentifier( Collection.DEFAULT_ELEMENT_COLUMN_NAME );
+								return context.getMetadataCollector()
+										.getDatabase()
+										.toIdentifier( Collection.DEFAULT_ELEMENT_COLUMN_NAME );
 							}
 						}
 				);
 
-				elementBinding.setLazy( elementSource.getFetchCharacteristics().getFetchTiming() != FetchTiming.IMMEDIATE );
+				elementBinding.setLazy(
+						elementSource.getFetchCharacteristics()
+								.getFetchTiming() != FetchTiming.IMMEDIATE
+				);
 				elementBinding.setFetchMode(
 						elementSource.getFetchCharacteristics().getFetchStyle() == FetchStyle.SELECT
 								? FetchMode.SELECT
@@ -3494,7 +3538,34 @@ public class ModelBinder {
 
 				getCollectionBinding().setElement( elementBinding );
 
-				getCollectionBinding().setManyToManyWhere( elementSource.getWhere() );
+				final PersistentClass referencedEntityBinding = mappingDocument.getMetadataCollector().getEntityBinding(
+						elementSource.getReferencedEntityName()
+				);
+
+				// Collection#setWhere is used to set the "where" clause that applies to the collection table
+				// (which is the join table for a many-to-many association).
+				// This "where" clause comes from the collection mapping; e.g., <set name="..." ... where="..." .../>
+				getCollectionBinding().setWhere( getPluralAttributeSource().getWhere() );
+
+				if ( useEntityWhereClauseForCollections() ) {
+					// For a many-to-many association, there are 2 possible sources of "where" clauses that apply
+					// to the associated entity table (not the join table):
+					// 1) from the associated entity mapping; i.e., <class name="..." ... where="..." .../>
+					// 2) from the many-to-many mapping; i.e <many-to-many ... where="...".../>
+					// Collection#setManytoManyWhere is used to set the "where" clause that applies to
+					// to the many-to-many associated entity table (not the join table).
+					getCollectionBinding().setManyToManyWhere(
+							StringHelper.getNonEmptyOrConjunctionIfBothNonEmpty(
+									referencedEntityBinding.getWhere(),
+									elementSource.getWhere()
+							)
+					);
+				}
+				else {
+					// ignore entity's where clause
+					getCollectionBinding().setManyToManyWhere( elementSource.getWhere() );
+				}
+
 				getCollectionBinding().setManyToManyOrdering( elementSource.getOrder() );
 
 				if ( !CollectionHelper.isEmpty( elementSource.getFilterSources() )
@@ -3534,7 +3605,7 @@ public class ModelBinder {
 						);
 					}
 
-					if ( debugEnabled ) {
+					if ( log.isDebugEnabled() ) {
 						log.debugf(
 								"Applying many-to-many filter [%s] as [%s] to collection [%s]",
 								filterSource.getName(),
@@ -3568,8 +3639,24 @@ public class ModelBinder {
 
 				);
 				getCollectionBinding().setElement( elementBinding );
+				// Collection#setWhere is used to set the "where" clause that applies to the collection table
+				// (which is the join table for a many-to-any association).
+				// This "where" clause comes from the collection mapping; e.g., <set name="..." ... where="..." .../>
+				getCollectionBinding().setWhere( getPluralAttributeSource().getWhere() );
 			}
 		}
+	}
+
+	private boolean useEntityWhereClauseForCollections() {
+		return ConfigurationHelper.getBoolean(
+				AvailableSettings.USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS,
+				metadataBuildingContext
+						.getBuildingOptions()
+						.getServiceRegistry()
+						.getService( ConfigurationService.class )
+						.getSettings(),
+				true
+		);
 	}
 
 	private class PluralAttributeListSecondPass extends AbstractPluralAttributeSecondPass {
@@ -4065,7 +4152,7 @@ public class ModelBinder {
 		}
 	}
 
-	private class ManyToOneFkSecondPass extends FkSecondPass {
+	private static class ManyToOneFkSecondPass extends FkSecondPass {
 		private final MappingDocument mappingDocument;
 		private final ManyToOne manyToOneBinding;
 
@@ -4126,7 +4213,7 @@ public class ModelBinder {
 		}
 	}
 
-	private class NaturalIdUniqueKeyBinderImpl implements NaturalIdUniqueKeyBinder {
+	private static class NaturalIdUniqueKeyBinderImpl implements NaturalIdUniqueKeyBinder {
 		private final MappingDocument mappingDocument;
 		private final PersistentClass entityBinding;
 		private final List<Property> attributeBindings = new ArrayList<Property>();

@@ -13,7 +13,7 @@ this feature is not suitable for a production environment.
 An automated schema migration tool (e.g. https://flywaydb.org/[Flyway], http://www.liquibase.org/[Liquibase]) allows you to use any database-specific DDL feature (e.g. Rules, Triggers, Partitioned Tables).
 Every migration should have an associated script, which is stored on the Version Control System, along with the application source code.
 
-When the application is deployed on a production-like QA environment, and the deploy worked as expected, then pushing the deploy to a production environment should be straightforward since the latest schema migration was already tested.
+When the application is deployed on a production-like QA environment, and the deployment worked as expected, then pushing the deployment to a production environment should be straightforward since the latest schema migration was already tested.
 
 [TIP]
 ====
@@ -62,7 +62,7 @@ This saves database roundtrips, and so it https://leanpub.com/high-performance-j
 
 Not only `INSERT` and `UPDATE` statements, but even `DELETE` statements can be batched as well.
 For `INSERT` and `UPDATE` statements, make sure that you have all the right configuration properties in place, like ordering inserts and updates and activating batching for versioned data.
-Check out this article for more details on this topic.
+Check out https://vladmihalcea.com/how-to-batch-insert-and-update-statements-with-hibernate/[this article] for more details on this topic.
 
 For `DELETE` statements, there is no option to order parent and child statements, so cascading can interfere with the JDBC batching process.
 
@@ -81,7 +81,7 @@ When it comes to identifiers, you can either choose a natural id or a synthetic 
 
 For natural identifiers, the *assigned* identifier generator is the right choice.
 
-For synthetic keys, the application developer can either choose a randomly generates fixed-size sequence (e.g. UUID) or a natural identifier.
+For synthetic keys, the application developer can either choose a randomly generated fixed-size sequence (e.g. UUID) or a natural identifier.
 Natural identifiers are very practical, being more compact than their UUID counterparts, so there are multiple generators to choose from:
 
 - `IDENTITY`
@@ -127,22 +127,22 @@ On the other hand, the more exotic the association mapping, the better the chanc
 Therefore, the `@ManyToOne` and the `@OneToOne` child-side association are best to represent a `FOREIGN KEY` relationship.
 
 The parent-side `@OneToOne` association requires bytecode enhancement
-so that the association can be loaded lazily. Otherwise, the parent-side is always fetched even if the association is marked with `FetchType.LAZY`.
+so that the association can be loaded lazily. Otherwise, the parent-side association is always fetched even if the association is marked with `FetchType.LAZY`.
 
 For this reason, it's best to map `@OneToOne` association using `@MapsId` so that the `PRIMARY KEY` is shared between the child and the parent entities.
-When using `@MapsId`, the parent-side becomes redundant since the child-entity can be easily fetched using the parent entity identifier.
+When using `@MapsId`, the parent-side association becomes redundant since the child-entity can be easily fetched using the parent entity identifier.
 
 For collections, the association can be either:
 
 - unidirectional
 - bidirectional
 
-For unidirectional collections, `Sets` are the best choice because they generate the most efficient SQL statements.
-Unidirectional `Lists` are less efficient than a `@ManyToOne` association.
+For unidirectional collections, ``Set``s are the best choice because they generate the most efficient SQL statements.
+Unidirectional ``List``s are less efficient than a `@ManyToOne` association.
 
 Bidirectional associations are usually a better choice because the `@ManyToOne` side controls the association.
 
-Embeddable collections (``@ElementCollection`) are unidirectional associations, hence `Sets` are the most efficient, followed by ordered `Lists`, whereas bags (unordered `Lists`) are the least efficient.
+Embeddable collections (``@ElementCollection``) are unidirectional associations, hence ``Set``s are the most efficient, followed by ordered ``List``s, whereas bags (unordered ``List``s) are the least efficient.
 
 The `@ManyToMany` annotation is rarely a good choice because it treats both sides as unidirectional associations.
 
@@ -198,7 +198,7 @@ Prior to JPA, Hibernate used to have all associations as `LAZY` by default.
 However, when JPA 1.0 specification emerged, it was thought that not all providers would use Proxies. Hence, the `@ManyToOne` and the `@OneToOne` associations are now `EAGER` by default.
 
 The `EAGER` fetching strategy cannot be overwritten on a per query basis, so the association is always going to be retrieved even if you don't need it.
-More, if you forget to `JOIN FETCH` an `EAGER` association in a JPQL query, Hibernate will initialize it with a secondary statement, which in turn can lead to N+1 query issues.
+Moreover, if you forget to `JOIN FETCH` an `EAGER` association in a JPQL query, Hibernate will initialize it with a secondary statement, which in turn can lead to N+1 query issues.
 ====
 
 So, `EAGER` fetching is to be avoided. For this reason, it's better if all associations are marked as `LAZY` by default.
@@ -208,19 +208,19 @@ There are good and bad ways to treat the `LazyInitializationException`.
 
 The best way to deal with `LazyInitializationException` is to fetch all the required associations prior to closing the Persistence Context.
 The `JOIN FETCH` directive is good for `@ManyToOne` and `OneToOne` associations, and for at most one collection (e.g. `@OneToMany` or `@ManyToMany`).
-If you need to fetch multiple collections, to avoid a Cartesian Product, you should use secondary queries which are triggered either by navigating the `LAZY` association or by calling `Hibernate#initialize(proxy)` method.
+If you need to fetch multiple collections, to avoid a Cartesian Product, you should use secondary queries which are triggered either by navigating the `LAZY` association or by calling `Hibernate#initialize(Object proxy)` method.
 
 [[best-practices-caching]]
 === Caching
 
 Hibernate has two caching layers:
 
-- the first-level cache (Persistence Context) which is a application-level repeatable reads.
-- the second-level cache which, unlike application-level caches, it doesn't store entity aggregates but normalized dehydrated entity entries.
+- the first-level cache (Persistence Context) which provides application-level repeatable reads.
+- the second-level cache which, unlike application-level caches, doesn't store entity aggregates but normalized dehydrated entity entries.
 
 The first-level cache is not a caching solution "per se", being more useful for ensuring `READ COMMITTED` isolation level.
 
-While the first-level cache is short lived, being cleared when the underlying `EntityManager` is closed, the second-level cache is tied to an `EntityManagerFactory`.
+While the first-level cache is short-lived, being cleared when the underlying `EntityManager` is closed, the second-level cache is tied to an `EntityManagerFactory`.
 Some second-level caching providers offer support for clusters. Therefore, a node needs only to store a subset of the whole cached data.
 
 Although the second-level cache can reduce transaction response time since entities are retrieved from the cache rather than from the database,
@@ -229,12 +229,12 @@ and you should consider these alternatives prior to jumping to a second-level ca
 
 - tuning the underlying database cache so that the working set fits into memory, therefore reducing Disk I/O traffic.
 - optimizing database statements through JDBC batching, statement caching, indexing can reduce the average response time, therefore increasing throughput as well.
-- database replication is also a very valuable option to increase read-only transaction throughput
+- database replication is also a very valuable option to increase read-only transaction throughput.
 
 After properly tuning the database, to further reduce the average response time and increase the system throughput, application-level caching becomes inevitable.
 
-Topically, a key-value application-level cache like https://memcached.org/[Memcached] or http://redis.io/[Redis] is a common choice to store data aggregates.
-If you can duplicate all data in the key-value store, you have the option of taking down the database system for maintenance without completely loosing availability since read-only traffic can still be served from the cache.
+Typically, a key-value application-level cache like https://memcached.org/[Memcached] or http://redis.io/[Redis] is a common choice to store data aggregates.
+If you can duplicate all data in the key-value store, you have the option of taking down the database system for maintenance without completely losing availability since read-only traffic can still be served from the cache.
 
 One of the main challenges of using an application-level cache is ensuring data consistency across entity aggregates.
 That's where the second-level cache comes to the rescue.
@@ -255,7 +255,7 @@ Both `READ_WRITE` and `TRANSACTIONAL` use write-through caching, while `NONSTRIC
 For this reason, `NONSTRICT_READ_WRITE` is not very suitable if entities are changed frequently.
 
 When using clustering, the second-level cache entries are spread across multiple nodes.
-When using http://blog.infinispan.org/2015/10/hibernate-second-level-cache.html[Infinispan distributed cache], only `READ_WRITE` and `NONSTRICT_READ_WRITE` are available for read-write caches.
+When using https://infinispan.org/blog/2015/10/01/hibernate-second-level-cache/[Infinispan distributed cache], only `READ_WRITE` and `NONSTRICT_READ_WRITE` are available for read-write caches.
 Bear in mind that `NONSTRICT_READ_WRITE` offers a weaker consistency guarantee since stale updates are possible.
 
 [NOTE]

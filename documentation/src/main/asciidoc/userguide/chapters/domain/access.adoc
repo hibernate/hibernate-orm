@@ -10,8 +10,9 @@ When placed on the identifier getter, Hibernate will use property-based access.
 
 [IMPORTANT]
 ====
-You should pay attention to https://docs.oracle.com/javase/8/docs/api/java/beans/Introspector.html#decapitalize(java.lang.String)[Java Beans specification] in regard to naming properties to avoid
-issues such as https://hibernate.atlassian.net/browse/HCANN-63[Property name beginning with at least two uppercase characters has odd functionality in HQL]!
+To avoid issues such as
+https://hibernate.atlassian.net/browse/HCANN-63[HCANN-63 - Property name beginning with at least two uppercase characters has odd functionality in HQL], you should pay attention to
+https://docs.oracle.com/javase/8/docs/api/java/beans/Introspector.html#decapitalize(java.lang.String)[Java Bean specification] in regard to naming properties.
 ====
 
 Embeddable types inherit the access strategy from their parent entities.
@@ -34,7 +35,9 @@ To exclude a field from being part of the entity persistent state, the field mus
 [NOTE]
 ====
 Another advantage of using field-based access is that some entity attributes can be hidden from outside the entity.
+
 An example of such attribute is the entity `@Version` field, which, usually, does not need to be manipulated by the data access layer.
+
 With field-based access, we can simply omit the getter and the setter for this version field, and Hibernate can still leverage the optimistic concurrency control mechanism.
 ====
 

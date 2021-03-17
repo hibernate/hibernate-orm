@@ -34,8 +34,20 @@ public @interface CollectionType {
 	String type();
 
 	/**
+	 * Specifies the class to use the semantics of.
+	 *
+	 * For example, specifying {@link java.util.Set} will use Set semantics.
+	 *
+	 * When not specified, will be inferred from the interfaces on the property
+	 * as long as it extends a standard {@link java.util.Collection} or {@link java.util.Map}.
+	 *
+	 * @return the class to use the semantics of.
+	 */
+	Class<?> semantics() default void.class;
+
+	/**
 	 * Specifies configuration information for the type.  Note that if the named type is a
-	 * {@link org.hibernate.usertype.UserCollectionType}, it must also implement 
+	 * {@link org.hibernate.usertype.UserCollectionType}, it must also implement
 	 * {@link org.hibernate.usertype.ParameterizedType} in order to receive these values.
 	 */
 	Parameter[] parameters() default {};

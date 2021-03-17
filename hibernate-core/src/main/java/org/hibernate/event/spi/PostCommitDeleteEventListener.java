@@ -13,7 +13,7 @@ package org.hibernate.event.spi;
  */
 public interface PostCommitDeleteEventListener extends PostDeleteEventListener {
 	/**
-	 * Called when a commit fails and an an entity was scheduled for deletion
+	 * Called when a commit fails and an entity was scheduled for deletion
 	 * 
 	 * @param event the delete event to be handled
 	 */

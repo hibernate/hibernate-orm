@@ -7,7 +7,6 @@
 package org.hibernate.proxool.internal;
 
 import java.util.Collections;
-import java.util.List;
 
 import org.hibernate.boot.registry.selector.SimpleStrategyRegistrationImpl;
 import org.hibernate.boot.registry.selector.StrategyRegistration;
@@ -20,23 +19,21 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
  * 
  * @author Brett Meyer
  */
-public class StrategyRegistrationProviderImpl implements StrategyRegistrationProvider {
-	private static final List<StrategyRegistration> REGISTRATIONS = Collections.singletonList(
-			(StrategyRegistration) new SimpleStrategyRegistrationImpl<ConnectionProvider>(
-					ConnectionProvider.class,
-					ProxoolConnectionProvider.class,
-					"proxool",
-					ProxoolConnectionProvider.class.getSimpleName(),
-					// legacy
-					"org.hibernate.connection.ProxoolConnectionProvider",
-					// legacy
-					"org.hibernate.service.jdbc.connections.internal.ProxoolConnectionProvider"
-			)
-	);
+public final class StrategyRegistrationProviderImpl implements StrategyRegistrationProvider {
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public Iterable<StrategyRegistration> getStrategyRegistrations() {
-		return REGISTRATIONS;
+		return Collections.singletonList(
+				new SimpleStrategyRegistrationImpl<ConnectionProvider>(
+						ConnectionProvider.class,
+						ProxoolConnectionProvider.class,
+						"proxool",
+						ProxoolConnectionProvider.class.getSimpleName(),
+						// legacy
+						"org.hibernate.connection.ProxoolConnectionProvider",
+						// legacy
+						"org.hibernate.service.jdbc.connections.internal.ProxoolConnectionProvider"
+				) );
 	}
 }

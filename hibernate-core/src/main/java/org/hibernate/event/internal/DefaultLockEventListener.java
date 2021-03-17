@@ -16,6 +16,7 @@ import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.LockEvent;
@@ -59,12 +60,12 @@ public class DefaultLockEventListener extends AbstractLockUpgradeEventListener i
 		}
 
 		SessionImplementor source = event.getSession();
-		
-		Object entity = source.getPersistenceContext().unproxyAndReassociate( event.getObject() );
+		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
+		Object entity = persistenceContext.unproxyAndReassociate( event.getObject() );
 		//TODO: if object was an uninitialized proxy, this is inefficient,
 		//      resulting in two SQL selects
 		
-		EntityEntry entry = source.getPersistenceContext().getEntry(entity);
+		EntityEntry entry = persistenceContext.getEntry(entity);
 		if (entry==null) {
 			final EntityPersister persister = source.getEntityPersister( event.getEntityName(), entity );
 			final Serializable id = persister.getIdentifier( entity, source );
@@ -84,7 +85,8 @@ public class DefaultLockEventListener extends AbstractLockUpgradeEventListener i
 	
 	private void cascadeOnLock(LockEvent event, EntityPersister persister, Object entity) {
 		EventSource source = event.getSession();
-		source.getPersistenceContext().incrementCascadeLevel();
+		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
+		persistenceContext.incrementCascadeLevel();
 		try {
 			Cascade.cascade(
 					CascadingActions.LOCK,
@@ -96,7 +98,7 @@ public class DefaultLockEventListener extends AbstractLockUpgradeEventListener i
 			);
 		}
 		finally {
-			source.getPersistenceContext().decrementCascadeLevel();
+			persistenceContext.decrementCascadeLevel();
 		}
 	}
 

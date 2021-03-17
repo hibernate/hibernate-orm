@@ -123,14 +123,14 @@ class SingularAttributeSourceBasicImpl
 	@Override
 	public Boolean isInsertable() {
 		return propertyElement.isInsert() == null
-				? true
+				? Boolean.TRUE
 				: propertyElement.isInsert();
 	}
 
 	@Override
 	public Boolean isUpdatable() {
 		return propertyElement.isUpdate() == null
-				? true
+				? Boolean.TRUE
 				: propertyElement.isUpdate();
 	}
 

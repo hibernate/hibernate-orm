@@ -9,7 +9,7 @@ package org.hibernate.cache;
 import org.hibernate.cfg.Environment;
 
 /**
- * Indicates a condition where a second-level cache implementation was expected to be to available, but
+ * Indicates a condition where a second-level cache implementation was expected to be available, but
  * none was found on the classpath.
  *
  * @author Steve Ebersole

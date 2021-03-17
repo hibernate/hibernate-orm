@@ -30,7 +30,6 @@ public class TransactionImpl implements TransactionImplementor {
 	private static final Logger LOG = CoreLogging.logger( TransactionImpl.class );
 
 	private final TransactionCoordinator transactionCoordinator;
-	private final ExceptionConverter exceptionConverter;
 	private final JpaCompliance jpaCompliance;
 	private final AbstractSharedSessionContract session;
 
@@ -38,10 +37,8 @@ public class TransactionImpl implements TransactionImplementor {
 
 	public TransactionImpl(
 			TransactionCoordinator transactionCoordinator,
-			ExceptionConverter exceptionConverter,
 			AbstractSharedSessionContract session) {
 		this.transactionCoordinator = transactionCoordinator;
-		this.exceptionConverter = exceptionConverter;
 		this.jpaCompliance = session.getFactory().getSessionFactoryOptions().getJpaCompliance();
 		this.session = session;
 
@@ -72,7 +69,13 @@ public class TransactionImpl implements TransactionImplementor {
 
 		// per-JPA
 		if ( isActive() ) {
-			throw new IllegalStateException( "Transaction already active" );
+			if ( jpaCompliance.isJpaTransactionComplianceEnabled()
+					|| !transactionCoordinator.getTransactionCoordinatorBuilder().isJta() ) {
+				throw new IllegalStateException( "Transaction already active" );
+			}
+			else {
+				return;
+			}
 		}
 
 		LOG.debug( "begin" );
@@ -98,7 +101,7 @@ public class TransactionImpl implements TransactionImplementor {
 			internalGetTransactionDriverControl().commit();
 		}
 		catch (RuntimeException e) {
-			throw exceptionConverter.convertCommitException( e );
+			throw session.getExceptionConverter().convertCommitException( e );
 		}
 	}
 

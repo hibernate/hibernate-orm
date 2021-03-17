@@ -20,6 +20,9 @@ import java.util.WeakHashMap;
 import javax.persistence.spi.LoadState;
 
 import org.hibernate.HibernateException;
+import org.hibernate.bytecode.enhance.spi.interceptor.AbstractLazyLoadInterceptor;
+import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
+import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
@@ -94,13 +97,12 @@ public final class PersistenceUtilHelper {
 
 	@SuppressWarnings("SimplifiableIfStatement")
 	private static boolean isInitialized(PersistentAttributeInterceptable interceptable) {
-		final LazyAttributeLoadingInterceptor interceptor = extractInterceptor( interceptable );
+		final BytecodeLazyAttributeInterceptor interceptor = extractInterceptor( interceptable );
 		return interceptable == null || interceptor == null || !interceptor.hasAnyUninitializedAttributes();
 	}
 
-	private static LazyAttributeLoadingInterceptor extractInterceptor(PersistentAttributeInterceptable interceptable) {
-		return (LazyAttributeLoadingInterceptor) interceptable.$$_hibernate_getInterceptor();
-
+	private static BytecodeLazyAttributeInterceptor extractInterceptor(PersistentAttributeInterceptable interceptable) {
+		return (BytecodeLazyAttributeInterceptor) interceptable.$$_hibernate_getInterceptor();
 	}
 
 	/**
@@ -130,7 +132,7 @@ public final class PersistenceUtilHelper {
 
 		// we are instrumenting but we can't assume we are the only ones
 		if ( entity instanceof PersistentAttributeInterceptable ) {
-			final LazyAttributeLoadingInterceptor interceptor = extractInterceptor( (PersistentAttributeInterceptable) entity );
+			final BytecodeLazyAttributeInterceptor interceptor = extractInterceptor( (PersistentAttributeInterceptable) entity );
 			final boolean isInitialized = interceptor == null || interceptor.isAttributeLoaded( attributeName );
 			LoadState state;
 			if (isInitialized && interceptor != null) {

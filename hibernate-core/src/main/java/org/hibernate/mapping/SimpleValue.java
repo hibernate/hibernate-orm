@@ -69,7 +69,6 @@ public class SimpleValue implements KeyValue {
 
 	public static final String DEFAULT_ID_GEN_STRATEGY = "assigned";
 
-	private MetadataBuildingContext buildingContext;
 	private final MetadataImplementor metadata;
 
 	private final List<Selectable> columns = new ArrayList<>();
@@ -111,13 +110,16 @@ public class SimpleValue implements KeyValue {
 		this.table = table;
 	}
 
+	/**
+	 * @deprecated Use {@link SimpleValue#SimpleValue(MetadataBuildingContext, Table)} instead.
+	 */
+	@Deprecated
 	public SimpleValue(MetadataBuildingContext buildingContext) {
-		this(buildingContext.getMetadataCollector());
-		this.buildingContext = buildingContext;
+		this( buildingContext.getMetadataCollector() );
 	}
 
 	public SimpleValue(MetadataBuildingContext buildingContext, Table table) {
-		this( buildingContext );
+		this.metadata = buildingContext.getMetadataCollector();
 		this.table = table;
 	}
 
@@ -261,6 +263,17 @@ public class SimpleValue implements KeyValue {
 	}
 
 	private IdentifierGenerator identifierGenerator;
+
+	/**
+	 * Returns the cached identifierGenerator.
+	 *
+	 * @return IdentifierGenerator null if
+	 * {@link #createIdentifierGenerator(IdentifierGeneratorFactory, Dialect, String, String, RootClass)} was never
+	 * completed.
+	 */
+	public IdentifierGenerator getIdentifierGenerator() {
+		return identifierGenerator;
+	}
 
 	@Override
 	public IdentifierGenerator createIdentifierGenerator(
@@ -486,7 +499,7 @@ public class SimpleValue implements KeyValue {
 			throw new MappingException( msg );
 		}
 
-		return result;
+		return type = result;
 	}
 
 	@Override
@@ -518,7 +531,7 @@ public class SimpleValue implements KeyValue {
 							.getServiceRegistry()
 							.getService( ClassLoaderService.class )
 			).getName();
-			// todo : to fully support isNationalized here we need do the process hinted at above
+			// todo : to fully support isNationalized here we need to do the process hinted at above
 			// 		essentially, much of the logic from #buildAttributeConverterTypeAdapter wrt resolving
 			//		a (1) SqlTypeDescriptor, a (2) JavaTypeDescriptor and dynamically building a BasicType
 			// 		combining them.
@@ -597,8 +610,8 @@ public class SimpleValue implements KeyValue {
 		);
 		int jdbcTypeCode = recommendedSqlType.getSqlType();
 		if ( isLob() ) {
-			if ( LobTypeMappings.INSTANCE.hasCorrespondingLobCode( jdbcTypeCode ) ) {
-				jdbcTypeCode = LobTypeMappings.INSTANCE.getCorrespondingLobCode( jdbcTypeCode );
+			if ( LobTypeMappings.isMappedToKnownLobCode( jdbcTypeCode ) ) {
+				jdbcTypeCode = LobTypeMappings.getLobCodeTypeMapping( jdbcTypeCode );
 			}
 			else {
 				if ( Serializable.class.isAssignableFrom( entityAttributeJavaTypeDescriptor.getJavaType() ) ) {
@@ -617,10 +630,10 @@ public class SimpleValue implements KeyValue {
 			}
 		}
 		if ( isNationalized() ) {
-			jdbcTypeCode = NationalizedTypeMappings.INSTANCE.getCorrespondingNationalizedCode( jdbcTypeCode );
+			jdbcTypeCode = NationalizedTypeMappings.toNationalizedTypeCode( jdbcTypeCode );
 		}
 
-		// find the standard SqlTypeDescriptor for that JDBC type code (allow itr to be remapped if needed!)
+		// find the standard SqlTypeDescriptor for that JDBC type code (allow it to be remapped if needed!)
 		final SqlTypeDescriptor sqlTypeDescriptor = getMetadata()
 				.getMetadataBuildingOptions()
 				.getServiceRegistry()

@@ -28,13 +28,14 @@ import org.hibernate.event.spi.PreInsertEvent;
 import org.hibernate.event.spi.PreInsertEventListener;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.stat.internal.StatsHelper;
+import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
  * The action for performing an entity insertion, for entities not defined to use IDENTITY generation.
  *
  * @see EntityIdentityInsertAction
  */
-public final class EntityInsertAction extends AbstractEntityInsertAction {
+public class EntityInsertAction extends AbstractEntityInsertAction {
 	private Object version;
 	private Object cacheEntry;
 
@@ -59,6 +60,22 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 			SharedSessionContractImplementor session) {
 		super( id, state, instance, isVersionIncrementDisabled, persister, session );
 		this.version = version;
+	}
+
+	public Object getVersion() {
+		return version;
+	}
+
+	public void setVersion(Object version) {
+		this.version = version;
+	}
+
+	protected Object getCacheEntry() {
+		return cacheEntry;
+	}
+
+	protected void setCacheEntry(Object cacheEntry) {
+		this.cacheEntry = cacheEntry;
 	}
 
 	@Override
@@ -88,7 +105,7 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 		if ( !veto ) {
 			
 			persister.insert( id, getState(), instance, session );
-			PersistenceContext persistenceContext = session.getPersistenceContext();
+			PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 			final EntityEntry entry = persistenceContext.getEntry( instance );
 			if ( entry == null ) {
 				throw new AssertionFailure( "possible non-threadsafe access to session" );
@@ -109,6 +126,7 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 
 		final SessionFactoryImplementor factory = session.getFactory();
 
+		final StatisticsImplementor statistics = factory.getStatistics();
 		if ( isCachePutEnabled( persister, session ) ) {
 			final CacheEntry ce = persister.buildCacheEntry(
 					instance,
@@ -122,8 +140,8 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 
 			final boolean put = cacheInsert( persister, ck );
 
-			if ( put && factory.getStatistics().isStatisticsEnabled() ) {
-				factory.getStatistics().entityCachePut(
+			if ( put && statistics.isStatisticsEnabled() ) {
+				statistics.entityCachePut(
 						StatsHelper.INSTANCE.getRootEntityRole( persister ),
 						cache.getRegion().getName()
 				);
@@ -134,14 +152,14 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 
 		postInsert();
 
-		if ( factory.getStatistics().isStatisticsEnabled() && !veto ) {
-			factory.getStatistics().insertEntity( getPersister().getEntityName() );
+		if ( statistics.isStatisticsEnabled() && !veto ) {
+			statistics.insertEntity( getPersister().getEntityName() );
 		}
 
 		markExecuted();
 	}
 
-	private boolean cacheInsert(EntityPersister persister, Object ck) {
+	protected boolean cacheInsert(EntityPersister persister, Object ck) {
 		SharedSessionContractImplementor session = getSession();
 		try {
 			session.getEventListenerManager().cachePutStart();
@@ -152,55 +170,42 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 		}
 	}
 
-	private void postInsert() {
-		final EventListenerGroup<PostInsertEventListener> listenerGroup = listenerGroup( EventType.POST_INSERT );
-		if ( listenerGroup.isEmpty() ) {
-			return;
-		}
-		final PostInsertEvent event = new PostInsertEvent(
+	protected void postInsert() {
+		getFastSessionServices()
+				.eventListenerGroup_POST_INSERT
+				.fireLazyEventOnEachListener( this::newPostInsertEvent, PostInsertEventListener::onPostInsert );
+	}
+
+	private PostInsertEvent newPostInsertEvent() {
+		return new PostInsertEvent(
 				getInstance(),
 				getId(),
 				getState(),
 				getPersister(),
 				eventSource()
 		);
-		for ( PostInsertEventListener listener : listenerGroup.listeners() ) {
+	}
+
+	protected void postCommitInsert(boolean success) {
+		getFastSessionServices()
+				.eventListenerGroup_POST_COMMIT_INSERT
+				.fireLazyEventOnEachListener( this::newPostInsertEvent, success ? PostInsertEventListener::onPostInsert : this::postCommitOnFailure );
+	}
+
+	private void postCommitOnFailure(PostInsertEventListener listener, PostInsertEvent event) {
+		if ( listener instanceof PostCommitInsertEventListener ) {
+			((PostCommitInsertEventListener) listener).onPostInsertCommitFailed( event );
+		}
+		else {
+			//default to the legacy implementation that always fires the event
 			listener.onPostInsert( event );
 		}
 	}
 
-	private void postCommitInsert(boolean success) {
-		final EventListenerGroup<PostInsertEventListener> listenerGroup = listenerGroup( EventType.POST_COMMIT_INSERT );
-		if ( listenerGroup.isEmpty() ) {
-			return;
-		}
-		final PostInsertEvent event = new PostInsertEvent(
-				getInstance(),
-				getId(),
-				getState(),
-				getPersister(),
-				eventSource()
-		);
-		for ( PostInsertEventListener listener : listenerGroup.listeners() ) {
-			if ( PostCommitInsertEventListener.class.isInstance( listener ) ) {
-				if ( success ) {
-					listener.onPostInsert( event );
-				}
-				else {
-					((PostCommitInsertEventListener) listener).onPostInsertCommitFailed( event );
-				}
-			}
-			else {
-				//default to the legacy implementation that always fires the event
-				listener.onPostInsert( event );
-			}
-		}
-	}
-
-	private boolean preInsert() {
+	protected boolean preInsert() {
 		boolean veto = false;
 
-		final EventListenerGroup<PreInsertEventListener> listenerGroup = listenerGroup( EventType.PRE_INSERT );
+		final EventListenerGroup<PreInsertEventListener> listenerGroup = getFastSessionServices().eventListenerGroup_PRE_INSERT;
 		if ( listenerGroup.isEmpty() ) {
 			return veto;
 		}
@@ -220,8 +225,9 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 			final Object ck = cache.generateCacheKey( getId(), persister, factory, session.getTenantIdentifier() );
 			final boolean put = cacheAfterInsert( cache, ck );
 
-			if ( put && factory.getStatistics().isStatisticsEnabled() ) {
-				factory.getStatistics().entityCachePut(
+			final StatisticsImplementor statistics = factory.getStatistics();
+			if ( put && statistics.isStatisticsEnabled() ) {
+				statistics.entityCachePut(
 						StatsHelper.INSTANCE.getRootEntityRole( persister ),
 						cache.getRegion().getName()
 				);
@@ -230,7 +236,7 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 		postCommitInsert( success );
 	}
 
-	private boolean cacheAfterInsert(EntityDataAccess cache, Object ck) {
+	protected boolean cacheAfterInsert(EntityDataAccess cache, Object ck) {
 		SharedSessionContractImplementor session = getSession();
 		final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
 		try {
@@ -244,17 +250,16 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 
 	@Override
 	protected boolean hasPostCommitEventListeners() {
-		final EventListenerGroup<PostInsertEventListener> group = listenerGroup( EventType.POST_COMMIT_INSERT );
+		final EventListenerGroup<PostInsertEventListener> group = getFastSessionServices().eventListenerGroup_POST_COMMIT_INSERT;
 		for ( PostInsertEventListener listener : group.listeners() ) {
 			if ( listener.requiresPostCommitHandling( getPersister() ) ) {
 				return true;
 			}
 		}
-
 		return false;
 	}
-	
-	private boolean isCachePutEnabled(EntityPersister persister, SharedSessionContractImplementor session) {
+
+	protected boolean isCachePutEnabled(EntityPersister persister, SharedSessionContractImplementor session) {
 		return persister.canWriteToCache()
 				&& !persister.isCacheInvalidationRequired()
 				&& session.getCacheMode().isPutEnabled();

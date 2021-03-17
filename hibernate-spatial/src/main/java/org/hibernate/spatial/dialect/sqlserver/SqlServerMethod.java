@@ -24,7 +24,7 @@ class SqlServerMethod extends StandardSQLFunction {
 
 	@Override
 	public String render(Type firstArgumentType, List arguments, SessionFactoryImplementor sessionFactory) {
-		final StringBuffer buf = new StringBuffer();
+		final StringBuilder buf = new StringBuilder();
 		if ( arguments.size() < 1 ) {
 			buf.append( getName() ).append( "()" );
 		}

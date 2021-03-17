@@ -209,7 +209,23 @@ public class PersistentAttributesHelper {
 
 	public static String getMappedBy(CtField persistentField, CtClass targetEntity, JavassistEnhancementContext context) throws NotFoundException {
 		final String local = getMappedByFromAnnotation( persistentField );
-		return local.isEmpty() ? getMappedByFromTargetEntity( persistentField, targetEntity, context ) : local;
+		if ( local == null || local.isEmpty() ) {
+			return getMappedByFromTargetEntity( persistentField, targetEntity, context );
+		}
+		else {
+			// HHH-13446 - mappedBy from annotation may not be a valid bi-directional association, verify by calling isValidMappedBy()
+			return isValidMappedBy( persistentField, targetEntity, local, context ) ? local : "";
+		}
+	}
+
+	private static boolean isValidMappedBy(CtField persistentField, CtClass targetEntity, String mappedBy, JavassistEnhancementContext context) {
+		try {
+			CtField f = targetEntity.getField( mappedBy );
+			return context.isPersistentField( f ) && isAssignable( persistentField.getDeclaringClass(), inferFieldTypeName( f ) );
+		}
+		catch ( NotFoundException e ) {
+			return false;
+		}
 	}
 
 	private static String getMappedByFromAnnotation(CtField persistentField) {

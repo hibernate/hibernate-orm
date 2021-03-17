@@ -6,7 +6,9 @@
  */
 package org.hibernate.testing.transaction;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -22,12 +24,20 @@ import org.hibernate.Session;
 import org.hibernate.SessionBuilder;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SybaseASE15Dialect;
+import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.service.ServiceRegistry;
+
+import org.junit.Assert;
 
 import org.jboss.logging.Logger;
 
@@ -37,6 +47,28 @@ import org.jboss.logging.Logger;
 public class TransactionUtil {
 
 	private static final Logger log = Logger.getLogger( TransactionUtil.class );
+
+	public static void doInHibernate(Supplier<SessionFactory> factorySupplier, Consumer<Session> function) {
+		final SessionFactory sessionFactory = factorySupplier.get();
+		Assert.assertNotNull( "SessionFactory is null in test!", sessionFactory );
+		//Make sure any error is propagated
+		try ( Session session = sessionFactory.openSession() ) {
+			final Transaction txn = session.getTransaction();
+			txn.begin();
+			try {
+				function.accept( session );
+			}
+			catch (Throwable e) {
+				try {
+					txn.rollback();
+				}
+				finally {
+					throw e;
+				}
+			}
+			txn.commit();
+		}
+	}
 
 	/**
 	 * Hibernate transaction function
@@ -123,6 +155,24 @@ public class TransactionUtil {
 		default void afterTransactionCompletion() {
 
 		}
+	}
+
+	/**
+	 * JDBC transaction function
+	 *
+	 * @param <T> function result
+	 */
+	@FunctionalInterface
+	public interface JDBCTransactionFunction<T> {
+		T accept(Connection connection) throws SQLException;
+	}
+
+	/**
+	 * JDBC transaction function without return value
+	 */
+	@FunctionalInterface
+	public interface JDBCTransactionVoidFunction {
+		void accept(Connection connection) throws SQLException;
 	}
 
 	/**
@@ -568,6 +618,12 @@ public class TransactionUtil {
 					st.execute(String.format( "SET TRANSACTION LOCK WAIT TIMEOUT %d", millis ));
 				}
 			}
+			else if( Dialect.getDialect() instanceof SybaseASE15Dialect) {
+				try (Statement st = connection.createStatement()) {
+					//Prepared Statements fail for SET commands
+					st.execute(String.format( "SET LOCK WAIT %d", millis/1000 ));
+				}
+			}
 			else {
 				try {
 					connection.setNetworkTimeout( Executors.newSingleThreadExecutor(), (int) millis );
@@ -578,4 +634,118 @@ public class TransactionUtil {
 		} );
 	}
 
+	/**
+	 * Use the supplied settings for building a new {@link org.hibernate.service.ServiceRegistry} and
+	 * create a new JDBC {@link Connection} in auto-commit mode.
+	 *
+	 * A new JDBC {@link Statement} is created and passed to the supplied callback.
+	 *
+	 * @param consumer {@link Statement} callback to execute statements in auto-commit mode
+	 * @param settings Settings to build a new {@link org.hibernate.service.ServiceRegistry}
+	 */
+	public static void doInAutoCommit(Consumer<Statement> consumer, Map settings) {
+		StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder();
+		if ( settings != null ) {
+			ssrb.applySettings( settings );
+		}
+		StandardServiceRegistry ssr = ssrb.build();
+
+		try {
+			try (Connection connection = ssr.getService( JdbcServices.class )
+					.getBootstrapJdbcConnectionAccess()
+					.obtainConnection();
+				Statement statement = connection.createStatement()) {
+				connection.setAutoCommit( true );
+				consumer.accept( statement );
+			}
+			catch (SQLException e) {
+				log.debug( e.getMessage() );
+			}
+		}
+		finally {
+			StandardServiceRegistryBuilder.destroy( ssr );
+		}
+	}
+
+	/**
+	 * Use the default settings for building a new {@link org.hibernate.service.ServiceRegistry} and
+	 * create a new JDBC {@link Connection} in auto-commit mode.
+	 *
+	 * A new JDBC {@link Statement} is created and passed to the supplied callback.
+	 *
+	 * @param consumer {@link Statement} callback to execute statements in auto-commit mode
+	 */
+	public static void doInAutoCommit(Consumer<Statement> consumer) {
+		doInAutoCommit( consumer, null );
+	}
+
+	/**
+	 * Use the supplied settings for building a new {@link org.hibernate.service.ServiceRegistry} and
+	 * create a new JDBC {@link Connection} in auto-commit mode.
+	 *
+	 * The supplied statements will be executed using the previously created connection
+	 *
+	 * @param settings Settings to build a new {@link org.hibernate.service.ServiceRegistry}
+	 * @param statements statements to be executed in auto-commit mode
+	 */
+	public static void doInAutoCommit(Map settings, String... statements) {
+		doInAutoCommit( s -> {
+			for ( String statement : statements ) {
+				try {
+					s.executeUpdate( statement );
+				}
+				catch (SQLException e) {
+					log.debugf( e, "Statement [%s] execution failed!", statement );
+				}
+			}
+		}, settings );
+	}
+
+	/**
+	 * Use the default settings for building a new {@link org.hibernate.service.ServiceRegistry} and
+	 * create a new JDBC {@link Connection} in auto-commit mode.
+	 *
+	 * The supplied statements will be executed using the previously created connection
+	 *
+	 * @param statements statements to be executed in auto-commit mode
+	 */
+	public static void doInAutoCommit(String... statements) {
+		doInAutoCommit( null, statements );
+	}
+
+	public static void doWithJDBC(ServiceRegistry serviceRegistry, JDBCTransactionVoidFunction function) throws SQLException {
+		final JdbcConnectionAccess connectionAccess = serviceRegistry.getService( JdbcServices.class )
+				.getBootstrapJdbcConnectionAccess();
+		Connection connection = connectionAccess.obtainConnection();
+		try {
+			function.accept( connection );
+		}
+		finally {
+			if ( connection != null ) {
+				try {
+					connectionAccess.releaseConnection( connection );
+				}
+				catch (SQLException ignore) {
+				}
+			}
+		}
+	}
+
+	public static <T> T doWithJDBC(ServiceRegistry serviceRegistry, JDBCTransactionFunction<T> function) throws SQLException {
+		final JdbcConnectionAccess connectionAccess = serviceRegistry.getService( JdbcServices.class )
+				.getBootstrapJdbcConnectionAccess();
+		Connection connection = connectionAccess.obtainConnection();
+		try {
+			return function.accept( connection );
+		}
+		finally {
+			if ( connection != null ) {
+				try {
+					connectionAccess.releaseConnection( connection );
+				}
+				catch (SQLException ignore) {
+				}
+			}
+		}
+	}
 }

@@ -7,18 +7,16 @@
 package org.hibernate.tuple.entity;
 
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
-import org.hibernate.MappingException;
-import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
+import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
+import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
+import org.hibernate.bytecode.spi.BytecodeProvider;
+import org.hibernate.bytecode.spi.ProxyFactoryFactory;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.cfg.Environment;
 import org.hibernate.classic.Lifecycle;
@@ -28,14 +26,12 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.mapping.Subclass;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.Setter;
-import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyFactory;
+import org.hibernate.proxy.pojo.ProxyFactoryHelper;
 import org.hibernate.tuple.Instantiator;
 import org.hibernate.type.CompositeType;
 
@@ -53,15 +49,11 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 	private final boolean lifecycleImplementor;
 	private final ReflectionOptimizer optimizer;
 
-	private final boolean isBytecodeEnhanced;
-
-
 	public PojoEntityTuplizer(EntityMetamodel entityMetamodel, PersistentClass mappedEntity) {
 		super( entityMetamodel, mappedEntity );
 		this.mappedClass = mappedEntity.getMappedClass();
 		this.proxyInterface = mappedEntity.getProxyInterface();
 		this.lifecycleImplementor = Lifecycle.class.isAssignableFrom( mappedClass );
-		this.isBytecodeEnhanced = entityMetamodel.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading();
 
 		String[] getterNames = new String[propertySpan];
 		String[] setterNames = new String[propertySpan];
@@ -76,16 +68,13 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 			optimizer = null;
 		}
 		else {
-			// todo : YUCK!!!
-			optimizer = Environment.getBytecodeProvider().getReflectionOptimizer(
+			final BytecodeProvider bytecodeProvider = entityMetamodel.getSessionFactory().getServiceRegistry().getService( BytecodeProvider.class );
+			optimizer = bytecodeProvider.getReflectionOptimizer(
 					mappedClass,
 					getterNames,
 					setterNames,
 					propTypes
 			);
-//			optimizer = getFactory().getSettings().getBytecodeProvider().getReflectionOptimizer(
-//					mappedClass, getterNames, setterNames, propTypes
-//			);
 		}
 	}
 
@@ -93,106 +82,47 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 	protected ProxyFactory buildProxyFactory(PersistentClass persistentClass, Getter idGetter, Setter idSetter) {
 		// determine the id getter and setter methods from the proxy interface (if any)
 		// determine all interfaces needed by the resulting proxy
-		
-		/*
-		 * We need to preserve the order of the interfaces they were put into the set, since javassist will choose the
-		 * first one's class-loader to construct the proxy class with. This is also the reason why HibernateProxy.class
-		 * should be the last one in the order (on JBossAS7 its class-loader will be org.hibernate module's class-
-		 * loader, which will not see the classes inside deployed apps.  See HHH-3078
-		 */
-		Set<Class> proxyInterfaces = new java.util.LinkedHashSet<Class>();
+		final String entityName = getEntityName();
+		final Class mappedClass = persistentClass.getMappedClass();
+		final Class proxyInterface = persistentClass.getProxyInterface();
 
-		Class mappedClass = persistentClass.getMappedClass();
-		Class proxyInterface = persistentClass.getProxyInterface();
+		final Set<Class> proxyInterfaces = ProxyFactoryHelper.extractProxyInterfaces( persistentClass, entityName );
 
-		if ( proxyInterface != null && !mappedClass.equals( proxyInterface ) ) {
-			if ( !proxyInterface.isInterface() ) {
-				throw new MappingException(
-						"proxy must be either an interface, or the class itself: " + getEntityName()
-				);
-			}
-			proxyInterfaces.add( proxyInterface );
+		Method proxyGetIdentifierMethod = ProxyFactoryHelper.extractProxyGetIdentifierMethod( idGetter, proxyInterface );
+		Method proxySetIdentifierMethod = ProxyFactoryHelper.extractProxySetIdentifierMethod( idSetter, proxyInterface );
+
+		ProxyFactory pf = buildProxyFactoryInternal( persistentClass, idGetter, idSetter );
+		try {
+
+			ProxyFactoryHelper.validateGetterSetterMethodProxyability( "Getter", proxyGetIdentifierMethod );
+			ProxyFactoryHelper.validateGetterSetterMethodProxyability( "Setter", proxySetIdentifierMethod );
+
+			ProxyFactoryHelper.validateProxyability( persistentClass );
+
+			pf.postInstantiate(
+					entityName,
+					mappedClass,
+					proxyInterfaces,
+					proxyGetIdentifierMethod,
+					proxySetIdentifierMethod,
+					persistentClass.hasEmbeddedIdentifier() ?
+							(CompositeType) persistentClass.getIdentifier().getType() :
+							null
+			);
 		}
-
-		if ( mappedClass.isInterface() ) {
-			proxyInterfaces.add( mappedClass );
+		catch (HibernateException he) {
+			LOG.unableToCreateProxyFactory( entityName, he );
+			pf = null;
 		}
-
-		Iterator<Subclass> subclasses = persistentClass.getSubclassIterator();
-		while ( subclasses.hasNext() ) {
-			final Subclass subclass = subclasses.next();
-			final Class subclassProxy = subclass.getProxyInterface();
-			final Class subclassClass = subclass.getMappedClass();
-			if ( subclassProxy != null && !subclassClass.equals( subclassProxy ) ) {
-				if ( !subclassProxy.isInterface() ) {
-					throw new MappingException(
-							"proxy must be either an interface, or the class itself: " + subclass.getEntityName()
-					);
-				}
-				proxyInterfaces.add( subclassProxy );
-			}
-		}
-
-		proxyInterfaces.add( HibernateProxy.class );
-
-		Iterator properties = persistentClass.getPropertyIterator();
-		Class clazz = persistentClass.getMappedClass();
-		while ( properties.hasNext() ) {
-			Property property = (Property) properties.next();
-			Method method = property.getGetter( clazz ).getMethod();
-			if ( method != null && Modifier.isFinal( method.getModifiers() ) ) {
-				LOG.gettersOfLazyClassesCannotBeFinal( persistentClass.getEntityName(), property.getName() );
-			}
-			method = property.getSetter( clazz ).getMethod();
-			if ( method != null && Modifier.isFinal( method.getModifiers() ) ) {
-				LOG.settersOfLazyClassesCannotBeFinal( persistentClass.getEntityName(), property.getName() );
-			}
-		}
-
-		Method idGetterMethod = idGetter == null ? null : idGetter.getMethod();
-		Method idSetterMethod = idSetter == null ? null : idSetter.getMethod();
-
-		Method proxyGetIdentifierMethod = idGetterMethod == null || proxyInterface == null ?
-				null :
-				ReflectHelper.getMethod( proxyInterface, idGetterMethod );
-		Method proxySetIdentifierMethod = idSetterMethod == null || proxyInterface == null ?
-				null :
-				ReflectHelper.getMethod( proxyInterface, idSetterMethod );
-
-		final PrivilegedAction<ProxyFactory> action = new PrivilegedAction<ProxyFactory>() {
-			@Override
-			public ProxyFactory run() {
-				ProxyFactory pf = buildProxyFactoryInternal( persistentClass, idGetter, idSetter );
-				try {
-					pf.postInstantiate(
-							getEntityName(),
-							mappedClass,
-							proxyInterfaces,
-							proxyGetIdentifierMethod,
-							proxySetIdentifierMethod,
-							persistentClass.hasEmbeddedIdentifier() ?
-									(CompositeType) persistentClass.getIdentifier().getType() :
-									null
-					);
-				}
-				catch (HibernateException he) {
-					LOG.unableToCreateProxyFactory( getEntityName(), he );
-					pf = null;
-				}
-				return pf;
-			}
-		};
-
-		return System.getSecurityManager() != null ? AccessController.doPrivileged( action ) : action.run();
+		return pf;
 	}
 
 	protected ProxyFactory buildProxyFactoryInternal(
 			PersistentClass persistentClass,
 			Getter idGetter,
 			Setter idSetter) {
-		// TODO : YUCK!!!  fix after HHH-1907 is complete
-		return Environment.getBytecodeProvider().getProxyFactoryFactory().buildProxyFactory( getFactory() );
-//		return getFactory().getSettings().getBytecodeProvider().getProxyFactoryFactory().buildProxyFactory();
+		ProxyFactoryFactory proxyFactory = getFactory().getServiceRegistry().getService( ProxyFactoryFactory.class );
+		return proxyFactory.buildProxyFactory( getFactory() );
 	}
 
 	@Override
@@ -277,22 +207,14 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 
 	@Override
 	public void afterInitialize(Object entity, SharedSessionContractImplementor session) {
-
-		// moving to multiple fetch groups, the idea of `lazyPropertiesAreUnfetched` really
-		// needs to become either:
-		// 		1) the names of all un-fetched fetch groups
-		//		2) the names of all fetched fetch groups
-		// probably (2) is best
-		//
-		// ultimately this comes from EntityEntry, although usage-search seems to show it is never updated there.
-		//
-		// also org.hibernate.persister.entity.AbstractEntityPersister.initializeLazyPropertiesFromDatastore()
-		//		needs to be re-worked
-
 		if ( entity instanceof PersistentAttributeInterceptable ) {
-			final LazyAttributeLoadingInterceptor interceptor = getEntityMetamodel().getBytecodeEnhancementMetadata().extractInterceptor( entity );
-			if ( interceptor == null ) {
-				getEntityMetamodel().getBytecodeEnhancementMetadata().injectInterceptor( entity, session );
+			final BytecodeLazyAttributeInterceptor interceptor = getEntityMetamodel().getBytecodeEnhancementMetadata().extractLazyInterceptor( entity );
+			if ( interceptor == null || interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
+				getEntityMetamodel().getBytecodeEnhancementMetadata().injectInterceptor(
+						entity,
+						getIdentifier( entity, session ),
+						session
+				);
 			}
 			else {
 				if ( interceptor.getLinkedSession() == null ) {
@@ -301,7 +223,7 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 			}
 		}
 
-		// clear the fields that are marked as dirty in the dirtyness tracker
+		// clear the fields that are marked as dirty in the dirtiness tracker
 		if ( entity instanceof SelfDirtinessTracker ) {
 			( (SelfDirtinessTracker) entity ).$$_hibernate_clearDirtyAttributes();
 		}

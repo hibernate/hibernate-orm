@@ -45,7 +45,7 @@ public class CollectionReferenceInitializerImpl implements CollectionReferenceIn
 
 		try {
 			// read the collection key for this reference for the current row.
-			final PersistenceContext persistenceContext = context.getSession().getPersistenceContext();
+			final PersistenceContext persistenceContext = context.getSession().getPersistenceContextInternal();
 			final Serializable collectionRowKey = (Serializable) collectionReference.getCollectionPersister().readKey(
 					resultSet,
 					aliases.getCollectionColumnAliases().getSuffixedKeyAliases(),
@@ -121,14 +121,14 @@ public class CollectionReferenceInitializerImpl implements CollectionReferenceIn
 			Serializable collectionRowKey,
 			ResultSet resultSet,
 			ResultSetProcessingContextImpl context) {
-		final Object collectionOwner = context.getSession().getPersistenceContext().getCollectionOwner(
+		final Object collectionOwner = context.getSession().getPersistenceContextInternal().getCollectionOwner(
 				collectionRowKey,
 				collectionReference.getCollectionPersister()
 		);
 		// todo : try org.hibernate.loader.plan.exec.process.spi.ResultSetProcessingContext.getOwnerProcessingState() ??
 		//			-- specifically to return its ResultSetProcessingContext.EntityReferenceProcessingState#getEntityInstance()
 		if ( collectionOwner == null ) {
-			//TODO: This is assertion is disabled because there is a bug that means the
+			//TODO: This assertion is disabled because there is a bug that means the
 			//	  original owner of a transient, uninitialized collection is not known
 			//	  if the collection is re-referenced by a different object associated
 			//	  with the current Session
@@ -148,7 +148,7 @@ public class CollectionReferenceInitializerImpl implements CollectionReferenceIn
 
 	@Override
 	public void endLoading(ResultSetProcessingContextImpl context) {
-		context.getSession().getPersistenceContext()
+		context.getSession().getPersistenceContextInternal()
 				.getLoadContexts()
 				.getCollectionLoadContext( context.getResultSet() )
 				.endLoadingCollections( collectionReference.getCollectionPersister() );

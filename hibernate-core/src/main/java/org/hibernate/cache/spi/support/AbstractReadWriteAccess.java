@@ -26,7 +26,6 @@ import org.jboss.logging.Logger;
  */
 public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAccess {
 	private static final Logger log = Logger.getLogger( AbstractReadWriteAccess.class );
-	private static final boolean DEBUG_ENABLED = log.isDebugEnabled();
 
 	private final UUID uuid = UUID.randomUUID();
 	private final AtomicLong nextLockId = new AtomicLong();
@@ -199,11 +198,16 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 	public void remove(SharedSessionContractImplementor session, Object key) {
 		if ( getStorageAccess().getFromCache( key, session ) instanceof SoftLock ) {
 			log.debugf( "Skipping #remove call in read-write access to maintain SoftLock : %s", key );
-			// don'tm do anything... we want the SoftLock to remain in place
+			// don't do anything... we want the SoftLock to remain in place
 		}
 		else {
 			super.remove( session, key );
 		}
+	}
+
+	@Override
+	public void removeAll(SharedSessionContractImplementor session) {
+		// A no-op
 	}
 
 	/**
@@ -233,7 +237,7 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 		boolean isUnlockable(SoftLock lock);
 
 		/**
-		 * Locks this entry, stamping it with the UUID and lockId given, with the lock timeout occuring at the specified
+		 * Locks this entry, stamping it with the UUID and lockId given, with the lock timeout occurring at the specified
 		 * time.  The returned Lock object can be used to unlock the entry in the future.
 		 */
 		SoftLockImpl lock(long timeout, UUID uuid, long lockId);
@@ -259,7 +263,7 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 
 		@Override
 		public boolean isReadable(long txTimestamp) {
-			if ( DEBUG_ENABLED ) {
+			if ( log.isDebugEnabled() ) {
 				log.debugf(
 						"Checking readability of read-write cache item [timestamp=`%s`, version=`%s`] : txTimestamp=`%s`",
 						(Object) timestamp,
@@ -273,7 +277,7 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 
 		@Override
 		public boolean isWriteable(long txTimestamp, Object newVersion, Comparator versionComparator) {
-			if ( DEBUG_ENABLED ) {
+			if ( log.isDebugEnabled() ) {
 				log.debugf(
 						"Checking writeability of read-write cache item [timestamp=`%s`, version=`%s`] : txTimestamp=`%s`, newVersion=`%s`",
 						timestamp,
@@ -346,7 +350,7 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 
 		@Override
 		public boolean isWriteable(long txTimestamp, Object newVersion, Comparator versionComparator) {
-			if ( DEBUG_ENABLED ) {
+			if ( log.isDebugEnabled() ) {
 				log.debugf(
 						"Checking writeability of read-write cache lock [timeout=`%s`, lockId=`%s`, version=`%s`, sourceUuid=%s, multiplicity=`%s`, unlockTimestamp=`%s`] : txTimestamp=`%s`, newVersion=`%s`",
 						timeout,

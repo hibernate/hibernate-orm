@@ -76,8 +76,8 @@ public class GeoDbWkb {
 		}
 		try {
 
-			if ( object instanceof com.vividsolutions.jts.geom.Geometry ) {
-				return JTS.from( (com.vividsolutions.jts.geom.Geometry) object );
+			if ( object instanceof org.locationtech.jts.geom.Geometry ) {
+				return JTS.from( (org.locationtech.jts.geom.Geometry) object );
 			}
 			final WkbDecoder decoder = Wkb.newDecoder( Wkb.Dialect.POSTGIS_EWKB_1 );
 			if ( object instanceof Blob ) {
@@ -86,8 +86,8 @@ public class GeoDbWkb {
 			else if ( object instanceof byte[] ) {
 				return decoder.decode( ByteBuffer.from( (byte[]) object ) );
 			}
-			else if ( object instanceof com.vividsolutions.jts.geom.Envelope ) {
-				return toPolygon( JTS.from( (com.vividsolutions.jts.geom.Envelope) object ) );
+			else if ( object instanceof org.locationtech.jts.geom.Envelope ) {
+				return toPolygon( JTS.from( (org.locationtech.jts.geom.Envelope) object ) );
 			}
 			else {
 				throw new IllegalArgumentException(

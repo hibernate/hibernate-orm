@@ -56,8 +56,13 @@ public class BidirectionalBagTest extends BaseEntityManagerFunctionalTestCase {
 
 		@Id
 		private Long id;
+
 		@OneToMany(mappedBy = "person", cascade = CascadeType.ALL)
 		private List<Phone> phones = new ArrayList<>();
+
+		//Getters and setters are omitted for brevity
+
+	//end::collections-bidirectional-bag-example[]
 
 		public Person() {
 		}
@@ -70,6 +75,7 @@ public class BidirectionalBagTest extends BaseEntityManagerFunctionalTestCase {
 			return phones;
 		}
 
+	//tag::collections-bidirectional-bag-example[]
 		public void addPhone(Phone phone) {
 			phones.add( phone );
 			phone.setPerson( this );
@@ -95,6 +101,10 @@ public class BidirectionalBagTest extends BaseEntityManagerFunctionalTestCase {
 
 		@ManyToOne
 		private Person person;
+
+		//Getters and setters are omitted for brevity
+
+	//end::collections-bidirectional-bag-example[]
 
 		public Phone() {
 		}
@@ -125,6 +135,7 @@ public class BidirectionalBagTest extends BaseEntityManagerFunctionalTestCase {
 			this.person = person;
 		}
 
+	//tag::collections-bidirectional-bag-example[]
 		@Override
 		public boolean equals(Object o) {
 			if ( this == o ) {

@@ -159,6 +159,11 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 	}
 
 	@Override
+	public boolean isNoConstraintByDefault() {
+		return delegate.isNoConstraintByDefault();
+	}
+
+	@Override
 	public List<MetadataSourceType> getSourceProcessOrdering() {
 		return delegate.getSourceProcessOrdering();
 	}
@@ -191,4 +196,15 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 			);
 		}
 	}
+
+	@Override
+	public String getSchemaCharset() {
+		return delegate.getSchemaCharset();
+	}
+
+	@Override
+	public boolean isXmlMappingEnabled() {
+		return delegate.isXmlMappingEnabled();
+	}
+
 }

@@ -68,7 +68,7 @@ public class CrossSchemaForeignKeyGenerationTest extends BaseUnitTestCase {
 	public void setUp() throws IOException {
 		output = File.createTempFile( "update_script", ".sql" );
 		output.deleteOnExit();
-		ssr = new StandardServiceRegistryBuilder().applySetting( AvailableSettings.HBM2DLL_CREATE_SCHEMAS, "true" )
+		ssr = new StandardServiceRegistryBuilder().applySetting( AvailableSettings.HBM2DDL_CREATE_SCHEMAS, "true" )
 				.build();
 	}
 

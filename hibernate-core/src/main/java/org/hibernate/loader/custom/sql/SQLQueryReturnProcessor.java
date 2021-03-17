@@ -565,7 +565,7 @@ public class SQLQueryReturnProcessor {
 			throw new HibernateException( "Owner alias [" + ownerAlias + "] is unknown for alias [" + alias + "]" );
 		}
 
-		// If this return's alias has not been processed yet, do so b4 further processing of this return
+		// If this return's alias has not been processed yet, do so before further processing of this return
 		if ( !alias2Persister.containsKey( ownerAlias ) ) {
 			NativeSQLQueryNonScalarReturn ownerReturn = ( NativeSQLQueryNonScalarReturn ) alias2Return.get(ownerAlias);
 			processReturn( ownerReturn );

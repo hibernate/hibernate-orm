@@ -7,6 +7,7 @@
 package org.hibernate.dialect;
 
 import java.sql.CallableStatement;
+import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
@@ -159,7 +160,7 @@ public class PostgreSQL81Dialect extends Dialect {
 		registerFunction( "user", new NoArgSQLFunction("user", StandardBasicTypes.STRING, false) );
 		registerFunction( "current_database", new NoArgSQLFunction("current_database", StandardBasicTypes.STRING, true) );
 		registerFunction( "current_schema", new NoArgSQLFunction("current_schema", StandardBasicTypes.STRING, true) );
-		
+
 		registerFunction( "to_char", new StandardSQLFunction("to_char", StandardBasicTypes.STRING) );
 		registerFunction( "to_date", new StandardSQLFunction("to_date", StandardBasicTypes.DATE) );
 		registerFunction( "to_timestamp", new StandardSQLFunction("to_timestamp", StandardBasicTypes.TIMESTAMP) );
@@ -242,7 +243,7 @@ public class PostgreSQL81Dialect extends Dialect {
 
 	@Override
 	public String getQuerySequencesString() {
-		return "select relname from pg_class where relkind='S'";
+		return "select * from information_schema.sequences";
 	}
 
 	@Override
@@ -275,7 +276,7 @@ public class PostgreSQL81Dialect extends Dialect {
 		/*
 		 * Parent's implementation for (aliases, lockOptions) ignores aliases.
 		 */
-		if ( "".equals( aliases ) ) {
+		if ( aliases != null && aliases.isEmpty() ) {
 			LockMode lockMode = lockOptions.getLockMode();
 			final Iterator<Map.Entry<String, LockMode>> itr = lockOptions.getAliasLockIterator();
 			while ( itr.hasNext() ) {
@@ -416,12 +417,12 @@ public class PostgreSQL81Dialect extends Dialect {
 
 	/**
 	 * Constraint-name extractor for Postgres constraint violation exceptions.
-	 * Orginally contributed by Denny Bartelt.
+	 * Originally contributed by Denny Bartelt.
 	 */
 	private static final ViolatedConstraintNameExtracter EXTRACTER = new TemplatedViolatedConstraintNameExtracter() {
 		@Override
 		protected String doExtractConstraintName(SQLException sqle) throws NumberFormatException {
-			final int sqlState = Integer.valueOf( JdbcExceptionHelper.extractSqlState( sqle ) );
+			final int sqlState = Integer.parseInt( JdbcExceptionHelper.extractSqlState( sqle ) );
 			switch (sqlState) {
 				// CHECK VIOLATION
 				case 23514: return extractUsingTemplate( "violates check constraint \"","\"", sqle.getMessage() );
@@ -438,7 +439,7 @@ public class PostgreSQL81Dialect extends Dialect {
 			}
 		}
 	};
-	
+
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return new SQLExceptionConversionDelegate() {
@@ -517,7 +518,7 @@ public class PostgreSQL81Dialect extends Dialect {
 					);
 		}
 	}
-	
+
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
@@ -589,12 +590,12 @@ public class PostgreSQL81Dialect extends Dialect {
 	public boolean supportsRowValueConstructorSyntax() {
 		return true;
 	}
-	
+
 	@Override
 	public String getForUpdateNowaitString() {
 		return getForUpdateString() + " nowait ";
 	}
-	
+
 	@Override
 	public String getForUpdateNowaitString(String aliases) {
 		return getForUpdateString( aliases ) + " nowait ";
@@ -635,6 +636,16 @@ public class PostgreSQL81Dialect extends Dialect {
 
 	@Override
 	public boolean supportsNoWait() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsJdbcConnectionLobCreation(DatabaseMetaData databaseMetaData) {
+		return false;
+	}
+
+	@Override
+	public boolean supportsSelectAliasInGroupByClause() {
 		return true;
 	}
 }

@@ -39,7 +39,6 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	public static final String DEFAULT_KEY_COLUMN_NAME = "id";
 
 	private final MetadataImplementor metadata;
-	private MetadataBuildingContext buildingContext;
 	private PersistentClass owner;
 
 	private KeyValue key;
@@ -91,7 +90,6 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 
 	protected Collection(MetadataBuildingContext buildingContext, PersistentClass owner) {
 		this(buildingContext.getMetadataCollector(), owner);
-		this.buildingContext = buildingContext;
 	}
 
 	/**
@@ -334,8 +332,8 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		int i = 0;
 		while ( iterator.hasNext() ) {
 			Selectable s = iterator.next();
-			// exclude formulas and coluns that are not insertable or updatable
-			// since these values can be be repeated (HHH-5393)
+			// exclude formulas and columns that are not insertable or updatable
+			// since these values can be repeated (HHH-5393)
 			if ( !s.isFormula() && ( insertability[i] || updatability[i] ) ) {
 				Column col = (Column) s;
 				if ( !distinctColumns.add( col.getName() ) ) {

@@ -32,7 +32,9 @@ final class EmbeddableCallback extends AbstractCallback {
 	public boolean performCallback(Object entity) {
 		try {
 			Object embeddable = embeddableGetter.get( entity );
-			callbackMethod.invoke( embeddable );
+			if ( embeddable != null ) {
+				callbackMethod.invoke( embeddable );
+			}
 			return true;
 		}
 		catch (InvocationTargetException e) {

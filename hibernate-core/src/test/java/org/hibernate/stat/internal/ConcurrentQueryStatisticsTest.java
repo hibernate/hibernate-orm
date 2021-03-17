@@ -12,8 +12,6 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**
- * <code>ConcurrentQueryStatisticsTest</code> -
- *
  * @author Vlad Mihalcea
  */
 public class ConcurrentQueryStatisticsTest extends BaseUnitTestCase {

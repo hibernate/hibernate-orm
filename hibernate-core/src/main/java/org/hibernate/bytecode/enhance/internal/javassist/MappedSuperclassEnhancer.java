@@ -32,7 +32,7 @@ public class MappedSuperclassEnhancer extends PersistentAttributesEnhancer {
 		super.enhance( managedCtClass );
 	}
 
-	// Generate 'template' methods for each attribute. This will be overriden by the actual entities
+	// Generate 'template' methods for each attribute. This will be overridden by the actual entities
 
 	@Override
 	protected CtMethod generateFieldReader(

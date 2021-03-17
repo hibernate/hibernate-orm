@@ -17,7 +17,7 @@ import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.dialect.oracle.OracleSpatial10gDialect;
 import org.hibernate.type.StandardBasicTypes;
 
-import com.vividsolutions.jts.geom.Geometry;
+import org.locationtech.jts.geom.Geometry;
 
 /**
  * A {@code Criterion} constraining a geometry property to be within a specified distance of a search geometry.

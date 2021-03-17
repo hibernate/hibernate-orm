@@ -60,7 +60,7 @@ public class SyntheticAndFactory implements HqlSqlTokenTypes {
 		}
 
 		whereFragment = whereFragment.trim();
-		if ( StringHelper.isEmpty( whereFragment ) ) {
+		if ( whereFragment.isEmpty() ) {
 			return;
 		}
 
@@ -147,7 +147,7 @@ public class SyntheticAndFactory implements HqlSqlTokenTypes {
 			Map enabledFilters,
 			String alias) {
 		String whereFragment = persister.filterFragment( alias, enabledFilters ).trim();
-		if ( "".equals( whereFragment ) ) {
+		if ( whereFragment != null && whereFragment.isEmpty() ) {
 			return;
 		}
 		if ( whereFragment.startsWith( "and" ) ) {
@@ -158,7 +158,7 @@ public class SyntheticAndFactory implements HqlSqlTokenTypes {
 		// that this is only used from update and delete HQL statement parsing
 		whereFragment = StringHelper.replace(
 				whereFragment,
-				persister.generateFilterConditionAlias( alias ) + ".",
+				persister.generateFilterConditionAlias( alias ) + '.',
 				""
 		);
 

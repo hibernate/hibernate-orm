@@ -7,9 +7,16 @@
 
 package org.hibernate.spatial.dialect.h2geodb;
 
+import java.util.List;
+import java.util.Locale;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import org.hibernate.QueryException;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.GeolatteGeometryJavaTypeDescriptor;
 import org.hibernate.spatial.GeolatteGeometryType;
@@ -19,6 +26,7 @@ import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.SpatialRelation;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.Type;
 
 /**
  * Extends the H2Dialect by also including information on spatial functions.
@@ -74,6 +82,8 @@ public class GeoDBDialect extends H2Dialect implements SpatialDialect {
 
 		registerFunction( "dwithin", new StandardSQLFunction( "ST_DWithin", StandardBasicTypes.BOOLEAN ) );
 
+		// Register Spatial Filter function
+		registerFunction( SpatialFunction.filter.name(), new FilterFunction() );
 	}
 
 	@Override
@@ -155,6 +165,28 @@ public class GeoDBDialect extends H2Dialect implements SpatialDialect {
 	@Override
 	public boolean supports(SpatialFunction function) {
 		return function != SpatialFunction.difference && ( getFunctions().get( function.toString() ) != null );
+	}
+
+	private static class FilterFunction extends StandardSQLFunction {
+
+		public FilterFunction() {
+			super( "&&" );
+		}
+
+		@Override
+		public String render(
+				Type firstArgumentType, List arguments, SessionFactoryImplementor sessionFactory) {
+			int argumentCount = arguments.size();
+			if ( argumentCount != 2 ) {
+				throw new QueryException( String.format( Locale.ENGLISH,"2 arguments expected, received %d", argumentCount ) );
+			}
+
+			return Stream.of(
+					String.valueOf( arguments.get( 0 ) ),
+					getRenderedName( arguments ),
+					String.valueOf( arguments.get( 1 ) )
+			).collect( Collectors.joining( " ", "(", ")" ) );
+		}
 	}
 
 }

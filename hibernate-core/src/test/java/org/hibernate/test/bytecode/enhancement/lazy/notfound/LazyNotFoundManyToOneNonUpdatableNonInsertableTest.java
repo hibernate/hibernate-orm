@@ -6,10 +6,6 @@
  */
 package org.hibernate.test.bytecode.enhancement.lazy.notfound;
 
-/**
- * @author Gail Badner
- */
-
 import javax.persistence.CascadeType;
 import javax.persistence.ConstraintMode;
 import javax.persistence.Entity;
@@ -36,6 +32,9 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 
+/**
+ * @author Gail Badner
+ */
 @TestForIssue( jiraKey = "HHH-12226")
 @RunWith( BytecodeEnhancerRunner.class )
 public class LazyNotFoundManyToOneNonUpdatableNonInsertableTest extends BaseCoreFunctionalTestCase {

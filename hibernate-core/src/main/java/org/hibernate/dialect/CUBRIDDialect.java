@@ -16,6 +16,8 @@ import org.hibernate.dialect.identity.CUBRIDIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.CUBRIDLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorCUBRIDDatabaseImpl;
+import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
@@ -284,7 +286,12 @@ public class CUBRIDDialect extends Dialect {
 
 	@Override
 	public String getQuerySequencesString() {
-		return "select name from db_serial";
+		return "select * from db_serial";
+	}
+
+	@Override
+	public SequenceInformationExtractor getSequenceInformationExtractor() {
+		return SequenceInformationExtractorCUBRIDDatabaseImpl.INSTANCE;
 	}
 
 	@Override

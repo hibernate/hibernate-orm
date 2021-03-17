@@ -10,12 +10,21 @@ package org.hibernate.jpa.test.lock;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.LockModeType;
+import javax.persistence.NamedQuery;
+import javax.persistence.QueryHint;
 import javax.persistence.Version;
 
 /**
  * @author Emmanuel Bernard
  */
 @Entity(name="Lock_")
+@NamedQuery(
+		name="AllLocks",
+		query="from Lock_",
+		lockMode = LockModeType.PESSIMISTIC_WRITE,
+		hints = { @QueryHint( name = "javax.persistence.lock.timeout", value = "0")}
+)
 public class Lock {
 	private Integer id;
 	private Integer version;

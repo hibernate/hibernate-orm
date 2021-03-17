@@ -45,7 +45,7 @@ public class MySQL5Dialect extends MySQLDialect {
 
 		@Override
 		protected String doExtractConstraintName(SQLException sqle) throws NumberFormatException {
-			final int sqlState = Integer.valueOf( JdbcExceptionHelper.extractSqlState( sqle ) ).intValue();
+			final int sqlState = Integer.parseInt( JdbcExceptionHelper.extractSqlState( sqle ) );
 			switch ( sqlState ) {
 			case 23000:
 				return extractUsingTemplate( " for key '", "'", sqle.getMessage() );
@@ -59,5 +59,10 @@ public class MySQL5Dialect extends MySQLDialect {
 	@Override
 	public String getQueryHintString(String query, String hints) {
 		return IndexQueryHintHandler.INSTANCE.addQueryHints( query, hints );
+	}
+
+	@Override
+	public boolean supportsUnionAll() {
+		return true;
 	}
 }

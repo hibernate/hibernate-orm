@@ -58,7 +58,7 @@ There are other ways to specify configuration properties, including:
 * Place a file named hibernate.properties in a root directory of the classpath.
 * Place a file named hibernate.properties in a root directory of the classpath.
 * Pass an instance of java.util.Properties to `Configuration#setProperties`.
-* Set System properties using java `-Dproperty=value`.
+* Set System properties using Java `-Dproperty=value`.
 * Include `<property/>` elements in `hibernate.cfg.xml`
 
 

@@ -12,7 +12,8 @@ import java.util.Comparator;
  * @author Gail Badner
  */
 public final class RowVersionComparator implements Comparator<byte[]> {
-	public static RowVersionComparator INSTANCE = new RowVersionComparator();
+
+	public static final RowVersionComparator INSTANCE = new RowVersionComparator();
 
 	private RowVersionComparator() {
 	}

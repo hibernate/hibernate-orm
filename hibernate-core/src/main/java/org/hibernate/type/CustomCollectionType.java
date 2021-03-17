@@ -22,7 +22,7 @@ import org.hibernate.usertype.UserCollectionType;
 
 /**
  * A custom type for mapping user-written classes that implement <tt>PersistentCollection</tt>
- * 
+ *
  * @see org.hibernate.collection.spi.PersistentCollection
  * @see org.hibernate.usertype.UserCollectionType
  * @author Gavin King
@@ -32,12 +32,23 @@ public class CustomCollectionType extends CollectionType {
 	private final UserCollectionType userType;
 	private final boolean customLogging;
 
+	/**
+	 * @deprecated Use the other constructor
+	 */
+	@Deprecated
 	public CustomCollectionType(
 			TypeFactory.TypeScope typeScope,
 			Class userTypeClass,
 			String role,
 			String foreignKeyPropertyName) {
-		super( typeScope, role, foreignKeyPropertyName );
+		this( userTypeClass, role, foreignKeyPropertyName );
+	}
+
+	public CustomCollectionType(
+			Class userTypeClass,
+			String role,
+			String foreignKeyPropertyName) {
+		super( role, foreignKeyPropertyName );
 		userType = createUserCollectionType( userTypeClass );
 		customLogging = LoggableUserType.class.isAssignableFrom( userTypeClass );
 	}

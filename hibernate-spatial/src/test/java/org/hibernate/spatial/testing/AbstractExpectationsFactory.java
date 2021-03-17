@@ -19,11 +19,11 @@ import org.hibernate.spatial.HSMessageLogger;
 
 import org.jboss.logging.Logger;
 
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.Point;
-import com.vividsolutions.jts.geom.Polygon;
-import com.vividsolutions.jts.io.ParseException;
-import com.vividsolutions.jts.io.WKTReader;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.geom.Polygon;
+import org.locationtech.jts.io.ParseException;
+import org.locationtech.jts.io.WKTReader;
 
 /**
  * An <code>AbstractExpectationsFactory</code> provides the expected
@@ -793,24 +793,22 @@ public abstract class AbstractExpectationsFactory {
 					case STRING:
 						expected.put( id, (T) results.getString( 2 ) );
 						break;
-					case INTEGER:
-						{
-							Long value = Long.valueOf( results.getLong( 2 ) );
-							if ( results.wasNull() ) {
-								value = null; // This is required because the Hibernate BasicExtractor also checks ResultSet#wasNull which can lead to a mismatch between the expected and the actual results
-							}
-							expected.put( id, (T) value );
+					case INTEGER: {
+						Long value = Long.valueOf( results.getLong( 2 ) );
+						if ( results.wasNull() ) {
+							value = null; // This is required because the Hibernate BasicExtractor also checks ResultSet#wasNull which can lead to a mismatch between the expected and the actual results
 						}
+						expected.put( id, (T) value );
+					}
 					break;
-					case DOUBLE:
-						{
-							Double value = Double.valueOf( results.getDouble( 2 ) );
-							if ( results.wasNull() ) {
-								value = null; //this is required because SQL Server converts automatically null to 0.0
-							}
-							expected.put( id, (T) value );
+					case DOUBLE: {
+						Double value = Double.valueOf( results.getDouble( 2 ) );
+						if ( results.wasNull() ) {
+							value = null; //this is required because SQL Server converts automatically null to 0.0
 						}
-						break;
+						expected.put( id, (T) value );
+					}
+					break;
 					case BOOLEAN:
 						expected.put( id, (T) Boolean.valueOf( results.getBoolean( 2 ) ) );
 						break;

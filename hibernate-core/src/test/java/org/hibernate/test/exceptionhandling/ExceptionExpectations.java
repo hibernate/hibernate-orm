@@ -7,6 +7,7 @@
 package org.hibernate.test.exceptionhandling;
 
 import java.sql.SQLException;
+import javax.persistence.NoResultException;
 import javax.persistence.OptimisticLockException;
 import javax.persistence.PersistenceException;
 import javax.persistence.RollbackException;
@@ -55,6 +56,16 @@ interface ExceptionExpectations {
 			}
 
 			@Override
+			public void onGetSingleResultWithMultipleResults(RuntimeException e) {
+				assertThat( e, instanceOf( javax.persistence.NonUniqueResultException.class ) );
+			}
+
+			@Override
+			public void onGetSingleResultWithNoResults(RuntimeException e) {
+				assertThat( e, instanceOf( NoResultException.class ) );
+			}
+
+			@Override
 			public void onStaleObjectMergeAndUpdateFlush(RuntimeException e) {
 				assertThat( e, instanceOf( OptimisticLockException.class ) );
 				assertThat( e.getCause(), instanceOf( StaleObjectStateException.class ) );
@@ -82,6 +93,13 @@ interface ExceptionExpectations {
 				assertThat( e, instanceOf( RollbackException.class ) );
 				assertThat( e.getCause(), instanceOf( PersistenceException.class ) );
 				assertThat( e.getCause().getCause(), instanceOf( TransactionException.class ) );
+			}
+
+			@Override
+			public void onExecuteUpdateWithConstraintViolation(RuntimeException e) {
+				assertThat( e, instanceOf( PersistenceException.class ) );
+				assertThat( e.getCause(), instanceOf( ConstraintViolationException.class ) );
+				assertThat( e.getCause().getCause(), instanceOf( SQLException.class ) );
 			}
 		};
 	}
@@ -116,6 +134,16 @@ interface ExceptionExpectations {
 			}
 
 			@Override
+			public void onGetSingleResultWithMultipleResults(RuntimeException e) {
+				assertThat( e, instanceOf( org.hibernate.NonUniqueResultException.class ) );
+			}
+
+			@Override
+			public void onGetSingleResultWithNoResults(RuntimeException e) {
+				assertThat( e, instanceOf( NoResultException.class ) );
+			}
+
+			@Override
 			public void onStaleObjectMergeAndUpdateFlush(RuntimeException e) {
 				assertThat( e, instanceOf( StaleObjectStateException.class ) );
 			}
@@ -138,6 +166,12 @@ interface ExceptionExpectations {
 			@Override
 			public void onTransactionExceptionOnCommit(RuntimeException e) {
 				assertThat( e, instanceOf( TransactionException.class ) );
+			}
+
+			@Override
+			public void onExecuteUpdateWithConstraintViolation(RuntimeException e) {
+				assertThat( e, instanceOf( ConstraintViolationException.class ) );
+				assertThat( e.getCause(), instanceOf( SQLException.class ) );
 			}
 		};
 	}
@@ -175,6 +209,16 @@ interface ExceptionExpectations {
 			}
 
 			@Override
+			public void onGetSingleResultWithMultipleResults(RuntimeException e) {
+				assertThat( e, instanceOf( javax.persistence.NonUniqueResultException.class ) );
+			}
+
+			@Override
+			public void onGetSingleResultWithNoResults(RuntimeException e) {
+				assertThat( e, instanceOf( NoResultException.class ) );
+			}
+
+			@Override
 			public void onStaleObjectMergeAndUpdateFlush(RuntimeException e) {
 				assertThat( e, instanceOf( OptimisticLockException.class ) );
 				assertThat( e.getCause(), instanceOf( StaleObjectStateException.class ) );
@@ -202,6 +246,13 @@ interface ExceptionExpectations {
 				assertThat( e, instanceOf( PersistenceException.class ) );
 				assertThat( e.getCause(), instanceOf( TransactionException.class ) );
 			}
+
+			@Override
+			public void onExecuteUpdateWithConstraintViolation(RuntimeException e) {
+				assertThat( e, instanceOf( PersistenceException.class ) );
+				assertThat( e.getCause(), instanceOf( ConstraintViolationException.class ) );
+				assertThat( e.getCause().getCause(), instanceOf( SQLException.class ) );
+			}
 		};
 	}
 
@@ -215,6 +266,10 @@ interface ExceptionExpectations {
 
 	void onInvalidQueryExecuted(RuntimeException e);
 
+	void onGetSingleResultWithMultipleResults(RuntimeException e);
+
+	void onGetSingleResultWithNoResults(RuntimeException e);
+
 	void onStaleObjectMergeAndUpdateFlush(RuntimeException e);
 
 	void onIdentifierGeneratorFailure(RuntimeException e);
@@ -224,4 +279,6 @@ interface ExceptionExpectations {
 	void onTransactionExceptionOnPersistAndMergeAndFlush(RuntimeException e);
 
 	void onTransactionExceptionOnCommit(RuntimeException e);
+
+	void onExecuteUpdateWithConstraintViolation(RuntimeException e);
 }

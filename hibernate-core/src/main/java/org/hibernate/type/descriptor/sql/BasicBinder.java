@@ -47,9 +47,8 @@ public abstract class BasicBinder<J> implements ValueBinder<J> {
 
 	@Override
 	public final void bind(PreparedStatement st, J value, int index, WrapperOptions options) throws SQLException {
-		final boolean traceEnabled = log.isTraceEnabled();
 		if ( value == null ) {
-			if ( traceEnabled ) {
+			if ( log.isTraceEnabled() ) {
 				log.trace(
 						String.format(
 								NULL_BIND_MSG_TEMPLATE,
@@ -61,7 +60,7 @@ public abstract class BasicBinder<J> implements ValueBinder<J> {
 			st.setNull( index, sqlDescriptor.getSqlType() );
 		}
 		else {
-			if ( traceEnabled ) {
+			if ( log.isTraceEnabled() ) {
 				log.trace(
 						String.format(
 								BIND_MSG_TEMPLATE,
@@ -77,9 +76,8 @@ public abstract class BasicBinder<J> implements ValueBinder<J> {
 
 	@Override
 	public final void bind(CallableStatement st, J value, String name, WrapperOptions options) throws SQLException {
-		final boolean traceEnabled = log.isTraceEnabled();
 		if ( value == null ) {
-			if ( traceEnabled ) {
+			if ( log.isTraceEnabled() ) {
 				log.trace(
 						String.format(
 								NULL_BIND_MSG_TEMPLATE,
@@ -91,7 +89,7 @@ public abstract class BasicBinder<J> implements ValueBinder<J> {
 			st.setNull( name, sqlDescriptor.getSqlType() );
 		}
 		else {
-			if ( traceEnabled ) {
+			if ( log.isTraceEnabled() ) {
 				log.trace(
 						String.format(
 								BIND_MSG_TEMPLATE,

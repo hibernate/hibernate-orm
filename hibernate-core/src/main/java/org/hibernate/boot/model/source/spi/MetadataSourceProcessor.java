@@ -38,7 +38,7 @@ public interface MetadataSourceProcessor {
 	/**
 	 * Process all "root" named queries.  These are named queries not defined on
 	 * a specific entity (which will be handled later during
-	 * {@link #processEntityHierarchies}.
+	 * {@link #processEntityHierarchies}).
 	 * <p/>
 	 * This step has no prerequisites.  The returns associated with named native
 	 * queries can depend on entity binding being complete, but those are handled

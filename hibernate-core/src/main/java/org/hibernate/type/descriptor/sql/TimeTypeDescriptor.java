@@ -49,7 +49,7 @@ public class TimeTypeDescriptor implements SqlTypeDescriptor {
 				if ( value instanceof Calendar ) {
 					st.setTime( index, time, (Calendar) value );
 				}
-				else if (options.getJdbcTimeZone() != null) {
+				else if ( options.getJdbcTimeZone() != null ) {
 					st.setTime( index, time, Calendar.getInstance( options.getJdbcTimeZone() ) );
 				}
 				else {
@@ -64,7 +64,7 @@ public class TimeTypeDescriptor implements SqlTypeDescriptor {
 				if ( value instanceof Calendar ) {
 					st.setTime( name, time, (Calendar) value );
 				}
-				else if (options.getJdbcTimeZone() != null) {
+				else if ( options.getJdbcTimeZone() != null ) {
 					st.setTime( name, time, Calendar.getInstance( options.getJdbcTimeZone() ) );
 				}
 				else {

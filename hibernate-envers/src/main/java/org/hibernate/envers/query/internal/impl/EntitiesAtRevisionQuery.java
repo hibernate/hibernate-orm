@@ -97,6 +97,11 @@ public class EntitiesAtRevisionQuery extends AbstractAuditQuery {
 				true
 		);
 
+		if ( enversService.getGlobalConfiguration().isAuditReaderFindAtRevisionExactMatch() ) {
+			// When EnversSettings#FIND_BY_REVISION_EXACT_MATCH is true, this forces this condition
+			qb.getRootParameters().addWhereWithNamedParam( revisionPropertyPath, "=", REVISION_PARAMETER );
+		}
+
 		if ( !includeDeletions ) {
 			// e.revision_type != DEL
 			qb.getRootParameters().addWhereWithParam( verEntCfg.getRevisionTypePropName(), "<>", RevisionType.DEL );

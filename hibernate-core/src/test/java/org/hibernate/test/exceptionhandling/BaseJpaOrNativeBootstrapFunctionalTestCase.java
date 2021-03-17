@@ -19,6 +19,7 @@ import javax.persistence.ValidationMode;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
@@ -81,6 +82,11 @@ public abstract class BaseJpaOrNativeBootstrapFunctionalTestCase extends BaseUni
 
 	protected Session openSession() throws HibernateException {
 		session = sessionFactory().openSession();
+		return session;
+	}
+
+	protected Session openSession(Interceptor interceptor) throws HibernateException {
+		session = sessionFactory().withOptions().interceptor( interceptor ).openSession();
 		return session;
 	}
 
@@ -254,7 +260,6 @@ public abstract class BaseJpaOrNativeBootstrapFunctionalTestCase extends BaseUni
 	private StandardServiceRegistryImpl buildServiceRegistry(BootstrapServiceRegistry bootRegistry, Configuration configuration) {
 		Properties properties = new Properties();
 		properties.putAll( configuration.getProperties() );
-		Environment.verifyProperties( properties );
 		ConfigurationHelper.resolvePlaceHolders( properties );
 
 		StandardServiceRegistryBuilder cfgRegistryBuilder = configuration.getStandardServiceRegistryBuilder();

@@ -8,7 +8,6 @@ package org.hibernate.service.internal;
 
 import java.util.List;
 
-import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -22,6 +21,8 @@ import org.hibernate.service.spi.SessionFactoryServiceInitiator;
 import org.hibernate.service.spi.SessionFactoryServiceInitiatorContext;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
+import org.jboss.logging.Logger;
+
 /**
  * @author Steve Ebersole
  */
@@ -29,25 +30,22 @@ public class SessionFactoryServiceRegistryImpl
 		extends AbstractServiceRegistryImpl
 		implements SessionFactoryServiceRegistry, SessionFactoryServiceInitiatorContext {
 
+	private static final Logger log = Logger.getLogger( SessionFactoryServiceRegistryImpl.class );
+
 	private final SessionFactoryOptions sessionFactoryOptions;
 	private final SessionFactoryImplementor sessionFactory;
-	private EventListenerRegistry cachedEventListenerRegistry;
 
-	private final BootstrapContext bootstrapContext;
-
-	@SuppressWarnings( {"unchecked"})
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	public SessionFactoryServiceRegistryImpl(
 			ServiceRegistryImplementor parent,
 			List<SessionFactoryServiceInitiator> initiators,
 			List<ProvidedService> providedServices,
 			SessionFactoryImplementor sessionFactory,
-			BootstrapContext bootstrapContext,
 			SessionFactoryOptions sessionFactoryOptions) {
 		super( parent );
 
 		this.sessionFactory = sessionFactory;
 		this.sessionFactoryOptions = sessionFactoryOptions;
-		this.bootstrapContext = bootstrapContext;
 
 		// for now, just use the standard initiator list
 		for ( SessionFactoryServiceInitiator initiator : initiators ) {
@@ -58,8 +56,6 @@ public class SessionFactoryServiceRegistryImpl
 		for ( ProvidedService providedService : providedServices ) {
 			createServiceBinding( providedService );
 		}
-
-		bootstrapContext = null;
 	}
 
 	@Override
@@ -70,14 +66,9 @@ public class SessionFactoryServiceRegistryImpl
 
 	@Override
 	public <R extends Service> void configureService(ServiceBinding<R> serviceBinding) {
-		if ( Configurable.class.isInstance( serviceBinding.getService() ) ) {
+		if ( serviceBinding.getService() instanceof Configurable ) {
 			( (Configurable) serviceBinding.getService() ).configure( getService( ConfigurationService.class ).getSettings() );
 		}
-	}
-
-	@Override
-	public BootstrapContext getBootstrapContext() {
-		return bootstrapContext;
 	}
 
 	@Override
@@ -97,16 +88,16 @@ public class SessionFactoryServiceRegistryImpl
 
 	@Override
 	public <R extends Service> R getService(Class<R> serviceRole) {
-
-		//HHH-11051 cache EventListenerRegistry
 		if ( serviceRole.equals( EventListenerRegistry.class ) ) {
-			if ( cachedEventListenerRegistry == null ) {
-				cachedEventListenerRegistry = (EventListenerRegistry) super.getService( serviceRole );
-			}
-			return (R) cachedEventListenerRegistry;
+			log.debug(
+					"EventListenerRegistry access via ServiceRegistry is deprecated.  " +
+							"Use `sessionFactory.getEventEngine().getListenerRegistry()` instead"
+			);
+
+			//noinspection unchecked
+			return (R) sessionFactory.getEventEngine().getListenerRegistry();
 		}
 
 		return super.getService( serviceRole );
 	}
-
 }

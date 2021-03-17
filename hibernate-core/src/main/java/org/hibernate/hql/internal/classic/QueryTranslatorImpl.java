@@ -23,6 +23,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -37,6 +38,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.hql.internal.HolderInstantiator;
 import org.hibernate.hql.internal.NameGenerator;
+import org.hibernate.hql.internal.ast.tree.FromElement;
 import org.hibernate.hql.spi.FilterTranslator;
 import org.hibernate.hql.spi.NamedParameterInformation;
 import org.hibernate.hql.spi.ParameterTranslations;
@@ -48,6 +50,7 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.BasicLoader;
+import org.hibernate.loader.internal.AliasConstantsHelper;
 import org.hibernate.loader.spi.AfterLoadAction;
 import org.hibernate.param.CollectionFilterKeyParameterSpecification;
 import org.hibernate.param.ParameterBinder;
@@ -60,6 +63,7 @@ import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.JoinType;
 import org.hibernate.sql.QuerySelect;
+import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.EntityType;
@@ -175,7 +179,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 	 *
 	 * @throws org.hibernate.MappingException Indicates problems resolving
 	 * things referenced in the query.
-	 * @throws org.hibernate.QueryException Generally some form of syntatic
+	 * @throws org.hibernate.QueryException Generally some form of syntactic
 	 * failure.
 	 */
 	void compile(QueryTranslatorImpl superquery) throws QueryException, MappingException {
@@ -227,7 +231,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 	 *
 	 * @throws org.hibernate.MappingException Indicates problems resolving
 	 * things referenced in the query.
-	 * @throws org.hibernate.QueryException Generally some form of syntatic
+	 * @throws org.hibernate.QueryException Generally some form of syntactic
 	 * failure.
 	 */
 	private void compile() throws QueryException, MappingException {
@@ -268,10 +272,12 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 		return sqlString;
 	}
 
+	@Override
 	public List<String> collectSqlStrings() {
-		return ArrayHelper.toList( new String[] {sqlString} );
+		return Collections.singletonList( sqlString );
 	}
 
+	@Override
 	public String getQueryString() {
 		return queryString;
 	}
@@ -291,15 +297,18 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 	 *
 	 * @return an array of <tt>Type</tt>s.
 	 */
+	@Override
 	public Type[] getReturnTypes() {
 		return actualReturnTypes;
 	}
 
+	@Override
 	public String[] getReturnAliases() {
 		// return aliases not supported in classic translator!
 		return NO_RETURN_ALIASES;
 	}
 
+	@Override
 	public String[][] getColumnNames() {
 		return scalarColumnNames;
 	}
@@ -642,10 +651,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 		}
 		else {
 			rtsize = returnedTypes.size();
-			Iterator iter = entitiesToFetch.iterator();
-			while ( iter.hasNext() ) {
-				returnedTypes.add( iter.next() );
-			}
+			returnedTypes.addAll( entitiesToFetch );
 		}
 		int size = returnedTypes.size();
 		persisters = new Queryable[size];
@@ -659,7 +665,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 			//if ( !isName(name) ) throw new QueryException("unknown type: " + name);
 			persisters[i] = getEntityPersisterForName( name );
 			// TODO: cannot use generateSuffixes() - it handles the initial suffix differently.
-			suffixes[i] = ( size == 1 ) ? "" : Integer.toString( i ) + '_';
+			suffixes[i] = ( size == 1 ) ? "" : AliasConstantsHelper.get( i );
 			names[i] = name;
 			includeInSelect[i] = !entitiesToFetch.contains( name );
 			if ( includeInSelect[i] ) {
@@ -758,14 +764,14 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 
 		for ( int k = 0; k < size; k++ ) {
 			String name = (String) returnedTypes.get( k );
-			String suffix = size == 1 ? "" : Integer.toString( k ) + '_';
+			String suffix = size == 1 ? "" : AliasConstantsHelper.get( k );
 			sql.addSelectFragmentString( persisters[k].identifierSelectFragment( name, suffix ) );
 		}
 
 	}
 
 	/*private String renderOrderByPropertiesSelect() {
-		StringBuffer buf = new StringBuffer(10);
+		StringBuilder buf = new StringBuilder(10);
 
 		//add the columns we are ordering by to the select ID select clause
 		Iterator iter = orderByTokens.iterator();
@@ -783,7 +789,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 	private void renderPropertiesSelect(QuerySelect sql) {
 		int size = returnedTypes.size();
 		for ( int k = 0; k < size; k++ ) {
-			String suffix = size == 1 ? "" : Integer.toString( k ) + '_';
+			String suffix = size == 1 ? "" : AliasConstantsHelper.get( k );
 			String name = (String) returnedTypes.get( k );
 			sql.addSelectFragmentString( persisters[k].propertySelectFragment( name, suffix, false ) );
 		}
@@ -828,7 +834,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 			//there _was_ a select clause
 			Iterator iter = scalarSelectTokens.iterator();
 			int c = 0;
-			boolean nolast = false; //real hacky...
+			boolean nolast = false; //really hacky...
 			int parenCount = 0; // used to count the nesting of parentheses
 			while ( iter.hasNext() ) {
 				Object next = iter.next();
@@ -1038,7 +1044,8 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 	public Iterator iterate(QueryParameters queryParameters, EventSource session)
 			throws HibernateException {
 
-		boolean stats = session.getFactory().getStatistics().isStatisticsEnabled();
+		final StatisticsImplementor statistics = session.getFactory().getStatistics();
+		boolean stats = statistics.isStatisticsEnabled();
 		long startTime = 0;
 		if ( stats ) {
 			startTime = System.nanoTime();
@@ -1071,7 +1078,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 			if ( stats ) {
 				final long endTime = System.nanoTime();
 				final long milliseconds = TimeUnit.MILLISECONDS.convert( endTime - startTime, TimeUnit.NANOSECONDS );
-				session.getFactory().getStatistics().queryExecuted(
+				statistics.queryExecuted(
 						"HQL: " + queryString,
 						0,
 						milliseconds
@@ -1309,6 +1316,11 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 	@Override
 	protected boolean isSubselectLoadingEnabled() {
 		return hasSubselectLoadableCollections();
+	}
+
+	@Override
+	public List<String> getPrimaryFromClauseTables() {
+		throw new UnsupportedOperationException( "The classic mode does not support UPDATE statements via createQuery!" );
 	}
 
 	@Override

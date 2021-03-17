@@ -7,7 +7,7 @@
 package org.hibernate.jpa.test.graphs.named.basic;
 
 /**
- * @author Strong Liu <stliu@hibernate.org>
+ * @author <a href="mailto:stliu@hibernate.org">Strong Liu</a>
  */
 public class BasicOrmNamedEntityGraphTest extends AbstractNamedEntityGraphTest{
 	@Override

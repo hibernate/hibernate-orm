@@ -39,7 +39,7 @@ public class HibernateAutoFlushTest extends BaseNonConfigCoreFunctionalTestCase 
 	@Test
 	public void testFlushAutoSQLNativeSession() {
 		doInHibernate( this::sessionFactory, session -> {
-			session.createNativeQuery( "delete from Person" ).executeUpdate();;
+			session.createNativeQuery( "delete from Person" ).executeUpdate();
 		} );
 		doInHibernate( this::sessionFactory, session -> {
 			log.info( "testFlushAutoSQLNativeSession" );

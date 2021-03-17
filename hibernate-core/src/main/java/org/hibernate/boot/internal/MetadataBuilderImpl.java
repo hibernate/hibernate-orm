@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import javax.persistence.AttributeConverter;
+import javax.persistence.ConstraintMode;
 import javax.persistence.SharedCacheMode;
 
 import org.hibernate.HibernateException;
@@ -69,7 +70,6 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.AbstractStandardBasicType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
@@ -122,7 +122,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		this.sources = sources;
 		this.options = new MetadataBuildingOptionsImpl( serviceRegistry );
 		this.bootstrapContext = new BootstrapContextImpl( serviceRegistry, options );
-		//this is needed only fro implementig deprecated method
+		//this is needed only for implementing deprecated method
 		options.setBootstrapContext( bootstrapContext );
 
 		for ( MetadataSourcesContributor contributor :
@@ -328,6 +328,11 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 	public MetadataBuilder allowSpecjSyntax() {
 		this.options.specjProprietarySyntaxEnabled = true;
+		return this;
+	}
+
+	public MetadataBuilder noConstraintByDefault() {
+		this.options.noConstraintByDefault = true;
 		return this;
 	}
 
@@ -611,11 +616,13 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		private boolean implicitlyForceDiscriminatorInSelect;
 		private boolean useNationalizedCharacterData;
 		private boolean specjProprietarySyntaxEnabled;
+		private boolean noConstraintByDefault;
 		private ArrayList<MetadataSourceType> sourceProcessOrdering;
 
 		private IdGeneratorInterpreterImpl idGenerationTypeInterpreter = new IdGeneratorInterpreterImpl();
 
 		private String schemaCharset;
+		private boolean xmlMappingEnabled;
 
 		public MetadataBuildingOptionsImpl(StandardServiceRegistry serviceRegistry) {
 			this.serviceRegistry = serviceRegistry;
@@ -626,6 +633,12 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			this.mappingDefaults = new MappingDefaultsImpl( serviceRegistry );
 
 			this.multiTenancyStrategy =  MultiTenancyStrategy.determineMultiTenancyStrategy( configService.getSettings() );
+
+			this.xmlMappingEnabled = configService.getSetting(
+					AvailableSettings.XML_MAPPING_ENABLED,
+					StandardConverters.BOOLEAN,
+					true
+			);
 
 			this.implicitDiscriminatorsForJoinedInheritanceSupported = configService.getSetting(
 					AvailableSettings.IMPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS,
@@ -695,6 +708,12 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 					StandardConverters.BOOLEAN,
 					false
 			);
+
+			this.noConstraintByDefault = ConstraintMode.NO_CONSTRAINT.name().equalsIgnoreCase( configService.getSetting(
+					AvailableSettings.HBM2DDL_DEFAULT_CONSTRAINT_MODE,
+					String.class,
+					null
+			) );
 
 			this.implicitNamingStrategy = strategySelector.resolveDefaultableStrategy(
 					ImplicitNamingStrategy.class,
@@ -877,6 +896,11 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		}
 
 		@Override
+		public boolean isNoConstraintByDefault() {
+			return noConstraintByDefault;
+		}
+
+		@Override
 		public List<MetadataSourceType> getSourceProcessOrdering() {
 			return sourceProcessOrdering;
 		}
@@ -899,6 +923,11 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		@Override
 		public String getSchemaCharset() {
 			return schemaCharset;
+		}
+
+		@Override
+		public boolean isXmlMappingEnabled() {
+			return xmlMappingEnabled;
 		}
 
 		/**

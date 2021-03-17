@@ -17,13 +17,13 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.service.spi.EventListenerGroup;
-import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostCommitDeleteEventListener;
 import org.hibernate.event.spi.PostDeleteEvent;
 import org.hibernate.event.spi.PostDeleteEventListener;
 import org.hibernate.event.spi.PreDeleteEvent;
 import org.hibernate.event.spi.PreDeleteEventListener;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
  * The action for performing an entity deletion.
@@ -61,11 +61,35 @@ public class EntityDeleteAction extends EntityAction {
 		this.state = state;
 
 		// before remove we need to remove the local (transactional) natural id cross-reference
-		naturalIdValues = session.getPersistenceContext().getNaturalIdHelper().removeLocalNaturalIdCrossReference(
+		naturalIdValues = session.getPersistenceContextInternal().getNaturalIdHelper().removeLocalNaturalIdCrossReference(
 				getPersister(),
 				getId(),
 				state
 		);
+	}
+
+	public Object getVersion() {
+		return version;
+	}
+
+	public boolean isCascadeDeleteEnabled() {
+		return isCascadeDeleteEnabled;
+	}
+
+	public Object[] getState() {
+		return state;
+	}
+
+	protected Object[] getNaturalIdValues() {
+		return naturalIdValues;
+	}
+
+	protected SoftLock getLock() {
+		return lock;
+	}
+
+	protected void setLock(SoftLock lock) {
+		this.lock = lock;
 	}
 
 	@Override
@@ -103,7 +127,7 @@ public class EntityDeleteAction extends EntityAction {
 		// After actually deleting a row, record the fact that the instance no longer 
 		// exists on the database (needed for identity-column key generation), and
 		// remove it from the session cache
-		final PersistenceContext persistenceContext = session.getPersistenceContext();
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		final EntityEntry entry = persistenceContext.removeEntry( instance );
 		if ( entry == null ) {
 			throw new AssertionFailure( "possible nonthreadsafe access to session" );
@@ -121,14 +145,15 @@ public class EntityDeleteAction extends EntityAction {
 
 		postDelete();
 
-		if ( getSession().getFactory().getStatistics().isStatisticsEnabled() && !veto ) {
-			getSession().getFactory().getStatistics().deleteEntity( getPersister().getEntityName() );
+		final StatisticsImplementor statistics = getSession().getFactory().getStatistics();
+		if ( statistics.isStatisticsEnabled() && !veto ) {
+			statistics.deleteEntity( getPersister().getEntityName() );
 		}
 	}
 
-	private boolean preDelete() {
+	protected boolean preDelete() {
 		boolean veto = false;
-		final EventListenerGroup<PreDeleteEventListener> listenerGroup = listenerGroup( EventType.PRE_DELETE );
+		final EventListenerGroup<PreDeleteEventListener> listenerGroup = getFastSessionServices().eventListenerGroup_PRE_DELETE;
 		if ( listenerGroup.isEmpty() ) {
 			return veto;
 		}
@@ -139,48 +164,40 @@ public class EntityDeleteAction extends EntityAction {
 		return veto;
 	}
 
-	private void postDelete() {
-		final EventListenerGroup<PostDeleteEventListener> listenerGroup = listenerGroup( EventType.POST_DELETE );
-		if ( listenerGroup.isEmpty() ) {
-			return;
-		}
-		final PostDeleteEvent event = new PostDeleteEvent(
+	protected void postDelete() {
+		getFastSessionServices()
+				.eventListenerGroup_POST_DELETE
+				.fireLazyEventOnEachListener( this::newPostDeleteEvent, PostDeleteEventListener::onPostDelete );
+	}
+
+	PostDeleteEvent newPostDeleteEvent() {
+		return new PostDeleteEvent(
 				getInstance(),
 				getId(),
 				state,
 				getPersister(),
 				eventSource()
 		);
-		for ( PostDeleteEventListener listener : listenerGroup.listeners() ) {
-			listener.onPostDelete( event );
+	}
+
+	protected void postCommitDelete(boolean success) {
+		final EventListenerGroup<PostDeleteEventListener> eventListeners = getFastSessionServices()
+				.eventListenerGroup_POST_COMMIT_DELETE;
+		if (success) {
+			eventListeners.fireLazyEventOnEachListener( this::newPostDeleteEvent, PostDeleteEventListener::onPostDelete );
+		}
+		else {
+			eventListeners.fireLazyEventOnEachListener( this::newPostDeleteEvent, EntityDeleteAction::postCommitDeleteOnUnsuccessful );
 		}
 	}
 
-	private void postCommitDelete(boolean success) {
-		final EventListenerGroup<PostDeleteEventListener> listenerGroup = listenerGroup( EventType.POST_COMMIT_DELETE );
-		if ( listenerGroup.isEmpty() ) {
-			return;
+	private static void postCommitDeleteOnUnsuccessful(PostDeleteEventListener listener, PostDeleteEvent event) {
+		if ( listener instanceof PostCommitDeleteEventListener ) {
+			( (PostCommitDeleteEventListener) listener ).onPostDeleteCommitFailed( event );
 		}
-		final PostDeleteEvent event = new PostDeleteEvent(
-				getInstance(),
-				getId(),
-				state,
-				getPersister(),
-				eventSource()
-		);
-		for ( PostDeleteEventListener listener : listenerGroup.listeners() ) {
-			if ( PostCommitDeleteEventListener.class.isInstance( listener ) ) {
-				if ( success ) {
-					listener.onPostDelete( event );
-				}
-				else {
-					((PostCommitDeleteEventListener) listener).onPostDeleteCommitFailed( event );
-				}
-			}
-			else {
-				//default to the legacy implementation that always fires the event
-				listener.onPostDelete( event );
-			}
+		else {
+			//default to the legacy implementation that always fires the event
+			listener.onPostDelete( event );
 		}
 	}
 
@@ -202,7 +219,7 @@ public class EntityDeleteAction extends EntityAction {
 
 	@Override
 	protected boolean hasPostCommitEventListeners() {
-		final EventListenerGroup<PostDeleteEventListener> group = listenerGroup( EventType.POST_COMMIT_DELETE );
+		final EventListenerGroup<PostDeleteEventListener> group = getFastSessionServices().eventListenerGroup_POST_COMMIT_DELETE;
 		for ( PostDeleteEventListener listener : group.listeners() ) {
 			if ( listener.requiresPostCommitHandling( getPersister() ) ) {
 				return true;

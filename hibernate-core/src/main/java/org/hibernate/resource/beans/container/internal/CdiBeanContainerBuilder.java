@@ -35,7 +35,7 @@ public class CdiBeanContainerBuilder {
 	private static final String CONTAINER_FQN_DELAYED = "org.hibernate.resource.beans.container.internal.CdiBeanContainerDelayedAccessImpl";
 	private static final String CONTAINER_FQN_EXTENDED = "org.hibernate.resource.beans.container.internal.CdiBeanContainerExtendedAccessImpl";
 
-	private static final String BEAN_MANAGER_EXTENSION_FQN = "org.hibernate.jpa.event.spi.jpa.ExtendedBeanManager";
+	private static final String BEAN_MANAGER_EXTENSION_FQN = "org.hibernate.resource.beans.container.spi.ExtendedBeanManager";
 
 	@SuppressWarnings("unchecked")
 	public static BeanContainer fromBeanManagerReference(

@@ -8,6 +8,7 @@ package org.hibernate.persister.entity;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -27,6 +28,7 @@ import org.hibernate.internal.DynamicFilterAliasGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.Join;
@@ -47,8 +49,8 @@ import org.hibernate.type.Type;
 /**
  * The default implementation of the <tt>EntityPersister</tt> interface.
  * Implements the "table-per-class-hierarchy" or "roll-up" mapping strategy
- * for an entity class and its inheritence hierarchy.  This is implemented
- * as a single table holding all classes in the hierarchy with a discrimator
+ * for an entity class and its inheritance hierarchy.  This is implemented
+ * as a single table holding all classes in the hierarchy with a discriminator
  * column used to determine which concrete class is referenced.
  *
  * @author Gavin King
@@ -75,6 +77,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	private final boolean[] subclassTableSequentialSelect;
 	private final String[][] subclassTableKeyColumnClosure;
 	private final boolean[] isClassOrSuperclassTable;
+	private final boolean[] isClassOrSuperclassJoin;
 
 	// properties of this class, including inherited properties
 	private final int[] propertyTableNumbers;
@@ -87,7 +90,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	private final int[] subclassFormulaTableNumberClosure;
 
 	// discriminator column
-	private final Map<Object, String> subclassesByDiscriminatorValue = new HashMap<Object, String>();
+	private final Map<Object, String> subclassesByDiscriminatorValue;
 	private final boolean forceDiscriminator;
 	private final String discriminatorColumnName;
 	private final String discriminatorColumnReaders;
@@ -104,9 +107,10 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	private final String[][] constraintOrderedKeyColumnNames;
 
 	//private final Map propertyTableNumbersByName = new HashMap();
-	private final Map<String, Integer> propertyTableNumbersByNameAndSubclass = new HashMap<String, Integer>();
+	private final Map<String, Integer> propertyTableNumbersByNameAndSubclass;
 
-	private final Map<String, String> sequentialSelectStringsByEntityName = new HashMap<String, String>();
+	//Efficiency note: try to not allocate an HashMap if we're not going to need it.
+	private final Map<String, String> sequentialSelectStringsByEntityName;
 
 	private static final Object NULL_DISCRIMINATOR = new MarkerObject( "<null discriminator>" );
 	private static final Object NOT_NULL_DISCRIMINATOR = new MarkerObject( "<not null discriminator>" );
@@ -178,11 +182,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			Join join = (Join) joinIter.next();
 			qualifiedTableNames[j] = determineTableName( join.getTable(), jdbcEnvironment );
 			isInverseTable[j] = join.isInverse();
-			isNullableTable[j] = join.isOptional()
-					|| creationContext.getSessionFactory()
-							.getSessionFactoryOptions()
-							.getJpaCompliance()
-							.isJpaCacheComplianceEnabled();
+			isNullableTable[j] = join.isOptional();
 			cascadeDeleteEnabled[j] = join.getKey().isCascadeDeleteEnabled() &&
 					factory.getDialect().supportsCascadeDelete();
 
@@ -231,6 +231,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		ArrayList<String> subclassTables = new ArrayList<String>();
 		ArrayList<String[]> joinKeyColumns = new ArrayList<String[]>();
 		ArrayList<Boolean> isConcretes = new ArrayList<Boolean>();
+		ArrayList<Boolean> isClassOrSuperclassJoins = new ArrayList<Boolean>();
 		ArrayList<Boolean> isDeferreds = new ArrayList<Boolean>();
 		ArrayList<Boolean> isInverses = new ArrayList<Boolean>();
 		ArrayList<Boolean> isNullables = new ArrayList<Boolean>();
@@ -238,6 +239,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		subclassTables.add( qualifiedTableNames[0] );
 		joinKeyColumns.add( getIdentifierColumnNames() );
 		isConcretes.add( Boolean.TRUE );
+		isClassOrSuperclassJoins.add( Boolean.TRUE );
 		isDeferreds.add( Boolean.FALSE );
 		isInverses.add( Boolean.FALSE );
 		isNullables.add( Boolean.FALSE );
@@ -245,26 +247,19 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		joinIter = persistentClass.getSubclassJoinClosureIterator();
 		while ( joinIter.hasNext() ) {
 			Join join = (Join) joinIter.next();
-			isConcretes.add( persistentClass.isClassOrSuperclassJoin( join ) );
-			isDeferreds.add( join.isSequentialSelect() );
+			isConcretes.add( persistentClass.isClassOrSuperclassTable( join.getTable() ) );
+			isClassOrSuperclassJoins.add( persistentClass.isClassOrSuperclassJoin( join ) );
 			isInverses.add( join.isInverse() );
-			isNullables.add(
-					join.isOptional() || creationContext.getSessionFactory()
-							.getSessionFactoryOptions()
-							.getJpaCompliance()
-							.isJpaCacheComplianceEnabled()
-			);
+			isNullables.add( join.isOptional() );
 			isLazies.add( lazyAvailable && join.isLazy() );
-			if ( join.isSequentialSelect() && !persistentClass.isClassOrSuperclassJoin( join ) ) {
-				hasDeferred = true;
-			}
-			subclassTables.add(
-					join.getTable().getQualifiedName(
-							factory.getDialect(),
-							factory.getSettings().getDefaultCatalogName(),
-							factory.getSettings().getDefaultSchemaName()
-					)
-			);
+
+			boolean isDeferred = join.isSequentialSelect() && ! persistentClass.isClassOrSuperclassJoin( join ) ;
+			isDeferreds.add( isDeferred );
+			hasDeferred |= isDeferred;
+
+			String joinTableName = determineTableName( join.getTable(), jdbcEnvironment );
+			subclassTables.add( joinTableName );
+
 			Iterator iter = join.getKey().getColumnIterator();
 			String[] keyCols = new String[join.getKey().getColumnSpan()];
 			int i = 0;
@@ -280,9 +275,12 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		subclassTableIsLazyClosure = ArrayHelper.toBooleanArray( isLazies );
 		subclassTableKeyColumnClosure = ArrayHelper.to2DStringArray( joinKeyColumns );
 		isClassOrSuperclassTable = ArrayHelper.toBooleanArray( isConcretes );
+		isClassOrSuperclassJoin = ArrayHelper.toBooleanArray( isClassOrSuperclassJoins );
 		isInverseSubclassTable = ArrayHelper.toBooleanArray( isInverses );
 		isNullableSubclassTable = ArrayHelper.toBooleanArray( isNullables );
 		hasSequentialSelects = hasDeferred;
+
+		this.sequentialSelectStringsByEntityName = hasSequentialSelects ? new HashMap<>() : Collections.EMPTY_MAP;
 
 		// DISCRIMINATOR
 
@@ -374,6 +372,9 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		ArrayList<Integer> formulaJoinedNumbers = new ArrayList<Integer>();
 		ArrayList<Integer> propertyJoinNumbers = new ArrayList<Integer>();
 
+		final HashMap<String, Integer> propertyTableNumbersByNameAndSubclassLocal = new HashMap<>();
+		final Map<Object, String> subclassesByDiscriminatorValueLocal = new HashMap<>();
+
 		iter = persistentClass.getSubclassPropertyClosureIterator();
 		while ( iter.hasNext() ) {
 			Property prop = (Property) iter.next();
@@ -381,7 +382,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			propertyJoinNumbers.add( join );
 
 			//propertyTableNumbersByName.put( prop.getName(), join );
-			propertyTableNumbersByNameAndSubclass.put(
+			propertyTableNumbersByNameAndSubclassLocal.put(
 					prop.getPersistentClass().getEntityName() + '.' + prop.getName(),
 					join
 			);
@@ -397,6 +398,9 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 				}
 			}
 		}
+
+		propertyTableNumbersByNameAndSubclass = CollectionHelper.toSmallMap( propertyTableNumbersByNameAndSubclassLocal );
+
 		subclassColumnTableNumberClosure = ArrayHelper.toIntArray( columnJoinNumbers );
 		subclassFormulaTableNumberClosure = ArrayHelper.toIntArray( formulaJoinedNumbers );
 		subclassPropertyTableNumberClosure = ArrayHelper.toIntArray( propertyJoinNumbers );
@@ -405,7 +409,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		subclassClosure = new String[subclassSpan];
 		subclassClosure[0] = getEntityName();
 		if ( persistentClass.isPolymorphic() ) {
-			addSubclassByDiscriminatorValue( discriminatorValue, getEntityName() );
+			addSubclassByDiscriminatorValue( subclassesByDiscriminatorValueLocal, discriminatorValue, getEntityName() );
 		}
 
 		// SUBCLASSES
@@ -416,15 +420,16 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 				Subclass sc = (Subclass) iter.next();
 				subclassClosure[k++] = sc.getEntityName();
 				if ( sc.isDiscriminatorValueNull() ) {
-					addSubclassByDiscriminatorValue( NULL_DISCRIMINATOR, sc.getEntityName() );
+					addSubclassByDiscriminatorValue( subclassesByDiscriminatorValueLocal, NULL_DISCRIMINATOR, sc.getEntityName() );
 				}
 				else if ( sc.isDiscriminatorValueNotNull() ) {
-					addSubclassByDiscriminatorValue( NOT_NULL_DISCRIMINATOR, sc.getEntityName() );
+					addSubclassByDiscriminatorValue( subclassesByDiscriminatorValueLocal, NOT_NULL_DISCRIMINATOR, sc.getEntityName() );
 				}
 				else {
 					try {
 						DiscriminatorType dtype = (DiscriminatorType) discriminatorType;
 						addSubclassByDiscriminatorValue(
+								subclassesByDiscriminatorValueLocal,
 								dtype.stringToObject( sc.getDiscriminatorValue() ),
 								sc.getEntityName()
 						);
@@ -439,7 +444,8 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			}
 		}
 
-		initLockers();
+		// Don't hold a reference to an empty HashMap:
+		this.subclassesByDiscriminatorValue = CollectionHelper.toSmallMap( subclassesByDiscriminatorValueLocal );
 
 		initSubclassPropertyAliasesMap( persistentClass );
 
@@ -447,7 +453,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 	}
 
-	private void addSubclassByDiscriminatorValue(Object discriminatorValue, String entityName) {
+	private static void addSubclassByDiscriminatorValue(Map<Object, String> subclassesByDiscriminatorValue, Object discriminatorValue, String entityName) {
 		String mappedEntityName = subclassesByDiscriminatorValue.put( discriminatorValue, entityName );
 		if ( mappedEntityName != null ) {
 			throw new MappingException(
@@ -457,7 +463,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		}
 	}
 
-	protected boolean isInverseTable(int j) {
+	public boolean isInverseTable(int j) {
 		return isInverseTable[j];
 	}
 
@@ -477,11 +483,11 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		return discriminatorColumnReaderTemplate;
 	}
 
-	protected String getDiscriminatorAlias() {
+	public String getDiscriminatorAlias() {
 		return discriminatorAlias;
 	}
 
-	protected String getDiscriminatorFormulaTemplate() {
+	public String getDiscriminatorFormulaTemplate() {
 		return discriminatorFormulaTemplate;
 	}
 
@@ -532,19 +538,19 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		return discriminatorFormula;
 	}
 
-	protected String getTableName(int j) {
+	public String getTableName(int j) {
 		return qualifiedTableNames[j];
 	}
 
-	protected String[] getKeyColumns(int j) {
+	public String[] getKeyColumns(int j) {
 		return keyColumnNames[j];
 	}
 
-	protected boolean isTableCascadeDeleteEnabled(int j) {
+	public boolean isTableCascadeDeleteEnabled(int j) {
 		return cascadeDeleteEnabled[j];
 	}
 
-	protected boolean isPropertyOfTable(int property, int j) {
+	public boolean isPropertyOfTable(int property, int j) {
 		return propertyTableNumbers[property] == j;
 	}
 
@@ -559,7 +565,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	public String filterFragment(String alias) throws MappingException {
+	protected String filterFragment(String alias) throws MappingException {
 		String result = discriminatorFilterFragment( alias );
 		if ( hasWhere() ) {
 			result += " and " + getSQLWhereString( alias );
@@ -585,7 +591,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	public String filterFragment(String alias, Set<String> treatAsDeclarations) {
+	protected String filterFragment(String alias, Set<String> treatAsDeclarations) {
 		String result = discriminatorFilterFragment( alias, treatAsDeclarations );
 		if ( hasWhere() ) {
 			result += " and " + getSQLWhereString( alias );
@@ -809,11 +815,15 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		return isClassOrSuperclassTable[j];
 	}
 
+	protected boolean isClassOrSuperclassJoin(int j) {
+		return isClassOrSuperclassJoin[j];
+	}
+
 	protected boolean isSubclassTableLazy(int j) {
 		return subclassTableIsLazyClosure[j];
 	}
 
-	protected boolean isNullableTable(int j) {
+	public boolean isNullableTable(int j) {
 		return isNullableTable[j];
 	}
 
@@ -821,6 +831,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		return isNullableSubclassTable[j];
 	}
 
+	@Override
 	public String getPropertyTableName(String propertyName) {
 		Integer index = getEntityMetamodel().getPropertyIndexOrNull( propertyName );
 		if ( index == null ) {
@@ -840,6 +851,11 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 				}
 			}
 		}
+	}
+
+	@Override
+	public boolean canOmitSuperclassTableJoin() {
+		return true;
 	}
 
 	public boolean isMultiTable() {

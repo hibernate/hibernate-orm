@@ -6,6 +6,8 @@
  */
 package org.hibernate.engine.jdbc;
 
+import java.sql.SQLException;
+
 /**
  * Marker interface for non-contextually created {@link java.sql.Blob} instances..
  *
@@ -17,5 +19,5 @@ public interface BlobImplementer {
 	 *
 	 * @return Access to the underlying data.
 	 */
-	public BinaryStream getUnderlyingStream();
+	public BinaryStream getUnderlyingStream() throws SQLException;
 }

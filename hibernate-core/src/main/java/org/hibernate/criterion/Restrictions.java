@@ -375,7 +375,7 @@ public class Restrictions {
 	}
 
 	/**
-	 * Return the conjuction of two expressions
+	 * Return the conjunction of two expressions
 	 *
 	 * @param lhs One expression
 	 * @param rhs The other expression
@@ -386,7 +386,7 @@ public class Restrictions {
 		return new LogicalExpression(lhs, rhs, "and");
 	}
 	/**
-	 * Return the conjuction of multiple expressions
+	 * Return the conjunction of multiple expressions
 	 *
 	 * @param predicates The predicates making up the initial junction
 	 *
@@ -397,7 +397,7 @@ public class Restrictions {
 	}
 
 	/**
-	 * Return the disjuction of two expressions
+	 * Return the disjunction of two expressions
 	 *
 	 * @param lhs One expression
 	 * @param rhs The other expression
@@ -409,7 +409,7 @@ public class Restrictions {
 	}
 
 	/**
-	 * Return the disjuction of multiple expressions
+	 * Return the disjunction of multiple expressions
 	 *
 	 * @param predicates The predicates making up the initial junction
 	 *

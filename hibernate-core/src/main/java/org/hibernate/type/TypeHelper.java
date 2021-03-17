@@ -8,6 +8,7 @@ package org.hibernate.type;
 
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.tuple.NonIdentifierAttribute;
 
@@ -159,6 +160,9 @@ public class TypeHelper {
 			if ( original[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY || original[i] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
 				copied[i] = target[i];
 			}
+			else if ( target[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
+				copied[i] = types[i].replace( original[i], null, session, owner, copyCache );
+			}
 			else {
 				copied[i] = types[i].replace( original[i], target[i], session, owner, copyCache );
 			}
@@ -192,6 +196,9 @@ public class TypeHelper {
 			if ( original[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY
 					|| original[i] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
 				copied[i] = target[i];
+			}
+			else if ( target[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
+				copied[i] = types[i].replace( original[i], null, session, owner, copyCache, foreignKeyDirection );
 			}
 			else {
 				copied[i] = types[i].replace( original[i], target[i], session, owner, copyCache, foreignKeyDirection );
@@ -319,9 +326,7 @@ public class TypeHelper {
 			return null;
 		}
 		else {
-			int[] trimmed = new int[count];
-			System.arraycopy( results, 0, trimmed, 0, count );
-			return trimmed;
+			return ArrayHelper.trim(results, count);
 		}
 	}
 

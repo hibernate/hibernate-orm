@@ -46,7 +46,7 @@ public class SelectClause extends SelectExpressionList {
 	/**
 	 * Does this SelectClause represent a scalar query
 	 *
-	 * @return True if this is a scalara select clause; false otherwise.
+	 * @return True if this is a scalar select clause; false otherwise.
 	 */
 	public boolean isScalarSelect() {
 		return scalarSelect;
@@ -110,14 +110,14 @@ public class SelectClause extends SelectExpressionList {
 	 *
 	 * @param fromClause The from clause linked to this select clause.
 	 *
-	 * @throws SemanticException indicates a semntic issue with the explicit select clause.
+	 * @throws SemanticException indicates a semantic issue with the explicit select clause.
 	 */
 	public void initializeExplicitSelectClause(FromClause fromClause) throws SemanticException {
 		if ( prepared ) {
 			throw new IllegalStateException( "SelectClause was already prepared!" );
 		}
 
-		//explicit = true;	// This is an explict Select.
+		//explicit = true;	// This is an explicit Select.
 		//ArrayList sqlResultTypeList = new ArrayList();
 		ArrayList queryReturnTypeList = new ArrayList();
 
@@ -177,7 +177,7 @@ public class SelectClause extends SelectExpressionList {
 			}
 		}
 
-		//init the aliases, after initing the constructornode
+		//init the aliases, after initiating the constructorNode
 		initAliases( selectExpressions );
 
 		if ( !getWalker().isShallowQuery() ) {
@@ -193,10 +193,10 @@ public class SelectClause extends SelectExpressionList {
 				FromElement fromElement = (FromElement) iterator.next();
 
 				if ( fromElement.isFetch() ) {
-					FromElement origin = null;
+					final FromElement origin;
 					if ( fromElement.getRealOrigin() == null ) {
 						// work around that crazy issue where the tree contains
-						// "empty" FromElements (no text); afaict, this is caused
+						// "empty" FromElements (no text); AFAICT, this is caused
 						// by FromElementFactory.createCollectionJoin()
 						if ( fromElement.getOrigin() == null ) {
 							throw new QueryException( "Unable to determine origin of join fetch [" + fromElement.getDisplayText() + "]" );
@@ -208,9 +208,7 @@ public class SelectClause extends SelectExpressionList {
 					else {
 						origin = fromElement.getRealOrigin();
 					}
-					if ( !fromElementsForLoad.contains( origin )
-							// work around that fetch joins of element collections where their parent instead of the root is selected
-							&& ( !fromElement.isCollectionJoin() || !fromElementsForLoad.contains( fromElement.getFetchOrigin() ) ) ) {
+					if ( !fromElementsForLoad.contains( origin ) && !fromElementsForLoad.contains( fromElement.getFetchOrigin() ) ) {
 						throw new QueryException(
 								"query specified join fetching, but the owner " +
 										"of the fetched association was not present in the select list " +

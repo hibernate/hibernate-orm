@@ -22,12 +22,12 @@ public class AliasToBeanConstructorResultTransformer implements ResultTransforme
 	/**
 	 * Instantiates a AliasToBeanConstructorResultTransformer.
 	 *
-	 * @param constructor The contructor in which to wrap the tuples.
+	 * @param constructor The constructor in which to wrap the tuples.
 	 */
 	public AliasToBeanConstructorResultTransformer(Constructor constructor) {
 		this.constructor = constructor;
 	}
-	
+
 	/**
 	 * Wrap the incoming tuples in a call to our configured constructor.
 	 */
@@ -37,7 +37,7 @@ public class AliasToBeanConstructorResultTransformer implements ResultTransforme
 			return constructor.newInstance( tuple );
 		}
 		catch ( Exception e ) {
-			throw new QueryException( 
+			throw new QueryException(
 					"could not instantiate class [" + constructor.getDeclaringClass().getName() + "] from tuple",
 					e
 			);
@@ -64,7 +64,7 @@ public class AliasToBeanConstructorResultTransformer implements ResultTransforme
 	 * defined constructor.
 	 *
 	 * @param other The other instance to check for equality.
-	 * @return True if both have the same defined constuctor; false otherwise.
+	 * @return True if both have the same defined constructor; false otherwise.
 	 */
 	@Override
 	public boolean equals(Object other) {

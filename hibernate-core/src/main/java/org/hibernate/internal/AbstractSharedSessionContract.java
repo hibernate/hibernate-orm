@@ -15,7 +15,12 @@ import java.util.List;
 import java.util.TimeZone;
 import java.util.UUID;
 import javax.persistence.FlushModeType;
+import javax.persistence.TransactionRequiredException;
 import javax.persistence.Tuple;
+import javax.persistence.criteria.CriteriaDelete;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.CriteriaUpdate;
+import javax.persistence.criteria.Selection;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.CacheMode;
@@ -27,20 +32,16 @@ import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.LockMode;
 import org.hibernate.MultiTenancyStrategy;
+import org.hibernate.SessionEventListener;
 import org.hibernate.SessionException;
 import org.hibernate.Transaction;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.cache.spi.CacheTransactionSynchronization;
-import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.internal.SessionEventListenerManagerImpl;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
-import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
-import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.engine.jdbc.internal.JdbcCoordinatorImpl;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -61,7 +62,13 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.transaction.internal.TransactionImpl;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.id.uuid.StandardRandomStrategy;
+import org.hibernate.jdbc.ReturningWork;
+import org.hibernate.jdbc.Work;
+import org.hibernate.jdbc.WorkExecutorVisitable;
+import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
+import org.hibernate.jpa.spi.CriteriaQueryTupleTransformer;
+import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
 import org.hibernate.jpa.spi.NativeQueryTupleTransformer;
 import org.hibernate.jpa.spi.TupleBuilderTransformer;
 import org.hibernate.persister.entity.EntityPersister;
@@ -70,12 +77,16 @@ import org.hibernate.procedure.ProcedureCallMemento;
 import org.hibernate.procedure.internal.ProcedureCallImpl;
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.Query;
+import org.hibernate.query.criteria.internal.compile.CompilableCriteria;
+import org.hibernate.query.criteria.internal.compile.CriteriaCompiler;
+import org.hibernate.query.criteria.internal.expression.CompoundSelectionImpl;
 import org.hibernate.query.internal.NativeQueryImpl;
 import org.hibernate.query.internal.QueryImpl;
 import org.hibernate.query.spi.NativeQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
+import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
@@ -106,6 +117,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	private transient SessionFactoryImpl factory;
 	private final String tenantIdentifier;
+	protected transient FastSessionServices fastSessionServices;
 	private UUID sessionIdentifier;
 
 	private transient JdbcConnectionAccess jdbcConnectionAccess;
@@ -123,6 +135,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	private FlushMode flushMode;
 	private boolean autoJoinTransactions;
+	private final PhysicalConnectionHandlingMode connectionHandlingMode;
 
 	private CacheMode cacheMode;
 
@@ -130,17 +143,21 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	protected boolean waitingForAutoClose;
 
 	// transient & non-final for Serialization purposes - ugh
-	private transient SessionEventListenerManagerImpl sessionEventsManager = new SessionEventListenerManagerImpl();
+	private transient SessionEventListenerManagerImpl sessionEventsManager;
 	private transient EntityNameResolver entityNameResolver;
-	private transient Boolean useStreamForLobBinding;
 
 	private Integer jdbcBatchSize;
 
-	protected transient ExceptionConverter exceptionConverter;
+	//Lazily initialized
+	private transient ExceptionConverter exceptionConverter;
+
+	private CriteriaCompiler criteriaCompiler;
 
 	public AbstractSharedSessionContract(SessionFactoryImpl factory, SessionCreationOptions options) {
 		this.factory = factory;
+		this.fastSessionServices = factory.getFastSessionServices();
 		this.cacheTransactionSync = factory.getCache().getRegionFactory().createTransactionContext( this );
+
 
 		this.flushMode = options.getInitialSessionFlushMode();
 
@@ -158,12 +175,17 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 		this.interceptor = interpret( options.getInterceptor() );
 		this.jdbcTimeZone = options.getJdbcTimeZone();
-
-		final StatementInspector statementInspector = interpret( options.getStatementInspector() );
-		this.jdbcSessionContext = new JdbcSessionContextImpl( this, statementInspector );
+		final List<SessionEventListener> customSessionEventListener = options.getCustomSessionEventListener();
+		if ( customSessionEventListener == null ) {
+			sessionEventsManager = new SessionEventListenerManagerImpl( fastSessionServices.defaultSessionEventListeners.buildBaseline() );
+		}
+		else {
+			sessionEventsManager = new SessionEventListenerManagerImpl( customSessionEventListener.toArray( new SessionEventListener[0] ) );
+		}
 
 		this.entityNameResolver = new CoordinatingEntityNameResolver( factory, interceptor );
 
+		final StatementInspector statementInspector = interpret( options.getStatementInspector() );
 		if ( options instanceof SharedSessionCreationOptions && ( (SharedSessionCreationOptions) options ).isTransactionCoordinatorShared() ) {
 			if ( options.getConnection() != null ) {
 				throw new SessionException( "Cannot simultaneously share transaction context and specify connection" );
@@ -175,7 +197,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			this.transactionCoordinator = sharedOptions.getTransactionCoordinator();
 			this.jdbcCoordinator = sharedOptions.getJdbcCoordinator();
 
-			// todo : "wrap" the transaction to no-op cmmit/rollback attempts?
+			// todo : "wrap" the transaction to no-op commit/rollback attempts?
 			this.currentHibernateTransaction = sharedOptions.getTransaction();
 
 			if ( sharedOptions.shouldAutoJoinTransactions() ) {
@@ -185,25 +207,30 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				);
 				autoJoinTransactions = false;
 			}
-			if ( sharedOptions.getPhysicalConnectionHandlingMode() != this.jdbcCoordinator.getLogicalConnection().getConnectionHandlingMode() ) {
+			this.connectionHandlingMode = this.jdbcCoordinator.getLogicalConnection().getConnectionHandlingMode();
+			if ( sharedOptions.getPhysicalConnectionHandlingMode() != this.connectionHandlingMode ) {
 				log.debug(
 						"Session creation specified 'PhysicalConnectionHandlingMode which is invalid in conjunction " +
 								"with sharing JDBC connection between sessions; ignoring"
 				);
 			}
 
+			this.jdbcSessionContext = new JdbcSessionContextImpl( this, statementInspector,
+					connectionHandlingMode, fastSessionServices );
+
 			addSharedSessionTransactionObserver( transactionCoordinator );
 		}
 		else {
 			this.isTransactionCoordinatorShared = false;
 			this.autoJoinTransactions = options.shouldAutoJoinTransactions();
-
-			this.jdbcCoordinator = new JdbcCoordinatorImpl( options.getConnection(), this );
-			this.transactionCoordinator = factory.getServiceRegistry()
-					.getService( TransactionCoordinatorBuilder.class )
-					.buildTransactionCoordinator( jdbcCoordinator, this );
+			this.connectionHandlingMode = options.getPhysicalConnectionHandlingMode();
+			this.jdbcSessionContext = new JdbcSessionContextImpl( this, statementInspector,
+					connectionHandlingMode, fastSessionServices );
+			// This must happen *after* the JdbcSessionContext was initialized,
+			// because some of the calls below retrieve this context indirectly through Session getters.
+			this.jdbcCoordinator = new JdbcCoordinatorImpl( options.getConnection(), this, fastSessionServices.jdbcServices );
+			this.transactionCoordinator = fastSessionServices.transactionCoordinatorBuilder.buildTransactionCoordinator( jdbcCoordinator, this );
 		}
-		exceptionConverter = new ExceptionConverterImpl( this );
 	}
 
 	protected void addSharedSessionTransactionObserver(TransactionCoordinator transactionCoordinator) {
@@ -211,6 +238,15 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	protected void removeSharedSessionTransactionObserver(TransactionCoordinator transactionCoordinator) {
 		transactionCoordinator.invalidate();
+	}
+
+	protected void prepareForAutoClose() {
+		waitingForAutoClose = true;
+		closed = true;
+		// For non-shared transaction coordinators, we have to add the observer
+		if ( !isTransactionCoordinatorShared ) {
+			addSharedSessionTransactionObserver( transactionCoordinator );
+		}
 	}
 
 	@Override
@@ -225,7 +261,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	private StatementInspector interpret(StatementInspector statementInspector) {
 		if ( statementInspector == null ) {
 			// If there is no StatementInspector specified, map to the call
-			//		to the (deprecated) Interceptor #onPrepareStatement method
+			//		to the (deprecated) Interceptor#onPrepareStatement method
 			return (StatementInspector) interceptor::onPrepareStatement;
 		}
 		return statementInspector;
@@ -268,7 +304,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override
 	public UUID getSessionIdentifier() {
 		if ( this.sessionIdentifier == null ) {
-			//Lazily initialized: otherwise all the UUID generations will cause of significant amount of contention.
+			//Lazily initialized: otherwise all the UUID generations will cause significant amount of contention.
 			this.sessionIdentifier = StandardRandomStrategy.INSTANCE.generateUUID( null );
 		}
 		return sessionIdentifier;
@@ -300,7 +336,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 		catch ( HibernateException e ) {
 			if ( getFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
-				throw this.exceptionConverter.convert( e );
+				throw getExceptionConverter().convert( e );
 			}
 			else {
 				throw e;
@@ -390,17 +426,19 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@Override
-	public Transaction getTransaction() throws HibernateException {
-		if ( getFactory().getSessionFactoryOptions().getJpaCompliance().isJpaTransactionComplianceEnabled() ) {
-			// JPA requires that we throw IllegalStateException if this is called
-			// on a JTA EntityManager
-			if ( getTransactionCoordinator().getTransactionCoordinatorBuilder().isJta() ) {
-				if ( !getFactory().getSessionFactoryOptions().isJtaTransactionAccessEnabled() ) {
-					throw new IllegalStateException( "A JTA EntityManager cannot use getTransaction()" );
-				}
-			}
+	public void checkTransactionNeededForUpdateOperation(String exceptionMessage) {
+		if ( fastSessionServices.disallowOutOfTransactionUpdateOperations && !isTransactionInProgress() ) {
+			throw new TransactionRequiredException( exceptionMessage );
 		}
+	}
 
+	@Override
+	public Transaction getTransaction() throws HibernateException {
+		if ( ! fastSessionServices.isJtaTransactionAccessible ) {
+			throw new IllegalStateException(
+					"Transaction is not accessible when using JTA with JPA-compliant transaction access enabled"
+			);
+		}
 		return accessTransaction();
 	}
 
@@ -409,11 +447,10 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		if ( this.currentHibernateTransaction == null ) {
 			this.currentHibernateTransaction = new TransactionImpl(
 					getTransactionCoordinator(),
-					getExceptionConverter(),
 					this
 			);
 		}
-		if ( !isClosed() || (waitingForAutoClose && factory.isOpen()) ) {
+		if ( !isClosed() || ( waitingForAutoClose && factory.isOpen() ) ) {
 			getTransactionCoordinator().pulse();
 		}
 		return this.currentHibernateTransaction;
@@ -478,7 +515,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public boolean isConnected() {
-		checkTransactionSynchStatus();
+		pulseTransactionCoordinator();
 		return jdbcCoordinator.getLogicalConnection().isOpen();
 	}
 
@@ -486,17 +523,17 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	public JdbcConnectionAccess getJdbcConnectionAccess() {
 		// See class-level JavaDocs for a discussion of the concurrent-access safety of this method
 		if ( jdbcConnectionAccess == null ) {
-			if ( !factory.getSettings().getMultiTenancyStrategy().requiresMultiTenantConnectionProvider() ) {
+			if ( ! fastSessionServices.requiresMultiTenantConnectionProvider ) {
 				jdbcConnectionAccess = new NonContextualJdbcConnectionAccess(
 						getEventListenerManager(),
-						factory.getServiceRegistry().getService( ConnectionProvider.class )
+						fastSessionServices.connectionProvider
 				);
 			}
 			else {
 				jdbcConnectionAccess = new ContextualJdbcConnectionAccess(
 						getTenantIdentifier(),
 						getEventListenerManager(),
-						factory.getServiceRegistry().getService( MultiTenantConnectionProvider.class )
+						fastSessionServices.multiTenantConnectionProvider
 				);
 			}
 		}
@@ -510,11 +547,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public boolean useStreamForLobBinding() {
-		if ( useStreamForLobBinding == null ) {
-			useStreamForLobBinding = Environment.useStreamsForBinary()
-					|| getJdbcServices().getJdbcEnvironment().getDialect().useInputStreamToInsertBlob();
-		}
-		return useStreamForLobBinding;
+		return fastSessionServices.useStreamForLobBinding;
 	}
 
 	@Override
@@ -530,7 +563,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 						return callback.executeOnConnection( connection );
 					}
 					catch (SQLException e) {
-						throw exceptionConverter.convert(
+						throw getExceptionConverter().convert(
 								e,
 								"Error creating contextual LOB : " + e.getMessage()
 						);
@@ -541,13 +574,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
-		if ( !sqlTypeDescriptor.canBeRemapped() ) {
-			return sqlTypeDescriptor;
-		}
-
-		final Dialect dialect = getJdbcServices().getJdbcEnvironment().getDialect();
-		final SqlTypeDescriptor remapped = dialect.remapSqlTypeDescriptor( sqlTypeDescriptor );
-		return remapped == null ? sqlTypeDescriptor : remapped;
+		return fastSessionServices.remapSqlTypeDescriptor( sqlTypeDescriptor );
 	}
 
 	@Override
@@ -602,7 +629,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override
 	public QueryImplementor getNamedQuery(String name) {
 		checkOpen();
-		checkTransactionSynchStatus();
+		pulseTransactionCoordinator();
 		delayedAfterCompletion();
 
 		// look as HQL/JPQL first
@@ -617,16 +644,17 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			return createNativeQuery( nativeQueryDefinition, true );
 		}
 
-		throw exceptionConverter.convert( new IllegalArgumentException( "No query defined for that name [" + name + "]" ) );
+		throw getExceptionConverter().convert( new IllegalArgumentException( "No query defined for that name [" + name + "]" ) );
 	}
 
-	protected QueryImplementor createQuery(NamedQueryDefinition queryDefinition) {
+	protected QueryImpl createQuery(NamedQueryDefinition queryDefinition) {
 		String queryString = queryDefinition.getQueryString();
 		final QueryImpl query = new QueryImpl(
 				this,
-				getQueryPlan( queryString, false ).getParameterMetadata(),
+				getQueryPlan( queryString, false ),
 				queryString
 		);
+		applyQuerySettingsAndHints( query );
 		query.setHibernateFlushMode( queryDefinition.getFlushMode() );
 		query.setComment( queryDefinition.getComment() != null ? queryDefinition.getComment() : queryDefinition.getName() );
 		if ( queryDefinition.getLockOptions() != null ) {
@@ -634,7 +662,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 
 		initQueryFromNamedDefinition( query, queryDefinition );
-//		applyQuerySettingsAndHints( query );
 
 		return query;
 	}
@@ -655,10 +682,10 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				this,
 				parameterMetadata
 		);
+		applyQuerySettingsAndHints( query );
 		query.setComment( queryDefinition.getComment() != null ? queryDefinition.getComment() : queryDefinition.getName() );
 
 		initQueryFromNamedDefinition( query, queryDefinition );
-		applyQuerySettingsAndHints( query );
 
 		return query;
 	}
@@ -690,27 +717,105 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		if ( nqd.getFlushMode() != null ) {
 			query.setHibernateFlushMode( nqd.getFlushMode() );
 		}
+		if ( nqd.getPassDistinctThrough() != null ) {
+			query.setHint( QueryHints.HINT_PASS_DISTINCT_THROUGH, nqd.getPassDistinctThrough() );
+		}
 	}
 
 	@Override
-	public QueryImplementor createQuery(String queryString) {
+	public QueryImpl createQuery(String queryString) {
 		checkOpen();
-		checkTransactionSynchStatus();
+		pulseTransactionCoordinator();
 		delayedAfterCompletion();
 
 		try {
 			final QueryImpl query = new QueryImpl(
 					this,
-					getQueryPlan( queryString, false ).getParameterMetadata(),
+					getQueryPlan( queryString, false ),
 					queryString
 			);
-			query.setComment( queryString );
 			applyQuerySettingsAndHints( query );
+			query.setComment( queryString );
 			return query;
 		}
 		catch (RuntimeException e) {
 			markForRollbackOnly();
-			throw exceptionConverter.convert( e );
+			throw getExceptionConverter().convert( e );
+		}
+	}
+
+	@SuppressWarnings("WeakerAccess")
+	protected CriteriaCompiler criteriaCompiler() {
+		if ( criteriaCompiler == null ) {
+			criteriaCompiler = new CriteriaCompiler( this );
+		}
+		return criteriaCompiler;
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public <T> QueryImplementor<T> createQuery(CriteriaQuery<T> criteriaQuery) {
+		checkOpen();
+		try {
+			return (QueryImplementor<T>) criteriaCompiler().compile( (CompilableCriteria) criteriaQuery );
+		}
+		catch ( RuntimeException e ) {
+			throw getExceptionConverter().convert( e );
+		}
+	}
+
+	@Override
+	public QueryImplementor createQuery(CriteriaUpdate criteriaUpdate) {
+		checkOpen();
+		try {
+			return criteriaCompiler().compile( (CompilableCriteria) criteriaUpdate );
+		}
+		catch ( RuntimeException e ) {
+			throw getExceptionConverter().convert( e );
+		}
+	}
+
+	@Override
+	public QueryImplementor createQuery(CriteriaDelete criteriaDelete) {
+		checkOpen();
+		try {
+			return criteriaCompiler().compile( (CompilableCriteria) criteriaDelete );
+		}
+		catch ( RuntimeException e ) {
+			throw getExceptionConverter().convert( e );
+		}
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public <T> QueryImplementor<T> createQuery(
+			String jpaqlString,
+			Class<T> resultClass,
+			Selection selection,
+			HibernateEntityManagerImplementor.QueryOptions queryOptions) {
+		try {
+			final QueryImplementor query = createQuery( jpaqlString );
+
+			if ( queryOptions.getValueHandlers() == null ) {
+				if ( queryOptions.getResultMetadataValidator() != null ) {
+					queryOptions.getResultMetadataValidator().validate( query.getReturnTypes() );
+				}
+			}
+
+			// determine if we need a result transformer
+			List tupleElements = Tuple.class.equals( resultClass )
+					? ( (CompoundSelectionImpl<Tuple>) selection ).getCompoundSelectionItems()
+					: null;
+			if ( queryOptions.getValueHandlers() != null || tupleElements != null ) {
+				query.setResultTransformer(
+						new CriteriaQueryTupleTransformer( queryOptions.getValueHandlers(), tupleElements )
+				);
+			}
+
+			return query;
+		}
+		catch ( RuntimeException e ) {
+			throw getExceptionConverter().convert( e );
 		}
 	}
 
@@ -721,28 +826,25 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@SuppressWarnings("unchecked")
 	public <T> QueryImplementor<T> createQuery(String queryString, Class<T> resultClass) {
 		checkOpen();
-		checkTransactionSynchStatus();
+		pulseTransactionCoordinator();
 		delayedAfterCompletion();
 
 		try {
 			// do the translation
-			final QueryImplementor<T> query = createQuery( queryString );
+			final QueryImpl<T> query = createQuery( queryString );
 			resultClassChecking( resultClass, query );
 			return query;
 		}
 		catch ( RuntimeException e ) {
-			throw exceptionConverter.convert( e );
+			throw getExceptionConverter().convert( e );
 		}
 	}
 
 	@SuppressWarnings({"unchecked", "WeakerAccess", "StatementWithEmptyBody"})
-	protected void resultClassChecking(Class resultClass, org.hibernate.Query hqlQuery) {
+	protected void resultClassChecking(Class resultClass, QueryImpl hqlQuery) {
 		// make sure the query is a select -> HHH-7192
-		final HQLQueryPlan queryPlan = getFactory().getQueryPlanCache().getHQLQueryPlan(
-				hqlQuery.getQueryString(),
-				false,
-				getLoadQueryInfluencers().getEnabledFilters()
-		);
+		HQLQueryPlan queryPlan = hqlQuery.getQueryPlan();
+
 		if ( queryPlan.getTranslators()[0].isManipulationStatement() ) {
 			throw new IllegalArgumentException( "Update/delete queries cannot be typed" );
 		}
@@ -766,7 +868,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				}
 			}
 			else if ( queryPlan.getTranslators()[0].getReturnTypes().length == 1 ) {
-				// if we have only a single return expression, its java type should match with the requested type
+				// if we have only a single return expression, its java type should match the requested type
 				final Type queryResultType = queryPlan.getTranslators()[0].getReturnTypes()[0];
 				if ( !resultClass.isAssignableFrom( queryResultType.getReturnedClass() ) ) {
 					throw new IllegalArgumentException(
@@ -794,7 +896,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	protected  <T> QueryImplementor<T> buildQueryFromName(String name, Class<T> resultType) {
 		checkOpen();
 		try {
-			checkTransactionSynchStatus();
+			pulseTransactionCoordinator();
 			delayedAfterCompletion();
 
 			// todo : apply stored setting at the JPA Query level too
@@ -809,7 +911,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				return (QueryImplementor<T>) createNativeQuery( nativeQueryDefinition, resultType );
 			}
 
-			throw exceptionConverter.convert( new IllegalArgumentException( "No query defined for that name [" + name + "]" ) );
+			throw getExceptionConverter().convert( new IllegalArgumentException( "No query defined for that name [" + name + "]" ) );
 		}
 		catch (RuntimeException e) {
 			throw !( e instanceof IllegalArgumentException ) ? new IllegalArgumentException( e ) : e;
@@ -818,7 +920,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@SuppressWarnings({"WeakerAccess", "unchecked"})
 	protected <T> QueryImplementor<T> createQuery(NamedQueryDefinition namedQueryDefinition, Class<T> resultType) {
-		final QueryImplementor query = createQuery( namedQueryDefinition );
+		final QueryImpl query = createQuery( namedQueryDefinition );
 		if ( resultType != null ) {
 			resultClassChecking( resultType, query );
 		}
@@ -827,7 +929,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@SuppressWarnings({"WeakerAccess", "unchecked"})
 	protected <T> NativeQueryImplementor createNativeQuery(NamedSQLQueryDefinition queryDefinition, Class<T> resultType) {
-		if ( resultType != null && !Tuple.class.equals(resultType)) {
+		if ( resultType != null && !Tuple.class.equals( resultType ) ) {
 			resultClassChecking( resultType, queryDefinition );
 		}
 
@@ -836,9 +938,10 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				this,
 				factory.getQueryPlanCache().getSQLParameterMetadata( queryDefinition.getQueryString(), false )
 		);
-		if (Tuple.class.equals(resultType)) {
-			query.setResultTransformer(new NativeQueryTupleTransformer());
+		if ( Tuple.class.equals( resultType ) ) {
+			query.setResultTransformer( new NativeQueryTupleTransformer() );
 		}
+		applyQuerySettingsAndHints( query );
 		query.setHibernateFlushMode( queryDefinition.getFlushMode() );
 		query.setComment( queryDefinition.getComment() != null ? queryDefinition.getComment() : queryDefinition.getName() );
 		if ( queryDefinition.getLockOptions() != null ) {
@@ -846,7 +949,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 
 		initQueryFromNamedDefinition( query, queryDefinition );
-		applyQuerySettingsAndHints( query );
 
 		return query;
 	}
@@ -875,7 +977,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			final Class<?> actualReturnedClass;
 			final String entityClassName = ( (NativeSQLQueryRootReturn) nativeSQLQueryReturn ).getReturnEntityName();
 			try {
-				actualReturnedClass = getFactory().getServiceRegistry().getService( ClassLoaderService.class ).classForName( entityClassName );
+				actualReturnedClass = fastSessionServices.classLoaderService.classForName( entityClassName );
 			}
 			catch ( ClassLoadingException e ) {
 				throw new AssertionFailure(
@@ -918,7 +1020,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override
 	public NativeQueryImplementor createNativeQuery(String sqlString, Class resultClass) {
 		checkOpen();
-		checkTransactionSynchStatus();
+		pulseTransactionCoordinator();
 		delayedAfterCompletion();
 
 		try {
@@ -927,7 +1029,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			return query;
 		}
 		catch ( RuntimeException he ) {
-			throw exceptionConverter.convert( he );
+			throw getExceptionConverter().convert( he );
 		}
 	}
 
@@ -943,7 +1045,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override
 	public NativeQueryImplementor createNativeQuery(String sqlString, String resultSetMapping) {
 		checkOpen();
-		checkTransactionSynchStatus();
+		pulseTransactionCoordinator();
 		delayedAfterCompletion();
 
 		try {
@@ -952,14 +1054,14 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			return query;
 		}
 		catch ( RuntimeException he ) {
-			throw exceptionConverter.convert( he );
+			throw getExceptionConverter().convert( he );
 		}
 	}
 
 	@Override
 	public NativeQueryImplementor getNamedNativeQuery(String name) {
 		checkOpen();
-		checkTransactionSynchStatus();
+		pulseTransactionCoordinator();
 		delayedAfterCompletion();
 
 		final NamedSQLQueryDefinition nativeQueryDefinition = factory.getNamedQueryRepository().getNamedSQLQueryDefinition( name );
@@ -967,7 +1069,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			return createNativeQuery( nativeQueryDefinition, true );
 		}
 
-		throw exceptionConverter.convert( new IllegalArgumentException( "No query defined for that name [" + name + "]" ) );
+		throw getExceptionConverter().convert( new IllegalArgumentException( "No query defined for that name [" + name + "]" ) );
 	}
 
 	@Override
@@ -975,11 +1077,33 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		return getNativeQueryImplementor( queryString, true );
 	}
 
+	@Override
+	public void doWork(final Work work) throws HibernateException {
+		WorkExecutorVisitable<Void> realWork = (workExecutor, connection) -> {
+			workExecutor.executeWork( work, connection );
+			return null;
+		};
+		doWork( realWork );
+	}
+
+	@Override
+	public <T> T doReturningWork(final ReturningWork<T> work) throws HibernateException {
+		WorkExecutorVisitable<T> realWork = (workExecutor, connection) -> workExecutor.executeReturningWork(
+				work,
+				connection
+		);
+		return doWork( realWork );
+	}
+
+	private <T> T doWork(WorkExecutorVisitable<T> work) throws HibernateException {
+		return getJdbcCoordinator().coordinateWork( work );
+	}
+
 	protected NativeQueryImplementor getNativeQueryImplementor(
 			String queryString,
 			boolean isOrdinalParameterZeroBased) {
 		checkOpen();
-		checkTransactionSynchStatus();
+		pulseTransactionCoordinator();
 		delayedAfterCompletion();
 
 		try {
@@ -990,10 +1114,11 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 					getFactory().getQueryPlanCache().getSQLParameterMetadata( queryString, isOrdinalParameterZeroBased )
 			);
 			query.setComment( "dynamic native SQL query" );
+			applyQuerySettingsAndHints( query );
 			return query;
 		}
 		catch ( RuntimeException he ) {
-			throw exceptionConverter.convert( he );
+			throw getExceptionConverter().convert( he );
 		}
 	}
 
@@ -1059,7 +1184,10 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@Override
-	public ExceptionConverter getExceptionConverter(){
+	public ExceptionConverter getExceptionConverter() {
+		if ( exceptionConverter == null ) {
+			exceptionConverter = new ExceptionConverterImpl( this );
+		}
 		return exceptionConverter;
 	}
 
@@ -1115,14 +1243,16 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Step 1 :: read back non-transient state...
 		ois.defaultReadObject();
-		sessionEventsManager = new SessionEventListenerManagerImpl();
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Step 2 :: read back transient state...
 		//		-- see above
 
 		factory = SessionFactoryImpl.deserialize( ois );
-		jdbcSessionContext = new JdbcSessionContextImpl( this, (StatementInspector) ois.readObject() );
+		fastSessionServices = factory.getFastSessionServices();
+		sessionEventsManager = new SessionEventListenerManagerImpl( fastSessionServices.defaultSessionEventListeners.buildBaseline() );
+		jdbcSessionContext = new JdbcSessionContextImpl( this, (StatementInspector) ois.readObject(),
+				connectionHandlingMode, fastSessionServices );
 		jdbcCoordinator = JdbcCoordinatorImpl.deserialize( ois, this );
 
 		cacheTransactionSync = factory.getCache().getRegionFactory().createTransactionContext( this );
@@ -1132,6 +1262,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				.buildTransactionCoordinator( jdbcCoordinator, this );
 
 		entityNameResolver = new CoordinatingEntityNameResolver( factory, interceptor );
-		exceptionConverter = new ExceptionConverterImpl( this );
 	}
+
 }

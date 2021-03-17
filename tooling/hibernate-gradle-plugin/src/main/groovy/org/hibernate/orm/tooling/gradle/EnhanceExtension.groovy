@@ -12,7 +12,7 @@ package org.hibernate.orm.tooling.gradle
  *
  * @author Steve Ebersole
  */
-class EnhanceExtension {
+class EnhanceExtension implements Serializable {
 	def boolean enableLazyInitialization = false
 	def boolean enableDirtyTracking = false
 	def boolean enableAssociationManagement = false

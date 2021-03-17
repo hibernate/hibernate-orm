@@ -114,7 +114,7 @@ public interface EntityManagerMessageLogger extends CoreMessageLogger {
 	@LogMessage(level = WARN)
 	@Message(
 			id = 15016,
-			value = "Encountered a deprecated javax.persistence.spi.PersistenceProvider [%s]; use [%s] instead."
+			value = "Encountered a deprecated javax.persistence.spi.PersistenceProvider [%s]; [%s] will be used instead."
 	)
 	void deprecatedPersistenceProvider(String deprecated, String replacement);
 

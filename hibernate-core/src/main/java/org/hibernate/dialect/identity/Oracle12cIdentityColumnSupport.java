@@ -33,4 +33,9 @@ public class Oracle12cIdentityColumnSupport extends IdentityColumnSupportImpl {
 			PostInsertIdentityPersister persister, Dialect dialect) {
 		return new Oracle12cGetGeneratedKeysDelegate( persister, dialect );
 	}
+
+	@Override
+	public String getIdentityInsertString() {
+		return "default";
+	}
 }

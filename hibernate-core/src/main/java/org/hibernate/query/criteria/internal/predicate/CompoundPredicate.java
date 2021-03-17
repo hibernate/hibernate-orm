@@ -80,7 +80,10 @@ public class CompoundPredicate
 
 	private void applyExpressions(List<Expression<Boolean>> expressions) {
 		this.expressions.clear();
-		this.expressions.addAll( expressions );
+		final CriteriaBuilderImpl criteriaBuilder = criteriaBuilder();
+		for ( Expression<Boolean> expression : expressions ) {
+			this.expressions.add( criteriaBuilder.wrap( expression ) );
+		}
 	}
 
 	@Override
@@ -113,10 +116,6 @@ public class CompoundPredicate
 	@Override
 	public String render(boolean isNegated, RenderingContext renderingContext) {
 		return render( this, renderingContext );
-	}
-
-	private String operatorTextWithSeparator() {
-		return operatorTextWithSeparator( this.getOperator() );
 	}
 
 	/**

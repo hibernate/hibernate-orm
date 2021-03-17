@@ -10,62 +10,98 @@ import java.sql.Types;
 import java.util.Locale;
 import java.util.Map;
 
-import org.hibernate.internal.util.collections.BoundedConcurrentHashMap;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
-
-import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole
+ * @author Sanne Grinovero
  */
-public class LobTypeMappings {
-	private static final Logger log = Logger.getLogger( LobTypeMappings.class );
+public final class LobTypeMappings {
 
 	/**
 	 * Singleton access
+	 * @deprecated use the static method helpers instead.
 	 */
+	@Deprecated
 	public static final LobTypeMappings INSTANCE = new LobTypeMappings();
 
-	private final Map<Integer,Integer> lobCodeByNonLobCode;
-
 	private LobTypeMappings() {
-		this.lobCodeByNonLobCode =  new BoundedConcurrentHashMap<Integer, Integer>();
-
-		// BLOB mappings
-		this.lobCodeByNonLobCode.put( Types.BLOB, Types.BLOB );
-		this.lobCodeByNonLobCode.put( Types.BINARY, Types.BLOB );
-		this.lobCodeByNonLobCode.put( Types.VARBINARY, Types.BLOB );
-		this.lobCodeByNonLobCode.put( Types.LONGVARBINARY, Types.BLOB );
-
-		// CLOB mappings
-		this.lobCodeByNonLobCode.put( Types.CLOB, Types.CLOB );
-		this.lobCodeByNonLobCode.put( Types.CHAR, Types.CLOB );
-		this.lobCodeByNonLobCode.put( Types.VARCHAR, Types.CLOB );
-		this.lobCodeByNonLobCode.put( Types.LONGVARCHAR, Types.CLOB );
-
-		// NCLOB mappings
-		this.lobCodeByNonLobCode.put( Types.NCLOB, Types.NCLOB );
-		this.lobCodeByNonLobCode.put( Types.NCHAR, Types.NCLOB );
-		this.lobCodeByNonLobCode.put( Types.NVARCHAR, Types.NCLOB );
-		this.lobCodeByNonLobCode.put( Types.LONGNVARCHAR, Types.NCLOB );
 	}
 
-	public boolean hasCorrespondingLobCode(int jdbcTypeCode) {
-		return lobCodeByNonLobCode.containsKey( jdbcTypeCode );
+	/**
+	 *
+	 * @param jdbcTypeCode
+	 * @return true if corresponding Lob code exists; false otherwise.
+	 * @deprecated use {@link #isMappedToKnownLobCode(int)}
+	 */
+	@Deprecated
+	public boolean hasCorrespondingLobCode(final int jdbcTypeCode) {
+		return isMappedToKnownLobCode( jdbcTypeCode );
 	}
 
-	public int getCorrespondingLobCode(int jdbcTypeCode) {
-		Integer lobTypeCode = lobCodeByNonLobCode.get( jdbcTypeCode );
-		if ( lobTypeCode == null ) {
-			throw new IllegalArgumentException(
-					String.format(
-							Locale.ROOT,
-							"JDBC type-code [%s (%s)] not known to have a corresponding LOB equivalent",
-							jdbcTypeCode,
-							JdbcTypeNameMapper.getTypeName( jdbcTypeCode )
-					)
-			);
+	/**
+	 *
+	 * @param jdbcTypeCode
+	 * @return corresponding Lob code
+	 * @deprecated use {@link #getLobCodeTypeMapping(int)}
+	 */
+	@Deprecated
+	public int getCorrespondingLobCode(final int jdbcTypeCode) {
+		return getLobCodeTypeMapping( jdbcTypeCode );
+	}
+
+	public static boolean isMappedToKnownLobCode(final int jdbcTypeCode) {
+		return
+				// BLOB mappings
+				jdbcTypeCode == Types.BLOB ||
+				jdbcTypeCode == Types.BINARY ||
+				jdbcTypeCode == Types.VARBINARY ||
+				jdbcTypeCode == Types.LONGVARBINARY ||
+
+				// CLOB mappings
+				jdbcTypeCode == Types.CLOB ||
+				jdbcTypeCode == Types.CHAR ||
+				jdbcTypeCode == Types.VARCHAR ||
+				jdbcTypeCode == Types.LONGVARCHAR ||
+
+				// NCLOB mappings
+				jdbcTypeCode == Types.NCLOB ||
+				jdbcTypeCode == Types.NCHAR ||
+				jdbcTypeCode == Types.NVARCHAR ||
+				jdbcTypeCode == Types.LONGNVARCHAR;
+	}
+
+	public static int getLobCodeTypeMapping(final int jdbcTypeCode) {
+		switch ( jdbcTypeCode ) {
+
+			// BLOB mappings
+			case Types.BLOB :
+			case Types.BINARY :
+			case Types.VARBINARY :
+			case Types.LONGVARBINARY : return Types.BLOB;
+
+			// CLOB mappings
+			case Types.CLOB :
+			case Types.CHAR :
+			case Types.VARCHAR :
+			case Types.LONGVARCHAR : return Types.CLOB;
+
+			// NCLOB mappings
+			case Types.NCLOB :
+			case Types.NCHAR :
+			case Types.NVARCHAR :
+			case Types.LONGNVARCHAR : return Types.NCLOB;
+
+			// Anything else:
+			default:
+				throw new IllegalArgumentException(
+						String.format(
+								Locale.ROOT,
+								"JDBC type-code [%s (%s)] not known to have a corresponding LOB equivalent",
+								jdbcTypeCode,
+								JdbcTypeNameMapper.getTypeName( jdbcTypeCode )
+						) );
 		}
-		return lobTypeCode;
 	}
+
 }

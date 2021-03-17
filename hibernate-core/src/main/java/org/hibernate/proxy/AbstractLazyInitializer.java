@@ -15,6 +15,7 @@ import org.hibernate.SessionException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
@@ -168,7 +169,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 			else if ( session == null ) {
 				throw new LazyInitializationException( "could not initialize proxy [" + entityName + "#" + id + "] - no Session" );
 			}
-			else if ( !session.isOpen() ) {
+			else if ( !session.isOpenOrWaitingForAutoClose() ) {
 				throw new LazyInitializationException( "could not initialize proxy [" + entityName + "#" + id + "] - the owning Session was closed" );
 			}
 			else if ( !session.isConnected() ) {
@@ -187,7 +188,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 
 	protected void permissiveInitialization() {
 		if ( session == null ) {
-			//we have a detached collection thats set to null, reattach
+			//we have a detached collection that is set to null, reattach
 			if ( sessionFactoryUuid == null ) {
 				throw new LazyInitializationException( "could not initialize proxy [" + entityName + "#" + id + "] - no Session" );
 			}
@@ -232,7 +233,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 				throw new LazyInitializationException( e.getMessage() );
 			}
 		}
-		else if ( session.isOpen() && session.isConnected() ) {
+		else if ( session.isOpenOrWaitingForAutoClose() && session.isConnected() ) {
 			target = session.immediateLoad( entityName, id );
 			initialized = true;
 			checkTargetState(session);
@@ -250,12 +251,12 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	 * of that session since the proxy was created.
 	 */
 	public final void initializeWithoutLoadIfPossible() {
-		if ( !initialized && session != null && session.isOpen() ) {
+		if ( !initialized && session != null && session.isOpenOrWaitingForAutoClose() ) {
 			final EntityKey key = session.generateEntityKey(
 					getIdentifier(),
 					session.getFactory().getMetamodel().entityPersister( getEntityName() )
 			);
-			final Object entity = session.getPersistenceContext().getEntity( key );
+			final Object entity = session.getPersistenceContextInternal().getEntity( key );
 			if ( entity != null ) {
 				setImplementation( entity );
 			}
@@ -298,8 +299,8 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 
 	private Object getProxyOrNull() {
 		final EntityKey entityKey = generateEntityKeyOrNull( getIdentifier(), session, getEntityName() );
-		if ( entityKey != null && session != null && session.isOpen() ) {
-			return session.getPersistenceContext().getProxy( entityKey );
+		if ( entityKey != null && session != null && session.isOpenOrWaitingForAutoClose() ) {
+			return session.getPersistenceContextInternal().getProxy( entityKey );
 		}
 		return null;
 	}
@@ -319,7 +320,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	@Override
 	public final Object getImplementation(SharedSessionContractImplementor s) throws HibernateException {
 		final EntityKey entityKey = generateEntityKeyOrNull( getIdentifier(), s, getEntityName() );
-		return (entityKey == null ? null : s.getPersistenceContext().getEntity( entityKey ));
+		return ( entityKey == null ? null : s.getPersistenceContext().getEntity( entityKey ) );
 	}
 
 	/**
@@ -344,7 +345,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 					"Proxy [" + entityName + "#" + id + "] is detached (i.e, session is null). The read-only/modifiable setting is only accessible when the proxy is associated with an open session."
 			);
 		}
-		if ( session.isClosed() ) {
+		if ( !session.isOpenOrWaitingForAutoClose() ) {
 			throw new SessionException(
 					"Session is closed. The read-only/modifiable setting is only accessible when the proxy [" + entityName + "#" + id + "] is associated with an open session."
 			);
@@ -369,8 +370,9 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 			this.readOnly = readOnly;
 			if ( initialized ) {
 				EntityKey key = generateEntityKeyOrNull( getIdentifier(), session, getEntityName() );
-				if ( key != null && session.getPersistenceContext().containsEntity( key ) ) {
-					session.getPersistenceContext().setReadOnly( target, readOnly );
+				final PersistenceContext persistenceContext = session.getPersistenceContext();
+				if ( key != null && persistenceContext.containsEntity( key ) ) {
+					persistenceContext.setReadOnly( target, readOnly );
 				}
 			}
 		}
@@ -430,7 +432,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	 * This method should only be called during deserialization, before associating
 	 * the proxy with a session.
 	 *
-	 * @param readOnlyBeforeAttachedToSession, the read-only/modifiable setting to use when
+	 * @param readOnlyBeforeAttachedToSession the read-only/modifiable setting to use when
 	 * associated with a session; null indicates that the default should be used.
 	 * @param sessionFactoryUuid the session factory uuid, to be used if {@code allowLoadOutsideTransaction} is {@code true}.
 	 * @param allowLoadOutsideTransaction whether the proxy can load data even

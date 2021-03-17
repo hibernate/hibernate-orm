@@ -64,9 +64,7 @@ public final class Settings {
 		this.defaultCatalogName = defaultCatalogName;
 		this.defaultSchemaName = defaultSchemaName;
 
-		final boolean debugEnabled =  LOG.isDebugEnabled();
-
-		if ( debugEnabled ) {
+		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf( "SessionFactory name : %s", sessionFactoryOptions.getSessionFactoryName() );
 			LOG.debugf( "Automatic flush during beforeCompletion(): %s", enabledDisabled( sessionFactoryOptions.isFlushBeforeCompletionEnabled() ) );
 			LOG.debugf( "Automatic session close at end of transaction: %s", enabledDisabled( sessionFactoryOptions.isAutoCloseSessionEnabled() ) );
@@ -78,7 +76,7 @@ public final class Settings {
 			LOG.debugf( "Check Nullability in Core (should be disabled when Bean Validation is on): %s", enabledDisabled( sessionFactoryOptions.isCheckNullability() ) );
 			LOG.debugf( "Allow initialization of lazy state outside session : %s", enabledDisabled( sessionFactoryOptions.isInitializeLazyStateOutsideTransactionsEnabled() ) );
 
-			LOG.debugf( "Using BatchFetchStyle : " + sessionFactoryOptions.getBatchFetchStyle().name() );
+			LOG.debugf( "Using BatchFetchStyle : %s", sessionFactoryOptions.getBatchFetchStyle().name() );
 			LOG.debugf( "Default batch fetch size: %s", sessionFactoryOptions.getDefaultBatchFetchSize() );
 			LOG.debugf( "Maximum outer join fetch depth: %s", sessionFactoryOptions.getMaximumFetchDepth() );
 			LOG.debugf( "Default null ordering: %s", sessionFactoryOptions.getDefaultNullPrecedence() );
@@ -110,10 +108,10 @@ public final class Settings {
 			LOG.debugf( "Connection release mode: %s", sessionFactoryOptions.getConnectionReleaseMode() );
 			LOG.debugf( "Generate SQL with comments: %s", enabledDisabled( sessionFactoryOptions.isCommentsEnabled() ) );
 
-			LOG.debugf( "JPA compliance - query : ", enabledDisabled( sessionFactoryOptions.getJpaCompliance().isJpaQueryComplianceEnabled() ) );
-			LOG.debugf( "JPA compliance - closed-handling : ", enabledDisabled( sessionFactoryOptions.getJpaCompliance().isJpaClosedComplianceEnabled() ) );
-			LOG.debugf( "JPA compliance - lists : ", enabledDisabled( sessionFactoryOptions.getJpaCompliance().isJpaListComplianceEnabled() ) );
-			LOG.debugf( "JPA compliance - transactions : ", enabledDisabled( sessionFactoryOptions.getJpaCompliance().isJpaTransactionComplianceEnabled() ) );
+			LOG.debugf( "JPA compliance - query : %s", enabledDisabled( sessionFactoryOptions.getJpaCompliance().isJpaQueryComplianceEnabled() ) );
+			LOG.debugf( "JPA compliance - closed-handling : %s", enabledDisabled( sessionFactoryOptions.getJpaCompliance().isJpaClosedComplianceEnabled() ) );
+			LOG.debugf( "JPA compliance - lists : %s", enabledDisabled( sessionFactoryOptions.getJpaCompliance().isJpaListComplianceEnabled() ) );
+			LOG.debugf( "JPA compliance - transactions : %s", enabledDisabled( sessionFactoryOptions.getJpaCompliance().isJpaTransactionComplianceEnabled() ) );
 		}
 	}
 
@@ -254,7 +252,8 @@ public final class Settings {
 
 	public boolean isAutoCreateSchema() {
 		return sessionFactoryOptions.getSchemaAutoTooling() == SchemaAutoTooling.CREATE
-				|| sessionFactoryOptions.getSchemaAutoTooling() == SchemaAutoTooling.CREATE_DROP;
+				|| sessionFactoryOptions.getSchemaAutoTooling() == SchemaAutoTooling.CREATE_DROP
+				|| sessionFactoryOptions.getSchemaAutoTooling() == SchemaAutoTooling.CREATE_ONLY;
 	}
 
 	public boolean isAutoDropSchema() {

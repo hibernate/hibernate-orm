@@ -14,6 +14,7 @@ import org.hibernate.Session;
 import org.hibernate.envers.EntityTrackingRevisionListener;
 import org.hibernate.envers.RevisionListener;
 import org.hibernate.envers.RevisionType;
+import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.synchronization.SessionCacheCleaner;
 import org.hibernate.envers.internal.tools.ReflectionTools;
@@ -36,6 +37,8 @@ public class DefaultRevisionInfoGenerator implements RevisionInfoGenerator {
 	private final Constructor<?> revisionInfoClassConstructor;
 	private final SessionCacheCleaner sessionCacheCleaner;
 
+	private RevisionInfoNumberReader revisionInfoNumberReader;
+
 	public DefaultRevisionInfoGenerator(
 			String revisionInfoEntityName,
 			Class<?> revisionInfoClass,
@@ -55,8 +58,16 @@ public class DefaultRevisionInfoGenerator implements RevisionInfoGenerator {
 	}
 
 	@Override
+	public void setRevisionInfoNumberReader(RevisionInfoNumberReader revisionInfoNumberReader) {
+		this.revisionInfoNumberReader = revisionInfoNumberReader;
+	}
+
+	@Override
 	public void saveRevisionData(Session session, Object revisionData) {
 		session.save( revisionInfoEntityName, revisionData );
+		if ( revisionInfoNumberReader != null && revisionInfoNumberReader.getRevisionNumber( revisionData ).longValue() < 0 ) {
+			throw new AuditException( "Negative revision numbers are not allowed" );
+		}
 		sessionCacheCleaner.scheduleAuditDataRemoval( session, revisionData );
 	}
 

@@ -15,7 +15,7 @@ import java.util.Set;
  *
  * @author Steve Ebersole
  */
-public class AnsiSqlKeywords {
+public final class AnsiSqlKeywords {
 	/**
 	 * Singleton access
 	 */
@@ -23,7 +23,7 @@ public class AnsiSqlKeywords {
 
 	private final Set<String> keywordsSql2003;
 
-	public AnsiSqlKeywords() {
+	private AnsiSqlKeywords() {
 		final Set<String> keywordsSql2003 = new HashSet<String>();
 		keywordsSql2003.add( "ADD" );
 		keywordsSql2003.add( "ALL" );
@@ -42,7 +42,6 @@ public class AnsiSqlKeywords {
 		keywordsSql2003.add( "BEGIN" );
 		keywordsSql2003.add( "BETWEEN" );
 		keywordsSql2003.add( "BIGINT" );
-		keywordsSql2003.add( "BINARY" );
 		keywordsSql2003.add( "BLOB" );
 		keywordsSql2003.add( "BINARY" );
 		keywordsSql2003.add( "BOTH" );
@@ -55,7 +54,6 @@ public class AnsiSqlKeywords {
 		keywordsSql2003.add( "CHAR" );
 		keywordsSql2003.add( "CHARACTER" );
 		keywordsSql2003.add( "CHECK" );
-		keywordsSql2003.add( "CLOB" );
 		keywordsSql2003.add( "CLOB" );
 		keywordsSql2003.add( "CLOSE" );
 		keywordsSql2003.add( "COLLATE" );
@@ -282,6 +280,5 @@ public class AnsiSqlKeywords {
 	public Set<String> sql2003() {
 		return keywordsSql2003;
 	}
-
 
 }

@@ -45,4 +45,46 @@ public interface ExtractionContext {
 	DatabaseObjectAccess getDatabaseObjectAccess();
 
 	void cleanup();
+
+	abstract class EmptyExtractionContext implements ExtractionContext {
+		@Override
+		public ServiceRegistry getServiceRegistry() {
+			return null;
+		}
+
+		@Override
+		public JdbcEnvironment getJdbcEnvironment() {
+			return null;
+		}
+
+		@Override
+		public Connection getJdbcConnection() {
+			return null;
+		}
+
+		@Override
+		public DatabaseMetaData getJdbcDatabaseMetaData() {
+			return null;
+		}
+
+		@Override
+		public Identifier getDefaultCatalog() {
+			return null;
+		}
+
+		@Override
+		public Identifier getDefaultSchema() {
+			return null;
+		}
+
+		@Override
+		public DatabaseObjectAccess getDatabaseObjectAccess() {
+			return null;
+		}
+
+		@Override
+		public void cleanup() {
+
+		}
+	}
 }

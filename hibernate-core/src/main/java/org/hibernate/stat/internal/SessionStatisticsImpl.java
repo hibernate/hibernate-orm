@@ -24,19 +24,19 @@ public class SessionStatisticsImpl implements SessionStatistics {
 	}
 
 	public int getEntityCount() {
-		return session.getPersistenceContext().getNumberOfManagedEntities();
+		return session.getPersistenceContextInternal().getNumberOfManagedEntities();
 	}
 	
 	public int getCollectionCount() {
-		return session.getPersistenceContext().getCollectionEntries().size();
+		return session.getPersistenceContextInternal().getCollectionEntriesSize();
 	}
 	
 	public Set getEntityKeys() {
-		return Collections.unmodifiableSet( session.getPersistenceContext().getEntitiesByKey().keySet() );
+		return Collections.unmodifiableSet( session.getPersistenceContextInternal().getEntitiesByKey().keySet() );
 	}
 	
 	public Set getCollectionKeys() {
-		return Collections.unmodifiableSet( session.getPersistenceContext().getCollectionsByKey().keySet() );
+		return Collections.unmodifiableSet( session.getPersistenceContextInternal().getCollectionsByKey().keySet() );
 	}
 	
 	public String toString() {

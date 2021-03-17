@@ -229,7 +229,7 @@ public abstract class AbstractCollectionMapper<T> extends AbstractPropertyMapper
 			PersistentCollection collection) {
 		// First attempt to resolve the persister from the collection entry
 		if ( collection != null ) {
-			CollectionEntry collectionEntry = session.getPersistenceContext().getCollectionEntry( collection );
+			CollectionEntry collectionEntry = session.getPersistenceContextInternal().getCollectionEntry( collection );
 			if ( collectionEntry != null ) {
 				CollectionPersister collectionPersister = collectionEntry.getCurrentPersister();
 				if ( collectionPersister != null ) {

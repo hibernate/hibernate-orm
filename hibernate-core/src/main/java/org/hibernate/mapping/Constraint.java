@@ -17,10 +17,10 @@ import java.util.List;
 import java.util.Locale;
 
 import org.hibernate.HibernateException;
-import org.hibernate.annotations.common.util.StringHelper;
 import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.Mapping;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * A relational constraint.
@@ -41,7 +41,7 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 	public void setName(String name) {
 		this.name = name;
 	}
-	
+
 	/**
 	 * If a constraint is not explicitly named, this is called to generate
 	 * a unique hash using the table and column names.
@@ -75,7 +75,16 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 	 * @return String The generated name
 	 */
 	public static String generateName(String prefix, Table table, List<Column> columns) {
-		return generateName( prefix, table, columns.toArray( new Column[columns.size()] ) );
+		//N.B. legacy APIs are involved: can't trust that the columns List is actually
+		//containing Column instances - the generic type isn't consistently enforced.
+		ArrayList<Column> defensive = new ArrayList<>( columns.size() );
+		for ( Object o : columns ) {
+			if ( o instanceof Column ) {
+				defensive.add( (Column) o );
+			}
+			//else: others might be Formula instances. They don't need to be part of the name generation.
+		}
+		return generateName( prefix, table, defensive.toArray( new Column[0] ) );
 	}
 
 	/**
@@ -83,10 +92,10 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 	 * (full alphanumeric), guaranteeing
 	 * that the length of the name will always be smaller than the 30
 	 * character identifier restriction enforced by a few dialects.
-	 * 
+	 *
 	 * @param s
 	 *            The name to be hashed.
-	 * @return String The hased name.
+	 * @return String The hashed name.
 	 */
 	public static String hashedName(String s) {
 		try {
@@ -147,6 +156,13 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 		return columns.iterator();
 	}
 
+	/**
+	 * This is a duplicate method, that has been removed in v.6.0.
+	 * {@link #getColumnIterator()} is the one that will stay.
+	 *
+	 * @deprecated (Since 6.0) use {@link #getColumnIterator()} instead.
+	 */
+	@Deprecated
 	public Iterator<Column> columnIterator() {
 		return columns.iterator();
 	}
@@ -205,7 +221,7 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 	public String toString() {
 		return getClass().getName() + '(' + getTable().getName() + getColumns() + ") as " + name;
 	}
-	
+
 	/**
 	 * @return String The prefix to use in generated constraint names.  Examples:
 	 * "UK_", "FK_", and "PK_".

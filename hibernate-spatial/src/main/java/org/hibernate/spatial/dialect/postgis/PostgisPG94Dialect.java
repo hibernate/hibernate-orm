@@ -31,7 +31,7 @@ public class PostgisPG94Dialect extends PostgreSQL94Dialect implements SpatialDi
 	public PostgisPG94Dialect() {
 		super();
 		registerColumnType(
-				PGGeometryTypeDescriptor.INSTANCE.getSqlType(),
+				PGGeometryTypeDescriptor.INSTANCE_WKB_1.getSqlType(),
 				"GEOMETRY"
 		);
 		for ( Map.Entry<String, SQLFunction> entry : support.functionsToRegister() ) {

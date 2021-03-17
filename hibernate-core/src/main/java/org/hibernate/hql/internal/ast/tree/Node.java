@@ -50,7 +50,7 @@ public class Node extends antlr.CommonAST {
 		line = tok.getLine();
 		column = tok.getColumn();
 		String text = tok.getText();
-		textLength = StringHelper.isEmpty(text) ? 0 : text.length();
+		textLength = StringHelper.isEmpty( text ) ? 0 : text.length();
 	}
 
 	@Override

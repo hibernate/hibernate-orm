@@ -12,6 +12,7 @@ import org.hibernate.LockMode;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.AbstractEvent;
 import org.hibernate.event.spi.EventSource;
@@ -54,7 +55,8 @@ public abstract class AbstractReassociateEventListener implements Serializable {
 		final EventSource source = event.getSession();
 		final EntityKey key = source.generateEntityKey( id, persister );
 
-		source.getPersistenceContext().checkUniqueness( key, object );
+		final PersistenceContext persistenceContext = source.getPersistenceContext();
+		persistenceContext.checkUniqueness( key, object );
 
 		//get a snapshot
 		Object[] values = persister.getPropertyValues( object );
@@ -67,7 +69,7 @@ public abstract class AbstractReassociateEventListener implements Serializable {
 		);
 		Object version = Versioning.getVersion( values, persister );
 
-		EntityEntry newEntry = source.getPersistenceContext().addEntity(
+		EntityEntry newEntry = persistenceContext.addEntity(
 				object,
 				( persister.isMutable() ? Status.MANAGED : Status.READ_ONLY ),
 				values,

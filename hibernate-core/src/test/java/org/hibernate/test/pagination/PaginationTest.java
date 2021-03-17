@@ -108,7 +108,7 @@ public class PaginationTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	/**
-	 * @author Piotr Findeisen <piotr.findeisen@gmail.com>
+	 * @author <a href="mailto:piotr.findeisen@gmail.com">Piotr Findeisen</a>
 	 */
 	@Test
 	@TestForIssue( jiraKey = "HHH-951" )

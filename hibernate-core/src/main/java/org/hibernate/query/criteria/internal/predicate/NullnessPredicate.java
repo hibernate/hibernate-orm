@@ -30,7 +30,7 @@ public class NullnessPredicate
 	private final Expression<?> operand;
 
 	/**
-	 * Constructs the affirmitive form of nullness checking (<i>IS NULL</i>).  To
+	 * Constructs the affirmative form of nullness checking (<i>IS NULL</i>).  To
 	 * construct the negative form (<i>IS NOT NULL</i>) call {@link #not} on the
 	 * constructed instance.
 	 *

@@ -7,81 +7,73 @@
 package org.hibernate.internal;
 
 import java.sql.Connection;
-import java.util.ArrayList;
-import java.util.List;
 
-import org.hibernate.engine.jdbc.spi.ConnectionObserver;
+import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcObserver;
 
 /**
  * @author Steve Ebersole
  */
-public class JdbcObserverImpl implements JdbcObserver {
-	private final SharedSessionContractImplementor session;
-	private final transient List<ConnectionObserver> observers;
+public final class JdbcObserverImpl implements JdbcObserver {
 
-	public JdbcObserverImpl(SharedSessionContractImplementor session) {
+	private final ConnectionObserverStatsBridge observer;
+	private final SessionEventListenerManager eventListenerManager;
+	private final SharedSessionContractImplementor session;
+
+	public JdbcObserverImpl(SharedSessionContractImplementor session, FastSessionServices fastSessionServices) {
 		this.session = session;
-		this.observers = new ArrayList<>();
-		this.observers.add( new ConnectionObserverStatsBridge( session.getFactory() ) );
+		this.observer = fastSessionServices.getDefaultJdbcObserver();
+		this.eventListenerManager = session.getEventListenerManager();
 	}
 
 	@Override
 	public void jdbcConnectionAcquisitionStart() {
-
 	}
 
 	@Override
 	public void jdbcConnectionAcquisitionEnd(Connection connection) {
-		for ( ConnectionObserver observer : observers ) {
-			observer.physicalConnectionObtained( connection );
-		}
+		observer.physicalConnectionObtained( connection );
 	}
 
 	@Override
 	public void jdbcConnectionReleaseStart() {
-
 	}
 
 	@Override
 	public void jdbcConnectionReleaseEnd() {
-		for ( ConnectionObserver observer : observers ) {
-			observer.physicalConnectionReleased();
-		}
+		observer.physicalConnectionReleased();
 	}
 
 	@Override
 	public void jdbcPrepareStatementStart() {
-		session.getEventListenerManager().jdbcPrepareStatementStart();
+		eventListenerManager.jdbcPrepareStatementStart();
 	}
 
 	@Override
 	public void jdbcPrepareStatementEnd() {
-		for ( ConnectionObserver observer : observers ) {
-			observer.statementPrepared();
-		}
-		session.getEventListenerManager().jdbcPrepareStatementEnd();
+		observer.statementPrepared();
+		eventListenerManager.jdbcPrepareStatementEnd();
 	}
 
 	@Override
 	public void jdbcExecuteStatementStart() {
-		session.getEventListenerManager().jdbcExecuteStatementStart();
+		eventListenerManager.jdbcExecuteStatementStart();
 	}
 
 	@Override
 	public void jdbcExecuteStatementEnd() {
-		session.getEventListenerManager().jdbcExecuteStatementEnd();
+		eventListenerManager.jdbcExecuteStatementEnd();
 	}
 
 	@Override
 	public void jdbcExecuteBatchStart() {
-		session.getEventListenerManager().jdbcExecuteBatchStart();
+		eventListenerManager.jdbcExecuteBatchStart();
 	}
 
 	@Override
 	public void jdbcExecuteBatchEnd() {
-		session.getEventListenerManager().jdbcExecuteBatchEnd();
+		eventListenerManager.jdbcExecuteBatchEnd();
 	}
 
 	@Override

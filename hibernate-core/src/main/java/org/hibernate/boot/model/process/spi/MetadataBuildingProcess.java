@@ -28,13 +28,15 @@ import org.hibernate.boot.model.source.internal.hbm.ModelBinder;
 import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.AdditionalJaxbMappingProducer;
-import org.hibernate.boot.spi.BasicTypeRegistration;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataContributor;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
@@ -96,10 +98,16 @@ public class MetadataBuildingProcess {
 			final MetadataSources sources,
 			final BootstrapContext bootstrapContext) {
 		final ManagedResourcesImpl managedResources = ManagedResourcesImpl.baseline( sources, bootstrapContext );
+		final ConfigurationService configService = bootstrapContext.getServiceRegistry().getService( ConfigurationService.class );
+		final boolean xmlMappingEnabled = configService.getSetting(
+				AvailableSettings.XML_MAPPING_ENABLED,
+				StandardConverters.BOOLEAN,
+				true
+		);
 		ScanningCoordinator.INSTANCE.coordinateScan(
 				managedResources,
 				bootstrapContext,
-				sources.getXmlMappingBinderAccess()
+				xmlMappingEnabled ? sources.getXmlMappingBinderAccess() : null
 		);
 		return managedResources;
 	}
@@ -148,10 +156,10 @@ public class MetadataBuildingProcess {
 		// 		to unified model
 
 		final MetadataSourceProcessor processor = new MetadataSourceProcessor() {
-			private final HbmMetadataSourceProcessorImpl hbmProcessor = new HbmMetadataSourceProcessorImpl(
-					managedResources,
-					rootMetadataBuildingContext
-			);
+			private final MetadataSourceProcessor hbmProcessor =
+						options.isXmlMappingEnabled()
+							? new HbmMetadataSourceProcessorImpl( managedResources, rootMetadataBuildingContext )
+							: new NoOpMetadataSourceProcessorImpl();
 
 			private final AnnotationMetadataSourceProcessorImpl annotationProcessor = new AnnotationMetadataSourceProcessorImpl(
 					managedResources,
@@ -286,28 +294,30 @@ public class MetadataBuildingProcess {
 
 		metadataCollector.processSecondPasses( rootMetadataBuildingContext );
 
-		Iterable<AdditionalJaxbMappingProducer> producers = classLoaderService.loadJavaServices( AdditionalJaxbMappingProducer.class );
-		if ( producers != null ) {
-			final EntityHierarchyBuilder hierarchyBuilder = new EntityHierarchyBuilder();
-//			final MappingBinder mappingBinder = new MappingBinder( true );
-			// We need to disable validation here.  It seems Envers is not producing valid (according to schema) XML
-			final MappingBinder mappingBinder = new MappingBinder( classLoaderService, false );
-			for ( AdditionalJaxbMappingProducer producer : producers ) {
-				log.tracef( "Calling AdditionalJaxbMappingProducer : %s", producer );
-				Collection<MappingDocument> additionalMappings = producer.produceAdditionalMappings(
-						metadataCollector,
-						jandexView,
-						mappingBinder,
-						rootMetadataBuildingContext
-				);
-				for ( MappingDocument mappingDocument : additionalMappings ) {
-					hierarchyBuilder.indexMappingDocument( mappingDocument );
+		if ( options.isXmlMappingEnabled() ) {
+			Iterable<AdditionalJaxbMappingProducer> producers = classLoaderService.loadJavaServices( AdditionalJaxbMappingProducer.class );
+			if ( producers != null ) {
+				final EntityHierarchyBuilder hierarchyBuilder = new EntityHierarchyBuilder();
+				// final MappingBinder mappingBinder = new MappingBinder( true );
+				// We need to disable validation here.  It seems Envers is not producing valid (according to schema) XML
+				final MappingBinder mappingBinder = new MappingBinder( classLoaderService, false );
+				for ( AdditionalJaxbMappingProducer producer : producers ) {
+					log.tracef( "Calling AdditionalJaxbMappingProducer : %s", producer );
+					Collection<MappingDocument> additionalMappings = producer.produceAdditionalMappings(
+							metadataCollector,
+							jandexView,
+							mappingBinder,
+							rootMetadataBuildingContext
+					);
+					for ( MappingDocument mappingDocument : additionalMappings ) {
+						hierarchyBuilder.indexMappingDocument( mappingDocument );
+					}
 				}
-			}
 
-			ModelBinder binder = ModelBinder.prepare( rootMetadataBuildingContext );
-			for ( EntityHierarchySourceImpl entityHierarchySource : hierarchyBuilder.buildHierarchies() ) {
-				binder.bindEntityHierarchy( entityHierarchySource );
+				ModelBinder binder = ModelBinder.prepare( rootMetadataBuildingContext );
+				for ( EntityHierarchySourceImpl entityHierarchySource : hierarchyBuilder.buildHierarchies() ) {
+					binder.bindEntityHierarchy( entityHierarchySource );
+				}
 			}
 		}
 
@@ -382,11 +392,7 @@ public class MetadataBuildingProcess {
 		}
 
 		// add explicit application registered types
-		for ( BasicTypeRegistration basicTypeRegistration : options.getBasicTypeRegistrations() ) {
-			bootstrapContext.getTypeConfiguration().getBasicTypeRegistry().register(
-					basicTypeRegistration.getBasicType(),
-					basicTypeRegistration.getRegistrationKeys()
-			);
-		}
+		bootstrapContext.getTypeConfiguration()
+				.addBasicTypeRegistrationContributions( options.getBasicTypeRegistrations() );
 	}
 }

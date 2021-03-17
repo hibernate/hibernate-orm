@@ -26,7 +26,7 @@ public class ParameterizedFunctionExpression<X>
 		extends BasicFunctionExpression<X>
 		implements FunctionExpression<X> {
 
-	public static List<String> STANDARD_JPA_FUNCTION_NAMES = Arrays.asList(
+	public static final List<String> STANDARD_JPA_FUNCTION_NAMES = Arrays.asList(
 			// 4.6.17.2.1
 			"CONCAT",
 			"SUBSTRING",
@@ -93,19 +93,26 @@ public class ParameterizedFunctionExpression<X>
 
 	@Override
 	public String render(RenderingContext renderingContext) {
-		StringBuilder buffer = new StringBuilder();
-		if ( isStandardJpaFunction() ) {
-			buffer.append( getFunctionName() )
-					.append( "(" );
+		renderingContext.getFunctionStack().push( this );
+
+		try {
+			final StringBuilder buffer = new StringBuilder();
+			if ( isStandardJpaFunction() ) {
+				buffer.append( getFunctionName() ).append( "(" );
+			}
+			else {
+				buffer.append( "function('" )
+						.append( getFunctionName() )
+						.append( "', " );
+			}
+
+			renderArguments( buffer, renderingContext );
+
+			return buffer.append( ')' ).toString();
 		}
-		else {
-			buffer.append( "function('" )
-					.append( getFunctionName() )
-					.append( "', " );
+		finally {
+			renderingContext.getFunctionStack().pop();
 		}
-		renderArguments( buffer, renderingContext );
-		buffer.append( ')' );
-		return buffer.toString();
 	}
 
 	protected void renderArguments(StringBuilder buffer, RenderingContext renderingContext) {
@@ -115,5 +122,7 @@ public class ParameterizedFunctionExpression<X>
 			sep = ", ";
 		}
 	}
+
+
 
 }

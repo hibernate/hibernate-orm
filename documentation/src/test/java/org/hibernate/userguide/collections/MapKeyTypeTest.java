@@ -147,6 +147,10 @@ public class MapKeyTypeTest extends BaseEntityManagerFunctionalTestCase {
 		@Column(name = "phone_number")
 		private Map<Date, Integer> callRegister = new HashMap<>();
 
+		//Getters and setters are omitted for brevity
+
+	//end::collections-map-custom-key-type-mapping-example[]
+
 		public void setId(Long id) {
 			this.id = id;
 		}
@@ -154,7 +158,7 @@ public class MapKeyTypeTest extends BaseEntityManagerFunctionalTestCase {
 		public Map<Date, Integer> getCallRegister() {
 			return callRegister;
 		}
+	//tag::collections-map-custom-key-type-mapping-example[]
 	}
-
 	//end::collections-map-custom-key-type-mapping-example[]
 }

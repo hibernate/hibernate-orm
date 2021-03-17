@@ -20,8 +20,16 @@ public class SortedMapType extends MapType {
 
 	private final Comparator comparator;
 
+	/**
+	 * @deprecated Use the other constructor
+	 */
+	@Deprecated
 	public SortedMapType(TypeFactory.TypeScope typeScope, String role, String propertyRef, Comparator comparator) {
-		super( typeScope, role, propertyRef );
+		this( role, propertyRef, comparator );
+	}
+
+	public SortedMapType(String role, String propertyRef, Comparator comparator) {
+		super( role, propertyRef );
 		this.comparator = comparator;
 	}
 

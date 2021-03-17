@@ -14,6 +14,7 @@ import java.util.NoSuchElementException;
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.engine.HibernateIterator;
+import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.hql.internal.HolderInstantiator;
 import org.hibernate.type.EntityType;
@@ -63,7 +64,8 @@ public final class IteratorImpl implements HibernateIterator {
 	public void close() throws JDBCException {
 		if ( ps != null ) {
 			LOG.debug( "Closing iterator" );
-			session.getJdbcCoordinator().getResourceRegistry().release( ps );
+			final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
+			jdbcCoordinator.getResourceRegistry().release( ps );
 			try {
 				session.getPersistenceContext().getLoadContexts().cleanup( rs );
 			}
@@ -71,7 +73,7 @@ public final class IteratorImpl implements HibernateIterator {
 				// ignore this error for now
 				LOG.debugf( "Exception trying to cleanup load context : %s", ignore.getMessage() );
 			}
-			session.getJdbcCoordinator().afterStatementExecution();
+			jdbcCoordinator.afterStatementExecution();
 			ps = null;
 			rs = null;
 			hasNext = false;
@@ -103,7 +105,7 @@ public final class IteratorImpl implements HibernateIterator {
 		try {
 			boolean isHolder = holderInstantiator.isRequired();
 
-			LOG.debugf( "Assembling results" );
+			LOG.debug( "Assembling results" );
 			if ( single && !isHolder ) {
 				currentResult = types[0].nullSafeGet( rs, names[0], session, null );
 			}
@@ -122,7 +124,7 @@ public final class IteratorImpl implements HibernateIterator {
 			}
 
 			postNext();
-			LOG.debugf( "Returning current results" );
+			LOG.debug( "Returning current results" );
 			return currentResult;
 		}
 		catch (SQLException sqle) {

@@ -17,7 +17,7 @@ import org.hibernate.type.Type;
 
 /**
  * A specialized ParameterSpecification impl for dealing with a dynamic filter parameters.
- * 
+ *
  * @see org.hibernate.Session#enableFilter(String)
  *
  * @author Steve Ebersole
@@ -32,7 +32,7 @@ public class DynamicFilterParameterSpecification implements ParameterSpecificati
 	 *
 	 * @param filterName The name of the filter
 	 * @param parameterName The name of the parameter
-	 * @param definedParameterType The paremeter type specified on the filter metadata
+	 * @param definedParameterType The parameter type specified on the filter metadata
 	 */
 	public DynamicFilterParameterSpecification(
 			String filterName,

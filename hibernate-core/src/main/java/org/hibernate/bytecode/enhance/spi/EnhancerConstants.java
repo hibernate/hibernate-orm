@@ -24,7 +24,7 @@ public final class EnhancerConstants {
 	public static final String PERSISTENT_FIELD_WRITER_PREFIX = "$$_hibernate_write_";
 
 	/**
-	 * Name of the method used to get reference the the entity instance (this in the case of enhanced classes).
+	 * Name of the method used to get reference of the entity instance (this in the case of enhanced classes).
 	 */
 	public static final String ENTITY_INSTANCE_GETTER_NAME = "$$_hibernate_getEntityInstance";
 
@@ -118,7 +118,7 @@ public final class EnhancerConstants {
 	public static final String TRACKER_FIELD_NAME = "$$_hibernate_tracker";
 
 	/**
-	 * Name of method that add changed fields
+	 * Name of method to add changed fields
 	 */
 	public static final String TRACKER_CHANGER_NAME = "$$_hibernate_trackChange";
 

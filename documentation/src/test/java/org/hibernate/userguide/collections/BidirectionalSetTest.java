@@ -69,6 +69,10 @@ public class BidirectionalSetTest extends BaseEntityManagerFunctionalTestCase {
 		@OneToMany(mappedBy = "person", cascade = CascadeType.ALL)
 		private Set<Phone> phones = new HashSet<>();
 
+		//Getters and setters are omitted for brevity
+
+	//end::collections-bidirectional-set-example[]
+
 		public Person() {
 		}
 
@@ -80,6 +84,7 @@ public class BidirectionalSetTest extends BaseEntityManagerFunctionalTestCase {
 			return phones;
 		}
 
+	//tag::collections-bidirectional-set-example[]
 		public void addPhone(Phone phone) {
 			phones.add( phone );
 			phone.setPerson( this );
@@ -105,6 +110,10 @@ public class BidirectionalSetTest extends BaseEntityManagerFunctionalTestCase {
 
 		@ManyToOne
 		private Person person;
+
+		//Getters and setters are omitted for brevity
+
+	//end::collections-bidirectional-set-example[]
 
 		public Phone() {
 		}
@@ -135,6 +144,7 @@ public class BidirectionalSetTest extends BaseEntityManagerFunctionalTestCase {
 			this.person = person;
 		}
 
+	//tag::collections-bidirectional-set-example[]
 		@Override
 		public boolean equals(Object o) {
 			if ( this == o ) {

@@ -22,6 +22,9 @@ public class Person {
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
     private List<Phone> phones = new ArrayList<>();
 
+    //Getters and setters are omitted for brevity
+//end::pc-cascade-domain-model-example[]
+
     public Long getId() {
         return id;
     }
@@ -41,6 +44,8 @@ public class Person {
     public List<Phone> getPhones() {
         return phones;
     }
+
+//tag::pc-cascade-domain-model-example[]
 
     public void addPhone(Phone phone) {
         this.phones.add( phone );

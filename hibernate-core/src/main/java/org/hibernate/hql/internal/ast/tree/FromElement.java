@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import antlr.collections.AST;
 import org.hibernate.QueryException;
 import org.hibernate.engine.internal.JoinSequence;
 import org.hibernate.hql.internal.CollectionProperties;
@@ -23,6 +24,7 @@ import org.hibernate.hql.internal.ast.util.ASTUtil;
 import org.hibernate.hql.spi.QueryTranslator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.param.DynamicFilterParameterSpecification;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.collection.QueryableCollection;
@@ -68,6 +70,7 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 	private boolean useWhereFragment = true;
 	private List<FromElement> destinations;
 	private boolean manyToMany;
+	private AST withClauseAst;
 	private String withClauseFragment;
 	private boolean dereferencedBySuperclassProperty;
 	private boolean dereferencedBySubclassProperty;
@@ -92,6 +95,10 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 		this.tableAlias = origin.getTableAlias();
 		super.initialize( fromClause.getWalker() );
 
+	}
+
+	public FromElementType getElementType() {
+		return elementType;
 	}
 
 	protected void initializeComponentJoin(FromElementType elementType) {
@@ -172,7 +179,7 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 		//return classAlias == null ? className : classAlias;
 	}
 
-	private String getTableName() {
+	public String getTableName() {
 		Queryable queryable = getQueryable();
 		return ( queryable != null ) ? queryable.getTableName() : "{none}";
 	}
@@ -279,7 +286,7 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 		if ( columns != null ) {
 			for ( int i = 0; i < columns.length; i++ ) {
 				buf.append( columns[i] );
-				if ( i < columns.length ) {
+				if ( i < columns.length - 1 ) {
 					buf.append( " " );
 				}
 			}
@@ -339,12 +346,16 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 			throw new IllegalStateException( "No table alias for node " + this );
 		}
 
-		final String propertyName = getIdentifierPropertyName();
-
-		return toColumns(
-				table, propertyName,
-				getWalker().getStatementType() == HqlSqlTokenTypes.SELECT
-		);
+		final String[] propertyNames = getIdentifierPropertyNames();
+		List<String> columns = new ArrayList<>();
+		final boolean inSelect = getWalker().getStatementType() == HqlSqlTokenTypes.SELECT;
+		for ( String propertyName : propertyNames ) {
+			String[] propertyNameColumns = toColumns( table, propertyName, inSelect );
+			for ( String propertyNameColumn : propertyNameColumns ) {
+				columns.add( propertyNameColumn );
+			}
+		}
+		return columns.toArray( new String[columns.size()] );
 	}
 
 	public void setCollectionJoin(boolean collectionJoin) {
@@ -402,7 +413,7 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 		else if ( !getWalker().isInFrom() ) {
 			// HHH-276 : implied joins in a subselect where clause - The destination needs to be added
 			// to the destination's from clause.
-			getFromClause().addChild( this );	// Not sure if this is will fix everything, but it works.
+			getFromClause().addChild( this );	// Not sure if this will fix everything, but it works.
 		}
 		else {
 			// Otherwise, the destination node was implied by the FROM clause and the FROM clause processor
@@ -438,7 +449,7 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 		if ( origin == null ) {
 			return null;
 		}
-		if ( origin.getText() == null || "".equals( origin.getText() ) ) {
+		if ( StringHelper.isEmpty( origin.getText() ) ) {
 			return origin.getRealOrigin();
 		}
 		return origin;
@@ -451,7 +462,7 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 		if ( !origin.isFetch() ) {
 			return origin;
 		}
-		if ( origin.getText() == null || "".equals( origin.getText() ) ) {
+		if ( StringHelper.isEmpty( origin.getText() ) ) {
 			return origin.getFetchOrigin();
 		}
 		return origin;
@@ -509,6 +520,10 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 		return elementType.getPropertyType( propertyName, propertyPath );
 	}
 
+	public String getPropertyTableName(String propertyName) {
+		return elementType.getPropertyTableName( propertyName );
+	}
+
 	public String[] toColumns(String tableAlias, String path, boolean inSelect) {
 		return elementType.toColumns( tableAlias, path, inSelect );
 	}
@@ -525,8 +540,8 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 		return elementType.getCollectionPropertyReference( propertyName );
 	}
 
-	public String getIdentifierPropertyName() {
-		return elementType.getIdentifierPropertyName();
+	public String[] getIdentifierPropertyNames() {
+		return elementType.getIdentifierPropertyNames();
 	}
 
 	public void setFetch(boolean fetch) {
@@ -597,7 +612,7 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 	}
 
 	public void setInProjectionList(boolean inProjectionList) {
-		// Do nothing, eplicit from elements are *always* in the projection list.
+		// Do nothing, explicit from elements are *always* in the projection list.
 	}
 
 	public boolean inProjectionList() {
@@ -618,11 +633,19 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 		isAllPropertyFetch = fetch;
 	}
 
+	public AST getWithClauseAst() {
+		return withClauseAst;
+	}
+
 	public String getWithClauseFragment() {
 		return withClauseFragment;
 	}
 
-	public void setWithClauseFragment(String withClauseFragment) {
+	public void setWithClauseFragment(AST ast, String withClauseFragment) {
+		// Normally, the from element is added first, but since the with clause could introduce joins,
+		// we have to move the from element to the end to retain the proper join order
+		getFromClause().moveFromElementToEnd( this );
+		this.withClauseAst = ast;
 		this.withClauseFragment = withClauseFragment;
 	}
 

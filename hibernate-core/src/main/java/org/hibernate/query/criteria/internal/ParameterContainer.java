@@ -8,7 +8,7 @@ package org.hibernate.query.criteria.internal;
 import javax.persistence.criteria.Selection;
 
 /**
- * Contract for query components capable of eirther being a parameter or containing parameters.
+ * Contract for query components capable of either being a parameter or containing parameters.
  *
  * @author Steve Ebersole
  */

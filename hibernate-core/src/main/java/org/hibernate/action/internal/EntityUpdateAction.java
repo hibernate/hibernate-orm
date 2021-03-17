@@ -17,6 +17,7 @@ import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -30,12 +31,13 @@ import org.hibernate.event.spi.PreUpdateEvent;
 import org.hibernate.event.spi.PreUpdateEventListener;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.stat.internal.StatsHelper;
+import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.TypeHelper;
 
 /**
  * The action for performing entity updates.
  */
-public final class EntityUpdateAction extends EntityAction {
+public class EntityUpdateAction extends EntityAction {
 	private final Object[] state;
 	private final Object[] previousState;
 	private final Object previousVersion;
@@ -58,7 +60,7 @@ public final class EntityUpdateAction extends EntityAction {
 	 * @param previousVersion The previous (stored) version
 	 * @param nextVersion The incremented version
 	 * @param instance The entity instance
-	 * @param rowId The entity's rowid
+	 * @param rowId The entity's row id
 	 * @param persister The entity's persister
 	 * @param session The session
 	 */
@@ -84,7 +86,7 @@ public final class EntityUpdateAction extends EntityAction {
 		this.rowId = rowId;
 
 		this.previousNaturalIdValues = determinePreviousNaturalIdValues( persister, previousState, session, id );
-		session.getPersistenceContext().getNaturalIdHelper().manageLocalNaturalIdCrossReference(
+		session.getPersistenceContextInternal().getNaturalIdHelper().manageLocalNaturalIdCrossReference(
 				persister,
 				id,
 				state,
@@ -102,11 +104,64 @@ public final class EntityUpdateAction extends EntityAction {
 			return null;
 		}
 
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		if ( previousState != null ) {
-			return session.getPersistenceContext().getNaturalIdHelper().extractNaturalIdValues( previousState, persister );
+			return persistenceContext.getNaturalIdHelper().extractNaturalIdValues( previousState, persister );
 		}
 
-		return session.getPersistenceContext().getNaturalIdSnapshot( id, persister );
+		return persistenceContext.getNaturalIdSnapshot( id, persister );
+	}
+
+	public Object[] getState() {
+		return state;
+	}
+
+	public Object[] getPreviousState() {
+		return previousState;
+	}
+
+	public Object getPreviousVersion() {
+		return previousVersion;
+	}
+
+	public Object getNextVersion() {
+		return nextVersion;
+	}
+
+	public void setNextVersion(Object nextVersion) {
+		this.nextVersion = nextVersion;
+	}
+
+	public int[] getDirtyFields() {
+		return dirtyFields;
+	}
+
+	public boolean hasDirtyCollection() {
+		return hasDirtyCollection;
+	}
+
+	public Object getRowId() {
+		return rowId;
+	}
+
+	public Object[] getPreviousNaturalIdValues() {
+		return previousNaturalIdValues;
+	}
+
+	protected Object getCacheEntry() {
+		return cacheEntry;
+	}
+
+	protected void setCacheEntry(Object cacheEntry) {
+		this.cacheEntry = cacheEntry;
+	}
+
+	protected SoftLock getLock() {
+		return lock;
+	}
+
+	protected void setLock(SoftLock lock) {
+		this.lock = lock;
 	}
 
 	@Override
@@ -126,12 +181,12 @@ public final class EntityUpdateAction extends EntityAction {
 			// multiple actions queued during the same flush
 			previousVersion = persister.getVersion( instance );
 		}
-		
+
 		final Object ck;
 		if ( persister.canWriteToCache() ) {
 			final EntityDataAccess cache = persister.getCacheAccessStrategy();
 			ck = cache.generateCacheKey(
-					id, 
+					id,
 					persister,
 					factory,
 					session.getTenantIdentifier()
@@ -143,24 +198,24 @@ public final class EntityUpdateAction extends EntityAction {
 		}
 
 		if ( !veto ) {
-			persister.update( 
-					id, 
-					state, 
-					dirtyFields, 
-					hasDirtyCollection, 
-					previousState, 
-					previousVersion, 
-					instance, 
-					rowId, 
-					session 
+			persister.update(
+					id,
+					state,
+					dirtyFields,
+					hasDirtyCollection,
+					previousState,
+					previousVersion,
+					instance,
+					rowId,
+					session
 			);
 		}
 
-		final EntityEntry entry = session.getPersistenceContext().getEntry( instance );
+		final EntityEntry entry = session.getPersistenceContextInternal().getEntry( instance );
 		if ( entry == null ) {
 			throw new AssertionFailure( "possible nonthreadsafe access to session" );
 		}
-		
+
 		if ( entry.getStatus()==Status.MANAGED || persister.isVersionPropertyGenerated() ) {
 			// get the updated snapshot of the entity state by cloning current state;
 			// it is safe to copy in place, since by this time no-one else (should have)
@@ -173,7 +228,7 @@ public final class EntityUpdateAction extends EntityAction {
 					session
 			);
 			if ( persister.hasUpdateGeneratedProperties() ) {
-				// this entity defines proeprty generation, so process those generated
+				// this entity defines property generation, so process those generated
 				// values...
 				persister.processUpdateGeneratedProperties( id, instance, state, session );
 				if ( persister.isVersionPropertyGenerated() ) {
@@ -185,6 +240,7 @@ public final class EntityUpdateAction extends EntityAction {
 			entry.postUpdate( instance, state, nextVersion );
 		}
 
+		final StatisticsImplementor statistics = factory.getStatistics();
 		if ( persister.canWriteToCache() ) {
 			if ( persister.isCacheInvalidationRequired() || entry.getStatus()!= Status.MANAGED ) {
 				persister.getCacheAccessStrategy().remove( session, ck);
@@ -195,8 +251,8 @@ public final class EntityUpdateAction extends EntityAction {
 				cacheEntry = persister.getCacheEntryStructure().structure( ce );
 
 				final boolean put = cacheUpdate( persister, previousVersion, ck );
-				if ( put && factory.getStatistics().isStatisticsEnabled() ) {
-					factory.getStatistics().entityCachePut(
+				if ( put && statistics.isStatisticsEnabled() ) {
+					statistics.entityCachePut(
 							StatsHelper.INSTANCE.getRootEntityRole( persister ),
 							getPersister().getCacheAccessStrategy().getRegion().getName()
 					);
@@ -204,7 +260,7 @@ public final class EntityUpdateAction extends EntityAction {
 			}
 		}
 
-		session.getPersistenceContext().getNaturalIdHelper().manageSharedNaturalIdCrossReference(
+		session.getPersistenceContextInternal().getNaturalIdHelper().manageSharedNaturalIdCrossReference(
 				persister,
 				id,
 				state,
@@ -214,12 +270,12 @@ public final class EntityUpdateAction extends EntityAction {
 
 		postUpdate();
 
-		if ( factory.getStatistics().isStatisticsEnabled() && !veto ) {
-			factory.getStatistics().updateEntity( getPersister().getEntityName() );
+		if ( statistics.isStatisticsEnabled() && !veto ) {
+			statistics.updateEntity( getPersister().getEntityName() );
 		}
 	}
 
-	private boolean cacheUpdate(EntityPersister persister, Object previousVersion, Object ck) {
+	protected boolean cacheUpdate(EntityPersister persister, Object previousVersion, Object ck) {
 		final SharedSessionContractImplementor session = getSession();
 		try {
 			session.getEventListenerManager().cachePutStart();
@@ -230,9 +286,9 @@ public final class EntityUpdateAction extends EntityAction {
 		}
 	}
 
-	private boolean preUpdate() {
+	protected boolean preUpdate() {
 		boolean veto = false;
-		final EventListenerGroup<PreUpdateEventListener> listenerGroup = listenerGroup( EventType.PRE_UPDATE );
+		final EventListenerGroup<PreUpdateEventListener> listenerGroup = getFastSessionServices().eventListenerGroup_PRE_UPDATE;
 		if ( listenerGroup.isEmpty() ) {
 			return veto;
 		}
@@ -250,31 +306,14 @@ public final class EntityUpdateAction extends EntityAction {
 		return veto;
 	}
 
-	private void postUpdate() {
-		final EventListenerGroup<PostUpdateEventListener> listenerGroup = listenerGroup( EventType.POST_UPDATE );
-		if ( listenerGroup.isEmpty() ) {
-			return;
-		}
-		final PostUpdateEvent event = new PostUpdateEvent(
-				getInstance(),
-				getId(),
-				state,
-				previousState,
-				dirtyFields,
-				getPersister(),
-				eventSource()
-		);
-		for ( PostUpdateEventListener listener : listenerGroup.listeners() ) {
-			listener.onPostUpdate( event );
-		}
+	protected void postUpdate() {
+		getFastSessionServices()
+				.eventListenerGroup_POST_UPDATE
+				.fireLazyEventOnEachListener( this::newPostUpdateEvent, PostUpdateEventListener::onPostUpdate );
 	}
 
-	private void postCommitUpdate(boolean success) {
-		final EventListenerGroup<PostUpdateEventListener> listenerGroup = listenerGroup( EventType.POST_COMMIT_UPDATE );
-		if ( listenerGroup.isEmpty() ) {
-			return;
-		}
-		final PostUpdateEvent event = new PostUpdateEvent(
+	private PostUpdateEvent newPostUpdateEvent() {
+		return new PostUpdateEvent(
 				getInstance(),
 				getId(),
 				state,
@@ -283,25 +322,27 @@ public final class EntityUpdateAction extends EntityAction {
 				getPersister(),
 				eventSource()
 		);
-		for ( PostUpdateEventListener listener : listenerGroup.listeners() ) {
-			if ( PostCommitUpdateEventListener.class.isInstance( listener ) ) {
-				if ( success ) {
-					listener.onPostUpdate( event );
-				}
-				else {
-					((PostCommitUpdateEventListener) listener).onPostUpdateCommitFailed( event );
-				}
-			}
-			else {
-				//default to the legacy implementation that always fires the event
-				listener.onPostUpdate( event );
-			}
+	}
+
+	protected void postCommitUpdate(boolean success) {
+		getFastSessionServices()
+				.eventListenerGroup_POST_COMMIT_UPDATE
+				.fireLazyEventOnEachListener( this::newPostUpdateEvent, success ? PostUpdateEventListener::onPostUpdate : this::onPostCommitFailure );
+	}
+
+	private void onPostCommitFailure(PostUpdateEventListener listener, PostUpdateEvent event) {
+		if ( listener instanceof PostCommitUpdateEventListener ) {
+			((PostCommitUpdateEventListener) listener).onPostUpdateCommitFailed( event );
+		}
+		else {
+			//default to the legacy implementation that always fires the event
+			listener.onPostUpdate( event );
 		}
 	}
 
 	@Override
 	protected boolean hasPostCommitEventListeners() {
-		final EventListenerGroup<PostUpdateEventListener> group = listenerGroup( EventType.POST_COMMIT_UPDATE );
+		final EventListenerGroup<PostUpdateEventListener> group = getFastSessionServices().eventListenerGroup_POST_COMMIT_UPDATE;
 		for ( PostUpdateEventListener listener : group.listeners() ) {
 			if ( listener.requiresPostCommitHandling( getPersister() ) ) {
 				return true;
@@ -316,12 +357,13 @@ public final class EntityUpdateAction extends EntityAction {
 		final EntityPersister persister = getPersister();
 		if ( persister.canWriteToCache() ) {
 			final EntityDataAccess cache = persister.getCacheAccessStrategy();
+			final SessionFactoryImplementor factory = session.getFactory();
 			final Object ck = cache.generateCacheKey(
 					getId(),
 					persister,
-					session.getFactory(),
+					factory,
 					session.getTenantIdentifier()
-					
+
 			);
 
 			if ( success &&
@@ -330,21 +372,22 @@ public final class EntityUpdateAction extends EntityAction {
 					session.getCacheMode().isPutEnabled() ) {
 				final boolean put = cacheAfterUpdate( cache, ck );
 
-				if ( put && getSession().getFactory().getStatistics().isStatisticsEnabled() ) {
-					session.getFactory().getStatistics().entityCachePut(
+				final StatisticsImplementor statistics = factory.getStatistics();
+				if ( put && statistics.isStatisticsEnabled() ) {
+					statistics.entityCachePut(
 							StatsHelper.INSTANCE.getRootEntityRole( persister ),
-							getPersister().getCacheAccessStrategy().getRegion().getName()
+							cache.getRegion().getName()
 					);
 				}
 			}
 			else {
-				cache.unlockItem(session, ck, lock );
+				cache.unlockItem( session, ck, lock );
 			}
 		}
 		postCommitUpdate( success );
 	}
 
-	private boolean cacheAfterUpdate(EntityDataAccess cache, Object ck) {
+	protected boolean cacheAfterUpdate(EntityDataAccess cache, Object ck) {
 		final SharedSessionContractImplementor session = getSession();
 		SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
 		try {

@@ -141,7 +141,7 @@ public class ExportableColumn extends Column {
 
 		@Override
 		public ServiceRegistry getServiceRegistry() {
-			return database.getBuildingOptions().getServiceRegistry();
+			return database.getServiceRegistry();
 		}
 	}
 

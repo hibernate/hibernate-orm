@@ -15,9 +15,11 @@ import java.util.List;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
+import org.hibernate.engine.spi.EffectiveEntityGraph;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.graph.GraphSemantic;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.entity.UniqueEntityLoader;
@@ -29,6 +31,7 @@ import org.hibernate.loader.plan.build.spi.MetamodelDrivenLoadPlanBuilder;
 import org.hibernate.loader.plan.exec.internal.AbstractLoadPlanBasedLoader;
 import org.hibernate.loader.plan.exec.internal.BatchingLoadQueryDetailsFactory;
 import org.hibernate.loader.plan.exec.internal.EntityLoadQueryDetails;
+import org.hibernate.loader.plan.exec.process.spi.ResultSetProcessorResolver;
 import org.hibernate.loader.plan.exec.query.spi.QueryBuildingParameters;
 import org.hibernate.loader.plan.exec.spi.LoadQueryDetails;
 import org.hibernate.loader.plan.spi.LoadPlan;
@@ -56,26 +59,37 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 			SessionFactoryImplementor factory,
 			String[] uniqueKeyColumnNames,
 			Type uniqueKeyType,
-			QueryBuildingParameters buildingParameters) {
+			QueryBuildingParameters buildingParameters,
+			ResultSetProcessorResolver resultSetProcessorResolver) {
 		super( factory );
 		this.entityPersister = entityPersister;
 		this.uniqueKeyType = uniqueKeyType;
 		this.entityName = entityPersister.getEntityName();
 
 		final LoadPlanBuildingAssociationVisitationStrategy strategy;
-		if ( buildingParameters.getQueryInfluencers().getFetchGraph() != null ) {
+
+		final EffectiveEntityGraph effectiveEntityGraph = buildingParameters.getQueryInfluencers().getEffectiveEntityGraph();
+		if ( effectiveEntityGraph.getSemantic() == GraphSemantic.FETCH ) {
 			strategy = new FetchGraphLoadPlanBuildingStrategy(
-					factory, buildingParameters.getQueryInfluencers(),buildingParameters.getLockMode()
+					factory,
+					effectiveEntityGraph.getGraph(),
+					buildingParameters.getQueryInfluencers(),
+					buildingParameters.getLockOptions() != null ? buildingParameters.getLockOptions().getLockMode() : buildingParameters.getLockMode()
 			);
 		}
-		else if ( buildingParameters.getQueryInfluencers().getLoadGraph() != null ) {
+		else if ( effectiveEntityGraph.getSemantic() == GraphSemantic.LOAD ) {
 			strategy = new LoadGraphLoadPlanBuildingStrategy(
-					factory, buildingParameters.getQueryInfluencers(),buildingParameters.getLockMode()
+					factory,
+					effectiveEntityGraph.getGraph(),
+					buildingParameters.getQueryInfluencers(),
+					buildingParameters.getLockOptions() != null ? buildingParameters.getLockOptions().getLockMode() : buildingParameters.getLockMode()
 			);
 		}
 		else {
 			strategy = new FetchStyleLoadPlanBuildingAssociationVisitationStrategy(
-					factory, buildingParameters.getQueryInfluencers(),buildingParameters.getLockMode()
+					factory,
+					buildingParameters.getQueryInfluencers(),
+					buildingParameters.getLockOptions() != null ? buildingParameters.getLockOptions().getLockMode() : buildingParameters.getLockMode()
 			);
 		}
 
@@ -84,7 +98,42 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 				plan,
 				uniqueKeyColumnNames,
 				buildingParameters,
-				factory
+				factory,
+				resultSetProcessorResolver
+		);
+	}
+
+	public AbstractLoadPlanBasedEntityLoader(
+			OuterJoinLoadable entityPersister,
+			SessionFactoryImplementor factory,
+			String[] uniqueKeyColumnNames,
+			Type uniqueKeyType,
+			QueryBuildingParameters buildingParameters) {
+		this(
+				entityPersister,
+				factory,
+				uniqueKeyColumnNames,
+				uniqueKeyType,
+				buildingParameters,ResultSetProcessorResolver.DEFAULT
+		);
+	}
+
+	protected AbstractLoadPlanBasedEntityLoader(
+			OuterJoinLoadable entityPersister,
+			SessionFactoryImplementor factory,
+			EntityLoadQueryDetails entityLoaderQueryDetailsTemplate,
+			Type uniqueKeyType,
+			QueryBuildingParameters buildingParameters,
+			ResultSetProcessorResolver resultSetProcessorResolver) {
+		super( factory );
+		this.entityPersister = entityPersister;
+		this.uniqueKeyType = uniqueKeyType;
+		this.entityName = entityPersister.getEntityName();
+
+		this.staticLoadQuery = BatchingLoadQueryDetailsFactory.INSTANCE.makeEntityLoadQueryDetails(
+				entityLoaderQueryDetailsTemplate,
+				buildingParameters,
+				resultSetProcessorResolver
 		);
 	}
 
@@ -94,15 +143,18 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 			EntityLoadQueryDetails entityLoaderQueryDetailsTemplate,
 			Type uniqueKeyType,
 			QueryBuildingParameters buildingParameters) {
-		super( factory );
-		this.entityPersister = entityPersister;
-		this.uniqueKeyType = uniqueKeyType;
-		this.entityName = entityPersister.getEntityName();
-
-		this.staticLoadQuery = BatchingLoadQueryDetailsFactory.INSTANCE.makeEntityLoadQueryDetails(
+		this(
+				entityPersister,
+				factory,
 				entityLoaderQueryDetailsTemplate,
-				buildingParameters
+				uniqueKeyType,
+				buildingParameters,
+				ResultSetProcessorResolver.DEFAULT
 		);
+	}
+
+	public OuterJoinLoadable getEntityPersister() {
+		return entityPersister;
 	}
 
 	@Override
@@ -112,6 +164,25 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 
 	protected String getEntityName() {
 		return entityName;
+	}
+
+	public List<?> loadEntityBatch(
+			Serializable[] idsInBatch,
+			OuterJoinLoadable persister,
+			LockOptions lockOptions,
+			SharedSessionContractImplementor session) {
+		final Type idType = persister.getIdentifierType();
+
+		return loadEntityBatch(
+				session,
+				idsInBatch,
+				persister.getIdentifierType(),
+				null,
+				null,
+				null,
+				persister,
+				lockOptions
+		);
 	}
 
 	/**
@@ -127,8 +198,20 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 			final String optionalEntityName,
 			final Serializable optionalId,
 			final EntityPersister persister,
-			LockOptions lockOptions) throws HibernateException {
+			final LockOptions lockOptions) throws HibernateException {
+		return loadEntityBatch( session, ids, idType, optionalObject, optionalEntityName, optionalId, persister, lockOptions, null );
+	}
 
+	public final List loadEntityBatch(
+			final SharedSessionContractImplementor session,
+			final Serializable[] ids,
+			final Type idType,
+			final Object optionalObject,
+			final String optionalEntityName,
+			final Serializable optionalId,
+			final EntityPersister persister,
+			final LockOptions lockOptions,
+			final Boolean readOnly) throws HibernateException {
 		if ( log.isDebugEnabled() ) {
 			log.debugf( "Batch loading entity: %s", MessageHelper.infoString( persister, ids, getFactory() ) );
 		}
@@ -140,8 +223,13 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 			final QueryParameters qp = new QueryParameters();
 			qp.setPositionalParameterTypes( types );
 			qp.setPositionalParameterValues( ids );
+			qp.setOptionalObject( optionalObject );
+			qp.setOptionalEntityName( optionalEntityName );
+			qp.setOptionalId( optionalId );
 			qp.setLockOptions( lockOptions );
-
+			if ( readOnly != null ) {
+				qp.setReadOnly( readOnly );
+			}
 			result = executeLoad(
 					session,
 					qp,
@@ -166,11 +254,21 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 
 	@Override
 	public Object load(Serializable id, Object optionalObject, SharedSessionContractImplementor session) throws HibernateException {
-		return load( id, optionalObject, session, LockOptions.NONE );
+		return load( id, optionalObject, session, (Boolean) null );
+	}
+
+	@Override
+	public Object load(Serializable id, Object optionalObject, SharedSessionContractImplementor session, Boolean readOnly) throws HibernateException {
+		return load( id, optionalObject, session, LockOptions.NONE, readOnly );
 	}
 
 	@Override
 	public Object load(Serializable id, Object optionalObject, SharedSessionContractImplementor session, LockOptions lockOptions) {
+		return load( id, optionalObject, session, lockOptions, null );
+	}
+
+	@Override
+	public Object load(Serializable id, Object optionalObject, SharedSessionContractImplementor session, LockOptions lockOptions, Boolean readOnly) {
 
 		final Object result;
 		try {
@@ -181,7 +279,9 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 			qp.setOptionalEntityName( entityPersister.getEntityName() );
 			qp.setOptionalId( id );
 			qp.setLockOptions( lockOptions );
-
+			if ( readOnly != null ) {
+				qp.setReadOnly( readOnly );
+			}
 			final List results = executeLoad(
 					session,
 					qp,

@@ -37,7 +37,7 @@ include::{sourcedir}/timestamp_version.xml[]
 |column |The name of the column which holds the timestamp. Optional, defaults to the property name
 |name |The name of a JavaBeans style property of Java type `Date` or `Timestamp` of the persistent class.
 |access |The strategy Hibernate uses to access the property value. Optional, defaults to `property`.
-|unsaved-value |A version property which indicates than instance is newly instantiated, and unsaved.
+|unsaved-value |A version property which indicates that the instance is newly instantiated and unsaved.
 This distinguishes it from detached instances that were saved or loaded in a previous session.
 The default value of `undefined` indicates that Hibernate uses the identifier property value.
 |source |Whether Hibernate retrieves the timestamp from the database or the current JVM.

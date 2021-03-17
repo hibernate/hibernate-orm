@@ -35,6 +35,7 @@ import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.criteria.LiteralHandlingMode;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
+import org.hibernate.stat.Statistics;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
 
 /**
@@ -84,7 +85,7 @@ public interface SessionFactoryOptions {
 	}
 
 	/**
-	 * The name to be used for the SessionFactory.  This is use both in:<ul>
+	 * The name to be used for the SessionFactory.  This is used both in:<ul>
 	 *     <li>in-VM serialization</li>
 	 *     <li>JNDI binding, depending on {@link #isSessionFactoryNameAlsoJndiName}</li>
 	 * </ul>
@@ -290,4 +291,36 @@ public interface SessionFactoryOptions {
 	default boolean nativeExceptionHandling51Compliance() {
 		return false;
 	}
+
+	default int getQueryStatisticsMaxSize() {
+		return Statistics.DEFAULT_QUERY_STATISTICS_MAX_SIZE;
+	}
+
+	/**
+	 * @deprecated Since 5.4.1, this is no longer used.
+	 */
+	@Deprecated
+	default boolean isPostInsertIdentifierDelayableEnabled() {
+		return true;
+	}
+
+	default boolean areJPACallbacksEnabled() {
+		return true;
+	}
+
+	/**
+	 * Can bytecode-enhanced entity classes be used as a "proxy"?
+	 *
+	 * @deprecated (since 5.5) use of enhanced proxies is always enabled
+	 */
+	@Deprecated
+	default boolean isEnhancementAsProxyEnabled() {
+		return true;
+	}
+
+	default boolean isCollectionsInDefaultFetchGroupEnabled() {
+		return false;
+	}
+
+	boolean isOmitJoinOfSuperclassTablesEnabled();
 }

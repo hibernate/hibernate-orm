@@ -1,0 +1,32 @@
+= Test Case Guide
+:toc:
+
+This is meant as a guide for writing test cases to be attached to bug reports in the Hibernate Jira.  Really most of the information here works just as well when asking for help on community help channels (forums, IRC, HipChat, etc).
+
+
+== Write a good test
+
+There are a number of tenants that make up a good test case as opposed to a poor one.  In fact there are a few guides for this across the web including (http://stackoverflow.com/help/mcve[MCVE]) and (http://sscce.org/[SSCCE]).  These guides all assert the same ideas albeit using different terms.  Given the ubiquity of StackOverflow and the fact that the MCVE guidelines were written specifically for StackOverflow, we will use those terms here as we assume most developers have seen them before:
+
+* (M)inimal - Provide just the minimal information needed.  If second level caching is irrelevant to the bug report then the test should not use second level caching.  If entity inheritance is irrelevant then do not use it in the test.  If your application uses Spring Data, remove Spring Data from the test.
+* (C)omplete - Provide all information needed to reproduce the problem.  If a bug only occurs when using bytecode enhancement, then the test should include bytecode enhancement.  In other words the test should be self-contained.
+* (V)erifiable - The test should actually reproduce the problem being reported.
+
+
+== Test templates
+
+The Hibernate team maintains a set of "test templates" intended to help developers write tests.  These test templates are maintained in GitHub @ https://github.com/hibernate/hibernate-test-case-templates/tree/master/orm[hibernate-test-case-templates]
+
+* If you want to use the Hibernate native API, you should follow the instructions from http://in.relation.to/2015/06/26/hibernate-test-case-templates/[this article].
+* If you want to use JPA, you should use the JPA templates that were detailed in http://in.relation.to/2016/01/14/hibernate-jpa-test-case-template/[this article].
+
+NOTE: the test templates are generally not a good starting point for problems building the SessionFactory/EntityManager.  In JUnit terms they manage the SessionFactory/EntityManager as set-up and teardown constructs._
+
+== Annotations
+
+When using "test templates" you can annotate a  single test or a whole test class with one of the following  annotations:
+
+* FailureExpected - allows to skip a single test or all test of a class, because test failures are expected. The test will acutally run, but not lead to an error report. In fact if a test is marked with `@FailureExpected` and the test actually succeed an error occurs. As a parameters to this annotation a jira key is required.
+* RequiresDialect - tests methods/classes annotated with `@RequiresDialect` will only run if the current Dialect is matching the one specified on as annotation parameter. You can also specify a comment and/or jira key explaining why this test requires a certain dialect
+* RequiresDialectFeature - tests methods/classes annotated with `@RequiresDialectFeature` will only run if the current Dialect offers the specified feature. Examples for this features are `SupportsSequences`, `SupportsExpectedLobUsagePattern` or `SupportsIdentityColumns`. You can add more feature if you need to. Have a look at `DialectChecks`.
+* SkipForDialect - tests methods/classes annotated with `@SkipForDialect` will not run if  the current Dialect is matching the one specified on as annotation  parameter. You can also specify a comment and/or jira key explaining why  this test has to be skipped for the Dialect.

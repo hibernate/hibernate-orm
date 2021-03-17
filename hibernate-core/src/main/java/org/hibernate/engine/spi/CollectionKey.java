@@ -27,32 +27,33 @@ public final class CollectionKey implements Serializable {
 	private final Type keyType;
 	private final SessionFactoryImplementor factory;
 	private final int hashCode;
-	private EntityMode entityMode;
 
 	public CollectionKey(CollectionPersister persister, Serializable key) {
 		this(
 				persister.getRole(),
 				key,
 				persister.getKeyType(),
-				persister.getOwnerEntityPersister().getEntityMetamodel().getEntityMode(),
 				persister.getFactory()
 		);
 	}
 
+	/**
+	 * The EntityMode parameter is now ignored. Use the other constructor.
+	 * @deprecated Use {@link #CollectionKey(CollectionPersister, Serializable)}
+	 */
+	@Deprecated
 	public CollectionKey(CollectionPersister persister, Serializable key, EntityMode em) {
-		this( persister.getRole(), key, persister.getKeyType(), em, persister.getFactory() );
+		this( persister.getRole(), key, persister.getKeyType(), persister.getFactory() );
 	}
 
 	private CollectionKey(
 			String role,
 			Serializable key,
 			Type keyType,
-			EntityMode entityMode,
 			SessionFactoryImplementor factory) {
 		this.role = role;
 		this.key = key;
 		this.keyType = keyType;
-		this.entityMode = entityMode;
 		this.factory = factory;
 		//cache the hash-code
 		this.hashCode = generateHashCode();
@@ -64,7 +65,6 @@ public final class CollectionKey implements Serializable {
 		result = 37 * result + keyType.getHashCode( key, factory );
 		return result;
 	}
-
 
 	public String getRole() {
 		return role;
@@ -112,7 +112,6 @@ public final class CollectionKey implements Serializable {
 		oos.writeObject( role );
 		oos.writeObject( key );
 		oos.writeObject( keyType );
-		oos.writeObject( entityMode.toString() );
 	}
 
 	/**
@@ -134,7 +133,6 @@ public final class CollectionKey implements Serializable {
 				(String) ois.readObject(),
 				(Serializable) ois.readObject(),
 				(Type) ois.readObject(),
-				EntityMode.parse( (String) ois.readObject() ),
 				(session == null ? null : session.getFactory())
 		);
 	}

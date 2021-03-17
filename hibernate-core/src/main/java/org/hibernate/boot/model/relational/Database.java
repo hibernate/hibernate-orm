@@ -21,20 +21,21 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.service.ServiceRegistry;
 
 /**
  * @author Steve Ebersole
  */
 public class Database {
+
 	private final Dialect dialect;
-	private final MetadataBuildingOptions buildingOptions;
 	private final JdbcEnvironment jdbcEnvironment;
+	private final Map<Namespace.Name,Namespace> namespaceMap = new TreeMap<Namespace.Name, Namespace>();
+	private final Map<String,AuxiliaryDatabaseObject> auxiliaryDatabaseObjects = new HashMap<String,AuxiliaryDatabaseObject>();
+	private final ServiceRegistry serviceRegistry;
+	private final PhysicalNamingStrategy physicalNamingStrategy;
 
 	private Namespace implicitNamespace;
-
-	private final Map<Namespace.Name,Namespace> namespaceMap = new TreeMap<Namespace.Name, Namespace>();
-
-	private Map<String,AuxiliaryDatabaseObject> auxiliaryDatabaseObjects;
 	private List<InitCommand> initCommands;
 
 	public Database(MetadataBuildingOptions buildingOptions) {
@@ -42,10 +43,9 @@ public class Database {
 	}
 
 	public Database(MetadataBuildingOptions buildingOptions, JdbcEnvironment jdbcEnvironment) {
-		this.buildingOptions = buildingOptions;
-
+		this.serviceRegistry = buildingOptions.getServiceRegistry();
 		this.jdbcEnvironment = jdbcEnvironment;
-
+		this.physicalNamingStrategy = buildingOptions.getPhysicalNamingStrategy();
 		this.dialect = determineDialect( buildingOptions );
 
 		this.implicitNamespace = makeNamespace(
@@ -68,13 +68,9 @@ public class Database {
 
 	private Namespace makeNamespace(Namespace.Name name) {
 		Namespace namespace;
-		namespace = new Namespace( this, name );
+		namespace = new Namespace( this.getPhysicalNamingStrategy(), this.getJdbcEnvironment(), name );
 		namespaceMap.put( name, namespace );
 		return namespace;
-	}
-
-	public MetadataBuildingOptions getBuildingOptions() {
-		return buildingOptions;
 	}
 
 	public Dialect getDialect() {
@@ -105,7 +101,7 @@ public class Database {
 	}
 
 	public PhysicalNamingStrategy getPhysicalNamingStrategy() {
-		return getBuildingOptions().getPhysicalNamingStrategy();
+		return physicalNamingStrategy;
 	}
 
 	public Iterable<Namespace> getNamespaces() {
@@ -148,9 +144,6 @@ public class Database {
 	}
 
 	public void addAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject) {
-		if ( auxiliaryDatabaseObjects == null ) {
-			auxiliaryDatabaseObjects = new HashMap<String,AuxiliaryDatabaseObject>();
-		}
 		auxiliaryDatabaseObjects.put( auxiliaryDatabaseObject.getExportIdentifier(), auxiliaryDatabaseObject );
 	}
 
@@ -171,5 +164,9 @@ public class Database {
 			initCommands = new ArrayList<InitCommand>();
 		}
 		initCommands.add( initCommand );
+	}
+
+	public ServiceRegistry getServiceRegistry() {
+		return serviceRegistry;
 	}
 }

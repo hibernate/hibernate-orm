@@ -117,7 +117,7 @@ public class AggregatedCollectionEventListener
 			this.event = event;
 			// make a copy of the collection?
 			this.snapshotAtTimeOfEventHandling = event.getSession()
-					.getPersistenceContext()
+					.getPersistenceContextInternal()
 					.getCollectionEntry( event.getCollection() )
 					.getSnapshot();
 		}

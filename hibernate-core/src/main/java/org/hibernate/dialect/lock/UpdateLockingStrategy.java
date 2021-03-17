@@ -14,12 +14,16 @@ import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.StaleObjectStateException;
+import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.sql.Update;
+import org.hibernate.stat.spi.StatisticsImplementor;
+import org.hibernate.type.Type;
+import org.hibernate.type.VersionType;
 
 import org.jboss.logging.Logger;
 
@@ -45,7 +49,7 @@ public class UpdateLockingStrategy implements LockingStrategy {
 	 * Construct a locking strategy based on SQL UPDATE statements.
 	 *
 	 * @param lockable The metadata for the entity to be locked.
-	 * @param lockMode Indictates the type of lock to be acquired.  Note that
+	 * @param lockMode Indicates the type of lock to be acquired.  Note that
 	 * read-locks are not valid for this strategy.
 	 */
 	public UpdateLockingStrategy(Lockable lockable, LockMode lockMode) {
@@ -70,37 +74,42 @@ public class UpdateLockingStrategy implements LockingStrategy {
 			Object object,
 			int timeout,
 			SharedSessionContractImplementor session) throws StaleObjectStateException, JDBCException {
+		final String lockableEntityName = lockable.getEntityName();
 		if ( !lockable.isVersioned() ) {
-			throw new HibernateException( "write locks via update not supported for non-versioned entities [" + lockable.getEntityName() + "]" );
+			throw new HibernateException( "write locks via update not supported for non-versioned entities [" + lockableEntityName + "]" );
 		}
 
 		// todo : should we additionally check the current isolation mode explicitly?
 		final SessionFactoryImplementor factory = session.getFactory();
 		try {
-			final PreparedStatement st = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );
+			final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
+			final PreparedStatement st = jdbcCoordinator.getStatementPreparer().prepareStatement( sql );
 			try {
-				lockable.getVersionType().nullSafeSet( st, version, 1, session );
+				final VersionType lockableVersionType = lockable.getVersionType();
+				lockableVersionType.nullSafeSet( st, version, 1, session );
 				int offset = 2;
 
-				lockable.getIdentifierType().nullSafeSet( st, id, offset, session );
-				offset += lockable.getIdentifierType().getColumnSpan( factory );
+				final Type lockableIdentifierType = lockable.getIdentifierType();
+				lockableIdentifierType.nullSafeSet( st, id, offset, session );
+				offset += lockableIdentifierType.getColumnSpan( factory );
 
 				if ( lockable.isVersioned() ) {
-					lockable.getVersionType().nullSafeSet( st, version, offset, session );
+					lockableVersionType.nullSafeSet( st, version, offset, session );
 				}
 
-				final int affected = session.getJdbcCoordinator().getResultSetReturn().executeUpdate( st );
+				final int affected = jdbcCoordinator.getResultSetReturn().executeUpdate( st );
 				if ( affected < 0 ) {
-					if (factory.getStatistics().isStatisticsEnabled()) {
-						factory.getStatistics().optimisticFailure( lockable.getEntityName() );
+					final StatisticsImplementor statistics = factory.getStatistics();
+					if ( statistics.isStatisticsEnabled() ) {
+						statistics.optimisticFailure( lockableEntityName );
 					}
-					throw new StaleObjectStateException( lockable.getEntityName(), id );
+					throw new StaleObjectStateException( lockableEntityName, id );
 				}
 
 			}
 			finally {
-				session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
-				session.getJdbcCoordinator().afterStatementExecution();
+				jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( st );
+				jdbcCoordinator.afterStatementExecution();
 			}
 
 		}

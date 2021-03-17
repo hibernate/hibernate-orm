@@ -32,6 +32,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -283,8 +285,12 @@ public class BatchFetchNotFoundIgnoreDefaultStyleTest extends BaseCoreFunctional
 		final EntityPersister persister =
 				sessionImplementor.getFactory().getMetamodel().entityPersister( Task.class );
 		final BatchFetchQueue batchFetchQueue =
-				sessionImplementor.getPersistenceContext().getBatchFetchQueue();
-		assertEquals( expected, batchFetchQueue.containsEntityKey( new EntityKey( id, persister ) ) );
+				sessionImplementor.getPersistenceContextInternal().getBatchFetchQueue();
+		assertThat(
+				"Checking BatchFetchQueue for entry for Task#" + id,
+				batchFetchQueue.containsEntityKey( new EntityKey( id, persister ) ),
+				is( expected )
+		);
 	}
 
 	@Entity(name = "Employee")

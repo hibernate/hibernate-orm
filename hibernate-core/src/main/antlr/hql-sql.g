@@ -68,6 +68,7 @@ tokens
 	private boolean inFrom = false;
 	private boolean inCount = false;
 	private boolean inCountDistinct = false;
+	private boolean inSize = false;
 
 	private int statementType;
 	private String statementTypeName;
@@ -107,6 +108,10 @@ tokens
     public final boolean isInCountDistinct() {
         return inCountDistinct;
     }
+
+    public final boolean isInSize() {
+            return inSize;
+        }
 
 	public final int getStatementType() {
 		return statementType;
@@ -237,7 +242,19 @@ tokens
 		return false;
 	}
 
+	protected boolean isGroupExpressionResultVariableRef(AST ident) throws SemanticException {
+		return false;
+	}
+
 	protected void handleResultVariableRef(AST resultVariableRef) throws SemanticException {
+	}
+
+	protected AST createCollectionSizeFunction(AST collectionPath, boolean inSelect) throws SemanticException {
+		throw new UnsupportedOperationException( "Walker should implement" );
+	}
+
+	protected AST createCollectionPath(AST qualifier, AST reference) throws SemanticException {
+		throw new UnsupportedOperationException( "Walker should implement" );
 	}
 
 	protected AST lookupProperty(AST dot,boolean root,boolean inSelect) throws SemanticException {
@@ -394,7 +411,7 @@ resultVariableRef!
 	;
 
 groupClause
-	: #(GROUP { handleClauseStart( GROUP ); } (expr [ null ])+ ( #(HAVING logicalExpr) )? ) {
+	: #(GROUP { handleClauseStart( GROUP ); } ({ isGroupExpressionResultVariableRef( _t ) }? resultVariableRef | expr [ null ])+ ( #(HAVING logicalExpr) )? ) {
 		handleClauseEnd();
 	}
 	;
@@ -458,7 +475,7 @@ aggregateExpr
 // Establishes the list of aliases being used by this query.
 fromClause {
 		// NOTE: This references the INPUT AST! (see http://www.antlr.org/doc/trees.html#Action%20Translation)
-		// the ouput AST (#fromClause) has not been built yet.
+		// the output AST (#fromClause) has not been built yet.
 		prepareFromClauseInputTree(#fromClause_in);
 	}
 	: #(f:FROM { pushFromClause(#fromClause,f); handleClauseStart( FROM ); } fromElementList ) {
@@ -679,7 +696,11 @@ collectionFunction
 	;
 
 functionCall
-	: #(METHOD_CALL  {inFunctionCall=true;} pathAsIdent ( #(EXPR_LIST (exprOrSubquery [ null ])* ) )? ) {
+	: #( COLL_SIZE {inSize=true;} path:collectionPath ) {
+		#functionCall = createCollectionSizeFunction( #path, inSelect );
+		inSize=false;
+	}
+	| #(METHOD_CALL  {inFunctionCall=true;} pathAsIdent ( #(EXPR_LIST (exprOrSubquery [ null ])* ) )? ) {
         processFunction( #functionCall, inSelect );
         inFunctionCall=false;
     }
@@ -688,6 +709,18 @@ functionCall
         inFunctionCall=false;
     }
 	| #(AGGREGATE aggregateExpr )
+	;
+
+collectionPath!
+// for now we do not support nested path refs.
+	: #( COLL_PATH ref:identifier (qualifier:collectionPathQualifier)? ) {
+		resolve( #qualifier );
+		#collectionPath = createCollectionPath( #qualifier, #ref );
+	}
+	;
+
+collectionPathQualifier
+	: addrExpr [true]
 	;
 
 constant

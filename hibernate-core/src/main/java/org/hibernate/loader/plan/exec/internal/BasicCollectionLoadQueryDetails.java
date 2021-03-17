@@ -23,7 +23,7 @@ public class BasicCollectionLoadQueryDetails extends AbstractCollectionLoadQuery
 	 * Constructs a BasicCollectionLoadQueryDetails object from the given inputs.
 	 *
 	 * @param loadPlan The load plan
-	 * @param buildingParameters And influencers that would affect the generated SQL (mostly we are concerned with those
+	 * @param buildingParameters Any influencers that would affect the generated SQL (mostly we are concerned with those
 	 * that add additional joins here)
 	 * @param factory The SessionFactory
 	 */

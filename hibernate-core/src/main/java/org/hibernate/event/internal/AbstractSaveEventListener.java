@@ -9,7 +9,6 @@ package org.hibernate.event.internal;
 import java.io.Serializable;
 import java.util.Map;
 
-import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
 import org.hibernate.NonUniqueObjectException;
 import org.hibernate.action.internal.AbstractEntityInsertAction;
@@ -18,12 +17,12 @@ import org.hibernate.action.internal.EntityInsertAction;
 import org.hibernate.classic.Lifecycle;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
-import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityEntryExtraState;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
@@ -39,9 +38,6 @@ import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 
-import static org.hibernate.FlushMode.COMMIT;
-import static org.hibernate.FlushMode.MANUAL;
-
 /**
  * A convenience base class for listeners responding to save events.
  *
@@ -51,10 +47,6 @@ public abstract class AbstractSaveEventListener
 		extends AbstractReassociateEventListener
 		implements CallbackRegistryConsumer {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractSaveEventListener.class );
-
-	public enum EntityState {
-		PERSISTENT, TRANSIENT, DETACHED, DELETED
-	}
 
 	private CallbackRegistry callbackRegistry;
 
@@ -178,10 +170,11 @@ public abstract class AbstractSaveEventListener
 		final EntityKey key;
 		if ( !useIdentityColumn ) {
 			key = source.generateEntityKey( id, persister );
-			Object old = source.getPersistenceContext().getEntity( key );
+			final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
+			Object old = persistenceContext.getEntity( key );
 			if ( old != null ) {
-				if ( source.getPersistenceContext().getEntry( old ).getStatus() == Status.DELETED ) {
-					source.forceFlush( source.getPersistenceContext().getEntry( old ) );
+				if ( persistenceContext.getEntry( old ).getStatus() == Status.DELETED ) {
+					source.forceFlush( persistenceContext.getEntry( old ) );
 				}
 				else {
 					throw new NonUniqueObjectException( id, persister.getEntityName() );
@@ -248,12 +241,14 @@ public abstract class AbstractSaveEventListener
 
 		Serializable id = key == null ? null : key.getIdentifier();
 
-		boolean shouldDelayIdentityInserts = shouldDelayIdentityInserts( requiresImmediateIdAccess, source );
+		boolean inTrx = source.isTransactionInProgress();
+		boolean shouldDelayIdentityInserts = !inTrx && !requiresImmediateIdAccess;
+		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
 
 		// Put a placeholder in entries, so we don't recurse back and try to save() the
 		// same object again. QUESTION: should this be done before onSave() is called?
 		// likewise, should it be done before onUpdate()?
-		EntityEntry original = source.getPersistenceContext().addEntry(
+		EntityEntry original = persistenceContext.addEntry(
 				entity,
 				Status.SAVING,
 				null,
@@ -274,7 +269,7 @@ public abstract class AbstractSaveEventListener
 		boolean substitute = substituteValuesIfNecessary( entity, id, values, persister, source );
 
 		if ( persister.hasCollections() ) {
-			substitute = substitute || visitCollectionsBeforeSave( entity, id, values, types, source );
+			substitute = visitCollectionsBeforeSave( entity, id, values, types, source ) || substitute;
 		}
 
 		if ( substitute ) {
@@ -308,7 +303,7 @@ public abstract class AbstractSaveEventListener
 			insert.handleNaturalIdPostSaveNotifications( id );
 		}
 
-		EntityEntry newEntry = source.getPersistenceContext().getEntry( entity );
+		EntityEntry newEntry = persistenceContext.getEntry( entity );
 
 		if ( newEntry != original ) {
 			EntityEntryExtraState extraState = newEntry.getExtraState( EntityEntryExtraState.class );
@@ -318,30 +313,6 @@ public abstract class AbstractSaveEventListener
 		}
 
 		return id;
-	}
-
-	private static boolean shouldDelayIdentityInserts(boolean requiresImmediateIdAccess, EventSource source) {
-		return shouldDelayIdentityInserts( requiresImmediateIdAccess, isPartOfTransaction( source ), source.getHibernateFlushMode() );
-	}
-
-	private static boolean shouldDelayIdentityInserts(
-			boolean requiresImmediateIdAccess,
-			boolean partOfTransaction,
-			FlushMode flushMode) {
-		if ( requiresImmediateIdAccess ) {
-			// todo : make this configurable?  as a way to support this behavior with Session#save etc
-			return false;
-		}
-
-		// otherwise we should delay the IDENTITY insertions if either:
-		//		1) we are not part of a transaction
-		//		2) we are in FlushMode MANUAL or COMMIT (not AUTO nor ALWAYS)
-		return !partOfTransaction || flushMode == MANUAL || flushMode == COMMIT;
-
-	}
-
-	private static boolean isPartOfTransaction(EventSource source) {
-		return source.isTransactionInProgress() && source.getTransactionCoordinator().isJoined();
 	}
 
 	private AbstractEntityInsertAction addInsertAction(
@@ -390,7 +361,7 @@ public abstract class AbstractSaveEventListener
 			Object[] values,
 			Type[] types,
 			EventSource source) {
-		WrapVisitor visitor = new WrapVisitor( source );
+		WrapVisitor visitor = new WrapVisitor( entity, id, source );
 		// substitutes into values by side-effect
 		visitor.processEntityPropertyValues( values, types );
 		return visitor.isSubstitutionRequired();
@@ -438,7 +409,7 @@ public abstract class AbstractSaveEventListener
 	/**
 	 * Handles the calls needed to perform pre-save cascades for the given entity.
 	 *
-	 * @param source The session from whcih the save event originated.
+	 * @param source The session from which the save event originated.
 	 * @param persister The entity's persister instance.
 	 * @param entity The entity to be saved.
 	 * @param anything Generally cascade-specific data
@@ -450,7 +421,8 @@ public abstract class AbstractSaveEventListener
 			Object anything) {
 
 		// cascade-save to many-to-one BEFORE the parent is saved
-		source.getPersistenceContext().incrementCascadeLevel();
+		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
+		persistenceContext.incrementCascadeLevel();
 		try {
 			Cascade.cascade(
 					getCascadeAction(),
@@ -462,7 +434,7 @@ public abstract class AbstractSaveEventListener
 			);
 		}
 		finally {
-			source.getPersistenceContext().decrementCascadeLevel();
+			persistenceContext.decrementCascadeLevel();
 		}
 	}
 
@@ -471,7 +443,7 @@ public abstract class AbstractSaveEventListener
 	 *
 	 * @param source The session from which the event originated.
 	 * @param persister The entity's persister instance.
-	 * @param entity The entity beng saved.
+	 * @param entity The entity being saved.
 	 * @param anything Generally cascade-specific data
 	 */
 	protected void cascadeAfterSave(
@@ -480,8 +452,9 @@ public abstract class AbstractSaveEventListener
 			Object entity,
 			Object anything) {
 
+		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
 		// cascade-save to collections AFTER the collection owner was saved
-		source.getPersistenceContext().incrementCascadeLevel();
+		persistenceContext.incrementCascadeLevel();
 		try {
 			Cascade.cascade(
 					getCascadeAction(),
@@ -493,67 +466,10 @@ public abstract class AbstractSaveEventListener
 			);
 		}
 		finally {
-			source.getPersistenceContext().decrementCascadeLevel();
+			persistenceContext.decrementCascadeLevel();
 		}
 	}
 
 	protected abstract CascadingAction getCascadeAction();
 
-	/**
-	 * Determine whether the entity is persistent, detached, or transient
-	 *
-	 * @param entity The entity to check
-	 * @param entityName The name of the entity
-	 * @param entry The entity's entry in the persistence context
-	 * @param source The originating session.
-	 *
-	 * @return The state.
-	 */
-	protected EntityState getEntityState(
-			Object entity,
-			String entityName,
-			EntityEntry entry, //pass this as an argument only to avoid double looking
-			SessionImplementor source) {
-
-		final boolean traceEnabled = LOG.isTraceEnabled();
-		if ( entry != null ) { // the object is persistent
-
-			//the entity is associated with the session, so check its status
-			if ( entry.getStatus() != Status.DELETED ) {
-				// do nothing for persistent instances
-				if ( traceEnabled ) {
-					LOG.tracev( "Persistent instance of: {0}", getLoggableName( entityName, entity ) );
-				}
-				return EntityState.PERSISTENT;
-			}
-			// ie. e.status==DELETED
-			if ( traceEnabled ) {
-				LOG.tracev( "Deleted instance of: {0}", getLoggableName( entityName, entity ) );
-			}
-			return EntityState.DELETED;
-		}
-		// the object is transient or detached
-
-		// the entity is not associated with the session, so
-		// try interceptor and unsaved-value
-
-		if ( ForeignKeys.isTransient( entityName, entity, getAssumedUnsaved(), source ) ) {
-			if ( traceEnabled ) {
-				LOG.tracev( "Transient instance of: {0}", getLoggableName( entityName, entity ) );
-			}
-			return EntityState.TRANSIENT;
-		}
-		if ( traceEnabled ) {
-			LOG.tracev( "Detached instance of: {0}", getLoggableName( entityName, entity ) );
-		}
-		return EntityState.DETACHED;
-	}
-
-	protected String getLoggableName(String entityName, Object entity) {
-		return entityName == null ? entity.getClass().getName() : entityName;
-	}
-
-	protected Boolean getAssumedUnsaved() {
-		return null;
-	}
 }

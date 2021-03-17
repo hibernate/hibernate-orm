@@ -159,20 +159,20 @@ public class LoadContexts {
 	}
 
 	/**
-	 * Attempt to locate the loading collection given the owner's key.  The lookup here
+	 * Attempt to locate the loading collection given the CollectionKey obtained from the owner's key.  The lookup here
 	 * occurs against all result-set contexts...
 	 *
 	 * @param persister The collection persister
-	 * @param ownerKey The owner key
+	 * @param key The collection key
 	 * @return The loading collection, or null if not found.
 	 */
-	public PersistentCollection locateLoadingCollection(CollectionPersister persister, Serializable ownerKey) {
-		final LoadingCollectionEntry lce = locateLoadingCollectionEntry( new CollectionKey( persister, ownerKey ) );
+	public PersistentCollection locateLoadingCollection(CollectionPersister persister, CollectionKey key) {
+		final LoadingCollectionEntry lce = locateLoadingCollectionEntry( key ) ;
 		if ( lce != null ) {
 			if ( LOG.isTraceEnabled() ) {
 				LOG.tracef(
 						"Returning loading collection: %s",
-						MessageHelper.collectionInfoString( persister, ownerKey, getSession().getFactory() )
+						MessageHelper.collectionInfoString( persister, key.getKey(), getSession().getFactory() )
 				);
 			}
 			return lce.getCollection();

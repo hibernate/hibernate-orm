@@ -9,7 +9,7 @@ package org.hibernate.sql.ordering.antlr;
 import antlr.CommonAST;
 
 /**
- * Basic implementation of a {@link Node} briding to the Antlr {@link CommonAST} hierarchy.
+ * Basic implementation of a {@link Node} bridging to the Antlr {@link CommonAST} hierarchy.
  *
  * @author Steve Ebersole
  */

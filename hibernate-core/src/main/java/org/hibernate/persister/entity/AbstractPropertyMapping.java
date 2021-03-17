@@ -41,7 +41,11 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractPropertyMapping.class );
 
 	private final Map<String, Type> typesByPropertyPath = new HashMap<>();
-	private final Set<String> duplicateIncompatiblePaths = new HashSet<>();
+
+	//This field is only used during initialization, no need for threadsafety:
+	//FIXME get rid of the field, or at least clear it after boot? Not urgent as we typically won't initialize it at all.
+	private Set<String> duplicateIncompatiblePaths = null;
+
 	private final Map<String, String[]> columnsByPropertyPath = new HashMap<>();
 	private final Map<String, String[]> columnReadersByPropertyPath = new HashMap<>();
 	private final Map<String, String[]> columnReaderTemplatesByPropertyPath = new HashMap<>();
@@ -168,13 +172,13 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 			String[] formulaTemplates,
 			Mapping factory) {
 		Type existingType = typesByPropertyPath.get( path );
-		if ( existingType != null || duplicateIncompatiblePaths.contains( path ) ) {
+		if ( existingType != null || ( duplicateIncompatiblePaths != null && duplicateIncompatiblePaths.contains( path ) ) ) {
 			// If types match or the new type is not an association type, there is nothing for us to do
 			if ( type == existingType || existingType == null || !( type instanceof AssociationType ) ) {
 				logDuplicateRegistration( path, existingType, type );
 			}
 			else if ( !( existingType instanceof AssociationType ) ) {
-				// Workaround for org.hibernate.cfg.annotations.PropertyBinder.bind() adding a component for *ToOne ids
+				// Workaround for org.hibernate.cfg.annotations.PropertyBinder#bind() adding a component for *ToOne ids
 				logDuplicateRegistration( path, existingType, type );
 			}
 			else {
@@ -212,10 +216,13 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 						logIncompatibleRegistration( path, existingType, type );
 					}
 					if ( commonType == null ) {
+						if ( duplicateIncompatiblePaths == null ) {
+							duplicateIncompatiblePaths = new HashSet<>();
+						}
 						duplicateIncompatiblePaths.add( path );
 						typesByPropertyPath.remove( path );
 						// Set everything to empty to signal action has to be taken!
-						// org.hibernate.hql.internal.ast.tree.DotNode.dereferenceEntityJoin() is reacting to this
+						// org.hibernate.hql.internal.ast.tree.DotNode#dereferenceEntityJoin() is reacting to this
 						String[] empty = new String[0];
 						columnsByPropertyPath.put( path, empty );
 						columnReadersByPropertyPath.put( path, empty );
@@ -319,7 +326,7 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 					//      referenced property in the mapping file (ok?)
 					columns = columnsByPropertyPath.get( foreignKeyProperty );
 					if ( columns == null ) {
-						return; //get em on the second pass!
+						return; //get 'em on the second pass!
 					}
 					columnReaders = columnReadersByPropertyPath.get( foreignKeyProperty );
 					columnReaderTemplates = columnReaderTemplatesByPropertyPath.get( foreignKeyProperty );
@@ -361,6 +368,7 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 					columns,
 					columnReaders,
 					columnReaderTemplates,
+					formulaTemplates != null && formulaTemplates.length > 0 ? formulaTemplates : null,
 					factory
 			);
 		}
@@ -373,6 +381,17 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 			final String[] columnReaders,
 			final String[] columnReaderTemplates,
 			final Mapping factory) throws MappingException {
+		initIdentifierPropertyPaths(path, etype, columns, columnReaders, columnReaderTemplates, null, factory);
+	}
+
+	protected void initIdentifierPropertyPaths(
+			final String path,
+			final EntityType etype,
+			final String[] columns,
+			final String[] columnReaders,
+			final String[] columnReaderTemplates,
+			final String[] formulaTemplates,
+			final Mapping factory) throws MappingException {
 
 		Type idtype = etype.getIdentifierOrUniqueKeyType( factory );
 		String idPropName = etype.getIdentifierOrUniqueKeyPropertyName( factory );
@@ -381,15 +400,15 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 		if ( etype.isReferenceToPrimaryKey() ) {
 			if ( !hasNonIdentifierPropertyNamedId ) {
 				String idpath1 = extendPath( path, EntityPersister.ENTITY_ID );
-				addPropertyPath( idpath1, idtype, columns, columnReaders, columnReaderTemplates, null, factory );
-				initPropertyPaths( idpath1, idtype, columns, columnReaders, columnReaderTemplates, null, factory );
+				addPropertyPath( idpath1, idtype, columns, columnReaders, columnReaderTemplates, formulaTemplates, factory );
+				initPropertyPaths( idpath1, idtype, columns, columnReaders, columnReaderTemplates, formulaTemplates, factory );
 			}
 		}
 
-		if ( (! etype.isNullable() || etype.isReferenceToPrimaryKey() ) && idPropName != null ) {
+		if ( (! etype.isNullable() ) && idPropName != null ) {
 			String idpath2 = extendPath( path, idPropName );
-			addPropertyPath( idpath2, idtype, columns, columnReaders, columnReaderTemplates, null, factory );
-			initPropertyPaths( idpath2, idtype, columns, columnReaders, columnReaderTemplates, null, factory );
+			addPropertyPath( idpath2, idtype, columns, columnReaders, columnReaderTemplates, formulaTemplates, factory );
+			initPropertyPaths( idpath2, idtype, columns, columnReaders, columnReaderTemplates, formulaTemplates, factory );
 		}
 	}
 

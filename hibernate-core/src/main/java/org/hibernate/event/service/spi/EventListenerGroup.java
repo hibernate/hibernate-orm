@@ -7,7 +7,11 @@
 package org.hibernate.event.service.spi;
 
 import java.io.Serializable;
+import java.util.Map;
+import java.util.function.BiConsumer;
+import java.util.function.Supplier;
 
+import org.hibernate.Incubating;
 import org.hibernate.event.spi.EventType;
 
 /**
@@ -33,6 +37,12 @@ public interface EventListenerGroup<T> extends Serializable {
 
 	public int count();
 
+	/**
+	 * @deprecated this is not the most efficient way for iterating the event listeners.
+	 * See {@link #fireEventOnEachListener(Object, BiConsumer)} and its overloaded variants for better alternatives.
+	 * @return The Iterable.
+	 */
+	@Deprecated
 	public Iterable<T> listeners();
 
 	/**
@@ -52,6 +62,55 @@ public interface EventListenerGroup<T> extends Serializable {
 	public void prependListener(T listener);
 	public void prependListeners(T... listeners);
 
+	/**
+	 * Clears both the list of event listeners and all DuplicationStrategy,
+	 * including the default duplication strategy.
+	 * @deprecated likely want to use {@link #clearListeners()} instead, which doesn't
+	 * also reset the registered DuplicationStrategy(ies).
+	 */
+	@Deprecated
 	public void clear();
+
+	/**
+	 * Removes all registered listeners
+	 */
+	public void clearListeners();
+
+	/**
+	 * Fires an event on each registered event listener of this group.
+	 *
+	 * Implementation note (performance):
+	 * the first argument is a supplier so that events can avoid being created when no listener is registered.
+	 * the second argument is specifically designed to avoid needing a capturing lambda.
+	 *
+	 * @param eventSupplier
+	 * @param actionOnEvent
+	 * @param <U> the kind of event
+	 */
+	@Incubating
+	<U> void fireLazyEventOnEachListener(final Supplier<U> eventSupplier, final BiConsumer<T,U> actionOnEvent);
+
+	/**
+	 * Similar as {@link #fireLazyEventOnEachListener(Supplier, BiConsumer)} except it doesn't use a {{@link Supplier}}:
+	 * useful when there is no need to lazily initialize the event.
+	 * @param event
+	 * @param actionOnEvent
+	 * @param <U> the kind of event
+	 */
+	@Incubating
+	<U> void fireEventOnEachListener(final U event, final BiConsumer<T,U> actionOnEvent);
+
+	/**
+	 * Similar to {@link #fireEventOnEachListener(Object, BiConsumer)}, but allows passing a third parameter
+	 * to the consumer; our code based occasionally needs a third parameter: having this additional variant
+	 * allows using the optimal iteration more extensively and reduce allocations.
+	 * @param event
+	 * @param param
+	 * @param actionOnEvent
+	 * @param <U>
+	 * @param <X>
+	 */
+	@Incubating
+	<U,X> void fireEventOnEachListener(final U event, X param, final EventActionWithParameter<T,U,X> actionOnEvent);
 
 }

@@ -161,15 +161,16 @@ public class EmbeddableOverrideTest extends BaseEntityManagerFunctionalTestCase 
 		@ManyToOne(fetch = FetchType.LAZY)
 		private Country country;
 
+		//Getters and setters, equals and hashCode methods omitted for brevity
+
+	//end::embeddable-type-association-mapping-example[]
+
 		public Publisher(String name, Country country) {
 			this.name = name;
 			this.country = country;
 		}
 
 		private Publisher() {}
-
-		//Getters and setters are omitted for brevity
-		//end::embeddable-type-association-mapping-example[]
 
 		public String getName() {
 			return name;

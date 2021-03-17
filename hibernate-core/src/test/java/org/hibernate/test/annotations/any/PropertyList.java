@@ -84,7 +84,7 @@ public class PropertyList<T extends Property> {
 		this.someProperty = someProperty;
 	}
 
-	public void addGeneratedProperty(T property) {
+	public void addGeneralProperty(T property) {
 		this.generalProperties.add( property );
 	}
 }

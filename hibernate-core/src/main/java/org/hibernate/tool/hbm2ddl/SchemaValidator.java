@@ -52,8 +52,7 @@ public class SchemaValidator {
 	public void validate(Metadata metadata, ServiceRegistry serviceRegistry) {
 		LOG.runningSchemaValidator();
 
-		Map config = new HashMap();
-		config.putAll( serviceRegistry.getService( ConfigurationService.class ).getSettings() );
+		Map config = new HashMap( serviceRegistry.getService( ConfigurationService.class ).getSettings() );
 
 		final SchemaManagementTool tool = serviceRegistry.getService( SchemaManagementTool.class );
 

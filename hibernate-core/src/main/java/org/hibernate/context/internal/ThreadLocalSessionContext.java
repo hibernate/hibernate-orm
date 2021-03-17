@@ -108,7 +108,7 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 	}
 
 	private boolean needsWrapping(Session session) {
-		// try to make sure we don't wrap and already wrapped session
+		// try to make sure we don't wrap an already wrapped session
 		if ( Proxy.isProxyClass( session.getClass() ) ) {
 			final InvocationHandler invocationHandler = Proxy.getInvocationHandler( session );
 			if ( invocationHandler != null && TransactionProtectionWrapper.class.isInstance( invocationHandler ) ) {
@@ -160,7 +160,7 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 	/**
 	 * Mainly for subclass usage.  This impl always returns true.
 	 *
-	 * @return Whether or not the the session should be flushed prior transaction completion.
+	 * @return Whether or not the the session should be flushed prior to transaction completion.
 	 */
 	protected boolean isAutoFlushEnabled() {
 		return true;
@@ -182,7 +182,7 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 				SESSION_PROXY_INTERFACES,
 				wrapper
 		);
-		// yick!  need this for proper serialization/deserialization handling...
+		// yuck!  need this for proper serialization/deserialization handling...
 		wrapper.setWrapped( wrapped );
 		return wrapped;
 	}
@@ -315,7 +315,7 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 				else if ( "getStatistics".equals( methodName )
 						|| "isOpen".equals( methodName )
 						|| "getListeners".equals( methodName ) ) {
-					// allow these to go through the the real session no matter what
+					// allow these to go through the real session no matter what
 					LOG.tracef( "Allowing invocation [%s] to proceed to real session", methodName );
 				}
 				else if ( !realSession.isOpen() ) {
@@ -332,6 +332,7 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 							|| "getTransaction".equals( methodName )
 							|| "isTransactionInProgress".equals( methodName )
 							|| "setFlushMode".equals( methodName )
+							|| "setHibernateFlushMode".equals( methodName )
 							|| "getFactory".equals( methodName )
 							|| "getSessionFactory".equals( methodName )
 							|| "getTenantIdentifier".equals( methodName ) ) {

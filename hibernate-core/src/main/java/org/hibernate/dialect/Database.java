@@ -47,7 +47,7 @@ public enum Database {
 	DB2 {
 		@Override
 		public Class<? extends Dialect> latestDialect() {
-			return DB2400Dialect.class;
+			return DB2400V7R3Dialect.class;
 		}
 
 		@Override
@@ -55,7 +55,15 @@ public enum Database {
 			final String databaseName = info.getDatabaseName();
 
 			if ( "DB2 UDB for AS/400".equals( databaseName ) ) {
-				return new DB2400Dialect();
+				final int majorVersion = info.getDatabaseMajorVersion();
+				final int minorVersion = info.getDatabaseMinorVersion();
+
+				if ( majorVersion > 7 || ( majorVersion == 7 && minorVersion >= 3 ) ) {
+					return latestDialectInstance( this );
+				}
+				else {
+					return new DB2400Dialect();
+				}
 			}
 
 			if ( databaseName.startsWith( "DB2/" ) ) {
@@ -167,9 +175,13 @@ public enum Database {
 		@Override
 		public Dialect resolveDialect(DialectResolutionInfo info) {
 			final String databaseName = info.getDatabaseName();
+			int databaseMajorVersion = info.getDatabaseMajorVersion();
 
 			if ( "HDB".equals( databaseName ) ) {
 				// SAP recommends defaulting to column store.
+				if ( databaseMajorVersion >= 4 ) {
+					return new HANACloudColumnStoreDialect();
+				}
 				return latestDialectInstance( this );
 			}
 
@@ -257,7 +269,7 @@ public enum Database {
 	MARIADB {
 		@Override
 		public Class<? extends Dialect> latestDialect() {
-			return MariaDB102Dialect.class;
+			return MariaDB103Dialect.class;
 		}
 
 		@Override
@@ -324,7 +336,7 @@ public enum Database {
 	MYSQL {
 		@Override
 		public Class<? extends Dialect> latestDialect() {
-			return MySQL57Dialect.class;
+			return MySQL8Dialect.class;
 		}
 
 		@Override
@@ -348,6 +360,14 @@ public enum Database {
 					else {
 						return new MySQL57Dialect();
 					}
+				}
+				else if ( majorVersion < 8 ) {
+					// There is no MySQL 6 or 7.
+					// Adding this just in case.
+					return new MySQL57Dialect();
+				}
+				else if ( majorVersion == 8 ) {
+					return new MySQL8Dialect();
 				}
 
 				return latestDialectInstance( this );
@@ -381,7 +401,7 @@ public enum Database {
 					case 8:
 						return new Oracle8iDialect();
 					default:
-						latestDialectInstance( this );
+						return latestDialectInstance( this );
 
 				}
 			}
@@ -403,7 +423,7 @@ public enum Database {
 	POSTGRESQL {
 		@Override
 		public Class<? extends Dialect> latestDialect() {
-			return PostgreSQL95Dialect.class;
+			return PostgreSQL10Dialect.class;
 		}
 
 		@Override
@@ -432,7 +452,7 @@ public enum Database {
 					else if ( minorVersion < 5 ) {
 						return new PostgreSQL94Dialect();
 					}
-					else if ( minorVersion < 6 ) {
+					else {
 						return new PostgreSQL95Dialect();
 					}
 				}
@@ -511,7 +531,7 @@ public enum Database {
 				return latestDialectInstance( this );
 			}
 
-			if ( databaseName.startsWith( "Adaptive Server Anywhere" ) ) {
+			if ( databaseName.startsWith( "Adaptive Server Anywhere" ) || "SQL Anywhere".equals( databaseName ) ) {
 				return new SybaseAnywhereDialect();
 			}
 

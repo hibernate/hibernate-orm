@@ -17,7 +17,7 @@ public interface LoggableUserType {
 	/**
 	 * Generate a loggable string representation of the collection (value).
 	 *
-	 * @param value The collection to be logged; guarenteed to be non-null and initialized.
+	 * @param value The collection to be logged; guaranteed to be non-null and initialized.
 	 * @param factory The factory.
 	 * @return The loggable string representation.
 	 */

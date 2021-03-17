@@ -71,7 +71,7 @@ public interface JdbcEnvironment extends Service {
 	/**
 	 * Obtain the level of support for qualified names.
 	 *
-	 * @return
+	 * @return The NameQualifierSupport.
 	 */
 	NameQualifierSupport getNameQualifierSupport();
 

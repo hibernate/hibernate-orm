@@ -33,12 +33,12 @@ import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
-import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.local.AfterUseAction;
 import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorDB2DatabaseImpl;
+import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
+import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.sql.DecimalTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SmallIntTypeDescriptor;
@@ -50,7 +50,6 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
  * @author Gavin King
  */
 public class DB2Dialect extends Dialect {
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( DB2Dialect.class );
 
 	private static final AbstractLimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
 		@Override
@@ -236,6 +235,11 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
+	public String[] getDropSchemaCommand(String schemaName) {
+		return new String[] {"drop schema " + schemaName + " restrict"};
+	}
+
+	@Override
 	public String getSequenceNextValString(String sequenceName) {
 		return "values nextval for " + sequenceName;
 	}
@@ -267,7 +271,17 @@ public class DB2Dialect extends Dialect {
 
 	@Override
 	public String getQuerySequencesString() {
-		return "select seqname from sysibm.syssequences";
+		return "select * from syscat.sequences";
+	}
+
+	@Override
+	public SequenceInformationExtractor getSequenceInformationExtractor() {
+		if ( getQuerySequencesString() == null ) {
+			return SequenceInformationExtractorNoOpImpl.INSTANCE;
+		}
+		else {
+			return SequenceInformationExtractorDB2DatabaseImpl.INSTANCE;
+		}
 	}
 
 	@Override
@@ -429,7 +443,7 @@ public class DB2Dialect extends Dialect {
 	/**
 	 * {@inheritDoc}
 	 * <p/>
-	 * NOTE : DB2 is know to support parameters in the <tt>SELECT</tt> clause, but only in casted form
+	 * NOTE : DB2 is known to support parameters in the <tt>SELECT</tt> clause, but only in casted form
 	 * (see {@link #requiresCastingOfParametersInSelectClause()}).
 	 */
 	@Override
@@ -536,7 +550,7 @@ public class DB2Dialect extends Dialect {
 	 * if expression has not been explicitly specified.
 	 * @param nullPrecedence Nulls precedence. Default value: {@link NullPrecedence#NONE}.
 	 *
-	 * @return
+	 * @return SQL string.
 	 */
 	@Override
 	public String renderOrderByElement(String expression, String collation, String order, NullPrecedence nullPrecedence) {
@@ -557,7 +571,7 @@ public class DB2Dialect extends Dialect {
 			// we have one of:
 			//		* ASC + NULLS LAST
 			//		* DESC + NULLS FIRST
-			// so just drop the null precedence.  *NOTE: we could pass along the null precedence here,
+			// so just drop the null precedence.  *NOTE*: we could pass along the null precedence here,
 			// but only DB2 9.7 or greater understand it; dropping it is more portable across DB2 versions
 			return super.renderOrderByElement( expression, collation, order, NullPrecedence.NONE );
 		}
@@ -569,7 +583,7 @@ public class DB2Dialect extends Dialect {
 				nullPrecedence == NullPrecedence.FIRST ? "0" : "1",
 				nullPrecedence == NullPrecedence.FIRST ? "1" : "0",
 				expression,
-				order
+				order == null ? "asc" : order
 		);
 	}
 

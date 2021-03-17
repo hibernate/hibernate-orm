@@ -17,6 +17,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.dialect.*;
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.junit.Test;
 
@@ -31,12 +34,6 @@ import org.hibernate.ReplicationMode;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.dialect.AbstractHANADialect;
-import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.HSQLDialect;
-import org.hibernate.dialect.IngresDialect;
-import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.TeradataDialect;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.internal.SessionImpl;
 import org.hibernate.jdbc.AbstractWork;
@@ -51,7 +48,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-
+@RequiresDialectFeature(DialectChecks.SupportsNoColumnInsert.class)
 public class ParentChildTest extends LegacyTestCase {
 	@Override
 	public String[] getMappings() {
@@ -482,12 +479,16 @@ public class ParentChildTest extends LegacyTestCase {
 		assertTrue( s.createCriteria(Part.class).list().size()==1 ); //there is a where condition on Part mapping
 		assertTrue( s.createCriteria(Part.class).add( Restrictions.eq( "id", p1.getId() ) ).list().size()==1 );
 		assertTrue( s.createQuery("from Part").list().size()==1 );
-		assertTrue( s.createQuery("from Baz baz join baz.parts").list().size()==2 );
+		// only Part entities that satisfy the where condition on Part mapping should be included in the collection
+		assertTrue( s.createQuery("from Baz baz join baz.parts").list().size()==1 );
 		baz = (Baz) s.createCriteria(Baz.class).uniqueResult();
-		assertTrue( s.createFilter( baz.getParts(), "" ).list().size()==2 );
+		// only Part entities that satisfy the where condition on Part mapping should be included in the collection
+		assertTrue( s.createFilter( baz.getParts(), "" ).list().size()==1 );
 		//assertTrue( baz.getParts().size()==1 );
-		s.delete( s.get( Part.class, p1.getId() ));
-		s.delete( s.get( Part.class, p2.getId() ));
+		s.delete( s.get( Part.class, p1.getId() ) );
+		// p2.description does not satisfy the condition on Part mapping, so it's not possible to retrieve it
+		// using Session#get; instead just delete using a native query
+		s.createNativeQuery( "delete from Part where id = :id" ).setParameter( "id", p2.getId() ).executeUpdate();
 		s.delete(baz);
 		t.commit();
 		s.close();
@@ -514,12 +515,20 @@ public class ParentChildTest extends LegacyTestCase {
 		assertTrue( s.createCriteria(Part.class).list().size()==1 ); //there is a where condition on Part mapping
 		assertTrue( s.createCriteria(Part.class).add( Restrictions.eq( "id", p1.getId() ) ).list().size()==1 );
 		assertTrue( s.createQuery("from Part").list().size()==1 );
-		assertTrue( s.createQuery("from Baz baz join baz.moreParts").list().size()==2 );
+		// only Part entities that satisfy the where condition on Part mapping should be included in the collection
+		assertTrue( s.createQuery("from Baz baz join baz.moreParts").list().size()==1 );
 		baz = (Baz) s.createCriteria(Baz.class).uniqueResult();
-		assertTrue( s.createFilter( baz.getMoreParts(), "" ).list().size()==2 );
+		// only Part entities that satisfy the where condition on Part mapping should be included in the collection
+		assertTrue( s.createFilter( baz.getMoreParts(), "" ).list().size()==1 );
 		//assertTrue( baz.getParts().size()==1 );
 		s.delete( s.get( Part.class, p1.getId() ));
-		s.delete( s.get( Part.class, p2.getId() ));
+		// p2.description does not satisfy the condition on Part mapping, so it's not possible to retrieve it
+		// using Session#get; instead just delete using a native query
+		s.createNativeQuery( "delete from baz_moreParts where baz = :baz AND part = :part" )
+				.setParameter( "baz", baz.getCode() )
+				.setParameter( "part", p2.getId() )
+				.executeUpdate();
+		s.createNativeQuery( "delete from Part where id = :id" ).setParameter( "id", p2.getId() ).executeUpdate();
 		s.delete(baz);
 		t.commit();
 		s.close();
@@ -1081,6 +1090,7 @@ public class ParentChildTest extends LegacyTestCase {
 	}
 
 	@Test
+	@SkipForDialect( value = CockroachDB192Dialect.class )
 	public void testLocking() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -1195,7 +1205,8 @@ public class ParentChildTest extends LegacyTestCase {
 		s.close();
 	}
 
-	 @Test
+	@Test
+	@SkipForDialect(value = CockroachDB192Dialect.class, comment = "Uses READ_COMMITTED isolation")
 	public void testLoadAfterNonExists() throws HibernateException, SQLException {
 		Session session = openSession();
 		if ( ( getDialect() instanceof MySQLDialect ) || ( getDialect() instanceof IngresDialect ) ) {

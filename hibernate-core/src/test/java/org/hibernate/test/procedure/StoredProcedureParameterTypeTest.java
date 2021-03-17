@@ -29,7 +29,7 @@ import javax.persistence.ParameterMode;
 import javax.sql.rowset.serial.SerialBlob;
 import javax.sql.rowset.serial.SerialClob;
 
-import org.hibernate.dialect.H2Dialect;
+import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.type.BigDecimalType;
 import org.hibernate.type.BigIntegerType;
 import org.hibernate.type.BinaryType;
@@ -61,17 +61,17 @@ import org.hibernate.type.UUIDBinaryType;
 import org.hibernate.type.UrlType;
 import org.hibernate.type.YesNoType;
 
-import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue( jiraKey = "HHH-12661" )
 public class StoredProcedureParameterTypeTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	private static final String TEST_STRING = "test_string";
@@ -79,6 +79,7 @@ public class StoredProcedureParameterTypeTest extends BaseNonConfigCoreFunctiona
 	private static final byte[] TEST_BYTE_ARRAY = TEST_STRING.getBytes();
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-12661" )
 	public void testNumericBooleanTypeInParameter() {
 		doInHibernate( this::sessionFactory, session -> {
 			session.createStoredProcedureQuery( "test" )
@@ -89,6 +90,7 @@ public class StoredProcedureParameterTypeTest extends BaseNonConfigCoreFunctiona
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-12661" )
 	public void testYesNoTypeInParameter() {
 		doInHibernate( this::sessionFactory, session -> {
 			session.createStoredProcedureQuery( "test" )
@@ -99,6 +101,7 @@ public class StoredProcedureParameterTypeTest extends BaseNonConfigCoreFunctiona
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-12661" )
 	public void testStringTypeInParameter() {
 		inTransaction(
 				session -> session.createStoredProcedureQuery("test")
@@ -108,6 +111,7 @@ public class StoredProcedureParameterTypeTest extends BaseNonConfigCoreFunctiona
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-12661" )
 	public void testMaterializedClobTypeInParameter() {
 		inTransaction(
 				session -> session.createStoredProcedureQuery("test")
@@ -117,6 +121,7 @@ public class StoredProcedureParameterTypeTest extends BaseNonConfigCoreFunctiona
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-12661" )
 	public void testTextTypeInParameter() {
 		inTransaction(
 				session -> session.createStoredProcedureQuery("test")
@@ -126,6 +131,7 @@ public class StoredProcedureParameterTypeTest extends BaseNonConfigCoreFunctiona
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-12661" )
 	public void testCharacterTypeInParameter() {
 		inTransaction(
 				session -> session.createStoredProcedureQuery("test")
@@ -135,6 +141,7 @@ public class StoredProcedureParameterTypeTest extends BaseNonConfigCoreFunctiona
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-12661" )
 	public void testTrueFalseTypeInParameter() {
 		inTransaction(
 				session -> session.createStoredProcedureQuery("test")
@@ -144,6 +151,7 @@ public class StoredProcedureParameterTypeTest extends BaseNonConfigCoreFunctiona
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-12661" )
 	public void testBooleanTypeInParameter() {
 		inTransaction(
 				session -> session.createStoredProcedureQuery("test")
@@ -153,6 +161,7 @@ public class StoredProcedureParameterTypeTest extends BaseNonConfigCoreFunctiona
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-12661" )
 	public void testByteTypeInParameter() {
 		inTransaction(
 				session -> session.createStoredProcedureQuery("test")
@@ -162,6 +171,7 @@ public class StoredProcedureParameterTypeTest extends BaseNonConfigCoreFunctiona
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-12661" )
 	public void testShortTypeInParameter() {
 		inTransaction(
 				session -> session.createStoredProcedureQuery("test")
@@ -171,6 +181,7 @@ public class StoredProcedureParameterTypeTest extends BaseNonConfigCoreFunctiona
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-12661" )
 	public void testIntegerTypeInParameter() {
 		inTransaction(
 				session -> session.createStoredProcedureQuery("test")
@@ -180,6 +191,7 @@ public class StoredProcedureParameterTypeTest extends BaseNonConfigCoreFunctiona
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-12661" )
 	public void testLongTypeInParameter() {
 		inTransaction(
 				session -> session.createStoredProcedureQuery("test")
@@ -198,6 +210,7 @@ public class StoredProcedureParameterTypeTest extends BaseNonConfigCoreFunctiona
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-12661" )
 	public void testDoubleTypeInParameter() {
 		inTransaction(
 				session -> session.createStoredProcedureQuery("test")
@@ -207,6 +220,7 @@ public class StoredProcedureParameterTypeTest extends BaseNonConfigCoreFunctiona
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-12661" )
 	public void testBigIntegerTypeInParameter() {
 		inTransaction(
 				session -> session.createStoredProcedureQuery("test")
@@ -216,6 +230,7 @@ public class StoredProcedureParameterTypeTest extends BaseNonConfigCoreFunctiona
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-12661" )
 	public void testBigDecimalTypeInParameter() {
 		inTransaction(
 				session -> session.createStoredProcedureQuery("test")
@@ -225,6 +240,7 @@ public class StoredProcedureParameterTypeTest extends BaseNonConfigCoreFunctiona
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-12661" )
 	public void testTimestampTypeDateInParameter() {
 		inTransaction(
 				session -> session.createStoredProcedureQuery("test")
@@ -234,6 +250,7 @@ public class StoredProcedureParameterTypeTest extends BaseNonConfigCoreFunctiona
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-12661" )
 	public void testTimestampTypeTimestampInParameter() {
 		inTransaction(
 				session -> session.createStoredProcedureQuery("test")
@@ -243,6 +260,7 @@ public class StoredProcedureParameterTypeTest extends BaseNonConfigCoreFunctiona
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-12661" )
 	public void testTimeTypeInParameter() {
 		inTransaction(
 				session -> session.createStoredProcedureQuery("test")
@@ -252,6 +270,7 @@ public class StoredProcedureParameterTypeTest extends BaseNonConfigCoreFunctiona
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-12661" )
 	public void testDateTypeInParameter() {
 		inTransaction(
 				session -> session.createStoredProcedureQuery("test")
@@ -261,6 +280,7 @@ public class StoredProcedureParameterTypeTest extends BaseNonConfigCoreFunctiona
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-12661" )
 	public void testCalendarTypeCalendarInParameter() {
 		inTransaction(
 				session -> session.createStoredProcedureQuery("test")
@@ -270,6 +290,7 @@ public class StoredProcedureParameterTypeTest extends BaseNonConfigCoreFunctiona
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-12661" )
 	public void testCurrencyTypeInParameter() {
 		inTransaction(
 				session -> session.createStoredProcedureQuery("test")
@@ -279,6 +300,7 @@ public class StoredProcedureParameterTypeTest extends BaseNonConfigCoreFunctiona
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-12661" )
 	public void testLocaleTypeInParameter() {
 		inTransaction(
 				session -> session.createStoredProcedureQuery("test")
@@ -288,6 +310,7 @@ public class StoredProcedureParameterTypeTest extends BaseNonConfigCoreFunctiona
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-12661" )
 	public void testTimeZoneTypeInParameter() {
 		inTransaction(
 				session -> session.createStoredProcedureQuery("test")
@@ -297,6 +320,7 @@ public class StoredProcedureParameterTypeTest extends BaseNonConfigCoreFunctiona
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-12661" )
 	public void testUrlTypeInParameter() throws MalformedURLException {
 		final URL url = new URL( "http://example.com");
 		inTransaction(
@@ -307,6 +331,7 @@ public class StoredProcedureParameterTypeTest extends BaseNonConfigCoreFunctiona
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-12661" )
 	public void testClassTypeInParameter() {
 		inTransaction(
 				session -> session.createStoredProcedureQuery("test")
@@ -316,6 +341,7 @@ public class StoredProcedureParameterTypeTest extends BaseNonConfigCoreFunctiona
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-12661" )
 	public void testBlobTypeInParameter() throws SQLException {
 		final Blob blob = new SerialBlob( TEST_BYTE_ARRAY);
 		inTransaction(
@@ -326,6 +352,7 @@ public class StoredProcedureParameterTypeTest extends BaseNonConfigCoreFunctiona
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-12661" )
 	public void testClobTypeInParameter() throws SQLException {
 		final Clob clob = new SerialClob( TEST_CHAR_ARRAY);
 		inTransaction(
@@ -336,6 +363,7 @@ public class StoredProcedureParameterTypeTest extends BaseNonConfigCoreFunctiona
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-12661" )
 	public void testBinaryTypeInParameter() {
 		inTransaction(
 				session -> session.createStoredProcedureQuery("test")
@@ -345,6 +373,7 @@ public class StoredProcedureParameterTypeTest extends BaseNonConfigCoreFunctiona
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-12661" )
 	public void testCharArrayTypeInParameter() {
 		inTransaction(
 				session -> session.createStoredProcedureQuery("test")
@@ -354,11 +383,43 @@ public class StoredProcedureParameterTypeTest extends BaseNonConfigCoreFunctiona
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-12661" )
 	public void testUUIDBinaryTypeInParameter() {
 		inTransaction(
 				session -> session.createStoredProcedureQuery("test")
 						.registerStoredProcedureParameter( 1, UUIDBinaryType.class, ParameterMode.IN)
 						.setParameter( 1, UUID.randomUUID())
+		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-12905")
+	public void testStringTypeInParameterIsNull() {
+		inTransaction(
+				session -> {
+					ProcedureCall procedureCall = session.createStoredProcedureCall( "test" );
+					procedureCall.registerParameter( 1, StringType.class, ParameterMode.IN ).enablePassingNulls( true );
+					procedureCall.setParameter( 1, null );
+				}
+		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-12905")
+	public void testStringTypeInParameterIsNullWithoutEnablePassingNulls() {
+		inTransaction(
+				session -> {
+					try {
+						ProcedureCall procedureCall = session.createStoredProcedureCall( "test" );
+						procedureCall.registerParameter( 1, StringType.class, ParameterMode.IN );
+						procedureCall.setParameter( 1, null );
+
+						fail("Should have thrown exception");
+					}
+					catch (IllegalArgumentException e) {
+						assertTrue( e.getMessage().endsWith( "You need to call ParameterRegistration#enablePassingNulls(true) in order to pass null parameters." ) );
+					}
+				}
 		);
 	}
 }

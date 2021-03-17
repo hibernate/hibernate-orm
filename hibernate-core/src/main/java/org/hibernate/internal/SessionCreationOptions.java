@@ -7,10 +7,12 @@
 package org.hibernate.internal;
 
 import java.sql.Connection;
+import java.util.List;
 import java.util.TimeZone;
 
 import org.hibernate.FlushMode;
 import org.hibernate.Interceptor;
+import org.hibernate.SessionEventListener;
 import org.hibernate.engine.spi.SessionOwner;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
@@ -45,13 +47,19 @@ public interface SessionCreationOptions {
 
 	TimeZone getJdbcTimeZone();
 
+	/**
+	 * @return the full list of SessionEventListener if this was customized,
+	 * or null if this Session is being created with the default list.
+	 */
+	List<SessionEventListener> getCustomSessionEventListener();
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// deprecations
 
 	/**
 	 * Access to the SessionOwner, which defines the contract for things that can wrap a Session
 	 *
-	 * @return The SessionOwner
+	 * @return Always returns null.
 	 *
 	 * @deprecated (since 5,2) SessionOwner is no longer pertinent due to the
 	 * hibernate-entitymanager -> hibernate-core consolidation

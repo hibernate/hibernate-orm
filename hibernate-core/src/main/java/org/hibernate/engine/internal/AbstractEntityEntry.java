@@ -16,12 +16,15 @@ import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.Session;
+import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityEntryExtraState;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.PersistentAttributeInterceptable;
+import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -29,14 +32,15 @@ import org.hibernate.engine.spi.Status;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.pretty.MessageHelper;
+import org.hibernate.proxy.HibernateProxy;
 
 /**
  * A base implementation of EntityEntry
  *
  * @author Gavin King
- * @author Emmanuel Bernard <emmanuel@hibernate.org>
+ * @author <a href="mailto:emmanuel@hibernate.org">Emmanuel Bernard</a>
  * @author Gunnar Morling
- * @author Sanne Grinovero  <sanne@hibernate.org>
+ * @author <a href="mailto:sanne@hibernate.org">Sanne Grinovero </a>
  */
 public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 	protected final Serializable id;
@@ -306,7 +310,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 			return !isExistsInDatabase();
 		}
 		else {
-			return session.getPersistenceContext().getNullifiableEntityKeys().contains( getEntityKey() );
+			return session.getPersistenceContextInternal().containsNullifiableEntityKey( this::getEntityKey );
 		}
 	}
 
@@ -342,7 +346,37 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 	@SuppressWarnings( {"SimplifiableIfStatement"})
 	private boolean isUnequivocallyNonDirty(Object entity) {
 		if ( entity instanceof SelfDirtinessTracker ) {
-			return ! persister.hasCollections() && ! ( (SelfDirtinessTracker) entity ).$$_hibernate_hasDirtyAttributes();
+			boolean uninitializedProxy = false;
+			if ( entity instanceof PersistentAttributeInterceptable ) {
+				final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) entity;
+				final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
+				if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
+					EnhancementAsProxyLazinessInterceptor enhancementAsProxyLazinessInterceptor = (EnhancementAsProxyLazinessInterceptor) interceptor;
+					if ( enhancementAsProxyLazinessInterceptor.hasWrittenFieldNames() ) {
+						return false;
+					}
+					// When a proxy has dirty attributes, we have to treat it like a normal entity to flush changes
+					return !enhancementAsProxyLazinessInterceptor.isInitialized()
+							|| !persister.hasCollections() && !( (SelfDirtinessTracker) entity ).$$_hibernate_hasDirtyAttributes();
+				}
+			}
+			else if ( entity instanceof HibernateProxy ) {
+				uninitializedProxy = ( (HibernateProxy) entity ).getHibernateLazyInitializer()
+						.isUninitialized();
+			}
+			// we never have to check an uninitialized proxy
+			return uninitializedProxy || !persister.hasCollections()
+					&& !persister.hasMutableProperties()
+					&& !( (SelfDirtinessTracker) entity ).$$_hibernate_hasDirtyAttributes();
+		}
+
+		if ( entity instanceof PersistentAttributeInterceptable ) {
+			final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) entity;
+			final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
+			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
+				// we never have to check an uninitialized proxy
+				return true;
+			}
 		}
 
 		final CustomEntityDirtinessStrategy customEntityDirtinessStrategy =

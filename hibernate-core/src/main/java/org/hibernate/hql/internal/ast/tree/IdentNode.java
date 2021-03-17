@@ -48,7 +48,7 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 	public void resolveIndex(AST parent) throws SemanticException {
 		// An ident node can represent an index expression if the ident
 		// represents a naked property ref
-		//      *Note: this makes the assumption (which is currently the case
+		//      *Note*: this makes the assumption (which is currently the case
 		//      in the hql-sql grammar) that the ident is first resolved
 		//      itself (addrExpr -> resolve()).  The other option, if that
 		//      changes, is to call resolve from here; but it is
@@ -214,6 +214,7 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 				final boolean shouldSkipWrappingInParenthesis =
 						(isInDistinctCount && ! dialect.requiresParensForTupleDistinctCounts())
 						|| isInNonDistinctCount
+						|| getWalker().isInSelect() && !getWalker().isInCase() && !isInCount && dialect.supportsTuplesInSubqueries() // HHH-14156
 						|| getWalker().getCurrentTopLevelClauseType() == HqlSqlTokenTypes.ORDER
 						|| getWalker().getCurrentTopLevelClauseType() == HqlSqlTokenTypes.GROUP;
 				if ( ! shouldSkipWrappingInParenthesis ) {
@@ -372,7 +373,7 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 
 	public void setScalarColumnText(int i) throws SemanticException {
 		if (nakedPropertyRef) {
-			// do *not* over-write the column text, as that has already been
+			// do *not* overwrite the column text, as that has already been
 			// "rendered" during resolve
 			ColumnHelper.generateSingleScalarColumn(this, i);
 		}

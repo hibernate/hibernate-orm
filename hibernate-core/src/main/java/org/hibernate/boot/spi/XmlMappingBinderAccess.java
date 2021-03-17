@@ -83,13 +83,13 @@ public class XmlMappingBinderAccess {
 				xmlInputStream.close();
 			}
 			catch (IOException e) {
-				LOG.debugf( "Unable to close InputStream obtained from InputStreamAccess : " + xmlInputStreamAccess.getStreamName() );
+				LOG.debugf( "Unable to close InputStream obtained from InputStreamAccess : %s", xmlInputStreamAccess.getStreamName() );
 			}
 		}
 	}
 
 	public Binding bind(InputStream xmlInputStream) {
-		LOG.tracef( "reading mappings from InputStream" );
+		LOG.trace( "reading mappings from InputStream" );
 		final Origin origin = new Origin( SourceType.INPUT_STREAM, null );
 		return new InputStreamXmlSource( origin, xmlInputStream, false ).doBind( getMappingBinder() );
 	}

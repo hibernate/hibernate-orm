@@ -7,7 +7,6 @@
 package org.hibernate.id;
 
 import java.io.Serializable;
-
 import javax.persistence.GeneratedValue;
 
 import org.hibernate.HibernateException;
@@ -60,4 +59,13 @@ public interface IdentifierGenerator {
 	 * @throws HibernateException Indicates trouble generating the identifier
 	 */
 	Serializable generate(SharedSessionContractImplementor session, Object object) throws HibernateException;
+
+	/**
+	 * Check if JDBC batch inserts are supported.
+	 *
+	 * @return JDBC batch inserts are supported.
+	 */
+	default boolean supportsJdbcBatchInserts() {
+		return true;
+	}
 }

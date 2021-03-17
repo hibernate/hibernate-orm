@@ -23,11 +23,11 @@ Ultimately all enhancement is handled by the `org.hibernate.bytecode.enhance.spi
 enhancement can certainly be crafted on top of Enhancer, but that is beyond the scope of this guide.  Here we
 will focus on the means Hibernate already exposes for performing these enhancements.
 
-=== Run-time enhancement
+=== Runtime enhancement
 
-Currently run-time enhancement of the domain model is only supported in managed JPA environments following the JPA defined SPI for performing class transformations.
+Currently runtime enhancement of the domain model is only supported in managed JPA environments following the JPA defined SPI for performing class transformations.
 
-Even then, this support is disabled by default. To enable run-time enhancement, specify one of the following configuration properties:
+Even then, this support is disabled by default. To enable runtime enhancement, specify one of the following configuration properties:
 
 `*hibernate.enhancer.enableDirtyTracking*` (e.g. `true` or `false` (default value))::
 Enable dirty tracking feature in runtime bytecode enhancement.

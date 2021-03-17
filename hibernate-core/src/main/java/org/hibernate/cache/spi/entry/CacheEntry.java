@@ -41,7 +41,7 @@ public interface CacheEntry extends Serializable {
 	 * Get the underlying disassembled state
 	 *
 	 * todo : this was added to support initializing an entity's EntityEntry snapshot during reattach;
-	 * this should be refactored to instead expose a method to assemble a EntityEntry based on this
+	 * this should be refactored to instead expose a method to assemble an EntityEntry based on this
 	 * state for return.
 	 *
 	 * @return The disassembled state

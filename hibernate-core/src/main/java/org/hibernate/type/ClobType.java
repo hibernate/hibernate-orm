@@ -36,7 +36,6 @@ public class ClobType extends AbstractSingleColumnStandardBasicType<Clob> {
 
 	@Override
 	protected Clob getReplacement(Clob original, Clob target, SharedSessionContractImplementor session) {
-		return session.getJdbcServices().getJdbcEnvironment().getDialect().getLobMergeStrategy().mergeClob( original, target, session );
+		return session.getJdbcServices().getJdbcEnvironment().getDialect().getLobMergeStrategy().mergeClob( (Clob) original, (Clob) target, session );
 	}
-
 }

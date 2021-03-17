@@ -11,6 +11,7 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.FlushEvent;
 import org.hibernate.event.spi.FlushEventListener;
+import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
  * Defines the default flush event listeners used by hibernate for 
@@ -27,10 +28,10 @@ public class DefaultFlushEventListener extends AbstractFlushingEventListener imp
 	 */
 	public void onFlush(FlushEvent event) throws HibernateException {
 		final EventSource source = event.getSession();
-		final PersistenceContext persistenceContext = source.getPersistenceContext();
+		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
 
 		if ( persistenceContext.getNumberOfManagedEntities() > 0 ||
-				persistenceContext.getCollectionEntries().size() > 0 ) {
+				persistenceContext.getCollectionEntriesSize() > 0 ) {
 
 			try {
 				source.getEventListenerManager().flushStart();
@@ -48,8 +49,9 @@ public class DefaultFlushEventListener extends AbstractFlushingEventListener imp
 
 			postPostFlush( source );
 
-			if ( source.getFactory().getStatistics().isStatisticsEnabled() ) {
-				source.getFactory().getStatistics().flush();
+			final StatisticsImplementor statistics = source.getFactory().getStatistics();
+			if ( statistics.isStatisticsEnabled() ) {
+				statistics.flush();
 			}
 		}
 	}

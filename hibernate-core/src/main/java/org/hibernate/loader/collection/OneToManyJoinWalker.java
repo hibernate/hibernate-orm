@@ -58,8 +58,7 @@ public class OneToManyJoinWalker extends CollectionJoinWalker {
 
 		walkEntityTree( elementPersister, alias );
 
-		List allAssociations = new ArrayList();
-		allAssociations.addAll( associations );
+		List allAssociations = new ArrayList( associations );
 		allAssociations.add(
 				OuterJoinableAssociation.createRoot(
 						oneToManyPersister.getCollectionType(),

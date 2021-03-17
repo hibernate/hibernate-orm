@@ -22,6 +22,10 @@ public class Identity implements Serializable {
 
     private String lastname;
 
+    //Getters and setters are omitted for brevity
+
+//end::sql-composite-key-entity-associations_named-query-example[]
+
     public String getFirstname() {
         return firstname;
     }
@@ -38,6 +42,7 @@ public class Identity implements Serializable {
         this.lastname = lastname;
     }
 
+//tag::sql-composite-key-entity-associations_named-query-example[]
     public boolean equals(Object o) {
         if ( this == o ) return true;
         if ( o == null || getClass() != o.getClass() ) return false;

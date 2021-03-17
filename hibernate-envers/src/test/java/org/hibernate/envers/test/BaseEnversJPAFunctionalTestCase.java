@@ -16,6 +16,7 @@ import javax.transaction.SystemException;
 
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -25,6 +26,8 @@ import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.boot.internal.EnversIntegrator;
 import org.hibernate.envers.configuration.EnversSettings;
+import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
+import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
@@ -33,6 +36,7 @@ import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.test.PersistenceUnitDescriptorAdapter;
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
+import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.hibernate.testing.junit4.Helper;
 import org.jboss.logging.Logger;
@@ -139,6 +143,14 @@ public abstract class BaseEnversJPAFunctionalTestCase extends AbstractEnversTest
 			config.put( AvailableSettings.XML_FILE_NAMES, dds );
 		}
 
+		config.put( GlobalTemporaryTableBulkIdStrategy.DROP_ID_TABLES, "true" );
+		config.put( LocalTemporaryTableBulkIdStrategy.DROP_ID_TABLES, "true" );
+		if ( !Environment.getProperties().containsKey( Environment.CONNECTION_PROVIDER ) ) {
+			config.put(
+					org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER,
+					SharedDriverManagerConnectionProviderImpl.getInstance()
+			);
+		}
 		addConfigOptions( config );
 
 		return config;

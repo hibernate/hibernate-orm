@@ -100,12 +100,17 @@ public class ManyToManyUnidirectionalTest extends BaseEntityManagerFunctionalTes
 		@ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
 		private List<Address> addresses = new ArrayList<>();
 
+		//Getters and setters are omitted for brevity
+
+	//end::associations-many-to-many-unidirectional-example[]
+
 		public Person() {
 		}
 
 		public List<Address> getAddresses() {
 			return addresses;
 		}
+	//tag::associations-many-to-many-unidirectional-example[]
 	}
 
 	@Entity(name = "Address")
@@ -119,6 +124,10 @@ public class ManyToManyUnidirectionalTest extends BaseEntityManagerFunctionalTes
 
 		@Column(name = "`number`")
 		private String number;
+
+		//Getters and setters are omitted for brevity
+
+	//end::associations-many-to-many-unidirectional-example[]
 
 		public Address() {
 		}
@@ -139,6 +148,7 @@ public class ManyToManyUnidirectionalTest extends BaseEntityManagerFunctionalTes
 		public String getNumber() {
 			return number;
 		}
+	//tag::associations-many-to-many-unidirectional-example[]
 	}
 	//end::associations-many-to-many-unidirectional-example[]
 }

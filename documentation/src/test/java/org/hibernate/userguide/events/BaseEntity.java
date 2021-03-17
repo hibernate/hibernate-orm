@@ -14,6 +14,10 @@ public abstract class BaseEntity {
 
     private Timestamp updatedOn;
 
+    //Getters and setters are omitted for brevity
+
+//end::events-default-listener-mapping-example[]
+
     public Timestamp getCreatedOn() {
         return createdOn;
     }
@@ -29,6 +33,7 @@ public abstract class BaseEntity {
     void setUpdatedOn(Timestamp updatedOn) {
         this.updatedOn = updatedOn;
     }
+//tag::events-default-listener-mapping-example[]
 }
 //end::events-default-listener-mapping-example[]
 

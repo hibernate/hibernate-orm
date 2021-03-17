@@ -16,10 +16,19 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 
 public class SortedSetType extends SetType {
+
 	private final Comparator comparator;
 
+	/**
+	 * @deprecated Use the other constructor
+	 */
+	@Deprecated
 	public SortedSetType(TypeFactory.TypeScope typeScope, String role, String propertyRef, Comparator comparator) {
-		super( typeScope, role, propertyRef );
+		this( role, propertyRef, comparator );
+	}
+
+	public SortedSetType(String role, String propertyRef, Comparator comparator) {
+		super( role, propertyRef );
 		this.comparator = comparator;
 	}
 

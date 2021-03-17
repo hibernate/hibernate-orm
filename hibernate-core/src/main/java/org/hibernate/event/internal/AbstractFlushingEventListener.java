@@ -11,23 +11,24 @@ import java.util.IdentityHashMap;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Interceptor;
 import org.hibernate.action.internal.CollectionRecreateAction;
 import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.internal.CollectionUpdateAction;
 import org.hibernate.action.internal.QueuedOperationCollectionAction;
-import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.internal.Collections;
+import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.ActionQueue;
 import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.CascadingActions;
-import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
+import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.service.spi.JpaBootstrapSensitive;
 import org.hibernate.event.spi.EventSource;
@@ -37,8 +38,6 @@ import org.hibernate.event.spi.FlushEntityEventListener;
 import org.hibernate.event.spi.FlushEvent;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.EntityPrinter;
-import org.hibernate.internal.util.collections.IdentityMap;
-import org.hibernate.internal.util.collections.LazyIterator;
 import org.hibernate.persister.entity.EntityPersister;
 
 import org.jboss.logging.Logger;
@@ -77,8 +76,8 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 
 		EventSource session = event.getSession();
 
-		final PersistenceContext persistenceContext = session.getPersistenceContext();
-		session.getInterceptor().preFlush( new LazyIterator( persistenceContext.getEntitiesByKey() ) );
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+		session.getInterceptor().preFlush( persistenceContext.managedEntitiesIterator() );
 
 		prepareEntityFlushes( session, persistenceContext );
 		// we could move this inside if we wanted to
@@ -111,7 +110,7 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 			return;
 		}
 		final EventSource session = event.getSession();
-		final PersistenceContext persistenceContext = session.getPersistenceContext();
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		LOG.debugf(
 				"Flushed: %s insertions, %s updates, %s deletions to %s objects",
 				session.getActionQueue().numberOfInsertions(),
@@ -124,7 +123,7 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 				session.getActionQueue().numberOfCollectionCreations(),
 				session.getActionQueue().numberOfCollectionUpdates(),
 				session.getActionQueue().numberOfCollectionRemovals(),
-				persistenceContext.getCollectionEntries().size()
+				persistenceContext.getCollectionEntriesSize()
 		);
 		new EntityPrinter( session.getFactory() ).toString(
 				persistenceContext.getEntitiesByKey().entrySet()
@@ -154,12 +153,13 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 
 	private void cascadeOnFlush(EventSource session, EntityPersister persister, Object object, Object anything)
 	throws HibernateException {
-		session.getPersistenceContext().incrementCascadeLevel();
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+		persistenceContext.incrementCascadeLevel();
 		try {
 			Cascade.cascade( getCascadingAction(), CascadePoint.BEFORE_FLUSH, session, persister, object, anything );
 		}
 		finally {
-			session.getPersistenceContext().decrementCascadeLevel();
+			persistenceContext.decrementCascadeLevel();
 		}
 	}
 
@@ -191,11 +191,9 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		// and reset reached, doupdate, etc.
 
 		LOG.debug( "Dirty checking collections" );
-
-		for ( Map.Entry<PersistentCollection,CollectionEntry> entry :
-				IdentityMap.concurrentEntries( (Map<PersistentCollection,CollectionEntry>) persistenceContext.getCollectionEntries() )) {
-			entry.getValue().preFlush( entry.getKey() );
-		}
+		persistenceContext.forEachCollectionEntry( (pc,ce) -> {
+			ce.preFlush( pc );
+		}, true );
 	}
 
 	/**
@@ -208,10 +206,8 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		LOG.trace( "Flushing entities and processing referenced collections" );
 
 		final EventSource source = event.getSession();
-		final Iterable<FlushEntityEventListener> flushListeners = source.getFactory().getServiceRegistry()
-				.getService( EventListenerRegistry.class )
-				.getEventListenerGroup( EventType.FLUSH_ENTITY )
-				.listeners();
+		final EventListenerGroup<FlushEntityEventListener> flushListeners = source.getFactory()
+				.getFastSessionServices().eventListenerGroup_FLUSH_ENTITY;
 
 		// Among other things, updateReachables() will recursively load all
 		// collections that are moving roles. This might cause entities to
@@ -231,9 +227,7 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 
 			if ( status != Status.LOADING && status != Status.GONE ) {
 				final FlushEntityEvent entityEvent = new FlushEntityEvent( source, me.getKey(), entry );
-				for ( FlushEntityEventListener listener : flushListeners ) {
-					listener.onFlushEntity( entityEvent );
-				}
+				flushListeners.fireEventOnEachListener( entityEvent, FlushEntityEventListener::onFlushEntity );
 			}
 		}
 
@@ -250,78 +244,70 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 	private int flushCollections(final EventSource session, final PersistenceContext persistenceContext) throws HibernateException {
 		LOG.trace( "Processing unreferenced collections" );
 
-		final Map.Entry<PersistentCollection,CollectionEntry>[] entries = IdentityMap.concurrentEntries(
-				(Map<PersistentCollection,CollectionEntry>) persistenceContext.getCollectionEntries()
-		);
+		final int count = persistenceContext.getCollectionEntriesSize();
 
-		final int count = entries.length;
-
-		for ( Map.Entry<PersistentCollection,CollectionEntry> me : entries ) {
-			CollectionEntry ce = me.getValue();
-			if ( !ce.isReached() && !ce.isIgnore() ) {
-				Collections.processUnreachableCollection( me.getKey(), session );
-			}
-		}
+		persistenceContext.forEachCollectionEntry(
+				(persistentCollection, collectionEntry) -> {
+					if ( !collectionEntry.isReached() && !collectionEntry.isIgnore() ) {
+						Collections.processUnreachableCollection( persistentCollection, session );
+					}
+				}, true );
 
 		// Schedule updates to collections:
 
 		LOG.trace( "Scheduling collection removes/(re)creates/updates" );
 
-		ActionQueue actionQueue = session.getActionQueue();
-		for ( Map.Entry<PersistentCollection,CollectionEntry> me :
-			IdentityMap.concurrentEntries( (Map<PersistentCollection,CollectionEntry>) persistenceContext.getCollectionEntries() )) {
-			PersistentCollection coll = me.getKey();
-			CollectionEntry ce = me.getValue();
-
-			if ( ce.isDorecreate() ) {
-				session.getInterceptor().onCollectionRecreate( coll, ce.getCurrentKey() );
-				actionQueue.addAction(
-						new CollectionRecreateAction(
-								coll,
-								ce.getCurrentPersister(),
-								ce.getCurrentKey(),
-								session
-							)
-					);
-			}
-			if ( ce.isDoremove() ) {
-				session.getInterceptor().onCollectionRemove( coll, ce.getLoadedKey() );
-				actionQueue.addAction(
-						new CollectionRemoveAction(
-								coll,
-								ce.getLoadedPersister(),
-								ce.getLoadedKey(),
-								ce.isSnapshotEmpty(coll),
-								session
-							)
-					);
-			}
-			if ( ce.isDoupdate() ) {
-				session.getInterceptor().onCollectionUpdate( coll, ce.getLoadedKey() );
-				actionQueue.addAction(
-						new CollectionUpdateAction(
-								coll,
-								ce.getLoadedPersister(),
-								ce.getLoadedKey(),
-								ce.isSnapshotEmpty(coll),
-								session
-							)
-					);
-			}
-
-			// todo : I'm not sure the !wasInitialized part should really be part of this check
-			if ( !coll.wasInitialized() && coll.hasQueuedOperations() ) {
-				actionQueue.addAction(
-						new QueuedOperationCollectionAction(
-								coll,
-								ce.getLoadedPersister(),
-								ce.getLoadedKey(),
-								session
-							)
-					);
-			}
-
-		}
+		final ActionQueue actionQueue = session.getActionQueue();
+		final Interceptor interceptor = session.getInterceptor();
+		persistenceContext.forEachCollectionEntry(
+				(coll, ce) -> {
+					if ( ce.isDorecreate() ) {
+						interceptor.onCollectionRecreate( coll, ce.getCurrentKey() );
+						actionQueue.addAction(
+								new CollectionRecreateAction(
+										coll,
+										ce.getCurrentPersister(),
+										ce.getCurrentKey(),
+										session
+								)
+						);
+					}
+					if ( ce.isDoremove() ) {
+						interceptor.onCollectionRemove( coll, ce.getLoadedKey() );
+						actionQueue.addAction(
+								new CollectionRemoveAction(
+										coll,
+										ce.getLoadedPersister(),
+										ce.getLoadedKey(),
+										ce.isSnapshotEmpty( coll ),
+										session
+								)
+						);
+					}
+					if ( ce.isDoupdate() ) {
+						interceptor.onCollectionUpdate( coll, ce.getLoadedKey() );
+						actionQueue.addAction(
+								new CollectionUpdateAction(
+										coll,
+										ce.getLoadedPersister(),
+										ce.getLoadedKey(),
+										ce.isSnapshotEmpty( coll ),
+										session
+								)
+						);
+					}
+					// todo : I'm not sure the !wasInitialized part should really be part of this check
+					if ( !coll.wasInitialized() && coll.hasQueuedOperations() ) {
+						actionQueue.addAction(
+								new QueuedOperationCollectionAction(
+										coll,
+										ce.getLoadedPersister(),
+										ce.getLoadedKey(),
+										session
+								)
+						);
+					}
+				}, true );
 
 		actionQueue.sortCollectionActions();
 
@@ -347,17 +333,20 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		//		during-flush callbacks more leniency in regards to initializing proxies and
 		//		lazy collections during their processing.
 		// For more information, see HHH-2763
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+		final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
 		try {
-			session.getJdbcCoordinator().flushBeginning();
-			session.getPersistenceContext().setFlushing( true );
+			jdbcCoordinator.flushBeginning();
+			persistenceContext.setFlushing( true );
 			// we need to lock the collection caches before executing entity inserts/updates in order to
 			// account for bi-directional associations
-			session.getActionQueue().prepareActions();
-			session.getActionQueue().executeActions();
+			final ActionQueue actionQueue = session.getActionQueue();
+			actionQueue.prepareActions();
+			actionQueue.executeActions();
 		}
 		finally {
-			session.getPersistenceContext().setFlushing( false );
-			session.getJdbcCoordinator().flushEnding();
+			persistenceContext.setFlushing( false );
+			jdbcCoordinator.flushEnding();
 		}
 	}
 
@@ -375,37 +364,36 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 
 		LOG.trace( "Post flush" );
 
-		final PersistenceContext persistenceContext = session.getPersistenceContext();
-		persistenceContext.getCollectionsByKey().clear();
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+		persistenceContext.clearCollectionsByKey();
 		
 		// the database has changed now, so the subselect results need to be invalidated
 		// the batch fetching queues should also be cleared - especially the collection batch fetching one
 		persistenceContext.getBatchFetchQueue().clear();
 
-		for ( Map.Entry<PersistentCollection, CollectionEntry> me : IdentityMap.concurrentEntries( persistenceContext.getCollectionEntries() ) ) {
-			CollectionEntry collectionEntry = me.getValue();
-			PersistentCollection persistentCollection = me.getKey();
-			collectionEntry.postFlush(persistentCollection);
-			if ( collectionEntry.getLoadedPersister() == null ) {
-				//if the collection is dereferenced, unset its session reference and remove from the session cache
-				//iter.remove(); //does not work, since the entrySet is not backed by the set
-				persistentCollection.unsetSession( session );
-				persistenceContext.getCollectionEntries()
-						.remove(persistentCollection);
-			}
-			else {
-				//otherwise recreate the mapping between the collection and its key
-				CollectionKey collectionKey = new CollectionKey(
-						collectionEntry.getLoadedPersister(),
-						collectionEntry.getLoadedKey()
-				);
-				persistenceContext.getCollectionsByKey().put(collectionKey, persistentCollection);
-			}
-		}
-
+		persistenceContext.forEachCollectionEntry(
+				(persistentCollection, collectionEntry) -> {
+					collectionEntry.postFlush( persistentCollection );
+					if ( collectionEntry.getLoadedPersister() == null ) {
+						//if the collection is dereferenced, unset its session reference and remove from the session cache
+						//iter.remove(); //does not work, since the entrySet is not backed by the set
+						persistentCollection.unsetSession( session );
+						persistenceContext.removeCollectionEntry( persistentCollection );
+					}
+					else {
+						//otherwise recreate the mapping between the collection and its key
+						CollectionKey collectionKey = new CollectionKey(
+								collectionEntry.getLoadedPersister(),
+								collectionEntry.getLoadedKey()
+						);
+						persistenceContext.addCollectionByKey( collectionKey, persistentCollection );
+					}
+				}, true
+		);
 	}
 
 	protected void postPostFlush(SessionImplementor session) {
-		session.getInterceptor().postFlush( new LazyIterator( session.getPersistenceContext().getEntitiesByKey() ) );
+		session.getInterceptor().postFlush( session.getPersistenceContextInternal().managedEntitiesIterator() );
 	}
+
 }

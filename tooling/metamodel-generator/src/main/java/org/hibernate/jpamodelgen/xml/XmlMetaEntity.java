@@ -339,7 +339,7 @@ public class XmlMetaEntity implements MetaEntity {
 					return "java.lang.Double";
 				}
 				case DECLARED: {
-					return mirror.toString();
+					return ((DeclaredType)mirror).asElement().asType().toString();
 				}
 				case TYPEVAR: {
 					return mirror.toString();

@@ -20,11 +20,12 @@ import org.hibernate.cache.spi.RegionFactory;
  *
  * @author Steve Ebersole
  */
-public class StrategyRegistrationProviderImpl implements StrategyRegistrationProvider {
+public final class StrategyRegistrationProviderImpl implements StrategyRegistrationProvider {
+
 	@Override
 	@SuppressWarnings("unchecked")
 	public Iterable<StrategyRegistration> getStrategyRegistrations() {
-		final List<StrategyRegistration> strategyRegistrations = new ArrayList<StrategyRegistration>();
+		final List<StrategyRegistration> strategyRegistrations = new ArrayList<StrategyRegistration>( 2 );
 
 		strategyRegistrations.add(
 				new SimpleStrategyRegistrationImpl(

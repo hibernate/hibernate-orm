@@ -7,7 +7,6 @@
 package org.hibernate.internal.util;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collection;
@@ -16,8 +15,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.StringTokenizer;
 
+import org.hibernate.boot.model.source.internal.hbm.CommaSeparatedStringHelper;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.loader.internal.AliasConstantsHelper;
 
 public final class StringHelper {
 
@@ -56,13 +56,13 @@ public final class StringHelper {
 		return buf.toString();
 	}
 
-	public static String join(String seperator, Iterator<?> objects) {
+	public static String join(String separator, Iterator<?> objects) {
 		StringBuilder buf = new StringBuilder();
 		if ( objects.hasNext() ) {
 			buf.append( objects.next() );
 		}
 		while ( objects.hasNext() ) {
-			buf.append( seperator ).append( objects.next() );
+			buf.append( separator ).append( objects.next() );
 		}
 		return buf.toString();
 	}
@@ -98,7 +98,6 @@ public final class StringHelper {
 		return new String( buffer );
 	}
 
-
 	public static String replace(String template, String placeholder, String replacement) {
 		return replace( template, placeholder, replacement, false );
 	}
@@ -124,7 +123,7 @@ public final class StringHelper {
 		if ( template == null ) {
 			return null;
 		}
-		int loc = template.indexOf( placeholder );
+		int loc = indexOfPlaceHolder( template, placeholder, wholeWords );
 		if ( loc < 0 ) {
 			return template;
 		}
@@ -142,7 +141,6 @@ public final class StringHelper {
 		}
 	}
 
-
 	public static String replace(
 			String beforePlaceholder,
 			String afterPlaceholder,
@@ -158,7 +156,7 @@ public final class StringHelper {
 		// enclosed in parentheses (HHH-10383)
 		// Examples:
 		// 1) "... IN (?1", we assume that "?1" does not need to be enclosed because there
-		// there is already a right-parenthesis; we assume there will be a matching right-parenthesis.
+		// is already a right-parenthesis; we assume there will be a matching right-parenthesis.
 		// 2) "... IN ?1", we assume that "?1" needs to be enclosed in parentheses, because there
 		// is no left-parenthesis.
 
@@ -189,6 +187,24 @@ public final class StringHelper {
 				)
 		);
 		return buf.toString();
+	}
+
+	private static int indexOfPlaceHolder(String template, String placeholder, boolean wholeWords) {
+		if ( wholeWords ) {
+			int placeholderIndex = -1;
+			boolean isPartialPlaceholderMatch;
+			do {
+				placeholderIndex = template.indexOf( placeholder, placeholderIndex + 1 );
+				isPartialPlaceholderMatch = placeholderIndex != -1 &&
+						template.length() > placeholderIndex + placeholder.length() &&
+						Character.isJavaIdentifierPart( template.charAt( placeholderIndex + placeholder.length() ) );
+			} while ( placeholderIndex != -1 && isPartialPlaceholderMatch );
+
+			return placeholderIndex;
+		}
+		else {
+			return template.indexOf( placeholder );
+		}
 	}
 
 	/**
@@ -239,7 +255,7 @@ public final class StringHelper {
 
 	public static String replaceOnce(String template, String placeholder, String replacement) {
 		if ( template == null ) {
-			return null;  // returnign null!
+			return null;  // returning null!
 		}
 		int loc = template.indexOf( placeholder );
 		if ( loc < 0 ) {
@@ -288,7 +304,7 @@ public final class StringHelper {
 	/**
 	 * Collapses a name.  Mainly intended for use with classnames, where an example might serve best to explain.
 	 * Imagine you have a class named <samp>'org.hibernate.internal.util.StringHelper'</samp>; calling collapse on that
-	 * classname will result in <samp>'o.h.u.StringHelper'<samp>.
+	 * classname will result in <samp>'o.h.u.StringHelper'</samp>.
 	 *
 	 * @param name The name to collapse.
 	 *
@@ -318,14 +334,15 @@ public final class StringHelper {
 	 */
 	public static String collapseQualifier(String qualifier, boolean includeDots) {
 		StringTokenizer tokenizer = new StringTokenizer( qualifier, "." );
-		String collapsed = Character.toString( tokenizer.nextToken().charAt( 0 ) );
+		StringBuilder sb = new StringBuilder();
+		sb.append( Character.toString( tokenizer.nextToken().charAt( 0 ) ) );
 		while ( tokenizer.hasMoreTokens() ) {
 			if ( includeDots ) {
-				collapsed += '.';
+				sb.append( '.' );
 			}
-			collapsed += tokenizer.nextToken().charAt( 0 );
+			sb.append( tokenizer.nextToken().charAt( 0 ) );
 		}
-		return collapsed;
+		return sb.toString();
 	}
 
 	/**
@@ -377,18 +394,13 @@ public final class StringHelper {
 	}
 
 	public static String root(String qualifiedName) {
-		int loc = qualifiedName.indexOf( "." );
+		int loc = qualifiedName.indexOf( '.' );
 		return ( loc < 0 ) ? qualifiedName : qualifiedName.substring( 0, loc );
 	}
 
 	public static String unroot(String qualifiedName) {
-		int loc = qualifiedName.indexOf( "." );
+		int loc = qualifiedName.indexOf( '.' );
 		return ( loc < 0 ) ? qualifiedName : qualifiedName.substring( loc + 1, qualifiedName.length() );
-	}
-
-	public static boolean booleanValue(String tfString) {
-		String trimmed = tfString.trim().toLowerCase( Locale.ROOT );
-		return trimmed.equals( "true" ) || trimmed.equals( "t" );
 	}
 
 	public static String toString(Object[] array) {
@@ -403,10 +415,10 @@ public final class StringHelper {
 		return buf.append( array[len - 1] ).toString();
 	}
 
-	public static String[] multiply(String string, Iterator placeholders, Iterator replacements) {
+	public static String[] multiply(String string, Iterator<String> placeholders, Iterator<String[]> replacements) {
 		String[] result = new String[] {string};
 		while ( placeholders.hasNext() ) {
-			result = multiply( result, (String) placeholders.next(), (String[]) replacements.next() );
+			result = multiply( result, placeholders.next(), replacements.next() );
 		}
 		return result;
 	}
@@ -429,8 +441,8 @@ public final class StringHelper {
 		if ( string == null ) {
 			return 0;
 		}
-		// Impl note: takes advantage of the fact that an escpaed single quote
-		// embedded within a quote-block can really be handled as two seperate
+		// Impl note: takes advantage of the fact that an escaped single quote
+		// embedded within a quote-block can really be handled as two separate
 		// quote-blocks for the purposes of this method...
 		int count = 0;
 		int stringLength = string.length();
@@ -452,48 +464,38 @@ public final class StringHelper {
 		return count;
 	}
 
-	public static int[] locateUnquoted(String string, char character) {
-		if ( '\'' == character ) {
-			throw new IllegalArgumentException( "Unquoted count of quotes is invalid" );
-		}
-		if ( string == null ) {
-			return new int[0];
-		}
-
-		ArrayList locations = new ArrayList( 20 );
-
-		// Impl note: takes advantage of the fact that an escpaed single quote
-		// embedded within a quote-block can really be handled as two seperate
-		// quote-blocks for the purposes of this method...
-		int stringLength = string.length();
-		boolean inQuote = false;
-		for ( int indx = 0; indx < stringLength; indx++ ) {
-			char c = string.charAt( indx );
-			if ( inQuote ) {
-				if ( '\'' == c ) {
-					inQuote = false;
-				}
-			}
-			else if ( '\'' == c ) {
-				inQuote = true;
-			}
-			else if ( c == character ) {
-				locations.add( indx );
-			}
-		}
-		return ArrayHelper.toIntArray( locations );
-	}
-
 	public static boolean isNotEmpty(String string) {
 		return string != null && string.length() > 0;
 	}
 
 	public static boolean isEmpty(String string) {
-		return string == null || string.length() == 0;
+		return string == null || string.isEmpty();
 	}
 
-	public static boolean isEmptyOrWhiteSpace(String string) {
-		return isEmpty( string ) || isEmpty( string.trim() );
+	public static boolean isBlank(String string) {
+		//TODO use Java 11's more efficient String#isBlank - currently we still require Java 8 compatibility
+		if ( string == null || string.isEmpty() ) {
+			return true;
+		}
+		else {
+			//Else: we need to check all characters, preferably without using String#trim() so to
+			//not allocate temporary strings
+			for ( int i = 0; i < string.length(); i++ ) {
+				if ( ! Character.isWhitespace( string.charAt( i ) ) ) {
+					return false;
+				}
+			}
+			return true;
+		}
+	}
+
+	/**
+	 * @deprecated use {@link #isBlank(String)}
+	 * @return
+	 */
+	@Deprecated
+	public static boolean isEmptyOrWhitespace(String string) {
+		return isBlank(string);
 	}
 
 	public static String qualify(String prefix, String name) {
@@ -522,23 +524,6 @@ public final class StringHelper {
 		return qualified;
 	}
 
-	public static String[] qualifyIfNot(String prefix, String[] names) {
-		if ( prefix == null ) {
-			return names;
-		}
-		int len = names.length;
-		String[] qualified = new String[len];
-		for ( int i = 0; i < len; i++ ) {
-			if ( names[i].indexOf( '.' ) < 0 ) {
-				qualified[i] = qualify( prefix, names[i] );
-			}
-			else {
-				qualified[i] = names[i];
-			}
-		}
-		return qualified;
-	}
-
 	public static int firstIndexOfChar(String sqlString, BitSet keys, int startindex) {
 		for ( int i = startindex, size = sqlString.length(); i < size; i++ ) {
 			if ( keys.get( sqlString.charAt( i ) ) ) {
@@ -546,7 +531,6 @@ public final class StringHelper {
 			}
 		}
 		return -1;
-
 	}
 
 	public static int firstIndexOfChar(String sqlString, String string, int startindex) {
@@ -555,7 +539,6 @@ public final class StringHelper {
 			keys.set( string.charAt( i ) );
 		}
 		return firstIndexOfChar( sqlString, keys, startindex );
-
 	}
 
 	public static String truncate(String string, int length) {
@@ -582,13 +565,12 @@ public final class StringHelper {
 	 */
 	public static String generateAlias(String description, int unique) {
 		return generateAliasRoot( description )
-				+ Integer.toString( unique )
-				+ '_';
+				+ AliasConstantsHelper.get( unique );
 	}
 
 	/**
 	 * Generates a root alias by truncating the "root name" defined by
-	 * the incoming decription and removing/modifying any non-valid
+	 * the incoming description and removing/modifying any non-valid
 	 * alias characters.
 	 *
 	 * @param description The root name from which to generate a root alias.
@@ -619,7 +601,7 @@ public final class StringHelper {
 	 */
 	private static String cleanAlias(String alias) {
 		char[] chars = alias.toCharArray();
-		// short cut check...
+		// shortcut check...
 		if ( !Character.isLetter( chars[0] ) ) {
 			for ( int i = 1; i < chars.length; i++ ) {
 				// as soon as we encounter our first letter, return the substring
@@ -642,7 +624,7 @@ public final class StringHelper {
 	}
 
 	public static String moveAndToBeginning(String filter) {
-		if ( filter.trim().length() > 0 ) {
+		if ( !isBlank( filter ) ) {
 			filter += " and ";
 			if ( filter.startsWith( " and " ) ) {
 				filter = filter.substring( 4 );
@@ -658,30 +640,15 @@ public final class StringHelper {
 	 *
 	 * @return True if the given string starts and ends with '`'; false otherwise.
 	 */
-	public static boolean isQuoted(String name) {
-		return name != null && name.length() != 0
-				&& ( ( name.charAt( 0 ) == '`' && name.charAt( name.length() - 1 ) == '`' )
-				|| ( name.charAt( 0 ) == '"' && name.charAt( name.length() - 1 ) == '"' ) );
-	}
-
-	/**
-	 * Return a representation of the given name ensuring quoting (wrapped with '`' characters).  If already wrapped
-	 * return name.
-	 *
-	 * @param name The name to quote.
-	 *
-	 * @return The quoted version.
-	 */
-	public static String quote(String name) {
-		if ( isEmpty( name ) || isQuoted( name ) ) {
-			return name;
-		}
-		// Convert the JPA2 specific quoting character (double quote) to Hibernate's (back tick)
-		else if ( name.startsWith( "\"" ) && name.endsWith( "\"" ) ) {
-			name = name.substring( 1, name.length() - 1 );
+	public static boolean isQuoted(final String name) {
+		if ( name == null || name.isEmpty() ) {
+			return false;
 		}
 
-		return "`" + name + '`';
+		final char first = name.charAt( 0 );
+		final char last = name.charAt( name.length() - 1 );
+
+		return ( ( first == last ) && ( first == '`' || first == '"' ) );
 	}
 
 	/**
@@ -699,8 +666,8 @@ public final class StringHelper {
 	 * Determine if the given name is quoted.  It is considered quoted if either:
 	 * <ol>
 	 * <li>starts AND ends with backticks (`)</li>
-	 * <li>starts with dialect-specified {@link org.hibernate.dialect.Dialect#openQuote() open-quote}
-	 * AND ends with dialect-specified {@link org.hibernate.dialect.Dialect#closeQuote() close-quote}</li>
+	 * <li>starts with dialect-specified {@link Dialect#openQuote() open-quote}
+	 * AND ends with dialect-specified {@link Dialect#closeQuote() close-quote}</li>
 	 * </ol>
 	 *
 	 * @param name The name to check
@@ -708,12 +675,15 @@ public final class StringHelper {
 	 *
 	 * @return True if quoted, false otherwise
 	 */
-	public static boolean isQuoted(String name, Dialect dialect) {
-		return name != null && name.length() != 0
-				&& ( ( name.charAt( 0 ) == '`' && name.charAt( name.length() - 1 ) == '`' )
-				|| ( name.charAt( 0 ) == '"' && name.charAt( name.length() - 1 ) == '"' )
-				|| ( name.charAt( 0 ) == dialect.openQuote()
-				&& name.charAt( name.length() - 1 ) == dialect.closeQuote() ) );
+	public static boolean isQuoted(final String name, final Dialect dialect) {
+		if ( name == null || name.isEmpty() ) {
+			return false;
+		}
+		final char first = name.charAt( 0 );
+		final char last = name.charAt( name.length() - 1 );
+
+		return ( ( first == last ) && ( first == '`' || first == '"' ) )
+				|| ( first == dialect.openQuote() && last == dialect.closeQuote() );
 	}
 
 	/**
@@ -736,15 +706,32 @@ public final class StringHelper {
 	 *
 	 * @return The unquoted versions.
 	 */
-	public static String[] unquote(String[] names, Dialect dialect) {
+	public static String[] unquote(final String[] names, final Dialect dialect) {
 		if ( names == null ) {
 			return null;
 		}
-		String[] unquoted = new String[names.length];
-		for ( int i = 0; i < names.length; i++ ) {
-			unquoted[i] = unquote( names[i], dialect );
+		int failedIndex = -1;
+		final int length = names.length;
+		for ( int i = 0; i < length; i++ ) {
+			if ( isQuoted( names[i], dialect ) ) {
+				failedIndex = i;
+				break;
+			}
 		}
-		return unquoted;
+		if ( failedIndex == -1 ) {
+			//In this case all strings are already unquoted, so return the same array as the input:
+			//this is a good optimisation to skip an array copy as typically either all names are consistently quoted, or none are;
+			//yet for safety we need to deal with mixed scenarios as well.
+			return names;
+		}
+		else {
+			String[] unquoted = new String[length];
+			System.arraycopy( names, 0, unquoted, 0, failedIndex );
+			for ( int i = failedIndex; i < length; i++ ) {
+				unquoted[i] = unquote( names[i], dialect );
+			}
+			return unquoted;
+		}
 	}
 
 
@@ -758,14 +745,14 @@ public final class StringHelper {
 		if ( columnNames.length == 1 ) {
 			// non-composite key
 			return new StringBuilder( StringHelper.qualify( alias, columnNames[0] ) )
-					.append( " in (" ).append( BATCH_ID_PLACEHOLDER ).append( ")" );
+					.append( " in (" ).append( BATCH_ID_PLACEHOLDER ).append( ')' );
 		}
 		else {
 			// composite key - the form to use here depends on what the dialect supports.
 			if ( dialect.supportsRowValueConstructorSyntaxInInList() ) {
 				// use : (col1, col2) in ( (?,?), (?,?), ... )
 				StringBuilder builder = new StringBuilder();
-				builder.append( "(" );
+				builder.append( '(' );
 				boolean firstPass = true;
 				String deliminator = "";
 				for ( String columnName : columnNames ) {
@@ -777,14 +764,18 @@ public final class StringHelper {
 				}
 				builder.append( ") in (" );
 				builder.append( BATCH_ID_PLACEHOLDER );
-				builder.append( ")" );
+				builder.append( ')' );
 				return builder;
 			}
 			else {
 				// use : ( (col1 = ? and col2 = ?) or (col1 = ? and col2 = ?) or ... )
 				//		unfortunately most of this building needs to be held off until we know
 				//		the exact number of ids :(
-				return new StringBuilder( "(" ).append( BATCH_ID_PLACEHOLDER ).append( ")" );
+				final StringBuilder stringBuilder = new StringBuilder();
+				stringBuilder.append( '(' )
+						.append( BATCH_ID_PLACEHOLDER )
+						.append( ')' );
+				return stringBuilder;
 			}
 		}
 	}
@@ -802,31 +793,19 @@ public final class StringHelper {
 		else {
 			// composite
 			if ( dialect.supportsRowValueConstructorSyntaxInInList() ) {
-				final String tuple = "(" + StringHelper.repeat( "?", keyColumnNames.length, "," ) + ")";
+				final String tuple = '(' + StringHelper.repeat( "?", keyColumnNames.length, "," ) + ')';
 				return StringHelper.replace( sql, BATCH_ID_PLACEHOLDER, repeat( tuple, ids.length, "," ) );
 			}
 			else {
-				final String keyCheck = "(" + joinWithQualifierAndSuffix(
+				final String keyCheck = '(' + joinWithQualifierAndSuffix(
 						keyColumnNames,
 						alias,
 						" = ?",
 						" and "
-				) + ")";
+				) + ')';
 				return replace( sql, BATCH_ID_PLACEHOLDER, repeat( keyCheck, ids.length, " or " ) );
 			}
 		}
-	}
-
-	/**
-	 * Takes a String s and returns a new String[1] with s as the only element.
-	 * If s is null or "", return String[0].
-	 *
-	 * @param s
-	 *
-	 * @return String[]
-	 */
-	public static String[] toArrayElement(String s) {
-		return ( s == null || s.length() == 0 ) ? new String[0] : new String[] {s};
 	}
 
 	public static String nullIfEmpty(String value) {
@@ -834,22 +813,73 @@ public final class StringHelper {
 	}
 
 	public static List<String> parseCommaSeparatedString(String incomingString) {
-		return Arrays.asList( incomingString.split( "\\s*,\\s*" ) );
+		return CommaSeparatedStringHelper.parseCommaSeparatedString( incomingString );
 	}
 
 	public static <T> String join(Collection<T> values, Renderer<T> renderer) {
 		final StringBuilder buffer = new StringBuilder();
 		for ( T value : values ) {
-			buffer.append( String.join(", ", renderer.render( value )) );
+			buffer.append( String.join(", ", renderer.render( value ) ) );
 		}
 		return buffer.toString();
-	}
-
-	public static <T> String join(T[] values, Renderer<T> renderer) {
-		return join( Arrays.asList( values ), renderer );
 	}
 
 	public interface Renderer<T> {
 		String render(T value);
 	}
+
+	/**
+	 * @param firstExpression the first expression
+	 * @param secondExpression the second expression
+	 * @return if {@code firstExpression} and {@code secondExpression} are both non-empty,
+	 * then "( " + {@code firstExpression} + " ) and ( " + {@code secondExpression} + " )" is returned;
+	 * if {@code firstExpression} is non-empty and {@code secondExpression} is empty,
+	 * then {@code firstExpression} is returned;
+	 * if {@code firstExpression} is empty and {@code secondExpression} is non-empty,
+	 * then {@code secondExpression} is returned;
+	 * if both {@code firstExpression} and {@code secondExpression} are empty, then null is returned.
+	 */
+	public static String getNonEmptyOrConjunctionIfBothNonEmpty( String firstExpression, String secondExpression ) {
+		final boolean isFirstExpressionNonEmpty = StringHelper.isNotEmpty( firstExpression );
+		final boolean isSecondExpressionNonEmpty = StringHelper.isNotEmpty( secondExpression );
+		if ( isFirstExpressionNonEmpty && isSecondExpressionNonEmpty ) {
+			final StringBuilder buffer = new StringBuilder();
+			buffer.append( "( " )
+					.append( firstExpression )
+					.append( " ) and ( ")
+					.append( secondExpression )
+					.append( " )" );
+			return buffer.toString();
+		}
+		else if ( isFirstExpressionNonEmpty ) {
+			return firstExpression;
+		}
+		else if ( isSecondExpressionNonEmpty ) {
+			return secondExpression;
+		}
+		else {
+			return null;
+		}
+	}
+
+	/**
+	 * Return the interned form of a String, or null if the parameter is null.
+	 * <p>
+	 * Use with caution: excessive interning is known to cause issues.
+	 * Best to use only with strings which are known to be long lived constants,
+	 * and for which the chances of being actual duplicates is proven.
+	 * (Even better: avoid needing interning by design changes such as reusing
+	 * the known reference)
+	 * @param string The string to intern.
+	 * @return The interned string.
+	 */
+	public static String safeInterning(final String string) {
+		if ( string == null ) {
+			return null;
+		}
+		else {
+			return string.intern();
+		}
+	}
+
 }

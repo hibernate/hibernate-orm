@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.cdi.events.extended;
 
+import java.util.function.Consumer;
 import javax.enterprise.inject.se.SeContainer;
 import javax.enterprise.inject.se.SeContainerInitializer;
 import javax.enterprise.inject.spi.BeanManager;
@@ -17,13 +18,14 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.jpa.event.spi.jpa.ExtendedBeanManager;
+import org.hibernate.resource.beans.container.spi.ExtendedBeanManager;
 import org.hibernate.tool.schema.Action;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.test.cdi.events.Monitor;
 import org.hibernate.test.cdi.events.TheEntity;
 import org.hibernate.test.cdi.events.TheListener;
+import org.hibernate.test.cdi.testsupport.TestingExtendedBeanManager;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil2.inTransaction;
@@ -40,17 +42,27 @@ import static org.junit.Assert.assertTrue;
  */
 public class ValidExtendedCdiSupportTest extends BaseUnitTestCase {
 	@Test
-	public void testIt() {
+	public void test() {
+		doTest( TestingExtendedBeanManager.create() );
+	}
+
+	/**
+	 * NOTE : we use the deprecated one here to make sure this continues to work.
+	 * Scott still uses this in WildFly and we need it to continue to work there
+	 */
+	@Test
+	public void testLegacy() {
+		doTest( TestingExtendedBeanManager.createLegacy() );
+	}
+
+	private void doTest(TestingExtendedBeanManager beanManager) {
 		Monitor.reset();
-
-
-		final ExtendedBeanManagerImpl standIn = new ExtendedBeanManagerImpl();
 
 		BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder().build();
 
 		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder( bsr )
 				.applySetting( AvailableSettings.HBM2DDL_AUTO, Action.CREATE_DROP )
-				.applySetting( AvailableSettings.CDI_BEAN_MANAGER, standIn )
+				.applySetting( AvailableSettings.CDI_BEAN_MANAGER, beanManager )
 				.build();
 
 
@@ -82,7 +94,7 @@ public class ValidExtendedCdiSupportTest extends BaseUnitTestCase {
 					.addBeanClasses( Monitor.class, TheListener.class );
 			try (final SeContainer cdiContainer = cdiInitializer.initialize()) {
 
-				standIn.beanManagerReady( cdiContainer.getBeanManager() );
+				beanManager.notifyListenerReady( cdiContainer.getBeanManager() );
 
 				// at this point the bean should have been accessed
 				assertTrue( Monitor.wasInstantiated() );
@@ -114,19 +126,6 @@ public class ValidExtendedCdiSupportTest extends BaseUnitTestCase {
 		}
 		finally {
 			sessionFactory.close();
-		}
-	}
-
-	public static class ExtendedBeanManagerImpl implements ExtendedBeanManager {
-		private LifecycleListener callback;
-
-		@Override
-		public void registerLifecycleListener(LifecycleListener lifecycleListener) {
-			this.callback = lifecycleListener;
-		}
-
-		public void beanManagerReady(BeanManager beanManager) {
-			callback.beanManagerInitialized( beanManager );
 		}
 	}
 }

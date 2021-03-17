@@ -8,7 +8,9 @@ package org.hibernate.tool.schema.extract.internal;
 
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -66,9 +68,13 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 		final String extraPhysycalTableTypesConfig = configService.getSetting(
 				AvailableSettings.EXTRA_PHYSICAL_TABLE_TYPES,
 				StandardConverters.STRING,
-				""
+				configService.getSetting(
+						AvailableSettings.DEPRECATED_EXTRA_PHYSICAL_TABLE_TYPES,
+						StandardConverters.STRING,
+						""
+				)
 		);
-		if ( !"".equals( extraPhysycalTableTypesConfig.trim() ) ) {
+		if ( ! StringHelper.isBlank( extraPhysycalTableTypesConfig ) ) {
 			this.extraPhysicalTableTypes = StringHelper.splitTrimmingTokens(
 					",;",
 					extraPhysycalTableTypesConfig,
@@ -526,8 +532,8 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 			if ( "TABLE".equalsIgnoreCase( tableType ) ) {
 				return true;
 			}
-			for ( int i = 0; i < extraPhysicalTableTypes.length; i++ ) {
-				if ( extraPhysicalTableTypes[i].equalsIgnoreCase( tableType ) ) {
+			for ( String extraPhysicalTableType : extraPhysicalTableTypes ) {
+				if ( extraPhysicalTableType.equalsIgnoreCase( tableType ) ) {
 					return true;
 				}
 			}
@@ -536,59 +542,50 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 	}
 
 	private void addColumns(TableInformation tableInformation) {
-		final QualifiedTableName tableName = tableInformation.getName();
-		final Identifier catalog = tableName.getCatalogName();
-		final Identifier schema = tableName.getSchemaName();
+		// We use this dummy query to retrieve the table information through the ResultSetMetaData
+		// This is significantly better than to use the DatabaseMetaData especially on Oracle with synonyms enabled
+		final String tableName = extractionContext.getJdbcEnvironment().getQualifiedObjectNameFormatter().format(
+				// The name comes from the database, so the case is correct
+				// But we quote here to avoid issues with reserved words
+				tableInformation.getName().quote(),
+				extractionContext.getJdbcEnvironment().getDialect()
+		);
+		final String query = "select * from " + tableName + " where 1=0";
+		try (Statement statement = extractionContext.getJdbcConnection()
+				.createStatement(); ResultSet resultSet = statement.executeQuery( query )) {
+			final ResultSetMetaData metaData = resultSet.getMetaData();
+			final int columnCount = metaData.getColumnCount();
 
-		final String catalogFilter;
-		final String schemaFilter;
-
-		if ( catalog == null ) {
-			catalogFilter = "";
-		}
-		else {
-			catalogFilter = catalog.getText();
-		}
-
-		if ( schema == null ) {
-			schemaFilter = "";
-		}
-		else {
-			schemaFilter = schema.getText();
-		}
-
-		try {
-			ResultSet resultSet = extractionContext.getJdbcDatabaseMetaData().getColumns(
-					catalogFilter,
-					schemaFilter,
-					tableName.getTableName().getText(),
-					"%"
-			);
-
-			try {
-				while ( resultSet.next() ) {
-					final String columnName = resultSet.getString( "COLUMN_NAME" );
-					final ColumnInformationImpl columnInformation = new ColumnInformationImpl(
-							tableInformation,
-							DatabaseIdentifier.toIdentifier( columnName ),
-							resultSet.getInt( "DATA_TYPE" ),
-							new StringTokenizer( resultSet.getString( "TYPE_NAME" ), "() " ).nextToken(),
-							resultSet.getInt( "COLUMN_SIZE" ),
-							resultSet.getInt( "DECIMAL_DIGITS" ),
-							interpretTruthValue( resultSet.getString( "IS_NULLABLE" ) )
-					);
-					tableInformation.addColumn( columnInformation );
-				}
-			}
-			finally {
-				resultSet.close();
+			for ( int i = 1; i <= columnCount; i++ ) {
+				final String columnName = metaData.getColumnName( i );
+				final ColumnInformationImpl columnInformation = new ColumnInformationImpl(
+						tableInformation,
+						DatabaseIdentifier.toIdentifier( columnName ),
+						metaData.getColumnType( i ),
+						new StringTokenizer( metaData.getColumnTypeName( i ), "() " ).nextToken(),
+						metaData.getPrecision( i ),
+						metaData.getScale( i ),
+						interpretNullable( metaData.isNullable( i ) )
+				);
+				tableInformation.addColumn( columnInformation );
 			}
 		}
 		catch (SQLException e) {
 			throw convertSQLException(
 					e,
-					"Error accessing column metadata: " + tableName.toString()
+					"Error accessing column metadata: " + tableInformation.getName().toString()
 			);
+		}
+	}
+
+	private TruthValue interpretNullable(int nullable) {
+		switch ( nullable ) {
+			case ResultSetMetaData.columnNullable:
+				return TruthValue.TRUE;
+			case ResultSetMetaData.columnNoNulls:
+				return TruthValue.FALSE;
+			default:
+				return TruthValue.UNKNOWN;
 		}
 	}
 

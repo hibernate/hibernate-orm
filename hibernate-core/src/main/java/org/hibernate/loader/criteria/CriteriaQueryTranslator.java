@@ -213,7 +213,7 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 		}
 
 		if ( parent.equals( rootCriteria ) ) {
-			// if its the root criteria, we are done
+			// if it's the root criteria, we are done
 			return path;
 		}
 		else {
@@ -230,8 +230,9 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 		criteriaInfoMap.put( rootCriteria, rootProvider);
 		nameCriteriaInfoMap.put( rootProvider.getName(), rootProvider );
 
-		for ( final String key : associationPathCriteriaMap.keySet() ) {
-			final Criteria value = associationPathCriteriaMap.get( key );
+		for ( Map.Entry<String, Criteria> entry : associationPathCriteriaMap.entrySet() ) {
+			final String key = entry.getKey();
+			final Criteria value = entry.getValue();
 			final CriteriaInfoProvider info = getPathInfo( key );
 			criteriaInfoMap.put( value, info );
 			nameCriteriaInfoMap.put( info.getName(), info );
@@ -254,7 +255,7 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 				final AssociationType atype = (AssociationType) type;
 				final CollectionType ctype = type.isCollectionType() ? (CollectionType)type : null;
 				final Type elementType = (ctype != null) ? ctype.getElementType( sessionFactory ) : null;
-				// is the association a collection of components or value-types? (i.e a colloction of valued types?)
+				// is the association a collection of components or value-types? (i.e a collection of valued types?)
 				if ( ctype != null  && elementType.isComponentType() ) {
 					provider = new ComponentCollectionCriteriaInfoProvider( helper.getCollectionPersister(ctype.getRole()) );
 				}
@@ -294,8 +295,9 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 
 	private void createCriteriaSQLAliasMap() {
 		int i = 0;
-		for(final Criteria crit : criteriaInfoMap.keySet()){
-			final CriteriaInfoProvider value = criteriaInfoMap.get( crit );
+		for ( Map.Entry<Criteria, CriteriaInfoProvider> entry : criteriaInfoMap.entrySet() ) {
+			final Criteria crit = entry.getKey();
+			final CriteriaInfoProvider value = entry.getValue();
 			String alias = crit.getAlias();
 			if ( alias == null ) {
 				// the entity name
@@ -320,9 +322,11 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 
 		final LockOptions lockOptions = new LockOptions();
 		final Map<String, LockMode> lockModeMap = rootCriteria.getLockModes();
-		for ( final String key : lockModeMap.keySet() ) {
+		for ( Map.Entry<String, LockMode> entry : lockModeMap.entrySet() ) {
+			final String key = entry.getKey();
+			final LockMode value = entry.getValue();
 			final Criteria subcriteria = getAliasedCriteria( key );
-			lockOptions.setAliasSpecificLockMode( getSQLAlias( subcriteria ), lockModeMap.get( key ) );
+			lockOptions.setAliasSpecificLockMode( getSQLAlias( subcriteria ), value );
 		}
 
 		final List<Object> values = new ArrayList<Object>();
@@ -602,7 +606,7 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 	}
 
 	/**
-	 * Get the a typed value for the given property value.
+	 * Get the typed value for the given property value.
 	 */
 	@Override
 	public TypedValue getTypedValue(Criteria subcriteria, String propertyName, Object value) throws HibernateException {

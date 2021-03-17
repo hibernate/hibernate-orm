@@ -39,7 +39,7 @@ public interface ResolvableNode {
 	void resolveInFunctionCall(boolean generateJoin, boolean implicitJoin) throws SemanticException;
 
 	/**
-	 * Does the work of resolving an an index [].
+	 * Does the work of resolving an index [].
 	 */
 	void resolveIndex(AST parent) throws SemanticException;
 

@@ -8,18 +8,14 @@ package org.hibernate.loader.entity;
 
 import java.io.Serializable;
 import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.OuterJoinLoader;
-import org.hibernate.param.ParameterBinder;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.Type;
@@ -46,12 +42,28 @@ public abstract class AbstractEntityLoader
 	@Override
 	public Object load(Serializable id, Object optionalObject, SharedSessionContractImplementor session) {
 		// this form is deprecated!
-		return load( id, optionalObject, session, LockOptions.NONE );
+		return load( id, optionalObject, session, LockOptions.NONE, null );
+	}
+
+	@Override
+	public Object load(Serializable id, Object optionalObject, SharedSessionContractImplementor session, Boolean readOnly) {
+		// this form is deprecated!
+		return load( id, optionalObject, session, LockOptions.NONE, readOnly );
 	}
 
 	@Override
 	public Object load(Serializable id, Object optionalObject, SharedSessionContractImplementor session, LockOptions lockOptions) {
-		return load( session, id, optionalObject, id, lockOptions );
+		return load( id, optionalObject, session, lockOptions, null );
+	}
+
+	@Override
+	public Object load(Serializable id, Object optionalObject, SharedSessionContractImplementor session, LockOptions lockOptions, Boolean readOnly) {
+		return load( session, id, optionalObject, id, lockOptions, readOnly );
+	}
+
+	@Override
+	public Object load(Object id, SharedSessionContractImplementor session, LockOptions lockOptions) {
+		return load( session, id, null, null, lockOptions, null );
 	}
 
 	protected Object load(
@@ -59,7 +71,8 @@ public abstract class AbstractEntityLoader
 			Object id,
 			Object optionalObject,
 			Serializable optionalId,
-			LockOptions lockOptions) {
+			LockOptions lockOptions,
+			Boolean readOnly) {
 
 		List list = loadEntity(
 				session,
@@ -69,7 +82,8 @@ public abstract class AbstractEntityLoader
 				entityName,
 				optionalId,
 				persister,
-				lockOptions
+				lockOptions,
+				readOnly
 			);
 
 		if ( list.size()==1 ) {
@@ -99,8 +113,8 @@ public abstract class AbstractEntityLoader
 			Object[] row,
 			ResultTransformer transformer,
 			ResultSet rs,
-			SharedSessionContractImplementor session) throws SQLException, HibernateException {
-		return row[row.length-1];
+			SharedSessionContractImplementor session) {
+		return row[ row.length - 1 ];
 	}
 
 	@Override

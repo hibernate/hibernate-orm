@@ -99,7 +99,7 @@ public class TypeResolver implements Serializable {
 	 * 	<li>
 	 * 		look for 'typeName' as a class name and<ol>
 	 *			<li>if it names a {@link Type} implementor, return an instance</li>
-	 *			<li>if it names a {@link CompositeUserType} or a {@link UserType}, return an instance of class wrapped intot the appropriate {@link Type} adapter</li>
+	 *			<li>if it names a {@link CompositeUserType} or a {@link UserType}, return an instance of class wrapped into the appropriate {@link Type} adapter</li>
 	 * 			<li>if it implements {@link org.hibernate.classic.Lifecycle}, return the corresponding entity type</li>
 	 * 			<li>if it implements {@link Serializable}, return the corresponding serializable type</li>
 	 * 		</ol>

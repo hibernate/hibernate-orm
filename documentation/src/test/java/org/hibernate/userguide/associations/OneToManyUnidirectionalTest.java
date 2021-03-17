@@ -59,8 +59,13 @@ public class OneToManyUnidirectionalTest extends BaseEntityManagerFunctionalTest
 		@Id
 		@GeneratedValue
 		private Long id;
+
 		@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
 		private List<Phone> phones = new ArrayList<>();
+
+		//Getters and setters are omitted for brevity
+
+	//end::associations-one-to-many-unidirectional-example[]
 
 		public Person() {
 		}
@@ -68,6 +73,8 @@ public class OneToManyUnidirectionalTest extends BaseEntityManagerFunctionalTest
 		public List<Phone> getPhones() {
 			return phones;
 		}
+
+	//tag::associations-one-to-many-unidirectional-example[]
 	}
 
 	@Entity(name = "Phone")
@@ -79,6 +86,10 @@ public class OneToManyUnidirectionalTest extends BaseEntityManagerFunctionalTest
 
 		@Column(name = "`number`")
 		private String number;
+
+		//Getters and setters are omitted for brevity
+
+	//end::associations-one-to-many-unidirectional-example[]
 
 		public Phone() {
 		}
@@ -94,6 +105,7 @@ public class OneToManyUnidirectionalTest extends BaseEntityManagerFunctionalTest
 		public String getNumber() {
 			return number;
 		}
+	//tag::associations-one-to-many-unidirectional-example[]
 	}
 	//end::associations-one-to-many-unidirectional-example[]
 }

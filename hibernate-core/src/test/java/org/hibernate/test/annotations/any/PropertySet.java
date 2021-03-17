@@ -89,7 +89,7 @@ public class PropertySet {
 		this.someProperty = someProperty;
 	}
 
-	public void addGeneratedProperty(Property property) {
+	public void addGeneralProperty(Property property) {
 		this.generalProperties.add( property );
 	}
 }

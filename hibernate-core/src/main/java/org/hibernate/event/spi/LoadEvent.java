@@ -46,23 +46,24 @@ public class LoadEvent extends AbstractEvent {
 	private boolean isAssociationFetch;
 	private Object result;
 	private PostLoadEvent postLoadEvent;
+	private Boolean readOnly;
 
-	public LoadEvent(Serializable entityId, Object instanceToLoad, EventSource source) {
-		this( entityId, null, instanceToLoad, DEFAULT_LOCK_OPTIONS, false, source );
+	public LoadEvent(Serializable entityId, Object instanceToLoad, EventSource source, Boolean readOnly) {
+		this( entityId, null, instanceToLoad, DEFAULT_LOCK_OPTIONS, false, source, readOnly );
 	}
 
-	public LoadEvent(Serializable entityId, String entityClassName, LockMode lockMode, EventSource source) {
-		this( entityId, entityClassName, null, lockMode, false, source );
+	public LoadEvent(Serializable entityId, String entityClassName, LockMode lockMode, EventSource source, Boolean readOnly) {
+		this( entityId, entityClassName, null, lockMode, false, source, readOnly );
 	}
 
-	public LoadEvent(Serializable entityId, String entityClassName, LockOptions lockOptions, EventSource source) {
-		this( entityId, entityClassName, null, lockOptions, false, source );
+	public LoadEvent(Serializable entityId, String entityClassName, LockOptions lockOptions, EventSource source, Boolean readOnly) {
+		this( entityId, entityClassName, null, lockOptions, false, source, readOnly );
 	}
 
-	public LoadEvent(Serializable entityId, String entityClassName, boolean isAssociationFetch, EventSource source) {
-		this( entityId, entityClassName, null, DEFAULT_LOCK_OPTIONS, isAssociationFetch, source );
+	public LoadEvent(Serializable entityId, String entityClassName, boolean isAssociationFetch, EventSource source, Boolean readOnly) {
+		this( entityId, entityClassName, null, DEFAULT_LOCK_OPTIONS, isAssociationFetch, source, readOnly );
 	}
-	
+
 	public boolean isAssociationFetch() {
 		return isAssociationFetch;
 	}
@@ -73,10 +74,11 @@ public class LoadEvent extends AbstractEvent {
 			Object instanceToLoad,
 			LockMode lockMode,
 			boolean isAssociationFetch,
-			EventSource source) {
+			EventSource source,
+			Boolean readOnly) {
 		this( entityId, entityClassName, instanceToLoad,
 				lockMode == DEFAULT_LOCK_MODE ? DEFAULT_LOCK_OPTIONS : new LockOptions().setLockMode( lockMode ),
-				isAssociationFetch, source );
+				isAssociationFetch, source, readOnly );
 	}
 
 	private LoadEvent(
@@ -85,12 +87,13 @@ public class LoadEvent extends AbstractEvent {
 			Object instanceToLoad,
 			LockOptions lockOptions,
 			boolean isAssociationFetch,
-			EventSource source) {
+			EventSource source,
+			Boolean readOnly) {
 
-		super(source);
+		super( source );
 
 		if ( entityId == null ) {
-			throw new IllegalArgumentException("id to load is required for loading");
+			throw new IllegalArgumentException( "id to load is required for loading" );
 		}
 
 		if ( lockOptions.getLockMode() == LockMode.WRITE ) {
@@ -106,6 +109,7 @@ public class LoadEvent extends AbstractEvent {
 		this.lockOptions = lockOptions;
 		this.isAssociationFetch = isAssociationFetch;
 		this.postLoadEvent = new PostLoadEvent( source );
+		this.readOnly = readOnly;
 	}
 
 	public Serializable getEntityId() {
@@ -189,5 +193,13 @@ public class LoadEvent extends AbstractEvent {
 
 	public void setPostLoadEvent(PostLoadEvent postLoadEvent) {
 		this.postLoadEvent = postLoadEvent;
+	}
+
+	public Boolean getReadOnly() {
+		return readOnly;
+	}
+
+	public void setReadOnly(Boolean readOnly) {
+		this.readOnly = readOnly;
 	}
 }

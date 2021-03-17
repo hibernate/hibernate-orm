@@ -11,11 +11,13 @@ import javax.persistence.ParameterMode;
 import javax.persistence.StoredProcedureQuery;
 
 import org.hibernate.dialect.SQLServer2012Dialect;
+import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.RequiresDialect;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.hibernate.testing.transaction.TransactionUtil.doInAutoCommit;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 
@@ -23,7 +25,7 @@ import static org.junit.Assert.assertEquals;
  * @author Vlad Mihalcea
  */
 @RequiresDialect(SQLServer2012Dialect.class)
-public class SQLServerStoredProcedureCrossSchemaTest extends AbstractStoredProcedureTest {
+public class SQLServerStoredProcedureCrossSchemaTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -35,49 +37,18 @@ public class SQLServerStoredProcedureCrossSchemaTest extends AbstractStoredProce
 
 	@Before
 	public void init() {
-		doInAutoCommit( statement -> {
-			try {
-				statement.executeUpdate( "DROP PROCEDURE sp_test.sp_square_number" );
-			}
-			catch (SQLException e) {
-				log.debug( e.getMessage() );
-			}
-		} );
-
-		doInAutoCommit( statement -> {
-			try {
-				statement.executeUpdate( "DROP SCHEMA sp_test" );
-			}
-			catch (SQLException e) {
-				log.debug( e.getMessage() );
-			}
-		} );
-
-		doInAutoCommit( statement -> {
-			try {
-				statement.executeUpdate( "CREATE SCHEMA sp_test" );
-			}
-			catch (SQLException e) {
-				log.debug( e.getMessage() );
-			}
-		} );
-
-		doInAutoCommit( statement -> {
-			try {
-				statement.executeUpdate(
-					"CREATE PROCEDURE sp_test.sp_square_number " +
-					"   @inputNumber INT, " +
-					"   @outputNumber INT OUTPUT " +
-					"AS " +
-					"BEGIN " +
-					"   SELECT @outputNumber = @inputNumber * @inputNumber; " +
-					"END"
-				);
-			}
-			catch (SQLException e) {
-				log.debug( e.getMessage() );
-			}
-		} );
+		doInAutoCommit(
+			"DROP PROCEDURE sp_test.sp_square_number",
+			"DROP SCHEMA sp_test",
+			"CREATE SCHEMA sp_test",
+			"CREATE PROCEDURE sp_test.sp_square_number " +
+			"   @inputNumber INT, " +
+			"   @outputNumber INT OUTPUT " +
+			"AS " +
+			"BEGIN " +
+			"   SELECT @outputNumber = @inputNumber * @inputNumber; " +
+			"END"
+		);
 	}
 
 	@Test

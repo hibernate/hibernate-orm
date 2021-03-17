@@ -14,6 +14,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -28,7 +29,8 @@ import org.hibernate.spatial.HSMessageLogger;
 
 import org.jboss.logging.Logger;
 
-import org.apache.commons.dbcp.BasicDataSource;
+
+import org.apache.commons.dbcp2.BasicDataSource;
 import org.geolatte.geom.Geometry;
 import org.geolatte.geom.codec.Wkt;
 import org.geolatte.geom.codec.WktDecodeException;
@@ -42,7 +44,7 @@ import org.geolatte.geom.codec.WktDecoder;
 public class DataSourceUtils {
 
 
-	private static HSMessageLogger LOG = Logger.getMessageLogger(
+	private static final HSMessageLogger LOG = Logger.getMessageLogger(
 			HSMessageLogger.class,
 			DataSourceUtils.class.getName()
 	);
@@ -257,7 +259,7 @@ public class DataSourceUtils {
 		BufferedReader reader = null;
 		try {
 			reader = new BufferedReader(
-					new InputStreamReader( is, Charset.forName( "UTF-8" ) )
+					new InputStreamReader( is, StandardCharsets.UTF_8 )
 			);
 
 			StringWriter sw = new StringWriter();

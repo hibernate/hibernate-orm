@@ -29,20 +29,10 @@ public abstract class AbstractCacheTransactionSynchronization implements CacheTr
 	public final void transactionJoined() {
 		// reset the timestamp
 		this.lastTransactionCompletionTimestamp = regionFactory.nextTimestamp();
-		processTransactionJoin();
-	}
-
-	private void processTransactionJoin() {
-		// by default, nothing to do.
 	}
 
 	@Override
 	public final void transactionCompleting() {
-		processTransactionCompleting();
-	}
-
-	private void processTransactionCompleting() {
-		// by default, nothing to do.
 	}
 
 	@Override
@@ -50,11 +40,6 @@ public abstract class AbstractCacheTransactionSynchronization implements CacheTr
 		// reset the timestamp for any non-transactional access after this
 		// 		point - until (if) we later join a new txn
 //		this.lastTransactionCompletionTimestamp = regionFactory.nextTimestamp();
-
-		processTransactionCompleted( successful );
 	}
 
-	private void processTransactionCompleted(boolean successful) {
-		// by default, nothing to do.
-	}
 }

@@ -8,10 +8,12 @@ package org.hibernate.bytecode.enhance.internal.bytebuddy;
 
 import java.util.Collection;
 import java.util.Objects;
+
 import javax.persistence.Embedded;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Id;
 
+import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl.AnnotatedFieldDescription;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
 
 import net.bytebuddy.ClassFileVersion;
@@ -27,7 +29,7 @@ import net.bytebuddy.jar.asm.MethodVisitor;
 import net.bytebuddy.jar.asm.Opcodes;
 import net.bytebuddy.jar.asm.Type;
 
-class InlineDirtyCheckingHandler implements Implementation, ByteCodeAppender {
+final class InlineDirtyCheckingHandler implements Implementation, ByteCodeAppender {
 
 	private final Implementation delegate;
 
@@ -44,25 +46,33 @@ class InlineDirtyCheckingHandler implements Implementation, ByteCodeAppender {
 	static Implementation wrap(
 			TypeDescription managedCtClass,
 			ByteBuddyEnhancementContext enhancementContext,
-			FieldDescription persistentField,
+			AnnotatedFieldDescription persistentField,
 			Implementation implementation) {
 		if ( enhancementContext.doDirtyCheckingInline( managedCtClass ) ) {
 
 			if ( enhancementContext.isCompositeClass( managedCtClass ) ) {
 				implementation = Advice.to( CodeTemplates.CompositeDirtyCheckingHandler.class ).wrap( implementation );
 			}
-			else if ( !EnhancerImpl.isAnnotationPresent( persistentField, Id.class )
-					&& !EnhancerImpl.isAnnotationPresent( persistentField, EmbeddedId.class )
+			else if ( !persistentField.hasAnnotation( Id.class )
+					&& !persistentField.hasAnnotation( EmbeddedId.class )
 					&& !( persistentField.getType().asErasure().isAssignableTo( Collection.class )
 					&& enhancementContext.isMappedCollection( persistentField ) ) ) {
-				implementation = new InlineDirtyCheckingHandler( implementation, managedCtClass, persistentField.asDefined() );
+				implementation = new InlineDirtyCheckingHandler( implementation, managedCtClass,
+						persistentField.asDefined() );
 			}
 
 			if ( enhancementContext.isCompositeClass( persistentField.getType().asErasure() )
-					&& EnhancerImpl.isAnnotationPresent( persistentField, Embedded.class ) ) {
+					&& persistentField.hasAnnotation( Embedded.class ) ) {
 
-				implementation = Advice.withCustomMapping()
-						.bind( CodeTemplates.FieldValue.class, persistentField )
+				// HHH-13759 - Call getter on superclass if field is not visible
+				// An embedded field won't be visible if declared private in a superclass
+				// annotated with @MappedSuperclass
+				Advice.WithCustomMapping advice = Advice.withCustomMapping();
+				advice = persistentField.isVisibleTo( managedCtClass )
+						? advice.bind( CodeTemplates.FieldValue.class, persistentField.getFieldDescription() )
+						: advice.bind( CodeTemplates.FieldValue.class, new CodeTemplates.GetterMapping( persistentField.getFieldDescription() ) );
+
+				implementation = advice
 						.bind( CodeTemplates.FieldName.class, persistentField.getName() )
 						.to( CodeTemplates.CompositeFieldDirtyCheckingHandler.class )
 						.wrap( implementation );
@@ -150,5 +160,24 @@ class InlineDirtyCheckingHandler implements Implementation, ByteCodeAppender {
 			methodVisitor.visitFrame( Opcodes.F_SAME, 0, null, 0, null );
 		}
 		return new Size( 1 + 2 * persistentField.getType().asErasure().getStackSize().getSize(), instrumentedMethod.getStackSize() );
+	}
+
+	@Override
+	public boolean equals(final Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || InlineDirtyCheckingHandler.class != o.getClass() ) {
+			return false;
+		}
+		final InlineDirtyCheckingHandler that = (InlineDirtyCheckingHandler) o;
+		return Objects.equals( delegate, that.delegate ) &&
+			Objects.equals( managedCtClass, that.managedCtClass ) &&
+			Objects.equals( persistentField, that.persistentField );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( delegate, managedCtClass, persistentField );
 	}
 }

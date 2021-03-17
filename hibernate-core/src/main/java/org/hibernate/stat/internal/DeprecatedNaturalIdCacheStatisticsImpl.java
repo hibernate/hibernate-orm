@@ -63,7 +63,7 @@ public class DeprecatedNaturalIdCacheStatisticsImpl implements NaturalIdCacheSta
 	}
 
 	/**
-	 * average time in ms taken by the excution of this query onto the DB
+	 * average time in ms taken by the execution of this query onto the DB
 	 */
 	@Override
 	public long getExecutionAvgTime() {
@@ -84,7 +84,7 @@ public class DeprecatedNaturalIdCacheStatisticsImpl implements NaturalIdCacheSta
 	}
 
 	/**
-	 * max time in ms taken by the excution of this query onto the DB
+	 * max time in ms taken by the execution of this query onto the DB
 	 */
 	@Override
 	public long getExecutionMaxTime() {
@@ -92,7 +92,7 @@ public class DeprecatedNaturalIdCacheStatisticsImpl implements NaturalIdCacheSta
 	}
 
 	/**
-	 * min time in ms taken by the excution of this query onto the DB
+	 * min time in ms taken by the execution of this query onto the DB
 	 */
 	@Override
 	public long getExecutionMinTime() {

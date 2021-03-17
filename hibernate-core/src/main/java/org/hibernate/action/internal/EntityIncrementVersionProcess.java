@@ -19,17 +19,14 @@ import org.hibernate.persister.entity.EntityPersister;
  */
 public class EntityIncrementVersionProcess implements BeforeTransactionCompletionProcess {
 	private final Object object;
-	private final EntityEntry entry;
 
 	/**
 	 * Constructs an EntityIncrementVersionProcess for the given entity.
 	 *
 	 * @param object The entity instance
-	 * @param entry The entity's EntityEntry reference
 	 */
-	public EntityIncrementVersionProcess(Object object, EntityEntry entry) {
+	public EntityIncrementVersionProcess(Object object) {
 		this.object = object;
-		this.entry = entry;
 	}
 
 	/**
@@ -39,6 +36,12 @@ public class EntityIncrementVersionProcess implements BeforeTransactionCompletio
 	 */
 	@Override
 	public void doBeforeTransactionCompletion(SessionImplementor session) {
+		final EntityEntry entry = session.getPersistenceContext().getEntry( object );
+		// Don't increment version for an entity that is not in the PersistenceContext;
+		if ( entry == null ) {
+			return;
+		}
+
 		final EntityPersister persister = entry.getPersister();
 		final Object nextVersion = persister.forceVersionIncrement( entry.getId(), entry.getVersion(), session );
 		entry.forceLocked( object, nextVersion );

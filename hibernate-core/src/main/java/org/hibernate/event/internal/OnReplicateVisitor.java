@@ -30,7 +30,7 @@ public class OnReplicateVisitor extends ReattachVisitor {
 
 	private boolean isUpdate;
 
-	OnReplicateVisitor(EventSource session, Serializable key, Object owner, boolean isUpdate) {
+	public OnReplicateVisitor(EventSource session, Serializable key, Object owner, boolean isUpdate) {
 		super( session, key, owner );
 		this.isUpdate = isUpdate;
 	}
@@ -51,7 +51,7 @@ public class OnReplicateVisitor extends ReattachVisitor {
 			final PersistentCollection wrapper = (PersistentCollection) collection;
 			wrapper.setCurrentSession( (SessionImplementor) session );
 			if ( wrapper.wasInitialized() ) {
-				session.getPersistenceContext().addNewCollection( persister, wrapper );
+				session.getPersistenceContextInternal().addNewCollection( persister, wrapper );
 			}
 			else {
 				reattachCollection( wrapper, type );

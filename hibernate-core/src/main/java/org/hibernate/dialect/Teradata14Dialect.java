@@ -207,7 +207,7 @@ public class Teradata14Dialect extends TeradataDialect {
 	}
 
 
-	private class TeradataIndexExporter extends StandardIndexExporter implements Exporter<Index> {
+	private static class TeradataIndexExporter extends StandardIndexExporter implements Exporter<Index> {
 
 		public TeradataIndexExporter(Dialect dialect) {
 			super(dialect);
@@ -254,7 +254,8 @@ public class Teradata14Dialect extends TeradataDialect {
 			final StringBuilder buf = new StringBuilder()
 					.append( "create index " )
 					.append( indexNameForCreation )
-					.append(  "(" + colBuf  )
+					.append(  '(' )
+					.append( colBuf )
 					.append( " on " )
 					.append( tableName );
 

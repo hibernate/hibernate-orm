@@ -80,7 +80,7 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 		try {
 			AgroalPropertiesReader agroalProperties = new AgroalPropertiesReader( CONFIG_PREFIX ).readProperties( props );
 			agroalProperties.modify().connectionPoolConfiguration( cp -> cp.connectionFactoryConfiguration( cf -> {
-				copyProperty( props, AvailableSettings.DRIVER, cf::driverClassName, Function.identity() );
+				copyProperty( props, AvailableSettings.DRIVER, cf::connectionProviderClassName, Function.identity() );
 				copyProperty( props, AvailableSettings.URL, cf::jdbcUrl, Function.identity() );
 				copyProperty( props, AvailableSettings.USER, cf::principal, NamePrincipal::new );
 				copyProperty( props, AvailableSettings.PASS, cf::credential, SimplePassword::new );
@@ -139,6 +139,8 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 
 	@Override
 	public void stop() {
-		agroalDataSource.close();
+		if ( agroalDataSource != null ) {
+			agroalDataSource.close();
+		}
 	}
 }

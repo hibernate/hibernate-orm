@@ -6,10 +6,12 @@
  */
 package org.hibernate.stat;
 
+import java.io.Serializable;
+
 /**
  * @author Steve Ebersole
  */
-public interface CacheableDataStatistics {
+public interface CacheableDataStatistics extends Serializable {
 	long NOT_CACHED_COUNT = Long.MIN_VALUE;
 
 	/**

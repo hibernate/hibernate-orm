@@ -9,16 +9,17 @@ package org.hibernate.jpa;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.hibernate.graph.GraphSemantic;
+
 import static org.hibernate.annotations.QueryHints.CACHEABLE;
 import static org.hibernate.annotations.QueryHints.CACHE_MODE;
 import static org.hibernate.annotations.QueryHints.CACHE_REGION;
 import static org.hibernate.annotations.QueryHints.COMMENT;
-import static org.hibernate.annotations.QueryHints.FETCHGRAPH;
 import static org.hibernate.annotations.QueryHints.FETCH_SIZE;
 import static org.hibernate.annotations.QueryHints.FLUSH_MODE;
 import static org.hibernate.annotations.QueryHints.FOLLOW_ON_LOCKING;
-import static org.hibernate.annotations.QueryHints.LOADGRAPH;
 import static org.hibernate.annotations.QueryHints.NATIVE_LOCKMODE;
+import static org.hibernate.annotations.QueryHints.NATIVE_SPACES;
 import static org.hibernate.annotations.QueryHints.PASS_DISTINCT_THROUGH;
 import static org.hibernate.annotations.QueryHints.READ_ONLY;
 import static org.hibernate.annotations.QueryHints.TIMEOUT_HIBERNATE;
@@ -26,8 +27,6 @@ import static org.hibernate.annotations.QueryHints.TIMEOUT_JPA;
 
 /**
  * Defines the supported JPA query hints
- *
- * @author Steve Ebersole
  */
 public class QueryHints {
 	/**
@@ -92,23 +91,26 @@ public class QueryHints {
 	 * Note: Currently, attributes that are not specified are treated as FetchType.LAZY or FetchType.EAGER depending
 	 * on the attribute's definition in metadata, rather than forcing FetchType.LAZY.
 	 */
-	public static final String HINT_FETCHGRAPH = FETCHGRAPH;
+	public static final String HINT_FETCHGRAPH = GraphSemantic.FETCH.getJpaHintName();
 	
 	/**
 	 * Hint providing a "loadgraph" EntityGraph.  Attributes explicitly specified as AttributeNodes are treated as
 	 * FetchType.EAGER (via join fetch or subsequent select).  Attributes that are not specified are treated as
 	 * FetchType.LAZY or FetchType.EAGER depending on the attribute's definition in metadata
 	 */
-	public static final String HINT_LOADGRAPH = LOADGRAPH;
+	public static final String HINT_LOADGRAPH = GraphSemantic.LOAD.getJpaHintName();
 
 	public static final String HINT_FOLLOW_ON_LOCKING = FOLLOW_ON_LOCKING;
 
 	public static final String HINT_PASS_DISTINCT_THROUGH = PASS_DISTINCT_THROUGH;
 
+	public static final String HINT_NATIVE_SPACES = NATIVE_SPACES;
+
+
 	private static final Set<String> HINTS = buildHintsSet();
 
 	private static Set<String> buildHintsSet() {
-		HashSet<String> hints = new HashSet<String>();
+		HashSet<String> hints = new HashSet<>();
 		hints.add( HINT_TIMEOUT );
 		hints.add( SPEC_HINT_TIMEOUT );
 		hints.add( HINT_COMMENT );
@@ -121,6 +123,7 @@ public class QueryHints {
 		hints.add( HINT_NATIVE_LOCKMODE );
 		hints.add( HINT_FETCHGRAPH );
 		hints.add( HINT_LOADGRAPH );
+		hints.add( HINT_NATIVE_SPACES );
 		return java.util.Collections.unmodifiableSet( hints );
 	}
 

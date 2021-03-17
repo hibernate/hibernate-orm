@@ -24,7 +24,7 @@ import javax.persistence.criteria.Selection;
 import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.EntityType;
 
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
 import org.hibernate.query.criteria.internal.compile.CompilableCriteria;
 import org.hibernate.query.criteria.internal.compile.CriteriaInterpretation;
@@ -33,6 +33,7 @@ import org.hibernate.query.criteria.internal.compile.ImplicitParameterBinding;
 import org.hibernate.query.criteria.internal.compile.InterpretedParameterMetadata;
 import org.hibernate.query.criteria.internal.compile.RenderingContext;
 import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
@@ -58,6 +59,10 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 		super( criteriaBuilder );
 		this.returnType = returnType;
 		this.queryStructure = new QueryStructure<T>( this, criteriaBuilder );
+	}
+
+	protected QueryStructure<T> getQueryStructure() {
+		return queryStructure;
 	}
 
 	@Override
@@ -169,7 +174,7 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 
 	@Override
 	public CriteriaQuery<T> where(Predicate... predicates) {
-		// TODO : assuming this should be a conjuntion, but the spec does not say specifically...
+		// TODO : assuming this should be a conjunction, but the spec does not say specifically...
 		queryStructure.setRestriction( criteriaBuilder().and( predicates ) );
 		return this;
 	}
@@ -291,16 +296,7 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 
 		queryStructure.render( jpaqlBuffer, renderingContext );
 
-		if ( ! getOrderList().isEmpty() ) {
-			jpaqlBuffer.append( " order by " );
-			String sep = "";
-			for ( Order orderSpec : getOrderList() ) {
-				jpaqlBuffer.append( sep )
-						.append( ( ( Renderable ) orderSpec.getExpression() ).render( renderingContext ) )
-						.append( orderSpec.isAscending() ? " asc" : " desc" );
-				sep = ", ";
-			}
-		}
+		renderOrderByClause( renderingContext, jpaqlBuffer );
 
 		final String jpaqlString = jpaqlBuffer.toString();
 
@@ -310,7 +306,7 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 			@Override
 			@SuppressWarnings("unchecked")
 			public QueryImplementor buildCompiledQuery(
-					SessionImplementor entityManager,
+					SharedSessionContractImplementor entityManager,
 					final InterpretedParameterMetadata parameterMetadata) {
 
 				final Map<String,Class> implicitParameterTypes = extractTypeMap( parameterMetadata.implicitParameterBindings() );
@@ -384,5 +380,26 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 				return map;
 			}
 		};
+	}
+
+	protected void renderOrderByClause(RenderingContext renderingContext, StringBuilder jpaqlBuffer) {
+		if ( getOrderList().isEmpty() ) {
+			return;
+		}
+
+		renderingContext.getClauseStack().push( Clause.ORDER );
+		try {
+			jpaqlBuffer.append( " order by " );
+			String sep = "";
+			for ( Order orderSpec : getOrderList() ) {
+				jpaqlBuffer.append( sep )
+						.append( ( (Renderable) orderSpec.getExpression() ).render( renderingContext ) )
+						.append( orderSpec.isAscending() ? " asc" : " desc" );
+				sep = ", ";
+			}
+		}
+		finally {
+			renderingContext.getClauseStack().pop();
+		}
 	}
 }

@@ -284,7 +284,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	}
 
 	/**
-	 * The value in {@link #getSegmentColumnName segment column} which
+	 * The value in {@link #getSegmentColumnName segment column}
 	 * corresponding to this generator instance.  In other words this value
 	 * indicates the row in which this generator instance will store values.
 	 *
@@ -737,7 +737,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 		if ( table == null ) {
 			table = namespace.createTable( qualifiedTableName.getObjectName(), false );
 
-			// todo : note sure the best solution here.  do we add the columns if missing?  other?
+			// todo : not sure the best solution here.  do we add the columns if missing?  other?
 			final Column segmentColumn = new ExportableColumn(
 					database,
 					table,

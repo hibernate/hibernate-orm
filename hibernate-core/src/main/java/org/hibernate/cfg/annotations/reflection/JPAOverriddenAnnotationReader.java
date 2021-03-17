@@ -250,7 +250,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 	private AccessibleObject mirroredAttribute;
 
 	/**
-	 * @deprecated Use {@link JPAMetadataProvider(AnnotatedElement, XMLContext, BootstrapContext)} instead.
+	 * @deprecated Use {@link #JPAOverriddenAnnotationReader(AnnotatedElement, XMLContext, BootstrapContext)} instead.
 	 */
 	public JPAOverriddenAnnotationReader(
 			AnnotatedElement el,
@@ -1377,7 +1377,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 			}
 		}
 		if ( elementsForProperty.size() == 0 && defaults.canUseJavaAnnotations() ) {
-			//we have nothing, so Java annotations might occurs
+			//we have nothing, so Java annotations might occur
 			Annotation annotation = getPhysicalAnnotation( Version.class );
 			if ( annotation != null ) {
 				annotationList.add( annotation );
@@ -2614,7 +2614,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 				}
 				else {
 					throw new AnnotationException(
-							"Unknown DiscrimiatorType in XML: " + value + " (" + SCHEMA_VALIDATION + ")"
+							"Unknown DiscriminatorType in XML: " + value + " (" + SCHEMA_VALIDATION + ")"
 					);
 				}
 			}
@@ -2869,7 +2869,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 			secondaryTables.add( AnnotationFactory.create( annotation ) );
 		}
 		/*
-		 * You can't have both secondary table in XML and Java,
+		 * You can't have both secondary tables in XML and Java,
 		 * since there would be no way to "remove" a secondary table
 		 */
 		if ( secondaryTables.size() == 0 && defaults.canUseJavaAnnotations() ) {
@@ -2998,7 +2998,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 
 	/**
 	 * Copy a string attribute from an XML element to an annotation descriptor. The name of the annotation attribute is
-	 * explicitely given.
+	 * explicitly given.
 	 *
 	 * @param annotation annotation where to copy to the attribute.
 	 * @param element XML element from where to copy the attribute.

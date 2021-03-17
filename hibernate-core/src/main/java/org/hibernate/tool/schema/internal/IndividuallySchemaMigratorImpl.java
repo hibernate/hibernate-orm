@@ -70,7 +70,7 @@ public class IndividuallySchemaMigratorImpl extends AbstractSchemaMigrator {
 					if ( tableInformation == null ) {
 						createTable( table, dialect, metadata, formatter, options, targets );
 					}
-					else if ( tableInformation != null && tableInformation.isPhysicalTable() ) {
+					else if ( tableInformation.isPhysicalTable() ) {
 						tablesInformation.addTableInformation( tableInformation );
 						migrateTable( table, tableInformation, dialect, metadata, formatter, options, targets );
 					}
@@ -80,7 +80,7 @@ public class IndividuallySchemaMigratorImpl extends AbstractSchemaMigrator {
 			for ( Table table : namespace.getTables() ) {
 				if ( schemaFilter.includeTable( table ) && table.isPhysicalTable() ) {
 					final TableInformation tableInformation = tablesInformation.getTableInformation( table );
-					if ( tableInformation == null || ( tableInformation != null && tableInformation.isPhysicalTable() ) ) {
+					if ( tableInformation == null || tableInformation.isPhysicalTable() ) {
 						applyIndexes( table, tableInformation, dialect, metadata, formatter, options, targets );
 						applyUniqueKeys( table, tableInformation, dialect, metadata, formatter, options, targets );
 					}

@@ -23,7 +23,7 @@ import static org.junit.Assert.assertNull;
 /**
  * Check some of the individual cascade styles
  *
- * @todo do something for refresh
+ * TODO: do something for refresh
  *
  * @author Emmanuel Bernard
  */
@@ -149,7 +149,7 @@ public class CascadeTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		tx = s.beginTransaction();
 		s.delete( s.get( Mouth.class, mouth.id ) );
-		
+
 		tx.commit();
 		s.close();
 	}

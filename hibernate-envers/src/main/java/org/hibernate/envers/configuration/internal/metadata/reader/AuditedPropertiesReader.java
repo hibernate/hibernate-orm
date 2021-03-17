@@ -7,8 +7,6 @@
 package org.hibernate.envers.configuration.internal.metadata.reader;
 
 import java.lang.annotation.Annotation;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
@@ -21,16 +19,17 @@ import javax.persistence.ElementCollection;
 import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
 import javax.persistence.MapKey;
+import javax.persistence.MapKeyEnumerated;
 import javax.persistence.OneToMany;
 import javax.persistence.Version;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.annotations.common.reflection.ClassLoadingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
-import org.hibernate.cfg.AccessType;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.envers.AuditJoinTable;
 import org.hibernate.envers.AuditMappedBy;
 import org.hibernate.envers.AuditOverride;
@@ -45,11 +44,11 @@ import org.hibernate.envers.internal.EnversMessageLogger;
 import org.hibernate.envers.internal.tools.MappingTools;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.envers.internal.tools.StringTools;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
-
 import org.jboss.logging.Logger;
 
 import static org.hibernate.envers.internal.tools.Tools.newHashMap;
@@ -65,6 +64,7 @@ import static org.hibernate.envers.internal.tools.Tools.newHashSet;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  * @author Michal Skowronek (mskowr at o2 dot pl)
  * @author Lukasz Zuchowski (author at zuchos dot com)
+ * @author Chris Cranford
  */
 public class AuditedPropertiesReader {
 	private static final EnversMessageLogger LOG = Logger.getMessageLogger(
@@ -86,6 +86,7 @@ public class AuditedPropertiesReader {
 
 	private final Set<XProperty> overriddenAuditedProperties;
 	private final Set<XProperty> overriddenNotAuditedProperties;
+	private final Map<XProperty, AuditJoinTable> overriddenAuditedPropertiesJoinTables;
 
 	private final Set<XClass> overriddenAuditedClasses;
 	private final Set<XClass> overriddenNotAuditedClasses;
@@ -110,6 +111,7 @@ public class AuditedPropertiesReader {
 
 		overriddenAuditedProperties = newHashSet();
 		overriddenNotAuditedProperties = newHashSet();
+		overriddenAuditedPropertiesJoinTables = newHashMap();
 
 		overriddenAuditedClasses = newHashSet();
 		overriddenNotAuditedClasses = newHashSet();
@@ -166,6 +168,7 @@ public class AuditedPropertiesReader {
 						if ( !overriddenNotAuditedProperties.contains( property ) ) {
 							// If the property has not been marked as not audited by the subclass.
 							overriddenAuditedProperties.add( property );
+							overriddenAuditedPropertiesJoinTables.put( property, auditOverride.auditJoinTable() );
 						}
 					}
 					else {
@@ -357,45 +360,24 @@ public class AuditedPropertiesReader {
 
 		//look in the class
 		addFromProperties(
-				getPropertiesFromClassByType( clazz, AccessType.FIELD ),
+				clazz.getDeclaredProperties( "field" ),
 				it -> "field",
 				fieldAccessedPersistentProperties,
 				allClassAudited
 		);
-
 		addFromProperties(
-				getPropertiesFromClassByType( clazz, AccessType.PROPERTY ),
+				clazz.getDeclaredProperties( "property" ),
 				propertyAccessedPersistentProperties::get,
 				propertyAccessedPersistentProperties.keySet(),
 				allClassAudited
 		);
 
 		if ( allClassAudited != null || !auditedPropertiesHolder.isEmpty() ) {
-			final PrivilegedAction<XClass> action = new PrivilegedAction<XClass>() {
-				@Override
-				public XClass run() {
-					return clazz.getSuperclass();
-				}
-			};
-
-			final XClass superclazz = System.getSecurityManager() != null
-					? AccessController.doPrivileged( action )
-					: action.run();
-
+			final XClass superclazz = clazz.getSuperclass();
 			if ( !clazz.isInterface() && !"java.lang.Object".equals( superclazz.getName() ) ) {
 				addPropertiesFromClass( superclazz );
 			}
 		}
-	}
-
-	private Iterable<XProperty> getPropertiesFromClassByType(XClass clazz, AccessType accessType) {
-		final PrivilegedAction<Iterable<XProperty>> action = new PrivilegedAction<Iterable<XProperty>>() {
-			@Override
-			public Iterable<XProperty> run() {
-				return clazz.getDeclaredProperties( accessType.getType() );
-			}
-		};
-		return System.getSecurityManager() != null ? AccessController.doPrivileged( action ) : action.run();
 	}
 
 	private void addFromProperties(
@@ -451,8 +433,10 @@ public class AuditedPropertiesReader {
 			// Marking component properties as placed directly in class (not inside another component).
 			componentData.setBeanName( null );
 
+			final ClassLoaderService classLoaderService = globalCfg.getEnversService().getClassLoaderService();
+
 			final PersistentPropertiesSource componentPropertiesSource = new ComponentPropertiesSource(
-					reflectionManager,
+					classLoaderService, reflectionManager,
 					propertyValue
 			);
 			final AuditedPropertiesReader audPropReader = new AuditedPropertiesReader(
@@ -478,7 +462,10 @@ public class AuditedPropertiesReader {
 			componentPropertiesSource = new DynamicComponentSource( reflectionManager, propertyValue, property );
 		}
 		else {
-			componentPropertiesSource = new ComponentPropertiesSource( reflectionManager, propertyValue );
+			final ClassLoaderService classLoaderService = this.globalCfg.getEnversService().getClassLoaderService();
+			componentPropertiesSource = new ComponentPropertiesSource(
+					classLoaderService,
+					reflectionManager, propertyValue );
 		}
 
 		final ComponentAuditedPropertiesReader audPropReader = new ComponentAuditedPropertiesReader(
@@ -610,13 +597,9 @@ public class AuditedPropertiesReader {
 			propertyData.setStore( aud.modStore() );
 			propertyData.setRelationTargetAuditMode( aud.targetAuditMode() );
 			propertyData.setUsingModifiedFlag( checkUsingModifiedFlag( aud ) );
-			if( aud.modifiedColumnName() != null && !"".equals( aud.modifiedColumnName() ) ) {
-				propertyData.setModifiedFlagName( aud.modifiedColumnName() );
-			}
-			else {
-				propertyData.setModifiedFlagName(
-						MetadataTools.getModifiedFlagPropertyName( propertyName, modifiedFlagSuffix )
-				);
+			propertyData.setModifiedFlagName( MetadataTools.getModifiedFlagPropertyName( propertyName, modifiedFlagSuffix ) );
+			if ( !StringTools.isEmpty( aud.modifiedColumnName() ) ) {
+				propertyData.setExplicitModifiedFlagName( aud.modifiedColumnName() );
 			}
 			return true;
 		}
@@ -641,7 +624,7 @@ public class AuditedPropertiesReader {
 
 	private void setPropertyRelationMappedBy(XProperty property, PropertyAuditingData propertyData) {
 		final OneToMany oneToMany = property.getAnnotation( OneToMany.class );
-		if ( oneToMany != null && !"".equals( oneToMany.mappedBy() ) ) {
+		if ( oneToMany != null && StringHelper.isNotEmpty( oneToMany.mappedBy() ) ) {
 			propertyData.setRelationMappedBy( oneToMany.mappedBy() );
 		}
 	}
@@ -650,7 +633,7 @@ public class AuditedPropertiesReader {
 		final AuditMappedBy auditMappedBy = property.getAnnotation( AuditMappedBy.class );
 		if ( auditMappedBy != null ) {
 			propertyData.setAuditMappedBy( auditMappedBy.mappedBy() );
-			if ( !"".equals( auditMappedBy.positionMappedBy() ) ) {
+			if ( StringHelper.isNotEmpty( auditMappedBy.positionMappedBy() ) ) {
 				propertyData.setPositionMappedBy( auditMappedBy.positionMappedBy() );
 			}
 		}
@@ -661,16 +644,36 @@ public class AuditedPropertiesReader {
 		if ( mapKey != null ) {
 			propertyData.setMapKey( mapKey.name() );
 		}
+		else {
+			final MapKeyEnumerated mapKeyEnumerated = property.getAnnotation( MapKeyEnumerated.class );
+			if ( mapKeyEnumerated != null ) {
+				propertyData.setMapKeyEnumType( mapKeyEnumerated.value() );
+			}
+		}
 	}
 
 	private void addPropertyJoinTables(XProperty property, PropertyAuditingData propertyData) {
-		// first set the join table based on the AuditJoinTable annotation
-		final AuditJoinTable joinTable = property.getAnnotation( AuditJoinTable.class );
-		if ( joinTable != null ) {
-			propertyData.setJoinTable( joinTable );
+		// The AuditJoinTable annotation source will follow the following priority rules
+		//		1. Use the override if one is specified
+		//		2. Use the site annotation if one is specified
+		//		3. Use the default if neither are specified
+		//
+		// The prime directive for (1) is so that when users in a subclass use @AuditOverride(s)
+		// the join-table specified there should have a higher priority in the event the
+		// super-class defines an equivalent @AuditJoinTable at the site/property level.
+
+		final AuditJoinTable overrideJoinTable = overriddenAuditedPropertiesJoinTables.get( property );
+		if ( overrideJoinTable != null ) {
+			propertyData.setJoinTable( overrideJoinTable );
 		}
 		else {
-			propertyData.setJoinTable( DEFAULT_AUDIT_JOIN_TABLE );
+			final AuditJoinTable propertyJoinTable = property.getAnnotation( AuditJoinTable.class );
+			if ( propertyJoinTable != null ) {
+				propertyData.setJoinTable( propertyJoinTable );
+			}
+			else {
+				propertyData.setJoinTable( DEFAULT_AUDIT_JOIN_TABLE );
+			}
 		}
 	}
 
@@ -717,7 +720,6 @@ public class AuditedPropertiesReader {
 					}
 				}
 			}
-
 		}
 		return true;
 	}
@@ -790,14 +792,17 @@ public class AuditedPropertiesReader {
 			this.component = component;
 		}
 
-		public ComponentPropertiesSource(ReflectionManager reflectionManager, Component component) {
+		public ComponentPropertiesSource(
+				ClassLoaderService classLoaderService,
+				ReflectionManager reflectionManager,
+				Component component) {
 			try {
-				this.xclass = reflectionManager.classForName( component.getComponentClassName() );
+				Class<Object> objectClass = classLoaderService.classForName( component.getComponentClassName() );
+				this.xclass = reflectionManager.toXClass( objectClass );
 			}
 			catch ( ClassLoadingException e ) {
 				throw new MappingException( e );
 			}
-
 			this.component = component;
 		}
 

@@ -17,6 +17,7 @@ import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.EntityType;
 
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
 import org.hibernate.query.criteria.internal.compile.CompilableCriteria;
 import org.hibernate.query.criteria.internal.compile.CriteriaInterpretation;
@@ -25,6 +26,7 @@ import org.hibernate.query.criteria.internal.compile.InterpretedParameterMetadat
 import org.hibernate.query.criteria.internal.compile.RenderingContext;
 import org.hibernate.query.criteria.internal.path.RootImpl;
 import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.sql.ast.Clause;
 
 /**
  * Base class for commonality between {@link javax.persistence.criteria.CriteriaUpdate} and
@@ -37,7 +39,6 @@ public abstract class AbstractManipulationCriteriaQuery<T> implements Compilable
 
 	private RootImpl<T> root;
 	private Predicate restriction;
-	private List<Subquery<?>> subQueries;
 
 	protected AbstractManipulationCriteriaQuery(CriteriaBuilderImpl criteriaBuilder) {
 		this.criteriaBuilder = criteriaBuilder;
@@ -104,7 +105,7 @@ public abstract class AbstractManipulationCriteriaQuery<T> implements Compilable
 			@Override
 			@SuppressWarnings("unchecked")
 			public QueryImplementor buildCompiledQuery(
-					SessionImplementor entityManager,
+					SharedSessionContractImplementor entityManager,
 					final InterpretedParameterMetadata interpretedParameterMetadata) {
 
 				final Map<String,Class> implicitParameterTypes = extractTypeMap( interpretedParameterMetadata.implicitParameterBindings() );
@@ -155,9 +156,17 @@ public abstract class AbstractManipulationCriteriaQuery<T> implements Compilable
 	}
 
 	protected void renderRestrictions(StringBuilder jpaql, RenderingContext renderingContext) {
-		if ( getRestriction() != null) {
+		if ( getRestriction() == null ) {
+			return;
+		}
+
+		renderingContext.getClauseStack().push( Clause.WHERE );
+		try {
 			jpaql.append( " where " )
 					.append( ( (Renderable) getRestriction() ).render( renderingContext ) );
+		}
+		finally {
+			renderingContext.getClauseStack().pop();
 		}
 	}
 }

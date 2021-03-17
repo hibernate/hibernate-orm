@@ -9,7 +9,6 @@ package org.hibernate.test.cdi.general.nonregistrymanaged.extended;
 import javax.enterprise.inject.Instance;
 import javax.enterprise.inject.se.SeContainer;
 import javax.enterprise.inject.se.SeContainerInitializer;
-import javax.enterprise.inject.spi.BeanManager;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
@@ -18,7 +17,6 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.jpa.event.spi.jpa.ExtendedBeanManager;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.tool.schema.Action;
 
@@ -38,6 +36,7 @@ import org.hibernate.test.cdi.general.nonregistrymanaged.TheNamedDependentBean;
 import org.hibernate.test.cdi.general.nonregistrymanaged.TheNestedDependentBean;
 import org.hibernate.test.cdi.general.nonregistrymanaged.TheNonHibernateBeanConsumer;
 import org.hibernate.test.cdi.general.nonregistrymanaged.TheSharedApplicationScopedBean;
+import org.hibernate.test.cdi.testsupport.TestingExtendedBeanManager;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -52,16 +51,28 @@ import static org.junit.Assert.assertEquals;
  */
 public class NonRegistryManagedExtendedCdiSupportTest extends BaseUnitTestCase {
 	@Test
-	public void testIt() {
+	public void test() {
+		doTest( TestingExtendedBeanManager.create() );
+	}
+
+	/**
+	 * NOTE : we use the deprecated one here to make sure this continues to work.
+	 * Scott still uses this in WildFly and we need it to continue to work there
+	 */
+	@Test
+	public void testLegacy() {
+		doTest( TestingExtendedBeanManager.createLegacy() );
+	}
+
+	private void doTest(TestingExtendedBeanManager beanManager) {
 		Monitor.reset();
 
-		final ExtendedBeanManagerImpl standIn = new ExtendedBeanManagerImpl();
 		final TheFallbackBeanInstanceProducer fallbackBeanInstanceProducer =
 				new TheFallbackBeanInstanceProducer();
 		final NonRegistryManagedBeanConsumingIntegrator beanConsumingIntegrator =
 				new NonRegistryManagedBeanConsumingIntegrator( fallbackBeanInstanceProducer );
 
-		try (SessionFactoryImplementor sessionFactory = buildSessionFactory( standIn, beanConsumingIntegrator )) {
+		try (SessionFactoryImplementor sessionFactory = buildSessionFactory( beanManager, beanConsumingIntegrator )) {
 			final SeContainerInitializer cdiInitializer = SeContainerInitializer.newInstance()
 					.disableDiscovery()
 					.addBeanClasses( TheApplicationScopedBean.class )
@@ -93,7 +104,7 @@ public class NonRegistryManagedExtendedCdiSupportTest extends BaseUnitTestCase {
 				// Nested dependent bean: 1 instance per bean that depends on it
 				assertEquals( 1, Monitor.theNestedDependentBean().currentInstantiationCount() );
 
-				standIn.beanManagerReady( cdiContainer.getBeanManager() );
+				beanManager.notifyListenerReady( cdiContainer.getBeanManager() );
 
 				beanConsumingIntegrator.ensureInstancesInitialized();
 
@@ -164,7 +175,7 @@ public class NonRegistryManagedExtendedCdiSupportTest extends BaseUnitTestCase {
 		assertEquals( 7, Monitor.theNestedDependentBean().currentPreDestroyCount() );
 	}
 
-	private SessionFactoryImplementor buildSessionFactory(ExtendedBeanManagerImpl standIn,
+	private SessionFactoryImplementor buildSessionFactory(TestingExtendedBeanManager beanManager,
 			NonRegistryManagedBeanConsumingIntegrator beanConsumingIntegrator) {
 		BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder()
 				.applyIntegrator( beanConsumingIntegrator )
@@ -172,7 +183,7 @@ public class NonRegistryManagedExtendedCdiSupportTest extends BaseUnitTestCase {
 
 		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder( bsr )
 				.applySetting( AvailableSettings.HBM2DDL_AUTO, Action.CREATE_DROP )
-				.applySetting( AvailableSettings.CDI_BEAN_MANAGER, standIn )
+				.applySetting( AvailableSettings.CDI_BEAN_MANAGER, beanManager )
 				.build();
 
 		try {
@@ -185,19 +196,6 @@ public class NonRegistryManagedExtendedCdiSupportTest extends BaseUnitTestCase {
 		catch (Exception e) {
 			StandardServiceRegistryBuilder.destroy( ssr );
 			throw e;
-		}
-	}
-
-	public static class ExtendedBeanManagerImpl implements ExtendedBeanManager {
-		private LifecycleListener callback;
-
-		@Override
-		public void registerLifecycleListener(LifecycleListener lifecycleListener) {
-			this.callback = lifecycleListener;
-		}
-
-		public void beanManagerReady(BeanManager beanManager) {
-			callback.beanManagerInitialized( beanManager );
 		}
 	}
 }

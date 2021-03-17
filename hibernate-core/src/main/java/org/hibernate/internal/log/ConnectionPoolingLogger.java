@@ -31,7 +31,7 @@ public interface ConnectionPoolingLogger extends BasicLogger {
 	/**
 	 * Static access to the logging instance
 	 */
-	public static final ConnectionPoolingLogger CONNECTIONS_LOGGER = Logger.getMessageLogger(
+	ConnectionPoolingLogger CONNECTIONS_LOGGER = Logger.getMessageLogger(
 			ConnectionPoolingLogger.class,
 			"org.hibernate.orm.connections.pooling"
 	);

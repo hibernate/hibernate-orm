@@ -12,8 +12,16 @@ import java.util.LinkedHashMap;
  */
 public class OrderedMapType extends MapType {
 
+	/**
+	 * @deprecated Use the other constructor
+	 */
+	@Deprecated
 	public OrderedMapType(TypeFactory.TypeScope typeScope, String role, String propertyRef) {
-		super( typeScope, role, propertyRef );
+		this( role, propertyRef );
+	}
+
+	public OrderedMapType(String role, String propertyRef) {
+		super( role, propertyRef );
 	}
 
 	@Override

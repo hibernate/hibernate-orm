@@ -46,7 +46,7 @@ import org.jboss.logging.Logger;
  * <ul>
  *     <li>Methods that return collections (e.g., {@link #keySet()},
  *          {@link #values()}, {@link #entrySet()}) return an
- *          unnmodifiable view of the collection;</li>
+ *          unmodifiable view of the collection;</li>
  *     <li>If {@link #put(Object mergeEntity, Object) managedEntity} or
  *         {@link #put(Object mergeEntity, Object managedEntity, boolean isOperatedOn)}
  *         is executed and this MergeMap already contains a cross-reference for
@@ -73,11 +73,11 @@ import org.jboss.logging.Logger;
  * The following method is intended to be used by a merge event listener (and other
  * classes) in the same package to indicate whether the merge operation is being
  * performed on a merge entity already in the MergeContext:
- * {@link MergeContext#setOperatedOn(Object mergeEntity, boolean isOperatedOn)
+ * {@link MergeContext#setOperatedOn(Object mergeEntity, boolean isOperatedOn)}
  *
  * @author Gail Badner
  */
-class MergeContext implements Map {
+public class MergeContext implements Map {
 	private static final Logger LOG = Logger.getLogger( MergeContext.class );
 
 	private final EventSource session;
@@ -101,7 +101,7 @@ class MergeContext implements Map {
 	    // key is a merge entity;
 	    // value is a flag indicating if the merge entity is currently in the merge process.
 
-	MergeContext(EventSource session, EntityCopyObserver entityCopyObserver){
+	public MergeContext(EventSource session, EntityCopyObserver entityCopyObserver){
 		this.session = session;
 		this.entityCopyObserver = entityCopyObserver;
 	}
@@ -149,7 +149,7 @@ class MergeContext implements Map {
 	 * Returns an unmodifiable set view of the merge-to-managed entity cross-references contained in this MergeContext.
 	 * @return an unmodifiable set view of the merge-to-managed entity cross-references contained in this MergeContext
 	 *
-	 * @see {@link Collections#unmodifiableSet(java.util.Set)}
+	 * @see Collections#unmodifiableSet(java.util.Set)
 	 */
 	public Set entrySet() {
 		return Collections.unmodifiableSet( mergeToManagedEntityXref.entrySet() );
@@ -180,7 +180,7 @@ class MergeContext implements Map {
 	 * Returns an unmodifiable set view of the merge entities contained in this MergeContext
 	 * @return an unmodifiable set view of the merge entities contained in this MergeContext
 	 *
-	 * @see {@link Collections#unmodifiableSet(java.util.Set)}
+	 * @see Collections#unmodifiableSet(java.util.Set)
 	 */
 	public Set keySet() {
 		return Collections.unmodifiableSet( mergeToManagedEntityXref.keySet() );
@@ -226,7 +226,7 @@ class MergeContext implements Map {
 	 * managed entity associated with <code>mergeEntity</code>
 	 * @throws IllegalStateException if internal cross-references are out of sync,
 	 */
-	/* package-private */ Object put(Object mergeEntity, Object managedEntity, boolean isOperatedOn) {
+	public Object put(Object mergeEntity, Object managedEntity, boolean isOperatedOn) {
 		if ( mergeEntity == null || managedEntity == null ) {
 			throw new NullPointerException( "null merge and managed entities are not supported by " + getClass().getName() );
 		}
@@ -319,7 +319,7 @@ class MergeContext implements Map {
 	 * Returns an unmodifiable Set view of managed entities contained in this MergeContext.
 	 * @return an unmodifiable Set view of managed entities contained in this MergeContext
 	 *
-	 * @see {@link Collections#unmodifiableSet(java.util.Set)}
+	 * @see Collections#unmodifiableSet(java.util.Set)
 	 */
 	public Collection values() {
 		return Collections.unmodifiableSet( managedToMergeEntityXref.keySet() );
@@ -347,7 +347,7 @@ class MergeContext implements Map {
 	 * @throws NullPointerException if mergeEntity is null
 	 * @throws IllegalStateException if this MergeContext does not contain a a cross-reference for mergeEntity
 	 */
-	/* package-private */ void setOperatedOn(Object mergeEntity, boolean isOperatedOn) {
+	public void setOperatedOn(Object mergeEntity, boolean isOperatedOn) {
 		if ( mergeEntity == null ) {
 			throw new NullPointerException( "null entities are not supported by " + getClass().getName() );
 		}
@@ -367,14 +367,14 @@ class MergeContext implements Map {
 	 *
 	 * @return an unmodifiable map view of the managed-to-merge entity cross-references.
 	 *
-	 * @see {@link Collections#unmodifiableMap(java.util.Map)}
+	 * @see Collections#unmodifiableMap(java.util.Map)
 	 */
 	public Map invertMap() {
 		return Collections.unmodifiableMap( managedToMergeEntityXref );
 	}
 
 	private String printEntity(Object entity) {
-		if ( session.getPersistenceContext().getEntry( entity ) != null ) {
+		if ( session.getPersistenceContextInternal().getEntry( entity ) != null ) {
 			return MessageHelper.infoString( session.getEntityName( entity ), session.getIdentifier( entity ) );
 		}
 		// Entity was not found in current persistence context. Use Object#toString() method.

@@ -20,6 +20,9 @@ import org.hibernate.StaleObjectStateException;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Projections;
 import org.hibernate.dialect.AbstractHANADialect;
+
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
@@ -33,6 +36,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Gavin King
  */
+@RequiresDialectFeature(DialectChecks.SupportsNoColumnInsert.class)
 public class MergeTest extends AbstractOperationTestCase {
 	@Test
 	public void testMergeStaleVersionFails() throws Exception {

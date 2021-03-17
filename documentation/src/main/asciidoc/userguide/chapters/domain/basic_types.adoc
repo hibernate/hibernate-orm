@@ -1,5 +1,5 @@
 [[basic]]
-=== Basic Types
+=== Basic types
 :modeldir: ../../../../../main/java/org/hibernate/userguide/model
 :sourcedir: ../../../../../test/java/org/hibernate/userguide/mapping
 :resourcedir: ../../../../../test/resources/org/hibernate/userguide/
@@ -15,33 +15,34 @@ Internally Hibernate uses a registry of basic types when it needs to resolve a s
 ==== Hibernate-provided BasicTypes
 
 .Standard BasicTypes
-[cols=",,,",options="header",]
+[cols="<.^,<.^,<.^,<.^",options="header",]
 |=======================================================================================================================================================================================================================================================================================
 |Hibernate type (org.hibernate.type package) |JDBC type |Java type |BasicTypeRegistry key(s)
 |StringType |VARCHAR |java.lang.String |string, java.lang.String
 |MaterializedClob |CLOB |java.lang.String |materialized_clob
 |TextType |LONGVARCHAR |java.lang.String |text
-|CharacterType |CHAR |char, java.lang.Character |char, java.lang.Character
-|BooleanType |BIT |boolean, java.lang.Boolean |boolean, java.lang.Boolean
+|CharacterType |CHAR |char, java.lang.Character |character, char, java.lang.Character
+|BooleanType |BOOLEAN |boolean, java.lang.Boolean |boolean, java.lang.Boolean
 |NumericBooleanType |INTEGER, 0 is false, 1 is true |boolean, java.lang.Boolean |numeric_boolean
 |YesNoType |CHAR, 'N'/'n' is false, 'Y'/'y' is true. The uppercase value is written to the database. |boolean, java.lang.Boolean |yes_no
 |TrueFalseType |CHAR, 'F'/'f' is false, 'T'/'t' is true. The uppercase value is written to the database. |boolean, java.lang.Boolean |true_false
 |ByteType |TINYINT |byte, java.lang.Byte |byte, java.lang.Byte
 |ShortType |SMALLINT |short, java.lang.Short |short, java.lang.Short
-|IntegerTypes |INTEGER |int, java.lang.Integer |int, java.lang.Integer
+|IntegerType |INTEGER |int, java.lang.Integer |integer, int, java.lang.Integer
 |LongType |BIGINT |long, java.lang.Long |long, java.lang.Long
 |FloatType |FLOAT |float, java.lang.Float |float, java.lang.Float
 |DoubleType |DOUBLE |double, java.lang.Double |double, java.lang.Double
 |BigIntegerType |NUMERIC |java.math.BigInteger |big_integer, java.math.BigInteger
 |BigDecimalType |NUMERIC |java.math.BigDecimal |big_decimal, java.math.bigDecimal
-|TimestampType |TIMESTAMP |java.sql.Timestamp |timestamp, java.sql.Timestamp
-|TimeType |TIME |java.sql.Time |time, java.sql.Time
-|DateType |DATE |java.sql.Date |date, java.sql.Date
-|CalendarType |TIMESTAMP |java.util.Calendar |calendar, java.util.Calendar
+|TimestampType |TIMESTAMP |java.util.Date |timestamp, java.sql.Timestamp, java.util.Date
+|DbTimestampType |TIMESTAMP |java.util.Date |dbtimestamp
+|TimeType |TIME |java.util.Date |time, java.sql.Time
+|DateType |DATE |java.util.Date |date, java.sql.Date
+|CalendarType |TIMESTAMP |java.util.Calendar |calendar, java.util.Calendar, java.util.GregorianCalendar
 |CalendarDateType |DATE |java.util.Calendar |calendar_date
 |CalendarTimeType |TIME |java.util.Calendar |calendar_time
 |CurrencyType |VARCHAR |java.util.Currency |currency, java.util.Currency
-|LocaleType |VARCHAR |java.util.Locale |locale, java.utility.locale
+|LocaleType |VARCHAR |java.util.Locale |locale, java.util.Locale
 |TimeZoneType |VARCHAR, using the TimeZone ID |java.util.TimeZone |timezone, java.util.TimeZone
 |UrlType |VARCHAR |java.net.URL |url, java.net.URL
 |ClassType |VARCHAR (class FQN) |java.lang.Class |class, java.lang.Class
@@ -64,10 +65,12 @@ Internally Hibernate uses a registry of basic types when it needs to resolve a s
 |PrimitiveCharacterArrayNClobType |NCHAR |char[] |N/A
 |CharacterNCharType |NCHAR |java.lang.Character |ncharacter
 |CharacterArrayNClobType |NCLOB |java.lang.Character[] |N/A
+|RowVersionType |VARBINARY |byte[] |row_version
+|ObjectType |VARCHAR |implementors of java.lang.Serializable | object, java.lang.Object
 |=======================================================================================================================================================================================================================================================================================
 
 .Java 8 BasicTypes
-[cols=",,,",options="header",]
+[cols="<.^,<.^,<.^,<.^",options="header",]
 |=================================================================================================
 |Hibernate type (org.hibernate.type package) |JDBC type |Java type |BasicTypeRegistry key(s)
 |DurationType |BIGINT |java.time.Duration |Duration, java.time.Duration
@@ -81,17 +84,18 @@ Internally Hibernate uses a registry of basic types when it needs to resolve a s
 |=================================================================================================
 
 .Hibernate Spatial BasicTypes
-[cols=",,,",options="header",]
+[cols="<.^,<.^,<.^,<.^",options="header",]
 |=================================================================================================
 |Hibernate type (org.hibernate.spatial package) |JDBC type |Java type |BasicTypeRegistry key(s)
-|JTSGeometryType |depends on the dialect | com.vividsolutions.jts.geom.Geometry |jts_geometry, or the classname of Geometry or any of its subclasses
-|GeolatteGeometryType |depends on the dialect | org.geolatte.geom.Geometry |geolatte_geometry, or the classname of Geometry or any of its subclasses
+|JTSGeometryType |depends on the dialect | com.vividsolutions.jts.geom.Geometry |jts_geometry, and the class names of Geometry and its subclasses
+|GeolatteGeometryType |depends on the dialect | org.geolatte.geom.Geometry |geolatte_geometry, and the class names of Geometry and its subclasses
 |=================================================================================================
 
 [NOTE]
 ====
-To use these hibernate-spatial types, you must add the `hibernate-spatial` dependency to your classpath _and_ use a `org.hibernate.spatial.SpatialDialect` implementation.
-See <<spatial>> for more details about spatial types.
+To use the Hibernate Spatial types, you must add the `hibernate-spatial` dependency to your classpath _and_ use an `org.hibernate.spatial.SpatialDialect` implementation.
+
+See the <<chapters/query/spatial/Spatial.adoc#spatial,Spatial>> chapter for more details.
 ====
 
 These mappings are managed by a service inside Hibernate called the `org.hibernate.type.BasicTypeRegistry`, which essentially maintains a map of `org.hibernate.type.BasicType` (a `org.hibernate.type.Type` specialization) instances keyed by a name.
@@ -142,24 +146,25 @@ The JPA specification strictly limits the Java types that can be marked as basic
 * any other type that implements `Serializable` (JPA's "support" for `Serializable` types is to directly serialize their state to the database).
 
 If provider portability is a concern, you should stick to just these basic types.
-Note that JPA 2.1 did add the notion of a `javax.persistence.AttributeConverter` to help alleviate some of these concerns; see <<basic-jpa-convert>> for more on this topic.
+
+Note that JPA 2.1 introduced the `javax.persistence.AttributeConverter` contract to help alleviate some of these concerns. See <<basic-jpa-convert>> for more on this topic.
 ====
 
 The `@Basic` annotation defines 2 attributes.
 
 `optional` - boolean (defaults to true):: Defines whether this attribute allows nulls.
-JPA defines this as "a hint", which essentially means that it effect is specifically required.
+JPA defines this as "a hint", which essentially means that its effect is specifically required.
 As long as the type is not primitive, Hibernate takes this to mean that the underlying column should be `NULLABLE`.
 `fetch` - FetchType (defaults to EAGER):: Defines whether this attribute should be fetched eagerly or lazily.
-JPA says that EAGER is a requirement to the provider (Hibernate) that the value should be fetched when the owner is fetched, while LAZY is merely a hint that the value be fetched when the attribute is accessed.
+JPA says that EAGER is a requirement to the provider (Hibernate) that the value should be fetched when the owner is fetched, while LAZY is merely a hint that the value is fetched when the attribute is accessed.
 Hibernate ignores this setting for basic types unless you are using bytecode enhancement.
-See the <<chapters/pc/BytecodeEnhancement.adoc#BytecodeEnhancement,BytecodeEnhancement>> for additional information on fetching and on bytecode enhancement.
+See the <<chapters/pc/BytecodeEnhancement.adoc#BytecodeEnhancement,Bytecode Enhancement>> for additional information on fetching and on bytecode enhancement.
 
 [[basic-column-annotation]]
 ==== The `@Column` annotation
 
 JPA defines rules for implicitly determining the name of tables and columns.
-For a detailed discussion of implicit naming see <<chapters/domain/naming.adoc#naming,Naming>>.
+For a detailed discussion of implicit naming see <<chapters/domain/naming.adoc#naming,Naming strategies>>.
 
 For basic type attributes, the implicit naming rule is that the column name is the same as the attribute name.
 If that implicit naming rule does not meet your requirements, you can explicitly tell Hibernate (and other providers) the column name to use.
@@ -180,20 +185,21 @@ The `@Column` annotation defines other mapping information as well. See its Java
 [[basic-registry]]
 ==== BasicTypeRegistry
 
-We said before that a Hibernate type is not a Java type, nor a SQL type, but that it understands both and performs the marshalling between them.
+We said before that a Hibernate type is not a Java type, nor an SQL type, but that it understands both and performs the marshalling between them.
 But looking at the basic type mappings from the previous examples,
 how did Hibernate know to use its `org.hibernate.type.StringType` for mapping for `java.lang.String` attributes,
 or its `org.hibernate.type.IntegerType` for mapping `java.lang.Integer` attributes?
 
-The answer lies in a service inside Hibernate called the `org.hibernate.type.BasicTypeRegistry`, which essentially maintains a map of `org.hibernate.type.BasicType` (a `org.hibernate.type.Type` specialization) instances keyed by a name.
+The answer lies in a service inside Hibernate called the `org.hibernate.type.BasicTypeRegistry`, which essentially maintains a map of `org.hibernate.type.BasicType` (an `org.hibernate.type.Type` specialization) instances keyed by a name.
 
 We will see later, in the <<basic-type-annotation>> section, that we can explicitly tell Hibernate which BasicType to use for a particular attribute.
-But first let's explore how implicit resolution works and how applications can adjust implicit resolution.
+But first, let's explore how implicit resolution works and how applications can adjust the implicit resolution.
 
 [NOTE]
 ====
-A thorough discussion of the `BasicTypeRegistry` and all the different ways to contribute types to it is beyond the scope of this documentation.
-Please see Integrations Guide for complete details.
+A thorough discussion of `BasicTypeRegistry` and all the different ways to contribute types is beyond the scope of this documentation.
+
+Please see the http://docs.jboss.org/hibernate/orm/{majorMinorVersion}/integrationguide/html_single/Hibernate_Integration_Guide.html[Integration Guide] for complete details.
 ====
 
 As an example, take a String attribute such as we saw before with Product#sku.
@@ -214,7 +220,7 @@ For more details, see <<basic-custom-type>> section.
 Sometimes you want a particular attribute to be handled differently.
 Occasionally Hibernate will implicitly pick a `BasicType` that you do not want (and for some reason you do not want to adjust the `BasicTypeRegistry`).
 
-In these cases you must explicitly tell Hibernate the `BasicType` to use, via the `org.hibernate.annotations.Type` annotation.
+In these cases, you must explicitly tell Hibernate the `BasicType` to use, via the `org.hibernate.annotations.Type` annotation.
 
 [[basic-type-annotation-example]]
 .Using `@org.hibernate.annotations.Type`
@@ -256,8 +262,7 @@ The first approach is to directly implement the `BasicType` interface.
 
 [NOTE]
 ====
-Because the `BasicType` interface has a lot of methods to implement, it's much more convenient to extend the `AbstractStandardBasicType`,
-or the `AbstractSingleColumnStandardBasicType` if the value is stored in a single database column.
+Because the `BasicType` interface has a lot of methods to implement, if the value is stored in a single database column, it's much more convenient to extend the `AbstractStandardBasicType` or the `AbstractSingleColumnStandardBasicType` Hibernate classes.
 ====
 
 First, we need to extend the `AbstractSingleColumnStandardBasicType` like this:
@@ -315,7 +320,7 @@ include::{sourcedir}/basic/BitSetTypeTest.java[tags=basic-custom-type-BitSetType
 ----
 ====
 
-Alternatively, use can use a `@TypeDef` ans skip the registration phase:
+Alternatively, you can use the `@TypeDef` and skip the registration phase:
 
 [[basic-custom-type-BitSetTypeDef-mapping-example]]
 .Using `@TypeDef` to register a custom Type
@@ -397,7 +402,7 @@ include::{sourcedir}/../bootstrap/BootstrapTest.java[tags=basic-custom-type-regi
 ====
 Like `BasicType`, you can also register the `UserType` using a simple name.
 
-Without registration, the `UserType` mapping requires the fully-classified name:
+Without registering a name, the `UserType` mapping requires the fully qualified class name:
 
 [source, JAVA, indent=0]
 ----
@@ -424,7 +429,7 @@ Hibernate supports the mapping of Java enums as basic value types in a number of
 [[basic-enums-Enumerated]]
 ===== `@Enumerated`
 
-The original JPA-compliant way to map enums was via the `@Enumerated` and `@MapKeyEnumerated` for map keys annotations which works on the principle that the enum values are stored according to one of 2 strategies indicated by `javax.persistence.EnumType`:
+The original JPA-compliant way to map enums was via the `@Enumerated` or `@MapKeyEnumerated` for map keys annotations, working on the principle that the enum values are stored according to one of 2 strategies indicated by `javax.persistence.EnumType`:
 
 `ORDINAL`::
 	stored according to the enum value's ordinal position within the enum class, as indicated by `java.lang.Enum#ordinal`
@@ -487,7 +492,7 @@ include::{sourcedir}/basic/PhoneTypeEnumeratedStringTest.java[tags=basic-enums-E
 ----
 ====
 
-Persisting the same entity like in the `@Enumerated(ORDINAL)` example, Hibernate generates the following SQL statement:
+Persisting the same entity as in the `@Enumerated(ORDINAL)` example, Hibernate generates the following SQL statement:
 
 [[basic-enums-Enumerated-string-persistence-example]]
 .Persisting an entity with an `@Enumerated(STRING)` mapping
@@ -504,7 +509,7 @@ include::{extrasdir}/basic/basic-enums-Enumerated-string-persistence-example.sql
 Let's consider the following `Gender` enum which stores its values using the `'M'` and `'F'` codes.
 
 [[basic-enums-converter-example]]
-.Enum with custom constructor
+.Enum with a custom constructor
 ====
 [source, JAVA, indent=0]
 ----
@@ -533,8 +538,9 @@ For additional details on using AttributeConverters, see <<basic-jpa-convert>> s
 
 [NOTE]
 ====
-JPA explicitly disallows the use of an AttributeConverter with an attribute marked as `@Enumerated`.
-So if using the AttributeConverter approach, be sure not to mark the attribute as `@Enumerated`.
+JPA explicitly disallows the use of an `AttributeConverter` with an attribute marked as `@Enumerated`.
+
+So, when using the `AttributeConverter` approach, be sure not to mark the attribute as `@Enumerated`.
 ====
 
 [[basic-attribute-converter-query-parameter]]
@@ -573,7 +579,7 @@ include::{converter-sourcedir}/ConverterTest.java[tags=basic-attribute-converter
 ----
 ====
 
-Traditionally, you could only use the dbData `Caption` representation, which in our case is a `String`, when referencing the `caption` entity property.
+Traditionally, you could only use the DB data `Caption` representation, which in our case is a `String`, when referencing the `caption` entity property.
 
 [[basic-attribute-converter-query-parameter-converter-dbdata-example]]
 .Filtering by the `Caption` property using the DB data representation
@@ -684,7 +690,7 @@ Mapping LOBs (database Large Objects) come in 2 forms, those using the JDBC loca
 
 JDBC LOB locators exist to allow efficient access to the LOB data.
 They allow the JDBC driver to stream parts of the LOB data as needed, potentially freeing up memory space.
-However they can be unnatural to deal with and have certain limitations.
+However, they can be unnatural to deal with and have certain limitations.
 For example, a LOB locator is only portably valid during the duration of the transaction in which it was obtained.
 
 The idea of materialized LOBs is to trade-off the potential efficiency (not all drivers handle LOB data efficiently) for a more natural programming paradigm using familiar Java types such as `String` or `byte[]`, etc for these LOBs.
@@ -698,7 +704,7 @@ The JDBC LOB locator types include:
 * `java.sql.NClob`
 
 Mapping materialized forms of these LOB values would use more familiar Java types such as `String`, `char[]`, `byte[]`, etc.
-The trade off for _more familiar_ is usually performance.
+The trade-off for _more familiar_ is usually performance.
 
 [[basic-clob]]
 ===== Mapping CLOB
@@ -764,8 +770,7 @@ include::{sourcedir}/basic/ClobStringTest.java[tags=basic-clob-string-example]
 ====
 How JDBC deals with `LOB` data varies from driver to driver, and Hibernate tries to handle all these variances on your behalf.
 
-However, some drivers are trickier (e.g. PostgreSQL), and, in such cases, you may have to do some extra to get LOBs working.
-Such discussions are beyond the scope of this guide.
+However, some drivers are trickier (e.g. PostgreSQL), and, in such cases, you may have to do some extra steps to get LOBs working. Such discussions are beyond the scope of this guide.
 ====
 
 We might even want the materialized data as a char array (although this might not be a very good idea).
@@ -843,7 +848,7 @@ include::{sourcedir}/basic/BlobByteArrayTest.java[tags=basic-blob-byte-array-exa
 ==== Mapping Nationalized Character Data
 
 JDBC 4 added the ability to explicitly handle nationalized character data.
-To this end it added specific nationalized character data types.
+To this end, it added specific nationalized character data types:
 
 * `NCHAR`
 * `NVARCHAR`
@@ -894,7 +899,7 @@ include::{sourcedir}/basic/NClobTest.java[tags=basic-nclob-example]
 ----
 ====
 
-To persist such an entity, you have to create a `NClob` using the `NClobProxy` Hibernate utility:
+To persist such an entity, you have to create an `NClob` using the `NClobProxy` Hibernate utility:
 
 [[basic-nclob-persist-example]]
 .Persisting a `java.sql.NClob` entity
@@ -940,7 +945,8 @@ include::{sourcedir}/basic/NClobCharArrayTest.java[tags=basic-nclob-char-array-e
 
 [NOTE]
 ====
-If you application and database are entirely nationalized you may instead want to enable nationalized character data as the default.
+If your application and database use nationalization, you may instead want to enable nationalized character data as the default.
+
 You can do this via the `hibernate.use_nationalized_character_data` setting or by calling `MetadataBuilder#enableGlobalNationalizedCharacterDataSupport` during bootstrap.
 ====
 
@@ -951,8 +957,9 @@ Hibernate also allows you to map UUID values, again in a number of ways.
 
 [NOTE]
 ====
-The default UUID mapping is as binary because it represents more efficient storage.
-However many applications prefer the readability of character storage.
+The default UUID mapping is the binary one because it uses a more efficient column storage.
+
+However, many applications prefer the readability of the character-based column storage.
 To switch the default mapping, simply call `MetadataBuilder.applyBasicType( UUIDCharType.INSTANCE, UUID.class.getName() )`.
 ====
 
@@ -961,7 +968,7 @@ To switch the default mapping, simply call `MetadataBuilder.applyBasicType( UUID
 As mentioned, the default mapping for UUID attributes.
 Maps the UUID to a `byte[]` using `java.util.UUID#getMostSignificantBits` and `java.util.UUID#getLeastSignificantBits` and stores that as `BINARY` data.
 
-Chosen as the default simply because it is generally more efficient from storage perspective.
+Chosen as the default simply because it is generally more efficient from a storage perspective.
 
 ==== UUID as (var)char
 
@@ -971,17 +978,17 @@ Maps the UUID to a String using `java.util.UUID#toString` and `java.util.UUID#fr
 
 [IMPORTANT]
 ====
-When using one of the PostgreSQL Dialects, this becomes the default UUID mapping.
+When using one of the PostgreSQL Dialects, the PostgreSQL-specific UUID Hibernate type becomes the default UUID mapping.
 ====
 
-Maps the UUID using PostgreSQL's specific UUID data type.
+Maps the UUID using the PostgreSQL-specific UUID data type.
 The PostgreSQL JDBC driver chooses to map its UUID type to the `OTHER` code.
 Note that this can cause difficulty as the driver chooses to map many different data types to `OTHER`.
 
 ==== UUID as identifier
 
-Hibernate supports using UUID values as identifiers, and they can even be generated on user's behalf.
-For details, see the discussion of generators in <<chapters/domain/identifiers.adoc#identifiers,_Identifier generators_>>.
+Hibernate supports using UUID values as identifiers, and they can even be generated on the user's behalf.
+For details, see the discussion of generators in <<chapters/domain/identifiers.adoc#identifiers,_Identifiers_>>.
 
 [[basic-datetime]]
 ==== Mapping Date/Time Values
@@ -995,7 +1002,7 @@ TIMESTAMP:: It stores both a DATE and a TIME plus nanoseconds. The JDBC equivale
 
 [NOTE]
 ====
-To avoid dependencies on the `java.sql` package, it's common to use the `java.util` or `java.time` Date/Time classes instead.
+To avoid dependencies on the `java.sql` package, it's common to use the `java.util` or `java.time` Date/Time classes instead of the `java.sql.Timestamp` and `java.sql.Time` ones.
 ====
 
 While the `java.sql` classes define a direct association to the SQL Date/Time data types,
@@ -1033,7 +1040,7 @@ include::{extrasdir}/basic/basic-datetime-temporal-date-persist-example.sql[]
 ----
 ====
 
-Only the year, month and the day field were saved into the database.
+Only the year, month and the day fields were saved into the database.
 
 If we change the `@Temporal` type to `TIME`:
 
@@ -1077,7 +1084,8 @@ include::{extrasdir}/basic/basic-datetime-temporal-timestamp-persist-example.sql
 
 [NOTE]
 ====
-Just like the `java.util.Date`, the `java.util.Calendar` requires the `@Temporal` annotation in order to know what JDBC data type to be chosen: DATE, TIME or TIMESTAMP.
+Just like the `java.util.Date`, the `java.util.Calendar` requires the `@Temporal` annotation in order to know what JDBC data type to be chosen: `DATE`, `TIME` or `TIMESTAMP`.
+
 If the `java.util.Date` marks a point in time, the `java.util.Calendar` takes into consideration the default Time Zone.
 ====
 
@@ -1094,7 +1102,8 @@ TIMESTAMP:: `java.time.Instant`, `java.time.LocalDateTime`, `java.time.OffsetDat
 
 [IMPORTANT]
 ====
-Because the mapping between Java 8 Date/Time classes and the SQL types is implicit, there is not need to specify the `@Temporal` annotation.
+Because the mapping between the Java 8 Date/Time classes and the SQL types is implicit, there is not need to specify the `@Temporal` annotation.
+
 Setting it on the `java.time` classes throws the following exception:
 
 ----
@@ -1127,7 +1136,7 @@ Programmatically::
 TimeZone.setDefault( TimeZone.getTimeZone( "UTC" ) );
 ----
 
-However, as explained in http://in.relation.to/2016/09/12/jdbc-time-zone-configuration-property/[this article], this is not always practical especially for front-end nodes.
+However, as explained in https://in.relation.to/2016/09/12/jdbc-time-zone-configuration-property/[this article], this is not always practical, especially for front-end nodes.
 For this reason, Hibernate offers the `hibernate.jdbc.time_zone` configuration property which can be configured:
 
 Declaratively, at the `SessionFactory` level::
@@ -1200,7 +1209,7 @@ include::{extrasdir}/basic/basic-jpa-convert-period-string-converter-sql-example
 In cases when the Java type specified for the "database side" of the conversion (the second `AttributeConverter` bind parameter) is not known,
 Hibernate will fallback to a `java.io.Serializable` type.
 
-If the Java type is not know to Hibernate, you will encounter the following message:
+If the Java type is not known to Hibernate, you will encounter the following message:
 
 > HHH000481: Encountered Java type for which we could not locate a JavaTypeDescriptor and which does not appear to implement equals and/or hashCode.
 > This can lead to significant performance problems when performing equality/dirty checking involving this Java type.
@@ -1258,7 +1267,7 @@ include::{sourcedir}/converter/MoneyConverterTest.java[tags=basic-jpa-convert-mo
 
 [TIP]
 ====
-Although the `AttributeConverter` types can be mutable so that dirty checking, deep copying and second-level caching work properly,
+Although the `AttributeConverter` types can be mutable so that dirty checking, deep copying, and second-level caching work properly,
 treating these as immutable (when they really are) is more efficient.
 
 For this reason, prefer immutable types over mutable ones whenever possible.
@@ -1291,7 +1300,7 @@ include::{sourcedir}/basic/JpaQuotingTest.java[tags=basic-jpa-quoting-example]
 ----
 ====
 
-Because `name` and `number` are reserved words, the `Product` entity mapping uses backtricks to quote these column names.
+Because `name` and `number` are reserved words, the `Product` entity mapping uses backticks to quote these column names.
 
 When saving the following `Product entity`, Hibernate generates the following SQL insert statement:
 
@@ -1360,8 +1369,8 @@ Properties marked as generated must additionally be _non-insertable_ and _non-up
 Only `@Version` and `@Basic` types can be marked as generated.
 
 `NEVER` (the default):: the given property value is not generated within the database.
-`INSERT`:: the given property value is generated on insert, but is not regenerated on subsequent updates. Properties like _creationTimestamp_ fall into this category.
-`ALWAYS`:: the property value is generated both on insert and on update.
+`INSERT`:: the given property value is generated on insert but is not regenerated on subsequent updates. Properties like _creationTimestamp_ fall into this category.
+`ALWAYS`:: the property value is generated both on insert and update.
 
 To mark a property as generated, use The Hibernate specific `@Generated` annotation.
 
@@ -1640,12 +1649,7 @@ include::{sourcedir}/../fetching/FetchingTest.java[tags=mapping-column-read-and-
 ----
 ====
 
-[NOTE]
-====
-You can use the plural form `@ColumnTransformers` if more than one columns need to define either of these rules.
-====
-
-If a property uses more than one column, you must use the `forColumn` attribute to specify which column, the expressions are targeting.
+If a property uses more than one column, you must use the `forColumn` attribute to specify which column the `@ColumnTransformer` read and write expressions are targeting.
 
 [[mapping-column-read-and-write-composite-type-example]]
 .`@ColumnTransformer` `forColumn` attribute usage
@@ -1682,11 +1686,11 @@ include::{extrasdir}/basic/mapping-column-read-and-write-composite-type-persiste
 ==== `@Formula`
 
 Sometimes, you want the Database to do some computation for you rather than in the JVM, you might also create some kind of virtual column.
-You can use a SQL fragment (aka formula) instead of mapping a property into a column. This kind of property is read only (its value is calculated by your formula fragment)
+You can use a SQL fragment (aka formula) instead of mapping a property into a column. This kind of property is read-only (its value is calculated by your formula fragment)
 
 [NOTE]
 ====
-You should be aware that the `@Formula` annotation takes a native SQL clause which can affect database portability.
+You should be aware that the `@Formula` annotation takes a native SQL clause which may affect database portability.
 ====
 
 [[mapping-column-formula-example]]
@@ -1716,738 +1720,5 @@ include::{extrasdir}/basic/mapping-column-formula-persistence-example.sql[]
 
 [NOTE]
 ====
-The SQL fragment can be as complex as you want and even include subselects.
+The SQL fragment defined by the `@Formula` annotation can be as complex as you want, and it can even include subselects.
 ====
-
-[[mapping-column-where]]
-==== `@Where`
-
-Sometimes, you want to filter out entities or collections using custom SQL criteria.
-This can be achieved using the `@Where` annotation, which can be applied to entities and collections.
-
-[[mapping-where-example]]
-.`@Where` mapping usage
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/WhereTest.java[tags=mapping-where-example]
-----
-====
-
-If the database contains the following entities:
-
-[[mapping-where-persistence-example]]
-.Persisting and fetching entities with a `@Where` mapping
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/WhereTest.java[tags=mapping-where-persistence-example]
-----
-
-[source, SQL, indent=0]
-----
-include::{extrasdir}/basic/mapping-where-persistence-example.sql[]
-----
-====
-
-When executing an `Account` entity query, Hibernate is going to filter out all records that are not active.
-
-[[mapping-where-entity-query-example]]
-.Query entities mapped with `@Where`
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/WhereTest.java[tags=mapping-where-entity-query-example]
-----
-
-[source, SQL, indent=0]
-----
-include::{extrasdir}/basic/mapping-where-entity-query-example.sql[]
-----
-====
-
-When fetching the `debitAccounts` or the `creditAccounts` collections, Hibernate is going to apply the `@Where` clause filtering criteria to the associated child entities.
-
-[[mapping-where-collection-query-example]]
-.Traversing collections mapped with `@Where`
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/WhereTest.java[tags=mapping-where-collection-query-example]
-----
-
-[source, SQL, indent=0]
-----
-include::{extrasdir}/basic/mapping-where-collection-query-example.sql[]
-----
-====
-
-[[mapping-where-join-table]]
-==== `@WhereJoinTable`
-
-Just like `@Where` annotation, `@WhereJoinTable` is used to filter out collections using a joined table (e.g. @ManyToMany association).
-
-[[mapping-where-join-table-example]]
-.`@WhereJoinTable` mapping example
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/WhereJoinTableTest.java[tags=mapping-where-join-table-example]
-----
-
-[source, SQL, indent=0]
-----
-include::{extrasdir}/basic/mapping-where-join-table-example.sql[]
-----
-====
-
-In the example above, the current week `Reader` entities are included in the `currentWeekReaders` collection
-which uses the `@WhereJoinTable` annotation to filter the joined table rows according to the provided SQL clause.
-
-Considering that the following two `Book_Reader` entries are added into our system:
-
-[[mapping-where-join-table-persist-example]]
-.`@WhereJoinTable` test data
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/WhereJoinTableTest.java[tags=mapping-where-join-table-persist-example]
-----
-====
-
-When fetching the `currentWeekReaders` collection, Hibernate is going to find one one entry:
-
-[[mapping-where-join-table-fetch-example]]
-.`@WhereJoinTable` fetch example
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/WhereJoinTableTest.java[tags=mapping-where-join-table-fetch-example]
-----
-====
-
-[[mapping-column-filter]]
-==== `@Filter`
-
-The `@Filter` annotation is another way to filter out entities or collections using custom SQL criteria.
-Unlike the `@Where` annotation, `@Filter` allows you to parameterize the filter clause at runtime.
-
-Now, considering we have the following `Account` entity:
-
-[[mapping-filter-account-example]]
-.`@Filter` mapping entity-level usage
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/FilterTest.java[tags=mapping-filter-Account-example]
-----
-====
-
-[NOTE]
-====
-Notice that the `active` property is mapped to the `active_status` column.
-
-This mapping was done to show you that the `@Filter` condition uses a SQL condition, and not a JPQL filtering criteria.
-====
-
-As already explained, we can also apply the `@Filter` annotation for collections as illustrated by the `Client` entity:
-
-[[mapping-filter-client-example]]
-.`@Filter` mapping collection-level usage
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/FilterTest.java[tags=mapping-filter-Client-example]
-----
-====
-
-If we persist a `Client` with three associated `Account` entities,
-Hibernate will execute the following SQL statements:
-
-[[mapping-filter-persistence-example]]
-.Persisting and fetching entities with a `@Filter` mapping
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/FilterTest.java[tags=mapping-filter-persistence-example]
-----
-
-[source, SQL, indent=0]
-----
-include::{extrasdir}/basic/mapping-filter-persistence-example.sql[]
-----
-====
-
-By default, without explicitly enabling the filter, Hibernate is going to fetch all `Account` entities.
-
-[[mapping-no-filter-entity-query-example]]
-.Query entities mapped without activating the `@Filter`
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/FilterTest.java[tags=mapping-no-filter-entity-query-example]
-----
-
-[source, SQL, indent=0]
-----
-include::{extrasdir}/basic/mapping-no-filter-entity-query-example.sql[]
-----
-====
-
-If the filter is enabled and the filter parameter value is provided,
-then Hibernate is going to apply the filtering criteria to the associated `Account` entities.
-
-[[mapping-filter-entity-query-example]]
-.Query entities mapped with `@Filter`
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/FilterTest.java[tags=mapping-filter-entity-query-example]
-----
-
-[source, SQL, indent=0]
-----
-include::{extrasdir}/basic/mapping-filter-entity-query-example.sql[]
-----
-====
-
-[IMPORTANT]
-====
-Filters apply to entity queries, but not to direct fetching.
-
-Therefore, in the following example, the filter is not taken into consideration when fetching an entity from the Persistence Context.
-
-[[mapping-filter-entity-example]]
-.Fetching entities mapped with `@Filter`
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/FilterTest.java[tags=mapping-filter-entity-example]
-----
-
-[source, SQL, indent=0]
-----
-include::{extrasdir}/basic/mapping-filter-entity-example.sql[]
-----
-
-As you can see from the example above, contrary to an entity query, the filter does not prevent the entity from being loaded.
-====
-
-Just like with entity queries, collections can be filtered as well, but only if the filter is explicitly enabled on the currently running Hibernate `Session`.
-
-[[mapping-no-filter-collection-query-example]]
-.Traversing collections without activating the `@Filter`
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/FilterTest.java[tags=mapping-no-filter-collection-query-example]
-----
-
-[source, SQL, indent=0]
-----
-include::{extrasdir}/basic/mapping-no-filter-collection-query-example.sql[]
-----
-====
-
-When activating the `@Filter` and fetching the `accounts` collections, Hibernate is going to apply the filter condition to the associated collection entries.
-
-[[mapping-filter-collection-query-example]]
-.Traversing collections mapped with `@Filter`
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/FilterTest.java[tags=mapping-filter-collection-query-example]
-----
-
-[source, SQL, indent=0]
-----
-include::{extrasdir}/basic/mapping-filter-collection-query-example.sql[]
-----
-====
-
-[NOTE]
-====
-The main advantage of `@Filter` over the `@Where` clause is that the filtering criteria can be customized at runtime.
-====
-
-[WARNING]
-====
-It's not possible to combine the `@Filter` and `@Cache` collection annotations.
-This limitation is due to ensuring consistency and because the filtering information is not stored in the second-level cache.
-
-If caching were allowed for a currently filtered collection, then the second-level cache would store only a subset of the whole collection.
-Afterward, every other Session will get the filtered collection from the cache, even if the Session-level filters have not been explicitly activated.
-
-For this reason, the second-level collection cache is limited to storing whole collections, and not subsets.
-====
-
-[[mapping-column-filter-join-table]]
-==== `@FilterJoinTable`
-
-When using the `@Filter` annotation with collections, the filtering is done against the child entries (entities or embeddables).
-However, if you have a link table between the parent entity and the child table, then you need to use the `@FilterJoinTable` to filter child entries according to some column contained in the join table.
-
-The `@FilterJoinTable` annotation can be, therefore, applied to a unidirectional `@OneToMany` collection as illustrated in the following mapping:
-
-[[mapping-filter-join-table-example]]
-.`@FilterJoinTable` mapping usage
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/FilterJoinTableTest.java[tags=mapping-filter-join-table-example]
-----
-====
-
-The `firstAccounts` filter will allow us to get only the `Account` entities that have the `order_id`
-(which tells the position of every entry inside the `accounts` collection)
-less than a given number (e.g. `maxOrderId`).
-
-Let's assume our database contains the following entities:
-
-[[mapping-filter-join-table-persistence-example]]
-.Persisting and fetching entities with a `@FilterJoinTable` mapping
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/FilterJoinTableTest.java[tags=mapping-filter-join-table-persistence-example]
-----
-
-[source, SQL, indent=0]
-----
-include::{extrasdir}/basic/mapping-filter-join-table-persistence-example.sql[]
-----
-====
-
-The collections can be filtered only if the associated filter is enabled on the currently running Hibernate `Session`.
-
-[[mapping-no-filter-join-table-collection-query-example]]
-.Traversing collections mapped with `@FilterJoinTable` without enabling the filter
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/FilterJoinTableTest.java[tags=mapping-no-filter-join-table-collection-query-example]
-----
-
-[source, SQL, indent=0]
-----
-include::{extrasdir}/basic/mapping-no-filter-join-table-collection-query-example.sql[]
-----
-====
-
-If we enable the filter and set the `maxOrderId` to `1`, when fetching the `accounts` collections, Hibernate is going to apply the `@FilterJoinTable` clause filtering criteria, and we will get just
-`2` `Account` entities, with the `order_id` values of `0` and `1`.
-
-[[mapping-filter-join-table-collection-query-example]]
-.Traversing collections mapped with `@FilterJoinTable`
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/FilterJoinTableTest.java[tags=mapping-filter-join-table-collection-query-example]
-----
-
-[source, SQL, indent=0]
-----
-include::{extrasdir}/basic/mapping-filter-join-table-collection-query-example.sql[]
-----
-====
-
-[[mapping-column-filter-sql-fragment-alias]]
-==== `@Filter` with `@SqlFragmentAlias`
-
-When using the `@Filter` annotation and working with entities that are mapped onto multiple database tables,
-you will need to use the
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/SqlFragmentAlias.html[`@SqlFragmentAlias`] annotation
-if the `@Filter` defines a condition that uses predicates across multiple tables.
-
-[[mapping-filter-sql-fragment-alias-example]]
-.`@SqlFragmentAlias` mapping usage
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/FilterSqlFragementAliasTest.java[tags=mapping-filter-sql-fragment-alias-example]
-----
-====
-
-Now, when fetching the `Account` entities and activating the filter,
-Hibernate is going to apply the right table aliases to the filter predicates:
-
-[[mapping-filter-sql-fragment-alias-query-example]]
-.Fetching a collection filtered with `@SqlFragmentAlias`
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/FilterSqlFragementAliasTest.java[tags=mapping-filter-sql-fragment-alias-query-example]
-----
-
-[source, SQL, indent=0]
-----
-include::{extrasdir}/basic/mapping-filter-sql-fragment-alias-query-example.sql[]
-----
-====
-
-[[mapping-column-any]]
-==== `@Any` mapping
-
-There is one more type of property mapping.
-The `@Any` mapping defines a polymorphic association to classes from multiple tables.
-This type of mapping requires more than one column.
-The first column contains the type of the associated entity.
-The remaining columns contain the identifier.
-
-[NOTE]
-====
-It is impossible to specify a foreign key constraint for this kind of association.
-This is not the usual way of mapping polymorphic associations and you should use this only in special cases (e.g. audit logs, user session data, etc).
-====
-
-The `@Any` annotation describes the column holding the metadata information.
-To link the value of the metadata information and an actual entity type, the `@AnyDef` and `@AnyDefs` annotations are used.
-The `metaType` attribute allows the application to specify a custom type that maps database column values to persistent classes that have identifier properties of the type specified by `idType`.
-You must specify the mapping from values of the `metaType` to class names.
-
-For the next examples, consider the following `Property` class hierarchy:
-
-[[mapping-column-any-property-example]]
-.`Property` class hierarchy
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/any/Property.java[tags=mapping-column-any-property-example]
-
-include::{sourcedir}/basic/any/IntegerProperty.java[tags=mapping-column-any-property-example]
-
-include::{sourcedir}/basic/any/StringProperty.java[tags=mapping-column-any-property-example]
-----
-====
-
-A `PropertyHolder` can reference any such property, and, because each `Property` belongs to a separate table, the `@Any` annotation is, therefore, required.
-
-[[mapping-column-any-example]]
-.`@Any` mapping usage
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/any/PropertyHolder.java[tags=mapping-column-any-example]
-----
-
-[source, SQL, indent=0]
-----
-include::{extrasdir}/basic/mapping-column-any-example.sql[]
-----
-====
-
-As you can see, there are two columns used to reference a `Property` instance: `property_id` and `property_type`.
-The `property_id` is used to match the `id` column of either the `string_property` or `integer_property` tables,
-while the `property_type` is used to match the `string_property` or the  `integer_property` table.
-
-The table resolving mapping is defined by the `metaDef` attribute which references an `@AnyMetaDef` mapping.
-Although the `@AnyMetaDef` mapping could be set right next to the `@Any` annotation,
-it's good practice to reuse it, therefore it makes sense to configure it on a class or package-level basis.
-
-The `package-info.java` contains the `@AnyMetaDef` mapping:
-
-[[mapping-column-any-meta-def-example]]
-.`@Any` mapping usage
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/any/package-info.java[tags=mapping-column-any-meta-def-example]
-----
-====
-
-[NOTE]
-====
-It is recommended to place the `@AnyMetaDef` mapping as a package metadata.
-====
-
-To see the `@Any` annotation in action, consider the next examples.
-
-If we persist an `IntegerProperty` as well as a `StringProperty` entity, and associate
-the `StringProperty` entity with a `PropertyHolder`,
-Hibernate will generate the following SQL queries:
-
-[[mapping-column-any-persist-example]]
-.`@Any` mapping persist example
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/any/AnyTest.java[tags=mapping-column-any-persist-example]
-----
-
-[source, SQL, indent=0]
-----
-include::{extrasdir}/basic/mapping-column-any-persist-example.sql[]
-----
-====
-
-When fetching the `PropertyHolder` entity and navigating its `property` association,
-Hibernate will fetch the associated `StringProperty` entity like this:
-
-[[mapping-column-any-query-example]]
-.`@Any` mapping query example
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/any/AnyTest.java[tags=mapping-column-any-query-example]
-----
-
-[source, SQL, indent=0]
-----
-include::{extrasdir}/basic/mapping-column-any-query-example.sql[]
-----
-====
-
-[[mapping-column-many-to-any]]
-===== `@ManyToAny` mapping
-
-The `@Any` mapping is useful to emulate a `@ManyToOne` association when there can be multiple target entities.
-To emulate a `@OneToMany` association, the `@ManyToAny` annotation must be used.
-
-In the following example, the `PropertyRepository` entity has a collection of `Property` entities.
-
-The `repository_properties` link table holds the associations between `PropertyRepository` and `Property` entities.
-
-[[mapping-column-many-to-any-example]]
-.`@ManyToAny` mapping usage
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/any/PropertyRepository.java[tags=mapping-column-many-to-any-example]
-----
-
-[source, SQL, indent=0]
-----
-include::{extrasdir}/basic/mapping-column-many-to-any-example.sql[]
-----
-====
-
-To see the `@ManyToAny` annotation in action, consider the next examples.
-
-If we persist an `IntegerProperty` as well as a `StringProperty` entity,
-and associate both of them with a `PropertyRepository` parent entity,
-Hibernate will generate the following SQL queries:
-
-[[mapping-column-many-to-any-persist-example]]
-.`@ManyToAny` mapping persist example
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/any/ManyToAnyTest.java[tags=mapping-column-many-to-any-persist-example]
-----
-
-[source, SQL, indent=0]
-----
-include::{extrasdir}/basic/mapping-column-many-to-any-persist-example.sql[]
-----
-====
-
-When fetching the `PropertyRepository` entity and navigating its `properties` association,
-Hibernate will fetch the associated `IntegerProperty` and `StringProperty` entities like this:
-
-[[mapping-column-many-to-any-query-example]]
-.`@ManyToAny` mapping query example
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/any/ManyToAnyTest.java[tags=mapping-column-many-to-any-query-example]
-----
-
-[source, SQL, indent=0]
-----
-include::{extrasdir}/basic/mapping-column-many-to-any-query-example.sql[]
-----
-====
-
-[[mapping-JoinFormula]]
-==== `@JoinFormula` mapping
-
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/JoinFormula.html[`@JoinFormula`] annotation is used to customize the join between a child Foreign Key and a parent row Primary Key.
-
-[[mapping-JoinFormula-example]]
-.`@JoinFormula` mapping usage
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/JoinFormulaTest.java[tags=mapping-JoinFormula-example]
-----
-
-[source, SQL, indent=0]
-----
-include::{extrasdir}/basic/mapping-JoinFormula-example.sql[]
-----
-====
-
-The `country` association in the `User` entity is mapped by the country identifier provided by the `phoneNumber` property.
-
-Considering we have the following entities:
-
-[[mapping-JoinFormula-persistence-example]]
-.`@JoinFormula` mapping usage
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/JoinFormulaTest.java[tags=mapping-JoinFormula-persistence-example]
-----
-====
-
-When fetching the `User` entities, the `country` property is mapped by the `@JoinFormula` expression:
-
-[[mapping-JoinFormula-fetching-example]]
-.`@JoinFormula` mapping usage
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/JoinFormulaTest.java[tags=mapping-JoinFormula-fetching-example]
-----
-
-[source, SQL, indent=0]
-----
-include::{extrasdir}/basic/mapping-JoinFormula-fetching-example.sql[]
-----
-====
-
-Therefore, the `@JoinFormula` annotation is used to define a custom join association between the parent-child association.
-
-[[mapping-JoinColumnOrFormula]]
-==== `@JoinColumnOrFormula` mapping
-
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/JoinColumnOrFormula.html[`@JoinColumnOrFormula`] annotation is used to customize the join between a child Foreign Key and a parent row Primary Key when we need to take into consideration a column value as well as a `@JoinFormula`.
-
-[[mapping-JoinColumnOrFormula-example]]
-.`@JoinColumnOrFormula` mapping usage
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/JoinColumnOrFormulaTest.java[tags=mapping-JoinColumnOrFormula-example]
-----
-
-[source, SQL, indent=0]
-----
-include::{extrasdir}/basic/mapping-JoinColumnOrFormula-example.sql[]
-----
-====
-
-The `country` association in the `User` entity is mapped by the `language` property value and the associated `Country` `is_default` column value.
-
-Considering we have the following entities:
-
-[[mapping-JoinColumnOrFormula-persistence-example]]
-.`@JoinColumnOrFormula` persist example
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/JoinColumnOrFormulaTest.java[tags=mapping-JoinColumnOrFormula-persistence-example]
-----
-====
-
-When fetching the `User` entities, the `country` property is mapped by the `@JoinColumnOrFormula` expression:
-
-[[mapping-JoinColumnOrFormula-fetching-example]]
-.`@JoinColumnOrFormula` fetching example
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/JoinColumnOrFormulaTest.java[tags=mapping-JoinColumnOrFormula-fetching-example]
-----
-
-[source, SQL, indent=0]
-----
-include::{extrasdir}/basic/mapping-JoinColumnOrFormula-fetching-example.sql[]
-----
-====
-
-Therefore, the `@JoinColumnOrFormula` annotation is used to define a custom join association between the parent-child association.
-
-[[mapping-Target]]
-==== `@Target` mapping
-
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Target.html[`@Target`] annotation is used to specify the implementation class of a given association that is mapped via an interface.
-The
-http://docs.oracle.com/javaee/7/api/javax/persistence/ManyToOne.html[`@ManyToOne`],
-http://docs.oracle.com/javaee/7/api/javax/persistence/OneToOne.html[`@OneToOne`],
-http://docs.oracle.com/javaee/7/api/javax/persistence/OneToMany.html[`@OneToMany`], and
-http://docs.oracle.com/javaee/7/api/javax/persistence/ManyToMany.html[`@ManyToMany`]
-feature a http://docs.oracle.com/javaee/7/api/javax/persistence/ManyToOne.html#targetEntity--[`targetEntity`] attribute to specify the actual class of the entiity association when an interface is used for the mapping.
-
-The http://docs.oracle.com/javaee/7/api/javax/persistence/ElementCollection.html[`@ElementCollection`] association has a http://docs.oracle.com/javaee/7/api/javax/persistence/ElementCollection.html#targetClass--[`targetClass`] attribute for the same purpose.
-
-However, for simple embeddable types, there is no such construct and so you need to use the Hibernate-specific `@Target` annotation instead.
-
-[[mapping-Target-example]]
-.`@Target` mapping usage
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/TargetTest.java[tags=mapping-Target-example]
-----
-====
-
-The `coordinates` embeddable type is mapped as the `Coordinates` interface.
-However, Hibernate needs to know the actual implementation tye, which is `GPS` in this case,
-hence the `@Target` annotation is used to provide this information.
-
-Assuming we have persisted the following `City` entity:
-
-[[mapping-Target-persist-example]]
-.`@Target` persist example
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/TargetTest.java[tags=mapping-Target-persist-example]
-----
-====
-
-When fetching the `City` entity, the `coordinates` property is mapped by the `@Target` expression:
-
-[[mapping-Target-fetching-example]]
-.`@Target` fetching example
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/TargetTest.java[tags=mapping-Target-fetching-example]
-----
-
-[source, SQL, indent=0]
-----
-include::{extrasdir}/basic/mapping-Target-fetching-example.sql[]
-----
-====
-
-Therefore, the `@Target` annotation is used to define a custom join association between the parent-child association.
-
-[[mapping-Parent]]
-==== `@Parent` mapping
-
-The Hibernate-specific `@Parent` annotation allows you to reference the owner entity from within an embeddable.
-
-[[mapping-Parent-example]]
-.`@Parent` mapping usage
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/ParentTest.java[tags=mapping-Parent-example]
-----
-====
-
-Assuming we have persisted the following `City` entity:
-
-[[mapping-Parent-persist-example]]
-.`@Parent` persist example
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/ParentTest.java[tags=mapping-Parent-persist-example]
-----
-====
-
-When fetching the `City` entity, the `city` property of the embeddable type acts as a back reference to the owning parent entity:
-
-[[mapping-Parent-fetching-example]]
-.`@Parent` fetching example
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/ParentTest.java[tags=mapping-Parent-fetching-example]
-----
-====
-
-Therefore, the `@Parent` annotation is used to define the association between an embeddable type and the owning entity.

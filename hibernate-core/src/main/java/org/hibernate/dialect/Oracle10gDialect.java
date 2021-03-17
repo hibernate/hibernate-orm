@@ -24,7 +24,7 @@ import org.hibernate.sql.JoinFragment;
  */
 public class Oracle10gDialect extends Oracle9iDialect {
 	/**
-	 * Constructs a Oracle10gDialect
+	 * Constructs an Oracle10gDialect
 	 */
 	public Oracle10gDialect() {
 		super();

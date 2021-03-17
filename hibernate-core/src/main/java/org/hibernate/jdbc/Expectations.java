@@ -45,17 +45,17 @@ public class Expectations {
 			}
 		}
 
-		public final void verifyOutcome(int rowCount, PreparedStatement statement, int batchPosition) {
+		public final void verifyOutcome(int rowCount, PreparedStatement statement, int batchPosition, String statementSQL) {
 			rowCount = determineRowCount( rowCount, statement );
 			if ( batchPosition < 0 ) {
-				checkNonBatched( rowCount );
+				checkNonBatched( rowCount, statementSQL );
 			}
 			else {
-				checkBatched( rowCount, batchPosition );
+				checkBatched( rowCount, batchPosition, statementSQL );
 			}
 		}
 
-		private void checkBatched(int rowCount, int batchPosition) {
+		private void checkBatched(int rowCount, int batchPosition, String statementSQL) {
 			if ( rowCount == -2 ) {
 				LOG.debugf( "Success of batch update unknown: %s", batchPosition );
 			}
@@ -67,7 +67,8 @@ public class Expectations {
 					throw new StaleStateException(
 							"Batch update returned unexpected row count from update ["
 									+ batchPosition + "]; actual row count: " + rowCount
-									+ "; expected: " + expectedRowCount
+									+ "; expected: " + expectedRowCount + "; statement executed: "
+									+ statementSQL
 					);
 				}
 				if ( expectedRowCount < rowCount ) {
@@ -79,10 +80,11 @@ public class Expectations {
 			}
 		}
 
-		private void checkNonBatched(int rowCount) {
+		private void checkNonBatched(int rowCount, String statementSQL) {
 			if ( expectedRowCount > rowCount ) {
 				throw new StaleStateException(
 						"Unexpected row count: " + rowCount + "; expected: " + expectedRowCount
+						+ "; statement executed: " + statementSQL
 				);
 			}
 			if ( expectedRowCount < rowCount ) {
@@ -148,7 +150,7 @@ public class Expectations {
 	// Various Expectation instances ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	public static final Expectation NONE = new Expectation() {
-		public void verifyOutcome(int rowCount, PreparedStatement statement, int batchPosition) {
+		public void verifyOutcome(int rowCount, PreparedStatement statement, int batchPosition, String statementSQL) {
 			// explicitly doAfterTransactionCompletion no checking...
 		}
 

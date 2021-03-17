@@ -9,7 +9,11 @@ package org.hibernate.type.spi;
 import java.io.InvalidObjectException;
 import java.io.Serializable;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.HibernateException;
@@ -17,7 +21,7 @@ import org.hibernate.Incubating;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
-import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.BasicTypeRegistration;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.uuid.LocalObjectUuidHelper;
@@ -26,13 +30,13 @@ import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.metamodel.internal.MetamodelImpl;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeFactory;
 import org.hibernate.type.TypeResolver;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry;
-import org.hibernate.type.internal.TypeConfigurationRegistry;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
@@ -70,6 +74,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 	private final transient Map<String,String> importMap = new ConcurrentHashMap<>();
 
+	private final transient Map<Integer, Set<String>> jdbcToHibernateTypeContributionMap = new HashMap<>();
 
 	// temporarily needed to support deprecations
 	private final transient TypeResolver typeResolver;
@@ -82,8 +87,6 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		this.basicTypeRegistry = new BasicTypeRegistry();
 		this.typeFactory = new TypeFactory( this );
 		this.typeResolver = new TypeResolver( this, typeFactory );
-
-		TypeConfigurationRegistry.INSTANCE.registerTypeConfiguration( this );
 	}
 
 	public String getUuid() {
@@ -121,6 +124,10 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		return Collections.unmodifiableMap( importMap );
 	}
 
+	public Map<Integer, Set<String>> getJdbcToHibernateTypeContributionMap() {
+		return jdbcToHibernateTypeContributionMap;
+	}
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Scoping
 
@@ -132,7 +139,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	 * bound here.  See {@link Scope} for more details regarding the stages
 	 * a TypeConfiguration goes through
 	 *
-	 * @return
+	 * @return The MetadataBuildingContext
 	 */
 	public MetadataBuildingContext getMetadataBuildingContext() {
 		return scope.getMetadataBuildingContext();
@@ -143,7 +150,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		scope.setMetadataBuildingContext( metadataBuildingContext );
 	}
 
-	public MetamodelImplementor scope(SessionFactoryImplementor sessionFactory,  BootstrapContext bootstrapContext) {
+	public MetamodelImplementor scope(SessionFactoryImplementor sessionFactory) {
 		log.debugf( "Scoping TypeConfiguration [%s] to SessionFactoryImpl [%s]", this, sessionFactory );
 
 		for ( Map.Entry<String, String> importEntry : scope.metadataBuildingContext.getMetadataCollector().getImports().entrySet() ) {
@@ -200,13 +207,39 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	public void sessionFactoryClosed(SessionFactory factory) {
 		log.tracef( "Handling #sessionFactoryClosed from [%s] for TypeConfiguration", factory );
 
-		TypeConfigurationRegistry.INSTANCE.deregisterTypeConfiguration( this );
-
 		scope.unsetSessionFactory( factory );
 
 		// todo (6.0) : finish this
 		//		release Database, descriptor Maps, etc... things that are only
 		// 		valid while the TypeConfiguration is scoped to SessionFactory
+	}
+
+	public void addBasicTypeRegistrationContributions(List<BasicTypeRegistration> contributions) {
+		for ( BasicTypeRegistration basicTypeRegistration : contributions ) {
+			BasicType basicType = basicTypeRegistration.getBasicType();
+
+			basicTypeRegistry.register(
+					basicType,
+					basicTypeRegistration.getRegistrationKeys()
+			);
+
+			try {
+				int[] jdbcTypes = basicType.sqlTypes( null );
+
+				if ( jdbcTypes.length == 1 ) {
+					int jdbcType = jdbcTypes[0];
+					Set<String> hibernateTypes = jdbcToHibernateTypeContributionMap.computeIfAbsent(
+						jdbcType,
+						k -> new HashSet<>()
+					);
+					hibernateTypes.add( basicType.getName() );
+				}
+			}
+			catch (Exception e) {
+				log.errorf( e, "Cannot register [%s] Hibernate Type contribution", basicType.getName() );
+			}
+
+		}
 	}
 
 	/**
@@ -336,12 +369,4 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		}
 	}
 
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Custom serialization hook
-
-	private Object readResolve() throws InvalidObjectException {
-		log.trace( "Resolving serialized TypeConfiguration - readResolve" );
-		return TypeConfigurationRegistry.INSTANCE.findTypeConfiguration( getUuid() );
-	}
 }

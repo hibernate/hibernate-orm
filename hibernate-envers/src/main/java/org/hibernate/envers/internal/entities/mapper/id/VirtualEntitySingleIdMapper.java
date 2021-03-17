@@ -67,6 +67,48 @@ public class VirtualEntitySingleIdMapper extends SingleIdMapper {
 	}
 
 	@Override
+	public void mapToEntityFromEntity(Object objTo, Object objFrom) {
+		if ( objTo == null || objFrom == null ) {
+			return;
+		}
+
+		AccessController.doPrivileged(
+				new PrivilegedAction<Object>() {
+					@Override
+					public Object run() {
+						final Getter getter = ReflectionTools.getGetter(
+								objFrom.getClass(),
+								propertyData,
+								getServiceRegistry()
+						);
+
+						final Setter setter = ReflectionTools.getSetter(
+								objTo.getClass(),
+								propertyData,
+								getServiceRegistry()
+						);
+
+						// Get the value from the containing entity
+						final Object value = getter.get( objFrom );
+						if ( value == null ) {
+							return null;
+						}
+
+						if ( !value.getClass().equals( propertyData.getVirtualReturnClass() ) ) {
+							setter.set( objTo, getAssociatedEntityIdMapper().mapToIdFromEntity( value ), null );
+						}
+						else {
+							// This means we're setting the object
+							setter.set( objTo, value, null );
+						}
+
+						return null;
+					}
+				}
+		);
+	}
+
+	@Override
 	public boolean mapToEntityFromMap(Object obj, Map data) {
 		if ( data == null || obj == null ) {
 			return false;

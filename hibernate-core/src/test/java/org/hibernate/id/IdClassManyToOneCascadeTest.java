@@ -19,7 +19,7 @@ import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.wildfly.common.Assert.assertTrue;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Vlad Mihalcea

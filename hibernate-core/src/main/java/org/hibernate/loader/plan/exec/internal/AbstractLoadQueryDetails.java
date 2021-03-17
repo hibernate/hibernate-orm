@@ -7,6 +7,7 @@
 package org.hibernate.loader.plan.exec.internal;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -17,6 +18,7 @@ import org.hibernate.loader.plan.exec.process.spi.CollectionReferenceInitializer
 import org.hibernate.loader.plan.exec.process.spi.EntityReferenceInitializer;
 import org.hibernate.loader.plan.exec.process.spi.ReaderCollector;
 import org.hibernate.loader.plan.exec.process.spi.ResultSetProcessor;
+import org.hibernate.loader.plan.exec.process.spi.ResultSetProcessorResolver;
 import org.hibernate.loader.plan.exec.query.internal.SelectStatementBuilder;
 import org.hibernate.loader.plan.exec.query.spi.QueryBuildingParameters;
 import org.hibernate.loader.plan.exec.spi.AliasResolutionContext;
@@ -40,7 +42,6 @@ public abstract class AbstractLoadQueryDetails implements LoadQueryDetails {
 	private final String[] keyColumnNames;
 	private final Return rootReturn;
 	private final LoadQueryJoinAndFetchProcessor queryProcessor;
-	private final QueryBuildingParameters buildingParameters;
 	private String sqlStatement;
 	private ResultSetProcessor resultSetProcessor;
 
@@ -59,30 +60,7 @@ public abstract class AbstractLoadQueryDetails implements LoadQueryDetails {
 		this.keyColumnNames = keyColumnNames;
 		this.rootReturn = rootReturn;
 		this.loadPlan = loadPlan;
-		this.queryProcessor = new LoadQueryJoinAndFetchProcessor(
-				aliasResolutionContext, buildingParameters.getQueryInfluencers(), factory
-		);
-		this.buildingParameters = buildingParameters;
-	}
-
-	/**
-	 * Constructs an AbstractLoadQueryDetails object from an initial object and new building parameters,
-	 * with the guarantee that only batch size changed between the initial parameters and the new ones.
-	 *
-	 * @param initialLoadQueryDetails The initial object to be copied
-	 * @param buildingParameters The new building parameters, with only the batch size being different
-	 * from the parameters used in the initial object.
-	 */
-	protected AbstractLoadQueryDetails(
-			AbstractLoadQueryDetails initialLoadQueryDetails,
-			QueryBuildingParameters buildingParameters) {
-		this.keyColumnNames = initialLoadQueryDetails.keyColumnNames;
-		this.rootReturn = initialLoadQueryDetails.rootReturn;
-		this.loadPlan = initialLoadQueryDetails.loadPlan;
-		this.queryProcessor = new LoadQueryJoinAndFetchProcessor(
-				initialLoadQueryDetails.queryProcessor, buildingParameters.getQueryInfluencers()
-		);
-		this.buildingParameters = buildingParameters;
+		this.queryProcessor = new LoadQueryJoinAndFetchProcessor( aliasResolutionContext, buildingParameters, factory );
 	}
 
 	protected QuerySpace getQuerySpace(String querySpaceUid) {
@@ -108,7 +86,7 @@ public abstract class AbstractLoadQueryDetails implements LoadQueryDetails {
 	}
 
 	protected final QueryBuildingParameters getQueryBuildingParameters() {
-		return buildingParameters;
+		return queryProcessor.getQueryBuildingParameters();
 	}
 
 	protected final SessionFactoryImplementor getSessionFactory() {
@@ -128,6 +106,10 @@ public abstract class AbstractLoadQueryDetails implements LoadQueryDetails {
 	 *
 	 */
 	protected void generate() {
+		generate( ResultSetProcessorResolver.DEFAULT );
+	}
+
+	protected void generate(ResultSetProcessorResolver resultSetProcessorResolver) {
 		// There are 2 high-level requirements to perform here:
 		// 	1) Determine the SQL required to carry out the given LoadPlan (and fulfill
 		// 		{@code LoadQueryDetails#getSqlStatement()}).  SelectStatementBuilder collects the ongoing efforts to
@@ -214,10 +196,10 @@ public abstract class AbstractLoadQueryDetails implements LoadQueryDetails {
 		LoadPlanTreePrinter.INSTANCE.logTree( loadPlan, queryProcessor.getAliasResolutionContext() );
 
 		this.sqlStatement = select.toStatementString();
-		this.resultSetProcessor = new ResultSetProcessorImpl(
+		this.resultSetProcessor = resultSetProcessorResolver.resolveResultSetProcessor(
 				loadPlan,
 				queryProcessor.getAliasResolutionContext(),
-				getReaderCollector().buildRowReader(),
+				getReaderCollector(),
 				shouldUseOptionalEntityInstance(),
 				isSubselectLoadingEnabled( fetchStats )
 		);
@@ -282,45 +264,62 @@ public abstract class AbstractLoadQueryDetails implements LoadQueryDetails {
 	}
 
 	protected abstract static class ReaderCollectorImpl implements ReaderCollector {
-		private final List<EntityReferenceInitializer> entityReferenceInitializers = new ArrayList<EntityReferenceInitializer>();
+		private List<EntityReferenceInitializer> entityReferenceInitializers;
 		private List<CollectionReferenceInitializer> arrayReferenceInitializers;
 		private List<CollectionReferenceInitializer> collectionReferenceInitializers;
 
 		@Override
 		public void add(CollectionReferenceInitializer collectionReferenceInitializer) {
 			if ( collectionReferenceInitializer.getCollectionReference().getCollectionPersister().isArray() ) {
-				if ( arrayReferenceInitializers == null ) {
-					arrayReferenceInitializers = new ArrayList<CollectionReferenceInitializer>();
-				}
-				arrayReferenceInitializers.add( collectionReferenceInitializer );
+				arrayReferenceInitializers = addTo( arrayReferenceInitializers, collectionReferenceInitializer );
 			}
 			else {
-				if ( collectionReferenceInitializers == null ) {
-					collectionReferenceInitializers = new ArrayList<CollectionReferenceInitializer>();
-				}
-				collectionReferenceInitializers.add( collectionReferenceInitializer );
+				collectionReferenceInitializers = addTo( collectionReferenceInitializers, collectionReferenceInitializer );
 			}
+		}
+
+		/**
+		 * LISP-style list growing, as there is a strong likelihood we'll be dealing with lists of zero or one element
+		 * we can save some memory.
+		 * @param host
+		 * @param element
+		 * @param <V>
+		 * @return possibly a new list instance, containing both the original elements and the new elements.
+		 */
+		private static <V> List<V> addTo(List<V> host, V element) {
+			List<V> output = host;
+			if ( output == null ) {
+				output = Collections.singletonList( element );
+			}
+			else if ( output.size() == 1 ) {
+				output = new ArrayList<V>( output );
+				output.add( element );
+			}
+			else {
+				output.add( element );
+			}
+			return output;
 		}
 
 		@Override
 		public void add(EntityReferenceInitializer entityReferenceInitializer) {
-			entityReferenceInitializers.add( entityReferenceInitializer );
+			entityReferenceInitializers = addTo( entityReferenceInitializers,  entityReferenceInitializer );
 		}
 
 		@Override
 		public final List<EntityReferenceInitializer> getEntityReferenceInitializers() {
-			return entityReferenceInitializers;
+			return entityReferenceInitializers == null ? Collections.EMPTY_LIST : entityReferenceInitializers;
 		}
 
 		@Override
 		public List<CollectionReferenceInitializer> getArrayReferenceInitializers() {
-			return arrayReferenceInitializers;
+			return arrayReferenceInitializers == null ? Collections.EMPTY_LIST : arrayReferenceInitializers;
 
 		}
 
 		@Override
 		public List<CollectionReferenceInitializer> getNonArrayCollectionReferenceInitializers() {
-			return collectionReferenceInitializers;
+			return collectionReferenceInitializers == null ? Collections.EMPTY_LIST : collectionReferenceInitializers;
 		}
 	}
 }

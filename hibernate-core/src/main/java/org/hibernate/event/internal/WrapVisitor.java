@@ -6,8 +6,11 @@
  */
 package org.hibernate.event.internal;
 
+import java.io.Serializable;
+
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
+import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -25,16 +28,25 @@ import org.hibernate.type.Type;
  *
  * @author Gavin King
  */
+@SuppressWarnings("WeakerAccess")
 public class WrapVisitor extends ProxyVisitor {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( WrapVisitor.class );
+	private Object entity;
+	private Serializable id;
 
-	boolean substitute;
+	private boolean substitute;
 
-	boolean isSubstitutionRequired() {
+	public WrapVisitor(Object entity, Serializable id, EventSource session) {
+		super( session );
+		this.entity = entity;
+		this.id = id;
+	}
+
+	public boolean isSubstitutionRequired() {
 		return substitute;
 	}
 
-	WrapVisitor(EventSource session) {
+	public WrapVisitor(EventSource session) {
 		super( session );
 	}
 
@@ -42,20 +54,26 @@ public class WrapVisitor extends ProxyVisitor {
 	Object processCollection(Object collection, CollectionType collectionType)
 			throws HibernateException {
 
-		if ( collection != null && ( collection instanceof PersistentCollection ) ) {
+		if ( collection == null ) {
+			return null;
+		}
 
+		if ( collection == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
+			return null;
+		}
+
+		if ( collection instanceof PersistentCollection ) {
+			final PersistentCollection coll = (PersistentCollection) collection;
 			final SessionImplementor session = getSession();
-			PersistentCollection coll = (PersistentCollection) collection;
+
 			if ( coll.setCurrentSession( session ) ) {
 				reattachCollection( coll, collectionType );
 			}
+
 			return null;
-
-		}
-		else {
-			return processArrayOrNewCollection( collection, collectionType );
 		}
 
+		return processArrayOrNewCollection( collection, collectionType );
 	}
 
 	final Object processArrayOrNewCollection(Object collection, CollectionType collectionType)
@@ -70,7 +88,7 @@ public class WrapVisitor extends ProxyVisitor {
 		else {
 			CollectionPersister persister = session.getFactory().getCollectionPersister( collectionType.getRole() );
 
-			final PersistenceContext persistenceContext = session.getPersistenceContext();
+			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 			//TODO: move into collection type, so we can use polymorphism!
 			if ( collectionType.hasHolder() ) {
 
@@ -134,7 +152,7 @@ public class WrapVisitor extends ProxyVisitor {
 	}
 
 	@Override
-	void process(Object object, EntityPersister persister) throws HibernateException {
+	public void process(Object object, EntityPersister persister) throws HibernateException {
 		final Object[] values = persister.getPropertyValues( object );
 		final Type[] types = persister.getPropertyTypes();
 		processEntityPropertyValues( values, types );

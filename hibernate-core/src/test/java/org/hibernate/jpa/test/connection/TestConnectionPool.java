@@ -7,6 +7,7 @@
 package org.hibernate.jpa.test.connection;
 
 import java.util.Map;
+import java.util.Properties;
 import javax.persistence.Entity;
 import javax.persistence.EntityManager;
 import javax.persistence.Id;
@@ -15,10 +16,13 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.TestForIssue;
+import org.junit.Assert;
 import org.junit.Test;
 
 /**
@@ -46,6 +50,19 @@ public class TestConnectionPool
 				AvailableSettings.POOL_SIZE,
 				Integer.valueOf( CONNECTION_POOL_SIZE )
 		);
+		options.put( "hibernate.connection.customProperty", "x" );
+		options.put( AvailableSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT, "true" );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-13700")
+	public void testConnectionPoolPropertyFiltering() {
+		ConnectionProvider cp = serviceRegistry().getService( ConnectionProvider.class );
+		DriverManagerConnectionProviderImpl dmcp = (DriverManagerConnectionProviderImpl) cp;
+		Properties connectionProperties = dmcp.getConnectionProperties();
+		Assert.assertEquals( "x", connectionProperties.getProperty( "customProperty" ) );
+		Assert.assertNull( connectionProperties.getProperty( "pool_size" ) );
+		Assert.assertNull( connectionProperties.getProperty( "provider_disables_autocommit" ) );
 	}
 
 	@Test

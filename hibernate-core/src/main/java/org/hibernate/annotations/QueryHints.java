@@ -7,6 +7,7 @@
 package org.hibernate.annotations;
 
 import org.hibernate.engine.spi.QueryParameters;
+import org.hibernate.graph.GraphSemantic;
 
 /**
  * Consolidation of hints available to Hibernate JPA queries.  Mainly used to define features available on
@@ -102,27 +103,33 @@ public class QueryHints {
 	 * Accepts a {@link javax.persistence.LockModeType} or a {@link org.hibernate.LockMode}
 	 */
 	public static final String NATIVE_LOCKMODE = "org.hibernate.lockMode";
-	
+
 	/**
 	 * Hint providing a "fetchgraph" EntityGraph.  Attributes explicitly specified as AttributeNodes are treated as
 	 * FetchType.EAGER (via join fetch or subsequent select).
-	 * 
+	 *
 	 * Note: Currently, attributes that are not specified are treated as FetchType.LAZY or FetchType.EAGER depending
 	 * on the attribute's definition in metadata, rather than forcing FetchType.LAZY.
+	 *
+	 * @deprecated (since 5.4) Use {@link GraphSemantic#FETCH}'s {@link GraphSemantic#getJpaHintName()} instead
 	 */
-	public static final String FETCHGRAPH = "javax.persistence.fetchgraph";
-	
+	@Deprecated
+	public static final String FETCHGRAPH = GraphSemantic.FETCH.getJpaHintName();
+
 	/**
 	 * Hint providing a "loadgraph" EntityGraph.  Attributes explicitly specified as AttributeNodes are treated as
 	 * FetchType.EAGER (via join fetch or subsequent select).  Attributes that are not specified are treated as
 	 * FetchType.LAZY or FetchType.EAGER depending on the attribute's definition in metadata
+	 *
+	 * @deprecated (since 5.4) Use {@link GraphSemantic#LOAD}'s {@link GraphSemantic#getJpaHintName()} instead
 	 */
-	public static final String LOADGRAPH = "javax.persistence.loadgraph";
+	@Deprecated
+	public static final String LOADGRAPH = GraphSemantic.LOAD.getJpaHintName();
 
 	/**
 	 * Hint to enable/disable the follow-on-locking mechanism provided by {@link org.hibernate.dialect.Dialect#useFollowOnLocking(QueryParameters)}.
 	 * A value of {@code true} enables follow-on-locking, whereas a value of {@code false} disables it.
-	 * If the value is {@code null}, the the {@code Dialect} strategy is going to be used instead.
+	 * If the value is {@code null}, the {@code Dialect} strategy is going to be used instead.
 	 *
 	 * @since 5.2
 	 */
@@ -136,5 +143,18 @@ public class QueryHints {
 	 * @since 5.2
 	 */
 	public static final String PASS_DISTINCT_THROUGH = "hibernate.query.passDistinctThrough";
+
+	/**
+	 * Hint for specifying query spaces to be applied to a native (SQL) query.
+	 *
+	 * Passed value can be any of:<ul>
+	 *     <li>List of the spaces</li>
+	 *     <li>array of the spaces</li>
+	 *     <li>String "whitespace"-separated list of the spaces</li>
+	 * </ul>
+	 *
+	 * @see org.hibernate.SynchronizeableQuery
+	 */
+	public static final String NATIVE_SPACES = "org.hibernate.query.native.spaces";
 
 }

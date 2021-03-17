@@ -93,6 +93,14 @@ public class SimpleAuxiliaryDatabaseObject extends AbstractAuxiliaryDatabaseObje
 		return copy;
 	}
 
+	protected String getCatalogName() {
+		return catalogName;
+	}
+
+	protected String getSchemaName() {
+		return schemaName;
+	}
+
 	private String injectCatalogAndSchema(String ddlString) {
 		String rtn = StringHelper.replace( ddlString, CATALOG_NAME_PLACEHOLDER, catalogName == null ? "" : catalogName );
 		rtn = StringHelper.replace( rtn, SCHEMA_NAME_PLACEHOLDER, schemaName == null ? "" : schemaName );

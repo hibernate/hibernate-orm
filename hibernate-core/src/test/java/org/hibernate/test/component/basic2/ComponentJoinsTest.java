@@ -56,4 +56,28 @@ public class ComponentJoinsTest extends BaseCoreFunctionalTestCase {
 		session.getTransaction().commit();
 		session.close();
 	}
+
+	@Test
+	public void dummy() {
+		Session session = openSession();
+		session.beginTransaction();
+		session.save( new Person( 1, "Steve", "Ebersone" ) );
+		session.getTransaction().commit();
+		session.close();
+
+
+		session = openSession();
+		session.beginTransaction();
+		Person person = session.get( Person.class, 1 );
+		person.getName().setLastName( "Ebersole" );
+		session.getTransaction().commit();
+		session.close();
+
+
+		session = openSession();
+		session.beginTransaction();
+		session.createQuery( "delete Person" ).executeUpdate();
+		session.getTransaction().commit();
+		session.close();
+	}
 }

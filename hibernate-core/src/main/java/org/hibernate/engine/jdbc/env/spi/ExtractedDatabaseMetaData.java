@@ -6,10 +6,14 @@
  */
 package org.hibernate.engine.jdbc.env.spi;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.hibernate.engine.jdbc.spi.TypeInfo;
+import org.hibernate.tool.schema.extract.spi.SequenceInformation;
 
 /**
  * Information extracted from {@link java.sql.DatabaseMetaData} regarding what the JDBC driver reports as
@@ -140,4 +144,13 @@ public interface ExtractedDatabaseMetaData {
 	 * @see java.sql.DatabaseMetaData#locatorsUpdateCopy()
 	 */
 	boolean doesLobLocatorUpdateCopy();
+
+	/**
+	 * Retrieve the list of {@code SequenceInformation} objects which describe the underlying database sequences.
+	 *
+	 * @return {@code SequenceInformation} objects.
+	 */
+	default List<SequenceInformation> getSequenceInformationList() {
+		return Collections.emptyList();
+	}
 }

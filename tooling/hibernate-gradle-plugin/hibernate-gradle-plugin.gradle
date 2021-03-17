@@ -5,11 +5,13 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 apply plugin: 'groovy'
+
+description = "Gradle plugin for integrating Hibernate functionality into your build"
+
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 apply plugin: 'java-gradle-plugin'
 apply plugin: 'maven'
 
-description = "Gradle plugin for integrating Hibernate functionality into your build"
 
 dependencies {
 	compile( project( ':hibernate-core' ) )
@@ -18,4 +20,26 @@ dependencies {
 	compile( libraries.byteBuddy )
 	compile gradleApi()
 	compile localGroovy()
+}
+
+tasks.withType( GroovyCompile ) {
+	options.encoding = 'UTF-8'
+}
+
+if ( !gradle.ext.javaToolchainEnabled ) {
+	tasks.withType( GroovyCompile ) {
+		sourceCompatibility = JavaVersion.toVersion( gradle.ext.baselineJavaVersion )
+		targetCompatibility = JavaVersion.toVersion( gradle.ext.baselineJavaVersion )
+	}
+}
+else {
+	logger.warn( "[WARN] Toolchains are not yet supported for Groovy compilation." +
+			" Using the JDK that runs Gradle for Groovy compilation." )
+}
+
+tasks.test {
+	if ( gradle.ext.javaVersions.test.launcher.asInt() >= 9 ) {
+		// Needs add-opens because Gradle uses illegal accesses to inject... mocks? Something like that.
+		jvmArgs( ['--add-opens', 'java.base/java.lang=ALL-UNNAMED'] )
+	}
 }

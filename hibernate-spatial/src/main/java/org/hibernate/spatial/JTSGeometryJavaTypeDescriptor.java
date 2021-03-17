@@ -7,14 +7,15 @@
 
 package org.hibernate.spatial;
 
+import java.util.Locale;
+
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptorRegistry;
 
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.io.ParseException;
-import com.vividsolutions.jts.io.WKTReader;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.io.ParseException;
+import org.locationtech.jts.io.WKTReader;
 import org.geolatte.geom.jts.JTS;
 
 /**
@@ -49,7 +50,7 @@ public class JTSGeometryJavaTypeDescriptor extends AbstractTypeDescriptor<Geomet
 			return reader.read( string );
 		}
 		catch (ParseException e) {
-			throw new RuntimeException( String.format( "Can't parse string %s as WKT", string ) );
+			throw new RuntimeException( String.format( Locale.ENGLISH, "Can't parse string %s as WKT", string ) );
 		}
 	}
 

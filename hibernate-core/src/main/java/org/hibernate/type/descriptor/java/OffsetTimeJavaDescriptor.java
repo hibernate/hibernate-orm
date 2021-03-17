@@ -12,7 +12,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
-import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Date;
@@ -65,6 +65,12 @@ public class OffsetTimeJavaDescriptor extends AbstractTypeDescriptor<OffsetTime>
 		final ZonedDateTime zonedDateTime = offsetTime.atDate( LocalDate.of( 1970, 1, 1 ) ).toZonedDateTime();
 
 		if ( Timestamp.class.isAssignableFrom( type ) ) {
+			/*
+			 * Workaround for HHH-13266 (JDK-8061577).
+			 * Ideally we'd want to use Timestamp.from( offsetDateTime.toInstant() ), but this won't always work.
+			 * Timestamp.from() assumes the number of milliseconds since the epoch
+			 * means the same thing in Timestamp and Instant, but it doesn't, in particular before 1900.
+			 */
 			return (X) Timestamp.valueOf( zonedDateTime.toLocalDateTime() );
 		}
 
@@ -95,22 +101,44 @@ public class OffsetTimeJavaDescriptor extends AbstractTypeDescriptor<OffsetTime>
 			return (OffsetTime) value;
 		}
 
+		/*
+		 * Also, in order to fix HHH-13357, and to be consistent with the conversion to Time (see above),
+		 * we set the offset to the current offset of the JVM (OffsetDateTime.now().getOffset()).
+		 * This is different from setting the *zone* to the current *zone* of the JVM (ZoneId.systemDefault()),
+		 * since a zone has a varying offset over time,
+		 * thus the zone might have a different offset for the given timezone than it has for the current date/time.
+		 * For example, if the timestamp represents 1970-01-01TXX:YY,
+		 * and the JVM is set to use Europe/Paris as a timezone, and the current time is 2019-04-16-08:53,
+		 * then applying the JVM timezone to the timestamp would result in the offset +01:00,
+		 * but applying the JVM offset would result in the offset +02:00, since DST is in effect at 2019-04-16-08:53.
+		 *
+		 * Of course none of this would be a problem if we just stored the offset in the database,
+		 * but I guess there are historical reasons that explain why we don't.
+		 */
+		ZoneOffset offset = OffsetDateTime.now().getOffset();
+
 		if ( Time.class.isInstance( value ) ) {
-			return ( (Time) value ).toLocalTime().atOffset( OffsetDateTime.now().getOffset() );
+			return ( (Time) value ).toLocalTime().atOffset( offset );
 		}
 
 		if ( Timestamp.class.isInstance( value ) ) {
 			final Timestamp ts = (Timestamp) value;
-			return OffsetTime.ofInstant( ts.toInstant(), ZoneId.systemDefault() );
+			/*
+			 * Workaround for HHH-13266 (JDK-8061577).
+			 * Ideally we'd want to use OffsetDateTime.ofInstant( ts.toInstant(), ... ), but this won't always work.
+			 * ts.toInstant() assumes the number of milliseconds since the epoch
+			 * means the same thing in Timestamp and Instant, but it doesn't, in particular before 1900.
+			 */
+			return ts.toLocalDateTime().toLocalTime().atOffset( offset );
 		}
 
 		if ( Date.class.isInstance( value ) ) {
 			final Date date = (Date) value;
-			return OffsetTime.ofInstant( date.toInstant(), ZoneId.systemDefault() );
+			return OffsetTime.ofInstant( date.toInstant(), offset );
 		}
 
 		if ( Long.class.isInstance( value ) ) {
-			return OffsetTime.ofInstant( Instant.ofEpochMilli( (Long) value ), ZoneId.systemDefault() );
+			return OffsetTime.ofInstant( Instant.ofEpochMilli( (Long) value ), offset );
 		}
 
 		if ( Calendar.class.isInstance( value ) ) {

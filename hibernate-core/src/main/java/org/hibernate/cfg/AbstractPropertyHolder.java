@@ -157,7 +157,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	}
 
 	/**
-	 * Set the property be processed.  property can be null
+	 * Set the property to be processed.  property can be null
 	 *
 	 * @param property The property
 	 */
@@ -207,7 +207,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	 		//  - the property uses some restricted values
 	 		//  - the user has overridden the column
 			// also change getOverriddenJoinColumn and getOverriddenJoinTable as well
-	 		
+
 //			if ( propertyName.contains( ".key." ) ) {
 //				//support for legacy @AttributeOverride declarations
 //				//TODO cache the underlying regexp

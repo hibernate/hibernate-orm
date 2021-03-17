@@ -13,7 +13,6 @@ import java.util.Set;
 import org.hibernate.AssertionFailure;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.StringHelper;
@@ -21,6 +20,7 @@ import org.hibernate.loader.plan.exec.process.internal.CollectionReferenceInitia
 import org.hibernate.loader.plan.exec.process.internal.EntityReferenceInitializerImpl;
 import org.hibernate.loader.plan.exec.process.spi.ReaderCollector;
 import org.hibernate.loader.plan.exec.query.internal.SelectStatementBuilder;
+import org.hibernate.loader.plan.exec.query.spi.QueryBuildingParameters;
 import org.hibernate.loader.plan.exec.spi.AliasResolutionContext;
 import org.hibernate.loader.plan.exec.spi.CollectionReferenceAliases;
 import org.hibernate.loader.plan.exec.spi.EntityReferenceAliases;
@@ -66,49 +66,32 @@ import org.jboss.logging.Logger;
 public class LoadQueryJoinAndFetchProcessor {
 	private static final Logger LOG = CoreLogging.logger( LoadQueryJoinAndFetchProcessor.class );
 
-	private final AliasResolutionContext aliasResolutionContext;
-	private final AliasResolutionContextImpl mutableAliasResolutionContext;
-	private final LoadQueryInfluencers queryInfluencers;
+	private final AliasResolutionContextImpl aliasResolutionContext;
+	private final QueryBuildingParameters buildingParameters;
 	private final SessionFactoryImplementor factory;
 
 	/**
 	 * Instantiates a LoadQueryJoinAndFetchProcessor with the given information
 	 *
-	 * @param mutableAliasResolutionContext
-	 * @param queryInfluencers
+	 * @param aliasResolutionContext
+	 * @param buildingParameters
 	 * @param factory
 	 */
 	public LoadQueryJoinAndFetchProcessor(
-			AliasResolutionContextImpl mutableAliasResolutionContext,
-			LoadQueryInfluencers queryInfluencers,
+			AliasResolutionContextImpl aliasResolutionContext,
+			QueryBuildingParameters buildingParameters,
 			SessionFactoryImplementor factory) {
-		this.aliasResolutionContext = mutableAliasResolutionContext;
-		this.mutableAliasResolutionContext = mutableAliasResolutionContext;
-		this.queryInfluencers = queryInfluencers;
+		this.aliasResolutionContext = aliasResolutionContext;
+		this.buildingParameters = buildingParameters;
 		this.factory = factory;
-	}
-
-	/**
-	 * Instantiates a LoadQueryJoinAndFetchProcessor from an initial object and new query influencers.
-	 *
-	 * Aliases are considered already contributed to the initial objects alias resolution context
-	 * and won't be added again.
-	 *
-	 * @param initialLoadQueryJoinAndFetchProcessor The initial object to be copied
-	 * @param queryInfluencers The new query influencers
-	 */
-	public LoadQueryJoinAndFetchProcessor(
-			LoadQueryJoinAndFetchProcessor initialLoadQueryJoinAndFetchProcessor,
-			LoadQueryInfluencers queryInfluencers) {
-		this.aliasResolutionContext = initialLoadQueryJoinAndFetchProcessor.aliasResolutionContext;
-		// Do not change the alias resolution context, it should be pre-populated
-		this.mutableAliasResolutionContext = null;
-		this.queryInfluencers = queryInfluencers;
-		this.factory = initialLoadQueryJoinAndFetchProcessor.factory;
 	}
 
 	public AliasResolutionContext getAliasResolutionContext() {
 		return aliasResolutionContext;
+	}
+
+	public QueryBuildingParameters getQueryBuildingParameters() {
+		return buildingParameters;
 	}
 
 	public SessionFactoryImplementor getSessionFactory() {
@@ -182,12 +165,7 @@ public class LoadQueryJoinAndFetchProcessor {
 			);
 		}
 
-		if ( mutableAliasResolutionContext != null ) {
-			mutableAliasResolutionContext.registerCompositeQuerySpaceUidResolution(
-					rightHandSideUid,
-					leftHandSideTableAlias
-			);
-		}
+		aliasResolutionContext.registerCompositeQuerySpaceUidResolution( rightHandSideUid, leftHandSideTableAlias );
 	}
 
 	private void renderEntityJoin(Join join, JoinFragment joinFragment) {
@@ -195,8 +173,8 @@ public class LoadQueryJoinAndFetchProcessor {
 
 		// see if there is already aliases registered for this entity query space (collection joins)
 		EntityReferenceAliases aliases = aliasResolutionContext.resolveEntityReferenceAliases( rightHandSide.getUid() );
-		if ( aliases == null && mutableAliasResolutionContext != null ) {
-			mutableAliasResolutionContext.generateEntityReferenceAliases(
+		if ( aliases == null ) {
+			aliasResolutionContext.generateEntityReferenceAliases(
 					rightHandSide.getUid(),
 					rightHandSide.getEntityPersister()
 			);
@@ -227,10 +205,10 @@ public class LoadQueryJoinAndFetchProcessor {
 		// calls to the Joinable.filterFragment() method where the Joinable is either the entity or
 		// collection persister
 		final String filter = associationType!=null?
-				associationType.getOnCondition( rhsTableAlias, factory, queryInfluencers.getEnabledFilters() ):
+				associationType.getOnCondition( rhsTableAlias, factory, buildingParameters.getQueryInfluencers().getEnabledFilters() ):
 				joinable.filterFragment(
 					rhsTableAlias,
-					queryInfluencers.getEnabledFilters()
+					buildingParameters.getQueryInfluencers().getEnabledFilters()
 		);
 
 		if ( StringHelper.isEmpty( withClause ) && StringHelper.isEmpty( filter ) ) {
@@ -281,9 +259,11 @@ public class LoadQueryJoinAndFetchProcessor {
 		);
 
 		String[] joinColumns = join.resolveAliasedLeftHandSideJoinConditionColumns( lhsTableAlias );
-		if ( joinColumns.length == 0 ) {
+		QuerySpace lhsQuerySpace = join.getLeftHandSide();
+		if ( joinColumns.length == 0 && lhsQuerySpace instanceof EntityQuerySpace ) {
 			// When no columns are available, this is a special join that involves multiple subtypes
-			AbstractEntityPersister persister = (AbstractEntityPersister) ( (EntityQuerySpace) join.getLeftHandSide() ).getEntityPersister();
+			EntityQuerySpace entityQuerySpace = (EntityQuerySpace) lhsQuerySpace;
+			AbstractEntityPersister persister = (AbstractEntityPersister) entityQuerySpace.getEntityPersister();
 
 			String[][] polyJoinColumns = persister.getPolymorphicJoinColumns(
 					lhsTableAlias,
@@ -317,19 +297,7 @@ public class LoadQueryJoinAndFetchProcessor {
 
 	private void renderCollectionJoin(Join join, JoinFragment joinFragment) {
 		final CollectionQuerySpace rightHandSide = (CollectionQuerySpace) join.getRightHandSide();
-		if ( mutableAliasResolutionContext != null ) {
-			registerCollectionJoinAliases( mutableAliasResolutionContext, rightHandSide );
-		}
-		addJoins(
-				join,
-				joinFragment,
-				(Joinable) rightHandSide.getCollectionPersister(),
-				null
-		);
-	}
 
-	private void registerCollectionJoinAliases(AliasResolutionContextImpl mutableAliasResolutionContext,
-			CollectionQuerySpace rightHandSide) {
 		// The SQL join to the "collection table" needs to be rendered.
 		//
 		// In the case of a basic collection, that's the only join needed.
@@ -385,14 +353,14 @@ public class LoadQueryJoinAndFetchProcessor {
 						)
 				);
 			}
-			mutableAliasResolutionContext.generateCollectionReferenceAliases(
+			aliasResolutionContext.generateCollectionReferenceAliases(
 					rightHandSide.getUid(),
 					rightHandSide.getCollectionPersister(),
 					collectionElementJoin.getRightHandSide().getUid()
 			);
 		}
 		else {
-			mutableAliasResolutionContext.generateCollectionReferenceAliases(
+			aliasResolutionContext.generateCollectionReferenceAliases(
 					rightHandSide.getUid(),
 					rightHandSide.getCollectionPersister(),
 					null
@@ -412,11 +380,17 @@ public class LoadQueryJoinAndFetchProcessor {
 						)
 				);
 			}
-			mutableAliasResolutionContext.generateEntityReferenceAliases(
+			aliasResolutionContext.generateEntityReferenceAliases(
 					collectionIndexJoin.getRightHandSide().getUid(),
 					rightHandSide.getCollectionPersister().getIndexDefinition().toEntityDefinition().getEntityPersister()
 			);
 		}
+		addJoins(
+				join,
+				joinFragment,
+				(Joinable) rightHandSide.getCollectionPersister(),
+				null
+		);
 	}
 
 	private void renderManyToManyJoin(
@@ -447,7 +421,7 @@ public class LoadQueryJoinAndFetchProcessor {
 			final CollectionPersister persister = leftHandSide.getCollectionPersister();
 			manyToManyFilter = persister.getManyToManyFilterFragment(
 					entityTableAlias,
-					queryInfluencers.getEnabledFilters()
+					buildingParameters.getQueryInfluencers().getEnabledFilters()
 			);
 		}
 		else {
@@ -633,7 +607,7 @@ public class LoadQueryJoinAndFetchProcessor {
 			// 		when processing the Join part of this we are able to look up the "lhs table alias" because we know
 			// 		the 'lhs' QuerySpace.
 			//
-			// Good idea to be able resolve a Join by lookup on the rhs and lhs uid?  If so, Fetch
+			// Good idea to be able to resolve a Join by lookup on the rhs and lhs uid?  If so, Fetch
 
 			// for many-to-many we have 3 table aliases.  By way of example, consider a normal m-n: User<->Role
 			// where User is the FetchOwner and Role (User.roles) is the Fetch.  We'd have:

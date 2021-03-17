@@ -58,6 +58,19 @@ public interface Joinable {
 	public String fromJoinFragment(String alias, boolean innerJoin, boolean includeSubclasses, Set<String> treatAsDeclarations);
 
 	/**
+	 * Get the from clause part of any joins
+	 * (optional operation)
+	 */
+	default String fromJoinFragment(
+			String alias,
+			boolean innerJoin,
+			boolean includeSubclasses,
+			Set<String> treatAsDeclarations,
+			Set<String> referencedTables) {
+		return fromJoinFragment( alias, innerJoin, includeSubclasses, treatAsDeclarations );
+	}
+
+	/**
 	 * The columns to join on
 	 */
 	public String[] getKeyColumnNames();

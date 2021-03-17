@@ -10,7 +10,6 @@ import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -25,6 +24,8 @@ import javax.persistence.TypedQuery;
 import org.hibernate.CacheMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
+import org.hibernate.dialect.CockroachDB192Dialect;
+import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.dialect.Oracle8iDialect;
@@ -673,6 +674,38 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	public void test_jpql_api_stream_example() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::jpql-api-stream-example[]
+			try(Stream<Person> personStream = entityManager.createQuery(
+				"select p " +
+				"from Person p " +
+				"where p.name like :name", Person.class )
+			.setParameter( "name", "J%" )
+			.getResultStream()) {
+				List<Person> persons = personStream
+					.skip( 5 )
+					.limit( 5 )
+					.collect( Collectors.toList() );
+			}
+			//end::jpql-api-stream-example[]
+
+			// tag::jpql-api-stream-terminal-operation[]
+			List<Person> persons = entityManager.createQuery(
+					"select p " +
+					"from Person p " +
+					"where p.name like :name", Person.class )
+			.setParameter( "name", "J%" )
+			.getResultStream()
+			.skip( 5 )
+			.limit( 5 )
+			.collect( Collectors.toList() );
+
+			//end::jpql-api-stream-terminal-operation[]
+		});
+	}
+
+	@Test
 	public void test_jpql_api_single_result_example() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::jpql-api-single-result-example[]
@@ -776,7 +809,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 		});
 	}
 
-	@Test
+	@Test(expected = IllegalArgumentException.class)
 	public void test_hql_api_positional_parameter_example() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Date timestamp = new Date(  );
@@ -785,7 +818,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 			org.hibernate.query.Query query = session.createQuery(
 				"select p " +
 				"from Person p " +
-				"where p.name like ?1" )
+				"where p.name like ?" )
 			.setParameter( 1, "J%" );
 			//end::hql-api-positional-parameter-example[]
 		});
@@ -1146,6 +1179,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = DerbyDialect.class, comment = "See https://issues.apache.org/jira/browse/DERBY-2072")
 	public void test_hql_concat_function_example() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::hql-concat-function-example[]
@@ -1265,6 +1299,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = CockroachDB192Dialect.class, comment = "https://github.com/cockroachdb/cockroach/issues/26710")
 	public void test_hql_sqrt_function_example() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::hql-sqrt-function-example[]
@@ -1279,6 +1314,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@SkipForDialect(SQLServerDialect.class)
+	@SkipForDialect(value = DerbyDialect.class, comment = "Comparisons between 'DATE' and 'TIMESTAMP' are not supported")
 	public void test_hql_current_date_function_example() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::hql-current-date-function-example[]
@@ -1350,6 +1386,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = DerbyDialect.class, comment = "See https://issues.apache.org/jira/browse/DERBY-2072")
 	public void test_hql_cast_function_example() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::hql-cast-function-example[]
@@ -1363,6 +1400,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = DerbyDialect.class, comment = "Derby doesn't support extract function")
 	public void test_hql_extract_function_example() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::hql-extract-function-example[]
@@ -1517,6 +1555,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = DerbyDialect.class, comment = "Comparisons between 'DATE' and 'TIMESTAMP' are not supported")
 	public void test_hql_collection_expressions_example_7() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::hql-collection-expressions-example[]
@@ -1532,6 +1571,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = DerbyDialect.class, comment = "Comparisons between 'DATE' and 'TIMESTAMP' are not supported")
 	public void test_hql_collection_expressions_example_8() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::hql-collection-expressions-example[]
@@ -1735,6 +1775,28 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 			.getResultList();
 			//end::hql-searched-case-expressions-example[]
 			assertEquals(3, nickNames.size());
+		});
+	}
+
+	@Test
+	public void test_case_arithmetic_expressions_example() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::hql-case-arithmetic-expressions-example[]
+			List<Long> values = entityManager.createQuery(
+				"select " +
+				"	case when p.nickName is null " +
+				"		 then (p.id * 1000) " +
+				"		 else p.id " +
+				"	end " +
+				"from Person p " +
+				"order by p.id", Long.class)
+			.getResultList();
+
+			assertEquals(3, values.size());
+			assertEquals( 1L, (long) values.get( 0 ) );
+			assertEquals( 2000, (long) values.get( 1 ) );
+			assertEquals( 3000, (long) values.get( 2 ) );
+			//end::hql-case-arithmetic-expressions-example[]
 		});
 	}
 

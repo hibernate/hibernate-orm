@@ -5,12 +5,15 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.tuple.component;
+
 import java.io.Serializable;
 import java.lang.reflect.Method;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.spi.BasicProxyFactory;
+import org.hibernate.bytecode.spi.BytecodeProvider;
+import org.hibernate.bytecode.spi.ProxyFactoryFactory;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -67,9 +70,8 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 			optimizer = null;
 		}
 		else {
-			// TODO: here is why we need to make bytecode provider global :(
-			// TODO : again, fix this after HHH-1907 is complete
-			optimizer = Environment.getBytecodeProvider().getReflectionOptimizer(
+			final BytecodeProvider bytecodeProvider = component.getServiceRegistry().getService( BytecodeProvider.class );
+			optimizer = bytecodeProvider.getReflectionOptimizer(
 					componentClass, getterNames, setterNames, propTypes
 			);
 		}
@@ -124,7 +126,8 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 
 	protected Instantiator buildInstantiator(Component component) {
 		if ( component.isEmbedded() && ReflectHelper.isAbstractClass( this.componentClass ) ) {
-			return new ProxiedInstantiator( this.componentClass );
+			ProxyFactoryFactory proxyFactoryFactory = component.getServiceRegistry().getService( ProxyFactoryFactory.class );
+			return new ProxiedInstantiator( this.componentClass, proxyFactoryFactory );
 		}
 		if ( optimizer == null ) {
 			return new PojoInstantiator( this.componentClass, null );
@@ -151,16 +154,14 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 		private final Class proxiedClass;
 		private final BasicProxyFactory factory;
 
-		public ProxiedInstantiator(Class componentClass) {
+		public ProxiedInstantiator(Class componentClass, ProxyFactoryFactory proxyFactoryFactory) {
 			proxiedClass = componentClass;
 			if ( proxiedClass.isInterface() ) {
-				factory = Environment.getBytecodeProvider()
-						.getProxyFactoryFactory()
+				factory = proxyFactoryFactory
 						.buildBasicProxyFactory( null, new Class[] { proxiedClass } );
 			}
 			else {
-				factory = Environment.getBytecodeProvider()
-						.getProxyFactoryFactory()
+				factory = proxyFactoryFactory
 						.buildBasicProxyFactory( proxiedClass, null );
 			}
 		}

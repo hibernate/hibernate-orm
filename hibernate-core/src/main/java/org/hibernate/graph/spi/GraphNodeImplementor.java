@@ -6,14 +6,15 @@
  */
 package org.hibernate.graph.spi;
 
-import java.util.List;
-import javax.persistence.AttributeNode;
+import org.hibernate.graph.GraphNode;
 
 /**
- * @author Strong Liu <stliu@hibernate.org>
+ * Integration version of the GraphNode contract
+ *
+ * @author Steve Ebersole
+ * @author <a href="mailto:stliu@hibernate.org">Strong Liu</a>
  */
-public interface GraphNodeImplementor {
-	List<AttributeNodeImplementor<?>> attributeImplementorNodes();
-	List<AttributeNode<?>> attributeNodes();
-	boolean containsAttribute(String name);
+public interface GraphNodeImplementor<J> extends GraphNode<J> {
+	@Override
+	GraphNodeImplementor<J> makeCopy(boolean mutable);
 }

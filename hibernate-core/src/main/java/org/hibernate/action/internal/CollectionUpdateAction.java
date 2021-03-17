@@ -20,6 +20,7 @@ import org.hibernate.event.spi.PreCollectionUpdateEvent;
 import org.hibernate.event.spi.PreCollectionUpdateEventListener;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
+import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
  * The action for updating a collection
@@ -57,8 +58,11 @@ public final class CollectionUpdateAction extends CollectionAction {
 		preUpdate();
 
 		if ( !collection.wasInitialized() ) {
-			if ( !collection.hasQueuedOperations() ) {
-				throw new AssertionFailure( "no queued adds" );
+			// If there were queued operations, they would have been processed
+			// and cleared by now.
+			// The collection should still be dirty.
+			if ( !collection.isDirty() ) {
+				throw new AssertionFailure( "collection is not dirty" );
 			}
 			//do nothing - we only need to notify the cache... 
 		}
@@ -85,42 +89,42 @@ public final class CollectionUpdateAction extends CollectionAction {
 			persister.insertRows( collection, id, session );
 		}
 
-		getSession().getPersistenceContext().getCollectionEntry( collection ).afterAction( collection );
+		session.getPersistenceContextInternal().getCollectionEntry( collection ).afterAction( collection );
 		evict();
 		postUpdate();
 
-		if ( getSession().getFactory().getStatistics().isStatisticsEnabled() ) {
-			getSession().getFactory().getStatistics().updateCollection( getPersister().getRole() );
+		final StatisticsImplementor statistics = session.getFactory().getStatistics();
+		if ( statistics.isStatisticsEnabled() ) {
+			statistics.updateCollection( persister.getRole() );
 		}
 	}
 	
 	private void preUpdate() {
-		final EventListenerGroup<PreCollectionUpdateEventListener> listenerGroup = listenerGroup( EventType.PRE_COLLECTION_UPDATE );
-		if ( listenerGroup.isEmpty() ) {
-			return;
-		}
-		final PreCollectionUpdateEvent event = new PreCollectionUpdateEvent(
+		getFastSessionServices()
+				.eventListenerGroup_PRE_COLLECTION_UPDATE
+				.fireLazyEventOnEachListener( this::newPreCollectionUpdateEvent, PreCollectionUpdateEventListener::onPreUpdateCollection );
+	}
+
+	private PreCollectionUpdateEvent newPreCollectionUpdateEvent() {
+		return new PreCollectionUpdateEvent(
 				getPersister(),
 				getCollection(),
 				eventSource()
 		);
-		for ( PreCollectionUpdateEventListener listener : listenerGroup.listeners() ) {
-			listener.onPreUpdateCollection( event );
-		}
 	}
 
 	private void postUpdate() {
-		final EventListenerGroup<PostCollectionUpdateEventListener> listenerGroup = listenerGroup( EventType.POST_COLLECTION_UPDATE );
-		if ( listenerGroup.isEmpty() ) {
-			return;
-		}
-		final PostCollectionUpdateEvent event = new PostCollectionUpdateEvent(
+		getFastSessionServices()
+				.eventListenerGroup_POST_COLLECTION_UPDATE
+				.fireLazyEventOnEachListener( this::newPostCollectionUpdateEvent, PostCollectionUpdateEventListener::onPostUpdateCollection );
+	}
+
+	private PostCollectionUpdateEvent newPostCollectionUpdateEvent() {
+		return new PostCollectionUpdateEvent(
 				getPersister(),
 				getCollection(),
 				eventSource()
 		);
-		for ( PostCollectionUpdateEventListener listener : listenerGroup.listeners() ) {
-			listener.onPostUpdateCollection( event );
-		}
 	}
+
 }

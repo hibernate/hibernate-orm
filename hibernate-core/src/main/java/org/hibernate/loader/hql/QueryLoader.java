@@ -37,6 +37,7 @@ import org.hibernate.hql.spi.ParameterInformation;
 import org.hibernate.internal.IteratorImpl;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.BasicLoader;
+import org.hibernate.loader.internal.AliasConstantsHelper;
 import org.hibernate.loader.spi.AfterLoadAction;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -45,6 +46,7 @@ import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
+import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
@@ -159,7 +161,7 @@ public class QueryLoader extends BasicLoader {
 			entityAliases[i] = element.getClassAlias();
 			sqlAliasByEntityAlias.put( entityAliases[i], sqlAliases[i] );
 			// TODO should we just collect these like with the collections above?
-			sqlAliasSuffixes[i] = ( size == 1 ) ? "" : (Integer.toString( i ) + "_").intern();
+			sqlAliasSuffixes[i] = ( size == 1 ) ? "" : AliasConstantsHelper.get( i );
 //			sqlAliasSuffixes[i] = element.getColumnAliasSuffix();
 			includeInSelect[i] = !element.isFetch();
 			if ( includeInSelect[i] ) {
@@ -400,7 +402,7 @@ public class QueryLoader extends BasicLoader {
 		return true;
 	}
 
-	private boolean hasSelectNew() {
+	protected boolean hasSelectNew() {
 		return aggregatedSelectExpression != null && aggregatedSelectExpression.getResultTransformer() != null;
 	}
 
@@ -485,7 +487,7 @@ public class QueryLoader extends BasicLoader {
 		}
 	}
 
-	private HolderInstantiator buildHolderInstantiator(ResultTransformer queryLocalResultTransformer) {
+	protected HolderInstantiator buildHolderInstantiator(ResultTransformer queryLocalResultTransformer) {
 		final ResultTransformer implicitResultTransformer = aggregatedSelectExpression == null
 				? null
 				: aggregatedSelectExpression.getResultTransformer();
@@ -504,7 +506,7 @@ public class QueryLoader extends BasicLoader {
 		return list( session, queryParameters, queryTranslator.getQuerySpaces(), queryReturnTypes );
 	}
 
-	private void checkQuery(QueryParameters queryParameters) {
+	protected void checkQuery(QueryParameters queryParameters) {
 		if ( hasSelectNew() && queryParameters.getResultTransformer() != null ) {
 			throw new QueryException( "ResultTransformer is not allowed for 'select new' queries." );
 		}
@@ -514,7 +516,8 @@ public class QueryLoader extends BasicLoader {
 			QueryParameters queryParameters,
 			EventSource session) throws HibernateException {
 		checkQuery( queryParameters );
-		final boolean stats = session.getFactory().getStatistics().isStatisticsEnabled();
+		final StatisticsImplementor statistics = session.getFactory().getStatistics();
+		final boolean stats = statistics.isStatisticsEnabled();
 		long startTime = 0;
 		if ( stats ) {
 			startTime = System.nanoTime();
@@ -545,7 +548,7 @@ public class QueryLoader extends BasicLoader {
 			if ( stats ) {
 				final long endTime = System.nanoTime();
 				final long milliseconds = TimeUnit.MILLISECONDS.convert( endTime - startTime, TimeUnit.NANOSECONDS );
-				session.getFactory().getStatistics().queryExecuted(
+				statistics.queryExecuted(
 //						"HQL: " + queryTranslator.getQueryString(),
 						getQueryIdentifier(),
 						0,

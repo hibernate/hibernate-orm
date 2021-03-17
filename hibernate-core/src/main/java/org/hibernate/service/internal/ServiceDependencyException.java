@@ -8,7 +8,7 @@ package org.hibernate.service.internal;
 import org.hibernate.HibernateException;
 
 /**
- * Indictes a problem processing service dependencies.
+ * Indicates a problem processing service dependencies.
  *
  * @author Steve Ebersole
  */

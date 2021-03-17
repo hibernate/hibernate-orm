@@ -120,7 +120,7 @@ public class ManagedBeanRegistryImpl implements ManagedBeanRegistry, BeanContain
 		registrations.clear();
 	}
 
-	private class ContainedBeanManagedBeanAdapter<B> implements ManagedBean<B> {
+	private static class ContainedBeanManagedBeanAdapter<B> implements ManagedBean<B> {
 		private final Class<B> beanClass;
 		private final ContainedBean<B> containedBean;
 

@@ -11,14 +11,13 @@ import java.util.Iterator;
 import org.hibernate.HibernateException;
 import org.hibernate.PropertyValueException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
-import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.engine.spi.Status;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.tuple.GenerationTiming;
+import org.hibernate.tuple.InMemoryValueGenerationStrategy;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
-import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
 /**
@@ -82,9 +81,9 @@ public final class Nullability {
 			  *
 			  *
 			  * In the previous implementation, not-null stuffs where checked
-			  * filtering by level one only updateable
+			  * filtering by level one only updatable
 			  * or insertable columns. So setting a sub component as update="false"
-			  * has no effect on not-null check if the main component had good checkeability
+			  * has no effect on not-null check if the main component had good checkability
 			  * In this implementation, we keep this feature.
 			  * However, I never see any documentation mentioning that, but it's for
 			  * sure a limitation.
@@ -95,13 +94,17 @@ public final class Nullability {
 					? persister.getPropertyInsertability()
 					: persister.getPropertyUpdateability();
 			final Type[] propertyTypes = persister.getPropertyTypes();
+			final InMemoryValueGenerationStrategy[] inMemoryValueGenerationStrategies =
+					persister.getEntityMetamodel().getInMemoryValueGenerationStrategies();
 
 			for ( int i = 0; i < values.length; i++ ) {
 
-				if ( checkability[i] && values[i]!= LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
+				if ( checkability[i] &&
+						values[i] != LazyPropertyInitializer.UNFETCHED_PROPERTY &&
+						GenerationTiming.NEVER == inMemoryValueGenerationStrategies[i].getGenerationTiming() ) {
 					final Object value = values[i];
 					if ( !nullability[i] && value == null ) {
-						//check basic level one nullablilty
+						//check basic level one nullability
 						throw new PropertyValueException(
 								"not-null property references a null or transient value",
 								persister.getEntityName(),

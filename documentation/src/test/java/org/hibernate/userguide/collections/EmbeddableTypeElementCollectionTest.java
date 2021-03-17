@@ -55,9 +55,14 @@ public class EmbeddableTypeElementCollectionTest extends BaseEntityManagerFuncti
 		@ElementCollection
 		private List<Phone> phones = new ArrayList<>();
 
+		//Getters and setters are omitted for brevity
+
+	//end::collections-embeddable-type-collection-lifecycle-entity-example[]
+
 		public List<Phone> getPhones() {
 			return phones;
 		}
+	//tag::collections-embeddable-type-collection-lifecycle-entity-example[]
 	}
 
 	@Embeddable
@@ -67,6 +72,10 @@ public class EmbeddableTypeElementCollectionTest extends BaseEntityManagerFuncti
 
 		@Column(name = "`number`")
 		private String number;
+
+		//Getters and setters are omitted for brevity
+
+	//end::collections-embeddable-type-collection-lifecycle-entity-example[]
 
 		public Phone() {
 		}
@@ -83,6 +92,7 @@ public class EmbeddableTypeElementCollectionTest extends BaseEntityManagerFuncti
 		public String getNumber() {
 			return number;
 		}
+	//tag::collections-embeddable-type-collection-lifecycle-entity-example[]
 	}
 	//end::collections-embeddable-type-collection-lifecycle-entity-example[]
 }

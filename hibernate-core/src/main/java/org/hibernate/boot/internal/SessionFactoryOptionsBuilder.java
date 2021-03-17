@@ -60,10 +60,9 @@ import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.stat.Statistics;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
-
-import org.jboss.logging.Logger;
 
 import static org.hibernate.cfg.AvailableSettings.ACQUIRE_CONNECTIONS;
 import static org.hibernate.cfg.AvailableSettings.ALLOW_JTA_TRANSACTION_ACCESS;
@@ -99,7 +98,9 @@ import static org.hibernate.cfg.AvailableSettings.LOG_SESSION_METRICS;
 import static org.hibernate.cfg.AvailableSettings.MAX_FETCH_DEPTH;
 import static org.hibernate.cfg.AvailableSettings.MULTI_TENANT_IDENTIFIER_RESOLVER;
 import static org.hibernate.cfg.AvailableSettings.NATIVE_EXCEPTION_HANDLING_51_COMPLIANCE;
+import static org.hibernate.cfg.AvailableSettings.OMIT_JOIN_OF_SUPERCLASS_TABLES;
 import static org.hibernate.cfg.AvailableSettings.ORDER_INSERTS;
+import static org.hibernate.cfg.AvailableSettings.JPA_CALLBACKS_ENABLED;
 import static org.hibernate.cfg.AvailableSettings.ORDER_UPDATES;
 import static org.hibernate.cfg.AvailableSettings.PREFER_USER_TRANSACTION;
 import static org.hibernate.cfg.AvailableSettings.PROCEDURE_NULL_PARAM_PASSING;
@@ -113,6 +114,7 @@ import static org.hibernate.cfg.AvailableSettings.SESSION_SCOPED_INTERCEPTOR;
 import static org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE;
 import static org.hibernate.cfg.AvailableSettings.STATEMENT_FETCH_SIZE;
 import static org.hibernate.cfg.AvailableSettings.STATEMENT_INSPECTOR;
+import static org.hibernate.cfg.AvailableSettings.QUERY_STATISTICS_MAX_SIZE;
 import static org.hibernate.cfg.AvailableSettings.USE_DIRECT_REFERENCE_CACHE_ENTRIES;
 import static org.hibernate.cfg.AvailableSettings.USE_GET_GENERATED_KEYS;
 import static org.hibernate.cfg.AvailableSettings.USE_IDENTIFIER_ROLLBACK;
@@ -193,7 +195,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private NullPrecedence defaultNullPrecedence;
 	private boolean orderUpdatesEnabled;
 	private boolean orderInsertsEnabled;
+	private boolean postInsertIdentifierDelayed;
+	private boolean collectionsInDefaultFetchGroupEnabled;
 
+	// JPA callbacks
+	private boolean callbacksEnabled;
 
 	// multi-tenancy
 	private MultiTenancyStrategy multiTenancyStrategy;
@@ -206,6 +212,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private final boolean procedureParameterNullPassingEnabled;
 	private final boolean collectionJoinSubqueryRewriteEnabled;
 	private boolean jdbcStyleParamsZeroBased;
+	private final boolean omitJoinOfSuperclassTablesEnabled;
 
 	// Caching
 	private boolean secondLevelCacheEnabled;
@@ -243,6 +250,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean inClauseParameterPaddingEnabled;
 
 	private boolean nativeExceptionHandling51Compliance;
+	private int queryStatisticsMaxSize;
+
 
 	@SuppressWarnings({"WeakerAccess", "deprecation"})
 	public SessionFactoryOptionsBuilder(StandardServiceRegistry serviceRegistry, BootstrapContext context) {
@@ -341,6 +350,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.orderUpdatesEnabled = ConfigurationHelper.getBoolean( ORDER_UPDATES, configurationSettings );
 		this.orderInsertsEnabled = ConfigurationHelper.getBoolean( ORDER_INSERTS, configurationSettings );
 
+		this.callbacksEnabled = ConfigurationHelper.getBoolean( JPA_CALLBACKS_ENABLED, configurationSettings, true );
+
 		this.jtaTrackByThread = cfgService.getSetting( JTA_TRACK_BY_THREAD, BOOLEAN, true );
 
 		this.querySubstitutions = ConfigurationHelper.toMap( QUERY_SUBSTITUTIONS, " ,=;:\n\t\r\f", configurationSettings );
@@ -349,6 +360,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				CONVENTIONAL_JAVA_CONSTANTS, BOOLEAN, true );
 		this.procedureParameterNullPassingEnabled = cfgService.getSetting( PROCEDURE_NULL_PARAM_PASSING, BOOLEAN, false );
 		this.collectionJoinSubqueryRewriteEnabled = cfgService.getSetting( COLLECTION_JOIN_SUBQUERY, BOOLEAN, true );
+		this.omitJoinOfSuperclassTablesEnabled = cfgService.getSetting( OMIT_JOIN_OF_SUPERCLASS_TABLES, BOOLEAN, true );
 
 		final RegionFactory regionFactory = serviceRegistry.getService( RegionFactory.class );
 		if ( !NoCachingRegionFactory.class.isInstance( regionFactory ) ) {
@@ -509,6 +521,13 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				configurationSettings,
 				false
 		);
+
+		this.queryStatisticsMaxSize = ConfigurationHelper.getInt(
+				QUERY_STATISTICS_MAX_SIZE,
+				configurationSettings,
+				Statistics.DEFAULT_QUERY_STATISTICS_MAX_SIZE
+		);
+
 		if ( context.isJpaBootstrap() && nativeExceptionHandling51Compliance ) {
 			log.nativeExceptionHandling51ComplianceJpaBootstrapping();
 			this.nativeExceptionHandling51Compliance = false;
@@ -1031,6 +1050,27 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		return nativeExceptionHandling51Compliance;
 	}
 
+	@Override
+	public int getQueryStatisticsMaxSize() {
+		return queryStatisticsMaxSize;
+	}
+
+	@Override
+	public boolean areJPACallbacksEnabled() {
+		return callbacksEnabled;
+	}
+
+	@Override
+	public boolean isCollectionsInDefaultFetchGroupEnabled() {
+		return collectionsInDefaultFetchGroupEnabled;
+	}
+
+	@Override
+	public boolean isOmitJoinOfSuperclassTablesEnabled() {
+		return omitJoinOfSuperclassTablesEnabled;
+	}
+
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// In-flight mutation access
 
@@ -1160,6 +1200,10 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	public void enableOrderingOfUpdates(boolean enabled) {
 		this.orderUpdatesEnabled = enabled;
+	}
+
+	public void enableDelayedIdentityInserts(boolean enabled) {
+		this.postInsertIdentifierDelayed = enabled;
 	}
 
 	public void applyMultiTenancyStrategy(MultiTenancyStrategy strategy) {
@@ -1311,6 +1355,10 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	public void enableJpaCachingCompliance(boolean enabled) {
 		mutableJpaCompliance().setCachingCompliance( enabled );
+	}
+
+	public void enableCollectionInDefaultFetchGroup(boolean enabled) {
+		this.collectionsInDefaultFetchGroupEnabled = enabled;
 	}
 
 	public void disableRefreshDetachedEntity() {

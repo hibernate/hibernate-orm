@@ -75,6 +75,10 @@ public class UnidirectionalComparatorSortedSetTest extends BaseEntityManagerFunc
 		@SortComparator(ReverseComparator.class)
 		private SortedSet<Phone> phones = new TreeSet<>();
 
+		//Getters and setters are omitted for brevity
+
+	//end::collections-unidirectional-sorted-set-custom-comparator-example[]
+
 		public Person() {
 		}
 
@@ -85,9 +89,11 @@ public class UnidirectionalComparatorSortedSetTest extends BaseEntityManagerFunc
 		public Set<Phone> getPhones() {
 			return phones;
 		}
+	//tag::collections-unidirectional-sorted-set-custom-comparator-example[]
 	}
 
 	public static class ReverseComparator implements Comparator<Phone> {
+
 		@Override
 		public int compare(Phone o1, Phone o2) {
 			return o2.compareTo( o1 );
@@ -105,6 +111,10 @@ public class UnidirectionalComparatorSortedSetTest extends BaseEntityManagerFunc
 		@NaturalId
 		@Column(name = "`number`")
 		private String number;
+
+		//Getters and setters are omitted for brevity
+
+	//end::collections-unidirectional-sorted-set-custom-comparator-example[]
 
 		public Phone() {
 		}
@@ -127,6 +137,7 @@ public class UnidirectionalComparatorSortedSetTest extends BaseEntityManagerFunc
 			return number;
 		}
 
+	//tag::collections-unidirectional-sorted-set-custom-comparator-example[]
 		@Override
 		public int compareTo(Phone o) {
 			return number.compareTo( o.getNumber() );

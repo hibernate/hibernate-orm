@@ -11,13 +11,12 @@ import java.io.Serializable;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.service.spi.EventListenerGroup;
-import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostCollectionRecreateEvent;
 import org.hibernate.event.spi.PostCollectionRecreateEventListener;
 import org.hibernate.event.spi.PreCollectionRecreateEvent;
 import org.hibernate.event.spi.PreCollectionRecreateEventListener;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
  * The action for recreating a collection
@@ -47,35 +46,35 @@ public final class CollectionRecreateAction extends CollectionAction {
 		final PersistentCollection collection = getCollection();
 		
 		preRecreate();
-		getPersister().recreate( collection, getKey(), getSession() );
-		getSession().getPersistenceContext().getCollectionEntry( collection ).afterAction( collection );
+		final SharedSessionContractImplementor session = getSession();
+		getPersister().recreate( collection, getKey(), session);
+		session.getPersistenceContextInternal().getCollectionEntry( collection ).afterAction( collection );
 		evict();
 		postRecreate();
 
-		if ( getSession().getFactory().getStatistics().isStatisticsEnabled() ) {
-			getSession().getFactory().getStatistics().recreateCollection( getPersister().getRole() );
+		final StatisticsImplementor statistics = session.getFactory().getStatistics();
+		if ( statistics.isStatisticsEnabled() ) {
+			statistics.recreateCollection( getPersister().getRole() );
 		}
 	}
 
 	private void preRecreate() {
-		final EventListenerGroup<PreCollectionRecreateEventListener> listenerGroup = listenerGroup( EventType.PRE_COLLECTION_RECREATE );
-		if ( listenerGroup.isEmpty() ) {
-			return;
-		}
-		final PreCollectionRecreateEvent event = new PreCollectionRecreateEvent( getPersister(), getCollection(), eventSource() );
-		for ( PreCollectionRecreateEventListener listener : listenerGroup.listeners() ) {
-			listener.onPreRecreateCollection( event );
-		}
+		getFastSessionServices()
+				.eventListenerGroup_PRE_COLLECTION_RECREATE
+				.fireLazyEventOnEachListener( this::newPreCollectionRecreateEvent, PreCollectionRecreateEventListener::onPreRecreateCollection );
+	}
+
+	private PreCollectionRecreateEvent newPreCollectionRecreateEvent() {
+		return new PreCollectionRecreateEvent( getPersister(), getCollection(), eventSource() );
 	}
 
 	private void postRecreate() {
-		final EventListenerGroup<PostCollectionRecreateEventListener> listenerGroup = listenerGroup( EventType.POST_COLLECTION_RECREATE );
-		if ( listenerGroup.isEmpty() ) {
-			return;
-		}
-		final PostCollectionRecreateEvent event = new PostCollectionRecreateEvent( getPersister(), getCollection(), eventSource() );
-		for ( PostCollectionRecreateEventListener listener : listenerGroup.listeners() ) {
-			listener.onPostRecreateCollection( event );
-		}
+		getFastSessionServices()
+				.eventListenerGroup_POST_COLLECTION_RECREATE
+				.fireLazyEventOnEachListener( this::newPostCollectionRecreateEvent, PostCollectionRecreateEventListener::onPostRecreateCollection );
+	}
+
+	private PostCollectionRecreateEvent newPostCollectionRecreateEvent() {
+		return new PostCollectionRecreateEvent( getPersister(), getCollection(), eventSource() );
 	}
 }

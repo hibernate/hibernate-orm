@@ -62,8 +62,13 @@ public class OneToManyBidirectionalTest extends BaseEntityManagerFunctionalTestC
 		@Id
 		@GeneratedValue
 		private Long id;
+
 		@OneToMany(mappedBy = "person", cascade = CascadeType.ALL, orphanRemoval = true)
 		private List<Phone> phones = new ArrayList<>();
+
+		//Getters and setters are omitted for brevity
+
+	//end::associations-one-to-many-bidirectional-example[]
 
 		public Person() {
 		}
@@ -76,6 +81,7 @@ public class OneToManyBidirectionalTest extends BaseEntityManagerFunctionalTestC
 			return phones;
 		}
 
+	//tag::associations-one-to-many-bidirectional-example[]
 		public void addPhone(Phone phone) {
 			phones.add( phone );
 			phone.setPerson( this );
@@ -101,6 +107,10 @@ public class OneToManyBidirectionalTest extends BaseEntityManagerFunctionalTestC
 		@ManyToOne
 		private Person person;
 
+		//Getters and setters are omitted for brevity
+
+	//end::associations-one-to-many-bidirectional-example[]
+
 		public Phone() {
 		}
 
@@ -124,6 +134,7 @@ public class OneToManyBidirectionalTest extends BaseEntityManagerFunctionalTestC
 			this.person = person;
 		}
 
+	//tag::associations-one-to-many-bidirectional-example[]
 		@Override
 		public boolean equals(Object o) {
 			if ( this == o ) {

@@ -16,6 +16,8 @@ public class PersonSummaryDTO {
 
     private String name;
 
+    //Getters and setters are omitted for brevity
+
     public Number getId() {
         return id;
     }

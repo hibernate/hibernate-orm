@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
 import javax.persistence.NoResultException;
@@ -25,7 +26,6 @@ import javax.persistence.NonUniqueResultException;
 import javax.persistence.Parameter;
 import javax.persistence.ParameterMode;
 import javax.persistence.TemporalType;
-import javax.persistence.TransactionRequiredException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.ResultSetMappingDefinition;
@@ -636,9 +636,8 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public int executeUpdate() {
-		if ( ! getProducer().isTransactionInProgress() ) {
-			throw new TransactionRequiredException( "javax.persistence.Query.executeUpdate requires active transaction" );
-		}
+		getProducer().checkTransactionNeededForUpdateOperation(
+				"javax.persistence.Query.executeUpdate requires active transaction" );
 
 		// the expectation is that there is just one Output, of type UpdateCountOutput
 		try {
@@ -918,6 +917,12 @@ public class ProcedureCallImpl<R>
 		final QueryParameterBinding binding = paramBindings.getBinding( position );
 		binding.setBindValue( value, temporalType );
 		return this;
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public Stream getResultStream() {
+		return getResultList().stream();
 	}
 
 }

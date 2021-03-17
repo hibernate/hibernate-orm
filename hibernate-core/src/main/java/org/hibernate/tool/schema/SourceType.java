@@ -34,7 +34,7 @@ public enum SourceType {
 	 */
 	SCRIPT( "script" ),
 	/**
-	 * "metadata-then-scripts" - Both the O/RM metadata and external DDL scripts are used as sources for generation,
+	 * "metadata-then-script" - Both the O/RM metadata and external DDL scripts are used as sources for generation,
 	 * with the O/RM metadata being applied first.
 	 *
 	 * @see #METADATA
@@ -42,7 +42,7 @@ public enum SourceType {
 	 */
 	METADATA_THEN_SCRIPT( "metadata-then-script" ),
 	/**
-	 * "scripts-then-metadata" - Both the O/RM metadata and external DDL scripts are used as sources for generation,
+	 * "script-then-metadata" - Both the O/RM metadata and external DDL scripts are used as sources for generation,
 	 * with the commands from the external DDL script(s) being applied first
 	 *
 	 * @see #SCRIPT
@@ -74,8 +74,8 @@ public enum SourceType {
 			return (SourceType) value;
 		}
 
-		final String name = value.toString();
-		if ( StringHelper.isEmpty( name ) ) {
+		final String name = value.toString().trim();
+		if ( name.isEmpty() ) {
 			// empty is in fact valid as means to interpret default value based on other settings
 			return defaultValue;
 		}
@@ -93,6 +93,6 @@ public enum SourceType {
 			return SCRIPT_THEN_METADATA;
 		}
 
-		throw new IllegalArgumentException( "Unrecognized schema generation source-type value : " + value );
+		throw new IllegalArgumentException( "Unrecognized schema generation source-type value : '" + value + '\'');
 	}
 }

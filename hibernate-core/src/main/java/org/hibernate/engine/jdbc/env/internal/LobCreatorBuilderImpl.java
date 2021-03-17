@@ -13,6 +13,7 @@ import java.sql.SQLException;
 import java.util.Map;
 
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.ContextualLobCreator;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
@@ -46,12 +47,13 @@ public class LobCreatorBuilderImpl implements LobCreatorBuilder {
 	 * The public factory method for obtaining the appropriate LOB creator (according to given
 	 * JDBC {@link java.sql.Connection}).
 	 *
+	 * @param dialect The {@link Dialect} in use
 	 * @param configValues The map of settings
 	 * @param jdbcConnection A JDBC {@link java.sql.Connection} which can be used to gauge the drivers level of support,
 	 * specifically for creating LOB references.
 	 */
-	public static LobCreatorBuilderImpl makeLobCreatorBuilder(Map configValues, Connection jdbcConnection) {
-		return new LobCreatorBuilderImpl( useContextualLobCreation( configValues, jdbcConnection ) );
+	public static LobCreatorBuilderImpl makeLobCreatorBuilder(Dialect dialect, Map configValues, Connection jdbcConnection) {
+		return new LobCreatorBuilderImpl( useContextualLobCreation( dialect, configValues, jdbcConnection ) );
 	}
 
 	/**
@@ -73,12 +75,14 @@ public class LobCreatorBuilderImpl implements LobCreatorBuilder {
 	 * but also whether the actual {@link java.sql.Connection} instance implements them (i.e. can be called without simply
 	 * throwing an exception).
 	 *
+	 * @param dialect The {@link Dialect} in use
+	 * @param configValues The map of settings
 	 * @param jdbcConnection The connection which can be used in level-of-support testing.
 	 *
 	 * @return True if the connection can be used to create LOBs; false otherwise.
 	 */
 	@SuppressWarnings("unchecked")
-	private static boolean useContextualLobCreation(Map configValues, Connection jdbcConnection) {
+	private static boolean useContextualLobCreation(Dialect dialect, Map configValues, Connection jdbcConnection) {
 		final boolean isNonContextualLobCreationRequired =
 				ConfigurationHelper.getBoolean( Environment.NON_CONTEXTUAL_LOB_CREATION, configValues );
 		if ( isNonContextualLobCreationRequired ) {
@@ -96,6 +100,10 @@ public class LobCreatorBuilderImpl implements LobCreatorBuilder {
 				// if the jdbc driver version is less than 4, it shouldn't have createClob
 				if ( meta.getJDBCMajorVersion() < 4 ) {
 					LOG.disablingContextualLOBCreationSinceOldJdbcVersion( meta.getJDBCMajorVersion() );
+					return false;
+				}
+
+				if ( !dialect.supportsJdbcConnectionLobCreation( meta ) ) {
 					return false;
 				}
 			}

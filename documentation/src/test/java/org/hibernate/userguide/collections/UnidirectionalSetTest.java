@@ -64,8 +64,12 @@ public class UnidirectionalSetTest extends BaseEntityManagerFunctionalTestCase {
 
 		@Id
 		private Long id;
+
 		@OneToMany(cascade = CascadeType.ALL)
 		private Set<Phone> phones = new HashSet<>();
+
+		//Getters and setters are omitted for brevity
+	//end::collections-unidirectional-set-example[]
 
 		public Person() {
 		}
@@ -77,6 +81,7 @@ public class UnidirectionalSetTest extends BaseEntityManagerFunctionalTestCase {
 		public Set<Phone> getPhones() {
 			return phones;
 		}
+	//tag::collections-unidirectional-set-example[]
 	}
 
 	@Entity(name = "Phone")
@@ -90,6 +95,10 @@ public class UnidirectionalSetTest extends BaseEntityManagerFunctionalTestCase {
 		@NaturalId
 		@Column(name = "`number`")
 		private String number;
+
+		//Getters and setters are omitted for brevity
+
+	//end::collections-unidirectional-set-example[]
 
 		public Phone() {
 		}
@@ -112,6 +121,7 @@ public class UnidirectionalSetTest extends BaseEntityManagerFunctionalTestCase {
 			return number;
 		}
 
+	//tag::collections-unidirectional-set-example[]
 		@Override
 		public boolean equals(Object o) {
 			if ( this == o ) {

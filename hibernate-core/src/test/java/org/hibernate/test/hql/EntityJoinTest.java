@@ -16,9 +16,11 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 import org.hibernate.annotations.NaturalId;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.hql.spi.QueryTranslator;
 
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.After;
@@ -105,6 +107,7 @@ public class EntityJoinTest extends BaseNonConfigCoreFunctionalTestCase {
 
     @Test
     @TestForIssue(jiraKey = "HHH-11337")
+    @SkipForDialect(SybaseDialect.class)
     public void testLeftOuterEntityJoinsWithImplicitInnerJoinInSelectClause() {
         doInHibernate( this::sessionFactory, session -> {
             // this should get all financial records even if their lastUpdateBy user is null

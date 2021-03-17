@@ -28,8 +28,8 @@ public abstract class AbstractPreDatabaseOperationEvent
 	 * Constructs an event containing the pertinent information.
 	 *
 	 * @param source The session from which the event originated.
-	 * @param entity The entity to be invloved in the database operation.
-	 * @param id The entity id to be invloved in the database operation.
+	 * @param entity The entity to be involved in the database operation.
+	 * @param id The entity id to be involved in the database operation.
 	 * @param persister The entity's persister.
 	 */
 	public AbstractPreDatabaseOperationEvent(

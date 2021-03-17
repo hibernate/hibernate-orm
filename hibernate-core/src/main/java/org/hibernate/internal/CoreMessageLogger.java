@@ -15,6 +15,7 @@ import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.util.Hashtable;
 import java.util.Properties;
+import java.util.ServiceConfigurationError;
 import java.util.Set;
 import javax.naming.NameNotFoundException;
 import javax.naming.NamingException;
@@ -343,12 +344,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Found mapping document in jar: %s", id = 109)
 	void foundMappingDocument(String name);
 
-	@LogMessage(level = ERROR)
-	@Message(value = "Getters of lazy classes cannot be final: %s.%s", id = 112)
-	void gettersOfLazyClassesCannotBeFinal(
-			String entityName,
-			String name);
-
 	@LogMessage(level = WARN)
 	@Message(value = "GUID identifier generated: %s", id = 113)
 	void guidGenerated(String result);
@@ -475,6 +470,9 @@ public interface CoreMessageLogger extends BasicLogger {
 
 	@Message(value = "Bytecode enhancement failed: %s", id = 142)
 	String bytecodeEnhancementFailed(String entityName);
+
+	@Message(value = "Bytecode enhancement failed because no public, protected or package-private default constructor was found for entity: %s. Private constructors don't work with runtime proxies!", id = 143)
+	String bytecodeEnhancementFailedBecauseOfDefaultConstructor(String entityName);
 
 	@LogMessage(level = WARN)
 	@Message(value = "%s = false breaks the EJB3 specification", id = 144)
@@ -637,14 +635,14 @@ public interface CoreMessageLogger extends BasicLogger {
 	void processEqualityExpression();
 
 	@LogMessage(level = INFO)
-	@Message(value = "Processing PersistenceUnitInfo [\n\tname: %s\n\t...]", id = 204)
+	@Message(value = "Processing PersistenceUnitInfo [name: %s]", id = 204)
 	void processingPersistenceUnitInfoName(String persistenceUnitName);
 
 	@LogMessage(level = INFO)
 	@Message(value = "Loaded properties from resource hibernate.properties: %s", id = 205)
 	void propertiesLoaded(Properties maskOut);
 
-	@LogMessage(level = INFO)
+	@LogMessage(level = DEBUG)
 	@Message(value = "hibernate.properties not found", id = 206)
 	void propertiesNotFound();
 
@@ -774,12 +772,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Sessions opened: %s", id = 242)
 	void sessionsOpened(long sessionOpenCount);
 
-	@LogMessage(level = ERROR)
-	@Message(value = "Setters of lazy classes cannot be final: %s.%s", id = 243)
-	void settersOfLazyClassesCannotBeFinal(
-			String entityName,
-			String name);
-
 	@LogMessage(level = WARN)
 	@Message(value = "@Sort not allowed for an indexed collection, annotation ignored.", id = 244)
 	void sortAnnotationIndexedCollection();
@@ -874,7 +866,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Type [%s] defined no registration keys; ignoring", id = 269)
 	void typeDefinedNoRegistrationKeys(BasicType type);
 
-	@LogMessage(level = INFO)
+	@LogMessage(level = DEBUG)
 	@Message(value = "Type registration [%s] overrides previous : %s", id = 270)
 	void typeRegistrationOverridesPrevious(
 			String key,
@@ -1112,8 +1104,8 @@ public interface CoreMessageLogger extends BasicLogger {
 	void unableToJoinTransaction(String transactionStrategy);
 
 	@LogMessage(level = INFO)
-	@Message(value = "Error performing load command : %s", id = 327)
-	void unableToLoadCommand(HibernateException e);
+	@Message(value = "Error performing load command", id = 327)
+	void unableToLoadCommand(@Cause HibernateException e);
 
 	@LogMessage(level = WARN)
 	@Message(value = "Unable to load/access derby driver class sysinfo to check versions : %s", id = 328)
@@ -1158,19 +1150,11 @@ public interface CoreMessageLogger extends BasicLogger {
 
 	@LogMessage(level = WARN)
 	@Message(value = "Could not obtain connection metadata: %s", id = 339)
-	void unableToObjectConnectionMetadata(SQLException error);
+	void unableToObtainConnectionMetadata(SQLException error);
 
 	@LogMessage(level = WARN)
-	@Message(value = "Could not obtain connection to query metadata: %s", id = 340)
-	void unableToObjectConnectionToQueryMetadata(SQLException error);
-
-	@LogMessage(level = WARN)
-	@Message(value = "Could not obtain connection metadata : %s", id = 341)
-	void unableToObtainConnectionMetadata(String message);
-
-	@LogMessage(level = WARN)
-	@Message(value = "Could not obtain connection to query metadata : %s", id = 342)
-	void unableToObtainConnectionToQueryMetadata(String message);
+	@Message(value = "Could not obtain connection to query metadata", id = 342)
+	void unableToObtainConnectionToQueryMetadata(@Cause Exception e);
 
 	@LogMessage(level = ERROR)
 	@Message(value = "Could not obtain initial context", id = 343)
@@ -1279,10 +1263,10 @@ public interface CoreMessageLogger extends BasicLogger {
 	void unableToStopHibernateService(@Cause Exception e);
 
 	@LogMessage(level = INFO)
-	@Message(value = "Error stopping service [%s] : %s", id = 369)
+	@Message(value = "Error stopping service [%s]", id = 369)
 	void unableToStopService(
 			Class class1,
-			String string);
+			@Cause Exception e);
 
 	@LogMessage(level = WARN)
 	@Message(value = "Exception switching from method: [%s] to a method using the column index. Reverting to using: [%<s]",
@@ -1394,19 +1378,9 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Oracle 11g is not yet fully supported; using Oracle 10g dialect", id = 394)
 	void unsupportedOracleVersion();
 
-	@LogMessage(level = WARN)
-	@Message(value = "Usage of obsolete property: %s no longer supported, use: %s", id = 395)
-	void unsupportedProperty(
-			Object propertyName,
-			Object newPropertyName);
-
 	@LogMessage(level = INFO)
 	@Message(value = "Updating schema", id = 396)
 	void updatingSchema();
-
-	@LogMessage(level = INFO)
-	@Message(value = "Using ASTQueryTranslatorFactory", id = 397)
-	void usingAstQueryTranslatorFactory();
 
 	@LogMessage(level = INFO)
 	@Message(value = "Explicit segment value for id generator [%s.%s] suggested; using default [%s]", id = 398)
@@ -1447,7 +1421,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void validatorNotFound();
 
 	@LogMessage(level = INFO)
-	@Message(value = "Hibernate Core {%s}", id = 412)
+	@Message(value = "Hibernate ORM core version %s", id = 412)
 	void version(String versionString);
 
 	@LogMessage(level = WARN)
@@ -1486,20 +1460,20 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Closing un-released batch", id = 420)
 	void closingUnreleasedBatch();
 
-	@LogMessage(level = INFO)
+	@LogMessage(level = DEBUG)
 	@Message(value = "Disabling contextual LOB creation as %s is true", id = 421)
 	void disablingContextualLOBCreation(String nonContextualLobCreation);
 
-	@LogMessage(level = INFO)
+	@LogMessage(level = DEBUG)
 	@Message(value = "Disabling contextual LOB creation as connection was null", id = 422)
 	void disablingContextualLOBCreationSinceConnectionNull();
 
-	@LogMessage(level = INFO)
+	@LogMessage(level = DEBUG)
 	@Message(value = "Disabling contextual LOB creation as JDBC driver reported JDBC version [%s] less than 4",
 			id = 423)
 	void disablingContextualLOBCreationSinceOldJdbcVersion(int jdbcMajorVersion);
 
-	@LogMessage(level = INFO)
+	@LogMessage(level = DEBUG)
 	@Message(value = "Disabling contextual LOB creation as createClob() method threw error : %s", id = 424)
 	void disablingContextualLOBCreationSinceCreateClobFailed(Throwable t);
 
@@ -1818,4 +1792,77 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = INFO)
 	@Message(value = "Using JtaPlatform implementation: [%s]", id = 490)
 	void usingJtaPlatform(String jtaPlatformClassName);
+
+	@LogMessage(level = WARN)
+	@Message(value = "The [%2$s] association in the [%1$s] entity uses both @NotFound(action = NotFoundAction.IGNORE) and FetchType.LAZY. " +
+			"The NotFoundAction.IGNORE @ManyToOne and @OneToOne associations are always fetched eagerly.", id = 491)
+	void ignoreNotFoundWithFetchTypeLazy(String entity, String association);
+
+	@LogMessage(level = INFO)
+	@Message(value = "Query plan cache hits: %s", id = 492)
+	void queryPlanCacheHits(long queryPlanCacheHitCount);
+
+	@LogMessage(level = INFO)
+	@Message(value = "Query plan cache misses: %s", id = 493)
+	void queryPlanCacheMisses(long queryPlanCacheMissCount);
+
+	@LogMessage(level = WARN)
+	@Message(value = "Attempt to merge an uninitialized collection with queued operations; queued operations will be ignored: %s", id = 494)
+	void ignoreQueuedOperationsOnMerge(String collectionInfoString);
+
+	@LogMessage(level = WARN)
+	@Message(value = "Attaching an uninitialized collection with queued operations to a session: %s", id = 495)
+	void queuedOperationWhenAttachToSession(String collectionInfoString);
+
+	@LogMessage(level = INFO)
+	@Message(value = "Detaching an uninitialized collection with queued operations from a session: %s", id = 496)
+	void queuedOperationWhenDetachFromSession(String collectionInfoString);
+
+	@LogMessage(level = WARN)
+	@Message(value = "The increment size of the [%s] sequence is set to [%d] in the entity mapping while the associated database sequence increment size is [%d]. The database sequence increment size will take precedence to avoid identifier allocation conflicts.", id = 497)
+	void sequenceIncrementSizeMismatch(String sequenceName, int incrementSize, int databaseIncrementSize);
+
+	@LogMessage(level = DEBUG)
+	@Message(value = "Detaching an uninitialized collection with queued operations from a session due to rollback: %s", id = 498)
+	void queuedOperationWhenDetachFromSessionOnRollback(String collectionInfoString);
+
+	@LogMessage(level = WARN)
+	@Message(value = "Using @AttributeOverride or @AttributeOverrides in conjunction with entity inheritance is not supported: %s. The overriding definitions are ignored.", id = 499)
+	void unsupportedAttributeOverrideWithEntityInheritance(String entityName);
+
+	/* 6.0 message loggers
+	 @LogMessage(level = WARN)
+	 @Message(value = "The bytecode provider class [%s] could not be loaded", id = 500)
+	 void bytecodeProviderClassNotFound(String className);
+
+	 @LogMessage(level = WARN)
+	 @Message(value = "The bytecode provider class [%s] does not implement BytecodeProvider", id = 501)
+	 void bytecodeProviderInvalidClass(String className);
+	 */
+
+	@LogMessage(level = WARN)
+	@Message(value = "The [%s] property of the [%s] entity was modified, but it won't be updated because the property is immutable.", id = 502)
+	void ignoreImmutablePropertyModification(String propertyName, String entityName);
+
+	@LogMessage(level = WARN)
+	@Message(value = "A class should not be annotated with both @Inheritance and @MappedSuperclass. @Inheritance will be ignored for: %s.", id = 503)
+	void unsupportedMappedSuperclassWithEntityInheritance(String entityName);
+
+	@LogMessage(level = WARN)
+	@Message(value = "Multiple configuration properties defined to create schema. Choose at most one among 'javax.persistence.create-database-schemas', 'hibernate.hbm2ddl.create_namespaces', 'hibernate.hbm2dll.create_namespaces' (this last being deprecated).", id = 504)
+	void multipleSchemaCreationSettingsDefined();
+
+	@LogMessage(level = WARN)
+	@Message(value = "Ignoring ServiceConfigurationError caught while trying to instantiate service '%s'.", id = 505)
+	void ignoringServiceConfigurationError(Class<?> serviceContract, @Cause ServiceConfigurationError error);
+
+	@LogMessage(level = WARN)
+	@Message(value = "Detaching an uninitialized collection with enabled filters from a session: %s", id = 506)
+	void enabledFiltersWhenDetachFromSession(String collectionInfoString);
+
+	@LogMessage(level = WARN)
+	@Message(value = "The Javassist based BytecodeProvider is deprecated. Please switch to using the ByteBuddy based BytecodeProvider, " +
+			"which is the default since Hibernate ORM 5.3. The Javassist one will be removed soon.", id = 507)
+	void warnUsingJavassistBytecodeProviderIsDeprecated();
+
 }

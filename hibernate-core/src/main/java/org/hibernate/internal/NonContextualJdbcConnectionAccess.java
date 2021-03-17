@@ -9,6 +9,7 @@ package org.hibernate.internal;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Objects;
 
 import org.hibernate.SessionEventListener;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
@@ -24,6 +25,8 @@ public class NonContextualJdbcConnectionAccess implements JdbcConnectionAccess, 
 	public NonContextualJdbcConnectionAccess(
 			SessionEventListener listener,
 			ConnectionProvider connectionProvider) {
+		Objects.requireNonNull( listener );
+		Objects.requireNonNull( connectionProvider );
 		this.listener = listener;
 		this.connectionProvider = connectionProvider;
 	}

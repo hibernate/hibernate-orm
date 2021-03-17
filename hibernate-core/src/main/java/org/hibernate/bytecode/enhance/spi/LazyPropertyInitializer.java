@@ -7,8 +7,10 @@
 package org.hibernate.bytecode.enhance.spi;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.Set;
 
+import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
@@ -32,9 +34,18 @@ public interface LazyPropertyInitializer {
 		}
 	};
 
+	/**
+	 * @deprecated Prefer the form of these methods defined on
+	 * {@link BytecodeLazyAttributeInterceptor} instead
+	 */
+	@Deprecated
 	interface InterceptorImplementor {
-		Set<String> getInitializedLazyAttributeNames();
-		void attributeInitialized(String name);
+		default Set<String> getInitializedLazyAttributeNames() {
+			return Collections.emptySet();
+		}
+
+		default void attributeInitialized(String name) {
+		}
 	}
 
 	/**

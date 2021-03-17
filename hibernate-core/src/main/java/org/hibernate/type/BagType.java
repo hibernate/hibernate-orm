@@ -18,9 +18,16 @@ import org.hibernate.persister.collection.CollectionPersister;
 
 public class BagType extends CollectionType {
 
-	@SuppressWarnings("WeakerAccess")
+	/**
+	 * @deprecated Use the other constructor
+	 */
+	@Deprecated
 	public BagType(TypeFactory.TypeScope typeScope, String role, String propertyRef) {
-		super( typeScope, role, propertyRef );
+		this( role, propertyRef );
+	}
+
+	public BagType(String role, String propertyRef) {
+		super( role, propertyRef );
 	}
 
 	@Override

@@ -24,6 +24,12 @@ public class TestingDialects {
 	public static class MyDialect22 extends Dialect {
 	}
 
+	public static class MyDialect311 extends Dialect {
+	}
+
+	public static class MyDialect312 extends Dialect {
+	}
+
 	public static class MySpecialDB2Dialect extends Dialect {
 	}
 

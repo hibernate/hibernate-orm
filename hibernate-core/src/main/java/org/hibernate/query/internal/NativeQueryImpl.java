@@ -19,6 +19,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.StringTokenizer;
 import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
 import javax.persistence.Parameter;
@@ -32,6 +33,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollMode;
+import org.hibernate.SynchronizeableQuery;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.query.spi.EntityGraphQueryHint;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryConstructorReturn;
@@ -41,9 +43,13 @@ import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.graph.GraphSemantic;
+import org.hibernate.graph.RootGraph;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.ParameterMetadata;
+import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.NativeQueryImplementor;
 import org.hibernate.query.spi.QueryParameterBindings;
@@ -246,7 +252,7 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 		super.beforeQuery();
 
 
-		if ( getSynchronizedQuerySpaces() != null && !getSynchronizedQuerySpaces().isEmpty() ) {
+		if ( CollectionHelper.isNotEmpty( getSynchronizedQuerySpaces() ) ) {
 			// The application defined query spaces on the Hibernate native SQLQuery which means the query will already
 			// perform a partial flush according to the defined query spaces, no need to do a full flush.
 			return;
@@ -438,12 +444,18 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 		return this;
 	}
 
+	@Override
+	public SynchronizeableQuery<T> addSynchronizedQuerySpace(String... querySpaces) {
+		addQuerySpaces( querySpaces );
+		return this;
+	}
+
 	protected void addQuerySpaces(String... spaces) {
 		if ( spaces != null ) {
 			if ( querySpaces == null ) {
 				querySpaces = new ArrayList<>();
 			}
-			querySpaces.addAll( Arrays.asList( (String[]) spaces ) );
+			querySpaces.addAll( Arrays.asList( spaces ) );
 		}
 	}
 
@@ -466,6 +478,36 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 	public NativeQueryImplementor<T> addSynchronizedEntityClass(Class entityClass) throws MappingException {
 		addQuerySpaces( getProducer().getFactory().getMetamodel().entityPersister( entityClass.getName() ).getQuerySpaces() );
 		return this;
+	}
+
+	@Override
+	protected boolean applyQuerySpaces(Object value) {
+		if ( value == null ) {
+			return false;
+		}
+
+		if ( value instanceof String[] ) {
+			addSynchronizedQuerySpace( (String[]) value );
+			return true;
+		}
+
+		if ( value instanceof Collection ) {
+			if ( querySpaces == null ) {
+				querySpaces = new ArrayList<>();
+			}
+			querySpaces.addAll( (Collection<String>) value );
+			return true;
+		}
+
+		if ( value instanceof String ) {
+			final StringTokenizer spaces = new StringTokenizer( (String) value, "," );
+			while ( spaces.hasMoreTokens() ) {
+				addQuerySpaces( spaces.nextToken() );
+			}
+			return true;
+		}
+
+		return false;
 	}
 
 	@Override
@@ -825,9 +867,12 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 	}
 
 	@Override
+	public Query<T> applyGraph(RootGraph graph, GraphSemantic semantic) {
+		throw new HibernateException( "A native SQL query cannot use EntityGraphs" );
+	}
+
+	@Override
 	protected void applyEntityGraphQueryHint(EntityGraphQueryHint hint) {
-		throw new HibernateException(
-			"A native SQL query cannot use EntityGraphs"
-		);
+		throw new HibernateException( "A native SQL query cannot use EntityGraphs" );
 	}
 }

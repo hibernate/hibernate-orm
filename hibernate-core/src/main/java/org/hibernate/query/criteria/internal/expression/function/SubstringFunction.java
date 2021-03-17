@@ -92,16 +92,24 @@ public class SubstringFunction
 	}
 
 	public String render(RenderingContext renderingContext) {
-		StringBuilder buffer = new StringBuilder();
-		buffer.append( "substring(" )
-				.append( ( (Renderable) getValue() ).render( renderingContext ) )
-				.append( ',' )
-				.append( ( (Renderable) getStart() ).render( renderingContext ) );
-		if ( getLength() != null ) {
-			buffer.append( ',' )
-					.append( ( (Renderable) getLength() ).render( renderingContext ) );
+		renderingContext.getFunctionStack().push( this );
+
+		try {
+			final StringBuilder buffer = new StringBuilder();
+			buffer.append( "substring(" )
+					.append( ( (Renderable) getValue() ).render( renderingContext ) )
+					.append( ',' )
+					.append( ( (Renderable) getStart() ).render( renderingContext ) );
+
+			if ( getLength() != null ) {
+				buffer.append( ',' )
+						.append( ( (Renderable) getLength() ).render( renderingContext ) );
+			}
+
+			return buffer.append( ')' ).toString();
 		}
-		buffer.append( ')' );
-		return buffer.toString();
+		finally {
+			renderingContext.getFunctionStack().pop();
+		}
 	}
 }

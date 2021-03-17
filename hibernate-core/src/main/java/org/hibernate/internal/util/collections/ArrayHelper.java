@@ -35,6 +35,12 @@ public final class ArrayHelper {
 		return -1;
 	}
 
+	public static <T> T[] filledArray(T value, Class<T> valueJavaType, int size) {
+		final T[] array = (T[]) Array.newInstance( valueJavaType, size );
+		Arrays.fill( array, value );
+		return array;
+	}
+
 	public static String[] toStringArray(Object[] objects) {
 		int length = objects.length;
 		String[] result = new String[length];
@@ -231,6 +237,15 @@ public final class ArrayHelper {
 		return true;
 	}
 
+	public static boolean[] negate(boolean[] valueNullness) {
+		boolean[] result = new boolean[valueNullness.length];
+		for (int i = 0; i < valueNullness.length; i++) {
+			result[i] = !valueNullness[i];
+		}
+		return result;
+	}
+
+
 	public static <T> void addAll(Collection<T> collection, T[] array) {
 		collection.addAll( Arrays.asList( array ) );
 	}
@@ -419,6 +434,24 @@ public final class ArrayHelper {
 			destination[x] = source[i];
 		}
 		return destination;
+	}
+
+	public static int[] trim(int[] from, int length) {
+		int[] trimmed = new int[length];
+		System.arraycopy( from, 0, trimmed, 0, length );
+		return trimmed;
+	}
+
+	public static Object[] toObjectArray(Object array) {
+		if ( array instanceof Object[] ) {
+			return ( Object[] ) array;
+		}
+		final int arrayLength = Array.getLength( array );
+		final Object[] outputArray = new Object[ arrayLength ];
+		for ( int i = 0; i < arrayLength; ++i ) {
+			outputArray[ i ] = Array.get( array, i );
+		}
+		return outputArray;
 	}
 
 	@AllowSysOut

@@ -13,7 +13,6 @@ import java.util.Collections;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.loader.plan.exec.process.internal.AbstractRowReader;
 import org.hibernate.loader.plan.exec.process.internal.EntityReferenceInitializerImpl;
@@ -22,6 +21,7 @@ import org.hibernate.loader.plan.exec.process.internal.ResultSetProcessingContex
 import org.hibernate.loader.plan.exec.process.spi.EntityReferenceInitializer;
 import org.hibernate.loader.plan.exec.process.spi.ReaderCollector;
 import org.hibernate.loader.plan.exec.process.spi.ResultSetProcessingContext;
+import org.hibernate.loader.plan.exec.process.spi.ResultSetProcessorResolver;
 import org.hibernate.loader.plan.exec.process.spi.RowReader;
 import org.hibernate.loader.plan.exec.query.internal.SelectStatementBuilder;
 import org.hibernate.loader.plan.exec.query.spi.QueryBuildingParameters;
@@ -33,8 +33,6 @@ import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.persister.entity.Queryable;
 
-import org.jboss.logging.Logger;
-
 /**
  * Handles interpreting a LoadPlan (for loading of an entity) by:<ul>
  *     <li>generating the SQL query to perform</li>
@@ -45,7 +43,6 @@ import org.jboss.logging.Logger;
  * @author Gail Badner
  */
 public class EntityLoadQueryDetails extends AbstractLoadQueryDetails {
-	private static final Logger log = CoreLogging.logger( EntityLoadQueryDetails.class );
 
 	private final EntityReferenceAliases entityReferenceAliases;
 	private final ReaderCollector readerCollector;
@@ -55,9 +52,10 @@ public class EntityLoadQueryDetails extends AbstractLoadQueryDetails {
 	 *
 	 * @param loadPlan The load plan
 	 * @param keyColumnNames The columns to load the entity by (the PK columns or some other unique set of columns)
-	 * @param buildingParameters And influencers that would affect the generated SQL (mostly we are concerned with those
+	 * @param buildingParameters Any influencers that would affect the generated SQL (mostly we are concerned with those
 	 * that add additional joins here)
 	 * @param factory The SessionFactory
+	 * @param resultSetProcessorResolver The ResultSet resolver.
 	 */
 	protected EntityLoadQueryDetails(
 			LoadPlan loadPlan,
@@ -65,7 +63,9 @@ public class EntityLoadQueryDetails extends AbstractLoadQueryDetails {
 			AliasResolutionContextImpl aliasResolutionContext,
 			EntityReturn rootReturn,
 			QueryBuildingParameters buildingParameters,
-			SessionFactoryImplementor factory) {
+			SessionFactoryImplementor factory,
+			ResultSetProcessorResolver resultSetProcessorResolver) {
+
 		super(
 				loadPlan,
 				aliasResolutionContext,
@@ -82,27 +82,54 @@ public class EntityLoadQueryDetails extends AbstractLoadQueryDetails {
 				new EntityReturnReader( rootReturn ),
 				new EntityReferenceInitializerImpl( rootReturn, entityReferenceAliases, true )
 		);
-		generate();
+		generate( resultSetProcessorResolver );
 	}
 
 	/**
-	 * Constructs an EntityLoadQueryDetails object from an initial object and new building parameters,
-	 * with the guarantee that only batch size changed between the initial parameters and the new ones.
+	 * Constructs a EntityLoadQueryDetails object from the given inputs.
 	 *
-	 * @param initialEntityLoadQueryDetails The initial object to be copied
-	 * @param buildingParameters The new building parameters, with only the batch size being different
-	 * from the parameters used in the initial object.
+	 * @param loadPlan The load plan
+	 * @param keyColumnNames The columns to load the entity by (the PK columns or some other unique set of columns)
+	 * @param buildingParameters Any influencers that would affect the generated SQL (mostly we are concerned with those
+	 * that add additional joins here)
+	 * @param factory The SessionFactory
 	 */
+	protected EntityLoadQueryDetails(
+			LoadPlan loadPlan,
+			String[] keyColumnNames,
+			AliasResolutionContextImpl aliasResolutionContext,
+			EntityReturn rootReturn,
+			QueryBuildingParameters buildingParameters,
+			SessionFactoryImplementor factory) {
+		this(
+				loadPlan,
+				keyColumnNames,
+				aliasResolutionContext,
+				rootReturn,
+				buildingParameters,
+				factory,
+				ResultSetProcessorResolver.DEFAULT
+		);
+	}
+
+	protected EntityLoadQueryDetails(
+			EntityLoadQueryDetails initialEntityLoadQueryDetails,
+			QueryBuildingParameters buildingParameters,
+			ResultSetProcessorResolver resultSetProcessorResolver) {
+		this(
+				initialEntityLoadQueryDetails.getLoadPlan(),
+				initialEntityLoadQueryDetails.getKeyColumnNames(),
+				new AliasResolutionContextImpl( initialEntityLoadQueryDetails.getSessionFactory() ),
+				(EntityReturn) initialEntityLoadQueryDetails.getRootReturn(),
+				buildingParameters,
+				initialEntityLoadQueryDetails.getSessionFactory(),
+				resultSetProcessorResolver
+		);
+	}
 	protected EntityLoadQueryDetails(
 			EntityLoadQueryDetails initialEntityLoadQueryDetails,
 			QueryBuildingParameters buildingParameters) {
-		super(
-				initialEntityLoadQueryDetails,
-				buildingParameters
-		);
-		this.entityReferenceAliases = initialEntityLoadQueryDetails.entityReferenceAliases;
-		this.readerCollector = initialEntityLoadQueryDetails.readerCollector;
-		generate();
+		this( initialEntityLoadQueryDetails, buildingParameters, ResultSetProcessorResolver.DEFAULT );
 	}
 
 	public boolean hasCollectionInitializers() {

@@ -470,7 +470,7 @@ public final class QueryParameters {
 	public boolean isReadOnly(SharedSessionContractImplementor session) {
 		return isReadOnlyInitialized
 				? isReadOnly()
-				: session.getPersistenceContext().isDefaultReadOnly();
+				: session.getPersistenceContextInternal().isDefaultReadOnly();
 	}
 
 	/**

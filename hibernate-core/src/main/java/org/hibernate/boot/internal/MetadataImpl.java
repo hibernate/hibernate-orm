@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -29,15 +30,20 @@ import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryBuilderFactory;
-import org.hibernate.cache.cfg.internal.DomainDataRegionConfigImpl;
+import org.hibernate.boot.spi.SessionFactoryBuilderImplementor;
+import org.hibernate.boot.spi.SessionFactoryBuilderService;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.cfg.annotations.NamedProcedureCallDefinition;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.ResultSetMappingDefinition;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
-import org.hibernate.id.factory.IdentifierGeneratorFactory;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.event.service.spi.EventListenerGroup;
+import org.hibernate.event.service.spi.EventListenerRegistry;
+import org.hibernate.event.spi.EventType;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.mapping.Collection;
@@ -48,6 +54,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
 import org.hibernate.procedure.ProcedureCallMemento;
 import org.hibernate.query.spi.NamedQueryRepository;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -60,11 +67,13 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Gail Badner
  */
 public class MetadataImpl implements MetadataImplementor, Serializable {
+	private static final Pattern LISTENER_SEPARATION_PATTERN = Pattern.compile( " ," );
+
 	private final UUID uuid;
 	private final MetadataBuildingOptions metadataBuildingOptions;
 	private final BootstrapContext bootstrapContext;
 
-	private final IdentifierGeneratorFactory identifierGeneratorFactory;
+	private final MutableIdentifierGeneratorFactory identifierGeneratorFactory;
 
 	private final Map<String,PersistentClass> entityBindingMap;
 	private final Map<Class, MappedSuperclass> mappedSuperclassMap;
@@ -80,10 +89,9 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private final Map<String, ResultSetMappingDefinition> sqlResultSetMappingMap;
 	private final Map<String, NamedEntityGraphDefinition> namedEntityGraphMap;
 	private final Map<String, SQLFunction> sqlFunctionMap;
-	private final java.util.Collection<DomainDataRegionConfigImpl.Builder> cacheRegionConfigBuilders;
 	private final Database database;
 
-	MetadataImpl(
+	public MetadataImpl(
 			UUID uuid,
 			MetadataBuildingOptions metadataBuildingOptions,
 			MutableIdentifierGeneratorFactory identifierGeneratorFactory,
@@ -101,7 +109,6 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			Map<String, ResultSetMappingDefinition> sqlResultSetMappingMap,
 			Map<String, NamedEntityGraphDefinition> namedEntityGraphMap,
 			Map<String, SQLFunction> sqlFunctionMap,
-			java.util.Collection<DomainDataRegionConfigImpl.Builder> cacheRegionConfigBuilders,
 			Database database,
 			BootstrapContext bootstrapContext) {
 		this.uuid = uuid;
@@ -121,7 +128,6 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		this.sqlResultSetMappingMap = sqlResultSetMappingMap;
 		this.namedEntityGraphMap = namedEntityGraphMap;
 		this.sqlFunctionMap = sqlFunctionMap;
-		this.cacheRegionConfigBuilders = cacheRegionConfigBuilders;
 		this.database = database;
 		this.bootstrapContext = bootstrapContext;
 	}
@@ -150,7 +156,8 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	@Override
 	public SessionFactoryBuilder getSessionFactoryBuilder() {
-		final SessionFactoryBuilderImpl defaultBuilder = new SessionFactoryBuilderImpl( this, bootstrapContext );
+		final SessionFactoryBuilderService factoryBuilderService = metadataBuildingOptions.getServiceRegistry().getService( SessionFactoryBuilderService.class );
+		final SessionFactoryBuilderImplementor defaultBuilder = factoryBuilderService.createSessionFactoryBuilder( this, bootstrapContext );
 
 		final ClassLoaderService cls = metadataBuildingOptions.getServiceRegistry().getService( ClassLoaderService.class );
 		final java.util.Collection<SessionFactoryBuilderFactory> discoveredBuilderFactories = cls.loadJavaServices( SessionFactoryBuilderFactory.class );
@@ -199,7 +206,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
-	public IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
+	public MutableIdentifierGeneratorFactory getIdentifierGeneratorFactory() {
 		return identifierGeneratorFactory;
 	}
 
@@ -360,6 +367,44 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
+	public void initSessionFactory(SessionFactoryImplementor sessionFactory) {
+		final ServiceRegistryImplementor sessionFactoryServiceRegistry = sessionFactory.getServiceRegistry();
+
+		assert sessionFactoryServiceRegistry != null;
+
+		final EventListenerRegistry eventListenerRegistry = sessionFactoryServiceRegistry.getService( EventListenerRegistry.class );
+		final ConfigurationService cfgService = sessionFactoryServiceRegistry.getService( ConfigurationService.class );
+		final ClassLoaderService classLoaderService = sessionFactoryServiceRegistry.getService( ClassLoaderService.class );
+
+		for ( Map.Entry entry : ( (Map<?, ?>) cfgService.getSettings() ).entrySet() ) {
+			if ( !String.class.isInstance( entry.getKey() ) ) {
+				continue;
+			}
+			final String propertyName = (String) entry.getKey();
+			if ( !propertyName.startsWith( org.hibernate.jpa.AvailableSettings.EVENT_LISTENER_PREFIX ) ) {
+				continue;
+			}
+			final String eventTypeName = propertyName.substring(
+					org.hibernate.jpa.AvailableSettings.EVENT_LISTENER_PREFIX.length() + 1
+			);
+			final EventType eventType = EventType.resolveEventTypeByName( eventTypeName );
+			final EventListenerGroup eventListenerGroup = eventListenerRegistry.getEventListenerGroup( eventType );
+			for ( String listenerImpl : LISTENER_SEPARATION_PATTERN.split( ( (String) entry.getValue() ) ) ) {
+				eventListenerGroup.appendListener( instantiate( listenerImpl, classLoaderService ) );
+			}
+		}
+	}
+
+	private Object instantiate(String listenerImpl, ClassLoaderService classLoaderService) {
+		try {
+			return classLoaderService.classForName( listenerImpl ).newInstance();
+		}
+		catch (Exception e) {
+			throw new HibernateException( "Could not instantiate requested listener [" + listenerImpl + "]", e );
+		}
+	}
+
+	@Override
 	public org.hibernate.type.Type getIdentifierType(String entityName) throws MappingException {
 		final PersistentClass pc = entityBindingMap.get( entityName );
 		if ( pc == null ) {
@@ -395,4 +440,55 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		}
 		return prop.getType();
 	}
+
+	//Specific for copies only:
+
+	public Map<String,PersistentClass> getEntityBindingMap() {
+		return entityBindingMap;
+	}
+
+	public Map<String, Collection> getCollectionBindingMap() {
+		return collectionBindingMap;
+	}
+
+	public Map<String, TypeDefinition> getTypeDefinitionMap() {
+		return typeDefinitionMap;
+	}
+
+	public Map<String, FetchProfile> getFetchProfileMap() {
+		return fetchProfileMap;
+	}
+
+	public Map<Class, MappedSuperclass> getMappedSuperclassMap() {
+		return mappedSuperclassMap;
+	}
+
+	public Map<String, IdentifierGeneratorDefinition> getIdGeneratorDefinitionMap() {
+		return idGeneratorDefinitionMap;
+	}
+
+	public Map<String, NamedQueryDefinition> getNamedQueryMap() {
+		return namedQueryMap;
+	}
+
+	public Map<String, NamedSQLQueryDefinition> getNamedNativeQueryMap() {
+		return namedNativeQueryMap;
+	}
+
+	public Map<String, NamedProcedureCallDefinition> getNamedProcedureCallMap() {
+		return namedProcedureCallMap;
+	}
+
+	public Map<String, ResultSetMappingDefinition> getSqlResultSetMappingMap() {
+		return sqlResultSetMappingMap;
+	}
+
+	public Map<String, NamedEntityGraphDefinition> getNamedEntityGraphMap() {
+		return namedEntityGraphMap;
+	}
+
+	public BootstrapContext getBootstrapContext() {
+		return bootstrapContext;
+	}
+
 }

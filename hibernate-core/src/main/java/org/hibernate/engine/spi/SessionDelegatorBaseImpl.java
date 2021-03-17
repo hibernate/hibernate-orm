@@ -55,6 +55,7 @@ import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
+import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.loader.custom.CustomQuery;
@@ -76,7 +77,7 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
  * API so that only some methods need to be overridden
  * (Used by Hibernate Search).
  *
- * @author Sanne Grinovero <sanne@hibernate.org> (C) 2012 Red Hat Inc.
+ * @author <a href="mailto:sanne@hibernate.org">Sanne Grinovero</a> (C) 2012 Red Hat Inc.
  */
 @SuppressWarnings("deprecation")
 public class SessionDelegatorBaseImpl implements SessionImplementor {
@@ -107,7 +108,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	/**
-	 * Returns the underlying delegate. Be careful that is has a different behavior from the {@link #getDelegate()}
+	 * Returns the underlying delegate. Be careful that it has a different behavior from the {@link #getDelegate()}
 	 * method coming from the EntityManager interface which returns the current session.
 	 *
 	 * @see SessionDelegatorBaseImpl#getDelegate()
@@ -154,6 +155,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public boolean isTransactionInProgress() {
 		return delegate.isTransactionInProgress();
+	}
+
+	@Override
+	public void checkTransactionNeededForUpdateOperation(String exceptionMessage) {
+		delegate.checkTransactionNeededForUpdateOperation( exceptionMessage );
 	}
 
 	@Override
@@ -461,6 +467,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public PersistenceContext getPersistenceContextInternal() {
+		return delegate.getPersistenceContextInternal();
+	}
+
+	@Override
 	public SessionEventListenerManager getEventListenerManager() {
 		return delegate.getEventListenerManager();
 	}
@@ -526,17 +537,17 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public <T> EntityGraph<T> createEntityGraph(Class<T> rootType) {
+	public <T> RootGraphImplementor<T> createEntityGraph(Class<T> rootType) {
 		return delegate.createEntityGraph( rootType );
 	}
 
 	@Override
-	public EntityGraph<?> createEntityGraph(String graphName) {
+	public RootGraphImplementor<?> createEntityGraph(String graphName) {
 		return delegate.createEntityGraph( graphName );
 	}
 
 	@Override
-	public EntityGraph<?> getEntityGraph(String graphName) {
+	public RootGraphImplementor<?> getEntityGraph(String graphName) {
 		return delegate.getEntityGraph( graphName );
 	}
 
@@ -617,7 +628,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 
 	@Override
 	public StoredProcedureQuery createStoredProcedureQuery(String procedureName) {
-		return delegate.createNamedStoredProcedureQuery( procedureName );
+		return delegate.createStoredProcedureQuery( procedureName );
 	}
 
 	@Override

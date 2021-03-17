@@ -17,8 +17,9 @@ import org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractor;
  * @author Steve Ebersole
  */
 public interface ScriptSourceInput {
+
 	/**
-	 * Prepare source for use.
+	 * Prepare source for use, and log that this script is about to be imported.
 	 */
 	void prepare();
 

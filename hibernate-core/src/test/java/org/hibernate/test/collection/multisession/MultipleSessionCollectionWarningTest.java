@@ -41,6 +41,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.collection.internal.AbstractPersistentCollection;
+import org.hibernate.collection.internal.PersistentSet;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -81,9 +82,8 @@ public class MultipleSessionCollectionWarningTest extends BaseCoreFunctionalTest
 		// gets logged. s1 will not function properly so the transaction will ultimately need
 		// to be rolled-back.
 
-		CollectionEntry ce = (CollectionEntry) ( (SessionImplementor) s1 ).getPersistenceContext()
-				.getCollectionEntries()
-				.remove( p.children );
+		CollectionEntry ce = ( (SessionImplementor) s1 ).getPersistenceContext()
+				.removeCollectionEntry( (PersistentSet) p.children );
 		assertNotNull( ce );
 
 		// the collection session should still be s1; the collection is no longer "connected" because its
@@ -132,9 +132,8 @@ public class MultipleSessionCollectionWarningTest extends BaseCoreFunctionalTest
 		// gets logged. s1 will not function properly so the transaction will ultimately need
 		// to be rolled-back.
 
-		CollectionEntry ce = (CollectionEntry) ( (SessionImplementor) s1 ).getPersistenceContext()
-				.getCollectionEntries()
-				.remove( p.children );
+		CollectionEntry ce = ( (SessionImplementor) s1 ).getPersistenceContext()
+				.removeCollectionEntry( (PersistentSet) p.children );
 		assertNotNull( ce );
 
 		// the collection session should still be s1; the collection is no longer "connected" because its
@@ -180,9 +179,8 @@ public class MultipleSessionCollectionWarningTest extends BaseCoreFunctionalTest
 		// gets logged. s1 will not function properly so the transaction will ultimately need
 		// to be rolled-back.
 
-		CollectionEntry ce = (CollectionEntry) ( (SessionImplementor) s1 ).getPersistenceContext()
-				.getCollectionEntries()
-				.remove( p.children );
+		CollectionEntry ce = ( (SessionImplementor) s1 ).getPersistenceContext()
+				.removeCollectionEntry( (PersistentSet) p.children );
 		assertNotNull( ce );
 
 		// the collection session should still be s1; the collection is no longer "connected" because its

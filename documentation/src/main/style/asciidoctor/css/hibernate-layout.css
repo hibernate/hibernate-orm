@@ -98,7 +98,8 @@ h4,h5,h6{
     background-color:gainsboro !important;
     border-radius: 1em !important;
     width: 100% !important;
-    padding: 2em 0em 2em 0em !important;
+    padding: 1em 0em 1em 0em !important;
+    margin: 1em 0em 1em 0em !important;
 }
 td.icon {
     display:block !important;
@@ -217,4 +218,9 @@ code{
     font-family:"Droid Sans Mono","DejaVu Sans Mono",monospace !important;
     font-weight:400 !important;
     color:rgba(0,0,0,.9) !important
+}
+.image img{
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
 }

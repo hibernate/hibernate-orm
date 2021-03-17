@@ -84,7 +84,7 @@ public class DynamicBatchingCollectionInitializerBuilder extends BatchingCollect
 		@Override
 		public void initialize(Serializable id, SharedSessionContractImplementor session) throws HibernateException {
 			// first, figure out how many batchable ids we have...
-			final Serializable[] batch = session.getPersistenceContext()
+			final Serializable[] batch = session.getPersistenceContextInternal()
 					.getBatchFetchQueue()
 					.getCollectionBatch( collectionPersister(), id, maxBatchSize );
 			final int numberOfIds = ArrayHelper.countNonNull( batch );
@@ -193,7 +193,7 @@ public class DynamicBatchingCollectionInitializerBuilder extends BatchingCollect
 			);
 
 			try {
-				final PersistenceContext persistenceContext = session.getPersistenceContext();
+				final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 				boolean defaultReadOnlyOrig = persistenceContext.isDefaultReadOnly();
 				if ( queryParameters.isReadOnlyInitialized() ) {
 					// The read-only/modifiable mode for the query was explicitly set.

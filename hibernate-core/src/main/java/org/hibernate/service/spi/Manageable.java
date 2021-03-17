@@ -18,7 +18,10 @@ public interface Manageable {
 	 *
 	 * @return The management domain.
 	 */
-	public String getManagementDomain();
+	default String getManagementDomain() {
+		// use Hibernate default domain
+		return null;
+	}
 
 	/**
 	 * Allows the service to specify a special 'serviceType' portion of the object name.  {@code null} indicates
@@ -26,12 +29,17 @@ public interface Manageable {
 	 *
 	 * @return The custom 'serviceType' name.
 	 */
-	public String getManagementServiceType();
+	default String getManagementServiceType() {
+		// use Hibernate default domain
+		return null;
+	}
 
 	/**
-	 * The the management bean (MBean) for this service.
+	 * The management bean (MBean) for this service.
 	 *
 	 * @return The management bean.
 	 */
-	public Object getManagementBean();
+	default Object getManagementBean() {
+		return this;
+	}
 }

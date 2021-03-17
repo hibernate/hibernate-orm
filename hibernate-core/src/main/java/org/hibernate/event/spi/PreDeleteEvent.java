@@ -46,7 +46,7 @@ public class PreDeleteEvent
 
 	/**
 	 * Getter for property 'deletedState'.  This is the entity state at the
-	 * time of deletion (useful for optomistic locking and such).
+	 * time of deletion (useful for optimistic locking and such).
 	 *
 	 * @return Value for property 'deletedState'.
 	 */

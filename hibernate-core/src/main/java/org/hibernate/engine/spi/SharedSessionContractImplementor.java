@@ -12,6 +12,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 import javax.persistence.FlushModeType;
+import javax.persistence.TransactionRequiredException;
+import javax.persistence.criteria.Selection;
 
 import org.hibernate.CacheMode;
 import org.hibernate.Criteria;
@@ -29,8 +31,10 @@ import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
 import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryProducerImplementor;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
@@ -87,7 +91,13 @@ public interface SharedSessionContractImplementor
 	SessionEventListenerManager getEventListenerManager();
 
 	/**
-	 * Get the persistence context for this session
+	 * Get the persistence context for this session.
+	 * See also {@link #getPersistenceContextInternal()} for
+	 * an alternative.
+	 *
+	 * This method is not extremely fast: if you need to access
+	 * the PersistenceContext multiple times, prefer keeping
+	 * a reference to it over invoking this method multiple times.
 	 */
 	PersistenceContext getPersistenceContext();
 
@@ -112,7 +122,7 @@ public interface SharedSessionContractImplementor
 	/**
 	 * Checks whether the session is closed.  Provided separately from
 	 * {@link #isOpen()} as this method does not attempt any JTA synchronization
-	 * registration, where as {@link #isOpen()} does; which makes this one
+	 * registration, whereas {@link #isOpen()} does; which makes this one
 	 * nicer to use for most internal purposes.
 	 *
 	 * @return {@code true} if the session is closed; {@code false} otherwise.
@@ -161,7 +171,7 @@ public interface SharedSessionContractImplementor
 	long getTransactionStartTimestamp();
 
 	/**
-	 * @deprecated (since 5.3) Use
+	 * @deprecated (since 5.3) Use {@link #getTransactionStartTimestamp()} instead.
 	 */
 	@Deprecated
 	default long getTimestamp() {
@@ -179,6 +189,18 @@ public interface SharedSessionContractImplementor
 	 * or is there a JTA transaction in progress?
 	 */
 	boolean isTransactionInProgress();
+
+	/**
+	 * Check if an active Transaction is necessary for the update operation to be executed.
+	 * If an active Transaction is necessary but it is not then a TransactionRequiredException is raised.
+	 *
+	 * @param exceptionMessage the message to use for the TransactionRequiredException
+	 */
+	default void checkTransactionNeededForUpdateOperation(String exceptionMessage) {
+		if ( !isTransactionInProgress() ) {
+			throw new TransactionRequiredException( exceptionMessage );
+		}
+	}
 
 	/**
 	 * Provides access to the underlying transaction or creates a new transaction if
@@ -238,6 +260,7 @@ public interface SharedSessionContractImplementor
 	 * Do not return the proxy.
 	 */
 	Object immediateLoad(String entityName, Serializable id) throws HibernateException;
+
 
 	/**
 	 * Execute a <tt>find()</tt> query
@@ -441,6 +464,12 @@ public interface SharedSessionContractImplementor
 	 */
 	LoadQueryInfluencers getLoadQueryInfluencers();
 
+	/**
+	 * The converter associated to a Session might be lazily initialized: only invoke
+	 * this getter when there is actual need to use it.
+	 *
+	 * @return the ExceptionConverter for this Session.
+	 */
 	ExceptionConverter getExceptionConverter();
 
 	/**
@@ -466,4 +495,38 @@ public interface SharedSessionContractImplementor
 			) :
 			sessionJdbcBatchSize;
 	}
+
+	/**
+	 * @deprecated (since 5.2) - see deprecation note on
+	 * org.hibernate.jpa.spi.HibernateEntityManagerImplementor#createQuery(java.lang.String, java.lang.Class, javax.persistence.criteria.Selection, org.hibernate.jpa.spi.HibernateEntityManagerImplementor.QueryOptions)
+	 * @return The typed query
+	 */
+	@Deprecated
+	<T> QueryImplementor<T> createQuery(
+			String jpaqlString,
+			Class<T> resultClass,
+			Selection selection,
+			HibernateEntityManagerImplementor.QueryOptions queryOptions);
+
+	/**
+	 * This is similar to {@link #getPersistenceContext()}, with
+	 * two main differences:
+	 * a) this version performs better as
+	 * it allows for inlining and probably better prediction
+	 * b) see SessionImpl{@link #getPersistenceContext()} : it
+	 * does some checks on the current state of the Session.
+	 *
+	 * Choose wisely: performance is important, correctness comes first.
+	 *
+	 * @return the PersistenceContext associated to this session.
+	 */
+	PersistenceContext getPersistenceContextInternal();
+
+	default boolean isEnforcingFetchGraph() {
+		return false;
+	}
+
+	default void setEnforcingFetchGraph(boolean enforcingFetchGraph) {
+	}
+
 }

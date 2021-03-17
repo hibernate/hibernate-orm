@@ -10,6 +10,7 @@ import java.util.Arrays;
 
 import org.hibernate.HibernateException;
 import org.hibernate.TypeMismatchException;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.internal.ast.QuerySyntaxException;
@@ -67,25 +68,32 @@ public class BinaryLogicOperatorNode extends AbstractSelectExpression implements
 
 	protected final void mutateRowValueConstructorSyntaxesIfNecessary(Type lhsType, Type rhsType) {
 		// TODO : this really needs to be delayed until after we definitively know all node types
-		// where this is currently a problem is parameters for which where we cannot unequivocally
+		// where this is currently a problem is parameters for which we cannot unequivocally
 		// resolve an expected type
 		SessionFactoryImplementor sessionFactory = getSessionFactoryHelper().getFactory();
 		if ( lhsType != null && rhsType != null ) {
 			int lhsColumnSpan = getColumnSpan( lhsType, sessionFactory );
 			if ( lhsColumnSpan != getColumnSpan( rhsType, sessionFactory ) ) {
 				throw new TypeMismatchException(
-						"left and right hand sides of a binary logic operator were incompatibile [" +
+						"left and right hand sides of a binary logic operator were incompatible [" +
 								lhsType.getName() + " : " + rhsType.getName() + "]"
 				);
 			}
 			if ( lhsColumnSpan > 1 ) {
 				// for dialects which are known to not support ANSI-SQL row-value-constructor syntax,
 				// we should mutate the tree.
-				if ( !sessionFactory.getDialect().supportsRowValueConstructorSyntax() ) {
+				if ( !useRowValueConstructorSyntax( sessionFactory.getDialect() ) ) {
 					mutateRowValueConstructorSyntax( lhsColumnSpan );
 				}
 			}
 		}
+	}
+
+	private boolean useRowValueConstructorSyntax(Dialect dialect) {
+		if ( isInsideSetClause() ) {
+			return dialect.supportsRowValueConstructorSyntaxInSet();
+		}
+		return dialect.supportsRowValueConstructorSyntax();
 	}
 
 	private int getColumnSpan(Type type, SessionFactoryImplementor sfi) {
@@ -111,20 +119,21 @@ public class BinaryLogicOperatorNode extends AbstractSelectExpression implements
 		// mutation depends on the types of nodes involved...
 		int comparisonType = getType();
 		String comparisonText = getText();
+		if ( !isInsideSetClause() ) {
+			switch ( comparisonType ) {
+				case HqlSqlTokenTypes.EQ:
+					setType( HqlSqlTokenTypes.AND );
+					setText( "AND" );
+					break;
 
-		switch ( comparisonType ) {
-			case HqlSqlTokenTypes.EQ:
-				setType( HqlSqlTokenTypes.AND );
-				setText( "AND" );
-				break;
+				case HqlSqlTokenTypes.NE:
+					setType( HqlSqlTokenTypes.OR );
+					setText( "OR" );
+					break;
 
-			case HqlSqlTokenTypes.NE:
-				setType( HqlSqlTokenTypes.OR );
-				setText( "OR" );
-				break;
-
-			default:
-				throw new QuerySyntaxException( comparisonText + " operator not supported on composite types." );
+				default:
+					throw new QuerySyntaxException( comparisonText + " operator not supported on composite types." );
+			}
 		}
 
 		String[] lhsElementTexts = extractMutationTexts( getLeftHandOperand(), valueElements );
@@ -153,41 +162,62 @@ public class BinaryLogicOperatorNode extends AbstractSelectExpression implements
 	}
 
 	protected void translate(
-			int valueElements, int comparisonType,
-			String comparisonText, String[] lhsElementTexts,
+			int valueElements, 
+			int comparisonType,
+			String comparisonText, 
+			String[] lhsElementTexts,
 			String[] rhsElementTexts,
 			ParameterSpecification lhsEmbeddedCompositeParameterSpecification,
 			ParameterSpecification rhsEmbeddedCompositeParameterSpecification,
 			AST container) {
+		Node leftHandOperand = this.getLeftHandOperand();
+		Node rightHandOperand = this.getRightHandOperand();
+
 		for ( int i = valueElements - 1; i > 0; i-- ) {
 			if ( i == 1 ) {
-				AST op1 = getASTFactory().create( comparisonType, comparisonText );
-				AST lhs1 = getASTFactory().create( HqlSqlTokenTypes.SQL_TOKEN, lhsElementTexts[0] );
-				AST rhs1 = getASTFactory().create( HqlSqlTokenTypes.SQL_TOKEN, rhsElementTexts[0] );
+				final AST op1;
+				if ( isInsideSetClause() ) {
+					op1 = container;
+				}
+				else {
+					op1 = getASTFactory().create( comparisonType, comparisonText );
+				}
+				
+				SqlFragment lhs1 = (SqlFragment) getASTFactory().create( HqlSqlTokenTypes.SQL_TOKEN, lhsElementTexts[0] );
+				SqlFragment rhs1 = (SqlFragment) getASTFactory().create( HqlSqlTokenTypes.SQL_TOKEN, rhsElementTexts[0] );
+				copyReferencedTables( leftHandOperand, lhs1 );
+				copyReferencedTables( rightHandOperand, rhs1 );
 				op1.setFirstChild( lhs1 );
 				lhs1.setNextSibling( rhs1 );
-				container.setFirstChild( op1 );
+				
 				AST op2 = getASTFactory().create( comparisonType, comparisonText );
-				AST lhs2 = getASTFactory().create( HqlSqlTokenTypes.SQL_TOKEN, lhsElementTexts[1] );
-				AST rhs2 = getASTFactory().create( HqlSqlTokenTypes.SQL_TOKEN, rhsElementTexts[1] );
+				SqlFragment lhs2 = (SqlFragment) getASTFactory().create( HqlSqlTokenTypes.SQL_TOKEN, lhsElementTexts[1] );
+				SqlFragment rhs2 = (SqlFragment) getASTFactory().create( HqlSqlTokenTypes.SQL_TOKEN, rhsElementTexts[1] );
+				copyReferencedTables( leftHandOperand, lhs2 );
+				copyReferencedTables( rightHandOperand, rhs2 );
 				op2.setFirstChild( lhs2 );
 				lhs2.setNextSibling( rhs2 );
 				op1.setNextSibling( op2 );
 
+				if ( !isInsideSetClause() ) {
+					container.setFirstChild( op1 );
+				}
+
 				// "pass along" our initial embedded parameter node(s) to the first generated
 				// sql fragment so that it can be handled later for parameter binding...
-				SqlFragment fragment = (SqlFragment) lhs1;
 				if ( lhsEmbeddedCompositeParameterSpecification != null ) {
-					fragment.addEmbeddedParameter( lhsEmbeddedCompositeParameterSpecification );
+					lhs1.addEmbeddedParameter( lhsEmbeddedCompositeParameterSpecification );
 				}
 				if ( rhsEmbeddedCompositeParameterSpecification != null ) {
-					fragment.addEmbeddedParameter( rhsEmbeddedCompositeParameterSpecification );
+					lhs1.addEmbeddedParameter( rhsEmbeddedCompositeParameterSpecification );
 				}
 			}
 			else {
 				AST op = getASTFactory().create( comparisonType, comparisonText );
-				AST lhs = getASTFactory().create( HqlSqlTokenTypes.SQL_TOKEN, lhsElementTexts[i] );
-				AST rhs = getASTFactory().create( HqlSqlTokenTypes.SQL_TOKEN, rhsElementTexts[i] );
+				SqlFragment lhs = (SqlFragment) getASTFactory().create( HqlSqlTokenTypes.SQL_TOKEN, lhsElementTexts[i] );
+				SqlFragment rhs = (SqlFragment) getASTFactory().create( HqlSqlTokenTypes.SQL_TOKEN, rhsElementTexts[i] );
+				copyReferencedTables( leftHandOperand, lhs );
+				copyReferencedTables( rightHandOperand, rhs );
 				op.setFirstChild( lhs );
 				lhs.setNextSibling( rhs );
 				AST newContainer = getASTFactory().create( container.getType(), container.getText() );
@@ -195,6 +225,17 @@ public class BinaryLogicOperatorNode extends AbstractSelectExpression implements
 				newContainer.setNextSibling( op );
 				container = newContainer;
 			}
+		}
+	}
+
+	private boolean isInsideSetClause() {
+		return getWalker().getCurrentClauseType() == HqlSqlTokenTypes.SET;
+	}
+
+	private static void copyReferencedTables(Node from, SqlFragment to) {
+		if (from instanceof TableReferenceNode) {
+			TableReferenceNode tableReferenceNode = (TableReferenceNode) from;
+			to.setReferencedTables( tableReferenceNode.getReferencedTables() );
 		}
 	}
 

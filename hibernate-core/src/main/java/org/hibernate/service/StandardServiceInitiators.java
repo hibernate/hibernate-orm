@@ -11,7 +11,10 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.boot.cfgxml.internal.CfgXmlAccessServiceInitiator;
+import org.hibernate.boot.internal.DefaultSessionFactoryBuilderInitiator;
 import org.hibernate.boot.registry.StandardServiceInitiator;
+import org.hibernate.bytecode.internal.BytecodeProviderInitiator;
+import org.hibernate.bytecode.internal.ProxyFactoryFactoryInitiator;
 import org.hibernate.cache.internal.RegionFactoryInitiator;
 import org.hibernate.engine.config.internal.ConfigurationServiceInitiator;
 import org.hibernate.engine.jdbc.batch.internal.BatchBuilderInitiator;
@@ -25,6 +28,7 @@ import org.hibernate.engine.jdbc.internal.JdbcServicesInitiator;
 import org.hibernate.engine.jndi.internal.JndiServiceInitiator;
 import org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator;
 import org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformResolverInitiator;
+import org.hibernate.event.internal.EntityCopyObserverFactoryInitiator;
 import org.hibernate.hql.internal.QueryTranslatorFactoryInitiator;
 import org.hibernate.id.factory.internal.MutableIdentifierGeneratorFactoryInitiator;
 import org.hibernate.jmx.internal.JmxServiceInitiator;
@@ -46,10 +50,15 @@ public final class StandardServiceInitiators {
 	private StandardServiceInitiators() {
 	}
 
-	public static List<StandardServiceInitiator> LIST = buildStandardServiceInitiatorList();
+	public static final List<StandardServiceInitiator> LIST = buildStandardServiceInitiatorList();
 
 	private static List<StandardServiceInitiator> buildStandardServiceInitiatorList() {
-		final List<StandardServiceInitiator> serviceInitiators = new ArrayList<StandardServiceInitiator>();
+		final ArrayList<StandardServiceInitiator> serviceInitiators = new ArrayList<StandardServiceInitiator>();
+
+		serviceInitiators.add( DefaultSessionFactoryBuilderInitiator.INSTANCE );
+
+		serviceInitiators.add( BytecodeProviderInitiator.INSTANCE );
+		serviceInitiators.add( ProxyFactoryFactoryInitiator.INSTANCE );
 
 		serviceInitiators.add( CfgXmlAccessServiceInitiator.INSTANCE );
 		serviceInitiators.add( ConfigurationServiceInitiator.INSTANCE );
@@ -86,6 +95,9 @@ public final class StandardServiceInitiators {
 		serviceInitiators.add( TransactionCoordinatorBuilderInitiator.INSTANCE );
 
 		serviceInitiators.add( ManagedBeanRegistryInitiator.INSTANCE );
+		serviceInitiators.add( EntityCopyObserverFactoryInitiator.INSTANCE );
+
+		serviceInitiators.trimToSize();
 
 		return Collections.unmodifiableList( serviceInitiators );
 	}

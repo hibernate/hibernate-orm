@@ -418,6 +418,10 @@ public class PersistenceContextTest extends BaseEntityManagerFunctionalTestCase 
 		@ManyToOne
 		private Person author;
 
+		//Getters and setters are omitted for brevity
+
+	//end::pc-find-by-natural-id-entity-example[]
+
 		public Long getId() {
 			return id;
 		}
@@ -449,6 +453,7 @@ public class PersistenceContextTest extends BaseEntityManagerFunctionalTestCase 
 		public void setIsbn(String isbn) {
 			this.isbn = isbn;
 		}
+	//tag::pc-find-by-natural-id-entity-example[]
 	}
 	//end::pc-find-by-natural-id-entity-example[]
 }

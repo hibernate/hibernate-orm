@@ -37,7 +37,7 @@ public class BinaryArithmeticOperatorNode extends AbstractSelectExpression
 		final Type rhType = ( rhs instanceof SqlNode ) ? ( (SqlNode) rhs ).getDataType() : null;
 
 		if ( ExpectedTypeAwareNode.class.isAssignableFrom( lhs.getClass() ) && rhType != null ) {
-			Type expectedType = null;
+			final Type expectedType;
 			// we have something like : "? [op] rhs"
 			if ( isDateTimeType( rhType ) ) {
 				// more specifically : "? [op] datetime"
@@ -167,7 +167,7 @@ public class BinaryArithmeticOperatorNode extends AbstractSelectExpression
 		boolean rhsIsDateTime = isDateTimeType( rhType );
 
 		// handle the (assumed) valid cases:
-		// #1 - the only valid datetime addition synatx is one or the other is a datetime (but not both)
+		// #1 - the only valid datetime addition syntax is one or the other is a datetime (but not both)
 		if ( getType() == HqlSqlTokenTypes.PLUS ) {
 			// one or the other needs to be a datetime for us to get into this method in the first place...
 			return lhsIsDateTime ? lhType : rhType;

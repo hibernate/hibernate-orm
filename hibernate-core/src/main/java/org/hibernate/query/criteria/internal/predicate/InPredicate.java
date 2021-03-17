@@ -98,6 +98,7 @@ public class InPredicate<T>
 	 * @param expression The expression.
 	 * @param values The value list.
 	 */
+	@SuppressWarnings("unchecked")
 	public InPredicate(
 			CriteriaBuilderImpl criteriaBuilder,
 			Expression<? extends T> expression,
@@ -110,9 +111,13 @@ public class InPredicate<T>
 				? ValueHandlerFactory.determineAppropriateHandler((Class<? extends T>) javaType)
 				: new ValueHandlerFactory.NoOpValueHandler<T>();
 		for ( T value : values ) {
-			this.values.add(
-					new LiteralExpression<T>( criteriaBuilder, valueHandler.convert( value ) )
-			);
+			if ( value instanceof Expression ) {
+				this.values.add( (Expression<T>) value );
+			}
+			else {
+				this.values.add(
+						new LiteralExpression<T>( criteriaBuilder, valueHandler.convert( value ) ) );
+			}
 		}
 	}
 
@@ -155,7 +160,7 @@ public class InPredicate<T>
 		final Expression exp = getExpression();
 		if ( ParameterExpressionImpl.class.isInstance( exp ) ) {
 			// technically we only need to CAST (afaik) if expression and all values are parameters.
-			// but checking for that condition could take long time on a lon value list
+			// but checking for that condition could take long time on a long value list
 			final ParameterExpressionImpl parameterExpression = (ParameterExpressionImpl) exp;
 			final SessionFactoryImplementor sfi = criteriaBuilder().getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
 			final Type mappingType = sfi.getTypeResolver().heuristicType( parameterExpression.getParameterType().getName() );
@@ -176,20 +181,32 @@ public class InPredicate<T>
 
 		// subquery expressions are already wrapped in parenthesis, so we only need to
 		// render the parenthesis here if the values represent an explicit value list
-		boolean isInSubqueryPredicate = getValues().size() == 1
-				&& Subquery.class.isInstance( getValues().get( 0 ) );
+		List<Expression<? extends T>> values = getValues();
+		boolean isInSubqueryPredicate = values.size() == 1
+				&& Subquery.class.isInstance( values.get( 0 ) );
 		if ( isInSubqueryPredicate ) {
-			buffer.append( ( (Renderable) getValues().get(0) ).render( renderingContext ) );
+			buffer.append( ( (Renderable) values.get( 0 ) ).render( renderingContext ) );
 		}
 		else {
-			buffer.append( '(' );
-			String sep = "";
-			for ( Expression value : getValues() ) {
-				buffer.append( sep )
-						.append( ( (Renderable) value ).render( renderingContext ) );
-				sep = ", ";
+			if ( values.isEmpty() ) {
+				if ( renderingContext.getDialect().supportsEmptyInList() ) {
+					buffer.append( "()" );
+				}
+				else {
+					buffer.append( "(null)" );
+				}
 			}
-			buffer.append( ')' );
+			else {
+				buffer.append( '(' );
+				String sep = "";
+				for ( Expression value : values) {
+					buffer.append( sep )
+							.append( ( (Renderable) value )
+									.render( renderingContext ) );
+					sep = ", ";
+				}
+				buffer.append( ')' );
+			}
 		}
 		return buffer.toString();
 	}

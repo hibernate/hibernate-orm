@@ -7,22 +7,23 @@
 package org.hibernate.type;
 
 import java.io.Serializable;
+import java.lang.reflect.Constructor;
 import java.util.Comparator;
+import java.util.Map;
 import java.util.Properties;
 
 import org.hibernate.MappingException;
 import org.hibernate.classic.Lifecycle;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.tuple.component.ComponentMetamodel;
+import org.hibernate.type.spi.TypeBootstrapContext;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.TypeConfigurationAware;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserType;
-
-import static org.hibernate.internal.CoreLogging.messageLogger;
 
 /**
  * Used internally to build instances of {@link Type}, specifically it builds instances of
@@ -38,9 +39,7 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
  */
 @Deprecated
 @SuppressWarnings({"unchecked"})
-public final class TypeFactory implements Serializable {
-	private static final CoreMessageLogger LOG = messageLogger( TypeFactory.class );
-
+public final class TypeFactory implements Serializable, TypeBootstrapContext {
 	/**
 	 * @deprecated Use {@link TypeConfiguration}/{@link TypeConfiguration.Scope} instead
 	 */
@@ -55,6 +54,11 @@ public final class TypeFactory implements Serializable {
 	public TypeFactory(TypeConfiguration typeConfiguration) {
 		this.typeConfiguration = typeConfiguration;
 		this.typeScope = (TypeScope) () -> typeConfiguration;
+	}
+
+	@Override
+	public Map<String, Object> getConfigurationSettings() {
+		return typeConfiguration.getServiceRegistry().getService( ConfigurationService.class ).getSettings();
 	}
 
 	public SessionFactoryImplementor resolveSessionFactory() {
@@ -88,8 +92,21 @@ public final class TypeFactory implements Serializable {
 
 	public Type type(Class<Type> typeClass, Properties parameters) {
 		try {
-			Type type = typeClass.newInstance();
+			final Type type;
+
+			final Constructor<Type> bootstrapContextAwareTypeConstructor = ReflectHelper.getConstructor(
+					typeClass,
+					TypeBootstrapContext.class
+			);
+			if ( bootstrapContextAwareTypeConstructor != null ) {
+				type = bootstrapContextAwareTypeConstructor.newInstance( this );
+			}
+			else {
+				type = typeClass.newInstance();
+			}
+
 			injectParameters( type, parameters );
+
 			return type;
 		}
 		catch (Exception e) {
@@ -122,7 +139,6 @@ public final class TypeFactory implements Serializable {
 	 * @deprecated Only for use temporary use by {@link org.hibernate.Hibernate}
 	 */
 	@Deprecated
-	@SuppressWarnings({"JavaDoc"})
 	public static CompositeCustomType customComponent(
 			Class<CompositeUserType> typeClass,
 			Properties parameters,
@@ -149,7 +165,7 @@ public final class TypeFactory implements Serializable {
 		catch (ClassNotFoundException cnfe) {
 			throw new MappingException( "user collection type class not found: " + typeName, cnfe );
 		}
-		CustomCollectionType result = new CustomCollectionType( typeScope, typeClass, role, propertyRef );
+		CustomCollectionType result = new CustomCollectionType( typeClass, role, propertyRef );
 		if ( typeParameters != null ) {
 			injectParameters( result.getUserType(), typeParameters );
 		}
@@ -200,6 +216,11 @@ public final class TypeFactory implements Serializable {
 
 	// one-to-one type builders ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	/**
+	 * @deprecated Use {@link TypeFactory#oneToOne(String, ForeignKeyDirection, boolean, String, boolean, boolean, String, String, boolean)}
+	 *  instead.
+	 */
+	@Deprecated
 	public EntityType oneToOne(
 			String persistentClass,
 			ForeignKeyDirection foreignKeyType,
@@ -209,9 +230,39 @@ public final class TypeFactory implements Serializable {
 			boolean unwrapProxy,
 			String entityName,
 			String propertyName) {
+		return oneToOne( persistentClass, foreignKeyType, referenceToPrimaryKey, uniqueKeyPropertyName, lazy, unwrapProxy, entityName, propertyName, foreignKeyType != ForeignKeyDirection.TO_PARENT );
+	}
+
+	/**
+	 * @deprecated Use {@link TypeFactory#specialOneToOne(String, ForeignKeyDirection, boolean, String, boolean, boolean, String, String, boolean)}
+	 *  instead.
+	 */
+	@Deprecated
+	public EntityType specialOneToOne(
+			String persistentClass,
+			ForeignKeyDirection foreignKeyType,
+			boolean referenceToPrimaryKey,
+			String uniqueKeyPropertyName,
+			boolean lazy,
+			boolean unwrapProxy,
+			String entityName,
+			String propertyName) {
+		return specialOneToOne( persistentClass, foreignKeyType, referenceToPrimaryKey, uniqueKeyPropertyName, lazy, unwrapProxy, entityName, propertyName, foreignKeyType != ForeignKeyDirection.TO_PARENT );
+	}
+
+	public EntityType oneToOne(
+			String persistentClass,
+			ForeignKeyDirection foreignKeyType,
+			boolean referenceToPrimaryKey,
+			String uniqueKeyPropertyName,
+			boolean lazy,
+			boolean unwrapProxy,
+			String entityName,
+			String propertyName,
+			boolean constrained) {
 		return new OneToOneType(
 				typeScope, persistentClass, foreignKeyType, referenceToPrimaryKey,
-				uniqueKeyPropertyName, lazy, unwrapProxy, entityName, propertyName
+				uniqueKeyPropertyName, lazy, unwrapProxy, entityName, propertyName, constrained
 		);
 	}
 
@@ -223,10 +274,12 @@ public final class TypeFactory implements Serializable {
 			boolean lazy,
 			boolean unwrapProxy,
 			String entityName,
-			String propertyName) {
+			String propertyName,
+			boolean constrained) {
 		return new SpecialOneToOneType(
 				typeScope, persistentClass, foreignKeyType, referenceToPrimaryKey,
-				uniqueKeyPropertyName, lazy, unwrapProxy, entityName, propertyName
+				uniqueKeyPropertyName, lazy, unwrapProxy, entityName, propertyName,
+				constrained
 		);
 	}
 
@@ -312,59 +365,80 @@ public final class TypeFactory implements Serializable {
 	// collection type builders ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	public CollectionType array(String role, String propertyRef, Class elementClass) {
-		return new ArrayType( typeScope, role, propertyRef, elementClass );
+		return new ArrayType( role, propertyRef, elementClass );
 	}
 
 	public CollectionType list(String role, String propertyRef) {
-		return new ListType( typeScope, role, propertyRef );
+		return new ListType( role, propertyRef );
 	}
 
 	public CollectionType bag(String role, String propertyRef) {
-		return new BagType( typeScope, role, propertyRef );
+		return new BagType( role, propertyRef );
 	}
 
 	public CollectionType idbag(String role, String propertyRef) {
-		return new IdentifierBagType( typeScope, role, propertyRef );
+		return new IdentifierBagType( role, propertyRef );
 	}
 
 	public CollectionType map(String role, String propertyRef) {
-		return new MapType( typeScope, role, propertyRef );
+		return new MapType( role, propertyRef );
 	}
 
 	public CollectionType orderedMap(String role, String propertyRef) {
-		return new OrderedMapType( typeScope, role, propertyRef );
+		return new OrderedMapType( role, propertyRef );
 	}
 
 	public CollectionType sortedMap(String role, String propertyRef, Comparator comparator) {
-		return new SortedMapType( typeScope, role, propertyRef, comparator );
+		return new SortedMapType( role, propertyRef, comparator );
 	}
 
 	public CollectionType set(String role, String propertyRef) {
-		return new SetType( typeScope, role, propertyRef );
+		return new SetType( role, propertyRef );
 	}
 
 	public CollectionType orderedSet(String role, String propertyRef) {
-		return new OrderedSetType( typeScope, role, propertyRef );
+		return new OrderedSetType( role, propertyRef );
 	}
 
 	public CollectionType sortedSet(String role, String propertyRef, Comparator comparator) {
-		return new SortedSetType( typeScope, role, propertyRef, comparator );
+		return new SortedSetType( role, propertyRef, comparator );
 	}
 
 	// component type builders ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	public ComponentType component(ComponentMetamodel metamodel) {
-		return new ComponentType( typeScope, metamodel );
+		return new ComponentType( metamodel );
 	}
 
 	public EmbeddedComponentType embeddedComponent(ComponentMetamodel metamodel) {
-		return new EmbeddedComponentType( typeScope, metamodel );
+		return new EmbeddedComponentType( metamodel );
 	}
 
 
 	// any type builder ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	/**
+	 * Get the AnyType with the specified parameters.
+	 *
+	 * @param metaType meta type
+	 * @param identifierType identifier type
+	 * @return AnyType
+	 * @deprecated use {@link TypeFactory#any(Type, Type, boolean)} instead
+	 */
+	@Deprecated
 	public Type any(Type metaType, Type identifierType) {
-		return new AnyType( typeScope, metaType, identifierType );
+		return any( metaType, identifierType, true );
+	}
+
+	/**
+	 * Get the AnyType with the specified parameters.
+	 *
+	 * @param metaType meta type
+	 * @param identifierType identifier type
+	 * @param lazy is the underlying property lazy
+	 * @return AnyType
+	 */
+	public Type any(Type metaType, Type identifierType, boolean lazy) {
+		return new AnyType( typeScope, metaType, identifierType, lazy );
 	}
 }

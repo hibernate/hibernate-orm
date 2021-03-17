@@ -20,6 +20,7 @@ import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
@@ -66,9 +67,10 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 		}
 		else {
 			//initialize properties of the event:
-			final Object entity = source.getPersistenceContext().unproxyAndReassociate( object );
+			final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
+			final Object entity = persistenceContext.unproxyAndReassociate( object );
 			event.setEntity( entity );
-			event.setEntry( source.getPersistenceContext().getEntry( entity ) );
+			event.setEntry( persistenceContext.getEntry( entity ) );
 			//return the id in the event object
 			event.setResultId( performSaveOrUpdate( event ) );
 		}
@@ -76,15 +78,16 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 	}
 
 	protected boolean reassociateIfUninitializedProxy(Object object, SessionImplementor source) {
-		return source.getPersistenceContext().reassociateIfUninitializedProxy( object );
+		return source.getPersistenceContextInternal().reassociateIfUninitializedProxy( object );
 	}
 
 	protected Serializable performSaveOrUpdate(SaveOrUpdateEvent event) {
-		EntityState entityState = getEntityState(
+		EntityState entityState = EntityState.getEntityState(
 				event.getEntity(),
 				event.getEntityName(),
 				event.getEntry(),
-				event.getSession()
+				event.getSession(),
+				null
 		);
 
 		switch ( entityState ) {
@@ -99,8 +102,7 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 	}
 
 	protected Serializable entityIsPersistent(SaveOrUpdateEvent event) throws HibernateException {
-		final boolean traceEnabled = LOG.isTraceEnabled();
-		if ( traceEnabled ) {
+		if ( LOG.isTraceEnabled() ) {
 			LOG.trace( "Ignoring persistent instance" );
 		}
 		EntityEntry entityEntry = event.getEntry();
@@ -137,7 +139,7 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 
 			}
 
-			if ( traceEnabled ) {
+			if ( LOG.isTraceEnabled() ) {
 				LOG.tracev(
 						"Object already associated with session: {0}",
 						MessageHelper.infoString( entityEntry.getPersister(), savedId, factory )
@@ -176,7 +178,7 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 
 		Serializable id = saveWithGeneratedOrRequestedId( event );
 
-		source.getPersistenceContext().reassociateProxy( event.getObject(), id );
+		source.getPersistenceContextInternal().reassociateProxy( event.getObject(), id );
 
 		return id;
 	}
@@ -209,18 +211,19 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 
 		LOG.trace( "Updating detached instance" );
 
-		if ( event.getSession().getPersistenceContext().isEntryFor( event.getEntity() ) ) {
+		final EventSource session = event.getSession();
+		if ( session.getPersistenceContextInternal().isEntryFor( event.getEntity() ) ) {
 			//TODO: assertion only, could be optimized away
 			throw new AssertionFailure( "entity was persistent" );
 		}
 
 		Object entity = event.getEntity();
 
-		EntityPersister persister = event.getSession().getEntityPersister( event.getEntityName(), entity );
+		EntityPersister persister = session.getEntityPersister( event.getEntityName(), entity );
 
 		event.setRequestedId(
 				getUpdateId(
-						entity, persister, event.getRequestedId(), event.getSession()
+						entity, persister, event.getRequestedId(), session
 				)
 		);
 
@@ -266,12 +269,11 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 			Object entity,
 			EntityPersister persister) throws HibernateException {
 
-		final boolean traceEnabled = LOG.isTraceEnabled();
-		if ( traceEnabled && !persister.isMutable() ) {
+		if ( LOG.isTraceEnabled() && !persister.isMutable() ) {
 			LOG.trace( "Immutable instance passed to performUpdate()" );
 		}
 
-		if ( traceEnabled ) {
+		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev(
 					"Updating {0}",
 					MessageHelper.infoString( persister, event.getRequestedId(), event.getSession().getFactory() )
@@ -281,7 +283,8 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 		final EventSource source = event.getSession();
 		final EntityKey key = source.generateEntityKey( event.getRequestedId(), persister );
 
-		source.getPersistenceContext().checkUniqueness( key, entity );
+		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
+		persistenceContext.checkUniqueness( key, entity );
 
 		if ( invokeUpdateLifecycle( entity, persister, source ) ) {
 			reassociate( event, event.getObject(), event.getRequestedId(), persister );
@@ -304,7 +307,7 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
             		entry.getState(); //TODO: half-assemble this stuff
         }*/
 
-		source.getPersistenceContext().addEntity(
+		persistenceContext.addEntity(
 				entity,
 				( persister.isMutable() ? Status.MANAGED : Status.READ_ONLY ),
 				null, // cachedState,
@@ -318,7 +321,7 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 
 		persister.afterReassociate( entity, source );
 
-		if ( traceEnabled ) {
+		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev(
 					"Updating {0}", MessageHelper.infoString(
 					persister,
@@ -352,12 +355,13 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 	 */
 	private void cascadeOnUpdate(SaveOrUpdateEvent event, EntityPersister persister, Object entity) {
 		final EventSource source = event.getSession();
-		source.getPersistenceContext().incrementCascadeLevel();
+		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
+		persistenceContext.incrementCascadeLevel();
 		try {
 			Cascade.cascade( CascadingActions.SAVE_UPDATE, CascadePoint.AFTER_UPDATE, source, persister, entity );
 		}
 		finally {
-			source.getPersistenceContext().decrementCascadeLevel();
+			persistenceContext.decrementCascadeLevel();
 		}
 	}
 

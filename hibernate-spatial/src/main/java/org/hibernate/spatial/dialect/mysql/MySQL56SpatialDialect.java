@@ -48,13 +48,13 @@ public class MySQL56SpatialDialect extends MySQL55Dialect implements SpatialDial
 				MySQLGeometryTypeDescriptor.INSTANCE.getSqlType(),
 				"GEOMETRY"
 		);
-		final MySQLSpatialFunctions functionsToRegister = overrideObjectShapeFunctions( new MySQLSpatialFunctions() );
+		final MySQL5SpatialFunctions functionsToRegister = overrideObjectShapeFunctions( new MySQL5SpatialFunctions() );
 		for ( Map.Entry<String, SQLFunction> entry : functionsToRegister ) {
 			registerFunction( entry.getKey(), entry.getValue() );
 		}
 	}
 
-	private MySQLSpatialFunctions overrideObjectShapeFunctions(MySQLSpatialFunctions mysqlFunctions) {
+	private MySQL5SpatialFunctions overrideObjectShapeFunctions(MySQL5SpatialFunctions mysqlFunctions) {
 		mysqlFunctions.put( "contains", new StandardSQLFunction( "ST_Contains", StandardBasicTypes.BOOLEAN ) );
 		mysqlFunctions.put( "crosses", new StandardSQLFunction( "ST_Crosses", StandardBasicTypes.BOOLEAN ) );
 		mysqlFunctions.put( "disjoint", new StandardSQLFunction( "ST_Disjoint", StandardBasicTypes.BOOLEAN ) );

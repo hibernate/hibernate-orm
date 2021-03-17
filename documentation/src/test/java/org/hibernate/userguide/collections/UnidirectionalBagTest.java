@@ -55,8 +55,13 @@ public class UnidirectionalBagTest extends BaseEntityManagerFunctionalTestCase {
 
 		@Id
 		private Long id;
+
 		@OneToMany(cascade = CascadeType.ALL)
 		private List<Phone> phones = new ArrayList<>();
+
+		//Getters and setters are omitted for brevity
+
+	//end::collections-unidirectional-bag-example[]
 
 		public Person() {
 		}
@@ -68,6 +73,7 @@ public class UnidirectionalBagTest extends BaseEntityManagerFunctionalTestCase {
 		public List<Phone> getPhones() {
 			return phones;
 		}
+	//tag::collections-unidirectional-bag-example[]
 	}
 
 	@Entity(name = "Phone")
@@ -80,6 +86,10 @@ public class UnidirectionalBagTest extends BaseEntityManagerFunctionalTestCase {
 
 		@Column(name = "`number`")
 		private String number;
+
+		//Getters and setters are omitted for brevity
+
+		//end::collections-unidirectional-bag-example[]
 
 		public Phone() {
 		}
@@ -101,6 +111,7 @@ public class UnidirectionalBagTest extends BaseEntityManagerFunctionalTestCase {
 		public String getNumber() {
 			return number;
 		}
+	//tag::collections-unidirectional-bag-example[]
 	}
 	//end::collections-unidirectional-bag-example[]
 }

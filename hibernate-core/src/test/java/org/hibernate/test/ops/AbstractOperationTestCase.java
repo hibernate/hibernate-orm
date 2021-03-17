@@ -8,6 +8,9 @@ package org.hibernate.test.ops;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;

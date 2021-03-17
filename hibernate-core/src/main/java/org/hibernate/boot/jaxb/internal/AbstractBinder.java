@@ -7,9 +7,6 @@
 package org.hibernate.boot.jaxb.internal;
 
 import java.io.InputStream;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
@@ -29,6 +26,7 @@ import org.hibernate.boot.jaxb.spi.Binder;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 
+import org.hibernate.internal.util.StringHelper;
 import org.jboss.logging.Logger;
 
 /**
@@ -101,15 +99,8 @@ public abstract class AbstractBinder implements Binder {
 
 	private Binding doBind(XMLEventReader eventReader, Origin origin) {
 		try {
-			final PrivilegedAction<Binding> action = new PrivilegedAction<Binding>() {
-				@Override
-				public Binding run() {
-					final StartElement rootElementStartEvent = seekRootElementStartEvent( eventReader, origin );
-					return doBind( eventReader, rootElementStartEvent, origin );
-				}
-			};
-
-			return System.getSecurityManager() != null ? AccessController.doPrivileged( action ) : action.run();
+			final StartElement rootElementStartEvent = seekRootElementStartEvent( eventReader, origin );
+			return doBind( eventReader, rootElementStartEvent, origin );
 		}
 		finally {
 			try {
@@ -161,7 +152,7 @@ public abstract class AbstractBinder implements Binder {
 	protected abstract Binding doBind(XMLEventReader staxEventReader, StartElement rootElementStartEvent, Origin origin);
 
 	protected static boolean hasNamespace(StartElement startElement) {
-		return ! "".equals( startElement.getName().getNamespaceURI() );
+		return StringHelper.isNotEmpty( startElement.getName().getNamespaceURI() );
 	}
 
 	@SuppressWarnings("unchecked")

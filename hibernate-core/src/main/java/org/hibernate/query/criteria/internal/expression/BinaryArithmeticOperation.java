@@ -16,7 +16,7 @@ import org.hibernate.query.criteria.internal.compile.RenderingContext;
 import org.hibernate.query.criteria.internal.predicate.ImplicitNumericExpressionTypeDeterminer;
 
 /**
- * Models standard arithmetc operations with two operands.
+ * Models standard arithmetic operations with two operands.
  *
  * @author Steve Ebersole
  */
@@ -105,7 +105,7 @@ public class BinaryArithmeticOperation<N extends Number>
 	public static Class<? extends Number> determineReturnType(
 			Class<? extends Number> defaultType,
 			Expression<? extends Number> expression) {
-		return expression == null || expression.getJavaType() == null 
+		return expression == null || expression.getJavaType() == null
 				? defaultType
 				: expression.getJavaType();
 	}
@@ -125,7 +125,7 @@ public class BinaryArithmeticOperation<N extends Number>
 	}
 
 	/**
-	 * Creates an arithmethic operation based on 2 expressions.
+	 * Creates an arithmetic operation based on 2 expressions.
 	 *
 	 * @param criteriaBuilder The builder for query components.
 	 * @param resultType The operation result type
@@ -146,7 +146,7 @@ public class BinaryArithmeticOperation<N extends Number>
 	}
 
 	/**
-	 * Creates an arithmethic operation based on an expression and a literal.
+	 * Creates an arithmetic operation based on an expression and a literal.
 	 *
 	 * @param criteriaBuilder The builder for query components.
 	 * @param javaType The operation result type

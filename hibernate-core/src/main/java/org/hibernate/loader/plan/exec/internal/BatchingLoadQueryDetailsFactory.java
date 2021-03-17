@@ -7,6 +7,7 @@
 package org.hibernate.loader.plan.exec.internal;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.loader.plan.exec.process.spi.ResultSetProcessorResolver;
 import org.hibernate.loader.plan.exec.query.spi.QueryBuildingParameters;
 import org.hibernate.loader.plan.exec.spi.LoadQueryDetails;
 import org.hibernate.loader.plan.spi.CollectionReturn;
@@ -31,13 +32,14 @@ public class BatchingLoadQueryDetailsFactory {
 	}
 
 	/**
-	 * Returns a EntityLoadQueryDetails object from the given inputs.
+	 * Returns an EntityLoadQueryDetails object from the given inputs.
 	 *
 	 * @param loadPlan The load plan
 	 * @param keyColumnNames The columns to load the entity by (the PK columns or some other unique set of columns)
-	 * @param buildingParameters And influencers that would affect the generated SQL (mostly we are concerned with those
+	 * @param buildingParameters Any influencers that would affect the generated SQL (mostly we are concerned with those
 	 * that add additional joins here)
 	 * @param factory The SessionFactory
+	 * @oaram resultSetProcessorResolver The ResultSet processor resolver.
 	 *
 	 * @return The EntityLoadQueryDetails
 	 */
@@ -45,7 +47,8 @@ public class BatchingLoadQueryDetailsFactory {
 			LoadPlan loadPlan,
 			String[] keyColumnNames,
 			QueryBuildingParameters buildingParameters,
-			SessionFactoryImplementor factory) {
+			SessionFactoryImplementor factory,
+			ResultSetProcessorResolver resultSetProcessorResolver) {
 
 		// TODO: how should shouldUseOptionalEntityInformation be used?
 		// final int batchSize = buildingParameters.getBatchSize();
@@ -64,7 +67,33 @@ public class BatchingLoadQueryDetailsFactory {
 				aliasResolutionContext,
 				rootReturn,
 				buildingParameters,
-				factory
+				factory,
+				resultSetProcessorResolver
+		);
+	}
+	/**
+	 * Returns an EntityLoadQueryDetails object from the given inputs.
+	 *
+	 * @param loadPlan The load plan
+	 * @param keyColumnNames The columns to load the entity by (the PK columns or some other unique set of columns)
+	 * @param buildingParameters Any influencers that would affect the generated SQL (mostly we are concerned with those
+	 * that add additional joins here)
+	 * @param factory The SessionFactory
+	 *
+	 * @return The EntityLoadQueryDetails
+	 */
+	public EntityLoadQueryDetails makeEntityLoadQueryDetails(
+			LoadPlan loadPlan,
+			String[] keyColumnNames,
+			QueryBuildingParameters buildingParameters,
+			SessionFactoryImplementor factory) {
+
+		return makeEntityLoadQueryDetails(
+				loadPlan,
+				keyColumnNames,
+				buildingParameters,
+				factory,
+				ResultSetProcessorResolver.DEFAULT
 		);
 	}
 
@@ -72,16 +101,38 @@ public class BatchingLoadQueryDetailsFactory {
 	 * Returns a EntityLoadQueryDetails object based on an existing one and additional elements specific to this one.
 	 *
 	 * @param entityLoadQueryDetailsTemplate the template
-	 * @param buildingParameters And influencers that would affect the generated SQL (mostly we are concerned with those
+	 * @param buildingParameters Any influencers that would affect the generated SQL (mostly we are concerned with those
+	 * that add additional joins here)
+	 * @oaram resultSetProcessorResolver The ResultSet processor resolver.
+	 *
+	 * @return The EntityLoadQueryDetails
+	 */
+	public EntityLoadQueryDetails makeEntityLoadQueryDetails(
+			EntityLoadQueryDetails entityLoadQueryDetailsTemplate,
+			QueryBuildingParameters buildingParameters,
+			ResultSetProcessorResolver resultSetProcessorResolver) {
+		return new EntityLoadQueryDetails(
+				entityLoadQueryDetailsTemplate,
+				buildingParameters,
+				resultSetProcessorResolver
+		);
+	}
+
+	/**
+	 * Returns a EntityLoadQueryDetails object based on an existing one and additional elements specific to this one.
+	 *
+	 * @param entityLoadQueryDetailsTemplate the template
+	 * @param buildingParameters Any influencers that would affect the generated SQL (mostly we are concerned with those
 	 * that add additional joins here)
 	 * @return The EntityLoadQueryDetails
 	 */
 	public EntityLoadQueryDetails makeEntityLoadQueryDetails(
 			EntityLoadQueryDetails entityLoadQueryDetailsTemplate,
 			QueryBuildingParameters buildingParameters) {
-		return new EntityLoadQueryDetails(
+		return makeEntityLoadQueryDetails(
 				entityLoadQueryDetailsTemplate,
-				buildingParameters
+				buildingParameters,
+				ResultSetProcessorResolver.DEFAULT
 		);
 	}
 
@@ -90,7 +141,7 @@ public class BatchingLoadQueryDetailsFactory {
 	 *
 	 * @param collectionPersister The collection persister.
 	 * @param loadPlan The load plan.
-	 * @param buildingParameters And influencers that would affect the generated SQL (mostly we are concerned with those
+	 * @param buildingParameters Any influencers that would affect the generated SQL (mostly we are concerned with those
 	 * that add additional joins here)
 	 *
 	 * @return The EntityLoadQueryDetails

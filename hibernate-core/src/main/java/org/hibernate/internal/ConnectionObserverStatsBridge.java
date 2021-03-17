@@ -11,6 +11,7 @@ import java.sql.Connection;
 
 import org.hibernate.engine.jdbc.spi.ConnectionObserver;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
  * @author Steve Ebersole
@@ -24,8 +25,9 @@ public class ConnectionObserverStatsBridge implements ConnectionObserver, Serial
 
 	@Override
 	public void physicalConnectionObtained(Connection connection) {
-		if ( sessionFactory.getStatistics().isStatisticsEnabled() ) {
-			sessionFactory.getStatistics().connect();
+		final StatisticsImplementor statistics = sessionFactory.getStatistics();
+		if ( statistics.isStatisticsEnabled() ) {
+			statistics.connect();
 		}
 	}
 
@@ -39,8 +41,9 @@ public class ConnectionObserverStatsBridge implements ConnectionObserver, Serial
 
 	@Override
 	public void statementPrepared() {
-		if ( sessionFactory.getStatistics().isStatisticsEnabled() ) {
-			sessionFactory.getStatistics().prepareStatement();
+		final StatisticsImplementor statistics = sessionFactory.getStatistics();
+		if ( statistics.isStatisticsEnabled() ) {
+			statistics.prepareStatement();
 		}
 	}
 }

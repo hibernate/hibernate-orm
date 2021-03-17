@@ -108,7 +108,7 @@ public class CollectionElementLoader extends OuterJoinLoader {
 			Object[] row,
 			ResultTransformer transformer,
 			ResultSet rs,
-			SharedSessionContractImplementor session) throws SQLException, HibernateException {
+			SharedSessionContractImplementor session) {
 		return row[row.length - 1];
 	}
 

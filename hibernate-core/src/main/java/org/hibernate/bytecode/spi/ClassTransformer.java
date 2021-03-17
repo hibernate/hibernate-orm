@@ -23,7 +23,7 @@ public interface ClassTransformer extends javax.persistence.spi.ClassTransformer
 	/**
 	 * Invoked when a class is being loaded or redefined to add hooks for persistence bytecode manipulation.
 	 *
-	 * @param loader the defining class loaderof the class being transformed.  It may be null if using bootstrap loader
+	 * @param loader the defining class loader of the class being transformed.  It may be null if using bootstrap loader
 	 * @param className The name of the class being transformed
 	 * @param classBeingRedefined If an already loaded class is being redefined, then pass this as a parameter
 	 * @param protectionDomain ProtectionDomain of the class being (re)-defined

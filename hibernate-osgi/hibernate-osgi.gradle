@@ -5,23 +5,38 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
+description = 'Support for running Hibernate O/RM in OSGi environments'
+
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 apply plugin: 'com.github.lburgazzoli.karaf'
 
-description = 'Support for running Hibernate O/RM in OSGi environments'
 
 ext {
 	osgiCoreVersion = '6.0.0'
 	osgiCompediumVersion = '5.0.0'
-	karafVersion = '4.1.0'
+	karafVersion = '4.2.1'
 	paxExamVersion = '4.12.0'
 }
 
-test.enabled = true
-
-if ( JavaVersion.current().isJava9Compatible() ) {
-	logger.warn( '[WARN] Skipping all tests for hibernate-osgi due to Karaf issues with JDK 9' )
-	// Hikari CP relies on Javassist which we know has issues with Java 9
+/*
+ * With the current karaf/pax-exam versions and with JDK11.0.3,
+ * we get errors like "java.lang.IllegalStateException: Unknown protocol: jrt".
+ *
+ * This is suspiciously similar to the problems we had on Hibernate Search,
+ * and we gave up the idea of fixing those after a few hours.
+ *
+ * Copy-pasting the explanation from Search (not sure it applies here, but it's likely):
+ * > Upgrading to Karaf 4.2.5 fixes that, but then we get errors about "/karaf.log" not being accessible.
+ * > Upgrading once again to Pax-exam 4.13.1 fixes that, but then startup looks stuck at some point,
+ * > without any particular error even if we raise all the different log levels to "trace".
+ * > Upgrading pax-url to 2.6.1 to be in line with the versions in the Karaf pom doesn't change anything.
+ * > Strangely, with these upgrades, everything still works fine with JDK8,
+ * > but we get in trouble with JDK11.0.0 and above.
+ * > A bit ironic since the problems we were trying to solve initially only affected JDK11.0.3,
+ * > not JDK11.0.0.
+ */
+if ( gradle.ext.javaVersions.test.launcher.asInt() >= 11 ) {
+	logger.warn( '[WARN] Skipping all tests for hibernate-osgi due to Karaf/Pax-Exam issues with latest JDK 11' )
 	test.enabled = false
 }
 
@@ -30,8 +45,8 @@ sourceSets {
 	test {
 		// send javac output and resource copying to the same output directory for test
 		// so Pax Exam can more easily find it without explicit TinyBundle hooks
-		output.classesDir = "${buildDir}/classes/test"
-		output.resourcesDir = output.classesDir
+		java.outputDir = file( "${buildDir}/classes/test" )
+		output.resourcesDir = java.outputDir
 	}
 }
 
@@ -44,10 +59,6 @@ configurations {
 		description = 'Feature for easily adding Envers support to hibernate-orm'
 		transitive = false
 	}
-	hibernateInfinispan {
-		description = 'Feature for easily adding Infinispan-based caching support to hibernate-orm'
-		transitive = false
-	}
 }
 
 dependencies {
@@ -56,6 +67,9 @@ dependencies {
 		// this dependency wasn't there in the 5.2.x bundles so ignoring it for now
 		// we might reintroduce it at some point if users complain about it
 		exclude module: 'javax.activation-api'
+		// JAXB is included in the Karaf distribution
+		exclude module: 'jaxb-api'
+		exclude module: 'jaxb-runtime'
 	}
 	testCompile( project( ':hibernate-envers' ) )
 
@@ -85,13 +99,22 @@ dependencies {
 
 jar {
 	manifest {
-		instruction 'Bundle-Activator', 'org.hibernate.osgi.HibernateBundleActivator'
-        instruction 'Provide-Capability', 'osgi.service;effective:=active;objectClass=javax.persistence.spi.PersistenceProvider'
-		instructionFirst 'Import-Package',
-			// TODO: Shouldn't have to explicitly list this, but the plugin
-			// generates it with a [1.0,2) version.
-			"javax.persistence;version=\"${project.jpaVersion.osgiName}\"",
-			"javax.persistence.spi;version=\"${project.jpaVersion.osgiName}\""
+		attributes(
+				// BND Plugin instructions (for OSGi):
+				'Bundle-Activator': 'org.hibernate.osgi.HibernateBundleActivator',
+				'Provide-Capability': 'osgi.service;effective:=active;objectClass=javax.persistence.spi.PersistenceProvider',
+				'Import-Package': [
+						// TODO: Shouldn't have to explicitly list this, but the plugin
+						// generates it with a [1.0,2) version.
+						"javax.persistence;version=\"${project.jpaVersion.osgiName}\"",
+						"javax.persistence.spi;version=\"${project.jpaVersion.osgiName}\"",
+						// Temporarily support JTA 1.1 -- Karaf and other frameworks still
+						// use it.  Without this, the plugin generates [1.2,2).
+						'javax.transaction;version="[1.1,2)"',
+						// Also import every package referenced in the code
+						'*'
+				].join( ',' )
+		)
 	}
 }
 
@@ -128,7 +151,9 @@ karaf {
 				prerequisite = true
 			}
 			feature 'transaction-api'
-	}
+			// Most Hibernate modules declare OSGi metadata through blueprints, so we need this feature
+			feature 'aries-blueprint'
+		}
 		// NOTE : would like to include spatial as well, but we need to wait for
 		//		it to not define dependency on postgresql driver
 		feature {
@@ -136,15 +161,11 @@ karaf {
 			description = 'Feature for easily adding Envers support to hibernate-orm'
 			includeProject = false
 			configurations 'hibernateEnvers'
-			feature 'hibernate-orm'
+			feature('hibernate-orm') {
+				version = project.version
+			}
 		}
-		feature {
-			name = 'hibernate-infinispan'
-			description = 'Feature for easily adding Infinispan-based caching support to hibernate-orm'
-			includeProject = false
-			configurations 'hibernateInfinispan'
-			feature 'hibernate-orm'
-		}
+		// The hibernate-infinispan feature is now provided by the Infinispan project.
 	}
 }
 
@@ -207,7 +228,7 @@ task generatePaxExamEnvironmentFile {
 		properties.setProperty( 'org.ops4j.pax.exam.container.karaf.distroUrl', karafDistroFile.toURI().toURL().toExternalForm() )
 		properties.setProperty( 'org.ops4j.pax.exam.container.karaf.unpackDir', karafUnpackDirectory.absolutePath )
 		properties.setProperty( 'org.ops4j.pax.exam.container.karaf.version', karafVersion as String )
-		properties.setProperty( 'org.ops4j.pax.exam.container.karaf.probe.classesDir', sourceSets.test.output.classesDir.absolutePath )
+		properties.setProperty( 'org.ops4j.pax.exam.container.karaf.probe.classesDir', sourceSets.test.java.outputDir.absolutePath )
 		properties.setProperty( 'org.ops4j.pax.exam.container.karaf.probe.resourcesDir', sourceSets.test.output.resourcesDir.absolutePath )
 		properties.setProperty( 'org.hibernate.osgi.test.karafFeatureFile', karaf.features.outputFile.absolutePath )
 

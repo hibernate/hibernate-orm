@@ -1,3 +1,7 @@
+import java.nio.charset.StandardCharsets
+
+import groovy.json.JsonSlurper
+
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -9,10 +13,51 @@ apply from: rootProject.file( 'gradle/base-information.gradle' )
 apply plugin: 'idea'
 apply plugin: 'distribution'
 
+ext {
+    if ( !project.hasProperty( 'gitRemote' ) ) {
+        gitRemote = 'origin'
+    }
+}
+
 idea.module {
 }
 
 final File documentationDir = mkdir( "${project.buildDir}/documentation" );
+
+task releaseChecks() {
+    doFirst {
+        if ( !project.hasProperty('releaseVersion') || !project.hasProperty('developmentVersion')
+                || !project.hasProperty('gitRemote') ||!project.hasProperty('gitBranch') ) {
+            throw new GradleException(
+                    "Release tasks require all of the following properties to be set:"
+                            + "'releaseVersion', 'developmentVersion', 'gitRemote', 'gitBranch'."
+            )
+        }
+
+        logger.lifecycle( "Checking that the working tree is clean..." )
+        String uncommittedFiles = executeGitCommand( 'status', '--porcelain' )
+        if ( !uncommittedFiles.isEmpty() ) {
+            throw new GradleException(
+                    "Cannot release because there are uncommitted or untracked files in the working tree."
+                            + "\nCommit or stash your changes first."
+                            + "\nUncommitted files:\n" + uncommittedFiles
+            );
+        }
+
+        logger.lifecycle( "Switching to branch '${project.gitBranch}'..." )
+        executeGitCommand( 'checkout', project.gitBranch )
+
+        logger.lifecycle( "Checking that all commits are pushed..." )
+        String diffWithUpstream = executeGitCommand( 'diff', '@{u}' )
+        if ( !diffWithUpstream.isEmpty() ) {
+            throw new GradleException(
+                    "Cannot release because there are commits on the branch to release that haven't been pushed yet."
+                            + "\nPush your commits to the branch to release first."
+            );
+        }
+
+    }
+}
 
 /**
  * Assembles all documentation into the {buildDir}/documentation directory.
@@ -242,5 +287,189 @@ artifacts {
     bundles distZip
 }
 
-task release( dependsOn: [uploadDocumentation, uploadBundlesSourceForge] )
+task release( dependsOn: [releaseChecks, uploadDocumentation, uploadBundlesSourceForge] )
+
+task changeLogFile( dependsOn: [releaseChecks] ) {
+    group = "Release"
+    description = "Updates the changelog.txt file"
+
+    doFirst {
+        logger.lifecycle( "Appending version '${project.releaseVersion}' to changelog..." )
+        ChangeLogFile.update( ormVersion.fullName );
+    }
+}
+
+task addVersionCommit( dependsOn: [changeLogFile] ) {
+    group = "Release"
+    description = "Adds a commit for the released version and push the changes to github"
+    doFirst{
+        logger.lifecycle( "Updating version to '${project.releaseVersion}'..." )
+        project.ormVersionFile.text = "hibernateVersion=${project.releaseVersion}"
+
+        logger.lifecycle( "Adding commit to update version to '${project.releaseVersion}'..." )
+        executeGitCommand( 'add', '.' )
+        executeGitCommand( 'commit', '-m', project.ormVersion.fullName )
+    }
+}
+release.mustRunAfter addVersionCommit
+
+rootProject.subprojects.each { Project subProject ->
+    if ( !this.name.equals( subProject.name ) ) {
+        if ( subProject.tasks.findByName( 'release' ) ) {
+            this.tasks.release.dependsOn( subProject.tasks.release )
+            subProject.tasks.release.mustRunAfter( this.tasks.addVersionCommit )
+        }
+    }
+}
+
+task ciRelease( dependsOn: [releaseChecks, addVersionCommit, release] ) {
+    group = "Release"
+    description = "Performs a release: the hibernate version is set and the changelog.txt file updated, the changes are pushed to github, then the release is performed, tagged and the hibernate version is set to the development one."
+    doLast {
+        String tag = null
+        if ( !project.hasProperty( 'noTag' ) ) {
+            tag = project.ormVersion.fullName
+            // the release is tagged and the tag is pushed to github
+            if ( tag.endsWith( ".Final" ) ) {
+                tag = tag.replace( ".Final", "" )
+            }
+            logger.lifecycle( "Tagging '${tag}'..." )
+            executeGitCommand( 'tag', tag )
+        }
+
+        logger.lifecycle( "Adding commit to update version to '${project.developmentVersion}'..." )
+        project.ormVersionFile.text = "hibernateVersion=${project.developmentVersion}"
+        executeGitCommand( 'add', '.')
+        executeGitCommand( 'commit', '-m', project.developmentVersion )
+
+        if ( tag != null ) {
+            logger.lifecycle("Pushing branch and tag to remote '${project.gitRemote}'...")
+            executeGitCommand( 'push', '--atomic', project.gitRemote , project.gitBranch, tag )
+        }
+        else {
+            logger.lifecycle("Pushing branch to remote '${project.gitRemote}'...")
+            executeGitCommand( 'push', project.gitRemote , project.gitBranch )
+        }
+    }
+}
+
+static String executeGitCommand(Object ... subcommand){
+    List<Object> command = ['git']
+    Collections.addAll( command, subcommand )
+    def proc = command.execute()
+    def code = proc.waitFor()
+    def stdout = inputStreamToString( proc.getInputStream() )
+    def stderr = inputStreamToString( proc.getErrorStream() )
+    if ( code != 0 ) {
+        throw new GradleException( "An error occurred while executing " + command + "\n\nstdout:\n" + stdout + "\n\nstderr:\n" + stderr )
+    }
+    return stdout
+}
+
+static String inputStreamToString(InputStream inputStream) {
+    inputStream.withCloseable { ins ->
+        new BufferedInputStream(ins).withCloseable { bis ->
+            new ByteArrayOutputStream().withCloseable { buf ->
+                int result = bis.read();
+                while (result != -1) {
+                    buf.write((byte) result);
+                    result = bis.read();
+                }
+                return buf.toString( StandardCharsets.UTF_8.name());
+            }
+        }
+    }
+}
+
+class ChangeLogFile {
+
+    // Get the Release Notes from Jira and add them to the Hibernate changelog.txt file
+    static void update(String releaseVersion) {
+        def text = ""
+        File changelog = new File( "changelog.txt" )
+        def newReleaseNoteBlock = getNewReleaseNoteBlock(releaseVersion)
+        changelog.eachLine {
+            line ->
+                if ( line.startsWith( "Note:" ) ) {
+                    text += line + System.lineSeparator() + System.lineSeparator() + newReleaseNoteBlock
+                }
+                else {
+                    text += line + System.lineSeparator()
+                }
+        }
+        changelog.text = text
+    }
+
+    // Get the Release Notes from Jira
+    static String getNewReleaseNoteBlock(String releaseVersion) {
+        def restReleaseVersion;
+        if ( releaseVersion.endsWith( ".Final" ) ) {
+            restReleaseVersion = releaseVersion.replace( ".Final", "" )
+        }
+        else {
+            restReleaseVersion = releaseVersion
+        }
+        def apiString = "https://hibernate.atlassian.net/rest/api/2/search/?jql=project=HHH%20AND%20fixVersion=${restReleaseVersion}%20order%20by%20issuetype%20ASC"
+        def apiUrl = new URL( apiString )
+        def jsonReleaseNotes = new JsonSlurper().parse( apiUrl )
+        def releaseDate = new Date().format( 'MMMM dd, YYYY' )
+        def versionId = getVersionId( jsonReleaseNotes, restReleaseVersion )
+
+        ReleaseNote releaseNotes = new ReleaseNote( releaseVersion, releaseDate, versionId )
+
+        def issuetype
+        jsonReleaseNotes.issues.each {
+            issue ->
+                if ( issuetype != issue.fields.issuetype.name ) {
+                    issuetype = issue.fields.issuetype.name
+                    releaseNotes.addEmptyLine();
+                    releaseNotes.addLine( "** ${issue.fields.issuetype.name}" )
+                }
+                releaseNotes.addLine( "    * [" + issue.key + "] - " + issue.fields.summary )
+        }
+        releaseNotes.addEmptyLine()
+        return releaseNotes.notes
+    }
+
+    private static getVersionId(jsonReleaseNotes, String restReleaseVersion) {
+        def fixVersions = jsonReleaseNotes.issues.get( 0 ).fields.fixVersions
+
+        for ( def fixVersion : fixVersions ) {
+            if ( fixVersion.name.equals( restReleaseVersion ) ) {
+                return fixVersion.id
+            }
+        }
+        throw new GradleException( "Unable to determine the version id of the current release." )
+    }
+}
+
+class ReleaseNote {
+    String notes;
+    String notesHeaderSeparator = "------------------------------------------------------------------------------------------------------------------------"
+
+    ReleaseNote(String releaseVersion, String releaseDate, String versionId) {
+        notes = "Changes in ${releaseVersion} (${releaseDate})" + System.lineSeparator()
+        addHeaderSeparator()
+        addEmptyLine()
+        addLine( "https://hibernate.atlassian.net/projects/HHH/versions/${versionId}" )
+    }
+
+    void addLine(String text) {
+        notes += text + System.lineSeparator()
+    }
+
+    void addHeaderSeparator() {
+        addLine( notesHeaderSeparator )
+    }
+
+    void addEmptyLine() {
+        notes += System.lineSeparator()
+    }
+
+    void addEmptyLines(int numberOfLines) {
+        for ( i in 1..numberOfLines ) {
+            notes += System.lineSeparator()
+        }
+    }
+}
 

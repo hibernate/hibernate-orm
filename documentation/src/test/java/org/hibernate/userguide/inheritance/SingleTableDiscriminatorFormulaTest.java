@@ -90,6 +90,10 @@ public class SingleTableDiscriminatorFormulaTest extends BaseEntityManagerFuncti
 
 		private BigDecimal interestRate;
 
+		//Getters and setters are omitted for brevity
+
+	//end::entity-inheritance-single-table-discriminator-formula-example[]
+
 		public Long getId() {
 			return id;
 		}
@@ -121,6 +125,7 @@ public class SingleTableDiscriminatorFormulaTest extends BaseEntityManagerFuncti
 		public void setInterestRate(BigDecimal interestRate) {
 			this.interestRate = interestRate;
 		}
+	//tag::entity-inheritance-single-table-discriminator-formula-example[]
 	}
 
 	@Entity(name = "DebitAccount")
@@ -130,6 +135,10 @@ public class SingleTableDiscriminatorFormulaTest extends BaseEntityManagerFuncti
 		private String debitKey;
 
 		private BigDecimal overdraftFee;
+
+		//Getters and setters are omitted for brevity
+
+	//end::entity-inheritance-single-table-discriminator-formula-example[]
 
 		private DebitAccount() {
 		}
@@ -149,6 +158,7 @@ public class SingleTableDiscriminatorFormulaTest extends BaseEntityManagerFuncti
 		public void setOverdraftFee(BigDecimal overdraftFee) {
 			this.overdraftFee = overdraftFee;
 		}
+	//tag::entity-inheritance-single-table-discriminator-formula-example[]
 	}
 
 	@Entity(name = "CreditAccount")
@@ -158,6 +168,10 @@ public class SingleTableDiscriminatorFormulaTest extends BaseEntityManagerFuncti
 		private String creditKey;
 
 		private BigDecimal creditLimit;
+
+		//Getters and setters are omitted for brevity
+
+	//end::entity-inheritance-single-table-discriminator-formula-example[]
 
 		private CreditAccount() {
 		}
@@ -177,6 +191,7 @@ public class SingleTableDiscriminatorFormulaTest extends BaseEntityManagerFuncti
 		public void setCreditLimit(BigDecimal creditLimit) {
 			this.creditLimit = creditLimit;
 		}
+	//tag::entity-inheritance-single-table-discriminator-formula-example[]
 	}
 	//end::entity-inheritance-single-table-discriminator-formula-example[]
 }

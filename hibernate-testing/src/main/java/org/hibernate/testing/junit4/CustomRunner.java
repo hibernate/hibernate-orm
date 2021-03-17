@@ -272,24 +272,27 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 		}
 
 		// @RequiresDialectFeature
-		RequiresDialectFeature requiresDialectFeatureAnn = Helper.locateAnnotation(
+		final List<RequiresDialectFeature> requiresDialectFeatures = Helper.locateAllAnnotations(
 				RequiresDialectFeature.class,
 				frameworkMethod,
 				getTestClass()
 		);
-		if ( requiresDialectFeatureAnn != null ) {
-			try {
-				for ( Class<? extends DialectCheck> checkClass : requiresDialectFeatureAnn.value() ) {
-					if ( !checkClass.newInstance().isMatch( dialect ) ) {
-						return buildIgnore( requiresDialectFeatureAnn );
+
+		if ( !requiresDialectFeatures.isEmpty() ) {
+			for ( RequiresDialectFeature requiresDialectFeature : requiresDialectFeatures ) {
+				try {
+					for ( Class<? extends DialectCheck> checkClass : requiresDialectFeature.value() ) {
+						if ( !checkClass.newInstance().isMatch( dialect ) ) {
+							return buildIgnore( requiresDialectFeature );
+						}
 					}
 				}
-			}
-			catch (RuntimeException e) {
-				throw e;
-			}
-			catch (Exception e) {
-				throw new RuntimeException( "Unable to instantiate DialectCheck", e );
+				catch (RuntimeException e) {
+					throw e;
+				}
+				catch (Exception e) {
+					throw new RuntimeException( "Unable to instantiate DialectCheck", e );
+				}
 			}
 		}
 

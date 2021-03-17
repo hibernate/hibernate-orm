@@ -21,7 +21,7 @@ package org.hibernate.cfg;
  * @author Gavin King
  * @author Emmanuel Bernard
  *
- * @deprecated A {@link org.hibernate.cfg.naming.NamingStrategyDelegator} should be used instead.
+ * @deprecated {@link org.hibernate.boot.model.naming.ImplicitNamingStrategy} and {@link org.hibernate.boot.model.naming.PhysicalNamingStrategy} should be used instead.
  */
 @Deprecated
 public interface NamingStrategy {
@@ -83,7 +83,7 @@ public interface NamingStrategy {
 	 * Return the logical column name used to refer to a column in the metadata
 	 * (like index, unique constraints etc)
 	 * A full bijection is required between logicalNames and physical ones
-	 * logicalName have to be case insersitively unique for a given table
+	 * logicalName have to be case insensitively unique for a given table
 	 *
 	 * @param columnName given column name if any
 	 * @param propertyName property name of this column

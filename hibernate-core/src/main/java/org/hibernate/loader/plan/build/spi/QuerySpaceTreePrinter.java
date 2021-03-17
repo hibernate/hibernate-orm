@@ -35,6 +35,8 @@ public class QuerySpaceTreePrinter {
 	 */
 	public static final QuerySpaceTreePrinter INSTANCE = new QuerySpaceTreePrinter();
 
+	private static final int detailDepthOffset = 1;
+
 	private QuerySpaceTreePrinter() {
 	}
 
@@ -62,7 +64,7 @@ public class QuerySpaceTreePrinter {
 	 * An indentation is defined as the number of characters defined by {@link TreePrinterHelper#INDENTATION}.
 	 *
 	 * @param spaces The {@link QuerySpaces} object.
-	 * @param depth The intial number of indentations
+	 * @param depth The initial number of indentations
 	 * @param aliasResolutionContext The context for resolving table and column aliases
 	 *        for the {@link QuerySpace} references in <code>spaces</code>; if null,
 	 *        table and column aliases are not included in returned value..
@@ -87,7 +89,7 @@ public class QuerySpaceTreePrinter {
 	 * An indentation is defined as the number of characters defined by {@link TreePrinterHelper#INDENTATION}.
 	 *
 	 * @param spaces The {@link QuerySpaces} object.
-	 * @param depth The intial number of indentations
+	 * @param depth The initial number of indentations
 	 * @param aliasResolutionContext The context for resolving table and column aliases
 	 *        for the {@link QuerySpace} references in <code>spaces</code>; if null,
 	 *        table and column aliases are not included in returned value.
@@ -112,7 +114,7 @@ public class QuerySpaceTreePrinter {
 	 * An indentation is defined as the number of characters defined by {@link TreePrinterHelper#INDENTATION}.
 	 *
 	 * @param spaces The {@link QuerySpaces} object.
-	 * @param depth The intial number of indentations
+	 * @param depth The initial number of indentations
 	 * @param aliasResolutionContext The context for resolving table and column aliases
 	 *        for the {@link QuerySpace} references in <code>spaces</code>; if null,
 	 *        table and column aliases are not included in returned value.
@@ -145,8 +147,6 @@ public class QuerySpaceTreePrinter {
 		generateDetailLines( querySpace, depth, aliasResolutionContext, printWriter );
 		writeJoins( querySpace.getJoins(), depth + 1, aliasResolutionContext, printWriter );
 	}
-
-	final int detailDepthOffset = 1;
 
 	private void generateDetailLines(
 			QuerySpace querySpace,
@@ -233,7 +233,7 @@ public class QuerySpaceTreePrinter {
 	 *     <li>query space class name</li>
 	 *     <li>unique ID</li>
 	 *     <li>entity name (for {@link EntityQuerySpace}</li>
-	 *     <li>collection role (for {@link CollectionQuerySpace}</li>	 *
+	 *     <li>collection role (for {@link CollectionQuerySpace}</li>
 	 * </ul>
 	 * @param space The query space
 	 * @return a String containing details about the {@link QuerySpace}

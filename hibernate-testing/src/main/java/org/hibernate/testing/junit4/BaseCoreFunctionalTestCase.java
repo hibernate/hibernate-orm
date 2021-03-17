@@ -20,6 +20,7 @@ import javax.persistence.SharedCacheMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
+import org.hibernate.StatelessSession;
 import org.hibernate.Transaction;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
@@ -33,7 +34,10 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
+import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
 import org.hibernate.internal.build.AllowSysOut;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jdbc.AbstractReturningWork;
@@ -46,6 +50,7 @@ import org.hibernate.testing.OnExpectedFailure;
 import org.hibernate.testing.OnFailure;
 import org.hibernate.testing.SkipLog;
 import org.hibernate.testing.cache.CachingRegionFactory;
+import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.hibernate.testing.transaction.TransactionUtil2;
 import org.junit.After;
 import org.junit.Before;
@@ -174,6 +179,14 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		}
 		configuration.setImplicitNamingStrategy( ImplicitNamingStrategyLegacyJpaImpl.INSTANCE );
 		configuration.setProperty( Environment.DIALECT, getDialect().getClass().getName() );
+		configuration.getProperties().put( GlobalTemporaryTableBulkIdStrategy.DROP_ID_TABLES, "true" );
+		configuration.getProperties().put( LocalTemporaryTableBulkIdStrategy.DROP_ID_TABLES, "true" );
+		if ( !Environment.getProperties().containsKey( Environment.CONNECTION_PROVIDER ) ) {
+			configuration.getProperties().put(
+					AvailableSettings.CONNECTION_PROVIDER,
+					SharedDriverManagerConnectionProviderImpl.getInstance()
+			);
+		}
 		return configuration;
 	}
 
@@ -235,6 +248,11 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		return NO_MAPPINGS;
 	}
 
+	/**
+	 *
+	 * @deprecated (Since 6.0) this method will be renamed to getOrmXmlFile().
+	 */
+	@Deprecated
 	protected String[] getXmlFiles() {
 		// todo : rename to getOrmXmlFiles()
 		return NO_MAPPINGS;
@@ -267,7 +285,6 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	protected StandardServiceRegistryImpl buildServiceRegistry(BootstrapServiceRegistry bootRegistry, Configuration configuration) {
 		Properties properties = new Properties();
 		properties.putAll( configuration.getProperties() );
-		Environment.verifyProperties( properties );
 		ConfigurationHelper.resolvePlaceHolders( properties );
 
 		StandardServiceRegistryBuilder cfgRegistryBuilder = configuration.getStandardServiceRegistryBuilder();
@@ -345,6 +362,11 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	@After
 	public final void afterTest() throws Exception {
+		// see https://github.com/hibernate/hibernate-orm/pull/3412#issuecomment-678338398
+		if ( getDialect() instanceof H2Dialect ) {
+			ReflectHelper.getMethod( Class.forName( "org.h2.util.DateTimeUtils" ), "resetCalendar" ).invoke( null );
+		}
+
 		completeStrayTransaction();
 
 		if ( isCleanupTestDataRequired() ) {
@@ -388,7 +410,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 			sessionFactory.getCache().evictAllRegions();
 		}
 	}
-	
+
 	protected boolean isCleanupTestDataRequired() {
 		return false;
 	}
@@ -420,6 +442,8 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	}
 
 	public static class RollbackWork implements Work {
+
+		@Override
 		public void execute(Connection connection) throws SQLException {
 			connection.rollback();
 		}
@@ -517,5 +541,9 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	protected void inSession(Consumer<SessionImplementor> action) {
 		TransactionUtil2.inSession( sessionFactory(), action );
+	}
+
+	protected void inStatelessSession(Consumer<StatelessSession> action) {
+		TransactionUtil2.inStatelessSession( sessionFactory(), action );
 	}
 }

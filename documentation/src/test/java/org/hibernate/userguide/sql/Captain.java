@@ -21,6 +21,10 @@ public class Captain {
     @EmbeddedId
     private Identity id;
 
+    //Getters and setters are omitted for brevity
+
+//end::sql-composite-key-entity-associations_named-query-example[]
+
     public Identity getId() {
         return id;
     }
@@ -28,5 +32,6 @@ public class Captain {
     public void setId(Identity id) {
         this.id = id;
     }
+//tag::sql-composite-key-entity-associations_named-query-example[]
 }
 //end::sql-composite-key-entity-associations_named-query-example[]

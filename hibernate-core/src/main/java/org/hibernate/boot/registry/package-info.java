@@ -13,14 +13,14 @@
  * "override" services from parent registries.  It also allows granular building of registries as services
  * become available.
  *
- * {@link BootstrapServiceRegistry} is the base service registry, intended to be built via
- * {@link BootstrapServiceRegistryBuilder} if you need customization.  For non-customized
- * {@link BootstrapServiceRegistry} usage, the {@link BootstrapServiceRegistryBuilder} and
- * {@link BootstrapServiceRegistry} can be bypassed altogether.
+ * {@link org.hibernate.boot.registry.BootstrapServiceRegistry} is the base service registry, intended to be built via
+ * {@link org.hibernate.boot.registry.BootstrapServiceRegistryBuilder} if you need customization.  For non-customized
+ * {@link org.hibernate.boot.registry.BootstrapServiceRegistry} usage, the {@link org.hibernate.boot.registry.BootstrapServiceRegistryBuilder} and
+ * {@link org.hibernate.boot.registry.BootstrapServiceRegistry} can be bypassed altogether.
  *
- * Usually the next level in a standard registry set up is the {@link StandardServiceRegistry}, intended to be built
- * by the {@link StandardServiceRegistryBuilder} if you need customization.  The builder optionally takes the
- * {@link BootstrapServiceRegistry} to use as a base; if none is provided a default one is generated assuming sensible
+ * Usually the next level in a standard registry set up is the {@link org.hibernate.boot.registry.StandardServiceRegistry}, intended to be built
+ * by the {@link org.hibernate.boot.registry.StandardServiceRegistryBuilder} if you need customization.  The builder optionally takes the
+ * {@link org.hibernate.boot.registry.BootstrapServiceRegistry} to use as a base; if none is provided a default one is generated assuming sensible
  * defaults in Java SE and EE environments, particularly in respect to Class loading.
  */
 package org.hibernate.boot.registry;

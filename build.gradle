@@ -1,5 +1,3 @@
-import org.apache.tools.ant.filters.ReplaceTokens
-
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -11,34 +9,33 @@ buildscript {
 	repositories {
 		jcenter()
 		mavenCentral()
-		maven {
-			name "jboss-snapshots"
-			url "http://snapshots.jboss.org/maven2/"
-		}
 	}
 	dependencies {
-		classpath 'org.hibernate.build.gradle:gradle-maven-publish-auth:2.0.1'
-		classpath 'org.hibernate.build.gradle:hibernate-matrix-testing:2.0.0.Final'
+		classpath 'org.hibernate.build.gradle:hibernate-matrix-testing:3.0.0.Final'
 		classpath 'org.hibernate.build.gradle:version-injection-plugin:1.0.0'
-		classpath 'org.hibernate.build.gradle:gradle-xjc-plugin:1.0.2.Final'
-		classpath 'gradle.plugin.com.github.lburgazzoli:gradle-karaf-plugin:0.1.1'
+		classpath 'gradle.plugin.com.github.lburgazzoli:gradle-karaf-plugin:0.5.1'
 		classpath 'org.asciidoctor:asciidoctor-gradle-plugin:1.5.7'
-		classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.3'
-		classpath 'de.thetaphi:forbiddenapis:2.5'
+		classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4'
+		classpath 'de.thetaphi:forbiddenapis:3.0.1'
 	}
 }
 
 plugins {
-	id 'com.gradle.build-scan' version '1.9'
-	id 'me.champeau.buildscan-recipes' version '0.1.7'
+	id 'me.champeau.buildscan-recipes' version '0.2.3'
+	id 'org.hibernate.build.xjc' version '2.0.1' apply false
+	id 'org.hibernate.build.maven-repo-auth' version '3.0.3' apply false
+	id 'biz.aQute.bnd' version '5.1.1' apply false
 }
 
 allprojects {
 	repositories {
 		mavenCentral()
-		maven {
-			name "jboss-snapshots"
-			url "http://snapshots.jboss.org/maven2/"
+		//Allow loading additional dependencies from a local path;
+		//useful to load JDBC drivers which can not be distributed in public.
+		if (System.env['ADDITIONAL_REPO'] != null) {
+			flatDir {
+				dirs "${System.env.ADDITIONAL_REPO}"
+			}
 		}
 	}
 	apply plugin: 'idea'
@@ -58,18 +55,21 @@ task release {
 			"the fact that subprojects will appropriately define a release task " +
 			"themselves if they have any release-related activities to perform"
 
-	// Force to release with JDK 8. Releasing with JDK 11 is not supported yet:
-	// - the hibernate-orm-modules tests do not run due to an issue with the ASM version currently used by Gradle
 	doFirst {
-		if ( !JavaVersion.current().isJava8() ) {
-			throw new IllegalStateException( "Please use JDK 8 to perform the release." )
+		def javaVersionsInUse = [gradle.ext.javaVersions.main.compiler, gradle.ext.javaVersions.main.release,
+								 gradle.ext.javaVersions.test.compiler, gradle.ext.javaVersions.test.release,
+								 gradle.ext.javaVersions.test.launcher].toSet()
+		// Force to release with JDK 8. It used to not work on JDK11 because of the hibernate-orm-modules module,
+		// but this limitation might be resolved now that this module has been deleted?
+		if ( javaVersionsInUse != [JavaLanguageVersion.of( 8 )].toSet() ) {
+			throw new IllegalStateException( "Please use JDK 8 to perform the release. Currently using: ${javaVersionsInUse}" )
 		}
 	}
 }
 
 task publish {
 	description = "The task performed when we want to just publish maven artifacts.  Relies on " +
-			"the fact that subprojects will have a task named pubappropriately define a release task " +
+			"the fact that subprojects will appropriately define a release task " +
 			"themselves if they have any release-related activities to perform"
 }
 
@@ -87,29 +87,25 @@ task ciBuild {
 
 
 wrapper {
-	gradleVersion = '4.8.1'
+	// To upgrade the version of gradle used in the wrapper, run:
+	//     ./gradlew wrapper --gradle-version NEW_VERSION
 	distributionType = Wrapper.DistributionType.ALL
 }
 
 
 buildScan {
-	licenseAgreementUrl = 'https://gradle.com/terms-of-service'
-	licenseAgree = 'yes'
+	termsOfServiceUrl = 'https://gradle.com/terms-of-service'
+	termsOfServiceAgree = 'yes'
+}
 
+buildScanRecipes {
 	recipe 'git-commit', baseUrl: 'https://github.com/hibernate/hibernate-orm/tree'
 }
 
-
-
-
-
-
-
-
 //idea {
 //    project {
-//		jdkName = baselineJavaVersion
-//		languageLevel = baselineJavaVersion
+//		jdkName = gradle.ext.baselineJavaVersion
+//		languageLevel = gradle.ext.baselineJavaVersion
 //
 //		vcs = 'Git'
 //    }

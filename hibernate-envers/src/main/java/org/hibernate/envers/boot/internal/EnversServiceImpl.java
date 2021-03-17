@@ -9,11 +9,14 @@ package org.hibernate.envers.boot.internal;
 import java.util.Map;
 import java.util.Properties;
 
+import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
 import org.hibernate.envers.configuration.internal.EntitiesConfigurator;
 import org.hibernate.envers.configuration.internal.GlobalConfiguration;
@@ -28,16 +31,15 @@ import org.hibernate.envers.internal.revisioninfo.RevisionInfoQueryCreator;
 import org.hibernate.envers.internal.synchronization.AuditProcessManager;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.envers.strategy.AuditStrategy;
-import org.hibernate.envers.strategy.ValidityAuditStrategy;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.internal.util.xml.XMLHelper;
-import org.hibernate.property.access.spi.Getter;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.Stoppable;
 
 import org.jboss.logging.Logger;
+
+import static org.hibernate.cfg.AvailableSettings.XML_MAPPING_ENABLED;
 
 /**
  * Provides central access to Envers' configuration.
@@ -76,8 +78,6 @@ public class EnversServiceImpl implements EnversService, Configurable, Stoppable
 	private RevisionInfoNumberReader revisionInfoNumberReader;
 	private ModifiedEntityNamesReader modifiedEntityNamesReader;
 
-	private XMLHelper xmlHelper;
-
 	@Override
 	public void configure(Map configurationValues) {
 		if ( configurationValues.containsKey( LEGACY_AUTO_REGISTER ) ) {
@@ -89,6 +89,11 @@ public class EnversServiceImpl implements EnversService, Configurable, Stoppable
 			);
 		}
 		this.integrationEnabled = ConfigurationHelper.getBoolean( INTEGRATION_ENABLED, configurationValues, true );
+		boolean xmlMappingEnabled = ConfigurationHelper.getBoolean( XML_MAPPING_ENABLED, configurationValues, true );
+		if ( this.integrationEnabled && !xmlMappingEnabled ) {
+			throw new HibernateException( "Hibernate Envers currently requires XML mapping to be enabled. Please don't disable setting `" + XML_MAPPING_ENABLED + "`; alternatively disable Hibernate Envers." );
+		}
+
 		log.infof( "Envers integration enabled? : %s", integrationEnabled );
 	}
 
@@ -113,7 +118,6 @@ public class EnversServiceImpl implements EnversService, Configurable, Stoppable
 
 		this.serviceRegistry = metadata.getMetadataBuildingOptions().getServiceRegistry();
 		this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
-		this.xmlHelper = new XMLHelper( classLoaderService );
 
 		doInitialize( metadata, mappingCollector, serviceRegistry );
 	}
@@ -182,22 +186,10 @@ public class EnversServiceImpl implements EnversService, Configurable, Stoppable
 			);
 		}
 
-		if ( strategy instanceof ValidityAuditStrategy ) {
-			// further initialization required
-			final Getter revisionTimestampGetter = ReflectionTools.getGetter(
-					revisionInfoClass,
-					revisionInfoTimestampData,
-					serviceRegistry
-			);
-			( (ValidityAuditStrategy) strategy ).setRevisionTimestampGetter( revisionTimestampGetter );
-		}
+		// Strategy-specific initialization
+		strategy.postInitialize( revisionInfoClass, revisionInfoTimestampData, serviceRegistry );
 
 		return strategy;
-	}
-
-	@Override
-	public XMLHelper getXmlHelper() {
-		return xmlHelper;
 	}
 
 	/**

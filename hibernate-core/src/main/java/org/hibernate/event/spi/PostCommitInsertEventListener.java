@@ -13,7 +13,7 @@ package org.hibernate.event.spi;
  */
 public interface PostCommitInsertEventListener extends PostInsertEventListener {
 	/**
-	 * Called when a commit fails and an an entity was scheduled for insertion
+	 * Called when a commit fails and an entity was scheduled for insertion
 	 * 
 	 * @param event the insert event to be handled
 	 */

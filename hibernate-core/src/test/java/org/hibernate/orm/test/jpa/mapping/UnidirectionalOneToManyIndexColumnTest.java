@@ -50,7 +50,7 @@ public class UnidirectionalOneToManyIndexColumnTest {
 	public void tearDown(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
-					entityManager.createQuery( "delete from UnidirectionalOneToManyIndexColumnTest$Parent" ).executeUpdate();
+					entityManager.createQuery( "delete from Parent" ).executeUpdate();
 				}
 		);
 	}

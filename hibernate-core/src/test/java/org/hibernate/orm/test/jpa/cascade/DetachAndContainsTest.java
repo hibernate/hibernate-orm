@@ -40,8 +40,8 @@ public class DetachAndContainsTest {
 	public void tearDown(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
-					entityManager.createQuery( "delete from DetachAndContainsTest$Tooth" ).executeUpdate();
-					entityManager.createQuery( "delete from DetachAndContainsTest$Mouth" ).executeUpdate();
+					entityManager.createQuery( "delete from Tooth" ).executeUpdate();
+					entityManager.createQuery( "delete from Mouth" ).executeUpdate();
 				}
 		);
 	}

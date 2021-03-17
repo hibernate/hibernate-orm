@@ -210,9 +210,6 @@ xjc {
 //sourceSets.main.sourceGeneratorsTask.dependsOn antlr
 tasks.compile.dependsOn antlr
 
-// todo (6.0) : remove this once we get 6.0 stable-ish
-tasks.withType( JavaCompile ).forEach({ JavaCompile c -> c.options.compilerArgs += ["-Xmaxerrs", "4999"]})
-
 task copyBundleResources (type: Copy) {
     ext {
         bundlesTargetDir = file( "${buildDir}/bundles" )

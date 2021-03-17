@@ -54,17 +54,23 @@ public class CacheableHbmXmlTest extends BaseUnitTestCase {
 
 		final URL hbmXmlUrl = getClass().getClassLoader().getResource( HBM_RESOURCE_NAME );
 		if ( hbmXmlUrl == null ) {
-			throw couldNotFindHbmXmlFile();
+			throw couldNotFindHbmXmlResource();
 		}
 		hbmXmlFile = new File( hbmXmlUrl.getFile() );
 		if ( ! hbmXmlFile.exists() ) {
-			throw couldNotFindHbmXmlFile();
+			throw couldNotFindHbmXmlFile( hbmXmlFile );
 		}
 		hbmXmlBinFile = CacheableFileXmlSource.determineCachedFile( hbmXmlFile );
 	}
 
-	private Exception couldNotFindHbmXmlFile() {
-		throw new IllegalStateException( "Could not locate hbm.xml file by resource lookup" );
+	private Exception couldNotFindHbmXmlResource() {
+		throw new IllegalStateException( "Could not locate `" + HBM_RESOURCE_NAME + "` by resource lookup" );
+	}
+
+	private Exception couldNotFindHbmXmlFile(File file) {
+		throw new IllegalStateException(
+				"File `" + file.getAbsolutePath() + "` resolved from `" + HBM_RESOURCE_NAME + "` resource-lookup does not exist"
+		);
 	}
 
 	@After

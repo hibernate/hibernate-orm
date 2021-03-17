@@ -142,7 +142,7 @@ public class SequenceMismatchStrategyWithoutSequenceGeneratorTest extends Entity
 		}
 	}
 
-	@Entity
+	@Entity(name = "ApplicationConfiguration")
 	@Table(name = "application_configurations")
 	public static class ApplicationConfiguration {
 

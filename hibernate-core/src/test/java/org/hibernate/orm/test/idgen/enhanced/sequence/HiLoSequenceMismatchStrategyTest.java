@@ -17,6 +17,7 @@ import javax.persistence.Id;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.id.enhanced.HiLoOptimizer;
@@ -47,7 +48,10 @@ import static org.junit.Assert.fail;
 @TestForIssue(jiraKey = "HHH-13783")
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsSequences.class )
 @ServiceRegistry(
-		settings = @Setting( name = AvailableSettings.SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY, value = "EXCEPTION" )
+		settings = {
+				@Setting( name = AvailableSettings.SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY, value = "EXCEPTION" ),
+				@Setting( name = AvailableSettings.DIALECT, value = "org.hibernate.dialect.DerbyDialect" ),
+		}
 )
 @DomainModel( annotatedClasses = HiLoSequenceMismatchStrategyTest.TestEntity.class )
 @SessionFactory
@@ -73,8 +77,9 @@ public class HiLoSequenceMismatchStrategyTest {
 					statement.execute( dropSequenceStatement );
 				}
 				catch (SQLException e) {
-					System.out.println( "TEST DEBUG : dropping sequence failed - " + e.getMessage() );
-					e.printStackTrace();
+					System.out.printf( "TEST DEBUG : dropping sequence failed [`%s`] - %s", dropSequenceStatement, e.getMessage() );
+					System.out.println();
+					e.printStackTrace( System.out );
 					// ignore
 				}
 			}

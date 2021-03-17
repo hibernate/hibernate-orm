@@ -48,10 +48,7 @@ import static org.junit.Assert.fail;
 @TestForIssue(jiraKey = "HHH-13783")
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsSequences.class )
 @ServiceRegistry(
-		settings = {
-				@Setting( name = AvailableSettings.SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY, value = "EXCEPTION" ),
-				@Setting( name = AvailableSettings.DIALECT, value = "org.hibernate.dialect.DerbyDialect" ),
-		}
+		settings = @Setting( name = AvailableSettings.SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY, value = "EXCEPTION" )
 )
 @DomainModel( annotatedClasses = HiLoSequenceMismatchStrategyTest.TestEntity.class )
 @SessionFactory
@@ -62,8 +59,9 @@ public class HiLoSequenceMismatchStrategyTest {
 	@BeforeEach
 	public void dropDatabaseSequence(SessionFactoryScope scope) {
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
-		final String[] dropSequenceStatements = dialect.getDropSequenceStrings( sequenceName );
-		final String[] createSequenceStatements = dialect.getCreateSequenceStrings( sequenceName, 1, 1 );
+
+		final String[] dropSequenceStatements = dialect.getSequenceSupport().getDropSequenceStrings( sequenceName );
+		final String[] createSequenceStatements = dialect.getSequenceSupport().getCreateSequenceStrings( sequenceName, 1, 1 );
 
 		final ConnectionProvider connectionProvider = scope.getSessionFactory()
 				.getServiceRegistry()

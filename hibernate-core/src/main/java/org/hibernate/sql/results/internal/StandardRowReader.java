@@ -89,7 +89,7 @@ public class StandardRowReader<T> implements RowReader<T> {
 
 		for ( int i = 0; i < assemblerCount; i++ ) {
 			final DomainResultAssembler assembler = resultAssemblers.get( i );
-			LoadingLogger.LOGGER.debugf( "Calling top-level assembler (%i / %i) : %s", i, assemblerCount, assembler );
+			LoadingLogger.LOGGER.debugf( "Calling top-level assembler (%s / %s) : %s", i, assemblerCount, assembler );
 			resultRow[i] = assembler.assemble( rowProcessingState, options );
 		}
 

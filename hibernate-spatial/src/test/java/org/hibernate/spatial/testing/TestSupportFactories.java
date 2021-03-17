@@ -9,12 +9,14 @@ package org.hibernate.spatial.testing;
 
 import org.hibernate.dialect.CockroachDB192Dialect;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.testing.dialects.cockroachdb.CockroachDBTestSupport;
 import org.hibernate.spatial.testing.dialects.db2.DB2TestSupport;
 import org.hibernate.spatial.testing.dialects.h2geodb.GeoDBTestSupport;
 import org.hibernate.spatial.testing.dialects.hana.HANATestSupport;
+import org.hibernate.spatial.testing.dialects.mariadb.MariaDBTestSupport;
 import org.hibernate.spatial.testing.dialects.mysql.MySQL56TestSupport;
 import org.hibernate.spatial.testing.dialects.mysql.MySQL8TestSupport;
 import org.hibernate.spatial.testing.dialects.mysql.MySQLTestSupport;
@@ -45,7 +47,11 @@ public class TestSupportFactories {
 			return PostgisTestSupport.class;
 		}
 
-		if ( ( dialect instanceof SpatialDialect ) && CockroachDB192Dialect.class.isAssignableFrom( dialect.getClass() ) ){
+		if ( ( dialect instanceof SpatialDialect ) && MariaDBDialect.class.isAssignableFrom( dialect.getClass() ) ) {
+			return MariaDBTestSupport.class;
+		}
+
+		if ( ( dialect instanceof SpatialDialect ) && CockroachDB192Dialect.class.isAssignableFrom( dialect.getClass() ) ) {
 			return CockroachDBTestSupport.class;
 		}
 

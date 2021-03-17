@@ -95,6 +95,7 @@ public class JpaStreamTest extends BaseNonConfigCoreFunctionalTestCase {
 		};
 
 		// run without onClose callbacks
+
 		this.runTerminalOperationTests(noOp, Collections.emptyList(), noOp, false, false);
 
 		AtomicInteger onClose1Count = new AtomicInteger();

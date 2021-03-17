@@ -200,7 +200,7 @@ hana() {
       --ulimit nofile=1048576:1048576 \
       --sysctl kernel.shmmax=1073741824 \
       --sysctl net.ipv4.ip_local_port_range='40000 60999' \
-      --sysctl kernel.shmmni=524288 \
+      --sysctl kernel.shmmni=4096 \
       --sysctl kernel.shmall=8388608 \
       -v $temp_dir:/config \
       store/saplabs/hanaexpress:2.00.045.00.20200121.1 \
@@ -225,6 +225,12 @@ cockroachdb() {
         sleep 10
         OUTPUT=$(docker logs cockroach)
   done
+  echo "Enabling experimental box2d operators"
+  docker exec -it cockroach bash -c "cat <<EOF | ./cockroach sql --insecure
+SET CLUSTER SETTING sql.spatial.experimental_box2d_comparison_operators.enabled = on;
+quit
+EOF
+"
   echo "Cockroachdb successfully started"
 
 }

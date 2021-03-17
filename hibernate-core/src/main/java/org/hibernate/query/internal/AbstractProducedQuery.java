@@ -1584,8 +1584,8 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		final ScrollableResultsIterator<R> iterator = new ScrollableResultsIterator<>( scrollableResults );
 		final Spliterator<R> spliterator = Spliterators.spliteratorUnknownSize( iterator, Spliterator.NONNULL );
 
-		return (Stream<R>) new StreamDecorator(
-				StreamSupport.stream( spliterator, false ),
+		return new StreamDecorator<>(
+				StreamSupport.stream(spliterator, false),
 				iterator::close
 		);
 	}

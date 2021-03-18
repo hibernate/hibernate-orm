@@ -37,7 +37,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @ExtendWith( SessionFactoryExtension.class )
 @ExtendWith( SessionFactoryParameterResolver.class )
 @ExtendWith( SessionFactoryScopeParameterResolver.class )
-@ExtendWith( DialectFilterExtension.class )
 public @interface SessionFactory {
 	String sessionFactoryName() default "";
 

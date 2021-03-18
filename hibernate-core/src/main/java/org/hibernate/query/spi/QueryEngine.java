@@ -6,7 +6,6 @@
  */
 package org.hibernate.query.spi;
 
-import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -18,7 +17,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
-import org.hibernate.query.QueryLogging;
 import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.hql.internal.StandardHqlTranslator;
@@ -34,6 +32,7 @@ import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.query.sqm.sql.StandardSqmTranslatorFactory;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.stat.spi.StatisticsImplementor;
 
 import java.util.Map;
 import java.util.function.Supplier;
@@ -75,7 +74,7 @@ public class QueryEngine {
 				hqlTranslator,
 				sqmTranslatorFactory,
 				sessionFactory.getServiceRegistry().getService( NativeQueryInterpreter.class ),
-				buildInterpretationCache( sessionFactory.getProperties() ),
+				buildInterpretationCache( sessionFactory::getStatistics, sessionFactory.getProperties() ),
 				dialect,
 				queryEngineOptions.getCustomSqmFunctionRegistry(),
 				sessionFactory.getServiceRegistry()
@@ -196,6 +195,7 @@ public class QueryEngine {
 		);
 
 		this.interpretationCache = buildInterpretationCache(
+				() -> serviceRegistry.getService( StatisticsImplementor.class ),
 				serviceRegistry.getService( ConfigurationService.class ).getSettings()
 		);
 	}
@@ -275,7 +275,7 @@ public class QueryEngine {
 		return new StandardSqmTranslatorFactory();
 	}
 
-	private static QueryInterpretationCache buildInterpretationCache(Map properties) {
+	private static QueryInterpretationCache buildInterpretationCache(Supplier<StatisticsImplementor> statisticsSupplier, Map properties) {
 		final boolean explicitUseCache = ConfigurationHelper.getBoolean(
 				AvailableSettings.QUERY_PLAN_CACHE_ENABLED,
 				properties,
@@ -293,11 +293,11 @@ public class QueryEngine {
 					? explicitMaxPlanSize
 					: QueryInterpretationCacheStandardImpl.DEFAULT_QUERY_PLAN_MAX_COUNT;
 
-			return new QueryInterpretationCacheStandardImpl( size );
+			return new QueryInterpretationCacheStandardImpl( size, statisticsSupplier );
 		}
 		else {
 			// disabled
-			return QueryInterpretationCacheDisabledImpl.INSTANCE;
+			return new QueryInterpretationCacheDisabledImpl( statisticsSupplier );
 		}
 	}
 
@@ -306,22 +306,6 @@ public class QueryEngine {
 			MetadataImplementor bootMetamodel,
 			BootstrapContext bootstrapContext) {
 		namedObjectRepository.prepare( sessionFactory, bootMetamodel, bootstrapContext );
-
-		//checking for named queries
-		if ( sessionFactory.getSessionFactoryOptions().isNamedQueryStartupCheckingEnabled() ) {
-			final Map<String, HibernateException> errors = namedObjectRepository.checkNamedQueries( this );
-
-			if ( !errors.isEmpty() ) {
-				StringBuilder failingQueries = new StringBuilder( "Errors in named queries: " );
-				String sep = "";
-				for ( Map.Entry<String, HibernateException> entry : errors.entrySet() ) {
-					QueryLogging.QUERY_MESSAGE_LOGGER.namedQueryError( entry.getKey(), entry.getValue() );
-					failingQueries.append( sep ).append( entry.getKey() );
-					sep = ", ";
-				}
-				throw new HibernateException( failingQueries.toString() );
-			}
-		}
 	}
 
 	public NamedObjectRepository getNamedObjectRepository() {

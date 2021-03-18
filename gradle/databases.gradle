@@ -50,19 +50,12 @@ ext {
                         'jdbc.url'   : 'jdbc:postgresql://127.0.0.1/hibernate_orm_test?preparedStatementCacheQueries=0'
                 ],
                 pgsql_ci : [
-                        'db.dialect' : 'org.hibernate.dialect.PostgreSQL95Dialect',
+                        'db.dialect' : 'org.hibernate.dialect.PostgreSQLDialect',
                         'jdbc.driver': 'org.postgresql.Driver',
                         'jdbc.user'  : 'hibernate_orm_test',
                         'jdbc.pass'  : 'hibernate_orm_test',
                         // Disable prepared statement caching due to https://www.postgresql.org/message-id/CAEcMXhmmRd4-%2BNQbnjDT26XNdUoXdmntV9zdr8%3DTu8PL9aVCYg%40mail.gmail.com
                         'jdbc.url'   : 'jdbc:postgresql://' + dbHost + '/hibernate_orm_test?preparedStatementCacheQueries=0'
-                ],
-                pgsql_ci : [
-                        'db.dialect' : 'org.hibernate.dialect.PostgreSQLDialect',
-                        'jdbc.driver': 'org.postgresql.Driver',
-                        'jdbc.user'  : 'hibernate_orm_test',
-                        'jdbc.pass'  : 'hibernate_orm_test',
-                        'jdbc.url'   : 'jdbc:postgresql://' + dbHost + '/hibernate_orm_test'
                 ],
                 mysql : [
                         'db.dialect' : 'org.hibernate.dialect.MySQLDialect',

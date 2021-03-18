@@ -41,7 +41,7 @@ public class QueryStatisticsImpl implements QueryStatistics {
 	private final Lock readLock;
 	private final Lock writeLock;
 
-	QueryStatisticsImpl(String query) {
+	public QueryStatisticsImpl(String query) {
 		this.query = query;
 		ReadWriteLock lock = new ReentrantReadWriteLock();
 		this.readLock = lock.readLock();
@@ -159,7 +159,7 @@ public class QueryStatisticsImpl implements QueryStatistics {
 	 * @param rows rows count returned
 	 * @param time time taken
 	 */
-	void executed(long rows, long time) {
+	public void executed(long rows, long time) {
 		// read lock is enough, concurrent updates are supported by the underlying type AtomicLong
 		// this only guards executed(long, long) to be called, when another thread is executing getExecutionAvgTime()
 		readLock.lock();

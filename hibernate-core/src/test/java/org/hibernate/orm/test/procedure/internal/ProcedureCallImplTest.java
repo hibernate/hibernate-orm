@@ -1,0 +1,34 @@
+package org.hibernate.orm.test.procedure.internal;
+
+import java.util.stream.Stream;
+import javax.persistence.Query;
+
+import org.hibernate.dialect.H2Dialect;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.NotImplementedYet;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.junit.Assert;
+import org.junit.jupiter.api.Test;
+
+/**
+ * @author Nathan Xu
+ */
+@Jpa
+public class ProcedureCallImplTest {
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-13644" )
+	@RequiresDialect( H2Dialect.class )
+	@NotImplementedYet(reason = "org.hibernate.procedure.internal.ProcedureCallImpl.buildOutputs not yet implemented")
+	public void testNoNullPointerExceptionThrown(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
+			em.createNativeQuery("CREATE ALIAS GET_RANDOM_VALUE FOR \"java.lang.Math.random\";").executeUpdate();
+			Query query = em.createStoredProcedureQuery("GET_RANDOM_VALUE");
+			Stream stream = query.getResultStream();
+			Assert.assertEquals(1, stream.count());
+		} );
+	}
+}

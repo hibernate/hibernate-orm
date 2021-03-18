@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.internal;
 
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -17,15 +18,18 @@ import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.sql.spi.ParameterInterpretation;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.tree.SqmStatement;
+import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
  * @author Steve Ebersole
  */
 public class QueryInterpretationCacheDisabledImpl implements QueryInterpretationCache {
-	/**
-	 * Singleton access
-	 */
-	public static final QueryInterpretationCacheDisabledImpl INSTANCE = new QueryInterpretationCacheDisabledImpl();
+
+	private final Supplier<StatisticsImplementor> statisticsSupplier;
+
+	public QueryInterpretationCacheDisabledImpl(Supplier<StatisticsImplementor> statisticsSupplier) {
+		this.statisticsSupplier = statisticsSupplier;
+	}
 
 	@Override
 	public int getNumberOfCachedHqlInterpretations() {
@@ -53,6 +57,9 @@ public class QueryInterpretationCacheDisabledImpl implements QueryInterpretation
 
 	@Override
 	public HqlInterpretation resolveHqlInterpretation(String queryString, Function<String, SqmStatement<?>> creator) {
+		StatisticsImplementor statistics = statisticsSupplier.get();
+		final boolean stats = statistics.isStatisticsEnabled();
+		final long startTime = ( stats ) ? System.nanoTime() : 0L;
 		final SqmStatement<?> sqmStatement = creator.apply( queryString );
 
 		final DomainParameterXref domainParameterXref;
@@ -64,6 +71,12 @@ public class QueryInterpretationCacheDisabledImpl implements QueryInterpretation
 		else {
 			domainParameterXref = DomainParameterXref.from( sqmStatement );
 			parameterMetadata = new ParameterMetadataImpl( domainParameterXref.getQueryParameters() );
+		}
+
+		if ( stats ) {
+			final long endTime = System.nanoTime();
+			final long microseconds = TimeUnit.MICROSECONDS.convert( endTime - startTime, TimeUnit.NANOSECONDS );
+			statistics.queryCompiled( queryString, microseconds );
 		}
 
 		return new HqlInterpretation() {

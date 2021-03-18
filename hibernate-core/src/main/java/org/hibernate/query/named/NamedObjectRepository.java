@@ -70,6 +70,14 @@ public interface NamedObjectRepository {
 	Map<String, HibernateException> checkNamedQueries(QueryEngine queryPlanCache);
 
 	/**
+	 * Resolve the named query with the given name.
+	 */
+	NamedQueryMemento resolve(
+			SessionFactoryImplementor sessionFactory,
+			MetadataImplementor bootMetamodel,
+			String registrationName);
+
+	/**
 	 * Prepare for runtime use
 	 */
 	void prepare(SessionFactoryImplementor sessionFactory, MetadataImplementor bootMetamodel, BootstrapContext bootstrapContext);

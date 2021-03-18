@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.internal;
 
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -21,6 +22,7 @@ import org.hibernate.query.spi.SimpleHqlInterpretationImpl;
 import org.hibernate.query.sql.spi.ParameterInterpretation;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.tree.SqmStatement;
+import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.jboss.logging.Logger;
 
@@ -52,13 +54,15 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 
 	private final BoundedConcurrentHashMap<String, HqlInterpretation> hqlInterpretationCache;
 	private final BoundedConcurrentHashMap<String, ParameterInterpretation> nativeQueryParamCache;
+	private final Supplier<StatisticsImplementor> statisticsSupplier;
 
-	public QueryInterpretationCacheStandardImpl(int maxQueryPlanCount) {
+	public QueryInterpretationCacheStandardImpl(int maxQueryPlanCount, Supplier<StatisticsImplementor> statisticsSupplier) {
 		log.debugf( "Starting QueryPlanCache(%s)", maxQueryPlanCount );
 
-		queryPlanCache = new BoundedConcurrentHashMap<>( maxQueryPlanCount, 20, BoundedConcurrentHashMap.Eviction.LIRS );
-		hqlInterpretationCache = new BoundedConcurrentHashMap<>( maxQueryPlanCount, 20, BoundedConcurrentHashMap.Eviction.LIRS );
-		nativeQueryParamCache = new BoundedConcurrentHashMap<>( maxQueryPlanCount, 20, BoundedConcurrentHashMap.Eviction.LIRS );
+		this.queryPlanCache = new BoundedConcurrentHashMap<>( maxQueryPlanCount, 20, BoundedConcurrentHashMap.Eviction.LIRS );
+		this.hqlInterpretationCache = new BoundedConcurrentHashMap<>( maxQueryPlanCount, 20, BoundedConcurrentHashMap.Eviction.LIRS );
+		this.nativeQueryParamCache = new BoundedConcurrentHashMap<>( maxQueryPlanCount, 20, BoundedConcurrentHashMap.Eviction.LIRS );
+		this.statisticsSupplier = statisticsSupplier;
 	}
 
 	@Override
@@ -103,9 +107,14 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 			String queryString,
 			Function<String, SqmStatement<?>> creator) {
 		log.tracef( "QueryPlan#resolveHqlInterpretation( `%s` )", queryString );
-
+		final StatisticsImplementor statistics = statisticsSupplier.get();
+		final boolean stats = statistics.isStatisticsEnabled();
+		final long startTime = ( stats ) ? System.nanoTime() : 0L;
 		final HqlInterpretation cached = hqlInterpretationCache.get( queryString );
 		if ( cached != null ) {
+			if ( stats ) {
+				statistics.queryPlanCacheHit( queryString );
+			}
 			return cached;
 		}
 
@@ -129,6 +138,12 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 				parameterMetadata,
 				domainParameterXref);
 		hqlInterpretationCache.put( queryString, interpretation );
+
+		if ( stats ) {
+			final long endTime = System.nanoTime();
+			final long microseconds = TimeUnit.MICROSECONDS.convert( endTime - startTime, TimeUnit.NANOSECONDS );
+			statistics.queryCompiled( queryString, microseconds );
+		}
 		return interpretation;
 	}
 
@@ -155,6 +170,8 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 	@Override
 	public void close() {
 		// todo (6.0) : clear maps/caches and LOG
+		hqlInterpretationCache.clear();
+		nativeQueryParamCache.clear();
 		queryPlanCache.clear();
 	}
 }

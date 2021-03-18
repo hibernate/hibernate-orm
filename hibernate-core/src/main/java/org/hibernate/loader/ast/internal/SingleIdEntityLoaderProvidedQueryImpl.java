@@ -7,15 +7,12 @@
 package org.hibernate.loader.ast.internal;
 
 import org.hibernate.LockOptions;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.ast.spi.SingleIdEntityLoader;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.named.NamedQueryMemento;
-import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.spi.QueryImplementor;
-import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 
 /**
  * Implementation of SingleIdEntityLoader for cases where the application has
@@ -29,27 +26,9 @@ public class SingleIdEntityLoaderProvidedQueryImpl<T> implements SingleIdEntityL
 
 	public SingleIdEntityLoaderProvidedQueryImpl(
 			EntityMappingType entityDescriptor,
-			String loadQueryName,
-			SessionFactoryImplementor sessionFactory) {
+			NamedQueryMemento namedQueryMemento) {
 		this.entityDescriptor = entityDescriptor;
-
-		this.namedQueryMemento = resolveNamedQuery( loadQueryName, sessionFactory );
-		if ( namedQueryMemento == null ) {
-			throw new IllegalArgumentException( "Could not resolve named load-query [" + entityDescriptor.getEntityName() + "] : " + loadQueryName );
-		}
-	}
-
-	private static NamedQueryMemento resolveNamedQuery(
-			String queryName,
-			SessionFactoryImplementor sf) {
-		final NamedObjectRepository namedObjectRepository = sf.getQueryEngine().getNamedObjectRepository();
-
-		final NamedNativeQueryMemento nativeQueryMemento = namedObjectRepository.getNativeQueryMemento( queryName );
-		if ( nativeQueryMemento != null ) {
-			return nativeQueryMemento;
-		}
-
-		return namedObjectRepository.getHqlQueryMemento( queryName );
+		this.namedQueryMemento = namedQueryMemento;
 	}
 
 	@Override
@@ -65,7 +44,7 @@ public class SingleIdEntityLoaderProvidedQueryImpl<T> implements SingleIdEntityL
 				entityDescriptor.getMappedJavaTypeDescriptor().getJavaTypeClass()
 		);
 
-		query.setParameter( 0, pkValue );
+		query.setParameter( 1, pkValue );
 
 		return query.uniqueResult();
 	}

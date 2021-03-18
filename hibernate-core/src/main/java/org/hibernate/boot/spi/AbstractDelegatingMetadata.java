@@ -140,6 +140,11 @@ public abstract class AbstractDelegatingMetadata implements MetadataImplementor 
 	}
 
 	@Override
+	public NamedProcedureCallDefinition getNamedProcedureCallMapping(String name) {
+		return delegate.getNamedProcedureCallMapping( name );
+	}
+
+	@Override
 	public void visitNamedProcedureCallDefinition(Consumer<NamedProcedureCallDefinition> definitionConsumer) {
 		delegate.visitNamedProcedureCallDefinition( definitionConsumer );
 	}

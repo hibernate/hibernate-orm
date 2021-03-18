@@ -137,6 +137,13 @@ public interface Metadata extends Mapping {
 	void visitNamedNativeQueryDefinitions(Consumer<NamedNativeQueryDefinition> definitionConsumer);
 
 	/**
+	 * Retrieve named procedure metadata.
+	 *
+	 * @return The named procedure metadata, or {@code null}
+	 */
+	NamedProcedureCallDefinition getNamedProcedureCallMapping(String name);
+
+	/**
 	 * Visit all named callable query definitions
 	 */
 	void visitNamedProcedureCallDefinition(Consumer<NamedProcedureCallDefinition> definitionConsumer);

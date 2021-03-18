@@ -23,21 +23,21 @@ import org.hibernate.internal.util.collections.BoundedConcurrentHashMap;
  *
  * @author Sanne Grinovero
  */
-final class StatsNamedContainer<V> {
+public final class StatsNamedContainer<V> {
 
 	private final ConcurrentMap<String,V> map;
 
 	/**
 	 * Creates a bounded container - based on BoundedConcurrentHashMap
 	 */
-	StatsNamedContainer(int capacity, int concurrencyLevel) {
+	public StatsNamedContainer(int capacity, int concurrencyLevel) {
 		this.map = new BoundedConcurrentHashMap( capacity, concurrencyLevel, BoundedConcurrentHashMap.Eviction.LRU );
 	}
 
 	/**
 	 * Creates an unbounded container - based on ConcurrentHashMap
 	 */
-	StatsNamedContainer() {
+	public StatsNamedContainer() {
 		this.map = new ConcurrentHashMap<>(  );
 	}
 

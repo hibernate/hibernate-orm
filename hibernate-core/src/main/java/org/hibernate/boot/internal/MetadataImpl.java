@@ -252,6 +252,11 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
+	public NamedProcedureCallDefinition getNamedProcedureCallMapping(String name) {
+		return namedProcedureCallMap.get( name );
+	}
+
+	@Override
 	public void visitNamedProcedureCallDefinition(Consumer<NamedProcedureCallDefinition> definitionConsumer) {
 		namedProcedureCallMap.values().forEach( definitionConsumer );
 	}

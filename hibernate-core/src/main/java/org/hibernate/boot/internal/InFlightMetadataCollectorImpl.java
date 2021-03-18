@@ -635,6 +635,11 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 
 	@Override
+	public NamedProcedureCallDefinition getNamedProcedureCallMapping(String name) {
+		return namedProcedureCallMap.get( name );
+	}
+
+	@Override
 	public void visitNamedProcedureCallDefinition(Consumer<NamedProcedureCallDefinition> definitionConsumer) {
 		namedProcedureCallMap.values().forEach( definitionConsumer );
 	}

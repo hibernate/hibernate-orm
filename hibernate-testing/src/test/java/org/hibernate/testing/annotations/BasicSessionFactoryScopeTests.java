@@ -6,19 +6,18 @@
  */
 package org.hibernate.testing.annotations;
 
-import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.H2Dialect;
 
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
 
-@ServiceRegistry( settings = @Setting( name = AvailableSettings.URL, value = "jdbc:h2:mem:test_db" ) )
+@RequiresDialect(H2Dialect.class)
 @DomainModel( annotatedClasses = AnEntity.class )
 @SessionFactory
 public class BasicSessionFactoryScopeTests {

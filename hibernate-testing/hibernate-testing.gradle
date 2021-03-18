@@ -35,11 +35,6 @@ dependencies {
     testRuntime( libraries.log4j )
 }
 
-// resources inherently exclude sources
-sourceSets.test.resources {
-    setSrcDirs( ['src/test/java'] )
-}
-
 // todo : Fold into hibernate-core and publish in separate publications
 // 		once http://issues.gradle.org/browse/GRADLE-2966 is resolved;
 //		that will allow us to keep the same artifactId and publish the pom

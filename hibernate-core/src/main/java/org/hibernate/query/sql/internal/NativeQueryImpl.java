@@ -289,12 +289,13 @@ public class NativeQueryImpl<R>
 					sqlString,
 					s -> {
 						final ParameterRecognizerImpl parameterRecognizer = new ParameterRecognizerImpl( session.getFactory() );
+						final String sql = new SQLQueryParser( sqlString, null, session.getFactory() ).process();
 
 						session.getFactory().getServiceRegistry()
 								.getService( NativeQueryInterpreter.class )
-								.recognizeParameters( sqlString, parameterRecognizer );
+								.recognizeParameters( sql, parameterRecognizer );
 
-						return new ParameterInterpretationImpl( sqlString, parameterRecognizer );
+						return new ParameterInterpretationImpl( sql, parameterRecognizer );
 					}
 			);
 	}

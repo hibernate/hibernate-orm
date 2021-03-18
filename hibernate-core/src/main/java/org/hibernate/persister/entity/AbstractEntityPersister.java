@@ -135,6 +135,7 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.DependantValue;
+import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -188,6 +189,8 @@ import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.named.NamedQueryMemento;
+import org.hibernate.query.sql.internal.SQLQueryParser;
 import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.Alias;
@@ -748,10 +751,15 @@ public abstract class AbstractEntityPersister
 		rowIdName = bootDescriptor.getRootTable().getRowId();
 
 		if ( bootDescriptor.getLoaderName() != null ) {
+			// We must resolve the named query on-demand through the boot model because it isn't initialized yet
+			final NamedQueryMemento namedQueryMemento = factory.getQueryEngine().getNamedObjectRepository()
+					.resolve( factory, creationContext.getBootModel(), bootDescriptor.getLoaderName() );
+			if ( namedQueryMemento == null ) {
+				throw new IllegalArgumentException( "Could not resolve named load-query [" + getEntityName() + "] : " + bootDescriptor.getLoaderName() );
+			}
 			singleIdEntityLoader = new SingleIdEntityLoaderProvidedQueryImpl(
 					this,
-					bootDescriptor.getLoaderName(),
-					factory
+					namedQueryMemento
 			);
 		}
 		else if ( batchSize > 1 ) {
@@ -849,8 +857,7 @@ public abstract class AbstractEntityPersister
 				colAliases[k] = thing.getAlias( dialect, prop.getValue().getTable() );
 				if ( thing.isFormula() ) {
 					foundFormula = true;
-					// ( (Formula) thing ).setFormula( substituteBrackets( ( (Formula) thing ).getFormula() ) );
-					// TODO: uncomment the above statement when this#substituteBrackets(String) is implemented
+					( (Formula) thing ).setFormula( substituteBrackets( ( (Formula) thing ).getFormula() ) );
 					formulaTemplates[k] = thing.getTemplate( dialect, factory.getQueryEngine().getSqmFunctionRegistry() );
 				}
 				else {
@@ -4562,7 +4569,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	private String substituteBrackets(String sql) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		return new SQLQueryParser( sql, null, getFactory() ).process();
 	}
 
 	public final void postInstantiate() throws MappingException {

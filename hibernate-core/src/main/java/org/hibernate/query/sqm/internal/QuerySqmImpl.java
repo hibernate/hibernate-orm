@@ -45,6 +45,7 @@ import org.hibernate.query.spi.HqlInterpretation;
 import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
@@ -110,8 +111,14 @@ public class QuerySqmImpl<R>
 		this.hqlString = memento.getHqlString();
 
 		final SessionFactoryImplementor factory = producer.getFactory();
+		final QueryEngine queryEngine = factory.getQueryEngine();
+		final QueryInterpretationCache interpretationCache = queryEngine.getInterpretationCache();
+		final HqlInterpretation hqlInterpretation = interpretationCache.resolveHqlInterpretation(
+				hqlString,
+				s -> queryEngine.getHqlTranslator().translate( hqlString )
+		);
 
-		this.sqmStatement = factory.getQueryEngine().getHqlTranslator().translate( hqlString );
+		this.sqmStatement = hqlInterpretation.getSqmStatement();
 
 		if ( resultType != null ) {
 			if ( sqmStatement instanceof SqmDmlStatement ) {
@@ -119,15 +126,8 @@ public class QuerySqmImpl<R>
 			}
 		}
 		this.resultType = resultType;
-
-		if ( sqmStatement.getSqmParameters().isEmpty() ) {
-			this.domainParameterXref = DomainParameterXref.empty();
-			this.parameterMetadata = ParameterMetadataImpl.EMPTY;
-		}
-		else {
-			this.domainParameterXref = DomainParameterXref.from( sqmStatement );
-			this.parameterMetadata = new ParameterMetadataImpl( domainParameterXref.getQueryParameters() );
-		}
+		this.domainParameterXref = hqlInterpretation.getDomainParameterXref();
+		this.parameterMetadata = hqlInterpretation.getParameterMetadata();
 
 		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, producer.getFactory() );
 

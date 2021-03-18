@@ -111,6 +111,7 @@ import org.hibernate.persister.entity.Loadable;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.proxy.HibernateProxyHelper;
+import org.hibernate.query.QueryLogging;
 import org.hibernate.query.hql.spi.HqlQueryImplementor;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryImplementor;
@@ -312,7 +313,18 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			this.queryEngine.prepare( this, bootMetamodel, bootstrapContext );
 
 			if ( options.isNamedQueryStartupCheckingEnabled() ) {
-				queryEngine.getNamedObjectRepository().checkNamedQueries( queryEngine );
+				final Map<String, HibernateException> errors = queryEngine.getNamedObjectRepository().checkNamedQueries( queryEngine );
+
+				if ( !errors.isEmpty() ) {
+					StringBuilder failingQueries = new StringBuilder( "Errors in named queries: " );
+					String sep = "";
+					for ( Map.Entry<String, HibernateException> entry : errors.entrySet() ) {
+						QueryLogging.QUERY_MESSAGE_LOGGER.namedQueryError( entry.getKey(), entry.getValue() );
+						failingQueries.append( sep ).append( entry.getKey() );
+						sep = ", ";
+					}
+					throw new HibernateException( failingQueries.toString() );
+				}
 			}
 
 			SchemaManagementToolCoordinator.process(
@@ -814,7 +826,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			cacheAccess.close();
 		}
 
-		if ( runtimeMetamodels != null ) {
+		if ( runtimeMetamodels != null && runtimeMetamodels.getMappingMetamodel() != null ) {
 			final JdbcConnectionAccess jdbcConnectionAccess = jdbcServices.getBootstrapJdbcConnectionAccess();
 			runtimeMetamodels.getMappingMetamodel().visitEntityDescriptors(
 					entityPersister -> {

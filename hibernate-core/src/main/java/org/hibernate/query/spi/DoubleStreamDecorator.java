@@ -47,7 +47,7 @@ public class DoubleStreamDecorator implements DoubleStream {
 			DoubleStream delegate,
 			Runnable closeHandler) {
 		this.closeHandler = closeHandler;
-		this.delegate = delegate.onClose(closeHandler);
+		this.delegate = delegate.onClose( closeHandler );
 	}
 
 	@Override
@@ -290,7 +290,7 @@ public class DoubleStreamDecorator implements DoubleStream {
 
 	@Override
 	public DoubleStream onClose(Runnable closeHandler) {
-		this.delegate.onClose(closeHandler);
+		this.delegate.onClose( closeHandler );
 		return this;
 	}
 

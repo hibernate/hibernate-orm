@@ -52,7 +52,7 @@ public class StreamDecorator<R> implements Stream<R> {
 			Stream<R> delegate,
 			Runnable closeHandler) {
 		this.closeHandler = closeHandler;
-		this.delegate = delegate.onClose(closeHandler);
+		this.delegate = delegate.onClose( closeHandler );
 	}
 
 	@Override
@@ -299,7 +299,7 @@ public class StreamDecorator<R> implements Stream<R> {
 
 	@Override
 	public Stream<R> onClose(Runnable closeHandler) {
-		this.delegate.onClose(closeHandler);
+		this.delegate.onClose( closeHandler );
 		return this;
 	}
 

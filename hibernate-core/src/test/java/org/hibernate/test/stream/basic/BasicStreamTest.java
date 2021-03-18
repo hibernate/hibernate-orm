@@ -26,7 +26,7 @@ import org.junit.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsEqual.*;
+import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 
@@ -133,23 +133,40 @@ public class BasicStreamTest extends BaseNonConfigCoreFunctionalTestCase {
 		AtomicInteger onCloseCount = new AtomicInteger();
 
 		// mainly we want to make sure that closing the Stream releases the ScrollableResults too
-		assertThat( ( (SessionImplementor) session ).getJdbcCoordinator().getLogicalConnection().getResourceRegistry().hasRegisteredResources(), is( false ) );
-		assertThat(onCloseCount.get(), equalTo(0));
+		assertThat( ( (SessionImplementor) session ).getJdbcCoordinator()
+							.getLogicalConnection()
+							.getResourceRegistry()
+							.hasRegisteredResources(), is( false ) );
 
-		final Stream<MyEntity> stream = session.createQuery( "from MyEntity", MyEntity.class ).stream().onClose(onCloseCount::incrementAndGet);
+		assertThat( onCloseCount.get(), equalTo( 0 ) );
 
-		assertThat( ( (SessionImplementor) session ).getJdbcCoordinator().getLogicalConnection().getResourceRegistry().hasRegisteredResources(), is( true ) );
-		assertThat(onCloseCount.get(), equalTo(0));
+		final Stream<MyEntity> stream = session.createQuery( "from MyEntity", MyEntity.class ).stream().onClose(
+				onCloseCount::incrementAndGet );
+
+		assertThat( ( (SessionImplementor) session ).getJdbcCoordinator()
+							.getLogicalConnection()
+							.getResourceRegistry()
+							.hasRegisteredResources(), is( true ) );
+
+		assertThat( onCloseCount.get(), equalTo( 0 ) );
 
 		stream.forEach( System.out::println );
 
-		assertThat( ( (SessionImplementor) session ).getJdbcCoordinator().getLogicalConnection().getResourceRegistry().hasRegisteredResources(), is( false ) );
-		assertThat(onCloseCount.get(), equalTo(1));
+		assertThat( ( (SessionImplementor) session ).getJdbcCoordinator()
+							.getLogicalConnection()
+							.getResourceRegistry()
+							.hasRegisteredResources(), is( false ) );
+
+		assertThat( onCloseCount.get(), equalTo( 1 ) );
 
 		stream.close();
 
-		assertThat( ( (SessionImplementor) session ).getJdbcCoordinator().getLogicalConnection().getResourceRegistry().hasRegisteredResources(), is( false ) );
-		assertThat(onCloseCount.get(), equalTo(1));
+		assertThat( ( (SessionImplementor) session ).getJdbcCoordinator()
+							.getLogicalConnection()
+							.getResourceRegistry()
+							.hasRegisteredResources(), is( false ) );
+
+		assertThat( onCloseCount.get(), equalTo( 1 ) );
 
 		session.getTransaction().commit();
 		session.close();

@@ -48,7 +48,7 @@ public class IntStreamDecorator implements IntStream {
 			IntStream delegate,
 			Runnable closeHandler) {
 		this.closeHandler = closeHandler;
-		this.delegate = delegate.onClose(closeHandler);
+		this.delegate = delegate.onClose( closeHandler );
 	}
 
 	@Override
@@ -305,7 +305,7 @@ public class IntStreamDecorator implements IntStream {
 
 	@Override
 	public IntStream onClose(Runnable closeHandler) {
-		this.delegate.onClose(closeHandler);
+		this.delegate.onClose( closeHandler );
 		return this;
 	}
 

@@ -6,32 +6,40 @@
  */
 package org.hibernate.test.stream.basic;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
 import org.hibernate.Session;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.resource.jdbc.ResourceRegistry;
+
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Steve Ebersole
@@ -107,9 +115,9 @@ public class JpaStreamTest extends BaseNonConfigCoreFunctionalTestCase {
 		this.runTerminalOperationTests(
 				() -> {
 					// prepare
-					onClose1Count.set(0);
-					onClose2Count.set(0);
-					onClose3Count.set(0);
+					onClose1Count.set( 0 );
+					onClose2Count.set( 0 );
+					onClose3Count.set( 0 );
 				},
 				Arrays.asList(
 						onClose1Count::incrementAndGet, // onClose1 logic
@@ -118,9 +126,9 @@ public class JpaStreamTest extends BaseNonConfigCoreFunctionalTestCase {
 				),
 				() -> {
 					// assertion
-					assertThat(onClose1Count).hasValue(1);
-					assertThat(onClose2Count).hasValue(1);
-					assertThat(onClose3Count).hasValue(1);
+					assertThat( onClose1Count ).hasValue( 1 );
+					assertThat( onClose2Count ).hasValue( 1 );
+					assertThat( onClose3Count ).hasValue( 1 );
 				},
 				false, // no flatMap before onClose
 				false // no flatMap after onClose
@@ -129,9 +137,9 @@ public class JpaStreamTest extends BaseNonConfigCoreFunctionalTestCase {
 		this.runTerminalOperationTests(
 				() -> {
 					// prepare
-					onClose1Count.set(0);
-					onClose2Count.set(0);
-					onClose3Count.set(0);
+					onClose1Count.set( 0 );
+					onClose2Count.set( 0 );
+					onClose3Count.set( 0 );
 				},
 				Arrays.asList(
 						onClose1Count::incrementAndGet, // onClose1 logic
@@ -140,9 +148,9 @@ public class JpaStreamTest extends BaseNonConfigCoreFunctionalTestCase {
 				),
 				() -> {
 					// assertion
-					assertThat(onClose1Count).hasValue(1);
-					assertThat(onClose2Count).hasValue(1);
-					assertThat(onClose3Count).hasValue(1);
+					assertThat( onClose1Count ).hasValue( 1 );
+					assertThat( onClose2Count ).hasValue( 1 );
+					assertThat( onClose3Count ).hasValue( 1 );
 				},
 				true, // run a flatMap operation before onClose
 				false // no flatMap after onClose
@@ -151,9 +159,9 @@ public class JpaStreamTest extends BaseNonConfigCoreFunctionalTestCase {
 		this.runTerminalOperationTests(
 				() -> {
 					// prepare
-					onClose1Count.set(0);
-					onClose2Count.set(0);
-					onClose3Count.set(0);
+					onClose1Count.set( 0 );
+					onClose2Count.set( 0 );
+					onClose3Count.set( 0 );
 				},
 				Arrays.asList(
 						onClose1Count::incrementAndGet, // onClose1 logic
@@ -162,9 +170,9 @@ public class JpaStreamTest extends BaseNonConfigCoreFunctionalTestCase {
 				),
 				() -> {
 					// assertion
-					assertThat(onClose1Count).hasValue(1);
-					assertThat(onClose2Count).hasValue(1);
-					assertThat(onClose3Count).hasValue(1);
+					assertThat( onClose1Count ).hasValue( 1 );
+					assertThat( onClose2Count ).hasValue( 1 );
+					assertThat( onClose3Count ).hasValue( 1 );
 				},
 				false, // no flatMap before onClose
 				true // run a flatMap operation after onClose
@@ -173,9 +181,9 @@ public class JpaStreamTest extends BaseNonConfigCoreFunctionalTestCase {
 		this.runTerminalOperationTests(
 				() -> {
 					// prepare
-					onClose1Count.set(0);
-					onClose2Count.set(0);
-					onClose3Count.set(0);
+					onClose1Count.set( 0 );
+					onClose2Count.set( 0 );
+					onClose3Count.set( 0 );
 				},
 				Arrays.asList(
 						onClose1Count::incrementAndGet, // onClose1 logic
@@ -184,9 +192,9 @@ public class JpaStreamTest extends BaseNonConfigCoreFunctionalTestCase {
 				),
 				() -> {
 					// assertion
-					assertThat(onClose1Count).hasValue(1);
-					assertThat(onClose2Count).hasValue(1);
-					assertThat(onClose3Count).hasValue(1);
+					assertThat( onClose1Count ).hasValue( 1 );
+					assertThat( onClose2Count ).hasValue( 1 );
+					assertThat( onClose3Count ).hasValue( 1 );
 				},
 				true, // run a flatMap operation before onClose
 				true // run a flatMap operation after onClose
@@ -416,13 +424,35 @@ public class JpaStreamTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	private static Stream<MyEntity> getMyEntityStream(
-			Runnable prepare, Session session, List<Runnable> onCloseCallbacks, boolean flatMapBefore, boolean flatMapAfter) {
-		return getStream(prepare, session, "SELECT me FROM MyEntity me", onCloseCallbacks, flatMapBefore, flatMapAfter);
+			Runnable prepare,
+			Session session,
+			List<Runnable> onCloseCallbacks,
+			boolean flatMapBefore,
+			boolean flatMapAfter) {
+		return getStream(
+				prepare,
+				session,
+				"SELECT me FROM MyEntity me",
+				onCloseCallbacks,
+				flatMapBefore,
+				flatMapAfter
+		);
 	}
 
 	private static Stream<Long> getLongStream(
-			Runnable prepare, Session session, List<Runnable> onCloseCallbacks, boolean flatMapBefore, boolean flatMapAfter) {
-		return getStream(prepare, session, "SELECT me.id FROM MyEntity me", onCloseCallbacks, flatMapBefore, flatMapAfter);
+			Runnable prepare,
+			Session session,
+			List<Runnable> onCloseCallbacks,
+			boolean flatMapBefore,
+			boolean flatMapAfter) {
+		return getStream(
+				prepare,
+				session,
+				"SELECT me.id FROM MyEntity me",
+				onCloseCallbacks,
+				flatMapBefore,
+				flatMapAfter
+		);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -432,18 +462,18 @@ public class JpaStreamTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		prepare.run();
 
-		Stream<T> stream = session.createQuery(queryString).getResultStream();
+		Stream<T> stream = session.createQuery( queryString ).getResultStream();
 
-		if(flatMapBefore) {
-			stream = stream.flatMap(Stream::of);
+		if ( flatMapBefore ) {
+			stream = stream.flatMap( Stream::of );
 		}
 
-		for (Runnable callback : onCloseCallbacks) {
-			stream = stream.onClose(callback);
+		for ( Runnable callback : onCloseCallbacks ) {
+			stream = stream.onClose( callback );
 		}
 
-		if(flatMapAfter) {
-			stream = stream.flatMap(Stream::of);
+		if ( flatMapAfter ) {
+			stream = stream.flatMap( Stream::of );
 		}
 
 		return stream;

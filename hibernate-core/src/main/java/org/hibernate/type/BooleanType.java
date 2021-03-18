@@ -62,11 +62,19 @@ public class BooleanType
 	@Override
 	public <X> BasicType<X> resolveIndicatedType(SqlTypeDescriptorIndicators indicators) {
 		final int preferredSqlTypeCodeForBoolean = indicators.getPreferredSqlTypeCodeForBoolean();
+		final SqlTypeDescriptor sqlTypeDescriptor;
 		// We treat BIT like BOOLEAN because it uses the same JDBC access methods
 		if ( preferredSqlTypeCodeForBoolean != Types.BIT && preferredSqlTypeCodeForBoolean != getSqlTypeDescriptor().getJdbcTypeCode() ) {
-			final SqlTypeDescriptor sqlTypeDescriptor = indicators.getTypeConfiguration()
+			sqlTypeDescriptor = indicators.getTypeConfiguration()
 					.getSqlTypeDescriptorRegistry()
 					.getDescriptor( preferredSqlTypeCodeForBoolean );
+		}
+		else {
+			sqlTypeDescriptor = indicators.getTypeConfiguration()
+					.getSqlTypeDescriptorRegistry()
+					.getDescriptor( Types.BOOLEAN );
+		}
+		if ( sqlTypeDescriptor != getSqlTypeDescriptor() ) {
 			//noinspection unchecked
 			return (BasicType<X>) indicators.getTypeConfiguration()
 					.getBasicTypeRegistry()

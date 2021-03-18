@@ -105,11 +105,11 @@ task assembleDocumentation(type: Task, dependsOn: [rootProject.project( 'documen
     }
 }
 
-task assembleProjectTemplates(type:Copy, dependsOn: project( ":project-template" ).tasks.assembleDist) {
-    def templateProject = project( ":project-template" )
-    from templateProject.layout.buildDirectory.dir( "distributions" )
-    into projectTemplateStagingDir
-}
+//task assembleProjectTemplates(type:Copy, dependsOn: project( ":project-template" ).tasks.assembleDist) {
+//    def templateProject = project( ":project-template" )
+//    from templateProject.layout.buildDirectory.dir( "distributions" )
+//    into projectTemplateStagingDir
+//}
 
 /**
  * Upload the documentation to the JBoss doc server

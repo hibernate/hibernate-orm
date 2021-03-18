@@ -10,7 +10,6 @@ import java.lang.reflect.Field;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.query.QueryLogging;
 import org.hibernate.query.hql.HqlLogging;
 import org.hibernate.query.hql.spi.DotIdentifierConsumer;
 import org.hibernate.query.hql.spi.SemanticPathPart;
@@ -29,8 +28,6 @@ import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
-
-import org.jboss.logging.Logger;
 
 /**
  * @asciidoc
@@ -154,7 +151,7 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 					}
 					else {
 						pathRootByExposedNavigable.registerImplicitJoinPath( sqmPath );
-						return new DomainPathPart( pathRootByExposedNavigable );
+						return new DomainPathPart( sqmPath );
 					}
 				}
 			}

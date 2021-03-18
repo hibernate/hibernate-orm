@@ -6,11 +6,14 @@
  */
 package org.hibernate.orm.test.query.criteria;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.ParameterExpression;
+import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Root;
 
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
@@ -37,6 +40,28 @@ public class CriteriaParameterTests {
 
 					final QueryImplementor<BasicEntity> query = session.createQuery( criteria );
 					query.setParameter( parameter, "fe" );
+					query.list();
+				}
+		);
+	}
+
+	@Test
+	public void testNamedParameterBaseline(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+					final ParameterExpression<Collection> parameter = criteriaBuilder.parameter( Collection.class, "datas" );
+					final CriteriaQuery<BasicEntity> criteria = criteriaBuilder.createQuery( BasicEntity.class );
+					final Root<BasicEntity> root = criteria.from( BasicEntity.class );
+					Path<?> property = root.get( "data" );
+					criteria.where( property.in( parameter ) );
+
+					final QueryImplementor<BasicEntity> query = session.createQuery( criteria );
+
+					List<String> parameterValue = new ArrayList<>();
+					parameterValue.add( "fe" );
+
+					query.setParameter( "datas", parameterValue );
 					query.list();
 				}
 		);

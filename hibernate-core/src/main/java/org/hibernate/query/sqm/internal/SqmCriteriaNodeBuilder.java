@@ -883,6 +883,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 		if ( Collection.class.isAssignableFrom( paramClass ) ) {
 			// a multi-valued parameter
 			return new JpaCriteriaParameter(
+					name,
 					new MultiValueParameterType<>( Collection.class ),
 					true,
 					this
@@ -892,6 +893,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 		if ( paramClass.isArray() ) {
 			// an array-valued, multi-valued parameter
 			return new JpaCriteriaParameter(
+					name,
 					new MultiValueParameterType( Object[].class ),
 					true,
 					this

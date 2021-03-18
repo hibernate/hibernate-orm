@@ -144,13 +144,19 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 					// identifier is an "unqualified attribute reference"
 					validateAsRoot( pathRootByExposedNavigable );
 
-					final SqmPathSource subPathSource = pathRootByExposedNavigable.getReferencedPathSource().findSubPathSource( identifier );
-					final SqmPath sqmPath = subPathSource.createSqmPath( pathRootByExposedNavigable, creationState );
+					SqmPath sqmPath = pathRootByExposedNavigable.getImplicitJoinPath( identifier );
+					if ( sqmPath == null ) {
+						final SqmPathSource subPathSource = pathRootByExposedNavigable.getReferencedPathSource()
+								.findSubPathSource( identifier );
+						sqmPath = subPathSource.createSqmPath( pathRootByExposedNavigable, creationState );
+						if ( !isTerminal ) {
+							pathRootByExposedNavigable.registerImplicitJoinPath( sqmPath );
+						}
+					}
 					if ( isTerminal ) {
 						return sqmPath;
 					}
 					else {
-						pathRootByExposedNavigable.registerImplicitJoinPath( sqmPath );
 						return new DomainPathPart( sqmPath );
 					}
 				}

@@ -3,6 +3,53 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.0.0.Alpha7 (March 18, 2021)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31878
+
+** Bug
+    * [HHH-14390] - StackOverflowError with @Fetch(FetchMode.SELECT) mapped for entity with an ID that is a bidirectional one-to-one eager association
+    * [HHH-14394] - Column "XYZ" must be in the GROUP BY list; SQL Error: 90016
+    * [HHH-14466] - StackOverflowError loading an entity with eager one-to-many if bidirectional and many-to-one side is the ID
+    * [HHH-14508] - Logging in debug mode gives an invalid conversion error in StandardRowReader.java
+
+** New Feature
+    * [HHH-1050] - HQL Unions
+    * [HHH-14188] - Enumerated "short name" handling in HQL
+    * [HHH-14285] - Create "project template"
+    * [HHH-14409] - Internal format of natural-id values
+
+** Task
+    * [HHH-14186] - @ColumnTransformer support
+    * [HHH-14192] - H2 compatibility: explicitly specify precision/scale for @Column in test
+    * [HHH-14195] - Generated DDL for UUID fields contains columns of length 255
+    * [HHH-14315] - Upgrade to Gradle 6.7 and use toolchains for per-JDK builds
+
+** Improvement
+    * [HHH-10282] - AttributeConverter for Enum within JPQL query
+    * [HHH-13077] - Optimize query plan call count
+    * [HHH-13658] - Make NO_PROXY unnecessary
+    * [HHH-13884] - Follow javax.persistence.criteria.Order.reverse() contract
+    * [HHH-14286] - Improvements to Hibernate's Gradle Plugin
+    * [HHH-14313] - New natural-id features
+    * [HHH-14318] - `@JoinFormula` and `@JoinColumnOrFormula` support
+    * [HHH-14452] - Support set operations in JPA Criteria API
+    * [HHH-14456] - Allow unwrap of DialectResolutionInfo to support detecting PostgreSQL forks
+    * [HHH-14478] - Allow DialectResolvers to be discovered by ServiceLoader
+
+** Sub-task
+    * [HHH-13757] - Second-level cache cleanup
+    * [HHH-14469] - Support schema-tooling on sub-sets of the relational model known to Hibernate
+    * [HHH-14491] - Apply default allocation/increment size for @GeneratedValue(AUTO)
+    * [HHH-14492] - Prefer sequence-per-entity (hierarchy) by default
+
+** Remove Feature
+    * [HHH-14450] - Drop ability to disable "enhanced proxies"
+
+
+
+
 Changes in 6.0.0.Alpha6 (August 20, 2020)
 ------------------------------------------------------------------------------------------------------------------------
 

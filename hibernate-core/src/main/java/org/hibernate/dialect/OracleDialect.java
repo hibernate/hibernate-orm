@@ -29,6 +29,7 @@ import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -56,11 +57,18 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorOracleDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.JdbcTypeNameMapper;
+import org.hibernate.type.descriptor.ValueBinder;
+import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.sql.BasicBinder;
 import org.hibernate.type.descriptor.sql.BlobTypeDescriptor;
+import org.hibernate.type.descriptor.sql.BooleanTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry;
 
 import java.sql.CallableStatement;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
@@ -69,6 +77,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.persistence.TemporalType;
+
+import org.jboss.logging.Logger;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.query.TemporalUnit.*;
@@ -642,6 +652,79 @@ public class OracleDialect extends Dialect {
 					BlobTypeDescriptor.DEFAULT;
 
 			typeContributions.contributeSqlTypeDescriptor( descriptor );
+		}
+		typeContributions.contributeSqlTypeDescriptor( new OracleBooleanTypeDescriptor() );
+	}
+
+	private static final class OracleBooleanTypeDescriptor extends BooleanTypeDescriptor {
+
+		private static final Logger log = CoreLogging.logger( BasicBinder.class );
+
+		@Override
+		public <X> ValueBinder<X> getBinder(JavaTypeDescriptor<X> javaTypeDescriptor) {
+			return new ValueBinder<X>() {
+
+				private static final String BIND_MSG_TEMPLATE = "binding parameter [%s] as [%s] - [%s]";
+				private static final String NULL_BIND_MSG_TEMPLATE = "binding parameter [%s] as [%s] - [null]";
+
+				@Override
+				public final void bind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
+					if ( value == null ) {
+						if ( log.isTraceEnabled() ) {
+							log.trace(
+									String.format(
+											NULL_BIND_MSG_TEMPLATE,
+											index,
+											JdbcTypeNameMapper.getTypeName( Types.BOOLEAN )
+									)
+							);
+						}
+						st.setNull( index, Types.BIT );
+					}
+					else {
+						if ( log.isTraceEnabled() ) {
+							log.trace(
+									String.format(
+											BIND_MSG_TEMPLATE,
+											index,
+											JdbcTypeNameMapper.getTypeName( Types.BOOLEAN ),
+											javaTypeDescriptor.extractLoggableRepresentation( value )
+									)
+							);
+						}
+						st.setBoolean( index, javaTypeDescriptor.unwrap( value, Boolean.class, options ) );
+					}
+				}
+
+				@Override
+				public final void bind(CallableStatement st, X value, String name, WrapperOptions options) throws SQLException {
+					if ( value == null ) {
+						if ( log.isTraceEnabled() ) {
+							log.trace(
+									String.format(
+											NULL_BIND_MSG_TEMPLATE,
+											name,
+											JdbcTypeNameMapper.getTypeName( Types.BOOLEAN )
+									)
+							);
+						}
+						st.setNull( name, Types.BIT );
+					}
+					else {
+						if ( log.isTraceEnabled() ) {
+							log.trace(
+									String.format(
+											BIND_MSG_TEMPLATE,
+											name,
+											JdbcTypeNameMapper.getTypeName( Types.BOOLEAN ),
+											javaTypeDescriptor.extractLoggableRepresentation( value )
+									)
+							);
+						}
+						st.setBoolean( name, javaTypeDescriptor.unwrap( value, Boolean.class, options ) );
+					}
+				}
+			};
 		}
 	}
 

@@ -49,7 +49,6 @@ import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.query.ComparisonOperator;
-import org.hibernate.query.FetchClauseType;
 import org.hibernate.query.Limit;
 import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.SortOrder;
@@ -69,7 +68,6 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.cte.CteColumn;
 import org.hibernate.sql.ast.tree.cte.CteContainer;
-import org.hibernate.sql.ast.tree.cte.CteSearchClauseKind;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.cte.SearchClauseSpecification;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
@@ -266,6 +264,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		@Override
 		public boolean useStreamForLobBinding() {
 			return sessionFactory.getFastSessionServices().useStreamForLobBinding();
+		}
+
+		@Override
+		public int getPreferredSqlTypeCodeForBoolean() {
+			return sessionFactory.getFastSessionServices().getPreferredSqlTypeCodeForBoolean();
 		}
 
 		@Override

@@ -1096,6 +1096,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public int getPreferredSqlTypeCodeForBoolean() {
+		return delegate.getPreferredSqlTypeCodeForBoolean();
+	}
+
+	@Override
 	public LobCreator getLobCreator() {
 		return delegate.getLobCreator();
 	}

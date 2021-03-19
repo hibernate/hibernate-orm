@@ -142,6 +142,7 @@ public final class FastSessionServices {
 	//Intentionally Package private:
 	final boolean disallowOutOfTransactionUpdateOperations;
 	final boolean useStreamForLobBinding;
+	final int preferredSqlTypeCodeForBoolean;
 	final boolean requiresMultiTenantConnectionProvider;
 	final ConnectionProvider connectionProvider;
 	final MultiTenantConnectionProvider multiTenantConnectionProvider;
@@ -210,6 +211,7 @@ public final class FastSessionServices {
 		this.dialect = jdbcServices.getJdbcEnvironment().getDialect();
 		this.disallowOutOfTransactionUpdateOperations = !sessionFactoryOptions.isAllowOutOfTransactionUpdateOperations();
 		this.useStreamForLobBinding = Environment.useStreamsForBinary() || dialect.useInputStreamToInsertBlob();
+		this.preferredSqlTypeCodeForBoolean = sessionFactoryOptions.getPreferredSqlTypeCodeForBoolean();
 		this.requiresMultiTenantConnectionProvider = sf.getSettings().getMultiTenancyStrategy().requiresMultiTenantConnectionProvider();
 
 		//Some "hot" services:
@@ -342,5 +344,9 @@ public final class FastSessionServices {
 
 	public void firePostLoadEvent(final PostLoadEvent postLoadEvent) {
 		eventListenerGroup_POST_LOAD.fireEventOnEachListener( postLoadEvent, PostLoadEventListener::onPostLoad );
+	}
+
+	public int getPreferredSqlTypeCodeForBoolean() {
+		return preferredSqlTypeCodeForBoolean;
 	}
 }

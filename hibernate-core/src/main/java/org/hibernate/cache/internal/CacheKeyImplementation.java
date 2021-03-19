@@ -9,6 +9,7 @@ package org.hibernate.cache.internal;
 import java.io.Serializable;
 import java.util.Objects;
 
+import org.hibernate.Internal;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.Type;
 
@@ -22,7 +23,8 @@ import org.hibernate.type.Type;
  * @author Gavin King
  * @author Steve Ebersole
  */
-final class CacheKeyImplementation implements Serializable {
+@Internal
+public final class CacheKeyImplementation implements Serializable {
 	private final Object id;
 	private final Type type;
 	private final String entityOrRoleName;
@@ -40,7 +42,8 @@ final class CacheKeyImplementation implements Serializable {
 	 * @param tenantId The tenant identifier associated with this data.
 	 * @param factory The session factory for which we are caching
 	 */
-	CacheKeyImplementation(
+	@Internal
+	public CacheKeyImplementation(
 			final Object id,
 			final Type type,
 			final String entityOrRoleName,

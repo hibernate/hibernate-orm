@@ -1,11 +1,14 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.internal.util;
+package org.hibernate.orm.test.internal.utils;
 
+import org.hibernate.internal.util.MathHelper;
+
+import org.junit.Assert;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -17,7 +20,7 @@ public class MathHelperTest {
 	
 	@Test
 	public void ceilingPowerOfTwo() {
-		assertEquals( 1, MathHelper.ceilingPowerOfTwo( 1 ) );
+		Assert.assertEquals( 1, MathHelper.ceilingPowerOfTwo( 1 ) );
 		assertEquals( 2, MathHelper.ceilingPowerOfTwo( 2 ) );
 		assertEquals( 4, MathHelper.ceilingPowerOfTwo( 3 ) );
 		assertEquals( 4, MathHelper.ceilingPowerOfTwo( 4 ) );

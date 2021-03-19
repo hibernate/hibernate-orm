@@ -12,6 +12,7 @@ import java.lang.reflect.Proxy;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.TimeZone;
 
 import org.hibernate.engine.jdbc.LobCreator;
@@ -96,6 +97,11 @@ public class MaterializedNClobBindTest {
 		@Override
 		public boolean useStreamForLobBinding() {
 			return useStreamForLobBinding;
+		}
+
+		@Override
+		public int getPreferredSqlTypeCodeForBoolean() {
+			return Types.BOOLEAN;
 		}
 
 		@Override

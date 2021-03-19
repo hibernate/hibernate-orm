@@ -64,6 +64,16 @@ public class BooleanTypeDescriptor implements JdbcTypeDescriptor {
 	public <X> ValueBinder<X> getBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 		return new BasicBinder<X>( javaTypeDescriptor, this ) {
 			@Override
+			protected void doBindNull(PreparedStatement st, int index, WrapperOptions options) throws SQLException {
+				st.setNull( index, options.getPreferredSqlTypeCodeForBoolean() );
+			}
+
+			@Override
+			protected void doBindNull(CallableStatement st, String name, WrapperOptions options) throws SQLException {
+				st.setNull( name, options.getPreferredSqlTypeCodeForBoolean() );;
+			}
+
+			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
 				st.setBoolean( index, javaTypeDescriptor.unwrap( value, Boolean.class, options ) );
 			}

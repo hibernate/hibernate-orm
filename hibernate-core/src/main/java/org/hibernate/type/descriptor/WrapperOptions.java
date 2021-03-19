@@ -34,6 +34,11 @@ public interface WrapperOptions {
 	boolean useStreamForLobBinding();
 
 	/**
+	 * Get the JDBC {@link java.sql.Types type code} used to bind a null boolean value
+	 */
+	int getPreferredSqlTypeCodeForBoolean();
+
+	/**
 	 * Obtain access to the {@link LobCreator}
 	 *
 	 * @return The LOB creator

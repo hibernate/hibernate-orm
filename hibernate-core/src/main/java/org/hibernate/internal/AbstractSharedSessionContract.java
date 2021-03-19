@@ -558,6 +558,11 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@Override
+	public int getPreferredSqlTypeCodeForBoolean() {
+		return fastSessionServices.preferredSqlTypeCodeForBoolean;
+	}
+
+	@Override
 	public LobCreator getLobCreator() {
 		return Hibernate.getLobCreator( this );
 	}

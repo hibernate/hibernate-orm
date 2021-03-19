@@ -55,7 +55,7 @@ public abstract class BasicBinder<J> implements ValueBinder<J> {
 						)
 				);
 			}
-			st.setNull( index, jdbcTypeDescriptor.getJdbcType() );
+			doBindNull( st, index, options );
 		}
 		else {
 			if ( JdbcBindingLogging.TRACE_ENABLED ) {
@@ -84,7 +84,7 @@ public abstract class BasicBinder<J> implements ValueBinder<J> {
 						)
 				);
 			}
-			st.setNull( name, jdbcTypeDescriptor.getJdbcType() );
+			doBindNull( st, name, options );
 		}
 		else {
 			if ( JdbcBindingLogging.TRACE_ENABLED ) {
@@ -99,6 +99,32 @@ public abstract class BasicBinder<J> implements ValueBinder<J> {
 			}
 			doBind( st, value, name, options );
 		}
+	}
+
+	/**
+	 * Perform the null binding.
+	 *
+	 * @param st The prepared statement
+	 * @param index The index at which to bind
+	 * @param options The binding options
+	 *
+	 * @throws SQLException Indicates a problem binding to the prepared statement.
+	 */
+	protected void doBindNull(PreparedStatement st, int index, WrapperOptions options) throws SQLException {
+		st.setNull( index, jdbcTypeDescriptor.getJdbcType() );
+	}
+
+	/**
+	 * Perform the null binding.
+	 *
+	 * @param st The CallableStatement
+	 * @param name The name at which to bind
+	 * @param options The binding options
+	 *
+	 * @throws SQLException Indicates a problem binding to the callable statement.
+	 */
+	protected void doBindNull(CallableStatement st, String name, WrapperOptions options) throws SQLException {
+		st.setNull( name, jdbcTypeDescriptor.getJdbcType() );
 	}
 
 	/**
@@ -122,7 +148,7 @@ public abstract class BasicBinder<J> implements ValueBinder<J> {
 	 * @param name The name at which to bind
 	 * @param options The binding options
 	 *
-	 * @throws SQLException Indicates a problem binding to the prepared statement.
+	 * @throws SQLException Indicates a problem binding to the callable statement.
 	 */
 	protected abstract void doBind(CallableStatement st, J value, String name, WrapperOptions options)
 			throws SQLException;

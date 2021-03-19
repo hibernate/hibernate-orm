@@ -2896,14 +2896,19 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	@Override
 	public SqmExpression<?> visitJpaNonStandardFunction(HqlParser.JpaNonStandardFunctionContext ctx) {
 		final String functionName = ctx.jpaNonStandardFunctionName().STRING_LITERAL().getText().toLowerCase();
-		List<SqmTypedNode<?>> functionArguments =
-				ctx.nonStandardFunctionArguments() == null ? emptyList() :
-						(List<SqmTypedNode<?>>) ctx.nonStandardFunctionArguments().accept( this );
+		//noinspection unchecked
+		final List<SqmTypedNode<?>> functionArguments = ctx.nonStandardFunctionArguments() == null
+				? emptyList()
+				: (List<SqmTypedNode<?>>) ctx.nonStandardFunctionArguments().accept( this );
 
 		SqmFunctionDescriptor functionTemplate = getFunctionDescriptor( functionName );
 		if (functionTemplate == null) {
-			functionTemplate = new NamedSqmFunctionDescriptor( functionName, true, null,
-					StandardFunctionReturnTypeResolvers.invariant( StandardBasicTypes.OBJECT_TYPE ) );
+			functionTemplate = new NamedSqmFunctionDescriptor(
+					functionName,
+					true,
+					null,
+					StandardFunctionReturnTypeResolvers.invariant( StandardBasicTypes.OBJECT_TYPE )
+			);
 		}
 		return functionTemplate.generateSqmExpression(
 				functionArguments,
@@ -2918,21 +2923,29 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		if ( creationOptions.useStrictJpaCompliance() ) {
 			throw new StrictJpaComplianceViolation(
 					"Encountered non-compliant non-standard function call [" +
-							ctx.nonStandardFunctionName() + "], but strict JPQL compliance was requested; use JPA's FUNCTION(functionName[,...]) syntax name instead",
+							ctx.nonStandardFunctionName() + "], but strict JPA " +
+							"compliance was requested; use JPA's FUNCTION(functionName[,...]) " +
+							"syntax name instead",
 					StrictJpaComplianceViolation.Type.FUNCTION_CALL
 			);
 		}
 
 		final String functionName = ctx.nonStandardFunctionName().getText().toLowerCase();
-		List<SqmTypedNode<?>> functionArguments =
-				ctx.nonStandardFunctionArguments() == null ? emptyList() :
-						(List<SqmTypedNode<?>>) ctx.nonStandardFunctionArguments().accept( this );
+		//noinspection unchecked
+		final List<SqmTypedNode<?>> functionArguments = ctx.nonStandardFunctionArguments() == null
+				? emptyList()
+				: (List<SqmTypedNode<?>>) ctx.nonStandardFunctionArguments().accept( this );
 
-		SqmFunctionDescriptor functionTemplate = getFunctionDescriptor(functionName);
-		if (functionTemplate == null) {
-			functionTemplate = new NamedSqmFunctionDescriptor( functionName, true, null,
-					StandardFunctionReturnTypeResolvers.invariant( StandardBasicTypes.OBJECT_TYPE ) );
+		SqmFunctionDescriptor functionTemplate = getFunctionDescriptor( functionName );
+		if ( functionTemplate == null ) {
+			functionTemplate = new NamedSqmFunctionDescriptor(
+					functionName,
+					true,
+					null,
+					StandardFunctionReturnTypeResolvers.invariant( StandardBasicTypes.OBJECT_TYPE )
+			);
 		}
+
 		return functionTemplate.generateSqmExpression(
 				functionArguments,
 				null,

@@ -1669,7 +1669,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	)
 	void applyingExplicitDiscriminatorColumnForJoined(String className, String overrideSetting);
 
-	// 458-466 reserved for use by master (ORM 5.0.0)
+	// 458-466 reserved for use by main branch (ORM 5.0.0)
 
 	@LogMessage(level = DEBUG)
 	@Message(value = "Creating pooled optimizer (lo) with [incrementSize=%s; returnClass=%s]", id = 467)

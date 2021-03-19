@@ -12,7 +12,7 @@ package org.hibernate.test.fileimport;
  */
 public class Dog {
 	private Integer id;
-	private Human master;
+	private Human owner;
 
 	public Integer getId() {
 		return id;
@@ -22,11 +22,11 @@ public class Dog {
 		this.id = id;
 	}
 
-	public Human getMaster() {
-		return master;
+	public Human getOwner() {
+		return owner;
 	}
 
-	public void setMaster(Human master) {
-		this.master = master;
+	public void setOwner(Human owner) {
+		this.owner = owner;
 	}
 }

@@ -13,7 +13,7 @@ import java.util.Set;
 
 public class Detail implements Serializable {
 	
-	private Master master;
+	private Root root;
 	private int i;
 	private Set details = new HashSet();
 	private int x;
@@ -25,12 +25,12 @@ public class Detail implements Serializable {
 		this.x = x;
 	}
 	
-	public Master getMaster() {
-		return master;
+	public Root getRoot() {
+		return root;
 	}
 	
-	public void setMaster(Master master) {
-		this.master = master;
+	public void setRoot(Root root) {
+		this.root = root;
 	}
 	
 	public int getI() {

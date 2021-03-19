@@ -24,27 +24,27 @@ import static org.junit.Assert.assertTrue;
  */
 public class FormulaJoinTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
-		return new String[] { "formulajoin/Master.hbm.xml" };
+		return new String[] { "formulajoin/Root.hbm.xml" };
 	}
 
 	@Test
 	public void testFormulaJoin() {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
-		Master master = new Master();
-		master.setName("master 1");
+		Root root = new Root();
+		root.setName("root 1");
 		Detail current = new Detail();
 		current.setCurrentVersion(true);
 		current.setVersion(2);
-		current.setDetails("details of master 1 blah blah");
-		current.setMaster(master);
-		master.setDetail(current);
+		current.setDetails("details of root 1 blah blah");
+		current.setRoot( root );
+		root.setDetail(current);
 		Detail past = new Detail();
 		past.setCurrentVersion(false);
 		past.setVersion(1);
-		past.setDetails("old details of master 1 yada yada");
-		past.setMaster(master);
-		s.persist(master);
+		past.setDetails("old details of root 1 yada yada");
+		past.setRoot( root );
+		s.persist( root );
 		s.persist(past);
 		s.persist(current);
 		tx.commit();
@@ -54,42 +54,42 @@ public class FormulaJoinTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		List l = s.createQuery("from Master m left join m.detail d").list();
+		List l = s.createQuery("from Root m left join m.detail d").list();
 		assertEquals( l.size(), 1 );
 		tx.commit();
 		s.close();
 		
 		s = openSession();
 		tx = s.beginTransaction();
-		l = s.createQuery("from Master m left join fetch m.detail").list();
+		l = s.createQuery("from Root m left join fetch m.detail").list();
 		assertEquals( l.size(), 1 );
-		Master m = (Master) l.get(0);
-		assertEquals( "master 1", m.getDetail().getMaster().getName() );
-		assertTrue( m==m.getDetail().getMaster() );
+		Root m = (Root) l.get(0);
+		assertEquals( "root 1", m.getDetail().getRoot().getName() );
+		assertTrue( m==m.getDetail().getRoot() );
 		tx.commit();
 		s.close();
 		
 		s = openSession();
 		tx = s.beginTransaction();
-		l = s.createQuery("from Master m join fetch m.detail").list();
+		l = s.createQuery("from Root m join fetch m.detail").list();
 		assertEquals( l.size(), 1 );
 		tx.commit();
 		s.close();
 		
 		s = openSession();
 		tx = s.beginTransaction();
-		l = s.createQuery("from Detail d join fetch d.currentMaster.master").list();
+		l = s.createQuery("from Detail d join fetch d.currentRoot.root").list();
 		assertEquals( l.size(), 2 );
 		tx.commit();
 		s.close();
 
 		s = openSession();
 		tx = s.beginTransaction();
-		l = s.createQuery("from Detail d join fetch d.currentMaster.master m join fetch m.detail").list();
+		l = s.createQuery("from Detail d join fetch d.currentRoot.root m join fetch m.detail").list();
 		assertEquals( l.size(), 2 );
 		
 		s.createQuery("delete from Detail").executeUpdate();
-		s.createQuery("delete from Master").executeUpdate();
+		s.createQuery("delete from Root").executeUpdate();
 		
 		tx.commit();
 		s.close();

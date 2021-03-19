@@ -9,11 +9,11 @@ name: Hibernate ORM build
 on:
   push:
     branches:
-      - 'master'
+      - 'main'
       - 'wip/6.0'
   pull_request:
     branches:
-      - 'master'
+      - 'main'
       - 'wip/6.0'
 jobs:
   build:

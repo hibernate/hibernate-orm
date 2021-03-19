@@ -169,7 +169,7 @@ hibernate.connection.url @DB_URL@
 
 #hibernate.dialect org.hibernate.dialect.InterbaseDialect
 #hibernate.connection.username sysdba
-#hibernate.connection.password masterkey
+#hibernate.connection.password thepass
 
 ## DO NOT specify hibernate.connection.sqlDialect
 

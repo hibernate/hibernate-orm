@@ -676,16 +676,16 @@ public class HqlParserTest {
 		parse( "from fo in class org.hibernate.test.Fo where fo.id.string like 'an instance of fo'" );
 		parse( "from org.hibernate.test.Inner" );
 		parse( "from org.hibernate.test.Outer o where o.id.detailId = ?" );
-		parse( "from org.hibernate.test.Outer o where o.id.master.id.sup.dudu is not null" );
-		parse( "from org.hibernate.test.Outer o where o.id.master.id.sup.id.akey is not null" );
-		parse( "select o.id.master.id.sup.dudu from org.hibernate.test.Outer o where o.id.master.id.sup.dudu is not null" );
-		parse( "select o.id.master.id.sup.id.akey from org.hibernate.test.Outer o where o.id.master.id.sup.id.akey is not null" );
-		parse( "from org.hibernate.test.Outer o where o.id.master.bla = ''" );
-		parse( "from org.hibernate.test.Outer o where o.id.master.id.one = ''" );
-		parse( "from org.hibernate.test.Inner inn where inn.id.bkey is not null and inn.backOut.id.master.id.sup.id.akey > 'a'" );
-		parse( "from org.hibernate.test.Outer as o left join o.id.master m left join m.id.sup where o.bubu is not null" );
-		parse( "from org.hibernate.test.Outer as o left join o.id.master.id.sup s where o.bubu is not null" );
-		parse( "from org.hibernate.test.Outer as o left join o.id.master m left join o.id.master.id.sup s where o.bubu is not null" );
+		parse( "from org.hibernate.test.Outer o where o.id.main.id.sup.dudu is not null" );
+		parse( "from org.hibernate.test.Outer o where o.id.main.id.sup.id.akey is not null" );
+		parse( "select o.id.main.id.sup.dudu from org.hibernate.test.Outer o where o.id.main.id.sup.dudu is not null" );
+		parse( "select o.id.main.id.sup.id.akey from org.hibernate.test.Outer o where o.id.main.id.sup.id.akey is not null" );
+		parse( "from org.hibernate.test.Outer o where o.id.main.bla = ''" );
+		parse( "from org.hibernate.test.Outer o where o.id.main.id.one = ''" );
+		parse( "from org.hibernate.test.Inner inn where inn.id.bkey is not null and inn.backOut.id.main.id.sup.id.akey > 'a'" );
+		parse( "from org.hibernate.test.Outer as o left join o.id.main m left join m.id.sup where o.bubu is not null" );
+		parse( "from org.hibernate.test.Outer as o left join o.id.main.id.sup s where o.bubu is not null" );
+		parse( "from org.hibernate.test.Outer as o left join o.id.main m left join o.id.main.id.sup s where o.bubu is not null" );
 		parse( "select fum1.fo from fum1 in class org.hibernate.test.Fum where fum1.fo.fum is not null" );
 		parse( "from fum1 in class org.hibernate.test.Fum where fum1.fo.fum is not null order by fum1.fo.fum" );
 		parse( "select elements(fum1.friends) from fum1 in class org.hibernate.test.Fum" );
@@ -696,7 +696,7 @@ public class HqlParserTest {
 		parse( "from org.hibernate.test.Up up order by up.id2 asc" );
 		parse( "from org.hibernate.test.Down down" );
 		parse( "from org.hibernate.test.Up up" );
-		parse( "from m in class org.hibernate.test.Master" );
+		parse( "from m in class org.hibernate.test.Root" );
 		parse( "from s in class org.hibernate.test.Several" );
 		parse( "from s in class org.hibernate.test.Single" );
 		parse( "\n" +
@@ -915,11 +915,11 @@ public class HqlParserTest {
 		parse( "from bar in class org.hibernate.test.Bar, foo in elements(bar.baz.fooSet)" );
 		parse( "from one in class org.hibernate.test.One, many in elements(one.manies) where one.id = 1 and many.id = 1" );
 		parse( "from org.hibernate.test.Inner _inner join _inner.middles middle" );
-		parse( "FROM m IN CLASS org.hibernate.test.Master WHERE NOT EXISTS ( FROM d IN elements(m.details) WHERE NOT d.i=5 )" );
-		parse( "FROM m IN CLASS org.hibernate.test.Master WHERE NOT 5 IN ( SELECT d.i FROM d IN elements(m.details) )" );
-		parse( "SELECT m FROM m IN CLASS org.hibernate.test.Master, d IN elements(m.details) WHERE d.i=5" );
-		parse( "SELECT m FROM m IN CLASS org.hibernate.test.Master, d IN elements(m.details) WHERE d.i=5" );
-		parse( "SELECT m.id FROM m IN CLASS org.hibernate.test.Master, d IN elements(m.details) WHERE d.i=5" );
+		parse( "FROM m IN CLASS org.hibernate.test.Root WHERE NOT EXISTS ( FROM d IN elements(m.details) WHERE NOT d.i=5 )" );
+		parse( "FROM m IN CLASS org.hibernate.test.Root WHERE NOT 5 IN ( SELECT d.i FROM d IN elements(m.details) )" );
+		parse( "SELECT m FROM m IN CLASS org.hibernate.test.Root, d IN elements(m.details) WHERE d.i=5" );
+		parse( "SELECT m FROM m IN CLASS org.hibernate.test.Root, d IN elements(m.details) WHERE d.i=5" );
+		parse( "SELECT m.id FROM m IN CLASS org.hibernate.test.Root, d IN elements(m.details) WHERE d.i=5" );
 		// I'm not sure about these... [jsd]
 //        parse("select bar.string, foo.string from bar in class org.hibernate.test.Bar inner join bar.baz as baz inner join elements(baz.fooSet) as foo where baz.name = 'name'");
 //        parse("select bar.string, foo.string from bar in class org.hibernate.test.Bar, bar.baz as baz, elements(baz.fooSet) as foo where baz.name = 'name'");

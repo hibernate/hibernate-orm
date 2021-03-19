@@ -3,6 +3,29 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.4.30.Final (March 19, 2021)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31927
+
+** Bug
+    * [HHH-14439] - QueryException: Unrecognized parameter label when executing the same query with subselects twice with different list parameters
+    * [HHH-12076] - Query not built properly when joining a table based on class
+
+** Improvement
+    * [HHH-14502] - Iterations and memory retention improvements for processing of PropertyContainer metadata
+    * [HHH-14485] - Upgrade integration tests to use Oracle JDBC driver version 21.1
+
+** New Feature
+    * [HHH-14454] - Create a spatial dialect for CockroachDB
+    * [HHH-14037] - Please make a PostgisPG10Dialect
+    * [HHH-4815] - Support orphan-removal for one-to-one inside component/@Embeddable
+
+** Task
+    * [HHH-14499] - Explicitly listing mapped classes which are @MappedSuperClass might break narrowing down of generics
+    * [HHH-14494] - Upgrade the PostgreSQL JDBC driver used for testing to v. 42.2.19
+
+
 Changes in 5.4.29.Final (March 03, 2021)
 ------------------------------------------------------------------------------------------------------------------------
 

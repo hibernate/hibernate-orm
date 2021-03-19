@@ -1,4 +1,10 @@
-package org.hibernate.boot.model.process.internal;
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ */
+package org.hibernate.orm.test.bootstrap.scanning;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -21,13 +27,17 @@ import org.hibernate.boot.archive.scan.spi.ScanParameters;
 import org.hibernate.boot.archive.scan.spi.ScanResult;
 import org.hibernate.boot.archive.scan.spi.Scanner;
 import org.hibernate.boot.archive.spi.InputStreamAccess;
+import org.hibernate.boot.internal.ClassmateContext;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
+import org.hibernate.boot.model.process.internal.ManagedResourcesImpl;
+import org.hibernate.boot.model.process.internal.ScanningCoordinator;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.XmlMappingBinderAccess;
 import org.hibernate.internal.CoreMessageLogger;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.logger.LoggerInspectionRule;
@@ -57,6 +67,7 @@ public class ScanningCoordinatorTest extends BaseUnitTestCase {
 	private ManagedResourcesImpl managedResources = Mockito.mock( ManagedResourcesImpl.class );
 	private ScanResult scanResult = Mockito.mock( ScanResult.class );
 	private BootstrapContext bootstrapContext = Mockito.mock( BootstrapContext.class );
+	private ClassmateContext classmateContext = new ClassmateContext();
 	private XmlMappingBinderAccess xmlMappingBinderAccess = Mockito.mock( XmlMappingBinderAccess.class );
 
 	private ScanEnvironment scanEnvironment = Mockito.mock( ScanEnvironment.class );
@@ -79,6 +90,7 @@ public class ScanningCoordinatorTest extends BaseUnitTestCase {
 		Mockito.reset( classLoaderService );
 
 		when( bootstrapContext.getScanEnvironment() ).thenReturn( scanEnvironment );
+		when( bootstrapContext.getClassmateContext() ).thenReturn( classmateContext );
 		when( bootstrapContext.getServiceRegistry() ).thenReturn( serviceRegistry );
 		when( serviceRegistry.getService( ClassLoaderService.class ) ).thenReturn( classLoaderService );
 

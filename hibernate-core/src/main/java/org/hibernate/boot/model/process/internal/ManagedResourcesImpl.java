@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.Internal;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
@@ -78,25 +79,30 @@ public class ManagedResourcesImpl implements ManagedResources {
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// package private
+	// @Internal
 
-	void addAttributeConverterDefinition(ConverterDescriptor descriptor) {
+	@Internal
+	public void addAttributeConverterDefinition(ConverterDescriptor descriptor) {
 		attributeConverterDescriptorMap.put( descriptor.getAttributeConverterClass(), descriptor );
 	}
 
-	void addAnnotatedClassReference(Class annotatedClassReference) {
+	@Internal
+	public void addAnnotatedClassReference(Class annotatedClassReference) {
 		annotatedClassReferences.add( annotatedClassReference );
 	}
 
-	void addAnnotatedClassName(String annotatedClassName) {
+	@Internal
+	public void addAnnotatedClassName(String annotatedClassName) {
 		annotatedClassNames.add( annotatedClassName );
 	}
 
-	void addAnnotatedPackageName(String annotatedPackageName) {
+	@Internal
+	public void addAnnotatedPackageName(String annotatedPackageName) {
 		annotatedPackageNames.add( annotatedPackageName );
 	}
 
-	void addXmlBinding(Binding binding) {
+	@Internal
+	public void addXmlBinding(Binding binding) {
 		mappingFileBindings.add( binding );
 	}
 }

@@ -9,7 +9,7 @@ package org.hibernate.jpa.test.schemagen.iso8859;
 import java.util.Map;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.jpa.test.schemagen.SchemaCreateDropUtf8WithoutHbm2DdlCharsetNameTest;
+import org.hibernate.orm.test.jpa.schemagen.SchemaCreateDropUtf8WithoutHbm2DdlCharsetNameTest;
 
 /**
  * @author Vlad Mihalcea

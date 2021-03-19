@@ -9,7 +9,7 @@ package org.hibernate.test.refresh;
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.jpa.test.refresh.TestEntity;
+import org.hibernate.orm.test.jpa.refresh.TestEntity;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Before;

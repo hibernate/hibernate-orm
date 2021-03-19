@@ -7,7 +7,7 @@
 package org.hibernate.test.refresh;
 
 import org.hibernate.Session;
-import org.hibernate.jpa.test.refresh.TestEntity;
+import org.hibernate.orm.test.jpa.refresh.TestEntity;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;

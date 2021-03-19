@@ -7,7 +7,6 @@
 package org.hibernate.orm.test.jpa.mapping;
 
 import java.util.Arrays;
-import java.util.List;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -19,7 +18,6 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.testing.orm.jpa.NonStringValueSettingProvider;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
-import org.hibernate.testing.orm.junit.Setting;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;

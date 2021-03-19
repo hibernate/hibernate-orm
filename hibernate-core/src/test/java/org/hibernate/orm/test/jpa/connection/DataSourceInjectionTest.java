@@ -27,8 +27,8 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.jpa.test.Distributor;
 import org.hibernate.jpa.test.Item;
-import org.hibernate.jpa.test.xml.Light;
-import org.hibernate.jpa.test.xml.Lighter;
+import org.hibernate.orm.test.jpa.xml.Light;
+import org.hibernate.orm.test.jpa.xml.Lighter;
 
 import org.hibernate.testing.util.jpa.PersistenceUnitInfoAdapter;
 import org.junit.jupiter.api.Assertions;

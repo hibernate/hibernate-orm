@@ -7,7 +7,7 @@
 package org.hibernate.jpa.test.schemagen.iso8859;
 
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.jpa.test.schemagen.JpaSchemaGeneratorTest;
+import org.hibernate.orm.test.jpa.schemagen.JpaSchemaGeneratorTest;
 
 import org.hibernate.testing.RequiresDialect;
 

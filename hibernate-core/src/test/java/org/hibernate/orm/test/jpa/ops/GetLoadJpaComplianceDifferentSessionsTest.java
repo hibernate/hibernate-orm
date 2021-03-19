@@ -15,8 +15,6 @@ import org.hibernate.jpa.boot.spi.Bootstrap;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit5.EntityManagerFactoryBasedFunctionalTest;
-import org.hibernate.testing.orm.junit.Jpa;
-import org.hibernate.testing.orm.junit.Setting;
 
 import org.junit.jupiter.api.Test;
 
@@ -27,10 +25,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author Vlad Mihalcea
  */
 @TestForIssue(jiraKey = "HHH-12273")
-@Jpa(
-		annotatedClasses = Workload.class,
-		integrationSettings = { @Setting(name = AvailableSettings.JPA_PROXY_COMPLIANCE, value = "false") }
-)
 public class GetLoadJpaComplianceDifferentSessionsTest extends EntityManagerFactoryBasedFunctionalTest {
 
 	@Override
@@ -87,6 +81,4 @@ public class GetLoadJpaComplianceDifferentSessionsTest extends EntityManagerFact
 
 		assertEquals( "Package", _workload.getName() );
 	}
-
 }
-

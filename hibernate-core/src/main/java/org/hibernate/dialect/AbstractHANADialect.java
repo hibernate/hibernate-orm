@@ -308,6 +308,11 @@ public abstract class AbstractHANADialect extends Dialect {
 		}
 
 		@Override
+		public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+			return BinaryStream.class;
+		}
+
+		@Override
 		public <X> ValueBinder<X> getBinder(JavaTypeDescriptor<X> javaTypeDescriptor) {
 			return new BasicBinder<X>( javaTypeDescriptor, this ) {
 
@@ -396,6 +401,11 @@ public abstract class AbstractHANADialect extends Dialect {
 		public HANAClobTypeDescriptor(int maxLobPrefetchSize, boolean useUnicodeStringTypes) {
 			this.maxLobPrefetchSize = maxLobPrefetchSize;
 			this.useUnicodeStringTypes = useUnicodeStringTypes;
+		}
+
+		@Override
+		public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+			return CharacterStream.class;
 		}
 
 		@Override
@@ -495,6 +505,11 @@ public abstract class AbstractHANADialect extends Dialect {
 		@Override
 		public String toString() {
 			return "HANANClobTypeDescriptor";
+		}
+
+		@Override
+		public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+			return CharacterStream.class;
 		}
 
 		@Override
@@ -600,6 +615,20 @@ public abstract class AbstractHANADialect extends Dialect {
 		@Override
 		public boolean canBeRemapped() {
 			return true;
+		}
+
+		@Override
+		public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+			return byte[].class;
+		}
+
+		@Override
+		public boolean needsWrapping(Class<?> type, WrapperOptions options) {
+			return type != byte[].class && (
+					options.useStreamForLobBinding() ?
+							hanaStreamBlobTypeDescriptor.needsWrapping( type, options ) :
+							BlobTypeDescriptor.BLOB_BINDING.needsWrapping( type, options )
+			);
 		}
 
 		@Override

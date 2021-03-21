@@ -6,6 +6,7 @@
  */
 package org.hibernate.type.descriptor.sql.internal;
 
+import org.hibernate.type.descriptor.sql.ArrayTypeDescriptor;
 import org.hibernate.type.descriptor.sql.BigIntTypeDescriptor;
 import org.hibernate.type.descriptor.sql.BinaryTypeDescriptor;
 import org.hibernate.type.descriptor.sql.BlobTypeDescriptor;
@@ -75,5 +76,7 @@ public class SqlTypeDescriptorBaseline {
 		target.addDescriptor( BlobTypeDescriptor.DEFAULT );
 		target.addDescriptor( ClobTypeDescriptor.DEFAULT );
 		target.addDescriptor( NClobTypeDescriptor.DEFAULT );
+
+		target.addDescriptor( ArrayTypeDescriptor.INSTANCE );
 	}
 }

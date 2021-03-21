@@ -12,7 +12,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -60,6 +59,16 @@ public class BooleanTypeDescriptor implements SqlTypeDescriptor {
 	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaTypeDescriptor<T> javaTypeDescriptor) {
 		//noinspection unchecked
 		return new JdbcLiteralFormatterBoolean( javaTypeDescriptor );
+	}
+
+	@Override
+	public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+		return Boolean.class;
+	}
+
+	@Override
+	public boolean needsWrapping(Class<?> type, WrapperOptions options) {
+		return type != Boolean.class;
 	}
 
 	public <X> ValueBinder<X> getBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {

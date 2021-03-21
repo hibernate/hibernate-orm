@@ -12,6 +12,7 @@ import java.sql.Types;
 import org.hibernate.query.CastType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -94,6 +95,21 @@ public interface SqlTypeDescriptor extends Serializable {
 	 * @return The appropriate extractor
 	 */
 	<X> ValueExtractor<X> getExtractor(JavaTypeDescriptor<X> javaTypeDescriptor);
+
+	/**
+	 * The Java type class that is preferred by the binder or null.
+	 */
+	default Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+		return null;
+	}
+
+	/**
+	 * Whether the given type might need wrapping by the binder.
+	 */
+	default boolean needsWrapping(Class<?> type, WrapperOptions options) {
+		final Class<?> preferredJavaTypeClass = getPreferredJavaTypeClass( options );
+		return preferredJavaTypeClass == null || !preferredJavaTypeClass.isAssignableFrom( type );
+	}
 
 	default boolean isInteger() {
 		switch ( getSqlType() ) {

@@ -67,6 +67,16 @@ public class AttributeConverterSqlTypeDescriptorAdapter implements SqlTypeDescri
 		return false;
 	}
 
+	@Override
+	public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+		return delegate.getPreferredJavaTypeClass( options );
+	}
+
+	@Override
+	public boolean needsWrapping(Class<?> type, WrapperOptions options) {
+		return delegate.needsWrapping( type, options );
+	}
+
 
 	// Binding ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

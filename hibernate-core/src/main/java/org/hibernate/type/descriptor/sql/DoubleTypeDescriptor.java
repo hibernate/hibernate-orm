@@ -57,6 +57,16 @@ public class DoubleTypeDescriptor implements SqlTypeDescriptor {
 	}
 
 	@Override
+	public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+		return Double.class;
+	}
+
+	@Override
+	public boolean needsWrapping(Class<?> type, WrapperOptions options) {
+		return type != Double.class;
+	}
+
+	@Override
 	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaTypeDescriptor<T> javaTypeDescriptor) {
 		//noinspection unchecked
 		return new JdbcLiteralFormatterNumericData( javaTypeDescriptor, Double.class );

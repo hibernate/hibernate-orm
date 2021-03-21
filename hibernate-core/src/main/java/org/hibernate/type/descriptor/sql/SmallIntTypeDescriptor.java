@@ -63,6 +63,16 @@ public class SmallIntTypeDescriptor implements SqlTypeDescriptor {
 	}
 
 	@Override
+	public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+		return Short.class;
+	}
+
+	@Override
+	public boolean needsWrapping(Class<?> type, WrapperOptions options) {
+		return type != Short.class;
+	}
+
+	@Override
 	public <X> ValueBinder<X> getBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 		return new BasicBinder<X>( javaTypeDescriptor, this ) {
 			@Override

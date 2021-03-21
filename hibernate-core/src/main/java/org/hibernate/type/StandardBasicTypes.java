@@ -30,6 +30,7 @@ import java.util.TimeZone;
 import java.util.UUID;
 
 import org.hibernate.type.descriptor.java.CharacterArrayTypeDescriptor;
+import org.hibernate.type.descriptor.java.GenericArrayTypeDescriptor;
 import org.hibernate.type.descriptor.java.PrimitiveCharacterArrayTypeDescriptor;
 import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
 import org.hibernate.type.descriptor.sql.NClobTypeDescriptor;
@@ -975,11 +976,18 @@ public final class StandardBasicTypes {
 
 	@SuppressWarnings("rawtypes")
 	private static void handle(
-			BasicType type,
+			BasicType<?> type,
 			String legacyTypeClassName,
 			BasicTypeRegistry basicTypeRegistry,
 			String... registrationKeys) {
 		basicTypeRegistry.addPrimeEntry( type, legacyTypeClassName, registrationKeys );
+		if ( type instanceof AbstractSingleColumnStandardBasicType<?> ) {
+			@SuppressWarnings("unchecked")
+			final BasicType<?> arrayType = new GenericArrayTypeDescriptor( type ).createType( type );
+			if ( arrayType != null ) {
+				basicTypeRegistry.addPrimeEntry( arrayType, null, arrayType.getRegistrationKeys() );
+			}
+		}
 	}
 
 }

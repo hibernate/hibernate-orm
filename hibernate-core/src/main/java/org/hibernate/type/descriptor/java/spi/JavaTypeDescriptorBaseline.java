@@ -46,6 +46,7 @@ import org.hibernate.type.descriptor.java.DateTypeDescriptor;
 import org.hibernate.type.descriptor.java.DoubleTypeDescriptor;
 import org.hibernate.type.descriptor.java.DurationJavaDescriptor;
 import org.hibernate.type.descriptor.java.FloatTypeDescriptor;
+import org.hibernate.type.descriptor.java.GenericArrayTypeDescriptor;
 import org.hibernate.type.descriptor.java.InstantJavaDescriptor;
 import org.hibernate.type.descriptor.java.IntegerTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -88,41 +89,41 @@ public class JavaTypeDescriptorBaseline {
 		primePrimitive( target, FloatTypeDescriptor.INSTANCE );
 		primePrimitive( target, DoubleTypeDescriptor.INSTANCE );
 
-		target.addBaselineDescriptor( BigDecimalTypeDescriptor.INSTANCE );
-		target.addBaselineDescriptor( BigIntegerTypeDescriptor.INSTANCE );
+		primeBasic( target, BigDecimalTypeDescriptor.INSTANCE );
+		primeBasic( target, BigIntegerTypeDescriptor.INSTANCE );
 
-		target.addBaselineDescriptor( StringTypeDescriptor.INSTANCE );
+		primeBasic( target, StringTypeDescriptor.INSTANCE );
 
-		target.addBaselineDescriptor( BlobTypeDescriptor.INSTANCE );
-		target.addBaselineDescriptor( ClobTypeDescriptor.INSTANCE );
-		target.addBaselineDescriptor( NClobTypeDescriptor.INSTANCE );
+		primeBasic( target, BlobTypeDescriptor.INSTANCE );
+		primeBasic( target, ClobTypeDescriptor.INSTANCE );
+		primeBasic( target, NClobTypeDescriptor.INSTANCE );
+
+		primeBasic( target, DurationJavaDescriptor.INSTANCE );
+		primeBasic( target, InstantJavaDescriptor.INSTANCE );
+		primeBasic( target, LocalDateJavaDescriptor.INSTANCE );
+		primeBasic( target, LocalDateTimeJavaDescriptor.INSTANCE );
+		primeBasic( target, OffsetDateTimeJavaDescriptor.INSTANCE );
+		primeBasic( target, OffsetTimeJavaDescriptor.INSTANCE );
+		primeBasic( target, ZonedDateTimeJavaDescriptor.INSTANCE );
+
+		primeBasic( target, CalendarTypeDescriptor.INSTANCE );
+		primeBasic( target, DateTypeDescriptor.INSTANCE );
+		primeBasic( target, java.sql.Date.class, JdbcDateTypeDescriptor.INSTANCE );
+		primeBasic( target, java.sql.Time.class, JdbcTimestampTypeDescriptor.INSTANCE );
+		primeBasic( target, java.sql.Timestamp.class, JdbcTimestampTypeDescriptor.INSTANCE );
+		primeBasic( target, TimeZoneTypeDescriptor.INSTANCE );
+
+		primeBasic( target, ClassTypeDescriptor.INSTANCE );
+
+		primeBasic( target, CurrencyTypeDescriptor.INSTANCE );
+		primeBasic( target, LocaleTypeDescriptor.INSTANCE );
+		primeBasic( target, UrlTypeDescriptor.INSTANCE );
+		primeBasic( target, UUIDTypeDescriptor.INSTANCE );
 
 		target.addBaselineDescriptor( ByteArrayTypeDescriptor.INSTANCE );
 		target.addBaselineDescriptor( CharacterArrayTypeDescriptor.INSTANCE );
 		target.addBaselineDescriptor( PrimitiveByteArrayTypeDescriptor.INSTANCE );
 		target.addBaselineDescriptor( PrimitiveCharacterArrayTypeDescriptor.INSTANCE );
-
-		target.addBaselineDescriptor( DurationJavaDescriptor.INSTANCE );
-		target.addBaselineDescriptor( InstantJavaDescriptor.INSTANCE );
-		target.addBaselineDescriptor( LocalDateJavaDescriptor.INSTANCE );
-		target.addBaselineDescriptor( LocalDateTimeJavaDescriptor.INSTANCE );
-		target.addBaselineDescriptor( OffsetDateTimeJavaDescriptor.INSTANCE );
-		target.addBaselineDescriptor( OffsetTimeJavaDescriptor.INSTANCE );
-		target.addBaselineDescriptor( ZonedDateTimeJavaDescriptor.INSTANCE );
-
-		target.addBaselineDescriptor( CalendarTypeDescriptor.INSTANCE );
-		target.addBaselineDescriptor( DateTypeDescriptor.INSTANCE );
-		target.addBaselineDescriptor( java.sql.Date.class, JdbcDateTypeDescriptor.INSTANCE );
-		target.addBaselineDescriptor( java.sql.Time.class, JdbcTimestampTypeDescriptor.INSTANCE );
-		target.addBaselineDescriptor( java.sql.Timestamp.class, JdbcTimestampTypeDescriptor.INSTANCE );
-		target.addBaselineDescriptor( TimeZoneTypeDescriptor.INSTANCE );
-
-		target.addBaselineDescriptor( ClassTypeDescriptor.INSTANCE );
-
-		target.addBaselineDescriptor( CurrencyTypeDescriptor.INSTANCE );
-		target.addBaselineDescriptor( LocaleTypeDescriptor.INSTANCE );
-		target.addBaselineDescriptor( UrlTypeDescriptor.INSTANCE );
-		target.addBaselineDescriptor( UUIDTypeDescriptor.INSTANCE );
 
 		target.addBaselineDescriptor( new CollectionJavaTypeDescriptor( Collection.class, StandardBagSemantics.INSTANCE ) );
 		target.addBaselineDescriptor( new CollectionJavaTypeDescriptor( Object[].class, StandardArraySemantics.INSTANCE ) );
@@ -142,8 +143,19 @@ public class JavaTypeDescriptorBaseline {
 		target.addBaselineDescriptor( MapEntryJavaDescriptor.INSTANCE );
 	}
 
+	private static void primeBasic(BaselineTarget target, JavaTypeDescriptor descriptor) {
+		target.addBaselineDescriptor( descriptor );
+		target.addBaselineDescriptor( new GenericArrayTypeDescriptor<>( descriptor ) );
+	}
+
+	private static void primeBasic(BaselineTarget target, Class<?> clazz, JavaTypeDescriptor descriptor) {
+		target.addBaselineDescriptor( clazz, descriptor );
+		target.addBaselineDescriptor( new GenericArrayTypeDescriptor<>( descriptor ) );
+	}
+
 	private static void primePrimitive(BaselineTarget target, JavaTypeDescriptor descriptor) {
 		target.addBaselineDescriptor( descriptor );
 		target.addBaselineDescriptor( ( (Primitive) descriptor ).getPrimitiveClass(), descriptor );
+		target.addBaselineDescriptor( new GenericArrayTypeDescriptor<>( descriptor ) );
 	}
 }

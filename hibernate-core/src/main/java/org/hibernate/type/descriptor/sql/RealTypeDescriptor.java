@@ -57,6 +57,16 @@ public class RealTypeDescriptor implements SqlTypeDescriptor {
 	}
 
 	@Override
+	public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+		return Float.class;
+	}
+
+	@Override
+	public boolean needsWrapping(Class<?> type, WrapperOptions options) {
+		return type != Float.class;
+	}
+
+	@Override
 	@SuppressWarnings("unchecked")
 	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaTypeDescriptor<T> javaTypeDescriptor) {
 		return new JdbcLiteralFormatterNumericData( javaTypeDescriptor, Float.class );

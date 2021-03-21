@@ -92,6 +92,20 @@ public abstract class BlobTypeDescriptor implements SqlTypeDescriptor {
 		}
 
 		@Override
+		public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+			return byte[].class;
+		}
+
+		@Override
+		public boolean needsWrapping(Class<?> type, WrapperOptions options) {
+			return type != byte[].class && (
+					options.useStreamForLobBinding() ?
+							STREAM_BINDING.needsWrapping( type, options ) :
+							BLOB_BINDING.needsWrapping( type, options )
+			);
+		}
+
+		@Override
 		public <X> BasicBinder<X> getBlobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 			return new BasicBinder<X>( javaTypeDescriptor, this ) {
 				@Override
@@ -132,6 +146,11 @@ public abstract class BlobTypeDescriptor implements SqlTypeDescriptor {
 		}
 
 		@Override
+		public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+			return byte[].class;
+		}
+
+		@Override
 		public <X> BasicBinder<X> getBlobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 			return new BasicBinder<X>( javaTypeDescriptor, this ) {
 				@Override
@@ -156,6 +175,11 @@ public abstract class BlobTypeDescriptor implements SqlTypeDescriptor {
 		}
 
 		@Override
+		public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+			return Blob.class;
+		}
+
+		@Override
 		public <X> BasicBinder<X> getBlobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 			return new BasicBinder<X>( javaTypeDescriptor, this ) {
 				@Override
@@ -177,6 +201,11 @@ public abstract class BlobTypeDescriptor implements SqlTypeDescriptor {
 		@Override
 		public String toString() {
 			return "BlobTypeDescriptor(STREAM_BINDING)";
+		}
+
+		@Override
+		public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+			return BinaryStream.class;
 		}
 
 		@Override

@@ -9,11 +9,13 @@ package org.hibernate.type.descriptor.java.spi;
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 import org.hibernate.type.descriptor.java.AbstractClassTypeDescriptor;
 import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.GenericArrayTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.SerializableTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -133,13 +135,26 @@ public class JavaTypeDescriptorRegistry implements JavaTypeDescriptorBaseline.Ba
 				() -> {
 					// the fallback will always be a basic type
 					final AbstractClassTypeDescriptor<J> fallbackDescriptor;
+					final Class<?> containerJavaTypeClass;
 					final Class<?> javaTypeClass;
 					if ( javaType instanceof Class<?> ) {
-						javaTypeClass = (Class<?>) javaType;
+						containerJavaTypeClass = (Class<?>) javaType;
+						if ( containerJavaTypeClass.isArray() ) {
+							javaTypeClass = containerJavaTypeClass.getComponentType();
+						}
+						else {
+							javaTypeClass = containerJavaTypeClass;
+						}
 					}
 					else {
 						final ParameterizedType parameterizedType = (ParameterizedType) javaType;
-						javaTypeClass = (Class<?>) parameterizedType.getRawType();
+						containerJavaTypeClass = (Class<?>) parameterizedType.getRawType();
+						if ( Collection.class.isAssignableFrom( containerJavaTypeClass ) ) {
+							javaTypeClass = (Class<?>) parameterizedType.getActualTypeArguments()[0];
+						}
+						else {
+							javaTypeClass = containerJavaTypeClass;
+						}
 					}
 
 					if ( javaTypeClass.isEnum() ) {
@@ -160,7 +175,18 @@ public class JavaTypeDescriptorRegistry implements JavaTypeDescriptorBaseline.Ba
 					//			1) How can we recognize non-JDK date/time types?
 					//			2) What is the temporal precision for the types we have deemed temporal?
 
-					return fallbackDescriptor;
+					if ( containerJavaTypeClass != javaTypeClass ) {
+						if ( containerJavaTypeClass.isArray() ) {
+							return new GenericArrayTypeDescriptor( fallbackDescriptor );
+						}
+						else {
+							// TODO: not yet implemented this container type
+							return new SerializableTypeDescriptor( javaTypeClass );
+						}
+					}
+					else {
+						return fallbackDescriptor;
+					}
 				}
 		);
 	}

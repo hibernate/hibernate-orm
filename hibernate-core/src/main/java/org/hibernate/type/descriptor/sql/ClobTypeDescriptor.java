@@ -83,6 +83,20 @@ public abstract class ClobTypeDescriptor implements SqlTypeDescriptor {
 		}
 
 		@Override
+		public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+			return options.useStreamForLobBinding() ?
+					STREAM_BINDING.getPreferredJavaTypeClass( options ) :
+					CLOB_BINDING.getPreferredJavaTypeClass( options );
+		}
+
+		@Override
+		public boolean needsWrapping(Class<?> type, WrapperOptions options) {
+			return options.useStreamForLobBinding() ?
+					STREAM_BINDING.needsWrapping( type, options ) :
+					CLOB_BINDING.needsWrapping( type, options );
+		}
+
+		@Override
 		public <X> BasicBinder<X> getClobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 			return new BasicBinder<X>( javaTypeDescriptor, this ) {
 				@Override
@@ -117,6 +131,11 @@ public abstract class ClobTypeDescriptor implements SqlTypeDescriptor {
 		}
 
 		@Override
+		public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+			return Clob.class;
+		}
+
+		@Override
 		public <X> BasicBinder<X> getClobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 			return new BasicBinder<X>( javaTypeDescriptor, this ) {
 				@Override
@@ -138,6 +157,11 @@ public abstract class ClobTypeDescriptor implements SqlTypeDescriptor {
 		@Override
 		public String toString() {
 			return "ClobTypeDescriptor(STREAM_BINDING)";
+		}
+
+		@Override
+		public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+			return CharacterStream.class;
 		}
 
 		@Override
@@ -172,6 +196,11 @@ public abstract class ClobTypeDescriptor implements SqlTypeDescriptor {
 		@Override
 		public String toString() {
 			return "ClobTypeDescriptor(STREAM_BINDING_EXTRACTING)";
+		}
+
+		@Override
+		public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+			return CharacterStream.class;
 		}
 
 		@Override

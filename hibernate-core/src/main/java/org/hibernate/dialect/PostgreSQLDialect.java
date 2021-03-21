@@ -91,6 +91,12 @@ public class PostgreSQLDialect extends Dialect {
 
 		registerColumnType( Types.TINYINT, "smallint" ); //no tinyint, not even in Postgres 11
 
+		// Register this type to be able to support Float[]
+		// The issue is that the JDBC driver can't handle createArrayOf( "float(24)", ... )
+		// It requires the use of "real" or "float4"
+		// Alternatively we could introduce a new API in Dialect for creating such base names
+		registerColumnType( Types.FLOAT, 24, "float4" );
+
 		registerColumnType( Types.VARBINARY, "bytea" );
 		registerColumnType( Types.BINARY, "bytea" );
 
@@ -659,6 +665,11 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsArrayDataTypes() {
+		return true;
+	}
+
+	@Override
 	public boolean supportsJdbcConnectionLobCreation(DatabaseMetaData databaseMetaData) {
 		return false;
 	}
@@ -861,6 +872,16 @@ public class PostgreSQLDialect extends Dialect {
 		@Override
 		public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaTypeDescriptor<T> javaTypeDescriptor) {
 			return null;
+		}
+
+		@Override
+		public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+			return UUID.class;
+		}
+
+		@Override
+		public boolean needsWrapping(Class<?> type, WrapperOptions options) {
+			return type != UUID.class;
 		}
 
 		@Override

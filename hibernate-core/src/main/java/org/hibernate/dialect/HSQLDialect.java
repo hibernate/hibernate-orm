@@ -401,6 +401,11 @@ public class HSQLDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsArrayDataTypes() {
+		return true;
+	}
+
+	@Override
 	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
 		return version < 200 ? EXTRACTOR_18 : EXTRACTOR_20;
 	}

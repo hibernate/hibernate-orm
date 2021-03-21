@@ -64,6 +64,11 @@ public class VarbinaryTypeDescriptor implements SqlTypeDescriptor {
 	}
 
 	@Override
+	public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+		return byte[].class;
+	}
+
+	@Override
 	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaTypeDescriptor<T> javaTypeDescriptor) {
 		//noinspection unchecked
 		return supportsLiterals ? new JdbcLiteralFormatterBinary( javaTypeDescriptor ) : null;

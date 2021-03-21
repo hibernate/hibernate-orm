@@ -83,6 +83,20 @@ public abstract class NClobTypeDescriptor implements SqlTypeDescriptor {
 		}
 
 		@Override
+		public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+			return options.useStreamForLobBinding() ?
+					STREAM_BINDING.getPreferredJavaTypeClass( options ) :
+					NCLOB_BINDING.getPreferredJavaTypeClass( options );
+		}
+
+		@Override
+		public boolean needsWrapping(Class<?> type, WrapperOptions options) {
+			return options.useStreamForLobBinding() ?
+					STREAM_BINDING.needsWrapping( type, options ) :
+					NCLOB_BINDING.needsWrapping( type, options );
+		}
+
+		@Override
 		public <X> BasicBinder<X> getNClobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 			return new BasicBinder<X>( javaTypeDescriptor, this ) {
 				@Override
@@ -117,6 +131,11 @@ public abstract class NClobTypeDescriptor implements SqlTypeDescriptor {
 		}
 
 		@Override
+		public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+			return NClob.class;
+		}
+
+		@Override
 		public <X> BasicBinder<X> getNClobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 			return new BasicBinder<X>( javaTypeDescriptor, this ) {
 				@Override
@@ -138,6 +157,11 @@ public abstract class NClobTypeDescriptor implements SqlTypeDescriptor {
 		@Override
 		public String toString() {
 			return "NClobTypeDescriptor(STREAM_BINDING)";
+		}
+
+		@Override
+		public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+			return CharacterStream.class;
 		}
 
 		@Override

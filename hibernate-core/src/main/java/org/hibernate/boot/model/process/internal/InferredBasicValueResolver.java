@@ -22,6 +22,7 @@ import org.hibernate.metamodel.model.domain.AllowableTemporalParameterType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.SqlTypeDescriptorIndicatorCapable;
+import org.hibernate.type.descriptor.java.BasicContainerJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
@@ -101,7 +102,42 @@ public class InferredBasicValueResolver {
 			else {
 				// here we have the legacy case
 				//		- we mimic how this used to be done
-				final BasicType registeredType = typeConfiguration.getBasicTypeRegistry().getRegisteredType( reflectedJtd.getJavaType() );
+				final BasicType registeredType;
+				if ( reflectedJtd instanceof BasicContainerJavaTypeDescriptor<?> ) {
+					final BasicContainerJavaTypeDescriptor<?> containerJtd = (BasicContainerJavaTypeDescriptor<?>) reflectedJtd;
+					final JavaTypeDescriptor<?> elementJtd = containerJtd.getElementDescriptor();
+					final BasicType registeredElementType;
+					if ( elementJtd instanceof EnumJavaTypeDescriptor ) {
+						final InferredBasicValueResolution resolution = InferredBasicValueResolver.fromEnum(
+								(EnumJavaTypeDescriptor) elementJtd,
+								explicitJavaTypeAccess.apply( typeConfiguration ),
+								explicitSqlTypeAccess.apply( typeConfiguration ),
+								stdIndicators,
+								typeConfiguration
+						);
+						registeredElementType = resolution.getLegacyResolvedBasicType();
+					}
+					else if ( elementJtd instanceof TemporalJavaTypeDescriptor ) {
+						final InferredBasicValueResolution resolution = InferredBasicValueResolver.fromTemporal(
+								(TemporalJavaTypeDescriptor) elementJtd,
+								explicitJavaTypeAccess,
+								explicitSqlTypeAccess,
+								stdIndicators,
+								typeConfiguration
+						);
+						registeredElementType = resolution.getLegacyResolvedBasicType();
+					}
+					else {
+						registeredElementType = typeConfiguration.getBasicTypeRegistry()
+								.getRegisteredType( elementJtd.getJavaType() );
+					}
+					registeredType = containerJtd.createType( registeredElementType );
+					typeConfiguration.getBasicTypeRegistry().register( registeredType );
+				}
+				else {
+					registeredType = typeConfiguration.getBasicTypeRegistry()
+							.getRegisteredType( reflectedJtd.getJavaType() );
+				}
 				legacyType = resolveSqlTypeIndicators( stdIndicators, registeredType );
 
 				// reuse the "legacy type"

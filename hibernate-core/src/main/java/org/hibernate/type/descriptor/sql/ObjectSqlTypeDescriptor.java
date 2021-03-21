@@ -50,6 +50,11 @@ public class ObjectSqlTypeDescriptor implements SqlTypeDescriptor {
 	}
 
 	@Override
+	public boolean needsWrapping(Class<?> type, WrapperOptions options) {
+		return false;
+	}
+
+	@Override
 	public <X> ValueBinder<X> getBinder(JavaTypeDescriptor<X> javaTypeDescriptor) {
 		if ( Serializable.class.isAssignableFrom( javaTypeDescriptor.getJavaTypeClass() ) ) {
 			return VarbinaryTypeDescriptor.INSTANCE.getBinder( javaTypeDescriptor );

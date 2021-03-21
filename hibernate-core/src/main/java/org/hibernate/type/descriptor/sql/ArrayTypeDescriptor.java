@@ -6,34 +6,56 @@
  */
 package org.hibernate.type.descriptor.sql;
 
+import java.lang.reflect.Method;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.hibernate.HibernateException;
+import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
+import org.hibernate.type.descriptor.java.GenericArrayTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.internal.JdbcLiteralFormatterNumericData;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * Descriptor for {@link Types#BIGINT BIGINT} handling.
+ * Descriptor for {@link Types#ARRAY ARRAY} handling.
  *
- * @author Steve Ebersole
+ * @author Christian Beikov
+ * @author Jordan Gigov
  */
-public class BigIntTypeDescriptor implements SqlTypeDescriptor {
-	public static final BigIntTypeDescriptor INSTANCE = new BigIntTypeDescriptor();
+public class ArrayTypeDescriptor implements SqlTypeDescriptor {
 
-	public BigIntTypeDescriptor() {
+	public static final ArrayTypeDescriptor INSTANCE = new ArrayTypeDescriptor();
+	private static final BasicJavaDescriptor RECOMMENDED_JAVA_TYPE_MAPPING = new GenericArrayTypeDescriptor(
+			JavaObjectType.INSTANCE
+	);
+	private static final ClassValue<Method> NAME_BINDER = new ClassValue<Method>() {
+		@Override
+		protected Method computeValue(Class<?> type) {
+			try {
+				return type.getMethod( "setArray", String.class, java.sql.Array.class );
+			}
+			catch ( Exception ex ) {
+				// add logging? Did we get NoSuchMethodException or SecurityException?
+				// Doesn't matter which. We can't use it.
+			}
+			return null;
+		}
+	};
+
+	public ArrayTypeDescriptor() {
 	}
 
 	@Override
 	public int getSqlType() {
-		return Types.BIGINT;
+		return Types.ARRAY;
 	}
 
 	@Override
@@ -43,38 +65,55 @@ public class BigIntTypeDescriptor implements SqlTypeDescriptor {
 
 	@Override
 	public <T> BasicJavaDescriptor<T> getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
-		return (BasicJavaDescriptor<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Long.class );
+		return (BasicJavaDescriptor<T>) RECOMMENDED_JAVA_TYPE_MAPPING;
 	}
 
 	@Override
 	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaTypeDescriptor<T> javaTypeDescriptor) {
 		//noinspection unchecked
+		// TODO: array literal formatter? introduce a dialect contract?
 		return new JdbcLiteralFormatterNumericData( javaTypeDescriptor, Long.class );
 	}
 
 	@Override
 	public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
-		return Long.class;
-	}
-
-	@Override
-	public boolean needsWrapping(Class<?> type, WrapperOptions options) {
-		return type != Long.class;
+		return java.sql.Array.class;
 	}
 
 	@Override
 	public <X> ValueBinder<X> getBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 		return new BasicBinder<X>( javaTypeDescriptor, this ) {
+
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
-				st.setLong( index, javaTypeDescriptor.unwrap( value, Long.class, options ) );
+				final java.sql.Array arr = javaTypeDescriptor.unwrap( value, java.sql.Array.class, options );
+				st.setArray( index, arr );
 			}
 
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
-				st.setLong( name, javaTypeDescriptor.unwrap( value, Long.class, options ) );
+				final java.sql.Array arr = javaTypeDescriptor.unwrap( value, java.sql.Array.class, options );
+				final Method nameBinder = NAME_BINDER.get( st.getClass() );
+				if ( nameBinder == null ) {
+					try {
+						st.setObject( name, arr, java.sql.Types.ARRAY );
+						return;
+					}
+					catch (SQLException ex) {
+						throw new HibernateException( "JDBC driver does not support named parameters for setArray. Use positional.", ex );
+					}
+				}
+				// Not that it's supposed to have setArray(String,Array) by standard.
+				// There are numerous missing methods that only have versions for positional parameter,
+				// but not named ones.
 
+				try {
+					nameBinder.invoke( st, name, arr );
+				}
+				catch ( Throwable t ) {
+					throw new HibernateException( t );
+				}
 			}
 		};
 	}
@@ -84,28 +123,28 @@ public class BigIntTypeDescriptor implements SqlTypeDescriptor {
 		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( rs.getLong( paramIndex ), options );
+				return javaTypeDescriptor.wrap( rs.getArray( paramIndex ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getLong( index ), options );
+				return javaTypeDescriptor.wrap( statement.getArray( index ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getLong( name ), options );
+				return javaTypeDescriptor.wrap( statement.getArray( name ), options );
 			}
 		};
 	}
 
 	@Override
 	public String getFriendlyName() {
-		return "BIGINT";
+		return "ARRAY";
 	}
 
 	@Override
 	public String toString() {
-		return "BigIntTypeDescriptor(" + getFriendlyName() + ")";
+		return "ArrayTypeDescriptor(" + getFriendlyName() + ")";
 	}
 }

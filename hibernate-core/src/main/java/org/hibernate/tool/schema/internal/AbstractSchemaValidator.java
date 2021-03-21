@@ -162,9 +162,7 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 			Metadata metadata,
 			ExecutionOptions options,
 			Dialect dialect) {
-		boolean typesMatch = dialect.equivalentTypes( column.getSqlTypeCode( metadata ), columnInformation.getTypeCode() )
-				|| column.getSqlType( dialect, metadata ).toLowerCase(Locale.ROOT).startsWith( columnInformation.getTypeName().toLowerCase(Locale.ROOT) );
-		if ( !typesMatch ) {
+		if ( !dialect.equivalentTypes( column, columnInformation ) ) {
 			throw new SchemaManagementException(
 					String.format(
 							"Schema-validation: wrong column type encountered in column [%s] in " +

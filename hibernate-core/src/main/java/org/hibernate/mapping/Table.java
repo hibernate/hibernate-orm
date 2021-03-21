@@ -426,35 +426,6 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 				&& Identifier.areEqual( catalog, table.catalog );
 	}
 
-	public void validateColumns(Dialect dialect, Mapping mapping, TableMetadata tableInfo) {
-		Iterator<Column> iter = getColumnIterator();
-		while ( iter.hasNext() ) {
-			Column col = (Column) iter.next();
-
-			ColumnMetadata columnInfo = tableInfo.getColumnMetadata( col.getName() );
-
-			if ( columnInfo == null ) {
-				throw new HibernateException( "Missing column: " + col.getName() + " in " + Table.qualify( tableInfo.getCatalog(), tableInfo.getSchema(), tableInfo.getName()));
-			}
-			else {
-				final boolean typesMatch =
-						dialect.equivalentTypes( columnInfo.getTypeCode(), col.getSqlTypeCode( mapping ) )
-						|| col.getSqlType( dialect, mapping ).toLowerCase(Locale.ROOT)
-								.startsWith( columnInfo.getTypeName().toLowerCase(Locale.ROOT) );
-				if ( !typesMatch ) {
-					throw new HibernateException(
-							"Wrong column type in " +
-							Table.qualify( tableInfo.getCatalog(), tableInfo.getSchema(), tableInfo.getName()) +
-							" for column " + col.getName() +
-							". Found: " + columnInfo.getTypeName().toLowerCase(Locale.ROOT) +
-							", expected: " + col.getSqlType( dialect, mapping )
-					);
-				}
-			}
-		}
-
-	}
-
 	public Iterator<String> sqlAlterStrings(
 			Dialect dialect,
 			Metadata metadata,

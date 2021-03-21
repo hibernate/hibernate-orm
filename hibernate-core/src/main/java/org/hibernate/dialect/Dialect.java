@@ -77,6 +77,7 @@ import org.hibernate.sql.ast.spi.CaseExpressionWalker;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
+import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.tool.schema.internal.*;
 import org.hibernate.tool.schema.spi.Exporter;
@@ -781,15 +782,18 @@ public abstract class Dialect implements ConversionContext {
 	 * {@link Types#DOUBLE DOUBLE} as essentially the same type, since the
 	 * ANSI SQL specification fails to meaningfully distinguish them.
 	 *
-	 * @param typeCode1 the first JDBC type code
-	 * @param typeCode2 the second JDBC type code
+	 * @param column1 the first column type info
+	 * @param column2 the second column type info
 	 *
 	 * @return {@code true} if the two type codes are equivalent
 	 */
-	public boolean equivalentTypes(int typeCode1, int typeCode2) {
-		return typeCode1==typeCode2
-			|| isNumericOrDecimal(typeCode1) && isNumericOrDecimal(typeCode2)
-			|| isFloatOrRealOrDouble(typeCode1) && isFloatOrRealOrDouble(typeCode2);
+	public boolean equivalentTypes(ColumnTypeInformation column1, ColumnTypeInformation column2) {
+		final int typeCode1 = column1.getTypeCode();
+		final int typeCode2 = column2.getTypeCode();
+		return typeCode1 == typeCode2
+				|| isNumericOrDecimal( typeCode1 ) && isNumericOrDecimal( typeCode2 )
+				|| isFloatOrRealOrDouble( typeCode1 ) && isFloatOrRealOrDouble( typeCode2 )
+				|| column1.getTypeName().toLowerCase(Locale.ROOT).startsWith( column2.getTypeName().toLowerCase(Locale.ROOT) );
 	}
 
 	private static boolean isNumericOrDecimal(int typeCode) {
@@ -3361,6 +3365,28 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
+	 * Database has native support for arrays.
+	 *
+	 * @return boolean
+	 * @since 6.0.0
+	 */
+	public boolean supportsArrayDataTypes() {
+		return false;
+	}
+
+	/**
+	 * The SQL type name for the array of the given type name.
+	 *
+	 * @since 6.0.0
+	 */
+	public String getArrayTypeName(String elementTypeName) {
+		if ( supportsArrayDataTypes() ) {
+			return elementTypeName + " array";
+		}
+		return null;
+	}
+
+	/**
 	 * The JDBC {@link Types type code} to use for mapping
 	 * properties of Java type {@code boolean}.
 	 * <p>
@@ -3695,10 +3721,12 @@ public abstract class Dialect implements ConversionContext {
 				case Types.REAL:
 				case Types.TIMESTAMP:
 				case Types.TIMESTAMP_WITH_TIMEZONE:
+					length = null;
 					size.setPrecision( javaType.getDefaultSqlPrecision( Dialect.this ) );
 					break;
 				case Types.NUMERIC:
 				case Types.DECIMAL:
+					length = null;
 					size.setPrecision( javaType.getDefaultSqlPrecision( Dialect.this ) );
 					size.setScale( javaType.getDefaultSqlScale() );
 					break;

@@ -62,8 +62,8 @@ gradlePlugin {
 }
 
 pluginBundle {
-	website = 'https://github.com/hibernate/hibernate-orm/tree/master/tooling/hibernate-gradle-plugin'
-	vcsUrl = 'https://github.com/hibernate/hibernate-orm/tree/master/tooling/hibernate-gradle-plugin'
+	website = 'https://github.com/hibernate/hibernate-orm/tree/main/tooling/hibernate-gradle-plugin'
+	vcsUrl = 'https://github.com/hibernate/hibernate-orm/tree/main/tooling/hibernate-gradle-plugin'
 	tags = ['hibernate','orm','bytecode','enhancement','bytebuddy']
 
 	plugins {

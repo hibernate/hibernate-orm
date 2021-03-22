@@ -55,7 +55,7 @@ Originally, we intended to include those dependencies within our own `features.x
 However, after guidance from the Karaf and Aries teams, it was pulled out.
 This allows Hibernate OSGi to be portable and not be directly tied to Aries versions, instead of having the user choose which to use.
 
-That being said, the QuickStart/Demo projects include a sample https://github.com/hibernate/hibernate-demos/tree/master/hibernate-orm/osgi/managed-jpa/features.xml[features.xml]
+That being said, the QuickStart/Demo projects include a sample https://github.com/hibernate/hibernate-demos/tree/main/hibernate-orm/osgi/managed-jpa/features.xml[features.xml]
 showing which features need to be activated in Karaf in order to support this environment.
 As mentioned, use this purely as a reference!
 
@@ -183,7 +183,7 @@ include::{sourcedir}/_native/HibernateUtil.java[tag=osgi-discover-SessionFactory
 
 === Optional Modules
 
-The https://github.com/hibernate/hibernate-demos/tree/master/hibernate-orm/osgi/unmanaged-native[unmanaged-native] demo project displays the use of optional Hibernate modules.
+The https://github.com/hibernate/hibernate-demos/tree/main/hibernate-orm/osgi/unmanaged-native[unmanaged-native] demo project displays the use of optional Hibernate modules.
 Each module adds additional dependency bundles that must first be activated, either manually or through an additional feature.
 As of ORM 4.2, Envers is fully supported.
 Support for C3P0, Proxool, EhCache, and Infinispan were added in 4.3. However, none of their 3rd party libraries currently work in OSGi (lots of `ClassLoader` problems, etc.).

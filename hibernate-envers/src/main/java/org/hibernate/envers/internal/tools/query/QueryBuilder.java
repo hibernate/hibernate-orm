@@ -247,7 +247,7 @@ public class QueryBuilder {
 			StringTools.append( sb, getOrderList().iterator(), ", " );
 		}
 		else if ( !orderFragments.isEmpty() ) {
-			// todo (6.0) : How to backport HHH-12992 to use Template#translateOrderBy from master?
+			// todo (6.0) : How to backport HHH-12992 to use Template#translateOrderBy from main?
 			throw new NotYetImplementedFor6Exception( getClass() );
 
 //			sb.append( " order by " );

@@ -529,7 +529,7 @@ public abstract class AbstractEntityWithManyToManyTest extends BaseCoreFunctiona
 						}
 						s.delete( c1 );
 					}
-					s.delete( p );
+					s.delete( p1 );
 					assertAllPlansAndContractsAreDeleted( s );
 				}
 		);
@@ -872,6 +872,9 @@ public abstract class AbstractEntityWithManyToManyTest extends BaseCoreFunctiona
 
 		inSession(
 				s -> {
+					s.beginTransaction();
+					pOrig.removeContract( cOrig );
+					s.update( pOrig );
 					try {
 						s.getTransaction().commit();
 						assertFalse( isContractVersioned );
@@ -925,7 +928,7 @@ public abstract class AbstractEntityWithManyToManyTest extends BaseCoreFunctiona
 					if ( isPlanContractsBidirectional ) {
 						assertSame( p1, c.getPlans().iterator().next() );
 					}
-					p.removeContract( c );
+					p1.removeContract( c );
 
 					p2.addContract( c );
 					s.save( p2 );
@@ -938,8 +941,8 @@ public abstract class AbstractEntityWithManyToManyTest extends BaseCoreFunctiona
 
 		inTransaction(
 				s -> {
-					Plan p1 = getPlan( s, p.getId() );
-					Plan p3 = getPlan( s, p2.getId() );
+					Plan p3 = getPlan( s, p.getId() );
+					Plan p4 = getPlan( s, p2.getId() );
 		/*
 		if ( isPlanContractsInverse ) {
 			assertEquals( 1, p1.getContracts().size() );
@@ -952,16 +955,16 @@ public abstract class AbstractEntityWithManyToManyTest extends BaseCoreFunctiona
 		}
 		else {
 		*/
-					assertEquals( 0, p1.getContracts().size() );
-					assertEquals( 1, p3.getContracts().size() );
-					Contract c = (Contract) p3.getContracts().iterator().next();
+					assertEquals( 0, p3.getContracts().size() );
+					assertEquals( 1, p4.getContracts().size() );
+					Contract c = (Contract) p4.getContracts().iterator().next();
 					assertEquals( "gail", c.getCustomerName() );
 					if ( isPlanContractsBidirectional ) {
-						assertSame( p3, c.getPlans().iterator().next() );
+						assertSame( p4, c.getPlans().iterator().next() );
 					}
 					//}
-					s.delete( p1 );
 					s.delete( p3 );
+					s.delete( p4 );
 					assertAllPlansAndContractsAreDeleted( s );
 				}
 		);
@@ -1040,7 +1043,7 @@ public abstract class AbstractEntityWithManyToManyTest extends BaseCoreFunctiona
 					Contract c1 = (Contract) p4.getContracts().iterator().next();
 					assertEquals( "gail", c1.getCustomerName() );
 					if ( isPlanContractsBidirectional ) {
-						assertSame( p3, c1.getPlans().iterator().next() );
+						assertSame( p4, c1.getPlans().iterator().next() );
 					}
 					//}
 					s.delete( p3 );

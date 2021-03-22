@@ -215,10 +215,10 @@ public class EntityMetamodel implements Serializable {
 
 		while ( props.hasNext() ) {
 			Property prop = props.next();
-
+			final NonIdentifierAttribute attribute;
 			if ( prop == persistentClass.getVersion() ) {
 				tempVersionProperty = i;
-				properties[i] = PropertyFactory.buildVersionProperty(
+				attribute = PropertyFactory.buildVersionProperty(
 						persister,
 						sessionFactory,
 						i,
@@ -227,7 +227,7 @@ public class EntityMetamodel implements Serializable {
 				);
 			}
 			else {
-				properties[i] = PropertyFactory.buildEntityBasedAttribute(
+				attribute = PropertyFactory.buildEntityBasedAttribute(
 						persister,
 						sessionFactory,
 						i,
@@ -236,6 +236,7 @@ public class EntityMetamodel implements Serializable {
 						creationContext
 				);
 			}
+			properties[i] = attribute;
 
 			if ( prop.isNaturalIdentifier() ) {
 				naturalIdNumbers.add( i );
@@ -267,17 +268,18 @@ public class EntityMetamodel implements Serializable {
 
 			propertyLaziness[i] = lazy;
 
-			propertyNames[i] = properties[i].getName();
-			propertyTypes[i] = properties[i].getType();
-			propertyNullability[i] = properties[i].isNullable();
-			propertyUpdateability[i] = properties[i].isUpdateable();
-			propertyInsertability[i] = properties[i].isInsertable();
-			propertyVersionability[i] = properties[i].isVersionable();
-			nonlazyPropertyUpdateability[i] = properties[i].isUpdateable() && !lazy;
+			propertyNames[i] = attribute.getName();
+			final Type propertyType = attribute.getType();
+			propertyTypes[i] = propertyType;
+			propertyNullability[i] = attribute.isNullable();
+			propertyUpdateability[i] = attribute.isUpdateable();
+			propertyInsertability[i] = attribute.isInsertable();
+			propertyVersionability[i] = attribute.isVersionable();
+			nonlazyPropertyUpdateability[i] = attribute.isUpdateable() && !lazy;
 			propertyCheckability[i] = propertyUpdateability[i] ||
-					( propertyTypes[i].isAssociationType() && ( (AssociationType) propertyTypes[i] ).isAlwaysDirtyChecked() );
+					( propertyType.isAssociationType() && ( (AssociationType) propertyType ).isAlwaysDirtyChecked() );
 
-			cascadeStyles[i] = properties[i].getCascadeStyle();
+			cascadeStyles[i] = attribute.getCascadeStyle();
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 			// generated value strategies ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -313,20 +315,20 @@ public class EntityMetamodel implements Serializable {
 			}
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-			if ( properties[i].isLazy() ) {
+			if ( attribute.isLazy() ) {
 				hasLazy = true;
 			}
 
-			if ( properties[i].getCascadeStyle() != CascadeStyles.NONE ) {
+			if ( attribute.getCascadeStyle() != CascadeStyles.NONE ) {
 				foundCascade = true;
 			}
 
-			if ( indicatesCollection( properties[i].getType() ) ) {
+			if ( indicatesCollection( attribute.getType() ) ) {
 				foundCollection = true;
 			}
 
 			// Component types are dirty tracked as well so they are not exactly mutable for the "maybeDirty" check
-			if ( propertyTypes[i].isMutable() && propertyCheckability[i] && !( propertyTypes[i] instanceof ComponentType ) ) {
+			if ( propertyType.isMutable() && propertyCheckability[i] && !( propertyType instanceof ComponentType ) ) {
 				mutableIndexes.set( i );
 			}
 

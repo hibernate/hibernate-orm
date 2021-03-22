@@ -426,7 +426,10 @@ public abstract class AbstractEntityWithOneToManyTest extends BaseCoreFunctional
 		Party firstParty = new Party( "party" );
 
 		inTransaction(
-				s -> s.persist( firstParty )
+				s -> {
+					s.persist( contract );
+					s.persist( firstParty );
+				}
 		);
 
 		assertInsertCount( 2 );
@@ -1100,6 +1103,7 @@ public abstract class AbstractEntityWithOneToManyTest extends BaseCoreFunctional
 
 		inSession(
 				s -> {
+					s.beginTransaction();
 					cOrig.removeParty( partyOrig );
 					s.update( cOrig );
 					try {

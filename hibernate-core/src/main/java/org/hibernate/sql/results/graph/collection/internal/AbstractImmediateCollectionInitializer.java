@@ -31,9 +31,8 @@ import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
  * an immediate initialization of some sort (join, select, batch, sub-select)
  * for a persistent collection.
  *
- * @implNote Mainly an intention contract wrt the immediacy of the fetch.
- *
  * @author Steve Ebersole
+ * @implNote Mainly an intention contract wrt the immediacy of the fetch.
  */
 @SuppressWarnings("WeakerAccess")
 public abstract class AbstractImmediateCollectionInitializer extends AbstractCollectionInitializer {
@@ -74,7 +73,7 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 
 	@Override
 	public void resolveInstance(RowProcessingState rowProcessingState) {
-		if ( collectionInstance != null ) {
+		if ( collectionInstance != null || collectionKey == null) {
 			return;
 		}
 
@@ -204,7 +203,11 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 				);
 			}
 
-			persistenceContext.addUninitializedCollection( collectionDescriptor, collectionInstance, collectionKey.getKey() );
+			persistenceContext.addUninitializedCollection(
+					collectionDescriptor,
+					collectionInstance,
+					collectionKey.getKey()
+			);
 
 			takeResponsibility( rowProcessingState, collectionKey );
 		}
@@ -311,9 +314,13 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 			}
 		}
 		else {
+			final Object parentKey = parentAccess.getParentKey();
+			if ( parentKey == null ) {
+				return;
+			}
 			this.collectionKey = new CollectionKey(
 					collectionAttributeMapping.getCollectionDescriptor(),
-					parentAccess.getParentKey()
+					parentKey
 			);
 		}
 	}
@@ -366,7 +373,10 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 		}
 	}
 
-	protected abstract void readCollectionRow(CollectionKey collectionKey, List loadingState, RowProcessingState rowProcessingState);
+	protected abstract void readCollectionRow(
+			CollectionKey collectionKey,
+			List loadingState,
+			RowProcessingState rowProcessingState);
 
 	@Override
 	public void finishUpRow(RowProcessingState rowProcessingState) {

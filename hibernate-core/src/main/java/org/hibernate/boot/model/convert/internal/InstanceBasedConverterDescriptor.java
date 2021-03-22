@@ -20,16 +20,16 @@ import org.hibernate.resource.beans.spi.ProvidedInstanceManagedBeanImpl;
  * @author Steve Ebersole
  */
 public class InstanceBasedConverterDescriptor extends AbstractConverterDescriptor {
-	private final AttributeConverter converterInstance;
+	private final AttributeConverter<?,?> converterInstance;
 
 	public InstanceBasedConverterDescriptor(
-			AttributeConverter converterInstance,
+			AttributeConverter<?,?> converterInstance,
 			ClassmateContext classmateContext) {
 		this( converterInstance, null, classmateContext );
 	}
 
 	public InstanceBasedConverterDescriptor(
-			AttributeConverter converterInstance,
+			AttributeConverter<?,?> converterInstance,
 			Boolean forceAutoApply,
 			ClassmateContext classmateContext) {
 		super( converterInstance.getClass(), forceAutoApply, classmateContext );
@@ -37,8 +37,8 @@ public class InstanceBasedConverterDescriptor extends AbstractConverterDescripto
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	protected ManagedBean<? extends AttributeConverter> createManagedBean(JpaAttributeConverterCreationContext context) {
-		return new ProvidedInstanceManagedBeanImpl( converterInstance );
+	protected ManagedBean<? extends AttributeConverter<?, ?>> createManagedBean(JpaAttributeConverterCreationContext context) {
+		return new ProvidedInstanceManagedBeanImpl<>( converterInstance );
 	}
+
 }

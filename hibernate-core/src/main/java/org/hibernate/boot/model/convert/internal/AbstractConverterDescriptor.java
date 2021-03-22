@@ -18,6 +18,7 @@ import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext
 import org.hibernate.metamodel.model.convert.internal.JpaAttributeConverterImpl;
 import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
 import org.hibernate.resource.beans.spi.ManagedBean;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 import com.fasterxml.classmate.ResolvedType;
 
@@ -101,15 +102,23 @@ public abstract class AbstractConverterDescriptor implements ConverterDescriptor
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public JpaAttributeConverter createJpaAttributeConverter(JpaAttributeConverterCreationContext context) {
+		final JavaTypeDescriptor<Object> converterJtd = context
+				.getJavaTypeDescriptorRegistry()
+				.getDescriptor( getAttributeConverterClass() );
+
+		final Class<?> domainJavaType = getDomainValueResolvedType().getErasedType();
+		final Class<?> jdbcJavaType = getRelationalValueResolvedType().getErasedType();
+
 		return new JpaAttributeConverterImpl(
 				createManagedBean( context ),
-				context.getJavaTypeDescriptorRegistry().getDescriptor( getAttributeConverterClass() ),
-				context.getJavaTypeDescriptorRegistry().getDescriptor( getDomainValueResolvedType().getErasedType() ),
-				context.getJavaTypeDescriptorRegistry().getDescriptor( getRelationalValueResolvedType().getErasedType() )
+				converterJtd,
+				domainJavaType,
+				jdbcJavaType,
+				context
 		);
 	}
 
-	protected abstract ManagedBean<? extends AttributeConverter> createManagedBean(JpaAttributeConverterCreationContext context);
+	protected abstract ManagedBean<? extends AttributeConverter<?, ?>> createManagedBean(JpaAttributeConverterCreationContext context);
 }

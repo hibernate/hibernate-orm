@@ -4,8 +4,10 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.test.converter;
+package org.hibernate.orm.test.mapping.converted;
 
+import java.sql.Types;
+import java.util.Locale;
 import javax.persistence.AttributeConverter;
 import javax.persistence.Cacheable;
 import javax.persistence.Convert;
@@ -18,18 +20,21 @@ import org.hibernate.Session;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.internal.MetadataBuilderImpl;
+import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.metamodel.spi.MetamodelImplementor;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -39,20 +44,66 @@ import static org.hamcrest.MatcherAssert.assertThat;
  */
 public class ExplicitJavaTypeDescriptorTest extends BaseNonConfigCoreFunctionalTestCase {
 
+	private static int mutableToDatabaseCallCount;
+	private static int mutableToDomainCallCount;
+
+	private static int immutableToDatabaseCallCount;
+	private static int immutableToDomainCallCount;
+
+	private static int pseudoMutableToDatabaseCallCount;
+	private static int pseudoMutableToDomainCallCount;
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-11098" )
+	public void testIt() {
+		// create data and check assertions
+		inTransaction(
+				(session) -> session.persist( new TheEntity( 1 ) )
+		);
+
+		// assertions based on the persist call
+		assertThat( mutableToDomainCallCount, is(1 ) );  			// 1 instead of 0 because of the deep copy call
+		assertThat( mutableToDatabaseCallCount, is(2 ) );  			// 2 instead of 1 because of the deep copy call
+
+		assertThat( immutableToDomainCallCount, is(0 ) );			// logical
+		assertThat( immutableToDatabaseCallCount, is(1 ) );			// logical
+
+		assertThat( pseudoMutableToDomainCallCount, is(0 ) );		// was 1 (like mutable) before the JavaTypeDescriptor registration
+		assertThat( pseudoMutableToDatabaseCallCount, is(1 ) );	// was 2 (like mutable) before the JavaTypeDescriptor registration
+	}
+
+	@BeforeEach
+	public void clearCounts() {
+		// in case we add additional tests
+		sessionFactory().getStatistics().clear();
+
+		mutableToDatabaseCallCount = 0;
+		mutableToDomainCallCount = 0;
+
+		immutableToDatabaseCallCount = 0;
+		immutableToDomainCallCount = 0;
+
+		pseudoMutableToDatabaseCallCount = 0;
+		pseudoMutableToDomainCallCount = 0;
+	}
+
+	@AfterEach
+	public void dropTestData() {
+		inTransaction(
+				(session) -> session.createQuery( "delete TheEntity" ).executeUpdate()
+		);
+	}
+
 	@Override
 	protected void configureMetadataBuilder(MetadataBuilder metadataBuilder) {
-		((MetadataBuilderImpl)metadataBuilder).contributeJavaTypeDescriptor(new JavaTypeDescriptorRegistry.FallbackJavaTypeDescriptor( MutableState2.class ) {
-			@Override
-			public MutabilityPlan getMutabilityPlan() {
-				return ImmutableMutabilityPlan.INSTANCE;
-			}
-		});
+		( (TypeContributions) metadataBuilder ).contributeJavaTypeDescriptor( PseudoMutableStateJavaTypeDescriptor.INSTANCE );
 	}
 
 	@Override
 	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
 		super.configureStandardServiceRegistryBuilder( ssrb );
 
+		// to make sure we get the deepCopy calls
 		ssrb.applySetting( AvailableSettings.USE_SECOND_LEVEL_CACHE, "true" );
 		ssrb.applySetting( AvailableSettings.GENERATE_STATISTICS, "true" );
 	}
@@ -60,46 +111,7 @@ public class ExplicitJavaTypeDescriptorTest extends BaseNonConfigCoreFunctionalT
 	@Override
 	protected void applyMetadataSources(MetadataSources sources) {
 		super.applyMetadataSources( sources );
-
 		sources.addAnnotatedClass( TheEntity.class );
-	}
-
-	@Test
-	@TestForIssue( jiraKey = "HHH-11098" )
-	public void testIt() {
-		// set up test data
-		Session session = openSession();
-		( (MetamodelImplementor) session.getMetamodel() ).getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry()
-				.addDescriptor(
-						new JavaTypeDescriptorRegistry.FallbackJavaTypeDescriptor( MutableState2.class ) {
-							@Override
-							public MutabilityPlan getMutabilityPlan() {
-								return ImmutableMutabilityPlan.INSTANCE;
-							}
-						}
-				);
-		session.beginTransaction();
-		session.persist( new TheEntity(1) );
-		session.getTransaction().commit();
-		session.close();
-
-		// assertions based on the persist call
-		assertThat( mutableToDomainCallCount, is(1) );  			// 1 instead of 0 because of the deep copy call
-		assertThat( mutableToDatabaseCallCount, is(2) );  			// 2 instead of 1 because of the deep copy call
-
-		assertThat( immutableToDomainCallCount, is(0) );			// logical
-		assertThat( immutableToDatabaseCallCount, is(1) );			// logical
-
-		assertThat( immutableMutableToDomainCallCount, is(0) );		// was 1 (like mutable) before the JavaTypeDescriptor registration
-		assertThat( immutableMutableToDatabaseCallCount, is(1) );	// was 2 (like mutable) before the JavaTypeDescriptor registration
-
-		// clean up test data
-		session = openSession();
-		session.beginTransaction();
-		session.delete( session.byId( TheEntity.class ).getReference( 1 ) );
-		session.getTransaction().commit();
-		session.close();
 	}
 
 
@@ -116,8 +128,8 @@ public class ExplicitJavaTypeDescriptorTest extends BaseNonConfigCoreFunctionalT
 		@Convert( converter = ImmutableConverterImpl.class )
 		private ImmutableState immutableState;
 
-		@Convert( converter = ImmutableMutable2ConverterImpl.class )
-		private MutableState2 immutableMutableState;
+		@Convert( converter = PseudoMutableConverterImpl.class )
+		private PseudoMutableState immutableMutableState;
 
 		public TheEntity() {
 		}
@@ -127,33 +139,9 @@ public class ExplicitJavaTypeDescriptorTest extends BaseNonConfigCoreFunctionalT
 
 			this.mutableState = new MutableState( id.toString() );
 			this.immutableState = new ImmutableState( id.toString() );
-			this.immutableMutableState = new MutableState2( id.toString() );
+			this.immutableMutableState = new PseudoMutableState( id.toString() );
 		}
 	}
-
-	@Before
-	public void clearCounts() {
-		// in case we add additional tests
-		sessionFactory().getStatistics().clear();
-
-		mutableToDatabaseCallCount = 0;
-		mutableToDomainCallCount = 0;
-
-		immutableToDatabaseCallCount = 0;
-		immutableToDomainCallCount = 0;
-
-		immutableMutableToDatabaseCallCount = 0;
-		immutableMutableToDomainCallCount = 0;
-	}
-
-	private static int mutableToDatabaseCallCount;
-	private static int mutableToDomainCallCount;
-
-	private static int immutableToDatabaseCallCount;
-	private static int immutableToDomainCallCount;
-
-	private static int immutableMutableToDatabaseCallCount;
-	private static int immutableMutableToDomainCallCount;
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -267,10 +255,10 @@ public class ExplicitJavaTypeDescriptorTest extends BaseNonConfigCoreFunctionalT
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Mutable state we treat as immutable
 
-	public static class MutableState2 {
+	public static class PseudoMutableState {
 		private String state;
 
-		public MutableState2(String state) {
+		public PseudoMutableState(String state) {
 			this.state = state;
 		}
 
@@ -293,7 +281,7 @@ public class ExplicitJavaTypeDescriptorTest extends BaseNonConfigCoreFunctionalT
 				return false;
 			}
 
-			MutableState2 that = (MutableState2) o;
+			PseudoMutableState that = (PseudoMutableState) o;
 
 			return getState() != null ? getState().equals( that.getState() ) : that.getState() == null;
 
@@ -306,20 +294,76 @@ public class ExplicitJavaTypeDescriptorTest extends BaseNonConfigCoreFunctionalT
 	}
 
 	@Converter
-	public static class ImmutableMutable2ConverterImpl implements AttributeConverter<MutableState2,String> {
+	public static class PseudoMutableConverterImpl implements AttributeConverter<PseudoMutableState,String> {
 		@Override
-		public String convertToDatabaseColumn(MutableState2 attribute) {
-			immutableMutableToDatabaseCallCount++;
+		public String convertToDatabaseColumn(PseudoMutableState attribute) {
+			pseudoMutableToDatabaseCallCount++;
 			return attribute == null ? null : attribute.getState();
 		}
 
 		@Override
-		public MutableState2 convertToEntityAttribute(String dbData) {
-			immutableMutableToDomainCallCount++;
-			return new MutableState2( dbData );
+		public PseudoMutableState convertToEntityAttribute(String dbData) {
+			pseudoMutableToDomainCallCount++;
+			return new PseudoMutableState( dbData );
 		}
 	}
 
+	public static class PseudoMutableStateJavaTypeDescriptor implements JavaTypeDescriptor<PseudoMutableState> {
+		/**
+		 * Singleton access
+		 */
+		public static final PseudoMutableStateJavaTypeDescriptor INSTANCE = new PseudoMutableStateJavaTypeDescriptor();
+
+		@Override
+		public Class<PseudoMutableState> getJavaTypeClass() {
+			return PseudoMutableState.class;
+		}
+
+		@Override
+		public MutabilityPlan<PseudoMutableState> getMutabilityPlan() {
+			//noinspection unchecked
+			return ImmutableMutabilityPlan.INSTANCE;
+		}
+
+		@Override
+		public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context) {
+			return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.VARCHAR );
+		}
+
+		@Override
+		public PseudoMutableState fromString(String string) {
+			return string == null ? null : new PseudoMutableState( string );
+		}
+
+		@Override
+		public <X> X unwrap(PseudoMutableState value, Class<X> type, WrapperOptions options) {
+			if ( value == null ) {
+				return null;
+			}
+
+			if ( PseudoMutableState.class.equals( type ) ) {
+				return (X) value;
+			}
+
+			if ( String.class.equals( type ) ) {
+				return (X) value.state;
+			}
+
+			throw new IllegalArgumentException(
+					String.format(
+							Locale.ROOT,
+							"Cannot convert value '%s' to type `%s`",
+							value.state,
+							type
+					)
+			);
+		}
+
+		@Override
+		public <X> PseudoMutableState wrap(X value, WrapperOptions options) {
+			return null;
+		}
+	}
 
 
 }

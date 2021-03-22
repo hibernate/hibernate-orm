@@ -44,7 +44,11 @@ public class SerializableTypeDescriptor<T extends Serializable> extends Abstract
 	}
 
 	public SerializableTypeDescriptor(Class<T> type) {
-		super( type, createMutabilityPlan( type ) );
+		this( type, createMutabilityPlan( type ) );
+	}
+
+	public SerializableTypeDescriptor(Class<T> type, MutabilityPlan<T> mutabilityPlan) {
+		super( type, mutabilityPlan == null ? createMutabilityPlan( type ) : mutabilityPlan );
 	}
 
 	@SuppressWarnings({ "unchecked" })

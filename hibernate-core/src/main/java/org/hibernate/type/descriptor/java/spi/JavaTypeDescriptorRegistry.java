@@ -12,9 +12,16 @@ import java.lang.reflect.Type;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
+import org.hibernate.annotations.Immutable;
+import org.hibernate.annotations.Mutability;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.resource.beans.spi.ManagedBean;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.descriptor.java.AbstractClassTypeDescriptor;
 import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.SerializableTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.TypeConfigurationAware;
@@ -35,7 +42,6 @@ public class JavaTypeDescriptorRegistry implements JavaTypeDescriptorBaseline.Ba
 	private final TypeConfiguration typeConfiguration;
 	private final ConcurrentHashMap<Type, JavaTypeDescriptor<?>> descriptorsByType = new ConcurrentHashMap<>();
 
-	@SuppressWarnings("unused")
 	public JavaTypeDescriptorRegistry(TypeConfiguration typeConfiguration) {
 		this.typeConfiguration = typeConfiguration;
 		JavaTypeDescriptorBaseline.prime( this );
@@ -131,8 +137,6 @@ public class JavaTypeDescriptorRegistry implements JavaTypeDescriptorBaseline.Ba
 		return resolveDescriptor(
 				javaType,
 				() -> {
-					// the fallback will always be a basic type
-					final AbstractClassTypeDescriptor<J> fallbackDescriptor;
 					final Class<?> javaTypeClass;
 					if ( javaType instanceof Class<?> ) {
 						javaTypeClass = (Class<?>) javaType;
@@ -142,25 +146,10 @@ public class JavaTypeDescriptorRegistry implements JavaTypeDescriptorBaseline.Ba
 						javaTypeClass = (Class<?>) parameterizedType.getRawType();
 					}
 
-					if ( javaTypeClass.isEnum() ) {
-						//noinspection rawtypes
-						fallbackDescriptor = new EnumJavaTypeDescriptor( javaTypeClass );
-					}
-					else if ( Serializable.class.isAssignableFrom( javaTypeClass ) ) {
-						//noinspection rawtypes
-						fallbackDescriptor = new SerializableTypeDescriptor( javaTypeClass );
-					}
-					else {
-						//noinspection rawtypes
-						fallbackDescriptor = new JavaTypeDescriptorBasicAdaptor( javaTypeClass );
-					}
-
-					// todo (6.0) : here we assume that all temporal type descriptors are registered
-					//		ahead of time.  Allow for on-the-fly temporal types?  The 2 impediments for that are:
-					//			1) How can we recognize non-JDK date/time types?
-					//			2) What is the temporal precision for the types we have deemed temporal?
-
-					return fallbackDescriptor;
+					return RegistryHelper.INSTANCE.createTypeDescriptor(
+							javaTypeClass,
+							typeConfiguration
+					);
 				}
 		);
 	}

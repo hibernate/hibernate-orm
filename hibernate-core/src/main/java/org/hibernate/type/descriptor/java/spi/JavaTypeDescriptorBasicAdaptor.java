@@ -8,6 +8,7 @@ package org.hibernate.type.descriptor.java.spi;
 
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractClassTypeDescriptor;
+import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
 
@@ -20,6 +21,10 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
 public class JavaTypeDescriptorBasicAdaptor<T> extends AbstractClassTypeDescriptor<T> {
 	public JavaTypeDescriptorBasicAdaptor(Class<T> type) {
 		super( type );
+	}
+
+	public JavaTypeDescriptorBasicAdaptor(Class<T> type, MutabilityPlan<T> mutabilityPlan) {
+		super( type, mutabilityPlan );
 	}
 
 	@Override

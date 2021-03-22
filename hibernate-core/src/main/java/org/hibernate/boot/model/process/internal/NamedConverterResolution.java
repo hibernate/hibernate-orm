@@ -24,6 +24,7 @@ import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.converter.AttributeConverterMutabilityPlanImpl;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
+import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
@@ -114,9 +115,18 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 				? explicitMutabilityPlanAccess.apply( typeConfiguration )
 				: null;
 
-		final MutabilityPlan mutabilityPlan = explicitMutabilityPlan != null
-				? explicitMutabilityPlan
-				: new AttributeConverterMutabilityPlanImpl( converter, true );
+
+		final MutabilityPlan mutabilityPlan;
+		if ( explicitMutabilityPlan != null ) {
+			mutabilityPlan = explicitMutabilityPlan;
+		}
+		else if ( domainJtd.getMutabilityPlan().isMutable() ) {
+			mutabilityPlan = new AttributeConverterMutabilityPlanImpl( converter, true );
+		}
+		else {
+			mutabilityPlan = ImmutableMutabilityPlan.INSTANCE;
+		}
+
 		return new NamedConverterResolution(
 				domainJtd,
 				relationalJtd,

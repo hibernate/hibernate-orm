@@ -2,6 +2,7 @@ package org.hibernate.event;
 
 import org.hibernate.Session;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
 import javax.persistence.*;
@@ -13,6 +14,7 @@ public class ReSaveReferencedDeletedEntityJPA extends BaseEntityManagerFunctiona
     }
 
     @Test
+    @TestForIssue(jiraKey = "HHH-14416")
     public void testRefreshUnDeletedEntityWithReferencesJPA() {
         EntityManager em = getOrCreateEntityManager();
         em.getTransaction().begin();
@@ -38,6 +40,7 @@ public class ReSaveReferencedDeletedEntityJPA extends BaseEntityManagerFunctiona
     }
 
     @Test
+    @TestForIssue(jiraKey = "HHH-14416")
     public void testReSaveDeletedEntityWithReferencesJPA() {
         EntityManager em = getOrCreateEntityManager();
         em.getTransaction().begin();

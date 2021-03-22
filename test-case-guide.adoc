@@ -15,7 +15,7 @@ There are a number of tenants that make up a good test case as opposed to a poor
 
 == Test templates
 
-The Hibernate team maintains a set of "test templates" intended to help developers write tests.  These test templates are maintained in GitHub @ https://github.com/hibernate/hibernate-test-case-templates/tree/master/orm[hibernate-test-case-templates]
+The Hibernate team maintains a set of "test templates" intended to help developers write tests.  These test templates are maintained in GitHub @ https://github.com/hibernate/hibernate-test-case-templates/tree/main/orm[hibernate-test-case-templates]
 
 * If you want to use the Hibernate native API, you should follow the instructions from http://in.relation.to/2015/06/26/hibernate-test-case-templates/[this article].
 * If you want to use JPA, you should use the JPA templates that were detailed in http://in.relation.to/2016/01/14/hibernate-jpa-test-case-template/[this article].

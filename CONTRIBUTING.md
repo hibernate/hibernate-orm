@@ -62,8 +62,8 @@ although this is more of a mnemonic strategy than a hard-and-fast rule - but doi
 
 _If there is not already a JIRA issue covering the work you want to do, create one._
   
-Assuming you will be working from the master branch and working
-on the JIRA HHH-123 : `git checkout -b HHH-123 master`
+Assuming you will be working from the `main` branch and working
+on the JIRA HHH-123 : `git checkout -b HHH-123 main`
 
 
 ## Code

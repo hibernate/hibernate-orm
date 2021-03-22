@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.stream.basic;
 
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -25,6 +26,7 @@ import org.junit.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 
@@ -121,6 +123,53 @@ public class BasicStreamTest extends BaseNonConfigCoreFunctionalTestCase {
 			Stream<Tuple> data = session.createQuery( "SELECT me.id, me.name FROM MyEntity me", Tuple.class ).stream();
 			data.forEach( tuple -> assertTyping( Tuple.class, tuple ) );
 		} );
+	}
+
+	@Test
+	public void basicStreamTestWithExplicitOnClose() {
+		Session session = openSession();
+		session.getTransaction().begin();
+
+		AtomicInteger onCloseCount = new AtomicInteger();
+
+		// mainly we want to make sure that closing the Stream releases the ScrollableResults too
+		assertThat( ( (SessionImplementor) session ).getJdbcCoordinator()
+							.getLogicalConnection()
+							.getResourceRegistry()
+							.hasRegisteredResources(), is( false ) );
+
+		assertThat( onCloseCount.get(), equalTo( 0 ) );
+
+		final Stream<MyEntity> stream = session.createQuery( "from MyEntity", MyEntity.class ).stream().onClose(
+				onCloseCount::incrementAndGet );
+
+		assertThat( ( (SessionImplementor) session ).getJdbcCoordinator()
+							.getLogicalConnection()
+							.getResourceRegistry()
+							.hasRegisteredResources(), is( true ) );
+
+		assertThat( onCloseCount.get(), equalTo( 0 ) );
+
+		stream.forEach( System.out::println );
+
+		assertThat( ( (SessionImplementor) session ).getJdbcCoordinator()
+							.getLogicalConnection()
+							.getResourceRegistry()
+							.hasRegisteredResources(), is( false ) );
+
+		assertThat( onCloseCount.get(), equalTo( 1 ) );
+
+		stream.close();
+
+		assertThat( ( (SessionImplementor) session ).getJdbcCoordinator()
+							.getLogicalConnection()
+							.getResourceRegistry()
+							.hasRegisteredResources(), is( false ) );
+
+		assertThat( onCloseCount.get(), equalTo( 1 ) );
+
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Entity(name = "MyEntity")

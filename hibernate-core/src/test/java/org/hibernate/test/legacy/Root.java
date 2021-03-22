@@ -4,9 +4,8 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-
-//$Id: Master.java 4599 2004-09-26 05:18:27Z oneovthafew $
 package org.hibernate.test.legacy;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Collection;
@@ -14,21 +13,21 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
-public class Master implements Serializable, Named {
+public class Root implements Serializable, Named {
 	private Long id;
-	private Master otherMaster;
+	private Root otherRoot;
 	private Set details = new HashSet();
 	private Set moreDetails = new HashSet();
 	private Set incoming = new HashSet();
 	private Set outgoing = new HashSet();
-	private String name="master";
+	private String name="root";
 	private Date stamp;
 	private int version;
 	private BigDecimal bigDecimal = new BigDecimal("1234.123");
 	private int x;
 	private Collection allDetails;
 
-	public Master() {
+	public Root() {
 	}
 
 	public Long getId() {
@@ -63,19 +62,19 @@ public class Master implements Serializable, Named {
 		details.remove(d);
 	}
 	
-	public void addIncoming(Master m) {
+	public void addIncoming(Root m) {
 		incoming.add(m);
 	}
 	
-	public void removeIncoming(Master m) {
+	public void removeIncoming(Root m) {
 		incoming.remove(m);
 	}
 	
-	public void addOutgoing(Master m) {
+	public void addOutgoing(Root m) {
 		outgoing.add(m);
 	}
 	
-	public void removeOutgoing(Master m) {
+	public void removeOutgoing(Root m) {
 		outgoing.remove(m);
 	}
 	
@@ -130,15 +129,15 @@ public class Master implements Serializable, Named {
 	/**
 	 * @return
 	 */
-	public Master getOtherMaster() {
-		return otherMaster;
+	public Root getOtherRoot() {
+		return otherRoot;
 	}
 
 	/**
-	 * @param master
+	 * @param root
 	 */
-	public void setOtherMaster(Master master) {
-		otherMaster = master;
+	public void setOtherRoot(Root root) {
+		otherRoot = root;
 	}
 
 	/**

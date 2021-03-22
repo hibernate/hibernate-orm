@@ -7,9 +7,11 @@
 
 package org.hibernate.spatial.testing;
 
+import org.hibernate.dialect.CockroachDB192Dialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.hibernate.spatial.SpatialDialect;
+import org.hibernate.spatial.testing.dialects.cockroachdb.CockroachDBTestSupport;
 import org.hibernate.spatial.testing.dialects.db2.DB2TestSupport;
 import org.hibernate.spatial.testing.dialects.h2geodb.GeoDBTestSupport;
 import org.hibernate.spatial.testing.dialects.hana.HANATestSupport;
@@ -42,6 +44,11 @@ public class TestSupportFactories {
 			//this test works because all postgis dialects ultimately derive of the Postgresql82Dialect
 			return PostgisTestSupport.class;
 		}
+
+		if ( ( dialect instanceof SpatialDialect ) && CockroachDB192Dialect.class.isAssignableFrom( dialect.getClass() ) ){
+			return CockroachDBTestSupport.class;
+		}
+
 		if ( "org.hibernate.spatial.dialect.h2geodb.GeoDBDialect".equals( canonicalName ) ) {
 			return GeoDBTestSupport.class;
 		}

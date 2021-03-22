@@ -1433,7 +1433,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 
 		return new StreamDecorator<>(
 				StreamSupport.stream( spliterator, false ),
-				scrollableResults::close
+				iterator::close
 		);
 	}
 

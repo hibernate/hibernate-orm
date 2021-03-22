@@ -4,50 +4,21 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
+
 package org.hibernate.spatial.dialect.postgis;
 
-import java.util.Map;
-
-import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.dialect.PostgreSQL9Dialect;
-import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
+import org.hibernate.spatial.dialect.SpatialFunctionsRegistry;
 
-/**
- * *  Extends the {@code PostgreSQL9Dialect} to add support for the Postgis spatial types, functions and operators .
- * <p>
- * Created by Karel Maesen, Geovise BVBA on 01/11/16.
- */
-public class PostgisPG9Dialect extends PostgreSQL9Dialect implements SpatialDialect {
+interface PGSpatialDialectTrait extends SpatialDialect {
+
+	PostgisSupport support = new PostgisSupport();
 
 
-	transient private PostgisSupport support = new PostgisSupport();
-
-	/**
-	 * Creates an instance
-	 */
-	public PostgisPG9Dialect() {
-		super();
-		registerColumnType(
-				PGGeometryTypeDescriptor.INSTANCE_WKB_1.getSqlType(),
-				"GEOMETRY"
-		);
-		for ( Map.Entry<String, SQLFunction> entry : support.functionsToRegister() ) {
-			registerFunction( entry.getKey(), entry.getValue() );
-		}
+	default SpatialFunctionsRegistry functionsToRegister() {
+		return support.functionsToRegister();
 	}
-
-	@Override
-	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
-		super.contributeTypes(
-				typeContributions,
-				serviceRegistry
-		);
-		support.contributeTypes( typeContributions, serviceRegistry );
-	}
-
 	/**
 	 * Returns the SQL fragment for the SQL WHERE-clause when parsing
 	 * <code>org.hibernatespatial.criterion.SpatialRelateExpression</code>s
@@ -62,7 +33,7 @@ public class PostgisPG9Dialect extends PostgreSQL9Dialect implements SpatialDial
 	 * @return SQL fragment  {@code SpatialRelateExpression}
 	 */
 	@Override
-	public String getSpatialRelateSQL(String columnName, int spatialRelation) {
+	default String getSpatialRelateSQL(String columnName, int spatialRelation) {
 		return support.getSpatialRelateSQL( columnName, spatialRelation );
 	}
 
@@ -77,7 +48,7 @@ public class PostgisPG9Dialect extends PostgreSQL9Dialect implements SpatialDial
 	 * @return Rhe SQL fragment for the {@code SpatialFilterExpression}
 	 */
 	@Override
-	public String getSpatialFilterExpression(String columnName) {
+	default String getSpatialFilterExpression(String columnName) {
 		return support.getSpatialFilterExpression( columnName );
 	}
 
@@ -90,7 +61,7 @@ public class PostgisPG9Dialect extends PostgreSQL9Dialect implements SpatialDial
 	 * @return The SQL fragment for the projection
 	 */
 	@Override
-	public String getSpatialAggregateSQL(String columnName, int aggregation) {
+	default String getSpatialAggregateSQL(String columnName, int aggregation) {
 		return support.getSpatialAggregateSQL( columnName, aggregation );
 	}
 
@@ -102,7 +73,7 @@ public class PostgisPG9Dialect extends PostgreSQL9Dialect implements SpatialDial
 	 * @return The SQL fragment when parsing a <code>DWithinExpression</code>.
 	 */
 	@Override
-	public String getDWithinSQL(String columnName) {
+	default String getDWithinSQL(String columnName) {
 		return support.getDWithinSQL( columnName );
 	}
 
@@ -114,7 +85,7 @@ public class PostgisPG9Dialect extends PostgreSQL9Dialect implements SpatialDial
 	 * @return The SQL fragment for a <code>HavingSridExpression</code>.
 	 */
 	@Override
-	public String getHavingSridSQL(String columnName) {
+	default String getHavingSridSQL(String columnName) {
 		return support.getHavingSridSQL( columnName );
 	}
 
@@ -128,7 +99,7 @@ public class PostgisPG9Dialect extends PostgreSQL9Dialect implements SpatialDial
 	 * @return The SQL fragment for the isempty function
 	 */
 	@Override
-	public String getIsEmptySQL(String columnName, boolean isEmpty) {
+	default String getIsEmptySQL(String columnName, boolean isEmpty) {
 		return support.getIsEmptySQL( columnName, isEmpty );
 	}
 
@@ -139,7 +110,7 @@ public class PostgisPG9Dialect extends PostgreSQL9Dialect implements SpatialDial
 	 * @return True if filtering is supported
 	 */
 	@Override
-	public boolean supportsFiltering() {
+	default boolean supportsFiltering() {
 		return support.supportsFiltering();
 	}
 
@@ -151,7 +122,7 @@ public class PostgisPG9Dialect extends PostgreSQL9Dialect implements SpatialDial
 	 * @return True if this <code>SpatialDialect</code> supports the spatial function specified by the function parameter.
 	 */
 	@Override
-	public boolean supports(SpatialFunction function) {
+	default boolean supports(SpatialFunction function) {
 		return support.supports( function );
 	}
 }

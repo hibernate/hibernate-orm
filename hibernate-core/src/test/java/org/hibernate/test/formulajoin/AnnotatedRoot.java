@@ -22,7 +22,7 @@ import org.hibernate.annotations.JoinFormula;
  * @author Steve Ebersole
  */
 @Entity
-public class AnnotatedMaster {
+public class AnnotatedRoot {
 	@Id
 	private Integer id;
 	private String name;

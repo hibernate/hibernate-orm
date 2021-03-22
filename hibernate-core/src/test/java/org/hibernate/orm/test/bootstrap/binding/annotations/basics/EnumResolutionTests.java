@@ -15,9 +15,6 @@ import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -32,8 +29,9 @@ import org.hibernate.type.EnumType;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 import org.hibernate.usertype.UserType;
 
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
-import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.junit.jupiter.api.Test;
 
 import static javax.persistence.EnumType.ORDINAL;
@@ -48,14 +46,14 @@ import static org.hamcrest.MatcherAssert.assertThat;
  * @author Steve Ebersole
  */
 @ServiceRegistry
+@DomainModel( annotatedClasses = EnumResolutionTests.EntityWithEnums.class )
 public class EnumResolutionTests {
 
 	@Test
-	public void testVariousEnumResolutions(ServiceRegistryScope serviceRegistryScope) {
-		final StandardServiceRegistry registry = serviceRegistryScope.getRegistry();
-		final Metadata metadata = new MetadataSources( registry ).addAnnotatedClass( EntityWithEnums.class ).buildMetadata();
-
-		final PersistentClass entityBinding = metadata.getEntityBinding( EntityWithEnums.class.getName() );
+	public void testRawEnumResolution(DomainModelScope scope) {
+		final PersistentClass entityBinding = scope
+				.getDomainModel()
+				.getEntityBinding( EntityWithEnums.class.getName() );
 
 		verifyEnumResolution(
 				entityBinding.getProperty( "rawEnum" ),
@@ -64,6 +62,13 @@ public class EnumResolutionTests {
 				OrdinalEnumValueConverter.class,
 				true
 		);
+	}
+
+	@Test
+	public void testUnspecifiedMappingEnumResolution(DomainModelScope scope) {
+		final PersistentClass entityBinding = scope
+				.getDomainModel()
+				.getEntityBinding( EntityWithEnums.class.getName() );
 
 		verifyEnumResolution(
 				entityBinding.getProperty( "unspecifiedMappingEnum" ),
@@ -72,6 +77,13 @@ public class EnumResolutionTests {
 				OrdinalEnumValueConverter.class,
 				true
 		);
+	}
+
+	@Test
+	public void testOrdinalEnumResolution(DomainModelScope scope) {
+		final PersistentClass entityBinding = scope
+				.getDomainModel()
+				.getEntityBinding( EntityWithEnums.class.getName() );
 
 		verifyEnumResolution(
 				entityBinding.getProperty( "ordinalEnum" ),
@@ -80,6 +92,13 @@ public class EnumResolutionTests {
 				OrdinalEnumValueConverter.class,
 				true
 		);
+	}
+
+	@Test
+	public void testNamedEnumResolution(DomainModelScope scope) {
+		final PersistentClass entityBinding = scope
+				.getDomainModel()
+				.getEntityBinding( EntityWithEnums.class.getName() );
 
 		verifyEnumResolution(
 				entityBinding.getProperty( "namedEnum" ),
@@ -88,6 +107,13 @@ public class EnumResolutionTests {
 				NamedEnumValueConverter.class,
 				false
 		);
+	}
+
+	@Test
+	public void testConvertedEnumResolution(DomainModelScope scope) {
+		final PersistentClass entityBinding = scope
+				.getDomainModel()
+				.getEntityBinding( EntityWithEnums.class.getName() );
 
 		verifyEnumResolution(
 				entityBinding.getProperty( "convertedEnum" ),

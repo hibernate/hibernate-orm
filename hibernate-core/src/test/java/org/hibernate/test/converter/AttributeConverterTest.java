@@ -7,6 +7,7 @@
 package org.hibernate.test.converter;
 
 import java.io.Serializable;
+import java.sql.Clob;
 import java.sql.Timestamp;
 import java.sql.Types;
 import javax.persistence.AttributeConverter;
@@ -30,14 +31,13 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.HANACloudColumnStoreDialect;
+import org.hibernate.dialect.HANAColumnStoreDialect;
 import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.type.AbstractStandardBasicType;
-import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
@@ -53,6 +53,12 @@ import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ExceptionUtil;
 import org.junit.Test;
 
+import org.hamcrest.Matchers;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.is;
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -98,25 +104,25 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 
 	@Test
 	public void testBasicOperation() {
-
-		SimpleValue simpleValue = new BasicValue( new MetadataBuildingContextTestingImpl() );
-		simpleValue.setJpaAttributeConverterDescriptor(
+		final BasicValue basicValue = new BasicValue( new MetadataBuildingContextTestingImpl() );
+		basicValue.setJpaAttributeConverterDescriptor(
 				new InstanceBasedConverterDescriptor(
 						new StringClobConverter(),
 						new ClassmateContext()
 				)
 		);
-		simpleValue.setTypeUsingReflection( IrrelevantEntity.class.getName(), "name" );
+		basicValue.setTypeUsingReflection( IrrelevantEntity.class.getName(), "name" );
 
-		Type type = simpleValue.getType();
+		final Type type = basicValue.getType();
 		assertNotNull( type );
-		if ( !AttributeConverterTypeAdapter.class.isInstance( type ) ) {
-			fail( "AttributeConverter not applied" );
-		}
-		AbstractStandardBasicType basicType = assertTyping( AbstractStandardBasicType.class, type );
-		assertSame( StringTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
-		SqlTypeDescriptor sqlTypeDescriptor = basicType.getSqlTypeDescriptor();
-		assertEquals( Dialect.getDialect().remapSqlTypeDescriptor( ClobTypeDescriptor.CLOB_BINDING).getSqlType(), sqlTypeDescriptor.getSqlType() );
+		assertThat( type, instanceOf( AttributeConverterTypeAdapter.class ) );
+
+		final AttributeConverterTypeAdapter typeAdapter = (AttributeConverterTypeAdapter) type;
+
+		assertThat( typeAdapter.getDomainJtd().getJavaTypeClass(), equalTo( String.class ) );
+
+		final SqlTypeDescriptor sqlTypeDescriptor = typeAdapter.getSqlTypeDescriptor();
+		assertThat( sqlTypeDescriptor.getJdbcTypeCode(), is( Types.CLOB ) );
 	}
 
 	@Test
@@ -150,25 +156,24 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
 
 		try {
-			MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
+			final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
 					.addAnnotatedClass( Tester.class )
 					.getMetadataBuilder()
 					.applyAttributeConverter( StringClobConverter.class, true )
 					.build();
 
-			PersistentClass tester = metadata.getEntityBinding( Tester.class.getName() );
-			Property nameProp = tester.getProperty( "name" );
-			SimpleValue nameValue = (SimpleValue) nameProp.getValue();
-			Type type = nameValue.getType();
+			final PersistentClass tester = metadata.getEntityBinding( Tester.class.getName() );
+			final Property nameProp = tester.getProperty( "name" );
+			final BasicValue nameValue = (BasicValue) nameProp.getValue();
+			final Type type = nameValue.getType();
 			assertNotNull( type );
-			assertTyping( BasicType.class, type );
-			if ( !AttributeConverterTypeAdapter.class.isInstance( type ) ) {
-				fail( "AttributeConverter not applied" );
-			}
-			AbstractStandardBasicType basicType = assertTyping( AbstractStandardBasicType.class, type );
-			assertSame( StringTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
-			SqlTypeDescriptor sqlTypeDescriptor = basicType.getSqlTypeDescriptor();
-			assertEquals( Dialect.getDialect().remapSqlTypeDescriptor(ClobTypeDescriptor.CLOB_BINDING).getSqlType(), sqlTypeDescriptor.getSqlType() );
+
+			assertThat( type, instanceOf( AttributeConverterTypeAdapter.class ) );
+
+			final AttributeConverterTypeAdapter typeAdapter = (AttributeConverterTypeAdapter) type;
+			assertThat( typeAdapter.getDomainJtd().getJavaTypeClass(), Matchers.equalTo( String.class ) );
+			final SqlTypeDescriptor sqlTypeDescriptor = typeAdapter.getSqlTypeDescriptor();
+			assertThat( sqlTypeDescriptor.getJdbcTypeCode(), is( Types.CLOB ) );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );
@@ -189,16 +194,18 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 
 			PersistentClass tester = metadata.getEntityBinding( Tester.class.getName() );
 			Property nameProp = tester.getProperty( "name" );
-			SimpleValue nameValue = (SimpleValue) nameProp.getValue();
+			BasicValue nameValue = (BasicValue) nameProp.getValue();
 			Type type = nameValue.getType();
 			assertNotNull( type );
-			if ( !AttributeConverterTypeAdapter.class.isInstance( type ) ) {
-				fail( "AttributeConverter not applied" );
-			}
-			AttributeConverterTypeAdapter basicType = assertTyping( AttributeConverterTypeAdapter.class, type );
-			assertSame( StringTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
-			SqlTypeDescriptor sqlTypeDescriptor = basicType.getSqlTypeDescriptor();
-			assertEquals( Dialect.getDialect().remapSqlTypeDescriptor(ClobTypeDescriptor.CLOB_BINDING).getSqlType(), sqlTypeDescriptor.getSqlType() );
+			assertThat( type, instanceOf( AttributeConverterTypeAdapter.class ) );
+
+			final AttributeConverterTypeAdapter typeAdapter = (AttributeConverterTypeAdapter) type;
+
+			assertThat( typeAdapter.getDomainJtd().getJavaTypeClass(), equalTo( String.class ) );
+			assertThat( typeAdapter.getRelationalJtd().getJavaTypeClass(), equalTo( Clob.class ) );
+
+			final SqlTypeDescriptor sqlTypeDescriptor = typeAdapter.getSqlTypeDescriptor();
+			assertThat( sqlTypeDescriptor.getJdbcTypeCode(), is( Types.CLOB ) );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );
@@ -405,23 +412,25 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 					.build();
 
 			// first lets validate that the converter was applied...
-			PersistentClass tester = metadata.getEntityBinding( EntityWithConvertibleField.class.getName() );
-			Property nameProp = tester.getProperty( "convertibleEnum" );
-			SimpleValue nameValue = (SimpleValue) nameProp.getValue();
-			Type type = nameValue.getType();
+			final PersistentClass tester = metadata.getEntityBinding( EntityWithConvertibleField.class.getName() );
+			final Property nameProp = tester.getProperty( "convertibleEnum" );
+			final BasicValue nameValue = (BasicValue) nameProp.getValue();
+			final Type type = nameValue.getType();
 			assertNotNull( type );
-			assertTyping( BasicType.class, type );
-			if ( !AttributeConverterTypeAdapter.class.isInstance( type ) ) {
-				fail( "AttributeConverter not applied" );
-			}
-			AbstractStandardBasicType basicType = assertTyping( AbstractStandardBasicType.class, type );
-			assertTyping( EnumJavaTypeDescriptor.class, basicType.getJavaTypeDescriptor() );
-			if (metadata.getDatabase().getDialect() instanceof HANACloudColumnStoreDialect) {
-				assertEquals( Types.NVARCHAR, basicType.getSqlTypeDescriptor().getSqlType() );
+			assertThat( type, instanceOf( AttributeConverterTypeAdapter.class ) );
+
+			final AttributeConverterTypeAdapter typeAdapter = (AttributeConverterTypeAdapter) type;
+
+			assertThat( typeAdapter.getDomainJtd(), instanceOf( EnumJavaTypeDescriptor.class ) );
+
+			final int expectedJdbcTypeCode;
+			if ( metadata.getDatabase().getDialect() instanceof HANAColumnStoreDialect ) {
+				expectedJdbcTypeCode = Types.NVARCHAR;
 			}
 			else {
-				assertEquals( Types.VARCHAR, basicType.getSqlTypeDescriptor().getSqlType() );
+				expectedJdbcTypeCode = Types.VARCHAR;
 			}
+			assertThat( typeAdapter.getSqlTypeDescriptor().getJdbcTypeCode(), is( expectedJdbcTypeCode ) );
 
 			// then lets build the SF and verify its use...
 			final SessionFactory sf = metadata.buildSessionFactory();

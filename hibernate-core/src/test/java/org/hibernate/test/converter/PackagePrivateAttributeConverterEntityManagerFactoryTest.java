@@ -6,8 +6,6 @@
  */
 package org.hibernate.test.converter;
 
-import java.util.Arrays;
-import java.util.List;
 import javax.persistence.AttributeConverter;
 import javax.persistence.Convert;
 import javax.persistence.Converter;
@@ -15,52 +13,55 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Tuple;
 
-import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.NotImplementedYet;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+
 import static org.junit.Assert.assertEquals;
 
 /**
  * @author Vlad Mihalcea
  */
 @TestForIssue( jiraKey = "HHH-10778" )
-public class PackagePrivateAttributeConverterEntityManagerFactoryTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] { Tester.class };
-	}
+@DomainModel( annotatedClasses = PackagePrivateAttributeConverterEntityManagerFactoryTest.Tester.class )
+@SessionFactory
+public class PackagePrivateAttributeConverterEntityManagerFactoryTest {
+	public final String sql = "select code from Tester where id = :id";
 
 	@Test
-	public void test() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Tester tester = new Tester();
-			tester.setId( 1L );
-			tester.setCode( 123 );
+	@NotImplementedYet( strict = false, reason = "Support for passing `resultType` to `#createNativeQuery` not yet implemented" )
+	public void test(SessionFactoryScope scope) {
+		scope.inTransaction(
+				(session) -> {
+					final Tester tester = new Tester();
+					tester.setId( 1L );
+					tester.setCode( 123 );
 
-			entityManager.persist( tester );
-		} );
+					session.persist( tester );
+				}
+		);
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Tuple tuple = (Tuple) entityManager.createNativeQuery(
-				"select code " +
-				"from Tester " +
-				"where id = :id", Tuple.class )
-			.setParameter( "id", 1L )
-			.getSingleResult();
+		scope.inTransaction(
+				(session) -> {
+					final Tuple tuple = (Tuple) session.createNativeQuery( sql, Tuple.class )
+							.setParameter( "id", 1L )
+							.getSingleResult();
+					assertEquals( "123", tuple.get( "code" ) );
 
-			assertEquals( "123", tuple.get( "code" ) );
+					final Tester tester = session.find( Tester.class, 1L );
+					assertEquals( 123, (int) tester.getCode() );
+				}
+		);
+	}
 
-			Tester tester = entityManager.find( Tester.class, 1L );
-
-			assertEquals( 123, (int) tester.getCode() );
-		} );
+	@AfterEach
+	public void dropTestData(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> session.createQuery( "delete Tester" ).executeUpdate() );
 	}
 
 	// Entity declarations used in the test ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

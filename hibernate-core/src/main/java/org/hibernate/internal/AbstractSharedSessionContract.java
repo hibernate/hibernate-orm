@@ -701,7 +701,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 		try {
 			NativeQueryImplementor query = createNativeQuery( sqlString );
-			query.addEntity( "alias1", resultClass.getName(), LockMode.READ );
+//			query.addEntity( "alias1", resultClass.getName(), LockMode.READ );
 			return query;
 		}
 		catch (RuntimeException he) {

@@ -17,7 +17,6 @@ import org.hibernate.query.Query;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -52,7 +51,6 @@ public class FormulaNativeQueryTest {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-7525", reason = "native query not implemented yet")
 	void testNativeQuery(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final Query<Foo> query = session.createNativeQuery( "SELECT ft.* FROM foo_table ft", Foo.class );

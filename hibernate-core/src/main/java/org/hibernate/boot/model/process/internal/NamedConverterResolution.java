@@ -6,6 +6,8 @@
  */
 package org.hibernate.boot.model.process.internal;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.function.Function;
 import javax.persistence.AttributeConverter;
 
@@ -15,9 +17,14 @@ import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.BasicValue;
+import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.SqlExpressable;
 import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -132,7 +139,8 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 				relationalJtd,
 				relationalStd,
 				converter,
-				mutabilityPlan
+				mutabilityPlan,
+				context.getBootstrapContext().getTypeConfiguration()
 		);
 	}
 
@@ -154,7 +162,8 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 			JavaTypeDescriptor relationalJtd,
 			SqlTypeDescriptor relationalStd,
 			JpaAttributeConverter valueConverter,
-			MutabilityPlan mutabilityPlan) {
+			MutabilityPlan mutabilityPlan,
+			TypeConfiguration typeConfiguration) {
 		assert domainJtd != null;
 		this.domainJtd = domainJtd;
 
@@ -194,7 +203,15 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 				return binder;
 			}
 		};
-//		this.jdbcMapping = new StandardBasicTypeImpl( relationalJtd, relationalStd );
+
+//		this.jdbcMapping = new ConverterJdbcMappingImpl(
+//				domainJtd,
+//				relationalJtd,
+//				relationalStd,
+//				valueConverter,
+//				mutabilityPlan,
+//				typeConfiguration
+//		);
 
 		this.legacyResolvedType = new AttributeConverterTypeAdapter(
 				ConverterDescriptor.TYPE_NAME_PREFIX + valueConverter.getConverterJavaTypeDescriptor().getJavaType().getTypeName(),
@@ -252,5 +269,142 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 	@Override
 	public String toString() {
 		return "NamedConverterResolution(" + valueConverter.getConverterBean().getBeanClass().getName() + ')';
+	}
+
+	/**
+	 * Allows treating the attribute conversion as a jdbc-level reference.
+	 * This covers the conversion plus managing the JDBC-value
+	 */
+	private static class ConverterJdbcMappingImpl implements JdbcMapping, MappingModelExpressable<Object>, SqlExpressable {
+		private final JavaTypeDescriptor domainJtd;
+		private final JavaTypeDescriptor jdbcJtd;
+		private final SqlTypeDescriptor std;
+		private final JpaAttributeConverter valueConverter;
+		private final MutabilityPlan mutabilityPlan;
+
+		private final ValueExtractor extractor;
+		private final ValueBinder binder;
+		private final BasicType lowLevelJdbcMapping;
+
+		public ConverterJdbcMappingImpl(
+				JavaTypeDescriptor domainJtd,
+				JavaTypeDescriptor jdbcJtd,
+				SqlTypeDescriptor std,
+				JpaAttributeConverter valueConverter,
+				MutabilityPlan mutabilityPlan,
+				TypeConfiguration typeConfiguration) {
+			this.domainJtd = domainJtd;
+			this.jdbcJtd = jdbcJtd;
+			this.std = std;
+			this.valueConverter = valueConverter;
+			this.mutabilityPlan = mutabilityPlan;
+
+			this.extractor = std.getExtractor( jdbcJtd );
+			this.binder = std.getBinder( jdbcJtd );
+
+			this.lowLevelJdbcMapping = typeConfiguration.getBasicTypeRegistry().resolve( jdbcJtd, std );
+		}
+
+		@Override
+		public JavaTypeDescriptor getJavaTypeDescriptor() {
+			return domainJtd;
+		}
+
+		@Override
+		public SqlTypeDescriptor getSqlTypeDescriptor() {
+			return std;
+		}
+
+		@Override
+		public ValueExtractor getJdbcValueExtractor() {
+			return extractor;
+		}
+
+		@Override
+		public ValueBinder getJdbcValueBinder() {
+			return binder;
+		}
+
+		@Override
+		public int getJdbcTypeCount() {
+			return 1;
+		}
+
+		@Override
+		public List<JdbcMapping> getJdbcMappings() {
+			return Collections.singletonList( this );
+		}
+
+		@Override
+		public int forEachJdbcType(IndexedConsumer<JdbcMapping> action) {
+			action.accept( 0, this );
+			return 1;
+		}
+
+		@Override
+		public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+			action.accept( offset, this );
+			return 1;
+		}
+
+		@Override
+		public Object disassemble(Object value, SharedSessionContractImplementor session) {
+			return mutabilityPlan.disassemble( value );
+		}
+
+		@Override
+		public int forEachJdbcValue(
+				Object value,
+				Clause clause,
+				int offset,
+				JdbcValuesConsumer valuesConsumer,
+				SharedSessionContractImplementor session) {
+			final AttributeConverter converter = (AttributeConverter) valueConverter.getConverterBean().getBeanInstance();
+			final Object converted = converter.convertToDatabaseColumn( value );
+			valuesConsumer.consume( offset, converted, this );
+			return 1;
+		}
+
+		@Override
+		public int forEachDisassembledJdbcValue(
+				Object value,
+				Clause clause,
+				JdbcValuesConsumer valuesConsumer,
+				SharedSessionContractImplementor session) {
+			final AttributeConverter converter = (AttributeConverter) valueConverter.getConverterBean().getBeanInstance();
+			final Object converted = converter.convertToDatabaseColumn( value );
+			valuesConsumer.consume( 0, converted, this );
+			return 1;
+		}
+
+		@Override
+		public int forEachDisassembledJdbcValue(
+				Object value,
+				Clause clause,
+				int offset,
+				JdbcValuesConsumer valuesConsumer,
+				SharedSessionContractImplementor session) {
+			final AttributeConverter converter = (AttributeConverter) valueConverter.getConverterBean().getBeanInstance();
+			final Object converted = converter.convertToDatabaseColumn( value );
+			valuesConsumer.consume( offset, converted, this );
+			return 1;
+		}
+
+		@Override
+		public int forEachJdbcValue(
+				Object value,
+				Clause clause,
+				JdbcValuesConsumer valuesConsumer,
+				SharedSessionContractImplementor session) {
+			final AttributeConverter converter = (AttributeConverter) valueConverter.getConverterBean().getBeanInstance();
+			final Object converted = converter.convertToDatabaseColumn( value );
+			valuesConsumer.consume( 0, converted, this );
+			return 1;
+		}
+
+		@Override
+		public JdbcMapping getJdbcMapping() {
+			return lowLevelJdbcMapping;
+		}
 	}
 }

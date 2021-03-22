@@ -29,6 +29,7 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
@@ -39,6 +40,7 @@ import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.spi.XmlMappingBinderAccess;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.cfg.annotations.NamedProcedureCallDefinition;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
@@ -365,10 +367,28 @@ public class Configuration {
 	}
 
 	/**
+	 * @return An object capable of parsing XML mapping files that can then be passed to {@link #addXmlMapping(Binding)}.
+	 */
+	public XmlMappingBinderAccess getXmlMappingBinderAccess() {
+		return metadataSources.getXmlMappingBinderAccess();
+	}
+
+	/**
 	 * @deprecated No longer supported.
 	 */
 	@Deprecated
 	public void add(XmlDocument metadataXml) {
+	}
+
+	/**
+	 * Read mappings that were parsed using {@link #getXmlMappingBinderAccess()}.
+	 *
+	 * @param binding the parsed mapping
+	 * @return this (for method chaining purposes)
+	 */
+	public Configuration addXmlMapping(Binding<?> binding) {
+		metadataSources.addXmlBinding( binding );
+		return this;
 	}
 
 	/**

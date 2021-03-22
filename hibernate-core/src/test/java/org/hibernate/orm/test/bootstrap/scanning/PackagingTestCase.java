@@ -40,9 +40,10 @@ import org.hibernate.jpa.test.pack.spacepar.Bug;
 import org.hibernate.jpa.test.pack.various.Airplane;
 import org.hibernate.jpa.test.pack.various.Seat;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
+import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 
 import org.jboss.shrinkwrap.api.ArchivePath;
 import org.jboss.shrinkwrap.api.ArchivePaths;
@@ -58,12 +59,16 @@ import static org.junit.Assert.fail;
  * @author Hardy Ferentschik
  * @author Brett Meyer
  */
-public abstract class PackagingTestCase extends BaseCoreFunctionalTestCase {
-	protected static ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
+public abstract class PackagingTestCase extends BaseSessionFactoryFunctionalTest {
+	protected static ClassLoader originalClassLoader;
+	private static Thread thread;
+
 	protected static ClassLoader bundleClassLoader;
 	protected static File packageTargetDir;
 
 	static {
+		thread = Thread.currentThread();
+		originalClassLoader = thread.getContextClassLoader();
 		// get a URL reference to something we now is part of the classpath (us)
 		URL myUrl = originalClassLoader.getResource(
 				PackagingTestCase.class.getName().replace( '.', '/' ) + ".class"
@@ -106,36 +111,36 @@ public abstract class PackagingTestCase extends BaseCoreFunctionalTestCase {
 		packageTargetDir.mkdirs();
 	}
 
-	@Before
+	@BeforeEach
 	public void prepareTCCL() {
 		// add the bundle class loader in order for ShrinkWrap to build the test package
-		Thread.currentThread().setContextClassLoader( bundleClassLoader );
+		thread.setContextClassLoader( bundleClassLoader );
 	}
 
-	@After
-	public void resetTCCL() throws Exception {
+	@AfterEach
+	public void resetTCCL() {
 		// reset the classloader
-		Thread.currentThread().setContextClassLoader( originalClassLoader );
+		thread.setContextClassLoader( originalClassLoader );
 	}
 
 	protected void addPackageToClasspath(File... files) throws MalformedURLException {
-		List<URL> urlList = new ArrayList<URL>();
+		List<URL> urlList = new ArrayList<>();
 		for ( File file : files ) {
 			urlList.add( file.toURL() );
 		}
 		URLClassLoader classLoader = new URLClassLoader(
 				urlList.toArray( new URL[urlList.size()] ), originalClassLoader
 		);
-		Thread.currentThread().setContextClassLoader( classLoader );
+		thread.setContextClassLoader( classLoader );
 	}
 
 	protected void addPackageToClasspath(URL... urls) throws MalformedURLException {
-		List<URL> urlList = new ArrayList<URL>();
+		List<URL> urlList = new ArrayList<>();
 		urlList.addAll( Arrays.asList( urls ) );
 		URLClassLoader classLoader = new URLClassLoader(
 				urlList.toArray( new URL[urlList.size()] ), originalClassLoader
 		);
-		Thread.currentThread().setContextClassLoader( classLoader );
+		thread.setContextClassLoader( classLoader );
 	}
 
 	protected File buildDefaultPar() {
@@ -433,9 +438,9 @@ public abstract class PackagingTestCase extends BaseCoreFunctionalTestCase {
 		JavaArchive archive = ShrinkWrap.create( JavaArchive.class, fileName );
 		archive.addAsResource( includeFile );
 
-		File testPackage = new File( packageTargetDir, fileName );
-		archive.as( ExplodedExporter.class ).exportExploded( packageTargetDir );
-		return testPackage;
+			File testPackage = new File( packageTargetDir, fileName );
+			archive.as( ExplodedExporter.class ).exportExploded( packageTargetDir );
+			return testPackage;
 	}
 
 }

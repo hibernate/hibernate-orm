@@ -43,15 +43,16 @@ import org.hibernate.jpa.test.pack.various.Airplane;
 import org.hibernate.jpa.test.pack.various.Seat;
 import org.hibernate.stat.Statistics;
 
-import org.hibernate.testing.FailureExpected;
-import org.junit.After;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.FailureExpected;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+
 
 /**
  * In this test we verify that  it is possible to bootstrap Hibernate/JPA from
@@ -65,7 +66,7 @@ import static org.junit.Assert.fail;
 @SuppressWarnings("unchecked")
 public class PackagedEntityManagerTest extends PackagingTestCase {
 	private EntityManagerFactory emf;
-	@After
+	@AfterEach
 	public void tearDown(){
 		if(emf != null && emf.isOpen()) {
 			emf.close();
@@ -160,20 +161,20 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		as.setVersion( v );
 		em.persist( as );
 		em.flush();
-		assertEquals( "Failure in default listeners", 1, IncrementListener.getIncrement() );
-		assertEquals( "Failure in XML overriden listeners", 1, OtherIncrementListener.getIncrement() );
+		assertEquals( 1, IncrementListener.getIncrement(), "Failure in default listeners" );
+		assertEquals(  1, OtherIncrementListener.getIncrement(), "Failure in XML overriden listeners" );
 
 		Mouse mouse = new Mouse();
 		mouse.setName( "mickey" );
 		em.persist( mouse );
 		em.flush();
-		assertEquals( "Failure in @ExcludeDefaultListeners", 1, IncrementListener.getIncrement() );
+		assertEquals( 1, IncrementListener.getIncrement(), "Failure in @ExcludeDefaultListeners" );
 		assertEquals( 1, OtherIncrementListener.getIncrement() );
 
 		Money money = new Money();
 		em.persist( money );
 		em.flush();
-		assertEquals( "Failure in @ExcludeDefaultListeners", 2, IncrementListener.getIncrement() );
+		assertEquals( 2, IncrementListener.getIncrement(), "Failure in @ExcludeDefaultListeners" );
 		assertEquals( 1, OtherIncrementListener.getIncrement() );
 
 		em.getTransaction().rollback();
@@ -324,10 +325,10 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 				.getServiceRegistry()
 				.getService( EventListenerRegistry.class );
 		assertEquals(
-				"Explicit pre-insert event through hibernate.ejb.event.pre-insert does not work",
 				listenerRegistry.getEventListenerGroup( EventType.PRE_INSERT ).count(),
-				listenerRegistry.getEventListenerGroup( EventType.PRE_UPDATE ).count() + 1
-		);
+				listenerRegistry.getEventListenerGroup( EventType.PRE_UPDATE ).count() + 1,
+				"Explicit pre-insert event through hibernate.ejb.event.pre-insert does not work"
+				);
 
 		em.close();
 		emf.close();
@@ -384,7 +385,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "none", message = "Problem with caching, specifically managing SoftLocks" )
+	@FailureExpected( jiraKey = "none", reason = "Problem with caching, specifically managing SoftLocks" )
 	public void testConfiguration() throws Exception {
 		File testPackage = buildExplicitPar();
 		addPackageToClasspath( testPackage );

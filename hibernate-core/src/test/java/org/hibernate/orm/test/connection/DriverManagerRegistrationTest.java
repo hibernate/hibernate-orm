@@ -16,12 +16,11 @@ import java.util.Properties;
 import java.util.logging.Logger;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.AfterClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * This test illustrates the problem with calling {@link ClassLoader#loadClass(String)} rather than
@@ -30,7 +29,7 @@ import static org.junit.Assert.fail;
  * @author Steve Ebersole
  */
 @TestForIssue( jiraKey = "HHH-7272" )
-public class DriverManagerRegistrationTest extends BaseUnitTestCase {
+public class DriverManagerRegistrationTest {
 
 	@Test
 	public void testDriverRegistrationUsingLoadClassFails() {
@@ -73,10 +72,14 @@ public class DriverManagerRegistrationTest extends BaseUnitTestCase {
 	}
 
 	private static ClassLoader determineClassLoader() {
-		return DriverManagerRegistrationTest.class.getClassLoader();
+		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+		if ( classLoader == null ) {
+			classLoader = DriverManagerRegistrationTest.class.getClassLoader();
+		}
+		return classLoader;
 	}
 
-	@AfterClass
+	@AfterAll
 	public static void afterwards() {
 		try {
 			DriverManager.deregisterDriver( TestDriver1.INSTANCE );

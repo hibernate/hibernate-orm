@@ -16,7 +16,10 @@ import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
 import org.hibernate.boot.registry.classloading.internal.TcclLookupPrecedence;
 
 import org.hibernate.testing.TestForIssue;
-import org.junit.Test;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -25,6 +28,18 @@ import static org.junit.Assert.assertTrue;
  * @author Cédric Tabin
  */
 public class ClassLoaderServiceImplTest {
+	protected ClassLoader originalClassLoader;
+
+	@BeforeEach
+	public void setUp(){
+		originalClassLoader = Thread.currentThread().getContextClassLoader();
+	}
+
+	@AfterEach
+	public void tearDown(){
+		Thread.currentThread().setContextClassLoader( originalClassLoader );
+	}
+
 	@Test
 	public void testNullTCCL() {
 		Thread.currentThread().setContextClassLoader( null );

@@ -38,9 +38,10 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.jpa.test.pack.defaultpar.Version;
 import org.hibernate.jpa.test.pack.explodedpar.Carpet;
 
-import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+
+import org.junit.jupiter.api.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

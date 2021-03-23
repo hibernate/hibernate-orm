@@ -13,7 +13,7 @@ import javax.persistence.TemporalType;
 import org.hibernate.QueryException;
 import org.hibernate.metamodel.model.domain.AllowableTemporalParameterType;
 import org.hibernate.type.descriptor.java.CalendarTimeTypeDescriptor;
-import org.hibernate.type.descriptor.sql.TimeTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.TimeTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**

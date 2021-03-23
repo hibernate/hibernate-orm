@@ -15,7 +15,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -73,23 +73,23 @@ public interface ResultSetAccess extends JdbcValuesMetadata {
 		try {
 			final TypeConfiguration typeConfiguration = getFactory().getTypeConfiguration();
 			final ResultSetMetaData metaData = getResultSet().getMetaData();
-			final SqlTypeDescriptor sqlTypeDescriptor = jdbcServices.getDialect()
+			final JdbcTypeDescriptor jdbcTypeDescriptor = jdbcServices.getDialect()
 					.resolveSqlTypeDescriptor(
 							metaData.getColumnType( position ),
 							metaData.getPrecision( position ),
 							metaData.getScale( position ),
-							typeConfiguration.getSqlTypeDescriptorRegistry()
+							typeConfiguration.getJdbcTypeDescriptorRegistry()
 					);
 			final JavaTypeDescriptor<J> javaTypeDescriptor;
 			if ( explicitJavaTypeDescriptor == null ) {
-				javaTypeDescriptor = sqlTypeDescriptor.getJdbcRecommendedJavaTypeMapping( typeConfiguration );
+				javaTypeDescriptor = jdbcTypeDescriptor.getJdbcRecommendedJavaTypeMapping( typeConfiguration );
 			}
 			else {
 				javaTypeDescriptor = explicitJavaTypeDescriptor;
 			}
 			return typeConfiguration.getBasicTypeRegistry().resolve(
 					javaTypeDescriptor,
-					sqlTypeDescriptor
+					jdbcTypeDescriptor
 			);
 		}
 		catch (SQLException e) {

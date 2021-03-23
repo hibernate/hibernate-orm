@@ -185,7 +185,7 @@ public class SmokeTests {
 					assertThat( selectedExpressable, instanceOf( StandardBasicTypeImpl.class ) );
 					final StandardBasicTypeImpl basicType = (StandardBasicTypeImpl) selectedExpressable;
 					assertThat( basicType.getJavaTypeDescriptor().getJavaTypeClass(), AssignableMatcher.assignableTo( Integer.class ) );
-					assertThat( basicType.getSqlTypeDescriptor().getSqlType(), is( Types.TINYINT ) );
+					assertThat( basicType.getJdbcTypeDescriptor().getJdbcType(), is( Types.TINYINT ) );
 
 
 					assertThat( sqlAst.getDomainResultDescriptors().size(), is( 1 ) );

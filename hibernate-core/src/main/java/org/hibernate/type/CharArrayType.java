@@ -8,9 +8,9 @@ package org.hibernate.type;
 import java.sql.Types;
 
 import org.hibernate.type.descriptor.java.PrimitiveCharacterArrayTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
-import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.VarcharTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#VARCHAR VARCHAR} and {@code char[]}
@@ -37,15 +37,15 @@ public class CharArrayType
 	}
 
 	@Override
-	public <X> BasicType<X> resolveIndicatedType(SqlTypeDescriptorIndicators indicators) {
+	public <X> BasicType<X> resolveIndicatedType(JdbcTypeDescriptorIndicators indicators) {
 		if ( indicators.isLob() ) {
 			//noinspection unchecked
 			return (BasicType<X>) ( indicators.isNationalized() ? CharacterArrayNClobType.INSTANCE : CharacterArrayClobType.INSTANCE );
 		}
 
 		if ( indicators.isNationalized() ) {
-			final SqlTypeDescriptor nvarcharType = indicators.getTypeConfiguration()
-					.getSqlTypeDescriptorRegistry()
+			final JdbcTypeDescriptor nvarcharType = indicators.getTypeConfiguration()
+					.getJdbcTypeDescriptorRegistry()
 					.getDescriptor( Types.NVARCHAR );
 
 			//noinspection unchecked

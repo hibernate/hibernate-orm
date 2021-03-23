@@ -12,7 +12,7 @@ import java.util.Comparator;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.ByteTypeDescriptor;
-import org.hibernate.type.descriptor.sql.TinyIntTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.TinyIntTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#TINYINT TINYINT} and {@link Byte}

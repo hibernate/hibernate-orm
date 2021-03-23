@@ -7,8 +7,8 @@
 package org.hibernate.type;
 
 import org.hibernate.type.descriptor.java.CharacterArrayTypeDescriptor;
-import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.ClobTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 
 /**
  * A type that maps between {@link java.sql.Types#CLOB CLOB} and {@link Character Character[]}
@@ -33,7 +33,7 @@ public class CharacterArrayClobType
 	}
 
 	@Override
-	public <X> BasicType<X> resolveIndicatedType(SqlTypeDescriptorIndicators indicators) {
+	public <X> BasicType<X> resolveIndicatedType(JdbcTypeDescriptorIndicators indicators) {
 		//noinspection unchecked
 		return (BasicType<X>) ( indicators.isNationalized() ? CharacterArrayNClobType.INSTANCE : this );
 	}

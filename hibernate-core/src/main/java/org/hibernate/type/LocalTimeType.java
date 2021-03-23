@@ -11,7 +11,7 @@ import javax.persistence.TemporalType;
 
 import org.hibernate.metamodel.model.domain.AllowableTemporalParameterType;
 import org.hibernate.type.descriptor.java.LocalTimeJavaDescriptor;
-import org.hibernate.type.descriptor.sql.TimeTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.TimeTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**

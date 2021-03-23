@@ -9,9 +9,11 @@ package org.hibernate.type;
 import java.io.Serializable;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.query.CastType;
 import org.hibernate.type.descriptor.java.BooleanTypeDescriptor;
-import org.hibernate.type.descriptor.sql.IntegerTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.IntegerTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#INTEGER INTEGER} and {@link Boolean} (using 1 and 0)
@@ -20,9 +22,10 @@ import org.hibernate.type.descriptor.sql.IntegerTypeDescriptor;
  */
 public class NumericBooleanType 
 		extends AbstractSingleColumnStandardBasicType<Boolean>
-		implements PrimitiveType<Boolean>, DiscriminatorType<Boolean> {
+		implements PrimitiveType<Boolean>, DiscriminatorType<Boolean>, ConvertedBasicType<Boolean> {
 
 	public static final NumericBooleanType INSTANCE = new NumericBooleanType();
+	public static final NumericConverter CONVERTER = new NumericConverter();
 
 	public NumericBooleanType() {
 		super( IntegerTypeDescriptor.INSTANCE, BooleanTypeDescriptor.INSTANCE );
@@ -50,5 +53,48 @@ public class NumericBooleanType
 	@Override
 	public CastType getCastType() {
 		return CastType.INTEGER_BOOLEAN;
+	}
+
+	@Override
+	public BasicValueConverter<Boolean, ?> getValueConverter() {
+		return CONVERTER;
+	}
+
+	private static class NumericConverter implements BasicValueConverter<Boolean, Integer> {
+		@Override
+		public Boolean toDomainValue(Integer relationalForm) {
+			if ( relationalForm == null ) {
+				return null;
+			}
+
+			if ( 1 == relationalForm ) {
+				return true;
+			}
+
+			if ( 0 == relationalForm ) {
+				return false;
+			}
+
+			return null;
+		}
+
+		@Override
+		public Integer toRelationalValue(Boolean domainForm) {
+			if ( domainForm == null ) {
+				return null;
+			}
+
+			return domainForm ? 1 : 0;
+		}
+
+		@Override
+		public JavaTypeDescriptor<Boolean> getDomainJavaDescriptor() {
+			return BooleanTypeDescriptor.INSTANCE;
+		}
+
+		@Override
+		public JavaTypeDescriptor<Integer> getRelationalJavaDescriptor() {
+			return org.hibernate.type.descriptor.java.IntegerTypeDescriptor.INSTANCE;
+		}
 	}
 }

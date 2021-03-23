@@ -55,7 +55,7 @@ import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.DataHelper;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.sql.*;
+import org.hibernate.type.descriptor.jdbc.*;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -277,7 +277,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		}
 	}
 
-	private static class HANAStreamBlobTypeDescriptor implements SqlTypeDescriptor {
+	private static class HANAStreamBlobTypeDescriptor implements JdbcTypeDescriptor {
 
 		private static final long serialVersionUID = -2476600722093442047L;
 
@@ -298,7 +298,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		}
 
 		@Override
-		public int getSqlType() {
+		public int getJdbcType() {
 			return Types.BLOB;
 		}
 
@@ -569,7 +569,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		}
 	}
 
-	public static class HANABlobTypeDescriptor implements SqlTypeDescriptor {
+	public static class HANABlobTypeDescriptor implements JdbcTypeDescriptor {
 
 		private static final long serialVersionUID = 5874441715643764323L;
 
@@ -583,7 +583,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		}
 
 		@Override
-		public int getSqlType() {
+		public int getJdbcType() {
 			return Types.BLOB;
 		}
 
@@ -634,7 +634,7 @@ public abstract class AbstractHANADialect extends Dialect {
 
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
-					SqlTypeDescriptor descriptor = BlobTypeDescriptor.BLOB_BINDING;
+					JdbcTypeDescriptor descriptor = BlobTypeDescriptor.BLOB_BINDING;
 					if ( byte[].class.isInstance( value ) ) {
 						// performance shortcut for binding BLOB data in byte[] format
 						descriptor = BlobTypeDescriptor.PRIMITIVE_ARRAY_BINDING;
@@ -647,7 +647,7 @@ public abstract class AbstractHANADialect extends Dialect {
 
 				@Override
 				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options) throws SQLException {
-					SqlTypeDescriptor descriptor = BlobTypeDescriptor.BLOB_BINDING;
+					JdbcTypeDescriptor descriptor = BlobTypeDescriptor.BLOB_BINDING;
 					if ( byte[].class.isInstance( value ) ) {
 						// performance shortcut for binding BLOB data in byte[] format
 						descriptor = BlobTypeDescriptor.PRIMITIVE_ARRAY_BINDING;
@@ -1002,7 +1002,7 @@ public abstract class AbstractHANADialect extends Dialect {
 	}
 
 	@Override
-	protected SqlTypeDescriptor getSqlTypeDescriptorOverride(final int sqlCode) {
+	protected JdbcTypeDescriptor getSqlTypeDescriptorOverride(final int sqlCode) {
 		switch ( sqlCode ) {
 			case Types.CLOB:
 				return this.clobTypeDescriptor;
@@ -1475,7 +1475,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		}
 	}
 
-	public SqlTypeDescriptor getBlobTypeDescriptor() {
+	public JdbcTypeDescriptor getBlobTypeDescriptor() {
 		return this.blobTypeDescriptor;
 	}
 

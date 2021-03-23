@@ -11,8 +11,8 @@ import java.sql.Types;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.java.BooleanTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 
 /**
  * A type that maps between {@link java.sql.Types#BOOLEAN BOOLEAN} and {@link Boolean}
@@ -26,11 +26,11 @@ public class BooleanType
 	public static final BooleanType INSTANCE = new BooleanType();
 
 	public BooleanType() {
-		this( org.hibernate.type.descriptor.sql.BooleanTypeDescriptor.INSTANCE, BooleanTypeDescriptor.INSTANCE );
+		this( org.hibernate.type.descriptor.jdbc.BooleanTypeDescriptor.INSTANCE, BooleanTypeDescriptor.INSTANCE );
 	}
 
-	protected BooleanType(SqlTypeDescriptor sqlTypeDescriptor, BooleanTypeDescriptor javaTypeDescriptor) {
-		super( sqlTypeDescriptor, javaTypeDescriptor );
+	protected BooleanType(JdbcTypeDescriptor jdbcTypeDescriptor, BooleanTypeDescriptor javaTypeDescriptor) {
+		super( jdbcTypeDescriptor, javaTypeDescriptor );
 	}
 	@Override
 	public String getName() {
@@ -60,25 +60,25 @@ public class BooleanType
 	}
 
 	@Override
-	public <X> BasicType<X> resolveIndicatedType(SqlTypeDescriptorIndicators indicators) {
+	public <X> BasicType<X> resolveIndicatedType(JdbcTypeDescriptorIndicators indicators) {
 		final int preferredSqlTypeCodeForBoolean = indicators.getPreferredSqlTypeCodeForBoolean();
-		final SqlTypeDescriptor sqlTypeDescriptor;
+		final JdbcTypeDescriptor jdbcTypeDescriptor;
 		// We treat BIT like BOOLEAN because it uses the same JDBC access methods
-		if ( preferredSqlTypeCodeForBoolean != Types.BIT && preferredSqlTypeCodeForBoolean != getSqlTypeDescriptor().getJdbcTypeCode() ) {
-			sqlTypeDescriptor = indicators.getTypeConfiguration()
-					.getSqlTypeDescriptorRegistry()
+		if ( preferredSqlTypeCodeForBoolean != Types.BIT && preferredSqlTypeCodeForBoolean != getJdbcTypeDescriptor().getJdbcTypeCode() ) {
+			jdbcTypeDescriptor = indicators.getTypeConfiguration()
+					.getJdbcTypeDescriptorRegistry()
 					.getDescriptor( preferredSqlTypeCodeForBoolean );
 		}
 		else {
-			sqlTypeDescriptor = indicators.getTypeConfiguration()
-					.getSqlTypeDescriptorRegistry()
+			jdbcTypeDescriptor = indicators.getTypeConfiguration()
+					.getJdbcTypeDescriptorRegistry()
 					.getDescriptor( Types.BOOLEAN );
 		}
-		if ( sqlTypeDescriptor != getSqlTypeDescriptor() ) {
+		if ( jdbcTypeDescriptor != getJdbcTypeDescriptor() ) {
 			//noinspection unchecked
 			return (BasicType<X>) indicators.getTypeConfiguration()
 					.getBasicTypeRegistry()
-					.resolve( getJavaTypeDescriptor(), sqlTypeDescriptor );
+					.resolve( getJavaTypeDescriptor(), jdbcTypeDescriptor );
 		}
 
 		//noinspection unchecked

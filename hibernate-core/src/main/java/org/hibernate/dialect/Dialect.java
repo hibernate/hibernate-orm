@@ -83,9 +83,9 @@ import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.jdbc.ClobTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
 import javax.persistence.TemporalType;
 import java.io.InputStream;
@@ -243,12 +243,12 @@ public abstract class Dialect implements ConversionContext {
 		sizeStrategy = new SizeStrategyImpl();
 	}
 
-	public SqlTypeDescriptor resolveSqlTypeDescriptor(
+	public JdbcTypeDescriptor resolveSqlTypeDescriptor(
 			int jdbcTypeCode,
 			int precision,
 			int scale,
-			SqlTypeDescriptorRegistry sqlTypeDescriptorRegistry) {
-		return sqlTypeDescriptorRegistry.getDescriptor( jdbcTypeCode );
+			JdbcTypeDescriptorRegistry jdbcTypeDescriptorRegistry) {
+		return jdbcTypeDescriptorRegistry.getDescriptor( jdbcTypeCode );
 	}
 
 	/**
@@ -1018,12 +1018,12 @@ public abstract class Dialect implements ConversionContext {
 		return paren>0 ? result.substring(0, paren) : result;
 	}
 
-	public String getRawTypeName(SqlTypeDescriptor sqlTypeDescriptor) throws HibernateException {
-		return getRawTypeName( sqlTypeDescriptor.getJdbcTypeCode() );
+	public String getRawTypeName(JdbcTypeDescriptor jdbcTypeDescriptor) throws HibernateException {
+		return getRawTypeName( jdbcTypeDescriptor.getJdbcTypeCode() );
 	}
 
-	public String getTypeName(SqlTypeDescriptor sqlTypeDescriptor) throws HibernateException {
-		return getTypeName( sqlTypeDescriptor.getJdbcTypeCode() );
+	public String getTypeName(JdbcTypeDescriptor jdbcTypeDescriptor) throws HibernateException {
+		return getTypeName( jdbcTypeDescriptor.getJdbcTypeCode() );
 	}
 
 	public String getTypeName(int code) throws HibernateException {
@@ -1081,14 +1081,14 @@ public abstract class Dialect implements ConversionContext {
 	 * Get the name of the database type associated with the given
 	 * <tt>SqlTypeDescriptor</tt>.
 	 *
-	 * @param sqlTypeDescriptor the SQL type
+	 * @param jdbcTypeDescriptor the SQL type
 	 * @param size the length, precision, scale of the column
 	 *
 	 * @return the database type name
 	 *
 	 */
-	public String getTypeName(SqlTypeDescriptor sqlTypeDescriptor, Size size) {
-		return getTypeName( sqlTypeDescriptor.getJdbcTypeCode(), size );
+	public String getTypeName(JdbcTypeDescriptor jdbcTypeDescriptor, Size size) {
+		return getTypeName( jdbcTypeDescriptor.getJdbcTypeCode(), size );
 	}
 
 	/**
@@ -1103,7 +1103,7 @@ public abstract class Dialect implements ConversionContext {
 		if ( length == null && precision == null ) {
 			//use defaults
 			size = getSizeStrategy().resolveSize(
-					type.getJdbcMapping().getSqlTypeDescriptor(),
+					type.getJdbcMapping().getJdbcTypeDescriptor(),
 					type.getJdbcMapping().getJavaTypeDescriptor(),
 					precision,
 					scale,
@@ -1122,7 +1122,7 @@ public abstract class Dialect implements ConversionContext {
 					.setScale( scale );
 		}
 
-		return getTypeName( type.getJdbcMapping().getSqlTypeDescriptor(), size );
+		return getTypeName( type.getJdbcMapping().getJdbcTypeDescriptor(), size );
 	}
 
 	/**
@@ -1150,44 +1150,44 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Allows the dialect to override a {@link SqlTypeDescriptor}.
+	 * Allows the dialect to override a {@link JdbcTypeDescriptor}.
 	 * <p/>
 	 * If the passed {@code sqlTypeDescriptor} allows itself to be remapped (per
-	 * {@link SqlTypeDescriptor#canBeRemapped()}), then this method uses
+	 * {@link JdbcTypeDescriptor#canBeRemapped()}), then this method uses
 	 * {@link #getSqlTypeDescriptorOverride}  to get an optional override based on the SQL code returned by
-	 * {@link SqlTypeDescriptor#getJdbcTypeCode()}.
+	 * {@link JdbcTypeDescriptor#getJdbcTypeCode()}.
 	 * <p/>
 	 * If this dialect does not provide an override or if the {@code sqlTypeDescriptor} does not allow itself to be
 	 * remapped, then this method simply returns the original passed {@code sqlTypeDescriptor}
 	 *
-	 * @param sqlTypeDescriptor The {@link SqlTypeDescriptor} to override
-	 * @return The {@link SqlTypeDescriptor} that should be used for this dialect;
+	 * @param jdbcTypeDescriptor The {@link JdbcTypeDescriptor} to override
+	 * @return The {@link JdbcTypeDescriptor} that should be used for this dialect;
 	 *         if there is no override, then original {@code sqlTypeDescriptor} is returned.
 	 * @throws IllegalArgumentException if {@code sqlTypeDescriptor} is null.
 	 *
 	 * @see #getSqlTypeDescriptorOverride
 	 */
-	public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
-		if ( sqlTypeDescriptor == null ) {
+	public JdbcTypeDescriptor remapSqlTypeDescriptor(JdbcTypeDescriptor jdbcTypeDescriptor) {
+		if ( jdbcTypeDescriptor == null ) {
 			throw new IllegalArgumentException( "sqlTypeDescriptor is null" );
 		}
-		if ( ! sqlTypeDescriptor.canBeRemapped() ) {
-			return sqlTypeDescriptor;
+		if ( ! jdbcTypeDescriptor.canBeRemapped() ) {
+			return jdbcTypeDescriptor;
 		}
 
-		final SqlTypeDescriptor overridden = getSqlTypeDescriptorOverride( sqlTypeDescriptor.getJdbcTypeCode() );
-		return overridden == null ? sqlTypeDescriptor : overridden;
+		final JdbcTypeDescriptor overridden = getSqlTypeDescriptorOverride( jdbcTypeDescriptor.getJdbcTypeCode() );
+		return overridden == null ? jdbcTypeDescriptor : overridden;
 	}
 
 	/**
-	 * Returns the {@link SqlTypeDescriptor} that should be used to handle the given JDBC type code.  Returns
+	 * Returns the {@link JdbcTypeDescriptor} that should be used to handle the given JDBC type code.  Returns
 	 * {@code null} if there is no override.
 	 *
 	 * @param sqlCode A {@link Types} constant indicating the SQL column type
-	 * @return The {@link SqlTypeDescriptor} to use as an override, or {@code null} if there is no override.
+	 * @return The {@link JdbcTypeDescriptor} to use as an override, or {@code null} if there is no override.
 	 */
-	protected SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
-		SqlTypeDescriptor descriptor;
+	protected JdbcTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
+		JdbcTypeDescriptor descriptor;
 		switch ( sqlCode ) {
 			case Types.CLOB: {
 				descriptor = useInputStreamToInsertBlob() ? ClobTypeDescriptor.STREAM_BINDING : null;
@@ -3717,12 +3717,12 @@ public abstract class Dialect implements ConversionContext {
 	public interface SizeStrategy {
 		/**
 		 * Resolve the {@link Size} to use for columns of the given
-		 * {@link SqlTypeDescriptor SQL type} and {@link JavaTypeDescriptor Java type}.
+		 * {@link JdbcTypeDescriptor SQL type} and {@link JavaTypeDescriptor Java type}.
 		 *
 		 * @return a non-null {@link Size}
 		 */
 		Size resolveSize(
-				SqlTypeDescriptor sqlType,
+				JdbcTypeDescriptor jdbcType,
 				JavaTypeDescriptor javaType,
 				Integer precision,
 				Integer scale, Long length);
@@ -3731,13 +3731,13 @@ public abstract class Dialect implements ConversionContext {
 	public class SizeStrategyImpl implements SizeStrategy {
 		@Override
 		public Size resolveSize(
-				SqlTypeDescriptor sqlType,
+				JdbcTypeDescriptor jdbcType,
 				JavaTypeDescriptor javaType,
 				Integer precision,
 				Integer scale,
 				Long length) {
 			final Size size = new Size();
-			int jdbcTypeCode = sqlType.getJdbcTypeCode();
+			int jdbcTypeCode = jdbcType.getJdbcTypeCode();
 
 			switch (jdbcTypeCode) {
 				case Types.BIT:

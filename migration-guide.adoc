@@ -13,7 +13,7 @@ earlier versions, see any other pertinent migration guides as well.
 
 ==== Influencing SqlTypeDescriptor to use
 
-Discuss `@SqlTypeCode`, `@SqlType`, `@SqlTypeRegistration`
+Discuss `JdbcTypeCode`, `JdbcType`, `JdbcTypeRegistration`
 
 ==== Influencing JavaTypeDescriptor to use
 

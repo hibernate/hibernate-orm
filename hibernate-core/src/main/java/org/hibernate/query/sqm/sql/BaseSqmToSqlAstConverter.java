@@ -275,7 +275,7 @@ import org.hibernate.sql.results.internal.StandardEntityGraphTraversalStateImpl;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
@@ -293,7 +293,7 @@ import static org.hibernate.type.spi.TypeConfiguration.isDuration;
  * @author Steve Ebersole
  */
 public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends BaseSemanticQueryWalker
-		implements SqmTranslator<T>, DomainResultCreationState, SqlTypeDescriptorIndicators {
+		implements SqmTranslator<T>, DomainResultCreationState, JdbcTypeDescriptorIndicators {
 
 	private static final Logger log = Logger.getLogger( BaseSqmToSqlAstConverter.class );
 

@@ -137,8 +137,8 @@ public class StandardFunctionReturnTypeResolvers {
 		//that is determined by how the function is used in the HQL query. In essence
 		//the types are compatible if the map to the same JDBC type, of if they are
 		//both numeric types.
-		int impliedTypeCode = ((BasicType<?>) implied).getJdbcMapping().getSqlTypeDescriptor().getJdbcTypeCode();
-		int definedTypeCode = ((BasicType<?>) defined).getJdbcMapping().getSqlTypeDescriptor().getJdbcTypeCode();
+		int impliedTypeCode = ((BasicType<?>) implied).getJdbcMapping().getJdbcTypeDescriptor().getJdbcTypeCode();
+		int definedTypeCode = ((BasicType<?>) defined).getJdbcMapping().getJdbcTypeDescriptor().getJdbcTypeCode();
 		return impliedTypeCode == definedTypeCode
 				|| isNumeric( impliedTypeCode ) && isNumeric( definedTypeCode );
 	}
@@ -177,8 +177,8 @@ public class StandardFunctionReturnTypeResolvers {
 		//that is determined by how the function is used in the HQL query. In essence
 		//the types are compatible if the map to the same JDBC type, of if they are
 		//both numeric types.
-		int impliedTypeCode = implied.getJdbcMapping().getSqlTypeDescriptor().getJdbcTypeCode();
-		int definedTypeCode = defined.getJdbcMapping().getSqlTypeDescriptor().getJdbcTypeCode();
+		int impliedTypeCode = implied.getJdbcMapping().getJdbcTypeDescriptor().getJdbcTypeCode();
+		int definedTypeCode = defined.getJdbcMapping().getJdbcTypeDescriptor().getJdbcTypeCode();
 		return impliedTypeCode == definedTypeCode
 				|| isNumeric( impliedTypeCode ) && isNumeric( definedTypeCode );
 

@@ -19,7 +19,6 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 
@@ -50,7 +49,7 @@ public class AndLobTest {
 
 		assertThat( typeAdapter.getDomainJtd().getJavaTypeClass(), equalTo( String.class ) );
 		assertThat( typeAdapter.getRelationalJtd().getJavaTypeClass(), equalTo( Integer.class ) );
-		assertThat( typeAdapter.getSqlTypeDescriptor().getJdbcTypeCode(), is( Types.INTEGER ) );
+		assertThat( typeAdapter.getJdbcTypeDescriptor().getJdbcTypeCode(), is( Types.INTEGER ) );
 	}
 
 	@Converter

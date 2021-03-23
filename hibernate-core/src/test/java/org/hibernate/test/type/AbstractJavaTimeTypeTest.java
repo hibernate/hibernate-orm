@@ -24,7 +24,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -391,17 +391,17 @@ abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase
 
 	protected static class AbstractRemappingH2Dialect extends H2Dialect {
 		private final int overriddenSqlTypeCode;
-		private final SqlTypeDescriptor overriddenSqlTypeDescriptor;
+		private final JdbcTypeDescriptor overriddenJdbcTypeDescriptor;
 
-		public AbstractRemappingH2Dialect(int overriddenSqlTypeCode, SqlTypeDescriptor overriddenSqlTypeDescriptor) {
+		public AbstractRemappingH2Dialect(int overriddenSqlTypeCode, JdbcTypeDescriptor overriddenJdbcTypeDescriptor) {
 			this.overriddenSqlTypeCode = overriddenSqlTypeCode;
-			this.overriddenSqlTypeDescriptor = overriddenSqlTypeDescriptor;
+			this.overriddenJdbcTypeDescriptor = overriddenJdbcTypeDescriptor;
 		}
 
 		@Override
-		protected SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
+		protected JdbcTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
 			if ( overriddenSqlTypeCode == sqlCode ) {
-				return overriddenSqlTypeDescriptor;
+				return overriddenJdbcTypeDescriptor;
 			}
 			else {
 				return super.getSqlTypeDescriptorOverride( sqlCode );

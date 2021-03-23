@@ -107,7 +107,7 @@ import org.hibernate.mapping.UniqueKey;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -397,8 +397,8 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	}
 
 	@Override
-	public void addSqlTypeRegistration(int typeCode, SqlTypeDescriptor std) {
-		getTypeConfiguration().getSqlTypeDescriptorRegistry().addDescriptor( typeCode, std );
+	public void addJdbcTypeRegistration(int typeCode, JdbcTypeDescriptor jdbcTypeDescriptor) {
+		getTypeConfiguration().getJdbcTypeDescriptorRegistry().addDescriptor( typeCode, jdbcTypeDescriptor );
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

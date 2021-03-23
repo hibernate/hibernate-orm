@@ -7,8 +7,8 @@
 package org.hibernate.type;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.java.StringTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
-import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.VarcharTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#VARCHAR VARCHAR} and {@link String}
@@ -49,7 +49,7 @@ public class StringType
 
 	@SuppressWarnings({"rawtypes", "unchecked"})
 	@Override
-	public BasicType resolveIndicatedType(SqlTypeDescriptorIndicators indicators) {
+	public BasicType resolveIndicatedType(JdbcTypeDescriptorIndicators indicators) {
 		if ( indicators.isLob() ) {
 			return indicators.isNationalized() ? MaterializedNClobType.INSTANCE : MaterializedClobType.INSTANCE;
 		}

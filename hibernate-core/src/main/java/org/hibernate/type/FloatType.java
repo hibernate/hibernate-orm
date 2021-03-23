@@ -23,7 +23,7 @@ public class FloatType extends AbstractSingleColumnStandardBasicType<Float> impl
 	public static final Float ZERO = 0.0f;
 
 	public FloatType() {
-		super( org.hibernate.type.descriptor.sql.FloatTypeDescriptor.INSTANCE, FloatTypeDescriptor.INSTANCE );
+		super( org.hibernate.type.descriptor.jdbc.FloatTypeDescriptor.INSTANCE, FloatTypeDescriptor.INSTANCE );
 	}
 	@Override
 	public String getName() {

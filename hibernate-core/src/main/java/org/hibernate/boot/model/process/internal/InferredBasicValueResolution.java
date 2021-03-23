@@ -12,7 +12,7 @@ import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -20,7 +20,7 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 public class InferredBasicValueResolution<J> implements BasicValue.Resolution<J> {
 	private JavaTypeDescriptor<J> domainJtd;
 	private JavaTypeDescriptor<J> relationalJtd;
-	private SqlTypeDescriptor relationalStd;
+	private JdbcTypeDescriptor jdbcTypeDescriptor;
 
 	private MutabilityPlan mutabilityPlan;
 
@@ -33,7 +33,7 @@ public class InferredBasicValueResolution<J> implements BasicValue.Resolution<J>
 			JdbcMapping jdbcMapping,
 			JavaTypeDescriptor<J> domainJtd,
 			JavaTypeDescriptor<J> relationalJtd,
-			SqlTypeDescriptor relationalStd,
+			JdbcTypeDescriptor jdbcTypeDescriptor,
 			BasicValueConverter valueConverter,
 			BasicType<J> legacyType,
 			MutabilityPlan mutabilityPlan) {
@@ -41,7 +41,7 @@ public class InferredBasicValueResolution<J> implements BasicValue.Resolution<J>
 		this.legacyType = legacyType;
 		this.domainJtd = domainJtd;
 		this.relationalJtd = relationalJtd;
-		this.relationalStd = relationalStd;
+		this.jdbcTypeDescriptor = jdbcTypeDescriptor;
 		this.valueConverter = valueConverter;
 		this.mutabilityPlan = mutabilityPlan == null ? domainJtd.getMutabilityPlan() : mutabilityPlan;
 	}
@@ -67,8 +67,8 @@ public class InferredBasicValueResolution<J> implements BasicValue.Resolution<J>
 	}
 
 	@Override
-	public SqlTypeDescriptor getRelationalSqlTypeDescriptor() {
-		return relationalStd;
+	public JdbcTypeDescriptor getJdbcTypeDescriptor() {
+		return jdbcTypeDescriptor;
 	}
 
 	@Override

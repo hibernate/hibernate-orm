@@ -16,7 +16,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.*;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.type.descriptor.sql.*;
+import org.hibernate.type.descriptor.jdbc.*;
 import org.junit.Test;
 
 /**
@@ -73,29 +73,29 @@ public class TypeOverrideTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testNonStandardSqlTypeDescriptor() {
 		// no override
-		SqlTypeDescriptor sqlTypeDescriptor = new IntegerTypeDescriptor() {
+		JdbcTypeDescriptor jdbcTypeDescriptor = new IntegerTypeDescriptor() {
 			@Override
 			public boolean canBeRemapped() {
 				return false;
 			}
 		};
-		assertSame( sqlTypeDescriptor, remapSqlTypeDescriptor( sqlTypeDescriptor ) );
+		assertSame( jdbcTypeDescriptor, remapSqlTypeDescriptor( jdbcTypeDescriptor ) );
 	}
 
 	@Test
 	public void testDialectWithNonStandardSqlTypeDescriptor() {
-		assertNotSame( VarcharTypeDescriptor.INSTANCE, StoredPrefixedStringType.INSTANCE.getSqlTypeDescriptor() );
+		assertNotSame( VarcharTypeDescriptor.INSTANCE, StoredPrefixedStringType.INSTANCE.getJdbcTypeDescriptor() );
 		final Dialect dialect = new H2DialectOverridePrefixedVarcharSqlTypeDesc();
-		final SqlTypeDescriptor remapped = remapSqlTypeDescriptor( dialect, StoredPrefixedStringType.PREFIXED_VARCHAR_TYPE_DESCRIPTOR );
+		final JdbcTypeDescriptor remapped = remapSqlTypeDescriptor( dialect, StoredPrefixedStringType.PREFIXED_VARCHAR_TYPE_DESCRIPTOR );
 		assertSame( VarcharTypeDescriptor.INSTANCE, remapped );
 	}
 
-	private SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
-		return remapSqlTypeDescriptor( sessionFactory().getDialect(), sqlTypeDescriptor );
+	private JdbcTypeDescriptor remapSqlTypeDescriptor(JdbcTypeDescriptor jdbcTypeDescriptor) {
+		return remapSqlTypeDescriptor( sessionFactory().getDialect(), jdbcTypeDescriptor );
 	}
 
-	private SqlTypeDescriptor remapSqlTypeDescriptor(Dialect dialect, SqlTypeDescriptor sqlTypeDescriptor) {
-		return dialect.remapSqlTypeDescriptor( sqlTypeDescriptor );
+	private JdbcTypeDescriptor remapSqlTypeDescriptor(Dialect dialect, JdbcTypeDescriptor jdbcTypeDescriptor) {
+		return dialect.remapSqlTypeDescriptor( jdbcTypeDescriptor );
 	}
 
 	@Test

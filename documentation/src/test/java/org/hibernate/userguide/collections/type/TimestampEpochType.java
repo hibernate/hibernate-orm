@@ -11,14 +11,12 @@ import java.util.Comparator;
 import java.util.Date;
 
 import org.hibernate.HibernateException;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.LiteralType;
-import org.hibernate.type.StringType;
 import org.hibernate.type.VersionType;
 import org.hibernate.type.descriptor.java.JdbcTimestampTypeDescriptor;
-import org.hibernate.type.descriptor.sql.BigIntTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.BigIntTypeDescriptor;
 
 /**
  * @author Vlad Mihalcea

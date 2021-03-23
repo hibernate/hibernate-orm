@@ -6,9 +6,9 @@
  */
 
 /**
- * Tests for {@link org.hibernate.annotations.SqlTypeCode}, {@link org.hibernate.annotations.SqlType},
- * {@link org.hibernate.annotations.SqlTypeRegistration}, {@link org.hibernate.annotations.MapKeySqlType},
- * {@link org.hibernate.annotations.MapKeySqlTypeCode}
+ * Tests for {@link org.hibernate.annotations.JdbcTypeCode}, {@link org.hibernate.annotations.JdbcType},
+ * {@link org.hibernate.annotations.JdbcTypeRegistration}, {@link org.hibernate.annotations.MapKeyJdbcType},
+ * {@link org.hibernate.annotations.MapKeyJdbcTypeCode}
  *
  * @author Steve Ebersole
  */

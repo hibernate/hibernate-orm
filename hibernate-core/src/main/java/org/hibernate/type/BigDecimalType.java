@@ -9,7 +9,7 @@ package org.hibernate.type;
 import java.math.BigDecimal;
 
 import org.hibernate.type.descriptor.java.BigDecimalTypeDescriptor;
-import org.hibernate.type.descriptor.sql.NumericTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.NumericTypeDescriptor;
 
 /**
  * A type that maps between a {@link java.sql.Types#NUMERIC NUMERIC} and {@link BigDecimal}.

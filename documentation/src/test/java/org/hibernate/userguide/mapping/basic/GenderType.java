@@ -1,7 +1,7 @@
 package org.hibernate.userguide.mapping.basic;
 
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
-import org.hibernate.type.descriptor.sql.CharTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.CharTypeDescriptor;
 
 /**
  * @author Vlad Mihalcea

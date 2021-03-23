@@ -61,11 +61,11 @@ import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.sql.BasicBinder;
-import org.hibernate.type.descriptor.sql.BlobTypeDescriptor;
-import org.hibernate.type.descriptor.sql.BooleanTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.jdbc.BasicBinder;
+import org.hibernate.type.descriptor.jdbc.BlobTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.BooleanTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
@@ -600,11 +600,11 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
-	public SqlTypeDescriptor resolveSqlTypeDescriptor(
+	public JdbcTypeDescriptor resolveSqlTypeDescriptor(
 			int jdbcTypeCode,
 			int precision,
 			int scale,
-			SqlTypeDescriptorRegistry sqlTypeDescriptorRegistry) {
+			JdbcTypeDescriptorRegistry jdbcTypeDescriptorRegistry) {
 		// This is the reverse of what registerNumericTypeMappings registers
 		switch ( jdbcTypeCode ) {
 			case Types.NUMERIC:
@@ -612,19 +612,19 @@ public class OracleDialect extends Dialect {
 				if ( scale == 0 ) {
 					switch ( precision ) {
 						case 1:
-							return sqlTypeDescriptorRegistry.getDescriptor( Types.BOOLEAN );
+							return jdbcTypeDescriptorRegistry.getDescriptor( Types.BOOLEAN );
 						case 3:
-							return sqlTypeDescriptorRegistry.getDescriptor( Types.TINYINT );
+							return jdbcTypeDescriptorRegistry.getDescriptor( Types.TINYINT );
 						case 5:
-							return sqlTypeDescriptorRegistry.getDescriptor( Types.SMALLINT );
+							return jdbcTypeDescriptorRegistry.getDescriptor( Types.SMALLINT );
 						case 10:
-							return sqlTypeDescriptorRegistry.getDescriptor( Types.INTEGER );
+							return jdbcTypeDescriptorRegistry.getDescriptor( Types.INTEGER );
 						case 19:
-							return sqlTypeDescriptorRegistry.getDescriptor( Types.BIGINT );
+							return jdbcTypeDescriptorRegistry.getDescriptor( Types.BIGINT );
 					}
 				}
 		}
-		return super.resolveSqlTypeDescriptor( jdbcTypeCode, precision, scale, sqlTypeDescriptorRegistry );
+		return super.resolveSqlTypeDescriptor( jdbcTypeCode, precision, scale, jdbcTypeDescriptorRegistry );
 	}
 
 	/**
@@ -654,9 +654,9 @@ public class OracleDialect extends Dialect {
 					BlobTypeDescriptor.PRIMITIVE_ARRAY_BINDING :
 					BlobTypeDescriptor.DEFAULT;
 
-			typeContributions.contributeSqlTypeDescriptor( descriptor );
+			typeContributions.contributeJdbcTypeDescriptor( descriptor );
 		}
-		typeContributions.contributeSqlTypeDescriptor( new OracleBooleanTypeDescriptor() );
+		typeContributions.contributeJdbcTypeDescriptor( new OracleBooleanTypeDescriptor() );
 	}
 
 	private static final class OracleBooleanTypeDescriptor extends BooleanTypeDescriptor {

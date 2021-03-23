@@ -20,7 +20,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.MaterializedNClobType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
@@ -29,7 +29,7 @@ import org.junit.Test;
  * @author Gail Badner
  */
 public class MaterializedNClobBindTest {
-	private static final ValueBinder<String> binder = MaterializedNClobType.INSTANCE.getSqlTypeDescriptor().getBinder(
+	private static final ValueBinder<String> binder = MaterializedNClobType.INSTANCE.getJdbcTypeDescriptor().getBinder(
 			MaterializedNClobType.INSTANCE.getJavaTypeDescriptor()
 	);
 
@@ -104,7 +104,7 @@ public class MaterializedNClobBindTest {
 		}
 
 		@Override
-		public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
+		public JdbcTypeDescriptor remapSqlTypeDescriptor(JdbcTypeDescriptor jdbcTypeDescriptor) {
 			return null;
 		}
 

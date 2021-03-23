@@ -8,7 +8,7 @@
 package org.hibernate.spatial;
 
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.SqlTypeDescriptor;
 
 import org.geolatte.geom.Geometry;
 import org.geolatte.geom.GeometryCollection;

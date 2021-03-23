@@ -8,7 +8,6 @@ package org.hibernate.cfg;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -119,8 +118,8 @@ import org.hibernate.annotations.Proxy;
 import org.hibernate.annotations.SortComparator;
 import org.hibernate.annotations.SortNatural;
 import org.hibernate.annotations.Source;
-import org.hibernate.annotations.SqlTypeRegistration;
-import org.hibernate.annotations.SqlTypeRegistrations;
+import org.hibernate.annotations.JdbcTypeRegistration;
+import org.hibernate.annotations.JdbcTypeRegistrations;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
 import org.hibernate.annotations.Where;
@@ -171,7 +170,7 @@ import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.UnionSubclass;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
@@ -357,14 +356,14 @@ public final class AnnotationBinder {
 	private static void handleSqlTypeDescriptorRegistration(
 			MetadataBuildingContext context,
 			ManagedBeanRegistry managedBeanRegistry,
-			SqlTypeRegistration annotation) {
-		final Class<? extends SqlTypeDescriptor> stdClass = annotation.value();
-		final SqlTypeDescriptor std = managedBeanRegistry.getBean( stdClass ).getBeanInstance();
+			JdbcTypeRegistration annotation) {
+		final Class<? extends JdbcTypeDescriptor> jdbcTypeClass = annotation.value();
+		final JdbcTypeDescriptor jdbcTypeDescriptor = managedBeanRegistry.getBean( jdbcTypeClass ).getBeanInstance();
 
 		final int typeCode = annotation.registrationCode() == Integer.MIN_VALUE
-				? std.getJdbcTypeCode()
+				? jdbcTypeDescriptor.getJdbcTypeCode()
 				: annotation.registrationCode();
-		context.getMetadataCollector().addSqlTypeRegistration( typeCode, std );
+		context.getMetadataCollector().addJdbcTypeRegistration( typeCode, jdbcTypeDescriptor );
 	}
 
 	private static void handleJavaTypeDescriptorRegistration(
@@ -883,13 +882,13 @@ public final class AnnotationBinder {
 			}
 		}
 
-		if ( annotatedElement.isAnnotationPresent( SqlTypeRegistration.class ) ) {
-			final SqlTypeRegistration annotation = annotatedElement.getAnnotation( SqlTypeRegistration.class );
+		if ( annotatedElement.isAnnotationPresent( JdbcTypeRegistration.class ) ) {
+			final JdbcTypeRegistration annotation = annotatedElement.getAnnotation( JdbcTypeRegistration.class );
 			handleSqlTypeDescriptorRegistration( context, managedBeanRegistry, annotation );
 		}
-		if ( annotatedElement.isAnnotationPresent( SqlTypeRegistrations.class ) ) {
-			final SqlTypeRegistrations annotation = annotatedElement.getAnnotation( SqlTypeRegistrations.class );
-			final SqlTypeRegistration[] registrations = annotation.value();
+		if ( annotatedElement.isAnnotationPresent( JdbcTypeRegistrations.class ) ) {
+			final JdbcTypeRegistrations annotation = annotatedElement.getAnnotation( JdbcTypeRegistrations.class );
+			final JdbcTypeRegistration[] registrations = annotation.value();
 			for ( int i = 0; i < registrations.length; i++ ) {
 				handleSqlTypeDescriptorRegistration( context, managedBeanRegistry, registrations[i] );
 			}

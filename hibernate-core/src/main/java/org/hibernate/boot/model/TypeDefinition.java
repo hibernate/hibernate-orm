@@ -31,7 +31,7 @@ import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.TypeConfigurationAware;
@@ -102,7 +102,7 @@ public class TypeDefinition implements Serializable {
 	public BasicValue.Resolution<?> resolve(
 			Map localConfigParameters,
 			MutabilityPlan explicitMutabilityPlan,
-			MetadataBuildingContext context, 
+			MetadataBuildingContext context,
 			SqlTypeDescriptorIndicators indicators) {
 		if ( CollectionHelper.isEmpty( localConfigParameters ) ) {
 			// we can use the re-usable resolution...
@@ -212,8 +212,8 @@ public class TypeDefinition implements Serializable {
 					}
 
 					@Override
-					public SqlTypeDescriptor getRelationalSqlTypeDescriptor() {
-						return resolvedBasicType.getSqlTypeDescriptor();
+					public JdbcTypeDescriptor getJdbcTypeDescriptor() {
+						return resolvedBasicType.getJdbcTypeDescriptor();
 					}
 
 					@Override
@@ -264,8 +264,8 @@ public class TypeDefinition implements Serializable {
 				}
 
 				@Override
-				public SqlTypeDescriptor getRelationalSqlTypeDescriptor() {
-					return resolved.getSqlTypeDescriptor();
+				public JdbcTypeDescriptor getJdbcTypeDescriptor() {
+					return resolved.getJdbcTypeDescriptor();
 				}
 
 				@Override

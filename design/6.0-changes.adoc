@@ -7,9 +7,9 @@ Changes in 6.0 worth documenting in various places
 
 Document in release-notes:
 
-* `@SqlTypeCode`
-* `@SqlType`
-* `@SqlTypeRegistration`
+* `@JdbcTypeCode`
+* `@JdbcType`
+* `@JdbcTypeRegistration`
 * `@JavaType`
 * `@JavaTypeRegistration`
 * `NativeQuery#addScalar(Class)`

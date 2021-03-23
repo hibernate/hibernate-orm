@@ -154,7 +154,7 @@ public class LongListTypeContributorTest extends BaseEntityManagerFunctionalTest
 			public static final StringifiedCollectionType INSTANCE = new StringifiedCollectionType();
 
 			public StringifiedCollectionType() {
-				super( org.hibernate.type.descriptor.sql.LongVarcharTypeDescriptor.INSTANCE,
+				super( org.hibernate.type.descriptor.jdbc.LongVarcharTypeDescriptor.INSTANCE,
 					   StringifiedCollectionJavaTypeDescriptor.INSTANCE );
 				regKeys = new String[]{ LongList.class.getName() };
 				name = "StringifiedCollection";

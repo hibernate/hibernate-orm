@@ -16,8 +16,8 @@ import org.hibernate.engine.jdbc.Size;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.compare.ComparableComparator;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 
 /**
  * Descriptor for the Java side of a value mapping.
@@ -49,7 +49,7 @@ public interface JavaTypeDescriptor<T> extends Serializable {
 	 *
 	 * @return The recommended SQL type descriptor
 	 */
-	SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context);
+	JdbcTypeDescriptor getRecommendedJdbcType(JdbcTypeDescriptorIndicators context);
 
 	/**
 	 * The default column length when this Java type is mapped
@@ -193,11 +193,11 @@ public interface JavaTypeDescriptor<T> extends Serializable {
 	 * definition in generated DDL.
 	 *
 	 * @param columnName the name of the column
-	 * @param sqlType the {@link SqlTypeDescriptor} of the mapped column
+	 * @param sqlType the {@link JdbcTypeDescriptor} of the mapped column
 	 * @param dialect the SQL {@link Dialect}
 	 * @return a check constraint condition or null
 	 */
-	default String getCheckCondition(String columnName, SqlTypeDescriptor sqlType, Dialect dialect) {
+	default String getCheckCondition(String columnName, JdbcTypeDescriptor sqlType, Dialect dialect) {
 		return null;
 	}
 }

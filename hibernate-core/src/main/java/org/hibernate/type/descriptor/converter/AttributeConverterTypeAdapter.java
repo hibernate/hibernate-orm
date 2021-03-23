@@ -12,16 +12,14 @@ import java.sql.SQLException;
 
 import javax.persistence.AttributeConverter;
 
-import org.hibernate.HibernateException;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 import org.jboss.logging.Logger;
 
@@ -50,7 +48,7 @@ public class AttributeConverterTypeAdapter<T> extends AbstractSingleColumnStanda
 			String name,
 			String description,
 			JpaAttributeConverter<? extends T,?> attributeConverter,
-			SqlTypeDescriptor std,
+			JdbcTypeDescriptor std,
 			JavaTypeDescriptor<?> relationalJtd,
 			JavaTypeDescriptor<T> domainJtd,
 			MutabilityPlan<T> mutabilityPlan) {

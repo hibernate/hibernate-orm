@@ -52,7 +52,7 @@ import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 /**
  * An in-flight representation of Metadata while Metadata is being built.
@@ -320,7 +320,7 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	void registerValueMappingResolver(Function<MetadataBuildingContext,Boolean> resolver);
 
 	void addJavaTypeRegistration(Class<?> javaType, JavaTypeDescriptor<?> jtd);
-	void addSqlTypeRegistration(int typeCode, SqlTypeDescriptor std);
+	void addJdbcTypeRegistration(int typeCode, JdbcTypeDescriptor jdbcTypeDescriptor);
 
 	interface DelayedPropertyReferenceHandler extends Serializable {
 		void process(InFlightMetadataCollector metadataCollector);

@@ -21,9 +21,9 @@ import org.hibernate.engine.jdbc.ClobProxy;
 import org.hibernate.engine.jdbc.WrappedClob;
 import org.hibernate.engine.jdbc.internal.CharacterStreamImpl;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
-import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
 /**
  * Descriptor for {@link Clob} handling.
@@ -41,13 +41,13 @@ public class ClobTypeDescriptor extends AbstractClassTypeDescriptor<Clob> {
 	}
 
 	@Override
-	public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators indicators) {
+	public JdbcTypeDescriptor getRecommendedJdbcType(JdbcTypeDescriptorIndicators indicators) {
 		if ( indicators.isNationalized() ) {
-			final SqlTypeDescriptorRegistry stdRegistry = indicators.getTypeConfiguration().getSqlTypeDescriptorRegistry();
+			final JdbcTypeDescriptorRegistry stdRegistry = indicators.getTypeConfiguration().getJdbcTypeDescriptorRegistry();
 			return stdRegistry.getDescriptor( Types.NCLOB );
 		}
 
-		return super.getJdbcRecommendedSqlType( indicators );
+		return super.getRecommendedJdbcType( indicators );
 	}
 
 	@Override

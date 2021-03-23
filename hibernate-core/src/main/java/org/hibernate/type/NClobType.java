@@ -21,7 +21,7 @@ public class NClobType extends AbstractSingleColumnStandardBasicType<NClob> {
 	public static final NClobType INSTANCE = new NClobType();
 
 	public NClobType() {
-		super( org.hibernate.type.descriptor.sql.NClobTypeDescriptor.DEFAULT, NClobTypeDescriptor.INSTANCE );
+		super( org.hibernate.type.descriptor.jdbc.NClobTypeDescriptor.DEFAULT, NClobTypeDescriptor.INSTANCE );
 	}
 
 	@Override

@@ -24,7 +24,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.EnhancedUserType;
 import org.hibernate.usertype.LoggableUserType;
@@ -56,7 +56,7 @@ public class CustomType
 	private final String name;
 
 	private final JavaTypeDescriptor mappedJavaTypeDescriptor;
-	private final SqlTypeDescriptor sqlTypeDescriptor;
+	private final JdbcTypeDescriptor jdbcTypeDescriptor;
 
 	private final Size dictatedSize;
 	private final Size defaultSize;
@@ -73,7 +73,7 @@ public class CustomType
 
 		//noinspection unchecked
 		this.mappedJavaTypeDescriptor = typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( userType.returnedClass() );
-		this.sqlTypeDescriptor = typeConfiguration.getSqlTypeDescriptorRegistry().getDescriptor( userType.sqlTypes()[0] );
+		this.jdbcTypeDescriptor = typeConfiguration.getJdbcTypeDescriptorRegistry().getDescriptor( userType.sqlTypes()[0] );
 
 		if ( userType instanceof Sized ) {
 			final Sized sized = (Sized) userType;
@@ -94,13 +94,13 @@ public class CustomType
 	}
 
 	@Override
-	public SqlTypeDescriptor getSqlTypeDescriptor() {
-		return sqlTypeDescriptor;
+	public JdbcTypeDescriptor getJdbcTypeDescriptor() {
+		return jdbcTypeDescriptor;
 	}
 
 	@Override
 	public int[] sqlTypes(Mapping pi) {
-		return new int[] { sqlTypeDescriptor.getSqlType() };
+		return new int[] { jdbcTypeDescriptor.getJdbcType() };
 	}
 
 	@Override

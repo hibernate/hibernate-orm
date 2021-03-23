@@ -12,7 +12,7 @@ import java.util.Properties;
 import org.hibernate.MappingException;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.type.descriptor.java.SerializableTypeDescriptor;
-import org.hibernate.type.descriptor.sql.BlobTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.BlobTypeDescriptor;
 import org.hibernate.usertype.DynamicParameterizedType;
 
 /**

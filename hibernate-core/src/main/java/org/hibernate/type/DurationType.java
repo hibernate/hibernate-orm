@@ -9,7 +9,7 @@ package org.hibernate.type;
 import java.time.Duration;
 
 import org.hibernate.type.descriptor.java.DurationJavaDescriptor;
-import org.hibernate.type.descriptor.sql.NumericTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.NumericTypeDescriptor;
 
 /**
  * @author Steve Ebersole

@@ -6,7 +6,7 @@
  */
 package org.hibernate.type;
 import org.hibernate.type.descriptor.java.ByteArrayTypeDescriptor;
-import org.hibernate.type.descriptor.sql.BlobTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.BlobTypeDescriptor;
 
 /**
  * A type that maps JDBC {@link java.sql.Types#BLOB BLOB} and {@code Byte[]}.

@@ -9,8 +9,8 @@ package org.hibernate.type.descriptor.java.spi;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractClassTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 
 /**
  * AbstractBasicTypeDescriptor adapter for cases where we do not know a proper JavaTypeDescriptor
@@ -28,7 +28,7 @@ public class JavaTypeDescriptorBasicAdaptor<T> extends AbstractClassTypeDescript
 	}
 
 	@Override
-	public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context) {
+	public JdbcTypeDescriptor getRecommendedJdbcType(JdbcTypeDescriptorIndicators context) {
 		throw new UnsupportedOperationException(
 				"Recommended SqlTypeDescriptor not known for this Java type : " + getJavaType().getTypeName()
 		);

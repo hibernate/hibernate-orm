@@ -10,8 +10,8 @@ import java.io.Serializable;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.java.CharacterTypeDescriptor;
-import org.hibernate.type.descriptor.sql.CharTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.CharTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 
 /**
  * A type that maps between {@link java.sql.Types#CHAR CHAR(1)} and {@link Character}
@@ -55,7 +55,7 @@ public class CharacterType
 	}
 
 	@Override
-	public <X> BasicType<X> resolveIndicatedType(SqlTypeDescriptorIndicators indicators) {
+	public <X> BasicType<X> resolveIndicatedType(JdbcTypeDescriptorIndicators indicators) {
 		return (BasicType<X>) ( indicators.isNationalized() ? CharacterNCharType.INSTANCE : this );
 	}
 }

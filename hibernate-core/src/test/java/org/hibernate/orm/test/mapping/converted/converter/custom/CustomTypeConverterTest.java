@@ -41,8 +41,8 @@ public class CustomTypeConverterTest extends BaseUnitTestCase {
 			final TypeConfiguration bootTypeConfiguration = metadataBuilder.getBootstrapContext().getTypeConfiguration();
 			bootTypeConfiguration.getJavaTypeDescriptorRegistry()
 					.addDescriptor( MyCustomJavaTypeDescriptor.INSTANCE );
-			bootTypeConfiguration.getSqlTypeDescriptorRegistry()
-					.addDescriptor( MyCustomSqlTypeDescriptor.INSTANCE );
+			bootTypeConfiguration.getJdbcTypeDescriptorRegistry()
+					.addDescriptor( MyCustomJdbcTypeDescriptor.INSTANCE );
 
 			performAssertions( metadataBuilder, bootTypeConfiguration );
 		}
@@ -63,8 +63,8 @@ public class CustomTypeConverterTest extends BaseUnitTestCase {
 			);
 
 			assertThat(
-					bootTypeConfiguration.getSqlTypeDescriptorRegistry().getDescriptor( MyCustomSqlTypeDescriptor.INSTANCE.getSqlType() ),
-					sameInstance( MyCustomSqlTypeDescriptor.INSTANCE )
+					bootTypeConfiguration.getJdbcTypeDescriptorRegistry().getDescriptor( MyCustomJdbcTypeDescriptor.INSTANCE.getJdbcType() ),
+					sameInstance( MyCustomJdbcTypeDescriptor.INSTANCE )
 			);
 
 			final EntityPersister entityPersister = sessionFactory.getMetamodel().entityPersister( MyEntity.class );

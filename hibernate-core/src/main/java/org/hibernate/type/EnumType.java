@@ -31,8 +31,8 @@ import org.hibernate.metamodel.model.convert.internal.OrdinalEnumValueConverter;
 import org.hibernate.metamodel.model.convert.spi.EnumValueConverter;
 import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.TypeConfigurationAware;
 import org.hibernate.usertype.DynamicParameterizedType;
@@ -133,7 +133,7 @@ public class EnumType<T extends Enum<T>>
 					.getJavaTypeDescriptorRegistry()
 					.getDescriptor( enumClass );
 
-			final LocalSqlTypeDescriptorIndicators indicators = new LocalSqlTypeDescriptorIndicators(
+			final LocalJdbcTypeDescriptorIndicators indicators = new LocalJdbcTypeDescriptorIndicators(
 					enumType,
 					columnLength,
 					reader
@@ -144,19 +144,19 @@ public class EnumType<T extends Enum<T>>
 					enumJavaDescriptor
 			);
 
-			final SqlTypeDescriptor sqlTypeDescriptor = relationalJtd.getJdbcRecommendedSqlType( indicators );
+			final JdbcTypeDescriptor jdbcTypeDescriptor = relationalJtd.getRecommendedJdbcType( indicators );
 
 			if ( isOrdinal ) {
 				this.enumValueConverter = new OrdinalEnumValueConverter(
 						enumJavaDescriptor,
-						sqlTypeDescriptor,
+						jdbcTypeDescriptor,
 						relationalJtd
 				);
 			}
 			else {
 				this.enumValueConverter = new NamedEnumValueConverter(
 						enumJavaDescriptor,
-						sqlTypeDescriptor,
+						jdbcTypeDescriptor,
 						relationalJtd
 				);
 			}
@@ -183,9 +183,9 @@ public class EnumType<T extends Enum<T>>
 	}
 
 	private BasicJavaDescriptor<?> resolveRelationalJavaTypeDescriptor(
-			LocalSqlTypeDescriptorIndicators indicators,
+			LocalJdbcTypeDescriptorIndicators indicators,
 			EnumJavaTypeDescriptor<?> enumJavaDescriptor) {
-		return enumJavaDescriptor.getJdbcRecommendedSqlType( indicators ).getJdbcRecommendedJavaTypeMapping( typeConfiguration );
+		return enumJavaDescriptor.getRecommendedJdbcType( indicators ).getJdbcRecommendedJavaTypeMapping( typeConfiguration );
 	}
 
 	private javax.persistence.EnumType getEnumType(ParameterType reader) {
@@ -226,7 +226,7 @@ public class EnumType<T extends Enum<T>>
 		// this method should only be called for hbm.xml handling
 		assert parameters.get( PARAMETER_TYPE ) == null;
 
-		final LocalSqlTypeDescriptorIndicators localIndicators = new LocalSqlTypeDescriptorIndicators(
+		final LocalJdbcTypeDescriptorIndicators localIndicators = new LocalJdbcTypeDescriptorIndicators(
 				// use ORDINAL as default for hbm.xml mappings
 				javax.persistence.EnumType.ORDINAL,
 				// Is there a reasonable value here?  Limits the
@@ -246,7 +246,7 @@ public class EnumType<T extends Enum<T>>
 				//noinspection rawtypes
 				return new NamedEnumValueConverter(
 						enumJavaDescriptor,
-						stringJavaDescriptor.getJdbcRecommendedSqlType( localIndicators ),
+						stringJavaDescriptor.getRecommendedJdbcType( localIndicators ),
 						stringJavaDescriptor
 				);
 			}
@@ -254,7 +254,7 @@ public class EnumType<T extends Enum<T>>
 				//noinspection rawtypes
 				return new OrdinalEnumValueConverter(
 						enumJavaDescriptor,
-						integerJavaDescriptor.getJdbcRecommendedSqlType( localIndicators ),
+						integerJavaDescriptor.getRecommendedJdbcType( localIndicators ),
 						typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Integer.class )
 				);
 			}
@@ -266,7 +266,7 @@ public class EnumType<T extends Enum<T>>
 				//noinspection rawtypes
 				return new OrdinalEnumValueConverter(
 						enumJavaDescriptor,
-						integerJavaDescriptor.getJdbcRecommendedSqlType( localIndicators ),
+						integerJavaDescriptor.getRecommendedJdbcType( localIndicators ),
 						typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Integer.class )
 				);
 			}
@@ -274,7 +274,7 @@ public class EnumType<T extends Enum<T>>
 				//noinspection rawtypes
 				return new NamedEnumValueConverter(
 						enumJavaDescriptor,
-						stringJavaDescriptor.getJdbcRecommendedSqlType( localIndicators ),
+						stringJavaDescriptor.getRecommendedJdbcType( localIndicators ),
 						stringJavaDescriptor
 				);
 			}
@@ -292,7 +292,7 @@ public class EnumType<T extends Enum<T>>
 		// the fallback
 		return new OrdinalEnumValueConverter(
 				enumJavaDescriptor,
-				integerJavaDescriptor.getJdbcRecommendedSqlType( localIndicators ),
+				integerJavaDescriptor.getRecommendedJdbcType( localIndicators ),
 				typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Integer.class )
 		);
 	}
@@ -432,12 +432,12 @@ public class EnumType<T extends Enum<T>>
 		return enumValueConverter instanceof OrdinalEnumValueConverter;
 	}
 
-	private class LocalSqlTypeDescriptorIndicators implements SqlTypeDescriptorIndicators {
+	private class LocalJdbcTypeDescriptorIndicators implements JdbcTypeDescriptorIndicators {
 		private final javax.persistence.EnumType enumType;
 		private final Long columnLength;
 		private final ParameterType reader;
 
-		public LocalSqlTypeDescriptorIndicators(javax.persistence.EnumType enumType, Long columnLength, ParameterType reader) {
+		public LocalJdbcTypeDescriptorIndicators(javax.persistence.EnumType enumType, Long columnLength, ParameterType reader) {
 			this.enumType = enumType;
 			this.columnLength = columnLength;
 			this.reader = reader;

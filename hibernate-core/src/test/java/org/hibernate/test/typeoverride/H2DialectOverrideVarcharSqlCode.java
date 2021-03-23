@@ -9,7 +9,7 @@ package org.hibernate.test.typeoverride;
 import java.sql.Types;
 
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 /**
  *
@@ -17,9 +17,9 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
  */
 public class H2DialectOverrideVarcharSqlCode extends H2Dialect {
 	@Override
-    public SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
+    public JdbcTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
 		return  sqlCode == Types.VARCHAR ?
-				StoredPrefixedStringType.INSTANCE.getSqlTypeDescriptor() :
+				StoredPrefixedStringType.INSTANCE.getJdbcTypeDescriptor() :
 				super.getSqlTypeDescriptorOverride( sqlCode );
 	}
 }

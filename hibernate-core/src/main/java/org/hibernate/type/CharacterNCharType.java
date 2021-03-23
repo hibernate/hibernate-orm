@@ -10,7 +10,7 @@ import java.io.Serializable;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.java.CharacterTypeDescriptor;
-import org.hibernate.type.descriptor.sql.NCharTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.NCharTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#NCHAR NCHAR(1)} and {@link Character}

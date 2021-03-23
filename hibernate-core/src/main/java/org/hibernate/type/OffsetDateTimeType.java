@@ -16,7 +16,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.AllowableTemporalParameterType;
 import org.hibernate.query.CastType;
 import org.hibernate.type.descriptor.java.OffsetDateTimeJavaDescriptor;
-import org.hibernate.type.descriptor.sql.TimestampWithTimeZoneDescriptor;
+import org.hibernate.type.descriptor.jdbc.TimestampWithTimeZoneDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**

@@ -10,7 +10,7 @@ import java.util.TimeZone;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.java.TimeZoneTypeDescriptor;
-import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.VarcharTypeDescriptor;
 
 /**
  * A type mapping {@link java.sql.Types#VARCHAR VARCHAR} and {@link TimeZone}

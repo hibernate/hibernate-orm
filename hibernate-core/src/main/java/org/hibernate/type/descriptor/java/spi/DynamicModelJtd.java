@@ -10,8 +10,8 @@ import java.util.Map;
 
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 
 /**
  * JavaTypeDescriptor for dynamic models
@@ -21,7 +21,7 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
 public class DynamicModelJtd implements JavaTypeDescriptor<Map<?,?>> {
 
 	@Override
-	public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context) {
+	public JdbcTypeDescriptor getRecommendedJdbcType(JdbcTypeDescriptorIndicators context) {
 		throw new UnsupportedOperationException();
 	}
 

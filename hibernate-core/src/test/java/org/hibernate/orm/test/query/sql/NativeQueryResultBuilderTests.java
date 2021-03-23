@@ -21,7 +21,6 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.BasicValuedSingularAttributeMapping;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
-import org.hibernate.query.NativeQuery;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
@@ -294,7 +293,7 @@ public class NativeQueryResultBuilderTests {
 		assertThat( valueConverter.getDomainJavaDescriptor(), is( attrMapping.getJavaTypeDescriptor() ) );
 		assertThat( valueConverter.getRelationalJavaDescriptor().getJavaTypeClass(), equalTo( Character.class ) );
 
-		assertThat( attrMapping.getJdbcMapping().getSqlTypeDescriptor().getJdbcTypeCode(), is( Types.CHAR ) );
+		assertThat( attrMapping.getJdbcMapping().getJdbcTypeDescriptor().getJdbcTypeCode(), is( Types.CHAR ) );
 	}
 
 	@BeforeEach

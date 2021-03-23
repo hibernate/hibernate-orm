@@ -66,7 +66,7 @@ import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.jpa.internal.util.LockOptionsHelper;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_SCOPE;
 import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_TIMEOUT;
@@ -248,13 +248,13 @@ public final class FastSessionServices {
 		return elr.getEventListenerGroup( type );
 	}
 
-	public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
-		if ( !sqlTypeDescriptor.canBeRemapped() ) {
-			return sqlTypeDescriptor;
+	public JdbcTypeDescriptor remapSqlTypeDescriptor(JdbcTypeDescriptor jdbcTypeDescriptor) {
+		if ( !jdbcTypeDescriptor.canBeRemapped() ) {
+			return jdbcTypeDescriptor;
 		}
 
-		final SqlTypeDescriptor remapped = dialect.remapSqlTypeDescriptor( sqlTypeDescriptor );
-		return remapped == null ? sqlTypeDescriptor : remapped;
+		final JdbcTypeDescriptor remapped = dialect.remapSqlTypeDescriptor( jdbcTypeDescriptor );
+		return remapped == null ? jdbcTypeDescriptor : remapped;
 	}
 
 	private static boolean isTransactionAccessible(SessionFactoryImpl sf, TransactionCoordinatorBuilder transactionCoordinatorBuilder) {

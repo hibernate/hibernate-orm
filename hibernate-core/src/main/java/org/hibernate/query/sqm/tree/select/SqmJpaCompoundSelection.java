@@ -85,7 +85,7 @@ public class SqmJpaCompoundSelection<T>
 	}
 
 	@Override
-	public List<? extends JpaSelection<?>> getSelectionItems() {
+	public List<SqmSelectableNode<?>> getSelectionItems() {
 		return selectableNodes;
 	}
 

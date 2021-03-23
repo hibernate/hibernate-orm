@@ -54,7 +54,7 @@ public interface NamedQueryMemento {
 	 */
 	NamedQueryMemento makeCopy(String name);
 
-	QueryImplementor<?> toQuery(SharedSessionContractImplementor session);
+	<T> QueryImplementor<T> toQuery(SharedSessionContractImplementor session);
 	<T> QueryImplementor<T> toQuery(SharedSessionContractImplementor session, Class<T> javaType);
 
 	interface ParameterMemento {

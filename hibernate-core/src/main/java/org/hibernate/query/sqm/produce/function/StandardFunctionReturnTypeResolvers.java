@@ -200,7 +200,7 @@ public class StandardFunctionReturnTypeResolvers {
 		return false;
 	}
 
-	private static AllowableFunctionReturnType<?> extractArgumentType(List<SqmTypedNode<?>> arguments, int position) {
+	public static AllowableFunctionReturnType<?> extractArgumentType(List<SqmTypedNode<?>> arguments, int position) {
 		final SqmTypedNode<?> specifiedArgument = arguments.get( position-1 );
 		final SqmExpressable<?> specifiedArgType = specifiedArgument.getNodeType();
 		if ( !(specifiedArgType instanceof AllowableFunctionReturnType) ) {
@@ -218,7 +218,7 @@ public class StandardFunctionReturnTypeResolvers {
 		return (AllowableFunctionReturnType<?>) specifiedArgType;
 	}
 
-	private static BasicValuedMapping extractArgumentValuedMapping(List<? extends SqlAstNode> arguments, int position) {
+	public static BasicValuedMapping extractArgumentValuedMapping(List<? extends SqlAstNode> arguments, int position) {
 		final SqlAstNode specifiedArgument = arguments.get( position-1 );
 		final MappingModelExpressable<?> specifiedArgType = specifiedArgument instanceof Expression
 				? ( (Expression) specifiedArgument ).getExpressionType()

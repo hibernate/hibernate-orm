@@ -23,7 +23,7 @@ public class SqmMaxElementPath<T> extends AbstractSqmSpecificPluralPartPath<T> {
 	public SqmMaxElementPath(SqmPath<?> pluralDomainPath) {
 		//noinspection unchecked
 		super(
-				pluralDomainPath.getNavigablePath().append( NAVIGABLE_NAME ),
+				pluralDomainPath.getNavigablePath().getParent().append( pluralDomainPath.getNavigablePath().getLocalName(), NAVIGABLE_NAME ),
 				pluralDomainPath,
 				(PluralPersistentAttribute) pluralDomainPath.getReferencedPathSource()
 		);

@@ -16,6 +16,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.named.AbstractNamedQueryMemento;
 import org.hibernate.query.named.NamedQueryMemento;
+import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sql.internal.NamedNativeQueryMementoImpl;
 
 /**
@@ -50,7 +51,7 @@ public interface NamedNativeQueryMemento extends NamedQueryMemento {
 	 * Convert the memento into an untyped executable query
 	 */
 	@Override
-	NativeQueryImplementor<?> toQuery(SharedSessionContractImplementor session);
+	<T> NativeQueryImplementor<T> toQuery(SharedSessionContractImplementor session);
 
 	/**
 	 * Convert the memento into a typed executable query

@@ -86,6 +86,8 @@ import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.InterpretationException;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
+import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
 import org.hibernate.query.sqm.spi.BaseSemanticQueryWalker;
@@ -107,11 +109,17 @@ import org.hibernate.query.sqm.tree.cte.SqmCteTable;
 import org.hibernate.query.sqm.tree.cte.SqmCteTableColumn;
 import org.hibernate.query.sqm.tree.cte.SqmSearchClauseSpecification;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
+import org.hibernate.query.sqm.tree.domain.AbstractSqmSpecificPluralPartPath;
 import org.hibernate.query.sqm.tree.domain.NonAggregatedCompositeSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmMapEntryReference;
+import org.hibernate.query.sqm.tree.domain.SqmIndexedCollectionAccessPath;
+import org.hibernate.query.sqm.tree.domain.SqmMaxElementPath;
+import org.hibernate.query.sqm.tree.domain.SqmMaxIndexPath;
+import org.hibernate.query.sqm.tree.domain.SqmMinElementPath;
+import org.hibernate.query.sqm.tree.domain.SqmMinIndexPath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
@@ -124,6 +132,7 @@ import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
 import org.hibernate.query.sqm.tree.expression.SqmCastTarget;
 import org.hibernate.query.sqm.tree.expression.SqmCollate;
+import org.hibernate.query.sqm.tree.expression.SqmCollectionSize;
 import org.hibernate.query.sqm.tree.expression.SqmDistinct;
 import org.hibernate.query.sqm.tree.expression.SqmDurationUnit;
 import org.hibernate.query.sqm.tree.expression.SqmEnumLiteral;
@@ -205,6 +214,7 @@ import org.hibernate.sql.ast.spi.SqlAstQueryPartProcessingState;
 import org.hibernate.sql.ast.spi.SqlAstTreeHelper;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.cte.CteColumn;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
@@ -1458,7 +1468,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	@Override
-	public Object visitSelection(SqmSelection<?> sqmSelection) {
+	public Void visitSelection(SqmSelection<?> sqmSelection) {
 		currentSqlSelectionCollector().next();
 		final Map<String, DomainResultProducer<?>> resultProducers;
 		if ( sqmSelection.getSelectableNode() instanceof SqmJpaCompoundSelection<?> ) {
@@ -3452,26 +3462,23 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public CaseSimpleExpression visitSimpleCaseExpression(SqmCaseSimple<?, ?> expression) {
-		SqmExpressable<?> resultType = expression.getNodeType();
 		List<CaseSimpleExpression.WhenFragment> whenFragments = new ArrayList<>( expression.getWhenFragments().size() );
 		for ( SqmCaseSimple.WhenFragment<?, ?> whenFragment : expression.getWhenFragments() ) {
-			resultType = QueryHelper.highestPrecedenceType2( resultType, whenFragment.getResult().getNodeType() );
 			whenFragments.add(
 					new CaseSimpleExpression.WhenFragment(
 							(Expression) whenFragment.getCheckValue().accept( this ),
-							(Expression) whenFragment.getResult().accept( this )
+							visitWithInferredType( whenFragment.getResult(), expression )
 					)
 			);
 		}
 
 		Expression otherwise = null;
 		if ( expression.getOtherwise() != null ) {
-			resultType = QueryHelper.highestPrecedenceType2( resultType, expression.getOtherwise().getNodeType() );
-			otherwise = (Expression) expression.getOtherwise().accept( this );
+			otherwise = visitWithInferredType( expression.getOtherwise(), expression );
 		}
 
 		final CaseSimpleExpression result = new CaseSimpleExpression(
-				resolveMappingExpressable( resultType ),
+				resolveMappingExpressable( expression.getNodeType() ),
 				(Expression) expression.getFixture().accept( this ),
 				whenFragments,
 				otherwise
@@ -3482,31 +3489,38 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public CaseSearchedExpression visitSearchedCaseExpression(SqmCaseSearched<?> expression) {
-		SqmExpressable<?> resultType = expression.getNodeType();
 		List<CaseSearchedExpression.WhenFragment> whenFragments = new ArrayList<>( expression.getWhenFragments().size() );
 		for ( SqmCaseSearched.WhenFragment<?> whenFragment : expression.getWhenFragments() ) {
-			resultType = QueryHelper.highestPrecedenceType2( resultType, whenFragment.getResult().getNodeType() );
 			whenFragments.add(
 					new CaseSearchedExpression.WhenFragment(
 							(Predicate) whenFragment.getPredicate().accept( this ),
-							(Expression) whenFragment.getResult().accept( this )
+							visitWithInferredType( whenFragment.getResult(), expression )
 					)
 			);
 		}
 
 		Expression otherwise = null;
 		if ( expression.getOtherwise() != null ) {
-			resultType = QueryHelper.highestPrecedenceType2( resultType, expression.getOtherwise().getNodeType() );
-			otherwise = (Expression) expression.getOtherwise().accept( this );
+			otherwise = visitWithInferredType( expression.getOtherwise(), expression );
 		}
 
 		final CaseSearchedExpression result = new CaseSearchedExpression(
-				resolveMappingExpressable( resultType ),
+				resolveMappingExpressable( expression.getNodeType() ),
 				whenFragments,
 				otherwise
 		);
 
 		return result;
+	}
+
+	private <T> T visitWithInferredType(SqmExpression<?> expression, SqmExpression<?> inferred) {
+		inferrableTypeAccessStack.push( () -> determineValueMapping( inferred ) );
+		try {
+			return (T) expression.accept( this );
+		}
+		finally {
+			inferrableTypeAccessStack.pop();
+		}
 	}
 
 	@Override
@@ -3589,6 +3603,170 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				sqmFieldLiteral.getValue(),
 				(BasicValuedMapping) determineValueMapping( sqmFieldLiteral )
 		);
+	}
+
+	@Override
+	public Expression visitMaxElementPath(SqmMaxElementPath<?> path) {
+		return createCorrelatedAggregateSubQuery( path, false, true );
+	}
+
+	@Override
+	public Expression visitMinElementPath(SqmMinElementPath<?> path) {
+		return createCorrelatedAggregateSubQuery( path, false, false );
+	}
+
+	@Override
+	public Expression visitMaxIndexPath(SqmMaxIndexPath<?> path) {
+		return createCorrelatedAggregateSubQuery( path, true, true );
+	}
+
+	@Override
+	public Expression visitMinIndexPath(SqmMinIndexPath<?> path) {
+		return createCorrelatedAggregateSubQuery( path, true, false );
+	}
+
+	@Override
+	public Expression visitPluralAttributeSizeFunction(SqmCollectionSize function) {
+		final SqmPath<?> pluralPath = function.getPluralPath();
+		final PluralAttributeMapping mappingModelExpressable = (PluralAttributeMapping) determineValueMapping(
+				pluralPath );
+		final FromClauseAccess parentFromClauseAccess = getFromClauseAccess();
+		final QuerySpec subQuerySpec = new QuerySpec( false );
+		pushProcessingState(
+				new SqlAstQueryPartProcessingStateImpl(
+						subQuerySpec,
+						getCurrentProcessingState(),
+						this,
+						currentClauseStack::getCurrent
+				)
+		);
+		try {
+			final TableGroup tableGroup = mappingModelExpressable.createRootTableGroup(
+					pluralPath.getNavigablePath(),
+					null,
+					true,
+					LockOptions.NONE.getLockMode(),
+					() -> subQuerySpec::applyPredicate,
+					this,
+					creationContext
+			);
+
+			getFromClauseAccess().registerTableGroup( pluralPath.getNavigablePath(), tableGroup );
+			subQuerySpec.getFromClause().addRoot( tableGroup );
+
+			final AbstractSqmSelfRenderingFunctionDescriptor functionDescriptor = (AbstractSqmSelfRenderingFunctionDescriptor) creationContext
+					.getSessionFactory()
+					.getQueryEngine()
+					.getSqmFunctionRegistry()
+					.findFunctionDescriptor( "count" );
+			final BasicType<Integer> integerType = creationContext.getDomainModel()
+					.getTypeConfiguration()
+					.getBasicTypeForJavaType( Integer.class );
+			final Expression expression = new SelfRenderingFunctionSqlAstExpression(
+					functionDescriptor.getName(),
+					functionDescriptor::render,
+					Collections.singletonList( new QueryLiteral<>( 1, integerType ) ),
+					integerType,
+					integerType
+			);
+			subQuerySpec.getSelectClause().addSqlSelection( new SqlSelectionImpl( 1, 0, expression ) );
+
+			subQuerySpec.applyPredicate(
+					mappingModelExpressable.getKeyDescriptor().generateJoinPredicate(
+							parentFromClauseAccess.findTableGroup( pluralPath.getNavigablePath().getParent() ),
+							tableGroup,
+							SqlAstJoinType.INNER,
+							getSqlExpressionResolver(),
+							creationContext
+					)
+			);
+		}
+		finally {
+			popProcessingStateStack();
+		}
+		return subQuerySpec;
+	}
+
+	@Override
+	public Object visitIndexedPluralAccessPath(SqmIndexedCollectionAccessPath path) {
+		// SemanticQueryBuilder applies the index expression to the generated join
+		return path.getLhs().accept( this );
+	}
+
+	protected Expression createCorrelatedAggregateSubQuery(
+			AbstractSqmSpecificPluralPartPath<?> pluralPartPath,
+			boolean index,
+			boolean max) {
+		final PluralAttributeMapping mappingModelExpressable = (PluralAttributeMapping) determineValueMapping(
+				pluralPartPath.getPluralDomainPath() );
+		final FromClauseAccess parentFromClauseAccess = getFromClauseAccess();
+		final QuerySpec subQuerySpec = new QuerySpec( false );
+		pushProcessingState(
+				new SqlAstQueryPartProcessingStateImpl(
+						subQuerySpec,
+						getCurrentProcessingState(),
+						this,
+						currentClauseStack::getCurrent
+				)
+		);
+		try {
+			final TableGroup tableGroup = mappingModelExpressable.createRootTableGroup(
+					pluralPartPath.getNavigablePath(),
+					null,
+					true,
+					LockOptions.NONE.getLockMode(),
+					() -> subQuerySpec::applyPredicate,
+					this,
+					creationContext
+			);
+
+			getFromClauseAccess().registerTableGroup( pluralPartPath.getNavigablePath(), tableGroup );
+			subQuerySpec.getFromClause().addRoot( tableGroup );
+
+			final AbstractSqmSelfRenderingFunctionDescriptor functionDescriptor = (AbstractSqmSelfRenderingFunctionDescriptor) creationContext
+					.getSessionFactory()
+					.getQueryEngine()
+					.getSqmFunctionRegistry()
+					.findFunctionDescriptor( max ? "max" : "min" );
+			final CollectionPart collectionPart = index
+					? mappingModelExpressable.getIndexDescriptor()
+					: mappingModelExpressable.getElementDescriptor();
+			final List<SqlAstNode> arguments = new ArrayList<>( 1 );
+
+			collectionPart.forEachSelection(
+					(selectionIndex, selectionMapping) -> {
+						arguments.add(
+								new ColumnReference(
+										tableGroup.getTableReference( selectionMapping.getContainingTableExpression() ),
+										selectionMapping,
+										creationContext.getSessionFactory()
+								)
+						);
+					}
+			);
+			final Expression expression = new SelfRenderingFunctionSqlAstExpression(
+					functionDescriptor.getName(),
+					functionDescriptor::render,
+					arguments,
+					(AllowableFunctionReturnType<?>) collectionPart.getJdbcMappings().get( 0 ),
+					collectionPart
+			);
+			subQuerySpec.getSelectClause().addSqlSelection( new SqlSelectionImpl( 1, 0, expression ) );
+
+			subQuerySpec.applyPredicate(
+					mappingModelExpressable.getKeyDescriptor().generateJoinPredicate(
+							parentFromClauseAccess.findTableGroup( pluralPartPath.getPluralDomainPath().getNavigablePath().getParent() ),
+							tableGroup,
+							SqlAstJoinType.INNER,
+							getSqlExpressionResolver(),
+							creationContext
+					)
+			);
+		}
+		finally {
+			popProcessingStateStack();
+		}
+		return subQuerySpec;
 	}
 
 

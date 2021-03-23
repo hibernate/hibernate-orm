@@ -17,6 +17,7 @@ import org.hibernate.query.hql.spi.HqlQueryImplementor;
 import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
 import org.hibernate.query.named.AbstractNamedQueryMemento;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sqm.internal.QuerySqmImpl;
 
 import org.jboss.logging.Logger;
@@ -128,7 +129,7 @@ public class NamedHqlQueryMementoImpl extends AbstractNamedQueryMemento implemen
 	}
 
 	@Override
-	public HqlQueryImplementor<?> toQuery(SharedSessionContractImplementor session) {
+	public <T> QueryImplementor<T> toQuery(SharedSessionContractImplementor session) {
 		return toQuery( session, null );
 	}
 

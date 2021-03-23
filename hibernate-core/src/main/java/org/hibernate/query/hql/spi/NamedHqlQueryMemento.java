@@ -16,6 +16,7 @@ import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
 import org.hibernate.query.named.AbstractNamedQueryMemento;
 import org.hibernate.query.named.NameableQuery;
 import org.hibernate.query.named.NamedQueryMemento;
+import org.hibernate.query.spi.QueryImplementor;
 
 /**
  * NamedQueryMemento for HQL queries
@@ -36,7 +37,7 @@ public interface NamedHqlQueryMemento extends NamedQueryMemento {
 	/**
 	 * Convert the memento into an untyped executable query
 	 */
-	HqlQueryImplementor<?> toQuery(SharedSessionContractImplementor session);
+	<T> QueryImplementor<T> toQuery(SharedSessionContractImplementor session);
 
 	Integer getFirstResult();
 

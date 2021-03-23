@@ -491,7 +491,7 @@ public class QuerySqmImpl<R>
 						queryOptions.getGraph() != null ||
 						hasLimit
 		);
-		ExecutionContext executionContextToUse;
+		final ExecutionContext executionContextToUse;
 		if ( queryOptions.hasLimit() && containsCollectionFetches ) {
 			boolean fail = getSessionFactory().getSessionFactoryOptions().isFailOnPaginationOverCollectionFetchEnabled();
 			if (fail) {

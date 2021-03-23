@@ -33,6 +33,7 @@ import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.query.sqm.sql.StandardSqmTranslatorFactory;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.stat.spi.StatisticsImplementor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.Map;
 import java.util.function.Supplier;
@@ -75,6 +76,7 @@ public class QueryEngine {
 				sqmTranslatorFactory,
 				sessionFactory.getServiceRegistry().getService( NativeQueryInterpreter.class ),
 				buildInterpretationCache( sessionFactory::getStatistics, sessionFactory.getProperties() ),
+				metadata.getTypeConfiguration(),
 				dialect,
 				queryEngineOptions.getCustomSqmFunctionRegistry(),
 				sessionFactory.getServiceRegistry()
@@ -88,6 +90,7 @@ public class QueryEngine {
 	private final NativeQueryInterpreter nativeQueryInterpreter;
 	private final QueryInterpretationCache interpretationCache;
 	private final SqmFunctionRegistry sqmFunctionRegistry;
+	private final TypeConfiguration typeConfiguration;
 	private final int preferredSqlTypeCodeForBoolean;
 
 	public QueryEngine(
@@ -99,6 +102,7 @@ public class QueryEngine {
 			SqmTranslatorFactory sqmTranslatorFactory,
 			NativeQueryInterpreter nativeQueryInterpreter,
 			QueryInterpretationCache interpretationCache,
+			TypeConfiguration typeConfiguration,
 			Dialect dialect,
 			SqmFunctionRegistry userDefinedRegistry,
 			ServiceRegistry serviceRegistry) {
@@ -116,6 +120,7 @@ public class QueryEngine {
 		);
 
 		this.sqmFunctionRegistry = new SqmFunctionRegistry();
+		this.typeConfiguration = typeConfiguration;
 		this.preferredSqlTypeCodeForBoolean = preferredSqlTypeCodeForBoolean;
 		dialect.initializeFunctionRegistry( this );
 		if ( userDefinedRegistry != null ) {
@@ -151,6 +156,7 @@ public class QueryEngine {
 		this.nativeQueryInterpreter = nativeQueryInterpreter;
 
 		this.sqmFunctionRegistry = new SqmFunctionRegistry();
+		this.typeConfiguration = jpaMetamodel.getTypeConfiguration();
 		this.preferredSqlTypeCodeForBoolean = preferredSqlTypeCodeForBoolean;
 		dialect.initializeFunctionRegistry( this );
 
@@ -334,6 +340,10 @@ public class QueryEngine {
 
 	public SqmFunctionRegistry getSqmFunctionRegistry() {
 		return sqmFunctionRegistry;
+	}
+
+	public TypeConfiguration getTypeConfiguration() {
+		return typeConfiguration;
 	}
 
 	public void close() {

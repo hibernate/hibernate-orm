@@ -146,13 +146,13 @@ public interface SemanticQueryWalker<T> {
 	
 	T visitIndexedPluralAccessPath(SqmIndexedCollectionAccessPath path);
 
-	T visitMaxElementPath(SqmMaxElementPath path);
+	T visitMaxElementPath(SqmMaxElementPath<?> path);
 
-	T visitMinElementPath(SqmMinElementPath path);
+	T visitMinElementPath(SqmMinElementPath<?> path);
 
-	T visitMaxIndexPath(SqmMaxIndexPath path);
+	T visitMaxIndexPath(SqmMaxIndexPath<?> path);
 
-	T visitMinIndexPath(SqmMinIndexPath path);
+	T visitMinIndexPath(SqmMinIndexPath<?> path);
 
 	T visitTreatedPath(SqmTreatedPath<?, ?> sqmTreatedPath);
 
@@ -168,7 +168,7 @@ public interface SemanticQueryWalker<T> {
 
 	T visitSelectClause(SqmSelectClause selectClause);
 
-	T visitSelection(SqmSelection selection);
+	T visitSelection(SqmSelection<?> selection);
 
 	T visitValues(SqmValues values);
 
@@ -178,7 +178,7 @@ public interface SemanticQueryWalker<T> {
 
 	T visitDynamicInstantiation(SqmDynamicInstantiation<?> sqmDynamicInstantiation);
 
-	default T visitJpaCompoundSelection(SqmJpaCompoundSelection selection) {
+	default T visitJpaCompoundSelection(SqmJpaCompoundSelection<?> selection) {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 

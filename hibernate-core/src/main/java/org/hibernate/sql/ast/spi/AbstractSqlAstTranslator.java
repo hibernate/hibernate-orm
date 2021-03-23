@@ -38,10 +38,14 @@ import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.BasicValuedCollectionPart;
+import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
+import org.hibernate.metamodel.mapping.internal.SimpleForeignKeyDescriptor;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.query.ComparisonOperator;
@@ -2650,10 +2654,26 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			appendSql( ( (Loadable) tableGroup.getModelPart() ).getIdentifierColumnNames()[0] );
 		}
 		else if ( modelPart instanceof PluralAttributeMapping ) {
-			CollectionPart elementDescriptor = ( (PluralAttributeMapping) modelPart ).getElementDescriptor();
+			final CollectionPart elementDescriptor = ( (PluralAttributeMapping) modelPart ).getElementDescriptor();
 			if ( elementDescriptor instanceof BasicValuedCollectionPart ) {
 				String mappedColumnExpression = ( (BasicValuedCollectionPart) elementDescriptor ).getSelectionExpression();
 				appendSql( mappedColumnExpression );
+			}
+			else if ( elementDescriptor instanceof EntityCollectionPart ) {
+				final ForeignKeyDescriptor foreignKeyDescriptor = ( (EntityCollectionPart) elementDescriptor ).getForeignKeyDescriptor();
+				if ( foreignKeyDescriptor instanceof SimpleForeignKeyDescriptor ) {
+					foreignKeyDescriptor.visitTargetColumns(
+							(selectionIndex, selectionMapping) -> appendSql( selectionMapping.getSelectionExpression() )
+					);
+				}
+			}
+		}
+		else if ( modelPart instanceof ToOneAttributeMapping ) {
+			final ForeignKeyDescriptor foreignKeyDescriptor = ( (ToOneAttributeMapping) modelPart ).getForeignKeyDescriptor();
+			if ( foreignKeyDescriptor instanceof SimpleForeignKeyDescriptor ) {
+				foreignKeyDescriptor.visitTargetColumns(
+						(selectionIndex, selectionMapping) -> appendSql( selectionMapping.getSelectionExpression() )
+				);
 			}
 		}
 		else {
@@ -3190,7 +3210,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitCaseSimpleExpression(CaseSimpleExpression caseSimpleExpression) {
-		appendSql( "case" );
+		appendSql( "case " );
 		caseSimpleExpression.getFixture().accept( this );
 		for ( CaseSimpleExpression.WhenFragment whenFragment : caseSimpleExpression.getWhenFragments() ) {
 			appendSql( " when " );

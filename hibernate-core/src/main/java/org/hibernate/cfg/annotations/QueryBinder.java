@@ -23,6 +23,7 @@ import org.hibernate.annotations.CacheModeType;
 import org.hibernate.annotations.FlushModeType;
 import org.hibernate.annotations.QueryHints;
 import org.hibernate.boot.internal.NamedHqlQueryDefinitionImpl;
+import org.hibernate.boot.internal.NamedProcedureCallDefinitionImpl;
 import org.hibernate.boot.query.NamedNativeQueryDefinitionBuilder;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
@@ -316,17 +317,15 @@ public abstract class QueryBinder {
 			throw new AnnotationException( "A named query must have a name when used in class or package level" );
 		}
 
-		throw new NotYetImplementedFor6Exception();
-//		NamedProcedureCallDefinition.
-//		final NamedProcedureCallDefinitionImpl def = new NamedProcedureCallDefinitionImpl( annotation );
-//
-//		if (isDefault) {
-//			context.getMetadataCollector().addDefaultNamedProcedureCall( def );
-//		}
-//		else {
-//			context.getMetadataCollector().addNamedProcedureCallDefinition( def );
-//		}
-//		LOG.debugf( "Bound named stored procedure query : %s => %s", def.getRegistrationName(), def.getProcedureName() );
+		final NamedProcedureCallDefinitionImpl def = new NamedProcedureCallDefinitionImpl( annotation );
+
+		if ( isDefault ) {
+			context.getMetadataCollector().addDefaultNamedProcedureCall( def );
+		}
+		else {
+			context.getMetadataCollector().addNamedProcedureCallDefinition( def );
+		}
+		LOG.debugf( "Bound named stored procedure query : %s => %s", def.getRegistrationName(), def.getProcedureName() );
 	}
 
 	public static void bindSqlResultSetMappings(

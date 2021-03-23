@@ -104,8 +104,8 @@ public class CompleteFetchBuilderBasicPart implements CompleteFetchBuilder, Mode
 				processingState -> new SqlSelectionImpl( valuesArrayPosition, referencedModelPart )
 		);
 
-		return referencedModelPart.generateFetch(
-				parent,
+		return parent.generateFetchableFetch(
+				referencedModelPart,
 				fetchPath,
 				FetchTiming.IMMEDIATE,
 				true,

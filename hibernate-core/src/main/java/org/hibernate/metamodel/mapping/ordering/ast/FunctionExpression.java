@@ -11,17 +11,28 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.mapping.internal.AbstractDomainPath;
 import org.hibernate.query.SortOrder;
+import org.hibernate.query.sqm.function.FunctionRenderingSupport;
+import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
+import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
+import org.hibernate.sql.ast.tree.select.SortSpecification;
 
 /**
  * Represents a function used in an order-by fragment
  *
  * @author Steve Ebersole
  */
-public class FunctionExpression implements OrderingExpression {
+public class FunctionExpression implements OrderingExpression, FunctionRenderingSupport {
 	private final String name;
 	private final List<OrderingExpression> arguments;
 
@@ -45,6 +56,42 @@ public class FunctionExpression implements OrderingExpression {
 	}
 
 	@Override
+	public SelfRenderingFunctionSqlAstExpression resolve(
+			QuerySpec ast,
+			TableGroup tableGroup,
+			String modelPartName,
+			SqlAstCreationState creationState) {
+
+		final int size = arguments.size();
+		final List<SqlAstNode> args = new ArrayList<>( size );
+		for ( int i = 0; i < size; i++ ) {
+			final OrderingExpression orderingExpression = arguments.get( i );
+			final String subModelPartName;
+			if ( orderingExpression instanceof DomainPath ) {
+				final String partName = ( (DomainPath) orderingExpression ).getNavigablePath().getUnaliasedLocalName();
+				if ( CollectionPart.Nature.ELEMENT.getName().equals( partName ) ) {
+					subModelPartName = AbstractDomainPath.ELEMENT_TOKEN;
+				}
+				else {
+					subModelPartName = partName;
+				}
+			}
+			else {
+				subModelPartName = null;
+			}
+			args.add( orderingExpression.resolve( ast, tableGroup, subModelPartName, creationState ) );
+		}
+
+		return new SelfRenderingFunctionSqlAstExpression(
+				name,
+				this,
+				args,
+				null,
+				tableGroup.getModelPart().findSubPart( modelPartName, null )
+		);
+	}
+
+	@Override
 	public void apply(
 			QuerySpec ast,
 			TableGroup tableGroup,
@@ -52,6 +99,21 @@ public class FunctionExpression implements OrderingExpression {
 			String modelPartName,
 			SortOrder sortOrder,
 			SqlAstCreationState creationState) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		final SelfRenderingFunctionSqlAstExpression expression = resolve( ast, tableGroup, modelPartName, creationState );
+		ast.addSortSpecification( new SortSpecification( expression, collation, sortOrder ) );
+	}
+
+	@Override
+	public void render(SqlAppender sqlAppender, List<SqlAstNode> sqlAstArguments, SqlAstTranslator<?> walker) {
+		sqlAppender.appendSql( name );
+		sqlAppender.appendSql( '(' );
+		if ( !sqlAstArguments.isEmpty() ) {
+			sqlAstArguments.get( 0 ).accept( walker );
+			for ( int i = 1; i < sqlAstArguments.size(); i++ ) {
+				sqlAppender.appendSql( ", " );
+				sqlAstArguments.get( i ).accept( walker );
+			}
+		}
+		sqlAppender.appendSql( ')' );
 	}
 }

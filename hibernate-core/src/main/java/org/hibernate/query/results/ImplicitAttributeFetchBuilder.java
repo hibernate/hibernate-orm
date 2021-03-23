@@ -42,8 +42,8 @@ public class ImplicitAttributeFetchBuilder implements FetchBuilder, ImplicitFetc
 			DomainResultCreationState domainResultCreationState) {
 		assert fetchPath.equals( navigablePath );
 
-		return attributeMapping.generateFetch(
-				parent,
+		return parent.generateFetchableFetch(
+				attributeMapping,
 				fetchPath,
 				FetchTiming.IMMEDIATE,
 				true,

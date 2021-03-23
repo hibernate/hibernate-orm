@@ -79,8 +79,8 @@ public class StandardListSemantics<E> implements CollectionSemantics<List<E>, E>
 			DomainResultCreationState creationState) {
 		return new ListInitializerProducer(
 				attributeMapping,
-				attributeMapping.getIndexDescriptor().generateFetch(
-						fetchParent,
+				fetchParent.generateFetchableFetch(
+						attributeMapping.getIndexDescriptor(),
 						navigablePath.append( CollectionPart.Nature.INDEX.getName() ),
 						FetchTiming.IMMEDIATE,
 						selected,
@@ -88,8 +88,8 @@ public class StandardListSemantics<E> implements CollectionSemantics<List<E>, E>
 						null,
 						creationState
 				),
-				attributeMapping.getElementDescriptor().generateFetch(
-						fetchParent,
+				fetchParent.generateFetchableFetch(
+						attributeMapping.getElementDescriptor(),
 						navigablePath.append( CollectionPart.Nature.ELEMENT.getName() ),
 						FetchTiming.IMMEDIATE,
 						selected,
@@ -112,8 +112,8 @@ public class StandardListSemantics<E> implements CollectionSemantics<List<E>, E>
 			Fetch elementFetch,
 			DomainResultCreationState creationState) {
 		if ( indexFetch == null ) {
-			indexFetch = attributeMapping.getIndexDescriptor().generateFetch(
-					fetchParent,
+			indexFetch = fetchParent.generateFetchableFetch(
+					attributeMapping.getIndexDescriptor(),
 					navigablePath.append( CollectionPart.Nature.INDEX.getName() ),
 					FetchTiming.IMMEDIATE,
 					selected,
@@ -123,8 +123,8 @@ public class StandardListSemantics<E> implements CollectionSemantics<List<E>, E>
 			);
 		}
 		if ( elementFetch == null ) {
-			elementFetch = attributeMapping.getElementDescriptor().generateFetch(
-					fetchParent,
+			elementFetch = fetchParent.generateFetchableFetch(
+					attributeMapping.getElementDescriptor(),
 					navigablePath.append( CollectionPart.Nature.ELEMENT.getName() ),
 					FetchTiming.IMMEDIATE,
 					selected,

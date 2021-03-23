@@ -19,6 +19,7 @@ import org.hibernate.metamodel.mapping.ConvertibleModelPart;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
@@ -99,6 +100,51 @@ public class BasicValuedSingularAttributeMapping
 		else {
 			this.customWriteExpression = customWriteExpression;
 		}
+	}
+
+	public static BasicValuedSingularAttributeMapping withSelectableMapping(
+			BasicValuedModelPart original,
+			SelectableMapping selectableMapping) {
+		String attributeName = null;
+		int stateArrayPosition = 0;
+		StateArrayContributorMetadataAccess attributeMetadataAccess = null;
+		BasicValueConverter<?, ?> valueConverter = null;
+		PropertyAccess propertyAccess = null;
+		ManagedMappingType declaringType = null;
+		if ( original instanceof SingleAttributeIdentifierMapping ) {
+			final SingleAttributeIdentifierMapping mapping = (SingleAttributeIdentifierMapping) original;
+			attributeName = mapping.getAttributeName();
+			attributeMetadataAccess = null;
+			propertyAccess = mapping.getPropertyAccess();
+			declaringType = mapping.findContainingEntityMapping();
+		}
+		else if ( original instanceof SingularAttributeMapping ) {
+			final SingularAttributeMapping mapping = (SingularAttributeMapping) original;
+			attributeName = mapping.getAttributeName();
+			stateArrayPosition = mapping.getStateArrayPosition();
+			attributeMetadataAccess = mapping.getAttributeMetadataAccess();
+			propertyAccess = mapping.getPropertyAccess();
+			declaringType = mapping.getDeclaringType();
+		}
+		if ( original instanceof ConvertibleModelPart ) {
+			valueConverter = ( (ConvertibleModelPart) original ).getValueConverter();
+		}
+		return new BasicValuedSingularAttributeMapping(
+				attributeName,
+				original.getNavigableRole(),
+				stateArrayPosition,
+				attributeMetadataAccess,
+				FetchStrategy.IMMEDIATE_JOIN,
+				selectableMapping.getContainingTableExpression(),
+				selectableMapping.getSelectionExpression(),
+				selectableMapping.isFormula(),
+				selectableMapping.getCustomReadExpression(),
+				selectableMapping.getCustomWriteExpression(),
+				valueConverter,
+				selectableMapping.getJdbcMapping(),
+				declaringType,
+				propertyAccess
+		);
 	}
 
 	@Override

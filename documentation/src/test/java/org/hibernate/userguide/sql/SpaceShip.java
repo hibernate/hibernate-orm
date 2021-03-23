@@ -52,8 +52,8 @@ import javax.persistence.SqlResultSetMapping;
             @FieldResult(name = "name", column = "name"),
             @FieldResult(name = "model", column = "model"),
             @FieldResult(name = "speed", column = "speed"),
-            @FieldResult(name = "captain.lastname", column = "lastn"),
-            @FieldResult(name = "captain.firstname", column = "firstn"),
+            @FieldResult(name = "captain.id.lastname", column = "lastn"),
+            @FieldResult(name = "captain.id.firstname", column = "firstn"),
             @FieldResult(name = "dimensions.length", column = "length"),
             @FieldResult(name = "dimensions.width", column = "width"),
         }

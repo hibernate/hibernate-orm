@@ -16,11 +16,13 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBasicImpl;
@@ -97,6 +99,31 @@ public class EmbeddedAttributeMapping
 		this.tableExpression = tableExpression;
 
 		this.embeddableMappingType = embeddableMappingType;
+	}
+
+	// Constructor is only used for creating the inverse attribute mapping
+	private EmbeddedAttributeMapping(
+			SelectableMappings selectableMappings,
+			EmbeddableValuedModelPart inverseModelPart,
+			MappingModelCreationProcess creationProcess) {
+		super( inverseModelPart.getFetchableName(), -1, null, inverseModelPart.getMappedFetchOptions(), null, null );
+
+		this.navigableRole = inverseModelPart.getNavigableRole().getParent().append( inverseModelPart.getFetchableName() );
+
+		this.tableExpression = selectableMappings.getSelectable( 0 ).getContainingTableExpression();
+		this.embeddableMappingType = inverseModelPart.getEmbeddableTypeDescriptor().createInverseMappingType(
+				this,
+				selectableMappings,
+				creationProcess
+		);
+		this.parentInjectionAttributePropertyAccess = null;
+	}
+
+	public static EmbeddableValuedModelPart createInverseModelPart(
+			EmbeddableValuedModelPart modelPart,
+			SelectableMappings selectableMappings,
+			MappingModelCreationProcess creationProcess) {
+		return new EmbeddedAttributeMapping( selectableMappings, modelPart, creationProcess );
 	}
 
 	@Override

@@ -16,12 +16,14 @@ import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.metamodel.mapping.AssociationKey;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
+import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
@@ -48,6 +50,7 @@ import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
 import org.hibernate.sql.results.graph.entity.EntityFetch;
@@ -84,7 +87,7 @@ public class ToOneAttributeMapping
 	private final String referencedPropertyName;
 
 	private final Cardinality cardinality;
-	private String bidirectionalAttributeName;
+	private final String bidirectionalAttributeName;
 
 	private ForeignKeyDescriptor foreignKeyDescriptor;
 	private String identifyingColumnsTableExpression;
@@ -122,6 +125,7 @@ public class ToOneAttributeMapping
 			else {
 				cardinality = Cardinality.MANY_TO_ONE;
 			}
+			this.bidirectionalAttributeName = null;
 		}
 		else {
 			assert bootValue instanceof OneToOne;
@@ -171,22 +175,49 @@ public class ToOneAttributeMapping
 				so in order to recognize the bidirectionality the "primaryKey." is removed from the otherSidePropertyName value.
 		 	*/
 			// todo (6.0): find a better solution for the embeddable part name not in the NavigablePath
-			bidirectionalAttributeName = StringHelper.subStringNullIfEmpty(
+			String bidirectionalAttributeName = StringHelper.subStringNullIfEmpty(
 					( (OneToOne) bootValue ).getMappedByProperty(),
 					'.'
 			);
 
 			if ( bidirectionalAttributeName == null ) {
-				bidirectionalAttributeName = StringHelper.subStringNullIfEmpty(
+				this.bidirectionalAttributeName = StringHelper.subStringNullIfEmpty(
 						bootValue.getReferencedPropertyName(),
 						'.'
 				);
+			}
+			else {
+				this.bidirectionalAttributeName = bidirectionalAttributeName;
 			}
 		}
 
 		this.navigableRole = navigableRole;
 	}
 
+	private ToOneAttributeMapping(ToOneAttributeMapping original) {
+		super(
+				original.getAttributeName(),
+				original.getStateArrayPosition(),
+				original.getAttributeMetadataAccess(),
+				original,
+				original.getDeclaringType(),
+				original.getPropertyAccess()
+		);
+		this.navigableRole = original.navigableRole;
+		this.sqlAliasStem = original.sqlAliasStem;
+		this.isNullable = original.isNullable;
+		this.unwrapProxy = original.unwrapProxy;
+		this.entityMappingType = original.entityMappingType;
+		this.referencedPropertyName = original.referencedPropertyName;
+		this.cardinality = original.cardinality;
+		this.bidirectionalAttributeName = original.bidirectionalAttributeName;
+	}
+
+	public ToOneAttributeMapping copy() {
+		return new ToOneAttributeMapping( this );
+	}
+
+	@Override
 	public void setForeignKeyDescriptor(ForeignKeyDescriptor foreignKeyDescriptor) {
 		isKeyReferringSide = foreignKeyDescriptor.getAssociationKey().getTable().equals( identifyingColumnsTableExpression );
 		assert identifyingColumnsTableExpression != null;
@@ -197,12 +228,17 @@ public class ToOneAttributeMapping
 		identifyingColumnsTableExpression = tableExpression;
 	}
 
+	@Override
 	public ForeignKeyDescriptor getForeignKeyDescriptor() {
 		return this.foreignKeyDescriptor;
 	}
 
 	public String getReferencedPropertyName() {
 		return referencedPropertyName;
+	}
+
+	public Cardinality getCardinality() {
+		return cardinality;
 	}
 
 	@Override
@@ -230,6 +266,35 @@ public class ToOneAttributeMapping
 		if ( creationState.isAssociationKeyVisited( associationKey ) ) {
 			NavigablePath parentNavigablePath = fetchablePath.getParent();
 			assert parentNavigablePath.equals( fetchParent.getNavigablePath() );
+			// The parent navigable path is {fk} if we are creating the domain result for the foreign key for a circular fetch
+			// In the following example, we create a circular fetch for the composite `Card.field.{id}.card.field`
+			// While creating the domain result for the foreign key of `Card#field`, we run into this condition
+			// We know that `Card#field` will be delayed because `EmbeddableForeignKeyResultImpl` enforces that
+			// so we can safely return null to avoid a stack overflow
+			/*
+				@Entity
+				public class Card {
+					@Id
+					private String id;
+					@ManyToOne
+					private CardField field;
+				}
+				@Entity
+				public class CardField {
+					@EmbeddedId
+					private PrimaryKey primaryKey;
+				}
+				@Embeddable
+				public class PrimaryKey {
+					@ManyToOne(optional = false)
+					private Card card;
+					@ManyToOne(optional = false)
+					private Key key;
+				}
+			 */
+			if ( parentNavigablePath.getLocalName().equals( ForeignKeyDescriptor.PART_NAME ) ) {
+				return null;
+			}
 
 			ModelPart modelPart = creationState.resolveModelPart( parentNavigablePath );
 			if ( modelPart instanceof EmbeddedIdentifierMappingImpl ) {
@@ -407,6 +472,9 @@ public class ToOneAttributeMapping
 				fetchParent.getNavigablePath()
 		);
 
+		final NavigablePath parentNavigablePath = fetchablePath.getParent();
+		assert parentNavigablePath.equals( fetchParent.getNavigablePath() );
+
 		if ( fetchTiming == FetchTiming.IMMEDIATE && selected ) {
 			if ( fetchParent instanceof EntityResultJoinedSubclassImpl &&
 					( (EntityPersister) fetchParent.getReferencedModePart() ).findDeclaredAttributeMapping( getPartName() ) == null ) {
@@ -471,12 +539,11 @@ public class ToOneAttributeMapping
 			selectByUniqueKey = false;
 		}
 		else {
+			// case 1.1
 			keyResult = foreignKeyDescriptor.createDomainResult( fetchablePath, parentTableGroup, isKeyReferringSide, creationState );
-// case 1.1
 			selectByUniqueKey = true;
 		}
 
-		assert !selected;
 		if ( fetchTiming == FetchTiming.IMMEDIATE ) {
 			return new EntityFetchSelectImpl(
 					fetchParent,

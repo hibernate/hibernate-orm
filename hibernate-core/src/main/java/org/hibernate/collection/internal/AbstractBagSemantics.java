@@ -72,8 +72,8 @@ public abstract class AbstractBagSemantics<E> implements BagSemantics<Collection
 			DomainResultCreationState creationState) {
 		return new BagInitializerProducer(
 				attributeMapping,
-				attributeMapping.getIdentifierDescriptor() == null ? null : attributeMapping.getIdentifierDescriptor().generateFetch(
-						fetchParent,
+				attributeMapping.getIdentifierDescriptor() == null ? null : fetchParent.generateFetchableFetch(
+						attributeMapping.getIdentifierDescriptor(),
 						navigablePath.append( CollectionPart.Nature.ID.getName() ),
 						FetchTiming.IMMEDIATE,
 						selected,
@@ -81,8 +81,8 @@ public abstract class AbstractBagSemantics<E> implements BagSemantics<Collection
 						null,
 						creationState
 				),
-				attributeMapping.getElementDescriptor().generateFetch(
-						fetchParent,
+				fetchParent.generateFetchableFetch(
+						attributeMapping.getElementDescriptor(),
 						navigablePath.append( CollectionPart.Nature.ELEMENT.getName() ),
 						FetchTiming.IMMEDIATE,
 						selected,
@@ -105,8 +105,8 @@ public abstract class AbstractBagSemantics<E> implements BagSemantics<Collection
 			Fetch elementFetch,
 			DomainResultCreationState creationState){
 		if ( indexFetch == null ) {
-			indexFetch = attributeMapping.getIdentifierDescriptor() == null ? null : attributeMapping.getIdentifierDescriptor().generateFetch(
-					fetchParent,
+			indexFetch = attributeMapping.getIdentifierDescriptor() == null ? null : fetchParent.generateFetchableFetch(
+					attributeMapping.getIdentifierDescriptor(),
 					navigablePath.append( CollectionPart.Nature.ID.getName() ),
 					FetchTiming.IMMEDIATE,
 					selected,
@@ -116,8 +116,8 @@ public abstract class AbstractBagSemantics<E> implements BagSemantics<Collection
 			);
 		}
 		if ( elementFetch == null ) {
-			elementFetch = attributeMapping.getElementDescriptor().generateFetch(
-					fetchParent,
+			elementFetch = fetchParent.generateFetchableFetch(
+					attributeMapping.getElementDescriptor(),
 					navigablePath.append( CollectionPart.Nature.ELEMENT.getName() ),
 					FetchTiming.IMMEDIATE,
 					selected,

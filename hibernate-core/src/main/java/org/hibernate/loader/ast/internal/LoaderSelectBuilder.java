@@ -737,8 +737,8 @@ public class LoaderSelectBuilder {
 				if ( changeFetchDepth ) {
 					fetchDepth++;
 				}
-				final Fetch fetch = fetchable.generateFetch(
-						fetchParent,
+				final Fetch fetch = fetchParent.generateFetchableFetch(
+						fetchable,
 						fetchablePath,
 						fetchTiming,
 						joined,

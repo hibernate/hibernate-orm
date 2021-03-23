@@ -34,7 +34,7 @@ public class EmbeddableValuedPathInterpretation<T> extends AbstractSqmPathInterp
 			SqmEmbeddedValuedSimplePath<T> sqmPath,
 			SqmToSqlAstConverter converter,
 			SemanticQueryWalker sqmWalker) {
-		final TableGroup tableGroup = converter.getFromClauseAccess()
+		TableGroup tableGroup = converter.getFromClauseAccess()
 				.findTableGroup( sqmPath.getLhs().getNavigablePath() );
 
 		final EmbeddableValuedModelPart mapping = (EmbeddableValuedModelPart) tableGroup.getModelPart().findSubPart(

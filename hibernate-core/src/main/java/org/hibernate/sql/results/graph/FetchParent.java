@@ -8,6 +8,8 @@ package org.hibernate.sql.results.graph;
 
 import java.util.List;
 
+import org.hibernate.LockMode;
+import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.Association;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
@@ -64,4 +66,23 @@ public interface FetchParent extends DomainResultGraphNode {
 	List<Fetch> getFetches();
 
 	Fetch findFetch(Fetchable fetchable);
+
+	default Fetch generateFetchableFetch(
+			Fetchable fetchable,
+			NavigablePath fetchablePath,
+			FetchTiming fetchTiming,
+			boolean selected,
+			LockMode lockMode,
+			String resultVariable,
+			DomainResultCreationState creationState) {
+		return fetchable.generateFetch(
+				this,
+				fetchablePath,
+				fetchTiming,
+				selected,
+				lockMode,
+				resultVariable,
+				creationState
+		);
+	}
 }

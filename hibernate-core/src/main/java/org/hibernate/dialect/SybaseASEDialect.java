@@ -26,8 +26,8 @@ import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.type.descriptor.sql.TinyIntTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.TinyIntTypeDescriptor;
 
 import java.sql.Types;
 import java.util.Map;
@@ -100,7 +100,7 @@ public class SybaseASEDialect extends SybaseDialect {
 	}
 
 	@Override
-	protected SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
+	protected JdbcTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
 		return sqlCode == Types.BOOLEAN
 				? TinyIntTypeDescriptor.INSTANCE
 				: super.getSqlTypeDescriptorOverride( sqlCode );

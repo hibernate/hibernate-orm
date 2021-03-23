@@ -11,7 +11,6 @@ import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.Locale;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -20,7 +19,7 @@ import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 /**
  * BasicValueConverter handling the conversion of an enum based on
@@ -30,7 +29,7 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
  */
 public class NamedEnumValueConverter<E extends Enum<E>> implements EnumValueConverter<E,String>, Serializable {
 	private final EnumJavaTypeDescriptor<E> domainTypeDescriptor;
-	private final SqlTypeDescriptor sqlTypeDescriptor;
+	private final JdbcTypeDescriptor jdbcTypeDescriptor;
 	private final JavaTypeDescriptor<String> relationalTypeDescriptor;
 
 	private transient ValueExtractor<String> valueExtractor;
@@ -38,14 +37,14 @@ public class NamedEnumValueConverter<E extends Enum<E>> implements EnumValueConv
 
 	public NamedEnumValueConverter(
 			EnumJavaTypeDescriptor<E> domainTypeDescriptor,
-			SqlTypeDescriptor sqlTypeDescriptor,
+			JdbcTypeDescriptor jdbcTypeDescriptor,
 			JavaTypeDescriptor<String> relationalTypeDescriptor) {
 		this.domainTypeDescriptor = domainTypeDescriptor;
-		this.sqlTypeDescriptor = sqlTypeDescriptor;
+		this.jdbcTypeDescriptor = jdbcTypeDescriptor;
 		this.relationalTypeDescriptor = relationalTypeDescriptor;
 
-		this.valueExtractor = sqlTypeDescriptor.getExtractor( relationalTypeDescriptor );
-		this.valueBinder = sqlTypeDescriptor.getBinder( relationalTypeDescriptor );
+		this.valueExtractor = jdbcTypeDescriptor.getExtractor( relationalTypeDescriptor );
+		this.valueBinder = jdbcTypeDescriptor.getBinder( relationalTypeDescriptor );
 	}
 
 	@Override
@@ -70,7 +69,7 @@ public class NamedEnumValueConverter<E extends Enum<E>> implements EnumValueConv
 
 	@Override
 	public int getJdbcTypeCode() {
-		return sqlTypeDescriptor.getJdbcTypeCode();
+		return jdbcTypeDescriptor.getJdbcTypeCode();
 	}
 
 	@Override
@@ -82,8 +81,8 @@ public class NamedEnumValueConverter<E extends Enum<E>> implements EnumValueConv
 	private void readObject(ObjectInputStream stream) throws ClassNotFoundException, IOException {
 		stream.defaultReadObject();
 
-		this.valueExtractor = sqlTypeDescriptor.getExtractor( relationalTypeDescriptor );
-		this.valueBinder = sqlTypeDescriptor.getBinder( relationalTypeDescriptor );
+		this.valueExtractor = jdbcTypeDescriptor.getExtractor( relationalTypeDescriptor );
+		this.valueBinder = jdbcTypeDescriptor.getBinder( relationalTypeDescriptor );
 	}
 
 	@Override

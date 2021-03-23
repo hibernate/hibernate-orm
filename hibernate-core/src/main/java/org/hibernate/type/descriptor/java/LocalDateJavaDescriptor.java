@@ -20,9 +20,9 @@ import java.util.GregorianCalendar;
 import javax.persistence.TemporalType;
 
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.sql.DateTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.DateTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -47,7 +47,7 @@ public class LocalDateJavaDescriptor extends AbstractTemporalTypeDescriptor<Loca
 	}
 
 	@Override
-	public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context) {
+	public JdbcTypeDescriptor getRecommendedJdbcType(JdbcTypeDescriptorIndicators context) {
 		return DateTypeDescriptor.INSTANCE;
 	}
 

@@ -268,7 +268,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 			type = getTypeForComponentValue( mapping, type, getTypeIndex() );
 		}
 		return dialect.getSizeStrategy().resolveSize(
-				( (JdbcMapping) type ).getSqlTypeDescriptor(),
+				( (JdbcMapping) type ).getJdbcTypeDescriptor(),
 				( (JdbcMapping) type ).getJavaTypeDescriptor(),
 				precision,
 				scale,

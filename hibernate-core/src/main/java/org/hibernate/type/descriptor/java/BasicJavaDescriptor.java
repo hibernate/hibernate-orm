@@ -6,9 +6,9 @@
  */
 package org.hibernate.type.descriptor.java;
 
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
-import org.hibernate.type.descriptor.sql.JdbcTypeJavaClassMappings;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeJavaClassMappings;
 
 /**
  * @apiNote Currently this is the only high-level categorization of
@@ -27,9 +27,9 @@ public interface BasicJavaDescriptor<T> extends JavaTypeDescriptor<T> {
 	 *
 	 * @return The recommended SQL type descriptor
 	 */
-	default SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators indicators) {
+	default JdbcTypeDescriptor getRecommendedJdbcType(JdbcTypeDescriptorIndicators indicators) {
 		// match legacy behavior
-		return indicators.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor(
+		return indicators.getTypeConfiguration().getJdbcTypeDescriptorRegistry().getDescriptor(
 				JdbcTypeJavaClassMappings.INSTANCE.determineJdbcTypeCodeForJavaClass( getJavaTypeClass() )
 		);
 	}

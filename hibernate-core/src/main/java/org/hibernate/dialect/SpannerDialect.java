@@ -788,7 +788,7 @@ public class SpannerDialect extends Dialect {
 	@Override
 	public String getCastTypeName(SqlExpressable type, Long length, Integer precision, Integer scale) {
 		//Spanner doesn't let you specify a length in cast() types
-		return super.getRawTypeName( type.getJdbcMapping().getSqlTypeDescriptor() );
+		return super.getRawTypeName( type.getJdbcMapping().getJdbcTypeDescriptor() );
 	}
 
 	/**

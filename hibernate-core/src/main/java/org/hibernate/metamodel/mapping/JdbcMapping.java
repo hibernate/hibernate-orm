@@ -10,7 +10,7 @@ import org.hibernate.query.CastType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 /**
  * Models the type of a thing that can be used as an expression in a SQL query
@@ -28,10 +28,10 @@ public interface JdbcMapping extends MappingType {
 	 * The descriptor for the SQL type represented by this
 	 * expressable type
 	 */
-	SqlTypeDescriptor getSqlTypeDescriptor();
+	JdbcTypeDescriptor getJdbcTypeDescriptor();
 
 	default CastType getCastType() {
-		return getSqlTypeDescriptor().getCastType();
+		return getJdbcTypeDescriptor().getCastType();
 	}
 
 	/**

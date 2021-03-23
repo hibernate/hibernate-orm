@@ -26,14 +26,14 @@ import org.hibernate.annotations.CollectionId;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.JavaType;
 import org.hibernate.annotations.MapKeyJavaType;
-import org.hibernate.annotations.MapKeySqlType;
-import org.hibernate.annotations.MapKeySqlTypeCode;
+import org.hibernate.annotations.MapKeyJdbcType;
+import org.hibernate.annotations.MapKeyJdbcTypeCode;
 import org.hibernate.annotations.MapKeyType;
 import org.hibernate.annotations.Mutability;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.annotations.Parameter;
-import org.hibernate.annotations.SqlType;
-import org.hibernate.annotations.SqlTypeCode;
+import org.hibernate.annotations.JdbcType;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
@@ -56,8 +56,8 @@ import org.hibernate.mapping.Table;
 import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
@@ -66,7 +66,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  * @author Emmanuel Bernard
  */
-public class BasicValueBinder<T> implements SqlTypeDescriptorIndicators {
+public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 
 	// todo (6.0) : In light of how we want to build Types (specifically BasicTypes) moving forward this class should undergo major changes
 	//		see the comments in #setType
@@ -96,7 +96,7 @@ public class BasicValueBinder<T> implements SqlTypeDescriptorIndicators {
 	private String explicitBasicTypeName;
 	private Map explicitLocalTypeParams;
 
-	private Function<TypeConfiguration,SqlTypeDescriptor> explicitSqlTypeAccess;
+	private Function<TypeConfiguration, JdbcTypeDescriptor> explicitSqlTypeAccess;
 	private Function<TypeConfiguration, BasicJavaDescriptor> explicitJtdAccess;
 	private Function<TypeConfiguration, MutabilityPlan> explicitMutabilityAccess;
 	private Function<TypeConfiguration, java.lang.reflect.Type> implicitJavaTypeAccess;
@@ -496,10 +496,10 @@ public class BasicValueBinder<T> implements SqlTypeDescriptorIndicators {
 		}
 
 		explicitSqlTypeAccess = typeConfiguration -> {
-			final MapKeySqlType explicitDescriptorAnn = attributeXProperty.getAnnotation( MapKeySqlType.class );
+			final MapKeyJdbcType explicitDescriptorAnn = attributeXProperty.getAnnotation( MapKeyJdbcType.class );
 			if ( explicitDescriptorAnn != null ) {
-				final SqlType explicitStdAnn = explicitDescriptorAnn.value();
-				final Class<? extends SqlTypeDescriptor> stdImplJavaType = explicitStdAnn.value();
+				final JdbcType explicitStdAnn = explicitDescriptorAnn.value();
+				final Class<? extends JdbcTypeDescriptor> stdImplJavaType = explicitStdAnn.value();
 
 				try {
 					return stdImplJavaType.newInstance();
@@ -509,10 +509,10 @@ public class BasicValueBinder<T> implements SqlTypeDescriptorIndicators {
 				}
 			}
 
-			final MapKeySqlTypeCode explicitCodeAnn = attributeXProperty.getAnnotation( MapKeySqlTypeCode.class );
+			final MapKeyJdbcTypeCode explicitCodeAnn = attributeXProperty.getAnnotation( MapKeyJdbcTypeCode.class );
 			if ( explicitCodeAnn != null ) {
-				final SqlTypeCode explicitSqlTypeAnn = explicitCodeAnn.value();
-				return typeConfiguration.getSqlTypeDescriptorRegistry().getDescriptor( explicitSqlTypeAnn.value() );
+				final JdbcTypeCode explicitSqlTypeAnn = explicitCodeAnn.value();
+				return typeConfiguration.getJdbcTypeDescriptorRegistry().getDescriptor( explicitSqlTypeAnn.value() );
 			}
 
 			return null;
@@ -540,9 +540,9 @@ public class BasicValueBinder<T> implements SqlTypeDescriptorIndicators {
 			XProperty attributeXProperty,
 			MetadataBuildingContext buildingContext) {
 		explicitSqlTypeAccess = typeConfiguration -> {
-			final SqlType explicitStdAnn = attributeXProperty.getAnnotation( SqlType.class );
+			final JdbcType explicitStdAnn = attributeXProperty.getAnnotation( JdbcType.class );
 			if ( explicitStdAnn != null ) {
-				final Class<? extends SqlTypeDescriptor> stdImplJavaType = explicitStdAnn.value();
+				final Class<? extends JdbcTypeDescriptor> stdImplJavaType = explicitStdAnn.value();
 
 				try {
 					return stdImplJavaType.newInstance();
@@ -552,9 +552,9 @@ public class BasicValueBinder<T> implements SqlTypeDescriptorIndicators {
 				}
 			}
 
-			final SqlTypeCode explicitSqlTypeAnn = attributeXProperty.getAnnotation( SqlTypeCode.class );
+			final JdbcTypeCode explicitSqlTypeAnn = attributeXProperty.getAnnotation( JdbcTypeCode.class );
 			if ( explicitSqlTypeAnn != null ) {
-				return typeConfiguration.getSqlTypeDescriptorRegistry().getDescriptor( explicitSqlTypeAnn.value() );
+				return typeConfiguration.getJdbcTypeDescriptorRegistry().getDescriptor( explicitSqlTypeAnn.value() );
 			}
 
 			return null;

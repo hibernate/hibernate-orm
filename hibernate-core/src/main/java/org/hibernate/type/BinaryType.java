@@ -10,7 +10,7 @@ import java.util.Comparator;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayTypeDescriptor;
-import org.hibernate.type.descriptor.sql.VarbinaryTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.VarbinaryTypeDescriptor;
 
 /**
  * A type that maps between a {@link java.sql.Types#VARBINARY VARBINARY} and {@code byte[]}

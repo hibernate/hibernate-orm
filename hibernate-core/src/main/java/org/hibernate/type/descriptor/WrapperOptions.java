@@ -12,7 +12,7 @@ import java.util.TimeZone;
 
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 /**
  * Gives binding (nullSafeSet) and extracting (nullSafeGet) code access to options.
@@ -43,11 +43,11 @@ public interface WrapperOptions {
 	/**
 	 * Allow remapping of descriptors for dealing with sql type.
 	 *
-	 * @param sqlTypeDescriptor The known descriptor
+	 * @param jdbcTypeDescriptor The known descriptor
 	 *
 	 * @return The remapped descriptor.  May be the same as the known descriptor indicating no remapping.
 	 */
-	SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor);
+	JdbcTypeDescriptor remapSqlTypeDescriptor(JdbcTypeDescriptor jdbcTypeDescriptor);
 
 	/**
 	 * The JDBC {@link TimeZone} used when persisting Timestamp and DateTime properties into the database.

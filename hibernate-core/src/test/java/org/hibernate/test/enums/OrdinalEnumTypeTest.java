@@ -13,8 +13,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.type.descriptor.sql.BasicBinder;
-import org.hibernate.type.descriptor.sql.BasicExtractor;
+import org.hibernate.type.descriptor.jdbc.BasicBinder;
+import org.hibernate.type.descriptor.jdbc.BasicExtractor;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;

@@ -31,8 +31,8 @@ import java.util.UUID;
 
 import org.hibernate.type.descriptor.java.CharacterArrayTypeDescriptor;
 import org.hibernate.type.descriptor.java.PrimitiveCharacterArrayTypeDescriptor;
-import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
-import org.hibernate.type.descriptor.sql.NClobTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.ClobTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.NClobTypeDescriptor;
 import org.hibernate.type.internal.StandardBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 

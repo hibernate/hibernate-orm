@@ -7,7 +7,7 @@
 package org.hibernate.type;
 
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 /**
  * A BasicType adapter targeting partial portability to 6.0's type
@@ -22,14 +22,14 @@ public class StandardBasicTypeTemplate<J> extends AbstractSingleColumnStandardBa
 	private final String[] registrationKeys;
 
 	public StandardBasicTypeTemplate(
-			SqlTypeDescriptor sqlTypeDescriptor,
+			JdbcTypeDescriptor jdbcTypeDescriptor,
 			JavaTypeDescriptor<J> javaTypeDescriptor,
 			String... registrationKeys) {
-		super( sqlTypeDescriptor, javaTypeDescriptor );
+		super( jdbcTypeDescriptor, javaTypeDescriptor );
 		this.registrationKeys = registrationKeys;
 
 		this.name = javaTypeDescriptor.getJavaType() == null ? "(map-mode)" : javaTypeDescriptor.getJavaType().getTypeName()
-				+ " -> " + sqlTypeDescriptor.getSqlType();
+				+ " -> " + jdbcTypeDescriptor.getJdbcType();
 	}
 
 	@Override

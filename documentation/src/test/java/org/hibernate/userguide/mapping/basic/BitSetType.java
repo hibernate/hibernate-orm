@@ -5,7 +5,7 @@ import java.util.BitSet;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.DiscriminatorType;
-import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.VarcharTypeDescriptor;
 
 /**
  * @author Vlad Mihalcea

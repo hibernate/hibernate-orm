@@ -14,7 +14,7 @@ import org.hibernate.type.CustomType;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -23,19 +23,19 @@ public class EnumeratedValueResolution<E extends Enum<E>> implements BasicValue.
 	private final CustomType enumTypeMapping;
 	private final JavaTypeDescriptor<E> domainJtd;
 	private final JavaTypeDescriptor<?> jdbcJtd;
-	private final SqlTypeDescriptor std;
+	private final JdbcTypeDescriptor jdbcTypeDescriptor;
 	private final EnumValueConverter<E,?> valueConverter;
 
 	public EnumeratedValueResolution(
 			CustomType enumTypeMapping,
 			JavaTypeDescriptor<E> domainJtd,
 			JavaTypeDescriptor<?> jdbcJtd,
-			SqlTypeDescriptor std,
+			JdbcTypeDescriptor jdbcTypeDescriptor,
 			EnumValueConverter<E, ?> valueConverter) {
 		this.enumTypeMapping = enumTypeMapping;
 		this.domainJtd = domainJtd;
 		this.jdbcJtd = jdbcJtd;
-		this.std = std;
+		this.jdbcTypeDescriptor = jdbcTypeDescriptor;
 		this.valueConverter = valueConverter;
 	}
 
@@ -60,8 +60,8 @@ public class EnumeratedValueResolution<E extends Enum<E>> implements BasicValue.
 	}
 
 	@Override
-	public SqlTypeDescriptor getRelationalSqlTypeDescriptor() {
-		return std;
+	public JdbcTypeDescriptor getJdbcTypeDescriptor() {
+		return jdbcTypeDescriptor;
 	}
 
 	@Override

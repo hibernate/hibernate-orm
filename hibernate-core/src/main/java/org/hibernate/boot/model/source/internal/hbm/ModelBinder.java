@@ -1983,7 +1983,7 @@ public class ModelBinder {
 					.getBasicTypeRegistry()
 					.getRegisteredType( value.getTypeName() );
 			if ( basicType instanceof AbstractSingleColumnStandardBasicType ) {
-				if ( isLob( basicType.getSqlTypeDescriptor().getSqlType(), null ) ) {
+				if ( isLob( basicType.getJdbcTypeDescriptor().getJdbcType(), null ) ) {
 					value.makeLob();
 				}
 			}
@@ -2004,9 +2004,9 @@ public class ModelBinder {
 
 	private static boolean isLob(Integer sqlType, String sqlTypeName) {
 		if ( sqlType != null ) {
-			return ClobType.INSTANCE.getSqlTypeDescriptor().getSqlType() == sqlType ||
-					BlobType.INSTANCE.getSqlTypeDescriptor().getSqlType() == sqlType ||
-					NClobType.INSTANCE.getSqlTypeDescriptor().getSqlType() == sqlType;
+			return ClobType.INSTANCE.getJdbcTypeDescriptor().getJdbcType() == sqlType ||
+					BlobType.INSTANCE.getJdbcTypeDescriptor().getJdbcType() == sqlType ||
+					NClobType.INSTANCE.getJdbcTypeDescriptor().getJdbcType() == sqlType;
 		}
 		else if ( sqlTypeName != null ) {
 			return ClobType.INSTANCE.getName().equalsIgnoreCase( sqlTypeName ) ||

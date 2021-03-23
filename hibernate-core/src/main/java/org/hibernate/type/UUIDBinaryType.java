@@ -10,7 +10,7 @@ import java.util.UUID;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.java.UUIDTypeDescriptor;
-import org.hibernate.type.descriptor.sql.BinaryTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.BinaryTypeDescriptor;
 
 /**
  * A type mapping {@link java.sql.Types#BINARY} and {@link UUID}

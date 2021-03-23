@@ -41,7 +41,7 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorDB
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.sql.*;
+import org.hibernate.type.descriptor.jdbc.*;
 
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
@@ -520,7 +520,7 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
-	protected SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
+	protected JdbcTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
 		final int version = getVersion();
 
 		if ( version < 1100 && sqlCode == Types.BOOLEAN ) {

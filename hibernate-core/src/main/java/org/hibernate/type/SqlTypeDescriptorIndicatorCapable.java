@@ -6,7 +6,7 @@
  */
 package org.hibernate.type;
 
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 
 /**
  * @author Steve Ebersole
@@ -15,5 +15,5 @@ public interface SqlTypeDescriptorIndicatorCapable<J> extends BasicType<J> {
 	/**
 	 * For Types whose resolution can be affected by SqlTypeDescriptorIndicators
 	 */
-	<X> BasicType<X> resolveIndicatedType(SqlTypeDescriptorIndicators indicators);
+	<X> BasicType<X> resolveIndicatedType(JdbcTypeDescriptorIndicators indicators);
 }

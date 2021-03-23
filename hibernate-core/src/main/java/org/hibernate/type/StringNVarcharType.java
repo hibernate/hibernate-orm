@@ -8,7 +8,7 @@ package org.hibernate.type;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.java.StringTypeDescriptor;
-import org.hibernate.type.descriptor.sql.NVarcharTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.NVarcharTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#VARCHAR VARCHAR} and {@link String}

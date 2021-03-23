@@ -8,7 +8,7 @@ package org.hibernate.orm.test.mapping.type.jdbc;
 
 import java.sql.Types;
 
-import org.hibernate.type.descriptor.sql.JdbcTypeJavaClassMappings;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeJavaClassMappings;
 
 import org.junit.After;
 import org.junit.Before;

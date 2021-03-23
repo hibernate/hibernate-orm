@@ -8,8 +8,8 @@ package org.hibernate.type.descriptor.java;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 
 import java.time.ZoneOffset;
 import java.util.Comparator;
@@ -43,8 +43,8 @@ public class ZoneOffsetJavaDescriptor extends AbstractClassTypeDescriptor<ZoneOf
 	}
 
 	@Override
-	public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context) {
-		return StringTypeDescriptor.INSTANCE.getJdbcRecommendedSqlType( context );
+	public JdbcTypeDescriptor getRecommendedJdbcType(JdbcTypeDescriptorIndicators context) {
+		return StringTypeDescriptor.INSTANCE.getRecommendedJdbcType( context );
 	}
 
 	@Override

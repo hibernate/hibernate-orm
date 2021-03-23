@@ -54,20 +54,20 @@ import org.hibernate.type.descriptor.java.FloatTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayTypeDescriptor;
 import org.hibernate.type.descriptor.java.StringTypeDescriptor;
-import org.hibernate.type.descriptor.sql.BasicBinder;
-import org.hibernate.type.descriptor.sql.BasicExtractor;
-import org.hibernate.type.descriptor.sql.BinaryTypeDescriptor;
-import org.hibernate.type.descriptor.sql.CharTypeDescriptor;
-import org.hibernate.type.descriptor.sql.JdbcLiteralFormatter;
-import org.hibernate.type.descriptor.sql.NumericTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.BasicBinder;
+import org.hibernate.type.descriptor.jdbc.BasicExtractor;
+import org.hibernate.type.descriptor.jdbc.BinaryTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.CharTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
+import org.hibernate.type.descriptor.jdbc.NumericTypeDescriptor;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.CustomRunner;
 import org.hibernate.testing.transaction.TransactionUtil;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.type.descriptor.sql.spi.BasicJdbcLiteralFormatter;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.spi.BasicJdbcLiteralFormatter;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.junit.After;
 import org.junit.Assert;
@@ -554,7 +554,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 		public static final String NAME = "float_as_real";
 
 		public FloatAsRealType() {
-			super( org.hibernate.type.descriptor.sql.RealTypeDescriptor.INSTANCE, FloatTypeDescriptor.INSTANCE );
+			super( org.hibernate.type.descriptor.jdbc.RealTypeDescriptor.INSTANCE, FloatTypeDescriptor.INSTANCE );
 		}
 
 		@Override
@@ -609,13 +609,13 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 
 }
 
-class BitTypeDescriptor implements SqlTypeDescriptor {
+class BitTypeDescriptor implements JdbcTypeDescriptor {
 	public static final BitTypeDescriptor INSTANCE = new BitTypeDescriptor();
 
 	public BitTypeDescriptor() {
 	}
 
-	public int getSqlType() {
+	public int getJdbcType() {
 		return Types.BIT;
 	}
 

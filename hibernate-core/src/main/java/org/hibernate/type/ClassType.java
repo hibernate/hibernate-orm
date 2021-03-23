@@ -6,7 +6,7 @@
  */
 package org.hibernate.type;
 import org.hibernate.type.descriptor.java.ClassTypeDescriptor;
-import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.VarcharTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#VARCHAR VARCHAR} and {@link Class}

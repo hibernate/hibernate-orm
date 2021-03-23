@@ -19,9 +19,9 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.UUIDTypeDescriptor;
-import org.hibernate.type.descriptor.sql.BasicBinder;
-import org.hibernate.type.descriptor.sql.BasicExtractor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.BasicBinder;
+import org.hibernate.type.descriptor.jdbc.BasicExtractor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -35,7 +35,7 @@ public class PostgresUUIDType extends AbstractSingleColumnStandardBasicType<UUID
 	public static final PostgresUUIDType INSTANCE = new PostgresUUIDType();
 
 	public PostgresUUIDType() {
-		super( PostgresUUIDSqlTypeDescriptor.INSTANCE, UUIDTypeDescriptor.INSTANCE );
+		super( PostgresUUIDJdbcTypeDescriptor.INSTANCE, UUIDTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {
@@ -48,10 +48,10 @@ public class PostgresUUIDType extends AbstractSingleColumnStandardBasicType<UUID
 		return true;
 	}
 
-	public static class PostgresUUIDSqlTypeDescriptor implements SqlTypeDescriptor {
-		public static final PostgresUUIDSqlTypeDescriptor INSTANCE = new PostgresUUIDSqlTypeDescriptor();
+	public static class PostgresUUIDJdbcTypeDescriptor implements JdbcTypeDescriptor {
+		public static final PostgresUUIDJdbcTypeDescriptor INSTANCE = new PostgresUUIDJdbcTypeDescriptor();
 
-		public int getSqlType() {
+		public int getJdbcType() {
 			// ugh
 			return Types.OTHER;
 		}
@@ -81,13 +81,13 @@ public class PostgresUUIDType extends AbstractSingleColumnStandardBasicType<UUID
 			return new BasicBinder<X>( javaTypeDescriptor, this ) {
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
-					st.setObject( index, javaTypeDescriptor.unwrap( value, UUID.class, options ), getSqlType() );
+					st.setObject( index, javaTypeDescriptor.unwrap( value, UUID.class, options ), getJdbcType() );
 				}
 
 				@Override
 				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 						throws SQLException {
-					st.setObject( name, javaTypeDescriptor.unwrap( value, UUID.class, options ), getSqlType() );
+					st.setObject( name, javaTypeDescriptor.unwrap( value, UUID.class, options ), getJdbcType() );
 				}
 			};
 		}

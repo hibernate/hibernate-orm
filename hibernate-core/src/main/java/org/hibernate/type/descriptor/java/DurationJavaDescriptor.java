@@ -12,9 +12,9 @@ import java.time.Duration;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.sql.NumericTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.NumericTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 
 /**
  * Descriptor for {@link Duration}, which is represented internally
@@ -44,7 +44,7 @@ public class DurationJavaDescriptor extends AbstractClassTypeDescriptor<Duration
 	}
 
 	@Override
-	public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context) {
+	public JdbcTypeDescriptor getRecommendedJdbcType(JdbcTypeDescriptorIndicators context) {
 		return NumericTypeDescriptor.INSTANCE;
 	}
 

@@ -7,7 +7,7 @@
 package org.hibernate.type;
 
 import org.hibernate.type.descriptor.java.CharacterArrayTypeDescriptor;
-import org.hibernate.type.descriptor.sql.NClobTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.NClobTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#NCLOB NCLOB} and {@link Character Character[]}

@@ -90,7 +90,7 @@ public class SmokeTests {
 			assertThat( valueConverter.getDomainJavaDescriptor(), is( genderAttrMapping.getJavaTypeDescriptor() ) );
 			assertThat( valueConverter.getRelationalJavaDescriptor().getJavaTypeClass(), equalTo( Integer.class ) );
 
-			assertThat( genderAttrMapping.getJdbcMapping().getSqlTypeDescriptor().getJdbcTypeCode(), is( Types.TINYINT ) );
+			assertThat( genderAttrMapping.getJdbcMapping().getJdbcTypeDescriptor().getJdbcTypeCode(), is( Types.TINYINT ) );
 		}
 
 		{
@@ -107,7 +107,7 @@ public class SmokeTests {
 			assertThat( valueConverter.getDomainJavaDescriptor(), is( attrMapping.getJavaTypeDescriptor() ) );
 			assertThat( valueConverter.getRelationalJavaDescriptor().getJavaTypeClass(), equalTo( String.class ) );
 
-			assertThat( attrMapping.getJdbcMapping().getSqlTypeDescriptor().getJdbcTypeCode(), is( Types.VARCHAR ) );
+			assertThat( attrMapping.getJdbcMapping().getJdbcTypeDescriptor().getJdbcTypeCode(), is( Types.VARCHAR ) );
 		}
 
 		{
@@ -124,7 +124,7 @@ public class SmokeTests {
 			assertThat( valueConverter.getDomainJavaDescriptor(), is( attrMapping.getJavaTypeDescriptor() ) );
 			assertThat( valueConverter.getRelationalJavaDescriptor().getJavaTypeClass(), equalTo( Character.class ) );
 
-			assertThat( attrMapping.getJdbcMapping().getSqlTypeDescriptor().getJdbcTypeCode(), is( Types.CHAR ) );
+			assertThat( attrMapping.getJdbcMapping().getJdbcTypeDescriptor().getJdbcTypeCode(), is( Types.CHAR ) );
 		}
 
 		{

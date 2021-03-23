@@ -10,8 +10,8 @@ import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractClassTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 
 /**
  * Extension of the general JavaTypeDescriptor for "collection types"
@@ -37,7 +37,7 @@ public class CollectionJavaTypeDescriptor<C> extends AbstractClassTypeDescriptor
 	}
 
 	@Override
-	public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context) {
+	public JdbcTypeDescriptor getRecommendedJdbcType(JdbcTypeDescriptorIndicators context) {
 		// none
 		return null;
 	}

@@ -20,8 +20,8 @@ import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -37,7 +37,7 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 	public static <E> VersionResolution<E> from(
 			Function<TypeConfiguration, java.lang.reflect.Type> implicitJavaTypeAccess,
 			Function<TypeConfiguration, BasicJavaDescriptor> explicitJtdAccess,
-			Function<TypeConfiguration, SqlTypeDescriptor> explicitStdAccess,
+			Function<TypeConfiguration, JdbcTypeDescriptor> explicitStdAccess,
 			TypeConfiguration typeConfiguration,
 			@SuppressWarnings("unused") MetadataBuildingContext context) {
 
@@ -49,7 +49,7 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 		if ( registered instanceof PrimitiveByteArrayTypeDescriptor ) {
 			return new VersionResolution<>(
 					RowVersionType.INSTANCE.getJavaTypeDescriptor(),
-					RowVersionType.INSTANCE.getSqlTypeDescriptor(),
+					RowVersionType.INSTANCE.getJdbcTypeDescriptor(),
 					RowVersionType.INSTANCE,
 					RowVersionType.INSTANCE
 			);
@@ -57,8 +57,8 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 
 		final BasicJavaDescriptor jtd = (BasicJavaDescriptor) registered;
 
-		final SqlTypeDescriptor std = jtd.getJdbcRecommendedSqlType(
-				new SqlTypeDescriptorIndicators() {
+		final JdbcTypeDescriptor recommendedJdbcType = jtd.getRecommendedJdbcType(
+				new JdbcTypeDescriptorIndicators() {
 					@Override
 					public TypeConfiguration getTypeConfiguration() {
 						return typeConfiguration;
@@ -72,27 +72,27 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 				}
 		);
 
-		final BasicType<?> basicType = typeConfiguration.getBasicTypeRegistry().resolve( jtd, std );
+		final BasicType<?> basicType = typeConfiguration.getBasicTypeRegistry().resolve( jtd, recommendedJdbcType );
 		final BasicType legacyType = typeConfiguration.getBasicTypeRegistry().getRegisteredType( jtd.getJavaType() );
 
-		assert legacyType.getSqlTypeDescriptor().equals( std );
+		assert legacyType.getJdbcTypeDescriptor().equals( recommendedJdbcType );
 
-		return new VersionResolution<>( jtd, std, basicType, legacyType );
+		return new VersionResolution<>( jtd, recommendedJdbcType, basicType, legacyType );
 	}
 
 	private final JavaTypeDescriptor jtd;
-	private final SqlTypeDescriptor std;
+	private final JdbcTypeDescriptor jdbcTypeDescriptor;
 
 	private final JdbcMapping jdbcMapping;
 	private final BasicType legacyType;
 
 	public VersionResolution(
 			JavaTypeDescriptor javaTypeDescriptor,
-			SqlTypeDescriptor sqlTypeDescriptor,
+			JdbcTypeDescriptor jdbcTypeDescriptor,
 			JdbcMapping jdbcMapping,
 			BasicType legacyType) {
 		this.jtd = javaTypeDescriptor;
-		this.std = sqlTypeDescriptor;
+		this.jdbcTypeDescriptor = jdbcTypeDescriptor;
 		this.jdbcMapping = jdbcMapping;
 		this.legacyType = legacyType;
 	}
@@ -120,8 +120,8 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 	}
 
 	@Override
-	public SqlTypeDescriptor getRelationalSqlTypeDescriptor() {
-		return std;
+	public JdbcTypeDescriptor getJdbcTypeDescriptor() {
+		return jdbcTypeDescriptor;
 	}
 
 	@Override

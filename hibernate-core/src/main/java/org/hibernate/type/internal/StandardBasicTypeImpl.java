@@ -15,8 +15,8 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypeDescriptorIndicatorCapable;
 import org.hibernate.type.descriptor.java.BooleanTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 
 /**
  * @author Steve Ebersole
@@ -27,7 +27,7 @@ public class StandardBasicTypeImpl<J>
 		implements SqlTypeDescriptorIndicatorCapable {
 	public static final String[] NO_REG_KEYS = ArrayHelper.EMPTY_STRING_ARRAY;
 
-	public StandardBasicTypeImpl(JavaTypeDescriptor<J> jtd, SqlTypeDescriptor std) {
+	public StandardBasicTypeImpl(JavaTypeDescriptor<J> jtd, JdbcTypeDescriptor std) {
 		//noinspection unchecked
 		super( std, jtd );
 	}
@@ -45,9 +45,9 @@ public class StandardBasicTypeImpl<J>
 	}
 
 	@Override
-	public BasicType resolveIndicatedType(SqlTypeDescriptorIndicators indicators) {
-		final SqlTypeDescriptor recommendedSqlType = getJavaTypeDescriptor().getJdbcRecommendedSqlType( indicators );
-		if ( recommendedSqlType == getSqlTypeDescriptor() ) {
+	public BasicType resolveIndicatedType(JdbcTypeDescriptorIndicators indicators) {
+		final JdbcTypeDescriptor recommendedSqlType = getJavaTypeDescriptor().getRecommendedJdbcType( indicators );
+		if ( recommendedSqlType == getJdbcTypeDescriptor() ) {
 			return this;
 		}
 

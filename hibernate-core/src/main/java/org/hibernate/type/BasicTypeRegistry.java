@@ -17,7 +17,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.internal.StandardBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserType;
@@ -32,7 +32,7 @@ public class BasicTypeRegistry implements Serializable {
 
 	private final TypeConfiguration typeConfiguration;
 
-	private final Map<SqlTypeDescriptor, Map<JavaTypeDescriptor<?>, BasicType<?>>> registryValues = new ConcurrentHashMap<>();
+	private final Map<JdbcTypeDescriptor, Map<JavaTypeDescriptor<?>, BasicType<?>>> registryValues = new ConcurrentHashMap<>();
 	private boolean primed;
 
 	private final Map<String, BasicType<?>> typesByName = new ConcurrentHashMap<>();
@@ -61,7 +61,7 @@ public class BasicTypeRegistry implements Serializable {
 	 * Find an existing BasicType registration for the given JavaTypeDescriptor and
 	 * SqlTypeDescriptor combo or create (and register) one.
 	 */
-	public <J> BasicType<J> resolve(JavaTypeDescriptor<J> jtdToUse, SqlTypeDescriptor stdToUse) {
+	public <J> BasicType<J> resolve(JavaTypeDescriptor<J> jtdToUse, JdbcTypeDescriptor stdToUse) {
 		//noinspection unchecked
 		return resolve(
 				jtdToUse,
@@ -74,7 +74,7 @@ public class BasicTypeRegistry implements Serializable {
 	 * Find an existing BasicType registration for the given JavaTypeDescriptor and
 	 * SqlTypeDescriptor combo or create (and register) one.
 	 */
-	public <J> BasicType<J> resolve(JavaTypeDescriptor<J> jtdToUse, SqlTypeDescriptor stdToUse, Supplier<BasicType<J>> creator) {
+	public <J> BasicType<J> resolve(JavaTypeDescriptor<J> jtdToUse, JdbcTypeDescriptor stdToUse, Supplier<BasicType<J>> creator) {
 		final Map<JavaTypeDescriptor<?>, BasicType<?>> typeByJtdForStd = registryValues.computeIfAbsent(
 				stdToUse,
 				sqlTypeDescriptor -> new ConcurrentHashMap<>()
@@ -118,7 +118,7 @@ public class BasicTypeRegistry implements Serializable {
 
 	private void applyOrOverwriteEntry(BasicType<?> type) {
 		final Map<JavaTypeDescriptor<?>, BasicType<?>> mappingsForStdToUse = registryValues.computeIfAbsent(
-				type.getSqlTypeDescriptor(),
+				type.getJdbcTypeDescriptor(),
 				sqlTypeDescriptor -> new ConcurrentHashMap<>()
 		);
 
@@ -126,7 +126,7 @@ public class BasicTypeRegistry implements Serializable {
 		if ( existing != null ) {
 			LOG.debugf(
 					"BasicTypeRegistry registration overwritten (%s + %s); previous =`%s`",
-					type.getSqlTypeDescriptor().getFriendlyName(),
+					type.getJdbcTypeDescriptor().getFriendlyName(),
 					type.getJavaTypeDescriptor(),
 					existing
 			);
@@ -184,7 +184,7 @@ public class BasicTypeRegistry implements Serializable {
 
 	private void primeRegistryEntry(BasicType<?> type) {
 		final Map<JavaTypeDescriptor<?>, BasicType<?>> mappingsForStdToUse = registryValues.computeIfAbsent(
-				type.getSqlTypeDescriptor(),
+				type.getJdbcTypeDescriptor(),
 				sqlTypeDescriptor -> new ConcurrentHashMap<>()
 		);
 
@@ -193,7 +193,7 @@ public class BasicTypeRegistry implements Serializable {
 		if ( existing != null ) {
 			LOG.debugf(
 					"Skipping registration of BasicType (%s + %s); still priming.  existing = %s",
-					type.getSqlTypeDescriptor().getFriendlyName(),
+					type.getJdbcTypeDescriptor().getFriendlyName(),
 					type.getJavaTypeDescriptor(),
 					existing
 			);

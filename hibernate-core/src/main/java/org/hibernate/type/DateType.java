@@ -29,7 +29,7 @@ public class DateType
 	public static final DateType INSTANCE = new DateType();
 
 	public DateType() {
-		super( org.hibernate.type.descriptor.sql.DateTypeDescriptor.INSTANCE, JdbcDateTypeDescriptor.INSTANCE );
+		super( org.hibernate.type.descriptor.jdbc.DateTypeDescriptor.INSTANCE, JdbcDateTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {

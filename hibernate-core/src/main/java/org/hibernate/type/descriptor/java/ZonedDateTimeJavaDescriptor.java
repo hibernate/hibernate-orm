@@ -20,12 +20,11 @@ import javax.persistence.TemporalType;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.sql.DateTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
-import org.hibernate.type.descriptor.sql.TimeTypeDescriptor;
-import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
-import org.hibernate.type.descriptor.sql.TimestampWithTimeZoneDescriptor;
+import org.hibernate.type.descriptor.jdbc.DateTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.TimeTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.TimestampWithTimeZoneDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -50,7 +49,7 @@ public class ZonedDateTimeJavaDescriptor extends AbstractTemporalTypeDescriptor<
 	}
 
 	@Override
-	public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators stdIndicators) {
+	public JdbcTypeDescriptor getRecommendedJdbcType(JdbcTypeDescriptorIndicators stdIndicators) {
 		final TemporalType temporalPrecision = stdIndicators.getTemporalPrecision();
 		if ( temporalPrecision == null || temporalPrecision == TemporalType.TIMESTAMP ) {
 			return TimestampWithTimeZoneDescriptor.INSTANCE;

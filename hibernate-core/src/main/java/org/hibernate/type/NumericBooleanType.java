@@ -11,7 +11,7 @@ import java.io.Serializable;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.query.CastType;
 import org.hibernate.type.descriptor.java.BooleanTypeDescriptor;
-import org.hibernate.type.descriptor.sql.IntegerTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.IntegerTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#INTEGER INTEGER} and {@link Boolean} (using 1 and 0)

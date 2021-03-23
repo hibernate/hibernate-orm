@@ -28,7 +28,7 @@ public class TimeType
 	public static final TimeType INSTANCE = new TimeType();
 
 	public TimeType() {
-		super( org.hibernate.type.descriptor.sql.TimeTypeDescriptor.INSTANCE, JdbcTimeTypeDescriptor.INSTANCE );
+		super( org.hibernate.type.descriptor.jdbc.TimeTypeDescriptor.INSTANCE, JdbcTimeTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {

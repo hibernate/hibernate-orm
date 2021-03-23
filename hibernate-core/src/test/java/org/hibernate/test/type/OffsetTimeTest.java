@@ -28,8 +28,8 @@ import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.type.descriptor.sql.BigIntTypeDescriptor;
-import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.BigIntTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.TimestampTypeDescriptor;
 
 import org.hibernate.testing.SkipForDialect;
 import org.junit.Test;

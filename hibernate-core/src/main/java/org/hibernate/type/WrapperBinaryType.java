@@ -6,7 +6,7 @@
  */
 package org.hibernate.type;
 import org.hibernate.type.descriptor.java.ByteArrayTypeDescriptor;
-import org.hibernate.type.descriptor.sql.VarbinaryTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.VarbinaryTypeDescriptor;
 
 /**
  * A type mapping {@link java.sql.Types#VARBINARY VARBINARY} and {@link Byte Byte[]}

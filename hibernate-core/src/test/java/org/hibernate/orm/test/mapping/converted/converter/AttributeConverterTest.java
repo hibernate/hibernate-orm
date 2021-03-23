@@ -43,7 +43,7 @@ import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.StringTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
@@ -126,8 +126,8 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 
 		assertThat( typeAdapter.getDomainJtd().getJavaTypeClass(), equalTo( String.class ) );
 
-		final SqlTypeDescriptor sqlTypeDescriptor = typeAdapter.getSqlTypeDescriptor();
-		assertThat( sqlTypeDescriptor.getJdbcTypeCode(), is( Types.CLOB ) );
+		final JdbcTypeDescriptor jdbcTypeDescriptor = typeAdapter.getJdbcTypeDescriptor();
+		assertThat( jdbcTypeDescriptor.getJdbcTypeCode(), is( Types.CLOB ) );
 	}
 
 	@Test
@@ -177,8 +177,8 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 
 			final AttributeConverterTypeAdapter typeAdapter = (AttributeConverterTypeAdapter) type;
 			assertThat( typeAdapter.getDomainJtd().getJavaTypeClass(), Matchers.equalTo( String.class ) );
-			final SqlTypeDescriptor sqlTypeDescriptor = typeAdapter.getSqlTypeDescriptor();
-			assertThat( sqlTypeDescriptor.getJdbcTypeCode(), is( Types.CLOB ) );
+			final JdbcTypeDescriptor jdbcTypeDescriptor = typeAdapter.getJdbcTypeDescriptor();
+			assertThat( jdbcTypeDescriptor.getJdbcTypeCode(), is( Types.CLOB ) );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );
@@ -209,8 +209,8 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			assertThat( typeAdapter.getDomainJtd().getJavaTypeClass(), equalTo( String.class ) );
 			assertThat( typeAdapter.getRelationalJtd().getJavaTypeClass(), equalTo( Clob.class ) );
 
-			final SqlTypeDescriptor sqlTypeDescriptor = typeAdapter.getSqlTypeDescriptor();
-			assertThat( sqlTypeDescriptor.getJdbcTypeCode(), is( Types.CLOB ) );
+			final JdbcTypeDescriptor jdbcTypeDescriptor = typeAdapter.getJdbcTypeDescriptor();
+			assertThat( jdbcTypeDescriptor.getJdbcTypeCode(), is( Types.CLOB ) );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );
@@ -238,7 +238,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			}
 			AbstractStandardBasicType basicType = assertTyping( AbstractStandardBasicType.class, type );
 			assertSame( StringTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
-			assertEquals( Types.VARCHAR, basicType.getSqlTypeDescriptor().getSqlType() );
+			assertEquals( Types.VARCHAR, basicType.getJdbcTypeDescriptor().getJdbcType() );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );
@@ -313,7 +313,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 
 			assertThat( typeAdapter.getDomainJtd().getJavaTypeClass(), equalTo( Integer.class ) );
 			assertThat( typeAdapter.getRelationalJtd().getJavaTypeClass(), equalTo( String.class ) );
-			assertThat( typeAdapter.getSqlTypeDescriptor().getJdbcTypeCode(), is( Types.VARCHAR ) );
+			assertThat( typeAdapter.getJdbcTypeDescriptor().getJdbcTypeCode(), is( Types.VARCHAR ) );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );
@@ -435,7 +435,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			else {
 				expectedJdbcTypeCode = Types.VARCHAR;
 			}
-			assertThat( typeAdapter.getSqlTypeDescriptor().getJdbcTypeCode(), is( expectedJdbcTypeCode ) );
+			assertThat( typeAdapter.getJdbcTypeDescriptor().getJdbcTypeCode(), is( expectedJdbcTypeCode ) );
 
 			// then lets build the SF and verify its use...
 			final SessionFactory sf = metadata.buildSessionFactory();

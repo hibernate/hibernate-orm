@@ -20,7 +20,7 @@ import org.hibernate.spatial.JTSGeometryType;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.SpatialRelation;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.SqlTypeDescriptor;
 
 /**
  * Created by Karel Maesen, Geovise BVBA on 2019-03-07.

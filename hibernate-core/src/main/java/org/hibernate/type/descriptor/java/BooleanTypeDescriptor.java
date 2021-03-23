@@ -11,7 +11,7 @@ import java.sql.Types;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.spi.Primitive;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 /**
  * Descriptor for {@link Boolean} handling.
@@ -159,8 +159,8 @@ public class BooleanTypeDescriptor extends AbstractClassTypeDescriptor<Boolean> 
 	}
 
 	@Override
-	public String getCheckCondition(String columnName, SqlTypeDescriptor sqlTypeDescriptor, Dialect dialect) {
-		switch ( sqlTypeDescriptor.getSqlType() ) {
+	public String getCheckCondition(String columnName, JdbcTypeDescriptor jdbcTypeDescriptor, Dialect dialect) {
+		switch ( jdbcTypeDescriptor.getJdbcType() ) {
 			case Types.CHAR:
 			case Types.VARCHAR:
 			case Types.LONGVARCHAR:

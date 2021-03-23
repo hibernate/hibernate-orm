@@ -7,8 +7,8 @@
 package org.hibernate.test.typeoverride;
 
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.VarcharTypeDescriptor;
 
 /**
  *
@@ -16,10 +16,10 @@ import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
  */
 public class H2DialectOverridePrefixedVarcharSqlTypeDesc extends H2Dialect {
 	@Override
-    public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
-		return  sqlTypeDescriptor == StoredPrefixedStringType.INSTANCE.getSqlTypeDescriptor() ?
+    public JdbcTypeDescriptor remapSqlTypeDescriptor(JdbcTypeDescriptor jdbcTypeDescriptor) {
+		return  jdbcTypeDescriptor == StoredPrefixedStringType.INSTANCE.getJdbcTypeDescriptor() ?
 				VarcharTypeDescriptor.INSTANCE :
-				super.remapSqlTypeDescriptor( sqlTypeDescriptor );
+				super.remapSqlTypeDescriptor( jdbcTypeDescriptor );
 	}
 }
 

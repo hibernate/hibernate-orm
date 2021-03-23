@@ -68,7 +68,7 @@ troubleshooting device.  Some log categories of particular interest include:
 |org.hibernate.SQL
 |Log all SQL statements as they are executed with through JDBC
 
-|org.hibernate.type.descriptor.sql
+|org.hibernate.type.descriptor.jdbc
 |Log all values as they are bound to JDBC parameters and extracted from JDBC results
 
 |org.hibernate.tool.hbm2ddl

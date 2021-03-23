@@ -17,7 +17,6 @@ import java.util.function.Supplier;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.model.process.internal.UserTypeResolution;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -29,7 +28,7 @@ import org.hibernate.type.CustomType;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserType;
@@ -200,8 +199,8 @@ public class TypeDefinition implements Serializable {
 				}
 
 				@Override
-				public SqlTypeDescriptor getRelationalSqlTypeDescriptor() {
-					return resolvedBasicType.getSqlTypeDescriptor();
+				public JdbcTypeDescriptor getJdbcTypeDescriptor() {
+					return resolvedBasicType.getJdbcTypeDescriptor();
 				}
 
 				@Override
@@ -284,8 +283,8 @@ public class TypeDefinition implements Serializable {
 				}
 
 				@Override
-				public SqlTypeDescriptor getRelationalSqlTypeDescriptor() {
-					return resolvedBasicType.getSqlTypeDescriptor();
+				public JdbcTypeDescriptor getJdbcTypeDescriptor() {
+					return resolvedBasicType.getJdbcTypeDescriptor();
 				}
 
 				@Override

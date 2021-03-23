@@ -11,11 +11,8 @@ import javax.persistence.EnumType;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.sql.IntegerTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
-import org.hibernate.type.descriptor.sql.TinyIntTypeDescriptor;
-import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 
 /**
  * Describes a Java Enum type.
@@ -29,20 +26,20 @@ public class EnumJavaTypeDescriptor<T extends Enum<T>> extends AbstractClassType
 	}
 
 	@Override
-	public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context) {
+	public JdbcTypeDescriptor getRecommendedJdbcType(JdbcTypeDescriptorIndicators context) {
 		if ( context.getEnumeratedType() != null && context.getEnumeratedType() == EnumType.STRING ) {
 			if ( context.getColumnLength() == 1 ) {
 				return context.isNationalized()
-						? context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.NCHAR )
-						: context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.CHAR );
+						? context.getTypeConfiguration().getJdbcTypeDescriptorRegistry().getDescriptor( Types.NCHAR )
+						: context.getTypeConfiguration().getJdbcTypeDescriptorRegistry().getDescriptor( Types.CHAR );
 			}
 
 			return context.isNationalized()
-					? context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.NVARCHAR )
-					: context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.VARCHAR );
+					? context.getTypeConfiguration().getJdbcTypeDescriptorRegistry().getDescriptor( Types.NVARCHAR )
+					: context.getTypeConfiguration().getJdbcTypeDescriptorRegistry().getDescriptor( Types.VARCHAR );
 		}
 		else {
-			return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.TINYINT );
+			return context.getTypeConfiguration().getJdbcTypeDescriptorRegistry().getDescriptor( Types.TINYINT );
 		}
 	}
 
@@ -217,8 +214,8 @@ public class EnumJavaTypeDescriptor<T extends Enum<T>> extends AbstractClassType
 	}
 
 	@Override
-	public String getCheckCondition(String columnName, SqlTypeDescriptor sqlTypeDescriptor, Dialect dialect) {
-		switch ( sqlTypeDescriptor.getSqlType() ) {
+	public String getCheckCondition(String columnName, JdbcTypeDescriptor jdbcTypeDescriptor, Dialect dialect) {
+		switch ( jdbcTypeDescriptor.getJdbcType() ) {
 			case Types.CHAR:
 			case Types.VARCHAR:
 			case Types.LONGVARCHAR:

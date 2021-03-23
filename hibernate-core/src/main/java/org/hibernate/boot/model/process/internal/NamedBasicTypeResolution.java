@@ -13,10 +13,9 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -74,8 +73,8 @@ public class NamedBasicTypeResolution<J> implements BasicValue.Resolution<J> {
 	}
 
 	@Override
-	public SqlTypeDescriptor getRelationalSqlTypeDescriptor() {
-		return basicType.getSqlTypeDescriptor();
+	public JdbcTypeDescriptor getJdbcTypeDescriptor() {
+		return basicType.getJdbcTypeDescriptor();
 	}
 
 	@Override

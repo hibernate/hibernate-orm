@@ -23,7 +23,7 @@ import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.SpatialRelation;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.SqlTypeDescriptor;
 
 /**
  * Extends the MySQL5Dialect by including support for the spatial operators.

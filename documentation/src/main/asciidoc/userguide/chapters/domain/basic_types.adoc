@@ -276,8 +276,8 @@ include::{sourcedir}/basic/BitSetType.java[tags=basic-custom-type-BitSetType-exa
 ----
 ====
 
-The `AbstractSingleColumnStandardBasicType` requires an `sqlTypeDescriptor` and a `javaTypeDescriptor`.
-The `sqlTypeDescriptor` is `VarcharTypeDescriptor.INSTANCE` because the database column is a VARCHAR.
+The `AbstractSingleColumnStandardBasicType` requires an `jdbcTypeDescriptor` and a `javaTypeDescriptor`.
+The `jdbcTypeDescriptor` is `VarcharTypeDescriptor.INSTANCE` because the database column is a VARCHAR.
 On the Java side, we need to use a `BitSetTypeDescriptor` instance which can be implemented like this:
 
 [[basic-custom-type-BitSetTypeDescriptor-example]]

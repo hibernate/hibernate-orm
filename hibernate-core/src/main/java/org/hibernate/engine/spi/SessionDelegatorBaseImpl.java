@@ -60,7 +60,7 @@ import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.stat.SessionStatistics;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 /**
  * This class is meant to be extended.
@@ -1101,8 +1101,8 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
-		return delegate.remapSqlTypeDescriptor( sqlTypeDescriptor );
+	public JdbcTypeDescriptor remapSqlTypeDescriptor(JdbcTypeDescriptor jdbcTypeDescriptor) {
+		return delegate.remapSqlTypeDescriptor( jdbcTypeDescriptor );
 	}
 
 	@Override

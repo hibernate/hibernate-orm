@@ -10,13 +10,13 @@ import java.sql.CallableStatement;
 import java.sql.SQLException;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 /**
  * Specialization of DomainType for types that can be used as a
  * parameter output for a {@link org.hibernate.procedure.ProcedureCall}
  *
- * @apiNote We assume a type that maps to exactly one SQL value, hence {@link #getSqlTypeDescriptor()}
+ * @apiNote We assume a type that maps to exactly one SQL value, hence {@link #getJdbcTypeDescriptor()}
  *
  * @author Steve Ebersole
  */
@@ -31,7 +31,7 @@ public interface AllowableOutputParameterType<J> extends AllowableParameterType<
 	/**
 	 * Descriptor for the SQL type mapped by this type.
 	 */
-	SqlTypeDescriptor getSqlTypeDescriptor();
+	JdbcTypeDescriptor getJdbcTypeDescriptor();
 
 	/**
 	 * Perform the extraction

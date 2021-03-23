@@ -43,8 +43,8 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.internal.StandardIndexExporter;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
@@ -123,21 +123,21 @@ public class TeradataDialect extends Dialect {
 	}
 
 	@Override
-	public SqlTypeDescriptor resolveSqlTypeDescriptor(
+	public JdbcTypeDescriptor resolveSqlTypeDescriptor(
 			int jdbcTypeCode,
 			int precision,
 			int scale,
-			SqlTypeDescriptorRegistry sqlTypeDescriptorRegistry) {
+			JdbcTypeDescriptorRegistry jdbcTypeDescriptorRegistry) {
 		switch ( jdbcTypeCode ) {
 			case Types.BIT:
-				return sqlTypeDescriptorRegistry.getDescriptor( Types.BOOLEAN );
+				return jdbcTypeDescriptorRegistry.getDescriptor( Types.BOOLEAN );
 			case Types.NUMERIC:
 			case Types.DECIMAL:
 				if ( precision == 19 && scale == 0 ) {
-					return sqlTypeDescriptorRegistry.getDescriptor( Types.BIGINT );
+					return jdbcTypeDescriptorRegistry.getDescriptor( Types.BIGINT );
 				}
 		}
-		return super.resolveSqlTypeDescriptor( jdbcTypeCode, precision, scale, sqlTypeDescriptorRegistry );
+		return super.resolveSqlTypeDescriptor( jdbcTypeCode, precision, scale, jdbcTypeDescriptorRegistry );
 	}
 
 	@Override

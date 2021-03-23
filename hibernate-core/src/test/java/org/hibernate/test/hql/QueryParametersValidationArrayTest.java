@@ -28,9 +28,9 @@ import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractClassTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.sql.BasicBinder;
-import org.hibernate.type.descriptor.sql.BasicExtractor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.BasicBinder;
+import org.hibernate.type.descriptor.jdbc.BasicExtractor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
@@ -82,7 +82,7 @@ public class QueryParametersValidationArrayTest extends BaseEntityManagerFunctio
 		public static final StringArrayType INSTANCE = new StringArrayType ();
 
 		public StringArrayType() {
-			super( StringArraySqlTypeDescriptor.INSTANCE, StringArrayTypeDescriptor.INSTANCE);
+			super( StringArrayJdbcTypeDescriptor.INSTANCE, StringArrayTypeDescriptor.INSTANCE);
 		}
 
 		public String getName() {
@@ -95,12 +95,12 @@ public class QueryParametersValidationArrayTest extends BaseEntityManagerFunctio
 		}
 	}
 
-	public static class StringArraySqlTypeDescriptor implements SqlTypeDescriptor {
+	public static class StringArrayJdbcTypeDescriptor implements JdbcTypeDescriptor {
 
-		public static final StringArraySqlTypeDescriptor INSTANCE = new StringArraySqlTypeDescriptor();
+		public static final StringArrayJdbcTypeDescriptor INSTANCE = new StringArrayJdbcTypeDescriptor();
 
 		@Override
-		public int getSqlType() {
+		public int getJdbcType() {
 			return Types.ARRAY;
 		}
 

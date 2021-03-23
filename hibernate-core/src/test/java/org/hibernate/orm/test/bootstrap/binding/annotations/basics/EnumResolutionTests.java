@@ -167,12 +167,12 @@ public class EnumResolutionTests {
 		final BasicValue.Resolution<?> resolution = ( (BasicValue) property.getValue() ).resolve();
 
 		// verify the interpretations used for reading
-		assertThat( resolution.getRelationalSqlTypeDescriptor().getJdbcTypeCode(), is( jdbcCode ) );
+		assertThat( resolution.getJdbcTypeDescriptor().getJdbcTypeCode(), is( jdbcCode ) );
 		assertThat( resolution.getRelationalJavaDescriptor().getJavaTypeClass(), equalTo( jdbcJavaType ) );
 		assertThat( resolution.getDomainJavaDescriptor().getJavaTypeClass(), equalTo( Values.class ) );
 
 		final JdbcMapping jdbcMapping = resolution.getJdbcMapping();
-		assertThat( jdbcMapping.getSqlTypeDescriptor(), equalTo( resolution.getRelationalSqlTypeDescriptor() ) );
+		assertThat( jdbcMapping.getJdbcTypeDescriptor(), equalTo( resolution.getJdbcTypeDescriptor() ) );
 		assertThat( jdbcMapping.getJavaTypeDescriptor(), equalTo( resolution.getRelationalJavaDescriptor() ) );
 
 		converterChecker.accept( resolution.getValueConverter() );

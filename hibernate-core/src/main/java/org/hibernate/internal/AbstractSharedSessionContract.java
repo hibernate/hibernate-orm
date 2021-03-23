@@ -26,7 +26,6 @@ import org.hibernate.FlushMode;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
-import org.hibernate.LockMode;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.SessionEventListener;
@@ -81,7 +80,7 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 /**
  * Base class for SharedSessionContract/SharedSessionContractImplementor
@@ -581,8 +580,8 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@Override
-	public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
-		return fastSessionServices.remapSqlTypeDescriptor( sqlTypeDescriptor );
+	public JdbcTypeDescriptor remapSqlTypeDescriptor(JdbcTypeDescriptor jdbcTypeDescriptor) {
+		return fastSessionServices.remapSqlTypeDescriptor( jdbcTypeDescriptor );
 	}
 
 	@Override

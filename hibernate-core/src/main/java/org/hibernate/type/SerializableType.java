@@ -9,7 +9,7 @@ package org.hibernate.type;
 import java.io.Serializable;
 
 import org.hibernate.type.descriptor.java.SerializableTypeDescriptor;
-import org.hibernate.type.descriptor.sql.VarbinaryTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.VarbinaryTypeDescriptor;
 
 /**
  * A type that maps between a {@link java.sql.Types#VARBINARY VARBINARY} and {@link Serializable} classes.

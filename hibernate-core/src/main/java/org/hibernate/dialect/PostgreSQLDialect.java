@@ -47,12 +47,13 @@ import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.sql.BasicBinder;
-import org.hibernate.type.descriptor.sql.BasicExtractor;
-import org.hibernate.type.descriptor.sql.BlobTypeDescriptor;
-import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
-import org.hibernate.type.descriptor.sql.JdbcLiteralFormatter;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.BasicBinder;
+import org.hibernate.type.descriptor.jdbc.BasicExtractor;
+import org.hibernate.type.descriptor.jdbc.BlobTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.ClobTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.sql.*;
@@ -327,7 +328,7 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
-	public SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
+	public JdbcTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
 		// For discussion of BLOB support in Postgres, as of 8.4, have a peek at
 		// <a href="http://jdbc.postgresql.org/documentation/84/binary-data.html">http://jdbc.postgresql.org/documentation/84/binary-data.html</a>.
  		// For the effects in regards to Hibernate see <a href="http://in.relation.to/15492.lace">http://in.relation.to/15492.lace</a>
@@ -822,11 +823,11 @@ public class PostgreSQLDialect extends Dialect {
 
 		if ( getVersion() >= 820 ) {
 			// HHH-9562
-			typeContributions.contributeSqlTypeDescriptor( PostgresUUIDType.INSTANCE );
+			typeContributions.contributeJdbcTypeDescriptor( PostgresUUIDType.INSTANCE );
 		}
 	}
 
-	private static class PostgresUUIDType implements SqlTypeDescriptor {
+	private static class PostgresUUIDType implements JdbcTypeDescriptor {
 		/**
 		 * Singleton access
 		 */
@@ -837,18 +838,18 @@ public class PostgreSQLDialect extends Dialect {
 		 * it reports a lot of its types as {@link java.sql.Types#OTHER}, making that
 		 * value useless for distinguishing one SqlTypeDescriptor from another.
 		 * So here we define a "magic value" that is a (hopefully no collisions)
-		 * unique key within the {@link org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry}
+		 * unique key within the {@link JdbcTypeDescriptorRegistry}
 		 */
 		private static final int JDBC_TYPE_CODE = 3975;
 
 		@Override
-		public int getSqlType() {
+		public int getJdbcType() {
 			return JDBC_TYPE_CODE;
 		}
 
 		@Override
 		public int getJdbcTypeCode() {
-			return getSqlType();
+			return getJdbcType();
 		}
 
 		@Override

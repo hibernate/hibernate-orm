@@ -10,7 +10,7 @@ import java.sql.Clob;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.ClobTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 
 /**
  * A type that maps between {@link java.sql.Types#CLOB CLOB} and {@link Clob}
@@ -22,7 +22,7 @@ public class ClobType extends AbstractSingleColumnStandardBasicType<Clob> implem
 	public static final ClobType INSTANCE = new ClobType();
 
 	public ClobType() {
-		super( org.hibernate.type.descriptor.sql.ClobTypeDescriptor.DEFAULT, ClobTypeDescriptor.INSTANCE );
+		super( org.hibernate.type.descriptor.jdbc.ClobTypeDescriptor.DEFAULT, ClobTypeDescriptor.INSTANCE );
 	}
 
 	@Override
@@ -42,7 +42,7 @@ public class ClobType extends AbstractSingleColumnStandardBasicType<Clob> implem
 
 	@SuppressWarnings({"rawtypes", "unchecked"})
 	@Override
-	public BasicType resolveIndicatedType(SqlTypeDescriptorIndicators indicators) {
+	public BasicType resolveIndicatedType(JdbcTypeDescriptorIndicators indicators) {
 		// todo (6.0) : Support a "wrapped clob"?  This would be a (N)VARCHAR column we handle as a Clob in-memory
 		//		- might be especially interesting for streaming based (N)VARCHAR reading
 

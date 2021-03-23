@@ -10,7 +10,7 @@ import java.util.Currency;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.java.CurrencyTypeDescriptor;
-import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.VarcharTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#VARCHAR VARCHAR} and {@link Currency}

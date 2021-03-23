@@ -7,7 +7,7 @@
 package org.hibernate.test.annotations.lob;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.descriptor.java.ByteArrayTypeDescriptor;
-import org.hibernate.type.descriptor.sql.LongVarbinaryTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.LongVarbinaryTypeDescriptor;
 
 /**
  * A type that maps JDBC {@link java.sql.Types#LONGVARBINARY LONGVARBINARY} and {@code Byte[]}

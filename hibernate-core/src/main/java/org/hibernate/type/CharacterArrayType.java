@@ -8,9 +8,9 @@ package org.hibernate.type;
 import java.sql.Types;
 
 import org.hibernate.type.descriptor.java.CharacterArrayTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
-import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.VarcharTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -38,7 +38,7 @@ public class CharacterArrayType
 	}
 
 	@Override
-	public <X> BasicType<X> resolveIndicatedType(SqlTypeDescriptorIndicators indicators) {
+	public <X> BasicType<X> resolveIndicatedType(JdbcTypeDescriptorIndicators indicators) {
 		if ( indicators.isNationalized() ) {
 			final TypeConfiguration typeConfiguration = indicators.getTypeConfiguration();
 			if ( indicators.isLob() ) {
@@ -46,7 +46,7 @@ public class CharacterArrayType
 				return (BasicType<X>) CharacterArrayNClobType.INSTANCE;
 			}
 			else {
-				final SqlTypeDescriptor nvarcharType = typeConfiguration.getSqlTypeDescriptorRegistry().getDescriptor( Types.NVARCHAR );
+				final JdbcTypeDescriptor nvarcharType = typeConfiguration.getJdbcTypeDescriptorRegistry().getDescriptor( Types.NVARCHAR );
 				//noinspection unchecked
 				return (BasicType<X>) typeConfiguration.getBasicTypeRegistry().resolve( getJavaTypeDescriptor(), nvarcharType );
 			}

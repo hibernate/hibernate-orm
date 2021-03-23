@@ -36,7 +36,7 @@ log4j.logger.org.hibernate.SQL=debug
 
 ### log JDBC bind parameters ###
 log4j.logger.org.hibernate.type=trace
-log4j.logger.org.hibernate.type.descriptor.sql=trace
+log4j.logger.org.hibernate.type.descriptor.jdbc=trace
 ----
 
 However, there are some other alternatives like using datasource-proxy or p6spy.

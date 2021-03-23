@@ -21,7 +21,7 @@ import org.hibernate.type.CustomType;
 import org.hibernate.type.UUIDBinaryType;
 import org.hibernate.type.UUIDCharType;
 import org.hibernate.type.descriptor.java.StringTypeDescriptor;
-import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.VarcharTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserType;
 

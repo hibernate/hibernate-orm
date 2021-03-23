@@ -11,10 +11,9 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
-import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -43,8 +42,8 @@ public class UserTypeResolution implements BasicValue.Resolution {
 	}
 
 	@Override
-	public SqlTypeDescriptor getRelationalSqlTypeDescriptor() {
-		return userTypeAdapter.getSqlTypeDescriptor();
+	public JdbcTypeDescriptor getJdbcTypeDescriptor() {
+		return userTypeAdapter.getJdbcTypeDescriptor();
 	}
 
 	@Override

@@ -11,8 +11,8 @@ import java.sql.Types;
 
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.SqlTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.SqlTypeDescriptor;
 
 import org.geolatte.geom.Geometry;
 import org.geolatte.geom.codec.Wkt;

@@ -42,15 +42,15 @@ import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.TemporalJavaTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
  */
 @SuppressWarnings({"unchecked", "rawtypes"})
-public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicators, Resolvable {
+public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicators, Resolvable {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( BasicValue.class );
 
 	private final TypeConfiguration typeConfiguration;
@@ -63,7 +63,7 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 	private Map explicitLocalTypeParams;
 
 	private Function<TypeConfiguration, BasicJavaDescriptor> explicitJavaTypeAccess;
-	private Function<TypeConfiguration, SqlTypeDescriptor> explicitSqlTypeAccess;
+	private Function<TypeConfiguration, JdbcTypeDescriptor> explicitSqlTypeAccess;
 	private Function<TypeConfiguration, MutabilityPlan> explicitMutabilityPlanAccess;
 	private Function<TypeConfiguration, java.lang.reflect.Type> implicitJavaTypeAccess;
 
@@ -130,7 +130,7 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 		this.explicitJavaTypeAccess = explicitJavaTypeAccess;
 	}
 
-	public void setExplicitSqlTypeAccess(Function<TypeConfiguration, SqlTypeDescriptor> sqlTypeAccess) {
+	public void setExplicitSqlTypeAccess(Function<TypeConfiguration, JdbcTypeDescriptor> sqlTypeAccess) {
 		this.explicitSqlTypeAccess = sqlTypeAccess;
 	}
 
@@ -253,7 +253,7 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 		if ( column instanceof Column && resolution.getValueConverter() == null ) {
 			final Column physicalColumn = (Column) column;
 			if ( physicalColumn.getSqlTypeCode() == null ) {
-				physicalColumn.setSqlTypeCode( resolution.getRelationalSqlTypeDescriptor().getJdbcTypeCode() );
+				physicalColumn.setSqlTypeCode( resolution.getJdbcTypeDescriptor().getJdbcTypeCode() );
 			}
 
 			final BasicType<?> basicType = resolution.getLegacyResolvedBasicType();
@@ -263,7 +263,7 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 				physicalColumn.setCheckConstraint(
 						basicType.getJavaTypeDescriptor().getCheckCondition(
 								physicalColumn.getQuotedName( dialect ),
-								basicType.getSqlTypeDescriptor(),
+								basicType.getJdbcTypeDescriptor(),
 								dialect
 						)
 				);
@@ -436,11 +436,11 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 			EnumType enumerationStyle,
 			Function<TypeConfiguration, java.lang.reflect.Type> implicitJavaTypeAccess,
 			Function<TypeConfiguration, BasicJavaDescriptor> explicitJtdAccess,
-			Function<TypeConfiguration, SqlTypeDescriptor> explicitStdAccess,
+			Function<TypeConfiguration, JdbcTypeDescriptor> explicitStdAccess,
 			Function<TypeConfiguration, MutabilityPlan> explicitMutabilityPlanAccess,
 			ConverterDescriptor converterDescriptor,
 			Map localTypeParams,
-			SqlTypeDescriptorIndicators stdIndicators,
+			JdbcTypeDescriptorIndicators stdIndicators,
 			TypeConfiguration typeConfiguration,
 			MetadataBuildingContext context) {
 
@@ -653,7 +653,7 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 		 * The JavaTypeDescriptor for the relational value as part of
 		 * the relational model (its JDBC representation)
 		 */
-		SqlTypeDescriptor getRelationalSqlTypeDescriptor();
+		JdbcTypeDescriptor getJdbcTypeDescriptor();
 
 		/**
 		 * Converter, if any, to convert values between the

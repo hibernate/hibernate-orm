@@ -27,7 +27,7 @@ public class IntegerType extends AbstractSingleColumnStandardBasicType<Integer>
 	public static final Integer ZERO = 0;
 
 	public IntegerType() {
-		super( org.hibernate.type.descriptor.sql.IntegerTypeDescriptor.INSTANCE, IntegerTypeDescriptor.INSTANCE );
+		super( org.hibernate.type.descriptor.jdbc.IntegerTypeDescriptor.INSTANCE, IntegerTypeDescriptor.INSTANCE );
 	}
 
 	@Override

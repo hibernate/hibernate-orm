@@ -14,9 +14,9 @@ import java.sql.Types;
 import org.hibernate.engine.jdbc.CharacterStream;
 import org.hibernate.engine.jdbc.internal.CharacterStreamImpl;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
-import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -40,9 +40,9 @@ public class StringTypeDescriptor extends AbstractClassTypeDescriptor<String> {
 	}
 
 	@Override
-	public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators stdIndicators) {
+	public JdbcTypeDescriptor getRecommendedJdbcType(JdbcTypeDescriptorIndicators stdIndicators) {
 		final TypeConfiguration typeConfiguration = stdIndicators.getTypeConfiguration();
-		final SqlTypeDescriptorRegistry stdRegistry = typeConfiguration.getSqlTypeDescriptorRegistry();
+		final JdbcTypeDescriptorRegistry stdRegistry = typeConfiguration.getJdbcTypeDescriptorRegistry();
 
 		if ( stdIndicators.isLob() ) {
 			return stdIndicators.isNationalized()
@@ -53,7 +53,7 @@ public class StringTypeDescriptor extends AbstractClassTypeDescriptor<String> {
 			return stdRegistry.getDescriptor( Types.NVARCHAR );
 		}
 
-		return super.getJdbcRecommendedSqlType( stdIndicators );
+		return super.getRecommendedJdbcType( stdIndicators );
 	}
 
 	@SuppressWarnings({ "unchecked" })

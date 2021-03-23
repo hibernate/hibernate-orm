@@ -6,7 +6,7 @@
  */
 package org.hibernate.type;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayTypeDescriptor;
-import org.hibernate.type.descriptor.sql.LongVarbinaryTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.LongVarbinaryTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#LONGVARBINARY LONGVARBINARY} and {@code byte[]}

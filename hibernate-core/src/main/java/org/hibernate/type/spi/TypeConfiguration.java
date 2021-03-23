@@ -50,9 +50,9 @@ import org.hibernate.type.SingleColumnType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
-import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 import org.hibernate.type.internal.StandardBasicTypeImpl;
 
 import java.sql.Time;
@@ -92,7 +92,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// things available during both boot and runtime lifecycle phases
 	private final transient JavaTypeDescriptorRegistry javaTypeDescriptorRegistry;
-	private final transient SqlTypeDescriptorRegistry sqlTypeDescriptorRegistry;
+	private final transient JdbcTypeDescriptorRegistry jdbcTypeDescriptorRegistry;
 	private final transient BasicTypeRegistry basicTypeRegistry;
 
 	private final transient Map<Integer, Set<String>> jdbcToHibernateTypeContributionMap = new HashMap<>();
@@ -101,7 +101,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		this.scope = new Scope( this );
 
 		this.javaTypeDescriptorRegistry = new JavaTypeDescriptorRegistry( this );
-		this.sqlTypeDescriptorRegistry = new SqlTypeDescriptorRegistry( this );
+		this.jdbcTypeDescriptorRegistry = new JdbcTypeDescriptorRegistry( this );
 
 		this.basicTypeRegistry = new BasicTypeRegistry( this );
 		StandardBasicTypes.prime( this );
@@ -120,11 +120,11 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		return javaTypeDescriptorRegistry;
 	}
 
-	public SqlTypeDescriptorRegistry getSqlTypeDescriptorRegistry() {
-		return sqlTypeDescriptorRegistry;
+	public JdbcTypeDescriptorRegistry getJdbcTypeDescriptorRegistry() {
+		return jdbcTypeDescriptorRegistry;
 	}
 
-	public SqlTypeDescriptorIndicators getCurrentBaseSqlTypeIndicators() {
+	public JdbcTypeDescriptorIndicators getCurrentBaseSqlTypeIndicators() {
 		return scope.getCurrentBaseSqlTypeIndicators();
 	}
 
@@ -324,7 +324,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		private String sessionFactoryName;
 		private String sessionFactoryUuid;
 
-		private transient SqlTypeDescriptorIndicators currentSqlTypeIndicators = new SqlTypeDescriptorIndicators() {
+		private transient JdbcTypeDescriptorIndicators currentSqlTypeIndicators = new JdbcTypeDescriptorIndicators() {
 			@Override
 			public TypeConfiguration getTypeConfiguration() {
 				return typeConfiguration;
@@ -340,7 +340,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			this.typeConfiguration = typeConfiguration;
 		}
 
-		public SqlTypeDescriptorIndicators getCurrentBaseSqlTypeIndicators() {
+		public JdbcTypeDescriptorIndicators getCurrentBaseSqlTypeIndicators() {
 			return currentSqlTypeIndicators;
 		}
 
@@ -575,7 +575,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 				javaType,
 				javaTypeDescriptor -> new StandardBasicTypeImpl<>(
 						javaTypeDescriptor,
-						javaTypeDescriptor.getJdbcRecommendedSqlType( getCurrentBaseSqlTypeIndicators() )
+						javaTypeDescriptor.getRecommendedJdbcType( getCurrentBaseSqlTypeIndicators() )
 				)
 		);
 	}
@@ -607,12 +607,12 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		if ( type == null ) {
 			return null;
 		}
-		return getSqlTemporalType( type.getExpressableJavaTypeDescriptor().getJdbcRecommendedSqlType( getCurrentBaseSqlTypeIndicators() ) );
+		return getSqlTemporalType( type.getExpressableJavaTypeDescriptor().getRecommendedJdbcType( getCurrentBaseSqlTypeIndicators() ) );
 	}
 
 	public static TemporalType getSqlTemporalType(MappingModelExpressable<?> type) {
 		if ( type instanceof BasicValuedMapping ) {
-			return getSqlTemporalType( ( (BasicValuedMapping) type ).getJdbcMapping().getSqlTypeDescriptor() );
+			return getSqlTemporalType( ( (BasicValuedMapping) type ).getJdbcMapping().getJdbcTypeDescriptor() );
 		}
 		else if (type instanceof SingleColumnType) {
 			return getSqlTemporalType( ((SingleColumnType<?>) type).sqlType() );
@@ -620,7 +620,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		return null;
 	}
 
-	public static TemporalType getSqlTemporalType(SqlTypeDescriptor descriptor) {
+	public static TemporalType getSqlTemporalType(JdbcTypeDescriptor descriptor) {
 		return getSqlTemporalType( descriptor.getJdbcTypeCode() );
 	}
 

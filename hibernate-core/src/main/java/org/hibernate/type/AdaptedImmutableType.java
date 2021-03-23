@@ -19,7 +19,7 @@ public class AdaptedImmutableType<T> extends AbstractSingleColumnStandardBasicTy
 	private final AbstractStandardBasicType<T> baseMutableType;
 
 	public AdaptedImmutableType(AbstractStandardBasicType<T> baseMutableType) {
-		super( baseMutableType.getSqlTypeDescriptor(), baseMutableType.getJavaTypeDescriptor() );
+		super( baseMutableType.getJdbcTypeDescriptor(), baseMutableType.getJavaTypeDescriptor() );
 		this.baseMutableType = baseMutableType;
 	}
 

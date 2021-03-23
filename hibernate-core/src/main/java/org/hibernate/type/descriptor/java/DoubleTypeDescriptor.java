@@ -13,8 +13,8 @@ import java.sql.Types;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.spi.Primitive;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 
 /**
  * Descriptor for {@link Double} handling.
@@ -29,8 +29,8 @@ public class DoubleTypeDescriptor extends AbstractClassTypeDescriptor<Double> im
 	}
 
 	@Override
-	public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators indicators) {
-		return indicators.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.REAL );
+	public JdbcTypeDescriptor getRecommendedJdbcType(JdbcTypeDescriptorIndicators indicators) {
+		return indicators.getTypeConfiguration().getJdbcTypeDescriptorRegistry().getDescriptor( Types.REAL );
 	}
 
 	@Override

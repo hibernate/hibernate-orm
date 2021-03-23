@@ -370,7 +370,7 @@ public class MappingModelCreationHelper {
 					.getBasicTypeRegistry()
 					.resolve(
 							valueConverter.getRelationalJavaDescriptor(),
-							resolution.getRelationalSqlTypeDescriptor()
+							resolution.getJdbcTypeDescriptor()
 					);
 
 

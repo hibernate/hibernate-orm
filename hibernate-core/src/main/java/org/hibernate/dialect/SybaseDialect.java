@@ -16,10 +16,10 @@ import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
-import org.hibernate.type.descriptor.sql.BlobTypeDescriptor;
-import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.jdbc.BlobTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.ClobTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
 import java.sql.Types;
 import javax.persistence.TemporalType;
@@ -53,19 +53,19 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public SqlTypeDescriptor resolveSqlTypeDescriptor(
+	public JdbcTypeDescriptor resolveSqlTypeDescriptor(
 			int jdbcTypeCode,
 			int precision,
 			int scale,
-			SqlTypeDescriptorRegistry sqlTypeDescriptorRegistry) {
+			JdbcTypeDescriptorRegistry jdbcTypeDescriptorRegistry) {
 		switch ( jdbcTypeCode ) {
 			case Types.NUMERIC:
 			case Types.DECIMAL:
 				if ( precision == 19 && scale == 0 ) {
-					return sqlTypeDescriptorRegistry.getDescriptor( Types.BIGINT );
+					return jdbcTypeDescriptorRegistry.getDescriptor( Types.BIGINT );
 				}
 		}
-		return super.resolveSqlTypeDescriptor( jdbcTypeCode, precision, scale, sqlTypeDescriptorRegistry );
+		return super.resolveSqlTypeDescriptor( jdbcTypeCode, precision, scale, jdbcTypeDescriptorRegistry );
 	}
 
 	@Override
@@ -90,7 +90,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	}
 	
 	@Override
-	protected SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
+	protected JdbcTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
 		switch (sqlCode) {
 		case Types.BLOB:
 			return BlobTypeDescriptor.PRIMITIVE_ARRAY_BINDING;

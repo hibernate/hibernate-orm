@@ -10,7 +10,7 @@ import java.util.TimeZone;
 
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 /**
  * @author Christian Beikov
@@ -34,8 +34,8 @@ public abstract class AbstractDelegatingWrapperOptions implements WrapperOptions
 	}
 
 	@Override
-	public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
-		return delegate().remapSqlTypeDescriptor( sqlTypeDescriptor );
+	public JdbcTypeDescriptor remapSqlTypeDescriptor(JdbcTypeDescriptor jdbcTypeDescriptor) {
+		return delegate().remapSqlTypeDescriptor( jdbcTypeDescriptor );
 	}
 
 	@Override

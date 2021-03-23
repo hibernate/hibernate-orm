@@ -48,8 +48,8 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
@@ -169,12 +169,12 @@ public class MySQLDialect extends Dialect {
 		sizeStrategy = new SizeStrategyImpl() {
 			@Override
 			public Size resolveSize(
-					SqlTypeDescriptor sqlType,
+					JdbcTypeDescriptor jdbcType,
 					JavaTypeDescriptor javaType,
 					Integer precision,
 					Integer scale,
 					Long length) {
-				final int jdbcTypeCode = sqlType.getSqlType();
+				final int jdbcTypeCode = jdbcType.getJdbcType();
 				switch ( jdbcTypeCode ) {
 					case Types.BIT:
 						// MySQL allows BIT with a length up to 64
@@ -182,7 +182,7 @@ public class MySQLDialect extends Dialect {
 							return Size.length( Math.min( Math.max( length, 1 ), 64 ) );
 						}
 				}
-				return super.resolveSize( sqlType, javaType, precision, scale, length );
+				return super.resolveSize( jdbcType, javaType, precision, scale, length );
 			}
 		};
 	}
@@ -208,15 +208,15 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
-	public SqlTypeDescriptor resolveSqlTypeDescriptor(
+	public JdbcTypeDescriptor resolveSqlTypeDescriptor(
 			int jdbcTypeCode,
 			int precision,
 			int scale,
-			SqlTypeDescriptorRegistry sqlTypeDescriptorRegistry) {
+			JdbcTypeDescriptorRegistry jdbcTypeDescriptorRegistry) {
 		if ( jdbcTypeCode == Types.BIT ) {
-			return sqlTypeDescriptorRegistry.getDescriptor( Types.BOOLEAN );
+			return jdbcTypeDescriptorRegistry.getDescriptor( Types.BOOLEAN );
 		}
-		return super.resolveSqlTypeDescriptor( jdbcTypeCode, precision, scale, sqlTypeDescriptorRegistry );
+		return super.resolveSqlTypeDescriptor( jdbcTypeCode, precision, scale, jdbcTypeDescriptorRegistry );
 	}
 
 	@Override
@@ -575,7 +575,7 @@ public class MySQLDialect extends Dialect {
 
 	@Override
 	public String getCastTypeName(SqlExpressable type, Long length, Integer precision, Integer scale) {
-		switch ( type.getJdbcMapping().getSqlTypeDescriptor().getJdbcTypeCode() ) {
+		switch ( type.getJdbcMapping().getJdbcTypeDescriptor().getJdbcTypeCode() ) {
 			case Types.INTEGER:
 			case Types.BIGINT:
 			case Types.SMALLINT:

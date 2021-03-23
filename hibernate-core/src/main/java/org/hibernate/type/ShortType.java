@@ -12,7 +12,7 @@ import java.util.Comparator;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.ShortTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SmallIntTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.SmallIntTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#SMALLINT SMALLINT} and {@link Short}

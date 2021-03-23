@@ -141,8 +141,8 @@ import org.hibernate.sql.results.jdbc.internal.JdbcValuesMappingProducerStandard
 import org.hibernate.type.IntegerType;
 import org.hibernate.type.StringType;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.sql.JdbcLiteralFormatter;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 import static org.hibernate.query.TemporalUnit.NANOSECOND;
 import static org.hibernate.sql.ast.SqlTreePrinter.logSqlAst;
@@ -261,8 +261,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 
 		@Override
-		public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
-			return sessionFactory.getFastSessionServices().remapSqlTypeDescriptor( sqlTypeDescriptor );
+		public JdbcTypeDescriptor remapSqlTypeDescriptor(JdbcTypeDescriptor jdbcTypeDescriptor) {
+			return sessionFactory.getFastSessionServices().remapSqlTypeDescriptor( jdbcTypeDescriptor );
 		}
 
 		@Override
@@ -2442,7 +2442,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 		final JdbcMapping jdbcMapping = literal.getJdbcMapping();
 		final JdbcLiteralFormatter literalFormatter = jdbcMapping
-				.getSqlTypeDescriptor()
+				.getJdbcTypeDescriptor()
 				.getJdbcLiteralFormatter( jdbcMapping.getJavaTypeDescriptor() );
 
 		// If we encounter a plain literal in the select clause which has no literal formatter, we must render it as parameter
@@ -2774,13 +2774,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					final JdbcMapping jdbcMapping = jdbcParameter.getExpressionType().getJdbcMappings().get( 0 );
 					// We try to avoid inlining parameters if possible which can be done by wrapping the parameter
 					// in an expression that is semantically unnecessary e.g. numeric + 0 or concat with an empty string
-					if ( jdbcMapping.getSqlTypeDescriptor().isNumber() ) {
+					if ( jdbcMapping.getJdbcTypeDescriptor().isNumber() ) {
 						appendSql( '(' );
 						sqlAstNode.accept( this );
 						appendSql( "+0)" );
 						break;
 					}
-					else if ( jdbcMapping.getSqlTypeDescriptor().isString() ) {
+					else if ( jdbcMapping.getJdbcTypeDescriptor().isString() ) {
 						final SqmFunctionDescriptor sqmFunctionDescriptor = getSessionFactory().getQueryEngine()
 								.getSqmFunctionRegistry()
 								.findFunctionDescriptor( "concat" );
@@ -3253,7 +3253,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		else {
 			assert jdbcParameter.getExpressionType().getJdbcTypeCount() == 1;
 			final JdbcMapping jdbcMapping = jdbcParameter.getExpressionType().getJdbcMappings().get( 0 );
-			final JdbcLiteralFormatter literalFormatter = jdbcMapping.getSqlTypeDescriptor().getJdbcLiteralFormatter( jdbcMapping.getJavaTypeDescriptor() );
+			final JdbcLiteralFormatter literalFormatter = jdbcMapping.getJdbcTypeDescriptor().getJdbcLiteralFormatter( jdbcMapping.getJavaTypeDescriptor() );
 			if ( literalFormatter == null ) {
 				throw new IllegalArgumentException( "Can't render parameter as literal, no literal formatter found" );
 			}

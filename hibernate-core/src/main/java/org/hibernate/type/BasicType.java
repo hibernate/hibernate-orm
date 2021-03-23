@@ -53,13 +53,13 @@ public interface BasicType<T> extends Type, BasicDomainType<T>, MappingType, Bas
 	@Override
 	default ValueExtractor getJdbcValueExtractor() {
 		//noinspection unchecked
-		return getSqlTypeDescriptor().getExtractor( getMappedJavaTypeDescriptor() );
+		return getJdbcTypeDescriptor().getExtractor( getMappedJavaTypeDescriptor() );
 	}
 
 	@Override
 	default ValueBinder getJdbcValueBinder() {
 		//noinspection unchecked
-		return getSqlTypeDescriptor().getBinder( getMappedJavaTypeDescriptor() );
+		return getJdbcTypeDescriptor().getBinder( getMappedJavaTypeDescriptor() );
 	}
 
 	@Override

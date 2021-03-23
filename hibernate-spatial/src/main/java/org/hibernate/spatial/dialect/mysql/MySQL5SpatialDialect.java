@@ -17,7 +17,7 @@ import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.SqlTypeDescriptor;
 
 /**
  * A Dialect for MySQL 5 using InnoDB engine, with support for its spatial features

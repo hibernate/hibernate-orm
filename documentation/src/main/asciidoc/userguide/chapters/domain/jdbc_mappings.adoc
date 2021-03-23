@@ -2,12 +2,12 @@
 === JDBC Mappings
 
 Historically Hibernate's BasicType / UserType system is based on a static binding between a Java type
-(`JavaTypeDescriptor`) and a SQL/JDBC type (`SqlTypeDescriptor`).  6.0 introduces the ability to influence
-the `JavaTypeDescriptor` and `SqlTypeDescriptor` independently.  Under this new approach, the resolution of a
+(`JavaTypeDescriptor`) and a SQL/JDBC type (`JdbcTypeDescriptor`).  6.0 introduces the ability to influence
+the `JavaTypeDescriptor` and `JdbcTypeDescriptor` independently.  Under this new approach, the resolution of a
 basic value mapping comes down to:
 
 * `JavaTypeDescriptor` to use
-* `SqlTypeDescriptor` to use
+* `JdbcTypeDescriptor` to use
 * `BasicValueConverter` to use (if one)
 * `MutabilityPlan` to use
 
@@ -29,13 +29,13 @@ An `AttributeConverter` can also influence the `JavaTypeDescriptor` used in cert
 
 ==== SqlTypeDescriptor
 
-`@SqlType` can be used to explicitly specify the `SqlTypeDescriptor` to use for a particular mapping.
+`JdbcType` can be used to explicitly specify the `JdbcTypeDescriptor` to use for a particular mapping.
 
-`@SqlTypeCode` can be used to indicate the `SqlTypeDescriptorRegistry` entry to use.  `@SqlTypeRegistration` can
-be used to register a `SqlTypeDescriptor` with the `SqlTypeDescriptorRegistry`.
+`JdbcTypeCode` can be used to indicate the `JdbcTypeDescriptorRegistry` entry to use.  `JdbcTypeRegistration` can
+be used to register a `JdbcTypeDescriptor` with the `JdbcTypeDescriptorRegistry`.
 
-`@MapKeySqlType` and `@MapKeySqlTypeCode` work the same as `@SqlType` and `@SqlTypeCode`, respectively, except
-describing the `SqlTypeDescriptor` to use for the map's key.  In which case, `@SqlType` and `@SqlTypeCode` refer
+`MapKeyJdbcType` and `MapKeyJdbcTypeCode` work the same as `JdbcType` and `JdbcTypeCode`, respectively, except
+describing the `JdbcTypeDescriptor` to use for the map's key.  In which case, `JdbcType` and `JdbcTypeCode` refer
 to the map's values.
 
 For character and binary data, the JPA `@Lob` annotation can be used to indicate that a JDBC BLOB, CLOB, NCLOB should
@@ -44,12 +44,12 @@ be used.
 For character data, `@Nationalized` can be used to indicate that the JDBC nationalized variant should be used.
 E.g. `Types.CLOB` -> `Types.CLOB`, `Types.VARCHAR` -> `Types.NVARCHAR`, etc
 
-`@Enumerated` influences the `SqlTypeDescriptor` to use by the `EnumType` specified.  `EnumType#ORDINAL` implies
+`@Enumerated` influences the `JdbcTypeDescriptor` to use by the `EnumType` specified.  `EnumType#ORDINAL` implies
 that `Types.TINYINT` should be used.  `EnumType#STRING` implies that `Types.VARCHAR` should be used.
 
-`@Temporal` can also influence the `SqlTypeDescriptor` used.
+`@Temporal` can also influence the `JdbcTypeDescriptor` used.
 
-An `AttributeConverter` can also influence the `SqlTypeDescriptor` to use by the Java type it reports for its
+An `AttributeConverter` can also influence the `JdbcTypeDescriptor` to use by the Java type it reports for its
 "relational type"
 
 

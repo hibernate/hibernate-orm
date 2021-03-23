@@ -23,9 +23,9 @@ import javax.persistence.TemporalType;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
-import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.TimestampTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -50,7 +50,7 @@ public class LocalTimeJavaDescriptor extends AbstractTemporalTypeDescriptor<Loca
 	}
 
 	@Override
-	public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context) {
+	public JdbcTypeDescriptor getRecommendedJdbcType(JdbcTypeDescriptorIndicators context) {
 		return TimestampTypeDescriptor.INSTANCE;
 	}
 

@@ -52,10 +52,10 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorDe
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.sql.DecimalTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SmallIntTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.DecimalTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.SmallIntTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.TimestampTypeDescriptor;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
@@ -487,7 +487,7 @@ public class DerbyDialect extends Dialect {
 		return false;
 	}
 
-	protected SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
+	protected JdbcTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
 		if ( getVersion() < 1070 && sqlCode == Types.BOOLEAN) {
 			return SmallIntTypeDescriptor.INSTANCE;
 		}

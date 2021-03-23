@@ -29,8 +29,7 @@ import javax.persistence.SqlResultSetMapping;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
-import org.hibernate.annotations.SqlType;
-import org.hibernate.annotations.SqlTypeCode;
+import org.hibernate.annotations.JdbcTypeCode;
 
 /**
  * @author Steve Ebersole
@@ -151,7 +150,7 @@ public class EntityOfBasics {
 
 	@Convert( converter = GenderConverter.class )
 	@Column(name = "converted_gender", length = 1)
-	@SqlTypeCode( Types.CHAR )
+	@JdbcTypeCode( Types.CHAR )
 	public Gender getConvertedGender() {
 		return convertedGender;
 	}
@@ -261,7 +260,7 @@ public class EntityOfBasics {
 		this.theBoolean = theBoolean;
 	}
 
-	@SqlTypeCode( Types.INTEGER )
+	@JdbcTypeCode( Types.INTEGER )
 	public Boolean isTheNumericBoolean() {
 		return theNumericBoolean;
 	}
@@ -270,7 +269,7 @@ public class EntityOfBasics {
 		this.theNumericBoolean = theNumericBoolean;
 	}
 
-	@SqlTypeCode( Types.CHAR )
+	@JdbcTypeCode( Types.CHAR )
 	public Boolean isTheStringBoolean() {
 		return theStringBoolean;
 	}

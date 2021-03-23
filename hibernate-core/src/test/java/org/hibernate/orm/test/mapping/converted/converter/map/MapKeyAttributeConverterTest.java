@@ -38,7 +38,8 @@ public class MapKeyAttributeConverterTest extends BaseNonConfigCoreFunctionalTes
 	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
-				MapEntity.class, MapValue.class,
+				MapEntity.class,
+				MapValue.class,
 
 				ColorTypeConverter.class,
 
@@ -234,8 +235,8 @@ public class MapKeyAttributeConverterTest extends BaseNonConfigCoreFunctionalTes
 				.uniqueResult();
 	}
 
-	@Entity
-	@Table(name = "map_entity")
+	@Entity( name = "MapEntity" )
+	@Table( name = "map_entity" )
 	public static class MapEntity {
 		@Id
 		@GeneratedValue(strategy = GenerationType.AUTO)
@@ -276,7 +277,7 @@ public class MapKeyAttributeConverterTest extends BaseNonConfigCoreFunctionalTes
 		private Map<ImplicitEnumMapKey, MapValue> enumImplicitOverridedType = new HashMap<ImplicitEnumMapKey, MapValue>();
 	}
 
-	@Entity
+	@Entity( name = "MapValue" )
 	@Table(name = "map_value")
 	public static class MapValue {
 		@Id

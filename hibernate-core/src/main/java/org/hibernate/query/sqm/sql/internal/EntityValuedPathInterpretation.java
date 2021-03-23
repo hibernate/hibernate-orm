@@ -17,7 +17,6 @@ import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
-import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.SimpleForeignKeyDescriptor;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
@@ -152,6 +151,14 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 		return sqlExpression instanceof SqlTuple
 				? (SqlTuple) sqlExpression
 				: null;
+	}
+	@Override
+	public void applySqlSelections(DomainResultCreationState creationState) {
+		creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
+				sqlExpression,
+				getExpressionType().getJavaTypeDescriptor(),
+				creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
+		);
 	}
 
 	@Override

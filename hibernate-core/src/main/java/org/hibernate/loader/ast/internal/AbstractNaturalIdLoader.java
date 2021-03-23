@@ -102,8 +102,8 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 					fetchParent.getReferencedMappingContainer().visitFetchables(
 							fetchable -> {
 								final NavigablePath navigablePath = fetchParent.getNavigablePath().append( fetchable.getFetchableName() );
-								final Fetch fetch = fetchable.generateFetch(
-										fetchParent,
+								final Fetch fetch = fetchParent.generateFetchableFetch(
+										fetchable,
 										navigablePath,
 										fetchable.getMappedFetchOptions().getTiming(),
 										true,
@@ -322,8 +322,8 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 					fetchParent.getReferencedMappingContainer().visitFetchables(
 							(fetchable) -> {
 								final NavigablePath navigablePath = fetchParent.getNavigablePath().append( fetchable.getFetchableName() );
-								final Fetch fetch = fetchable.generateFetch(
-										fetchParent,
+								final Fetch fetch = fetchParent.generateFetchableFetch(
+										fetchable,
 										navigablePath,
 										fetchable.getMappedFetchOptions().getTiming(),
 										true,

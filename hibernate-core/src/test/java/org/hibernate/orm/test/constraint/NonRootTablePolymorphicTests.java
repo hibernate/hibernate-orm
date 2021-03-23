@@ -205,8 +205,8 @@ public class NonRootTablePolymorphicTests {
 		assertThat( childFk.getTargetTable(), is( "sub_child" ) );
 
 		assertThat( childFk.getJdbcTypeCount(), is( 1 ) );
-		assertThat( childFk.getKeySide().getSelectableMapping().getSelectionExpression(), is( "child_fk" ) );
-		assertThat( childFk.getTargetSide().getSelectableMapping().getSelectionExpression(), is( "child_id" ) );
+		assertThat( childFk.getKeySide().getSelectionExpression(), is( "child_fk" ) );
+		assertThat( childFk.getTargetSide().getSelectionExpression(), is( "child_id" ) );
 
 
 		// check Parent#sub fk
@@ -218,8 +218,8 @@ public class NonRootTablePolymorphicTests {
 		assertThat( subFk.getTargetTable(), is( "sub" ) );
 
 		assertThat( subFk.getJdbcTypeCount(), is( 1 ) );
-		assertThat( subFk.getKeySide().getSelectableMapping().getSelectionExpression(), is( "parent_sub_fk" ) );
-		assertThat( subFk.getTargetSide().getSelectableMapping().getSelectionExpression(), is( "sub_id" ) );
+		assertThat( subFk.getKeySide().getSelectionExpression(), is( "parent_sub_fk" ) );
+		assertThat( subFk.getTargetSide().getSelectionExpression(), is( "sub_id" ) );
 
 		scope.inTransaction(
 				(session) -> {

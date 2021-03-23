@@ -84,8 +84,8 @@ public abstract class AbstractMapSemantics<MKV extends Map<K,V>, K, V> implement
 			DomainResultCreationState creationState) {
 		return new MapInitializerProducer(
 				attributeMapping,
-				attributeMapping.getIndexDescriptor().generateFetch(
-						fetchParent,
+				fetchParent.generateFetchableFetch(
+						attributeMapping.getIndexDescriptor(),
 						navigablePath.append( CollectionPart.Nature.INDEX.getName() ),
 						FetchTiming.IMMEDIATE,
 						selected,
@@ -93,8 +93,8 @@ public abstract class AbstractMapSemantics<MKV extends Map<K,V>, K, V> implement
 						null,
 						creationState
 				),
-				attributeMapping.getElementDescriptor().generateFetch(
-						fetchParent,
+				fetchParent.generateFetchableFetch(
+						attributeMapping.getElementDescriptor(),
 						navigablePath.append( CollectionPart.Nature.ELEMENT.getName() ),
 						FetchTiming.IMMEDIATE,
 						selected,
@@ -117,8 +117,8 @@ public abstract class AbstractMapSemantics<MKV extends Map<K,V>, K, V> implement
 			Fetch elementFetch,
 			DomainResultCreationState creationState){
 		if ( indexFetch == null ) {
-			indexFetch = attributeMapping.getIndexDescriptor().generateFetch(
-					fetchParent,
+			indexFetch = fetchParent.generateFetchableFetch(
+					attributeMapping.getIndexDescriptor(),
 					navigablePath.append( CollectionPart.Nature.INDEX.getName() ),
 					FetchTiming.IMMEDIATE,
 					selected,
@@ -128,8 +128,8 @@ public abstract class AbstractMapSemantics<MKV extends Map<K,V>, K, V> implement
 			);
 		}
 		if ( elementFetch == null ) {
-			elementFetch = attributeMapping.getElementDescriptor().generateFetch(
-					fetchParent,
+			elementFetch = fetchParent.generateFetchableFetch(
+					attributeMapping.getElementDescriptor(),
 					navigablePath.append( CollectionPart.Nature.ELEMENT.getName() ),
 					FetchTiming.IMMEDIATE,
 					selected,

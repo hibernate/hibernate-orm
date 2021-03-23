@@ -18,17 +18,22 @@ import javax.persistence.FieldResult;
 import javax.persistence.SqlResultSetMapping;
 
 import org.hibernate.LockMode;
+import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.RuntimeMetamodels;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.internal.FetchMementoBasicStandard;
+import org.hibernate.query.internal.ImplicitAttributeFetchMemento;
 import org.hibernate.query.internal.ModelPartResultMementoBasicImpl;
 import org.hibernate.query.internal.NamedResultSetMappingMementoImpl;
 import org.hibernate.query.internal.ResultMementoBasicStandard;
@@ -41,7 +46,8 @@ import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.named.ResultMemento;
 import org.hibernate.query.named.ResultMementoBasic;
 import org.hibernate.query.named.ResultMementoInstantiation.ArgumentMemento;
-import org.hibernate.query.results.complete.CompleteResultBuilderBasicModelPart;
+import org.hibernate.sql.results.graph.Fetchable;
+import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -330,36 +336,32 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 		private final NavigablePath navigablePath;
 
 		private final String entityName;
-		private final String relativeFetchPath;
+		private final String propertyPath;
+		private final String[] propertyPathParts;
 		private final List<String> columnNames;
 
 		private AttributeFetchDescriptor(
 				NavigablePath entityPath,
 				String entityName,
-				String relativeFetchPath,
+				String propertyPath,
 				String columnName) {
-			final String[] names = relativeFetchPath.split( "\\." );
-			NavigablePath fetchPath = entityPath;
-			//noinspection ForLoopReplaceableByForEach
-			for ( int i = 0; i < names.length; i++ ) {
-				fetchPath = fetchPath.append( names[ i ] );
-			}
-			this.navigablePath = fetchPath;
 			this.entityName = entityName;
-			this.relativeFetchPath = relativeFetchPath;
+			this.propertyPath = propertyPath;
+			this.propertyPathParts = propertyPath.split( "\\." );
+			this.navigablePath = entityPath;
 			this.columnNames = new ArrayList<>();
 			columnNames.add( columnName );
 		}
 
 		private void addColumn(FieldResult fieldResult) {
-			if ( ! relativeFetchPath.equals( fieldResult.name() ) ) {
+			if ( ! propertyPath.equals( fieldResult.name() ) ) {
 				throw new IllegalArgumentException(
 						String.format(
 								Locale.ROOT,
 								"Passed FieldResult [%s, %s] does not match AttributeFetchMapping [%s]",
 								fieldResult.name(),
 								fieldResult.column(),
-								relativeFetchPath
+								propertyPath
 						)
 				);
 			}
@@ -374,7 +376,7 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 			final RuntimeMetamodels runtimeMetamodels = resolutionContext.getSessionFactory().getRuntimeMetamodels();
 			final EntityMappingType entityMapping = runtimeMetamodels.getEntityMappingType( entityName );
 
-			final ModelPart subPart = entityMapping.findSubPart( relativeFetchPath, null );
+			final ModelPart subPart = entityMapping.findSubPart( propertyPath, null );
 
 			//noinspection StatementWithEmptyBody
 			if ( subPart == null ) {
@@ -389,7 +391,7 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 			}
 
 			throw new NotYetImplementedFor6Exception(
-					"Only support for basic-valued model-parts have been implemented : " + relativeFetchPath
+					"Only support for basic-valued model-parts have been implemented : " + propertyPath
 					+ " [" + subPart + "]"
 			);
 		}
@@ -399,15 +401,34 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 			final RuntimeMetamodels runtimeMetamodels = resolutionContext.getSessionFactory().getRuntimeMetamodels();
 			final EntityMappingType entityMapping = runtimeMetamodels.getEntityMappingType( entityName );
 
-			final ModelPart subPart = entityMapping.resolveSubPart( navigablePath );
+			NavigablePath navigablePath = this.navigablePath.append( propertyPathParts[ 0 ] );
+			ModelPart subPart = entityMapping.findSubPart(
+					propertyPathParts[ 0 ],
+					null
+			);
+
+			for ( int i = 1; i < propertyPathParts.length; i++ ) {
+				if ( ! ( subPart instanceof ModelPartContainer ) ) {
+					throw new MappingException(
+							"Non-terminal property path [" + navigablePath.getFullPath()
+									+ " did not reference FetchableContainer"
+					);
+				}
+				navigablePath = navigablePath.append( propertyPathParts[ i ] );
+				subPart = ( (ModelPartContainer) subPart ).findSubPart( propertyPathParts[i], null );
+			}
+
 			if ( subPart instanceof BasicValuedModelPart ) {
 				assert columnNames.size() == 1;
 				final BasicValuedModelPart basicPart = (BasicValuedModelPart) subPart;
 
 				return new FetchMementoBasicStandard( navigablePath, basicPart, columnNames.get( 0 ) );
 			}
+			else if ( subPart instanceof EntityValuedModelPart ) {
+				return new ImplicitAttributeFetchMemento( navigablePath, (AttributeMapping) subPart );
+			}
 			throw new NotYetImplementedFor6Exception(
-					"Only support for basic-valued model-parts have been implemented : " + relativeFetchPath
+					"Only support for basic-valued model-parts have been implemented : " + propertyPath
 							+ " [" + subPart + "]"
 			);
 		}

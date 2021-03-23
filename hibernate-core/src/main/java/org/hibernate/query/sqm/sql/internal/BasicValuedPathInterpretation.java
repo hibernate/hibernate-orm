@@ -35,7 +35,7 @@ public class BasicValuedPathInterpretation<T> extends AbstractSqmPathInterpretat
 			SqmBasicValuedSimplePath<T> sqmPath,
 			SqlAstCreationState sqlAstCreationState,
 			SemanticQueryWalker sqmWalker) {
-		final TableGroup tableGroup = sqlAstCreationState.getFromClauseAccess().getTableGroup( sqmPath.getLhs().getNavigablePath() );
+		TableGroup tableGroup = sqlAstCreationState.getFromClauseAccess().getTableGroup( sqmPath.getLhs().getNavigablePath() );
 
 		final BasicValuedModelPart mapping = (BasicValuedModelPart) tableGroup.getModelPart().findSubPart(
 				sqmPath.getReferencedPathSource().getPathName(),

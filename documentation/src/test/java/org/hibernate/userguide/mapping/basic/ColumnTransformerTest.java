@@ -67,6 +67,7 @@ public class ColumnTransformerTest extends BaseEntityManagerFunctionalTestCase {
 			read = "money / 100",
 			write = "? * 100"
 		)
+		// todo (6.0): needs a composite user type mechanism e.g. by providing a custom ComponentTuplizer/Instantiator
 		private MonetaryAmount wallet;
 
 		//Getters and setters omitted for brevity

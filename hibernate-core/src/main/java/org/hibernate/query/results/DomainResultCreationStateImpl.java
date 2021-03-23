@@ -14,13 +14,17 @@ import java.util.function.Function;
 
 import org.hibernate.Internal;
 import org.hibernate.LockMode;
+import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
+import org.hibernate.metamodel.mapping.Association;
 import org.hibernate.metamodel.mapping.AssociationKey;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.NonAggregatedIdentifierMappingImpl;
 import org.hibernate.query.EntityIdentifierNavigablePath;
@@ -43,8 +47,6 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
-import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
-import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -317,8 +319,20 @@ public class DomainResultCreationStateImpl
 			final NavigablePath relativePath = relativePathStack.isEmpty()
 					? new NavigablePath( fetchableName )
 					: relativePathStack.getCurrent().append( fetchableName );
-
-			relativePathStack.push( relativePath );
+			// todo (6.0): figure out if we can somehow create the navigable paths in a better way
+			if ( fetchable instanceof Association && fetchable.getMappedFetchOptions().getTiming() == FetchTiming.DELAYED ) {
+				final Association association = (Association) fetchable;
+				final ForeignKeyDescriptor foreignKeyDescriptor = association.getForeignKeyDescriptor();
+				if ( foreignKeyDescriptor.getPartMappingType() instanceof EmbeddableMappingType ) {
+					relativePathStack.push( relativePath.append( ( (EmbeddableMappingType) foreignKeyDescriptor.getPartMappingType() ).getPartName() ) );
+				}
+				else {
+					relativePathStack.push( relativePath.append( foreignKeyDescriptor.getPartName() ) );
+				}
+			}
+			else {
+				relativePathStack.push( relativePath );
+			}
 			try {
 				final FetchBuilder explicitFetchBuilder = fetchBuilderResolverStack
 						.getCurrent()

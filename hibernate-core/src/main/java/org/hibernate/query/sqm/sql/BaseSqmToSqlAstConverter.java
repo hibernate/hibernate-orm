@@ -1558,43 +1558,47 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			);
 		}
 
-		if ( domainResults != null ) {
-			final Stack<SqlAstProcessingState> processingStateStack = getProcessingStateStack();
-			final boolean collectDomainResults;
-			if ( processingStateStack.depth() == 1) {
-				collectDomainResults = true;
-			}
-			else {
-				final SqlAstProcessingState current = processingStateStack.getCurrent();
-				// Since we only want to create domain results for the first/left-most query spec within query groups,
-				// we have to check if the current query spec is the left-most.
-				// This is the case when all upper level in-flight query groups are still empty
-				collectDomainResults = processingStateStack.findCurrentFirst(
-						processingState -> {
-							if ( !( processingState instanceof SqlAstQueryPartProcessingState ) ) {
-								return Boolean.FALSE;
-							}
-							if ( processingState == current ) {
-								return null;
-							}
-							final QueryPart part = ( (SqlAstQueryPartProcessingState) processingState ).getInflightQueryPart();
-							if ( part instanceof QueryGroup ) {
-								if ( ( (QueryGroup) part ).getQueryParts().isEmpty() ) {
-									return null;
-								}
-							}
+		final Stack<SqlAstProcessingState> processingStateStack = getProcessingStateStack();
+		final boolean needsDomainResults = domainResults != null && currentClauseContributesToTopLevelSelectClause();
+		final boolean collectDomainResults;
+		if ( processingStateStack.depth() == 1) {
+			collectDomainResults = needsDomainResults;
+		}
+		else {
+			final SqlAstProcessingState current = processingStateStack.getCurrent();
+			// Since we only want to create domain results for the first/left-most query spec within query groups,
+			// we have to check if the current query spec is the left-most.
+			// This is the case when all upper level in-flight query groups are still empty
+			collectDomainResults = needsDomainResults && processingStateStack.findCurrentFirst(
+					processingState -> {
+						if ( !( processingState instanceof SqlAstQueryPartProcessingState ) ) {
 							return Boolean.FALSE;
 						}
-				) == null;
-			}
-			if ( collectDomainResults ) {
-				resultProducers.forEach( (alias, r) -> domainResults.add( r.createDomainResult( alias, this ) ) );
-			}
-			else {
-				resultProducers.forEach( (alias, r) -> r.applySqlSelections( this ) );
-			}
+						if ( processingState == current ) {
+							return null;
+						}
+						final QueryPart part = ( (SqlAstQueryPartProcessingState) processingState ).getInflightQueryPart();
+						if ( part instanceof QueryGroup ) {
+							if ( ( (QueryGroup) part ).getQueryParts().isEmpty() ) {
+								return null;
+							}
+						}
+						return Boolean.FALSE;
+					}
+			) == null;
+		}
+		if ( collectDomainResults ) {
+			resultProducers.forEach( (alias, r) -> domainResults.add( r.createDomainResult( alias, this ) ) );
+		}
+		else {
+			resultProducers.forEach( (alias, r) -> r.applySqlSelections( this ) );
 		}
 		return null;
+	}
+
+	private boolean currentClauseContributesToTopLevelSelectClause() {
+		// The current clause contributes to the top level select if the clause stack contains just SELECT
+		return currentClauseStack.findCurrentFirst( clause -> clause == Clause.SELECT ? null : clause ) == null;
 	}
 
 	protected Expression resolveGroupOrOrderByExpression(SqmExpression<?> groupByClauseExpression) {
@@ -4303,8 +4307,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public InSubQueryPredicate visitInSubQueryPredicate(SqmInSubQueryPredicate predicate) {
 		return new InSubQueryPredicate(
-				(Expression) predicate.getTestExpression().accept( this ),
-				(QueryPart) predicate.getSubQueryExpression().accept( this ),
+				visitWithInferredType( predicate.getTestExpression(), predicate.getSubQueryExpression() ),
+				visitWithInferredType( predicate.getSubQueryExpression(), predicate.getTestExpression() ),
 				predicate.isNegated()
 		);
 	}
@@ -4515,8 +4519,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 
 		try {
-			final Fetch fetch = fetchable.generateFetch(
-					fetchParent,
+			final Fetch fetch = fetchParent.generateFetchableFetch(
+					fetchable,
 					fetchablePath,
 					fetchTiming,
 					joined,

@@ -45,7 +45,7 @@ public abstract class AbstractSqmPathInterpretation<T> implements SqmPathInterpr
 		return mapping;
 	}
 
-	protected TableGroup getTableGroup() {
+	public TableGroup getTableGroup() {
 		return tableGroup;
 	}
 

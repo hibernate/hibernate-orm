@@ -15,6 +15,8 @@ import javax.persistence.NamedStoredProcedureQuery;
 import javax.persistence.ParameterMode;
 import javax.persistence.StoredProcedureParameter;
 
+import org.hibernate.CacheMode;
+import org.hibernate.FlushMode;
 import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
@@ -23,8 +25,12 @@ import org.hibernate.cfg.annotations.QueryHintDefinition;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.procedure.internal.NamedCallableQueryMementoImpl;
+import org.hibernate.procedure.internal.Util;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.procedure.spi.ParameterStrategy;
+import org.hibernate.query.internal.ResultSetMappingResolutionContext;
+import org.hibernate.query.results.ResultSetMappingImpl;
 
 import static org.hibernate.procedure.spi.NamedCallableQueryMemento.ParameterMemento;
 
@@ -44,7 +50,7 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 	private final ParameterDefinitions parameterDefinitions;
 	private final Map<String, Object> hints;
 
-	NamedProcedureCallDefinitionImpl(NamedStoredProcedureQuery annotation) {
+	public NamedProcedureCallDefinitionImpl(NamedStoredProcedureQuery annotation) {
 		this.registeredName = annotation.name();
 		this.procedureName = annotation.procedureName();
 		this.hints = new QueryHintDefinition( registeredName, annotation.hints() ).getHintsMap();
@@ -84,12 +90,45 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 		final boolean specifiesResultClasses = resultClasses != null && resultClasses.length > 0;
 		final boolean specifiesResultSetMappings = resultSetMappings != null && resultSetMappings.length > 0;
 
-//		if ( specifiesResultClasses ) {
-//			Util.resolveResultClasses(
-//					new Util.ResultClassesResolutionContext() {
+		ResultSetMappingImpl resultSetMapping = new ResultSetMappingImpl( registeredName );
+
+		if ( specifiesResultClasses ) {
+			Util.resolveResultSetMappingClasses(
+					resultClasses,
+					resultSetMapping,
+					collectedQuerySpaces::add,
+					new ResultSetMappingResolutionContext() {
+						@Override
+						public SessionFactoryImplementor getSessionFactory() {
+							return sessionFactory;
+						}
+
 //						@Override
-//						public SessionFactoryImplementor getSessionFactory() {
-//							return sessionFactory;
+//						public void addQueryReturns(NativeSQLQueryReturn... queryReturns) {
+//							Collections.addAll( collectedQueryReturns, queryReturns );
+//						}
+//
+//						@Override
+//						public void addQuerySpaces(String... spaces) {
+//							Collections.addAll( collectedQuerySpaces, spaces );
+//						}
+					}
+			);
+		}
+		else if ( specifiesResultSetMappings ) {
+			Util.resolveResultSetMappingNames(
+					resultSetMappings,
+					resultSetMapping,
+					collectedQuerySpaces::add,
+					new ResultSetMappingResolutionContext() {
+						@Override
+						public SessionFactoryImplementor getSessionFactory() {
+							return sessionFactory;
+						}
+
+//						@Override
+//						public NamedResultSetMappingMemento findResultSetMapping(String name) {
+//							return sessionFactory.getQueryEngine().getNamedObjectRepository().getResultSetMappingMemento( name );
 //						}
 //
 //						@Override
@@ -101,47 +140,28 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 //						public void addQuerySpaces(String... spaces) {
 //							Collections.addAll( collectedQuerySpaces, spaces );
 //						}
-//					},
-//					resultClasses
-//			);
-//		}
-//		else if ( specifiesResultSetMappings ) {
-//			Util.resolveResultSetMappings(
-//					new Util.ResultSetMappingResolutionContext() {
-//						@Override
-//						public SessionFactoryImplementor getSessionFactory() {
-//							return sessionFactory;
-//						}
-//
-//						@Override
-//						public ResultSetMappingDescriptor findResultSetMapping(String name) {
-//							return sessionFactory.getQueryEngine().getNamedQueryRepository().getResultSetMappingMemento( name );
-//						}
-//
-//						@Override
-//						public void addQueryReturns(NativeSQLQueryReturn... queryReturns) {
-//							Collections.addAll( collectedQueryReturns, queryReturns );
-//						}
-//
-//						@Override
-//						public void addQuerySpaces(String... spaces) {
-//							Collections.addAll( collectedQuerySpaces, spaces );
-//						}
-//					},
-//					resultSetMappings
-//			);
-//		}
-//
-//		return new NamedCallableQueryMementoImpl(
-//				getRegistrationName(),
-//				procedureName,
-//				collectedQueryReturns.toArray( new NativeSQLQueryReturn[ collectedQueryReturns.size() ] ),
-//				parameterDefinitions.getParameterStrategy(),
-//				parameterDefinitions.toMementos( sessionFactory ),
-//				collectedQuerySpaces,
-//				hints
-//		);
-		throw new NotYetImplementedFor6Exception( getClass() );
+					}
+			);
+		}
+
+		return new NamedCallableQueryMementoImpl(
+				getRegistrationName(),
+				procedureName,
+				parameterDefinitions.getParameterStrategy(),
+				parameterDefinitions.toMementos( sessionFactory ),
+				resultSetMappings,
+				resultClasses,
+				collectedQuerySpaces,
+				false,
+				null,
+				CacheMode.IGNORE,
+				FlushMode.AUTO,
+				false,
+				null,
+				null,
+				null,
+				hints
+		);
 	}
 
 	static class ParameterDefinitions {
@@ -234,19 +254,19 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 
 		@SuppressWarnings("UnnecessaryUnboxing")
 		public ParameterMemento toMemento(SessionFactoryImplementor sessionFactory) {
-			final boolean initialPassNullSetting = explicitPassNullSetting != null
-					? explicitPassNullSetting.booleanValue()
-					: sessionFactory.getSessionFactoryOptions().isProcedureParameterNullPassingEnabled();
+			// todo (6.0): figure out how to handle this
+//			final boolean initialPassNullSetting = explicitPassNullSetting != null
+//					? explicitPassNullSetting.booleanValue()
+//					: sessionFactory.getSessionFactoryOptions().isProcedureParameterNullPassingEnabled();
 
-//			return new ParameterMemento(
-//					position,
-//					name,
-//					parameterMode,
-//					type,
-//					sessionFactory.getTypeResolver().heuristicType( type.getName() ),
-//					initialPassNullSetting
-//			);
-			throw new NotYetImplementedFor6Exception( getClass() );
+			return new NamedCallableQueryMementoImpl.ParameterMementoImpl(
+					position,
+					name,
+					parameterMode,
+					type,
+					sessionFactory.getTypeConfiguration().getBasicTypeForJavaType( type )
+//					,initialPassNullSetting
+			);
 		}
 	}
 

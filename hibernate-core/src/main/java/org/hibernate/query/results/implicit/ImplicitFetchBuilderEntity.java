@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.results.implicit;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.BiFunction;
@@ -13,62 +14,84 @@ import java.util.function.Function;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
+import org.hibernate.metamodel.mapping.MappingType;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.results.Builders;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.FetchBuilder;
-import org.hibernate.query.results.SqlSelectionImpl;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
-import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
 import static org.hibernate.query.results.ResultsHelper.impl;
-import static org.hibernate.query.results.ResultsHelper.jdbcPositionToValuesArrayPosition;
-import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
 /**
  * @author Steve Ebersole
  */
-public class ImplicitFetchBuilderEmbeddable implements ImplicitFetchBuilder {
+public class ImplicitFetchBuilderEntity implements ImplicitFetchBuilder {
 	private final NavigablePath fetchPath;
-	private final EmbeddableValuedFetchable fetchable;
+	private final ToOneAttributeMapping fetchable;
 	private final Map<NavigablePath, FetchBuilder> fetchBuilders;
 
-	public ImplicitFetchBuilderEmbeddable(
+	public ImplicitFetchBuilderEntity(
 			NavigablePath fetchPath,
-			EmbeddableValuedFetchable fetchable,
+			ToOneAttributeMapping fetchable,
 			DomainResultCreationState creationState) {
 		this.fetchPath = fetchPath;
 		this.fetchable = fetchable;
 		final DomainResultCreationStateImpl creationStateImpl = impl( creationState );
 		final NavigablePath relativePath = creationStateImpl.getCurrentRelativePath();
 		final Function<String, FetchBuilder> fetchBuilderResolver = creationStateImpl.getCurrentExplicitFetchMementoResolver();
-		final Map<NavigablePath, FetchBuilder> fetchBuilders = new LinkedHashMap<>( fetchable.getNumberOfFetchables() );
-		fetchable.visitFetchables(
-				subFetchable -> {
-					final NavigablePath subFetchPath = relativePath.append( subFetchable.getFetchableName() );
-					final FetchBuilder explicitFetchBuilder = fetchBuilderResolver
-							.apply( subFetchPath.getFullPath() );
-					if ( explicitFetchBuilder == null ) {
-						fetchBuilders.put(
-								subFetchPath,
-								Builders.implicitFetchBuilder( fetchPath, subFetchable, creationStateImpl )
-						);
-					}
-					else {
-						fetchBuilders.put( subFetchPath, explicitFetchBuilder );
-					}
-				},
-				null
-		);
+		ForeignKeyDescriptor foreignKeyDescriptor = fetchable.getForeignKeyDescriptor();
+		final String associationKeyPropertyName;
+		if ( fetchable.getReferencedPropertyName() == null ) {
+			associationKeyPropertyName = fetchable.getEntityMappingType().getIdentifierMapping().getPartName();
+		}
+		else {
+			associationKeyPropertyName = fetchable.getReferencedPropertyName();
+		}
+		final NavigablePath associationKeyFetchPath = relativePath.append( associationKeyPropertyName );
+		final FetchBuilder explicitAssociationKeyFetchBuilder = fetchBuilderResolver
+				.apply( associationKeyFetchPath.getFullPath() );
+		final Map<NavigablePath, FetchBuilder> fetchBuilders;
+		if ( explicitAssociationKeyFetchBuilder == null ) {
+			final MappingType partMappingType = foreignKeyDescriptor.getPartMappingType();
+			if ( partMappingType instanceof EmbeddableMappingType ) {
+				final EmbeddableMappingType embeddableValuedModelPart = (EmbeddableMappingType) partMappingType;
+				fetchBuilders = new LinkedHashMap<>( embeddableValuedModelPart.getNumberOfFetchables() );
+				embeddableValuedModelPart.visitFetchables(
+						subFetchable -> {
+							final NavigablePath subFetchPath = associationKeyFetchPath.append( subFetchable.getFetchableName() );
+							final FetchBuilder explicitFetchBuilder = fetchBuilderResolver
+									.apply( subFetchPath.getFullPath() );
+							if ( explicitFetchBuilder == null ) {
+								fetchBuilders.put(
+										subFetchPath,
+										Builders.implicitFetchBuilder( fetchPath, subFetchable, creationStateImpl )
+								);
+							}
+							else {
+								fetchBuilders.put( subFetchPath, explicitFetchBuilder );
+							}
+						},
+						null
+				);
+			}
+			else {
+				fetchBuilders = Collections.emptyMap();
+			}
+		}
+		else {
+			fetchBuilders = Collections.singletonMap( associationKeyFetchPath, explicitAssociationKeyFetchBuilder );
+		}
 		this.fetchBuilders = fetchBuilders;
 	}
 
@@ -79,31 +102,11 @@ public class ImplicitFetchBuilderEmbeddable implements ImplicitFetchBuilder {
 			JdbcValuesMetadata jdbcResultsMetadata,
 			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState creationState) {
-		final DomainResultCreationStateImpl creationStateImpl = impl( creationState );
-
-		final TableGroup tableGroup = creationStateImpl.getFromClauseAccess().resolveTableGroup(
-				fetchPath,
-				navigablePath -> {
-					final TableGroup parentTableGroup = creationStateImpl
-							.getFromClauseAccess()
-							.getTableGroup( parent.getNavigablePath() );
-					final TableGroupJoin tableGroupJoin = fetchable.createTableGroupJoin(
-							fetchPath,
-							parentTableGroup,
-							null,
-							SqlAstJoinType.INNER,
-							LockMode.READ,
-							creationStateImpl
-					);
-					return tableGroupJoin.getJoinedGroup();
-				}
-		);
-
 		final Fetch fetch = parent.generateFetchableFetch(
 				fetchable,
 				fetchPath,
-				FetchTiming.IMMEDIATE,
-				true,
+				FetchTiming.DELAYED,
+				false,
 				LockMode.READ,
 				null,
 				creationState
@@ -124,6 +127,6 @@ public class ImplicitFetchBuilderEmbeddable implements ImplicitFetchBuilder {
 
 	@Override
 	public String toString() {
-		return "ImplicitFetchBuilderEmbeddable(" + fetchPath + ")";
+		return "ImplicitFetchBuilderEntity(" + fetchPath + ")";
 	}
 }

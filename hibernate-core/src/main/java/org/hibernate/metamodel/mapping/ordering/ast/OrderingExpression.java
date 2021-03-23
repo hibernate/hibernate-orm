@@ -8,6 +8,7 @@ package org.hibernate.metamodel.mapping.ordering.ast;
 
 import org.hibernate.query.SortOrder;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
+import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 
@@ -17,6 +18,9 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
  * @author Steve Ebersole
  */
 public interface OrderingExpression extends Node {
+
+	SqlAstNode resolve(QuerySpec ast, TableGroup tableGroup, String modelPartName, SqlAstCreationState creationState);
+
 	/**
 	 * Apply the SQL AST sort-specifications associated with this ordering-expression
 	 */

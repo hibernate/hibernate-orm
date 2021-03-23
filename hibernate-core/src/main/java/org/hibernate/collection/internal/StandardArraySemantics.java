@@ -105,8 +105,8 @@ public class StandardArraySemantics<E> implements CollectionSemantics<E[], E> {
 			DomainResultCreationState creationState) {
 		return new ArrayInitializerProducer(
 				attributeMapping,
-				attributeMapping.getIndexDescriptor().generateFetch(
-						fetchParent,
+				fetchParent.generateFetchableFetch(
+						attributeMapping.getIndexDescriptor(),
 						navigablePath.append( CollectionPart.Nature.INDEX.getName() ),
 						FetchTiming.IMMEDIATE,
 						selected,
@@ -114,8 +114,8 @@ public class StandardArraySemantics<E> implements CollectionSemantics<E[], E> {
 						null,
 						creationState
 				),
-				attributeMapping.getElementDescriptor().generateFetch(
-						fetchParent,
+				fetchParent.generateFetchableFetch(
+						attributeMapping.getElementDescriptor(),
 						navigablePath.append( CollectionPart.Nature.ELEMENT.getName() ),
 						FetchTiming.IMMEDIATE,
 						selected,
@@ -138,8 +138,8 @@ public class StandardArraySemantics<E> implements CollectionSemantics<E[], E> {
 			Fetch elementFetch,
 			DomainResultCreationState creationState){
 		if ( indexFetch == null ) {
-			indexFetch = attributeMapping.getIndexDescriptor().generateFetch(
-					fetchParent,
+			indexFetch = fetchParent.generateFetchableFetch(
+					attributeMapping.getIndexDescriptor(),
 					navigablePath.append( CollectionPart.Nature.INDEX.getName() ),
 					FetchTiming.IMMEDIATE,
 					selected,
@@ -149,8 +149,8 @@ public class StandardArraySemantics<E> implements CollectionSemantics<E[], E> {
 			);
 		}
 		if ( elementFetch == null ) {
-			elementFetch = attributeMapping.getElementDescriptor().generateFetch(
-					fetchParent,
+			elementFetch = fetchParent.generateFetchableFetch(
+					attributeMapping.getElementDescriptor(),
 					navigablePath.append( CollectionPart.Nature.ELEMENT.getName() ),
 					FetchTiming.IMMEDIATE,
 					selected,

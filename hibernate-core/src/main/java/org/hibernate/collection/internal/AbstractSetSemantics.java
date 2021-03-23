@@ -57,8 +57,8 @@ public abstract class AbstractSetSemantics<SE extends Set<E>,E> implements Colle
 			DomainResultCreationState creationState) {
 		return new SetInitializerProducer(
 				attributeMapping,
-				attributeMapping.getElementDescriptor().generateFetch(
-						fetchParent,
+				fetchParent.generateFetchableFetch(
+						attributeMapping.getElementDescriptor(),
 						navigablePath.append( CollectionPart.Nature.ELEMENT.getName() ),
 						FetchTiming.IMMEDIATE,
 						selected,

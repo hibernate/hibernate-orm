@@ -18,7 +18,9 @@ import org.hibernate.metamodel.RuntimeMetamodels;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.internal.ResultSetMappingResolutionContext;
@@ -33,6 +35,8 @@ import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.query.results.implicit.ImplicitFetchBuilder;
 import org.hibernate.query.results.implicit.ImplicitFetchBuilderBasic;
 import org.hibernate.query.results.implicit.ImplicitFetchBuilderEmbeddable;
+import org.hibernate.query.results.implicit.ImplicitFetchBuilderEntity;
+import org.hibernate.query.results.implicit.ImplicitFetchBuilderPlural;
 import org.hibernate.query.results.implicit.ImplicitModelPartResultBuilderEntity;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetchable;
@@ -258,9 +262,13 @@ public class Builders {
 			return new ImplicitFetchBuilderEmbeddable( fetchPath, embeddableValuedFetchable, creationState );
 		}
 
-		if ( fetchable instanceof EntityValuedFetchable ) {
-			final EntityValuedFetchable entityValuedFetchable = (EntityValuedFetchable) fetchable;
-			throw new NotYetImplementedFor6Exception( "Support for implicit entity-valued fetches is not yet implemented" );
+		if ( fetchable instanceof ToOneAttributeMapping ) {
+			final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) fetchable;
+			return new ImplicitFetchBuilderEntity( fetchPath, toOneAttributeMapping, creationState );
+		}
+
+		if ( fetchable instanceof PluralAttributeMapping ) {
+			return new ImplicitFetchBuilderPlural( fetchPath, (PluralAttributeMapping) fetchable, creationState );
 		}
 
 		throw new UnsupportedOperationException();

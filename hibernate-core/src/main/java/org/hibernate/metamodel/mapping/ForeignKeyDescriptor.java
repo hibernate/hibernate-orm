@@ -6,7 +6,12 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import java.util.function.BiConsumer;
+import java.util.function.Function;
+import java.util.function.IntFunction;
+
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
@@ -26,6 +31,8 @@ public interface ForeignKeyDescriptor extends VirtualModelPart {
 	String getKeyTable();
 
 	String getTargetTable();
+
+	ModelPart getKeyPart();
 
 	DomainResult createCollectionFetchDomainResult(
 			NavigablePath collectionPath,
@@ -83,6 +90,13 @@ public interface ForeignKeyDescriptor extends VirtualModelPart {
 	default int visitTargetSelectables(SelectableConsumer consumer) {
 		return visitTargetSelectables( 0, consumer );
 	}
+
+	/**
+	 * Return a copy of this foreign key descriptor with the selectable mappings as provided by the given accessor.
+	 */
+	ForeignKeyDescriptor withKeySelectionMapping(
+			IntFunction<SelectableMapping> selectableMappingAccess,
+			MappingModelCreationProcess creationProcess);
 
 	AssociationKey getAssociationKey();
 }

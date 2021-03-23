@@ -6,18 +6,12 @@
  */
 package org.hibernate.sql.results.graph.embeddable.internal;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.internal.util.MutableInteger;
-import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.AbstractFetchParent;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -25,12 +19,8 @@ import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.Fetchable;
-import org.hibernate.sql.results.graph.basic.BasicFetch;
-import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
-import org.hibernate.sql.results.graph.entity.internal.EntityDelayedFetchImpl;
-import org.hibernate.sql.results.graph.entity.internal.EntityFetchSelectImpl;
 
 /**
  * @author Andrea Boriero
@@ -43,22 +33,13 @@ public class EmbeddableForeignKeyResultImpl<T>
 	private final String resultVariable;
 
 	public EmbeddableForeignKeyResultImpl(
-			List<SqlSelection> sqlSelections,
 			NavigablePath navigablePath,
 			EmbeddableValuedModelPart embeddableValuedModelPart,
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		super( embeddableValuedModelPart.getEmbeddableTypeDescriptor(), navigablePath.append( ROLE_LOCAL_NAME ) );
 		this.resultVariable = resultVariable;
-		fetches = new ArrayList<>();
-		MutableInteger index = new MutableInteger();
-
-		embeddableValuedModelPart.visitFetchables(
-				fetchable ->
-						generateFetches( sqlSelections, navigablePath, creationState, index, fetchable )
-				,
-				null
-		);
+		this.fetches = creationState.visitFetches( this );
 	}
 
 	@Override
@@ -66,60 +47,30 @@ public class EmbeddableForeignKeyResultImpl<T>
 		return true;
 	}
 
-	private void generateFetches(
-			List<SqlSelection> sqlSelections,
-			NavigablePath navigablePath,
-			DomainResultCreationState creationState,
-			MutableInteger mutableInteger,
-			Fetchable fetchable) {
-		if ( fetchable instanceof ToOneAttributeMapping ) {
-			final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) fetchable;
-			EntityMappingType associatedEntityMappingType = toOneAttributeMapping.getAssociatedEntityMappingType();
-			BasicResult domainResult = new BasicResult(
-					sqlSelections.get( mutableInteger.getAndIncrement() ).getValuesArrayPosition(),
-					null,
-					associatedEntityMappingType.getIdentifierMapping().getJavaTypeDescriptor()
-			);
-			Fetch fetch;
-			if ( toOneAttributeMapping.getMappedFetchOptions().getTiming() == FetchTiming.DELAYED ) {
-				fetch = new EntityDelayedFetchImpl(
-						this,
-						toOneAttributeMapping,
-						navigablePath.append( fetchable.getFetchableName() ),
-						domainResult
-				);
-			}
-			else {
-				fetch = new EntityFetchSelectImpl(
-						this,
-						toOneAttributeMapping,
-						false,
-						navigablePath.append( fetchable.getFetchableName() ),
-						domainResult,
-						false,
-						creationState
-				);
-			}
-			fetches.add( fetch );
-		}
-		else {
-			final Fetch fetch = new BasicFetch(
-					sqlSelections.get( mutableInteger.getAndIncrement() ).getValuesArrayPosition(),
-					null,
-					navigablePath.append( fetchable.getFetchableName() ),
-					(BasicValuedModelPart) fetchable,
-					true,
-					null,
-					FetchTiming.IMMEDIATE,
-					creationState
-			);
-			fetches.add( fetch );
-		}
-	}
-
 	@Override
 	public String getResultVariable() {
 		return resultVariable;
+	}
+
+	@Override
+	public Fetch generateFetchableFetch(
+			Fetchable fetchable,
+			NavigablePath fetchablePath,
+			FetchTiming fetchTiming,
+			boolean selected,
+			LockMode lockMode,
+			String resultVariable,
+			DomainResultCreationState creationState) {
+		return fetchable.generateFetch(
+				this,
+				fetchablePath,
+				fetchTiming,
+				// We need to make sure to-ones are always delayed to avoid cycles while resolving entity keys
+				selected && !( fetchable instanceof ToOneAttributeMapping ),
+				lockMode,
+				resultVariable,
+				creationState
+		);
 	}
 
 	@Override

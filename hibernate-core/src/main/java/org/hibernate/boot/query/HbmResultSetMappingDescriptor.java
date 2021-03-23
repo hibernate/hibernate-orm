@@ -540,7 +540,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 									+ " did not reference FetchableContainer"
 					);
 				}
-				navigablePath = fetchParentMemento.getNavigablePath().append( propertyPathParts[ i ] );
+				navigablePath = navigablePath.append( propertyPathParts[ i ] );
 				fetchable = (Fetchable) ( (FetchableContainer) fetchable ).findSubPart( propertyPathParts[i], null );
 			}
 

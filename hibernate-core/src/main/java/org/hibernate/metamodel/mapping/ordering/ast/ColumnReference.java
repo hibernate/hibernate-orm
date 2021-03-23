@@ -15,6 +15,7 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.query.SortOrder;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -57,19 +58,17 @@ public class ColumnReference implements OrderingExpression, SequencePart {
 	}
 
 	@Override
-	public void apply(
+	public Expression resolve(
 			QuerySpec ast,
 			TableGroup tableGroup,
-			String collation,
 			String modelPartName,
-			SortOrder sortOrder,
 			SqlAstCreationState creationState) {
 		TableReference tableReference;
 
 		tableReference = getTableReference( tableGroup );
 
 		final SqlExpressionResolver sqlExpressionResolver = creationState.getSqlExpressionResolver();
-		final Expression expression = sqlExpressionResolver.resolveSqlExpression(
+		return sqlExpressionResolver.resolveSqlExpression(
 				SqlExpressionResolver.createColumnReferenceKey( tableReference, columnExpression ),
 				sqlAstProcessingState -> new org.hibernate.sql.ast.tree.expression.ColumnReference(
 						tableReference,
@@ -83,6 +82,17 @@ public class ColumnReference implements OrderingExpression, SequencePart {
 						creationState.getCreationContext().getSessionFactory()
 				)
 		);
+	}
+
+	@Override
+	public void apply(
+			QuerySpec ast,
+			TableGroup tableGroup,
+			String collation,
+			String modelPartName,
+			SortOrder sortOrder,
+			SqlAstCreationState creationState) {
+		final Expression expression = resolve( ast, tableGroup, modelPartName, creationState );
 		// It makes no sense to order by an expression multiple times
 		// SQL Server even reports a query error in this case
 		if ( ast.hasSortSpecifications() ) {

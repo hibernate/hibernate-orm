@@ -6,6 +6,9 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.SortOrder;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
@@ -16,8 +19,10 @@ import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.ordering.ast.DomainPath;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -28,6 +33,77 @@ import org.hibernate.sql.ast.tree.select.SortSpecification;
  */
 public abstract class AbstractDomainPath implements DomainPath {
 	public static final String ELEMENT_TOKEN = "$element$";
+
+	@Override
+	public SqlAstNode resolve(
+			QuerySpec ast,
+			TableGroup tableGroup,
+			String modelPartName,
+			SqlAstCreationState creationState) {
+		return resolve(
+				getReferenceModelPart(),
+				ast,
+				tableGroup,
+				modelPartName,
+				creationState
+		);
+	}
+
+	public Expression resolve(
+			ModelPart referenceModelPart,
+			QuerySpec ast,
+			TableGroup tableGroup,
+			String modelPartName,
+			SqlAstCreationState creationState) {
+		if ( referenceModelPart instanceof BasicValuedModelPart ) {
+			final BasicValuedModelPart selection = (BasicValuedModelPart) referenceModelPart;
+			final TableReference tableReference = tableGroup.resolveTableReference( selection.getContainingTableExpression() );
+			return creationState.getSqlExpressionResolver().resolveSqlExpression(
+					SqlExpressionResolver.createColumnReferenceKey(
+							selection.getContainingTableExpression(),
+							selection.getSelectionExpression()
+					),
+					sqlAstProcessingState -> new ColumnReference(
+							tableReference,
+							selection,
+							creationState.getCreationContext().getSessionFactory()
+					)
+			);
+		}
+		else if ( referenceModelPart instanceof EntityValuedModelPart ) {
+			final ModelPart subPart;
+			if ( ELEMENT_TOKEN.equals( modelPartName ) ) {
+				subPart = ( (EntityValuedModelPart) referenceModelPart ).getEntityMappingType().getIdentifierMapping();
+			}
+			else {
+				subPart = ( (EntityValuedModelPart) referenceModelPart ).findSubPart( modelPartName );
+			}
+			return resolve( subPart, ast, tableGroup, modelPartName, creationState );
+		}
+		else if ( referenceModelPart instanceof EmbeddableValuedModelPart ) {
+			final EmbeddableValuedModelPart embeddableValuedModelPart = (EmbeddableValuedModelPart) referenceModelPart;
+			if ( embeddableValuedModelPart.getFetchableName()
+					.equals( modelPartName ) || ELEMENT_TOKEN.equals( modelPartName ) ) {
+				final List<Expression> expressions = new ArrayList<>( embeddableValuedModelPart.getNumberOfFetchables() );
+				embeddableValuedModelPart.visitFetchables(
+						fetchable -> {
+							expressions.add( resolve( fetchable, ast, tableGroup, modelPartName, creationState ) );
+						},
+						null
+				);
+				return new SqlTuple( expressions, embeddableValuedModelPart );
+			}
+			else {
+				ModelPart subPart = embeddableValuedModelPart.findSubPart( modelPartName, null );
+				assert subPart instanceof BasicValuedModelPart;
+				return resolve( subPart, ast, tableGroup, modelPartName, creationState );
+			}
+		}
+		else {
+			// sure it can happen
+			throw new NotYetImplementedFor6Exception( "Ordering for " + referenceModelPart + " not supported" );
+		}
+	}
 
 	@Override
 	public void apply(
@@ -97,7 +173,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 		}
 		else {
 			// sure it can happen
-			throw new NotYetImplementedFor6Exception( "Ordering for " + getReferenceModelPart() + "not supported" );
+			throw new NotYetImplementedFor6Exception( "Ordering for " + getReferenceModelPart() + " not supported" );
 		}
 	}
 

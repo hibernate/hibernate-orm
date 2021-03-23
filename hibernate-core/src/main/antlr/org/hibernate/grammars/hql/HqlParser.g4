@@ -44,7 +44,7 @@ deleteStatement
 	;
 
 updateStatement
-	: UPDATE dmlTarget setClause whereClause?
+	: UPDATE VERSIONED? dmlTarget setClause whereClause?
 	;
 
 setClause
@@ -1224,6 +1224,7 @@ identifier
 	| UPPER
 	| VALUE
 	| VERSION
+	| VERSIONED
 	| WEEK
 	| WHERE
 	| WITH

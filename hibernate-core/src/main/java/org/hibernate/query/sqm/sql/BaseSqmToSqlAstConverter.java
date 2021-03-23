@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.sql;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -50,6 +51,7 @@ import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -64,6 +66,7 @@ import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.CompositeSqmPathSource;
+import org.hibernate.param.VersionTypeSeedParameterSpecification;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
@@ -173,12 +176,14 @@ import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationArgument;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationTarget;
+import org.hibernate.query.sqm.tree.select.SqmJpaCompoundSelection;
 import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
 import org.hibernate.query.sqm.tree.select.SqmQueryGroup;
 import org.hibernate.query.sqm.tree.select.SqmQueryPart;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
@@ -275,13 +280,16 @@ import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.internal.StandardEntityGraphTraversalStateImpl;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.VersionType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.usertype.UserVersionType;
 
 import org.jboss.logging.Logger;
 
 import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
+import static org.hibernate.query.BinaryArithmeticOperator.ADD;
 import static org.hibernate.query.BinaryArithmeticOperator.MULTIPLY;
 import static org.hibernate.query.BinaryArithmeticOperator.SUBTRACT;
 import static org.hibernate.query.TemporalUnit.DAY;
@@ -572,6 +580,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			);
 
 			final List<Assignment> assignments = visitSetClause( sqmStatement.getSetClause() );
+			addVersionedAssignment( assignments::add, sqmStatement );
 
 			final FilterPredicate filterPredicate = FilterHelper.createFilterPredicate(
 					getLoadQueryInfluencers(),
@@ -623,6 +632,57 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			// otherwise...
 			throw new QueryException( "Manipulation query may only contain embeddable joins" );
 		}
+	}
+
+	public void addVersionedAssignment(Consumer<Assignment> assignmentConsumer, SqmUpdateStatement<?> sqmStatement) {
+		if ( !sqmStatement.isVersioned() ) {
+			return;
+		}
+		final EntityPersister persister = creationContext.getDomainModel()
+				.findEntityDescriptor( sqmStatement.getTarget().getEntityName() );
+		if ( !persister.isVersioned() ) {
+			throw new SemanticException( "increment option specified for update of non-versioned entity" );
+		}
+
+		final VersionType<?> versionType = persister.getVersionType();
+		if ( versionType instanceof UserVersionType ) {
+			throw new SemanticException( "user-defined version types not supported for increment option" );
+		}
+
+		final EntityVersionMapping versionMapping = persister.getVersionMapping();
+		final List<ColumnReference> targetColumnReferences = BasicValuedPathInterpretation.from(
+				(SqmBasicValuedSimplePath<?>) sqmStatement
+						.getRoot()
+						.get( versionMapping.getPartName() ),
+				this,
+				this
+		).getColumnReferences();
+		assert targetColumnReferences.size() == 1;
+
+		final ColumnReference versionColumn = targetColumnReferences.get( 0 );
+		final Expression value;
+		if ( isTimestampBasedVersion( versionType ) ) {
+			value = new VersionTypeSeedParameterSpecification( versionType );
+		}
+		else {
+			final BasicValuedMapping basicValuedMapping = (BasicValuedMapping) versionType;
+			value = new BinaryArithmeticExpression(
+					versionColumn,
+					ADD,
+					new QueryLiteral<>( 1, basicValuedMapping ),
+					basicValuedMapping
+			);
+		}
+		assignmentConsumer.accept( new Assignment( versionColumn, value ) );
+	}
+
+	private boolean isTimestampBasedVersion(VersionType<?> versionType) {
+		if ( versionType instanceof BasicType<?> ) {
+			return ( (BasicType<?>) versionType ).getJdbcTypeDescriptor().isTemporal();
+		}
+		final Class<?> javaType = versionType.getReturnedClass();
+		return java.util.Date.class.isAssignableFrom( javaType )
+				|| Calendar.class.isAssignableFrom( javaType );
 	}
 
 	@Override
@@ -830,6 +890,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		);
 		currentClauseStack.push( Clause.INSERT );
 		final InsertStatement insertStatement;
+		boolean needsVersionInsert = entityDescriptor.isVersioned();
 
 		try {
 			final NavigablePath rootPath = sqmStatement.getTarget().getNavigablePath();
@@ -857,10 +918,34 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					Collections.emptyList()
 			);
 
-			List<SqmPath> targetPaths = sqmStatement.getInsertionTargetPaths();
-			for ( SqmPath<?> target : targetPaths ) {
-				Assignable assignable = (Assignable) target.accept( this );
-				insertStatement.addTargetColumnReferences( assignable.getColumnReferences() );
+			final List<SqmPath> targetPaths = sqmStatement.getInsertionTargetPaths();
+			if ( needsVersionInsert ) {
+				final String versionAttributeName = entityDescriptor.getVersionMapping().getVersionAttribute().getAttributeName();
+				for ( int i = 0; i < targetPaths.size(); i++ ) {
+					final SqmPath<?> path = targetPaths.get( i );
+					if ( versionAttributeName.equals( path.getNavigablePath().getLocalName() ) ) {
+						needsVersionInsert = false;
+					}
+					final Assignable assignable = (Assignable) path.accept( this );
+					insertStatement.addTargetColumnReferences( assignable.getColumnReferences() );
+				}
+				if ( needsVersionInsert ) {
+					final List<ColumnReference> targetColumnReferences = BasicValuedPathInterpretation.from(
+							(SqmBasicValuedSimplePath<?>) sqmStatement.getTarget()
+									.get( versionAttributeName ),
+							this,
+							this
+					).getColumnReferences();
+					assert targetColumnReferences.size() == 1;
+
+					insertStatement.addTargetColumnReferences( targetColumnReferences );
+				}
+			}
+			else {
+				for ( int i = 0; i < targetPaths.size(); i++ ) {
+					final Assignable assignable = (Assignable) targetPaths.get( i ).accept( this );
+					insertStatement.addTargetColumnReferences( assignable.getColumnReferences() );
+				}
 			}
 		}
 		finally {
@@ -871,6 +956,19 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		insertStatement.setSourceSelectStatement(
 				visitQueryPart( selectQueryPart )
 		);
+
+		if ( needsVersionInsert ) {
+			final VersionType versionType = entityDescriptor.getVersionType();
+			final Expression expression = new VersionTypeSeedParameterSpecification( versionType );
+			insertStatement.getSourceSelectStatement().forEachQuerySpec(
+					querySpec -> {
+						querySpec.getSelectClause().addSqlSelection(
+								// The position is irrelevant as this is only needed for insert
+								new SqlSelectionImpl( 1, 0, expression )
+						);
+					}
+			);
+		}
 
 		return insertStatement;
 	}
@@ -1360,9 +1458,26 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	@Override
-	public Void visitSelection(SqmSelection sqmSelection) {
+	public Object visitSelection(SqmSelection<?> sqmSelection) {
 		currentSqlSelectionCollector().next();
-		final DomainResultProducer resultProducer = resolveDomainResultProducer( sqmSelection );
+		final Map<String, DomainResultProducer<?>> resultProducers;
+		if ( sqmSelection.getSelectableNode() instanceof SqmJpaCompoundSelection<?> ) {
+			SqmJpaCompoundSelection<?> selectableNode = (SqmJpaCompoundSelection<?>) sqmSelection.getSelectableNode();
+			resultProducers = new HashMap<>( selectableNode.getSelectionItems().size() );
+			for ( SqmSelectableNode<?> selectionItem : selectableNode.getSelectionItems() ) {
+				resultProducers.put(
+						selectionItem.getAlias(),
+						(DomainResultProducer<?>) selectionItem.accept( this )
+				);
+			}
+
+		}
+		else {
+			resultProducers = Collections.singletonMap(
+					sqmSelection.getAlias(),
+					(DomainResultProducer<?>) sqmSelection.getSelectableNode().accept( this )
+			);
+		}
 
 		if ( domainResults != null ) {
 			final Stack<SqlAstProcessingState> processingStateStack = getProcessingStateStack();
@@ -1394,22 +1509,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				) == null;
 			}
 			if ( collectDomainResults ) {
-				final DomainResult domainResult = resultProducer.createDomainResult(
-						sqmSelection.getAlias(),
-						this
-				);
-
-				domainResults.add( domainResult );
+				resultProducers.forEach( (alias, r) -> domainResults.add( r.createDomainResult( alias, this ) ) );
 			}
 			else {
-				resultProducer.applySqlSelections( this );
+				resultProducers.forEach( (alias, r) -> r.applySqlSelections( this ) );
 			}
 		}
 		return null;
-	}
-
-	private DomainResultProducer resolveDomainResultProducer(SqmSelection sqmSelection) {
-		return (DomainResultProducer) sqmSelection.getSelectableNode().accept( this );
 	}
 
 	protected Expression resolveGroupOrOrderByExpression(SqmExpression<?> groupByClauseExpression) {
@@ -3539,7 +3645,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	@Override
-	public InSubQueryPredicate visitMemberOfPredicate(SqmMemberOfPredicate predicate) {
+	public Predicate visitMemberOfPredicate(SqmMemberOfPredicate predicate) {
 		final SqmPath<?> pluralPath = predicate.getPluralPath();
 		final PluralAttributeMapping mappingModelExpressable = (PluralAttributeMapping) determineValueMapping(
 				pluralPath );
@@ -3564,63 +3670,58 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			inferrableTypeAccessStack.pop();
 		}
 
-		return new InSubQueryPredicate(
-				lhs,
-				createMemberOfSubQuery( pluralPath, mappingModelExpressable ),
-				predicate.isNegated()
-		);
-	}
-
-	private QueryPart createMemberOfSubQuery(SqmPath<?> pluralPath, PluralAttributeMapping mappingModelExpressable) {
 		final FromClauseAccess parentFromClauseAccess = getFromClauseAccess();
-		final QuerySpec querySpec = new QuerySpec( false );
+		final QuerySpec subQuerySpec = new QuerySpec( false );
 		pushProcessingState(
 				new SqlAstQueryPartProcessingStateImpl(
-						querySpec,
+						subQuerySpec,
 						getCurrentProcessingState(),
 						this,
 						currentClauseStack::getCurrent
 				)
 		);
 		try {
-
-			final TableGroup rootTableGroup = mappingModelExpressable.createRootTableGroup(
+			final TableGroup tableGroup = mappingModelExpressable.createRootTableGroup(
 					pluralPath.getNavigablePath(),
 					null,
 					true,
 					LockOptions.NONE.getLockMode(),
-					() -> querySpec::applyPredicate,
+					() -> subQuerySpec::applyPredicate,
 					this,
 					creationContext
 			);
 
-			getFromClauseAccess().registerTableGroup( pluralPath.getNavigablePath(), rootTableGroup );
-
-			querySpec.getFromClause().addRoot( rootTableGroup );
+			getFromClauseAccess().registerTableGroup( pluralPath.getNavigablePath(), tableGroup );
+			subQuerySpec.getFromClause().addRoot( tableGroup );
 
 			final CollectionPart elementDescriptor = mappingModelExpressable.getElementDescriptor();
 
 			elementDescriptor.createDomainResult(
 					pluralPath.getNavigablePath(),
-					rootTableGroup,
+					tableGroup,
 					null,
 					this
 			);
 
-			final Predicate predicate = mappingModelExpressable.getKeyDescriptor().generateJoinPredicate(
-					parentFromClauseAccess.findTableGroup( pluralPath.getNavigablePath().getParent() ),
-					rootTableGroup,
-					null,
-					getSqlExpressionResolver(),
-					creationContext
+			subQuerySpec.applyPredicate(
+					mappingModelExpressable.getKeyDescriptor().generateJoinPredicate(
+							parentFromClauseAccess.findTableGroup( pluralPath.getNavigablePath().getParent() ),
+							tableGroup,
+							SqlAstJoinType.INNER,
+							getSqlExpressionResolver(),
+							creationContext
+					)
 			);
-			querySpec.applyPredicate( predicate );
 		}
 		finally {
 			popProcessingStateStack();
 		}
 
-		return querySpec;
+		return new InSubQueryPredicate(
+				lhs,
+				subQuerySpec,
+				predicate.isNegated()
+		);
 	}
 
 	@Override
@@ -3675,34 +3776,33 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			assert parentNavPath != null;
 
 			final TableGroup parentTableGroup = parentFromClauseAccess.getTableGroup( parentNavPath );
-
+			final SqlAliasBase sqlAliasBase = sqlAliasBaseManager.createSqlAliasBase( parentTableGroup.getGroupAlias() );
+			final TableGroup tableGroup = new CorrelatedTableGroup(
+					parentTableGroup,
+					sqlAliasBase,
+					subQuerySpec,
+					subQuerySpec::applyPredicate,
+					creationContext.getSessionFactory()
+			);
 			subQueryState.getSqlAstCreationState().getFromClauseAccess().registerTableGroup(
 					parentNavPath,
-					parentTableGroup
+					tableGroup
 			);
 
 			final SqmPathInterpretation<?> sqmPathInterpretation = visitPluralValuedPath( sqmPluralPath );
-
-
 			final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) sqmPathInterpretation.getExpressionType();
-
-			// note : do not add to `parentTableGroup` as a join
-
-			final TableGroupJoin tableGroupJoin = pluralAttributeMapping.createTableGroupJoin(
+			// The creation of the table group join against the correlated table group
+			// has the side effect that the from and where clause of the sub-query are set
+			pluralAttributeMapping.createTableGroupJoin(
 					pluralPathNavPath,
-					parentTableGroup,
+					tableGroup,
 					sqmPluralPath.getExplicitAlias(),
-					SqlAstJoinType.LEFT,
+					SqlAstJoinType.INNER,
 					LockMode.NONE,
 					sqlAliasBaseManager,
 					subQueryState,
 					creationContext
 			);
-
-			final TableGroup collectionTableGroup = tableGroupJoin.getJoinedGroup();
-
-			subQuerySpec.getFromClause().addRoot( collectionTableGroup );
-			subQuerySpec.applyPredicate( tableGroupJoin.getPredicate() );
 
 			final ForeignKeyDescriptor collectionKeyDescriptor = pluralAttributeMapping.getKeyDescriptor();
 			final int jdbcTypeCount = collectionKeyDescriptor.getJdbcTypeCount();
@@ -3713,7 +3813,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					new SqlSelectionImpl( 1, 0, jdbcLiteral )
 			);
 
-			return new ExistsPredicate( subQuerySpec );
+			final ExistsPredicate existsPredicate = new ExistsPredicate( subQuerySpec );
+			if ( predicate.isNegated() ) {
+				return existsPredicate;
+			}
+			return new NegatedPredicate( existsPredicate );
 		}
 		finally {
 			popProcessingStateStack();

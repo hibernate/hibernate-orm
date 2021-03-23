@@ -7,6 +7,7 @@
 package org.hibernate.sql.ast.tree.select;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.hibernate.query.SetOperator;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
@@ -35,6 +36,13 @@ public class QueryGroup extends QueryPart {
 	@Override
 	public QuerySpec getLastQuerySpec() {
 		return queryParts.get( queryParts.size() - 1 ).getLastQuerySpec();
+	}
+
+	@Override
+	public void forEachQuerySpec(Consumer<QuerySpec> querySpecConsumer) {
+		for ( int i = 0; i < queryParts.size(); i++ ) {
+			queryParts.get( i ).forEachQuerySpec( querySpecConsumer );
+		}
 	}
 
 	public SetOperator getSetOperator() {

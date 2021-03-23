@@ -35,6 +35,7 @@ import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 public class SqmUpdateStatement<T>
 		extends AbstractSqmDmlStatement<T>
 		implements SqmDeleteOrUpdateStatement<T>, JpaCriteriaUpdate<T> {
+	private boolean versioned;
 	private SqmSetClause setClause;
 	private SqmWhereClause whereClause;
 
@@ -131,6 +132,23 @@ public class SqmUpdateStatement<T>
 	@Override
 	public SqmUpdateStatement<T> set(String attributeName, Object value) {
 		throw new NotYetImplementedFor6Exception();
+	}
+
+	@Override
+	public boolean isVersioned() {
+		return versioned;
+	}
+
+	@Override
+	public SqmUpdateStatement<T> versioned() {
+		this.versioned = true;
+		return this;
+	}
+
+	@Override
+	public SqmUpdateStatement<T> versioned(boolean versioned) {
+		this.versioned = versioned;
+		return this;
 	}
 
 	@Override

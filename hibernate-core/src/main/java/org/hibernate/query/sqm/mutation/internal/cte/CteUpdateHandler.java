@@ -81,6 +81,7 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 				assignments::add,
 				parameterResolutions::put
 		);
+		sqmConverter.addVersionedAssignment( assignments::add, updateStatement );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// cross-reference the TableReference by alias.  The TableGroup already

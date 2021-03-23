@@ -15,7 +15,7 @@ import org.hibernate.sql.ast.tree.select.QueryPart;
  */
 public class ExistsPredicate implements Predicate {
 
-	private QueryPart expression;
+	private final QueryPart expression;
 
 	public ExistsPredicate(QueryPart expression) {
 		this.expression = expression;

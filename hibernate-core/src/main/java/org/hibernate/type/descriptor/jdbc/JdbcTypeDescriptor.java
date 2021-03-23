@@ -137,6 +137,17 @@ public interface JdbcTypeDescriptor extends Serializable {
 		return false;
 	}
 
+	default boolean isTemporal() {
+		switch ( getSqlType() ) {
+			case Types.DATE:
+			case Types.TIME:
+			case Types.TIMESTAMP:
+			case Types.TIMESTAMP_WITH_TIMEZONE:
+				return true;
+		}
+		return false;
+	}
+
 	default CastType getCastType() {
 		switch ( getJdbcType() ) {
 			case Types.INTEGER:

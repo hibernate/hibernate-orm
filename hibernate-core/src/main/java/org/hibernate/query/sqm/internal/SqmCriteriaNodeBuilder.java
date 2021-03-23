@@ -70,6 +70,7 @@ import org.hibernate.query.sqm.tree.domain.SqmBagJoin;
 import org.hibernate.query.sqm.tree.domain.SqmListJoin;
 import org.hibernate.query.sqm.tree.domain.SqmMapJoin;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmSetJoin;
 import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
@@ -94,10 +95,13 @@ import org.hibernate.query.sqm.tree.predicate.SqmAndPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmBetweenPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmBooleanExpressionPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmEmptinessPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmExistsPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmInListPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmInPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmInSubQueryPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmLikePredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmMemberOfPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmNullnessPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmOrPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
@@ -507,7 +511,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 	public <N extends Number> SqmExpression<N> sum(Expression<N> argument) {
 		return getFunctionDescriptor("sum").generateSqmExpression(
 				(SqmTypedNode<?>) argument,
-				(AllowableFunctionReturnType<N>) ( (SqmExpression<N>) argument ).getNodeType(),
+				null,
 				queryEngine,
 				getJpaMetamodel().getTypeConfiguration()
 		);
@@ -545,12 +549,14 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 
 	@Override
 	public <X extends Comparable<? super X>> SqmExpression<X> greatest(Expression<X> argument) {
-		throw new NotYetImplementedFor6Exception();
+		return queryEngine.getSqmFunctionRegistry().findFunctionDescriptor( "max" )
+				.generateSqmExpression( (SqmTypedNode<?>) argument, null, queryEngine, getTypeConfiguration() );
 	}
 
 	@Override
 	public <X extends Comparable<? super X>> SqmExpression<X> least(Expression<X> argument) {
-		throw new NotYetImplementedFor6Exception();
+		return queryEngine.getSqmFunctionRegistry().findFunctionDescriptor( "min" )
+				.generateSqmExpression( (SqmTypedNode<?>) argument, null, queryEngine, getTypeConfiguration() );
 	}
 
 	@Override
@@ -747,10 +753,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 		//noinspection unchecked
 		return getFunctionDescriptor("sqrt").generateSqmExpression(
 				(SqmTypedNode<?>) x,
-				(AllowableFunctionReturnType<Double>) QueryHelper.highestPrecedenceType2(
-						((SqmExpression<?>) x).getNodeType(),
-						StandardBasicTypes.DOUBLE
-				),
+				null,
 				queryEngine,
 				getJpaMetamodel().getTypeConfiguration()
 		);
@@ -1876,32 +1879,32 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 
 	@Override
 	public <C extends Collection<?>> SqmPredicate isEmpty(Expression<C> collection) {
-		throw new NotYetImplementedFor6Exception();
+		return new SqmEmptinessPredicate( (SqmPluralValuedSimplePath) collection, false, this );
 	}
 
 	@Override
 	public <C extends Collection<?>> SqmPredicate isNotEmpty(Expression<C> collection) {
-		throw new NotYetImplementedFor6Exception();
+		return new SqmEmptinessPredicate( (SqmPluralValuedSimplePath) collection, true, this );
 	}
 
 	@Override
 	public <E, C extends Collection<E>> SqmPredicate isMember(Expression<E> elem, Expression<C> collection) {
-		throw new NotYetImplementedFor6Exception();
+		return new SqmMemberOfPredicate( (SqmExpression<?>) elem, (SqmPath<?>) collection, false, this );
 	}
 
 	@Override
 	public <E, C extends Collection<E>> SqmPredicate isMember(E elem, Expression<C> collection) {
-		throw new NotYetImplementedFor6Exception();
+		return new SqmMemberOfPredicate( value( elem ), (SqmPath<?>) collection, false, this );
 	}
 
 	@Override
 	public <E, C extends Collection<E>> SqmPredicate isNotMember(Expression<E> elem, Expression<C> collection) {
-		throw new NotYetImplementedFor6Exception();
+		return new SqmMemberOfPredicate( (SqmExpression<?>) elem, (SqmPath<?>) collection, true, this );
 	}
 
 	@Override
 	public <E, C extends Collection<E>> SqmPredicate isNotMember(E elem, Expression<C> collection) {
-		throw new NotYetImplementedFor6Exception();
+		return new SqmMemberOfPredicate( value( elem ), (SqmPath<?>) collection, true, this );
 	}
 
 	@Override
@@ -1993,30 +1996,29 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 	}
 
 	@Override
-	public <T> SqmInPredicate in(Expression<? extends T> expression) {
-		//noinspection unchecked
-		return new SqmInListPredicate( (SqmExpression) expression, this );
+	@SuppressWarnings("unchecked")
+	public <T> SqmInPredicate<T> in(Expression<? extends T> expression) {
+		return new SqmInListPredicate<>( (SqmExpression<T>) expression, this );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> SqmInPredicate in(Expression<? extends T> expression, Expression<? extends T>... values) {
-		final SqmInListPredicate predicate = new SqmInListPredicate( (SqmExpression) expression, this );
+	public <T> SqmInPredicate<T> in(Expression<? extends T> expression, Expression<? extends T>... values) {
+		final SqmInListPredicate<T> predicate = new SqmInListPredicate<>( (SqmExpression<T>) expression, this );
 		for ( Expression<? extends T> value : values ) {
-			predicate.addExpression( (SqmExpression) value );
+			predicate.addExpression( (SqmExpression<T>) value );
 		}
 		return predicate;
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> SqmInPredicate in(Expression<? extends T> expression, T... values) {
-		final SqmExpression sqmExpression = (SqmExpression) expression;
-		final SqmInListPredicate predicate = new SqmInListPredicate( sqmExpression, this );
+	public <T> SqmInPredicate<T> in(Expression<? extends T> expression, T... values) {
+		final SqmExpression<T> sqmExpression = (SqmExpression<T>) expression;
+		final SqmInListPredicate<T> predicate = new SqmInListPredicate<>( sqmExpression, this );
 		for ( T value : values ) {
-			//noinspection unchecked
 			predicate.addExpression(
-					new SqmLiteral( value, sqmExpression.getNodeType(), this )
+					new SqmLiteral<>( value, sqmExpression.getNodeType(), this )
 			);
 		}
 		return predicate;
@@ -2024,35 +2026,35 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> SqmInPredicate in(Expression<? extends T> expression, List<T> values) {
-		final SqmExpression sqmExpression = (SqmExpression) expression;
-		final SqmInListPredicate predicate = new SqmInListPredicate( sqmExpression, this );
+	public <T> SqmInPredicate<T> in(Expression<? extends T> expression, List<T> values) {
+		final SqmExpression<T> sqmExpression = (SqmExpression<T>) expression;
+		final SqmInListPredicate<T> predicate = new SqmInListPredicate<>( sqmExpression, this );
 		for ( T value : values ) {
 			predicate.addExpression(
-					new SqmLiteral( value, sqmExpression.getNodeType(), this )
+					new SqmLiteral<>( value, sqmExpression.getNodeType(), this )
 			);
 		}
 		return predicate;
 	}
 
 	@Override
-	public <T> SqmInPredicate in(Expression<? extends T> expression, SqmSubQuery<T> subQuery) {
-		//noinspection unchecked
-		return new SqmInSubQueryPredicate( (SqmExpression) expression, subQuery, this );
+	@SuppressWarnings("unchecked")
+	public <T> SqmInPredicate<T> in(Expression<? extends T> expression, SqmSubQuery<T> subQuery) {
+		return new SqmInSubQueryPredicate<>( (SqmExpression<T>) expression, subQuery, this );
 	}
 
 	@Override
-	public SqmPredicate exists(Subquery<?> subquery) {
-		throw new NotYetImplementedFor6Exception();
+	public SqmPredicate exists(Subquery<?> subQuery) {
+		return new SqmExistsPredicate( (SqmExpression<?>) subQuery, this );
 	}
 
 	@Override
 	public <M extends Map<?, ?>> SqmPredicate isMapEmpty(JpaExpression<M> mapExpression) {
-		throw new NotYetImplementedFor6Exception();
+		return new SqmEmptinessPredicate( (SqmPluralValuedSimplePath<?>) mapExpression, false, this );
 	}
 
 	@Override
 	public <M extends Map<?, ?>> SqmPredicate isMapNotEmpty(JpaExpression<M> mapExpression) {
-		throw new NotYetImplementedFor6Exception();
+		return new SqmEmptinessPredicate( (SqmPluralValuedSimplePath<?>) mapExpression, true, this );
 	}
 }

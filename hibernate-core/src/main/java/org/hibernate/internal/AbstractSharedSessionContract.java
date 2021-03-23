@@ -793,7 +793,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				.getHqlQueryMemento( queryName );
 
 		if ( namedHqlDescriptor != null ) {
-			HqlQueryImplementor query = namedHqlDescriptor.toQuery( this, resultType );
+			HqlQueryImplementor<T> query = namedHqlDescriptor.toQuery( this, resultType );
 			query.setComment( "dynamic HQL query" );
 			applyQuerySettingsAndHints( query );
 			return query;
@@ -805,10 +805,13 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				.getNativeQueryMemento( queryName );
 
 		if ( namedNativeDescriptor != null ) {
-			if( resultType == null){
-				resultType = (Class<T>) namedNativeDescriptor.getResultMappingClass();
+			final NativeQueryImplementor<T> query;
+			if ( resultType == null) {
+				query = namedNativeDescriptor.toQuery( this );
 			}
-			NativeQueryImplementor query = namedNativeDescriptor.toQuery( this, resultType );
+			else {
+				query = namedNativeDescriptor.toQuery( this, resultType );
+			}
 			query.setComment( "dynamic native SQL query" );
 			applyQuerySettingsAndHints( query );
 			return query;

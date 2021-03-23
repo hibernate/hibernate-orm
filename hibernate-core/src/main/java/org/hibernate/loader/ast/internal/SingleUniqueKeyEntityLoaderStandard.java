@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -130,14 +131,19 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 				true
 		);
 
-		int size = list.size();
-		assert size <= 1;
-		if ( size == 0 ) {
-			return null;
+		switch ( list.size() ) {
+			case 0:
+				return null;
+			case 1:
+				//noinspection unchecked
+				return (T) list.get( 0 );
 		}
-
-		//noinspection unchecked
-		return (T) list.get( 0 );
+		throw new HibernateException(
+				"More than one row with the given identifier was found: " +
+						ukValue +
+						", for class: " +
+						entityDescriptor.getEntityName()
+		);
 	}
 
 	@Override

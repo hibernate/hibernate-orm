@@ -17,19 +17,19 @@ import org.hibernate.query.JpaTuple;
  * @author Steve Ebersole
  */
 public class TupleImpl implements JpaTuple {
-	private final List<TupleElement<?>> tupleElements;
+	private final TupleMetadata tupleMetadata;
 	private final Object[] row;
 
-	public TupleImpl(List<TupleElement<?>> tupleElements, Object[] row) {
-		this.tupleElements = tupleElements;
+	public TupleImpl(TupleMetadata tupleMetadata, Object[] row) {
+		this.tupleMetadata = tupleMetadata;
 		this.row = row;
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public <X> X get(TupleElement<X> tupleElement) {
-		int index = tupleElements.indexOf( tupleElement );
-		if ( index < 0 ) {
+		final Integer index = tupleMetadata.get( tupleElement );
+		if ( index == null ) {
 			throw new IllegalArgumentException(
 					"Requested tuple element did not correspond to element in the result tuple"
 			);
@@ -59,21 +59,8 @@ public class TupleImpl implements JpaTuple {
 
 	@Override
 	public Object get(String alias) {
-		int index = -1;
-		if ( alias != null ) {
-			alias = alias.trim();
-			if ( alias.length() > 0 ) {
-				int i = 0;
-				for ( TupleElement selection : tupleElements ) {
-					if ( alias.equals( selection.getAlias() ) ) {
-						index = i;
-						break;
-					}
-					i++;
-				}
-			}
-		}
-		if ( index < 0 ) {
+		Integer index = tupleMetadata.get( alias );
+		if ( index == null ) {
 			throw new IllegalArgumentException(
 					"Given alias [" + alias + "] did not correspond to an element in the result tuple"
 			);
@@ -115,8 +102,7 @@ public class TupleImpl implements JpaTuple {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public List<TupleElement<?>> getElements() {
-		return tupleElements;
+		return tupleMetadata.getList();
 	}
 }

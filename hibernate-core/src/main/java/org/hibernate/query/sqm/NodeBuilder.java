@@ -582,18 +582,18 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 	SqmPredicate notLike(Expression<String> x, String pattern, char escapeChar);
 
 	@Override
-	<T> SqmInPredicate in(Expression<? extends T> expression);
+	<T> SqmInPredicate<T> in(Expression<? extends T> expression);
 
 	@Override
-	<T> SqmInPredicate in(Expression<? extends T> expression, Expression<? extends T>... values);
+	<T> SqmInPredicate<T> in(Expression<? extends T> expression, Expression<? extends T>... values);
 
 	@Override
-	<T> SqmInPredicate in(Expression<? extends T> expression, T... values);
+	<T> SqmInPredicate<T> in(Expression<? extends T> expression, T... values);
 
 	@Override
-	<T> SqmInPredicate in(Expression<? extends T> expression, List<T> values);
+	<T> SqmInPredicate<T> in(Expression<? extends T> expression, List<T> values);
 
-	<T> SqmInPredicate in(Expression<? extends T> expression, SqmSubQuery<T> subQuery);
+	<T> SqmInPredicate<T> in(Expression<? extends T> expression, SqmSubQuery<T> subQuery);
 
 	@Override
 	SqmPredicate exists(Subquery<?> subquery);

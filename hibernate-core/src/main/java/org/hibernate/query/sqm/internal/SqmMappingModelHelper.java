@@ -31,6 +31,7 @@ import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.query.sqm.tree.domain.AbstractSqmSpecificPluralPartPath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -57,6 +58,14 @@ public class SqmMappingModelHelper {
 		// which is exactly what we want
 		final String hibernateEntityName = entityType.getHibernateEntityName();
 		return sessionFactory.getMetamodel().entityPersister( hibernateEntityName );
+	}
+
+	public static <J> SqmPathSource<J> resolveSqmKeyPathSource(
+			String name,
+			DomainType<J> valueDomainType,
+			Bindable.BindableType jpaBindableType) {
+		// todo (6.0): the key path source must create a special path for the key
+		return resolveSqmPathSource( name, valueDomainType, jpaBindableType );
 	}
 
 	public static <J> SqmPathSource<J> resolveSqmPathSource(
@@ -135,6 +144,12 @@ public class SqmMappingModelHelper {
 			final EntityPersister container = domainModel.findEntityDescriptor( treatTargetType.getHibernateEntityName() );
 
 			return container.findSubPart( sqmPath.getNavigablePath().getLocalName(), container );
+		}
+
+		// Plural path parts are not joined and thus also have no table group
+		if ( sqmPath instanceof AbstractSqmSpecificPluralPartPath<?> ) {
+			final TableGroup lhsTableGroup = tableGroupLocator.apply( sqmPath.getLhs().getLhs().getNavigablePath() );
+			return lhsTableGroup.getModelPart().findSubPart( sqmPath.getReferencedPathSource().getPathName(), null );
 		}
 
 		final TableGroup lhsTableGroup = tableGroupLocator.apply( sqmPath.getLhs().getNavigablePath() );

@@ -7,9 +7,7 @@
 
 package org.hibernate.sql.results.internal;
 
-import java.util.List;
 import javax.persistence.Tuple;
-import javax.persistence.TupleElement;
 
 import org.hibernate.sql.results.spi.RowTransformer;
 
@@ -19,15 +17,15 @@ import org.hibernate.sql.results.spi.RowTransformer;
  * @author Steve Ebersole
  */
 public class RowTransformerJpaTupleImpl implements RowTransformer<Tuple> {
-	private final List<TupleElement<?>> tupleElements;
+	private final TupleMetadata tupleMetadata;
 
-	public RowTransformerJpaTupleImpl(List<TupleElement<?>> tupleElements) {
-		this.tupleElements = tupleElements;
+	public RowTransformerJpaTupleImpl(TupleMetadata tupleMetadata) {
+		this.tupleMetadata = tupleMetadata;
 	}
 
 	@Override
 	public Tuple transformRow(Object[] row) {
-		return new TupleImpl( tupleElements, row );
+		return new TupleImpl( tupleMetadata, row );
 	}
 
 	@Override

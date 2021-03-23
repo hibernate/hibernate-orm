@@ -85,12 +85,14 @@ import org.hibernate.query.sqm.tree.predicate.SqmOrPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
+import org.hibernate.query.sqm.tree.select.SqmJpaCompoundSelection;
 import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
 import org.hibernate.query.sqm.tree.select.SqmQueryGroup;
 import org.hibernate.query.sqm.tree.select.SqmQueryPart;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
@@ -287,22 +289,22 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 	}
 
 	@Override
-	public Object visitMaxElementPath(SqmMaxElementPath path) {
+	public Object visitMaxElementPath(SqmMaxElementPath<?> path) {
 		return path;
 	}
 
 	@Override
-	public Object visitMinElementPath(SqmMinElementPath path) {
+	public Object visitMinElementPath(SqmMinElementPath<?> path) {
 		return path;
 	}
 
 	@Override
-	public Object visitMaxIndexPath(SqmMaxIndexPath path) {
+	public Object visitMaxIndexPath(SqmMaxIndexPath<?> path) {
 		return path;
 	}
 
 	@Override
-	public Object visitMinIndexPath(SqmMinIndexPath path) {
+	public Object visitMinIndexPath(SqmMinIndexPath<?> path) {
 		return path;
 	}
 
@@ -325,8 +327,16 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 	}
 
 	@Override
-	public Object visitSelection(SqmSelection selection) {
+	public Object visitSelection(SqmSelection<?> selection) {
 		selection.getSelectableNode().accept( this );
+		return selection;
+	}
+
+	@Override
+	public Object visitJpaCompoundSelection(SqmJpaCompoundSelection<?> selection) {
+		for ( SqmSelectableNode<?> selectionItem : selection.getSelectionItems() ) {
+			selectionItem.accept( this );
+		}
 		return selection;
 	}
 
@@ -399,7 +409,9 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 	public Object visitLikePredicate(SqmLikePredicate predicate) {
 		predicate.getMatchExpression().accept( this );
 		predicate.getPattern().accept( this );
-		predicate.getEscapeCharacter().accept( this );
+		if ( predicate.getEscapeCharacter() != null ) {
+			predicate.getEscapeCharacter().accept( this );
+		}
 		return predicate;
 	}
 

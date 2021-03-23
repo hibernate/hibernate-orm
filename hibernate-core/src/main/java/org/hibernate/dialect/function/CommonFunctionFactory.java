@@ -6,11 +6,25 @@
  */
 package org.hibernate.dialect.function;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.sql.Types;
+import java.util.List;
 import java.util.Arrays;
+import java.util.function.Supplier;
+
+import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
+import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
+import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
+import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.useArgType;
 
@@ -1476,7 +1490,87 @@ public class CommonFunctionFactory {
 				.setExactArgumentCount(1)
 				.register();
 
+		final TypeConfiguration typeConfiguration = queryEngine.getTypeConfiguration();
+		final BasicType<Long> longType = typeConfiguration.getBasicTypeForJavaType( Long.class );
+		final BasicType<Double> doubleType = typeConfiguration.getBasicTypeForJavaType( Double.class );
+		final BasicType<BigInteger> bigIntegerType = typeConfiguration.getBasicTypeForJavaType( BigInteger.class );
+		final BasicType<BigDecimal> bigDecimalType = typeConfiguration.getBasicTypeForJavaType( BigDecimal.class );
+		// Resolve according to JPA spec 4.8.5
+		// SUM returns Long when applied to state fields of integral types (other than BigInteger);
+		// Double when applied to state fields of floating point types;
+		// BigInteger when applied to state fields of type BigInteger;
+		// and BigDecimal when applied to state fields of type BigDecimal.
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder("sum")
+				.setReturnTypeResolver( new FunctionReturnTypeResolver() {
+					@Override
+					public AllowableFunctionReturnType<?> resolveFunctionReturnType(AllowableFunctionReturnType<?> impliedType, List<SqmTypedNode<?>> arguments, TypeConfiguration typeConfiguration) {
+						final AllowableFunctionReturnType<?> argType = StandardFunctionReturnTypeResolvers.extractArgumentType(
+								arguments,
+								1
+						);
+						final BasicType<?> basicType;
+						if ( argType instanceof BasicType<?> ) {
+							basicType = (BasicType<?>) argType;
+						}
+						else {
+							basicType = typeConfiguration.getBasicTypeForJavaType( argType.getJavaType() );
+							if ( basicType == null ) {
+								return impliedType;
+							}
+						}
+						switch ( basicType.getJdbcTypeDescriptor().getJdbcTypeCode() ) {
+							case Types.SMALLINT:
+							case Types.TINYINT:
+							case Types.INTEGER:
+							case Types.BIGINT:
+								return longType;
+							case Types.FLOAT:
+							case Types.REAL:
+							case Types.DOUBLE:
+								return doubleType;
+							case Types.DECIMAL:
+							case Types.NUMERIC:
+								if ( BigInteger.class.isAssignableFrom( basicType.getJavaType() ) ) {
+									return bigIntegerType;
+								}
+								else {
+									return bigDecimalType;
+								}
+						}
+						// Better use the implied type than throwing an exception
+						return impliedType;
+					}
+
+					@Override
+					public BasicValuedMapping resolveFunctionReturnType(Supplier<BasicValuedMapping> impliedTypeAccess, List<? extends SqlAstNode> arguments) {
+						// Resolve according to JPA spec 4.8.5
+						final BasicValuedMapping specifiedArgType = StandardFunctionReturnTypeResolvers.extractArgumentValuedMapping(
+								arguments,
+								1
+						);
+						switch ( specifiedArgType.getJdbcMapping().getJdbcTypeDescriptor().getJdbcTypeCode() ) {
+							case Types.SMALLINT:
+							case Types.TINYINT:
+							case Types.INTEGER:
+							case Types.BIGINT:
+								return longType;
+							case Types.FLOAT:
+							case Types.REAL:
+							case Types.DOUBLE:
+								return doubleType;
+							case Types.DECIMAL:
+							case Types.NUMERIC:
+								if ( BigInteger.class.isAssignableFrom( specifiedArgType.getJdbcMapping().getJavaTypeDescriptor().getJavaTypeClass() ) ) {
+									return bigIntegerType;
+								}
+								else {
+									return bigDecimalType;
+								}
+						}
+						return impliedTypeAccess.get();
+					}
+
+				} )
 				.setExactArgumentCount(1)
 				.register();
 
@@ -1511,6 +1605,8 @@ public class CommonFunctionFactory {
 				.register();
 
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder("mod")
+				// According to JPA spec 4.6.17.2.2.
+				.setInvariantType( StandardBasicTypes.INTEGER )
 				.setExactArgumentCount(2)
 				.register();
 
@@ -1524,6 +1620,8 @@ public class CommonFunctionFactory {
 				.register();
 
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder("sqrt")
+				// According to JPA spec 4.6.17.2.2.
+				.setInvariantType( StandardBasicTypes.DOUBLE )
 				.setExactArgumentCount(1)
 				.register();
 

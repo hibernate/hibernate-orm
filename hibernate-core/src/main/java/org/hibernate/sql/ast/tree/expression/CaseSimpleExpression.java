@@ -16,6 +16,8 @@ import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.basic.BasicResult;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -57,17 +59,16 @@ public class CaseSimpleExpression implements Expression, DomainResultProducer {
 	public DomainResult createDomainResult(
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-
-//		return new BasicResultImpl(
-//				resultVariable,
-//				creationState.getSqlExpressionResolver().resolveSqlSelection(
-//						this,
-//						getType().getJavaTypeDescriptor(),
-//						creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
-//				),
-//				getType()
-//		);
+		final JavaTypeDescriptor javaTypeDescriptor = type.getJdbcMappings().get( 0 ).getJavaTypeDescriptor();
+		return new BasicResult(
+				creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
+						this,
+						javaTypeDescriptor,
+						creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
+				).getValuesArrayPosition(),
+				resultVariable,
+				javaTypeDescriptor
+		);
 	}
 
 	public List<WhenFragment> getWhenFragments() {

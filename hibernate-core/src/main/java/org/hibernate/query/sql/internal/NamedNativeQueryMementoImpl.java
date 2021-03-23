@@ -14,6 +14,7 @@ import org.hibernate.FlushMode;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.named.AbstractNamedQueryMemento;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 
@@ -26,8 +27,8 @@ import org.hibernate.query.sql.spi.NativeQueryImplementor;
 public class NamedNativeQueryMementoImpl extends AbstractNamedQueryMemento implements NamedNativeQueryMemento {
 	private final String sqlString;
 
-	private String resultSetMappingName;
-	private Class resultSetMappingClass;
+	private final String resultSetMappingName;
+	private final Class<?> resultSetMappingClass;
 
 	private final Set<String> querySpaces;
 
@@ -59,7 +60,9 @@ public class NamedNativeQueryMementoImpl extends AbstractNamedQueryMemento imple
 				hints
 		);
 		this.sqlString = sqlString;
-		this.resultSetMappingName = resultSetMappingName;
+		this.resultSetMappingName = resultSetMappingName == null || resultSetMappingName.isEmpty()
+				? null
+				: resultSetMappingName;
 		this.resultSetMappingClass = resultSetMappingClass;
 		this.querySpaces = querySpaces;
 	}
@@ -117,19 +120,17 @@ public class NamedNativeQueryMementoImpl extends AbstractNamedQueryMemento imple
 	}
 
 	@Override
-	public NativeQueryImplementor toQuery(SharedSessionContractImplementor session) {
-		return new NativeQueryImpl( this, session );
+	public <T> NativeQueryImplementor<T> toQuery(SharedSessionContractImplementor session) {
+		return new NativeQueryImpl<>( this, session );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <T> NativeQueryImplementor<T> toQuery(SharedSessionContractImplementor session, Class<T> resultType) {
-		return new NativeQueryImpl( this, resultType, session );
+		return new NativeQueryImpl<>( this, resultType, session );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <T> NativeQueryImplementor<T> toQuery(SharedSessionContractImplementor session, String resultSetMappingName) {
-		return new NativeQueryImpl( this, resultSetMappingName, session );
+		return new NativeQueryImpl<>( this, resultSetMappingName, session );
 	}
 }

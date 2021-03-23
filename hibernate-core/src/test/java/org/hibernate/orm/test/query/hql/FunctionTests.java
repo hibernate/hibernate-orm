@@ -168,7 +168,7 @@ public class FunctionTests {
 					assertThat( session.createQuery("select round(32.12345,2)").getSingleResult(), is(32.12f) );
 					assertThat( session.createQuery("select mod(3,2)").getSingleResult(), is(1) );
 					assertThat( session.createQuery("select 3%2").getSingleResult(), is(1) );
-					assertThat( session.createQuery("select sqrt(9.0)").getSingleResult(), is(3.0f) );
+					assertThat( session.createQuery("select sqrt(9.0)").getSingleResult(), is(3.0d) );
 				}
 		);
 	}

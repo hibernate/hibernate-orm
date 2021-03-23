@@ -8,6 +8,7 @@ package org.hibernate.query.sqm.internal;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import javax.persistence.Tuple;
@@ -45,7 +46,7 @@ import org.hibernate.sql.results.internal.RowTransformerJpaTupleImpl;
 import org.hibernate.sql.results.internal.RowTransformerPassThruImpl;
 import org.hibernate.sql.results.internal.RowTransformerSingularReturnImpl;
 import org.hibernate.sql.results.internal.RowTransformerTupleTransformerAdapter;
-import org.hibernate.sql.results.internal.TupleElementImpl;
+import org.hibernate.sql.results.internal.TupleMetadata;
 import org.hibernate.sql.results.spi.RowTransformer;
 
 /**
@@ -136,17 +137,12 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		if ( Tuple.class.isAssignableFrom( resultType ) ) {
 			// resultType is Tuple..
 			if ( queryOptions.getTupleTransformer() == null ) {
-				final List<TupleElement<?>> tupleElementList = new ArrayList<>( selections.size() );
+				final Map<TupleElement<?>, Integer> tupleElementMap = new IdentityHashMap<>( selections.size() );
 				for ( int i = 0; i < selections.size(); i++ ) {
-					final SqmSelection selection = selections.get( i );
-					tupleElementList.add(
-							new TupleElementImpl<>(
-									selection.getSelectableNode().getJavaTypeDescriptor().getJavaTypeClass(),
-									selection.getAlias()
-							)
-					);
+					final SqmSelection<?> selection = selections.get( i );
+					tupleElementMap.put( selection.getSelectableNode(), i );
 				}
-				return (RowTransformer<R>) new RowTransformerJpaTupleImpl( tupleElementList );
+				return (RowTransformer<R>) new RowTransformerJpaTupleImpl( new TupleMetadata( tupleElementMap ) );
 			}
 
 			throw new IllegalArgumentException(

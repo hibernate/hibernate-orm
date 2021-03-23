@@ -24,6 +24,7 @@ import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.query.named.AbstractNamedQueryMemento;
 import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.spi.QueryImplementor;
 
 /**
  * Implementation of NamedCallableQueryMemento
@@ -121,7 +122,7 @@ public class NamedCallableQueryMementoImpl extends AbstractNamedQueryMemento imp
 	public ProcedureCall makeProcedureCall(
 			SharedSessionContractImplementor session,
 			String... resultSetMappingNames) {
-		return new ProcedureCallImpl( session, this, resultSetMappingNames );
+		return new ProcedureCallImpl<>( session, this, resultSetMappingNames );
 	}
 
 	@Override
@@ -132,8 +133,8 @@ public class NamedCallableQueryMementoImpl extends AbstractNamedQueryMemento imp
 	}
 
 	@Override
-	public ProcedureCallImplementor<?> toQuery(SharedSessionContractImplementor session) {
-		return makeProcedureCall( session );
+	public <T> QueryImplementor<T> toQuery(SharedSessionContractImplementor session) {
+		return new ProcedureCallImpl<>( session, this );
 	}
 
 	@Override

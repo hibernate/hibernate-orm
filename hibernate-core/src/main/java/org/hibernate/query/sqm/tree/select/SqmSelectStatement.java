@@ -315,7 +315,9 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 	@SuppressWarnings("unchecked")
 	public SqmSelectStatement<T> select(Selection<? extends T> selection) {
 		getQuerySpec().setSelection( (JpaSelection<T>) selection );
-		setResultType( (Class<T>) selection.getJavaType() );
+		if ( getResultType() == null ) {
+			setResultType( (Class<T>) selection.getJavaType() );
+		}
 		return this;
 	}
 
@@ -324,7 +326,9 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 		for ( Selection<?> selection : selections ) {
 			getQuerySpec().getSelectClause().add( (SqmExpression<?>) selection, selection.getAlias() );
 		}
-		setResultType( (Class<T>) Object[].class );
+		if ( getResultType() == null ) {
+			setResultType( (Class<T>) Object[].class );
+		}
 		return this;
 	}
 
@@ -333,7 +337,9 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 		for ( Selection<?> selection : selectionList ) {
 			getQuerySpec().getSelectClause().add( (SqmExpression<?>) selection, selection.getAlias() );
 		}
-		setResultType( (Class<T>) Object[].class );
+		if ( getResultType() == null ) {
+			setResultType( (Class<T>) Object[].class );
+		}
 		return this;
 	}
 

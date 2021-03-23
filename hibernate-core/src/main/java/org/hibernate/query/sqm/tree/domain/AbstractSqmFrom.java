@@ -46,7 +46,6 @@ import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 
-
 /**
  * Convenience base class for SqmFrom implementations
  *
@@ -55,7 +54,7 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
 public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements SqmFrom<O,T> {
 	private String alias;
 
-	private List<SqmJoin<T,?>> joins;
+	private List<SqmJoin<T, ?>> joins;
 
 	protected AbstractSqmFrom(
 			NavigablePath navigablePath,
@@ -133,12 +132,12 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	}
 
 	@Override
-	public List<SqmJoin<T,?>> getSqmJoins() {
+	public List<SqmJoin<T, ?>> getSqmJoins() {
 		return joins == null ? Collections.emptyList() : Collections.unmodifiableList( joins );
 	}
 
 	@Override
-	public void addSqmJoin(SqmJoin<T,?> join) {
+	public void addSqmJoin(SqmJoin<T, ?> join) {
 		if ( joins == null ) {
 			joins = new ArrayList<>();
 		}
@@ -146,7 +145,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	}
 
 	@Override
-	public void visitSqmJoins(Consumer<SqmJoin<T,?>> consumer) {
+	public void visitSqmJoins(Consumer<SqmJoin<T, ?>> consumer) {
 		if ( joins != null ) {
 			joins.forEach( consumer );
 		}
@@ -190,84 +189,105 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	@Override
 	@SuppressWarnings("unchecked")
 	public <A> SqmSingularJoin<T, A> join(SingularAttribute<? super T, A> attribute, JoinType jt) {
-		return buildSingularJoin( (SingularPersistentAttribute) attribute, SqmJoinType.from( jt ), false );
+		final SqmSingularJoin<T, A> join = buildSingularJoin( (SingularPersistentAttribute<? super T, A>) attribute, SqmJoinType.from( jt ), false );
+		addSqmJoin( join );
+		return join;
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public <A> SqmBagJoin<T,A> join(CollectionAttribute<? super T, A> attribute) {
+	public <A> SqmBagJoin<T, A> join(CollectionAttribute<? super T, A> attribute) {
 		return join( attribute, JoinType.INNER );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public SqmBagJoin join(CollectionAttribute attribute, JoinType jt) {
-		return buildBagJoin( (BagPersistentAttribute) attribute, SqmJoinType.from( jt ), false );
+	public <E> SqmBagJoin<T, E> join(CollectionAttribute<? super T, E> attribute, JoinType jt) {
+		final SqmBagJoin<T, E> join = buildBagJoin( (BagPersistentAttribute<T, E>) attribute, SqmJoinType.from( jt ), false );
+		addSqmJoin( join );
+		return join;
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public SqmSetJoin join(SetAttribute attribute) {
+	public <E> SqmSetJoin<T, E> join(SetAttribute<? super T, E> attribute) {
 		return join( attribute, JoinType.INNER );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public SqmSetJoin join(SetAttribute attribute, JoinType jt) {
-		return buildSetJoin( (SetPersistentAttribute) attribute, SqmJoinType.from( jt ), false );
+	public <E> SqmSetJoin<T, E> join(SetAttribute<? super T, E> attribute, JoinType jt) {
+		final SqmSetJoin<T, E> join = buildSetJoin(
+				(SetPersistentAttribute<? super T, E>) attribute,
+				SqmJoinType.from( jt ),
+				false
+		);
+		addSqmJoin( join );
+		return join;
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public SqmListJoin join(ListAttribute attribute) {
+	public <E> SqmListJoin<T, E> join(ListAttribute<? super T, E> attribute) {
 		return join( attribute, JoinType.INNER );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public SqmListJoin join(ListAttribute attribute, JoinType jt) {
-		return buildListJoin( (ListPersistentAttribute) attribute, SqmJoinType.from( jt ), false );
+	public <E> SqmListJoin<T, E> join(ListAttribute<? super T, E> attribute, JoinType jt) {
+		final SqmListJoin<T, E> join = buildListJoin(
+				(ListPersistentAttribute<? super T, E>) attribute,
+				SqmJoinType.from( jt ),
+				false
+		);
+		addSqmJoin( join );
+		return join;
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public SqmMapJoin join(MapAttribute attribute) {
+	public <K, V> SqmMapJoin<T, K, V> join(MapAttribute<? super T, K, V> attribute) {
 		return join( attribute, JoinType.INNER );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public SqmMapJoin join(MapAttribute attribute, JoinType jt) {
-		return buildMapJoin( (MapPersistentAttribute) attribute, SqmJoinType.from( jt ), false );
+	public <K, V> SqmMapJoin<T, K, V> join(MapAttribute<? super T, K, V> attribute, JoinType jt) {
+		final SqmMapJoin<T, K, V> join = buildMapJoin(
+				(MapPersistentAttribute<? super T, K, V>) attribute,
+				SqmJoinType.from( jt ),
+				false
+		);
+		addSqmJoin( join );
+		return join;
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public SqmAttributeJoin join(String attributeName) {
+	public <X, Y> SqmAttributeJoin<X, Y> join(String attributeName) {
 		return join( attributeName, JoinType.INNER );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public SqmAttributeJoin join(String attributeName, JoinType jt) {
+	public <X, Y> SqmAttributeJoin<X, Y> join(String attributeName, JoinType jt) {
 		final SqmPathSource<?> subPathSource = getReferencedPathSource().findSubPathSource( attributeName );
-
-		return buildJoin( subPathSource, SqmJoinType.from( jt ), false );
+		return (SqmAttributeJoin<X, Y>) buildJoin( subPathSource, SqmJoinType.from( jt ), false );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public SqmBagJoin joinCollection(String attributeName) {
+	public <X, Y> SqmBagJoin<X, Y> joinCollection(String attributeName) {
 		return joinCollection( attributeName, JoinType.INNER );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public SqmBagJoin joinCollection(String attributeName, JoinType jt) {
+	public <X, Y> SqmBagJoin<X, Y> joinCollection(String attributeName, JoinType jt) {
 		final SqmPathSource<?> joinedPathSource = getReferencedPathSource().findSubPathSource( attributeName );
 
 		if ( joinedPathSource instanceof BagPersistentAttribute ) {
-			return buildBagJoin( (BagPersistentAttribute) joinedPathSource, SqmJoinType.from( jt ), false );
+			final SqmBagJoin<T, Y> join = buildBagJoin(
+					(BagPersistentAttribute<T, Y>) joinedPathSource,
+					SqmJoinType.from( jt ),
+					false
+			);
+			addSqmJoin( join );
+			return (SqmBagJoin<X, Y>) join;
 		}
 
 		throw new IllegalArgumentException(
@@ -282,18 +302,23 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public SqmSetJoin joinSet(String attributeName) {
+	public <X, Y> SqmSetJoin<X, Y> joinSet(String attributeName) {
 		return joinSet( attributeName, JoinType.INNER );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public SqmSetJoin joinSet(String attributeName, JoinType jt) {
+	public <X, Y> SqmSetJoin<X, Y> joinSet(String attributeName, JoinType jt) {
 		final SqmPathSource<?> joinedPathSource = getReferencedPathSource().findSubPathSource( attributeName );
 
 		if ( joinedPathSource instanceof SetPersistentAttribute ) {
-			return buildSetJoin( (SetPersistentAttribute) joinedPathSource, SqmJoinType.from( jt ), false );
+			final SqmSetJoin<T, Y> join = buildSetJoin(
+					(SetPersistentAttribute<T, Y>) joinedPathSource,
+					SqmJoinType.from( jt ),
+					false
+			);
+			addSqmJoin( join );
+			return (SqmSetJoin<X, Y>) join;
 		}
 
 		throw new IllegalArgumentException(
@@ -308,18 +333,23 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public SqmListJoin joinList(String attributeName) {
+	public <X, Y> SqmListJoin<X, Y> joinList(String attributeName) {
 		return joinList( attributeName, JoinType.INNER );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public SqmListJoin joinList(String attributeName, JoinType jt) {
+	public <X, Y> SqmListJoin<X, Y> joinList(String attributeName, JoinType jt) {
 		final SqmPathSource<?> joinedPathSource = getReferencedPathSource().findSubPathSource( attributeName );
 
 		if ( joinedPathSource instanceof ListPersistentAttribute ) {
-			return buildListJoin( (ListPersistentAttribute) joinedPathSource, SqmJoinType.from( jt ), false );
+			final SqmListJoin<T, Y> join = buildListJoin(
+					(ListPersistentAttribute<T, Y>) joinedPathSource,
+					SqmJoinType.from( jt ),
+					false
+			);
+			addSqmJoin( join );
+			return (SqmListJoin<X, Y>) join;
 		}
 
 		throw new IllegalArgumentException(
@@ -334,18 +364,23 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public SqmMapJoin joinMap(String attributeName) {
+	public <X, K, V> SqmMapJoin<X, K, V> joinMap(String attributeName) {
 		return joinMap( attributeName, JoinType.INNER );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public SqmMapJoin joinMap(String attributeName, JoinType jt) {
+	public <X, K, V> SqmMapJoin<X, K, V> joinMap(String attributeName, JoinType jt) {
 		final SqmPathSource<?> joinedPathSource = getReferencedPathSource().findSubPathSource( attributeName );
 
-		if ( joinedPathSource instanceof MapPersistentAttribute ) {
-			return buildMapJoin( (MapPersistentAttribute) joinedPathSource, SqmJoinType.from( jt ), false );
+		if ( joinedPathSource instanceof MapPersistentAttribute<?, ?, ?> ) {
+			final SqmMapJoin<T, K, V> join = buildMapJoin(
+					(MapPersistentAttribute<T, K, V>) joinedPathSource,
+					SqmJoinType.from( jt ),
+					false
+			);
+			addSqmJoin( join );
+			return (SqmMapJoin<X, K, V>) join;
 		}
 
 		throw new IllegalArgumentException(
@@ -374,12 +409,14 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <A> SqmSingularJoin<T,A> fetch(SingularAttribute<? super T, A> attribute, JoinType jt) {
-		return buildSingularJoin(
-				(SingularPersistentAttribute) attribute,
+	public <A> SqmSingularJoin<T, A> fetch(SingularAttribute<? super T, A> attribute, JoinType jt) {
+		final SqmSingularJoin<T, A> join = buildSingularJoin(
+				(SingularPersistentAttribute<? super T, A>) attribute,
 				SqmJoinType.from( jt ),
 				true
 		);
+		addSqmJoin( join );
+		return join;
 	}
 
 	@Override
@@ -391,7 +428,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	@SuppressWarnings("unchecked")
 	public <A> SqmAttributeJoin<T, A> fetch(PluralAttribute<? super T, ?, A> attribute, JoinType jt) {
 		return buildJoin(
-				(PluralPersistentAttribute) attribute,
+				(PluralPersistentAttribute<? super T, ?, A>) attribute,
 				SqmJoinType.from( jt ),
 				true
 		);
@@ -404,47 +441,52 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <X,A> SqmAttributeJoin<X,A> fetch(String attributeName, JoinType jt) {
-		final SqmPathSource<?> fetchedPathSource = getReferencedPathSource().findSubPathSource( attributeName );
-		return buildJoin( fetchedPathSource, SqmJoinType.from( jt ), true );
+	public <X, A> SqmAttributeJoin<X, A> fetch(String attributeName, JoinType jt) {
+		final SqmPathSource<A> fetchedPathSource = (SqmPathSource<A>) getReferencedPathSource()
+				.findSubPathSource( attributeName );
+		return (SqmAttributeJoin<X, A>) buildJoin(
+				fetchedPathSource,
+				SqmJoinType.from( jt ),
+				true
+		);
 	}
 
-	private <A> SqmAttributeJoin buildJoin(
+	private <A> SqmAttributeJoin<T, A> buildJoin(
 			SqmPathSource<A> joinedPathSource,
 			SqmJoinType joinType,
 			boolean fetched) {
-		final SqmAttributeJoin sqmJoin;
-		if ( joinedPathSource instanceof SingularPersistentAttribute ) {
+		final SqmAttributeJoin<T, A> sqmJoin;
+		if ( joinedPathSource instanceof SingularPersistentAttribute<?, ?> ) {
 			sqmJoin = buildSingularJoin(
-					(SingularPersistentAttribute<T,A>) joinedPathSource,
+					(SingularPersistentAttribute<T, A>) joinedPathSource,
 					joinType,
 					fetched
 			);
 		}
-		else if ( joinedPathSource instanceof BagPersistentAttribute ) {
+		else if ( joinedPathSource instanceof BagPersistentAttribute<?, ?> ) {
 			sqmJoin = buildBagJoin(
-					(BagPersistentAttribute) joinedPathSource,
+					(BagPersistentAttribute<T, A>) joinedPathSource,
 					joinType,
 					fetched
 			);
 		}
-		else if ( joinedPathSource instanceof ListPersistentAttribute ) {
+		else if ( joinedPathSource instanceof ListPersistentAttribute<?, ?> ) {
 			sqmJoin = buildListJoin(
-					(ListPersistentAttribute) joinedPathSource,
+					(ListPersistentAttribute<T, A>) joinedPathSource,
 					joinType,
 					fetched
 			);
 		}
-		else if ( joinedPathSource instanceof MapPersistentAttribute ) {
+		else if ( joinedPathSource instanceof MapPersistentAttribute<?, ?, ?> ) {
 			sqmJoin = buildMapJoin(
-					(MapPersistentAttribute) joinedPathSource,
+					(MapPersistentAttribute<T, ?, A>) joinedPathSource,
 					joinType,
 					fetched
 			);
 		}
-		else if ( joinedPathSource instanceof SetPersistentAttribute ) {
+		else if ( joinedPathSource instanceof SetPersistentAttribute<?, ?> ) {
 			sqmJoin = buildSetJoin(
-					(SetPersistentAttribute) joinedPathSource,
+					(SetPersistentAttribute<T, A>) joinedPathSource,
 					joinType,
 					fetched
 			);
@@ -464,15 +506,15 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		return sqmJoin;
 	}
 
-	private <A> SqmSingularJoin<T,A> buildSingularJoin(
-			SingularPersistentAttribute<T,A> attribute,
+	@SuppressWarnings("unchecked")
+	private <A> SqmSingularJoin<T, A> buildSingularJoin(
+			SingularPersistentAttribute<? super T, A> attribute,
 			SqmJoinType joinType,
 			boolean fetched) {
 		if ( attribute.getSqmPathType() instanceof ManagedDomainType ) {
-			//noinspection unchecked
-			return new SqmSingularJoin(
+			return new SqmSingularJoin<>(
 					this,
-					attribute,
+					(SingularPersistentAttribute<T, A>) attribute,
 					null,
 					joinType,
 					fetched,
@@ -481,17 +523,16 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		}
 
 		throw new SemanticException( "Attribute [" + attribute + "] is not joinable" );
-
 	}
 
 	@SuppressWarnings("unchecked")
-	private <E> SqmBagJoin<T,E> buildBagJoin(
-			BagPersistentAttribute attribute,
+	private <E> SqmBagJoin<T, E> buildBagJoin(
+			BagPersistentAttribute<? super T, E> attribute,
 			SqmJoinType joinType,
 			boolean fetched) {
-		return new SqmBagJoin(
+		return new SqmBagJoin<>(
 				this,
-				attribute,
+				(BagPersistentAttribute<T, E>)attribute,
 				null,
 				joinType,
 				fetched,
@@ -500,13 +541,13 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	}
 
 	@SuppressWarnings("unchecked")
-	private <E> SqmListJoin<T,E> buildListJoin(
-			ListPersistentAttribute attribute,
+	private <E> SqmListJoin<T, E> buildListJoin(
+			ListPersistentAttribute<? super T, E> attribute,
 			SqmJoinType joinType,
 			boolean fetched) {
-		return new SqmListJoin(
+		return new SqmListJoin<>(
 				this,
-				attribute,
+				(ListPersistentAttribute<T, E>) attribute,
 				null,
 				joinType,
 				fetched,
@@ -515,13 +556,13 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	}
 
 	@SuppressWarnings("unchecked")
-	private <K,V> SqmMapJoin<T,K,V> buildMapJoin(
-			MapPersistentAttribute attribute,
+	private <K, V> SqmMapJoin<T, K, V> buildMapJoin(
+			MapPersistentAttribute<? super T, K, V> attribute,
 			SqmJoinType joinType,
 			boolean fetched) {
-		return new SqmMapJoin(
+		return new SqmMapJoin<>(
 				this,
-				attribute,
+				(MapPersistentAttribute<T, K, V>) attribute,
 				null,
 				joinType,
 				fetched,
@@ -530,13 +571,13 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	}
 
 	@SuppressWarnings("unchecked")
-	private <E> SqmSetJoin<T,E> buildSetJoin(
-			SetPersistentAttribute attribute,
+	private <E> SqmSetJoin<T, E> buildSetJoin(
+			SetPersistentAttribute<? super T, E> attribute,
 			SqmJoinType joinType,
 			boolean fetched) {
-		return new SqmSetJoin(
+		return new SqmSetJoin<>(
 				this,
-				attribute,
+				(SetPersistentAttribute<T, E>) attribute,
 				null,
 				joinType,
 				fetched,

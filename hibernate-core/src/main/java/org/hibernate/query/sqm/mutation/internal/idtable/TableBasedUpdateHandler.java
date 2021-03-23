@@ -156,6 +156,7 @@ public class TableBasedUpdateHandler
 						k -> new ArrayList<>( 1 )
 				).add( jdbcParameters )
 		);
+		converterDelegate.addVersionedAssignment( assignments::add, getSqmDeleteOrUpdateStatement() );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// visit the where-clause using our special converter, collecting information

@@ -12,4 +12,10 @@ import javax.persistence.criteria.CriteriaUpdate;
  * @author Steve Ebersole
  */
 public interface JpaCriteriaUpdate<T> extends JpaManipulationCriteria<T>, CriteriaUpdate<T> {
+
+	boolean isVersioned();
+
+	JpaCriteriaUpdate<T> versioned();
+
+	JpaCriteriaUpdate<T> versioned(boolean versioned);
 }

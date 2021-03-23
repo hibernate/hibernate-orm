@@ -11,6 +11,10 @@ import java.sql.SQLException;
 
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.sql.exec.internal.JdbcParameterImpl;
+import org.hibernate.sql.exec.spi.ExecutionContext;
+import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.type.Type;
 import org.hibernate.type.VersionType;
 
@@ -19,7 +23,7 @@ import org.hibernate.type.VersionType;
  *
  * @author Steve Ebersole
  */
-public class VersionTypeSeedParameterSpecification implements ParameterSpecification {
+public class VersionTypeSeedParameterSpecification extends JdbcParameterImpl {
 	private final VersionType type;
 
 	/**
@@ -28,31 +32,16 @@ public class VersionTypeSeedParameterSpecification implements ParameterSpecifica
 	 * @param type The version type.
 	 */
 	public VersionTypeSeedParameterSpecification(VersionType type) {
+		super( (JdbcMapping) type );
 		this.type = type;
 	}
 
 	@Override
-	public int bind(
+	public void bindParameterValue(
 			PreparedStatement statement,
-			QueryParameters qp,
-			SharedSessionContractImplementor session,
-			int position) throws SQLException {
-		type.nullSafeSet( statement, type.seed( session ), position, session );
-		return 1;
-	}
-
-	@Override
-	public Type getExpectedType() {
-		return type;
-	}
-
-	@Override
-	public void setExpectedType(Type expectedType) {
-		// expected type is intrinsic here...
-	}
-
-	@Override
-	public String renderDisplayInfo() {
-		return "version-seed, type=" + type;
+			int startPosition,
+			JdbcParameterBindings jdbcParamBindings,
+			ExecutionContext executionContext) throws SQLException {
+		type.nullSafeSet( statement, type.seed( executionContext.getSession() ), startPosition, executionContext.getSession() );
 	}
 }

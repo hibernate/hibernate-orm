@@ -34,6 +34,8 @@ public abstract class QueryPart implements SqlAstNode, Expression, DomainResultP
 
 	public abstract QuerySpec getLastQuerySpec();
 
+	public abstract void forEachQuerySpec(Consumer<QuerySpec> querySpecConsumer);
+
 	/**
 	 * Does this QueryPart map to the statement's root query (as
 	 * opposed to one of its sub-queries)?

@@ -136,6 +136,7 @@ ARROW :	'->';
 
 ID 				: [iI][dD];
 VERSION			: [vV] [eE] [rR] [sS] [iI] [oO] [nN];
+VERSIONED		: [vV] [eE] [rR] [sS] [iI] [oO] [nN] [eE] [dD];
 NATURALID		: [nN] [aA] [tT] [uU] [rR] [aA] [lL] [iI] [dD];
 
 ABS					: [aA] [bB] [sS];

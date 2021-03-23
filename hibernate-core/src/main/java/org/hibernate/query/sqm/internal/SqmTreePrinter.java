@@ -352,7 +352,7 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	public Object visitUpdateStatement(SqmUpdateStatement<?> statement) {
 		if ( DEBUG_ENABLED ) {
 			processStanza(
-					"update",
+					statement.isVersioned() ? "update versioned" : "update",
 					() -> {
 						logWithIndentation( "[target = %s]", statement.getTarget().getNavigablePath().getFullPath() );
 

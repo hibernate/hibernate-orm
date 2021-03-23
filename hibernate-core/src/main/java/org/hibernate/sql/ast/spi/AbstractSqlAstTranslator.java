@@ -487,6 +487,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			else {
 				throw new IllegalArgumentException( "Unexpected statement!" );
 			}
+
 			if ( jdbcParameterBindings != null && CollectionHelper.isNotEmpty( getFilterJdbcParameters() ) ) {
 				for ( FilterJdbcParameter filterJdbcParameter : getFilterJdbcParameters() ) {
 					jdbcParameterBindings.addBinding(
@@ -495,6 +496,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					);
 				}
 			}
+
 			return (T) jdbcOperation;
 		}
 		finally {
@@ -2437,9 +2439,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	@SuppressWarnings("unchecked")
 	protected void renderLiteral(Literal literal, boolean castParameter) {
 		assert literal.getExpressionType().getJdbcTypeCount() == 1;
+
 		final JdbcMapping jdbcMapping = literal.getJdbcMapping();
-		final JdbcLiteralFormatter literalFormatter = jdbcMapping.getSqlTypeDescriptor()
+		final JdbcLiteralFormatter literalFormatter = jdbcMapping
+				.getSqlTypeDescriptor()
 				.getJdbcLiteralFormatter( jdbcMapping.getJavaTypeDescriptor() );
+
 		// If we encounter a plain literal in the select clause which has no literal formatter, we must render it as parameter
 		if ( literalFormatter == null ) {
 			parameterBinders.add( literal );

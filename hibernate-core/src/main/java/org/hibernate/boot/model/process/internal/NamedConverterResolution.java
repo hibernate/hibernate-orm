@@ -127,11 +127,11 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 		if ( explicitMutabilityPlan != null ) {
 			mutabilityPlan = explicitMutabilityPlan;
 		}
-		else if ( domainJtd.getMutabilityPlan().isMutable() ) {
-			mutabilityPlan = new AttributeConverterMutabilityPlanImpl( converter, true );
+		else if ( ! domainJtd.getMutabilityPlan().isMutable() ) {
+			mutabilityPlan = ImmutableMutabilityPlan.INSTANCE;
 		}
 		else {
-			mutabilityPlan = ImmutableMutabilityPlan.INSTANCE;
+			mutabilityPlan = new AttributeConverterMutabilityPlanImpl( converter, true );
 		}
 
 		return new NamedConverterResolution(
@@ -179,30 +179,34 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 		assert mutabilityPlan != null;
 		this.mutabilityPlan = mutabilityPlan;
 
-		this.jdbcMapping = new JdbcMapping() {
-			private final ValueExtractor extractor = relationalStd.getExtractor( relationalJtd );
-			private final ValueBinder binder = relationalStd.getBinder( relationalJtd );
-
-			@Override
-			public JavaTypeDescriptor getJavaTypeDescriptor() {
-				return relationalJtd;
-			}
-
-			@Override
-			public SqlTypeDescriptor getSqlTypeDescriptor() {
-				return relationalStd;
-			}
-
-			@Override
-			public ValueExtractor getJdbcValueExtractor() {
-				return extractor;
-			}
-
-			@Override
-			public ValueBinder getJdbcValueBinder() {
-				return binder;
-			}
-		};
+		this.jdbcMapping = typeConfiguration.getBasicTypeRegistry().resolve(
+				relationalJtd,
+				relationalStd
+		);
+//		this.jdbcMapping = new JdbcMapping() {
+//			private final ValueExtractor extractor = relationalStd.getExtractor( relationalJtd );
+//			private final ValueBinder binder = relationalStd.getBinder( relationalJtd );
+//
+//			@Override
+//			public JavaTypeDescriptor getJavaTypeDescriptor() {
+//				return relationalJtd;
+//			}
+//
+//			@Override
+//			public SqlTypeDescriptor getSqlTypeDescriptor() {
+//				return relationalStd;
+//			}
+//
+//			@Override
+//			public ValueExtractor getJdbcValueExtractor() {
+//				return extractor;
+//			}
+//
+//			@Override
+//			public ValueBinder getJdbcValueBinder() {
+//				return binder;
+//			}
+//		};
 
 //		this.jdbcMapping = new ConverterJdbcMappingImpl(
 //				domainJtd,

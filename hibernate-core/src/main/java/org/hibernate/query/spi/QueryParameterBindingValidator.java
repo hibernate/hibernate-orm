@@ -11,7 +11,11 @@ import java.util.Collection;
 import java.util.Date;
 import javax.persistence.TemporalType;
 
+import org.hibernate.metamodel.mapping.ConvertibleModelPart;
+import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
+import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Andrea Boriero
@@ -32,6 +36,16 @@ public class QueryParameterBindingValidator {
 			// nothing we can check
 			return;
 		}
+
+		if ( paramType instanceof AttributeConverterTypeAdapter ) {
+			final AttributeConverterTypeAdapter converterTypeAdapter = (AttributeConverterTypeAdapter) paramType;
+			final JavaTypeDescriptor domainJtd = converterTypeAdapter.getDomainJtd();
+
+			if ( domainJtd.getJavaTypeClass().isInstance( bind ) ) {
+				return;
+			}
+		}
+
 		final Class parameterType = paramType.getExpressableJavaTypeDescriptor().getJavaTypeClass();
 		if ( parameterType == null ) {
 			// nothing we can check

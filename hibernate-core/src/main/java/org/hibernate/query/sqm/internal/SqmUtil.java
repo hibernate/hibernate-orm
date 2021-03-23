@@ -18,9 +18,12 @@ import java.util.function.Function;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.MappingMetamodel;
+import org.hibernate.metamodel.mapping.ConvertibleModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
+import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.NavigablePath;
@@ -39,6 +42,7 @@ import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -176,7 +180,7 @@ public class SqmUtil {
 			);
 
 			final Map<SqmParameter, List<List<JdbcParameter>>> jdbcParamMap = jdbcParamXref.get( queryParam );
-			for ( SqmParameter sqmParameter : sqmParameters ) {
+			sqm_params: for ( SqmParameter sqmParameter : sqmParameters ) {
 				final List<List<JdbcParameter>> jdbcParamsBinds = jdbcParamMap.get( sqmParameter );
 				if ( !domainParamBinding.isBound() ) {
 					final MappingModelExpressable mappingExpressable = SqmMappingModelHelper.resolveMappingModelExpressable(
@@ -184,7 +188,7 @@ public class SqmUtil {
 							domainModel,
 							tableGroupLocator
 					);
-					for ( int i = 0; i < jdbcParamsBinds.size(); i++ ) {
+					jdbc_params: for ( int i = 0; i < jdbcParamsBinds.size(); i++ ) {
 						final List<JdbcParameter> jdbcParams = jdbcParamsBinds.get( i );
 						mappingExpressable.forEachJdbcType(
 								(position, jdbcType) -> {
@@ -246,6 +250,39 @@ public class SqmUtil {
 					}
 				}
 				else {
+					if ( domainParamBinding.getType() instanceof AttributeConverterTypeAdapter
+							|| domainParamBinding.getType() instanceof ConvertibleModelPart ) {
+						final BasicValueConverter valueConverter;
+						final JdbcMapping jdbcMapping;
+
+						if ( domainParamBinding.getType() instanceof AttributeConverterTypeAdapter ) {
+							final AttributeConverterTypeAdapter adapter = (AttributeConverterTypeAdapter) domainParamBinding.getType();
+							valueConverter = adapter.getAttributeConverter();
+							jdbcMapping = adapter.getJdbcMapping();
+						}
+						else {
+							final ConvertibleModelPart convertibleModelPart = (ConvertibleModelPart) domainParamBinding.getType();
+							valueConverter = convertibleModelPart.getValueConverter();
+							jdbcMapping = convertibleModelPart.getJdbcMapping();
+						}
+
+						if ( valueConverter != null ) {
+							final Object convertedValue = valueConverter.toRelationalValue( domainParamBinding.getBindValue() );
+
+							for ( int i = 0; i < jdbcParamsBinds.size(); i++ ) {
+								final List<JdbcParameter> jdbcParams = jdbcParamsBinds.get( i );
+								assert jdbcParams.size() == 1;
+								final JdbcParameter jdbcParameter = jdbcParams.get( 0 );
+								jdbcParameterBindings.addBinding(
+										jdbcParameter,
+										new JdbcParameterBindingImpl( jdbcMapping, convertedValue )
+								);
+							}
+
+							continue sqm_params;
+						}
+					}
+
 					final Object bindValue = domainParamBinding.getBindValue();
 					for ( int i = 0; i < jdbcParamsBinds.size(); i++ ) {
 						final List<JdbcParameter> jdbcParams = jdbcParamsBinds.get( i );

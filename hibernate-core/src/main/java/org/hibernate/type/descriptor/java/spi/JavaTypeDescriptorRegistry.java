@@ -12,17 +12,9 @@ import java.lang.reflect.Type;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
-import org.hibernate.annotations.Immutable;
-import org.hibernate.annotations.Mutability;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.resource.beans.spi.ManagedBean;
-import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
-import org.hibernate.type.descriptor.java.AbstractClassTypeDescriptor;
-import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.type.descriptor.java.SerializableTypeDescriptor;
+import org.hibernate.type.descriptor.java.MutableMutabilityPlan;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.TypeConfigurationAware;
 
@@ -132,7 +124,6 @@ public class JavaTypeDescriptorRegistry implements JavaTypeDescriptorBaseline.Ba
 		return created;
 	}
 
-	@SuppressWarnings("unchecked")
 	public <J> JavaTypeDescriptor<J> resolveDescriptor(Type javaType) {
 		return resolveDescriptor(
 				javaType,
@@ -148,6 +139,20 @@ public class JavaTypeDescriptorRegistry implements JavaTypeDescriptorBaseline.Ba
 
 					return RegistryHelper.INSTANCE.createTypeDescriptor(
 							javaTypeClass,
+							() -> {
+								final MutabilityPlan<J> determinedPlan = RegistryHelper.INSTANCE.determineMutabilityPlan( javaType, typeConfiguration );
+								if ( determinedPlan != null ) {
+									return determinedPlan;
+								}
+
+								return new MutableMutabilityPlan<J>() {
+									@Override
+									protected J deepCopyNotNull(J value) {
+										return value;
+									}
+								};
+
+							},
 							typeConfiguration
 					);
 				}

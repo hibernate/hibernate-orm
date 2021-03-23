@@ -372,10 +372,21 @@ public class TypeHelper {
 		int span = properties.length;
 
 		for ( int i = 0; i < span; i++ ) {
-			final boolean dirty = currentState[i] != LazyPropertyInitializer.UNFETCHED_PROPERTY &&
-					( previousState[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY ||
-							( properties[i].isDirtyCheckable()
-									&& properties[i].getType().isDirty( previousState[i], currentState[i], includeColumns[i], session ) ) );
+			final boolean dirty;
+			if ( currentState[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
+				dirty = false;
+			}
+			else if ( previousState[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
+				dirty = true;
+			}
+			else if ( properties[i].isDirtyCheckable()
+					&& properties[i].getType().isDirty( previousState[i], currentState[i], includeColumns[i], session ) ) {
+				dirty = true;
+			}
+			else {
+				dirty = false;
+			}
+
 			if ( dirty ) {
 				if ( results == null ) {
 					results = new int[span];

@@ -48,6 +48,7 @@ import org.hibernate.type.descriptor.java.DurationJavaDescriptor;
 import org.hibernate.type.descriptor.java.FloatTypeDescriptor;
 import org.hibernate.type.descriptor.java.InstantJavaDescriptor;
 import org.hibernate.type.descriptor.java.IntegerTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaObjectTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JdbcDateTypeDescriptor;
 import org.hibernate.type.descriptor.java.JdbcTimestampTypeDescriptor;
@@ -87,6 +88,8 @@ public class JavaTypeDescriptorBaseline {
 		primePrimitive( target, LongTypeDescriptor.INSTANCE );
 		primePrimitive( target, FloatTypeDescriptor.INSTANCE );
 		primePrimitive( target, DoubleTypeDescriptor.INSTANCE );
+
+		target.addBaselineDescriptor( JavaObjectTypeDescriptor.INSTANCE );
 
 		target.addBaselineDescriptor( BigDecimalTypeDescriptor.INSTANCE );
 		target.addBaselineDescriptor( BigIntegerTypeDescriptor.INSTANCE );

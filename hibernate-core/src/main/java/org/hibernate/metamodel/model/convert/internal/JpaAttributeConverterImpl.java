@@ -8,10 +8,14 @@ package org.hibernate.metamodel.model.convert.internal;
 
 import javax.persistence.AttributeConverter;
 
+import org.hibernate.annotations.Immutable;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
 import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
 import org.hibernate.resource.beans.spi.ManagedBean;
+import org.hibernate.type.descriptor.converter.AttributeConverterMutabilityPlanImpl;
+import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 import org.hibernate.type.descriptor.java.spi.RegistryHelper;
 
@@ -49,9 +53,26 @@ public class JpaAttributeConverterImpl<O,R> implements JpaAttributeConverter<O,R
 		final JavaTypeDescriptorRegistry jtdRegistry = context.getJavaTypeDescriptorRegistry();
 
 		jdbcJtd = jtdRegistry.getDescriptor( jdbcJavaType );
-		domainJtd = jtdRegistry.resolveDescriptor(
+		//noinspection unchecked
+		domainJtd = (JavaTypeDescriptor<O>) jtdRegistry.resolveDescriptor(
 				domainJavaType,
-				() -> RegistryHelper.INSTANCE.createTypeDescriptor( domainJavaType, context.getTypeConfiguration() )
+				() -> RegistryHelper.INSTANCE.createTypeDescriptor(
+						domainJavaType,
+						() -> {
+							final Class<? extends AttributeConverter<O, R>> converterClass = attributeConverterBean.getBeanClass();
+							final MutabilityPlan<Object> mutabilityPlan = RegistryHelper.INSTANCE.determineMutabilityPlan(
+									converterClass,
+									context.getTypeConfiguration()
+							);
+
+							if ( mutabilityPlan != null ) {
+								return mutabilityPlan;
+							}
+
+							return new AttributeConverterMutabilityPlanImpl<>( this, true );
+						},
+						context.getTypeConfiguration()
+				)
 		);
 	}
 

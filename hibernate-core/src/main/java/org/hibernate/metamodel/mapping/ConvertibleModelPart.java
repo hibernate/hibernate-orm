@@ -11,7 +11,7 @@ import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 /**
  * @author Steve Ebersole
  */
-public interface ConvertibleModelPart extends ModelPart {
+public interface ConvertibleModelPart extends BasicValuedModelPart {
 	/**
 	 * Get the value converter applied to this model part if any
 	 */

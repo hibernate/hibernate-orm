@@ -12,6 +12,7 @@ import java.sql.SQLException;
 
 import javax.persistence.AttributeConverter;
 
+import org.hibernate.HibernateException;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
@@ -114,6 +115,12 @@ public class AttributeConverterTypeAdapter<T> extends AbstractSingleColumnStanda
 	@Override
 	protected MutabilityPlan<T> getMutabilityPlan() {
 		return mutabilityPlan;
+	}
+
+	@Override
+	public boolean isEqual(Object one, Object another) {
+		//noinspection unchecked
+		return ( (JavaTypeDescriptor<Object>) getDomainJtd() ).areEqual( one, another );
 	}
 
 	@Override

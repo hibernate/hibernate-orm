@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.Mutability;
@@ -35,42 +36,60 @@ public class RegistryHelper {
 	private RegistryHelper() {
 	}
 
-	@SuppressWarnings("unchecked")
-	public <J> JavaTypeDescriptor<J> createTypeDescriptor(Type javaType, TypeConfiguration typeConfiguration) {
+	public <J> JavaTypeDescriptor<J> createTypeDescriptor(
+			Type javaType,
+			Supplier<MutabilityPlan<J>> fallbackMutabilityPlanResolver,
+			TypeConfiguration typeConfiguration) {
 		return createTypeDescriptor(
 				javaType,
 				(javaTypeClass) -> {
-					if ( javaTypeClass.isAnnotationPresent( Immutable.class ) ) {
-						return ImmutableMutabilityPlan.INSTANCE;
+					MutabilityPlan<J> mutabilityPlan = determineMutabilityPlan( javaType, typeConfiguration );
+					if ( mutabilityPlan == null ) {
+						mutabilityPlan = fallbackMutabilityPlanResolver.get();
 					}
-
-					if ( javaTypeClass.isAnnotationPresent( Mutability.class ) ) {
-						final Mutability annotation = javaTypeClass.getAnnotation( Mutability.class );
-						final Class<? extends MutabilityPlan<?>> planClass = annotation.value();
-						final ManagedBeanRegistry managedBeanRegistry = typeConfiguration
-								.getServiceRegistry()
-								.getService( ManagedBeanRegistry.class );
-						final ManagedBean<? extends MutabilityPlan<?>> planBean = managedBeanRegistry.getBean( planClass );
-						return (MutabilityPlan<J>) planBean.getBeanInstance();
-					}
-
-					return ImmutableMutabilityPlan.INSTANCE;
+					return mutabilityPlan;
 				}
 		);
 	}
 
 	@SuppressWarnings("unchecked")
-	public <J> JavaTypeDescriptor<J> createTypeDescriptor(
+	public <J> MutabilityPlan<J> determineMutabilityPlan(Type javaType, TypeConfiguration typeConfiguration) {
+		final Class<J> javaTypeClass = determineJavaTypeClass( javaType );
+
+		if ( javaTypeClass.isAnnotationPresent( Immutable.class ) ) {
+			return ImmutableMutabilityPlan.INSTANCE;
+		}
+
+		if ( javaTypeClass.isAnnotationPresent( Mutability.class ) ) {
+			final Mutability annotation = javaTypeClass.getAnnotation( Mutability.class );
+			final Class<? extends MutabilityPlan<?>> planClass = annotation.value();
+			final ManagedBeanRegistry managedBeanRegistry = typeConfiguration
+					.getServiceRegistry()
+					.getService( ManagedBeanRegistry.class );
+			final ManagedBean<? extends MutabilityPlan<?>> planBean = managedBeanRegistry.getBean( planClass );
+			return (MutabilityPlan<J>) planBean.getBeanInstance();
+		}
+
+		if ( javaTypeClass.isEnum() ) {
+			return ImmutableMutabilityPlan.INSTANCE;
+		}
+
+		if ( javaTypeClass.isPrimitive() ) {
+			return ImmutableMutabilityPlan.INSTANCE;
+		}
+
+		if ( Serializable.class.isAssignableFrom( javaTypeClass ) ) {
+			return (MutabilityPlan<J>) SerializableTypeDescriptor.SerializableMutabilityPlan.INSTANCE;
+		}
+
+		return null;
+	}
+
+	@SuppressWarnings("unchecked")
+	private  <J> JavaTypeDescriptor<J> createTypeDescriptor(
 			Type javaType,
 			Function<Class<J>,MutabilityPlan<J>> mutabilityPlanResolver) {
-		final Class<J> javaTypeClass;
-		if ( javaType instanceof Class<?> ) {
-			javaTypeClass = (Class<J>) javaType;
-		}
-		else {
-			final ParameterizedType parameterizedType = (ParameterizedType) javaType;
-			javaTypeClass = (Class<J>) parameterizedType.getRawType();
-		}
+		final Class<J> javaTypeClass = determineJavaTypeClass( javaType );
 
 		if ( javaTypeClass.isEnum() ) {
 			// enums are unequivocally immutable
@@ -86,5 +105,17 @@ public class RegistryHelper {
 		}
 
 		return new JavaTypeDescriptorBasicAdaptor<>( javaTypeClass, plan );
+	}
+
+	private <J> Class<J> determineJavaTypeClass(Type javaType) {
+		final Class<J> javaTypeClass;
+		if ( javaType instanceof Class<?> ) {
+			javaTypeClass = (Class<J>) javaType;
+		}
+		else {
+			final ParameterizedType parameterizedType = (ParameterizedType) javaType;
+			javaTypeClass = (Class<J>) parameterizedType.getRawType();
+		}
+		return javaTypeClass;
 	}
 }

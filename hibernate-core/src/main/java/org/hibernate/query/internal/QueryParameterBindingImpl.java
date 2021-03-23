@@ -168,11 +168,16 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 
 		bindValue( value );
 
-		//noinspection unchecked
-		this.bindType = (AllowableParameterType) BindingTypeHelper.INSTANCE.resolveDateTemporalTypeVariant(
-				getBindType().getExpressableJavaTypeDescriptor().getJavaTypeClass(),
-				getBindType()
-		);
+		if ( bindType == null ) {
+			bindType = queryParameter.getHibernateType();
+		}
+
+		if ( bindType != null ) {
+			bindType = (AllowableParameterType) BindingTypeHelper.INSTANCE.resolveDateTemporalTypeVariant(
+					bindType.getExpressableJavaTypeDescriptor().getJavaTypeClass(),
+					bindType
+			);
+		}
 
 		this.explicitTemporalPrecision = temporalTypePrecision;
 	}

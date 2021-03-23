@@ -224,7 +224,7 @@ public abstract class AbstractStandardBasicType<T>
 
 	@Override
 	@SuppressWarnings({ "unchecked" })
-	public final boolean isEqual(Object one, Object another) {
+	public boolean isEqual(Object one, Object another) {
 		return javaTypeDescriptor.areEqual( (T) one, (T) another );
 	}
 

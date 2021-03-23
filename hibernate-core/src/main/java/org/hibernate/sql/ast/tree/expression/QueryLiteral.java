@@ -35,16 +35,8 @@ public class QueryLiteral<T> implements Literal, DomainResultProducer<T> {
 	private final BasicValuedMapping type;
 
 	public QueryLiteral(T value, BasicValuedMapping type) {
+		this.value = value;
 		this.type = type;
-
-		if ( type instanceof ConvertibleModelPart ) {
-			final ConvertibleModelPart convertible = (ConvertibleModelPart) type;
-			final BasicValueConverter valueConverter = convertible.getValueConverter();
-			this.value = (T) valueConverter.toRelationalValue( value );
-		}
-		else {
-			this.value = value;
-		}
 	}
 
 	@Override

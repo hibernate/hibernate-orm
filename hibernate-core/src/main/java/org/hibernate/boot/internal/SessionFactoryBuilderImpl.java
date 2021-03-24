@@ -14,7 +14,6 @@ import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.Interceptor;
-import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.query.NullPrecedence;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
@@ -257,8 +256,8 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
-	public SessionFactoryBuilder applyMultiTenancyStrategy(MultiTenancyStrategy strategy) {
-		this.optionsBuilder.applyMultiTenancyStrategy( strategy );
+	public SessionFactoryBuilder applyMultiTenancy(boolean enabled) {
+		this.optionsBuilder.applyMultiTenancy(enabled);
 		return this;
 	}
 

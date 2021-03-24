@@ -46,17 +46,6 @@ Using this approach, we would have a distinct JDBC Connection pool per-tenant wh
 * Connections could point to the database itself (using some default schema) but the Connections would be altered using the SQL `SET SCHEMA` (or similar) command.
 Using this approach, we would have a single JDBC Connection pool for use to service all tenants, but before using the Connection, it would be altered to reference the schema named by the "tenant identifier" associated with the currently logged in user.
 
-[[multitenacy-discriminator]]
-=== Partitioned (discriminator) data
-
-image:images/multitenancy/multitenacy_discriminator.png[]
-
-All data is kept in a single database schema.
-The data for each tenant is partitioned by the use of partition value or discriminator.
-The complexity of this discriminator might range from a simple column value to a complex SQL formula.
-Again, this approach would use a single Connection pool to service all tenants.
-However, in this approach, the application needs to alter each and every SQL statement sent to the database to reference the "tenant identifier" discriminator.
-
 [[multitenacy-hibernate]]
 === Multitenancy in Hibernate
 
@@ -72,26 +61,6 @@ The API is really just defined by passing the tenant identifier as part of openi
 include::{sourcedir}/AbstractMultiTenancyTest.java[tags=multitenacy-hibernate-session-example]
 ----
 ====
-
-Additionally, when specifying the configuration, an `org.hibernate.MultiTenancyStrategy` should be named using the `hibernate.multiTenancy` setting.
-Hibernate will perform validations based on the type of strategy you specify.
-The strategy here correlates with the isolation approach discussed above.
-
-NONE::
-  (the default) No multitenancy is expected.
-  In fact, it is considered an error if a tenant identifier is specified when opening a session using this strategy.
-SCHEMA::
-  Correlates to the separate schema approach.
-  It is an error to attempt to open a session without a tenant identifier using this strategy.
-  Additionally, a `MultiTenantConnectionProvider` must be specified.
-DATABASE::
-  Correlates to the separate database approach.
-  It is an error to attempt to open a session without a tenant identifier using this strategy.
-  Additionally, a `MultiTenantConnectionProvider` must be specified.
-DISCRIMINATOR::
-  Correlates to the partitioned (discriminator) approach.
-  It is an error to attempt to open a session without a tenant identifier using this strategy.
-  This strategy is not yet implemented and you can follow its progress via the https://hibernate.atlassian.net/browse/HHH-6054[HHH-6054 Jira issue].
 
 [[multitenacy-hibernate-MultiTenantConnectionProvider]]
 ==== MultiTenantConnectionProvider

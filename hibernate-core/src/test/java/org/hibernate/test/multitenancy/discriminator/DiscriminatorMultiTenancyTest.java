@@ -12,7 +12,6 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
-import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.Session;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
@@ -59,7 +58,6 @@ public class DiscriminatorMultiTenancyTest extends BaseUnitTestCase {
 	@Before
 	public void setUp() {
 		Map settings = new HashMap();
-		settings.put(Environment.MULTI_TENANT, MultiTenancyStrategy.DISCRIMINATOR);
 		settings.put(Environment.MULTI_TENANT_IDENTIFIER_RESOLVER, currentTenantResolver);
 		settings.put(Environment.CACHE_REGION_FACTORY, CachingRegionFactory.class.getName());
 		settings.put(Environment.GENERATE_STATISTICS, "true");

@@ -10,7 +10,6 @@ import java.util.List;
 import javax.persistence.SharedCacheMode;
 
 import org.hibernate.HibernateException;
-import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
@@ -115,8 +114,8 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 	}
 
 	@Override
-	public MultiTenancyStrategy getMultiTenancyStrategy() {
-		return delegate.getMultiTenancyStrategy();
+	public boolean isMultiTenancyEnabled() {
+		return delegate.isMultiTenancyEnabled();
 	}
 
 	@Override

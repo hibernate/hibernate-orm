@@ -206,6 +206,11 @@ xjc {
             xjcBinding = file( 'src/main/xjb/hbm-mapping-bindings.xjb' )
             xjcExtensions = ['inheritance', 'simplify']
         }
+        mapping {
+            xsd = file( 'src/main/resources/org/hibernate/jpa/orm_2_2.xsd' )
+            xjcBinding = file( 'src/main/xjb/mapping-bindings.xjb' )
+            xjcExtensions = ['inheritance']
+        }
     }
 }
 

@@ -6,9 +6,8 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.FetchClauseType;
+import org.hibernate.query.FetchClauseType;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.Limit;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.cte.CteStatement;

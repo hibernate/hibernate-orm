@@ -11,7 +11,7 @@ import java.util.Set;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 
-import org.hibernate.FetchClauseType;
+import org.hibernate.query.FetchClauseType;
 
 /**
  * Models a {@code SELECT} query.  Used as a delegate in

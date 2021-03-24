@@ -7,7 +7,7 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.SortOrder;
+import org.hibernate.query.SortOrder;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;

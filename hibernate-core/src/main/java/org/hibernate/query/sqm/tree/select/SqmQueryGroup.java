@@ -9,13 +9,12 @@ package org.hibernate.query.sqm.tree.select;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.FetchClauseType;
-import org.hibernate.SetOperator;
+import org.hibernate.query.FetchClauseType;
+import org.hibernate.query.SetOperator;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaOrder;
 import org.hibernate.query.criteria.JpaQueryGroup;
-import org.hibernate.query.criteria.JpaQueryPart;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 

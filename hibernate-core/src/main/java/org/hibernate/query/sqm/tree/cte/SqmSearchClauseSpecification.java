@@ -6,8 +6,8 @@
  */
 package org.hibernate.query.sqm.tree.cte;
 
-import org.hibernate.NullPrecedence;
-import org.hibernate.SortOrder;
+import org.hibernate.query.NullPrecedence;
+import org.hibernate.query.SortOrder;
 
 /**
  * @author Christian Beikov

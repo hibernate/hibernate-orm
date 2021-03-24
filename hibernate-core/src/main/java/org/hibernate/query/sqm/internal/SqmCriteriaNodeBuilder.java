@@ -34,10 +34,10 @@ import javax.persistence.criteria.SetJoin;
 import javax.persistence.criteria.Subquery;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.NullPrecedence;
+import org.hibernate.query.NullPrecedence;
 import org.hibernate.QueryException;
-import org.hibernate.SetOperator;
-import org.hibernate.SortOrder;
+import org.hibernate.query.SetOperator;
+import org.hibernate.query.SortOrder;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;

@@ -6,7 +6,6 @@
  */
 package org.hibernate.query;
 
-import org.hibernate.DotIdentifierSequence;
 import org.hibernate.internal.util.StringHelper;
 
 /**

@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.SortOrder;
+import org.hibernate.query.SortOrder;
 import org.hibernate.grammars.ordering.OrderingParser;
 import org.hibernate.grammars.ordering.OrderingParser.ExpressionContext;
 import org.hibernate.grammars.ordering.OrderingParserBaseVisitor;

@@ -16,7 +16,7 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Selection;
 import javax.persistence.metamodel.EntityType;
 
-import org.hibernate.FetchClauseType;
+import org.hibernate.query.FetchClauseType;
 
 /**
  * Extension of the JPA {@link CriteriaQuery}

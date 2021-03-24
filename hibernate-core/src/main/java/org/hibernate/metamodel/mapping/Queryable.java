@@ -8,7 +8,7 @@ package org.hibernate.metamodel.mapping;
 
 import java.util.function.Consumer;
 
-import org.hibernate.DotIdentifierSequence;
+import org.hibernate.query.DotIdentifierSequence;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 
 /**

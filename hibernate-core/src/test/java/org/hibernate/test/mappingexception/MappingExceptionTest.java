@@ -20,7 +20,6 @@ import java.net.URL;
 import org.hibernate.Hibernate;
 import org.hibernate.InvalidMappingException;
 import org.hibernate.MappingException;
-import org.hibernate.MappingNotFoundException;
 import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.internal.util.ConfigHelper;
@@ -47,10 +46,6 @@ public class MappingExceptionTest extends BaseUnitTestCase {
 			cfg.addCacheableFile( "completelybogus.hbm.xml" );
 			fail();
 		}
-		catch ( MappingNotFoundException e ) {
-			assertEquals( e.getType(), "file" );
-			assertEquals( e.getPath(), "completelybogus.hbm.xml" );
-		}
 		catch (org.hibernate.boot.MappingNotFoundException e) {
 			assertEquals( e.getOrigin().getType(), SourceType.FILE );
 			assertEquals( e.getOrigin().getName(), "completelybogus.hbm.xml" );
@@ -59,10 +54,6 @@ public class MappingExceptionTest extends BaseUnitTestCase {
 		try {
 			cfg.addCacheableFile( new File( "completelybogus.hbm.xml" ) );
 			fail();
-		}
-		catch ( MappingNotFoundException e ) {
-			assertEquals( e.getType(), "file" );
-			assertEquals( e.getPath(), "completelybogus.hbm.xml" );
 		}
 		catch (org.hibernate.boot.MappingNotFoundException e) {
 			assertEquals( e.getOrigin().getType(), SourceType.FILE );
@@ -73,10 +64,6 @@ public class MappingExceptionTest extends BaseUnitTestCase {
 			cfg.addClass( Hibernate.class ); // TODO: String.class result in npe, because no classloader exists for it
 			fail();
 		}
-		catch ( MappingNotFoundException inv ) {
-			assertEquals( inv.getType(), "resource" );
-			assertEquals( inv.getPath(), "org/hibernate/Hibernate.hbm.xml" );
-		}
 		catch (org.hibernate.boot.MappingNotFoundException e) {
 			assertEquals( e.getOrigin().getType(), SourceType.RESOURCE );
 			assertEquals( e.getOrigin().getName(), "org/hibernate/Hibernate.hbm.xml" );
@@ -86,10 +73,6 @@ public class MappingExceptionTest extends BaseUnitTestCase {
 			cfg.addFile( "completelybogus.hbm.xml" );
 			fail();
 		}
-		catch ( MappingNotFoundException e ) {
-			assertEquals( e.getType(), "file" );
-			assertEquals( e.getPath(), "completelybogus.hbm.xml" );
-		}
 		catch (org.hibernate.boot.MappingNotFoundException e) {
 			assertEquals( e.getOrigin().getType(), SourceType.FILE );
 			assertEquals( e.getOrigin().getName(), "completelybogus.hbm.xml" );
@@ -98,10 +81,6 @@ public class MappingExceptionTest extends BaseUnitTestCase {
 		try {
 			cfg.addFile( new File( "completelybogus.hbm.xml" ) );
 			fail();
-		}
-		catch ( MappingNotFoundException inv ) {
-			assertEquals( inv.getType(), "file" );
-			assertEquals( inv.getPath(), "completelybogus.hbm.xml" );
 		}
 		catch (org.hibernate.boot.MappingNotFoundException e) {
 			assertEquals( e.getOrigin().getType(), SourceType.FILE );
@@ -125,10 +104,6 @@ public class MappingExceptionTest extends BaseUnitTestCase {
 			cfg.addResource( "nothere" );
 			fail();
 		}
-		catch ( MappingNotFoundException inv ) {
-			assertEquals( inv.getType(), "resource" );
-			assertEquals( inv.getPath(), "nothere" );
-		}
 		catch (org.hibernate.boot.MappingNotFoundException e) {
 			assertEquals( e.getOrigin().getType(), SourceType.RESOURCE );
 			assertEquals( e.getOrigin().getName(), "nothere" );
@@ -137,10 +112,6 @@ public class MappingExceptionTest extends BaseUnitTestCase {
 		try {
 			cfg.addResource( "nothere", getClass().getClassLoader() );
 			fail();
-		}
-		catch ( MappingNotFoundException inv ) {
-			assertEquals( inv.getType(), "resource" );
-			assertEquals( inv.getPath(), "nothere" );
 		}
 		catch (org.hibernate.boot.MappingNotFoundException e) {
 			assertEquals( e.getOrigin().getType(), SourceType.RESOURCE );
@@ -181,7 +152,6 @@ public class MappingExceptionTest extends BaseUnitTestCase {
 			assertEquals( inv.getType(), "file" );
 			assertNotNull( inv.getPath() );
 			assertTrue( inv.getPath().endsWith( ".hbm.xml" ) );
-			assertTrue( !( inv.getCause() instanceof MappingNotFoundException ) );
 		}
 
 		try {
@@ -192,7 +162,6 @@ public class MappingExceptionTest extends BaseUnitTestCase {
 			assertEquals( inv.getType(), "file" );
 			assertNotNull( inv.getPath() );
 			assertTrue( inv.getPath().endsWith( ".hbm.xml" ) );
-			assertTrue( !( inv.getCause() instanceof MappingNotFoundException ) );
 		}
 
 		try {
@@ -202,7 +171,6 @@ public class MappingExceptionTest extends BaseUnitTestCase {
 		catch ( InvalidMappingException inv ) {
 			assertEquals( inv.getType(), "resource" );
 			assertEquals( inv.getPath(), "org/hibernate/test/mappingexception/InvalidMapping.hbm.xml" );
-			assertTrue( !( inv.getCause() instanceof MappingNotFoundException ) );
 		}
 
 		try {
@@ -212,7 +180,6 @@ public class MappingExceptionTest extends BaseUnitTestCase {
 		catch ( InvalidMappingException inv ) {
 			assertEquals( inv.getType(), "file" );
 			assertEquals( inv.getPath(), file.getPath() );
-			assertTrue( !( inv.getCause() instanceof MappingNotFoundException ) );
 		}
 
 		try {
@@ -222,7 +189,6 @@ public class MappingExceptionTest extends BaseUnitTestCase {
 		catch ( InvalidMappingException inv ) {
 			assertEquals( inv.getType(), "file" );
 			assertEquals( inv.getPath(), file.getPath() );
-			assertTrue( !( inv.getCause() instanceof MappingNotFoundException ) );
 		}
 
 
@@ -233,7 +199,6 @@ public class MappingExceptionTest extends BaseUnitTestCase {
 		catch ( InvalidMappingException inv ) {
 			assertEquals( inv.getType(), "input stream" );
 			assertEquals( inv.getPath(), null );
-			assertTrue( !( inv.getCause() instanceof MappingNotFoundException ) );
 		}
 
 		try {
@@ -243,7 +208,6 @@ public class MappingExceptionTest extends BaseUnitTestCase {
 		catch ( InvalidMappingException inv ) {
 			assertEquals( inv.getType(), "resource" );
 			assertEquals( inv.getPath(), resourceName );
-			assertTrue( !( inv.getCause() instanceof MappingNotFoundException ) );
 		}
 
 		try {
@@ -253,7 +217,6 @@ public class MappingExceptionTest extends BaseUnitTestCase {
 		catch ( InvalidMappingException inv ) {
 			assertEquals( inv.getType(), "resource" );
 			assertEquals( inv.getPath(), resourceName );
-			assertTrue( !( inv.getCause() instanceof MappingNotFoundException ) );
 		}
 
 		try {
@@ -263,7 +226,6 @@ public class MappingExceptionTest extends BaseUnitTestCase {
 		catch ( InvalidMappingException inv ) {
 			assertEquals( inv.getType(), "URL" );
 			assertTrue( inv.getPath().endsWith( "InvalidMapping.hbm.xml" ) );
-			assertTrue( !( inv.getCause() instanceof MappingNotFoundException ) );
 		}
 	}
 

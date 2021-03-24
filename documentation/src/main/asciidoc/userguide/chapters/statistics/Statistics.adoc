@@ -74,7 +74,7 @@ https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/
 [[statistics-concurrency-control]]
 ==== Concurrency Control statistics methods
 
-`getOptimisticFailureCount`:: The number of Hibernate ``StaleObjectStateException``s or JPA ``OptimisticLockException``s that occurred.
+`getOptimisticFailureCount`:: The number of Hibernate ``StaleObjectStateException``s or JPA ``OptimisticEntityLockException``s that occurred.
 
 [[statistics-entity]]
 ==== Entity statistics methods

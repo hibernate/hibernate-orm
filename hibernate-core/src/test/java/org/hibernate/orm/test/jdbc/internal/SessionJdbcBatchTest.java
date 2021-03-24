@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.jdbc.internal;
+package org.hibernate.orm.test.jdbc.internal;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -15,12 +15,10 @@ import javax.persistence.Id;
 
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.test.util.jdbc.PreparedStatementSpyConnectionProvider;
 import org.junit.Test;
@@ -67,6 +65,13 @@ public class SessionJdbcBatchTest
 	@Override
 	protected boolean isCleanupTestDataRequired() {
 		return true;
+	}
+
+	@Override
+	protected void cleanupTestData() throws Exception {
+		inTransaction(
+				(session) -> session.createQuery( "delete Event" ).executeUpdate()
+		);
 	}
 
 	private long id;

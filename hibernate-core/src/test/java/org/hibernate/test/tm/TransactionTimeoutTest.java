@@ -20,7 +20,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.test.jdbc.Person;
+import org.hibernate.orm.test.jdbc.Person;
 import org.junit.Test;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;

@@ -75,6 +75,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.loader.spi.AfterLoadAction;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.UniqueKeyLoadable;
@@ -1896,6 +1897,25 @@ public abstract class Loader {
 				session.getPersistenceContextInternal().addEntity( euk, object );
 			}
 		}
+		boolean[] propertyUniqueness = ( (AbstractEntityPersister) persister ).getPropertyUniqueness();
+		for ( int index = 0; index < propertyUniqueness.length; index++ ) {
+			if ( propertyUniqueness[index] ) {
+				final Type type = persister.getPropertyTypes()[index];
+				final Object uniqueKey = type.semiResolve( values[index], session, object );
+				if ( uniqueKey != null ) {
+					EntityUniqueKey euk = new EntityUniqueKey(
+							rootPersister.getEntityName(), //polymorphism comment above
+							persister.getPropertyNames()[index],
+							uniqueKey,
+							type,
+							persister.getEntityMode(),
+							session.getFactory()
+					);
+					session.getPersistenceContextInternal().addEntity( euk, object );
+				}
+			}
+		}
+
 
 		TwoPhaseLoad.postHydrate(
 				persister,

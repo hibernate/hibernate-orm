@@ -8,7 +8,6 @@ package org.hibernate.dialect.lock;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
-import org.hibernate.OptimisticLockException;
 import org.hibernate.action.internal.EntityVerifyVersionProcess;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
@@ -22,7 +21,6 @@ import org.hibernate.persister.entity.Lockable;
  * @author Scott Marlow
  * @since 3.5
  */
-@SuppressWarnings("deprecation")
 public class OptimisticLockingStrategy implements LockingStrategy {
 	private final Lockable lockable;
 	private final LockMode lockMode;
@@ -44,7 +42,7 @@ public class OptimisticLockingStrategy implements LockingStrategy {
 	@Override
 	public void lock(Object id, Object version, Object object, int timeout, SharedSessionContractImplementor session) {
 		if ( !lockable.isVersioned() ) {
-			throw new OptimisticLockException( object, "[" + lockMode + "] not supported for non-versioned entities [" + lockable.getEntityName() + "]" );
+			throw new OptimisticEntityLockException( object, "[" + lockMode + "] not supported for non-versioned entities [" + lockable.getEntityName() + "]" );
 		}
 		// Register the EntityVerifyVersionProcess action to run just prior to transaction commit.
 		( (EventSource) session ).getActionQueue().registerProcess( new EntityVerifyVersionProcess( object ) );

@@ -6,8 +6,8 @@
  */
 package org.hibernate.action.internal;
 
-import org.hibernate.OptimisticLockException;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
+import org.hibernate.dialect.lock.OptimisticEntityLockException;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.entity.EntityPersister;
@@ -42,7 +42,7 @@ public class EntityVerifyVersionProcess implements BeforeTransactionCompletionPr
 		final EntityPersister persister = entry.getPersister();
 		final Object latestVersion = persister.getCurrentVersion( entry.getId(), session );
 		if ( !entry.getVersion().equals( latestVersion ) ) {
-			throw new OptimisticLockException(
+			throw new OptimisticEntityLockException(
 					object,
 					"Newer version [" + latestVersion +
 							"] of entity [" + MessageHelper.infoString( entry.getEntityName(), entry.getId() ) +

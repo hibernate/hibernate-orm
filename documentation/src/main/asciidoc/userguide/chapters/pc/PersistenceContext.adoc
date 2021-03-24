@@ -1025,7 +1025,7 @@ The log should be reviewed to determine if multiple representations of entities 
 If so, the application should be modified so there is only one representation, and a custom implementation of `org.hibernate.event.spi.EntityCopyObserver` should be provided to disallow entity copies for entities with critical data.
 
 Using optimistic locking is recommended to detect if different representations are from different versions of the same persistent entity.
-If they are not from the same version, Hibernate will throw either the JPA `OptimisticLockException` or the native `StaleObjectStateException` depending on your bootstrapping strategy.
+If they are not from the same version, Hibernate will throw either the JPA `OptimisticEntityLockException` or the native `StaleObjectStateException` depending on your bootstrapping strategy.
 ====
 
 [[pc-contains]]

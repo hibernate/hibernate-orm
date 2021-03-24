@@ -244,7 +244,7 @@ include::{extrasdir}/locking-optimistic-lock-type-all-update-example.sql[]
 ====
 
 As you can see, all the columns of the associated database row are used in the `WHERE` clause.
-If any column has changed after the row was loaded, there won't be any match, and a `StaleStateException` or an `OptimisticLockException`
+If any column has changed after the row was loaded, there won't be any match, and a `StaleStateException` or an `OptimisticEntityLockException`
 is going to be thrown.
 
 [NOTE]
@@ -290,7 +290,7 @@ This time, only the database column that has changed was used in the `WHERE` cla
 ====
 The main advantage of `OptimisticLockType.DIRTY` over `OptimisticLockType.ALL`
 and the default `OptimisticLockType.VERSION` used implicitly along with the `@Version` mapping,
-is that it allows you to minimize the risk of `OptimisticLockException` across non-overlapping entity property changes.
+is that it allows you to minimize the risk of `OptimisticEntityLockException` across non-overlapping entity property changes.
 
 When using `OptimisticLockType.DIRTY`, you should also use `@DynamicUpdate` because the `UPDATE` statement must take into consideration all the dirty entity property values,
 and also the `@SelectBeforeUpdate` annotation so that detached entities are properly handled by the

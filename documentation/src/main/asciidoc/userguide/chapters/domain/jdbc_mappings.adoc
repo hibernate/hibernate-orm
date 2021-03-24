@@ -31,7 +31,7 @@ An `AttributeConverter` can also influence the `JavaTypeDescriptor` used in cert
 
 `JdbcType` can be used to explicitly specify the `JdbcTypeDescriptor` to use for a particular mapping.
 
-`JdbcTypeCode` can be used to indicate the `JdbcTypeDescriptorRegistry` entry to use.  `JdbcTypeRegistration` can
+`@JdbcTypeCode` can be used to indicate the `JdbcTypeDescriptorRegistry` entry to use.  `@JdbcTypeRegistration` can
 be used to register a `JdbcTypeDescriptor` with the `JdbcTypeDescriptorRegistry`.
 
 `MapKeyJdbcType` and `MapKeyJdbcTypeCode` work the same as `JdbcType` and `JdbcTypeCode`, respectively, except

@@ -9,7 +9,6 @@ package org.hibernate.boot.spi;
 import java.util.List;
 import javax.persistence.SharedCacheMode;
 
-import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
@@ -178,7 +177,7 @@ public interface MetadataBuildingOptions {
 	 *
 	 * @return The MultiTenancyStrategy
 	 */
-	MultiTenancyStrategy getMultiTenancyStrategy();
+	boolean isMultiTenancyEnabled();
 
 	IdGeneratorStrategyInterpreter getIdGenerationTypeInterpreter();
 

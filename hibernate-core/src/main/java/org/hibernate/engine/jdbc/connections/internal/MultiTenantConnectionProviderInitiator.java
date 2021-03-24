@@ -8,7 +8,6 @@ package org.hibernate.engine.jdbc.connections.internal;
 
 import java.util.Map;
 
-import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
@@ -41,8 +40,7 @@ public class MultiTenantConnectionProviderInitiator implements StandardServiceIn
 	@Override
 	@SuppressWarnings( {"unchecked"})
 	public MultiTenantConnectionProvider initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
-		final MultiTenancyStrategy strategy = MultiTenancyStrategy.determineMultiTenancyStrategy(  configurationValues );
-		if ( !strategy.requiresMultiTenantConnectionProvider() ) {
+		if ( !configurationValues.containsKey( AvailableSettings.MULTI_TENANT_CONNECTION_PROVIDER ) ) {
 			// nothing to do, but given the separate hierarchies have to handle this here.
 			return null;
 		}

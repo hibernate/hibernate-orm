@@ -24,7 +24,6 @@ import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
-import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.query.NullPrecedence;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionFactoryObserver;
@@ -101,6 +100,7 @@ import static org.hibernate.cfg.AvailableSettings.JPA_CALLBACKS_ENABLED;
 import static org.hibernate.cfg.AvailableSettings.JTA_TRACK_BY_THREAD;
 import static org.hibernate.cfg.AvailableSettings.LOG_SESSION_METRICS;
 import static org.hibernate.cfg.AvailableSettings.MAX_FETCH_DEPTH;
+import static org.hibernate.cfg.AvailableSettings.MULTI_TENANT_CONNECTION_PROVIDER;
 import static org.hibernate.cfg.AvailableSettings.MULTI_TENANT_IDENTIFIER_RESOLVER;
 import static org.hibernate.cfg.AvailableSettings.NATIVE_EXCEPTION_HANDLING_51_COMPLIANCE;
 import static org.hibernate.cfg.AvailableSettings.OMIT_JOIN_OF_SUPERCLASS_TABLES;
@@ -205,7 +205,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean callbacksEnabled;
 
 	// multi-tenancy
-	private MultiTenancyStrategy multiTenancyStrategy;
+	private boolean multiTenancyEnabled;
 	private CurrentTenantIdentifierResolver currentTenantIdentifierResolver;
 
 	// Queries
@@ -340,7 +340,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.checkNullability = cfgService.getSetting( CHECK_NULLABILITY, BOOLEAN, true );
 		this.initializeLazyStateOutsideTransactions = cfgService.getSetting( ENABLE_LAZY_LOAD_NO_TRANS, BOOLEAN, false );
 
-		this.multiTenancyStrategy = MultiTenancyStrategy.determineMultiTenancyStrategy( configurationSettings );
+		this.multiTenancyEnabled = configurationSettings.containsKey( MULTI_TENANT_CONNECTION_PROVIDER );
 		this.currentTenantIdentifierResolver = strategySelector.resolveStrategy(
 				CurrentTenantIdentifierResolver.class,
 				configurationSettings.get( MULTI_TENANT_IDENTIFIER_RESOLVER )
@@ -966,8 +966,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
-	public MultiTenancyStrategy getMultiTenancyStrategy() {
-		return multiTenancyStrategy;
+	public boolean isMultiTenancyEnabled() {
+		return multiTenancyEnabled;
 	}
 
 	@Override
@@ -1328,8 +1328,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.postInsertIdentifierDelayed = enabled;
 	}
 
-	public void applyMultiTenancyStrategy(MultiTenancyStrategy strategy) {
-		this.multiTenancyStrategy = strategy;
+	public void applyMultiTenancy(boolean enabled) {
+		this.multiTenancyEnabled = enabled;
 	}
 
 	public void applyCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver resolver) {

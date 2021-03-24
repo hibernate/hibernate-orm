@@ -21,7 +21,6 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
-import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.Session;
 import org.hibernate.SessionBuilder;
 import org.hibernate.SessionFactory;
@@ -79,7 +78,6 @@ public class DatabaseTimeZoneMultiTenancyTest extends BaseUnitTestCase {
 
         Map<String, Object> settings = new HashMap<>();
 
-        settings.put( AvailableSettings.MULTI_TENANT, MultiTenancyStrategy.DATABASE );
         settings.put(
                 AvailableSettings.MULTI_TENANT_CONNECTION_PROVIDER,
                 new ConfigurableMultiTenantConnectionProvider( connectionProviderMap )

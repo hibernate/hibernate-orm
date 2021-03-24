@@ -9,7 +9,6 @@ package org.hibernate.test.multitenancy.schema;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.SessionBuilder;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
@@ -61,7 +60,6 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 		T multiTenantConnectionProvider = buildMultiTenantConnectionProvider();
 
 		Map settings = new HashMap();
-		settings.put( Environment.MULTI_TENANT, MultiTenancyStrategy.SCHEMA );
 		settings.put( Environment.CACHE_REGION_FACTORY, CachingRegionFactory.class.getName() );
 		settings.put( Environment.GENERATE_STATISTICS, "true" );
 

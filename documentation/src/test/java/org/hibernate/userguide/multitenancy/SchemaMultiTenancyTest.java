@@ -6,7 +6,6 @@
  */
 package org.hibernate.userguide.multitenancy;
 
-import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.dialect.H2Dialect;
 
 import org.hibernate.testing.RequiresDialect;
@@ -18,11 +17,6 @@ import org.hibernate.testing.RequiresDialect;
 public class SchemaMultiTenancyTest extends AbstractMultiTenancyTest {
 
 	public static final String SCHEMA_TOKEN = ";INIT=CREATE SCHEMA IF NOT EXISTS %1$s\\;SET SCHEMA %1$s";
-
-	@Override
-	protected MultiTenancyStrategy multiTenancyStrategy() {
-		return MultiTenancyStrategy.SCHEMA;
-	}
 
 	@Override
 	protected String tenantUrl(String originalUrl, String tenantIdentifier) {

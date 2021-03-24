@@ -6,7 +6,6 @@
  */
 package org.hibernate.userguide.multitenancy;
 
-import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.dialect.H2Dialect;
 
 import org.hibernate.testing.RequiresDialect;
@@ -16,11 +15,6 @@ import org.hibernate.testing.RequiresDialect;
  */
 @RequiresDialect(H2Dialect.class)
 public class DatabaseMultiTenancyTest extends AbstractMultiTenancyTest {
-
-	@Override
-	protected MultiTenancyStrategy multiTenancyStrategy() {
-		return MultiTenancyStrategy.DATABASE;
-	}
 
 	@Override
 	protected String tenantUrl(String originalUrl, String tenantIdentifier) {

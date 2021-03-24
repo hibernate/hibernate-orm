@@ -66,10 +66,7 @@ import org.hibernate.context.internal.ThreadLocalSessionContext;
 import org.hibernate.context.spi.CurrentSessionContext;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
-import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
-import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jndi.spi.JndiService;
 import org.hibernate.engine.profile.Association;
@@ -522,17 +519,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 	}
 
-	private JdbcConnectionAccess buildLocalConnectionAccess() {
-		if ( settings.getMultiTenancyStrategy().requiresMultiTenantConnectionProvider() ) {
-			final MultiTenantConnectionProvider mTenantConnectionProvider = serviceRegistry.getService( MultiTenantConnectionProvider.class );
-			return new JdbcEnvironmentInitiator.MultiTenantConnectionProviderJdbcConnectionAccess( mTenantConnectionProvider );
-		}
-		else {
-			final ConnectionProvider connectionProvider = serviceRegistry.getService( ConnectionProvider.class );
-			return new JdbcEnvironmentInitiator.ConnectionProviderJdbcConnectionAccess( connectionProvider );
-		}
-	}
-
 	public Session openSession() throws HibernateException {
 		//The defaultSessionOpenOptions can't be used in some cases; for example when using a TenantIdentifierResolver.
 		if ( this.defaultSessionOpenOptions != null ) {
@@ -637,7 +623,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	@Override
 	public DeserializationResolver getDeserializationResolver() {
-		return (DeserializationResolver) () -> (SessionFactoryImplementor) SessionFactoryRegistry.INSTANCE.findSessionFactory(
+		return () -> (SessionFactoryImplementor) SessionFactoryRegistry.INSTANCE.findSessionFactory(
 				uuid,
 				name
 		);

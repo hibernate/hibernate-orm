@@ -7,7 +7,6 @@
 package org.hibernate.test.multitenancy;
 
 import org.hibernate.ConnectionReleaseMode;
-import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Environment;
@@ -31,7 +30,6 @@ public class ConfigurationValidationTest extends BaseUnitTestCase {
 		ServiceRegistryImplementor serviceRegistry = null;
 		try {
 			serviceRegistry	= (ServiceRegistryImplementor) new StandardServiceRegistryBuilder()
-					.applySetting( Environment.MULTI_TENANT, MultiTenancyStrategy.SCHEMA  )
 					.applySetting( Environment.MULTI_TENANT_CONNECTION_PROVIDER, "class.not.present.in.classpath" )
 					.build();
 
@@ -53,7 +51,6 @@ public class ConfigurationValidationTest extends BaseUnitTestCase {
 		ServiceRegistryImplementor serviceRegistry = null;
 		try {
 			serviceRegistry	= (ServiceRegistryImplementor) new StandardServiceRegistryBuilder()
-					.applySetting( Environment.MULTI_TENANT, MultiTenancyStrategy.SCHEMA  )
 					.applySetting( Environment.RELEASE_CONNECTIONS, ConnectionReleaseMode.AFTER_STATEMENT.name() )
 					.addService(
 							MultiTenantConnectionProvider.class,

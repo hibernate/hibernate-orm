@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.function;
 
+import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
@@ -116,12 +117,11 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 			mapping = returnTypeResolver.resolveFunctionReturnType(
 					() -> {
 						try {
-							// I think it's supposed to be this, but
-							// resolveMappingExpressable() looks to
-							// be unfinished, and throws
-							return (BasicValuedMapping)
-									walker.getCreationContext().getDomainModel()
-											.resolveMappingExpressable( getNodeType() );
+							final MappingMetamodel domainModel = walker.getCreationContext().getDomainModel();
+							return (BasicValuedMapping) domainModel.resolveMappingExpressable(
+									getNodeType(),
+									walker.getFromClauseAccess()::getTableGroup
+							);
 						}
 						catch (Exception e) {
 							return null; // this works at least approximately

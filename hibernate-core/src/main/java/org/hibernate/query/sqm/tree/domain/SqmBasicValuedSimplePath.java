@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.PathException;
@@ -16,11 +17,14 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmBasicValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
+public class SqmBasicValuedSimplePath<T>
+		extends AbstractSqmSimplePath<T>
+		implements AllowableParameterType<T> {
 	public SqmBasicValuedSimplePath(
 			NavigablePath navigablePath,
 			SqmPathSource<T> referencedPathSource,
@@ -76,6 +80,21 @@ public class SqmBasicValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 	@Override
 	public <S extends T> SqmTreatedPath<T, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
 		throw new UnsupportedOperationException( "Basic-value cannot be treated (downcast)" );
+	}
+
+	@Override
+	public JavaTypeDescriptor<T> getExpressableJavaTypeDescriptor() {
+		return getJavaTypeDescriptor();
+	}
+
+	@Override
+	public PersistenceType getPersistenceType() {
+		return PersistenceType.BASIC;
+	}
+
+	@Override
+	public Class<T> getJavaType() {
+		return getJavaTypeDescriptor().getJavaTypeClass();
 	}
 
 

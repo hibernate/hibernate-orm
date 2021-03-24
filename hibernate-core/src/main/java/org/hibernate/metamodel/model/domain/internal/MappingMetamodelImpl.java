@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import javax.persistence.EntityGraph;
 import javax.persistence.metamodel.EmbeddableType;
 import javax.persistence.metamodel.EntityType;
@@ -61,7 +62,10 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.spi.PersisterFactory;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -705,7 +709,17 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 	}
 
 	@Override
-	public MappingModelExpressable resolveMappingExpressable(SqmExpressable<?> sqmExpressable) {
+	public MappingModelExpressable resolveMappingExpressable(SqmExpressable<?> sqmExpressable, Function<NavigablePath, TableGroup> tableGroupLocator) {
+		if ( sqmExpressable instanceof SqmPath ) {
+			final SqmPath sqmPath = (SqmPath) sqmExpressable;
+			final NavigablePath navigablePath = sqmPath.getNavigablePath();
+			if ( navigablePath.getParent() != null ) {
+				final TableGroup parentTableGroup = tableGroupLocator.apply( navigablePath.getParent() );
+				return parentTableGroup.getModelPart().findSubPart( navigablePath.getLocalName(), null );
+			}
+			return tableGroupLocator.apply( navigablePath.getParent() ).getModelPart();
+		}
+
 		if ( sqmExpressable instanceof BasicType<?> ) {
 			return (BasicType) sqmExpressable;
 		}

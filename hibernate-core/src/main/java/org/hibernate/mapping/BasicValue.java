@@ -531,7 +531,7 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 				);
 				context.getTypeDefinitionRegistry().register( implicitDefinition );
 				return implicitDefinition.resolve(
-						null,
+						localTypeParams,
 						explicitMutabilityPlanAccess != null
 								? explicitMutabilityPlanAccess.apply( typeConfiguration )
 								: null,

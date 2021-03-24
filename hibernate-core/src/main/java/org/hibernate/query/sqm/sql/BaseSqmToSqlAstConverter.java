@@ -1268,6 +1268,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		);
 	}
 
+	private TableGroup findTableGroupByPath(NavigablePath navigablePath) {
+		return getFromClauseAccess().getTableGroup( navigablePath );
+	}
+
 	private interface OrderByFragmentConsumer {
 		void accept(OrderByFragment orderByFragment, TableGroup tableGroup);
 
@@ -2170,7 +2174,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	protected MappingModelExpressable<?> resolveMappingExpressable(SqmExpressable<?> nodeType) {
 		final MappingModelExpressable valueMapping = getCreationContext().getDomainModel().resolveMappingExpressable(
-				nodeType );
+				nodeType,
+				this::findTableGroupByPath
+		);
 
 		if ( valueMapping == null ) {
 			final Supplier<MappingModelExpressable> currentExpressableSupplier = inferrableTypeAccessStack.getCurrent();
@@ -2224,7 +2230,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						sqmExpressable = selectionNodeType;
 					}
 
-					final MappingModelExpressable<?> expressable = domainModel.resolveMappingExpressable( sqmExpressable );
+					final MappingModelExpressable<?> expressable = domainModel.resolveMappingExpressable( sqmExpressable, this::findTableGroupByPath );
 
 					if ( expressable != null ) {
 						return expressable;
@@ -2243,7 +2249,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		log.debugf( "Determining mapping-model type for generalized SqmExpression : %s", sqmExpression );
 		final SqmExpressable<?> nodeType = sqmExpression.getNodeType();
 		final MappingModelExpressable valueMapping = domainModel.resolveMappingExpressable(
-				nodeType );
+				nodeType,
+				this::findTableGroupByPath
+		);
 
 		if ( valueMapping == null ) {
 			final Supplier<MappingModelExpressable> currentExpressableSupplier = inferrableTypeAccessStack.getCurrent();
@@ -2288,6 +2296,20 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 
 		assert parameterSqmType != null;
+
+		if ( parameterSqmType instanceof SqmPath ) {
+			final SqmPath sqmPath = (SqmPath) parameterSqmType;
+			final NavigablePath navigablePath = sqmPath.getNavigablePath();
+			if ( navigablePath.getParent() != null ) {
+				final TableGroup tableGroup = getFromClauseAccess().getTableGroup( navigablePath.getParent() );
+				return tableGroup.getModelPart().findSubPart(
+						navigablePath.getLocalName(),
+						null
+				);
+			}
+
+			return getFromClauseAccess().getTableGroup( navigablePath ).getModelPart();
+		}
 
 		if ( parameterSqmType instanceof BasicValuedMapping ) {
 			return (BasicValuedMapping) parameterSqmType;

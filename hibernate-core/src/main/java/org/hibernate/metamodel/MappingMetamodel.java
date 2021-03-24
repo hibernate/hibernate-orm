@@ -8,6 +8,7 @@ package org.hibernate.metamodel;
 
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import org.hibernate.Incubating;
 import org.hibernate.graph.RootGraph;
@@ -17,7 +18,10 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -38,7 +42,7 @@ public interface MappingMetamodel {
 	/**
 	 * todo (6.0) : POC!!!  Intended for use in SQM -> SQL translation
 	 */
-	MappingModelExpressable resolveMappingExpressable(SqmExpressable<?> sqmExpressable);
+	MappingModelExpressable resolveMappingExpressable(SqmExpressable<?> sqmExpressable, Function<NavigablePath, TableGroup> tableGroupLocator);
 
 	/**
 	 * Given a Java type, determine the corresponding AllowableParameterType to

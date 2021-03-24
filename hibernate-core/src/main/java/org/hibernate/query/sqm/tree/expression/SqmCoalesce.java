@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.query.criteria.JpaCoalesce;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -69,14 +70,23 @@ public class SqmCoalesce<T> extends AbstractSqmExpression<T> implements JpaCoale
 
 	@Override
 	public SqmCoalesce<T> value(T value) {
-		value( nodeBuilder().value( value ) );
+		value( nodeBuilder().value( value, firstOrNull() ) );
 		return this;
+	}
+
+	private SqmExpression<T> firstOrNull() {
+		if ( CollectionHelper.isEmpty( arguments ) ) {
+			return null;
+		}
+
+		//noinspection unchecked
+		return (SqmExpression<T>) arguments.get( 0 );
 	}
 
 	@Override
 	public SqmCoalesce<T> value(Expression<? extends T> value) {
 		//noinspection unchecked
-		value( (SqmExpression) value );
+		value( (SqmExpression<? extends T>) value );
 		return this;
 	}
 
@@ -90,8 +100,9 @@ public class SqmCoalesce<T> extends AbstractSqmExpression<T> implements JpaCoale
 	@Override
 	@SuppressWarnings("unchecked")
 	public SqmCoalesce<T> values(T... values) {
+		final SqmExpression<T> firstOrNull = firstOrNull();
 		for ( T value : values ) {
-			value( nodeBuilder().value( value ) );
+			value( nodeBuilder().value( value, firstOrNull ) );
 		}
 		return this;
 	}

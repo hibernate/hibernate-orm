@@ -4,14 +4,13 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.enums;
+package org.hibernate.orm.test.mapping.converted.enums;
 
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 
+import org.hibernate.Session;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.descriptor.sql.BasicBinder;
 import org.hibernate.type.descriptor.sql.BasicExtractor;
@@ -26,12 +25,13 @@ import org.junit.Test;
 import org.jboss.logging.Logger;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
- * @author Vlad Mihacea
+ * @author Brett Meyer
  */
-public class OrdinalEnumTypeTest extends BaseCoreFunctionalTestCase {
+public class EnumTypeTest extends BaseCoreFunctionalTestCase {
 
 	@Rule
 	public LoggerInspectionRule binderLogInspection = new LoggerInspectionRule( Logger.getMessageLogger(
@@ -52,10 +52,12 @@ public class OrdinalEnumTypeTest extends BaseCoreFunctionalTestCase {
 	private Triggerable extractorTriggerable;
 
 	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				Person.class
-		};
+	protected String getBaseForMappings() {
+		return "";
+	}
+
+	protected String[] getMappings() {
+		return new String[] { "org/hibernate/orm/test/mapping/converted/enums/Person.hbm.xml" };
 	}
 
 	@Override
@@ -75,6 +77,39 @@ public class OrdinalEnumTypeTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected boolean isCleanupTestDataRequired() {
 		return true;
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-8153")
+	public void hbmEnumTypeTest() {
+		doInHibernate(
+				this::sessionFactory,
+				s -> {
+					assertEquals( getNumberOfPersonByGender( s, Gender.MALE ), 2 );
+					assertEquals( getNumberOfPersonByGenderAndHairColor( s, Gender.MALE, HairColor.BROWN ), 1 );
+					assertEquals( getNumberOfPersonByGender( s, Gender.FEMALE ), 2 );
+					assertEquals( getNumberOfPersonByGenderAndHairColor( s, Gender.FEMALE, HairColor.BROWN ), 1 );
+				}
+		);
+	}
+
+	private int getNumberOfPersonByGender(Session session, Gender value) {
+		CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+		CriteriaQuery<Person> criteria = criteriaBuilder.createQuery( Person.class );
+		Root<Person> root = criteria.from( Person.class );
+		criteria.where( criteriaBuilder.equal( root.get( "gender" ), value ) );
+		return session.createQuery( criteria ).list().size();
+	}
+
+	private int getNumberOfPersonByGenderAndHairColor(Session session, Gender gender, HairColor hairColor) {
+		CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+		CriteriaQuery<Person> criteria = criteriaBuilder.createQuery( Person.class );
+		Root<Person> root = criteria.from( Person.class );
+		criteria.where( criteriaBuilder.and(
+				criteriaBuilder.equal( root.get( "gender" ), gender ),
+				criteriaBuilder.equal( root.get( "hairColor" ), hairColor )
+		) );
+		return session.createQuery( criteria ).list().size();
 	}
 
 	@Test
@@ -107,101 +142,5 @@ public class OrdinalEnumTypeTest extends BaseCoreFunctionalTestCase {
 			assertTrue( binderTriggerable.wasTriggered() );
 			assertTrue( extractorTriggerable.wasTriggered() );
 		} );
-	}
-
-	@Test
-	@TestForIssue(jiraKey = "HHH-10282")
-	public void hqlTestEnumShortHandSyntax() {
-		doInHibernate( this::sessionFactory, session -> {
-			session.createQuery(
-				"select id from Person where originalHairColor = BLONDE")
-				.getResultList();
-		} );
-	}
-
-	@Test
-	@TestForIssue(jiraKey = "HHH-10282")
-	public void hqlTestEnumQualifiedShortHandSyntax() {
-		doInHibernate( this::sessionFactory, session -> {
-			session.createQuery(
-					"select id from Person where originalHairColor = HairColor.BLONDE")
-					.getResultList();
-		} );
-	}
-
-	@Test
-	@TestForIssue(jiraKey = "HHH-10282")
-	public void hqlTestEnumShortHandSyntaxInPredicate() {
-		doInHibernate( this::sessionFactory, session -> {
-			session.createQuery(
-					"select id from Person where originalHairColor in (BLONDE, BROWN)")
-					.getResultList();
-		} );
-	}
-
-	@Test
-	@TestForIssue(jiraKey = "HHH-10282")
-	public void hqlTestEnumQualifiedShortHandSyntaxInPredicate() {
-		doInHibernate( this::sessionFactory, session -> {
-			session.createQuery(
-					"select id from Person where originalHairColor in (HairColor.BLONDE, HairColor.BROWN)")
-					.getResultList();
-		} );
-	}
-
-	@Entity(name = "Person")
-	public static class Person {
-
-		@Id
-		@GeneratedValue
-		private Long id;
-
-		@Enumerated(EnumType.ORDINAL)
-		private Gender gender;
-
-		@Enumerated(EnumType.ORDINAL)
-		private HairColor hairColor;
-
-		@Enumerated(EnumType.ORDINAL)
-		private HairColor originalHairColor;
-
-		public static Person person(Gender gender, HairColor hairColor) {
-			Person person = new Person();
-			person.setGender( gender );
-			person.setHairColor( hairColor );
-			return person;
-		}
-
-		public long getId() {
-			return id;
-		}
-
-		public void setId(long id) {
-			this.id = id;
-		}
-
-		public Gender getGender() {
-			return gender;
-		}
-
-		public void setGender(Gender gender) {
-			this.gender = gender;
-		}
-
-		public HairColor getHairColor() {
-			return hairColor;
-		}
-
-		public void setHairColor(HairColor hairColor) {
-			this.hairColor = hairColor;
-		}
-
-		public HairColor getOriginalHairColor() {
-			return originalHairColor;
-		}
-
-		public void setOriginalHairColor(HairColor originalHairColor) {
-			this.originalHairColor = originalHairColor;
-		}
 	}
 }

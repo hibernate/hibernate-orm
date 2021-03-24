@@ -2872,6 +2872,9 @@ public class ModelBinder {
 
 		if ( CollectionHelper.isNotEmpty( typeResolution.parameters ) ) {
 			simpleValue.setTypeParameters( typeResolution.parameters );
+			if ( simpleValue instanceof BasicValue ) {
+				( (BasicValue) simpleValue ).setExplicitTypeParams( typeResolution.parameters );
+			}
 		}
 
 		if ( typeResolution.typeName != null ) {
@@ -2907,6 +2910,7 @@ public class ModelBinder {
 				typeParameters.putAll( typeDefinition.getParameters() );
 			}
 		}
+
 		// parameters on the property mapping should override parameters in the type-def
 		if ( typeSource.getParameters() != null ) {
 			typeParameters.putAll( typeSource.getParameters() );

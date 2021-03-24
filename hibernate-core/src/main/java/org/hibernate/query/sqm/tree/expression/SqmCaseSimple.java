@@ -136,7 +136,7 @@ public class SqmCaseSimple<T,R>
 	@Override
 	public JpaSimpleCase<T, R> when(T condition, Expression<? extends R> result) {
 		//noinspection unchecked
-		when( nodeBuilder().value( condition ), (SqmExpression) result );
+		when( nodeBuilder().value( condition, (SqmExpression<T>) result ), (SqmExpression<R>) result );
 		return this;
 	}
 
@@ -149,7 +149,7 @@ public class SqmCaseSimple<T,R>
 	@Override
 	public JpaSimpleCase<T, R> otherwise(Expression<? extends R> result) {
 		//noinspection unchecked
-		otherwise( (SqmExpression) result );
+		otherwise( (SqmExpression<R>) result );
 		return this;
 	}
 

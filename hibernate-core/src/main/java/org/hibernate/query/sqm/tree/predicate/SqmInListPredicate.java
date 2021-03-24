@@ -73,18 +73,22 @@ public class SqmInListPredicate<T> extends AbstractNegatableSqmPredicate impleme
 	@Override
 	public SqmInPredicate<T> value(Object value) {
 		if ( value instanceof Collection ) {
-			( (Collection) value ).forEach(
-					v -> addExpression( nodeBuilder().value( v ) )
+			//noinspection unchecked
+			( (Collection<T>) value ).forEach(
+					v -> addExpression( nodeBuilder().value( v, testExpression ) )
 			);
-			return this;
 		}
-		addExpression( nodeBuilder().value( value ) );
+		else {
+			//noinspection unchecked
+			addExpression( nodeBuilder().value( (T) value, testExpression ) );
+		}
+
 		return this;
 	}
 
 	@Override
 	public SqmInPredicate<T> value(Expression value) {
-		addExpression( (SqmExpression) value );
+		addExpression( (SqmExpression<T>) value );
 		return this;
 	}
 
@@ -98,11 +102,11 @@ public class SqmInListPredicate<T> extends AbstractNegatableSqmPredicate impleme
 		return listExpressions;
 	}
 
-	public void addExpression(SqmExpression expression) {
+	public <X> void addExpression(SqmExpression<X> expression) {
 		implyListElementType( expression );
 
 		//noinspection unchecked
-		listExpressions.add( expression );
+		listExpressions.add( (SqmExpression<T>) expression );
 	}
 
 	private void implyListElementType(SqmExpression expression) {

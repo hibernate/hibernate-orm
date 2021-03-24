@@ -1730,22 +1730,43 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	private Map<Class<?>, Enum<?>> getPossibleEnumValues(HqlParser.ExpressionContext expressionContext) {
 		ParseTree ctx;
 		// Traverse the expression structure according to the grammar
-		if ( expressionContext instanceof HqlParser.CollateExpressionContext
-				&& expressionContext.getChildCount() == 1
-				&& ( ctx = expressionContext.getChild( 0 ) ) instanceof HqlParser.PrimaryExpressionContext
-				&& ctx.getChildCount() == 1
-				&& ( ctx = expressionContext.getChild( 0 ) ) instanceof HqlParser.PathContext
-				&& ctx.getChildCount() == 1
-				&& ( ctx = ctx.getChild( 0 ) ) instanceof HqlParser.GeneralPathFragmentContext
-				&& ctx.getChildCount() == 1
-				&& ( ctx = ctx.getChild( 0 ) ) instanceof HqlParser.DotIdentifierSequenceContext
-				// With childCount == 1 we could have a simple enum literal e.g. ENUM_VALUE
-				// With childCount == 2 we could have a qualified enum literal e.g. EnumName.ENUM_VALUE
-				&& ( ctx.getChildCount() == 1 || ctx.getChildCount() == 2 && ctx.getChild( 1 ) instanceof HqlParser.DotIdentifierSequenceContinuationContext )
-				&& ctx.getChild( 0 ) instanceof HqlParser.IdentifierContext
-		) {
-			return creationContext.getJpaMetamodel().getAllowedEnumLiteralTexts().get( ctx.getText() );
+		if ( expressionContext instanceof HqlParser.CollateExpressionContext && expressionContext.getChildCount() == 1 ) {
+			ctx = expressionContext.getChild( 0 );
+
+			while ( ctx instanceof HqlParser.PrimaryExpressionContext && ctx.getChildCount() == 1 ) {
+				ctx = ctx.getChild( 0 );
+			}
+
+			if ( ctx instanceof HqlParser.PathContext && ctx.getChildCount() == 1 ) {
+				ctx = ctx.getChild( 0 );
+
+				if ( ctx instanceof HqlParser.GeneralPathFragmentContext && ctx.getChildCount() == 1 ) {
+					ctx = ctx.getChild( 0 );
+
+					if ( ctx instanceof HqlParser.DotIdentifierSequenceContext ) {
+						return creationContext.getJpaMetamodel().getAllowedEnumLiteralTexts().get( ctx.getText() );
+					}
+				}
+			}
 		}
+
+//		if ( expressionContext instanceof HqlParser.CollateExpressionContext
+//				&& expressionContext.getChildCount() == 1
+//				&& ( ctx = expressionContext.getChild( 0 ) ) instanceof HqlParser.PrimaryExpressionContext
+//				&& ctx.getChildCount() == 1
+//				&& ( ctx = expressionContext.getChild( 0 ) ) instanceof HqlParser.PathContext
+//				&& ctx.getChildCount() == 1
+//				&& ( ctx = ctx.getChild( 0 ) ) instanceof HqlParser.GeneralPathFragmentContext
+//				&& ctx.getChildCount() == 1
+//				&& ( ctx = ctx.getChild( 0 ) ) instanceof HqlParser.DotIdentifierSequenceContext
+//				// With childCount == 1 we could have a simple enum literal e.g. ENUM_VALUE
+//				// With childCount == 2 we could have a qualified enum literal e.g. EnumName.ENUM_VALUE
+//				&& ( ctx.getChildCount() == 1 || ctx.getChildCount() == 2 && ctx.getChild( 1 ) instanceof HqlParser.DotIdentifierSequenceContinuationContext )
+//				&& ctx.getChild( 0 ) instanceof HqlParser.IdentifierContext
+//		) {
+//			return creationContext.getJpaMetamodel().getAllowedEnumLiteralTexts().get( ctx.getText() );
+//		}
+
 		return null;
 	}
 

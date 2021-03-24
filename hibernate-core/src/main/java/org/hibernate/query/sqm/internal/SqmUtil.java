@@ -213,6 +213,7 @@ public class SqmUtil {
 								parameterType,
 								jdbcParams,
 								valueItr.next(),
+								tableGroupLocator,
 								session
 						);
 					}
@@ -232,6 +233,7 @@ public class SqmUtil {
 									parameterType,
 									expansionJdbcParams,
 									valueItr.next(),
+									tableGroupLocator,
 									session
 							);
 						}
@@ -292,6 +294,7 @@ public class SqmUtil {
 								parameterType,
 								jdbcParams,
 								bindValue,
+								tableGroupLocator,
 								session
 						);
 					}
@@ -308,6 +311,7 @@ public class SqmUtil {
 			AllowableParameterType<?> parameterType,
 			List<JdbcParameter> jdbcParams,
 			Object bindValue,
+			Function<NavigablePath, TableGroup> tableGroupLocator,
 			SharedSessionContractImplementor session) {
 		final MappingMetamodel domainModel = session.getFactory().getDomainModel();
 		final MappingModelExpressable mappingExpressable;
@@ -335,7 +339,7 @@ public class SqmUtil {
 			}
 		}
 		else {
-			mappingExpressable = domainModel.resolveMappingExpressable( parameterType );
+			mappingExpressable = domainModel.resolveMappingExpressable( parameterType, tableGroupLocator );
 		}
 
 		int offset = jdbcParameterBindings.registerParametersForEachJdbcValue(

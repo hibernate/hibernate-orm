@@ -33,6 +33,7 @@ import javax.persistence.criteria.Subquery;
 import org.hibernate.NullPrecedence;
 import org.hibernate.SortOrder;
 import org.hibernate.metamodel.model.domain.DomainType;
+import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.select.SqmSelectQuery;
 
@@ -258,6 +259,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
 	@Override
 	<T> JpaExpression<T> literal(T value);
+	<T> SqmExpression<T> literal(T value, SqmExpression<T> typeInferenceSource);
 
 	<T> List<? extends JpaExpression<T>> literals(T[] values);
 
@@ -366,6 +368,8 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	<K, L extends List<?>> JpaExpression<Set<K>> indexes(L list);
 
 	<T> SqmExpression<T> value(T value);
+
+	<T> SqmExpression<T> value(T value, SqmExpression<T> typeInferenceSource);
 
 	<V, C extends Collection<V>> JpaExpression<Collection<V>> values(C collection);
 

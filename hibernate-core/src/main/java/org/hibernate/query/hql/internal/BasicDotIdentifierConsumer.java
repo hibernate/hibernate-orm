@@ -232,7 +232,7 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 						if ( namedClass.isEnum() ) {
 							return new SqmEnumLiteral(
 									Enum.valueOf( (Class) namedClass, terminal ),
-									(EnumJavaTypeDescriptor<?>) javaTypeDescriptorRegistry.resolveDescriptor( namedClass ),
+									(EnumJavaTypeDescriptor) javaTypeDescriptorRegistry.resolveDescriptor( namedClass ),
 									terminal,
 									creationContext.getNodeBuilder()
 							);

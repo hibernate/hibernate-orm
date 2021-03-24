@@ -20,6 +20,7 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Version;
 
+import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.CollectionId;
@@ -289,7 +290,7 @@ public class BasicValueBinder<T> implements SqlTypeDescriptorIndicators {
 		else {
 			switch ( kind ) {
 				case ATTRIBUTE: {
-					prepareBasicAttribute( modelXProperty, modelPropertyTypeXClass );
+					prepareBasicAttribute( declaringClassName, modelXProperty, modelPropertyTypeXClass );
 					break;
 				}
 				case COLLECTION_ID: {
@@ -313,6 +314,7 @@ public class BasicValueBinder<T> implements SqlTypeDescriptorIndicators {
 				}
 			}
 		}
+
 	}
 
 	private void prepareCollectionId(XProperty modelXProperty) {
@@ -439,7 +441,7 @@ public class BasicValueBinder<T> implements SqlTypeDescriptorIndicators {
 	}
 
 	@SuppressWarnings("unchecked")
-	private void prepareBasicAttribute(XProperty attributeDescriptor, XClass attributeType) {
+	private void prepareBasicAttribute(String declaringClassName, XProperty attributeDescriptor, XClass attributeType) {
 		final Class<T> javaType = buildingContext.getBootstrapContext()
 				.getReflectionManager()
 				.toClass( attributeType );
@@ -478,6 +480,16 @@ public class BasicValueBinder<T> implements SqlTypeDescriptorIndicators {
 			}
 		}
 		else {
+			if ( attributeDescriptor.isAnnotationPresent( Enumerated.class ) ) {
+				throw new AnnotationException(
+						String.format(
+								"Attribute [%s.%s] was annotated as enumerated, but its java type is not an enum [%s]",
+								declaringClassName,
+								attributeDescriptor.getName(),
+								attributeType.getName()
+						)
+				);
+			}
 			this.enumType = null;
 		}
 

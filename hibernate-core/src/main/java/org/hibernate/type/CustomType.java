@@ -36,6 +36,13 @@ import org.hibernate.usertype.UserVersionType;
  * Adapts {@link UserType} to the generic {@link Type} interface, in order
  * to isolate user code from changes in the internal Type contracts.
  *
+ * @apiNote Many of the interfaces implemented here are implemented just to
+ * handle the case of the wrapped type implementing them so we can pass them
+ * along.
+ *
+ * todo (6.0) : ^^ this introduces a problem in code that relies on `instance of` checks
+ * 		against any of these interfaces when the wrapped type does not
+ *
  * @author Gavin King
  * @author Steve Ebersole
  */

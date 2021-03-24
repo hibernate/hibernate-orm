@@ -26,11 +26,13 @@ import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
+import org.hibernate.type.EnumType;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.type.spi.TypeConfigurationAware;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserType;
 
@@ -238,6 +240,10 @@ public class TypeDefinition implements Serializable {
 				.getBean( name, typeImplementorClass );
 
 		final Object typeInstance = typeBean.getBeanInstance();
+
+		if ( typeInstance instanceof TypeConfigurationAware ) {
+			( (TypeConfigurationAware) typeInstance ).setTypeConfiguration( buildingContext.getBootstrapContext().getTypeConfiguration() );
+		}
 
 		injectParameters( typeInstance, () -> CollectionHelper.asProperties( localTypeParams ) );
 

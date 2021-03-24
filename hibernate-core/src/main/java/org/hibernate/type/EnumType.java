@@ -44,18 +44,22 @@ import org.jboss.logging.Logger;
 /**
  * Value type mapper for enumerations.
  *
- * Generally speaking, the proper configuration is picked up from the annotations associated with the mapped attribute.
+ * Provides 2 distinct forms of "configuration" - one for hbm.xml mapping and
+ * another for annotation/orm.xml mapping triggered within the {@link #setParameterValues}
+ * method
  *
- * There are a few configuration parameters understood by this type mapper:<ul>
+ * Annotation based config relies on a {@link ParameterType} reference passed as
+ * an entry in the parameter values under the key {@link #PARAMETER_TYPE}
+ *
+ * hbm.xml based config relies on a number of values from the parameters: <ul>
  *     <li>
- *         <strong>enumClass</strong> - Names the enumeration class.
+ *         {@link #ENUM} - Name the enumeration class.
  *     </li>
  *     <li>
- *         <strong>useNamed</strong> - Should enum be mapped via name.  Default is to map as ordinal.  Used when
- *         annotations are not used (otherwise {@link javax.persistence.EnumType} is used).
+ *         {@link #NAMED} - Should enum be mapped via name.  Default is to map as ordinal.
  *     </li>
  *     <li>
- *         <strong>type</strong> - Identifies the JDBC type (via type code) to be used for the column.
+ * 			{@link #TYPE} - JDBC type code (legacy alternative to {@link #NAMED})
  *     </li>
  * </ul>
  *
@@ -103,6 +107,8 @@ public class EnumType<T extends Enum<T>>
 		//		2) we are not passed a ParameterType - generally this indicates a hbm.xml binding case.
 		final ParameterType reader = (ParameterType) parameters.get( PARAMETER_TYPE );
 
+		// the `reader != null` block handles annotations, while the `else` block
+		// handles hbm.xml
 		if ( reader != null ) {
 			enumClass = reader.getReturnedClass().asSubclass( Enum.class );
 
@@ -183,20 +189,23 @@ public class EnumType<T extends Enum<T>>
 	}
 
 	private javax.persistence.EnumType getEnumType(ParameterType reader) {
-		javax.persistence.EnumType enumType = null;
+		if ( reader == null ) {
+			return null;
+		}
+
 		if ( reader.isPrimaryKey() ) {
-			MapKeyEnumerated enumAnn = getAnnotation( reader.getAnnotationsMethod(), MapKeyEnumerated.class );
+			final MapKeyEnumerated enumAnn = getAnnotation( reader.getAnnotationsMethod(), MapKeyEnumerated.class );
 			if ( enumAnn != null ) {
-				enumType = enumAnn.value();
+				return enumAnn.value();
 			}
 		}
-		else {
-			Enumerated enumAnn = getAnnotation( reader.getAnnotationsMethod(), Enumerated.class );
-			if ( enumAnn != null ) {
-				enumType = enumAnn.value();
-			}
+
+		final Enumerated enumAnn = getAnnotation( reader.getAnnotationsMethod(), Enumerated.class );
+		if ( enumAnn != null ) {
+			return enumAnn.value();
 		}
-		return enumType;
+
+		return null;
 	}
 
 	private <A extends Annotation> A getAnnotation(Annotation[] annotations, Class<A> anClass) {
@@ -209,17 +218,24 @@ public class EnumType<T extends Enum<T>>
 	}
 
 	private EnumValueConverter<T,?> interpretParameters(Properties parameters) {
-		final EnumJavaTypeDescriptor<?> enumJavaDescriptor = (EnumJavaTypeDescriptor<?>) typeConfiguration
+		//noinspection rawtypes
+		final EnumJavaTypeDescriptor enumJavaDescriptor = (EnumJavaTypeDescriptor) typeConfiguration
 				.getJavaTypeDescriptorRegistry()
 				.getDescriptor( enumClass );
 
-		final ParameterType reader = (ParameterType) parameters.get( PARAMETER_TYPE );
-		final javax.persistence.EnumType enumType = getEnumType( reader );
+		// this method should only be called for hbm.xml handling
+		assert parameters.get( PARAMETER_TYPE ) == null;
 
 		final LocalSqlTypeDescriptorIndicators localIndicators = new LocalSqlTypeDescriptorIndicators(
-				enumType,
-				reader.getColumnLengths()[0],
-				reader
+				// use ORDINAL as default for hbm.xml mappings
+				javax.persistence.EnumType.ORDINAL,
+				// Is there a reasonable value here?  Limits the
+				// number of enums that can be stored:
+				// 	1 = 10
+				//	2 = 100
+				//  etc
+				-1L,
+				null
 		);
 		final BasicJavaDescriptor<?> stringJavaDescriptor = (BasicJavaDescriptor<?>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( String.class );
 		final BasicJavaDescriptor<?> integerJavaDescriptor = (BasicJavaDescriptor<?>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Integer.class );
@@ -450,9 +466,11 @@ public class EnumType<T extends Enum<T>>
 				return true;
 			}
 
-			for ( Annotation annotation : reader.getAnnotationsMethod() ) {
-				if ( annotation instanceof Nationalized ) {
-					return true;
+			if ( reader != null ) {
+				for ( Annotation annotation : reader.getAnnotationsMethod() ) {
+					if ( annotation instanceof Nationalized ) {
+						return true;
+					}
 				}
 			}
 

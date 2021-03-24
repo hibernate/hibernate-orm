@@ -116,7 +116,7 @@ public class SqmCaseSearched<R>
 
 	@Override
 	public SqmCaseSearched<R> when(Expression<Boolean> condition, R result) {
-		when( nodeBuilder().wrap( condition ), nodeBuilder().value( result ) );
+		when( nodeBuilder().wrap( condition ), nodeBuilder().value( result, otherwise ) );
 		return this;
 	}
 

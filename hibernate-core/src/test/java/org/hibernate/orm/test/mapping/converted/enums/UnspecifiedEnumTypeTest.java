@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.enums;
+package org.hibernate.orm.test.mapping.converted.enums;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -29,8 +29,13 @@ import org.junit.Test;
 @RequiresDialect( value = H2Dialect.class )
 public class UnspecifiedEnumTypeTest extends BaseCoreFunctionalTestCase {
 	@Override
+	protected String getBaseForMappings() {
+		return "";
+	}
+
+	@Override
 	protected String[] getMappings() {
-		return new String[] { "enums/mappings.hbm.xml" };
+		return new String[] { "org/hibernate/orm/test/mapping/converted/enums/mappings.hbm.xml" };
 	}
 
 	@Override

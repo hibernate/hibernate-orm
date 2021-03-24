@@ -28,7 +28,6 @@ import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.LockMode;
-import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionException;
 import org.hibernate.Transaction;
@@ -149,7 +148,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		this.flushMode = options.getInitialSessionFlushMode();
 
 		this.tenantIdentifier = options.getTenantIdentifier();
-		if ( MultiTenancyStrategy.NONE == factory.getSettings().getMultiTenancyStrategy() ) {
+		if ( !factory.getSettings().isMultiTenancyEnabled() ) {
 			if ( tenantIdentifier != null ) {
 				throw new HibernateException( "SessionFactory was not configured for multi-tenancy" );
 			}

@@ -8,9 +8,7 @@ package org.hibernate.boot.spi;
 
 import java.util.List;
 import jakarta.persistence.SharedCacheMode;
-
 import org.hibernate.HibernateException;
-import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.boot.CacheRegionDefinition;
@@ -24,7 +22,6 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.type.spi.TypeConfiguration;
-
 import org.jboss.jandex.IndexView;
 
 /**
@@ -127,8 +124,8 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 	}
 
 	@Override
-	public MultiTenancyStrategy getMultiTenancyStrategy() {
-		return delegate.getMultiTenancyStrategy();
+	public boolean isMultiTenancyEnabled() {
+		return delegate.isMultiTenancyEnabled();
 	}
 
 	@Override

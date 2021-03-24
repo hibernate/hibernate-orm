@@ -9,7 +9,6 @@ package org.hibernate.cfg;
 import java.util.Map;
 
 import org.hibernate.ConnectionReleaseMode;
-import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.SchemaAutoTooling;
 import org.hibernate.boot.model.naming.Identifier;
@@ -79,7 +78,7 @@ public final class Settings {
 			LOG.debugf( "Order SQL updates by primary key: %s", enabledDisabled( sessionFactoryOptions.isOrderUpdatesEnabled() ) );
 			LOG.debugf( "Order SQL inserts for batching: %s", enabledDisabled( sessionFactoryOptions.isOrderInsertsEnabled() ) );
 
-			LOG.debugf( "multi-tenancy strategy : %s", sessionFactoryOptions.getMultiTenancyStrategy() );
+			LOG.debugf( "multi-tenancy enabled : %s", sessionFactoryOptions.isMultiTenancyEnabled() );
 
 			LOG.debugf( "JTA Track by Thread: %s", enabledDisabled( sessionFactoryOptions.isJtaTrackByThread() ) );
 
@@ -191,8 +190,8 @@ public final class Settings {
 		return sessionFactoryOptions.isOrderInsertsEnabled();
 	}
 
-	public MultiTenancyStrategy getMultiTenancyStrategy() {
-		return sessionFactoryOptions.getMultiTenancyStrategy();
+	public boolean isMultiTenancyEnabled() {
+		return sessionFactoryOptions.isMultiTenancyEnabled();
 	}
 	public boolean isJtaTrackByThread() {
 		return sessionFactoryOptions.isJtaTrackByThread();

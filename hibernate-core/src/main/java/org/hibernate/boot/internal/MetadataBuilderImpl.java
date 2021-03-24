@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 import org.hibernate.HibernateException;
-import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.TimeZoneStorageType;
@@ -533,7 +532,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 		private SharedCacheMode sharedCacheMode;
 		private AccessType defaultCacheAccessType;
-		private MultiTenancyStrategy multiTenancyStrategy;
+		private boolean multiTenancyEnabled;
 		private boolean explicitDiscriminatorsForJoinedInheritanceSupported;
 		private boolean implicitDiscriminatorsForJoinedInheritanceSupported;
 		private boolean implicitlyForceDiscriminatorInSelect;
@@ -556,7 +555,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			this.mappingDefaults = new MappingDefaultsImpl( serviceRegistry );
 
 			this.defaultTimezoneStorage = resolveTimeZoneStorageStrategy( serviceRegistry, configService );
-			this.multiTenancyStrategy =  MultiTenancyStrategy.determineMultiTenancyStrategy( configService.getSettings() );
+			this.multiTenancyEnabled =  configService.getSettings().containsKey( AvailableSettings.MULTI_TENANT_CONNECTION_PROVIDER );
 
 			this.xmlMappingEnabled = configService.getSetting(
 					AvailableSettings.XML_MAPPING_ENABLED,
@@ -794,8 +793,8 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		}
 
 		@Override
-		public MultiTenancyStrategy getMultiTenancyStrategy() {
-			return multiTenancyStrategy;
+		public boolean isMultiTenancyEnabled() {
+			return multiTenancyEnabled;
 		}
 
 		@Override

@@ -13,7 +13,6 @@ import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.Interceptor;
-import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
@@ -354,13 +353,11 @@ public interface SessionFactoryBuilder {
 	/**
 	 * Apply the form of multi-tenancy used by the application
 	 *
-	 * @param strategy The form of multi-tenancy in use.
+	 * @param enabled True if multi-tenancy in use.
 	 *
 	 * @return {@code this}, for method chaining
-	 *
-	 * @see org.hibernate.cfg.AvailableSettings#MULTI_TENANT
 	 */
-	SessionFactoryBuilder applyMultiTenancyStrategy(MultiTenancyStrategy strategy);
+	SessionFactoryBuilder applyMultiTenancy(boolean enabled);
 
 	/**
 	 * Specifies a strategy for resolving the notion of a "current" tenant-identifier when using multi-tenancy

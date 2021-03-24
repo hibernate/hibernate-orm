@@ -13,7 +13,6 @@ import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.Interceptor;
-import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.SessionFactoryBuilder;
@@ -251,8 +250,8 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
-	public SessionFactoryBuilder applyMultiTenancyStrategy(MultiTenancyStrategy strategy) {
-		this.optionsBuilder.applyMultiTenancyStrategy( strategy );
+	public SessionFactoryBuilder applyMultiTenancy(boolean enabled) {
+		this.optionsBuilder.applyMultiTenancy(enabled);
 		return this;
 	}
 

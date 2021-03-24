@@ -14,7 +14,6 @@ import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.Interceptor;
-import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.boot.SchemaAutoTooling;
@@ -211,8 +210,8 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
-	public MultiTenancyStrategy getMultiTenancyStrategy() {
-		return delegate.getMultiTenancyStrategy();
+	public boolean isMultiTenancyEnabled() {
+		return delegate.isMultiTenancyEnabled();
 	}
 
 	@Override

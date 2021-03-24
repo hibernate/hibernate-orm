@@ -16,7 +16,6 @@ import java.util.function.Consumer;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
@@ -63,7 +62,6 @@ public abstract class AbstractMultiTenancyTest extends BaseUnitTestCase {
 
         Map<String, Object> settings = new HashMap<>(  );
 
-        settings.put( AvailableSettings.MULTI_TENANT, multiTenancyStrategy() );
         settings.put( AvailableSettings.MULTI_TENANT_CONNECTION_PROVIDER,
             new ConfigurableMultiTenantConnectionProvider( connectionProviderMap ) );
 
@@ -114,8 +112,6 @@ public abstract class AbstractMultiTenancyTest extends BaseUnitTestCase {
         } );
 		//end::multitenacy-multitenacy-hibernate-same-entity-example[]
     }
-
-    protected abstract MultiTenancyStrategy multiTenancyStrategy();
 
     protected Properties properties() {
         Properties properties = new Properties( );

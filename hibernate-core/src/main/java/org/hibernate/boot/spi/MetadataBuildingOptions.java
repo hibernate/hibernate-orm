@@ -8,8 +8,6 @@ package org.hibernate.boot.spi;
 
 import java.util.List;
 import jakarta.persistence.SharedCacheMode;
-
-import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.boot.CacheRegionDefinition;
@@ -27,7 +25,6 @@ import org.hibernate.collection.spi.CollectionSemanticsResolver;
 import org.hibernate.metamodel.internal.ManagedTypeRepresentationResolverStandard;
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.type.spi.TypeConfiguration;
-
 import org.jboss.jandex.IndexView;
 
 /**
@@ -182,7 +179,7 @@ public interface MetadataBuildingOptions {
 	 *
 	 * @return The MultiTenancyStrategy
 	 */
-	MultiTenancyStrategy getMultiTenancyStrategy();
+	boolean isMultiTenancyEnabled();
 
 	IdGeneratorStrategyInterpreter getIdGenerationTypeInterpreter();
 

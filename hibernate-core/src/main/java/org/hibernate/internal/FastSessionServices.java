@@ -221,8 +221,8 @@ public final class FastSessionServices {
 		this.useStreamForLobBinding = Environment.useStreamsForBinary() || dialect.useInputStreamToInsertBlob();
 		this.preferredSqlTypeCodeForBoolean = sessionFactoryOptions.getPreferredSqlTypeCodeForBoolean();
 		this.defaultTimeZoneStorageStrategy = sessionFactoryOptions.getDefaultTimeZoneStorageStrategy();
-		this.requiresMultiTenantConnectionProvider = sf.getSettings().getMultiTenancyStrategy().requiresMultiTenantConnectionProvider();
 		this.defaultJdbcBatchSize = sessionFactoryOptions.getJdbcBatchSize();
+		this.requiresMultiTenantConnectionProvider = sf.getSettings().isMultiTenancyEnabled();
 
 		//Some "hot" services:
 		this.connectionProvider = requiresMultiTenantConnectionProvider ? null : sr.getService( ConnectionProvider.class );

@@ -163,7 +163,7 @@ public class LocalTemporaryTableBulkIdStrategy
 			protected void releaseFromUse(Queryable persister, SharedSessionContractImplementor session) {
 				Helper.INSTANCE.releaseTempTable(
 						tableInfo,
-						afterUseAction,
+						dropIdTables ? AfterUseAction.DROP : afterUseAction,
 						ddlTransactionHandling,
 						session
 				);
@@ -194,7 +194,7 @@ public class LocalTemporaryTableBulkIdStrategy
 			protected void releaseFromUse(Queryable persister, SharedSessionContractImplementor session) {
 				Helper.INSTANCE.releaseTempTable(
 						tableInfo,
-						afterUseAction,
+						dropIdTables ? AfterUseAction.DROP : afterUseAction,
 						ddlTransactionHandling,
 						session
 				);

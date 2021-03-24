@@ -8,7 +8,7 @@ package org.hibernate.dialect;
 
 import org.hibernate.HibernateException;
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.NullOrdering;
+import org.hibernate.query.NullOrdering;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.FirebirdIdentityColumnSupport;

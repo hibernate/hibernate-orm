@@ -8,7 +8,7 @@ package org.hibernate.sql.ast.tree.select;
 
 import java.util.List;
 
-import org.hibernate.SetOperator;
+import org.hibernate.query.SetOperator;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.results.graph.DomainResult;

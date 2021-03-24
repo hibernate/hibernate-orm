@@ -10,7 +10,7 @@ import java.sql.Types;
 
 import javax.persistence.TemporalType;
 
-import org.hibernate.NullOrdering;
+import org.hibernate.query.NullOrdering;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cfg.AvailableSettings;

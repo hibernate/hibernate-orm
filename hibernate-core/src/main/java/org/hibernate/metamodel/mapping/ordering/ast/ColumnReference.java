@@ -6,7 +6,7 @@
  */
 package org.hibernate.metamodel.mapping.ordering.ast;
 
-import org.hibernate.SortOrder;
+import org.hibernate.query.SortOrder;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;

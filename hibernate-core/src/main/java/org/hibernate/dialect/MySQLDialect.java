@@ -7,8 +7,8 @@
 package org.hibernate.dialect;
 
 import org.hibernate.LockOptions;
-import org.hibernate.NullOrdering;
-import org.hibernate.NullPrecedence;
+import org.hibernate.query.NullOrdering;
+import org.hibernate.query.NullPrecedence;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cfg.Environment;

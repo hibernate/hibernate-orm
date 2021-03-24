@@ -7,7 +7,7 @@
 package org.hibernate.dialect;
 
 import org.hibernate.LockOptions;
-import org.hibernate.NullPrecedence;
+import org.hibernate.query.NullPrecedence;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.DB2FormatEmulation;

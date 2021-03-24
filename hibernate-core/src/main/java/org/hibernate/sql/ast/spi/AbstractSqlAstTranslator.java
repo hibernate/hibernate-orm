@@ -19,12 +19,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 
-import org.hibernate.CteSearchClauseKind;
-import org.hibernate.FetchClauseType;
+import org.hibernate.sql.ast.tree.cte.CteSearchClauseKind;
+import org.hibernate.query.FetchClauseType;
 import org.hibernate.LockOptions;
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.NullPrecedence;
-import org.hibernate.SortOrder;
+import org.hibernate.query.NullPrecedence;
+import org.hibernate.query.SortOrder;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.AbstractDelegatingWrapperOptions;

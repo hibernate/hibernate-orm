@@ -8,7 +8,6 @@ package org.hibernate.sql.ast.tree.cte;
 
 import java.util.List;
 
-import org.hibernate.CteSearchClauseKind;
 import org.hibernate.sql.ast.tree.Statement;
 
 /**

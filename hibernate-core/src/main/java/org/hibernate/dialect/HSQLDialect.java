@@ -13,7 +13,7 @@ import javax.persistence.TemporalType;
 
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
-import org.hibernate.NullOrdering;
+import org.hibernate.query.NullOrdering;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cfg.Environment;

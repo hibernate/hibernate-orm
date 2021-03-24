@@ -30,12 +30,12 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import org.hibernate.FetchClauseType;
+import org.hibernate.query.FetchClauseType;
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.NullPrecedence;
+import org.hibernate.query.NullPrecedence;
 import org.hibernate.QueryException;
-import org.hibernate.SetOperator;
-import org.hibernate.SortOrder;
+import org.hibernate.query.SetOperator;
+import org.hibernate.query.SortOrder;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.grammars.hql.HqlLexer;

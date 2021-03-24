@@ -9,7 +9,7 @@ package org.hibernate.query.sqm.tree.select;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.FetchClauseType;
+import org.hibernate.query.FetchClauseType;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaOrder;
 import org.hibernate.query.criteria.JpaQueryPart;

@@ -6,8 +6,8 @@
  */
 package org.hibernate.metamodel.mapping.ordering.ast;
 
-import org.hibernate.NullPrecedence;
-import org.hibernate.SortOrder;
+import org.hibernate.query.NullPrecedence;
+import org.hibernate.query.SortOrder;
 
 /**
  * An individual sort specification in an order-by fragment

@@ -8,7 +8,7 @@ package org.hibernate.metamodel.model.domain;
 
 import java.util.Objects;
 
-import org.hibernate.DotIdentifierSequence;
+import org.hibernate.query.DotIdentifierSequence;
 import org.hibernate.internal.util.StringHelper;
 
 /**

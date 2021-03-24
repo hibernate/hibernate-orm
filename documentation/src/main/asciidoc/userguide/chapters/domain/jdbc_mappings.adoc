@@ -35,7 +35,7 @@ An `AttributeConverter` can also influence the `JavaTypeDescriptor` used in cert
 be used to register a `JdbcTypeDescriptor` with the `JdbcTypeDescriptorRegistry`.
 
 `@MapKeyJdbcType` and `@MapKeyJdbcTypeCode` work the same as `@JdbcType` and `@JdbcTypeCode`, respectively, except
-describing the `JdbcTypeDescriptor` to use for the map's key.  In which case, `JdbcType` and `JdbcTypeCode` refer
+describing the `JdbcTypeDescriptor` to use for the map's key.  In which case, `@JdbcType` and `@JdbcTypeCode` refer
 to the map's values.
 
 For character and binary data, the JPA `@Lob` annotation can be used to indicate that a JDBC BLOB, CLOB, NCLOB should

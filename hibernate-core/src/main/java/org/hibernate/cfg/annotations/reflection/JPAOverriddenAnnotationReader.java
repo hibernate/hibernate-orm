@@ -238,12 +238,12 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 		annotationToXml.put( ConstructorResult.class, "constructor-result" );
 	}
 
-	private XMLContext xmlContext;
+	private final XMLContext xmlContext;
 	private final ClassLoaderAccess classLoaderAccess;
 	private final AnnotatedElement element;
-	private String className;
-	private String propertyName;
-	private PropertyType propertyType;
+	private final String className;
+	private final String propertyName;
+	private final PropertyType propertyType;
 	private transient Annotation[] annotations;
 	private transient Map<Class, Annotation> annotationsMap;
 	private transient List<Element> elementsForProperty;
@@ -263,6 +263,8 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 		if ( el instanceof Class ) {
 			Class clazz = (Class) el;
 			className = clazz.getName();
+			propertyName = null;
+			propertyType = null;
 		}
 		else if ( el instanceof Field ) {
 			Field field = (Field) el;
@@ -282,18 +284,18 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 		else if ( el instanceof Method ) {
 			Method method = (Method) el;
 			className = method.getDeclaringClass().getName();
-			propertyName = method.getName();
+			String methodName = method.getName();
 
 			// YUCK!  The null here is the 'boundType', we'd rather get the TypeEnvironment()
 			if ( ReflectionUtil.isProperty( method, null, PersistentAttributeFilter.INSTANCE ) ) {
-				if ( propertyName.startsWith( "get" ) ) {
-					propertyName = Introspector.decapitalize( propertyName.substring( "get".length() ) );
+				if ( methodName.startsWith( "get" ) ) {
+					propertyName = Introspector.decapitalize( methodName.substring( "get".length() ) );
 				}
-				else if ( propertyName.startsWith( "is" ) ) {
-					propertyName = Introspector.decapitalize( propertyName.substring( "is".length() ) );
+				else if ( methodName.startsWith( "is" ) ) {
+					propertyName = Introspector.decapitalize( methodName.substring( "is".length() ) );
 				}
 				else {
-					throw new RuntimeException( "Method " + propertyName + " is not a property getter" );
+					throw new RuntimeException( "Method " + methodName + " is not a property getter" );
 				}
 				propertyType = PropertyType.PROPERTY;
 				try {
@@ -304,12 +306,14 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 				}
 			}
 			else {
+				propertyName = methodName;
 				propertyType = PropertyType.METHOD;
 			}
 		}
 		else {
 			className = null;
 			propertyName = null;
+			propertyType = null;
 		}
 	}
 

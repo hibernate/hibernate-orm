@@ -13,7 +13,6 @@ import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.Interceptor;
-import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.SessionFactoryBuilder;
@@ -216,8 +215,8 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
-	public T applyMultiTenancyStrategy(MultiTenancyStrategy strategy) {
-		delegate.applyMultiTenancyStrategy( strategy );
+	public T applyMultiTenancy(boolean enabled) {
+		delegate.applyMultiTenancy(enabled);
 		return getThis();
 	}
 

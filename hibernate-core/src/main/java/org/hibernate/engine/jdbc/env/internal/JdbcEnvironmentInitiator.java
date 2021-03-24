@@ -12,7 +12,6 @@ import java.sql.SQLException;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
-import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
@@ -246,10 +245,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 	}
 
 	private JdbcConnectionAccess buildJdbcConnectionAccess(Map configValues, ServiceRegistryImplementor registry) {
-		final MultiTenancyStrategy multiTenancyStrategy = MultiTenancyStrategy.determineMultiTenancyStrategy(
-				configValues
-		);
-		if ( !multiTenancyStrategy.requiresMultiTenantConnectionProvider() ) {
+		if ( !configValues.containsKey( AvailableSettings.MULTI_TENANT_CONNECTION_PROVIDER ) ) {
 			ConnectionProvider connectionProvider = registry.getService( ConnectionProvider.class );
 			return new ConnectionProviderJdbcConnectionAccess( connectionProvider );
 		}
@@ -260,9 +256,9 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 	}
 
 	public static JdbcConnectionAccess buildBootstrapJdbcConnectionAccess(
-			MultiTenancyStrategy multiTenancyStrategy,
+			boolean multiTenancyEnabled,
 			ServiceRegistryImplementor registry) {
-		if ( !multiTenancyStrategy.requiresMultiTenantConnectionProvider() ) {
+		if ( !multiTenancyEnabled ) {
 			ConnectionProvider connectionProvider = registry.getService( ConnectionProvider.class );
 			return new ConnectionProviderJdbcConnectionAccess( connectionProvider );
 		}

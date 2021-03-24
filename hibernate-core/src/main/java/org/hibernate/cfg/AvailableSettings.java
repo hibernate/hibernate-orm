@@ -1733,14 +1733,6 @@ public interface AvailableSettings {
 	String USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS = "hibernate.use_entity_where_clause_for_collections";
 
 	/**
-	 * Strategy for multi-tenancy.
-
-	 * @see org.hibernate.MultiTenancyStrategy
-	 * @since 4.0
-	 */
-	String MULTI_TENANT = "hibernate.multiTenancy";
-
-	/**
 	 * Names a {@link org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider} implementation to
 	 * use.  As MultiTenantConnectionProvider is also a service, can be configured directly through the
 	 * {@link org.hibernate.boot.registry.StandardServiceRegistryBuilder}

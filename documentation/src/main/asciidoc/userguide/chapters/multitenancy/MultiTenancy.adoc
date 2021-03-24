@@ -73,26 +73,6 @@ include::{sourcedir}/AbstractMultiTenancyTest.java[tags=multitenacy-hibernate-se
 ----
 ====
 
-Additionally, when specifying the configuration, an `org.hibernate.MultiTenancyStrategy` should be named using the `hibernate.multiTenancy` setting.
-Hibernate will perform validations based on the type of strategy you specify.
-The strategy here correlates with the isolation approach discussed above.
-
-NONE::
-  (the default) No multitenancy is expected.
-  In fact, it is considered an error if a tenant identifier is specified when opening a session using this strategy.
-SCHEMA::
-  Correlates to the separate schema approach.
-  It is an error to attempt to open a session without a tenant identifier using this strategy.
-  Additionally, a `MultiTenantConnectionProvider` must be specified.
-DATABASE::
-  Correlates to the separate database approach.
-  It is an error to attempt to open a session without a tenant identifier using this strategy.
-  Additionally, a `MultiTenantConnectionProvider` must be specified.
-DISCRIMINATOR::
-  Correlates to the partitioned (discriminator) approach.
-  It is an error to attempt to open a session without a tenant identifier using this strategy.
-  This strategy is not yet implemented and you can follow its progress via the https://hibernate.atlassian.net/browse/HHH-6054[HHH-6054 Jira issue].
-
 [[multitenacy-hibernate-MultiTenantConnectionProvider]]
 ==== MultiTenantConnectionProvider
 

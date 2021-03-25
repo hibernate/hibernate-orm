@@ -94,17 +94,19 @@ public abstract class AbstractCompositionAttribute
 							final AssociationType aType = (AssociationType) type;
 
 							if ( aType.isAnyType() ) {
+								final OuterJoinLoadable outerJoinLoadable = (OuterJoinLoadable) locateOwningPersister();
 								associationKey = new AssociationKey(
 										JoinHelper.getLHSTableName(
 												aType,
 												attributeNumber(),
-												(OuterJoinLoadable) locateOwningPersister()
+												outerJoinLoadable
 										),
+										outerJoinLoadable.getTableName(),
 										JoinHelper.getLHSColumnNames(
 												aType,
 												attributeNumber(),
 												columnPosition,
-												(OuterJoinLoadable) locateOwningPersister(),
+												outerJoinLoadable,
 												sessionFactory()
 										)
 								);
@@ -113,16 +115,23 @@ public abstract class AbstractCompositionAttribute
 								final Joinable joinable = aType.getAssociatedJoinable( sessionFactory() );
 
 								final String lhsTableName;
+								final String ownerTableName;
 								final String[] lhsColumnNames;
 
 								if ( joinable.isCollection() ) {
 									final QueryableCollection collectionPersister = (QueryableCollection) joinable;
 									lhsTableName = collectionPersister.getTableName();
+									ownerTableName = ( (Joinable) sessionFactory().getMetamodel()
+											.entityPersister( collectionPersister.getOwnerEntityPersister().getRootEntityName() ) )
+											.getTableName();
 									lhsColumnNames = collectionPersister.getElementColumnNames();
 								}
 								else {
 									final OuterJoinLoadable entityPersister = (OuterJoinLoadable) locateOwningPersister();
 									lhsTableName = getLHSTableName( aType, attributeNumber(), entityPersister );
+									ownerTableName = ( (Joinable) sessionFactory().getMetamodel()
+											.entityPersister( entityPersister.getRootEntityName() ) )
+											.getTableName();
 									lhsColumnNames = getLHSColumnNames(
 											aType,
 											attributeNumber(),
@@ -131,13 +140,16 @@ public abstract class AbstractCompositionAttribute
 											sessionFactory()
 									);
 								}
-								associationKey = new AssociationKey( lhsTableName, lhsColumnNames );
+								associationKey = new AssociationKey( lhsTableName, ownerTableName, lhsColumnNames );
 							}
 							else {
 								final Joinable joinable = aType.getAssociatedJoinable( sessionFactory() );
 
 								associationKey = new AssociationKey(
 										joinable.getTableName(),
+										( (Joinable) sessionFactory().getMetamodel()
+												.entityPersister( locateOwningPersister().getRootEntityName() ) )
+												.getTableName(),
 										getRHSColumnNames( aType, sessionFactory() )
 								);
 							}

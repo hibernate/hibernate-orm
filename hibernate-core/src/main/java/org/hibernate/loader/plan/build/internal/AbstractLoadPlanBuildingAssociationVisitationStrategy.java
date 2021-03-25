@@ -353,9 +353,13 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 		pushToCollectionStack( collectionReturn );
 		addRootReturn( collectionReturn );
 
+		final String sourceTableName = ( (Joinable) sessionFactory().getMetamodel()
+				.entityPersister( collectionDefinition.getCollectionPersister().getOwnerEntityPersister().getRootEntityName() ) )
+				.getTableName();
 		associationKeyRegistered(
 				new AssociationKey(
 						( (Joinable) collectionDefinition.getCollectionPersister() ).getTableName(),
+						sourceTableName,
 						( (Joinable) collectionDefinition.getCollectionPersister() ).getKeyColumnNames()
 				)
 		);

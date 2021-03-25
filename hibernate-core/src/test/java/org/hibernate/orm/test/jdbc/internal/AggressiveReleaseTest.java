@@ -6,28 +6,61 @@
  */
 package org.hibernate.orm.test.jdbc.internal;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.engine.jdbc.internal.JdbcCoordinatorImpl;
+import org.hibernate.resource.jdbc.ResourceRegistry;
+import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
+
 import org.hibernate.testing.boot.BasicTestingJdbcServiceImpl;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.test.util.jdbc.PreparedStatementSpyConnectionProvider;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+
 
 /**
  * @author Steve Ebersole
  */
-public class AggressiveReleaseTest extends BaseCoreFunctionalTestCase {
-	
-	private BasicTestingJdbcServiceImpl services = new BasicTestingJdbcServiceImpl();
-	
+@RequiresDialect(H2Dialect.class)
+public class AggressiveReleaseTest extends BaseSessionFactoryFunctionalTest {
+
+	private PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider(
+			false,
+			false,
+			true
+	);
+
 	@Override
+	protected void applySettings(StandardServiceRegistryBuilder builer) {
+		builer.applySetting(
+				org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER,
+				connectionProvider
+		);
+		builer.applySetting(
+				AvailableSettings.CONNECTION_HANDLING,
+				PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT
+		);
+	}
+
+	private BasicTestingJdbcServiceImpl services = new BasicTestingJdbcServiceImpl();
+
+	@BeforeEach
 	protected void prepareTest() throws Exception {
+
 		services.prepare( true );
 
 		Connection connection = null;
@@ -43,20 +76,20 @@ public class AggressiveReleaseTest extends BaseCoreFunctionalTestCase {
 				try {
 					stmnt.close();
 				}
-				catch ( SQLException ignore ) {
+				catch (SQLException ignore) {
 				}
 			}
 			if ( connection != null ) {
 				try {
 					services.getBootstrapJdbcConnectionAccess().releaseConnection( connection );
 				}
-				catch ( SQLException ignore ) {
+				catch (SQLException ignore) {
 				}
 			}
 		}
 	}
-	
-	@Override
+
+	@AfterEach
 	protected void cleanupTest() throws Exception {
 		Connection connection = null;
 		Statement stmnt = null;
@@ -70,173 +103,174 @@ public class AggressiveReleaseTest extends BaseCoreFunctionalTestCase {
 				try {
 					stmnt.close();
 				}
-				catch ( SQLException ignore ) {
+				catch (SQLException ignore) {
 				}
 			}
 			if ( connection != null ) {
 				try {
 					services.getBootstrapJdbcConnectionAccess().releaseConnection( connection );
 				}
-				catch ( SQLException ignore ) {
+				catch (SQLException ignore) {
 				}
 			}
 		}
 
 		services.release();
 	}
-	
+
 	@Test
 	public void testBasicRelease() {
-//		Session session = openSession();
-//		SessionImplementor sessionImpl = (SessionImplementor) session;
-//
-//		LogicalConnectionImplementor logicalConnection = new LogicalConnectionImpl( null,
-//				ConnectionReleaseMode.AFTER_STATEMENT, services, new JdbcConnectionAccessImpl(
-//						services.getConnectionProvider() ) );
-//
-//		JdbcCoordinatorImpl jdbcCoord = new JdbcCoordinatorImpl( logicalConnection,
-//				sessionImpl );
-//		JournalingConnectionObserver observer = new JournalingConnectionObserver();
-//		logicalConnection.addObserver( observer );
-//
-//		try {
-//			PreparedStatement ps = jdbcCoord.getStatementPreparer().prepareStatement( "insert into SANDBOX_JDBC_TST( ID, NAME ) values ( ?, ? )" );
-//			ps.setLong( 1, 1 );
-//			ps.setString( 2, "name" );
-//			jdbcCoord.getResultSetReturn().execute( ps );
-//			assertTrue( jdbcCoord.hasRegisteredResources() );
-//			assertEquals( 1, observer.getPhysicalConnectionObtainedCount() );
-//			assertEquals( 0, observer.getPhysicalConnectionReleasedCount() );
-//			jdbcCoord.release( ps );
-//			assertFalse( jdbcCoord.hasRegisteredResources() );
-//			assertEquals( 1, observer.getPhysicalConnectionObtainedCount() );
-//			assertEquals( 1, observer.getPhysicalConnectionReleasedCount() );
-//		}
-//		catch ( SQLException sqle ) {
-//			fail( "incorrect exception type : sqlexception" );
-//		}
-//		finally {
-//			session.close();
-//		}
-//
-//		assertFalse( jdbcCoord.hasRegisteredResources() );
+		connectionProvider.clear();
+		ResourceRegistry registry = sessionFactoryScope().fromSession(
+				session -> {
+					JdbcCoordinatorImpl jdbcCoord = (JdbcCoordinatorImpl) session.getJdbcCoordinator();
+					ResourceRegistry resourceRegistry = jdbcCoord.getLogicalConnection().getResourceRegistry();
+					try {
+						PreparedStatement ps = jdbcCoord.getStatementPreparer().prepareStatement(
+								"insert into SANDBOX_JDBC_TST( ID, NAME ) values ( ?, ? )" );
+						ps.setLong( 1, 1 );
+						ps.setString( 2, "name" );
+						jdbcCoord.getResultSetReturn().execute( ps );
+						assertTrue( jdbcCoord.getResourceRegistry().hasRegisteredResources() );
+						assertEquals( 1, connectionProvider.getAcquiredConnections().size() );
+						assertEquals( 0, connectionProvider.getReleasedConnections().size() );
+						resourceRegistry.release( ps );
+						jdbcCoord.afterStatementExecution();
+
+						assertFalse( resourceRegistry.hasRegisteredResources() );
+						assertEquals( 0, connectionProvider.getAcquiredConnections().size() );
+						assertEquals( 1, connectionProvider.getReleasedConnections().size() );
+					}
+					catch (SQLException sqle) {
+						fail( "incorrect exception type : sqlexception" );
+					}
+					finally {
+						jdbcCoord.close();
+					}
+					return resourceRegistry;
+				}
+		);
+
+		assertFalse( registry.hasRegisteredResources() );
 	}
 
 	@Test
 	public void testReleaseCircumventedByHeldResources() {
-//		Session session = openSession();
-//		SessionImplementor sessionImpl = (SessionImplementor) session;
-//
-//		LogicalConnectionImpl logicalConnection = new LogicalConnectionImpl( null,
-//				ConnectionReleaseMode.AFTER_STATEMENT, services, new JdbcConnectionAccessImpl(
-//						services.getConnectionProvider() ) );
-//		JdbcCoordinatorImpl jdbcCoord = new JdbcCoordinatorImpl( logicalConnection,
-//				sessionImpl.getTransactionCoordinator() );
-//		JournalingConnectionObserver observer = new JournalingConnectionObserver();
-//		logicalConnection.addObserver( observer );
-//
-//		try {
-//			PreparedStatement ps = jdbcCoord.getStatementPreparer().prepareStatement( "insert into SANDBOX_JDBC_TST( ID, NAME ) values ( ?, ? )" );
-//			ps.setLong( 1, 1 );
-//			ps.setString( 2, "name" );
-//			jdbcCoord.getResultSetReturn().execute( ps );
-//			assertTrue( jdbcCoord.hasRegisteredResources() );
-//			assertEquals( 1, observer.getPhysicalConnectionObtainedCount() );
-//			assertEquals( 0, observer.getPhysicalConnectionReleasedCount() );
-//			jdbcCoord.release( ps );
-//			assertFalse( jdbcCoord.hasRegisteredResources() );
-//			assertEquals( 1, observer.getPhysicalConnectionObtainedCount() );
-//			assertEquals( 1, observer.getPhysicalConnectionReleasedCount() );
-//
-//			// open a result set and hold it open...
-//			ps = jdbcCoord.getStatementPreparer().prepareStatement( "select * from SANDBOX_JDBC_TST" );
-//			jdbcCoord.getResultSetReturn().extract( ps );
-//			assertTrue( jdbcCoord.hasRegisteredResources() );
-//			assertEquals( 2, observer.getPhysicalConnectionObtainedCount() );
-//			assertEquals( 1, observer.getPhysicalConnectionReleasedCount() );
-//
-//			// open a second result set
-//			PreparedStatement ps2 = jdbcCoord.getStatementPreparer().prepareStatement( "select * from SANDBOX_JDBC_TST" );
-//			jdbcCoord.getResultSetReturn().execute( ps );
-//			assertTrue( jdbcCoord.hasRegisteredResources() );
-//			assertEquals( 2, observer.getPhysicalConnectionObtainedCount() );
-//			assertEquals( 1, observer.getPhysicalConnectionReleasedCount() );
-//			// and close it...
-//			jdbcCoord.release( ps2 );
-//			// the release should be circumvented...
-//			assertTrue( jdbcCoord.hasRegisteredResources() );
-//			assertEquals( 2, observer.getPhysicalConnectionObtainedCount() );
-//			assertEquals( 1, observer.getPhysicalConnectionReleasedCount() );
-//
-//			// let the close of the logical connection below release all resources (hopefully)...
-//		}
-//		catch ( SQLException sqle ) {
-//			fail( "incorrect exception type : sqlexception" );
-//		}
-//		finally {
-//			jdbcCoord.close();
-//			session.close();
-//		}
-//
-//		assertFalse( jdbcCoord.hasRegisteredResources() );
-//		assertEquals( 2, observer.getPhysicalConnectionObtainedCount() );
-//		assertEquals( 2, observer.getPhysicalConnectionReleasedCount() );
+		connectionProvider.clear();
+		ResourceRegistry registry = sessionFactoryScope().fromSession(
+				session -> {
+					JdbcCoordinatorImpl jdbcCoord = (JdbcCoordinatorImpl) session.getJdbcCoordinator();
+					ResourceRegistry resourceRegistry = jdbcCoord.getLogicalConnection().getResourceRegistry();
+
+					try {
+						PreparedStatement ps = jdbcCoord.getStatementPreparer().prepareStatement(
+								"insert into SANDBOX_JDBC_TST( ID, NAME ) values ( ?, ? )" );
+						ps.setLong( 1, 1 );
+						ps.setString( 2, "name" );
+						jdbcCoord.getResultSetReturn().execute( ps );
+						assertTrue( resourceRegistry.hasRegisteredResources() );
+						assertEquals( 1, connectionProvider.getAcquiredConnections().size() );
+						assertEquals( 0, connectionProvider.getReleasedConnections().size() );
+						resourceRegistry.release( ps );
+						jdbcCoord.afterStatementExecution();
+
+						assertFalse( resourceRegistry.hasRegisteredResources() );
+						assertEquals( 0, connectionProvider.getAcquiredConnections().size() );
+						assertEquals( 1, connectionProvider.getReleasedConnections().size() );
+
+						// open a result set and hold it open...
+						ps = jdbcCoord.getStatementPreparer().prepareStatement( "select * from SANDBOX_JDBC_TST" );
+						jdbcCoord.getResultSetReturn().extract( ps );
+						assertTrue( resourceRegistry.hasRegisteredResources() );
+						assertEquals( 1, connectionProvider.getAcquiredConnections().size() );
+						assertEquals( 1, connectionProvider.getReleasedConnections().size() );
+
+						// open a second result set
+						PreparedStatement ps2 = jdbcCoord.getStatementPreparer()
+								.prepareStatement( "select * from SANDBOX_JDBC_TST" );
+						jdbcCoord.getResultSetReturn().execute( ps );
+						assertTrue( resourceRegistry.hasRegisteredResources() );
+						assertEquals( 1, connectionProvider.getAcquiredConnections().size() );
+						assertEquals( 1, connectionProvider.getReleasedConnections().size() );
+						// and close it...
+						resourceRegistry.release( ps2 );
+						jdbcCoord.afterStatementExecution();
+						// the release should be circumvented...
+						assertTrue( resourceRegistry.hasRegisteredResources() );
+						assertEquals( 1, connectionProvider.getAcquiredConnections().size() );
+						assertEquals( 1, connectionProvider.getReleasedConnections().size() );
+						// let the close of the logical connection below release all resources (hopefully)...
+					}
+					catch (SQLException sqle) {
+						fail( "incorrect exception type : sqlexception" );
+					}
+					finally {
+						jdbcCoord.close();
+
+					}
+					return resourceRegistry;
+
+				} );
+
+		assertFalse( registry.hasRegisteredResources() );
+		assertEquals( 0, connectionProvider.getAcquiredConnections().size() );
+		assertEquals( 2, connectionProvider.getReleasedConnections().size() );
 	}
 
 	@Test
 	public void testReleaseCircumventedManually() {
-//		Session session = openSession();
-//		SessionImplementor sessionImpl = (SessionImplementor) session;
-//
-//		LogicalConnectionImpl logicalConnection = new LogicalConnectionImpl( null,
-//				ConnectionReleaseMode.AFTER_STATEMENT, services, new JdbcConnectionAccessImpl(
-//						services.getConnectionProvider() ) );
-//		JdbcCoordinatorImpl jdbcCoord = new JdbcCoordinatorImpl( logicalConnection,
-//				sessionImpl.getTransactionCoordinator() );
-//		JournalingConnectionObserver observer = new JournalingConnectionObserver();
-//		logicalConnection.addObserver( observer );
-//
-//		try {
-//			PreparedStatement ps = jdbcCoord.getStatementPreparer().prepareStatement( "insert into SANDBOX_JDBC_TST( ID, NAME ) values ( ?, ? )" );
-//			ps.setLong( 1, 1 );
-//			ps.setString( 2, "name" );
-//			jdbcCoord.getResultSetReturn().execute( ps );
-//			assertTrue( jdbcCoord.hasRegisteredResources() );
-//			assertEquals( 1, observer.getPhysicalConnectionObtainedCount() );
-//			assertEquals( 0, observer.getPhysicalConnectionReleasedCount() );
-//			jdbcCoord.release( ps );
-//			assertFalse( jdbcCoord.hasRegisteredResources() );
-//			assertEquals( 1, observer.getPhysicalConnectionObtainedCount() );
-//			assertEquals( 1, observer.getPhysicalConnectionReleasedCount() );
-//
-//			// disable releases...
-//			jdbcCoord.disableReleases();
-//
-//			// open a result set...
-//			ps = jdbcCoord.getStatementPreparer().prepareStatement( "select * from SANDBOX_JDBC_TST" );
-//			jdbcCoord.getResultSetReturn().extract( ps );
-//			assertTrue( jdbcCoord.hasRegisteredResources() );
-//			assertEquals( 2, observer.getPhysicalConnectionObtainedCount() );
-//			assertEquals( 1, observer.getPhysicalConnectionReleasedCount() );
-//			// and close it...
-//			jdbcCoord.release( ps );
-//			// the release should be circumvented...
-//			assertFalse( jdbcCoord.hasRegisteredResources() );
-//			assertEquals( 2, observer.getPhysicalConnectionObtainedCount() );
-//			assertEquals( 1, observer.getPhysicalConnectionReleasedCount() );
-//
-//			// let the close of the logical connection below release all resources (hopefully)...
-//		}
-//		catch ( SQLException sqle ) {
-//			fail( "incorrect exception type : sqlexception" );
-//		}
-//		finally {
-//			jdbcCoord.close();
-//			session.close();
-//		}
-//
-//		assertFalse( jdbcCoord.hasRegisteredResources() );
-//		assertEquals( 2, observer.getPhysicalConnectionObtainedCount() );
-//		assertEquals( 2, observer.getPhysicalConnectionReleasedCount() );
+		connectionProvider.clear();
+		connectionProvider.clear();
+		ResourceRegistry registry = sessionFactoryScope().fromSession(
+				session -> {
+					JdbcCoordinatorImpl jdbcCoord = (JdbcCoordinatorImpl) session.getJdbcCoordinator();
+					ResourceRegistry resourceRegistry = jdbcCoord.getLogicalConnection().getResourceRegistry();
+
+					try {
+						PreparedStatement ps = jdbcCoord.getStatementPreparer().prepareStatement(
+								"insert into SANDBOX_JDBC_TST( ID, NAME ) values ( ?, ? )" );
+						ps.setLong( 1, 1 );
+						ps.setString( 2, "name" );
+						jdbcCoord.getResultSetReturn().execute( ps );
+						assertTrue( resourceRegistry.hasRegisteredResources() );
+						assertEquals( 1, connectionProvider.getAcquiredConnections().size() );
+						assertEquals( 0, connectionProvider.getReleasedConnections().size() );
+						resourceRegistry.release( ps );
+						jdbcCoord.afterStatementExecution();
+						assertFalse( resourceRegistry.hasRegisteredResources() );
+						assertEquals( 0, connectionProvider.getAcquiredConnections().size() );
+						assertEquals( 1, connectionProvider.getReleasedConnections().size() );
+
+						// disable releases...
+						jdbcCoord.disableReleases();
+
+						// open a result set...
+						ps = jdbcCoord.getStatementPreparer().prepareStatement( "select * from SANDBOX_JDBC_TST" );
+						jdbcCoord.getResultSetReturn().extract( ps );
+						assertTrue( resourceRegistry.hasRegisteredResources() );
+						assertEquals( 1, connectionProvider.getAcquiredConnections().size() );
+						assertEquals( 1, connectionProvider.getReleasedConnections().size() );
+						// and close it...
+						resourceRegistry.release( ps );
+						jdbcCoord.afterStatementExecution();
+						// the release should be circumvented...
+						assertFalse( resourceRegistry.hasRegisteredResources() );
+						assertEquals( 1, connectionProvider.getAcquiredConnections().size() );
+						assertEquals( 1, connectionProvider.getReleasedConnections().size() );
+
+						// let the close of the logical connection below release all resources (hopefully)...
+					}
+					catch (SQLException sqle) {
+						fail( "incorrect exception type : sqlexception" );
+					}
+					finally {
+						jdbcCoord.close();
+					}
+					return resourceRegistry;
+				} );
+
+		assertFalse( registry.hasRegisteredResources() );
+		assertEquals( 0, connectionProvider.getAcquiredConnections().size() );
+		assertEquals( 2, connectionProvider.getReleasedConnections().size() );
 	}
 }

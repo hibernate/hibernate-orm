@@ -60,7 +60,7 @@ public class PreparedStatementSpyConnectionProvider extends ConnectionProviderDe
 	 */
 	@Deprecated
 	public PreparedStatementSpyConnectionProvider() {
-		this( false, false );
+		this( false, false, false );
 	}
 
 	/**
@@ -68,7 +68,14 @@ public class PreparedStatementSpyConnectionProvider extends ConnectionProviderDe
 	 * memory usage of the testsuite is extremely high.
 	 * When you really need to verify invocations, set the relevant constructor parameter to true.
 	 */
-	public PreparedStatementSpyConnectionProvider(boolean allowMockVerificationOnStatements, boolean allowMockVerificationOnConnections) {
+	public PreparedStatementSpyConnectionProvider(
+			boolean allowMockVerificationOnStatements,
+			boolean allowMockVerificationOnConnections) {
+		this( allowMockVerificationOnStatements, allowMockVerificationOnConnections, false );
+	}
+
+	public PreparedStatementSpyConnectionProvider(boolean allowMockVerificationOnStatements, boolean allowMockVerificationOnConnections, boolean forceSupportsAggressiveRelease) {
+		super(forceSupportsAggressiveRelease);
 		this.settingsForStatements = allowMockVerificationOnStatements ? VERIFIEABLE_MOCK_SETTINGS : MOCK_SETTINGS;
 		this.settingsForConnections = allowMockVerificationOnConnections ? VERIFIEABLE_MOCK_SETTINGS : MOCK_SETTINGS;
 	}

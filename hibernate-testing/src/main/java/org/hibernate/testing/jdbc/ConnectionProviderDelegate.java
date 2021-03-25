@@ -35,12 +35,19 @@ public class ConnectionProviderDelegate implements
 
 	private ConnectionProvider connectionProvider;
 	private boolean configured;
+	private final boolean forceSupportsAggressiveRelease;
 
-	public ConnectionProviderDelegate() {
+	public ConnectionProviderDelegate(){
+		this(false);
+	}
+
+	public ConnectionProviderDelegate(boolean forceSupportsAggressiveRelease) {
+		this.forceSupportsAggressiveRelease = forceSupportsAggressiveRelease;
 	}
 
 	public ConnectionProviderDelegate(ConnectionProvider connectionProvider) {
 		this.connectionProvider = connectionProvider;
+		this.forceSupportsAggressiveRelease = false;
 	}
 
 	public ConnectionProvider getConnectionProvider() {
@@ -88,6 +95,9 @@ public class ConnectionProviderDelegate implements
 
 	@Override
 	public boolean supportsAggressiveRelease() {
+		if ( forceSupportsAggressiveRelease ) {
+			return true;
+		}
 		return connectionProvider.supportsAggressiveRelease();
 	}
 
@@ -107,4 +117,6 @@ public class ConnectionProviderDelegate implements
 			( (Stoppable) connectionProvider ).stop();
 		}
 	}
+
+
 }

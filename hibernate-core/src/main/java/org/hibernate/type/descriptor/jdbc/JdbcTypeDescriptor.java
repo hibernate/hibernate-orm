@@ -107,6 +107,25 @@ public interface JdbcTypeDescriptor extends Serializable {
 		return false;
 	}
 
+	default boolean isFloat() {
+		switch ( getJdbcType() ) {
+			case Types.FLOAT:
+			case Types.REAL:
+			case Types.DOUBLE:
+				return true;
+		}
+		return false;
+	}
+
+	default boolean isDecimal() {
+		switch ( getJdbcType() ) {
+			case Types.DECIMAL:
+			case Types.NUMERIC:
+				return true;
+		}
+		return false;
+	}
+
 	default boolean isNumber() {
 		switch ( getJdbcType() ) {
 			case Types.BIT:

@@ -16,6 +16,9 @@ import java.util.function.Supplier;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 
+import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
@@ -1588,8 +1591,9 @@ public class CommonFunctionFactory {
 
 	public static void math(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "round" )
+				// To avoid truncating to a specific data type, we default to using the argument type
+				.setReturnTypeResolver( useArgType(1) )
 				.setExactArgumentCount(2)
-				.setInvariantType( StandardBasicTypes.DOUBLE )
 				.register();
 
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder("floor")
@@ -1635,6 +1639,7 @@ public class CommonFunctionFactory {
 
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder("power")
 				.setExactArgumentCount(2)
+				.setReturnTypeResolver( new PowerReturnTypeResolver() )
 				.register();
 	}
 
@@ -1648,7 +1653,7 @@ public class CommonFunctionFactory {
 	public static void power_expLn(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "power", "exp(ln(?1)*?2)")
 				.setExactArgumentCount( 2 )
-				.setInvariantType( StandardBasicTypes.DOUBLE )
+				.setReturnTypeResolver( new PowerReturnTypeResolver() )
 				.register();
 	}
 
@@ -1900,4 +1905,45 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	private static class PowerReturnTypeResolver implements FunctionReturnTypeResolver {
+
+		@Override
+		public AllowableFunctionReturnType<?> resolveFunctionReturnType(
+				AllowableFunctionReturnType<?> impliedType,
+				List<SqmTypedNode<?>> arguments,
+				TypeConfiguration typeConfiguration) {
+			final JdbcMapping baseType = StandardFunctionReturnTypeResolvers
+					.extractArgumentJdbcMapping( typeConfiguration, arguments, 1 );
+			final JdbcMapping powerType = StandardFunctionReturnTypeResolvers
+					.extractArgumentJdbcMapping( typeConfiguration, arguments, 2 );
+
+			if ( baseType.getJdbcTypeDescriptor().isDecimal() ) {
+				return (AllowableFunctionReturnType<?>) arguments.get( 0 ).getNodeType();
+			}
+			else if ( powerType.getJdbcTypeDescriptor().isDecimal() ) {
+				return (AllowableFunctionReturnType<?>) arguments.get( 1 ).getNodeType();
+			}
+			return typeConfiguration.getBasicTypeForJavaType( Double.class );
+		}
+
+		@Override
+		public BasicValuedMapping resolveFunctionReturnType(
+				Supplier<BasicValuedMapping> impliedTypeAccess, List<? extends SqlAstNode> arguments) {
+			final BasicValuedMapping baseMapping = StandardFunctionReturnTypeResolvers.extractArgumentValuedMapping(
+					arguments,
+					1
+			);
+			final BasicValuedMapping powerMapping = StandardFunctionReturnTypeResolvers.extractArgumentValuedMapping(
+					arguments,
+					2
+			);
+			if ( baseMapping.getJdbcMapping().getJdbcTypeDescriptor().isDecimal() ) {
+				return baseMapping;
+			}
+			else if ( powerMapping.getJdbcMapping().getJdbcTypeDescriptor().isDecimal() ) {
+				return powerMapping;
+			}
+			return StandardBasicTypes.DOUBLE;
+		}
+	}
 }

@@ -164,7 +164,7 @@ public class FunctionTests {
 							.list();
 					assertThat( session.createQuery("select abs(-2)").getSingleResult(), is(2) );
 					assertThat( session.createQuery("select sign(-2)").getSingleResult(), is(-1) );
-					assertThat( session.createQuery("select power(3.0,2.0)").getSingleResult(), is(9.0f) );
+					assertThat( session.createQuery("select power(3.0,2.0)").getSingleResult(), is(9.0d) );
 					assertThat( session.createQuery("select round(32.12345,2)").getSingleResult(), is(32.12f) );
 					assertThat( session.createQuery("select mod(3,2)").getSingleResult(), is(1) );
 					assertThat( session.createQuery("select 3%2").getSingleResult(), is(1) );

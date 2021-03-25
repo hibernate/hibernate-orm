@@ -55,7 +55,8 @@ public class InsertSubstringOverlayEmulation
 			AllowableFunctionReturnType<T> impliedResultType,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
-		BasicType<Integer> intType = typeConfiguration.getBasicTypeForJavaType(Integer.class);
+		final BasicType<Integer> intType = typeConfiguration.getBasicTypeForJavaType( Integer.class );
+		final BasicType<String> stringType = typeConfiguration.getBasicTypeForJavaType( String.class );
 
 		SqmTypedNode<?> string = arguments.get(0);
 		SqmTypedNode<?> replacement = arguments.get(1);
@@ -93,7 +94,6 @@ public class InsertSubstringOverlayEmulation
 					intType,
 					queryEngine.getCriteriaBuilder()
 			);
-			SqmExpressable<Object> stringType = (SqmExpressable<Object>) impliedResultType;
 			SqmTypedNode<?> restString = substring.generateSqmExpression(
 					asList( string, startPlusLength ),
 					impliedResultType,
@@ -101,7 +101,7 @@ public class InsertSubstringOverlayEmulation
 					typeConfiguration
 			);
 			if ( strictSubstring ) {
-				restString = (SqmTypedNode<?>) new SqmCaseSearched<>( stringType, start.nodeBuilder() )
+				restString = new SqmCaseSearched<>( stringType, start.nodeBuilder() )
 						.when(
 								new SqmComparisonPredicate(
 										startPlusLength,
@@ -114,8 +114,8 @@ public class InsertSubstringOverlayEmulation
 										),
 										string.nodeBuilder()
 								),
-								(Expression<?>) new SqmLiteral<>( "", stringType, string.nodeBuilder() )
-						).otherwise( (Expression<?>) restString );
+								new SqmLiteral<>( "", stringType, string.nodeBuilder() )
+						).otherwise( (Expression<? extends String>) restString );
 			}
 			return concat.generateSqmExpression(
 					asList(

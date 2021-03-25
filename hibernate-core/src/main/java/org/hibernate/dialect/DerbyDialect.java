@@ -63,6 +63,8 @@ import java.sql.Types;
 
 import javax.persistence.TemporalType;
 
+import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.useArgType;
+
 /**
  * Hibernate Dialect for Apache Derby / Cloudscape 10
  *
@@ -194,8 +196,8 @@ public class DerbyDialect extends Dialect {
 		CommonFunctionFactory.power_expLn( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "round", "floor(?1*1e?2+0.5)/1e?2")
+				.setReturnTypeResolver( useArgType(1) )
 				.setExactArgumentCount( 2 )
-				.setInvariantType( StandardBasicTypes.DOUBLE )
 				.register();
 
 		//no way I can see to pad with anything other than spaces

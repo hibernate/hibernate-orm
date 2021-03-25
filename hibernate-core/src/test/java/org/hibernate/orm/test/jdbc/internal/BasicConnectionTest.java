@@ -60,7 +60,7 @@ public class BasicConnectionTest extends BaseCoreFunctionalTestCase {
 
 		try {
 			Statement statement = jdbcCoord.getStatementPreparer().createStatement();
-			String dropSql = getDialect().getDropTableString( "SANDBOX_JDBC_TST" );
+			String dropSql = sessionFactory().getJdbcServices().getDialect().getDropTableString( "SANDBOX_JDBC_TST" );
 			try {
 				jdbcCoord.getResultSetReturn().execute( statement, dropSql );
 			}
@@ -94,7 +94,7 @@ public class BasicConnectionTest extends BaseCoreFunctionalTestCase {
 				session.doWork( connection -> {
 					final Statement stmnt = connection.createStatement();
 
-					stmnt.execute( getDialect().getDropTableString( "SANDBOX_JDBC_TST" ) );
+					stmnt.execute( sessionFactory().getJdbcServices().getDialect().getDropTableString( "SANDBOX_JDBC_TST" ) );
 				} );
 			}
 			finally {

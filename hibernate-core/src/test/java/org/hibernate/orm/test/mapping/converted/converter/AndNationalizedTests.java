@@ -23,6 +23,7 @@ import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.mapping.PersistentClass;
 
 import org.hibernate.testing.SkipForDialect;
@@ -37,7 +38,6 @@ import static org.junit.Assert.assertEquals;
  *
  * @author Steve Ebersole
  */
-//@SkipForDialect(value = PostgreSQL81Dialect.class, comment = "Postgres does not support ")
 @SkipForDialect(value = DB2Dialect.class, comment = "DB2 jdbc driver doesn't support setNString")
 public class AndNationalizedTests extends BaseUnitTestCase {
 	@Test
@@ -50,15 +50,15 @@ public class AndNationalizedTests extends BaseUnitTestCase {
 
 			final PersistentClass entityBinding = metadata.getEntityBinding( TestEntity.class.getName() );
 			final Dialect dialect = metadata.getDatabase().getDialect();
-			if ( dialect instanceof PostgreSQL81Dialect
-					|| dialect instanceof DB2Dialect && !( dialect instanceof DerbyDialect )
+			if ( dialect instanceof PostgreSQLDialect
+					|| dialect instanceof DB2Dialect
 					|| dialect instanceof CockroachDialect ){
 				// See issue HHH-10693 for PostgreSQL and CockroachDB, HHH-12753 for DB2
 				assertEquals(
 						Types.VARCHAR,
 						entityBinding.getProperty( "name" ).getType().sqlTypes( metadata )[0]
 				);
-			}else {
+			} else {
 				assertEquals(
 						Types.NVARCHAR,
 						entityBinding.getProperty( "name" ).getType().sqlTypes( metadata )[0]

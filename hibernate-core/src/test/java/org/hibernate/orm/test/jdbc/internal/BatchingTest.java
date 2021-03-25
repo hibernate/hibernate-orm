@@ -58,7 +58,7 @@ public class BatchingTest extends BaseCoreFunctionalTestCase implements BatchKey
 
 		// set up some tables to use
 		Statement statement = jdbcCoordinator.getStatementPreparer().createStatement();
-		String dropSql = getDialect().getDropTableString( "SANDBOX_JDBC_TST" );
+		String dropSql = sessionFactory().getJdbcServices().getDialect().getDropTableString( "SANDBOX_JDBC_TST" );
 		try {
 			jdbcCoordinator.getResultSetReturn().execute( statement, dropSql );
 		}
@@ -117,7 +117,7 @@ public class BatchingTest extends BaseCoreFunctionalTestCase implements BatchKey
 
 		// set up some tables to use
 		Statement statement = jdbcCoordinator.getStatementPreparer().createStatement();
-		String dropSql = getDialect().getDropTableString( "SANDBOX_JDBC_TST" );
+		String dropSql = sessionFactory().getJdbcServices().getDialect().getDropTableString( "SANDBOX_JDBC_TST" );
 		try {
 			jdbcCoordinator.getResultSetReturn().execute( statement, dropSql );
 		}
@@ -188,7 +188,7 @@ public class BatchingTest extends BaseCoreFunctionalTestCase implements BatchKey
 
 		// set up some tables to use
 		Statement statement = jdbcCoordinator.getStatementPreparer().createStatement();
-		String dropSql = getDialect().getDropTableString( "SANDBOX_JDBC_TST" );
+		String dropSql = sessionFactory().getJdbcServices().getDialect().getDropTableString( "SANDBOX_JDBC_TST" );
 		try {
 			jdbcCoordinator.getResultSetReturn().execute( statement, dropSql );
 		}
@@ -266,7 +266,7 @@ public class BatchingTest extends BaseCoreFunctionalTestCase implements BatchKey
 			session.doWork( connection -> {
 				final Statement stmnt = connection.createStatement();
 
-				stmnt.execute( getDialect().getDropTableString( "SANDBOX_JDBC_TST" ) );
+				stmnt.execute( sessionFactory().getJdbcServices().getDialect().getDropTableString( "SANDBOX_JDBC_TST" ) );
 			} );
 		}
 	}

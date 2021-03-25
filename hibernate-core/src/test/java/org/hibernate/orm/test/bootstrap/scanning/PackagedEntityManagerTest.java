@@ -285,7 +285,6 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		TransactionUtil.doInJPA( () -> emf, em -> {
 			org.hibernate.jpa.test.pack.overridenpar.Bug bug = new org.hibernate.jpa.test.pack.overridenpar.Bug();
 			bug.setSubject( "Allow DS overriding" );
-			em.getTransaction().begin();
 			em.persist( bug );
 			em.flush();
 			em.remove( bug );
@@ -446,7 +445,6 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 			Scooter s = new Scooter();
 			s.setModel( "Abadah" );
 			s.setSpeed( 85l );
-			em.getTransaction().begin();
 			em.persist( s );
 			return s;
 		} );
@@ -468,7 +466,6 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 			seat.setNumber( "3B" );
 			Airplane plane = new Airplane();
 			plane.setSerialNumber( "75924418409052355" );
-			em.getTransaction().begin();
 			em.persist( seat );
 			em.persist( plane );
 			em.flush();

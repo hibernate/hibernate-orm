@@ -1,4 +1,4 @@
-parser grammar HqlParser;
+parser grammar HqlParserBase;
 
 options {
 	tokenVocab=HqlLexer;

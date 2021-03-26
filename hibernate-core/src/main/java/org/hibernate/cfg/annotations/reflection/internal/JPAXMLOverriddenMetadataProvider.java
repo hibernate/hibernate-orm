@@ -23,6 +23,7 @@ import javax.persistence.TableGenerator;
 import org.hibernate.annotations.common.reflection.AnnotationReader;
 import org.hibernate.annotations.common.reflection.MetadataProvider;
 import org.hibernate.annotations.common.reflection.java.JavaMetadataProvider;
+import org.hibernate.boot.jaxb.spi.XmlMappingOptions;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
@@ -34,6 +35,8 @@ import org.dom4j.Element;
  *
  * @author Emmanuel Bernard
  */
+// FIXME HHH-14529 Change this class to use JaxbEntityMappings instead of Document.
+//   I'm delaying this change in order to keep the commits simpler and easier to review.
 @SuppressWarnings("unchecked")
 public final class JPAXMLOverriddenMetadataProvider implements MetadataProvider {
 
@@ -46,7 +49,7 @@ public final class JPAXMLOverriddenMetadataProvider implements MetadataProvider 
 	 * We allow fully disabling XML sources so to improve the efficiency of
 	 * the boot process for those not using it.
 	 */
-	private final boolean xmlMappingEnabled;
+	private final XmlMappingOptions xmlMappingOptions;
 
 	private Map<Object, Object> defaults;
 	private Map<AnnotatedElement, AnnotationReader> cache;
@@ -54,7 +57,7 @@ public final class JPAXMLOverriddenMetadataProvider implements MetadataProvider 
 	public JPAXMLOverriddenMetadataProvider(BootstrapContext bootstrapContext) {
 		this.classLoaderAccess = bootstrapContext.getClassLoaderAccess();
 		this.xmlContext = new XMLContext( classLoaderAccess );
-		this.xmlMappingEnabled = bootstrapContext.getMetadataBuildingOptions().isXmlMappingEnabled();
+		this.xmlMappingOptions = bootstrapContext.getMetadataBuildingOptions().getXmlMappingOptions();
 	}
 
 	//all of the above can be safely rebuilt from XMLContext: only XMLContext this object is serialized
@@ -87,7 +90,7 @@ public final class JPAXMLOverriddenMetadataProvider implements MetadataProvider 
 
 	@Override
 	public Map<Object, Object> getDefaults() {
-		if ( xmlMappingEnabled == false ) {
+		if ( !xmlMappingOptions.isEnabled() ) {
 			return Collections.emptyMap();
 		}
 		else {

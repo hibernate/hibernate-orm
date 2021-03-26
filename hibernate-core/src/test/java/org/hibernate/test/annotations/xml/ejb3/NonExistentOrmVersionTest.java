@@ -10,6 +10,7 @@ import org.hibernate.InvalidMappingException;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.internal.util.xml.UnsupportedOrmXsdVersionException;
+import org.hibernate.internal.util.xml.XmlMappingOptionsStrategyRegistrationProvider;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -21,9 +22,10 @@ import static org.junit.Assert.fail;
 public class NonExistentOrmVersionTest extends BaseUnitTestCase {
 	@Test
 	public void testNonExistentOrmVersion() {
-		// FIXME HHH-14529 configure the BootstrapServiceRegistry to use JAXB for orm.xml mappings
 		try {
-			new MetadataSources( new BootstrapServiceRegistryBuilder().build() )
+			BootstrapServiceRegistryBuilder builder = new BootstrapServiceRegistryBuilder();
+			XmlMappingOptionsStrategyRegistrationProvider.applyJaxbStrategy( builder );
+			new MetadataSources( builder.build() )
 					.addResource( "org/hibernate/test/annotations/xml/ejb3/orm5.xml" )
 					.buildMetadata();
 			fail( "Expecting failure due to unsupported xsd version" );

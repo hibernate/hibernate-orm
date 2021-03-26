@@ -22,17 +22,21 @@ import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.AttributeConverterInfo;
 import org.hibernate.boot.internal.MetadataBuildingContextRootImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappings;
 import org.hibernate.boot.jaxb.spi.Binding;
+import org.hibernate.boot.jaxb.spi.XmlMappingOptions;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.JpaOrmXmlPersistenceUnitDefaultAware;
 import org.hibernate.boot.spi.JpaOrmXmlPersistenceUnitDefaultAware.JpaOrmXmlPersistenceUnitDefaults;
+import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.cfg.AnnotationBinder;
 import org.hibernate.cfg.InheritanceState;
 import org.hibernate.cfg.annotations.reflection.AttributeConverterDefinitionCollector;
 import org.hibernate.cfg.annotations.reflection.JPAMetadataProvider;
+import org.hibernate.cfg.annotations.reflection.internal.JPAXMLOverriddenMetadataProvider;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 
@@ -75,11 +79,29 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 		final AttributeConverterManager attributeConverterManager = new AttributeConverterManager( rootMetadataBuildingContext );
 		this.classLoaderService = rootMetadataBuildingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class );
 
-		if ( rootMetadataBuildingContext.getBuildingOptions().isXmlMappingEnabled() ) {
-
+		MetadataBuildingOptions metadataBuildingOptions = rootMetadataBuildingContext.getBuildingOptions();
+		XmlMappingOptions xmlMappingOptions = metadataBuildingOptions.getXmlMappingOptions();
+		if ( xmlMappingOptions.isEnabled() ) {
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 			// Ewww.  This is temporary until we migrate to Jandex + StAX for annotation binding
+			if ( xmlMappingOptions.isPreferJaxb() ) {
+				final JPAXMLOverriddenMetadataProvider jpaMetadataProvider = (JPAXMLOverriddenMetadataProvider) ( (MetadataProviderInjector) reflectionManager )
+						.getMetadataProvider();
+				for ( Binding<?> xmlBinding : managedResources.getXmlMappingBindings() ) {
+					Object root = xmlBinding.getRoot();
+					if ( !(root instanceof JaxbEntityMappings) ) {
+						continue;
+					}
+					JaxbEntityMappings entityMappings = (JaxbEntityMappings) xmlBinding.getRoot();
 
+					final List<String> classNames = jpaMetadataProvider.getXMLContext().addDocument( entityMappings );
+					for ( String className : classNames ) {
+						xClasses.add( toXClass( className, reflectionManager, classLoaderService ) );
+					}
+				}
+				jpaMetadataProvider.getXMLContext().applyDiscoveredAttributeConverters( attributeConverterManager );
+			}
+			else {
 				final JPAMetadataProvider jpaMetadataProvider = (JPAMetadataProvider) ( (MetadataProviderInjector) reflectionManager )
 						.getMetadataProvider();
 				for ( Binding xmlBinding : managedResources.getXmlMappingBindings() ) {
@@ -94,6 +116,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 					}
 				}
 				jpaMetadataProvider.getXMLContext().applyDiscoveredAttributeConverters( attributeConverterManager );
+			}
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		}
 

@@ -11,6 +11,7 @@ import org.hibernate.Transaction;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.xml.ErrorLogger;
+import org.hibernate.internal.util.xml.XmlMappingOptionsStrategyRegistrationProvider;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -29,8 +30,8 @@ public class OrmVersion1SupportedTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected void prepareBootstrapRegistryBuilder(BootstrapServiceRegistryBuilder builder) {
-		// FIXME HHH-14529 configure the BootstrapServiceRegistry to use JAXB for orm.xml mappings
 		super.prepareBootstrapRegistryBuilder( builder );
+		XmlMappingOptionsStrategyRegistrationProvider.applyJaxbStrategy( builder );
 	}
 
 	@Rule

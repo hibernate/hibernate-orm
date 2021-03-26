@@ -17,6 +17,7 @@ import org.hibernate.dialect.CockroachDB192Dialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.TeradataDialect;
+import org.hibernate.internal.util.xml.XmlMappingOptionsStrategyRegistrationProvider;
 import org.hibernate.persister.collection.BasicCollectionPersister;
 
 import org.hibernate.testing.SkipForDialect;
@@ -35,8 +36,8 @@ public class Ejb3XmlTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected void prepareBootstrapRegistryBuilder(BootstrapServiceRegistryBuilder builder) {
-		// FIXME HHH-14529 configure the BootstrapServiceRegistry to use JAXB for orm.xml mappings
 		super.prepareBootstrapRegistryBuilder( builder );
+		XmlMappingOptionsStrategyRegistrationProvider.applyJaxbStrategy( builder );
 	}
 
 	@Test

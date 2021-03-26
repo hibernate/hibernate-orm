@@ -142,6 +142,8 @@ import org.dom4j.Element;
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
  */
+// FIXME HHH-14529 Change this class to use JaxbEntityMappings instead of Document.
+//   I'm delaying this change in order to keep the commits simpler and easier to review.
 @SuppressWarnings("unchecked")
 public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( JPAXMLOverriddenAnnotationReader.class );
@@ -322,7 +324,6 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 			BootstrapContext bootstrapContext) {
 		this( el, xmlContext, bootstrapContext.getClassLoaderAccess() );
 	}
-
 
 	public <T extends Annotation> T getAnnotation(Class<T> annotationType) {
 		initAnnotations();

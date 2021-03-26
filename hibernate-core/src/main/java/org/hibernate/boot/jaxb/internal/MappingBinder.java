@@ -20,7 +20,9 @@ import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
 import org.hibernate.boot.jaxb.internal.stax.HbmEventReader;
 import org.hibernate.boot.jaxb.internal.stax.JpaOrmXmlEventReader;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappings;
 import org.hibernate.boot.jaxb.spi.Binding;
+import org.hibernate.boot.jaxb.spi.XmlMappingOptions;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.xsd.MappingXsdSupport;
 import org.hibernate.internal.util.config.ConfigurationException;
@@ -39,18 +41,18 @@ public class MappingBinder extends AbstractBinder {
 
 	private final XMLEventFactory xmlEventFactory = XMLEventFactory.newInstance();
 
+	private final XmlMappingOptions options;
+
 	private JAXBContext hbmJaxbContext;
+	private JAXBContext entityMappingsJaxbContext;
 
-	public MappingBinder(ClassLoaderService classLoaderService) {
-		this( classLoaderService, true );
-	}
-
-	public MappingBinder(ClassLoaderService classLoaderService, boolean validateXml) {
+	public MappingBinder(ClassLoaderService classLoaderService, boolean validateXml, XmlMappingOptions options) {
 		super( classLoaderService, validateXml );
+		this.options = options;
 	}
 
 	@Override
-	protected Binding doBind(
+	protected Binding<?> doBind(
 			XMLEventReader staxEventReader,
 			StartElement rootElementStartEvent,
 			Origin origin) {
@@ -63,12 +65,20 @@ public class MappingBinder extends AbstractBinder {
 			return new Binding<>( hbmBindings, origin );
 		}
 		else {
-//			final XMLEventReader reader = new JpaOrmXmlEventReader( staxEventReader );
-//			return jaxb( reader, LocalSchema.MAPPING.getSchema(), JaxbEntityMappings.class, origin );
-
 			try {
-				final XMLEventReader reader = new JpaOrmXmlEventReader( staxEventReader, xmlEventFactory );
-				return new Binding<>( toDom4jDocument( reader, origin ), origin );
+				if ( options.isPreferJaxb() ) {
+					log.debugf( "Performing JAXB binding of orm.xml document : %s", origin.toString() );
+
+					XMLEventReader reader = new JpaOrmXmlEventReader( staxEventReader, xmlEventFactory );
+					JaxbEntityMappings bindingRoot = jaxb( reader, MappingXsdSupport.INSTANCE.latestJpaDescriptor().getSchema(), entityMappingsJaxbContext(), origin );
+					return new Binding<>( bindingRoot, origin );
+				}
+				else {
+					log.debugf( "Performing DOM4J binding of orm.xml document : %s", origin.toString() );
+
+					final XMLEventReader reader = new JpaOrmXmlEventReader( staxEventReader, xmlEventFactory );
+					return new Binding<>( toDom4jDocument( reader, origin ), origin );
+				}
 			}
 			catch (JpaOrmXmlEventReader.BadVersionException e) {
 				throw new UnsupportedOrmXsdVersionException( e.getRequestedVersion(), origin );
@@ -86,6 +96,18 @@ public class MappingBinder extends AbstractBinder {
 			}
 		}
 		return hbmJaxbContext;
+	}
+
+	private JAXBContext entityMappingsJaxbContext() {
+		if ( entityMappingsJaxbContext == null ) {
+			try {
+				entityMappingsJaxbContext = JAXBContext.newInstance( JaxbEntityMappings.class );
+			}
+			catch ( JAXBException e ) {
+				throw new ConfigurationException( "Unable to build orm.xml JAXBContext", e );
+			}
+		}
+		return entityMappingsJaxbContext;
 	}
 
 	private Document toDom4jDocument(XMLEventReader jpaOrmXmlEventReader, Origin origin) {

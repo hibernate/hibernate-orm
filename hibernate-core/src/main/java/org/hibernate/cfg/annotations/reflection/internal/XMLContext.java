@@ -16,10 +16,12 @@ import javax.persistence.AttributeConverter;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.boot.AttributeConverterInfo;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappings;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.cfg.AttributeConverterDefinition;
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.cfg.annotations.reflection.AttributeConverterDefinitionCollector;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -34,6 +36,8 @@ import org.dom4j.Element;
  * @author Emmanuel Bernard
  * @author Brett Meyer
  */
+// FIXME HHH-14529 Change this class to use JaxbEntityMappings instead of Document.
+//   I'm delaying this change in order to keep the commits simpler and easier to review.
 public class XMLContext implements Serializable {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( XMLContext.class );
 
@@ -53,6 +57,14 @@ public class XMLContext implements Serializable {
 	// For tests only
 	public XMLContext(BootstrapContext bootstrapContext) {
 		this.classLoaderAccess = bootstrapContext.getClassLoaderAccess();
+	}
+
+	/**
+	 * @param entityMappings The xml entity mappings to add
+	 * @return Add an xml document to this context and return the list of added class names.
+	 */
+	public List<String> addDocument(JaxbEntityMappings entityMappings) {
+		throw new NotYetImplementedException("HHH-14529 Implementation in progress");
 	}
 
 	/**

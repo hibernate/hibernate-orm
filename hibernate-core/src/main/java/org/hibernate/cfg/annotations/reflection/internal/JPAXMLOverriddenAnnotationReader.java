@@ -250,10 +250,7 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 	private transient List<Element> elementsForProperty;
 	private AccessibleObject mirroredAttribute;
 
-	/**
-	 * @deprecated Use {@link #JPAXMLOverriddenAnnotationReader(AnnotatedElement, XMLContext, BootstrapContext)} instead.
-	 */
-	public JPAXMLOverriddenAnnotationReader(
+	JPAXMLOverriddenAnnotationReader(
 			AnnotatedElement el,
 			XMLContext xmlContext,
 			ClassLoaderAccess classLoaderAccess) {
@@ -318,6 +315,7 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		}
 	}
 
+	// For tests only
 	public JPAXMLOverriddenAnnotationReader(
 			AnnotatedElement el,
 			XMLContext xmlContext,

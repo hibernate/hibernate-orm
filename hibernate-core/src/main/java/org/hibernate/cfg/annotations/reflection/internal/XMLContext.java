@@ -46,14 +46,11 @@ public class XMLContext implements Serializable {
 	private List<String> defaultEntityListeners = new ArrayList<>();
 	private boolean hasContext = false;
 
-	/**
-	 * @deprecated Use {@link XMLContext#XMLContext(BootstrapContext)} instead.
-	 */
-	@Deprecated
-	public XMLContext(ClassLoaderAccess classLoaderAccess) {
+	XMLContext(ClassLoaderAccess classLoaderAccess) {
 		this.classLoaderAccess = classLoaderAccess;
 	}
 
+	// For tests only
 	public XMLContext(BootstrapContext bootstrapContext) {
 		this.classLoaderAccess = bootstrapContext.getClassLoaderAccess();
 	}

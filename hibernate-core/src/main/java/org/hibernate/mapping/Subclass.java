@@ -15,8 +15,10 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.OptimisticLockStyle;
+import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.internal.util.collections.SingletonIterator;
+import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * A subclass in a table-per-class-hierarchy mapping
@@ -24,7 +26,7 @@ import org.hibernate.internal.util.collections.SingletonIterator;
  */
 public class Subclass extends PersistentClass {
 	private PersistentClass superclass;
-	private Class classPersisterClass;
+	private Class<? extends EntityPersister> classPersisterClass;
 	private final int subclassId;
 
 	public Subclass(PersistentClass superclass, MetadataBuildingContext metadataBuildingContext) {
@@ -100,22 +102,22 @@ public class Subclass extends PersistentClass {
 		getSuperclass().addSubclassJoin(j);
 	}
 
-	public Iterator getPropertyClosureIterator() {
-		return new JoinedIterator(
+	public Iterator<Property> getPropertyClosureIterator() {
+		return new JoinedIterator<>(
 				getSuperclass().getPropertyClosureIterator(),
 				getPropertyIterator()
 			);
 	}
-	public Iterator getTableClosureIterator() {
-		return new JoinedIterator(
+	public Iterator<Table> getTableClosureIterator() {
+		return new JoinedIterator<>(
 				getSuperclass().getTableClosureIterator(),
-				new SingletonIterator( getTable() )
+				new SingletonIterator<>( getTable() )
 			);
 	}
-	public Iterator getKeyClosureIterator() {
-		return new JoinedIterator(
+	public Iterator<KeyValue> getKeyClosureIterator() {
+		return new JoinedIterator<>(
 				getSuperclass().getKeyClosureIterator(),
-				new SingletonIterator( getKey() )
+				new SingletonIterator<>( getKey() )
 			);
 	}
 	protected void addSubclassProperty(Property p) {
@@ -146,7 +148,7 @@ public class Subclass extends PersistentClass {
 	public boolean hasEmbeddedIdentifier() {
 		return getSuperclass().hasEmbeddedIdentifier();
 	}
-	public Class getEntityPersisterClass() {
+	public Class<? extends EntityPersister> getEntityPersisterClass() {
 		if (classPersisterClass==null) {
 			return getSuperclass().getEntityPersisterClass();
 		}
@@ -186,7 +188,7 @@ public class Subclass extends PersistentClass {
 		getKey().createForeignKeyOfEntity( getSuperclass().getEntityName() );
 	}
 
-	public void setEntityPersisterClass(Class classPersisterClass) {
+	public void setEntityPersisterClass(Class<? extends EntityPersister> classPersisterClass) {
 		this.classPersisterClass = classPersisterClass;
 	}
 
@@ -198,8 +200,8 @@ public class Subclass extends PersistentClass {
 		return getSuperclass().getPropertyClosureSpan() + super.getPropertyClosureSpan();
 	}
 
-	public Iterator getJoinClosureIterator() {
-		return new JoinedIterator(
+	public Iterator<Join> getJoinClosureIterator() {
+		return new JoinedIterator<>(
 			getSuperclass().getJoinClosureIterator(),
 			super.getJoinClosureIterator()
 		);
@@ -225,8 +227,8 @@ public class Subclass extends PersistentClass {
 		return getSuperclass().isDiscriminatorInsertable();
 	}
 
-	public java.util.Set getSynchronizedTables() {
-		HashSet result = new HashSet();
+	public java.util.Set<String> getSynchronizedTables() {
+		HashSet<String> result = new HashSet<>();
 		result.addAll(synchronizedTables);
 		result.addAll( getSuperclass().getSynchronizedTables() );
 		return result;
@@ -236,8 +238,8 @@ public class Subclass extends PersistentClass {
 		return mv.accept(this);
 	}
 
-	public java.util.List getFilters() {
-		java.util.List filters = new ArrayList(super.getFilters());
+	public java.util.List<FilterConfiguration> getFilters() {
+		java.util.List<FilterConfiguration> filters = new ArrayList<>(super.getFilters());
 		filters.addAll(getSuperclass().getFilters());
 		return filters;
 	}

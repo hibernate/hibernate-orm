@@ -73,8 +73,7 @@ public class QueryLiteral<T> implements Literal, DomainResultProducer<T> {
 						.getTypeConfiguration()
 		);
 
-		//noinspection unchecked
-		return new BasicResult<>(
+		return new BasicResult(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
 				type.getMappedType().getMappedJavaTypeDescriptor()

@@ -8,19 +8,15 @@ package org.hibernate.persister.entity;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
-import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.boot.model.relational.Database;
@@ -61,18 +57,12 @@ import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.InFragment;
 import org.hibernate.sql.Insert;
 import org.hibernate.sql.SelectFragment;
-import org.hibernate.sql.ast.spi.SqlAliasBase;
-import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
-import org.hibernate.sql.ast.tree.from.StandardTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -86,6 +76,8 @@ import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
 
+import static java.util.Collections.emptyMap;
+
 /**
  * An <tt>EntityPersister</tt> implementing the normalized "table-per-subclass"
  * mapping strategy
@@ -98,8 +90,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	private static final String IMPLICIT_DISCRIMINATOR_ALIAS = "clazz_";
 	private static final Object NULL_DISCRIMINATOR = new MarkerObject("<null discriminator>");
 	private static final Object NOT_NULL_DISCRIMINATOR = new MarkerObject("<not null discriminator>");
-	private static final String NULL_STRING = "null";
-	private static final String NOT_NULL_STRING = "not null";
 
 	// the class hierarchy structure
 	private final int tableSpan;
@@ -142,7 +132,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	// subclass discrimination works by assigning particular
 	// values to certain combinations of null primary key
 	// values in the outer join using an SQL CASE
-	private final Map subclassesByDiscriminatorValue = new HashMap();
+	private final Map<Object,String> subclassesByDiscriminatorValue = new HashMap<>();
 	private final String[] discriminatorValues;
 	private final String[] notNullColumnNames;
 	private final int[] notNullColumnTableNumbers;
@@ -152,7 +142,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 	private final Object discriminatorValue;
 	private final String discriminatorSQLString;
-	private final DiscriminatorType discriminatorType;
+	private final DiscriminatorType<?> discriminatorType;
 	private final String explicitDiscriminatorColumnName;
 	private final String discriminatorAlias;
 
@@ -188,7 +178,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				log.debug( "Encountered explicit discriminator mapping for joined inheritance" );
 
 				final Selectable selectable = discriminatorMapping.getColumnIterator().next();
-				if ( Formula.class.isInstance( selectable ) ) {
+				if ( selectable instanceof Formula ) {
 					throw new MappingException( "Discriminator formulas on joined inheritance hierarchies not supported at this time" );
 				}
 				else {
@@ -196,7 +186,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 					explicitDiscriminatorColumnName = column.getQuotedName( factory.getDialect() );
 					discriminatorAlias = column.getAlias( factory.getDialect(), persistentClass.getRootTable() );
 				}
-				discriminatorType = (DiscriminatorType) persistentClass.getDiscriminator().getType();
+				discriminatorType = (DiscriminatorType<?>) persistentClass.getDiscriminator().getType();
 				if ( persistentClass.isDiscriminatorValueNull() ) {
 					discriminatorValue = NULL_DISCRIMINATOR;
 					discriminatorSQLString = InFragment.NULL;
@@ -208,7 +198,10 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				else {
 					try {
 						discriminatorValue = discriminatorType.stringToObject( persistentClass.getDiscriminatorValue() );
-						discriminatorSQLString = discriminatorType.objectToSQLString( discriminatorValue, factory.getDialect() );
+						discriminatorSQLString = ((DiscriminatorType) discriminatorType).objectToSQLString(
+								discriminatorValue,
+								factory.getJdbcServices().getDialect()
+						);
 					}
 					catch (ClassCastException cce) {
 						throw new MappingException("Illegal discriminator type: " + discriminatorType.getName() );
@@ -252,27 +245,27 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		ArrayList<String[]> keyColumnReaders = new ArrayList<>();
 		ArrayList<String[]> keyColumnReaderTemplates = new ArrayList<>();
 		ArrayList<Boolean> cascadeDeletes = new ArrayList<>();
-		Iterator tItr = persistentClass.getTableClosureIterator();
-		Iterator kItr = persistentClass.getKeyClosureIterator();
+		Iterator<Table> tItr = persistentClass.getTableClosureIterator();
+		Iterator<KeyValue> kItr = persistentClass.getKeyClosureIterator();
 		while ( tItr.hasNext() ) {
-			final Table table = (Table) tItr.next();
-			final KeyValue key = (KeyValue) kItr.next();
+			final Table table = tItr.next();
+			final KeyValue key = kItr.next();
 			final String tableName = determineTableName( table, jdbcEnvironment );
 			tableNames.add( tableName );
 			String[] keyCols = new String[idColumnSpan];
 			String[] keyColReaders = new String[idColumnSpan];
 			String[] keyColReaderTemplates = new String[idColumnSpan];
-			Iterator cItr = key.getColumnIterator();
+			Iterator<Selectable> cItr = key.getColumnIterator();
 			for ( int k = 0; k < idColumnSpan; k++ ) {
 				Column column = (Column) cItr.next();
-				keyCols[k] = column.getQuotedName( factory.getDialect() );
-				keyColReaders[k] = column.getReadExpr( factory.getDialect() );
-				keyColReaderTemplates[k] = column.getTemplate( factory.getDialect(), factory.getQueryEngine().getSqmFunctionRegistry() );
+				keyCols[k] = column.getQuotedName( factory.getJdbcServices().getDialect() );
+				keyColReaders[k] = column.getReadExpr( factory.getJdbcServices().getDialect() );
+				keyColReaderTemplates[k] = column.getTemplate( factory.getJdbcServices().getDialect(), factory.getQueryEngine().getSqmFunctionRegistry() );
 			}
 			keyColumns.add( keyCols );
 			keyColumnReaders.add( keyColReaders );
 			keyColumnReaderTemplates.add( keyColReaderTemplates );
-			cascadeDeletes.add( key.isCascadeDeleteEnabled() && factory.getDialect().supportsCascadeDelete() );
+			cascadeDeletes.add( key.isCascadeDeleteEnabled() && factory.getJdbcServices().getDialect().supportsCascadeDelete() );
 		}
 
 		//Span of the tableNames directly mapped by this entity and super-classes, if any
@@ -282,9 +275,9 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		isNullableTable = new boolean[tableSpan];
 		isInverseTable = new boolean[tableSpan];
 
-		Iterator joinItr = persistentClass.getJoinClosureIterator();
+		Iterator<Join> joinItr = persistentClass.getJoinClosureIterator();
 		for ( int tableIndex = 0; joinItr.hasNext(); tableIndex++ ) {
-			Join join = (Join) joinItr.next();
+			Join join = joinItr.next();
 
 			isNullableTable[tableIndex] = join.isOptional();
 			isInverseTable[tableIndex] = join.isInverse();
@@ -300,18 +293,17 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			String[] keyColReaders = new String[joinIdColumnSpan];
 			String[] keyColReaderTemplates = new String[joinIdColumnSpan];
 
-			Iterator cItr = key.getColumnIterator();
-
+			Iterator<Selectable> cItr = key.getColumnIterator();
 			for ( int k = 0; k < joinIdColumnSpan; k++ ) {
 				Column column = (Column) cItr.next();
-				keyCols[k] = column.getQuotedName( factory.getDialect() );
-				keyColReaders[k] = column.getReadExpr( factory.getDialect() );
-				keyColReaderTemplates[k] = column.getTemplate( factory.getDialect(), factory.getQueryEngine().getSqmFunctionRegistry() );
+				keyCols[k] = column.getQuotedName( factory.getJdbcServices().getDialect() );
+				keyColReaders[k] = column.getReadExpr( factory.getJdbcServices().getDialect() );
+				keyColReaderTemplates[k] = column.getTemplate( factory.getJdbcServices().getDialect(), factory.getQueryEngine().getSqmFunctionRegistry() );
 			}
 			keyColumns.add( keyCols );
 			keyColumnReaders.add( keyColReaders );
 			keyColumnReaderTemplates.add( keyColReaderTemplates );
-			cascadeDeletes.add( key.isCascadeDeleteEnabled() && factory.getDialect().supportsCascadeDelete() );
+			cascadeDeletes.add( key.isCascadeDeleteEnabled() && factory.getJdbcServices().getDialect().supportsCascadeDelete() );
 		}
 
 		naturalOrderTableNames = ArrayHelper.toStringArray( tableNames );
@@ -330,7 +322,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		keyColumns = new ArrayList<>();
 		tItr = persistentClass.getSubclassTableClosureIterator();
 		while ( tItr.hasNext() ) {
-			Table tab = (Table) tItr.next();
+			Table tab = tItr.next();
 			isConcretes.add( persistentClass.isClassOrSuperclassTable( tab ) );
 			isDeferreds.add( Boolean.FALSE );
 			isLazies.add( Boolean.FALSE );
@@ -339,9 +331,9 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			final String tableName = determineTableName( tab, jdbcEnvironment );
 			subclassTableNames.add( tableName );
 			String[] key = new String[idColumnSpan];
-			Iterator cItr = tab.getPrimaryKey().getColumnIterator();
+			Iterator<Column> cItr = tab.getPrimaryKey().getColumnIterator();
 			for ( int k = 0; k < idColumnSpan; k++ ) {
-				key[k] = ( (Column) cItr.next() ).getQuotedName( factory.getDialect() );
+				key[k] = cItr.next().getQuotedName( factory.getJdbcServices().getDialect() );
 			}
 			keyColumns.add( key );
 		}
@@ -349,7 +341,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		//Add joins
 		joinItr = persistentClass.getSubclassJoinClosureIterator();
 		while ( joinItr.hasNext() ) {
-			final Join join = (Join) joinItr.next();
+			final Join join = joinItr.next();
 			final Table joinTable = join.getTable();
 
 			isConcretes.add( persistentClass.isClassOrSuperclassTable( joinTable ) );
@@ -361,9 +353,9 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			String joinTableName = determineTableName( joinTable, jdbcEnvironment );
 			subclassTableNames.add( joinTableName );
 			String[] key = new String[idColumnSpan];
-			Iterator citer = joinTable.getPrimaryKey().getColumnIterator();
+			Iterator<Column> citer = joinTable.getPrimaryKey().getColumnIterator();
 			for ( int k = 0; k < idColumnSpan; k++ ) {
-				key[k] = ( (Column) citer.next() ).getQuotedName( factory.getDialect() );
+				key[k] = citer.next().getQuotedName( factory.getJdbcServices().getDialect() );
 			}
 			keyColumns.add( key );
 		}
@@ -384,7 +376,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			constraintOrderedKeyColumnNames[currentPosition] = naturalOrderSubclassTableKeyColumnClosure[i];
 		}
 
-		/**
+		/*
 		 * Suppose an entity Client extends Person, mapped to the tableNames CLIENT and PERSON respectively.
 		 * For the Client entity:
 		 * naturalOrderTableNames -> PERSON, CLIENT; this reflects the sequence in which the tableNames are
@@ -450,7 +442,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		joinItr = persistentClass.getJoinClosureIterator();
 		int j = coreTableSpan;
 		while ( joinItr.hasNext() ) {
-			Join join = (Join) joinItr.next();
+			Join join = joinItr.next();
 
 			isInverseTable[j] = join.isInverse();
 			isNullableTable[j] = join.isOptional();
@@ -477,12 +469,12 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		int hydrateSpan = getPropertySpan();
 		naturalOrderPropertyTableNumbers = new int[hydrateSpan];
 		propertyTableNumbers = new int[hydrateSpan];
-		Iterator iter = persistentClass.getPropertyClosureIterator();
+		Iterator<Property> iter = persistentClass.getPropertyClosureIterator();
 		int i = 0;
 		while ( iter.hasNext() ) {
-			Property prop = (Property) iter.next();
+			Property prop = iter.next();
 			String tabname = prop.getValue().getTable().getQualifiedName(
-					factory.getDialect(),
+					factory.getJdbcServices().getDialect(),
 					factory.getSettings().getDefaultCatalogName(),
 					factory.getSettings().getDefaultSchemaName()
 			);
@@ -495,25 +487,25 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 		//TODO: code duplication with SingleTableEntityPersister
 
-		ArrayList columnTableNumbers = new ArrayList();
-		ArrayList formulaTableNumbers = new ArrayList();
-		ArrayList propTableNumbers = new ArrayList();
+		ArrayList<Integer> columnTableNumbers = new ArrayList<>();
+		ArrayList<Integer> formulaTableNumbers = new ArrayList<>();
+		ArrayList<Integer> propTableNumbers = new ArrayList<>();
 
 		iter = persistentClass.getSubclassPropertyClosureIterator();
 		while ( iter.hasNext() ) {
-			Property prop = (Property) iter.next();
+			Property prop = iter.next();
 			Table tab = prop.getValue().getTable();
 			String tabname = tab.getQualifiedName(
-					factory.getDialect(),
+					factory.getJdbcServices().getDialect(),
 					factory.getSettings().getDefaultCatalogName(),
 					factory.getSettings().getDefaultSchemaName()
 			);
 			Integer tabnum = getTableId( tabname, subclassTableNameClosure );
 			propTableNumbers.add( tabnum );
 
-			Iterator citer = prop.getColumnIterator();
+			Iterator<Selectable> citer = prop.getColumnIterator();
 			while ( citer.hasNext() ) {
-				Selectable thing = (Selectable) citer.next();
+				Selectable thing = citer.next();
 				if ( thing.isFormula() ) {
 					formulaTableNumbers.add( tabnum );
 				}
@@ -552,7 +544,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				notNullColumnTableNumbers = new int[subclassSpan];
 				final int id = getTableId(
 						table.getQualifiedName(
-								factory.getDialect(),
+								factory.getJdbcServices().getDialect(),
 								factory.getSettings().getDefaultCatalogName(),
 								factory.getSettings().getDefaultSchemaName()
 						),
@@ -574,18 +566,18 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			}
 		}
 		else {
-			subclassNameByTableName = Collections.EMPTY_MAP;
-			discriminatorValuesByTableName = Collections.EMPTY_MAP;
-			discriminatorColumnNameByTableName = Collections.EMPTY_MAP;
+			subclassNameByTableName = emptyMap();
+			discriminatorValuesByTableName = emptyMap();
+			discriminatorColumnNameByTableName = emptyMap();
 			discriminatorValues = null;
 			notNullColumnTableNumbers = null;
 			notNullColumnNames = null;
 		}
 
-		iter = persistentClass.getSubclassIterator();
+		Iterator<Subclass> siter = persistentClass.getSubclassIterator();
 		int k = 0;
-		while ( iter.hasNext() ) {
-			Subclass sc = (Subclass) iter.next();
+		while ( siter.hasNext() ) {
+			Subclass sc = siter.next();
 			subclassClosure[k] = sc.getEntityName();
 			final Table table = sc.getTable();
 			subclassNameByTableName.put( table.getName(), sc.getClassName() );
@@ -621,7 +613,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 					subclassesByDiscriminatorValue.put( discriminatorValue, sc.getEntityName() );
 					int id = getTableId(
 							table.getQualifiedName(
-									factory.getDialect(),
+									factory.getJdbcServices().getDialect(),
 									factory.getSettings().getDefaultCatalogName(),
 									factory.getSettings().getDefaultSchemaName()
 							),
@@ -652,7 +644,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			Table table,
 			Object discriminatorValue) {
 		final String tableName = determineTableName( table, jdbcEnvironment );
-		final String columnName = table.getPrimaryKey().getColumn( 0 ).getQuotedName( factory.getDialect() );
+		final String columnName = table.getPrimaryKey().getColumn( 0 ).getQuotedName( factory.getJdbcServices().getDialect() );
 		discriminatorValuesByTableName.put( tableName, discriminatorValue );
 		discriminatorColumnNameByTableName.put( tableName, columnName );
 		discriminatorValues[k] = discriminatorValue.toString();
@@ -698,8 +690,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	 * Essentially we are building a mapping that we can later use to determine whether a given "subclass table"
 	 * should be included in joins when JPA TREAT-AS is used.
 	 *
-	 * @param persistentClass
-	 * @param factory
 	 * @return subclassNamesBySubclassTable
 	 */
 	private String[][] buildSubclassNamesBySubclassTableMapping(PersistentClass persistentClass, SessionFactoryImplementor factory) {
@@ -725,9 +715,9 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		// included when one of the collected class names is used in TREAT
 		final Set<String> classNames = new HashSet<>();
 
-		final Iterator itr = persistentClass.getDirectSubclasses();
+		final Iterator<Subclass> itr = persistentClass.getDirectSubclasses();
 		while ( itr.hasNext() ) {
-			final Subclass subclass = (Subclass) itr.next();
+			final Subclass subclass = itr.next();
 			final Set<String> subclassSubclassNames = processPersistentClassHierarchy(
 					subclass,
 					false,
@@ -759,18 +749,18 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			SessionFactoryImplementor factory) {
 
 		final String tableName = persistentClass.getTable().getQualifiedName(
-				factory.getDialect(),
+				factory.getJdbcServices().getDialect(),
 				factory.getSettings().getDefaultCatalogName(),
 				factory.getSettings().getDefaultSchemaName()
 		);
 
 		associateSubclassNamesToSubclassTableIndex( tableName, classNames, mapping );
 
-		Iterator itr = persistentClass.getJoinIterator();
+		Iterator<Join> itr = persistentClass.getJoinIterator();
 		while ( itr.hasNext() ) {
-			final Join join = (Join) itr.next();
+			final Join join = itr.next();
 			final String secondaryTableName = join.getTable().getQualifiedName(
-					factory.getDialect(),
+					factory.getJdbcServices().getDialect(),
 					factory.getSettings().getDefaultCatalogName(),
 					factory.getSettings().getDefaultSchemaName()
 			);
@@ -798,7 +788,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 							)
 					);
 				}
-				mapping[index] = classNames.toArray( new String[ classNames.size() ] );
+				mapping[index] = ArrayHelper.toStringArray( classNames );
 				break;
 			}
 		}
@@ -881,7 +871,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	public String getSubclassForDiscriminatorValue(Object value) {
-		return (String) subclassesByDiscriminatorValue.get( value );
+		return subclassesByDiscriminatorValue.get( value );
 	}
 
 	@Override
@@ -915,9 +905,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	/**
 	 * Reverse the first n elements of the incoming array
 	 *
-	 * @param objects
-	 * @param n
-	 *
 	 * @return New array with the first n elements in reversed order
 	 */
 	private static String[] reverse(String[] objects, int n) {
@@ -938,9 +925,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 	/**
 	 * Reverse the first n elements of the incoming array
-	 *
-	 * @param objects
-	 * @param n
 	 *
 	 * @return New array with the first n elements in reversed order
 	 */
@@ -991,7 +975,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	private CaseFragment discriminatorFragment(String alias) {
-		CaseFragment cases = getFactory().getDialect().createCaseFragment();
+		CaseFragment cases = getFactory().getJdbcServices().getDialect().createCaseFragment();
 
 		for ( int i = 0; i < discriminatorValues.length; i++ ) {
 			cases.addWhenColumnNotNull(
@@ -1270,7 +1254,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				bootEntityDescriptor.getIdentifierProperty().getName(),
 				getTableName(),
 				tableKeyColumns[0][0],
-				(BasicType) idType,
+				(BasicType<?>) idType,
 				creationProcess
 		);
 	}
@@ -1336,7 +1320,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 						getDiscriminatorFormulaTemplate() != null,
 						info.caseSearchedExpression,
 						info.columnReferences,
-						(BasicType) getDiscriminatorType()
+						(BasicType<?>) getDiscriminatorType()
 				);
 			}
 			else {
@@ -1354,9 +1338,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 			consumer.consume(
 					tableName,
-					() -> columnConsumer -> {
-						columnConsumer.accept(tableName, constraintOrderedKeyColumnNames[tablePosition]);
-					}
+					() -> columnConsumer -> columnConsumer.accept( tableName, constraintOrderedKeyColumnNames[tablePosition] )
 			);
 		}
 	}
@@ -1370,10 +1352,10 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		CaseSearchedExpressionInfo info = new CaseSearchedExpressionInfo();
 
 		final TableReference primaryTableReference = entityTableGroup.getPrimaryTableReference();
-		final BasicType discriminatorType = (BasicType) getDiscriminatorType();
+		final BasicType<?> discriminatorType = (BasicType<?>) getDiscriminatorType();
 		final CaseSearchedExpression caseSearchedExpression = new CaseSearchedExpression( discriminatorType );
 
-		Boolean addPrimaryTableCaseAsLastCaseExpression = false;
+		boolean addPrimaryTableCaseAsLastCaseExpression = false;
 		for ( String tableName : discriminatorValuesByTableName.keySet() ) {
 			if ( !primaryTableReference.getTableExpression().equals( tableName ) ) {
 				TableReference tableReference = entityTableGroup.getTableReference( tableName );
@@ -1414,7 +1396,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			CaseSearchedExpression caseSearchedExpression,
 			TableReference table,
 			ColumnReference identifierColumnReference,
-			BasicType resultType) {
+			BasicType<?> resultType) {
 		final Predicate predicate = new NullnessPredicate( identifierColumnReference, true );
 		final Expression expression = new QueryLiteral<>(
 				discriminatorValuesByTableName.get( table.getTableExpression() ),

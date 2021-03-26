@@ -55,7 +55,7 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping, SelectionMapp
 	}
 
 	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
+	public JavaTypeDescriptor<?> getJavaTypeDescriptor() {
 		return JavaObjectType.INSTANCE.getJavaTypeDescriptor();
 	}
 
@@ -106,7 +106,7 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping, SelectionMapp
 				sqlAstCreationState.getCreationContext().getDomainModel().getTypeConfiguration()
 		);
 
-		return new BasicResult<T>(
+		return new BasicResult(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
 				getJavaTypeDescriptor(),

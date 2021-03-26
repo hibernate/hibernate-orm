@@ -20,8 +20,8 @@ public class Join implements AttributeContainer, Serializable {
 
 	private static final Alias PK_ALIAS = new Alias(15, "PK");
 
-	private ArrayList properties = new ArrayList();
-	private ArrayList declaredProperties = new ArrayList();
+	private final ArrayList<Property> properties = new ArrayList<>();
+	private final ArrayList<Property> declaredProperties = new ArrayList<>();
 	private Table table;
 	private KeyValue key;
 	private PersistentClass persistentClass;
@@ -52,14 +52,14 @@ public class Join implements AttributeContainer, Serializable {
 		prop.setPersistentClass( getPersistentClass() );
 	}
 
-	public Iterator getDeclaredPropertyIterator() {
+	public Iterator<Property> getDeclaredPropertyIterator() {
 		return declaredProperties.iterator();
 	}
 
 	public boolean containsProperty(Property prop) {
 		return properties.contains(prop);
 	}
-	public Iterator getPropertyIterator() {
+	public Iterator<Property> getPropertyIterator() {
 		return properties.iterator();
 	}
 
@@ -176,10 +176,9 @@ public class Join implements AttributeContainer, Serializable {
 	}
 
 	public boolean isLazy() {
-		Iterator iter = getPropertyIterator();
+		Iterator<Property> iter = getPropertyIterator();
 		while ( iter.hasNext() ) {
-			Property prop = (Property) iter.next();
-			if ( !prop.isLazy() ) {
+			if ( !iter.next().isLazy() ) {
 				return false;
 			}
 		}

@@ -27,6 +27,7 @@ import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.internal.util.collections.SingletonIterator;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.Alias;
 
@@ -47,10 +48,10 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	private String entityName;
 
 	private String className;
-	private transient Class mappedClass;
+	private transient Class<?> mappedClass;
 
 	private String proxyInterfaceName;
-	private transient Class proxyInterface;
+	private transient Class<?> proxyInterface;
 
 	private String jpaEntityName;
 
@@ -125,7 +126,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		this.proxyInterface = null;
 	}
 
-	public Class getMappedClass() throws MappingException {
+	public Class<?> getMappedClass() throws MappingException {
 		if ( className == null ) {
 			return null;
 		}
@@ -141,7 +142,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		}
 	}
 
-	public Class getProxyInterface() {
+	public Class<?> getProxyInterface() {
 		if ( proxyInterfaceName == null ) {
 			return null;
 		}
@@ -214,33 +215,33 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	 * Iterate over subclasses in a special 'order', most derived subclasses
 	 * first.
 	 */
-	public Iterator getSubclassIterator() {
-		Iterator[] iters = new Iterator[subclasses.size() + 1];
-		Iterator iter = subclasses.iterator();
+	public Iterator<Subclass> getSubclassIterator() {
+		Iterator<Subclass>[] iters = new Iterator[subclasses.size() + 1];
+		Iterator<Subclass> iter = subclasses.iterator();
 		int i = 0;
 		while ( iter.hasNext() ) {
-			iters[i++] = ( (Subclass) iter.next() ).getSubclassIterator();
+			iters[i++] = iter.next().getSubclassIterator();
 		}
 		iters[i] = subclasses.iterator();
-		return new JoinedIterator( iters );
+		return new JoinedIterator<>( iters );
 	}
 
-	public Iterator getSubclassClosureIterator() {
-		ArrayList iters = new ArrayList();
-		iters.add( new SingletonIterator( this ) );
-		Iterator iter = getSubclassIterator();
+	public Iterator<PersistentClass> getSubclassClosureIterator() {
+		ArrayList<Iterator<PersistentClass>> iters = new ArrayList<>();
+		iters.add( new SingletonIterator<>( this ) );
+		Iterator<Subclass> iter = getSubclassIterator();
 		while ( iter.hasNext() ) {
-			PersistentClass clazz = (PersistentClass) iter.next();
+			PersistentClass clazz =  iter.next();
 			iters.add( clazz.getSubclassClosureIterator() );
 		}
-		return new JoinedIterator( iters );
+		return new JoinedIterator<>( iters );
 	}
 
 	public Table getIdentityTable() {
 		return getRootTable();
 	}
 
-	public Iterator getDirectSubclasses() {
+	public Iterator<Subclass> getDirectSubclasses() {
 		return subclasses.iterator();
 	}
 
@@ -314,11 +315,11 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 
 	public abstract boolean isDiscriminatorInsertable();
 
-	public abstract Iterator getPropertyClosureIterator();
+	public abstract Iterator<Property> getPropertyClosureIterator();
 
-	public abstract Iterator getTableClosureIterator();
+	public abstract Iterator<Table> getTableClosureIterator();
 
-	public abstract Iterator getKeyClosureIterator();
+	public abstract Iterator<KeyValue> getKeyClosureIterator();
 
 	protected void addSubclassProperty(Property prop) {
 		subclassProperties.add( prop );
@@ -332,23 +333,23 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		subclassTables.add( subclassTable );
 	}
 
-	public Iterator getSubclassPropertyClosureIterator() {
-		ArrayList iters = new ArrayList();
+	public Iterator<Property> getSubclassPropertyClosureIterator() {
+		ArrayList<Iterator<Property>> iters = new ArrayList<>();
 		iters.add( getPropertyClosureIterator() );
 		iters.add( subclassProperties.iterator() );
 		for ( int i = 0; i < subclassJoins.size(); i++ ) {
 			Join join = subclassJoins.get( i );
 			iters.add( join.getPropertyIterator() );
 		}
-		return new JoinedIterator( iters );
+		return new JoinedIterator<>( iters );
 	}
 
-	public Iterator getSubclassJoinClosureIterator() {
-		return new JoinedIterator( getJoinClosureIterator(), subclassJoins.iterator() );
+	public Iterator<Join> getSubclassJoinClosureIterator() {
+		return new JoinedIterator<>( getJoinClosureIterator(), subclassJoins.iterator() );
 	}
 
-	public Iterator getSubclassTableClosureIterator() {
-		return new JoinedIterator( getTableClosureIterator(), subclassTables.iterator() );
+	public Iterator<Table> getSubclassTableClosureIterator() {
+		return new JoinedIterator<>( getTableClosureIterator(), subclassTables.iterator() );
 	}
 
 	public boolean isClassOrSuperclassJoin(Join join) {
@@ -369,9 +370,9 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 
 	public abstract boolean hasEmbeddedIdentifier();
 
-	public abstract Class getEntityPersisterClass();
+	public abstract Class<? extends EntityPersister> getEntityPersisterClass();
 
-	public abstract void setEntityPersisterClass(Class classPersisterClass);
+	public abstract void setEntityPersisterClass(Class<? extends EntityPersister> classPersisterClass);
 
 	public abstract Table getRootTable();
 
@@ -424,7 +425,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	 * @see #getReferencedProperty for a discussion of "referenceable"
 	 * @return The referenceable property iterator.
 	 */
-	public Iterator getReferenceablePropertyIterator() {
+	public Iterator<Property> getReferenceablePropertyIterator() {
 		return getPropertyClosureIterator();
 	}
 
@@ -462,7 +463,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		}
 	}
 
-	private Property getRecursiveProperty(String propertyPath, Iterator iter) throws MappingException {
+	private Property getRecursiveProperty(String propertyPath, Iterator<Property> iter) throws MappingException {
 		Property property = null;
 		StringTokenizer st = new StringTokenizer( propertyPath, ".", false );
 		try {
@@ -508,11 +509,11 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		return property;
 	}
 
-	private Property getProperty(String propertyName, Iterator iterator) throws MappingException {
+	private Property getProperty(String propertyName, Iterator<Property> iterator) throws MappingException {
 		if ( iterator.hasNext() ) {
 			String root = StringHelper.root( propertyName );
 			while ( iterator.hasNext() ) {
-				Property prop = (Property) iterator.next();
+				Property prop = iterator.next();
 				if ( prop.getName().equals( root )
 						|| (prop instanceof Backref || prop instanceof IndexBackref)
 						&& prop.getName().equals( propertyName ) ) {
@@ -524,7 +525,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	}
 
 	public Property getProperty(String propertyName) throws MappingException {
-		Iterator iter = getPropertyClosureIterator();
+		Iterator<Property> iter = getPropertyClosureIterator();
 		Property identifierProperty = getIdentifierProperty();
 		if ( identifierProperty != null
 				&& identifierProperty.getName().equals( StringHelper.root( propertyName ) ) ) {
@@ -549,9 +550,9 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 			return true;
 		}
 
-		final Iterator itr = getPropertyClosureIterator();
+		final Iterator<Property> itr = getPropertyClosureIterator();
 		while ( itr.hasNext() ) {
-			final Property property = (Property) itr.next();
+			final Property property = itr.next();
 			if ( property.getName().equals( name ) ) {
 				return true;
 			}
@@ -627,9 +628,9 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	}
 
 	public void validate(Mapping mapping) throws MappingException {
-		Iterator iter = getPropertyIterator();
+		Iterator<Property> iter = getPropertyIterator();
 		while ( iter.hasNext() ) {
-			Property prop = (Property) iter.next();
+			Property prop = iter.next();
 			if ( !prop.isValid( mapping ) ) {
 				throw new MappingException(
 						"property mapping has wrong number of columns: " +
@@ -645,9 +646,9 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 
 	private void checkPropertyDuplication() throws MappingException {
 		HashSet<String> names = new HashSet<>();
-		Iterator iter = getPropertyIterator();
+		Iterator<Property> iter = getPropertyIterator();
 		while ( iter.hasNext() ) {
-			Property prop = (Property) iter.next();
+			Property prop = iter.next();
 			if ( !names.add( prop.getName() ) ) {
 				throw new MappingException( "Duplicate property mapping of " + prop.getName() + " found in " + getEntityName() );
 			}
@@ -681,11 +682,11 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		return getClass().getName() + '(' + getEntityName() + ')';
 	}
 
-	public Iterator getJoinIterator() {
+	public Iterator<Join> getJoinIterator() {
 		return joins.iterator();
 	}
 
-	public Iterator getJoinClosureIterator() {
+	public Iterator<Join> getJoinClosureIterator() {
 		return joins.iterator();
 	}
 
@@ -708,9 +709,9 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 
 	public int getJoinNumber(Property prop) {
 		int result = 1;
-		Iterator iter = getSubclassJoinClosureIterator();
+		Iterator<Join> iter = getSubclassJoinClosureIterator();
 		while ( iter.hasNext() ) {
-			Join join = (Join) iter.next();
+			Join join = iter.next();
 			if ( join.containsProperty( prop ) ) {
 				return result;
 			}
@@ -732,14 +733,14 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	 *
 	 * @return An iterator over the "normal" properties.
 	 */
-	public Iterator getPropertyIterator() {
-		ArrayList iterators = new ArrayList();
+	public Iterator<Property> getPropertyIterator() {
+		ArrayList<Iterator<Property>> iterators = new ArrayList<>();
 		iterators.add( properties.iterator() );
 		for ( int i = 0; i < joins.size(); i++ ) {
 			Join join = joins.get( i );
 			iterators.add( join.getPropertyIterator() );
 		}
-		return new JoinedIterator( iterators );
+		return new JoinedIterator<>( iterators );
 	}
 
 	/**
@@ -749,7 +750,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	 *
 	 * @return An iterator over the non-joined "normal" properties.
 	 */
-	public Iterator getUnjoinedPropertyIterator() {
+	public Iterator<Property> getUnjoinedPropertyIterator() {
 		return properties.iterator();
 	}
 
@@ -825,7 +826,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		);
 	}
 
-	public java.util.List getFilters() {
+	public java.util.List<FilterConfiguration> getFilters() {
 		return filters;
 	}
 
@@ -843,7 +844,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		this.loaderName = loaderName == null ? null : loaderName.intern();
 	}
 
-	public abstract java.util.Set getSynchronizedTables();
+	public abstract java.util.Set<String> getSynchronizedTables();
 
 	public void addSynchronizedTable(String table) {
 		synchronizedTables.add( table );
@@ -857,10 +858,10 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		this.isAbstract = isAbstract;
 	}
 
-	protected void checkColumnDuplication(Set distinctColumns, Iterator columns)
+	protected void checkColumnDuplication(Set<String> distinctColumns, Iterator<Selectable> columns)
 			throws MappingException {
 		while ( columns.hasNext() ) {
-			Selectable columnOrFormula = (Selectable) columns.next();
+			Selectable columnOrFormula = columns.next();
 			if ( !columnOrFormula.isFormula() ) {
 				Column col = (Column) columnOrFormula;
 				if ( !distinctColumns.add( col.getName() ) ) {
@@ -892,16 +893,16 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		}
 	}
 
-	protected Iterator getNonDuplicatedPropertyIterator() {
+	protected Iterator<Property> getNonDuplicatedPropertyIterator() {
 		return getUnjoinedPropertyIterator();
 	}
 
-	protected Iterator getDiscriminatorColumnIterator() {
+	protected Iterator<Selectable> getDiscriminatorColumnIterator() {
 		return Collections.emptyIterator();
 	}
 
 	protected void checkColumnDuplication() {
-		HashSet cols = new HashSet();
+		HashSet<String> cols = new HashSet<>();
 		if ( getIdentifierMapper() == null ) {
 			//an identifier mapper => getKey will be included in the getNonDuplicatedPropertyIterator()
 			//and checked later, so it needs to be excluded
@@ -909,10 +910,10 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		}
 		checkColumnDuplication( cols, getDiscriminatorColumnIterator() );
 		checkPropertyColumnDuplication( cols, getNonDuplicatedPropertyIterator() );
-		Iterator iter = getJoinIterator();
+		Iterator<Join> iter = getJoinIterator();
 		while ( iter.hasNext() ) {
 			cols.clear();
-			Join join = (Join) iter.next();
+			Join join = iter.next();
 			checkColumnDuplication( cols, join.getKey().getColumnIterator() );
 			checkPropertyColumnDuplication( cols, join.getPropertyIterator() );
 		}
@@ -991,7 +992,6 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	}
 
 	private boolean determineIfNaturalIdDefined() {
-		//noinspection unchecked
 		final Iterator<Property> props = getRootClass().getPropertyIterator();
 		while ( props.hasNext() ) {
 			if ( props.next().isNaturalIdentifier() ) {
@@ -1002,14 +1002,14 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	}
 
 	// The following methods are added to support @MappedSuperclass in the metamodel
-	public Iterator getDeclaredPropertyIterator() {
-		ArrayList iterators = new ArrayList();
+	public Iterator<Property> getDeclaredPropertyIterator() {
+		ArrayList<Iterator<Property>> iterators = new ArrayList<>();
 		iterators.add( declaredProperties.iterator() );
 		for ( int i = 0; i < joins.size(); i++ ) {
 			Join join = joins.get( i );
 			iterators.add( join.getDeclaredPropertyIterator() );
 		}
-		return new JoinedIterator( iterators );
+		return new JoinedIterator<>( iterators );
 	}
 
 	public void addMappedsuperclassProperty(Property p) {

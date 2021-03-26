@@ -32,11 +32,11 @@ public class UnionSubclass extends Subclass implements TableOwner {
 		getSuperclass().addSubclassTable(table);
 	}
 
-	public java.util.Set getSynchronizedTables() {
+	public java.util.Set<String> getSynchronizedTables() {
 		return synchronizedTables;
 	}
 	
-	protected Iterator getNonDuplicatedPropertyIterator() {
+	protected Iterator<Property> getNonDuplicatedPropertyIterator() {
 		return getPropertyClosureIterator();
 	}
 

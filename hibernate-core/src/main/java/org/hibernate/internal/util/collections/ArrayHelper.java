@@ -75,33 +75,33 @@ public final class ArrayHelper {
 		return array;
 	}
 
-	public static String[] toStringArray(Collection coll) {
-		return (String[]) coll.toArray( new String[coll.size()] );
+	public static String[] toStringArray(Collection<String> coll) {
+		return coll.toArray( EMPTY_STRING_ARRAY );
 	}
 
-	public static String[][] to2DStringArray(Collection coll) {
-		return (String[][]) coll.toArray( new String[coll.size()][] );
+	public static String[][] to2DStringArray(Collection<String[]> coll) {
+		return coll.toArray( new String[0][] );
 	}
 
-	public static int[][] to2DIntArray(Collection coll) {
-		return (int[][]) coll.toArray( new int[coll.size()][] );
+	public static int[][] to2DIntArray(Collection<int[]> coll) {
+		return coll.toArray( new int[0][] );
 	}
 
-	public static Type[] toTypeArray(Collection coll) {
-		return (Type[]) coll.toArray( new Type[coll.size()] );
+	public static Type[] toTypeArray(Collection<Type> coll) {
+		return coll.toArray( EMPTY_TYPE_ARRAY );
 	}
 
-	public static int[] toIntArray(Collection coll) {
-		Iterator iter = coll.iterator();
+	public static int[] toIntArray(Collection<Integer> coll) {
+		Iterator<Integer> iter = coll.iterator();
 		int[] arr = new int[coll.size()];
 		int i = 0;
 		while ( iter.hasNext() ) {
-			arr[i++] = (Integer) iter.next();
+			arr[i++] = iter.next();
 		}
 		return arr;
 	}
 
-	public static boolean[] toBooleanArray(Collection coll) {
+	public static boolean[] toBooleanArray(Collection<Boolean> coll) {
 		Iterator iter = coll.iterator();
 		boolean[] arr = new boolean[coll.size()];
 		int i = 0;

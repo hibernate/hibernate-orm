@@ -110,7 +110,7 @@ public class BasicValuedCollectionPart
 	}
 
 	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
+	public JavaTypeDescriptor<?> getJavaTypeDescriptor() {
 		return selectionMapping.getJdbcMapping().getJavaTypeDescriptor();
 	}
 

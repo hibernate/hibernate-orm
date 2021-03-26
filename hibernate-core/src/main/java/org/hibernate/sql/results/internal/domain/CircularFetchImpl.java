@@ -172,7 +172,7 @@ public class CircularFetchImpl implements BiDirectionalFetch, Association {
 	}
 
 	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
+	public JavaTypeDescriptor<?> getJavaTypeDescriptor() {
 		return fetchable.getJavaTypeDescriptor();
 	}
 

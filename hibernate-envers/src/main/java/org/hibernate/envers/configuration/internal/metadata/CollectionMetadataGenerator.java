@@ -70,6 +70,7 @@ import org.hibernate.envers.internal.tools.Tools;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.IndexedCollection;
+import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.PersistentClass;
@@ -1012,9 +1013,8 @@ public final class CollectionMetadataGenerator {
 		return null;
 	}
 
-	@SuppressWarnings({"unchecked"})
 	private String searchMappedByKey(PersistentClass referencedClass, Collection collectionValue) {
-		final Iterator<Value> assocIdClassProps = referencedClass.getKeyClosureIterator();
+		final Iterator<KeyValue> assocIdClassProps = referencedClass.getKeyClosureIterator();
 		while ( assocIdClassProps.hasNext() ) {
 			final Value value = assocIdClassProps.next();
 			// make sure its a 'Component' because IdClass is registered as this type.

@@ -109,7 +109,7 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 	}
 
 	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
+	public JavaTypeDescriptor<?> getJavaTypeDescriptor() {
 		return versionBasicType.getJavaTypeDescriptor();
 	}
 
@@ -190,8 +190,7 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 			DomainResultCreationState creationState) {
 		final SqlSelection sqlSelection = resolveSqlSelection( tableGroup, creationState );
 
-		//noinspection unchecked
-		return new BasicResult<>(
+		return new BasicResult(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
 				getJavaTypeDescriptor(),

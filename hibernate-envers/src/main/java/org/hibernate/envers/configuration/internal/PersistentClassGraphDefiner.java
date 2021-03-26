@@ -38,27 +38,24 @@ public class PersistentClassGraphDefiner implements GraphDefiner<PersistentClass
 		return metadata.getEntityBinding( entityName );
 	}
 
-	@SuppressWarnings({"unchecked"})
-	private void addNeighbours(List<PersistentClass> neighbours, Iterator<PersistentClass> subclassIterator) {
+	private void addNeighbours(List<PersistentClass> neighbours, Iterator<? extends PersistentClass> subclassIterator) {
 		while ( subclassIterator.hasNext() ) {
 			final PersistentClass subclass = subclassIterator.next();
 			neighbours.add( subclass );
-			addNeighbours( neighbours, (Iterator<PersistentClass>) subclass.getSubclassIterator() );
+			addNeighbours( neighbours, subclass.getSubclassIterator() );
 		}
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked"})
 	public List<PersistentClass> getNeighbours(PersistentClass pc) {
 		final List<PersistentClass> neighbours = new ArrayList<>();
 
-		addNeighbours( neighbours, (Iterator<PersistentClass>) pc.getSubclassIterator() );
+		addNeighbours( neighbours, pc.getSubclassIterator() );
 
 		return neighbours;
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked"})
 	public List<PersistentClass> getValues() {
 		return Tools.collectionToList( metadata.getEntityBindings() );
 	}

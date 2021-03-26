@@ -107,7 +107,7 @@ public class EntityCollectionPart
 	}
 
 	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
+	public JavaTypeDescriptor<?> getJavaTypeDescriptor() {
 		return getEntityMappingType().getJavaTypeDescriptor();
 	}
 

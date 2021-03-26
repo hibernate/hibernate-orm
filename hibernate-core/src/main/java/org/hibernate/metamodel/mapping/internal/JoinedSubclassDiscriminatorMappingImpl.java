@@ -38,7 +38,7 @@ public class JoinedSubclassDiscriminatorMappingImpl extends AbstractEntityDiscri
 			boolean isFormula,
 			CaseSearchedExpression caseSearchedExpression,
 			List<ColumnReference> columnReferences,
-			BasicType mappingType) {
+			BasicType<?> mappingType) {
 		super( entityDescriptor, tableExpression, mappedColumnExpression, isFormula, mappingType );
 
 		this.navigableRole = entityDescriptor.getNavigableRole().append( EntityDiscriminatorMapping.ROLE_NAME );

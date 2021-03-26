@@ -364,7 +364,7 @@ public interface EntityPersister
 	 *
 	 * @return The type of the version property; or null, if not versioned.
 	 */
-	VersionType getVersionType();
+	VersionType<?> getVersionType();
 
 	/**
 	 * If {@link #isVersioned()}, then what is the index of the property
@@ -433,7 +433,7 @@ public interface EntityPersister
 	 */
 	boolean hasLazyProperties();
 
-	default NaturalIdLoader getNaturalIdLoader() {
+	default NaturalIdLoader<?> getNaturalIdLoader() {
 		throw new UnsupportedOperationException(
 				"EntityPersister implementation `" + getClass().getName() + "` does not support `NaturalIdLoader`"
 		);
@@ -447,7 +447,6 @@ public interface EntityPersister
 
 	/**
 	 * Load the id for the entity based on the natural id.
-	 * @return
 	 */
 	Object loadEntityIdByNaturalId(
 			Object[] naturalIdValues,
@@ -763,7 +762,7 @@ public interface EntityPersister
 	/**
 	 * The persistent class, or null
 	 */
-	Class getMappedClass();
+	Class<?> getMappedClass();
 
 	/**
 	 * Does the class implement the {@link org.hibernate.classic.Lifecycle} interface.
@@ -774,7 +773,7 @@ public interface EntityPersister
 	 * Get the proxy interface that instances of <em>this</em> concrete class will be
 	 * cast to (optional operation).
 	 */
-	Class getConcreteProxyClass();
+	Class<?> getConcreteProxyClass();
 
 	/**
 	 * Set the given values to the mapped properties of the given object

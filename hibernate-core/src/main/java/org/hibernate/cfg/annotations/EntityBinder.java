@@ -88,7 +88,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.TableOwner;
 import org.hibernate.mapping.Value;
 
-import org.hibernate.tuple.Tuplizer;
+import org.hibernate.persister.entity.EntityPersister;
 import org.jboss.logging.Logger;
 
 import static org.hibernate.cfg.BinderHelper.toAliasEntityMap;
@@ -305,7 +305,7 @@ public class EntityBinder {
 		//set persister if needed
 		Persister persisterAnn = annotatedClass.getAnnotation( Persister.class );
 		if ( persisterAnn != null ) {
-			Class persister = persisterAnn.impl();
+			Class<? extends EntityPersister> persister = (Class<? extends EntityPersister>) persisterAnn.impl();
 			persistentClass.setEntityPersisterClass( persister );
 		}
 

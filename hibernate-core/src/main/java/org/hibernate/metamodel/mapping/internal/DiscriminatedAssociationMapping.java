@@ -458,7 +458,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		@Override
 		public JavaTypeDescriptor<T> getAssembledJavaTypeDescriptor() {
 			//noinspection unchecked
-			return fetchedPart.getJavaTypeDescriptor();
+			return (JavaTypeDescriptor<T>) fetchedPart.getJavaTypeDescriptor();
 		}
 
 		@Override

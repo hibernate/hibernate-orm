@@ -161,7 +161,7 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping {
 	}
 
 	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
+	public JavaTypeDescriptor<?> getJavaTypeDescriptor() {
 		return attribute.getJavaTypeDescriptor();
 	}
 

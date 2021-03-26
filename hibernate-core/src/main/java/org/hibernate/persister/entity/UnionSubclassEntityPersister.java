@@ -72,7 +72,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	private final String[] subclassSpaces;
 	private final Object discriminatorValue;
 	private final String discriminatorSQLValue;
-	private final Map subclassByDiscriminatorValue = new HashMap();
+	private final Map<Object,String> subclassByDiscriminatorValue = new HashMap<>();
 
 	private final String[] constraintOrderedTableNames;
 	private final String[][] constraintOrderedKeyColumnNames;
@@ -145,8 +145,6 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 		// PROPERTIES
 
-		int subclassSpan = persistentClass.getSubclassSpan() + 1;
-
 		// SUBCLASSES
 		subclassByDiscriminatorValue.put(
 				persistentClass.getSubclassId(),
@@ -172,7 +170,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			spaces[i] = iter.next();
 		}
 
-		HashSet<String> subclassTables = new HashSet();
+		HashSet<String> subclassTables = new HashSet<>();
 		Iterator<Table> subclassTableIter = persistentClass.getSubclassTableClosureIterator();
 		while ( subclassTableIter.hasNext() ) {
 			subclassTables.add( determineTableName( subclassTableIter.next(), jdbcEnvironment ) );
@@ -194,7 +192,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 					String[] key = new String[idColumnSpan];
 					Iterator<Column> citer = tab.getPrimaryKey().getColumnIterator();
 					for ( int k = 0; k < idColumnSpan; k++ ) {
-						key[k] = citer.next().getQuotedName( factory.getDialect() );
+						key[k] = citer.next().getQuotedName( factory.getJdbcServices().getDialect() );
 					}
 					keyColumns.add( key );
 				}
@@ -285,7 +283,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 	@Override
 	public String getSubclassForDiscriminatorValue(Object value) {
-		return (String) subclassByDiscriminatorValue.get( value );
+		return subclassByDiscriminatorValue.get( value );
 	}
 
 	@Override
@@ -383,9 +381,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 			consumer.consume(
 					tableName,
-					() -> columnConsumer -> {
-						columnConsumer.accept(tableName, constraintOrderedKeyColumnNames[tablePosition]);
-					}
+					() -> columnConsumer -> columnConsumer.accept( tableName, constraintOrderedKeyColumnNames[tablePosition] )
 			);
 		}
 	}
@@ -424,7 +420,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 	protected String generateSubquery(PersistentClass model, Mapping mapping) {
 
-		Dialect dialect = getFactory().getDialect();
+		Dialect dialect = getFactory().getJdbcServices().getDialect();
 		Settings settings = getFactory().getSettings();
 
 		if ( !model.hasSubclasses() ) {
@@ -435,12 +431,12 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			);
 		}
 
-		HashSet columns = new LinkedHashSet();
-		Iterator titer = model.getSubclassTableClosureIterator();
+		HashSet<Column> columns = new LinkedHashSet<>();
+		Iterator<Table> titer = model.getSubclassTableClosureIterator();
 		while ( titer.hasNext() ) {
-			Table table = (Table) titer.next();
+			Table table = titer.next();
 			if ( !table.isAbstractUnionTable() ) {
-				Iterator citer = table.getColumnIterator();
+				Iterator<Column> citer = table.getColumnIterator();
 				while ( citer.hasNext() ) {
 					columns.add( citer.next() );
 				}
@@ -450,27 +446,25 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		StringBuilder buf = new StringBuilder()
 				.append( "( " );
 
-		Iterator siter = new JoinedIterator(
-				new SingletonIterator( model ),
+		Iterator<PersistentClass> siter = new JoinedIterator<>(
+				new SingletonIterator<>( model ),
 				model.getSubclassIterator()
 		);
 
 		while ( siter.hasNext() ) {
-			PersistentClass clazz = (PersistentClass) siter.next();
+			PersistentClass clazz = siter.next();
 			Table table = clazz.getTable();
 			if ( !table.isAbstractUnionTable() ) {
 				//TODO: move to .sql package!!
 				buf.append( "select " );
-				Iterator citer = columns.iterator();
-				while ( citer.hasNext() ) {
-					Column col = (Column) citer.next();
-					if ( !table.containsColumn( col ) ) {
-						int sqlType = col.getSqlTypeCode( mapping );
-						buf.append( dialect.getSelectClauseNullString( sqlType ) )
-								.append( " as " );
+				for ( Column col : columns ) {
+					if ( !table.containsColumn(col) ) {
+						int sqlType = col.getSqlTypeCode(mapping);
+						buf.append( dialect.getSelectClauseNullString(sqlType) )
+								.append(" as ");
 					}
-					buf.append( col.getQuotedName( dialect ) );
-					buf.append( ", " );
+					buf.append(col.getQuotedName(dialect));
+					buf.append(", ");
 				}
 				buf.append( clazz.getSubclassId() )
 						.append( " as clazz_" );

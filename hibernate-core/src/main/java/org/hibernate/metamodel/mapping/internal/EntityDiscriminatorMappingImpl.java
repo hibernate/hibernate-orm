@@ -32,7 +32,7 @@ public class EntityDiscriminatorMappingImpl extends AbstractEntityDiscriminatorM
 			String tableExpression,
 			String mappedColumnExpression,
 			boolean isFormula,
-			BasicType mappingType) {
+			BasicType<?> mappingType) {
 		super( entityDescriptor, tableExpression, mappedColumnExpression, isFormula, mappingType );
 		this.navigableRole = entityDescriptor.getNavigableRole().append( EntityDiscriminatorMapping.ROLE_NAME );
 	}

@@ -29,7 +29,6 @@ import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
-import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
@@ -61,7 +60,6 @@ class DatabaseSnapshotExecutor {
 	private static final Logger log = Logger.getLogger( DatabaseSnapshotExecutor.class );
 
 	private final EntityMappingType entityDescriptor;
-	private final SessionFactoryImplementor sessionFactory;
 
 	private final JdbcSelect jdbcSelect;
 	private final List<JdbcParameter> jdbcParameters;
@@ -70,7 +68,6 @@ class DatabaseSnapshotExecutor {
 			EntityMappingType entityDescriptor,
 			SessionFactoryImplementor sessionFactory) {
 		this.entityDescriptor = entityDescriptor;
-		this.sessionFactory = sessionFactory;
 		this.jdbcParameters = new ArrayList<>(
 				entityDescriptor.getIdentifierMapping().getJdbcTypeCount()
 		);
@@ -170,7 +167,7 @@ class DatabaseSnapshotExecutor {
 						// TODO: Instead use a delayed collection result? Or will we remove this when redesigning this
 						//noinspection unchecked
 						domainResults.add(
-								new BasicResult<Object>(
+								new BasicResult(
 										0,
 										null,
 										contributorMapping.getJavaTypeDescriptor()

@@ -100,6 +100,7 @@
         <bindings node="//xsd:complexType[@name='entity']">
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.ManagedType</inheritance:implements>
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.EntityOrMappedSuperclass</inheritance:implements>
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.LifecycleCallbackContainer</inheritance:implements>
         </bindings>
         <bindings node="//xsd:complexType[@name='embeddable']">
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.ManagedType</inheritance:implements>
@@ -107,6 +108,11 @@
         <bindings node="//xsd:complexType[@name='mapped-superclass']">
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.ManagedType</inheritance:implements>
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.EntityOrMappedSuperclass</inheritance:implements>
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.LifecycleCallbackContainer</inheritance:implements>
+        </bindings>
+
+        <bindings node="//xsd:complexType[@name='entity-listener']">
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.LifecycleCallbackContainer</inheritance:implements>
         </bindings>
 
         <bindings node="//xsd:complexType[@name='id']">
@@ -173,7 +179,6 @@
         <bindings node="//xsd:complexType[@name='embeddable-attributes']">
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.AttributesContainer</inheritance:implements>
         </bindings>
-
     </bindings>
 
     <!-- All bindings need to be serializable for cached metadata sources. -->

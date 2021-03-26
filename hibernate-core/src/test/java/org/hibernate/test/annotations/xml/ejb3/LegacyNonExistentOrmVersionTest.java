@@ -8,7 +8,7 @@ package org.hibernate.test.annotations.xml.ejb3;
 
 import org.hibernate.InvalidMappingException;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
+import org.hibernate.cfg.annotations.reflection.JPAOverriddenAnnotationReader;
 import org.hibernate.internal.util.xml.UnsupportedOrmXsdVersionException;
 
 import org.hibernate.testing.TestForIssue;
@@ -17,13 +17,19 @@ import org.junit.Test;
 
 import static org.junit.Assert.fail;
 
-@TestForIssue(jiraKey = {"HHH-6271", "HHH-14529"})
-public class NonExistentOrmVersionTest extends BaseUnitTestCase {
+/**
+ * Equivalent to {@link org.hibernate.test.annotations.xml.ejb3.NonExistentOrmVersionTest}
+ * for the legacy {@link JPAOverriddenAnnotationReader}.
+ *
+ * @author Emmanuel Bernard
+ * @deprecated This test will be removed in Hibernate ORM 6, along with the legacy {@link JPAOverriddenAnnotationReader}.
+ */
+@TestForIssue(jiraKey = "HHH-6271")
+public class LegacyNonExistentOrmVersionTest extends BaseUnitTestCase {
 	@Test
 	public void testNonExistentOrmVersion() {
-		// FIXME HHH-14529 configure the BootstrapServiceRegistry to use JAXB for orm.xml mappings
 		try {
-			new MetadataSources( new BootstrapServiceRegistryBuilder().build() )
+			new MetadataSources()
 					.addResource( "org/hibernate/test/annotations/xml/ejb3/orm5.xml" )
 					.buildMetadata();
 			fail( "Expecting failure due to unsupported xsd version" );

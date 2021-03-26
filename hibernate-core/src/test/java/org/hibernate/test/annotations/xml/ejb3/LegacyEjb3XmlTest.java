@@ -12,7 +12,7 @@ import java.util.List;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
-import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
+import org.hibernate.cfg.annotations.reflection.JPAOverriddenAnnotationReader;
 import org.hibernate.dialect.CockroachDB192Dialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
@@ -20,7 +20,6 @@ import org.hibernate.dialect.TeradataDialect;
 import org.hibernate.persister.collection.BasicCollectionPersister;
 
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -28,17 +27,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 /**
+ * Equivalent to {@link org.hibernate.test.annotations.xml.ejb3.Ejb3XmlTest}
+ * for the legacy {@link JPAOverriddenAnnotationReader}.
+ *
  * @author Emmanuel Bernard
+ * @deprecated This test will be removed in Hibernate ORM 6, along with the legacy {@link JPAOverriddenAnnotationReader}.
  */
-@TestForIssue(jiraKey = "HHH-14529")
-public class Ejb3XmlTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected void prepareBootstrapRegistryBuilder(BootstrapServiceRegistryBuilder builder) {
-		// FIXME HHH-14529 configure the BootstrapServiceRegistry to use JAXB for orm.xml mappings
-		super.prepareBootstrapRegistryBuilder( builder );
-	}
-
+@Deprecated
+public class LegacyEjb3XmlTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@SkipForDialect(value = {PostgreSQL81Dialect.class, PostgreSQLDialect.class, CockroachDB192Dialect.class},
 			comment = "postgresql jdbc driver does not implement the setQueryTimeout method")

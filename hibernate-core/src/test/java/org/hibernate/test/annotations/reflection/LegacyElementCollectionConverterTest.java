@@ -6,7 +6,7 @@
  */
 package org.hibernate.test.annotations.reflection;
 
-import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
+import org.hibernate.cfg.annotations.reflection.JPAOverriddenAnnotationReader;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -15,14 +15,19 @@ import org.junit.Test;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 
-@TestForIssue(jiraKey = {"HHH-11924", "HHH-14529"})
-public class ElementCollectionConverterTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected void prepareBootstrapRegistryBuilder(BootstrapServiceRegistryBuilder builder) {
-		// FIXME HHH-14529 configure the BootstrapServiceRegistry to use JAXB for orm.xml mappings
-		super.prepareBootstrapRegistryBuilder( builder );
-	}
+/**
+ * Tests the legacy {@link JPAOverriddenAnnotationReader},
+ * which will be replaced with {@link org.hibernate.cfg.annotations.reflection.internal.JPAXMLOverriddenAnnotationReader}.
+ * {@link JPAOverriddenAnnotationReader} is still the default implementation,
+ * but we want to switch to {@link org.hibernate.cfg.annotations.reflection.internal.JPAXMLOverriddenAnnotationReader}
+ * as soon as it will be practical.
+ *
+ * @see JPAXMLOverriddenAnnotationReaderTest
+ * @deprecated This test will be removed in Hibernate ORM 6, along with the legacy {@link JPAOverriddenAnnotationReader}.
+ */
+@Deprecated
+@TestForIssue( jiraKey = "HHH-11924")
+public class LegacyElementCollectionConverterTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected Class[] getAnnotatedClasses() {

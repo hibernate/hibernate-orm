@@ -11,23 +11,25 @@ import java.io.InputStream;
 import java.io.UncheckedIOException;
 
 import org.hibernate.boot.jaxb.spi.Binding;
-import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.annotations.reflection.JPAOverriddenAnnotationReader;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.test.annotations.xml.ejb3.PreParsedOrmXmlTest.NonAnnotatedEntity;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@TestForIssue(jiraKey = {"HHH-14530", "HHH-14529"})
-public class PreParsedOrmXmlTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected void prepareBootstrapRegistryBuilder(BootstrapServiceRegistryBuilder builder) {
-		// FIXME HHH-14529 configure the BootstrapServiceRegistry to use JAXB for orm.xml mappings
-		super.prepareBootstrapRegistryBuilder( builder );
-	}
+/**
+ * Equivalent to {@link org.hibernate.test.annotations.xml.ejb3.PreParsedOrmXmlTest}
+ * for the legacy {@link JPAOverriddenAnnotationReader}.
+ *
+ * @author Emmanuel Bernard
+ * @deprecated This test will be removed in Hibernate ORM 6, along with the legacy {@link JPAOverriddenAnnotationReader}.
+ */
+@TestForIssue(jiraKey = "HHH-14530")
+public class LegacyPreParsedOrmXmlTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected void addMappings(Configuration configuration) {
@@ -52,34 +54,5 @@ public class PreParsedOrmXmlTest extends BaseCoreFunctionalTestCase {
 			assertThat( retrievedEntity ).extracting( NonAnnotatedEntity::getName )
 					.isEqualTo( persistedEntity.getName() );
 		} );
-	}
-
-	public static class NonAnnotatedEntity {
-		private long id;
-
-		private String name;
-
-		public NonAnnotatedEntity() {
-		}
-
-		public NonAnnotatedEntity(String name) {
-			this.name = name;
-		}
-
-		public long getId() {
-			return id;
-		}
-
-		public void setId(long id) {
-			this.id = id;
-		}
-
-		public String getName() {
-			return name;
-		}
-
-		public void setName(String name) {
-			this.name = name;
-		}
 	}
 }

@@ -34,15 +34,23 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.UniqueConstraint;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.cfg.annotations.reflection.JPAOverriddenAnnotationReader;
+
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-@TestForIssue(jiraKey = "HHH-14529")
-public class Ejb3XmlElementCollectionTest extends Ejb3XmlTestCase {
+/**
+ * Equivalent to {@link org.hibernate.test.annotations.xml.ejb3.Ejb3XmlElementCollectionTest}
+ * for the legacy {@link JPAOverriddenAnnotationReader}.
+ *
+ * @author Emmanuel Bernard
+ * @deprecated This test will be removed in Hibernate ORM 6, along with the legacy {@link JPAOverriddenAnnotationReader}.
+ */
+@Deprecated
+public class LegacyEjb3XmlElementCollectionTest extends LegacyEjb3XmlTestCase {
 	@Test
 	public void testNoChildren() throws Exception {
 		reader = getReader( Entity2.class, "field1", "element-collection.orm1.xml" );

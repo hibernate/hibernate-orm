@@ -79,7 +79,7 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 	}
 
 	@Override
-	default JavaTypeDescriptor getJavaTypeDescriptor() {
+	default JavaTypeDescriptor<?> getJavaTypeDescriptor() {
 		return getMappedJavaTypeDescriptor();
 	}
 

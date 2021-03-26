@@ -17,7 +17,6 @@ import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.SelectionConsumer;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -59,7 +58,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 	private final String rootTable;
 	private final String pkColumnName;
 
-	private final BasicType idType;
+	private final BasicType<?> idType;
 
 	private final SessionFactoryImplementor sessionFactory;
 
@@ -68,7 +67,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 			String attributeName,
 			String rootTable,
 			String pkColumnName,
-			BasicType idType,
+			BasicType<?> idType,
 			MappingModelCreationProcess creationProcess) {
 		assert attributeName != null;
 		this.attributeName = attributeName;
@@ -162,7 +161,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 	}
 
 	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
+	public JavaTypeDescriptor<?> getJavaTypeDescriptor() {
 		return getMappedType().getMappedJavaTypeDescriptor();
 	}
 
@@ -179,7 +178,6 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 			DomainResultCreationState creationState) {
 		final SqlSelection sqlSelection = resolveSqlSelection( navigablePath, tableGroup, creationState );
 
-		//noinspection unchecked
 		return new BasicResult(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,

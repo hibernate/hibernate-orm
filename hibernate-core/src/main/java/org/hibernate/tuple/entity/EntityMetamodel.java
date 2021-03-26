@@ -123,7 +123,7 @@ public class EntityMetamodel implements Serializable {
 	private final boolean explicitPolymorphism;
 	private final boolean inherited;
 	private final boolean hasSubclasses;
-	private final Set subclassEntityNames;
+	private final Set<String> subclassEntityNames;
 	private final Map<Class,String> entityNameByInheritenceClassMap;
 
 	private final BytecodeEnhancementMetadata bytecodeEnhancementMetadata;
@@ -154,7 +154,6 @@ public class EntityMetamodel implements Serializable {
 			if ( identifierMapperComponent != null ) {
 				nonAggregatedCidMapper = (CompositeType) identifierMapperComponent.getType();
 				idAttributeNames = new HashSet<>( );
-				//noinspection unchecked
 				final Iterator<Property> propertyItr = identifierMapperComponent.getPropertyIterator();
 				while ( propertyItr.hasNext() ) {
 					idAttributeNames.add( propertyItr.next().getName() );
@@ -205,7 +204,7 @@ public class EntityMetamodel implements Serializable {
 		boolean foundPostUpdateGeneratedValues = false;
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-		Iterator iter = persistentClass.getPropertyClosureIterator();
+		Iterator<Property> props = persistentClass.getPropertyClosureIterator();
 		int i = 0;
 		int tempVersionProperty = NO_VERSION_INDX;
 		boolean foundCascade = false;
@@ -214,8 +213,8 @@ public class EntityMetamodel implements Serializable {
 		boolean foundNonIdentifierPropertyNamedId = false;
 		boolean foundUpdateableNaturalIdProperty = false;
 
-		while ( iter.hasNext() ) {
-			Property prop = ( Property ) iter.next();
+		while ( props.hasNext() ) {
+			Property prop = props.next();
 
 			if ( prop == persistentClass.getVersion() ) {
 				tempVersionProperty = i;
@@ -404,7 +403,7 @@ public class EntityMetamodel implements Serializable {
 		hasCollections = foundCollection;
 		mutablePropertiesIndexes = mutableIndexes;
 
-		iter = persistentClass.getSubclassIterator();
+		Iterator iter = persistentClass.getSubclassIterator();
 		final Set<String> subclassEntityNamesLocal = new HashSet<>();
 		while ( iter.hasNext() ) {
 			subclassEntityNamesLocal.add( ( (PersistentClass) iter.next() ).getEntityName() );
@@ -803,7 +802,7 @@ public class EntityMetamodel implements Serializable {
 		return hasImmutableNaturalId;
 	}
 
-	public Set getSubclassEntityNames() {
+	public Set<String> getSubclassEntityNames() {
 		return subclassEntityNames;
 	}
 

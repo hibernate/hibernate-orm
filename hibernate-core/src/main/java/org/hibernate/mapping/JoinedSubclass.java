@@ -52,7 +52,7 @@ public class JoinedSubclass extends Subclass implements TableOwner {
 		}
 	}
 
-	public Iterator getReferenceablePropertyIterator() {
+	public Iterator<Property> getReferenceablePropertyIterator() {
 		return getPropertyIterator();
 	}
 

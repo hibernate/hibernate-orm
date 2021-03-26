@@ -18,6 +18,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.SingletonIterator;
+import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * The root class of an inheritance hierarchy
@@ -44,7 +45,7 @@ public class RootClass extends PersistentClass implements TableOwner {
 	private boolean mutable = true;
 	private boolean embeddedIdentifier;
 	private boolean explicitPolymorphism;
-	private Class entityPersisterClass;
+	private Class<? extends EntityPersister> entityPersisterClass;
 	private boolean forceDiscriminator;
 	private String where;
 	private Table table;
@@ -125,18 +126,18 @@ public class RootClass extends PersistentClass implements TableOwner {
 	}
 
 	@Override
-	public Iterator getPropertyClosureIterator() {
+	public Iterator<Property> getPropertyClosureIterator() {
 		return getPropertyIterator();
 	}
 
 	@Override
-	public Iterator getTableClosureIterator() {
-		return new SingletonIterator( getTable() );
+	public Iterator<Table> getTableClosureIterator() {
+		return new SingletonIterator<>( getTable() );
 	}
 
 	@Override
-	public Iterator getKeyClosureIterator() {
-		return new SingletonIterator( getKey() );
+	public Iterator<KeyValue> getKeyClosureIterator() {
+		return new SingletonIterator<>( getKey() );
 	}
 
 	@Override
@@ -184,7 +185,7 @@ public class RootClass extends PersistentClass implements TableOwner {
 	}
 
 	@Override
-	public Class getEntityPersisterClass() {
+	public Class<? extends EntityPersister> getEntityPersisterClass() {
 		return entityPersisterClass;
 	}
 
@@ -194,7 +195,7 @@ public class RootClass extends PersistentClass implements TableOwner {
 	}
 
 	@Override
-	public void setEntityPersisterClass(Class persister) {
+	public void setEntityPersisterClass(Class<? extends EntityPersister> persister) {
 		this.entityPersisterClass = persister;
 	}
 
@@ -333,7 +334,7 @@ public class RootClass extends PersistentClass implements TableOwner {
 	}
 
 	@Override
-	public java.util.Set getSynchronizedTables() {
+	public java.util.Set<String> getSynchronizedTables() {
 		return synchronizedTables;
 	}
 

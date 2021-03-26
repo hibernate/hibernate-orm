@@ -23,14 +23,14 @@ public class SingleTableSubclass extends Subclass {
 	}
 
 	@SuppressWarnings("unchecked")
-	protected Iterator getNonDuplicatedPropertyIterator() {
-		return new JoinedIterator(
+	protected Iterator<Property> getNonDuplicatedPropertyIterator() {
+		return new JoinedIterator<>(
 				getSuperclass().getUnjoinedPropertyIterator(),
 				getUnjoinedPropertyIterator()
 		);
 	}
 
-	protected Iterator getDiscriminatorColumnIterator() {
+	protected Iterator<Selectable> getDiscriminatorColumnIterator() {
 		if ( isDiscriminatorInsertable() && !getDiscriminator().hasFormula() ) {
 			return getDiscriminator().getColumnIterator();
 		}

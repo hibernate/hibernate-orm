@@ -30,7 +30,7 @@ public interface EntityDiscriminatorMapping extends VirtualModelPart, BasicValue
 	}
 
 	@Override
-	default JavaTypeDescriptor getJavaTypeDescriptor() {
+	default JavaTypeDescriptor<?> getJavaTypeDescriptor() {
 		return null;
 	}
 }

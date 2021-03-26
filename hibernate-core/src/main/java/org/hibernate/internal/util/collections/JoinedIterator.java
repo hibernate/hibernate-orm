@@ -19,18 +19,18 @@ import java.util.List;
  * @author Steve Ebersole
  */
 public class JoinedIterator<T> implements Iterator<T> {
-	private Iterator<T>[] wrappedIterators;
+	private final Iterator<? extends T>[] wrappedIterators;
 
 	private int currentIteratorIndex;
-	private Iterator<T> currentIterator;
-	private Iterator<T> lastUsedIterator;
+	private Iterator<? extends T> currentIterator;
+	private Iterator<? extends T> lastUsedIterator;
 
 	@SuppressWarnings("unchecked")
 	public JoinedIterator(List<Iterator<T>> wrappedIterators) {
-		this( wrappedIterators.toArray( new Iterator[ wrappedIterators.size() ]) );
+		this( wrappedIterators.toArray(new Iterator[0]) );
 	}
 
-	public JoinedIterator(Iterator<T>... iteratorsToWrap) {
+	public JoinedIterator(Iterator<? extends T>... iteratorsToWrap) {
 		if( iteratorsToWrap == null ) {
 			throw new NullPointerException( "Iterators to join were null" );
 		}
@@ -58,7 +58,7 @@ public class JoinedIterator<T> implements Iterator<T> {
 	protected void updateCurrentIterator() {
 		if ( currentIterator == null ) {
 			if( wrappedIterators.length == 0  ) {
-				currentIterator = Collections.<T>emptyList().iterator();
+				currentIterator = Collections.emptyIterator();
 			}
 			else {
 				currentIterator = wrappedIterators[0];

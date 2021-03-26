@@ -42,8 +42,7 @@ public abstract class AbstractAttributeMapping implements AttributeMapping {
 	}
 
 	@Override
-	@SuppressWarnings("rawtypes")
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
+	public JavaTypeDescriptor<?> getJavaTypeDescriptor() {
 		return getMappedType().getMappedJavaTypeDescriptor();
 	}
 

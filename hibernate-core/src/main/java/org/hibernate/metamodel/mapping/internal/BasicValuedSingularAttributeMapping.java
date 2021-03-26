@@ -112,7 +112,7 @@ public class BasicValuedSingularAttributeMapping
 	}
 
 	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
+	public JavaTypeDescriptor<?> getJavaTypeDescriptor() {
 		return domainTypeDescriptor;
 	}
 

@@ -22,7 +22,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  */
 public interface ManagedMappingType extends MappingType, FetchableContainer {
 	@Override
-	default JavaTypeDescriptor getJavaTypeDescriptor() {
+	default JavaTypeDescriptor<?> getJavaTypeDescriptor() {
 		return getMappedJavaTypeDescriptor();
 	}
 

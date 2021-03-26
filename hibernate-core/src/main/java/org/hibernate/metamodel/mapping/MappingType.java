@@ -14,5 +14,5 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * @author Steve Ebersole
  */
 public interface MappingType {
-	JavaTypeDescriptor getMappedJavaTypeDescriptor();
+	JavaTypeDescriptor<?> getMappedJavaTypeDescriptor();
 }

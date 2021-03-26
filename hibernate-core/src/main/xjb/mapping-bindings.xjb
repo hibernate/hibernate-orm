@@ -81,12 +81,14 @@
 
         <bindings node="//xsd:complexType[@name='entity']">
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.ManagedType</inheritance:implements>
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.EntityOrMappedSuperclass</inheritance:implements>
         </bindings>
         <bindings node="//xsd:complexType[@name='embeddable']">
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.ManagedType</inheritance:implements>
         </bindings>
         <bindings node="//xsd:complexType[@name='mapped-superclass']">
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.ManagedType</inheritance:implements>
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.EntityOrMappedSuperclass</inheritance:implements>
         </bindings>
 
         <bindings node="//xsd:complexType[@name='id']">

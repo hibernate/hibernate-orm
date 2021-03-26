@@ -10,10 +10,6 @@ package org.hibernate.boot.jaxb.mapping.spi;
  * Common interface for JAXB bindings representing entities and mapped-superclasses.
  */
 public interface EntityOrMappedSuperclass extends ManagedType {
-	
-	String getDescription();
-
-	void setDescription(String value);
 
 	JaxbIdClass getIdClass();
 

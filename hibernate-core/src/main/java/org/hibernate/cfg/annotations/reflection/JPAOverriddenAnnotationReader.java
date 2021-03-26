@@ -126,6 +126,7 @@ import org.hibernate.annotations.common.reflection.ReflectionUtil;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
+import org.hibernate.cfg.annotations.reflection.internal.JPAXMLOverriddenAnnotationReader;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
@@ -140,7 +141,13 @@ import org.dom4j.Element;
  * @author Davide Marchignoli
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
+ *
+ * @deprecated This class is not API: do not use it from application code.
+ * This class will be removed in Hibernate ORM 6.0.
+ * For implementation code, use {@link JPAXMLOverriddenAnnotationReader}
+ * instead.
  */
+@Deprecated
 @SuppressWarnings("unchecked")
 public class JPAOverriddenAnnotationReader implements AnnotationReader {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( JPAOverriddenAnnotationReader.class );
@@ -884,7 +891,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 	 * field or property.  Thus, any methods which might in some contexts merge
 	 * with annotations must not do so in this context.
 	 *
-	 * @see #getElementCollection(List, org.hibernate.cfg.annotations.reflection.XMLContext.Default)
+	 * @see #getElementCollection(List, XMLContext.Default)
 	 */
 	private void getAssociation(
 			Class<? extends Annotation> annotationType, List<Annotation> annotationList, XMLContext.Default defaults
@@ -2691,7 +2698,8 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 				AnnotationDescriptor ad = new AnnotationDescriptor( IdClass.class );
 				Class clazz;
 				try {
-					clazz = classLoaderAccess.classForName( XMLContext.buildSafeClassName( attr.getValue(), defaults )
+					clazz = classLoaderAccess.classForName( XMLContext
+							.buildSafeClassName( attr.getValue(), defaults )
 					);
 				}
 				catch ( ClassLoadingException e ) {

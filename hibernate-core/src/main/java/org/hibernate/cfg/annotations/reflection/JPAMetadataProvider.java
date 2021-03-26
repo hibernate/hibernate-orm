@@ -30,6 +30,7 @@ import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.ClassLoaderAccessDelegateImpl;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
+import org.hibernate.cfg.annotations.reflection.internal.JPAXMLOverriddenMetadataProvider;
 
 import org.dom4j.Element;
 
@@ -37,7 +38,13 @@ import org.dom4j.Element;
  * MetadataProvider aware of the JPA Deployment descriptor
  *
  * @author Emmanuel Bernard
+ *
+ * @deprecated This class is not API: do not use it from application code.
+ * This class will be removed in Hibernate ORM 6.0.
+ * For implementation code, use {@link JPAXMLOverriddenMetadataProvider}
+ * instead.
  */
+@Deprecated
 @SuppressWarnings("unchecked")
 public final class JPAMetadataProvider implements MetadataProvider {
 
@@ -74,12 +81,12 @@ public final class JPAMetadataProvider implements MetadataProvider {
 				return delegate;
 			}
 		},
-				metadataBuildingOptions.isXmlMappingEnabled() );
+				metadataBuildingOptions.getXmlMappingOptions().isEnabled() );
 	}
 
 	public JPAMetadataProvider(BootstrapContext bootstrapContext) {
 		this( bootstrapContext.getClassLoaderAccess(),
-			  bootstrapContext.getMetadataBuildingOptions().isXmlMappingEnabled() );
+				bootstrapContext.getMetadataBuildingOptions().getXmlMappingOptions().isEnabled() );
 	}
 
 	JPAMetadataProvider(ClassLoaderAccess classLoaderAccess, boolean xmlMetadataEnabled) {
@@ -147,7 +154,8 @@ public final class JPAMetadataProvider implements MetadataProvider {
 						defaults.put( SequenceGenerator.class, sequenceGenerators );
 					}
 					for ( Element subelement : elements ) {
-						sequenceGenerators.add( JPAOverriddenAnnotationReader.buildSequenceGeneratorAnnotation( subelement ) );
+						sequenceGenerators.add( JPAOverriddenAnnotationReader
+								.buildSequenceGeneratorAnnotation( subelement ) );
 					}
 
 					elements = element.elements( "table-generator" );
@@ -169,7 +177,8 @@ public final class JPAMetadataProvider implements MetadataProvider {
 						namedQueries = new ArrayList<>();
 						defaults.put( NamedQuery.class, namedQueries );
 					}
-					List<NamedQuery> currentNamedQueries = JPAOverriddenAnnotationReader.buildNamedQueries(
+					List<NamedQuery> currentNamedQueries = JPAOverriddenAnnotationReader
+							.buildNamedQueries(
 							element,
 							false,
 							xmlDefaults,
@@ -182,7 +191,8 @@ public final class JPAMetadataProvider implements MetadataProvider {
 						namedNativeQueries = new ArrayList<>();
 						defaults.put( NamedNativeQuery.class, namedNativeQueries );
 					}
-					List<NamedNativeQuery> currentNamedNativeQueries = JPAOverriddenAnnotationReader.buildNamedQueries(
+					List<NamedNativeQuery> currentNamedNativeQueries = JPAOverriddenAnnotationReader
+							.buildNamedQueries(
 							element,
 							true,
 							xmlDefaults,
@@ -197,7 +207,8 @@ public final class JPAMetadataProvider implements MetadataProvider {
 						sqlResultSetMappings = new ArrayList<>();
 						defaults.put( SqlResultSetMapping.class, sqlResultSetMappings );
 					}
-					List<SqlResultSetMapping> currentSqlResultSetMappings = JPAOverriddenAnnotationReader.buildSqlResultsetMappings(
+					List<SqlResultSetMapping> currentSqlResultSetMappings = JPAOverriddenAnnotationReader
+							.buildSqlResultsetMappings(
 							element,
 							xmlDefaults,
 							classLoaderAccess
@@ -209,7 +220,8 @@ public final class JPAMetadataProvider implements MetadataProvider {
 						namedStoredProcedureQueries = new ArrayList<>(  );
 						defaults.put( NamedStoredProcedureQuery.class, namedStoredProcedureQueries );
 					}
-					List<NamedStoredProcedureQuery> currentNamedStoredProcedureQueries = JPAOverriddenAnnotationReader.buildNamedStoreProcedureQueries(
+					List<NamedStoredProcedureQuery> currentNamedStoredProcedureQueries = JPAOverriddenAnnotationReader
+							.buildNamedStoreProcedureQueries(
 							element,
 							xmlDefaults,
 							classLoaderAccess

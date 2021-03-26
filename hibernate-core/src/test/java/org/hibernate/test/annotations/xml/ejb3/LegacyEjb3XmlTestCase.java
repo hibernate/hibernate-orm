@@ -10,14 +10,14 @@ import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 
-import org.dom4j.Document;
-import org.dom4j.io.SAXReader;
-
-import org.hibernate.cfg.annotations.reflection.internal.JPAXMLOverriddenAnnotationReader;
-import org.hibernate.cfg.annotations.reflection.internal.XMLContext;
+import org.hibernate.cfg.annotations.reflection.JPAOverriddenAnnotationReader;
+import org.hibernate.cfg.annotations.reflection.XMLContext;
 
 import org.hibernate.testing.boot.BootstrapContextImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+
+import org.dom4j.Document;
+import org.dom4j.io.SAXReader;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -27,9 +27,16 @@ import static org.junit.Assert.assertTrue;
  * Test superclass to provide utility methods for testing the mapping of JPA
  * XML to JPA annotations.  The configuration is built within each test, and no
  * database is used.  Thus, no schema generation or cleanup will be performed.
+ * <p>
+ * Equivalent to {@link org.hibernate.test.annotations.xml.ejb3.Ejb3XmlTest}
+ * for the legacy {@link JPAOverriddenAnnotationReader}.
+ *
+ * @author Emmanuel Bernard
+ * @deprecated This test will be removed in Hibernate ORM 6, along with the legacy {@link JPAOverriddenAnnotationReader}.
  */
-public abstract class Ejb3XmlTestCase extends BaseUnitTestCase {
-	protected JPAXMLOverriddenAnnotationReader reader;
+@Deprecated
+abstract class LegacyEjb3XmlTestCase extends BaseUnitTestCase {
+	protected JPAOverriddenAnnotationReader reader;
 
 	protected void assertAnnotationPresent(Class<? extends Annotation> annotationType) {
 		assertTrue(
@@ -45,11 +52,11 @@ public abstract class Ejb3XmlTestCase extends BaseUnitTestCase {
 		);
 	}
 
-	protected JPAXMLOverriddenAnnotationReader getReader(Class<?> entityClass, String fieldName, String ormResourceName)
+	protected JPAOverriddenAnnotationReader getReader(Class<?> entityClass, String fieldName, String ormResourceName)
 			throws Exception {
 		AnnotatedElement el = getAnnotatedElement( entityClass, fieldName );
 		XMLContext xmlContext = getContext( ormResourceName );
-		return new JPAXMLOverriddenAnnotationReader( el, xmlContext, BootstrapContextImpl.INSTANCE );
+		return new JPAOverriddenAnnotationReader( el, xmlContext, BootstrapContextImpl.INSTANCE );
 	}
 
 	protected AnnotatedElement getAnnotatedElement(Class<?> entityClass, String fieldName) throws Exception {

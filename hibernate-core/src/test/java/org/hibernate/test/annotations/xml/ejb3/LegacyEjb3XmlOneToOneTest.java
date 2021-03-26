@@ -14,34 +14,91 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinColumns;
 import javax.persistence.JoinTable;
-import javax.persistence.ManyToOne;
 import javax.persistence.MapsId;
+import javax.persistence.OneToOne;
+import javax.persistence.PrimaryKeyJoinColumn;
+import javax.persistence.PrimaryKeyJoinColumns;
 import javax.persistence.UniqueConstraint;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.cfg.annotations.reflection.JPAOverriddenAnnotationReader;
+
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-@TestForIssue(jiraKey = "HHH-14529")
-public class Ejb3XmlManyToOneTest extends Ejb3XmlTestCase {
+/**
+ * Equivalent to {@link org.hibernate.test.annotations.xml.ejb3.Ejb3XmlOneToOneTest}
+ * for the legacy {@link JPAOverriddenAnnotationReader}.
+ *
+ * @author Emmanuel Bernard
+ * @deprecated This test will be removed in Hibernate ORM 6, along with the legacy {@link JPAOverriddenAnnotationReader}.
+ */
+@Deprecated
+public class LegacyEjb3XmlOneToOneTest extends LegacyEjb3XmlTestCase {
 	@Test
-	public void testNoJoins() throws Exception {
-		reader = getReader( Entity1.class, "field1", "many-to-one.orm1.xml" );
-		assertAnnotationPresent( ManyToOne.class );
-		assertAnnotationNotPresent( JoinColumn.class );
-		assertAnnotationNotPresent( JoinColumns.class );
-		assertAnnotationNotPresent( JoinTable.class );
-		assertAnnotationNotPresent( Id.class );
+	public void testNoChildren() throws Exception {
+		reader = getReader( Entity1.class, "field1", "one-to-one.orm1.xml" );
+		assertAnnotationPresent( OneToOne.class );
 		assertAnnotationNotPresent( MapsId.class );
+		assertAnnotationNotPresent( Id.class );
+		assertAnnotationNotPresent( PrimaryKeyJoinColumn.class );
+		assertAnnotationNotPresent( PrimaryKeyJoinColumns.class );
+		assertAnnotationNotPresent( JoinColumns.class );
+		assertAnnotationNotPresent( JoinColumn.class );
+		assertAnnotationNotPresent( JoinTable.class );
 		assertAnnotationNotPresent( Access.class );
-		ManyToOne relAnno = reader.getAnnotation( ManyToOne.class );
+		OneToOne relAnno = reader.getAnnotation( OneToOne.class );
 		assertEquals( 0, relAnno.cascade().length );
 		assertEquals( FetchType.EAGER, relAnno.fetch() );
+		assertEquals( "", relAnno.mappedBy() );
 		assertTrue( relAnno.optional() );
+		assertFalse( relAnno.orphanRemoval() );
 		assertEquals( void.class, relAnno.targetEntity() );
+	}
+
+	/**
+	 * When there's a single primary key join column, we still wrap it with
+	 * a PrimaryKeyJoinColumns annotation.
+	 */
+	@Test
+	public void testSinglePrimaryKeyJoinColumn() throws Exception {
+		reader = getReader( Entity1.class, "field1", "one-to-one.orm2.xml" );
+		assertAnnotationPresent( OneToOne.class );
+		assertAnnotationNotPresent( PrimaryKeyJoinColumn.class );
+		assertAnnotationPresent( PrimaryKeyJoinColumns.class );
+		PrimaryKeyJoinColumns joinColumnsAnno =
+				reader.getAnnotation( PrimaryKeyJoinColumns.class );
+		assertAnnotationNotPresent( JoinColumns.class );
+		assertAnnotationNotPresent( JoinColumn.class );
+		assertAnnotationNotPresent( JoinTable.class );
+		PrimaryKeyJoinColumn[] joinColumns = joinColumnsAnno.value();
+		assertEquals( 1, joinColumns.length );
+		assertEquals( "col1", joinColumns[0].name() );
+		assertEquals( "col2", joinColumns[0].referencedColumnName() );
+		assertEquals( "int", joinColumns[0].columnDefinition() );
+	}
+
+	@Test
+	public void testMultiplePrimaryKeyJoinColumn() throws Exception {
+		reader = getReader( Entity1.class, "field1", "one-to-one.orm3.xml" );
+		assertAnnotationPresent( OneToOne.class );
+		assertAnnotationNotPresent( PrimaryKeyJoinColumn.class );
+		assertAnnotationPresent( PrimaryKeyJoinColumns.class );
+		assertAnnotationNotPresent( JoinColumns.class );
+		assertAnnotationNotPresent( JoinColumn.class );
+		assertAnnotationNotPresent( JoinTable.class );
+		PrimaryKeyJoinColumns joinColumnsAnno =
+				reader.getAnnotation( PrimaryKeyJoinColumns.class );
+		PrimaryKeyJoinColumn[] joinColumns = joinColumnsAnno.value();
+		assertEquals( 2, joinColumns.length );
+		assertEquals( "", joinColumns[0].name() );
+		assertEquals( "", joinColumns[0].referencedColumnName() );
+		assertEquals( "", joinColumns[0].columnDefinition() );
+		assertEquals( "col1", joinColumns[1].name() );
+		assertEquals( "col2", joinColumns[1].referencedColumnName() );
+		assertEquals( "int", joinColumns[1].columnDefinition() );
 	}
 
 	/**
@@ -50,10 +107,12 @@ public class Ejb3XmlManyToOneTest extends Ejb3XmlTestCase {
 	 */
 	@Test
 	public void testSingleJoinColumn() throws Exception {
-		reader = getReader( Entity1.class, "field1", "many-to-one.orm2.xml" );
-		assertAnnotationPresent( ManyToOne.class );
-		assertAnnotationNotPresent( JoinColumn.class );
+		reader = getReader( Entity1.class, "field1", "one-to-one.orm4.xml" );
+		assertAnnotationPresent( OneToOne.class );
+		assertAnnotationNotPresent( PrimaryKeyJoinColumn.class );
+		assertAnnotationNotPresent( PrimaryKeyJoinColumns.class );
 		assertAnnotationPresent( JoinColumns.class );
+		assertAnnotationNotPresent( JoinColumn.class );
 		assertAnnotationNotPresent( JoinTable.class );
 		JoinColumns joinColumnsAnno = reader.getAnnotation( JoinColumns.class );
 		JoinColumn[] joinColumns = joinColumnsAnno.value();
@@ -65,8 +124,10 @@ public class Ejb3XmlManyToOneTest extends Ejb3XmlTestCase {
 
 	@Test
 	public void testMultipleJoinColumns() throws Exception {
-		reader = getReader( Entity1.class, "field1", "many-to-one.orm3.xml" );
-		assertAnnotationPresent( ManyToOne.class );
+		reader = getReader( Entity1.class, "field1", "one-to-one.orm5.xml" );
+		assertAnnotationPresent( OneToOne.class );
+		assertAnnotationNotPresent( PrimaryKeyJoinColumn.class );
+		assertAnnotationNotPresent( PrimaryKeyJoinColumns.class );
 		assertAnnotationNotPresent( JoinColumn.class );
 		assertAnnotationPresent( JoinColumns.class );
 		assertAnnotationNotPresent( JoinTable.class );
@@ -93,11 +154,13 @@ public class Ejb3XmlManyToOneTest extends Ejb3XmlTestCase {
 
 	@Test
 	public void testJoinTableNoChildren() throws Exception {
-		reader = getReader( Entity1.class, "field1", "many-to-one.orm4.xml" );
-		assertAnnotationPresent( ManyToOne.class );
-		assertAnnotationNotPresent( JoinColumn.class );
-		assertAnnotationNotPresent( JoinColumns.class );
+		reader = getReader( Entity1.class, "field1", "one-to-one.orm6.xml" );
+		assertAnnotationPresent( OneToOne.class );
+		assertAnnotationNotPresent( PrimaryKeyJoinColumn.class );
+		assertAnnotationNotPresent( PrimaryKeyJoinColumns.class );
 		assertAnnotationPresent( JoinTable.class );
+		assertAnnotationNotPresent( JoinColumns.class );
+		assertAnnotationNotPresent( JoinColumn.class );
 		JoinTable joinTableAnno = reader.getAnnotation( JoinTable.class );
 		assertEquals( "", joinTableAnno.catalog() );
 		assertEquals( "", joinTableAnno.name() );
@@ -109,11 +172,13 @@ public class Ejb3XmlManyToOneTest extends Ejb3XmlTestCase {
 
 	@Test
 	public void testJoinTableAllChildren() throws Exception {
-		reader = getReader( Entity1.class, "field1", "many-to-one.orm5.xml" );
-		assertAnnotationPresent( ManyToOne.class );
-		assertAnnotationNotPresent( JoinColumn.class );
-		assertAnnotationNotPresent( JoinColumns.class );
+		reader = getReader( Entity1.class, "field1", "one-to-one.orm7.xml" );
+		assertAnnotationPresent( OneToOne.class );
+		assertAnnotationNotPresent( PrimaryKeyJoinColumn.class );
+		assertAnnotationNotPresent( PrimaryKeyJoinColumns.class );
 		assertAnnotationPresent( JoinTable.class );
+		assertAnnotationNotPresent( JoinColumns.class );
+		assertAnnotationNotPresent( JoinColumn.class );
 		JoinTable joinTableAnno = reader.getAnnotation( JoinTable.class );
 		assertEquals( "cat1", joinTableAnno.catalog() );
 		assertEquals( "table1", joinTableAnno.name() );
@@ -173,41 +238,19 @@ public class Ejb3XmlManyToOneTest extends Ejb3XmlTestCase {
 	}
 
 	@Test
-	public void testAllAttributes() throws Exception {
-		reader = getReader( Entity1.class, "field1", "many-to-one.orm6.xml" );
-		assertAnnotationPresent( ManyToOne.class );
-		assertAnnotationNotPresent( JoinColumn.class );
-		assertAnnotationNotPresent( JoinColumns.class );
-		assertAnnotationNotPresent( JoinTable.class );
-		assertAnnotationPresent( Id.class );
-		assertAnnotationPresent( MapsId.class );
-		assertAnnotationPresent( Access.class );
-		ManyToOne relAnno = reader.getAnnotation( ManyToOne.class );
-		assertEquals( 0, relAnno.cascade().length );
-		assertEquals( FetchType.LAZY, relAnno.fetch() );
-		assertFalse( relAnno.optional() );
-		assertEquals( Entity3.class, relAnno.targetEntity() );
-		assertEquals( "col1", reader.getAnnotation( MapsId.class ).value() );
-		assertEquals(
-				AccessType.PROPERTY, reader.getAnnotation( Access.class )
-				.value()
-		);
-	}
-
-	@Test
 	public void testCascadeAll() throws Exception {
-		reader = getReader( Entity1.class, "field1", "many-to-one.orm7.xml" );
-		assertAnnotationPresent( ManyToOne.class );
-		ManyToOne relAnno = reader.getAnnotation( ManyToOne.class );
+		reader = getReader( Entity1.class, "field1", "one-to-one.orm8.xml" );
+		assertAnnotationPresent( OneToOne.class );
+		OneToOne relAnno = reader.getAnnotation( OneToOne.class );
 		assertEquals( 1, relAnno.cascade().length );
 		assertEquals( CascadeType.ALL, relAnno.cascade()[0] );
 	}
 
 	@Test
 	public void testCascadeSomeWithDefaultPersist() throws Exception {
-		reader = getReader( Entity1.class, "field1", "many-to-one.orm8.xml" );
-		assertAnnotationPresent( ManyToOne.class );
-		ManyToOne relAnno = reader.getAnnotation( ManyToOne.class );
+		reader = getReader( Entity1.class, "field1", "one-to-one.orm9.xml" );
+		assertAnnotationPresent( OneToOne.class );
+		OneToOne relAnno = reader.getAnnotation( OneToOne.class );
 		assertEquals( 4, relAnno.cascade().length );
 		assertEquals( CascadeType.REMOVE, relAnno.cascade()[0] );
 		assertEquals( CascadeType.REFRESH, relAnno.cascade()[1] );
@@ -222,9 +265,9 @@ public class Ejb3XmlManyToOneTest extends Ejb3XmlTestCase {
 	 */
 	@Test
 	public void testCascadeAllPlusMore() throws Exception {
-		reader = getReader( Entity1.class, "field1", "many-to-one.orm9.xml" );
-		assertAnnotationPresent( ManyToOne.class );
-		ManyToOne relAnno = reader.getAnnotation( ManyToOne.class );
+		reader = getReader( Entity1.class, "field1", "one-to-one.orm10.xml" );
+		assertAnnotationPresent( OneToOne.class );
+		OneToOne relAnno = reader.getAnnotation( OneToOne.class );
 		assertEquals( 6, relAnno.cascade().length );
 		assertEquals( CascadeType.ALL, relAnno.cascade()[0] );
 		assertEquals( CascadeType.PERSIST, relAnno.cascade()[1] );
@@ -232,6 +275,35 @@ public class Ejb3XmlManyToOneTest extends Ejb3XmlTestCase {
 		assertEquals( CascadeType.REMOVE, relAnno.cascade()[3] );
 		assertEquals( CascadeType.REFRESH, relAnno.cascade()[4] );
 		assertEquals( CascadeType.DETACH, relAnno.cascade()[5] );
+	}
+
+	@Test
+	public void testAllAttributes() throws Exception {
+		reader = getReader( Entity1.class, "field1", "one-to-one.orm11.xml" );
+		assertAnnotationPresent( OneToOne.class );
+		assertAnnotationPresent( MapsId.class );
+		assertAnnotationPresent( Id.class );
+		assertAnnotationNotPresent( PrimaryKeyJoinColumn.class );
+		assertAnnotationNotPresent( PrimaryKeyJoinColumns.class );
+		assertAnnotationNotPresent( JoinColumns.class );
+		assertAnnotationNotPresent( JoinColumn.class );
+		assertAnnotationNotPresent( JoinTable.class );
+		assertAnnotationPresent( Access.class );
+		OneToOne relAnno = reader.getAnnotation( OneToOne.class );
+		assertEquals( 0, relAnno.cascade().length );
+		assertEquals( FetchType.LAZY, relAnno.fetch() );
+		assertEquals( "field2", relAnno.mappedBy() );
+		assertFalse( relAnno.optional() );
+		assertTrue( relAnno.orphanRemoval() );
+		assertEquals( Entity3.class, relAnno.targetEntity() );
+		assertEquals(
+				AccessType.PROPERTY, reader.getAnnotation( Access.class )
+				.value()
+		);
+		assertEquals(
+				"field3", reader.getAnnotation( MapsId.class )
+				.value()
+		);
 	}
 
 }

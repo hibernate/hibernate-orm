@@ -18,15 +18,23 @@ import javax.persistence.ManyToOne;
 import javax.persistence.MapsId;
 import javax.persistence.UniqueConstraint;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.cfg.annotations.reflection.JPAOverriddenAnnotationReader;
+
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-@TestForIssue(jiraKey = "HHH-14529")
-public class Ejb3XmlManyToOneTest extends Ejb3XmlTestCase {
+/**
+ * Equivalent to {@link org.hibernate.test.annotations.xml.ejb3.Ejb3XmlManyToOneTest}
+ * for the legacy {@link JPAOverriddenAnnotationReader}.
+ *
+ * @author Emmanuel Bernard
+ * @deprecated This test will be removed in Hibernate ORM 6, along with the legacy {@link JPAOverriddenAnnotationReader}.
+ */
+@Deprecated
+public class LegacyEjb3XmlManyToOneTest extends LegacyEjb3XmlTestCase {
 	@Test
 	public void testNoJoins() throws Exception {
 		reader = getReader( Entity1.class, "field1", "many-to-one.orm1.xml" );

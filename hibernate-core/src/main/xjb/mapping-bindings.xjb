@@ -59,6 +59,24 @@
 					printMethod="org.hibernate.boot.jaxb.mapping.internal.TemporalTypeMarshalling.toXml" />
         </bindings>
 
+		<bindings node="//xsd:simpleType[@name='inheritance-type']">
+			<javaType name="javax.persistence.InheritanceType"
+					parseMethod="org.hibernate.boot.jaxb.mapping.internal.InheritanceTypeMarshalling.fromXml"
+					printMethod="org.hibernate.boot.jaxb.mapping.internal.InheritanceTypeMarshalling.toXml" />
+        </bindings>
+
+		<bindings node="//xsd:simpleType[@name='generation-type']">
+			<javaType name="javax.persistence.GenerationType"
+					parseMethod="org.hibernate.boot.jaxb.mapping.internal.GenerationTypeMarshalling.fromXml"
+					printMethod="org.hibernate.boot.jaxb.mapping.internal.GenerationTypeMarshalling.toXml" />
+        </bindings>
+
+		<bindings node="//xsd:simpleType[@name='constraint-mode']">
+			<javaType name="javax.persistence.ContraintMode"
+					parseMethod="org.hibernate.boot.jaxb.mapping.internal.ContraintModeMarshalling.fromXml"
+					printMethod="org.hibernate.boot.jaxb.mapping.internal.ContraintModeMarshalling.toXml" />
+        </bindings>
+
 
         <bindings node="//xsd:complexType[@name='secondary-table']">
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.SchemaAware</inheritance:implements>

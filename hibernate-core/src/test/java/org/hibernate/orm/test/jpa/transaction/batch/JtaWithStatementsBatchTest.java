@@ -10,7 +10,9 @@ import java.sql.PreparedStatement;
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.FlushModeType;
+import javax.transaction.NotSupportedException;
 import javax.transaction.Status;
+import javax.transaction.SystemException;
 import javax.transaction.TransactionManager;
 
 import org.hibernate.cfg.AvailableSettings;
@@ -93,12 +95,13 @@ public class JtaWithStatementsBatchTest extends AbstractJtaBatchTest {
 					}
 					catch (Exception e) {
 						try {
-							if ( transactionManager.getStatus() == Status.STATUS_ACTIVE ) {
-								transactionManager.rollback();
+							switch ( transactionManager.getStatus() ) {
+								case Status.STATUS_ACTIVE:
+								case Status.STATUS_MARKED_ROLLBACK:
+									transactionManager.rollback();
 							}
-						}
-						catch (Exception e2) {
-							// Ignore
+						}catch (Exception e2){
+							//ignore e
 						}
 					}
 
@@ -123,12 +126,24 @@ public class JtaWithStatementsBatchTest extends AbstractJtaBatchTest {
 					}
 					catch (Exception e) {
 						try {
-							if ( transactionManager.getStatus() == Status.STATUS_ACTIVE ) {
-								transactionManager.rollback();
+							switch ( transactionManager.getStatus() ) {
+								case Status.STATUS_ACTIVE:
+								case Status.STATUS_MARKED_ROLLBACK:
+									transactionManager.rollback();
 							}
+						}catch (Exception e2){
+							//ignore e
 						}
-						catch (Exception e2) {
-							// Ignore
+					}
+					finally {
+						try {
+							switch ( transactionManager.getStatus() ) {
+								case Status.STATUS_ACTIVE:
+								case Status.STATUS_MARKED_ROLLBACK:
+									transactionManager.rollback();
+							}
+						}catch (Exception e){
+							//ignore e
 						}
 					}
 				}

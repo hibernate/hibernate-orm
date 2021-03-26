@@ -7,7 +7,6 @@
 package org.hibernate.orm.test.jpa.ejb3configuration;
 
 import java.util.Map;
-import javax.persistence.EntityManager;
 
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.test.Wallet;
@@ -18,7 +17,6 @@ import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.test.util.jdbc.PreparedStatementSpyConnectionProvider;
-
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -32,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 @RequiresDialectFeature(DialectChecks.SupportsJdbcDriverProxying.class)
 @Jpa(
 		annotatedClasses = { Wallet.class },
-		integrationSettings = { @Setting( name = AvailableSettings.DISCARD_PC_ON_CLOSE, value = "true") },
+		integrationSettings = { @Setting(name = AvailableSettings.DISCARD_PC_ON_CLOSE, value = "true") },
 		nonStringValueSettingProviders = { PreparedStatementSpyConnectionProviderSettingValueProvider.class }
 )
 public class EnableDiscardPersistenceContextOnCloseTest {
@@ -59,18 +57,14 @@ public class EnableDiscardPersistenceContextOnCloseTest {
 						entityManager.close();
 						assertEquals( 0, connectionProvider.getAcquiredConnections().size() );
 						assertTrue( entityManager.getTransaction().isActive() );
+					}
+					finally {
 						try {
 							entityManager.getTransaction().rollback();
 							fail( "Should throw IllegalStateException because the Connection is already closed!" );
 						}
 						catch (IllegalStateException expected) {
 						}
-					}
-					catch (Exception e) {
-						if ( entityManager.getTransaction().isActive() ) {
-							entityManager.getTransaction().rollback();
-						}
-						throw e;
 					}
 
 				}

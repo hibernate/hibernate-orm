@@ -138,6 +138,7 @@ public class ForeignGeneratorResourceLocalTest {
 
 		EntityManager entityManager = null;
 		EntityTransaction txn = null;
+
 		try {
 			entityManager = scope.getEntityManagerFactory().createEntityManager();
 			txn = entityManager.getTransaction();

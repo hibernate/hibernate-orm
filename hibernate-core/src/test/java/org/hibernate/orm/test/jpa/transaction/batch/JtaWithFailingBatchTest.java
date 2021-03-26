@@ -49,9 +49,11 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 				AbstractJtaBatchTest.Comment.class,
 				AbstractJtaBatchTest.EventLog.class
 		},
-		integrationSettings = { @Setting(name = AvailableSettings.JPA_TRANSACTION_TYPE, value = "JTA"),
+		integrationSettings = {
+				@Setting(name = AvailableSettings.JPA_TRANSACTION_TYPE, value = "JTA"),
 				@Setting(name = AvailableSettings.JPA_TRANSACTION_COMPLIANCE, value = "true"),
-				@Setting(name = AvailableSettings.STATEMENT_BATCH_SIZE, value = "50") },
+				@Setting(name = AvailableSettings.STATEMENT_BATCH_SIZE, value = "50")
+		},
 		nonStringValueSettingProviders = {
 				AbstractJtaBatchTest.JtaPlatformNonStringValueSettingProvider.class,
 				AbstractJtaBatchTest.ConnectionNonStringValueSettingProvider.class,
@@ -86,39 +88,35 @@ public class JtaWithFailingBatchTest extends AbstractJtaBatchTest {
 						Comment comment = new Comment();
 						comment.setMessage( "Bar" );
 
+						em.persist( comment );
+						transactionManager.commit();
+					}
+					catch (Exception expected) {
+						//expected
 						try {
-							em.persist( comment );
-							transactionManager.commit();
-						}
-						catch (Exception expected) {
-							//expected
 							switch ( transactionManager.getStatus() ) {
 								case Status.STATUS_ACTIVE:
 								case Status.STATUS_MARKED_ROLLBACK:
 									transactionManager.rollback();
 							}
 						}
-
-						assertThat(
-								"AbstractBatchImpl#releaseStatements() has not been callled",
-								testBatch.calledReleaseStatements,
-								is( true )
-						);
-						assertAllStatementsAreClosed( testBatch.createdStatements );
-						assertStatementsListIsCleared();
-					}
-					catch (Exception e) {
-						try {
-							if (transactionManager.getStatus() == Status.STATUS_ACTIVE) {
-								transactionManager.rollback();
-							}
-						}
-						catch (Exception e2) {
-							// Ignore
+						catch (Exception e) {
+							//ignore e
 						}
 					}
 
-					assertFalse( triggerable.wasTriggered(), "HHH000352: Unable to release batch statement... has been thrown" );
+					assertThat(
+							"AbstractBatchImpl#releaseStatements() has not been callled",
+							testBatch.calledReleaseStatements,
+							is( true )
+					);
+					assertAllStatementsAreClosed( testBatch.createdStatements );
+					assertStatementsListIsCleared();
+
+					assertFalse(
+							triggerable.wasTriggered(),
+							"HHH000352: Unable to release batch statement... has been thrown"
+					);
 				}
 		);
 	}

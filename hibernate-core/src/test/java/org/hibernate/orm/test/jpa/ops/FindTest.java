@@ -47,17 +47,22 @@ public class FindTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9856" )
+	@TestForIssue(jiraKey = "HHH-9856")
 	public void testNonEntity(EntityManagerFactoryScope scope) {
 		scope.inEntityManager(
 				entityManager -> {
-					entityManager.getTransaction().begin();
 					try {
+						entityManager.getTransaction().begin();
 						entityManager.find( String.class, 1 );
 						Assertions.fail( "Expecting a failure" );
 					}
 					catch (IllegalArgumentException ignore) {
 						// expected
+					}
+					finally {
+						if ( entityManager.getTransaction().isActive() ) {
+							entityManager.getTransaction().rollback();
+						}
 					}
 				}
 		);

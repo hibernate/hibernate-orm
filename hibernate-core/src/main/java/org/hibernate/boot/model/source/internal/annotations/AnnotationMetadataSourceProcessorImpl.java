@@ -83,13 +83,6 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 				final JPAMetadataProvider jpaMetadataProvider = (JPAMetadataProvider) ( (MetadataProviderInjector) reflectionManager )
 						.getMetadataProvider();
 				for ( Binding xmlBinding : managedResources.getXmlMappingBindings() ) {
-	//			if ( !MappingBinder.DelayedOrmXmlData.class.isInstance( xmlBinding.getRoot() ) ) {
-	//				continue;
-	//			}
-	//
-	//			// convert the StAX representation in delayedOrmXmlData to DOM because that's what commons-annotations needs
-	//			final MappingBinder.DelayedOrmXmlData delayedOrmXmlData = (MappingBinder.DelayedOrmXmlData) xmlBinding.getRoot();
-	//			org.dom4j.Document dom4jDocument = toDom4jDocument( delayedOrmXmlData );
 					if ( !org.dom4j.Document.class.isInstance( xmlBinding.getRoot() ) ) {
 						continue;
 					}
@@ -137,22 +130,6 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 	private XClass toXClass(String className, ReflectionManager reflectionManager, ClassLoaderService cls) {
 		return reflectionManager.toXClass( cls.classForName( className ) );
 	}
-
-//	private Document toDom4jDocument(MappingBinder.DelayedOrmXmlData delayedOrmXmlData) {
-//		// todo : do we need to build a DocumentFactory instance for use here?
-//		//		historically we did that to set TCCL since, iirc, dom4j uses TCCL
-//		org.dom4j.io.STAXEventReader staxToDom4jReader = new STAXEventReader();
-//		try {
-//			return staxToDom4jReader.readDocument( delayedOrmXmlData.getStaxEventReader() );
-//		}
-//		catch (XMLStreamException e) {
-//			throw new MappingException(
-//					"An error occurred transforming orm.xml document from StAX to dom4j representation ",
-//					e,
-//					delayedOrmXmlData.getOrigin()
-//			);
-//		}
-//	}
 
 	@Override
 	public void prepare() {

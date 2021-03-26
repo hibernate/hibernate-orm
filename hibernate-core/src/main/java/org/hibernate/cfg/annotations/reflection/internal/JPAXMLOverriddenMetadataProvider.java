@@ -23,13 +23,9 @@ import javax.persistence.TableGenerator;
 import org.hibernate.annotations.common.reflection.AnnotationReader;
 import org.hibernate.annotations.common.reflection.MetadataProvider;
 import org.hibernate.annotations.common.reflection.java.JavaMetadataProvider;
-import org.hibernate.boot.internal.ClassLoaderAccessImpl;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
-import org.hibernate.boot.spi.ClassLoaderAccessDelegateImpl;
-import org.hibernate.boot.spi.MetadataBuildingOptions;
 
 import org.dom4j.Element;
 
@@ -55,37 +51,10 @@ public final class JPAXMLOverriddenMetadataProvider implements MetadataProvider 
 	private Map<Object, Object> defaults;
 	private Map<AnnotatedElement, AnnotationReader> cache;
 
-	/**
-	 * @deprecated Use {@link JPAXMLOverriddenMetadataProvider#JPAXMLOverriddenMetadataProvider(BootstrapContext)} instead.
-	 */
-	@Deprecated
-	public JPAXMLOverriddenMetadataProvider(final MetadataBuildingOptions metadataBuildingOptions) {
-		this( new ClassLoaderAccessDelegateImpl() {
-			ClassLoaderAccess delegate;
-
-			@Override
-			protected ClassLoaderAccess getDelegate() {
-				if ( delegate == null ) {
-					delegate = new ClassLoaderAccessImpl(
-							metadataBuildingOptions.getTempClassLoader(),
-							metadataBuildingOptions.getServiceRegistry().getService( ClassLoaderService.class )
-					);
-				}
-				return delegate;
-			}
-		},
-				metadataBuildingOptions.isXmlMappingEnabled() );
-	}
-
 	public JPAXMLOverriddenMetadataProvider(BootstrapContext bootstrapContext) {
-		this( bootstrapContext.getClassLoaderAccess(),
-			  bootstrapContext.getMetadataBuildingOptions().isXmlMappingEnabled() );
-	}
-
-	JPAXMLOverriddenMetadataProvider(ClassLoaderAccess classLoaderAccess, boolean xmlMetadataEnabled) {
-		this.classLoaderAccess = classLoaderAccess;
+		this.classLoaderAccess = bootstrapContext.getClassLoaderAccess();
 		this.xmlContext = new XMLContext( classLoaderAccess );
-		this.xmlMappingEnabled = xmlMetadataEnabled;
+		this.xmlMappingEnabled = bootstrapContext.getMetadataBuildingOptions().isXmlMappingEnabled();
 	}
 
 	//all of the above can be safely rebuilt from XMLContext: only XMLContext this object is serialized

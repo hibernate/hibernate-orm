@@ -23,8 +23,14 @@ public class JUnitHelper {
 	public static ExtensionContext.Store locateExtensionStore(
 			Class<? extends Extension> extensionClass,
 			ExtensionContext context,
-			Object testInstance) {
-		return context.getStore( create( extensionClass.getName(), testInstance ) );
+			Object scopeObject) {
+		return context.getStore( create( extensionClass.getName(), scopeObject ) );
+	}
+
+	public static ExtensionContext.Store locateExtensionStore(
+			ExtensionContext context,
+			Object... scopeRefs) {
+		return context.getStore( create( scopeRefs ) );
 	}
 
 	private JUnitHelper() {

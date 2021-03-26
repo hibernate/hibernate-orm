@@ -36,17 +36,14 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.XmlMappingBinderAccess;
-import org.hibernate.internal.CoreMessageLogger;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.testing.logger.LoggerInspectionRule;
-import org.hibernate.testing.logger.Triggerable;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Logger;
+import org.hibernate.testing.orm.junit.MessageKeyInspection;
+import org.hibernate.testing.orm.junit.MessageKeyWatcher;
 
-import org.jboss.logging.Logger;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.mockito.Mockito;
 
@@ -62,7 +59,11 @@ import static org.mockito.Mockito.when;
  * @author Vlad Mihalcea
  * @author Petteri Pitkanen
  */
-public class ScanningCoordinatorTest extends BaseUnitTestCase {
+@MessageKeyInspection(
+		messageKey = "Unable to resolve class [a.b.C] named in persistence unit",
+		logger = @Logger( loggerNameClass = ScanningCoordinator.class )
+)
+public class ScanningCoordinatorTest {
 
 	private ManagedResourcesImpl managedResources = Mockito.mock( ManagedResourcesImpl.class );
 	private ScanResult scanResult = Mockito.mock( ScanResult.class );
@@ -75,13 +76,7 @@ public class ScanningCoordinatorTest extends BaseUnitTestCase {
 
 	private ClassLoaderService classLoaderService = Mockito.mock( ClassLoaderService.class );
 
-	private Triggerable triggerable;
-
-	@Rule
-	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger( CoreMessageLogger.class, ScanningCoordinator.class.getName() ) );
-
-	@Before
+	@BeforeEach
 	public void init() {
 		Mockito.reset( managedResources );
 		Mockito.reset( scanResult );
@@ -100,13 +95,10 @@ public class ScanningCoordinatorTest extends BaseUnitTestCase {
 		when( classLoaderService.classForName( eq( "a.b.C" ) ) ).thenThrow( ClassLoadingException.class );
 		when( classLoaderService.locateResource( eq( "a/b/c.class" ) ) ).thenReturn( null );
 		when( classLoaderService.locateResource( eq( "a/b/c/package-info.class" ) ) ).thenReturn( null );
-
-		triggerable = logInspection.watchForLogMessages( "Unable" );
-		triggerable.reset();
 	}
 
 	@Test
-	public void testApplyScanResultsToManagedResourcesWithNullRootUrl() {
+	public void testApplyScanResultsToManagedResourcesWithNullRootUrl(MessageKeyWatcher watcher) {
 
 		ScanningCoordinator.INSTANCE.applyScanResultsToManagedResources(
 				managedResources,
@@ -114,11 +106,11 @@ public class ScanningCoordinatorTest extends BaseUnitTestCase {
 				bootstrapContext,
 				xmlMappingBinderAccess
 		);
-		assertEquals( "Unable to resolve class [a.b.C] named in persistence unit [null]", triggerable.triggerMessage() );
+		assertEquals( "Unable to resolve class [a.b.C] named in persistence unit [null]", watcher.getFirstTriggeredMessage() );
 	}
 
 	@Test
-	public void testApplyScanResultsToManagedResourcesWithNotNullRootUrl()
+	public void testApplyScanResultsToManagedResourcesWithNotNullRootUrl(MessageKeyWatcher watcher)
 			throws MalformedURLException {
 		when( scanEnvironment.getRootUrl() ).thenReturn( new URL( "http://http://hibernate.org/" ) );
 
@@ -128,7 +120,7 @@ public class ScanningCoordinatorTest extends BaseUnitTestCase {
 				bootstrapContext,
 				xmlMappingBinderAccess
 		);
-		assertEquals( "Unable to resolve class [a.b.C] named in persistence unit [http://http://hibernate.org/]", triggerable.triggerMessage() );
+		assertEquals( "Unable to resolve class [a.b.C] named in persistence unit [http://http://hibernate.org/]", watcher.getFirstTriggeredMessage() );
 	}
 
 	@Test

@@ -9,6 +9,7 @@ package org.hibernate.testing.logger;
 import java.lang.reflect.Field;
 
 import org.hibernate.AssertionFailure;
+
 import org.jboss.logging.BasicLogger;
 import org.jboss.logging.DelegatingBasicLogger;
 
@@ -22,6 +23,25 @@ import org.jboss.logging.DelegatingBasicLogger;
 public final class LogInspectionHelper {
 
 	private LogInspectionHelper() {
+	}
+
+	private static Log4DelegatingLogger convertType(Object loggerReference) {
+		if ( loggerReference instanceof DelegatingBasicLogger) {
+			//Most loggers generated via the annotation processor are of this type
+			DelegatingBasicLogger wrapper = (DelegatingBasicLogger) loggerReference;
+			try {
+				return extractFromWrapper( wrapper );
+			}
+			catch (Exception cause) {
+				throw new RuntimeException( cause );
+			}
+		}
+
+		if ( ! ( loggerReference instanceof Log4DelegatingLogger ) ) {
+			throw new AssertionFailure( "Unexpected log type: JBoss Logger didn't register the custom TestableLoggerProvider as logger provider" );
+		}
+
+		return (Log4DelegatingLogger) loggerReference;
 	}
 
 	public static void registerListener(LogListener listener, BasicLogger log) {

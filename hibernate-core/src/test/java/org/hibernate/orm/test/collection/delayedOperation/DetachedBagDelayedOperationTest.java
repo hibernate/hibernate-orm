@@ -24,21 +24,19 @@ import javax.persistence.OneToMany;
 
 import org.hibernate.Hibernate;
 import org.hibernate.collection.internal.AbstractPersistentCollection;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.CollectionType;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.LoggingInspections;
+import org.hibernate.testing.orm.junit.LoggingInspectionsScope;
+import org.hibernate.testing.orm.junit.MessageKeyWatcher;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.Rule;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import org.jboss.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -57,22 +55,27 @@ import static org.junit.jupiter.api.Assertions.fail;
 		}
 )
 @SessionFactory
+@LoggingInspections(
+		messages = {
+				@LoggingInspections.Message(
+						messageKey = "HHH000494",
+						loggers = @org.hibernate.testing.orm.junit.Logger( loggerNameClass = CollectionType.class )
+				),
+				@LoggingInspections.Message(
+						messageKey = "HHH000495",
+						loggers = @org.hibernate.testing.orm.junit.Logger( loggerNameClass = AbstractPersistentCollection.class )
+				),
+				@LoggingInspections.Message(
+						messageKey = "HHH000496",
+						loggers = @org.hibernate.testing.orm.junit.Logger( loggerNameClass = AbstractPersistentCollection.class )
+				),
+				@LoggingInspections.Message(
+						messageKey = "HHH000498",
+						loggers = @org.hibernate.testing.orm.junit.Logger( loggerNameClass = AbstractPersistentCollection.class )
+				)
+		}
+)
 public class DetachedBagDelayedOperationTest {
-
-	@Rule
-	public LoggerInspectionRule logInspectionCollectionType = new LoggerInspectionRule(
-			Logger.getMessageLogger( CoreMessageLogger.class, CollectionType.class.getName() )
-	);
-
-	@Rule
-	public LoggerInspectionRule logInspectionAbstractPersistentCollection = new LoggerInspectionRule(
-			Logger.getMessageLogger( CoreMessageLogger.class, AbstractPersistentCollection.class.getName() )
-	);
-
-	private Triggerable triggerableIgnoreQueuedOperationsOnMerge;
-	private Triggerable triggerableQueuedOperationWhenAttachToSession;
-	private Triggerable triggerableQueuedOperationWhenDetachFromSession;
-	private Triggerable triggerableQueuedOperationOnRollback;
 
 	@BeforeEach
 	public void setup(SessionFactoryScope scope) {
@@ -91,16 +94,6 @@ public class DetachedBagDelayedOperationTest {
 					session.persist( parent );
 				}
 		);
-
-		triggerableIgnoreQueuedOperationsOnMerge = logInspectionCollectionType.watchForLogMessages( "HHH000494" );
-		triggerableQueuedOperationWhenAttachToSession = logInspectionAbstractPersistentCollection.watchForLogMessages(
-				"HHH000495" );
-		triggerableQueuedOperationWhenDetachFromSession = logInspectionAbstractPersistentCollection.watchForLogMessages(
-				"HHH000496" );
-		triggerableQueuedOperationOnRollback = logInspectionAbstractPersistentCollection.watchForLogMessages(
-				"HHH000498" );
-
-		resetTriggerables();
 	}
 
 	@AfterEach
@@ -115,7 +108,9 @@ public class DetachedBagDelayedOperationTest {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-11209")
-	public void testMergeDetachedCollectionWithQueuedOperations(SessionFactoryScope scope) {
+	public void testMergeDetachedCollectionWithQueuedOperations(
+			SessionFactoryScope scope,
+			LoggingInspectionsScope loggingScope) {
 		final Parent pOriginal = scope.fromTransaction(
 				session -> {
 					Parent p = session.get( Parent.class, 1L );
@@ -126,6 +121,12 @@ public class DetachedBagDelayedOperationTest {
 					return p;
 				}
 		);
+
+		final MessageKeyWatcher opMergedWatcher = loggingScope.getWatcher( "HHH000494", CollectionType.class );
+		final MessageKeyWatcher opAttachedWatcher = loggingScope.getWatcher( "HHH000495", AbstractPersistentCollection.class );
+		final MessageKeyWatcher opDetachedWatcher = loggingScope.getWatcher( "HHH000496", AbstractPersistentCollection.class );
+		final MessageKeyWatcher opRollbackWatcher = loggingScope.getWatcher( "HHH000498", AbstractPersistentCollection.class );
+
 		final Parent pWithQueuedOperations = scope.fromTransaction(
 				session -> {
 					Parent p = (Parent) session.merge( pOriginal );
@@ -137,23 +138,34 @@ public class DetachedBagDelayedOperationTest {
 					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
 					assertTrue( ( (AbstractPersistentCollection) p.getChildren() ).hasQueuedOperations() );
 
-					checkTriggerablesNotTriggered();
+					assertFalse( opMergedWatcher.wasTriggered() );
+					assertFalse( opAttachedWatcher.wasTriggered() );
+					assertFalse( opDetachedWatcher.wasTriggered() );
+					assertFalse( opRollbackWatcher.wasTriggered() );
+
 					session.detach( p );
-					assertTrue( triggerableQueuedOperationWhenDetachFromSession.wasTriggered() );
+
+					assertTrue( opDetachedWatcher.wasTriggered() );
 					assertEquals(
 							"HHH000496: Detaching an uninitialized collection with queued operations from a session: [org.hibernate.orm.test.collection.delayedOperation.DetachedBagDelayedOperationTest$Parent.children#1]",
-							triggerableQueuedOperationWhenDetachFromSession.triggerMessage()
+							opDetachedWatcher.getFirstTriggeredMessage()
 					);
-					triggerableQueuedOperationWhenDetachFromSession.reset();
+					opDetachedWatcher.reset();
 
 					// Make sure nothing else got triggered
-					checkTriggerablesNotTriggered();
+					assertFalse( opMergedWatcher.wasTriggered() );
+					assertFalse( opAttachedWatcher.wasTriggered() );
+					assertFalse( opDetachedWatcher.wasTriggered() );
+					assertFalse( opRollbackWatcher.wasTriggered() );
 
 					return p;
 				}
 		);
 
-		checkTriggerablesNotTriggered();
+		assertFalse( opMergedWatcher.wasTriggered() );
+		assertFalse( opAttachedWatcher.wasTriggered() );
+		assertFalse( opDetachedWatcher.wasTriggered() );
+		assertFalse( opRollbackWatcher.wasTriggered() );
 
 		assertTrue( ( (AbstractPersistentCollection) pWithQueuedOperations.getChildren() ).hasQueuedOperations() );
 
@@ -161,16 +173,19 @@ public class DetachedBagDelayedOperationTest {
 		scope.inTransaction(
 				session -> {
 
-					checkTriggerablesNotTriggered();
+					assertFalse( opMergedWatcher.wasTriggered() );
+					assertFalse( opAttachedWatcher.wasTriggered() );
+					assertFalse( opDetachedWatcher.wasTriggered() );
+					assertFalse( opRollbackWatcher.wasTriggered() );
 
-					assertFalse( triggerableIgnoreQueuedOperationsOnMerge.wasTriggered() );
+					assertFalse( opMergedWatcher.wasTriggered() );
 					Parent p = (Parent) session.merge( pWithQueuedOperations );
-					assertTrue( triggerableIgnoreQueuedOperationsOnMerge.wasTriggered() );
+					assertTrue( opMergedWatcher.wasTriggered() );
 					assertEquals(
 							"HHH000494: Attempt to merge an uninitialized collection with queued operations; queued operations will be ignored: [org.hibernate.orm.test.collection.delayedOperation.DetachedBagDelayedOperationTest$Parent.children#1]",
-							triggerableIgnoreQueuedOperationsOnMerge.triggerMessage()
+							opMergedWatcher.getFirstTriggeredMessage()
 					);
-					triggerableIgnoreQueuedOperationsOnMerge.reset();
+					opMergedWatcher.reset();
 
 					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
 					assertFalse( ( (AbstractPersistentCollection) p.getChildren() ).hasQueuedOperations() );
@@ -190,12 +205,21 @@ public class DetachedBagDelayedOperationTest {
 				}
 		);
 
-		checkTriggerablesNotTriggered();
+		assertFalse( opMergedWatcher.wasTriggered() );
+		assertFalse( opAttachedWatcher.wasTriggered() );
+		assertFalse( opDetachedWatcher.wasTriggered() );
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-11209")
-	public void testSaveOrUpdateDetachedCollectionWithQueuedOperations(SessionFactoryScope scope) {
+	public void testSaveOrUpdateDetachedCollectionWithQueuedOperations(
+			SessionFactoryScope scope,
+			LoggingInspectionsScope loggingScope) {
+		final MessageKeyWatcher opMergedWatcher = loggingScope.getWatcher( "HHH000494", CollectionType.class );
+		final MessageKeyWatcher opAttachedWatcher = loggingScope.getWatcher( "HHH000495", AbstractPersistentCollection.class );
+		final MessageKeyWatcher opDetachedWatcher = loggingScope.getWatcher( "HHH000496", AbstractPersistentCollection.class );
+		final MessageKeyWatcher opRollbackWatcher = loggingScope.getWatcher( "HHH000498", AbstractPersistentCollection.class );
+
 		final Parent pOriginal = scope.fromTransaction(
 				session -> {
 					Parent p = session.get( Parent.class, 1L );
@@ -217,23 +241,32 @@ public class DetachedBagDelayedOperationTest {
 					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
 					assertTrue( ( (AbstractPersistentCollection) p.getChildren() ).hasQueuedOperations() );
 
-					checkTriggerablesNotTriggered();
+					assertFalse( opMergedWatcher.wasTriggered() );
+					assertFalse( opAttachedWatcher.wasTriggered() );
+					assertFalse( opDetachedWatcher.wasTriggered() );
+					assertFalse( opRollbackWatcher.wasTriggered() );
+
 					session.detach( p );
-					assertTrue( triggerableQueuedOperationWhenDetachFromSession.wasTriggered() );
+					assertTrue( opDetachedWatcher.wasTriggered() );
 					assertEquals(
 							"HHH000496: Detaching an uninitialized collection with queued operations from a session: [org.hibernate.orm.test.collection.delayedOperation.DetachedBagDelayedOperationTest$Parent.children#1]",
-							triggerableQueuedOperationWhenDetachFromSession.triggerMessage()
+							opDetachedWatcher.getFirstTriggeredMessage()
 					);
-					triggerableQueuedOperationWhenDetachFromSession.reset();
+					opDetachedWatcher.reset();
 
 					// Make sure nothing else got triggered
-					checkTriggerablesNotTriggered();
+					assertFalse( opMergedWatcher.wasTriggered() );
+					assertFalse( opAttachedWatcher.wasTriggered() );
+					assertFalse( opDetachedWatcher.wasTriggered() );
+					assertFalse( opRollbackWatcher.wasTriggered() );
 
 					return p;
 				}
 		);
 
-		checkTriggerablesNotTriggered();
+		assertFalse( opMergedWatcher.wasTriggered() );
+		assertFalse( opAttachedWatcher.wasTriggered() );
+		assertFalse( opDetachedWatcher.wasTriggered() );
 
 		assertTrue( ( (AbstractPersistentCollection) pAfterDetachWithQueuedOperations.getChildren() ).hasQueuedOperations() );
 
@@ -241,19 +274,25 @@ public class DetachedBagDelayedOperationTest {
 		scope.inTransaction(
 				session -> {
 
-					checkTriggerablesNotTriggered();
+					assertFalse( opMergedWatcher.wasTriggered() );
+					assertFalse( opAttachedWatcher.wasTriggered() );
+					assertFalse( opDetachedWatcher.wasTriggered() );
+					assertFalse( opRollbackWatcher.wasTriggered() );
 
-					assertFalse( triggerableQueuedOperationWhenAttachToSession.wasTriggered() );
+					assertFalse( opAttachedWatcher.wasTriggered() );
 					session.saveOrUpdate( pAfterDetachWithQueuedOperations );
-					assertTrue( triggerableQueuedOperationWhenAttachToSession.wasTriggered() );
+					assertTrue( opAttachedWatcher.wasTriggered() );
 					assertEquals(
 							"HHH000495: Attaching an uninitialized collection with queued operations to a session: [org.hibernate.orm.test.collection.delayedOperation.DetachedBagDelayedOperationTest$Parent.children#1]",
-							triggerableQueuedOperationWhenAttachToSession.triggerMessage()
+							opAttachedWatcher.getFirstTriggeredMessage()
 					);
-					triggerableQueuedOperationWhenAttachToSession.reset();
+					opAttachedWatcher.reset();
 
 					// Make sure nothing else got triggered
-					checkTriggerablesNotTriggered();
+					assertFalse( opMergedWatcher.wasTriggered() );
+					assertFalse( opAttachedWatcher.wasTriggered() );
+					assertFalse( opDetachedWatcher.wasTriggered() );
+					assertFalse( opRollbackWatcher.wasTriggered() );
 
 					assertFalse( Hibernate.isInitialized( pAfterDetachWithQueuedOperations.getChildren() ) );
 					assertTrue( ( (AbstractPersistentCollection) pAfterDetachWithQueuedOperations.getChildren() ).hasQueuedOperations() );
@@ -273,12 +312,22 @@ public class DetachedBagDelayedOperationTest {
 				}
 		);
 
-		checkTriggerablesNotTriggered();
+		assertFalse( opMergedWatcher.wasTriggered() );
+		assertFalse( opAttachedWatcher.wasTriggered() );
+		assertFalse( opDetachedWatcher.wasTriggered() );
+		assertFalse( opRollbackWatcher.wasTriggered() );
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-11209")
-	public void testCollectionWithQueuedOperationsOnRollback(SessionFactoryScope scope) {
+	public void testCollectionWithQueuedOperationsOnRollback(
+			SessionFactoryScope scope,
+			LoggingInspectionsScope loggingScope) {
+		final MessageKeyWatcher opMergedWatcher = loggingScope.getWatcher( "HHH000494", CollectionType.class );
+		final MessageKeyWatcher opAttachedWatcher = loggingScope.getWatcher( "HHH000495", AbstractPersistentCollection.class );
+		final MessageKeyWatcher opDetachedWatcher = loggingScope.getWatcher( "HHH000496", AbstractPersistentCollection.class );
+		final MessageKeyWatcher opRollbackWatcher = loggingScope.getWatcher( "HHH000498", AbstractPersistentCollection.class );
+
 		final Parent pOriginal = scope.fromTransaction(
 				session -> {
 					Parent p = session.get( Parent.class, 1L );
@@ -301,7 +350,10 @@ public class DetachedBagDelayedOperationTest {
 						assertFalse( Hibernate.isInitialized( p.getChildren() ) );
 						assertTrue( ( (AbstractPersistentCollection) p.getChildren() ).hasQueuedOperations() );
 
-						checkTriggerablesNotTriggered();
+						assertFalse( opMergedWatcher.wasTriggered() );
+						assertFalse( opAttachedWatcher.wasTriggered() );
+						assertFalse( opDetachedWatcher.wasTriggered() );
+						assertFalse( opRollbackWatcher.wasTriggered() );
 
 						// save a new Parent with the same ID to throw an exception.
 
@@ -315,22 +367,13 @@ public class DetachedBagDelayedOperationTest {
 		catch (EntityExistsException expected) {
 		}
 
-		assertTrue( triggerableQueuedOperationOnRollback.wasTriggered() );
-		triggerableQueuedOperationOnRollback.reset();
+		assertTrue( opRollbackWatcher.wasTriggered() );
+		opRollbackWatcher.reset();
 
-		checkTriggerablesNotTriggered();
-	}
-
-	private void resetTriggerables() {
-		triggerableIgnoreQueuedOperationsOnMerge.reset();
-		triggerableQueuedOperationWhenAttachToSession.reset();
-		triggerableQueuedOperationWhenDetachFromSession.reset();
-	}
-
-	private void checkTriggerablesNotTriggered() {
-		assertFalse( triggerableIgnoreQueuedOperationsOnMerge.wasTriggered() );
-		assertFalse( triggerableQueuedOperationWhenAttachToSession.wasTriggered() );
-		assertFalse( triggerableQueuedOperationWhenDetachFromSession.wasTriggered() );
+		assertFalse( opMergedWatcher.wasTriggered() );
+		assertFalse( opAttachedWatcher.wasTriggered() );
+		assertFalse( opDetachedWatcher.wasTriggered() );
+		assertFalse( opRollbackWatcher.wasTriggered() );
 	}
 
 	@Entity(name = "Parent")

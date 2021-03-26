@@ -41,12 +41,13 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.logger.LoggerInspectionRule;
-import org.hibernate.testing.logger.Triggerable;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Logger;
+import org.hibernate.testing.orm.junit.LoggingInspections;
+import org.hibernate.testing.orm.junit.LoggingInspectionsScope;
+import org.hibernate.testing.orm.junit.MessageKeyWatcher;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.Rule;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -65,15 +66,26 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		}
 )
 @SessionFactory
+@LoggingInspections(
+		messages = {
+				@LoggingInspections.Message(
+						messageKey = "HHH000470",
+						loggers = @Logger( loggerNameClass = AbstractPersistentCollection.class )
+				),
+				@LoggingInspections.Message(
+						messageKey = "HHH000471",
+						loggers = @Logger( loggerNameClass = AbstractPersistentCollection.class )
+				)
+		}
+)
 public class MultipleSessionCollectionWarningTest {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractPersistentCollection.class );
 
-	@Rule
-	public LoggerInspectionRule logInspection = new LoggerInspectionRule( LOG );
-
 	@Test
 	@TestForIssue(jiraKey = "HHH-9518")
-	public void testSetCurrentSessionOverwritesNonConnectedSesssion(SessionFactoryScope scope) {
+	public void testSetCurrentSessionOverwritesNonConnectedSession(
+			SessionFactoryScope scope,
+			LoggingInspectionsScope loggingScope) {
 		Parent p = new Parent();
 		Child c = new Child();
 		p.children.add( c );
@@ -101,15 +113,15 @@ public class MultipleSessionCollectionWarningTest {
 								s2 -> {
 									s2.getTransaction().begin();
 									try {
-										Triggerable triggerable = logInspection.watchForLogMessages( "HHH000470:" );
-										assertFalse( triggerable.wasTriggered() );
+										final MessageKeyWatcher watcher = loggingScope.getWatcher( "HHH000470", AbstractPersistentCollection.class );
+										assertFalse( watcher.wasTriggered() );
 
 										// The following should trigger warning because we're setting a new session when the collection already
 										// has a non-null session (and the collection is not "connected" to that session);
 										// Since s1 was not flushed, the collection role will not be known (no way to test that other than inspection).
 										s2.saveOrUpdate( p );
 
-										assertTrue( triggerable.wasTriggered() );
+										assertTrue( watcher.wasTriggered() );
 
 										// collection's session should be overwritten with s2
 										assertSame( s2, ( (AbstractPersistentCollection) p.children ).getSession() );
@@ -129,7 +141,9 @@ public class MultipleSessionCollectionWarningTest {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-9518")
-	public void testSetCurrentSessionOverwritesNonConnectedSesssionFlushed(SessionFactoryScope scope) {
+	public void testSetCurrentSessionOverwritesNonConnectedSessionFlushed(
+			SessionFactoryScope scope,
+			LoggingInspectionsScope loggingScope) {
 		Parent p = new Parent();
 		Child c = new Child();
 		p.children.add( c );
@@ -160,15 +174,15 @@ public class MultipleSessionCollectionWarningTest {
 								s2 -> {
 									s2.getTransaction().begin();
 									try {
-										Triggerable triggerable = logInspection.watchForLogMessages( "HHH000470:" );
-										assertFalse( triggerable.wasTriggered() );
+										final MessageKeyWatcher watcher = loggingScope.getWatcher( "HHH000470", AbstractPersistentCollection.class );
+										assertFalse( watcher.wasTriggered() );
 
 										// The following should trigger warning because we're setting a new session when the collection already
 										// has a non-null session (and the collection is not "connected" to that session);
 										// The collection role and key should be included in the message (no way to test that other than inspection).
 										s2.saveOrUpdate( p );
 
-										assertTrue( triggerable.wasTriggered() );
+										assertTrue( watcher.wasTriggered() );
 
 										// collection's session should be overwritten with s2
 										assertSame( s2, ( (AbstractPersistentCollection) p.children ).getSession() );
@@ -189,7 +203,9 @@ public class MultipleSessionCollectionWarningTest {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-9518")
-	public void testUnsetSessionCannotOverwriteNonConnectedSesssion(SessionFactoryScope scope) {
+	public void testUnsetSessionCannotOverwriteNonConnectedSession(
+			SessionFactoryScope scope,
+			LoggingInspectionsScope loggingScope) {
 		Parent p = new Parent();
 		Child c = new Child();
 		p.children.add( c );
@@ -217,15 +233,15 @@ public class MultipleSessionCollectionWarningTest {
 								s2 -> {
 									s2.getTransaction().begin();
 									try {
-										Triggerable triggerable = logInspection.watchForLogMessages( "HHH000471:" );
-										assertFalse( triggerable.wasTriggered() );
+										final MessageKeyWatcher watcher = loggingScope.getWatcher( "HHH000471", AbstractPersistentCollection.class );
+										assertFalse( watcher.wasTriggered() );
 
 										// The following should trigger warning because we're unsetting a different session.
 										// We should not do this in practice; it is done here only to force the warning.
 										// Since s1 was not flushed, the collection role will not be known (no way to test that).
 										assertFalse( ( (PersistentCollection) p.children ).unsetSession( s2 ) );
 
-										assertTrue( triggerable.wasTriggered() );
+										assertTrue( watcher.wasTriggered() );
 
 										// collection's session should still be s1
 										assertSame( s1, ( (AbstractPersistentCollection) p.children ).getSession() );
@@ -247,7 +263,9 @@ public class MultipleSessionCollectionWarningTest {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-9518")
-	public void testUnsetSessionCannotOverwriteConnectedSesssion(SessionFactoryScope scope) {
+	public void testUnsetSessionCannotOverwriteConnectedSession(
+			SessionFactoryScope scope,
+			LoggingInspectionsScope loggingScope) {
 		Parent p = new Parent();
 		Child c = new Child();
 		p.children.add( c );
@@ -270,15 +288,15 @@ public class MultipleSessionCollectionWarningTest {
 								s2 -> {
 									s2.getTransaction().begin();
 									try {
-										Triggerable triggerable = logInspection.watchForLogMessages( "HHH000471:" );
-										assertFalse( triggerable.wasTriggered() );
+										final MessageKeyWatcher watcher = loggingScope.getWatcher( "HHH000471", AbstractPersistentCollection.class );
+										assertFalse( watcher.wasTriggered() );
 
 										// The following should trigger warning because we're unsetting a different session
 										// We should not do this in practice; it is done here only to force the warning.
 										// Since s1 was not flushed, the collection role will not be known (no way to test that).
 										assertFalse( ( (PersistentCollection) p.children ).unsetSession( s2 ) );
 
-										assertTrue( triggerable.wasTriggered() );
+										assertTrue( watcher.wasTriggered() );
 
 										// collection's session should still be s1
 										assertSame( s1, ( (AbstractPersistentCollection) p.children ).getSession() );
@@ -298,7 +316,9 @@ public class MultipleSessionCollectionWarningTest {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-9518")
-	public void testUnsetSessionCannotOverwriteConnectedSesssionFlushed(SessionFactoryScope scope) {
+	public void testUnsetSessionCannotOverwriteConnectedSessionFlushed(
+			SessionFactoryScope scope,
+			LoggingInspectionsScope loggingScope) {
 		Parent p = new Parent();
 		Child c = new Child();
 		p.children.add( c );
@@ -324,15 +344,15 @@ public class MultipleSessionCollectionWarningTest {
 								s2 -> {
 									s2.getTransaction().begin();
 									try {
-										Triggerable triggerable = logInspection.watchForLogMessages( "HHH000471:" );
-										assertFalse( triggerable.wasTriggered() );
+										final MessageKeyWatcher watcher = loggingScope.getWatcher( "HHH000471", AbstractPersistentCollection.class );
+										assertFalse( watcher.wasTriggered() );
 
 										// The following should trigger warning because we're unsetting a different session
 										// We should not do this in practice; it is done here only to force the warning.
 										// The collection role and key should be included in the message (no way to test that other than inspection).
 										assertFalse( ( (PersistentCollection) p.children ).unsetSession( s2 ) );
 
-										assertTrue( triggerable.wasTriggered() );
+										assertTrue( watcher.wasTriggered() );
 
 										// collection's session should still be s1
 										assertSame( s1, ( (AbstractPersistentCollection) p.children ).getSession() );

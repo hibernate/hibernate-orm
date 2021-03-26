@@ -8,7 +8,7 @@ package org.hibernate.test.annotations.xml.ejb3;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
+import org.hibernate.cfg.annotations.reflection.JPAOverriddenAnnotationReader;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.xml.ErrorLogger;
 
@@ -24,14 +24,15 @@ import org.jboss.logging.Logger;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
-@TestForIssue(jiraKey = {"HHH-6271", "HHH-14529"})
-public class OrmVersion1SupportedTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected void prepareBootstrapRegistryBuilder(BootstrapServiceRegistryBuilder builder) {
-		// FIXME HHH-14529 configure the BootstrapServiceRegistry to use JAXB for orm.xml mappings
-		super.prepareBootstrapRegistryBuilder( builder );
-	}
+/**
+ * Equivalent to {@link org.hibernate.test.annotations.xml.ejb3.OrmVersion1SupportedTest}
+ * for the legacy {@link JPAOverriddenAnnotationReader}.
+ *
+ * @author Emmanuel Bernard
+ * @deprecated This test will be removed in Hibernate ORM 6, along with the legacy {@link JPAOverriddenAnnotationReader}.
+ */
+@TestForIssue(jiraKey = "HHH-6271")
+public class LegacyOrmVersion1SupportedTest extends BaseCoreFunctionalTestCase {
 
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule(

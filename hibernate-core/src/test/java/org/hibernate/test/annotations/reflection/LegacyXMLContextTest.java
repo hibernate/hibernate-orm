@@ -10,32 +10,32 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.dom4j.io.SAXReader;
-import org.junit.Assert;
-import org.junit.Test;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXNotSupportedException;
-
 import org.hibernate.cfg.EJB3DTDEntityResolver;
-import org.hibernate.cfg.annotations.reflection.internal.XMLContext;
+import org.hibernate.cfg.annotations.reflection.XMLContext;
 import org.hibernate.internal.util.xml.ErrorLogger;
 import org.hibernate.internal.util.xml.XMLHelper;
 
-import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.boot.BootstrapContextImpl;
 import org.hibernate.testing.boot.ClassLoaderServiceTestingImpl;
+import org.junit.Assert;
+import org.junit.Test;
+
+import org.dom4j.io.SAXReader;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXNotSupportedException;
 
 /**
- * Tests the new {@link XMLContext},
- * which will be replacing {@link org.hibernate.cfg.annotations.reflection.XMLContext}.
- * {@link org.hibernate.cfg.annotations.reflection.XMLContext} is still the default implementation,
- * but we want to switch to {@link XMLContext}
+ * Tests the legacy {@link XMLContext},
+ * which will be replaced with {@link org.hibernate.cfg.annotations.reflection.internal.XMLContext}.
+ * {@link XMLContext} is still the default implementation,
+ * but we want to switch to {@link org.hibernate.cfg.annotations.reflection.internal.XMLContext}
  * as soon as it will be practical.
  *
+ * @see XMLContextTest
  * @author Emmanuel Bernard
+ * @deprecated This test will be removed in Hibernate ORM 6, along with the legacy {@link XMLContext}.
  */
-@TestForIssue(jiraKey = "HHH-14529")
-public class XMLContextTest {
+public class LegacyXMLContextTest {
 	@Test
 	public void testAll() throws Exception {
 		final XMLHelper xmlHelper = new XMLHelper();

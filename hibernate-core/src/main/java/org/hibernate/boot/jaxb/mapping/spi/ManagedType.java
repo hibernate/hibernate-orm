@@ -16,6 +16,11 @@ import javax.persistence.AccessType;
  * @author Steve Ebersole
  */
 public interface ManagedType {
+
+	String getDescription();
+
+	void setDescription(String value);
+
 	String getClazz();
 
 	void setClazz(String className);
@@ -25,4 +30,8 @@ public interface ManagedType {
 	void setMetadataComplete(Boolean isMetadataComplete);
 
 	AccessType getAccess();
+
+	void setAccess(AccessType value);
+
+	AttributesContainer getAttributes();
 }

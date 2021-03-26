@@ -127,14 +127,17 @@
         <bindings node="//xsd:complexType[@name='many-to-one']">
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.PersistentAttribute</inheritance:implements>
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.FetchableAttribute</inheritance:implements>
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.AssociationAttribute</inheritance:implements>
         </bindings>
         <bindings node="//xsd:complexType[@name='one-to-many']">
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.PersistentAttribute</inheritance:implements>
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.CollectionAttribute</inheritance:implements>
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.AssociationAttribute</inheritance:implements>
         </bindings>
         <bindings node="//xsd:complexType[@name='one-to-one']">
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.PersistentAttribute</inheritance:implements>
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.FetchableAttribute</inheritance:implements>
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.AssociationAttribute</inheritance:implements>
         </bindings>
         <bindings node="//xsd:complexType[@name='embedded-id']">
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.PersistentAttribute</inheritance:implements>
@@ -145,6 +148,7 @@
         <bindings node="//xsd:complexType[@name='many-to-many']">
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.PersistentAttribute</inheritance:implements>
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.CollectionAttribute</inheritance:implements>
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.AssociationAttribute</inheritance:implements>
         </bindings>
         <bindings node="//xsd:complexType[@name='element-collection']">
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.PersistentAttribute</inheritance:implements>

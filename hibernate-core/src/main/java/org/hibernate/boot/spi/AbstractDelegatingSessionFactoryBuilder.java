@@ -14,7 +14,6 @@ import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.Interceptor;
-import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.query.NullPrecedence;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
@@ -223,8 +222,8 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
-	public T applyMultiTenancyStrategy(MultiTenancyStrategy strategy) {
-		delegate.applyMultiTenancyStrategy( strategy );
+	public T applyMultiTenancy(boolean enabled) {
+		delegate.applyMultiTenancy(enabled);
 		return getThis();
 	}
 

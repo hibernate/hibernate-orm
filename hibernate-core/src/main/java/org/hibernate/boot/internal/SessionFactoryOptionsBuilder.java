@@ -24,7 +24,6 @@ import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
-import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.query.NullPrecedence;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionFactoryObserver;
@@ -71,68 +70,7 @@ import org.hibernate.stat.Statistics;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
 
-import static org.hibernate.cfg.AvailableSettings.ACQUIRE_CONNECTIONS;
-import static org.hibernate.cfg.AvailableSettings.ALLOW_JTA_TRANSACTION_ACCESS;
-import static org.hibernate.cfg.AvailableSettings.ALLOW_REFRESH_DETACHED_ENTITY;
-import static org.hibernate.cfg.AvailableSettings.ALLOW_UPDATE_OUTSIDE_TRANSACTION;
-import static org.hibernate.cfg.AvailableSettings.AUTO_CLOSE_SESSION;
-import static org.hibernate.cfg.AvailableSettings.AUTO_EVICT_COLLECTION_CACHE;
-import static org.hibernate.cfg.AvailableSettings.AUTO_SESSION_EVENTS_LISTENER;
-import static org.hibernate.cfg.AvailableSettings.BATCH_FETCH_STYLE;
-import static org.hibernate.cfg.AvailableSettings.BATCH_VERSIONED_DATA;
-import static org.hibernate.cfg.AvailableSettings.CACHE_REGION_PREFIX;
-import static org.hibernate.cfg.AvailableSettings.CALLABLE_NAMED_PARAMS_ENABLED;
-import static org.hibernate.cfg.AvailableSettings.CHECK_NULLABILITY;
-import static org.hibernate.cfg.AvailableSettings.COLLECTION_JOIN_SUBQUERY;
-import static org.hibernate.cfg.AvailableSettings.CONNECTION_HANDLING;
-import static org.hibernate.cfg.AvailableSettings.CONVENTIONAL_JAVA_CONSTANTS;
-import static org.hibernate.cfg.AvailableSettings.CRITERIA_LITERAL_HANDLING_MODE;
-import static org.hibernate.cfg.AvailableSettings.CRITERIA_VALUE_HANDLING_MODE;
-import static org.hibernate.cfg.AvailableSettings.CUSTOM_ENTITY_DIRTINESS_STRATEGY;
-import static org.hibernate.cfg.AvailableSettings.DEFAULT_BATCH_FETCH_SIZE;
-import static org.hibernate.cfg.AvailableSettings.DEFAULT_ENTITY_MODE;
-import static org.hibernate.cfg.AvailableSettings.DELAY_ENTITY_LOADER_CREATIONS;
-import static org.hibernate.cfg.AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS;
-import static org.hibernate.cfg.AvailableSettings.FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH;
-import static org.hibernate.cfg.AvailableSettings.FLUSH_BEFORE_COMPLETION;
-import static org.hibernate.cfg.AvailableSettings.GENERATE_STATISTICS;
-import static org.hibernate.cfg.AvailableSettings.IMMUTABLE_ENTITY_UPDATE_QUERY_HANDLING_MODE;
-import static org.hibernate.cfg.AvailableSettings.INTERCEPTOR;
-import static org.hibernate.cfg.AvailableSettings.IN_CLAUSE_PARAMETER_PADDING;
-import static org.hibernate.cfg.AvailableSettings.JDBC_TIME_ZONE;
-import static org.hibernate.cfg.AvailableSettings.JPA_CALLBACKS_ENABLED;
-import static org.hibernate.cfg.AvailableSettings.JTA_TRACK_BY_THREAD;
-import static org.hibernate.cfg.AvailableSettings.LOG_SESSION_METRICS;
-import static org.hibernate.cfg.AvailableSettings.MAX_FETCH_DEPTH;
-import static org.hibernate.cfg.AvailableSettings.MULTI_TENANT_IDENTIFIER_RESOLVER;
-import static org.hibernate.cfg.AvailableSettings.NATIVE_EXCEPTION_HANDLING_51_COMPLIANCE;
-import static org.hibernate.cfg.AvailableSettings.OMIT_JOIN_OF_SUPERCLASS_TABLES;
-import static org.hibernate.cfg.AvailableSettings.ORDER_INSERTS;
-import static org.hibernate.cfg.AvailableSettings.ORDER_UPDATES;
-import static org.hibernate.cfg.AvailableSettings.PREFER_USER_TRANSACTION;
-import static org.hibernate.cfg.AvailableSettings.PROCEDURE_NULL_PARAM_PASSING;
-import static org.hibernate.cfg.AvailableSettings.QUERY_CACHE_FACTORY;
-import static org.hibernate.cfg.AvailableSettings.QUERY_STARTUP_CHECKING;
-import static org.hibernate.cfg.AvailableSettings.QUERY_STATISTICS_MAX_SIZE;
-import static org.hibernate.cfg.AvailableSettings.QUERY_SUBSTITUTIONS;
-import static org.hibernate.cfg.AvailableSettings.RELEASE_CONNECTIONS;
-import static org.hibernate.cfg.AvailableSettings.SESSION_FACTORY_NAME;
-import static org.hibernate.cfg.AvailableSettings.SESSION_FACTORY_NAME_IS_JNDI;
-import static org.hibernate.cfg.AvailableSettings.SESSION_SCOPED_INTERCEPTOR;
-import static org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE;
-import static org.hibernate.cfg.AvailableSettings.STATEMENT_FETCH_SIZE;
-import static org.hibernate.cfg.AvailableSettings.STATEMENT_INSPECTOR;
-import static org.hibernate.cfg.AvailableSettings.USE_DIRECT_REFERENCE_CACHE_ENTRIES;
-import static org.hibernate.cfg.AvailableSettings.USE_GET_GENERATED_KEYS;
-import static org.hibernate.cfg.AvailableSettings.USE_IDENTIFIER_ROLLBACK;
-import static org.hibernate.cfg.AvailableSettings.USE_MINIMAL_PUTS;
-import static org.hibernate.cfg.AvailableSettings.USE_QUERY_CACHE;
-import static org.hibernate.cfg.AvailableSettings.USE_SCROLLABLE_RESULTSET;
-import static org.hibernate.cfg.AvailableSettings.USE_SECOND_LEVEL_CACHE;
-import static org.hibernate.cfg.AvailableSettings.USE_SQL_COMMENTS;
-import static org.hibernate.cfg.AvailableSettings.USE_STRUCTURED_CACHE;
-import static org.hibernate.cfg.AvailableSettings.VALIDATE_QUERY_PARAMETERS;
-import static org.hibernate.cfg.AvailableSettings.WRAP_RESULT_SETS;
+import static org.hibernate.cfg.AvailableSettings.*;
 import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 import static org.hibernate.jpa.AvailableSettings.DISCARD_PC_ON_CLOSE;
@@ -208,7 +146,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean callbacksEnabled;
 
 	// multi-tenancy
-	private MultiTenancyStrategy multiTenancyStrategy;
+	private boolean multiTenancyEnabled;
 	private CurrentTenantIdentifierResolver currentTenantIdentifierResolver;
 
 	// Queries
@@ -339,7 +277,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.checkNullability = cfgService.getSetting( CHECK_NULLABILITY, BOOLEAN, true );
 		this.initializeLazyStateOutsideTransactions = cfgService.getSetting( ENABLE_LAZY_LOAD_NO_TRANS, BOOLEAN, false );
 
-		this.multiTenancyStrategy = MultiTenancyStrategy.determineMultiTenancyStrategy( configurationSettings );
+		this.multiTenancyEnabled = configurationSettings.containsKey( MULTI_TENANT_CONNECTION_PROVIDER );
 		this.currentTenantIdentifierResolver = strategySelector.resolveStrategy(
 				CurrentTenantIdentifierResolver.class,
 				configurationSettings.get( MULTI_TENANT_IDENTIFIER_RESOLVER )
@@ -969,8 +907,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
-	public MultiTenancyStrategy getMultiTenancyStrategy() {
-		return multiTenancyStrategy;
+	public boolean isMultiTenancyEnabled() {
+		return multiTenancyEnabled;
 	}
 
 	@Override
@@ -1341,8 +1279,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.postInsertIdentifierDelayed = enabled;
 	}
 
-	public void applyMultiTenancyStrategy(MultiTenancyStrategy strategy) {
-		this.multiTenancyStrategy = strategy;
+	public void applyMultiTenancy(boolean enabled) {
+		this.multiTenancyEnabled = enabled;
 	}
 
 	public void applyCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver resolver) {

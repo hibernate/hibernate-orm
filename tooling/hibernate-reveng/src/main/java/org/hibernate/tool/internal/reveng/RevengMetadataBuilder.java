@@ -68,7 +68,7 @@ public class RevengMetadataBuilder {
 				new InFlightMetadataCollectorImpl(
 						bootstrapContext,
 						metadataBuildingOptions);
-		this.metadataBuildingContext = new MetadataBuildingContextRootImpl(bootstrapContext, metadataBuildingOptions, metadataCollector);
+		this.metadataBuildingContext = new MetadataBuildingContextRootImpl("tools", bootstrapContext, metadataBuildingOptions, metadataCollector);
 		this.binderContext = BinderContext
 				.create(
 						metadataBuildingContext, 
@@ -95,7 +95,7 @@ public class RevengMetadataBuilder {
 						serviceRegistry.getService(JdbcServices.class).getDialect(), 
 						properties );
 	    DatabaseReader reader = DatabaseReader.create(properties,revengStrategy,mdd, serviceRegistry);
-	    RevengMetadataCollector revengMetadataCollector = new RevengMetadataCollector(metadataCollector);
+	    RevengMetadataCollector revengMetadataCollector = new RevengMetadataCollector(metadataBuildingContext);
         reader.readDatabaseSchema(revengMetadataCollector);
         return revengMetadataCollector;
 	}

@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.boot.spi.InFlightMetadataCollector;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.reveng.TableIdentifier;
@@ -14,14 +15,14 @@ import org.hibernate.tool.internal.util.TableNameQualifier;
 
 public class RevengMetadataCollector {
 
-	private InFlightMetadataCollector metadataCollector = null;
+	private MetadataBuildingContext metadataBuildingContext = null;
 	private final Map<TableIdentifier, Table> tables;
 	private Map<String, List<ForeignKey>> oneToManyCandidates;
 	private final Map<TableIdentifier, String> suggestedIdentifierStrategies;
 
-	public RevengMetadataCollector(InFlightMetadataCollector metadataCollector) {
+	public RevengMetadataCollector(MetadataBuildingContext metadataBuildingContext) {
 		this();
-		this.metadataCollector = metadataCollector;
+		this.metadataBuildingContext = metadataBuildingContext;
 	}
 	
 	public RevengMetadataCollector() {
@@ -39,8 +40,9 @@ public class RevengMetadataCollector {
 		String catalog = tableIdentifier.getCatalog();
 		String schema = tableIdentifier.getSchema();
 		String name = tableIdentifier.getName();
+		InFlightMetadataCollector metadataCollector = metadataBuildingContext.getMetadataCollector();
 		if (metadataCollector != null) {
-			result = metadataCollector.addTable(schema, catalog, name, null, false);
+			result = metadataCollector.addTable(schema, catalog, name, null, false, metadataBuildingContext);
 		} else {
 			result = createTable(catalog, schema, name);			
 		}

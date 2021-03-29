@@ -6,7 +6,6 @@
  */
 package org.hibernate.test.notfound;
 
-import javax.persistence.Column;
 import javax.persistence.ConstraintMode;
 import javax.persistence.Entity;
 import javax.persistence.EntityNotFoundException;
@@ -18,6 +17,7 @@ import javax.persistence.ManyToOne;
 
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
+import org.hibernate.proxy.HibernateProxy;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
@@ -28,6 +28,8 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
@@ -41,15 +43,14 @@ public class EagerProxyNotFoundTest extends BaseNonConfigCoreFunctionalTestCase 
 		doInHibernate( this::sessionFactory, session -> {
 			final Task task = new Task();
 			task.id = 1;
-			task.employeeId = 2;
+			task.employeeEagerNotFoundIgnore = session.load( Employee.class, 2 );
 			session.persist( task );
 		});
 
 		doInHibernate( this::sessionFactory, session -> {
 			final Task task = session.createQuery( "from Task", Task.class ).getSingleResult();
 			assertNotNull( task );
-			assertEquals( 2, task.employeeId );
-			assertNull( task.employee );
+			assertNull( task.employeeEagerNotFoundIgnore );
 		});
 	}
 
@@ -58,7 +59,7 @@ public class EagerProxyNotFoundTest extends BaseNonConfigCoreFunctionalTestCase 
 		doInHibernate( this::sessionFactory, session -> {
 			final Task task = new Task();
 			task.id = 1;
-			task.employeeId = 2;
+			task.employeeEagerNotFoundIgnore = session.load( Employee.class, 2 );
 			session.persist( task );
 		});
 
@@ -66,8 +67,49 @@ public class EagerProxyNotFoundTest extends BaseNonConfigCoreFunctionalTestCase 
 			session.load( Employee.class, 2 );
 			final Task task = session.createQuery( "from Task", Task.class ).getSingleResult();
 			assertNotNull( task );
-			assertEquals( 2, task.employeeId );
-			assertNull( task.employee );
+			assertNull( task.employeeEagerNotFoundIgnore );
+		});
+	}
+
+	@Test
+	public void testEagerIgnoreLazyProxy() {
+		doInHibernate( this::sessionFactory, session -> {
+			final Task task = new Task();
+			task.id = 1;
+			task.employeeLazy = session.load( Employee.class, 2 );
+			task.employeeEagerNotFoundIgnore = task.employeeLazy;
+			session.persist( task );
+		});
+
+		doInHibernate( this::sessionFactory, session -> {
+			final Task task = session.createQuery( "from Task", Task.class ).getSingleResult();
+			assertNotNull( task );
+			assertNull( task.employeeEagerNotFoundIgnore );
+			assertNotNull( task.employeeLazy );
+			assertTrue( HibernateProxy.class.isInstance( task.employeeLazy ) );
+			assertEquals( 2, task.employeeLazy.getId() );
+		});
+	}
+
+	@Test
+	public void testProxyInSessionEagerIgnoreLazyProxy() {
+		doInHibernate( this::sessionFactory, session -> {
+			final Task task = new Task();
+			task.id = 1;
+			task.employeeLazy = session.load( Employee.class, 2 );
+			task.employeeEagerNotFoundIgnore = task.employeeLazy;
+			session.persist( task );
+		});
+
+		doInHibernate( this::sessionFactory, session -> {
+			final Employee employeeProxy = session.load( Employee.class, 2 );
+			final Task task = session.createQuery( "from Task", Task.class ).getSingleResult();
+			assertNotNull( task );
+			assertNull( task.employeeEagerNotFoundIgnore );
+			assertNotNull( task.employeeLazy );
+			assertTrue( HibernateProxy.class.isInstance( task.employeeLazy ) );
+			assertEquals( 2, task.employeeLazy.getId() );
+			assertSame( employeeProxy, task.employeeLazy );
 		});
 	}
 
@@ -80,8 +122,7 @@ public class EagerProxyNotFoundTest extends BaseNonConfigCoreFunctionalTestCase 
 
 			final Task task = new Task();
 			task.id = 2;
-			task.employee = employee;
-			task.employeeId = 1;
+			task.employeeEagerNotFoundIgnore = employee;
 			session.persist( task );
 
 			session.flush();
@@ -129,15 +170,17 @@ public class EagerProxyNotFoundTest extends BaseNonConfigCoreFunctionalTestCase 
 		@ManyToOne(fetch = FetchType.EAGER)
 		@JoinColumn(
 				name = "employeeId",
-				insertable = false,
-				updatable = false,
 				foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT)
 		)
 		@NotFound(action = NotFoundAction.IGNORE)
-		private Employee employee;
+		private Employee employeeEagerNotFoundIgnore;
 
-		@Column(name = "employeeId")
-		private int employeeId;
+		@ManyToOne(fetch = FetchType.LAZY)
+		@JoinColumn(
+				name = "lazyEmployeeId",
+				foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT)
+		)
+		private Employee employeeLazy;
 	}
 
 	@Entity(name = "Employee")
@@ -150,6 +193,13 @@ public class EagerProxyNotFoundTest extends BaseNonConfigCoreFunctionalTestCase 
 		@ManyToOne(fetch = FetchType.EAGER)
 		@JoinColumn(name = "locationId", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
 		private Location location;
+
+		public int getId() {
+			return id;
+		}
+		public void setId(int id) {
+			this.id = id;
+		}
 	}
 
 	@Entity(name = "Location")

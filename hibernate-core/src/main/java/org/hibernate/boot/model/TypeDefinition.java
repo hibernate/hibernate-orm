@@ -32,7 +32,7 @@ import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.TypeConfigurationAware;
 import org.hibernate.usertype.ParameterizedType;
@@ -103,7 +103,7 @@ public class TypeDefinition implements Serializable {
 			Map localConfigParameters,
 			MutabilityPlan explicitMutabilityPlan,
 			MetadataBuildingContext context,
-			SqlTypeDescriptorIndicators indicators) {
+			JdbcTypeDescriptorIndicators indicators) {
 		if ( CollectionHelper.isEmpty( localConfigParameters ) ) {
 			// we can use the re-usable resolution...
 			if ( reusableResolution == null ) {
@@ -121,7 +121,7 @@ public class TypeDefinition implements Serializable {
 	private BasicValue.Resolution<?> createResolution(
 			String name,
 			Map<?,?> usageSiteProperties,
-			SqlTypeDescriptorIndicators indicators,
+			JdbcTypeDescriptorIndicators indicators,
 			MetadataBuildingContext context) {
 		return createResolution(
 				name,
@@ -138,7 +138,7 @@ public class TypeDefinition implements Serializable {
 			Class<?> typeImplementorClass,
 			Properties parameters,
 			Map<?,?> usageSiteProperties,
-			SqlTypeDescriptorIndicators indicators,
+			JdbcTypeDescriptorIndicators indicators,
 			MetadataBuildingContext context) {
 		final TypeConfiguration typeConfiguration = context.getBootstrapContext().getTypeConfiguration();
 
@@ -238,7 +238,7 @@ public class TypeDefinition implements Serializable {
 			final JavaTypeDescriptor<Serializable> jtd = typeConfiguration
 					.getJavaTypeDescriptorRegistry()
 					.resolveDescriptor( typeImplementorClass );
-			final SqlTypeDescriptor jdbcType = typeConfiguration.getSqlTypeDescriptorRegistry().getDescriptor( Types.VARBINARY );
+			final JdbcTypeDescriptor jdbcType = typeConfiguration.getJdbcTypeDescriptorRegistry().getDescriptor( Types.VARBINARY );
 			final BasicType<Serializable> resolved = typeConfiguration.getBasicTypeRegistry().resolve( jtd, jdbcType );
 			final SerializableType legacyType = new SerializableType( typeImplementorClass );
 

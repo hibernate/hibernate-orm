@@ -157,10 +157,10 @@ public class BooleanTypeDescriptor extends AbstractClassTypeDescriptor<Boolean> 
 	}
 
 	@Override
-	public String getCheckCondition(String columnName, SqlTypeDescriptor sqlTypeDescriptor, Dialect dialect) {
+	public String getCheckCondition(String columnName, JdbcTypeDescriptor sqlTypeDescriptor, Dialect dialect) {
 		return dialect.getBooleanCheckCondition(
 				columnName,
-				sqlTypeDescriptor.getSqlType(),
+				sqlTypeDescriptor.getJdbcTypeCode(),
 				characterValueFalse,
 				characterValueTrue
 		);

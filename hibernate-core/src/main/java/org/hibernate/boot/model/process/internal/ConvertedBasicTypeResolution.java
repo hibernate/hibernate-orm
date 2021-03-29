@@ -13,8 +13,8 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.ConvertedBasicType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 
 /**
  * @author Steve Ebersole
@@ -25,7 +25,7 @@ public class ConvertedBasicTypeResolution<J> implements BasicValue.Resolution<J>
 
 	public ConvertedBasicTypeResolution(
 			ConvertedBasicType basicType,
-			SqlTypeDescriptorIndicators stdIndicators) {
+			JdbcTypeDescriptorIndicators stdIndicators) {
 		this.basicType = basicType;
 
 		final BasicValueConverter valueConverter = basicType.getValueConverter();
@@ -58,8 +58,8 @@ public class ConvertedBasicTypeResolution<J> implements BasicValue.Resolution<J>
 	}
 
 	@Override
-	public SqlTypeDescriptor getRelationalSqlTypeDescriptor() {
-		return adapted.getSqlTypeDescriptor();
+	public JdbcTypeDescriptor getJdbcTypeDescriptor() {
+		return adapted.getJdbcTypeDescriptor();
 	}
 
 	@Override

@@ -214,7 +214,7 @@ public class EnumJavaTypeDescriptor<T extends Enum<T>> extends AbstractClassType
 	}
 
 	@Override
-	public String getCheckCondition(String columnName, SqlTypeDescriptor sqlTypeDescriptor, Dialect dialect) {
-		return dialect.getEnumCheckCondition( columnName, sqlTypeDescriptor.getSqlType(), getJavaTypeClass() );
+	public String getCheckCondition(String columnName, JdbcTypeDescriptor jdbcType, Dialect dialect) {
+		return dialect.getEnumCheckCondition( columnName, jdbcType.getJdbcTypeCode(), getJavaTypeClass() );
 	}
 }

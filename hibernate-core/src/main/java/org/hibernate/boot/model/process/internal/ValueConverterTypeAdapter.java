@@ -17,7 +17,7 @@ import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 
 /**
  * @author Steve Ebersole
@@ -33,16 +33,16 @@ public class ValueConverterTypeAdapter<J> extends AbstractSingleColumnStandardBa
 	public ValueConverterTypeAdapter(
 			String description,
 			BasicValueConverter<J, ?> converter,
-			SqlTypeDescriptorIndicators indicators) {
+			JdbcTypeDescriptorIndicators indicators) {
 		super(
-				converter.getRelationalJavaDescriptor().getJdbcRecommendedSqlType( indicators ),
+				converter.getRelationalJavaDescriptor().getRecommendedJdbcType( indicators ),
 				(JavaTypeDescriptor) converter.getRelationalJavaDescriptor()
 		);
 
 		this.description = description;
 		this.converter = converter;
 
-		this.valueBinder = getSqlTypeDescriptor().getBinder( converter.getRelationalJavaDescriptor() );
+		this.valueBinder = getJdbcTypeDescriptor().getBinder( converter.getRelationalJavaDescriptor() );
 	}
 
 	@Override

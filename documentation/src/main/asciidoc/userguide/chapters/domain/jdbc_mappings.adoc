@@ -29,13 +29,13 @@ An `AttributeConverter` can also influence the `JavaTypeDescriptor` used in cert
 
 ==== SqlTypeDescriptor
 
-`JdbcType` can be used to explicitly specify the `JdbcTypeDescriptor` to use for a particular mapping.
+`@JdbcType` can be used to explicitly specify the `JdbcTypeDescriptor` to use for a particular mapping.
 
-`JdbcTypeCode` can be used to indicate the `JdbcTypeDescriptorRegistry` entry to use.  `JdbcTypeRegistration` can
+`@JdbcTypeCode` can be used to indicate the `JdbcTypeDescriptorRegistry` entry to use.  `@JdbcTypeRegistration` can
 be used to register a `JdbcTypeDescriptor` with the `JdbcTypeDescriptorRegistry`.
 
-`MapKeyJdbcType` and `MapKeyJdbcTypeCode` work the same as `JdbcType` and `JdbcTypeCode`, respectively, except
-describing the `JdbcTypeDescriptor` to use for the map's key.  In which case, `JdbcType` and `JdbcTypeCode` refer
+`@MapKeyJdbcType` and `@MapKeyJdbcTypeCode` work the same as `@JdbcType` and `@JdbcTypeCode`, respectively, except
+describing the `JdbcTypeDescriptor` to use for the map's key.  In which case, `@JdbcType` and `@JdbcTypeCode` refer
 to the map's values.
 
 For character and binary data, the JPA `@Lob` annotation can be used to indicate that a JDBC BLOB, CLOB, NCLOB should
@@ -55,7 +55,7 @@ An `AttributeConverter` can also influence the `JdbcTypeDescriptor` to use by th
 
 ==== BasicValueConverter
 
-At the moment the only ways to apply a `BasicValueConverter` are by using `@Enumerated` and by applying a JPA
+At the moment, the only ways to apply a `BasicValueConverter` are by using `@Enumerated` and by applying a JPA
 `AttributeConverter`.
 
 

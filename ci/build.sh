@@ -9,10 +9,14 @@ elif [ "$RDBMS" == "postgresql" ]; then
   goal="-Pdb=pgsql_ci"
 elif [ "$RDBMS" == "oracle" ]; then
   goal="-Pdb=oracle_ci"
+elif [ "$RDBMS" == "oracle_ee" ]; then
+  goal="-Pdb=oracle_ci"
 elif [ "$RDBMS" == "db2" ]; then
   goal="-Pdb=db2_ci"
 elif [ "$RDBMS" == "mssql" ]; then
   goal="-Pdb=mssql_ci"
+elif [ "$RDBMS" == "hana" ]; then
+  goal="-Pdb=hana_ci"
 fi
 
 exec ./gradlew check ${goal} -Plog-test-progress=true --stacktrace

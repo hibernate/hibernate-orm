@@ -247,6 +247,7 @@ import org.hibernate.type.TypeHelper;
 import org.hibernate.type.VersionType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Basic functionality for persisting an entity via JDBC
@@ -1405,7 +1406,7 @@ public abstract class AbstractEntityPersister
 									generateJoinPredicate(
 											primaryTableReference,
 											joinedTableReference,
-											i,
+											getSubclassTableKeyColumns( i ),
 											sqlExpressionResolver
 									)
 							);
@@ -1426,6 +1427,7 @@ public abstract class AbstractEntityPersister
 		return resolvePrimaryTableReference( sqlAliasBase );
 	}
 
+
 	@Override
 	public TableReferenceJoin createTableReferenceJoin(
 			String joinTableExpression,
@@ -1437,27 +1439,44 @@ public abstract class AbstractEntityPersister
 		for ( int i = 1; i < getSubclassTableSpan(); i++ ) {
 			final String subclassTableName = getSubclassTableName( i );
 			if ( subclassTableName.equals( joinTableExpression ) ) {
-				final TableReference joinedTableReference = new TableReference(
+				return generateTableReferenceJoin(
+						lhs,
 						joinTableExpression,
-						sqlAliasBase.generateNewAlias(),
-						isNullableSubclassTable( i ),
-						getFactory()
-				);
-
-				return new TableReferenceJoin(
+						sqlAliasBase,
 						determineSubclassTableJoinType( i, canUseInnerJoin, true, Collections.emptySet() ),
-						joinedTableReference,
-						generateJoinPredicate(
-								lhs,
-								joinedTableReference,
-								i,
-								sqlExpressionResolver
-						)
+						getSubclassTableKeyColumns( i ),
+						sqlExpressionResolver
 				);
 			}
 		}
 
 		return null;
+	}
+
+	protected TableReferenceJoin generateTableReferenceJoin(
+			TableReference lhs,
+			String joinTableExpression,
+			SqlAliasBase sqlAliasBase,
+			SqlAstJoinType joinType,
+			String[] targetColumns,
+			SqlExpressionResolver sqlExpressionResolver) {
+		final TableReference joinedTableReference = new TableReference(
+				joinTableExpression,
+				sqlAliasBase.generateNewAlias(),
+				joinType != SqlAstJoinType.INNER,
+				getFactory()
+		);
+
+		return new TableReferenceJoin(
+				joinType,
+				joinedTableReference,
+				generateJoinPredicate(
+						lhs,
+						joinedTableReference,
+						targetColumns,
+						sqlExpressionResolver
+				)
+		);
 	}
 
 	protected TableReference resolvePrimaryTableReference(SqlAliasBase sqlAliasBase) {
@@ -1472,14 +1491,13 @@ public abstract class AbstractEntityPersister
 	protected Predicate generateJoinPredicate(
 			TableReference rootTableReference,
 			TableReference joinedTableReference,
-			int subClassTablePosition,
+			String[] fkColumnNames,
 			SqlExpressionResolver sqlExpressionResolver) {
 		final EntityIdentifierMapping identifierMapping = getIdentifierMapping();
 
 		final Junction conjunction = new Junction( Junction.Nature.CONJUNCTION );
 
 		final String[] rootPkColumnNames = getKeyColumnNames();
-		final String[] fkColumnNames = getSubclassTableKeyColumns( subClassTablePosition );
 
 		assert rootPkColumnNames.length == fkColumnNames.length;
 		assert rootPkColumnNames.length == identifierMapping.getJdbcTypeCount();
@@ -1521,6 +1539,19 @@ public abstract class AbstractEntityPersister
 		);
 
 		return conjunction;
+	}
+
+	protected Predicate generateJoinPredicate(
+			TableReference rootTableReference,
+			TableReference joinedTableReference,
+			int subClassTablePosition,
+			SqlExpressionResolver sqlExpressionResolver) {
+		return generateJoinPredicate(
+				rootTableReference,
+				joinedTableReference,
+				getSubclassTableKeyColumns( subClassTablePosition ),
+				sqlExpressionResolver
+		);
 	}
 
 	public Object initializeLazyProperty(String fieldName, Object entity, SharedSessionContractImplementor session) {
@@ -6393,8 +6424,11 @@ public abstract class AbstractEntityPersister
 			Property bootProperty,
 			int stateArrayPosition,
 			MappingModelCreationProcess creationProcess) {
-
 		final SessionFactoryImplementor sessionFactory = creationProcess.getCreationContext().getSessionFactory();
+		final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
+		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
+		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
+		final Dialect dialect = jdbcEnvironment.getDialect();
 
 		final String attrName = tupleAttrDefinition.getName();
 		final Type attrType = tupleAttrDefinition.getType();
@@ -6452,7 +6486,7 @@ public abstract class AbstractEntityPersister
 
 					assert attrColumnExpression.equals( selectable.getText( sessionFactory.getDialect() ) );
 
-					customReadExpr = selectable.getCustomReadExpression();
+					customReadExpr = selectable.getTemplate( dialect, sessionFactory.getQueryEngine().getSqmFunctionRegistry() );
 					customWriteExpr = selectable.getCustomWriteExpression();
 				}
 				else {

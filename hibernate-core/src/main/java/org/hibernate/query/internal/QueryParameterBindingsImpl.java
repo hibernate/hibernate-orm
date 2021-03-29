@@ -136,8 +136,13 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 
 	@Override
 	public <P> QueryParameterBinding<P> getBinding(String name) {
+		final QueryParameterImplementor<?> parameter = parameterMetadata.getQueryParameter( name );
+		if ( parameter == null ) {
+			throw new IllegalArgumentException( "Parameter does not exist: " + name );
+		}
+
 		//noinspection unchecked
-		return (QueryParameterBinding<P>) getBinding( parameterMetadata.getQueryParameter( name ) );
+		return (QueryParameterBinding<P>) getBinding( parameter );
 	}
 
 	@Override

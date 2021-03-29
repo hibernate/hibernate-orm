@@ -160,6 +160,22 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	public void testBooleanHandlingBaseline() {
+		TestData data = new TestData();
+		data.prepare();
+
+		inTransaction(
+				s -> {
+					final String qryString = "select e from BooleanLiteralEntity e where e.yesNoBoolean = :p";
+					final Query query = s.createQuery( qryString ).setParameter( "p", true );
+					query.list();
+				}
+		);
+
+		data.cleanup();
+	}
+
+	@Test
 	public void testBooleanHandling() {
 		TestData data = new TestData();
 		data.prepare();

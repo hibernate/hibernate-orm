@@ -12,141 +12,130 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.type.descriptor.sql.BasicBinder;
-import org.hibernate.type.descriptor.sql.BasicExtractor;
+import org.hibernate.type.descriptor.JdbcBindingLogging;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.testing.logger.LoggerInspectionRule;
-import org.hibernate.testing.logger.Triggerable;
-import org.junit.Rule;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Logger;
+import org.hibernate.testing.orm.junit.MessageKeyInspection;
+import org.hibernate.testing.orm.junit.MessageKeyWatcher;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import org.jboss.logging.Logger;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertTrue;
 
 /**
  * @author Vlad Mihacea
  */
-public class OrdinalEnumTypeTest extends BaseCoreFunctionalTestCase {
-
-	@Rule
-	public LoggerInspectionRule binderLogInspection = new LoggerInspectionRule( Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			BasicBinder.class.getName()
-	) );
-
-	@Rule
-	public LoggerInspectionRule extractorLogInspection = new LoggerInspectionRule( Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			BasicExtractor.class.getName()
-	) );
-
-	private Person person;
-
-	private Triggerable binderTriggerable;
-
-	private Triggerable extractorTriggerable;
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				Person.class
-		};
+@MessageKeyInspection(
+		logger = @Logger( loggerName = JdbcBindingLogging.NAME ),
+		messageKey = "binding parameter ["
+)
+@DomainModel( annotatedClasses = OrdinalEnumTypeTest.Person.class )
+@SessionFactory
+public class OrdinalEnumTypeTest {
+	@BeforeEach
+	protected void createTestData(SessionFactoryScope scope) {
+		scope.inTransaction(
+				(session) -> {
+					final Person person = Person.person( Gender.MALE, HairColor.BROWN );
+					session.persist( person );
+					session.persist( Person.person( Gender.MALE, HairColor.BLACK ) );
+					session.persist( Person.person( Gender.FEMALE, HairColor.BROWN ) );
+					session.persist( Person.person( Gender.FEMALE, HairColor.BLACK ) );
+				}
+		);
 	}
 
-	@Override
-	protected void prepareTest() {
-		doInHibernate( this::sessionFactory, s -> {
-			this.person = Person.person( Gender.MALE, HairColor.BROWN );
-			s.persist( person );
-			s.persist( Person.person( Gender.MALE, HairColor.BLACK ) );
-			s.persist( Person.person( Gender.FEMALE, HairColor.BROWN ) );
-			s.persist( Person.person( Gender.FEMALE, HairColor.BLACK ) );
-		} );
-
-		binderTriggerable = binderLogInspection.watchForLogMessages( "binding parameter" );
-		extractorTriggerable = extractorLogInspection.watchForLogMessages( "extracted value" );
-	}
-
-	@Override
-	protected boolean isCleanupTestDataRequired() {
-		return true;
+	@AfterEach
+	public void dropTestData(SessionFactoryScope scope) {
+		scope.inTransaction(
+				(session) -> session.createQuery( "delete Person" ).executeUpdate()
+		);
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-12978")
-	public void testEnumAsBindParameterAndExtract() {
-		doInHibernate( this::sessionFactory, s -> {
-			binderTriggerable.reset();
-			extractorTriggerable.reset();
+	public void testEnumAsBindParameterAndExtract(SessionFactoryScope scope, MessageKeyWatcher loggingWatcher) {
+		scope.inTransaction(
+				(session) -> {
+					session.createQuery( "select p.id from Person p where p.id = :id", Long.class )
+							.setParameter( "id", 1 )
+							.list();
 
-			s.createQuery( "select p.id from Person p where p.id = :id", Long.class )
-					.setParameter( "id", person.getId() )
-					.getSingleResult();
+					assertTrue( loggingWatcher.wasTriggered() );
+				}
+		);
 
-			assertTrue( binderTriggerable.wasTriggered() );
-			assertTrue( extractorTriggerable.wasTriggered() );
-		} );
+		loggingWatcher.reset();
 
-		doInHibernate( this::sessionFactory, s -> {
-			binderTriggerable.reset();
-			extractorTriggerable.reset();
+		scope.inTransaction(
+				(session) -> {
+					final String qry = "select p.gender from Person p where p.gender = :gender and p.hairColor = :hairColor";
+					session.createQuery( qry, Gender.class )
+							.setParameter( "gender", Gender.MALE )
+							.setParameter( "hairColor", HairColor.BROWN )
+							.getSingleResult();
 
-			s.createQuery(
-					"select p.gender from Person p where p.gender = :gender and p.hairColor = :hairColor",
-					Gender.class
-			)
-					.setParameter( "gender", Gender.MALE )
-					.setParameter( "hairColor", HairColor.BROWN )
-					.getSingleResult();
-
-			assertTrue( binderTriggerable.wasTriggered() );
-			assertTrue( extractorTriggerable.wasTriggered() );
-		} );
+					assertTrue( loggingWatcher.wasTriggered() );
+				}
+		);
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-10282")
-	public void hqlTestEnumShortHandSyntax() {
-		doInHibernate( this::sessionFactory, session -> {
-			session.createQuery(
-				"select id from Person where originalHairColor = BLONDE")
-				.getResultList();
-		} );
+	public void hqlTestEnumShortHandSyntax(SessionFactoryScope scope, MessageKeyWatcher loggingWatcher) {
+		scope.inTransaction(
+				(session) -> {
+					session.createQuery(
+							"select id from Person where originalHairColor = BLONDE")
+							.getResultList();
+
+					assertTrue( loggingWatcher.wasTriggered() );
+				}
+		);
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-10282")
-	public void hqlTestEnumQualifiedShortHandSyntax() {
-		doInHibernate( this::sessionFactory, session -> {
-			session.createQuery(
-					"select id from Person where originalHairColor = HairColor.BLONDE")
-					.getResultList();
-		} );
+	public void hqlTestEnumQualifiedShortHandSyntax(SessionFactoryScope scope, MessageKeyWatcher loggingWatcher) {
+		final String qry = "select id from Person where originalHairColor = HairColor.BLONDE";
+		scope.inTransaction(
+				(session) -> {
+					session.createQuery( qry ).getResultList();
+
+					assertTrue( loggingWatcher.wasTriggered() );
+				}
+		);
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-10282")
-	public void hqlTestEnumShortHandSyntaxInPredicate() {
-		doInHibernate( this::sessionFactory, session -> {
-			session.createQuery(
-					"select id from Person where originalHairColor in (BLONDE, BROWN)")
-					.getResultList();
-		} );
+	public void hqlTestEnumShortHandSyntaxInPredicate(SessionFactoryScope scope, MessageKeyWatcher loggingWatcher) {
+		scope.inTransaction(
+				(session) -> {
+					final String qry = "select id from Person where originalHairColor in (BLONDE, BROWN)";
+					session.createQuery( qry ).getResultList();
+
+					assertTrue( loggingWatcher.wasTriggered() );
+				}
+		);
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-10282")
-	public void hqlTestEnumQualifiedShortHandSyntaxInPredicate() {
-		doInHibernate( this::sessionFactory, session -> {
-			session.createQuery(
-					"select id from Person where originalHairColor in (HairColor.BLONDE, HairColor.BROWN)")
-					.getResultList();
-		} );
+	public void hqlTestEnumQualifiedShortHandSyntaxInPredicate(SessionFactoryScope scope, MessageKeyWatcher loggingWatcher) {
+		scope.inTransaction(
+				(session) -> {
+					final String qry = "select id from Person where originalHairColor in (HairColor.BLONDE, HairColor.BROWN)";
+					session.createQuery( qry ).getResultList();
+
+					assertTrue( loggingWatcher.wasTriggered() );
+				}
+		);
 	}
 
 	@Entity(name = "Person")

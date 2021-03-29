@@ -52,7 +52,7 @@ class SingularIdentifierAttributeSourceImpl
 
 		if ( StringHelper.isEmpty( idElement.getName() ) ) {
 			DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfNonNamedIdAttribute( container.getAttributeRoleBase().getFullPath() );
-			name = null;
+			name = "id";
 		}
 		else {
 			name = idElement.getName();

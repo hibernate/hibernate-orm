@@ -2459,7 +2459,8 @@ public class ModelBinder {
 			final BasicValue.Resolution<?> resolution = typeDefinition.resolve(
 					parameters,
 					null,
-					metadataBuildingContext
+					metadataBuildingContext,
+					bootstrapContext.getTypeConfiguration().getCurrentBaseSqlTypeIndicators()
 			);
 
 			return (DiscriminatorType<?>) resolution.getLegacyResolvedBasicType();

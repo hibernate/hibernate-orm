@@ -25,6 +25,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.QueryException;
 import org.hibernate.boot.model.process.internal.InferredBasicValueResolver;
 import org.hibernate.dialect.function.TimestampaddFunction;
 import org.hibernate.dialect.function.TimestampdiffFunction;
@@ -54,6 +55,7 @@ import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.SelectionMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedCollectionPart;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
@@ -524,8 +526,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	public UpdateStatement visitUpdateStatement(SqmUpdateStatement sqmStatement) {
 		Map<String, CteStatement> cteStatements = this.visitCteContainer( sqmStatement );
 
-		final String entityName = sqmStatement.getTarget().getEntityName();
-		final EntityPersister entityDescriptor = getCreationContext().getDomainModel()
+		final SqmRoot<?> sqmTarget = sqmStatement.getTarget();
+		final String entityName = sqmTarget.getEntityName();
+
+		final EntityPersister entityDescriptor = getCreationContext()
+				.getDomainModel()
 				.getEntityDescriptor( entityName );
 		assert entityDescriptor != null;
 
@@ -538,7 +543,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		);
 
 		try {
-			final NavigablePath rootPath = sqmStatement.getTarget().getNavigablePath();
+			final NavigablePath rootPath = sqmTarget.getNavigablePath();
 			final TableGroup rootTableGroup = entityDescriptor.createRootTableGroup(
 					rootPath,
 					sqmStatement.getRoot().getAlias(),
@@ -549,11 +554,21 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					getCreationContext()
 			);
 
-			if ( !rootTableGroup.getTableReferenceJoins().isEmpty() ) {
-				throw new HibernateException( "Not expecting multiple table references for an SQM DELETE" );
+			if ( ! rootTableGroup.getTableReferenceJoins().isEmpty() ) {
+				throw new HibernateException( "Not expecting multiple table references for an SQM UPDATE" );
+			}
+
+			if ( sqmTarget.hasJoins() ) {
+				throw new HibernateException( "SQM UPDATE does not support explicit joins" );
 			}
 
 			getFromClauseAccess().registerTableGroup( rootPath, rootTableGroup );
+
+			// however, implicit joins are "ok" so long as they are embeddable-valued
+			applyManipulationImplicitJoins(
+					sqmTarget,
+					rootTableGroup
+			);
 
 			final List<Assignment> assignments = visitSetClause( sqmStatement.getSetClause() );
 
@@ -590,6 +605,25 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 	}
 
+	private void applyManipulationImplicitJoins(SqmPath<?> sqmPath, TableGroup correspondingTableGroup) {
+		consumeImplicitJoins(
+				sqmPath,
+				correspondingTableGroup,
+				BaseSqmToSqlAstConverter::verifyManipulationImplicitJoin
+		);
+	}
+
+	private static void verifyManipulationImplicitJoin(SqmPath<?> joinedPath) {
+		//noinspection StatementWithEmptyBody
+		if ( joinedPath instanceof SqmEmbeddedValuedSimplePath<?> ) {
+			// this is fine
+		}
+		else {
+			// otherwise...
+			throw new QueryException( "Manipulation query may only contain embeddable joins" );
+		}
+	}
+
 	@Override
 	public List<Assignment> visitSetClause(SqmSetClause setClause) {
 		final List<Assignment> assignments = new ArrayList<>( setClause.getAssignments().size() );
@@ -601,18 +635,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					new SqlAstProcessingStateImpl(
 							getCurrentProcessingState(),
 							this,
-							getCurrentClauseStack()::getCurrent
-					) {
+							getCurrentClauseStack()::getCurrent) {
 						@Override
 						public Expression resolveSqlExpression(
 								String key,
 								Function<SqlAstProcessingState, Expression> creator) {
-							final Expression expression = getParentState().getSqlExpressionResolver()
+							final Expression expression = getParentState()
+									.getSqlExpressionResolver()
 									.resolveSqlExpression( key, creator );
 							assert expression instanceof ColumnReference;
-
 							targetColumnReferences.add( (ColumnReference) expression );
-
 							return expression;
 						}
 					},
@@ -634,18 +666,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					new SqlAstProcessingStateImpl(
 							getCurrentProcessingState(),
 							this,
-							getCurrentClauseStack()::getCurrent
-					) {
+							getCurrentClauseStack()::getCurrent) {
 						@Override
 						public Expression resolveSqlExpression(
 								String key,
 								Function<SqlAstProcessingState, Expression> creator) {
-							final Expression expression = getParentState().getSqlExpressionResolver()
+							final Expression expression = getParentState()
+									.getSqlExpressionResolver()
 									.resolveSqlExpression( key, creator );
 							assert expression instanceof ColumnReference;
-
 							valueColumnReferences.add( (ColumnReference) expression );
-
 							return expression;
 						}
 					},
@@ -655,30 +685,17 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			try {
 
 				if ( sqmAssignment.getValue() instanceof SqmParameter ) {
-					final SqmParameter sqmParameter = (SqmParameter) sqmAssignment.getValue();
-					final List<JdbcParameter> jdbcParametersForSqm = new ArrayList<>();
+					final SqmParameter<?> sqmParameter = (SqmParameter<?>) sqmAssignment.getValue();
 
-					// create one JdbcParameter for each column in the assigned path
-					assignedPathInterpretation.getExpressionType().forEachSelection(
-							(columnIndex, selection) -> {
-								final JdbcParameter jdbcParameter = new JdbcParameterImpl( selection.getJdbcMapping() );
-								jdbcParametersForSqm.add( jdbcParameter );
-								assignments.add(
-										new Assignment(
-												new ColumnReference(
-														// we do not want a qualifier (table alias) here
-														(String) null,
-														selection,
-														getCreationContext().getSessionFactory()
-												),
-												jdbcParameter
-										)
-								);
-							}
+					consumeSqmParameter(
+							sqmParameter,
+							(index, jdbcParameter) -> assignments.add(
+									new Assignment(
+											targetColumnReferences.get( index ),
+											jdbcParameter
+									)
+							)
 					);
-
-					getJdbcParamsBySqmParam().computeIfAbsent( sqmParameter, k -> new ArrayList<>( 1 ) )
-						.add( jdbcParametersForSqm );
 				}
 				else {
 					final Expression valueExpression = (Expression) sqmAssignment.getValue().accept( this );
@@ -1850,6 +1867,17 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private void consumeImplicitJoins(SqmPath<?> sqmPath, TableGroup tableGroup) {
+		consumeImplicitJoins(
+				sqmPath,
+				tableGroup,
+				(sqmSubPath) -> {}
+		);
+	}
+
+	private void consumeImplicitJoins(
+			SqmPath<?> sqmPath,
+			TableGroup tableGroup,
+			Consumer<SqmPath<?>> implicitJoinChecker) {
 		if ( log.isTraceEnabled() ) {
 			log.tracef( "Visiting implicit joins for `%s`", sqmPath.getNavigablePath() );
 		}
@@ -1859,6 +1887,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					if ( log.isTraceEnabled() ) {
 						log.tracef( "Starting implicit join handling for `%s`", joinedPath.getNavigablePath() );
 					}
+
+					implicitJoinChecker.accept( joinedPath );
+
 					final FromClauseIndex fromClauseIndex = getFromClauseIndex();
 					assert fromClauseIndex.findTableGroup( joinedPath.getLhs().getNavigablePath() ) == tableGroup;
 
@@ -1882,7 +1913,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 					fromClauseIndex.register( joinedPath, tableGroupJoin.getJoinedGroup() );
 
-					consumeImplicitJoins( joinedPath, tableGroupJoin.getJoinedGroup() );
+					consumeImplicitJoins( joinedPath, tableGroupJoin.getJoinedGroup(), implicitJoinChecker );
 				}
 		);
 	}
@@ -2146,8 +2177,42 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 
+	protected Expression consumeSqmParameter(
+			SqmParameter sqmParameter,
+			BiConsumer<Integer,JdbcParameter> jdbcParameterConsumer) {
+		final MappingModelExpressable valueMapping = determineValueMapping( sqmParameter );
+
+		final List<JdbcParameter> jdbcParametersForSqm = new ArrayList<>();
+
+		resolveSqmParameter(
+				sqmParameter,
+				valueMapping,
+				(index,jdbcParameter) -> {
+					jdbcParameterConsumer.accept( index, jdbcParameter );
+					jdbcParametersForSqm.add( jdbcParameter );
+				}
+		);
+
+		this.jdbcParameters.addParameters( jdbcParametersForSqm );
+		this.jdbcParamsBySqmParam
+				.computeIfAbsent( sqmParameter, k -> new ArrayList<>( 1 ) )
+				.add( jdbcParametersForSqm );
+
+		final QueryParameterImplementor<?> queryParameter = domainParameterXref.getQueryParameter( sqmParameter );
+		final QueryParameterBinding<?> binding = domainParameterBindings.getBinding( queryParameter );
+		binding.setType( valueMapping );
+		return new SqmParameterInterpretation(
+				sqmParameter,
+				queryParameter,
+				jdbcParametersForSqm,
+				valueMapping,
+				qp -> binding
+		);
+	}
+
 	protected Expression consumeSqmParameter(SqmParameter sqmParameter) {
 		final MappingModelExpressable valueMapping = determineValueMapping( sqmParameter );
+
 		final List<JdbcParameter> jdbcParametersForSqm = new ArrayList<>();
 
 		resolveSqmParameter(
@@ -2157,7 +2222,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		);
 
 		this.jdbcParameters.addParameters( jdbcParametersForSqm );
-		this.jdbcParamsBySqmParam.computeIfAbsent( sqmParameter, k -> new ArrayList<>( 1 ) )
+		this.jdbcParamsBySqmParam
+				.computeIfAbsent( sqmParameter, k -> new ArrayList<>( 1 ) )
 				.add( jdbcParametersForSqm );
 
 		final QueryParameterImplementor<?> queryParameter = domainParameterXref.getQueryParameter( sqmParameter );
@@ -2329,15 +2395,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private void resolveSqmParameter(
 			SqmParameter expression,
 			MappingModelExpressable valueMapping,
-			Consumer<JdbcParameter> jdbcParameterConsumer) {
+			BiConsumer<Integer,JdbcParameter> jdbcParameterConsumer) {
 		if ( valueMapping instanceof Association ) {
 			( (Association) valueMapping ).getForeignKeyDescriptor().forEachJdbcType(
-					(index, jdbcMapping) -> jdbcParameterConsumer.accept( new JdbcParameterImpl( jdbcMapping ) )
+					(index, jdbcMapping) -> jdbcParameterConsumer.accept( index, new JdbcParameterImpl( jdbcMapping ) )
 			);
 		}
 		else {
 			valueMapping.forEachJdbcType(
-					(index, jdbcMapping) -> jdbcParameterConsumer.accept( new JdbcParameterImpl( jdbcMapping ) )
+					(index, jdbcMapping) -> jdbcParameterConsumer.accept( index, new JdbcParameterImpl( jdbcMapping ) )
 			);
 		}
 	}

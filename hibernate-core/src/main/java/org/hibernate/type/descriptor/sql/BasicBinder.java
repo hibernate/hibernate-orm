@@ -10,7 +10,7 @@ import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-import org.hibernate.internal.CoreLogging;
+import org.hibernate.type.descriptor.JdbcBindingLogging;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -24,8 +24,6 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public abstract class BasicBinder<J> implements ValueBinder<J> {
-	private static final Logger log = CoreLogging.logger( BasicBinder.class );
-
 	private static final String BIND_MSG_TEMPLATE = "binding parameter [%s] as [%s] - [%s]";
 	private static final String NULL_BIND_MSG_TEMPLATE = "binding parameter [%s] as [%s] - [null]";
 
@@ -48,8 +46,8 @@ public abstract class BasicBinder<J> implements ValueBinder<J> {
 	@Override
 	public final void bind(PreparedStatement st, J value, int index, WrapperOptions options) throws SQLException {
 		if ( value == null ) {
-			if ( log.isTraceEnabled() ) {
-				log.trace(
+			if ( JdbcBindingLogging.TRACE_ENABLED ) {
+				JdbcBindingLogging.LOGGER.trace(
 						String.format(
 								NULL_BIND_MSG_TEMPLATE,
 								index,
@@ -60,8 +58,8 @@ public abstract class BasicBinder<J> implements ValueBinder<J> {
 			st.setNull( index, sqlDescriptor.getSqlType() );
 		}
 		else {
-			if ( log.isTraceEnabled() ) {
-				log.trace(
+			if ( JdbcBindingLogging.TRACE_ENABLED ) {
+				JdbcBindingLogging.LOGGER.trace(
 						String.format(
 								BIND_MSG_TEMPLATE,
 								index,
@@ -77,8 +75,8 @@ public abstract class BasicBinder<J> implements ValueBinder<J> {
 	@Override
 	public final void bind(CallableStatement st, J value, String name, WrapperOptions options) throws SQLException {
 		if ( value == null ) {
-			if ( log.isTraceEnabled() ) {
-				log.trace(
+			if ( JdbcBindingLogging.TRACE_ENABLED ) {
+				JdbcBindingLogging.LOGGER.trace(
 						String.format(
 								NULL_BIND_MSG_TEMPLATE,
 								name,
@@ -89,8 +87,8 @@ public abstract class BasicBinder<J> implements ValueBinder<J> {
 			st.setNull( name, sqlDescriptor.getSqlType() );
 		}
 		else {
-			if ( log.isTraceEnabled() ) {
-				log.trace(
+			if ( JdbcBindingLogging.TRACE_ENABLED ) {
+				JdbcBindingLogging.LOGGER.trace(
 						String.format(
 								BIND_MSG_TEMPLATE,
 								name,

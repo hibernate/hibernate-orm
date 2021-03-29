@@ -23,6 +23,10 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 public interface ForeignKeyDescriptor extends VirtualModelPart {
 	String PART_NAME = "{fk}";
 
+	String getKeyColumnContainingTable();
+
+	String getTargetColumnContainingTable();
+
 	DomainResult createCollectionFetchDomainResult(
 			NavigablePath collectionPath,
 			TableGroup tableGroup,

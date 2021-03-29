@@ -108,11 +108,17 @@ public class StandardPojoEntityRepresentationStrategy implements EntityRepresent
 
 			final KeyValue bootDescriptorIdentifier = bootDescriptor.getIdentifier();
 
-			if ( bootDescriptorIdentifier != null && bootDescriptorIdentifier instanceof Component ) {
-				mapsIdRepresentationStrategy = new StandardPojoEmbeddableRepresentationStrategy(
-						bootDescriptor.getIdentifierMapper(),
-						creationContext
-				);
+			if ( bootDescriptorIdentifier instanceof Component ) {
+				final Component component = (Component) bootDescriptorIdentifier;
+				if ( bootDescriptor.getIdentifierMapper() != null ) {
+					mapsIdRepresentationStrategy = new StandardPojoEmbeddableRepresentationStrategy(
+							bootDescriptor.getIdentifierMapper(),
+							creationContext
+					);
+				}
+				else {
+					mapsIdRepresentationStrategy = null;
+				}
 			}
 			else {
 				mapsIdRepresentationStrategy = null;
@@ -408,6 +414,11 @@ public class StandardPojoEntityRepresentationStrategy implements EntityRepresent
 		if ( propertyAccess != null ) {
 			return propertyAccess;
 		}
-		return mapsIdRepresentationStrategy.resolvePropertyAccess( bootAttributeDescriptor );
+
+		if ( mapsIdRepresentationStrategy != null ) {
+			return mapsIdRepresentationStrategy.resolvePropertyAccess( bootAttributeDescriptor );
+		}
+
+		return null;
 	}
 }

@@ -6,26 +6,24 @@
  */
 package org.hibernate.metamodel.mapping.ordering.ast;
 
-import org.hibernate.query.SortOrder;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.TranslationContext;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.SortOrder;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
 
 /**
  * Represents a column-reference used in an order-by fragment
  *
- * @author Steve Ebersole
  * @apiNote This is Hibernate-specific feature.  For {@link javax.persistence.OrderBy} (JPA)
  * all path references are expected to be domain paths (attributes).
  *
@@ -101,19 +99,15 @@ public class ColumnReference implements OrderingExpression, SequencePart {
 	TableReference getTableReference(TableGroup tableGroup) {
 		ModelPartContainer modelPart = tableGroup.getModelPart();
 		if ( modelPart instanceof PluralAttributeMapping ) {
-			MappingType partMappingType = ( (PluralAttributeMapping) modelPart ).getElementDescriptor()
-					.getPartMappingType();
-			if ( partMappingType instanceof AbstractEntityPersister ) {
-				AbstractEntityPersister abstractEntityPersister = (AbstractEntityPersister) partMappingType;
-				int i = abstractEntityPersister.determineTableNumberForColumn( columnExpression );
-				String tableName = abstractEntityPersister.getTableName( i );
-				for ( TableReferenceJoin tableReferenceJoin : tableGroup.getTableReferenceJoins() ) {
-					final TableReference joinedTableReference = tableReferenceJoin.getJoinedTableReference();
-					if ( joinedTableReference.getTableExpression()
-							.equals( tableName ) ) {
-						return joinedTableReference;
-					}
-				}
+			final PluralAttributeMapping pluralAttribute = (PluralAttributeMapping) modelPart;
+			final MappingType elementMappingType = (pluralAttribute).getElementDescriptor().getPartMappingType();
+
+			if ( elementMappingType instanceof AbstractEntityPersister ) {
+				final AbstractEntityPersister abstractEntityPersister = (AbstractEntityPersister) elementMappingType;
+				final int tableNumber = abstractEntityPersister.determineTableNumberForColumn( columnExpression );
+				final String tableName = abstractEntityPersister.getTableName( tableNumber );
+
+				return tableGroup.getTableReference( tableName );
 			}
 			else {
 				return tableGroup.getPrimaryTableReference();

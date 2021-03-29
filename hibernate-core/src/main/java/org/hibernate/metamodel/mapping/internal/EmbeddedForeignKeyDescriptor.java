@@ -85,6 +85,16 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 	}
 
 	@Override
+	public String getKeyColumnContainingTable() {
+		return keyColumnContainingTable;
+	}
+
+	@Override
+	public String getTargetColumnContainingTable() {
+		return targetColumnContainingTable;
+	}
+
+	@Override
 	public DomainResult createCollectionFetchDomainResult(
 			NavigablePath collectionPath,
 			TableGroup tableGroup,

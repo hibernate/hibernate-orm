@@ -3922,6 +3922,12 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 		try {
 			queryExpressionContext.accept( this );
+
+			final List<SqmSelection> selections = subQuery.getQuerySpec().getSelectClause().getSelections();
+			if ( selections.size() == 1 ) {
+				subQuery.applyInferableType( selections.get( 0 ).getNodeType() );
+			}
+
 			return subQuery;
 		}
 		finally {

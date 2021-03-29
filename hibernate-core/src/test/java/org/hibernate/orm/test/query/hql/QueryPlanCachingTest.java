@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.query.hql;
 
-import org.hibernate.orm.test.metamodel.mapping.SmokeTests;
+import org.hibernate.orm.test.mapping.SmokeTests;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;

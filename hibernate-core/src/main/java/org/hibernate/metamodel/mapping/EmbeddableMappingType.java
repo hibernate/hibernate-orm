@@ -44,6 +44,7 @@ import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.Template;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -225,7 +226,7 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectionMappi
 						containingTableExpression,
 						columnExpression,
 						selectable.isFormula(),
-						selectable.getCustomReadExpression(),
+						selectable.getTemplate( dialect, sessionFactory.getQueryEngine().getSqmFunctionRegistry() ),
 						selectable.getCustomWriteExpression(),
 						representationStrategy.resolvePropertyAccess( bootPropertyDescriptor ),
 						compositeType.getCascadeStyle( attributeIndex ),

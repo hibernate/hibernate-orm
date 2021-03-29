@@ -75,23 +75,23 @@ public class ColumnReference implements Expression, Assignable {
 		if ( isFormula ) {
 			this.readExpression = this.columnExpression;
 		}
-		else if ( customReadExpression == null ) {
+		else if ( customReadExpression != null ) {
+			this.readExpression = StringHelper.replace( customReadExpression, Template.TEMPLATE, qualifier );
+		}
+		else {
 			this.readExpression = this.qualifier == null
 					? this.columnExpression
 					: this.qualifier + "." + this.columnExpression;
-		}
-		else {
-			this.readExpression = customReadExpression;
 		}
 
 		if ( isFormula ) {
 			this.writeExpression = null;
 		}
-		else if ( customWriteExpression == null ) {
-			this.writeExpression = DEFAULT_COLUMN_WRITE_EXPRESSION;
+		else if ( customWriteExpression != null ) {
+			this.writeExpression = StringHelper.replace( customWriteExpression, Template.TEMPLATE, qualifier );
 		}
 		else {
-			this.writeExpression = customWriteExpression;
+			this.writeExpression = DEFAULT_COLUMN_WRITE_EXPRESSION;
 		}
 
 		this.jdbcMapping = jdbcMapping;

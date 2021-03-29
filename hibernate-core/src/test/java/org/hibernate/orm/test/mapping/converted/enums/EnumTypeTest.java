@@ -12,6 +12,8 @@ import javax.persistence.criteria.Root;
 
 import org.hibernate.Session;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.type.descriptor.JdbcBindingLogging;
+import org.hibernate.type.descriptor.JdbcExtractingLogging;
 import org.hibernate.type.descriptor.sql.BasicBinder;
 import org.hibernate.type.descriptor.sql.BasicExtractor;
 
@@ -36,13 +38,13 @@ public class EnumTypeTest extends BaseCoreFunctionalTestCase {
 	@Rule
 	public LoggerInspectionRule binderLogInspection = new LoggerInspectionRule( Logger.getMessageLogger(
 			CoreMessageLogger.class,
-			BasicBinder.class.getName()
+			JdbcBindingLogging.NAME
 	) );
 
 	@Rule
 	public LoggerInspectionRule extractorLogInspection = new LoggerInspectionRule( Logger.getMessageLogger(
 			CoreMessageLogger.class,
-			BasicExtractor.class.getName()
+			JdbcExtractingLogging.NAME
 	) );
 
 	private Person person;

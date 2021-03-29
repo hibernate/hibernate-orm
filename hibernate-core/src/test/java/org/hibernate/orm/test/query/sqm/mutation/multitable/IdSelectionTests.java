@@ -8,8 +8,8 @@ package org.hibernate.orm.test.query.sqm.mutation.multitable;
 
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.orm.test.metamodel.mapping.SecondaryTableTests;
-import org.hibernate.orm.test.metamodel.mapping.inheritance.joined.JoinedInheritanceTest;
+import org.hibernate.orm.test.mapping.SecondaryTableTests;
+import org.hibernate.orm.test.mapping.inheritance.joined.JoinedInheritanceTest;
 import org.hibernate.query.internal.ParameterMetadataImpl;
 import org.hibernate.query.internal.QueryParameterBindingsImpl;
 import org.hibernate.query.spi.QueryOptions;

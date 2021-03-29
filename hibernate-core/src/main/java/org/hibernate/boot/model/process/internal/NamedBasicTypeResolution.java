@@ -41,9 +41,9 @@ public class NamedBasicTypeResolution<J> implements BasicValue.Resolution<J> {
 		this.basicType = basicType;
 
 		// named type cannot have converter applied
-		this.valueConverter = null;
+//		this.valueConverter = null;
 		// todo (6.0) : does it even make sense to allow a combo of explicit Type and a converter?
-//		this.valueConverter = valueConverter;
+		this.valueConverter = valueConverter;
 
 		final MutabilityPlan explicitPlan = explicitMutabilityPlanAccess != null
 				? explicitMutabilityPlanAccess.apply( context.getBootstrapContext().getTypeConfiguration() )
@@ -70,7 +70,9 @@ public class NamedBasicTypeResolution<J> implements BasicValue.Resolution<J> {
 
 	@Override
 	public JavaTypeDescriptor<?> getRelationalJavaDescriptor() {
-		return basicType.getJavaTypeDescriptor();
+		return valueConverter == null
+				? basicType.getJavaTypeDescriptor()
+				: valueConverter.getRelationalJavaDescriptor();
 	}
 
 	@Override

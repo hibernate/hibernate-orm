@@ -9,12 +9,11 @@ package org.hibernate.orm.test.sql.exec;
 import java.time.Instant;
 import java.util.Date;
 
-import org.hibernate.orm.test.metamodel.mapping.SecondaryTableTests;
-import org.hibernate.orm.test.metamodel.mapping.inheritance.joined.JoinedInheritanceTest;
+import org.hibernate.orm.test.mapping.SecondaryTableTests;
+import org.hibernate.orm.test.mapping.inheritance.joined.JoinedInheritanceTest;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;

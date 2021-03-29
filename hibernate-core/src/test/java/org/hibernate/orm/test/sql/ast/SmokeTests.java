@@ -12,8 +12,8 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.model.convert.internal.OrdinalEnumValueConverter;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
-import org.hibernate.orm.test.metamodel.mapping.SmokeTests.Gender;
-import org.hibernate.orm.test.metamodel.mapping.SmokeTests.SimpleEntity;
+import org.hibernate.orm.test.mapping.SmokeTests.Gender;
+import org.hibernate.orm.test.mapping.SmokeTests.SimpleEntity;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.hql.spi.HqlQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
@@ -198,7 +198,7 @@ public class SmokeTests {
 					assertThat( assembler.getValueConverter(), instanceOf( OrdinalEnumValueConverter.class ) );
 
 					final NavigablePath expectedSelectedPath = new NavigablePath(
-							org.hibernate.orm.test.metamodel.mapping.SmokeTests.SimpleEntity.class.getName(),
+							org.hibernate.orm.test.mapping.SmokeTests.SimpleEntity.class.getName(),
 							"e"
 					).append( "gender" );
 					assertThat( domainResult.getNavigablePath(), equalTo( expectedSelectedPath ) );

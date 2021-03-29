@@ -17,6 +17,7 @@ import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
+import org.hibernate.boot.model.process.internal.ConvertedBasicTypeResolution;
 import org.hibernate.boot.model.process.internal.InferredBasicValueResolver;
 import org.hibernate.boot.model.process.internal.NamedBasicTypeResolution;
 import org.hibernate.boot.model.process.internal.NamedConverterResolution;
@@ -36,6 +37,7 @@ import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.ConvertedBasicType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
@@ -365,7 +367,12 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 				.resolveAutoApplied( (BasicJavaDescriptor<?>) jtd );
 		if ( autoAppliedTypeDef != null ) {
 			log.debug( "BasicValue resolution matched auto-applied type-definition" );
-			return autoAppliedTypeDef.resolve( getTypeParameters(), null, getBuildingContext() );
+			return autoAppliedTypeDef.resolve(
+					getTypeParameters(),
+					null,
+					getBuildingContext(),
+					this
+			);
 		}
 
 		if ( jtd instanceof EnumJavaTypeDescriptor ) {
@@ -483,13 +490,17 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 		if ( basicTypeByName != null ) {
 			final BasicValueConverter valueConverter;
 			final JavaTypeDescriptor<?> domainJtd;
-			if ( converterDescriptor == null ) {
-				valueConverter = null;
-				domainJtd = basicTypeByName.getJavaTypeDescriptor();
-			}
-			else {
+			if ( converterDescriptor != null ) {
 				valueConverter = converterDescriptor.createJpaAttributeConverter( converterCreationContext );
 				domainJtd = valueConverter.getDomainJavaDescriptor();
+			}
+			else if ( basicTypeByName instanceof ConvertedBasicType ) {
+				final ConvertedBasicType convertedType = (ConvertedBasicType) basicTypeByName;
+				return new ConvertedBasicTypeResolution( convertedType, stdIndicators );
+			}
+			else {
+				valueConverter = null;
+				domainJtd = basicTypeByName.getJavaTypeDescriptor();
 			}
 
 			return new NamedBasicTypeResolution(
@@ -509,7 +520,8 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 					explicitMutabilityPlanAccess != null
 							? explicitMutabilityPlanAccess.apply( typeConfiguration )
 							: null,
-					context
+					context,
+					stdIndicators
 			);
 		}
 
@@ -535,7 +547,8 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 						explicitMutabilityPlanAccess != null
 								? explicitMutabilityPlanAccess.apply( typeConfiguration )
 								: null,
-						context
+						context,
+						stdIndicators
 				);
 			}
 

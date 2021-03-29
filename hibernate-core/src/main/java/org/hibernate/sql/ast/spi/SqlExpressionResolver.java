@@ -45,6 +45,9 @@ public interface SqlExpressionResolver {
 	 * @see #resolveSqlExpression
 	 */
 	static String createColumnReferenceKey(TableReference tableReference, String columnExpression) {
+		assert tableReference != null : "tableReference expected to be non-null";
+		assert columnExpression != null : "columnExpression expected to be non-null";
+
 		final String qualifier = tableReference.getIdentificationVariable() == null
 				? tableReference.getTableExpression()
 				: tableReference.getIdentificationVariable();

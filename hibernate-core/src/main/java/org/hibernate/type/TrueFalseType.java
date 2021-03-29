@@ -9,8 +9,11 @@ package org.hibernate.type;
 import java.io.Serializable;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.query.CastType;
 import org.hibernate.type.descriptor.java.BooleanTypeDescriptor;
+import org.hibernate.type.descriptor.java.CharacterTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.CharTypeDescriptor;
 
 /**
@@ -21,29 +24,35 @@ import org.hibernate.type.descriptor.sql.CharTypeDescriptor;
  */
 public class TrueFalseType
 		extends AbstractSingleColumnStandardBasicType<Boolean>
-		implements PrimitiveType<Boolean>, DiscriminatorType<Boolean> {
+		implements PrimitiveType<Boolean>, DiscriminatorType<Boolean>, ConvertedBasicType<Boolean> {
 
 	public static final TrueFalseType INSTANCE = new TrueFalseType();
+	private static final TrueFalseConverter CONVERTER = new TrueFalseConverter();
 
 	public TrueFalseType() {
 		super( CharTypeDescriptor.INSTANCE, new BooleanTypeDescriptor( 'T', 'F' ) );
 	}
+
 	@Override
 	public String getName() {
 		return "true_false";
 	}
+
 	@Override
 	public Class getPrimitiveClass() {
 		return boolean.class;
 	}
+
 	@Override
 	public Boolean stringToObject(String xml) throws Exception {
 		return fromString( xml );
 	}
+
 	@Override
 	public Serializable getDefaultValue() {
 		return Boolean.FALSE;
 	}
+
 	@Override
 	public String objectToSQLString(Boolean value, Dialect dialect) throws Exception {
 		return StringType.INSTANCE.objectToSQLString( value ? "T" : "F", dialect );
@@ -52,5 +61,48 @@ public class TrueFalseType
 	@Override
 	public CastType getCastType() {
 		return CastType.TF_BOOLEAN;
+	}
+
+	@Override
+	public BasicValueConverter<Boolean, ?> getValueConverter() {
+		return CONVERTER;
+	}
+
+	private static class TrueFalseConverter implements BasicValueConverter<Boolean, Character> {
+		@Override
+		public Boolean toDomainValue(Character relationalForm) {
+			if ( relationalForm == null ) {
+				return null;
+			}
+
+			if ( 'T' == relationalForm ) {
+				return true;
+			}
+
+			if ( 'F' == relationalForm ) {
+				return false;
+			}
+
+			return null;
+		}
+
+		@Override
+		public Character toRelationalValue(Boolean domainForm) {
+			if ( domainForm == null ) {
+				return null;
+			}
+
+			return domainForm ? 'T' : 'F';
+		}
+
+		@Override
+		public JavaTypeDescriptor<Boolean> getDomainJavaDescriptor() {
+			return BooleanTypeDescriptor.INSTANCE;
+		}
+
+		@Override
+		public JavaTypeDescriptor<Character> getRelationalJavaDescriptor() {
+			return CharacterTypeDescriptor.INSTANCE;
+		}
 	}
 }

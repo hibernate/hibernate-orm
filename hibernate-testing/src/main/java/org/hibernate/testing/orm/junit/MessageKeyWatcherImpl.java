@@ -35,7 +35,7 @@ public class MessageKeyWatcherImpl implements MessageKeyWatcher, LogListener {
 		if ( loggerAnn.loggerNameClass() != void.class ) {
 			logger = Logger.getLogger( loggerAnn.loggerNameClass() );
 		}
-		else if ( "".equals( loggerAnn.loggerName().trim() ) ) {
+		else if ( ! "".equals( loggerAnn.loggerName().trim() ) ) {
 			logger = Logger.getLogger( loggerAnn.loggerName().trim() );
 		}
 		else {

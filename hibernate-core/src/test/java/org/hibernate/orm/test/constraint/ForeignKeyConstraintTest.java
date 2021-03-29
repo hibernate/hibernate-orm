@@ -48,8 +48,12 @@ import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.mapping.Column;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.NotImplementedYet;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -60,115 +64,121 @@ import static org.junit.Assert.fail;
  * @author Christian Beikov
  */
 @TestForIssue( jiraKey = "HHH-11180" )
-public class ForeignKeyConstraintTest extends BaseNonConfigCoreFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				CreditCard.class,
-				Person.class,
-				Student.class,
-				Professor.class,
-				Vehicle.class,
-				VehicleBuyInfo.class,
-				Car.class,
-				Truck.class,
-				Company.class,
-				PlanItem.class,
-				Task.class
-		};
+@DomainModel(
+		annotatedClasses = {
+				ForeignKeyConstraintTest.CreditCard.class,
+				ForeignKeyConstraintTest.Person.class,
+				ForeignKeyConstraintTest.Student.class,
+				ForeignKeyConstraintTest.Professor.class,
+				ForeignKeyConstraintTest.Vehicle.class,
+				ForeignKeyConstraintTest.VehicleBuyInfo.class,
+				ForeignKeyConstraintTest.Car.class,
+				ForeignKeyConstraintTest.Truck.class,
+				ForeignKeyConstraintTest.Company.class,
+				ForeignKeyConstraintTest.PlanItem.class,
+				ForeignKeyConstraintTest.Task.class
+		}
+)
+@SessionFactory
+public class ForeignKeyConstraintTest {
+	@Test
+	public void testJoinColumn(DomainModelScope scope) {
+		assertForeignKey( scope, "FK_CAR_OWNER", "OWNER_PERSON_ID" );
+		assertForeignKey( scope, "FK_CAR_OWNER3", "OWNER_PERSON_ID3" );
+		assertForeignKey( scope, "FK_PERSON_CC", "PERSON_CC_ID" );
+		assertNoForeignKey( scope, "FK_CAR_OWNER2", "OWNER_PERSON_ID2" );
+		assertNoForeignKey( scope, "FK_CAR_OWNER4", "OWNER_PERSON_ID4" );
+		assertNoForeignKey( scope, "FK_PERSON_CC2", "PERSON_CC_ID2" );
 	}
 
 	@Test
-	public void testJoinColumn() {
-		assertForeignKey( "FK_CAR_OWNER", "OWNER_PERSON_ID" );
-		assertForeignKey( "FK_CAR_OWNER3", "OWNER_PERSON_ID3" );
-		assertForeignKey( "FK_PERSON_CC", "PERSON_CC_ID" );
-		assertNoForeignKey( "FK_CAR_OWNER2", "OWNER_PERSON_ID2" );
-		assertNoForeignKey( "FK_CAR_OWNER4", "OWNER_PERSON_ID4" );
-		assertNoForeignKey( "FK_PERSON_CC2", "PERSON_CC_ID2" );
+	public void testJoinColumns(DomainModelScope scope) {
+		assertForeignKey( scope, "FK_STUDENT_CAR", "CAR_NR", "CAR_VENDOR_NR" );
+		assertForeignKey( scope, "FK_STUDENT_CAR3", "CAR_NR3", "CAR_VENDOR_NR3" );
+		assertNoForeignKey( scope, "FK_STUDENT_CAR2", "CAR_NR2", "CAR_VENDOR_NR2" );
+		assertNoForeignKey( scope, "FK_STUDENT_CAR4", "CAR_NR4", "CAR_VENDOR_NR4" );
 	}
 
 	@Test
-	public void testJoinColumns() {
-		assertForeignKey( "FK_STUDENT_CAR", "CAR_NR", "CAR_VENDOR_NR" );
-		assertForeignKey( "FK_STUDENT_CAR3", "CAR_NR3", "CAR_VENDOR_NR3" );
-		assertNoForeignKey( "FK_STUDENT_CAR2", "CAR_NR2", "CAR_VENDOR_NR2" );
-		assertNoForeignKey( "FK_STUDENT_CAR4", "CAR_NR4", "CAR_VENDOR_NR4" );
+	public void testJoinTable(DomainModelScope scope) {
+		assertForeignKey( scope, "FK_VEHICLE_BUY_INFOS_STUDENT", "STUDENT_ID" );
 	}
 
 	@Test
-	public void testJoinTable() {
-		assertForeignKey( "FK_VEHICLE_BUY_INFOS_STUDENT", "STUDENT_ID" );
+	public void testJoinTableInverse(DomainModelScope scope) {
+		assertForeignKey( scope, "FK_VEHICLE_BUY_INFOS_VEHICLE_BUY_INFO", "VEHICLE_BUY_INFO_ID" );
 	}
 
 	@Test
-	public void testJoinTableInverse() {
-		assertForeignKey( "FK_VEHICLE_BUY_INFOS_VEHICLE_BUY_INFO", "VEHICLE_BUY_INFO_ID" );
+	public void testPrimaryKeyJoinColumn(DomainModelScope scope) {
+		assertForeignKey( scope, "FK_STUDENT_PERSON", "PERSON_ID" );
+		assertNoForeignKey( scope, "FK_PROFESSOR_PERSON", "PERSON_ID" );
 	}
 
 	@Test
-	public void testPrimaryKeyJoinColumn() {
-		assertForeignKey( "FK_STUDENT_PERSON", "PERSON_ID" );
-		assertNoForeignKey( "FK_PROFESSOR_PERSON", "PERSON_ID" );
+	public void testPrimaryKeyJoinColumns(DomainModelScope scope) {
+		assertForeignKey( scope, "FK_CAR_VEHICLE", "CAR_NR", "VENDOR_NR" );
+		assertNoForeignKey( scope, "FK_TRUCK_VEHICLE", "CAR_NR", "VENDOR_NR" );
 	}
 
 	@Test
-	public void testPrimaryKeyJoinColumns() {
-		assertForeignKey( "FK_CAR_VEHICLE", "CAR_NR", "VENDOR_NR" );
-		assertNoForeignKey( "FK_TRUCK_VEHICLE", "CAR_NR", "VENDOR_NR" );
+	public void testCollectionTable(DomainModelScope scope) {
+		assertForeignKey( scope, "FK_OWNER_INFO_CAR", "CAR_NR", "VENDOR_NR" );
 	}
 
 	@Test
-	public void testCollectionTable() {
-		assertForeignKey( "FK_OWNER_INFO_CAR", "CAR_NR", "VENDOR_NR" );
+	public void testMapKeyJoinColumn(DomainModelScope scope) {
+		assertForeignKey( scope, "FK_OWNER_INFO_PERSON", "PERSON_ID" );
 	}
 
 	@Test
-	public void testMapKeyJoinColumn() {
-		assertForeignKey( "FK_OWNER_INFO_PERSON", "PERSON_ID" );
+	public void testMapKeyJoinColumns(DomainModelScope scope) {
+		assertForeignKey( scope, "FK_VEHICLE_BUY_INFOS_VEHICLE", "VEHICLE_NR", "VEHICLE_VENDOR_NR" );
 	}
 
 	@Test
-	public void testMapKeyJoinColumns() {
-		assertForeignKey( "FK_VEHICLE_BUY_INFOS_VEHICLE", "VEHICLE_NR", "VEHICLE_VENDOR_NR" );
+	public void testMapForeignKeyJoinColumnCollection(DomainModelScope scope) {
+		assertForeignKey( scope, "FK_PROPERTIES_TASK", "task_id" );
 	}
 
 	@Test
-	public void testMapForeignKeyJoinColumnColection() {
-		assertForeignKey( "FK_PROPERTIES_TASK", "task_id" );
+	public void testMapForeignKeyCollection(DomainModelScope scope) {
+		assertForeignKey( scope, "FK_ATTRIBUTES_TASK", "task_id" );
 	}
 
 	@Test
-	public void testMapForeignKeyColection() {
-		assertForeignKey( "FK_ATTRIBUTES_TASK", "task_id" );
-	}
-
-	@Test
-	public void testAssociationOverride() {
+	public void testAssociationOverride(DomainModelScope scope) {
 		// class level association overrides
-		assertForeignKey( "FK_COMPANY_OWNER", "OWNER_PERSON_ID" );
-		assertForeignKey( "FK_COMPANY_CREDIT_CARD", "CREDIT_CARD_ID" );
-		assertForeignKey( "FK_COMPANY_CREDIT_CARD3", "CREDIT_CARD_ID3" );
-		assertNoForeignKey( "FK_COMPANY_OWNER2", "OWNER_PERSON_ID2" );
-		assertNoForeignKey( "FK_COMPANY_CREDIT_CARD2", "CREDIT_CARD_ID2" );
-		assertNoForeignKey( "FK_COMPANY_CREDIT_CARD4", "CREDIT_CARD_ID4" );
+		assertForeignKey( scope, "FK_COMPANY_OWNER", "OWNER_PERSON_ID" );
+		assertForeignKey( scope, "FK_COMPANY_CREDIT_CARD", "CREDIT_CARD_ID" );
+		assertForeignKey( scope, "FK_COMPANY_CREDIT_CARD3", "CREDIT_CARD_ID3" );
+		assertNoForeignKey( scope, "FK_COMPANY_OWNER2", "OWNER_PERSON_ID2" );
+		assertNoForeignKey( scope, "FK_COMPANY_CREDIT_CARD2", "CREDIT_CARD_ID2" );
+		assertNoForeignKey( scope, "FK_COMPANY_CREDIT_CARD4", "CREDIT_CARD_ID4" );
 
 		// embeddable association overrides
-		assertForeignKey( "FK_COMPANY_CARD", "AO_CI_CC_ID" );
-		assertNoForeignKey( "FK_COMPANY_CARD2", "AO_CI_CC_ID2" );
-		assertForeignKey( "FK_COMPANY_CARD3", "AO_CI_CC_ID3" );
-		assertNoForeignKey( "FK_COMPANY_CARD4", "AO_CI_CC_ID4" );
+		assertForeignKey( scope, "FK_COMPANY_CARD", "AO_CI_CC_ID" );
+		assertNoForeignKey( scope, "FK_COMPANY_CARD2", "AO_CI_CC_ID2" );
+		assertForeignKey( scope, "FK_COMPANY_CARD3", "AO_CI_CC_ID3" );
+		assertNoForeignKey( scope, "FK_COMPANY_CARD4", "AO_CI_CC_ID4" );
 	}
 
 	@Test
-	public void testSecondaryTable() {
-		assertForeignKey( "FK_CAR_DETAILS_CAR", "CAR_NR", "CAR_VENDOR_NR" );
+	public void testSecondaryTable(DomainModelScope scope) {
+		assertForeignKey( scope, "FK_CAR_DETAILS_CAR", "CAR_NR", "CAR_VENDOR_NR" );
 	}
 
-	private void assertForeignKey(String foreignKeyName, String... columns) {
+	@Test
+	@NotImplementedYet( strict = false, reason = "Problem with non-root-entity based FKs" )
+	public void testGet(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> session.get( Student.class, 1l )
+		);
+	}
+
+	private void assertForeignKey(DomainModelScope scope, String foreignKeyName, String... columns) {
 		Set<String> columnSet = new LinkedHashSet<>( Arrays.asList( columns ) );
-		for ( Namespace namespace : metadata().getDatabase().getNamespaces() ) {
+		for ( Namespace namespace : scope.getDomainModel().getDatabase().getNamespaces() ) {
 			for ( org.hibernate.mapping.Table table : namespace.getTables() ) {
 				Iterator<org.hibernate.mapping.ForeignKey> fkItr = table.getForeignKeyIterator();
 				while ( fkItr.hasNext() ) {
@@ -189,18 +199,8 @@ public class ForeignKeyConstraintTest extends BaseNonConfigCoreFunctionalTestCas
 		fail( "ForeignKey '" + foreignKeyName + "' could not be found!" );
 	}
 
-	@Test
-	public void testGet(){
-		inTransaction(
-				session -> {
-					session.get( Student.class, 1l );
-				}
-		);
-	}
-
-	private void assertNoForeignKey(String foreignKeyName, String... columns) {
-		Set<String> columnSet = new LinkedHashSet<>( Arrays.asList( columns ) );
-		for ( Namespace namespace : metadata().getDatabase().getNamespaces() ) {
+	private void assertNoForeignKey(DomainModelScope scope, String foreignKeyName, String... columns) {
+		for ( Namespace namespace : scope.getDomainModel().getDatabase().getNamespaces() ) {
 			for ( org.hibernate.mapping.Table table : namespace.getTables() ) {
 				Iterator<org.hibernate.mapping.ForeignKey> fkItr = table.getForeignKeyIterator();
 				while ( fkItr.hasNext() ) {
@@ -324,6 +324,7 @@ public class ForeignKeyConstraintTest extends BaseNonConfigCoreFunctionalTestCas
 	public static class Vehicle {
 		@EmbeddedId
 		public VehicleId id;
+		public String name;
 	}
 
 	@Embeddable

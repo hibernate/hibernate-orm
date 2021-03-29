@@ -69,6 +69,16 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	}
 
 	@Override
+	public String getKeyColumnContainingTable() {
+		return keySelectionMapping.getContainingTableExpression();
+	}
+
+	@Override
+	public String getTargetColumnContainingTable() {
+		return targetSelectionMapping.getContainingTableExpression();
+	}
+
+	@Override
 	public DomainResult<?> createCollectionFetchDomainResult(
 			NavigablePath collectionPath,
 			TableGroup tableGroup,

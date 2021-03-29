@@ -55,7 +55,7 @@ public class ResultsHelper {
 						if ( existing != null ) {
 							if ( fetchedModelPart.getNavigableRole().equals(
 									existing.getInitializedPart().getNavigableRole() ) ) {
-								ResultsLogger.LOGGER.debugf(
+								ResultsLogger.LOGGER.tracef(
 										"Returning previously-registered initializer : %s",
 										existing
 								);
@@ -64,7 +64,7 @@ public class ResultsHelper {
 						}
 
 						final Initializer initializer = producer.get();
-						ResultsLogger.LOGGER.debugf(
+						ResultsLogger.LOGGER.tracef(
 								"Registering initializer : %s",
 								initializer
 						);

@@ -6,8 +6,8 @@
  */
 package org.hibernate.orm.test.sql.exec;
 
-import org.hibernate.orm.test.metamodel.mapping.SecondaryTableTests;
-import org.hibernate.orm.test.metamodel.mapping.inheritance.joined.JoinedInheritanceTest;
+import org.hibernate.orm.test.mapping.SecondaryTableTests;
+import org.hibernate.orm.test.mapping.inheritance.joined.JoinedInheritanceTest;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.BasicEntity;

@@ -193,6 +193,10 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 		return superMappingType.getRootEntityDescriptor();
 	}
 
+	default TableReference locateTableReference(TableGroup tableGroup) {
+		return tableGroup.getPrimaryTableReference();
+	}
+
 	interface ConstraintOrderedTableConsumer {
 		void consume(String tableExpression, Supplier<Consumer<SelectionConsumer>> tableKeyColumnVisitationSupplier);
 	}

@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 

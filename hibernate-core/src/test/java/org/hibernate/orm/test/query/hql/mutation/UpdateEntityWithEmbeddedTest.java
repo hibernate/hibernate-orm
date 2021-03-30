@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.test.hql;
+package org.hibernate.orm.test.query.hql.mutation;
 
 import javax.persistence.Embeddable;
 import javax.persistence.Embedded;
@@ -12,26 +12,24 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Andrea Boriero
  */
 @TestForIssue(jiraKey = "HHH-14251")
-public class UpdateEntityWithEmbeddedTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Company.class };
-	}
-
-	@Before
-	public void setUp() {
-		inTransaction(
-				session -> {
+@DomainModel( annotatedClasses = UpdateEntityWithEmbeddedTest.Company.class )
+@SessionFactory
+public class UpdateEntityWithEmbeddedTest {
+	@BeforeEach
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction(
+				(session) -> {
 					Logo logo = new Logo( "logo1", "png" );
 					Company company = new Company( 1l, logo );
 					session.save( company );
@@ -39,19 +37,19 @@ public class UpdateEntityWithEmbeddedTest extends BaseCoreFunctionalTestCase {
 		);
 	}
 
-	@After
-	public void tearDown() {
-		inTransaction(
-				session -> {
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
+				(session) -> {
 					session.createQuery( "delete from Company" ).executeUpdate();
 				}
 		);
 	}
 
 	@Test
-	public void testUpdate() {
-		inTransaction(
-				session -> {
+	public void testUpdate(SessionFactoryScope scope) {
+		scope.inTransaction(
+				(session) -> {
 					Logo logo = new Logo( "logo2", "png" );
 					session.createQuery( "UPDATE Company c SET c.logo = :logo" )
 							.setParameter( "logo", logo )
@@ -61,9 +59,9 @@ public class UpdateEntityWithEmbeddedTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testUpdate2() {
-		inTransaction(
-				session -> {
+	public void testUpdate2(SessionFactoryScope scope) {
+		scope.inTransaction(
+				(session) -> {
 					session.createQuery(
 							"UPDATE Company c SET c.logo.fileName = :filename, c.logo.fileExtension = :fileExtension" )
 							.setParameter( "filename", "logo2" )

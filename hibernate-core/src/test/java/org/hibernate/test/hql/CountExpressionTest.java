@@ -78,7 +78,7 @@ public class CountExpressionTest extends BaseCoreFunctionalTestCase {
 			List results = session.createQuery(
 				"SELECT " +
 				"	d.id, " +
-				"	COUNT(DISTINCT CONCAT(CAST(KEY(l) AS java.lang.String), 'test')) " +
+				"	COUNT(DISTINCT CONCAT(CAST(KEY(l) AS String), 'test')) " +
 				"FROM Document d " +
 				"LEFT JOIN d.contacts c " +
 				"LEFT JOIN c.localized l " +

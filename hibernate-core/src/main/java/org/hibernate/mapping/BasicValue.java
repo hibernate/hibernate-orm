@@ -14,6 +14,7 @@ import javax.persistence.TemporalType;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.TypeDefinition;
+import org.hibernate.boot.model.TypeDefinitionRegistry;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
@@ -360,11 +361,8 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 			}
 		}
 
-
-		// Use JTD if we know it to apply any specialized resolutions
-
-		final TypeDefinition autoAppliedTypeDef = getBuildingContext().getTypeDefinitionRegistry()
-				.resolveAutoApplied( (BasicJavaDescriptor<?>) jtd );
+		final TypeDefinitionRegistry typeDefinitionRegistry = getBuildingContext().getTypeDefinitionRegistry();
+		final TypeDefinition autoAppliedTypeDef = typeDefinitionRegistry.resolveAutoApplied( (BasicJavaDescriptor<?>) jtd );
 		if ( autoAppliedTypeDef != null ) {
 			log.debug( "BasicValue resolution matched auto-applied type-definition" );
 			return autoAppliedTypeDef.resolve(
@@ -372,26 +370,6 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 					null,
 					getBuildingContext(),
 					this
-			);
-		}
-
-		if ( jtd instanceof EnumJavaTypeDescriptor ) {
-			return InferredBasicValueResolver.fromEnum(
-					(EnumJavaTypeDescriptor) jtd,
-					explicitJavaTypeAccess.apply( typeConfiguration ),
-					explicitSqlTypeAccess.apply( typeConfiguration ),
-					this,
-					typeConfiguration
-			);
-		}
-
-		if ( jtd instanceof TemporalJavaTypeDescriptor ) {
-			return InferredBasicValueResolver.fromTemporal(
-					(TemporalJavaTypeDescriptor) jtd,
-					explicitJavaTypeAccess,
-					explicitSqlTypeAccess,
-					this,
-					typeConfiguration
 			);
 		}
 

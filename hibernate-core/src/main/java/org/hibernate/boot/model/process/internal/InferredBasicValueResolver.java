@@ -21,11 +21,13 @@ import org.hibernate.metamodel.model.convert.internal.OrdinalEnumValueConverter;
 import org.hibernate.metamodel.model.domain.AllowableTemporalParameterType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
+import org.hibernate.type.SerializableType;
 import org.hibernate.type.SqlTypeDescriptorIndicatorCapable;
 import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.SerializableTypeDescriptor;
 import org.hibernate.type.descriptor.java.TemporalJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
@@ -33,7 +35,8 @@ import org.hibernate.type.descriptor.jdbc.TinyIntTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * @author Steve Ebersole
+ * BasicValue.Resolution resolver for cases where no explicit
+ * type info was supplied.
  */
 public class InferredBasicValueResolver {
 	/**
@@ -102,10 +105,43 @@ public class InferredBasicValueResolver {
 				// here we have the legacy case
 				//		- we mimic how this used to be done
 				final BasicType registeredType = typeConfiguration.getBasicTypeRegistry().getRegisteredType( reflectedJtd.getJavaType() );
-				legacyType = resolveSqlTypeIndicators( stdIndicators, registeredType );
 
-				// reuse the "legacy type"
-				jdbcMapping = legacyType;
+				if ( registeredType != null ) {
+					// reuse the "legacy type"
+					legacyType = resolveSqlTypeIndicators( stdIndicators, registeredType );
+					jdbcMapping = legacyType;
+				}
+				else {
+					// Use JTD if we know it to apply any specialized resolutions
+
+					if ( reflectedJtd instanceof EnumJavaTypeDescriptor ) {
+						return fromEnum(
+								(EnumJavaTypeDescriptor) reflectedJtd,
+								explicitJavaTypeAccess.apply( typeConfiguration ),
+								explicitSqlTypeAccess.apply( typeConfiguration ),
+								stdIndicators,
+								typeConfiguration
+						);
+					}
+					else if ( reflectedJtd instanceof TemporalJavaTypeDescriptor ) {
+						return fromTemporal(
+								(TemporalJavaTypeDescriptor) reflectedJtd,
+								explicitJavaTypeAccess,
+								explicitSqlTypeAccess,
+								stdIndicators,
+								typeConfiguration
+						);
+					}
+					else if ( reflectedJtd instanceof SerializableTypeDescriptor ) {
+						legacyType = new SerializableType<>( reflectedJtd.getJavaTypeClass() );
+						jdbcMapping = legacyType;
+					}
+					else {
+						// let this fall through to the exception creation below
+						legacyType = null;
+						jdbcMapping = null;
+					}
+				}
 			}
 		}
 		else {
@@ -120,7 +156,6 @@ public class InferredBasicValueResolver {
 
 				jdbcMapping = resolveSqlTypeIndicators( stdIndicators, resolved );
 				legacyType = jdbcMapping;
-
 			}
 			else {
 				// we have neither a JTD nor STD

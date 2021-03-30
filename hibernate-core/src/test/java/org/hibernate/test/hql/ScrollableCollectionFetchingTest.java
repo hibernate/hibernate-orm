@@ -38,7 +38,6 @@ import static org.junit.Assert.fail;
  * @author Steve Ebersole
  */
 @FailureExpected( jiraKey = "none", message = "Support for scrolling collection fetches not yet implemented" )
-@NotImplementedYet
 public class ScrollableCollectionFetchingTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "hql/Animal.hbm.xml" };

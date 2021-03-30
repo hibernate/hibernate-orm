@@ -16,19 +16,23 @@ import javax.persistence.AttributeConverter;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.boot.AttributeConverterInfo;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbConverter;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntity;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListener;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListeners;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappings;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbMappedSuperclass;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistenceUnitDefaults;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistenceUnitMetadata;
+import org.hibernate.boot.jaxb.mapping.spi.ManagedType;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.cfg.AttributeConverterDefinition;
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.cfg.annotations.reflection.AttributeConverterDefinitionCollector;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
-
-import org.dom4j.Document;
-import org.dom4j.Element;
 
 /**
  * A helper for consuming orm.xml mappings.
@@ -36,69 +40,57 @@ import org.dom4j.Element;
  * @author Emmanuel Bernard
  * @author Brett Meyer
  */
-// FIXME HHH-14529 Change this class to use JaxbEntityMappings instead of Document.
-//   I'm delaying this change in order to keep the commits simpler and easier to review.
 public class XMLContext implements Serializable {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( XMLContext.class );
 
 	private final ClassLoaderAccess classLoaderAccess;
 
 	private Default globalDefaults;
-	private Map<String, Element> classOverriding = new HashMap<>();
-	private Map<String, Default> defaultsOverriding = new HashMap<>();
-	private List<Element> defaultElements = new ArrayList<>();
-	private List<String> defaultEntityListeners = new ArrayList<>();
+	private final Map<String, ManagedType> managedTypeOverride = new HashMap<>();
+	private final Map<String, JaxbEntityListener> entityListenerOverride = new HashMap<>();
+	private final Map<String, Default> defaultsOverride = new HashMap<>();
+	private final List<JaxbEntityMappings> defaultElements = new ArrayList<>();
+	private final List<String> defaultEntityListeners = new ArrayList<>();
 	private boolean hasContext = false;
 
-	XMLContext(ClassLoaderAccess classLoaderAccess) {
+	/**
+	 * @deprecated Use {@link org.hibernate.cfg.annotations.reflection.XMLContext#XMLContext(BootstrapContext)} instead.
+	 */
+	@Deprecated
+	public XMLContext(ClassLoaderAccess classLoaderAccess) {
 		this.classLoaderAccess = classLoaderAccess;
 	}
 
-	// For tests only
 	public XMLContext(BootstrapContext bootstrapContext) {
 		this.classLoaderAccess = bootstrapContext.getClassLoaderAccess();
 	}
 
 	/**
-	 * @param entityMappings The xml entity mappings to add
-	 * @return Add an xml document to this context and return the list of added class names.
-	 */
-	public List<String> addDocument(JaxbEntityMappings entityMappings) {
-		throw new NotYetImplementedException("HHH-14529 Implementation in progress");
-	}
-
-	/**
-	 * @param doc The xml document to add
+	 * @param entityMappings The xml document to add
 	 * @return Add an xml document to this context and return the list of added class names.
 	 */
 	@SuppressWarnings( "unchecked" )
-	public List<String> addDocument(Document doc) {
+	public List<String> addDocument(JaxbEntityMappings entityMappings) {
 		hasContext = true;
 		List<String> addedClasses = new ArrayList<>();
-		Element root = doc.getRootElement();
 		//global defaults
-		Element metadata = root.element( "persistence-unit-metadata" );
+		JaxbPersistenceUnitMetadata metadata = entityMappings.getPersistenceUnitMetadata();
 		if ( metadata != null ) {
 			if ( globalDefaults == null ) {
 				globalDefaults = new Default();
 				globalDefaults.setMetadataComplete(
-						metadata.element( "xml-mapping-metadata-complete" ) != null ?
+						metadata.getXmlMappingMetadataComplete() != null ?
 								Boolean.TRUE :
 								null
 				);
-				Element defaultElement = metadata.element( "persistence-unit-defaults" );
+				JaxbPersistenceUnitDefaults defaultElement = metadata.getPersistenceUnitDefaults();
 				if ( defaultElement != null ) {
-					Element unitElement = defaultElement.element( "schema" );
-					globalDefaults.setSchema( unitElement != null ? unitElement.getTextTrim() : null );
-					unitElement = defaultElement.element( "catalog" );
-					globalDefaults.setCatalog( unitElement != null ? unitElement.getTextTrim() : null );
-					unitElement = defaultElement.element( "access" );
-					setAccess( unitElement, globalDefaults );
-					unitElement = defaultElement.element( "cascade-persist" );
-					globalDefaults.setCascadePersist( unitElement != null ? Boolean.TRUE : null );
-					unitElement = defaultElement.element( "delimited-identifiers" );
-					globalDefaults.setDelimitedIdentifiers( unitElement != null ? Boolean.TRUE : null );
-					defaultEntityListeners.addAll( addEntityListenerClasses( defaultElement, null, addedClasses ) );
+					globalDefaults.setSchema( defaultElement.getSchema() );
+					globalDefaults.setCatalog( defaultElement.getCatalog() );
+					globalDefaults.setAccess( defaultElement.getAccess() );
+					globalDefaults.setCascadePersist( defaultElement.getCascadePersist() != null ? Boolean.TRUE : null );
+					globalDefaults.setDelimitedIdentifiers( defaultElement.getDelimitedIdentifiers() != null ? Boolean.TRUE : null );
+					defaultEntityListeners.addAll( addEntityListenerClasses( defaultElement.getEntityListeners(), null, addedClasses ) );
 				}
 			}
 			else {
@@ -108,92 +100,61 @@ public class XMLContext implements Serializable {
 
 		//entity mapping default
 		Default entityMappingDefault = new Default();
-		Element unitElement = root.element( "package" );
-		String packageName = unitElement != null ? unitElement.getTextTrim() : null;
+		String packageName = entityMappings.getPackage();
 		entityMappingDefault.setPackageName( packageName );
-		unitElement = root.element( "schema" );
-		entityMappingDefault.setSchema( unitElement != null ? unitElement.getTextTrim() : null );
-		unitElement = root.element( "catalog" );
-		entityMappingDefault.setCatalog( unitElement != null ? unitElement.getTextTrim() : null );
-		unitElement = root.element( "access" );
-		setAccess( unitElement, entityMappingDefault );
-		defaultElements.add( root );
+		entityMappingDefault.setSchema( entityMappings.getSchema() );
+		entityMappingDefault.setCatalog( entityMappings.getCatalog() );
+		entityMappingDefault.setAccess( entityMappings.getAccess() );
+		defaultElements.add( entityMappings );
 
-		setLocalAttributeConverterDefinitions( root.elements( "converter" ) );
+		setLocalAttributeConverterDefinitions( entityMappings.getConverter() );
 
-		List<Element> entities = root.elements( "entity" );
-		addClass( entities, packageName, entityMappingDefault, addedClasses );
+		addClass( entityMappings.getEntity(), packageName, entityMappingDefault, addedClasses );
 
-		entities = root.elements( "mapped-superclass" );
-		addClass( entities, packageName, entityMappingDefault, addedClasses );
+		addClass( entityMappings.getMappedSuperclass(), packageName, entityMappingDefault, addedClasses );
 
-		entities = root.elements( "embeddable" );
-		addClass( entities, packageName, entityMappingDefault, addedClasses );
+		addClass( entityMappings.getEmbeddable(), packageName, entityMappingDefault, addedClasses );
+
 		return addedClasses;
 	}
 
-	private void setAccess(Element unitElement, Default defaultType) {
-		if ( unitElement != null ) {
-			String access = unitElement.getTextTrim();
-			setAccess( access, defaultType );
-		}
-	}
-
-	private void setAccess( String access, Default defaultType) {
-		AccessType type;
-		if ( access != null ) {
-			try {
-				type = AccessType.valueOf( access );
-			}
-			catch ( IllegalArgumentException e ) {
-				throw new AnnotationException( "Invalid access type " + access + " (check your xml configuration)" );
-			}
-			defaultType.setAccess( type );
-		}
-	}
-
-	private void addClass(List<Element> entities, String packageName, Default defaults, List<String> addedClasses) {
-		for (Element element : entities) {
-			String className = buildSafeClassName( element.attributeValue( "class" ), packageName );
-			if ( classOverriding.containsKey( className ) ) {
+	private void addClass(List<? extends ManagedType> managedTypes, String packageName, Default defaults, List<String> addedClasses) {
+		for (ManagedType element : managedTypes) {
+			String className = buildSafeClassName( element.getClazz(), packageName );
+			if ( managedTypeOverride.containsKey( className ) ) {
 				//maybe switch it to warn?
 				throw new IllegalStateException( "Duplicate XML entry for " + className );
 			}
 			addedClasses.add( className );
-			classOverriding.put( className, element );
+			managedTypeOverride.put( className, element );
 			Default localDefault = new Default();
 			localDefault.override( defaults );
-			String metadataCompleteString = element.attributeValue( "metadata-complete" );
-			if ( metadataCompleteString != null ) {
-				localDefault.setMetadataComplete( Boolean.parseBoolean( metadataCompleteString ) );
-			}
-			String access = element.attributeValue( "access" );
-			setAccess( access, localDefault );
-			defaultsOverriding.put( className, localDefault );
+			localDefault.setMetadataComplete( element.isMetadataComplete() );
+			localDefault.setAccess( element.getAccess() );
+			defaultsOverride.put( className, localDefault );
 
 			LOG.debugf( "Adding XML overriding information for %s", className );
-			addEntityListenerClasses( element, packageName, addedClasses );
+			if ( element instanceof JaxbEntity ) {
+				addEntityListenerClasses( ( (JaxbEntity) element ).getEntityListeners(), packageName, addedClasses );
+			}
+			else if ( element instanceof JaxbMappedSuperclass ) {
+				addEntityListenerClasses( ( (JaxbMappedSuperclass) element ).getEntityListeners(), packageName, addedClasses );
+			}
 		}
 	}
 
-	private List<String> addEntityListenerClasses(Element element, String packageName, List<String> addedClasses) {
+	private List<String> addEntityListenerClasses(JaxbEntityListeners listeners, String packageName, List<String> addedClasses) {
 		List<String> localAddedClasses = new ArrayList<>();
-		Element listeners = element.element( "entity-listeners" );
 		if ( listeners != null ) {
-			@SuppressWarnings( "unchecked" )
-			List<Element> elements = listeners.elements( "entity-listener" );
-			for (Element listener : elements) {
-				String listenerClassName = buildSafeClassName( listener.attributeValue( "class" ), packageName );
-				if ( classOverriding.containsKey( listenerClassName ) ) {
-					//maybe switch it to warn?
-					if ( "entity-listener".equals( classOverriding.get( listenerClassName ).getName() ) ) {
-						LOG.duplicateListener( listenerClassName );
-						continue;
-					}
-					throw new IllegalStateException("Duplicate XML entry for " + listenerClassName);
+			List<JaxbEntityListener> elements = listeners.getEntityListener();
+			for (JaxbEntityListener listener : elements) {
+				String listenerClassName = buildSafeClassName( listener.getClazz(), packageName );
+				if ( entityListenerOverride.containsKey( listenerClassName ) ) {
+					LOG.duplicateListener( listenerClassName );
+					continue;
 				}
 				localAddedClasses.add( listenerClassName );
-				classOverriding.put( listenerClassName, listener );
+				entityListenerOverride.put( listenerClassName, listener );
 			}
 		}
 		LOG.debugf( "Adding XML overriding information for listeners: %s", localAddedClasses );
@@ -202,11 +163,10 @@ public class XMLContext implements Serializable {
 	}
 
 	@SuppressWarnings("unchecked")
-	private void setLocalAttributeConverterDefinitions(List<Element> converterElements) {
-		for ( Element converterElement : converterElements ) {
-			final String className = converterElement.attributeValue( "class" );
-			final String autoApplyAttribute = converterElement.attributeValue( "auto-apply" );
-			final boolean autoApply = autoApplyAttribute != null && Boolean.parseBoolean( autoApplyAttribute );
+	private void setLocalAttributeConverterDefinitions(List<JaxbConverter> converterElements) {
+		for ( JaxbConverter converterElement : converterElements ) {
+			final String className = converterElement.getClazz();
+			final boolean autoApply = Boolean.TRUE.equals( converterElement.isAutoApply() );
 
 			try {
 				final Class<? extends AttributeConverter> attributeConverterClass = classLoaderAccess.classForName(
@@ -232,7 +192,7 @@ public class XMLContext implements Serializable {
 		return className;
 	}
 
-	public static String buildSafeClassName(String className, XMLContext.Default defaults) {
+	public static String buildSafeClassName(String className, Default defaults) {
 		return buildSafeClassName( className, defaults.getPackageName() );
 	}
 
@@ -240,17 +200,21 @@ public class XMLContext implements Serializable {
 		Default xmlDefault = new Default();
 		xmlDefault.override( globalDefaults );
 		if ( className != null ) {
-			Default entityMappingOverriding = defaultsOverriding.get( className );
+			Default entityMappingOverriding = defaultsOverride.get( className );
 			xmlDefault.override( entityMappingOverriding );
 		}
 		return xmlDefault;
 	}
 
-	public Element getXMLTree(String className ) {
-		return classOverriding.get( className );
+	public ManagedType getManagedTypeOverride(String className) {
+		return managedTypeOverride.get( className );
 	}
 
-	public List<Element> getAllDocuments() {
+	public JaxbEntityListener getEntityListenerOverride(String className) {
+		return entityListenerOverride.get( className );
+	}
+
+	public List<JaxbEntityMappings> getAllDocuments() {
 		return defaultElements;
 	}
 

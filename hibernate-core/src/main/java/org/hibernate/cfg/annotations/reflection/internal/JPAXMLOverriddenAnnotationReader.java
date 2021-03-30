@@ -14,13 +14,13 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import javax.persistence.Access;
 import javax.persistence.AccessType;
 import javax.persistence.AssociationOverride;
@@ -123,6 +123,67 @@ import org.hibernate.annotations.common.annotationfactory.AnnotationDescriptor;
 import org.hibernate.annotations.common.annotationfactory.AnnotationFactory;
 import org.hibernate.annotations.common.reflection.AnnotationReader;
 import org.hibernate.annotations.common.reflection.ReflectionUtil;
+import org.hibernate.boot.jaxb.mapping.spi.AssociationAttribute;
+import org.hibernate.boot.jaxb.mapping.spi.AttributesContainer;
+import org.hibernate.boot.jaxb.mapping.spi.EntityOrMappedSuperclass;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbAssociationOverride;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbAttributeOverride;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbAttributes;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbBasic;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbCascadeType;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbCollectionTable;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbColumn;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbColumnResult;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbConstructorResult;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbConvert;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbDiscriminatorColumn;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbElementCollection;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddable;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbedded;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddedId;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEmptyType;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntity;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListener;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListeners;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityResult;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbFieldResult;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbGeneratedValue;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbId;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbIdClass;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbIndex;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbInheritance;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbJoinColumn;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbJoinTable;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbLob;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToMany;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToOne;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbMapKey;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbMapKeyClass;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbMapKeyColumn;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbMapKeyJoinColumn;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbMappedSuperclass;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedAttributeNode;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedEntityGraph;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedNativeQuery;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedQuery;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedStoredProcedureQuery;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedSubgraph;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbOneToMany;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbOneToOne;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbOrderColumn;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbPrimaryKeyJoinColumn;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbQueryHint;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbSecondaryTable;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbSequenceGenerator;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbSqlResultSetMapping;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbStoredProcedureParameter;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbTable;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbTableGenerator;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbTransient;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbUniqueConstraint;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbVersion;
+import org.hibernate.boot.jaxb.mapping.spi.LifecycleCallbackContainer;
+import org.hibernate.boot.jaxb.mapping.spi.ManagedType;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
@@ -131,8 +192,8 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 
-import org.dom4j.Attribute;
-import org.dom4j.Element;
+import static org.hibernate.cfg.annotations.reflection.internal.PropertyMappingElementCollector.JAXB_TRANSIENT_NAME;
+import static org.hibernate.cfg.annotations.reflection.internal.PropertyMappingElementCollector.PERSISTENT_ATTRIBUTE_NAME;
 
 /**
  * Encapsulates the overriding of Java annotations from an EJB 3.0 descriptor (orm.xml, ...).
@@ -249,7 +310,7 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 	private final PropertyType propertyType;
 	private transient Annotation[] annotations;
 	private transient Map<Class, Annotation> annotationsMap;
-	private transient List<Element> elementsForProperty;
+	private transient PropertyMappingElementCollector elementsForProperty;
 	private AccessibleObject mirroredAttribute;
 
 	JPAXMLOverriddenAnnotationReader(
@@ -349,7 +410,7 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 			XMLContext.Default defaults = xmlContext.getDefault( className );
 			if ( className != null && propertyName == null ) {
 				//is a class
-				Element tree = xmlContext.getXMLTree( className );
+				ManagedType managedTypeOverride = xmlContext.getManagedTypeOverride( className );
 				Annotation[] annotations = getPhysicalAnnotations();
 				List<Annotation> annotationList = new ArrayList<>( annotations.length + 5 );
 				annotationsMap = new HashMap<>( annotations.length + 5 );
@@ -359,40 +420,41 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 						annotationList.add( annotation );
 					}
 				}
-				addIfNotNull( annotationList, getEntity( tree, defaults ) );
-				addIfNotNull( annotationList, getMappedSuperclass( tree, defaults ) );
-				addIfNotNull( annotationList, getEmbeddable( tree, defaults ) );
-				addIfNotNull( annotationList, getTable( tree, defaults ) );
-				addIfNotNull( annotationList, getSecondaryTables( tree, defaults ) );
-				addIfNotNull( annotationList, getPrimaryKeyJoinColumns( tree, defaults, true ) );
-				addIfNotNull( annotationList, getIdClass( tree, defaults ) );
-				addIfNotNull( annotationList, getCacheable( tree, defaults ) );
-				addIfNotNull( annotationList, getInheritance( tree, defaults ) );
-				addIfNotNull( annotationList, getDiscriminatorValue( tree, defaults ) );
-				addIfNotNull( annotationList, getDiscriminatorColumn( tree, defaults ) );
-				addIfNotNull( annotationList, getSequenceGenerator( tree, defaults ) );
-				addIfNotNull( annotationList, getTableGenerator( tree, defaults ) );
-				addIfNotNull( annotationList, getNamedQueries( tree, defaults ) );
-				addIfNotNull( annotationList, getNamedNativeQueries( tree, defaults ) );
-				addIfNotNull( annotationList, getNamedStoredProcedureQueries( tree, defaults ) );
-				addIfNotNull( annotationList, getNamedEntityGraphs( tree, defaults ) );
-				addIfNotNull( annotationList, getSqlResultSetMappings( tree, defaults ) );
-				addIfNotNull( annotationList, getExcludeDefaultListeners( tree, defaults ) );
-				addIfNotNull( annotationList, getExcludeSuperclassListeners( tree, defaults ) );
-				addIfNotNull( annotationList, getAccessType( tree, defaults ) );
-				addIfNotNull( annotationList, getAttributeOverrides( tree, defaults, true ) );
-				addIfNotNull( annotationList, getAssociationOverrides( tree, defaults, true ) );
-				addIfNotNull( annotationList, getEntityListeners( tree, defaults ) );
-				addIfNotNull( annotationList, getConverts( tree, defaults ) );
+				addIfNotNull( annotationList, getEntity( managedTypeOverride, defaults ) );
+				addIfNotNull( annotationList, getMappedSuperclass( managedTypeOverride, defaults ) );
+				addIfNotNull( annotationList, getEmbeddable( managedTypeOverride, defaults ) );
+				addIfNotNull( annotationList, getTable( managedTypeOverride, defaults ) );
+				addIfNotNull( annotationList, getSecondaryTables( managedTypeOverride, defaults ) );
+				addIfNotNull( annotationList, getPrimaryKeyJoinColumns( managedTypeOverride, defaults ) );
+				addIfNotNull( annotationList, getIdClass( managedTypeOverride, defaults ) );
+				addIfNotNull( annotationList, getCacheable( managedTypeOverride, defaults ) );
+				addIfNotNull( annotationList, getInheritance( managedTypeOverride, defaults ) );
+				addIfNotNull( annotationList, getDiscriminatorValue( managedTypeOverride, defaults ) );
+				addIfNotNull( annotationList, getDiscriminatorColumn( managedTypeOverride, defaults ) );
+				addIfNotNull( annotationList, getSequenceGenerator( managedTypeOverride, defaults ) );
+				addIfNotNull( annotationList, getTableGenerator( managedTypeOverride, defaults ) );
+				addIfNotNull( annotationList, getNamedQueries( managedTypeOverride, defaults ) );
+				addIfNotNull( annotationList, getNamedNativeQueries( managedTypeOverride, defaults ) );
+				addIfNotNull( annotationList, getNamedStoredProcedureQueries( managedTypeOverride, defaults ) );
+				addIfNotNull( annotationList, getNamedEntityGraphs( managedTypeOverride, defaults ) );
+				addIfNotNull( annotationList, getSqlResultSetMappings( managedTypeOverride, defaults ) );
+				addIfNotNull( annotationList, getExcludeDefaultListeners( managedTypeOverride, defaults ) );
+				addIfNotNull( annotationList, getExcludeSuperclassListeners( managedTypeOverride, defaults ) );
+				addIfNotNull( annotationList, getAccessType( managedTypeOverride, defaults ) );
+				addIfNotNull( annotationList, getAttributeOverrides( managedTypeOverride, defaults ) );
+				addIfNotNull( annotationList, getAssociationOverrides( managedTypeOverride, defaults ) );
+				addIfNotNull( annotationList, getEntityListeners( managedTypeOverride, defaults ) );
+				addIfNotNull( annotationList, getConverts( managedTypeOverride, defaults ) );
 
 				this.annotations = annotationList.toArray( new Annotation[annotationList.size()] );
 				for ( Annotation ann : this.annotations ) {
 					annotationsMap.put( ann.annotationType(), ann );
 				}
-				checkForOrphanProperties( tree );
+				checkForOrphanProperties( managedTypeOverride );
 			}
 			else if ( className != null ) { //&& propertyName != null ) { //always true but less confusing
-				Element tree = xmlContext.getXMLTree( className );
+				ManagedType managedTypeOverride = xmlContext.getManagedTypeOverride( className );
+				JaxbEntityListener entityListenerOverride = xmlContext.getEntityListenerOverride( className );
 				Annotation[] annotations = getPhysicalAnnotations();
 				List<Annotation> annotationList = new ArrayList<>( annotations.length + 5 );
 				annotationsMap = new HashMap<>( annotations.length + 5 );
@@ -402,7 +464,7 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 						annotationList.add( annotation );
 					}
 				}
-				preCalculateElementsForProperty( tree );
+				preCalculateElementsForProperty( managedTypeOverride, entityListenerOverride );
 				Transient transientAnn = getTransient( defaults );
 				if ( transientAnn != null ) {
 					annotationList.add( transientAnn );
@@ -417,12 +479,12 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 					getEmbedded( annotationList, defaults );
 					getBasic( annotationList, defaults );
 					getVersion( annotationList, defaults );
-					getAssociation( ManyToOne.class, annotationList, defaults );
-					getAssociation( OneToOne.class, annotationList, defaults );
-					getAssociation( OneToMany.class, annotationList, defaults );
-					getAssociation( ManyToMany.class, annotationList, defaults );
-					getAssociation( Any.class, annotationList, defaults );
-					getAssociation( ManyToAny.class, annotationList, defaults );
+					getManyToOne( annotationList, defaults );
+					getOneToOne( annotationList, defaults );
+					getOneToMany( annotationList, defaults );
+					getManyToMany( annotationList, defaults );
+					getAny( annotationList, defaults );
+					getManyToAny( annotationList, defaults );
 					getElementCollection( annotationList, defaults );
 					addIfNotNull( annotationList, getSequenceGenerator( elementsForProperty, defaults ) );
 					addIfNotNull( annotationList, getTableGenerator( elementsForProperty, defaults ) );
@@ -445,7 +507,7 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		}
 	}
 
-	private Annotation getConvertsForAttribute(List<Element> elementsForProperty, XMLContext.Default defaults) {
+	private Annotation getConvertsForAttribute(PropertyMappingElementCollector elementsForProperty, XMLContext.Default defaults) {
 		// NOTE : we use a map here to make sure that an xml and annotation referring to the same attribute
 		// properly overrides.  Very sparse map, yes, but easy setup.
 		// todo : revisit this
@@ -453,19 +515,18 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 
 		final Map<String,Convert> convertAnnotationsMap = new HashMap<>();
 
-		for ( Element element : elementsForProperty ) {
-			final boolean isBasic = "basic".equals( element.getName() );
-			final boolean isEmbedded = "embedded".equals( element.getName() );
-			final boolean isElementCollection = "element-collection".equals(element.getName());
-
-			final boolean canHaveConverts = isBasic || isEmbedded || isElementCollection;
-
-			if ( !canHaveConverts ) {
-				continue;
+		for ( JaxbBasic element : elementsForProperty.getBasic() ) {
+			JaxbConvert convert = element.getConvert();
+			if ( convert != null ) {
+				applyXmlDefinedConverts( Collections.singletonList( convert ), defaults, null,
+						convertAnnotationsMap );
 			}
-
-			final String attributeNamePrefix = isBasic ? null : propertyName;
-			applyXmlDefinedConverts( element, defaults, attributeNamePrefix, convertAnnotationsMap );
+		}
+		for ( JaxbEmbedded element : elementsForProperty.getEmbedded() ) {
+			applyXmlDefinedConverts( element.getConvert(), defaults, propertyName, convertAnnotationsMap );
+		}
+		for ( JaxbElementCollection element : elementsForProperty.getElementCollection() ) {
+			applyXmlDefinedConverts( element.getConvert(), defaults, propertyName, convertAnnotationsMap );
 		}
 
 		// NOTE : per section 12.2.3.16 of the spec <convert/> is additive, although only if "metadata-complete" is not
@@ -485,13 +546,13 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		return null;
 	}
 
-	private Converts getConverts(Element tree, XMLContext.Default defaults) {
+	private Converts getConverts(ManagedType root, XMLContext.Default defaults) {
 		// NOTE : we use a map here to make sure that an xml and annotation referring to the same attribute
 		// properly overrides.  Bit sparse, but easy...
 		final Map<String,Convert> convertAnnotationsMap = new HashMap<>();
 
-		if ( tree != null ) {
-			applyXmlDefinedConverts( tree, defaults, null, convertAnnotationsMap );
+		if ( root instanceof JaxbEntity ) {
+			applyXmlDefinedConverts( ( (JaxbEntity) root ).getConvert(), defaults, null, convertAnnotationsMap );
 		}
 
 		// NOTE : per section 12.2.3.16 of the spec <convert/> is additive, although only if "metadata-complete" is not
@@ -511,20 +572,19 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 	}
 
 	private void applyXmlDefinedConverts(
-			Element containingElement,
+			List<JaxbConvert> elements,
 			XMLContext.Default defaults,
 			String attributeNamePrefix,
 			Map<String,Convert> convertAnnotationsMap) {
-		final List<Element> convertElements = containingElement.elements( "convert" );
-		for ( Element convertElement : convertElements ) {
+		for ( JaxbConvert convertElement : elements ) {
 			final AnnotationDescriptor convertAnnotationDescriptor = new AnnotationDescriptor( Convert.class );
-			copyStringAttribute( convertAnnotationDescriptor, convertElement, "attribute-name", false );
-			copyBooleanAttribute( convertAnnotationDescriptor, convertElement, "disable-conversion" );
+			copyAttribute( convertAnnotationDescriptor, "attribute-name", convertElement.getAttributeName(), false );
+			copyAttribute( convertAnnotationDescriptor, "disable-conversion", convertElement.isDisableConversion(), false );
 
-			final Attribute converterClassAttr = convertElement.attribute( "converter" );
-			if ( converterClassAttr != null ) {
+			final String converter = convertElement.getConverter();
+			if ( converter != null ) {
 				final String converterClassName = XMLContext.buildSafeClassName(
-						converterClassAttr.getValue(),
+						converter,
 						defaults
 				);
 				try {
@@ -584,7 +644,7 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		}
 	}
 
-	private void checkForOrphanProperties(Element tree) {
+	private void checkForOrphanProperties(ManagedType root) {
 		Class clazz;
 		try {
 			clazz = classLoaderAccess.classForName( className );
@@ -592,9 +652,9 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		catch ( ClassLoadingException e ) {
 			return; //a primitive type most likely
 		}
-		Element element = tree != null ? tree.element( "attributes" ) : null;
+		AttributesContainer container = root != null ? root.getAttributes() : null;
 		//put entity.attributes elements
-		if ( element != null ) {
+		if ( container != null ) {
 			//precompute the list of properties
 			//TODO is it really useful...
 			Set<String> properties = new HashSet<>();
@@ -610,12 +670,38 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 					properties.add( Introspector.decapitalize( name.substring( "is".length() ) ) );
 				}
 			}
-			for ( Element subelement : (List<Element>) element.elements() ) {
-				String propertyName = subelement.attributeValue( "name" );
-				if ( !properties.contains( propertyName ) ) {
-					LOG.propertyNotFound( StringHelper.qualify( className, propertyName ) );
-				}
+			if ( container instanceof JaxbAttributes ) {
+				JaxbAttributes jaxbAttributes = (JaxbAttributes) container;
+				checkForOrphanProperties( jaxbAttributes.getId(), properties, PERSISTENT_ATTRIBUTE_NAME );
+				checkForOrphanProperties( jaxbAttributes.getEmbeddedId(), properties, PERSISTENT_ATTRIBUTE_NAME );
+				checkForOrphanProperties( jaxbAttributes.getVersion(), properties, PERSISTENT_ATTRIBUTE_NAME );
 			}
+			checkForOrphanProperties( container.getBasic(), properties, PERSISTENT_ATTRIBUTE_NAME );
+			checkForOrphanProperties( container.getManyToOne(), properties, PERSISTENT_ATTRIBUTE_NAME );
+			checkForOrphanProperties( container.getOneToMany(), properties, PERSISTENT_ATTRIBUTE_NAME );
+			checkForOrphanProperties( container.getOneToOne(), properties, PERSISTENT_ATTRIBUTE_NAME );
+			checkForOrphanProperties( container.getManyToMany(), properties, PERSISTENT_ATTRIBUTE_NAME );
+			checkForOrphanProperties( container.getElementCollection(), properties, PERSISTENT_ATTRIBUTE_NAME );
+			checkForOrphanProperties( container.getEmbedded(), properties, PERSISTENT_ATTRIBUTE_NAME );
+			checkForOrphanProperties( container.getTransient(), properties, JAXB_TRANSIENT_NAME );
+		}
+	}
+
+	private <T> void checkForOrphanProperties(List<T> elements, Set<String> properties,
+			Function<? super T, String> nameGetter) {
+		for ( T element : elements ) {
+			checkForOrphanProperties( element, properties, nameGetter );
+		}
+	}
+
+	private <T> void checkForOrphanProperties(T element, Set<String> properties,
+			Function<? super T, String> nameGetter) {
+		if ( element == null ) {
+			return;
+		}
+		String propertyName = nameGetter.apply( element );
+		if ( !properties.contains( propertyName ) ) {
+			LOG.propertyNotFound( StringHelper.qualify( className, propertyName ) );
 		}
 	}
 
@@ -635,14 +721,14 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 	}
 
 	//TODO mutualize the next 2 methods
-	private Annotation getTableGenerator(List<Element> elementsForProperty, XMLContext.Default defaults) {
-		for ( Element element : elementsForProperty ) {
-			Element subelement = element != null ? element.element( annotationToXml.get( TableGenerator.class ) ) : null;
+	private Annotation getTableGenerator(PropertyMappingElementCollector elementsForProperty, XMLContext.Default defaults) {
+		for ( JaxbId element : elementsForProperty.getId() ) {
+			JaxbTableGenerator subelement = element.getTableGenerator();
 			if ( subelement != null ) {
 				return buildTableGeneratorAnnotation( subelement, defaults );
 			}
 		}
-		if ( elementsForProperty.size() == 0 && defaults.canUseJavaAnnotations() ) {
+		if ( elementsForProperty.isEmpty() && defaults.canUseJavaAnnotations() ) {
 			return getPhysicalAnnotation( TableGenerator.class );
 		}
 		else {
@@ -650,14 +736,14 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		}
 	}
 
-	private Annotation getSequenceGenerator(List<Element> elementsForProperty, XMLContext.Default defaults) {
-		for ( Element element : elementsForProperty ) {
-			Element subelement = element != null ? element.element( annotationToXml.get( SequenceGenerator.class ) ) : null;
+	private Annotation getSequenceGenerator(PropertyMappingElementCollector elementsForProperty, XMLContext.Default defaults) {
+		for ( JaxbId element : elementsForProperty.getId() ) {
+			JaxbSequenceGenerator subelement = element.getSequenceGenerator();
 			if ( subelement != null ) {
 				return buildSequenceGeneratorAnnotation( subelement );
 			}
 		}
-		if ( elementsForProperty.size() == 0 && defaults.canUseJavaAnnotations() ) {
+		if ( elementsForProperty.isEmpty() && defaults.canUseJavaAnnotations() ) {
 			return getPhysicalAnnotation( SequenceGenerator.class );
 		}
 		else {
@@ -667,43 +753,40 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 
 	private void processEventAnnotations(List<Annotation> annotationList, XMLContext.Default defaults) {
 		boolean eventElement = false;
-		for ( Element element : elementsForProperty ) {
-			String elementName = element.getName();
-			if ( "pre-persist".equals( elementName ) ) {
-				AnnotationDescriptor ad = new AnnotationDescriptor( PrePersist.class );
-				annotationList.add( AnnotationFactory.create( ad ) );
-				eventElement = true;
-			}
-			else if ( "pre-remove".equals( elementName ) ) {
-				AnnotationDescriptor ad = new AnnotationDescriptor( PreRemove.class );
-				annotationList.add( AnnotationFactory.create( ad ) );
-				eventElement = true;
-			}
-			else if ( "pre-update".equals( elementName ) ) {
-				AnnotationDescriptor ad = new AnnotationDescriptor( PreUpdate.class );
-				annotationList.add( AnnotationFactory.create( ad ) );
-				eventElement = true;
-			}
-			else if ( "post-persist".equals( elementName ) ) {
-				AnnotationDescriptor ad = new AnnotationDescriptor( PostPersist.class );
-				annotationList.add( AnnotationFactory.create( ad ) );
-				eventElement = true;
-			}
-			else if ( "post-remove".equals( elementName ) ) {
-				AnnotationDescriptor ad = new AnnotationDescriptor( PostRemove.class );
-				annotationList.add( AnnotationFactory.create( ad ) );
-				eventElement = true;
-			}
-			else if ( "post-update".equals( elementName ) ) {
-				AnnotationDescriptor ad = new AnnotationDescriptor( PostUpdate.class );
-				annotationList.add( AnnotationFactory.create( ad ) );
-				eventElement = true;
-			}
-			else if ( "post-load".equals( elementName ) ) {
-				AnnotationDescriptor ad = new AnnotationDescriptor( PostLoad.class );
-				annotationList.add( AnnotationFactory.create( ad ) );
-				eventElement = true;
-			}
+		if ( !elementsForProperty.getPrePersist().isEmpty() ) {
+			AnnotationDescriptor ad = new AnnotationDescriptor( PrePersist.class );
+			annotationList.add( AnnotationFactory.create( ad ) );
+			eventElement = true;
+		}
+		else if ( !elementsForProperty.getPreRemove().isEmpty() ) {
+			AnnotationDescriptor ad = new AnnotationDescriptor( PreRemove.class );
+			annotationList.add( AnnotationFactory.create( ad ) );
+			eventElement = true;
+		}
+		else if ( !elementsForProperty.getPreUpdate().isEmpty() ) {
+			AnnotationDescriptor ad = new AnnotationDescriptor( PreUpdate.class );
+			annotationList.add( AnnotationFactory.create( ad ) );
+			eventElement = true;
+		}
+		else if ( !elementsForProperty.getPostPersist().isEmpty() ) {
+			AnnotationDescriptor ad = new AnnotationDescriptor( PostPersist.class );
+			annotationList.add( AnnotationFactory.create( ad ) );
+			eventElement = true;
+		}
+		else if ( !elementsForProperty.getPostRemove().isEmpty() ) {
+			AnnotationDescriptor ad = new AnnotationDescriptor( PostRemove.class );
+			annotationList.add( AnnotationFactory.create( ad ) );
+			eventElement = true;
+		}
+		else if ( !elementsForProperty.getPostUpdate().isEmpty() ) {
+			AnnotationDescriptor ad = new AnnotationDescriptor( PostUpdate.class );
+			annotationList.add( AnnotationFactory.create( ad ) );
+			eventElement = true;
+		}
+		else if ( !elementsForProperty.getPostLoad().isEmpty() ) {
+			AnnotationDescriptor ad = new AnnotationDescriptor( PostLoad.class );
+			annotationList.add( AnnotationFactory.create( ad ) );
+			eventElement = true;
 		}
 		if ( !eventElement && defaults.canUseJavaAnnotations() ) {
 			Annotation ann = getPhysicalAnnotation( PrePersist.class );
@@ -723,12 +806,12 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		}
 	}
 
-	private EntityListeners getEntityListeners(Element tree, XMLContext.Default defaults) {
-		Element element = tree != null ? tree.element( "entity-listeners" ) : null;
+	private EntityListeners getEntityListeners(ManagedType root, XMLContext.Default defaults) {
+		JaxbEntityListeners element = root instanceof EntityOrMappedSuperclass ? ( (EntityOrMappedSuperclass) root ).getEntityListeners() : null;
 		if ( element != null ) {
 			List<Class> entityListenerClasses = new ArrayList<>();
-			for ( Element subelement : (List<Element>) element.elements( "entity-listener" ) ) {
-				String className = subelement.attributeValue( "class" );
+			for ( JaxbEntityListener subelement : element.getEntityListener() ) {
+				String className = subelement.getClazz();
 				try {
 					entityListenerClasses.add(
 							classLoaderAccess.classForName(
@@ -738,7 +821,7 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 				}
 				catch ( ClassLoadingException e ) {
 					throw new AnnotationException(
-							"Unable to find " + element.getPath() + ".class: " + className, e
+							"Unable to find class: " + className, e
 					);
 				}
 			}
@@ -844,37 +927,66 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		return annotation;
 	}
 
-	private void getJoinTable(List<Annotation> annotationList, Element tree, XMLContext.Default defaults) {
-		addIfNotNull( annotationList, buildJoinTable( tree, defaults ) );
+	private void getJoinTable(List<Annotation> annotationList, AssociationAttribute associationAttribute,
+			XMLContext.Default defaults) {
+		addIfNotNull( annotationList, buildJoinTable( associationAttribute.getJoinTable(), defaults ) );
 	}
 
 	/*
 	 * no partial overriding possible
 	 */
-	private JoinTable buildJoinTable(Element tree, XMLContext.Default defaults) {
-		Element subelement = tree == null ? null : tree.element( "join-table" );
+	private JoinTable buildJoinTable(JaxbJoinTable subelement, XMLContext.Default defaults) {
 		final Class<JoinTable> annotationType = JoinTable.class;
 		if ( subelement == null ) {
 			return null;
 		}
 		//ignore java annotation, an element is defined
 		AnnotationDescriptor annotation = new AnnotationDescriptor( annotationType );
-		copyStringAttribute( annotation, subelement, "name", false );
-		copyStringAttribute( annotation, subelement, "catalog", false );
+		copyAttribute( annotation, "name", subelement.getName(), false );
+		copyAttribute( annotation, "catalog", subelement.getCatalog(), false );
 		if ( StringHelper.isNotEmpty( defaults.getCatalog() )
 				&& StringHelper.isEmpty( (String) annotation.valueOf( "catalog" ) ) ) {
 			annotation.setValue( "catalog", defaults.getCatalog() );
 		}
-		copyStringAttribute( annotation, subelement, "schema", false );
+		copyAttribute( annotation, "schema", subelement.getSchema(), false );
 		if ( StringHelper.isNotEmpty( defaults.getSchema() )
 				&& StringHelper.isEmpty( (String) annotation.valueOf( "schema" ) ) ) {
 			annotation.setValue( "schema", defaults.getSchema() );
 		}
-		buildUniqueConstraints( annotation, subelement );
-		buildIndex( annotation, subelement );
-		annotation.setValue( "joinColumns", getJoinColumns( subelement, false ) );
-		annotation.setValue( "inverseJoinColumns", getJoinColumns( subelement, true ) );
+		buildUniqueConstraints( annotation, subelement.getUniqueConstraint() );
+		buildIndex( annotation, subelement.getIndex() );
+		annotation.setValue( "joinColumns", getJoinColumns( subelement.getJoinColumn(), false ) );
+		annotation.setValue( "inverseJoinColumns", getJoinColumns( subelement.getInverseJoinColumn(), true ) );
 		return AnnotationFactory.create( annotation );
+	}
+
+	private void getOneToMany(List<Annotation> annotationList, XMLContext.Default defaults) {
+		Class<OneToMany> annotationType = OneToMany.class;
+		List<JaxbOneToMany> elements = elementsForProperty.getOneToMany();
+		for ( JaxbOneToMany element : elements ) {
+			AnnotationDescriptor ad = new AnnotationDescriptor( annotationType );
+			addTargetClass( element.getTargetEntity(), ad, "target-entity", defaults );
+			getFetchType( ad, element.getFetch() );
+			getCascades( ad, element.getCascade(), defaults );
+			getJoinTable( annotationList, element, defaults );
+			buildJoinColumns( annotationList, element.getJoinColumn() );
+			copyAttribute( ad, "orphan-removal", element.isOrphanRemoval(), false );
+			copyAttribute( ad, "mapped-by", element.getMappedBy(), false );
+			annotationList.add( AnnotationFactory.create( ad ) );
+
+			getOrderBy( annotationList, element.getOrderBy() );
+			getMapKey( annotationList, element.getMapKey() );
+			getMapKeyClass( annotationList, element.getMapKeyClass(), defaults );
+			getMapKeyColumn( annotationList, element.getMapKeyColumn() );
+			getOrderColumn( annotationList, element.getOrderColumn() );
+			getMapKeyTemporal( annotationList, element.getMapKeyTemporal() );
+			getMapKeyEnumerated( annotationList, element.getMapKeyEnumerated() );
+			Annotation annotation = getMapKeyAttributeOverrides( element.getMapKeyAttributeOverride(), defaults );
+			addIfNotNull( annotationList, annotation );
+			getMapKeyJoinColumns( annotationList, element.getMapKeyJoinColumn() );
+			getAccessType( annotationList, element.getAccess() );
+		}
+		afterGetAssociation( annotationType, annotationList, defaults );
 	}
 
 	/**
@@ -886,40 +998,100 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 	 *
 	 * @see #getElementCollection(List, XMLContext.Default)
 	 */
-	private void getAssociation(
-			Class<? extends Annotation> annotationType, List<Annotation> annotationList, XMLContext.Default defaults
-	) {
-		String xmlName = annotationToXml.get( annotationType );
-		for ( Element element : elementsForProperty ) {
-			if ( xmlName.equals( element.getName() ) ) {
-				AnnotationDescriptor ad = new AnnotationDescriptor( annotationType );
-				addTargetClass( element, ad, "target-entity", defaults );
-				getFetchType( ad, element );
-				getCascades( ad, element, defaults );
-				getJoinTable( annotationList, element, defaults );
-				buildJoinColumns( annotationList, element );
-				Annotation annotation = getPrimaryKeyJoinColumns( element, defaults, false );
-				addIfNotNull( annotationList, annotation );
-				copyBooleanAttribute( ad, element, "optional" );
-				copyBooleanAttribute( ad, element, "orphan-removal" );
-				copyStringAttribute( ad, element, "mapped-by", false );
-				getOrderBy( annotationList, element );
-				getMapKey( annotationList, element );
-				getMapKeyClass( annotationList, element, defaults );
-				getMapKeyColumn( annotationList, element );
-				getOrderColumn( annotationList, element );
-				getMapKeyTemporal( annotationList, element );
-				getMapKeyEnumerated( annotationList, element );
-				annotation = getMapKeyAttributeOverrides( element, defaults );
-				addIfNotNull( annotationList, annotation );
-				buildMapKeyJoinColumns( annotationList, element );
-				getAssociationId( annotationList, element );
-				getMapsId( annotationList, element );
-				annotationList.add( AnnotationFactory.create( ad ) );
-				getAccessType( annotationList, element );
-			}
+	private void getOneToOne(List<Annotation> annotationList, XMLContext.Default defaults) {
+		Class<OneToOne> annotationType = OneToOne.class;
+		List<JaxbOneToOne> elements = elementsForProperty.getOneToOne();
+		for ( JaxbOneToOne element : elements ) {
+			AnnotationDescriptor ad = new AnnotationDescriptor( annotationType );
+			addTargetClass( element.getTargetEntity(), ad, "target-entity", defaults );
+			getFetchType( ad, element.getFetch() );
+			getCascades( ad, element.getCascade(), defaults );
+			getJoinTable( annotationList, element, defaults );
+			buildJoinColumns( annotationList, element.getJoinColumn() );
+			Annotation annotation = getPrimaryKeyJoinColumns( element.getPrimaryKeyJoinColumn(), defaults, false );
+			addIfNotNull( annotationList, annotation );
+			copyAttribute( ad, "optional", element.isOptional(), false );
+			copyAttribute( ad, "orphan-removal", element.isOrphanRemoval(), false );
+			copyAttribute( ad, "mapped-by", element.getMappedBy(), false );
+			annotationList.add( AnnotationFactory.create( ad ) );
+
+			getAssociationId( annotationList, element.isId() );
+			getMapsId( annotationList, element.getMapsId() );
+			getAccessType( annotationList, element.getAccess() );
 		}
-		if ( elementsForProperty.size() == 0 && defaults.canUseJavaAnnotations() ) {
+		afterGetAssociation( annotationType, annotationList, defaults );
+	}
+
+	/**
+	 * @see #getOneToOne(List, XMLContext.Default)
+	 * @see #getElementCollection(List, XMLContext.Default)
+	 */
+	private void getManyToOne(List<Annotation> annotationList, XMLContext.Default defaults) {
+		Class<ManyToOne> annotationType = ManyToOne.class;
+		List<JaxbManyToOne> elements = elementsForProperty.getManyToOne();
+		for ( JaxbManyToOne element : elements ) {
+			AnnotationDescriptor ad = new AnnotationDescriptor( annotationType );
+			addTargetClass( element.getTargetEntity(), ad, "target-entity", defaults );
+			getFetchType( ad, element.getFetch() );
+			getCascades( ad, element.getCascade(), defaults );
+			getJoinTable( annotationList, element, defaults );
+			buildJoinColumns( annotationList, element.getJoinColumn() );
+			copyAttribute( ad, "optional", element.isOptional(), false );
+			annotationList.add( AnnotationFactory.create( ad ) );
+
+			getAssociationId( annotationList, element.isId() );
+			getMapsId( annotationList, element.getMapsId() );
+			getAccessType( annotationList, element.getAccess() );
+		}
+		afterGetAssociation( annotationType, annotationList, defaults );
+	}
+
+	/**
+	 * @see #getOneToOne(List, XMLContext.Default)
+	 * @see #getElementCollection(List, XMLContext.Default)
+	 */
+	private void getManyToMany(List<Annotation> annotationList, XMLContext.Default defaults) {
+		Class<ManyToMany> annotationType = ManyToMany.class;
+		List<JaxbManyToMany> elements = elementsForProperty.getManyToMany();
+		for ( JaxbManyToMany element : elements ) {
+			AnnotationDescriptor ad = new AnnotationDescriptor( annotationType );
+			addTargetClass( element.getTargetEntity(), ad, "target-entity", defaults );
+			getFetchType( ad, element.getFetch() );
+			getCascades( ad, element.getCascade(), defaults );
+			getJoinTable( annotationList, element, defaults );
+			copyAttribute( ad, "mapped-by", element.getMappedBy(), false );
+			annotationList.add( AnnotationFactory.create( ad ) );
+
+			getOrderBy( annotationList, element.getOrderBy() );
+			getMapKey( annotationList, element.getMapKey() );
+			getMapKeyClass( annotationList, element.getMapKeyClass(), defaults );
+			getMapKeyColumn( annotationList, element.getMapKeyColumn() );
+			getOrderColumn( annotationList, element.getOrderColumn() );
+			getMapKeyTemporal( annotationList, element.getMapKeyTemporal() );
+			getMapKeyEnumerated( annotationList, element.getMapKeyEnumerated() );
+			Annotation annotation = getMapKeyAttributeOverrides( element.getMapKeyAttributeOverride(), defaults );
+			addIfNotNull( annotationList, annotation );
+			getMapKeyJoinColumns( annotationList, element.getMapKeyJoinColumn() );
+			getAccessType( annotationList, element.getAccess() );
+		}
+		afterGetAssociation( annotationType, annotationList, defaults );
+	}
+
+	private void getAny(List<Annotation> annotationList, XMLContext.Default defaults) {
+		// No support for "any" in JPA's orm.xml; we will just use the "physical" annotations.
+		// TODO HHH-10176 We should allow "any" associations, but the JPA XSD doesn't allow that. We would need our own XSD.
+		afterGetAssociation( Any.class, annotationList, defaults );
+	}
+
+	private void getManyToAny(List<Annotation> annotationList, XMLContext.Default defaults) {
+		// No support for "many-to-any" in JPA's orm.xml; we will just use the annotations.
+		// TODO HHH-10176 We should allow "many-to-any" associations, but the JPA XSD doesn't allow that. We would need our own XSD.
+		afterGetAssociation( ManyToAny.class, annotationList, defaults );
+	}
+
+	private void afterGetAssociation(Class<? extends Annotation> annotationType, List<Annotation> annotationList,
+			XMLContext.Default defaults) {
+		if ( elementsForProperty.isEmpty() && defaults.canUseJavaAnnotations() ) {
 			Annotation annotation = getPhysicalAnnotation( annotationType );
 			if ( annotation != null ) {
 				annotation = overridesDefaultCascadePersist( annotation, defaults );
@@ -1016,8 +1188,8 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		}
 	}
 
-	private void buildMapKeyJoinColumns(List<Annotation> annotationList, Element element) {
-		MapKeyJoinColumn[] joinColumns = getMapKeyJoinColumns( element );
+	private void getMapKeyJoinColumns(List<Annotation> annotationList, List<JaxbMapKeyJoinColumn> elements) {
+		MapKeyJoinColumn[] joinColumns = buildMapKeyJoinColumns( elements );
 		if ( joinColumns.length > 0 ) {
 			AnnotationDescriptor ad = new AnnotationDescriptor( MapKeyJoinColumns.class );
 			ad.setValue( "value", joinColumns );
@@ -1025,37 +1197,36 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		}
 	}
 
-	private MapKeyJoinColumn[] getMapKeyJoinColumns(Element element) {
-		List<Element> subelements = element != null ? element.elements( "map-key-join-column" ) : null;
+	private MapKeyJoinColumn[] buildMapKeyJoinColumns(List<JaxbMapKeyJoinColumn> elements) {
 		List<MapKeyJoinColumn> joinColumns = new ArrayList<>();
-		if ( subelements != null ) {
-			for ( Element subelement : subelements ) {
+		if ( elements != null ) {
+			for ( JaxbMapKeyJoinColumn element : elements ) {
 				AnnotationDescriptor column = new AnnotationDescriptor( MapKeyJoinColumn.class );
-				copyStringAttribute( column, subelement, "name", false );
-				copyStringAttribute( column, subelement, "referenced-column-name", false );
-				copyBooleanAttribute( column, subelement, "unique" );
-				copyBooleanAttribute( column, subelement, "nullable" );
-				copyBooleanAttribute( column, subelement, "insertable" );
-				copyBooleanAttribute( column, subelement, "updatable" );
-				copyStringAttribute( column, subelement, "column-definition", false );
-				copyStringAttribute( column, subelement, "table", false );
+				copyAttribute( column, "name", element.getName(), false );
+				copyAttribute( column, "referenced-column-name", element.getReferencedColumnName(), false );
+				copyAttribute( column, "unique", element.isUnique(), false );
+				copyAttribute( column, "nullable", element.isNullable(), false );
+				copyAttribute( column, "insertable", element.isInsertable(), false );
+				copyAttribute( column, "updatable", element.isUpdatable(), false );
+				copyAttribute( column, "column-definition", element.getColumnDefinition(), false );
+				copyAttribute( column, "table", element.getTable(), false );
 				joinColumns.add( AnnotationFactory.create( column ) );
 			}
 		}
 		return joinColumns.toArray( new MapKeyJoinColumn[joinColumns.size()] );
 	}
 
-	private AttributeOverrides getMapKeyAttributeOverrides(Element tree, XMLContext.Default defaults) {
-		List<AttributeOverride> attributes = buildAttributeOverrides( tree, "map-key-attribute-override" );
+	private AttributeOverrides getMapKeyAttributeOverrides(List<JaxbAttributeOverride> elements, XMLContext.Default defaults) {
+		List<AttributeOverride> attributes = buildAttributeOverrides( elements, "map-key-attribute-override" );
 		return mergeAttributeOverrides( defaults, attributes, false );
 	}
 
-	private Cacheable getCacheable(Element element, XMLContext.Default defaults){
-		if ( element != null ) {
-			String attValue = element.attributeValue( "cacheable" );
+	private Cacheable getCacheable(ManagedType root, XMLContext.Default defaults){
+		if ( root instanceof JaxbEntity ) {
+			Boolean attValue = ( (JaxbEntity) root ).isCacheable();
 			if ( attValue != null ) {
 				AnnotationDescriptor ad = new AnnotationDescriptor( Cacheable.class );
-				ad.setValue( "value", Boolean.valueOf( attValue ) );
+				ad.setValue( "value", attValue );
 				return AnnotationFactory.create( ad );
 			}
 		}
@@ -1071,12 +1242,10 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 	 * contains a map-key-enumerated sub-element. This should only be the case for
 	 * element-collection, many-to-many, or one-to-many associations.
 	 */
-	private void getMapKeyEnumerated(List<Annotation> annotationList, Element element) {
-		Element subelement = element != null ? element.element( "map-key-enumerated" ) : null;
-		if ( subelement != null ) {
+	private void getMapKeyEnumerated(List<Annotation> annotationList, EnumType enumType) {
+		if ( enumType != null ) {
 			AnnotationDescriptor ad = new AnnotationDescriptor( MapKeyEnumerated.class );
-			EnumType value = EnumType.valueOf( subelement.getTextTrim() );
-			ad.setValue( "value", value );
+			ad.setValue( "value", enumType );
 			annotationList.add( AnnotationFactory.create( ad ) );
 		}
 	}
@@ -1086,12 +1255,10 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 	 * contains a map-key-temporal sub-element. This should only be the case for element-collection,
 	 * many-to-many, or one-to-many associations.
 	 */
-	private void getMapKeyTemporal(List<Annotation> annotationList, Element element) {
-		Element subelement = element != null ? element.element( "map-key-temporal" ) : null;
-		if ( subelement != null ) {
+	private void getMapKeyTemporal(List<Annotation> annotationList, TemporalType temporalType) {
+		if ( temporalType != null ) {
 			AnnotationDescriptor ad = new AnnotationDescriptor( MapKeyTemporal.class );
-			TemporalType value = TemporalType.valueOf( subelement.getTextTrim() );
-			ad.setValue( "value", value );
+			ad.setValue( "value", temporalType );
 			annotationList.add( AnnotationFactory.create( ad ) );
 		}
 	}
@@ -1101,15 +1268,14 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 	 * contains an order-column sub-element. This should only be the case for element-collection,
 	 * many-to-many, or one-to-many associations.
 	 */
-	private void getOrderColumn(List<Annotation> annotationList, Element element) {
-		Element subelement = element != null ? element.element( "order-column" ) : null;
-		if ( subelement != null ) {
+	private void getOrderColumn(List<Annotation> annotationList, JaxbOrderColumn element) {
+		if ( element != null ) {
 			AnnotationDescriptor ad = new AnnotationDescriptor( OrderColumn.class );
-			copyStringAttribute( ad, subelement, "name", false );
-			copyBooleanAttribute( ad, subelement, "nullable" );
-			copyBooleanAttribute( ad, subelement, "insertable" );
-			copyBooleanAttribute( ad, subelement, "updatable" );
-			copyStringAttribute( ad, subelement, "column-definition", false );
+			copyAttribute( ad, "name", element.getName(), false );
+			copyAttribute( ad, "nullable", element.isNullable(), false );
+			copyAttribute( ad, "insertable", element.isInsertable(), false );
+			copyAttribute( ad, "updatable", element.isUpdatable(), false );
+			copyAttribute( ad, "column-definition", element.getColumnDefinition(), false );
 			annotationList.add( AnnotationFactory.create( ad ) );
 		}
 	}
@@ -1119,11 +1285,10 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 	 * maps-id attribute set. This should only be the case for many-to-one or one-to-one
 	 * associations.
 	 */
-	private void getMapsId(List<Annotation> annotationList, Element element) {
-		String attrVal = element.attributeValue( "maps-id" );
-		if ( attrVal != null ) {
+	private void getMapsId(List<Annotation> annotationList, String mapsId) {
+		if ( mapsId != null ) {
 			AnnotationDescriptor ad = new AnnotationDescriptor( MapsId.class );
-			ad.setValue( "value", attrVal );
+			ad.setValue( "value", mapsId );
 			annotationList.add( AnnotationFactory.create( ad ) );
 		}
 	}
@@ -1133,24 +1298,22 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 	 * attribute set to true. This should only be the case for many-to-one or one-to-one
 	 * associations.
 	 */
-	private void getAssociationId(List<Annotation> annotationList, Element element) {
-		String attrVal = element.attributeValue( "id" );
-		if ( "true".equals( attrVal ) ) {
+	private void getAssociationId(List<Annotation> annotationList, Boolean isId) {
+		if ( Boolean.TRUE.equals( isId ) ) {
 			AnnotationDescriptor ad = new AnnotationDescriptor( Id.class );
 			annotationList.add( AnnotationFactory.create( ad ) );
 		}
 	}
 
-	private void addTargetClass(Element element, AnnotationDescriptor ad, String nodeName, XMLContext.Default defaults) {
-		String className = element.attributeValue( nodeName );
+	private void addTargetClass(String className, AnnotationDescriptor ad, String nodeName, XMLContext.Default defaults) {
 		if ( className != null ) {
-			Class clazz;
+			Class<?> clazz;
 			try {
 				clazz = classLoaderAccess.classForName( XMLContext.buildSafeClassName( className, defaults ) );
 			}
 			catch ( ClassLoadingException e ) {
 				throw new AnnotationException(
-						"Unable to find " + element.getPath() + " " + nodeName + ": " + className, e
+						"Unable to find " + nodeName + ": " + className, e
 				);
 			}
 			ad.setValue( getJavaAttributeNameFromXMLOne( nodeName ), clazz );
@@ -1165,82 +1328,76 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 	 * context.
 	 */
 	private void getElementCollection(List<Annotation> annotationList, XMLContext.Default defaults) {
-		for ( Element element : elementsForProperty ) {
-			if ( "element-collection".equals( element.getName() ) ) {
-				AnnotationDescriptor ad = new AnnotationDescriptor( ElementCollection.class );
-				addTargetClass( element, ad, "target-class", defaults );
-				getFetchType( ad, element );
-				getOrderBy( annotationList, element );
-				getOrderColumn( annotationList, element );
-				getMapKey( annotationList, element );
-				getMapKeyClass( annotationList, element, defaults );
-				getMapKeyTemporal( annotationList, element );
-				getMapKeyEnumerated( annotationList, element );
-				getMapKeyColumn( annotationList, element );
-				buildMapKeyJoinColumns( annotationList, element );
-				Annotation annotation = getColumn( element.element( "column" ), false, element );
-				addIfNotNull( annotationList, annotation );
-				getTemporal( annotationList, element );
-				getEnumerated( annotationList, element );
-				getLob( annotationList, element );
-				//Both map-key-attribute-overrides and attribute-overrides
-				//translate into AttributeOverride annotations, which need
-				//need to be wrapped in the same AttributeOverrides annotation.
-				List<AttributeOverride> attributes = new ArrayList<>();
-				attributes.addAll( buildAttributeOverrides( element, "map-key-attribute-override" ) );
-				attributes.addAll( buildAttributeOverrides( element, "attribute-override" ) );
-				annotation = mergeAttributeOverrides( defaults, attributes, false );
-				addIfNotNull( annotationList, annotation );
-				annotation = getAssociationOverrides( element, defaults, false );
-				addIfNotNull( annotationList, annotation );
-				getCollectionTable( annotationList, element, defaults );
-				annotationList.add( AnnotationFactory.create( ad ) );
-				getAccessType( annotationList, element );
-			}
+		for ( JaxbElementCollection element : elementsForProperty.getElementCollection() ) {
+			AnnotationDescriptor ad = new AnnotationDescriptor( ElementCollection.class );
+			addTargetClass( element.getTargetClass(), ad, "target-class", defaults );
+			getFetchType( ad, element.getFetch() );
+			getOrderBy( annotationList, element.getOrderBy() );
+			getOrderColumn( annotationList, element.getOrderColumn() );
+			getMapKey( annotationList, element.getMapKey() );
+			getMapKeyClass( annotationList, element.getMapKeyClass(), defaults );
+			getMapKeyTemporal( annotationList, element.getMapKeyTemporal() );
+			getMapKeyEnumerated( annotationList, element.getMapKeyEnumerated() );
+			getMapKeyColumn( annotationList, element.getMapKeyColumn() );
+			getMapKeyJoinColumns( annotationList, element.getMapKeyJoinColumn() );
+			Annotation annotation = getColumn( element.getColumn(), false, "element-collection" );
+			addIfNotNull( annotationList, annotation );
+			getTemporal( annotationList, element.getTemporal() );
+			getEnumerated( annotationList, element.getEnumerated() );
+			getLob( annotationList, element.getLob() );
+			//Both map-key-attribute-overrides and attribute-overrides
+			//translate into AttributeOverride annotations, which need
+			//need to be wrapped in the same AttributeOverrides annotation.
+			List<AttributeOverride> attributes = new ArrayList<>();
+			attributes.addAll( buildAttributeOverrides( element.getMapKeyAttributeOverride(), "map-key-attribute-override" ) );
+			attributes.addAll( buildAttributeOverrides( element.getAttributeOverride(), "attribute-override" ) );
+			annotation = mergeAttributeOverrides( defaults, attributes, false );
+			addIfNotNull( annotationList, annotation );
+			annotation = getAssociationOverrides( element.getAssociationOverride(), defaults, false );
+			addIfNotNull( annotationList, annotation );
+			getCollectionTable( annotationList, element.getCollectionTable(), defaults );
+			annotationList.add( AnnotationFactory.create( ad ) );
+			getAccessType( annotationList, element.getAccess() );
 		}
 	}
 
-	private void getOrderBy(List<Annotation> annotationList, Element element) {
-		Element subelement = element != null ? element.element( "order-by" ) : null;
-		if ( subelement != null ) {
+	private void getOrderBy(List<Annotation> annotationList, String orderBy) {
+		if ( orderBy != null ) {
 			AnnotationDescriptor ad = new AnnotationDescriptor( OrderBy.class );
-			copyStringElement( subelement, ad, "value" );
+			ad.setValue( "value", orderBy );
 			annotationList.add( AnnotationFactory.create( ad ) );
 		}
 	}
 
-	private void getMapKey(List<Annotation> annotationList, Element element) {
-		Element subelement = element != null ? element.element( "map-key" ) : null;
-		if ( subelement != null ) {
+	private void getMapKey(List<Annotation> annotationList, JaxbMapKey element) {
+		if ( element != null ) {
 			AnnotationDescriptor ad = new AnnotationDescriptor( MapKey.class );
-			copyStringAttribute( ad, subelement, "name", false );
+			copyAttribute( ad, "name", element.getName(), false );
 			annotationList.add( AnnotationFactory.create( ad ) );
 		}
 	}
 
-	private void getMapKeyColumn(List<Annotation> annotationList, Element element) {
-		Element subelement = element != null ? element.element( "map-key-column" ) : null;
-		if ( subelement != null ) {
+	private void getMapKeyColumn(List<Annotation> annotationList, JaxbMapKeyColumn element) {
+		if ( element != null ) {
 			AnnotationDescriptor ad = new AnnotationDescriptor( MapKeyColumn.class );
-			copyStringAttribute( ad, subelement, "name", false );
-			copyBooleanAttribute( ad, subelement, "unique" );
-			copyBooleanAttribute( ad, subelement, "nullable" );
-			copyBooleanAttribute( ad, subelement, "insertable" );
-			copyBooleanAttribute( ad, subelement, "updatable" );
-			copyStringAttribute( ad, subelement, "column-definition", false );
-			copyStringAttribute( ad, subelement, "table", false );
-			copyIntegerAttribute( ad, subelement, "length" );
-			copyIntegerAttribute( ad, subelement, "precision" );
-			copyIntegerAttribute( ad, subelement, "scale" );
+			copyAttribute( ad, "name", element.getName(), false );
+			copyAttribute( ad, "unique", element.isUnique(), false );
+			copyAttribute( ad, "nullable", element.isNullable(), false );
+			copyAttribute( ad, "insertable", element.isInsertable(), false );
+			copyAttribute( ad, "updatable", element.isUpdatable(), false );
+			copyAttribute( ad, "column-definition", element.getColumnDefinition(), false );
+			copyAttribute( ad, "table", element.getTable(), false );
+			copyAttribute( ad, "length", element.getLength(), false );
+			copyAttribute( ad, "precision", element.getPrecision(), false );
+			copyAttribute( ad, "scale", element.getScale(), false );
 			annotationList.add( AnnotationFactory.create( ad ) );
 		}
 	}
 
-	private void getMapKeyClass(List<Annotation> annotationList, Element element, XMLContext.Default defaults) {
+	private void getMapKeyClass(List<Annotation> annotationList, JaxbMapKeyClass element, XMLContext.Default defaults) {
 		String nodeName = "map-key-class";
-		Element subelement = element != null ? element.element( nodeName ) : null;
-		if ( subelement != null ) {
-			String mapKeyClassName = subelement.attributeValue( "class" );
+		if ( element != null ) {
+			String mapKeyClassName = element.getClazz();
 			AnnotationDescriptor ad = new AnnotationDescriptor( MapKeyClass.class );
 			if ( StringHelper.isNotEmpty( mapKeyClassName ) ) {
 				Class clazz;
@@ -1251,7 +1408,7 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 				}
 				catch ( ClassLoadingException e ) {
 					throw new AnnotationException(
-							"Unable to find " + element.getPath() + " " + nodeName + ": " + mapKeyClassName, e
+							"Unable to find " + nodeName + ": " + mapKeyClassName, e
 					);
 				}
 				ad.setValue( "value", clazz );
@@ -1260,33 +1417,32 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		}
 	}
 
-	private void getCollectionTable(List<Annotation> annotationList, Element element, XMLContext.Default defaults) {
-		Element subelement = element != null ? element.element( "collection-table" ) : null;
-		if ( subelement != null ) {
+	private void getCollectionTable(List<Annotation> annotationList, JaxbCollectionTable element, XMLContext.Default defaults) {
+		if ( element != null ) {
 			AnnotationDescriptor annotation = new AnnotationDescriptor( CollectionTable.class );
-			copyStringAttribute( annotation, subelement, "name", false );
-			copyStringAttribute( annotation, subelement, "catalog", false );
+			copyAttribute( annotation, "name", element.getName(), false );
+			copyAttribute( annotation, "catalog", element.getCatalog(), false );
 			if ( StringHelper.isNotEmpty( defaults.getCatalog() )
 					&& StringHelper.isEmpty( (String) annotation.valueOf( "catalog" ) ) ) {
 				annotation.setValue( "catalog", defaults.getCatalog() );
 			}
-			copyStringAttribute( annotation, subelement, "schema", false );
+			copyAttribute( annotation, "schema", element.getSchema(), false );
 			if ( StringHelper.isNotEmpty( defaults.getSchema() )
 					&& StringHelper.isEmpty( (String) annotation.valueOf( "schema" ) ) ) {
 				annotation.setValue( "schema", defaults.getSchema() );
 			}
-			JoinColumn[] joinColumns = getJoinColumns( subelement, false );
+			JoinColumn[] joinColumns = getJoinColumns( element.getJoinColumn(), false );
 			if ( joinColumns.length > 0 ) {
 				annotation.setValue( "joinColumns", joinColumns );
 			}
-			buildUniqueConstraints( annotation, subelement );
-			buildIndex( annotation, subelement );
+			buildUniqueConstraints( annotation, element.getUniqueConstraint() );
+			buildIndex( annotation, element.getIndex() );
 			annotationList.add( AnnotationFactory.create( annotation ) );
 		}
 	}
 
-	private void buildJoinColumns(List<Annotation> annotationList, Element element) {
-		JoinColumn[] joinColumns = getJoinColumns( element, false );
+	private void buildJoinColumns(List<Annotation> annotationList, List<JaxbJoinColumn> elements) {
+		JoinColumn[] joinColumns = getJoinColumns( elements, false );
 		if ( joinColumns.length > 0 ) {
 			AnnotationDescriptor ad = new AnnotationDescriptor( JoinColumns.class );
 			ad.setValue( "value", joinColumns );
@@ -1294,26 +1450,25 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		}
 	}
 
-	private void getCascades(AnnotationDescriptor ad, Element element, XMLContext.Default defaults) {
-		List<Element> elements = element != null ? element.elements( "cascade" ) : new ArrayList<>( 0 );
+	private void getCascades(AnnotationDescriptor ad, JaxbCascadeType element, XMLContext.Default defaults) {
 		List<CascadeType> cascades = new ArrayList<>();
-		for ( Element subelement : elements ) {
-			if ( subelement.element( "cascade-all" ) != null ) {
+		if ( element != null ) {
+			if ( element.getCascadeAll() != null ) {
 				cascades.add( CascadeType.ALL );
 			}
-			if ( subelement.element( "cascade-persist" ) != null ) {
+			if ( element.getCascadePersist() != null ) {
 				cascades.add( CascadeType.PERSIST );
 			}
-			if ( subelement.element( "cascade-merge" ) != null ) {
+			if ( element.getCascadeMerge() != null ) {
 				cascades.add( CascadeType.MERGE );
 			}
-			if ( subelement.element( "cascade-remove" ) != null ) {
+			if ( element.getCascadeRemove() != null ) {
 				cascades.add( CascadeType.REMOVE );
 			}
-			if ( subelement.element( "cascade-refresh" ) != null ) {
+			if ( element.getCascadeRefresh() != null ) {
 				cascades.add( CascadeType.REFRESH );
 			}
-			if ( subelement.element( "cascade-detach" ) != null ) {
+			if ( element.getCascadeDetach() != null ) {
 				cascades.add( CascadeType.DETACH );
 			}
 		}
@@ -1327,18 +1482,16 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 	}
 
 	private void getEmbedded(List<Annotation> annotationList, XMLContext.Default defaults) {
-		for ( Element element : elementsForProperty ) {
-			if ( "embedded".equals( element.getName() ) ) {
-				AnnotationDescriptor ad = new AnnotationDescriptor( Embedded.class );
-				annotationList.add( AnnotationFactory.create( ad ) );
-				Annotation annotation = getAttributeOverrides( element, defaults, false );
-				addIfNotNull( annotationList, annotation );
-				annotation = getAssociationOverrides( element, defaults, false );
-				addIfNotNull( annotationList, annotation );
-				getAccessType( annotationList, element );
-			}
+		for ( JaxbEmbedded element : elementsForProperty.getEmbedded() ) {
+			AnnotationDescriptor ad = new AnnotationDescriptor( Embedded.class );
+			annotationList.add( AnnotationFactory.create( ad ) );
+			Annotation annotation = getAttributeOverrides( element.getAttributeOverride(), defaults, false );
+			addIfNotNull( annotationList, annotation );
+			annotation = getAssociationOverrides( element.getAssociationOverride(), defaults, false );
+			addIfNotNull( annotationList, annotation );
+			getAccessType( annotationList, element.getAccess() );
 		}
-		if ( elementsForProperty.size() == 0 && defaults.canUseJavaAnnotations() ) {
+		if ( elementsForProperty.isEmpty() && defaults.canUseJavaAnnotations() ) {
 			Annotation annotation = getPhysicalAnnotation( Embedded.class );
 			if ( annotation != null ) {
 				annotationList.add( annotation );
@@ -1355,13 +1508,11 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 	}
 
 	private Transient getTransient(XMLContext.Default defaults) {
-		for ( Element element : elementsForProperty ) {
-			if ( "transient".equals( element.getName() ) ) {
-				AnnotationDescriptor ad = new AnnotationDescriptor( Transient.class );
-				return AnnotationFactory.create( ad );
-			}
+		if ( !elementsForProperty.getTransient().isEmpty() ) {
+			AnnotationDescriptor ad = new AnnotationDescriptor( Transient.class );
+			return AnnotationFactory.create( ad );
 		}
-		if ( elementsForProperty.size() == 0 && defaults.canUseJavaAnnotations() ) {
+		if ( elementsForProperty.isEmpty() && defaults.canUseJavaAnnotations() ) {
 			return getPhysicalAnnotation( Transient.class );
 		}
 		else {
@@ -1370,17 +1521,15 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 	}
 
 	private void getVersion(List<Annotation> annotationList, XMLContext.Default defaults) {
-		for ( Element element : elementsForProperty ) {
-			if ( "version".equals( element.getName() ) ) {
-				Annotation annotation = buildColumns( element );
-				addIfNotNull( annotationList, annotation );
-				getTemporal( annotationList, element );
-				AnnotationDescriptor basic = new AnnotationDescriptor( Version.class );
-				annotationList.add( AnnotationFactory.create( basic ) );
-				getAccessType( annotationList, element );
-			}
+		for ( JaxbVersion element : elementsForProperty.getVersion() ) {
+			Annotation annotation = buildColumns( element.getColumn(), "version" );
+			addIfNotNull( annotationList, annotation );
+			getTemporal( annotationList, element.getTemporal() );
+			AnnotationDescriptor basic = new AnnotationDescriptor( Version.class );
+			annotationList.add( AnnotationFactory.create( basic ) );
+			getAccessType( annotationList, element.getAccess() );
 		}
-		if ( elementsForProperty.size() == 0 && defaults.canUseJavaAnnotations() ) {
+		if ( elementsForProperty.isEmpty() && defaults.canUseJavaAnnotations() ) {
 			//we have nothing, so Java annotations might occur
 			Annotation annotation = getPhysicalAnnotation( Version.class );
 			if ( annotation != null ) {
@@ -1396,21 +1545,19 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 	}
 
 	private void getBasic(List<Annotation> annotationList, XMLContext.Default defaults) {
-		for ( Element element : elementsForProperty ) {
-			if ( "basic".equals( element.getName() ) ) {
-				Annotation annotation = buildColumns( element );
-				addIfNotNull( annotationList, annotation );
-				getAccessType( annotationList, element );
-				getTemporal( annotationList, element );
-				getLob( annotationList, element );
-				getEnumerated( annotationList, element );
-				AnnotationDescriptor basic = new AnnotationDescriptor( Basic.class );
-				getFetchType( basic, element );
-				copyBooleanAttribute( basic, element, "optional" );
-				annotationList.add( AnnotationFactory.create( basic ) );
-			}
+		for ( JaxbBasic element : elementsForProperty.getBasic() ) {
+			Annotation annotation = buildColumns( element.getColumn(), "basic" );
+			addIfNotNull( annotationList, annotation );
+			getAccessType( annotationList, element.getAccess() );
+			getTemporal( annotationList, element.getTemporal() );
+			getLob( annotationList, element.getLob() );
+			getEnumerated( annotationList, element.getEnumerated() );
+			AnnotationDescriptor basic = new AnnotationDescriptor( Basic.class );
+			getFetchType( basic, element.getFetch() );
+			copyAttribute( basic, "optional", element.isOptional(), false );
+			annotationList.add( AnnotationFactory.create( basic ) );
 		}
-		if ( elementsForProperty.size() == 0 && defaults.canUseJavaAnnotations() ) {
+		if ( elementsForProperty.isEmpty() && defaults.canUseJavaAnnotations() ) {
 			//no annotation presence constraint, basic is the default
 			Annotation annotation = getPhysicalAnnotation( Basic.class );
 			addIfNotNull( annotationList, annotation );
@@ -1435,58 +1582,38 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		}
 	}
 
-	private void getEnumerated(List<Annotation> annotationList, Element element) {
-		Element subElement = element != null ? element.element( "enumerated" ) : null;
-		if ( subElement != null ) {
+	private void getEnumerated(List<Annotation> annotationList, EnumType enumType) {
+		if ( enumType != null ) {
 			AnnotationDescriptor ad = new AnnotationDescriptor( Enumerated.class );
-			String enumerated = subElement.getTextTrim();
-			if ( "ORDINAL".equalsIgnoreCase( enumerated ) ) {
-				ad.setValue( "value", EnumType.ORDINAL );
-			}
-			else if ( "STRING".equalsIgnoreCase( enumerated ) ) {
-				ad.setValue( "value", EnumType.STRING );
-			}
-			else if ( StringHelper.isNotEmpty( enumerated ) ) {
-				throw new AnnotationException( "Unknown EnumType: " + enumerated + ". " + SCHEMA_VALIDATION );
-			}
+			ad.setValue( "value", enumType );
 			annotationList.add( AnnotationFactory.create( ad ) );
 		}
 	}
 
-	private void getLob(List<Annotation> annotationList, Element element) {
-		Element subElement = element != null ? element.element( "lob" ) : null;
-		if ( subElement != null ) {
+	private void getLob(List<Annotation> annotationList, JaxbLob element) {
+		if ( element != null ) {
 			annotationList.add( AnnotationFactory.create( new AnnotationDescriptor( Lob.class ) ) );
 		}
 	}
 
-	private void getFetchType(AnnotationDescriptor descriptor, Element element) {
-		String fetchString = element != null ? element.attributeValue( "fetch" ) : null;
-		if ( fetchString != null ) {
-			if ( "eager".equalsIgnoreCase( fetchString ) ) {
-				descriptor.setValue( "fetch", FetchType.EAGER );
-			}
-			else if ( "lazy".equalsIgnoreCase( fetchString ) ) {
-				descriptor.setValue( "fetch", FetchType.LAZY );
-			}
+	private void getFetchType(AnnotationDescriptor descriptor, FetchType type) {
+		if ( type != null ) {
+			descriptor.setValue( "fetch", type );
 		}
 	}
 
 	private void getEmbeddedId(List<Annotation> annotationList, XMLContext.Default defaults) {
-		for ( Element element : elementsForProperty ) {
-			if ( "embedded-id".equals( element.getName() ) ) {
-				if ( isProcessingId( defaults ) ) {
-					Annotation annotation = getAttributeOverrides( element, defaults, false );
-					addIfNotNull( annotationList, annotation );
-					annotation = getAssociationOverrides( element, defaults, false );
-					addIfNotNull( annotationList, annotation );
-					AnnotationDescriptor ad = new AnnotationDescriptor( EmbeddedId.class );
-					annotationList.add( AnnotationFactory.create( ad ) );
-					getAccessType( annotationList, element );
-				}
+		for ( JaxbEmbeddedId element : elementsForProperty.getEmbeddedId() ) {
+			if ( isProcessingId( defaults ) ) {
+				Annotation annotation = getAttributeOverrides( element.getAttributeOverride(), defaults, false );
+				addIfNotNull( annotationList, annotation );
+				// TODO HHH-10176 We should allow association overrides here, but the JPA XSD doesn't allow that. We would need our own XSD.
+				AnnotationDescriptor ad = new AnnotationDescriptor( EmbeddedId.class );
+				annotationList.add( AnnotationFactory.create( ad ) );
+				getAccessType( annotationList, element.getAccess() );
 			}
 		}
-		if ( elementsForProperty.size() == 0 && defaults.canUseJavaAnnotations() ) {
+		if ( elementsForProperty.isEmpty() && defaults.canUseJavaAnnotations() ) {
 			Annotation annotation = getPhysicalAnnotation( EmbeddedId.class );
 			if ( annotation != null ) {
 				annotationList.add( annotation );
@@ -1514,49 +1641,42 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		}
 	}
 
-	private void preCalculateElementsForProperty(Element tree) {
-		elementsForProperty = new ArrayList<>();
-		Element element = tree != null ? tree.element( "attributes" ) : null;
+	private void preCalculateElementsForProperty(ManagedType managedType, JaxbEntityListener entityListener) {
+		elementsForProperty = new PropertyMappingElementCollector( propertyName );
+		AttributesContainer attributes = managedType == null ? null : managedType.getAttributes();
 		//put entity.attributes elements
-		if ( element != null ) {
-			for ( Element subelement : (List<Element>) element.elements() ) {
-				if ( propertyName.equals( subelement.attributeValue( "name" ) ) ) {
-					elementsForProperty.add( subelement );
-				}
-			}
+		if ( attributes != null ) {
+			elementsForProperty.collectPersistentAttributesIfMatching( attributes );
 		}
 		//add pre-* etc from entity and pure entity listener classes
-		if ( tree != null ) {
-			for ( Element subelement : (List<Element>) tree.elements() ) {
-				if ( propertyName.equals( subelement.attributeValue( "method-name" ) ) ) {
-					elementsForProperty.add( subelement );
-				}
-			}
+		if ( managedType instanceof LifecycleCallbackContainer ) {
+			elementsForProperty.collectLifecycleCallbacksIfMatching( (LifecycleCallbackContainer) managedType );
+		}
+		if ( entityListener != null ) {
+			elementsForProperty.collectLifecycleCallbacksIfMatching( entityListener );
 		}
 	}
 
 	private void getId(List<Annotation> annotationList, XMLContext.Default defaults) {
-		for ( Element element : elementsForProperty ) {
-			if ( "id".equals( element.getName() ) ) {
-				boolean processId = isProcessingId( defaults );
-				if ( processId ) {
-					Annotation annotation = buildColumns( element );
-					addIfNotNull( annotationList, annotation );
-					annotation = buildGeneratedValue( element );
-					addIfNotNull( annotationList, annotation );
-					getTemporal( annotationList, element );
-					//FIXME: fix the priority of xml over java for generator names
-					annotation = getTableGenerator( element, defaults );
-					addIfNotNull( annotationList, annotation );
-					annotation = getSequenceGenerator( element, defaults );
-					addIfNotNull( annotationList, annotation );
-					AnnotationDescriptor id = new AnnotationDescriptor( Id.class );
-					annotationList.add( AnnotationFactory.create( id ) );
-					getAccessType( annotationList, element );
-				}
+		for ( JaxbId element : elementsForProperty.getId() ) {
+			boolean processId = isProcessingId( defaults );
+			if ( processId ) {
+				Annotation annotation = buildColumns( element.getColumn(), "id" );
+				addIfNotNull( annotationList, annotation );
+				annotation = buildGeneratedValue( element.getGeneratedValue() );
+				addIfNotNull( annotationList, annotation );
+				getTemporal( annotationList, element.getTemporal() );
+				//FIXME: fix the priority of xml over java for generator names
+				annotation = getTableGenerator( element.getTableGenerator(), defaults );
+				addIfNotNull( annotationList, annotation );
+				annotation = getSequenceGenerator( element.getSequenceGenerator(), defaults );
+				addIfNotNull( annotationList, annotation );
+				AnnotationDescriptor id = new AnnotationDescriptor( Id.class );
+				annotationList.add( AnnotationFactory.create( id ) );
+				getAccessType( annotationList, element.getAccess() );
 			}
 		}
-		if ( elementsForProperty.size() == 0 && defaults.canUseJavaAnnotations() ) {
+		if ( elementsForProperty.isEmpty() && defaults.canUseJavaAnnotations() ) {
 			Annotation annotation = getPhysicalAnnotation( Id.class );
 			if ( annotation != null ) {
 				annotationList.add( annotation );
@@ -1602,11 +1722,26 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		return correctAccess || ( !isExplicit && hasId ) || ( !isExplicit && propertyIsDefault );
 	}
 
-	private Columns buildColumns(Element element) {
-		List<Element> subelements = element.elements( "column" );
-		List<Column> columns = new ArrayList<>( subelements.size() );
-		for ( Element subelement : subelements ) {
-			columns.add( getColumn( subelement, false, element ) );
+	private Columns buildColumns(JaxbColumn element, String nodeName) {
+		if ( element == null ) {
+			return null;
+		}
+		List<Column> columns = new ArrayList<>( 1 );
+		columns.add( getColumn( element, false, nodeName ) );
+		if ( columns.size() > 0 ) {
+			AnnotationDescriptor columnsDescr = new AnnotationDescriptor( Columns.class );
+			columnsDescr.setValue( "columns", columns.toArray( new Column[columns.size()] ) );
+			return AnnotationFactory.create( columnsDescr );
+		}
+		else {
+			return null;
+		}
+	}
+
+	private Columns buildColumns(List<JaxbColumn> elements, String nodeName) {
+		List<Column> columns = new ArrayList<>( elements.size() );
+		for ( JaxbColumn element : elements ) {
+			columns.add( getColumn( element, false, nodeName ) );
 		}
 		if ( columns.size() > 0 ) {
 			AnnotationDescriptor columnsDescr = new AnnotationDescriptor( Columns.class );
@@ -1618,27 +1753,14 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		}
 	}
 
-	private GeneratedValue buildGeneratedValue(Element element) {
-		Element subElement = element != null ? element.element( "generated-value" ) : null;
-		if ( subElement != null ) {
+	private GeneratedValue buildGeneratedValue(JaxbGeneratedValue element) {
+		if ( element != null ) {
 			AnnotationDescriptor ad = new AnnotationDescriptor( GeneratedValue.class );
-			String strategy = subElement.attributeValue( "strategy" );
-			if ( "TABLE".equalsIgnoreCase( strategy ) ) {
-				ad.setValue( "strategy", GenerationType.TABLE );
+			GenerationType strategy = element.getStrategy();
+			if ( strategy != null ) {
+				ad.setValue( "strategy", strategy );
 			}
-			else if ( "SEQUENCE".equalsIgnoreCase( strategy ) ) {
-				ad.setValue( "strategy", GenerationType.SEQUENCE );
-			}
-			else if ( "IDENTITY".equalsIgnoreCase( strategy ) ) {
-				ad.setValue( "strategy", GenerationType.IDENTITY );
-			}
-			else if ( "AUTO".equalsIgnoreCase( strategy ) ) {
-				ad.setValue( "strategy", GenerationType.AUTO );
-			}
-			else if ( StringHelper.isNotEmpty( strategy ) ) {
-				throw new AnnotationException( "Unknown GenerationType: " + strategy + ". " + SCHEMA_VALIDATION );
-			}
-			copyStringAttribute( ad, subElement, "generator", false );
+			copyAttribute( ad, "generator", element.getGenerator(), false );
 			return AnnotationFactory.create( ad );
 		}
 		else {
@@ -1646,41 +1768,20 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		}
 	}
 
-	private void getTemporal(List<Annotation> annotationList, Element element) {
-		Element subElement = element != null ? element.element( "temporal" ) : null;
-		if ( subElement != null ) {
+	private void getTemporal(List<Annotation> annotationList, TemporalType type) {
+		if ( type != null ) {
 			AnnotationDescriptor ad = new AnnotationDescriptor( Temporal.class );
-			String temporal = subElement.getTextTrim();
-			if ( "DATE".equalsIgnoreCase( temporal ) ) {
-				ad.setValue( "value", TemporalType.DATE );
-			}
-			else if ( "TIME".equalsIgnoreCase( temporal ) ) {
-				ad.setValue( "value", TemporalType.TIME );
-			}
-			else if ( "TIMESTAMP".equalsIgnoreCase( temporal ) ) {
-				ad.setValue( "value", TemporalType.TIMESTAMP );
-			}
-			else if ( StringHelper.isNotEmpty( temporal ) ) {
-				throw new AnnotationException( "Unknown TemporalType: " + temporal + ". " + SCHEMA_VALIDATION );
-			}
+			ad.setValue( "value", type );
 			annotationList.add( AnnotationFactory.create( ad ) );
 		}
 	}
 
-	private void getAccessType(List<Annotation> annotationList, Element element) {
+	private void getAccessType(List<Annotation> annotationList, AccessType type) {
 		if ( element == null ) {
 			return;
 		}
-		String access = element.attributeValue( "access" );
-		if ( access != null ) {
+		if ( type != null ) {
 			AnnotationDescriptor ad = new AnnotationDescriptor( Access.class );
-			AccessType type;
-			try {
-				type = AccessType.valueOf( access );
-			}
-			catch ( IllegalArgumentException e ) {
-				throw new AnnotationException( access + " is not a valid access type. Check you xml confguration." );
-			}
 
 			if ( ( AccessType.PROPERTY.equals( type ) && this.element instanceof Method ) ||
 					( AccessType.FIELD.equals( type ) && this.element instanceof Field ) ) {
@@ -1692,14 +1793,20 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		}
 	}
 
+	private AssociationOverrides getAssociationOverrides(ManagedType root, XMLContext.Default defaults) {
+		return root instanceof JaxbEntity
+				? getAssociationOverrides( ( (JaxbEntity) root ).getAssociationOverride(), defaults, true )
+				: null;
+	}
+
 	/**
 	 * @param mergeWithAnnotations Whether to use Java annotations for this
 	 * element, if present and not disabled by the XMLContext defaults.
 	 * In some contexts (such as an element-collection mapping) merging
-	 * with annotations is never allowed.
 	 */
-	private AssociationOverrides getAssociationOverrides(Element tree, XMLContext.Default defaults, boolean mergeWithAnnotations) {
-		List<AssociationOverride> attributes = buildAssociationOverrides( tree, defaults );
+	private AssociationOverrides getAssociationOverrides(List<JaxbAssociationOverride> elements, XMLContext.Default defaults,
+			boolean mergeWithAnnotations) {
+		List<AssociationOverride> attributes = buildAssociationOverrides( elements, defaults );
 		if ( mergeWithAnnotations && defaults.canUseJavaAnnotations() ) {
 			AssociationOverride annotation = getPhysicalAnnotation( AssociationOverride.class );
 			addAssociationOverrideIfNeeded( annotation, attributes );
@@ -1720,15 +1827,14 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		}
 	}
 
-	private List<AssociationOverride> buildAssociationOverrides(Element element, XMLContext.Default defaults) {
-		List<Element> subelements = element == null ? null : element.elements( "association-override" );
+	private List<AssociationOverride> buildAssociationOverrides(List<JaxbAssociationOverride> elements, XMLContext.Default defaults) {
 		List<AssociationOverride> overrides = new ArrayList<>();
-		if ( subelements != null && subelements.size() > 0 ) {
-			for ( Element current : subelements ) {
+		if ( elements != null && elements.size() > 0 ) {
+			for ( JaxbAssociationOverride current : elements ) {
 				AnnotationDescriptor override = new AnnotationDescriptor( AssociationOverride.class );
-				copyStringAttribute( override, current, "name", true );
-				override.setValue( "joinColumns", getJoinColumns( current, false ) );
-				JoinTable joinTable = buildJoinTable( current, defaults );
+				copyAttribute( override, "name", current.getName(), true );
+				override.setValue( "joinColumns", getJoinColumns( current.getJoinColumn(), false ) );
+				JoinTable joinTable = buildJoinTable( current.getJoinTable(), defaults );
 				if ( joinTable != null ) {
 					override.setValue( "joinTable", joinTable );
 				}
@@ -1738,22 +1844,19 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		return overrides;
 	}
 
-	private JoinColumn[] getJoinColumns(Element element, boolean isInverse) {
-		List<Element> subelements = element != null ?
-				element.elements( isInverse ? "inverse-join-column" : "join-column" ) :
-				null;
+	private JoinColumn[] getJoinColumns(List<JaxbJoinColumn> subelements, boolean isInverse) {
 		List<JoinColumn> joinColumns = new ArrayList<>();
 		if ( subelements != null ) {
-			for ( Element subelement : subelements ) {
+			for ( JaxbJoinColumn subelement : subelements ) {
 				AnnotationDescriptor column = new AnnotationDescriptor( JoinColumn.class );
-				copyStringAttribute( column, subelement, "name", false );
-				copyStringAttribute( column, subelement, "referenced-column-name", false );
-				copyBooleanAttribute( column, subelement, "unique" );
-				copyBooleanAttribute( column, subelement, "nullable" );
-				copyBooleanAttribute( column, subelement, "insertable" );
-				copyBooleanAttribute( column, subelement, "updatable" );
-				copyStringAttribute( column, subelement, "column-definition", false );
-				copyStringAttribute( column, subelement, "table", false );
+				copyAttribute( column, "name", subelement.getName(), false );
+				copyAttribute( column, "referenced-column-name", subelement.getReferencedColumnName(), false );
+				copyAttribute( column, "unique", subelement.isUnique(), false );
+				copyAttribute( column, "nullable", subelement.isNullable(), false );
+				copyAttribute( column, "insertable", subelement.isInsertable(), false );
+				copyAttribute( column, "updatable", subelement.isUpdatable(), false );
+				copyAttribute( column, "column-definition", subelement.getColumnDefinition(), false );
+				copyAttribute( column, "table", subelement.getTable(), false );
 				joinColumns.add( AnnotationFactory.create( column ) );
 			}
 		}
@@ -1776,14 +1879,21 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		}
 	}
 
+	private AttributeOverrides getAttributeOverrides(ManagedType root, XMLContext.Default defaults) {
+		return root instanceof JaxbEntity
+				? getAttributeOverrides( ( (JaxbEntity) root ).getAttributeOverride(), defaults, true )
+				: null;
+	}
+
 	/**
 	 * @param mergeWithAnnotations Whether to use Java annotations for this
 	 * element, if present and not disabled by the XMLContext defaults.
 	 * In some contexts (such as an association mapping) merging with
 	 * annotations is never allowed.
 	 */
-	private AttributeOverrides getAttributeOverrides(Element tree, XMLContext.Default defaults, boolean mergeWithAnnotations) {
-		List<AttributeOverride> attributes = buildAttributeOverrides( tree, "attribute-override" );
+	private AttributeOverrides getAttributeOverrides(List<JaxbAttributeOverride> elements, XMLContext.Default defaults,
+			boolean mergeWithAnnotations) {
+		List<AttributeOverride> attributes = buildAttributeOverrides( elements, "attribute-override" );
 		return mergeAttributeOverrides( defaults, attributes, mergeWithAnnotations );
 	}
 
@@ -1814,47 +1924,38 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		}
 	}
 
-	private List<AttributeOverride> buildAttributeOverrides(Element element, String nodeName) {
-		List<Element> subelements = element == null ? null : element.elements( nodeName );
-		return buildAttributeOverrides( subelements, nodeName );
-	}
-
-	private List<AttributeOverride> buildAttributeOverrides(List<Element> subelements, String nodeName) {
+	private List<AttributeOverride> buildAttributeOverrides(List<JaxbAttributeOverride> subelements, String nodeName) {
 		List<AttributeOverride> overrides = new ArrayList<>();
 		if ( subelements != null && subelements.size() > 0 ) {
-			for ( Element current : subelements ) {
-				if ( !current.getName().equals( nodeName ) ) {
-					continue;
-				}
+			for ( JaxbAttributeOverride current : subelements ) {
 				AnnotationDescriptor override = new AnnotationDescriptor( AttributeOverride.class );
-				copyStringAttribute( override, current, "name", true );
-				Element column = current.element( "column" );
-				override.setValue( "column", getColumn( column, true, current ) );
+				copyAttribute( override, "name", current.getName(), true );
+				JaxbColumn column = current.getColumn();
+				override.setValue( "column", getColumn( column, true, nodeName ) );
 				overrides.add( AnnotationFactory.create( override ) );
 			}
 		}
 		return overrides;
 	}
 
-	private Column getColumn(Element element, boolean isMandatory, Element current) {
-		//Element subelement = element != null ? element.element( "column" ) : null;
+	private Column getColumn(JaxbColumn element, boolean isMandatory, String nodeName) {
 		if ( element != null ) {
 			AnnotationDescriptor column = new AnnotationDescriptor( Column.class );
-			copyStringAttribute( column, element, "name", false );
-			copyBooleanAttribute( column, element, "unique" );
-			copyBooleanAttribute( column, element, "nullable" );
-			copyBooleanAttribute( column, element, "insertable" );
-			copyBooleanAttribute( column, element, "updatable" );
-			copyStringAttribute( column, element, "column-definition", false );
-			copyStringAttribute( column, element, "table", false );
-			copyIntegerAttribute( column, element, "length" );
-			copyIntegerAttribute( column, element, "precision" );
-			copyIntegerAttribute( column, element, "scale" );
+			copyAttribute( column, "name", element.getName(), false );
+			copyAttribute( column, "unique", element.isUnique(), false );
+			copyAttribute( column, "nullable", element.isNullable(), false );
+			copyAttribute( column, "insertable", element.isInsertable(), false );
+			copyAttribute( column, "updatable", element.isUpdatable(), false );
+			copyAttribute( column, "column-definition", element.getColumnDefinition(), false );
+			copyAttribute( column, "table", element.getTable(), false );
+			copyAttribute( column, "length", element.getLength(), false );
+			copyAttribute( column, "precision", element.getPrecision(), false );
+			copyAttribute( column, "scale", element.getScale(), false );
 			return (Column) AnnotationFactory.create( column );
 		}
 		else {
 			if ( isMandatory ) {
-				throw new AnnotationException( current.getPath() + ".column is mandatory. " + SCHEMA_VALIDATION );
+				throw new AnnotationException( nodeName + ".column is mandatory. " + SCHEMA_VALIDATION );
 			}
 			return null;
 		}
@@ -1876,18 +1977,11 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		}
 	}
 
-	private Access getAccessType(Element tree, XMLContext.Default defaults) {
-		String access = tree == null ? null : tree.attributeValue( "access" );
+	private Access getAccessType(ManagedType root, XMLContext.Default defaults) {
+		AccessType access = root == null ? null : root.getAccess();
 		if ( access != null ) {
 			AnnotationDescriptor ad = new AnnotationDescriptor( Access.class );
-			AccessType type;
-			try {
-				type = AccessType.valueOf( access );
-			}
-			catch ( IllegalArgumentException e ) {
-				throw new AnnotationException( access + " is not a valid access type. Check you xml confguration." );
-			}
-			ad.setValue( "value", type );
+			ad.setValue( "value", access );
 			return AnnotationFactory.create( ad );
 		}
 		else if ( defaults.canUseJavaAnnotations() && isPhysicalAnnotationPresent( Access.class ) ) {
@@ -1903,19 +1997,25 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		}
 	}
 
-	private ExcludeSuperclassListeners getExcludeSuperclassListeners(Element tree, XMLContext.Default defaults) {
-		return (ExcludeSuperclassListeners) getMarkerAnnotation( ExcludeSuperclassListeners.class, tree, defaults );
+	private ExcludeSuperclassListeners getExcludeSuperclassListeners(ManagedType root, XMLContext.Default defaults) {
+		return (ExcludeSuperclassListeners) getMarkerAnnotation( ExcludeSuperclassListeners.class,
+				root instanceof EntityOrMappedSuperclass
+						? ( (EntityOrMappedSuperclass) root ).getExcludeSuperclassListeners()
+						: null,
+				defaults );
 	}
 
-	private ExcludeDefaultListeners getExcludeDefaultListeners(Element tree, XMLContext.Default defaults) {
-		return (ExcludeDefaultListeners) getMarkerAnnotation( ExcludeDefaultListeners.class, tree, defaults );
+	private ExcludeDefaultListeners getExcludeDefaultListeners(ManagedType root, XMLContext.Default defaults) {
+		return (ExcludeDefaultListeners) getMarkerAnnotation( ExcludeDefaultListeners.class,
+				root instanceof EntityOrMappedSuperclass
+						? ( (EntityOrMappedSuperclass) root ).getExcludeDefaultListeners()
+						: null,
+				defaults );
 	}
 
-	private Annotation getMarkerAnnotation(
-			Class<? extends Annotation> clazz, Element element, XMLContext.Default defaults
-	) {
-		Element subelement = element == null ? null : element.element( annotationToXml.get( clazz ) );
-		if ( subelement != null ) {
+	private Annotation getMarkerAnnotation(Class<? extends Annotation> clazz, JaxbEmptyType element,
+			XMLContext.Default defaults) {
+		if ( element != null ) {
 			return AnnotationFactory.create( new AnnotationDescriptor( clazz ) );
 		}
 		else if ( defaults.canUseJavaAnnotations() ) {
@@ -1927,8 +2027,10 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		}
 	}
 
-	private SqlResultSetMappings getSqlResultSetMappings(Element tree, XMLContext.Default defaults) {
-		List<SqlResultSetMapping> results = buildSqlResultsetMappings( tree, defaults, classLoaderAccess );
+	private SqlResultSetMappings getSqlResultSetMappings(ManagedType root, XMLContext.Default defaults) {
+		List<SqlResultSetMapping> results = root instanceof JaxbEntity
+				? buildSqlResultsetMappings( ( (JaxbEntity) root ).getSqlResultSetMapping(), defaults, classLoaderAccess )
+				: new ArrayList<>();
 		if ( defaults.canUseJavaAnnotations() ) {
 			SqlResultSetMapping annotation = getPhysicalAnnotation( SqlResultSetMapping.class );
 			addSqlResultsetMappingIfNeeded( annotation, results );
@@ -1950,26 +2052,18 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 	}
 
 	public static List<NamedEntityGraph> buildNamedEntityGraph(
-			Element element,
+			List<JaxbNamedEntityGraph> elements,
 			XMLContext.Default defaults,
 			ClassLoaderAccess classLoaderAccess) {
-		if ( element == null ) {
-			return new ArrayList<>();
-		}
 		List<NamedEntityGraph> namedEntityGraphList = new ArrayList<>();
-		List<Element> namedEntityGraphElements = element.elements( "named-entity-graph" );
-		for ( Element subElement : namedEntityGraphElements ) {
+		for ( JaxbNamedEntityGraph element : elements ) {
 			AnnotationDescriptor ann = new AnnotationDescriptor( NamedEntityGraph.class );
-			copyStringAttribute( ann, subElement, "name", false );
-			copyBooleanAttribute( ann, subElement, "include-all-attributes" );
-			bindNamedAttributeNodes( subElement, ann );
+			copyAttribute( ann, "name", element.getName(), false );
+			copyAttribute( ann, "include-all-attributes", element.isIncludeAllAttributes(), false );
+			bindNamedAttributeNodes( element.getNamedAttributeNode(), ann );
 
-			List<Element> subgraphNodes = subElement.elements( "subgraph" );
-			List<Element> subclassSubgraphNodes = subElement.elements( "subclass-subgraph" );
-			if(!subclassSubgraphNodes.isEmpty()) {
-				subgraphNodes.addAll( subclassSubgraphNodes );
-			}
-			bindNamedSubgraph( defaults, ann, subgraphNodes, classLoaderAccess );
+			bindNamedSubgraph( defaults, ann, "subgraphs", element.getSubgraph(), classLoaderAccess );
+			bindNamedSubgraph( defaults, ann, "subclass-subgraph", element.getSubclassSubgraph(), classLoaderAccess );
 			namedEntityGraphList.add( AnnotationFactory.create( ann ) );
 		}
 		//TODO
@@ -1979,13 +2073,14 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 	private static void bindNamedSubgraph(
 			XMLContext.Default defaults,
 			AnnotationDescriptor ann,
-			List<Element> subgraphNodes,
+			String annotationAttributeName,
+			List<JaxbNamedSubgraph> subgraphNodes,
 			ClassLoaderAccess classLoaderAccess) {
 		List<NamedSubgraph> annSubgraphNodes = new ArrayList<>(  );
-		for(Element subgraphNode : subgraphNodes){
+		for(JaxbNamedSubgraph subgraphNode : subgraphNodes){
 			AnnotationDescriptor annSubgraphNode = new AnnotationDescriptor( NamedSubgraph.class );
-			copyStringAttribute( annSubgraphNode, subgraphNode, "name", true );
-			String clazzName = subgraphNode.attributeValue( "class" );
+			copyAttribute( annSubgraphNode, "name", subgraphNode.getName(), true );
+			String clazzName = subgraphNode.getClazz();
 			Class clazz;
 			try {
 				clazz = classLoaderAccess.classForName(
@@ -1996,56 +2091,49 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 				throw new AnnotationException( "Unable to find entity-class: " + clazzName, e );
 			}
 			annSubgraphNode.setValue( "type", clazz );
-			bindNamedAttributeNodes(subgraphNode, annSubgraphNode);
+			bindNamedAttributeNodes(subgraphNode.getNamedAttributeNode(), annSubgraphNode);
 			annSubgraphNodes.add( AnnotationFactory.create( annSubgraphNode ) );
 		}
 
-		ann.setValue( "subgraphs", annSubgraphNodes.toArray( new NamedSubgraph[annSubgraphNodes.size()] ) );
+		ann.setValue( annotationAttributeName, annSubgraphNodes.toArray( new NamedSubgraph[annSubgraphNodes.size()] ) );
 	}
 
-	private static void bindNamedAttributeNodes(Element subElement, AnnotationDescriptor ann) {
-		List<Element> namedAttributeNodes = subElement.elements("named-attribute-node");
+	private static void bindNamedAttributeNodes(List<JaxbNamedAttributeNode> elements, AnnotationDescriptor ann) {
 		List<NamedAttributeNode> annNamedAttributeNodes = new ArrayList<>(  );
-		for(Element namedAttributeNode : namedAttributeNodes){
+		for( JaxbNamedAttributeNode element : elements){
 			AnnotationDescriptor annNamedAttributeNode = new AnnotationDescriptor( NamedAttributeNode.class );
-			copyStringAttribute( annNamedAttributeNode, namedAttributeNode, "value", "name", true );
-			copyStringAttribute( annNamedAttributeNode, namedAttributeNode, "subgraph", false );
-			copyStringAttribute( annNamedAttributeNode, namedAttributeNode, "key-subgraph", false );
+			copyAttribute( annNamedAttributeNode, "value", "name", element.getName(),true );
+			copyAttribute( annNamedAttributeNode, "subgraph", element.getSubgraph(), false );
+			copyAttribute( annNamedAttributeNode, "key-subgraph", element.getKeySubgraph(), false );
 			annNamedAttributeNodes.add( AnnotationFactory.create( annNamedAttributeNode ) );
 		}
 		ann.setValue( "attributeNodes", annNamedAttributeNodes.toArray( new NamedAttributeNode[annNamedAttributeNodes.size()] ) );
 	}
 
 	public static List<NamedStoredProcedureQuery> buildNamedStoreProcedureQueries(
-			Element element,
+			List<JaxbNamedStoredProcedureQuery> elements,
 			XMLContext.Default defaults,
 			ClassLoaderAccess classLoaderAccess) {
-		if ( element == null ) {
-			return new ArrayList<>();
-		}
-		List namedStoredProcedureElements = element.elements( "named-stored-procedure-query" );
 		List<NamedStoredProcedureQuery> namedStoredProcedureQueries = new ArrayList<>();
-		for ( Object obj : namedStoredProcedureElements ) {
-			Element subElement = (Element) obj;
+		for ( JaxbNamedStoredProcedureQuery element : elements ) {
 			AnnotationDescriptor ann = new AnnotationDescriptor( NamedStoredProcedureQuery.class );
-			copyStringAttribute( ann, subElement, "name", true );
-			copyStringAttribute( ann, subElement, "procedure-name", true );
+			copyAttribute( ann, "name", element.getName(), true );
+			copyAttribute( ann, "procedure-name", element.getProcedureName(), true );
 
-			List<Element> elements = subElement.elements( "parameter" );
 			List<StoredProcedureParameter> storedProcedureParameters = new ArrayList<>();
 
-			for ( Element parameterElement : elements ) {
+			for ( JaxbStoredProcedureParameter parameterElement : element.getParameter() ) {
 				AnnotationDescriptor parameterDescriptor = new AnnotationDescriptor( StoredProcedureParameter.class );
-				copyStringAttribute( parameterDescriptor, parameterElement, "name", false );
-				String modeValue = parameterElement.attributeValue( "mode" );
+				copyAttribute( parameterDescriptor, "name", parameterElement.getName(), false );
+				ParameterMode modeValue = parameterElement.getMode();
 				if ( modeValue == null ) {
 					parameterDescriptor.setValue( "mode", ParameterMode.IN );
 				}
 				else {
-					parameterDescriptor.setValue( "mode", ParameterMode.valueOf( modeValue.toUpperCase(Locale.ROOT) ) );
+					parameterDescriptor.setValue( "mode", modeValue );
 				}
-				String clazzName = parameterElement.attributeValue( "class" );
-				Class clazz;
+				String clazzName = parameterElement.getClazz();
+				Class<?> clazz;
 				try {
 					clazz = classLoaderAccess.classForName(
 							XMLContext.buildSafeClassName( clazzName, defaults )
@@ -2063,11 +2151,9 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 					storedProcedureParameters.toArray( new StoredProcedureParameter[storedProcedureParameters.size()] )
 			);
 
-			elements = subElement.elements( "result-class" );
-			List<Class> returnClasses = new ArrayList<>();
-			for ( Element classElement : elements ) {
-				String clazzName = classElement.getTextTrim();
-				Class clazz;
+			List<Class<?>> returnClasses = new ArrayList<>();
+			for ( String clazzName : element.getResultClass() ) {
+				Class<?> clazz;
 				try {
 					clazz = classLoaderAccess.classForName(
 							XMLContext.buildSafeClassName( clazzName, defaults )
@@ -2081,14 +2167,8 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 			ann.setValue( "resultClasses", returnClasses.toArray( new Class[returnClasses.size()] ) );
 
 
-			elements = subElement.elements( "result-set-mapping" );
-			List<String> resultSetMappings = new ArrayList<>();
-			for ( Element resultSetMappingElement : elements ) {
-				resultSetMappings.add( resultSetMappingElement.getTextTrim() );
-			}
-			ann.setValue( "resultSetMappings", resultSetMappings.toArray( new String[resultSetMappings.size()] ) );
-			elements = subElement.elements( "hint" );
-			buildQueryHints( elements, ann );
+			ann.setValue( "resultSetMappings", element.getResultSetMapping().toArray( new String[0] ) );
+			buildQueryHints( element.getHint(), ann );
 			namedStoredProcedureQueries.add( AnnotationFactory.create( ann ) );
 		}
 		return namedStoredProcedureQueries;
@@ -2096,20 +2176,15 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 	}
 
 	public static List<SqlResultSetMapping> buildSqlResultsetMappings(
-			Element element,
+			List<JaxbSqlResultSetMapping> elements,
 			XMLContext.Default defaults,
 			ClassLoaderAccess classLoaderAccess) {
 		final List<SqlResultSetMapping> builtResultSetMappings = new ArrayList<>();
-		if ( element == null ) {
-			return builtResultSetMappings;
-		}
 
 		// iterate over each <sql-result-set-mapping/> element
-		for ( Object resultSetMappingElementObject : element.elements( "sql-result-set-mapping" ) ) {
-			final Element resultSetMappingElement = (Element) resultSetMappingElementObject;
-
+		for ( JaxbSqlResultSetMapping resultSetMappingElement : elements ) {
 			final AnnotationDescriptor resultSetMappingAnnotation = new AnnotationDescriptor( SqlResultSetMapping.class );
-			copyStringAttribute( resultSetMappingAnnotation, resultSetMappingElement, "name", true );
+			copyAttribute( resultSetMappingAnnotation, "name", resultSetMappingElement.getName(), true );
 
 			// iterate over the <sql-result-set-mapping/> sub-elements, which should include:
 			//		* <entity-result/>
@@ -2120,48 +2195,24 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 			List<ColumnResult> columnResultAnnotations = null;
 			List<ConstructorResult> constructorResultAnnotations = null;
 
-			for ( Object resultElementObject : resultSetMappingElement.elements() ) {
-				final Element resultElement = (Element) resultElementObject;
-
-				if ( "entity-result".equals( resultElement.getName() ) ) {
-					if ( entityResultAnnotations == null ) {
-						entityResultAnnotations = new ArrayList<>();
-					}
-					// process the <entity-result/>
-					entityResultAnnotations.add( buildEntityResult( resultElement, defaults, classLoaderAccess ) );
+			for ( JaxbEntityResult resultElement : resultSetMappingElement.getEntityResult() ) {
+				if ( entityResultAnnotations == null ) {
+					entityResultAnnotations = new ArrayList<>();
 				}
-				else if ( "column-result".equals( resultElement.getName() ) ) {
-					if ( columnResultAnnotations == null ) {
-						columnResultAnnotations = new ArrayList<>();
-					}
-					columnResultAnnotations.add( buildColumnResult( resultElement, defaults, classLoaderAccess ) );
+				// process the <entity-result/>
+				entityResultAnnotations.add( buildEntityResult( resultElement, defaults, classLoaderAccess ) );
+			}
+			for ( JaxbColumnResult resultElement : resultSetMappingElement.getColumnResult() ) {
+				if ( columnResultAnnotations == null ) {
+					columnResultAnnotations = new ArrayList<>();
 				}
-				else if ( "constructor-result".equals( resultElement.getName() ) ) {
-					if ( constructorResultAnnotations == null ) {
-						constructorResultAnnotations = new ArrayList<>();
-					}
-					constructorResultAnnotations.add( buildConstructorResult( resultElement, defaults, classLoaderAccess ) );
+				columnResultAnnotations.add( buildColumnResult( resultElement, defaults, classLoaderAccess ) );
+			}
+			for ( JaxbConstructorResult resultElement : resultSetMappingElement.getConstructorResult() ) {
+				if ( constructorResultAnnotations == null ) {
+					constructorResultAnnotations = new ArrayList<>();
 				}
-				else {
-					// most likely the <result-class/> this code used to handle.  I have left the code here,
-					// but commented it out for now.  I'll just log a warning for now.
-					LOG.debug( "Encountered unrecognized sql-result-set-mapping sub-element : " + resultElement.getName() );
-
-//					String clazzName = subelement.attributeValue( "result-class" );
-//					if ( StringHelper.isNotEmpty( clazzName ) ) {
-//						Class clazz;
-//						try {
-//							clazz = ReflectHelper.classForName(
-//									XMLContext.buildSafeClassName( clazzName, defaults ),
-//									JPAOverriddenAnnotationReader.class
-//							);
-//						}
-//						catch ( ClassNotFoundException e ) {
-//							throw new AnnotationException( "Unable to find entity-class: " + clazzName, e );
-//						}
-//						ann.setValue( "resultClass", clazz );
-//					}
-				}
+				constructorResultAnnotations.add( buildConstructorResult( resultElement, defaults, classLoaderAccess ) );
 			}
 
 			if ( entityResultAnnotations != null && !entityResultAnnotations.isEmpty() ) {
@@ -2183,10 +2234,6 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 				);
 			}
 
-
-			// this was part of the old code too, but could never figure out what it is supposed to do...
-			// copyStringAttribute( ann, subelement, "result-set-mapping", false );
-
 			builtResultSetMappings.add( AnnotationFactory.create( resultSetMappingAnnotation ) );
 		}
 
@@ -2194,22 +2241,22 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 	}
 
 	private static EntityResult buildEntityResult(
-			Element entityResultElement,
+			JaxbEntityResult entityResultElement,
 			XMLContext.Default defaults,
 			ClassLoaderAccess classLoaderAccess) {
 		final AnnotationDescriptor entityResultDescriptor = new AnnotationDescriptor( EntityResult.class );
 
-		final Class entityClass = resolveClassReference( entityResultElement.attributeValue( "entity-class" ), defaults, classLoaderAccess );
+		final Class<?> entityClass = resolveClassReference( entityResultElement.getEntityClass(), defaults, classLoaderAccess );
 		entityResultDescriptor.setValue( "entityClass", entityClass );
 
-		copyStringAttribute( entityResultDescriptor, entityResultElement, "discriminator-column", false );
+		copyAttribute( entityResultDescriptor, "discriminator-column", entityResultElement.getDiscriminatorColumn(), false );
 
 		// process the <field-result/> sub-elements
 		List<FieldResult> fieldResultAnnotations = new ArrayList<>();
-		for ( Element fieldResult : (List<Element>) entityResultElement.elements( "field-result" ) ) {
+		for ( JaxbFieldResult fieldResult : entityResultElement.getFieldResult() ) {
 			AnnotationDescriptor fieldResultDescriptor = new AnnotationDescriptor( FieldResult.class );
-			copyStringAttribute( fieldResultDescriptor, fieldResult, "name", true );
-			copyStringAttribute( fieldResultDescriptor, fieldResult, "column", true );
+			copyAttribute( fieldResultDescriptor, "name", fieldResult.getName(), true );
+			copyAttribute( fieldResultDescriptor, "column", fieldResult.getColumn(), true );
 			fieldResultAnnotations.add( AnnotationFactory.create( fieldResultDescriptor ) );
 		}
 		entityResultDescriptor.setValue(
@@ -2236,16 +2283,12 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 	}
 
 	private static ColumnResult buildColumnResult(
-			Element columnResultElement,
+			JaxbColumnResult columnResultElement,
 			XMLContext.Default defaults,
 			ClassLoaderAccess classLoaderAccess) {
-//		AnnotationDescriptor columnResultDescriptor = new AnnotationDescriptor( ColumnResult.class );
-//		copyStringAttribute( columnResultDescriptor, columnResultElement, "name", true );
-//		return AnnotationFactory.create( columnResultDescriptor );
-
 		AnnotationDescriptor columnResultDescriptor = new AnnotationDescriptor( ColumnResult.class );
-		copyStringAttribute( columnResultDescriptor, columnResultElement, "name", true );
-		final String columnTypeName = columnResultElement.attributeValue( "class" );
+		copyAttribute( columnResultDescriptor, "name", columnResultElement.getName(), true );
+		final String columnTypeName = columnResultElement.getClazz();
 		if ( StringHelper.isNotEmpty( columnTypeName ) ) {
 			columnResultDescriptor.setValue( "type", resolveClassReference( columnTypeName, defaults, classLoaderAccess ) );
 		}
@@ -2253,16 +2296,16 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 	}
 
 	private static ConstructorResult buildConstructorResult(
-			Element constructorResultElement,
+			JaxbConstructorResult constructorResultElement,
 			XMLContext.Default defaults,
 			ClassLoaderAccess classLoaderAccess) {
 		AnnotationDescriptor constructorResultDescriptor = new AnnotationDescriptor( ConstructorResult.class );
 
-		final Class entityClass = resolveClassReference( constructorResultElement.attributeValue( "target-class" ), defaults, classLoaderAccess );
+		final Class entityClass = resolveClassReference( constructorResultElement.getTargetClass(), defaults, classLoaderAccess );
 		constructorResultDescriptor.setValue( "targetClass", entityClass );
 
 		List<ColumnResult> columnResultAnnotations = new ArrayList<>();
-		for ( Element columnResultElement : (List<Element>) constructorResultElement.elements( "column" ) ) {
+		for ( JaxbColumnResult columnResultElement : constructorResultElement.getColumn() ) {
 			columnResultAnnotations.add( buildColumnResult( columnResultElement, defaults, classLoaderAccess ) );
 		}
 		constructorResultDescriptor.setValue(
@@ -2289,9 +2332,11 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		}
 	}
 
-	private NamedQueries getNamedQueries(Element tree, XMLContext.Default defaults) {
+	private NamedQueries getNamedQueries(ManagedType root, XMLContext.Default defaults) {
 		//TODO avoid the Proxy Creation (@NamedQueries) when possible
-		List<NamedQuery> queries = (List<NamedQuery>) buildNamedQueries( tree, false, defaults, classLoaderAccess );
+		List<NamedQuery> queries = root instanceof JaxbEntity
+				? buildNamedQueries( ( (JaxbEntity) root ).getNamedQuery(), defaults, classLoaderAccess )
+				: new ArrayList<>();
 		if ( defaults.canUseJavaAnnotations() ) {
 			NamedQuery annotation = getPhysicalAnnotation( NamedQuery.class );
 			addNamedQueryIfNeeded( annotation, queries );
@@ -2328,8 +2373,10 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		}
 	}
 
-	private NamedEntityGraphs getNamedEntityGraphs(Element tree, XMLContext.Default defaults) {
-		List<NamedEntityGraph> queries = buildNamedEntityGraph( tree, defaults, classLoaderAccess );
+	private NamedEntityGraphs getNamedEntityGraphs(ManagedType root, XMLContext.Default defaults) {
+		List<NamedEntityGraph> queries = root instanceof JaxbEntity
+				? buildNamedEntityGraph( ( (JaxbEntity) root ).getNamedEntityGraph(), defaults, classLoaderAccess )
+				: new ArrayList<>();
 		if ( defaults.canUseJavaAnnotations() ) {
 			NamedEntityGraph annotation = getPhysicalAnnotation( NamedEntityGraph.class );
 			addNamedEntityGraphIfNeeded( annotation, queries );
@@ -2367,8 +2414,10 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 
 	}
 
-	private NamedStoredProcedureQueries getNamedStoredProcedureQueries(Element tree, XMLContext.Default defaults) {
-		List<NamedStoredProcedureQuery> queries = buildNamedStoreProcedureQueries( tree, defaults, classLoaderAccess );
+	private NamedStoredProcedureQueries getNamedStoredProcedureQueries(ManagedType root, XMLContext.Default defaults) {
+		List<NamedStoredProcedureQuery> queries = root instanceof JaxbEntity
+				? buildNamedStoreProcedureQueries( ( (JaxbEntity) root ).getNamedStoredProcedureQuery(), defaults, classLoaderAccess )
+				: new ArrayList<>();
 		if ( defaults.canUseJavaAnnotations() ) {
 			NamedStoredProcedureQuery annotation = getPhysicalAnnotation( NamedStoredProcedureQuery.class );
 			addNamedStoredProcedureQueryIfNeeded( annotation, queries );
@@ -2407,9 +2456,11 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 
 
 	private NamedNativeQueries getNamedNativeQueries(
-			Element tree,
+			ManagedType root,
 			XMLContext.Default defaults) {
-		List<NamedNativeQuery> queries = (List<NamedNativeQuery>) buildNamedQueries( tree, true, defaults, classLoaderAccess );
+		List<NamedNativeQuery> queries = root instanceof JaxbEntity
+				? buildNamedNativeQueries( ( (JaxbEntity) root ).getNamedNativeQuery(), defaults, classLoaderAccess )
+				: new ArrayList<>();
 		if ( defaults.canUseJavaAnnotations() ) {
 			NamedNativeQuery annotation = getPhysicalAnnotation( NamedNativeQuery.class );
 			addNamedNativeQueryIfNeeded( annotation, queries );
@@ -2446,16 +2497,16 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		}
 	}
 
-	private static void buildQueryHints(List<Element> elements, AnnotationDescriptor ann){
+	private static void buildQueryHints(List<JaxbQueryHint> elements, AnnotationDescriptor ann){
 		List<QueryHint> queryHints = new ArrayList<>( elements.size() );
-		for ( Element hint : elements ) {
+		for ( JaxbQueryHint hint : elements ) {
 			AnnotationDescriptor hintDescriptor = new AnnotationDescriptor( QueryHint.class );
-			String value = hint.attributeValue( "name" );
+			String value = hint.getName();
 			if ( value == null ) {
 				throw new AnnotationException( "<hint> without name. " + SCHEMA_VALIDATION );
 			}
 			hintDescriptor.setValue( "name", value );
-			value = hint.attributeValue( "value" );
+			value = hint.getValue();
 			if ( value == null ) {
 				throw new AnnotationException( "<hint> without value. " + SCHEMA_VALIDATION );
 			}
@@ -2465,32 +2516,33 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		ann.setValue( "hints", queryHints.toArray( new QueryHint[queryHints.size()] ) );
 	}
 
-	public static List buildNamedQueries(
-			Element element,
-			boolean isNative,
+	public static List<NamedQuery> buildNamedQueries(
+			List<JaxbNamedQuery> elements,
 			XMLContext.Default defaults,
 			ClassLoaderAccess classLoaderAccess) {
-		if ( element == null ) {
-			return new ArrayList();
+		List<NamedQuery> namedQueries = new ArrayList<>();
+		for ( JaxbNamedQuery element : elements ) {
+			AnnotationDescriptor ann = new AnnotationDescriptor( NamedQuery.class );
+			copyAttribute( ann, "name", element.getName(), false );
+			copyAttribute( ann, "query", element.getQuery(), true );
+			buildQueryHints( element.getHint(), ann );
+			copyAttribute( ann, "lock-mode", element.getLockMode(), false );
+			namedQueries.add( AnnotationFactory.create( ann ) );
 		}
-		List namedQueryElementList = isNative ?
-				element.elements( "named-native-query" ) :
-				element.elements( "named-query" );
-		List namedQueries = new ArrayList();
-		for ( Object aNamedQueryElementList : namedQueryElementList ) {
-			Element subelement = (Element) aNamedQueryElementList;
-			AnnotationDescriptor ann = new AnnotationDescriptor(
-					isNative ? NamedNativeQuery.class : NamedQuery.class
-			);
-			copyStringAttribute( ann, subelement, "name", false );
-			Element queryElt = subelement.element( "query" );
-			if ( queryElt == null ) {
-				throw new AnnotationException( "No <query> element found." + SCHEMA_VALIDATION );
-			}
-			copyStringElement( queryElt, ann, "query" );
-			List<Element> elements = subelement.elements( "hint" );
-			buildQueryHints( elements, ann );
-			String clazzName = subelement.attributeValue( "result-class" );
+		return namedQueries;
+	}
+
+	public static List<NamedNativeQuery> buildNamedNativeQueries(
+			List<JaxbNamedNativeQuery> elements,
+			XMLContext.Default defaults,
+			ClassLoaderAccess classLoaderAccess) {
+		List<NamedNativeQuery> namedQueries = new ArrayList<>();
+		for ( JaxbNamedNativeQuery element : elements ) {
+			AnnotationDescriptor ann = new AnnotationDescriptor( NamedNativeQuery.class );
+			copyAttribute( ann, "name", element.getName(), false );
+			copyAttribute( ann, "query", element.getQuery(), true );
+			buildQueryHints( element.getHint(), ann );
+			String clazzName = element.getResultClass();
 			if ( StringHelper.isNotEmpty( clazzName ) ) {
 				Class clazz;
 				try {
@@ -2503,14 +2555,17 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 				}
 				ann.setValue( "resultClass", clazz );
 			}
-			copyStringAttribute( ann, subelement, "result-set-mapping", false );
+			copyAttribute( ann, "result-set-mapping", element.getResultSetMapping(), false );
 			namedQueries.add( AnnotationFactory.create( ann ) );
 		}
 		return namedQueries;
 	}
 
-	private TableGenerator getTableGenerator(Element tree, XMLContext.Default defaults) {
-		Element element = tree != null ? tree.element( annotationToXml.get( TableGenerator.class ) ) : null;
+	private TableGenerator getTableGenerator(ManagedType root, XMLContext.Default defaults) {
+		return getTableGenerator( root instanceof JaxbEntity ? ( (JaxbEntity) root ).getTableGenerator() : null, defaults );
+	}
+
+	private TableGenerator getTableGenerator(JaxbTableGenerator element, XMLContext.Default defaults) {
 		if ( element != null ) {
 			return buildTableGeneratorAnnotation( element, defaults );
 		}
@@ -2548,18 +2603,18 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		}
 	}
 
-	public static TableGenerator buildTableGeneratorAnnotation(Element element, XMLContext.Default defaults) {
+	public static TableGenerator buildTableGeneratorAnnotation(JaxbTableGenerator element, XMLContext.Default defaults) {
 		AnnotationDescriptor ad = new AnnotationDescriptor( TableGenerator.class );
-		copyStringAttribute( ad, element, "name", false );
-		copyStringAttribute( ad, element, "table", false );
-		copyStringAttribute( ad, element, "catalog", false );
-		copyStringAttribute( ad, element, "schema", false );
-		copyStringAttribute( ad, element, "pk-column-name", false );
-		copyStringAttribute( ad, element, "value-column-name", false );
-		copyStringAttribute( ad, element, "pk-column-value", false );
-		copyIntegerAttribute( ad, element, "initial-value" );
-		copyIntegerAttribute( ad, element, "allocation-size" );
-		buildUniqueConstraints( ad, element );
+		copyAttribute( ad, "name", element.getName(), false );
+		copyAttribute( ad, "table", element.getTable(), false );
+		copyAttribute( ad, "catalog", element.getCatalog(), false );
+		copyAttribute( ad, "schema", element.getSchema(), false );
+		copyAttribute( ad, "pk-column-name", element.getPkColumnName(), false );
+		copyAttribute( ad, "value-column-name", element.getValueColumnName(), false );
+		copyAttribute( ad, "pk-column-value", element.getPkColumnValue(), false );
+		copyAttribute( ad, "initial-value", element.getInitialValue(), false );
+		copyAttribute( ad, "allocation-size", element.getAllocationSize(), false );
+		buildUniqueConstraints( ad, element.getUniqueConstraint() );
 		if ( StringHelper.isEmpty( (String) ad.valueOf( "schema" ) )
 				&& StringHelper.isNotEmpty( defaults.getSchema() ) ) {
 			ad.setValue( "schema", defaults.getSchema() );
@@ -2571,8 +2626,12 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		return AnnotationFactory.create( ad );
 	}
 
-	private SequenceGenerator getSequenceGenerator(Element tree, XMLContext.Default defaults) {
-		Element element = tree != null ? tree.element( annotationToXml.get( SequenceGenerator.class ) ) : null;
+	private SequenceGenerator getSequenceGenerator(ManagedType root, XMLContext.Default defaults) {
+		return getSequenceGenerator( root instanceof JaxbEntity ? ( (JaxbEntity) root ).getSequenceGenerator() : null,
+				defaults );
+	}
+
+	private SequenceGenerator getSequenceGenerator(JaxbSequenceGenerator element, XMLContext.Default defaults) {
 		if ( element != null ) {
 			return buildSequenceGeneratorAnnotation( element );
 		}
@@ -2584,13 +2643,13 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		}
 	}
 
-	public static SequenceGenerator buildSequenceGeneratorAnnotation(Element element) {
+	public static SequenceGenerator buildSequenceGeneratorAnnotation(JaxbSequenceGenerator element) {
 		if ( element != null ) {
 			AnnotationDescriptor ad = new AnnotationDescriptor( SequenceGenerator.class );
-			copyStringAttribute( ad, element, "name", false );
-			copyStringAttribute( ad, element, "sequence-name", false );
-			copyIntegerAttribute( ad, element, "initial-value" );
-			copyIntegerAttribute( ad, element, "allocation-size" );
+			copyAttribute( ad, "name", element.getName(), false );
+			copyAttribute( ad, "sequence-name", element.getSequenceName(), false );
+			copyAttribute( ad, "initial-value", element.getInitialValue(), false );
+			copyAttribute( ad, "allocation-size", element.getAllocationSize(), false );
 			return AnnotationFactory.create( ad );
 		}
 		else {
@@ -2598,32 +2657,17 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		}
 	}
 
-	private DiscriminatorColumn getDiscriminatorColumn(Element tree, XMLContext.Default defaults) {
-		Element element = tree != null ? tree.element( "discriminator-column" ) : null;
+	private DiscriminatorColumn getDiscriminatorColumn(ManagedType root, XMLContext.Default defaults) {
+		JaxbDiscriminatorColumn element = root instanceof JaxbEntity ? ( (JaxbEntity) root ).getDiscriminatorColumn() : null;
 		if ( element != null ) {
 			AnnotationDescriptor ad = new AnnotationDescriptor( DiscriminatorColumn.class );
-			copyStringAttribute( ad, element, "name", false );
-			copyStringAttribute( ad, element, "column-definition", false );
-			String value = element.attributeValue( "discriminator-type" );
-			DiscriminatorType type = DiscriminatorType.STRING;
-			if ( value != null ) {
-				if ( "STRING".equals( value ) ) {
-					type = DiscriminatorType.STRING;
-				}
-				else if ( "CHAR".equals( value ) ) {
-					type = DiscriminatorType.CHAR;
-				}
-				else if ( "INTEGER".equals( value ) ) {
-					type = DiscriminatorType.INTEGER;
-				}
-				else {
-					throw new AnnotationException(
-							"Unknown DiscriminatorType in XML: " + value + " (" + SCHEMA_VALIDATION + ")"
-					);
-				}
+			copyAttribute( ad, "name", element.getName(), false );
+			copyAttribute( ad, "column-definition", element.getColumnDefinition(), false );
+			DiscriminatorType type = element.getDiscriminatorType();
+			if ( type != null ) {
+				ad.setValue( "discriminatorType", type );
 			}
-			ad.setValue( "discriminatorType", type );
-			copyIntegerAttribute( ad, element, "length" );
+			copyAttribute( ad, "length", element.getLength(), false );
 			return AnnotationFactory.create( ad );
 		}
 		else if ( defaults.canUseJavaAnnotations() ) {
@@ -2634,11 +2678,11 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		}
 	}
 
-	private DiscriminatorValue getDiscriminatorValue(Element tree, XMLContext.Default defaults) {
-		Element element = tree != null ? tree.element( "discriminator-value" ) : null;
+	private DiscriminatorValue getDiscriminatorValue(ManagedType root, XMLContext.Default defaults) {
+		String element = root instanceof JaxbEntity ? ( (JaxbEntity) root ).getDiscriminatorValue() : null;
 		if ( element != null ) {
 			AnnotationDescriptor ad = new AnnotationDescriptor( DiscriminatorValue.class );
-			copyStringElement( element, ad, "value" );
+			ad.setValue( "value", element );
 			return AnnotationFactory.create( ad );
 		}
 		else if ( defaults.canUseJavaAnnotations() ) {
@@ -2649,30 +2693,14 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		}
 	}
 
-	private Inheritance getInheritance(Element tree, XMLContext.Default defaults) {
-		Element element = tree != null ? tree.element( "inheritance" ) : null;
+	private Inheritance getInheritance(ManagedType root, XMLContext.Default defaults) {
+		JaxbInheritance element = root instanceof JaxbEntity ? ( (JaxbEntity) root ).getInheritance() : null;
 		if ( element != null ) {
 			AnnotationDescriptor ad = new AnnotationDescriptor( Inheritance.class );
-			Attribute attr = element.attribute( "strategy" );
-			InheritanceType strategy = InheritanceType.SINGLE_TABLE;
-			if ( attr != null ) {
-				String value = attr.getValue();
-				if ( "SINGLE_TABLE".equals( value ) ) {
-					strategy = InheritanceType.SINGLE_TABLE;
-				}
-				else if ( "JOINED".equals( value ) ) {
-					strategy = InheritanceType.JOINED;
-				}
-				else if ( "TABLE_PER_CLASS".equals( value ) ) {
-					strategy = InheritanceType.TABLE_PER_CLASS;
-				}
-				else {
-					throw new AnnotationException(
-							"Unknown InheritanceType in XML: " + value + " (" + SCHEMA_VALIDATION + ")"
-					);
-				}
+			InheritanceType strategy = element.getStrategy();
+			if ( strategy != null ) {
+				ad.setValue( "strategy", strategy );
 			}
-			ad.setValue( "strategy", strategy );
 			return AnnotationFactory.create( ad );
 		}
 		else if ( defaults.canUseJavaAnnotations() ) {
@@ -2683,19 +2711,19 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		}
 	}
 
-	private IdClass getIdClass(Element tree, XMLContext.Default defaults) {
-		Element element = tree == null ? null : tree.element( "id-class" );
+	private IdClass getIdClass(ManagedType root, XMLContext.Default defaults) {
+		JaxbIdClass element = root instanceof EntityOrMappedSuperclass ?
+				( (EntityOrMappedSuperclass) root ).getIdClass() : null;
 		if ( element != null ) {
-			Attribute attr = element.attribute( "class" );
-			if ( attr != null ) {
+			String className = element.getClazz();
+			if ( className != null ) {
 				AnnotationDescriptor ad = new AnnotationDescriptor( IdClass.class );
-				Class clazz;
+				Class<?> clazz;
 				try {
-					clazz = classLoaderAccess.classForName( XMLContext.buildSafeClassName( attr.getValue(), defaults )
-					);
+					clazz = classLoaderAccess.classForName( XMLContext.buildSafeClassName( className, defaults ) );
 				}
 				catch ( ClassLoadingException e ) {
-					throw new AnnotationException( "Unable to find id-class: " + attr.getValue(), e );
+					throw new AnnotationException( "Unable to find id-class: " + className, e );
 				}
 				ad.setValue( "value", clazz );
 				return AnnotationFactory.create( ad );
@@ -2712,14 +2740,20 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		}
 	}
 
+	private PrimaryKeyJoinColumns getPrimaryKeyJoinColumns(ManagedType root, XMLContext.Default defaults) {
+		return root instanceof JaxbEntity
+				? getPrimaryKeyJoinColumns( ( (JaxbEntity) root ).getPrimaryKeyJoinColumn(), defaults, true )
+				: null;
+	}
+
 	/**
 	 * @param mergeWithAnnotations Whether to use Java annotations for this
 	 * element, if present and not disabled by the XMLContext defaults.
 	 * In some contexts (such as an association mapping) merging with
-	 * annotations is never allowed.
 	 */
-	private PrimaryKeyJoinColumns getPrimaryKeyJoinColumns(Element element, XMLContext.Default defaults, boolean mergeWithAnnotations) {
-		PrimaryKeyJoinColumn[] columns = buildPrimaryKeyJoinColumns( element );
+	private PrimaryKeyJoinColumns getPrimaryKeyJoinColumns(List<JaxbPrimaryKeyJoinColumn> elements,
+			XMLContext.Default defaults, boolean mergeWithAnnotations) {
+		PrimaryKeyJoinColumn[] columns = buildPrimaryKeyJoinColumns( elements );
 		if ( mergeWithAnnotations ) {
 			if ( columns.length == 0 && defaults.canUseJavaAnnotations() ) {
 				PrimaryKeyJoinColumn annotation = getPhysicalAnnotation( PrimaryKeyJoinColumn.class );
@@ -2742,14 +2776,15 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		}
 	}
 
-	private Entity getEntity(Element tree, XMLContext.Default defaults) {
-		if ( tree == null ) {
+	private Entity getEntity(ManagedType element, XMLContext.Default defaults) {
+		if ( element == null ) {
 			return defaults.canUseJavaAnnotations() ? getPhysicalAnnotation( Entity.class ) : null;
 		}
 		else {
-			if ( "entity".equals( tree.getName() ) ) {
+			if ( element instanceof JaxbEntity ) {
+				JaxbEntity entityElement = (JaxbEntity) element;
 				AnnotationDescriptor entity = new AnnotationDescriptor( Entity.class );
-				copyStringAttribute( entity, tree, "name", false );
+				copyAttribute( entity, "name", entityElement.getName(), false );
 				if ( defaults.canUseJavaAnnotations()
 						&& StringHelper.isEmpty( (String) entity.valueOf( "name" ) ) ) {
 					Entity javaAnn = getPhysicalAnnotation( Entity.class );
@@ -2765,12 +2800,12 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		}
 	}
 
-	private MappedSuperclass getMappedSuperclass(Element tree, XMLContext.Default defaults) {
-		if ( tree == null ) {
+	private MappedSuperclass getMappedSuperclass(ManagedType element, XMLContext.Default defaults) {
+		if ( element == null ) {
 			return defaults.canUseJavaAnnotations() ? getPhysicalAnnotation( MappedSuperclass.class ) : null;
 		}
 		else {
-			if ( "mapped-superclass".equals( tree.getName() ) ) {
+			if ( element instanceof JaxbMappedSuperclass ) {
 				AnnotationDescriptor entity = new AnnotationDescriptor( MappedSuperclass.class );
 				return AnnotationFactory.create( entity );
 			}
@@ -2780,12 +2815,12 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		}
 	}
 
-	private Embeddable getEmbeddable(Element tree, XMLContext.Default defaults) {
-		if ( tree == null ) {
+	private Embeddable getEmbeddable(ManagedType element, XMLContext.Default defaults) {
+		if ( element == null ) {
 			return defaults.canUseJavaAnnotations() ? getPhysicalAnnotation( Embeddable.class ) : null;
 		}
 		else {
-			if ( "embeddable".equals( tree.getName() ) ) {
+			if ( element instanceof JaxbEmbeddable ) {
 				AnnotationDescriptor entity = new AnnotationDescriptor( Embeddable.class );
 				return AnnotationFactory.create( entity );
 			}
@@ -2795,9 +2830,9 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		}
 	}
 
-	private Table getTable(Element tree, XMLContext.Default defaults) {
-		Element subelement = tree == null ? null : tree.element( "table" );
-		if ( subelement == null ) {
+	private Table getTable(ManagedType root, XMLContext.Default defaults) {
+		JaxbTable element = root instanceof JaxbEntity ? ( (JaxbEntity) root ).getTable() : null;
+		if ( element == null ) {
 			//no element but might have some default or some annotation
 			if ( StringHelper.isNotEmpty( defaults.getCatalog() )
 					|| StringHelper.isNotEmpty( defaults.getSchema() ) ) {
@@ -2832,44 +2867,44 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		else {
 			//ignore java annotation, an element is defined
 			AnnotationDescriptor annotation = new AnnotationDescriptor( Table.class );
-			copyStringAttribute( annotation, subelement, "name", false );
-			copyStringAttribute( annotation, subelement, "catalog", false );
+			copyAttribute( annotation, "name", element.getName(), false );
+			copyAttribute( annotation, "catalog", element.getCatalog(), false );
 			if ( StringHelper.isNotEmpty( defaults.getCatalog() )
 					&& StringHelper.isEmpty( (String) annotation.valueOf( "catalog" ) ) ) {
 				annotation.setValue( "catalog", defaults.getCatalog() );
 			}
-			copyStringAttribute( annotation, subelement, "schema", false );
+			copyAttribute( annotation, "schema", element.getSchema(), false );
 			if ( StringHelper.isNotEmpty( defaults.getSchema() )
 					&& StringHelper.isEmpty( (String) annotation.valueOf( "schema" ) ) ) {
 				annotation.setValue( "schema", defaults.getSchema() );
 			}
-			buildUniqueConstraints( annotation, subelement );
-			buildIndex( annotation, subelement );
+			buildUniqueConstraints( annotation, element.getUniqueConstraint() );
+			buildIndex( annotation, element.getIndex() );
 			return AnnotationFactory.create( annotation );
 		}
 	}
 
-	private SecondaryTables getSecondaryTables(Element tree, XMLContext.Default defaults) {
-		List<Element> elements = tree == null ?
-				new ArrayList<>() :
-				(List<Element>) tree.elements( "secondary-table" );
+	private SecondaryTables getSecondaryTables(ManagedType root, XMLContext.Default defaults) {
+		List<JaxbSecondaryTable> elements = root instanceof JaxbEntity ?
+				( (JaxbEntity) root ).getSecondaryTable() : Collections.emptyList();
 		List<SecondaryTable> secondaryTables = new ArrayList<>( 3 );
-		for ( Element element : elements ) {
+		for ( JaxbSecondaryTable element : elements ) {
 			AnnotationDescriptor annotation = new AnnotationDescriptor( SecondaryTable.class );
-			copyStringAttribute( annotation, element, "name", false );
-			copyStringAttribute( annotation, element, "catalog", false );
+			copyAttribute( annotation, "name", element.getName(), false );
+			copyAttribute( annotation, "catalog", element.getCatalog(), false );
 			if ( StringHelper.isNotEmpty( defaults.getCatalog() )
 					&& StringHelper.isEmpty( (String) annotation.valueOf( "catalog" ) ) ) {
 				annotation.setValue( "catalog", defaults.getCatalog() );
 			}
-			copyStringAttribute( annotation, element, "schema", false );
+			copyAttribute( annotation, "schema", element.getSchema(), false );
 			if ( StringHelper.isNotEmpty( defaults.getSchema() )
 					&& StringHelper.isEmpty( (String) annotation.valueOf( "schema" ) ) ) {
 				annotation.setValue( "schema", defaults.getSchema() );
 			}
-			buildUniqueConstraints( annotation, element );
-			buildIndex( annotation, element );
-			annotation.setValue( "pkJoinColumns", buildPrimaryKeyJoinColumns( element ) );
+			buildUniqueConstraints( annotation, element.getUniqueConstraint() );
+			buildIndex( annotation, element.getIndex() );
+			annotation.setValue( "pkJoinColumns",
+					buildPrimaryKeyJoinColumns( element.getPrimaryKeyJoinColumn() ) );
 			secondaryTables.add( AnnotationFactory.create( annotation ) );
 		}
 		/*
@@ -2924,120 +2959,91 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 			}
 		}
 	}
-	private static void buildIndex(AnnotationDescriptor annotation, Element element){
-		List indexElementList = element.elements( "index" );
-		Index[] indexes = new Index[indexElementList.size()];
-		for(int i=0;i<indexElementList.size();i++){
-			Element subelement = (Element)indexElementList.get( i );
+	private static void buildIndex(AnnotationDescriptor annotation, List<JaxbIndex> elements) {
+		Index[] indexes = new Index[elements.size()];
+		int i = 0;
+		for ( JaxbIndex element : elements ) {
 			AnnotationDescriptor indexAnn = new AnnotationDescriptor( Index.class );
-			copyStringAttribute( indexAnn, subelement, "name", false );
-			copyStringAttribute( indexAnn, subelement, "column-list", true );
-			copyBooleanAttribute( indexAnn, subelement, "unique" );
-			indexes[i] = AnnotationFactory.create( indexAnn );
+			copyAttribute( indexAnn, "name", element.getName(), false );
+			copyAttribute( indexAnn, "column-list", element.getColumnList(), true );
+			copyAttribute( indexAnn, "unique", element.isUnique(), false );
+			indexes[i++] = AnnotationFactory.create( indexAnn );
 		}
 		annotation.setValue( "indexes", indexes );
 	}
-	private static void buildUniqueConstraints(AnnotationDescriptor annotation, Element element) {
-		List uniqueConstraintElementList = element.elements( "unique-constraint" );
-		UniqueConstraint[] uniqueConstraints = new UniqueConstraint[uniqueConstraintElementList.size()];
-		int ucIndex = 0;
-		Iterator ucIt = uniqueConstraintElementList.listIterator();
-		while ( ucIt.hasNext() ) {
-			Element subelement = (Element) ucIt.next();
-			List<Element> columnNamesElements = subelement.elements( "column-name" );
-			String[] columnNames = new String[columnNamesElements.size()];
-			int columnNameIndex = 0;
-			Iterator it = columnNamesElements.listIterator();
-			while ( it.hasNext() ) {
-				Element columnNameElt = (Element) it.next();
-				columnNames[columnNameIndex++] = columnNameElt.getTextTrim();
-			}
+
+	private static void buildUniqueConstraints(AnnotationDescriptor annotation,
+			List<JaxbUniqueConstraint> elements) {
+		UniqueConstraint[] uniqueConstraints = new UniqueConstraint[elements.size()];
+		int i = 0;
+		for ( JaxbUniqueConstraint element : elements ) {
+			String[] columnNames = element.getColumnName().toArray( new String[0] );
 			AnnotationDescriptor ucAnn = new AnnotationDescriptor( UniqueConstraint.class );
-			copyStringAttribute( ucAnn, subelement, "name", false );
+			copyAttribute( ucAnn, "name", element.getName(), false );
 			ucAnn.setValue( "columnNames", columnNames );
-			uniqueConstraints[ucIndex++] = AnnotationFactory.create( ucAnn );
+			uniqueConstraints[i++] = AnnotationFactory.create( ucAnn );
 		}
 		annotation.setValue( "uniqueConstraints", uniqueConstraints );
 	}
 
-	private PrimaryKeyJoinColumn[] buildPrimaryKeyJoinColumns(Element element) {
-		if ( element == null ) {
-			return new PrimaryKeyJoinColumn[] { };
-		}
-		List pkJoinColumnElementList = element.elements( "primary-key-join-column" );
-		PrimaryKeyJoinColumn[] pkJoinColumns = new PrimaryKeyJoinColumn[pkJoinColumnElementList.size()];
-		int index = 0;
-		Iterator pkIt = pkJoinColumnElementList.listIterator();
-		while ( pkIt.hasNext() ) {
-			Element subelement = (Element) pkIt.next();
+	private PrimaryKeyJoinColumn[] buildPrimaryKeyJoinColumns(List<JaxbPrimaryKeyJoinColumn> elements) {
+		PrimaryKeyJoinColumn[] pkJoinColumns = new PrimaryKeyJoinColumn[elements.size()];
+		int i = 0;
+		for ( JaxbPrimaryKeyJoinColumn element : elements ) {
 			AnnotationDescriptor pkAnn = new AnnotationDescriptor( PrimaryKeyJoinColumn.class );
-			copyStringAttribute( pkAnn, subelement, "name", false );
-			copyStringAttribute( pkAnn, subelement, "referenced-column-name", false );
-			copyStringAttribute( pkAnn, subelement, "column-definition", false );
-			pkJoinColumns[index++] = AnnotationFactory.create( pkAnn );
+			copyAttribute( pkAnn, "name", element.getName(), false );
+			copyAttribute( pkAnn, "referenced-column-name", element.getReferencedColumnName(), false );
+			copyAttribute( pkAnn, "column-definition", element.getColumnDefinition(), false );
+			pkJoinColumns[i++] = AnnotationFactory.create( pkAnn );
 		}
 		return pkJoinColumns;
 	}
 
 	/**
-	 * Copy a string attribute from an XML element to an annotation descriptor. The name of the annotation attribute is
+	 * Copy an attribute from an XML element to an annotation descriptor. The name of the annotation attribute is
 	 * computed from the name of the XML attribute by {@link #getJavaAttributeNameFromXMLOne(String)}.
 	 *
 	 * @param annotation annotation descriptor where to copy to the attribute.
-	 * @param element XML element from where to copy the attribute.
 	 * @param attributeName name of the XML attribute to copy.
+	 * @param attributeValue value of the XML attribute to copy.
 	 * @param mandatory whether the attribute is mandatory.
 	 */
-	private static void copyStringAttribute(
-			final AnnotationDescriptor annotation, final Element element,
-			final String attributeName, final boolean mandatory) {
-		copyStringAttribute(
+	private static void copyAttribute(
+			final AnnotationDescriptor annotation,
+			final String attributeName, final Object attributeValue,
+			final boolean mandatory) {
+		copyAttribute(
 				annotation,
-				element,
 				getJavaAttributeNameFromXMLOne( attributeName ),
 				attributeName,
+				attributeValue,
 				mandatory
 		);
 	}
 
 	/**
-	 * Copy a string attribute from an XML element to an annotation descriptor. The name of the annotation attribute is
+	 * Copy an attribute from an XML element to an annotation descriptor. The name of the annotation attribute is
 	 * explicitly given.
 	 *
 	 * @param annotation annotation where to copy to the attribute.
-	 * @param element XML element from where to copy the attribute.
 	 * @param annotationAttributeName name of the annotation attribute where to copy.
-	 * @param attributeName name of the XML attribute to copy.
+	 * @param attributeValue value of the XML attribute to copy.
 	 * @param mandatory whether the attribute is mandatory.
 	 */
-	private static void copyStringAttribute(
-			final AnnotationDescriptor annotation, final Element element,
-			final String annotationAttributeName, final String attributeName, boolean mandatory) {
-		String attribute = element.attributeValue( attributeName );
-		if ( attribute != null ) {
-			annotation.setValue( annotationAttributeName, attribute );
+	private static void copyAttribute(
+			final AnnotationDescriptor annotation,
+			final String annotationAttributeName, final Object attributeName,
+			final Object attributeValue,
+			boolean mandatory) {
+		if ( attributeValue != null ) {
+			annotation.setValue( annotationAttributeName, attributeValue );
 		}
 		else {
 			if ( mandatory ) {
 				throw new AnnotationException(
-						element.getName() + "." + attributeName + " is mandatory in XML overriding. " + SCHEMA_VALIDATION
-				);
-			}
-		}
-	}
-
-	private static void copyIntegerAttribute(AnnotationDescriptor annotation, Element element, String attributeName) {
-		String attribute = element.attributeValue( attributeName );
-		if ( attribute != null ) {
-			String annotationAttributeName = getJavaAttributeNameFromXMLOne( attributeName );
-			annotation.setValue( annotationAttributeName, attribute );
-			try {
-				int length = Integer.parseInt( attribute );
-				annotation.setValue( annotationAttributeName, length );
-			}
-			catch ( NumberFormatException e ) {
-				throw new AnnotationException(
-						element.getPath() + attributeName + " not parseable: " + attribute + " (" + SCHEMA_VALIDATION + ")"
+						annotationToXml.getOrDefault( annotation.type(), annotation.type().getName() )
+								+ "." + attributeName
+								+ " is mandatory in XML overriding. " + SCHEMA_VALIDATION
 				);
 			}
 		}
@@ -3056,19 +3062,6 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		return annotationAttributeName.toString();
 	}
 
-	private static void copyStringElement(Element element, AnnotationDescriptor ad, String annotationAttribute) {
-		String discr = element.getTextTrim();
-		ad.setValue( annotationAttribute, discr );
-	}
-
-	private static void copyBooleanAttribute(AnnotationDescriptor descriptor, Element element, String attribute) {
-		String attributeValue = element.attributeValue( attribute );
-		if ( StringHelper.isNotEmpty( attributeValue ) ) {
-			String javaAttribute = getJavaAttributeNameFromXMLOne( attribute );
-			descriptor.setValue( javaAttribute, Boolean.parseBoolean( attributeValue ) );
-		}
-	}
-
 	private <T extends Annotation> T getPhysicalAnnotation(Class<T> annotationType) {
 		return element.getAnnotation( annotationType );
 	}
@@ -3080,4 +3073,5 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 	private Annotation[] getPhysicalAnnotations() {
 		return element.getAnnotations();
 	}
+
 }

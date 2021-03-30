@@ -40,7 +40,7 @@ public class RevengMetadataCollector {
 		String catalog = tableIdentifier.getCatalog();
 		String schema = tableIdentifier.getSchema();
 		String name = tableIdentifier.getName();
-		InFlightMetadataCollector metadataCollector = metadataBuildingContext.getMetadataCollector();
+		InFlightMetadataCollector metadataCollector = getMetadataCollector();
 		if (metadataCollector != null) {
 			result = metadataCollector.addTable(schema, catalog, name, null, false, metadataBuildingContext);
 		} else {
@@ -86,6 +86,14 @@ public class RevengMetadataCollector {
 		table.setSchema(schema);
 		table.setCatalog(catalog);	
 		return table;
+	}
+	
+	private InFlightMetadataCollector getMetadataCollector() {
+		InFlightMetadataCollector result = null;
+		if (metadataBuildingContext != null) {
+			result = metadataBuildingContext.getMetadataCollector();
+		}
+		return result;
 	}
 	
 }

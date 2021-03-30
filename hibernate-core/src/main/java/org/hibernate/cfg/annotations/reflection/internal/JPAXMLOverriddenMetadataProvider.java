@@ -23,20 +23,19 @@ import javax.persistence.TableGenerator;
 import org.hibernate.annotations.common.reflection.AnnotationReader;
 import org.hibernate.annotations.common.reflection.MetadataProvider;
 import org.hibernate.annotations.common.reflection.java.JavaMetadataProvider;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappings;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbSequenceGenerator;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbTableGenerator;
 import org.hibernate.boot.jaxb.spi.XmlMappingOptions;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
-
-import org.dom4j.Element;
 
 /**
  * MetadataProvider aware of the JPA Deployment descriptor (orm.xml, ...).
  *
  * @author Emmanuel Bernard
  */
-// FIXME HHH-14529 Change this class to use JaxbEntityMappings instead of Document.
-//   I'm delaying this change in order to keep the commits simpler and easier to review.
 @SuppressWarnings("unchecked")
 public final class JPAXMLOverriddenMetadataProvider implements MetadataProvider {
 
@@ -112,28 +111,27 @@ public final class JPAXMLOverriddenMetadataProvider implements MetadataProvider 
 					}
 				}
 				defaults.put( EntityListeners.class, entityListeners );
-				for ( Element element : xmlContext.getAllDocuments() ) {
-					@SuppressWarnings( "unchecked" )
-					List<Element> elements = element.elements( "sequence-generator" );
+				for ( JaxbEntityMappings entityMappings : xmlContext.getAllDocuments() ) {
+					List<JaxbSequenceGenerator> jaxbSequenceGenerators = entityMappings.getSequenceGenerator();
 					List<SequenceGenerator> sequenceGenerators = ( List<SequenceGenerator> ) defaults.get( SequenceGenerator.class );
 					if ( sequenceGenerators == null ) {
 						sequenceGenerators = new ArrayList<>();
 						defaults.put( SequenceGenerator.class, sequenceGenerators );
 					}
-					for ( Element subelement : elements ) {
-						sequenceGenerators.add( JPAXMLOverriddenAnnotationReader.buildSequenceGeneratorAnnotation( subelement ) );
+					for ( JaxbSequenceGenerator element : jaxbSequenceGenerators ) {
+						sequenceGenerators.add( JPAXMLOverriddenAnnotationReader.buildSequenceGeneratorAnnotation( element ) );
 					}
 
-					elements = element.elements( "table-generator" );
+					List<JaxbTableGenerator> jaxbTableGenerators = entityMappings.getTableGenerator();
 					List<TableGenerator> tableGenerators = ( List<TableGenerator> ) defaults.get( TableGenerator.class );
 					if ( tableGenerators == null ) {
 						tableGenerators = new ArrayList<>();
 						defaults.put( TableGenerator.class, tableGenerators );
 					}
-					for ( Element subelement : elements ) {
+					for ( JaxbTableGenerator element : jaxbTableGenerators ) {
 						tableGenerators.add(
 								JPAXMLOverriddenAnnotationReader.buildTableGeneratorAnnotation(
-										subelement, xmlDefaults
+										element, xmlDefaults
 								)
 						);
 					}
@@ -144,8 +142,7 @@ public final class JPAXMLOverriddenMetadataProvider implements MetadataProvider 
 						defaults.put( NamedQuery.class, namedQueries );
 					}
 					List<NamedQuery> currentNamedQueries = JPAXMLOverriddenAnnotationReader.buildNamedQueries(
-							element,
-							false,
+							entityMappings.getNamedQuery(),
 							xmlDefaults,
 							classLoaderAccess
 					);
@@ -156,9 +153,8 @@ public final class JPAXMLOverriddenMetadataProvider implements MetadataProvider 
 						namedNativeQueries = new ArrayList<>();
 						defaults.put( NamedNativeQuery.class, namedNativeQueries );
 					}
-					List<NamedNativeQuery> currentNamedNativeQueries = JPAXMLOverriddenAnnotationReader.buildNamedQueries(
-							element,
-							true,
+					List<NamedNativeQuery> currentNamedNativeQueries = JPAXMLOverriddenAnnotationReader.buildNamedNativeQueries(
+							entityMappings.getNamedNativeQuery(),
 							xmlDefaults,
 							classLoaderAccess
 					);
@@ -172,7 +168,7 @@ public final class JPAXMLOverriddenMetadataProvider implements MetadataProvider 
 						defaults.put( SqlResultSetMapping.class, sqlResultSetMappings );
 					}
 					List<SqlResultSetMapping> currentSqlResultSetMappings = JPAXMLOverriddenAnnotationReader.buildSqlResultsetMappings(
-							element,
+							entityMappings.getSqlResultSetMapping(),
 							xmlDefaults,
 							classLoaderAccess
 					);
@@ -185,7 +181,7 @@ public final class JPAXMLOverriddenMetadataProvider implements MetadataProvider 
 					}
 					List<NamedStoredProcedureQuery> currentNamedStoredProcedureQueries = JPAXMLOverriddenAnnotationReader
 							.buildNamedStoreProcedureQueries(
-							element,
+							entityMappings.getNamedStoredProcedureQuery(),
 							xmlDefaults,
 							classLoaderAccess
 					);

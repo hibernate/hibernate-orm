@@ -72,9 +72,9 @@
         </bindings>
 
 		<bindings node="//xsd:simpleType[@name='constraint-mode']">
-			<javaType name="javax.persistence.ContraintMode"
-					parseMethod="org.hibernate.boot.jaxb.mapping.internal.ContraintModeMarshalling.fromXml"
-					printMethod="org.hibernate.boot.jaxb.mapping.internal.ContraintModeMarshalling.toXml" />
+			<javaType name="javax.persistence.ConstraintMode"
+					parseMethod="org.hibernate.boot.jaxb.mapping.internal.ConstraintModeMarshalling.fromXml"
+					printMethod="org.hibernate.boot.jaxb.mapping.internal.ConstraintModeMarshalling.toXml" />
         </bindings>
 
 

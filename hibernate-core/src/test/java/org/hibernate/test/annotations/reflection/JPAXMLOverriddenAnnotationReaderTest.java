@@ -9,12 +9,15 @@ package org.hibernate.test.annotations.reflection;
 import org.dom4j.DocumentException;
 import org.dom4j.io.SAXReader;
 import org.hibernate.annotations.Columns;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappings;
+import org.hibernate.boot.jaxb.spi.XmlMappingOptions;
 import org.hibernate.cfg.EJB3DTDEntityResolver;
 import org.hibernate.cfg.annotations.reflection.JPAOverriddenAnnotationReader;
 import org.hibernate.cfg.annotations.reflection.internal.JPAXMLOverriddenAnnotationReader;
 import org.hibernate.cfg.annotations.reflection.internal.XMLContext;
 import org.hibernate.internal.util.xml.ErrorLogger;
 import org.hibernate.internal.util.xml.XMLHelper;
+import org.hibernate.internal.util.xml.XMLMappingHelper;
 
 import org.hibernate.testing.boot.BootstrapContextImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -401,32 +404,16 @@ public class JPAXMLOverriddenAnnotationReaderTest extends BaseUnitTestCase {
 		assertEquals( OtherLogListener.class.getName(), context.getDefaultEntityListeners().get( 0 ) );
 	}
 
-	private XMLContext buildContext(String ormfile) throws SAXException, DocumentException, IOException {
-		XMLHelper xmlHelper = new XMLHelper();
-		InputStream is = ClassLoaderServiceTestingImpl.INSTANCE.locateResourceStream( ormfile );
-		assertNotNull( "ORM.xml not found: " + ormfile, is );
+	private XMLContext buildContext(String ormfile) throws IOException {
+		XMLMappingHelper xmlHelper = new XMLMappingHelper( new XmlMappingOptions() {
+			@Override
+			public boolean isPreferJaxb() {
+				return true;
+			}
+		} );
+		JaxbEntityMappings mappings = xmlHelper.readOrmXmlMappings( ormfile );
 		XMLContext context = new XMLContext( BootstrapContextImpl.INSTANCE );
-		ErrorLogger errorLogger = new ErrorLogger();
-		SAXReader saxReader = xmlHelper.createSAXReader( errorLogger, EJB3DTDEntityResolver.INSTANCE );
-		//saxReader.setValidation( false );
-		try {
-			saxReader.setFeature( "http://apache.org/xml/features/validation/schema", true );
-		}
-		catch ( SAXNotSupportedException e ) {
-			saxReader.setValidation( false );
-		}
-		org.dom4j.Document doc;
-		try {
-			doc = saxReader.read( new InputSource( new BufferedInputStream( is ) ) );
-		}
-		finally {
-			is.close();
-		}
-		if ( errorLogger.hasErrors() ) {
-			System.out.println( errorLogger.getErrors().get( 0 ) );
-		}
-		assertFalse( errorLogger.hasErrors() );
-		context.addDocument( doc );
+		context.addDocument( mappings );
 		return context;
 	}
 }

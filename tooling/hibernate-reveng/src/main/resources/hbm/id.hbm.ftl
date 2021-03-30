@@ -1,5 +1,5 @@
 <#if embeddedid?exists>   
-   <composite-id name="${clazz.entityName}Id">
+   <composite-id>
  <#foreach keyproperty in embeddedid.propertyIterator>
 	<#if !c2h.isManyToOne(keyproperty)>
 	   <key-property name="${keyproperty.name}" type="${keyproperty.value.typeName}">

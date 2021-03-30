@@ -10,11 +10,11 @@ import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 
-import org.dom4j.Document;
-import org.dom4j.io.SAXReader;
-
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappings;
+import org.hibernate.boot.jaxb.spi.XmlMappingOptions;
 import org.hibernate.cfg.annotations.reflection.internal.JPAXMLOverriddenAnnotationReader;
 import org.hibernate.cfg.annotations.reflection.internal.XMLContext;
+import org.hibernate.internal.util.xml.XMLMappingHelper;
 
 import org.hibernate.testing.boot.BootstrapContextImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -29,7 +29,11 @@ import static org.junit.Assert.assertTrue;
  * database is used.  Thus, no schema generation or cleanup will be performed.
  */
 public abstract class Ejb3XmlTestCase extends BaseUnitTestCase {
+
 	protected JPAXMLOverriddenAnnotationReader reader;
+
+	protected Ejb3XmlTestCase() {
+	}
 
 	protected void assertAnnotationPresent(Class<? extends Annotation> annotationType) {
 		assertTrue(
@@ -59,17 +63,19 @@ public abstract class Ejb3XmlTestCase extends BaseUnitTestCase {
 	protected XMLContext getContext(String resourceName) throws Exception {
 		InputStream is = getClass().getResourceAsStream( resourceName );
 		assertNotNull( "Could not load resource " + resourceName, is );
-		return getContext( is );
+		return getContext( is, resourceName );
 	}
 
-	protected XMLContext getContext(InputStream is) throws Exception {
-		XMLContext xmlContext = new XMLContext( BootstrapContextImpl.INSTANCE );
-		SAXReader reader = new SAXReader();
-		reader.setFeature( "http://apache.org/xml/features/nonvalidating/load-external-dtd", false );
-		reader.setFeature( "http://xml.org/sax/features/external-general-entities", false );
-		reader.setFeature( "http://xml.org/sax/features/external-parameter-entities", false );
-		Document doc = reader.read( is );
-		xmlContext.addDocument( doc );
-		return xmlContext;
+	protected XMLContext getContext(InputStream is, String resourceName) throws Exception {
+		XMLMappingHelper xmlHelper = new XMLMappingHelper( new XmlMappingOptions() {
+			@Override
+			public boolean isPreferJaxb() {
+				return true;
+			}
+		} );
+		JaxbEntityMappings mappings = xmlHelper.readOrmXmlMappings( is, resourceName );
+		XMLContext context = new XMLContext( BootstrapContextImpl.INSTANCE );
+		context.addDocument( mappings );
+		return context;
 	}
 }

@@ -35,13 +35,13 @@ public class MappingXsdSupport {
 	private final XsdDescriptor jpa21 = LocalXsdResolver.buildXsdDescriptor(
 			"org/hibernate/jpa/orm_2_1.xsd",
 			"2.1",
-			"http://xmlns.jcp.org/xml/ns/persistence"
+			"http://xmlns.jcp.org/xml/ns/persistence/orm"
 	);
 
 	private final XsdDescriptor jpa22 = LocalXsdResolver.buildXsdDescriptor(
 			"org/hibernate/jpa/orm_2_2.xsd",
 			"2.2",
-			"http://xmlns.jcp.org/xml/ns/persistence"
+			"http://xmlns.jcp.org/xml/ns/persistence/orm"
 	);
 
 	private final XsdDescriptor jpa30 = LocalXsdResolver.buildXsdDescriptor(

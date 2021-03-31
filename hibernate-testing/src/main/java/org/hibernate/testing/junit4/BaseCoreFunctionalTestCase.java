@@ -112,11 +112,11 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	protected void buildSessionFactory(Consumer<Configuration> configurationAdapter) {
 		// for now, build the configuration to get all the property settings
-		configuration = constructAndConfigureConfiguration();
+		BootstrapServiceRegistry bootRegistry = buildBootstrapServiceRegistry();
+		configuration = constructAndConfigureConfiguration( bootRegistry );
 		if ( configurationAdapter != null ) {
 			configurationAdapter.accept(configuration);
 		}
-		BootstrapServiceRegistry bootRegistry = buildBootstrapServiceRegistry();
 		serviceRegistry = buildServiceRegistry( bootRegistry, configuration );
 		// this is done here because Configuration does not currently support 4.0 xsd
 		afterConstructAndConfigureConfiguration( configuration );
@@ -145,14 +145,8 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		buildSessionFactory( configurationAdapter );
 	}
 
-	protected Configuration buildConfiguration() {
-		Configuration cfg = constructAndConfigureConfiguration();
-		afterConstructAndConfigureConfiguration( cfg );
-		return cfg;
-	}
-
-	protected Configuration constructAndConfigureConfiguration() {
-		Configuration cfg = constructConfiguration();
+	protected Configuration constructAndConfigureConfiguration(BootstrapServiceRegistry bootstrapServiceRegistry) {
+		Configuration cfg = constructConfiguration( bootstrapServiceRegistry );
 		configure( cfg );
 		return cfg;
 	}
@@ -163,8 +157,8 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		afterConfigurationBuilt( cfg );
 	}
 
-	protected Configuration constructConfiguration() {
-		Configuration configuration = new Configuration();
+	protected Configuration constructConfiguration(BootstrapServiceRegistry bootstrapServiceRegistry) {
+		Configuration configuration = new Configuration( bootstrapServiceRegistry );
 		configuration.setProperty( AvailableSettings.CACHE_REGION_FACTORY, CachingRegionFactory.class.getName() );
 		configuration.setProperty( AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
 		if ( createSchema() ) {

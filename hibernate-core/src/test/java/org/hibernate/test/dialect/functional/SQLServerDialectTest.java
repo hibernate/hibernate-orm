@@ -44,10 +44,9 @@ import static org.junit.Assert.assertTrue;
 public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 
 	@Override
-	protected Configuration constructConfiguration() {
-		Configuration configuration = super.constructConfiguration();
+	protected void configure(Configuration configuration) {
+		super.configure( configuration );
 		configuration.setProperty( AvailableSettings.KEYWORD_AUTO_QUOTING_ENABLED, Boolean.TRUE.toString() );
-		return configuration;
 	}
 
 	@Test

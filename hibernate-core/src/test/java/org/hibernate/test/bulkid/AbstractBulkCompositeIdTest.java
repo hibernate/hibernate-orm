@@ -33,13 +33,12 @@ public abstract class AbstractBulkCompositeIdTest extends BaseCoreFunctionalTest
 	}
 
 	@Override
-	protected Configuration constructConfiguration() {
-		Configuration configuration = super.constructConfiguration();
+	protected void configure(Configuration configuration) {
+		super.configure( configuration );
 		Class<? extends MultiTableBulkIdStrategy> strategyClass = getMultiTableBulkIdStrategyClass();
 		if ( strategyClass != null ) {
 			configuration.setProperty( AvailableSettings.HQL_BULK_ID_STRATEGY, strategyClass.getName() );
 		}
-		return configuration;
 	}
 
 	protected abstract Class<? extends MultiTableBulkIdStrategy> getMultiTableBulkIdStrategyClass();

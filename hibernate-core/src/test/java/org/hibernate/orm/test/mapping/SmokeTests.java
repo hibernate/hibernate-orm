@@ -134,11 +134,11 @@ public class SmokeTests {
 			assertThat( attrMapping.getContainingTableExpression(), is( "mapping_simple_entity" ) );
 			assertThat( attrMapping.getEmbeddableTypeDescriptor().getJdbcTypeCount(), is( 4 ) );
 			assertThat(
-					attrMapping.getEmbeddableTypeDescriptor().getSelectionMapping( 0 ).getSelectionExpression(),
+					attrMapping.getEmbeddableTypeDescriptor().getSelectable( 0 ).getSelectionExpression(),
 					is( "attribute1" )
 			);
 			assertThat(
-					attrMapping.getEmbeddableTypeDescriptor().getSelectionMapping( 1 ).getSelectionExpression(),
+					attrMapping.getEmbeddableTypeDescriptor().getSelectable( 1 ).getSelectionExpression(),
 					is( "attribute2" )
 			);
 		}

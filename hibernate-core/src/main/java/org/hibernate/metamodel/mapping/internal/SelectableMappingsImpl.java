@@ -17,9 +17,9 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.SelectionConsumer;
-import org.hibernate.metamodel.mapping.SelectionMapping;
-import org.hibernate.metamodel.mapping.SelectionMappings;
+import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
@@ -28,12 +28,12 @@ import org.hibernate.type.Type;
 /**
  * @author Christian Beikov
  */
-public class SelectionMappingsImpl implements SelectionMappings {
+public class SelectableMappingsImpl implements SelectableMappings {
 
-	private final SelectionMapping[] selectionMappings;
+	private final SelectableMapping[] selectableMappings;
 
-	public SelectionMappingsImpl(SelectionMapping[] selectionMappings) {
-		this.selectionMappings = selectionMappings;
+	public SelectableMappingsImpl(SelectableMapping[] selectableMappings) {
+		this.selectableMappings = selectableMappings;
 	}
 
 	private static void resolveJdbcMappings(List<JdbcMapping> jdbcMappings, Mapping mapping, Type valueType) {
@@ -55,7 +55,7 @@ public class SelectionMappingsImpl implements SelectionMappings {
 		}
 	}
 
-	public static SelectionMappings from(
+	public static SelectableMappings from(
 			String containingTableExpression,
 			Value value,
 			Mapping mapping,
@@ -63,56 +63,56 @@ public class SelectionMappingsImpl implements SelectionMappings {
 			SqmFunctionRegistry sqmFunctionRegistry) {
 		final List<JdbcMapping> jdbcMappings = new ArrayList<>();
 		resolveJdbcMappings( jdbcMappings, mapping, value.getType() );
-		final List<SelectionMapping> selectionMappings = new ArrayList<>( jdbcMappings.size() );
+		final List<SelectableMapping> selectableMappings = new ArrayList<>( jdbcMappings.size() );
 		final Iterator<Selectable> columnIterator = value.getColumnIterator();
 		while ( columnIterator.hasNext() ) {
 			final Selectable selectable = columnIterator.next();
-			selectionMappings.add(
-					SelectionMappingImpl.from(
+			selectableMappings.add(
+					SelectableMappingImpl.from(
 							containingTableExpression,
 							selectable,
-							jdbcMappings.get( selectionMappings.size() ),
+							jdbcMappings.get( selectableMappings.size() ),
 							dialect,
 							sqmFunctionRegistry
 					)
 			);
 		}
-		return new SelectionMappingsImpl( selectionMappings.toArray( new SelectionMapping[0] ) );
+		return new SelectableMappingsImpl( selectableMappings.toArray( new SelectableMapping[0] ) );
 	}
 
-	public static SelectionMappings from(EmbeddableMappingType embeddableMappingType) {
+	public static SelectableMappings from(EmbeddableMappingType embeddableMappingType) {
 		final int propertySpan = embeddableMappingType.getNumberOfAttributeMappings();
-		final List<SelectionMapping> selectionMappings = CollectionHelper.arrayList( propertySpan );
+		final List<SelectableMapping> selectableMappings = CollectionHelper.arrayList( propertySpan );
 
 		embeddableMappingType.forEachAttributeMapping(
 				(index, attributeMapping) -> {
-					attributeMapping.forEachSelection(
+					attributeMapping.forEachSelectable(
 							(columnIndex, selection) -> {
-								selectionMappings.add( selection );
+								selectableMappings.add( selection );
 							}
 					);
 				}
 		);
 
-		return new SelectionMappingsImpl( selectionMappings.toArray( new SelectionMapping[0] ) );
+		return new SelectableMappingsImpl( selectableMappings.toArray( new SelectableMapping[0] ) );
 	}
 
 	@Override
-	public SelectionMapping getSelectionMapping(int columnIndex) {
-		return selectionMappings[columnIndex];
+	public SelectableMapping getSelectable(int columnIndex) {
+		return selectableMappings[columnIndex];
 	}
 
 	@Override
 	public int getJdbcTypeCount() {
-		return selectionMappings.length;
+		return selectableMappings.length;
 	}
 
 	@Override
-	public int forEachSelection(final int offset, final SelectionConsumer consumer) {
-		for ( int i = 0; i < selectionMappings.length; i++ ) {
-			consumer.accept( offset + i, selectionMappings[i] );
+	public int forEachSelectable(final int offset, final SelectableConsumer consumer) {
+		for ( int i = 0; i < selectableMappings.length; i++ ) {
+			consumer.accept( offset + i, selectableMappings[i] );
 		}
-		return selectionMappings.length;
+		return selectableMappings.length;
 	}
 
 }

@@ -29,7 +29,7 @@ public class MappingModelHelper {
 
 		if ( modelPart instanceof EmbeddableValuedModelPart ) {
 			final List<ColumnReference> columnReferences = new ArrayList<>( jdbcTypeCount );
-			modelPart.forEachSelection(
+			modelPart.forEachSelectable(
 					(columnIndex, selection) -> {
 						final ColumnReference colRef;
 						if ( sqlExpressionResolver == null ) {

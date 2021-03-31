@@ -85,7 +85,7 @@ public final class ExecuteWithIdTableHelper {
 
 		matchingIdSelection.getFromClause().addRoot( mutatingTableGroup );
 
-		mutatingEntityDescriptor.getIdentifierMapping().forEachSelection(
+		mutatingEntityDescriptor.getIdentifierMapping().forEachSelectable(
 				(jdbcPosition, selection) -> {
 					final TableReference tableReference = mutatingTableGroup.resolveTableReference( selection.getContainingTableExpression() );
 					matchingIdSelection.getSelectClause().addSqlSelection(

@@ -22,7 +22,7 @@ import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
-import org.hibernate.metamodel.mapping.SelectionConsumer;
+import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NavigablePath;
@@ -189,8 +189,8 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping {
 	}
 
 	@Override
-	public int forEachSelection(int offset, SelectionConsumer consumer) {
-		return attribute.forEachSelection( offset, consumer );
+	public int forEachSelectable(int offset, SelectableConsumer consumer) {
+		return attribute.forEachSelectable( offset, consumer );
 	}
 
 	@Override

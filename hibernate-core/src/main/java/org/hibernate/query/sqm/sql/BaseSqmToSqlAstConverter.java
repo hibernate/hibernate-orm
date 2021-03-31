@@ -35,7 +35,6 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.internal.FilterHelper;
-import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
@@ -56,7 +55,6 @@ import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.metamodel.mapping.SelectionMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedCollectionPart;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
@@ -1598,43 +1596,41 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
 				final int jdbcTypeCount = identifierMapping.getJdbcTypeCount();
 				if ( jdbcTypeCount == 1 ) {
-					identifierMapping.forEachSelection(
-							(selectionIndex, selectionMapping) -> {
-								additionalRestrictions = SqlAstTreeHelper.combinePredicates(
-										additionalRestrictions,
-										new ComparisonPredicate(
-												new ColumnReference(
-														parentTableGroup.getTableReference( selectionMapping.getContainingTableExpression() ),
-														selectionMapping,
-														sessionFactory
-												),
-												ComparisonOperator.EQUAL,
-												new ColumnReference(
-														tableGroup.getTableReference( selectionMapping.getContainingTableExpression() ),
-														selectionMapping,
-														sessionFactory
-												)
-										)
-								);
-							}
+					identifierMapping.forEachSelectable(
+							(index, selectable) -> additionalRestrictions = SqlAstTreeHelper.combinePredicates(
+									additionalRestrictions,
+									new ComparisonPredicate(
+											new ColumnReference(
+													parentTableGroup.getTableReference( selectable.getContainingTableExpression() ),
+													selectable,
+													sessionFactory
+											),
+											ComparisonOperator.EQUAL,
+											new ColumnReference(
+													tableGroup.getTableReference( selectable.getContainingTableExpression() ),
+													selectable,
+													sessionFactory
+											)
+									)
+							)
 					);
 				}
 				else {
 					final List<Expression> lhs = new ArrayList<>( jdbcTypeCount );
 					final List<Expression> rhs = new ArrayList<>( jdbcTypeCount );
-					identifierMapping.forEachSelection(
-							(selectionIndex, selectionMapping) -> {
+					identifierMapping.forEachSelectable(
+							(index, selectable) -> {
 								lhs.add(
 										new ColumnReference(
-												parentTableGroup.getTableReference( selectionMapping.getContainingTableExpression() ),
-												selectionMapping,
+												parentTableGroup.getTableReference( selectable.getContainingTableExpression() ),
+												selectable,
 												sessionFactory
 										)
 								);
 								rhs.add(
 										new ColumnReference(
-												tableGroup.getTableReference( selectionMapping.getContainingTableExpression() ),
-												selectionMapping,
+												tableGroup.getTableReference( selectable.getContainingTableExpression() ),
+												selectable,
 												sessionFactory
 										)
 								);

@@ -17,8 +17,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
-import org.hibernate.metamodel.mapping.SelectionConsumer;
-import org.hibernate.metamodel.mapping.SelectionMappings;
+import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -117,20 +117,20 @@ public abstract class AbstractCompositeIdentifierMapping
 	}
 
 	@Override
-	public int forEachSelection(int offset, SelectionConsumer consumer) {
+	public int forEachSelectable(int offset, SelectableConsumer consumer) {
 		int span = 0;
 		final List<SingularAttributeMapping> attributes = getAttributes();
 		for ( int i = 0; i < attributes.size(); i++ ) {
 			final SingularAttributeMapping attribute = attributes.get( i );
 			if ( attribute instanceof ToOneAttributeMapping ) {
 				final ToOneAttributeMapping associationAttributeMapping = (ToOneAttributeMapping) attribute;
-				span += associationAttributeMapping.getForeignKeyDescriptor().visitReferringColumns(
+				span += associationAttributeMapping.getForeignKeyDescriptor().visitReferringSelectables(
 						span + offset,
 						consumer
 				);
 			}
 			else {
-				span += attribute.forEachSelection( span + offset, consumer );
+				span += attribute.forEachSelectable( span + offset, consumer );
 			}
 		}
 		return span;
@@ -226,10 +226,10 @@ public abstract class AbstractCompositeIdentifierMapping
 			Clause clause,
 			SqmToSqlAstConverter walker,
 			SqlAstCreationState sqlAstCreationState) {
-		final SelectionMappings selectionMappings = getEmbeddableTypeDescriptor();
-		final List<ColumnReference> columnReferences = CollectionHelper.arrayList( selectionMappings.getJdbcTypeCount() );
+		final SelectableMappings selectableMappings = getEmbeddableTypeDescriptor();
+		final List<ColumnReference> columnReferences = CollectionHelper.arrayList( selectableMappings.getJdbcTypeCount() );
 		final TableReference defaultTableReference = tableGroup.resolveTableReference( getContainingTableExpression() );
-		getEmbeddableTypeDescriptor().forEachSelection(
+		getEmbeddableTypeDescriptor().forEachSelectable(
 				(columnIndex, selection) -> {
 					final TableReference tableReference = selection.getContainingTableExpression().equals( defaultTableReference.getTableExpression() )
 							? defaultTableReference

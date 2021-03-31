@@ -6,7 +6,6 @@
  */
 package org.hibernate.metamodel.mapping;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 
@@ -97,17 +96,17 @@ public interface ModelPart extends MappingModelExpressable {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
-	default int forEachSelection(SelectionConsumer consumer) {
-		return forEachSelection( 0, consumer );
+	default void forEachSelectable(SelectableConsumer consumer) {
+		forEachSelectable( 0, consumer );
 	}
 
-	default int forEachSelection(int offset, SelectionConsumer consumer) {
+	default int forEachSelectable(int offset, SelectableConsumer consumer) {
 		return 0;
 	}
 
 	@FunctionalInterface
 	interface JdbcValueConsumer {
-		void consume(Object value, SelectionMapping jdbcValueMapping);
+		void consume(Object value, SelectableMapping jdbcValueMapping);
 	}
 
 	void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session);

@@ -7,11 +7,11 @@
 package org.hibernate.metamodel.mapping;
 
 /**
- * A column mapping.
+ * Mapping of a selectable (column/formula)
  *
  * @author Christian Beikov
  */
-public interface SelectionMapping {
+public interface SelectableMapping {
 	String getContainingTableExpression();
 	String getSelectionExpression();
 	String getCustomReadExpression();

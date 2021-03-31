@@ -470,7 +470,7 @@ public class LoaderSelectBuilder {
 		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 
 		if ( numberColumns == 1 ) {
-			modelPart.forEachSelection(
+			modelPart.forEachSelectable(
 					(columnIndex, selection) -> {
 						final TableReference tableReference = rootTableGroup.resolveTableReference(
 								selection.getContainingTableExpression() );
@@ -510,7 +510,7 @@ public class LoaderSelectBuilder {
 		else {
 			final List<ColumnReference> columnReferences = new ArrayList<>( numberColumns );
 
-			modelPart.forEachSelection(
+			modelPart.forEachSelectable(
 					(columnIndex, selection) -> {
 						final TableReference tableReference = rootTableGroup.resolveTableReference( selection.getContainingTableExpression() );
 						columnReferences.add(
@@ -906,7 +906,7 @@ public class LoaderSelectBuilder {
 		}
 		else {
 			final List<ColumnReference> columnReferences = new ArrayList<>( jdbcTypeCount );
-			fkDescriptor.forEachSelection(
+			fkDescriptor.forEachSelectable(
 					(columnIndex, selection) ->
 							columnReferences.add(
 									(ColumnReference) sqlAstCreationState.getSqlExpressionResolver()
@@ -964,7 +964,7 @@ public class LoaderSelectBuilder {
 
 		final SqlExpressionResolver sqlExpressionResolver = creationState.getSqlExpressionResolver();
 
-		fkDescriptor.visitTargetColumns(
+		fkDescriptor.visitTargetSelectables(
 				(valuesPosition, selection) -> {
 					// for each column, resolve a SqlSelection and add it to the sub-query select-clause
 					final TableReference tableReference = ownerTableGroup.resolveTableReference( selection.getContainingTableExpression() );

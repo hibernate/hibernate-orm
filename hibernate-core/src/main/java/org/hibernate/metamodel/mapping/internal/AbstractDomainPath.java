@@ -12,7 +12,7 @@ import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.metamodel.mapping.SelectionMapping;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.ordering.ast.DomainPath;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -111,7 +111,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 			SqlAstCreationState creationState) {
 		if ( embeddableValuedModelPart.getFetchableName()
 				.equals( modelPartName ) || ELEMENT_TOKEN.equals( modelPartName ) ) {
-			embeddableValuedModelPart.forEachSelection(
+			embeddableValuedModelPart.forEachSelectable(
 					(columnIndex, selection) -> {
 						addSortSpecification(
 								selection,
@@ -139,7 +139,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 	}
 
 	private void addSortSpecification(
-			SelectionMapping selection,
+			SelectableMapping selection,
 			QuerySpec ast,
 			TableGroup tableGroup,
 			String collation,

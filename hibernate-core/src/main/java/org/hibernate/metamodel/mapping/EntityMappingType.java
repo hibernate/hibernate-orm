@@ -8,7 +8,6 @@ package org.hibernate.metamodel.mapping;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -198,7 +197,7 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 	}
 
 	interface ConstraintOrderedTableConsumer {
-		void consume(String tableExpression, Supplier<Consumer<SelectionConsumer>> tableKeyColumnVisitationSupplier);
+		void consume(String tableExpression, Supplier<Consumer<SelectableConsumer>> tableKeyColumnVisitationSupplier);
 	}
 
 

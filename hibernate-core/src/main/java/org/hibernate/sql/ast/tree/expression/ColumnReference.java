@@ -13,7 +13,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.mapping.SelectionMapping;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.sql.Template;
@@ -39,15 +39,15 @@ public class ColumnReference implements Expression, Assignable {
 
 	public ColumnReference(
 			String qualifier,
-			SelectionMapping selectionMapping,
+			SelectableMapping selectableMapping,
 			SessionFactoryImplementor sessionFactory) {
 		this(
 				qualifier,
-				selectionMapping.getSelectionExpression(),
-				selectionMapping.isFormula(),
-				selectionMapping.getCustomReadExpression(),
-				selectionMapping.getCustomWriteExpression(),
-				selectionMapping.getJdbcMapping(),
+				selectableMapping.getSelectionExpression(),
+				selectableMapping.isFormula(),
+				selectableMapping.getCustomReadExpression(),
+				selectableMapping.getCustomWriteExpression(),
+				selectableMapping.getJdbcMapping(),
 				sessionFactory
 		);
 	}
@@ -99,11 +99,11 @@ public class ColumnReference implements Expression, Assignable {
 
 	public ColumnReference(
 			TableReference tableReference,
-			SelectionMapping selectionMapping,
+			SelectableMapping selectableMapping,
 			SessionFactoryImplementor sessionFactory) {
 		this(
 				tableReference.getIdentificationVariable(),
-				selectionMapping,
+				selectableMapping,
 				sessionFactory
 		);
 	}

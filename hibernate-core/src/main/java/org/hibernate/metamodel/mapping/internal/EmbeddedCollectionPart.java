@@ -169,7 +169,7 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 
 		final List<Expression> expressions = new ArrayList<>();
-		getEmbeddableTypeDescriptor().forEachSelection(
+		getEmbeddableTypeDescriptor().forEachSelectable(
 				(columnIndex, selection) -> {
 					assert containingTableExpression.equals( selection.getContainingTableExpression() );
 					expressions.add(

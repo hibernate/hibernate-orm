@@ -11,7 +11,7 @@ import org.hibernate.sql.results.graph.Fetchable;
 /**
  * @author Steve Ebersole
  */
-public interface BasicValuedModelPart extends BasicValuedMapping, ModelPart, Fetchable, SelectionMapping {
+public interface BasicValuedModelPart extends BasicValuedMapping, ModelPart, Fetchable, SelectableMapping {
 
 	@Override
 	default MappingType getPartMappingType() {

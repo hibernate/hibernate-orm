@@ -24,7 +24,7 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.metamodel.mapping.SelectionConsumer;
+import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
@@ -667,9 +667,9 @@ public class ToOneAttributeMapping
 	}
 
 	@Override
-	public int forEachSelection(int offset, SelectionConsumer consumer) {
+	public int forEachSelectable(int offset, SelectableConsumer consumer) {
 		if ( isKeyReferringSide ) {
-			return foreignKeyDescriptor.visitReferringColumns( offset, consumer );
+			return foreignKeyDescriptor.visitReferringSelectables( offset, consumer );
 		}
 		else {
 			return 0;

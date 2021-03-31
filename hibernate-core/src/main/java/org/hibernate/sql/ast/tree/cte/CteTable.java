@@ -39,7 +39,7 @@ public class CteTable {
 	public CteTable(String cteName, EntityMappingType entityDescriptor) {
 		final int numberOfColumns = entityDescriptor.getIdentifierMapping().getJdbcTypeCount();
 		final List<CteColumn> columns = new ArrayList<>( numberOfColumns );
-		entityDescriptor.getIdentifierMapping().forEachSelection(
+		entityDescriptor.getIdentifierMapping().forEachSelectable(
 				(columnIndex, selection) -> columns.add(
 						new CteColumn("cte_" + selection.getSelectionExpression(), selection.getJdbcMapping() )
 				)

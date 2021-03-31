@@ -56,14 +56,14 @@ public class ManyToOneJoinTableTest {
 		final ToOneAttributeMapping simpleAttributeMapping = (ToOneAttributeMapping) simpleEntityAssociation;
 
 		ForeignKeyDescriptor foreignKeyDescriptor = simpleAttributeMapping.getForeignKeyDescriptor();
-		foreignKeyDescriptor.visitReferringColumns(
+		foreignKeyDescriptor.visitReferringSelectables(
 				(columnIndex, selection) -> {
 					assertThat( selection.getContainingTableExpression(), is( "other_simple" ) );
 					assertThat( selection.getSelectionExpression(), is( "RHS_ID" ) );
 				}
 		);
 
-		foreignKeyDescriptor.visitTargetColumns(
+		foreignKeyDescriptor.visitTargetSelectables(
 				(columnIndex, selection) -> {
 					assertThat( selection.getContainingTableExpression(), is( "simple_entity" ) );
 					assertThat( selection.getSelectionExpression(), is( "id" ) );
@@ -77,14 +77,14 @@ public class ManyToOneJoinTableTest {
 		final ToOneAttributeMapping anotherAttributeMapping = (ToOneAttributeMapping) anotherEntityAssociation;
 
 		foreignKeyDescriptor = anotherAttributeMapping.getForeignKeyDescriptor();
-		foreignKeyDescriptor.visitReferringColumns(
+		foreignKeyDescriptor.visitReferringSelectables(
 				(columnIndex, selection) -> {
 					assertThat( selection.getContainingTableExpression(), is( "other_another" ) );
 					assertThat( selection.getSelectionExpression(), is( "RHS_ID" ) );
 				}
 		);
 
-		foreignKeyDescriptor.visitTargetColumns(
+		foreignKeyDescriptor.visitTargetSelectables(
 				(columnIndex, selection) -> {
 					assertThat( selection.getContainingTableExpression(), is( "another_entity" ) );
 					assertThat( selection.getSelectionExpression(), is( "id" ) );
@@ -103,14 +103,14 @@ public class ManyToOneJoinTableTest {
 		ToOneAttributeMapping otherAttributeMapping = (ToOneAttributeMapping) otherEntityEntityAssociation;
 
 		foreignKeyDescriptor = otherAttributeMapping.getForeignKeyDescriptor();
-		foreignKeyDescriptor.visitReferringColumns(
+		foreignKeyDescriptor.visitReferringSelectables(
 				(columnIndex, selection) -> {
 					assertThat( selection.getContainingTableExpression(), is( "other_simple" ) );
 					assertThat( selection.getSelectionExpression(), is( "LHS_ID" ) );
 				}
 		);
 
-		foreignKeyDescriptor.visitTargetColumns(
+		foreignKeyDescriptor.visitTargetSelectables(
 				(columnIndex, selection) -> {
 					assertThat( selection.getContainingTableExpression(), is( "other_entity" ) );
 					assertThat( selection.getSelectionExpression(), is( "id" ) );
@@ -129,14 +129,14 @@ public class ManyToOneJoinTableTest {
 		otherAttributeMapping = (ToOneAttributeMapping) otherEntityEntityAssociation;
 
 		foreignKeyDescriptor = otherAttributeMapping.getForeignKeyDescriptor();
-		foreignKeyDescriptor.visitReferringColumns(
+		foreignKeyDescriptor.visitReferringSelectables(
 				(columnIndex, selection) -> {
 					assertThat( selection.getContainingTableExpression(), is( "another_entity" ) );
 					assertThat( selection.getSelectionExpression(), is( "other_id" ) );
 				}
 		);
 
-		foreignKeyDescriptor.visitTargetColumns(
+		foreignKeyDescriptor.visitTargetSelectables(
 				(columnIndex, selection) -> {
 					assertThat( selection.getContainingTableExpression(), is( "other_entity" ) );
 					assertThat( selection.getSelectionExpression(), is( "id" ) );

@@ -28,7 +28,7 @@ import org.hibernate.loader.ast.spi.NaturalIdLoader;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
-import org.hibernate.metamodel.mapping.SelectionMapping;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
@@ -278,29 +278,29 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 	 */
 	protected Expression resolveColumnReference(
 			TableGroup rootTableGroup,
-			SelectionMapping selectionMapping,
+			SelectableMapping selectableMapping,
 			SqlExpressionResolver sqlExpressionResolver,
 			SessionFactoryImplementor sessionFactory) {
-		final TableReference tableReference = rootTableGroup.getTableReference( selectionMapping.getContainingTableExpression() );
+		final TableReference tableReference = rootTableGroup.getTableReference( selectableMapping.getContainingTableExpression() );
 		if ( tableReference == null ) {
 			throw new IllegalStateException(
 					String.format(
 							Locale.ROOT,
 							"Unable to locate TableReference for `%s` : %s",
-							selectionMapping.getContainingTableExpression(),
+							selectableMapping.getContainingTableExpression(),
 							rootTableGroup
 					)
 			);
 		}
 		return sqlExpressionResolver.resolveSqlExpression(
-				SqlExpressionResolver.createColumnReferenceKey( tableReference, selectionMapping.getSelectionExpression() ),
+				SqlExpressionResolver.createColumnReferenceKey( tableReference, selectableMapping.getSelectionExpression() ),
 				(processingState) -> new ColumnReference(
 						tableReference,
-						selectionMapping.getSelectionExpression(),
-						selectionMapping.isFormula(),
-						selectionMapping.getCustomReadExpression(),
-						selectionMapping.getCustomWriteExpression(),
-						selectionMapping.getJdbcMapping(),
+						selectableMapping.getSelectionExpression(),
+						selectableMapping.isFormula(),
+						selectableMapping.getCustomReadExpression(),
+						selectableMapping.getCustomWriteExpression(),
+						selectableMapping.getJdbcMapping(),
 						sessionFactory
 				)
 		);

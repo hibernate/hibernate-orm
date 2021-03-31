@@ -13,7 +13,7 @@ import java.util.function.Supplier;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
-import org.hibernate.metamodel.mapping.SelectionConsumer;
+import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -47,7 +47,7 @@ public class DisjunctionRestrictionProducer implements MatchingIdRestrictionProd
 			List<?> matchingIdValues,
 			EntityMappingType entityDescriptor,
 			TableReference mutatingTableReference,
-			Supplier<Consumer<SelectionConsumer>> columnsToMatchVisitationSupplier,
+			Supplier<Consumer<SelectableConsumer>> columnsToMatchVisitationSupplier,
 			ExecutionContext executionContext) {
 		assert matchingIdValues != null;
 		assert ! matchingIdValues.isEmpty();
@@ -87,7 +87,7 @@ public class DisjunctionRestrictionProducer implements MatchingIdRestrictionProd
 		else {
 			final List<ColumnReference> columnReferences = new ArrayList<>( idColumnCount );
 			final List<JdbcMapping> jdbcMappings = new ArrayList<>( idColumnCount );
-			identifierMapping.forEachSelection(
+			identifierMapping.forEachSelectable(
 					(columnIndex, selection) -> {
 						columnReferences.add(
 								new ColumnReference(

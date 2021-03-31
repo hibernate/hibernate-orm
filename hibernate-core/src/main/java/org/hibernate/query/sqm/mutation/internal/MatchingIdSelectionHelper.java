@@ -85,7 +85,7 @@ public class MatchingIdSelectionHelper {
 		//noinspection rawtypes
 		final List<DomainResult> domainResults = new ArrayList<>();
 
-		targetEntityDescriptor.getIdentifierMapping().forEachSelection(
+		targetEntityDescriptor.getIdentifierMapping().forEachSelectable(
 				(position, selection) -> {
 					final TableReference tableReference = mutatingTableGroup.resolveTableReference( selection.getContainingTableExpression() );
 					final Expression expression = sqmConverter.getSqlExpressionResolver().resolveSqlExpression(
@@ -151,7 +151,7 @@ public class MatchingIdSelectionHelper {
 		final TableGroup mutatingTableGroup = sqmConverter.getMutatingTableGroup();
 		idSelectionQuery.getFromClause().addRoot( mutatingTableGroup );
 
-		targetEntityDescriptor.getIdentifierMapping().forEachSelection(
+		targetEntityDescriptor.getIdentifierMapping().forEachSelectable(
 				(position, selection) -> {
 					final TableReference tableReference = mutatingTableGroup.resolveTableReference( selection.getContainingTableExpression() );
 					final Expression expression = sqmConverter.getSqlExpressionResolver().resolveSqlExpression(

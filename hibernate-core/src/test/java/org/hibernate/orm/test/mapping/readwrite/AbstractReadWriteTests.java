@@ -9,7 +9,6 @@ package org.hibernate.orm.test.mapping.readwrite;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Property;
-import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.internal.BasicValuedSingularAttributeMapping;
 
@@ -43,7 +42,7 @@ public abstract class AbstractReadWriteTests {
 				.getRuntimeMetamodels()
 				.getEntityMappingType( ReadWriteEntity.class );
 		final BasicValuedSingularAttributeMapping attribute = (BasicValuedSingularAttributeMapping) entityMapping.findAttributeMapping( "value" );
-		attribute.forEachSelection(
+		attribute.forEachSelectable(
 				(i, selectable) -> {
 					final String readExpression = selectable.getCustomReadExpression();
 				}

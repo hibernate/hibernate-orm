@@ -47,14 +47,14 @@ public class EntityWithOneToOneJoinTableTest {
 		final ToOneAttributeMapping otherAttributeMapping = (ToOneAttributeMapping) other;
 
 		final ForeignKeyDescriptor foreignKeyDescriptor = otherAttributeMapping.getForeignKeyDescriptor();
-		foreignKeyDescriptor.visitReferringColumns(
+		foreignKeyDescriptor.visitReferringSelectables(
 				(columnIndex, selection) -> {
 					assertThat( selection.getContainingTableExpression(), is( "Entity_SimpleEntity" ) );
 					assertThat( selection.getSelectionExpression(), is( "other_id" ) );
 				}
 		);
 
-		foreignKeyDescriptor.visitTargetColumns(
+		foreignKeyDescriptor.visitTargetSelectables(
 				(columnIndex, selection) -> {
 					assertThat( selection.getContainingTableExpression(), is( "SIMPLE_ENTITY" ) );
 					assertThat( selection.getSelectionExpression(), is( "id" ) );

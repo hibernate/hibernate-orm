@@ -18,7 +18,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.metamodel.mapping.SelectionConsumer;
+import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.query.spi.SqlOmittingQueryOptions;
@@ -216,7 +216,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 
 	private void updateTable(
 			String tableExpression,
-			Supplier<Consumer<SelectionConsumer>> tableKeyColumnVisitationSupplier,
+			Supplier<Consumer<SelectableConsumer>> tableKeyColumnVisitationSupplier,
 			QuerySpec idTableSubQuery,
 			ExecutionContext executionContext) {
 		final TableReference updatingTableReference = updatingTableGroup.resolveTableReference( tableExpression );

@@ -48,14 +48,14 @@ public class EntityWithOneToOneSharingPrimaryKeyTest {
 		final ToOneAttributeMapping otherAttributeMapping = (ToOneAttributeMapping) otherAssociation;
 
 		ForeignKeyDescriptor foreignKeyDescriptor = otherAttributeMapping.getForeignKeyDescriptor();
-		foreignKeyDescriptor.visitReferringColumns(
+		foreignKeyDescriptor.visitReferringSelectables(
 				(columnIndex, selection) -> {
 					assertThat( selection.getContainingTableExpression(), is( "EntityWithOneToOneSharingPrimaryKey" ) );
 					assertThat( selection.getSelectionExpression(), is( "id" ) );
 				}
 		);
 
-		foreignKeyDescriptor.visitTargetColumns(
+		foreignKeyDescriptor.visitTargetSelectables(
 				(columnIndex, selection) -> {
 					assertThat( selection.getContainingTableExpression(), is( "SIMPLE_ENTITY" ) );
 					assertThat( selection.getSelectionExpression(), is( "id" ) );

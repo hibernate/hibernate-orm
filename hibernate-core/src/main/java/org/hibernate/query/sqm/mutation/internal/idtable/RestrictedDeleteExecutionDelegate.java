@@ -23,7 +23,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.internal.FilterHelper;
-import org.hibernate.metamodel.mapping.SelectionConsumer;
+import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.MappingModelHelper;
@@ -267,7 +267,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 
 	private void deleteFromNonRootTableWithoutIdTable(
 			TableReference targetTableReference,
-			Supplier<Consumer<SelectionConsumer>> tableKeyColumnVisitationSupplier,
+			Supplier<Consumer<SelectableConsumer>> tableKeyColumnVisitationSupplier,
 			SqlExpressionResolver sqlExpressionResolver,
 			TableGroup rootTableGroup,
 			QuerySpec matchingIdSubQuerySpec,
@@ -448,7 +448,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 
 	private void deleteFromTableUsingIdTable(
 			String tableExpression,
-			Supplier<Consumer<SelectionConsumer>> tableKeyColumnVisitationSupplier,
+			Supplier<Consumer<SelectableConsumer>> tableKeyColumnVisitationSupplier,
 			QuerySpec idTableSubQuery,
 			ExecutionContext executionContext) {
 		log.tracef( "deleteFromTableUsingIdTable - %s", tableExpression );

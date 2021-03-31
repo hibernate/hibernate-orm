@@ -7,17 +7,30 @@
 package org.hibernate.metamodel.mapping;
 
 /**
- * Consumer used to visit columns for a given model part
+ * Consumer used to visit selectable (column/formula) mappings
  *
  * @author Steve Ebersole
  */
 @FunctionalInterface
-public interface SelectionConsumer {
+public interface SelectableConsumer {
+	/**
+	 * Accept the selectable mapping.  `selectIndex` is its position,
+	 * the meaning of which depends on the impl and whether
+	 * {@link SelectableMappings#forEachSelectable(SelectableConsumer)} or
+	 * {@link SelectableMappings#forEachSelectable(int, SelectableConsumer)}
+	 * was used
+	 */
+	void accept(int selectionIndex, SelectableMapping selectableMapping);
 
-	void accept(int selectionIndex, SelectionMapping selectionMapping);
-
+	/**
+	 * Simple form allowing visitation over a number of column names within a
+	 * table.
+	 *
+	 * Very limited functionality in terms of the visited SelectableMappings
+	 * will not have any defined JdbcMapping, etc
+	 */
 	default void accept(String tableName, String[] columnNames) {
-		class SelectionMappingIterator implements SelectionMapping {
+		class SelectableMappingIterator implements SelectableMapping {
 
 			private int index;
 
@@ -52,7 +65,7 @@ public interface SelectionConsumer {
 			}
 		}
 		for (
-				SelectionMappingIterator iterator = new SelectionMappingIterator();
+				SelectableMappingIterator iterator = new SelectableMappingIterator();
 				iterator.index < columnNames.length;
 				iterator.index++
 		) {

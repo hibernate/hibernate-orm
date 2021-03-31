@@ -90,7 +90,7 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 			final ToOneAttributeMapping toOne = (ToOneAttributeMapping) mapping;
 			final ModelPart modelPart = getModelPart( sqlAstCreationState, toOne );
 
-			modelPart.forEachSelection(
+			modelPart.forEachSelectable(
 					(columnIndex, selection) -> {
 						final TableReference tableReference = getTableReference(
 								sqmPath,
@@ -147,18 +147,18 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 					}
 			);
 
-			entityCollectionPart.forEachSelection(
-					(selectionIndex, selectionMapping) -> {
-						final TableReference tableReference = mapTableGroup.resolveTableReference( selectionMapping.getContainingTableExpression() );
+			entityCollectionPart.forEachSelectable(
+					(index, selectable) -> {
+						final TableReference tableReference = mapTableGroup.resolveTableReference( selectable.getContainingTableExpression() );
 
 						final SqlExpressionResolver expressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 
 						columnReferences.add(
 								(ColumnReference) expressionResolver.resolveSqlExpression(
-										createColumnReferenceKey( tableReference, selectionMapping.getSelectionExpression() ),
+										createColumnReferenceKey( tableReference, selectable.getSelectionExpression() ),
 										(processingState) -> new ColumnReference(
 												tableReference.getIdentificationVariable(),
-												selectionMapping,
+												selectable,
 												sqlAstCreationState.getCreationContext().getSessionFactory()
 										)
 								)

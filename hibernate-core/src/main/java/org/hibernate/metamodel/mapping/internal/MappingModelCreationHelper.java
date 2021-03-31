@@ -54,8 +54,8 @@ import org.hibernate.metamodel.mapping.CollectionIdentifierDescriptor;
 import org.hibernate.metamodel.mapping.CollectionMappingType;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.PropertyBasedMapping;
-import org.hibernate.metamodel.mapping.SelectionMapping;
-import org.hibernate.metamodel.mapping.SelectionMappings;
+import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
@@ -648,7 +648,7 @@ public class MappingModelCreationHelper {
 				);
 
 				final BasicValue index = (BasicValue) ( (IndexedCollection) bootValueMapping ).getIndex();
-				final SelectionMapping selectionMapping = SelectionMappingImpl.from(
+				final SelectableMapping selectableMapping = SelectableMappingImpl.from(
 						tableExpression,
 						index.getColumnIterator().next(),
 						creationContext.getTypeConfiguration().getBasicTypeForJavaType( Integer.class ),
@@ -660,7 +660,7 @@ public class MappingModelCreationHelper {
 						CollectionPart.Nature.INDEX,
 						// no converter
 						null,
-						selectionMapping
+						selectableMapping
 				);
 
 				break;
@@ -699,7 +699,7 @@ public class MappingModelCreationHelper {
 			}
 			case LIST: {
 				final BasicValue index = (BasicValue) ( (IndexedCollection) bootValueMapping ).getIndex();
-				final SelectionMapping selectionMapping = SelectionMappingImpl.from(
+				final SelectableMapping selectableMapping = SelectableMappingImpl.from(
 						tableExpression,
 						index.getColumnIterator().next(),
 						creationContext.getTypeConfiguration().getBasicTypeForJavaType( Integer.class ),
@@ -711,7 +711,7 @@ public class MappingModelCreationHelper {
 						CollectionPart.Nature.INDEX,
 						// no converter
 						null,
-						selectionMapping
+						selectableMapping
 				);
 
 				collectionMappingType = new CollectionMappingTypeImpl(
@@ -912,7 +912,7 @@ public class MappingModelCreationHelper {
 			assert fkTarget instanceof BasicValuedModelPart;
 			final BasicValuedModelPart simpleFkTarget = (BasicValuedModelPart) fkTarget;
 			final String tableExpression = getTableIdentifierExpression( bootValueMappingKey.getTable(), creationProcess );
-			final SelectionMapping keySelectionMapping = SelectionMappingImpl.from(
+			final SelectableMapping keySelectableMapping = SelectableMappingImpl.from(
 					tableExpression,
 					bootValueMappingKey.getColumnIterator().next(),
 					(JdbcMapping) keyType,
@@ -921,7 +921,7 @@ public class MappingModelCreationHelper {
 			);
 			attributeMapping.setForeignKeyDescriptor(
 					new SimpleForeignKeyDescriptor(
-							keySelectionMapping,
+							keySelectableMapping,
 							simpleFkTarget,
 							( (PropertyBasedMapping) simpleFkTarget ).getPropertyAccess(),
 							isReferenceToPrimaryKey
@@ -1023,9 +1023,9 @@ public class MappingModelCreationHelper {
 			final Iterator<Selectable> columnIterator = bootValueMapping.getColumnIterator();
 			final Table table = bootValueMapping.getTable();
 			final String tableExpression = getTableIdentifierExpression( table, creationProcess );
-			final SelectionMapping keySelectionMapping;
+			final SelectableMapping keySelectableMapping;
 			if ( columnIterator.hasNext() ) {
-				keySelectionMapping = SelectionMappingImpl.from(
+				keySelectableMapping = SelectableMappingImpl.from(
 						tableExpression,
 						columnIterator.next(),
 						simpleFkTarget.getJdbcMapping(),
@@ -1035,7 +1035,7 @@ public class MappingModelCreationHelper {
 			}
 			else {
 				// case of ToOne with @PrimaryKeyJoinColumn
-				keySelectionMapping = SelectionMappingImpl.from(
+				keySelectableMapping = SelectableMappingImpl.from(
 						tableExpression,
 						table.getColumn( 0 ),
 						simpleFkTarget.getJdbcMapping(),
@@ -1045,7 +1045,7 @@ public class MappingModelCreationHelper {
 			}
 
 			final ForeignKeyDescriptor foreignKeyDescriptor = new SimpleForeignKeyDescriptor(
-					keySelectionMapping,
+					keySelectableMapping,
 					simpleFkTarget,
 					( (PropertyBasedMapping) simpleFkTarget ).getPropertyAccess(),
 					bootValueMapping.isReferenceToPrimaryKey()
@@ -1089,7 +1089,7 @@ public class MappingModelCreationHelper {
 			boolean inverse,
 			Dialect dialect,
 			MappingModelCreationProcess creationProcess) {
-		final SelectionMappings keySelectionMappings;
+		final SelectableMappings keySelectableMappings;
 		final String keyTableExpression;
 		if ( bootValueMapping instanceof Collection ) {
 			final Collection collectionBootValueMapping = (Collection) bootValueMapping;
@@ -1097,7 +1097,7 @@ public class MappingModelCreationHelper {
 					collectionBootValueMapping.getCollectionTable(),
 					creationProcess
 			);
-			keySelectionMappings = SelectionMappingsImpl.from(
+			keySelectableMappings = SelectableMappingsImpl.from(
 					keyTableExpression,
 					collectionBootValueMapping.getKey(),
 					creationProcess.getCreationContext().getSessionFactory(),
@@ -1110,7 +1110,7 @@ public class MappingModelCreationHelper {
 					bootValueMapping.getTable(),
 					creationProcess
 			);
-			keySelectionMappings = SelectionMappingsImpl.from(
+			keySelectableMappings = SelectableMappingsImpl.from(
 					keyTableExpression,
 					bootValueMapping,
 					creationProcess.getCreationContext().getSessionFactory(),
@@ -1124,7 +1124,7 @@ public class MappingModelCreationHelper {
 					embeddableValuedModelPart.getContainingTableExpression(),
 					embeddableValuedModelPart.getEmbeddableTypeDescriptor(),
 					keyTableExpression,
-					keySelectionMappings,
+					keySelectableMappings,
 					creationProcess
 			);
 		}
@@ -1132,7 +1132,7 @@ public class MappingModelCreationHelper {
 			return new EmbeddedForeignKeyDescriptor(
 					embeddableValuedModelPart,
 					keyTableExpression,
-					keySelectionMappings,
+					keySelectableMappings,
 					embeddableValuedModelPart.getContainingTableExpression(),
 					embeddableValuedModelPart.getEmbeddableTypeDescriptor(),
 					creationProcess
@@ -1193,7 +1193,7 @@ public class MappingModelCreationHelper {
 
 		if ( bootMapKeyDescriptor instanceof BasicValue ) {
 			final BasicValue basicValue = (BasicValue) bootMapKeyDescriptor;
-			final SelectionMapping selectionMapping = SelectionMappingImpl.from(
+			final SelectableMapping selectableMapping = SelectableMappingImpl.from(
 					tableExpression,
 					basicValue.getColumnIterator().next(),
 					basicValue.resolve().getJdbcMapping(),
@@ -1204,7 +1204,7 @@ public class MappingModelCreationHelper {
 					collectionDescriptor,
 					CollectionPart.Nature.INDEX,
 					basicValue.resolve().getValueConverter(),
-					selectionMapping
+					selectableMapping
 			);
 		}
 
@@ -1284,7 +1284,7 @@ public class MappingModelCreationHelper {
 
 		if ( element instanceof BasicValue ) {
 			final BasicValue basicElement = (BasicValue) element;
-			final SelectionMapping selectionMapping = SelectionMappingImpl.from(
+			final SelectableMapping selectableMapping = SelectableMappingImpl.from(
 					tableExpression,
 					basicElement.getColumnIterator().next(),
 					basicElement.resolve().getJdbcMapping(),
@@ -1295,7 +1295,7 @@ public class MappingModelCreationHelper {
 					collectionDescriptor,
 					CollectionPart.Nature.ELEMENT,
 					basicElement.resolve().getValueConverter(),
-					selectionMapping
+					selectableMapping
 			);
 		}
 

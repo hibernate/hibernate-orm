@@ -49,7 +49,7 @@ public final class ExecuteWithoutIdTableHelper {
 
 		matchingIdSelect.getFromClause().addRoot( matchingIdSelectTableGroup );
 
-		rootEntityPersister.getIdentifierMapping().forEachSelection(
+		rootEntityPersister.getIdentifierMapping().forEachSelectable(
 				(columnIndex, selection) -> {
 					final ColumnReference columnReference = (ColumnReference) sqlExpressionResolver.resolveSqlExpression(
 							SqlExpressionResolver.createColumnReferenceKey( rootTableReference, selection.getSelectionExpression() ),

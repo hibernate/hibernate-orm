@@ -9,14 +9,14 @@ package org.hibernate.metamodel.mapping.internal;
 import java.util.List;
 
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.SelectionConsumer;
-import org.hibernate.metamodel.mapping.SelectionMapping;
-import org.hibernate.metamodel.mapping.SelectionMappings;
+import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.SelectableMappings;
 
 /**
  * @author Steve Ebersole
  */
-public class SingleSelectionMappings implements SelectionMapping, SelectionMappings {
+public class SingleSelectableMappings implements SelectableMapping, SelectableMappings {
 	private final String tableName;
 	private final String expression;
 	private final String readExpression;
@@ -24,7 +24,7 @@ public class SingleSelectionMappings implements SelectionMapping, SelectionMappi
 	private final boolean isFormula;
 	private final JdbcMapping jdbcMapping;
 
-	public SingleSelectionMappings(
+	public SingleSelectableMappings(
 			String tableName,
 			String expression,
 			String readExpression,
@@ -70,7 +70,7 @@ public class SingleSelectionMappings implements SelectionMapping, SelectionMappi
 	}
 
 	@Override
-	public SelectionMapping getSelectionMapping(int columnIndex) {
+	public SelectableMapping getSelectable(int columnIndex) {
 		return this;
 	}
 
@@ -80,16 +80,15 @@ public class SingleSelectionMappings implements SelectionMapping, SelectionMappi
 	}
 
 	@Override
-	public int forEachSelection(int offset, SelectionConsumer consumer) {
+	public int forEachSelectable(int offset, SelectableConsumer consumer) {
 		assert offset == 1;
 		consumer.accept( offset, this );
 		return 1;
 	}
 
 	@Override
-	public int forEachSelection(SelectionConsumer consumer) {
+	public void forEachSelectable(SelectableConsumer consumer) {
 		consumer.accept( 0, this );
-		return 1;
 	}
 
 	@Override

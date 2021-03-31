@@ -59,8 +59,8 @@ public interface EmbeddableValuedModelPart extends ModelPart, Fetchable, Fetchab
 	}
 
 	@Override
-	default int forEachSelection(int offset, SelectionConsumer consumer) {
-		return getEmbeddableTypeDescriptor().forEachSelection( offset, consumer );
+	default int forEachSelectable(int offset, SelectableConsumer consumer) {
+		return getEmbeddableTypeDescriptor().forEachSelectable( offset, consumer );
 	}
 
 	@Override

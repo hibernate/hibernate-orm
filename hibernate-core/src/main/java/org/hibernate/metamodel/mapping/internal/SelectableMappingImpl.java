@@ -8,14 +8,14 @@ package org.hibernate.metamodel.mapping.internal;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.Selectable;
-import org.hibernate.metamodel.mapping.SelectionMapping;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 
 /**
  * @author Christian Beikov
  */
-public class SelectionMappingImpl implements SelectionMapping {
+public class SelectableMappingImpl implements SelectableMapping {
 
 	private final String containingTableExpression;
 	private final String selectionExpression;
@@ -24,7 +24,7 @@ public class SelectionMappingImpl implements SelectionMapping {
 	private final boolean isFormula;
 	private final JdbcMapping jdbcMapping;
 
-	public SelectionMappingImpl(
+	public SelectableMappingImpl(
 			String containingTableExpression,
 			String selectionExpression,
 			String customReadExpression,
@@ -40,7 +40,7 @@ public class SelectionMappingImpl implements SelectionMapping {
 		this.jdbcMapping = jdbcMapping;
 	}
 
-	public static SelectionMapping from(
+	public static SelectableMapping from(
 			final String containingTableExpression,
 			final Selectable selectable,
 			final JdbcMapping jdbcMapping,
@@ -53,7 +53,7 @@ public class SelectionMappingImpl implements SelectionMapping {
 		else {
 			columnExpression = selectable.getText( dialect );
 		}
-		return new SelectionMappingImpl(
+		return new SelectableMappingImpl(
 				containingTableExpression,
 				columnExpression,
 				selectable.getCustomReadExpression(),

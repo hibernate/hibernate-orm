@@ -20,7 +20,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.metamodel.mapping.SelectionConsumer;
+import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBasicImpl;
@@ -120,8 +120,8 @@ public class EmbeddedAttributeMapping
 	}
 
 	@Override
-	public int forEachSelection(int offset, SelectionConsumer consumer) {
-		return getEmbeddableTypeDescriptor().forEachSelection( offset, consumer );
+	public int forEachSelectable(int offset, SelectableConsumer consumer) {
+		return getEmbeddableTypeDescriptor().forEachSelectable( offset, consumer );
 	}
 
 	@Override
@@ -202,7 +202,7 @@ public class EmbeddedAttributeMapping
 			SqlAstCreationState sqlAstCreationState) {
 		final List<ColumnReference> columnReferences = CollectionHelper.arrayList( embeddableMappingType.getJdbcTypeCount() );
 		final TableReference defaultTableReference = tableGroup.resolveTableReference( getContainingTableExpression() );
-		getEmbeddableTypeDescriptor().forEachSelection(
+		getEmbeddableTypeDescriptor().forEachSelectable(
 				(columnIndex, selection) -> {
 					final TableReference tableReference = selection.getContainingTableExpression().equals( defaultTableReference.getTableExpression() )
 							? defaultTableReference

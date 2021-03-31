@@ -17,8 +17,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.CollectionPart;
-import org.hibernate.metamodel.mapping.SelectionConsumer;
-import org.hibernate.metamodel.mapping.SelectionMapping;
+import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.ConvertibleModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -55,18 +55,18 @@ public class BasicValuedCollectionPart
 	private final Nature nature;
 	private final BasicValueConverter valueConverter;
 
-	private final SelectionMapping selectionMapping;
+	private final SelectableMapping selectableMapping;
 
 	public BasicValuedCollectionPart(
 			CollectionPersister collectionDescriptor,
 			Nature nature,
 			BasicValueConverter valueConverter,
-			SelectionMapping selectionMapping) {
+			SelectableMapping selectableMapping) {
 		this.navigableRole = collectionDescriptor.getNavigableRole().append( nature.getName() );
 		this.collectionDescriptor = collectionDescriptor;
 		this.nature = nature;
 		this.valueConverter = valueConverter;
-		this.selectionMapping = selectionMapping;
+		this.selectableMapping = selectableMapping;
 	}
 
 	@Override
@@ -76,32 +76,32 @@ public class BasicValuedCollectionPart
 
 	@Override
 	public MappingType getPartMappingType() {
-		return selectionMapping.getJdbcMapping()::getJavaTypeDescriptor;
+		return selectableMapping.getJdbcMapping()::getJavaTypeDescriptor;
 	}
 
 	@Override
 	public String getContainingTableExpression() {
-		return selectionMapping.getContainingTableExpression();
+		return selectableMapping.getContainingTableExpression();
 	}
 
 	@Override
 	public String getSelectionExpression() {
-		return selectionMapping.getSelectionExpression();
+		return selectableMapping.getSelectionExpression();
 	}
 
 	@Override
 	public boolean isFormula() {
-		return selectionMapping.isFormula();
+		return selectableMapping.isFormula();
 	}
 
 	@Override
 	public String getCustomReadExpression() {
-		return selectionMapping.getCustomReadExpression();
+		return selectableMapping.getCustomReadExpression();
 	}
 
 	@Override
 	public String getCustomWriteExpression() {
-		return selectionMapping.getCustomWriteExpression();
+		return selectableMapping.getCustomWriteExpression();
 	}
 
 	@Override
@@ -111,7 +111,7 @@ public class BasicValuedCollectionPart
 
 	@Override
 	public JavaTypeDescriptor<?> getJavaTypeDescriptor() {
-		return selectionMapping.getJdbcMapping().getJavaTypeDescriptor();
+		return selectableMapping.getJdbcMapping().getJavaTypeDescriptor();
 	}
 
 	@Override
@@ -144,11 +144,11 @@ public class BasicValuedCollectionPart
 				exprResolver.resolveSqlExpression(
 						SqlExpressionResolver.createColumnReferenceKey(
 								tableGroup.getPrimaryTableReference(),
-								selectionMapping.getSelectionExpression()
+								selectableMapping.getSelectionExpression()
 						),
 						sqlAstProcessingState -> new ColumnReference(
 								tableGroup.getPrimaryTableReference().getIdentificationVariable(),
-								selectionMapping,
+								selectableMapping,
 								creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
 						)
 				),
@@ -179,7 +179,7 @@ public class BasicValuedCollectionPart
 
 	@Override
 	public JdbcMapping getJdbcMapping() {
-		return selectionMapping.getJdbcMapping();
+		return selectableMapping.getJdbcMapping();
 	}
 
 	@Override
@@ -251,13 +251,13 @@ public class BasicValuedCollectionPart
 
 	@Override
 	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
-		action.accept( offset, selectionMapping.getJdbcMapping() );
+		action.accept( offset, selectableMapping.getJdbcMapping() );
 		return getJdbcTypeCount();
 	}
 
 	@Override
-	public int forEachSelection(int offset, SelectionConsumer consumer) {
-		consumer.accept( offset, selectionMapping );
+	public int forEachSelectable(int offset, SelectableConsumer consumer) {
+		consumer.accept( offset, selectableMapping );
 		return getJdbcTypeCount();
 	}
 

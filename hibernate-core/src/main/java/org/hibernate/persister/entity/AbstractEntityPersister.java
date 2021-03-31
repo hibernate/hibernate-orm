@@ -157,7 +157,7 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.Queryable;
-import org.hibernate.metamodel.mapping.SelectionConsumer;
+import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadata;
@@ -1502,7 +1502,7 @@ public abstract class AbstractEntityPersister
 		assert rootPkColumnNames.length == fkColumnNames.length;
 		assert rootPkColumnNames.length == identifierMapping.getJdbcTypeCount();
 
-		identifierMapping.forEachSelection(
+		identifierMapping.forEachSelectable(
 				(columnIndex, selection) -> {
 					final String rootPkColumnName = rootPkColumnNames[ columnIndex ];
 					final Expression pkColumnExpression = sqlExpressionResolver.resolveSqlExpression(
@@ -6839,11 +6839,11 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public int forEachSelection(int offset, SelectionConsumer selectionConsumer) {
+	public int forEachSelectable(int offset, SelectableConsumer selectableConsumer) {
 		int span = 0;
 		final List<AttributeMapping> mappings = getAttributeMappings();
 		for ( int i = 0; i < mappings.size(); i++ ) {
-			span += mappings.get( i ).forEachSelection( span + offset, selectionConsumer );
+			span += mappings.get( i ).forEachSelectable( span + offset, selectableConsumer );
 		}
 		return span;
 	}

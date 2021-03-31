@@ -140,15 +140,13 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 					final TableReference dmlTableReference = updatingTableGroup.resolveTableReference( tableExpression );
 					final List<ColumnReference> columnReferences = new ArrayList<>( idSelectCte.getCteTable().getCteColumns().size() );
 					tableColumnsVisitationSupplier.get().accept(
-							(selectionIndex, selectionMapping) -> {
-								columnReferences.add(
-										new ColumnReference(
-												dmlTableReference,
-												selectionMapping,
-												factory
-										)
-								);
-							}
+							(index, selectable) -> columnReferences.add(
+									new ColumnReference(
+											dmlTableReference,
+											selectable,
+											factory
+									)
+							)
 					);
 					final MutationStatement dmlStatement = new UpdateStatement(
 							dmlTableReference,

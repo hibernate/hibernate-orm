@@ -53,14 +53,14 @@ public class ManyToOneTest {
 		final ToOneAttributeMapping childAttributeMapping = (ToOneAttributeMapping) simpleEntityAssociation;
 
 		ForeignKeyDescriptor foreignKeyDescriptor = childAttributeMapping.getForeignKeyDescriptor();
-		foreignKeyDescriptor.visitReferringColumns(
+		foreignKeyDescriptor.visitReferringSelectables(
 				(columnIndex, selection) -> {
 					assertThat( selection.getContainingTableExpression(), is( "other_entity" ) );
 					assertThat( selection.getSelectionExpression(), is( "simple_entity_id" ) );
 				}
 		);
 
-		foreignKeyDescriptor.visitTargetColumns(
+		foreignKeyDescriptor.visitTargetSelectables(
 				(columnIndex, selection) -> {
 					assertThat( selection.getContainingTableExpression(), is( "simple_entity" ) );
 					assertThat( selection.getSelectionExpression(), is( "id" ) );

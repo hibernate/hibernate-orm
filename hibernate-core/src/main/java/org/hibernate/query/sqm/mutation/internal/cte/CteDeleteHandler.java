@@ -18,8 +18,6 @@ import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
 import org.hibernate.query.sqm.tree.cte.SqmCteTable;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
-import org.hibernate.sql.ast.spi.SqlAliasBase;
-import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.tree.MutationStatement;
 import org.hibernate.sql.ast.tree.cte.CteContainer;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
@@ -28,7 +26,6 @@ import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.sql.ast.tree.from.TableReference;
 
 /**
@@ -77,16 +74,14 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 							);
 							final TableReference dmlTableReference = new TableReference( tableExpression, null, true, factory );
 							final List<ColumnReference> columnReferences = new ArrayList<>( idSelectCte.getCteTable().getCteColumns().size() );
-							pluralAttribute.getKeyDescriptor().visitReferringColumns(
-									(selectionIndex, selectionMapping) -> {
-										columnReferences.add(
-												new ColumnReference(
-														dmlTableReference,
-														selectionMapping,
-														factory
-												)
-										);
-									}
+							pluralAttribute.getKeyDescriptor().visitReferringSelectables(
+									(index, selectable) -> columnReferences.add(
+											new ColumnReference(
+													dmlTableReference,
+													selectable,
+													factory
+											)
+									)
 							);
 							final MutationStatement dmlStatement = new DeleteStatement(
 									dmlTableReference,
@@ -109,15 +104,13 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 					final TableReference dmlTableReference = updatingTableGroup.resolveTableReference( tableExpression );
 					final List<ColumnReference> columnReferences = new ArrayList<>( idSelectCte.getCteTable().getCteColumns().size() );
 					tableColumnsVisitationSupplier.get().accept(
-							(selectionIndex, selectionMapping) -> {
-								columnReferences.add(
-										new ColumnReference(
-												dmlTableReference,
-												selectionMapping,
-												factory
-										)
-								);
-							}
+							(index, selectable) -> columnReferences.add(
+									new ColumnReference(
+											dmlTableReference,
+											selectable,
+											factory
+									)
+							)
 					);
 					final MutationStatement dmlStatement = new DeleteStatement(
 							dmlTableReference,

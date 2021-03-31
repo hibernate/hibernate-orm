@@ -40,7 +40,7 @@ import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.PropertyBasedMapping;
-import org.hibernate.metamodel.mapping.SelectionMapping;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragmentTranslator;
@@ -331,7 +331,7 @@ public class PluralAttributeMappingImpl
 		if ( fkTargetPart instanceof BasicValuedModelPart ) {
 			final BasicValuedModelPart basicFkTargetPart = (BasicValuedModelPart) fkTargetPart;
 			final Joinable collectionDescriptorAsJoinable = (Joinable) collectionDescriptor;
-			final SelectionMapping keySelectionMapping = SelectionMappingImpl.from(
+			final SelectableMapping keySelectableMapping = SelectableMappingImpl.from(
 					collectionDescriptorAsJoinable.getTableName(),
 					fkBootDescriptorSource.getColumnIterator().next(),
 					basicFkTargetPart.getJdbcMapping(),
@@ -339,7 +339,7 @@ public class PluralAttributeMappingImpl
 					creationProcess.getSqmFunctionRegistry()
 			);
 			return new SimpleForeignKeyDescriptor(
-					keySelectionMapping,
+					keySelectableMapping,
 					basicFkTargetPart,
 					( (PropertyBasedMapping) basicFkTargetPart ).getPropertyAccess(),
 					entityType.isReferenceToPrimaryKey()

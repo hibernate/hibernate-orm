@@ -38,7 +38,7 @@ public class IdTable implements Exportable, Contributable {
 				( (Joinable) entityDescriptor.getEntityPersister() ).getTableName()
 		);
 
-		entityDescriptor.getIdentifierMapping().forEachSelection(
+		entityDescriptor.getIdentifierMapping().forEachSelectable(
 				(columnIndex, selection) -> columns.add(
 						new IdTableColumn(
 								this,

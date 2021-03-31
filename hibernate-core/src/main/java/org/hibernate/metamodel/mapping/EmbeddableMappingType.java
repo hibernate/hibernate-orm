@@ -37,14 +37,13 @@ import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.mapping.internal.DiscriminatedAssociationAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
-import org.hibernate.metamodel.mapping.internal.SelectionMappingsImpl;
+import org.hibernate.metamodel.mapping.internal.SelectableMappingsImpl;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.Template;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -65,7 +64,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 /**
  * @author Steve Ebersole
  */
-public class EmbeddableMappingType implements ManagedMappingType, SelectionMappings {
+public class EmbeddableMappingType implements ManagedMappingType, SelectableMappings {
 
 	public static EmbeddableMappingType from(
 			Component bootDescriptor,
@@ -136,7 +135,7 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectionMappi
 	private final SessionFactoryImplementor sessionFactory;
 
 	private final List<AttributeMapping> attributeMappings = new ArrayList<>();
-	private SelectionMappings selectionMappings;
+	private SelectableMappings selectableMappings;
 
 	private final EmbeddableValuedModelPart valueMapping;
 	private NavigableRole embeddedRole;
@@ -428,7 +427,7 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectionMappi
 	}
 
 	private boolean initColumnMappings() {
-		this.selectionMappings = SelectionMappingsImpl.from( this );
+		this.selectableMappings = SelectableMappingsImpl.from( this );
 		return true;
 	}
 
@@ -503,27 +502,25 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectionMappi
 	}
 
 	@Override
-	public SelectionMapping getSelectionMapping(int columnIndex) {
-		return selectionMappings.getSelectionMapping( columnIndex );
+	public SelectableMapping getSelectable(int columnIndex) {
+		return selectableMappings.getSelectable( columnIndex );
 	}
 
 	@Override
 	public int getJdbcTypeCount() {
-		return selectionMappings.getJdbcTypeCount();
+		return selectableMappings.getJdbcTypeCount();
 	}
 
 	@Override
 	public List<JdbcMapping> getJdbcMappings() {
-		return selectionMappings.getJdbcMappings();
+		return selectableMappings.getJdbcMappings();
 	}
 
 	@Override
 	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
-		return selectionMappings.forEachSelection(
+		return selectableMappings.forEachSelectable(
 				offset,
-				(selectionIndex, selectionMapping) -> {
-					action.accept( selectionIndex, selectionMapping.getJdbcMapping() );
-				}
+				(index, selectable) -> action.accept( index, selectable.getJdbcMapping() )
 		);
 	}
 
@@ -597,13 +594,13 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectionMappi
 	}
 
 	@Override
-	public int forEachSelection(SelectionConsumer consumer) {
-		return selectionMappings.forEachSelection( 0, consumer );
+	public void forEachSelectable(SelectableConsumer consumer) {
+		selectableMappings.forEachSelectable( 0, consumer );
 	}
 
 	@Override
-	public int forEachSelection(int offset, SelectionConsumer consumer) {
-		return selectionMappings.forEachSelection( offset, consumer );
+	public int forEachSelectable(int offset, SelectableConsumer consumer) {
+		return selectableMappings.forEachSelectable( offset, consumer );
 	}
 
 	@Override

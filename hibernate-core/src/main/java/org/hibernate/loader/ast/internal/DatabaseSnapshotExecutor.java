@@ -111,7 +111,7 @@ class DatabaseSnapshotExecutor {
 				new QueryLiteral<>( null, IntegerType.INSTANCE ).createDomainResult( null, state )
 		);
 
-		entityDescriptor.getIdentifierMapping().forEachSelection(
+		entityDescriptor.getIdentifierMapping().forEachSelectable(
 				(columnIndex, selection) -> {
 					final TableReference tableReference = rootTableGroup.resolveTableReference( selection.getContainingTableExpression() );
 

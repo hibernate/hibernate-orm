@@ -20,8 +20,8 @@ import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.metamodel.mapping.SelectionConsumer;
-import org.hibernate.metamodel.mapping.SelectionMappings;
+import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.NavigablePath;
@@ -50,22 +50,22 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 
 	private final EmbeddableValuedModelPart mappingType;
 	private final String keyColumnContainingTable;
-	private final SelectionMappings keySelectionMappings;
+	private final SelectableMappings keySelectableMappings;
 	private final String targetColumnContainingTable;
-	private final SelectionMappings targetSelectionMappings;
+	private final SelectableMappings targetSelectableMappings;
 	private AssociationKey associationKey;
 
 	public EmbeddedForeignKeyDescriptor(
 			EmbeddableValuedModelPart mappingType,
 			String keyColumnContainingTable,
-			SelectionMappings keySelectionMappings,
+			SelectableMappings keySelectableMappings,
 			String targetColumnContainingTable,
-			SelectionMappings targetSelectionMappings,
+			SelectableMappings targetSelectableMappings,
 			MappingModelCreationProcess creationProcess) {
 		this.keyColumnContainingTable = keyColumnContainingTable;
-		this.keySelectionMappings = keySelectionMappings;
+		this.keySelectableMappings = keySelectableMappings;
 		this.targetColumnContainingTable = targetColumnContainingTable;
-		this.targetSelectionMappings = targetSelectionMappings;
+		this.targetSelectableMappings = targetSelectableMappings;
 		this.mappingType = mappingType;
 
 		creationProcess.registerInitializationCallback(
@@ -104,7 +104,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 					collectionPath,
 					tableGroup,
 					targetColumnContainingTable,
-					targetSelectionMappings,
+					targetSelectableMappings,
 					creationState
 			);
 		}
@@ -113,7 +113,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 					collectionPath,
 					tableGroup,
 					keyColumnContainingTable,
-					keySelectionMappings,
+					keySelectableMappings,
 					creationState
 			);
 		}
@@ -128,7 +128,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 				collectionPath,
 				tableGroup,
 				keyColumnContainingTable,
-				keySelectionMappings,
+				keySelectableMappings,
 				creationState
 		);
 	}
@@ -144,7 +144,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 					collectionPath,
 					tableGroup,
 					keyColumnContainingTable,
-					keySelectionMappings,
+					keySelectableMappings,
 					creationState
 			);
 		}
@@ -153,7 +153,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 					collectionPath,
 					tableGroup,
 					targetColumnContainingTable,
-					targetSelectionMappings,
+					targetSelectableMappings,
 					creationState
 			);
 		}
@@ -163,15 +163,15 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 			NavigablePath collectionPath,
 			TableGroup tableGroup,
 			String columnContainingTable,
-			SelectionMappings selectionMappings,
+			SelectableMappings selectableMappings,
 			DomainResultCreationState creationState) {
 		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
 		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 		final TableReference tableReference = tableGroup.resolveTableReference( columnContainingTable );
 		final String identificationVariable = tableReference.getIdentificationVariable();
 
-		final List<SqlSelection> sqlSelections = new ArrayList<>( selectionMappings.getJdbcTypeCount() );
-		selectionMappings.forEachSelection(
+		final List<SqlSelection> sqlSelections = new ArrayList<>( selectableMappings.getJdbcTypeCount() );
+		selectableMappings.forEachSelectable(
 				(columnIndex, selection) -> {
 					final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 							sqlExpressionResolver.resolveSqlExpression(
@@ -252,11 +252,11 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 		final String lhsTableExpression = lhs.getTableExpression();
 		if ( lhsTableExpression.equals( keyColumnContainingTable ) ) {
 			assert rhsTableExpression.equals( targetColumnContainingTable );
-			return getPredicate( lhs, rhs, creationContext, keySelectionMappings, targetSelectionMappings );
+			return getPredicate( lhs, rhs, creationContext, keySelectableMappings, targetSelectableMappings );
 		}
 		else {
 			assert rhsTableExpression.equals( keyColumnContainingTable );
-			return getPredicate( lhs, rhs, creationContext, targetSelectionMappings, keySelectionMappings );
+			return getPredicate( lhs, rhs, creationContext, targetSelectableMappings, keySelectableMappings );
 		}
 	}
 
@@ -264,10 +264,10 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 			TableReference lhs,
 			TableReference rhs,
 			SqlAstCreationContext creationContext,
-			SelectionMappings lhsMappings,
-			SelectionMappings rhsMappings) {
+			SelectableMappings lhsMappings,
+			SelectableMappings rhsMappings) {
 		final Junction predicate = new Junction( Junction.Nature.CONJUNCTION );
-		lhsMappings.forEachSelection(
+		lhsMappings.forEachSelectable(
 				(i, selection) -> {
 					final ComparisonPredicate comparisonPredicate = new ComparisonPredicate(
 							new ColumnReference(
@@ -278,7 +278,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 							ComparisonOperator.EQUAL,
 							new ColumnReference(
 									rhs,
-									rhsMappings.getSelectionMapping( i ),
+									rhsMappings.getSelectable( i ),
 									creationContext.getSessionFactory()
 							)
 					);
@@ -322,20 +322,20 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 	}
 
 	@Override
-	public int visitReferringColumns(int offset, SelectionConsumer consumer) {
-		return keySelectionMappings.forEachSelection( offset, consumer );
+	public int visitReferringSelectables(int offset, SelectableConsumer consumer) {
+		return keySelectableMappings.forEachSelectable( offset, consumer );
 	}
 
 	@Override
-	public int visitTargetColumns(int offset, SelectionConsumer consumer) {
-		return targetSelectionMappings.forEachSelection( offset, consumer );
+	public int visitTargetSelectables(int offset, SelectableConsumer consumer) {
+		return targetSelectableMappings.forEachSelectable( offset, consumer );
 	}
 
 	@Override
 	public AssociationKey getAssociationKey() {
 		if ( associationKey == null ) {
 			final List<String> columns = new ArrayList<>();
-			keySelectionMappings.forEachSelection(
+			keySelectableMappings.forEachSelectable(
 					(columnIndex, selection) -> {
 						columns.add( selection.getSelectionExpression() );
 					}
@@ -371,9 +371,9 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 		final TableReference tableReference = tableGroup.resolveTableReference( keyColumnContainingTable );
 		final String identificationVariable = tableReference.getIdentificationVariable();
-		final int size = keySelectionMappings.getJdbcTypeCount();
+		final int size = keySelectableMappings.getJdbcTypeCount();
 		final List<SqlSelection> sqlSelections = new ArrayList<>( size );
-		keySelectionMappings.forEachSelection(
+		keySelectableMappings.forEachSelectable(
 				(columnIndex, selection) -> {
 					final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 							sqlExpressionResolver.resolveSqlExpression(
@@ -412,10 +412,8 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 
 		final Object[] values = (Object[]) domainValue;
 
-		keySelectionMappings.forEachSelection(
-				(selectionIndex, selectionMapping) -> {
-					valueConsumer.consume( values[ selectionIndex ], selectionMapping );
-				}
+		keySelectableMappings.forEachSelectable(
+				(index, selectable) -> valueConsumer.consume( values[ index ], selectable )
 		);
 	}
 

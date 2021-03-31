@@ -67,11 +67,11 @@ public class SimpleNaturalIdLoader<T> extends AbstractNaturalIdLoader<T> {
 			LoaderSqlAstCreationState sqlAstCreationState,
 			SharedSessionContractImplementor session) {
 		if ( bindValue == null ) {
-			naturalIdMapping().getAttribute().forEachSelection(
-					(selectionIndex, selectionMapping) -> {
+			naturalIdMapping().getAttribute().forEachSelectable(
+					(index, selectable) -> {
 						final Expression columnReference = resolveColumnReference(
 								rootTableGroup,
-								selectionMapping,
+								selectable,
 								sqlAstCreationState.getSqlExpressionResolver(),
 								session.getFactory()
 						);

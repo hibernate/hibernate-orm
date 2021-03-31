@@ -52,11 +52,11 @@ public class CompoundNaturalIdLoader<T> extends AbstractNaturalIdLoader<T> {
 		if ( bindValue == null ) {
 			final List<SingularAttributeMapping> naturalIdAttributes = naturalIdMapping().getNaturalIdAttributes();
 			for ( int i = 0; i < naturalIdAttributes.size(); i++ ) {
-				naturalIdAttributes.get( i ).forEachSelection(
-						(selectionIndex, selectionMapping) -> {
+				naturalIdAttributes.get( i ).forEachSelectable(
+						(index, selectable) -> {
 							final Expression columnRef = resolveColumnReference(
 									rootTableGroup,
-									selectionMapping,
+									selectable,
 									sqlExpressionResolver,
 									factory
 							);

@@ -13,7 +13,8 @@
     <class name="org.hibernate.orm.test.mapping.formula.EntityOfFormulas" table="formulas">
         <id name="id" />
         <property name="realValue" column="real_value" />
-        <property name="stringFormula" formula="real_value || ' a'" />
+        <!-- Workaround for Derby which requires an intermediate cast -->
+        <property name="stringFormula" formula="{fn concat(cast(trim(cast(real_value as char(254))) as varchar(255)), ' a')}" />
         <property name="integerFormula" formula="real_value + 1" />
     </class>
 

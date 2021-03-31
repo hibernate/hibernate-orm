@@ -102,35 +102,35 @@ public class InferredBasicValueResolver {
 				legacyType = jdbcMapping;
 			}
 			else {
-				// here we have the legacy case
-				//		- we mimic how this used to be done
-				final BasicType registeredType = typeConfiguration.getBasicTypeRegistry().getRegisteredType( reflectedJtd.getJavaType() );
+				// Use JTD if we know it to apply any specialized resolutions
 
-				if ( registeredType != null ) {
-					// reuse the "legacy type"
-					legacyType = resolveSqlTypeIndicators( stdIndicators, registeredType );
-					jdbcMapping = legacyType;
+				if ( reflectedJtd instanceof EnumJavaTypeDescriptor ) {
+					return fromEnum(
+							(EnumJavaTypeDescriptor) reflectedJtd,
+							explicitJavaTypeAccess.apply( typeConfiguration ),
+							explicitSqlTypeAccess.apply( typeConfiguration ),
+							stdIndicators,
+							typeConfiguration
+					);
+				}
+				else if ( reflectedJtd instanceof TemporalJavaTypeDescriptor ) {
+					return fromTemporal(
+							(TemporalJavaTypeDescriptor) reflectedJtd,
+							explicitJavaTypeAccess,
+							explicitSqlTypeAccess,
+							stdIndicators,
+							typeConfiguration
+					);
 				}
 				else {
-					// Use JTD if we know it to apply any specialized resolutions
+					// here we have the legacy case
+					//		- we mimic how this used to be done
+					final BasicType registeredType = typeConfiguration.getBasicTypeRegistry().getRegisteredType( reflectedJtd.getJavaType() );
 
-					if ( reflectedJtd instanceof EnumJavaTypeDescriptor ) {
-						return fromEnum(
-								(EnumJavaTypeDescriptor) reflectedJtd,
-								explicitJavaTypeAccess.apply( typeConfiguration ),
-								explicitSqlTypeAccess.apply( typeConfiguration ),
-								stdIndicators,
-								typeConfiguration
-						);
-					}
-					else if ( reflectedJtd instanceof TemporalJavaTypeDescriptor ) {
-						return fromTemporal(
-								(TemporalJavaTypeDescriptor) reflectedJtd,
-								explicitJavaTypeAccess,
-								explicitSqlTypeAccess,
-								stdIndicators,
-								typeConfiguration
-						);
+					if ( registeredType != null ) {
+						// reuse the "legacy type"
+						legacyType = resolveSqlTypeIndicators( stdIndicators, registeredType );
+						jdbcMapping = legacyType;
 					}
 					else if ( reflectedJtd instanceof SerializableTypeDescriptor ) {
 						legacyType = new SerializableType<>( reflectedJtd.getJavaTypeClass() );

@@ -2662,7 +2662,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			else if ( elementDescriptor instanceof EntityCollectionPart ) {
 				final ForeignKeyDescriptor foreignKeyDescriptor = ( (EntityCollectionPart) elementDescriptor ).getForeignKeyDescriptor();
 				if ( foreignKeyDescriptor instanceof SimpleForeignKeyDescriptor ) {
-					foreignKeyDescriptor.visitTargetColumns(
+					foreignKeyDescriptor.visitTargetSelectables(
 							(selectionIndex, selectionMapping) -> appendSql( selectionMapping.getSelectionExpression() )
 					);
 				}
@@ -2671,7 +2671,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		else if ( modelPart instanceof ToOneAttributeMapping ) {
 			final ForeignKeyDescriptor foreignKeyDescriptor = ( (ToOneAttributeMapping) modelPart ).getForeignKeyDescriptor();
 			if ( foreignKeyDescriptor instanceof SimpleForeignKeyDescriptor ) {
-				foreignKeyDescriptor.visitTargetColumns(
+				foreignKeyDescriptor.visitTargetSelectables(
 						(selectionIndex, selectionMapping) -> appendSql( selectionMapping.getSelectionExpression() )
 				);
 			}

@@ -169,10 +169,9 @@ public class ForeignKeyConstraintTest {
 	}
 
 	@Test
-	@NotImplementedYet( strict = false, reason = "Problem with non-root-entity based FKs" )
 	public void testGet(SessionFactoryScope scope) {
 		scope.inTransaction(
-				session -> session.get( Student.class, 1l )
+				session -> session.get( Student.class, 1L )
 		);
 	}
 

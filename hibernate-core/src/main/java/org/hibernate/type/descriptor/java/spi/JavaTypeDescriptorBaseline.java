@@ -51,9 +51,11 @@ import org.hibernate.type.descriptor.java.IntegerTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaObjectTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JdbcDateTypeDescriptor;
+import org.hibernate.type.descriptor.java.JdbcTimeTypeDescriptor;
 import org.hibernate.type.descriptor.java.JdbcTimestampTypeDescriptor;
 import org.hibernate.type.descriptor.java.LocalDateJavaDescriptor;
 import org.hibernate.type.descriptor.java.LocalDateTimeJavaDescriptor;
+import org.hibernate.type.descriptor.java.LocalTimeJavaDescriptor;
 import org.hibernate.type.descriptor.java.LocaleTypeDescriptor;
 import org.hibernate.type.descriptor.java.LongTypeDescriptor;
 import org.hibernate.type.descriptor.java.NClobTypeDescriptor;
@@ -66,6 +68,7 @@ import org.hibernate.type.descriptor.java.StringTypeDescriptor;
 import org.hibernate.type.descriptor.java.TimeZoneTypeDescriptor;
 import org.hibernate.type.descriptor.java.UUIDTypeDescriptor;
 import org.hibernate.type.descriptor.java.UrlTypeDescriptor;
+import org.hibernate.type.descriptor.java.ZoneOffsetJavaDescriptor;
 import org.hibernate.type.descriptor.java.ZonedDateTimeJavaDescriptor;
 
 /**
@@ -109,6 +112,7 @@ public class JavaTypeDescriptorBaseline {
 		target.addBaselineDescriptor( InstantJavaDescriptor.INSTANCE );
 		target.addBaselineDescriptor( LocalDateJavaDescriptor.INSTANCE );
 		target.addBaselineDescriptor( LocalDateTimeJavaDescriptor.INSTANCE );
+		target.addBaselineDescriptor( LocalTimeJavaDescriptor.INSTANCE );
 		target.addBaselineDescriptor( OffsetDateTimeJavaDescriptor.INSTANCE );
 		target.addBaselineDescriptor( OffsetTimeJavaDescriptor.INSTANCE );
 		target.addBaselineDescriptor( ZonedDateTimeJavaDescriptor.INSTANCE );
@@ -116,9 +120,10 @@ public class JavaTypeDescriptorBaseline {
 		target.addBaselineDescriptor( CalendarTypeDescriptor.INSTANCE );
 		target.addBaselineDescriptor( DateTypeDescriptor.INSTANCE );
 		target.addBaselineDescriptor( java.sql.Date.class, JdbcDateTypeDescriptor.INSTANCE );
-		target.addBaselineDescriptor( java.sql.Time.class, JdbcTimestampTypeDescriptor.INSTANCE );
+		target.addBaselineDescriptor( java.sql.Time.class, JdbcTimeTypeDescriptor.INSTANCE );
 		target.addBaselineDescriptor( java.sql.Timestamp.class, JdbcTimestampTypeDescriptor.INSTANCE );
 		target.addBaselineDescriptor( TimeZoneTypeDescriptor.INSTANCE );
+		target.addBaselineDescriptor( ZoneOffsetJavaDescriptor.INSTANCE );
 
 		target.addBaselineDescriptor( ClassTypeDescriptor.INSTANCE );
 

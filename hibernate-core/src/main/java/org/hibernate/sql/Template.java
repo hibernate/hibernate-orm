@@ -219,7 +219,18 @@ public final class Template {
 
 				boolean hasMoreOperands = true;
 				String operandToken = tokens.nextToken();
+				switch ( operandToken.toLowerCase( Locale.ROOT ) ) {
+					case "leading":
+					case "trailing":
+					case "both":
+						operands.add( operandToken );
+						if ( hasMoreOperands = tokens.hasMoreTokens() ) {
+							operandToken = tokens.nextToken();
+						}
+						break;
+				}
 				boolean quotedOperand = false;
+				int parenthesis = 0;
 				while ( hasMoreOperands ) {
 					final boolean isQuote = "'".equals( operandToken );
 					if ( isQuote ) {
@@ -235,14 +246,40 @@ public final class Template {
 					else if ( quotedOperand ) {
 						builder.append( operandToken );
 					}
-					else if ( operandToken.length() == 1 && Character.isWhitespace( operandToken.charAt( 0 ) ) ) {
-						// do nothing
+					else if ( parenthesis != 0 ) {
+						builder.append( operandToken );
+						switch ( operandToken ) {
+							case "(":
+								parenthesis++;
+								break;
+							case ")":
+								parenthesis--;
+								break;
+						}
 					}
 					else {
-						operands.add( operandToken );
+						builder.append( operandToken );
+						switch ( operandToken.toLowerCase( Locale.ROOT ) ) {
+							case "(":
+								parenthesis++;
+								break;
+							case ")":
+								parenthesis--;
+								break;
+							case "from":
+								if ( builder.length() != 0 ) {
+									operands.add( builder.substring( 0, builder.length() - 4 ) );
+									builder.setLength( 0 );
+									operands.add( operandToken );
+								}
+								break;
+						}
 					}
 					operandToken = tokens.nextToken();
-					hasMoreOperands = tokens.hasMoreTokens() && ! ")".equals( operandToken );
+					hasMoreOperands = tokens.hasMoreTokens() && ( parenthesis != 0 || ! ")".equals( operandToken ) );
+				}
+				if ( builder.length() != 0 ) {
+					operands.add( builder.toString() );
 				}
 
 				TrimOperands trimOperands = new TrimOperands( operands );

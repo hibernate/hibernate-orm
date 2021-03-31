@@ -1512,7 +1512,11 @@ public abstract class AbstractEntityPersister
 							),
 							sqlAstProcessingState -> new ColumnReference(
 									rootTableReference.getIdentificationVariable(),
-									selection,
+									rootPkColumnName,
+									false,
+									null,
+									null,
+									selection.getJdbcMapping(),
 									getFactory()
 							)
 					);

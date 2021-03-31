@@ -225,7 +225,7 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectableMapp
 						containingTableExpression,
 						columnExpression,
 						selectable.isFormula(),
-						selectable.getTemplate( dialect, sessionFactory.getQueryEngine().getSqmFunctionRegistry() ),
+						selectable.getCustomReadExpression(),
 						selectable.getCustomWriteExpression(),
 						representationStrategy.resolvePropertyAccess( bootPropertyDescriptor ),
 						compositeType.getCascadeStyle( attributeIndex ),

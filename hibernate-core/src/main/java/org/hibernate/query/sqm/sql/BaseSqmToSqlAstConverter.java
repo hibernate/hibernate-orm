@@ -3733,7 +3733,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					: mappingModelExpressable.getElementDescriptor();
 			final List<SqlAstNode> arguments = new ArrayList<>( 1 );
 
-			collectionPart.forEachSelection(
+			collectionPart.forEachSelectable(
 					(selectionIndex, selectionMapping) -> {
 						arguments.add(
 								new ColumnReference(

@@ -9,6 +9,7 @@ package org.hibernate.spatial;
 
 import java.util.Locale;
 
+import org.hibernate.spatial.jts.JTSUtils;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -52,6 +53,11 @@ public class JTSGeometryJavaTypeDescriptor extends AbstractTypeDescriptor<Geomet
 		catch (ParseException e) {
 			throw new RuntimeException( String.format( Locale.ENGLISH, "Can't parse string %s as WKT", string ) );
 		}
+	}
+
+	@Override
+	public boolean areEqual(Geometry one, Geometry another) {
+		return JTSUtils.equalsExact3D( one, another );
 	}
 
 	@Override

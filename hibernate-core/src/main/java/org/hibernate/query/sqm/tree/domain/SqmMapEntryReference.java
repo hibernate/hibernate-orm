@@ -11,16 +11,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
-
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
-import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 
@@ -32,7 +30,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * @author Steve Ebersole
  */
 public class SqmMapEntryReference<K,V>
-		implements SqmSelectableNode<Map.Entry<K,V>>, Expression<Map.Entry<K,V>>, DomainResultProducer<Map.Entry<K,V>> {
+		implements SqmSelectableNode<Map.Entry<K,V>>, Expression<Map.Entry<K,V>> {
 	@SuppressWarnings({"FieldCanBeLocal", "unused"})
 	private final SqmPath<?> mapPath;
 	private final NodeBuilder nodeBuilder;
@@ -86,6 +84,7 @@ public class SqmMapEntryReference<K,V>
 
 	@Override
 	public void visitSubSelectableNodes(Consumer<SqmSelectableNode<?>> jpaSelectionConsumer) {
+		jpaSelectionConsumer.accept( this );
 	}
 
 	@Override
@@ -146,4 +145,5 @@ public class SqmMapEntryReference<K,V>
 	public <X> Expression<X> as(Class<X> type) {
 		throw new UnsupportedOperationException( "Whatever JPA" );
 	}
+
 }

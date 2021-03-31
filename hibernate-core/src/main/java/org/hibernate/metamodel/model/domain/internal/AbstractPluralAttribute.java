@@ -11,6 +11,7 @@ import java.util.Collection;
 
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.internal.MetadataContext;
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.query.NavigablePath;
@@ -53,7 +54,7 @@ public abstract class AbstractPluralAttribute<D,C,E>
 		this.classification = builder.getCollectionClassification();
 
 		this.elementPathSource = SqmMappingModelHelper.resolveSqmPathSource(
-				getName(),
+				CollectionPart.Nature.ELEMENT.getName(),
 				builder.getValueType(),
 				BindableType.PLURAL_ATTRIBUTE
 		);

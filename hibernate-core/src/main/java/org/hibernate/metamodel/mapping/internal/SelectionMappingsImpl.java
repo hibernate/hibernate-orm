@@ -32,7 +32,7 @@ public class SelectionMappingsImpl implements SelectionMappings {
 
 	private final SelectionMapping[] selectionMappings;
 
-	private SelectionMappingsImpl(SelectionMapping[] selectionMappings) {
+	public SelectionMappingsImpl(SelectionMapping[] selectionMappings) {
 		this.selectionMappings = selectionMappings;
 	}
 

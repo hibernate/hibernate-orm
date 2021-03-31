@@ -35,6 +35,7 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.internal.FilterHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
@@ -95,6 +96,7 @@ import org.hibernate.query.sqm.sql.internal.NonAggregatedCompositeValuedPathInte
 import org.hibernate.query.sqm.sql.internal.PluralValuedSimplePathInterpretation;
 import org.hibernate.query.sqm.sql.internal.SqlAstProcessingStateImpl;
 import org.hibernate.query.sqm.sql.internal.SqlAstQueryPartProcessingStateImpl;
+import org.hibernate.query.sqm.sql.internal.SqmMapEntryResult;
 import org.hibernate.query.sqm.sql.internal.SqmParameterInterpretation;
 import org.hibernate.query.sqm.sql.internal.SqmPathInterpretation;
 import org.hibernate.query.sqm.tree.SqmStatement;
@@ -108,6 +110,7 @@ import org.hibernate.query.sqm.tree.domain.NonAggregatedCompositeSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmMapEntryReference;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
@@ -2460,6 +2463,66 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public Star visitStar(SqmStar sqmStar) {
 		return new Star();
+	}
+
+	@Override
+	@SuppressWarnings("rawtypes")
+	public Object visitMapEntryFunction(SqmMapEntryReference entryRef) {
+		final SqmPath mapPath = entryRef.getMapPath();
+		final NavigablePath mapNavigablePath = mapPath.getNavigablePath();
+
+
+		final TableGroup tableGroup = getFromClauseAccess().resolveTableGroup(
+				mapNavigablePath,
+				(navigablePath) -> {
+					final TableGroup parentTableGroup = getFromClauseAccess().getTableGroup( mapNavigablePath.getParent() );
+					final PluralAttributeMapping mapAttribute = (PluralAttributeMapping) parentTableGroup.getModelPart().findSubPart( mapNavigablePath.getLocalName(), null );
+
+					final TableGroupJoin tableGroupJoin = mapAttribute.createTableGroupJoin(
+							mapNavigablePath,
+							parentTableGroup,
+							null,
+							SqlAstJoinType.INNER,
+							LockMode.READ,
+							sqlAliasBaseManager,
+							getSqlExpressionResolver(),
+							creationContext
+					);
+
+					return tableGroupJoin.getJoinedGroup();
+				}
+		);
+
+		final PluralAttributeMapping mapDescriptor = (PluralAttributeMapping) tableGroup.getModelPart();
+
+		final ForeignKeyDescriptor keyDescriptor = mapDescriptor.getKeyDescriptor();
+		final NavigablePath keyNavigablePath = mapNavigablePath.append( keyDescriptor.getPartName() );
+		final DomainResult keyResult = keyDescriptor.createDomainResult(
+				keyNavigablePath,
+				tableGroup,
+				this
+		);
+
+		final CollectionPart valueDescriptor = mapDescriptor.getElementDescriptor();
+		final NavigablePath valueNavigablePath = mapNavigablePath.append( valueDescriptor.getPartName() );
+		final DomainResult valueResult = valueDescriptor.createDomainResult(
+				valueNavigablePath,
+				tableGroup,
+				null,
+				this
+		);
+
+		return new DomainResultProducer() {
+			@Override
+			public DomainResult createDomainResult(
+					String resultVariable,
+					DomainResultCreationState creationState) {
+				final JavaTypeDescriptor<Object> mapEntryDescriptor = getTypeConfiguration()
+						.getJavaTypeDescriptorRegistry()
+						.resolveDescriptor( Map.Entry.class );
+				return new SqmMapEntryResult( keyResult, valueResult, resultVariable, mapEntryDescriptor );
+			}
+		};
 	}
 
 	@Override

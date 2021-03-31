@@ -1353,7 +1353,7 @@ public class MappingModelCreationHelper {
 			);
 
 			creationProcess.registerInitializationCallback(
-					"EntityCollectionPart( " + elementDescriptor.getNavigableRole() + ")#finishInitialization",
+					"PluralAttributeMapping( " + elementDescriptor.getNavigableRole() + ") - index descriptor",
 					() -> {
 						try {
 							elementDescriptor.finishInitialization(

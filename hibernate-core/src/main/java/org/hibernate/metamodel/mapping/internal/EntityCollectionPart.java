@@ -9,26 +9,28 @@ package org.hibernate.metamodel.mapping.internal;
 import java.util.function.BiConsumer;
 
 import org.hibernate.LockMode;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.CollectionPart;
-import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.SelectionConsumer;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.SelectionConsumer;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableGroupJoin;
+import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
@@ -173,6 +175,72 @@ public class EntityCollectionPart
 			DomainResultCreationState creationState) {
 		return fkTargetModelPart.createDomainResult( navigablePath, tableGroup, resultVariable, creationState );
 	}
+
+//	@Override
+//	public <T> DomainResult<T> createDomainResult(
+//			NavigablePath navigablePath,
+//			TableGroup tableGroup,
+//			String resultVariable,
+//			DomainResultCreationState creationState) {
+//		final TableGroup partTableGroup = creationState.getSqlAstCreationState().getFromClauseAccess().resolveTableGroup(
+//				navigablePath,
+//				(np) -> {
+//					assert navigablePath.getParent() != null;
+//					final TableGroup parentTableGroup = creationState.getSqlAstCreationState()
+//							.getFromClauseAccess()
+//							.getTableGroup( navigablePath.getParent() );
+//					final TableGroupJoin join = createTableGroupJoin(
+//							navigablePath,
+//							parentTableGroup,
+//							this,
+//							creationState
+//					);
+//					return join.getJoinedGroup();
+//				}
+//		);
+//
+//		return entityMappingType.createDomainResult( navigablePath, partTableGroup, resultVariable, creationState );
+//	}
+//
+//	private TableGroupJoin createTableGroupJoin(
+//			NavigablePath navigablePath,
+//			TableGroup parentTableGroup,
+//			EntityCollectionPart collectionPart,
+//			DomainResultCreationState creationState) {
+//		final ForeignKeyDescriptor foreignKeyDescriptor = getForeignKeyDescriptor();
+//
+//		// create a TableGroup that contains the following tables:
+//		//		1) the fk referring columns from the parentTableGroup
+//		//		2) the associated entity tables
+//		final TableGroup entityTableGroup = entityMappingType.createRootTableGroup(
+//				navigablePath,
+//				null,
+//				false,
+//				LockMode.READ,
+//				() -> (predicate) -> {
+//				},
+//				creationState.getSqlAstCreationState(),
+//				creationState.getSqlAstCreationState().getCreationContext()
+//		);
+//
+//		// todo (6.0) : do we need to make the FK table/columns available as well from this table group?
+//
+//		final TableReference fkReferringTable = parentTableGroup.resolveTableReference( foreignKeyDescriptor.getKeyColumnContainingTable() );
+//		final TableReference fkTargetTable = entityTableGroup.resolveTableReference( foreignKeyDescriptor.getTargetColumnContainingTable() );
+//
+//		return new TableGroupJoin(
+//				navigablePath,
+//				SqlAstJoinType.INNER,
+//				entityTableGroup,
+//				foreignKeyDescriptor.generateJoinPredicate(
+//						fkTargetTable,
+//						fkReferringTable,
+//						SqlAstJoinType.LEFT,
+//						creationState.getSqlAstCreationState().getSqlExpressionResolver(),
+//						creationState.getSqlAstCreationState().getCreationContext()
+//				)
+//		);
+//	}
 
 	@Override
 	public int forEachSelection(int offset, SelectionConsumer consumer) {

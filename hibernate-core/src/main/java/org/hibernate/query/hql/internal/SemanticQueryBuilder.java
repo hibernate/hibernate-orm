@@ -94,6 +94,7 @@ import org.hibernate.query.sqm.tree.domain.AbstractSqmFrom;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelation;
 import org.hibernate.query.sqm.tree.domain.SqmIndexedCollectionAccessPath;
 import org.hibernate.query.sqm.tree.domain.SqmMapEntryReference;
+import org.hibernate.query.sqm.tree.domain.SqmMapJoin;
 import org.hibernate.query.sqm.tree.domain.SqmMaxElementPath;
 import org.hibernate.query.sqm.tree.domain.SqmMaxIndexPath;
 import org.hibernate.query.sqm.tree.domain.SqmMinElementPath;
@@ -4125,26 +4126,23 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 
 	@Override
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public SqmPath visitMapKeyNavigablePath(HqlParser.MapKeyNavigablePathContext ctx) {
 		final SqmPath<?> sqmPath = consumeDomainPath( ctx.path() );
-		final SqmPathSource<?> referencedPathSource = sqmPath.getReferencedPathSource();
 
-		if ( ! (referencedPathSource instanceof MapPersistentAttribute ) ) {
-			throw new PathException(
-					"SqmPath#referencedPathSource [" + sqmPath + "] does not refer"
-			);
+		if ( sqmPath instanceof SqmMapJoin ) {
+			final SqmMapJoin sqmMapJoin = (SqmMapJoin) sqmPath;
+			return sqmMapJoin.getReferencedPathSource().getIndexPathSource().createSqmPath( sqmMapJoin, this );
 		}
-
-		final MapPersistentAttribute attribute = (MapPersistentAttribute) referencedPathSource;
-
-		//noinspection unchecked
-		final SqmPath result = attribute.getKeyPathSource().createSqmPath( sqmPath, this );
-
-		if ( ctx.pathContinuation() != null ) {
-			return consumeDomainPath( ctx.path() );
+		else {
+			assert sqmPath instanceof SqmPluralValuedSimplePath;
+			final SqmPluralValuedSimplePath mapPath = (SqmPluralValuedSimplePath) sqmPath;
+			final SqmPath keyPath = mapPath.getReferencedPathSource()
+					.getIndexPathSource()
+					.createSqmPath( mapPath, this );
+			mapPath.registerImplicitJoinPath( keyPath );
+			return keyPath;
 		}
-
-		return result;
 	}
 
 	private SqmPath consumeDomainPath(HqlParser.PathContext parserPath) {

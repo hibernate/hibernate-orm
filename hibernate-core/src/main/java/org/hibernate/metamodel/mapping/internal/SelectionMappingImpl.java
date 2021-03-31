@@ -24,7 +24,7 @@ public class SelectionMappingImpl implements SelectionMapping {
 	private final boolean isFormula;
 	private final JdbcMapping jdbcMapping;
 
-	private SelectionMappingImpl(
+	public SelectionMappingImpl(
 			String containingTableExpression,
 			String selectionExpression,
 			String customReadExpression,

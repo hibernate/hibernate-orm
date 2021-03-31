@@ -9,6 +9,7 @@ package org.hibernate.metamodel.model.domain.internal;
 import java.util.Map;
 
 import org.hibernate.metamodel.internal.MetadataContext;
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -29,7 +30,7 @@ class MapAttributeImpl<X, K, V> extends AbstractPluralAttribute<X, Map<K, V>, V>
 		super( xceBuilder, metadataContext );
 
 		this.keyPathSource = SqmMappingModelHelper.resolveSqmPathSource(
-				getName(),
+				CollectionPart.Nature.INDEX.getName(),
 				xceBuilder.getListIndexOrMapKeyType(),
 				BindableType.PLURAL_ATTRIBUTE
 		);

@@ -44,10 +44,9 @@ public class SQLServerDialectTempTableCollationTest extends BaseCoreFunctionalTe
 	private boolean collationChanged;
 
 	@Override
-	protected Configuration constructConfiguration() {
-		Configuration configuration = super.constructConfiguration();
+	protected void configure(Configuration configuration) {
+		super.configure( configuration );
 		configuration.setProperty( AvailableSettings.KEYWORD_AUTO_QUOTING_ENABLED, Boolean.TRUE.toString() );
-		return configuration;
 	}
 
 	@AfterClassOnce
@@ -56,7 +55,7 @@ public class SQLServerDialectTempTableCollationTest extends BaseCoreFunctionalTe
 			BootstrapServiceRegistry bootRegistry = buildBootstrapServiceRegistry();
 			StandardServiceRegistryImpl serviceRegistry = buildServiceRegistry(
 					bootRegistry,
-					constructConfiguration()
+					constructAndConfigureConfiguration( bootRegistry )
 			);
 			try (Connection connection = serviceRegistry.getService( JdbcServices.class )
 					.getBootstrapJdbcConnectionAccess()
@@ -76,7 +75,8 @@ public class SQLServerDialectTempTableCollationTest extends BaseCoreFunctionalTe
 
 	protected void buildSessionFactory() {
 		BootstrapServiceRegistry bootRegistry = buildBootstrapServiceRegistry();
-		StandardServiceRegistryImpl serviceRegistry = buildServiceRegistry( bootRegistry, constructConfiguration() );
+		StandardServiceRegistryImpl serviceRegistry =
+				buildServiceRegistry( bootRegistry, constructAndConfigureConfiguration( bootRegistry ) );
 
 		try {
 			try ( Connection connection = serviceRegistry.getService( JdbcServices.class ).getBootstrapJdbcConnectionAccess().obtainConnection();

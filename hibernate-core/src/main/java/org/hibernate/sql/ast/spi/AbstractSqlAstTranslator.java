@@ -2533,26 +2533,28 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected void renderTableGroup(TableGroup tableGroup, Predicate predicate) {
-		// NOTE : commented out blocks render the TableGroup as a CTE
-
-//		if ( tableGroup.getGroupAlias() !=  null ) {
-//			sqlAppender.appendSql( OPEN_PARENTHESIS );
-//		}
+		// Without reference joins, even a real table group does not need parenthesis
+		final boolean realTableGroup = tableGroup.isRealTableGroup()
+				&& CollectionHelper.isNotEmpty( tableGroup.getTableReferenceJoins() );
+		if ( realTableGroup ) {
+			appendSql( '(' );
+		}
 
 		renderTableReference( tableGroup.getPrimaryTableReference() );
+
+		if ( realTableGroup ) {
+			renderTableReferenceJoins( tableGroup );
+			appendSql( ')' );
+		}
 
 		appendSql( " on " );
 		predicate.accept( this );
 
-		renderTableReferenceJoins( tableGroup );
-
-//		if ( tableGroup.getGroupAlias() !=  null ) {
-//			sqlAppender.appendSql( CLOSE_PARENTHESIS );
-//			sqlAppender.appendSql( AS_KEYWORD );
-//			sqlAppender.appendSql( tableGroup.getGroupAlias() );
-//		}
-
+		if ( !realTableGroup ) {
+			renderTableReferenceJoins( tableGroup );
+		}
 		processTableGroupJoins( tableGroup );
+
 		ModelPartContainer modelPart = tableGroup.getModelPart();
 		if ( modelPart instanceof AbstractEntityPersister ) {
 			String[] querySpaces = (String[]) ( (AbstractEntityPersister) modelPart ).getQuerySpaces();
@@ -2625,7 +2627,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		else {
 			appendSql( EMPTY_STRING );
 			SqlAstJoinType joinType = tableGroupJoin.getJoinType();
-			if ( joinType == SqlAstJoinType.INNER && !joinedGroup.getTableReferenceJoins().isEmpty() ) {
+			if ( !joinedGroup.isRealTableGroup() && joinType == SqlAstJoinType.INNER && !joinedGroup.getTableReferenceJoins().isEmpty() ) {
 				joinType = SqlAstJoinType.LEFT;
 			}
 			appendSql( joinType.getText() );

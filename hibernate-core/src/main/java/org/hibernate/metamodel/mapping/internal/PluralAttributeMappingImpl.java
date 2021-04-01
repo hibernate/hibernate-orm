@@ -592,8 +592,6 @@ public class PluralAttributeMappingImpl
 			SqlAstCreationContext creationContext) {
 		final TableGroup tableGroup = createOneToManyTableGroup(
 				navigablePath,
-				sqlAstJoinType == SqlAstJoinType.INNER
-						&& !getAttributeMetadataAccess().resolveAttributeMetadata( null ).isNullable(),
 				lockMode,
 				aliasBaseGenerator,
 				sqlExpressionResolver,
@@ -620,7 +618,6 @@ public class PluralAttributeMappingImpl
 
 	private TableGroup createOneToManyTableGroup(
 			NavigablePath navigablePath,
-			boolean canUseInnerJoins,
 			LockMode lockMode,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
@@ -649,13 +646,13 @@ public class PluralAttributeMappingImpl
 				this,
 				lockMode,
 				primaryTableReference,
+				true,
 				sqlAliasBase,
 				entityMappingType::containsTableReference,
 				(tableExpression, tg) -> entityMappingType.createTableReferenceJoin(
 						tableExpression,
 						sqlAliasBase,
 						primaryTableReference,
-						canUseInnerJoins,
 						sqlExpressionResolver,
 						creationContext
 				),
@@ -675,8 +672,6 @@ public class PluralAttributeMappingImpl
 			SqlAstCreationContext creationContext) {
 		final TableGroup tableGroup = createCollectionTableGroup(
 				navigablePath,
-				sqlAstJoinType == SqlAstJoinType.INNER
-						&& !getAttributeMetadataAccess().resolveAttributeMetadata( null ).isNullable(),
 				lockMode,
 				aliasBaseGenerator,
 				sqlExpressionResolver,
@@ -703,7 +698,6 @@ public class PluralAttributeMappingImpl
 
 	private TableGroup createCollectionTableGroup(
 			NavigablePath navigablePath,
-			boolean canUseInnerJoin,
 			LockMode lockMode,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
@@ -746,13 +740,7 @@ public class PluralAttributeMappingImpl
 		final TableReference elementAssociatedPrimaryTable;
 		final Function<TableGroup, TableReferenceJoin> elementTableGroupFinalizer;
 		// todo (6.0) : not sure it is
-		final boolean elementUseInnerJoin;
 		if ( elementDescriptorEntityMappingType != null ) {
-			elementUseInnerJoin = canUseInnerJoin && !getAttributeMetadataAccess()
-					.resolveAttributeMetadata( elementDescriptorEntityMappingType ).isNullable();
-			final SqlAstJoinType joinType = elementUseInnerJoin
-					? SqlAstJoinType.INNER
-					: SqlAstJoinType.LEFT;
 			elementAssociatedPrimaryTable = elementDescriptorEntityMappingType.createPrimaryTableReference(
 					sqlAliasBase,
 					sqlExpressionResolver,
@@ -764,25 +752,18 @@ public class PluralAttributeMappingImpl
 					creationContext,
 					collectionTableReference,
 					elementAssociatedPrimaryTable,
-					joinType,
+					SqlAstJoinType.INNER,
 					elementFkDescriptor
 			);
 		}
 		else {
 			elementAssociatedPrimaryTable = null;
 			elementTableGroupFinalizer = null;
-			elementUseInnerJoin = false;
 		}
 
 		TableReference indexAssociatedPrimaryTable;
 		final Function<TableGroup, TableReferenceJoin> indexTableGroupFinalizer;
-		final boolean indexUseInnerJoin;
 		if ( indexDescriptorEntityMappingType != null ) {
-			indexUseInnerJoin = canUseInnerJoin && !getAttributeMetadataAccess()
-					.resolveAttributeMetadata( indexDescriptorEntityMappingType ).isNullable();
-			final SqlAstJoinType joinType = indexUseInnerJoin
-					? SqlAstJoinType.INNER
-					: SqlAstJoinType.LEFT;
 			indexAssociatedPrimaryTable = indexDescriptorEntityMappingType.createPrimaryTableReference(
 					sqlAliasBase,
 					sqlExpressionResolver,
@@ -794,14 +775,13 @@ public class PluralAttributeMappingImpl
 					creationContext,
 					collectionTableReference,
 					indexAssociatedPrimaryTable,
-					joinType,
+					SqlAstJoinType.INNER,
 					indexFkDescriptor
 			);
 		}
 		else {
 			indexAssociatedPrimaryTable = null;
 			indexTableGroupFinalizer = null;
-			indexUseInnerJoin = false;
 		}
 
 		if ( elementDescriptorEntityMappingType != null || indexDescriptorEntityMappingType != null ) {
@@ -815,7 +795,6 @@ public class PluralAttributeMappingImpl
 							elementDescriptorEntityMappingType,
 							elementAssociatedPrimaryTable,
 							elementTableGroupFinalizer,
-							elementUseInnerJoin,
 							tableExpression,
 							tableGroup
 					);
@@ -829,7 +808,6 @@ public class PluralAttributeMappingImpl
 							indexDescriptorEntityMappingType,
 							indexAssociatedPrimaryTable,
 							indexTableGroupFinalizer,
-							indexUseInnerJoin,
 							tableExpression,
 							tableGroup
 					);
@@ -850,6 +828,7 @@ public class PluralAttributeMappingImpl
 				this,
 				lockMode,
 				collectionTableReference,
+				true,
 				sqlAliasBase,
 				tableReferenceJoinNameChecker,
 				tableReferenceJoinCreator,
@@ -866,7 +845,6 @@ public class PluralAttributeMappingImpl
 			EntityMappingType elementDescriptorEntityMappingType,
 			TableReference elementAssociatedPrimaryTable,
 			Function<TableGroup, TableReferenceJoin> elementTableGroupFinalizer,
-			boolean useInnerJoin,
 			String tableExpression, TableGroup tableGroup) {
 		if ( elementAssociatedPrimaryTable.getTableExpression().equals( tableExpression ) ) {
 			TableReferenceJoin tableReferenceJoin = elementTableGroupFinalizer.apply( tableGroup );
@@ -883,7 +861,6 @@ public class PluralAttributeMappingImpl
 				tableExpression,
 				sqlAliasBase,
 				elementAssociatedPrimaryTable,
-				useInnerJoin,
 				sqlExpressionResolver,
 				creationContext
 		);
@@ -933,7 +910,6 @@ public class PluralAttributeMappingImpl
 	public TableGroup createRootTableGroup(
 			NavigablePath navigablePath,
 			String explicitSourceAlias,
-			boolean canUseInnerJoins,
 			LockMode lockMode,
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
 			SqlAstCreationState creationState,
@@ -941,7 +917,6 @@ public class PluralAttributeMappingImpl
 		if ( getCollectionDescriptor().isOneToMany() ) {
 			return createOneToManyTableGroup(
 					navigablePath,
-					canUseInnerJoins,
 					lockMode,
 					creationState.getSqlAliasBaseGenerator(),
 					creationState.getSqlExpressionResolver(),
@@ -951,7 +926,6 @@ public class PluralAttributeMappingImpl
 		else {
 			return createCollectionTableGroup(
 					navigablePath,
-					canUseInnerJoins,
 					lockMode,
 					creationState.getSqlAliasBaseGenerator(),
 					creationState.getSqlExpressionResolver(),

@@ -25,6 +25,7 @@ public class StandardTableGroup extends AbstractTableGroup {
 	private final TableReference primaryTableReference;
 	private final Predicate<String> tableReferenceJoinNameChecker;
 	private final BiFunction<String,TableGroup,TableReferenceJoin> tableReferenceJoinCreator;
+	private final boolean realTableGroup;
 
 	private List<TableReferenceJoin> tableJoins;
 
@@ -37,6 +38,7 @@ public class StandardTableGroup extends AbstractTableGroup {
 			SessionFactoryImplementor sessionFactory) {
 		super( navigablePath, tableGroupProducer, lockMode, sqlAliasBase, sessionFactory );
 		this.primaryTableReference = primaryTableReference;
+		this.realTableGroup = false;
 		this.tableJoins = Collections.emptyList();
 		this.tableReferenceJoinCreator = null;
 		this.tableReferenceJoinNameChecker = s -> {
@@ -54,12 +56,14 @@ public class StandardTableGroup extends AbstractTableGroup {
 			TableGroupProducer tableGroupProducer,
 			LockMode lockMode,
 			TableReference primaryTableReference,
+			boolean realTableGroup,
 			SqlAliasBase sqlAliasBase,
 			Predicate<String> tableReferenceJoinNameChecker,
-			BiFunction<String,TableGroup,TableReferenceJoin> tableReferenceJoinCreator,
+			BiFunction<String, TableGroup, TableReferenceJoin> tableReferenceJoinCreator,
 			SessionFactoryImplementor sessionFactory) {
 		super( navigablePath, tableGroupProducer, lockMode, sqlAliasBase, sessionFactory );
 		this.primaryTableReference = primaryTableReference;
+		this.realTableGroup = realTableGroup;
 		this.tableJoins = null;
 		this.tableReferenceJoinNameChecker = tableReferenceJoinNameChecker;
 		this.tableReferenceJoinCreator = tableReferenceJoinCreator;
@@ -87,6 +91,11 @@ public class StandardTableGroup extends AbstractTableGroup {
 	@Override
 	public List<TableReferenceJoin> getTableReferenceJoins() {
 		return tableJoins == null ? Collections.emptyList() : tableJoins;
+	}
+
+	@Override
+	public boolean isRealTableGroup() {
+		return realTableGroup;
 	}
 
 	public void addTableReferenceJoin(TableReferenceJoin join) {

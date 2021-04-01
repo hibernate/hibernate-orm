@@ -60,7 +60,6 @@ public class ImplicitModelPartResultBuilderEntity
 					return modelPart.getEntityMappingType().createRootTableGroup(
 							navigablePath,
 							null,
-							false,
 							LockMode.READ,
 							() -> predicate -> {
 							},

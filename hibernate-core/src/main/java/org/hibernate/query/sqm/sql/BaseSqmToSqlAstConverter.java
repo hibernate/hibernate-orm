@@ -78,7 +78,6 @@ import org.hibernate.query.QueryLogging;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.UnaryArithmeticOperator;
-import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
@@ -566,7 +565,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final TableGroup rootTableGroup = entityDescriptor.createRootTableGroup(
 					rootPath,
 					sqmStatement.getRoot().getAlias(),
-					false,
 					LockMode.WRITE,
 					() -> predicate -> additionalRestrictions = predicate,
 					this,
@@ -826,7 +824,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final TableGroup rootTableGroup = entityDescriptor.createRootTableGroup(
 					rootPath,
 					statement.getRoot().getAlias(),
-					false,
 					LockMode.WRITE,
 					() -> predicate -> additionalRestrictions = predicate,
 					this,
@@ -907,7 +904,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final TableGroup rootTableGroup = entityDescriptor.createRootTableGroup(
 					rootPath,
 					sqmStatement.getTarget().getExplicitAlias(),
-					false,
 					LockMode.WRITE,
 					() -> predicate -> additionalRestrictions = predicate,
 					this,
@@ -1007,7 +1003,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final TableGroup rootTableGroup = entityDescriptor.createRootTableGroup(
 					rootPath,
 					sqmStatement.getTarget().getExplicitAlias(),
-					false,
 					LockMode.WRITE,
 					() -> predicate -> additionalRestrictions = predicate,
 					this,
@@ -1703,7 +1698,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				tableGroup = entityDescriptor.createRootTableGroup(
 						sqmRoot.getNavigablePath(),
 						sqmRoot.getExplicitAlias(),
-						true,
 						LockMode.NONE,
 						() -> predicate -> {},
 						this,
@@ -1768,7 +1762,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			tableGroup = entityDescriptor.createRootTableGroup(
 					sqmRoot.getNavigablePath(),
 					sqmRoot.getExplicitAlias(),
-					true,
 					LockMode.NONE,
 					() -> predicate -> additionalRestrictions = SqlAstTreeHelper.combinePredicates(
 							additionalRestrictions,
@@ -1920,7 +1913,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final TableGroup tableGroup = entityDescriptor.createRootTableGroup(
 				sqmJoin.getNavigablePath(),
 				sqmJoin.getExplicitAlias(),
-				true,
 				determineLockMode( sqmJoin.getExplicitAlias() ),
 				() -> predicate -> additionalRestrictions = SqlAstTreeHelper.combinePredicates(
 						additionalRestrictions,
@@ -1950,7 +1942,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final TableGroup tableGroup = entityDescriptor.createRootTableGroup(
 				sqmJoin.getNavigablePath(),
 				sqmJoin.getExplicitAlias(),
-				true,
 				determineLockMode( sqmJoin.getExplicitAlias() ),
 				() -> predicate -> additionalRestrictions = SqlAstTreeHelper.combinePredicates(
 						additionalRestrictions,
@@ -3644,7 +3635,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final TableGroup tableGroup = mappingModelExpressable.createRootTableGroup(
 					pluralPath.getNavigablePath(),
 					null,
-					true,
 					LockOptions.NONE.getLockMode(),
 					() -> subQuerySpec::applyPredicate,
 					this,
@@ -3713,7 +3703,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final TableGroup tableGroup = mappingModelExpressable.createRootTableGroup(
 					pluralPartPath.getNavigablePath(),
 					null,
-					true,
 					LockOptions.NONE.getLockMode(),
 					() -> subQuerySpec::applyPredicate,
 					this,
@@ -3862,7 +3851,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final TableGroup tableGroup = mappingModelExpressable.createRootTableGroup(
 					pluralPath.getNavigablePath(),
 					null,
-					true,
 					LockOptions.NONE.getLockMode(),
 					() -> subQuerySpec::applyPredicate,
 					this,

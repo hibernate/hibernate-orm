@@ -83,7 +83,6 @@ import static org.hibernate.cfg.AvailableSettings.BATCH_VERSIONED_DATA;
 import static org.hibernate.cfg.AvailableSettings.CACHE_REGION_PREFIX;
 import static org.hibernate.cfg.AvailableSettings.CALLABLE_NAMED_PARAMS_ENABLED;
 import static org.hibernate.cfg.AvailableSettings.CHECK_NULLABILITY;
-import static org.hibernate.cfg.AvailableSettings.COLLECTION_JOIN_SUBQUERY;
 import static org.hibernate.cfg.AvailableSettings.CONNECTION_HANDLING;
 import static org.hibernate.cfg.AvailableSettings.CONVENTIONAL_JAVA_CONSTANTS;
 import static org.hibernate.cfg.AvailableSettings.CRITERIA_LITERAL_HANDLING_MODE;
@@ -221,7 +220,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean namedQueryStartupCheckingEnabled;
 	private boolean conventionalJavaConstants;
 	private final boolean procedureParameterNullPassingEnabled;
-	private final boolean collectionJoinSubqueryRewriteEnabled;
 	private final boolean omitJoinOfSuperclassTablesEnabled;
 	private final int preferredSqlTypeCodeForBoolean;
 
@@ -411,7 +409,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.conventionalJavaConstants = cfgService.getSetting(
 				CONVENTIONAL_JAVA_CONSTANTS, BOOLEAN, true );
 		this.procedureParameterNullPassingEnabled = cfgService.getSetting( PROCEDURE_NULL_PARAM_PASSING, BOOLEAN, false );
-		this.collectionJoinSubqueryRewriteEnabled = cfgService.getSetting( COLLECTION_JOIN_SUBQUERY, BOOLEAN, true );
 		this.omitJoinOfSuperclassTablesEnabled = cfgService.getSetting( OMIT_JOIN_OF_SUPERCLASS_TABLES, BOOLEAN, true );
 		this.preferredSqlTypeCodeForBoolean = ConfigurationHelper.getPreferredSqlTypeCodeForBoolean( serviceRegistry );
 
@@ -1001,11 +998,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public boolean isProcedureParameterNullPassingEnabled() {
 		return procedureParameterNullPassingEnabled;
-	}
-
-	@Override
-	public boolean isCollectionJoinSubqueryRewriteEnabled() {
-		return collectionJoinSubqueryRewriteEnabled;
 	}
 
 	@Override

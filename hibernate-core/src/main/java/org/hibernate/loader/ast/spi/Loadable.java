@@ -40,7 +40,6 @@ public interface Loadable extends ModelPart, RootTableGroupProducer {
 	default TableGroup createRootTableGroup(
 			NavigablePath navigablePath,
 			String explicitSourceAlias,
-			boolean canUseInnerJoins,
 			LockMode lockMode,
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
 			SqlAstCreationState creationState, SqlAstCreationContext creationContext) {

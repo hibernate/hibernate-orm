@@ -594,8 +594,8 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectableMapp
 	}
 
 	@Override
-	public void forEachSelectable(SelectableConsumer consumer) {
-		selectableMappings.forEachSelectable( 0, consumer );
+	public int forEachSelectable(SelectableConsumer consumer) {
+		return selectableMappings.forEachSelectable( 0, consumer );
 	}
 
 	@Override

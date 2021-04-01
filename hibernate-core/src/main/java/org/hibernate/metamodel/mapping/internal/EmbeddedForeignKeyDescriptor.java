@@ -19,7 +19,6 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
-import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.model.domain.NavigableRole;
@@ -46,25 +45,25 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 /**
  * @author Andrea Boriero
  */
-public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, ModelPart {
+public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 
 	private final EmbeddableValuedModelPart mappingType;
-	private final String keyColumnContainingTable;
+	private final String keyTable;
 	private final SelectableMappings keySelectableMappings;
-	private final String targetColumnContainingTable;
+	private final String targetTable;
 	private final SelectableMappings targetSelectableMappings;
 	private AssociationKey associationKey;
 
 	public EmbeddedForeignKeyDescriptor(
 			EmbeddableValuedModelPart mappingType,
-			String keyColumnContainingTable,
+			String keyTable,
 			SelectableMappings keySelectableMappings,
-			String targetColumnContainingTable,
+			String targetTable,
 			SelectableMappings targetSelectableMappings,
 			MappingModelCreationProcess creationProcess) {
-		this.keyColumnContainingTable = keyColumnContainingTable;
+		this.keyTable = keyTable;
 		this.keySelectableMappings = keySelectableMappings;
-		this.targetColumnContainingTable = targetColumnContainingTable;
+		this.targetTable = targetTable;
 		this.targetSelectableMappings = targetSelectableMappings;
 		this.mappingType = mappingType;
 
@@ -85,13 +84,13 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 	}
 
 	@Override
-	public String getKeyColumnContainingTable() {
-		return keyColumnContainingTable;
+	public String getKeyTable() {
+		return keyTable;
 	}
 
 	@Override
-	public String getTargetColumnContainingTable() {
-		return targetColumnContainingTable;
+	public String getTargetTable() {
+		return targetTable;
 	}
 
 	@Override
@@ -99,11 +98,11 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 			NavigablePath collectionPath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
-		if ( targetColumnContainingTable.equals( keyColumnContainingTable ) ) {
+		if ( targetTable.equals( keyTable ) ) {
 			return createDomainResult(
 					collectionPath,
 					tableGroup,
-					targetColumnContainingTable,
+					targetTable,
 					targetSelectableMappings,
 					creationState
 			);
@@ -112,7 +111,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 			return createDomainResult(
 					collectionPath,
 					tableGroup,
-					keyColumnContainingTable,
+					keyTable,
 					keySelectableMappings,
 					creationState
 			);
@@ -127,7 +126,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 		return createDomainResult(
 				collectionPath,
 				tableGroup,
-				keyColumnContainingTable,
+				keyTable,
 				keySelectableMappings,
 				creationState
 		);
@@ -143,7 +142,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 			return createDomainResult(
 					collectionPath,
 					tableGroup,
-					keyColumnContainingTable,
+					keyTable,
 					keySelectableMappings,
 					creationState
 			);
@@ -152,7 +151,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 			return createDomainResult(
 					collectionPath,
 					tableGroup,
-					targetColumnContainingTable,
+					targetTable,
 					targetSelectableMappings,
 					creationState
 			);
@@ -213,22 +212,22 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 			SqlAstCreationContext creationContext) {
 		TableReference lhsTableReference;
 		TableReference rhsTableKeyReference;
-		if ( targetColumnContainingTable.equals( keyColumnContainingTable ) ) {
-			lhsTableReference = getTableReferenceWhenTargetEqualsKey( lhs, tableGroup, keyColumnContainingTable );
+		if ( targetTable.equals( keyTable ) ) {
+			lhsTableReference = getTableReferenceWhenTargetEqualsKey( lhs, tableGroup, keyTable );
 
 			rhsTableKeyReference = getTableReference(
 					lhs,
 					tableGroup,
-					targetColumnContainingTable
+					targetTable
 			);
 		}
 		else {
-			lhsTableReference = getTableReference( lhs, tableGroup, keyColumnContainingTable );
+			lhsTableReference = getTableReference( lhs, tableGroup, keyTable );
 
 			rhsTableKeyReference = getTableReference(
 					lhs,
 					tableGroup,
-					targetColumnContainingTable
+					targetTable
 			);
 		}
 
@@ -250,12 +249,12 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 			SqlAstCreationContext creationContext) {
 		final String rhsTableExpression = rhs.getTableExpression();
 		final String lhsTableExpression = lhs.getTableExpression();
-		if ( lhsTableExpression.equals( keyColumnContainingTable ) ) {
-			assert rhsTableExpression.equals( targetColumnContainingTable );
+		if ( lhsTableExpression.equals( keyTable ) ) {
+			assert rhsTableExpression.equals( targetTable );
 			return getPredicate( lhs, rhs, creationContext, keySelectableMappings, targetSelectableMappings );
 		}
 		else {
-			assert rhsTableExpression.equals( keyColumnContainingTable );
+			assert rhsTableExpression.equals( keyTable );
 			return getPredicate( lhs, rhs, creationContext, targetSelectableMappings, keySelectableMappings );
 		}
 	}
@@ -322,7 +321,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 	}
 
 	@Override
-	public int visitReferringSelectables(int offset, SelectableConsumer consumer) {
+	public int visitKeySelectables(int offset, SelectableConsumer consumer) {
 		return keySelectableMappings.forEachSelectable( offset, consumer );
 	}
 
@@ -340,7 +339,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 						columns.add( selection.getSelectionExpression() );
 					}
 			);
-			associationKey = new AssociationKey( keyColumnContainingTable, columns );
+			associationKey = new AssociationKey( keyTable, columns );
 		}
 		return associationKey;
 	}
@@ -369,7 +368,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 		//noinspection unchecked
 		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
 		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
-		final TableReference tableReference = tableGroup.resolveTableReference( keyColumnContainingTable );
+		final TableReference tableReference = tableGroup.resolveTableReference( keyTable );
 		final String identificationVariable = tableReference.getIdentificationVariable();
 		final int size = keySelectableMappings.getJdbcTypeCount();
 		final List<SqlSelection> sqlSelections = new ArrayList<>( size );

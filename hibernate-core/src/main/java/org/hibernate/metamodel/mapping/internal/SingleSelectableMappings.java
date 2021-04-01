@@ -87,8 +87,9 @@ public class SingleSelectableMappings implements SelectableMapping, SelectableMa
 	}
 
 	@Override
-	public void forEachSelectable(SelectableConsumer consumer) {
+	public int forEachSelectable(SelectableConsumer consumer) {
 		consumer.accept( 0, this );
+		return 1;
 	}
 
 	@Override

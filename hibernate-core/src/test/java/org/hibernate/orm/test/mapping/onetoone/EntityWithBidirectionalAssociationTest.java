@@ -51,7 +51,7 @@ public class EntityWithBidirectionalAssociationTest {
 		final ToOneAttributeMapping childAttributeMapping = (ToOneAttributeMapping) childAssociation;
 
 		ForeignKeyDescriptor foreignKeyDescriptor = childAttributeMapping.getForeignKeyDescriptor();
-		foreignKeyDescriptor.visitReferringSelectables(
+		foreignKeyDescriptor.visitKeySelectables(
 				(columnIndex, selection) -> {
 					assertThat( selection.getContainingTableExpression(), is( "PARENT" ) );
 					assertThat( selection.getSelectionExpression(), is( "child_id" ) );
@@ -76,7 +76,7 @@ public class EntityWithBidirectionalAssociationTest {
 		final ToOneAttributeMapping parentAttributeMapping = (ToOneAttributeMapping) parentAssociation;
 
 		foreignKeyDescriptor = parentAttributeMapping.getForeignKeyDescriptor();
-		foreignKeyDescriptor.visitReferringSelectables(
+		foreignKeyDescriptor.visitKeySelectables(
 				(columnIndex, selection) -> {
 					assertThat( selection.getContainingTableExpression(), is( "PARENT" ) );
 					assertThat( selection.getSelectionExpression(), is( "child_id" ) );

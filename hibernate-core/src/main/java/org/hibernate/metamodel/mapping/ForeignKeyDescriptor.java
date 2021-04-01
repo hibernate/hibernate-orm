@@ -18,14 +18,14 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 
 /**
- * @author Steve Ebersole
+ * Descriptor for foreign-keys
  */
 public interface ForeignKeyDescriptor extends VirtualModelPart {
 	String PART_NAME = "{fk}";
 
-	String getKeyColumnContainingTable();
+	String getKeyTable();
 
-	String getTargetColumnContainingTable();
+	String getTargetTable();
 
 	DomainResult createCollectionFetchDomainResult(
 			NavigablePath collectionPath,
@@ -67,15 +67,15 @@ public interface ForeignKeyDescriptor extends VirtualModelPart {
 	 */
 	@Override
 	default int forEachSelectable(int offset, SelectableConsumer consumer) {
-		return visitReferringSelectables( offset, consumer );
+		return visitKeySelectables( offset, consumer );
 	}
 
 	Object getAssociationKeyFromTarget(Object targetObject, SharedSessionContractImplementor session);
 
-	int visitReferringSelectables(int offset, SelectableConsumer consumer);
+	int visitKeySelectables(int offset, SelectableConsumer consumer);
 
-	default int visitReferringSelectables(SelectableConsumer consumer)  {
-		return visitReferringSelectables( 0, consumer );
+	default int visitKeySelectables(SelectableConsumer consumer)  {
+		return visitKeySelectables( 0, consumer );
 	}
 
 	int visitTargetSelectables(int offset, SelectableConsumer consumer);

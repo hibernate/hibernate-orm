@@ -96,8 +96,8 @@ public interface ModelPart extends MappingModelExpressable {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
-	default void forEachSelectable(SelectableConsumer consumer) {
-		forEachSelectable( 0, consumer );
+	default int forEachSelectable(SelectableConsumer consumer) {
+		return forEachSelectable( 0, consumer );
 	}
 
 	default int forEachSelectable(int offset, SelectableConsumer consumer) {

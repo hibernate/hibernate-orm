@@ -36,4 +36,9 @@ public class SqlAliasBaseImpl implements SqlAliasBase {
 			return alias;
 		}
 	}
+
+	@Override
+	public String toString() {
+		return "SqlAliasBase(" + stem + " : " + aliasCount + ")";
+	}
 }

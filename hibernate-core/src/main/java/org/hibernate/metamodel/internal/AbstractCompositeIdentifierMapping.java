@@ -124,7 +124,7 @@ public abstract class AbstractCompositeIdentifierMapping
 			final SingularAttributeMapping attribute = attributes.get( i );
 			if ( attribute instanceof ToOneAttributeMapping ) {
 				final ToOneAttributeMapping associationAttributeMapping = (ToOneAttributeMapping) attribute;
-				span += associationAttributeMapping.getForeignKeyDescriptor().visitReferringSelectables(
+				span += associationAttributeMapping.getForeignKeyDescriptor().visitKeySelectables(
 						span + offset,
 						consumer
 				);

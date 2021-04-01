@@ -923,7 +923,7 @@ public class MappingModelCreationHelper {
 					new SimpleForeignKeyDescriptor(
 							keySelectableMapping,
 							simpleFkTarget,
-							( (PropertyBasedMapping) simpleFkTarget ).getPropertyAccess(),
+							(owner) -> ( (PropertyBasedMapping) simpleFkTarget ).getPropertyAccess().getGetter().get( owner ),
 							isReferenceToPrimaryKey
 					)
 			);
@@ -946,17 +946,19 @@ public class MappingModelCreationHelper {
 		}
 	}
 
-	public static void interpretSingularAssociationAttributeMappingKeyDescriptor(
+	public static void interpretToOneKeyDescriptor(
 			ToOneAttributeMapping attributeMapping,
 			Property bootProperty,
 			ToOne bootValueMapping,
 			Dialect dialect,
 			MappingModelCreationProcess creationProcess) {
 		if ( attributeMapping.getForeignKeyDescriptor() != null ) {
+			// already built/known
 			return;
 		}
 
 		final String tableName = getTableIdentifierExpression( bootValueMapping.getTable(), creationProcess );
+
 		attributeMapping.setIdentifyingColumnsTableExpression( tableName );
 
 		final EntityPersister referencedEntityDescriptor = creationProcess
@@ -998,7 +1000,7 @@ public class MappingModelCreationHelper {
 			}
 			else {
 				throw new NotYetImplementedFor6Exception(
-						"Support for composite foreign-keys not yet implemented: " +
+						"Support for foreign-keys based on `" + modelPart + "` not yet implemented: " +
 								bootProperty.getPersistentClass().getEntityName() + " -> " + bootProperty.getName()
 				);
 			}
@@ -1047,7 +1049,7 @@ public class MappingModelCreationHelper {
 			final ForeignKeyDescriptor foreignKeyDescriptor = new SimpleForeignKeyDescriptor(
 					keySelectableMapping,
 					simpleFkTarget,
-					( (PropertyBasedMapping) simpleFkTarget ).getPropertyAccess(),
+					(owner) -> ( (PropertyBasedMapping) simpleFkTarget ).getPropertyAccess().getGetter().get( owner ),
 					bootValueMapping.isReferenceToPrimaryKey()
 			);
 			attributeMapping.setForeignKeyDescriptor( foreignKeyDescriptor );
@@ -1154,7 +1156,7 @@ public class MappingModelCreationHelper {
 					.getEntityBinding(
 							referencedEntityDescriptor.getEntityName() );
 			Property property = entityBinding.getProperty( referencedPropertyName );
-			interpretSingularAssociationAttributeMappingKeyDescriptor(
+			interpretToOneKeyDescriptor(
 					referencedAttributeMapping,
 					property,
 					(ToOne) property.getValue(),
@@ -1173,11 +1175,10 @@ public class MappingModelCreationHelper {
 				.getMetadata()
 				.getDatabase()
 				.getJdbcEnvironment();
-		return jdbcEnvironment
-				.getQualifiedObjectNameFormatter().format(
-						table.getQualifiedTableName(),
-						jdbcEnvironment.getDialect()
-				);
+		return jdbcEnvironment.getQualifiedObjectNameFormatter().format(
+				table.getQualifiedTableName(),
+				jdbcEnvironment.getDialect()
+		);
 	}
 
 	private static CollectionPart interpretMapKey(
@@ -1469,7 +1470,7 @@ public class MappingModelCreationHelper {
 								.getJdbcServices()
 								.getDialect();
 
-						MappingModelCreationHelper.interpretSingularAssociationAttributeMappingKeyDescriptor(
+						MappingModelCreationHelper.interpretToOneKeyDescriptor(
 								attributeMapping,
 								bootProperty,
 								(ToOne) bootProperty.getValue(),

@@ -341,7 +341,7 @@ public class PluralAttributeMappingImpl
 			return new SimpleForeignKeyDescriptor(
 					keySelectableMapping,
 					basicFkTargetPart,
-					( (PropertyBasedMapping) basicFkTargetPart ).getPropertyAccess(),
+					(owner) -> ( (PropertyBasedMapping) basicFkTargetPart ).getPropertyAccess().getGetter().get( owner ),
 					entityType.isReferenceToPrimaryKey()
 			);
 		}

@@ -669,7 +669,7 @@ public class ToOneAttributeMapping
 	@Override
 	public int forEachSelectable(int offset, SelectableConsumer consumer) {
 		if ( isKeyReferringSide ) {
-			return foreignKeyDescriptor.visitReferringSelectables( offset, consumer );
+			return foreignKeyDescriptor.visitKeySelectables( offset, consumer );
 		}
 		else {
 			return 0;

@@ -222,8 +222,43 @@ public class EntityCollectionPart
 //
 //		// todo (6.0) : do we need to make the FK table/columns available as well from this table group?
 //
-//		final TableReference fkReferringTable = parentTableGroup.resolveTableReference( foreignKeyDescriptor.getKeyColumnContainingTable() );
-//		final TableReference fkTargetTable = entityTableGroup.resolveTableReference( foreignKeyDescriptor.getTargetColumnContainingTable() );
+//		final TableReference fkReferringTable;
+//		try {
+//			fkReferringTable = parentTableGroup.resolveTableReference( foreignKeyDescriptor.getKeyTable() );
+//		}
+//		catch (HibernateException e) {
+//			throw e;
+//		}
+//		catch (Exception e) {
+//			throw new SqlTreeCreationException(
+//					String.format(
+//							Locale.ROOT,
+//							"Unable to locate `%s` as foreign-key referring table for entity collection part `%s` relative to parent TableGroup : %s",
+//							foreignKeyDescriptor.getKeyTable(),
+//							navigableRole.getFullPath(),
+//							parentTableGroup
+//					)
+//			);
+//		}
+//
+//		final TableReference fkTargetTable;
+//		try {
+//			fkTargetTable = entityTableGroup.resolveTableReference( foreignKeyDescriptor.getTargetTable() );
+//		}
+//		catch (HibernateException e) {
+//			throw e;
+//		}
+//		catch (Exception e) {
+//			throw new SqlTreeCreationException(
+//					String.format(
+//							Locale.ROOT,
+//							"Unable to locate `%s` as foreign-key target table for entity collection part `%s` relative to rhs TableGroup : %s",
+//							foreignKeyDescriptor.getTargetTable(),
+//							navigableRole.getFullPath(),
+//							entityTableGroup
+//					)
+//			);
+//		}
 //
 //		return new TableGroupJoin(
 //				navigablePath,

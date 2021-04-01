@@ -91,7 +91,6 @@ class DatabaseSnapshotExecutor {
 		final TableGroup rootTableGroup = entityDescriptor.createRootTableGroup(
 				rootPath,
 				null,
-				true,
 				LockMode.NONE,
 				() -> rootQuerySpec::applyPredicate,
 				state,

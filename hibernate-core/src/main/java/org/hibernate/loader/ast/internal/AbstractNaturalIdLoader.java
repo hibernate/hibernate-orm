@@ -176,7 +176,6 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 		final TableGroup rootTableGroup = entityDescriptor.createRootTableGroup(
 				entityPath,
 				null,
-				true,
 				lockMode,
 				() -> rootQuerySpec::applyPredicate,
 				sqlAstCreationState,

@@ -33,6 +33,7 @@ import org.junit.jupiter.api.Test;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Chris Cranford
@@ -76,7 +77,7 @@ public class ManyToManyWithDynamicFilterTest {
 
 			final User user = session.get( User.class, 1 );
 			assertNotNull( user );
-			assertThat( CollectionHelper.isNotEmpty( user.getRoles() ), is( true ) );
+			assertTrue( user.getRoles().isEmpty() );
 		} );
 	}
 

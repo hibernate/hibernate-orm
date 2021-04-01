@@ -376,7 +376,6 @@ public class LoaderSelectBuilder {
 		final TableGroup rootTableGroup = loadable.createRootTableGroup(
 				rootNavigablePath,
 				null,
-				true,
 				lockOptions.getLockMode(),
 				() -> rootQuerySpec::applyPredicate,
 				sqlAstCreationState,
@@ -828,7 +827,6 @@ public class LoaderSelectBuilder {
 		final TableGroup rootTableGroup = loadable.createRootTableGroup(
 				rootNavigablePath,
 				null,
-				true,
 				lockOptions.getLockMode(),
 				() -> rootQuerySpec::applyPredicate,
 				sqlAstCreationState,

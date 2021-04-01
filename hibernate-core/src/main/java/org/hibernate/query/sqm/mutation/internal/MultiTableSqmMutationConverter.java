@@ -81,7 +81,6 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 		this.mutatingTableGroup = mutatingEntityDescriptor.createRootTableGroup(
 				navigablePath,
 				mutatingEntityExplicitAlias,
-				true,
 				LockMode.PESSIMISTIC_WRITE,
 				() -> predicate -> {
 				},

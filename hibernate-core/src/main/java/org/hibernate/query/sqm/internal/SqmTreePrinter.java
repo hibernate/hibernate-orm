@@ -66,6 +66,7 @@ import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
+import org.hibernate.query.sqm.tree.from.SqmQualifiedJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
@@ -503,45 +504,55 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 		return null;
 	}
 
+	private boolean inJoinPredicate;
+
+	private void processJoinPredicate(SqmQualifiedJoin<?, ?> joinedFromElement) {
+		if ( joinedFromElement.getJoinPredicate() != null ) {
+			boolean oldInJoinPredicate = inJoinPredicate;
+			inJoinPredicate = true;
+			processStanza(
+					"on",
+					() -> joinedFromElement.getJoinPredicate().accept( this )
+			);
+			inJoinPredicate = oldInJoinPredicate;
+		}
+	}
+
 	@Override
 	public Object visitQualifiedEntityJoin(SqmEntityJoin joinedFromElement) {
-		processStanza(
-				"entity",
-				'`' + joinedFromElement.getNavigablePath().getFullPath() + '`',
-				() -> {
-					if ( joinedFromElement.getJoinPredicate() != null ) {
-						processStanza(
-								"on",
-								() -> joinedFromElement.getJoinPredicate().accept( this )
-						);
+		if ( inJoinPredicate ) {
+			logWithIndentation( "-> [joined-path] - `%s`", joinedFromElement.getNavigablePath().getFullPath() );
+		}
+		else {
+			processStanza(
+					"entity",
+					'`' + joinedFromElement.getNavigablePath().getFullPath() + '`',
+					() -> {
+						processJoinPredicate( joinedFromElement );
+						processJoins( joinedFromElement );
 					}
-
-					processJoins( joinedFromElement );
-				}
-		);
-
+			);
+		}
 		return null;
 	}
 
 	@Override
 	public Object visitQualifiedAttributeJoin(SqmAttributeJoin joinedFromElement) {
-		processStanza(
-				"attribute",
-				'`' + joinedFromElement.getNavigablePath().getFullPath() + '`',
-				() -> {
-					logIndented( "[fetched = " + joinedFromElement.isFetched() + ']' );
+		if ( inJoinPredicate ) {
+			logWithIndentation( "-> [joined-path] - `%s`", joinedFromElement.getNavigablePath().getFullPath() );
+		}
+		else {
+			processStanza(
+					"attribute",
+					'`' + joinedFromElement.getNavigablePath().getFullPath() + '`',
+					() -> {
+						logIndented( "[fetched = " + joinedFromElement.isFetched() + ']' );
 
-					if ( joinedFromElement.getJoinPredicate() != null ) {
-						processStanza(
-								"on",
-								() -> joinedFromElement.getJoinPredicate().accept( this )
-						);
+						processJoinPredicate( joinedFromElement );
+						processJoins( joinedFromElement );
 					}
-
-					processJoins( joinedFromElement );
-				}
-		);
-
+			);
+		}
 		return null;
 	}
 

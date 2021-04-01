@@ -597,13 +597,13 @@ public class ToOneAttributeMapping
 				this,
 				lockMode,
 				primaryTableReference,
+				false,
 				sqlAliasBase,
 				(tableExpression) -> getEntityMappingType().containsTableReference( tableExpression ),
 				(tableExpression, tg) -> getEntityMappingType().createTableReferenceJoin(
 						tableExpression,
 						sqlAliasBase,
 						primaryTableReference,
-						false,
 						sqlExpressionResolver,
 						creationContext
 				),

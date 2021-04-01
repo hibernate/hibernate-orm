@@ -1361,7 +1361,6 @@ public abstract class AbstractEntityPersister
 	public TableGroup createRootTableGroup(
 			NavigablePath navigablePath,
 			String explicitSourceAlias,
-			boolean canUseInnerJoins,
 			LockMode lockMode,
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
 			SqlAstCreationState creationState,
@@ -1381,6 +1380,7 @@ public abstract class AbstractEntityPersister
 				this,
 				lockMode,
 				primaryTableReference,
+				true,
 				sqlAliasBase,
 				(tableExpression) -> ArrayHelper.contains( getSubclassTableNames(), tableExpression ),
 				(tableExpression, tableGroup) -> {
@@ -1398,7 +1398,6 @@ public abstract class AbstractEntityPersister
 							return new TableReferenceJoin(
 									determineSubclassTableJoinType(
 											i,
-											canUseInnerJoins,
 											true,
 											Collections.emptySet()
 									),
@@ -1433,7 +1432,6 @@ public abstract class AbstractEntityPersister
 			String joinTableExpression,
 			SqlAliasBase sqlAliasBase,
 			TableReference lhs,
-			boolean canUseInnerJoin,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
 		for ( int i = 1; i < getSubclassTableSpan(); i++ ) {
@@ -1443,7 +1441,7 @@ public abstract class AbstractEntityPersister
 						lhs,
 						joinTableExpression,
 						sqlAliasBase,
-						determineSubclassTableJoinType( i, canUseInnerJoin, true, Collections.emptySet() ),
+						determineSubclassTableJoinType( i, true, Collections.emptySet() ),
 						getSubclassTableKeyColumns( i ),
 						sqlExpressionResolver
 				);
@@ -4340,12 +4338,10 @@ public abstract class AbstractEntityPersister
 
 	protected SqlAstJoinType determineSubclassTableJoinType(
 			int subclassTableNumber,
-			boolean canInnerJoin,
 			boolean includeSubclasses,
 			Set<String> treatAsDeclarations) {
 		if ( isClassOrSuperclassTable( subclassTableNumber ) ) {
-			final boolean shouldInnerJoin = canInnerJoin
-					&& !isInverseTable( subclassTableNumber )
+			final boolean shouldInnerJoin = !isInverseTable( subclassTableNumber )
 					&& !isNullableTable( subclassTableNumber );
 			// the table is either this persister's driving table or (one of) its super class persister's driving
 			// tables which can be inner joined as long as the `shouldInnerJoin` condition resolves to true

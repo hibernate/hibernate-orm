@@ -259,8 +259,6 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 
 	boolean isProcedureParameterNullPassingEnabled();
 
-	boolean isCollectionJoinSubqueryRewriteEnabled();
-
 	boolean isAllowOutOfTransactionUpdateOperations();
 
 	boolean isReleaseResourcesOnCloseEnabled();

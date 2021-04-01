@@ -791,7 +791,6 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected(jiraKey = "none", message = "v6 imperfection")
 	public void testManyToManyFilterOnCriteria() {
 		inSession(
 				session -> {
@@ -818,7 +817,6 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected(jiraKey = "none", message = "v6 imperfection")
 	public void testManyToManyFilterOnLoad() {
 		inSession(
 				session -> {
@@ -858,7 +856,6 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected(jiraKey = "none", message = "v6 imperfection")
 	public void testManyToManyOnCollectionLoadAfterHQL() {
 		inSession(
 				session -> {
@@ -882,7 +879,6 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected(jiraKey = "none", message = "v6 imperfection")
 	public void testManyToManyFilterOnQuery() {
 		inSession(
 				session -> {

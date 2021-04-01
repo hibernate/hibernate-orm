@@ -273,7 +273,6 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 	default TableGroup createRootTableGroup(
 			NavigablePath navigablePath,
 			String explicitSourceAlias,
-			boolean canUseInnerJoins,
 			LockMode lockMode,
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
 			SqlAstCreationState creationState,
@@ -281,7 +280,6 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 		return getEntityPersister().createRootTableGroup(
 				navigablePath,
 				explicitSourceAlias,
-				canUseInnerJoins,
 				lockMode,
 				additionalPredicateCollectorAccess,
 				creationState,
@@ -303,7 +301,6 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 			String joinTableExpression,
 			SqlAliasBase sqlAliasBase,
 			TableReference lhs,
-			boolean canUseInnerJoin,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
 		throw new UnsupportedOperationException(

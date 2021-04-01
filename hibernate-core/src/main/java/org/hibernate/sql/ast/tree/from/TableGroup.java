@@ -87,4 +87,8 @@ public interface TableGroup extends SqlAstNode, ColumnReferenceQualifier, SqmPat
 	}
 
 	boolean isInnerJoinPossible();
+
+	default boolean isRealTableGroup() {
+		return false;
+	}
 }

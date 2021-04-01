@@ -902,7 +902,6 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	public TableGroup createRootTableGroup(
 			NavigablePath navigablePath,
 			String explicitSourceAlias,
-			boolean canUseInnerJoins,
 			LockMode lockMode,
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
 			SqlAstCreationState creationState,
@@ -910,7 +909,6 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		final TableGroup tableGroup = super.createRootTableGroup(
 				navigablePath,
 				explicitSourceAlias,
-				canUseInnerJoins,
 				lockMode,
 				additionalPredicateCollectorAccess,
 				creationState, creationContext

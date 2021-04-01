@@ -78,7 +78,6 @@ import org.hibernate.query.QueryLogging;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.UnaryArithmeticOperator;
-import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
@@ -3628,9 +3627,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public Expression visitPluralAttributeSizeFunction(SqmCollectionSize function) {
 		final SqmPath<?> pluralPath = function.getPluralPath();
-		final PluralAttributeMapping mappingModelExpressable = (PluralAttributeMapping) determineValueMapping(
-				pluralPath );
-		final FromClauseAccess parentFromClauseAccess = getFromClauseAccess();
+
+		final TableGroup parentTableGroup = getFromClauseAccess().getTableGroup( pluralPath.getNavigablePath().getParent() );
+		assert parentTableGroup != null;
+
+		final PluralAttributeMapping collectionPart = (PluralAttributeMapping) parentTableGroup.getModelPart().findSubPart(
+				pluralPath.getNavigablePath().getUnaliasedLocalName(),
+				null
+		);
+		assert collectionPart != null;
+
 		final QuerySpec subQuerySpec = new QuerySpec( false );
 		pushProcessingState(
 				new SqlAstQueryPartProcessingStateImpl(
@@ -3641,7 +3647,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				)
 		);
 		try {
-			final TableGroup tableGroup = mappingModelExpressable.createRootTableGroup(
+			final TableGroup tableGroup = collectionPart.createRootTableGroup(
 					pluralPath.getNavigablePath(),
 					null,
 					true,
@@ -3672,8 +3678,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			subQuerySpec.getSelectClause().addSqlSelection( new SqlSelectionImpl( 1, 0, expression ) );
 
 			subQuerySpec.applyPredicate(
-					mappingModelExpressable.getKeyDescriptor().generateJoinPredicate(
-							parentFromClauseAccess.findTableGroup( pluralPath.getNavigablePath().getParent() ),
+					collectionPart.getKeyDescriptor().generateJoinPredicate(
+							parentTableGroup,
 							tableGroup,
 							SqlAstJoinType.INNER,
 							getSqlExpressionResolver(),

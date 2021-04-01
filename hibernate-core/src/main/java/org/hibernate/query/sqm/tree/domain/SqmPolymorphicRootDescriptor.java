@@ -164,6 +164,12 @@ public class SqmPolymorphicRootDescriptor<T> implements EntityDomainType<T> {
 	}
 
 	@Override
+	public PersistentAttribute<? super T, ?> findAttributeInSuperTypes(String name) {
+		// there are effectively no super-types
+		return null;
+	}
+
+	@Override
 	public void visitAttributes(Consumer<PersistentAttribute<T, ?>> action) {
 		commonAttributes.values().forEach( (Consumer) action );
 	}

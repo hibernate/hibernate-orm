@@ -4,22 +4,22 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.test.hql;
+package org.hibernate.orm.test.any.hbm;
 
 
 /**
- * todo: describe StringPropertyValue
+ * todo: describe IntegerPropertyValue
  *
  * @author Steve Ebersole
  */
-public class StringPropertyValue implements PropertyValue {
+public class IntegerPropertyValue implements PropertyValue {
 	private Long id;
-	private String value;
+	private int value;
 
-	public StringPropertyValue() {
+	public IntegerPropertyValue() {
 	}
 
-	public StringPropertyValue(String value) {
+	public IntegerPropertyValue(int value) {
 		this.value = value;
 	}
 
@@ -31,15 +31,15 @@ public class StringPropertyValue implements PropertyValue {
 		this.id = id;
 	}
 
-	public String getValue() {
+	public int getValue() {
 		return value;
 	}
 
-	public void setValue(String value) {
+	public void setValue(int value) {
 		this.value = value;
 	}
 
 	public String asString() {
-		return value;
+		return Integer.toString( value );
 	}
 }

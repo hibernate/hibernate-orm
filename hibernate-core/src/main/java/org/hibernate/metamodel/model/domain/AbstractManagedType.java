@@ -157,8 +157,7 @@ public abstract class AbstractManagedType<J>
 		}
 
 		if ( getSuperType() != null ) {
-			attribute = getSuperType().findAttribute( name );
-			//noinspection RedundantIfStatement
+			attribute = getSuperType().findAttributeInSuperTypes( name );
 			if ( attribute != null ) {
 				return attribute;
 			}
@@ -174,6 +173,19 @@ public abstract class AbstractManagedType<J>
 		return null;
 	}
 
+	@Override
+	public PersistentAttribute<? super J, ?> findAttributeInSuperTypes(String name) {
+		final PersistentAttribute<J, ?> local = findDeclaredAttribute( name );
+		if ( local != null ) {
+			return local;
+		}
+
+		if ( superType != null ) {
+			return superType.findAttributeInSuperTypes( name );
+		}
+
+		return null;
+	}
 
 	@Override
 	public PersistentAttribute<? super J, ?> findSubTypesAttribute(String name) {

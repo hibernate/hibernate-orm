@@ -386,7 +386,9 @@ public class MetadataContext {
 			final Component cidValue = (Component) persistentClass.getIdentifier();
 			final Iterator<Property> cidPropertyItr = cidValue.getPropertyIterator();
 
-			AbstractIdentifiableType idType = (AbstractIdentifiableType) entityTypes.get( cidValue.getOwner().getMappedClass() );
+			assert cidValue.isEmbedded();
+
+			AbstractIdentifiableType idType = (AbstractIdentifiableType) entityTypesByEntityName.get( cidValue.getOwner().getEntityName() );
 			Set idAttributes = idType.getIdClassAttributesSafely();
 			if ( idAttributes == null ) {
 				idAttributes = new HashSet<>( cidValue.getPropertySpan() );

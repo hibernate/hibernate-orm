@@ -53,12 +53,17 @@ import org.hibernate.loader.MultipleBagFetchException;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
+import org.hibernate.orm.test.any.hbm.IntegerPropertyValue;
+import org.hibernate.orm.test.any.hbm.PropertySet;
+import org.hibernate.orm.test.any.hbm.PropertyValue;
+import org.hibernate.orm.test.any.hbm.StringPropertyValue;
 import org.hibernate.query.Query;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.internal.QuerySqmImpl;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.stat.QueryStatistics;
@@ -77,6 +82,8 @@ import org.hibernate.orm.test.cid.LineItem;
 import org.hibernate.orm.test.cid.LineItem.Id;
 import org.hibernate.orm.test.cid.Order;
 import org.hibernate.orm.test.cid.Product;
+
+import org.junit.After;
 import org.junit.Test;
 
 import org.hamcrest.CoreMatchers;
@@ -85,6 +92,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.hibernate.testing.junit4.ExtraAssertions.assertClassAssignability;
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
@@ -116,27 +124,109 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 	private List<Long> createdAnimalIds = new ArrayList<>();
 
+	@After
+	public void cleanUpTestData() {
+		inTransaction(
+				(session) -> {
+					session.createQuery( "from Animal" ).list().forEach(
+							(animal) -> session.delete( animal )
+					);
+					session.createQuery( "from User" ).list().forEach(
+							(animal) -> session.delete( animal )
+					);
+					session.createQuery( "from Zoo" ).list().forEach(
+							(animal) -> session.delete( animal )
+					);
+					session.createQuery( "from StateProvince" ).list().forEach(
+							(animal) -> session.delete( animal )
+					);
+					session.createQuery( "from Joiner" ).list().forEach(
+							(animal) -> session.delete( animal )
+					);
+					session.createQuery( "from Foo" ).list().forEach(
+							(animal) -> session.delete( animal )
+					);
+					session.createQuery( "from One" ).list().forEach(
+							(animal) -> session.delete( animal )
+					);
+					session.createQuery( "from Many" ).list().forEach(
+							(animal) -> session.delete( animal )
+					);
+					session.createQuery( "from SimpleAssociatedEntity" ).list().forEach(
+							(animal) -> session.delete( animal )
+					);
+					session.createQuery( "from SimpleEntityWithAssociation" ).list().forEach(
+							(animal) -> session.delete( animal )
+					);
+					session.createQuery( "from HeresAnotherCrazyIdFieldName" ).list().forEach(
+							(animal) -> session.delete( animal )
+					);
+					session.createQuery( "from MoreCrazyIdFieldNameStuffEntity" ).list().forEach(
+							(animal) -> session.delete( animal )
+					);
+					session.createQuery( "from Image" ).list().forEach(
+							(animal) -> session.delete( animal )
+					);
+					session.createQuery( "from ComponentContainer" ).list().forEach(
+							(animal) -> session.delete( animal )
+					);
+					session.createQuery( "from VariousKeywordPropertyEntity" ).list().forEach(
+							(animal) -> session.delete( animal )
+					);
+					session.createQuery( "from Constructor" ).list().forEach(
+							(animal) -> session.delete( animal )
+					);
+					session.createQuery( "from ProductLine" ).list().forEach(
+							(animal) -> session.delete( animal )
+					);
+					session.createQuery( "from Model" ).list().forEach(
+							(animal) -> session.delete( animal )
+					);
+					session.createQuery( "from LineItem" ).list().forEach(
+							(animal) -> session.delete( animal )
+					);
+					session.createQuery( "from Product" ).list().forEach(
+							(animal) -> session.delete( animal )
+					);
+					session.createQuery( "from Order" ).list().forEach(
+							(animal) -> session.delete( animal )
+					);
+					session.createQuery( "from Customer" ).list().forEach(
+							(animal) -> session.delete( animal )
+					);
+					session.createQuery( "from PropertySet" ).list().forEach(
+							(animal) -> session.delete( animal )
+					);
+					session.createQuery( "from Commento" ).list().forEach(
+							(animal) -> session.delete( animal )
+					);
+					session.createQuery( "from Marelo" ).list().forEach(
+							(animal) -> session.delete( animal )
+					);
+				}
+		);
+	}
 	@Override
 	protected boolean isCleanupTestDataRequired() {
-		return true;
+		return false;
 	}
 	@Override
 	public String[] getMappings() {
 		return new String[] {
-				"hql/Animal.hbm.xml",
-				"hql/FooBarCopy.hbm.xml",
-				"hql/SimpleEntityWithAssociation.hbm.xml",
-				"hql/CrazyIdFieldNames.hbm.xml",
-				"hql/Image.hbm.xml",
-				"hql/ComponentContainer.hbm.xml",
-				"hql/VariousKeywordPropertyEntity.hbm.xml",
-				"hql/Constructor.hbm.xml",
+				"/org/hibernate/test/hql/Animal.hbm.xml",
+				"/org/hibernate/test/hql/FooBarCopy.hbm.xml",
+				"/org/hibernate/test/hql/SimpleEntityWithAssociation.hbm.xml",
+				"/org/hibernate/test/hql/CrazyIdFieldNames.hbm.xml",
+				"/org/hibernate/test/hql/Image.hbm.xml",
+				"/org/hibernate/test/hql/ComponentContainer.hbm.xml",
+				"/org/hibernate/test/hql/VariousKeywordPropertyEntity.hbm.xml",
+				"/org/hibernate/test/hql/Constructor.hbm.xml",
 				"batchfetch/ProductLine.hbm.xml",
-				"cid/Customer.hbm.xml",
-				"cid/Order.hbm.xml",
-				"cid/LineItem.hbm.xml",
-				"cid/Product.hbm.xml",
-				"any/Properties.hbm.xml",
+				"/org/hibernate/orm/test/cid/Customer.hbm.xml",
+				"/org/hibernate/orm/test/cid/Order.hbm.xml",
+				"/org/hibernate/orm/test/cid/LineItem.hbm.xml",
+				"/org/hibernate/orm/test/cid/Product.hbm.xml",
+				"/org/hibernate/orm/test/any/hbm/Properties.hbm.xml",
 				"legacy/Commento.hbm.xml",
 				"legacy/Marelo.hbm.xml"
 		};
@@ -2607,8 +2697,18 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		sqmStatement = (SqmSelectStatement<?>) q.unwrap( QuerySqmImpl.class ).getSqmStatement();
 		selections = sqmStatement.getQuerySpec().getSelectClause().getSelections();
 		assertThat( selections.size(), is( 2 ) );
-		assertThat( selections.get( 0 ), nullValue() );
-		assertThat( selections.get( 1 ), is( "avg" ) );
+
+		assertThat( selections.get( 0 ), notNullValue() );
+		assertThat( selections.get( 0 ).getAlias(), nullValue() );
+		assertThat( selections.get( 0 ).getSelectableNode(), instanceOf( SqmFunction.class ) );
+		assertThat( ( (SqmFunction) selections.get( 0 ).getSelectableNode() ).getFunctionName(), is( "count" ) );
+
+		assertThat( selections.get( 1 ), notNullValue());
+		assertThat( selections.get( 1 ).getAlias(), notNullValue() );
+		assertThat( selections.get( 1 ).getAlias(), is( "avg" ) );
+		assertThat( selections.get( 1 ).getSelectableNode(), instanceOf( SqmFunction.class ) );
+		assertThat( ( (SqmFunction) selections.get( 1 ).getSelectableNode() ).getFunctionName(), is( "avg" ) );
+
 		s.delete(a);
 		t.commit();
 		s.close();

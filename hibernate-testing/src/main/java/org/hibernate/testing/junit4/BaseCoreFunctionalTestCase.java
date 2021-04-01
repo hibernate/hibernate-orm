@@ -198,10 +198,15 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		String[] mappings = getMappings();
 		if ( mappings != null ) {
 			for ( String mapping : mappings ) {
-				configuration.addResource(
-						getBaseForMappings() + mapping,
-						getClass().getClassLoader()
-				);
+				if ( mapping.startsWith( "/" ) ) {
+					configuration.addResource( mapping, getClass().getClassLoader() );
+				}
+				else {
+					configuration.addResource(
+							getBaseForMappings() + mapping,
+							getClass().getClassLoader()
+					);
+				}
 			}
 		}
 		Class<?>[] annotatedClasses = getAnnotatedClasses();

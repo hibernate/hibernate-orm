@@ -19,6 +19,7 @@ public class NavigablePath implements DotIdentifierSequence {
 
 	private final NavigablePath parent;
 	private final String fullPath;
+	private final String unaliasedLocalName;
 	private final String identifierForTableGroup;
 
 	public NavigablePath(NavigablePath parent, String navigableName) {
@@ -29,9 +30,11 @@ public class NavigablePath implements DotIdentifierSequence {
 		// various things such as criteria paths and fetch profile association paths
 		if ( IDENTIFIER_MAPPER_PROPERTY.equals( navigableName ) ) {
 			this.fullPath = parent != null ? parent.getFullPath() : "";
+			this.unaliasedLocalName = "";
 			this.identifierForTableGroup = parent != null ? parent.getIdentifierForTableGroup() : "";
 		}
 		else {
+			this.unaliasedLocalName = navigableName;
 			if ( parent != null ) {
 				final String parentFullPath = parent.getFullPath();
 				this.fullPath = StringHelper.isEmpty( parentFullPath )
@@ -55,6 +58,7 @@ public class NavigablePath implements DotIdentifierSequence {
 	public NavigablePath(String rootName, String alias) {
 		this.parent = null;
 		this.fullPath = alias == null ? rootName : rootName + "(" + alias + ")";
+		this.unaliasedLocalName = StringHelper.unqualify( rootName );
 		identifierForTableGroup = rootName;
 	}
 
@@ -70,9 +74,11 @@ public class NavigablePath implements DotIdentifierSequence {
 		// various things such as criteria paths and fetch profile association paths
 		if ( IDENTIFIER_MAPPER_PROPERTY.equals( navigableName ) ) {
 			this.fullPath = parent != null ? parent.getFullPath() : "";
+			this.unaliasedLocalName = "";
 			identifierForTableGroup = parent != null ? parent.getFullPath() : "";
 		}
 		else {
+			this.unaliasedLocalName = property;
 			if ( parent != null ) {
 				final String parentFullPath = parent.getFullPath();
 				this.fullPath = StringHelper.isEmpty( parentFullPath )
@@ -107,6 +113,10 @@ public class NavigablePath implements DotIdentifierSequence {
 
 	public String getLocalName() {
 		return parent == null ? fullPath : StringHelper.unqualify( fullPath );
+	}
+
+	public String getUnaliasedLocalName() {
+		return unaliasedLocalName;
 	}
 
 	public String getFullPath() {

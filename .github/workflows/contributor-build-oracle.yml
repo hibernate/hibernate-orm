@@ -15,6 +15,7 @@ on:
     branches:
       - 'main'
       - 'wip/6.0'
+      - 'oracle-ee'
 jobs:
   build:
     name: Java 8

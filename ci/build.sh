@@ -8,9 +8,7 @@ elif [ "$RDBMS" == "mariadb" ]; then
 elif [ "$RDBMS" == "postgresql" ]; then
   goal="-Pdb=pgsql_ci"
 elif [ "$RDBMS" == "oracle" ]; then
-  goal="-Pdb=oracle_ci"
-elif [ "$RDBMS" == "oracle_ee" ]; then
-  goal="-Pdb=oracle_ci"
+  goal="-Pdb=oracle_docker"
 elif [ "$RDBMS" == "db2" ]; then
   goal="-Pdb=db2_ci"
 elif [ "$RDBMS" == "mssql" ]; then

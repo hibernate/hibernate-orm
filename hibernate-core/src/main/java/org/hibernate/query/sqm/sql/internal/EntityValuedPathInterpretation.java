@@ -86,6 +86,7 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 		final List<ColumnReference> columnReferences = new ArrayList<>();
 
 		// todo (6.0) : "polymorphize" this
+		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 		if ( mapping instanceof ToOneAttributeMapping ) {
 			final ToOneAttributeMapping toOne = (ToOneAttributeMapping) mapping;
 			final ModelPart modelPart = getModelPart( sqlAstCreationState, toOne );
@@ -99,21 +100,19 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 								toOne,
 								selection.getContainingTableExpression()
 						);
+						final Expression columnReference = sqlExpressionResolver.resolveSqlExpression(
+								createColumnReferenceKey(
+										tableReference,
+										selection.getSelectionExpression()
+								),
+								sqlAstProcessingState -> new ColumnReference(
+										tableReference.getIdentificationVariable(),
+										selection,
+										sqlAstCreationState.getCreationContext().getSessionFactory()
+								)
+						);
 
-						final Expression columnReference = sqlAstCreationState.getSqlExpressionResolver()
-								.resolveSqlExpression(
-										createColumnReferenceKey(
-												tableReference,
-												selection.getSelectionExpression()
-										),
-										sqlAstProcessingState -> new ColumnReference(
-												tableReference.getIdentificationVariable(),
-												selection,
-												sqlAstCreationState.getCreationContext().getSessionFactory()
-										)
-								);
-
-						columnReferences.add( (ColumnReference) columnReference );
+						columnReferences.add( columnReference.unwrap( ColumnReference.class ) );
 					}
 			);
 		}
@@ -151,7 +150,7 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 					(index, selectable) -> {
 						final TableReference tableReference = mapTableGroup.resolveTableReference( selectable.getContainingTableExpression() );
 
-						final SqlExpressionResolver expressionResolver = sqlAstCreationState.getSqlExpressionResolver();
+						final SqlExpressionResolver expressionResolver = sqlExpressionResolver;
 
 						columnReferences.add(
 								(ColumnReference) expressionResolver.resolveSqlExpression(

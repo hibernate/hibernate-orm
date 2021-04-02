@@ -100,4 +100,15 @@ public class Address {
 		result = 31 * result + ( stateProvince != null ? stateProvince.hashCode() : 0 );
 		return result;
 	}
+
+	@Override
+	public String toString() {
+		return "Address{" +
+				"street='" + street + '\'' +
+				", city='" + city + '\'' +
+				", postalCode='" + postalCode + '\'' +
+				", country='" + country + '\'' +
+				", stateProvince=" + stateProvince +
+				'}';
+	}
 }

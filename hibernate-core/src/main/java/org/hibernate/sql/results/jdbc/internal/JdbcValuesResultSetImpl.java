@@ -9,6 +9,7 @@ package org.hibernate.sql.results.jdbc.internal;
 import java.sql.SQLException;
 
 import org.hibernate.CacheMode;
+import org.hibernate.HibernateException;
 import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.cache.spi.QueryResultsCache;
 import org.hibernate.query.spi.QueryOptions;
@@ -248,11 +249,19 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 
 	private void readCurrentRowValues() throws SQLException {
 		for ( final SqlSelection sqlSelection : sqlSelections ) {
-			currentRowJdbcValues[ sqlSelection.getValuesArrayPosition() ] = sqlSelection.getJdbcValueExtractor().extract(
-					resultSetAccess.getResultSet(),
-					sqlSelection.getJdbcResultSetIndex(),
-					executionContext.getSession()
-			);
+			try {
+				currentRowJdbcValues[ sqlSelection.getValuesArrayPosition() ] = sqlSelection.getJdbcValueExtractor().extract(
+						resultSetAccess.getResultSet(),
+						sqlSelection.getJdbcResultSetIndex(),
+						executionContext.getSession()
+				);
+			}
+			catch (Exception e) {
+				throw new HibernateException(
+						"Unable to extract JDBC value for position `" + sqlSelection.getJdbcResultSetIndex() + "`",
+						e
+				);
+			}
 		}
 	}
 

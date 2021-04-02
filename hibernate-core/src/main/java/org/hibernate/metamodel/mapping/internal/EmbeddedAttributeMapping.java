@@ -219,7 +219,7 @@ public class EmbeddedAttributeMapping
 							)
 					);
 
-					columnReferences.add( (ColumnReference) columnReference );
+					columnReferences.add( columnReference.unwrap( ColumnReference.class ) );
 				}
 		);
 

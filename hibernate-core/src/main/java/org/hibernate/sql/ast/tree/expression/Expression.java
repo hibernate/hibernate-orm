@@ -25,6 +25,10 @@ public interface Expression extends SqlAstNode, SqlSelectionProducer {
 	 */
 	MappingModelExpressable getExpressionType();
 
+	default <T> T unwrap(Class<T> target) {
+		return (T) this;
+	}
+
 	@Override
 	default SqlSelection createSqlSelection(
 			int jdbcPosition,

@@ -70,4 +70,13 @@ public class StateProvince {
 		result = 31 * result + ( isoCode != null ? isoCode.hashCode() : 0 );
 		return result;
 	}
+
+	@Override
+	public String toString() {
+		return "StateProvince{" +
+				"id=" + id +
+				", name='" + name + '\'' +
+				", isoCode='" + isoCode + '\'' +
+				'}';
+	}
 }

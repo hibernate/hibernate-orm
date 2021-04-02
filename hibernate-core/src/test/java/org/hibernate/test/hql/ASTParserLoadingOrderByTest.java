@@ -55,7 +55,6 @@ public class ASTParserLoadingOrderByTest extends BaseCoreFunctionalTestCase {
 		super.configure( cfg );
 		cfg.setProperty( Environment.USE_QUERY_CACHE, "false" );
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
-		cfg.setProperty( Environment.SEMANTIC_QUERY_PRODUCER, HqlTranslator.class.getName() );
 	}
 
 	private void createData() {
@@ -68,6 +67,7 @@ public class ASTParserLoadingOrderByTest extends BaseCoreFunctionalTestCase {
 		address1.setStreet( "1313 Mockingbird Lane" );
 		address1.setCity( "Anywhere" );
 		address1.setStateProvince( stateProvince );
+		address1.setPostalCode( "12345" );
 		address1.setCountry( "USA" );
 		zoo1.setAddress( address1 );
 		zoo1Mammal1 = new Mammal();
@@ -84,6 +84,7 @@ public class ASTParserLoadingOrderByTest extends BaseCoreFunctionalTestCase {
 		Address address2 = new Address();
 		address2.setStreet( "1313 Mockingbird Lane" );
 		address2.setCity( "Anywhere" );
+		address2.setPostalCode( "12345" );
 		address2.setStateProvince( stateProvince );
 		address2.setCountry( "USA" );
 		zoo2.setAddress( address2 );
@@ -100,6 +101,7 @@ public class ASTParserLoadingOrderByTest extends BaseCoreFunctionalTestCase {
 		address3.setStreet( "1312 Mockingbird Lane" );
 		address3.setCity( "Anywhere" );
 		address3.setStateProvince( stateProvince );
+		address3.setPostalCode( "12345" );
 		address3.setCountry( "USA" );
 		zoo3.setAddress( address3 );
 
@@ -109,6 +111,7 @@ public class ASTParserLoadingOrderByTest extends BaseCoreFunctionalTestCase {
 		address4.setStreet( "1312 Mockingbird Lane" );
 		address4.setCity( "Nowhere" );
 		address4.setStateProvince( stateProvince );
+		address4.setPostalCode( "12345" );
 		address4.setCountry( "USA" );
 		zoo4.setAddress( address4 );
 
@@ -241,17 +244,58 @@ public class ASTParserLoadingOrderByTest extends BaseCoreFunctionalTestCase {
 		//   zoo4  Duh Zoo     1312 Mockingbird Lane, Nowhere, IL USA
 		//   zoo2  A Zoo       1313 Mockingbird Lane, Anywhere, IL USA
 		//   zoo1  Zoo         1313 Mockingbird Lane, Anywhere, IL USA
+
+		// NOTE (6.0) : the above illustration is based on 5.x code.  but the outcome
+		// 		is ultimately based on the order in which we render the attributes of
+		//		the Address component.  In 6.0 this has been made consistent and easily
+		//		explainable, whereas that was not previously the case.
+//		checkTestOrderByResults(
+//				s.createQuery(
+//						"select z.name, z.address from Zoo z order by z.address, z.name"
+//				).list(),
+//				zoo3, zoo4, zoo2, zoo1, null
+//		);
+
+		// NOTE (6.0) - continued : this is functionally equivalent to the 5.x case
+		checkTestOrderByResults(
+				s.createQuery(
+						"select z.name, z.address " +
+								"from Zoo z " +
+								"order by z.address.street," +
+								"    z.address.city," +
+								"    z.address.postalCode, " +
+								"    z.address.country," +
+								"    z.name"
+				).list(),
+				zoo3, zoo4, zoo2, zoo1, null
+		);
+
+		// NOTE (6.0) - continued 2 : this is the 6.x functionally
+		// ordered by address, name:
+		//   zoo3  Zoo         1312 Mockingbird Lane, Anywhere, IL USA
+		//   zoo2  A Zoo       1313 Mockingbird Lane, Anywhere, IL USA
+		//   zoo1  Zoo         1313 Mockingbird Lane, Anywhere, IL USA
+		//   zoo4  Duh Zoo     1312 Mockingbird Lane, Nowhere, IL USA
 		checkTestOrderByResults(
 				s.createQuery(
 						"select z.name, z.address from Zoo z order by z.address, z.name"
 				).list(),
-				zoo3, zoo4, zoo2, zoo1, null
+				zoo3, zoo2, zoo1, zoo4, null
 		);
+
+		// NOTE (6.0) - continued 3 : and the functionally equiv "full ordering"
+		checkTestOrderByResults(
+				s.createQuery(
+						"select z.name, z.address from Zoo z order by z.address.city, z.address.country, z.address.stateProvince, z.address.street, z.name"
+				).list(),
+				zoo3, zoo2, zoo1, zoo4, null
+		);
+
 		checkTestOrderByResults(
 				s.createQuery(
 						"select name, address from Zoo order by address, name"
 				).list(),
-				zoo3, zoo4, zoo2, zoo1, null
+				zoo3, zoo2, zoo1, zoo4, null
 		);
 
 		// ordered by address:
@@ -260,15 +304,24 @@ public class ASTParserLoadingOrderByTest extends BaseCoreFunctionalTestCase {
 		// unordered:
 		//   zoo2  A Zoo       1313 Mockingbird Lane, Anywhere, IL USA
 		//   zoo1  Zoo         1313 Mockingbird Lane, Anywhere, IL USA
+		//
+		// NOTE 6.0 : these results are not well defined.  Because we primarily order
+		//		based on city zoo1, zoo2 and zoo3 are all sorted "above" zoo4.  however
+		// 		the order between zoo1 and zoo2 is completely undefined because they
+		//		have the same address
+		//
+		//		and honestly, not even sure what this assertion is even trying to test.
+		//		but changed the query to what you'd need to get those results - which I guess
+		//		is the order used by 5.x
 		checkTestOrderByResults(
 				s.createQuery(
-						"select z.name, z.address from Zoo z order by z.address"
+						"select z.name, z.address from Zoo z order by z.address.street, z.address.city"
 				).list(),
 				zoo3, zoo4, null, null, zoosWithSameAddress
 		);
 		checkTestOrderByResults(
 				s.createQuery(
-						"select name, address from Zoo order by address"
+						"select name, address from Zoo order by address.street, address.city"
 				).list(),
 				zoo3, zoo4, null, null, zoosWithSameAddress
 		);
@@ -406,30 +459,37 @@ public class ASTParserLoadingOrderByTest extends BaseCoreFunctionalTestCase {
 		//   zoo4  Duh Zoo     1312 Mockingbird Lane, Nowhere, IL USA
 		//   zoo2  A Zoo       1313 Mockingbird Lane, Anywhere, IL USA
 		//   zoo1  Zoo         1313 Mockingbird Lane, Anywhere, IL USA
+		//
+		// NOTE (6.0) : another case of different handling for the component attributes
+		//		causing a "failure"
+		//   zoo3  Zoo         1312 Mockingbird Lane, Anywhere, IL USA
+		//   zoo2  A Zoo       1313 Mockingbird Lane, Anywhere, IL USA
+		//   zoo1  Zoo         1313 Mockingbird Lane, Anywhere, IL USA
+		//   zoo4  Duh Zoo     1312 Mockingbird Lane, Nowhere, IL USA
 		checkTestOrderByResults(
 				s.createQuery(
 						"select z.name as address, z.address as name from Zoo z order by name, address"
 				).list(),
-				zoo3, zoo4, zoo2, zoo1, null
+				zoo3, zoo2, zoo1, zoo4, null
 		);
 		checkTestOrderByResults(
 				s.createQuery(
 						"select z.name, z.address as name from Zoo z order by name, z.name"
 				).list(),
-				zoo3, zoo4, zoo2, zoo1, null
+				zoo3, zoo2, zoo1, zoo4, null
 		);
 		// using ASC
 		checkTestOrderByResults(
 				s.createQuery(
 						"select z.name as address, z.address as name from Zoo z order by name ASC, address ASC"
 				).list(),
-				zoo3, zoo4, zoo2, zoo1, null
+				zoo3, zoo2, zoo1, zoo4, null
 		);
 		checkTestOrderByResults(
 				s.createQuery(
 						"select z.name, z.address as name from Zoo z order by name ASC, z.name ASC"
 				).list(),
-				zoo3, zoo4, zoo2, zoo1, null
+				zoo3, zoo2, zoo1, zoo4, null
 		);
 
 		// ordered by address:
@@ -438,19 +498,22 @@ public class ASTParserLoadingOrderByTest extends BaseCoreFunctionalTestCase {
 		// unordered:
 		//   zoo2  A Zoo       1313 Mockingbird Lane, Anywhere, IL USA
 		//   zoo1  Zoo         1313 Mockingbird Lane, Anywhere, IL USA
-		checkTestOrderByResults(
-				s.createQuery(
-						"select z.name as zooName, z.address as zooAddress from Zoo z order by zooAddress"
-				).list(),
-				zoo3, zoo4, null, null, zoosWithSameAddress
-		);
+		//
+		// NOTE (6.0) : another one where the result order would be undefined
+//		checkTestOrderByResults(
+//				s.createQuery(
+//						"select z.name as zooName, z.address as zooAddress from Zoo z order by zooAddress"
+//				).list(),
+//				zoo3, zoo4, null, null, zoosWithSameAddress
+//		);
 
-		checkTestOrderByResults(
-				s.createQuery(
-						"select z.name as zooName, z.address as name from Zoo z order by name"
-				).list(),
-				zoo3, zoo4, null, null, zoosWithSameAddress
-		);
+		// NOTE (6.0) : another undefined case
+//		checkTestOrderByResults(
+//				s.createQuery(
+//						"select z.name as zooName, z.address as name from Zoo z order by name"
+//				).list(),
+//				zoo3, zoo4, null, null, zoosWithSameAddress
+//		);
 
 		// ordered by name:
 		//   zoo2  A Zoo       1313 Mockingbird Lane, Anywhere, IL USA
@@ -679,8 +742,8 @@ public class ASTParserLoadingOrderByTest extends BaseCoreFunctionalTestCase {
 			assertTrue( zoosUnordered.remove( zooResult ) );
 		}
 		else {
-			assertEquals( zooExpected.getName(), ( ( Object[] ) result )[ 0 ] );
 			assertEquals( zooExpected.getAddress(), ( ( Object[] ) result )[ 1 ] );
+			assertEquals( zooExpected.getName(), ( ( Object[] ) result )[ 0 ] );
 		}
 	}
 }

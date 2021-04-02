@@ -201,7 +201,7 @@ hana() {
       --sysctl kernel.shmmax=1073741824 \
       --sysctl net.ipv4.ip_local_port_range='40000 60999' \
       --sysctl kernel.shmmni=4096 \
-      --sysctl kernel.shmall=8388608 \
+      --sysctl kernel.shmall=67108864 \
       -v $temp_dir:/config \
       store/saplabs/hanaexpress:2.00.045.00.20200121.1 \
       --passwords-url file:///config/password.json \
@@ -213,6 +213,8 @@ hana() {
         sleep 10
         OUTPUT=$(docker logs hana)
     done
+    # Configure a 6GB memory limit
+    docker exec hana bash -c ed '/^global_allocation_limit/s/=.*$/=6144/' /hana/shared/HXE/HDB90/exe/config/global.ini
     echo "HANA successfully started"
 }
 

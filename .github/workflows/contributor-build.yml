@@ -69,7 +69,7 @@ jobs:
         run: docker logout
         if: ${{ matrix.rdbms == 'oracle' || matrix.rdbms == 'hana' }}
       - uses: actions/checkout@v2 # After the database is running, we can checkout the PR
-        if: ${{ github.event_name == 'pull_request' && (matrix.rdbms == 'oracle' || matrix.rdbms == 'hana') }}
+        if: ${{ github.event_name == 'pull_request_target' && (matrix.rdbms == 'oracle' || matrix.rdbms == 'hana') }}
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           persist-credentials: false
@@ -119,7 +119,7 @@ jobs:
         with:
           persist-credentials: false
       - uses: actions/checkout@v2
-        if: ${{ github.event_name == 'pull_request' }}
+        if: ${{ github.event_name == 'pull_request_target' }}
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           persist-credentials: false

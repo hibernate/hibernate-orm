@@ -42,7 +42,7 @@ jobs:
       - name: Start database # After the database started, we can logout so the credentials aren't available anymore
         run: docker logout
       - uses: actions/checkout@v2 # After the database is running, we can checkout the PR
-        if: ${{ github.event_name == 'pull_request' }}
+        if: ${{ github.event_name == 'pull_request_target' }}
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           persist-credentials: false

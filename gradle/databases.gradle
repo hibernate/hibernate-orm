@@ -216,6 +216,14 @@ ext {
                         // Disable prepared statement caching due to https://help.sap.com/viewer/0eec0d68141541d1b07893a39944924e/2.0.04/en-US/78f2163887814223858e4369d18e2847.html
                         'jdbc.url'   : 'jdbc:sap://' + dbHost + ':39017/?statementCacheSize=0'
                 ],
+                hana_ci : [
+                        'db.dialect' : 'org.hibernate.dialect.HANAColumnStoreDialect',
+                        'jdbc.driver': 'com.sap.db.jdbc.Driver',
+                        'jdbc.user'  : 'SYSTEM',
+                        'jdbc.pass'  : 'H1bernate_test',
+                        // Disable prepared statement caching due to https://help.sap.com/viewer/0eec0d68141541d1b07893a39944924e/2.0.04/en-US/78f2163887814223858e4369d18e2847.html
+                        'jdbc.url'   : 'jdbc:sap://' + dbHost + ':39017/?statementCacheSize=0'
+                ],
                 hana_spatial_ci : [
                         'db.dialect' : 'org.hibernate.spatial.dialect.hana.HANASpatialDialect',
                         'jdbc.driver': 'com.sap.db.jdbc.Driver',

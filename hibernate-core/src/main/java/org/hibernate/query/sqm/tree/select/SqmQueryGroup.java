@@ -83,6 +83,7 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 		this.setOperator = setOperator;
 	}
 
+
 	@Override
 	public SqmQueryGroup<T> setSortSpecifications(List<? extends JpaOrder> sortSpecifications) {
 		return (SqmQueryGroup<T>) super.setSortSpecifications( sortSpecifications );

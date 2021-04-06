@@ -23,6 +23,7 @@ import java.util.function.Supplier;
 import javax.persistence.TemporalType;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.NotYetImplementedFor6Exception;
@@ -124,6 +125,7 @@ import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.query.sqm.tree.expression.Conversion;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
+import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
 import org.hibernate.query.sqm.tree.expression.SqmAny;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmByUnit;
@@ -361,11 +363,20 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		this.statement = statement;
 
 		if ( statement instanceof SqmSelectStatement<?> ) {
+			// NOTE: note the difference here between `JpaSelection#getSelectionItems`
+			//		and `SqmSelectClause#getSelections`.
+			//
+			//		- `#getSelectionItems` returns individual select-items.  "grouped" selections,
+			//			such as dynamic-instantiation, unwrap themselves (possibly recursively).
+			//			It is a JPA-defined method
+			//
+			//		- `#getSelections` returns top-level selections.  These are ultimately the
+			//			domain-results of the query
 			this.domainResults = new ArrayList<>(
 					( (SqmSelectStatement<?>) statement ).getQueryPart()
 							.getFirstQuerySpec()
 							.getSelectClause()
-							.getSelectionItems()
+							.getSelections()
 							.size()
 			);
 
@@ -885,7 +896,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				new SqlAstProcessingStateImpl(
 						null,
 						this,
-						r -> new SqlSelectionForSqmSelectionResolver(
+						r -> new SqmAliasedNodePositionTracker(
 								r,
 								selectQueryPart.getFirstQuerySpec()
 										.getSelectClause()
@@ -1072,12 +1083,18 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		);
 
 		for ( SqmDynamicInstantiationArgument<?> sqmArgument : sqmDynamicInstantiation.getArguments() ) {
-			final DomainResultProducer<?> argumentResultProducer = (DomainResultProducer<?>) sqmArgument.getSelectableNode()
+			//noinspection StatementWithEmptyBody
+			if ( sqmArgument.getSelectableNode() instanceof SqmDynamicInstantiation ) {
+				// see discussion on `#visitSelection` wrt dynamic-instantiation
+			}
+			else {
+				currentSqlSelectionCollector().next();
+			}
+
+			final DomainResultProducer<?> argumentResultProducer = (DomainResultProducer<?>) sqmArgument
+					.getSelectableNode()
 					.accept( this );
-			dynamicInstantiation.addArgument(
-					sqmArgument.getAlias(),
-					argumentResultProducer
-			);
+			dynamicInstantiation.addArgument( sqmArgument.getAlias(), argumentResultProducer, this );
 		}
 
 		dynamicInstantiation.complete();
@@ -1086,14 +1103,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	@SuppressWarnings("unchecked")
-	private <T> JavaTypeDescriptor<T> interpretInstantiationTarget(SqmDynamicInstantiationTarget<?> instantiationTarget) {
-		final Class<T> targetJavaType;
+	private <X> JavaTypeDescriptor<X> interpretInstantiationTarget(SqmDynamicInstantiationTarget<?> instantiationTarget) {
+		final Class<X> targetJavaType;
 
 		if ( instantiationTarget.getNature() == DynamicInstantiationNature.LIST ) {
-			targetJavaType = (Class<T>) List.class;
+			targetJavaType = (Class<X>) List.class;
 		}
 		else if ( instantiationTarget.getNature() == DynamicInstantiationNature.MAP ) {
-			targetJavaType = (Class<T>) Map.class;
+			targetJavaType = (Class<X>) Map.class;
 		}
 		else {
 			targetJavaType = instantiationTarget.getJavaType();
@@ -1250,6 +1267,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return cteStatements;
 	}
 
+	private boolean trackSelectionsForGroup;
+
 	@Override
 	public QueryPart visitQueryPart(SqmQueryPart<?> queryPart) {
 		return (QueryPart) super.visitQueryPart( queryPart );
@@ -1265,26 +1284,36 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				queryGroup.getSetOperator(),
 				newQueryParts
 		);
+
+		if ( queryGroup.getOrderByClause() != null && queryGroup.getOrderByClause().hasPositionalSortItem() ) {
+			trackSelectionsForGroup = true;
+		}
+
 		final SqlAstQueryPartProcessingStateImpl processingState = new SqlAstQueryPartProcessingStateImpl(
 				group,
 				getCurrentProcessingState(),
 				this,
-				DelegatingSqlSelectionForSqmSelectionCollector::new,
+				DelegatingSqmAliasedNodeCollector::new,
 				currentClauseStack::getCurrent
 		);
-		final DelegatingSqlSelectionForSqmSelectionCollector collector = (DelegatingSqlSelectionForSqmSelectionCollector) processingState
+		final DelegatingSqmAliasedNodeCollector collector = (DelegatingSqmAliasedNodeCollector) processingState
 				.getSqlExpressionResolver();
 		pushProcessingState( processingState );
 
 		try {
 			newQueryParts.add( visitQueryPart( queryParts.get( 0 ) ) );
-			collector.setSqlSelectionForSqmSelectionCollector(
-					(SqlSelectionForSqmSelectionCollector) lastPoppedProcessingState.getSqlExpressionResolver()
+
+			collector.setSqmAliasedNodeCollector(
+					(SqmAliasedNodeCollector) lastPoppedProcessingState.getSqlExpressionResolver()
 			);
+
+			visitOrderByOffsetAndFetch( queryGroup, group );
+
+			trackSelectionsForGroup = false;
 			for ( int i = 1; i < size; i++ ) {
 				newQueryParts.add( visitQueryPart( queryParts.get( i ) ) );
 			}
-			visitOrderByOffsetAndFetch( queryGroup, group );
+
 			return group;
 		}
 		finally {
@@ -1294,8 +1323,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public QuerySpec visitQuerySpec(SqmQuerySpec<?> sqmQuerySpec) {
+		final boolean topLevel = getProcessingStateStack().isEmpty();
 		final QuerySpec sqlQuerySpec = new QuerySpec(
-				getProcessingStateStack().isEmpty(),
+				topLevel,
 				sqmQuerySpec.getFromClause().getNumberOfRoots()
 		);
 		final SqmSelectClause selectClause = sqmQuerySpec.getSelectClause();
@@ -1303,22 +1333,45 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		Predicate originalAdditionalRestrictions = additionalRestrictions;
 		additionalRestrictions = null;
 
-		pushProcessingState(
-				new SqlAstQueryPartProcessingStateImpl(
-						sqlQuerySpec,
-						getCurrentProcessingState(),
-						this,
-						r -> new SqlSelectionForSqmSelectionResolver(
-								r,
-								selectClause.getSelectionItems()
-										.size()
-						),
-						currentClauseStack::getCurrent
-				)
-		);
+		final boolean trackAliasedNodePositions;
+		if ( trackSelectionsForGroup ) {
+			trackAliasedNodePositions = true;
+		}
+		else if ( sqmQuerySpec.getOrderByClause() != null && sqmQuerySpec.getOrderByClause().hasPositionalSortItem() ) {
+			trackAliasedNodePositions = true;
+		}
+		else if ( sqmQuerySpec.hasPositionalGroupItem() ) {
+			trackAliasedNodePositions = true;
+		}
+		else {
+			trackAliasedNodePositions = false;
+		}
+
+		final SqlAstProcessingState processingState;
+		if ( trackAliasedNodePositions ) {
+			processingState = new SqlAstQueryPartProcessingStateImpl(
+					sqlQuerySpec,
+					getCurrentProcessingState(),
+					this,
+					r -> new SqmAliasedNodePositionTracker(
+							r,
+							selectClause.getSelectionItems().size()
+					),
+					currentClauseStack::getCurrent
+			);
+		}
+		else {
+			processingState = new SqlAstQueryPartProcessingStateImpl(
+					sqlQuerySpec,
+					getCurrentProcessingState(),
+					this,
+					currentClauseStack::getCurrent
+			);
+		}
+
+		pushProcessingState( processingState );
 
 		try {
-			final boolean topLevel = sqlQuerySpec.isRoot();
 			if ( topLevel ) {
 				orderByFragmentConsumer = new StandardOrderByFragmentConsumer();
 			}
@@ -1464,12 +1517,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public Void visitSelection(SqmSelection<?> sqmSelection) {
-		currentSqlSelectionCollector().next();
 		final Map<String, DomainResultProducer<?>> resultProducers;
+
 		if ( sqmSelection.getSelectableNode() instanceof SqmJpaCompoundSelection<?> ) {
 			SqmJpaCompoundSelection<?> selectableNode = (SqmJpaCompoundSelection<?>) sqmSelection.getSelectableNode();
 			resultProducers = new HashMap<>( selectableNode.getSelectionItems().size() );
 			for ( SqmSelectableNode<?> selectionItem : selectableNode.getSelectionItems() ) {
+				currentSqlSelectionCollector().next();
 				resultProducers.put(
 						selectionItem.getAlias(),
 						(DomainResultProducer<?>) selectionItem.accept( this )
@@ -1478,6 +1532,18 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		}
 		else {
+			//noinspection StatementWithEmptyBody
+			if ( sqmSelection.getSelectableNode() instanceof SqmDynamicInstantiation ) {
+				// this `currentSqlSelectionCollector().next()` is meant solely for resolving
+				// literal reference to a selection-item in the order-by or group-by clause.
+				// in the case of `SqmDynamicInstantiation`, that ordering should ignore that
+				// level here.  visiting the dynamic-instantiation will manage this for its
+				// arguments
+			}
+			else {
+				// otherwise, position the collector at the next index in prep for visitation
+				currentSqlSelectionCollector().next();
+			}
 			resultProducers = Collections.singletonMap(
 					sqmSelection.getAlias(),
 					(DomainResultProducer<?>) sqmSelection.getSelectableNode().accept( this )
@@ -1524,31 +1590,32 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	protected Expression resolveGroupOrOrderByExpression(SqmExpression<?> groupByClauseExpression) {
-		if ( groupByClauseExpression instanceof SqmLiteral<?> ) {
-			Object literal = ( (SqmLiteral<?>) groupByClauseExpression ).getLiteralValue();
-			if ( literal instanceof Integer ) {
-				// Integer literals have a special meaning in the GROUP BY and ORDER BY clause i.e. they refer to a select item
-				final int sqmPosition = (Integer) literal;
-				final List<SqlSelection> selections = currentSqlSelectionCollector().getSelections( sqmPosition );
-				final List<Expression> expressions = new ArrayList<>( selections.size() );
-				OUTER: for ( int i = 0; i < selections.size(); i++ ) {
-					final SqlSelection selection = selections.get( i );
-					// We skip duplicate selections which can occur when grouping/ordering by an entity alias.
-					// Duplication happens because the primary key of an entity usually acts as FK target of collections
-					// which is, just like the identifier itself, also registered as selection
-					for ( int j = 0; j < i; j++ ) {
-						if ( selections.get( j ) == selection ) {
-							continue OUTER;
-						}
+		if ( groupByClauseExpression instanceof SqmAliasedNodeRef ) {
+			final int aliasedNodeOrdinal = ( (SqmAliasedNodeRef) groupByClauseExpression ).getPosition();
+			final int sqmPosition = aliasedNodeOrdinal - 1;
+			final List<SqlSelection> selections = currentSqlSelectionCollector().getSelections( sqmPosition );
+			assert selections != null : String.format( Locale.ROOT, "No SqlSelections for SQM position `%s`", sqmPosition );
+			final List<Expression> expressions = new ArrayList<>( selections.size() );
+			OUTER: for ( int i = 0; i < selections.size(); i++ ) {
+				final SqlSelection selection = selections.get( i );
+				// We skip duplicate selections which can occur when grouping/ordering by an entity alias.
+				// Duplication happens because the primary key of an entity usually acts as FK target of collections
+				// which is, just like the identifier itself, also registered as selection
+				for ( int j = 0; j < i; j++ ) {
+					if ( selections.get( j ) == selection ) {
+						continue OUTER;
 					}
-					expressions.add( new SqlSelectionExpression( selection ) );
 				}
-				if ( expressions.size() == 1 ) {
-					return expressions.get( 0 );
-				}
-				return new SqlTuple( expressions, null );
+				expressions.add( new SqlSelectionExpression( selection ) );
 			}
+
+			if ( expressions.size() == 1 ) {
+				return expressions.get( 0 );
+			}
+
+			return new SqlTuple( expressions, null );
 		}
+
 		return (Expression) groupByClauseExpression.accept( this );
 	}
 
@@ -2064,8 +2131,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return processingState.getInflightQueryPart();
 	}
 
-	protected SqlSelectionForSqmSelectionCollector currentSqlSelectionCollector() {
-		return (SqlSelectionForSqmSelectionCollector) getCurrentProcessingState().getSqlExpressionResolver();
+	protected SqmAliasedNodeCollector currentSqlSelectionCollector() {
+		return (SqmAliasedNodeCollector) getCurrentProcessingState().getSqlExpressionResolver();
 	}
 
 	@Override
@@ -4502,17 +4569,18 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 	}
 
-	protected interface SqlSelectionForSqmSelectionCollector {
+	@Internal
+	public interface SqmAliasedNodeCollector {
 		void next();
 		List<SqlSelection> getSelections(int position);
 	}
 
-	protected static class DelegatingSqlSelectionForSqmSelectionCollector implements SqlExpressionResolver, SqlSelectionForSqmSelectionCollector {
+	protected static class DelegatingSqmAliasedNodeCollector implements SqlExpressionResolver, SqmAliasedNodeCollector {
 
 		private final SqlExpressionResolver delegate;
-		private SqlSelectionForSqmSelectionCollector sqlSelectionForSqmSelectionCollector;
+		private SqmAliasedNodeCollector sqmAliasedNodeCollector;
 
-		public DelegatingSqlSelectionForSqmSelectionCollector(SqlExpressionResolver delegate) {
+		public DelegatingSqmAliasedNodeCollector(SqlExpressionResolver delegate) {
 			this.delegate = delegate;
 		}
 
@@ -4523,7 +4591,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		@Override
 		public List<SqlSelection> getSelections(int position) {
-			return sqlSelectionForSqmSelectionCollector.getSelections( position );
+			return sqmAliasedNodeCollector.getSelections( position );
 		}
 
 		@Override
@@ -4539,22 +4607,21 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			return delegate.resolveSqlSelection( expression, javaTypeDescriptor, typeConfiguration );
 		}
 
-		public SqlSelectionForSqmSelectionCollector getSqlSelectionForSqmSelectionCollector() {
-			return sqlSelectionForSqmSelectionCollector;
+		public SqmAliasedNodeCollector getSqmAliasedNodeCollector() {
+			return sqmAliasedNodeCollector;
 		}
 
-		public void setSqlSelectionForSqmSelectionCollector(SqlSelectionForSqmSelectionCollector sqlSelectionForSqmSelectionCollector) {
-			this.sqlSelectionForSqmSelectionCollector = sqlSelectionForSqmSelectionCollector;
+		public void setSqmAliasedNodeCollector(SqmAliasedNodeCollector sqmAliasedNodeCollector) {
+			this.sqmAliasedNodeCollector = sqmAliasedNodeCollector;
 		}
 	}
 
-	protected static class SqlSelectionForSqmSelectionResolver implements SqlExpressionResolver, SqlSelectionForSqmSelectionCollector {
-
+	protected static class SqmAliasedNodePositionTracker implements SqlExpressionResolver, SqmAliasedNodeCollector {
 		private final SqlExpressionResolver delegate;
 		private final List<SqlSelection>[] sqlSelectionsForSqmSelection;
 		private int index = -1;
 
-		public SqlSelectionForSqmSelectionResolver(SqlExpressionResolver delegate, int sqmSelectionCount) {
+		public SqmAliasedNodePositionTracker(SqlExpressionResolver delegate, int sqmSelectionCount) {
 			this.delegate = delegate;
 			sqlSelectionsForSqmSelection = new List[sqmSelectionCount];
 		}
@@ -4566,7 +4633,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		@Override
 		public List<SqlSelection> getSelections(int position) {
-			return sqlSelectionsForSqmSelection[position - 1];
+			return sqlSelectionsForSqmSelection[ position ];
 		}
 
 		@Override

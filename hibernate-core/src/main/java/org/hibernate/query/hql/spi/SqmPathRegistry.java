@@ -12,7 +12,7 @@ import org.hibernate.Incubating;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.query.sqm.tree.select.SqmSelection;
+import org.hibernate.query.sqm.tree.select.SqmAliasedNode;
 
 /**
  * Registry for SqmPath references providing the ability to access them
@@ -76,17 +76,30 @@ public interface SqmPathRegistry {
 	// SqmSelection
 
 	/**
-	 * Register an SqmSelection
+	 * Register a node aliased within the select-clause
 	 */
-	void register(SqmSelection selection);
+	void register(SqmAliasedNode<?> aliasedNode);
 
 	/**
-	 * Find an SqmSelection by the explicit alias assigned to it
+	 * Find a node (if one) by the explicit alias assigned to it
+	 * within the select-clause
+	 *
+	 * @return The matching node, or null
 	 */
-	SqmSelection findSelectionByAlias(String alias);
+	SqmAliasedNode<?> findAliasedNodeByAlias(String alias);
+
+	/**
+	 * Find the position of a node with the given alias, relative to the
+	 * underlying SQL select-list.
+	 *
+	 * @return The position, or null
+	 */
+	Integer findAliasedNodePosition(String alias);
 
 	/**
 	 * Find an SqmSelection by its position in the SqmSelectClause
+	 *
+	 * @return The matching node, or null
 	 */
-	SqmSelection findSelectionByPosition(int position);
+	SqmAliasedNode<?> findAliasedNodeByPosition(int position);
 }

@@ -12,6 +12,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
+import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlAstTreeHelper;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -37,6 +38,7 @@ public class QuerySpec extends QueryPart implements SqlAstNode, PredicateContain
 
 	private Predicate whereClauseRestrictions;
 
+	private boolean hasPositionalGroupItem;
 	private List<Expression> groupByClauseExpressions = Collections.emptyList();
 	private Predicate havingClauseRestrictions;
 
@@ -86,8 +88,20 @@ public class QuerySpec extends QueryPart implements SqlAstNode, PredicateContain
 		return groupByClauseExpressions;
 	}
 
+	public boolean hasPositionalGroupItem() {
+		return hasPositionalGroupItem;
+	}
+
 	public void setGroupByClauseExpressions(List<Expression> groupByClauseExpressions) {
 		this.groupByClauseExpressions = groupByClauseExpressions == null ? Collections.emptyList() : groupByClauseExpressions;
+		if ( isRoot() ) {
+			for ( int i = 0; i < groupByClauseExpressions.size(); i++ ) {
+				final Expression groupItem = groupByClauseExpressions.get( i );
+				if ( groupItem instanceof SqmAliasedNodeRef ) {
+					hasPositionalGroupItem = true;
+				}
+			}
+		}
 	}
 
 	public Predicate getHavingClauseRestrictions() {

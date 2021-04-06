@@ -7,10 +7,9 @@
 package org.hibernate.query.sqm.internal;
 
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
-import org.hibernate.query.hql.spi.SqmQuerySpecCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmCreationState;
+import org.hibernate.query.hql.spi.SqmQuerySpecCreationProcessingState;
 import org.hibernate.query.sqm.tree.select.SqmSelectQuery;
-import org.hibernate.query.sqm.tree.select.SqmSelection;
 
 /**
  * Models the state related to parsing a sqm spec.  As a "linked list" to account for
@@ -41,20 +40,5 @@ public class SqmQuerySpecCreationProcessingStateStandardImpl
 	@Override
 	public SqmSelectQuery<?> getProcessingQuery() {
 		return (SqmSelectQuery<?>) super.getProcessingQuery();
-	}
-
-	@Override
-	public void registerSelection(SqmSelection selection) {
-		getProcessingIndex().register( selection );
-	}
-
-	@Override
-	public SqmSelection findSelectionByAlias(String alias) {
-		return getProcessingIndex().findSelectionByAlias( alias );
-	}
-
-	@Override
-	public SqmSelection findSelectionByPosition(int position) {
-		return getProcessingIndex().findSelectionByPosition( position );
 	}
 }

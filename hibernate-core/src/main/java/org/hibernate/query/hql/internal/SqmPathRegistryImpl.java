@@ -6,12 +6,15 @@
  */
 package org.hibernate.query.hql.internal;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.Function;
 
+import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.hql.HqlLogging;
@@ -23,7 +26,7 @@ import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.SqmTreeCreationLogger;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.query.sqm.tree.select.SqmSelection;
+import org.hibernate.query.sqm.tree.select.SqmAliasedNode;
 
 /**
  * Container for indexing needed while building an SQM tree.
@@ -39,7 +42,7 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 
 	private final Map<String, SqmFrom> sqmFromByAlias = new HashMap<>();
 
-	private final LinkedHashMap<String, SqmSelection> sqmSelectionsByAlias = new LinkedHashMap<>();
+	private final List<SqmAliasedNode> simpleSelectionNodes = new ArrayList<>();
 
 	public SqmPathRegistryImpl(SqmCreationProcessingState associatedProcessingState) {
 		this.associatedProcessingState = associatedProcessingState;
@@ -227,21 +230,13 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 	}
 
 	@Override
-	public SqmSelection findSelectionByAlias(String alias) {
-		return sqmSelectionsByAlias.get( alias );
-	}
+	public SqmAliasedNode<?> findAliasedNodeByAlias(String alias) {
+		assert alias != null;
 
-	@Override
-	public SqmSelection findSelectionByPosition(int position) {
-		// NOTE : 1-based
-		//		so incoming position must be between >= 1 and <= map.size
-
-		if ( position >= 1 && position <= sqmSelectionsByAlias.size() ) {
-			int i = 1;
-			for ( Map.Entry<String, SqmSelection> entry : sqmSelectionsByAlias.entrySet() ) {
-				if ( position == i++ ) {
-					return entry.getValue();
-				}
+		for ( int i = 0; i < simpleSelectionNodes.size(); i++ ) {
+			final SqmAliasedNode<?> node = simpleSelectionNodes.get( i );
+			if ( alias.equals( node.getAlias() ) ) {
+				return node;
 			}
 		}
 
@@ -249,22 +244,50 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 	}
 
 	@Override
-	public void register(SqmSelection selection) {
-		if ( selection.getAlias() != null ) {
-			checkResultVariable( selection );
-			sqmSelectionsByAlias.put( selection.getAlias(), selection );
+	public Integer findAliasedNodePosition(String alias) {
+		if ( alias == null ) {
+			return null;
 		}
+
+		// NOTE : 1-based
+
+		for ( int i = 0; i < simpleSelectionNodes.size(); i++ ) {
+			final SqmAliasedNode<?> node = simpleSelectionNodes.get( i );
+			if ( alias.equals( node.getAlias() ) ) {
+				return i + 1;
+			}
+		}
+
+		return null;
 	}
 
-	private void checkResultVariable(SqmSelection selection) {
-		final String alias = selection.getAlias();
+	@Override
+	public SqmAliasedNode<?> findAliasedNodeByPosition(int position) {
+		// NOTE : 1-based
 
-		if ( sqmSelectionsByAlias.containsKey( alias ) ) {
+		return simpleSelectionNodes.get( position - 1 );
+	}
+
+	@Override
+	public void register(SqmAliasedNode<?> node) {
+		checkResultVariable( node );
+		simpleSelectionNodes.add( node );
+	}
+
+	private void checkResultVariable(SqmAliasedNode selection) {
+		final String alias = selection.getAlias();
+		if ( alias == null ) {
+			return;
+		}
+
+		final Integer position = findAliasedNodePosition( alias );
+		if ( position != null ) {
 			throw new AliasCollisionException(
 					String.format(
 							Locale.ENGLISH,
-							"Alias [%s] is already used in same select clause",
-							alias
+							"Alias [%s] is already used in same select clause [position=%s]",
+							alias,
+							position
 					)
 			);
 		}

@@ -219,10 +219,9 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 				sqlQuerySpec,
 				rootProcessingState,
 				this,
-				r -> new SqlSelectionForSqmSelectionResolver(
+				r -> new SqmAliasedNodePositionTracker(
 						r,
-						sqmSelectClause.getSelectionItems()
-								.size()
+						sqmSelectClause.getSelectionItems().size()
 				),
 				getCurrentClauseStack()::getCurrent
 		) {

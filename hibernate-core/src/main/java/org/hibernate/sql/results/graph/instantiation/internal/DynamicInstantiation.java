@@ -58,7 +58,7 @@ public class DynamicInstantiation<T> implements DomainResultProducer {
 		return getTargetJavaTypeDescriptor().getJavaTypeClass();
 	}
 
-	public void addArgument(String alias, DomainResultProducer argumentResultProducer) {
+	public void addArgument(String alias, DomainResultProducer<?> argumentResultProducer, DomainResultCreationState creationState) {
 		if ( argumentAdditionsComplete ) {
 			throw new ConversionException( "Unexpected call to DynamicInstantiation#addAgument after previously complete" );
 		}
@@ -90,7 +90,7 @@ public class DynamicInstantiation<T> implements DomainResultProducer {
 			arguments = new ArrayList<>();
 		}
 
-		arguments.add( new DynamicInstantiationArgument( argumentResultProducer, alias ) );
+		arguments.add( new DynamicInstantiationArgument<>( alias, argumentResultProducer, creationState ) );
 	}
 
 	public void complete() {

@@ -24,6 +24,7 @@ import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmNode;
+import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -46,6 +47,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 	private SqmSelectClause selectClause;
 	private SqmWhereClause whereClause;
 
+	private boolean hasPositionalGroupItem;
 	private List<SqmExpression<?>> groupByClauseExpressions = Collections.emptyList();
 	private SqmPredicate havingClausePredicate;
 
@@ -129,6 +131,10 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		whereClause.applyPredicate( predicate );
 	}
 
+	public boolean hasPositionalGroupItem() {
+		return hasPositionalGroupItem;
+	}
+
 	public List<SqmExpression<?>> getGroupByClauseExpressions() {
 		return groupByClauseExpressions;
 	}
@@ -137,6 +143,13 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		this.groupByClauseExpressions = groupByClauseExpressions == null
 				? Collections.emptyList()
 				: groupByClauseExpressions;
+
+		for ( int i = 0; i < groupByClauseExpressions.size(); i++ ) {
+			final SqmExpression<?> groupItem = groupByClauseExpressions.get( i );
+			if ( groupItem instanceof SqmAliasedNodeRef ) {
+				hasPositionalGroupItem = true;
+			}
+		}
 	}
 
 	public SqmPredicate getHavingClausePredicate() {

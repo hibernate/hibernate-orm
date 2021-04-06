@@ -8,7 +8,6 @@ package org.hibernate.query.hql.spi;
 
 import org.hibernate.Incubating;
 import org.hibernate.query.sqm.tree.select.SqmSelectQuery;
-import org.hibernate.query.sqm.tree.select.SqmSelection;
 
 /**
  * SqmCreationProcessingState specialization for processing a SQM query-spec
@@ -17,10 +16,6 @@ import org.hibernate.query.sqm.tree.select.SqmSelection;
  */
 @Incubating
 public interface SqmQuerySpecCreationProcessingState extends SqmCreationProcessingState {
-	void registerSelection(SqmSelection selection);
-	SqmSelection findSelectionByAlias(String alias);
-	SqmSelection findSelectionByPosition(int position);
-
 	@Override
 	SqmSelectQuery<?> getProcessingQuery();
 }

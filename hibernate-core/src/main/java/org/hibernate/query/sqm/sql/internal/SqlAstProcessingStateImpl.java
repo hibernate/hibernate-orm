@@ -8,10 +8,13 @@ package org.hibernate.query.sqm.sql.internal;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter;
+import org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter.SqmAliasedNodeCollector;
 import org.hibernate.query.sqm.sql.ConversionException;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
@@ -29,7 +32,8 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Steve Ebersole
  */
-public class SqlAstProcessingStateImpl implements SqlAstProcessingState, SqlExpressionResolver {
+public class SqlAstProcessingStateImpl
+		implements SqlAstProcessingState, SqlExpressionResolver, SqmAliasedNodeCollector {
 	private final SqlAstProcessingState parentState;
 	private final SqlAstCreationState creationState;
 	private final SqlExpressionResolver expressionResolver;
@@ -140,5 +144,16 @@ public class SqlAstProcessingStateImpl implements SqlAstProcessingState, SqlExpr
 			JavaTypeDescriptor javaTypeDescriptor,
 			TypeConfiguration typeConfiguration) {
 		throw new ConversionException( "Unexpected call to resolve SqlSelection outside of QuerySpec processing" );
+	}
+
+	@Override
+	public void next() {
+		// nothing to do
+		int i = 1;
+	}
+
+	@Override
+	public List<SqlSelection> getSelections(int position) {
+		throw new UnsupportedOperationException();
 	}
 }

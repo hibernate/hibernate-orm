@@ -28,14 +28,11 @@ import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
-import org.hibernate.query.FetchClauseType;
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.query.NullPrecedence;
 import org.hibernate.QueryException;
-import org.hibernate.query.SetOperator;
-import org.hibernate.query.SortOrder;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.grammars.hql.HqlLexer;
@@ -50,13 +47,16 @@ import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
-import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.query.BinaryArithmeticOperator;
 import org.hibernate.query.ComparisonOperator;
+import org.hibernate.query.FetchClauseType;
+import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.PathException;
 import org.hibernate.query.SemanticException;
+import org.hibernate.query.SetOperator;
+import org.hibernate.query.SortOrder;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.TrimSpec;
 import org.hibernate.query.UnaryArithmeticOperator;
@@ -104,6 +104,7 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
+import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
 import org.hibernate.query.sqm.tree.expression.SqmAny;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmByUnit;
@@ -161,6 +162,7 @@ import org.hibernate.query.sqm.tree.predicate.SqmOrPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.AbstractSqmSelectQuery;
+import org.hibernate.query.sqm.tree.select.SqmAliasedNode;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationArgument;
 import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
@@ -241,17 +243,19 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	private final Stack<SqmCreationProcessingState> processingStateStack = new StandardStack<>();
 
 	private ParameterCollector parameterCollector;
-
-
-	public Stack<SqmCreationProcessingState> getProcessingStateStack() {
-		return processingStateStack;
-	}
+	private BasicDomainType<Integer> integerDomainType;
+	private JavaTypeDescriptor<List<?>> listJavaTypeDescriptor;
+	private JavaTypeDescriptor<Map<?,?>> mapJavaTypeDescriptor;
 
 	@SuppressWarnings("WeakerAccess")
 	public SemanticQueryBuilder(SqmCreationOptions creationOptions, SqmCreationContext creationContext) {
 		this.creationOptions = creationOptions;
 		this.creationContext = creationContext;
 		this.dotIdentifierConsumerStack = new StandardStack<>( new BasicDotIdentifierConsumer( this ) );
+		this.integerDomainType = creationContext
+				.getNodeBuilder()
+				.getTypeConfiguration()
+				.standardBasicTypeForJavaType( Integer.class );
 	}
 
 	@Override
@@ -262,6 +266,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	@Override
 	public SqmCreationOptions getCreationOptions() {
 		return creationOptions;
+	}
+
+	public Stack<SqmCreationProcessingState> getProcessingStateStack() {
+		return processingStateStack;
 	}
 
 	protected Stack<ParameterDeclarationContext> getParameterDeclarationContextStack() {
@@ -770,28 +778,41 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final SqmSelectableNode selectableNode = visitSelectableNode( ctx );
 
 		//noinspection unchecked
-		final SqmSelection selection = new SqmSelection(
+		final SqmSelection<?> selection = new SqmSelection<>(
 				selectableNode,
+				// NOTE : SqmSelection forces the alias down to its selectableNode.
+				//		- no need to do that here
 				resultIdentifier,
 				creationContext.getNodeBuilder()
 		);
 
-		getProcessingStateStack().getCurrent().getPathRegistry().register( selection );
+		// if the node is not a dynamic-instantiation, register it with
+		// the path-registry
+		//noinspection StatementWithEmptyBody
+		if ( selectableNode instanceof SqmDynamicInstantiation ) {
+			// nothing else to do (avoid kludgy `! ( instanceof )` syntax
+		}
+		else {
+			getCurrentProcessingState().getPathRegistry().register( selection );
+		}
 
 		return selection;
 	}
 
-	private SqmSelectableNode visitSelectableNode(HqlParser.SelectionContext ctx) {
+	private SqmSelectableNode<?> visitSelectableNode(HqlParser.SelectionContext ctx) {
 		if ( ctx.selectExpression().dynamicInstantiation() != null ) {
 			return visitDynamicInstantiation( ctx.selectExpression().dynamicInstantiation() );
 		}
-		else if ( ctx.selectExpression().jpaSelectObjectSyntax() != null ) {
+
+		if ( ctx.selectExpression().jpaSelectObjectSyntax() != null ) {
 			return visitJpaSelectObjectSyntax( ctx.selectExpression().jpaSelectObjectSyntax() );
 		}
-		else if ( ctx.selectExpression().mapEntrySelection() != null ) {
+
+		if ( ctx.selectExpression().mapEntrySelection() != null ) {
 			return visitMapEntrySelection( ctx.selectExpression().mapEntrySelection() );
 		}
-		else if ( ctx.selectExpression().expression() != null ) {
+
+		if ( ctx.selectExpression().expression() != null ) {
 			return (SqmExpression) ctx.selectExpression().expression().accept( this );
 		}
 
@@ -829,12 +850,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return null;
 	}
 
-	private JavaTypeDescriptor<List> listJavaTypeDescriptor;
-	private JavaTypeDescriptor<Map> mapJavaTypeDescriptor;
-
 	@Override
-	public SqmDynamicInstantiation visitDynamicInstantiation(HqlParser.DynamicInstantiationContext ctx) {
-		final SqmDynamicInstantiation dynamicInstantiation;
+	public SqmDynamicInstantiation<?> visitDynamicInstantiation(HqlParser.DynamicInstantiationContext ctx) {
+		final SqmDynamicInstantiation<?> dynamicInstantiation;
 
 		if ( ctx.dynamicInstantiationTarget().MAP() != null ) {
 			if ( mapJavaTypeDescriptor == null ) {
@@ -863,7 +881,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		else {
 			final String className = ctx.dynamicInstantiationTarget().dotIdentifierSequence().getText();
 			try {
-				final JavaTypeDescriptor jtd = resolveInstantiationTargetJtd( className );
+				final JavaTypeDescriptor<?> jtd = resolveInstantiationTargetJtd( className );
 				dynamicInstantiation = SqmDynamicInstantiation.forClassInstantiation(
 						jtd,
 						creationContext.getNodeBuilder()
@@ -881,7 +899,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return dynamicInstantiation;
 	}
 
-	private JavaTypeDescriptor resolveInstantiationTargetJtd(String className) {
+	private JavaTypeDescriptor<?> resolveInstantiationTargetJtd(String className) {
 		final Class<?> targetJavaType = classForName( creationContext.getJpaMetamodel().qualifyImportableName( className ) );
 		return creationContext.getJpaMetamodel()
 				.getTypeConfiguration()
@@ -889,18 +907,32 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				.resolveDescriptor( targetJavaType );
 	}
 
-	private Class classForName(String className) {
+	private Class<?> classForName(String className) {
 		return creationContext.getServiceRegistry().getService( ClassLoaderService.class ).classForName( className );
 	}
 
 	@Override
-	public SqmDynamicInstantiationArgument visitDynamicInstantiationArg(HqlParser.DynamicInstantiationArgContext ctx) {
+	public SqmDynamicInstantiationArgument<?> visitDynamicInstantiationArg(HqlParser.DynamicInstantiationArgContext ctx) {
+		final String alias = ctx.identifier() == null ? null : ctx.identifier().getText();
+
+		final SqmSelectableNode<?> argExpression = visitDynamicInstantiationArgExpression( ctx.dynamicInstantiationArgExpression() );
+
 		//noinspection unchecked
-		return new SqmDynamicInstantiationArgument(
-				visitDynamicInstantiationArgExpression( ctx.dynamicInstantiationArgExpression() ),
-				ctx.identifier() == null ? null : ctx.identifier().getText(),
+		final SqmDynamicInstantiationArgument<?> argument = new SqmDynamicInstantiationArgument<>(
+				argExpression,
+				alias,
 				creationContext.getNodeBuilder()
 		);
+
+		//noinspection StatementWithEmptyBody
+		if ( argExpression instanceof SqmDynamicInstantiation ) {
+			// nothing else to do (avoid kludgy `! ( instanceof )` syntax
+		}
+		else {
+			getCurrentProcessingState().getPathRegistry().register( argument );
+		}
+
+		return argument;
 	}
 
 	@Override
@@ -930,56 +962,71 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return visitExpressions( ctx.groupByExpression() );
 	}
 
-	@Override
-	public SqmExpression<?> visitGroupByExpression(HqlParser.GroupByExpressionContext ctx) {
-		if ( ctx.INTEGER_LITERAL() != null ) {
-			// This is syntactically disallowed
-			if ( ctx.collationSpecification() != null ) {
-				throw new ParsingException( "COLLATE is not allowed for position based group by items!" );
-			}
-			final int position = Integer.parseInt( ctx.INTEGER_LITERAL().getText() );
-			final SqmSelection<?> selection = getCurrentProcessingState().getPathRegistry().findSelectionByPosition( position );
-			if ( selection == null ) {
-				throw new ParsingException( "Invalid select item position " + position + " used for order by item!" );
+	private SqmExpression<?> resolveOrderByOrGroupByExpression(
+			Supplier<TerminalNode> positionLiteralAccess,
+			Supplier<HqlParser.IdentifierContext> identifierAccess,
+			Supplier<HqlParser.ExpressionContext> expressionContextAccess,
+			boolean definedCollate) {
+		if ( positionLiteralAccess.get() != null ) {
+			if ( definedCollate ) {
+				// This is syntactically disallowed
+				throw new ParsingException( "COLLATE is not allowed for position based order-by or group-by items" );
 			}
 
-			return new SqmLiteral<>(
-					position,
-					resolveExpressableTypeBasic( Integer.class ),
-					creationContext.getNodeBuilder()
-			);
+			final int position = Integer.parseInt( positionLiteralAccess.get().getText() );
+
+			// make sure this selection exists
+			final SqmAliasedNode<?> nodeByPosition = getCurrentProcessingState()
+					.getPathRegistry()
+					.findAliasedNodeByPosition( position );
+			if ( nodeByPosition == null ) {
+				throw new ParsingException( "Numeric literal `" + position + "` used in group-by does not match a registered select-item" );
+			}
+
+			return new SqmAliasedNodeRef( position, integerDomainType, creationContext.getNodeBuilder() );
 		}
 
-		if ( ctx.identifier() != null ) {
-			final HqlParser.CollationSpecificationContext collationSpecificationContext = ctx.collationSpecification();
-			final SqmSelection<?> selection = getCurrentProcessingState().getPathRegistry().findSelectionByAlias( ctx.identifier().getText() );
-			if ( selection != null ) {
-				// This is syntactically disallowed
-				if ( collationSpecificationContext != null ) {
-					throw new ParsingException( "COLLATE is not allowed for alias based group by items!" );
+		final HqlParser.IdentifierContext identifier = identifierAccess.get();
+		if ( identifier != null ) {
+			final String identifierText = identifier.getText();
+
+			final Integer correspondingPosition = getCurrentProcessingState()
+					.getPathRegistry()
+					.findAliasedNodePosition( identifierText );
+			if ( correspondingPosition != null ) {
+				if ( definedCollate ) {
+					// This is syntactically disallowed
+					throw new ParsingException( "COLLATE is not allowed for alias based order-by or group-by items" );
 				}
-				return new SqmLiteral<>(
-						getSelectionPosition( selection ),
-						resolveExpressableTypeBasic( Integer.class ),
-						creationContext.getNodeBuilder()
-				);
+				return new SqmAliasedNodeRef( correspondingPosition, integerDomainType, creationContext.getNodeBuilder() );
 			}
 
-			final SqmFrom<?, ?> sqmFrom = getCurrentProcessingState().getPathRegistry().findFromByAlias( ctx.identifier().getText() );
+			final SqmFrom<?, ?> sqmFrom = getCurrentProcessingState().getPathRegistry().findFromByAlias( identifierText );
 			if ( sqmFrom != null ) {
-				// This is syntactically disallowed
-				if ( collationSpecificationContext != null ) {
-					throw new ParsingException( "COLLATE is not allowed for alias based group by items!" );
+				if ( definedCollate ) {
+					// This is syntactically disallowed
+					throw new ParsingException( "COLLATE is not allowed for alias based order-by or group-by items" );
 				}
+				// this will group-by all of the sub-parts in the from-element's model part
 				return sqmFrom;
 			}
 
 			final DotIdentifierConsumer dotIdentifierConsumer = dotIdentifierConsumerStack.getCurrent();
-			dotIdentifierConsumer.consumeIdentifier( ctx.getText(), true, true );
+			dotIdentifierConsumer.consumeIdentifier( identifierText, true, true );
 			return (SqmExpression<?>) dotIdentifierConsumer.getConsumedPart();
 		}
 
-		return (SqmExpression<?>) ctx.expression().accept( this );
+		return (SqmExpression<?>) expressionContextAccess.get().accept( this );
+	}
+
+	@Override
+	public SqmExpression<?> visitGroupByExpression(HqlParser.GroupByExpressionContext ctx) {
+		return resolveOrderByOrGroupByExpression(
+				ctx::INTEGER_LITERAL,
+				ctx::identifier,
+				ctx::expression,
+				ctx.collationSpecification() != null
+		);
 	}
 
 	@Override
@@ -1034,66 +1081,12 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmExpression<?> visitSortExpression(HqlParser.SortExpressionContext ctx) {
-		if ( ctx.INTEGER_LITERAL() != null ) {
-			// This is syntactically disallowed
-			if ( ctx.collationSpecification() != null ) {
-				throw new ParsingException( "COLLATE is not allowed for position based order by items!" );
-			}
-			final int position = Integer.parseInt( ctx.INTEGER_LITERAL().getText() );
-			SqmSelection<?> selection = getCurrentProcessingState().getPathRegistry().findSelectionByPosition( position );
-			if ( selection == null ) {
-				selection = currentQuerySpec().getSelectClause().getSelections().get( position - 1 );
-			}
-			if ( selection == null ) {
-				throw new ParsingException( "Invalid select item position " + position + " used for order by item!" );
-			}
-
-			return new SqmLiteral<>(
-					position,
-					resolveExpressableTypeBasic( Integer.class ),
-					creationContext.getNodeBuilder()
-			);
-		}
-
-		if ( ctx.identifier() != null ) {
-			final HqlParser.CollationSpecificationContext collationSpecificationContext = ctx.collationSpecification();
-			final String alias = ctx.identifier().getText();
-			SqmSelection<?> selection = getCurrentProcessingState().getPathRegistry().findSelectionByAlias( alias );
-			if ( selection == null ) {
-				for ( SqmSelection sqmSelection : currentQuerySpec().getSelectClause().getSelections() ) {
-					if ( alias.equals( sqmSelection.getAlias() ) ) {
-						selection = sqmSelection;
-						break;
-					}
-				}
-			}
-			if ( selection != null ) {
-				// This is syntactically disallowed
-				if ( collationSpecificationContext != null ) {
-					throw new ParsingException( "COLLATE is not allowed for alias based order by items!" );
-				}
-				return new SqmLiteral<>(
-						getSelectionPosition( selection ),
-						resolveExpressableTypeBasic( Integer.class ),
-						creationContext.getNodeBuilder()
-				);
-			}
-
-			final SqmFrom<?, ?> sqmFrom = getCurrentProcessingState().getPathRegistry().findFromByAlias( ctx.identifier().getText() );
-			if ( sqmFrom != null ) {
-				// This is syntactically disallowed
-				if ( collationSpecificationContext != null ) {
-					throw new ParsingException( "COLLATE is not allowed for alias based order by items!" );
-				}
-				return sqmFrom;
-			}
-
-			final DotIdentifierConsumer dotIdentifierConsumer = dotIdentifierConsumerStack.getCurrent();
-			dotIdentifierConsumer.consumeIdentifier( ctx.getText(), true, true );
-			return (SqmExpression<?>) dotIdentifierConsumer.getConsumedPart();
-		}
-
-		return (SqmExpression<?>) ctx.expression().accept( this );
+		return resolveOrderByOrGroupByExpression(
+				ctx::INTEGER_LITERAL,
+				ctx::identifier,
+				ctx::expression,
+				ctx.collationSpecification() != null
+		);
 	}
 
 	private SqmQuerySpec<?> currentQuerySpec() {

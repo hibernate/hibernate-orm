@@ -10,15 +10,21 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
  * @author Steve Ebersole
  */
 public class SqmOrderByClause {
+	private boolean hasPositionalSortItem;
 	private List<SqmSortSpecification> sortSpecifications;
 
 	public SqmOrderByClause() {
+	}
+
+	public boolean hasPositionalSortItem() {
+		return hasPositionalSortItem;
 	}
 
 	@SuppressWarnings("UnusedReturnValue")
@@ -27,6 +33,9 @@ public class SqmOrderByClause {
 			sortSpecifications = new ArrayList<>();
 		}
 		sortSpecifications.add( sortSpecification );
+		if ( sortSpecification.getExpression() instanceof SqmAliasedNodeRef ) {
+			hasPositionalSortItem = true;
+		}
 		return this;
 	}
 
@@ -49,5 +58,11 @@ public class SqmOrderByClause {
 	public void setSortSpecifications(List<SqmSortSpecification> sortSpecifications) {
 		this.sortSpecifications = new ArrayList<>();
 		this.sortSpecifications.addAll( sortSpecifications );
+		for ( int i = 0; i < sortSpecifications.size(); i++ ) {
+			final SqmSortSpecification sortSpecification = sortSpecifications.get( i );
+			if ( sortSpecification.getExpression() instanceof SqmAliasedNodeRef ) {
+				hasPositionalSortItem = true;
+			}
+		}
 	}
 }

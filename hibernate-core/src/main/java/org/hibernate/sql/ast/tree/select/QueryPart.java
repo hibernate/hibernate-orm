@@ -12,6 +12,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.query.FetchClauseType;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
+import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 
@@ -19,9 +20,11 @@ import org.hibernate.sql.ast.tree.expression.Expression;
  * @author Christian Beikov
  */
 public abstract class QueryPart implements SqlAstNode, Expression, DomainResultProducer {
-
 	private final boolean isRoot;
+
+	private boolean hasPositionalSortItem;
 	private List<SortSpecification> sortSpecifications;
+
 	private Expression offsetClauseExpression;
 	private Expression fetchClauseExpression;
 	private FetchClauseType fetchClauseType = FetchClauseType.ROWS_ONLY;
@@ -48,6 +51,10 @@ public abstract class QueryPart implements SqlAstNode, Expression, DomainResultP
 		return sortSpecifications != null && !sortSpecifications.isEmpty();
 	}
 
+	public boolean hasPositionalSortItem() {
+		return hasPositionalSortItem;
+	}
+
 	public List<SortSpecification> getSortSpecifications() {
 		return sortSpecifications;
 	}
@@ -63,6 +70,12 @@ public abstract class QueryPart implements SqlAstNode, Expression, DomainResultP
 			sortSpecifications = new ArrayList<>();
 		}
 		sortSpecifications.add( specification );
+
+		if ( isRoot ) {
+			if ( specification.getSortExpression() instanceof SqmAliasedNodeRef ) {
+				hasPositionalSortItem = true;
+			}
+		}
 	}
 
 	public boolean hasOffsetOrFetchClause() {

@@ -39,10 +39,6 @@ public class SqmCreationProcessingStateImpl implements SqmCreationProcessingStat
 		return processingQuery;
 	}
 
-	protected SqmPathRegistryImpl getProcessingIndex() {
-		return processingIndex;
-	}
-
 	@Override
 	public SqmCreationState getCreationState() {
 		return creationState;

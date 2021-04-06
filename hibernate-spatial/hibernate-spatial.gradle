@@ -26,6 +26,7 @@ dependencies {
     testCompile(libraries.junit)
     testCompile(project(':hibernate-testing'))
     testCompile([group: 'commons-dbcp', name: 'commons-dbcp', version: '1.4'])
+    testCompile( project( path: ':hibernate-core', configuration: 'tests' ) )
     testCompile(libraries.validation)
     testCompile(libraries.jandex)
     testCompile(libraries.classmate)

@@ -171,17 +171,11 @@ public class MappingModelCreationHelper {
 							propertyAccess
 					);
 					Component bootComponentDescriptor = bootEntityDescriptor.getIdentifierMapper();
-					final List<SingularAttributeMapping> idAttributeMappings;
-					final Iterator<Property> bootIdSubPropertyItr;
 					if ( bootComponentDescriptor == null ) {
-						idAttributeMappings = new ArrayList<>( bootIdClassComponent.getPropertySpan() );
-						bootIdSubPropertyItr = bootIdClassComponent.getPropertyIterator();
-
+						bootComponentDescriptor = bootIdClassComponent;
 					}
-					else {
-						idAttributeMappings = new ArrayList<>( bootComponentDescriptor.getPropertySpan() );
-						bootIdSubPropertyItr = bootComponentDescriptor.getPropertyIterator();
-					}
+					final List<SingularAttributeMapping> idAttributeMappings = new ArrayList<>( bootComponentDescriptor.getPropertySpan() );
+					final Iterator<Property> bootIdSubPropertyItr = bootComponentDescriptor.getPropertyIterator();
 
 					int columnsConsumedSoFar = 0;
 

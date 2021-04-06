@@ -510,6 +510,14 @@ public class PluralAttributeMappingImpl
 				);
 			}
 			else {
+				if ( collectionDescriptor.isLazy()  ) {
+					return createDelayedCollectionFetch(
+							fetchParent,
+							fetchablePath,
+							creationState,
+							sqlAstCreationState
+					);
+				}
 				return new SelectEagerCollectionFetch( fetchablePath, this, fetchParent );
 			}
 		}
@@ -518,11 +526,17 @@ public class PluralAttributeMappingImpl
 			return new SelectEagerCollectionFetch( fetchablePath, this, fetchParent );
 		}
 
-		final FromClauseAccess fromClauseAccess = sqlAstCreationState.getFromClauseAccess();
-		final TableGroup fetchParentTableGroup = fromClauseAccess.getTableGroup( fetchParent.getNavigablePath() );
+		return createDelayedCollectionFetch( fetchParent, fetchablePath, creationState, sqlAstCreationState );
+	}
+
+	private DelayedCollectionFetch createDelayedCollectionFetch(
+			FetchParent fetchParent,
+			NavigablePath fetchablePath,
+			DomainResultCreationState creationState,
+			SqlAstCreationState sqlAstCreationState) {
 		final DomainResult fkResult = getKeyDescriptor().createDomainResult(
 				fetchablePath,
-				fetchParentTableGroup,
+				sqlAstCreationState.getFromClauseAccess().getTableGroup( fetchParent.getNavigablePath() ),
 				false,
 				creationState
 		);

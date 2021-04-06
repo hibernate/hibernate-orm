@@ -29,6 +29,7 @@ import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.spi.RowReader;
 import org.hibernate.sql.results.spi.RowTransformer;
+import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
  * @author Steve Ebersole
@@ -113,6 +114,11 @@ public class ResultsHelper {
 
 		final BatchFetchQueue batchFetchQueue = persistenceContext.getBatchFetchQueue();
 		batchFetchQueue.removeBatchLoadableCollection( collectionEntry );
+
+		final StatisticsImplementor statistics = persistenceContext.getSession().getFactory().getStatistics();
+		if ( statistics.isStatisticsEnabled() ) {
+			statistics.loadCollection( collectionDescriptor.getRole() );
+		}
 
 		// todo (6.0) : there is other logic still needing to be implemented here.  caching, etc
 		// 		see org.hibernate.engine.loading.internal.CollectionLoadContext#endLoadingCollection in 5.x

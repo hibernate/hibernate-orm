@@ -944,6 +944,7 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 	public void testManyToManyBaseThruCriteria() {
 		inSession(
 				session -> {
+					sessionFactory().getStatistics().clear();
 					CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
 					CriteriaQuery<Product> criteria = criteriaBuilder.createQuery( Product.class );
 					Root<Product> root = criteria.from( Product.class );
@@ -957,10 +958,16 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 
 					Product prod = result.get( 0 );
 
+
 					long initLoadCount = sessionFactory().getStatistics().getCollectionLoadCount();
 					long initFetchCount = sessionFactory().getStatistics().getCollectionFetchCount();
 
-					// should already have been initialized...
+					// categories should not have been initialized...
+					assertTrue(
+							"load with join fetch of many-to-many triggers join fetch",
+							( 0 == initLoadCount ) && ( 0 == initFetchCount )
+					);
+
 					int size = prod.getCategories().size();
 					assertEquals( "Incorrect non-filtered collection count", 2, size );
 
@@ -968,8 +975,8 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 					long currFetchCount = sessionFactory().getStatistics().getCollectionFetchCount();
 
 					assertTrue(
-							"load with join fetch of many-to-many did not trigger join fetch",
-							( initLoadCount == currLoadCount ) && ( initFetchCount == currFetchCount )
+							"load with join fetch of many-to-many triggers join fetch",
+							( 1 == currLoadCount ) && ( 1 == currFetchCount )
 					);
 
 					// make sure we did not get back a collection of proxies

@@ -144,7 +144,7 @@ public class CollectionTest {
 		scope.inTransaction(
 				s -> {
 					User u2 = findUser( s );
-					assertTrue( Hibernate.isInitialized( u2.getEmailAddresses() ) );
+					assertFalse( Hibernate.isInitialized( u2.getEmailAddresses() ) );
 					assertFalse( Hibernate.isInitialized( u2.getPermissions() ) );
 					assertEquals( 2, u2.getEmailAddresses().size() );
 					s.delete( u2 );

@@ -91,7 +91,7 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 				s -> {
 					s.beginTransaction();
 					try {
-						Contract c = getContract( s );
+						Contract c =  s.load(Contract.class, contract.getId());
 //						Contract c = (Contract) s.createCriteria(Contract.class).uniqueResult();
 						assertTrue( s.isReadOnly( c ) );
 						assertEquals( c.getCustomerName(), "gavin" );
@@ -153,7 +153,7 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 
 		inSession(
 				s -> {
-					Contract c = getContract( s );
+					Contract c = s.load( Contract.class, contract.getId() );
 					assertTrue( s.isReadOnly( c ) );
 					assertEquals( c.getCustomerName(), "gavin" );
 					assertEquals( c.getVariations().size(), 2 );
@@ -1218,7 +1218,7 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 
 		inTransaction(
 				s -> {
-					Contract c = getContract( s );
+					Contract c = s.load( Contract.class, contract.getId() );
 					assertEquals( c.getCustomerName(), "gavin" );
 					assertEquals( c.getVariations().size(), 2 );
 					Iterator it = c.getVariations().iterator();

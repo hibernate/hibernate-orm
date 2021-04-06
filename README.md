@@ -146,3 +146,22 @@ You can do this from the module which you are interested in testing or from the 
 
 Afterward, just pick any test from the IDE and run it as usual. Hibernate will pick the database configuration from the `hibernate.properties`
 file that was set up by the `setDataBase` Gradle task.
+
+Starting test databases locally as docker containers
+-------------------------------------------------------------
+
+You don't have to install all databases locally to be able to test against them in case you have docker available.
+The script `docker_db.sh` allows you to start a pre-configured database which can be used for testing.
+
+All you have to do is run the following command:
+
+    ./docker_db.sh postgresql_9_5
+
+omitting the argument will print a list of possible options.
+
+When the database is properly started, you can run tests with special profiles that are suffixed with `_ci`
+e.g. `pgsql_ci` for PostgreSQL. By using the system property `dbHost` you can configure the IP address of your docker host.
+
+The command for running tests could look like the following:
+
+    gradlew test -Pdb=pgsql_ci "-DdbHost=192.168.99.100"

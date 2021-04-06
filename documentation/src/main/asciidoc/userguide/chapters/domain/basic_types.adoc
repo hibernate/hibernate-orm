@@ -1448,7 +1448,7 @@ include::{sourcedir}/generated/GeneratorTypeTest.java[tags=mapping-generated-Gen
 When the `Person` entity is persisted, Hibernate is going to populate the `createdBy` column with the currently logged user.
 
 [[mapping-generated-GeneratorType-persist-example]]
-.`@Generated` persist example
+.`@GeneratorType` persist example
 ====
 [source, JAVA, indent=0]
 ----
@@ -1465,7 +1465,7 @@ The same goes when the `Person` entity is updated.
 Hibernate is going to populate the `updatedBy` column with the currently logged user.
 
 [[mapping-generated-GeneratorType-update-example]]
-.`@Generated` update example
+.`@GeneratorType` update example
 ====
 [source, JAVA, indent=0]
 ----

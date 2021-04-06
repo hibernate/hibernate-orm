@@ -47,7 +47,7 @@ public class CastStrEmulation
 						asList(
 								argument,
 								new SqmCastTarget<>(
-										impliedResultType,
+										StandardBasicTypes.STRING,
 										argument.nodeBuilder()
 								)
 						),

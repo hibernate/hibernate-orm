@@ -634,20 +634,15 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 					//		1) create a new ordinal parameter at a synthetic position of maxOrdinalPosition + 1
 					//		2) expand the queryString to include each new ordinal param in place of the original
 					//		3) create a new ordinal binding for just that single value under the synthetic position
-					// for the first item, we reuse the original parameter to avoid gaps in the positions
-					if ( i == 0 ) {
-						syntheticParam = sourceParam;
-					}
-					else {
-						int syntheticPosition = ++maxOrdinalPosition;
-						syntheticParam = new OrdinalParameterDescriptor(
-								syntheticPosition,
-								syntheticPosition - jdbcStyleOrdinalCountBase,
-								sourceParam.getHibernateType(),
-								sourceParam.getSourceLocations()
-						);
-					}
-
+					// There is no strong demand, we must reuse the original ordinal parameters, so we just start
+					// from (maxOrdinalPosition + 1).
+					int syntheticPosition = ++maxOrdinalPosition;
+					syntheticParam = new OrdinalParameterDescriptor(
+									syntheticPosition,
+									syntheticPosition - jdbcStyleOrdinalCountBase,
+									sourceParam.getHibernateType(),
+									sourceParam.getSourceLocations()
+					);
 					expansionList.append( "?" ).append( syntheticParam.getPosition() );
 				}
 

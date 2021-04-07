@@ -8,8 +8,8 @@ package org.hibernate.envers.test.integration.inheritance.mixed;
 
 import java.util.Arrays;
 
-import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.envers.test.Priority;
+import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
+import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.envers.test.integration.inheritance.mixed.entities.AbstractActivity;
 import org.hibernate.envers.test.integration.inheritance.mixed.entities.AbstractCheckActivity;
 import org.hibernate.envers.test.integration.inheritance.mixed.entities.Activity;

@@ -19,8 +19,8 @@ import javax.persistence.ManyToOne;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.query.AuditEntity;
-import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.envers.test.Priority;
+import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
+import org.hibernate.orm.test.envers.Priority;
 import org.junit.Test;
 
 import org.hibernate.testing.TestForIssue;

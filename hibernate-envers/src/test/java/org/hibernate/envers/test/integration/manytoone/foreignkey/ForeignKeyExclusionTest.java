@@ -9,7 +9,7 @@ package org.hibernate.envers.test.integration.manytoone.foreignkey;
 import java.time.LocalDate;
 import java.util.ArrayList;
 
-import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
+import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.junit.Test;
 
 import org.hibernate.testing.TestForIssue;

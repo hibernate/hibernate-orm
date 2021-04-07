@@ -9,8 +9,11 @@ package org.hibernate.envers.test.integration.onetomany.embeddedid;
 import java.util.Arrays;
 import javax.persistence.EntityManager;
 
-import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.envers.test.Priority;
+import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
+import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.orm.test.envers.integration.onetomany.embeddedid.Constant;
+import org.hibernate.orm.test.envers.integration.onetomany.embeddedid.Person;
+import org.hibernate.orm.test.envers.integration.onetomany.embeddedid.PersonTuple;
 
 import org.hibernate.testing.TestForIssue;
 import org.junit.Assert;

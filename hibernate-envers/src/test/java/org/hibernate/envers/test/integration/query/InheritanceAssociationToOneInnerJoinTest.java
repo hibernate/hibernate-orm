@@ -17,8 +17,8 @@ import javax.persistence.OneToOne;
 import javax.persistence.criteria.JoinType;
 
 import org.hibernate.envers.Audited;
-import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.envers.test.Priority;
+import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
+import org.hibernate.orm.test.envers.Priority;
 import org.junit.Test;
 
 import org.hibernate.testing.TestForIssue;

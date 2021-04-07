@@ -6,16 +6,14 @@
  */
 package org.hibernate.envers.test.integration.manytoone.lazy;
 
-import org.hibernate.Hibernate;
 import org.hibernate.envers.configuration.EnversSettings;
-import org.hibernate.envers.test.BaseEnversFunctionalTestCase;
-import org.hibernate.envers.test.Priority;
+import org.hibernate.orm.test.envers.BaseEnversFunctionalTestCase;
+import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.Map;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;

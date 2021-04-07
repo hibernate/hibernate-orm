@@ -9,10 +9,11 @@ package org.hibernate.envers.test.integration.reventity;
 
 import java.util.Iterator;
 
-import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
+import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.integration.inheritance.joined.ChildEntity;
 import org.hibernate.envers.test.integration.inheritance.joined.ParentEntity;
 import org.hibernate.mapping.Column;
+import org.hibernate.orm.test.envers.integration.reventity.LongRevNumberRevEntity;
 
 import org.junit.Test;
 
@@ -34,7 +35,7 @@ public class LongRevEntityInheritanceChildAuditing extends BaseEnversJPAFunction
 	public void testChildRevColumnType() {
 		// We need the second column
 		Iterator childEntityKeyColumnsIterator = metadata()
-				.getEntityBinding("org.hibernate.envers.test.integration.inheritance.joined.ChildEntity_AUD" )
+				.getEntityBinding("org.hibernate.orm.test.envers.integration.inheritance.joined.ChildEntity_AUD" )
 				.getKey()
 				.getColumnIterator();
 		childEntityKeyColumnsIterator.next();

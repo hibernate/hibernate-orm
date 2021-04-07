@@ -8,8 +8,11 @@ package org.hibernate.envers.test.integration.onetoone.bidirectional;
 
 import javax.persistence.EntityManager;
 
-import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.envers.test.Priority;
+import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
+import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.orm.test.envers.integration.onetoone.bidirectional.BiRefedOptionalEntity;
+import org.hibernate.orm.test.envers.integration.onetoone.bidirectional.BiRefingOptionalEntity;
+
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 

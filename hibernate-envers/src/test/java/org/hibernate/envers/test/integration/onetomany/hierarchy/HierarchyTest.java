@@ -9,9 +9,9 @@ package org.hibernate.envers.test.integration.onetomany.hierarchy;
 import java.util.Arrays;
 import javax.persistence.EntityManager;
 
-import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.envers.test.Priority;
-import org.hibernate.envers.test.tools.TestTools;
+import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
+import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.orm.test.envers.tools.TestTools;
 
 import org.hibernate.testing.TestForIssue;
 import org.junit.Assert;

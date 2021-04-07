@@ -11,8 +11,8 @@ import java.time.Instant;
 import java.util.Arrays;
 
 import org.hibernate.Hibernate;
-import org.hibernate.envers.test.BaseEnversFunctionalTestCase;
-import org.hibernate.envers.test.Priority;
+import org.hibernate.orm.test.envers.BaseEnversFunctionalTestCase;
+import org.hibernate.orm.test.envers.Priority;
 import org.junit.Test;
 
 import org.hibernate.testing.TestForIssue;

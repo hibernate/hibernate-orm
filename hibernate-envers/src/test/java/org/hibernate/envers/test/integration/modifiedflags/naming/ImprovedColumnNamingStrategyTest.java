@@ -9,7 +9,7 @@ package org.hibernate.envers.test.integration.modifiedflags.naming;
 import java.util.Map;
 
 import org.hibernate.envers.configuration.EnversSettings;
-import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
+import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
 import org.junit.Test;

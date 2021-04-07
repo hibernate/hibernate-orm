@@ -10,7 +10,7 @@
         "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 <hibernate-mapping default-lazy="false">
 	<!-- shortened table name for Oracle -->
-    <class name="org.hibernate.envers.test.integration.components.dynamic.NotAuditedDynamicMapComponent" table="NotAudited">
+    <class name="org.hibernate.orm.test.envers.integration.components.dynamic.NotAuditedDynamicMapComponent" table="NotAudited">
         <id name="id" type="long" column="id"/>
         <property name="note" type="string"/>
         <dynamic-component name="customFields">

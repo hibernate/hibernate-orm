@@ -10,17 +10,18 @@ import java.util.Arrays;
 import java.util.List;
 import javax.persistence.EntityManager;
 
-import org.hibernate.envers.test.Priority;
-import org.hibernate.envers.test.entities.StrTestEntity;
-import org.hibernate.envers.test.entities.components.Component1;
-import org.hibernate.envers.test.entities.components.Component2;
-import org.hibernate.envers.test.integration.modifiedflags.entities.PartialModifiedFlagsEntity;
-import org.hibernate.envers.test.integration.modifiedflags.entities.WithModifiedFlagReferencingEntity;
+import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.orm.test.envers.entities.StrTestEntity;
+import org.hibernate.orm.test.envers.entities.components.Component1;
+import org.hibernate.orm.test.envers.entities.components.Component2;
+import org.hibernate.orm.test.envers.integration.modifiedflags.AbstractModifiedFlagsEntityTest;
+import org.hibernate.orm.test.envers.integration.modifiedflags.entities.PartialModifiedFlagsEntity;
+import org.hibernate.orm.test.envers.integration.modifiedflags.entities.WithModifiedFlagReferencingEntity;
 import org.junit.Test;
 
 import static junit.framework.Assert.assertEquals;
-import static org.hibernate.envers.test.tools.TestTools.extractRevisionNumbers;
-import static org.hibernate.envers.test.tools.TestTools.makeList;
+import static org.hibernate.orm.test.envers.tools.TestTools.extractRevisionNumbers;
+import static org.hibernate.orm.test.envers.tools.TestTools.makeList;
 
 /**
  * @author Michal Skowronek (mskowr at o2 dot pl)

@@ -9,8 +9,11 @@ package org.hibernate.envers.test.integration.ids.idclass;
 import java.util.Arrays;
 import javax.persistence.EntityManager;
 
-import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.envers.test.Priority;
+import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
+import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.orm.test.envers.integration.ids.idclass.ClassType;
+import org.hibernate.orm.test.envers.integration.ids.idclass.RelationalClassId;
+import org.hibernate.orm.test.envers.integration.ids.idclass.SampleClass;
 
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
@@ -26,7 +29,7 @@ public class IdClassWithRelationTest extends BaseEnversJPAFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {SampleClass.class, RelationalClassId.class, ClassType.class};
+		return new Class<?>[] { SampleClass.class, RelationalClassId.class, ClassType.class};
 	}
 
 	@Test

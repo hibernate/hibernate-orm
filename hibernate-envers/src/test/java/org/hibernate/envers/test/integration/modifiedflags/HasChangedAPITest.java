@@ -10,12 +10,13 @@ import java.util.List;
 import javax.persistence.EntityManager;
 
 import org.hibernate.envers.query.AuditEntity;
-import org.hibernate.envers.test.Priority;
-import org.hibernate.envers.test.integration.auditReader.AuditedTestEntity;
-import org.hibernate.envers.test.integration.auditReader.NotAuditedTestEntity;
+import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.orm.test.envers.integration.auditReader.AuditedTestEntity;
+import org.hibernate.orm.test.envers.integration.auditReader.NotAuditedTestEntity;
 
-import org.hibernate.envers.test.integration.modifiedflags.entities.EnumEntity;
-import org.hibernate.envers.test.integration.modifiedflags.entities.EnumOption;
+import org.hibernate.orm.test.envers.integration.modifiedflags.AbstractModifiedFlagsEntityTest;
+import org.hibernate.orm.test.envers.integration.modifiedflags.entities.EnumEntity;
+import org.hibernate.orm.test.envers.integration.modifiedflags.entities.EnumOption;
 import org.junit.Test;
 
 import org.hibernate.testing.TestForIssue;

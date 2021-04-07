@@ -9,10 +9,10 @@ package org.hibernate.envers.test.integration.collection;
 import java.util.Arrays;
 import javax.persistence.EntityManager;
 
-import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.envers.test.Priority;
-import org.hibernate.envers.test.entities.collection.EnumMapEntity;
-import org.hibernate.envers.test.entities.collection.EnumMapType;
+import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
+import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.orm.test.envers.entities.collection.EnumMapEntity;
+import org.hibernate.orm.test.envers.entities.collection.EnumMapType;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 

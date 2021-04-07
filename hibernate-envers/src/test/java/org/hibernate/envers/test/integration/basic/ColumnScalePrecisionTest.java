@@ -9,10 +9,11 @@ package org.hibernate.envers.test.integration.basic;
 import java.util.Arrays;
 import javax.persistence.EntityManager;
 
-import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.envers.test.Priority;
+import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
+import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
+import org.hibernate.orm.test.envers.integration.basic.ScalePrecisionEntity;
 
 import org.hibernate.testing.TestForIssue;
 import org.junit.Assert;
@@ -29,7 +30,7 @@ public class ColumnScalePrecisionTest extends BaseEnversJPAFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {ScalePrecisionEntity.class};
+		return new Class[] { ScalePrecisionEntity.class};
 	}
 
 	@Test
@@ -44,9 +45,9 @@ public class ColumnScalePrecisionTest extends BaseEnversJPAFunctionalTestCase {
 		em.getTransaction().commit();
 
 		id = entity.getId();
-		auditTable = metadata().getEntityBinding( "org.hibernate.envers.test.integration.basic.ScalePrecisionEntity_AUD" )
+		auditTable = metadata().getEntityBinding( "org.hibernate.orm.test.envers.integration.basic.ScalePrecisionEntity_AUD" )
 				.getTable();
-		originalTable = metadata().getEntityBinding( "org.hibernate.envers.test.integration.basic.ScalePrecisionEntity" )
+		originalTable = metadata().getEntityBinding( "org.hibernate.orm.test.envers.integration.basic.ScalePrecisionEntity" )
 				.getTable();
 	}
 

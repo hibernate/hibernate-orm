@@ -14,7 +14,7 @@ import javax.persistence.SecondaryTable;
 
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.SecondaryAuditTable;
-import org.hibernate.envers.test.entities.ids.MulId;
+import org.hibernate.orm.test.envers.entities.ids.MulId;
 
 /**
  * @author Adam Warski (adam at warski dot org)

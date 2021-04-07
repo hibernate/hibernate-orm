@@ -11,11 +11,15 @@ import java.util.Iterator;
 import java.util.List;
 import javax.persistence.EntityManager;
 
-import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.envers.test.Priority;
-import org.hibernate.envers.test.entities.components.Component1;
+import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
+import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.orm.test.envers.entities.components.Component1;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.orm.test.envers.integration.naming.VersionsJoinTableRangeComponentTestEntity;
+import org.hibernate.orm.test.envers.integration.naming.VersionsJoinTableRangeTestAlternateEntity;
+import org.hibernate.orm.test.envers.integration.naming.VersionsJoinTableRangeTestEntity;
+import org.hibernate.orm.test.envers.integration.naming.VersionsJoinTableRangeTestEntitySuperClass;
 
 import org.junit.Test;
 

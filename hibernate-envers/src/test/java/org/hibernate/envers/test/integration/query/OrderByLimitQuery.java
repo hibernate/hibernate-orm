@@ -11,9 +11,9 @@ import java.util.List;
 import javax.persistence.EntityManager;
 
 import org.hibernate.envers.query.AuditEntity;
-import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.envers.test.Priority;
-import org.hibernate.envers.test.entities.IntTestEntity;
+import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
+import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.orm.test.envers.entities.IntTestEntity;
 
 import org.junit.Test;
 

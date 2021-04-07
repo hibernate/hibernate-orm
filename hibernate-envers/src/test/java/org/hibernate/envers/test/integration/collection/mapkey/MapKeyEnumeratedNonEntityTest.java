@@ -19,14 +19,14 @@ import javax.persistence.MapKeyColumn;
 import javax.persistence.MapKeyEnumerated;
 
 import org.hibernate.envers.Audited;
-import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.envers.test.Priority;
-import org.hibernate.envers.test.tools.TestTools;
+import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
+import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.orm.test.envers.tools.TestTools;
 import org.junit.Test;
 
 import org.hibernate.testing.TestForIssue;
 
-import static org.hibernate.envers.test.tools.TestTools.checkCollection;
+import static org.hibernate.orm.test.envers.tools.TestTools.checkCollection;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 

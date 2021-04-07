@@ -16,8 +16,8 @@ import javax.persistence.MapKey;
 import javax.persistence.Table;
 
 import org.hibernate.envers.Audited;
-import org.hibernate.envers.test.entities.components.Component1;
-import org.hibernate.envers.test.entities.components.ComponentTestEntity;
+import org.hibernate.orm.test.envers.entities.components.Component1;
+import org.hibernate.orm.test.envers.entities.components.ComponentTestEntity;
 
 /**
  * @author Adam Warski (adam at warski dot org)

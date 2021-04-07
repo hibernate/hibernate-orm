@@ -9,8 +9,12 @@ package org.hibernate.envers.test.integration.ids.embeddedid;
 import java.util.Arrays;
 import javax.persistence.EntityManager;
 
-import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.envers.test.Priority;
+import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
+import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.orm.test.envers.integration.ids.embeddedid.Item;
+import org.hibernate.orm.test.envers.integration.ids.embeddedid.ItemId;
+import org.hibernate.orm.test.envers.integration.ids.embeddedid.Producer;
+import org.hibernate.orm.test.envers.integration.ids.embeddedid.PurchaseOrder;
 
 import org.hibernate.testing.TestForIssue;
 import org.junit.Assert;
@@ -26,7 +30,7 @@ public class RelationInsideEmbeddableTest extends BaseEnversJPAFunctionalTestCas
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {PurchaseOrder.class, Item.class, ItemId.class, Producer.class};
+		return new Class<?>[] { PurchaseOrder.class, Item.class, ItemId.class, Producer.class};
 	}
 
 	@Test

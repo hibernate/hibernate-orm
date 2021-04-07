@@ -9,15 +9,15 @@ package org.hibernate.envers.test.integration.ids;
 import java.util.Arrays;
 import javax.persistence.EntityManager;
 
-import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.envers.test.Priority;
-import org.hibernate.envers.test.entities.ids.CustomEnum;
-import org.hibernate.envers.test.entities.ids.EmbId;
-import org.hibernate.envers.test.entities.ids.EmbIdTestEntity;
-import org.hibernate.envers.test.entities.ids.EmbIdWithCustomType;
-import org.hibernate.envers.test.entities.ids.EmbIdWithCustomTypeTestEntity;
-import org.hibernate.envers.test.entities.ids.MulId;
-import org.hibernate.envers.test.entities.ids.MulIdTestEntity;
+import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
+import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.orm.test.envers.entities.ids.CustomEnum;
+import org.hibernate.orm.test.envers.entities.ids.EmbId;
+import org.hibernate.orm.test.envers.entities.ids.EmbIdTestEntity;
+import org.hibernate.orm.test.envers.entities.ids.EmbIdWithCustomType;
+import org.hibernate.orm.test.envers.entities.ids.EmbIdWithCustomTypeTestEntity;
+import org.hibernate.orm.test.envers.entities.ids.MulId;
+import org.hibernate.orm.test.envers.entities.ids.MulIdTestEntity;
 
 import org.junit.Test;
 

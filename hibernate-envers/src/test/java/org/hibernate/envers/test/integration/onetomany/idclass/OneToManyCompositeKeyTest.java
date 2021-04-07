@@ -9,8 +9,12 @@ package org.hibernate.envers.test.integration.onetomany.idclass;
 import java.util.Arrays;
 
 import org.hibernate.envers.query.AuditEntity;
-import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.envers.test.Priority;
+import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
+import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.orm.test.envers.integration.onetomany.idclass.ManyToManyCompositeKey;
+import org.hibernate.orm.test.envers.integration.onetomany.idclass.ManyToOneOwned;
+import org.hibernate.orm.test.envers.integration.onetomany.idclass.OneToManyOwned;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.Test;

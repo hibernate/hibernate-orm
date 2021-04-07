@@ -10,8 +10,8 @@ import java.util.Arrays;
 import java.util.Iterator;
 import javax.persistence.EntityManager;
 
-import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.envers.test.Priority;
+import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
+import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.mapping.Join;
 
 import org.junit.Test;

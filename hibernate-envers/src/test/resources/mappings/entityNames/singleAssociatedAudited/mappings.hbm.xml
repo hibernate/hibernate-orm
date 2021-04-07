@@ -8,7 +8,7 @@
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 <hibernate-mapping>
 
-	<class name="org.hibernate.envers.test.integration.entityNames.singleAssociatedAudited.Person" entity-name="Personaje" table="OWNERS">
+	<class name="org.hibernate.orm.test.envers.integration.entityNames.singleAssociatedAudited.Person" entity-name="Personaje" table="OWNERS">
 		
 		<id name="id" column="ID_person" type="long" >
 			<generator class="native" />
@@ -22,7 +22,7 @@
 	</class>
 
     <!-- Deliberately use the same domain object and map it to a different database table. See issue HHH-4648. -->
-	<class name="org.hibernate.envers.test.integration.entityNames.singleAssociatedAudited.Person" entity-name="Driveraje" table="DRIVERS">
+	<class name="org.hibernate.orm.test.envers.integration.entityNames.singleAssociatedAudited.Person" entity-name="Driveraje" table="DRIVERS">
 
 		<id name="id" column="ID_person" type="long" >
 			<generator class="native" />
@@ -35,7 +35,7 @@
 
 	</class>
 	
-	<class name="org.hibernate.envers.test.integration.entityNames.singleAssociatedAudited.Car" >
+	<class name="org.hibernate.orm.test.envers.integration.entityNames.singleAssociatedAudited.Car" >
 
 		<id name="id" column="ID_BED" type="long">
 			<generator class="native" />

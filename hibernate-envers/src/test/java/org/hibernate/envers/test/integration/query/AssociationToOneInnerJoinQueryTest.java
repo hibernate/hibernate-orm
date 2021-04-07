@@ -12,11 +12,11 @@ import javax.persistence.criteria.JoinType;
 
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.query.AuditEntity;
-import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.envers.test.Priority;
-import org.hibernate.envers.test.integration.query.entities.Address;
-import org.hibernate.envers.test.integration.query.entities.Car;
-import org.hibernate.envers.test.integration.query.entities.Person;
+import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
+import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.orm.test.envers.integration.query.entities.Address;
+import org.hibernate.orm.test.envers.integration.query.entities.Car;
+import org.hibernate.orm.test.envers.integration.query.entities.Person;
 
 import org.junit.Test;
 

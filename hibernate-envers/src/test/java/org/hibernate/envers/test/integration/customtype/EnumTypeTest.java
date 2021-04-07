@@ -9,9 +9,9 @@ package org.hibernate.envers.test.integration.customtype;
 import java.util.List;
 import javax.persistence.EntityManager;
 
-import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.envers.test.Priority;
-import org.hibernate.envers.test.entities.customtype.EnumTypeEntity;
+import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
+import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.orm.test.envers.entities.customtype.EnumTypeEntity;
 
 import org.hibernate.testing.TestForIssue;
 import org.junit.Assert;

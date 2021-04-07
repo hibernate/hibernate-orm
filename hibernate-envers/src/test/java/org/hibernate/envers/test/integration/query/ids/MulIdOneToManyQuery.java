@@ -12,12 +12,12 @@ import java.util.Set;
 import javax.persistence.EntityManager;
 
 import org.hibernate.envers.query.AuditEntity;
-import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.envers.test.Priority;
-import org.hibernate.envers.test.entities.ids.MulId;
-import org.hibernate.envers.test.entities.onetomany.ids.SetRefEdMulIdEntity;
-import org.hibernate.envers.test.entities.onetomany.ids.SetRefIngMulIdEntity;
-import org.hibernate.envers.test.tools.TestTools;
+import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
+import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.orm.test.envers.entities.ids.MulId;
+import org.hibernate.orm.test.envers.entities.onetomany.ids.SetRefEdMulIdEntity;
+import org.hibernate.orm.test.envers.entities.onetomany.ids.SetRefIngMulIdEntity;
+import org.hibernate.orm.test.envers.tools.TestTools;
 
 import org.junit.Test;
 

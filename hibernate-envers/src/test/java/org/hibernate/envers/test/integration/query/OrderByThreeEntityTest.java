@@ -19,7 +19,7 @@ import javax.persistence.Id;
 import javax.persistence.OrderBy;
 
 import org.hibernate.envers.Audited;
-import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
+import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.junit.Test;
 
 import org.hibernate.testing.TestForIssue;

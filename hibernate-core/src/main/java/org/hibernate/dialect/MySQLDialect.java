@@ -117,7 +117,7 @@ public class MySQLDialect extends Dialect {
 		}
 
 		// max length for VARCHAR changed in 5.0.3
-		final int maxVarcharLen = getMySQLVersion() < 500 ? 255 : 65_535;
+		final int maxVarcharLen = getMaxVarcharLen();
 
 		registerColumnType( Types.VARCHAR, maxVarcharLen, "varchar($l)" );
 		registerColumnType( Types.VARBINARY, maxVarcharLen, "varbinary($l)" );
@@ -185,6 +185,10 @@ public class MySQLDialect extends Dialect {
 				return super.resolveSize( jdbcType, javaType, precision, scale, length );
 			}
 		};
+	}
+
+	protected int getMaxVarcharLen() {
+		return getMySQLVersion() < 500 ? 255 : 65_535;
 	}
 
 	@Override

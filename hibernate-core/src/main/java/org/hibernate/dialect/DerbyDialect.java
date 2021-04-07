@@ -119,6 +119,8 @@ public class DerbyDialect extends Dialect {
 		registerColumnType( Types.TIMESTAMP, "timestamp" );
 		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp" );
 
+		registerColumnType( Types.LONGVARCHAR, "long varchar" );
+
 		registerDerbyKeywords();
 
 		limitHandler = getVersion() < 1050

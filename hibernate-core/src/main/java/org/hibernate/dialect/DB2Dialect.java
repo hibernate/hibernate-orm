@@ -110,6 +110,8 @@ public class DB2Dialect extends Dialect {
 		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp($p)" );
 		registerColumnType( Types.TIME_WITH_TIMEZONE, "time" );
 
+		registerColumnType( Types.LONGVARCHAR, "long varchar" );
+
 		//not keywords, at least not in DB2 11,
 		//but perhaps they were in older versions?
 		registerKeyword( "current" );

@@ -6,6 +6,8 @@
  */
 package org.hibernate.dialect;
 
+import java.sql.Types;
+
 import org.hibernate.dialect.sequence.MariaDBSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -41,6 +43,10 @@ public class MariaDBDialect extends MySQLDialect {
 	public MariaDBDialect(int version) {
 		super( version < 530 ? 500 : 570 );
 		this.version = version;
+	}
+
+	protected int getMaxVarcharLen() {
+		return getMySQLVersion() < 500 ? 255 : 65_534;
 	}
 
 	@Override

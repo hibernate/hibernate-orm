@@ -41,10 +41,19 @@ jobs:
             experimental: true
           - rdbms: mssql
             experimental: true
+# Running with HANA requires at least 8GB memory just for the database, which we don't have on GH Actions runners
+#          - rdbms: hana
+#            experimental: true
     steps:
       - uses: actions/checkout@v2
+        with:
+          persist-credentials: false
       - name: Reclaim Disk Space
         run: .github/ci-prerequisites.sh
+      - name: Start database
+        env:
+          RDBMS: ${{ matrix.rdbms }}
+        run: ci/database-start.sh
       - name: Set up Java 8
         uses: actions/setup-java@v1
         with:
@@ -86,6 +95,8 @@ jobs:
     continue-on-error: true
     steps:
       - uses: actions/checkout@v2
+        with:
+          persist-credentials: false
       - name: Set up Java 11
         uses: actions/setup-java@v1
         with:

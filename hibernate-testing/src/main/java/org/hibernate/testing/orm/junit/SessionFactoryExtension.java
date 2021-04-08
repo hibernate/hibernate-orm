@@ -391,6 +391,18 @@ public class SessionFactoryExtension
 
 				throw e;
 			}
+			catch (AssertionError t) {
+				try {
+					txn.rollback();
+				}
+				catch (Exception ignore) {
+					log.trace( "Was unable to roll back transaction" );
+					// really nothing else we can do here - the attempt to
+					//		rollback already failed and there is nothing else
+					// 		to clean up.
+				}
+				throw t;
+			}
 		}
 
 		@Override
@@ -428,6 +440,18 @@ public class SessionFactoryExtension
 				}
 
 				throw e;
+			}
+			catch (AssertionError t) {
+				try {
+					txn.rollback();
+				}
+				catch (Exception ignore) {
+					log.trace( "Was unable to roll back transaction" );
+					// really nothing else we can do here - the attempt to
+					//		rollback already failed and there is nothing else
+					// 		to clean up.
+				}
+				throw t;
 			}
 		}
 

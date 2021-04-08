@@ -165,7 +165,18 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		return keyPart;
 	}
 
-	public EntityMappingType resolveDiscriminatorValueToEntityName(Object discriminatorValue) {
+	public Object resolveDiscriminatorValueToEntityMapping(EntityMappingType entityMappingType) {
+		for ( int i = 0; i < discriminatorValueMappings.size(); i++ ) {
+			final ValueMapping valueMapping = discriminatorValueMappings.get( i );
+			if ( valueMapping.entityMapping.equals( entityMappingType ) ) {
+				return valueMapping.discriminatorValue;
+			}
+		}
+
+		return null;
+	}
+
+	public EntityMappingType resolveDiscriminatorValueToEntityMapping(Object discriminatorValue) {
 		//noinspection ForLoopReplaceableByForEach
 		for ( int i = 0; i < discriminatorValueMappings.size(); i++ ) {
 			final ValueMapping valueMapping = discriminatorValueMappings.get( i );

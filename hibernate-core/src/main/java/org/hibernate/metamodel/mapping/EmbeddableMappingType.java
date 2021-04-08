@@ -571,6 +571,9 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectableMapp
 
 		for ( int i = 0; i < attributeMappings.size(); i++ ) {
 			final AttributeMapping attributeMapping = attributeMappings.get( i );
+			if ( attributeMapping instanceof PluralAttributeMapping ) {
+				continue;
+			}
 			final Object o = attributeMapping.getPropertyAccess().getGetter().get( value );
 			span += attributeMapping.forEachJdbcValue( o, clause, span + offset, consumer, session );
 		}

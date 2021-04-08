@@ -77,7 +77,12 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 
 	@Override
 	public EntityMappingType resolveDiscriminatorValue(Object discriminatorValue) {
-		return discriminatorMapping.resolveDiscriminatorValueToEntityName( discriminatorValue );
+		return discriminatorMapping.resolveDiscriminatorValueToEntityMapping( discriminatorValue );
+	}
+
+	@Override
+	public Object resolveDiscriminatorForEntityType(EntityMappingType entityMappingType) {
+		return discriminatorMapping.resolveDiscriminatorValueToEntityMapping( entityMappingType );
 	}
 
 	@Override

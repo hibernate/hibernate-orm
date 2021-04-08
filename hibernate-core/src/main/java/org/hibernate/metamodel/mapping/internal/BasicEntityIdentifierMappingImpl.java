@@ -282,7 +282,8 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 		if ( value == null ) {
 			return null;
 		}
-		return propertyAccess.getGetter().get( value );
+		return value;
+//		return propertyAccess.getGetter().get( value );
 	}
 
 	@Override

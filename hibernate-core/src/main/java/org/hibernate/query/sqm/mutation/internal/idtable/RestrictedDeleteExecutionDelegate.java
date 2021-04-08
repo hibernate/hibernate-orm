@@ -9,6 +9,7 @@ package org.hibernate.query.sqm.mutation.internal.idtable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -21,12 +22,13 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.internal.FilterHelper;
-import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
+import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.MappingModelHelper;
+import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.query.spi.QueryOptions;
@@ -126,11 +128,15 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 		assert hierarchyRootTableReference != null;
 
 		final Map<SqmParameter, List<List<JdbcParameter>>> parameterResolutions;
+		final Map<SqmParameter, MappingModelExpressable> paramTypeResolutions;
+
 		if ( domainParameterXref.getSqmParameterCount() == 0 ) {
 			parameterResolutions = Collections.emptyMap();
+			paramTypeResolutions = Collections.emptyMap();
 		}
 		else {
 			parameterResolutions = new IdentityHashMap<>();
+			paramTypeResolutions = new LinkedHashMap<>();
 		}
 
 		// Use the converter to interpret the where-clause.  We do this for 2 reasons:
@@ -146,10 +152,13 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 						needsIdTableWrapper.set( true );
 					}
 				},
-				(sqmParameter, jdbcParameters) -> parameterResolutions.computeIfAbsent(
-						sqmParameter,
-						k -> new ArrayList<>( 1 )
-				).add( jdbcParameters )
+				(sqmParameter, mappingType, jdbcParameters) -> {
+					parameterResolutions.computeIfAbsent(
+							sqmParameter,
+							k -> new ArrayList<>( 1 )
+					).add( jdbcParameters );
+					paramTypeResolutions.put( sqmParameter, mappingType );
+				}
 		);
 
 		final FilterPredicate filterPredicate = FilterHelper.createFilterPredicate(
@@ -169,6 +178,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 					predicate,
 					deletingTableGroup,
 					parameterResolutions,
+					paramTypeResolutions,
 					executionContext
 			);
 		}
@@ -177,6 +187,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 					predicate,
 					deletingTableGroup,
 					parameterResolutions,
+					paramTypeResolutions,
 					converter.getSqlExpressionResolver(),
 					executionContext
 			);
@@ -187,6 +198,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 			Predicate suppliedPredicate,
 			TableGroup tableGroup,
 			Map<SqmParameter, List<List<JdbcParameter>>> restrictionSqmParameterResolutions,
+			Map<SqmParameter, MappingModelExpressable> paramTypeResolutions,
 			SqlExpressionResolver sqlExpressionResolver,
 			ExecutionContext executionContext) {
 		final EntityPersister rootEntityPersister;
@@ -221,6 +233,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 				),
 				sessionFactory.getDomainModel(),
 				navigablePath -> tableGroup,
+				paramTypeResolutions::get,
 				executionContext.getSession()
 		);
 
@@ -358,6 +371,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 			Predicate predicate,
 			TableGroup deletingTableGroup,
 			Map<SqmParameter, List<List<JdbcParameter>>> restrictionSqmParameterResolutions,
+			Map<SqmParameter, MappingModelExpressable> paramTypeResolutions,
 			ExecutionContext executionContext) {
 		final JdbcParameterBindings jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
 				executionContext.getQueryParameterBindings(),
@@ -368,6 +382,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 				),
 				sessionFactory.getDomainModel(),
 				navigablePath -> deletingTableGroup,
+				paramTypeResolutions::get,
 				executionContext.getSession()
 		);
 

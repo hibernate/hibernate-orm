@@ -36,7 +36,6 @@ import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.hibernate.testing.transaction.TransactionUtil2.fromTransaction;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -114,7 +113,6 @@ public class CascadeDeleteManyToOneTest extends BaseCoreFunctionalTestCase {
 		sqlInterceptor.clear();
 
 		final Child detachedChild = fromTransaction(
-				sessionFactory(),
 				(s) -> {
 					Child child = s.get( Child.class, originalChild.getId() );
 

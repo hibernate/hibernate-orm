@@ -16,7 +16,7 @@ import org.hibernate.sql.ast.SqlAstWalker;
 /**
  * @author Steve Ebersole
  */
-public class SqlTuple implements Expression {
+public class SqlTuple implements Expression, SqlTupleContainer {
 	private final List<? extends Expression> expressions;
 	private final MappingModelExpressable valueMapping;
 
@@ -37,6 +37,11 @@ public class SqlTuple implements Expression {
 	@Override
 	public void accept(SqlAstWalker sqlTreeWalker) {
 		sqlTreeWalker.visitTuple( this );
+	}
+
+	@Override
+	public SqlTuple getSqlTuple() {
+		return this;
 	}
 
 	public static class Builder {

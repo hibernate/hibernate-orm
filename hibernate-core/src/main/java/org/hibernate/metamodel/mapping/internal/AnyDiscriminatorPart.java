@@ -6,6 +6,8 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import java.io.Serializable;
+
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
@@ -121,6 +123,12 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions 
 	@Override
 	public NavigableRole getNavigableRole() {
 		return navigableRole;
+	}
+
+	@Override
+	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+		final Serializable discriminator = metaType.disassemble( value, session, value );
+		return discriminator;
 	}
 
 	@Override

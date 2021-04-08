@@ -44,8 +44,10 @@ public class TableBasedDeleteHandler
 
 	public TableBasedDeleteHandler(
 			SqmDeleteStatement sqmDeleteStatement,
-			DomainParameterXref domainParameterXref, IdTable idTable,
-			Function<SharedSessionContractImplementor, String> sessionUidAccess,
+			DomainParameterXref domainParameterXref,
+			IdTable idTable,
+			Function<SharedSessionContractImplementor,
+			String> sessionUidAccess,
 			Supplier<IdTableExporter> exporterSupplier,
 			BeforeUseAction beforeUseAction,
 			AfterUseAction afterUseAction,

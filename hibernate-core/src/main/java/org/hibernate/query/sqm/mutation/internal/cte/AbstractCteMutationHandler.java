@@ -9,12 +9,14 @@ package org.hibernate.query.sqm.mutation.internal.cte;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.SqlExpressable;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.query.spi.SqlOmittingQueryOptions;
@@ -115,10 +117,12 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 			parameterResolutions = new IdentityHashMap<>();
 		}
 
+		final Map<SqmParameter, MappingModelExpressable> paramTypeResolutions = new LinkedHashMap<>();
+
 		final Predicate restriction = sqmConverter.visitWhereClause(
 				sqmMutationStatement.getWhereClause(),
 				columnReference -> {},
-				parameterResolutions::put
+				(sqmParam, mappingType, jdbcParameters) -> paramTypeResolutions.put( sqmParam, mappingType )
 		);
 
 		final CteStatement idSelectCte = new CteStatement(
@@ -172,6 +176,7 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 				SqmUtil.generateJdbcParamsXref( domainParameterXref, sqmConverter ),
 				factory.getDomainModel(),
 				navigablePath -> sqmConverter.getMutatingTableGroup(),
+				paramTypeResolutions::get,
 				executionContext.getSession()
 		);
 		final JdbcSelect select = translator.translate( jdbcParameterBindings, executionContext.getQueryOptions() );

@@ -12,14 +12,16 @@ import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.domain.NonAggregatedCompositeSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.sql.ast.SqlAstWalker;
-import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
+import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 
 /**
  * @author Andrea Boriero
  */
-public class NonAggregatedCompositeValuedPathInterpretation<T> extends AbstractSqmPathInterpretation<T> {
+public class NonAggregatedCompositeValuedPathInterpretation<T>
+		extends AbstractSqmPathInterpretation<T>
+		implements SqlTupleContainer {
 
 	public static <T> NonAggregatedCompositeValuedPathInterpretation<T> from(
 			NonAggregatedCompositeSimplePath<T> sqmPath,
@@ -64,4 +66,8 @@ public class NonAggregatedCompositeValuedPathInterpretation<T> extends AbstractS
 		sqlExpression.accept( sqlTreeWalker );
 	}
 
+	@Override
+	public SqlTuple getSqlTuple() {
+		return sqlExpression;
+	}
 }

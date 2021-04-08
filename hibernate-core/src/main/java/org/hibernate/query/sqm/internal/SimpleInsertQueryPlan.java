@@ -6,11 +6,14 @@
  */
 package org.hibernate.query.sqm.internal;
 
+import java.util.List;
+import java.util.Map;
+
 import org.hibernate.action.internal.BulkOperationCleanupAction;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryParameterImplementor;
@@ -21,7 +24,6 @@ import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
 import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.insert.InsertStatement;
@@ -29,15 +31,13 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcInsert;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 
-import java.util.List;
-import java.util.Map;
-
 /**
  * @author Gavin King
  */
 public class SimpleInsertQueryPlan implements NonSelectQueryPlan {
 	private final SqmInsertStatement sqmInsert;
 	private final DomainParameterXref domainParameterXref;
+	private Map<SqmParameter, MappingModelExpressable> paramTypeResolutions;
 
 	private JdbcInsert jdbcInsert;
 	private FromClauseAccess tableGroupAccess;
@@ -73,6 +73,8 @@ public class SimpleInsertQueryPlan implements NonSelectQueryPlan {
 				sqmInterpretation::getJdbcParamsBySqmParam
 		);
 
+		this.paramTypeResolutions = sqmInterpretation.getSqmParameterMappingModelTypeResolutions();
+
 		return factory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
 				.buildInsertTranslator( factory, sqmInterpretation.getSqlAst() );
 	}
@@ -94,6 +96,7 @@ public class SimpleInsertQueryPlan implements NonSelectQueryPlan {
 				jdbcParamsXref,
 				factory.getDomainModel(),
 				tableGroupAccess::findTableGroup,
+				paramTypeResolutions::get,
 				session
 		);
 

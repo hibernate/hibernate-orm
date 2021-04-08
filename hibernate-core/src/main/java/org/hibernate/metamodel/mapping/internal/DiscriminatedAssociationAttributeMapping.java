@@ -18,6 +18,7 @@ import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
@@ -93,8 +94,13 @@ public class DiscriminatedAssociationAttributeMapping
 
 	@Override
 	public EntityMappingType resolveDiscriminatorValue(Object discriminatorValue) {
-		return discriminatorMapping.resolveDiscriminatorValueToEntityName( discriminatorValue );
+		return discriminatorMapping.resolveDiscriminatorValueToEntityMapping( discriminatorValue );
 	}
+
+	public Object resolveDiscriminatorForEntityType(EntityMappingType entityMappingType) {
+		return discriminatorMapping.resolveDiscriminatorValueToEntityMapping( entityMappingType );
+	}
+
 
 	@Override
 	public Fetch generateFetch(
@@ -134,6 +140,25 @@ public class DiscriminatedAssociationAttributeMapping
 	@Override
 	public int getJdbcTypeCount() {
 		return getDiscriminatorPart().getJdbcTypeCount() + getKeyPart().getJdbcTypeCount();
+	}
+
+	@Override
+	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+		final String entityName = session.bestGuessEntityName( value );
+		final EntityMappingType entityMappingType = session.getFactory()
+				.getRuntimeMetamodels()
+				.getEntityMappingType( entityName );
+		final Object discriminator = discriminatorMapping
+				.getModelPart()
+				.resolveDiscriminatorForEntityType( entityMappingType );
+
+		final EntityIdentifierMapping identifierMapping = entityMappingType.getIdentifierMapping();
+		final Object identifier = identifierMapping.getIdentifier( value, session );
+
+		return new Object[] {
+				discriminatorMapping.getDiscriminatorPart().disassemble( discriminator, session ),
+				identifierMapping.disassemble( identifier, session )
+		};
 	}
 
 	@Override

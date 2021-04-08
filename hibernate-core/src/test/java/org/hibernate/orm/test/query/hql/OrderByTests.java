@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.test.hql;
+package org.hibernate.orm.test.query.hql;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +22,13 @@ import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
+import org.hibernate.test.hql.Address;
+import org.hibernate.test.hql.Human;
+import org.hibernate.test.hql.Mammal;
+import org.hibernate.test.hql.Name;
+import org.hibernate.test.hql.StateProvince;
+import org.hibernate.test.hql.Zoo;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -30,7 +37,7 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Gail Badner
  */
-public class ASTParserLoadingOrderByTest extends BaseCoreFunctionalTestCase {
+public class OrderByTests extends BaseCoreFunctionalTestCase {
 	StateProvince stateProvince;
 	private Zoo zoo1;
 	private Zoo zoo2;
@@ -351,7 +358,6 @@ public class ASTParserLoadingOrderByTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "unknown" )
 	public void testOrderByComponentDescNoSelectAliasRef() {
 		createData();
 
@@ -359,21 +365,21 @@ public class ASTParserLoadingOrderByTest extends BaseCoreFunctionalTestCase {
 		Transaction t = s.beginTransaction();
 
 		// ordered by address DESC, name DESC:
-		//   zoo3  Zoo         1312 Mockingbird Lane, Anywhere, IL USA
 		//   zoo4  Duh Zoo     1312 Mockingbird Lane, Nowhere, IL USA
-		//   zoo2  A Zoo       1313 Mockingbird Lane, Anywhere, IL USA
 		//   zoo1  Zoo         1313 Mockingbird Lane, Anywhere, IL USA
+		//   zoo2  A Zoo       1313 Mockingbird Lane, Anywhere, IL USA
+		//   zoo3  Zoo         1312 Mockingbird Lane, Anywhere, IL USA
 		checkTestOrderByResults(
 				s.createQuery(
 						"select z.name, z.address from Zoo z order by z.address DESC, z.name DESC"
 				).list(),
-				zoo1, zoo2, zoo4, zoo3, null
+				zoo4, zoo1, zoo2, zoo3, null
 		);
 		checkTestOrderByResults(
 				s.createQuery(
 						"select name, address from Zoo order by address DESC, name DESC"
 				).list(),
-				zoo1, zoo2, zoo4, zoo3, null
+				zoo4, zoo1, zoo2, zoo3, null
 		);
 		t.commit();
 		s.close();
@@ -541,24 +547,23 @@ public class ASTParserLoadingOrderByTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "unknown")
-	public void testOrderByComponentDescSelectAliasRefFailureExpected() {
+	public void testOrderByComponentDescSelectAliasRef() {
 		createData();
 
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 
 		// ordered by address desc, name desc:
-		//   zoo3  Zoo         1312 Mockingbird Lane, Anywhere, IL USA
 		//   zoo4  Duh Zoo     1312 Mockingbird Lane, Nowhere, IL USA
-		//   zoo2  A Zoo       1313 Mockingbird Lane, Anywhere, IL USA
 		//   zoo1  Zoo         1313 Mockingbird Lane, Anywhere, IL USA
+		//   zoo2  A Zoo       1313 Mockingbird Lane, Anywhere, IL USA
+		//   zoo3  Zoo         1312 Mockingbird Lane, Anywhere, IL USA
 		// using DESC
 		checkTestOrderByResults(
 				s.createQuery(
 						"select z.name as zooName, z.address as zooAddress from Zoo z order by zooAddress DESC, zooName DESC"
 				).list(),
-				zoo1, zoo2, zoo4, zoo3, null
+				zoo4, zoo1, zoo2, zoo3, null
 		);
 
 		t.commit();

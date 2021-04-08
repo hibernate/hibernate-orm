@@ -104,13 +104,12 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 				jdbcParamsXref,
 				factory.getDomainModel(),
 				sqmInterpretation.getFromClauseAccess()::findTableGroup,
+				sqmInterpretation.getSqmParameterMappingModelTypeResolutions()::get,
 				session
 		);
 
-		if ( jdbcDelete != null && !jdbcDelete.isCompatibleWith(
-				jdbcParameterBindings,
-				executionContext.getQueryOptions()
-		) ) {
+		if ( jdbcDelete != null
+				&& ! jdbcDelete.isCompatibleWith( jdbcParameterBindings, executionContext.getQueryOptions() ) ) {
 			deleteTranslator = createDeleteTranslator( executionContext );
 		}
 

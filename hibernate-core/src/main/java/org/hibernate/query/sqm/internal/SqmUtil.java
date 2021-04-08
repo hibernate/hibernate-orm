@@ -15,27 +15,32 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.function.Function;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.MappingMetamodel;
+import org.hibernate.metamodel.mapping.Bindable;
 import org.hibernate.metamodel.mapping.ConvertibleModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
-import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.spi.JdbcParameterBySqmParameterAccess;
+import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.tree.SqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.SqlTreeCreationException;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
@@ -162,6 +167,7 @@ public class SqmUtil {
 			Map<QueryParameterImplementor<?>, Map<SqmParameter, List<List<JdbcParameter>>>> jdbcParamXref,
 			MappingMetamodel domainModel,
 			Function<NavigablePath, TableGroup> tableGroupLocator,
+			SqmParameterMappingModelResolutionAccess mappingModelResolutionAccess,
 			SharedSessionContractImplementor session) {
 		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl(
 				domainParameterXref.getSqmParameterCount()
@@ -173,14 +179,17 @@ public class SqmUtil {
 			final List<SqmParameter> sqmParameters = entry.getValue();
 
 			final QueryParameterBinding<?> domainParamBinding = domainParamBindings.getBinding( queryParam );
-			final AllowableParameterType<?> parameterType = determineParameterType(
-					domainParamBinding,
-					queryParam,
-					session.getFactory()
-			);
 
 			final Map<SqmParameter, List<List<JdbcParameter>>> jdbcParamMap = jdbcParamXref.get( queryParam );
 			sqm_params: for ( SqmParameter sqmParameter : sqmParameters ) {
+				final Bindable parameterType = determineParameterType(
+						domainParamBinding,
+						queryParam,
+						sqmParameters,
+						mappingModelResolutionAccess,
+						session.getFactory()
+				);
+
 				final List<List<JdbcParameter>> jdbcParamsBinds = jdbcParamMap.get( sqmParameter );
 				if ( !domainParamBinding.isBound() ) {
 					final MappingModelExpressable mappingExpressable = SqmMappingModelHelper.resolveMappingModelExpressable(
@@ -209,6 +218,7 @@ public class SqmUtil {
 						final List<JdbcParameter> jdbcParams = jdbcParamsBinds.get( i );
 						createValueBindings(
 								jdbcParameterBindings,
+								queryParam,
 								domainParamBinding,
 								parameterType,
 								jdbcParams,
@@ -229,7 +239,7 @@ public class SqmUtil {
 							List<JdbcParameter> expansionJdbcParams = jdbcParamBinds.get( i );
 							createValueBindings(
 									jdbcParameterBindings,
-									domainParamBinding,
+									queryParam, domainParamBinding,
 									parameterType,
 									expansionJdbcParams,
 									valueItr.next(),
@@ -290,6 +300,7 @@ public class SqmUtil {
 						final List<JdbcParameter> jdbcParams = jdbcParamsBinds.get( i );
 						createValueBindings(
 								jdbcParameterBindings,
+								queryParam,
 								domainParamBinding,
 								parameterType,
 								jdbcParams,
@@ -307,61 +318,69 @@ public class SqmUtil {
 
 	private static void createValueBindings(
 			JdbcParameterBindings jdbcParameterBindings,
-			final QueryParameterBinding<?> domainParamBinding,
-			AllowableParameterType<?> parameterType,
+			QueryParameterImplementor<?> domainParam,
+			QueryParameterBinding<?> domainParamBinding,
+			Bindable parameterType,
 			List<JdbcParameter> jdbcParams,
 			Object bindValue,
 			Function<NavigablePath, TableGroup> tableGroupLocator,
 			SharedSessionContractImplementor session) {
-		final MappingMetamodel domainModel = session.getFactory().getDomainModel();
-		final MappingModelExpressable mappingExpressable;
 		if ( parameterType == null ) {
-			if ( domainParamBinding.getType() != null ) {
-				final MappingModelExpressable type = domainParamBinding.getType();
-				if ( type instanceof EntityIdentifierMapping ) {
-					mappingExpressable = type;
-					EntityIdentifierMapping identifierMapping = (EntityIdentifierMapping) type;
-					if ( !identifierMapping.getJavaTypeDescriptor().getJavaTypeClass().isInstance( bindValue ) ) {
-						bindValue = identifierMapping.getIdentifier( bindValue, session );
-					}
-				}
-				else if ( type instanceof ToOneAttributeMapping ) {
-					ToOneAttributeMapping association = (ToOneAttributeMapping) type;
-					bindValue = association.getForeignKeyDescriptor().getAssociationKeyFromTarget( bindValue, session );
-					mappingExpressable = association.getForeignKeyDescriptor();
-				}
-				else {
-					mappingExpressable = type;
-				}
-			}
-			else {
-				throw new IllegalStateException( "Parameter has no type by which it can be bound: " + jdbcParameterBindings );
+			throw new SqlTreeCreationException( "Unable to interpret mapping-model type for Query parameter : " + domainParam );
+		}
+
+		if ( parameterType instanceof EntityIdentifierMapping ) {
+			final EntityIdentifierMapping identifierMapping = (EntityIdentifierMapping) parameterType;
+			final EntityMappingType entityMapping = identifierMapping.findContainingEntityMapping();
+			if ( entityMapping.getRepresentationStrategy().getInstantiator().isInstance( bindValue, session.getFactory() ) ) {
+				bindValue = identifierMapping.getIdentifier( bindValue, session );
 			}
 		}
-		else {
-			mappingExpressable = domainModel.resolveMappingExpressable( parameterType, tableGroupLocator );
+		else if ( parameterType instanceof ToOneAttributeMapping ) {
+			ToOneAttributeMapping association = (ToOneAttributeMapping) parameterType;
+			bindValue = association.getForeignKeyDescriptor().getAssociationKeyFromTarget( bindValue, session );
+			parameterType = association.getForeignKeyDescriptor();
+		}
+		else if ( parameterType instanceof PluralAttributeMapping ) {
+			// we'd expect the values to refer to the collection element
+			// for now, let's blow up and see where this happens and fix the specifics...
+			throw new NotYetImplementedFor6Exception( "Binding parameters whose inferred type comes from plural attribute not yet implemented" );
 		}
 
 		int offset = jdbcParameterBindings.registerParametersForEachJdbcValue(
 				bindValue,
 				Clause.IRRELEVANT,
-				mappingExpressable,
+				parameterType,
 				jdbcParams,
 				session
 		);
 		assert offset == jdbcParams.size();
 	}
 
-	public static AllowableParameterType determineParameterType(
+	public static Bindable determineParameterType(
 			QueryParameterBinding<?> binding,
 			QueryParameterImplementor<?> parameter,
+			List<SqmParameter> sqmParameters,
+			SqmParameterMappingModelResolutionAccess mappingModelResolutionAccess,
 			SessionFactoryImplementor sessionFactory) {
-		if ( binding.getBindType() != null ) {
-			return binding.getBindType();
+		if ( binding.getType() != null ) {
+			return binding.getType();
 		}
 
-		if ( parameter.getHibernateType() != null ) {
-			return parameter.getHibernateType();
+		if ( binding.getBindType() != null && binding.getBindType() instanceof Bindable ) {
+			return (Bindable) binding.getBindType();
+		}
+
+		if ( parameter.getHibernateType() != null && parameter.getHibernateType() instanceof Bindable ) {
+			return (Bindable) parameter.getHibernateType();
+		}
+
+		for ( int i = 0; i < sqmParameters.size(); i++ ) {
+			final MappingModelExpressable<?> mappingModelType = mappingModelResolutionAccess
+					.getResolvedMappingModelType( sqmParameters.get( i ) );
+			if ( mappingModelType != null ) {
+				return mappingModelType;
+			}
 		}
 
 		final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();

@@ -10,10 +10,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.action.internal.BulkOperationCleanupAction;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryParameterImplementor;
@@ -24,11 +24,10 @@ import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
+import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcUpdate;
 
@@ -42,6 +41,7 @@ public class SimpleUpdateQueryPlan implements NonSelectQueryPlan {
 	private JdbcUpdate jdbcUpdate;
 	private FromClauseAccess tableGroupAccess;
 	private Map<QueryParameterImplementor<?>, Map<SqmParameter, List<List<JdbcParameter>>>> jdbcParamsXref;
+	private Map<SqmParameter,MappingModelExpressable> sqmParamMappingTypeResolutions;
 
 	public SimpleUpdateQueryPlan(
 			SqmUpdateStatement sqmUpdate,
@@ -67,6 +67,7 @@ public class SimpleUpdateQueryPlan implements NonSelectQueryPlan {
 				jdbcParamsXref,
 				factory.getDomainModel(),
 				tableGroupAccess::findTableGroup,
+				sqmParamMappingTypeResolutions::get,
 				session
 		);
 
@@ -118,6 +119,8 @@ public class SimpleUpdateQueryPlan implements NonSelectQueryPlan {
 				domainParameterXref,
 				sqmInterpretation::getJdbcParamsBySqmParam
 		);
+
+		this.sqmParamMappingTypeResolutions = sqmInterpretation.getSqmParameterMappingModelTypeResolutions();
 
 		return factory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
 				.buildUpdateTranslator( factory, sqmInterpretation.getSqlAst() );

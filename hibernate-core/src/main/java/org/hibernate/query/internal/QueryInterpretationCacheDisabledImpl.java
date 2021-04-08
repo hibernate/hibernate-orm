@@ -6,10 +6,13 @@
  */
 package org.hibernate.query.internal;
 
+import java.util.Collections;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.query.spi.HqlInterpretation;
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
@@ -18,6 +21,7 @@ import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.sql.spi.ParameterInterpretation;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.tree.SqmStatement;
+import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
@@ -64,6 +68,7 @@ public class QueryInterpretationCacheDisabledImpl implements QueryInterpretation
 
 		final DomainParameterXref domainParameterXref;
 		final ParameterMetadataImplementor parameterMetadata;
+
 		if ( sqmStatement.getSqmParameters().isEmpty() ) {
 			domainParameterXref = DomainParameterXref.empty();
 			parameterMetadata = ParameterMetadataImpl.EMPTY;
@@ -71,6 +76,7 @@ public class QueryInterpretationCacheDisabledImpl implements QueryInterpretation
 		else {
 			domainParameterXref = DomainParameterXref.from( sqmStatement );
 			parameterMetadata = new ParameterMetadataImpl( domainParameterXref.getQueryParameters() );
+
 		}
 
 		if ( stats ) {

@@ -15,6 +15,7 @@ import org.hibernate.LockMode;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
@@ -46,17 +47,21 @@ import org.hibernate.sql.ast.tree.update.Assignment;
  * of an SQM mutation query tree representing into the various SQL AST trees
  * needed to perform that operation.
  *
- * @see #visitSetClause(SqmSetClause, Consumer, BiConsumer)
- * @see #visitWhereClause(SqmWhereClause, Consumer, BiConsumer)
- * @see #visitSelectClause(SqmSelectClause, QuerySpec, Consumer, BiConsumer)
+ * @see #visitSetClause(SqmSetClause, Consumer, SqmParameterResolutionConsumer)
+ * @see #visitWhereClause(SqmWhereClause, Consumer, SqmParameterResolutionConsumer)
+ * @see #visitSelectClause(SqmSelectClause, QuerySpec, Consumer, SqmParameterResolutionConsumer)
  *
  * @author Steve Ebersole
  */
 public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Statement> {
+	public interface SqmParameterResolutionConsumer {
+		void accept(SqmParameter sqmParam, MappingModelExpressable mappingType, List<JdbcParameter> jdbcParameters);
+	}
+
 	private final EntityMappingType mutatingEntityDescriptor;
 	private final TableGroup mutatingTableGroup;
 
-	private BiConsumer<SqmParameter, List<JdbcParameter>> parameterResolutionConsumer;
+	private SqmParameterResolutionConsumer parameterResolutionConsumer;
 
 	public MultiTableSqmMutationConverter(
 			EntityMappingType mutatingEntityDescriptor,
@@ -111,7 +116,7 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 	public void visitSetClause(
 			SqmSetClause setClause,
 			Consumer<Assignment> assignmentConsumer,
-			BiConsumer<SqmParameter, List<JdbcParameter>> parameterResolutionConsumer) {
+			SqmParameterResolutionConsumer parameterResolutionConsumer) {
 		this.parameterResolutionConsumer = parameterResolutionConsumer;
 
 		for ( SqmAssignment assignment : setClause.getAssignments() ) {
@@ -144,7 +149,7 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 	public Predicate visitWhereClause(
 			SqmWhereClause sqmWhereClause,
 			Consumer<ColumnReference> restrictionColumnReferenceConsumer,
-			BiConsumer<SqmParameter, List<JdbcParameter>> parameterResolutionConsumer) {
+			SqmParameterResolutionConsumer parameterResolutionConsumer) {
 		this.parameterResolutionConsumer = parameterResolutionConsumer;
 
 		if ( sqmWhereClause == null || sqmWhereClause.getPredicate() == null ) {
@@ -198,7 +203,12 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 		final Expression expression = super.consumeSqmParameter( sqmParameter );
 
 		final List<List<JdbcParameter>> jdbcParameters = getJdbcParamsBySqmParam().get( sqmParameter );
-		parameterResolutionConsumer.accept( sqmParameter, jdbcParameters.get( jdbcParameters.size() - 1 ) );
+		final MappingModelExpressable<?> mappingType = getSqmParameterMappingModelExpressableResolutions().get( sqmParameter );
+		parameterResolutionConsumer.accept(
+				sqmParameter,
+				mappingType,
+				jdbcParameters.get( jdbcParameters.size() - 1 )
+		);
 
 		return expression;
 	}
@@ -209,7 +219,7 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 			SqmSelectClause sqmSelectClause,
 			QuerySpec sqlQuerySpec,
 			Consumer<ColumnReference> columnReferenceConsumer,
-			BiConsumer<SqmParameter, List<JdbcParameter>> parameterResolutionConsumer) {
+			SqmParameterResolutionConsumer parameterResolutionConsumer) {
 		assert sqmSelectClause != null;
 
 		this.parameterResolutionConsumer = parameterResolutionConsumer;

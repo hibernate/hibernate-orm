@@ -94,7 +94,12 @@ public interface EntityValuedModelPart extends FetchableContainer {
 
 	@Override
 	default Object disassemble(Object value, SharedSessionContractImplementor session) {
-		return getEntityMappingType().disassemble( value, session );
+		if ( value == null ) {
+			return null;
+		}
+		final EntityIdentifierMapping identifierMapping = getEntityMappingType().getIdentifierMapping();
+		final Object identifier = identifierMapping.getIdentifier( value, session );
+		return identifierMapping.disassemble( identifier, session );
 	}
 
 	@Override

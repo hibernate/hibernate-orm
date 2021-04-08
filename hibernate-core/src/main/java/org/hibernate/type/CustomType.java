@@ -23,6 +23,9 @@ import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.type.descriptor.ValueBinder;
+import org.hibernate.type.descriptor.ValueExtractor;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -48,7 +51,7 @@ import org.hibernate.usertype.UserVersionType;
  */
 public class CustomType
 		extends AbstractType
-		implements BasicType, IdentifierType, DiscriminatorType, VersionType, StringRepresentableType, ProcedureParameterNamedBinder, ProcedureParameterExtractionAware {
+		implements BasicType, IdentifierType, DiscriminatorType, VersionType, StringRepresentableType, ProcedureParameterNamedBinder, ProcedureParameterExtractionAware, ValueBinder {
 
 	private final UserType userType;
 	private final String[] registrationKeys;
@@ -57,6 +60,8 @@ public class CustomType
 
 	private final JavaTypeDescriptor mappedJavaTypeDescriptor;
 	private final JdbcTypeDescriptor jdbcTypeDescriptor;
+
+	private final ValueExtractor valueExtractor;
 
 	private final Size dictatedSize;
 	private final Size defaultSize;
@@ -85,8 +90,40 @@ public class CustomType
 			this.defaultSize = null;
 		}
 
+		if ( userType instanceof ValueExtractor ) {
+			this.valueExtractor = (ValueExtractor) userType;
+		}
+		else {
+			this.valueExtractor = jdbcTypeDescriptor.getExtractor( mappedJavaTypeDescriptor );
+		}
+
 		this.customLogging = userType instanceof LoggableUserType;
 		this.registrationKeys = registrationKeys;
+	}
+
+	@Override
+	public ValueBinder<?> getJdbcValueBinder() {
+		return this;
+	}
+
+	@Override
+	public void bind(PreparedStatement st, Object value, int index, WrapperOptions options) throws SQLException {
+		userType.nullSafeSet( st, value, index, options.getSession() );
+	}
+
+	@Override
+	public void bind(CallableStatement st, Object value, String name, WrapperOptions options) throws SQLException {
+		if ( userType instanceof ProcedureParameterNamedBinder ) {
+			final ProcedureParameterNamedBinder namedParamSupport = (ProcedureParameterNamedBinder) userType;
+			if ( namedParamSupport.canDoSetting() ) {
+				namedParamSupport.nullSafeSet( st, value, name, options.getSession() );
+			}
+		}
+	}
+
+	@Override
+	public ValueExtractor getJdbcValueExtractor() {
+		return valueExtractor;
 	}
 
 	public UserType getUserType() {
@@ -155,7 +192,6 @@ public class CustomType
 			Object owner) throws SQLException {
 		return nullSafeGet(rs, new String[] { columnName }, session, owner);
 	}
-
 
 	@Override
 	public Object assemble(Serializable cached, SharedSessionContractImplementor session, Object owner) {

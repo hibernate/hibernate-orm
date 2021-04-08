@@ -535,6 +535,10 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		TransactionUtil2.inTransaction( sessionFactory(), action );
 	}
 
+	protected <T> T fromTransaction(Function<SessionImplementor,T> action) {
+		return TransactionUtil2.fromTransaction( sessionFactory(), action );
+	}
+
 	protected void inTransaction(SessionImplementor session, Consumer<SessionImplementor> action) {
 		TransactionUtil2.inTransaction( session, action );
 	}

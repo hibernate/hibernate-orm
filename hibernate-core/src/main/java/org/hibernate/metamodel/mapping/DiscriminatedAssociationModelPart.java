@@ -26,4 +26,5 @@ public interface DiscriminatedAssociationModelPart extends Fetchable, FetchableC
 	BasicValuedModelPart getKeyPart();
 
 	EntityMappingType resolveDiscriminatorValue(Object discriminatorValue);
+	Object resolveDiscriminatorForEntityType(EntityMappingType entityMappingType);
 }

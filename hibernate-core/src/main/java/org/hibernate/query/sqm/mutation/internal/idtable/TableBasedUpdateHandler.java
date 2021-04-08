@@ -9,6 +9,7 @@ package org.hibernate.query.sqm.mutation.internal.idtable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
@@ -21,6 +22,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.FilterHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.MappingMetamodel;
+import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
@@ -147,14 +149,18 @@ public class TableBasedUpdateHandler
 		// information about the assignments
 
 		final List<Assignment> assignments = new ArrayList<>();
+		final Map<SqmParameter, MappingModelExpressable> paramTypeResolutions = new LinkedHashMap<>();
 
 		converterDelegate.visitSetClause(
 				getSqmDeleteOrUpdateStatement().getSetClause(),
 				assignments::add,
-				(sqmParameter, jdbcParameters) -> parameterResolutions.computeIfAbsent(
-						sqmParameter,
-						k -> new ArrayList<>( 1 )
-				).add( jdbcParameters )
+				(sqmParameter, mappingType, jdbcParameters) -> {
+					parameterResolutions.computeIfAbsent(
+							sqmParameter,
+							k -> new ArrayList<>( 1 )
+					).add( jdbcParameters );
+					paramTypeResolutions.put( sqmParameter, mappingType );
+				}
 		);
 		converterDelegate.addVersionedAssignment( assignments::add, getSqmDeleteOrUpdateStatement() );
 
@@ -171,10 +177,14 @@ public class TableBasedUpdateHandler
 			predicate = converterDelegate.visitWhereClause(
 					whereClause,
 					columnReference -> {},
-					(sqmParameter, jdbcParameters) -> parameterResolutions.computeIfAbsent(
-							sqmParameter,
-							k -> new ArrayList<>( 1 )
-					).add( jdbcParameters )
+					(sqmParameter, mappingType, jdbcParameters) -> {
+						parameterResolutions.computeIfAbsent(
+								sqmParameter,
+								k -> new ArrayList<>( 1 )
+						).add( jdbcParameters );
+						paramTypeResolutions.put( sqmParameter, mappingType );
+					}
+
 			);
 			assert predicate != null;
 		}
@@ -214,6 +224,7 @@ public class TableBasedUpdateHandler
 				assignments,
 				predicate,
 				parameterResolutions,
+				paramTypeResolutions,
 				executionContext
 		);
 	}

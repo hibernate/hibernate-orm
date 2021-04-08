@@ -53,6 +53,7 @@ import org.hibernate.loader.MultipleBagFetchException;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
+import org.hibernate.metamodel.model.domain.internal.EntitySqmPathSource;
 import org.hibernate.orm.test.any.hbm.IntegerPropertyValue;
 import org.hibernate.orm.test.any.hbm.PropertySet;
 import org.hibernate.orm.test.any.hbm.PropertyValue;
@@ -249,21 +250,18 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testSubSelectAsArithmeticOperand() {
-		Session s = openSession();
-		s.beginTransaction();
+		inTransaction(
+				(s) -> {
+					s.createQuery( "from Zoo z where ( select count(*) from Zoo ) = 0" ).list();
 
-		// first a control
-		s.createQuery( "from Zoo z where ( select count(*) from Zoo ) = 0" ).list();
+					// now as operands singly:
+					s.createQuery( "from Zoo z where ( select count(*) from Zoo ) + 0 = 0" ).list();
+					s.createQuery( "from Zoo z where 0 + ( select count(*) from Zoo ) = 0" ).list();
 
-		// now as operands singly:
-		s.createQuery( "from Zoo z where ( select count(*) from Zoo ) + 0 = 0" ).list();
-		s.createQuery( "from Zoo z where 0 + ( select count(*) from Zoo ) = 0" ).list();
-
-		// and doubly:
-		s.createQuery( "from Zoo z where ( select count(*) from Zoo ) + ( select count(*) from Zoo ) = 0" ).list();
-
-		s.getTransaction().commit();
-		s.close();
+					// and doubly:
+					s.createQuery( "from Zoo z where ( select count(*) from Zoo ) + ( select count(*) from Zoo ) = 0" ).list();
+				}
+		);
 	}
 
 	@Test
@@ -278,33 +276,24 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 				"City 8", "City 9", "City 10", "City 11", "City 12"
 		};
 
-		Session session = openSession();
+		inTransaction(
+				(session) -> {
+					Address address = new Address();
+					Zoo zoo = new Zoo( "ZOO 1", address );
+					address.setCity( "City 1" );
+					session.save( zoo );
+				}
+		);
 
-		session.getTransaction().begin();
-		Address address = new Address();
-		Zoo zoo = new Zoo( "ZOO 1", address );
-		address.setCity( "City 1" );
-		session.save( zoo );
-		session.getTransaction().commit();
-
-		session.clear();
-
-		session.getTransaction().begin();
-		List result = session.createQuery( "FROM Zoo z WHERE z.name IN (?1) and z.address.city IN (?2)" )
-				.setParameterList( 1, namesArray )
-				.setParameterList( 2, citiesArray )
-				.list();
-		assertEquals( 1, result.size() );
-		session.getTransaction().commit();
-
-		session.clear();
-
-		session.getTransaction().begin();
-		zoo = (Zoo) session.get( Zoo.class, zoo.getId() );
-		session.delete( zoo );
-		session.getTransaction().commit();
-
-		session.close();
+		inTransaction(
+				(session) -> {
+					List result = session.createQuery( "FROM Zoo z WHERE z.name IN (?1) and z.address.city IN (?2)" )
+							.setParameterList( 1, namesArray )
+							.setParameterList( 2, citiesArray )
+							.list();
+					assertEquals( 1, result.size() );
+				}
+		);
 	}
 
 	@Test
@@ -312,34 +301,23 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	// For now, restrict to H2.  Selecting w/ predicate functions cause issues for too many dialects.
 	@RequiresDialect(value = H2Dialect.class, jiraKey = "HHH-9052")
 	public void testBooleanPredicate() {
-		final Session session = openSession();
-
-		session.getTransaction().begin();
-		final Constructor constructor = new Constructor();
-		session.save( constructor );
-		session.getTransaction().commit();
-
-		session.clear();
-		Constructor.resetConstructorExecutionCount();
-
-		session.getTransaction().begin();
-		final Constructor result = (Constructor) session.createQuery(
-				"select new Constructor( c.id, c.id is not null, c.id = c.id, c.id + 1, concat( c.id, 'foo' ) ) from Constructor c where c.id = :id"
-		).setParameter( "id", constructor.getId() ).uniqueResult();
-		session.getTransaction().commit();
-
-		assertEquals( 1, Constructor.getConstructorExecutionCount() );
-		assertEquals(
-				new Constructor(
-						constructor.getId(),
-						true,
-						true,
-						constructor.getId() + 1,
-						constructor.getId() + "foo"
-				), result
+		final Constructor created = fromTransaction(
+				(session) -> {
+					final Constructor constructor = new Constructor();
+					session.save( constructor );
+					return constructor;
+				}
 		);
 
-		session.close();
+		Constructor.resetConstructorExecutionCount();
+
+		inTransaction(
+				(session) -> {
+					final String qry = "select new Constructor( c.id, c.id is not null, c.id = c.id, c.id + 1, concat( c.id, 'foo' ) ) from Constructor c where c.id = :id";
+					final Constructor result = (Constructor) session.createQuery(qry ).setParameter( "id", created.getId() ).uniqueResult();
+					assertEquals( created, result );
+				}
+		);
 	}
 
 	@Test
@@ -382,109 +360,91 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testComponentJoins() {
-		Session s = openSession();
-		s.beginTransaction();
-		ComponentContainer root = new ComponentContainer(
-				new ComponentContainer.Address(
-						"123 Main",
-						"Anywhere",
-						"USA",
-						new ComponentContainer.Address.Zip( 12345, 6789 )
-				)
+		inTransaction(
+				(s) -> {
+					ComponentContainer root = new ComponentContainer(
+							new ComponentContainer.Address(
+									"123 Main",
+									"Anywhere",
+									"USA",
+									new ComponentContainer.Address.Zip( 12345, 6789 )
+							)
+					);
+					s.save( root );
+				}
 		);
-		s.save( root );
-		s.getTransaction().commit();
-		s.close();
 
-		s = openSession();
-		s.beginTransaction();
-		List result = s.createQuery( "select a from ComponentContainer c join c.address a" ).list();
-		assertEquals( 1, result.size() );
-		assertTrue( ComponentContainer.Address.class.isInstance( result.get( 0 ) ) );
+		inTransaction(
+				(s) -> {
+					List result = s.createQuery( "select a from ComponentContainer c join c.address a" ).list();
+					assertEquals( 1, result.size() );
+					assertTrue( ComponentContainer.Address.class.isInstance( result.get( 0 ) ) );
 
-		result = s.createQuery( "select a.zip from ComponentContainer c join c.address a" ).list();
-		assertEquals( 1, result.size() );
-		assertTrue( ComponentContainer.Address.Zip.class.isInstance( result.get( 0 ) ) );
+					result = s.createQuery( "select a.zip from ComponentContainer c join c.address a" ).list();
+					assertEquals( 1, result.size() );
+					assertTrue( ComponentContainer.Address.Zip.class.isInstance( result.get( 0 ) ) );
 
-		result = s.createQuery( "select z from ComponentContainer c join c.address a join a.zip z" ).list();
-		assertEquals( 1, result.size() );
-		assertTrue( ComponentContainer.Address.Zip.class.isInstance( result.get( 0 ) ) );
+					result = s.createQuery( "select z from ComponentContainer c join c.address a join a.zip z" ).list();
+					assertEquals( 1, result.size() );
+					assertTrue( ComponentContainer.Address.Zip.class.isInstance( result.get( 0 ) ) );
 
-		result = s.createQuery( "select z.code from ComponentContainer c join c.address a join a.zip z" ).list();
-		assertEquals( 1, result.size() );
-		assertTrue( Integer.class.isInstance( result.get( 0 ) ) );
-		s.delete( root );
-		s.getTransaction().commit();
-		s.close();
+					result = s.createQuery( "select z.code from ComponentContainer c join c.address a join a.zip z" ).list();
+					assertEquals( 1, result.size() );
+					assertTrue( Integer.class.isInstance( result.get( 0 ) ) );
+				}
+		);
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-9642")
 	public void testLazyAssociationInComponent() {
-		Session session = openSession();
-		session.getTransaction().begin();
+		inTransaction(
+				(session) -> {
+					Address address = new Address();
+					Zoo zoo = new Zoo( "ZOO 1", address );
+					address.setCity( "City 1" );
+					StateProvince stateProvince = new StateProvince();
+					stateProvince.setName( "Illinois" );
+					session.save( stateProvince );
+					address.setStateProvince( stateProvince );
+					session.save( zoo );
+				}
+		);
 
-		Address address = new Address();
-		Zoo zoo = new Zoo( "ZOO 1", address );
-		address.setCity( "City 1" );
-		StateProvince stateProvince = new StateProvince();
-		stateProvince.setName( "Illinois" );
-		session.save( stateProvince );
-		address.setStateProvince( stateProvince );
-		session.save( zoo );
-
-		session.getTransaction().commit();
-		session.close();
-
-		session = openSession();
-		session.getTransaction().begin();
-
-		zoo = (Zoo) session.createQuery( "from Zoo z" ).uniqueResult();
-		assertNotNull( zoo );
-		assertNotNull( zoo.getAddress() );
-		assertEquals( "City 1", zoo.getAddress().getCity() );
-		assertFalse( Hibernate.isInitialized( zoo.getAddress().getStateProvince() ) );
-		assertEquals( "Illinois", zoo.getAddress().getStateProvince().getName() );
-		assertTrue( Hibernate.isInitialized( zoo.getAddress().getStateProvince() ) );
-
-		session.getTransaction().commit();
-		session.close();
+		inTransaction(
+				(session) -> {
+					final Zoo zoo = (Zoo) session.createQuery( "from Zoo z" ).uniqueResult();
+					assertNotNull( zoo );
+					assertNotNull( zoo.getAddress() );
+					assertEquals( "City 1", zoo.getAddress().getCity() );
+					assertFalse( Hibernate.isInitialized( zoo.getAddress().getStateProvince() ) );
+					assertEquals( "Illinois", zoo.getAddress().getStateProvince().getName() );
+					assertTrue( Hibernate.isInitialized( zoo.getAddress().getStateProvince() ) );
+				}
+		);
 
 
-		session = openSession();
-		session.getTransaction().begin();
+		inTransaction(
+				(session) -> {
+					final Zoo zoo = (Zoo) session.createQuery( "from Zoo z join fetch z.address.stateProvince" ).uniqueResult();
+					assertNotNull( zoo );
+					assertNotNull( zoo.getAddress() );
+					assertEquals( "City 1", zoo.getAddress().getCity() );
+					assertTrue( Hibernate.isInitialized( zoo.getAddress().getStateProvince() ) );
+					assertEquals( "Illinois", zoo.getAddress().getStateProvince().getName() );
+				}
+		);
 
-		zoo = (Zoo) session.createQuery( "from Zoo z join fetch z.address.stateProvince" ).uniqueResult();
-		assertNotNull( zoo );
-		assertNotNull( zoo.getAddress() );
-		assertEquals( "City 1", zoo.getAddress().getCity() );
-		assertTrue( Hibernate.isInitialized( zoo.getAddress().getStateProvince() ) );
-		assertEquals( "Illinois", zoo.getAddress().getStateProvince().getName() );
-
-		session.getTransaction().commit();
-		session.close();
-
-		session = openSession();
-		session.getTransaction().begin();
-
-		zoo = (Zoo) session.createQuery( "from Zoo z join fetch z.address a join fetch a.stateProvince" ).uniqueResult();
-		assertNotNull( zoo );
-		assertNotNull( zoo.getAddress() );
-		assertEquals( "City 1", zoo.getAddress().getCity() );
-		assertTrue( Hibernate.isInitialized( zoo.getAddress().getStateProvince() ) );
-		assertEquals( "Illinois", zoo.getAddress().getStateProvince().getName() );
-
-		session.getTransaction().commit();
-		session.close();
-
-		session = openSession();
-		session.getTransaction().begin();
-
-		zoo.getAddress().setStateProvince( null );
-		session.delete( stateProvince );
-		session.delete( zoo );
-		session.getTransaction().commit();
-		session.close();
+		inTransaction(
+				(session) -> {
+					final Zoo zoo = (Zoo) session.createQuery( "from Zoo z join fetch z.address a join fetch a.stateProvince" ).uniqueResult();
+					assertNotNull( zoo );
+					assertNotNull( zoo.getAddress() );
+					assertEquals( "City 1", zoo.getAddress().getCity() );
+					assertTrue( Hibernate.isInitialized( zoo.getAddress().getStateProvince() ) );
+					assertEquals( "Illinois", zoo.getAddress().getStateProvince().getName() );
+				}
+		);
 	}
 
 	@Test
@@ -2242,11 +2202,11 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		final SqmSelection<?> sqmSelection = sqmStatement.getQuerySpec().getSelectClause().getSelections().get( 0 );
 		assertThat( sqmSelection.getSelectableNode(), instanceOf( SqmPath.class ) );
 		final SqmPath<?> selectedPath = (SqmPath<?>) sqmSelection.getSelectableNode();
-		assertThat( selectedPath.getReferencedPathSource(), instanceOf( SingularPersistentAttribute.class ) );
-		final SingularPersistentAttribute selectedAttr = (SingularPersistentAttribute) selectedPath.getReferencedPathSource();
-		assertThat( selectedAttr.getName(), is( "zoo" ) );
-		assertThat( selectedAttr.getType(), instanceOf( EntityDomainType.class ) );
-		final EntityDomainType<?> zooType = (EntityDomainType<?>) selectedAttr.getType();
+		assertThat( selectedPath.getReferencedPathSource(), instanceOf( EntitySqmPathSource.class ) );
+		final EntitySqmPathSource selectedAttr = (EntitySqmPathSource) selectedPath.getReferencedPathSource();
+		assertThat( selectedAttr.getPathName(), is( "zoo" ) );
+		assertThat( selectedAttr.getSqmPathType(), instanceOf( EntityDomainType.class ) );
+		final EntityDomainType<?> zooType = (EntityDomainType<?>) selectedAttr.getSqmPathType();
 		assertThat( zooType.getHibernateEntityName(), is( Zoo.class.getName() ) );
 	}
 

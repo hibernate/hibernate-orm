@@ -9,6 +9,7 @@ package org.hibernate.query.sqm.sql;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -22,16 +23,19 @@ public class StandardSqmTranslation<T extends Statement> implements SqmTranslati
 
 	private final T sqlAst;
 	private final Map<SqmParameter, List<List<JdbcParameter>>> jdbcParamMap;
+	private final Map<SqmParameter, MappingModelExpressable> parameterMappingModelTypeMap;
 	private final SqlExpressionResolver sqlExpressionResolver;
 	private final FromClauseAccess fromClauseAccess;
 
 	public StandardSqmTranslation(
 			T sqlAst,
 			Map<SqmParameter, List<List<JdbcParameter>>> jdbcParamMap,
+			Map<SqmParameter, MappingModelExpressable> parameterMappingModelTypeMap,
 			SqlExpressionResolver sqlExpressionResolver,
 			FromClauseAccess fromClauseAccess) {
 		this.sqlAst = sqlAst;
 		this.jdbcParamMap = jdbcParamMap;
+		this.parameterMappingModelTypeMap = parameterMappingModelTypeMap;
 		this.sqlExpressionResolver = sqlExpressionResolver;
 		this.fromClauseAccess = fromClauseAccess;
 	}
@@ -44,6 +48,11 @@ public class StandardSqmTranslation<T extends Statement> implements SqmTranslati
 	@Override
 	public Map<SqmParameter, List<List<JdbcParameter>>> getJdbcParamsBySqmParam() {
 		return jdbcParamMap;
+	}
+
+	@Override
+	public Map<SqmParameter, MappingModelExpressable> getSqmParameterMappingModelTypeResolutions() {
+		return parameterMappingModelTypeMap;
 	}
 
 	@Override

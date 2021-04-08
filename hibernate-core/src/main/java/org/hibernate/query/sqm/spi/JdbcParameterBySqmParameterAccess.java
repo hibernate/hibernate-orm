@@ -17,6 +17,7 @@ import org.hibernate.sql.ast.tree.expression.JdbcParameter;
  *
  * @author Steve Ebersole
  */
+@FunctionalInterface
 public interface JdbcParameterBySqmParameterAccess {
 	/**
 	 * The mapping between an SqmParameter and all of its JDBC parameters

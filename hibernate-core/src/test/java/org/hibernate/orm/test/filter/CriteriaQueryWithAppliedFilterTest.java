@@ -217,7 +217,6 @@ public class CriteriaQueryWithAppliedFilterTest {
 	}
 
 	@Test
-	@FailureExpected(reason = "component criteria not fully implemented in v6 yet")
 	void testRestrictionsOnComponentTypes(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			session.enableFilter( "statusFilter" ).setParameter( "status", "active" );

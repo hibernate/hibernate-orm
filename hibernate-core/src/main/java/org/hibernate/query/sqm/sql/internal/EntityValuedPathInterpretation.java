@@ -27,6 +27,7 @@ import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
+import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -37,7 +38,7 @@ import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnRefere
 /**
  * @author Koen Aers
  */
-public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpretation<T> {
+public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpretation<T> implements SqlTupleContainer {
 
 	public static <T> EntityValuedPathInterpretation<T> from(
 			SqmEntityValuedSimplePath<T> sqmPath,
@@ -62,10 +63,10 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 		);
 	}
 
-	private final Expression sqlExpression;
+	private final SqlTuple sqlExpression;
 
 	private EntityValuedPathInterpretation(
-			Expression sqlExpression,
+			SqlTuple sqlExpression,
 			SqmEntityValuedSimplePath sqmPath,
 			TableGroup tableGroup,
 			EntityValuedModelPart mapping) {
@@ -225,5 +226,10 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 			return tableGroupJoin.getJoinedGroup().getTableReference( containingTableExpression );
 		}
 		return tableReference;
+	}
+
+	@Override
+	public SqlTuple getSqlTuple() {
+		return sqlExpression;
 	}
 }

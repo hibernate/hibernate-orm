@@ -18,13 +18,14 @@ import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
+import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.update.Assignable;
 
 /**
  * @author Steve Ebersole
  */
-public class EmbeddableValuedPathInterpretation<T> extends AbstractSqmPathInterpretation<T> implements Assignable {
+public class EmbeddableValuedPathInterpretation<T> extends AbstractSqmPathInterpretation<T> implements Assignable, SqlTupleContainer {
 
 	/**
 	 * Static factory
@@ -94,5 +95,10 @@ public class EmbeddableValuedPathInterpretation<T> extends AbstractSqmPathInterp
 		final List<ColumnReference> results = new ArrayList<>();
 		visitColumnReferences( results::add );
 		return results;
+	}
+
+	@Override
+	public SqlTuple getSqlTuple() {
+		return sqlExpression;
 	}
 }

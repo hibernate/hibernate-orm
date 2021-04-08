@@ -7,6 +7,7 @@
 package org.hibernate.test.hql;
 
 import java.io.Serializable;
+import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -15,6 +16,8 @@ import java.sql.Types;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.ValueExtractor;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.usertype.EnhancedUserType;
 
 /**
@@ -26,7 +29,7 @@ import org.hibernate.usertype.EnhancedUserType;
  *
  * @author Steve Ebersole
  */
-public class ClassificationType implements EnhancedUserType {
+public class ClassificationType implements EnhancedUserType, ValueExtractor<Classification> {
 
 	@Override
 	public int[] sqlTypes() {
@@ -118,5 +121,20 @@ public class ClassificationType implements EnhancedUserType {
 
 	private String extractOrdinalString(Object value) {
 		return Integer.toString( extractOrdinal( value ) );
+	}
+
+	@Override
+	public Classification extract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
+		return Classification.valueOf( rs.getInt( paramIndex ) );
+	}
+
+	@Override
+	public Classification extract(CallableStatement statement, int paramIndex, WrapperOptions options) throws SQLException {
+		return Classification.valueOf( statement.getInt( paramIndex ) );
+	}
+
+	@Override
+	public Classification extract(CallableStatement statement, String paramName, WrapperOptions options) throws SQLException {
+		return Classification.valueOf( statement.getInt( paramName ) );
 	}
 }

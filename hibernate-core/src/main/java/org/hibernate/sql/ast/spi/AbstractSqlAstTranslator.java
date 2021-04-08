@@ -95,6 +95,7 @@ import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
 import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
+import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
 import org.hibernate.sql.ast.tree.expression.Star;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.expression.TrimSpecification;
@@ -1580,9 +1581,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		final Expression sortExpression = sortSpecification.getSortExpression();
 		final NullPrecedence nullPrecedence = sortSpecification.getNullPrecedence();
 		final SortOrder sortOrder = sortSpecification.getSortOrder();
-		if ( sortExpression instanceof SqlTuple ) {
+		if ( sortExpression instanceof SqlTupleContainer ) {
+			final SqlTuple sqlTuple = ( (SqlTupleContainer) sortExpression ).getSqlTuple();
 			String separator = NO_SEPARATOR;
-			for ( Expression expression : ( (SqlTuple) sortExpression ).getExpressions() ) {
+			for ( Expression expression : sqlTuple.getExpressions() ) {
 				appendSql( separator );
 				visitSortSpecification( expression, sortOrder, nullPrecedence );
 				separator = COMA_SEPARATOR;

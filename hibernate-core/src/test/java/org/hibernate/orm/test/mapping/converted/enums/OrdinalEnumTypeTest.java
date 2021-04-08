@@ -63,7 +63,7 @@ public class OrdinalEnumTypeTest {
 		scope.inTransaction(
 				(session) -> {
 					session.createQuery( "select p.id from Person p where p.id = :id", Long.class )
-							.setParameter( "id", 1 )
+							.setParameter( "id", 1L )
 							.list();
 
 					assertTrue( loggingWatcher.wasTriggered() );

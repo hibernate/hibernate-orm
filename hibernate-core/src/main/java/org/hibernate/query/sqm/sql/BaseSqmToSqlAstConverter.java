@@ -90,6 +90,7 @@ import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescript
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
+import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
 import org.hibernate.query.sqm.spi.BaseSemanticQueryWalker;
 import org.hibernate.query.sqm.sql.internal.BasicValuedPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
@@ -325,6 +326,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	private final DomainParameterXref domainParameterXref;
 	private final QueryParameterBindings domainParameterBindings;
+	private final Map<SqmParameter,MappingModelExpressable> sqmParameterMappingModelTypes = new LinkedHashMap<>();
 	private final Map<JpaCriteriaParameter<?>, Supplier<SqmJpaCriteriaParameterWrapper<?>>> jpaCriteriaParamResolutions;
 	private final List<DomainResult> domainResults;
 	private final EntityGraphTraversalState entityGraphTraversalState;
@@ -410,6 +412,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		this.domainParameterBindings = domainParameterBindings;
 		this.jpaCriteriaParamResolutions = domainParameterXref.getParameterResolutions()
 				.getJpaCriteriaParamResolutions();
+	}
+
+	public Map<SqmParameter, MappingModelExpressable> getSqmParameterMappingModelExpressableResolutions() {
+		return sqmParameterMappingModelTypes;
 	}
 
 	protected Stack<SqlAstProcessingState> getProcessingStateStack() {
@@ -538,6 +544,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return new StandardSqmTranslation<>(
 				statement,
 				getJdbcParamsBySqmParam(),
+				sqmParameterMappingModelTypes,
 				lastPoppedProcessingState.getSqlExpressionResolver(),
 				getFromClauseAccess()
 		);
@@ -2521,6 +2528,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			if ( currentExpressableSupplier != null ) {
 				final MappingModelExpressable inferredMapping = currentExpressableSupplier.get();
 				if ( inferredMapping != null ) {
+					if ( inferredMapping instanceof PluralAttributeMapping ) {
+						return ( (PluralAttributeMapping) inferredMapping ).getElementDescriptor();
+					}
 					return inferredMapping;
 				}
 			}
@@ -2569,6 +2579,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			SqmParameter expression,
 			MappingModelExpressable valueMapping,
 			BiConsumer<Integer,JdbcParameter> jdbcParameterConsumer) {
+		sqmParameterMappingModelTypes.put( expression, valueMapping );
+
 		if ( valueMapping instanceof Association ) {
 			( (Association) valueMapping ).getForeignKeyDescriptor().forEachJdbcType(
 					(index, jdbcMapping) -> jdbcParameterConsumer.accept( index, new JdbcParameterImpl( jdbcMapping ) )

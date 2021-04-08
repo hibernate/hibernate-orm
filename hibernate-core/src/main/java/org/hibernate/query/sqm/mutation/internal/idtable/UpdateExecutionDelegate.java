@@ -18,9 +18,10 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
+import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.query.spi.SqlOmittingQueryOptions;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmUtil;
@@ -28,6 +29,7 @@ import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
@@ -36,7 +38,6 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcUpdate;
 
@@ -61,6 +62,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 	private final JdbcParameterBindings jdbcParameterBindings;
 
 	private final Map<TableReference, List<Assignment>> assignmentsByTable;
+	private final Map<SqmParameter, MappingModelExpressable> paramTypeResolutions;
 	private final SessionFactoryImplementor sessionFactory;
 
 	public UpdateExecutionDelegate(
@@ -79,6 +81,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 			List<Assignment> assignments,
 			Predicate suppliedPredicate,
 			Map<SqmParameter, List<List<JdbcParameter>>> parameterResolutions,
+			Map<SqmParameter, MappingModelExpressable> paramTypeResolutions,
 			ExecutionContext executionContext) {
 		this.sqmUpdate = sqmUpdate;
 		this.sqmConverter = sqmConverter;
@@ -91,6 +94,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 		this.domainParameterXref = domainParameterXref;
 		this.updatingTableGroup = updatingTableGroup;
 		this.suppliedPredicate = suppliedPredicate;
+		this.paramTypeResolutions = paramTypeResolutions;
 
 		this.sessionFactory = executionContext.getSession().getFactory();
 
@@ -110,6 +114,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 				),
 				sessionFactory.getDomainModel(),
 				navigablePath -> updatingTableGroup,
+				paramTypeResolutions::get,
 				executionContext.getSession()
 		);
 

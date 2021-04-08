@@ -202,6 +202,7 @@ public class MatchingIdSelectionHelper {
 
 
 		final Map<SqmParameter, List<JdbcParameter>> parameterResolutions;
+
 		if ( domainParameterXref.getSqmParameterCount() == 0 ) {
 			parameterResolutions = Collections.emptyMap();
 		}
@@ -212,7 +213,7 @@ public class MatchingIdSelectionHelper {
 		final Predicate restriction = sqmConverter.visitWhereClause(
 				sqmMutationStatement.getWhereClause(),
 				columnReference -> {},
-				parameterResolutions::put
+				(sqmParam, mappingType, jdbcParameters) -> parameterResolutions.put( sqmParam, jdbcParameters )
 		);
 
 		final SelectStatement matchingIdSelection = generateMatchingIdSelectStatement(
@@ -235,6 +236,7 @@ public class MatchingIdSelectionHelper {
 				SqmUtil.generateJdbcParamsXref( domainParameterXref, sqmConverter ),
 				factory.getDomainModel(),
 				navigablePath -> sqmConverter.getMutatingTableGroup(),
+				sqmConverter.getSqmParameterMappingModelExpressableResolutions()::get,
 				executionContext.getSession()
 		);
 		final JdbcSelect idSelectJdbcOperation = sqlAstSelectTranslator.translate(

@@ -10,6 +10,7 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.hql.spi.SqmCreationState;
+import org.hibernate.query.sqm.tree.domain.SqmAnyValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 
 /**
@@ -37,6 +38,11 @@ public class AnyMappingSqmPathSource<J> extends AbstractSqmPathSource<J> {
 
 	@Override
 	public SqmPath<J> createSqmPath(SqmPath<?> lhs, SqmCreationState creationState) {
-		throw new NotYetImplementedFor6Exception();
+		return new SqmAnyValuedSimplePath<>(
+				lhs.getNavigablePath().append( getPathName() ),
+				this,
+				lhs,
+				creationState.getCreationContext().getQueryEngine().getCriteriaBuilder()
+		);
 	}
 }

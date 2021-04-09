@@ -6,6 +6,10 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import java.util.Collections;
+import java.util.List;
+
+import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.query.CastType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -17,7 +21,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public interface JdbcMapping extends MappingType {
+public interface JdbcMapping extends MappingType, JdbcMappingContainer {
 	/**
 	 * The descriptor for the Java type represented by this
 	 * expressable type
@@ -49,5 +53,27 @@ public interface JdbcMapping extends MappingType {
 	@Override
 	default JavaTypeDescriptor getMappedJavaTypeDescriptor() {
 		return getJavaTypeDescriptor();
+	}
+
+	@Override
+	default int getJdbcTypeCount() {
+		return 1;
+	}
+
+	@Override
+	default List<JdbcMapping> getJdbcMappings() {
+		return Collections.singletonList( this );
+	}
+
+	@Override
+	default int forEachJdbcType(IndexedConsumer<JdbcMapping> action) {
+		action.accept( 0, this );
+		return 1;
+	}
+
+	@Override
+	default int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+		action.accept( 0, this );
+		return 1;
 	}
 }

@@ -3388,7 +3388,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmCastTarget<?> visitCastTarget(HqlParser.CastTargetContext castTargetContext) {
-		String targetName = castTargetContext.identifier().getText();
+		final String targetName = castTargetContext.castTargetType().fullTargetName;
 
 		List<TerminalNode> args = castTargetContext.INTEGER_LITERAL();
 		Long length = args.size() == 1 ? Long.valueOf( args.get(0).getText() ) : null;

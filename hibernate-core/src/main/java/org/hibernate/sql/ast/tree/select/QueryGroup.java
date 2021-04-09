@@ -9,8 +9,8 @@ package org.hibernate.sql.ast.tree.select;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.SetOperator;
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -62,7 +62,7 @@ public class QueryGroup extends QueryPart {
 	// Expression
 
 	@Override
-	public MappingModelExpressable getExpressionType() {
+	public JdbcMappingContainer getExpressionType() {
 		return queryParts.get( 0 ).getExpressionType();
 	}
 

@@ -9,7 +9,7 @@ package org.hibernate.orm.test.sql.ast;
 import java.sql.Types;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.model.convert.internal.OrdinalEnumValueConverter;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.orm.test.mapping.SmokeTests.Gender;
@@ -31,11 +31,11 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcSelect;
-import org.hibernate.sql.results.internal.SqlSelectionImpl;
-import org.hibernate.sql.results.graph.basic.BasicResult;
-import org.hibernate.sql.results.graph.basic.BasicResultAssembler;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
+import org.hibernate.sql.results.graph.basic.BasicResult;
+import org.hibernate.sql.results.graph.basic.BasicResultAssembler;
+import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.type.internal.StandardBasicTypeImpl;
 
 import org.hibernate.testing.hamcrest.AssignableMatcher;
@@ -50,7 +50,6 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
@@ -181,7 +180,7 @@ public class SmokeTests {
 					final ColumnReference columnReference = (ColumnReference) selectedExpression;
 					assertThat( columnReference.renderSqlFragment( scope.getSessionFactory() ), is( "s1_0.gender" ) );
 
-					final MappingModelExpressable selectedExpressable = selectedExpression.getExpressionType();
+					final JdbcMappingContainer selectedExpressable = selectedExpression.getExpressionType();
 					assertThat( selectedExpressable, instanceOf( StandardBasicTypeImpl.class ) );
 					final StandardBasicTypeImpl basicType = (StandardBasicTypeImpl) selectedExpressable;
 					assertThat( basicType.getJavaTypeDescriptor().getJavaTypeClass(), AssignableMatcher.assignableTo( Integer.class ) );

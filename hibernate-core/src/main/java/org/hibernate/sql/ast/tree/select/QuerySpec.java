@@ -10,7 +10,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
 import org.hibernate.sql.ast.SqlAstWalker;
@@ -121,7 +121,7 @@ public class QuerySpec extends QueryPart implements SqlAstNode, PredicateContain
 	// Expression
 
 	@Override
-	public MappingModelExpressable getExpressionType() {
+	public JdbcMappingContainer getExpressionType() {
 		if ( selectClause.getSqlSelections().size() == 1 ) {
 			SqlSelection first = selectClause.getSqlSelections().get( 0 );
 			return first.getExpressionType();

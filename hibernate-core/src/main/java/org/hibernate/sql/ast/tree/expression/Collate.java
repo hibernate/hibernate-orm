@@ -7,7 +7,7 @@
 package org.hibernate.sql.ast.tree.expression;
 
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.SqlExpressable;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -43,11 +43,17 @@ public class Collate implements Expression, SqlExpressable, SqlAstNode {
 			return ( (SqlExpressable) getExpressionType() ).getJdbcMapping();
 		}
 
+		if ( getExpressionType() != null ) {
+			final JdbcMappingContainer mappingContainer = getExpressionType();
+			assert mappingContainer.getJdbcTypeCount() == 1;
+			return mappingContainer.getJdbcMappings().get( 0 );
+		}
+
 		return null;
 	}
 
 	@Override
-	public MappingModelExpressable getExpressionType() {
+	public JdbcMappingContainer getExpressionType() {
 		return expression.getExpressionType();
 	}
 

@@ -54,6 +54,7 @@ import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
@@ -2231,7 +2232,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				// we must convert this duration from
 				// nanoseconds to the given unit
 
-				MappingModelExpressable durationType = scaledExpression.getExpressionType();
+				JdbcMappingContainer durationType = scaledExpression.getExpressionType();
 				Duration duration = new Duration( scaledExpression, NANOSECOND, (BasicValuedMapping) durationType );
 
 				TemporalUnit appliedUnit = appliedByUnit.getUnit().getUnit();
@@ -2349,12 +2350,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		);
 	}
 
-	private MappingModelExpressable<?> getKeyExpressable(MappingModelExpressable<?> mappingModelExpressable) {
+	private MappingModelExpressable<?> getKeyExpressable(JdbcMappingContainer mappingModelExpressable) {
 		if ( mappingModelExpressable instanceof EntityAssociationMapping ) {
 			return ( (EntityAssociationMapping) mappingModelExpressable ).getKeyTargetMatchPart();
 		}
 		else {
-			return mappingModelExpressable;
+			return (MappingModelExpressable<?>) mappingModelExpressable;
 		}
 	}
 
@@ -2749,7 +2750,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			targetType = InferredBasicValueResolver.resolveSqlTypeIndicators( this, (BasicType<?>) targetType );
 		}
 		return new CastTarget(
-				targetType,
+				targetType.getJdbcMapping(),
 				target.getLength(),
 				target.getPrecision(),
 				target.getScale()
@@ -3264,7 +3265,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				Expression timestamp = adjustedTimestamp;
 				SqmExpressable<?> timestampType = adjustedTimestampType;
 				adjustedTimestamp = toSqlExpression( expression.getLeftHandOperand().accept( this ) );
-				MappingModelExpressable type = adjustedTimestamp.getExpressionType();
+				JdbcMappingContainer type = adjustedTimestamp.getExpressionType();
 				if ( type instanceof SqmExpressable ) {
 					adjustedTimestampType = (SqmExpressable) type;
 				}

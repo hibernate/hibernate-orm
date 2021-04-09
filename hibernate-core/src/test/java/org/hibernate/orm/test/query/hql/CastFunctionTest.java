@@ -9,96 +9,16 @@ package org.hibernate.orm.test.query.hql;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
+import org.hibernate.Session;
 import org.hibernate.dialect.DerbyDialect;
-import org.hibernate.dialect.Dialect;
 
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.Test;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 /**
  * @author Steve Ebersole
  */
-@DomainModel( annotatedClasses = CastFunctionTest.MyEntity.class )
-@SessionFactory
-@FailureExpected( reason = "requires https://github.com/hibernate/hibernate-orm/pull/3912" )
-public class CastFunctionTest {
-	@Test
-	public void testStringCasting(SessionFactoryScope scope) {
-		scope.inTransaction(
-				(session) -> {
-					final Dialect dialect = session.getFactory().getJdbcServices().getDialect();
-					if ( DerbyDialect.class.isInstance( dialect ) ) {
-
-						// the conversion from DOUBLE to VARCHAR is not supported by Derby,
-						// using the short name
-						session.createQuery( "select cast(char(e.theLostNumber) as string) from MyEntity e" ).list();
-						// using the java class name
-						session.createQuery( "select cast(char(e.theLostNumber) as java.lang.String) from MyEntity e" ).list();
-						// using the fqn Hibernate Type name
-						session.createQuery( "select cast(char(e.theLostNumber) as org.hibernate.type.StringType) from MyEntity e" )
-								.list();
-					}
-					else {
-						// using the short name
-						session.createQuery( "select cast(e.theLostNumber as string) from MyEntity e" ).list();
-						// using the java class name
-						session.createQuery( "select cast(e.theLostNumber as java.lang.String) from MyEntity e" ).list();
-						// using the fqn Hibernate Type name
-						session.createQuery( "select cast(e.theLostNumber as org.hibernate.type.StringType) from MyEntity e" )
-								.list();
-					}
-				}
-		);
-	}
-
-	@Test
-	public void testIntegerCasting(SessionFactoryScope scope) {
-		scope.inTransaction(
-				(session) -> {
-					// using the short name
-					session.createQuery( "select cast(e.theLostNumber as integer) from MyEntity e" ).list();
-					// using the java class name (primitive)
-					session.createQuery( "select cast(e.theLostNumber as int) from MyEntity e" ).list();
-					// using the java class name
-					session.createQuery( "select cast(e.theLostNumber as java.lang.Integer) from MyEntity e" ).list();
-					// using the fqn Hibernate Type name
-					session.createQuery( "select cast(e.theLostNumber as org.hibernate.type.IntegerType) from MyEntity e" ).list();
-				}
-		);
-	}
-
-	@Test
-	public void testLongCasting(SessionFactoryScope scope) {
-		scope.inTransaction(
-				(session) -> {
-					// using the short name (also the primitive name)
-					session.createQuery( "select cast(e.theLostNumber as long) from MyEntity e" ).list();
-					// using the java class name
-					session.createQuery( "select cast(e.theLostNumber as java.lang.Long) from MyEntity e" ).list();
-					// using the fqn Hibernate Type name
-					session.createQuery( "select cast(e.theLostNumber as org.hibernate.type.LongType) from MyEntity e" ).list();
-				}
-		);
-	}
-
-	@Test
-	public void testFloatCasting(SessionFactoryScope scope) {
-		scope.inTransaction(
-				(session) -> {
-					// using the short name (also the primitive name)
-					session.createQuery( "select cast(e.theLostNumber as float) from MyEntity e" ).list();
-					// using the java class name
-					session.createQuery( "select cast(e.theLostNumber as java.lang.Float) from MyEntity e" ).list();
-					// using the fqn Hibernate Type name
-					session.createQuery( "select cast(e.theLostNumber as org.hibernate.type.FloatType) from MyEntity e" ).list();
-
-				}
-		);
-	}
-
+public class CastFunctionTest extends BaseCoreFunctionalTestCase {
 	@Entity( name="MyEntity" )
 	public static class MyEntity {
 		@Id
@@ -107,4 +27,87 @@ public class CastFunctionTest {
 		private Double theLostNumber;
 	}
 
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { MyEntity.class };
+	}
+
+	@Test
+	public void testStringCasting() {
+		Session s = openSession();
+		s.beginTransaction();
+
+		if ( getDialect() instanceof DerbyDialect ) {
+			// the conversion from DOUBLE to VARCHAR is not supported by Derby,
+			// using the short name
+			s.createQuery( "select cast(char(e.theLostNumber) as string) from MyEntity e" ).list();
+			// using the java class name
+			s.createQuery( "select cast(char(e.theLostNumber) as java.lang.String) from MyEntity e" ).list();
+			// using the fqn Hibernate Type name
+			s.createQuery( "select cast(char(e.theLostNumber) as org.hibernate.type.StringType) from MyEntity e" )
+					.list();
+		}
+		else {
+			// using the short name
+			s.createQuery( "select cast(e.theLostNumber as string) from MyEntity e" ).list();
+			// using the java class name
+			s.createQuery( "select cast(e.theLostNumber as java.lang.String) from MyEntity e" ).list();
+			// using the fqn Hibernate Type name
+			s.createQuery( "select cast(e.theLostNumber as org.hibernate.type.StringType) from MyEntity e" )
+					.list();
+		}
+
+		s.getTransaction().commit();
+		s.close();
+	}
+
+	@Test
+	public void testIntegerCasting() {
+		Session s = openSession();
+		s.beginTransaction();
+
+		// using the short name
+		s.createQuery( "select cast(e.theLostNumber as integer) from MyEntity e" ).list();
+		// using the java class name (primitive)
+		s.createQuery( "select cast(e.theLostNumber as int) from MyEntity e" ).list();
+		// using the java class name
+		s.createQuery( "select cast(e.theLostNumber as java.lang.Integer) from MyEntity e" ).list();
+		// using the fqn Hibernate Type name
+		s.createQuery( "select cast(e.theLostNumber as org.hibernate.type.IntegerType) from MyEntity e" ).list();
+
+		s.getTransaction().commit();
+		s.close();
+	}
+
+	@Test
+	public void testLongCasting() {
+		Session s = openSession();
+		s.beginTransaction();
+
+		// using the short name (also the primitive name)
+		s.createQuery( "select cast(e.theLostNumber as long) from MyEntity e" ).list();
+		// using the java class name
+		s.createQuery( "select cast(e.theLostNumber as java.lang.Long) from MyEntity e" ).list();
+		// using the fqn Hibernate Type name
+		s.createQuery( "select cast(e.theLostNumber as org.hibernate.type.LongType) from MyEntity e" ).list();
+
+		s.getTransaction().commit();
+		s.close();
+	}
+
+	@Test
+	public void testFloatCasting() {
+		Session s = openSession();
+		s.beginTransaction();
+
+		// using the short name (also the primitive name)
+		s.createQuery( "select cast(e.theLostNumber as float) from MyEntity e" ).list();
+		// using the java class name
+		s.createQuery( "select cast(e.theLostNumber as java.lang.Float) from MyEntity e" ).list();
+		// using the fqn Hibernate Type name
+		s.createQuery( "select cast(e.theLostNumber as org.hibernate.type.FloatType) from MyEntity e" ).list();
+
+		s.getTransaction().commit();
+		s.close();
+	}
 }

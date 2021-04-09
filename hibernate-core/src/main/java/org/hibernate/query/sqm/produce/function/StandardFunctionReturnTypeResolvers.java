@@ -6,9 +6,14 @@
  */
 package org.hibernate.query.sqm.produce.function;
 
+import java.sql.Types;
+import java.util.List;
+import java.util.Locale;
+import java.util.function.Supplier;
+
 import org.hibernate.QueryException;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
@@ -16,11 +21,6 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
-
-import java.sql.Types;
-import java.util.List;
-import java.util.Locale;
-import java.util.function.Supplier;
 
 /**
  * @author Steve Ebersole
@@ -90,7 +90,7 @@ public class StandardFunctionReturnTypeResolvers {
 						continue;
 					}
 
-					final MappingModelExpressable<?> nodeType = ( (Expression) arg ).getExpressionType();
+					final JdbcMappingContainer nodeType = ( (Expression) arg ).getExpressionType();
 					if ( nodeType instanceof BasicValuedMapping ) {
 						final BasicValuedMapping argType = (BasicValuedMapping) nodeType;
 						return useImpliedTypeIfPossible( argType, impliedTypeAccess.get() );
@@ -220,7 +220,7 @@ public class StandardFunctionReturnTypeResolvers {
 
 	public static BasicValuedMapping extractArgumentValuedMapping(List<? extends SqlAstNode> arguments, int position) {
 		final SqlAstNode specifiedArgument = arguments.get( position-1 );
-		final MappingModelExpressable<?> specifiedArgType = specifiedArgument instanceof Expression
+		final JdbcMappingContainer specifiedArgType = specifiedArgument instanceof Expression
 				? ( (Expression) specifiedArgument ).getExpressionType()
 				: null;
 

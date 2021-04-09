@@ -219,10 +219,10 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 		);
 
 		//noinspection unchecked
-		return new BasicResult<Object>(
+		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				null,
-				type.getJavaTypeDescriptor(),
+				(JavaTypeDescriptor<Object>) type.getJavaTypeDescriptor(),
 				collectionPath
 		);
 	}

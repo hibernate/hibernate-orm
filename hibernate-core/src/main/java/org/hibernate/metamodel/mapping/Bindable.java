@@ -8,13 +8,12 @@ package org.hibernate.metamodel.mapping;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 
+import org.hibernate.Incubating;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.sql.ast.Clause;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Contract for things at the domain/mapping level that can be bound into a JDBC
@@ -24,6 +23,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Steve Ebersole
  */
+@Incubating
 public interface Bindable {
 	/*
 	 * todo (6.0) : much of this contract uses Clause which (1) kludgy and (2) not always necessary
@@ -43,10 +43,16 @@ public interface Bindable {
 	 * }
 	 */
 
+	/**
+	 * The number of JDBC mappings
+	 */
 	default int getJdbcTypeCount() {
 		return forEachJdbcType( (index, jdbcMapping) -> {} );
 	}
 
+	/**
+	 * The list of JDBC mappings
+	 */
 	default List<JdbcMapping> getJdbcMappings() {
 		final List<JdbcMapping> results = new ArrayList<>();
 		forEachJdbcType( (index, jdbcMapping) -> results.add( jdbcMapping ) );
@@ -56,15 +62,17 @@ public interface Bindable {
 	// todo (6.0) : why did I do 2 forms of JDBC-type visiting?  in-flight change?
 
 	/**
-	 * Visit all of the SqlExpressableTypes associated with this this Bindable.
-	 * <p>
-	 * Used during cacheable SQL AST creation.
+	 * Visit each of JdbcMapping
+	 *
+	 * @apiNote Same as {@link #forEachJdbcType(int, IndexedConsumer)} starting from `0`
 	 */
-
 	default int forEachJdbcType(IndexedConsumer<JdbcMapping> action) {
 		return forEachJdbcType( 0, action );
 	}
 
+	/**
+	 * Visit each JdbcMapping starting from the given offset
+	 */
 	default int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}

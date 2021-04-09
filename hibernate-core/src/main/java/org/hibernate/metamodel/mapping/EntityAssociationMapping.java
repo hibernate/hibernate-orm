@@ -9,6 +9,7 @@ package org.hibernate.metamodel.mapping;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 
@@ -17,7 +18,7 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
  *
  * @author Steve Ebersole
  */
-public interface EntityAssociationMapping extends ModelPart, Association {
+public interface EntityAssociationMapping extends ModelPart, Association, TableGroupJoinProducer {
 	@Override
 	default String getFetchableName() {
 		return getPartName();

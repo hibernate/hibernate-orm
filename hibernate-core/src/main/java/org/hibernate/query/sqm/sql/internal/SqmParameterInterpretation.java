@@ -9,6 +9,7 @@ package org.hibernate.query.sqm.sql.internal;
 import java.util.List;
 import java.util.function.Function;
 
+import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
@@ -21,14 +22,16 @@ import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmParameterInterpretation implements Expression, DomainResultProducer {
+public class SqmParameterInterpretation implements Expression, DomainResultProducer, SqlTupleContainer {
 	private final SqmParameter sqmParameter;
 	private final QueryParameterImplementor<?> queryParameter;
 	private final MappingModelExpressable valueMapping;
@@ -44,15 +47,29 @@ public class SqmParameterInterpretation implements Expression, DomainResultProdu
 			Function<QueryParameterImplementor, QueryParameterBinding> queryParameterBindingResolver) {
 		this.sqmParameter = sqmParameter;
 		this.queryParameter = queryParameter;
-		this.valueMapping = valueMapping;
 		this.queryParameterBindingResolver = queryParameterBindingResolver;
+
+		if ( valueMapping instanceof EntityValuedFetchable ) {
+			this.valueMapping = ( (EntityValuedFetchable) valueMapping ).getEntityMappingType().getIdentifierMapping();
+		}
+		else {
+			this.valueMapping = valueMapping;
+		}
 
 		assert jdbcParameters != null;
 		assert jdbcParameters.size() > 0;
 
-		this.resolvedExpression = valueMapping instanceof EmbeddableValuedModelPart
-				? new SqlTuple( jdbcParameters, valueMapping )
-				: jdbcParameters.get( 0 );
+		this.resolvedExpression = determineResolvedExpression( jdbcParameters, this.valueMapping );
+	}
+
+	private Expression determineResolvedExpression(List<JdbcParameter> jdbcParameters, MappingModelExpressable valueMapping) {
+		if ( valueMapping instanceof EmbeddableValuedModelPart
+				|| valueMapping instanceof DiscriminatedAssociationModelPart ) {
+			return new SqlTuple( jdbcParameters, valueMapping );
+		}
+
+		assert jdbcParameters.size() == 1;
+		return jdbcParameters.get( 0 );
 	}
 
 	public Expression getResolvedExpression() {
@@ -98,5 +115,12 @@ public class SqmParameterInterpretation implements Expression, DomainResultProdu
 				resultVariable,
 				nodeType.getExpressableJavaTypeDescriptor()
 		);
+	}
+
+	@Override
+	public SqlTuple getSqlTuple() {
+		return resolvedExpression instanceof SqlTuple
+				? (SqlTuple) resolvedExpression
+				: null;
 	}
 }

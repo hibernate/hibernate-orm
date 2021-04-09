@@ -8,6 +8,7 @@ package org.hibernate.type.descriptor.converter;
 
 import java.io.Serializable;
 
+import org.hibernate.SharedSessionContract;
 import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
 import org.hibernate.type.descriptor.java.MutableMutabilityPlan;
 
@@ -43,7 +44,7 @@ public class AttributeConverterMutabilityPlanImpl<T> extends MutableMutabilityPl
 	}
 
 	@Override
-	public Serializable disassemble(T value) {
+	public Serializable disassemble(T value, SharedSessionContract session) {
 		if ( mutable ) {
 			return (Serializable) converter.toRelationalValue( value );
 		}
@@ -51,7 +52,7 @@ public class AttributeConverterMutabilityPlanImpl<T> extends MutableMutabilityPl
 	}
 
 	@Override
-	public T assemble(Serializable cached) {
+	public T assemble(Serializable cached, SharedSessionContract session) {
 		if ( mutable ) {
 			return (T) converter.toDomainValue( cached );
 		}

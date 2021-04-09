@@ -13,6 +13,7 @@ import org.hibernate.query.sqm.tree.cte.SqmCteContainer;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.NonAggregatedCompositeSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmAnyValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelation;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
@@ -137,6 +138,8 @@ public interface SemanticQueryWalker<T> {
 	T visitBasicValuedPath(SqmBasicValuedSimplePath<?> path);
 
 	T visitEmbeddableValuedPath(SqmEmbeddedValuedSimplePath<?> path);
+
+	T visitAnyValuedValuedPath(SqmAnyValuedSimplePath<?> path);
 
 	T visitNonAggregatedCompositeValuedPath(NonAggregatedCompositeSimplePath path);
 

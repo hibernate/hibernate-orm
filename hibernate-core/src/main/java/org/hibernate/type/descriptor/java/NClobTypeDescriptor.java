@@ -13,6 +13,7 @@ import java.sql.SQLException;
 import java.util.Comparator;
 
 import org.hibernate.HibernateException;
+import org.hibernate.SharedSessionContract;
 import org.hibernate.engine.jdbc.CharacterStream;
 import org.hibernate.engine.jdbc.NClobImplementer;
 import org.hibernate.engine.jdbc.NClobProxy;
@@ -42,11 +43,11 @@ public class NClobTypeDescriptor extends AbstractClassTypeDescriptor<NClob> {
 			return value;
 		}
 
-		public Serializable disassemble(NClob value) {
+		public Serializable disassemble(NClob value, SharedSessionContract session) {
 			throw new UnsupportedOperationException( "Clobs are not cacheable" );
 		}
 
-		public NClob assemble(Serializable cached) {
+		public NClob assemble(Serializable cached, SharedSessionContract session) {
 			throw new UnsupportedOperationException( "Clobs are not cacheable" );
 		}
 	}

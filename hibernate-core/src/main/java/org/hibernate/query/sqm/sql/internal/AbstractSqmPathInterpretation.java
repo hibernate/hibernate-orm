@@ -45,6 +45,10 @@ public abstract class AbstractSqmPathInterpretation<T> implements SqmPathInterpr
 		return mapping;
 	}
 
+	protected TableGroup getTableGroup() {
+		return tableGroup;
+	}
+
 	@Override
 	public DomainResult<T> createDomainResult(
 			String resultVariable,

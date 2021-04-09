@@ -12,6 +12,7 @@ import java.util.List;
 
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.sql.ast.SqlAstWalker;
+import org.hibernate.sql.ast.SqlTreeCreationLogger;
 
 /**
  * @author Steve Ebersole
@@ -23,6 +24,13 @@ public class SqlTuple implements Expression, SqlTupleContainer {
 	public SqlTuple(List<? extends Expression> expressions, MappingModelExpressable valueMapping) {
 		this.expressions = expressions;
 		this.valueMapping = valueMapping;
+
+		if ( expressions.size() < 2 ) {
+			SqlTreeCreationLogger.LOGGER.debugf(
+					"SqlTuple created with `%s` expression(s)",
+					expressions.size()
+			);
+		}
 	}
 
 	@Override

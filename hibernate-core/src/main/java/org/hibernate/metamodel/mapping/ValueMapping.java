@@ -8,6 +8,9 @@ package org.hibernate.metamodel.mapping;
 
 import java.util.Locale;
 
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaTypedExpressable;
+
 /**
  * Describes a mapping related to any part of the app's domain model - e.g.
  * an attribute, an entity identifier, collection elements, etc
@@ -18,13 +21,18 @@ import java.util.Locale;
  *
  * @author Steve Ebersole
  */
-public interface ValueMapping extends MappingModelExpressable {
+public interface ValueMapping extends MappingModelExpressable, JavaTypedExpressable {
 	/**
 	 * Descriptor for the type of this mapping
 	 */
 	MappingType getMappedType();
 
-	/**
+	@Override
+	default JavaTypeDescriptor<?> getExpressableJavaTypeDescriptor() {
+		return getMappedType().getMappedJavaTypeDescriptor();
+	}
+
+	/**return null;
 	 * Treat operation.  Asks the ValueMapping to treat itself as the
 	 * given `targetType`, if it can.
 	 *

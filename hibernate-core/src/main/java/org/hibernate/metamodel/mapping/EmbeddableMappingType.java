@@ -16,6 +16,7 @@ import java.util.function.Function;
 
 import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.SharedSessionContract;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.FetchTiming;
@@ -263,12 +264,12 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectableMapp
 						}
 
 						@Override
-						public Serializable disassemble(Object value) {
+						public Serializable disassemble(Object value, SharedSessionContract session) {
 							throw new NotYetImplementedFor6Exception( getClass() );
 						}
 
 						@Override
-						public Object assemble(Serializable cached) {
+						public Object assemble(Serializable cached, SharedSessionContract session) {
 							throw new NotYetImplementedFor6Exception( getClass() );
 						}
 					};

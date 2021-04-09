@@ -44,7 +44,7 @@ public class QueryKey implements Serializable {
 
 		return new QueryKey(
 				sqlQueryString,
-				parameterBindings.generateQueryKeyMemento(),
+				parameterBindings.generateQueryKeyMemento( persistenceContext ),
 				limitToUse.getFirstRow(),
 				limitToUse.getMaxRows(),
 				persistenceContext.getTenantIdentifier(),

@@ -93,12 +93,6 @@ public class TypeDefinition implements Serializable {
 		return parameters;
 	}
 
-	public Properties getParametersAsProperties() {
-		Properties properties = new Properties();
-		properties.putAll( parameters );
-		return properties;
-	}
-
 	public BasicValue.Resolution<?> resolve(
 			Map localConfigParameters,
 			MutabilityPlan explicitMutabilityPlan,
@@ -255,7 +249,7 @@ public class TypeDefinition implements Serializable {
 
 				@Override
 				public JavaTypeDescriptor<Object> getDomainJavaDescriptor() {
-					return resolved.getMappedJavaTypeDescriptor();
+					return (JavaTypeDescriptor) resolved.getMappedJavaTypeDescriptor();
 				}
 
 				@Override

@@ -392,8 +392,15 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			for ( Integrator integrator : serviceRegistry.getService( IntegratorService.class ).getIntegrators() ) {
 				integrator.disintegrate( this, serviceRegistry );
 				integratorObserver.integrators.remove( integrator );
+				serviceRegistry.close();
 			}
-			close();
+
+			try {
+				close();
+			}
+			catch (Exception closeException) {
+				LOG.debugf( "Eating error closing SF on failed attempt to start it" );
+			}
 			throw e;
 		}
 	}

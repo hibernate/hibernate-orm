@@ -345,12 +345,12 @@ public abstract class AbstractStandardBasicType<T>
 	@Override
 	@SuppressWarnings({ "unchecked" })
 	public final Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner) throws HibernateException {
-		return getMutabilityPlan().disassemble( (T) value );
+		return getMutabilityPlan().disassemble( (T) value, session );
 	}
 
 	@Override
 	public final Object assemble(Serializable cached, SharedSessionContractImplementor session, Object owner) throws HibernateException {
-		return getMutabilityPlan().assemble( cached );
+		return getMutabilityPlan().assemble( cached, session );
 	}
 
 	@Override

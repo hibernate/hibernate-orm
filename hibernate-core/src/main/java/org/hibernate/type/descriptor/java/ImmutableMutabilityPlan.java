@@ -8,6 +8,8 @@ package org.hibernate.type.descriptor.java;
 
 import java.io.Serializable;
 
+import org.hibernate.SharedSessionContract;
+
 /**
  * Mutability plan for immutable objects
  *
@@ -32,13 +34,13 @@ public class ImmutableMutabilityPlan<T> implements MutabilityPlan<T> {
 	}
 
 	@Override
-	public Serializable disassemble(T value) {
+	public Serializable disassemble(T value, SharedSessionContract session) {
 		return (Serializable) value;
 	}
 
 	@Override
 	@SuppressWarnings({ "unchecked" })
-	public T assemble(Serializable cached) {
+	public T assemble(Serializable cached, SharedSessionContract session) {
 		return (T) cached;
 	}
 }

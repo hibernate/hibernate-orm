@@ -14,6 +14,7 @@ import java.sql.SQLException;
 import java.util.Comparator;
 
 import org.hibernate.HibernateException;
+import org.hibernate.SharedSessionContract;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.BinaryStream;
 import org.hibernate.engine.jdbc.BlobImplementer;
@@ -48,12 +49,12 @@ public class BlobTypeDescriptor extends AbstractClassTypeDescriptor<Blob> {
 		}
 
 		@Override
-		public Serializable disassemble(Blob value) {
+		public Serializable disassemble(Blob value, SharedSessionContract session) {
 			throw new UnsupportedOperationException( "Blobs are not cacheable" );
 		}
 
 		@Override
-		public Blob assemble(Serializable cached) {
+		public Blob assemble(Serializable cached, SharedSessionContract session) {
 			throw new UnsupportedOperationException( "Blobs are not cacheable" );
 		}
 	}

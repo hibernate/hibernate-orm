@@ -6,23 +6,32 @@
  */
 package org.hibernate.query.internal;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 
 import org.hibernate.Incubating;
 import org.hibernate.QueryException;
 import org.hibernate.QueryParameterException;
 import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaTypedExpressable;
+import org.hibernate.type.descriptor.java.MutabilityPlan;
+import org.hibernate.type.descriptor.java.MutabilityPlanExposer;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Manages the group of QueryParameterBinding for a particular query.
@@ -36,7 +45,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	private final ParameterMetadataImplementor parameterMetadata;
 	private final boolean queryParametersValidationEnabled;
 
-	private Map<QueryParameter, QueryParameterBinding> parameterBindingMap;
+	private Map<QueryParameter<?>, QueryParameterBinding<?>> parameterBindingMap;
 
 	/**
 	 * Constructs a QueryParameterBindings based on the passed information
@@ -84,8 +93,8 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 		this.parameterBindingMap = new ConcurrentHashMap<>( parameterMetadata.getParameterCount() );
 	}
 
-	@SuppressWarnings({"WeakerAccess", "unchecked"})
-	protected QueryParameterBinding makeBinding(QueryParameterImplementor queryParameter) {
+	@SuppressWarnings({"WeakerAccess" })
+	protected QueryParameterBinding<?> makeBinding(QueryParameterImplementor<?> queryParameter) {
 		if ( parameterBindingMap == null ) {
 			parameterBindingMap = new IdentityHashMap<>();
 		}
@@ -99,15 +108,14 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 			);
 		}
 
-		final QueryParameterBinding binding = new QueryParameterBindingImpl( queryParameter, sessionFactory, null, queryParametersValidationEnabled );
+		final QueryParameterBinding<?> binding = new QueryParameterBindingImpl<>( queryParameter, sessionFactory, null, queryParametersValidationEnabled );
 		parameterBindingMap.put( queryParameter, binding );
 
 		return binding;
 	}
 
 	@Override
-	public boolean isBound(QueryParameterImplementor parameter) {
-		//noinspection unchecked
+	public boolean isBound(QueryParameterImplementor<?> parameter) {
 		return getBinding( parameter ).isBound();
 	}
 
@@ -115,17 +123,17 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	public <P> QueryParameterBinding<P> getBinding(QueryParameterImplementor<P> parameter) {
 		if ( parameterBindingMap == null ) {
 			//noinspection unchecked
-			return makeBinding( parameter );
+			return (QueryParameterBinding<P>) makeBinding( parameter );
 		}
 
-		QueryParameterBinding binding = parameterBindingMap.get( parameter );
+		QueryParameterBinding<?> binding = parameterBindingMap.get( parameter );
 
 		if ( binding == null ) {
 			binding = makeBinding( parameter );
 		}
 
 		//noinspection unchecked
-		return binding;
+		return (QueryParameterBinding<P>)  binding;
 	}
 
 	@Override
@@ -163,7 +171,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 
 	@Override
 	public boolean hasAnyMultiValuedBindings() {
-		for ( QueryParameterBinding binding : parameterBindingMap.values() ) {
+		for ( QueryParameterBinding<?> binding : parameterBindingMap.values() ) {
 			if ( binding.isMultiValued() ) {
 				return true;
 			}
@@ -173,7 +181,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	}
 
 	@Override
-	public void visitBindings(BiConsumer action) {
+	public void visitBindings(@SuppressWarnings("rawtypes") BiConsumer action) {
 		parameterMetadata.visitRegistrations(
 				queryParameterImplementor -> {
 					//noinspection unchecked
@@ -183,20 +191,76 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	}
 
 	@Override
-	public QueryKey.ParameterBindingsMemento generateQueryKeyMemento() {
+	public QueryKey.ParameterBindingsMemento generateQueryKeyMemento(SharedSessionContractImplementor persistenceContext) {
 		final int size = parameterBindingMap.size();
-		final Object[] values = new Object[size];
-		int i = 0;
+		final List<Object> allBindValues = new ArrayList<>( size );
 		int hashCode = 0;
-		for ( QueryParameterBinding binding : parameterBindingMap.values() ) {
-			JavaTypeDescriptor javaTypeDescriptor = binding.getBindType().getExpressableJavaTypeDescriptor();
-			final Object value = javaTypeDescriptor.getMutabilityPlan().deepCopy( binding.getBindValue() );
-			hashCode = 31 * hashCode + javaTypeDescriptor.extractHashCode( value );
-			values[i] = value;
+
+		for ( QueryParameterBinding<?> binding : parameterBindingMap.values() ) {
+			final MappingModelExpressable<?> mappingType = determineMappingType( binding, persistenceContext );
+			assert mappingType instanceof JavaTypedExpressable;
+
+			if ( binding.isMultiValued() ) {
+				for ( Object bindValue : binding.getBindValues() ) {
+					assert bindValue != null;
+
+					final Object disassembled = mappingType.disassemble( bindValue, persistenceContext );
+					allBindValues.add( disassembled );
+
+					//noinspection unchecked
+					final int valueHashCode = ( (JavaTypedExpressable<Object>) mappingType ).getExpressableJavaTypeDescriptor().extractHashCode( bindValue );
+
+					hashCode = 31 * hashCode + valueHashCode;
+				}
+			}
+			else {
+				final Object bindValue = binding.getBindValue();
+
+				final Object disassembled = mappingType.disassemble( bindValue, persistenceContext );
+				allBindValues.add( disassembled );
+
+				//noinspection unchecked
+				final int valueHashCode = ( (JavaTypedExpressable<Object>) mappingType ).getExpressableJavaTypeDescriptor().extractHashCode( bindValue );
+
+				hashCode = 31 * hashCode + valueHashCode;
+			}
 		}
 
-		return new ParameterBindingsMementoImpl( values, hashCode);
+		return new ParameterBindingsMementoImpl( allBindValues.toArray( new Object[0] ), hashCode );
 	}
+
+	private MappingModelExpressable<?> determineMappingType(QueryParameterBinding<?> binding, SharedSessionContractImplementor session) {
+		if ( binding.getBindType() != null ) {
+			if ( binding.getBindType() instanceof MappingModelExpressable ) {
+				//noinspection unchecked
+				return (MappingModelExpressable<Object>) binding.getBindType();
+			}
+		}
+
+		if ( binding.getType() != null ) {
+			return binding.getType();
+		}
+
+		final TypeConfiguration typeConfiguration = session.getFactory().getTypeConfiguration();
+
+		if ( binding.getBindType() instanceof JavaTypedExpressable ) {
+			final JavaTypedExpressable javaTypedExpressable = (JavaTypedExpressable) binding.getBindType();
+			final JavaTypeDescriptor jtd = javaTypedExpressable.getExpressableJavaTypeDescriptor();
+			if ( jtd.getJavaTypeClass() != null ) {
+				// avoid dynamic models
+				return typeConfiguration.getBasicTypeForJavaType( jtd.getJavaTypeClass() );
+			}
+		}
+
+		if ( binding.isMultiValued() ) {
+			final Object firstBindValue = binding.getBindValues().iterator().next();
+			return typeConfiguration.getBasicTypeForJavaType( firstBindValue.getClass() );
+		}
+		else {
+			return typeConfiguration.getBasicTypeForJavaType( binding.getBindValue().getClass() );
+		}
+	}
+
 
 	private static class ParameterBindingsMementoImpl implements QueryKey.ParameterBindingsMemento {
 		private final Object[] values;

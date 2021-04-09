@@ -14,6 +14,7 @@ import java.sql.Types;
 import java.util.Comparator;
 
 import org.hibernate.HibernateException;
+import org.hibernate.SharedSessionContract;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.CharacterStream;
 import org.hibernate.engine.jdbc.ClobImplementer;
@@ -173,11 +174,11 @@ public class ClobTypeDescriptor extends AbstractClassTypeDescriptor<Clob> {
 			return value;
 		}
 
-		public Serializable disassemble(Clob value) {
+		public Serializable disassemble(Clob value, SharedSessionContract session) {
 			throw new UnsupportedOperationException( "Clobs are not cacheable" );
 		}
 
-		public Clob assemble(Serializable cached) {
+		public Clob assemble(Serializable cached, SharedSessionContract session) {
 			throw new UnsupportedOperationException( "Clobs are not cacheable" );
 		}
 	}

@@ -22,6 +22,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Database;
@@ -287,6 +288,11 @@ public class DriverManagerConnectionProviderImpl
 		return true;
 	}
 
+	@Internal
+	public void releasePooledConnections() {
+		state.pool.releasePooledConnections();
+	}
+
 	public static class PooledConnections {
 
 		private final ConcurrentLinkedQueue<Connection> allConnections = new ConcurrentLinkedQueue<>();
@@ -453,6 +459,13 @@ public class DriverManagerConnectionProviderImpl
 
 		public String getUrl() {
 			return connectionCreator.getUrl();
+		}
+
+		@Internal
+		public void releasePooledConnections() {
+			for ( Connection connection : allConnections ) {
+				closeConnection( connection, null );
+			}
 		}
 
 		public static class Builder {

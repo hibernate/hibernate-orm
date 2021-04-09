@@ -8,6 +8,7 @@ package org.hibernate.boot.model.process.internal;
 
 import java.io.Serializable;
 
+import org.hibernate.SharedSessionContract;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.usertype.UserType;
 
@@ -33,13 +34,13 @@ public class UserTypeMutabilityPlanAdapter<T> implements MutabilityPlan<T> {
 	}
 
 	@Override
-	public Serializable disassemble(T value) {
+	public Serializable disassemble(T value, SharedSessionContract session) {
 		return userType.disassemble( value );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public T assemble(Serializable cached) {
+	public T assemble(Serializable cached, SharedSessionContract session) {
 		return (T) userType.assemble( cached, null );
 	}
 }

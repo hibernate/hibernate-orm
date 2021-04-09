@@ -1583,11 +1583,16 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		final SortOrder sortOrder = sortSpecification.getSortOrder();
 		if ( sortExpression instanceof SqlTupleContainer ) {
 			final SqlTuple sqlTuple = ( (SqlTupleContainer) sortExpression ).getSqlTuple();
-			String separator = NO_SEPARATOR;
-			for ( Expression expression : sqlTuple.getExpressions() ) {
-				appendSql( separator );
-				visitSortSpecification( expression, sortOrder, nullPrecedence );
-				separator = COMA_SEPARATOR;
+			if ( sqlTuple != null ){
+				String separator = NO_SEPARATOR;
+				for ( Expression expression : sqlTuple.getExpressions() ) {
+					appendSql( separator );
+					visitSortSpecification( expression, sortOrder, nullPrecedence );
+					separator = COMA_SEPARATOR;
+				}
+			}
+			else {
+				visitSortSpecification( sortExpression, sortOrder, nullPrecedence );
 			}
 		}
 		else {
@@ -3508,21 +3513,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected final SqlTuple getTuple(Expression expression) {
-		if ( expression instanceof SqlTuple ) {
-			return (SqlTuple) expression;
+		if ( expression instanceof SqlTupleContainer ) {
+			return ( (SqlTupleContainer) expression ).getSqlTuple();
 		}
-		else if ( expression instanceof SqmParameterInterpretation ) {
-			final Expression resolvedExpression = ( (SqmParameterInterpretation) expression ).getResolvedExpression();
-			if ( resolvedExpression instanceof SqlTuple ) {
-				return (SqlTuple) resolvedExpression;
-			}
-		}
-		else if ( expression instanceof EmbeddableValuedPathInterpretation<?> ) {
-			return ( (EmbeddableValuedPathInterpretation<?>) expression ).getSqlExpression();
-		}
-		else if ( expression instanceof NonAggregatedCompositeValuedPathInterpretation<?> ) {
-			return ( (NonAggregatedCompositeValuedPathInterpretation<?>) expression ).getSqlExpression();
-		}
+
 		return null;
 	}
 
@@ -3799,11 +3793,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		// If we decide to support that ^^  we should validate that *both* sides of the
 		//		predicate are multi-valued parameters.  because...
 		//		well... its stupid :)
-//		if ( relationalPredicate.getLeftHandExpression() instanceof GenericParameter ) {
-//			final GenericParameter lhs =
-//			// transform this into a
-//		}
-//
+
 		final SqlTuple lhsTuple;
 		final SqlTuple rhsTuple;
 		if ( ( lhsTuple = getTuple( comparisonPredicate.getLeftHandExpression() ) ) != null ) {

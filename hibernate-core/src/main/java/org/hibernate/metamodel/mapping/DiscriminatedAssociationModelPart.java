@@ -17,8 +17,6 @@ import org.hibernate.sql.results.graph.FetchableContainer;
  * Commonality between {@link org.hibernate.annotations.Any} and
  * {@link org.hibernate.annotations.ManyToAny} mappings.
  *
- * todo (6.0) : atm `@ManyToAny` is not implemented
- *
  * @author Steve Ebersole
  */
 public interface DiscriminatedAssociationModelPart extends Fetchable, FetchableContainer {

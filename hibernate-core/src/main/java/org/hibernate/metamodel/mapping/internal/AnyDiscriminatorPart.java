@@ -20,6 +20,8 @@ import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
+import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
@@ -45,7 +47,7 @@ import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnRefere
  *
  * @author Steve Ebersole
  */
-public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions {
+public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions, SelectableMapping {
 	public static final String ROLE_NAME = EntityDiscriminatorMapping.ROLE_NAME;
 
 	private final NavigableRole navigableRole;
@@ -160,6 +162,17 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions 
 	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
 		action.accept( offset, jdbcMapping() );
 		return getJdbcTypeCount();
+	}
+
+	@Override
+	public int forEachSelectable(SelectableConsumer consumer) {
+		return forEachSelectable( 0, consumer );
+	}
+
+	@Override
+	public int forEachSelectable(int offset, SelectableConsumer consumer) {
+		consumer.accept( offset, this );
+		return 1;
 	}
 
 	@Override

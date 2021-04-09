@@ -7,7 +7,6 @@
 package org.hibernate.metamodel.mapping;
 
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.sql.results.graph.Fetchable;
 
 /**
  * Describes an attribute with a property access.

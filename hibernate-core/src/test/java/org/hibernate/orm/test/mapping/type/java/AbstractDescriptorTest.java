@@ -72,8 +72,8 @@ public abstract class AbstractDescriptorTest<T> extends BaseUnitTestCase {
 	public void testMutabilityPlan() {
 		assertTrue( shouldBeMutable() == typeDescriptor.getMutabilityPlan().isMutable() );
 
-		if ( Clob.class.isInstance( testData.copyOfOriginalValue )
-				|| Blob.class.isInstance( testData.copyOfOriginalValue ) ) {
+		if ( testData.copyOfOriginalValue instanceof Clob
+				|| testData.copyOfOriginalValue instanceof Blob ) {
 			return;
 		}
 
@@ -84,11 +84,13 @@ public abstract class AbstractDescriptorTest<T> extends BaseUnitTestCase {
 		}
 
 		// ensure the symmetry of assemble/disassebly
-		Serializable cached = typeDescriptor.getMutabilityPlan().disassemble( testData.copyOfOriginalValue );
+		//		NOTE: these should not use Session, so we just pass null
+
+		Serializable cached = typeDescriptor.getMutabilityPlan().disassemble( testData.copyOfOriginalValue, null );
 		if ( ! shouldBeMutable() ) {
 			assertTrue( cached == testData.copyOfOriginalValue );
 		}
-		T reassembled = typeDescriptor.getMutabilityPlan().assemble( cached );
+		T reassembled = typeDescriptor.getMutabilityPlan().assemble( cached, null );
 		assertTrue( typeDescriptor.areEqual( testData.originalValue, reassembled ) );
 	}
 }

@@ -47,6 +47,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.internal.PropertyAccessMapImpl;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.tuple.entity.EntityMetamodel;
+import org.hibernate.type.AnyType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.EntityType;
@@ -220,13 +221,12 @@ public class AttributeFactory {
 					return context.locateEntityType( entityType.getAssociatedEntityName() );
 				}
 
-				assert type instanceof CompositeType;
-				final JavaTypeDescriptor<Y> objectJtd = (JavaTypeDescriptor<Y>) context
-						.getTypeConfiguration()
+				assert type instanceof AnyType;
+				final AnyType anyType = (AnyType) type;
+				final JavaTypeDescriptor<Object> baseJtd = context.getTypeConfiguration()
 						.getJavaTypeDescriptorRegistry()
-						.getDescriptor( Object.class );
-
-				return new AnyMappingDomainTypeImpl<>( objectJtd );
+						.resolveDescriptor( anyType.getReturnedClass() );
+				return new AnyMappingDomainTypeImpl<>( anyType, baseJtd );
 			}
 			case EMBEDDABLE: {
 				final Component component = (Component) typeContext.getHibernateValue();

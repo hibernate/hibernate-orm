@@ -6516,11 +6516,12 @@ public abstract class AbstractEntityPersister
 			);
 		}
 		else if ( attrType instanceof AnyType ) {
-			// todo (6.0) : determine a "base JTD"?
 			final JavaTypeDescriptor<Object> baseAssociationJtd = sessionFactory
 					.getTypeConfiguration()
 					.getJavaTypeDescriptorRegistry()
 					.getDescriptor( Object.class );
+
+			final AnyType anyType = (AnyType) attrType;
 
 			return new DiscriminatedAssociationAttributeMapping(
 					navigableRole.append( bootProperty.getName() ),
@@ -6529,7 +6530,7 @@ public abstract class AbstractEntityPersister
 					stateArrayPosition,
 					entityMappingType -> new StateArrayContributorMetadata() {
 
-						private final MutabilityPlan<?> mutabilityPlan = baseAssociationJtd.getMutabilityPlan();
+						private final MutabilityPlan<?> mutabilityPlan = new DiscriminatedAssociationAttributeMapping.MutabilityPlanImpl( anyType );
 
 						private final boolean nullable = bootProperty.isOptional();
 						private final boolean insertable = bootProperty.isInsertable();

@@ -26,6 +26,8 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaTypedExpressable;
 
 /**
  * Represents a literal in the SQL AST.  This form accepts a {@link JdbcMapping} and acts
@@ -35,7 +37,7 @@ import org.hibernate.sql.results.graph.basic.BasicResult;
  *
  * @author Steve Ebersole
  */
-public class JdbcLiteral<T> implements Literal, MappingModelExpressable<T>, DomainResultProducer<T> {
+public class JdbcLiteral<T> implements Literal, MappingModelExpressable<T>, DomainResultProducer<T>, JavaTypedExpressable<T> {
 	private final T literalValue;
 	private final JdbcMapping jdbcMapping;
 
@@ -157,4 +159,8 @@ public class JdbcLiteral<T> implements Literal, MappingModelExpressable<T>, Doma
 		);
 	}
 
+	@Override
+	public JavaTypeDescriptor<T> getExpressableJavaTypeDescriptor() {
+		return jdbcMapping.getJavaTypeDescriptor();
+	}
 }

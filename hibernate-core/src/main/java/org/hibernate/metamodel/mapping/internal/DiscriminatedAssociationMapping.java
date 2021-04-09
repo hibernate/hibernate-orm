@@ -10,7 +10,10 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStyle;
@@ -23,8 +26,10 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.metamodel.RuntimeMetamodels;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -38,6 +43,7 @@ import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
+import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.AnyType;
@@ -186,6 +192,99 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		}
 
 		return null;
+	}
+
+	public void forEachConcreteType(Consumer<EntityMappingType> consumer) {
+		discriminatorValueMappings.forEach( valueMapping -> consumer.accept( valueMapping.entityMapping ) );
+	}
+
+	public EntityMappingType findConcrete(Function<EntityMappingType, EntityMappingType> matcher) {
+		for ( ValueMapping discriminatorValueMapping : discriminatorValueMappings ) {
+			final EntityMappingType matched = matcher.apply( discriminatorValueMapping.entityMapping );
+			if ( matched != null ) {
+				return matched;
+			}
+		}
+
+		return null;
+	}
+
+	public <T> T fromConcrete(Function<EntityMappingType,T> matcher) {
+		for ( ValueMapping discriminatorValueMapping : discriminatorValueMappings ) {
+			final T matched = matcher.apply( discriminatorValueMapping.entityMapping );
+			if ( matched != null ) {
+				return matched;
+			}
+		}
+		return null;
+	}
+
+	public ModelPart findSubPart(String name, EntityMappingType treatTarget) {
+		if ( AnyDiscriminatorPart.ROLE_NAME.equals( name ) ) {
+			return getDiscriminatorPart();
+		}
+
+		if ( AnyKeyPart.ROLE_NAME.equals( name ) ) {
+			return getKeyPart();
+		}
+
+		if ( treatTarget != null ) {
+			// make sure the treat-target is one of the mapped entities
+			ensureMapped( treatTarget );
+
+			return resolveAssociatedSubPart( name, treatTarget );
+		}
+
+		for ( ValueMapping discriminatorValueMapping : discriminatorValueMappings ) {
+			try {
+				final ModelPart subPart = resolveAssociatedSubPart( name, discriminatorValueMapping.entityMapping );
+				if ( subPart != null ) {
+					return subPart;
+				}
+			}
+			catch (Exception e) {
+				//noinspection UnnecessaryContinue
+				continue;
+			}
+		}
+
+		return null;
+	}
+
+	private ModelPart resolveAssociatedSubPart(String name, EntityMappingType entityMapping) {
+		final EntityIdentifierMapping identifierMapping = entityMapping.getIdentifierMapping();
+
+		if ( identifierMapping.getPartName().equals( name ) ) {
+			return getKeyPart();
+		}
+
+		if ( identifierMapping instanceof SingleAttributeIdentifierMapping ) {
+			final String idAttrName = ( (SingleAttributeIdentifierMapping) identifierMapping ).getAttributeName();
+			if ( idAttrName.equals( name ) ) {
+				return getKeyPart();
+			}
+		}
+
+		return entityMapping.findSubPart( name );
+	}
+
+	private void ensureMapped(EntityMappingType treatTarget) {
+		assert treatTarget != null;
+
+		for ( ValueMapping mapping : discriminatorValueMappings ) {
+			if ( mapping.entityMapping.equals( treatTarget ) ) {
+				return;
+			}
+		}
+
+		throw new IllegalArgumentException(
+				String.format(
+						Locale.ROOT,
+						"Treat-target [`%s`] is not not an entity mapped by ANY value : %s",
+						treatTarget.getEntityName(),
+						modelPart.getNavigableRole()
+				)
+		);
 	}
 
 	public MappingType getPartMappingType() {

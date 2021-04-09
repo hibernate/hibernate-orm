@@ -151,15 +151,7 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 
 	@Override
 	public ModelPart findSubPart(String name, EntityMappingType treatTargetType) {
-		if ( AnyDiscriminatorPart.ROLE_NAME.equals( name ) ) {
-			return getDiscriminatorPart();
-		}
-
-		if ( AnyKeyPart.ROLE_NAME.equals( name ) ) {
-			return getKeyPart();
-		}
-
-		return null;
+		return discriminatorMapping.findSubPart( name, treatTargetType );
 	}
 
 	@Override

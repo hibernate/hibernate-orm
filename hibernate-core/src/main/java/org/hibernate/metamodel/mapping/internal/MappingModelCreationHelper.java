@@ -18,6 +18,7 @@ import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.SharedSessionContract;
 import org.hibernate.collection.internal.StandardArraySemantics;
 import org.hibernate.collection.internal.StandardBagSemantics;
 import org.hibernate.collection.internal.StandardIdentifierBagSemantics;
@@ -488,12 +489,12 @@ public class MappingModelCreationHelper {
 						}
 
 						@Override
-						public Serializable disassemble(Object value) {
+						public Serializable disassemble(Object value, SharedSessionContract session) {
 							throw new NotYetImplementedFor6Exception( getClass() );
 						}
 
 						@Override
-						public Object assemble(Serializable cached) {
+						public Object assemble(Serializable cached, SharedSessionContract session) {
 							throw new NotYetImplementedFor6Exception( getClass() );
 						}
 					};

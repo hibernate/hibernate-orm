@@ -90,8 +90,8 @@ import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescript
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
-import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
 import org.hibernate.query.sqm.spi.BaseSemanticQueryWalker;
+import org.hibernate.query.sqm.sql.internal.DiscriminatedAssociationPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.BasicValuedPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.query.sqm.sql.internal.EmbeddableValuedPathInterpretation;
@@ -112,6 +112,7 @@ import org.hibernate.query.sqm.tree.cte.SqmSearchClauseSpecification;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmSpecificPluralPartPath;
 import org.hibernate.query.sqm.tree.domain.NonAggregatedCompositeSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmAnyValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
@@ -2080,20 +2081,24 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 									: null
 					);
 
-					assert subPart instanceof TableGroupJoinProducer;
-					final TableGroupJoinProducer joinProducer = (TableGroupJoinProducer) subPart;
-					final TableGroupJoin tableGroupJoin = joinProducer.createTableGroupJoin(
-							joinedPath.getNavigablePath(),
-							tableGroup,
-							null,
-							tableGroup.isInnerJoinPossible() ? SqlAstJoinType.INNER : SqlAstJoinType.LEFT,
-							null,
-							this
-					);
+					if ( subPart instanceof TableGroupJoinProducer ) {
+						final TableGroupJoinProducer joinProducer = (TableGroupJoinProducer) subPart;
+						final TableGroupJoin tableGroupJoin = joinProducer.createTableGroupJoin(
+								joinedPath.getNavigablePath(),
+								tableGroup,
+								null,
+								tableGroup.isInnerJoinPossible() ? SqlAstJoinType.INNER : SqlAstJoinType.LEFT,
+								null,
+								this
+						);
 
-					fromClauseIndex.register( joinedPath, tableGroupJoin.getJoinedGroup() );
+						fromClauseIndex.register( joinedPath, tableGroupJoin.getJoinedGroup() );
 
-					consumeImplicitJoins( joinedPath, tableGroupJoin.getJoinedGroup(), implicitJoinChecker );
+						consumeImplicitJoins( joinedPath, tableGroupJoin.getJoinedGroup(), implicitJoinChecker );
+					}
+					else {
+						fromClauseIndex.register( joinedPath, tableGroup );
+					}
 				}
 		);
 	}
@@ -2240,6 +2245,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public SqmPathInterpretation<?> visitEmbeddableValuedPath(SqmEmbeddedValuedSimplePath<?> sqmPath) {
 		return EmbeddableValuedPathInterpretation.from( sqmPath, this, this );
+	}
+
+	@Override
+	public SqmPathInterpretation visitAnyValuedValuedPath(SqmAnyValuedSimplePath<?> path) {
+		return DiscriminatedAssociationPathInterpretation.from( path, this );
 	}
 
 	@Override

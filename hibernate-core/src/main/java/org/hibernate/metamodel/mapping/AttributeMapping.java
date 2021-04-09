@@ -8,13 +8,15 @@ package org.hibernate.metamodel.mapping;
 
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.sql.results.graph.Fetchable;
+import org.hibernate.type.descriptor.java.MutabilityPlan;
+import org.hibernate.type.descriptor.java.MutabilityPlanExposer;
 
 /**
  * Describes an attribute at the mapping model level.
  *
  * @author Steve Ebersole
  */
-public interface AttributeMapping extends ModelPart, ValueMapping, Fetchable, PropertyBasedMapping {
+public interface AttributeMapping extends ModelPart, ValueMapping, Fetchable, PropertyBasedMapping, MutabilityPlanExposer {
 	String getAttributeName();
 
 	@Override
@@ -31,5 +33,10 @@ public interface AttributeMapping extends ModelPart, ValueMapping, Fetchable, Pr
 	@Override
 	default EntityMappingType findContainingEntityMapping() {
 		return getDeclaringType().findContainingEntityMapping();
+	}
+
+	@Override
+	default MutabilityPlan<?> getExposedMutabilityPlan() {
+		return getAttributeMetadataAccess().resolveAttributeMetadata( null ).getMutabilityPlan();
 	}
 }

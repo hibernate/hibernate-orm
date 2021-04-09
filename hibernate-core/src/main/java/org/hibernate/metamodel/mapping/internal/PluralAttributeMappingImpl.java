@@ -960,19 +960,27 @@ public class PluralAttributeMappingImpl
 		if ( nature == CollectionPart.Nature.ELEMENT ) {
 			return elementDescriptor;
 		}
-		else if ( nature == CollectionPart.Nature.INDEX ) {
+
+		if ( nature == CollectionPart.Nature.INDEX ) {
 			return indexDescriptor;
 		}
-		else if ( nature == CollectionPart.Nature.ID ) {
+
+		if ( nature == CollectionPart.Nature.ID ) {
 			return identifierDescriptor;
 		}
 
 		if ( elementDescriptor instanceof EntityCollectionPart ) {
 			return ( (EntityCollectionPart) elementDescriptor ).findSubPart( name );
 		}
-		else if ( elementDescriptor instanceof EmbeddedCollectionPart ) {
+
+		if ( elementDescriptor instanceof EmbeddedCollectionPart ) {
 			return ( (EmbeddedCollectionPart) elementDescriptor ).findSubPart( name, treatTargetType );
 		}
+
+		if ( elementDescriptor instanceof DiscriminatedCollectionPart ) {
+			return ( (DiscriminatedCollectionPart) elementDescriptor ).findSubPart( name, treatTargetType );
+		}
+
 		return null;
 	}
 

@@ -16,6 +16,7 @@ import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationState;
+import org.hibernate.query.sqm.UnknownPathException;
 
 /**
  * @author Steve Ebersole
@@ -58,11 +59,20 @@ public class SqmAnyValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 			String name,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		return null;
+		final SqmPathSource<?> subPathSource = getReferencedPathSource().findSubPathSource( name );
+		if ( subPathSource == null ) {
+			throw UnknownPathException.unknownSubPath( this, name );
+		}
+
+		return subPathSource.createSqmPath( this, creationState );
+
 	}
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Visitation
 
 	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {
-		return null;
+		return walker.visitAnyValuedValuedPath( this );
 	}
 }

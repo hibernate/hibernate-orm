@@ -8,10 +8,8 @@ import javax.persistence.Table;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 
-import org.hibernate.dialect.PostgreSQLDialect;
-
-import org.hibernate.testing.junit5.EntityManagerFactoryBasedFunctionalTest;
-import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,17 +17,16 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
-public class CriteriaLiteralWithSingleQuoteTest extends EntityManagerFactoryBasedFunctionalTest {
-
-	@Override
-	public Class[] getAnnotatedClasses() {
-		return new Class[] { Student.class };
-	}
+@Jpa(
+		annotatedClasses = {
+				CriteriaLiteralWithSingleQuoteTest.Student.class
+		}
+)
+public class CriteriaLiteralWithSingleQuoteTest {
 
 	@Test
-	public void literalSingleQuoteTest() {
-
-		inTransaction(
+	public void literalSingleQuoteTest(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
 				entityManager -> {
 					CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 					CriteriaQuery<Object> query = cb.createQuery();
@@ -41,9 +38,8 @@ public class CriteriaLiteralWithSingleQuoteTest extends EntityManagerFactoryBase
 	}
 
 	@Test
-	public void literalProjectionTest() {
-
-		inTransaction(
+	public void literalProjectionTest(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
 				entityManager -> {
 					CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 					CriteriaQuery<Object> query = cb.createQuery();
@@ -55,8 +51,8 @@ public class CriteriaLiteralWithSingleQuoteTest extends EntityManagerFactoryBase
 	}
 
 	@Test
-	public void testLiteralProjectionAndGroupBy() {
-		inTransaction(
+	public void testLiteralProjectionAndGroupBy(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
 				entityManager -> {
 
 					final String literal = "' || aValue || '";
@@ -74,8 +70,8 @@ public class CriteriaLiteralWithSingleQuoteTest extends EntityManagerFactoryBase
 	}
 
 	@BeforeEach
-	public void setupData() {
-		inTransaction(
+	public void setupData(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
 				entityManager -> {
 					Student student = new Student();
 					student.setAValue( "A Value" );
@@ -85,8 +81,8 @@ public class CriteriaLiteralWithSingleQuoteTest extends EntityManagerFactoryBase
 	}
 
 	@AfterEach
-	public void cleanupData() {
-		inTransaction(
+	public void cleanupData(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
 				entityManager -> {
 					entityManager.createQuery( "delete from Student" ).executeUpdate();
 				}

@@ -21,17 +21,19 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.junit5.BaseUnitTest;
-import org.junit.Assert;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /**
  * Test harness for ANN-742.
  *
  * @author Hardy Ferentschik
- *
  */
-public class NullablePrimaryKeyTest extends BaseUnitTest {
+@BaseUnitTest
+public class NullablePrimaryKeyTest {
 
 	@Test
 	public void testGeneratedSql() {
@@ -44,18 +46,21 @@ public class NullablePrimaryKeyTest extends BaseUnitTest {
 
 		try {
 			MetadataSources ms = new MetadataSources( serviceRegistry );
-			ms.addAnnotatedClass( Address.class);
-			ms.addAnnotatedClass( Person.class);
+			ms.addAnnotatedClass( Address.class );
+			ms.addAnnotatedClass( Person.class );
 
 			final Metadata metadata = ms.buildMetadata();
-			final List<String> commands = new SchemaCreatorImpl( serviceRegistry ).generateCreationCommands( metadata, false );
+			final List<String> commands = new SchemaCreatorImpl( serviceRegistry ).generateCreationCommands(
+					metadata,
+					false
+			);
 			String expectedMappingTableSql = "create table personAddress (address_id bigint, " +
 					"person_id bigint not null, primary key (person_id))";
 
-            Assert.assertEquals( "Wrong SQL", expectedMappingTableSql, commands.get( 2 ) );
+			assertEquals( "Wrong SQL", expectedMappingTableSql, commands.get( 2 ) );
 		}
 		catch (Exception e) {
-			Assert.fail(e.getMessage());
+			fail( e.getMessage() );
 		}
 		finally {
 			ServiceRegistryBuilder.destroy( serviceRegistry );

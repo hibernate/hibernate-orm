@@ -6,7 +6,6 @@
  */
 package org.hibernate.orm.test.mapping.onetoone;
 
-import java.util.Map;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.EntityManagerFactory;
@@ -15,42 +14,45 @@ import javax.persistence.JoinColumn;
 import javax.persistence.MapsId;
 import javax.persistence.OneToOne;
 
-
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.resource.jdbc.spi.StatementInspector;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
-import org.hibernate.testing.junit5.EntityManagerFactoryBasedFunctionalTest;
-
+import org.hibernate.testing.orm.jpa.NonStringValueSettingProvider;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
 /**
  * @author Vlad Mihalcea
  */
-public class OneToOneMapsIdJoinColumnTest extends EntityManagerFactoryBasedFunctionalTest {
+@Jpa(
+		annotatedClasses = {
+				OneToOneMapsIdJoinColumnTest.Person.class,
+				OneToOneMapsIdJoinColumnTest.PersonDetails.class
+		},
+		nonStringValueSettingProviders = { OneToOneMapsIdJoinColumnTest.SQLStatementInspectorProvider.class }
+)
+public class OneToOneMapsIdJoinColumnTest {
 
+	public static class SQLStatementInspectorProvider extends NonStringValueSettingProvider {
+		@Override
+		public String getKey() {
+			return AvailableSettings.STATEMENT_INSPECTOR;
+		}
 
-	@Override
-	protected void applySettings(Map<Object, Object> settings) {
-		settings.put( AvailableSettings.STATEMENT_INSPECTOR, SQLStatementInspector.class );
-	}
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Person.class,
-				PersonDetails.class
-		};
+		@Override
+		public Object getValue() {
+			return SQLStatementInspector.class;
+		}
 	}
 
 	@BeforeEach
-	public void setUp(){
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void setUp(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 
 			Person person = new Person( "ABC-123" );
 
@@ -60,16 +62,15 @@ public class OneToOneMapsIdJoinColumnTest extends EntityManagerFactoryBasedFunct
 			person.setDetails( details );
 			entityManager.persist( person );
 
-			return person;
 		} );
 	}
 
 	@Test
-	public void testLifecycle() {
-		SQLStatementInspector statementInspector = getSqlStatementInspector();
+	public void testLifecycle(EntityManagerFactoryScope scope) {
+		SQLStatementInspector statementInspector = getSqlStatementInspector( scope );
 
 		statementInspector.clear();
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Person person = entityManager.find( Person.class, "ABC-123" );
 			statementInspector.assertExecutedCount( 1 );
 			statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 1 );
@@ -79,19 +80,19 @@ public class OneToOneMapsIdJoinColumnTest extends EntityManagerFactoryBasedFunct
 			PersonDetails details = entityManager.find( PersonDetails.class, "ABC-123" );
 			statementInspector.assertExecutedCount( 0 );
 
-			assertSame(details.getPerson(), person);
+			assertSame( details.getPerson(), person );
 			statementInspector.assertExecutedCount( 0 );
 		} );
 	}
 
-	private SQLStatementInspector getSqlStatementInspector() {
-		EntityManagerFactory entityManagerFactory = entityManagerFactory();
+	private SQLStatementInspector getSqlStatementInspector(EntityManagerFactoryScope scope) {
+		EntityManagerFactory entityManagerFactory = scope.getEntityManagerFactory();
 		SessionFactory sessionFactory = entityManagerFactory.unwrap( SessionFactory.class );
 		return (SQLStatementInspector) sessionFactory.getSessionFactoryOptions().getStatementInspector();
 	}
 
 	@Entity(name = "Person")
-	public static class Person  {
+	public static class Person {
 
 		@Id
 		private String id;
@@ -99,7 +100,8 @@ public class OneToOneMapsIdJoinColumnTest extends EntityManagerFactoryBasedFunct
 		@OneToOne(mappedBy = "person", cascade = CascadeType.PERSIST, optional = false)
 		private PersonDetails details;
 
-		public Person() {}
+		public Person() {
+		}
 
 		public Person(String id) {
 			this.id = id;
@@ -120,7 +122,7 @@ public class OneToOneMapsIdJoinColumnTest extends EntityManagerFactoryBasedFunct
 	}
 
 	@Entity(name = "PersonDetails")
-	public static class PersonDetails  {
+	public static class PersonDetails {
 
 		@Id
 		private String id;

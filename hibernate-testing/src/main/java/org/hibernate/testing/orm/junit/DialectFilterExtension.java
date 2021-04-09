@@ -11,7 +11,6 @@ import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
 
-import org.hibernate.testing.junit5.DialectContext;
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;
 import org.junit.jupiter.api.extension.ExecutionCondition;
 import org.junit.jupiter.api.extension.ExtensionContext;

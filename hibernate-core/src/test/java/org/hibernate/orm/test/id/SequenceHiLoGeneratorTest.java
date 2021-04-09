@@ -24,8 +24,7 @@ import org.hibernate.internal.SessionImpl;
 import org.hibernate.type.StandardBasicTypes;
 
 import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
-import org.hibernate.testing.junit5.BaseUnitTest;
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks.SupportsSequences;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.junit.jupiter.api.AfterEach;
@@ -42,7 +41,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 @SuppressWarnings({"deprecation"})
 @RequiresDialectFeature(feature = SupportsSequences.class)
-public class SequenceHiLoGeneratorTest extends BaseUnitTest {
+@BaseUnitTest
+public class SequenceHiLoGeneratorTest {
 	private static final String TEST_SEQUENCE = "test_sequence";
 
 	private StandardServiceRegistry serviceRegistry;

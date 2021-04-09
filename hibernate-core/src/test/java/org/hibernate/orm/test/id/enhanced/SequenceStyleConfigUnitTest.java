@@ -32,11 +32,11 @@ import org.hibernate.id.enhanced.TableStructure;
 import org.hibernate.type.StandardBasicTypes;
 
 import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
-import org.hibernate.testing.junit5.BaseUnitTest;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.Matchers.instanceOf;
-import static org.hibernate.testing.junit5.ExtraAssertions.assertClassAssignability;
+import static org.hibernate.testing.orm.junit.ExtraAssertions.assertClassAssignability;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -47,7 +47,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  *
  * @author Steve Ebersole
  */
-public class SequenceStyleConfigUnitTest extends BaseUnitTest {
+@BaseUnitTest
+public class SequenceStyleConfigUnitTest {
 
 	/**
 	 * Test all params defaulted with a dialect supporting pooled sequences

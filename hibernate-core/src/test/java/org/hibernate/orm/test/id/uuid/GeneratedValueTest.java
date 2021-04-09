@@ -26,10 +26,10 @@ import org.hibernate.id.UUIDGenerator;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 
-import org.hibernate.testing.junit5.BaseUnitTest;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.junit5.ExtraAssertions.assertTyping;
+import static org.hibernate.testing.orm.junit.ExtraAssertions.assertTyping;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -38,7 +38,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  *
  * @author Steve Ebersole
  */
-public class GeneratedValueTest extends BaseUnitTest {
+@BaseUnitTest
+public class GeneratedValueTest {
 	@Test
 	public void testGeneratedUuidId() throws Exception {
 		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()

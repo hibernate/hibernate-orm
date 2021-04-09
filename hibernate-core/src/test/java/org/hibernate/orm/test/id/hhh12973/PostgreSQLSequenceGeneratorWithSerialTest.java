@@ -29,7 +29,7 @@ import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.internal.CoreMessageLogger;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit5.EntityManagerFactoryBasedFunctionalTest;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -38,7 +38,6 @@ import org.junit.jupiter.api.Test;
 
 import org.jboss.logging.Logger;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -51,10 +50,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class PostgreSQLSequenceGeneratorWithSerialTest extends EntityManagerFactoryBasedFunctionalTest {
 
 	@Rule
-	public LoggerInspectionRule logInspection = new LoggerInspectionRule( Logger.getMessageLogger( CoreMessageLogger.class,
-																								   SequenceStyleGenerator.class
-																										   .getName()
-	) );
+	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
+			Logger.getMessageLogger(
+					CoreMessageLogger.class,
+					SequenceStyleGenerator.class.getName()
+			) );
 
 	private Triggerable triggerable = logInspection.watchForLogMessages( "HHH000497:" );
 
@@ -84,9 +84,9 @@ public class PostgreSQLSequenceGeneratorWithSerialTest extends EntityManagerFact
 			Configuration config = new Configuration();
 			sessionFactory = config.buildSessionFactory( ssr );
 
-			try(Session session = sessionFactory.openSession()) {
+			try (Session session = sessionFactory.openSession()) {
 				session.doWork( connection -> {
-					try(Statement statement = connection.createStatement()) {
+					try (Statement statement = connection.createStatement()) {
 						statement.execute( DROP_TABLE );
 						statement.execute( DROP_SEQUENCE );
 						statement.execute( CREATE_TABLE );
@@ -104,7 +104,7 @@ public class PostgreSQLSequenceGeneratorWithSerialTest extends EntityManagerFact
 		settings.put( AvailableSettings.HBM2DDL_DROP_SCRIPT_SOURCE, new StringReader(
 				DROP_TABLE + ";" + DROP_SEQUENCE
 		) );
-		settings.put( AvailableSettings.SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY, SequenceMismatchStrategy.FIX);
+		settings.put( AvailableSettings.SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY, SequenceMismatchStrategy.FIX );
 	}
 
 	@Override
@@ -119,7 +119,7 @@ public class PostgreSQLSequenceGeneratorWithSerialTest extends EntityManagerFact
 
 		final int ITERATIONS = 51;
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		inTransaction( entityManager -> {
 			for ( int i = 1; i <= ITERATIONS; i++ ) {
 				ApplicationConfiguration model = new ApplicationConfiguration();
 

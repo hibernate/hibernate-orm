@@ -13,10 +13,10 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 
-import org.hibernate.testing.junit5.BaseUnitTest;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.junit.jupiter.api.Test;
 
-import static junit.framework.TestCase.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -25,7 +25,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * @author Hardy Ferentschik
  */
-public class DiscriminatorOptionsTest extends BaseUnitTest {
+@BaseUnitTest
+public class DiscriminatorOptionsTest {
 	@Test
 	public void testNonDefaultOptions() {
 		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
@@ -42,7 +43,7 @@ public class DiscriminatorOptionsTest extends BaseUnitTest {
 
 			RootClass root = (RootClass) persistentClass;
 			assertTrue( root.isForceDiscriminator(), "Discriminator should be forced" );
-			assertFalse( "Discriminator should not be insertable", root.isDiscriminatorInsertable() );
+			assertFalse(  root.isDiscriminatorInsertable(), "Discriminator should not be insertable" );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );
@@ -64,7 +65,7 @@ public class DiscriminatorOptionsTest extends BaseUnitTest {
 			assertTrue( persistentClass instanceof RootClass );
 
 			RootClass root = (RootClass) persistentClass;
-			assertFalse( "Discriminator should not be forced by default", root.isForceDiscriminator() );
+			assertFalse( root.isForceDiscriminator(), "Discriminator should not be forced by default" );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );

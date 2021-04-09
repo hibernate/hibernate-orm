@@ -10,7 +10,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.id.SequenceMismatchStrategy;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit5.BaseUnitTest;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.util.ExceptionUtil;
 import org.junit.jupiter.api.Test;
 
@@ -22,7 +22,8 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Vlad Mihalcea
  */
 @TestForIssue(jiraKey = "HHH-12973")
-public class SequenceMismatchStrategyUnknownEnumValueTest extends BaseUnitTest {
+@BaseUnitTest
+public class SequenceMismatchStrategyUnknownEnumValueTest {
 
 	@Test
 	public void test() {

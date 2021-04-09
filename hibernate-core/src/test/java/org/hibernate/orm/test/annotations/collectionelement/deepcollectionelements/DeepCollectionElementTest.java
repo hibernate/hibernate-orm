@@ -11,7 +11,7 @@ import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.Configuration;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.junit5.BaseUnitTest;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.FailureExpected;
 import org.junit.jupiter.api.Test;
 
@@ -19,7 +19,8 @@ import org.junit.jupiter.api.Test;
  * @author Emmanuel Bernard
  */
 @FailureExpected( jiraKey = "HHH-3157" )
-public class DeepCollectionElementTest extends BaseUnitTest {
+@BaseUnitTest
+public class DeepCollectionElementTest {
 
 	@Test
 	public void testInitialization() {

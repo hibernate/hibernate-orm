@@ -16,7 +16,6 @@ import java.util.function.Function;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.StatelessSession;
-import org.hibernate.Transaction;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -29,6 +28,7 @@ import org.hibernate.tool.schema.Action;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator.ActionGrouping;
 
+import org.hibernate.testing.orm.transaction.TransactionUtil;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.TestExecutionExceptionHandler;
@@ -259,7 +259,7 @@ public class SessionFactoryExtension
 
 		@Override
 		public void close() {
-			if ( ! active ) {
+			if ( !active ) {
 				return;
 			}
 
@@ -286,7 +286,7 @@ public class SessionFactoryExtension
 		}
 
 		private SessionFactoryImplementor createSessionFactory() {
-			if ( ! active ) {
+			if ( !active ) {
 				throw new IllegalStateException( "SessionFactoryScope is no longer active" );
 			}
 
@@ -349,117 +349,20 @@ public class SessionFactoryExtension
 		@Override
 		public void inTransaction(SessionImplementor session, Consumer<SessionImplementor> action) {
 			log.trace( "inTransaction(Session,Consumer)" );
-
-			final Transaction txn = session.beginTransaction();
-			log.trace( "Started transaction" );
-
-			try {
-				log.trace( "Calling action in txn" );
-				action.accept( session );
-				log.trace( "Called action - in txn" );
-
-				if ( !txn.getRollbackOnly() ) {
-					log.trace( "Committing transaction" );
-					txn.commit();
-					log.trace( "Committed transaction" );
-				}
-				else {
-					try {
-						log.trace( "Rollback transaction marked for rollback only" );
-						txn.rollback();
-					}
-					catch (Exception e) {
-						log.error( "Rollback failure", e );
-					}
-				}
-			}
-			catch (Exception e) {
-				log.tracef(
-						"Error calling action: %s (%s) - rolling back",
-						e.getClass().getName(),
-						e.getMessage()
-				);
-				try {
-					txn.rollback();
-				}
-				catch (Exception ignore) {
-					log.trace( "Was unable to roll back transaction" );
-					// really nothing else we can do here - the attempt to
-					//		rollback already failed and there is nothing else
-					// 		to clean up.
-				}
-
-				throw e;
-			}
-			catch (AssertionError t) {
-				try {
-					txn.rollback();
-				}
-				catch (Exception ignore) {
-					log.trace( "Was unable to roll back transaction" );
-					// really nothing else we can do here - the attempt to
-					//		rollback already failed and there is nothing else
-					// 		to clean up.
-				}
-				throw t;
-			}
+			TransactionUtil.inTransaction( session, action );
 		}
 
 		@Override
-		public <T> T fromTransaction(SessionImplementor session, Function<SessionImplementor,T> action) {
+		public <T> T fromTransaction(SessionImplementor session, Function<SessionImplementor, T> action) {
 			log.trace( "fromTransaction(Session,Function)" );
-
-			final Transaction txn = session.beginTransaction();
-			log.trace( "Started transaction" );
-
-			try {
-				log.trace( "Calling action in txn" );
-				final T result = action.apply( session );
-				log.trace( "Called action - in txn" );
-
-				log.trace( "Committing transaction" );
-				txn.commit();
-				log.trace( "Committed transaction" );
-
-				return result;
-			}
-			catch (Exception e) {
-				log.tracef(
-						"Error calling action: %s (%s) - rolling back",
-						e.getClass().getName(),
-						e.getMessage()
-				);
-				try {
-					txn.rollback();
-				}
-				catch (Exception ignore) {
-					log.trace( "Was unable to roll back transaction" );
-					// really nothing else we can do here - the attempt to
-					//		rollback already failed and there is nothing else
-					// 		to clean up.
-				}
-
-				throw e;
-			}
-			catch (AssertionError t) {
-				try {
-					txn.rollback();
-				}
-				catch (Exception ignore) {
-					log.trace( "Was unable to roll back transaction" );
-					// really nothing else we can do here - the attempt to
-					//		rollback already failed and there is nothing else
-					// 		to clean up.
-				}
-				throw t;
-			}
+			return TransactionUtil.fromTransaction( session, action );
 		}
 
 		@Override
 		public void inStatelessSession(Consumer<StatelessSession> action) {
 			log.trace( "#inStatelessSession(Consumer)" );
 
-			try ( final StatelessSession statelessSession = getSessionFactory().openStatelessSession(); ) {
+			try (final StatelessSession statelessSession = getSessionFactory().openStatelessSession();) {
 				log.trace( "StatelessSession opened, calling action" );
 				action.accept( statelessSession );
 			}
@@ -472,7 +375,7 @@ public class SessionFactoryExtension
 		public void inStatelessTransaction(Consumer<StatelessSession> action) {
 			log.trace( "#inStatelessTransaction(Consumer)" );
 
-			try ( final StatelessSession statelessSession = getSessionFactory().openStatelessSession(); ) {
+			try (final StatelessSession statelessSession = getSessionFactory().openStatelessSession();) {
 				log.trace( "StatelessSession opened, calling action" );
 				inStatelessTransaction( statelessSession, action );
 			}
@@ -485,47 +388,7 @@ public class SessionFactoryExtension
 		public void inStatelessTransaction(StatelessSession session, Consumer<StatelessSession> action) {
 			log.trace( "inStatelessTransaction(StatelessSession,Consumer)" );
 
-			final Transaction txn = session.beginTransaction();
-			log.trace( "Started transaction" );
-
-			try {
-				log.trace( "Calling action in txn" );
-				action.accept( session );
-				log.trace( "Called action - in txn" );
-
-				if ( !txn.getRollbackOnly() ) {
-					log.trace( "Committing transaction" );
-					txn.commit();
-					log.trace( "Committed transaction" );
-				}
-				else {
-					try {
-						log.trace( "Rollback transaction marked for rollback only" );
-						txn.rollback();
-					}
-					catch (Exception e) {
-						log.error( "Rollback failure", e );
-					}
-				}
-			}
-			catch (Exception e) {
-				log.tracef(
-						"Error calling action: %s (%s) - rolling back",
-						e.getClass().getName(),
-						e.getMessage()
-				);
-				try {
-					txn.rollback();
-				}
-				catch (Exception ignore) {
-					log.trace( "Was unable to roll back transaction" );
-					// really nothing else we can do here - the attempt to
-					//		rollback already failed and there is nothing else
-					// 		to clean up.
-				}
-
-				throw e;
-			}
+			TransactionUtil.inTransaction( session, action );
 		}
 	}
 }

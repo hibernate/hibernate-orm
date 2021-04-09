@@ -12,6 +12,7 @@ import java.util.List;
 import org.hibernate.Incubating;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.sql.ast.Clause;
 
@@ -24,7 +25,7 @@ import org.hibernate.sql.ast.Clause;
  * @author Steve Ebersole
  */
 @Incubating
-public interface Bindable {
+public interface Bindable extends JdbcMappingContainer {
 	/*
 	 * todo (6.0) : much of this contract uses Clause which (1) kludgy and (2) not always necessary
 	 *  		- e.g. see the note below wrt "2 forms of JDBC-type visiting"

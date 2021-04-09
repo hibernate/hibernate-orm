@@ -6,6 +6,9 @@
  */
 package org.hibernate.type;
 
+import java.util.Collections;
+import java.util.List;
+
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
@@ -46,8 +49,24 @@ public interface BasicType<T> extends Type, BasicDomainType<T>, MappingType, Bas
 	}
 
 	@Override
+	default int forEachJdbcType(IndexedConsumer<JdbcMapping> action) {
+		action.accept( 0, this );
+		return 1;
+	}
+
+	@Override
 	default JdbcMapping getJdbcMapping() {
 		return this;
+	}
+
+	@Override
+	default int getJdbcTypeCount() {
+		return 1;
+	}
+
+	@Override
+	default List<JdbcMapping> getJdbcMappings() {
+		return Collections.singletonList( this );
 	}
 
 	@Override

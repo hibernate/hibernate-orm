@@ -11,7 +11,6 @@ import java.util.List;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.SqlExpressable;
 import org.hibernate.query.CastType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
@@ -54,11 +53,11 @@ public class CastFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 	@Override
 	public void render(SqlAppender sqlAppender, List<SqlAstNode> arguments, SqlAstTranslator<?> walker) {
 		final Expression source = (Expression) arguments.get( 0 );
-		final JdbcMapping sourceMapping = ( (SqlExpressable) source.getExpressionType() ).getJdbcMapping();
+		final JdbcMapping sourceMapping = source.getExpressionType().getJdbcMappings().get( 0 );
 		final CastType sourceType = getCastType( sourceMapping );
 
 		final CastTarget castTarget = (CastTarget) arguments.get( 1 );
-		final JdbcMapping targetJdbcMapping = castTarget.getExpressionType().getJdbcMapping();
+		final JdbcMapping targetJdbcMapping = castTarget.getExpressionType().getJdbcMappings().get( 0 );
 		final CastType targetType = getCastType( targetJdbcMapping );
 
 		String cast = dialect.castPattern( sourceType, targetType );

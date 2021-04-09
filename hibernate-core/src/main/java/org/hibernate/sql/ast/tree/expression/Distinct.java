@@ -7,7 +7,7 @@
 package org.hibernate.sql.ast.tree.expression;
 
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.SqlExpressable;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -36,11 +36,16 @@ public class Distinct implements Expression, SqlExpressable, SqlAstNode {
 			return ( (SqlExpressable) getExpressionType() ).getJdbcMapping();
 		}
 
+		if ( getExpressionType() != null ) {
+			assert getExpressionType().getJdbcTypeCount() == 1;
+			return getExpressionType().getJdbcMappings().get( 0 );
+		}
+
 		return null;
 	}
 
 	@Override
-	public MappingModelExpressable getExpressionType() {
+	public JdbcMappingContainer getExpressionType() {
 		return expression.getExpressionType();
 	}
 

@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.ast.tree.expression;
 
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.spi.SqlSelectionProducer;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -23,7 +23,7 @@ public interface Expression extends SqlAstNode, SqlSelectionProducer {
 	/**
 	 * The type for this expression
 	 */
-	MappingModelExpressable getExpressionType();
+	JdbcMappingContainer getExpressionType();
 
 	default <T> T unwrap(Class<T> target) {
 		return (T) this;

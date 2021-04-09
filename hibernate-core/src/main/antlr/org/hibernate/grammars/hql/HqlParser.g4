@@ -769,7 +769,15 @@ castFunction
 	;
 
 castTarget
-	: identifier (LEFT_PAREN INTEGER_LITERAL (COMMA INTEGER_LITERAL)? RIGHT_PAREN)?
+	: castTargetType (LEFT_PAREN INTEGER_LITERAL (COMMA INTEGER_LITERAL)? RIGHT_PAREN)?
+	;
+
+/**
+ * Like the `entityName` rule, we have a specialized dotIdentifierSequence rule
+ */
+castTargetType
+	returns [String fullTargetName]
+	: (i=identifier { $fullTargetName = _localctx.i.getText(); }) (DOT c=identifier { $fullTargetName += ("." + _localctx.c.getText() ); })*
 	;
 
 concatFunction

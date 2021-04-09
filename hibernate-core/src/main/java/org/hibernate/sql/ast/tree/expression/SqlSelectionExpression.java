@@ -6,9 +6,9 @@
  */
 package org.hibernate.sql.ast.tree.expression;
 
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
-import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.sql.ast.SqlAstWalker;
+import org.hibernate.sql.ast.spi.SqlSelection;
 
 /**
  * Represents a selection that is "re-used" in certain parts of the query
@@ -57,7 +57,7 @@ public class SqlSelectionExpression implements Expression {
 	}
 
 	@Override
-	public MappingModelExpressable getExpressionType() {
+	public JdbcMappingContainer getExpressionType() {
 		return theSelection.getExpressionType();
 	}
 }

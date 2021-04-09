@@ -19,12 +19,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 
-import org.hibernate.sql.ast.tree.cte.CteSearchClauseKind;
-import org.hibernate.query.FetchClauseType;
 import org.hibernate.LockOptions;
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.query.NullPrecedence;
-import org.hibernate.query.SortOrder;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.AbstractDelegatingWrapperOptions;
@@ -36,12 +32,12 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
-import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.SqlExpressable;
 import org.hibernate.metamodel.mapping.internal.BasicValuedCollectionPart;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.mapping.internal.SimpleForeignKeyDescriptor;
@@ -49,13 +45,14 @@ import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.query.ComparisonOperator;
+import org.hibernate.query.FetchClauseType;
 import org.hibernate.query.Limit;
+import org.hibernate.query.NullPrecedence;
+import org.hibernate.query.SortOrder;
 import org.hibernate.query.UnaryArithmeticOperator;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
-import org.hibernate.query.sqm.sql.internal.EmbeddableValuedPathInterpretation;
-import org.hibernate.query.sqm.sql.internal.NonAggregatedCompositeValuedPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.SqmParameterInterpretation;
 import org.hibernate.query.sqm.tree.expression.Conversion;
 import org.hibernate.sql.ast.Clause;
@@ -68,6 +65,7 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.cte.CteColumn;
 import org.hibernate.sql.ast.tree.cte.CteContainer;
+import org.hibernate.sql.ast.tree.cte.CteSearchClauseKind;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.cte.SearchClauseSpecification;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
@@ -2500,7 +2498,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	protected void renderCasted(Expression expression) {
 		final List<SqlAstNode> arguments = new ArrayList<>( 2 );
 		arguments.add( expression );
-		arguments.add( new CastTarget( (BasicValuedMapping) expression.getExpressionType() ) );
+		arguments.add( new CastTarget( expression.getExpressionType().getJdbcMappings().get( 0 ) ) );
 		castFunction().render( this, arguments, this );
 	}
 
@@ -2521,7 +2519,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			if ( castParameter ) {
 				final List<SqlAstNode> arguments = new ArrayList<>( 2 );
 				arguments.add( jdbcParameter );
-				arguments.add( new CastTarget( (BasicValuedMapping) jdbcMapping ) );
+				arguments.add( new CastTarget( jdbcMapping ) );
 				castFunction().render( this, arguments, this );
 			}
 			else {
@@ -2818,7 +2816,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	public void visitCastTarget(CastTarget castTarget) {
 		appendSql(
 				getDialect().getCastTypeName(
-						castTarget.getExpressionType(),
+						(SqlExpressable) castTarget.getExpressionType(),
 						castTarget.getLength(),
 						castTarget.getPrecision(),
 						castTarget.getScale()
@@ -2878,7 +2876,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					}
 					final List<SqlAstNode> arguments = new ArrayList<>( 2 );
 					arguments.add( jdbcParameter );
-					arguments.add( new CastTarget( (BasicValuedMapping) jdbcMapping ) );
+					arguments.add( new CastTarget( jdbcMapping ) );
 					castFunction().render( this, arguments, this );
 				}
 				else {

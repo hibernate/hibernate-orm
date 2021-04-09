@@ -7,7 +7,7 @@
 package org.hibernate.sql.ast.tree.expression;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 
@@ -32,7 +32,7 @@ public class LiteralAsParameter<T> implements SelfRenderingExpression {
 	}
 
 	@Override
-	public MappingModelExpressable getExpressionType() {
+	public JdbcMappingContainer getExpressionType() {
 		return literal.getExpressionType();
 	}
 

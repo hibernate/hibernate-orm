@@ -14,7 +14,7 @@ package org.hibernate.metamodel.mapping;
  *
  * @author Steve Ebersole
  */
-public interface SqlExpressable {
+public interface SqlExpressable extends JdbcMappingContainer {
 	/**
 	 * Any thing that is expressable at the SQL AST level
 	 * would be of basic type.

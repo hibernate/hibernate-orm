@@ -7,6 +7,8 @@
 package org.hibernate.sql.ast.tree.expression;
 
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 
@@ -14,16 +16,16 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
  * @author Gavin King
  */
 public class CastTarget implements Expression, SqlAstNode {
-	private final BasicValuedMapping type;
+	private final JdbcMapping type;
 	private final Long length;
 	private final Integer precision;
 	private final Integer scale;
 
-	public CastTarget(BasicValuedMapping type) {
+	public CastTarget(JdbcMapping type) {
 		this( type, null, null, null );
 	}
 
-	public CastTarget(BasicValuedMapping type, Long length, Integer precision, Integer scale) {
+	public CastTarget(JdbcMapping type, Long length, Integer precision, Integer scale) {
 		this.type = type;
 		this.length = length;
 		this.precision = precision;
@@ -43,7 +45,7 @@ public class CastTarget implements Expression, SqlAstNode {
 	}
 
 	@Override
-	public BasicValuedMapping getExpressionType() {
+	public JdbcMappingContainer getExpressionType() {
 		return type;
 	}
 

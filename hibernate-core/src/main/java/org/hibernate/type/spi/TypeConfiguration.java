@@ -31,6 +31,7 @@ import org.hibernate.Incubating;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.BasicTypeRegistration;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -38,6 +39,8 @@ import org.hibernate.id.uuid.LocalObjectUuidHelper;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
 import org.hibernate.query.BinaryArithmeticOperator;
@@ -288,7 +291,25 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			case "truefalse": return StandardBasicTypes.TRUE_FALSE;
 			case "yesno": return StandardBasicTypes.YES_NO;
 			case "numericboolean": return StandardBasicTypes.NUMERIC_BOOLEAN;
-			default: throw new HibernateException( "unrecognized cast target type: " + name );
+			default: {
+				final BasicType<Object> registeredBasicType = basicTypeRegistry.getRegisteredType( name );
+				if ( registeredBasicType != null ) {
+					return registeredBasicType;
+				}
+
+				try {
+					final ClassLoaderService cls = getServiceRegistry().getService( ClassLoaderService.class );
+					final Class<?> javaTypeClass = cls.classForName( name );
+
+					final JavaTypeDescriptor<?> jtd = javaTypeDescriptorRegistry.resolveDescriptor( javaTypeClass );
+					final JdbcTypeDescriptor jdbcType = jtd.getRecommendedJdbcType( getCurrentBaseSqlTypeIndicators() );
+					return basicTypeRegistry.resolve( jtd, jdbcType );
+				}
+				catch (Exception ignore) {
+				}
+
+				throw new HibernateException( "unrecognized cast target type: " + name );
+			}
 		}
 	}
 
@@ -608,6 +629,15 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			return null;
 		}
 		return getSqlTemporalType( type.getExpressableJavaTypeDescriptor().getRecommendedJdbcType( getCurrentBaseSqlTypeIndicators() ) );
+	}
+
+	public static TemporalType getSqlTemporalType(JdbcMapping jdbcMapping) {
+		return getSqlTemporalType( jdbcMapping.getJdbcTypeDescriptor() );
+	}
+
+	public static TemporalType getSqlTemporalType(JdbcMappingContainer jdbcMappings) {
+		assert jdbcMappings.getJdbcTypeCount() == 1;
+		return getSqlTemporalType( jdbcMappings.getJdbcMappings().get( 0 ).getJdbcTypeDescriptor() );
 	}
 
 	public static TemporalType getSqlTemporalType(MappingModelExpressable<?> type) {

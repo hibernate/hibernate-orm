@@ -6,12 +6,14 @@
  */
 package org.hibernate.query.sqm.function;
 
+import java.util.List;
+
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.SqlExpressable;
 import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.query.SemanticException;
@@ -32,8 +34,6 @@ import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import java.util.List;
-
 /**
  * Representation of a function call in the SQL AST for impls that know how to
  * render themselves.
@@ -46,14 +46,14 @@ public class SelfRenderingFunctionSqlAstExpression
 	private final FunctionRenderingSupport renderer;
 	private final List<SqlAstNode> sqlAstArguments;
 	private final AllowableFunctionReturnType<?> type;
-	private final MappingModelExpressable<?> expressable;
+	private final JdbcMappingContainer expressable;
 
 	public SelfRenderingFunctionSqlAstExpression(
 			String functionName,
 			FunctionRenderingSupport renderer,
 			List<SqlAstNode> sqlAstArguments,
 			AllowableFunctionReturnType<?> type,
-			MappingModelExpressable<?> expressable) {
+			JdbcMappingContainer expressable) {
 		this.functionName = functionName;
 		this.renderer = renderer;
 		this.sqlAstArguments = sqlAstArguments;
@@ -73,7 +73,7 @@ public class SelfRenderingFunctionSqlAstExpression
 	}
 
 	@Override
-	public MappingModelExpressable getExpressionType() {
+	public JdbcMappingContainer getExpressionType() {
 		return expressable;
 	}
 

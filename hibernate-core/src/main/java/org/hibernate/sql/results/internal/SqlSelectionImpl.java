@@ -6,15 +6,15 @@
  */
 package org.hibernate.sql.results.internal;
 
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import java.util.Objects;
+
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.SqlExpressable;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlExpressionAccess;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.descriptor.ValueExtractor;
-
-import java.util.Objects;
 
 /**
  * @asciidoc
@@ -69,7 +69,7 @@ public class SqlSelectionImpl implements SqlSelection, SqlExpressionAccess {
 	}
 
 	@Override
-	public MappingModelExpressable getExpressionType() {
+	public JdbcMappingContainer getExpressionType() {
 		return getExpression().getExpressionType();
 	}
 

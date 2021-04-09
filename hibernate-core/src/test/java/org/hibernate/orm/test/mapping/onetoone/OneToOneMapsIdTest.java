@@ -14,35 +14,31 @@ import javax.persistence.OneToOne;
 
 import org.hibernate.annotations.NaturalId;
 
-import org.hibernate.testing.junit5.EntityManagerFactoryBasedFunctionalTest;
-
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
 /**
  * @author Vlad Mihalcea
  */
-public class OneToOneMapsIdTest extends EntityManagerFactoryBasedFunctionalTest {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Person.class,
-				PersonDetails.class
-		};
-	}
+@Jpa(
+		annotatedClasses = {
+				OneToOneMapsIdTest.Person.class,
+				OneToOneMapsIdTest.PersonDetails.class
+		}
+)
+public class OneToOneMapsIdTest {
 
 	@Test
-	public void testLifecycle() {
-		Person _person = doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testLifecycle(EntityManagerFactoryScope scope) {
+		Person _person = scope.fromTransaction( entityManager -> {
 			Person person = new Person( "ABC-123" );
 			entityManager.persist( person );
 
 			return person;
 		} );
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Person person = entityManager.find( Person.class, _person.getId() );
 
 			PersonDetails personDetails = new PersonDetails();
@@ -54,7 +50,7 @@ public class OneToOneMapsIdTest extends EntityManagerFactoryBasedFunctionalTest 
 	}
 
 	@Entity(name = "Person")
-	public static class Person  {
+	public static class Person {
 
 		@Id
 		@GeneratedValue
@@ -63,7 +59,8 @@ public class OneToOneMapsIdTest extends EntityManagerFactoryBasedFunctionalTest 
 		@NaturalId
 		private String registrationNumber;
 
-		public Person() {}
+		public Person() {
+		}
 
 		public Person(String registrationNumber) {
 			this.registrationNumber = registrationNumber;
@@ -83,7 +80,7 @@ public class OneToOneMapsIdTest extends EntityManagerFactoryBasedFunctionalTest 
 	}
 
 	@Entity(name = "PersonDetails")
-	public static class PersonDetails  {
+	public static class PersonDetails {
 
 		@Id
 		private Long id;

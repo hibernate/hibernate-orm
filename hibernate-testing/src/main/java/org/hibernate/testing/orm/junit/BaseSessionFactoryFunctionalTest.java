@@ -7,6 +7,7 @@
 package org.hibernate.testing.orm.junit;
 
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
@@ -158,5 +159,8 @@ public abstract class BaseSessionFactoryFunctionalTest
 		sessionFactoryScope().inTransaction( action );
 	}
 
+	protected <T> T fromTransaction(Function<SessionImplementor, T> action) {
+		return sessionFactoryScope().fromTransaction( action );
+	}
 
 }

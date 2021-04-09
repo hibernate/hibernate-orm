@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.testing.junit5;
+package org.hibernate.testing.orm.junit;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -24,6 +24,7 @@ import javax.persistence.spi.PersistenceUnitTransactionType;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
@@ -42,7 +43,6 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
  */
 @FunctionalEntityManagerFactoryTesting
 public class EntityManagerFactoryBasedFunctionalTest
-		extends BaseUnitTest
 		implements EntityManagerFactoryProducer, EntityManagerFactoryScopeContainer {
 	private static final Logger log = Logger.getLogger( EntityManagerFactoryBasedFunctionalTest.class );
 
@@ -281,9 +281,11 @@ public class EntityManagerFactoryBasedFunctionalTest
 
 	protected void cleanupTestData() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			Arrays.stream( getAnnotatedClasses() ).forEach( annotatedClass ->
-																	entityManager.createQuery( "delete from " + annotatedClass
-																			.getSimpleName() ).executeUpdate()
+			Arrays.stream(
+					getAnnotatedClasses() ).forEach(
+					annotatedClass ->
+							entityManager.createQuery( "delete from " + annotatedClass
+									.getSimpleName() ).executeUpdate()
 			);
 		} );
 	}
@@ -295,4 +297,14 @@ public class EntityManagerFactoryBasedFunctionalTest
 	protected <T> T fromTransaction(Function<EntityManager, T> action) {
 		return entityManagerFactoryScope().fromTransaction( action );
 	}
+
+	protected void inEntityManager(Consumer<EntityManager> action) {
+		entityManagerFactoryScope().inEntityManager( action );
+	}
+
+	protected <T> T fromEntityManager(Function<EntityManager, T> action) {
+		return entityManagerFactoryScope().fromEntityManager( action );
+	}
+
+
 }

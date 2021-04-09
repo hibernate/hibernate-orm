@@ -11,13 +11,14 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.junit5.BaseUnitTest;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.junit.jupiter.api.Test;
 
 /**
  * @author Steve Ebersole
  */
-public class SubclassProxyInterfaceTest extends BaseUnitTest {
+@BaseUnitTest
+public class SubclassProxyInterfaceTest {
 	@Test
 	public void testSubclassProxyInterfaces() {
         final Configuration cfg = new Configuration()

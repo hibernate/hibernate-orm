@@ -25,7 +25,7 @@ import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit5.EntityManagerFactoryBasedFunctionalTest;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.util.ExceptionUtil;
@@ -56,7 +56,7 @@ public class SequenceMismatchStrategyDefaultExceptionTest extends EntityManagerF
 		try {
 			super.produceEntityManagerFactory();
 
-			fail("Should throw MappingException!");
+			fail( "Should throw MappingException!" );
 		}
 		catch (Exception e) {
 			Throwable rootCause = ExceptionUtil.rootCause( e );

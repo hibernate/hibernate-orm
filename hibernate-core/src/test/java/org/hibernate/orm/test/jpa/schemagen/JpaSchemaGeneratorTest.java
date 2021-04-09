@@ -17,7 +17,7 @@ import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit5.EntityManagerFactoryBasedFunctionalTest;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

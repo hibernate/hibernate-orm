@@ -9,7 +9,7 @@ package org.hibernate.orm.test.id;
 import org.hibernate.id.IdentifierGenerationException;
 import org.hibernate.id.IntegralDataTypeHolder;
 
-import org.hibernate.testing.junit5.BaseUnitTest;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -20,7 +20,8 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Steve Ebersole
  */
 @SuppressWarnings({ "UnusedDeclaration" })
-public abstract class AbstractHolderTest extends BaseUnitTest {
+@BaseUnitTest
+public abstract class AbstractHolderTest {
 	protected abstract IntegralDataTypeHolder makeHolder();
 
 	@Test
@@ -119,6 +120,7 @@ public abstract class AbstractHolderTest extends BaseUnitTest {
 		}
 	}
 
+	@Test
 	public void testIncrement() {
 		IntegralDataTypeHolder holder = makeHolder();
 		holder.initialize( 0 );

@@ -13,7 +13,7 @@ import org.hibernate.id.enhanced.Optimizer;
 import org.hibernate.id.enhanced.OptimizerFactory;
 import org.hibernate.id.enhanced.StandardOptimizerDescriptor;
 
-import org.hibernate.testing.junit5.BaseUnitTest;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -23,7 +23,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  *
  * @author Steve Ebersole
  */
-public class OptimizerUnitTest extends BaseUnitTest {
+@BaseUnitTest
+public class OptimizerUnitTest {
 	@Test
 	public void testBasicNoOptimizerUsage() {
 		// test historic sequence behavior, where the initial values start at 1...

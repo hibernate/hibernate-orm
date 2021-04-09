@@ -15,7 +15,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.CannotForceNonNullableException;
 
-import org.hibernate.testing.junit5.BaseUnitTest;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 
 import org.junit.jupiter.api.AfterEach;
@@ -32,7 +32,8 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Steve Ebersole
  */
 @ServiceRegistry
-public class AndFormulaTest extends BaseUnitTest {
+@BaseUnitTest
+public class AndFormulaTest {
 	private static StandardServiceRegistry ssr;
 
 	@BeforeEach

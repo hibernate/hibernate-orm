@@ -6,8 +6,6 @@
  */
 package org.hibernate.orm.test.annotations.override.inheritance;
 
-import static org.junit.Assert.assertTrue;
-
 import javax.persistence.AttributeOverride;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -20,18 +18,23 @@ import javax.persistence.UniqueConstraint;
 
 import org.hibernate.cfg.AnnotationBinder;
 import org.hibernate.internal.CoreMessageLogger;
+
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit5.EntityManagerFactoryBasedFunctionalTest;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
-import org.jboss.logging.Logger;
 import org.junit.Rule;
 import org.junit.jupiter.api.Test;
+
+import org.jboss.logging.Logger;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue( jiraKey = "HHH-12609, HHH-12654, HHH-13172" )
+@TestForIssue(jiraKey = "HHH-12609, HHH-12654, HHH-13172")
 public class EntityInheritanceAttributeOverrideTest extends EntityManagerFactoryBasedFunctionalTest {
 
 	@Rule
@@ -40,10 +43,10 @@ public class EntityInheritanceAttributeOverrideTest extends EntityManagerFactory
 
 	@Override
 	public Class<?>[] getAnnotatedClasses() {
-		return new Class[]{
-			CategoryEntity.class,
-			TaxonEntity.class,
-			AbstractEntity.class
+		return new Class[] {
+				CategoryEntity.class,
+				TaxonEntity.class,
+				AbstractEntity.class
 		};
 	}
 
@@ -53,7 +56,7 @@ public class EntityInheritanceAttributeOverrideTest extends EntityManagerFactory
 
 		EntityManagerFactory entityManagerFactory = super.produceEntityManagerFactory();
 
-		assertTrue("A warning should have been logged for this unsupported configuration", warningLogged.wasTriggered());
+		assertTrue( warningLogged.wasTriggered(), "A warning should have been logged for this unsupported configuration");
 		return entityManagerFactory;
 	}
 

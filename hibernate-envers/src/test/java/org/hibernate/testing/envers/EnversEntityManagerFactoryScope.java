@@ -14,7 +14,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
-import org.hibernate.testing.junit5.EntityManagerFactoryAccess;
 
 /**
  * @author Chris Cranford

@@ -27,7 +27,7 @@ import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.tool.schema.spi.CommandAcceptanceException;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit5.EntityManagerFactoryBasedFunctionalTest;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

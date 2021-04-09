@@ -21,7 +21,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.internal.SessionFactoryRegistry;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit5.BaseUnitTest;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -32,7 +32,8 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @TestForIssue( jiraKey = "HHH-7214" )
-public class DuplicatedDiscriminatorValueTest extends BaseUnitTest  {
+@BaseUnitTest
+public class DuplicatedDiscriminatorValueTest {
 	private static final String DISCRIMINATOR_VALUE = "D";
 
 	@Test

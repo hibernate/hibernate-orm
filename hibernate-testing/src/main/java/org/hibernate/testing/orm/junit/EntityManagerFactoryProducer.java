@@ -6,10 +6,7 @@
  */
 package org.hibernate.testing.orm.junit;
 
-import java.util.Map;
 import javax.persistence.EntityManagerFactory;
-
-import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 
 /**
  * Contract for something that can build a SessionFactory.
@@ -28,5 +25,5 @@ import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
  * @author Steve Ebersole
  */
 public interface EntityManagerFactoryProducer {
-	EntityManagerFactory produceEntityManagerFactory(PersistenceUnitDescriptor persistenceUnitDescriptor, Map<String,String> integrationSettings);
+	EntityManagerFactory produceEntityManagerFactory();
 }

@@ -15,23 +15,29 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit5.EntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.Rule;
 import org.junit.jupiter.api.Test;
 
 import org.jboss.logging.Logger;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue( jiraKey = "HHH-13228" )
-public class OneToOneMapsIdChangeParentTest extends EntityManagerFactoryBasedFunctionalTest {
+@TestForIssue(jiraKey = "HHH-13228")
+@Jpa(
+		annotatedClasses = {
+				OneToOneMapsIdChangeParentTest.Parent.class,
+				OneToOneMapsIdChangeParentTest.Child.class
+		}
+)
+public class OneToOneMapsIdChangeParentTest {
 
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
@@ -43,23 +49,16 @@ public class OneToOneMapsIdChangeParentTest extends EntityManagerFactoryBasedFun
 
 	private Triggerable triggerable = logInspection.watchForLogMessages( "HHH000502:" );
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Parent.class,
-				Child.class
-		};
-	}
 
 	@Test
-	public void test() {
-		Child _child = doInJPA( this::entityManagerFactory, entityManager -> {
+	public void test(EntityManagerFactoryScope scope) {
+		Child _child = scope.fromTransaction( entityManager -> {
 			Parent firstParent = new Parent();
 			firstParent.setId( 1L );
-			entityManager.persist(firstParent);
+			entityManager.persist( firstParent );
 
 			Child child = new Child();
-			child.setParent(firstParent);
+			child.setParent( firstParent );
 			entityManager.persist( child );
 
 			return child;
@@ -68,12 +67,12 @@ public class OneToOneMapsIdChangeParentTest extends EntityManagerFactoryBasedFun
 		triggerable.reset();
 		assertFalse( triggerable.wasTriggered() );
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Parent secondParent = new Parent();
 			secondParent.setId( 2L );
-			entityManager.persist(secondParent);
+			entityManager.persist( secondParent );
 
-			_child.setParent(secondParent);
+			_child.setParent( secondParent );
 
 			entityManager.merge( _child );
 		} );

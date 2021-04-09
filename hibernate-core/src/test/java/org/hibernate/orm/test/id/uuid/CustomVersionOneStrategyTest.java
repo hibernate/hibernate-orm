@@ -10,7 +10,7 @@ import java.util.UUID;
 
 import org.hibernate.id.uuid.CustomVersionOneStrategy;
 
-import org.hibernate.testing.junit5.BaseUnitTest;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -20,7 +20,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 /**
  * @author Steve Ebersole
  */
-public class CustomVersionOneStrategyTest extends BaseUnitTest {
+@BaseUnitTest
+public class CustomVersionOneStrategyTest {
 
 	@Test
 	public void testUniqueCounter() {

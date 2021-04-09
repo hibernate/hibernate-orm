@@ -9,7 +9,7 @@ package org.hibernate.orm.test.id.hhh12973;
 import org.hibernate.id.SequenceMismatchStrategy;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit5.BaseUnitTest;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -19,7 +19,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author Vlad Mihalcea
  */
 @TestForIssue(jiraKey = "HHH-12973")
-public class SequenceMismatchStrategyNullValueTest extends BaseUnitTest {
+@BaseUnitTest
+public class SequenceMismatchStrategyNullValueTest {
 
 	@Test
 	public void test() {

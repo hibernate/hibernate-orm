@@ -14,9 +14,9 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
-
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit5.EntityManagerFactoryBasedFunctionalTest;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -25,19 +25,18 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author Vlad Mihalcea
  */
-public class MappedSuperclassAttributeOverrideTest extends EntityManagerFactoryBasedFunctionalTest {
-	@Override
-	public Class[] getAnnotatedClasses() {
-		return new Class[] {
-				CategoryEntity.class,
-				TaxonEntity.class
-		};
-	}
+@Jpa(
+		annotatedClasses = {
+				MappedSuperclassAttributeOverrideTest.CategoryEntity.class,
+				MappedSuperclassAttributeOverrideTest.TaxonEntity.class
+		}
+)
+public class MappedSuperclassAttributeOverrideTest {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-12609")
-	public void test() {
-		inTransaction( entityManager -> {
+	public void test(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			TaxonEntity taxon1 = new TaxonEntity();
 			taxon1.setId( 1L );
 			taxon1.setCode( "Taxon" );
@@ -53,7 +52,7 @@ public class MappedSuperclassAttributeOverrideTest extends EntityManagerFactoryB
 			entityManager.persist( taxon2 );
 		} );
 
-		inTransaction(  entityManager -> {
+		scope.inTransaction( entityManager -> {
 			assertEquals(
 					2,
 					( (Number) entityManager.createQuery(

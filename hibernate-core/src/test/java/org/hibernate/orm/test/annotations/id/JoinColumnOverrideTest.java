@@ -16,7 +16,8 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit5.BaseUnitTest;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
+
 import org.hibernate.orm.test.annotations.id.entities.Bunny;
 import org.hibernate.orm.test.annotations.id.entities.PointyTooth;
 import org.hibernate.orm.test.annotations.id.entities.TwinkleToes;
@@ -29,8 +30,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * @author Hardy Ferentschik
  */
-@SuppressWarnings("unchecked")
-public class JoinColumnOverrideTest extends BaseUnitTest {
+@BaseUnitTest
+public class JoinColumnOverrideTest {
 
 	private static final String expectedSqlPointyTooth = "create table PointyTooth (id numeric(128,0) not null, " +
 			"bunny_id numeric(128,0), primary key (id))";

@@ -4,9 +4,10 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.testing.junit5;
+package org.hibernate.testing.orm.junit;
 
 import java.util.Optional;
+import javax.persistence.EntityManagerFactory;
 
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -59,7 +60,7 @@ public class EntityManagerFactoryScopeExtension
 		if ( EntityManagerFactoryScopeContainer.class.isInstance( testInstance ) ) {
 			final EntityManagerFactoryScopeContainer scopeContainer = EntityManagerFactoryScopeContainer.class.cast(
 					testInstance );
-			final EntityManagerFactoryScope scope = new EntityManagerFactoryScope(
+			final EntityManagerFactoryScope scope = new EntityManagerFactoryScopeImpl(
 					scopeContainer.getEntityManagerFactoryProducer()
 			);
 			context.getStore( namespace( testInstance ) ).put( ENTITYMANAGER_FACTORY_KEY, scope );
@@ -95,4 +96,20 @@ public class EntityManagerFactoryScopeExtension
 
 		throw throwable;
 	}
+
+	private static class EntityManagerFactoryScopeImpl extends AbstractEntityManagerFactoryScope {
+
+		private final EntityManagerFactoryProducer producer;
+
+		public EntityManagerFactoryScopeImpl(EntityManagerFactoryProducer producer) {
+			log.trace( "EntityManagerFactoryScope#<init>" );
+			this.producer = producer;
+		}
+
+		@Override
+		protected EntityManagerFactory createEntityManagerFactory() {
+			return producer.produceEntityManagerFactory();
+		}
+	}
+
 }

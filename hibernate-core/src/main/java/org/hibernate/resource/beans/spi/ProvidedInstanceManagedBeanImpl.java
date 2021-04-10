@@ -6,6 +6,8 @@
  */
 package org.hibernate.resource.beans.spi;
 
+import static org.hibernate.internal.util.Validator.checkNotNullIAE;
+
 /**
  * ManagedBean implementation for cases where we have been handed an actual
  * instance to use.
@@ -16,11 +18,7 @@ public class ProvidedInstanceManagedBeanImpl<T> implements ManagedBean<T> {
 	private final T instance;
 
 	public ProvidedInstanceManagedBeanImpl(T instance) {
-		if ( instance == null ) {
-			throw new IllegalArgumentException( "Bean instance cannot be null" );
-		}
-
-		this.instance = instance;
+		this.instance = checkNotNullIAE( "instance", instance );
 	}
 
 	@Override

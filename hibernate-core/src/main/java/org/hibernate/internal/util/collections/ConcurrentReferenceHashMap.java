@@ -13,6 +13,8 @@
 
 package org.hibernate.internal.util.collections;
 
+import static org.hibernate.internal.util.Validator.checkNotNullNPE;
+
 import java.io.IOException;
 import java.io.Serializable;
 import java.lang.ref.Reference;
@@ -1404,9 +1406,9 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 	 */
 	@Override
 	public boolean replace(K key, V oldValue, V newValue) {
-		if ( key == null || oldValue == null || newValue == null ) {
-			throw new NullPointerException();
-		}
+		checkNotNullNPE( "key", key );
+		checkNotNullNPE( "oldValue", oldValue );
+		checkNotNullNPE( "newValue", newValue );
 		int hash = hashOf( key );
 		return segmentFor( hash ).replace( key, hash, oldValue, newValue );
 	}
@@ -1736,10 +1738,7 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 		 */
 		@Override
 		public V setValue(V value) {
-			if ( value == null ) {
-				throw new NullPointerException();
-			}
-			V v = super.setValue( value );
+			V v = super.setValue( checkNotNullNPE( "value", value ) );
 			ConcurrentReferenceHashMap.this.put( getKey(), value );
 			return v;
 		}

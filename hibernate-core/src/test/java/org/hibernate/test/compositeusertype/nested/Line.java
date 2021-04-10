@@ -6,6 +6,8 @@
  */
 package org.hibernate.test.compositeusertype.nested;
 
+import static org.hibernate.internal.util.Validator.checkNotNullNPE;
+
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -15,8 +17,8 @@ public class Line implements Serializable {
 	private final Point p1, p2;
 
 	public Line(Point p1, Point p2) {
-		this.p1 = Objects.requireNonNull( p1 );
-		this.p2 = Objects.requireNonNull( p2 );
+		this.p1 = checkNotNullNPE( "p1", p1 );
+		this.p2 = checkNotNullNPE( "p2", p2 );
 	}
 
 	public Point getP1() {

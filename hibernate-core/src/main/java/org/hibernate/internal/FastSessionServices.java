@@ -6,6 +6,8 @@
  */
 package org.hibernate.internal;
 
+import static org.hibernate.internal.util.Validator.checkNotNullNPE;
+
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
@@ -65,7 +67,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import javax.persistence.CacheRetrieveMode;
 import javax.persistence.CacheStoreMode;
@@ -169,7 +170,7 @@ public final class FastSessionServices {
 	private final ConnectionObserverStatsBridge defaultJdbcObservers;
 
 	FastSessionServices(SessionFactoryImpl sf) {
-		Objects.requireNonNull( sf );
+		checkNotNullNPE( "sf", sf );
 		final ServiceRegistryImplementor sr = sf.getServiceRegistry();
 		final JdbcServices jdbcServices = sf.getJdbcServices();
 		final SessionFactoryOptions sessionFactoryOptions = sf.getSessionFactoryOptions();

@@ -6,6 +6,8 @@
  */
 package org.hibernate.event.spi;
 
+import static org.hibernate.internal.util.Validator.checkNotNullIAE;
+
 /**
  * An event class for persist()
  *
@@ -23,12 +25,7 @@ public class PersistEvent extends AbstractEvent {
 
 	public PersistEvent(Object object, EventSource source) {
 		super(source);
-		if ( object == null ) {
-			throw new IllegalArgumentException(
-					"attempt to create event with null entity"
-			);
-		}
-		this.object = object;
+		this.object = checkNotNullIAE( "object", object );
 	}
 
 	public Object getObject() {

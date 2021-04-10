@@ -6,6 +6,8 @@
  */
 package org.hibernate.hql.internal;
 
+import static org.hibernate.internal.util.Validator.checkNotNullIAE;
+
 import org.hibernate.QueryException;
 
 /**
@@ -16,8 +18,6 @@ import org.hibernate.QueryException;
 public class QueryExecutionRequestException extends QueryException {
 	public QueryExecutionRequestException(String message, String queryString) {
 		super( message, queryString );
-		if ( queryString == null ) {
-			throw new IllegalArgumentException( "Illegal to pass null as queryString argument" );
-		}
+		checkNotNullIAE( "queryString", queryString );
 	}
 }

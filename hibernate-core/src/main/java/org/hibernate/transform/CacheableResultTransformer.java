@@ -6,6 +6,8 @@
  */
 package org.hibernate.transform;
 
+import static org.hibernate.internal.util.Validator.checkNotNullIAE;
+
 import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.List;
@@ -91,9 +93,7 @@ public class CacheableResultTransformer implements ResultTransformer {
 			TupleSubsetResultTransformer transformer,
 			String[] aliases,
 			boolean[] includeInTuple) {
-		if ( transformer == null ) {
-			throw new IllegalArgumentException( "transformer cannot be null" );
-		}
+		checkNotNullIAE( "transformer", transformer );
 		int tupleLength = ArrayHelper.countTrue( includeInTuple );
 		if ( aliases != null && aliases.length != tupleLength ) {
 			throw new IllegalArgumentException(
@@ -125,10 +125,7 @@ public class CacheableResultTransformer implements ResultTransformer {
 	}
 
 	private CacheableResultTransformer(boolean[] includeInTuple, boolean[] includeInTransform) {
-		if ( includeInTuple == null ) {
-			throw new IllegalArgumentException( "includeInTuple cannot be null" );
-		}
-		this.includeInTuple = includeInTuple;
+		this.includeInTuple = checkNotNullIAE( "includeInTuple", includeInTuple );
 		tupleLength = ArrayHelper.countTrue( includeInTuple );
 		tupleSubsetLength = (
 				includeInTransform == null ?
@@ -185,9 +182,7 @@ public class CacheableResultTransformer implements ResultTransformer {
 			String[] aliases,
 			ResultTransformer transformer,
 			boolean[] includeInTuple) {
-		if ( transformer == null ) {
-			throw new IllegalArgumentException( "transformer cannot be null" );
-		}
+		checkNotNullIAE( "transformer", transformer );
 		if ( ! this.equals( create( transformer, aliases, includeInTuple ) ) ) {
 			throw new IllegalStateException(
 					"this CacheableResultTransformer is inconsistent with specified arguments; cannot re-transform"

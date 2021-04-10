@@ -6,6 +6,8 @@
  */
 package org.hibernate.internal;
 
+import static org.hibernate.internal.util.Validator.checkNotNullNPE;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -564,9 +566,7 @@ public class SessionImpl
 	public LockMode getCurrentLockMode(Object object) throws HibernateException {
 		checkOpen();
 		checkTransactionSynchStatus();
-		if ( object == null ) {
-			throw new NullPointerException( "null object passed to getCurrentLockMode()" );
-		}
+		checkNotNullNPE( "object", object );
 		if ( object instanceof HibernateProxy ) {
 			object = ( (HibernateProxy) object ).getHibernateLazyInitializer().getImplementation( this );
 			if ( object == null ) {
@@ -1702,9 +1702,7 @@ public class SessionImpl
 			String filter,
 			QueryParameters parameters,
 			boolean shallow) throws HibernateException {
-		if ( collection == null ) {
-			throw new NullPointerException( "null collection passed to filter" );
-		}
+		checkNotNullNPE( "collection", collection );
 
 		CollectionEntry entry = persistenceContext.getCollectionEntryOrNull( collection );
 		final CollectionPersister roleBeforeFlush = ( entry == null ) ? null : entry.getLoadedPersister();

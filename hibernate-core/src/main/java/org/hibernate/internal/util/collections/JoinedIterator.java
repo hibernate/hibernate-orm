@@ -6,6 +6,8 @@
  */
 package org.hibernate.internal.util.collections;
 
+import static org.hibernate.internal.util.Validator.checkNotNullNPE;
+
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -31,10 +33,7 @@ public class JoinedIterator<T> implements Iterator<T> {
 	}
 
 	public JoinedIterator(Iterator<T>... iteratorsToWrap) {
-		if( iteratorsToWrap == null ) {
-			throw new NullPointerException( "Iterators to join were null" );
-		}
-		this.wrappedIterators = iteratorsToWrap;
+		this.wrappedIterators = checkNotNullNPE( "iteratorsToWrap", iteratorsToWrap );
 	}
 
 	public boolean hasNext() {

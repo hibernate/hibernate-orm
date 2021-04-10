@@ -6,6 +6,8 @@
  */
 package org.hibernate.internal.util;
 
+import static org.hibernate.internal.util.Validator.checkNotNullIAE;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -95,9 +97,7 @@ public final class SerializationHelper {
 	 * @throws SerializationException (runtime) if the serialization fails
 	 */
 	public static void serialize(Serializable obj, OutputStream outputStream) throws SerializationException {
-		if ( outputStream == null ) {
-			throw new IllegalArgumentException( "The OutputStream must not be null" );
-		}
+		checkNotNullIAE( "outputStream", outputStream );
 
 		if ( LOG.isTraceEnabled() ) {
 			if ( Hibernate.isInitialized( obj ) ) {
@@ -208,9 +208,7 @@ public final class SerializationHelper {
 			ClassLoader loader,
 			ClassLoader fallbackLoader1,
 			ClassLoader fallbackLoader2) throws SerializationException {
-		if ( inputStream == null ) {
-			throw new IllegalArgumentException( "The InputStream must not be null" );
-		}
+		checkNotNullIAE( "inputStream", inputStream );
 
 		LOG.trace( "Starting deserialization of object" );
 
@@ -263,10 +261,7 @@ public final class SerializationHelper {
 	}
 
 	private static InputStream wrap(byte[] objectData) {
-		if ( objectData == null ) {
-			throw new IllegalArgumentException( "The byte[] must not be null" );
-		}
-		return new ByteArrayInputStream( objectData );
+		return new ByteArrayInputStream( checkNotNullIAE( "objectData", objectData ) );
 	}
 
 	/**

@@ -6,6 +6,8 @@
  */
 package org.hibernate.engine.jdbc.batch.internal;
 
+import static org.hibernate.internal.util.Validator.checkNotNullIAE;
+
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.LinkedHashMap;
@@ -45,14 +47,8 @@ public abstract class AbstractBatchImpl implements Batch {
 	private LinkedHashSet<BatchObserver> observers = new LinkedHashSet<>();
 
 	protected AbstractBatchImpl(BatchKey key, JdbcCoordinator jdbcCoordinator) {
-		if ( key == null ) {
-			throw new IllegalArgumentException( "batch key cannot be null" );
-		}
-		if ( jdbcCoordinator == null ) {
-			throw new IllegalArgumentException( "JDBC coordinator cannot be null" );
-		}
-		this.key = key;
-		this.jdbcCoordinator = jdbcCoordinator;
+		this.key = checkNotNullIAE( "key", key );
+		this.jdbcCoordinator = checkNotNullIAE( "jdbcCoordinator", jdbcCoordinator );
 
 		final JdbcServices jdbcServices = jdbcCoordinator.getJdbcSessionOwner()
 				.getJdbcSessionContext()
@@ -118,10 +114,7 @@ public abstract class AbstractBatchImpl implements Batch {
 
 	@Override
 	public PreparedStatement getBatchStatement(String sql, boolean callable) {
-		if ( sql == null ) {
-			throw new IllegalArgumentException( "sql must be non-null." );
-		}
-		PreparedStatement statement = statements.get( sql );
+		PreparedStatement statement = statements.get( checkNotNullIAE( "sql", sql ) );
 		if ( statement == null ) {
 			statement = buildBatchStatement( sql, callable );
 			statements.put( sql, statement );

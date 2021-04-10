@@ -6,6 +6,8 @@
  */
 package org.hibernate.event.spi;
 
+import static org.hibernate.internal.util.Validator.checkNotNullIAE;
+
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 
@@ -23,10 +25,7 @@ public class RefreshEvent extends AbstractEvent {
 
 	public RefreshEvent(Object object, EventSource source) {
 		super(source);
-		if (object == null) {
-			throw new IllegalArgumentException("Attempt to generate refresh event with null object");
-		}
-		this.object = object;
+		this.object = checkNotNullIAE( "object", object );
 	}
 
 	public RefreshEvent(String entityName, Object object, EventSource source){
@@ -36,18 +35,12 @@ public class RefreshEvent extends AbstractEvent {
 
 	public RefreshEvent(Object object, LockMode lockMode, EventSource source) {
 		this(object, source);
-		if (lockMode == null) {
-			throw new IllegalArgumentException("Attempt to generate refresh event with null lock mode");
-		}
-		this.lockOptions.setLockMode(lockMode);
+		this.lockOptions.setLockMode( checkNotNullIAE( "lockMode", lockMode ) );
 	}
 
 	public RefreshEvent(Object object, LockOptions lockOptions, EventSource source) {
 		this(object, source);
-		if (lockOptions == null) {
-			throw new IllegalArgumentException("Attempt to generate refresh event with null lock request");
-		}
-		this.lockOptions = lockOptions;
+		this.lockOptions = checkNotNullIAE( "lockOptions", lockOptions );
 	}
 	public RefreshEvent(String entityName, Object object, LockOptions lockOptions, EventSource source){
 		this(object,lockOptions,source);

@@ -6,6 +6,8 @@
  */
 package org.hibernate.engine.jdbc.env.internal;
 
+import static org.hibernate.internal.util.Validator.checkNotNullIAE;
+
 import java.util.Locale;
 import java.util.TreeSet;
 
@@ -123,9 +125,7 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 	}
 
 	private String toMetaDataText(Identifier identifier) {
-		if ( identifier == null ) {
-			throw new IllegalArgumentException( "Identifier cannot be null; bad usage" );
-		}
+		checkNotNullIAE( "identifier", identifier );
 
 		if ( identifier instanceof DatabaseIdentifier ) {
 			return identifier.getText();
@@ -191,10 +191,9 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 	public String toMetaDataObjectName(Identifier identifier) {
 		log.tracef( "Normalizing identifier quoting for object name [%s]", identifier );
 
-		if ( identifier == null ) {
-			// if this method was called, the value is needed
-			throw new IllegalArgumentException( "null was passed as an object name" );
-		}
+		// if this method was called, the value is needed
+		checkNotNullIAE( "identifier", identifier );
+
 		return toMetaDataText( identifier );
 	}
 }

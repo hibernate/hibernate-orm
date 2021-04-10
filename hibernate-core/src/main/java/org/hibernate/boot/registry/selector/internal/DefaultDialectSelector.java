@@ -6,7 +6,7 @@
  */
 package org.hibernate.boot.registry.selector.internal;
 
-import java.util.Objects;
+import static org.hibernate.internal.util.Validator.checkNotNullNPE;
 
 import org.hibernate.dialect.CUBRIDDialect;
 import org.hibernate.dialect.Cache71Dialect;
@@ -65,7 +65,7 @@ public class DefaultDialectSelector implements LazyServiceResolver<Dialect> {
 
 	@Override
 	public Class<? extends Dialect> resolve(final String name) {
-		Objects.requireNonNull( name);
+		checkNotNullNPE( "name", name );
 		if ( name.isEmpty() ) {
 			return null;
 		}

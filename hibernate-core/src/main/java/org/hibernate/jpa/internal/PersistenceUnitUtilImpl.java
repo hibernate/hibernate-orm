@@ -6,6 +6,8 @@
  */
 package org.hibernate.jpa.internal;
 
+import static org.hibernate.internal.util.Validator.checkNotNullIAE;
+
 import java.io.Serializable;
 import javax.persistence.PersistenceUnitUtil;
 import javax.persistence.spi.LoadState;
@@ -63,9 +65,7 @@ public class PersistenceUnitUtilImpl implements PersistenceUnitUtil, Serializabl
 
 	@Override
 	public Object getIdentifier(Object entity) {
-		if ( entity == null ) {
-			throw new IllegalArgumentException( "Passed entity cannot be null" );
-		}
+		checkNotNullIAE( "entity", entity );
 
 		if ( entity instanceof HibernateProxy ) {
 			return ((HibernateProxy) entity).getHibernateLazyInitializer().getIdentifier();

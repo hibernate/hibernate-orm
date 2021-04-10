@@ -6,6 +6,8 @@
  */
 package org.hibernate.query.internal;
 
+import static org.hibernate.internal.util.Validator.checkNotNullIAE;
+
 import java.io.Serializable;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -1718,10 +1720,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	}
 
 	protected String resolveEntityName(Object val) {
-		if ( val == null ) {
-			throw new IllegalArgumentException( "entity for parameter binding cannot be null" );
-		}
-		return getProducer().bestGuessEntityName( val );
+		return getProducer().bestGuessEntityName( checkNotNullIAE( "val", val ) );
 	}
 
 	@Override

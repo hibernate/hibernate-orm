@@ -6,6 +6,8 @@
  */
 package org.hibernate.query.criteria.internal;
 
+import static org.hibernate.internal.util.Validator.checkNotNullIAE;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -600,10 +602,7 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 
 	@Override
 	public <T> Expression<T> literal(T value) {
-		if ( value == null ) {
-			throw new IllegalArgumentException( "literal value cannot be null" );
-		}
-		return new LiteralExpression<T>( this, value );
+		return new LiteralExpression<T>( this, checkNotNullIAE( "value", value ) );
 	}
 
 	@Override
@@ -811,9 +810,8 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <N extends Number> Expression<N> sum(Expression<? extends N> expression1, Expression<? extends N> expression2) {
-		if ( expression1 == null || expression2 == null ) {
-			throw new IllegalArgumentException( "arguments to sum() cannot be null" );
-		}
+		checkNotNullIAE( "expression1", expression1 );
+		checkNotNullIAE( "expression2", expression2 );
 
 		final Class resultType = BinaryArithmeticOperation.determineResultType( expression1.getJavaType(), expression2.getJavaType() );
 
@@ -829,9 +827,8 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <N extends Number> Expression<N> prod(Expression<? extends N> expression1, Expression<? extends N> expression2) {
-		if ( expression1 == null || expression2 == null ) {
-			throw new IllegalArgumentException( "arguments to prod() cannot be null" );
-		}
+		checkNotNullIAE( "expression1", expression1 );
+		checkNotNullIAE( "expression2", expression2 );
 
 		final Class resultType = BinaryArithmeticOperation.determineResultType( expression1.getJavaType(), expression2.getJavaType() );
 
@@ -847,9 +844,8 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <N extends Number> Expression<N> diff(Expression<? extends N> expression1, Expression<? extends N> expression2) {
-		if ( expression1 == null || expression2 == null ) {
-			throw new IllegalArgumentException( "arguments to diff() cannot be null" );
-		}
+		checkNotNullIAE( "expression1", expression1 );
+		checkNotNullIAE( "expression2", expression2 );
 
 		final Class resultType = BinaryArithmeticOperation.determineResultType( expression1.getJavaType(), expression2.getJavaType() );
 
@@ -865,9 +861,8 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <N extends Number> Expression<N> sum(Expression<? extends N> expression, N n) {
-		if ( expression == null || n == null ) {
-			throw new IllegalArgumentException( "arguments to sum() cannot be null" );
-		}
+		checkNotNullIAE( "expression", expression );
+		checkNotNullIAE( "n", n );
 
 		final Class resultType = BinaryArithmeticOperation.determineResultType( expression.getJavaType(), n.getClass() );
 
@@ -883,9 +878,8 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <N extends Number> Expression<N> prod(Expression<? extends N> expression, N n) {
-		if ( expression == null || n == null ) {
-			throw new IllegalArgumentException( "arguments to prod() cannot be null" );
-		}
+		checkNotNullIAE( "expression", expression );
+		checkNotNullIAE( "n", n );
 
 		final Class resultType = BinaryArithmeticOperation.determineResultType( expression.getJavaType(), n.getClass() );
 
@@ -901,9 +895,8 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <N extends Number> Expression<N> diff(Expression<? extends N> expression, N n) {
-		if ( expression == null || n == null ) {
-			throw new IllegalArgumentException( "arguments to diff() cannot be null" );
-		}
+		checkNotNullIAE( "expression", expression );
+		checkNotNullIAE( "n", n );
 
 		final Class resultType = BinaryArithmeticOperation.determineResultType( expression.getJavaType(), n.getClass() );
 
@@ -919,9 +912,8 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <N extends Number> Expression<N> sum(N n, Expression<? extends N> expression) {
-		if ( expression == null || n == null ) {
-			throw new IllegalArgumentException( "arguments to sum() cannot be null" );
-		}
+		checkNotNullIAE( "expression", expression );
+		checkNotNullIAE( "n", n );
 
 		final Class resultType = BinaryArithmeticOperation.determineResultType( n.getClass(), expression.getJavaType() );
 
@@ -937,9 +929,8 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <N extends Number> Expression<N> prod(N n, Expression<? extends N> expression) {
-		if ( n == null || expression == null ) {
-			throw new IllegalArgumentException( "arguments to prod() cannot be null" );
-		}
+		checkNotNullIAE( "expression", expression );
+		checkNotNullIAE( "n", n );
 
 		final Class resultType = BinaryArithmeticOperation.determineResultType( n.getClass(), expression.getJavaType() );
 
@@ -955,9 +946,8 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <N extends Number> Expression<N> diff(N n, Expression<? extends N> expression) {
-		if ( n == null || expression == null ) {
-			throw new IllegalArgumentException( "arguments to diff() cannot be null" );
-		}
+		checkNotNullIAE( "expression", expression );
+		checkNotNullIAE( "n", n );
 
 		final Class resultType = BinaryArithmeticOperation.determineResultType( n.getClass(), expression.getJavaType() );
 
@@ -973,9 +963,8 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 	@Override
 	@SuppressWarnings( {"unchecked"})
 	public Expression<Number> quot(Expression<? extends Number> expression1, Expression<? extends Number> expression2) {
-		if ( expression1 == null || expression2 == null ) {
-			throw new IllegalArgumentException( "arguments to quot() cannot be null" );
-		}
+		checkNotNullIAE( "expression1", expression1 );
+		checkNotNullIAE( "expression2", expression2 );
 
 		final Class resultType = BinaryArithmeticOperation.determineResultType( expression1.getJavaType(), expression2.getJavaType(), true );
 
@@ -991,9 +980,8 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 	@Override
 	@SuppressWarnings( {"unchecked"})
 	public Expression<Number> quot(Expression<? extends Number> expression, Number number) {
-		if ( expression == null || number == null ) {
-			throw new IllegalArgumentException( "arguments to quot() cannot be null" );
-		}
+		checkNotNullIAE( "expression", expression );
+		checkNotNullIAE( "number", number );
 
 		final Class resultType = BinaryArithmeticOperation.determineResultType( expression.getJavaType(), number.getClass(), true );
 
@@ -1009,9 +997,8 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 	@Override
 	@SuppressWarnings( {"unchecked"})
 	public Expression<Number> quot(Number number, Expression<? extends Number> expression) {
-		if ( expression == null || number == null ) {
-			throw new IllegalArgumentException( "arguments to quot() cannot be null" );
-		}
+		checkNotNullIAE( "expression", expression );
+		checkNotNullIAE( "number", number );
 
 		final Class resultType = BinaryArithmeticOperation.determineResultType( number.getClass(), expression.getJavaType(), true );
 
@@ -1026,9 +1013,8 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 
 	@Override
 	public Expression<Integer> mod(Expression<Integer> expression1, Expression<Integer> expression2) {
-		if ( expression1 == null || expression2 == null ) {
-			throw new IllegalArgumentException( "arguments to mod() cannot be null" );
-		}
+		checkNotNullIAE( "expression1", expression1 );
+		checkNotNullIAE( "expression2", expression2 );
 
 		return new BinaryArithmeticOperation<Integer>(
 				this,
@@ -1041,9 +1027,8 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 
 	@Override
 	public Expression<Integer> mod(Expression<Integer> expression, Integer integer) {
-		if ( expression == null || integer == null ) {
-			throw new IllegalArgumentException( "arguments to mod() cannot be null" );
-		}
+		checkNotNullIAE( "expression", expression );
+		checkNotNullIAE( "integer", integer );
 
 		return new BinaryArithmeticOperation<Integer>(
 				this,
@@ -1056,9 +1041,8 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 
 	@Override
 	public Expression<Integer> mod(Integer integer, Expression<Integer> expression) {
-		if ( integer == null || expression == null ) {
-			throw new IllegalArgumentException( "arguments to mod() cannot be null" );
-		}
+		checkNotNullIAE( "expression", expression );
+		checkNotNullIAE( "integer", integer );
 
 		return new BinaryArithmeticOperation<Integer>(
 				this,

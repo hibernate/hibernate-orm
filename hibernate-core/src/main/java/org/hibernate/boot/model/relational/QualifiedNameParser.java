@@ -6,6 +6,8 @@
  */
 package org.hibernate.boot.model.relational;
 
+import static org.hibernate.internal.util.Validator.checkNotNullIAE;
+
 import java.util.Objects;
 
 import org.hibernate.HibernateException;
@@ -31,13 +33,9 @@ public class QualifiedNameParser {
 		private final String qualifiedText;
 
 		public NameParts(Identifier catalogName, Identifier schemaName, Identifier objectName) {
-			if ( objectName == null ) {
-				throw new IllegalArgumentException( "Name cannot be null" );
-			}
-
 			this.catalogName = catalogName;
 			this.schemaName = schemaName;
-			this.objectName = objectName;
+			this.objectName = checkNotNullIAE( "objectName", objectName );
 
 			StringBuilder buff = new StringBuilder();
 			if ( catalogName != null ) {

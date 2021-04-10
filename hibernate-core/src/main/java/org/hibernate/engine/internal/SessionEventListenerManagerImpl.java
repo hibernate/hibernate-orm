@@ -6,9 +6,10 @@
  */
 package org.hibernate.engine.internal;
 
+import static org.hibernate.internal.util.Validator.checkNotNullNPE;
+
 import java.io.Serializable;
 import java.util.Arrays;
-import java.util.Objects;
 
 import org.hibernate.SessionEventListener;
 import org.hibernate.engine.spi.SessionEventListenerManager;
@@ -27,7 +28,7 @@ public class SessionEventListenerManagerImpl implements SessionEventListenerMana
 
 	@Override
 	public void addListener(final SessionEventListener... additionalListeners) {
-		Objects.requireNonNull( additionalListeners );
+		checkNotNullNPE( "additionalListeners", additionalListeners );
 		final SessionEventListener[] existing = this.listeners;
 		if ( existing == null ) {
 			//Make a defensive copy as this array can be tracked back to API (user code)

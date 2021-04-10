@@ -6,6 +6,8 @@
  */
 package org.hibernate.mapping;
 
+import static org.hibernate.internal.util.Validator.checkNotNullNPE;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,7 +17,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -867,10 +868,8 @@ public class Table implements RelationalModel, Serializable, Exportable {
 		private final Column[] referencedColumns;
 
 		ForeignKeyKey(List<Column> columns, String referencedClassName, List<Column> referencedColumns) {
-			Objects.requireNonNull( columns );
-			Objects.requireNonNull( referencedClassName );
-			this.referencedClassName = referencedClassName;
-			this.columns = columns.toArray( EMPTY_COLUMN_ARRAY );
+			this.referencedClassName = checkNotNullNPE( "referencedClassName", referencedClassName );
+			this.columns = checkNotNullNPE( "columns", columns ).toArray( EMPTY_COLUMN_ARRAY );
 			if ( referencedColumns != null ) {
 				this.referencedColumns = referencedColumns.toArray( EMPTY_COLUMN_ARRAY );
 			}

@@ -6,6 +6,8 @@
  */
 package org.hibernate.query.internal;
 
+import static org.hibernate.internal.util.Validator.checkNotNullIAE;
+
 import java.util.Collection;
 import javax.persistence.TemporalType;
 
@@ -65,10 +67,7 @@ public class QueryParameterListBindingImpl<T> implements QueryParameterListBindi
 	}
 
 	private void bindValue(Collection<T> bindValues) {
-		if ( bindValues == null ) {
-			throw new IllegalArgumentException( "Collection must be not null!" );
-		}
-		this.bindValues = bindValues;
+		this.bindValues = checkNotNullIAE( "bindValues", bindValues );
 	}
 
 	private void validate(Collection<T> value) {

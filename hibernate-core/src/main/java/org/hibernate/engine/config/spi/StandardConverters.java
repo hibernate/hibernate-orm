@@ -8,6 +8,7 @@ package org.hibernate.engine.config.spi;
 
 
 import static org.hibernate.engine.config.spi.ConfigurationService.Converter;
+import static org.hibernate.internal.util.Validator.checkNotNullIAE;
 
 /**
  * Standard set of setting converters
@@ -18,9 +19,7 @@ public class StandardConverters {
 	public static final Converter<Boolean> BOOLEAN = new Converter<Boolean>() {
 		@Override
 		public Boolean convert(Object value) {
-			if ( value == null ) {
-				throw new IllegalArgumentException( "Null value passed to convert" );
-			}
+			checkNotNullIAE( "value", value );
 
 			return Boolean.class.isInstance( value )
 					? Boolean.class.cast( value )
@@ -31,9 +30,7 @@ public class StandardConverters {
 	public static final Converter<String> STRING = new Converter<String>() {
 		@Override
 		public String convert(Object value) {
-			if ( value == null ) {
-				throw new IllegalArgumentException( "Null value passed to convert" );
-			}
+			checkNotNullIAE( "value", value );
 
 			return value.toString();
 		}

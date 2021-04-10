@@ -6,6 +6,8 @@
  */
 package org.hibernate.tool.schema.extract.internal;
 
+import static org.hibernate.internal.util.Validator.checkNotNullIAE;
+
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
@@ -104,9 +106,8 @@ public class DatabaseInformationImpl
 
 	@Override
 	public TableInformation getTableInformation(QualifiedTableName tableName) {
-		if ( tableName.getObjectName() == null ) {
-			throw new IllegalArgumentException( "Passed table name cannot be null" );
-		}
+		checkNotNullIAE( "tableName", tableName );
+		checkNotNullIAE( "tableName.getObjectName", tableName.getObjectName() );
 
 		return extractor.getTable(
 				tableName.getCatalogName(),

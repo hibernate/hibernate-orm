@@ -6,6 +6,9 @@
  */
 package org.hibernate.criterion;
 
+import static org.hibernate.internal.util.Validator.checkNotNullNPE;
+import static org.hibernate.internal.util.Validator.checkNotNullIAE;
+
 import java.util.Collection;
 import java.util.Map;
 
@@ -142,9 +145,7 @@ public class Restrictions {
 	 * @see LikeExpression
 	 */
 	public static Criterion ilike(String propertyName, Object value) {
-		if ( value == null ) {
-			throw new IllegalArgumentException( "Comparison value passed to ilike cannot be null" );
-		}
+		checkNotNullIAE( "value", value );
 		return ilike( propertyName, value.toString(), MatchMode.EXACT );
 	}
 
@@ -160,9 +161,7 @@ public class Restrictions {
 	 * @see LikeExpression
 	 */
 	public static Criterion ilike(String propertyName, String value, MatchMode matchMode) {
-		if ( value == null ) {
-			throw new IllegalArgumentException( "Comparison value passed to ilike cannot be null" );
-		}
+		checkNotNullIAE( "value", value );
 		return new LikeExpression( propertyName, value, matchMode, null, true );
 	}
 

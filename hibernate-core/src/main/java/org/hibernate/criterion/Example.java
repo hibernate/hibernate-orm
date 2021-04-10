@@ -6,6 +6,8 @@
  */
 package org.hibernate.criterion;
 
+import static org.hibernate.internal.util.Validator.checkNotNullNPE;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -57,10 +59,7 @@ public class Example implements Criterion {
 	 * @return a new instance of Example
 	 */
 	public static Example create(Object exampleEntity) {
-		if ( exampleEntity == null ) {
-			throw new NullPointerException( "null example entity" );
-		}
-		return new Example( exampleEntity, NotNullPropertySelector.INSTANCE );
+		return new Example( checkNotNullNPE( "exampleEntity", exampleEntity ), NotNullPropertySelector.INSTANCE );
 	}
 
 	/**

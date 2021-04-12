@@ -79,7 +79,7 @@ public class PGGeometryTypeDescriptor implements SqlTypeDescriptor {
 
 	@Override
 	public int getSqlType() {
-		return Types.OTHER;
+		return Types.DISTINCT; //valid code, but not used anywhere
 	}
 
 	@Override

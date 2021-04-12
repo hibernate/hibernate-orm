@@ -11,8 +11,11 @@ import java.io.Serializable;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
+import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.PersistentAttributeInterceptable;
+import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreLogging;
@@ -31,8 +34,8 @@ import org.hibernate.type.Type;
 @SuppressWarnings("WeakerAccess")
 public class WrapVisitor extends ProxyVisitor {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( WrapVisitor.class );
-	private Object entity;
-	private Serializable id;
+	protected Object entity;
+	protected Serializable id;
 
 	private boolean substitute;
 
@@ -105,8 +108,17 @@ public class WrapVisitor extends ProxyVisitor {
 				return null;
 			}
 			else {
+				if ( entity instanceof PersistentAttributeInterceptable ) {
+					final PersistentAttributeInterceptor interceptor = ( (PersistentAttributeInterceptable) entity ).$$_hibernate_getInterceptor();
+					if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
+						if ( !( (EnhancementAsProxyLazinessInterceptor) interceptor ).isInitialized() ) {
+							return null;
+						}
+					}
+				}
 
-				PersistentCollection persistentCollection = collectionType.wrap( session, collection );
+				final PersistentCollection persistentCollection = collectionType.wrap( session, collection );
+
 				persistenceContext.addNewCollection( persister, persistentCollection );
 
 				if ( LOG.isTraceEnabled() ) {
@@ -114,11 +126,8 @@ public class WrapVisitor extends ProxyVisitor {
 				}
 
 				return persistentCollection; //Force a substitution!
-
 			}
-
 		}
-
 	}
 
 	@Override

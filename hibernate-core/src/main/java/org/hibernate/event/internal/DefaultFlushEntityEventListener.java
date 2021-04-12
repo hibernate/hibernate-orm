@@ -22,7 +22,6 @@ import org.hibernate.engine.internal.Nullability;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
@@ -40,7 +39,6 @@ import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.Type;
 
@@ -166,7 +164,8 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		event.setPropertyValues( values );
 
 		//TODO: avoid this for non-new instances where mightBeDirty==false
-		boolean substitute = wrapCollections( session, persister, types, values );
+
+		boolean substitute = wrapCollections( session, persister, entity, entry.getId(), types, values );
 
 		if ( isUpdateNecessary( event, mightBeDirty ) ) {
 			substitute = scheduleUpdate( event ) || substitute;
@@ -214,6 +213,8 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	private boolean wrapCollections(
 			EventSource session,
 			EntityPersister persister,
+			Object entity,
+			Serializable id,
 			Type[] types,
 			Object[] values
 	) {
@@ -227,7 +228,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			// don't dirty the container. Also, for versioned data, we
 			// need to wrap before calling searchForDirtyCollections
 
-			WrapVisitor visitor = new WrapVisitor( session );
+			WrapVisitor visitor = new WrapVisitor( entity, id ,session );
 			// substitutes into values by side-effect
 			visitor.processEntityPropertyValues( values, types );
 			return visitor.isSubstitutionRequired();

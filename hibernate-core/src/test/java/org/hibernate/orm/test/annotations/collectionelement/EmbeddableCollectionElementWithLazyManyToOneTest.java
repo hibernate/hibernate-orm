@@ -18,6 +18,9 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 
 import org.hibernate.Hibernate;
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
+import org.hibernate.query.criteria.JpaCriteriaQuery;
+import org.hibernate.query.criteria.JpaRoot;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;

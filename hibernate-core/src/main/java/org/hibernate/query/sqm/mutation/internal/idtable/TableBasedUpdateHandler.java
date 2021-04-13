@@ -133,7 +133,10 @@ public class TableBasedUpdateHandler
 
 		final TableGroup updatingTableGroup = converterDelegate.getMutatingTableGroup();
 
-		final TableReference hierarchyRootTableReference = updatingTableGroup.resolveTableReference( hierarchyRootTableName );
+		final TableReference hierarchyRootTableReference = updatingTableGroup.resolveTableReference(
+				updatingTableGroup.getNavigablePath(),
+				hierarchyRootTableName
+		);
 		assert hierarchyRootTableReference != null;
 
 		final Map<SqmParameter, List<List<JdbcParameter>>> parameterResolutions;

@@ -33,7 +33,6 @@ import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
-import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
@@ -374,7 +373,7 @@ public class SqmPolymorphicRootDescriptor<T> implements EntityDomainType<T> {
 	}
 
 	@Override
-	public SqmPath<T> createSqmPath(SqmPath<?> lhs, SqmCreationState creationState) {
+	public SqmPath<T> createSqmPath(SqmPath<?> lhs) {
 		throw new UnsupportedOperationException();
 	}
 

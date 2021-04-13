@@ -315,7 +315,7 @@ public class DomainResultCreationStateImpl
 
 		final Consumer<Fetchable> fetchableConsumer = fetchable -> {
 			final String fetchableName = fetchable.getFetchableName();
-			final NavigablePath fetchPath = fetchParent.getNavigablePath().append( fetchableName );
+			final NavigablePath fetchPath = fetchParent.resolveNavigablePath( fetchable );
 			final NavigablePath relativePath = relativePathStack.isEmpty()
 					? new NavigablePath( fetchableName )
 					: relativePathStack.getCurrent().append( fetchableName );

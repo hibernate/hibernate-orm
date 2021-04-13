@@ -10,9 +10,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import javax.persistence.metamodel.MapAttribute;
 import javax.persistence.metamodel.PluralAttribute;
@@ -21,11 +19,8 @@ import javax.persistence.metamodel.SingularAttribute;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
-import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
-import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
+import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.IllegalPathUsageException;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -39,23 +34,14 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  */
 public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implements SqmPath<T> {
 	private final NavigablePath navigablePath;
-	private final SqmPath lhs;
+	private final SqmPath<?> lhs;
 
 	/**
-	 * Note that this field is only really used to support Criteria building.
-	 * For HQL processing the {@link org.hibernate.query.hql.spi.SqmPathRegistry}
-	 * serves the same purpose.
+	 * For HQL and Criteria processing - used to track reusable paths relative to this path.
+	 * E.g., given `p.mate.mate` the SqmRoot identified by `p` would
+	 * have a reusable path for the `p.mate` path.
 	 */
-	private Map<String, SqmPath> attributePathRegistry;
-
-	/**
-	 * For HQL processing - used to track implicit-join paths relative to this
-	 * path.  E.g., given `p.mate.mate` the SqmRoot identified by `p` would
-	 * have an implicit-join for the `p.mate` path.  Note however that the SqmPath
-	 * for `p.mate` would not have one for `p.mate.mate` *unless* `p.mate.mate` were
-	 * de-referenced somewhere else in the query.
-	 */
-	private Map<String,SqmPath<?>> implicitJoinPaths;
+	private Map<String, SqmPath<?>> reusablePaths;
 
 	@SuppressWarnings("WeakerAccess")
 	protected AbstractSqmPath(
@@ -79,7 +65,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	}
 
 	@SuppressWarnings("WeakerAccess")
-	protected AbstractSqmPath(SqmPathSource<T> referencedPathSource, SqmPath lhs, NodeBuilder nodeBuilder) {
+	protected AbstractSqmPath(SqmPathSource<T> referencedPathSource, SqmPath<?> lhs, NodeBuilder nodeBuilder) {
 		this(
 				lhs == null
 						? new NavigablePath( referencedPathSource.getPathName() )
@@ -101,43 +87,43 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	}
 
 	@Override
-	public List<SqmPath<?>> getImplicitJoinPaths() {
-		if ( implicitJoinPaths == null ) {
+	public List<SqmPath<?>> getReusablePaths() {
+		if ( reusablePaths == null ) {
 			return Collections.emptyList();
 		}
 
-		return new ArrayList<>( implicitJoinPaths.values() );
+		return new ArrayList<>( reusablePaths.values() );
 	}
 
 	@Override
-	public void visitImplicitJoinPaths(Consumer<SqmPath<?>> consumer) {
-		if ( implicitJoinPaths != null ) {
-			implicitJoinPaths.values().forEach( consumer );
+	public void visitReusablePaths(Consumer<SqmPath<?>> consumer) {
+		if ( reusablePaths != null ) {
+			reusablePaths.values().forEach( consumer );
 		}
 	}
 
 	@Override
-	public void registerImplicitJoinPath(SqmPath<?> path) {
+	public void registerReusablePath(SqmPath<?> path) {
 		assert path.getLhs() == this;
 
-		if ( implicitJoinPaths == null ) {
-			implicitJoinPaths = new HashMap<>();
+		if ( reusablePaths == null ) {
+			reusablePaths = new HashMap<>();
 		}
 
 		final String relativeName = path.getNavigablePath().getLocalName();
 
-		final SqmPath<?> previous = implicitJoinPaths.put( relativeName, path );
+		final SqmPath<?> previous = reusablePaths.put( relativeName, path );
 		if ( previous != null && previous != path ) {
 			throw new IllegalStateException( "Implicit-join path registration unexpectedly overrode previous registration - " + relativeName );
 		}
 	}
 
 	@Override
-	public SqmPath<?> getImplicitJoinPath(String name) {
-		if ( implicitJoinPaths == null ) {
+	public SqmPath<?> getReusablePath(String name) {
+		if ( reusablePaths == null ) {
 			return null;
 		}
-		return implicitJoinPaths.get( name );
+		return reusablePaths.get( name );
 	}
 
 	@Override
@@ -185,7 +171,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 					}
 
 					@Override
-					public SqmPath createSqmPath(SqmPath lhs, SqmCreationState creationState) {
+					public SqmPath createSqmPath(SqmPath lhs) {
 						return new SqmBasicValuedSimplePath( discriminatorNavigablePath, this, AbstractSqmPath.this, nodeBuilder() );
 					}
 
@@ -195,7 +181,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 					}
 
 					@Override
-					public Class getBindableJavaType() {
+					public Class<?> getBindableJavaType() {
 						return null;
 					}
 
@@ -234,111 +220,49 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 			throw new IllegalStateException( "Cannot resolve path `" + attributeName + "` relative to a basic-valued path: `" + getNavigablePath() + "`" );
 		}
 
-		return resolvePath(
-				attributeName,
-				(pathSource, name) -> {
-					final SqmPathSource<?> subNavigable = getReferencedPathSource().findSubPathSource( attributeName );
+		final SqmPathSource<?> subNavigable = getReferencedPathSource().findSubPathSource( attributeName );
 
-					if ( subNavigable == null ) {
-						throw new IllegalArgumentException( "Could not resolve attribute named `" + attributeName + "` relative to `" + getNavigablePath() + "`" );
-					}
-
-					if ( subNavigable instanceof SingularPersistentAttribute ) {
-						return createSingularPath( (SingularPersistentAttribute<?,?>) subNavigable );
-					}
-					else {
-						assert subNavigable instanceof PluralPersistentAttribute;
-						return createPluralPath( (PluralPersistentAttribute<?,?,?>) subNavigable );
-					}
-				}
-		);
-	}
-
-	@SuppressWarnings("unchecked")
-	private SqmPath createSingularPath(SingularPersistentAttribute attribute) {
-		final NavigablePath subNavPath = getNavigablePath().append( attribute.getPathName() );
-
-		switch ( attribute.getAttributeClassification() ) {
-			case BASIC: {
-				return new SqmBasicValuedSimplePath( subNavPath, attribute, this, nodeBuilder() );
-			}
-			case EMBEDDED: {
-				return new SqmEmbeddedValuedSimplePath( subNavPath, attribute, this, nodeBuilder() );
-			}
-			case ANY: {
-				return new SqmAnyValuedSimplePath( subNavPath, attribute, this, nodeBuilder() );
-			}
-			case ONE_TO_ONE:
-			case MANY_TO_ONE: {
-				return new SqmEntityValuedSimplePath( subNavPath, attribute, this, nodeBuilder() );
-			}
-			default: {
-				throw new UnsupportedOperationException(
-						String.format(
-								Locale.ROOT,
-								"Cannot create SqmPath from singular attribute [%s#%s] - unknown classification : %s",
-								attribute.getDeclaringType().getTypeName(),
-								attribute.getName(),
-								attribute.getAttributeClassification()
-						)
-				);
-			}
+		if ( subNavigable == null ) {
+			throw new IllegalArgumentException( "Could not resolve attribute named `" + attributeName + "` relative to `" + getNavigablePath() + "`" );
 		}
+		return resolvePath( attributeName, subNavigable );
 	}
 
-	private SqmPath createPluralPath(PluralPersistentAttribute pluralAttribute) {
-		return new SqmPluralValuedSimplePath(
-				getNavigablePath().append( pluralAttribute.getPathName() ),
-				pluralAttribute,
-				this,
-				nodeBuilder()
-		);
+	private SqmPath<?> resolvePath(PersistentAttribute<?, ?> attribute) {
+		return resolvePath( attribute.getName(), (SqmPathSource<?>) attribute );
 	}
 
-
-	private SqmPath resolvePath(String attributeName, BiFunction<SqmPath, String, SqmPath> creator) {
-		final SqmPath pathSource = getLhs();
-
-		if ( attributePathRegistry == null ) {
-			attributePathRegistry = new HashMap<>();
-			final SqmPath path = creator.apply( pathSource, attributeName );
-			attributePathRegistry.put( attributeName, path );
+	private SqmPath<?> resolvePath(String attributeName, SqmPathSource<?> pathSource) {
+		if ( reusablePaths == null ) {
+			reusablePaths = new HashMap<>();
+			final SqmPath<?> path = pathSource.createSqmPath( this );
+			reusablePaths.put( attributeName, path );
 			return path;
 		}
 		else {
-			return attributePathRegistry.computeIfAbsent(
+			return reusablePaths.computeIfAbsent(
 					attributeName,
-					name -> creator.apply( pathSource, attributeName )
+					name -> pathSource.createSqmPath( this )
 			);
 		}
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public SqmPath get(SingularAttribute jpaAttribute) {
-		final SingularPersistentAttribute attribute = (SingularPersistentAttribute) jpaAttribute;
-		return resolvePath(
-				attribute.getName(),
-				(pathSource, name) -> createSingularPath( attribute )
-		);
+	public <Y> SqmPath<Y> get(SingularAttribute<? super T, Y> jpaAttribute) {
+		return (SqmPath<Y>) resolvePath( (PersistentAttribute<?, ?>) jpaAttribute );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public SqmPath get(PluralAttribute attribute) {
-		return resolvePath(
-				attribute.getName(),
-				(pathSource, name) -> createPluralPath( (PluralPersistentAttribute) attribute )
-		);
+	public <E, C extends java.util.Collection<E>> SqmPath<C> get(PluralAttribute<T, C, E> attribute) {
+		return (SqmPath<C>) resolvePath( (PersistentAttribute<?, ?>) attribute );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public SqmPath get(MapAttribute map) {
-		return resolvePath(
-				map.getName(),
-				(pathSource, name) -> createPluralPath( (MapPersistentAttribute) map )
-		);
+	public <K, V, M extends java.util.Map<K, V>> SqmPath<M> get(MapAttribute<T, K, V> map) {
+		return (SqmPath<M>) resolvePath( (PersistentAttribute<?, ?>) map );
 	}
 
 	@Override

@@ -12,7 +12,6 @@ import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.IllegalPathUsageException;
 import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 
@@ -42,13 +41,13 @@ public class BasicSqmPathSource<J>
 	}
 
 	@Override
-	public SqmPath<J> createSqmPath(SqmPath<?> lhs, SqmCreationState creationState) {
+	public SqmPath<J> createSqmPath(SqmPath<?> lhs) {
 		final NavigablePath navigablePath = lhs.getNavigablePath().append( getPathName() );
 		return new SqmBasicValuedSimplePath<>(
 				navigablePath,
 				this,
 				lhs,
-				creationState.getCreationContext().getNodeBuilder()
+				lhs.nodeBuilder()
 		);
 	}
 

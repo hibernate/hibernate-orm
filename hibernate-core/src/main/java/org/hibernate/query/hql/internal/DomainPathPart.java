@@ -7,7 +7,6 @@
 package org.hibernate.query.hql.internal;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.query.SemanticException;
 import org.hibernate.query.hql.HqlLogging;
 import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationState;
@@ -43,18 +42,6 @@ public class DomainPathPart implements SemanticPathPart {
 				currentPath,
 				name
 		);
-		final SqmPath<?> lhs = currentPath;
-		final SqmPathSource subPathSource = lhs.getReferencedPathSource().findSubPathSource( name );
-		if ( subPathSource == null ) {
-			throw new SemanticException( "Cannot resolve path (`" + name + "`) relative to `"  + lhs.getNavigablePath() + "`" );
-		}
-		//noinspection unchecked
-		final SqmPath<?> existingImplicitJoinPath = lhs.getImplicitJoinPath( name );
-		if ( existingImplicitJoinPath != null ) {
-			currentPath = existingImplicitJoinPath;
-			return this;
-		}
-
 // if we want to allow re-use of matched unaliased SqmFrom nodes
 //
 //		final SqmPathRegistry pathRegistry = creationState.getCurrentProcessingState().getPathRegistry();
@@ -70,13 +57,11 @@ public class DomainPathPart implements SemanticPathPart {
 //				}
 //			}
 //		}
-//
-		currentPath = subPathSource.createSqmPath( lhs, creationState );
+		currentPath = (SqmPath<?>) currentPath.get( name );
 		if ( isTerminal ) {
 			return currentPath;
 		}
 		else {
-			lhs.registerImplicitJoinPath( currentPath );
 			return this;
 		}
 	}

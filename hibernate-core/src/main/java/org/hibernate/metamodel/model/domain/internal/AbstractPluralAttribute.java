@@ -16,7 +16,6 @@ import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
@@ -128,14 +127,14 @@ public abstract class AbstractPluralAttribute<D,C,E>
 	}
 
 	@Override
-	public SqmPath<E> createSqmPath(SqmPath<?> lhs, SqmCreationState creationState) {
+	public SqmPath<E> createSqmPath(SqmPath<?> lhs) {
 		final NavigablePath navigablePath = lhs.getNavigablePath().append( getPathName() );
 		//noinspection unchecked
 		return new SqmPluralValuedSimplePath(
 				navigablePath,
 				this,
 				lhs,
-				creationState.getCreationContext().getNodeBuilder()
+				lhs.nodeBuilder()
 		);
 	}
 }

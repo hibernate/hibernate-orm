@@ -317,7 +317,8 @@ public class OneToManySizeTest2 {
 							Student.class
 					).getResultList();
 					assertEquals( 3L, students.size() );
-					assertEquals( 1, countNumberOfJoins( statementInterceptor.getSqlQueries().get( 0 ) ) );
+					// Since the join for "student.teacher" is never used and is a non-optional association we don't generate a SQL join for it
+					assertEquals( 0, countNumberOfJoins( statementInterceptor.getSqlQueries().get( 0 ) ) );
 
 					statementInterceptor.clear();
 
@@ -333,7 +334,8 @@ public class OneToManySizeTest2 {
 							"select student from Student student join student.teacher where size( student.teacher.students ) > -1",
 							Student.class
 					).getResultList();
-					statementInterceptor.assertNumberOfJoins( 0, 2 );
+					// Since the join for "student.teacher" is never used and is a non-optional association we don't generate a SQL join for it
+					statementInterceptor.assertNumberOfJoins( 0, 1 );
 
 				}
 		);
@@ -351,7 +353,8 @@ public class OneToManySizeTest2 {
 							Student.class
 					).getResultList();
 					assertEquals( 3L, students.size() );
-					assertEquals( 2, countNumberOfJoins( statementInspector.getSqlQueries().get( 0 ) ) );
+					// Since the join for "student.teacher" is never used and is a non-optional association we don't generate a SQL join for it
+					assertEquals( 1, countNumberOfJoins( statementInspector.getSqlQueries().get( 0 ) ) );
 
 					students = session.createQuery(
 							"select student from Student student join student.teacher t where size(student.teacher.students) > 0",

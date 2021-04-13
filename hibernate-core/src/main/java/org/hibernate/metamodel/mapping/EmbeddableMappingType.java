@@ -454,6 +454,7 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectableMapp
 						attributeIndex,
 						bootPropertyDescriptor,
 						entityPersister,
+						entityPersister,
 						(EntityType) subtype,
 						getRepresentationStrategy().resolvePropertyAccess( bootPropertyDescriptor ),
 						compositeType.getCascadeStyle( attributeIndex ),

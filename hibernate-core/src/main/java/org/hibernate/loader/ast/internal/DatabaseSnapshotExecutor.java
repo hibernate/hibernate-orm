@@ -109,10 +109,13 @@ class DatabaseSnapshotExecutor {
 		domainResults.add(
 				new QueryLiteral<>( null, IntegerType.INSTANCE ).createDomainResult( null, state )
 		);
-
+		final NavigablePath idNavigablePath = rootPath.append( entityDescriptor.getIdentifierMapping().getNavigableRole().getNavigableName() );
 		entityDescriptor.getIdentifierMapping().forEachSelectable(
 				(columnIndex, selection) -> {
-					final TableReference tableReference = rootTableGroup.resolveTableReference( selection.getContainingTableExpression() );
+					final TableReference tableReference = rootTableGroup.resolveTableReference(
+							idNavigablePath,
+							selection.getContainingTableExpression()
+					);
 
 					final JdbcParameter jdbcParameter = new JdbcParameterImpl( selection.getJdbcMapping() );
 					jdbcParameters.add( jdbcParameter );

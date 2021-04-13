@@ -91,4 +91,8 @@ public interface TableGroup extends SqlAstNode, ColumnReferenceQualifier, SqmPat
 	default boolean isRealTableGroup() {
 		return false;
 	}
+
+	default boolean isFetched() {
+		return false;
+	}
 }

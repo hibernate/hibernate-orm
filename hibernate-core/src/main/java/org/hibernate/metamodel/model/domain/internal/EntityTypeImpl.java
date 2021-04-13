@@ -21,7 +21,6 @@ import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
-import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.IllegalPathUsageException;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
@@ -86,12 +85,12 @@ public class EntityTypeImpl<J>
 				}
 
 				@Override
-				public SqmPath<?> createSqmPath(SqmPath lhs, SqmCreationState creationState) {
+				public SqmPath<?> createSqmPath(SqmPath lhs) {
 					return new SqmBasicValuedSimplePath(
 							lhs.getNavigablePath().append( EntityDiscriminatorMapping.ROLE_NAME ),
 							this,
 							lhs,
-							creationState.getCreationContext().getNodeBuilder()
+							lhs.nodeBuilder()
 					);
 				}
 
@@ -223,8 +222,7 @@ public class EntityTypeImpl<J>
 
 	@Override
 	public SqmPath<J> createSqmPath(
-			SqmPath<?> lhs,
-			SqmCreationState creationState) {
+			SqmPath<?> lhs) {
 		throw new UnsupportedOperationException(
 				"EntityType cannot be used to create an SqmPath - that would be an SqmFrom which are created directly"
 		);

@@ -29,6 +29,7 @@ import org.hibernate.type.descriptor.jdbc.RealTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.SmallIntTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.TimeTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.TimestampTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.TimestampWithTimeZoneDescriptor;
 import org.hibernate.type.descriptor.jdbc.TinyIntTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.VarbinaryTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.VarcharTypeDescriptor;
@@ -57,6 +58,7 @@ public class JdbcTypeDescriptorBaseline {
 
 		target.addDescriptor( DateTypeDescriptor.INSTANCE );
 		target.addDescriptor( TimestampTypeDescriptor.INSTANCE );
+		target.addDescriptor( TimestampWithTimeZoneDescriptor.INSTANCE );
 		target.addDescriptor( TimeTypeDescriptor.INSTANCE );
 
 		target.addDescriptor( BinaryTypeDescriptor.INSTANCE );

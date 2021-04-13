@@ -1294,7 +1294,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			DomainResultCreationState creationState) {
 		if ( hasSubclasses() ) {
 			//noinspection unchecked
-			return new EntityResultJoinedSubclassImpl( navigablePath, this, resultVariable, creationState );
+			return new EntityResultJoinedSubclassImpl( navigablePath, this, tableGroup, resultVariable, creationState );
 		}
 		else {
 			return super.createDomainResult( navigablePath, tableGroup, resultVariable, creationState );
@@ -1358,11 +1358,11 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		boolean addPrimaryTableCaseAsLastCaseExpression = false;
 		for ( String tableName : discriminatorValuesByTableName.keySet() ) {
 			if ( !primaryTableReference.getTableExpression().equals( tableName ) ) {
-				TableReference tableReference = entityTableGroup.getTableReference( tableName );
+				TableReference tableReference = entityTableGroup.getTableReference( entityTableGroup.getNavigablePath(), tableName );
 				if ( tableReference == null ) {
 					// we have not yet created a TableReference for this sub-class table, but we need to because
 					// it has a discriminator value associated with it
-					tableReference = entityTableGroup.resolveTableReference( tableName );
+					tableReference = entityTableGroup.resolveTableReference( entityTableGroup.getNavigablePath(), tableName );
 				}
 
 				final ColumnReference identifierColumnReference = getIdentifierColumnReference( tableReference );

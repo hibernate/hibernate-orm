@@ -87,7 +87,10 @@ public class MatchingIdSelectionHelper {
 
 		targetEntityDescriptor.getIdentifierMapping().forEachSelectable(
 				(position, selection) -> {
-					final TableReference tableReference = mutatingTableGroup.resolveTableReference( selection.getContainingTableExpression() );
+					final TableReference tableReference = mutatingTableGroup.resolveTableReference(
+							mutatingTableGroup.getNavigablePath(),
+							selection.getContainingTableExpression()
+					);
 					final Expression expression = sqmConverter.getSqlExpressionResolver().resolveSqlExpression(
 							SqlExpressionResolver.createColumnReferenceKey( tableReference, selection.getSelectionExpression() ),
 							sqlAstProcessingState -> new ColumnReference(
@@ -153,7 +156,10 @@ public class MatchingIdSelectionHelper {
 
 		targetEntityDescriptor.getIdentifierMapping().forEachSelectable(
 				(position, selection) -> {
-					final TableReference tableReference = mutatingTableGroup.resolveTableReference( selection.getContainingTableExpression() );
+					final TableReference tableReference = mutatingTableGroup.resolveTableReference(
+							mutatingTableGroup.getNavigablePath(),
+							selection.getContainingTableExpression()
+					);
 					final Expression expression = sqmConverter.getSqlExpressionResolver().resolveSqlExpression(
 							SqlExpressionResolver.createColumnReferenceKey( tableReference, selection.getSelectionExpression() ),
 							sqlAstProcessingState -> new ColumnReference(

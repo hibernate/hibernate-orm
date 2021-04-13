@@ -86,26 +86,24 @@ public class SqmPluralValuedSimplePath<E> extends AbstractSqmSimplePath<E> {
 
 					if ( CollectionPropertyNames.COLLECTION_ELEMENTS.equals( name ) ) {
 						return referencedPathSource.getElementPathSource().createSqmPath(
-								this,
-								creationState
+								this
 						);
 					}
 
 					if ( CollectionPropertyNames.COLLECTION_INDEX.equals( name )
 							|| CollectionPropertyNames.COLLECTION_INDICES.equals( name ) ) {
 						if ( referencedPathSource instanceof MapPersistentAttribute ) {
-							return ( (MapPersistentAttribute) referencedPathSource ).getKeyPathSource().createSqmPath( this, creationState );
+							return ( (MapPersistentAttribute) referencedPathSource ).getKeyPathSource().createSqmPath( this );
 						}
 						else if ( referencedPathSource instanceof ListPersistentAttribute ) {
-							return referencedPathSource.getIndexPathSource().createSqmPath( this, creationState );
+							return referencedPathSource.getIndexPathSource().createSqmPath( this );
 						}
 
 						throw new UnsupportedOperationException(  );
 					}
 
 					return referencedPathSource.getElementPathSource().createSqmPath(
-							this,
-							creationState
+							this
 					);
 				}
 		);

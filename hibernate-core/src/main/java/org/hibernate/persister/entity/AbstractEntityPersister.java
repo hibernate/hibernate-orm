@@ -1267,7 +1267,7 @@ public abstract class AbstractEntityPersister
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		//noinspection unchecked
-		return new EntityResultImpl( navigablePath, this, resultVariable, creationState );
+		return new EntityResultImpl( navigablePath, this, tableGroup, resultVariable, creationState );
 	}
 
 	@Override
@@ -6612,6 +6612,7 @@ public abstract class AbstractEntityPersister
 					getNavigableRole().append( attrName ),
 					stateArrayPosition,
 					bootProperty,
+					this,
 					this,
 					(EntityType) attrType,
 					propertyAccess,

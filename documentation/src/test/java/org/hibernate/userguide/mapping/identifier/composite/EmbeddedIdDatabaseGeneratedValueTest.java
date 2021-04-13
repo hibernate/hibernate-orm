@@ -7,6 +7,7 @@
 package org.hibernate.userguide.mapping.identifier.composite;
 
 import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
@@ -33,15 +34,16 @@ public class EmbeddedIdDatabaseGeneratedValueTest extends BaseEntityManagerFunct
 	@TestForIssue(jiraKey = "HHH-13096")
 	public void test() {
 		final EventId eventId = doInJPA( this::entityManagerFactory, entityManager -> {
+			// On H2 1.4.199+ CURRENT_TIMESTAMP returns a timestamp with timezone
 			//tag::identifiers-composite-generated-database-example[]
-			Timestamp currentTimestamp = (Timestamp) entityManager
+			OffsetDateTime currentTimestamp = (OffsetDateTime) entityManager
 			.createNativeQuery(
 				"SELECT CURRENT_TIMESTAMP" )
 			.getSingleResult();
 
 			EventId id = new EventId();
 			id.setCategory( 1 );
-			id.setCreatedOn( currentTimestamp );
+			id.setCreatedOn( Timestamp.from( currentTimestamp.toInstant() ) );
 
 			Event event = new Event();
 			event.setId( id );

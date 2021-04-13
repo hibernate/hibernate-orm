@@ -83,7 +83,7 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping, SelectableMap
 		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
 
 		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
-		final TableReference columnTableReference = tableGroup.resolveTableReference( tableExpression );
+		final TableReference columnTableReference = tableGroup.resolveTableReference( navigablePath, tableExpression );
 
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				sqlExpressionResolver.resolveSqlExpression(

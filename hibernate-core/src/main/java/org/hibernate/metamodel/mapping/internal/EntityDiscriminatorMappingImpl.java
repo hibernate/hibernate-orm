@@ -42,7 +42,11 @@ public class EntityDiscriminatorMappingImpl extends AbstractEntityDiscriminatorM
 		final SqlExpressionResolver expressionResolver = creationState.getSqlAstCreationState()
 				.getSqlExpressionResolver();
 
-		final TableReference tableReference = tableGroup.resolveTableReference( getContainingTableExpression() );
+		final TableReference tableReference = tableGroup.resolveTableReference(
+				tableGroup.getNavigablePath()
+						.append( getNavigableRole().getNavigableName() ),
+				getContainingTableExpression()
+		);
 
 		return expressionResolver.resolveSqlSelection(
 				expressionResolver.resolveSqlExpression(

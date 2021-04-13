@@ -6,11 +6,10 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.domain.SqmAnyValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 
@@ -20,7 +19,7 @@ import static javax.persistence.metamodel.Bindable.BindableType.SINGULAR_ATTRIBU
  * @author Steve Ebersole
  */
 public class AnyMappingSqmPathSource<J> extends AbstractSqmPathSource<J> {
-	private SqmPathSource<?> keyPathSource;
+	private final SqmPathSource<?> keyPathSource;
 
 	@SuppressWarnings("WeakerAccess")
 	public AnyMappingSqmPathSource(
@@ -47,13 +46,9 @@ public class AnyMappingSqmPathSource<J> extends AbstractSqmPathSource<J> {
 	}
 
 	@Override
-	public SqmPath<J> createSqmPath(SqmPath<?> lhs, SqmCreationState creationState) {
-		return new SqmAnyValuedSimplePath<>(
-				lhs.getNavigablePath().append( getPathName() ),
-				this,
-				lhs,
-				creationState.getCreationContext().getQueryEngine().getCriteriaBuilder()
-		);
+	public SqmPath<J> createSqmPath(SqmPath<?> lhs) {
+		final NavigablePath navigablePath = lhs.getNavigablePath().append( getPathName() );
+		return new SqmAnyValuedSimplePath( navigablePath, this, lhs, lhs.nodeBuilder() );
 	}
 
 }

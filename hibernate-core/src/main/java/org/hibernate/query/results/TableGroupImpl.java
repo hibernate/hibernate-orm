@@ -9,7 +9,6 @@ package org.hibernate.query.results;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -113,18 +112,12 @@ public class TableGroupImpl implements TableGroup {
 	}
 
 	@Override
-	public TableReference resolveTableReference(
-			String tableExpression, Supplier<TableReference> creator) {
+	public TableReference resolveTableReference(NavigablePath navigablePath, String tableExpression) {
 		return primaryTableReference;
 	}
 
 	@Override
-	public TableReference resolveTableReference(String tableExpression) {
-		return primaryTableReference;
-	}
-
-	@Override
-	public TableReference getTableReference(String tableExpression) {
+	public TableReference getTableReference(NavigablePath navigablePath, String tableExpression) {
 		return primaryTableReference;
 	}
 

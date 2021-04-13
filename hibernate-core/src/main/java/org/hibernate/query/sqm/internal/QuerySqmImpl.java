@@ -231,7 +231,9 @@ public class QuerySqmImpl<R>
 				final Object value = jpaCriteriaParameter.getValue();
 				// We don't set a null value, unless the type is also null which is the case when using HibernateCriteriaBuilder.value
 				if ( value != null || jpaCriteriaParameter.getNodeType() == null ) {
-					setParameter( jpaCriteriaParameter, value );
+					// Use the anticipated type for binding the value if possible
+					getQueryParameterBindings().getBinding( jpaCriteriaParameter )
+							.setBindValue( value, jpaCriteriaParameter.getAnticipatedType() );
 				}
 			}
 		}

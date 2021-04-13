@@ -9,6 +9,7 @@ package org.hibernate.sql.results.graph.entity.internal;
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
@@ -29,6 +30,7 @@ public class EntityFetchJoinedImpl extends AbstractNonLazyEntityFetch {
 	public EntityFetchJoinedImpl(
 			FetchParent fetchParent,
 			EntityValuedFetchable fetchedAttribute,
+			TableGroup tableGroup,
 			LockMode lockMode,
 			boolean nullable,
 			NavigablePath navigablePath,
@@ -38,6 +40,7 @@ public class EntityFetchJoinedImpl extends AbstractNonLazyEntityFetch {
 		entityResult = new EntityResultImpl(
 				navigablePath,
 				fetchedAttribute,
+				tableGroup,
 				null,
 				creationState
 		);

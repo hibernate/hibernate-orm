@@ -467,12 +467,13 @@ public class LoaderSelectBuilder {
 			Consumer<JdbcParameter> jdbcParameterConsumer,
 			LoaderSqlAstCreationState sqlAstCreationState) {
 		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
+		final NavigablePath navigablePath = rootNavigablePath.append( modelPart.getNavigableRole().getNavigableName() );
 
 		if ( numberColumns == 1 ) {
 			modelPart.forEachSelectable(
 					(columnIndex, selection) -> {
 						final TableReference tableReference = rootTableGroup.resolveTableReference(
-								selection.getContainingTableExpression() );
+								navigablePath, selection.getContainingTableExpression() );
 						final ColumnReference columnRef =
 								(ColumnReference) sqlExpressionResolver.resolveSqlExpression(
 										createColumnReferenceKey( tableReference, selection.getSelectionExpression() ),
@@ -511,7 +512,7 @@ public class LoaderSelectBuilder {
 
 			modelPart.forEachSelectable(
 					(columnIndex, selection) -> {
-						final TableReference tableReference = rootTableGroup.resolveTableReference( selection.getContainingTableExpression() );
+						final TableReference tableReference = rootTableGroup.resolveTableReference( navigablePath, selection.getContainingTableExpression() );
 						columnReferences.add(
 								(ColumnReference) sqlExpressionResolver.resolveSqlExpression(
 										createColumnReferenceKey( tableReference, selection.getSelectionExpression() ),
@@ -629,7 +630,6 @@ public class LoaderSelectBuilder {
 			List<Fetch> fetches,
 			List<String> bagRoles) {
 		return (fetchable, isKeyFetchable) -> {
-			final NavigablePath parentNavigablePath = fetchParent.getNavigablePath();
 			final NavigablePath fetchablePath;
 
 			if ( isKeyFetchable ) {
@@ -659,16 +659,16 @@ public class LoaderSelectBuilder {
 
 				if ( identifierMapping != null ) {
 					fetchablePath = new EntityIdentifierNavigablePath(
-							parentNavigablePath,
+							fetchParent.getNavigablePath(),
 							attributeName( identifierMapping )
 					);
 				}
 				else {
-					fetchablePath = parentNavigablePath.append( fetchable.getFetchableName() );
+					fetchablePath = fetchParent.resolveNavigablePath( fetchable );
 				}
 			}
 			else {
-				fetchablePath = parentNavigablePath.append( fetchable.getFetchableName() );
+				fetchablePath = fetchParent.resolveNavigablePath( fetchable );
 			}
 
 			final Fetch biDirectionalFetch = fetchable.resolveCircularFetch(
@@ -879,6 +879,7 @@ public class LoaderSelectBuilder {
 
 		final PluralAttributeMapping attributeMapping = (PluralAttributeMapping) loadable;
 		final ForeignKeyDescriptor fkDescriptor = attributeMapping.getKeyDescriptor();
+		final NavigablePath navigablePath = rootNavigablePath.append( attributeMapping.getAttributeName() );
 
 		final Expression fkExpression;
 
@@ -892,7 +893,7 @@ public class LoaderSelectBuilder {
 							simpleFkDescriptor.getSelectionExpression()
 					),
 					sqlAstProcessingState -> new ColumnReference(
-							rootTableGroup.resolveTableReference( simpleFkDescriptor.getContainingTableExpression() ),
+							rootTableGroup.resolveTableReference( navigablePath, simpleFkDescriptor.getContainingTableExpression() ),
 							simpleFkDescriptor.getSelectionExpression(),
 							false,
 							null,
@@ -914,7 +915,7 @@ public class LoaderSelectBuilder {
 															selection.getSelectionExpression()
 													),
 													sqlAstProcessingState -> new ColumnReference(
-															rootTableGroup.resolveTableReference( selection.getContainingTableExpression() ),
+															rootTableGroup.resolveTableReference( navigablePath, selection.getContainingTableExpression() ),
 															selection,
 															this.creationContext.getSessionFactory()
 													)
@@ -961,11 +962,12 @@ public class LoaderSelectBuilder {
 		loadingSqlAst.getFromClause().visitRoots( subQuery.getFromClause()::addRoot );
 
 		final SqlExpressionResolver sqlExpressionResolver = creationState.getSqlExpressionResolver();
+		final NavigablePath navigablePath = ownerTableGroup.getNavigablePath().append( attributeMapping.getAttributeName() );
 
 		fkDescriptor.visitTargetSelectables(
 				(valuesPosition, selection) -> {
 					// for each column, resolve a SqlSelection and add it to the sub-query select-clause
-					final TableReference tableReference = ownerTableGroup.resolveTableReference( selection.getContainingTableExpression() );
+					final TableReference tableReference = ownerTableGroup.resolveTableReference( navigablePath, selection.getContainingTableExpression() );
 					final Expression expression = sqlExpressionResolver.resolveSqlExpression(
 							createColumnReferenceKey( tableReference, selection.getSelectionExpression() ),
 							sqlAstProcessingState -> new ColumnReference(

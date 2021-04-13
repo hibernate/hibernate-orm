@@ -720,7 +720,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	@SuppressWarnings( {"unchecked", "rawtypes"} )
 	public Set<Parameter<?>> getParameters() {
 		getSession().checkOpen( false );
-		return (Set) ( (ParameterMetadata) getParameterMetadata() ).getRegistrations();
+		return (Set) getParameterMetadata().getRegistrations();
 	}
 
 	@Override
@@ -821,16 +821,16 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		return getQueryParameterBindings().getBinding( parameter );
 	}
 
-	@SuppressWarnings( {"WeakerAccess", "unchecked"} )
+	@SuppressWarnings( {"WeakerAccess"} )
 	protected <P> QueryParameterBinding<P> locateBinding(String name) {
 		getSession().checkOpen();
-		return (QueryParameterBinding<P>) getQueryParameterBindings().getBinding( name );
+		return getQueryParameterBindings().getBinding( name );
 	}
 
-	@SuppressWarnings( {"WeakerAccess", "unchecked"} )
+	@SuppressWarnings( {"WeakerAccess"} )
 	protected <P> QueryParameterBinding<P> locateBinding(int position) {
 		getSession().checkOpen();
-		return (QueryParameterBinding<P>) getQueryParameterBindings().getBinding( position );
+		return getQueryParameterBindings().getBinding( position );
 	}
 
 	@Override

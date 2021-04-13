@@ -139,20 +139,12 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 					}
 				}
 
-				final SqmFrom pathRootByExposedNavigable = sqmPathRegistry.findFromExposing( identifier );
+				final SqmFrom<?, ?> pathRootByExposedNavigable = sqmPathRegistry.findFromExposing( identifier );
 				if ( pathRootByExposedNavigable != null ) {
 					// identifier is an "unqualified attribute reference"
 					validateAsRoot( pathRootByExposedNavigable );
 
-					SqmPath sqmPath = pathRootByExposedNavigable.getImplicitJoinPath( identifier );
-					if ( sqmPath == null ) {
-						final SqmPathSource subPathSource = pathRootByExposedNavigable.getReferencedPathSource()
-								.findSubPathSource( identifier );
-						sqmPath = subPathSource.createSqmPath( pathRootByExposedNavigable, creationState );
-						if ( !isTerminal ) {
-							pathRootByExposedNavigable.registerImplicitJoinPath( sqmPath );
-						}
-					}
+					SqmPath<?> sqmPath = (SqmPath<?>) pathRootByExposedNavigable.get( identifier );
 					if ( isTerminal ) {
 						return sqmPath;
 					}

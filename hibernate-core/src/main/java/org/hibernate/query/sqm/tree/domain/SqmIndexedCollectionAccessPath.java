@@ -61,7 +61,7 @@ public class SqmIndexedCollectionAccessPath<T> extends AbstractSqmPath<T> implem
 			SqmCreationState creationState) {
 		final SqmPathSource subPathSource = getReferencedPathSource().getElementPathSource().findSubPathSource( name );
 		//noinspection unchecked
-		return subPathSource.createSqmPath( this, creationState );
+		return subPathSource.createSqmPath( this );
 	}
 
 	@Override

@@ -1950,7 +1950,7 @@ public abstract class AbstractCollectionPersister
 			tableReference = tableGroup.getPrimaryTableReference();
 		}
 		else if ( elementPersister instanceof Joinable ) {
-			tableReference = tableGroup.getTableReference( ( (Joinable) elementPersister ).getTableName() );
+			tableReference = tableGroup.getTableReference( tableGroup.getNavigablePath(), ( (Joinable) elementPersister ).getTableName() );
 		}
 
 		if ( tableReference != null ) {

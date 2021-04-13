@@ -69,7 +69,10 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 		final EntityPersister rootEntityDescriptor = factory.getDomainModel().getEntityDescriptor( rootEntityName );
 
 		final String hierarchyRootTableName = ( (Joinable) rootEntityDescriptor ).getTableName();
-		final TableReference hierarchyRootTableReference = updatingTableGroup.resolveTableReference( hierarchyRootTableName );
+		final TableReference hierarchyRootTableReference = updatingTableGroup.resolveTableReference(
+				updatingTableGroup.getNavigablePath(),
+				hierarchyRootTableName
+		);
 		assert hierarchyRootTableReference != null;
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -144,7 +147,10 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 					if ( assignmentList == null ) {
 						return;
 					}
-					final TableReference dmlTableReference = updatingTableGroup.resolveTableReference( tableExpression );
+					final TableReference dmlTableReference = updatingTableGroup.resolveTableReference(
+							updatingTableGroup.getNavigablePath(),
+							tableExpression
+					);
 					final List<ColumnReference> columnReferences = new ArrayList<>( idSelectCte.getCteTable().getCteColumns().size() );
 					tableColumnsVisitationSupplier.get().accept(
 							(index, selectable) -> columnReferences.add(

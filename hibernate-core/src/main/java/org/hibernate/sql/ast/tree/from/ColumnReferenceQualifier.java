@@ -6,13 +6,15 @@
  */
 package org.hibernate.sql.ast.tree.from;
 
-import java.util.function.Supplier;
+import org.hibernate.query.NavigablePath;
 
 /**
  * @author Steve Ebersole
  */
 public interface ColumnReferenceQualifier {
-	TableReference resolveTableReference(String tableExpression, Supplier<TableReference> creator);
-	TableReference resolveTableReference(String tableExpression);
-	TableReference getTableReference(String tableExpression);
+	TableReference resolveTableReference(NavigablePath navigablePath, String tableExpression);
+	TableReference getTableReference(NavigablePath navigablePath, String tableExpression);
+	default TableReference getTableReference(String tableExpression) {
+		return getTableReference( null, tableExpression );
+	}
 }

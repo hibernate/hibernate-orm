@@ -43,7 +43,7 @@ public class NonAggregatedCompositeSimplePath<T> extends SqmEntityValuedSimplePa
 			throw UnknownPathException.unknownSubPath( this, name );
 		}
 
-		return subPathSource.createSqmPath( this, creationState );
+		return subPathSource.createSqmPath( this );
 	}
 
 	@Override

@@ -70,7 +70,8 @@ public class EagerKeyManyToOneTest {
 						assertSame( card, cf.getPrimaryKey().getCard() );
 
 						statementInspector.assertExecutedCount( 2 );
-						statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 3 );
+						// Since CardField and Key have no additional state, it's not necessary to join their tables
+						statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 1 );
 						statementInspector.assertNumberOfOccurrenceInQuery( 1, "join", 0 );
 					}
 					catch (StackOverflowError soe) {

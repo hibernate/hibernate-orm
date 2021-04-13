@@ -41,7 +41,7 @@ public class SqmEntityValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 				.findPath( getLhs().getNavigablePath() ) != null;
 
 		//noinspection unchecked
-		return subPathSource.createSqmPath( this, creationState );
+		return subPathSource.createSqmPath( this );
 	}
 
 	@Override

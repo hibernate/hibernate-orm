@@ -149,7 +149,7 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 		final TableGroup tableGroup = sqlAstCreationState.getFromClauseAccess().findTableGroup( fetchParent.getNavigablePath() );
 
 		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
-		final TableReference columnTableReference = tableGroup.resolveTableReference( columnTableExpression );
+		final TableReference columnTableReference = tableGroup.resolveTableReference( fetchablePath, columnTableExpression );
 
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				sqlExpressionResolver.resolveSqlExpression(
@@ -220,7 +220,11 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
 
 		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
-		final TableReference columnTableReference = tableGroup.resolveTableReference( columnTableExpression );
+		final TableReference columnTableReference = tableGroup.resolveTableReference(
+				tableGroup.getNavigablePath()
+						.append( getNavigableRole().getNavigableName() ),
+				columnTableExpression
+		);
 
 		return sqlExpressionResolver.resolveSqlSelection(
 				sqlExpressionResolver.resolveSqlExpression(

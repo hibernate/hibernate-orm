@@ -73,6 +73,16 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 			identifierResult = null;
 			visitIdentifierMapping( identifierNavigablePath, creationState, identifierMapping, entityTableGroup );
 		}
+		else if ( referencedModelPart instanceof ToOneAttributeMapping
+				&& ( (ToOneAttributeMapping) referencedModelPart ).canJoinForeignKey( identifierMapping ) ) {
+			// If we don't do this here, LazyTableGroup#getTableReferenceInternal would have to use the target table in case {id} is encountered
+			identifierResult = ( (ToOneAttributeMapping) referencedModelPart ).getForeignKeyDescriptor().createDomainResult(
+					navigablePath,
+					creationState.getSqlAstCreationState().getFromClauseAccess().findTableGroup( navigablePath.getParent() ),
+					null,
+					creationState
+			);
+		}
 		else {
 			identifierResult = identifierMapping.createDomainResult(
 					identifierNavigablePath,

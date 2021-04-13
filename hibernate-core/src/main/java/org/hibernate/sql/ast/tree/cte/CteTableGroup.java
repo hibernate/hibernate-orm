@@ -9,7 +9,6 @@ package org.hibernate.sql.ast.tree.cte;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -62,7 +61,7 @@ public class CteTableGroup implements TableGroup {
 	}
 
 	@Override
-	public TableReference getTableReference(String tableExpression) {
+	public TableReference getTableReference(NavigablePath navigablePath, String tableExpression) {
 		if ( cteTableReference.getTableExpression().equals( tableExpression ) ) {
 			return cteTableReference;
 		}
@@ -70,14 +69,7 @@ public class CteTableGroup implements TableGroup {
 	}
 
 	@Override
-	public TableReference resolveTableReference(String tableExpression) {
-		return cteTableReference;
-	}
-
-	@Override
-	public TableReference resolveTableReference(
-			String tableExpression,
-			Supplier<TableReference> creator) {
+	public TableReference resolveTableReference(NavigablePath navigablePath, String tableExpression) {
 		return cteTableReference;
 	}
 

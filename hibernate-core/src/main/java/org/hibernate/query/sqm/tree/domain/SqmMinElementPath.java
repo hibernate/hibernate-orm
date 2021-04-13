@@ -36,7 +36,7 @@ public class SqmMinElementPath<T> extends AbstractSqmSpecificPluralPartPath<T> {
 			SqmCreationState creationState) {
 		if ( getPluralAttribute().getElementPathSource().getSqmPathType() instanceof ManagedDomainType ) {
 			//noinspection unchecked
-			return getPluralAttribute().getElementPathSource().createSqmPath( this, creationState );
+			return getPluralAttribute().getElementPathSource().createSqmPath( this );
 		}
 
 		throw new SemanticException( "Collection element cannot be de-referenced : " + getPluralDomainPath().getNavigablePath() );

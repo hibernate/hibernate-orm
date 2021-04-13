@@ -9,12 +9,10 @@ package org.hibernate.metamodel.mapping.internal;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 
 import org.hibernate.LockMode;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -24,17 +22,13 @@ import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.MappingType;
-import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
-import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
@@ -94,14 +88,6 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 		return targetSide.getContainingTableExpression();
 	}
 
-	public BasicValuedModelPart getKeySide() {
-		return keySide;
-	}
-
-	public BasicValuedModelPart getTargetSide() {
-		return targetSide;
-	}
-
 	@Override
 	public ForeignKeyDescriptor withKeySelectionMapping(
 			IntFunction<SelectableMapping> selectableMappingAccess,
@@ -146,11 +132,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			NavigablePath collectionPath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
-		if ( targetSide.getContainingTableExpression()
-				.equals( keySide.getContainingTableExpression() ) ) {
-			return createDomainResult( collectionPath, tableGroup, targetSide, creationState );
-		}
-		return createDomainResult( collectionPath, tableGroup, creationState );
+		return createDomainResult( collectionPath, tableGroup, targetSide, creationState );
 	}
 
 	@Override
@@ -204,7 +186,10 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
 		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 
-		final TableReference tableReference = tableGroup.resolveTableReference( selectableMapping.getContainingTableExpression() );
+		final TableReference tableReference = tableGroup.resolveTableReference(
+				navigablePath.append( getNavigableRole().getNavigableName() ),
+				selectableMapping.getContainingTableExpression()
+		);
 		final String identificationVariable = tableReference.getIdentificationVariable();
 
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
@@ -333,7 +318,11 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			return tableGroup.getPrimaryTableReference();
 		}
 
-		final TableReference tableReference = lhs.resolveTableReference( table );
+		final TableReference tableReference = lhs.resolveTableReference(
+				lhs.getNavigablePath()
+						.append( getNavigableRole().getNavigableName() ),
+				table
+		);
 		if ( tableReference != null ) {
 			return tableReference;
 		}
@@ -342,8 +331,13 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	}
 
 	@Override
-	public ModelPart getKeyPart() {
+	public BasicValuedModelPart getKeyPart() {
 		return keySide;
+	}
+
+	@Override
+	public BasicValuedModelPart getTargetPart() {
+		return targetSide;
 	}
 
 	@Override

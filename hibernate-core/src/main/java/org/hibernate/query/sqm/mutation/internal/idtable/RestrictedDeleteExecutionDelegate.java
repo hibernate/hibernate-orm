@@ -124,7 +124,10 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 
 		final TableGroup deletingTableGroup = converter.getMutatingTableGroup();
 
-		final TableReference hierarchyRootTableReference = deletingTableGroup.resolveTableReference( hierarchyRootTableName );
+		final TableReference hierarchyRootTableReference = deletingTableGroup.resolveTableReference(
+				deletingTableGroup.getNavigablePath(),
+				hierarchyRootTableName
+		);
 		assert hierarchyRootTableReference != null;
 
 		final Map<SqmParameter, List<List<JdbcParameter>>> parameterResolutions;
@@ -213,7 +216,10 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 		final MutableInteger rows = new MutableInteger();
 
 		final String rootTableName = ( (Joinable) rootEntityPersister ).getTableName();
-		final TableReference rootTableReference = tableGroup.resolveTableReference( rootTableName );
+		final TableReference rootTableReference = tableGroup.resolveTableReference(
+				tableGroup.getNavigablePath(),
+				rootTableName
+		);
 
 		final QuerySpec matchingIdSubQuerySpec = ExecuteWithoutIdTableHelper.createIdMatchingSubQuerySpec(
 				tableGroup.getNavigablePath(),
@@ -251,7 +257,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 					}
 					else {
 						deleteFromNonRootTableWithoutIdTable(
-								tableGroup.resolveTableReference( tableExpression ),
+								tableGroup.resolveTableReference( tableGroup.getNavigablePath(), tableExpression ),
 								tableKeyColumnVisitationSupplier,
 								sqlExpressionResolver,
 								tableGroup,

@@ -228,12 +228,13 @@ public class EmbeddedAttributeMapping
 			SqmToSqlAstConverter walker,
 			SqlAstCreationState sqlAstCreationState) {
 		final List<ColumnReference> columnReferences = CollectionHelper.arrayList( embeddableMappingType.getJdbcTypeCount() );
-		final TableReference defaultTableReference = tableGroup.resolveTableReference( getContainingTableExpression() );
+		final NavigablePath navigablePath = tableGroup.getNavigablePath().append( getNavigableRole().getNavigableName() );
+		final TableReference defaultTableReference = tableGroup.resolveTableReference( navigablePath, getContainingTableExpression() );
 		getEmbeddableTypeDescriptor().forEachSelectable(
 				(columnIndex, selection) -> {
 					final TableReference tableReference = selection.getContainingTableExpression().equals( defaultTableReference.getTableExpression() )
 							? defaultTableReference
-							: tableGroup.resolveTableReference( selection.getContainingTableExpression() );
+							: tableGroup.resolveTableReference( navigablePath, selection.getContainingTableExpression() );
 					final Expression columnReference = sqlAstCreationState.getSqlExpressionResolver().resolveSqlExpression(
 							SqlExpressionResolver.createColumnReferenceKey(
 									tableReference,
@@ -273,6 +274,7 @@ public class EmbeddedAttributeMapping
 			TableGroup lhs,
 			String explicitSourceAlias,
 			SqlAstJoinType sqlAstJoinType,
+			boolean fetched,
 			LockMode lockMode,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,

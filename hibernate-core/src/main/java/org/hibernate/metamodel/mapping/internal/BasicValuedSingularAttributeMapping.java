@@ -217,7 +217,11 @@ public class BasicValuedSingularAttributeMapping
 
 	private SqlSelection resolveSqlSelection(TableGroup tableGroup, DomainResultCreationState creationState) {
 		final SqlExpressionResolver expressionResolver = creationState.getSqlAstCreationState().getSqlExpressionResolver();
-		final TableReference tableReference = tableGroup.resolveTableReference( getContainingTableExpression() );
+		final TableReference tableReference = tableGroup.resolveTableReference(
+				tableGroup.getNavigablePath()
+						.append( getNavigableRole().getNavigableName() ),
+				getContainingTableExpression()
+		);
 		final String tableAlias = tableReference.getIdentificationVariable();
 		return expressionResolver.resolveSqlSelection(
 				expressionResolver.resolveSqlExpression(

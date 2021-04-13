@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
@@ -110,26 +109,19 @@ public class CompositeTableGroup implements VirtualTableGroup {
 	}
 
 	@Override
-	public TableReference getTableReference(String tableExpression) {
+	public TableReference getTableReference(NavigablePath navigablePath, String tableExpression) {
 		return underlyingTableGroup.getTableReference( tableExpression );
 	}
 
 	@Override
-	public TableReference resolveTableReference(
-			String tableExpression,
-			Supplier<TableReference> creator) {
-		return underlyingTableGroup.resolveTableReference( tableExpression, creator );
-	}
-
-	@Override
-	public TableReference resolveTableReference(String tableExpression) {
-		TableReference tableReference = underlyingTableGroup.getTableReference( tableExpression );
+	public TableReference resolveTableReference(NavigablePath navigablePath, String tableExpression) {
+		TableReference tableReference = underlyingTableGroup.getTableReference( navigablePath, tableExpression );
 		if ( tableReference != null ) {
 			return tableReference;
 		}
 		for ( TableGroupJoin tableGroupJoin : getTableGroupJoins() ) {
-			final TableReference primaryTableReference = tableGroupJoin.getJoinedGroup().getPrimaryTableReference();
-			if ( primaryTableReference.getTableExpression().equals( tableExpression ) ) {
+			final TableReference primaryTableReference = tableGroupJoin.getJoinedGroup().getPrimaryTableReference().getTableReference( navigablePath, tableExpression );
+			if ( primaryTableReference != null ) {
 				return primaryTableReference;
 			}
 		}

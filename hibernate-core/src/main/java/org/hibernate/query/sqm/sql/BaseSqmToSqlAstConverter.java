@@ -646,11 +646,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private void applyManipulationImplicitJoins(SqmPath<?> sqmPath, TableGroup correspondingTableGroup) {
-		consumeImplicitJoins(
-				sqmPath,
-				correspondingTableGroup,
-				BaseSqmToSqlAstConverter::verifyManipulationImplicitJoin
-		);
+		consumeReusablePaths( sqmPath, correspondingTableGroup, BaseSqmToSqlAstConverter::verifyManipulationImplicitJoin );
 	}
 
 	private static void verifyManipulationImplicitJoin(SqmPath<?> joinedPath) {
@@ -1772,7 +1768,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				log.tracef( "Resolved SqmRoot [%s] to correlated TableGroup [%s]", sqmRoot, tableGroup );
 
 				consumeExplicitJoins( sqmRoot, tableGroup );
-				consumeImplicitJoins( sqmRoot, tableGroup );
+				consumeReusablePaths( sqmRoot, tableGroup );
 				return;
 			}
 			else {
@@ -1786,6 +1782,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						creationContext
 				);
 				final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
+				final NavigablePath navigablePath = sqmRoot.getNavigablePath().append( identifierMapping.getNavigableRole().getNavigableName() );
 				final int jdbcTypeCount = identifierMapping.getJdbcTypeCount();
 				if ( jdbcTypeCount == 1 ) {
 					identifierMapping.forEachSelectable(
@@ -1793,13 +1790,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 									additionalRestrictions,
 									new ComparisonPredicate(
 											new ColumnReference(
-													parentTableGroup.getTableReference( selectable.getContainingTableExpression() ),
+													parentTableGroup.getTableReference( navigablePath, selectable.getContainingTableExpression() ),
 													selectable,
 													sessionFactory
 											),
 											ComparisonOperator.EQUAL,
 											new ColumnReference(
-													tableGroup.getTableReference( selectable.getContainingTableExpression() ),
+													tableGroup.getTableReference( navigablePath, selectable.getContainingTableExpression() ),
 													selectable,
 													sessionFactory
 											)
@@ -1814,14 +1811,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							(index, selectable) -> {
 								lhs.add(
 										new ColumnReference(
-												parentTableGroup.getTableReference( selectable.getContainingTableExpression() ),
+												parentTableGroup.getTableReference( navigablePath, selectable.getContainingTableExpression() ),
 												selectable,
 												sessionFactory
 										)
 								);
 								rhs.add(
 										new ColumnReference(
-												tableGroup.getTableReference( selectable.getContainingTableExpression() ),
+												tableGroup.getTableReference( navigablePath, selectable.getContainingTableExpression() ),
 												selectable,
 												sessionFactory
 										)
@@ -1860,7 +1857,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		currentQuerySpec().getFromClause().addRoot( tableGroup );
 
 		consumeExplicitJoins( sqmRoot, tableGroup );
-		consumeImplicitJoins( sqmRoot, tableGroup );
+		consumeReusablePaths( sqmRoot, tableGroup );
 	}
 
 	private EntityPersister resolveEntityPersister(EntityDomainType<?> entityDomainType) {
@@ -1929,6 +1926,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					lhsTableGroup,
 					sqmJoin.getExplicitAlias(),
 					sqmJoin.getSqmJoinType().getCorrespondingSqlJoinType(),
+					sqmJoin.isFetched(),
 					determineLockMode( sqmJoin.getExplicitAlias() ),
 					this
 			);
@@ -1943,6 +1941,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					lhsTableGroup,
 					sqmJoin.getExplicitAlias(),
 					sqmJoin.getSqmJoinType().getCorrespondingSqlJoinType(),
+					sqmJoin.isFetched(),
 					determineLockMode( sqmJoin.getExplicitAlias() ),
 					this
 			);
@@ -1969,7 +1968,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 
 		consumeExplicitJoins( sqmJoin, joinedTableGroup );
-		consumeImplicitJoins( sqmJoin, joinedTableGroup );
+		consumeReusablePaths( sqmJoin, joinedTableGroup );
 	}
 
 	private NavigablePath getJoinNavigablePath(
@@ -2015,7 +2014,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		getFromClauseIndex().register( sqmJoin, tableGroup );
 
 		consumeExplicitJoins( sqmJoin, tableGroupJoin.getJoinedGroup() );
-		consumeImplicitJoins( sqmJoin, tableGroupJoin.getJoinedGroup() );
+		consumeReusablePaths( sqmJoin, tableGroupJoin.getJoinedGroup() );
 	}
 
 	private void consumeEntityJoin(SqmEntityJoin sqmJoin, TableGroup lhsTableGroup) {
@@ -2043,7 +2042,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		lhsTableGroup.addTableGroupJoin( tableGroupJoin );
 
 		consumeExplicitJoins( sqmJoin, tableGroupJoin.getJoinedGroup() );
-		consumeImplicitJoins( sqmJoin, tableGroupJoin.getJoinedGroup() );
+		consumeReusablePaths( sqmJoin, tableGroupJoin.getJoinedGroup() );
 
 		// add any additional join restrictions
 		if ( sqmJoin.getJoinPredicate() != null ) {
@@ -2054,58 +2053,58 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	}
 
-	private void consumeImplicitJoins(SqmPath<?> sqmPath, TableGroup tableGroup) {
-		consumeImplicitJoins(
-				sqmPath,
-				tableGroup,
-				(sqmSubPath) -> {}
-		);
+	private void consumeReusablePaths(SqmPath<?> sqmPath, TableGroup tableGroup) {
+		consumeReusablePaths( sqmPath, tableGroup, (sqmSubPath) -> {} );
 	}
 
-	private void consumeImplicitJoins(
+	private void consumeReusablePaths(
 			SqmPath<?> sqmPath,
-			TableGroup tableGroup,
+			TableGroup parentTableGroup,
 			Consumer<SqmPath<?>> implicitJoinChecker) {
 		if ( log.isTraceEnabled() ) {
 			log.tracef( "Visiting implicit joins for `%s`", sqmPath.getNavigablePath() );
 		}
 
-		sqmPath.visitImplicitJoinPaths(
+		sqmPath.visitReusablePaths(
 				joinedPath -> {
 					if ( log.isTraceEnabled() ) {
 						log.tracef( "Starting implicit join handling for `%s`", joinedPath.getNavigablePath() );
 					}
+					// No need to create a table group for this path if no sub-paths exist
+					if ( joinedPath.getReusablePaths().isEmpty() ) {
+						return;
+					}
 
-					implicitJoinChecker.accept( joinedPath );
-
+					final SqmPath<?> lhsPath = joinedPath.getLhs();
 					final FromClauseIndex fromClauseIndex = getFromClauseIndex();
-					assert fromClauseIndex.findTableGroup( joinedPath.getLhs().getNavigablePath() ) == tableGroup;
-
-					final ModelPart subPart = tableGroup.getModelPart().findSubPart(
+					final ModelPart subPart = parentTableGroup.getModelPart().findSubPart(
 							joinedPath.getReferencedPathSource().getPathName(),
-							sqmPath instanceof SqmTreatedPath
-									? resolveEntityPersister( ( (SqmTreatedPath) sqmPath ).getTreatTarget() )
+							lhsPath instanceof SqmTreatedPath
+									? resolveEntityPersister( ( (SqmTreatedPath<?, ?>) lhsPath ).getTreatTarget() )
 									: null
 					);
 
+					final TableGroup tableGroup;
 					if ( subPart instanceof TableGroupJoinProducer ) {
+						implicitJoinChecker.accept( joinedPath );
 						final TableGroupJoinProducer joinProducer = (TableGroupJoinProducer) subPart;
 						final TableGroupJoin tableGroupJoin = joinProducer.createTableGroupJoin(
 								joinedPath.getNavigablePath(),
-								tableGroup,
+								parentTableGroup,
 								null,
-								tableGroup.isInnerJoinPossible() ? SqlAstJoinType.INNER : SqlAstJoinType.LEFT,
+								parentTableGroup.isInnerJoinPossible() ? SqlAstJoinType.INNER : SqlAstJoinType.LEFT,
+								false,
 								null,
 								this
 						);
 
 						fromClauseIndex.register( joinedPath, tableGroupJoin.getJoinedGroup() );
-
-						consumeImplicitJoins( joinedPath, tableGroupJoin.getJoinedGroup(), implicitJoinChecker );
+						tableGroup = tableGroupJoin.getJoinedGroup();
 					}
 					else {
-						fromClauseIndex.register( joinedPath, tableGroup );
+						tableGroup = null;
 					}
+					consumeReusablePaths( joinedPath, tableGroup, implicitJoinChecker );
 				}
 		);
 	}
@@ -2555,7 +2554,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		if ( sqmParameter.getAnticipatedType() == null ) {
 			// this should indicate the condition that the user query did not define an
 			// explicit type in regard to this parameter.  Here we should prefer the
-			// inferable type and fallback to the binding type
+			// inferrable type and fallback to the binding type
 			final Supplier<MappingModelExpressable> currentExpressableSupplier = inferrableTypeAccessStack.getCurrent();
 			if ( currentExpressableSupplier != null ) {
 				final MappingModelExpressable inferredMapping = currentExpressableSupplier.get();
@@ -2697,6 +2696,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							parentTableGroup,
 							null,
 							SqlAstJoinType.INNER,
+							false,
 							LockMode.READ,
 							sqlAliasBaseManager,
 							getSqlExpressionResolver(),
@@ -3907,12 +3907,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					? mappingModelExpressable.getIndexDescriptor()
 					: mappingModelExpressable.getElementDescriptor();
 			final List<SqlAstNode> arguments = new ArrayList<>( 1 );
-
+			final NavigablePath navigablePath = pluralPartPath.getNavigablePath();
 			collectionPart.forEachSelectable(
 					(selectionIndex, selectionMapping) -> {
 						arguments.add(
 								new ColumnReference(
-										tableGroup.getTableReference( selectionMapping.getContainingTableExpression() ),
+										tableGroup.getTableReference( navigablePath, selectionMapping.getContainingTableExpression() ),
 										selectionMapping,
 										creationContext.getSessionFactory()
 								)
@@ -4150,6 +4150,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					tableGroup,
 					sqmPluralPath.getExplicitAlias(),
 					SqlAstJoinType.INNER,
+					false,
 					LockMode.NONE,
 					sqlAliasBaseManager,
 					subQueryState,
@@ -4451,7 +4452,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final List<String> bagRoles = new ArrayList<>();
 
 		final BiConsumer<Fetchable, Boolean> fetchableBiConsumer = (fetchable, isKeyFetchable) -> {
-			final NavigablePath fetchablePath = fetchParent.getNavigablePath().append( fetchable.getFetchableName() );
+			final NavigablePath fetchablePath = fetchParent.resolveNavigablePath( fetchable );
 
 			final Fetch biDirectionalFetch = fetchable.resolveCircularFetch(
 					fetchablePath,
@@ -4594,6 +4595,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 									lhs,
 									alias,
 									SqlAstJoinType.LEFT,
+									true,
 									LockMode.NONE,
 									this
 							);

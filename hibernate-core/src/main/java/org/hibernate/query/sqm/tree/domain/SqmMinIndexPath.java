@@ -48,7 +48,7 @@ public class SqmMinIndexPath<T> extends AbstractSqmSpecificPluralPartPath<T> {
 			String name,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		return indexPathSource.createSqmPath( this, creationState );
+		return indexPathSource.createSqmPath( this );
 	}
 
 	@Override

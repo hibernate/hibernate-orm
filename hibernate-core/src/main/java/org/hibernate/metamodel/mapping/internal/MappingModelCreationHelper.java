@@ -233,6 +233,7 @@ public class MappingModelCreationHelper {
 									idAttributeMappings.size(),
 									bootIdSubProperty,
 									attributeMappingType,
+									entityPersister,
 									keyManyToOnePropertyType,
 									entityPersister.getRepresentationStrategy().resolvePropertyAccess( bootIdSubProperty ),
 									CascadeStyles.ALL,
@@ -1408,6 +1409,7 @@ public class MappingModelCreationHelper {
 			int stateArrayPosition,
 			Property bootProperty,
 			ManagedMappingType declaringType,
+			EntityPersister declaringEntityPersister,
 			EntityType attrType,
 			PropertyAccess propertyAccess,
 			CascadeStyle cascadeStyle,
@@ -1454,6 +1456,7 @@ public class MappingModelCreationHelper {
 					fetchStrategy,
 					entityPersister,
 					declaringType,
+					declaringEntityPersister,
 					propertyAccess
 			);
 

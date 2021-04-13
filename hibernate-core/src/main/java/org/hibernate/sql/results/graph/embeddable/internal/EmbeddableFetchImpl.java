@@ -66,6 +66,7 @@ public class EmbeddableFetchImpl extends AbstractFetchParent implements Embeddab
 							lhsTableGroup,
 							null,
 							nullable ? SqlAstJoinType.LEFT : SqlAstJoinType.INNER,
+							true,
 							LockMode.NONE,
 							creationState.getSqlAstCreationState()
 					);

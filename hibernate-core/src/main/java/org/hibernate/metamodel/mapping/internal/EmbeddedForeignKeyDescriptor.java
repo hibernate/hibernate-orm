@@ -245,6 +245,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 							tableGroup,
 							null,
 							SqlAstJoinType.INNER,
+							true,
 							LockMode.NONE,
 							creationState.getSqlAstCreationState()
 					);
@@ -370,7 +371,11 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 			return tableGroup.getPrimaryTableReference();
 		}
 
-		final TableReference tableReference = lhs.resolveTableReference( table );
+		final TableReference tableReference = lhs.resolveTableReference(
+				lhs.getNavigablePath()
+						.append( getNavigableRole().getNavigableName() ),
+				table
+		);
 		if ( tableReference != null ) {
 			return tableReference;
 		}
@@ -408,6 +413,11 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	}
 
 	@Override
+	public ModelPart getTargetPart() {
+		return targetMappingType.getEmbeddableTypeDescriptor().getEmbeddedValueMapping();
+	}
+
+	@Override
 	public MappingType getPartMappingType() {
 		return targetMappingType.getPartMappingType();
 	}
@@ -437,6 +447,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 							tableGroup,
 							null,
 							null,
+							true,
 							LockMode.NONE,
 							creationState.getSqlAstCreationState()
 					);

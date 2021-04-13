@@ -26,6 +26,7 @@ public class StandardTableGroup extends AbstractTableGroup {
 	private final Predicate<String> tableReferenceJoinNameChecker;
 	private final BiFunction<String,TableGroup,TableReferenceJoin> tableReferenceJoinCreator;
 	private final boolean realTableGroup;
+	private final boolean fetched;
 
 	private List<TableReferenceJoin> tableJoins;
 
@@ -39,6 +40,7 @@ public class StandardTableGroup extends AbstractTableGroup {
 		super( navigablePath, tableGroupProducer, lockMode, sqlAliasBase, sessionFactory );
 		this.primaryTableReference = primaryTableReference;
 		this.realTableGroup = false;
+		this.fetched = false;
 		this.tableJoins = Collections.emptyList();
 		this.tableReferenceJoinCreator = null;
 		this.tableReferenceJoinNameChecker = s -> {
@@ -64,6 +66,27 @@ public class StandardTableGroup extends AbstractTableGroup {
 		super( navigablePath, tableGroupProducer, lockMode, sqlAliasBase, sessionFactory );
 		this.primaryTableReference = primaryTableReference;
 		this.realTableGroup = realTableGroup;
+		this.fetched = false;
+		this.tableJoins = null;
+		this.tableReferenceJoinNameChecker = tableReferenceJoinNameChecker;
+		this.tableReferenceJoinCreator = tableReferenceJoinCreator;
+	}
+
+	public StandardTableGroup(
+			NavigablePath navigablePath,
+			TableGroupProducer tableGroupProducer,
+			boolean fetched,
+			LockMode lockMode,
+			TableReference primaryTableReference,
+			boolean realTableGroup,
+			SqlAliasBase sqlAliasBase,
+			Predicate<String> tableReferenceJoinNameChecker,
+			BiFunction<String, TableGroup, TableReferenceJoin> tableReferenceJoinCreator,
+			SessionFactoryImplementor sessionFactory) {
+		super( navigablePath, tableGroupProducer, lockMode, sqlAliasBase, sessionFactory );
+		this.primaryTableReference = primaryTableReference;
+		this.realTableGroup = realTableGroup;
+		this.fetched = fetched;
 		this.tableJoins = null;
 		this.tableReferenceJoinNameChecker = tableReferenceJoinNameChecker;
 		this.tableReferenceJoinCreator = tableReferenceJoinCreator;
@@ -76,11 +99,6 @@ public class StandardTableGroup extends AbstractTableGroup {
 		for ( TableReferenceJoin tableReferenceJoin : tableJoins ) {
 			nameCollector.accept( tableReferenceJoin.getJoinedTableReference().getTableExpression() );
 		}
-	}
-
-	@Override
-	public TableReference getTableReference(String tableExpression) {
-		return getTableReferenceInternal( tableExpression );
 	}
 
 	@Override
@@ -98,6 +116,11 @@ public class StandardTableGroup extends AbstractTableGroup {
 		return realTableGroup;
 	}
 
+	@Override
+	public boolean isFetched() {
+		return fetched;
+	}
+
 	public void addTableReferenceJoin(TableReferenceJoin join) {
 		if ( tableJoins == null ) {
 			tableJoins = new ArrayList<>();
@@ -106,8 +129,10 @@ public class StandardTableGroup extends AbstractTableGroup {
 	}
 
 	@Override
-	public TableReference getTableReferenceInternal(String tableExpression) {
-		TableReference tableReference = primaryTableReference.getTableReference( tableExpression );
+	public TableReference getTableReferenceInternal(
+			NavigablePath navigablePath,
+			String tableExpression) {
+		TableReference tableReference = primaryTableReference.getTableReference( navigablePath, tableExpression );
 		if ( tableReference != null ) {
 			return tableReference;
 		}
@@ -118,7 +143,7 @@ public class StandardTableGroup extends AbstractTableGroup {
 					final TableReferenceJoin join = tableJoins.get( i );
 					assert join != null;
 					final TableReference resolveTableReference = join.getJoinedTableReference()
-							.getTableReference( tableExpression );
+							.getTableReference( navigablePath, tableExpression );
 					if ( resolveTableReference != null ) {
 						return resolveTableReference;
 					}
@@ -130,7 +155,7 @@ public class StandardTableGroup extends AbstractTableGroup {
 
 		for ( TableGroupJoin tableGroupJoin : getTableGroupJoins() ) {
 			final TableReference primaryTableReference = tableGroupJoin.getJoinedGroup().getPrimaryTableReference();
-			if ( primaryTableReference.getTableReference( tableExpression ) != null ) {
+			if ( primaryTableReference.getTableReference( navigablePath, tableExpression ) != null ) {
 				return primaryTableReference;
 			}
 		}

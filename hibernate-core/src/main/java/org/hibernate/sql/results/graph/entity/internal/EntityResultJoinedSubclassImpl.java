@@ -24,9 +24,10 @@ public class EntityResultJoinedSubclassImpl extends EntityResultImpl {
 	public EntityResultJoinedSubclassImpl(
 			NavigablePath navigablePath,
 			EntityValuedModelPart entityValuedModelPart,
+			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		super( navigablePath, entityValuedModelPart, resultVariable, creationState );
+		super( navigablePath, entityValuedModelPart, tableGroup, resultVariable, creationState );
 	}
 
 	@Override

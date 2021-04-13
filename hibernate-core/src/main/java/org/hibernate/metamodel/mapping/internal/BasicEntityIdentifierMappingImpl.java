@@ -202,7 +202,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 				.getSqlExpressionResolver();
 		final TableReference rootTableReference;
 		try {
-			rootTableReference = tableGroup.resolveTableReference( rootTable );
+			rootTableReference = tableGroup.resolveTableReference( navigablePath, rootTable );
 		}
 		catch (Exception e) {
 			throw new IllegalStateException(

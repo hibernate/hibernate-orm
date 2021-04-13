@@ -9,7 +9,7 @@ package org.hibernate.spatial.testing.dialects.mysql;
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
 import org.hibernate.spatial.testing.DataSourceUtils;
 import org.hibernate.spatial.testing.SQLExpressionTemplate;
-import org.hibernate.spatial.testing.TestData;
+import org.hibernate.spatial.testing.datareader.TestData;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 

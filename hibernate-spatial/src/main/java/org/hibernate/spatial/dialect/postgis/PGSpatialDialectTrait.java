@@ -13,7 +13,7 @@ import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.dialect.SpatialFunctionsRegistry;
 
-interface PGSpatialDialectTrait extends SpatialDialect {
+interface PGSpatialDialectTrait {
 
 	PostgisSupport support = new PostgisSupport();
 
@@ -34,7 +34,7 @@ interface PGSpatialDialectTrait extends SpatialDialect {
 	 *
 	 * @return SQL fragment  {@code SpatialRelateExpression}
 	 */
-	@Override
+
 	default String getSpatialRelateSQL(String columnName, int spatialRelation) {
 		return support.getSpatialRelateSQL( columnName, spatialRelation );
 	}
@@ -49,7 +49,7 @@ interface PGSpatialDialectTrait extends SpatialDialect {
 	 *
 	 * @return Rhe SQL fragment for the {@code SpatialFilterExpression}
 	 */
-	@Override
+	
 	default String getSpatialFilterExpression(String columnName) {
 		return support.getSpatialFilterExpression( columnName );
 	}
@@ -62,7 +62,7 @@ interface PGSpatialDialectTrait extends SpatialDialect {
 	 *
 	 * @return The SQL fragment for the projection
 	 */
-	@Override
+	
 	default String getSpatialAggregateSQL(String columnName, int aggregation) {
 		return support.getSpatialAggregateSQL( columnName, aggregation );
 	}
@@ -74,7 +74,7 @@ interface PGSpatialDialectTrait extends SpatialDialect {
 	 *
 	 * @return The SQL fragment when parsing a <code>DWithinExpression</code>.
 	 */
-	@Override
+	
 	default String getDWithinSQL(String columnName) {
 		return support.getDWithinSQL( columnName );
 	}
@@ -86,7 +86,7 @@ interface PGSpatialDialectTrait extends SpatialDialect {
 	 *
 	 * @return The SQL fragment for a <code>HavingSridExpression</code>.
 	 */
-	@Override
+	
 	default String getHavingSridSQL(String columnName) {
 		return support.getHavingSridSQL( columnName );
 	}
@@ -100,7 +100,7 @@ interface PGSpatialDialectTrait extends SpatialDialect {
 	 *
 	 * @return The SQL fragment for the isempty function
 	 */
-	@Override
+	
 	default String getIsEmptySQL(String columnName, boolean isEmpty) {
 		return support.getIsEmptySQL( columnName, isEmpty );
 	}
@@ -111,7 +111,7 @@ interface PGSpatialDialectTrait extends SpatialDialect {
 	 *
 	 * @return True if filtering is supported
 	 */
-	@Override
+	
 	default boolean supportsFiltering() {
 		return support.supportsFiltering();
 	}
@@ -123,7 +123,7 @@ interface PGSpatialDialectTrait extends SpatialDialect {
 	 *
 	 * @return True if this <code>SpatialDialect</code> supports the spatial function specified by the function parameter.
 	 */
-	@Override
+	
 	default boolean supports(SpatialFunction function) {
 		return support.supports( function );
 	}

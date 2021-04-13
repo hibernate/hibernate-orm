@@ -17,9 +17,4 @@ import org.hibernate.dialect.MySQLStorageEngine;
  */
 @Deprecated
 public class MySQL5InnoDBSpatialDialect extends MySQL5SpatialDialect {
-
-	@Override
-	protected MySQLStorageEngine getDefaultMySQLStorageEngine() {
-		return InnoDBStorageEngine.INSTANCE;
-	}
 }

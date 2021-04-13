@@ -15,7 +15,7 @@ import java.sql.Struct;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
-import org.hibernate.type.descriptor.jdbc.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 import org.geolatte.geom.Geometry;
 import org.geolatte.geom.codec.db.oracle.Decoders;
@@ -38,26 +38,26 @@ public class SDOGeometryValueExtractor<X> extends BasicExtractor<X> {
 	 * @param javaDescriptor the {@code JavaTypeDescriptor} to use
 	 * @param sqlTypeDescriptor the {@code SqlTypeDescriptor} to use
 	 */
-	public SDOGeometryValueExtractor(JavaTypeDescriptor<X> javaDescriptor, SqlTypeDescriptor sqlTypeDescriptor) {
+	public SDOGeometryValueExtractor(JavaTypeDescriptor<X> javaDescriptor, JdbcTypeDescriptor sqlTypeDescriptor) {
 		super( javaDescriptor, sqlTypeDescriptor );
 	}
 
 	@Override
 	protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
 		final Object geomObj = rs.getObject( paramIndex );
-		return getJavaDescriptor().wrap( convert( geomObj ), options );
+		return getJavaTypeDescriptor().wrap( convert( geomObj ), options );
 	}
 
 	@Override
 	protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
 		final Object geomObj = statement.getObject( index );
-		return getJavaDescriptor().wrap( convert( geomObj ), options );
+		return getJavaTypeDescriptor().wrap( convert( geomObj ), options );
 	}
 
 	@Override
 	protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
 		final Object geomObj = statement.getObject( name );
-		return getJavaDescriptor().wrap( convert( geomObj ), options );
+		return getJavaTypeDescriptor().wrap( convert( geomObj ), options );
 	}
 
 	/**

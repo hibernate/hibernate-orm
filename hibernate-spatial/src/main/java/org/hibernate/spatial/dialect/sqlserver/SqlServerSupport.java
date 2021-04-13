@@ -10,7 +10,9 @@ import java.io.Serializable;
 import java.util.Map;
 
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.dialect.function.SQLFunction;
+
+import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.GeolatteGeometryJavaTypeDescriptor;
 import org.hibernate.spatial.GeolatteGeometryType;
@@ -27,7 +29,7 @@ class SqlServerSupport implements SpatialDialect, Serializable {
 
 	private SqlServerFunctions functions = new SqlServerFunctions();
 
-	Iterable<? extends Map.Entry<String, SQLFunction>> functionsToRegister() {
+	Iterable<? extends Map.Entry<String, SqmFunctionDescriptor>> functionsToRegister() {
 		return functions;
 	}
 
@@ -40,7 +42,7 @@ class SqlServerSupport implements SpatialDialect, Serializable {
 	}
 
 
-	@Override
+	
 	public String getSpatialRelateSQL(String columnName, int spatialRelation) {
 		final String stfunction;
 		switch ( spatialRelation ) {
@@ -77,38 +79,38 @@ class SqlServerSupport implements SpatialDialect, Serializable {
 		return columnName + "." + stfunction + "(?) = 1";
 	}
 
-	@Override
+	
 	public String getSpatialFilterExpression(String columnName) {
 		return columnName + ".Filter(?) = 1";
 	}
 
-	@Override
+	
 	public String getSpatialAggregateSQL(String columnName, int aggregation) {
 		throw new UnsupportedOperationException( "No spatial aggregate SQL functions." );
 	}
 
-	@Override
+	
 	public String getDWithinSQL(String columnName) {
 		throw new UnsupportedOperationException( "SQL Server has no DWithin function." );
 	}
 
-	@Override
+	
 	public String getHavingSridSQL(String columnName) {
 		return columnName + ".STSrid = (?)";
 	}
 
-	@Override
+	
 	public String getIsEmptySQL(String columnName, boolean isEmpty) {
 		final String base = "(" + columnName + ".STIsEmpty() ";
 		return isEmpty ? base + " = 1 )" : base + " = 0 )";
 	}
 
-	@Override
+	
 	public boolean supportsFiltering() {
 		return true;
 	}
 
-	@Override
+	
 	public boolean supports(SpatialFunction function) {
 		return ( functions.get( function.toString() ) != null );
 	}

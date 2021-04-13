@@ -13,7 +13,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -26,6 +25,8 @@ import java.util.Properties;
 import javax.sql.DataSource;
 
 import org.hibernate.spatial.HSMessageLogger;
+import org.hibernate.spatial.testing.datareader.TestData;
+import org.hibernate.spatial.testing.datareader.TestDataElement;
 
 import org.jboss.logging.Logger;
 

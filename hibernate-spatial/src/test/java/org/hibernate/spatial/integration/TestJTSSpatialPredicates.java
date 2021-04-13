@@ -34,9 +34,6 @@ import org.jboss.logging.Logger;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-/**
- * @see TestSpatialRestrictions
- */
 @Skip(condition = SpatialDialectMatcher.class, message = "No Spatial Dialect")
 @SkipForDialect(value = HANASpatialDialect.class, comment = "The HANA dialect is tested via org.hibernate.spatial.dialect.hana.TestHANASpatialFunctions", jiraKey = "HHH-12426")
 public class TestJTSSpatialPredicates extends SpatialFunctionalTestCase {
@@ -65,21 +62,21 @@ public class TestJTSSpatialPredicates extends SpatialFunctionalTestCase {
 		retrieveAndCompare( dbexpected, predicateFactory );
 	}
 
-	@Test
-	public void filter() throws SQLException {
-		if ( !dialectSupportsFiltering() ) {
-			LOG.info( "Filtering is not supported by Dialect" );
-			return;
-		}
-		Map<Integer, Boolean> dbexpected = expectationsFactory.getFilter( expectationsFactory.getTestPolygon() );
-		BiFunction<CriteriaBuilder, Root<JtsGeomEntity>, Predicate> predicateFactory = (criteriaBuilder, root) ->
-				JTSSpatialPredicates.filter(
-						criteriaBuilder,
-						root.get( "geom" ),
-						expectationsFactory.getTestPolygon()
-				);
-		retrieveAndCompare( dbexpected, predicateFactory );
-	}
+//	@Test
+//	public void filter() throws SQLException {
+//		if ( !dialectSupportsFiltering() ) {
+//			LOG.info( "Filtering is not supported by Dialect" );
+//			return;
+//		}
+//		Map<Integer, Boolean> dbexpected = expectationsFactory.getFilter( expectationsFactory.getTestPolygon() );
+//		BiFunction<CriteriaBuilder, Root<JtsGeomEntity>, Predicate> predicateFactory = (criteriaBuilder, root) ->
+//				JTSSpatialPredicates.filter(
+//						criteriaBuilder,
+//						root.get( "geom" ),
+//						expectationsFactory.getTestPolygon()
+//				);
+//		retrieveAndCompare( dbexpected, predicateFactory );
+//	}
 
 	@Test
 	public void contains() throws SQLException {

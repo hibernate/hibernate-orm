@@ -7,6 +7,8 @@
 
 package org.hibernate.spatial.testing;
 
+import org.hibernate.spatial.testing.datareader.TestDataElement;
+
 /**
  * <code>SQLExpressoinTemplate</code>s generate database-specific
  * SQL statements for a given <code>TestDataElement</code> instance.

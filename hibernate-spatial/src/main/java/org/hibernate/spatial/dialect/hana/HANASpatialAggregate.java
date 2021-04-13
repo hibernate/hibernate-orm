@@ -7,6 +7,7 @@
 package org.hibernate.spatial.dialect.hana;
 
 import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.type.Type;
 
 public class HANASpatialAggregate extends StandardSQLFunction {
@@ -15,7 +16,7 @@ public class HANASpatialAggregate extends StandardSQLFunction {
 		super( name );
 	}
 
-	public HANASpatialAggregate(String name, Type registeredType) {
+	public HANASpatialAggregate(String name, AllowableFunctionReturnType registeredType) {
 		super( name, registeredType );
 	}
 }

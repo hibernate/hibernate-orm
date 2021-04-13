@@ -10,12 +10,11 @@ package org.hibernate.spatial.testing.dialects.cockroachdb;
 import org.hibernate.spatial.integration.TestGeolatteSpatialPredicates;
 import org.hibernate.spatial.integration.TestJTSSpatialPredicates;
 import org.hibernate.spatial.integration.TestSpatialFunctions;
-import org.hibernate.spatial.integration.TestSpatialRestrictions;
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
 import org.hibernate.spatial.testing.DataSourceUtils;
 import org.hibernate.spatial.testing.SQLExpressionTemplate;
-import org.hibernate.spatial.testing.TestData;
-import org.hibernate.spatial.testing.TestSupport;
+import org.hibernate.spatial.testing.datareader.TestData;
+import org.hibernate.spatial.testing.datareader.TestSupport;
 import org.hibernate.spatial.testing.dialects.postgis.PostgisExpressionTemplate;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -25,7 +24,6 @@ public class CockroachDBTestSupport extends TestSupport {
 	public TestData createTestData(BaseCoreFunctionalTestCase testcase) {
 		Class<? extends BaseCoreFunctionalTestCase> testcaseClass = testcase.getClass();
 		if ( ( testcaseClass == TestSpatialFunctions.class ) ||
-				( testcaseClass == TestSpatialRestrictions.class ) ||
 				( testcaseClass == TestJTSSpatialPredicates.class ) ||
 				( testcaseClass == TestGeolatteSpatialPredicates.class ) ) {
 			return TestData.fromFile( "cockroachdb/functions-test.xml" );

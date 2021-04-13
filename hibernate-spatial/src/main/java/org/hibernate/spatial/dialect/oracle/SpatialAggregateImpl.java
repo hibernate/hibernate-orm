@@ -7,22 +7,19 @@
 
 package org.hibernate.spatial.dialect.oracle;
 
-
-import org.hibernate.spatial.dialect.oracle.criterion.OracleSpatialAggregate;
-
 /**
  * Provides Aggregate type spatial function interpretation
  */
-class SpatialAggregate {
+class SpatialAggregateImpl {
 
 	private static final String SDO_AGGR = "SDO_AGGR_";
 	private boolean aggregateType;
 	private String aggregateSyntax;
 
-	SpatialAggregate() {
+	SpatialAggregateImpl() {
 	}
 
-	SpatialAggregate(int aggregation) {
+	SpatialAggregateImpl(int aggregation) {
 
 		String specificAggrSyntax;
 

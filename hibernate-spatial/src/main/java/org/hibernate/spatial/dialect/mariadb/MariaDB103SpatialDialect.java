@@ -7,36 +7,9 @@
 
 package org.hibernate.spatial.dialect.mariadb;
 
-import java.util.Map;
-
-import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.MariaDB103Dialect;
-import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.spatial.dialect.SpatialFunctionsRegistry;
+import org.hibernate.spatial.SpatialDialect;
 
-public class MariaDB103SpatialDialect extends MariaDB103Dialect implements MariaDBSpatialDialectTrait {
+public class MariaDB103SpatialDialect extends MariaDB103Dialect implements SpatialDialect {
 
-	final private SpatialFunctionsRegistry spatialFunctions = new MariaDB103SpatialFunctions();
-
-	public MariaDB103SpatialDialect() {
-		super();
-		registerColumnType(
-				MariaDBGeometryTypeDescriptor.INSTANCE.getSqlType(),
-				"GEOMETRY"
-		);
-		for ( Map.Entry<String, SQLFunction> entry : spatialFunctions ) {
-			registerFunction( entry.getKey(), entry.getValue() );
-		}
-	}
-
-	@Override
-	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
-		delegateContributeTypes( typeContributions, serviceRegistry );
-	}
-
-	@Override
-	public SpatialFunctionsRegistry spatialFunctions() {
-		return spatialFunctions;
-	}
 }

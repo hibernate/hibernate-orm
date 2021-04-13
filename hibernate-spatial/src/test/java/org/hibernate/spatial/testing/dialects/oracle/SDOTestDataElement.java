@@ -8,7 +8,7 @@
 package org.hibernate.spatial.testing.dialects.oracle;
 
 
-import org.hibernate.spatial.testing.TestDataElement;
+import org.hibernate.spatial.testing.datareader.TestDataElement;
 
 /**
  * A specialised subclass for SDOGeometry test objects

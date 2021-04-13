@@ -22,6 +22,7 @@ public class HibernateSpatialConfigurationSettings implements Serializable {
 	 */
 
 	public static final String CONNECTION_FINDER = "hibernate.spatial.connection_finder";
+
 	/**
 	 * SRID to use for the DB2 Spatial Dialects.
 	 */
@@ -30,6 +31,5 @@ public class HibernateSpatialConfigurationSettings implements Serializable {
 	private HibernateSpatialConfigurationSettings() {
 		//prevent this object from being instantiated
 	}
-
 
 }

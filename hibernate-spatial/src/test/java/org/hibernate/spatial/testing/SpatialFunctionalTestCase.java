@@ -12,15 +12,20 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.Query;
+import javax.persistence.Query;
+
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.HSMessageLogger;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.integration.jts.JtsGeomEntity;
+import org.hibernate.spatial.testing.datareader.TestData;
+import org.hibernate.spatial.testing.datareader.TestSupport;
 
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -159,19 +164,10 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 	 * @return
 	 */
 	public boolean isSupportedByDialect(SpatialFunction spatialFunction) {
-		SpatialDialect dialect = (SpatialDialect) getDialect();
-		return dialect.supports( spatialFunction );
+		Dialect dialect = getDialect();
+		throw new NotYetImplementedException();
 	}
 
-	/**
-	 * Supports true if the spatial dialect supports filtering (e.g. ST_overlap, MBROverlap, SDO_FILTER)
-	 *
-	 * @return
-	 */
-	public boolean dialectSupportsFiltering() {
-		SpatialDialect dialect = (SpatialDialect) getDialect();
-		return dialect.supportsFiltering();
-	}
 
 	abstract protected HSMessageLogger getLogger();
 
@@ -187,7 +183,7 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 	 * @param <T> type of the second column in the query results
 	 */
 	protected <T> void addQueryResults(Map<Integer, T> result, Query query) {
-		List<Object[]> rows = (List<Object[]>) query.list();
+		List<Object[]> rows = query.getResultList();
 		if ( rows.size() == 0 ) {
 			getLogger().warn( "No results returned for query!!" );
 		}

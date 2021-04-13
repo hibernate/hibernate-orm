@@ -1,0 +1,56 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
+package org.hibernate.orm.test.jpa.metamodel;
+
+import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.IdentifiableType;
+import javax.persistence.metamodel.ManagedType;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.fail;
+
+/**
+ * @author Steve Ebersole
+ */
+@Jpa(annotatedClasses = {
+		SomeMappedSuperclassSubclass.class
+})
+public class MappedSuperclassTypeTest {
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-6896" )
+	public void ensureMappedSuperclassTypeReturnedAsManagedType(EntityManagerFactoryScope scope) {
+		ManagedType<SomeMappedSuperclass> type = scope.getEntityManagerFactory().getMetamodel().managedType( SomeMappedSuperclass.class );
+		// the issue was in regards to throwing an exception, but also check for nullness
+		assertNotNull( type );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-8533" )
+	@SuppressWarnings("unchecked")
+	public void testAttributeAccess(EntityManagerFactoryScope scope) {
+		final EntityType<SomeMappedSuperclassSubclass> entityType =  scope.getEntityManagerFactory().getMetamodel().entity( SomeMappedSuperclassSubclass.class );
+		final IdentifiableType<SomeMappedSuperclass> mappedSuperclassType = (IdentifiableType<SomeMappedSuperclass>) entityType.getSupertype();
+
+		assertNotNull( entityType.getId( Long.class ) );
+		try {
+			entityType.getDeclaredId( Long.class );
+			fail();
+		}
+		catch (IllegalArgumentException expected) {
+		}
+
+		assertNotNull( mappedSuperclassType.getId( Long.class ) );
+		assertNotNull( mappedSuperclassType.getDeclaredId( Long.class ) );
+	}
+}

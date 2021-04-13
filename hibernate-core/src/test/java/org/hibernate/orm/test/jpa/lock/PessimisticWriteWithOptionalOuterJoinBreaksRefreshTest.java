@@ -1,0 +1,98 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
+
+package org.hibernate.orm.test.jpa.lock;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinTable;
+import javax.persistence.LockModeType;
+import javax.persistence.ManyToOne;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+@TestForIssue(jiraKey = "HHH-13000")
+@Jpa(annotatedClasses = {
+		PessimisticWriteWithOptionalOuterJoinBreaksRefreshTest.Parent.class,
+		PessimisticWriteWithOptionalOuterJoinBreaksRefreshTest.Child.class
+})
+public class PessimisticWriteWithOptionalOuterJoinBreaksRefreshTest {
+
+	private Child child;
+
+	@BeforeEach
+	protected void afterEntityManagerFactoryBuilt(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					child = new Child();
+					child.parent = new Parent();
+					entityManager.persist( child );
+				}
+		);
+	}
+
+	@AfterEach
+	public void tearDown(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					entityManager.createQuery( "delete from Child" ).executeUpdate();
+					entityManager.createQuery( "delete from Parent" ).executeUpdate();
+				}
+		);
+	}
+
+	@Test
+	public void pessimisticWriteWithOptionalOuterJoinBreaksRefreshTest(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					child = entityManager.find( Child.class, child.id );
+					entityManager.lock( child, LockModeType.PESSIMISTIC_WRITE );
+					entityManager.flush();
+					entityManager.refresh( child );
+				}
+		);
+	}
+
+	@Test
+	public void pessimisticReadWithOptionalOuterJoinBreaksRefreshTest(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					child = entityManager.find( Child.class, child.id );
+					entityManager.lock( child, LockModeType.PESSIMISTIC_READ );
+					entityManager.flush();
+					entityManager.refresh( child );
+				}
+		);
+	}
+
+	@Entity(name = "Parent")
+	public static class Parent {
+		@Id
+		@GeneratedValue(strategy = GenerationType.AUTO)
+		Long id;
+	}
+
+	@Entity(name = "Child")
+	public static class Child {
+		@Id
+		@GeneratedValue(strategy = GenerationType.AUTO)
+		Long id;
+
+		@ManyToOne(cascade = { CascadeType.PERSIST })
+		@JoinTable(name = "test")
+		Parent parent;
+	}
+}

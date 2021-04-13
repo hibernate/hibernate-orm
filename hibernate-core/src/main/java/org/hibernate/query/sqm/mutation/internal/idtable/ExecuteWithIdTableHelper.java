@@ -87,7 +87,10 @@ public final class ExecuteWithIdTableHelper {
 
 		mutatingEntityDescriptor.getIdentifierMapping().forEachSelectable(
 				(jdbcPosition, selection) -> {
-					final TableReference tableReference = mutatingTableGroup.resolveTableReference( selection.getContainingTableExpression() );
+					final TableReference tableReference = mutatingTableGroup.resolveTableReference(
+							mutatingTableGroup.getNavigablePath(),
+							selection.getContainingTableExpression()
+					);
 					matchingIdSelection.getSelectClause().addSqlSelection(
 							new SqlSelectionImpl(
 									jdbcPosition,

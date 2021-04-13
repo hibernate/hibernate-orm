@@ -153,7 +153,7 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 				.getSessionFactory();
 
 		final TableGroup tableGroup = fromClauseAccess.getTableGroup( fetchParent.getNavigablePath().getParent() );
-		final TableReference tableReference = tableGroup.getTableReference( table );
+		final TableReference tableReference = tableGroup.getTableReference( fetchablePath, table );
 
 		final Expression columnReference = sqlExpressionResolver.resolveSqlExpression(
 				SqlExpressionResolver.createColumnReferenceKey( tableReference, column ),

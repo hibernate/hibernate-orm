@@ -59,7 +59,7 @@ public class ImplicitFetchBuilderBasic implements ImplicitFetchBuilder {
 		final int valuesArrayPosition = jdbcPositionToValuesArrayPosition( jdbcPosition );
 
 		final Expression expression = creationStateImpl.resolveSqlExpression(
-				createColumnReferenceKey( parentTableGroup.getTableReference( table ), column ),
+				createColumnReferenceKey( parentTableGroup.getTableReference( fetchPath, table ), column ),
 				processingState -> new SqlSelectionImpl( valuesArrayPosition, fetchable )
 		);
 

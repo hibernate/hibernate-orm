@@ -1925,8 +1925,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		if ( sqmPathType instanceof IdentifiableDomainType ) {
 			//noinspection unchecked
 			final SqmPath idPath = ( (IdentifiableDomainType) sqmPathType ).getIdentifierDescriptor().createSqmPath(
-					sqmPath,
-					this
+					sqmPath
 			);
 
 			if ( ctx.pathContinuation() == null ) {
@@ -1960,7 +1959,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			}
 
 			//noinspection unchecked
-			return versionAttribute.createSqmPath( sqmPath, this );
+			return versionAttribute.createSqmPath( sqmPath );
 		}
 
 		throw new SemanticException( "Path does not reference an identifiable-type : " + sqmPath.getNavigablePath().getFullPath() );
@@ -3832,8 +3831,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 		//noinspection unchecked
 		return ( (PluralPersistentAttribute<?, ?, ?>) pluralAttribute ).getIndexPathSource().createSqmPath(
-				sqmFrom,
-				this
+				sqmFrom
 		);
 	}
 
@@ -4143,8 +4141,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 		//noinspection unchecked
 		SqmPath result = attribute.getElementPathSource().createSqmPath(
-				pluralAttributePath,
-				this
+				pluralAttributePath
 		);
 
 		if ( ctx.pathContinuation() != null ) {
@@ -4162,15 +4159,15 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 		if ( sqmPath instanceof SqmMapJoin ) {
 			final SqmMapJoin sqmMapJoin = (SqmMapJoin) sqmPath;
-			return sqmMapJoin.getReferencedPathSource().getIndexPathSource().createSqmPath( sqmMapJoin, this );
+			return sqmMapJoin.getReferencedPathSource().getIndexPathSource().createSqmPath( sqmMapJoin );
 		}
 		else {
 			assert sqmPath instanceof SqmPluralValuedSimplePath;
 			final SqmPluralValuedSimplePath mapPath = (SqmPluralValuedSimplePath) sqmPath;
 			final SqmPath keyPath = mapPath.getReferencedPathSource()
 					.getIndexPathSource()
-					.createSqmPath( mapPath, this );
-			mapPath.registerImplicitJoinPath( keyPath );
+					.createSqmPath( mapPath );
+			mapPath.registerReusablePath( keyPath );
 			return keyPath;
 		}
 	}

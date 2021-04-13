@@ -46,7 +46,10 @@ public class BasicValuedPathInterpretation<T> extends AbstractSqmPathInterpretat
 			throw new SemanticException( "`" + sqmPath.getNavigablePath().getFullPath() + "` did not reference a known model part" );
 		}
 
-		final TableReference tableReference = tableGroup.resolveTableReference( mapping.getContainingTableExpression() );
+		final TableReference tableReference = tableGroup.resolveTableReference(
+				sqmPath.getNavigablePath(),
+				mapping.getContainingTableExpression()
+		);
 
 		final Expression expression = sqlAstCreationState.getSqlExpressionResolver().resolveSqlExpression(
 				SqlExpressionResolver.createColumnReferenceKey(

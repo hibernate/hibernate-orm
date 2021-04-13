@@ -7,6 +7,7 @@
 package org.hibernate.sql.ast.tree.from;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.NavigablePath;
 
 /**
  * @author Andrea Boriero
@@ -25,7 +26,7 @@ public class UnionTableReference extends TableReference {
 		this.subclassTableSpaceExpressions = subclassTableSpaceExpressions;
 	}
 
-	public TableReference resolveTableReference(String tableExpression) {
+	public TableReference resolveTableReference(NavigablePath navigablePath, String tableExpression) {
 		if ( hasTableExpression( tableExpression ) ) {
 			return this;
 		}
@@ -33,7 +34,7 @@ public class UnionTableReference extends TableReference {
 	}
 
 	@Override
-	public TableReference getTableReference(String tableExpression) {
+	public TableReference getTableReference(NavigablePath navigablePath, String tableExpression) {
 		if ( hasTableExpression( tableExpression ) ) {
 			return this;
 		}

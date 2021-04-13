@@ -190,7 +190,7 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions,
 		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 
 		final TableGroup tableGroup = fromClauseAccess.getTableGroup( fetchablePath.getParent().getParent() );
-		final TableReference tableReference = tableGroup.getTableReference( table );
+		final TableReference tableReference = tableGroup.getTableReference( fetchablePath, table );
 		final Expression columnReference = sqlExpressionResolver.resolveSqlExpression(
 				createColumnReferenceKey( tableReference, column ),
 				processingState -> new ColumnReference(

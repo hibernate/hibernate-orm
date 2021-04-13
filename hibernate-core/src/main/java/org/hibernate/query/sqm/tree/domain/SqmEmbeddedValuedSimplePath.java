@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.NavigablePath;
@@ -16,11 +17,12 @@ import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.UnknownPathException;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.hql.spi.SqmCreationState;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmEmbeddedValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
+public class SqmEmbeddedValuedSimplePath<T> extends AbstractSqmSimplePath<T> implements AllowableParameterType<T> {
 	public SqmEmbeddedValuedSimplePath(
 			NavigablePath navigablePath,
 			SqmPathSource<T> referencedPathSource,
@@ -53,7 +55,7 @@ public class SqmEmbeddedValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 			throw UnknownPathException.unknownSubPath( this, name );
 		}
 
-		return subPathSource.createSqmPath( this, creationState );
+		return subPathSource.createSqmPath( this );
 	}
 
 	@Override
@@ -72,7 +74,22 @@ public class SqmEmbeddedValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 		throw new PathException( "Embeddable paths cannot be TREAT-ed" );
 	}
 
-	//	@Override
+	@Override
+	public JavaTypeDescriptor<T> getExpressableJavaTypeDescriptor() {
+		return getJavaTypeDescriptor();
+	}
+
+	@Override
+	public PersistenceType getPersistenceType() {
+		return PersistenceType.EMBEDDABLE;
+	}
+
+	@Override
+	public Class<T> getJavaType() {
+		return getJavaTypeDescriptor().getJavaTypeClass();
+	}
+
+//	@Override
 //	public DomainResult createDomainResult(
 //			String resultVariable,
 //			DomainResultCreationState creationState,

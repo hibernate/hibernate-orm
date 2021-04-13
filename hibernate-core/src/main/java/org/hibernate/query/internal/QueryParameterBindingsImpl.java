@@ -29,8 +29,6 @@ import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypedExpressable;
-import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.type.descriptor.java.MutabilityPlanExposer;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -94,7 +92,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	}
 
 	@SuppressWarnings({"WeakerAccess" })
-	protected QueryParameterBinding<?> makeBinding(QueryParameterImplementor<?> queryParameter) {
+	protected <T> QueryParameterBinding<T> makeBinding(QueryParameterImplementor<T> queryParameter) {
 		if ( parameterBindingMap == null ) {
 			parameterBindingMap = new IdentityHashMap<>();
 		}
@@ -108,7 +106,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 			);
 		}
 
-		final QueryParameterBinding<?> binding = new QueryParameterBindingImpl<>( queryParameter, sessionFactory, null, queryParametersValidationEnabled );
+		final QueryParameterBinding<T> binding = new QueryParameterBindingImpl<>( queryParameter, sessionFactory, null, queryParametersValidationEnabled );
 		parameterBindingMap.put( queryParameter, binding );
 
 		return binding;
@@ -122,8 +120,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	@Override
 	public <P> QueryParameterBinding<P> getBinding(QueryParameterImplementor<P> parameter) {
 		if ( parameterBindingMap == null ) {
-			//noinspection unchecked
-			return (QueryParameterBinding<P>) makeBinding( parameter );
+			return makeBinding( parameter );
 		}
 
 		QueryParameterBinding<?> binding = parameterBindingMap.get( parameter );

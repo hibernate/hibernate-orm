@@ -45,7 +45,7 @@ public interface SqmPathSource<J> extends SqmExpressable<J>, Bindable<J> {
 	/**
 	 * Create an SQM path for this source relative to the given left-hand side
 	 */
-	SqmPath<J> createSqmPath(SqmPath<?> lhs, SqmCreationState creationState);
+	SqmPath<J> createSqmPath(SqmPath<?> lhs);
 
 	default <X extends DomainType> X sqmAs(Class<X> targetType) {
 		if ( targetType.isInstance( this ) ) {

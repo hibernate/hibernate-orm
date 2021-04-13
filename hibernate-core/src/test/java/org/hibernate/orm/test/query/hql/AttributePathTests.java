@@ -53,7 +53,7 @@ public class AttributePathTests extends BaseSqmUnitTest {
 		final SqmRoot<?> sqmRoot = statement.getQuerySpec().getFromClause().getRoots().get( 0 );
 
 		assertThat( sqmRoot.getJoins().size(), is(0) );
-		assertThat( sqmRoot.getImplicitJoinPaths().size(), is(1) );
+		assertThat( sqmRoot.getReusablePaths().size(), is( 1) );
 
 		// from-clause paths
 //		assertPropertyPath( space.getRoot(), "com.acme.Something(s)" );
@@ -81,7 +81,7 @@ public class AttributePathTests extends BaseSqmUnitTest {
 		final SqmRoot<?> sqmRoot = statement.getQuerySpec().getFromClause().getRoots().get( 0 );
 
 		assertThat( sqmRoot.getJoins().size(), is(0) );
-		assertThat( sqmRoot.getImplicitJoinPaths().size(), is(1) );
+		assertThat( sqmRoot.getReusablePaths().size(), is( 1) );
 
 		final SqmSelection selection = statement.getQuerySpec().getSelectClause().getSelections().get( 0 );
 		assertThat( selection.getSelectableNode(), instanceOf( SqmEntityValuedSimplePath.class ) );

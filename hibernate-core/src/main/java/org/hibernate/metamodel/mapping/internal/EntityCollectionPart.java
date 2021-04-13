@@ -151,7 +151,7 @@ public class EntityCollectionPart
 		final FromClauseAccess fromClauseAccess = creationState.getSqlAstCreationState().getFromClauseAccess();
 		creationState.registerVisitedAssociationKey( getForeignKeyDescriptor().getAssociationKey() );
 
-		fromClauseAccess.resolveTableGroup(
+		TableGroup tableGroup = fromClauseAccess.resolveTableGroup(
 				fetchablePath,
 				np -> {
 					// We need to create one.  The Result will be able to find it later by path
@@ -166,7 +166,7 @@ public class EntityCollectionPart
 				}
 		);
 
-		return new EntityFetchJoinedImpl( fetchParent, this, lockMode, selected, fetchablePath, creationState );
+		return new EntityFetchJoinedImpl( fetchParent, this, tableGroup, lockMode, selected, fetchablePath, creationState );
 	}
 
 	@Override
@@ -347,6 +347,7 @@ public class EntityCollectionPart
 			TableGroup lhs,
 			String explicitSourceAlias,
 			SqlAstJoinType sqlAstJoinType,
+			boolean fetched,
 			LockMode lockMode,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
@@ -356,6 +357,7 @@ public class EntityCollectionPart
 				lhs,
 				explicitSourceAlias,
 				sqlAstJoinType,
+				fetched,
 				lockMode,
 				aliasBaseGenerator,
 				sqlExpressionResolver,

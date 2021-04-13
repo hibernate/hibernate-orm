@@ -52,6 +52,7 @@ public class EmbeddableResultImpl<T> extends AbstractFetchParent implements Embe
 							fromClauseAccess.findTableGroup( navigablePath.getParent() ),
 							resultVariable,
 							SqlAstJoinType.INNER,
+							true,
 							LockMode.NONE,
 							creationState.getSqlAstCreationState()
 					);

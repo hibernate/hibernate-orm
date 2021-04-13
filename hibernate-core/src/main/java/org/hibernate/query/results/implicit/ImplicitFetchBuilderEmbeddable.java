@@ -17,13 +17,10 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.query.results.Builders;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.FetchBuilder;
-import org.hibernate.query.results.SqlSelectionImpl;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
-import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
@@ -31,7 +28,6 @@ import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
 import static org.hibernate.query.results.ResultsHelper.impl;
-import static org.hibernate.query.results.ResultsHelper.jdbcPositionToValuesArrayPosition;
 import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
 /**
@@ -92,6 +88,7 @@ public class ImplicitFetchBuilderEmbeddable implements ImplicitFetchBuilder {
 							parentTableGroup,
 							null,
 							SqlAstJoinType.INNER,
+							true,
 							LockMode.READ,
 							creationStateImpl
 					);

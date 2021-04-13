@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -109,19 +108,13 @@ public class UnionTableGroup implements VirtualTableGroup {
 	}
 
 	@Override
-	public TableReference getTableReference(String tableExpression) {
+	public TableReference getTableReference(NavigablePath navigablePath, String tableExpression) {
 //		assert tableReference.getTableExpression().equals( tableExpression );
 		return tableReference;
 	}
 
 	@Override
-	public TableReference resolveTableReference(String tableExpression, Supplier<TableReference> creator) {
-		assert tableReference.getTableExpression().equals( tableExpression );
-		return tableReference;
-	}
-
-	@Override
-	public TableReference resolveTableReference(String tableExpression) {
+	public TableReference resolveTableReference(NavigablePath navigablePath, String tableExpression) {
 //		assert tableReference.getTableExpression().equals( tableExpression );
 		return tableReference;
 	}

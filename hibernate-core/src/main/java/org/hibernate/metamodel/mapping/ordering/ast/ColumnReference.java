@@ -117,7 +117,7 @@ public class ColumnReference implements OrderingExpression, SequencePart {
 				final int tableNumber = abstractEntityPersister.determineTableNumberForColumn( columnExpression );
 				final String tableName = abstractEntityPersister.getTableName( tableNumber );
 
-				return tableGroup.getTableReference( tableName );
+				return tableGroup.getTableReference( tableGroup.getNavigablePath(), tableName );
 			}
 			else {
 				return tableGroup.getPrimaryTableReference();

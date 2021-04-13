@@ -57,7 +57,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 			SqlAstCreationState creationState) {
 		if ( referenceModelPart instanceof BasicValuedModelPart ) {
 			final BasicValuedModelPart selection = (BasicValuedModelPart) referenceModelPart;
-			final TableReference tableReference = tableGroup.resolveTableReference( selection.getContainingTableExpression() );
+			final TableReference tableReference = tableGroup.resolveTableReference( getNavigablePath(), selection.getContainingTableExpression() );
 			return creationState.getSqlExpressionResolver().resolveSqlExpression(
 					SqlExpressionResolver.createColumnReferenceKey(
 							selection.getContainingTableExpression(),
@@ -221,7 +221,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 			String collation,
 			SortOrder sortOrder,
 			SqlAstCreationState creationState) {
-		final TableReference tableReference = tableGroup.resolveTableReference( selection.getContainingTableExpression() );
+		final TableReference tableReference = tableGroup.resolveTableReference( getNavigablePath(), selection.getContainingTableExpression() );
 		final Expression expression = creationState.getSqlExpressionResolver().resolveSqlExpression(
 				SqlExpressionResolver.createColumnReferenceKey(
 						selection.getContainingTableExpression(),

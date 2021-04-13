@@ -61,12 +61,22 @@ public class EmbeddableForeignKeyResultImpl<T>
 			LockMode lockMode,
 			String resultVariable,
 			DomainResultCreationState creationState) {
+		final boolean shouldSelect;
+		if ( fetchable instanceof ToOneAttributeMapping ) {
+			// We need to make sure to-ones are always delayed to avoid cycles while resolving entity keys
+			final ToOneAttributeMapping toOne = (ToOneAttributeMapping) fetchable;
+			shouldSelect = selected && !creationState.isAssociationKeyVisited(
+					toOne.getForeignKeyDescriptor().getAssociationKey()
+			);
+		}
+		else {
+			shouldSelect = selected;
+		}
 		return fetchable.generateFetch(
 				this,
 				fetchablePath,
 				fetchTiming,
-				// We need to make sure to-ones are always delayed to avoid cycles while resolving entity keys
-				selected && !( fetchable instanceof ToOneAttributeMapping ),
+				shouldSelect,
 				lockMode,
 				resultVariable,
 				creationState

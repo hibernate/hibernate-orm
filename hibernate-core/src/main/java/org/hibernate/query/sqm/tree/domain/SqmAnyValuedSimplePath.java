@@ -25,7 +25,7 @@ public class SqmAnyValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 	public SqmAnyValuedSimplePath(
 			NavigablePath navigablePath,
 			SqmPathSource<T> referencedPathSource,
-			SqmPath lhs,
+			SqmPath<?> lhs,
 			NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedPathSource, lhs, nodeBuilder );
 
@@ -36,7 +36,7 @@ public class SqmAnyValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 	public SqmAnyValuedSimplePath(
 			NavigablePath navigablePath,
 			SqmPathSource<T> referencedPathSource,
-			SqmPath lhs,
+			SqmPath<?> lhs,
 			String explicitAlias,
 			NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedPathSource, lhs, explicitAlias, nodeBuilder );
@@ -64,7 +64,7 @@ public class SqmAnyValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 			throw UnknownPathException.unknownSubPath( this, name );
 		}
 
-		return subPathSource.createSqmPath( this, creationState );
+		return subPathSource.createSqmPath( this );
 
 	}
 

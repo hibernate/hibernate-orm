@@ -7,9 +7,9 @@
 package org.hibernate.sql.ast.tree.from;
 
 import java.util.List;
-import java.util.function.Supplier;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.NavigablePath;
 
 /**
  * @author Steve Ebersole
@@ -25,20 +25,10 @@ public abstract class AbstractColumnReferenceQualifier implements ColumnReferenc
 	// TableReference handling
 
 	@Override
-	public TableReference resolveTableReference(String tableExpression, Supplier<TableReference> creator) {
-		final TableReference existing = getTableReferenceInternal( tableExpression );
-		if ( existing != null ) {
-			return existing;
-		}
-
-		return creator.get();
-	}
-
-	@Override
-	public TableReference resolveTableReference(String tableExpression) {
+	public TableReference resolveTableReference(NavigablePath navigablePath, String tableExpression) {
 		assert tableExpression != null;
 
-		final TableReference tableReference = getTableReferenceInternal( tableExpression );
+		final TableReference tableReference = getTableReferenceInternal( navigablePath, tableExpression );
 		if ( tableReference == null ) {
 			throw new IllegalStateException( "Could not resolve binding for table `" + tableExpression + "`" );
 		}
@@ -47,18 +37,24 @@ public abstract class AbstractColumnReferenceQualifier implements ColumnReferenc
 	}
 
 	@Override
-	public TableReference getTableReference(String tableExpression) {
-		return getTableReferenceInternal( tableExpression );
+	public TableReference getTableReference(NavigablePath navigablePath, String tableExpression) {
+		return getTableReferenceInternal( navigablePath, tableExpression );
 	}
 
-	protected TableReference getTableReferenceInternal(String tableExpression) {
-		if ( getPrimaryTableReference().getTableReference( tableExpression ) != null) {
-			return getPrimaryTableReference();
+	protected TableReference getTableReferenceInternal(
+			NavigablePath navigablePath,
+			String tableExpression) {
+		final TableReference primaryTableReference = getPrimaryTableReference().getTableReference( navigablePath , tableExpression );
+		if ( primaryTableReference != null) {
+			return primaryTableReference;
 		}
 
 		for ( TableReferenceJoin tableJoin : getTableReferenceJoins() ) {
-			if ( tableJoin.getJoinedTableReference().getTableReference( tableExpression ) != null) {
-				return tableJoin.getJoinedTableReference();
+			final TableReference tableReference = tableJoin.getJoinedTableReference().getTableReference(
+					navigablePath,
+					tableExpression );
+			if ( tableReference != null) {
+				return tableReference;
 			}
 		}
 

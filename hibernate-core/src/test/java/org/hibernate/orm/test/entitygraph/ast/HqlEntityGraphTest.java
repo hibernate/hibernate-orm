@@ -39,7 +39,7 @@ import org.hibernate.query.sqm.sql.internal.StandardSqmTranslator;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.sql.ast.tree.from.CompositeTableGroup;
 import org.hibernate.sql.ast.tree.from.FromClause;
-import org.hibernate.sql.ast.tree.from.StandardTableGroup;
+import org.hibernate.sql.ast.tree.from.LazyTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
@@ -167,7 +167,7 @@ public class HqlEntityGraphTest implements SessionFactoryScopeAware {
 								) );
 						Map<String, Class<? extends TableGroup> > expectedTableGroupByName = new HashMap<>();
 						expectedTableGroupByName.put( "homeAddress", CompositeTableGroup.class );
-						expectedTableGroupByName.put( "company", StandardTableGroup.class );
+						expectedTableGroupByName.put( "company", LazyTableGroup.class );
 						assertThat( tableGroupByName, is( expectedTableGroupByName ) );
 					} );
 

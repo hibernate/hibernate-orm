@@ -12,6 +12,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
@@ -59,20 +60,23 @@ public class CorrelatedTableGroup extends AbstractTableGroup {
 	}
 
 	@Override
-	protected TableReference getTableReferenceInternal(String tableExpression) {
-		final TableReference primaryTableReference = correlatedTableGroup.getPrimaryTableReference();
-		if ( tableExpression.equals( primaryTableReference.getTableExpression() ) ) {
+	protected TableReference getTableReferenceInternal(
+			NavigablePath navigablePath,
+			String tableExpression) {
+		final TableReference primaryTableReference = correlatedTableGroup.getPrimaryTableReference().getTableReference( navigablePath, tableExpression );
+		if ( primaryTableReference != null ) {
 			return primaryTableReference;
 		}
 		for ( TableGroupJoin tableGroupJoin : getTableGroupJoins() ) {
-			final TableReference groupTableReference = tableGroupJoin.getJoinedGroup().getPrimaryTableReference();
-			if ( groupTableReference.getTableReference( tableExpression ) != null ) {
+			final TableReference groupTableReference = tableGroupJoin.getJoinedGroup().getPrimaryTableReference().getTableReference( navigablePath, tableExpression );
+			if ( groupTableReference != null ) {
 				return groupTableReference;
 			}
 		}
 		for ( TableReferenceJoin tableReferenceJoin : correlatedTableGroup.getTableReferenceJoins() ) {
-			if ( tableExpression.equals( tableReferenceJoin.getJoinedTableReference().getTableExpression() ) ) {
-				return tableReferenceJoin.getJoinedTableReference();
+			final TableReference tableReference = tableReferenceJoin.getJoinedTableReference().getTableReference( navigablePath, tableExpression );
+			if ( tableReference != null ) {
+				return tableReference;
 			}
 		}
 		return null;

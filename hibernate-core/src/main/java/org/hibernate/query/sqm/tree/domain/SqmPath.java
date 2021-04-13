@@ -63,21 +63,21 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	SqmPath<?> getLhs();
 
 	/**
-	 * Returns an immutable List of implicit-join paths
+	 * Returns an immutable List of reusable paths
 	 */
-	List<SqmPath<?>> getImplicitJoinPaths();
+	List<SqmPath<?>> getReusablePaths();
 
 	/**
-	 * Visit each implicit-join path relative to this path
+	 * Visit each reusable path relative to this path
 	 */
-	void visitImplicitJoinPaths(Consumer<SqmPath<?>> consumer);
+	void visitReusablePaths(Consumer<SqmPath<?>> consumer);
 
 	/**
-	 * Register an implicit-join path relative to this path
+	 * Register a reusable path relative to this path
 	 */
-	void registerImplicitJoinPath(SqmPath<?> path);
+	void registerReusablePath(SqmPath<?> path);
 
-	SqmPath<?> getImplicitJoinPath(String name);
+	SqmPath<?> getReusablePath(String name);
 
 	/**
 	 * This node's type is its "referenced path source"

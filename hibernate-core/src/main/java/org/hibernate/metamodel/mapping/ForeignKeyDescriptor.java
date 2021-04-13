@@ -32,6 +32,8 @@ public interface ForeignKeyDescriptor extends VirtualModelPart {
 
 	ModelPart getKeyPart();
 
+	ModelPart getTargetPart();
+
 	/**
 	 * Create a DomainResult for the referring-side of the fk
 	 */

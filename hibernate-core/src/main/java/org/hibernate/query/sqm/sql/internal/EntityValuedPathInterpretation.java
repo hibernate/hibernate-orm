@@ -61,7 +61,10 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 		if ( mapping instanceof EntityAssociationMapping ) {
 			final EntityAssociationMapping associationMapping = (EntityAssociationMapping) mapping;
 			final ForeignKeyDescriptor keyDescriptor = associationMapping.getForeignKeyDescriptor();
-			final TableReference tableReference = tableGroup.resolveTableReference( keyDescriptor.getKeyTable() );
+			final TableReference tableReference = tableGroup.resolveTableReference(
+					sqmPath.getNavigablePath(),
+					keyDescriptor.getKeyTable()
+			);
 
 			if ( keyDescriptor instanceof SimpleForeignKeyDescriptor ) {
 				final SimpleForeignKeyDescriptor simpleKeyDescriptor = (SimpleForeignKeyDescriptor) keyDescriptor;
@@ -98,7 +101,10 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 			if ( identifierMapping instanceof BasicEntityIdentifierMapping ) {
 				final BasicEntityIdentifierMapping simpleIdMapping = (BasicEntityIdentifierMapping) identifierMapping;
 
-				final TableReference tableReference = tableGroup.resolveTableReference( simpleIdMapping.getContainingTableExpression() );
+				final TableReference tableReference = tableGroup.resolveTableReference(
+						sqmPath.getNavigablePath(),
+						simpleIdMapping.getContainingTableExpression()
+				);
 				assert tableReference != null : "Could not resolve table-group : " + simpleIdMapping.getContainingTableExpression();
 
 				sqlExpression = sqlExprResolver.resolveSqlExpression(
@@ -189,6 +195,7 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 								parentTableGroup,
 								null,
 								SqlAstJoinType.INNER,
+								false,
 								LockMode.READ,
 								sqlAstCreationState
 						);

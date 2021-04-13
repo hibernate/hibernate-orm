@@ -42,6 +42,10 @@ public interface FetchParent extends DomainResultGraphNode {
 		return null;
 	}
 
+	default NavigablePath resolveNavigablePath(Fetchable fetchable) {
+		return getNavigablePath().append( fetchable.getFetchableName() );
+	}
+
 	/**
 	 * Whereas {@link #getReferencedMappingContainer} and {@link #getReferencedMappingType} return the
 	 * referenced container type, this method returns the referenced part.

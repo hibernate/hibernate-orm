@@ -9,9 +9,13 @@ package org.hibernate.sql.results.graph.entity.internal;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableGroupJoin;
+import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.entity.AbstractEntityResultGraphNode;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
@@ -24,19 +28,22 @@ import org.hibernate.sql.results.graph.entity.EntityResult;
  */
 public class EntityResultImpl extends AbstractEntityResultGraphNode implements EntityResult {
 
+	private final TableGroup tableGroup;
 	private final String resultVariable;
 
 	public EntityResultImpl(
 			NavigablePath navigablePath,
 			EntityValuedModelPart entityValuedModelPart,
+			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		this( navigablePath, entityValuedModelPart, resultVariable, null, creationState );
+		this( navigablePath, entityValuedModelPart, tableGroup, resultVariable, null, creationState );
 	}
 
 	public EntityResultImpl(
 			NavigablePath navigablePath,
 			EntityValuedModelPart entityValuedModelPart,
+			TableGroup tableGroup,
 			String resultVariable,
 			EntityMappingType targetType,
 			DomainResultCreationState creationState) {
@@ -46,10 +53,25 @@ public class EntityResultImpl extends AbstractEntityResultGraphNode implements E
 				navigablePath,
 				creationState
 		);
-
+		this.tableGroup = tableGroup;
 		this.resultVariable = resultVariable;
 
 		afterInitialize( creationState );
+	}
+
+	@Override
+	public NavigablePath resolveNavigablePath(Fetchable fetchable) {
+		// todo: this is not ideal yet as we could potentially resolve a path that we did not intend
+		//  to fix this, we'd need to know if the table group is for a fetch
+		if ( fetchable instanceof TableGroupProducer &&
+			!getNavigablePath().getUnaliasedLocalName().equals( getNavigablePath().getLocalName() ) ) {
+			for ( TableGroupJoin tableGroupJoin : tableGroup.getTableGroupJoins() ) {
+				if ( tableGroupJoin.getJoinedGroup().isFetched() && tableGroupJoin.getJoinedGroup().getModelPart() == fetchable ) {
+					return tableGroupJoin.getNavigablePath();
+				}
+			}
+		}
+		return super.resolveNavigablePath( fetchable );
 	}
 
 	@Override

@@ -101,7 +101,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 					final List<Fetch> fetches = new ArrayList<>( naturalIdMapping.getNaturalIdAttributes().size() );
 					fetchParent.getReferencedMappingContainer().visitFetchables(
 							fetchable -> {
-								final NavigablePath navigablePath = fetchParent.getNavigablePath().append( fetchable.getFetchableName() );
+								final NavigablePath navigablePath = fetchParent.resolveNavigablePath( fetchable );
 								final Fetch fetch = fetchParent.generateFetchableFetch(
 										fetchable,
 										navigablePath,
@@ -280,7 +280,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 			SelectableMapping selectableMapping,
 			SqlExpressionResolver sqlExpressionResolver,
 			SessionFactoryImplementor sessionFactory) {
-		final TableReference tableReference = rootTableGroup.getTableReference( selectableMapping.getContainingTableExpression() );
+		final TableReference tableReference = rootTableGroup.getTableReference( rootTableGroup.getNavigablePath(), selectableMapping.getContainingTableExpression() );
 		if ( tableReference == null ) {
 			throw new IllegalStateException(
 					String.format(
@@ -321,7 +321,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 
 					fetchParent.getReferencedMappingContainer().visitFetchables(
 							(fetchable) -> {
-								final NavigablePath navigablePath = fetchParent.getNavigablePath().append( fetchable.getFetchableName() );
+								final NavigablePath navigablePath = fetchParent.resolveNavigablePath( fetchable );
 								final Fetch fetch = fetchParent.generateFetchableFetch(
 										fetchable,
 										navigablePath,

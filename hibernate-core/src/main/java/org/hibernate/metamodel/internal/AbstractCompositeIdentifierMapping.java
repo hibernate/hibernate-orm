@@ -162,6 +162,7 @@ public abstract class AbstractCompositeIdentifierMapping
 			TableGroup lhs,
 			String explicitSourceAlias,
 			SqlAstJoinType sqlAstJoinType,
+			boolean fetched,
 			LockMode lockMode,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
@@ -228,12 +229,13 @@ public abstract class AbstractCompositeIdentifierMapping
 			SqlAstCreationState sqlAstCreationState) {
 		final SelectableMappings selectableMappings = getEmbeddableTypeDescriptor();
 		final List<ColumnReference> columnReferences = CollectionHelper.arrayList( selectableMappings.getJdbcTypeCount() );
-		final TableReference defaultTableReference = tableGroup.resolveTableReference( getContainingTableExpression() );
+		final NavigablePath navigablePath = tableGroup.getNavigablePath().append( getNavigableRole().getNavigableName() );
+		final TableReference defaultTableReference = tableGroup.resolveTableReference( navigablePath, getContainingTableExpression() );
 		getEmbeddableTypeDescriptor().forEachSelectable(
 				(columnIndex, selection) -> {
 					final TableReference tableReference = selection.getContainingTableExpression().equals( defaultTableReference.getTableExpression() )
 							? defaultTableReference
-							: tableGroup.resolveTableReference( selection.getContainingTableExpression() );
+							: tableGroup.resolveTableReference( navigablePath, selection.getContainingTableExpression() );
 					final Expression columnReference = sqlAstCreationState.getSqlExpressionResolver()
 							.resolveSqlExpression(
 									SqlExpressionResolver.createColumnReferenceKey(

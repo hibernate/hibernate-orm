@@ -9,7 +9,6 @@ package org.hibernate.sql.ast.tree.from;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -62,20 +61,15 @@ public class MutatingTableReferenceGroupWrapper implements VirtualTableGroup {
 	}
 
 	@Override
-	public TableReference getTableReference(String tableExpression) {
+	public TableReference getTableReference(NavigablePath navigablePath, String tableExpression) {
 		return mutatingTableReference.getTableExpression().equals( tableExpression )
 				? mutatingTableReference
 				: null;
 	}
 
 	@Override
-	public TableReference resolveTableReference(String tableExpression, Supplier<TableReference> creator) {
-		return resolveTableReference( tableExpression );
-	}
-
-	@Override
-	public TableReference resolveTableReference(String tableExpression) {
-		return getTableReference( tableExpression );
+	public TableReference resolveTableReference(NavigablePath navigablePath, String tableExpression) {
+		return getTableReference( navigablePath, tableExpression );
 	}
 
 	@Override

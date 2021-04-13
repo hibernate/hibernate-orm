@@ -176,7 +176,11 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 							sqlExpressionResolver.resolveSqlExpression(
 									SqlExpressionResolver.createColumnReferenceKey( selection.getContainingTableExpression(), selection.getSelectionExpression() ),
 									sqlAstProcessingState -> new ColumnReference(
-											tableGroup.resolveTableReference( selection.getContainingTableExpression() ),
+											tableGroup.resolveTableReference(
+													tableGroup.getNavigablePath()
+															.append( getNavigableRole().getNavigableName() ),
+													selection.getContainingTableExpression()
+											),
 											selection,
 											sqlAstCreationState.getCreationContext().getSessionFactory()
 									)
@@ -193,6 +197,7 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 			TableGroup lhs,
 			String explicitSourceAlias,
 			SqlAstJoinType sqlAstJoinType,
+			boolean fetched,
 			LockMode lockMode,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,

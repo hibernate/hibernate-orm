@@ -211,7 +211,10 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 			return tableReferenceByQualifier;
 		}
 
-		final TableReference tableReferenceByName = updatingTableGroup.resolveTableReference( columnReference.getQualifier() );
+		final TableReference tableReferenceByName = updatingTableGroup.resolveTableReference(
+				updatingTableGroup.getNavigablePath(),
+				columnReference.getQualifier()
+		);
 		if ( tableReferenceByName != null ) {
 			return tableReferenceByName;
 		}
@@ -224,7 +227,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 			Supplier<Consumer<SelectableConsumer>> tableKeyColumnVisitationSupplier,
 			QuerySpec idTableSubQuery,
 			ExecutionContext executionContext) {
-		final TableReference updatingTableReference = updatingTableGroup.resolveTableReference( tableExpression );
+		final TableReference updatingTableReference = updatingTableGroup.resolveTableReference( updatingTableGroup.getNavigablePath(), tableExpression );
 
 		final List<Assignment> assignments = assignmentsByTable.get( updatingTableReference );
 		if ( assignments == null || assignments.isEmpty() ) {

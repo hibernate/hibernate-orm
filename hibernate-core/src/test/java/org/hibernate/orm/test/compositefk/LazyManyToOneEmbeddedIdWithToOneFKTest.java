@@ -82,7 +82,7 @@ public class LazyManyToOneEmbeddedIdWithToOneFKTest {
 					System system = session.get( System.class, 1 );
 					assertThat( system, is( notNullValue() ) );
 
-					statementInspector.assertExecutedCount( 2 );
+					statementInspector.assertExecutedCount( 1 );
 
 					assertThat( system.getId(), is( 1 ) );
 
@@ -98,9 +98,8 @@ public class LazyManyToOneEmbeddedIdWithToOneFKTest {
 					SystemUser user = system.getUser();
 					assertThat( user, is( notNullValue() ) );
 
-					statementInspector.assertExecutedCount( 2 );
-					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 0 );
-					statementInspector.assertNumberOfOccurrenceInQuery( 1, "join", 0 );
+					statementInspector.assertExecutedCount( 1 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 1 );
 
 					statementInspector.clear();
 					assertThat( user.getName(), is( "Fab" ) );

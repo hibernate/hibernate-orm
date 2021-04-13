@@ -7,9 +7,9 @@
 package org.hibernate.sql.ast.tree.from;
 
 import java.util.Objects;
-import java.util.function.Supplier;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 
@@ -52,12 +52,7 @@ public class TableReference implements SqlAstNode, ColumnReferenceQualifier {
 	}
 
 	@Override
-	public TableReference resolveTableReference(String tableExpression, Supplier<TableReference> creator) {
-		throw new UnsupportedOperationException( "Cannot create a TableReference relative to a TableReference" );
-	}
-
-	@Override
-	public TableReference resolveTableReference(String tableExpression) {
+	public TableReference resolveTableReference(NavigablePath navigablePath, String tableExpression) {
 		if ( tableExpression.equals( getTableExpression() ) ) {
 			return this;
 		}
@@ -65,7 +60,7 @@ public class TableReference implements SqlAstNode, ColumnReferenceQualifier {
 	}
 
 	@Override
-	public TableReference getTableReference(String tableExpression) {
+	public TableReference getTableReference(NavigablePath navigablePath, String tableExpression) {
 		if ( this.tableExpression.equals( tableExpression ) ) {
 			return this;
 		}

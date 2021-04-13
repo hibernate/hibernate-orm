@@ -51,9 +51,11 @@ import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.tree.predicate.InListPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.BasicType;
@@ -636,7 +638,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			frag.addValues( decodeTreatAsRequests( treatAsDeclarations ) );
 		}
 		else {
-			frag.addValues( fullDiscriminatorValues() );
+			frag.addValues( fullDiscriminatorSQLValues() );
 		}
 
 		return frag.toFragmentString();
@@ -672,10 +674,11 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		return ArrayHelper.toStringArray( values );
 	}
 
-	private String[] fullDiscriminatorValues;
+	private String[] fullDiscriminatorSQLValues;
 
-	private String[] fullDiscriminatorValues() {
-		if ( fullDiscriminatorValues == null ) {
+	private String[] fullDiscriminatorSQLValues() {
+		String[] fullDiscriminatorSQLValues = this.fullDiscriminatorSQLValues;
+		if ( fullDiscriminatorSQLValues == null ) {
 			// first access; build it
 			final List<String> values = new ArrayList<>();
 			for ( String subclass : getSubclassClosure() ) {
@@ -684,7 +687,26 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 					values.add( queryable.getDiscriminatorSQLValue() );
 				}
 			}
-			fullDiscriminatorValues = ArrayHelper.toStringArray( values );
+			this.fullDiscriminatorSQLValues = fullDiscriminatorSQLValues = ArrayHelper.toStringArray( values );
+		}
+
+		return fullDiscriminatorSQLValues;
+	}
+
+	private Object[] fullDiscriminatorValues;
+
+	private Object[] fullDiscriminatorValues() {
+		Object[] fullDiscriminatorValues = this.fullDiscriminatorValues;
+		if ( fullDiscriminatorValues == null ) {
+			// first access; build it
+			final List<Object> values = new ArrayList<>();
+			for ( String subclass : getSubclassClosure() ) {
+				final Queryable queryable = (Queryable) getFactory().getMetamodel().entityPersister( subclass );
+				if ( !queryable.isAbstract() ) {
+					values.add( queryable.getDiscriminatorValue() );
+				}
+			}
+			this.fullDiscriminatorValues = fullDiscriminatorValues = values.toArray(new Object[0]);
 		}
 
 		return fullDiscriminatorValues;
@@ -946,23 +968,34 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 					getDiscriminatorColumnName()
 			);
 		}
+
+		final BasicType<?> discriminatorType = (BasicType<?>) getDiscriminatorType();
+		final Expression sqlExpression = sqlExpressionResolver.resolveSqlExpression(
+				columnReferenceKey,
+				sqlAstProcessingState -> new ColumnReference(
+						tableGroup.getPrimaryTableReference().getIdentificationVariable(),
+						discriminatorExpression,
+						isDiscriminatorFormula(),
+						null,
+						null,
+						(discriminatorType).getJdbcMapping(),
+						getFactory()
+				)
+		);
+		if ( hasSubclasses() ) {
+			final Object[] discriminatorValues = fullDiscriminatorValues();
+			final List<Expression> values = new ArrayList<>( discriminatorValues.length );
+			for ( Object discriminatorValue : discriminatorValues ) {
+				values.add( new QueryLiteral<>( discriminatorValue, discriminatorType ) );
+			}
+			return new InListPredicate( sqlExpression, values );
+		}
 		return new ComparisonPredicate(
-				sqlExpressionResolver.resolveSqlExpression(
-						columnReferenceKey,
-						sqlAstProcessingState -> new ColumnReference(
-								tableGroup.getPrimaryTableReference().getIdentificationVariable(),
-								discriminatorExpression,
-								isDiscriminatorFormula(),
-								null,
-								null,
-								( (BasicType<?>) getDiscriminatorType() ).getJdbcMapping(),
-								getFactory()
-						)
-				),
+				sqlExpression,
 				ComparisonOperator.EQUAL,
 				new QueryLiteral<>(
 						getDiscriminatorValue(),
-						( (BasicType<?>) getDiscriminatorType() )
+						discriminatorType
 				)
 		);
 	}

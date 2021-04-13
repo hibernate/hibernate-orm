@@ -65,6 +65,7 @@ public class ImplicitModelPartResultBuilderEmbeddable
 							parentTableGroup,
 							null,
 							SqlAstJoinType.INNER,
+							true,
 							LockMode.READ,
 							creationStateImpl
 					);

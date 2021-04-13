@@ -8,7 +8,6 @@ package org.hibernate.sql.results.graph.collection.internal;
 
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -103,18 +102,13 @@ public class EntityCollectionPartTableGroup implements TableGroup {
 	}
 
 	@Override
-	public TableReference getTableReference(String tableExpression) {
+	public TableReference getTableReference(NavigablePath navigablePath, String tableExpression) {
 		return collectionTableGroup.getTableReference( tableExpression );
 	}
 
 	@Override
-	public TableReference resolveTableReference(String tableExpression, Supplier<TableReference> creator) {
-		return collectionTableGroup.resolveTableReference( tableExpression, creator );
-	}
-
-	@Override
-	public TableReference resolveTableReference(String tableExpression) {
-		return collectionTableGroup.resolveTableReference( tableExpression );
+	public TableReference resolveTableReference(NavigablePath navigablePath, String tableExpression) {
+		return collectionTableGroup.resolveTableReference( navigablePath, tableExpression );
 	}
 
 	@Override

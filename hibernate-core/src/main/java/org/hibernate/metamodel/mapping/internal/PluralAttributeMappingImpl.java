@@ -418,6 +418,11 @@ public class PluralAttributeMappingImpl
 	}
 
 	@Override
+	public boolean containsTableReference(String tableExpression) {
+		return tableExpression.equals( separateCollectionTable );
+	}
+
+	@Override
 	public int getStateArrayPosition() {
 		return stateArrayPosition;
 	}
@@ -494,6 +499,7 @@ public class PluralAttributeMappingImpl
 									lhsTableGroup,
 									null,
 									SqlAstJoinType.LEFT,
+									true,
 									lockMode,
 									creationState.getSqlAstCreationState()
 							);
@@ -559,6 +565,7 @@ public class PluralAttributeMappingImpl
 			TableGroup lhs,
 			String explicitSourceAlias,
 			SqlAstJoinType sqlAstJoinType,
+			boolean fetched,
 			LockMode lockMode,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
@@ -570,6 +577,7 @@ public class PluralAttributeMappingImpl
 					lhs,
 					explicitSourceAlias,
 					sqlAstJoinType,
+					fetched,
 					lockMode,
 					aliasBaseGenerator,
 					sqlExpressionResolver,
@@ -582,6 +590,7 @@ public class PluralAttributeMappingImpl
 					lhs,
 					explicitSourceAlias,
 					sqlAstJoinType,
+					fetched,
 					lockMode,
 					aliasBaseGenerator,
 					sqlExpressionResolver,
@@ -600,12 +609,14 @@ public class PluralAttributeMappingImpl
 			TableGroup lhs,
 			String explicitSourceAlias,
 			SqlAstJoinType sqlAstJoinType,
+			boolean fetched,
 			LockMode lockMode,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
 		final TableGroup tableGroup = createOneToManyTableGroup(
 				navigablePath,
+				fetched,
 				lockMode,
 				aliasBaseGenerator,
 				sqlExpressionResolver,
@@ -632,6 +643,7 @@ public class PluralAttributeMappingImpl
 
 	private TableGroup createOneToManyTableGroup(
 			NavigablePath navigablePath,
+			boolean fetched,
 			LockMode lockMode,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
@@ -658,6 +670,7 @@ public class PluralAttributeMappingImpl
 		return new StandardTableGroup(
 				navigablePath,
 				this,
+				fetched,
 				lockMode,
 				primaryTableReference,
 				true,
@@ -680,12 +693,14 @@ public class PluralAttributeMappingImpl
 			TableGroup lhs,
 			String explicitSourceAlias,
 			SqlAstJoinType sqlAstJoinType,
+			boolean fetched,
 			LockMode lockMode,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
 		final TableGroup tableGroup = createCollectionTableGroup(
 				navigablePath,
+				fetched,
 				lockMode,
 				aliasBaseGenerator,
 				sqlExpressionResolver,
@@ -712,6 +727,7 @@ public class PluralAttributeMappingImpl
 
 	private TableGroup createCollectionTableGroup(
 			NavigablePath navigablePath,
+			boolean fetched,
 			LockMode lockMode,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
@@ -840,6 +856,7 @@ public class PluralAttributeMappingImpl
 		final StandardTableGroup tableGroup = new StandardTableGroup(
 				navigablePath,
 				this,
+				fetched,
 				lockMode,
 				collectionTableReference,
 				true,
@@ -931,6 +948,7 @@ public class PluralAttributeMappingImpl
 		if ( getCollectionDescriptor().isOneToMany() ) {
 			return createOneToManyTableGroup(
 					navigablePath,
+					false,
 					lockMode,
 					creationState.getSqlAliasBaseGenerator(),
 					creationState.getSqlExpressionResolver(),
@@ -940,6 +958,7 @@ public class PluralAttributeMappingImpl
 		else {
 			return createCollectionTableGroup(
 					navigablePath,
+					false,
 					lockMode,
 					creationState.getSqlAliasBaseGenerator(),
 					creationState.getSqlExpressionResolver(),

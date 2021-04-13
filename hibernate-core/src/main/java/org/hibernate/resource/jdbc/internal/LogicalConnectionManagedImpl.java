@@ -167,8 +167,10 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 		super.afterTransaction();
 
 		if ( connectionHandlingMode.getReleaseMode() != ConnectionReleaseMode.ON_CLOSE ) {
-			// NOTE : we check for !ON_CLOSE here (rather than AFTER_TRANSACTION) to also catch AFTER_STATEMENT cases
-			// that were circumvented due to held resources
+			// NOTE : we check for !ON_CLOSE here (rather than AFTER_TRANSACTION) to also catch:
+			// - AFTER_STATEMENT cases that were circumvented due to held resources
+			// - BEFORE_TRANSACTION_COMPLETION cases that were circumvented because a rollback occurred
+			//   (we don't get a beforeTransactionCompletion event on rollback).
 			log.debug( "Initiating JDBC connection release from afterTransaction" );
 			releaseConnection();
 		}

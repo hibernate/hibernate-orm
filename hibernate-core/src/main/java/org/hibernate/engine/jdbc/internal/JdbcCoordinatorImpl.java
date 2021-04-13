@@ -270,7 +270,8 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	public void afterTransaction() {
 		transactionTimeOutInstant = -1;
 		if ( getConnectionReleaseMode() == ConnectionReleaseMode.AFTER_STATEMENT ||
-				getConnectionReleaseMode() == ConnectionReleaseMode.AFTER_TRANSACTION ) {
+				getConnectionReleaseMode() == ConnectionReleaseMode.AFTER_TRANSACTION ||
+				getConnectionReleaseMode() == ConnectionReleaseMode.BEFORE_TRANSACTION_COMPLETION ) {
 			this.logicalConnection.afterTransaction();
 		}
 	}

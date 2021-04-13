@@ -9,8 +9,8 @@ package org.hibernate.spatial.testing.dialects.sqlserver;
 
 import org.hibernate.spatial.testing.DataSourceUtils;
 import org.hibernate.spatial.testing.SQLExpressionTemplate;
-import org.hibernate.spatial.testing.TestData;
-import org.hibernate.spatial.testing.TestSupport;
+import org.hibernate.spatial.testing.datareader.TestData;
+import org.hibernate.spatial.testing.datareader.TestSupport;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 

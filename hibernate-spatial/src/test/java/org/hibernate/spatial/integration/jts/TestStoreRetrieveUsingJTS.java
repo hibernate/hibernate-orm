@@ -12,7 +12,7 @@ import org.hibernate.spatial.integration.AbstractTestStoreRetrieve;
 import org.hibernate.spatial.testing.GeometryEquality;
 import org.hibernate.spatial.testing.JTSGeometryEquality;
 import org.hibernate.spatial.testing.SpatialDialectMatcher;
-import org.hibernate.spatial.testing.TestDataElement;
+import org.hibernate.spatial.testing.datareader.TestDataElement;
 
 import org.hibernate.testing.Skip;
 

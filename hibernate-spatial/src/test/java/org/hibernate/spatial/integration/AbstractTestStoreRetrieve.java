@@ -14,10 +14,12 @@ import java.util.Map;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.query.Query;
+import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.spatial.integration.geolatte.GeomEntity;
 import org.hibernate.spatial.testing.GeometryEquality;
 import org.hibernate.spatial.testing.SpatialFunctionalTestCase;
-import org.hibernate.spatial.testing.TestDataElement;
+import org.hibernate.spatial.testing.datareader.TestDataElement;
 
 import org.junit.Test;
 
@@ -168,8 +170,9 @@ public abstract class AbstractTestStoreRetrieve<G, E extends GeomEntityLike<G>> 
 		try {
 			session = openSession();
 			tx = session.beginTransaction();
-			Criteria criteria = session.createCriteria( GeomEntity.class );
-			List<GeomEntity> retrieved = criteria.list();
+			JpaCriteriaQuery<GeomEntity> criteria = session.getCriteriaBuilder().createQuery( GeomEntity.class );
+			Query<GeomEntity> query = session.createQuery( criteria );
+			List<GeomEntity> retrieved = query.list();
 			assertEquals( "Expected exactly one result", 1, retrieved.size() );
 			GeomEntity entity = retrieved.get( 0 );
 			assertNull( entity.getGeom() );

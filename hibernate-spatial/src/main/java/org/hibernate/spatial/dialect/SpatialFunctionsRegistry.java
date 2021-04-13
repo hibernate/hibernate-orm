@@ -11,26 +11,26 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 
 /**
  * Registers all available spatial functions for a <code>Dialect</code>
  * <p>
  * Created by Karel Maesen, Geovise BVBA on 29/10/16.
  */
-public abstract class SpatialFunctionsRegistry implements Iterable<Map.Entry<String, SQLFunction>>, Serializable {
-	protected final Map<String, SQLFunction> functionMap = new HashMap<String, SQLFunction>();
+public abstract class SpatialFunctionsRegistry implements Iterable<Map.Entry<String, SqmFunctionDescriptor>>, Serializable {
+	protected final Map<String, SqmFunctionDescriptor> functionMap = new HashMap<String, SqmFunctionDescriptor>();
 
-	public void put(String name, SQLFunction function) {
+	public void put(String name, SqmFunctionDescriptor function) {
 		this.functionMap.put( name, function );
 	}
 
 	@Override
-	public Iterator<Map.Entry<String, SQLFunction>> iterator() {
+	public Iterator<Map.Entry<String, SqmFunctionDescriptor>> iterator() {
 		return functionMap.entrySet().iterator();
 	}
 
-	public SQLFunction get(String functionName) {
+	public SqmFunctionDescriptor get(String functionName) {
 		return functionMap.get( functionName );
 	}
 }

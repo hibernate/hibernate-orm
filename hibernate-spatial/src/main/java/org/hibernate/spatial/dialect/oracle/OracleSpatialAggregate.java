@@ -4,17 +4,15 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.spatial.dialect.oracle.criterion;
 
-
-import org.hibernate.spatial.SpatialAggregate;
+package org.hibernate.spatial.dialect.oracle;
 
 /**
  * Defines types of Oracle Spatial aggregate functions
  *
  * @author Karel Maesen, Geovise BVBA
  */
-public interface OracleSpatialAggregate extends SpatialAggregate {
+public interface OracleSpatialAggregate extends org.hibernate.spatial.SpatialAggregate {
 
 	/**
 	 * LRS_CONCAT aggregate function

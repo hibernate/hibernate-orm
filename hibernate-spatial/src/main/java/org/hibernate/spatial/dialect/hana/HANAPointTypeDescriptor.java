@@ -18,11 +18,11 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
-import org.hibernate.type.descriptor.jdbc.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 import org.geolatte.geom.Point;
 
-public class HANAPointTypeDescriptor implements SqlTypeDescriptor {
+public class HANAPointTypeDescriptor implements JdbcTypeDescriptor {
 
 	/**
 	 * An instance of the descrtiptor
@@ -31,7 +31,7 @@ public class HANAPointTypeDescriptor implements SqlTypeDescriptor {
 	private static final long serialVersionUID = -6978798264716544804L;
 
 	@Override
-	public int getSqlType() {
+	public int getJdbcType() {
 		return Types.STRUCT;
 	}
 
@@ -47,14 +47,14 @@ public class HANAPointTypeDescriptor implements SqlTypeDescriptor {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 					throws SQLException {
-				final Point<?> geometry = getJavaDescriptor().unwrap( value, Point.class, options );
+				final Point<?> geometry = getJavaTypeDescriptor().unwrap( value, Point.class, options );
 				st.setObject( index, HANASpatialUtils.toEWKB( geometry ) );
 			}
 
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
-				final Point<?> geometry = getJavaDescriptor().unwrap( value, Point.class, options );
+				final Point<?> geometry = getJavaTypeDescriptor().unwrap( value, Point.class, options );
 				st.setObject( name, HANASpatialUtils.toEWKB( geometry ) );
 			}
 
@@ -67,18 +67,18 @@ public class HANAPointTypeDescriptor implements SqlTypeDescriptor {
 
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-				return getJavaDescriptor().wrap( HANASpatialUtils.toGeometry( rs.getObject( paramIndex ) ), options );
+				return getJavaTypeDescriptor().wrap( HANASpatialUtils.toGeometry( rs.getObject( paramIndex ) ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				return getJavaDescriptor().wrap( HANASpatialUtils.toGeometry( statement.getObject( index ) ), options );
+				return getJavaTypeDescriptor().wrap( HANASpatialUtils.toGeometry( statement.getObject( index ) ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
 					throws SQLException {
-				return getJavaDescriptor().wrap( HANASpatialUtils.toGeometry( statement.getObject( name ) ), options );
+				return getJavaTypeDescriptor().wrap( HANASpatialUtils.toGeometry( statement.getObject( name ) ), options );
 			}
 		};
 	}

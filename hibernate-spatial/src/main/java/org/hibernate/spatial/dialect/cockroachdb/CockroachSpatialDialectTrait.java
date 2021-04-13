@@ -44,32 +44,32 @@ public interface CockroachSpatialDialectTrait extends SpatialDialect {
 		return DELEGATE.getSpatialFilterExpression( columnName );
 	}
 
-	@Override
+
 	default String getSpatialAggregateSQL(String columnName, int aggregation) {
 		return DELEGATE.getSpatialAggregateSQL( columnName, aggregation );
 	}
 
-	@Override
+
 	default String getDWithinSQL(String columnName) {
 		return DELEGATE.getDWithinSQL( columnName );
 	}
 
-	@Override
+
 	default String getHavingSridSQL(String columnName) {
 		return DELEGATE.getHavingSridSQL( columnName );
 	}
 
-	@Override
+
 	default String getIsEmptySQL(String columnName, boolean isEmpty) {
 		return DELEGATE.getIsEmptySQL( columnName, isEmpty );
 	}
 
-	@Override
+
 	default boolean supportsFiltering() {
 		return DELEGATE.supportsFiltering();
 	}
 
-	@Override
+
 	default boolean supports(SpatialFunction function) {
 		return DELEGATE.supports( function );
 	}

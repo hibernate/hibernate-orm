@@ -8,7 +8,7 @@ package org.hibernate.spatial.testing.dialects.mysql;
 
 
 import org.hibernate.spatial.testing.SQLExpressionTemplate;
-import org.hibernate.spatial.testing.TestDataElement;
+import org.hibernate.spatial.testing.datareader.TestDataElement;
 import org.hibernate.spatial.testing.WktUtility;
 
 /**

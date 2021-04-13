@@ -6,18 +6,8 @@
  */
 package org.hibernate.spatial.dialect.mysql;
 
-import java.util.Map;
-
-import org.hibernate.HibernateException;
-import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.dialect.InnoDBStorageEngine;
 import org.hibernate.dialect.MySQL5Dialect;
-import org.hibernate.dialect.MySQLStorageEngine;
-import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.SpatialDialect;
-import org.hibernate.spatial.SpatialFunction;
-import org.hibernate.type.descriptor.jdbc.SqlTypeDescriptor;
 
 /**
  * A Dialect for MySQL 5 using InnoDB engine, with support for its spatial features
@@ -25,80 +15,4 @@ import org.hibernate.type.descriptor.jdbc.SqlTypeDescriptor;
  * @author Karel Maesen, Geovise BVBA
  */
 public class MySQL5SpatialDialect extends MySQL5Dialect implements SpatialDialect {
-
-	private MySQLSpatialDialect dialectDelegate = new MySQLSpatialDialect();
-
-	/**
-	 * Constructs an instance
-	 */
-	public MySQL5SpatialDialect() {
-		super();
-		registerColumnType(
-				MySQLGeometryTypeDescriptor.INSTANCE.getSqlType(),
-				"GEOMETRY"
-		);
-		for ( Map.Entry<String, SQLFunction> entry : new MySQL5SpatialFunctions() ) {
-			registerFunction( entry.getKey(), entry.getValue() );
-		}
-	}
-
-	@Override
-	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
-		dialectDelegate.contributeTypes( typeContributions, serviceRegistry );
-	}
-
-	@Override
-	public String getTypeName(int code, long length, int precision, int scale) throws HibernateException {
-		return dialectDelegate.getTypeName( code, length, precision, scale );
-	}
-
-	@Override
-	public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
-		return dialectDelegate.remapSqlTypeDescriptor( sqlTypeDescriptor );
-	}
-
-	@Override
-	public String getSpatialRelateSQL(String columnName, int spatialRelation) {
-		return dialectDelegate.getSpatialRelateSQL( columnName, spatialRelation );
-	}
-
-	@Override
-	public String getSpatialFilterExpression(String columnName) {
-		return dialectDelegate.getSpatialFilterExpression( columnName );
-	}
-
-	@Override
-	public String getSpatialAggregateSQL(String columnName, int aggregation) {
-		return dialectDelegate.getSpatialAggregateSQL( columnName, aggregation );
-	}
-
-	@Override
-	public String getDWithinSQL(String columnName) {
-		return dialectDelegate.getDWithinSQL( columnName );
-	}
-
-	@Override
-	public String getHavingSridSQL(String columnName) {
-		return dialectDelegate.getHavingSridSQL( columnName );
-	}
-
-	@Override
-	public String getIsEmptySQL(String columnName, boolean isEmpty) {
-		return dialectDelegate.getIsEmptySQL( columnName, isEmpty );
-	}
-
-	@Override
-	public boolean supportsFiltering() {
-		return dialectDelegate.supportsFiltering();
-	}
-
-	@Override
-	public boolean supports(SpatialFunction function) {
-		return dialectDelegate.supports( function );
-	}
-
-	@Override
-	protected MySQLStorageEngine getDefaultMySQLStorageEngine() {
-		return InnoDBStorageEngine.INSTANCE;
-	}
 }

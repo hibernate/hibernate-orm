@@ -49,7 +49,7 @@ public class PostgisSupport implements SpatialDialect, Serializable {
 	}
 
 	public boolean isSpatial(int typeCode){
-		return typeCode == Types.OTHER || typeCode == PGGeometryTypeDescriptor.INSTANCE_WKB_1.getSqlType();
+		return typeCode == Types.OTHER || typeCode == PGGeometryTypeDescriptor.INSTANCE_WKB_1.getJdbcType();
 	}
 
 	/**
@@ -65,7 +65,7 @@ public class PostgisSupport implements SpatialDialect, Serializable {
 	 *
 	 * @return SQL fragment  {@code SpatialRelateExpression}
 	 */
-	@Override
+	
 	public String getSpatialRelateSQL(String columnName, int spatialRelation) {
 		switch ( spatialRelation ) {
 			case SpatialRelation.WITHIN:
@@ -102,7 +102,7 @@ public class PostgisSupport implements SpatialDialect, Serializable {
 	 *
 	 * @return Rhe SQL fragment for the {@code SpatialFilterExpression}
 	 */
-	@Override
+	
 	public String getSpatialFilterExpression(String columnName) {
 		return "(" + columnName + " && ? ) ";
 	}
@@ -115,7 +115,7 @@ public class PostgisSupport implements SpatialDialect, Serializable {
 	 *
 	 * @return The SQL fragment for the projection
 	 */
-	@Override
+	
 	public String getSpatialAggregateSQL(String columnName, int aggregation) {
 		switch ( aggregation ) {
 			case SpatialAggregate.EXTENT:
@@ -137,7 +137,7 @@ public class PostgisSupport implements SpatialDialect, Serializable {
 	 *
 	 * @return The SQL fragment when parsing a <code>DWithinExpression</code>.
 	 */
-	@Override
+	
 	public String getDWithinSQL(String columnName) {
 		return "ST_DWithin(" + columnName + ",?,?)";
 	}
@@ -149,7 +149,7 @@ public class PostgisSupport implements SpatialDialect, Serializable {
 	 *
 	 * @return The SQL fragment for a <code>HavingSridExpression</code>.
 	 */
-	@Override
+	
 	public String getHavingSridSQL(String columnName) {
 		return "( ST_srid(" + columnName + ") = ?)";
 	}
@@ -163,7 +163,7 @@ public class PostgisSupport implements SpatialDialect, Serializable {
 	 *
 	 * @return The SQL fragment for the isempty function
 	 */
-	@Override
+	
 	public String getIsEmptySQL(String columnName, boolean isEmpty) {
 		final String emptyExpr = " ST_IsEmpty(" + columnName + ") ";
 		return isEmpty ? emptyExpr : "( NOT " + emptyExpr + ")";
@@ -175,7 +175,7 @@ public class PostgisSupport implements SpatialDialect, Serializable {
 	 *
 	 * @return True if filtering is supported
 	 */
-	@Override
+	
 	public boolean supportsFiltering() {
 		return true;
 	}
@@ -187,7 +187,7 @@ public class PostgisSupport implements SpatialDialect, Serializable {
 	 *
 	 * @return True if this <code>SpatialDialect</code> supports the spatial function specified by the function parameter.
 	 */
-	@Override
+	
 	public boolean supports(SpatialFunction function) {
 		return ( postgisFunctions.get( function.toString() ) != null );
 	}

@@ -121,7 +121,8 @@ include 'hibernate-transaction-client'
 include 'hibernate-envers'
 include 'hibernate-envers-jakarta'
 
-//include 'hibernate-spatial'
+include 'hibernate-community-dialects'
+include 'hibernate-spatial'
 
 include 'hibernate-c3p0'
 include 'hibernate-proxool'

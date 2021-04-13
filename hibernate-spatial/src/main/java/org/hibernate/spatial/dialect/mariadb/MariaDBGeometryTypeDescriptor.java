@@ -17,9 +17,9 @@ import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.sql.BasicBinder;
-import org.hibernate.type.descriptor.sql.BasicExtractor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.BasicBinder;
+import org.hibernate.type.descriptor.jdbc.BasicExtractor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 import org.geolatte.geom.ByteBuffer;
 import org.geolatte.geom.ByteOrder;
@@ -28,14 +28,14 @@ import org.geolatte.geom.codec.Wkb;
 import org.geolatte.geom.codec.WkbDecoder;
 import org.geolatte.geom.codec.WkbEncoder;
 
-public class MariaDBGeometryTypeDescriptor implements SqlTypeDescriptor {
+public class MariaDBGeometryTypeDescriptor implements JdbcTypeDescriptor {
 
 	public static final MariaDBGeometryTypeDescriptor INSTANCE = new MariaDBGeometryTypeDescriptor();
 	final WkbEncoder encoder = Wkb.newEncoder( Wkb.Dialect.MYSQL_WKB );
 	final WkbDecoder decoder = Wkb.newDecoder( Wkb.Dialect.MYSQL_WKB );
 
 	@Override
-	public int getSqlType() {
+	public int getJdbcType() {
 		return Types.ARRAY;
 	}
 
@@ -63,7 +63,7 @@ public class MariaDBGeometryTypeDescriptor implements SqlTypeDescriptor {
 			}
 
 			private byte[] valueToByteArray(X value, WrapperOptions options) {
-				final Geometry<?> geometry = getJavaDescriptor().unwrap( value, Geometry.class, options );
+				final Geometry<?> geometry = getJavaTypeDescriptor().unwrap( value, Geometry.class, options );
 				final ByteBuffer buffer = encoder.encode( geometry, ByteOrder.NDR );
 				return buffer == null ? null : buffer.toByteArray();
 			}
@@ -74,20 +74,21 @@ public class MariaDBGeometryTypeDescriptor implements SqlTypeDescriptor {
 	public <X> ValueExtractor<X> getExtractor(JavaTypeDescriptor<X> javaTypeDescriptor) {
 		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 
+
 			@Override
-			protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
-				return getJavaDescriptor().wrap( toGeometry( rs.getBytes( name ) ), options );
+			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
+				return getJavaTypeDescriptor().wrap( toGeometry( rs.getBytes( paramIndex ) ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				return getJavaDescriptor().wrap( toGeometry( statement.getBytes( index ) ), options );
+				return getJavaTypeDescriptor().wrap( toGeometry( statement.getBytes( index ) ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
 					throws SQLException {
-				return getJavaDescriptor().wrap( toGeometry( statement.getBytes( name ) ), options );
+				return getJavaTypeDescriptor().wrap( toGeometry( statement.getBytes( name ) ), options );
 			}
 		};
 	}

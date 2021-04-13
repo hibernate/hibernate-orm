@@ -20,7 +20,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
-import org.hibernate.type.descriptor.jdbc.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 import org.geolatte.geom.Geometry;
 import org.geolatte.geom.codec.db.sqlserver.Decoders;
@@ -32,7 +32,7 @@ import org.geolatte.geom.codec.db.sqlserver.Encoders;
  * @author Karel Maesen, Geovise BVBA
  * creation-date: 8/23/11
  */
-public class SqlServer2008GeometryTypeDescriptor implements SqlTypeDescriptor {
+public class SqlServer2008GeometryTypeDescriptor implements JdbcTypeDescriptor {
 
 	/**
 	 * An instance of the descrtiptor
@@ -40,7 +40,7 @@ public class SqlServer2008GeometryTypeDescriptor implements SqlTypeDescriptor {
 	public static final SqlServer2008GeometryTypeDescriptor INSTANCE = new SqlServer2008GeometryTypeDescriptor();
 
 	@Override
-	public int getSqlType() {
+	public int getJdbcType() {
 		return Types.ARRAY;
 	}
 
@@ -55,7 +55,7 @@ public class SqlServer2008GeometryTypeDescriptor implements SqlTypeDescriptor {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 					throws SQLException {
-				final Geometry geometry = getJavaDescriptor().unwrap( value, Geometry.class, options );
+				final Geometry geometry = getJavaTypeDescriptor().unwrap( value, Geometry.class, options );
 				final byte[] bytes = Encoders.encode( geometry );
 				st.setObject( index, bytes );
 			}
@@ -63,7 +63,7 @@ public class SqlServer2008GeometryTypeDescriptor implements SqlTypeDescriptor {
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
-				final Geometry geometry = getJavaDescriptor().unwrap( value, Geometry.class, options );
+				final Geometry geometry = getJavaTypeDescriptor().unwrap( value, Geometry.class, options );
 				final byte[] bytes = Encoders.encode( geometry );
 				st.setObject( name, bytes );
 			}
@@ -77,18 +77,18 @@ public class SqlServer2008GeometryTypeDescriptor implements SqlTypeDescriptor {
 
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-				return getJavaDescriptor().wrap( toGeometry( rs.getObject( paramIndex ) ), options );
+				return getJavaTypeDescriptor().wrap( toGeometry( rs.getObject( paramIndex ) ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				return getJavaDescriptor().wrap( toGeometry( statement.getObject( index ) ), options );
+				return getJavaTypeDescriptor().wrap( toGeometry( statement.getObject( index ) ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
 					throws SQLException {
-				return getJavaDescriptor().wrap( toGeometry( statement.getObject( name ) ), options );
+				return getJavaTypeDescriptor().wrap( toGeometry( statement.getObject( name ) ), options );
 			}
 		};
 	}

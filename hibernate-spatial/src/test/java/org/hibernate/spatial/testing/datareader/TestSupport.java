@@ -5,11 +5,22 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
-package org.hibernate.spatial.testing;
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
+
+package org.hibernate.spatial.testing.datareader;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.spatial.testing.AbstractExpectationsFactory;
+import org.hibernate.spatial.testing.DataSourceUtils;
+import org.hibernate.spatial.testing.JTSGeometryEquality;
+import org.hibernate.spatial.testing.SQLExpressionTemplate;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 

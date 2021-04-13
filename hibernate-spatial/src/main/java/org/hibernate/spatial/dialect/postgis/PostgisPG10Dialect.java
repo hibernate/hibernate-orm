@@ -7,41 +7,18 @@
 
 package org.hibernate.spatial.dialect.postgis;
 
-import java.sql.Types;
 import java.util.Map;
 
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.dialect.PostgreSQL10Dialect;
-import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.service.ServiceRegistry;
 
-public class PostgisPG10Dialect extends PostgreSQL10Dialect implements PGSpatialDialectTrait {
+@Deprecated
+public class PostgisPG10Dialect  extends PostgreSQLDialect {
 
 	public PostgisPG10Dialect() {
-		super();
-		registerColumnType(
-				PGGeometryTypeDescriptor.INSTANCE_WKB_1.getSqlType(),
-				"GEOMETRY"
-		);
-		for ( Map.Entry<String, SQLFunction> entry : functionsToRegister() ) {
-			registerFunction( entry.getKey(), entry.getValue() );
-		}
+		super( 100 );
 	}
-
-	@Override
-	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
-		super.contributeTypes(
-				typeContributions,
-				serviceRegistry
-		);
-		support.contributeTypes( typeContributions, serviceRegistry );
-	}
-
-	@Override
-	public boolean equivalentTypes(int typeCode1, int typeCode2) {
-		return super.equivalentTypes( typeCode1, typeCode2 ) ||
-				( isSpatial( typeCode1 ) && isSpatial( typeCode2 ) );
-	}
-
 
 }
+

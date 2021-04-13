@@ -21,8 +21,7 @@ dependencies {
 
     testCompile(libraries.junit)
     testCompile(project(':hibernate-testing'))
-    testCompile( project( path: ':hibernate-core', configuration: 'tests' ) )
-    testCompile([group: 'org.apache.commons', name: 'commons-dbcp2', version: '2.8.0'])
+    testCompile( project( path: ':hibernate-core', configuration: 'tests' ) )    
     testCompile(libraries.validation)
     testCompile(libraries.jandex)
     testCompile(libraries.classmate)
@@ -44,6 +43,10 @@ sourceSets.test.resources {
     setSrcDirs(['src/test/java', 'src/test/resources'])
 }
 
+
 tasks.test {
     enabled = project.db == 'pgsql'
 }
+
+//tasks.test.include '**/*'
+

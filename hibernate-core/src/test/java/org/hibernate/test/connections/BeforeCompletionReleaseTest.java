@@ -110,11 +110,11 @@ public class BeforeCompletionReleaseTest extends BaseEntityManagerFunctionalTest
     @Test
     @TestForIssue(jiraKey = {"HHH-13976", "HHH-14326"})
     public void testResourcesReleasedThenConnectionClosedThenCommit() throws SQLException, XAException {
-        XAResource transactionSpy = mock( XAResource.class );
-        Connection[] connectionSpies = new Connection[1];
-        Statement statementMock = Mockito.mock( Statement.class );
-
         try (SessionImplementor s = (SessionImplementor) openSession()) {
+            XAResource transactionSpy = mock( XAResource.class );
+            Connection[] connectionSpies = new Connection[1];
+            Statement statementMock = Mockito.mock( Statement.class );
+
             TransactionUtil2.inTransaction( s, session -> {
                 spyOnTransaction( transactionSpy );
 
@@ -126,15 +126,18 @@ public class BeforeCompletionReleaseTest extends BaseEntityManagerFunctionalTest
                 logicalConnection.getResourceRegistry().register( statementMock, true );
                 connectionSpies[0] = logicalConnection.getPhysicalConnection();
             } );
+
+            // Note: all this must happen BEFORE the session is closed;
+            // it's particularly important when reusing the session.
+
+            Connection connectionSpy = connectionSpies[0];
+
+            // Must close the resources, then the connection, then commit
+            InOrder inOrder = inOrder( statementMock, connectionSpy, transactionSpy );
+            inOrder.verify( statementMock ).close();
+            inOrder.verify( connectionSpy ).close();
+            inOrder.verify( transactionSpy ).commit( any(), anyBoolean() );
         }
-
-        Connection connectionSpy = connectionSpies[0];
-
-        // Must close the resources, then the connection, then commit
-        InOrder inOrder = inOrder( statementMock, connectionSpy, transactionSpy );
-        inOrder.verify( statementMock ).close();
-        inOrder.verify( connectionSpy ).close();
-        inOrder.verify( transactionSpy ).commit( any(), anyBoolean() );
     }
 
     private void spyOnTransaction(XAResource xaResource) {

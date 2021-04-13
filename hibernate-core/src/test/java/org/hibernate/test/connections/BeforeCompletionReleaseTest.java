@@ -140,6 +140,50 @@ public class BeforeCompletionReleaseTest extends BaseEntityManagerFunctionalTest
         }
     }
 
+    @Test
+    @TestForIssue(jiraKey = {"HHH-14557"})
+    public void testResourcesReleasedThenConnectionClosedOnEachRollback() throws SQLException {
+        try (SessionImplementor s = (SessionImplementor) openSession()) {
+            Connection[] connectionSpies = new Connection[1];
+            Statement statementMock = Mockito.mock( Statement.class );
+            RuntimeException rollbackException = new RuntimeException("Rollback");
+
+            try {
+                TransactionUtil2.inTransaction( s, session -> {
+                    Thing thing = new Thing();
+                    thing.setId( 1 );
+                    session.persist( thing );
+
+                    LogicalConnectionImplementor logicalConnection = session.getJdbcCoordinator().getLogicalConnection();
+                    logicalConnection.getResourceRegistry().register( statementMock, true );
+                    connectionSpies[0] = logicalConnection.getPhysicalConnection();
+
+                    throw rollbackException;
+                } );
+            }
+            catch (RuntimeException e) {
+                if ( e != rollbackException ) {
+                    throw e;
+                }
+                // Else: ignore, that was expected.
+            }
+
+            // Note: all this must happen BEFORE the session is closed;
+            // it's particularly important when reusing the session.
+
+            Connection connectionSpy = connectionSpies[0];
+
+            // Must close the resources, then the connection
+            InOrder inOrder = inOrder( statementMock, connectionSpy );
+            inOrder.verify( statementMock ).close();
+            inOrder.verify( connectionSpy ).close();
+            // We don't check the relative ordering of the rollback here,
+            // because unfortunately we know it's wrong:
+            // we don't get a "before transaction completion" event for rollbacks,
+            // so in the case of rollbacks the closing always happen after transaction completion.
+        }
+    }
+
     private void spyOnTransaction(XAResource xaResource) {
         try {
             TestingJtaPlatformImpl.transactionManager().getTransaction().enlistResource( xaResource );

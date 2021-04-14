@@ -163,7 +163,10 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 				return new IllegalStateException( e ); //Spec 3.2.3 Synchronization rules
 			}
 			else {
-				final PersistenceException converted = new PersistenceException( cause );
+				final PersistenceException converted = new PersistenceException(
+						"Converting `" + cause.getClass().getName() + "` to JPA `PersistenceException` : " + cause.getMessage(),
+						cause
+				);
 				handlePersistenceException( converted );
 				return converted;
 			}

@@ -5,7 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
-package org.hibernate.test.hql.size;
+package org.hibernate.orm.test.query.hql.size;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,34 +13,76 @@ import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.OneToMany;
+import javax.persistence.ManyToMany;
 
 import org.hibernate.Hibernate;
 import org.hibernate.dialect.DerbyDialect;
 
-import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 
 @TestForIssue( jiraKey = "HHH-13619" )
-public class OneToManySizeTest extends BaseNonConfigCoreFunctionalTestCase {
+@DomainModel( annotatedClasses = { ManyToManySizeTest.Company.class, ManyToManySizeTest.Customer.class } )
+@SessionFactory
+public class ManyToManySizeTest {
 
 	@Test
-	@SkipForDialect(value = DerbyDialect.class, comment = "Derby doesn't see that the subquery is functionally dependent")
-	public void testSizeAsSelectExpression() {
-		doInHibernate(
-				this::sessionFactory,
-				session -> {
+	public void testSizeAsRestriction(SessionFactoryScope scope) {
+		scope.inTransaction(
+				(session) -> {
 					final List results = session.createQuery(
-							"select new org.hibernate.test.hql.size.OneToManySizeTest$CompanyDto(" +
+							"select c.id from Company c where size( c.customers ) = 0"
+					).list();
+					assertThat( results.size(), is( 1 ) );
+					assertThat( results.get( 0 ), is( 0 ) );
+				}
+		);
+	}
+
+	@Test
+	@SkipForDialect( dialectClass = DerbyDialect.class, reason = "Derby doesn't see that the subquery is functionally dependent" )
+	public void testSizeAsCompoundSelectExpression(SessionFactoryScope scope) {
+		scope.inTransaction(
+				(session) -> {
+					final List results = session.createQuery(
+							"select c.id, c.name, size( c.customers )" +
+									" from Company c" +
+									" group by c.id, c.name" +
+									" order by c.id"
+					).list();
+					assertThat( results.size(), is( 3 ) );
+
+					final Object[] first = (Object[]) results.get( 0 );
+					assertThat( first[ 0 ], is( 0 ) );
+					assertThat( first[ 2 ], is( 0 ) );
+
+					final Object[] second = (Object[]) results.get( 1 );
+					assertThat( second[ 0 ], is( 1 ) );
+					assertThat( second[ 2 ], is( 1 ) );
+
+					final Object[] third = (Object[]) results.get( 2 );
+					assertThat( third[ 0 ], is( 2 ) );
+					assertThat( third[ 2 ], is( 2 ) );
+				}
+		);
+	}
+
+	@Test
+	@SkipForDialect( dialectClass = DerbyDialect.class, reason = "Derby doesn't see that the subquery is functionally dependent" )
+	public void testSizeAsCtorSelectExpression(SessionFactoryScope scope) {
+		scope.inTransaction(
+				(session) -> {
+					final List results = session.createQuery(
+							"select new org.hibernate.orm.test.query.hql.size.ManyToManySizeTest$CompanyDto(" +
 									" c.id, c.name, size( c.customers ) )" +
 									" from Company c" +
 									" group by c.id, c.name" +
@@ -64,13 +106,12 @@ public class OneToManySizeTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(value = DerbyDialect.class, comment = "Derby doesn't see that the subquery is functionally dependent")
-	public void testSizeAsSelectExpressionWithLeftJoin() {
-		doInHibernate(
-				this::sessionFactory,
-				session -> {
+	@SkipForDialect( dialectClass = DerbyDialect.class, reason = "Derby doesn't see that the subquery is functionally dependent" )
+	public void testSizeAsSelectExpressionWithLeftJoin(SessionFactoryScope scope) {
+		scope.inTransaction(
+				(session) -> {
 					final List results = session.createQuery(
-							"select new org.hibernate.test.hql.size.OneToManySizeTest$CompanyDto(" +
+							"select new org.hibernate.orm.test.query.hql.size.ManyToManySizeTest$CompanyDto(" +
 									" c.id, c.name, size( c.customers ) )" +
 									" from Company c left join c.customers cu" +
 									" group by c.id, c.name" +
@@ -94,13 +135,12 @@ public class OneToManySizeTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(value = DerbyDialect.class, comment = "Derby doesn't see that the subquery is functionally dependent")
-	public void testSizeAsSelectExpressionWithInnerJoin() {
-		doInHibernate(
-				this::sessionFactory,
-				session -> {
+	@SkipForDialect( dialectClass = DerbyDialect.class, reason = "Derby doesn't see that the subquery is functionally dependent" )
+	public void testSizeAsSelectExpressionWithInnerJoin(SessionFactoryScope scope) {
+		scope.inTransaction(
+				(session) -> {
 					final List results = session.createQuery(
-							"select new org.hibernate.test.hql.size.OneToManySizeTest$CompanyDto(" +
+							"select new org.hibernate.orm.test.query.hql.size.ManyToManySizeTest$CompanyDto(" +
 									" c.id, c.name, size( c.customers ) )" +
 									" from Company c inner join c.customers cu" +
 									" group by c.id, c.name" +
@@ -120,13 +160,12 @@ public class OneToManySizeTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(value = DerbyDialect.class, comment = "Derby doesn't see that the subquery is functionally dependent")
-	public void testSizeAsSelectExpressionOfAliasWithInnerJoin() {
-		doInHibernate(
-				this::sessionFactory,
-				session -> {
+	@SkipForDialect( dialectClass = DerbyDialect.class, reason = "Derby doesn't see that the subquery is functionally dependent" )
+	public void testSizeAsSelectExpressionOfAliasWithInnerJoin(SessionFactoryScope scope) {
+		scope.inTransaction(
+				(session) -> {
 					final List results = session.createQuery(
-							"select new org.hibernate.test.hql.size.OneToManySizeTest$CompanyDto(" +
+							"select new org.hibernate.orm.test.query.hql.size.ManyToManySizeTest$CompanyDto(" +
 									" c.id, c.name, size( cu ) )" +
 									" from Company c inner join c.customers cu" +
 									" group by c.id, c.name" +
@@ -146,13 +185,12 @@ public class OneToManySizeTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(value = DerbyDialect.class, comment = "Derby doesn't see that the subquery is functionally dependent")
-	public void testSizeAsSelectExpressionExcludeEmptyCollection() {
-		doInHibernate(
-				this::sessionFactory,
+	@SkipForDialect( dialectClass = DerbyDialect.class, reason = "Derby doesn't see that the subquery is functionally dependent" )
+	public void testSizeAsSelectExpressionExcludeEmptyCollection(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					final List results = session.createQuery(
-							"select new org.hibernate.test.hql.size.OneToManySizeTest$CompanyDto(" +
+							"select new org.hibernate.orm.test.query.hql.size.ManyToManySizeTest$CompanyDto(" +
 									" c.id, c.name, size( c.customers ) )" +
 									" from Company c" +
 									" where c.id != 0" +
@@ -172,10 +210,9 @@ public class OneToManySizeTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testSizeAsConditionalExpressionExcludeEmptyCollection() {
-		doInHibernate(
-				this::sessionFactory,
-				session -> {
+	public void testSizeAsConditionalExpressionExcludeEmptyCollection(SessionFactoryScope scope) {
+		scope.inTransaction(
+				(session) -> {
 					final List<Company> results = session.createQuery(
 							"from Company c" +
 									" where size( c.customers ) > 0" +
@@ -198,10 +235,9 @@ public class OneToManySizeTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testSizeAsConditionalExpressionIncludeEmptyCollection() {
-		doInHibernate(
-				this::sessionFactory,
-				session -> {
+	public void testSizeAsConditionalExpressionIncludeEmptyCollection(SessionFactoryScope scope) {
+		scope.inTransaction(
+				(session) -> {
 					final List<Company> results = session.createQuery(
 							"from Company c" +
 									" where size( c.customers ) > -1" +
@@ -228,12 +264,10 @@ public class OneToManySizeTest extends BaseNonConfigCoreFunctionalTestCase {
 		);
 	}
 
-	@Before
-	public void initDataBase(){
-
-		doInHibernate(
-				this::sessionFactory,
-				session -> {
+	@BeforeEach
+	public void createTestData(SessionFactoryScope scope) {
+		scope.inTransaction(
+				(session) -> {
 					// Add a company with no customers
 					final Company companyWithNoCustomers = new Company( 0 );
 					companyWithNoCustomers.name = "Company 0";
@@ -255,21 +289,15 @@ public class OneToManySizeTest extends BaseNonConfigCoreFunctionalTestCase {
 		);
 	}
 
-	@After
-	public void cleanupDatabase() {
-		doInHibernate(
-				this::sessionFactory,
-				session -> {
+	@AfterEach
+	public void dropTestData(SessionFactoryScope scope) {
+		scope.inTransaction(
+				(session) -> {
 					for ( Company company : session.createQuery( "from Company", Company.class ).list() ) {
 						session.delete( company );
 					}
 				}
 		);
-	}
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] { Company.class, Customer.class };
 	}
 
 	@Entity(name ="Company")
@@ -280,8 +308,7 @@ public class OneToManySizeTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		private String name;
 
-		@OneToMany(cascade = CascadeType.ALL,fetch = FetchType.EAGER)
-		@JoinColumn
+		@ManyToMany(cascade = CascadeType.ALL,fetch = FetchType.EAGER)
 		private List<Customer> customers = new ArrayList<>();
 
 		public Company() {

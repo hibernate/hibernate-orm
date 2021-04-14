@@ -16,6 +16,7 @@ import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.service.spi.ServiceContributor;
 
@@ -96,6 +97,8 @@ public class ServiceRegistryExtension
 						throw new RuntimeException( "Unable to determine how to handle given ExtensionContext : " + context.getDisplayName() );
 					}
 
+					// set some baseline test settings
+					ssrb.applySetting( AvailableSettings.STATEMENT_INSPECTOR, org.hibernate.testing.jdbc.SQLStatementInspector.class );
 
 					final Optional<ServiceRegistry> ssrAnnWrapper = AnnotationSupport.findAnnotation(
 							context.getElement().get(),

@@ -6,8 +6,6 @@
  */
 package org.hibernate.metamodel.mapping;
 
-import java.util.function.BiConsumer;
-import java.util.function.Function;
 import java.util.function.IntFunction;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -33,6 +31,22 @@ public interface ForeignKeyDescriptor extends VirtualModelPart {
 	String getTargetTable();
 
 	ModelPart getKeyPart();
+
+	/**
+	 * Create a DomainResult for the referring-side of the fk
+	 */
+	DomainResult<?> createKeyDomainResult(
+			NavigablePath collectionPath,
+			TableGroup tableGroup,
+			DomainResultCreationState creationState);
+
+	/**
+	 * Create a DomainResult for the target-side of the fk
+	 */
+	DomainResult<?> createTargetDomainResult(
+			NavigablePath collectionPath,
+			TableGroup tableGroup,
+			DomainResultCreationState creationState);
 
 	DomainResult createCollectionFetchDomainResult(
 			NavigablePath collectionPath,

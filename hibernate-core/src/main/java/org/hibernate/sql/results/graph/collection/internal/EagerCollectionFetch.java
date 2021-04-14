@@ -15,6 +15,7 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -28,6 +29,7 @@ import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
+import org.hibernate.sql.results.graph.entity.EntityFetch;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -56,14 +58,51 @@ public class EagerCollectionFetch extends CollectionFetch implements FetchParent
 		final NavigablePath parentPath = fetchedPath.getParent();
 		final TableGroup parentTableGroup = parentPath == null ? null : fromClauseAccess.findTableGroup( parentPath );
 
+
+		// NOTE :
+		// 		`keyContainerResult` = fk target-side
+		//		`keyCollectionResult` = fk key-side
+
+		// 3 cases:
+		//
+		//		#1 - one-to-many : Teacher#students
+		//			teacher( id ), student( id, teacher_fk )
+		//
+		//			student.teacher_fk -> teacher.id
+		//
+		//			referring : student.teacher_fk
+		//			target : teacher.id
+		//
+		//		#2 - many-to-many : Teacher#skills
+		//			teacher( id ), skill( id ), teacher_skill( teacher_fk, skill_id )
+		//
+		//			teacher_skill.skill_id -> skill.id
+		//			teacher_skill.teacher_fk -> teacher.id
+		//
+		//			referring : teacher_skill.teacher_fk
+		//			target : teacher.id
+		//
+		//		#3 - element-collection : Teacher#nickNames
+		//			teacher( id ), teacher_nicks( teacher_fk, nick )
+		//
+		//			teacher_nicks.teacher_fk -> teacher.id
+		//
+		//			referring : teacher_nicks.teacher_fk
+		//			target : teacher.id
+
 		final ForeignKeyDescriptor keyDescriptor = fetchedAttribute.getKeyDescriptor();
 		if ( parentTableGroup != null ) {
 			// join fetch
-			keyContainerResult = keyDescriptor.createCollectionFetchDomainResult( fetchedPath, parentTableGroup, creationState );
-			keyCollectionResult = keyDescriptor.createDomainResult( fetchedPath, collectionTableGroup, creationState );
+
+			// target-side
+			keyContainerResult = keyDescriptor.createTargetDomainResult( fetchedPath, parentTableGroup, creationState );
+
+			// referring(key)-side
+			keyCollectionResult = keyDescriptor.createKeyDomainResult( fetchedPath, collectionTableGroup, creationState );
 		}
 		else {
 			// select fetch
+
 			// todo (6.0) : we could potentially leverage batch fetching for performance
 			keyContainerResult = keyDescriptor.createCollectionFetchDomainResult( fetchedPath, collectionTableGroup, creationState );
 

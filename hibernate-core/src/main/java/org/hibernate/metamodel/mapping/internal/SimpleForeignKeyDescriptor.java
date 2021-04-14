@@ -8,6 +8,7 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.IntFunction;
@@ -46,6 +47,7 @@ import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.results.DomainResultCreationException;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
@@ -113,6 +115,33 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	}
 
 	@Override
+	public DomainResult<?> createKeyDomainResult(
+			NavigablePath collectionPath,
+			TableGroup tableGroup,
+			DomainResultCreationState creationState) {
+		assert tableGroup.getTableReference( keySide.getContainingTableExpression() ) != null;
+
+		return createDomainResult(
+				collectionPath,
+				tableGroup,
+				keySide,
+				creationState
+		);
+	}
+
+	@Override
+	public DomainResult<?> createTargetDomainResult(NavigablePath collectionPath, TableGroup tableGroup, DomainResultCreationState creationState) {
+		assert tableGroup.getTableReference( targetSide.getContainingTableExpression() ) != null;
+
+		return createDomainResult(
+				collectionPath,
+				tableGroup,
+				targetSide,
+				creationState
+		);
+	}
+
+	@Override
 	public DomainResult<?> createCollectionFetchDomainResult(
 			NavigablePath collectionPath,
 			TableGroup tableGroup,
@@ -129,7 +158,21 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
-		return createDomainResult( navigablePath, tableGroup, keySide, creationState );
+		try {
+			return createDomainResult( navigablePath, tableGroup, keySide, creationState );
+		}
+		catch (Exception e) {
+			throw new DomainResultCreationException(
+					String.format(
+							Locale.ROOT,
+							"Unable to create fk key domain-result `%s.%s` relative to `%s`",
+							keySide.getContainingTableExpression(),
+							keySide.getSelectionExpression(),
+							tableGroup
+					),
+					e
+			);
+		}
 	}
 
 	@Override
@@ -160,8 +203,10 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			DomainResultCreationState creationState) {
 		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
 		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
+
 		final TableReference tableReference = tableGroup.resolveTableReference( selectableMapping.getContainingTableExpression() );
 		final String identificationVariable = tableReference.getIdentificationVariable();
+
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				sqlExpressionResolver.resolveSqlExpression(
 						SqlExpressionResolver.createColumnReferenceKey(

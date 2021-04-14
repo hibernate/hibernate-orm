@@ -10,8 +10,8 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.hql.HqlLogging;
 import org.hibernate.query.hql.spi.SemanticPathPart;
-import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.hql.spi.SqmCreationState;
+import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
@@ -55,6 +55,22 @@ public class DomainPathPart implements SemanticPathPart {
 			return this;
 		}
 
+// if we want to allow re-use of matched unaliased SqmFrom nodes
+//
+//		final SqmPathRegistry pathRegistry = creationState.getCurrentProcessingState().getPathRegistry();
+//		final NavigablePath possibleImplicitAliasPath = lhs.getNavigablePath().append( name );
+//		final SqmPath fromByImplicitAlias = pathRegistry.findPath( possibleImplicitAliasPath );
+//
+//		if ( fromByImplicitAlias != null ) {
+//			if ( fromByImplicitAlias instanceof SqmFrom ) {
+//				final String explicitPathAlias = fromByImplicitAlias.getExplicitAlias();
+//				if ( explicitPathAlias == null || Objects.equals( possibleImplicitAliasPath.getFullPath(), explicitPathAlias ) ) {
+//					currentPath = fromByImplicitAlias;
+//					return isTerminal ? currentPath : this;
+//				}
+//			}
+//		}
+//
 		currentPath = subPathSource.createSqmPath( lhs, creationState );
 		if ( isTerminal ) {
 			return currentPath;

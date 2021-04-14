@@ -8,8 +8,6 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
 import java.util.function.IntFunction;
 
 import org.hibernate.LockMode;
@@ -132,6 +130,38 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 				selectionMappings[0].getContainingTableExpression(),
 				new SelectableMappingsImpl( selectionMappings ),
 				creationProcess
+		);
+	}
+
+	@Override
+	public DomainResult<?> createKeyDomainResult(
+			NavigablePath collectionPath,
+			TableGroup tableGroup,
+			DomainResultCreationState creationState) {
+		assert tableGroup.getTableReference( keyTable ) != null;
+
+		return createDomainResult(
+				collectionPath,
+				tableGroup,
+				keyTable,
+				keyMappingType,
+				creationState
+		);
+	}
+
+	@Override
+	public DomainResult<?> createTargetDomainResult(
+			NavigablePath collectionPath,
+			TableGroup tableGroup,
+			DomainResultCreationState creationState) {
+		assert tableGroup.getTableReference( targetTable ) != null;
+
+		return createDomainResult(
+				collectionPath,
+				tableGroup,
+				targetTable,
+				targetMappingType,
+				creationState
 		);
 	}
 

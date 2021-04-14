@@ -13,7 +13,7 @@ import org.jboss.logging.Logger;
 /**
  * @author Steve Ebersole
  */
-public interface ResultGraphLogger {
+public interface ResultGraphLogging {
 	Logger LOGGER = ResultsLogger.subLogger( "graph" );
 
 	boolean DEBUG_ENABLED = LOGGER.isDebugEnabled();

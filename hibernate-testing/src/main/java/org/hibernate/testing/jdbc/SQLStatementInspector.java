@@ -10,6 +10,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -40,8 +41,18 @@ public class SQLStatementInspector implements StatementInspector {
 		sqlQueries.clear();
 	}
 
+	public int getNumberOfJoins(int position) {
+		final String sql = sqlQueries.get( position );
+		String fromPart = sql.toLowerCase( Locale.ROOT ).split( " from " )[1].split( " where " )[0];
+		return fromPart.split( "(\\sjoin\\s|,\\s)", -1 ).length - 1;
+	}
+
 	public void assertExecuted(String expected) {
 		assertTrue( sqlQueries.contains( expected ) );
+	}
+
+	public void assertNumberOfJoins(int queryNumber, int expectedNumberOfJoins) {
+		assertNumberOfOccurrenceInQuery( queryNumber, "join", expectedNumberOfJoins );
 	}
 
 	public void assertExecutedCount(int expected) {
@@ -51,7 +62,7 @@ public class SQLStatementInspector implements StatementInspector {
 	public void assertNumberOfOccurrenceInQuery(int queryNumber, String toCheck, int expectedNumberOfOccurrences) {
 		String query = sqlQueries.get( queryNumber );
 		int actual = query.split( " " + toCheck + " ", -1 ).length - 1;
-		assertThat( "number of " + toCheck,actual, is( expectedNumberOfOccurrences ) );
+		assertThat( "number of " + toCheck, actual, is( expectedNumberOfOccurrences ) );
 	}
 
 	public void assertIsSelect(int queryNumber) {
@@ -67,5 +78,9 @@ public class SQLStatementInspector implements StatementInspector {
 	public void assertIsUpdate(int queryNumber) {
 		String query = sqlQueries.get( queryNumber );
 		assertTrue( query.toLowerCase( Locale.ROOT ).startsWith( "update" ) );
+	}
+
+	public static SQLStatementInspector extractFromSession(SessionImplementor session) {
+		return (SQLStatementInspector) session.getJdbcSessionContext().getStatementInspector();
 	}
 }

@@ -8,10 +8,12 @@ package org.hibernate.persister.entity;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -52,6 +54,7 @@ import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.UnionTableGroup;
 import org.hibernate.sql.ast.tree.from.UnionTableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 
@@ -70,6 +73,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	private final String[] subclassTableNames;
 	private final String[] spaces;
 	private final String[] subclassSpaces;
+	private final String[] subclassTableExpressions;
 	private final Object discriminatorValue;
 	private final String discriminatorSQLValue;
 	private final Map<Object,String> subclassByDiscriminatorValue = new HashMap<>();
@@ -178,6 +182,22 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		subclassSpaces = ArrayHelper.toStringArray( subclassTables );
 
 		subquery = generateSubquery( persistentClass, creationContext.getMetadata() );
+		final List<String> tableExpressions = new ArrayList<>( subclassSpaces.length * 2 );
+		Collections.addAll( tableExpressions, subclassSpaces );
+		tableExpressions.add( subquery );
+		PersistentClass parentPersistentClass = persistentClass.getSuperclass();
+		while ( parentPersistentClass != null ) {
+			tableExpressions.add( generateSubquery( parentPersistentClass, creationContext.getMetadata() ) );
+			parentPersistentClass = parentPersistentClass.getSuperclass();
+		}
+		final Iterator<PersistentClass> subclassClosureIterator = persistentClass.getSubclassClosureIterator();
+		while ( subclassClosureIterator.hasNext() ) {
+			final PersistentClass subPersistentClass = subclassClosureIterator.next();
+			if ( subPersistentClass.hasSubclasses() ) {
+				tableExpressions.add( generateSubquery( subPersistentClass, creationContext.getMetadata() ) );
+			}
+		}
+		subclassTableExpressions = ArrayHelper.toStringArray( tableExpressions );
 
 		if ( isMultiTable() ) {
 			int idColumnSpan = getIdentifierColumnSpan();
@@ -213,10 +233,12 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 	@Override
 	public boolean containsTableReference(String tableExpression) {
-		if ( tableName.equals( tableExpression ) ) {
-			return true;
+		for ( String subclassTableExpression : subclassTableExpressions ) {
+			if ( subclassTableExpression.equals( tableExpression ) ) {
+				return true;
+			}
 		}
-		return super.containsTableReference( tableExpression );
+		return false;
 	}
 
 	@Override
@@ -238,7 +260,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	protected TableReference resolvePrimaryTableReference(SqlAliasBase sqlAliasBase) {
 		return new UnionTableReference(
 				getTableName(),
-				subclassSpaces,
+				subclassTableExpressions,
 				sqlAliasBase.generateNewAlias(),
 				false,
 				getFactory()

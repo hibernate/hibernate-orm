@@ -24,6 +24,7 @@ import java.time.ZonedDateTime;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Locale;
@@ -124,7 +125,6 @@ import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameterizedEntityType;
-import org.hibernate.query.sqm.tree.expression.SqmPathEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
 import org.hibernate.query.sqm.tree.expression.SqmStar;
 import org.hibernate.query.sqm.tree.expression.SqmSummarization;
@@ -1812,7 +1812,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		if ( inListContext instanceof HqlParser.ExplicitTupleInListContext ) {
 			final HqlParser.ExplicitTupleInListContext tupleExpressionListContext = (HqlParser.ExplicitTupleInListContext) inListContext;
 			final List<HqlParser.ExpressionContext> expressionContexts = tupleExpressionListContext.expression();
-
 			final boolean isEnum = testExpression.getJavaType().isEnum();
 			parameterDeclarationContextStack.push( () -> expressionContexts.size() == 1 );
 			try {
@@ -1843,41 +1842,37 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				parameterDeclarationContextStack.pop();
 			}
 		}
-		else if ( inListContext instanceof HqlParser.SubQueryOrParamInListContext ) {
-			final HqlParser.SubQueryOrParamInListContext subQueryOrParamInListContext = (HqlParser.SubQueryOrParamInListContext) inListContext;
-			final SqmExpression sqmExpression = (SqmExpression) subQueryOrParamInListContext.expression().accept( this );
-
-			if ( !( sqmExpression instanceof SqmSubQuery ) ) {
-				if ( sqmExpression instanceof SqmParameter ) {
-						final List<SqmExpression<?>> listExpressions = new ArrayList<>( 1 );
-						listExpressions.add( sqmExpression );
-
-						return new SqmInListPredicate(
-								testExpression,
-								listExpressions,
-								ctx.NOT() != null,
-								creationContext.getNodeBuilder()
-						);
-				}
-				throw new ParsingException(
-						"Was expecting a SubQueryExpression or a SqmParameter, but found " + sqmExpression.getClass()
-								.getSimpleName()
-								+ " : " + subQueryOrParamInListContext.expression().toString()
+		else if ( inListContext instanceof HqlParser.ParamInListContext ) {
+			final HqlParser.ParamInListContext tupleExpressionListContext = (HqlParser.ParamInListContext) inListContext;
+			parameterDeclarationContextStack.push( () -> true );
+			try {
+				//noinspection unchecked
+				return new SqmInListPredicate(
+						testExpression,
+						Collections.singletonList( tupleExpressionListContext.parameter().accept( this ) ),
+						ctx.NOT() != null,
+						creationContext.getNodeBuilder()
 				);
 			}
-
+			finally {
+				parameterDeclarationContextStack.pop();
+			}
+		}
+		else if ( inListContext instanceof HqlParser.SubQueryInListContext ) {
+			final HqlParser.SubQueryInListContext subQueryOrParamInListContext = (HqlParser.SubQueryInListContext) inListContext;
 			//noinspection unchecked
 			return new SqmInSubQueryPredicate(
 					testExpression,
-					(SqmSubQuery) sqmExpression,
+					visitSubQuery( subQueryOrParamInListContext.subQuery() ),
 					ctx.NOT() != null,
 					creationContext.getNodeBuilder()
 			);
 		}
+		else {
+			// todo : handle PersistentCollectionReferenceInList labeled branch
 
-		// todo : handle PersistentCollectionReferenceInList labeled branch
-
-		throw new ParsingException( "Unexpected IN predicate type [" + ctx.getClass().getSimpleName() + "] : " + ctx.getText() );
+			throw new ParsingException( "Unexpected IN predicate type [" + ctx.getClass().getSimpleName() + "] : " + ctx.getText() );
+		}
 	}
 
 	@Override
@@ -1903,10 +1898,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 		else if ( pathContext != null ) {
 			// we have form (1)
-			return new SqmPathEntityType(
-					(SqmPath<?>) pathContext.accept( this ),
-					creationContext.getNodeBuilder()
-			);
+			return ( (SqmPath<?>) pathContext.accept( this ) ).type();
 		}
 
 		throw new ParsingException( "Could not interpret grammar context as 'entity type' expression : " + ctx.getText() );

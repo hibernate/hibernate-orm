@@ -1320,7 +1320,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 						getDiscriminatorFormulaTemplate() != null,
 						info.caseSearchedExpression,
 						info.columnReferences,
-						(BasicType<?>) getDiscriminatorType()
+						(org.hibernate.persister.entity.DiscriminatorType<?>) getTypeDiscriminatorMetadata().getResolutionType()
 				);
 			}
 			else {

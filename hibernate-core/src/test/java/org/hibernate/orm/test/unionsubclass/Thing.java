@@ -6,7 +6,7 @@
  */
 
 //$Id: Thing.java 4418 2004-08-22 13:38:16Z oneovthafew $
-package org.hibernate.test.unionsubclass;
+package org.hibernate.orm.test.unionsubclass;
 
 
 /**

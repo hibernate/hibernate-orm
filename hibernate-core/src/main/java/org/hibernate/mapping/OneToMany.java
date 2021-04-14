@@ -35,6 +35,10 @@ public class OneToMany implements Value {
 		this.referencingTable = ( owner == null ) ? null : owner.getTable();
 	}
 
+	public MetadataBuildingContext getBuildingContext() {
+		return buildingContext;
+	}
+
 	@Override
 	public ServiceRegistry getServiceRegistry() {
 		return buildingContext.getBuildingOptions().getServiceRegistry();

@@ -17,6 +17,7 @@ import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
+import org.hibernate.boot.model.source.internal.hbm.MappingDocument;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -26,7 +27,6 @@ import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.util.collections.JoinedIterator;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.tuple.component.ComponentMetamodel;
 import org.hibernate.type.ComponentType;
@@ -183,7 +183,21 @@ public class Component extends SimpleValue implements MetaAttributable {
 		if ( localType == null ) {
 			synchronized ( this ) {
 				if ( type == null ) {
-					properties.sort( Comparator.comparing( Property::getName ) );
+					final int[] originalPropertyOrder;
+					// We need to capture the original property order the source is a XML mapping
+					// because XML mappings might refer to this through the defined order
+					if ( getBuildingContext() instanceof MappingDocument ) {
+						final Object[] originalProperties = properties.toArray();
+						properties.sort( Comparator.comparing( Property::getName ) );
+						originalPropertyOrder = new int[originalProperties.length];
+						for ( int j = 0; j < originalPropertyOrder.length; j++ ) {
+							originalPropertyOrder[j] = properties.indexOf( originalProperties[j] );
+						}
+					}
+					else {
+						properties.sort( Comparator.comparing( Property::getName ) );
+						originalPropertyOrder = null;
+					}
 
 					// TODO : temporary initial step towards HHH-1907
 					final ComponentMetamodel metamodel = new ComponentMetamodel(
@@ -192,8 +206,8 @@ public class Component extends SimpleValue implements MetaAttributable {
 					);
 
 					localType = isEmbedded()
-							? new EmbeddedComponentType( getBuildingContext().getBootstrapContext().getTypeConfiguration(), metamodel )
-							: new ComponentType( getBuildingContext().getBootstrapContext().getTypeConfiguration(), metamodel );
+							? new EmbeddedComponentType( getBuildingContext().getBootstrapContext().getTypeConfiguration(), metamodel, originalPropertyOrder )
+							: new ComponentType( getBuildingContext().getBootstrapContext().getTypeConfiguration(), metamodel, originalPropertyOrder );
 
 					this.type = localType;
 				}
@@ -510,9 +524,8 @@ public class Component extends SimpleValue implements MetaAttributable {
 	}
 
 	public void prepareForMappingModel() {
-		if ( type == null ) {
-			properties.sort( Comparator.comparing( Property::getName ) );
-		}
+		// This call will initialize the type properly
+		getType();
 	}
 
 }

@@ -12,7 +12,9 @@ import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.persister.entity.DiscriminatorType;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
@@ -32,13 +34,16 @@ public class EntityDiscriminatorMappingImpl extends AbstractEntityDiscriminatorM
 			String tableExpression,
 			String mappedColumnExpression,
 			boolean isFormula,
-			BasicType<?> mappingType) {
+			DiscriminatorType<?> mappingType) {
 		super( entityDescriptor, tableExpression, mappedColumnExpression, isFormula, mappingType );
 		this.navigableRole = entityDescriptor.getNavigableRole().append( EntityDiscriminatorMapping.ROLE_NAME );
 	}
 
 	@Override
-	protected SqlSelection resolveSqlSelection(TableGroup tableGroup, DomainResultCreationState creationState) {
+	protected SqlSelection resolveSqlSelection(
+			TableGroup tableGroup,
+			boolean underlyingType,
+			DomainResultCreationState creationState) {
 		final SqlExpressionResolver expressionResolver = creationState.getSqlAstCreationState()
 				.getSqlExpressionResolver();
 
@@ -47,6 +52,7 @@ public class EntityDiscriminatorMappingImpl extends AbstractEntityDiscriminatorM
 						.append( getNavigableRole().getNavigableName() ),
 				getContainingTableExpression()
 		);
+		final BasicType<?> type = underlyingType ? getMappedType().getUnderlyingType() : getMappedType();
 
 		return expressionResolver.resolveSqlSelection(
 				expressionResolver.resolveSqlExpression(
@@ -57,18 +63,35 @@ public class EntityDiscriminatorMappingImpl extends AbstractEntityDiscriminatorM
 						sqlAstProcessingState -> new ColumnReference(
 								tableReference.getIdentificationVariable(),
 								this,
+								type,
 								creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
 						)
 				),
-				getMappedType().getMappedJavaTypeDescriptor(),
+				type.getMappedJavaTypeDescriptor(),
 				creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
 		);
+	}
+
+	@Override
+	public int forEachDisassembledJdbcValue(
+			Object value,
+			Clause clause,
+			int offset,
+			JdbcValuesConsumer valuesConsumer,
+			SharedSessionContractImplementor session) {
+		valuesConsumer.consume( offset, value, getJdbcMapping() );
+		return getJdbcTypeCount();
 	}
 
 	@Override
 	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
 		action.accept( offset, getJdbcMapping() );
 		return getJdbcTypeCount();
+	}
+
+	@Override
+	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+		return value;
 	}
 
 	@Override

@@ -19,6 +19,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.Queryable;
+import org.hibernate.sql.ast.tree.cte.CteSearchClauseKind;
+import org.hibernate.query.FetchClauseType;
 import org.hibernate.LockOptions;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.dialect.Dialect;
@@ -3267,14 +3271,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitEntityTypeLiteral(EntityTypeLiteral expression) {
-		throw new NotYetImplementedFor6Exception( "Mapping model subclass support not yet implemented" );
-//		final EntityPersister entityTypeDescriptor = expression.getEntityTypeDescriptor();
-//		final DiscriminatorDescriptor<?> discriminatorDescriptor = expression.getDiscriminatorDescriptor();
-//
-//		final Object discriminatorValue = discriminatorDescriptor.getDiscriminatorMappings()
-//				.entityNameToDiscriminatorValue( entityTypeDescriptor.getEntityName() );
-//
-//		appendSql( discriminatorValue.toString() );
+		final EntityPersister entityTypeDescriptor = expression.getEntityTypeDescriptor();
+		appendSql( (( Queryable ) entityTypeDescriptor).getDiscriminatorSQLValue() );
 	}
 
 	@Override

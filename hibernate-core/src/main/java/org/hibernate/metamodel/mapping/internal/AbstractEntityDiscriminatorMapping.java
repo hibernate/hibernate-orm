@@ -12,6 +12,7 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
+import org.hibernate.persister.entity.DiscriminatorType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
@@ -24,7 +25,6 @@ import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.basic.BasicResult;
-import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -36,14 +36,14 @@ public abstract class AbstractEntityDiscriminatorMapping implements EntityDiscri
 	private final String mappedColumnExpression;
 	private final boolean isFormula;
 
-	private final BasicType<?> mappingType;
+	private final DiscriminatorType<?> mappingType;
 
 	public AbstractEntityDiscriminatorMapping(
 			EntityPersister entityDescriptor,
 			String tableExpression,
 			String mappedColumnExpression,
 			boolean isFormula,
-			BasicType<?> mappingType) {
+			DiscriminatorType<?> mappingType) {
 		this.entityDescriptor = entityDescriptor;
 		this.tableExpression = tableExpression;
 		this.mappedColumnExpression = mappedColumnExpression;
@@ -96,7 +96,7 @@ public abstract class AbstractEntityDiscriminatorMapping implements EntityDiscri
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final SqlSelection sqlSelection = resolveSqlSelection( tableGroup, creationState );
+		final SqlSelection sqlSelection = resolveSqlSelection( tableGroup, false, creationState );
 
 		//noinspection unchecked
 		return new BasicResult(
@@ -108,11 +108,28 @@ public abstract class AbstractEntityDiscriminatorMapping implements EntityDiscri
 	}
 
 	@Override
+	public <T> DomainResult<T> createUnderlyingDomainResult(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			String resultVariable,
+			DomainResultCreationState creationState) {
+		final SqlSelection sqlSelection = resolveSqlSelection( tableGroup, true, creationState );
+
+		//noinspection unchecked
+		return new BasicResult(
+				sqlSelection.getValuesArrayPosition(),
+				resultVariable,
+				mappingType.getUnderlyingType().getJavaTypeDescriptor(),
+				navigablePath
+		);
+	}
+
+	@Override
 	public void applySqlSelections(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
-		resolveSqlSelection( tableGroup, creationState );
+		resolveSqlSelection( tableGroup, false, creationState );
 	}
 
 	@Override
@@ -131,7 +148,7 @@ public abstract class AbstractEntityDiscriminatorMapping implements EntityDiscri
 
 		assert tableGroup != null;
 
-		final SqlSelection sqlSelection = resolveSqlSelection( tableGroup, creationState );
+		final SqlSelection sqlSelection = resolveSqlSelection( tableGroup, true, creationState );
 
 		return new BasicFetch(
 				sqlSelection.getValuesArrayPosition(),
@@ -151,7 +168,12 @@ public abstract class AbstractEntityDiscriminatorMapping implements EntityDiscri
 	}
 
 	@Override
-	public MappingType getMappedType() {
+	public DiscriminatorType<?> getMappedType() {
+		return mappingType;
+	}
+
+	@Override
+	public DiscriminatorType<?> getPartMappingType() {
 		return mappingType;
 	}
 
@@ -160,5 +182,8 @@ public abstract class AbstractEntityDiscriminatorMapping implements EntityDiscri
 		return mappingType.getJdbcMapping();
 	}
 
-	protected abstract SqlSelection resolveSqlSelection(TableGroup tableGroup, DomainResultCreationState creationState);
+	protected abstract SqlSelection resolveSqlSelection(
+			TableGroup tableGroup,
+			boolean underlyingType,
+			DomainResultCreationState creationState);
 }

@@ -395,7 +395,8 @@ public class OneToManySizeTest2 {
 										"where size(tjoin.students) > -1",
 								Student.class
 						).getResultList();
-						assertEquals( 3, countNumberOfJoins( statementInspector.getSqlQueries().get( 0 ) ) );
+						// Since the join for "student.teacher" is never used and is a non-optional association we don't generate a SQL join for it
+						assertEquals( 2, countNumberOfJoins( statementInspector.getSqlQueries().get( 0 ) ) );
 						assertEquals( 3L, students.size() );
 					}
 
@@ -409,7 +410,8 @@ public class OneToManySizeTest2 {
 										"where size(t.students) > -1",
 								Student.class
 						).getResultList();
-						assertEquals( 3, countNumberOfJoins( statementInspector.getSqlQueries().get( 0 ) ) );
+						// Since the join for "student.teacher" is never used and is a non-optional association we don't generate a SQL join for it
+						assertEquals( 2, countNumberOfJoins( statementInspector.getSqlQueries().get( 0 ) ) );
 						assertEquals( 3L, students.size() );
 					}
 				}
@@ -433,7 +435,8 @@ public class OneToManySizeTest2 {
 									"where size(student.teacher.students) > -1",
 							Student.class
 					).getResultList();
-					assertEquals( 4, countNumberOfJoins( statementInspector.getSqlQueries().get( 0 ) ) );
+					// Since the join for "student.teacher" is never used and is a non-optional association we don't generate a SQL join for it
+					assertEquals( 3, countNumberOfJoins( statementInspector.getSqlQueries().get( 0 ) ) );
 					assertEquals( 3L, students.size() );
 					assertTrue( Hibernate.isInitialized( students.get( 0 ).getTeacher().getStudents() ) );
 					assertTrue( Hibernate.isInitialized( students.get( 1 ).getTeacher().getStudents() ) );
@@ -448,7 +451,8 @@ public class OneToManySizeTest2 {
 									"where size(student.teacher.students) > 0",
 							Student.class
 					).getResultList();
-					assertEquals( 4, countNumberOfJoins( statementInspector.getSqlQueries().get( 0 ) ) );
+					// Since the join for "student.teacher" is never used and is a non-optional association we don't generate a SQL join for it
+					assertEquals( 3, countNumberOfJoins( statementInspector.getSqlQueries().get( 0 ) ) );
 					assertEquals( 3L, students.size() );
 					assertTrue( Hibernate.isInitialized( students.get( 0 ).getTeacher().getStudents() ) );
 					assertTrue( Hibernate.isInitialized( students.get( 1 ).getTeacher().getStudents() ) );
@@ -463,7 +467,8 @@ public class OneToManySizeTest2 {
 									"where size(student.teacher.students) > 1",
 							Student.class
 					).getResultList();
-					assertEquals( 4, countNumberOfJoins( statementInspector.getSqlQueries().get( 0 ) ) );
+					// Since the join for "student.teacher" is never used and is a non-optional association we don't generate a SQL join for it
+					assertEquals( 3, countNumberOfJoins( statementInspector.getSqlQueries().get( 0 ) ) );
 					assertEquals( 2L, students.size() );
 					assertTrue( Hibernate.isInitialized( students.get( 0 ).getTeacher().getStudents() ) );
 					assertTrue( Hibernate.isInitialized( students.get( 1 ).getTeacher().getStudents() ) );
@@ -528,9 +533,8 @@ public class OneToManySizeTest2 {
 							"select distinct student from Student student join student.teacher t join fetch student.teacher tfetch join fetch tfetch.students where size(t.students) > -1",
 							Student.class
 					).getResultList();
-					// NOTE: An INNER JOIN is done on Teacher twice, which results in 4 joins.
-					//       A possible optimization would be to reuse this INNER JOIN.
-					assertEquals( countNumberOfJoins( statementInspector.getSqlQueries().get( 0 ) ), 3 );
+					// Since the join for "student.teacher" is never used and is a non-optional association we don't generate a SQL join for it
+					assertEquals( 2, countNumberOfJoins( statementInspector.getSqlQueries().get( 0 ) ) );
 					assertEquals( 3L, students.size() );
 					assertTrue( Hibernate.isInitialized( students.get( 0 ).getTeacher().getStudents() ) );
 					assertTrue( Hibernate.isInitialized( students.get( 1 ).getTeacher().getStudents() ) );

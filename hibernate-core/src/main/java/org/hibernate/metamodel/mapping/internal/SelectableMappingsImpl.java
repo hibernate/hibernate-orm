@@ -58,26 +58,26 @@ public class SelectableMappingsImpl implements SelectableMappings {
 	public static SelectableMappings from(
 			String containingTableExpression,
 			Value value,
+			int[] propertyOrder,
 			Mapping mapping,
 			Dialect dialect,
 			SqmFunctionRegistry sqmFunctionRegistry) {
 		final List<JdbcMapping> jdbcMappings = new ArrayList<>();
 		resolveJdbcMappings( jdbcMappings, mapping, value.getType() );
-		final List<SelectableMapping> selectableMappings = new ArrayList<>( jdbcMappings.size() );
+		final SelectableMapping[] selectableMappings = new SelectableMapping[jdbcMappings.size()];
 		final Iterator<Selectable> columnIterator = value.getColumnIterator();
-		while ( columnIterator.hasNext() ) {
+		for ( int i = 0; columnIterator.hasNext(); i++ ) {
 			final Selectable selectable = columnIterator.next();
-			selectableMappings.add(
-					SelectableMappingImpl.from(
-							containingTableExpression,
-							selectable,
-							jdbcMappings.get( selectableMappings.size() ),
-							dialect,
-							sqmFunctionRegistry
-					)
+			selectableMappings[propertyOrder[i]] = SelectableMappingImpl.from(
+					containingTableExpression,
+					selectable,
+					jdbcMappings.get( propertyOrder[i] ),
+					dialect,
+					sqmFunctionRegistry
 			);
 		}
-		return new SelectableMappingsImpl( selectableMappings.toArray( new SelectableMapping[0] ) );
+
+		return new SelectableMappingsImpl( selectableMappings );
 	}
 
 	public static SelectableMappings from(EmbeddableMappingType embeddableMappingType) {

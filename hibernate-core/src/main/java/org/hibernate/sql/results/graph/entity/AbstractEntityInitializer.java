@@ -35,6 +35,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+import org.hibernate.proxy.map.MapProxy;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.results.graph.AbstractFetchParentAccess;
@@ -441,7 +442,9 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
 		final Object proxy = getProxy( persistenceContext );
 
-		if ( proxy != null ) {
+		// Special case map proxy to avoid stack overflows
+		// We know that a map proxy will always be of "the right type" so just use that object
+		if ( proxy != null && ( proxy instanceof MapProxy || concreteDescriptor.isInstance( proxy ) ) ) {
 			entityInstance = proxy;
 		}
 		else {

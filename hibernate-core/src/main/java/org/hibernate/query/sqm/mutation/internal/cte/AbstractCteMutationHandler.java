@@ -40,7 +40,9 @@ import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.from.UnionTableGroup;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
 import org.hibernate.sql.ast.tree.predicate.Junction;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
@@ -259,4 +261,20 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 			Map<SqmParameter, List<JdbcParameter>> parameterResolutions,
 			SessionFactoryImplementor factory);
 
+
+	protected TableReference resolveUnionTableReference(
+			TableGroup tableGroup,
+			String tableExpression) {
+		if ( tableGroup instanceof UnionTableGroup ) {
+			return new TableReference(
+					tableExpression,
+					tableGroup.getPrimaryTableReference().getIdentificationVariable(),
+					false,
+					getSessionFactory()
+			);
+		}
+		else {
+			return tableGroup.getTableReference( tableGroup.getNavigablePath(), tableExpression );
+		}
+	}
 }

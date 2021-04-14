@@ -138,7 +138,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 			NavigablePath collectionPath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
-		assert tableGroup.getTableReference( keyTable ) != null;
+		assert tableGroup.getTableReference( collectionPath, keyTable ) != null;
 
 		return createDomainResult(
 				collectionPath,
@@ -154,7 +154,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 			NavigablePath collectionPath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
-		assert tableGroup.getTableReference( targetTable ) != null;
+		assert tableGroup.getTableReference( collectionPath, targetTable ) != null;
 
 		return createDomainResult(
 				collectionPath,

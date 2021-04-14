@@ -34,6 +34,7 @@ import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
+import org.hibernate.sql.ast.tree.from.UnionTableGroup;
 import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 
@@ -143,12 +144,18 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 							idSelectCte.getCteTable().getCteColumns(),
 							factory
 					);
-					final List<Assignment> assignmentList = assignmentsByTable.get( tableExpression );
-					if ( assignmentList == null ) {
-						return;
+					final List<Assignment> assignmentList;
+					if ( updatingTableGroup instanceof UnionTableGroup ) {
+						assignmentList = assignmentsByTable.get( updatingTableGroup.getPrimaryTableReference().getTableExpression() );
 					}
-					final TableReference dmlTableReference = updatingTableGroup.resolveTableReference(
-							updatingTableGroup.getNavigablePath(),
+					else {
+						assignmentList = assignmentsByTable.get( tableExpression );
+						if ( assignmentList == null ) {
+							return;
+						}
+					}
+					final TableReference dmlTableReference = resolveUnionTableReference(
+							updatingTableGroup,
 							tableExpression
 					);
 					final List<ColumnReference> columnReferences = new ArrayList<>( idSelectCte.getCteTable().getCteColumns().size() );

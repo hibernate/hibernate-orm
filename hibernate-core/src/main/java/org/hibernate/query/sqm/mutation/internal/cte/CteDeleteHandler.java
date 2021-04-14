@@ -101,8 +101,8 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 							idSelectCte.getCteTable().getCteColumns(),
 							factory
 					);
-					final TableReference dmlTableReference = updatingTableGroup.resolveTableReference(
-							updatingTableGroup.getNavigablePath(),
+					final TableReference dmlTableReference = resolveUnionTableReference(
+							updatingTableGroup,
 							tableExpression
 					);
 					final List<ColumnReference> columnReferences = new ArrayList<>( idSelectCte.getCteTable().getCteColumns().size() );

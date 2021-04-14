@@ -53,7 +53,6 @@ import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameterizedEntityType;
-import org.hibernate.query.sqm.tree.expression.SqmPathEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
 import org.hibernate.query.sqm.tree.expression.SqmRestrictedSubQueryExpression;
 import org.hibernate.query.sqm.tree.expression.SqmStar;
@@ -1010,11 +1009,6 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	@Override
 	public Object visitFieldLiteral(SqmFieldLiteral sqmFieldLiteral) {
 		throw new NotYetImplementedFor6Exception( getClass() );
-	}
-
-	@Override
-	public Object visitSqmPathEntityTypeExpression(SqmPathEntityType<?> expression) {
-		return null;
 	}
 
 	@Override

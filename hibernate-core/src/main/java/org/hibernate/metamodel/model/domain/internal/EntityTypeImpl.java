@@ -12,7 +12,6 @@ import javax.persistence.metamodel.EntityType;
 import org.hibernate.graph.internal.SubGraphImpl;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.model.domain.AbstractIdentifiableType;
 import org.hibernate.metamodel.model.domain.DomainType;
@@ -21,8 +20,11 @@ import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
+import org.hibernate.persister.entity.DiscriminatorMetadata;
+import org.hibernate.persister.entity.Queryable;
 import org.hibernate.query.sqm.IllegalPathUsageException;
 import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.tree.domain.SqmBasicValuedEntityTypePath;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.type.StandardBasicTypes;
@@ -57,62 +59,71 @@ public class EntityTypeImpl<J>
 
 		this.jpaEntityName = persistentClass.getJpaEntityName();
 
-		if ( persistentClass.hasSubclasses() ) {
-			final Value discriminator = persistentClass.getDiscriminator();
-			final DomainType discriminatorType;
-			if ( discriminator != null ) {
-				discriminatorType = (DomainType) discriminator.getType();
+		final Queryable entityPersister = (Queryable) jpaMetamodel.getTypeConfiguration()
+				.getSessionFactory()
+				.getMetamodel()
+				.entityPersister( getHibernateEntityName() );
+		final DiscriminatorMetadata discriminatorMetadata = entityPersister.getTypeDiscriminatorMetadata();
+		final DomainType discriminatorType;
+		if ( discriminatorMetadata != null ) {
+			discriminatorType = (DomainType) discriminatorMetadata.getResolutionType();
+		}
+		else {
+			discriminatorType = StandardBasicTypes.STRING;
+		}
+		final boolean hasSubclasses = persistentClass.hasSubclasses();
+		this.discriminatorPathSource = new SqmPathSource() {
+			@Override
+			public String getPathName() {
+				return EntityDiscriminatorMapping.ROLE_NAME;
 			}
-			else {
-				discriminatorType = StandardBasicTypes.STRING;
+
+			@Override
+			public DomainType<?> getSqmPathType() {
+				// the BasicType for Class?
+				return discriminatorType;
 			}
 
-			discriminatorPathSource = new SqmPathSource() {
-				@Override
-				public String getPathName() {
-					return EntityDiscriminatorMapping.ROLE_NAME;
-				}
+			@Override
+			public SqmPathSource<?> findSubPathSource(String name) {
+				throw new IllegalPathUsageException( "Entity discriminator cannot be de-referenced" );
+			}
 
-				@Override
-				public DomainType<?> getSqmPathType() {
-					// the BasicType for Class?
-					return discriminatorType;
-				}
-
-				@Override
-				public SqmPathSource<?> findSubPathSource(String name) {
-					throw new IllegalPathUsageException( "Entity discriminator cannot be de-referenced" );
-				}
-
-				@Override
-				public SqmPath<?> createSqmPath(SqmPath lhs) {
-					return new SqmBasicValuedSimplePath(
+			@Override
+			public SqmPath<?> createSqmPath(SqmPath lhs) {
+				if ( hasSubclasses ) {
+					return new SqmBasicValuedSimplePath<>(
 							lhs.getNavigablePath().append( EntityDiscriminatorMapping.ROLE_NAME ),
 							this,
 							lhs,
 							lhs.nodeBuilder()
 					);
 				}
-
-				@Override
-				public BindableType getBindableType() {
-					return BindableType.SINGULAR_ATTRIBUTE;
+				else {
+					return new SqmBasicValuedEntityTypePath<>(
+							lhs.getNavigablePath().append( EntityDiscriminatorMapping.ROLE_NAME ),
+							EntityTypeImpl.this,
+							lhs,
+							lhs.nodeBuilder()
+					);
 				}
+			}
 
-				@Override
-				public Class<?> getBindableJavaType() {
-					return getExpressableJavaTypeDescriptor().getJavaTypeClass();
-				}
+			@Override
+			public BindableType getBindableType() {
+				return BindableType.SINGULAR_ATTRIBUTE;
+			}
 
-				@Override
-				public JavaTypeDescriptor<?> getExpressableJavaTypeDescriptor() {
-					return discriminatorType.getExpressableJavaTypeDescriptor();
-				}
-			};
-		}
-		else {
-			discriminatorPathSource = null;
-		}
+			@Override
+			public Class<?> getBindableJavaType() {
+				return getExpressableJavaTypeDescriptor().getJavaTypeClass();
+			}
+
+			@Override
+			public JavaTypeDescriptor<?> getExpressableJavaTypeDescriptor() {
+				return discriminatorType.getExpressableJavaTypeDescriptor();
+			}
+		};
 	}
 
 	@Override

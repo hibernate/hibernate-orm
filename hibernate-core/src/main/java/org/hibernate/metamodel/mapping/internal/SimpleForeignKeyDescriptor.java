@@ -105,7 +105,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			NavigablePath collectionPath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
-		assert tableGroup.getTableReference( keySide.getContainingTableExpression() ) != null;
+		assert tableGroup.getTableReference( collectionPath, keySide.getContainingTableExpression() ) != null;
 
 		return createDomainResult(
 				collectionPath,
@@ -117,7 +117,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 
 	@Override
 	public DomainResult<?> createTargetDomainResult(NavigablePath collectionPath, TableGroup tableGroup, DomainResultCreationState creationState) {
-		assert tableGroup.getTableReference( targetSide.getContainingTableExpression() ) != null;
+		assert tableGroup.getTableReference( collectionPath, targetSide.getContainingTableExpression() ) != null;
 
 		return createDomainResult(
 				collectionPath,
@@ -311,18 +311,15 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	}
 
 	protected TableReference getTableReference(TableGroup lhs, TableGroup tableGroup, String table) {
-		if ( lhs.getPrimaryTableReference().getTableExpression().equals( table ) ) {
+		final NavigablePath navigablePath = lhs.getNavigablePath().append( getNavigableRole().getNavigableName() );
+		if ( lhs.getPrimaryTableReference().getTableReference( navigablePath, table ) != null ) {
 			return lhs.getPrimaryTableReference();
 		}
-		else if ( tableGroup.getPrimaryTableReference().getTableExpression().equals( table ) ) {
+		else if ( tableGroup.getPrimaryTableReference().getTableReference( navigablePath, table ) != null ) {
 			return tableGroup.getPrimaryTableReference();
 		}
 
-		final TableReference tableReference = lhs.resolveTableReference(
-				lhs.getNavigablePath()
-						.append( getNavigableRole().getNavigableName() ),
-				table
-		);
+		final TableReference tableReference = lhs.resolveTableReference( navigablePath, table );
 		if ( tableReference != null ) {
 			return tableReference;
 		}

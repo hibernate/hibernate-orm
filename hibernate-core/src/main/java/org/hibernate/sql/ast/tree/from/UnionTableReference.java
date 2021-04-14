@@ -26,6 +26,7 @@ public class UnionTableReference extends TableReference {
 		this.subclassTableSpaceExpressions = subclassTableSpaceExpressions;
 	}
 
+	@Override
 	public TableReference resolveTableReference(NavigablePath navigablePath, String tableExpression) {
 		if ( hasTableExpression( tableExpression ) ) {
 			return this;

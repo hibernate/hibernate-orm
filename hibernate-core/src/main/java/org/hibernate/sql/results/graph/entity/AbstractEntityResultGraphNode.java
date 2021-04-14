@@ -94,7 +94,7 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 
 		final EntityDiscriminatorMapping discriminatorMapping = getDiscriminatorMapping( entityDescriptor, entityTableGroup );
 		if ( discriminatorMapping != null ) {
-			discriminatorResult = discriminatorMapping.createDomainResult(
+			discriminatorResult = discriminatorMapping.createUnderlyingDomainResult(
 					navigablePath.append( EntityDiscriminatorMapping.ROLE_NAME ),
 					entityTableGroup,
 					null,

@@ -2428,7 +2428,7 @@ public abstract class AbstractEntityPersister
 			}
 
 			public Type getResolutionType() {
-				return new DiscriminatorType( getDiscriminatorType(), AbstractEntityPersister.this );
+				return new DiscriminatorType( (org.hibernate.type.BasicType) getDiscriminatorType(), AbstractEntityPersister.this );
 			}
 		};
 	}
@@ -5529,7 +5529,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public EntityPersister getSubclassEntityPersister(Object instance, SessionFactoryImplementor factory) {
-		if ( !hasSubclasses() ) {
+		if ( instance == null || !hasSubclasses() ) {
 			return this;
 		}
 		else {
@@ -6237,7 +6237,7 @@ public abstract class AbstractEntityPersister
 					getTableName(),
 					discriminatorColumnExpression,
 					getDiscriminatorFormulaTemplate() != null,
-					(BasicType<?>) getDiscriminatorType()
+					(DiscriminatorType<?>) getTypeDiscriminatorMetadata().getResolutionType()
 			);
 		}
 	}
@@ -6274,7 +6274,13 @@ public abstract class AbstractEntityPersister
 		}
 
 		this.superMappingType = creationProcess.getEntityPersister( getMappedSuperclass() );
-		( (InFlightEntityMappingType) superMappingType ).linkWithSubType( this, creationProcess );
+		final InFlightEntityMappingType inFlightEntityMappingType = (InFlightEntityMappingType) superMappingType;
+		inFlightEntityMappingType.linkWithSubType( this, creationProcess );
+		if ( subclassMappingTypes != null ) {
+			subclassMappingTypes.values().forEach(
+					sub -> inFlightEntityMappingType.linkWithSubType( sub, creationProcess)
+			);
+		}
 	}
 
 	@Override
@@ -6284,6 +6290,9 @@ public abstract class AbstractEntityPersister
 			subclassMappingTypes = new TreeMap<>();
 		}
 		subclassMappingTypes.put( sub.getEntityName(), sub );
+		if ( superMappingType != null ) {
+			( (InFlightEntityMappingType) superMappingType ).linkWithSubType( sub, creationProcess );
+		}
 	}
 
 	@Override
@@ -6729,6 +6738,10 @@ public abstract class AbstractEntityPersister
 
 		if ( identifierMapping instanceof NonAggregatedIdentifierMappingImpl ) {
 			return ( (NonAggregatedIdentifierMappingImpl) identifierMapping ).findSubPart( name, treatTargetType );
+		}
+
+		if ( EntityDiscriminatorMapping.matchesRoleName( name ) ) {
+			return discriminatorMapping;
 		}
 
 		return null;

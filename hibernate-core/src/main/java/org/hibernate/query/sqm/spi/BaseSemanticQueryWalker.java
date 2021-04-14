@@ -50,7 +50,6 @@ import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameterizedEntityType;
-import org.hibernate.query.sqm.tree.expression.SqmPathEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
 import org.hibernate.query.sqm.tree.expression.SqmRestrictedSubQueryExpression;
 import org.hibernate.query.sqm.tree.expression.SqmSummarization;
@@ -536,12 +535,7 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 	}
 
 	@Override
-	public Object visitSqmPathEntityTypeExpression(SqmPathEntityType<?> expression) {
-		return expression;
-	}
-
-	@Override
-	public Object visitParameterizedEntityTypeExpression(SqmParameterizedEntityType expression) {
+	public Object visitParameterizedEntityTypeExpression(SqmParameterizedEntityType<?> expression) {
 		return expression;
 	}
 

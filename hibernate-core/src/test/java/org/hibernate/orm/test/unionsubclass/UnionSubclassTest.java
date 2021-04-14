@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.unionsubclass;
+package org.hibernate.orm.test.unionsubclass;
 
 import java.sql.Connection;
 import java.util.List;
@@ -57,6 +57,10 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 	protected void releaseSessionFactory() {
 		super.releaseSessionFactory();
 		connectionProvider.stop();
+	}
+	@Override
+	protected String getBaseForMappings() {
+		return "org/hibernate/orm/test/";
 	}
 
 	@Override

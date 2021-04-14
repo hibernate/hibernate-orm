@@ -17,17 +17,13 @@ import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
-import org.hibernate.metamodel.model.domain.DomainType;
-import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.query.sqm.IllegalPathUsageException;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -141,70 +137,10 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 		return getReferencedPathSource();
 	}
 
-	private SqmExpression pathTypeExpression;
-
 	@Override
 	@SuppressWarnings("unchecked")
 	public SqmExpression<Class<? extends T>> type() {
-		if ( pathTypeExpression == null ) {
-			final String discriminatorPathName = EntityDiscriminatorMapping.ROLE_NAME;
-			final NavigablePath discriminatorNavigablePath = getNavigablePath().append( discriminatorPathName );
-
-			final DomainType sqmNodeType = getReferencedPathSource().getSqmPathType();
-
-			if ( sqmNodeType instanceof EntityDomainType ) {
-				final SqmPathSource discriminatorPathSource = new SqmPathSource() {
-					@Override
-					public String getPathName() {
-						return discriminatorPathName;
-					}
-
-					@Override
-					public DomainType<?> getSqmPathType() {
-						// the BasicType for Class?
-						return null;
-					}
-
-					@Override
-					public SqmPathSource<?> findSubPathSource(String name) {
-						throw new IllegalPathUsageException( "Entity discriminator cannot be de-referenced" );
-					}
-
-					@Override
-					public SqmPath createSqmPath(SqmPath lhs) {
-						return new SqmBasicValuedSimplePath( discriminatorNavigablePath, this, AbstractSqmPath.this, nodeBuilder() );
-					}
-
-					@Override
-					public BindableType getBindableType() {
-						return BindableType.SINGULAR_ATTRIBUTE;
-					}
-
-					@Override
-					public Class<?> getBindableJavaType() {
-						return null;
-					}
-
-					@Override
-					public JavaTypeDescriptor getExpressableJavaTypeDescriptor() {
-						return null;
-					}
-				};
-
-				pathTypeExpression = new SqmBasicValuedSimplePath(
-						discriminatorNavigablePath,
-						discriminatorPathSource,
-						this,
-						nodeBuilder()
-				);
-			}
-			else {
-				// todo (6.0) : not sure this is strictly true
-				throw new UnsupportedOperationException( "SqmPath [" + getClass().getName() + "] cannot be typed" );
-			}
-		}
-
-		return pathTypeExpression;
+		return (SqmExpression<Class<? extends T>>) get( EntityDiscriminatorMapping.ROLE_NAME );
 	}
 
 	@Override

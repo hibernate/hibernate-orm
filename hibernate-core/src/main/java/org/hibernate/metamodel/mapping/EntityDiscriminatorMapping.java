@@ -6,7 +6,10 @@
  */
 package org.hibernate.metamodel.mapping;
 
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
 
 /**
  * @author Steve Ebersole
@@ -24,13 +27,9 @@ public interface EntityDiscriminatorMapping extends VirtualModelPart, BasicValue
 		return ROLE_NAME;
 	}
 
-	@Override
-	default MappingType getPartMappingType() {
-		return this::getJavaTypeDescriptor;
-	}
-
-	@Override
-	default JavaTypeDescriptor<?> getJavaTypeDescriptor() {
-		return null;
-	}
+	<T> DomainResult<T> createUnderlyingDomainResult(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			String resultVariable,
+			DomainResultCreationState creationState);
 }

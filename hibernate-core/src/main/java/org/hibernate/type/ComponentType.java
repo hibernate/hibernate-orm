@@ -49,6 +49,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	private final Type[] propertyTypes;
 	private final ValueGeneration[] propertyValueGenerationStrategies;
 	private final boolean[] propertyNullability;
+	private final int[] originalPropertyOrder;
 	protected final int propertySpan;
 	private final CascadeStyle[] cascade;
 	private final FetchMode[] joinedFetch;
@@ -59,11 +60,12 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	protected final EntityMode entityMode;
 	protected final ComponentTuplizer componentTuplizer;
 
-	public ComponentType(TypeConfiguration typeConfiguration, ComponentMetamodel metamodel) {
+	public ComponentType(TypeConfiguration typeConfiguration, ComponentMetamodel metamodel, int[] originalPropertyOrder) {
 		this.typeConfiguration = typeConfiguration;
 		// for now, just "re-flatten" the metamodel since this is temporary stuff anyway (HHH-1907)
 		this.isKey = metamodel.isKey();
 		this.propertySpan = metamodel.getPropertySpan();
+		this.originalPropertyOrder = originalPropertyOrder;
 		this.propertyNames = new String[propertySpan];
 		this.propertyTypes = new Type[propertySpan];
 		this.propertyValueGenerationStrategies = new ValueGeneration[propertySpan];
@@ -747,6 +749,10 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 		throw new PropertyNotFoundException(
 				"Unable to locate property named " + name + " on " + getReturnedClass().getName()
 		);
+	}
+
+	public int[] getOriginalPropertyOrder() {
+		return originalPropertyOrder;
 	}
 
 	private Boolean canDoExtraction;

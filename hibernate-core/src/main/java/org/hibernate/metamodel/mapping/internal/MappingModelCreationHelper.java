@@ -19,6 +19,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.SharedSessionContract;
+import org.hibernate.boot.model.source.internal.hbm.MappingDocument;
 import org.hibernate.collection.internal.StandardArraySemantics;
 import org.hibernate.collection.internal.StandardBagSemantics;
 import org.hibernate.collection.internal.StandardIdentifierBagSemantics;
@@ -45,6 +46,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Resolvable;
 import org.hibernate.mapping.Selectable;
+import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
@@ -85,6 +87,7 @@ import org.hibernate.type.AnyType;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CollectionType;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
@@ -1098,6 +1101,7 @@ public class MappingModelCreationHelper {
 			keySelectableMappings = SelectableMappingsImpl.from(
 					keyTableExpression,
 					collectionBootValueMapping.getKey(),
+					getPropertyOrder( bootValueMapping, creationProcess ),
 					creationProcess.getCreationContext().getSessionFactory(),
 					dialect,
 					creationProcess.getSqmFunctionRegistry()
@@ -1111,6 +1115,7 @@ public class MappingModelCreationHelper {
 			keySelectableMappings = SelectableMappingsImpl.from(
 					keyTableExpression,
 					bootValueMapping,
+					getPropertyOrder( bootValueMapping, creationProcess ),
 					creationProcess.getCreationContext().getSessionFactory(),
 					dialect,
 					creationProcess.getSqmFunctionRegistry()
@@ -1135,6 +1140,42 @@ public class MappingModelCreationHelper {
 					embeddableValuedModelPart.getEmbeddableTypeDescriptor(),
 					creationProcess
 			);
+		}
+	}
+
+	private static int[] getPropertyOrder(Value bootValueMapping, MappingModelCreationProcess creationProcess) {
+		final ComponentType componentType;
+		final boolean fromXml;
+		if ( bootValueMapping instanceof Collection ) {
+			final Collection collectionBootValueMapping = (Collection) bootValueMapping;
+			fromXml = collectionBootValueMapping.getBuildingContext() instanceof MappingDocument;
+			componentType = (ComponentType) collectionBootValueMapping.getKey().getType();
+		}
+		else {
+			if ( bootValueMapping instanceof OneToMany ) {
+				fromXml = ( (OneToMany) bootValueMapping ).getBuildingContext() instanceof MappingDocument;
+			}
+			else {
+				fromXml = ( (SimpleValue) bootValueMapping ).getBuildingContext() instanceof MappingDocument;
+			}
+			final EntityType entityType = (EntityType) bootValueMapping.getType();
+			final Type identifierOrUniqueKeyType = entityType.getIdentifierOrUniqueKeyType(
+					creationProcess.getCreationContext().getSessionFactory()
+			);
+			componentType = (ComponentType) identifierOrUniqueKeyType;
+		}
+		// If the value comes from XML, we need to consider the reordering
+		if ( fromXml ) {
+			return componentType.getOriginalPropertyOrder();
+		}
+		// A value that came from the annotation model is already sorted appropriately
+		// so we use an "identity mapping"
+		else {
+			final int[] propertyReordering = new int[componentType.getSubtypes().length];
+			for ( int i = 0; i < propertyReordering.length; i++ ) {
+				propertyReordering[i] = i;
+			}
+			return propertyReordering;
 		}
 	}
 

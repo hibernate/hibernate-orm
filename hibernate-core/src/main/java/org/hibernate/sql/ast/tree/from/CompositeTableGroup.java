@@ -110,7 +110,7 @@ public class CompositeTableGroup implements VirtualTableGroup {
 
 	@Override
 	public TableReference getTableReference(NavigablePath navigablePath, String tableExpression) {
-		return underlyingTableGroup.getTableReference( tableExpression );
+		return underlyingTableGroup.getTableReference( navigablePath, tableExpression );
 	}
 
 	@Override

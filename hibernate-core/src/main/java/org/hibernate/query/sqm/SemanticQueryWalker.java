@@ -47,7 +47,6 @@ import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
-import org.hibernate.query.sqm.tree.expression.SqmPathEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
 import org.hibernate.query.sqm.tree.expression.SqmRestrictedSubQueryExpression;
 import org.hibernate.query.sqm.tree.expression.SqmSummarization;
@@ -222,8 +221,6 @@ public interface SemanticQueryWalker<T> {
 	T visitJpaCriteriaParameter(JpaCriteriaParameter<?> expression);
 
 	T visitEntityTypeLiteralExpression(SqmLiteralEntityType<?> expression);
-
-	T visitSqmPathEntityTypeExpression(SqmPathEntityType<?> expression);
 
 	T visitParameterizedEntityTypeExpression(SqmParameterizedEntityType<?> expression);
 

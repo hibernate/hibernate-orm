@@ -103,7 +103,7 @@ public class EntityCollectionPartTableGroup implements TableGroup {
 
 	@Override
 	public TableReference getTableReference(NavigablePath navigablePath, String tableExpression) {
-		return collectionTableGroup.getTableReference( tableExpression );
+		return collectionTableGroup.getTableReference( navigablePath, tableExpression );
 	}
 
 	@Override

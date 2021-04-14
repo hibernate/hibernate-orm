@@ -6,45 +6,125 @@
  */
 package org.hibernate.sql.ast.tree.expression;
 
-import org.hibernate.metamodel.mapping.ModelPart;
+import java.util.List;
+
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.mapping.IndexedConsumer;
+import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.persister.entity.DiscriminatorType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Queryable;
+import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstWalker;
-import org.hibernate.type.Type;
+import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.basic.BasicResult;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaTypedExpressable;
 
 /**
  * @author Steve Ebersole
  */
-public class EntityTypeLiteral implements Expression {
+public class EntityTypeLiteral implements Expression, MappingModelExpressable, DomainResultProducer, JavaTypedExpressable {
 	private final EntityPersister entityTypeDescriptor;
-	private final Type discriminatorType;
+	private final DiscriminatorType discriminatorType;
 
 	public EntityTypeLiteral(EntityPersister entityTypeDescriptor) {
 		this.entityTypeDescriptor = entityTypeDescriptor;
-		this.discriminatorType = ( (Queryable) entityTypeDescriptor ).getDiscriminatorType();
+		this.discriminatorType = (DiscriminatorType) ( (Queryable) entityTypeDescriptor ).getTypeDiscriminatorMetadata().getResolutionType();
 	}
 
 	public EntityPersister getEntityTypeDescriptor() {
 		return entityTypeDescriptor;
 	}
 
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// MappingModelExpressable
+
 	@Override
-	public ModelPart getExpressionType() {
-		// todo (6.0) : entity descriptor or its discriminator descriptor?
-		return entityTypeDescriptor;
+	public MappingModelExpressable getExpressionType() {
+		return this;
 	}
 
-//	@Override
-//	public SqlSelection createSqlSelection(
-//			int jdbcPosition,
-//			int valuesArrayPosition,
-//			JavaTypeDescriptor javaTypeDescriptor,
-//			TypeConfiguration typeConfiguration) {
-//		throw new UnsupportedOperationException( "Entity-type literal not supported in select-clause" );
-//	}
+	@Override
+	public int getJdbcTypeCount() {
+		return discriminatorType.getJdbcTypeCount();
+	}
+
+	@Override
+	public List<JdbcMapping> getJdbcMappings() {
+		return discriminatorType.getJdbcMappings();
+	}
+
+	@Override
+	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+		return discriminatorType.forEachJdbcType( offset, action );
+	}
+
+	@Override
+	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+		return discriminatorType.disassemble( value, session );
+	}
+
+	@Override
+	public int forEachDisassembledJdbcValue(
+			Object value,
+			Clause clause,
+			int offset,
+			JdbcValuesConsumer valuesConsumer,
+			SharedSessionContractImplementor session) {
+		return discriminatorType.forEachDisassembledJdbcValue( value, clause, offset, valuesConsumer, session );
+	}
+
+	@Override
+	public int forEachJdbcValue(
+			Object value,
+			Clause clause,
+			int offset,
+			JdbcValuesConsumer valuesConsumer,
+			SharedSessionContractImplementor session) {
+		return discriminatorType.forEachJdbcValue( value, clause, offset, valuesConsumer, session );
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// DomainResultProducer
+
+	@Override
+	public void applySqlSelections(DomainResultCreationState creationState) {
+		createSqlSelection( creationState );
+	}
+
+	@Override
+	public DomainResult createDomainResult(String resultVariable, DomainResultCreationState creationState) {
+		return new BasicResult(
+				createSqlSelection( creationState )
+						.getValuesArrayPosition(),
+				resultVariable,
+				discriminatorType.getExpressableJavaTypeDescriptor()
+		);
+	}
+
+	private SqlSelection createSqlSelection(DomainResultCreationState creationState) {
+		return creationState.getSqlAstCreationState().getSqlExpressionResolver()
+				.resolveSqlSelection(
+						this,
+						discriminatorType.getExpressableJavaTypeDescriptor(),
+						creationState.getSqlAstCreationState().getCreationContext()
+								.getDomainModel().getTypeConfiguration()
+				);
+	}
 
 	@Override
 	public void accept(SqlAstWalker sqlTreeWalker) {
 		sqlTreeWalker.visitEntityTypeLiteral( this );
+	}
+
+	@Override
+	public JavaTypeDescriptor getExpressableJavaTypeDescriptor() {
+		return discriminatorType.getExpressableJavaTypeDescriptor();
 	}
 }

@@ -14,6 +14,7 @@ import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.persister.entity.DiscriminatorType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -29,7 +30,7 @@ import org.hibernate.type.BasicType;
 public class JoinedSubclassDiscriminatorMappingImpl extends AbstractEntityDiscriminatorMapping {
 	private final NavigableRole navigableRole;
 	private final CaseSearchedExpression caseSearchedExpression;
-	private final List<ColumnReference> columnReferences;
+	private final CaseSearchedExpression caseSearchedExpressionUnderlying;
 
 	public JoinedSubclassDiscriminatorMappingImpl(
 			EntityPersister entityDescriptor,
@@ -38,37 +39,34 @@ public class JoinedSubclassDiscriminatorMappingImpl extends AbstractEntityDiscri
 			boolean isFormula,
 			CaseSearchedExpression caseSearchedExpression,
 			List<ColumnReference> columnReferences,
-			BasicType<?> mappingType) {
+			DiscriminatorType<?> mappingType) {
 		super( entityDescriptor, tableExpression, mappedColumnExpression, isFormula, mappingType );
 
 		this.navigableRole = entityDescriptor.getNavigableRole().append( EntityDiscriminatorMapping.ROLE_NAME );
 		this.caseSearchedExpression = caseSearchedExpression;
-		this.columnReferences = columnReferences;
+		final CaseSearchedExpression caseSearchedExpressionUnderlying = new CaseSearchedExpression( mappingType.getUnderlyingType() );
+		for ( CaseSearchedExpression.WhenFragment whenFragment : caseSearchedExpression.getWhenFragments() ) {
+			caseSearchedExpressionUnderlying.when( whenFragment.getPredicate(), whenFragment.getResult() );
+		}
+		caseSearchedExpressionUnderlying.otherwise( caseSearchedExpression.getOtherwise() );
+		this.caseSearchedExpressionUnderlying = caseSearchedExpressionUnderlying;
 	}
 
 	@Override
-	protected SqlSelection resolveSqlSelection(TableGroup tableGroup, DomainResultCreationState creationState) {
+	protected SqlSelection resolveSqlSelection(
+			TableGroup tableGroup,
+			boolean underlyingType,
+			DomainResultCreationState creationState) {
 		final SqlExpressionResolver expressionResolver = creationState.getSqlAstCreationState()
 				.getSqlExpressionResolver();
-		// need to add the columns of the ids used in the case expression
-		columnReferences.forEach(
-				columnReference ->
-						expressionResolver.resolveSqlSelection(
-								columnReference,
-								getMappedType().getMappedJavaTypeDescriptor(),
-								creationState.getSqlAstCreationState()
-										.getCreationContext()
-										.getDomainModel()
-										.getTypeConfiguration()
-						)
-		);
+		final BasicType<?> type = underlyingType ? getMappedType().getUnderlyingType() : getMappedType();
 
 		return expressionResolver.resolveSqlSelection(
 				expressionResolver.resolveSqlExpression(
 						getSelectionExpression(),
-						sqlAstProcessingState -> caseSearchedExpression
+						sqlAstProcessingState -> underlyingType ? caseSearchedExpressionUnderlying : caseSearchedExpression
 				),
-				getMappedType().getMappedJavaTypeDescriptor(),
+				type.getMappedJavaTypeDescriptor(),
 				creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
 		);
 	}

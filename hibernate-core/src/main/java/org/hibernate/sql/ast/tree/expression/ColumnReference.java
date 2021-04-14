@@ -54,6 +54,22 @@ public class ColumnReference implements Expression, Assignable {
 
 	public ColumnReference(
 			String qualifier,
+			SelectableMapping selectableMapping,
+			JdbcMapping jdbcMapping,
+			SessionFactoryImplementor sessionFactory) {
+		this(
+				qualifier,
+				selectableMapping.getSelectionExpression(),
+				selectableMapping.isFormula(),
+				selectableMapping.getCustomReadExpression(),
+				selectableMapping.getCustomWriteExpression(),
+				jdbcMapping,
+				sessionFactory
+		);
+	}
+
+	public ColumnReference(
+			String qualifier,
 			String columnExpression,
 			boolean isFormula,
 			String customReadExpression,

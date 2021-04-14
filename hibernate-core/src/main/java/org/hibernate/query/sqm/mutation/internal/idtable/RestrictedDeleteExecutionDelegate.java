@@ -49,6 +49,7 @@ import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.from.UnionTableGroup;
 import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
@@ -256,20 +257,36 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 						);
 					}
 					else {
-						deleteFromNonRootTableWithoutIdTable(
-								tableGroup.resolveTableReference( tableGroup.getNavigablePath(), tableExpression ),
-								tableKeyColumnVisitationSupplier,
-								sqlExpressionResolver,
-								tableGroup,
-								matchingIdSubQuerySpec,
-								jdbcParameterBindings,
-								executionContext
+						rows.set(
+								rows.get() + deleteFromNonRootTableWithoutIdTable(
+										resolveUnionTableReference( tableGroup, tableExpression ),
+										tableKeyColumnVisitationSupplier,
+										sqlExpressionResolver,
+										tableGroup,
+										matchingIdSubQuerySpec,
+										jdbcParameterBindings,
+										executionContext
+								)
 						);
 					}
 				}
 		);
 
 		return rows.get();
+	}
+
+	private TableReference resolveUnionTableReference(TableGroup tableGroup, String tableExpression) {
+		if ( tableGroup instanceof UnionTableGroup ) {
+			return new TableReference(
+					tableExpression,
+					tableGroup.getPrimaryTableReference().getIdentificationVariable(),
+					false,
+					sessionFactory
+			);
+		}
+		else {
+			return tableGroup.getTableReference( tableGroup.getNavigablePath(), tableExpression );
+		}
 	}
 
 	private int deleteFromRootTableWithoutIdTable(
@@ -284,7 +301,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 		);
 	}
 
-	private void deleteFromNonRootTableWithoutIdTable(
+	private int  deleteFromNonRootTableWithoutIdTable(
 			TableReference targetTableReference,
 			Supplier<Consumer<SelectableConsumer>> tableKeyColumnVisitationSupplier,
 			SqlExpressionResolver sqlExpressionResolver,
@@ -309,7 +326,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 		final List<ColumnReference> deletingTableColumnRefs = new ArrayList<>();
 		tableKeyColumnVisitationSupplier.get().accept(
 				(columnIndex, selection) -> {
-					assert targetTableReference.getTableExpression().equals( selection.getContainingTableExpression() );
+					assert targetTableReference.getTableReference( selection.getContainingTableExpression() ) != null;
 
 					final Expression expression = sqlExpressionResolver.resolveSqlExpression(
 							SqlExpressionResolver.createColumnReferenceKey( targetTableReference, selection.getSelectionExpression() ),
@@ -345,6 +362,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 				executionContext
 		);
 		log.debugf( "deleteFromNonRootTable - `%s` : %s rows", targetTableReference, rows );
+		return rows;
 	}
 
 

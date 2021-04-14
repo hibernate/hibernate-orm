@@ -4,18 +4,15 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.unionsubclass.alias;
+package org.hibernate.orm.test.unionsubclass.alias;
 import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * 
  * @author <a href="mailto:stliu@redhat.com">Strong Liu</a>
  */
-public class Seller implements Serializable {
+public abstract class Customer implements Serializable {
     private PersonID id;
-    private Set buyers = new HashSet();
 
     public PersonID getId() {
         return id;
@@ -25,23 +22,14 @@ public class Seller implements Serializable {
         this.id = id;
     }
 
-    public Set getBuyers() {
-        return buyers;
-    }
-
-    public void setBuyers( Set buyers ) {
-        this.buyers = buyers;
-    }
-
     public boolean equals( Object obj ) {
         if ( obj == null )
             return false;
         if ( obj == this )
             return true;
-        if ( !( obj instanceof Seller ) )
+        if ( !( obj instanceof Customer ) )
             return false;
-
-        return ( (Seller) obj ).getId().equals( getId() );
+        return ( (Customer) obj ).getId().equals( getId() );
     }
 
     public int hashCode() {

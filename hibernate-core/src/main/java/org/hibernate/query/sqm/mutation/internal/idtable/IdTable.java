@@ -35,7 +35,8 @@ public class IdTable implements Exportable, Contributable {
 		this.entityDescriptor = entityDescriptor;
 
 		this.qualifiedTableName = idTableNameAdjuster.apply(
-				( (Joinable) entityDescriptor.getEntityPersister() ).getTableName()
+				// The table name might be a sub-query, which is inappropriate for an id table name
+				entityDescriptor.getEntityPersister().getSynchronizedQuerySpaces()[0]
 		);
 
 		entityDescriptor.getIdentifierMapping().forEachSelectable(

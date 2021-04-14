@@ -32,6 +32,7 @@ import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.from.UnionTableGroup;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -206,20 +207,31 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 			ColumnReference columnReference,
 			TableGroup updatingTableGroup,
 			Map<String, TableReference> tableReferenceByAlias) {
+		final TableReference tableReferenceByName = resolveUnionTableReference( updatingTableGroup, columnReference.getQualifier() );
+		if ( tableReferenceByName != null ) {
+			return tableReferenceByName;
+		}
+
 		final TableReference tableReferenceByQualifier = tableReferenceByAlias.get( columnReference.getQualifier() );
 		if ( tableReferenceByQualifier != null ) {
 			return tableReferenceByQualifier;
 		}
 
-		final TableReference tableReferenceByName = updatingTableGroup.resolveTableReference(
-				updatingTableGroup.getNavigablePath(),
-				columnReference.getQualifier()
-		);
-		if ( tableReferenceByName != null ) {
-			return tableReferenceByName;
-		}
-
 		throw new IllegalStateException( "Could not resolve restricted column's table-reference" );
+	}
+
+	private TableReference resolveUnionTableReference(TableGroup tableGroup, String tableExpression) {
+		if ( tableGroup instanceof UnionTableGroup ) {
+			return new TableReference(
+					tableExpression,
+					tableGroup.getPrimaryTableReference().getIdentificationVariable(),
+					false,
+					sessionFactory
+			);
+		}
+		else {
+			return tableGroup.getTableReference( tableGroup.getNavigablePath(), tableExpression );
+		}
 	}
 
 	private void updateTable(
@@ -227,7 +239,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 			Supplier<Consumer<SelectableConsumer>> tableKeyColumnVisitationSupplier,
 			QuerySpec idTableSubQuery,
 			ExecutionContext executionContext) {
-		final TableReference updatingTableReference = updatingTableGroup.resolveTableReference( updatingTableGroup.getNavigablePath(), tableExpression );
+		final TableReference updatingTableReference = resolveUnionTableReference( updatingTableGroup, tableExpression );
 
 		final List<Assignment> assignments = assignmentsByTable.get( updatingTableReference );
 		if ( assignments == null || assignments.isEmpty() ) {

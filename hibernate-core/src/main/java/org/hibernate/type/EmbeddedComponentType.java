@@ -17,8 +17,8 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Gavin King
  */
 public class EmbeddedComponentType extends ComponentType {
-	public EmbeddedComponentType(TypeConfiguration typeScope, ComponentMetamodel metamodel) {
-		super( typeScope, metamodel );
+	public EmbeddedComponentType(TypeConfiguration typeScope, ComponentMetamodel metamodel, int[] propertyReordering) {
+		super( typeScope, metamodel, propertyReordering );
 	}
 
 	public boolean isEmbedded() {

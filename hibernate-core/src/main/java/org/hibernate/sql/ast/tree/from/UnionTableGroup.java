@@ -109,13 +109,23 @@ public class UnionTableGroup implements VirtualTableGroup {
 
 	@Override
 	public TableReference getTableReference(NavigablePath navigablePath, String tableExpression) {
-//		assert tableReference.getTableExpression().equals( tableExpression );
-		return tableReference;
+		return resolveTableReference( navigablePath, tableExpression );
 	}
 
 	@Override
 	public TableReference resolveTableReference(NavigablePath navigablePath, String tableExpression) {
-//		assert tableReference.getTableExpression().equals( tableExpression );
-		return tableReference;
+		if ( tableReference.getTableReference( navigablePath, tableExpression ) != null ) {
+			return tableReference;
+		}
+		if ( tableGroupJoins != null ) {
+			for ( TableGroupJoin tableGroupJoin : tableGroupJoins ) {
+				final TableReference tableReference = tableGroupJoin.getJoinedGroup()
+						.resolveTableReference( navigablePath, tableExpression );
+				if ( tableReference != null ) {
+					return tableReference;
+				}
+			}
+		}
+		return null;
 	}
 }

@@ -54,7 +54,8 @@ public class NotImplementedYetExtension
 				return ConditionEvaluationResult.enabled( "@NotImplementedYet validation" );
 			}
 			else {
-				return ConditionEvaluationResult.disabled( "Disabled : @NotImplementedYet" );
+				final Optional<NotImplementedYet> annotation = TestingUtil.findEffectiveAnnotation( context, NotImplementedYet.class );
+				return ConditionEvaluationResult.disabled( "Disabled : @NotImplementedYet - " + annotation.get().reason() );
 			}
 		}
 		return ConditionEvaluationResult.enabled( "No @NotImplementedYet" );

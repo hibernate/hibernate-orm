@@ -2287,7 +2287,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				return new NullnessLiteral( mappingModelExpressable );
 			}
 			final MappingModelExpressable keyExpressable = getKeyExpressable( mappingModelExpressable );
+			if ( keyExpressable == null ) {
+				throw new IllegalArgumentException( "Could not determine type for null literal" );
+			}
+
 			final List<Expression> expressions = new ArrayList<>( keyExpressable.getJdbcTypeCount() );
+
 			keyExpressable.forEachJdbcType(
 					(index, jdbcMapping) -> expressions.add(
 							new QueryLiteral<>(

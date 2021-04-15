@@ -199,16 +199,13 @@ public class QuerySqmImpl<R>
 			SharedSessionContractImplementor producer) {
 		super( producer );
 
-		if ( sqmStatement instanceof SqmSelectStatement ) {
+		if ( resultType != null ) {
+			SqmUtil.verifyIsSelectStatement( sqmStatement );
 			visitQueryReturnType(
 					( (SqmSelectStatement<R>) sqmStatement ).getQueryPart(),
 					resultType,
 					producer.getFactory()
 			);
-		}
-		else {
-			assert sqmStatement instanceof SqmDmlStatement;
-			throw new IllegalArgumentException( "Non-select queries cannot be typed" );
 		}
 
 		this.hqlString = CRITERIA_HQL_STRING;

@@ -92,8 +92,8 @@ import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
 import org.hibernate.query.sqm.spi.BaseSemanticQueryWalker;
-import org.hibernate.query.sqm.sql.internal.DiscriminatedAssociationPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.BasicValuedPathInterpretation;
+import org.hibernate.query.sqm.sql.internal.DiscriminatedAssociationPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.query.sqm.sql.internal.EmbeddableValuedPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.EntityValuedPathInterpretation;
@@ -106,6 +106,7 @@ import org.hibernate.query.sqm.sql.internal.SqmParameterInterpretation;
 import org.hibernate.query.sqm.sql.internal.SqmPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.TypeHelper;
 import org.hibernate.query.sqm.tree.SqmStatement;
+import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.cte.SqmCteContainer;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.cte.SqmCteTable;
@@ -118,8 +119,8 @@ import org.hibernate.query.sqm.tree.domain.SqmAnyValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
-import org.hibernate.query.sqm.tree.domain.SqmMapEntryReference;
 import org.hibernate.query.sqm.tree.domain.SqmIndexedCollectionAccessPath;
+import org.hibernate.query.sqm.tree.domain.SqmMapEntryReference;
 import org.hibernate.query.sqm.tree.domain.SqmMaxElementPath;
 import org.hibernate.query.sqm.tree.domain.SqmMaxIndexPath;
 import org.hibernate.query.sqm.tree.domain.SqmMinElementPath;
@@ -3565,9 +3566,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	public CaseSimpleExpression visitSimpleCaseExpression(SqmCaseSimple<?, ?> expression) {
 		List<CaseSimpleExpression.WhenFragment> whenFragments = new ArrayList<>( expression.getWhenFragments().size() );
 
-		final MappingModelExpressable<?> alreadyKnown = creationContext
-				.getDomainModel()
-				.lenientlyResolveMappingExpressable( expression.getNodeType(), getFromClauseIndex()::findTableGroup );
+		final MappingModelExpressable<?> alreadyKnown = determineCurrentExpressable( expression );
 		MappingModelExpressable<?> resolved = alreadyKnown;
 
 		inferrableTypeAccessStack.push( () -> alreadyKnown );
@@ -3576,7 +3575,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		try {
 			for ( SqmCaseSimple.WhenFragment<?, ?> whenFragment : expression.getWhenFragments() ) {
 				final Expression resultExpression = (Expression) whenFragment.getResult().accept( this );
-				resolved = TypeHelper.highestPrecedence( resolved, resultExpression.getExpressionType() );
+				resolved = (MappingModelExpressable<?>) TypeHelper.highestPrecedence( resolved, resultExpression.getExpressionType() );
 
 				whenFragments.add(
 						new CaseSimpleExpression.WhenFragment(
@@ -3588,7 +3587,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 			if ( expression.getOtherwise() != null ) {
 				otherwise = (Expression) expression.getOtherwise().accept( this );
-				resolved = TypeHelper.highestPrecedence( resolved, otherwise.getExpressionType() );
+				resolved = (MappingModelExpressable<?>) TypeHelper.highestPrecedence( resolved, otherwise.getExpressionType() );
 			}
 		}
 		finally {
@@ -3603,13 +3602,22 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		);
 	}
 
+	private MappingModelExpressable<?> determineCurrentExpressable(SqmTypedNode<?> expression) {
+		try {
+			return creationContext
+					.getDomainModel()
+					.resolveMappingExpressable( expression.getNodeType(), getFromClauseIndex()::findTableGroup );
+		}
+		catch (UnsupportedOperationException e) {
+			return null;
+		}
+	}
+
 	@Override
 	public CaseSearchedExpression visitSearchedCaseExpression(SqmCaseSearched<?> expression) {
 		final List<CaseSearchedExpression.WhenFragment> whenFragments = new ArrayList<>( expression.getWhenFragments().size() );
 
-		final MappingModelExpressable<?> alreadyKnown = creationContext
-				.getDomainModel()
-				.lenientlyResolveMappingExpressable( expression.getNodeType(), getFromClauseIndex()::findTableGroup );
+		final MappingModelExpressable<?> alreadyKnown = determineCurrentExpressable( expression );
 		MappingModelExpressable<?> resolved = alreadyKnown;
 
 		inferrableTypeAccessStack.push( () -> alreadyKnown );
@@ -3619,14 +3627,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			for ( SqmCaseSearched.WhenFragment<?> whenFragment : expression.getWhenFragments() ) {
 				final Predicate whenPredicate = (Predicate) whenFragment.getPredicate().accept( this );
 				final Expression resultExpression = (Expression) whenFragment.getResult().accept( this );
-				resolved = TypeHelper.highestPrecedence( resolved, resultExpression.getExpressionType() );
+				resolved = (MappingModelExpressable<?>) TypeHelper.highestPrecedence( resolved, resultExpression.getExpressionType() );
 
 				whenFragments.add( new CaseSearchedExpression.WhenFragment( whenPredicate, resultExpression ) );
 			}
 
 			if ( expression.getOtherwise() != null ) {
 				otherwise = (Expression) expression.getOtherwise().accept( this );
-				resolved = TypeHelper.highestPrecedence( resolved, otherwise.getExpressionType() );
+				resolved = (MappingModelExpressable<?>) TypeHelper.highestPrecedence( resolved, otherwise.getExpressionType() );
 			}
 		}
 		finally {

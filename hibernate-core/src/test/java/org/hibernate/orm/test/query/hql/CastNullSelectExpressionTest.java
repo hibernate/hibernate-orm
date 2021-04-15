@@ -28,7 +28,10 @@ import static org.junit.Assert.assertNull;
  */
 @DomainModel( annotatedClasses = CastNullSelectExpressionTest.Person.class )
 @SessionFactory
-@NotImplementedYet( reason = "Combination of https://github.com/hibernate/hibernate-orm/discussions/3921 and https://github.com/hibernate/hibernate-orm/discussions/3889" )
+@NotImplementedYet(
+		reason = "Combination of https://github.com/hibernate/hibernate-orm/discussions/3921 and https://github.com/hibernate/hibernate-orm/discussions/3889",
+		strict = false
+)
 public class CastNullSelectExpressionTest {
 
 	@Test
@@ -37,7 +40,7 @@ public class CastNullSelectExpressionTest {
 		scope.inTransaction(
 				(session) -> {
 					Object[] result = (Object[]) session.createQuery(
-							"select firstName, cast( null as string ), lastName from CastNullSelectExpressionTest$Person where lastName='Munster'"
+							"select firstName, cast( null as string ), lastName from Person where lastName='Munster'"
 					).uniqueResult();
 
 					assertEquals( 3, result.length );
@@ -54,7 +57,7 @@ public class CastNullSelectExpressionTest {
 		scope.inTransaction(
 				(session) -> {
 					Person result = (Person) session.createQuery(
-							"select new CastNullSelectExpressionTest$Person( id, firstName, cast( null as string ), lastName ) from CastNullSelectExpressionTest$Person where lastName='Munster'"
+							"select Person( id, firstName, cast( null as string ), lastName ) from Person where lastName='Munster'"
 					).uniqueResult();
 					assertEquals( "Herman", result.firstName );
 					assertNull( result.middleName );
@@ -83,7 +86,7 @@ public class CastNullSelectExpressionTest {
 		);
 	}
 
-	@Entity
+	@Entity( name= "Person" )
 	@Table(name = "PERSON")
 	public static class Person {
 		@Id

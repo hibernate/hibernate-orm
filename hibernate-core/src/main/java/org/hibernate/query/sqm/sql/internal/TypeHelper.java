@@ -6,16 +6,14 @@
  */
 package org.hibernate.query.sqm.sql.internal;
 
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.query.sqm.SqmExpressable;
-import org.hibernate.query.sqm.tree.domain.SqmPath;
 
 /**
  * @author Steve Ebersole
  */
 public class TypeHelper {
-	public static MappingModelExpressable<?> highestPrecedence(MappingModelExpressable<?> type1, MappingModelExpressable<?> type2) {
+	public static JdbcMappingContainer highestPrecedence(JdbcMappingContainer type1, JdbcMappingContainer type2) {
 		if ( type1 == null ) {
 			return type2;
 		}

@@ -103,6 +103,7 @@ import org.hibernate.query.sqm.sql.internal.SqlAstQueryPartProcessingStateImpl;
 import org.hibernate.query.sqm.sql.internal.SqmMapEntryResult;
 import org.hibernate.query.sqm.sql.internal.SqmParameterInterpretation;
 import org.hibernate.query.sqm.sql.internal.SqmPathInterpretation;
+import org.hibernate.query.sqm.sql.internal.TypeHelper;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.cte.SqmCteContainer;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
@@ -2432,6 +2433,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		);
 	}
 
+	protected MappingModelExpressable<?> lenientlyResolveMappingExpressable(SqmExpressable<?> nodeType) {
+		try {
+			return resolveMappingExpressable( nodeType );
+		}
+		catch (UnsupportedOperationException e) {
+			// todo (6.0) : log?
+			return null;
+		}
+	}
+
 	protected MappingModelExpressable<?> resolveMappingExpressable(SqmExpressable<?> nodeType) {
 		final MappingModelExpressable valueMapping = getCreationContext().getDomainModel().resolveMappingExpressable(
 				nodeType,
@@ -3547,60 +3558,121 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public CaseSimpleExpression visitSimpleCaseExpression(SqmCaseSimple<?, ?> expression) {
 		List<CaseSimpleExpression.WhenFragment> whenFragments = new ArrayList<>( expression.getWhenFragments().size() );
-		for ( SqmCaseSimple.WhenFragment<?, ?> whenFragment : expression.getWhenFragments() ) {
-			whenFragments.add(
-					new CaseSimpleExpression.WhenFragment(
-							(Expression) whenFragment.getCheckValue().accept( this ),
-							visitWithInferredType( whenFragment.getResult(), expression )
-					)
-			);
-		}
+
+		final MappingModelExpressable<?> alreadyKnown = creationContext
+				.getDomainModel()
+				.lenientlyResolveMappingExpressable( expression.getNodeType(), getFromClauseIndex()::findTableGroup );
+		MappingModelExpressable<?> resolved = alreadyKnown;
+
+		inferrableTypeAccessStack.push( () -> alreadyKnown );
 
 		Expression otherwise = null;
-		if ( expression.getOtherwise() != null ) {
-			otherwise = visitWithInferredType( expression.getOtherwise(), expression );
+		try {
+			for ( SqmCaseSimple.WhenFragment<?, ?> whenFragment : expression.getWhenFragments() ) {
+				final Expression resultExpression = (Expression) whenFragment.getResult().accept( this );
+				resolved = TypeHelper.highestPrecedence( resolved, resultExpression.getExpressionType() );
+
+				whenFragments.add(
+						new CaseSimpleExpression.WhenFragment(
+								(Expression) whenFragment.getCheckValue().accept( this ),
+								resultExpression
+						)
+				);
+			}
+
+			if ( expression.getOtherwise() != null ) {
+				otherwise = (Expression) expression.getOtherwise().accept( this );
+				resolved = TypeHelper.highestPrecedence( resolved, otherwise.getExpressionType() );
+			}
+		}
+		finally {
+			inferrableTypeAccessStack.pop();
 		}
 
-		final CaseSimpleExpression result = new CaseSimpleExpression(
-				resolveMappingExpressable( expression.getNodeType() ),
+		return new CaseSimpleExpression(
+				resolved,
 				(Expression) expression.getFixture().accept( this ),
 				whenFragments,
 				otherwise
 		);
-
-		return result;
 	}
 
 	@Override
 	public CaseSearchedExpression visitSearchedCaseExpression(SqmCaseSearched<?> expression) {
-		List<CaseSearchedExpression.WhenFragment> whenFragments = new ArrayList<>( expression.getWhenFragments().size() );
-		for ( SqmCaseSearched.WhenFragment<?> whenFragment : expression.getWhenFragments() ) {
-			whenFragments.add(
-					new CaseSearchedExpression.WhenFragment(
-							(Predicate) whenFragment.getPredicate().accept( this ),
-							visitWithInferredType( whenFragment.getResult(), expression )
-					)
-			);
-		}
+		final List<CaseSearchedExpression.WhenFragment> whenFragments = new ArrayList<>( expression.getWhenFragments().size() );
+
+		final MappingModelExpressable<?> alreadyKnown = creationContext
+				.getDomainModel()
+				.lenientlyResolveMappingExpressable( expression.getNodeType(), getFromClauseIndex()::findTableGroup );
+		MappingModelExpressable<?> resolved = alreadyKnown;
+
+		inferrableTypeAccessStack.push( () -> alreadyKnown );
 
 		Expression otherwise = null;
-		if ( expression.getOtherwise() != null ) {
-			otherwise = visitWithInferredType( expression.getOtherwise(), expression );
+		try {
+			for ( SqmCaseSearched.WhenFragment<?> whenFragment : expression.getWhenFragments() ) {
+				final Predicate whenPredicate = (Predicate) whenFragment.getPredicate().accept( this );
+				final Expression resultExpression = (Expression) whenFragment.getResult().accept( this );
+				resolved = TypeHelper.highestPrecedence( resolved, resultExpression.getExpressionType() );
+
+				whenFragments.add( new CaseSearchedExpression.WhenFragment( whenPredicate, resultExpression ) );
+			}
+
+			if ( expression.getOtherwise() != null ) {
+				otherwise = (Expression) expression.getOtherwise().accept( this );
+				resolved = TypeHelper.highestPrecedence( resolved, otherwise.getExpressionType() );
+			}
+		}
+		finally {
+			inferrableTypeAccessStack.pop();
 		}
 
-		final CaseSearchedExpression result = new CaseSearchedExpression(
-				resolveMappingExpressable( expression.getNodeType() ),
-				whenFragments,
-				otherwise
-		);
-
-		return result;
+		return new CaseSearchedExpression( resolved, whenFragments, otherwise );
 	}
 
-	private <T> T visitWithInferredType(SqmExpression<?> expression, SqmExpression<?> inferred) {
+	private <X> X visitWithInferredType(SqmExpression<?> expression, SqmExpression<?> inferred) {
 		inferrableTypeAccessStack.push( () -> determineValueMapping( inferred ) );
 		try {
-			return (T) expression.accept( this );
+			return (X) expression.accept( this );
+		}
+		finally {
+			inferrableTypeAccessStack.pop();
+		}
+	}
+
+	private <X> X visitWithLenientInferredType(SqmExpression<?> expression, SqmExpression<?> inferred) {
+		inferrableTypeAccessStack.push(
+				() -> {
+					try {
+						final MappingModelExpressable<?> definedType = creationContext
+								.getDomainModel()
+								.resolveMappingExpressable( expression.getNodeType(), getFromClauseIndex()::findTableGroup );
+						if ( definedType != null ) {
+							return definedType;
+						}
+					}
+					catch (UnsupportedOperationException ignore) {
+						// todo (6.0) : log?
+					}
+
+					try {
+						final MappingModelExpressable<?> definedType = creationContext
+								.getDomainModel()
+								.lenientlyResolveMappingExpressable( inferred.getNodeType(), getFromClauseIndex()::findTableGroup );
+						if ( definedType != null ) {
+							return definedType;
+						}
+					}
+					catch (UnsupportedOperationException ignore) {
+						// todo (6.0) : log?
+					}
+
+					return null;
+				}
+		);
+
+		try {
+			return (X) expression.accept( this );
 		}
 		finally {
 			inferrableTypeAccessStack.pop();

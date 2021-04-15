@@ -10,6 +10,8 @@ package org.hibernate.sql.ast.tree.expression;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.SqlAstWalker;
@@ -24,17 +26,17 @@ import org.hibernate.type.BasicType;
  * @author Steve Ebersole
  */
 public class CaseSearchedExpression implements Expression, DomainResultProducer {
-	private final BasicType type;
+	private final BasicValuedMapping type;
 
 	private List<WhenFragment> whenFragments = new ArrayList<>();
 	private Expression otherwise;
 
 	public CaseSearchedExpression(MappingModelExpressable type) {
-		this.type = (BasicType) type;
+		this.type = (BasicValuedMapping) type;
 	}
 
 	public CaseSearchedExpression(MappingModelExpressable type, List<WhenFragment> whenFragments, Expression otherwise) {
-		this.type = (BasicType) type;
+		this.type = (BasicValuedMapping) type;
 		this.whenFragments = whenFragments;
 		this.otherwise = otherwise;
 	}

@@ -17,12 +17,16 @@ import org.hibernate.engine.spi.SessionImplementor;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.After;
 import org.junit.Test;
 
+import static org.hamcrest.Matchers.is;
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.hibernate.testing.transaction.TransactionUtil2.inTransaction;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
@@ -35,6 +39,14 @@ public class CaseStatementTest extends BaseCoreFunctionalTestCase {
 		@Id
 		private Integer id;
 		private String name;
+
+		private Person() {
+		}
+
+		public Person(Integer id, String name) {
+			this.id = id;
+			this.name = name;
+		}
 	}
 
 	@Override
@@ -69,55 +81,25 @@ public class CaseStatementTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testSimpleCaseStatementWithParamAllResults() {
-		try ( final SessionImplementor s = (SessionImplementor) openSession() ) {
-			inTransaction(
-					s,
-					session-> {
-						try {
-							s.createQuery( "select case p.name when 'Steve' then :opt1 else :opt2 end from Person p" )
-									.setParameter( "opt1", "x" )
-									.setParameter( "opt2", "y" )
-									.list();
-							fail( "was expecting an exception" );
-						}
-						catch (IllegalArgumentException e) {
-							assertTyping( QueryException.class, e.getCause() );
-						}
-						catch (QueryException expected) {
-							// expected
-						}
-					}
-			);
 
-			inTransaction(
-					s,
-					session-> {
-						s.createQuery( "select case p.name when 'Steve' then cast( :opt1 as string ) else cast( :opt2 as string) end from Person p" )
-								.setParameter( "opt1", "x" )
-								.setParameter( "opt2", "y" )
-								.list();
-					}
-			);
+		inTransaction(
+				(session) -> {
+					session.createQuery( "select case p.name when 'Steve' then :opt1 else :opt2 end from Person p" )
+							.setParameter( "opt1", "x" )
+							.setParameter( "opt2", "y" )
+							.list();
 
-			inTransaction(
-					s,
-					session -> {
-						try {
-							s.createQuery( "select case p.name when 'Steve' then :opt1 else :opt2 end from Person p" )
-									.setParameter( "opt1", "x" )
-									.setParameter( "opt2", "y" )
-									.list();
-							fail( "was expecting an exception" );
-						}
-						catch (IllegalArgumentException e) {
-							assertTyping( QueryException.class, e.getCause() );
-						}
-						catch (QueryException expected) {
-							// expected
-						}
-					}
-			);
-		}
+					session.createQuery( "select case p.name when 'Steve' then cast( :opt1 as string ) else cast( :opt2 as string) end from Person p" )
+							.setParameter( "opt1", "x" )
+							.setParameter( "opt2", "y" )
+							.list();
+
+					session.createQuery( "select case p.name when 'Steve' then :opt1 else :opt2 end from Person p" )
+							.setParameter( "opt1", "x" )
+							.setParameter( "opt2", "y" )
+							.list();
+				}
+		);
 	}
 
 	@Test
@@ -170,36 +152,39 @@ public class CaseStatementTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testSearchedCaseStatementWithAllParamResults() {
-		try ( final SessionImplementor s = (SessionImplementor) openSession() ) {
-			inTransaction(
-					s,
-					session-> {
-						try {
-							s.createQuery( "select case when p.name = 'Steve' then :opt1 else :opt2 end from Person p" )
-									.setParameter( "opt1", "x" )
-									.setParameter( "opt2", "y" )
-									.list();
-							fail( "was expecting an exception" );
-						}
-						catch (IllegalArgumentException e) {
-							assertTyping( QueryException.class, e.getCause() );
-						}
-						catch (QueryException expected) {
-							// expected
-						}
-					}
-			);
+		inTransaction(
+				(session) -> {
+					session.persist( new Person( 1, "Steve" ) );
+				}
+		);
 
-			inTransaction(
-					s,
-					session-> {
-						s.createQuery( "select case when p.name = 'Steve' then cast( :opt1 as string) else :opt2 end from Person p" )
-								.setParameter( "opt1", "x" )
-								.setParameter( "opt2", "y" )
-								.list();
+		inTransaction(
+				(session) -> {
+					final List list = session.createQuery( "select case when p.name = 'Steve' then :opt1 else :opt2 end from Person p" )
+							.setParameter( "opt1", "x" )
+							.setParameter( "opt2", "y" )
+							.list();
+					assertThat( list.size(), is( 1 ) );
+					assertThat( list.get( 0 ), is( "x" )  );
+				}
+		);
 
-					}
-			);
-		}
+		inTransaction(
+				(session) -> {
+					final List list = session.createQuery( "select case when p.name = 'Steve' then cast( :opt1 as string) else :opt2 end from Person p" )
+							.setParameter( "opt1", "x" )
+							.setParameter( "opt2", "y" )
+							.list();
+					assertThat( list.size(), is( 1 ) );
+					assertThat( list.get( 0 ), is( "x" )  );
+				}
+		);
+	}
+
+	@After
+	public void dropTestData() {
+		inTransaction(
+				(session) -> session.createQuery( "delete Person" ).executeUpdate()
+		);
 	}
 }

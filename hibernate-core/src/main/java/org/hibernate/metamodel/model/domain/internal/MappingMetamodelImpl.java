@@ -709,6 +709,17 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 	}
 
 	@Override
+	public MappingModelExpressable lenientlyResolveMappingExpressable(SqmExpressable<?> sqmExpressable, Function<NavigablePath, TableGroup> tableGroupLocator) {
+		try {
+			return resolveMappingExpressable( sqmExpressable, tableGroupLocator );
+		}
+		catch (UnsupportedOperationException e) {
+			return null;
+		}
+	}
+
+
+	@Override
 	public MappingModelExpressable resolveMappingExpressable(SqmExpressable<?> sqmExpressable, Function<NavigablePath, TableGroup> tableGroupLocator) {
 		if ( sqmExpressable instanceof SqmPath ) {
 			final SqmPath sqmPath = (SqmPath) sqmExpressable;

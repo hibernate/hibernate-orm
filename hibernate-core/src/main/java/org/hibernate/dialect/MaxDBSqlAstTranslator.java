@@ -14,6 +14,7 @@ import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
+import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
@@ -58,6 +59,17 @@ public class MaxDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 			SqlTuple tuple,
 			ComparisonOperator operator) {
 		emulateTupleComparison( lhsExpressions, tuple.getExpressions(), operator, true );
+	}
+
+	@Override
+	protected void visitCaseSearchedExpression(CaseSearchedExpression caseSearchedExpression, boolean inSelect) {
+		// Couldn't find documentation for older versions, but 7.7 supports ANSI style case expressions
+		if ( getDialect().getVersion() < 770 ) {
+			visitDecodeCaseSearchedExpression( caseSearchedExpression );
+		}
+		else {
+			visitAnsiCaseSearchedExpression( caseSearchedExpression );
+		}
 	}
 
 	@Override

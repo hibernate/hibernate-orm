@@ -2496,6 +2496,31 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		expression.accept( this );
 	}
 
+	protected void renderSelectExpressionWithCastedOrInlinedPlainParameters(Expression expression) {
+		// Null literals have to be casted in the select clause
+		if ( expression instanceof Literal ) {
+			final Literal literal = (Literal) expression;
+			if ( literal.getLiteralValue() == null ) {
+				renderCasted( literal );
+			}
+			else {
+				renderLiteral( literal, true );
+			}
+		}
+		else if ( expression instanceof NullnessLiteral || expression instanceof JdbcParameter || expression instanceof SqmParameterInterpretation ) {
+			renderCasted( expression );
+		}
+		else if ( expression instanceof CaseSimpleExpression ) {
+			visitCaseSimpleExpression( (CaseSimpleExpression) expression, true );
+		}
+		else if ( expression instanceof CaseSearchedExpression ) {
+			visitCaseSearchedExpression( (CaseSearchedExpression) expression, true );
+		}
+		else {
+			expression.accept( this );
+		}
+	}
+
 	protected void renderCasted(Expression expression) {
 		final List<SqlAstNode> arguments = new ArrayList<>( 2 );
 		arguments.add( expression );
@@ -3280,12 +3305,112 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	@Override
-	public void visitCaseSearchedExpression(CaseSearchedExpression caseSearchedExpression) {
-		dialect.getCaseExpressionWalker().visitCaseSearchedExpression( caseSearchedExpression, sqlBuffer, this );
+	public final void visitCaseSearchedExpression(CaseSearchedExpression caseSearchedExpression) {
+		visitCaseSearchedExpression( caseSearchedExpression, false );
+	}
+
+	protected void visitCaseSearchedExpression(CaseSearchedExpression caseSearchedExpression, boolean inSelect) {
+		if ( inSelect ) {
+			visitAnsiCaseSearchedExpressionInSelect( caseSearchedExpression );
+		}
+		else {
+			visitAnsiCaseSearchedExpression( caseSearchedExpression );
+		}
+	}
+
+	protected void visitAnsiCaseSearchedExpression(CaseSearchedExpression caseSearchedExpression){
+		appendSql( "case" );
+
+		for ( CaseSearchedExpression.WhenFragment whenFragment : caseSearchedExpression.getWhenFragments() ) {
+			appendSql( " when " );
+			whenFragment.getPredicate().accept( this );
+			appendSql( " then " );
+			whenFragment.getResult().accept( this );
+		}
+
+		Expression otherwise = caseSearchedExpression.getOtherwise();
+		if ( otherwise != null ) {
+			appendSql( " else " );
+			otherwise.accept( this );
+		}
+
+		appendSql( " end" );
+	}
+
+	protected void visitAnsiCaseSearchedExpressionInSelect(CaseSearchedExpression caseSearchedExpression) {
+		appendSql( "case" );
+
+		for ( CaseSearchedExpression.WhenFragment whenFragment : caseSearchedExpression.getWhenFragments() ) {
+			appendSql( " when " );
+			whenFragment.getPredicate().accept( this );
+			appendSql( " then " );
+			renderSelectExpression( whenFragment.getResult() );
+		}
+
+		Expression otherwise = caseSearchedExpression.getOtherwise();
+		if ( otherwise != null ) {
+			appendSql( " else " );
+			renderSelectExpression( otherwise );
+		}
+
+		appendSql( " end" );
+	}
+
+	protected void visitDecodeCaseSearchedExpression(CaseSearchedExpression caseSearchedExpression) {
+		appendSql( "decode( " );
+
+		List<CaseSearchedExpression.WhenFragment> whenFragments = caseSearchedExpression.getWhenFragments();
+		int caseNumber = whenFragments.size();
+		CaseSearchedExpression.WhenFragment firstWhenFragment = null;
+		for ( int i = 0; i < caseNumber; i++ ) {
+			final CaseSearchedExpression.WhenFragment whenFragment = whenFragments.get( i );
+			Predicate predicate = whenFragment.getPredicate();
+			if ( i != 0 ) {
+				appendSql( ", " );
+				getLeftHandExpression( predicate ).accept( this );
+				appendSql( ", " );
+				whenFragment.getResult().accept( this );
+			}
+			else {
+				getLeftHandExpression( predicate ).accept( this );
+				firstWhenFragment = whenFragment;
+			}
+		}
+		appendSql( ", " );
+		firstWhenFragment.getResult().accept( this );
+
+		Expression otherwise = caseSearchedExpression.getOtherwise();
+		if ( otherwise != null ) {
+			appendSql( ", " );
+			otherwise.accept( this );
+		}
+
+		appendSql( ')' );
+	}
+
+	protected Expression getLeftHandExpression(Predicate predicate) {
+		if ( predicate instanceof NullnessPredicate ) {
+			return ( (NullnessPredicate) predicate ).getExpression();
+		}
+		assert predicate instanceof ComparisonPredicate;
+		return ( (ComparisonPredicate) predicate ).getLeftHandExpression();
 	}
 
 	@Override
-	public void visitCaseSimpleExpression(CaseSimpleExpression caseSimpleExpression) {
+	public final void visitCaseSimpleExpression(CaseSimpleExpression caseSimpleExpression) {
+		visitCaseSimpleExpression( caseSimpleExpression, false );
+	}
+
+	protected void visitCaseSimpleExpression(CaseSimpleExpression caseSimpleExpression, boolean inSelect) {
+		if ( inSelect ) {
+			visitAnsiCaseSimpleExpressionInSelect( caseSimpleExpression );
+		}
+		else {
+			visitAnsiCaseSimpleExpression( caseSimpleExpression );
+		}
+	}
+
+	protected void visitAnsiCaseSimpleExpression(CaseSimpleExpression caseSimpleExpression) {
 		appendSql( "case " );
 		caseSimpleExpression.getFixture().accept( this );
 		for ( CaseSimpleExpression.WhenFragment whenFragment : caseSimpleExpression.getWhenFragments() ) {
@@ -3294,8 +3419,28 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			appendSql( " then " );
 			whenFragment.getResult().accept( this );
 		}
-		appendSql( " else " );
-		caseSimpleExpression.getOtherwise().accept( this );
+		final Expression otherwise = caseSimpleExpression.getOtherwise();
+		if ( otherwise != null ) {
+			appendSql( " else " );
+			otherwise.accept( this );
+		}
+		appendSql( " end" );
+	}
+
+	protected void visitAnsiCaseSimpleExpressionInSelect(CaseSimpleExpression caseSimpleExpression) {
+		appendSql( "case " );
+		caseSimpleExpression.getFixture().accept( this );
+		for ( CaseSimpleExpression.WhenFragment whenFragment : caseSimpleExpression.getWhenFragments() ) {
+			appendSql( " when " );
+			whenFragment.getCheckValue().accept( this );
+			appendSql( " then " );
+			renderSelectExpression( whenFragment.getResult() );
+		}
+		final Expression otherwise = caseSimpleExpression.getOtherwise();
+		if ( otherwise != null ) {
+			appendSql( " else " );
+			renderSelectExpression( otherwise );
+		}
 		appendSql( " end" );
 	}
 

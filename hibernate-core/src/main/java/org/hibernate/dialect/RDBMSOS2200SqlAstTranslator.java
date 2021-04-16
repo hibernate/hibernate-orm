@@ -16,6 +16,7 @@ import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
+import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
@@ -84,6 +85,11 @@ public class RDBMSOS2200SqlAstTranslator<T extends JdbcOperation> extends Abstra
 			SqlTuple tuple,
 			ComparisonOperator operator) {
 		emulateTupleComparison( lhsExpressions, tuple.getExpressions(), operator, true );
+	}
+
+	@Override
+	protected void visitCaseSearchedExpression(CaseSearchedExpression caseSearchedExpression, boolean inSelect) {
+		visitDecodeCaseSearchedExpression( caseSearchedExpression );
 	}
 
 	@Override

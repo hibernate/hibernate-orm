@@ -15,6 +15,7 @@ import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
@@ -121,6 +122,17 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 			SqlTuple tuple,
 			ComparisonOperator operator) {
 		emulateTupleComparison( lhsExpressions, tuple.getExpressions(), operator, true );
+	}
+
+	@Override
+	protected void visitCaseSearchedExpression(CaseSearchedExpression caseSearchedExpression, boolean inSelect) {
+		// Oracle did not add support for CASE until 9i
+		if ( getDialect().getVersion() < 900 ) {
+			visitDecodeCaseSearchedExpression( caseSearchedExpression );
+		}
+		else {
+			visitAnsiCaseSearchedExpression( caseSearchedExpression );
+		}
 	}
 
 	@Override

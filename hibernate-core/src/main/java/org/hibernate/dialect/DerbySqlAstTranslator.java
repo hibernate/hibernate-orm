@@ -11,15 +11,18 @@ import java.util.List;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.sqm.sql.internal.SqmParameterInterpretation;
+import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.cte.CteContainer;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
+import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.NullnessLiteral;
+import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.select.QueryPart;
@@ -93,22 +96,7 @@ public class DerbySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 
 	@Override
 	protected void renderSelectExpression(Expression expression) {
-		// Null literals have to be casted in the select clause
-		if ( expression instanceof Literal ) {
-			final Literal literal = (Literal) expression;
-			if ( literal.getLiteralValue() == null ) {
-				renderCasted( literal );
-			}
-			else {
-				renderLiteral( literal, true );
-			}
-		}
-		else if ( expression instanceof NullnessLiteral || expression instanceof JdbcParameter || expression instanceof SqmParameterInterpretation ) {
-			renderCasted( expression );
-		}
-		else {
-			expression.accept( this );
-		}
+		renderSelectExpressionWithCastedOrInlinedPlainParameters( expression );
 	}
 
 	@Override

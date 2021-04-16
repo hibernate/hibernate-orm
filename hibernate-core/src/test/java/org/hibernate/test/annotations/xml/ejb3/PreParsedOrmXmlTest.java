@@ -13,7 +13,6 @@ import java.io.UncheckedIOException;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.internal.util.xml.XmlMappingOptionsStrategyRegistrationProvider;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -27,7 +26,6 @@ public class PreParsedOrmXmlTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected void prepareBootstrapRegistryBuilder(BootstrapServiceRegistryBuilder builder) {
 		super.prepareBootstrapRegistryBuilder( builder );
-		XmlMappingOptionsStrategyRegistrationProvider.applyJaxbStrategy( builder );
 	}
 
 	@Override

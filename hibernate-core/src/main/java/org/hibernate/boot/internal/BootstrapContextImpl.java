@@ -30,7 +30,6 @@ import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.annotations.reflection.JPAMetadataProvider;
 import org.hibernate.cfg.annotations.reflection.internal.JPAXMLOverriddenMetadataProvider;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -310,13 +309,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 
 	private JavaReflectionManager generateHcannReflectionManager() {
 		final JavaReflectionManager reflectionManager = new JavaReflectionManager();
-		if ( metadataBuildingOptions.getXmlMappingOptions().isPreferJaxb() ) {
-			reflectionManager.setMetadataProvider( new JPAXMLOverriddenMetadataProvider( this ) );
-		}
-		else {
-			// Legacy implementation based on DOM4J, for backwards compatibility.
-			reflectionManager.setMetadataProvider( new JPAMetadataProvider( this ) );
-		}
+		reflectionManager.setMetadataProvider( new JPAXMLOverriddenMetadataProvider( this ) );
 		return reflectionManager;
 	}
 

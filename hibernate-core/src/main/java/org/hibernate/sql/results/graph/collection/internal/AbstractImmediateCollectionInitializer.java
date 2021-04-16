@@ -183,11 +183,10 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 			}
 		}
 
-		final PluralAttributeMapping collectionAttributeMapping = getCollectionAttributeMapping();
-		final CollectionPersister collectionDescriptor = collectionAttributeMapping.getCollectionDescriptor();
-		final CollectionSemantics collectionSemantics = collectionDescriptor.getCollectionSemantics();
-
 		if ( collectionInstance == null && collectionKey != null ) {
+			final CollectionPersister collectionDescriptor = getCollectionAttributeMapping().getCollectionDescriptor();
+			final CollectionSemantics collectionSemantics = collectionDescriptor.getCollectionSemantics();
+
 			collectionInstance = collectionSemantics.instantiateWrapper(
 					collectionKey.getKey(),
 					getInitializingCollectionDescriptor(),
@@ -260,28 +259,12 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 			return;
 		}
 
+		resolveKeyCollectionValue( rowProcessingState );
+
 		final CollectionKey loadingKey = rowProcessingState.getCollectionKey();
-		if ( loadingKey != null ) {
+		if ( loadingKey != null && loadingKey.getRole().equals( getCollectionAttributeMapping().getNavigableRole().getNavigableName() ) ) {
 			collectionKey = loadingKey;
 			return;
-		}
-
-		final JdbcValuesSourceProcessingOptions processingOptions = rowProcessingState.getJdbcValuesSourceProcessingState()
-				.getProcessingOptions();
-
-		keyContainerValue = keyContainerAssembler.assemble(
-				rowProcessingState,
-				processingOptions
-		);
-
-		if ( keyCollectionAssembler == null || keyContainerAssembler == keyCollectionAssembler ) {
-			keyCollectionValue = keyContainerValue;
-		}
-		else {
-			keyCollectionValue = keyCollectionAssembler.assemble(
-					rowProcessingState,
-					processingOptions
-			);
 		}
 
 		Object keyContainerValue = getKeyContainerValue();
@@ -321,6 +304,26 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 			this.collectionKey = new CollectionKey(
 					collectionAttributeMapping.getCollectionDescriptor(),
 					parentKey
+			);
+		}
+	}
+
+	private void resolveKeyCollectionValue(RowProcessingState rowProcessingState) {
+		final JdbcValuesSourceProcessingOptions processingOptions = rowProcessingState.getJdbcValuesSourceProcessingState()
+				.getProcessingOptions();
+
+		keyContainerValue = keyContainerAssembler.assemble(
+				rowProcessingState,
+				processingOptions
+		);
+
+		if ( keyCollectionAssembler == null || keyContainerAssembler == keyCollectionAssembler ) {
+			keyCollectionValue = keyContainerValue;
+		}
+		else {
+			keyCollectionValue = keyCollectionAssembler.assemble(
+					rowProcessingState,
+					processingOptions
 			);
 		}
 	}

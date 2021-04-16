@@ -53,7 +53,8 @@ public interface DeprecationLogger extends BasicLogger {
 	public void logDeprecationOfMultipleEntityModeSupport();
 
 	/**
-	 * Log message indicating the use of DOM4J EntityMode.
+	 * Log message indicating the use of features that were only useful for DOM4J EntityMode,
+	 * which was removed a long time ago.
 	 */
 	@LogMessage( level = WARN )
 	@Message(

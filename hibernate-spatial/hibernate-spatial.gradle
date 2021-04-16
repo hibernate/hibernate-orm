@@ -19,10 +19,6 @@ dependencies {
 
     compile( libraries.postgresql )
 
-    compile(libraries.dom4j) {
-        transitive = false
-    }
-
     testCompile(libraries.junit)
     testCompile(project(':hibernate-testing'))
     testCompile( project( path: ':hibernate-core', configuration: 'tests' ) )
@@ -33,6 +29,9 @@ dependencies {
     testCompile(libraries.validator) {
         // for test runtime
         transitive = true
+    }
+    testCompile(libraries.dom4j) {
+        transitive = false
     }
 
     testRuntime( libraries.expression_language )

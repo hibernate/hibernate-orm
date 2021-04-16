@@ -76,7 +76,7 @@ public class AdditionalJaxbMappingProducerImpl implements AdditionalJaxbMappingP
 
 		final MappingCollector mappingCollector = new MappingCollector() {
 			@Override
-			public void addDocument(Document document) throws DocumentException {
+			public void addDocument(Document document) {
 				dump( document );
 
 				// while the commented-out code here is more efficient (well, understanding that

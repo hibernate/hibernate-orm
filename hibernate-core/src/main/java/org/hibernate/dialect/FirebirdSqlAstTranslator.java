@@ -134,22 +134,7 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 
 	@Override
 	protected void renderSelectExpression(Expression expression) {
-		// Null literals have to be casted in the select clause
-		if ( expression instanceof Literal ) {
-			final Literal literal = (Literal) expression;
-			if ( literal.getLiteralValue() == null ) {
-				renderCasted( literal );
-			}
-			else {
-				renderLiteral( literal, true );
-			}
-		}
-		else if ( expression instanceof NullnessLiteral || expression instanceof JdbcParameter || expression instanceof SqmParameterInterpretation ) {
-			renderCasted( expression );
-		}
-		else {
-			expression.accept( this );
-		}
+		renderSelectExpressionWithCastedOrInlinedPlainParameters( expression );
 	}
 
 	@Override

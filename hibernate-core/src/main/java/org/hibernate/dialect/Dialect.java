@@ -49,7 +49,6 @@ import org.hibernate.mapping.Constraint;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Table;
-import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.SqlExpressable;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -66,15 +65,12 @@ import org.hibernate.query.sqm.mutation.internal.idtable.AfterUseAction;
 import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
 import org.hibernate.query.sqm.mutation.internal.idtable.PersistentTableStrategy;
 import org.hibernate.query.sqm.mutation.internal.idtable.PhysicalIdTableExporter;
-import org.hibernate.query.sqm.mutation.internal.inline.InlineStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.*;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.spi.ANSICaseExpressionWalker;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
-import org.hibernate.sql.ast.spi.CaseExpressionWalker;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
@@ -2183,17 +2179,6 @@ public abstract class Dialect implements ConversionContext {
 	@Deprecated
 	public CaseFragment createCaseFragment() {
 		return new ANSICaseFragment();
-	}
-
-	/**
-	 * Create a {@link CaseExpressionWalker} responsible
-	 * for handling this dialect's variations in how CASE statements are
-	 * handled.
-	 *
-	 * @return This dialect's {@link CaseFragment} strategy.
-	 */
-	public CaseExpressionWalker getCaseExpressionWalker() {
-		return ANSICaseExpressionWalker.INSTANCE;
 	}
 
 	/**

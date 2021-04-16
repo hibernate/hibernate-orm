@@ -26,7 +26,6 @@ import org.hibernate.annotations.common.reflection.java.JavaMetadataProvider;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappings;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbSequenceGenerator;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbTableGenerator;
-import org.hibernate.boot.jaxb.spi.XmlMappingOptions;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
@@ -48,7 +47,7 @@ public final class JPAXMLOverriddenMetadataProvider implements MetadataProvider 
 	 * We allow fully disabling XML sources so to improve the efficiency of
 	 * the boot process for those not using it.
 	 */
-	private final XmlMappingOptions xmlMappingOptions;
+	private final boolean xmlMappingEnabled;
 
 	private Map<Object, Object> defaults;
 	private Map<AnnotatedElement, AnnotationReader> cache;
@@ -56,7 +55,7 @@ public final class JPAXMLOverriddenMetadataProvider implements MetadataProvider 
 	public JPAXMLOverriddenMetadataProvider(BootstrapContext bootstrapContext) {
 		this.classLoaderAccess = bootstrapContext.getClassLoaderAccess();
 		this.xmlContext = new XMLContext( classLoaderAccess );
-		this.xmlMappingOptions = bootstrapContext.getMetadataBuildingOptions().getXmlMappingOptions();
+		this.xmlMappingEnabled = bootstrapContext.getMetadataBuildingOptions().isXmlMappingEnabled();
 	}
 
 	//all of the above can be safely rebuilt from XMLContext: only XMLContext this object is serialized
@@ -89,7 +88,7 @@ public final class JPAXMLOverriddenMetadataProvider implements MetadataProvider 
 
 	@Override
 	public Map<Object, Object> getDefaults() {
-		if ( !xmlMappingOptions.isEnabled() ) {
+		if ( !xmlMappingEnabled ) {
 			return Collections.emptyMap();
 		}
 		else {

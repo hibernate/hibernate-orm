@@ -19,7 +19,6 @@ import org.hibernate.boot.jaxb.internal.stax.HbmEventReader;
 import org.hibernate.boot.jaxb.internal.stax.JpaOrmXmlEventReader;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappings;
 import org.hibernate.boot.jaxb.spi.Binding;
-import org.hibernate.boot.jaxb.spi.XmlMappingOptions;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.xsd.MappingXsdSupport;
 import org.hibernate.internal.util.config.ConfigurationException;

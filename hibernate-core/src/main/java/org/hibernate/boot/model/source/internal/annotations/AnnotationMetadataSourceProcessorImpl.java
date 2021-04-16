@@ -24,7 +24,6 @@ import org.hibernate.boot.AttributeConverterInfo;
 import org.hibernate.boot.internal.MetadataBuildingContextRootImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappings;
 import org.hibernate.boot.jaxb.spi.Binding;
-import org.hibernate.boot.jaxb.spi.XmlMappingOptions;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
@@ -77,8 +76,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 		this.classLoaderService = rootMetadataBuildingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class );
 
 		MetadataBuildingOptions metadataBuildingOptions = rootMetadataBuildingContext.getBuildingOptions();
-		XmlMappingOptions xmlMappingOptions = metadataBuildingOptions.getXmlMappingOptions();
-		if ( xmlMappingOptions.isEnabled() ) {
+		if ( metadataBuildingOptions.isXmlMappingEnabled() ) {
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 			// Ewww.  This is temporary until we migrate to Jandex + StAX for annotation binding
 			final JPAXMLOverriddenMetadataProvider jpaMetadataProvider = (JPAXMLOverriddenMetadataProvider) ( (MetadataProviderInjector) reflectionManager )

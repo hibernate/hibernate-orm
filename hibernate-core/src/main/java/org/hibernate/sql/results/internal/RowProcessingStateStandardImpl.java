@@ -8,11 +8,13 @@ package org.hibernate.sql.results.internal;
 
 import java.util.List;
 
+import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.exec.spi.Callback;
+import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.entity.EntityFetch;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesSourceProcessingStateStandardImpl;
@@ -28,20 +30,20 @@ public class RowProcessingStateStandardImpl implements RowProcessingState {
 	private static final Initializer[] NO_INITIALIZERS = new Initializer[0];
 
 	private final JdbcValuesSourceProcessingStateStandardImpl resultSetProcessingState;
-	private final QueryOptions queryOptions;
 
 	private final Initializer[] initializers;
 
 	private final RowReader<?> rowReader;
 	private final JdbcValues jdbcValues;
+	private final ExecutionContext executionContext;
 
 	public RowProcessingStateStandardImpl(
 			JdbcValuesSourceProcessingStateStandardImpl resultSetProcessingState,
-			QueryOptions queryOptions,
+			ExecutionContext executionContext,
 			RowReader<?> rowReader,
 			JdbcValues jdbcValues) {
 		this.resultSetProcessingState = resultSetProcessingState;
-		this.queryOptions = queryOptions;
+		this.executionContext = executionContext;
 		this.rowReader = rowReader;
 		this.jdbcValues = jdbcValues;
 
@@ -113,7 +115,7 @@ public class RowProcessingStateStandardImpl implements RowProcessingState {
 
 	@Override
 	public QueryOptions getQueryOptions() {
-		return queryOptions;
+		return executionContext.getQueryOptions();
 	}
 
 	@Override
@@ -124,6 +126,11 @@ public class RowProcessingStateStandardImpl implements RowProcessingState {
 	@Override
 	public Callback getCallback() {
 		return afterLoadAction -> {};
+	}
+
+	@Override
+	public CollectionKey getCollectionKey() {
+		return executionContext.getCollectionKey();
 	}
 
 	@Override

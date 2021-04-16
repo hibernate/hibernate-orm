@@ -43,13 +43,16 @@ public class DelayedCollectionInitializer extends AbstractCollectionInitializer 
 
 	@Override
 	public void resolveKey(RowProcessingState rowProcessingState) {
+		super.resolveKey( rowProcessingState );
 		if ( collectionKey != null ) {
 			// already resolved
 			return;
 		}
 
+
 		final CollectionKey loadingKey = rowProcessingState.getCollectionKey();
-		if ( loadingKey != null ) {
+		if ( loadingKey != null && loadingKey.getRole()
+				.equals( getCollectionAttributeMapping().getNavigableRole().getNavigableName() ) ) {
 			collectionKey = loadingKey;
 			return;
 		}

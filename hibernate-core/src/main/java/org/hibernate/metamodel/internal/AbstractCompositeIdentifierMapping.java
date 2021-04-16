@@ -86,6 +86,15 @@ public abstract class AbstractCompositeIdentifierMapping
 				.appendContainer( EntityIdentifierMapping.ROLE_LOCAL_NAME );
 	}
 
+	/**
+	 * Does the identifier have a corresponding EmbeddableId or IdClass?
+	 *
+	 * @return false if there is not an IdCass or an EmbeddableId
+	 */
+	public boolean hasContainingClass(){
+		return true;
+	}
+
 	@Override
 	public EmbeddableMappingType getMappedType() {
 		return embeddableDescriptor;

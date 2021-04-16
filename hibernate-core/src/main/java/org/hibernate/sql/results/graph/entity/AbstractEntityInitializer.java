@@ -44,6 +44,7 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableAssembler;
 import org.hibernate.sql.results.internal.NullValueAssembler;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
@@ -73,6 +74,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	private final List<Initializer> identifierInitializers = new ArrayList<>();
 
 	private final DomainResultAssembler identifierAssembler;
+	private final boolean embeddableIdentifierWithNoContainingClass;
 	private final DomainResultAssembler discriminatorAssembler;
 	private final DomainResultAssembler versionAssembler;
 	private final DomainResultAssembler<Object> rowIdAssembler;
@@ -81,7 +83,6 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 	// per-row state
 	private EntityPersister concreteDescriptor;
-	private Object entityIdentifier;
 	private EntityKey entityKey;
 	private Object entityInstance;
 	private boolean missing;
@@ -99,7 +100,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			DomainResult<?> versionResult,
 			DomainResult<Object> rowIdResult,
 			AssemblerCreationState creationState) {
-		super( );
+		super();
 
 		this.referencedModelPart = resultDescriptor.getEntityValuedModelPart();
 		this.entityDescriptor = (EntityPersister) referencedModelPart.getEntityMappingType();
@@ -159,6 +160,8 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			this.identifierAssembler = null;
 		}
 
+		embeddableIdentifierWithNoContainingClass = hasEmbeddableIdentifierWithNoContainingClass( identifierAssembler );
+
 		if ( discriminatorResult != null ) {
 			discriminatorAssembler = discriminatorResult.createResultAssembler( creationState );
 		}
@@ -197,7 +200,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 					final DomainResultAssembler stateAssembler;
 					if ( fetch == null ) {
 						stateAssembler = new NullValueAssembler(
-								attributeMapping.getMappedType() .getMappedJavaTypeDescriptor()
+								attributeMapping.getMappedType().getMappedJavaTypeDescriptor()
 						);
 					}
 					else {
@@ -210,8 +213,15 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		);
 	}
 
+	protected final boolean hasEmbeddableIdentifierWithNoContainingClass(DomainResultAssembler identifierAssembler) {
+		if ( identifierAssembler instanceof EmbeddableAssembler ) {
+			return !( (EmbeddableAssembler) identifierAssembler ).hasContainingClass();
+		}
+		return false;
+	}
+
 	@Override
-	public ModelPart getInitializedPart(){
+	public ModelPart getInitializedPart() {
 		return referencedModelPart;
 	}
 
@@ -290,7 +300,6 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			return;
 		}
 
-		initializeIdentifier( rowProcessingState );
 		resolveEntityKey( rowProcessingState );
 
 		if ( entityKey == null ) {
@@ -334,10 +343,10 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 		final EntityPersister concreteType = session.getFactory().getMetamodel().findEntityDescriptor( concreteEntityName );
 
-		if ( concreteType == null || ! concreteType.isTypeOrSuperType( entityDescriptor ) ) {
+		if ( concreteType == null || !concreteType.isTypeOrSuperType( entityDescriptor ) ) {
 			throw new WrongClassException(
 					concreteEntityName,
-					entityIdentifier,
+					null,
 					entityDescriptor.getEntityName(),
 					discriminatorValue
 			);
@@ -347,29 +356,6 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		assert concreteType.isTypeOrSuperType( entityDescriptor );
 
 		return concreteType;
-	}
-
-	@SuppressWarnings("WeakerAccess")
-	protected void initializeIdentifier(RowProcessingState rowProcessingState) {
-		if ( EntityLoadingLogger.TRACE_ENABLED ) {
-			EntityLoadingLogger.LOGGER.tracef(
-					"(%s) Beginning Initializer#initializeIdentifier process for entity (%s) ",
-					StringHelper.collapse( this.getClass().getName() ),
-					getNavigablePath()
-			);
-		}
-
-		identifierInitializers.forEach( initializer -> initializer.resolveKey( rowProcessingState ) );
-		identifierInitializers.forEach( initializer -> initializer.resolveInstance( rowProcessingState ) );
-		identifierInitializers.forEach( initializer -> initializer.initializeInstance( rowProcessingState ) );
-
-		if ( EntityLoadingLogger.TRACE_ENABLED ) {
-			EntityLoadingLogger.LOGGER.tracef(
-					"(%s) Fiish Initializer#initializeIdentifier process for entity (%s) ",
-					StringHelper.collapse( this.getClass().getName() ),
-					getNavigablePath()
-			);
-		}
 	}
 
 	@SuppressWarnings("WeakerAccess")
@@ -388,6 +374,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			id = jdbcValuesSourceProcessingState.getProcessingOptions().getEffectiveOptionalId();
 		}
 		else {
+			initializeIdentifier( rowProcessingState );
 			id = identifierAssembler.assemble(
 					rowProcessingState,
 					jdbcValuesSourceProcessingState.getProcessingOptions()
@@ -399,6 +386,11 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			// EARLY EXIT!!!
 			return;
 		}
+
+		if ( embeddableIdentifierWithNoContainingClass ) {
+			entityInstance = id;
+		}
+
 		//		2) build the EntityKey
 		this.entityKey = new EntityKey( id, concreteDescriptor );
 
@@ -411,6 +403,31 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			if ( !session.getPersistenceContext().containsEntity( entityKey ) ) {
 				session.getPersistenceContext().getBatchFetchQueue().addBatchLoadableEntityKey( entityKey );
 			}
+		}
+	}
+
+	@SuppressWarnings("WeakerAccess")
+	protected void initializeIdentifier(RowProcessingState rowProcessingState) {
+		if ( EntityLoadingLogger.TRACE_ENABLED ) {
+			EntityLoadingLogger.LOGGER.tracef(
+					"(%s) Beginning Initializer#initializeIdentifier process for entity (%s) ",
+					StringHelper.collapse( this.getClass().getName() ),
+					getNavigablePath()
+			);
+		}
+
+		if ( !embeddableIdentifierWithNoContainingClass ) {
+			identifierInitializers.forEach( initializer -> initializer.resolveKey( rowProcessingState ) );
+			identifierInitializers.forEach( initializer -> initializer.resolveInstance( rowProcessingState ) );
+			identifierInitializers.forEach( initializer -> initializer.initializeInstance( rowProcessingState ) );
+		}
+
+		if ( EntityLoadingLogger.TRACE_ENABLED ) {
+			EntityLoadingLogger.LOGGER.tracef(
+					"(%s) Fiish Initializer#initializeIdentifier process for entity (%s) ",
+					StringHelper.collapse( this.getClass().getName() ),
+					getNavigablePath()
+			);
 		}
 	}
 

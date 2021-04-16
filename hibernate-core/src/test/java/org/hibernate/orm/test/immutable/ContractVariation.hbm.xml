@@ -15,7 +15,7 @@
      
 -->
 
-<hibernate-mapping package="org.hibernate.test.immutable">
+<hibernate-mapping package="org.hibernate.orm.test.immutable">
     <class name="Info" mutable="true">
         <id name="id">
             <generator class="increment"/>

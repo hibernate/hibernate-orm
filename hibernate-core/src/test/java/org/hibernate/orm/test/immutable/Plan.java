@@ -6,7 +6,8 @@
  */
 
 //$Id: ContractVariation.java 7222 2005-06-19 17:22:01Z oneovthafew $
-package org.hibernate.test.immutable;
+package org.hibernate.orm.test.immutable;
+
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Iterator;

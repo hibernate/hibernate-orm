@@ -6,9 +6,12 @@
  */
 package org.hibernate.testing.orm.junit;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -35,6 +38,8 @@ public abstract class BaseSessionFactoryFunctionalTest
 		SessionFactoryProducer, SessionFactoryScopeAware {
 
 	protected static final Class[] NO_CLASSES = new Class[0];
+	protected static final String[] NO_MAPPINGS = new String[0];
+
 	private static final Logger log = Logger.getLogger( BaseSessionFactoryFunctionalTest.class );
 
 	private ServiceRegistryScope registryScope;
@@ -75,18 +80,40 @@ public abstract class BaseSessionFactoryFunctionalTest
 	@Override
 	public MetadataImplementor produceModel(StandardServiceRegistry serviceRegistry) {
 		MetadataSources metadataSources = new MetadataSources( serviceRegistry );
+		MetadataBuilder metadataBuilder = metadataSources.getMetadataBuilder();
+		applyMetadataBuilder(metadataBuilder);
 		applyMetadataSources( metadataSources );
 		return (MetadataImplementor) metadataSources.buildMetadata();
 	}
 
+	protected void applyMetadataBuilder(MetadataBuilder metadataBuilder) {
+
+	}
+
 	protected void applyMetadataSources(MetadataSources metadataSources) {
+
 		for ( Class annotatedClass : getAnnotatedClasses() ) {
 			metadataSources.addAnnotatedClass( annotatedClass );
+		}
+		String[] xmlFiles = getOrmXmlFiles();
+		if ( xmlFiles != null ) {
+			for ( String xmlFile : xmlFiles ) {
+				try ( InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream( xmlFile ) ) {
+					metadataSources.addInputStream( is );
+				}
+				catch (IOException e) {
+					throw new IllegalArgumentException( e );
+				}
+			}
 		}
 	}
 
 	protected Class[] getAnnotatedClasses() {
 		return NO_CLASSES;
+	}
+
+	protected String[] getOrmXmlFiles() {
+		return NO_MAPPINGS;
 	}
 
 	@Override
@@ -161,6 +188,14 @@ public abstract class BaseSessionFactoryFunctionalTest
 
 	protected <T> T fromTransaction(Function<SessionImplementor, T> action) {
 		return sessionFactoryScope().fromTransaction( action );
+	}
+
+	protected void inSession(Consumer<SessionImplementor> action){
+		sessionFactoryScope.inSession( action );
+	}
+
+	protected <T> T fromSession(Function<SessionImplementor, T> action){
+		return sessionFactoryScope.fromSession( action );
 	}
 
 }

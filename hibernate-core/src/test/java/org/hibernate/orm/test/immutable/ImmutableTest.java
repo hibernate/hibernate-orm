@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.immutable;
+package org.hibernate.orm.test.immutable;
 
 import java.util.Iterator;
 import javax.persistence.PersistenceException;
@@ -13,31 +13,34 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
 import org.hibernate.Hibernate;
-import org.hibernate.Session;
-import org.hibernate.cfg.Configuration;
+import org.hibernate.boot.MetadataBuilder;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.TextType;
 import org.hibernate.type.descriptor.jdbc.ClobTypeDescriptor;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
+import org.hibernate.testing.orm.junit.DialectContext;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Gavin King
  */
-public class ImmutableTest extends BaseCoreFunctionalTestCase {
+public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
+
 	private static class TextAsMaterializedClobType extends AbstractSingleColumnStandardBasicType<String> {
 		public final static TextAsMaterializedClobType INSTANCE = new TextAsMaterializedClobType();
 
@@ -51,17 +54,22 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-	public void configure(Configuration cfg) {
-		if ( Oracle8iDialect.class.isInstance( getDialect() ) ) {
-			cfg.registerTypeOverride( TextAsMaterializedClobType.INSTANCE );
+	protected void applyMetadataBuilder(MetadataBuilder metadataBuilder) {
+		Dialect dialect = DialectContext.getDialect();
+		if ( OracleDialect.class.isInstance( dialect ) ) {
+			metadataBuilder.applyBasicType( TextAsMaterializedClobType.INSTANCE );
 		}
-		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
-		cfg.setProperty( Environment.STATEMENT_BATCH_SIZE, "0" );
 	}
 
 	@Override
-	public String[] getMappings() {
-		return new String[] { "immutable/ContractVariation.hbm.xml" };
+	protected void applySettings(StandardServiceRegistryBuilder builer) {
+		builer.applySetting( Environment.GENERATE_STATISTICS, "true" );
+		builer.applySetting( Environment.STATEMENT_BATCH_SIZE, "0" );
+	}
+
+	@Override
+	public String[] getOrmXmlFiles() {
+		return new String[] { "org/hibernate/orm/test/immutable/ContractVariation.hbm.xml" };
 	}
 
 	@Test
@@ -91,16 +99,16 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 				s -> {
 					s.beginTransaction();
 					try {
-						Contract c =  s.load(Contract.class, contract.getId());
+						Contract c = s.load( Contract.class, contract.getId() );
 //						Contract c = (Contract) s.createCriteria(Contract.class).uniqueResult();
 						assertTrue( s.isReadOnly( c ) );
-						assertEquals( c.getCustomerName(), "gavin" );
-						assertEquals( c.getVariations().size(), 2 );
-						Iterator it = c.getVariations().iterator();
-						ContractVariation cv1 = (ContractVariation) it.next();
-						assertEquals( cv1.getText(), "expensive" );
-						ContractVariation cv2 = (ContractVariation) it.next();
-						assertEquals( cv2.getText(), "more expensive" );
+						assertEquals( "gavin", c.getCustomerName() );
+						assertEquals( 2, c.getVariations().size() );
+						Iterator<ContractVariation> it = c.getVariations().iterator();
+						ContractVariation cv1 = it.next();
+						assertEquals( "expensive", cv1.getText() );
+						ContractVariation cv2 = it.next();
+						assertEquals( "more expensive", cv2.getText() );
 						assertTrue( s.isReadOnly( cv1 ) );
 						assertTrue( s.isReadOnly( cv2 ) );
 
@@ -155,13 +163,13 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 				s -> {
 					Contract c = s.load( Contract.class, contract.getId() );
 					assertTrue( s.isReadOnly( c ) );
-					assertEquals( c.getCustomerName(), "gavin" );
-					assertEquals( c.getVariations().size(), 2 );
-					Iterator it = c.getVariations().iterator();
-					ContractVariation cv1 = (ContractVariation) it.next();
-					assertEquals( cv1.getText(), "expensive" );
-					ContractVariation cv2 = (ContractVariation) it.next();
-					assertEquals( cv2.getText(), "more expensive" );
+					assertEquals( "gavin", c.getCustomerName() );
+					assertEquals( 2, c.getVariations().size() );
+					Iterator<ContractVariation> it = c.getVariations().iterator();
+					ContractVariation cv1 = it.next();
+					assertEquals( "expensive", cv1.getText() );
+					ContractVariation cv2 = it.next();
+					assertEquals( "more expensive", cv2.getText() );
 					assertTrue( s.isReadOnly( cv1 ) );
 					assertTrue( s.isReadOnly( cv2 ) );
 
@@ -221,13 +229,13 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 				s -> {
 					Contract c = getContract( s );
 					assertTrue( s.isReadOnly( c ) );
-					assertEquals( c.getCustomerName(), "gavin" );
-					assertEquals( c.getVariations().size(), 2 );
-					Iterator it = c.getVariations().iterator();
-					ContractVariation cv1 = (ContractVariation) it.next();
-					assertEquals( cv1.getText(), "expensive" );
-					ContractVariation cv2 = (ContractVariation) it.next();
-					assertEquals( cv2.getText(), "more expensive" );
+					assertEquals( "gavin", c.getCustomerName() );
+					assertEquals( 2, c.getVariations().size() );
+					Iterator<ContractVariation> it = c.getVariations().iterator();
+					ContractVariation cv1 = it.next();
+					assertEquals( "expensive", cv1.getText() );
+					ContractVariation cv2 = it.next();
+					assertEquals( "more expensive", cv2.getText() );
 					assertTrue( s.isReadOnly( cv1 ) );
 					assertTrue( s.isReadOnly( cv2 ) );
 					s.delete( c );
@@ -268,13 +276,13 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 				s -> {
 					Contract c = getContract( s );
 					assertTrue( s.isReadOnly( c ) );
-					assertEquals( c.getCustomerName(), "gavin" );
-					assertEquals( c.getVariations().size(), 2 );
-					Iterator it = c.getVariations().iterator();
-					ContractVariation cv1 = (ContractVariation) it.next();
-					assertEquals( cv1.getText(), "expensive" );
-					ContractVariation cv2 = (ContractVariation) it.next();
-					assertEquals( cv2.getText(), "more expensive" );
+					assertEquals( "gavin", c.getCustomerName() );
+					assertEquals( 2, c.getVariations().size() );
+					Iterator<ContractVariation> it = c.getVariations().iterator();
+					ContractVariation cv1 = it.next();
+					assertEquals( "expensive", cv1.getText() );
+					ContractVariation cv2 = it.next();
+					assertEquals( "more expensive", cv2.getText() );
 					assertTrue( s.isReadOnly( cv1 ) );
 					assertTrue( s.isReadOnly( cv2 ) );
 					s.delete( c );
@@ -314,13 +322,13 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 				s -> {
 					Contract c = getContract( s );
 					assertTrue( s.isReadOnly( c ) );
-					assertEquals( c.getCustomerName(), "gavin" );
-					assertEquals( c.getVariations().size(), 2 );
-					Iterator it = c.getVariations().iterator();
-					ContractVariation cv1 = (ContractVariation) it.next();
-					assertEquals( cv1.getText(), "expensive" );
-					ContractVariation cv2 = (ContractVariation) it.next();
-					assertEquals( cv2.getText(), "more expensive" );
+					assertEquals( "gavin", c.getCustomerName() );
+					assertEquals( 2, c.getVariations().size() );
+					Iterator<ContractVariation> it = c.getVariations().iterator();
+					ContractVariation cv1 = it.next();
+					assertEquals( "expensive", cv1.getText() );
+					ContractVariation cv2 = it.next();
+					assertEquals( "more expensive", cv2.getText() );
 					assertTrue( s.isReadOnly( cv1 ) );
 					assertTrue( s.isReadOnly( cv2 ) );
 					s.delete( c );
@@ -360,13 +368,13 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 				s -> {
 					Contract c = getContract( s );
 					assertTrue( s.isReadOnly( c ) );
-					assertEquals( c.getCustomerName(), "gavin" );
-					assertEquals( c.getVariations().size(), 2 );
-					Iterator it = c.getVariations().iterator();
-					ContractVariation cv1 = (ContractVariation) it.next();
-					assertEquals( cv1.getText(), "expensive" );
-					ContractVariation cv2 = (ContractVariation) it.next();
-					assertEquals( cv2.getText(), "more expensive" );
+					assertEquals( "gavin", c.getCustomerName() );
+					assertEquals( 2, c.getVariations().size() );
+					Iterator<ContractVariation> it = c.getVariations().iterator();
+					ContractVariation cv1 = it.next();
+					assertEquals( "expensive", cv1.getText() );
+					ContractVariation cv2 = it.next();
+					assertEquals( "more expensive", cv2.getText() );
 					assertTrue( s.isReadOnly( cv1 ) );
 					assertTrue( s.isReadOnly( cv2 ) );
 					s.delete( c );
@@ -407,13 +415,13 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 					// refresh detached
 					s.refresh( contract );
 					assertTrue( s.isReadOnly( contract ) );
-					assertEquals( contract.getCustomerName(), "gavin" );
-					assertEquals( contract.getVariations().size(), 2 );
-					Iterator it = contract.getVariations().iterator();
-					ContractVariation cv1 = (ContractVariation) it.next();
-					assertEquals( cv1.getText(), "expensive" );
-					ContractVariation cv2 = (ContractVariation) it.next();
-					assertEquals( cv2.getText(), "more expensive" );
+					assertEquals( "gavin", contract.getCustomerName() );
+					assertEquals( 2, contract.getVariations().size() );
+					Iterator<ContractVariation> it = contract.getVariations().iterator();
+					ContractVariation cv1 = it.next();
+					assertEquals( "expensive", cv1.getText() );
+					ContractVariation cv2 = it.next();
+					assertEquals( "more expensive", cv2.getText() );
 					assertTrue( s.isReadOnly( cv1 ) );
 					assertTrue( s.isReadOnly( cv2 ) );
 				}
@@ -429,13 +437,13 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 				s -> {
 					s.refresh( contract );
 					assertTrue( s.isReadOnly( contract ) );
-					assertEquals( contract.getCustomerName(), "gavin" );
-					assertEquals( contract.getVariations().size(), 2 );
-					Iterator it = contract.getVariations().iterator();
-					ContractVariation cv1 = (ContractVariation) it.next();
-					assertEquals( cv1.getText(), "expensive" );
-					ContractVariation cv2 = (ContractVariation) it.next();
-					assertEquals( cv2.getText(), "more expensive" );
+					assertEquals( "gavin", contract.getCustomerName() );
+					assertEquals( 2, contract.getVariations().size() );
+					Iterator<ContractVariation> it = contract.getVariations().iterator();
+					ContractVariation cv1 = it.next();
+					assertEquals( "expensive", cv1.getText() );
+					ContractVariation cv2 = it.next();
+					assertEquals( "more expensive", cv2.getText() );
 					assertTrue( s.isReadOnly( cv1 ) );
 					assertTrue( s.isReadOnly( cv2 ) );
 				}
@@ -488,7 +496,7 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 						Contract c = getContract( s );
 						assertTrue( s.isReadOnly( c ) );
 						c.setCustomerName( "foo bar" );
-						ContractVariation cv1 = (ContractVariation) c.getVariations().iterator().next();
+						ContractVariation cv1 = c.getVariations().iterator().next();
 						cv1.setText( "blah blah" );
 						assertTrue( s.isReadOnly( cv1 ) );
 						assertFalse( s.contains( contractVariation2 ) );
@@ -515,13 +523,13 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 				s -> {
 					Contract c = getContract( s );
 					assertTrue( s.isReadOnly( c ) );
-					assertEquals( c.getCustomerName(), "gavin" );
-					assertEquals( c.getVariations().size(), 2 );
-					Iterator it = c.getVariations().iterator();
-					ContractVariation cv1 = (ContractVariation) it.next();
-					assertEquals( cv1.getText(), "expensive" );
-					ContractVariation cv2 = (ContractVariation) it.next();
-					assertEquals( cv2.getText(), "more expensive" );
+					assertEquals( "gavin", c.getCustomerName() );
+					assertEquals( 2, c.getVariations().size() );
+					Iterator<ContractVariation> it = c.getVariations().iterator();
+					ContractVariation cv1 = it.next();
+					assertEquals( "expensive", cv1.getText() );
+					ContractVariation cv2 = it.next();
+					assertEquals( "more expensive", cv2.getText() );
 					assertTrue( s.isReadOnly( cv1 ) );
 					assertTrue( s.isReadOnly( cv2 ) );
 					s.delete( c );
@@ -565,7 +573,7 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 						Contract c = getContract( s );
 						assertTrue( s.isReadOnly( c ) );
 						c.setCustomerName( "foo bar" );
-						ContractVariation cv1 = (ContractVariation) c.getVariations().iterator().next();
+						ContractVariation cv1 = c.getVariations().iterator().next();
 						cv1.setText( "blah blah" );
 						assertTrue( s.isReadOnly( cv1 ) );
 						assertFalse( s.contains( contractVariation2 ) );
@@ -591,13 +599,13 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 				s -> {
 					Contract c = getContract( s );
 					assertTrue( s.isReadOnly( c ) );
-					assertEquals( c.getCustomerName(), "gavin" );
-					assertEquals( c.getVariations().size(), 2 );
-					Iterator it = c.getVariations().iterator();
-					ContractVariation cv1 = (ContractVariation) it.next();
-					assertEquals( cv1.getText(), "expensive" );
-					ContractVariation cv2 = (ContractVariation) it.next();
-					assertEquals( cv2.getText(), "more expensive" );
+					assertEquals( "gavin", c.getCustomerName() );
+					assertEquals( 2, c.getVariations().size() );
+					Iterator<ContractVariation> it = c.getVariations().iterator();
+					ContractVariation cv1 = it.next();
+					assertEquals( "expensive", cv1.getText() );
+					ContractVariation cv2 = it.next();
+					assertEquals( "more expensive", cv2.getText() );
 					assertTrue( s.isReadOnly( cv1 ) );
 					assertTrue( s.isReadOnly( cv2 ) );
 					s.delete( c );
@@ -631,13 +639,13 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 				s -> {
 					Contract c = getContract( s );
 					assertTrue( s.isReadOnly( c ) );
-					assertEquals( c.getCustomerName(), "gavin" );
-					assertEquals( c.getVariations().size(), 2 );
-					Iterator it = c.getVariations().iterator();
-					ContractVariation cv1 = (ContractVariation) it.next();
-					assertEquals( cv1.getText(), "expensive" );
-					ContractVariation cv2 = (ContractVariation) it.next();
-					assertEquals( cv2.getText(), "more expensive" );
+					assertEquals( "gavin", c.getCustomerName() );
+					assertEquals( 2, c.getVariations().size() );
+					Iterator<ContractVariation> it = c.getVariations().iterator();
+					ContractVariation cv1 = it.next();
+					assertEquals( "expensive", cv1.getText() );
+					ContractVariation cv2 = it.next();
+					assertEquals( "more expensive", cv2.getText() );
 					assertTrue( s.isReadOnly( cv1 ) );
 					assertTrue( s.isReadOnly( cv2 ) );
 					c.setCustomerName( "Sherman" );
@@ -671,13 +679,13 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 				s -> {
 					Contract c = s.get( Contract.class, contract.getId() );
 					assertTrue( s.isReadOnly( c ) );
-					assertEquals( c.getCustomerName(), "gavin" );
-					assertEquals( c.getVariations().size(), 2 );
-					Iterator it = c.getVariations().iterator();
-					ContractVariation cv1 = (ContractVariation) it.next();
-					assertEquals( cv1.getText(), "expensive" );
-					ContractVariation cv2 = (ContractVariation) it.next();
-					assertEquals( cv2.getText(), "more expensive" );
+					assertEquals( "gavin", c.getCustomerName() );
+					assertEquals( 2, c.getVariations().size() );
+					Iterator<ContractVariation> it = c.getVariations().iterator();
+					ContractVariation cv1 = it.next();
+					assertEquals( "expensive", cv1.getText() );
+					ContractVariation cv2 = it.next();
+					assertEquals( "more expensive", cv2.getText() );
 					assertTrue( s.isReadOnly( cv1 ) );
 					assertTrue( s.isReadOnly( cv2 ) );
 					c.setCustomerName( "Sherman" );
@@ -771,13 +779,13 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 						contract.setCustomerName( "foo bar" );
 						s.update( contract );
 						assertTrue( s.isReadOnly( contract ) );
-						for ( Iterator it = contract.getVariations().iterator(); it.hasNext(); ) {
+						for ( Iterator<ContractVariation> it = contract.getVariations().iterator(); it.hasNext(); ) {
 							assertTrue( s.contains( it.next() ) );
 						}
 						s.getTransaction().commit();
 						assertTrue( s.isReadOnly( contract ) );
-						for ( Iterator it = contract.getVariations().iterator(); it.hasNext(); ) {
-							ContractVariation cv = (ContractVariation) it.next();
+						for ( Iterator<ContractVariation> it = contract.getVariations().iterator(); it.hasNext(); ) {
+							ContractVariation cv = it.next();
 							assertTrue( s.contains( cv ) );
 							assertTrue( s.isReadOnly( cv ) );
 						}
@@ -796,13 +804,13 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 		inTransaction(
 				s -> {
 					Contract c = getContract( s );
-					assertEquals( c.getCustomerName(), "gavin" );
-					assertEquals( c.getVariations().size(), 2 );
-					Iterator it = c.getVariations().iterator();
-					ContractVariation cv1 = (ContractVariation) it.next();
-					assertEquals( cv1.getText(), "expensive" );
-					ContractVariation cv2 = (ContractVariation) it.next();
-					assertEquals( cv2.getText(), "more expensive" );
+					assertEquals( "gavin", c.getCustomerName() );
+					assertEquals( 2, c.getVariations().size() );
+					Iterator<ContractVariation> it = c.getVariations().iterator();
+					ContractVariation cv1 = it.next();
+					assertEquals( "expensive", cv1.getText() );
+					ContractVariation cv2 = it.next();
+					assertEquals( "more expensive", cv2.getText() );
 					s.delete( c );
 					assertAllContractAndVariationsAreDeleted( s );
 
@@ -833,7 +841,7 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 				s -> {
 					try {
 						s.beginTransaction();
-						ContractVariation cv1 = (ContractVariation) contract.getVariations().iterator().next();
+						ContractVariation cv1 = contract.getVariations().iterator().next();
 						cv1.setText( "blah blah" );
 						s.update( contract );
 						assertTrue( s.isReadOnly( contract ) );
@@ -858,13 +866,13 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 		inTransaction(
 				s -> {
 					Contract c = getContract( s );
-					assertEquals( c.getCustomerName(), "gavin" );
-					assertEquals( c.getVariations().size(), 2 );
-					Iterator it = c.getVariations().iterator();
-					ContractVariation cv1 = (ContractVariation) it.next();
-					assertEquals( cv1.getText(), "expensive" );
-					ContractVariation cv2 = (ContractVariation) it.next();
-					assertEquals( cv2.getText(), "more expensive" );
+					assertEquals( "gavin", c.getCustomerName() );
+					assertEquals( 2, c.getVariations().size() );
+					Iterator<ContractVariation> it = c.getVariations().iterator();
+					ContractVariation cv1 = it.next();
+					assertEquals( "expensive", cv1.getText() );
+					ContractVariation cv2 = it.next();
+					assertEquals( "more expensive", cv2.getText() );
 					s.delete( c );
 					assertAllContractAndVariationsAreDeleted( s );
 
@@ -916,13 +924,13 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 		inTransaction(
 				s -> {
 					Contract c = getContract( s );
-					assertEquals( c.getCustomerName(), "gavin" );
-					assertEquals( c.getVariations().size(), 2 );
-					Iterator it = c.getVariations().iterator();
-					ContractVariation cv1 = (ContractVariation) it.next();
-					assertEquals( cv1.getText(), "expensive" );
-					ContractVariation cv2 = (ContractVariation) it.next();
-					assertEquals( cv2.getText(), "more expensive" );
+					assertEquals( "gavin", c.getCustomerName() );
+					assertEquals( 2, c.getVariations().size() );
+					Iterator<ContractVariation> it = c.getVariations().iterator();
+					ContractVariation cv1 = it.next();
+					assertEquals( "expensive", cv1.getText() );
+					ContractVariation cv2 = it.next();
+					assertEquals( "more expensive", cv2.getText() );
 					s.delete( c );
 
 					assertAllContractAndVariationsAreDeleted( s );
@@ -955,9 +963,9 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 					Contract c = (Contract) s.merge( contract );
 					assertTrue( s.isReadOnly( c ) );
 					assertTrue( Hibernate.isInitialized( c.getVariations() ) );
-					Iterator it = c.getVariations().iterator();
-					ContractVariation cv1 = (ContractVariation) it.next();
-					ContractVariation cv2 = (ContractVariation) it.next();
+					Iterator<ContractVariation> it = c.getVariations().iterator();
+					ContractVariation cv1 = it.next();
+					ContractVariation cv2 = it.next();
 					assertTrue( s.isReadOnly( cv1 ) );
 					assertTrue( s.isReadOnly( cv2 ) );
 				}
@@ -969,13 +977,13 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 		inTransaction(
 				s -> {
 					Contract c = getContract( s );
-					assertEquals( c.getCustomerName(), "gavin" );
-					assertEquals( c.getVariations().size(), 2 );
-					Iterator it = c.getVariations().iterator();
-					ContractVariation cv1 = (ContractVariation) it.next();
-					assertEquals( cv1.getText(), "expensive" );
-					ContractVariation cv2 = (ContractVariation) it.next();
-					assertEquals( cv2.getText(), "more expensive" );
+					assertEquals( "gavin", c.getCustomerName() );
+					assertEquals( 2, c.getVariations().size() );
+					Iterator<ContractVariation> it = c.getVariations().iterator();
+					ContractVariation cv1 = it.next();
+					assertEquals( "expensive", cv1.getText() );
+					ContractVariation cv2 = it.next();
+					assertEquals( "more expensive", cv2.getText() );
 					s.delete( c );
 					assertAllContractAndVariationsAreDeleted( s );
 				}
@@ -1007,9 +1015,9 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 					Contract c = (Contract) s.merge( contract );
 					assertTrue( s.isReadOnly( c ) );
 					assertTrue( Hibernate.isInitialized( c.getVariations() ) );
-					Iterator it = c.getVariations().iterator();
-					ContractVariation cv1 = (ContractVariation) it.next();
-					ContractVariation cv2 = (ContractVariation) it.next();
+					Iterator<ContractVariation> it = c.getVariations().iterator();
+					ContractVariation cv1 = it.next();
+					ContractVariation cv2 = it.next();
 					assertTrue( s.isReadOnly( c ) );
 					assertTrue( s.isReadOnly( c ) );
 				}
@@ -1020,13 +1028,13 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 		inTransaction(
 				s -> {
 					Contract c = getContract( s );
-					assertEquals( c.getCustomerName(), "gavin" );
-					assertEquals( c.getVariations().size(), 2 );
-					Iterator it = c.getVariations().iterator();
-					ContractVariation cv1 = (ContractVariation) it.next();
-					assertEquals( cv1.getText(), "expensive" );
-					ContractVariation cv2 = (ContractVariation) it.next();
-					assertEquals( cv2.getText(), "more expensive" );
+					assertEquals( "gavin", c.getCustomerName() );
+					assertEquals( 2, c.getVariations().size() );
+					Iterator<ContractVariation> it = c.getVariations().iterator();
+					ContractVariation cv1 = it.next();
+					assertEquals( "expensive", cv1.getText() );
+					ContractVariation cv2 = it.next();
+					assertEquals( "more expensive", cv2.getText() );
 					s.delete( c );
 					assertAllContractAndVariationsAreDeleted( s );
 
@@ -1055,14 +1063,14 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 
 		inTransaction(
 				s -> {
-					ContractVariation cv1 = (ContractVariation) contract.getVariations().iterator().next();
+					ContractVariation cv1 = contract.getVariations().iterator().next();
 					cv1.setText( "blah blah" );
 					Contract c = (Contract) s.merge( contract );
 					assertTrue( s.isReadOnly( c ) );
 					assertTrue( Hibernate.isInitialized( c.getVariations() ) );
-					Iterator it = c.getVariations().iterator();
-					cv1 = (ContractVariation) it.next();
-					ContractVariation cv2 = (ContractVariation) it.next();
+					Iterator<ContractVariation> it = c.getVariations().iterator();
+					cv1 = it.next();
+					ContractVariation cv2 = it.next();
 					assertTrue( s.isReadOnly( c ) );
 					assertTrue( s.isReadOnly( c ) );
 				}
@@ -1073,13 +1081,13 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 		inTransaction(
 				s -> {
 					Contract c = getContract( s );
-					assertEquals( c.getCustomerName(), "gavin" );
-					assertEquals( c.getVariations().size(), 2 );
-					Iterator it = c.getVariations().iterator();
-					ContractVariation cv1 = (ContractVariation) it.next();
-					assertEquals( cv1.getText(), "expensive" );
-					ContractVariation cv2 = (ContractVariation) it.next();
-					assertEquals( cv2.getText(), "more expensive" );
+					assertEquals( "gavin", c.getCustomerName() );
+					assertEquals( 2, c.getVariations().size() );
+					Iterator<ContractVariation> it = c.getVariations().iterator();
+					ContractVariation cv1 = it.next();
+					assertEquals( "expensive", cv1.getText() );
+					ContractVariation cv2 = it.next();
+					assertEquals( "more expensive", cv2.getText() );
 					s.delete( c );
 					assertAllContractAndVariationsAreDeleted( s );
 				}
@@ -1122,17 +1130,16 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-
 		inTransaction(
 				s -> {
 					Contract c = getContract( s );
-					assertEquals( c.getCustomerName(), "gavin" );
-					assertEquals( c.getVariations().size(), 2 );
-					Iterator it = c.getVariations().iterator();
-					ContractVariation cv1 = (ContractVariation) it.next();
-					assertEquals( cv1.getText(), "expensive" );
-					ContractVariation cv2 = (ContractVariation) it.next();
-					assertEquals( cv2.getText(), "more expensive" );
+					assertEquals( "gavin", c.getCustomerName() );
+					assertEquals( 2, c.getVariations().size() );
+					Iterator<ContractVariation> it = c.getVariations().iterator();
+					ContractVariation cv1 = it.next();
+					assertEquals( "expensive", cv1.getText() );
+					ContractVariation cv2 = it.next();
+					assertEquals( "more expensive", cv2.getText() );
 					s.delete( c );
 					assertAllContractAndVariationsAreDeleted( s );
 
@@ -1172,15 +1179,15 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 		inTransaction(
 				s -> {
 					Contract c = getContract( s );
-					assertEquals( c.getCustomerName(), "gavin" );
-					assertEquals( c.getVariations().size(), 2 );
-					Iterator it = c.getVariations().iterator();
-					ContractVariation cv1 = (ContractVariation) it.next();
-					assertEquals( cv1.getText(), "expensive" );
+					assertEquals( "gavin", c.getCustomerName() );
+					assertEquals( 2, c.getVariations().size() );
+					Iterator<ContractVariation> it = c.getVariations().iterator();
+					ContractVariation cv1 = it.next();
+					assertEquals( "expensive", cv1.getText() );
 					assertEquals( 1, cv1.getInfos().size() );
 					assertEquals( "cv1 info", ( (Info) cv1.getInfos().iterator().next() ).getText() );
-					ContractVariation cv2 = (ContractVariation) it.next();
-					assertEquals( cv2.getText(), "more expensive" );
+					ContractVariation cv2 = it.next();
+					assertEquals( "more expensive", cv2.getText() );
 					s.delete( c );
 					assertAllContractAndVariationsAreDeleted( s );
 				}
@@ -1218,16 +1225,16 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 
 		inTransaction(
 				s -> {
-					Contract c = s.load( Contract.class, contract.getId() );
-					assertEquals( c.getCustomerName(), "gavin" );
-					assertEquals( c.getVariations().size(), 2 );
-					Iterator it = c.getVariations().iterator();
-					ContractVariation cv1 = (ContractVariation) it.next();
-					assertEquals( cv1.getText(), "expensive" );
+					Contract c = getContract( s );
+					assertEquals( "gavin", c.getCustomerName() );
+					assertEquals( 2, c.getVariations().size() );
+					Iterator<ContractVariation> it = c.getVariations().iterator();
+					ContractVariation cv1 = it.next();
+					assertEquals( "expensive", cv1.getText() );
 					assertEquals( 1, cv1.getInfos().size() );
 					assertEquals( "cv1 info", ( (Info) cv1.getInfos().iterator().next() ).getText() );
-					ContractVariation cv2 = (ContractVariation) it.next();
-					assertEquals( cv2.getText(), "more expensive" );
+					ContractVariation cv2 = it.next();
+					assertEquals( "more expensive", cv2.getText() );
 					s.delete( c );
 					assertAllContractAndVariationsAreDeleted( s );
 
@@ -1272,15 +1279,15 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 		inTransaction(
 				s -> {
 					Contract c = getContract( s );
-					assertEquals( c.getCustomerName(), "gavin" );
+					assertEquals( "gavin", c.getCustomerName() );
 					assertEquals( c.getVariations().size(), 2 );
-					Iterator it = c.getVariations().iterator();
-					ContractVariation cv1 = (ContractVariation) it.next();
-					assertEquals( cv1.getText(), "expensive" );
+					Iterator<ContractVariation> it = c.getVariations().iterator();
+					ContractVariation cv1 = it.next();
+					assertEquals( "expensive", cv1.getText() );
 					assertEquals( 1, cv1.getInfos().size() );
 					assertEquals( "new cv1 info", ( (Info) cv1.getInfos().iterator().next() ).getText() );
-					ContractVariation cv2 = (ContractVariation) it.next();
-					assertEquals( cv2.getText(), "more expensive" );
+					ContractVariation cv2 = it.next();
+					assertEquals( "more expensive", cv2.getText() );
 					s.delete( c );
 
 					assertAllContractAndVariationsAreDeleted( s );
@@ -1324,15 +1331,15 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 		inTransaction(
 				s -> {
 					Contract c = getContract( s );
-					assertEquals( c.getCustomerName(), "gavin" );
-					assertEquals( c.getVariations().size(), 2 );
-					Iterator it = c.getVariations().iterator();
-					ContractVariation cv1 = (ContractVariation) it.next();
-					assertEquals( cv1.getText(), "expensive" );
+					assertEquals( "gavin", c.getCustomerName() );
+					assertEquals( 2, c.getVariations().size() );
+					Iterator<ContractVariation> it = c.getVariations().iterator();
+					ContractVariation cv1 = it.next();
+					assertEquals( "expensive", cv1.getText() );
 					assertEquals( 1, cv1.getInfos().size() );
 					assertEquals( "new cv1 info", ( (Info) cv1.getInfos().iterator().next() ).getText() );
-					ContractVariation cv2 = (ContractVariation) it.next();
-					assertEquals( cv2.getText(), "more expensive" );
+					ContractVariation cv2 = it.next();
+					assertEquals( "more expensive", cv2.getText() );
 					s.delete( c );
 					assertAllContractAndVariationsAreDeleted( s );
 				}
@@ -1385,13 +1392,13 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 		inTransaction(
 				s -> {
 					Contract c = getContract( s );
-					assertEquals( c.getCustomerName(), "gavin" );
-					assertEquals( c.getVariations().size(), 2 );
-					Iterator it = c.getVariations().iterator();
-					ContractVariation cv1 = (ContractVariation) it.next();
-					assertEquals( cv1.getText(), "expensive" );
-					ContractVariation cv2 = (ContractVariation) it.next();
-					assertEquals( cv2.getText(), "more expensive" );
+					assertEquals( "gavin", c.getCustomerName() );
+					assertEquals( 2, c.getVariations().size() );
+					Iterator<ContractVariation> it = c.getVariations().iterator();
+					ContractVariation cv1 = it.next();
+					assertEquals( "expensive", cv1.getText() );
+					ContractVariation cv2 = it.next();
+					assertEquals( "more expensive", cv2.getText() );
 					//assertEquals( 2, c.getParties().size() );
 					s.delete( c );
 
@@ -1432,13 +1439,13 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 		inTransaction(
 				s -> {
 					Contract c = getContract( s );
-					assertEquals( c.getCustomerName(), "gavin" );
-					assertEquals( c.getVariations().size(), 2 );
-					Iterator it = c.getVariations().iterator();
-					ContractVariation cv1 = (ContractVariation) it.next();
-					assertEquals( cv1.getText(), "expensive" );
-					ContractVariation cv2 = (ContractVariation) it.next();
-					assertEquals( cv2.getText(), "more expensive" );
+					assertEquals( "gavin", c.getCustomerName() );
+					assertEquals( 2, c.getVariations().size() );
+					Iterator<ContractVariation> it = c.getVariations().iterator();
+					ContractVariation cv1 = it.next();
+					assertEquals( "expensive", cv1.getText() );
+					ContractVariation cv2 = it.next();
+					assertEquals( "more expensive", cv2.getText() );
 					//assertEquals( 0, c.getParties().size() );
 					s.delete( c );
 
@@ -1459,8 +1466,8 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 		contractVariation1.setText( "expensive" );
 		ContractVariation contractVariation2 = new ContractVariation( 2, contract );
 		contractVariation2.setText( "more expensive" );
-		Party party = new Party( "party1" );
-		contract.addParty( party );
+		Party p = new Party( "party1" );
+		contract.addParty( p );
 
 		inTransaction( s -> s.persist( contract ) );
 
@@ -1469,21 +1476,24 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 		assertUpdateCount( 0 );
 		clearCounts();
 
-		party = (Party) contract.getParties().iterator().next();
+		Party party = (Party) contract.getParties().iterator().next();
 
-		try (Session s = openSession()) {
-			try {
-				s.beginTransaction();
-				s.delete( party );
-				s.getTransaction().commit();
-			}
-			catch (Exception e) {
-				if ( s.getTransaction().isActive() ) {
-					s.getTransaction().rollback();
+		inSession(
+				s -> {
+					try {
+						s.beginTransaction();
+						s.delete( party );
+						s.getTransaction().commit();
+					}
+					catch (Exception e) {
+						if ( s.getTransaction().isActive() ) {
+							s.getTransaction().rollback();
+						}
+						throw e;
+					}
 				}
-				throw e;
-			}
-		}
+		);
+
 
 		assertUpdateCount( 0 );
 		assertDeleteCount( 1 );
@@ -1492,13 +1502,13 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 		inTransaction(
 				s -> {
 					Contract c = getContract( s );
-					assertEquals( c.getCustomerName(), "gavin" );
-					assertEquals( c.getVariations().size(), 2 );
-					Iterator it = c.getVariations().iterator();
-					ContractVariation cv1 = (ContractVariation) it.next();
-					assertEquals( cv1.getText(), "expensive" );
-					ContractVariation cv2 = (ContractVariation) it.next();
-					assertEquals( cv2.getText(), "more expensive" );
+					assertEquals( "gavin", c.getCustomerName() );
+					assertEquals( 2, c.getVariations().size() );
+					Iterator<ContractVariation> it = c.getVariations().iterator();
+					ContractVariation cv1 = it.next();
+					assertEquals( "expensive", cv1.getText() );
+					ContractVariation cv2 = it.next();
+					assertEquals( "more expensive", cv2.getText() );
 					assertEquals( 0, c.getParties().size() );
 					s.delete( c );
 					assertAllContractAndVariationsAreDeleted( s );
@@ -1530,7 +1540,7 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 		Party p = (Party) contract.getParties().iterator().next();
 		party.setContract( null );
 
-		try (Session s = openSession()) {
+		inSession( s -> {
 			try {
 				s.beginTransaction();
 				s.update( p );
@@ -1542,7 +1552,7 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 				}
 				throw e;
 			}
-		}
+		} );
 
 		inTransaction(
 				s -> {
@@ -1557,13 +1567,13 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 		inTransaction(
 				s -> {
 					Contract c = getContract( s );
-					assertEquals( c.getCustomerName(), "gavin" );
-					assertEquals( c.getVariations().size(), 2 );
-					Iterator it = c.getVariations().iterator();
-					ContractVariation cv1 = (ContractVariation) it.next();
-					assertEquals( cv1.getText(), "expensive" );
-					ContractVariation cv2 = (ContractVariation) it.next();
-					assertEquals( cv2.getText(), "more expensive" );
+					assertEquals( "gavin", c.getCustomerName() );
+					assertEquals( 2, c.getVariations().size() );
+					Iterator<ContractVariation> it = c.getVariations().iterator();
+					ContractVariation cv1 = it.next();
+					assertEquals( "expensive", cv1.getText() );
+					ContractVariation cv2 = it.next();
+					assertEquals( "more expensive", cv2.getText() );
 					assertEquals( 1, c.getParties().size() );
 					Party p1 = (Party) c.getParties().iterator().next();
 					assertEquals( "party1", p1.getName() );
@@ -1584,17 +1594,17 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 
 	protected void assertInsertCount(int expected) {
 		int inserts = (int) sessionFactory().getStatistics().getEntityInsertCount();
-		assertEquals( "unexpected insert count", expected, inserts );
+		assertEquals( expected, inserts, "unexpected insert count" );
 	}
 
 	protected void assertUpdateCount(int expected) {
 		int updates = (int) sessionFactory().getStatistics().getEntityUpdateCount();
-		assertEquals( "unexpected update counts", expected, updates );
+		assertEquals( expected, updates, "unexpected update counts" );
 	}
 
 	protected void assertDeleteCount(int expected) {
 		int deletes = (int) sessionFactory().getStatistics().getEntityDeleteCount();
-		assertEquals( "unexpected delete counts", expected, deletes );
+		assertEquals( expected, deletes, "unexpected delete counts" );
 	}
 
 	private Long getContractRowCount(SessionImplementor s) {

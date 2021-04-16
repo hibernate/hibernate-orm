@@ -6,7 +6,8 @@
  */
 
 //$Id: Contract.java 7222 2005-06-19 17:22:01Z oneovthafew $
-package org.hibernate.test.immutable;
+package org.hibernate.orm.test.immutable;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -84,7 +85,7 @@ public class Contract implements Serializable {
 		this.type = type;
 	}
 
-	public List getVariations() {
+	public List<ContractVariation> getVariations() {
 		return variations;
 	}
 

@@ -73,8 +73,13 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 
 	@Override
 	public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
-		final Serializable disassemble = bootCidDescriptor.getType().disassemble( entity, session, null );
-		return bootIdClassDescriptor.getType().assemble( disassemble, session, null );
+		if ( hasContainingClass() ) {
+			final Serializable disassemble = bootCidDescriptor.getType().disassemble( entity, session, null );
+			return bootIdClassDescriptor.getType().assemble( disassemble, session, null );
+		}
+		else {
+			return entity;
+		}
 	}
 
 	@Override
@@ -146,4 +151,8 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 		return idAttributeMappings.size();
 	}
 
+	@Override
+	public boolean hasContainingClass() {
+		return bootIdClassDescriptor != bootCidDescriptor;
+	}
 }

@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.results.graph.embeddable.internal;
 
+import org.hibernate.metamodel.internal.AbstractCompositeIdentifierMapping;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
@@ -16,16 +17,27 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * @author Steve Ebersole
  */
 public class EmbeddableAssembler implements DomainResultAssembler {
-	private final EmbeddableInitializer initializer;
-
+	protected final EmbeddableInitializer initializer;
+	private final boolean containingClass;
 
 	public EmbeddableAssembler(EmbeddableInitializer initializer) {
 		this.initializer = initializer;
+		if ( initializer instanceof AbstractCompositeIdentifierMapping ) {
+			containingClass = ( (AbstractCompositeIdentifierMapping) initializer.getInitializedPart() )
+					.hasContainingClass();
+		}
+		else {
+			containingClass = true;
+		}
 	}
 
 	@Override
 	public JavaTypeDescriptor getAssembledJavaTypeDescriptor() {
 		return initializer.getInitializedPart().getJavaTypeDescriptor();
+	}
+
+	public boolean hasContainingClass() {
+		return containingClass;
 	}
 
 	@Override

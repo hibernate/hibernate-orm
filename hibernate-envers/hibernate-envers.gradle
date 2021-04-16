@@ -16,6 +16,9 @@ dependencies {
         exclude group: "org.javassist", module: "javassist"
     }
 
+    // TODO HHH-13703: get rid of this dependency
+    compile( libraries.dom4j )
+
     provided( libraries.ant )
     annotationProcessor( project( ':hibernate-jpamodelgen' ) )
 

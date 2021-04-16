@@ -61,11 +61,6 @@ dependencies {
     compile( libraries.classmate )
     compile( libraries.activation )
 
-    // We need dom4j for a number of things temporarily:
-    //      1) (unsupported) EntityMode.DOM4J support
-    //      2) Envers
-    //      3) hibernate-commons-annotations
-    compile( libraries.dom4j )
     compile( libraries.commons_annotations )
     antlr( libraries.antlr )
 

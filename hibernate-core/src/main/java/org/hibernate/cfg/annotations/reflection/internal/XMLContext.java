@@ -54,7 +54,7 @@ public class XMLContext implements Serializable {
 	private boolean hasContext = false;
 
 	/**
-	 * @deprecated Use {@link org.hibernate.cfg.annotations.reflection.XMLContext#XMLContext(BootstrapContext)} instead.
+	 * @deprecated Use {@link #XMLContext(BootstrapContext)} instead.
 	 */
 	@Deprecated
 	public XMLContext(ClassLoaderAccess classLoaderAccess) {

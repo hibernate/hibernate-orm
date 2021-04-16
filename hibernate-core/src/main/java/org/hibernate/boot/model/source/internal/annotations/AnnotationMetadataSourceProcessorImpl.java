@@ -35,15 +35,12 @@ import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.cfg.AnnotationBinder;
 import org.hibernate.cfg.InheritanceState;
 import org.hibernate.cfg.annotations.reflection.AttributeConverterDefinitionCollector;
-import org.hibernate.cfg.annotations.reflection.JPAMetadataProvider;
 import org.hibernate.cfg.annotations.reflection.internal.JPAXMLOverriddenMetadataProvider;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 
 import org.jboss.jandex.IndexView;
 import org.jboss.logging.Logger;
-
-import org.dom4j.Document;
 
 /**
  * @author Steve Ebersole
@@ -84,39 +81,21 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 		if ( xmlMappingOptions.isEnabled() ) {
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 			// Ewww.  This is temporary until we migrate to Jandex + StAX for annotation binding
-			if ( xmlMappingOptions.isPreferJaxb() ) {
-				final JPAXMLOverriddenMetadataProvider jpaMetadataProvider = (JPAXMLOverriddenMetadataProvider) ( (MetadataProviderInjector) reflectionManager )
-						.getMetadataProvider();
-				for ( Binding<?> xmlBinding : managedResources.getXmlMappingBindings() ) {
-					Object root = xmlBinding.getRoot();
-					if ( !(root instanceof JaxbEntityMappings) ) {
-						continue;
-					}
-					JaxbEntityMappings entityMappings = (JaxbEntityMappings) xmlBinding.getRoot();
-
-					final List<String> classNames = jpaMetadataProvider.getXMLContext().addDocument( entityMappings );
-					for ( String className : classNames ) {
-						xClasses.add( toXClass( className, reflectionManager, classLoaderService ) );
-					}
+			final JPAXMLOverriddenMetadataProvider jpaMetadataProvider = (JPAXMLOverriddenMetadataProvider) ( (MetadataProviderInjector) reflectionManager )
+					.getMetadataProvider();
+			for ( Binding<?> xmlBinding : managedResources.getXmlMappingBindings() ) {
+				Object root = xmlBinding.getRoot();
+				if ( !(root instanceof JaxbEntityMappings) ) {
+					continue;
 				}
-				jpaMetadataProvider.getXMLContext().applyDiscoveredAttributeConverters( attributeConverterManager );
-			}
-			else {
-				final JPAMetadataProvider jpaMetadataProvider = (JPAMetadataProvider) ( (MetadataProviderInjector) reflectionManager )
-						.getMetadataProvider();
-				for ( Binding xmlBinding : managedResources.getXmlMappingBindings() ) {
-					if ( !org.dom4j.Document.class.isInstance( xmlBinding.getRoot() ) ) {
-						continue;
-					}
-					org.dom4j.Document dom4jDocument = (Document) xmlBinding.getRoot();
+				JaxbEntityMappings entityMappings = (JaxbEntityMappings) xmlBinding.getRoot();
 
-					final List<String> classNames = jpaMetadataProvider.getXMLContext().addDocument( dom4jDocument );
-					for ( String className : classNames ) {
-						xClasses.add( toXClass( className, reflectionManager, classLoaderService ) );
-					}
+				final List<String> classNames = jpaMetadataProvider.getXMLContext().addDocument( entityMappings );
+				for ( String className : classNames ) {
+					xClasses.add( toXClass( className, reflectionManager, classLoaderService ) );
 				}
-				jpaMetadataProvider.getXMLContext().applyDiscoveredAttributeConverters( attributeConverterManager );
 			}
+			jpaMetadataProvider.getXMLContext().applyDiscoveredAttributeConverters( attributeConverterManager );
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		}
 

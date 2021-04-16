@@ -28,8 +28,8 @@ import org.junit.Assert;
 public final class XMLMappingHelper {
 	private final MappingBinder binder;
 
-	public XMLMappingHelper(XmlMappingOptions xmlMappingOptions) {
-		binder = new MappingBinder( ClassLoaderServiceTestingImpl.INSTANCE, true, xmlMappingOptions );
+	public XMLMappingHelper() {
+		binder = new MappingBinder( ClassLoaderServiceTestingImpl.INSTANCE, true );
 	}
 
 	public JaxbEntityMappings readOrmXmlMappings(String name) throws IOException {

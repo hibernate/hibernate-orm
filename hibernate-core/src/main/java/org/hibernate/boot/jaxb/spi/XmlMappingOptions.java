@@ -72,15 +72,4 @@ public interface XmlMappingOptions {
 		return true;
 	}
 
-	/**
-	 * Whether to prefer JAXB implementations for XML parsing,
-	 * or to rely on legacy behavior (JAXB for hbm.xml, DOM4J for orm.xml and Envers).
-	 * <p>
-	 * This option will be removed in a future major version (probably ORM 6.0)
-	 * where JAXB will always be used.
-	 */
-	default boolean isPreferJaxb() {
-		return false;
-	}
-
 }

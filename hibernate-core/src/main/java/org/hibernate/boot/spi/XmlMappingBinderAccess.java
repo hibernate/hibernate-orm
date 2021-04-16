@@ -41,12 +41,10 @@ public class XmlMappingBinderAccess {
 	public XmlMappingBinderAccess(ServiceRegistry serviceRegistry) {
 		this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 
-		XmlMappingOptions xmlMappingOptions = XmlMappingOptions.get( serviceRegistry );
-
 		// NOTE : The boolean here indicates whether or not to perform validation as we load XML documents.
 		// Should we expose this setting?  Disabling would speed up JAXP and JAXB at runtime, but potentially
 		// at the cost of less obvious errors when a document is not valid.
-		this.mappingBinder = new MappingBinder( classLoaderService, true, xmlMappingOptions );
+		this.mappingBinder = new MappingBinder( classLoaderService, true );
 	}
 
 	public MappingBinder getMappingBinder() {

@@ -741,7 +741,6 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 */
 	String XML_MAPPING_ENABLED = "hibernate.xml_mapping_enabled";
 
-
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SessionFactoryBuilder level settings
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

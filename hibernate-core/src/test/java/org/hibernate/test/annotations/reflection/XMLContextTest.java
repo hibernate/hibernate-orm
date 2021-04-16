@@ -6,60 +6,37 @@
  */
 package org.hibernate.test.annotations.reflection;
 
-import java.io.BufferedInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappings;
+import org.hibernate.boot.jaxb.spi.XmlMappingOptions;
+import org.hibernate.cfg.annotations.reflection.internal.XMLContext;
+import org.hibernate.internal.util.xml.XMLMappingHelper;
 
-import org.dom4j.io.SAXReader;
-import org.junit.Assert;
-import org.junit.Test;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXNotSupportedException;
-
-import org.hibernate.cfg.EJB3DTDEntityResolver;
-import org.hibernate.cfg.annotations.reflection.XMLContext;
-import org.hibernate.internal.util.xml.ErrorLogger;
-import org.hibernate.internal.util.xml.XMLHelper;
-
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.boot.BootstrapContextImpl;
-import org.hibernate.testing.boot.ClassLoaderServiceTestingImpl;
+import org.junit.Test;
 
 /**
+ * Tests the new {@link XMLContext},
+ * which will be replacing {@link org.hibernate.cfg.annotations.reflection.XMLContext}.
+ * {@link org.hibernate.cfg.annotations.reflection.XMLContext} is still the default implementation,
+ * but we want to switch to {@link XMLContext}
+ * as soon as it will be practical.
+ *
  * @author Emmanuel Bernard
  */
+@TestForIssue(jiraKey = "HHH-14529")
 public class XMLContextTest {
 	@Test
 	public void testAll() throws Exception {
-		final XMLHelper xmlHelper = new XMLHelper();
+		XMLMappingHelper xmlHelper = new XMLMappingHelper( new XmlMappingOptions() {
+			@Override
+			public boolean isPreferJaxb() {
+				return true;
+			}
+		} );
 		final XMLContext context = new XMLContext( BootstrapContextImpl.INSTANCE );
 
-		InputStream is = ClassLoaderServiceTestingImpl.INSTANCE.locateResourceStream(
-				"org/hibernate/test/annotations/reflection/orm.xml"
-		);
-		Assert.assertNotNull( "ORM.xml not found", is );
-
-		final ErrorLogger errorLogger = new ErrorLogger();
-		final SAXReader saxReader = xmlHelper.createSAXReader( errorLogger, EJB3DTDEntityResolver.INSTANCE );
-
-		try {
-			saxReader.setFeature( "http://apache.org/xml/features/validation/schema", true );
-		}
-		catch ( SAXNotSupportedException e ) {
-			saxReader.setValidation( false );
-		}
-		org.dom4j.Document doc;
-		try {
-			doc = saxReader.read( new InputSource( new BufferedInputStream( is ) ) );
-		}
-		finally {
-			try {
-				is.close();
-			}
-			catch ( IOException ioe ) {
-				//log.warn( "Could not close input stream", ioe );
-			}
-		}
-		Assert.assertFalse( errorLogger.hasErrors() );
-		context.addDocument( doc );
+		JaxbEntityMappings mappings = xmlHelper.readOrmXmlMappings( "org/hibernate/test/annotations/reflection/orm.xml" );
+		context.addDocument( mappings );
 	}
 }

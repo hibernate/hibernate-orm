@@ -28,6 +28,7 @@ import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.cfgxml.spi.LoadedConfig;
 import org.hibernate.boot.cfgxml.spi.MappingReference;
+import org.hibernate.boot.jaxb.spi.XmlMappingOptions;
 import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeContributor;
@@ -554,7 +555,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		private IdGeneratorInterpreterImpl idGenerationTypeInterpreter = new IdGeneratorInterpreterImpl();
 
 		private String schemaCharset;
-		private boolean xmlMappingEnabled;
+		private final XmlMappingOptions xmlMappingOptions;
 
 		public MetadataBuildingOptionsImpl(StandardServiceRegistry serviceRegistry) {
 			this.serviceRegistry = serviceRegistry;
@@ -566,11 +567,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 			this.multiTenancyStrategy =  MultiTenancyStrategy.determineMultiTenancyStrategy( configService.getSettings() );
 
-			this.xmlMappingEnabled = configService.getSetting(
-					AvailableSettings.XML_MAPPING_ENABLED,
-					StandardConverters.BOOLEAN,
-					true
-			);
+			xmlMappingOptions = XmlMappingOptions.get( serviceRegistry );
 
 			this.implicitDiscriminatorsForJoinedInheritanceSupported = configService.getSetting(
 					AvailableSettings.IMPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS,
@@ -843,8 +840,8 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		}
 
 		@Override
-		public boolean isXmlMappingEnabled() {
-			return xmlMappingEnabled;
+		public XmlMappingOptions getXmlMappingOptions() {
+			return xmlMappingOptions;
 		}
 
 		/**

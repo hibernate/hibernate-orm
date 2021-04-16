@@ -20,6 +20,8 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
 import org.hibernate.type.descriptor.jdbc.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.BasicExtractor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 import org.geolatte.geom.ByteBuffer;
 import org.geolatte.geom.ByteOrder;
@@ -39,12 +41,12 @@ import org.postgresql.util.PGobject;
 public class PGGeometryTypeDescriptor implements SqlTypeDescriptor {
 
 
-	final private Wkb.Dialect wkbDialect;
+	private final Wkb.Dialect wkbDialect;
 
 	// Type descriptor instance using EWKB v1 (postgis versions < 2.2.2)
-	public static final PGGeometryTypeDescriptor INSTANCE_WKB_1 = new PGGeometryTypeDescriptor( Wkb.Dialect.POSTGIS_EWKB_1);
+	public static final PGGeometryTypeDescriptor INSTANCE_WKB_1 = new PGGeometryTypeDescriptor( Wkb.Dialect.POSTGIS_EWKB_1 );
 	// Type descriptor instance using EWKB v2 (postgis versions >= 2.2.2, see: https://trac.osgeo.org/postgis/ticket/3181)
-	public static final PGGeometryTypeDescriptor INSTANCE_WKB_2 = new PGGeometryTypeDescriptor(Wkb.Dialect.POSTGIS_EWKB_2);
+	public static final PGGeometryTypeDescriptor INSTANCE_WKB_2 = new PGGeometryTypeDescriptor( Wkb.Dialect.POSTGIS_EWKB_2 );
 
 	private PGGeometryTypeDescriptor(Wkb.Dialect dialect) {
 		wkbDialect = dialect;
@@ -79,7 +81,7 @@ public class PGGeometryTypeDescriptor implements SqlTypeDescriptor {
 
 	@Override
 	public int getSqlType() {
-		return Types.OTHER;
+		return 5432;
 	}
 
 	@Override
@@ -122,8 +124,8 @@ public class PGGeometryTypeDescriptor implements SqlTypeDescriptor {
 		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 
 			@Override
-			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-				return getJavaDescriptor().wrap( toGeometry( rs.getObject( paramIndex ) ), options );
+			protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
+				return getJavaDescriptor().wrap( toGeometry( rs.getObject( name ) ), options );
 			}
 
 			@Override

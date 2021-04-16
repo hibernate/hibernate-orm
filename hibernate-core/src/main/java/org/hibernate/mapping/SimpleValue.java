@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Properties;
 import java.util.Objects;
 import java.util.Properties;
 import javax.persistence.AttributeConverter;
@@ -412,6 +414,18 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	/**
+	 * Sets the identifierGeneratorProperties.
+	 * @param identifierGeneratorProperties The identifierGeneratorProperties to set
+	 */
+	public void setIdentifierGeneratorProperties(Map identifierGeneratorProperties) {
+		if ( identifierGeneratorProperties != null ) {
+			Properties properties = new Properties();
+			properties.putAll( identifierGeneratorProperties );
+			setIdentifierGeneratorProperties( properties );
+		}
+	}
+
+	/**
 	 * Sets the identifierGeneratorStrategy.
 	 * @param identifierGeneratorStrategy The identifierGeneratorStrategy to set
 	 */
@@ -702,7 +716,15 @@ public abstract class SimpleValue implements KeyValue {
 	public void setTypeParameters(Properties parameterMap) {
 		this.typeParameters = parameterMap;
 	}
-	
+
+	public void setTypeParameters(Map<String, String> parameters) {
+		if ( parameters != null ) {
+			Properties properties = new Properties();
+			properties.putAll( parameters );
+			setTypeParameters( properties );
+		}
+	}
+
 	public Properties getTypeParameters() {
 		return typeParameters;
 	}

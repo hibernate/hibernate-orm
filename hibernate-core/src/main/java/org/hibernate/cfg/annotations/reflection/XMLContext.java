@@ -32,7 +32,12 @@ import org.dom4j.Element;
  *
  * @author Emmanuel Bernard
  * @author Brett Meyer
+ *
+ * @deprecated This class is not API: do not use it from application code.
+ * This class will be removed in Hibernate ORM 6.0.
+ * For implementation code, use {@link org.hibernate.cfg.annotations.reflection.internal.XMLContext} instead.
  */
+@Deprecated
 public class XMLContext implements Serializable {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( XMLContext.class );
 
@@ -222,7 +227,7 @@ public class XMLContext implements Serializable {
 		return className;
 	}
 
-	public static String buildSafeClassName(String className, XMLContext.Default defaults) {
+	public static String buildSafeClassName(String className, Default defaults) {
 		return buildSafeClassName( className, defaults.getPackageName() );
 	}
 

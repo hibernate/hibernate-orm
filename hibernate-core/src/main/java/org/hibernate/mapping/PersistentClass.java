@@ -18,6 +18,7 @@ import java.util.StringTokenizer;
 
 import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.CustomSql;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.OptimisticLockStyle;
@@ -754,6 +755,16 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		return properties.iterator();
 	}
 
+	public void setCustomSqlInsert(CustomSql customSql) {
+		if ( customSql != null ) {
+			setCustomSQLInsert(
+					customSql.getSql(),
+					customSql.isCallable(),
+					customSql.getCheckStyle()
+			);
+		}
+	}
+
 	public void setCustomSQLInsert(String customSQLInsert, boolean callable, ExecuteUpdateResultCheckStyle checkStyle) {
 		this.customSQLInsert = customSQLInsert;
 		this.customInsertCallable = callable;
@@ -772,6 +783,16 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		return insertCheckStyle;
 	}
 
+	public void setCustomSqlUpdate(CustomSql customSql) {
+		if ( customSql != null ) {
+			setCustomSQLUpdate(
+					customSql.getSql(),
+					customSql.isCallable(),
+					customSql.getCheckStyle()
+			);
+		}
+	}
+
 	public void setCustomSQLUpdate(String customSQLUpdate, boolean callable, ExecuteUpdateResultCheckStyle checkStyle) {
 		this.customSQLUpdate = customSQLUpdate;
 		this.customUpdateCallable = callable;
@@ -788,6 +809,16 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 
 	public ExecuteUpdateResultCheckStyle getCustomSQLUpdateCheckStyle() {
 		return updateCheckStyle;
+	}
+
+	public void setCustomSqlDelete(CustomSql customSql) {
+		if ( customSql != null ) {
+			setCustomSQLDelete(
+					customSql.getSql(),
+					customSql.isCallable(),
+					customSql.getCheckStyle()
+			);
+		}
 	}
 
 	public void setCustomSQLDelete(String customSQLDelete, boolean callable, ExecuteUpdateResultCheckStyle checkStyle) {

@@ -24,12 +24,15 @@ import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
 import org.hibernate.boot.jaxb.internal.MappingBinder;
 import org.hibernate.boot.jaxb.spi.Binding;
+import org.hibernate.boot.jaxb.spi.XmlMappingOptions;
 import org.hibernate.boot.model.source.internal.hbm.MappingDocument;
 import org.hibernate.boot.spi.AdditionalJaxbMappingProducer;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.envers.boot.EnversBootLogger;
 import org.hibernate.envers.configuration.internal.MappingCollector;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.ServiceRegistry;
 
 import org.jboss.jandex.IndexView;
@@ -39,6 +42,8 @@ import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
+
+import static org.hibernate.cfg.AvailableSettings.XML_MAPPING_ENABLED;
 
 /**
  * @author Steve Ebersole
@@ -52,12 +57,19 @@ public class AdditionalJaxbMappingProducerImpl implements AdditionalJaxbMappingP
 			IndexView jandexIndex,
 			final MappingBinder mappingBinder,
 			final MetadataBuildingContext buildingContext) {
-		final ServiceRegistry serviceRegistry = metadata.getMetadataBuildingOptions().getServiceRegistry();
+		MetadataBuildingOptions metadataBuildingOptions = metadata.getMetadataBuildingOptions();
+		final ServiceRegistry serviceRegistry = metadataBuildingOptions.getServiceRegistry();
 		final EnversService enversService = serviceRegistry.getService( EnversService.class );
 
 		if ( !enversService.isEnabled() ) {
 			// short-circuit if envers integration has been disabled.
 			return Collections.emptyList();
+		}
+
+		if ( !metadataBuildingOptions.getXmlMappingOptions().isEnabled() ) {
+			throw new HibernateException( "Hibernate Envers currently requires XML mapping to be enabled."
+					+ " Please don't disable setting `" + XML_MAPPING_ENABLED
+					+ "`; alternatively disable Hibernate Envers." );
 		}
 
 		final ArrayList<MappingDocument> additionalMappingDocuments = new ArrayList<>();

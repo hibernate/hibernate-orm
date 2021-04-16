@@ -9,6 +9,8 @@ package org.hibernate.boot.registry.selector.internal;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.boot.jaxb.internal.DefaultXmlMappingOptions;
+import org.hibernate.boot.jaxb.spi.XmlMappingOptions;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
@@ -103,6 +105,8 @@ public class StrategySelectorBuilder {
 		addSqmMultiTableMutationStrategies( strategySelector );
 		addImplicitNamingStrategies( strategySelector );
 		addCacheKeysFactories( strategySelector );
+		strategySelector.registerStrategyImplementor( XmlMappingOptions.class, XmlMappingOptions.DEFAULT_NAME,
+				DefaultXmlMappingOptions.class );
 
 		// apply auto-discovered registrations
 		for ( StrategyRegistrationProvider provider : classLoaderService.loadJavaServices( StrategyRegistrationProvider.class ) ) {

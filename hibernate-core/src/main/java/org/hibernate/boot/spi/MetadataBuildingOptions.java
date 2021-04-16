@@ -15,6 +15,7 @@ import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
 import org.hibernate.boot.archive.scan.spi.ScanOptions;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
+import org.hibernate.boot.jaxb.spi.XmlMappingOptions;
 import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
@@ -260,7 +261,7 @@ public interface MetadataBuildingOptions {
 		return null;
 	}
 
-	default boolean isXmlMappingEnabled() {
-		return true;
+	default XmlMappingOptions getXmlMappingOptions() {
+		return XmlMappingOptions.get( getServiceRegistry() );
 	}
 }

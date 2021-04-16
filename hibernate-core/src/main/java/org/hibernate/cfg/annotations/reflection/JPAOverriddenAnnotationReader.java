@@ -126,6 +126,7 @@ import org.hibernate.annotations.common.reflection.ReflectionUtil;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
+import org.hibernate.cfg.annotations.reflection.internal.JPAXMLOverriddenAnnotationReader;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
@@ -141,7 +142,13 @@ import org.dom4j.Element;
  * @author Davide Marchignoli
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
+ *
+ * @deprecated This class is not API: do not use it from application code.
+ * This class will be removed in Hibernate ORM 6.0.
+ * For implementation code, use {@link JPAXMLOverriddenAnnotationReader}
+ * instead.
  */
+@Deprecated
 @SuppressWarnings("unchecked")
 public class JPAOverriddenAnnotationReader implements AnnotationReader {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( JPAOverriddenAnnotationReader.class );
@@ -239,12 +246,12 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 		annotationToXml.put( ConstructorResult.class, "constructor-result" );
 	}
 
-	private XMLContext xmlContext;
+	private final XMLContext xmlContext;
 	private final ClassLoaderAccess classLoaderAccess;
 	private final AnnotatedElement element;
-	private String className;
-	private String propertyName;
-	private PropertyType propertyType;
+	private final String className;
+	private final String propertyName;
+	private final PropertyType propertyType;
 	private transient Annotation[] annotations;
 	private transient Map<Class, Annotation> annotationsMap;
 	private transient List<Element> elementsForProperty;
@@ -264,6 +271,8 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 		if ( el instanceof Class ) {
 			Class clazz = (Class) el;
 			className = clazz.getName();
+			propertyName = null;
+			propertyType = null;
 		}
 		else if ( el instanceof Field ) {
 			Field field = (Field) el;
@@ -283,18 +292,18 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 		else if ( el instanceof Method ) {
 			Method method = (Method) el;
 			className = method.getDeclaringClass().getName();
-			propertyName = method.getName();
+			String methodName = method.getName();
 
 			// YUCK!  The null here is the 'boundType', we'd rather get the TypeEnvironment()
 			if ( ReflectionUtil.isProperty( method, null, PersistentAttributeFilter.INSTANCE ) ) {
-				if ( propertyName.startsWith( "get" ) ) {
-					propertyName = Introspector.decapitalize( propertyName.substring( "get".length() ) );
+				if ( methodName.startsWith( "get" ) ) {
+					propertyName = Introspector.decapitalize( methodName.substring( "get".length() ) );
 				}
-				else if ( propertyName.startsWith( "is" ) ) {
-					propertyName = Introspector.decapitalize( propertyName.substring( "is".length() ) );
+				else if ( methodName.startsWith( "is" ) ) {
+					propertyName = Introspector.decapitalize( methodName.substring( "is".length() ) );
 				}
 				else {
-					throw new RuntimeException( "Method " + propertyName + " is not a property getter" );
+					throw new RuntimeException( "Method " + methodName + " is not a property getter" );
 				}
 				propertyType = PropertyType.PROPERTY;
 				try {
@@ -305,12 +314,14 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 				}
 			}
 			else {
+				propertyName = methodName;
 				propertyType = PropertyType.METHOD;
 			}
 		}
 		else {
 			className = null;
 			propertyName = null;
+			propertyType = null;
 		}
 	}
 
@@ -881,7 +892,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 	 * field or property.  Thus, any methods which might in some contexts merge
 	 * with annotations must not do so in this context.
 	 *
-	 * @see #getElementCollection(List, org.hibernate.cfg.annotations.reflection.XMLContext.Default)
+	 * @see #getElementCollection(List, XMLContext.Default)
 	 */
 	private void getAssociation(
 			Class<? extends Annotation> annotationType, List<Annotation> annotationList, XMLContext.Default defaults
@@ -2690,7 +2701,8 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 				AnnotationDescriptor ad = new AnnotationDescriptor( IdClass.class );
 				Class clazz;
 				try {
-					clazz = classLoaderAccess.classForName( XMLContext.buildSafeClassName( attr.getValue(), defaults )
+					clazz = classLoaderAccess.classForName( XMLContext
+							.buildSafeClassName( attr.getValue(), defaults )
 					);
 				}
 				catch ( ClassLoadingException e ) {

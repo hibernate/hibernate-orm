@@ -55,7 +55,6 @@ task processPluginXml(type: Copy) {
     filter(ReplaceTokens, tokens: ['version' : project.version, 'generated-dependencies' :\
             generateMavenDependency(libraries.jpa)\
             + generateMavenDependency(libraries.antlr)\
-            + generateMavenDependency(libraries.dom4j)\
             + generateMavenDependency(libraries.jta)\
             + generateMavenDependency(libraries.commons_annotations)\
             + generateMavenDependency(libraries.javassist)\

@@ -242,20 +242,32 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	private final Stack<ParameterDeclarationContext> parameterDeclarationContextStack = new StandardStack<>();
 	private final Stack<SqmCreationProcessingState> processingStateStack = new StandardStack<>();
 
+	private final BasicDomainType<Integer> integerDomainType;
+	private final JavaTypeDescriptor<List<?>> listJavaTypeDescriptor;
+	private final JavaTypeDescriptor<Map<?,?>> mapJavaTypeDescriptor;
+
 	private ParameterCollector parameterCollector;
-	private BasicDomainType<Integer> integerDomainType;
-	private JavaTypeDescriptor<List<?>> listJavaTypeDescriptor;
-	private JavaTypeDescriptor<Map<?,?>> mapJavaTypeDescriptor;
 
 	@SuppressWarnings("WeakerAccess")
 	public SemanticQueryBuilder(SqmCreationOptions creationOptions, SqmCreationContext creationContext) {
 		this.creationOptions = creationOptions;
 		this.creationContext = creationContext;
 		this.dotIdentifierConsumerStack = new StandardStack<>( new BasicDotIdentifierConsumer( this ) );
+
 		this.integerDomainType = creationContext
 				.getNodeBuilder()
 				.getTypeConfiguration()
 				.standardBasicTypeForJavaType( Integer.class );
+		this.listJavaTypeDescriptor = creationContext
+				.getNodeBuilder()
+				.getTypeConfiguration()
+				.getJavaTypeDescriptorRegistry()
+				.resolveDescriptor( List.class );
+		this.mapJavaTypeDescriptor = creationContext
+				.getNodeBuilder()
+				.getTypeConfiguration()
+				.getJavaTypeDescriptorRegistry()
+				.resolveDescriptor( Map.class );
 	}
 
 	@Override
@@ -855,24 +867,12 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final SqmDynamicInstantiation<?> dynamicInstantiation;
 
 		if ( ctx.dynamicInstantiationTarget().MAP() != null ) {
-			if ( mapJavaTypeDescriptor == null ) {
-				mapJavaTypeDescriptor = creationContext.getJpaMetamodel()
-						.getTypeConfiguration()
-						.getJavaTypeDescriptorRegistry()
-						.getDescriptor( Map.class );
-			}
 			dynamicInstantiation = SqmDynamicInstantiation.forMapInstantiation(
 					mapJavaTypeDescriptor,
 					creationContext.getNodeBuilder()
 			);
 		}
 		else if ( ctx.dynamicInstantiationTarget().LIST() != null ) {
-			if ( listJavaTypeDescriptor == null ) {
-				listJavaTypeDescriptor = creationContext.getJpaMetamodel()
-						.getTypeConfiguration()
-						.getJavaTypeDescriptorRegistry()
-						.getDescriptor( List.class );
-			}
 			dynamicInstantiation = SqmDynamicInstantiation.forListInstantiation(
 					listJavaTypeDescriptor,
 					creationContext.getNodeBuilder()
@@ -1452,7 +1452,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			throw new SemanticException( "FULL OUTER joins are not yet supported : " + parserJoin.getText() );
 		}
 		else if ( joinTypeQualifier.RIGHT() != null ) {
-			throw new SemanticException( "RIGHT OUTER joins are not yet supported : " + parserJoin.getText() );
+			joinType = SqmJoinType.RIGHT;
 		}
 		else if ( joinTypeQualifier.OUTER() != null || joinTypeQualifier.LEFT() != null ) {
 			joinType = SqmJoinType.LEFT;
@@ -1475,6 +1475,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		);
 
 		try {
+			//noinspection rawtypes
 			final SqmQualifiedJoin join = (SqmQualifiedJoin) parserJoin.qualifiedJoinRhs().path().accept( this );
 
 			// we need to set the alias here because the path could be treated - the treat operator is
@@ -1486,8 +1487,13 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				sqmRoot.addSqmJoin( join );
 			}
 			else {
+				if ( joinType == SqmJoinType.RIGHT ) {
+					throw new SemanticException( "RIGHT OUTER attribute-joins are not supported : " + parserJoin.getText() );
+				}
+
 				if ( getCreationOptions().useStrictJpaCompliance() ) {
 					if ( join.getExplicitAlias() != null ){
+						//noinspection rawtypes
 						if ( ( (SqmAttributeJoin) join ).isFetched() ) {
 							throw new StrictJpaComplianceViolation(
 									"Encountered aliased fetch join, but strict JPQL compliance was requested",

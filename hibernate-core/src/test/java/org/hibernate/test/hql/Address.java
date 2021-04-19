@@ -13,7 +13,10 @@ package org.hibernate.test.hql;
  * Implementation of Address.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Use {@link org.hibernate.testing.orm.domain.animal.Address} instead
  */
+@Deprecated
 public class Address {
 	private String street;
 	private String city;

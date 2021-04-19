@@ -12,7 +12,10 @@ import java.util.Set;
 
 /**
  * @author Gavin King
+ *
+ * @deprecated Use {@link org.hibernate.testing.orm.domain.animal.Animal} instead
  */
+@Deprecated
 public class Animal {
 	private Long id;
 	private float bodyWeight;

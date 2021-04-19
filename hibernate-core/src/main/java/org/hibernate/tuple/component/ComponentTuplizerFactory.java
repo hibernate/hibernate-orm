@@ -8,6 +8,7 @@ package org.hibernate.tuple.component;
 
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -103,8 +104,17 @@ public class ComponentTuplizerFactory implements Serializable {
 		try {
 			return constructor.newInstance( metadata );
 		}
-		catch ( Throwable t ) {
-			throw new HibernateException( "Unable to instantiate default tuplizer [" + tuplizerClass.getName() + "]", t );
+		catch (Exception e) {
+			throw new HibernateException(
+					String.format(
+							Locale.ROOT,
+							"Unable to instantiate tuplizer [%s] for component: `%s` (%s)",
+							tuplizerClass.getName(),
+							metadata.getComponentClassName(),
+							metadata.getRoleName()
+					),
+					e
+			);
 		}
 	}
 

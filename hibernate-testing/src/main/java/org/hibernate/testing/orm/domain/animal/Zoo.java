@@ -4,18 +4,30 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
+package org.hibernate.testing.orm.domain.animal;
 
-//$Id: Zoo.java 10653 2006-10-26 13:38:50Z steve.ebersole@jboss.com $
-package org.hibernate.test.hql;
 import java.util.HashMap;
 import java.util.Map;
+import javax.persistence.CollectionTable;
+import javax.persistence.DiscriminatorColumn;
+import javax.persistence.DiscriminatorValue;
+import javax.persistence.Embedded;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.Id;
+import javax.persistence.Inheritance;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
+import javax.persistence.MapKey;
+import javax.persistence.MapKeyColumn;
+import javax.persistence.OneToMany;
 
-/**
- * @author Gavin King
- *
- * @deprecated Use {@link org.hibernate.testing.orm.domain.animal.Zoo} instead
- */
-@Deprecated
+@Entity
+@Inheritance
+@DiscriminatorColumn( name = "zooType" )
+@DiscriminatorValue( "Z" )
 public class Zoo {
 	private Long id;
 	private String name;
@@ -27,11 +39,13 @@ public class Zoo {
 
 	public Zoo() {
 	}
+
 	public Zoo(String name, Address address) {
 		this.name = name;
 		this.address = address;
 	}
 
+	@Id
 	public Long getId() {
 		return id;
 	}
@@ -48,7 +62,14 @@ public class Zoo {
 		this.name = name;
 	}
 
-	public Map getDirectors() {
+	@ManyToMany
+	@JoinTable(
+			name = "t_directors",
+			joinColumns = @JoinColumn( name = "zoo_fk" ),
+			inverseJoinColumns = @JoinColumn( name = "director_fk" )
+	)
+	@MapKeyColumn( name = "`title`" )
+	public Map<String,Human> getDirectors() {
 		return directors;
 	}
 
@@ -56,7 +77,10 @@ public class Zoo {
 		this.directors = directors;
 	}
 
-	public Map getMammals() {
+	@OneToMany
+	@JoinColumn( name = "mammal_fk" )
+	@MapKeyColumn( name = "name" )
+	public Map<String,Mammal> getMammals() {
 		return mammals;
 	}
 
@@ -64,7 +88,9 @@ public class Zoo {
 		this.mammals = mammals;
 	}
 
-	public Map getAnimals() {
+	@OneToMany( mappedBy = "zoo" )
+	@MapKeyColumn( name = "serialNumber" )
+	public Map<String, Animal> getAnimals() {
 		return animals;
 	}
 
@@ -72,6 +98,7 @@ public class Zoo {
 		this.animals = animals;
 	}
 
+	@Embedded
 	public Address getAddress() {
 		return address;
 	}
@@ -80,6 +107,7 @@ public class Zoo {
 		this.address = address;
 	}
 
+	@Enumerated( value = EnumType.STRING )
 	public Classification getClassification() {
 		return classification;
 	}

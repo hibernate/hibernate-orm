@@ -66,6 +66,7 @@ import org.hibernate.query.TypedParameterValue;
 import org.hibernate.query.internal.ScrollableResultsIterator;
 import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 import static org.hibernate.LockMode.UPGRADE;
@@ -964,8 +965,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		}
 
 		if ( value instanceof Collection ) {
-			//noinspection rawtypes
-			setParameterList( Integer.toString( position ), (Collection) value );
+			setParameterList( position, (Collection<?>) value );
 		}
 		else {
 			locateBinding( position ).setBindValue( value );
@@ -1314,6 +1314,9 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 			type = getParameterMetadata().getQueryParameter( namedParam ).getHibernateType();
 		}
 		if ( type == null ) {
+			if ( retType == null ) {
+				return JavaObjectType.INSTANCE;
+			}
 			type = getSession().getFactory().resolveParameterBindType( retType );
 		}
 		return type;

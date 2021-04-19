@@ -4,23 +4,18 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
+package org.hibernate.testing.orm.domain.animal;
 
-//$Id: Name.java 5686 2005-02-12 07:27:32Z steveebersole $
-package org.hibernate.test.hql;
+import javax.persistence.Column;
+import javax.persistence.Embeddable;
 
-
-/**
- * @author Gavin King
- *
- * @deprecated Use {@link org.hibernate.testing.orm.domain.animal.Name} instead
- */
-@Deprecated
+@Embeddable
 public class Name {
 	private String first;
 	private Character initial;
 	private String last;
 	
-	protected Name() {}
+	public Name() {}
 	
 	public Name(String first, Character initial, String last) {
 		this.first = first;
@@ -29,9 +24,10 @@ public class Name {
 	}
 
 	public Name(String first, char initial, String last) {
-		this( first, new Character( initial ), last );
+		this( first, Character.valueOf( initial ), last );
 	}
 
+	@Column( name = "name_first" )
 	public String getFirst() {
 		return first;
 	}
@@ -40,6 +36,7 @@ public class Name {
 		this.first = first;
 	}
 
+	@Column( name = "name_initial" )
 	public Character getInitial() {
 		return initial;
 	}
@@ -48,6 +45,7 @@ public class Name {
 		this.initial = initial;
 	}
 
+	@Column( name = "name_last" )
 	public String getLast() {
 		return last;
 	}

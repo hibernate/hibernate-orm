@@ -4,17 +4,16 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
+package org.hibernate.testing.orm.domain.animal;
 
-//$Id: Mammal.java 6005 2005-03-04 11:41:11Z oneovthafew $
-package org.hibernate.test.hql;
 import java.util.Date;
+import javax.persistence.Entity;
+import javax.persistence.PrimaryKeyJoinColumn;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 
-/**
- * @author Gavin King
- *
- * @deprecated Use {@link org.hibernate.testing.orm.domain.animal.Mammal} instead
- */
-@Deprecated
+@Entity
+@PrimaryKeyJoinColumn( name = "mammal_id_fk" )
 public class Mammal extends Animal {
 	private boolean pregnant;
 	private Date birthdate;
@@ -27,6 +26,7 @@ public class Mammal extends Animal {
 		this.pregnant = pregnant;
 	}
 
+	@Temporal( TemporalType.DATE )
 	public Date getBirthdate() {
 		return birthdate;
 	}

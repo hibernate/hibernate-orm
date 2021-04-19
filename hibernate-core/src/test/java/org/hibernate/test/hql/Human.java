@@ -15,7 +15,10 @@ import java.util.Set;
 
 /**
  * @author Gavin King
+ *
+ * @deprecated Use {@link org.hibernate.testing.orm.domain.animal.Human} instead
  */
+@Deprecated
 public class Human extends Mammal {
 	private Name name;
 	private String nickName;

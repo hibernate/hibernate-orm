@@ -12,7 +12,10 @@ import java.util.HashMap;
  * Mimic a JDK 5 enum.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Use {@link org.hibernate.testing.orm.domain.animal.Classification} instead
  */
+@Deprecated
 public class Classification implements Serializable, Comparable {
 
 	public static final Classification COOL = new Classification( "COOL", 0 );

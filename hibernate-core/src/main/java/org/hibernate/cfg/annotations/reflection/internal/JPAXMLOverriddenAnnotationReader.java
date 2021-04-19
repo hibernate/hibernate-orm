@@ -2063,7 +2063,7 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 			bindNamedAttributeNodes( element.getNamedAttributeNode(), ann );
 
 			bindNamedSubgraph( defaults, ann, "subgraphs", element.getSubgraph(), classLoaderAccess );
-			bindNamedSubgraph( defaults, ann, "subclass-subgraph", element.getSubclassSubgraph(), classLoaderAccess );
+			bindNamedSubgraph( defaults, ann, "subclassSubgraphs", element.getSubclassSubgraph(), classLoaderAccess );
 			namedEntityGraphList.add( AnnotationFactory.create( ann ) );
 		}
 		//TODO

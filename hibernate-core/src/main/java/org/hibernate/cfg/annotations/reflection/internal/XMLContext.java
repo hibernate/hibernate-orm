@@ -127,11 +127,16 @@ public class XMLContext implements Serializable {
 			}
 			addedClasses.add( className );
 			managedTypeOverride.put( className, element );
-			Default localDefault = new Default();
-			localDefault.override( defaults );
-			localDefault.setMetadataComplete( element.isMetadataComplete() );
-			localDefault.setAccess( element.getAccess() );
-			defaultsOverride.put( className, localDefault );
+			Default mergedDefaults = new Default();
+			// Apply entity mapping defaults
+			mergedDefaults.override( defaults );
+			// ... then apply entity settings
+			Default fileDefaults = new Default();
+			fileDefaults.setMetadataComplete( element.isMetadataComplete() );
+			fileDefaults.setAccess( element.getAccess() );
+			mergedDefaults.override( fileDefaults );
+			// ... and we get the merged defaults for that entity
+			defaultsOverride.put( className, mergedDefaults );
 
 			LOG.debugf( "Adding XML overriding information for %s", className );
 			if ( element instanceof JaxbEntity ) {

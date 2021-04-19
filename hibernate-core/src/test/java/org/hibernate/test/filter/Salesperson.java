@@ -24,6 +24,13 @@ public class Salesperson {
 	private Department department;
 	private Set orders = new HashSet();
 
+	@Override
+	public String toString() {
+		return "Salesperson#" + id + "{"
+				+ ", name='" + name + '\'' +
+				'}';
+	}
+
 	public Long getId() {
 		return id;
 	}

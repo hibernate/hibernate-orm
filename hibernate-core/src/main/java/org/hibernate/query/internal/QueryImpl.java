@@ -92,7 +92,9 @@ public class QueryImpl<R> extends AbstractProducedQuery<R> implements Query<R> {
 		if ( queryPlan != null ) {
 			queryParameters.setQueryPlan( queryPlan );
 		}
-		else if ( hql.equals( getQueryString() ) ) {
+		else if ( hql.equals( getQueryString() )
+				&& getQueryPlan().getEnabledFilterNames()
+						.equals( getProducer().getLoadQueryInfluencers().getEnabledFilters().values() ) ) {
 			queryParameters.setQueryPlan( getQueryPlan() );
 		}
 	}

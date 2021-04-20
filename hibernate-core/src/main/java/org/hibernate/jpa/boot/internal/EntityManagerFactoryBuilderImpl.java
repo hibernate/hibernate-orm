@@ -91,6 +91,15 @@ import static org.hibernate.cfg.AvailableSettings.DRIVER;
 import static org.hibernate.cfg.AvailableSettings.JACC_CONTEXT_ID;
 import static org.hibernate.cfg.AvailableSettings.JACC_ENABLED;
 import static org.hibernate.cfg.AvailableSettings.JACC_PREFIX;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_JDBC_DRIVER;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_JDBC_PASSWORD;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_JDBC_URL;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_JDBC_USER;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_JTA_DATASOURCE;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_NON_JTA_DATASOURCE;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_SHARED_CACHE_MODE;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_TRANSACTION_TYPE;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_VALIDATION_MODE;
 import static org.hibernate.cfg.AvailableSettings.JPA_JDBC_DRIVER;
 import static org.hibernate.cfg.AvailableSettings.JPA_JDBC_PASSWORD;
 import static org.hibernate.cfg.AvailableSettings.JPA_JDBC_URL;
@@ -259,7 +268,13 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 				metamodelBuilder.getBootstrapContext()
 		);
 
-		withValidatorFactory( configurationValues.get( org.hibernate.cfg.AvailableSettings.JPA_VALIDATION_FACTORY ) );
+		final Object validatorFactory = configurationValues.get( org.hibernate.cfg.AvailableSettings.JPA_VALIDATION_FACTORY );
+		if ( validatorFactory == null ) {
+			withValidatorFactory( configurationValues.get( org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_VALIDATION_FACTORY ) );
+		}
+		else {
+			withValidatorFactory( validatorFactory );
+		}
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// push back class transformation to the environment; for the time being this only has any effect in EE
@@ -572,20 +587,30 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 		// normalize ValidationMode
 		final Object intgValidationMode = integrationSettingsCopy.remove( JPA_VALIDATION_MODE );
+		final Object jakartaIntgValidationMode = integrationSettingsCopy.remove( JAKARTA_JPA_VALIDATION_MODE );
 		if ( intgValidationMode != null ) {
 			mergedSettings.configurationValues.put( JPA_VALIDATION_MODE, intgValidationMode );
 		}
+		else if ( jakartaIntgValidationMode != null ) {
+			mergedSettings.configurationValues.put( JAKARTA_JPA_VALIDATION_MODE, jakartaIntgValidationMode );
+		}
 		else if ( persistenceUnit.getValidationMode() != null ) {
 			mergedSettings.configurationValues.put( JPA_VALIDATION_MODE, persistenceUnit.getValidationMode() );
+			mergedSettings.configurationValues.put( JAKARTA_JPA_VALIDATION_MODE, persistenceUnit.getValidationMode() );
 		}
 
 		// normalize SharedCacheMode
 		final Object intgCacheMode = integrationSettingsCopy.remove( JPA_SHARED_CACHE_MODE );
+		final Object jakartaIntgCacheMode = integrationSettingsCopy.remove( JAKARTA_JPA_SHARED_CACHE_MODE );
 		if ( intgCacheMode != null ) {
 			mergedSettings.configurationValues.put( JPA_SHARED_CACHE_MODE, intgCacheMode );
 		}
+		else if ( jakartaIntgCacheMode != null ) {
+			mergedSettings.configurationValues.put( JAKARTA_JPA_SHARED_CACHE_MODE, jakartaIntgCacheMode );
+		}
 		else if ( persistenceUnit.getSharedCacheMode() != null ) {
 			mergedSettings.configurationValues.put( JPA_SHARED_CACHE_MODE, persistenceUnit.getSharedCacheMode() );
+			mergedSettings.configurationValues.put( JAKARTA_JPA_SHARED_CACHE_MODE, persistenceUnit.getSharedCacheMode() );
 		}
 
 		// Apply all "integration overrides" as the last step.  By specification,
@@ -618,16 +643,20 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		final Object effectiveUser = NullnessHelper.coalesceSuppliedValues(
 				() -> integrationSettingsCopy.remove( USER ),
 				() -> integrationSettingsCopy.remove( JPA_JDBC_USER ),
+				() -> integrationSettingsCopy.remove( JAKARTA_JPA_JDBC_USER ),
 				() -> extractPuProperty( persistenceUnit, USER ),
-				() -> extractPuProperty( persistenceUnit, JPA_JDBC_USER )
+				() -> extractPuProperty( persistenceUnit, JPA_JDBC_USER ),
+				() -> extractPuProperty( persistenceUnit, JAKARTA_JPA_JDBC_USER )
 		);
 
 		//noinspection unchecked
 		final Object effectivePass = NullnessHelper.coalesceSuppliedValues(
 				() -> integrationSettingsCopy.remove( PASS ),
 				() -> integrationSettingsCopy.remove( JPA_JDBC_PASSWORD ),
+				() -> integrationSettingsCopy.remove( JAKARTA_JPA_JDBC_PASSWORD ),
 				() -> extractPuProperty( persistenceUnit, PASS ),
-				() -> extractPuProperty( persistenceUnit, JPA_JDBC_PASSWORD )
+				() -> extractPuProperty( persistenceUnit, JPA_JDBC_PASSWORD ),
+				() -> extractPuProperty( persistenceUnit, JAKARTA_JPA_JDBC_PASSWORD )
 		);
 
 		if ( effectiveUser != null || effectivePass != null ) {
@@ -645,11 +674,13 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		if ( effectiveUser != null ) {
 			mergedSettings.configurationValues.put( USER, effectiveUser );
 			mergedSettings.configurationValues.put( JPA_JDBC_USER, effectiveUser );
+			mergedSettings.configurationValues.put( JAKARTA_JPA_JDBC_USER, effectiveUser );
 		}
 
 		if ( effectivePass != null ) {
 			mergedSettings.configurationValues.put( PASS, effectivePass );
 			mergedSettings.configurationValues.put( JPA_JDBC_PASSWORD, effectivePass );
+			mergedSettings.configurationValues.put( JAKARTA_JPA_JDBC_PASSWORD, effectivePass );
 		}
 	}
 
@@ -662,7 +693,10 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			MergedSettings mergedSettings) {
 		PersistenceUnitTransactionType txnType = null;
 
-		final Object intgTxnType = integrationSettingsCopy.remove( JPA_TRANSACTION_TYPE );
+		Object intgTxnType = integrationSettingsCopy.remove( JPA_TRANSACTION_TYPE );
+		if ( intgTxnType == null ) {
+			intgTxnType = integrationSettingsCopy.remove( JAKARTA_JPA_TRANSACTION_TYPE );
+		}
 
 		if ( intgTxnType != null ) {
 			txnType = PersistenceUnitTransactionTypeHelper.interpretTransactionType( intgTxnType );
@@ -671,7 +705,10 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			txnType = persistenceUnit.getTransactionType();
 		}
 		else {
-			final Object puPropTxnType = mergedSettings.configurationValues.get( JPA_TRANSACTION_TYPE );
+			Object puPropTxnType = mergedSettings.configurationValues.get( JPA_TRANSACTION_TYPE );
+			if ( puPropTxnType == null ) {
+				puPropTxnType = mergedSettings.configurationValues.get( JAKARTA_JPA_TRANSACTION_TYPE );
+			}
 			if ( puPropTxnType != null ) {
 				txnType = PersistenceUnitTransactionTypeHelper.interpretTransactionType( puPropTxnType );
 			}
@@ -762,8 +799,37 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			}
 		}
 
+		if ( integrationSettingsCopy.containsKey( JAKARTA_JPA_JTA_DATASOURCE ) ) {
+			final Object dataSourceRef = integrationSettingsCopy.remove( JAKARTA_JPA_JTA_DATASOURCE );
+			if ( dataSourceRef != null ) {
+				applyDataSource(
+						dataSourceRef,
+						true,
+						integrationSettingsCopy,
+						mergedSettings
+				);
+
+				// EARLY EXIT!!
+				return;
+			}
+		}
+
 		if ( integrationSettingsCopy.containsKey( JPA_NON_JTA_DATASOURCE ) ) {
 			final Object dataSourceRef = integrationSettingsCopy.remove( JPA_NON_JTA_DATASOURCE );
+
+			applyDataSource(
+					dataSourceRef,
+					false,
+					integrationSettingsCopy,
+					mergedSettings
+			);
+
+			// EARLY EXIT!!
+			return;
+		}
+
+		if ( integrationSettingsCopy.containsKey( JAKARTA_JPA_NON_JTA_DATASOURCE ) ) {
+			final Object dataSourceRef = integrationSettingsCopy.remove( JAKARTA_JPA_NON_JTA_DATASOURCE );
 
 			applyDataSource(
 					dataSourceRef,
@@ -786,8 +852,10 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 						NullnessHelper.coalesceSuppliedValues(
 								() -> ConfigurationHelper.getString( DRIVER, integrationSettingsCopy ),
 								() -> ConfigurationHelper.getString( JPA_JDBC_DRIVER, integrationSettingsCopy ),
+								() -> ConfigurationHelper.getString( JAKARTA_JPA_JDBC_DRIVER, integrationSettingsCopy ),
 								() -> ConfigurationHelper.getString( DRIVER, mergedSettings.configurationValues ),
-								() -> ConfigurationHelper.getString( JPA_JDBC_DRIVER, mergedSettings.configurationValues )
+								() -> ConfigurationHelper.getString( JPA_JDBC_DRIVER, mergedSettings.configurationValues ),
+								() -> ConfigurationHelper.getString( JAKARTA_JPA_JDBC_DRIVER, mergedSettings.configurationValues )
 						),
 						integrationSettingsCopy,
 						mergedSettings
@@ -808,6 +876,26 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 						NullnessHelper.coalesceSuppliedValues(
 								() -> ConfigurationHelper.getString( JPA_JDBC_DRIVER, integrationSettingsCopy ),
 								() -> ConfigurationHelper.getString( JPA_JDBC_DRIVER, mergedSettings.configurationValues )
+						),
+						integrationSettingsCopy,
+						mergedSettings
+				);
+
+				// EARLY EXIT!!
+				return;
+			}
+		}
+
+		if ( integrationSettingsCopy.containsKey( JAKARTA_JPA_JDBC_URL ) ) {
+			final Object integrationJdbcUrl = integrationSettingsCopy.get( JAKARTA_JPA_JDBC_URL );
+
+			if ( integrationJdbcUrl != null ) {
+				//noinspection unchecked
+				applyJdbcSettings(
+						integrationJdbcUrl,
+						NullnessHelper.coalesceSuppliedValues(
+								() -> ConfigurationHelper.getString( JAKARTA_JPA_JDBC_DRIVER, integrationSettingsCopy ),
+								() -> ConfigurationHelper.getString( JAKARTA_JPA_JDBC_DRIVER, mergedSettings.configurationValues )
 						),
 						integrationSettingsCopy,
 						mergedSettings
@@ -874,6 +962,22 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			}
 		}
 
+		if ( mergedSettings.configurationValues.containsKey( JAKARTA_JPA_JDBC_URL ) ) {
+			final Object url = mergedSettings.configurationValues.get( JAKARTA_JPA_JDBC_URL );
+
+			if ( url != null && ( ! ( url instanceof String ) || StringHelper.isNotEmpty( (String) url ) ) ) {
+				applyJdbcSettings(
+						url,
+						ConfigurationHelper.getString( JAKARTA_JPA_JDBC_DRIVER, mergedSettings.configurationValues ),
+						integrationSettingsCopy,
+						mergedSettings
+				);
+
+				// EARLY EXIT!!
+				return;
+			}
+		}
+
 		// any other conditions to account for?
 	}
 
@@ -894,31 +998,48 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		// add to EMF properties (questionable - see HHH-13432)
 		final String emfKey;
 		final String inverseEmfKey;
+		final String jakartaEmfKey;
+		final String jakartaInverseEmfKey;
 		if ( isJta ) {
 			emfKey = JPA_JTA_DATASOURCE;
+			jakartaEmfKey = JAKARTA_JPA_JTA_DATASOURCE;
 			inverseEmfKey = JPA_NON_JTA_DATASOURCE;
+			jakartaInverseEmfKey = JAKARTA_JPA_NON_JTA_DATASOURCE;
 		}
 		else {
 			emfKey = JPA_NON_JTA_DATASOURCE;
+			jakartaEmfKey = JAKARTA_JPA_NON_JTA_DATASOURCE;
 			inverseEmfKey = JPA_JTA_DATASOURCE;
+			jakartaInverseEmfKey = JAKARTA_JPA_JTA_DATASOURCE;
 		}
 		mergedSettings.configurationValues.put( emfKey, dataSourceRef );
+		mergedSettings.configurationValues.put( jakartaEmfKey, dataSourceRef );
 
 		// clear any settings logically overridden by this datasource
 		cleanUpConfigKeys(
 				integrationSettingsCopy,
 				mergedSettings,
 				inverseEmfKey,
+				jakartaInverseEmfKey,
 				JPA_JDBC_DRIVER,
+				JAKARTA_JPA_JDBC_DRIVER,
 				DRIVER,
 				JPA_JDBC_URL,
+				JAKARTA_JPA_JDBC_URL,
 				URL
 		);
 
 
 		// clean-up the entries in the "integration overrides" so they do not get get picked
 		// up in the general "integration overrides" handling
-		cleanUpConfigKeys( integrationSettingsCopy, DATASOURCE, JPA_JTA_DATASOURCE, JPA_NON_JTA_DATASOURCE );
+		cleanUpConfigKeys(
+				integrationSettingsCopy,
+				DATASOURCE,
+				JPA_JTA_DATASOURCE,
+				JAKARTA_JPA_JTA_DATASOURCE,
+				JPA_NON_JTA_DATASOURCE,
+				JAKARTA_JPA_NON_JTA_DATASOURCE
+		);
 
 		// add under Hibernate's DATASOURCE setting where the ConnectionProvider will find it
 		mergedSettings.configurationValues.put( DATASOURCE, dataSourceRef );
@@ -952,14 +1073,17 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			MergedSettings mergedSettings) {
 		mergedSettings.configurationValues.put( URL, url );
 		mergedSettings.configurationValues.put( JPA_JDBC_URL, url );
+		mergedSettings.configurationValues.put( JAKARTA_JPA_JDBC_URL, url );
 
 		if ( driver != null ) {
 			mergedSettings.configurationValues.put( DRIVER, driver );
 			mergedSettings.configurationValues.put( JPA_JDBC_DRIVER, driver );
+			mergedSettings.configurationValues.put( JAKARTA_JPA_JDBC_DRIVER, driver );
 		}
 		else {
 			mergedSettings.configurationValues.remove( DRIVER );
 			mergedSettings.configurationValues.remove( JPA_JDBC_DRIVER );
+			mergedSettings.configurationValues.remove( JAKARTA_JPA_JDBC_DRIVER );
 		}
 
 		// clean up the integration-map values
@@ -967,12 +1091,16 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 				integrationSettingsCopy,
 				DRIVER,
 				JPA_JDBC_DRIVER,
+				JAKARTA_JPA_JDBC_DRIVER,
 				URL,
 				JPA_JDBC_URL,
+				JAKARTA_JPA_JDBC_URL,
 				USER,
 				JPA_JDBC_USER,
+				JAKARTA_JPA_JDBC_USER,
 				PASS,
-				JPA_JDBC_PASSWORD
+				JPA_JDBC_PASSWORD,
+				JAKARTA_JPA_JDBC_PASSWORD
 		);
 
 		cleanUpConfigKeys(
@@ -980,7 +1108,9 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 				mergedSettings,
 				DATASOURCE,
 				JPA_JTA_DATASOURCE,
-				JPA_NON_JTA_DATASOURCE
+				JAKARTA_JPA_JTA_DATASOURCE,
+				JPA_NON_JTA_DATASOURCE,
+				JAKARTA_JPA_NON_JTA_DATASOURCE
 		);
 	}
 

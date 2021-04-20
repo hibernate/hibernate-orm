@@ -175,6 +175,10 @@ import org.hibernate.stat.SessionStatistics;
 import org.hibernate.stat.internal.SessionStatisticsImpl;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_LOCK_SCOPE;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_LOCK_TIMEOUT;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_SHARED_CACHE_RETRIEVE_MODE;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_SHARED_CACHE_STORE_MODE;
 import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_SCOPE;
 import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_TIMEOUT;
 import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_RETRIEVE_MODE;
@@ -305,8 +309,28 @@ public class SessionImpl
 		if ( ( queryTimeout = getSessionProperty( QueryHints.SPEC_HINT_TIMEOUT )  ) != null ) {
 			query.setHint( QueryHints.SPEC_HINT_TIMEOUT, queryTimeout );
 		}
+		final Object jakartaQueryTimeout;
+		if ( ( jakartaQueryTimeout = getSessionProperty( QueryHints.JAKARTA_SPEC_HINT_TIMEOUT )  ) != null ) {
+			query.setHint( QueryHints.JAKARTA_SPEC_HINT_TIMEOUT, jakartaQueryTimeout );
+		}
 		final Object lockTimeout;
-		if ( ( lockTimeout = getSessionProperty( JPA_LOCK_TIMEOUT ) ) != null ) {
+		final Object jpaLockTimeout = getSessionProperty( JPA_LOCK_TIMEOUT );
+		if ( jpaLockTimeout == null ) {
+			lockTimeout = getSessionProperty( JAKARTA_JPA_LOCK_TIMEOUT );
+		}
+		else if ( Integer.valueOf( LockOptions.WAIT_FOREVER ).equals( jpaLockTimeout ) ) {
+			final Object jakartaLockTimeout = getSessionProperty( JAKARTA_JPA_LOCK_TIMEOUT );
+			if ( jakartaLockTimeout == null ) {
+				lockTimeout = jpaLockTimeout;
+			}
+			else {
+				lockTimeout = jakartaLockTimeout;
+			}
+		}
+		else {
+			lockTimeout = jpaLockTimeout;
+		}
+		if ( lockTimeout != null ) {
 			query.setHint( JPA_LOCK_TIMEOUT, lockTimeout );
 		}
 	}
@@ -3424,11 +3448,19 @@ public class SessionImpl
 	}
 
 	private static CacheRetrieveMode determineCacheRetrieveMode(Map<String, Object> settings) {
-		return ( CacheRetrieveMode ) settings.get( JPA_SHARED_CACHE_RETRIEVE_MODE );
+		final CacheRetrieveMode cacheRetrieveMode = (CacheRetrieveMode) settings.get( JPA_SHARED_CACHE_RETRIEVE_MODE );
+		if ( cacheRetrieveMode == null ) {
+			return (CacheRetrieveMode) settings.get( JAKARTA_JPA_SHARED_CACHE_RETRIEVE_MODE );
+		}
+		return cacheRetrieveMode;
 	}
 
 	private static CacheStoreMode determineCacheStoreMode(Map<String, Object> settings) {
-		return ( CacheStoreMode ) settings.get( JPA_SHARED_CACHE_STORE_MODE );
+		final CacheStoreMode cacheStoreMode = (CacheStoreMode) settings.get( JPA_SHARED_CACHE_STORE_MODE );
+		if ( cacheStoreMode == null ) {
+			return ( CacheStoreMode ) settings.get( JAKARTA_JPA_SHARED_CACHE_STORE_MODE );
+		}
+		return cacheStoreMode;
 	}
 
 	private void checkTransactionNeededForUpdateOperation() {
@@ -3574,10 +3606,14 @@ public class SessionImpl
 		if ( AvailableSettings.FLUSH_MODE.equals( propertyName ) ) {
 			setHibernateFlushMode( ConfigurationHelper.getFlushMode( value, FlushMode.AUTO ) );
 		}
-		else if ( JPA_LOCK_SCOPE.equals( propertyName ) || JPA_LOCK_TIMEOUT.equals(  propertyName ) ) {
+		else if ( JPA_LOCK_SCOPE.equals( propertyName ) || JPA_LOCK_TIMEOUT.equals( propertyName )
+				|| JAKARTA_JPA_LOCK_SCOPE.equals( propertyName ) || JAKARTA_JPA_LOCK_TIMEOUT.equals( propertyName ) ) {
 			LockOptionsHelper.applyPropertiesToLockOptions( properties, this::getLockOptionsForWrite );
 		}
-		else if ( JPA_SHARED_CACHE_RETRIEVE_MODE.equals( propertyName ) || JPA_SHARED_CACHE_STORE_MODE.equals(  propertyName ) ) {
+		else if ( JPA_SHARED_CACHE_RETRIEVE_MODE.equals( propertyName )
+				|| JPA_SHARED_CACHE_STORE_MODE.equals( propertyName )
+				|| JAKARTA_JPA_SHARED_CACHE_RETRIEVE_MODE.equals( propertyName )
+				|| JAKARTA_JPA_SHARED_CACHE_STORE_MODE.equals( propertyName ) ) {
 			getSession().setCacheMode(
 					CacheModeHelper.interpretCacheMode(
 							determineCacheStoreMode( properties ),

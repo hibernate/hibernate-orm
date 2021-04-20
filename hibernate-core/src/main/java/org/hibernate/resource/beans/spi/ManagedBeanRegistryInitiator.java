@@ -60,7 +60,10 @@ public class ManagedBeanRegistryInitiator implements StandardServiceInitiator<Ma
 		// simplified CDI support
 
 		final boolean isCdiAvailable = isCdiAvailable( classLoaderService );
-		final Object beanManagerRef = cfgSvc.getSettings().get( AvailableSettings.CDI_BEAN_MANAGER );
+		Object beanManagerRef = cfgSvc.getSettings().get( AvailableSettings.CDI_BEAN_MANAGER );
+		if ( beanManagerRef == null ) {
+			beanManagerRef = cfgSvc.getSettings().get( AvailableSettings.JAKARTA_CDI_BEAN_MANAGER );
+		}
 		if ( beanManagerRef != null ) {
 			if ( !isCdiAvailable ) {
 				BeansMessageLogger.BEANS_LOGGER.beanManagerButCdiNotAvailable( beanManagerRef );

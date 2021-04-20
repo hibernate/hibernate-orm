@@ -71,6 +71,10 @@ import javax.persistence.CacheRetrieveMode;
 import javax.persistence.CacheStoreMode;
 import javax.persistence.PessimisticLockScope;
 
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_LOCK_SCOPE;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_LOCK_TIMEOUT;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_SHARED_CACHE_RETRIEVE_MODE;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_SHARED_CACHE_STORE_MODE;
 import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_SCOPE;
 import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_TIMEOUT;
 import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_RETRIEVE_MODE;
@@ -277,18 +281,27 @@ public final class FastSessionServices {
 		//Static defaults:
 		p.putIfAbsent( AvailableSettings.FLUSH_MODE, FlushMode.AUTO.name() );
 		p.putIfAbsent( JPA_LOCK_SCOPE, PessimisticLockScope.EXTENDED.name() );
+		p.putIfAbsent( JAKARTA_JPA_LOCK_SCOPE, PessimisticLockScope.EXTENDED.name() );
 		p.putIfAbsent( JPA_LOCK_TIMEOUT, LockOptions.WAIT_FOREVER );
+		p.putIfAbsent( JAKARTA_JPA_LOCK_TIMEOUT, LockOptions.WAIT_FOREVER );
 		p.putIfAbsent( JPA_SHARED_CACHE_RETRIEVE_MODE, CacheModeHelper.DEFAULT_RETRIEVE_MODE );
+		p.putIfAbsent( JAKARTA_JPA_SHARED_CACHE_RETRIEVE_MODE, CacheModeHelper.DEFAULT_RETRIEVE_MODE );
 		p.putIfAbsent( JPA_SHARED_CACHE_STORE_MODE, CacheModeHelper.DEFAULT_STORE_MODE );
+		p.putIfAbsent( JAKARTA_JPA_SHARED_CACHE_STORE_MODE, CacheModeHelper.DEFAULT_STORE_MODE );
 
 		//Defaults defined by SessionFactory configuration:
 		final String[] ENTITY_MANAGER_SPECIFIC_PROPERTIES = {
 				JPA_LOCK_SCOPE,
+				JAKARTA_JPA_LOCK_SCOPE,
 				JPA_LOCK_TIMEOUT,
+				JAKARTA_JPA_LOCK_TIMEOUT,
 				AvailableSettings.FLUSH_MODE,
 				JPA_SHARED_CACHE_RETRIEVE_MODE,
+				JAKARTA_JPA_SHARED_CACHE_RETRIEVE_MODE,
 				JPA_SHARED_CACHE_STORE_MODE,
-				QueryHints.SPEC_HINT_TIMEOUT
+				JAKARTA_JPA_SHARED_CACHE_STORE_MODE,
+				QueryHints.SPEC_HINT_TIMEOUT,
+				QueryHints.JAKARTA_SPEC_HINT_TIMEOUT
 		};
 		final Map<String, Object> properties = sf.getProperties();
 		for ( String key : ENTITY_MANAGER_SPECIFIC_PROPERTIES ) {
@@ -328,11 +341,19 @@ public final class FastSessionServices {
 	}
 
 	private static CacheRetrieveMode determineCacheRetrieveMode(Map<String, Object> settings) {
-		return ( CacheRetrieveMode ) settings.get( JPA_SHARED_CACHE_RETRIEVE_MODE );
+		final CacheRetrieveMode cacheRetrieveMode = (CacheRetrieveMode) settings.get( JPA_SHARED_CACHE_RETRIEVE_MODE );
+		if ( cacheRetrieveMode == null ) {
+			return (CacheRetrieveMode) settings.get( JAKARTA_JPA_SHARED_CACHE_RETRIEVE_MODE );
+		}
+		return cacheRetrieveMode;
 	}
 
 	private static CacheStoreMode determineCacheStoreMode(Map<String, Object> settings) {
-		return ( CacheStoreMode ) settings.get( JPA_SHARED_CACHE_STORE_MODE );
+		final CacheStoreMode cacheStoreMode = (CacheStoreMode) settings.get( JPA_SHARED_CACHE_STORE_MODE );
+		if ( cacheStoreMode == null ) {
+			return ( CacheStoreMode ) settings.get( JAKARTA_JPA_SHARED_CACHE_STORE_MODE );
+		}
+		return cacheStoreMode;
 	}
 
 	public ConnectionObserverStatsBridge getDefaultJdbcObserver() {

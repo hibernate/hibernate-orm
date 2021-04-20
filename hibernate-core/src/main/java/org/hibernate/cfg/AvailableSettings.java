@@ -208,6 +208,185 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	String CDI_BEAN_MANAGER = "javax.persistence.bean.manager";
 
 
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Jakarta JPA defined settings
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	/**
+	 * The name of the {@link javax.persistence.spi.PersistenceProvider} implementor
+	 * <p/>
+	 * See JPA 2 sections 9.4.3 and 8.2.1.4
+	 */
+	String JAKARTA_JPA_PERSISTENCE_PROVIDER = "jakarta.persistence.provider";
+
+	/**
+	 * The type of transactions supported by the entity managers.
+	 * <p/>
+	 * See JPA 2 sections 9.4.3 and 8.2.1.2
+	 */
+	String JAKARTA_JPA_TRANSACTION_TYPE = "jakarta.persistence.transactionType";
+
+	/**
+	 * The JNDI name of a JTA {@link javax.sql.DataSource}.
+	 * <p/>
+	 * See JPA 2 sections 9.4.3 and 8.2.1.5
+	 */
+	String JAKARTA_JPA_JTA_DATASOURCE = "jakarta.persistence.jtaDataSource";
+
+	/**
+	 * The JNDI name of a non-JTA {@link javax.sql.DataSource}.
+	 * <p/>
+	 * See JPA 2 sections 9.4.3 and 8.2.1.5
+	 */
+	String JAKARTA_JPA_NON_JTA_DATASOURCE = "jakarta.persistence.nonJtaDataSource";
+
+	/**
+	 * The name of a JDBC driver to use to connect to the database.
+	 * <p/>
+	 * Used in conjunction with {@link #JPA_JDBC_URL}, {@link #JPA_JDBC_USER} and {@link #JPA_JDBC_PASSWORD}
+	 * to define how to make connections to the database in lieu of
+	 * a datasource (either {@link #JPA_JTA_DATASOURCE} or {@link #JPA_NON_JTA_DATASOURCE}).
+	 * <p/>
+	 * See section 8.2.1.9
+	 */
+	String JAKARTA_JPA_JDBC_DRIVER = "jakarta.persistence.jdbc.driver";
+
+	/**
+	 * The JDBC connection url to use to connect to the database.
+	 * <p/>
+	 * Used in conjunction with {@link #JPA_JDBC_DRIVER}, {@link #JPA_JDBC_USER} and {@link #JPA_JDBC_PASSWORD}
+	 * to define how to make connections to the database in lieu of
+	 * a datasource (either {@link #JPA_JTA_DATASOURCE} or {@link #JPA_NON_JTA_DATASOURCE}).
+	 * <p/>
+	 * See section 8.2.1.9
+	 */
+	String JAKARTA_JPA_JDBC_URL = "jakarta.persistence.jdbc.url";
+
+	/**
+	 * The JDBC connection user name.
+	 * <p/>
+	 * Used in conjunction with {@link #JPA_JDBC_DRIVER}, {@link #JPA_JDBC_URL} and {@link #JPA_JDBC_PASSWORD}
+	 * to define how to make connections to the database in lieu of
+	 * a datasource (either {@link #JPA_JTA_DATASOURCE} or {@link #JPA_NON_JTA_DATASOURCE}).
+	 * <p/>
+	 * See section 8.2.1.9
+	 */
+	String JAKARTA_JPA_JDBC_USER = "jakarta.persistence.jdbc.user";
+
+	/**
+	 * The JDBC connection password.
+	 * <p/>
+	 * Used in conjunction with {@link #JPA_JDBC_DRIVER}, {@link #JPA_JDBC_URL} and {@link #JPA_JDBC_USER}
+	 * to define how to make connections to the database in lieu of
+	 * a datasource (either {@link #JPA_JTA_DATASOURCE} or {@link #JPA_NON_JTA_DATASOURCE}).
+	 * <p/>
+	 * See JPA 2 section 8.2.1.9
+	 */
+	String JAKARTA_JPA_JDBC_PASSWORD = "jakarta.persistence.jdbc.password";
+
+	/**
+	 * Used to indicate whether second-level (what JPA terms shared cache) caching is
+	 * enabled as per the rules defined in JPA 2 section 3.1.7.
+	 * <p/>
+	 * See JPA 2 sections 9.4.3 and 8.2.1.7
+	 * @see javax.persistence.SharedCacheMode
+	 */
+	String JAKARTA_JPA_SHARED_CACHE_MODE = "jakarta.persistence.sharedCache.mode";
+
+	/**
+	 * NOTE : Not a valid EMF property...
+	 * <p/>
+	 * Used to indicate if the provider should attempt to retrieve requested data
+	 * in the shared cache.
+	 *
+	 * @see javax.persistence.CacheRetrieveMode
+	 */
+	String JAKARTA_JPA_SHARED_CACHE_RETRIEVE_MODE ="jakarta.persistence.cache.retrieveMode";
+
+	/**
+	 * NOTE : Not a valid EMF property...
+	 * <p/>
+	 * Used to indicate if the provider should attempt to store data loaded from the database
+	 * in the shared cache.
+	 *
+	 * @see javax.persistence.CacheStoreMode
+	 */
+	String JAKARTA_JPA_SHARED_CACHE_STORE_MODE ="jakarta.persistence.cache.storeMode";
+
+	/**
+	 * Used to indicate what form of automatic validation is in effect as per rules defined
+	 * in JPA 2 section 3.6.1.1
+	 * <p/>
+	 * See JPA 2 sections 9.4.3 and 8.2.1.8
+	 * @see javax.persistence.ValidationMode
+	 */
+	String JAKARTA_JPA_VALIDATION_MODE = "jakarta.persistence.validation.mode";
+
+	/**
+	 * Used to pass along any discovered validator factory.
+	 */
+	String JAKARTA_JPA_VALIDATION_FACTORY = "jakarta.persistence.validation.factory";
+
+	/**
+	 * Used to coordinate with bean validators
+	 * <p/>
+	 * See JPA 2 section 8.2.1.9
+	 */
+	String JAKARTA_JPA_PERSIST_VALIDATION_GROUP = "jakarta.persistence.validation.group.pre-persist";
+
+	/**
+	 * Used to coordinate with bean validators
+	 * <p/>
+	 * See JPA 2 section 8.2.1.9
+	 */
+	String JAKARTA_JPA_UPDATE_VALIDATION_GROUP = "jakarta.persistence.validation.group.pre-update";
+
+	/**
+	 * Used to coordinate with bean validators
+	 * <p/>
+	 * See JPA 2 section 8.2.1.9
+	 */
+	String JAKARTA_JPA_REMOVE_VALIDATION_GROUP = "jakarta.persistence.validation.group.pre-remove";
+
+	/**
+	 * Used to request (hint) a pessimistic lock scope.
+	 * <p/>
+	 * See JPA 2 sections 8.2.1.9 and 3.4.4.3
+	 */
+	String JAKARTA_JPA_LOCK_SCOPE = "jakarta.persistence.lock.scope";
+
+	/**
+	 * Used to request (hint) a pessimistic lock timeout (in milliseconds).
+	 * <p/>
+	 * See JPA 2 sections 8.2.1.9 and 3.4.4.3
+	 */
+	String JAKARTA_JPA_LOCK_TIMEOUT = "jakarta.persistence.lock.timeout";
+
+	/**
+	 * Used to pass along the CDI BeanManager, if any, to be used.
+	 *
+	 * According to JPA, strictly, the BeanManager should be passed in
+	 * at boot-time and be ready for use at that time.  However not all
+	 * environments can do this (WildFly e.g.).  To accommodate such
+	 * environments, Hibernate provides 2 options:
+	 *
+	 *     * a proprietary CDI extension SPI (that we have proposed to
+	 *     	the CDI spec group as a standard option) that can be used
+	 *     	to provide delayed BeanManager access.  To use this solution,
+	 *     	the reference passed as the BeanManager during bootstrap
+	 *     	should be typed as {@link ExtendedBeanManager}
+	 *     * delayed access to the BeanManager reference.  Here, Hibernate
+	 *      will not access the reference passed as the BeanManager during
+	 *      bootstrap until it is first needed.  Note however that this has
+	 *      the effect of delaying any deployment problems until after
+	 *      bootstrapping.
+	 *
+	 * This setting is used to configure Hibernate ORM's access to
+	 * the BeanManager (either directly or via {@link ExtendedBeanManager}).
+	 */
+	String JAKARTA_CDI_BEAN_MANAGER = "jakarta.persistence.bean.manager";
+
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// BootstrapServiceRegistry level settings
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1485,6 +1664,172 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 * provider should not attempt to create database schemas.
 	 */
 	String HBM2DDL_CREATE_SCHEMAS = "javax.persistence.create-database-schemas";
+
+	/**
+	 * Setting to perform SchemaManagementTool actions against the database directly via JDBC
+	 * automatically as part of the SessionFactory lifecycle.  Valid options are defined by the
+	 * {@link org.hibernate.tool.schema.Action} enum.
+	 * <p/>
+	 * Interpreted in combination with {@link #HBM2DDL_AUTO}.  If no value is specified, the default
+	 * is "none" ({@link org.hibernate.tool.schema.Action#NONE}).
+	 *
+	 * @see org.hibernate.tool.schema.Action
+	 */
+	String JAKARTA_HBM2DDL_DATABASE_ACTION = "jakarta.persistence.schema-generation.database.action";
+
+	/**
+	 * Setting to perform SchemaManagementTool actions writing the commands into a DDL script file.
+	 * Valid options are defined by the {@link org.hibernate.tool.schema.Action} enum.
+	 * <p/>
+	 * Interpreted in combination with {@link #HBM2DDL_AUTO}.  If no value is specified, the default
+	 * is "none" ({@link org.hibernate.tool.schema.Action#NONE}).
+	 *
+	 * @see org.hibernate.tool.schema.Action
+	 */
+	String JAKARTA_HBM2DDL_SCRIPTS_ACTION = "jakarta.persistence.schema-generation.scripts.action";
+
+	/**
+	 * Allows passing a specific {@link java.sql.Connection} instance to be used by SchemaManagementTool.
+	 * <p/>
+	 * May also be used to determine the values for {@value #HBM2DDL_DB_NAME},
+	 * {@value #HBM2DDL_DB_MAJOR_VERSION} and {@value #HBM2DDL_DB_MINOR_VERSION}.
+	 */
+	String JAKARTA_HBM2DDL_CONNECTION = "jakarta.persistence.schema-generation-connection";
+
+	/**
+	 * Specifies the name of the database provider in cases where a Connection to the underlying database is
+	 * not available (aka, mainly in generating scripts).  In such cases, a value for this setting
+	 * *must* be specified.
+	 * <p/>
+	 * The value of this setting is expected to match the value returned by
+	 * {@link java.sql.DatabaseMetaData#getDatabaseProductName()} for the target database.
+	 * <p/>
+	 * Additionally specifying {@value #HBM2DDL_DB_MAJOR_VERSION} and/or {@value #HBM2DDL_DB_MINOR_VERSION}
+	 * may be required to understand exactly how to generate the required schema commands.
+	 *
+	 * @see #HBM2DDL_DB_MAJOR_VERSION
+	 * @see #HBM2DDL_DB_MINOR_VERSION
+	 */
+	@SuppressWarnings("JavaDoc")
+	String JAKARTA_HBM2DDL_DB_NAME = "jakarta.persistence.database-product-name";
+
+	/**
+	 * Specifies the major version of the underlying database, as would be returned by
+	 * {@link java.sql.DatabaseMetaData#getDatabaseMajorVersion} for the target database.  This value is used to
+	 * help more precisely determine how to perform schema generation tasks for the underlying database in cases
+	 * where {@value #HBM2DDL_DB_NAME} does not provide enough distinction.
+
+	 * @see #HBM2DDL_DB_NAME
+	 * @see #HBM2DDL_DB_MINOR_VERSION
+	 */
+	String JAKARTA_HBM2DDL_DB_MAJOR_VERSION = "jakarta.persistence.database-major-version";
+
+	/**
+	 * Specifies the minor version of the underlying database, as would be returned by
+	 * {@link java.sql.DatabaseMetaData#getDatabaseMinorVersion} for the target database.  This value is used to
+	 * help more precisely determine how to perform schema generation tasks for the underlying database in cases
+	 * where the combination of {@value #HBM2DDL_DB_NAME} and {@value #HBM2DDL_DB_MAJOR_VERSION} does not provide
+	 * enough distinction.
+	 *
+	 * @see #HBM2DDL_DB_NAME
+	 * @see #HBM2DDL_DB_MAJOR_VERSION
+	 */
+	String JAKARTA_HBM2DDL_DB_MINOR_VERSION = "jakarta.persistence.database-minor-version";
+
+	/**
+	 * Specifies whether schema generation commands for schema creation are to be determined based on object/relational
+	 * mapping metadata, DDL scripts, or a combination of the two.  See {@link SourceType} for valid set of values.
+	 * If no value is specified, a default is assumed as follows:<ul>
+	 *     <li>
+	 *         if source scripts are specified (per {@value #HBM2DDL_CREATE_SCRIPT_SOURCE}),then "scripts" is assumed
+	 *     </li>
+	 *     <li>
+	 *         otherwise, "metadata" is assumed
+	 *     </li>
+	 * </ul>
+	 *
+	 * @see SourceType
+	 */
+	String JAKARTA_HBM2DDL_CREATE_SOURCE = "jakarta.persistence.schema-generation.create-source";
+
+	/**
+	 * Specifies whether schema generation commands for schema dropping are to be determined based on object/relational
+	 * mapping metadata, DDL scripts, or a combination of the two.  See {@link SourceType} for valid set of values.
+	 * If no value is specified, a default is assumed as follows:<ul>
+	 *     <li>
+	 *         if source scripts are specified (per {@value #HBM2DDL_DROP_SCRIPT_SOURCE}),then "scripts" is assumed
+	 *     </li>
+	 *     <li>
+	 *         otherwise, "metadata" is assumed
+	 *     </li>
+	 * </ul>
+	 *
+	 * @see SourceType
+	 */
+	String JAKARTA_HBM2DDL_DROP_SOURCE = "jakarta.persistence.schema-generation.drop-source";
+
+	/**
+	 * Specifies the CREATE script file as either a {@link java.io.Reader} configured for reading of the DDL script
+	 * file or a string designating a file {@link java.net.URL} for the DDL script.
+	 * <p/>
+	 * Hibernate historically also accepted {@link #HBM2DDL_IMPORT_FILES} for a similar purpose.  This setting
+	 * should be preferred over {@link #HBM2DDL_IMPORT_FILES} moving forward
+	 *
+	 * @see #HBM2DDL_CREATE_SOURCE
+	 * @see #HBM2DDL_IMPORT_FILES
+	 */
+	String JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE = "jakarta.persistence.schema-generation.create-script-source";
+
+	/**
+	 * Specifies the DROP script file as either a {@link java.io.Reader} configured for reading of the DDL script
+	 * file or a string designating a file {@link java.net.URL} for the DDL script.
+	 *
+	 * @see #HBM2DDL_DROP_SOURCE
+	 */
+	String JAKARTA_HBM2DDL_DROP_SCRIPT_SOURCE = "jakarta.persistence.schema-generation.drop-script-source";
+
+	/**
+	 * For cases where the {@value #HBM2DDL_SCRIPTS_ACTION} value indicates that schema creation commands should
+	 * be written to DDL script file, {@value #HBM2DDL_SCRIPTS_CREATE_TARGET} specifies either a
+	 * {@link java.io.Writer} configured for output of the DDL script or a string specifying the file URL for the DDL
+	 * script.
+	 *
+	 * @see #HBM2DDL_SCRIPTS_ACTION
+	 */
+	@SuppressWarnings("JavaDoc")
+	String JAKARTA_HBM2DDL_SCRIPTS_CREATE_TARGET = "jakarta.persistence.schema-generation.scripts.create-target";
+
+	/**
+	 * For cases where the {@value #HBM2DDL_SCRIPTS_ACTION} value indicates that schema drop commands should
+	 * be written to DDL script file, {@value #HBM2DDL_SCRIPTS_DROP_TARGET} specifies either a
+	 * {@link java.io.Writer} configured for output of the DDL script or a string specifying the file URL for the DDL
+	 * script.
+	 *
+	 * @see #HBM2DDL_SCRIPTS_ACTION
+	 */
+	@SuppressWarnings("JavaDoc")
+	String JAKARTA_HBM2DDL_SCRIPTS_DROP_TARGET = "jakarta.persistence.schema-generation.scripts.drop-target";
+
+	/**
+	 * JPA variant of {@link #HBM2DDL_IMPORT_FILES}
+	 * <p/>
+	 * Specifies a {@link java.io.Reader} configured for reading of the SQL load script or a string designating the
+	 * file {@link java.net.URL} for the SQL load script.
+	 * <p/>
+	 * A "SQL load script" is a script that performs some database initialization (INSERT, etc).
+	 */
+	String JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE = "jakarta.persistence.sql-load-script-source";
+
+	/**
+	 * The JPA variant of {@link #HBM2DDL_CREATE_NAMESPACES}
+	 * <p/>
+	 * Specifies whether the persistence provider is to create the database schema(s) in addition to creating
+	 * database objects (tables, sequences, constraints, etc).  The value of this boolean property should be set
+	 * to {@code true} if the persistence provider is to create schemas in the database or to generate DDL that
+	 * contains "CREATE SCHEMA" commands.  If this property is not supplied (or is explicitly {@code false}), the
+	 * provider should not attempt to create database schemas.
+	 */
+	String JAKARTA_HBM2DDL_CREATE_SCHEMAS = "jakarta.persistence.create-database-schemas";
 
 	/**
 	 * @deprecated Use {@link #HBM2DDL_CREATE_SCHEMAS} instead: this variable name had a typo.

@@ -111,6 +111,9 @@ public class Helper {
 		if ( configurationValues.containsKey( AvailableSettings.HBM2DDL_CREATE_SCHEMAS ) ) {
 			count++;
 		}
+		if ( configurationValues.containsKey( AvailableSettings.JAKARTA_HBM2DDL_CREATE_SCHEMAS ) ) {
+			count++;
+		}
 		if ( configurationValues.containsKey( AvailableSettings.HBM2DDL_CREATE_NAMESPACES ) ) {
 			count++;
 		}
@@ -124,15 +127,20 @@ public class Helper {
 		return ConfigurationHelper.getBoolean(
 				AvailableSettings.HBM2DDL_CREATE_SCHEMAS,
 				configurationValues,
-				//Then try the Hibernate ORM setting:
+				//Then try the Jakarta JPA setting:
 				ConfigurationHelper.getBoolean(
-						AvailableSettings.HBM2DDL_CREATE_NAMESPACES,
+						AvailableSettings.JAKARTA_HBM2DDL_CREATE_SCHEMAS,
 						configurationValues,
-						//And finally fall back to the old name this had before we fixed the typo:
+						//Then try the Hibernate ORM setting:
 						ConfigurationHelper.getBoolean(
-								AvailableSettings.HBM2DLL_CREATE_NAMESPACES,
+								AvailableSettings.HBM2DDL_CREATE_NAMESPACES,
 								configurationValues,
-								false
+								//And finally fall back to the old name this had before we fixed the typo:
+								ConfigurationHelper.getBoolean(
+										AvailableSettings.HBM2DLL_CREATE_NAMESPACES,
+										configurationValues,
+										false
+								)
 						)
 				)
 		);

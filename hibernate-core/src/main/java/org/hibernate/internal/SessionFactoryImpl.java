@@ -234,10 +234,15 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		this.properties = new HashMap<>();
 		this.properties.putAll( serviceRegistry.getService( ConfigurationService.class ).getSettings() );
-		if ( !properties.containsKey( AvailableSettings.JPA_VALIDATION_FACTORY ) ) {
+		if ( !properties.containsKey( AvailableSettings.JPA_VALIDATION_FACTORY )
+				&& !properties.containsKey( AvailableSettings.JAKARTA_JPA_VALIDATION_FACTORY ) ) {
 			if ( getSessionFactoryOptions().getValidatorFactoryReference() != null ) {
 				properties.put(
 						AvailableSettings.JPA_VALIDATION_FACTORY,
+						getSessionFactoryOptions().getValidatorFactoryReference()
+				);
+				properties.put(
+						AvailableSettings.JAKARTA_JPA_VALIDATION_FACTORY,
 						getSessionFactoryOptions().getValidatorFactoryReference()
 				);
 			}
@@ -1647,6 +1652,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	private void maskOutSensitiveInformation(Map<String, Object> props) {
 		maskOutIfSet( props, AvailableSettings.JPA_JDBC_USER );
 		maskOutIfSet( props, AvailableSettings.JPA_JDBC_PASSWORD );
+		maskOutIfSet( props, AvailableSettings.JAKARTA_JPA_JDBC_USER );
+		maskOutIfSet( props, AvailableSettings.JAKARTA_JPA_JDBC_PASSWORD );
 		maskOutIfSet( props, AvailableSettings.USER );
 		maskOutIfSet( props, AvailableSettings.PASS );
 	}

@@ -60,6 +60,7 @@ import org.hibernate.tool.schema.spi.TargetDescriptor;
 
 import static org.hibernate.cfg.AvailableSettings.HBM2DDL_CHARSET_NAME;
 import static org.hibernate.cfg.AvailableSettings.HBM2DDL_LOAD_SCRIPT_SOURCE;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE;
 import static org.hibernate.tool.schema.internal.Helper.interpretScriptSourceSetting;
 
 /**
@@ -457,7 +458,10 @@ public class SchemaCreatorImpl implements SchemaCreator {
 		//final Formatter formatter = format ? DDLFormatterImpl.INSTANCE : FormatStyle.NONE.getFormatter();
 		final Formatter formatter = FormatStyle.NONE.getFormatter();
 
-		final Object importScriptSetting = options.getConfigurationValues().get( HBM2DDL_LOAD_SCRIPT_SOURCE );
+		Object importScriptSetting = options.getConfigurationValues().get( HBM2DDL_LOAD_SCRIPT_SOURCE );
+		if ( importScriptSetting == null ) {
+			importScriptSetting = options.getConfigurationValues().get( JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE );
+		}
 		String charsetName = (String) options.getConfigurationValues().get( HBM2DDL_CHARSET_NAME );
 
 		if ( importScriptSetting != null ) {

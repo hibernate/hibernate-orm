@@ -46,6 +46,7 @@ import org.jboss.logging.Logger;
 
 import static org.hibernate.cfg.AvailableSettings.HBM2DDL_CONNECTION;
 import static org.hibernate.cfg.AvailableSettings.HBM2DDL_DELIMITER;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_CONNECTION;
 
 /**
  * The standard Hibernate implementation for performing schema management.
@@ -196,12 +197,30 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 		if ( providedConnection != null ) {
 			jdbcContextBuilder.jdbcConnectionAccess = new JdbcConnectionAccessProvidedConnectionImpl( providedConnection );
 		}
+		else {
+			final Connection jakartaProvidedConnection = (Connection) configurationValues.get( JAKARTA_HBM2DDL_CONNECTION );
+			if ( jakartaProvidedConnection != null ) {
+				jdbcContextBuilder.jdbcConnectionAccess = new JdbcConnectionAccessProvidedConnectionImpl( jakartaProvidedConnection );
+			}
+		}
 
 		// see if a specific Dialect override has been provided...
-		final String explicitDbName = (String) configurationValues.get( AvailableSettings.HBM2DDL_DB_NAME );
+		String dbName = (String) configurationValues.get( AvailableSettings.HBM2DDL_DB_NAME );
+		if ( dbName == null ) {
+			dbName = (String) configurationValues.get( AvailableSettings.JAKARTA_HBM2DDL_DB_NAME );
+		}
+		final String explicitDbName = dbName;
 		if ( StringHelper.isNotEmpty( explicitDbName ) ) {
-			final String explicitDbMajor = (String) configurationValues.get( AvailableSettings.HBM2DDL_DB_MAJOR_VERSION );
-			final String explicitDbMinor = (String) configurationValues.get( AvailableSettings.HBM2DDL_DB_MINOR_VERSION );
+			String dbMajor = (String) configurationValues.get( AvailableSettings.HBM2DDL_DB_MAJOR_VERSION );
+			if ( dbMajor == null ) {
+				dbMajor = (String) configurationValues.get( AvailableSettings.JAKARTA_HBM2DDL_DB_MAJOR_VERSION );
+			}
+			String dbMinor = (String) configurationValues.get( AvailableSettings.HBM2DDL_DB_MINOR_VERSION );
+			if ( dbMinor == null ) {
+				dbMinor = (String) configurationValues.get( AvailableSettings.JAKARTA_HBM2DDL_DB_MINOR_VERSION );
+			}
+			final String explicitDbMajor = dbMajor;
+			final String explicitDbMinor = dbMinor;
 
 			final Dialect indicatedDialect = serviceRegistry.getService( DialectResolver.class ).resolveDialect(
 					new DialectResolutionInfo() {

@@ -272,8 +272,14 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 			( (ConfigurationServiceImpl) cfgService ).injectServices( (ServiceRegistryImplementor) serviceRegistry );
 		}
 
-		this.beanManagerReference = configurationSettings.get( "javax.persistence.bean.manager" );
-		this.validatorFactoryReference = configurationSettings.get( "javax.persistence.validation.factory" );
+		this.beanManagerReference = configurationSettings.getOrDefault(
+				AvailableSettings.CDI_BEAN_MANAGER,
+				configurationSettings.get( AvailableSettings.JAKARTA_CDI_BEAN_MANAGER )
+		);
+		this.validatorFactoryReference = configurationSettings.getOrDefault(
+				AvailableSettings.JPA_VALIDATION_FACTORY,
+				configurationSettings.get( AvailableSettings.JAKARTA_JPA_VALIDATION_FACTORY )
+		);
 
 		this.sessionFactoryName = (String) configurationSettings.get( SESSION_FACTORY_NAME );
 		this.sessionFactoryNameAlsoJndiName = cfgService.getSetting(

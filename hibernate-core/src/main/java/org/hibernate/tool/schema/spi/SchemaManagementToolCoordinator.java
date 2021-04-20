@@ -33,6 +33,14 @@ import static org.hibernate.cfg.AvailableSettings.HBM2DDL_DROP_SOURCE;
 import static org.hibernate.cfg.AvailableSettings.HBM2DDL_SCRIPTS_ACTION;
 import static org.hibernate.cfg.AvailableSettings.HBM2DDL_SCRIPTS_CREATE_TARGET;
 import static org.hibernate.cfg.AvailableSettings.HBM2DDL_SCRIPTS_DROP_TARGET;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_CREATE_SOURCE;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DROP_SCRIPT_SOURCE;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DROP_SOURCE;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_ACTION;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_CREATE_TARGET;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_DROP_TARGET;
 
 /**
  * Responsible for coordinating SchemaManagementTool execution(s) for auto-tooling whether
@@ -394,17 +402,29 @@ public class SchemaManagementToolCoordinator {
 
 		@Override
 		public Object getSourceTypeSetting(Map configurationValues) {
-			return configurationValues.get( HBM2DDL_CREATE_SOURCE );
+			Object setting = configurationValues.get( HBM2DDL_CREATE_SOURCE );
+			if ( setting == null ) {
+				setting = configurationValues.get( JAKARTA_HBM2DDL_CREATE_SOURCE );
+			}
+			return setting;
 		}
 
 		@Override
 		public Object getScriptSourceSetting(Map configurationValues) {
-			return configurationValues.get( HBM2DDL_CREATE_SCRIPT_SOURCE );
+			Object setting = configurationValues.get( HBM2DDL_CREATE_SCRIPT_SOURCE );
+			if ( setting == null ) {
+				setting = configurationValues.get( JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE );
+			}
+			return setting;
 		}
 
 		@Override
 		public Object getScriptTargetSetting(Map configurationValues) {
-			return configurationValues.get( HBM2DDL_SCRIPTS_CREATE_TARGET );
+			Object setting = configurationValues.get( HBM2DDL_SCRIPTS_CREATE_TARGET );
+			if ( setting == null ) {
+				setting = configurationValues.get( JAKARTA_HBM2DDL_SCRIPTS_CREATE_TARGET );
+			}
+			return setting;
 		}
 	}
 
@@ -416,17 +436,29 @@ public class SchemaManagementToolCoordinator {
 
 		@Override
 		public Object getSourceTypeSetting(Map configurationValues) {
-			return configurationValues.get( HBM2DDL_DROP_SOURCE );
+			Object setting = configurationValues.get( HBM2DDL_DROP_SOURCE );
+			if ( setting == null ) {
+				setting = configurationValues.get( JAKARTA_HBM2DDL_DROP_SOURCE );
+			}
+			return setting;
 		}
 
 		@Override
 		public Object getScriptSourceSetting(Map configurationValues) {
-			return configurationValues.get( HBM2DDL_DROP_SCRIPT_SOURCE );
+			Object setting = configurationValues.get( HBM2DDL_DROP_SCRIPT_SOURCE );
+			if ( setting == null ) {
+				setting = configurationValues.get( JAKARTA_HBM2DDL_DROP_SCRIPT_SOURCE );
+			}
+			return setting;
 		}
 
 		@Override
 		public Object getScriptTargetSetting(Map configurationValues) {
-			return configurationValues.get( HBM2DDL_SCRIPTS_DROP_TARGET );
+			Object setting = configurationValues.get( HBM2DDL_SCRIPTS_DROP_TARGET );
+			if ( setting == null ) {
+				setting = configurationValues.get( JAKARTA_HBM2DDL_SCRIPTS_DROP_TARGET );
+			}
+			return setting;
 		}
 	}
 
@@ -454,7 +486,11 @@ public class SchemaManagementToolCoordinator {
 		@Override
 		public Object getScriptTargetSetting(Map configurationValues) {
 			// for now, reuse the CREATE script target setting
-			return configurationValues.get( HBM2DDL_SCRIPTS_CREATE_TARGET );
+			Object setting = configurationValues.get( HBM2DDL_SCRIPTS_CREATE_TARGET );
+			if ( setting == null ) {
+				setting = configurationValues.get( JAKARTA_HBM2DDL_SCRIPTS_CREATE_TARGET );
+			}
+			return setting;
 		}
 	}
 
@@ -481,9 +517,17 @@ public class SchemaManagementToolCoordinator {
 		}
 
 		public static ActionGrouping interpret(Map configurationValues) {
+			Object databaseActionSetting = configurationValues.get( HBM2DDL_DATABASE_ACTION );
+			Object scriptsActionSetting = configurationValues.get( HBM2DDL_SCRIPTS_ACTION );
+			if ( databaseActionSetting == null ) {
+				databaseActionSetting = configurationValues.get( JAKARTA_HBM2DDL_DATABASE_ACTION );
+			}
+			if ( scriptsActionSetting == null ) {
+				scriptsActionSetting = configurationValues.get( JAKARTA_HBM2DDL_SCRIPTS_ACTION );
+			}
 			// interpret the JPA settings first
-			Action databaseAction = Action.interpretJpaSetting( configurationValues.get( HBM2DDL_DATABASE_ACTION ) );
-			Action scriptAction = Action.interpretJpaSetting( configurationValues.get( HBM2DDL_SCRIPTS_ACTION ) );
+			Action databaseAction = Action.interpretJpaSetting( databaseActionSetting );
+			Action scriptAction = Action.interpretJpaSetting( scriptsActionSetting );
 
 			// if no JPA settings were specified, look at the legacy HBM2DDL_AUTO setting...
 			if ( databaseAction == Action.NONE && scriptAction == Action.NONE ) {

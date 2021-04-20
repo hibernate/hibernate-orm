@@ -90,6 +90,10 @@ import org.hibernate.type.Type;
 import org.jboss.logging.Logger;
 
 import static org.hibernate.LockOptions.WAIT_FOREVER;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_LOCK_SCOPE;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_LOCK_TIMEOUT;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_SHARED_CACHE_RETRIEVE_MODE;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_SHARED_CACHE_STORE_MODE;
 import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_SCOPE;
 import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_TIMEOUT;
 import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_RETRIEVE_MODE;
@@ -107,6 +111,9 @@ import static org.hibernate.jpa.QueryHints.HINT_LOADGRAPH;
 import static org.hibernate.jpa.QueryHints.HINT_NATIVE_SPACES;
 import static org.hibernate.jpa.QueryHints.HINT_READONLY;
 import static org.hibernate.jpa.QueryHints.HINT_TIMEOUT;
+import static org.hibernate.jpa.QueryHints.JAKARTA_HINT_FETCHGRAPH;
+import static org.hibernate.jpa.QueryHints.JAKARTA_HINT_LOADGRAPH;
+import static org.hibernate.jpa.QueryHints.JAKARTA_SPEC_HINT_TIMEOUT;
 import static org.hibernate.jpa.QueryHints.SPEC_HINT_TIMEOUT;
 
 /**
@@ -1003,16 +1010,19 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		if ( queryTimeout != null ) {
 			hints.put( HINT_TIMEOUT, queryTimeout );
 			hints.put( SPEC_HINT_TIMEOUT, queryTimeout * 1000 );
+			hints.put( JAKARTA_SPEC_HINT_TIMEOUT, queryTimeout * 1000 );
 		}
 
 		final LockOptions lockOptions = getLockOptions();
 		final int lockOptionsTimeOut = lockOptions.getTimeOut();
 		if ( lockOptionsTimeOut != WAIT_FOREVER ) {
 			hints.put( JPA_LOCK_TIMEOUT, lockOptionsTimeOut );
+			hints.put( JAKARTA_JPA_LOCK_TIMEOUT, lockOptionsTimeOut );
 		}
 
 		if ( lockOptions.getScope() ) {
 			hints.put( JPA_LOCK_SCOPE, lockOptions.getScope() );
+			hints.put( JAKARTA_JPA_LOCK_SCOPE, lockOptions.getScope() );
 		}
 
 		if ( lockOptions.hasAliasSpecificLockModes() && canApplyAliasSpecificLockModeHints() ) {
@@ -1031,7 +1041,9 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		if ( cacheStoreMode != null || cacheRetrieveMode != null ) {
 			putIfNotNull( hints, HINT_CACHE_MODE, CacheModeHelper.interpretCacheMode( cacheStoreMode, cacheRetrieveMode ) );
 			putIfNotNull( hints, JPA_SHARED_CACHE_RETRIEVE_MODE, cacheRetrieveMode );
+			putIfNotNull( hints, JAKARTA_JPA_SHARED_CACHE_RETRIEVE_MODE, cacheRetrieveMode );
 			putIfNotNull( hints, JPA_SHARED_CACHE_STORE_MODE, cacheStoreMode );
+			putIfNotNull( hints, JAKARTA_JPA_SHARED_CACHE_STORE_MODE, cacheStoreMode );
 		}
 
 		if ( isCacheable() ) {
@@ -1072,12 +1084,12 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 			if ( HINT_TIMEOUT.equals( hintName ) ) {
 				applied = applyTimeoutHint( ConfigurationHelper.getInteger( value ) );
 			}
-			else if ( SPEC_HINT_TIMEOUT.equals( hintName ) ) {
+			else if ( SPEC_HINT_TIMEOUT.equals( hintName ) || JAKARTA_SPEC_HINT_TIMEOUT.equals( hintName ) ) {
 				// convert milliseconds to seconds
 				int timeout = (int)Math.round( ConfigurationHelper.getInteger( value ).doubleValue() / 1000.0 );
 				applied = applyTimeoutHint( timeout );
 			}
-			else if ( JPA_LOCK_TIMEOUT.equals( hintName ) ) {
+			else if ( JPA_LOCK_TIMEOUT.equals( hintName ) || JAKARTA_JPA_LOCK_TIMEOUT.equals( hintName ) ) {
 				applied = applyLockTimeoutHint( ConfigurationHelper.getInteger( value ) );
 			}
 			else if ( HINT_COMMENT.equals( hintName ) ) {
@@ -1101,11 +1113,11 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 			else if ( HINT_CACHE_MODE.equals( hintName ) ) {
 				applied = applyCacheModeHint( ConfigurationHelper.getCacheMode( value ) );
 			}
-			else if ( JPA_SHARED_CACHE_RETRIEVE_MODE.equals( hintName ) ) {
+			else if ( JPA_SHARED_CACHE_RETRIEVE_MODE.equals( hintName ) || JAKARTA_JPA_SHARED_CACHE_RETRIEVE_MODE.equals( hintName ) ) {
 				final CacheRetrieveMode retrieveMode = value != null ? CacheRetrieveMode.valueOf( value.toString() ) : null;
 				applied = applyJpaCacheRetrieveMode( retrieveMode );
 			}
-			else if ( JPA_SHARED_CACHE_STORE_MODE.equals( hintName ) ) {
+			else if ( JPA_SHARED_CACHE_STORE_MODE.equals( hintName ) || JAKARTA_JPA_SHARED_CACHE_STORE_MODE.equals( hintName ) ) {
 				final CacheStoreMode storeMode = value != null ? CacheStoreMode.valueOf( value.toString() ) : null;
 				applied = applyJpaCacheStoreMode( storeMode );
 			}
@@ -1133,7 +1145,10 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 					applied = false;
 				}
 			}
-			else if ( HINT_FETCHGRAPH.equals( hintName ) || HINT_LOADGRAPH.equals( hintName ) ) {
+			else if ( HINT_FETCHGRAPH.equals( hintName )
+					|| HINT_LOADGRAPH.equals( hintName )
+					|| JAKARTA_HINT_FETCHGRAPH.equals( hintName )
+					|| JAKARTA_HINT_LOADGRAPH.equals( hintName ) ) {
 				if ( value instanceof RootGraph ) {
 					applyGraph( (RootGraph) value, GraphSemantic.fromJpaHintName( hintName ) );
 					applyEntityGraphQueryHint( new EntityGraphQueryHint( hintName, (RootGraphImpl) value ) );

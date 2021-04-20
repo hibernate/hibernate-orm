@@ -7,7 +7,6 @@
 package org.hibernate.test.annotations.reflection;
 
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
-import org.hibernate.internal.util.xml.XmlMappingOptionsStrategyRegistrationProvider;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -22,7 +21,6 @@ public class ElementCollectionConverterTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected void prepareBootstrapRegistryBuilder(BootstrapServiceRegistryBuilder builder) {
 		super.prepareBootstrapRegistryBuilder( builder );
-		XmlMappingOptionsStrategyRegistrationProvider.applyJaxbStrategy( builder );
 	}
 
 	@Override

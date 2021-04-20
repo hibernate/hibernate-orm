@@ -10,7 +10,6 @@ import org.hibernate.InvalidMappingException;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.internal.util.xml.UnsupportedOrmXsdVersionException;
-import org.hibernate.internal.util.xml.XmlMappingOptionsStrategyRegistrationProvider;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -24,7 +23,6 @@ public class NonExistentOrmVersionTest extends BaseUnitTestCase {
 	public void testNonExistentOrmVersion() {
 		try {
 			BootstrapServiceRegistryBuilder builder = new BootstrapServiceRegistryBuilder();
-			XmlMappingOptionsStrategyRegistrationProvider.applyJaxbStrategy( builder );
 			new MetadataSources( builder.build() )
 					.addResource( "org/hibernate/test/annotations/xml/ejb3/orm5.xml" )
 					.buildMetadata();

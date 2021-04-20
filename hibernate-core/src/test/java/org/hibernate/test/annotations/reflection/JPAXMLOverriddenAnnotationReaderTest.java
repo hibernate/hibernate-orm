@@ -6,45 +6,25 @@
  */
 package org.hibernate.test.annotations.reflection;
 
-import org.dom4j.DocumentException;
-import org.dom4j.io.SAXReader;
 import org.hibernate.annotations.Columns;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappings;
-import org.hibernate.boot.jaxb.spi.XmlMappingOptions;
-import org.hibernate.cfg.EJB3DTDEntityResolver;
-import org.hibernate.cfg.annotations.reflection.JPAOverriddenAnnotationReader;
 import org.hibernate.cfg.annotations.reflection.internal.JPAXMLOverriddenAnnotationReader;
 import org.hibernate.cfg.annotations.reflection.internal.XMLContext;
-import org.hibernate.internal.util.xml.ErrorLogger;
-import org.hibernate.internal.util.xml.XMLHelper;
 import org.hibernate.internal.util.xml.XMLMappingHelper;
 
 import org.hibernate.testing.boot.BootstrapContextImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.boot.ClassLoaderServiceTestingImpl;
 import org.junit.Test;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.SAXNotSupportedException;
 
 import javax.persistence.*;
-import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 import static org.junit.Assert.*;
 
 /**
- * Tests the new {@link JPAXMLOverriddenAnnotationReader},
- * which will be replacing {@link JPAOverriddenAnnotationReader}.
- * {@link JPAOverriddenAnnotationReader} is still the default implementation,
- * but we want to switch to {@link JPAXMLOverriddenAnnotationReader}
- * as soon as it will be practical.
- *
- * @see LegacyJPAOverriddenAnnotationReaderTest
  * @author Emmanuel Bernard
  */
 @TestForIssue(jiraKey = "HHH-14529")
@@ -405,12 +385,7 @@ public class JPAXMLOverriddenAnnotationReaderTest extends BaseUnitTestCase {
 	}
 
 	private XMLContext buildContext(String ormfile) throws IOException {
-		XMLMappingHelper xmlHelper = new XMLMappingHelper( new XmlMappingOptions() {
-			@Override
-			public boolean isPreferJaxb() {
-				return true;
-			}
-		} );
+		XMLMappingHelper xmlHelper = new XMLMappingHelper();
 		JaxbEntityMappings mappings = xmlHelper.readOrmXmlMappings( ormfile );
 		XMLContext context = new XMLContext( BootstrapContextImpl.INSTANCE );
 		context.addDocument( mappings );

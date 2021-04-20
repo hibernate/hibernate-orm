@@ -14,10 +14,6 @@ import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.internal.MappingBinder;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappings;
 import org.hibernate.boot.jaxb.spi.Binding;
-import org.hibernate.boot.jaxb.spi.XmlMappingOptions;
-import org.hibernate.boot.registry.BootstrapServiceRegistry;
-import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
-import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 import org.hibernate.testing.boot.ClassLoaderServiceTestingImpl;
 import org.junit.Assert;
@@ -28,8 +24,8 @@ import org.junit.Assert;
 public final class XMLMappingHelper {
 	private final MappingBinder binder;
 
-	public XMLMappingHelper(XmlMappingOptions xmlMappingOptions) {
-		binder = new MappingBinder( ClassLoaderServiceTestingImpl.INSTANCE, true, xmlMappingOptions );
+	public XMLMappingHelper() {
+		binder = new MappingBinder( ClassLoaderServiceTestingImpl.INSTANCE, true );
 	}
 
 	public JaxbEntityMappings readOrmXmlMappings(String name) throws IOException {

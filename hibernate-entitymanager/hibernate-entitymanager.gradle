@@ -4,7 +4,6 @@ apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 
 dependencies {
 	compile( project( ':hibernate-core' ) )
-	compile( libraries.dom4j )
 	compile( libraries.commons_annotations )
 	compile( libraries.jpa )
 	compile( libraries.byteBuddy )

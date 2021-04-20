@@ -24,7 +24,6 @@ import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
 import org.hibernate.boot.jaxb.internal.MappingBinder;
 import org.hibernate.boot.jaxb.spi.Binding;
-import org.hibernate.boot.jaxb.spi.XmlMappingOptions;
 import org.hibernate.boot.model.source.internal.hbm.MappingDocument;
 import org.hibernate.boot.spi.AdditionalJaxbMappingProducer;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -32,14 +31,12 @@ import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.envers.boot.EnversBootLogger;
 import org.hibernate.envers.configuration.internal.MappingCollector;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.ServiceRegistry;
 
 import org.jboss.jandex.IndexView;
 import org.jboss.logging.Logger;
 
 import org.dom4j.Document;
-import org.dom4j.DocumentException;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
 
@@ -66,7 +63,7 @@ public class AdditionalJaxbMappingProducerImpl implements AdditionalJaxbMappingP
 			return Collections.emptyList();
 		}
 
-		if ( !metadataBuildingOptions.getXmlMappingOptions().isEnabled() ) {
+		if ( !metadataBuildingOptions.isXmlMappingEnabled() ) {
 			throw new HibernateException( "Hibernate Envers currently requires XML mapping to be enabled."
 					+ " Please don't disable setting `" + XML_MAPPING_ENABLED
 					+ "`; alternatively disable Hibernate Envers." );

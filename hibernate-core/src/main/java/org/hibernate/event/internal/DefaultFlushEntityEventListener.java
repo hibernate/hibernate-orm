@@ -133,7 +133,8 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		event.setPropertyValues( values );
 
 		//TODO: avoid this for non-new instances where mightBeDirty==false
-		boolean substitute = wrapCollections( session, persister, types, values );
+
+		boolean substitute = wrapCollections( session, persister, entity, entry.getId(), types, values );
 
 		if ( isUpdateNecessary( event, mightBeDirty ) ) {
 			substitute = scheduleUpdate( event ) || substitute;
@@ -181,6 +182,8 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	private boolean wrapCollections(
 			EventSource session,
 			EntityPersister persister,
+			Object entity,
+			Object id,
 			Type[] types,
 			Object[] values
 	) {
@@ -194,7 +197,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			// don't dirty the container. Also, for versioned data, we
 			// need to wrap before calling searchForDirtyCollections
 
-			WrapVisitor visitor = new WrapVisitor( session );
+			WrapVisitor visitor = new WrapVisitor( entity, id ,session );
 			// substitutes into values by side-effect
 			visitor.processEntityPropertyValues( values, types );
 			return visitor.isSubstitutionRequired();

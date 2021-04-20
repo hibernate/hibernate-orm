@@ -39,6 +39,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -249,6 +250,22 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 					assertTrue( results.size() == 1 );
 				}
 		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-14567")
+	public void testHqlFiltersAppliedAfterQueryCreation() {
+		inTransaction( session -> {
+			Query<Salesperson> query = session.createQuery(
+					"select s from Salesperson s",
+					Salesperson.class
+			);
+			List<Salesperson> list = query.list();
+			assertThat( list ).hasSize( 2 );
+
+			session.enableFilter( "region" ).setParameter( "region", "APAC" );
+			assertThat( query.list() ).hasSize( 1 );
+		} );
 	}
 
 	@Test

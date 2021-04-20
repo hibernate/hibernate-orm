@@ -11,7 +11,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappings;
-import org.hibernate.boot.jaxb.spi.XmlMappingOptions;
 import org.hibernate.cfg.annotations.reflection.internal.JPAXMLOverriddenAnnotationReader;
 import org.hibernate.cfg.annotations.reflection.internal.XMLContext;
 import org.hibernate.internal.util.xml.XMLMappingHelper;
@@ -67,12 +66,7 @@ public abstract class Ejb3XmlTestCase extends BaseUnitTestCase {
 	}
 
 	protected XMLContext getContext(InputStream is, String resourceName) throws Exception {
-		XMLMappingHelper xmlHelper = new XMLMappingHelper( new XmlMappingOptions() {
-			@Override
-			public boolean isPreferJaxb() {
-				return true;
-			}
-		} );
+		XMLMappingHelper xmlHelper = new XMLMappingHelper();
 		JaxbEntityMappings mappings = xmlHelper.readOrmXmlMappings( is, resourceName );
 		XMLContext context = new XMLContext( BootstrapContextImpl.INSTANCE );
 		context.addDocument( mappings );

@@ -17,7 +17,6 @@ import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.TeradataDialect;
-import org.hibernate.internal.util.xml.XmlMappingOptionsStrategyRegistrationProvider;
 import org.hibernate.persister.collection.BasicCollectionPersister;
 
 import org.hibernate.testing.SkipForDialect;
@@ -37,7 +36,6 @@ public class Ejb3XmlTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected void prepareBootstrapRegistryBuilder(BootstrapServiceRegistryBuilder builder) {
 		super.prepareBootstrapRegistryBuilder( builder );
-		XmlMappingOptionsStrategyRegistrationProvider.applyJaxbStrategy( builder );
 	}
 
 	@Test

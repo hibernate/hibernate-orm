@@ -141,6 +141,11 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 	}
 
 	@Override
+	public String toString() {
+		return "EmbeddedCollectionPart(" + getNavigableRole() + ")@" + System.identityHashCode( this );
+	}
+
+	@Override
 	public Fetch generateFetch(
 			FetchParent fetchParent,
 			NavigablePath fetchablePath,

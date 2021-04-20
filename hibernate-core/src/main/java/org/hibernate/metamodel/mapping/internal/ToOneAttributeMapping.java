@@ -876,7 +876,7 @@ public class ToOneAttributeMapping
 
 	@Override
 	public String toString() {
-		return "SingularAssociationAttributeMapping {" + navigableRole + "}";
+		return "ToOneAttributeMapping(" + navigableRole + ")@" + System.identityHashCode( this );
 	}
 
 	@Override

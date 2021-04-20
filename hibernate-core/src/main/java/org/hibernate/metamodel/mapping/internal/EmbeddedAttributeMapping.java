@@ -307,6 +307,6 @@ public class EmbeddedAttributeMapping
 
 	@Override
 	public String toString() {
-		return "EmbeddedAttributeMapping {" + navigableRole + "}";
+		return "EmbeddedAttributeMapping(" + navigableRole + ")@" + System.identityHashCode( this );
 	}
 }

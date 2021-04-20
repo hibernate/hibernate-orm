@@ -45,7 +45,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * @author Steve Ebersole
  */
 @SuppressWarnings("rawtypes")
-public class BasicValuedSingularAttributeMapping
+public class BasicAttributeMapping
 		extends AbstractSingularAttributeMapping
 		implements SingularAttributeMapping, BasicValuedModelPart, ConvertibleModelPart {
 	private final NavigableRole navigableRole;
@@ -62,7 +62,7 @@ public class BasicValuedSingularAttributeMapping
 	private final JavaTypeDescriptor domainTypeDescriptor;
 
 	@SuppressWarnings("WeakerAccess")
-	public BasicValuedSingularAttributeMapping(
+	public BasicAttributeMapping(
 			String attributeName,
 			NavigableRole navigableRole,
 			int stateArrayPosition,
@@ -102,7 +102,7 @@ public class BasicValuedSingularAttributeMapping
 		}
 	}
 
-	public static BasicValuedSingularAttributeMapping withSelectableMapping(
+	public static BasicAttributeMapping withSelectableMapping(
 			BasicValuedModelPart original,
 			SelectableMapping selectableMapping) {
 		String attributeName = null;
@@ -129,7 +129,7 @@ public class BasicValuedSingularAttributeMapping
 		if ( original instanceof ConvertibleModelPart ) {
 			valueConverter = ( (ConvertibleModelPart) original ).getValueConverter();
 		}
-		return new BasicValuedSingularAttributeMapping(
+		return new BasicAttributeMapping(
 				attributeName,
 				original.getNavigableRole(),
 				stateArrayPosition,
@@ -195,6 +195,11 @@ public class BasicValuedSingularAttributeMapping
 	@Override
 	public NavigableRole getNavigableRole() {
 		return navigableRole;
+	}
+
+	@Override
+	public String toString() {
+		return "BasicAttributeMapping(" + navigableRole + ")@" + System.identityHashCode( this );
 	}
 
 	@Override

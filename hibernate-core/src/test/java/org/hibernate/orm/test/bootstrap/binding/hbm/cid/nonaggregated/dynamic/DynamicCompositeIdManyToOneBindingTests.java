@@ -11,7 +11,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
-import org.hibernate.metamodel.mapping.internal.BasicValuedSingularAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedIdentifierMappingImpl;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
@@ -57,7 +57,7 @@ public class DynamicCompositeIdManyToOneBindingTests {
 
 			final AttributeMapping key1 = cid.getEmbeddableTypeDescriptor().findAttributeMapping( "key1" );
 			assertThat( key1, notNullValue() );
-			assertThat( key1, instanceOf( BasicValuedSingularAttributeMapping.class ) );
+			assertThat( key1, instanceOf( BasicAttributeMapping.class ) );
 
 			final AttributeMapping key2 = cid.getEmbeddableTypeDescriptor().findAttributeMapping( "key2" );
 			assertThat( key2, notNullValue() );
@@ -65,7 +65,7 @@ public class DynamicCompositeIdManyToOneBindingTests {
 
 			final AttributeMapping attr1 = entityDescriptor.findAttributeMapping( "attr1" );
 			assertThat( attr1, notNullValue() );
-			assertThat( attr1, instanceOf( BasicValuedSingularAttributeMapping.class ) );
+			assertThat( attr1, instanceOf( BasicAttributeMapping.class ) );
 		}
 		finally {
 			sessionFactory.close();

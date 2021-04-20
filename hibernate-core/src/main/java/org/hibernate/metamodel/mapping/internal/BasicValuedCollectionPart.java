@@ -120,6 +120,11 @@ public class BasicValuedCollectionPart
 	}
 
 	@Override
+	public String toString() {
+		return "BasicValuedCollectionPart(" + navigableRole + ")@" + System.identityHashCode( this );
+	}
+
+	@Override
 	public <T> DomainResult<T> createDomainResult(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,

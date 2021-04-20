@@ -277,7 +277,7 @@ public class MappingModelCreationHelper {
 	// Non-identifier attributes
 
 	@SuppressWarnings("rawtypes")
-	public static BasicValuedSingularAttributeMapping buildBasicAttributeMapping(
+	public static BasicAttributeMapping buildBasicAttributeMapping(
 			String attrName,
 			NavigableRole navigableRole,
 			int stateArrayPosition,
@@ -373,7 +373,7 @@ public class MappingModelCreationHelper {
 					);
 
 
-			return new BasicValuedSingularAttributeMapping(
+			return new BasicAttributeMapping(
 					attrName,
 					navigableRole,
 					stateArrayPosition,
@@ -391,7 +391,7 @@ public class MappingModelCreationHelper {
 			);
 		}
 		else {
-			return new BasicValuedSingularAttributeMapping(
+			return new BasicAttributeMapping(
 					attrName,
 					navigableRole,
 					stateArrayPosition,

@@ -113,6 +113,11 @@ public class DiscriminatedAssociationAttributeMapping
 	}
 
 	@Override
+	public String toString() {
+		return "DiscriminatedAssociationAttributeMapping(" + navigableRole + ")@" + System.identityHashCode( this );
+	}
+
+	@Override
 	public Fetch generateFetch(
 			FetchParent fetchParent,
 			NavigablePath fetchablePath,

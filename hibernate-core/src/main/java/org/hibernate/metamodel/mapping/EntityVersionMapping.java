@@ -6,11 +6,11 @@
  */
 package org.hibernate.metamodel.mapping;
 
-import org.hibernate.metamodel.mapping.internal.BasicValuedSingularAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 
 /**
  * @author Steve Ebersole
  */
 public interface EntityVersionMapping extends BasicValuedModelPart {
-	BasicValuedSingularAttributeMapping getVersionAttribute();
+	BasicAttributeMapping getVersionAttribute();
 }

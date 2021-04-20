@@ -96,6 +96,11 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 	}
 
 	@Override
+	public String toString() {
+		return "DiscriminatedCollectionPart(" + getNavigableRole() + ")@" + System.identityHashCode( this );
+	}
+
+	@Override
 	public Fetch generateFetch(
 			FetchParent fetchParent,
 			NavigablePath fetchablePath,

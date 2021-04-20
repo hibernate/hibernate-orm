@@ -10,7 +10,7 @@ import java.util.Locale;
 import java.util.function.BiFunction;
 
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
-import org.hibernate.metamodel.mapping.internal.BasicValuedSingularAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.query.results.SqlSelectionImpl;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -24,7 +24,7 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
  * @author Steve Ebersole
  */
 public class DynamicResultBuilderAttribute implements DynamicResultBuilder {
-	private final BasicValuedSingularAttributeMapping attributeMapping;
+	private final BasicAttributeMapping attributeMapping;
 	private final String columnAlias;
 	private final String entityName;
 	private final String attributePath;
@@ -34,7 +34,7 @@ public class DynamicResultBuilderAttribute implements DynamicResultBuilder {
 			String columnAlias,
 			String entityName,
 			String attributePath) {
-		final boolean allowable = attributeMapping instanceof BasicValuedSingularAttributeMapping;
+		final boolean allowable = attributeMapping instanceof BasicAttributeMapping;
 		if ( !allowable ) {
 			throw new IllegalArgumentException(
 					String.format(
@@ -47,7 +47,7 @@ public class DynamicResultBuilderAttribute implements DynamicResultBuilder {
 			);
 		}
 
-		this.attributeMapping = (BasicValuedSingularAttributeMapping) attributeMapping;
+		this.attributeMapping = (BasicAttributeMapping) attributeMapping;
 		this.columnAlias = columnAlias;
 		this.entityName = entityName;
 		this.attributePath = attributePath;

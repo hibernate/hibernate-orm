@@ -18,7 +18,7 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.metamodel.mapping.internal.BasicValuedSingularAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
@@ -283,8 +283,8 @@ public class NativeQueryResultBuilderTests {
 				.getEntityMappingType( EntityOfBasics.class );
 
 		final ModelPart part = entityDescriptor.findSubPart( "convertedGender", null );
-		assertThat( part, instanceOf( BasicValuedSingularAttributeMapping.class ) );
-		final BasicValuedSingularAttributeMapping attrMapping = (BasicValuedSingularAttributeMapping) part;
+		assertThat( part, instanceOf( BasicAttributeMapping.class ) );
+		final BasicAttributeMapping attrMapping = (BasicAttributeMapping) part;
 
 		assertThat( attrMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( EntityOfBasics.Gender.class ) );
 

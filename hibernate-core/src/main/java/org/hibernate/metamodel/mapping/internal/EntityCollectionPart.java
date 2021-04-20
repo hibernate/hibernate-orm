@@ -322,7 +322,7 @@ public class EntityCollectionPart
 
 	@Override
 	public String toString() {
-		return "EntityCollectionPart {" + navigableRole + "}";
+		return "EntityCollectionPart(" + navigableRole + ")@" + System.identityHashCode( this );
 	}
 
 	@Override

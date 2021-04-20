@@ -72,7 +72,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 		assert targetModelPart != null;
 		assert disassemblyValueExtractor != null;
 
-		this.keySide = BasicValuedSingularAttributeMapping.withSelectableMapping( targetModelPart, keySelectableMapping );
+		this.keySide = BasicAttributeMapping.withSelectableMapping( targetModelPart, keySelectableMapping );
 		this.targetSide = targetModelPart;
 		this.disassemblyValueExtractor = disassemblyValueExtractor;
 		this.refersToPrimaryKey = refersToPrimaryKey;

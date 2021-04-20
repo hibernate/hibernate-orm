@@ -62,8 +62,8 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 	}
 
 	@Override
-	public BasicValuedSingularAttributeMapping getVersionAttribute() {
-		return (BasicValuedSingularAttributeMapping) declaringType.findAttributeMapping( attributeName );
+	public BasicAttributeMapping getVersionAttribute() {
+		return (BasicAttributeMapping) declaringType.findAttributeMapping( attributeName );
 	}
 
 	@Override

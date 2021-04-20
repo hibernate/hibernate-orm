@@ -19,8 +19,6 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.FetchStrategy;
-import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -37,12 +35,11 @@ import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
-import org.hibernate.metamodel.mapping.internal.BasicValuedSingularAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.DiscriminatedAssociationAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.mapping.internal.SelectableMappingsImpl;
-import org.hibernate.metamodel.mapping.internal.SimpleForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
@@ -190,10 +187,10 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectableMapp
 					int currentIndex = 0;
 					// We copy the attributes from the inverse mappings and replace the selection mappings
 					for ( AttributeMapping attributeMapping : inverseMappingType.attributeMappings ) {
-						if ( attributeMapping instanceof BasicValuedSingularAttributeMapping ) {
-							final BasicValuedSingularAttributeMapping original = (BasicValuedSingularAttributeMapping) attributeMapping;
+						if ( attributeMapping instanceof BasicAttributeMapping ) {
+							final BasicAttributeMapping original = (BasicAttributeMapping) attributeMapping;
 							final SelectableMapping selectableMapping = selectableMappings.getSelectable( currentIndex );
-							attributeMapping = BasicValuedSingularAttributeMapping.withSelectableMapping( original, selectableMapping );
+							attributeMapping = BasicAttributeMapping.withSelectableMapping( original, selectableMapping );
 							currentIndex++;
 						}
 						else if ( attributeMapping instanceof ToOneAttributeMapping ) {

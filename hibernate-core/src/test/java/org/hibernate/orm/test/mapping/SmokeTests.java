@@ -22,7 +22,7 @@ import javax.persistence.Table;
 
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.metamodel.mapping.internal.BasicValuedSingularAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.model.convert.internal.NamedEnumValueConverter;
@@ -71,15 +71,15 @@ public class SmokeTests {
 
 		{
 			final ModelPart namePart = entityDescriptor.findSubPart( "name" );
-			assert namePart instanceof BasicValuedSingularAttributeMapping;
-			assert "mapping_simple_entity".equals( ( (BasicValuedSingularAttributeMapping) namePart ).getContainingTableExpression() );
-			assert "name".equals( ( (BasicValuedSingularAttributeMapping) namePart ).getSelectionExpression() );
+			assert namePart instanceof BasicAttributeMapping;
+			assert "mapping_simple_entity".equals( ( (BasicAttributeMapping) namePart ).getContainingTableExpression() );
+			assert "name".equals( ( (BasicAttributeMapping) namePart ).getSelectionExpression() );
 		}
 
 		{
 			final ModelPart genderPart = entityDescriptor.findSubPart( "gender" );
-			assert genderPart instanceof BasicValuedSingularAttributeMapping;
-			final BasicValuedSingularAttributeMapping genderAttrMapping = (BasicValuedSingularAttributeMapping) genderPart;
+			assert genderPart instanceof BasicAttributeMapping;
+			final BasicAttributeMapping genderAttrMapping = (BasicAttributeMapping) genderPart;
 			assert "mapping_simple_entity".equals( genderAttrMapping.getContainingTableExpression() );
 			assert "gender".equals( genderAttrMapping.getSelectionExpression() );
 
@@ -95,8 +95,8 @@ public class SmokeTests {
 
 		{
 			final ModelPart part = entityDescriptor.findSubPart( "gender2" );
-			assert part instanceof BasicValuedSingularAttributeMapping;
-			final BasicValuedSingularAttributeMapping attrMapping = (BasicValuedSingularAttributeMapping) part;
+			assert part instanceof BasicAttributeMapping;
+			final BasicAttributeMapping attrMapping = (BasicAttributeMapping) part;
 			assert "mapping_simple_entity".equals( attrMapping.getContainingTableExpression() );
 			assert "gender2".equals( attrMapping.getSelectionExpression() );
 
@@ -112,8 +112,8 @@ public class SmokeTests {
 
 		{
 			final ModelPart part = entityDescriptor.findSubPart( "gender3" );
-			assert part instanceof BasicValuedSingularAttributeMapping;
-			final BasicValuedSingularAttributeMapping attrMapping = (BasicValuedSingularAttributeMapping) part;
+			assert part instanceof BasicAttributeMapping;
+			final BasicAttributeMapping attrMapping = (BasicAttributeMapping) part;
 			assert "mapping_simple_entity".equals( attrMapping.getContainingTableExpression() );
 			assert "gender3".equals( attrMapping.getSelectionExpression() );
 

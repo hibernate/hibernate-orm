@@ -129,7 +129,12 @@ public class ManagedBeanRegistryInitiator implements StandardServiceInitiator<Ma
 	}
 
 	public static Class cdiBeanManagerClass(ClassLoaderService classLoaderService) throws ClassLoadingException {
-		return classLoaderService.classForName( "javax.enterprise.inject.spi.BeanManager" );
+		try {
+			return classLoaderService.classForName( "javax.enterprise.inject.spi.BeanManager" );
+		}
+		catch (ClassLoadingException e) {
+			return classLoaderService.classForName( "jakarta.enterprise.inject.spi.BeanManager" );
+		}
 	}
 
 }

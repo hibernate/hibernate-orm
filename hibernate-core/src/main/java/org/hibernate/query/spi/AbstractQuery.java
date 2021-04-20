@@ -1313,10 +1313,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		if ( type == null ) {
 			type = getParameterMetadata().getQueryParameter( namedParam ).getHibernateType();
 		}
-		if ( type == null ) {
-			if ( retType == null ) {
-				return JavaObjectType.INSTANCE;
-			}
+		if ( type == null && retType != null ) {
 			type = getSession().getFactory().resolveParameterBindType( retType );
 		}
 		return type;

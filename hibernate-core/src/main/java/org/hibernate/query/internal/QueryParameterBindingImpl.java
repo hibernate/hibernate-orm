@@ -8,8 +8,11 @@ package org.hibernate.query.internal;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
 import javax.persistence.TemporalType;
 
+import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.query.QueryParameter;
@@ -133,7 +136,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 		this.isBound = true;
 		this.bindValue = value;
 
-		if ( bindType == null ) {
+		if ( bindType == null && value != null ) {
 			//noinspection unchecked
 			this.bindType = (AllowableParameterType) typeResolver.resolveParameterBindType( value );
 		}
@@ -203,9 +206,15 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 		this.bindValue = null;
 		this.bindValues = values;
 
-		if ( bindType == null && !values.isEmpty() ) {
+		final Iterator<T> iterator = values.iterator();
+		T value = null;
+		while ( value == null && iterator.hasNext() ) {
+			value = iterator.next();
+		}
+
+		if ( bindType == null && value != null ) {
 			//noinspection unchecked
-			this.bindType = (AllowableParameterType) typeResolver.resolveParameterBindType( values.iterator().next() );
+			this.bindType = (AllowableParameterType) typeResolver.resolveParameterBindType( value );
 		}
 
 	}
@@ -242,6 +251,15 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 	@Override
 	public void setType(MappingModelExpressable type) {
 		this.type = type;
+		if ( type instanceof AllowableParameterType<?> ) {
+			this.bindType = (AllowableParameterType<T>) type;
+		}
+		else if ( type instanceof BasicValuedMapping ) {
+			final JdbcMapping jdbcMapping = ( (BasicValuedMapping) type).getJdbcMapping();
+			if ( jdbcMapping instanceof AllowableParameterType<?> ) {
+				this.bindType = (AllowableParameterType<T>) jdbcMapping;
+			}
+		}
 	}
 
 	private void validate(T value) {

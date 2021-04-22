@@ -23,14 +23,22 @@
  */
 package org.hibernate.test.onetoone.bidirectional;
 
-import org.hibernate.engine.internal.StatisticalLoggingSessionEventListener;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Test;
-
-import javax.persistence.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToOne;
+
+import org.hibernate.engine.internal.StatisticalLoggingSessionEventListener;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 import static org.junit.Assert.assertEquals;
 
@@ -39,37 +47,36 @@ import static org.junit.Assert.assertEquals;
  *
  * @author Christian Beikov
  */
-public class BiDirectionalOneToOneFetchTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				BiDirectionalOneToOneFetchTest.EntityA.class,
+				BiDirectionalOneToOneFetchTest.EntityB.class
+		}
+)
+@SessionFactory
+public class BiDirectionalOneToOneFetchTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				EntityA.class,
-				EntityB.class
-		};
-	}
-
-	@After
-	public void delete() {
-		inTransaction( s -> {
+	@AfterEach
+	public void delete(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			s.createQuery( "delete from EntityA" ).executeUpdate();
 			s.createQuery( "delete from EntityB" ).executeUpdate();
 		} );
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-3930" )
-	public void testEagerFetchBidirectionalOneToOneWithDirectFetching() {
-		inTransaction( session -> {
+	@TestForIssue(jiraKey = "HHH-3930")
+	public void testEagerFetchBidirectionalOneToOneWithDirectFetching(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			EntityA a = new EntityA( 1L, new EntityB( 2L ) );
-			
+
 			session.persist( a );
 			session.flush();
 			session.clear();
 
 			// Use atomic integer because we need something mutable
 			final AtomicInteger queryExecutionCount = new AtomicInteger();
-			
+
 			session.getEventListenerManager().addListener( new StatisticalLoggingSessionEventListener() {
 				@Override
 				public void jdbcExecuteStatementStart() {
@@ -77,9 +84,9 @@ public class BiDirectionalOneToOneFetchTest extends BaseCoreFunctionalTestCase {
 					queryExecutionCount.getAndIncrement();
 				}
 			} );
-			
+
 			session.find( EntityA.class, 1L );
-			
+
 			assertEquals(
 					"Join fetching inverse one-to-one didn't use the object already present in the result set!",
 					1,
@@ -89,9 +96,9 @@ public class BiDirectionalOneToOneFetchTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-3930" )
-	public void testFetchBidirectionalOneToOneWithOneJoinFetch() {
-		inTransaction( session -> {
+	@TestForIssue(jiraKey = "HHH-3930")
+	public void testFetchBidirectionalOneToOneWithOneJoinFetch(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			EntityA a = new EntityA( 1L, new EntityB( 2L ) );
 
 			session.persist( a );
@@ -122,9 +129,9 @@ public class BiDirectionalOneToOneFetchTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-3930" )
-	public void testFetchBidirectionalOneToOneWithCircularJoinFetch() {
-		inTransaction( session -> {
+	@TestForIssue(jiraKey = "HHH-3930")
+	public void testFetchBidirectionalOneToOneWithCircularJoinFetch(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			EntityA a = new EntityA( 1L, new EntityB( 2L ) );
 
 			session.persist( a );
@@ -155,10 +162,10 @@ public class BiDirectionalOneToOneFetchTest extends BaseCoreFunctionalTestCase {
 
 	@Entity(name = "EntityA")
 	public static class EntityA {
-		
+
 		@Id
 		private Long id;
-		
+
 		@OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
 		@JoinColumn(name = "b_id")
 		private EntityB b;
@@ -175,10 +182,10 @@ public class BiDirectionalOneToOneFetchTest extends BaseCoreFunctionalTestCase {
 
 	@Entity(name = "EntityB")
 	public static class EntityB {
-		
+
 		@Id
 		private Long id;
-		
+
 		@OneToOne(mappedBy = "b", fetch = FetchType.EAGER)
 		private EntityA a;
 

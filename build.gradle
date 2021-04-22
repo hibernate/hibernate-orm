@@ -43,6 +43,7 @@ ext {
 		ormVersion = new HibernateVersion( project.releaseVersion, project )
 	}
 	jpaVersion = new JpaVersion('2.2')
+	jakartaJpaVersion = new JpaVersion('3.0.0')
 }
 
 // The Gradle Nexus Publish Plugin must be applied to the root project and requires group and version

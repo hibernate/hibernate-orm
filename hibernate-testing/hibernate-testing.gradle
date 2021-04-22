@@ -19,6 +19,9 @@ dependencies {
     compile( libraries.byteman_bmunit )
     compile( libraries.xapool )
     compile( libraries.log4j )
+    compile( libraries.jboss_tx_spi ) {
+        transitive=false;
+    }
     compile ( libraries.jboss_jta ) {
         transitive=false;
     }

@@ -25,7 +25,7 @@ sourceSets {
     // resources inherently exclude sources
     test {
         resources {
-            setSrcDirs( ['src/test/java','src/test/resources'] )
+            setSrcDirs( ['src/test/java','src/test/resources','src/test/bundles'] )
         }
     }
 
@@ -145,6 +145,7 @@ jar {
                         // For JPA, we don't want to target the automatically generated range, but a specific version
                         "javax.persistence;version=\"${project.jpaVersion.osgiName}\"",
                         // optionals
+                        'jakarta.persistence.spi;resolution:=optional',
                         'javax.management;resolution:=optional',
                         'javax.naming.event;resolution:=optional',
                         'javax.naming.spi;resolution:=optional',
@@ -218,7 +219,7 @@ task copyBundleResources (type: Copy) {
         ext.bundleTokens['buildDirName'] = buildDir.absolutePath
     }
 
-    from file('src/test/bundles')
+    from file('src/test/bundles/templates')
     into ext.bundlesTargetDir
     filter( ReplaceTokens, tokens: ext.bundleTokens)
 
@@ -229,6 +230,7 @@ task copyBundleResources (type: Copy) {
 processTestResources.dependsOn copyBundleResources
 
 task testJar(type: Jar, dependsOn: testClasses) {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     archiveClassifier.set( 'test' )
     from sourceSets.test.output
 }

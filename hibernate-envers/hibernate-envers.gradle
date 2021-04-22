@@ -41,6 +41,12 @@ sourceSets {
     }
 }
 
+configurations {
+    tests {
+        description = 'Configuration for the produced test jar'
+    }
+}
+
 jar {
     manifest {
         attributes(
@@ -63,6 +69,16 @@ jar {
                 ].join( ',' )
         )
     }
+}
+
+task testJar(type: Jar, dependsOn: testClasses) {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    archiveClassifier.set( 'test' )
+    from sourceSets.test.output
+}
+
+artifacts {
+    tests testJar
 }
 
 tasks."matrix_mariadb" {

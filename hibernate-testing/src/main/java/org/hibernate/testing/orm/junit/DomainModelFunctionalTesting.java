@@ -24,12 +24,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 @TestInstance( TestInstance.Lifecycle.PER_CLASS )
 
-@ExtendWith( FailureExpectedExtension.class )
-
 //@ExtendWith( ServiceRegistryExtension.class )
 //@ExtendWith( ServiceRegistryParameterResolver.class )
 
 @ServiceRegistryFunctionalTesting
+
+@ExtendWith( ExpectedExceptionExtension.class )
+@ExtendWith( DialectFilterExtension.class )
 
 @ExtendWith( DomainModelExtension.class )
 @ExtendWith( DomainModelParameterResolver.class )

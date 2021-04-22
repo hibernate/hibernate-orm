@@ -38,6 +38,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @TestInstance( TestInstance.Lifecycle.PER_CLASS )
 
 @DomainModelFunctionalTesting
+@ExtendWith( FailureExpectedExtension.class )
+
 
 @ExtendWith( SessionFactoryExtension.class )
 public @interface SessionFactoryFunctionalTesting {

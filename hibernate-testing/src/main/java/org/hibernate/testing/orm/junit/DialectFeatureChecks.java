@@ -13,7 +13,6 @@ import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.FirebirdDialect;
-import org.hibernate.dialect.GroupBySummarizationRenderingStrategy;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MariaDBDialect;
@@ -141,6 +140,12 @@ abstract public class DialectFeatureChecks {
 					|| dialect instanceof CockroachDialect
 					|| dialect instanceof MySQLDialect
 					|| dialect instanceof PostgreSQLDialect;
+		}
+	}
+
+	public static class SupportsJdbcDriverProxying implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return !( dialect instanceof DB2Dialect );
 		}
 	}
 

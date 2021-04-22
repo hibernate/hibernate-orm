@@ -18,9 +18,11 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 
+import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.junit.jupiter.api.AfterEach;
 
 import org.jboss.logging.Logger;
@@ -61,6 +63,12 @@ public abstract class BaseSessionFactoryFunctionalTest
 	@Override
 	public StandardServiceRegistry produceServiceRegistry(StandardServiceRegistryBuilder ssrBuilder) {
 		ssrBuilder.applySetting( AvailableSettings.HBM2DDL_AUTO, exportSchema() ? "create-drop" : "none" );
+		if ( !Environment.getProperties().containsKey( Environment.CONNECTION_PROVIDER ) ) {
+			ssrBuilder.applySetting(
+					AvailableSettings.CONNECTION_PROVIDER,
+					SharedDriverManagerConnectionProviderImpl.getInstance()
+			);
+		}
 		applySettings( ssrBuilder );
 		return ssrBuilder.build();
 	}

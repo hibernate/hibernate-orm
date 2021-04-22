@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -117,6 +118,19 @@ public class Component extends SimpleValue implements MetaAttributable {
 			iters[i++] = iter.next().getColumnIterator();
 		}
 		return new JoinedIterator<>( iters );
+	}
+
+	@Override
+	public List<Selectable> getSelectables() {
+		final List<Selectable> columns = new ArrayList<>();
+		final Iterator<Property> propertyIterator = getPropertyIterator();
+		while ( propertyIterator.hasNext() ) {
+			final Iterator<Selectable> columnIterator = propertyIterator.next().getColumnIterator();
+			while ( columnIterator.hasNext() ) {
+				columns.add( columnIterator.next() );
+			}
+		}
+		return columns;
 	}
 
 	public boolean isEmbedded() {

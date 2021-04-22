@@ -1,0 +1,114 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
+package org.hibernate.orm.test.insertordering;
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
+import javax.persistence.ManyToOne;
+
+import org.hibernate.cfg.Environment;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
+
+/**
+ * @author Vlad Mihalcea
+ */
+@TestForIssue(jiraKey = "HHH-12407")
+@SessionFactory
+@DomainModel(
+		annotatedClasses = {
+				InsertOrderingWithBaseClassReferencingSubclass.OwningTable.class,
+				InsertOrderingWithBaseClassReferencingSubclass.TableB.class,
+				InsertOrderingWithBaseClassReferencingSubclass.TableA.class,
+				InsertOrderingWithBaseClassReferencingSubclass.LinkTable.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting(name = Environment.ORDER_INSERTS, value = "true"),
+				@Setting(name = Environment.STATEMENT_BATCH_SIZE, value = "10")
+		}
+)
+public class InsertOrderingWithBaseClassReferencingSubclass {
+
+	@Test
+	public void testBatching(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			OwningTable rec_owningTable = new OwningTable();
+			session.persist( rec_owningTable );
+
+			session.flush();
+
+			TableB rec_tableB = new TableB();
+			rec_tableB.owning = rec_owningTable;
+			session.persist( rec_tableB );
+
+			TableA rec_tableA = new TableA();
+			rec_tableA.owning = rec_owningTable;
+			session.persist( rec_tableA );
+
+			LinkTable rec_link = new LinkTable();
+			rec_link.refToA = rec_tableA;
+			rec_link.refToB = rec_tableB;
+
+			session.persist( rec_link );
+		} );
+
+	}
+
+	@Entity(name = "RootTable")
+	@Inheritance(strategy = InheritanceType.JOINED)
+	public abstract static class RootTable {
+		@Id
+		@GeneratedValue
+		public int sysId;
+
+		public String name;
+	}
+
+	@Entity(name = "OwnedTable")
+	public abstract static class OwnedTable extends RootTable {
+		@ManyToOne
+		public OwningTable owning;
+	}
+
+	@Entity(name = "OwningTable")
+	public static class OwningTable extends OwnedTable {
+	}
+
+	@Entity(name = "TableA")
+	public static class TableA extends OwnedTable {
+	}
+
+	@Entity(name = "TableB")
+	public static class TableB extends OwnedTable {
+	}
+
+	@Entity(name = "LinkTable")
+	public static class LinkTable {
+		@Id
+		@GeneratedValue
+		public int sysId;
+
+		public String name;
+
+		@ManyToOne
+		public TableA refToA;
+
+		@ManyToOne
+		public TableB refToB;
+	}
+}

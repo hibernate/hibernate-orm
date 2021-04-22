@@ -7,6 +7,7 @@
 package org.hibernate.mapping;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Objects;
 
 import org.hibernate.FetchMode;
@@ -75,6 +76,11 @@ public class OneToMany implements Value {
 
 	public Iterator<Selectable> getColumnIterator() {
 		return associatedClass.getKey().getColumnIterator();
+	}
+
+	@Override
+	public List<Selectable> getSelectables() {
+		return associatedClass.getKey().getSelectables();
 	}
 
 	public int getColumnSpan() {

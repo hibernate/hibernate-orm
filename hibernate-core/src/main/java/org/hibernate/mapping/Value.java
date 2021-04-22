@@ -8,6 +8,7 @@ package org.hibernate.mapping;
 
 import java.io.Serializable;
 import java.util.Iterator;
+import java.util.List;
 
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
@@ -27,6 +28,7 @@ import org.hibernate.type.Type;
 public interface Value extends Serializable {
 	int getColumnSpan();
 	Iterator<Selectable> getColumnIterator();
+	List<Selectable> getSelectables();
 	Type getType() throws MappingException;
 	FetchMode getFetchMode();
 	Table getTable();

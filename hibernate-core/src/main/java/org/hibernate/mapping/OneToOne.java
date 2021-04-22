@@ -8,6 +8,7 @@ package org.hibernate.mapping;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Objects;
 
 import org.hibernate.MappingException;
@@ -88,6 +89,14 @@ public class OneToOne extends ToOne {
 			//TODO: handle the case of a foreign key to something other than the pk
 			createForeignKeyOfEntity( ( (EntityType) getType() ).getAssociatedEntityName() );
 		}
+	}
+
+	@Override
+	public List<Selectable> getSelectables() {
+		if ( super.getSelectables().size() > 0 ) {
+			return super.getSelectables();
+		}
+		return getConstraintColumns();
 	}
 
 	public java.util.List getConstraintColumns() {

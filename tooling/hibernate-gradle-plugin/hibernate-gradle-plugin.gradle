@@ -45,8 +45,8 @@ ext {
 }
 
 dependencies {
-	implementation( project( ':hibernate-core' ) )
-	implementation project( ':hibernate-testing' )
+	compile project( ':hibernate-core' )
+	compile project( ':hibernate-testing' )
 	implementation( libraries.jpa )
 	implementation( libraries.javassist )
 	implementation( libraries.byteBuddy )

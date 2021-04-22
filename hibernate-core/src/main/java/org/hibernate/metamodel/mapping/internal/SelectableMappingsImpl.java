@@ -7,7 +7,6 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.dialect.Dialect;
@@ -64,13 +63,14 @@ public class SelectableMappingsImpl implements SelectableMappings {
 			SqmFunctionRegistry sqmFunctionRegistry) {
 		final List<JdbcMapping> jdbcMappings = new ArrayList<>();
 		resolveJdbcMappings( jdbcMappings, mapping, value.getType() );
+
+		final List<Selectable> constraintColumns = value.getSelectables();
+
 		final SelectableMapping[] selectableMappings = new SelectableMapping[jdbcMappings.size()];
-		final Iterator<Selectable> columnIterator = value.getColumnIterator();
-		for ( int i = 0; columnIterator.hasNext(); i++ ) {
-			final Selectable selectable = columnIterator.next();
+		for ( int i = 0; i < constraintColumns.size(); i++ ) {
 			selectableMappings[propertyOrder[i]] = SelectableMappingImpl.from(
 					containingTableExpression,
-					selectable,
+					constraintColumns.get( i ),
 					jdbcMappings.get( propertyOrder[i] ),
 					dialect,
 					sqmFunctionRegistry

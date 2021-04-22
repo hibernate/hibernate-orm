@@ -191,6 +191,11 @@ public abstract class SimpleValue implements KeyValue {
 		return columns.iterator();
 	}
 
+	@Override
+	public List<Selectable> getSelectables() {
+		return columns;
+	}
+
 	public List getConstraintColumns() {
 		return columns;
 	}

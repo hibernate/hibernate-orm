@@ -6,7 +6,9 @@
  */
 package org.hibernate.id;
 
+import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 import org.hibernate.FetchMode;
@@ -70,6 +72,11 @@ public class ExportableColumn extends Column {
 		@Override
 		public Iterator<Selectable> getColumnIterator() {
 			return new ColumnIterator( column );
+		}
+
+		@Override
+		public List<Selectable> getSelectables() {
+			return Arrays.asList( column );
 		}
 
 		@Override

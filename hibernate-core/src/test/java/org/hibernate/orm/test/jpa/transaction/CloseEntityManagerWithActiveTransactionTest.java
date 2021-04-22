@@ -4,11 +4,10 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.jpa.test.transaction;
+package org.hibernate.orm.test.jpa.transaction;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -26,44 +25,48 @@ import javax.transaction.Status;
 import javax.transaction.TransactionManager;
 
 import org.hibernate.Session;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.internal.JdbcCoordinatorImpl;
 import org.hibernate.internal.SessionImpl;
-import org.hibernate.jpa.AvailableSettings;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.jpa.test.transaction.Book;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
-import org.junit.After;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.Setting;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Andrea Boriero
  */
-public class CloseEntityManagerWithActiveTransactionTest extends BaseEntityManagerFunctionalTestCase {
-	@Override
-	protected void addConfigOptions(Map options) {
-		super.addConfigOptions( options );
-		TestingJtaBootstrap.prepare( options );
-		options.put( AvailableSettings.TRANSACTION_TYPE, "JTA" );
-		options.put( org.hibernate.cfg.AvailableSettings.JPA_TRANSACTION_COMPLIANCE, "true" );
-	}
+@Jpa(
+		annotatedClasses = {
+				Book.class,
+				CloseEntityManagerWithActiveTransactionTest.Container.class,
+				CloseEntityManagerWithActiveTransactionTest.Box.class,
+				CloseEntityManagerWithActiveTransactionTest.Muffin.class,
+				CloseEntityManagerWithActiveTransactionTest.SmallBox.class
+		},
+		integrationSettings = {
+				@Setting(name = AvailableSettings.CONNECTION_PROVIDER, value = "org.hibernate.testing.jta.JtaAwareConnectionProviderImpl"),
+				@Setting(name = AvailableSettings.JPA_TRANSACTION_TYPE, value = "JTA"),
+				@Setting(name = AvailableSettings.JPA_TRANSACTION_COMPLIANCE, value = "true")
+		},
+		nonStringValueSettingProviders = { JtaPlatformNonStringValueSettingProvider.class }
+)
+public class CloseEntityManagerWithActiveTransactionTest {
 
-	@Override
-	public Class[] getAnnotatedClasses() {
-		return new Class[] {
-				Book.class, Container.class, Box.class, Muffin.class, SmallBox.class
-		};
-	}
-
-	@After
-	public void tearDown() throws Exception {
+	@AfterEach
+	public void tearDown(EntityManagerFactoryScope scope) throws Exception {
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		EntityManager em = getOrCreateEntityManager();
+		EntityManager em = scope.getEntityManagerFactory().createEntityManager();
 		try {
 			em.createQuery( "delete from Muffin" ).executeUpdate();
 			em.createQuery( "delete from Box" ).executeUpdate();
@@ -71,8 +74,8 @@ public class CloseEntityManagerWithActiveTransactionTest extends BaseEntityManag
 		}
 		catch (Exception e) {
 			final TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
-			if ( transactionManager.getTransaction() != null && transactionManager.getTransaction()
-					.getStatus() == Status.STATUS_ACTIVE ) {
+			if ( transactionManager.getTransaction() != null &&
+					transactionManager.getTransaction().getStatus() == Status.STATUS_ACTIVE ) {
 				TestingJtaPlatformImpl.INSTANCE.getTransactionManager().rollback();
 			}
 			throw e;
@@ -86,9 +89,9 @@ public class CloseEntityManagerWithActiveTransactionTest extends BaseEntityManag
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-10942")
-	public void testPersistThenCloseWithAnActiveTransaction() throws Exception {
+	public void testPersistThenCloseWithAnActiveTransaction(EntityManagerFactoryScope scope) throws Exception {
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		EntityManager em = getOrCreateEntityManager();
+		EntityManager em = scope.getEntityManagerFactory().createEntityManager();
 		try {
 			Box box = new Box();
 			box.setColor( "red-and-white" );
@@ -109,7 +112,7 @@ public class CloseEntityManagerWithActiveTransactionTest extends BaseEntityManag
 				em.close();
 			}
 		}
-		em = getOrCreateEntityManager();
+		em = scope.getEntityManagerFactory().createEntityManager();
 		try {
 			final List results = em.createQuery( "from Box" ).getResultList();
 			assertThat( results.size(), is( 1 ) );
@@ -120,10 +123,10 @@ public class CloseEntityManagerWithActiveTransactionTest extends BaseEntityManag
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11166")
-	public void testMergeThenCloseWithAnActiveTransaction() throws Exception {
+	@TestForIssue(jiraKey = "HHH-11166")
+	public void testMergeThenCloseWithAnActiveTransaction(EntityManagerFactoryScope scope) throws Exception {
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		EntityManager em = getOrCreateEntityManager();
+		EntityManager em = scope.getEntityManagerFactory().createEntityManager();
 		try {
 			Box box = new Box();
 			box.setColor( "red-and-white" );
@@ -132,7 +135,7 @@ public class CloseEntityManagerWithActiveTransactionTest extends BaseEntityManag
 			TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 
 			TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-			em = getOrCreateEntityManager();
+			em = scope.getEntityManagerFactory().createEntityManager();
 
 			Muffin muffin = new Muffin();
 			muffin.setKind( "blueberry" );
@@ -157,7 +160,7 @@ public class CloseEntityManagerWithActiveTransactionTest extends BaseEntityManag
 				em.close();
 			}
 		}
-		em = getOrCreateEntityManager();
+		em = scope.getEntityManagerFactory().createEntityManager();
 		try {
 			final List<Box> boxes = em.createQuery( "from Box" ).getResultList();
 			assertThat( boxes.size(), is( 1 ) );
@@ -169,21 +172,21 @@ public class CloseEntityManagerWithActiveTransactionTest extends BaseEntityManag
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11269")
-	public void testMergeWithDeletionOrphanRemovalThenCloseWithAnActiveTransaction() throws Exception {
+	@TestForIssue(jiraKey = "HHH-11269")
+	public void testMergeWithDeletionOrphanRemovalThenCloseWithAnActiveTransaction(EntityManagerFactoryScope scope) throws Exception {
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		EntityManager em = getOrCreateEntityManager();
+		EntityManager em = scope.getEntityManagerFactory().createEntityManager();
 		try {
 			Muffin muffin = new Muffin();
 			muffin.setKind( "blueberry" );
-			SmallBox box = new SmallBox(muffin);
+			SmallBox box = new SmallBox( muffin );
 			box.setColor( "red-and-white" );
 			em.persist( box );
 			em.close();
 			TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 
 			TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-			em = getOrCreateEntityManager();
+			em = scope.getEntityManagerFactory().createEntityManager();
 
 			box.emptyBox();
 
@@ -206,11 +209,11 @@ public class CloseEntityManagerWithActiveTransactionTest extends BaseEntityManag
 				em.close();
 			}
 		}
-		em = getOrCreateEntityManager();
+		em = scope.getEntityManagerFactory().createEntityManager();
 		try {
 			final List<SmallBox> boxes = em.createQuery( "from SmallBox" ).getResultList();
 			assertThat( boxes.size(), is( 1 ) );
-			assertTrue( boxes.get( 0 ).isEmpty());
+			assertTrue( boxes.get( 0 ).isEmpty() );
 		}
 		finally {
 			em.close();
@@ -218,10 +221,10 @@ public class CloseEntityManagerWithActiveTransactionTest extends BaseEntityManag
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11166")
-	public void testUpdateThenCloseWithAnActiveTransaction() throws Exception {
+	@TestForIssue(jiraKey = "HHH-11166")
+	public void testUpdateThenCloseWithAnActiveTransaction(EntityManagerFactoryScope scope) throws Exception {
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		EntityManager em = getOrCreateEntityManager();
+		EntityManager em = scope.getEntityManagerFactory().createEntityManager();
 		try {
 			Box box = new Box();
 			box.setColor( "red-and-white" );
@@ -230,7 +233,7 @@ public class CloseEntityManagerWithActiveTransactionTest extends BaseEntityManag
 			TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 
 			TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-			em = getOrCreateEntityManager();
+			em = scope.getEntityManagerFactory().createEntityManager();
 			box = em.find( Box.class, box.getId() );
 			Muffin muffin = new Muffin();
 			muffin.setKind( "blueberry" );
@@ -252,7 +255,7 @@ public class CloseEntityManagerWithActiveTransactionTest extends BaseEntityManag
 				em.close();
 			}
 		}
-		em = getOrCreateEntityManager();
+		em = scope.getEntityManagerFactory().createEntityManager();
 		try {
 			final List<Box> boxes = em.createQuery( "from Box" ).getResultList();
 			assertThat( boxes.size(), is( 1 ) );
@@ -264,10 +267,10 @@ public class CloseEntityManagerWithActiveTransactionTest extends BaseEntityManag
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11166")
-	public void testRemoveThenCloseWithAnActiveTransaction() throws Exception {
+	@TestForIssue(jiraKey = "HHH-11166")
+	public void testRemoveThenCloseWithAnActiveTransaction(EntityManagerFactoryScope scope) throws Exception {
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		EntityManager em = getOrCreateEntityManager();
+		EntityManager em = scope.getEntityManagerFactory().createEntityManager();
 		try {
 			Box box = new Box();
 			box.setColor( "red-and-white" );
@@ -279,7 +282,7 @@ public class CloseEntityManagerWithActiveTransactionTest extends BaseEntityManag
 			TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 
 			TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-			em = getOrCreateEntityManager();
+			em = scope.getEntityManagerFactory().createEntityManager();
 			box = em.find( Box.class, box.getId() );
 			em.remove( box );
 
@@ -299,7 +302,7 @@ public class CloseEntityManagerWithActiveTransactionTest extends BaseEntityManag
 				em.close();
 			}
 		}
-		em = getOrCreateEntityManager();
+		em = scope.getEntityManagerFactory().createEntityManager();
 		try {
 			final List<Box> boxes = em.createQuery( "from Box" ).getResultList();
 			assertThat( boxes.size(), is( 0 ) );
@@ -311,9 +314,9 @@ public class CloseEntityManagerWithActiveTransactionTest extends BaseEntityManag
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-11099")
-	public void testCommitReleasesLogicalConnection() throws Exception {
+	public void testCommitReleasesLogicalConnection(EntityManagerFactoryScope scope) throws Exception {
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		EntityManager em = getOrCreateEntityManager();
+		EntityManager em = scope.getEntityManagerFactory().createEntityManager();
 		try {
 			Box box = new Box();
 			box.setColor( "red-and-white" );
@@ -396,29 +399,29 @@ public class CloseEntityManagerWithActiveTransactionTest extends BaseEntityManag
 	@Entity(name = "SmallBox")
 	public static class SmallBox extends Container {
 
-		@OneToOne(cascade = {CascadeType.MERGE,
+		@OneToOne(cascade = {
+				CascadeType.MERGE,
 				CascadeType.REMOVE,
 				CascadeType.REFRESH,
 				CascadeType.PERSIST
 		}, orphanRemoval = true)
 		private Muffin muffin;
 
-		public SmallBox(){}
+		public SmallBox() {
+		}
 
 		public SmallBox(Muffin muffin) {
 			this.muffin = muffin;
 		}
 
-		public void emptyBox(){
+		public void emptyBox() {
 			muffin = null;
 		}
 
-		public boolean isEmpty(){
+		public boolean isEmpty() {
 			return muffin == null;
 		}
 	}
-
-
 
 	@Entity(name = "Muffin")
 	public static class Muffin {
@@ -446,11 +449,5 @@ public class CloseEntityManagerWithActiveTransactionTest extends BaseEntityManag
 		public void setKind(String kind) {
 			this.kind = kind;
 		}
-	}
-
-
-	@FunctionalInterface
-	public interface Action{
-		void execute();
 	}
 }

@@ -63,18 +63,6 @@ public abstract class AbstractJtaBatchTest {
 		} );
 	}
 
-	public static class JtaPlatformNonStringValueSettingProvider extends NonStringValueSettingProvider {
-		@Override
-		public String getKey() {
-			return AvailableSettings.JTA_PLATFORM;
-		}
-
-		@Override
-		public Object getValue() {
-			return TestingJtaPlatformImpl.INSTANCE;
-		}
-	}
-
 	public static class ConnectionNonStringValueSettingProvider extends NonStringValueSettingProvider {
 		@Override
 		public String getKey() {

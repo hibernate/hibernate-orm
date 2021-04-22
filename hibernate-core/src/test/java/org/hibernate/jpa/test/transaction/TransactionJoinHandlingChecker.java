@@ -24,7 +24,7 @@ import static org.junit.Assert.assertTrue;
  * @author Steve Ebersole
  */
 public class TransactionJoinHandlingChecker {
-	static void validateExplicitJoiningHandling(EntityManager entityManager) throws Exception {
+	public static void validateExplicitJoiningHandling(EntityManager entityManager) throws Exception {
 		SharedSessionContractImplementor session = entityManager.unwrap( SharedSessionContractImplementor.class );
 
 		ExtraAssertions.assertTyping( JtaTransactionCoordinatorImpl.class, session.getTransactionCoordinator() );

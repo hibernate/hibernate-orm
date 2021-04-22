@@ -8,8 +8,8 @@ package org.hibernate;
 
 import java.util.Iterator;
 
+import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
-import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.HibernateIterator;
 import org.hibernate.engine.jdbc.LobCreator;
@@ -202,11 +202,8 @@ public final class Hibernate {
 
 		if ( entity instanceof PersistentAttributeInterceptable ) {
 			PersistentAttributeInterceptor interceptor = ( (PersistentAttributeInterceptable) entity ).$$_hibernate_getInterceptor();
-			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
-				return false;
-			}
-			if ( interceptor instanceof LazyAttributeLoadingInterceptor ) {
-				return ( (LazyAttributeLoadingInterceptor) interceptor ).isAttributeLoaded( propertyName );
+			if ( interceptor instanceof BytecodeLazyAttributeInterceptor ) {
+				return ( (BytecodeLazyAttributeInterceptor) interceptor ).isAttributeLoaded( propertyName );
 			}
 		}
 

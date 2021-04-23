@@ -7,9 +7,13 @@
 
 description = 'Support for testing Hibernate ORM Jakarta functionality'
 
-// todo (jakarta): replace this when the jakarta artifact is released
-apply from: rootProject.file( 'gradle/java-module.gradle' )
-//apply from: rootProject.file( 'gradle/published-java-module.gradle' )
+apply from: rootProject.file( 'gradle/published-java-module.gradle' )
+
+tasks.withType(PublishToMavenRepository) {
+	onlyIf {
+		repository == publishing.repositories.mavenLocal
+	}
+}
 
 configurations {
 	jakartaeeTransformJars
@@ -26,9 +30,9 @@ dependencies {
 	compile( libraries.log4j )
 // todo (jakarta): replace this when the jakarta artifacts are released
 	compile project( ':hibernate-jboss-jta' )
-//	compile( libraries.jboss_tx_spi_jakarta ) {
-//		transitive=false;
-//	}
+	compile( libraries.jboss_tx_spi_jakarta ) {
+		transitive=false;
+	}
 //	compile ( libraries.jboss_jta_jakarta ) {
 //		transitive=false;
 //	}

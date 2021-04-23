@@ -7,7 +7,13 @@
 
 description = 'JBoss JTA transformed to be JTA 2.0 compatible'
 
-apply from: rootProject.file( 'gradle/java-module.gradle' )
+apply from: rootProject.file( 'gradle/published-java-module.gradle' )
+
+tasks.withType(PublishToMavenRepository) {
+	onlyIf {
+		repository == publishing.repositories.mavenLocal
+	}
+}
 
 configurations {
 	jakartaeeTransformJars
@@ -16,7 +22,7 @@ configurations {
 dependencies {
 	compile( libraries.jakarta_jta )
 	compile( libraries.jakarta_resource )
-	compile( project(':hibernate-transaction-spi') )
+	compile( libraries.jboss_tx_spi_jakarta )
 
 	jakartaeeTransformJars 'biz.aQute.bnd:biz.aQute.bnd.transform:5.1.1',
 			'commons-cli:commons-cli:1.4',

@@ -142,6 +142,7 @@ ext {
 
             informix:        'com.ibm.informix:jdbc:4.10.12',
             jboss_jta:       "org.jboss.narayana.jta:narayana-jta:5.11.1.Final",
+            // todo: update the version when the parent pom is published
             jboss_tx_spi:    "org.jboss:jboss-transaction-spi:7.6.0.Final",
             // todo (jakarta): update the version when it is released
             jboss_jta_jakarta:       "org.jboss.narayana.jta:narayana-jta-jakarta:5.11.2.Final",

@@ -78,11 +78,15 @@ public class LoadContexts {
 	public void cleanup(ResultSet resultSet) {
 		if ( collectionLoadContexts != null ) {
 			final CollectionLoadContext collectionLoadContext = collectionLoadContexts.remove( resultSet );
-			collectionLoadContext.cleanup();
+			if ( collectionLoadContext != null ) {
+				collectionLoadContext.cleanup();
+			}
 		}
 		if ( entityLoadContexts != null ) {
 			final EntityLoadContext entityLoadContext = entityLoadContexts.remove( resultSet );
-			entityLoadContext.cleanup();
+			if ( entityLoadContext != null ) {
+				entityLoadContext.cleanup();
+			}
 		}
 	}
 

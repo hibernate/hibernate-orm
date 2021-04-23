@@ -7,7 +7,13 @@
 
 description = 'Wildfly Transaction Client transformed to be JTA 2.0 compatible'
 
-apply from: rootProject.file( 'gradle/java-module.gradle' )
+apply from: rootProject.file( 'gradle/published-java-module.gradle' )
+
+tasks.withType(PublishToMavenRepository) {
+	onlyIf {
+		repository == publishing.repositories.mavenLocal
+	}
+}
 
 configurations {
 	jakartaeeTransformJars

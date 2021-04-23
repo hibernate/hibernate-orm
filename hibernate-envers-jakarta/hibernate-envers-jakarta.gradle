@@ -28,9 +28,10 @@ dependencies {
 			'org.eclipse.transformer:org.eclipse.transformer:0.2.0',
 			'org.eclipse.transformer:org.eclipse.transformer.cli:0.2.0'
 
-	testCompile( project( ':hibernate-testing-jakarta' ) )
 	testCompile( project( ':hibernate-envers-jakarta' ) )
-	testCompile( project( path: ':hibernate-core-jakarta', configuration: 'tests' ) )
+// todo: enable again when we can finally use the Jakarta JARs from narayana
+//	testCompile( project( ':hibernate-testing-jakarta' ) )
+//	testCompile( project( path: ':hibernate-core-jakarta', configuration: 'tests' ) )
 }
 
 jar {
@@ -75,29 +76,30 @@ jar {
 	}
 }
 
-task unpackTestJar(type: Copy) {
-	dependsOn jar
-	fileTree(project.buildDir).matching { include 'libs/*-test.jar' }.each {
-		def outputDir = file("${buildDir}/unpacked/" + it.name)
-		from zipTree(it)
-		into outputDir
-	}
-}
-
-test {
-	dependsOn unpackTestJar
-	fileTree(project.buildDir).matching { include 'libs/*-test.jar' }.each {
-		def outputDir = file("${buildDir}/unpacked/" + it.name)
-		testClassesDirs += files(outputDir)
-		classpath += files(outputDir)
-	}
-	systemProperty 'file.encoding', 'utf-8'
-
-	if ( gradle.ext.javaVersions.test.launcher.asInt() >= 9 ) {
-		// See org.hibernate.boot.model.naming.NamingHelperTest.DefaultCharset.set
-		jvmArgs( ['--add-opens', 'java.base/java.nio.charset=ALL-UNNAMED'] )
-		// Weld needs this to generate proxies
-		jvmArgs( ['--add-opens', 'java.base/java.security=ALL-UNNAMED'] )
-		jvmArgs( ['--add-opens', 'java.base/java.lang=ALL-UNNAMED'] )
-	}
-}
+// todo: enable again when we can finally use the Jakarta JARs from narayana
+//task unpackTestJar(type: Copy) {
+//	dependsOn jar
+//	fileTree(project.buildDir).matching { include 'libs/*-test.jar' }.each {
+//		def outputDir = file("${buildDir}/unpacked/" + it.name)
+//		from zipTree(it)
+//		into outputDir
+//	}
+//}
+//
+//test {
+//	dependsOn unpackTestJar
+//	fileTree(project.buildDir).matching { include 'libs/*-test.jar' }.each {
+//		def outputDir = file("${buildDir}/unpacked/" + it.name)
+//		testClassesDirs += files(outputDir)
+//		classpath += files(outputDir)
+//	}
+//	systemProperty 'file.encoding', 'utf-8'
+//
+//	if ( gradle.ext.javaVersions.test.launcher.asInt() >= 9 ) {
+//		// See org.hibernate.boot.model.naming.NamingHelperTest.DefaultCharset.set
+//		jvmArgs( ['--add-opens', 'java.base/java.nio.charset=ALL-UNNAMED'] )
+//		// Weld needs this to generate proxies
+//		jvmArgs( ['--add-opens', 'java.base/java.security=ALL-UNNAMED'] )
+//		jvmArgs( ['--add-opens', 'java.base/java.lang=ALL-UNNAMED'] )
+//	}
+//}

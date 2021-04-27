@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.jpa.test.transaction;
+package org.hibernate.orm.test.jpa.transaction;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -25,18 +25,19 @@ import org.hibernate.jpa.test.PersistenceUnitDescriptorAdapter;
 import org.hibernate.jpa.test.SettingsGenerator;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Vlad Mihalcea
  */
-public class TransactionCommitFailureTest extends BaseUnitTestCase {
+@BaseUnitTest
+public class TransactionCommitFailureTest {
 
 	public static final String COMMIT_FAILURE = "Error while committing the transaction";
 
@@ -45,17 +46,17 @@ public class TransactionCommitFailureTest extends BaseUnitTestCase {
 
 	private EntityManagerFactory emf;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 		// static variables need to be initialized before the EMF is set up, because they can be referenced during EMF setup via the connection provider.
 		transactionFailureTrigger = new AtomicBoolean();
 		connectionIsOpen = new AtomicBoolean();
-		
+
 		final Map settings = basicSettings();
 		emf = Bootstrap.getEntityManagerFactoryBuilder( new PersistenceUnitDescriptorAdapter(), settings ).build();
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() {
 		emf.close();
 	}
@@ -70,7 +71,7 @@ public class TransactionCommitFailureTest extends BaseUnitTestCase {
 			em.getTransaction().commit();
 		}
 		catch (RollbackException e) {
-			assertEquals( COMMIT_FAILURE, e.getLocalizedMessage());
+			assertEquals( COMMIT_FAILURE, e.getLocalizedMessage() );
 		}
 		finally {
 			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
@@ -79,7 +80,7 @@ public class TransactionCommitFailureTest extends BaseUnitTestCase {
 			em.close();
 		}
 
-		assertEquals( "The connection was not released", false, connectionIsOpen.get() );
+		assertEquals( false, connectionIsOpen.get(), "The connection was not released" );
 	}
 
 	@Test
@@ -100,7 +101,7 @@ public class TransactionCommitFailureTest extends BaseUnitTestCase {
 			em.close();
 		}
 
-		assertEquals( "The connection was not released", false, connectionIsOpen.get() );
+		assertEquals( false, connectionIsOpen.get(), "The connection was not released" );
 	}
 
 	private Map basicSettings() {

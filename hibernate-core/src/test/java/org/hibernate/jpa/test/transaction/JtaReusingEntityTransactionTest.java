@@ -7,42 +7,39 @@
 package org.hibernate.jpa.test.transaction;
 
 import java.util.List;
-import java.util.Map;
 import javax.persistence.Entity;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.transaction.SynchronizationTypeTest;
 
-import org.hibernate.testing.jta.TestingJtaBootstrap;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
 
 /**
  * @author Andrea Boriero
  */
-public class JtaReusingEntityTransactionTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(
+		annotatedClasses = { JtaReusingEntityTransactionTest.TestEntity.class },
+		integrationSettings = {
+				@Setting(name = org.hibernate.jpa.AvailableSettings.TRANSACTION_TYPE, value = "JTA"),
+				@Setting(name = org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER, value = "org.hibernate.testing.jta.JtaAwareConnectionProviderImpl"),
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { TestEntity.class };
-	}
-
-	@Override
-	protected void addConfigOptions(Map options) {
-		super.addConfigOptions( options );
-		TestingJtaBootstrap.prepare( options );
-		options.put( AvailableSettings.JPA_TRANSACTION_TYPE, "JTA" );
-	}
+		},
+		nonStringValueSettingProviders = { SynchronizationTypeTest.JtaPlatformNonStringValueSettingProvider.class }
+)
+public class JtaReusingEntityTransactionTest {
 
 	@Test
-	public void entityTransactionShouldBeReusableTest() {
-		EntityManager em = createEntityManager();
+	public void entityTransactionShouldBeReusableTest(EntityManagerFactoryScope scope) {
+		EntityManager em = createEntityManager( scope );
 		EntityTransaction transaction = null;
 		try {
 			transaction = em.getTransaction();
@@ -59,7 +56,7 @@ public class JtaReusingEntityTransactionTest extends BaseEntityManagerFunctional
 			}
 			em.close();
 		}
-		em = createEntityManager();
+		em = createEntityManager( scope );
 		try {
 			transaction = em.getTransaction();
 			transaction.begin();
@@ -75,6 +72,10 @@ public class JtaReusingEntityTransactionTest extends BaseEntityManagerFunctional
 		}
 	}
 
+	private EntityManager createEntityManager(EntityManagerFactoryScope scope) {
+		return scope.getEntityManagerFactory().createEntityManager();
+	}
+
 	@Entity(name = "TestEntity")
 	public static class TestEntity {
 		@Id
@@ -82,4 +83,3 @@ public class JtaReusingEntityTransactionTest extends BaseEntityManagerFunctional
 		private Long id;
 	}
 }
-

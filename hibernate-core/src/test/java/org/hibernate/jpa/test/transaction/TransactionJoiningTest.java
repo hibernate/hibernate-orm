@@ -20,6 +20,7 @@ import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.internal.SessionImpl;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.transaction.TransactionJoinHandlingChecker;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 
 import org.hibernate.testing.TestForIssue;

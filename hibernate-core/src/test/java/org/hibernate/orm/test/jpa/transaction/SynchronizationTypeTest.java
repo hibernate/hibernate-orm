@@ -15,15 +15,13 @@ import javax.persistence.criteria.CriteriaUpdate;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
-import org.hibernate.jpa.AvailableSettings;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.test.transaction.Book;
 import org.hibernate.jpa.test.transaction.Book_;
-import org.hibernate.jpa.test.transaction.TransactionJoiningTest;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
-import org.hibernate.testing.orm.jpa.NonStringValueSettingProvider;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.ExtraAssertions;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -46,26 +44,14 @@ import static org.junit.jupiter.api.Assertions.fail;
 @Jpa(
 		annotatedClasses = { Book.class },
 		integrationSettings = {
-				@Setting(name = AvailableSettings.TRANSACTION_TYPE, value = "JTA"),
+				@Setting(name = AvailableSettings.JPA_TRANSACTION_TYPE, value = "JTA"),
 				@Setting(name = org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER, value = "org.hibernate.testing.jta.JtaAwareConnectionProviderImpl"),
 
 
 		},
-		nonStringValueSettingProviders = { SynchronizationTypeTest.JtaPlatformNonStringValueSettingProvider.class }
+		nonStringValueSettingProviders = { JtaPlatformNonStringValueSettingProvider.class }
 )
 public class SynchronizationTypeTest {
-	public static class JtaPlatformNonStringValueSettingProvider extends NonStringValueSettingProvider {
-		@Override
-		public String getKey() {
-			return org.hibernate.cfg.AvailableSettings.JTA_PLATFORM;
-		}
-
-		@Override
-		public Object getValue() {
-			return TestingJtaPlatformImpl.INSTANCE;
-		}
-	}
-
 
 	@Test
 	public void testUnSynchronizedExplicitJoinHandling(EntityManagerFactoryScope scope) throws Exception {

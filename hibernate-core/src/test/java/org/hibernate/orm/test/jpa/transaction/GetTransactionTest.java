@@ -6,7 +6,6 @@
  */
 package org.hibernate.orm.test.jpa.transaction;
 
-import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -14,9 +13,9 @@ import org.hibernate.testing.orm.junit.Jpa;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 /**
  * @author Andrea Boriero

@@ -10,9 +10,7 @@ import java.sql.PreparedStatement;
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.FlushModeType;
-import javax.transaction.NotSupportedException;
 import javax.transaction.Status;
-import javax.transaction.SystemException;
 import javax.transaction.TransactionManager;
 
 import org.hibernate.cfg.AvailableSettings;
@@ -22,6 +20,7 @@ import org.hibernate.engine.jdbc.batch.internal.BatchingBatch;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
+import org.hibernate.orm.test.jpa.transaction.JtaPlatformNonStringValueSettingProvider;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
@@ -55,7 +54,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 				@Setting(name = AvailableSettings.STATEMENT_BATCH_SIZE, value = "50")
 		},
 		nonStringValueSettingProviders = {
-				AbstractJtaBatchTest.JtaPlatformNonStringValueSettingProvider.class,
+				JtaPlatformNonStringValueSettingProvider.class,
 				AbstractJtaBatchTest.ConnectionNonStringValueSettingProvider.class,
 				JtaWithStatementsBatchTest.BatchBuilderNonStringValueSettingProvider.class
 		}

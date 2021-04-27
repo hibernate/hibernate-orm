@@ -41,6 +41,7 @@ import org.hibernate.grammars.hql.HqlParser;
 import org.hibernate.grammars.hql.HqlParserBaseVisitor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
+import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
@@ -825,7 +826,29 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 
 		if ( ctx.selectExpression().expression() != null ) {
-			return (SqmExpression) ctx.selectExpression().expression().accept( this );
+			final SqmExpression<?> sqmExpression = (SqmExpression<?>) ctx.selectExpression().expression().accept( this );
+			if ( sqmExpression instanceof SqmPath ) {
+				final SqmPath<?> sqmPath = (SqmPath<?>) sqmExpression;
+				if ( sqmPath.getReferencedPathSource() instanceof PluralPersistentAttribute ) {
+					// for plural-attribute selections, use the element path as the selection
+					//		- this is not strictly JPA compliant
+					if ( creationOptions.useStrictJpaCompliance() ) {
+						SqmTreeCreationLogger.LOGGER.debugf(
+								"Raw selection of plural attribute not supported by JPA: %s.  Use `value(%s)` or `key(%s)` to indicate what part of the collection to select",
+								sqmPath.getAlias(),
+								sqmPath.getAlias(),
+								sqmPath.getAlias()
+						);
+					}
+
+					final PluralPersistentAttribute<?,?,?> pluralAttribute = (PluralPersistentAttribute<?,?,?>) sqmPath.getReferencedPathSource();
+					final SqmPath<?> elementPath = pluralAttribute.getElementPathSource().createSqmPath( sqmPath );
+					processingStateStack.getCurrent().getPathRegistry().register( elementPath );
+					return elementPath;
+				}
+			}
+
+			return sqmExpression;
 		}
 
 		throw new ParsingException( "Unexpected selection rule type : " + ctx.getText() );

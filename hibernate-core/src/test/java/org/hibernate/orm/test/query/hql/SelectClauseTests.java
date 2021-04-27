@@ -215,6 +215,25 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 	}
 
 	@Test
+	public void testPluralJoinSelection() {
+		collectionValueFunctionAssertions(
+				interpretSelect( "select l from EntityOfLists e join e.listOfBasics l" ),
+				EntityOfLists.class.getName() + ".listOfBasics",
+				"l"
+		);
+		collectionValueFunctionAssertions(
+				interpretSelect( "select l from EntityOfLists e join e.listOfComponents l" ),
+				EntityOfLists.class.getName() + ".listOfComponents",
+				"l"
+		);
+		collectionValueFunctionAssertions(
+				interpretSelect( "select l from EntityOfLists e join e.listOfOneToMany l" ),
+				EntityOfLists.class.getName() + ".listOfOneToMany",
+				"l"
+		);
+	}
+
+	@Test
 	public void testCollectionValueFunction() {
 		collectionValueFunctionAssertions(
 				interpretSelect( "select value(b) from EntityOfLists e join e.listOfBasics b" ),

@@ -8,8 +8,7 @@ package org.hibernate.orm.test.jpa.transaction;
 
 import javax.persistence.EntityManager;
 
-import org.hibernate.jpa.AvailableSettings;
-import org.hibernate.jpa.test.transaction.Book;
+import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -24,11 +23,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  */
 @Jpa(
 		integrationSettings = {
-				@Setting(name = AvailableSettings.TRANSACTION_TYPE, value = "JTA"),
+				@Setting(name = AvailableSettings.JPA_TRANSACTION_TYPE, value = "JTA"),
 				@Setting(name = org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER, value = "org.hibernate.testing.jta.JtaAwareConnectionProviderImpl"),
 				@Setting( name = org.hibernate.cfg.AvailableSettings.JPA_TRANSACTION_COMPLIANCE, value = "true")
 		},
-		nonStringValueSettingProviders = { SynchronizationTypeTest.JtaPlatformNonStringValueSettingProvider.class }
+		nonStringValueSettingProviders = { JtaPlatformNonStringValueSettingProvider.class }
 )
 public class JtaGetTransactionThrowsExceptionTest {
 

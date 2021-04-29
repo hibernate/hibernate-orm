@@ -10,19 +10,30 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
 
-import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.LockMode;
+import org.hibernate.engine.FetchTiming;
+import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.ResultsHelper;
+import org.hibernate.query.results.SqlSelectionImpl;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
+
+import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
 /**
  * @author Steve Ebersole
+ * @author Christian Beikov
  */
 public class DynamicFetchBuilderStandard
 		implements DynamicFetchBuilder, NativeQuery.ReturnProperty {
@@ -50,9 +61,59 @@ public class DynamicFetchBuilderStandard
 
 		final TableGroup ownerTableGroup = creationStateImpl.getFromClauseAccess().getTableGroup( parent.getNavigablePath() );
 
-		// todo (6.0) : create the TableGroupJoin for the fetch and then build the fetch
+		final Fetchable attributeMapping = (Fetchable) parent.getReferencedMappingContainer().findSubPart( fetchableName, null );
+		final SqlExpressionResolver sqlExpressionResolver = domainResultCreationState.getSqlAstCreationState().getSqlExpressionResolver();
 
-		throw new NotYetImplementedFor6Exception( getClass() );
+		final SelectableConsumer selectableConsumer = (selectionIndex, selectableMapping) -> {
+			final TableReference tableReference = ownerTableGroup.getTableReference(
+					fetchPath,
+					selectableMapping.getContainingTableExpression()
+			);
+			final String columnAlias = columnNames.get( selectionIndex );
+			sqlExpressionResolver.resolveSqlSelection(
+					sqlExpressionResolver.resolveSqlExpression(
+							createColumnReferenceKey( tableReference, selectableMapping.getSelectionExpression() ),
+							state -> {
+								final int resultSetPosition = jdbcResultsMetadata.resolveColumnPosition( columnAlias );
+								final int valuesArrayPosition = resultSetPosition - 1;
+								return new SqlSelectionImpl( valuesArrayPosition, (BasicValuedMapping) selectableMapping );
+							}
+					),
+					selectableMapping.getJdbcMapping().getMappedJavaTypeDescriptor(),
+					domainResultCreationState.getSqlAstCreationState()
+							.getCreationContext()
+							.getSessionFactory()
+							.getTypeConfiguration()
+			);
+		};
+		if ( attributeMapping instanceof BasicValuedMapping ) {
+			attributeMapping.forEachSelectable( selectableConsumer );
+			return parent.generateFetchableFetch(
+					attributeMapping,
+					fetchPath,
+					FetchTiming.IMMEDIATE,
+					true,
+					LockMode.NONE,
+					null,
+					creationStateImpl
+			);
+		}
+		else {
+			// Not sure if this fetch builder can also be used with other attribute mappings
+			assert attributeMapping instanceof ToOneAttributeMapping;
+
+			final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attributeMapping;
+			toOneAttributeMapping.getForeignKeyDescriptor().visitKeySelectables( selectableConsumer );
+			return parent.generateFetchableFetch(
+					attributeMapping,
+					fetchPath,
+					FetchTiming.DELAYED,
+					false,
+					LockMode.NONE,
+					null,
+					creationStateImpl
+			);
+		}
 	}
 
 	@Override

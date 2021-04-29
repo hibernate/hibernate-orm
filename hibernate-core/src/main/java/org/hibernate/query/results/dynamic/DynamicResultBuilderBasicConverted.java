@@ -19,6 +19,7 @@ import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.resource.beans.spi.ProvidedInstanceManagedBeanImpl;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
@@ -97,32 +98,35 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 			int resultPosition,
 			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState domainResultCreationState) {
-		final int currentJdbcPosition = resultPosition + 1;
-
-		final int jdbcPosition;
-		if ( columnAlias != null ) {
-			jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( columnAlias );
-		}
-		else {
-			jdbcPosition = currentJdbcPosition;
-		}
-
 		final TypeConfiguration typeConfiguration = domainResultCreationState.getSqlAstCreationState()
 				.getCreationContext()
 				.getSessionFactory()
 				.getTypeConfiguration();
 
-		final BasicType<?> basicType = jdbcResultsMetadata.resolveType( jdbcPosition, basicValueConverter.getRelationalJavaDescriptor() );
-
-		final int valuesArrayPosition = ResultsHelper.jdbcPositionToValuesArrayPosition( jdbcPosition );
-
 		final SqlExpressionResolver sqlExpressionResolver = domainResultCreationState.getSqlAstCreationState().getSqlExpressionResolver();
-		sqlExpressionResolver.resolveSqlExpression(
-				columnAlias,
-				state -> new SqlSelectionImpl( valuesArrayPosition, (BasicValuedMapping) basicType )
+		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
+				sqlExpressionResolver.resolveSqlExpression(
+						columnAlias,
+						state -> {
+							final int currentJdbcPosition = resultPosition + 1;
+
+							final int jdbcPosition;
+							if ( columnAlias != null ) {
+								jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( columnAlias );
+							}
+							else {
+								jdbcPosition = currentJdbcPosition;
+							}
+							final BasicType<?> basicType = jdbcResultsMetadata.resolveType( jdbcPosition, basicValueConverter.getRelationalJavaDescriptor() );
+
+							final int valuesArrayPosition = ResultsHelper.jdbcPositionToValuesArrayPosition( jdbcPosition );
+							return new SqlSelectionImpl( valuesArrayPosition, (BasicValuedMapping) basicType );
+						}
+				),
+				domainJtd,
+				typeConfiguration
 		);
 
-		//noinspection unchecked
-		return new BasicResult( valuesArrayPosition, columnAlias, domainJtd, basicValueConverter );
+		return new BasicResult<>( sqlSelection.getValuesArrayPosition(), columnAlias, domainJtd, basicValueConverter );
 	}
 }

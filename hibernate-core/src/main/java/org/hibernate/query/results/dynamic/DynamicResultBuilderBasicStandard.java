@@ -13,6 +13,8 @@ import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.query.results.SqlSelectionImpl;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
@@ -78,17 +80,24 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 				.getCreationContext()
 				.getSessionFactory();
 
-		final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( columnName );
-		final int valuesArrayPosition = ResultsHelper.jdbcPositionToValuesArrayPosition( jdbcPosition );
+		final SqlExpressionResolver sqlExpressionResolver = domainResultCreationState.getSqlAstCreationState().getSqlExpressionResolver();
+		final Expression expression = sqlExpressionResolver.resolveSqlExpression(
+				columnName,
+				state -> {
+					final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( columnName );
+					final int valuesArrayPosition = ResultsHelper.jdbcPositionToValuesArrayPosition( jdbcPosition );
 
-		final BasicType<?> basicType;
+					final BasicType<?> basicType;
 
-		if ( explicitType != null ) {
-			basicType = explicitType;
-		}
-		else {
-			basicType = jdbcResultsMetadata.resolveType( jdbcPosition, explicitJavaTypeDescriptor );
-		}
+					if ( explicitType != null ) {
+						basicType = explicitType;
+					}
+					else {
+						basicType = jdbcResultsMetadata.resolveType( jdbcPosition, explicitJavaTypeDescriptor );
+					}
+					return new SqlSelectionImpl( valuesArrayPosition, (BasicValuedMapping) basicType );
+				}
+		);
 
 		final JavaTypeDescriptor<?> javaTypeDescriptor;
 
@@ -96,23 +105,18 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 			javaTypeDescriptor = explicitJavaTypeDescriptor;
 		}
 		else {
-			javaTypeDescriptor = basicType.getJavaTypeDescriptor();
+			javaTypeDescriptor = expression.getExpressionType().getJdbcMappings().get( 0 ).getMappedJavaTypeDescriptor();
 		}
-
-		final SqlExpressionResolver sqlExpressionResolver = domainResultCreationState.getSqlAstCreationState().getSqlExpressionResolver();
-		sqlExpressionResolver.resolveSqlSelection(
-				sqlExpressionResolver.resolveSqlExpression(
-						columnName,
-						state -> new SqlSelectionImpl( valuesArrayPosition, (BasicValuedMapping) basicType )
-				),
-				basicType.getJavaTypeDescriptor(),
+		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
+				expression,
+				javaTypeDescriptor,
 				sessionFactory.getTypeConfiguration()
 		);
 
 		// StandardRowReader expects there to be a JavaTypeDescriptor as part of the ResultAssembler.
 		assert javaTypeDescriptor != null;
 
-		return new BasicResult<>( valuesArrayPosition, resultAlias, javaTypeDescriptor );
+		return new BasicResult<>( sqlSelection.getValuesArrayPosition(), resultAlias, javaTypeDescriptor );
 	}
 
 }

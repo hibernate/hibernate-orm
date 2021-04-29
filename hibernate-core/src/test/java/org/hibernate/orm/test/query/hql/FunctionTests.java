@@ -51,7 +51,7 @@ public class FunctionTests {
 					entity.setId(123);
 					entity.setTheDate( new Date( 74, 2, 25 ) );
 					entity.setTheTime( new Time( 23, 10, 8 ) );
-					entity.setTheTimestamp( new Timestamp( System.currentTimeMillis() ) );
+					entity.setTheTimestamp( new Timestamp( 121, 4, 27, 13, 22, 50, 123456789 ) );
 					em.persist(entity);
 				}
 		);

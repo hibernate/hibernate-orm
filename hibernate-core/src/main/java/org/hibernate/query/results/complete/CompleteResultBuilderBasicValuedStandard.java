@@ -14,6 +14,7 @@ import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.query.results.SqlSelectionImpl;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
+import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
@@ -54,39 +55,46 @@ public class CompleteResultBuilderBasicValuedStandard implements CompleteResultB
 		final DomainResultCreationStateImpl creationStateImpl = impl( domainResultCreationState );
 		final SessionFactoryImplementor sessionFactory = creationStateImpl.getSessionFactory();
 
-		final int jdbcPosition;
 		final String columnName;
-
 		if ( explicitColumnName != null ) {
-			jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( explicitColumnName );
 			columnName = explicitColumnName;
 		}
 		else {
-			jdbcPosition = resultPosition + 1;
-			columnName = jdbcResultsMetadata.resolveColumnName( jdbcPosition );
+			columnName = jdbcResultsMetadata.resolveColumnName( resultPosition + 1 );
 		}
 
-		final int valuesArrayPosition = ResultsHelper.jdbcPositionToValuesArrayPosition( jdbcPosition );
-
-		final BasicValuedMapping basicType;
-
-		if ( explicitType != null ) {
-			basicType = explicitType;
-		}
-		else {
-			basicType = jdbcResultsMetadata.resolveType( jdbcPosition, explicitJavaTypeDescriptor );
-		}
-
-		creationStateImpl.resolveSqlSelection(
+		final SqlSelection sqlSelection = creationStateImpl.resolveSqlSelection(
 				creationStateImpl.resolveSqlExpression(
 						columnName,
-						processingState -> new SqlSelectionImpl( valuesArrayPosition, basicType )
+						processingState -> {
+							final int jdbcPosition;
+							if ( explicitColumnName != null ) {
+								jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( explicitColumnName );
+							}
+							else {
+								jdbcPosition = resultPosition + 1;
+							}
+							final int valuesArrayPosition = ResultsHelper.jdbcPositionToValuesArrayPosition( jdbcPosition );
+
+							final BasicValuedMapping basicType;
+							if ( explicitType != null ) {
+								basicType = explicitType;
+							}
+							else {
+								basicType = jdbcResultsMetadata.resolveType( jdbcPosition, explicitJavaTypeDescriptor );
+							}
+							return new SqlSelectionImpl( valuesArrayPosition, basicType );
+						}
 				),
 				explicitJavaTypeDescriptor,
 				sessionFactory.getTypeConfiguration()
 		);
 
-		return new BasicResult<>( valuesArrayPosition, columnName, basicType.getMappedType().getMappedJavaTypeDescriptor() );
+		return new BasicResult<>(
+				sqlSelection.getValuesArrayPosition(),
+				columnName,
+				sqlSelection.getExpressionType().getJdbcMappings().get( 0 ).getMappedJavaTypeDescriptor()
+		);
 	}
 
 }

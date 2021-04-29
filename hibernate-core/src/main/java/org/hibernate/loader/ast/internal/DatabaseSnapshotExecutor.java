@@ -101,7 +101,7 @@ class DatabaseSnapshotExecutor {
 		state.getFromClauseAccess().registerTableGroup( rootPath, rootTableGroup );
 
 		// We produce the same state array as if we were creating an entity snapshot
-		final List<DomainResult> domainResults = new ArrayList<>();
+		final List<DomainResult<?>> domainResults = new ArrayList<>();
 
 		final SqlExpressionResolver sqlExpressionResolver = state.getSqlExpressionResolver();
 

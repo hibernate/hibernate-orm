@@ -77,11 +77,6 @@ public class TableBasedDeleteHandler
 	}
 
 	private ExecutionDelegate resolveDelegate(ExecutionContext executionContext) {
-		if ( ( getSqmDeleteOrUpdateStatement().getWhereClause() == null || getSqmDeleteOrUpdateStatement().getWhereClause().getPredicate() == null )
-				&& ! getEntityDescriptor().isAffectedByEnabledFilters( executionContext.getLoadQueryInfluencers() ) ) {
-			return new UnrestrictedDeleteExecutionDelegate( getEntityDescriptor() );
-		}
-
 		return new RestrictedDeleteExecutionDelegate(
 				getEntityDescriptor(),
 				idTable,

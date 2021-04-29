@@ -2657,19 +2657,26 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	protected void renderTableReference(TableReference tableReference) {
 		appendSql( tableReference.getTableExpression() );
 		registerAffectedTable( tableReference );
-		// todo (6.0) : For now we just skip the alias rendering in the delete and update clauses
-		//  We need some dialect support if we want to support joins in delete and update statements
 		final Clause currentClause = clauseStack.getCurrent();
-		switch ( currentClause ) {
-			case DELETE:
-			case UPDATE:
-				return;
+		if ( !rendersTableReferenceAlias( currentClause ) ) {
+			return;
 		}
 		final String identificationVariable = tableReference.getIdentificationVariable();
 		if ( identificationVariable != null ) {
 			appendSql( getDialect().getTableAliasSeparator() );
 			appendSql( identificationVariable );
 		}
+	}
+
+	public static boolean rendersTableReferenceAlias(Clause clause) {
+		// todo (6.0) : For now we just skip the alias rendering in the delete and update clauses
+		//  We need some dialect support if we want to support joins in delete and update statements
+		switch ( clause ) {
+			case DELETE:
+			case UPDATE:
+				return false;
+		}
+		return true;
 	}
 
 	protected void registerAffectedTable(TableReference tableReference) {

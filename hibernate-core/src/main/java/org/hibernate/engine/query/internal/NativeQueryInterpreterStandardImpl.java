@@ -8,6 +8,7 @@ package org.hibernate.engine.query.internal;
 
 import org.hibernate.engine.query.spi.NativeQueryInterpreter;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.results.ResultSetMapping;
 import org.hibernate.query.sql.internal.NativeSelectQueryPlanImpl;
 import org.hibernate.query.sql.internal.ParameterParser;
 import org.hibernate.query.sql.spi.NativeSelectQueryDefinition;
@@ -36,7 +37,7 @@ public class NativeQueryInterpreterStandardImpl implements NativeQueryInterprete
 				queryDefinition.getSqlString(),
 				queryDefinition.getAffectedTableNames(),
 				queryDefinition.getQueryParameterList(),
-				queryDefinition.getJdbcValuesMappingProducer(),
+				(ResultSetMapping) queryDefinition.getJdbcValuesMappingProducer(),
 				queryDefinition.getRowTransformer(),
 				sessionFactory
 		);

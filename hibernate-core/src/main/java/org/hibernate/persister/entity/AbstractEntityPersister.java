@@ -4208,10 +4208,24 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public String filterFragment(TableGroup tableGroup, Map<String, Filter> enabledFilters, Set<String> treatAsDeclarations) {
+	public String filterFragment(
+			TableGroup tableGroup,
+			Map<String, Filter> enabledFilters,
+			Set<String> treatAsDeclarations,
+			boolean useIdentificationVariable) {
+		final String alias;
+		if ( tableGroup == null ) {
+			alias = null;
+		}
+		else if ( useIdentificationVariable && tableGroup.getPrimaryTableReference().getIdentificationVariable() != null ) {
+			alias = tableGroup.getPrimaryTableReference().getIdentificationVariable();
+		}
+		else {
+			alias = tableGroup.getPrimaryTableReference().getTableExpression();
+		}
 		final StringBuilder sessionFilterFragment = new StringBuilder();
-		filterHelper.render( sessionFilterFragment, tableGroup == null ? null : getFilterAliasGenerator( tableGroup ), enabledFilters );
-		return sessionFilterFragment.append( filterFragment( tableGroup == null ? null : tableGroup.getPrimaryTableReference().getIdentificationVariable(), treatAsDeclarations ) ).toString();
+		filterHelper.render( sessionFilterFragment, !useIdentificationVariable || tableGroup == null ? null : getFilterAliasGenerator( tableGroup ), enabledFilters );
+		return sessionFilterFragment.append( filterFragment( alias, treatAsDeclarations ) ).toString();
 	}
 
 	public String generateFilterConditionAlias(String rootAlias) {

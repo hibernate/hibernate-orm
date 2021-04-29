@@ -1789,7 +1789,8 @@ public abstract class AbstractCollectionPersister
 				buffer.append( " and " );
 			}
 			assert elementPersister instanceof Joinable;
-			buffer.append( StringHelper.replace( manyToManyWhereTemplate, Template.TEMPLATE, ( (Joinable) elementPersister ).getTableName() ) );
+			final TableReference tableReference = tableGroup.getTableReference( ( (Joinable) elementPersister ).getTableName() );
+			buffer.append( StringHelper.replace( manyToManyWhereTemplate, Template.TEMPLATE, tableReference.getIdentificationVariable() ) );
 		}
 
 		return buffer.toString();
@@ -1940,11 +1941,9 @@ public abstract class AbstractCollectionPersister
 	public String filterFragment(
 			TableGroup tableGroup,
 			Map<String, Filter> enabledFilters,
-			Set<String> treatAsDeclarations) {
-		StringBuilder sessionFilterFragment = new StringBuilder();
-		filterHelper.render( sessionFilterFragment, getFilterAliasGenerator( tableGroup ), enabledFilters );
-
-		TableReference tableReference = null;
+			Set<String> treatAsDeclarations,
+			boolean useIdentificationVariable) {
+		TableReference tableReference;
 		if ( isManyToMany() ) {
 			// if filtering on many-to-many element were intended, getManyToManyFilterFragment() should have been chosen
 			tableReference = tableGroup.getPrimaryTableReference();
@@ -1952,11 +1951,23 @@ public abstract class AbstractCollectionPersister
 		else if ( elementPersister instanceof Joinable ) {
 			tableReference = tableGroup.getTableReference( tableGroup.getNavigablePath(), ( (Joinable) elementPersister ).getTableName() );
 		}
-
-		if ( tableReference != null ) {
-			sessionFilterFragment.append( filterFragment( tableReference.getIdentificationVariable(), treatAsDeclarations ) );
+		else {
+			tableReference = tableGroup.getTableReference( tableGroup.getNavigablePath(), qualifiedTableName );
 		}
-		return sessionFilterFragment.toString();
+
+		final String alias;
+		if ( tableReference == null ) {
+			alias = null;
+		}
+		else if ( useIdentificationVariable && tableReference.getIdentificationVariable() != null ) {
+			alias = tableReference.getIdentificationVariable();
+		}
+		else {
+			alias = tableReference.getTableExpression();
+		}
+		StringBuilder sessionFilterFragment = new StringBuilder();
+		filterHelper.render( sessionFilterFragment, getFilterAliasGenerator( tableGroup ), enabledFilters );
+		return sessionFilterFragment.append( filterFragment( alias, treatAsDeclarations ) ).toString();
 	}
 
 	@Override

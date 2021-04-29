@@ -21,13 +21,13 @@ import org.hibernate.sql.results.graph.DomainResult;
  */
 public class SelectStatement extends AbstractStatement {
 	private final QueryPart queryPart;
-	private final List<DomainResult> domainResults;
+	private final List<DomainResult<?>> domainResults;
 
 	public SelectStatement(QueryPart queryPart) {
 		this( queryPart, Collections.emptyList() );
 	}
 
-	public SelectStatement(QueryPart queryPart, List<DomainResult> domainResults) {
+	public SelectStatement(QueryPart queryPart, List<DomainResult<?>> domainResults) {
 		this( false, new LinkedHashMap<>(), queryPart, domainResults );
 	}
 
@@ -35,7 +35,7 @@ public class SelectStatement extends AbstractStatement {
 			boolean withRecursive,
 			Map<String, CteStatement> cteStatements,
 			QueryPart queryPart,
-			List<DomainResult> domainResults) {
+			List<DomainResult<?>> domainResults) {
 		super( cteStatements );
 		this.queryPart = queryPart;
 		this.domainResults = domainResults;
@@ -50,7 +50,7 @@ public class SelectStatement extends AbstractStatement {
 		return queryPart;
 	}
 
-	public List<DomainResult> getDomainResultDescriptors() {
+	public List<DomainResult<?>> getDomainResultDescriptors() {
 		return domainResults;
 	}
 

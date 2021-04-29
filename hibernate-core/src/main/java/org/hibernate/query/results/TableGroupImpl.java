@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.results;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
@@ -28,7 +29,8 @@ public class TableGroupImpl implements TableGroup {
 	private final NavigablePath navigablePath;
 	private final String alias;
 
-	private final TableReferenceImpl primaryTableReference;
+	private final TableReference primaryTableReference;
+	private List<TableGroupJoin> tableGroupJoins;
 
 	private final ModelPartContainer container;
 	private final LockMode lockMode;
@@ -37,7 +39,7 @@ public class TableGroupImpl implements TableGroup {
 	public TableGroupImpl(
 			NavigablePath navigablePath,
 			String alias,
-			TableReferenceImpl primaryTableReference,
+			TableReference primaryTableReference,
 			ModelPartContainer container,
 			LockMode lockMode) {
 		this.navigablePath = navigablePath;
@@ -74,21 +76,29 @@ public class TableGroupImpl implements TableGroup {
 
 	@Override
 	public List<TableGroupJoin> getTableGroupJoins() {
-		return Collections.emptyList();
+		return tableGroupJoins == null ? Collections.emptyList() : Collections.unmodifiableList( tableGroupJoins );
 	}
 
 	@Override
 	public boolean hasTableGroupJoins() {
-		return false;
+		return tableGroupJoins != null && !tableGroupJoins.isEmpty();
 	}
 
 	@Override
 	public void addTableGroupJoin(TableGroupJoin join) {
-		throw new UnsupportedOperationException();
+		if ( tableGroupJoins == null ) {
+			tableGroupJoins = new ArrayList<>();
+		}
+		if ( !tableGroupJoins.contains( join ) ) {
+			tableGroupJoins.add( join );
+		}
 	}
 
 	@Override
 	public void visitTableGroupJoins(Consumer<TableGroupJoin> consumer) {
+		if ( tableGroupJoins != null ) {
+			tableGroupJoins.forEach( consumer );
+		}
 	}
 
 	@Override
@@ -113,21 +123,28 @@ public class TableGroupImpl implements TableGroup {
 
 	@Override
 	public TableReference resolveTableReference(NavigablePath navigablePath, String tableExpression) {
-		return primaryTableReference;
+		final TableReference tableReference = getTableReference( navigablePath, tableExpression );
+		if ( tableReference == null ) {
+			throw new IllegalStateException( "Could not resolve binding for table `" + tableExpression + "`" );
+		}
+
+		return tableReference;
 	}
 
 	@Override
 	public TableReference getTableReference(NavigablePath navigablePath, String tableExpression) {
-		return primaryTableReference;
+		if ( primaryTableReference.getTableReference( navigablePath , tableExpression ) != null ) {
+			return primaryTableReference;
+		}
+
+		for ( TableGroupJoin tableGroupJoin : getTableGroupJoins() ) {
+			final TableReference primaryTableReference = tableGroupJoin.getJoinedGroup().getPrimaryTableReference();
+			if ( primaryTableReference.getTableReference( navigablePath, tableExpression ) != null ) {
+				return primaryTableReference;
+			}
+		}
+
+		return null;
 	}
 
-	public static class TableReferenceImpl extends TableReference {
-		public TableReferenceImpl(
-				String tableExpression,
-				String identificationVariable,
-				boolean isOptional,
-				SessionFactoryImplementor sessionFactory) {
-			super( tableExpression, identificationVariable, isOptional, sessionFactory );
-		}
-	}
 }

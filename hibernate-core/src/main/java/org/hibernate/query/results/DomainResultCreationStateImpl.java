@@ -337,9 +337,24 @@ public class DomainResultCreationStateImpl
 				final FetchBuilder explicitFetchBuilder = fetchBuilderResolverStack
 						.getCurrent()
 						.apply( relativePath.getFullPath() );
-				final FetchBuilder fetchBuilder = explicitFetchBuilder != null
-						? explicitFetchBuilder
-						: Builders.implicitFetchBuilder( fetchPath, fetchable, this );
+				final FetchBuilder fetchBuilder;
+				if ( explicitFetchBuilder != null ) {
+					fetchBuilder = explicitFetchBuilder;
+				}
+				else {
+					final DynamicFetchBuilderLegacy fetchBuilderLegacy = legacyFetchResolver.resolve(
+							fromClauseAccess.findTableGroup( fetchParent.getNavigablePath() )
+									.getPrimaryTableReference()
+									.getIdentificationVariable(),
+							fetchableName
+					);
+					if ( fetchBuilderLegacy == null ) {
+						fetchBuilder = Builders.implicitFetchBuilder( fetchPath, fetchable, this );
+					}
+					else {
+						fetchBuilder = fetchBuilderLegacy;
+					}
+				}
 				final Fetch fetch = fetchBuilder.buildFetch(
 						fetchParent,
 						fetchPath,

@@ -14,6 +14,7 @@ import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.SqlSelectionImpl;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -65,13 +66,14 @@ public class CompleteResultBuilderBasicModelPart
 		final TableReference tableReference = tableGroup.getTableReference( navigablePath, modelPart.getContainingTableExpression() );
 		final String mappedColumn = modelPart.getSelectionExpression();
 
-		final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( columnAlias );
-		final int valuesArrayPosition = jdbcPositionToValuesArrayPosition( jdbcPosition );
-
-		creationStateImpl.resolveSqlSelection(
+		final SqlSelection sqlSelection = creationStateImpl.resolveSqlSelection(
 				creationStateImpl.resolveSqlExpression(
 						SqlExpressionResolver.createColumnReferenceKey( tableReference, mappedColumn ),
-						processingState -> new SqlSelectionImpl( valuesArrayPosition, modelPart )
+						processingState -> {
+							final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( columnAlias );
+							final int valuesArrayPosition = jdbcPositionToValuesArrayPosition( jdbcPosition );
+							return new SqlSelectionImpl( valuesArrayPosition, modelPart );
+						}
 				),
 				modelPart.getJavaTypeDescriptor(),
 				creationStateImpl.getSessionFactory().getTypeConfiguration()
@@ -79,7 +81,7 @@ public class CompleteResultBuilderBasicModelPart
 
 		//noinspection unchecked
 		return new BasicResult(
-				valuesArrayPosition,
+				sqlSelection.getValuesArrayPosition(),
 				columnAlias,
 				modelPart.getJavaTypeDescriptor()
 		);

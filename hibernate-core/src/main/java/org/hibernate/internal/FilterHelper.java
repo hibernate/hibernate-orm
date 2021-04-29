@@ -7,6 +7,7 @@
 package org.hibernate.internal;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -151,12 +152,24 @@ public class FilterHelper {
 		}
 	}
 
-	public static FilterPredicate createFilterPredicate(LoadQueryInfluencers loadQueryInfluencers, Joinable joinable) {
-		return createFilterPredicate( loadQueryInfluencers, joinable, null );
+	public static FilterPredicate createFilterPredicate(
+			LoadQueryInfluencers loadQueryInfluencers,
+			Joinable joinable,
+			TableGroup rootTableGroup) {
+		return createFilterPredicate( loadQueryInfluencers, joinable, rootTableGroup, true );
 	}
 
-	public static FilterPredicate createFilterPredicate(LoadQueryInfluencers loadQueryInfluencers, Joinable joinable, TableGroup rootTableGroup) {
-		final String filterFragment = joinable.filterFragment( rootTableGroup, loadQueryInfluencers.getEnabledFilters() );
+	public static FilterPredicate createFilterPredicate(
+			LoadQueryInfluencers loadQueryInfluencers,
+			Joinable joinable,
+			TableGroup rootTableGroup,
+			boolean useIdentificationVariable) {
+		final String filterFragment = joinable.filterFragment(
+				rootTableGroup,
+				loadQueryInfluencers.getEnabledFilters(),
+				Collections.emptySet(),
+				useIdentificationVariable
+		);
 		if ( StringHelper.isNotEmpty( filterFragment ) ) {
 			return doCreateFilterPredicate( filterFragment, loadQueryInfluencers.getEnabledFilters() );
 		}

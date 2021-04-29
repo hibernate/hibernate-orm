@@ -7,6 +7,7 @@
 package org.hibernate.query.results;
 
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 import org.hibernate.Incubating;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
@@ -40,6 +41,7 @@ public interface ResultSetMapping extends JdbcValuesMappingProducer {
 	int getNumberOfResultBuilders();
 
 	void visitResultBuilders(BiConsumer<Integer, ResultBuilder> resultBuilderConsumer);
+	void visitLegacyFetchBuilders(Consumer<DynamicFetchBuilderLegacy> resultBuilderConsumer);
 
 	void addResultBuilder(ResultBuilder resultBuilder);
 	void addLegacyFetchBuilder(DynamicFetchBuilderLegacy fetchBuilder);

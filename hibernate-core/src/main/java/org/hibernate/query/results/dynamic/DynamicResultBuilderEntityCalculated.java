@@ -11,10 +11,13 @@ import java.util.function.BiFunction;
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.query.NativeQuery;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.query.results.TableGroupImpl;
+import org.hibernate.sql.ast.spi.SqlAliasBaseConstant;
+import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
@@ -26,7 +29,7 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
  *
  * @author Steve Ebersole
  */
-public class DynamicResultBuilderEntityCalculated implements DynamicResultBuilderEntity {
+public class DynamicResultBuilderEntityCalculated implements DynamicResultBuilderEntity, NativeQuery.RootReturn {
 	private final NavigablePath navigablePath;
 	private final EntityMappingType entityMapping;
 
@@ -48,6 +51,51 @@ public class DynamicResultBuilderEntityCalculated implements DynamicResultBuilde
 	}
 
 	@Override
+	public EntityMappingType getEntityMapping() {
+		return entityMapping;
+	}
+
+	@Override
+	public String getTableAlias() {
+		return tableAlias;
+	}
+
+	@Override
+	public NavigablePath getNavigablePath() {
+		return navigablePath;
+	}
+
+	@Override
+	public NativeQuery.RootReturn setLockMode(LockMode lockMode) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public NativeQuery.RootReturn addIdColumnAliases(String... aliases) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public String getDiscriminatorAlias() {
+		return null;
+	}
+
+	@Override
+	public NativeQuery.RootReturn setDiscriminatorAlias(String columnAlias) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public NativeQuery.RootReturn addProperty(String propertyName, String columnAlias) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public NativeQuery.ReturnProperty addProperty(String propertyName) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public EntityResult buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
@@ -55,11 +103,10 @@ public class DynamicResultBuilderEntityCalculated implements DynamicResultBuilde
 			DomainResultCreationState domainResultCreationState) {
 		final DomainResultCreationStateImpl creationStateImpl = ResultsHelper.impl( domainResultCreationState );
 
-		TableGroupImpl.TableReferenceImpl tableReference = new TableGroupImpl.TableReferenceImpl(
-				entityMapping.getEntityName(),
-				tableAlias,
-				false,
-				sessionFactory
+		final TableReference tableReference = entityMapping.createPrimaryTableReference(
+				new SqlAliasBaseConstant( tableAlias ),
+				creationStateImpl.getSqlExpressionResolver(),
+				creationStateImpl.getCreationContext()
 		);
 
 		final TableGroupImpl tableGroup = new TableGroupImpl(

@@ -8,6 +8,7 @@ package org.hibernate.type.descriptor.java;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -74,16 +75,70 @@ public class LongTypeDescriptor extends AbstractClassTypeDescriptor<Long> implem
 		if ( value == null ) {
 			return null;
 		}
-		if ( Long.class.isInstance( value ) ) {
+		if ( value instanceof Long ) {
 			return (Long) value;
 		}
-		if ( Number.class.isInstance( value ) ) {
+		if ( value instanceof Number ) {
 			return ( (Number) value ).longValue();
 		}
-		else if ( String.class.isInstance( value ) ) {
+		else if ( value instanceof String ) {
 			return Long.valueOf( ( (String) value ) );
 		}
 		throw unknownWrap( value.getClass() );
+	}
+
+	@Override
+	public <X> Long coerce(X value, CoercionContext coercionContext) {
+		if ( value == null ) {
+			return null;
+		}
+
+		if ( value instanceof Long ) {
+			return ( (Long) value );
+		}
+
+		if ( value instanceof Byte ) {
+			return CoercionHelper.toLong( (Byte) value );
+		}
+
+		if ( value instanceof Short ) {
+			return CoercionHelper.toLong( (Short) value );
+		}
+
+		if ( value instanceof Integer ) {
+			return CoercionHelper.toLong( (Integer) value );
+		}
+
+		if ( value instanceof Double ) {
+			return CoercionHelper.toLong( (Double) value );
+		}
+
+		if ( value instanceof Float ) {
+			return CoercionHelper.toLong( (Float) value );
+		}
+
+		if ( value instanceof BigInteger ) {
+			return CoercionHelper.toLong( (BigInteger) value );
+		}
+
+		if ( value instanceof BigDecimal ) {
+			return CoercionHelper.toLong( (BigDecimal) value );
+		}
+
+		if ( value instanceof String ) {
+			return CoercionHelper.coerceWrappingError(
+					() -> Long.parseLong( (String) value )
+			);
+		}
+
+		throw new CoercionException(
+				String.format(
+						Locale.ROOT,
+						"Cannot coerce value `%s` [%s] as Long",
+						value,
+						value.getClass().getName()
+				)
+		);
 	}
 
 	@Override

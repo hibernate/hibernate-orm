@@ -9,6 +9,7 @@ package org.hibernate.type.descriptor.java;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Types;
+import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -120,5 +121,59 @@ public class DoubleTypeDescriptor extends AbstractClassTypeDescriptor<Double> im
 		return dialect.getDoublePrecision();
 	}
 
+
+	@Override
+	public <X> Double coerce(X value, CoercionContext coercionContext) {
+		if ( value == null ) {
+			return null;
+		}
+
+		if ( value instanceof Double ) {
+			return ( (Double) value );
+		}
+
+		if ( value instanceof Byte ) {
+			return ( (Byte) value ).doubleValue();
+		}
+
+		if ( value instanceof Short ) {
+			return ( (Short) value ).doubleValue();
+		}
+
+		if ( value instanceof Integer ) {
+			return ( (Integer) value ).doubleValue();
+		}
+
+		if ( value instanceof Long ) {
+			return ( (Long) value ).doubleValue();
+		}
+
+		if ( value instanceof Float ) {
+			return CoercionHelper.toDouble( (float) value );
+		}
+
+		if ( value instanceof BigInteger ) {
+			return CoercionHelper.toDouble( (BigInteger) value );
+		}
+
+		if ( value instanceof BigDecimal ) {
+			return CoercionHelper.toDouble( (BigDecimal) value );
+		}
+
+		if ( value instanceof String ) {
+			return CoercionHelper.coerceWrappingError(
+					() -> Double.parseDouble( (String) value )
+			);
+		}
+
+		throw new CoercionException(
+				String.format(
+						Locale.ROOT,
+						"Cannot coerce value `%s` [%s] as Double",
+						value,
+						value.getClass().getName()
+				)
+		);
+	}
 
 }

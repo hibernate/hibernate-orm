@@ -8,6 +8,7 @@ package org.hibernate.type.descriptor.java;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -82,13 +83,13 @@ public class BigIntegerTypeDescriptor extends AbstractClassTypeDescriptor<BigInt
 		if ( value == null ) {
 			return null;
 		}
-		if ( BigInteger.class.isInstance( value ) ) {
+		if ( value instanceof BigInteger ) {
 			return (BigInteger) value;
 		}
-		if ( BigDecimal.class.isInstance( value ) ) {
+		if ( value instanceof BigDecimal ) {
 			return ( (BigDecimal) value ).toBigIntegerExact();
 		}
-		if ( Number.class.isInstance( value ) ) {
+		if ( value instanceof Number ) {
 			return BigInteger.valueOf( ( (Number) value ).longValue() );
 		}
 		throw unknownWrap( value.getClass() );
@@ -107,5 +108,59 @@ public class BigIntegerTypeDescriptor extends AbstractClassTypeDescriptor<BigInt
 	@Override
 	public int getDefaultSqlScale() {
 		return 0;
+	}
+
+	@Override
+	public <X> BigInteger coerce(X value, CoercionContext coercionContext) {
+		if ( value == null ) {
+			return null;
+		}
+
+		if ( value instanceof BigInteger ) {
+			return (BigInteger) value;
+		}
+
+		if ( value instanceof Byte ) {
+			return BigInteger.valueOf( ( (byte) value ) );
+		}
+
+		if ( value instanceof Short ) {
+			return BigInteger.valueOf( ( (short) value ) );
+		}
+
+		if ( value instanceof Integer ) {
+			return BigInteger.valueOf( ( (int) value ) );
+		}
+
+		if ( value instanceof Long ) {
+			return BigInteger.valueOf( ( (long) value ) );
+		}
+
+		if ( value instanceof Double ) {
+			return CoercionHelper.toBigInteger( (Double) value );
+		}
+
+		if ( value instanceof Float ) {
+			return CoercionHelper.toBigInteger( (Float) value );
+		}
+
+		if ( value instanceof BigDecimal ) {
+			return CoercionHelper.toBigInteger( (BigDecimal) value );
+		}
+
+		if ( value instanceof String ) {
+			return CoercionHelper.coerceWrappingError(
+					() -> BigInteger.valueOf( Long.parseLong( (String) value ) )
+			);
+		}
+
+		throw new CoercionException(
+				String.format(
+						Locale.ROOT,
+						"Unable to coerce value [%s (%s)] to BigInteger",
+						value,
+						value.getClass().getName()
+				)
+		);
 	}
 }

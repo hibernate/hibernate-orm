@@ -8,6 +8,7 @@ package org.hibernate.type.descriptor.java;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -108,5 +109,59 @@ public class FloatTypeDescriptor extends AbstractClassTypeDescriptor<Float> impl
 		//this is the number of *binary* digits
 		//in a single-precision FP number
 		return dialect.getFloatPrecision();
+	}
+
+	@Override
+	public <X> Float coerce(X value, CoercionContext coercionContext) {
+		if ( value == null ) {
+			return null;
+		}
+
+		if ( value instanceof Float ) {
+			return (Float) value;
+		}
+
+		if ( value instanceof Double ) {
+			return ( (Double) value ).floatValue();
+		}
+
+		if ( value instanceof Byte ) {
+			return ( (Byte) value ).floatValue();
+		}
+
+		if ( value instanceof Short ) {
+			return ( (Short) value ).floatValue();
+		}
+
+		if ( value instanceof Integer ) {
+			return ( (Integer) value ).floatValue();
+		}
+
+		if ( value instanceof Long ) {
+			return ( (Long) value ).floatValue();
+		}
+
+		if ( value instanceof BigInteger ) {
+			return ( (BigInteger) value ).floatValue();
+		}
+
+		if ( value instanceof BigDecimal ) {
+			return ( (BigDecimal) value ).floatValue();
+		}
+
+		if ( value instanceof String ) {
+			return CoercionHelper.coerceWrappingError(
+					() -> Float.parseFloat( (String) value )
+			);
+		}
+
+		throw new CoercionException(
+				String.format(
+						Locale.ROOT,
+						"Cannot coerce value `%s` [%s] as Float",
+						value,
+						value.getClass().getName()
+				)
+		);
 	}
 }

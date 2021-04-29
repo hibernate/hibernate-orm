@@ -19,6 +19,8 @@ import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
 import org.hibernate.query.spi.QueryParameterBindingValidator;
+import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -26,7 +28,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Steve Ebersole
  */
-public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
+public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, JavaTypeDescriptor.CoercionContext {
 	private final QueryParameter<T> queryParameter;
 	private final QueryParameterBindingTypeResolver typeResolver;
 	private final boolean isBindingValidationRequired;
@@ -103,6 +105,13 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 			return;
 		}
 
+		if ( bindType != null ) {
+			value = bindType.getExpressableJavaTypeDescriptor().coerce( value, this );
+		}
+		else if ( queryParameter.getHibernateType() != null ) {
+			value = queryParameter.getHibernateType().getExpressableJavaTypeDescriptor().coerce( value, this );
+		}
+
 		if ( isBindingValidationRequired ) {
 			validate( value );
 		}
@@ -148,15 +157,22 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 			return;
 		}
 
+		if ( clarifiedType != null ) {
+			this.bindType = clarifiedType;
+		}
+
+		if ( bindType != null ) {
+			value = bindType.getExpressableJavaTypeDescriptor().coerce( value, this );
+		}
+		else if ( queryParameter.getHibernateType() != null ) {
+			value = queryParameter.getHibernateType().getExpressableJavaTypeDescriptor().coerce( value, this );
+		}
+
 		if ( isBindingValidationRequired ) {
 			validate( value, clarifiedType );
 		}
 
 		bindValue( value );
-
-		if ( clarifiedType != null ) {
-			this.bindType = clarifiedType;
-		}
 	}
 
 	@Override
@@ -165,15 +181,22 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 			return;
 		}
 
+		if ( bindType == null ) {
+			bindType = queryParameter.getHibernateType();
+		}
+
+		if ( bindType != null ) {
+			value = bindType.getExpressableJavaTypeDescriptor().coerce( value, this );
+		}
+		else if ( queryParameter.getHibernateType() != null ) {
+			value = queryParameter.getHibernateType().getExpressableJavaTypeDescriptor().coerce( value, this );
+		}
+
 		if ( isBindingValidationRequired ) {
 			validate( value, temporalTypePrecision );
 		}
 
 		bindValue( value );
-
-		if ( bindType == null ) {
-			bindType = queryParameter.getHibernateType();
-		}
 
 		if ( bindType != null ) {
 			bindType = (AllowableParameterType) BindingTypeHelper.INSTANCE.resolveDateTemporalTypeVariant(
@@ -221,10 +244,10 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 
 	@Override
 	public void setBindValues(Collection<T> values, AllowableParameterType<T> clarifiedType) {
-		setBindValues( values );
 		if ( clarifiedType != null ) {
 			this.bindType = clarifiedType;
 		}
+		setBindValues( values );
 	}
 
 	@Override
@@ -237,7 +260,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 		this.bindType = BindingTypeHelper.INSTANCE.resolveTemporalPrecision(
 				temporalTypePrecision,
 				bindType,
-				typeConfiguration
+				getTypeConfiguration()
 		);
 
 		this.explicitTemporalPrecision = temporalTypePrecision;
@@ -272,5 +295,10 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 
 	private void validate(T value, TemporalType clarifiedTemporalType) {
 		QueryParameterBindingValidator.INSTANCE.validate( getBindType(), value, clarifiedTemporalType );
+	}
+
+	@Override
+	public TypeConfiguration getTypeConfiguration() {
+		return typeResolver.getTypeConfiguration();
 	}
 }

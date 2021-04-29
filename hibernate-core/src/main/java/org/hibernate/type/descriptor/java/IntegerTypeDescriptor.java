@@ -8,6 +8,7 @@ package org.hibernate.type.descriptor.java;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -109,5 +110,59 @@ public class IntegerTypeDescriptor extends AbstractClassTypeDescriptor<Integer> 
 	@Override
 	public int getDefaultSqlScale() {
 		return 0;
+	}
+
+	@Override
+	public Integer coerce(Object value, CoercionContext coercionContext) {
+		if ( value == null ) {
+			return null;
+		}
+
+		if ( value instanceof Integer ) {
+			return (int) value;
+		}
+
+		if ( value instanceof Short ) {
+			return CoercionHelper.toInteger( (short) value );
+		}
+
+		if ( value instanceof Byte ) {
+			return CoercionHelper.toInteger( (byte) value );
+		}
+
+		if ( value instanceof Long ) {
+			return CoercionHelper.toInteger( (long) value );
+		}
+
+		if ( value instanceof Double ) {
+			return CoercionHelper.toInteger( (double) value );
+		}
+
+		if ( value instanceof Float ) {
+			return CoercionHelper.toInteger( (float) value );
+		}
+
+		if ( value instanceof BigInteger ) {
+			return CoercionHelper.toInteger( (BigInteger) value );
+		}
+
+		if ( value instanceof BigDecimal ) {
+			return CoercionHelper.toInteger( (BigDecimal) value );
+		}
+
+		if ( value instanceof String ) {
+			return CoercionHelper.coerceWrappingError(
+					() -> Integer.parseInt( (String) value )
+			);
+		}
+
+		throw new CoercionException(
+				String.format(
+						Locale.ROOT,
+						"Cannot coerce vale `%s` [%s] as Integer",
+						value,
+						value.getClass().getName()
+				)
+		);
 	}
 }

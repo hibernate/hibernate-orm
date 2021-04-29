@@ -124,7 +124,7 @@ public class MultiIdLoaderStandard<T> implements MultiIdEntityLoader<T> {
 		final List<Integer> elementPositionsLoadedByBatch = new ArrayList<>();
 
 		for ( int i = 0; i < ids.length; i++ ) {
-			final Object id = ids[i];
+			final Object id = entityDescriptor.getIdentifierMapping().getJavaTypeDescriptor().coerce( ids[i], session );
 			final EntityKey entityKey = new EntityKey( id, entityDescriptor );
 
 			if ( loadOptions.isSessionCheckingEnabled() || loadOptions.isSecondLevelCacheCheckingEnabled() ) {
@@ -175,7 +175,7 @@ public class MultiIdLoaderStandard<T> implements MultiIdEntityLoader<T> {
 
 			// if we did not hit any of the continues above, then we need to batch
 			// load the entity state.
-			idsInBatch.add( ids[i] );
+			idsInBatch.add( id );
 
 			if ( idsInBatch.size() >= maxBatchSize ) {
 				// we've hit the allotted max-batch-size, perform an "intermediate load"
@@ -352,7 +352,7 @@ public class MultiIdLoaderStandard<T> implements MultiIdEntityLoader<T> {
 			final List<Object> nonManagedIds = new ArrayList<>();
 
 			for ( int i = 0; i < ids.length; i++ ) {
-				final Object id = ids[ i ];
+				final Object id = entityDescriptor.getIdentifierMapping().getJavaTypeDescriptor().coerce( ids[ i ], session );
 				final EntityKey entityKey = new EntityKey( id, entityDescriptor );
 
 				LoadEvent loadEvent = new LoadEvent(

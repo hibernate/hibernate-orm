@@ -35,6 +35,8 @@ import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder.Options;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Defines the internal contract shared between {@link org.hibernate.Session} and
@@ -66,7 +68,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
  * @author Steve Ebersole
  */
 public interface SharedSessionContractImplementor
-		extends SharedSessionContract, JdbcSessionOwner, Options, LobCreationContext, WrapperOptions, QueryProducerImplementor {
+		extends SharedSessionContract, JdbcSessionOwner, Options, LobCreationContext, WrapperOptions, QueryProducerImplementor, JavaTypeDescriptor.CoercionContext {
 
 	// todo : this is the shared contract between Session and StatelessSession, but it defines methods that StatelessSession does not implement
 	//	(it just throws UnsupportedOperationException).  To me it seems like it is better to properly isolate those methods
@@ -81,6 +83,11 @@ public interface SharedSessionContractImplementor
 	 * Get the creating <tt>SessionFactoryImplementor</tt>
 	 */
 	SessionFactoryImplementor getFactory();
+
+	@Override
+	default TypeConfiguration getTypeConfiguration() {
+		return getFactory().getTypeConfiguration();
+	}
 
 	SessionEventListenerManager getEventListenerManager();
 

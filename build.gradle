@@ -15,16 +15,36 @@ buildscript {
 		classpath 'org.hibernate.build.gradle:version-injection-plugin:1.0.0'
 		classpath 'gradle.plugin.com.github.lburgazzoli:gradle-karaf-plugin:0.5.1'
 		classpath 'org.asciidoctor:asciidoctor-gradle-plugin:1.5.7'
-		classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4'
 		classpath 'de.thetaphi:forbiddenapis:3.0.1'
 	}
 }
 
 plugins {
 	id 'me.champeau.buildscan-recipes' version '0.2.3'
+	id 'io.github.gradle-nexus.publish-plugin' version '1.0.0'
+	id 'nu.studer.credentials' version '2.1' apply false
 	id 'org.hibernate.build.xjc' version '2.0.1' apply false
 	id 'org.hibernate.build.maven-repo-auth' version '3.0.3' apply false
 	id 'biz.aQute.bnd' version '5.1.1' apply false
+}
+
+ext {
+	sonatypeOssrhUser = project.findProperty( 'SONATYPE_OSSRH_USER' )
+	sonatypeOssrhPassword = project.findProperty( 'SONATYPE_OSSRH_PASSWORD' )
+}
+
+// nexusPublishing uses group and version
+// as defaults
+group = project.group
+version = project.version
+
+nexusPublishing {
+	repositories {
+		sonatype {
+			username = project.sonatypeOssrhUser
+			password = project.sonatypeOssrhPassword
+		}
+	}
 }
 
 allprojects {
@@ -39,6 +59,9 @@ allprojects {
 		}
 	}
 	apply plugin: 'idea'
+
+	group = project.group
+	version = project.version
 
 	// minimize changes, at least for now (gradle uses 'build' by default)..
 	buildDir = "target"

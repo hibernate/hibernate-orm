@@ -54,7 +54,6 @@ public interface QueryParameterBinding<T> {
 
 	/**
 	 * Sets the parameter binding value using the explicit Type.
-	 *
 	 * @param value The bind value
 	 * @param clarifiedType The explicit Type to use
 	 */
@@ -62,7 +61,6 @@ public interface QueryParameterBinding<T> {
 
 	/**
 	 * Sets the parameter binding value using the explicit TemporalType.
-	 *
 	 * @param value The bind value
 	 * @param temporalTypePrecision The temporal type to use
 	 */
@@ -78,14 +76,13 @@ public interface QueryParameterBinding<T> {
 	/**
 	 * Sets the parameter binding values.  The inherent parameter type (if known) is assumed in regards to the
 	 * individual values.
+	 *  @param values The bind values
 	 *
-	 * @param values The bind values
 	 */
 	void setBindValues(Collection<T> values);
 
 	/**
 	 * Sets the parameter binding values using the explicit Type in regards to the individual values.
-	 *
 	 * @param values The bind values
 	 * @param clarifiedType The explicit Type to use
 	 */
@@ -93,8 +90,7 @@ public interface QueryParameterBinding<T> {
 
 	/**Sets the parameter binding value using the explicit TemporalType in regards to the individual values.
 	 *
-	 *
-	 * @param values The bind values
+	 *  @param values The bind values
 	 * @param temporalTypePrecision The temporal type to use
 	 */
 	void setBindValues(Collection<T> values, TemporalType temporalTypePrecision, TypeConfiguration typeConfiguration);

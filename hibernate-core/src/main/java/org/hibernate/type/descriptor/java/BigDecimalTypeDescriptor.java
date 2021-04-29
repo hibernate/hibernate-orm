@@ -8,6 +8,7 @@ package org.hibernate.type.descriptor.java;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -78,13 +79,13 @@ public class BigDecimalTypeDescriptor extends AbstractClassTypeDescriptor<BigDec
 		if ( value == null ) {
 			return null;
 		}
-		if ( BigDecimal.class.isInstance( value ) ) {
+		if ( value instanceof BigDecimal ) {
 			return (BigDecimal) value;
 		}
-		if ( BigInteger.class.isInstance( value ) ) {
+		if ( value instanceof BigInteger ) {
 			return new BigDecimal( (BigInteger) value );
 		}
-		if ( Number.class.isInstance( value ) ) {
+		if ( value instanceof Number ) {
 			return BigDecimal.valueOf( ( (Number) value ).doubleValue() );
 		}
 		throw unknownWrap( value.getClass() );
@@ -98,5 +99,31 @@ public class BigDecimalTypeDescriptor extends AbstractClassTypeDescriptor<BigDec
 	@Override
 	public int getDefaultSqlPrecision(Dialect dialect) {
 		return dialect.getDefaultDecimalPrecision();
+	}
+
+	@Override
+	public <X> BigDecimal coerce(X value, CoercionContext coercionContext) {
+		if ( value == null ) {
+			return null;
+		}
+
+		if ( value instanceof Number ) {
+			return BigDecimal.valueOf( ( (Number) value ).doubleValue() );
+		}
+
+		if ( value instanceof String ) {
+			return CoercionHelper.coerceWrappingError(
+					() -> BigDecimal.valueOf( Double.parseDouble( (String) value ) )
+			);
+		}
+
+		throw new CoercionException(
+				String.format(
+						Locale.ROOT,
+						"Unable to coerce value [%s (%s)] to BigDecimal",
+						value,
+						value.getClass().getName()
+				)
+		);
 	}
 }

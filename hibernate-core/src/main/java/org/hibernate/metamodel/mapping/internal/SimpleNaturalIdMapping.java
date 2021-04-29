@@ -8,6 +8,7 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
@@ -32,12 +33,14 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Single-attribute NaturalIdMapping implementation
  */
-public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping {
+public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements JavaTypeDescriptor.CoercionContext {
 	private final SingularAttributeMapping attribute;
+	private final TypeConfiguration typeConfiguration;
 
 	public SimpleNaturalIdMapping(
 			SingularAttributeMapping attribute,
@@ -48,6 +51,11 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping {
 				attribute.getAttributeMetadataAccess().resolveAttributeMetadata( declaringType ).isUpdatable()
 		);
 		this.attribute = attribute;
+
+		typeConfiguration = creationProcess.getCreationContext()
+				.getSessionFactory()
+				.getTypeConfiguration();
+
 	}
 
 	@Override
@@ -112,15 +120,21 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping {
 
 		if ( ! getJavaTypeDescriptor().getJavaTypeClass().isInstance( naturalIdValue ) ) {
 			throw new IllegalArgumentException(
-					"Incoming natural-id value [" + naturalIdValue + "] is not of expected type ["
-							+ getJavaTypeDescriptor().getJavaType().getTypeName() + "]"
+					String.format(
+							Locale.ROOT,
+							"Incoming natural-id value [%s (`%s`)] is not of expected type [`%s`] and could not be coerced",
+							naturalIdValue,
+							naturalIdValue.getClass().getName(),
+							getJavaTypeDescriptor().getJavaType().getTypeName()
+					)
 			);
 		}
 	}
 
 	@Override
 	public int calculateHashCode(Object value, SharedSessionContractImplementor session) {
-		return 0;
+		//noinspection unchecked
+		return value == null ? 0 : ( (JavaTypeDescriptor<Object>) getJavaTypeDescriptor() ).extractHashCode( value );
 	}
 
 	@Override
@@ -134,16 +148,16 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping {
 			final Map valueMap = (Map) naturalIdToLoad;
 			assert valueMap.size() == 1;
 			assert valueMap.containsKey( getAttribute().getAttributeName() );
-			return valueMap.get( getAttribute().getAttributeName() );
+			return getJavaTypeDescriptor().coerce( valueMap.get( getAttribute().getAttributeName() ), this );
 		}
 
 		if ( naturalIdToLoad instanceof Object[] ) {
 			final Object[] values = (Object[]) naturalIdToLoad;
 			assert values.length == 1;
-			return values[0];
+			return getJavaTypeDescriptor().coerce( values[0], this );
 		}
 
-		return naturalIdToLoad;
+		return getJavaTypeDescriptor().coerce( naturalIdToLoad, this );
 	}
 
 	public SingularAttributeMapping getAttribute() {
@@ -246,5 +260,10 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping {
 	@Override
 	public MultiNaturalIdLoader<?> makeMultiLoader(EntityMappingType entityDescriptor) {
 		return new MultiNaturalIdLoaderStandard<>( entityDescriptor );
+	}
+
+	@Override
+	public TypeConfiguration getTypeConfiguration() {
+		return typeConfiguration;
 	}
 }

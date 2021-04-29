@@ -27,11 +27,13 @@ import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
  */
-public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T> {
+public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, JavaTypeDescriptor.CoercionContext {
 	private final LoadAccessContext context;
 	private final EntityPersister entityPersister;
 
@@ -114,6 +116,8 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T> {
 		final EventSource eventSource = (EventSource) session;
 		final LoadQueryInfluencers loadQueryInfluencers = session.getLoadQueryInfluencers();
 
+		id = entityPersister.getIdentifierMapping().getJavaTypeDescriptor().coerce( id, this );
+
 		if ( this.lockOptions != null ) {
 			LoadEvent event = new LoadEvent( id, entityPersister.getEntityName(), lockOptions, eventSource, loadQueryInfluencers.getReadOnly() );
 			context.fireLoad( event, LoadEventListener.LOAD );
@@ -153,6 +157,8 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T> {
 		final SessionImplementor session = context.getSession();
 		final EventSource eventSource = (EventSource) session;
 		final LoadQueryInfluencers loadQueryInfluencers = session.getLoadQueryInfluencers();
+
+		id = entityPersister.getIdentifierMapping().getJavaTypeDescriptor().coerce( id, this );
 
 		if ( this.lockOptions != null ) {
 			LoadEvent event = new LoadEvent( id, entityPersister.getEntityName(), lockOptions, eventSource, loadQueryInfluencers.getReadOnly() );
@@ -205,5 +211,10 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T> {
 		if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
 			( (EnhancementAsProxyLazinessInterceptor) interceptor ).forceInitialize( result, null );
 		}
+	}
+
+	@Override
+	public TypeConfiguration getTypeConfiguration() {
+		return context.getSession().getSessionFactory().getTypeConfiguration();
 	}
 }

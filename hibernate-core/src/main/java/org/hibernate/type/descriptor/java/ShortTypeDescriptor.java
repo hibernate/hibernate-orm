@@ -5,6 +5,10 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.type.descriptor.java;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.Locale;
+
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.spi.Primitive;
@@ -76,7 +80,7 @@ public class ShortTypeDescriptor extends AbstractClassTypeDescriptor<Short> impl
 	}
 
 	@Override
-	public Class getPrimitiveClass() {
+	public Class<Short> getPrimitiveClass() {
 		return short.class;
 	}
 
@@ -98,5 +102,59 @@ public class ShortTypeDescriptor extends AbstractClassTypeDescriptor<Short> impl
 	@Override
 	public int getDefaultSqlScale() {
 		return 0;
+	}
+
+	@Override
+	public Short coerce(Object value, CoercionContext coercionContext) {
+		if ( value == null ) {
+			return null;
+		}
+
+		if ( value instanceof Short ) {
+			return (short) value;
+		}
+
+		if ( value instanceof Byte ) {
+			return CoercionHelper.toShort( (Byte) value );
+		}
+
+		if ( value instanceof Integer ) {
+			return CoercionHelper.toShort( (Integer) value );
+		}
+
+		if ( value instanceof Long ) {
+			return CoercionHelper.toShort( (Long) value );
+		}
+
+		if ( value instanceof Double ) {
+			return CoercionHelper.toShort( (Double) value );
+		}
+
+		if ( value instanceof Float ) {
+			return CoercionHelper.toShort( (Float) value );
+		}
+
+		if ( value instanceof BigInteger ) {
+			return CoercionHelper.toShort( (BigInteger) value );
+		}
+
+		if ( value instanceof BigDecimal ) {
+			return CoercionHelper.toShort( (BigDecimal) value );
+		}
+
+		if ( value instanceof String ) {
+			return CoercionHelper.coerceWrappingError(
+					() -> Short.parseShort( (String) value )
+			);
+		}
+
+		throw new CoercionException(
+				String.format(
+						Locale.ROOT,
+						"Cannot coerce value `%s` [%s] as Short",
+						value,
+						value.getClass().getName()
+				)
+		);
 	}
 }

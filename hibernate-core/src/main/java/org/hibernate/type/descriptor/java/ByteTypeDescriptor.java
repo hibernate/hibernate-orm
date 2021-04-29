@@ -5,6 +5,10 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.type.descriptor.java;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.Locale;
+
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.spi.Primitive;
@@ -66,20 +70,20 @@ public class ByteTypeDescriptor extends AbstractClassTypeDescriptor<Byte> implem
 		if ( value == null ) {
 			return null;
 		}
-		if ( Byte.class.isInstance( value ) ) {
+		if ( value instanceof Byte ) {
 			return (Byte) value;
 		}
-		if ( Number.class.isInstance( value ) ) {
+		if ( value instanceof Number ) {
 			return ( (Number) value ).byteValue();
 		}
-		if ( String.class.isInstance( value ) ) {
+		if ( value instanceof String ) {
 			return Byte.valueOf( ( (String) value ) );
 		}
 		throw unknownWrap( value.getClass() );
 	}
 
 	@Override
-	public Class getPrimitiveClass() {
+	public Class<Byte> getPrimitiveClass() {
 		return byte.class;
 	}
 
@@ -101,5 +105,59 @@ public class ByteTypeDescriptor extends AbstractClassTypeDescriptor<Byte> implem
 	@Override
 	public int getDefaultSqlScale() {
 		return 0;
+	}
+
+	@Override
+	public <X> Byte coerce(X value, CoercionContext coercionContext) {
+		if ( value == null ) {
+			return null;
+		}
+
+		if ( value instanceof Byte ) {
+			return (byte) value;
+		}
+
+		if ( value instanceof Short ) {
+			return CoercionHelper.toByte( (short) value );
+		}
+
+		if ( value instanceof Integer ) {
+			return CoercionHelper.toByte( (Integer) value );
+		}
+
+		if ( value instanceof Long ) {
+			return CoercionHelper.toByte( (Long) value );
+		}
+
+		if ( value instanceof Double ) {
+			return CoercionHelper.toByte( (Double) value );
+		}
+
+		if ( value instanceof Float ) {
+			return CoercionHelper.toByte( (Float) value );
+		}
+
+		if ( value instanceof BigInteger ) {
+			return CoercionHelper.toByte( (BigInteger) value );
+		}
+
+		if ( value instanceof BigDecimal ) {
+			return CoercionHelper.toByte( (BigDecimal) value );
+		}
+
+		if ( value instanceof String ) {
+			return CoercionHelper.coerceWrappingError(
+					() -> Byte.parseByte( (String) value )
+			);
+		}
+
+		throw new CoercionException(
+				String.format(
+						Locale.ROOT,
+						"Cannot coerce value `%s` [%s] as Byte",
+						value,
+						value.getClass().getName()
+				)
+		);
 	}
 }

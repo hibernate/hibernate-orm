@@ -18,6 +18,7 @@ import org.hibernate.internal.util.compare.ComparableComparator;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Descriptor for the Java side of a value mapping.
@@ -178,6 +179,15 @@ public interface JavaTypeDescriptor<T> extends Serializable {
 	 * @return The wrapped value.
 	 */
 	<X> T wrap(X value, WrapperOptions options);
+
+	interface CoercionContext {
+		TypeConfiguration getTypeConfiguration();
+	}
+
+	default <X> T coerce(X value, CoercionContext coercionContext) {
+		//noinspection unchecked
+		return (T) value;
+	}
 
 	/**
 	 * Retrieve the Java type handled here.

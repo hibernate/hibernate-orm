@@ -22,6 +22,8 @@ import org.hibernate.collection.spi.BagSemantics;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.profile.FetchProfile;
+import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.EffectiveEntityGraph;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -32,6 +34,7 @@ import org.hibernate.internal.FilterHelper;
 import org.hibernate.loader.MultipleBagFetchException;
 import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.loader.ast.spi.Loader;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -80,6 +83,7 @@ import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
 import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.internal.StandardEntityGraphTraversalStateImpl;
+import org.hibernate.tuple.entity.EntityMetamodel;
 
 import org.jboss.logging.Logger;
 
@@ -248,6 +252,7 @@ public class LoaderSelectBuilder {
 
 	private int fetchDepth;
 	private Map<OrderByFragment, TableGroup> orderByFragments;
+	private boolean hasCollectionJoinFetches;
 
 	private LoaderSelectBuilder(
 			SqlAstCreationContext creationContext,
@@ -731,6 +736,18 @@ public class LoaderSelectBuilder {
 						}
 					}
 				}
+				else if ( loadQueryInfluencers.getEnabledCascadingFetchProfile() != null ) {
+					final CascadeStyle cascadeStyle = ( (AttributeMapping) fetchable ).getAttributeMetadataAccess()
+							.resolveAttributeMetadata( fetchable.findContainingEntityMapping() )
+							.getCascadeStyle();
+					final CascadingAction cascadingAction = loadQueryInfluencers.getEnabledCascadingFetchProfile()
+							.getCascadingAction();
+					if ( cascadeStyle == null || cascadeStyle.doCascade( cascadingAction ) ) {
+						fetchTiming = FetchTiming.IMMEDIATE;
+						// In 5.x the CascadeEntityJoinWalker only join fetched the first collection fetch
+						joined = !hasCollectionJoinFetches;
+					}
+				}
 			}
 
 			final Integer maximumFetchDepth = creationContext.getMaximumFetchDepth();
@@ -771,6 +788,7 @@ public class LoaderSelectBuilder {
 						bagRoles.add( fetchable.getNavigableRole().getNavigableName() );
 					}
 					if ( joined ) {
+						hasCollectionJoinFetches = true;
 						final TableGroup joinTableGroup = creationState.getFromClauseAccess()
 								.getTableGroup( fetchablePath );
 						applyFiltering(

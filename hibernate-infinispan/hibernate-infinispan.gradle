@@ -32,4 +32,4 @@ publishing {
 	}
 }
 
-task release( dependsOn: bintrayUpload )
+task release( dependsOn: publishToSonatype )

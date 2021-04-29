@@ -6,23 +6,31 @@
  */
 package org.hibernate.loader.ast.spi;
 
+import org.hibernate.engine.spi.CascadingAction;
+import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.internal.util.StringHelper;
 
 /**
  * @author Steve Ebersole
  */
 public enum CascadingFetchProfile {
-	MERGE( "merge" ),
-	REFRESH( "refresh" );
+	MERGE( "merge", CascadingActions.MERGE ),
+	REFRESH( "refresh", CascadingActions.REFRESH );
 
 	private final String legacyName;
+	private final CascadingAction cascadingAction;
 
-	CascadingFetchProfile(String legacyName) {
+	CascadingFetchProfile(String legacyName, CascadingAction cascadingAction) {
 		this.legacyName = legacyName;
+		this.cascadingAction = cascadingAction;
 	}
 
 	public String getLegacyName() {
 		return legacyName;
+	}
+
+	public CascadingAction getCascadingAction() {
+		return cascadingAction;
 	}
 
 	public static CascadingFetchProfile fromLegacyName(String legacyName) {

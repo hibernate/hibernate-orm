@@ -20,6 +20,7 @@ import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.jpa.QueryHints;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.query.spi.QueryImplementor;
 
@@ -1197,24 +1198,27 @@ public abstract class AbstractEntityWithOneToManyTest {
 		CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
 		CriteriaQuery<Contract> criteria = criteriaBuilder.createQuery( Contract.class );
 		criteria.from( Contract.class );
-
-		QueryImplementor<Contract> query = s.createQuery( criteria );
-		query.setHint( "javax.persistence.fetchgraph", s.createEntityGraph( Contract.class) );
-		return query.uniqueResult();
+		return s.createQuery( criteria )
+				.setHint( QueryHints.HINT_FETCHGRAPH, s.createEntityGraph( Contract.class ) )
+				.uniqueResult();
 	}
 
 	private ContractVariation getContractVariation(SessionImplementor s) {
 		CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
 		CriteriaQuery<ContractVariation> criteria = criteriaBuilder.createQuery( ContractVariation.class );
 		criteria.from( ContractVariation.class );
-		return s.createQuery( criteria ).uniqueResult();
+		return s.createQuery( criteria )
+				.setHint( QueryHints.HINT_FETCHGRAPH, s.createEntityGraph( ContractVariation.class ) )
+				.uniqueResult();
 	}
 
 	private Party getParty(SessionImplementor s) {
 		CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
 		CriteriaQuery<Party> criteria = criteriaBuilder.createQuery( Party.class );
 		criteria.from( Party.class );
-		return s.createQuery( criteria ).uniqueResult();
+		return s.createQuery( criteria )
+				.setHint( QueryHints.HINT_FETCHGRAPH, s.createEntityGraph( Party.class ) )
+				.uniqueResult();
 	}
 
 	private void assertPartyAndContractAreDeleted(SessionImplementor s) {

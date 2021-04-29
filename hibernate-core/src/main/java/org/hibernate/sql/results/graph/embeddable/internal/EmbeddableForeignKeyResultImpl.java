@@ -37,7 +37,7 @@ public class EmbeddableForeignKeyResultImpl<T>
 			EmbeddableValuedModelPart embeddableValuedModelPart,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		super( embeddableValuedModelPart.getEmbeddableTypeDescriptor(), navigablePath.append( ROLE_LOCAL_NAME ) );
+		super( embeddableValuedModelPart.getEmbeddableTypeDescriptor(), navigablePath );
 		this.resultVariable = resultVariable;
 		this.fetches = creationState.visitFetches( this );
 	}

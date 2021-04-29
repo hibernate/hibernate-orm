@@ -380,7 +380,10 @@ public class ToOneAttributeMapping
 					private Key key;
 				}
 			 */
-			if ( parentNavigablePath.getLocalName().equals( ForeignKeyDescriptor.PART_NAME ) ) {
+			if ( parentNavigablePath.getLocalName()
+					.equals( ForeignKeyDescriptor.TARGET_PART_NAME ) || parentNavigablePath.getLocalName().equals(
+					ForeignKeyDescriptor.PART_NAME ) ) {
+				// todo (6.0): maybe it's better to have a flag in creation state that marks if we are building a circular fetch domain result already to skip this?
 				return null;
 			}
 
@@ -709,7 +712,7 @@ public class ToOneAttributeMapping
 		if ( isNullable ) {
 			sqlAstJoinType = SqlAstJoinType.LEFT;
 		}
-		else if ( parentTableGroup.getModelPart() instanceof EmbeddedCollectionPart ) {
+		else if ( parentTableGroup.getModelPart() instanceof CollectionPart ) {
 			sqlAstJoinType = SqlAstJoinType.LEFT;
 		}
 		else {

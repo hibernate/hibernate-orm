@@ -34,6 +34,10 @@ public class EntityAssembler implements DomainResultAssembler {
 
 	@Override
 	public Object assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
+		// Ensure that the instance really is initialized
+		// This is important for key-many-to-ones that are part of a collection key fk,
+		// as the instance is needed for resolveKey before initializing the instance in RowReader
+		initializer.resolveInstance( rowProcessingState );
 		return initializer.getEntityInstance();
 	}
 }

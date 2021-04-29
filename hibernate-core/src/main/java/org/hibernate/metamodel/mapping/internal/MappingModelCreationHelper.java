@@ -799,6 +799,11 @@ public class MappingModelCreationHelper {
 			public boolean isIncludedInOptimisticLocking() {
 				return bootProperty.isOptimisticLocked();
 			}
+
+			@Override
+			public CascadeStyle getCascadeStyle() {
+				return cascadeStyle;
+			}
 		};
 
 		final FetchStyle style = FetchStrategyHelper.determineFetchStyleByMetadata(

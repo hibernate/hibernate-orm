@@ -237,11 +237,21 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 			EmbeddableValuedModelPart modelPart,
 			DomainResultCreationState creationState) {
 		final NavigablePath fkNavigablePath = navigablePath.append( getPartName() );
-		creationState.getSqlAstCreationState().getFromClauseAccess().resolveTableGroup(
-				fkNavigablePath,
+		final NavigablePath resultNavigablePath;
+		if ( associationKey.getTable().equals( columnContainingTable ) ) {
+			// todo (6.0): what if we append the actual model part and maybe prefix with `{element}`
+//			resultNavigablePath = navigablePath.append( modelPart.getFetchableName() );
+			// todo (6.0): note that the following is only necessary for detecting circular fetch cycles in ToOneAttributeMapping
+			resultNavigablePath = navigablePath.append( ForeignKeyDescriptor.TARGET_PART_NAME );
+		}
+		else {
+			resultNavigablePath = navigablePath.append( getPartName() );
+		}
+		final TableGroup fkTableGroup = creationState.getSqlAstCreationState().getFromClauseAccess().resolveTableGroup(
+				resultNavigablePath,
 				np -> {
 					final TableGroupJoin tableGroupJoin = modelPart.createTableGroupJoin(
-							fkNavigablePath,
+							resultNavigablePath,
 							tableGroup,
 							null,
 							SqlAstJoinType.INNER,
@@ -251,11 +261,16 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 					);
 					return tableGroupJoin.getJoinedGroup();
 				}
-
 		);
+		if ( fkNavigablePath != resultNavigablePath ) {
+			creationState.getSqlAstCreationState().getFromClauseAccess().resolveTableGroup(
+					fkNavigablePath,
+					np -> fkTableGroup
+			);
+		}
 
 		return new EmbeddableForeignKeyResultImpl<>(
-				navigablePath,
+				resultNavigablePath,
 				modelPart,
 				null,
 				creationState
@@ -457,7 +472,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 		);
 
 		return new EmbeddableForeignKeyResultImpl<>(
-				navigablePath,
+				fkNavigablePath,
 				keyMappingType,
 				resultVariable,
 				creationState

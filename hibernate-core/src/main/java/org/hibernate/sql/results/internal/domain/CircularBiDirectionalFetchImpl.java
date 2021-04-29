@@ -11,6 +11,7 @@ import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.Association;
 import org.hibernate.metamodel.mapping.AttributeMapping;
@@ -199,7 +200,14 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Assoc
 
 					final SharedSessionContractImplementor session = rowProcessingState.getJdbcValuesSourceProcessingState()
 							.getSession();
-					return session.getPersistenceContext().getEntity( entityKey );
+					final PersistenceContext persistenceContext = session.getPersistenceContext();
+					final Object proxy = persistenceContext.getProxy( entityKey );
+					// it is conceivable there is a proxy, so check that first
+					if ( proxy == null ) {
+						// otherwise look for an initialized version
+						return persistenceContext.getEntity( entityKey );
+					}
+					return proxy;
 				}
 			}
 			if ( initializer.getInitializedInstance() == null ) {

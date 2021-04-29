@@ -10,9 +10,6 @@ plugins {
   id "org.wildfly.build.featurepack" version '0.0.11'
 }
 
-
-
-apply from: rootProject.file( 'gradle/base-information.gradle' )
 apply plugin: 'java'
 apply from: rootProject.file( 'gradle/libraries.gradle' )
 

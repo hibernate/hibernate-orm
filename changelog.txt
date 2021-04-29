@@ -3,6 +3,29 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.4.31.Final (April 29, 2021)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31933
+
+** Bug
+    * [HHH-14571] - Hibernate.isPropertyInitialized( someEntity, "id" ) returns false
+    * [HHH-14567] - Filters are ignored if enabled after query creation but before execution
+    * [HHH-14557] - Connection leaked on rollback with mode DELAYED_ACQUISITION_AND_RELEASE_BEFORE_TRANSACTION_COMPLETION
+    * [HHH-14549] - Collection with default field initializer will always be empty
+    * [HHH-14537] - EntityNotFoundException thrown when non-existing association with @NotFound(IGNORE) mapped has proxy in PersistenceContext
+    * [HHH-14523] - Spatial Update Z axis of a org.locationtech.jts.geom.Point on Postgis
+    * [HHH-11490] - UUID mapped as GEOMETRY with PostGisDialect
+
+** Improvement
+    * [HHH-14090] - Hibernate-core provides MariaDB specific dialects. But hibernate-spatial does not provide MariaDB spatial dialect.  I think we need one.
+    * [HHH-13077] - Optimize query plan call count
+
+** Task
+    * [HHH-14575] - Adapt BasicProxyFactoryImpl to be more native-image friendly
+    * [HHH-14513] - Move publishing release artifacts from BinTray
+
+
 Changes in 5.4.30.Final (March 19, 2021)
 ------------------------------------------------------------------------------------------------------------------------
 
